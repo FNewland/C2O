@@ -6,7 +6,6 @@ import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { LANGS, type Lang } from './index'
-import { fs } from '../theme/tokens'
 
 const NATIVE_NAME: Record<Lang, string> = { en: 'English', fr: 'Français' }
 
@@ -16,16 +15,8 @@ export function LanguageToggle({ style }: { style?: CSSProperties }) {
   const setLang = useUIStore(s => s.setLang)
 
   return (
-    <div
-      role="group"
-      aria-label={t('Interface language')}
-      style={{
-        display: 'inline-flex', borderRadius: 'var(--radius)', overflow: 'hidden',
-        border: '1px solid var(--line-strong)', background: 'var(--surface-1)',
-        ...style,
-      }}
-    >
-      {LANGS.map((code, i) => {
+    <div role="group" aria-label={t('Interface language')} className="c2o-seg c2o-lang" style={style}>
+      {LANGS.map(code => {
         const active = code === lang
         return (
           <button
@@ -34,15 +25,8 @@ export function LanguageToggle({ style }: { style?: CSSProperties }) {
             lang={code}
             title={NATIVE_NAME[code]}
             aria-pressed={active}
+            className="c2o-seg__item c2o-lang__item"
             onClick={() => { if (!active) setLang(code) }}
-            style={{
-              minHeight: 26, padding: '0 var(--sp-2)', fontSize: fs.label, fontWeight: 600,
-              fontFamily: 'var(--font-mono)',
-              border: 'none', borderLeft: i > 0 ? '1px solid var(--line-strong)' : 'none',
-              background: active ? 'var(--interactive)' : 'transparent',
-              color: active ? 'var(--on-fill)' : 'var(--text-2)',
-              cursor: active ? 'default' : 'pointer',
-            }}
           >
             {code.toUpperCase()}
           </button>

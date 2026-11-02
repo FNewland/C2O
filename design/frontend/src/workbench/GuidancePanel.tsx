@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import i18n from '../i18n'
 import { useUIStore, type Level } from '../stores/uiStore'
-import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -262,54 +261,46 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, right: 0, bottom: 0, width: 380,
-      background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border)',
-      overflow: 'auto', zIndex: 1000, padding: '1rem',
-      boxShadow: '-4px 0 20px rgba(0,0,0,0.3)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <h2 style={{ fontSize: fs.value, margin: 0, color: 'var(--accent)' }}>{t('Facilitator Guide')}</h2>
-        <span style={{ flex: 1 }} />
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: fs.title }}>×</button>
+    <aside className="c2o-drawer" aria-labelledby="c2o-guide-title"
+      onKeyDown={e => { if (e.key === 'Escape') onClose() }}>
+      <div className="c2o-drawer__head">
+        <h2 id="c2o-guide-title" className="t-15 w-600 m-0">{t('Facilitator Guide')}</h2>
+        <button type="button" onClick={onClose} className="c2o-btn c2o-btn--icon" aria-label={t('Close')} autoFocus>×</button>
       </div>
 
       {/* Current level guidance */}
-      <div style={{ marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: fs.body, color: 'var(--status-caution)', marginBottom: '0.3rem' }}>{guidance.title}</h3>
+      <div className="mb-4">
+        <h3 className="t-13 w-600 mb-2">{guidance.title}</h3>
 
-        <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
+        <div className="t-12 w-600 c-2 mb-1 caps">
           {t('Related Sessions')}
         </div>
-        <div style={{ marginBottom: '0.4rem' }}>
+        <div className="mb-2">
           {guidance.sessions.map((s, i) => (
-            <div key={i} style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '0.1rem 0' }}>
+            <div key={i} className="t-12 c-2 py-1 px-0">
               {s}
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
+        <div className="t-12 w-600 c-2 mb-1 caps">
           {t('Learning Objectives')}
         </div>
-        <div style={{ marginBottom: '0.4rem' }}>
+        <div className="mb-2">
           {guidance.objectives.map((o, i) => (
-            <div key={i} style={{ display: 'flex', gap: '0.3rem', fontSize: fs.label, padding: '0.1rem 0' }}>
-              <span style={{ color: 'var(--success)', flexShrink: 0 }}>•</span>
+            <div key={i} className="flex gap-1 t-12 py-1 px-0">
+              <span className="c-ok shrink-0">•</span>
               <span>{o}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.15rem', textTransform: 'uppercase' }}>
+        <div className="t-12 w-600 c-2 mb-1 caps">
           {t('Tips')}
         </div>
         <div>
           {guidance.tips.map((tip, i) => (
-            <div key={i} style={{
-              fontSize: fs.label, padding: '0.2rem 0.3rem', marginBottom: '0.15rem',
-              background: 'rgba(59,130,246,0.08)', borderRadius: '3px', borderLeft: '2px solid var(--accent)',
-            }}>
+            <div key={i} className="t-12 p-1 mb-1 bg-accent rounded bl-accent">
               {tip}
             </div>
           ))}
@@ -317,50 +308,42 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Downloadable worksheets */}
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', marginBottom: '0.75rem' }}>
-        <h3 style={{ fontSize: fs.body, color: 'var(--cat-6)', marginBottom: '0.3rem' }}>{t('Worksheets')}</h3>
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+      <div className="bt pt-3 mb-3">
+        <h3 className="t-13 w-600 mb-1">{t('Worksheets')}</h3>
+        <div className="t-12 c-2 mb-1">
           {t('Download worksheet templates for this level:')}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div className="stack gap-1">
           {(LEVEL_WORKSHEETS[currentLevel] || []).map((ws, i) => (
-            <button key={i} onClick={() => downloadWorksheet(ws)} style={{
-              padding: '0.25rem 0.4rem', borderRadius: '3px', textAlign: 'left',
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
-            }}>
-              <div style={{ fontWeight: 500 }}>{t(ws.title)}</div>
-              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t(ws.description)}</div>
+            <button key={i} type="button" onClick={() => downloadWorksheet(ws)} className="c2o-example-card">
+              <div className="w-500">{t(ws.title)}</div>
+              <div className="t-12 c-2">{t(ws.description)}</div>
             </button>
           ))}
         </div>
       </div>
 
       {/* Example missions */}
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-        <h3 style={{ fontSize: fs.body, color: 'var(--status-ok)', marginBottom: '0.3rem' }}>{t('Worked Examples')}</h3>
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+      <div className="bt pt-3">
+        <h3 className="t-13 w-600 mb-1">{t('Worked Examples')}</h3>
+        <div className="t-12 c-2 mb-1">
           {t('Load a pre-built mission to explore or use as a starting point:')}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div className="stack gap-1">
           {(examples?.missions || []).map((m: any) => (
-            <button key={m.id} onClick={() => loadExample(m.id)} disabled={loadingExample}
-              style={{
-                padding: '0.3rem 0.5rem', borderRadius: '4px', textAlign: 'left',
-                background: 'var(--bg-card)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
-              }}>
-              <div style={{ fontWeight: 600 }}>{m.name}</div>
-              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{m.description}</div>
+            <button key={m.id} type="button" onClick={() => loadExample(m.id)} disabled={loadingExample}
+              className="c2o-example-card">
+              <div className="w-600">{m.name}</div>
+              <div className="t-12 c-2">{m.description}</div>
             </button>
           ))}
           {(!examples?.missions || examples.missions.length === 0) && (
-            <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+            <div className="t-12 c-2">
               {t('No example missions available from server.')}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

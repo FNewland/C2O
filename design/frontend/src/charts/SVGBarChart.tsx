@@ -43,7 +43,7 @@ export function SVGBarChart({
     const gap = (chartH - barH * data.length) / Math.max(data.length - 1, 1)
 
     return (
-      <svg width={width} height={height} style={{ display: 'block' }}>
+      <svg width={width} height={height} className="block">
         {title && <text x={width / 2} y={16} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontWeight={600}>{title}</text>}
         {data.map((d, i) => {
           const y = padding.top + i * (barH + gap)
@@ -73,7 +73,7 @@ export function SVGBarChart({
   const gap = (chartW - barW * data.length) / Math.max(data.length - 1, 1)
 
   return (
-    <svg width={width} height={height} style={{ display: 'block' }}>
+    <svg width={width} height={height} className="block">
       {title && <text x={width / 2} y={16} textAnchor="middle" fill="var(--text)" fontSize={fs.label} fontWeight={600}>{title}</text>}
       {/* Y-axis labels */}
       {[0, 0.5, 1].map(frac => (

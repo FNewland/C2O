@@ -1,45 +1,52 @@
 /**
- * BudgetPanel — Budget allocation and rollup for elements at the current level.
+ * BudgetPanel — budget allocation and rollup for the elements at this level.
  *
- * Shows a table of child elements with:
- * - Allocation: what budget is assigned to this element (set by user)
- * - Actual: current value (from element properties or child rollup)
- * - Margin: allocation - actual
- * - Status: green/amber/red
+ * Picture first (C2O brief §1.1): the parent's value against its allocation,
+ * then one bar per child on a shared scale. The detail table (allocations,
+ * nominal, maturity margin, quantities) is one click deeper.
  *
- * The top-level allocation on the parent constrains the total.
- * Per-child allocations break the parent allocation down.
+ * ECSS vocabulary (ECSS-E-ST-10C / ECSS-M-ST-10C): nominal = current best
+ * estimate; maturity margin = the per-element margin for design maturity;
+ * allocation = the value apportioned from the level above; margin to
+ * allocation = (allocation − nominal with margin) / allocation.
  */
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
-import { fs } from '../theme/tokens'
+import { displayElementName } from './BlocksPanel'
+import { Button, DataTable, Disclosure, MarginBar, MarginBarKey, Note, NoData, Panel, Tabs, fmtNum, tabPanelProps, type Column } from '../components/ui'
 
 const API = '/api'
 
-// English text is the i18n key
-const BUDGET_LABELS: Record<string, string> = { mass: 'Mass', power: 'Power', data: 'Data', cost: 'Cost' }
+/** System line: caution below the ECSS 20 % system margin. Element lines: caution when within 5 % of their allocation. */
+const ELEMENT_CAUTION_PCT = 5
 
-const BUDGET_TYPES = [
-  { id: 'mass', label: BUDGET_LABELS.mass, unit: 'kg' },
-  { id: 'power', label: BUDGET_LABELS.power, unit: 'W' },
-  { id: 'data', label: BUDGET_LABELS.data, unit: 'Mbps' },
-  { id: 'cost', label: BUDGET_LABELS.cost, unit: 'kEUR' },
+type BudgetKind = 'mass' | 'power' | 'data' | 'cost'
+
+// English text is the i18n key
+const BUDGET_TYPES: Array<{ id: BudgetKind; label: string; unit: string; digits: number }> = [
+  { id: 'mass', label: 'Mass', unit: 'kg', digits: 2 },
+  { id: 'power', label: 'Power', unit: 'W', digits: 1 },
+  { id: 'data', label: 'Data', unit: 'Mbps', digits: 3 },
+  { id: 'cost', label: 'Cost', unit: 'kEUR', digits: 0 },
 ]
 
-const STATUS_COLORS: Record<string, string> = {
-  green: 'var(--success)', amber: 'var(--warning)', red: 'var(--danger)', undefined: 'var(--text-secondary)',
+interface BudgetLine {
+  element_id: string; name: string; nominal: number; with_margin: number; margin_pct: number
+  quantity: number; per_unit: number; allocation: number | null; allocation_per_unit: number | null
+  power_avg_w?: number; power_peak_w?: number; duty_cycle?: number | null
+  data_rate_mbps?: number; volume_per_orbit_mb?: number; data_volume_gb_per_day?: number
 }
 
 export function BudgetPanel() {
   const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
-  const [activeBudget, setActiveBudget] = useState('mass')
+  const [activeBudget, setActiveBudget] = useState<BudgetKind>('mass')
+  const [autoBusy, setAutoBusy] = useState(false)
   const qc = useQueryClient()
 
-  // Find root element if no focus
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
@@ -47,7 +54,7 @@ export function BudgetPanel() {
   })
   const targetId = focusElementId || allElements.find((e: any) => !e.parent_id)?.id
 
-  // Detect constellation context: if an ancestor has quantity > 1, show per-unit values
+  // Constellation context: an ancestor with quantity > 1 means per-spacecraft values.
   const constellationQty = useMemo(() => {
     if (!focusElementId) return 1
     let current = allElements.find((e: any) => e.id === focusElementId)
@@ -57,20 +64,17 @@ export function BudgetPanel() {
     }
     return 1
   }, [focusElementId, allElements])
-  const isConstellation = constellationQty > 1
 
-  // Fetch budget
   const { data: budget } = useQuery({
     queryKey: ['budget', targetId, activeBudget],
     queryFn: () => fetch(`${API}/elements/${targetId}/budget/${activeBudget}`).then(r => r.json()),
     enabled: !!targetId,
     structuralSharing: false,
-    refetchInterval: 3000,  // Poll every 3s for live multi-user updates
+    refetchInterval: 3000,  // live multi-user updates
   })
 
   const bt = BUDGET_TYPES.find(b => b.id === activeBudget)!
 
-  // Set allocation on any element
   const setAllocation = useCallback(async (elementId: string, value: number) => {
     await fetch(`${API}/elements/${elementId}/allocations`, {
       method: 'POST',
@@ -81,320 +85,142 @@ export function BudgetPanel() {
   }, [activeBudget, bt.unit, qc])
 
   if (!targetId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: fs.body }}>{t('Add a mission element first.')}</div>
+    return <div className="c2o-pane c2o-pane--empty c-2">{t('Add a mission element first.')}</div>
   }
 
-  // Compute total allocated to children
-  const totalChildAlloc = (budget?.lines || []).reduce((s: number, l: any) => s + (l.allocation || 0), 0)
-  const parentAlloc = budget?.allocation
-  const unallocated = parentAlloc != null ? parentAlloc - totalChildAlloc : null
+  const lines: BudgetLine[] = budget?.lines || []
+  const totalChildAlloc = lines.reduce((s, l) => s + (l.allocation || 0), 0)
+  const parentAlloc: number | null = budget?.allocation ?? null
+  const unallocated = parentAlloc != null && totalChildAlloc > 0 ? parentAlloc - totalChildAlloc : null
+  const unallocatedLines = lines.filter(l => l.nominal > 0 && l.allocation == null)
+  const scaleMax = Math.max(0, ...lines.map(l => Math.max(l.allocation ?? 0, l.with_margin ?? 0)))
+  const parentName = budget?.element_name ? displayElementName(budget.element_name, t) : t('Parent')
+  const kindLabel = t(bt.label)
+
+  const autoAllocate = async () => {
+    setAutoBusy(true)
+    try {
+      for (const line of unallocatedLines) {
+        // Allocation = nominal with margin + 10 %
+        await setAllocation(line.element_id, Math.round(line.with_margin * 1.1 * 100) / 100)
+      }
+    } finally { setAutoBusy(false) }
+  }
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
-      {/* Budget type selector */}
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-        {BUDGET_TYPES.map(b => (
-          <button key={b.id} onClick={() => setActiveBudget(b.id)} style={{
-            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '3px',
-            background: activeBudget === b.id ? 'var(--accent)' : 'var(--bg-card)',
-            color: activeBudget === b.id ? 'white' : 'var(--text-secondary)',
-            border: 'none', cursor: 'pointer',
-          }}>
-            {t(b.label)}
-          </button>
-        ))}
-        <span style={{ flex: 1 }} />
-        {budget && (
-          <span style={{
-            padding: '0.2rem 0.5rem', borderRadius: '3px', fontWeight: 600, fontSize: fs.label,
-            background: `color-mix(in srgb, ${STATUS_COLORS[budget.status]} 13%, transparent)`, color: STATUS_COLORS[budget.status],
-          }}>
-            {budget.margin_pct != null ? t('{{pct}}% margin', { pct: budget.margin_pct.toFixed(0) }) : t('No allocation set')}
-          </span>
+    <div className="c2o-pane stack gap-4">
+      <div className="row wrap gap-3">
+        <Tabs idBase="budget" variant="segmented" label={t('Budget type')} value={activeBudget} onChange={setActiveBudget}
+          items={BUDGET_TYPES.map(b => ({ id: b.id, label: t(b.label) }))} />
+        {constellationQty > 1 && (
+          <span className="t-12 c-2">{t('Per spacecraft, ×{{qty}} in the constellation', { qty: constellationQty })}</span>
+        )}
+        <span className="grow" />
+        {unallocatedLines.length > 0 && (
+          <Button size="sm" onClick={autoAllocate} busy={autoBusy}
+            title={t('Sets each missing allocation to its nominal with margin, plus 10 %')}>
+            {autoBusy ? t('Allocating...') : t('Allocate the {{n}} unallocated (+10 %)', { n: unallocatedLines.length })}
+          </Button>
         )}
       </div>
 
-      {/* Auto-allocate from current values */}
-      {budget?.lines?.some((l: any) => l.nominal > 0 && l.allocation == null) && (
-        <button onClick={async () => {
-          for (const line of budget.lines) {
-            if (line.nominal > 0 && line.allocation == null) {
-              // Set allocation to actual + 20% margin
-              const alloc = Math.round(line.with_margin * 1.1 * 100) / 100
-              await setAllocation(line.element_id, alloc)
-            }
-          }
-        }} style={{
-          marginBottom: '0.4rem', padding: '0.2rem 0.5rem', fontSize: fs.label, fontWeight: 600,
-          borderRadius: '3px', background: 'rgba(59,130,246,0.15)', color: 'var(--accent)',
-          border: '1px solid var(--accent)', cursor: 'pointer',
-        }}>
-          {t('Auto-allocate from current values (+10% margin)')}
-        </button>
-      )}
+      <div {...tabPanelProps('budget', activeBudget)} className="stack gap-4">
+        {/* Level 1: the parent against its allocation */}
+        <section aria-label={t('{{name}}: {{kind}} budget', { name: parentName, kind: kindLabel })} className="stack gap-2">
+          <MarginBar lead label={parentName} nominal={budget?.sum_nominal ?? null} withMargin={budget?.sum_with_margin ?? null}
+            allocation={parentAlloc} unit={bt.unit} digits={bt.digits} />
+          <div className="row wrap gap-4 t-12 c-3">
+            <span className="row gap-1">
+              {t('Allocation')}
+              <AllocationInput currentValue={parentAlloc} onSet={v => setAllocation(targetId, v)} unit={bt.unit} label={t('Allocation for {{name}}', { name: parentName })} />
+              {bt.unit}
+            </span>
+            {activeBudget === 'power' && budget?.total_avg_power != null && (
+              <span>{t('Orbit average')} <span className="mono c-v t-13">{fmtNum(budget.total_avg_power, 1)}</span> W · {t('Peak')} <span className="mono c-v t-13">{fmtNum(budget.total_peak_power, 1)}</span> W</span>
+            )}
+            {activeBudget === 'data' && budget?.total_data_rate_mbps != null && (
+              <span>{t('Volume per day')} <span className="mono c-v t-13">{fmtNum(budget.total_data_volume_gb_per_day, 3)}</span> GB</span>
+            )}
+          </div>
+          {unallocated != null && Math.abs(unallocated) > 1e-9 && (
+            unallocated < 0
+              ? <Note tone="caution">{t('Child allocations total {{sum}} {{unit}}, {{over}} {{unit}} more than the {{alloc}} {{unit}} allocated to {{name}}.', { sum: fmtNum(totalChildAlloc, bt.digits), over: fmtNum(-unallocated, bt.digits), alloc: fmtNum(parentAlloc!, bt.digits), unit: bt.unit, name: parentName })}</Note>
+              : <Note>{t('{{value}} {{unit}} unallocated to children', { value: fmtNum(unallocated, bt.digits), unit: bt.unit })}</Note>
+          )}
+        </section>
 
-      {/* Parent allocation row */}
-      <div style={{
-        display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem',
-        padding: '0.4rem 0.5rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--border)',
-      }}>
-        <span style={{ fontWeight: 600, fontSize: fs.label }}>
-          {isConstellation
-            ? t('{{name}} (per spacecraft, ×{{qty}} in constellation):', { name: budget?.element_name || t('Parent'), qty: constellationQty })
-            : t('{{name}} Total:', { name: budget?.element_name || t('Parent') })}
-        </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Allocation:')}</span>
-        <AllocationInput currentValue={parentAlloc} onSet={v => setAllocation(targetId, v)} unit={bt.unit} />
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
-          {t('Actual:')} <b style={{ color: 'var(--text-primary)' }}>{budget?.sum_with_margin?.toFixed(2) || '0'} {bt.unit}</b>
-        </span>
-        {budget?.remaining != null && (
-          <span style={{ fontSize: fs.label, color: STATUS_COLORS[budget.status] }}>
-            {t('Remaining:')} <b>{budget.remaining.toFixed(2)} {bt.unit}</b>
-          </span>
+        {/* Level 2: each child against its own allocation, on one scale */}
+        <Panel title={t('By element')} meta={t('{{count}} elements', { count: lines.length, defaultValue_one: '{{count}} element' })} actions={lines.length > 0 ? <MarginBarKey /> : undefined}>
+          {lines.length === 0 ? (
+            <p className="t-13 c-2 m-0">{t('No child elements. Add elements in the Blocks panel first.')}</p>
+          ) : (
+            <div className="c2o-mbar-list">
+              {lines.map(l => (
+                <MarginBar key={l.element_id}
+                  label={l.quantity > 1 ? `${displayElementName(l.name, t)} ×${l.quantity}` : displayElementName(l.name, t)}
+                  nominal={l.nominal} withMargin={l.with_margin} allocation={l.allocation}
+                  unit={bt.unit} digits={bt.digits} scaleMax={scaleMax} cautionBelowPct={ELEMENT_CAUTION_PCT} />
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        {/* Level 3: the numbers */}
+        {lines.length > 0 && (
+          <Disclosure summary={t('Detail table')} meta={t('allocations, nominal, maturity margin')} ruled>
+            <BudgetTable kind={activeBudget} unit={bt.unit} digits={bt.digits} lines={lines} budget={budget} totalChildAlloc={totalChildAlloc} onSet={setAllocation} />
+          </Disclosure>
         )}
       </div>
-
-      {/* Unallocated warning */}
-      {unallocated != null && unallocated > 0 && totalChildAlloc > 0 && (
-        <div style={{
-          fontSize: fs.label, color: 'var(--warning)', marginBottom: '0.4rem', padding: '0.2rem 0.5rem',
-          background: 'rgba(245,158,11,0.1)', borderRadius: '3px',
-        }}>
-          {t('{{value}} {{unit}} unallocated to children', { value: unallocated.toFixed(2), unit: bt.unit })}
-        </div>
-      )}
-
-      {/* Power budget summary bar */}
-      {activeBudget === 'power' && budget?.total_avg_power != null && (
-        <div style={{
-          display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
-          background: 'rgba(168,85,247,0.08)', borderRadius: '4px', fontSize: fs.label,
-        }}>
-          <span>{t('Avg Power:')} <b>{budget.total_avg_power.toFixed(2)} W</b></span>
-          <span>{t('Peak Power:')} <b>{budget.total_peak_power.toFixed(2)} W</b></span>
-        </div>
-      )}
-
-      {/* Data budget summary bar */}
-      {activeBudget === 'data' && budget?.total_data_rate_mbps != null && (
-        <div style={{
-          display: 'flex', gap: '1rem', marginBottom: '0.5rem', padding: '0.3rem 0.5rem',
-          background: 'rgba(6,182,212,0.08)', borderRadius: '4px', fontSize: fs.label,
-        }}>
-          <span>{t('Total Data Rate:')} <b>{budget.total_data_rate_mbps.toFixed(3)} Mbps</b></span>
-          <span>{t('Volume/Day:')} <b>{budget.total_data_volume_gb_per_day.toFixed(3)} GB</b></span>
-        </div>
-      )}
-
-      {/* Per-element table */}
-      {budget?.lines?.length > 0 ? (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border)' }}>
-              <th style={thL}>{t('Element')}</th>
-              {activeBudget === 'power' ? (
-                <>
-                  <th style={thR}>{t('Allocation (W)')}</th>
-                  <th style={thR}>{t('Avg (W)')}</th>
-                  <th style={thR}>{t('Peak (W)')}</th>
-                  <th style={thR}>{t('Duty %')}</th>
-                  <th style={thR}>{t('Margin')}</th>
-                  <th style={thR}>{t('Qty')}</th>
-                  <th style={thC}>{t('Status')}</th>
-                </>
-              ) : activeBudget === 'data' ? (
-                <>
-                  <th style={thR}>{t('Data Rate (Mbps)')}</th>
-                  <th style={thR}>{t('Duty %')}</th>
-                  <th style={thR}>{t('Vol/Orbit (MB)')}</th>
-                  <th style={thR}>{t('Vol/Day (GB)')}</th>
-                  <th style={thR}>{t('Qty')}</th>
-                </>
-              ) : (
-                <>
-                  <th style={thR}>{t('Allocation ({{unit}})', { unit: bt.unit })}</th>
-                  <th style={thR}>{t('Actual ({{unit}})', { unit: bt.unit })}</th>
-                  <th style={thR}>{t('Margin')}</th>
-                  <th style={thR}>{t('With Margin')}</th>
-                  <th style={thR}>{t('Qty')}</th>
-                  <th style={thC}>{t('Status')}</th>
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {budget.lines.map((line: any) => {
-              const childMargin = line.allocation != null && line.allocation > 0
-                ? ((line.allocation - line.with_margin) / line.allocation * 100)
-                : null
-              const childStatus = childMargin == null ? 'undefined'
-                : childMargin > 20 ? 'green' : childMargin > 0 ? 'amber' : 'red'
-
-              if (activeBudget === 'power') {
-                return (
-                  <tr key={line.element_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
-                    <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right' }}>
-                      <AllocationInput currentValue={line.allocation} onSet={v => setAllocation(line.element_id, v)} unit="W" />
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                      {(line.power_avg_w || 0) > 0 ? line.power_avg_w.toFixed(2) : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                      {(line.power_peak_w || 0) > 0 ? line.power_peak_w.toFixed(2) : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                      {line.duty_cycle != null ? `${(line.duty_cycle * 100).toFixed(0)}%` : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                      {line.margin_pct}%
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                      {line.quantity > 1 ? `×${line.quantity}` : ''}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'center' }}>
-                      {childMargin != null ? (
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[childStatus] }} title={t('{{pct}}% margin', { pct: childMargin.toFixed(0) })} />
-                      ) : <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>—</span>}
-                    </td>
-                  </tr>
-                )
-              }
-
-              if (activeBudget === 'data') {
-                return (
-                  <tr key={line.element_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
-                    <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                      {(line.data_rate_mbps || 0) > 0 ? line.data_rate_mbps.toFixed(3) : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                      {line.duty_cycle != null ? `${(line.duty_cycle * 100).toFixed(0)}%` : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                      {(line.volume_per_orbit_mb || 0) > 0 ? line.volume_per_orbit_mb.toFixed(2) : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                      {(line.data_volume_gb_per_day || 0) > 0 ? line.data_volume_gb_per_day.toFixed(3) : '—'}
-                    </td>
-                    <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                      {line.quantity > 1 ? `×${line.quantity}` : ''}
-                    </td>
-                  </tr>
-                )
-              }
-
-              // Default: mass, cost, volume
-              return (
-                <tr key={line.element_id} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
-                  <td style={{ padding: '0.3rem 0.4rem', fontWeight: 500 }}>{line.name}</td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right' }}>
-                    <AllocationInput
-                      currentValue={line.allocation}
-                      onSet={v => setAllocation(line.element_id, v)}
-                      unit={bt.unit}
-                    />
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace' }}>
-                    {line.nominal > 0 ? line.nominal.toFixed(2) : '—'}
-                    {line.quantity > 1 && line.per_unit > 0 && (
-                      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
-                        {t('{{value}} ea', { value: line.per_unit.toFixed(2) })}
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                    {line.margin_pct}%
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>
-                    {line.with_margin > 0 ? line.with_margin.toFixed(2) : '—'}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                    {line.quantity > 1 ? `×${line.quantity}` : ''}
-                    {line.quantity > 1 && line.allocation_per_unit != null && (
-                      <div style={{ fontSize: fs.label, color: 'var(--info)' }}>
-                        {t('{{value}}/ea', { value: line.allocation_per_unit.toFixed(1) })}
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'center' }}>
-                    {childMargin != null ? (
-                      <span style={{
-                        display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                        background: STATUS_COLORS[childStatus],
-                      }} title={t('{{pct}}% margin', { pct: childMargin.toFixed(0) })} />
-                    ) : (
-                      <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>—</span>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-          <tfoot>
-            <tr style={{ borderTop: '2px solid var(--border)' }}>
-              <td style={{ padding: '0.3rem 0.4rem', fontWeight: 700 }}>{t('Total')}</td>
-              {activeBudget === 'power' ? (
-                <>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {totalChildAlloc > 0 ? totalChildAlloc.toFixed(2) : '—'}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.total_avg_power?.toFixed(2) || '0.00'}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.total_peak_power?.toFixed(2) || '0.00'}
-                  </td>
-                  <td /><td /><td /><td />
-                </>
-              ) : activeBudget === 'data' ? (
-                <>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.total_data_rate_mbps?.toFixed(3) || '0.000'}
-                  </td>
-                  <td />
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.lines.reduce((s: number, l: any) => s + (l.volume_per_orbit_mb || 0), 0).toFixed(2)}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.total_data_volume_gb_per_day?.toFixed(3) || '0.000'}
-                  </td>
-                  <td />
-                </>
-              ) : (
-                <>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {totalChildAlloc > 0 ? totalChildAlloc.toFixed(2) : '—'}
-                  </td>
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.sum_nominal.toFixed(2)}
-                  </td>
-                  <td />
-                  <td style={{ padding: '0.3rem 0.4rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
-                    {budget.sum_with_margin.toFixed(2)}
-                  </td>
-                  <td /><td />
-                </>
-              )}
-            </tr>
-          </tfoot>
-        </table>
-      ) : (
-        <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-          {t('No child elements. Add elements in the Blocks panel first.')}
-        </div>
-      )}
     </div>
   )
 }
 
-const thL: React.CSSProperties = { textAlign: 'left', padding: '0.3rem 0.4rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: fs.label, textTransform: 'uppercase' }
-const thR: React.CSSProperties = { ...thL, textAlign: 'right' }
-const thC: React.CSSProperties = { ...thL, textAlign: 'center' }
+function BudgetTable({ kind, unit, digits, lines, budget, totalChildAlloc, onSet }: {
+  kind: BudgetKind; unit: string; digits: number; lines: BudgetLine[]; budget: any; totalChildAlloc: number
+  onSet: (id: string, v: number) => void
+}) {
+  const { t } = useTranslation()
+  const nd = <NoData label={t('no data')} />
+  const num = (v: number | null | undefined, d = digits) => (v != null && v > 0 ? fmtNum(v, d) : nd)
+  const name: Column<BudgetLine> = { key: 'name', header: t('Element'), render: l => <span className="w-500">{displayElementName(l.name, t)}</span>, sort: l => l.name }
+  const qty: Column<BudgetLine> = { key: 'qty', header: t('Qty'), num: true, render: l => (l.quantity > 1 ? `×${l.quantity}` : ''), sort: l => l.quantity }
+  const alloc: Column<BudgetLine> = {
+    key: 'alloc', header: t('Allocation ({{unit}})', { unit }), num: true, sort: l => l.allocation,
+    render: l => <AllocationInput currentValue={l.allocation} onSet={v => onSet(l.element_id, v)} unit={unit} label={t('Allocation for {{name}}', { name: displayElementName(l.name, t) })} />,
+    foot: totalChildAlloc > 0 ? fmtNum(totalChildAlloc, digits) : '',
+  }
+  const mgn: Column<BudgetLine> = { key: 'mgn', header: t('Maturity margin'), num: true, render: l => `${l.margin_pct} %`, sort: l => l.margin_pct }
 
-/** Inline allocation input that shows current value and allows editing */
-function AllocationInput({ currentValue, onSet, unit }: { currentValue: number | null | undefined; onSet: (v: number) => void; unit: string }) {
+  let columns: Column<BudgetLine>[]
+  if (kind === 'power') {
+    columns = [name, alloc,
+      { key: 'avg', header: t('Avg (W)'), num: true, render: l => num(l.power_avg_w, 2), sort: l => l.power_avg_w, foot: fmtNum(budget?.total_avg_power ?? 0, 2) },
+      { key: 'peak', header: t('Peak (W)'), num: true, render: l => num(l.power_peak_w, 2), sort: l => l.power_peak_w, foot: fmtNum(budget?.total_peak_power ?? 0, 2) },
+      { key: 'duty', header: t('Duty %'), num: true, render: l => (l.duty_cycle != null ? `${(l.duty_cycle * 100).toFixed(0)} %` : nd), sort: l => l.duty_cycle },
+      mgn, qty]
+  } else if (kind === 'data') {
+    columns = [name,
+      { key: 'rate', header: t('Data Rate (Mbps)'), num: true, render: l => num(l.data_rate_mbps, 3), sort: l => l.data_rate_mbps, foot: fmtNum(budget?.total_data_rate_mbps ?? 0, 3) },
+      { key: 'duty', header: t('Duty %'), num: true, render: l => (l.duty_cycle != null ? `${(l.duty_cycle * 100).toFixed(0)} %` : nd), sort: l => l.duty_cycle },
+      { key: 'orbit', header: t('Vol/Orbit (MB)'), num: true, render: l => num(l.volume_per_orbit_mb, 2), sort: l => l.volume_per_orbit_mb, foot: fmtNum(lines.reduce((s, l) => s + (l.volume_per_orbit_mb || 0), 0), 2) },
+      { key: 'day', header: t('Vol/Day (GB)'), num: true, render: l => num(l.data_volume_gb_per_day, 3), sort: l => l.data_volume_gb_per_day, foot: fmtNum(budget?.total_data_volume_gb_per_day ?? 0, 3) },
+      qty]
+  } else {
+    columns = [name, alloc,
+      {
+        key: 'nom', header: t('Nominal ({{unit}})', { unit }), num: true, sort: l => l.nominal, foot: fmtNum(budget?.sum_nominal ?? 0, digits),
+        render: l => <>{num(l.nominal)}{l.quantity > 1 && l.per_unit > 0 && <div className="t-12 c-3">{t('{{value}} ea', { value: fmtNum(l.per_unit, digits) })}</div>}</>,
+      },
+      mgn,
+      { key: 'wm', header: t('With margin ({{unit}})', { unit }), num: true, render: l => <span className="w-600">{num(l.with_margin)}</span>, sort: l => l.with_margin, foot: fmtNum(budget?.sum_with_margin ?? 0, digits) },
+      qty]
+  }
+  return <DataTable dense caption={t('Budget detail')} columns={columns} rows={lines} rowKey={l => l.element_id} />
+}
+
+/** Inline allocation editor: shows the value, edits on click (Enter saves, Esc cancels). */
+function AllocationInput({ currentValue, onSet, unit, label }: { currentValue: number | null | undefined; onSet: (v: number) => void; unit: string; label: string }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState('')
@@ -404,6 +230,7 @@ function AllocationInput({ currentValue, onSet, unit }: { currentValue: number |
       <input
         type="number"
         autoFocus
+        aria-label={label}
         value={value}
         onChange={e => setValue(e.target.value)}
         onKeyDown={e => {
@@ -415,26 +242,20 @@ function AllocationInput({ currentValue, onSet, unit }: { currentValue: number |
           setEditing(false); setValue('')
         }}
         placeholder={unit}
-        style={{
-          width: 65, padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px', textAlign: 'right',
-          background: 'var(--bg-primary)', border: '1px solid var(--accent)', color: 'var(--text-primary)',
-        }}
+        className="c2o-input c2o-input--sm c2o-input--num c2o-alloc-input"
       />
     )
   }
 
   return (
     <button
+      type="button"
+      className={currentValue != null ? 'c2o-alloc mono' : 'c2o-alloc c2o-alloc--unset'}
       onClick={() => { setValue(currentValue != null ? String(currentValue) : ''); setEditing(true) }}
-      style={{
-        background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label,
-        fontFamily: 'monospace', fontWeight: 600, padding: '0.1rem 0.2rem', borderRadius: '2px',
-        color: currentValue != null ? 'var(--text-primary)' : 'var(--text-secondary)',
-        textDecoration: currentValue == null ? 'underline dotted' : 'none',
-      }}
+      aria-label={`${label}: ${currentValue != null ? `${currentValue} ${unit}` : t('not set')}`}
       title={t('Click to set allocation')}
     >
-      {currentValue != null ? `${currentValue.toFixed(1)}` : t('set')}
+      {currentValue != null ? fmtNum(currentValue, currentValue < 10 ? 2 : 1) : t('set')}
     </button>
   )
 }

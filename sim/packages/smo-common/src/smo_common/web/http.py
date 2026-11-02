@@ -58,6 +58,11 @@ from __future__ import annotations
 import hashlib
 import logging
 import mimetypes
+
+# Self-hosted IBM Plex (smo_common/ui/fonts): some platforms' mime tables lack
+# woff2, and aiohttp's static handler would then serve application/octet-stream.
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/woff", ".woff")
 import os
 import re
 from pathlib import Path

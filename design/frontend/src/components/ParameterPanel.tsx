@@ -25,15 +25,6 @@ import { fs } from '../theme/tokens'
 
 const API = '/api'
 
-const inputStyle: React.CSSProperties = {
-  padding: '0.12rem 0.3rem', fontSize: fs.label, borderRadius: '3px',
-  background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-}
-const monoInput: React.CSSProperties = { ...inputStyle, fontFamily: 'ui-monospace, monospace' }
-const smallBtn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
-  background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
-  fontSize: fs.label, padding: '0.08rem 0.3rem', color,
-})
 const PROV_COLORS: Record<Provenance, string> = { manual: 'var(--status-caution)', formula: 'var(--cat-2)', column: 'var(--interactive)', agent: 'var(--status-ok)' }
 // English text is the i18n key
 const PROV_LABELS: Record<string, string> = { manual: 'manual', formula: 'formula', column: 'column', agent: 'agent' }
@@ -162,13 +153,11 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
     setAdding(false); setNewName(''); setNewUnit(''); setNewValue('')
   }
 
-  const th: React.CSSProperties = { textAlign: 'left', padding: '0.15rem 0.3rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-  const td: React.CSSProperties = { padding: compact ? '0.15rem 0.3rem' : '0.25rem 0.4rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
 
   return (
-    <div style={{ fontSize: fs.label }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
+    <div className="t-12">
+      <div className="flex ai-c gap-2 mb-1 wrap">
+        <span className="c-2 t-12">
           {t('{{count}} parameters', { count: params.length, defaultValue_one: '{{count}} parameter' })} · {t('formulas use names on this element,')} <code>el("Name").x</code>, <code>children("mass_kg")</code>, <code>budget("power")</code>
         </span>
         {optionId && (
@@ -177,38 +166,38 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
             {t('editing option: {{name}}', { name: optionName })}
           </span>
         )}
-        <span style={{ flex: 1 }} />
-        <button style={smallBtn('var(--interactive)')} onClick={() => setAdding(v => !v)}>{t('+ parameter')}</button>
-        <button style={smallBtn('var(--cat-2)')} disabled={!studyId || recompute.isPending} onClick={() => recompute.mutate()}>
+        <span className="grow" />
+        <button className="c2o-btn c2o-btn--sm" onClick={() => setAdding(v => !v)}>{t('+ parameter')}</button>
+        <button className="c2o-btn c2o-btn--sm" disabled={!studyId || recompute.isPending} onClick={() => recompute.mutate()}>
           {recompute.isPending ? t('Recomputing…') : t('Recompute')}
         </button>
       </div>
       {error && (
-        <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginBottom: '0.3rem' }}>
-          {error} <button style={smallBtn('var(--status-alarm)')} onClick={() => setError(null)}>{t('dismiss')}</button>
+        <div className="c-alarm t-12 mb-1">
+          {error} <button className="c2o-btn c2o-btn--sm" onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
       {adding && (
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('name (e.g. peak_power_w)')} style={{ ...inputStyle, minWidth: 160 }}
+        <div className="flex gap-1 ai-c mb-1 wrap">
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('name (e.g. peak_power_w)')} className="c2o-input c2o-input--sm" style={{ minWidth: 160 }}
             onKeyDown={e => e.key === 'Enter' && addParam()} />
-          <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder={t('unit')} style={{ ...inputStyle, width: 60 }} />
-          <input value={newValue} onChange={e => setNewValue(e.target.value)} placeholder={t('value (optional)')} style={{ ...inputStyle, width: 110 }}
+          <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder={t('unit')} className="c2o-input c2o-input--sm" style={{ width: 60 }} />
+          <input value={newValue} onChange={e => setNewValue(e.target.value)} placeholder={t('value (optional)')} className="c2o-input c2o-input--sm" style={{ width: 110 }}
             onKeyDown={e => e.key === 'Enter' && addParam()} />
-          <button style={smallBtn('var(--status-ok)')} disabled={!newName.trim()} onClick={addParam}>{t('add')}</button>
-          <button style={smallBtn()} onClick={() => setAdding(false)}>{t('cancel')}</button>
+          <button className="c2o-btn c2o-btn--sm" disabled={!newName.trim()} onClick={addParam}>{t('add')}</button>
+          <button className="c2o-btn c2o-btn--sm" onClick={() => setAdding(false)}>{t('cancel')}</button>
         </div>
       )}
-      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Loading…')}</div>}
+      {isLoading && <div className="c-2">{t('Loading…')}</div>}
       {!isLoading && params.length === 0 && (
-        <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('No parameters on this element yet.')}</div>
+        <div className="c-2 t-12">{t('No parameters on this element yet.')}</div>
       )}
       {params.length > 0 && (
-        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <table className={compact ? "c2o-table c2o-table--dense" : "c2o-table"}>
           <thead>
             <tr>
-              <th style={th}>{t('Name')}</th><th style={th}>{t('Value')}</th><th style={th}>{t('Unit')}</th><th style={th}>{t('Switch')}</th>
-              <th style={th}>{t('Formula')}</th><th style={th}>{t('Source')}</th><th style={th}></th>
+              <th>{t('Name')}</th><th>{t('Value')}</th><th>{t('Unit')}</th><th>{t('Switch')}</th>
+              <th>{t('Formula')}</th><th>{t('Source')}</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -217,10 +206,10 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
               const hasErr = (p.errors || []).length > 0
               return (
                 <tr key={p.id || p.name}>
-                  <td style={{ ...td, fontWeight: 600, whiteSpace: 'nowrap' }} title={p.quantity_kind || undefined}>{p.name}</td>
-                  <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                  <td className="w-600 nowrap" title={p.quantity_kind || undefined}>{p.name}</td>
+                  <td className="nowrap">
                     {isEd ? (
-                      <input value={manual} onChange={e => setManual(e.target.value)} placeholder={t('manual value')} style={{ ...inputStyle, width: 90 }}
+                      <input value={manual} onChange={e => setManual(e.target.value)} placeholder={t('manual value')} className="c2o-input c2o-input--sm" style={{ width: 90 }}
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(p); if (e.key === 'Escape') setEditing(null) }} />
                     ) : (
                       <span onDoubleClick={() => startEdit(p)} title={t('manual {{manual}} · computed {{computed}} · reference {{reference}}', { manual: fmt(p.manual_value), computed: fmt(p.computed_value), reference: fmt(p.reference_value) })}
@@ -229,15 +218,15 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                       </span>
                     )}
                   </td>
-                  <td style={{ ...td, color: 'var(--text-secondary)' }}>{p.unit || ''}</td>
-                  <td style={td}>
-                    <select value={p.value_switch} onChange={e => setSwitch(p, e.target.value as ValueSwitch)} style={{ ...inputStyle, fontSize: fs.label, padding: '0 0.15rem' }}>
+                  <td className="c-2">{p.unit || ''}</td>
+                  <td>
+                    <select value={p.value_switch} onChange={e => setSwitch(p, e.target.value as ValueSwitch)} className="c2o-select c2o-select--sm t-12 py-0 px-1">
                       {VALUE_SWITCHES.map(s => <option key={s} value={s}>{SWITCH_LABELS[s] ? t(SWITCH_LABELS[s]) : s}</option>)}
                     </select>
                   </td>
-                  <td style={{ ...td, minWidth: 140 }}>
+                  <td style={{ minWidth: 140 }}>
                     {isEd ? (
-                      <input value={formula} onChange={e => setFormula(e.target.value)} placeholder={t('e.g. mass_kg * 1.2 or el("Bus").power_avg_w')} style={{ ...monoInput, width: '100%' }}
+                      <input value={formula} onChange={e => setFormula(e.target.value)} placeholder={t('e.g. mass_kg * 1.2 or el("Bus").power_avg_w')} className="c2o-input c2o-input--sm mono w-full"
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(p); if (e.key === 'Escape') setEditing(null) }} />
                     ) : (
                       <span onDoubleClick={() => startEdit(p)} style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: p.formula ? 'var(--cat-2)' : 'var(--text-secondary)', cursor: 'text' }}>
@@ -245,19 +234,19 @@ export function ParameterPanel({ elementId, studyId, compact }: { elementId: str
                         {p.formula && p.formula_kind && <span style={{ opacity: 0.6 }}> [{p.formula_kind}]</span>}
                       </span>
                     )}
-                    {hasErr && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginTop: '0.1rem' }}>{p.errors.join('; ')}</div>}
+                    {hasErr && <div className="c-alarm t-12 mt-1">{p.errors.join('; ')}</div>}
                   </td>
-                  <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                  <td className="nowrap">
                     <ProvenanceChip p={p.provenance} />
                     {p.option_id && <OptionOverrideChip optionName={options.find(o => o.id === p.option_id)?.name ?? optionName} />}
                   </td>
-                  <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                  <td className="nowrap">
                     {isEd ? (<>
-                      <button style={smallBtn('var(--status-ok)')} onClick={() => commitEdit(p)}>{t('save')}</button>{' '}
-                      <button style={smallBtn()} onClick={() => setEditing(null)}>{t('cancel')}</button>
+                      <button className="c2o-btn c2o-btn--sm" onClick={() => commitEdit(p)}>{t('save')}</button>{' '}
+                      <button className="c2o-btn c2o-btn--sm" onClick={() => setEditing(null)}>{t('cancel')}</button>
                     </>) : (<>
-                      <button style={smallBtn()} onClick={() => startEdit(p)}>{t('edit')}</button>{' '}
-                      <button style={smallBtn('var(--status-alarm)')}
+                      <button className="c2o-btn c2o-btn--sm" onClick={() => startEdit(p)}>{t('edit')}</button>{' '}
+                      <button className="c2o-btn c2o-btn--sm"
                         title={p.option_id ? t('Remove the override from option "{{name}}" (the baseline value shows through)', { name: optionName }) : t('Delete (well-known parameters are reset to the column value)')}
                         disabled={!!optionId && !p.option_id}
                         onClick={() => remove.mutate(p.name)}>×</button>
@@ -281,11 +270,11 @@ export function ParameterSection({ elementId, studyId, elementName, defaultOpen 
   const [open, setOpen] = useState(defaultOpen)
   if (!elementId) return null
   return (
-    <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
+    <div className="mt-2 bt pt-2">
       <button onClick={() => setOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label, color: 'var(--cat-2)', fontWeight: 600, padding: 0 }}>
         {open ? '▾' : '▸'} {elementName ? t('Parameters & equations: {{name}}', { name: elementName }) : t('Parameters & equations')}
       </button>
-      {open && <div style={{ marginTop: '0.3rem' }}><ParameterPanel elementId={elementId} studyId={studyId} compact /></div>}
+      {open && <div className="mt-1"><ParameterPanel elementId={elementId} studyId={studyId} compact /></div>}
     </div>
   )
 }

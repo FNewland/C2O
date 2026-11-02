@@ -61,15 +61,6 @@ function ago(iso: string | null | undefined, t: TFunction): string {
   return t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
-const card: React.CSSProperties = {
-  flex: '1 1 120px', minWidth: 110, padding: '0.4rem 0.55rem', borderRadius: 6,
-  background: 'var(--bg-primary)', border: '1px solid var(--border)',
-}
-const btn = (primary = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? 'var(--interactive)' : 'var(--border)'}`,
-  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : 'var(--text-secondary)',
-})
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
@@ -81,12 +72,12 @@ function Badge({ text, color, title }: { text: string; color: string; title?: st
 
 function SummaryCard({ label, value, unit, tone, sub }: { label: string; value: string; unit?: string; tone?: string; sub?: string }) {
   return (
-    <div style={card}>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
+    <div className="c2o-card">
+      <div className="t-12 c-2 caps">{label}</div>
       <div style={{ fontSize: fs.value, fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
         {value}{unit && <span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
       </div>
-      {sub && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{sub}</div>}
+      {sub && <div className="t-12 c-2">{sub}</div>}
     </div>
   )
 }
@@ -171,7 +162,7 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
   const minSoc = series?.inputs?.min_soc_pct as number | undefined
   const storage = series?.inputs?.storage_gb as number | null | undefined
 
-  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div className="t-12 c-2">{t('Select a study.')}</div>
 
   const s = run?.summary ?? {}
   const socTone = s.sim_min_soc_pct === undefined ? undefined : s.sim_min_soc_pct < (minSoc ?? 20) ? 'var(--status-alarm)' : 'var(--status-ok)'
@@ -180,34 +171,34 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
   const backlogTone = s.sim_data_backlog_end_gb === undefined ? undefined : s.sim_data_backlog_end_gb > 0.05 ? 'var(--status-caution)' : 'var(--status-ok)'
 
   return (
-    <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="t-12 stack gap-2">
       {/* header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: fs.label }}>{t('Mission simulation')}</strong>
+      <div className="flex ai-c gap-2 wrap">
+        <strong className="t-12">{t('Mission simulation')}</strong>
         {run ? (
           <>
             <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? 'var(--status-ok)' : 'var(--status-alarm)'} title={run.finished_at || undefined} />
             {run.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('The model changed since this run — re-run to refresh')} />}
-            {s.n_orbits !== undefined && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('{{n}} orbits · {{samples}} samples', { n: s.n_orbits, samples: s.samples ?? '?' })}</span>}
+            {s.n_orbits !== undefined && <span className="c-2 t-12">{t('{{n}} orbits · {{samples}} samples', { n: s.n_orbits, samples: s.samples ?? '?' })}</span>}
           </>
-        ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>{t('loading…')}</span>
+        ) : runQ.isLoading ? <span className="c-2">{t('loading…')}</span>
           : <Badge text={t('never run')} color="var(--text-3)" />}
-        <span style={{ flex: 1 }} />
-        <label style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
+        <span className="grow" />
+        <label className="c-2 t-12">
           {t('orbits')}{' '}
           <input type="number" min={1} max={200} value={nOrbits} onChange={e => setNOrbits(Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
                  style={{ width: 46, fontSize: fs.label, padding: '0.1rem 0.25rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }} />
         </label>
-        <button style={btn(true)} disabled={runMut.isPending} onClick={() => runMut.mutate()}>
+        <button className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={runMut.isPending} onClick={() => runMut.mutate()}>
           {runMut.isPending ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
       </div>
-      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{error}</div>}
-      {run?.status === 'failed' && s.error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
+      {error && <div className="c-alarm t-12">{error}</div>}
+      {run?.status === 'failed' && s.error && <div className="c-alarm t-12">{t('Last run failed: {{error}}', { error: s.error })}</div>}
 
       {/* summary cards */}
       {run && run.status === 'ok' && (
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+        <div className="flex gap-2 wrap">
           <SummaryCard label={t('Min SoC')} value={fmt(s.sim_min_soc_pct)} unit="%" tone={socTone}
                        sub={s.min_soc_mode ? (minSoc !== undefined ? t('in {{mode}} · limit {{limit}} %', { mode: s.min_soc_mode, limit: minSoc }) : t('in {{mode}}', { mode: s.min_soc_mode })) : undefined} />
           <SummaryCard label={t('Energy balance')} value={(s.sim_energy_balance_wh_per_orbit ?? 0) >= 0 ? `+${fmt(s.sim_energy_balance_wh_per_orbit, 2)}` : fmt(s.sim_energy_balance_wh_per_orbit, 2)} unit={t('Wh/orbit')} tone={ebTone}
@@ -224,28 +215,28 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
 
       {/* warnings */}
       {!!s.warnings?.length && (
-        <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--status-caution)', fontSize: fs.label }}>
+        <ul className="m-0 pl-4 c-caution t-12">
           {s.warnings.map((w, i) => <li key={i}>{w}</li>)}
         </ul>
       )}
 
       {/* plots */}
-      {seriesQ.isLoading && run?.status === 'ok' && <div style={{ color: 'var(--text-secondary)' }}>{t('loading series…')}</div>}
+      {seriesQ.isLoading && run?.status === 'ok' && <div className="c-2">{t('loading series…')}</div>}
       {series && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.5rem' }}>
-          <div style={card}>
+          <div className="c2o-card">
             <SVGLineChart title={t('Battery state of charge')} series={socSeries} bands={bands} xLabel="h" yLabel="SoC [%]" yMin={0} yMax={100}
                           refLines={minSoc !== undefined ? [{ y: minSoc, label: t('min {{value}} %', { value: minSoc }) }] : []} height={190} />
           </div>
-          <div style={card}>
+          <div className="c2o-card">
             <SVGLineChart title={t('Generation vs load')} series={powerSeries} xLabel="h" yLabel="W" yMin={0} height={190} />
           </div>
-          <div style={card}>
+          <div className="c2o-card">
             <SVGLineChart title={t('On-board data buffer')} series={dataSeries} bands={bands} xLabel="h" yLabel="GB" yMin={0}
                           refLines={storage ? [{ y: storage, label: t('storage {{value}} GB', { value: fmt(storage, 1) }) }] : []} height={190} />
           </div>
           {tempSeries.length > 0 && (
-            <div style={card}>
+            <div className="c2o-card">
               <SVGLineChart title={t('Temperature (single node)')} series={tempSeries} xLabel="h" yLabel="°C" refLines={[{ y: 0, label: t('heater on'), color: 'var(--interactive)' }]} height={190} />
             </div>
           )}
@@ -255,26 +246,26 @@ export function MissionSimulationPanel({ studyId, optionId }: { studyId: string 
       {/* what limited me */}
       {run && run.status === 'ok' && (
         <div>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+          <div className="t-12 c-2 mb-1">
             {t('What limited me')} {conflicts.length ? `(${conflicts.length})` : ''}
           </div>
           {conflicts.length === 0 ? (
-            <div style={{ color: 'var(--status-ok)', fontSize: fs.label }}>{t('No limits hit: SoC, energy balance, data and safe-mode time are all within bounds.')}</div>
+            <div className="c-ok t-12">{t('No limits hit: SoC, energy balance, data and safe-mode time are all within bounds.')}</div>
           ) : (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <ul className="list-reset m-0 p-0 stack gap-1">
               {conflicts.map(c => {
                 const color = SEVERITY_COLORS[c.severity] || 'var(--text-3)'
                 return (
-                  <li key={c.id} style={{ ...card, borderLeft: `3px solid ${color}` }}>
-                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <li key={c.id} className="c2o-card" style={{ borderLeft: `3px solid ${color}` }}>
+                    <div className="flex gap-2 ai-c wrap">
                       <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
-                      <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.code}</span>
-                      <strong style={{ fontSize: fs.label }}>{c.title}</strong>
+                      <span className="mono t-12 c-2">{c.code}</span>
+                      <strong className="t-12">{c.title}</strong>
                     </div>
                     {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
                     {c.suggested_fix && (
                       <div style={{ fontSize: fs.label, marginTop: 2 }}>
-                        <span style={{ color: 'var(--interactive)' }}>{t('Fix:')} </span>{c.suggested_fix}
+                        <span className="c-accent">{t('Fix:')} </span>{c.suggested_fix}
                       </div>
                     )}
                   </li>

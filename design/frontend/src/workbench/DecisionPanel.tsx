@@ -15,6 +15,7 @@ import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
 import { fs } from '../theme/tokens'
 import { showAlert } from '../components/ui/Dialog'
+import { Button, Disclosure } from '../components/ui'
 
 const API = '/api'
 
@@ -42,10 +43,10 @@ export function DecisionPanel() {
   const isGroundSegment = focusElement?.segment === 'ground'
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label, overflow: 'auto', maxHeight: '100%' }}>
-      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.5rem', color: 'var(--status-caution)' }}>
+    <div className="c2o-pane">
+      <h2 className="c2o-panel__title mb-2">
         {t('Decision Support — Level {{level}}', { level: currentLevel })}
-      </div>
+      </h2>
 
       {/* Decision categorization — always shown */}
       <DecisionCategorizer currentLevel={currentLevel} focusElement={focusElement} />
@@ -103,33 +104,33 @@ function MissionTradeWidget(_props: { studyId: string | null }) {
 
   return (
     <ToolSection title={t('Mission Trade: Space vs Alternatives')} color="var(--interactive)">
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <label style={labelStyle}>{t('GSD (m):')} <input type="number" value={gsd} onChange={e => setGsd(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>{t('Revisit (days):')} <input type="number" value={revisit} onChange={e => setRevisit(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>{t('Budget (kEUR/yr):')} <input type="number" value={budget} onChange={e => setBudget(e.target.value)} style={inputStyle} /></label>
+      <div className="flex gap-1 mb-1 wrap">
+        <label className="c2o-inline-field">{t('GSD (m):')} <input type="number" value={gsd} onChange={e => setGsd(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
+        <label className="c2o-inline-field">{t('Revisit (days):')} <input type="number" value={revisit} onChange={e => setRevisit(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
+        <label className="c2o-inline-field">{t('Budget (kEUR/yr):')} <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
       </div>
-      <button onClick={runTrade} disabled={loading} style={btnStyle}>
+      <Button onClick={runTrade} busy={loading} variant="primary" size="sm">
         {loading ? t('Analysing...') : t('Evaluate Alternatives')}
-      </button>
+      </Button>
       {result?.alternatives && (
-        <div style={{ marginTop: '0.4rem' }}>
+        <div className="mt-2">
           {result.question && (
-            <div style={{ fontSize: fs.label, color: 'var(--accent)', fontWeight: 600, marginBottom: '0.3rem' }}>{result.question}</div>
+            <div className="t-12 c-accent w-600 mb-1">{result.question}</div>
           )}
           {result.alternatives.map((alt: any, i: number) => {
             const score = alt.score ?? (alt.rank ? (1 - (alt.rank - 1) * 0.15) : 0.5)
             return (
-              <div key={i} style={{ ...rowStyle, borderLeft: `3px solid ${score > 0.7 ? 'var(--success)' : score > 0.4 ? 'var(--warning)' : 'var(--danger)'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.15rem' }}>
-                  <span style={{ fontWeight: 600 }}>{alt.name}</span>
-                  <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
-                    {alt.category && <span style={{ marginRight: '0.3rem' }}>{alt.category}</span>}
+              <div key={i} className={`c2o-dec-row ${score > 0.7 ? '' : score > 0.4 ? 'is-caution' : 'is-alarm'}`}>
+                <div className="flex jc-sb mb-1">
+                  <span className="w-600">{alt.name}</span>
+                  <span className="t-12 c-2">
+                    {alt.category && <span className="mr-1">{alt.category}</span>}
                     #{alt.rank || i + 1}
                   </span>
                 </div>
-                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{alt.description}</div>
+                <div className="t-12 c-2">{alt.description}</div>
                 {alt.gsd_m && (
-                  <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                  <div className="t-12 c-2 mt-1">
                     {t('GSD: {{gsd}}m | Revisit: {{revisit}}d | Cost: {{cost}} kEUR/yr', { gsd: alt.gsd_m, revisit: alt.revisit_days, cost: alt.annual_cost_keur })}
                   </div>
                 )}
@@ -137,7 +138,7 @@ function MissionTradeWidget(_props: { studyId: string | null }) {
             )
           })}
           {result.recommendation && (
-            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(16,185,129,0.1)', borderRadius: '3px', fontSize: fs.label, color: 'var(--success)' }}>
+            <div className="mt-1 p-1 bg-ok rounded t-12 c-ok">
               {result.recommendation}
             </div>
           )}
@@ -166,43 +167,43 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
 
   return (
     <ToolSection title={t('Orbit Trade Study')} color="var(--cat-2)">
-      <button onClick={runTrade} disabled={loading} style={btnStyle}>
+      <Button onClick={runTrade} busy={loading} variant="primary" size="sm">
         {loading ? t('Computing...') : t('Evaluate Orbit Options')}
-      </button>
+      </Button>
       {result?.candidates && (
-        <div style={{ marginTop: '0.4rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
+        <div className="mt-2">
+          <table className="c2o-table c2o-table--dense">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th style={thL}>{t('Orbit')}</th>
-                <th style={thR}>{t('Alt', { context: 'column' })}</th>
-                <th style={thR}>{t('Inc', { context: 'column' })}</th>
-                <th style={thR}>GSD</th>
-                <th style={thR}>{t('Revisit')}</th>
-                <th style={thR}>{t('Lifetime')}</th>
-                <th style={thR}>{t('Score')}</th>
-                <th style={thC}>{t('Deorbit')}</th>
-                <th style={thC}></th>
+              <tr className="bb">
+                <th>{t('Orbit')}</th>
+                <th className="num">{t('Alt', { context: 'column' })}</th>
+                <th className="num">{t('Inc', { context: 'column' })}</th>
+                <th className="num">GSD</th>
+                <th className="num">{t('Revisit')}</th>
+                <th className="num">{t('Lifetime')}</th>
+                <th className="num">{t('Score')}</th>
+                <th className="ctr">{t('Deorbit')}</th>
+                <th className="ctr"></th>
               </tr>
             </thead>
             <tbody>
               {result.candidates.map((c: any, i: number) => (
-                <tr key={i} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
-                  <td style={{ padding: '0.2rem 0.3rem', fontWeight: 500 }}>{c.name || c.orbit_type}</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.altitude_km}</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.inclination_deg?.toFixed(1)}</td>
+                <tr key={i} className="bb">
+                  <td className="p-1 w-500">{c.name || c.orbit_type}</td>
+                  <td className="p-1 ta-r mono">{c.altitude_km}</td>
+                  <td className="p-1 ta-r mono">{c.inclination_deg?.toFixed(1)}</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', color: c.meets_gsd ? 'var(--success)' : 'var(--text-secondary)' }}>{c.achievable_gsd_m?.toFixed(1)}m</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace' }}>{c.revisit_days?.toFixed(0)}d</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', fontSize: fs.label }}>{c.natural_lifetime_years?.toFixed(0)}yr</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', color: 'var(--success)' }}>{((c.total_score || c.weighted_score || c.score || 0) * 100).toFixed(0)}%</td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
+                  <td className="p-1 ta-r mono">{c.revisit_days?.toFixed(0)}d</td>
+                  <td className="p-1 ta-r mono t-12">{c.natural_lifetime_years?.toFixed(0)}yr</td>
+                  <td className="p-1 ta-r mono c-ok">{((c.total_score || c.weighted_score || c.score || 0) * 100).toFixed(0)}%</td>
+                  <td className="p-1 ta-c">
                     {c.compliant_25yr != null ? (
                       <span style={{ color: c.compliant_25yr ? 'var(--success)' : 'var(--danger)' }}>
                         {c.compliant_25yr ? '✓' : '✗'} {c.natural_lifetime_years != null ? `(${c.natural_lifetime_years}yr)` : ''}
                       </span>
                     ) : '—'}
                   </td>
-                  <td style={{ padding: '0.2rem 0.3rem', textAlign: 'center' }}>
+                  <td className="p-1 ta-c">
                     <button onClick={async () => {
                       // Apply this orbit to the focused spacecraft element
                       const fid = useUIStore.getState().focusElementId
@@ -220,7 +221,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                       })
                       qc.invalidateQueries({ queryKey: ['elements'] })
                       void showAlert(i18n.t('Applied: {{name}} ({{alt}}km, {{incl}}°)', { name: c.name, alt: c.altitude_km, incl: c.inclination_deg }))
-                    }} style={{ ...btnStyle, fontSize: fs.label, padding: '0.1rem 0.3rem', background: 'var(--success)' }}>
+                    }} type="button" className="c2o-btn c2o-btn--sm">
                       {t('Apply')}
                     </button>
                   </td>
@@ -263,27 +264,27 @@ function ConstellationWidget(_props: { studyId: string | null }) {
 
   return (
     <ToolSection title={t('Constellation Sizing')} color="var(--interactive)">
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <label style={labelStyle}>{t('Alt (km):')} <input type="number" value={altitude} onChange={e => setAltitude(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>{t('Inc (°):')} <input type="number" value={inclination} onChange={e => setInclination(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>{t('Revisit (h):')} <input type="number" value={revisitHours} onChange={e => setRevisitHours(e.target.value)} style={inputStyle} /></label>
+      <div className="flex gap-1 mb-1 wrap">
+        <label className="c2o-inline-field">{t('Alt (km):')} <input type="number" value={altitude} onChange={e => setAltitude(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
+        <label className="c2o-inline-field">{t('Inc (°):')} <input type="number" value={inclination} onChange={e => setInclination(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
+        <label className="c2o-inline-field">{t('Revisit (h):')} <input type="number" value={revisitHours} onChange={e => setRevisitHours(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
       </div>
-      <button onClick={runDesign} disabled={loading} style={btnStyle}>
+      <Button onClick={runDesign} busy={loading} variant="primary" size="sm">
         {loading ? t('Computing...') : t('Size Constellation')}
-      </button>
+      </Button>
       {result && (
-        <div style={{ marginTop: '0.4rem', fontSize: fs.label }}>
+        <div className="mt-2 t-12">
           {(result.candidates || result.options || []).map((opt: any, i: number) => (
-            <div key={i} style={rowStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600 }}>
+            <div key={i} className="c2o-dec-row">
+              <div className="flex jc-sb">
+                <span className="w-600">
                   {opt.walker_notation || t('{{planes}}P × {{sats}}S = {{total}} sats', { planes: opt.num_planes || opt.planes, sats: opt.sats_per_plane, total: opt.total_satellites || opt.total_sats })}
                 </span>
-                <span style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>
+                <span className="c-accent mono">
                   {opt.total_cost_meur != null ? `${opt.total_cost_meur.toFixed(1)}M€` : ''}
                 </span>
               </div>
-              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+              <div className="t-12 c-2">
                 {t('Revisit: {{max}}h max, {{mean}}h mean', { max: (opt.max_revisit_hours || opt.revisit_hours)?.toFixed(1), mean: (opt.mean_revisit_hours)?.toFixed(1) })}
                 {opt.coverage_percent != null && t(' | Coverage: {{pct}}%', { pct: opt.coverage_percent.toFixed(0) })}
                 {opt.total_mass_kg != null && t(' | Mass: {{mass}}kg', { mass: opt.total_mass_kg })}
@@ -306,13 +307,13 @@ function ConstellationWidget(_props: { studyId: string | null }) {
                 })
                 qc.invalidateQueries({ queryKey: ['elements'] })
                 void showAlert(i18n.t('Applied: {{what}}', { what: opt.walker_notation || i18n.t('{{n}} sats', { n: opt.total_satellites }) }))
-              }} style={{ ...btnStyle, fontSize: fs.label, padding: '0.1rem 0.3rem', background: 'var(--success)', marginTop: '0.15rem' }}>
+              }} type="button" className="c2o-btn c2o-btn--sm mt-1">
                 {t('Apply to Design')}
               </button>
             </div>
           ))}
           {result.count != null && (
-            <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+            <div className="t-12 c-2 mt-1">
               {t('{{count}} configurations evaluated', { count: result.count })}
             </div>
           )}
@@ -340,18 +341,18 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
 
   return (
     <ToolSection title={t('Ground Segment Trade')} color="var(--status-ok)">
-      <button onClick={runTrade} disabled={loading} style={btnStyle}>
+      <Button onClick={runTrade} busy={loading} variant="primary" size="sm">
         {loading ? t('Analysing...') : t('Evaluate Ground Architectures')}
-      </button>
+      </Button>
       {result?.alternatives && (
-        <div style={{ marginTop: '0.4rem' }}>
+        <div className="mt-2">
           {result.alternatives.map((alt: any, i: number) => (
-            <div key={i} style={rowStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600 }}>{alt.name}</span>
-                <span style={{ fontFamily: 'monospace', color: 'var(--success)' }}>{((alt.score || 0) * 100).toFixed(0)}%</span>
+            <div key={i} className="c2o-dec-row">
+              <div className="flex jc-sb">
+                <span className="w-600">{alt.name}</span>
+                <span className="mono c-ok">{((alt.score || 0) * 100).toFixed(0)}%</span>
               </div>
-              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+              <div className="t-12 c-2">
                 {alt.stations?.join(', ') || alt.description}
                 {alt.contact_minutes_per_day && t(' | {{min}} min/day contact', { min: alt.contact_minutes_per_day.toFixed(0) })}
                 {alt.annual_cost_keur && t(' | {{cost}} kEUR/yr', { cost: alt.annual_cost_keur })}
@@ -359,7 +360,7 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
             </div>
           ))}
           {result.recommendation && (
-            <div style={{ marginTop: '0.3rem', padding: '0.3rem', background: 'rgba(16,185,129,0.1)', borderRadius: '3px', fontSize: fs.label, color: 'var(--success)' }}>
+            <div className="mt-1 p-1 bg-ok rounded t-12 c-ok">
               {result.recommendation}
             </div>
           )}
@@ -425,32 +426,32 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 
   return (
     <ToolSection title={t('Ground Contact Schedule')} color="var(--interactive)">
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+      <div className="t-12 c-2 mb-1">
         {t("Uses your design's orbit parameters and ground stations from the element tree.")}
       </div>
-      <button onClick={runSchedule} disabled={loading} style={btnStyle}>
+      <Button onClick={runSchedule} busy={loading} variant="primary" size="sm">
         {loading ? t('Computing...') : t('Predict Contact Windows')}
-      </button>
+      </Button>
       {result?._design_context && (
-        <div style={{ fontSize: fs.label, color: 'var(--info)', marginTop: '0.2rem' }}>
+        <div className="t-12 c-accent mt-1">
           {t('Using: {{alt}}km, {{incl}}° inc, {{count}} ground stations, {{sc}} spacecraft', { alt: result._design_context.altitude, incl: result._design_context.inclination, count: result._design_context.ground_stations, sc: result._design_context.spacecraft, defaultValue_one: 'Using: {{alt}}km, {{incl}}° inc, {{count}} ground station, {{sc}} spacecraft' })}
         </div>
       )}
       {result && (
-        <div style={{ marginTop: '0.4rem', fontSize: fs.label }}>
+        <div className="mt-2 t-12">
           {(result.coverage_stats || result.contacts) && (
-            <div style={rowStyle}>
+            <div className="c2o-dec-row">
               <span>{t('Contacts:')} <b>{result.contacts?.length || result.coverage_stats?.total_passes_per_day || '?'}</b></span>
               {result.coverage_stats?.total_contact_minutes_per_day && (
-                <span style={{ marginLeft: '0.5rem' }}>{t('Contact:')} <b>{t('{{min}} min/day', { min: result.coverage_stats.total_contact_minutes_per_day.toFixed(1) })}</b></span>
+                <span className="ml-2">{t('Contact:')} <b>{t('{{min}} min/day', { min: result.coverage_stats.total_contact_minutes_per_day.toFixed(1) })}</b></span>
               )}
             </div>
           )}
           {(result.contacts || result.windows)?.slice(0, 8).map((w: any, i: number) => {
             const dur = w.duration_min ?? ((w.end_s - w.start_s) / 60)
             return (
-              <div key={i} style={{ padding: '0.15rem 0.3rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
-                <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{w.station || w.station_id}</span>
+              <div key={i} className="p-1 t-12 c-2 bb">
+                <span className="w-500 c-1">{w.station || w.station_id}</span>
                 {' '}{t('{{dur}} min | max el: {{el}}°', { dur: dur.toFixed(1), el: w.max_elevation_deg?.toFixed(0) })}
                 {w.data_volume_mbit && ` | ${(w.data_volume_mbit / 1000).toFixed(1)} Gbit`}
               </div>
@@ -503,18 +504,18 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
 
   return (
     <ToolSection title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="var(--cat-6)">
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+      <div className="t-12 c-2 mb-1">
         {t('Score each option vs datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse.')}
         {' '}{hasWeights ? t('Weights from pairwise comparison applied.') : t('Define weights above for weighted scoring.')}
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label, marginBottom: '0.3rem' }}>
+      <table className="c2o-table c2o-table--dense mb-1">
         <thead>
-          <tr style={{ borderBottom: '1px solid var(--border)' }}>
-            <th style={thL}>{t('Criteria')}</th>
-            {hasWeights && <th style={thR}>{t('Wt')}</th>}
+          <tr className="bb">
+            <th>{t('Criteria')}</th>
+            {hasWeights && <th className="num">{t('Wt')}</th>}
             {options.map((opt, i) => (
-              <th key={opt} style={{ ...thC, background: i === datum ? 'rgba(59,130,246,0.1)' : i === best ? 'rgba(16,185,129,0.1)' : undefined, cursor: 'pointer' }}
+              <th key={opt} className={`ctr c2o-pugh__opt${i === datum ? ' is-datum' : i === best ? ' is-best' : ''}`}
                 onClick={() => setDatum(i)} title={t('Click to set as datum')}>
                 {opt} {i === datum ? '(D)' : i === best ? '★' : ''}
               </th>
@@ -523,12 +524,12 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
         </thead>
         <tbody>
           {criteria.map(crit => (
-            <tr key={crit} style={{ borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
-              <td style={{ padding: '0.15rem 0.3rem', fontWeight: 500 }}>{t(crit, { context: 'criterion' })}</td>
-              {hasWeights && <td style={{ padding: '0.15rem 0.3rem', textAlign: 'right', fontSize: fs.label, color: 'var(--accent)' }}>{((weights?.[crit] ?? 0) * 100).toFixed(0)}%</td>}
+            <tr key={crit} className="bb">
+              <td className="p-1 w-500">{t(crit, { context: 'criterion' })}</td>
+              {hasWeights && <td className="p-1 ta-r t-12 c-accent">{((weights?.[crit] ?? 0) * 100).toFixed(0)}%</td>}
               {options.map((opt, i) => (
-                <td key={opt} style={{ padding: '0.15rem', textAlign: 'center' }}>
-                  {i === datum ? <span style={{ color: 'var(--text-secondary)' }}>D</span> : (
+                <td key={opt} className="p-1 ta-c">
+                  {i === datum ? <span className="c-2">D</span> : (
                     <select value={getScore(opt, crit)} onChange={e => setScore(opt, crit, parseInt(e.target.value))}
                       style={{ width: 40, fontSize: fs.label, padding: '0.1rem', borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: getScore(opt, crit) > 0 ? 'var(--success)' : getScore(opt, crit) < 0 ? 'var(--danger)' : 'var(--text-secondary)', textAlign: 'center' }}>
                       <option value={2}>+2</option><option value={1}>+1</option><option value={0}>0</option><option value={-1}>−1</option><option value={-2}>−2</option>
@@ -539,7 +540,7 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
             </tr>
           ))}
           <tr style={{ borderTop: '2px solid var(--border)' }}>
-            <td style={{ padding: '0.2rem 0.3rem', fontWeight: 700 }}>{hasWeights ? t('Weighted Total') : t('Total')}</td>
+            <td className="p-1 w-600">{hasWeights ? t('Weighted Total') : t('Total')}</td>
             {hasWeights && <td />}
             {totals.map((tot, i) => (
               <td key={i} style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 700, color: i === datum ? 'var(--text-secondary)' : i === best ? 'var(--success)' : tot.weighted > 0 ? 'var(--success)' : tot.weighted < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
@@ -550,10 +551,10 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
         </tbody>
       </table>
 
-      <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
-        <input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} placeholder={t('+ criterion')} style={{ ...inputStyle, width: 80 }}
+      <div className="flex gap-1 wrap">
+        <input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} placeholder={t('+ criterion')} className="c2o-input c2o-input--sm c2o-w-num"
           onKeyDown={e => { if (e.key === 'Enter' && newCriterion) { onCriteriaChanged([...criteria, newCriterion]); setNewCriterion('') } }} />
-        <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder={t('+ option')} style={{ ...inputStyle, width: 80 }}
+        <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder={t('+ option')} className="c2o-input c2o-input--sm c2o-w-num"
           onKeyDown={e => { if (e.key === 'Enter' && newOption) { setOptions(p => [...p, newOption]); setNewOption('') } }} />
       </div>
     </ToolSection>
@@ -609,13 +610,13 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
 
   return (
     <ToolSection title={t('Pairwise Comparison Weighting')} color="var(--cat-2)">
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+      <div className="t-12 c-2 mb-1">
         {t('For each pair: which criterion is more important? 1 = left wins, 0.5 = equal, 0 = right wins')}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.4rem' }}>
+      <div className="stack gap-1 mb-2">
         {pairs.map(([a, b]) => (
-          <div key={`${a}-${b}`} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label }}>
+          <div key={`${a}-${b}`} className="flex ai-c gap-1 t-12">
             <span style={{ width: 60, textAlign: 'right', fontWeight: 500 }}>{t(a, { context: 'criterion' })}</span>
             <input type="range" min={0} max={1} step={0.5} value={comparisons[pairKey(a, b)] ?? 0.5}
               onChange={e => setComparison(a, b, parseFloat(e.target.value))}
@@ -629,18 +630,18 @@ function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged
       </div>
 
       {/* Derived weights */}
-      <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.2rem', color: 'var(--text-secondary)' }}>{t('Derived Weights:')}</div>
-      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+      <div className="t-12 w-600 mb-1 c-2">{t('Derived Weights:')}</div>
+      <div className="flex gap-1 wrap">
         {normalizedWeights.sort((a, b) => b.weight - a.weight).map(w => (
-          <div key={w.criterion} style={{ padding: '0.15rem 0.4rem', borderRadius: '3px', background: 'var(--bg-card)', fontSize: fs.label }}>
-            <span style={{ fontWeight: 500 }}>{t(w.criterion, { context: 'criterion' })}</span>
-            <span style={{ marginLeft: '0.3rem', color: 'var(--accent)', fontWeight: 600 }}>{(w.weight * 100).toFixed(0)}%</span>
+          <div key={w.criterion} className="py-1 px-2 rounded bg-2 t-12">
+            <span className="w-500">{t(w.criterion, { context: 'criterion' })}</span>
+            <span className="ml-1 c-accent w-600">{(w.weight * 100).toFixed(0)}%</span>
           </div>
         ))}
       </div>
 
       <input value={newCrit} onChange={e => setNewCrit(e.target.value)} placeholder={t('+ criterion')}
-        style={{ ...inputStyle, marginTop: '0.3rem', width: 100 }}
+        className="c2o-input c2o-input--sm c2o-w-num mt-2"
         onKeyDown={e => { if (e.key === 'Enter' && newCrit) { onCriteriaChanged([...criteria, newCrit]); setNewCrit('') } }} />
     </ToolSection>
   )
@@ -671,13 +672,13 @@ function CostLearningCurveWidget() {
 
   return (
     <ToolSection title={t('Constellation Cost Learning Curve')} color="var(--status-caution)">
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-        <label style={labelStyle}>{t('First unit (kEUR):')} <input type="number" value={unitCost} onChange={e => setUnitCost(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>{t('Quantity:')} <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} style={inputStyle} /></label>
-        <label style={labelStyle}>{t('Learning rate:')} <input type="number" value={learningRate} onChange={e => setLearningRate(e.target.value)} step="0.01" min="0.7" max="1.0" style={inputStyle} /></label>
+      <div className="flex gap-1 mb-1 wrap">
+        <label className="c2o-inline-field">{t('First unit (kEUR):')} <input type="number" value={unitCost} onChange={e => setUnitCost(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
+        <label className="c2o-inline-field">{t('Quantity:')} <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
+        <label className="c2o-inline-field">{t('Learning rate:')} <input type="number" value={learningRate} onChange={e => setLearningRate(e.target.value)} step="0.01" min="0.7" max="1.0" className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.3rem', fontSize: fs.label }}>
+      <div className="flex gap-3 mb-1 t-12">
         <span>{t('Total:')} <b>{fmtProse(Math.round(cumulative))} kEUR</b></span>
         <span>{t('Average:')} <b>{t('{{cost}} kEUR/unit', { cost: fmtProse(avgCost) })}</b></span>
         <span>{t('Savings vs flat:')} <b>{Math.round((1 - cumulative / (c1 * n)) * 100)}%</b></span>
@@ -693,7 +694,7 @@ function CostLearningCurveWidget() {
           }} title={t('Unit {{n}}: {{cost}} kEUR', { n: u.unit, cost: u.cost })} />
         ))}
       </div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textAlign: 'center' }}>
+      <div className="t-12 c-2 ta-c">
         {t('Unit cost decreases with production experience (Wright learning curve)')}
       </div>
     </ToolSection>
@@ -760,10 +761,10 @@ function DecisionCategorizer({ currentLevel }: { currentLevel: number; focusElem
 
   return (
     <ToolSection title={t('Decision Categorization')} color="var(--interactive)">
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+      <div className="t-12 c-2 mb-1">
         {t("Categorize decisions at this level: what's obvious, what needs a trade, what needs exploration.")}
       </div>
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.2rem' }}>
+      <div className="flex gap-2 mb-1">
         {(['obvious', 'trade', 'explore'] as const).map(bin => (
           <div key={bin} style={{ flex: 1, fontSize: fs.label, textAlign: 'center', padding: '0.15rem', borderRadius: '3px', background: `color-mix(in srgb, ${BIN_COLORS[bin]} 8%, transparent)`, color: BIN_COLORS[bin], fontWeight: 700 }}>
             {BIN_ICONS[bin]} {t(BIN_LABELS[bin])} ({bins[bin].length})
@@ -771,9 +772,9 @@ function DecisionCategorizer({ currentLevel }: { currentLevel: number; focusElem
         ))}
       </div>
       {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.15rem 0.3rem', fontSize: fs.label, borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)' }}>
+        <div key={i} className="flex ai-c gap-1 p-1 t-12 bb">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: BIN_COLORS[item.category], flexShrink: 0 }} />
-          <span style={{ fontWeight: 500, flex: 1 }}>{t(item.item)}</span>
+          <span className="w-500 grow">{t(item.item)}</span>
           <span style={{ color: 'var(--text-secondary)', fontSize: fs.label, maxWidth: 200 }}>{t(item.rationale)}</span>
         </div>
       ))}
@@ -859,17 +860,17 @@ function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel:
 
   return (
     <ToolSection title={t('Architecture Trades')} color="var(--cat-6)">
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+      <div className="t-12 c-2 mb-1">
         {t('Which architecture is right? The driving requirement determines the answer.')}
       </div>
       {trades.map((trade, i) => (
-        <div key={i} style={{ marginBottom: '0.4rem' }}>
-          <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.1rem' }}>{t(trade.name)}</div>
-          <div style={{ fontSize: fs.label, color: 'var(--warning)', marginBottom: '0.2rem' }}>{t('Driver: {{driver}}', { driver: t(trade.driver) })}</div>
+        <div key={i} className="mb-2">
+          <div className="w-600 t-12 mb-1">{t(trade.name)}</div>
+          <div className="t-12 c-caution mb-1">{t('Driver: {{driver}}', { driver: t(trade.driver) })}</div>
           {trade.options.map((opt, j) => (
-            <div key={j} style={{ display: 'flex', gap: '0.3rem', padding: '0.1rem 0.3rem', fontSize: fs.label, borderLeft: '2px solid var(--border)', marginLeft: '0.3rem', marginBottom: '0.1rem' }}>
+            <div key={j} className="flex gap-1 p-1 t-12 bl ml-1 mb-1">
               <span style={{ fontWeight: 500, minWidth: 120 }}>{t(opt.name)}</span>
-              <span style={{ color: 'var(--text-secondary)' }}>→ {t(opt.when)}</span>
+              <span className="c-2">→ {t(opt.when)}</span>
             </div>
           ))}
         </div>
@@ -880,35 +881,7 @@ function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel:
 
 // ─── Shared components ───
 
-function ToolSection({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div style={{ marginBottom: '0.5rem', borderLeft: `3px solid ${color}`, paddingLeft: '0.5rem' }}>
-      <button onClick={() => setOpen(!open)} style={{
-        background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label,
-        fontWeight: 600, color, padding: 0, marginBottom: '0.2rem',
-      }}>
-        {open ? '▾' : '▸'} {title}
-      </button>
-      {open && <div style={{ paddingTop: '0.2rem' }}>{children}</div>}
-    </div>
-  )
+function ToolSection({ title, children }: { title: string; color?: string; children: React.ReactNode }) {
+  return <Disclosure ruled summary={title}>{children}</Disclosure>
 }
 
-const btnStyle: React.CSSProperties = {
-  padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
-  background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer',
-}
-const rowStyle: React.CSSProperties = {
-  padding: '0.25rem 0.3rem', borderRadius: '3px', background: 'var(--bg-card)',
-  marginBottom: '0.2rem', fontSize: fs.label,
-}
-const inputStyle: React.CSSProperties = {
-  width: 60, padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px',
-  background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-  marginLeft: '0.2rem',
-}
-const labelStyle: React.CSSProperties = { fontSize: fs.label, color: 'var(--text-secondary)' }
-const thL: React.CSSProperties = { textAlign: 'left', padding: '0.2rem 0.3rem', color: 'var(--text-secondary)', fontWeight: 500, fontSize: fs.label }
-const thR: React.CSSProperties = { ...thL, textAlign: 'right' }
-const thC: React.CSSProperties = { ...thL, textAlign: 'center' }

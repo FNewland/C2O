@@ -74,19 +74,6 @@ function ago(iso: string | null | undefined): string {
   return i18n.t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
-const card: React.CSSProperties = {
-  flex: '1 1 140px', minWidth: 130, padding: '0.4rem 0.55rem', borderRadius: 6,
-  background: 'var(--bg-primary)', border: '1px solid var(--border)',
-}
-const btn = (primary = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? 'var(--interactive)' : 'var(--border)'}`,
-  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : 'var(--text-secondary)',
-})
-const th: React.CSSProperties = { textAlign: 'left', fontWeight: 500, color: 'var(--text-secondary)', padding: '0.15rem 0.35rem', fontSize: fs.label, textTransform: 'uppercase', letterSpacing: '0.03em', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top' }
-const sel: React.CSSProperties = { fontSize: fs.label, background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 3, padding: '0.05rem 0.15rem' }
-const inp: React.CSSProperties = { ...sel, width: '100%', minWidth: 60, boxSizing: 'border-box' }
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
@@ -104,8 +91,8 @@ function LevelBar({ level, r }: { level: VVLevel; r: VVLevelRollup }) {
   const pct = total > 0 ? (100 * closed) / total : 0
   const segs: [VVStatus, number][] = [['passed', r.passed], ['waived', r.waived], ['in_progress', r.in_progress], ['failed', r.failed], ['planned', r.planned]]
   return (
-    <div style={{ ...card, flex: '1 1 160px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+    <div className="c2o-card" style={{ flex: '1 1 160px' }}>
+      <div className="flex jc-sb t-12 c-2 caps">
         <span>{t(LEVEL_LABEL[level] ?? level)}</span>
         <span style={{ fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : pct >= 100 ? 'var(--status-ok)' : r.failed > 0 ? 'var(--status-alarm)' : 'var(--text-primary)' }}>
           {total === 0 ? '—' : `${closed}/${total} · ${pct.toFixed(0)} %`}
@@ -153,53 +140,53 @@ function ItemRow({ item, onPatch, busy }: RowProps) {
   const statusColor = STATUS_COLORS[item.status] || 'var(--text-3)'
   return (
     <tr style={{ opacity: busy ? 0.6 : 1, background: item.status === 'failed' ? 'rgba(239,68,68,0.05)' : undefined }}>
-      <td style={{ ...td, whiteSpace: 'nowrap' }}>
-        <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--accent)', fontSize: fs.label }}>{item.requirement_code}</span>
+      <td className="nowrap">
+        <span className="mono c-accent t-12">{item.requirement_code}</span>
         {item.edited_by_user && <span title={t('Edited by user — the generator only fills empty fields on this row')} style={{ marginLeft: 4, fontSize: fs.label }}>🔒</span>}
       </td>
-      <td style={{ ...td, maxWidth: 260 }} title={item.requirement_text}>
+      <td style={{ maxWidth: 260 }} title={item.requirement_text}>
         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>{item.requirement_text}</div>
         {item.linked_element_names.length > 0 && (
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>→ {item.linked_element_names.join(', ')}</div>
+          <div className="t-12 c-2">→ {item.linked_element_names.join(', ')}</div>
         )}
       </td>
-      <td style={td}>
-        <select value={item.method ?? ''} onChange={e => onPatch(item.id, { method: (e.target.value || null) as VVMethod | null })}
-                style={{ ...sel, color: item.method ? METHOD_COLORS[item.method] : 'var(--text-secondary)', fontWeight: 600 }} title={item.method ? t(METHOD_FULL[item.method]) : ''}>
+      <td>
+        <select aria-label={t('Verification method')} value={item.method ?? ''} onChange={e => onPatch(item.id, { method: (e.target.value || null) as VVMethod | null })}
+                className="c2o-select c2o-select--sm" style={{ color: item.method ? METHOD_COLORS[item.method] : 'var(--text-secondary)', fontWeight: 600 }} title={item.method ? t(METHOD_FULL[item.method]) : ''}>
           <option value="">—</option>
           {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
       </td>
-      <td style={td}>
-        <select value={item.level ?? ''} onChange={e => onPatch(item.id, { level: (e.target.value || null) as VVLevel | null })} style={sel}>
+      <td>
+        <select value={item.level ?? ''} onChange={e => onPatch(item.id, { level: (e.target.value || null) as VVLevel | null })} className="c2o-select c2o-select--sm" aria-label={t('Level')}>
           <option value="">—</option>
           {LEVELS.map(l => <option key={l} value={l}>{t(LEVEL_LABEL[l])}</option>)}
         </select>
       </td>
-      <td style={td}>
-        <select value={item.phase ?? ''} onChange={e => onPatch(item.id, { phase: (e.target.value || null) as VVPhase | null })} style={sel}>
+      <td>
+        <select value={item.phase ?? ''} onChange={e => onPatch(item.id, { phase: (e.target.value || null) as VVPhase | null })} className="c2o-select c2o-select--sm" aria-label={t('Phase')}>
           <option value="">—</option>
           {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       </td>
-      <td style={{ ...td, minWidth: 90 }}>
+      <td style={{ minWidth: 90 }}>
         <input value={facility} onChange={e => setFacility(e.target.value)} onBlur={() => commit('facility', facility)}
-               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={inp} placeholder={t('facility')} />
+               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} className="c2o-input c2o-input--sm" placeholder={t('facility')} />
       </td>
-      <td style={{ ...td, minWidth: 180 }}>
+      <td style={{ minWidth: 180 }}>
         <input value={acceptance} onChange={e => setAcceptance(e.target.value)} onBlur={() => commit('acceptance_criterion', acceptance)}
-               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={inp} placeholder={t('acceptance criterion')} title={acceptance} />
+               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} className="c2o-input c2o-input--sm" placeholder={t('acceptance criterion')} title={acceptance} />
       </td>
-      <td style={{ ...td, whiteSpace: 'nowrap' }}>
-        <select value={item.status} onChange={e => onPatch(item.id, { status: e.target.value as VVStatus })}
-                style={{ ...sel, color: statusColor, fontWeight: 600 }}>
+      <td className="nowrap">
+        <select aria-label={t('Status')} value={item.status} onChange={e => onPatch(item.id, { status: e.target.value as VVStatus })}
+                className="c2o-select c2o-select--sm" style={{ color: statusColor, fontWeight: 600 }}>
           {STATUSES.map(s => <option key={s} value={s}>{t(STATUS_LABEL[s])}</option>)}
         </select>
         {item.auto_closed && <span style={{ marginLeft: 4 }}><Badge text="auto" color="var(--interactive)" title={t('Closed by analysis run {{run}}', { run: item.evidence_ref?.replace('analysis:', '') ?? '' })} /></span>}
       </td>
-      <td style={{ ...td, minWidth: 110 }}>
+      <td style={{ minWidth: 110 }}>
         <input value={evidence} onChange={e => setEvidence(e.target.value)} onBlur={() => commit('evidence_ref', evidence)}
-               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} style={{ ...inp, fontFamily: 'ui-monospace, monospace' }} placeholder={t('evidence ref')} />
+               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} className="c2o-input c2o-input--sm mono" placeholder={t('evidence ref')} />
       </td>
     </tr>
   )
@@ -280,45 +267,45 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
     a.click()
   }
 
-  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div className="t-12 c-2">{t('Select a study.')}</div>
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="stack gap-2">
       {/* header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <h3 style={{ fontSize: fs.body, margin: 0 }}>{t('V&V plan & closure')}</h3>
+      <div className="flex ai-c gap-2 wrap">
+        <h3 className="t-13 m-0">{t('V&V plan & closure')}</h3>
         {lastRun && (
-          <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+          <span className="t-12 c-2">
             {t('last run {{ago}}', { ago: ago(lastRun.finished_at ?? lastRun.started_at) })}
             {lastRun.status === 'failed' && <span style={{ color: 'var(--status-alarm)', marginLeft: 4 }}>{t('failed')}</span>}
           </span>
         )}
         {lastRun?.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('Requirements or elements changed since this run')} />}
         {!lastRun && !runQ.isLoading && <Badge text={t('never run')} color="var(--text-3)" />}
-        <span style={{ flex: 1 }} />
-        <button onClick={() => download('rtm.csv')} style={btn()} title={t('Requirement traceability matrix (CSV)')}>RTM CSV</button>
-        <button onClick={() => download('vcd.docx')} style={btn()} title={t('Verification Control Document (Word)')}>VCD docx</button>
-        <button onClick={() => run.mutate()} disabled={run.isPending} style={btn(true)}>
+        <span className="grow" />
+        <button onClick={() => download('rtm.csv')} className="c2o-btn c2o-btn--sm" title={t('Requirement traceability matrix (CSV)')}>RTM CSV</button>
+        <button onClick={() => download('vcd.docx')} className="c2o-btn c2o-btn--sm" title={t('Verification Control Document (Word)')}>VCD docx</button>
+        <button onClick={() => run.mutate()} disabled={run.isPending} className="c2o-btn c2o-btn--primary c2o-btn--sm">
           {run.isPending ? t('Running…') : lastRun ? t('Re-run V&V') : t('Run V&V')}
         </button>
       </div>
-      {error && <div style={{ fontSize: fs.label, color: 'var(--status-alarm)' }}>{error}</div>}
+      {error && <div className="t-12 c-alarm">{error}</div>}
 
       {/* summary */}
-      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-        <div style={card}>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('Closure')}</div>
+      <div className="flex gap-2 wrap">
+        <div className="c2o-card">
+          <div className="t-12 c-2 caps">{t('Closure')}</div>
           <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'ui-monospace, monospace', color: total === 0 ? 'var(--text-secondary)' : closurePct >= 100 ? 'var(--status-ok)' : failed > 0 ? 'var(--status-alarm)' : 'var(--text-primary)' }}>
             {closurePct.toFixed(0)}<span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
           </div>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{passed}} passed · {{waived}} waived · {{failed}} failed of {{total}}', { passed, waived, failed, total })}</div>
+          <div className="t-12 c-2">{t('{{passed}} passed · {{waived}} waived · {{failed}} failed of {{total}}', { passed, waived, failed, total })}</div>
         </div>
-        <div style={card}>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('By analysis')}</div>
-          <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>
+        <div className="c2o-card">
+          <div className="t-12 c-2 caps">{t('By analysis')}</div>
+          <div className="t-15 w-600 mono">
             {byAnalysisPct.toFixed(0)}<span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>%</span>
           </div>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{n}} closed automatically', { n: autoClosed })}</div>
+          <div className="t-12 c-2">{t('{{n}} closed automatically', { n: autoClosed })}</div>
         </div>
         {LEVELS.map(l => <LevelBar key={l} level={l} r={byLevel[l]} />)}
       </div>
@@ -329,51 +316,51 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
           {vvConflicts.map(c => (
             <div key={c.id} style={{ display: 'flex', gap: '0.4rem', alignItems: 'baseline', fontSize: fs.label, padding: '0.2rem 0.4rem', borderLeft: `3px solid ${SEVERITY_COLORS[c.severity] || 'var(--text-3)'}`, background: 'var(--bg-card)', borderRadius: 3 }}>
               <Badge text={c.severity} color={SEVERITY_COLORS[c.severity] || 'var(--text-3)'} />
-              <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--text-secondary)' }}>{c.code}</span>
-              <span style={{ fontWeight: 500 }}>{c.title}</span>
-              {c.suggested_fix && <span style={{ color: 'var(--text-secondary)' }}>— {c.suggested_fix}</span>}
+              <span className="mono c-2">{c.code}</span>
+              <span className="w-500">{c.title}</span>
+              {c.suggested_fix && <span className="c-2">— {c.suggested_fix}</span>}
             </div>
           ))}
         </div>
       )}
 
       {/* filters */}
-      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: fs.label, flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-secondary)' }}>{t('Filter')}</span>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as VVStatus | 'all')} style={sel}>
+      <div className="flex gap-2 ai-c t-12 wrap">
+        <span className="c-2">{t('Filter')}</span>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as VVStatus | 'all')} className="c2o-select c2o-select--sm w-auto" aria-label={t('Filter by status')}>
           <option value="all">{t('all statuses')}</option>
           {STATUSES.map(s => <option key={s} value={s}>{t(STATUS_LABEL[s])}</option>)}
         </select>
-        <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as VVLevel | 'all')} style={sel}>
+        <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as VVLevel | 'all')} className="c2o-select c2o-select--sm w-auto" aria-label={t('Filter by level')}>
           <option value="all">{t('all levels')}</option>
           {LEVELS.map(l => <option key={l} value={l}>{t(LEVEL_LABEL[l])}</option>)}
         </select>
-        <select value={methodFilter} onChange={e => setMethodFilter(e.target.value as VVMethod | 'all')} style={sel}>
+        <select value={methodFilter} onChange={e => setMethodFilter(e.target.value as VVMethod | 'all')} className="c2o-select c2o-select--sm w-auto" aria-label={t('Filter by method')}>
           <option value="all">{t('all methods')}</option>
           {METHODS.map(m => <option key={m} value={m}>{m} — {t(METHOD_FULL[m])}</option>)}
         </select>
-        <span style={{ color: 'var(--text-secondary)' }}>{t('{{shown}} of {{total}} items', { shown: filtered.length, total })}</span>
-        <span style={{ flex: 1 }} />
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
+        <span className="c-2">{t('{{shown}} of {{total}} items', { shown: filtered.length, total })}</span>
+        <span className="grow" />
+        <span className="c-2 t-12">
           <Badge text="auto" color="var(--interactive)" /> {t('closed by analysis · 🔒 user-edited (generator fills empty fields only)')}
         </span>
       </div>
 
       {/* table */}
       {itemsQ.isLoading ? (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Loading…')}</div>
+        <div className="t-12 c-2">{t('Loading…')}</div>
       ) : total === 0 ? (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
+        <div className="t-12 c-2 py-2 px-0">
           {t('No verification items yet — run V&V to generate one per requirement (method, level, phase, facility and acceptance criterion are derived from the requirement and its allocation).')}
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="c2o-table c2o-table--dense">
             <thead>
               <tr>
-                <th style={th}>{t('Req')}</th><th style={th}>{t('Requirement')}</th><th style={th} title={t('A analysis · T test · I inspection · R review · D demonstration')}>{t('Method')}</th>
-                <th style={th}>{t('Level')}</th><th style={th}>{t('Phase')}</th><th style={th}>{t('Facility')}</th><th style={th}>{t('Acceptance criterion')}</th>
-                <th style={th}>{t('Status')}</th><th style={th}>{t('Evidence')}</th>
+                <th>{t('Req')}</th><th>{t('Requirement')}</th><th title={t('A analysis · T test · I inspection · R review · D demonstration')}>{t('Method')}</th>
+                <th>{t('Level')}</th><th>{t('Phase')}</th><th>{t('Facility')}</th><th>{t('Acceptance criterion')}</th>
+                <th>{t('Status')}</th><th>{t('Evidence')}</th>
               </tr>
             </thead>
             <tbody>

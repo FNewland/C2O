@@ -8,11 +8,12 @@
  * - All in-scope elements have defined interfaces (if >1 sibling)
  * - All checks green → can freeze
  */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
-import { fs } from '../theme/tokens'
+import { StatusBadge } from '../components/ui/StatusBadge'
+import { Chevron } from '../components/ui/Disclosure'
 
 const API = '/api'
 
@@ -24,6 +25,7 @@ interface Check {
 
 export function ReadinessChecklist() {
   const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const currentLevel = useUIStore(s => s.currentLevel)
@@ -121,33 +123,32 @@ export function ReadinessChecklist() {
 
   const allPassed = checks.every(c => c.passed)
   const passedCount = checks.filter(c => c.passed).length
+  const firstOpen = checks.find(c => !c.passed)
 
-  // Unmet readiness is "not yet", not an alarm: caution glyph + text; ✓ for met (P6, brief §1.3).
+  // Compact summary in the context bar; the full checklist is one click deeper.
+  // Unmet readiness is "not yet", not an alarm: caution glyph + text; check for met (P6).
   return (
-    <div role="status" style={{
-      padding: 'var(--sp-1) var(--sp-3)', fontSize: fs.label, minHeight: 28,
-      background: 'var(--surface-1)', borderBottom: '1px solid var(--line)',
-      boxShadow: `inset 3px 0 0 ${allPassed ? 'var(--status-ok)' : 'var(--status-caution)'}`,
-      display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap',
-    }}>
-      <span style={{ fontWeight: 600, color: 'var(--text)' }}>
-        {t('Level {{level}} Readiness: {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
-      </span>
-      {checks.map(c => (
-        <span key={c.label} style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }} title={c.detail}>
-          <span aria-hidden="true" style={{ color: c.passed ? 'var(--status-ok)' : 'var(--status-caution)', fontWeight: 700 }}>
-            {c.passed ? '✓' : '◆'}
-          </span>
-          <span style={{ color: c.passed ? 'var(--text-2)' : 'var(--text)' }}>
-            <span className="sr-only">{c.passed ? t('Met:') : t('Not met:')} </span>{c.label}
-          </span>
-          {!c.passed && (
-            <span style={{ color: 'var(--text-2)', fontSize: fs.label, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {c.detail}
-            </span>
-          )}
-        </span>
-      ))}
+    <div className="c2o-readiness">
+      <button type="button" className="c2o-readiness__btn" aria-expanded={open} aria-controls="c2o-readiness-list"
+        onClick={() => setOpen(o => !o)}>
+        <StatusBadge status={allPassed ? 'ok' : 'caution'}>
+          {t('Level {{level}} readiness {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
+        </StatusBadge>
+        {firstOpen && !open && <span className="c2o-readiness__next c-2 ellipsis">{t('Next: {{label}}', { label: firstOpen.label })}</span>}
+        <Chevron />
+      </button>
+      {open && (
+        <ul id="c2o-readiness-list" className="c2o-readiness__list list-reset">
+          {checks.map(c => (
+            <li key={c.label} className="c2o-readiness__item">
+              <StatusBadge status={c.passed ? 'ok' : 'caution'}>
+                <span className="sr-only">{c.passed ? t('Met:') : t('Not met:')} </span>{c.label}
+              </StatusBadge>
+              <span className="t-12 c-2">{c.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

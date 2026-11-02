@@ -20,8 +20,17 @@
  *    param triad, one AND table. Pages must not fork these.
  *  - Colour is never the only cue (P6): every state emitted here carries a
  *    glyph and/or text label alongside its status class.
- *  - Stale must never look like steady (P4): renderers take ages/staleness
- *    explicitly and emit the hatch + em-dash affordance.
+ *  - Stale must never look like steady (P4), and never like never-received:
+ *    a STALE value keeps its last number, dimmed + italic, with an age chip
+ *    ("82.1 % · 59 s"); a value NEVER RECEIVED reads "no data" (never "—");
+ *    a parameter whose HK structure is disabled reads "not enabled".
+ *    Verdicts come from state.js freshness() (cadence-aware, four states).
+ *
+ * STATE VOCABULARY (brief §1.3, gallery.html): renderButton, renderValue,
+ * renderAge, renderNoData, renderGauge, renderField, renderTabs,
+ * renderDisclosure, renderBanner, renderLinkBanner, renderModeBanner (pure);
+ * setDisabled, setEnabled, armButton, installReasonTips, mountTabs (impure,
+ * DOM). Reason tooltips are installed automatically on import in a browser.
  *
  * DATA CONTRACT SUMMARY (which endpoint feeds which argument):
  *  - `def`    — one entry of MCS GET /api/param-catalog `parameters[]`:
@@ -43,6 +52,7 @@
  * ============================================================================ */
 
 import { t, tText, getLang, setLang, onLangChange, LANGS } from "/static/shared/i18n.js";
+import { freshness as freshness4 } from "/static/shared/state.js";
 
 const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
@@ -101,51 +111,73 @@ export function limitClass(state) {
  * renderParam(def, value, limits) -> html string
  *
  * The one way a scalar with limits is displayed: name + numeral + unit +
- * deviation bar. Parameters WITHOUT limits render a visible "no limit
+ * bar against limits. Parameters WITHOUT limits render a visible "no limit
  * defined" line instead of a bar (P3).
+ *
+ * Data states (brief §1.3):
+ *   live      value bright, upright; out-of-limits adds colour + triangle +
+ *             ISA code (H/HH/L/LL) and the w/a class
+ *   degraded  live, plus an amber age chip
+ *   stale     LAST VALUE KEPT, dim italic, dashed age chip ("82.1 % · 59 s");
+ *             the needle stays at the last value, uncoloured
+ *   no data   never received: the label "no data", no number, no needle
+ *   off       HK structure not enabled (verdict "disabled"): "not enabled"
  *
  * @param {object} def    — /api/param-catalog entry (see header). Only
  *        `name`, `hex`, `units` are required; `description` becomes the
- *        title attribute.
+ *        title attribute; `hk_interval_s` makes the freshness verdict
+ *        cadence-aware; `eng` is the engineering string of a discrete value.
  * @param {number|null|undefined} value — live value from WS state
- *        `data.params[def.hex]`. null/undefined => stale em-dash rendering.
+ *        `data.params[def.hex]`. null/undefined => "no data".
  * @param {object|null} [limits] — /api/limits band for def.hex, optionally
  *        extended by the caller with:
- *          state {string}  — data.param_limit_state[def.hex] (else derived
- *                            from the band client-side),
- *          age_s {number}  — data.params_age[String(def.id)],
- *          lo/hi {number}  — display range override for the bar.
+ *          state {string}   — data.param_limit_state[def.hex] (else derived
+ *                             from the band client-side),
+ *          age_s {number}   — data.params_age[String(def.id)],
+ *          verdict {string} — the caller's own verdict ("fresh"|"degraded"|
+ *                             "stale"|"nodata"|"disabled"), wins over age_s,
+ *          lo/hi {number}   — display range override for the bar.
  * @returns {string} `<div class="ds-param ...">...`
+ *          Classes: "w"/"a" (= is-caution/is-alarm), "stale" (= is-stale),
+ *          "is-nodata", "degraded".
  */
 export function renderParam(def, value, limits) {
   const d = def || {};
-  const hasVal = value !== null && value !== undefined && Number.isFinite(Number(value));
+  const L = limits || {};
+  const hasVal = _finite(value);
   const band = _band(limits);
-  const state = (limits && limits.state) || (band && hasVal ? _classify(Number(value), band) : "");
-  const fr = limits && "age_s" in limits ? freshness(limits.age_s) : (hasVal ? "fresh" : "stale");
-  const stale = fr === "stale" || !hasVal;
-  const lc = stale ? "" : limitClass(state);
-  const cls = ["ds-param", lc, stale ? "stale" : "", fr === "degraded" ? "degraded" : ""]
+  const age = "age_s" in L ? L.age_s : undefined;
+  const vs = valueState(value, age, { verdict: L.verdict, intervalS: d.hk_interval_s });
+  const live = vs === "live" || vs === "degraded";
+  const state = L.state || (band && hasVal ? _classify(Number(value), band) : "");
+  const lc = live ? limitClass(state) : "";
+  const cls = ["ds-param", lc, vs === "stale" ? "stale" : "",
+    vs === "nodata" || vs === "off" ? "is-nodata" : "", vs === "degraded" ? "degraded" : ""]
     .filter(Boolean).join(" ");
   // `def.eng` — the engineering-value string for a DISCRETE parameter
   // ("COARSE_SUN (2)"). It is carried separately from `value` on purpose:
   // `value` stays numeric so limits, banding and the deviation bar keep
   // working, and only the rendered text changes. Passing the string as
   // `value` instead makes Number() NaN, which trips `hasVal` and renders the
-  // parameter as "—" with a stale class — i.e. a mode chip that shows nothing.
-  const vTxt = stale ? "—" : (d.eng !== undefined && d.eng !== null
-                              ? esc(String(d.eng)) : _num(Number(value)));
-  const unit = d.units ? `<u>${esc(d.units)}</u>` : "";
-  const ageChip = fr === "degraded" && limits && "age_s" in limits
-    ? ` <span class="ds-age degraded">${esc(_age(limits.age_s))}</span>` : "";
+  // parameter as "no data" — i.e. a mode chip that shows nothing.
+  let vHtml;
+  if (vs === "nodata") vHtml = renderNoData();
+  else if (vs === "off") vHtml = renderNoData({ off: true });
+  else {
+    const txt = d.eng !== undefined && d.eng !== null ? esc(String(d.eng)) : _num(Number(value));
+    const unit = d.units ? `<u>${esc(d.units)}</u>` : "";
+    vHtml = (lc ? glyph(_limitGlyph(state)) : "") + txt + unit +
+      (lc ? renderFlag(state, { glyph: false }) : "") +
+      (vs === "stale" || vs === "degraded" ? renderAge(age, { degraded: vs === "degraded" }) : "");
+  }
   const bar = band
-    ? renderDeviationBar(hasVal && !stale ? Number(value) : null, limits)
+    ? _devbar(hasVal && vs !== "off" ? Number(value) : null, limits, !live)
     : `<span class="nolimit">${t("no limit defined")}</span>`;
   return `<div class="${cls}" data-param="${esc(d.hex || "")}"` +
          (d.description ? ` title="${esc(d.description)}"` : "") + `>` +
          `<span class="nm">${esc(d.name || d.hex || "?")}` +
          `<small>${esc(d.hex || "")}</small></span>` +
-         `<span class="vl">${vTxt}${unit}${ageChip}</span>` +
+         `<span class="vl">${vHtml}</span>` +
          bar +
          `</div>`;
 }
@@ -167,6 +199,10 @@ export function renderParam(def, value, limits) {
  * @returns {string} `<div class="ds-devbar ...">...`
  */
 export function renderDeviationBar(value, limits) {
+  return _devbar(value, limits, false);
+}
+
+function _devbar(value, limits, neutral) {
   const band = _band(limits);
   if (!band) return `<span class="nolimit">${t("no limit defined")}</span>`;
   const { yellow_low: yl, yellow_high: yh, red_low: rl, red_high: rh } = band;
@@ -199,7 +235,7 @@ export function renderDeviationBar(value, limits) {
   const state = hasVal ? _classify(Number(value), band) : "";
   const needle = hasVal
     ? `<span class="nd" style="left:${pct(Number(value)).toFixed(1)}%"></span>` : "";
-  return `<div class="ds-devbar ${limitClass(state)}" tabindex="0" role="img" ` +
+  return `<div class="ds-devbar ${neutral ? "" : limitClass(state)}" tabindex="0" role="img" ` +
          `aria-label="${esc(tText("value {{value}} of range {{lo}} to {{hi}}", {
            value: hasVal ? _num(Number(value)) : tText("unknown"), lo: _num(lo), hi: _num(hi) }))}">` +
          segs + ticks + needle + `</div>`;
@@ -288,42 +324,46 @@ export function renderAndTable(params, values) {
     // threshold, which cannot distinguish "the link is down" from "nobody
     // enabled this SID", and so shows the last known value as though it were
     // arriving. See configs/eosat1/mcs/staleness.yaml.
-    const fr = (v.verdicts && v.verdicts[hex])
-      || freshness(age !== undefined ? age : (val !== undefined ? 0 : null));
-    const disabled = fr === "disabled";
-    const stale = fr === "stale" || disabled;
-    const state = (v.limitState && v.limitState[hex]) || "";
-    const lc = stale ? "" : limitClass(state);
-    const band = v.limits ? v.limits[hex] : null;
+    const fr = v.verdicts ? v.verdicts[hex] : undefined;
     const hasVal = val !== null && val !== undefined && Number.isFinite(Number(val));
+    const vs = valueState(val, age, { verdict: fr, intervalS: p.hk_interval_s });
+    const disabled = vs === "off";
+    const stale = vs === "stale";
+    const nodata = vs === "nodata";
+    const live = vs === "live" || vs === "degraded";
+    const state = (v.limitState && v.limitState[hex]) || "";
+    const lc = live ? limitClass(state) : "";
+    const band = v.limits ? v.limits[hex] : null;
     const st = v.states ? v.states[hex] : null;
-    const engTxt = disabled ? tText("NOT ENABLED")
-      : stale || !hasVal ? "—"
-      : (st && st[String(Math.round(Number(val)))] !== undefined
-          ? `${st[String(Math.round(Number(val)))]} (${Math.round(Number(val))})`
-          : _num(Number(val)));
+    const code = hasVal ? Math.round(Number(val)) : null;
+    // Stale keeps the LAST value (dim italic, the Age column says how old);
+    // never-received says "no data"; a disabled HK structure says "not
+    // enabled" and shows no number at all.
+    const engHtml = disabled ? renderNoData({ off: true, label: tText("NOT ENABLED") })
+      : nodata || !hasVal ? renderNoData()
+      : esc(st && st[String(code)] !== undefined ? `${st[String(code)]} (${code})` : _num(Number(val)));
     // RAW follows the same gate as ENG. Showing the last received count beside
     // an ENG cell reading "NOT ENABLED" is a mixed message: the operator sees a
     // number in a value column and reads it as current. The value is not lost —
     // it is still in the ground cache, and the Age column says how old it is —
     // but a display column is not the place to assert it.
-    const raw = stale || !hasVal ? "—"
+    const raw = disabled || nodata || !hasVal ? ""
       : (v.raw && v.raw[hex] !== undefined ? String(v.raw[hex]) : _num(Number(val)));
-    const ool = !band ? "NO LIM"
-      : stale || !hasVal ? "—"
-      : lc === "a" ? (state.endsWith("high") ? "RH" : "RL")
-      : lc === "w" ? (state.endsWith("high") ? "YH" : "YL")
+    const ool = !band ? `<span class="ds-meta">${t("no limit")}</span>`
+      : !live ? ""
+      : lc ? glyph(_limitGlyph(state)) + _isaCode(state)
       : "";
-    return `<tr class="${[lc, stale ? "stale" : "", disabled ? "disabled" : ""].filter(Boolean).join(" ")}" ` +
-           `data-param="${esc(hex)}">` +
+    const rowCls = [lc, stale ? "stale" : "", nodata ? "is-nodata" : "", disabled ? "disabled" : ""]
+      .filter(Boolean).join(" ");
+    return `<tr class="${rowCls}" data-param="${esc(hex)}">` +
            `<td class="id">${esc(hex)}</td>` +
            `<td>${esc(p.name || "")}` +
            (p.description ? `<br><small>${esc(p.description)}</small>` : "") + `</td>` +
            `<td class="raw">${esc(raw)}</td>` +
-           `<td class="eng">${esc(engTxt)}</td>` +
+           `<td class="eng">${engHtml}</td>` +
            `<td>${esc(p.units || "")}</td>` +
            `<td class="ool">${ool}</td>` +
-           `<td class="ds-age${fr === "degraded" ? " degraded" : ""}">${_age(age)}</td>` +
+           `<td class="ds-age${vs === "degraded" ? " degraded" : ""}">${hasVal ? _age(age) : ""}</td>` +
            `</tr>`;
   }).join("");
   return `<table class="ds-and"><thead><tr>` +
@@ -339,12 +379,14 @@ export function renderAndTable(params, values) {
  *
  * The one binary/enumerated-state idiom: glyph + text label + colour class.
  * Glyph vocabulary (PRINCIPLES P6): warning = hollow amber up/down triangle;
- * alarm = filled red triangle; stale = hatched em-dash; commanded = blue
- * dashed diamond; off = hollow ring; nominal/ok = plain grey (no glyph
- * unless provided).
+ * alarm = filled red triangle; stale = dashed outline + italic; commanded =
+ * accent dashed diamond; off = hollow ring; ok = check; active = accent fill
+ * + filled square; nominal = plain grey, no glyph.
  *
  * @param {{kind:string, label:string, dir?:"up"|"down", title?:string}} state
- *        kind — "ok"|"warn"|"alarm"|"stale"|"cmd"|"off"|"neutral".
+ *        kind — "ok"|"warn"|"alarm"|"stale"|"cmd"|"off"|"neutral"|
+ *               "active" (accent fill: running/tracking)|"nodata"|"shelved".
+ *        glyph — override the glyph (a glyphs.svg id without "g-").
  *        label — the text (ALWAYS present: colour is never the only cue).
  *        dir — for warn/alarm: which side of the band ("up" high, "down"
  *              low; derived from limit state suffix _high/_low).
@@ -355,11 +397,11 @@ export function renderChip(state) {
   const s = state || {};
   const kind = s.kind || "neutral";
   const dir = s.dir === "down" ? "down" : "up";
-  const g = {
-    warn: `warn-${dir}`, alarm: `alarm-${dir}`,
-    stale: "stale", cmd: "commanded", off: "off",
+  const g = s.glyph || {
+    warn: `warn-${dir}`, alarm: `alarm-${dir}`, ok: "ack", shelved: "shelved",
+    stale: "stale", cmd: "commanded", off: "off", active: "run",
   }[kind];
-  const cls = { neutral: "", ok: "ok" }[kind] ?? kind;
+  const cls = { neutral: "", ok: "ok", active: "is-active", nodata: "is-nodata" }[kind] ?? kind;
   return `<span class="ds-chip ${cls}"` +
          (s.title ? ` title="${esc(s.title)}"` : "") + `>` +
          (g ? glyph(g) : "") +
@@ -413,10 +455,14 @@ export function renderStepper(states, activeIdx) {
  *        rtn (bool, returned-to-normal), utc (pre-formatted time string —
  *        pages format timestamps with fmtUTC + the sim clock; this renderer
  *        does NOT read clocks).
+ * @param {object} [opts] — {role?: ARIA role for the row, e.g. "listitem"
+ *        inside a role="list" container}. No role by default: a row
+ *        without cells is an axe critical (was role="row" until 2026-11).
  * @returns {string} `<div class="ds-alarm-row ...">...`
  */
-export function renderAlarmRow(alarm) {
+export function renderAlarmRow(alarm, opts) {
   const a = alarm || {};
+  const role = opts && opts.role ? ` role="${esc(opts.role)}"` : "";
   const pri = [1, 2, 3, 4].includes(a.priority) ? a.priority
     : (Number(a.severity) >= 3 ? 2 : Number(a.severity) === 2 ? 3 : 4);
   const cls = [
@@ -439,9 +485,9 @@ export function renderAlarmRow(alarm) {
       ? tText("{{status}} on {{param}}", { status: a.status || tText("limit"),
         param: `0x${Number(a.param_id).toString(16).toUpperCase().padStart(4, "0")}` })
       : "");
-  return `<div class="${cls}" data-id="${esc(a.id)}" role="row">` +
+  return `<div class="${cls}" data-id="${esc(a.id)}"${role}>` +
          `<span class="t num">${esc(a.utc || "")}</span>` +
-         `<span class="pri">P${pri}</span>` +
+         `<span class="pri">${pri <= 2 ? glyph("alarm-up") : pri === 3 ? glyph("warn-up") : ""}P${pri}</span>` +
          `<span class="msg">${esc(a.subsystem ? a.subsystem.toUpperCase() + " — " : "")}` +
          `${esc(msg)}${a.value !== undefined ? ` <span class="num">(${_num(Number(a.value))})</span>` : ""}` +
          `${ratHtml}</span>` +
@@ -526,9 +572,9 @@ export function bindSchematic(svgRoot, state) {
     // (state.param_verdicts): a schematic that prints the last known number
     // for a SID nobody enabled is the most confident possible way to be wrong.
     const fr = (st.param_verdicts && st.param_verdicts[hex])
-      || freshness(age !== undefined ? age : (val !== undefined ? 0 : null));
+      || freshness4(age !== undefined ? age : (val !== undefined ? 0 : null));
     const disabled = fr === "disabled";
-    const stale = fr === "stale" || disabled || val === undefined || val === null;
+    const stale = fr === "stale" || fr === "nodata" || disabled || val === undefined || val === null;
     const lc = stale ? "" : limitClass(limitState[hex] || "");
     node.classList.remove("warn", "alarm", "stale");
     if (stale) node.classList.add("stale");
@@ -544,7 +590,9 @@ export function bindSchematic(svgRoot, state) {
       const stt = st.param_states && st.param_states[hex];
       const code = hasFiniteNumber(val) ? Math.round(Number(val)) : null;
       if (disabled) vl.textContent = tText("NOT ENABLED");
-      else if (stale) vl.textContent = "—";
+      else if (!hasFiniteNumber(val)) vl.textContent = tText("no data");
+      // stale: the LAST value stays, the node's .stale class dims it (dashed
+      // outline, italic) — a blank box hides what the spacecraft last said.
       else if (stt && code !== null && stt[String(code)] !== undefined) {
         vl.textContent = `${stt[String(code)]} (${code})`;
       } else vl.textContent = _num(Number(val)) + (units ? " " + units : "");
@@ -625,6 +673,595 @@ export function mountLangToggle(host) {
   onLangChange(draw);
   draw();
   return host;
+}
+
+/* ── 9c. STATE VOCABULARY (brief §1.3) — additive 2026-11 ─────────────────
+ * One function per state concept, shared by every console. The gallery
+ * (/static/shared/gallery.html) shows each in every state, dark and light.
+ *
+ *   valueState(value, ageS, opts)   -> "live"|"degraded"|"stale"|"nodata"|"off"
+ *   renderValue(value, opts)        -> a readout in its data state
+ *   renderAge(ageS, opts)           -> the dashed age chip ("59 s")
+ *   renderNoData(opts)              -> "no data" / "not enabled" tag
+ *   renderFlag(limitState, opts)    -> triangle + ISA code (H/HH/L/LL)
+ *   renderGauge(value, limits, opts)-> compact bar against limits + value
+ *   renderButton(opts)              -> enabled|disabled|armed|active button
+ *   renderField(opts)               -> labelled input/select/checkbox
+ *   renderTabs(tabs, activeId, opts)-> tablist (wire with mountTabs)
+ *   renderDisclosure(summary, body, opts) -> <details> that opens downward
+ *   renderBanner(kind, text, opts)  -> full-width state strip
+ *   renderLinkBanner(link, opts)    -> from state.js linkState()/linkLimited()
+ *   renderModeBanner(mode)          -> from state.js modeState()
+ * Impure (DOM): setDisabled, setEnabled, armButton, installReasonTips,
+ * mountTabs. installReasonTips(document) runs on import in a browser.
+ * ------------------------------------------------------------------------- */
+
+let _seq = 0;
+const _uid = (p) => `${p}-${(++_seq).toString(36)}`;
+const _finite = (v) => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v));
+
+function _limitGlyph(state) {
+  const s = String(state || "");
+  const dir = s.endsWith("low") ? "down" : "up";
+  return (s.startsWith("red") ? "alarm-" : "warn-") + dir;
+}
+
+/* ISA-18.2 limit codes: identifiers, never translated. */
+function _isaCode(state) {
+  return { red_high: "HH", yellow_high: "H", yellow_low: "L", red_low: "LL" }[state] || "";
+}
+
+function _limitText(state) {
+  return {
+    red_high: tText("above the alarm limit"), yellow_high: tText("above the caution limit"),
+    yellow_low: tText("below the caution limit"), red_low: tText("below the alarm limit"),
+  }[state] || "";
+}
+
+/**
+ * valueState(value, ageS, opts) -> "live"|"degraded"|"stale"|"nodata"|"off"
+ *
+ * The one data-state verdict for a displayed value. `opts.verdict` (the
+ * caller's own four-state verdict, e.g. from the MCS staleness policy, or
+ * "disabled" for an HK structure that is not enabled) wins; otherwise the
+ * age is classified by state.js freshness() with `opts.intervalS`. A value
+ * with no age at all is taken as live (the caller vouches for it); no value
+ * is "nodata" whatever the age says.
+ */
+export function valueState(value, ageS, opts = {}) {
+  const vd = opts.verdict;
+  if (vd === "disabled" || vd === "off") return "off";
+  if (!_finite(value) && (opts.eng === undefined || opts.eng === null)) return "nodata";
+  if (vd === "stale") return "stale";
+  if (vd === "degraded") return "degraded";
+  if (vd === "fresh" || vd === "live") return "live";
+  if (ageS === undefined || ageS === null) return "live";
+  const f = freshness4(ageS, { intervalS: opts.intervalS, policy: opts.policy });
+  return f === "fresh" || f === "nodata" ? "live" : f;
+}
+
+/**
+ * renderAge(ageS, {degraded}) -> html string
+ * The age chip that follows a stale (dashed grey) or degraded (amber) value.
+ * Screen readers hear "stale value, age 59 s".
+ */
+export function renderAge(ageS, opts = {}) {
+  const txt = _age(ageS);
+  return `<span class="ds-age${opts.degraded ? " degraded" : ""}" ` +
+         `title="${esc(tText("last value received {{age}} ago", { age: txt }))}">` +
+         `<span class="ds-sr">${opts.degraded ? t("late value, age") : t("stale value, age")} </span>${esc(txt)}</span>`;
+}
+
+/**
+ * renderNoData({off, label}) -> html string
+ * "no data": never received (never an em-dash). off:true -> "not enabled"
+ * with the hollow-ring glyph (the HK structure that carries it is disabled).
+ */
+export function renderNoData(opts = {}) {
+  const label = opts.label || (opts.off ? tText("not enabled") : tText("no data"));
+  return `<span class="ds-nodata${opts.off ? " off" : ""}"` +
+         (opts.off ? ` title="${esc(tText("HK SID carrying this parameter is disabled"))}"` : "") + `>` +
+         (opts.off ? glyph("off") : "") + `${esc(label)}</span>`;
+}
+
+/**
+ * renderFlag(limitState, {glyph}) -> html string
+ * Out-of-limits marker: triangle (hollow caution, filled alarm, pointing to
+ * the side of the band) + ISA code + a spoken explanation. "" when nominal.
+ */
+export function renderFlag(limitState, opts = {}) {
+  const lc = limitClass(limitState);
+  if (!lc) return "";
+  const cls = lc === "a" ? "is-alarm" : "is-caution";
+  return `<span class="ds-flag ${cls}" title="${esc(_limitText(limitState))}">` +
+         (opts.glyph === false ? "" : glyph(_limitGlyph(limitState))) +
+         `${_isaCode(limitState)}<span class="ds-sr"> ${esc(_limitText(limitState))}</span></span>`;
+}
+
+/**
+ * renderValue(value, opts) -> html string
+ *
+ * A single readout in its data state, as ONE element (`.ds-readout`, or the
+ * `.ds-nodata` tag): live (bright mono), caution/alarm
+ * (colour + triangle + ISA code), degraded (amber age chip), stale (last
+ * value, dim italic, dashed age chip), no data, not enabled.
+ *
+ * @param {number|null|undefined} value
+ * @param {{units?:string, digits?:number, eng?:string, ageS?:number,
+ *          verdict?:string, intervalS?:number, limitState?:string,
+ *          limits?:object, cls?:string}} [opts]
+ *        limitState — "nominal"|"yellow_low"|... (else classified from
+ *        opts.limits when given); eng — discrete state text to show instead
+ *        of the number.
+ */
+export function renderValue(value, opts = {}) {
+  const vs = valueState(value, opts.ageS, opts);
+  if (vs === "nodata") return renderNoData();
+  if (vs === "off") return renderNoData({ off: true });
+  const band = _band(opts.limits);
+  const state = opts.limitState || (band && _finite(value) ? _classify(Number(value), band) : "");
+  const live = vs === "live" || vs === "degraded";
+  const lc = live ? limitClass(state) : "";
+  const cls = ["ds-value", lc === "a" ? "is-alarm" : lc === "w" ? "is-caution" : "",
+    vs === "stale" ? "is-stale" : "", opts.cls || ""].filter(Boolean).join(" ");
+  const txt = opts.eng !== undefined && opts.eng !== null ? esc(String(opts.eng))
+    : _fmtDigits(Number(value), opts.digits);
+  return `<span class="ds-readout"><span class="${cls}">${lc ? glyph(_limitGlyph(state)) : ""}${txt}` +
+         (opts.units ? `<span class="u">${esc(opts.units)}</span>` : "") + `</span>` +
+         (lc ? renderFlag(state, { glyph: false }) : "") +
+         (vs === "stale" || vs === "degraded" ? renderAge(opts.ageS, { degraded: vs === "degraded" }) : "") +
+         `</span>`;
+}
+
+function _fmtDigits(v, digits) {
+  if (!Number.isFinite(v)) return "—";
+  return Number.isInteger(digits) ? v.toFixed(digits) : _num(v);
+}
+
+/**
+ * renderGauge(value, limits, opts) -> html string
+ *
+ * The compact flight-deck readout: label, a scale with the caution/alarm
+ * ranges drawn as bands under it, a neutral fill up to the value (status
+ * colour only when out of limits), and the exact value beside it.
+ *
+ * @param {number|null} value
+ * @param {object|null} limits — {yellow_low, yellow_high, red_low, red_high}
+ *        (any subset) plus optional lo/hi scale range.
+ * @param {{label?:string, units?:string, digits?:number, lo?:number,
+ *          hi?:number, ageS?:number, verdict?:string, intervalS?:number,
+ *          reason?:string}} [opts] — reason: the gauge is disabled (e.g.
+ *          "Payload off"), shown on hover and focus.
+ */
+export function renderGauge(value, limits, opts = {}) {
+  const band = _band(limits) || {};
+  const vs = opts.reason ? "off" : valueState(value, opts.ageS, opts);
+  const has = _finite(value) && vs !== "nodata" && vs !== "off";
+  const v = has ? Number(value) : null;
+  const L = limits || {};
+  const bounds = [band.yellow_low, band.yellow_high, band.red_low, band.red_high].filter(_finite);
+  let lo = opts.lo ?? L.lo, hi = opts.hi ?? L.hi;
+  if (lo === undefined || hi === undefined) {
+    const mn = Math.min(...bounds, v ?? Infinity), mx = Math.max(...bounds, v ?? -Infinity);
+    const span = Number.isFinite(mx - mn) ? (mx - mn || Math.abs(mx) || 1) : 1;
+    if (lo === undefined) lo = Number.isFinite(mn) ? mn - span * 0.15 : 0;
+    if (hi === undefined) hi = Number.isFinite(mx) ? mx + span * 0.15 : 1;
+  }
+  const pct = (x) => Math.max(0, Math.min(100, ((x - lo) / (hi - lo || 1)) * 100)).toFixed(1);
+  let marks = "";
+  const bandSeg = (a, b, c) => `<span class="band ${c}" style="left:${pct(a)}%;width:${(pct(b) - pct(a)).toFixed(1)}%"></span>`;
+  if (_finite(band.red_low)) marks += bandSeg(lo, band.red_low, "r");
+  if (_finite(band.yellow_low)) marks += bandSeg(_finite(band.red_low) ? band.red_low : lo, band.yellow_low, "y");
+  if (_finite(band.yellow_high)) marks += bandSeg(band.yellow_high, _finite(band.red_high) ? band.red_high : hi, "y");
+  if (_finite(band.red_high)) marks += bandSeg(band.red_high, hi, "r");
+  const state = has ? (_band(limits) ? _classify(v, band) : "") : "";
+  const live = vs === "live" || vs === "degraded";
+  const lc = live ? limitClass(state) : "";
+  const cls = ["ds-gauge", lc === "a" ? "is-alarm" : lc === "w" ? "is-caution" : "",
+    vs === "stale" ? "is-stale" : "", vs === "nodata" ? "is-nodata" : "",
+    vs === "off" ? "is-disabled" : ""].filter(Boolean).join(" ");
+  const fill = has ? `<span class="fill" style="width:${pct(v)}%"></span>` : "";
+  const label = opts.label || "";
+  const aria = has ? tText("value {{value}} of range {{lo}} to {{hi}}", { value: _num(v), lo: _num(lo), hi: _num(hi) })
+    : tText("no data");
+  const val = opts.reason ? renderNoData({ label: tText("off") })
+    : renderValue(value, { units: opts.units, digits: opts.digits, ageS: opts.ageS,
+                           verdict: opts.verdict, intervalS: opts.intervalS, limitState: state });
+  const why = opts.reason ? _uid("ds-why") : "";
+  return `<div class="${cls}${label ? "" : " nolabel"}"` +
+         (opts.reason ? ` data-reason="${esc(opts.reason)}" tabindex="0" aria-describedby="${why}"` : "") + `>` +
+         (label ? `<span class="nm">${esc(label)}</span>` : "") +
+         `<span class="tr" role="img" aria-label="${esc(label ? label + ": " + aria : aria)}">${fill}${marks}</span>` +
+         val +
+         (opts.reason ? `<span id="${why}" class="ds-sr">${esc(opts.reason)}</span>` : "") +
+         `</div>`;
+}
+
+/**
+ * renderButton(opts) -> html string
+ *
+ * @param {{label:string, kind?:"default"|"primary"|"critical"|"ghost",
+ *          state?:"enabled"|"disabled"|"armed"|"active", reason?:string,
+ *          id?:string, act?:string, size?:"sm", toggle?:boolean,
+ *          seconds?:number, attrs?:string}} o
+ *   state "disabled" needs `reason` (shown on hover AND focus, read by
+ *   screen readers through aria-describedby). The button stays focusable
+ *   (aria-disabled, not the disabled attribute) and clicks are swallowed.
+ *   state "armed" renders the armed look statically (armButton() animates
+ *   it live); state "active" fills with the accent: say what is running in
+ *   the label ("Running", "Tracking"). toggle:true adds aria-pressed.
+ *   `attrs` is trusted extra attribute markup.
+ */
+export function renderButton(o = {}) {
+  const st = o.state || "enabled";
+  const kind = o.kind && o.kind !== "default" ? o.kind : "";
+  const cls = ["ds-btn", kind, o.size === "sm" ? "sm" : "",
+    st === "active" ? "is-active" : "", st === "armed" ? "is-armed" : ""].filter(Boolean).join(" ");
+  const why = st === "disabled" ? (o.id ? `${o.id}-why` : _uid("ds-why")) : "";
+  const label = esc(o.label ?? "");
+  const inner = st === "armed"
+    ? `${t("Confirm: {{action}}", { action: o.label ?? "" })} <span class="ds-arm-t">${o.seconds ?? 5} s</span>` +
+      `<span class="ds-arm-bar"></span>`
+    : (st === "active" ? `<span class="ds-run" aria-hidden="true"></span>` : "") + label;
+  return `<button type="button" class="${cls}"` +
+         (o.id ? ` id="${esc(o.id)}"` : "") +
+         (o.act ? ` data-act="${esc(o.act)}"` : "") +
+         (o.toggle ? ` aria-pressed="${st === "active"}"` : "") +
+         (st === "disabled" ? ` aria-disabled="true" data-reason="${esc(o.reason || "")}" aria-describedby="${why}"` : "") +
+         (o.attrs ? " " + o.attrs : "") + `>${inner}</button>` +
+         (st === "disabled" ? `<span id="${why}" class="ds-sr" hidden>${esc(o.reason || "")}</span>` : "");
+}
+
+/**
+ * renderField(opts) -> html string
+ *
+ * @param {{label:string, id?:string, type?:"number"|"text"|"select"|"checkbox",
+ *          value?:any, options?:(string|{value,label})[], units?:string,
+ *          hint?:string, error?:string, placeholder?:string,
+ *          state?:"enabled"|"disabled"|"invalid", reason?:string,
+ *          name?:string, checked?:boolean}} o
+ *   disabled: aria-disabled + readonly (still focusable, reason on hover and
+ *   focus); invalid: alarm border, aria-invalid, and the error text with a
+ *   triangle under the field ("Enter a value between 0 and 100").
+ */
+export function renderField(o = {}) {
+  const id = o.id || _uid("ds-f");
+  const st = o.state || (o.error ? "invalid" : "enabled");
+  const dis = st === "disabled";
+  const inv = st === "invalid";
+  const desc = [o.hint ? `${id}-hint` : "", inv && o.error ? `${id}-err` : "", dis ? `${id}-why` : ""]
+    .filter(Boolean).join(" ");
+  const common = ` id="${esc(id)}"` + (o.name ? ` name="${esc(o.name)}"` : "") +
+    (desc ? ` aria-describedby="${desc}"` : "") +
+    (dis ? ` aria-disabled="true" data-reason="${esc(o.reason || "")}"` : "") +
+    (inv ? ` aria-invalid="true"` : "");
+  const extra = (o.hint ? `<span class="hint" id="${id}-hint">${esc(o.hint)}</span>` : "") +
+    (inv && o.error ? `<span class="err" id="${id}-err">${glyph("alarm-up")}${esc(o.error)}</span>` : "") +
+    (dis ? `<span class="ds-sr" id="${id}-why" hidden>${esc(o.reason || "")}</span>` : "");
+  const wcls = ["ds-field", dis ? "is-disabled" : "", inv ? "is-invalid" : ""].filter(Boolean).join(" ");
+  if (o.type === "checkbox") {
+    return `<div class="${wcls}"><label class="ds-check${dis ? " is-disabled" : ""}">` +
+           `<input type="checkbox"${common}${o.checked ? " checked" : ""}${dis ? ` onclick="return false"` : ""}>` +
+           `${esc(o.label || "")}</label>${extra}</div>`;
+  }
+  let control;
+  if (o.type === "select") {
+    const opts = (o.options || []).map((x) => {
+      const v = typeof x === "object" ? x.value : x, l = typeof x === "object" ? x.label : x;
+      return `<option value="${esc(v)}"${String(v) === String(o.value ?? "") ? " selected" : ""}>${esc(l)}</option>`;
+    }).join("");
+    control = `<select class="ds-select"${common}>${opts}</select>`;
+  } else {
+    const isNum = o.type !== "text";
+    control = `<span class="ds-input-wrap"><input class="ds-input${isNum ? "" : " text"}" ` +
+      `type="text"${isNum ? ` inputmode="decimal"` : ""}${common}` +
+      ` value="${esc(o.value ?? "")}"` + (o.placeholder ? ` placeholder="${esc(o.placeholder)}"` : "") +
+      (dis ? " readonly" : "") + `>` + (o.units ? `<span class="u">${esc(o.units)}</span>` : "") + `</span>`;
+  }
+  return `<div class="${wcls}"><label for="${esc(id)}">${esc(o.label || "")}</label>${control}${extra}</div>`;
+}
+
+/**
+ * renderTabs(tabs, activeId, {label}) -> html string
+ * @param {{id:string, label:string, count?:number|string, countKind?:string,
+ *          reason?:string}[]} tabs — reason => the tab is disabled.
+ * Wire keyboard (arrows, Home/End) and selection with mountTabs().
+ */
+export function renderTabs(tabs, activeId, opts = {}) {
+  return `<div class="ds-tabs" role="tablist"` +
+    (opts.label ? ` aria-label="${esc(opts.label)}"` : "") + `>` +
+    (tabs || []).map((tb) => {
+      const sel = tb.id === activeId;
+      return `<button type="button" role="tab" class="ds-tab" id="tab-${esc(tb.id)}" data-tab="${esc(tb.id)}" ` +
+        `aria-selected="${sel}" tabindex="${sel ? 0 : -1}"` +
+        (opts.panel ? ` aria-controls="${esc(opts.panel)}"` : "") +
+        (tb.reason ? ` aria-disabled="true" data-reason="${esc(tb.reason)}"` : "") + `>` +
+        esc(tb.label) +
+        (tb.count !== undefined && tb.count !== null
+          ? ` ${renderChip({ kind: tb.countKind || "neutral", label: String(tb.count) })}` : "") +
+        `</button>`;
+    }).join("") + `</div>`;
+}
+
+/**
+ * renderDisclosure(summary, bodyHtml, {open, meta}) -> html string
+ * Progressive disclosure: a native <details> that opens DOWNWARD below its
+ * summary, so nothing above it moves. `bodyHtml` is trusted markup.
+ */
+export function renderDisclosure(summary, bodyHtml, opts = {}) {
+  return `<details class="ds-disclosure"${opts.open ? " open" : ""}>` +
+         `<summary>${esc(summary)}` +
+         (opts.meta ? `<span class="r">${esc(opts.meta)}</span>` : "") +
+         `</summary><div class="bd">${bodyHtml || ""}</div></details>`;
+}
+
+const BANNER = {
+  ok: ["ok", "ack"], caution: ["is-caution", "warn-up"], alarm: ["is-alarm", "alarm-up"],
+  stale: ["is-stale", "stale"], nodata: ["is-nodata", "off"], info: ["info", "commanded"],
+  neutral: ["", ""],
+};
+
+/**
+ * renderBanner(kind, text, {meta, metaHtml, html, role, glyph}) -> html string
+ * meta: a string or an array of strings (each its own right-aligned item).
+ * kind: "ok"|"caution"|"alarm"|"stale"|"nodata"|"info"|"neutral".
+ * `text` is escaped; pass `html` (trusted) instead for markup. Glyph +
+ * colour + text, so it reads in greyscale.
+ */
+export function renderBanner(kind, text, opts = {}) {
+  const [cls, g0] = BANNER[kind] || BANNER.neutral;
+  const g = opts.glyph ?? g0;
+  return `<div class="ds-banner ${cls}"${opts.role ? ` role="${esc(opts.role)}"` : ""}>` +
+         (g ? glyph(g) : "") + `<span>${opts.html ?? esc(text ?? "")}</span>` +
+         (opts.metaHtml || (opts.meta && opts.meta.length)
+           ? `<span class="r">${opts.metaHtml ?? [].concat(opts.meta).filter(Boolean)
+               .map((m) => `<span>${esc(m)}</span>`).join("")}</span>` : "") +
+         `</div>`;
+}
+
+/**
+ * renderLinkBanner(link, {limited}) -> html string
+ * @param {object} link — state.js linkState(state).
+ * @param {{limited?:{limited:boolean, speed:number}, frameIntervalS?:number}} [opts]
+ *        frameIntervalS — expected TM frame cadence in contact (default 1 s);
+ *        limited — state.js
+ *        linkLimited(state): at sim speed > 1 the console is link-limited,
+ *        values are held, not lost — one caution banner says so.
+ */
+export function renderLinkBanner(link, opts = {}) {
+  const ls = link || {};
+  const gs = ls.gs ? ` <span class="k">${esc(ls.gs)}</span>` : "";
+  const age = _finite(ls.ageS) ? renderAge(ls.ageS) : "";
+  if (opts.limited && opts.limited.limited) {
+    return renderBanner("caution", "", { html: t("Link-limited at ×{{speed}}: values are held, not lost",
+      { speed: opts.limited.speed }), metaHtml: age });
+  }
+  // Frames arrive every second or so in contact: judge their age on that
+  // cadence (state.js floors: 10 s fresh, 20 s stale), not the aperiodic one.
+  const tmStale = ls.tm === "stale" ||
+    (_finite(ls.ageS) && freshness4(ls.ageS, { intervalS: opts.frameIntervalS ?? 1 }) === "stale");
+  if (ls.contact && tmStale) {
+    return renderBanner("stale", "", { html: t("In contact") + gs + " " + t("telemetry stale"), metaHtml: age });
+  }
+  if (ls.contact) {
+    return renderBanner("ok", "", { glyph: "lock", html: t("In contact") + gs,
+      meta: ls.source ? tText("source: {{src}}", { src: ls.source }) : "" });
+  }
+  return renderBanner("nodata", t("No contact"), { metaHtml: age ? tText("last frame") + " " + age : "" });
+}
+
+/**
+ * renderModeBanner(mode) -> html string
+ * @param {object} mode — state.js modeState(state). SAFE -> caution,
+ *        EMERGENCY -> alarm, FDIR level >= 2 -> at least caution, unknown ->
+ *        "no data". Mode names are identifiers (never translated).
+ */
+export function renderModeBanner(mode) {
+  const ms = mode || {};
+  const lbl = t("Spacecraft mode");
+  if (!ms.mode) return renderBanner("nodata", "", { html: `${lbl} ${renderNoData()}` });
+  const kind = ms.mode === "EMERGENCY" ? "alarm" : ms.contingency ? "caution" : "neutral";
+  const fdir = _finite(ms.fdirLevel) && ms.fdirLevel > 0
+    ? tText("FDIR level {{n}}", { n: ms.fdirLevel }) : "";
+  return renderBanner(kind, "", { html: `${lbl} <span class="k">${esc(ms.mode)}</span>`,
+    meta: [fdir, ms.source || ""] });
+}
+
+/* ── impure helpers (DOM) ─────────────────────────────────────────────── */
+
+/**
+ * setDisabled(el, reason) / setEnabled(el)
+ * Disable a control WITH its reason: aria-disabled (stays focusable, so the
+ * reason is reachable from the keyboard), data-reason (tooltip on hover and
+ * focus), aria-describedby -> a hidden span holding the reason. Activation
+ * is swallowed by installReasonTips()'s guard. setEnabled undoes all of it.
+ */
+export function setDisabled(el, reason) {
+  if (!el) return el;
+  el.setAttribute("aria-disabled", "true");
+  el.setAttribute("data-reason", reason || "");
+  if (el.disabled) el.disabled = false;
+  if (typeof document !== "undefined" && document.createElement) {
+    const id = (el.id || _uid("ds-el")) + "-why";
+    let sp = document.getElementById ? document.getElementById(id) : null;
+    if (!sp) {
+      sp = document.createElement("span");
+      sp.id = id; sp.className = "ds-sr"; sp.hidden = true;
+      if (el.insertAdjacentElement) el.insertAdjacentElement("afterend", sp);
+    }
+    sp.textContent = reason || "";
+    const d = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter((x) => x && x !== id);
+    el.setAttribute("aria-describedby", [...d, id].join(" "));
+  }
+  return el;
+}
+
+export function setEnabled(el) {
+  if (!el) return el;
+  el.removeAttribute("aria-disabled");
+  el.removeAttribute("data-reason");
+  const d = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter((x) => x && !x.endsWith("-why"));
+  if (d.length) el.setAttribute("aria-describedby", d.join(" "));
+  else el.removeAttribute("aria-describedby");
+  return el;
+}
+
+function _announce(msg) {
+  if (typeof document === "undefined" || !document.body) return;
+  let r = document.getElementById("ds-live");
+  if (!r) {
+    r = document.createElement("div");
+    r.id = "ds-live"; r.className = "ds-sr";
+    r.setAttribute("aria-live", "polite");
+    document.body.appendChild(r);
+  }
+  r.textContent = "";
+  setTimeout(() => { r.textContent = msg; }, 30);
+}
+
+/**
+ * armButton(el, {seconds, onExecute, onDisarm}) -> {disarm(), armed()}
+ *
+ * The two-step for critical commands (P9). First activation ARMS the button
+ * for `seconds` (default 5): amber border, label "Confirm: <label>", a
+ * countdown and a draining bar. A second activation inside the window calls
+ * onExecute(event); Esc, the timeout, or the button becoming disabled
+ * disarms. Screen readers are told what to do. Works on any <button>.
+ */
+export function armButton(el, opts = {}) {
+  if (!el || el.__dsArm) return el && el.__dsArm;
+  const secs = opts.seconds ?? 5;
+  const orig = el.innerHTML;
+  const origText = (el.textContent || "").trim();
+  let timer = null, tick = null, until = 0;
+  const armed = () => el.classList.contains("is-armed");
+  function disarm(silent) {
+    clearTimeout(timer); clearInterval(tick); timer = tick = null;
+    if (!armed()) return;
+    el.classList.remove("is-armed");
+    el.innerHTML = orig;
+    if (!silent) { _announce(tText("Disarmed")); if (opts.onDisarm) opts.onDisarm(); }
+  }
+  function arm() {
+    until = Date.now() + secs * 1000;
+    el.classList.add("is-armed");
+    el.innerHTML = `${t("Confirm: {{action}}", { action: origText })} ` +
+      `<span class="ds-arm-t">${secs} s</span><span class="ds-arm-bar"></span>`;
+    const bar = el.querySelector(".ds-arm-bar"), cnt = el.querySelector(".ds-arm-t");
+    if (bar) {
+      bar.style.transform = "scaleX(1)";
+      bar.getBoundingClientRect();
+      bar.style.transition = `transform ${secs}s linear`;
+      bar.style.transform = "scaleX(0)";
+    }
+    tick = setInterval(() => {
+      const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      if (cnt) cnt.textContent = `${left} s`;
+      if (el.getAttribute("aria-disabled") === "true") disarm();
+    }, 200);
+    timer = setTimeout(() => disarm(), secs * 1000);
+    _announce(tText("Armed. Press again within {{s}} s to execute, or Esc to cancel.", { s: secs }));
+  }
+  el.addEventListener("click", (ev) => {
+    if (el.getAttribute("aria-disabled") === "true") return;
+    if (armed()) { disarm(true); if (opts.onExecute) opts.onExecute(ev); }
+    else arm();
+  });
+  el.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && armed()) { ev.preventDefault(); disarm(); } });
+  el.__dsArm = { disarm: () => disarm(), armed };
+  return el.__dsArm;
+}
+
+/**
+ * installReasonTips(root) — once per document (done on import in a browser).
+ * Shows the data-reason of any element on hover and on keyboard focus in a
+ * fixed-position tooltip (never clipped by a scroll panel), hides on Esc,
+ * scroll and leave; and swallows click/Enter/Space/typing on anything
+ * aria-disabled="true" so a disabled control can stay focusable.
+ */
+export function installReasonTips(root) {
+  const doc = root || (typeof document !== "undefined" ? document : null);
+  if (!doc || typeof doc.addEventListener !== "function" || doc.__dsTips) return;
+  doc.__dsTips = true;
+  let tip = null, cur = null;
+  const ensure = () => {
+    if (tip || !doc.body) return tip;
+    tip = doc.createElement("div");
+    tip.className = "ds-tip"; tip.hidden = true;
+    tip.setAttribute("aria-hidden", "true");   // the reason is read via aria-describedby
+    doc.body.appendChild(tip);
+    return tip;
+  };
+  const show = (el) => {
+    const why = el.getAttribute("data-reason");
+    if (!why || !ensure()) return;
+    cur = el;
+    tip.textContent = why;
+    tip.hidden = false;
+    const r = el.getBoundingClientRect();
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    const vw = doc.documentElement.clientWidth, vh = doc.documentElement.clientHeight;
+    let top = r.bottom + 6;
+    if (top + h > vh - 4) top = r.top - h - 6;
+    tip.style.top = `${Math.max(4, top)}px`;
+    tip.style.left = `${Math.max(4, Math.min(r.left, vw - w - 4))}px`;
+  };
+  const hide = () => { cur = null; if (tip) tip.hidden = true; };
+  doc.addEventListener("mouseover", (ev) => {
+    const el = ev.target.closest && ev.target.closest("[data-reason]");
+    if (el && el !== cur) show(el); else if (!el && cur && doc.activeElement !== cur) hide();
+  });
+  doc.addEventListener("focusin", (ev) => {
+    const el = ev.target.closest && ev.target.closest("[data-reason]");
+    if (el) show(el); else hide();
+  });
+  doc.addEventListener("focusout", hide);
+  doc.addEventListener("scroll", hide, true);
+  const blocked = (ev) => ev.target.closest && ev.target.closest('[aria-disabled="true"]');
+  for (const type of ["click", "mousedown"]) {
+    doc.addEventListener(type, (ev) => {
+      if (blocked(ev)) { ev.preventDefault(); ev.stopImmediatePropagation(); }
+    }, true);
+  }
+  doc.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") hide();
+    if (blocked(ev) && !["Tab", "Shift", "Escape"].includes(ev.key)) {
+      ev.preventDefault(); ev.stopImmediatePropagation();
+    }
+  }, true);
+}
+
+/**
+ * mountTabs(host, onSelect) -> host
+ * Wires a renderTabs() tablist: click and Left/Right/Home/End move the
+ * selection (skipping disabled tabs, whose reason still shows on focus) and
+ * call onSelect(id).
+ */
+export function mountTabs(host, onSelect) {
+  if (!host || host.__dsTabs) return host;
+  host.__dsTabs = true;
+  const tabs = () => Array.from(host.querySelectorAll('[role="tab"]'));
+  const select = (b) => {
+    if (!b || b.getAttribute("aria-disabled") === "true") return;
+    tabs().forEach((x) => { x.setAttribute("aria-selected", String(x === b)); x.tabIndex = x === b ? 0 : -1; });
+    b.focus();
+    if (onSelect) onSelect(b.getAttribute("data-tab"));
+  };
+  host.addEventListener("click", (ev) => select(ev.target.closest('[role="tab"]')));
+  host.addEventListener("keydown", (ev) => {
+    const all = tabs().filter((x) => x.getAttribute("aria-disabled") !== "true");
+    const i = all.indexOf(document.activeElement);
+    if (i < 0) return;
+    const k = ev.key;
+    const n = k === "ArrowRight" ? all[(i + 1) % all.length] : k === "ArrowLeft" ? all[(i - 1 + all.length) % all.length]
+      : k === "Home" ? all[0] : k === "End" ? all[all.length - 1] : null;
+    if (n) { ev.preventDefault(); select(n); }
+  });
+  return host;
+}
+if (typeof window !== "undefined" && typeof document !== "undefined" &&
+    typeof document.addEventListener === "function") {
+  try { installReasonTips(document); } catch (e) { /* non-browser DOM stub */ }
 }
 
 /* ── 10. TRANSPORT HELPERS ─────────────────────────────────────────────── */

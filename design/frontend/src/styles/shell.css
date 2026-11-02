@@ -1,0 +1,172 @@
+/*
+ * SpaceCDF shell: two bars, then the work.
+ *   app bar      wordmark · product-tree levels · presence, option, language, theme
+ *   context bar  breadcrumb · readiness · escalation · study actions
+ * Under 900 px the bars wrap into rows and the workbench stacks (single column).
+ */
+.c2o-shell { display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--surface-0); color: var(--text); }
+.c2o-shell__main { flex: 1; min-height: 0; overflow: hidden; }
+
+.c2o-appbar {
+  display: flex; align-items: stretch; gap: var(--sp-3); flex-wrap: wrap;
+  min-height: 40px; padding: 0 var(--sp-3) 0 var(--sp-4);
+  background: var(--surface-1); border-bottom: 1px solid var(--line);
+}
+.c2o-appbar__mark {
+  align-self: center; flex: none;
+  font-size: var(--fs-value); font-weight: 600; letter-spacing: 0.01em; color: var(--brand);
+  padding-right: var(--sp-3); border-right: 1px solid var(--line); line-height: 24px;
+}
+.c2o-appbar__levels { flex: 1 1 auto; min-width: 0; }
+.c2o-appbar__levels .c2o-tab { min-height: 40px; }
+.c2o-appbar__end { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-left: auto; padding: var(--sp-1) 0; }
+
+.c2o-presence { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+.c2o-presence__names { max-width: 220px; font-size: var(--fs-label); }
+.c2o-option-select { width: auto; max-width: 180px; }
+
+.c2o-contextbar {
+  position: relative; z-index: 20;
+  display: flex; align-items: center; gap: var(--sp-2) var(--sp-4); flex-wrap: wrap;
+  min-height: 44px; padding: var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-4);
+  background: var(--surface-0); border-bottom: 1px solid var(--line);
+}
+.c2o-contextbar__actions { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.c2o-contextbar__sep { width: 1px; align-self: stretch; margin: 4px var(--sp-1); background: var(--line); }
+
+.c2o-crumbs { display: flex; align-items: center; gap: var(--sp-1); min-width: 0; flex-wrap: wrap; }
+.c2o-crumb {
+  min-height: 24px; padding: 0 var(--sp-1);
+  font-size: var(--fs-body); font-weight: 500; color: var(--interactive);
+  background: none; border: 0; border-radius: var(--radius-sm); cursor: pointer;
+}
+.c2o-crumb:hover { background: var(--surface-2); }
+.c2o-crumb[aria-current='page'] { color: var(--text); font-weight: 600; cursor: default; }
+.c2o-crumb[aria-current='page']:hover { background: none; }
+
+/* Readiness: summary button; the checklist drops down without moving the page. */
+.c2o-readiness { position: relative; min-width: 0; }
+.c2o-readiness__btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 28px; max-width: 100%;
+  padding: 0 var(--sp-2); background: none; border: 1px solid transparent; border-radius: var(--radius); cursor: pointer; color: inherit;
+}
+.c2o-readiness__btn:hover, .c2o-readiness__btn[aria-expanded='true'] { border-color: var(--line-strong); background: var(--surface-1); }
+.c2o-readiness__btn .c2o-disclosure__chev { transform: rotate(90deg); }
+.c2o-readiness__btn[aria-expanded='true'] .c2o-disclosure__chev { transform: rotate(-90deg); }
+.c2o-readiness__next { max-width: 260px; font-size: var(--fs-label); }
+.c2o-readiness__list {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 30;
+  width: max-content; max-width: min(560px, calc(100vw - 32px));
+  padding: var(--sp-2) var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-2);
+  background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(11, 13, 16, 0.12);
+}
+.c2o-readiness__item { display: grid; grid-template-columns: minmax(150px, max-content) 1fr; gap: var(--sp-3); align-items: baseline; }
+
+.c2o-escalation { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.c2o-escalation__item {
+  display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 28px; padding: 0 var(--sp-2);
+  background: var(--status-alarm-wash); border: 1px solid var(--status-alarm); border-radius: var(--radius); cursor: pointer; color: inherit;
+}
+.c2o-escalation__item:hover { box-shadow: inset 0 0 0 1px var(--status-alarm); }
+
+/* Margin tower (after an analysis run) */
+.c2o-tower { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-5); padding: var(--sp-1) var(--sp-4); background: var(--surface-1); border-bottom: 1px solid var(--line); }
+.c2o-tower__item { display: grid; grid-template-columns: auto 72px auto; align-items: center; gap: var(--sp-2); font-size: var(--fs-label); }
+.c2o-tower__bar { position: relative; height: 6px; background: var(--surface-2); border: 1px solid var(--line); }
+.c2o-tower__fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--text-3); }
+.c2o-tower__item--caution .c2o-tower__fill { background: var(--status-caution); }
+.c2o-tower__item--alarm .c2o-tower__fill { background: var(--status-alarm); }
+
+/* Entry screens */
+.c2o-home-frame { min-height: 100vh; background: var(--surface-0); color: var(--text); }
+.c2o-home-frame__bar {
+  display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+  min-height: 48px; padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4);
+  background: var(--surface-1); border-bottom: 1px solid var(--line);
+}
+.c2o-home-frame__main { width: 100%; max-width: 1040px; margin: 0 auto; padding: clamp(24px, 8vh, 72px) var(--sp-4) var(--sp-6); }
+.c2o-home-frame__lead { margin: var(--sp-2) 0 0; max-width: 62ch; font-size: var(--fs-body); color: var(--text-2); }
+.c2o-name-form { max-width: 480px; }
+.c2o-name-form__field { flex: 1 1 240px; }
+.c2o-btn--tall { min-height: 32px; }
+
+/* Workbench (LevelWorkbench) */
+.c2o-wb { display: flex; flex-direction: column; height: 100%; }
+.c2o-wb__strip {
+  flex: none; min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3);
+  padding: var(--sp-1) var(--sp-4); background: var(--surface-1); border-bottom: 1px solid var(--line);
+  font-size: var(--fs-body); color: var(--text-2);
+}
+.c2o-wb__diagram { flex: 1; min-height: 120px; position: relative; }
+.c2o-wb__hide { position: absolute; top: 8px; right: 8px; z-index: 5; }
+.c2o-wb__activity { min-height: 0; display: flex; flex-direction: column; background: var(--surface-0); }
+.c2o-wb__tabbar { display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-3) 0 var(--sp-2); background: var(--surface-1); border-bottom: 1px solid var(--line); }
+.c2o-wb__tabs { flex: 1 1 auto; min-width: 0; }
+.c2o-wb__show { flex: none; }
+.c2o-wb__panel { flex: 1; overflow: auto; background: var(--surface-0); }
+
+@media (max-width: 899px) {
+  .c2o-appbar { padding: 0 var(--sp-3); gap: 0 var(--sp-3); }
+  .c2o-appbar__levels { order: 3; flex-basis: 100%; border-top: 1px solid var(--line); margin: 0 calc(-1 * var(--sp-3)); padding: 0 var(--sp-1); }
+  .c2o-appbar__mark { border-right: 0; }
+  .c2o-presence__names { display: none; }
+  .c2o-contextbar { padding: var(--sp-1) var(--sp-3); }
+  .c2o-contextbar > .grow { display: none; }
+  .c2o-contextbar__actions { width: 100%; }
+  .c2o-contextbar__sep { display: none; }
+  .c2o-readiness__next { display: none; }
+  /* Single column: the diagram becomes a fixed band above the activity panel. */
+  .c2o-shell { height: auto; min-height: 100dvh; }
+  .c2o-shell__main { overflow: visible; }
+  .c2o-wb { height: auto; }
+  .c2o-wb__diagram { flex: none; height: 300px; }
+  .c2o-wb .c2o-splitter { display: none; }
+  .c2o-wb__activity { height: auto !important; flex: none !important; }
+  .c2o-wb__panel { overflow-x: auto; }
+  .c2o-theme-toggle { min-width: 0; }
+}
+.c2o-contextbar__actions { margin-left: auto; }
+@media (max-width: 599px) {
+  .c2o-theme-toggle__label { display: none; }
+  .c2o-appbar__end { gap: var(--sp-2); }
+}
+
+/* React Flow edge labels: 12 px floor, themed label plate. */
+.react-flow__edge-text { font-size: var(--fs-label); fill: var(--text-2); font-family: var(--font-sans); }
+.react-flow__edge-textbg { fill: var(--surface-0); }
+.react-flow__edge-path { stroke: var(--line-strong); }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--interactive); }
+.react-flow__background { background: var(--surface-0); }
+
+/* Block diagram nodes */
+.c2o-node {
+  position: relative; min-width: 160px; padding: var(--sp-2) var(--sp-3) var(--sp-2) 14px; cursor: pointer;
+  background: var(--surface-1); border: 1px solid var(--line-strong); border-left: 4px solid var(--line-strong); border-radius: var(--radius);
+}
+.c2o-node.is-frozen { background: var(--surface-2); }
+.c2o-node.is-external { border-style: dashed; border-left-style: solid; }
+.react-flow__node.selected .c2o-node { box-shadow: 0 0 0 2px var(--interactive); }
+.c2o-node__handle.react-flow__handle { width: 6px; height: 6px; background: var(--text-3); border: 0; }
+.c2o-node__qty {
+  position: absolute; top: -9px; right: -9px; min-width: 22px; height: 20px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 600; color: var(--surface-1); background: var(--text); border-radius: var(--radius-sm);
+}
+.c2o-node__kind { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: var(--fs-label); color: var(--text-3); }
+.c2o-node__name { margin-bottom: 4px; font-size: var(--fs-value); font-weight: 600; line-height: var(--lh-value); color: var(--text); }
+.c2o-node__vals { display: flex; flex-wrap: wrap; gap: var(--sp-2); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--fs-label); color: var(--text-2); }
+.c2o-node__sans { font-family: var(--font-sans); }
+.c2o-node__meta { margin-top: 2px; font-size: var(--fs-label); color: var(--text-2); }
+.c2o-node__layer { position: absolute; width: 100%; height: 100%; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); }
+.c2o-node__layer.is-external { border-style: dashed; }
+.c2o-node--port { min-width: 120px; padding: 6px 10px; text-align: center; border: 1px dashed var(--line-strong); }
+.c2o-diagram-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); font-size: var(--fs-body); color: var(--text-2); }
+
+/* Side drawer (facilitator guide) */
+.c2o-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 1000; width: min(400px, 100vw); overflow: auto;
+  padding: 0 var(--sp-4) var(--sp-5); background: var(--surface-1); color: var(--text);
+  border-left: 1px solid var(--line-strong); box-shadow: -8px 0 24px rgba(11, 13, 16, 0.14);
+}
+.c2o-drawer__head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; min-height: 48px; margin: 0 calc(-1 * var(--sp-4)) var(--sp-3); padding: 0 var(--sp-3) 0 var(--sp-4); background: var(--surface-1); border-bottom: 1px solid var(--line); }

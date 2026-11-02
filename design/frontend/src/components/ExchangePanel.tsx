@@ -14,10 +14,6 @@ import { fs } from '../theme/tokens'
 
 const API = '/api'
 
-const btn = (color: string): React.CSSProperties => ({
-  padding: '0.25rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px', cursor: 'pointer',
-  background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 38%, transparent)`, whiteSpace: 'nowrap',
-})
 
 interface Fmt { id: string; label: string; ext: string; path: string; color: string; blurb: string }
 
@@ -82,8 +78,8 @@ function ImportZone({ label, accept, endpoint, color, blurb, onDone }: {
         border: `1px dashed ${over ? color : 'var(--border)'}`, background: over ? `color-mix(in srgb, ${color} 6%, transparent)` : 'var(--bg-primary)',
       }}>
       <div style={{ fontSize: fs.label, fontWeight: 600, color }}>{busy ? t('Importing…') : t('Import {{label}}', { label })}</div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.15rem' }}>{blurb}</div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{t('Drop a file here or click to choose ({{accept}}).', { accept })}</div>
+      <div className="t-12 c-2 mt-1">{blurb}</div>
+      <div className="t-12 c-2 mt-1">{t('Drop a file here or click to choose ({{accept}}).', { accept })}</div>
       <input ref={inputRef} type="file" accept={accept} style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) upload(f) }} />
     </div>
@@ -96,12 +92,12 @@ function ImportSummary({ r }: { r: ImportResult }) {
     typeof o === 'number' ? String(o) : Object.entries(o).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(', ') || '0'
   return (
     <div style={{ fontSize: fs.label, marginTop: '0.4rem', padding: '0.4rem 0.6rem', borderRadius: '4px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)' }}>
-      <div style={{ color: 'var(--status-ok)', fontWeight: 600 }}>{t('Imported {{format}}', { format: r.format })}{r.filename ? ` — ${r.filename}` : ''}</div>
+      <div className="c-ok w-600">{t('Imported {{format}}', { format: r.format })}{r.filename ? ` — ${r.filename}` : ''}</div>
       <div>{t('created: {{created}} · updated: {{updated}}', { created: counts(r.created), updated: counts(r.updated) })}{r.format === 'reqif' ? ` · ${t('relations: {{n}}', { n: r.relations_created })}` : ''}</div>
       {r.warnings?.length > 0 && (
-        <details style={{ marginTop: '0.2rem' }}>
-          <summary style={{ color: 'var(--status-caution)', cursor: 'pointer' }}>{t('{{count}} warnings', { count: r.warnings.length, defaultValue_one: '{{count}} warning' })}</summary>
-          <ul style={{ margin: '0.2rem 0 0 1rem', color: 'var(--text-secondary)' }}>{r.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+        <details className="mt-1">
+          <summary className="c-caution cursor-p">{t('{{count}} warnings', { count: r.warnings.length, defaultValue_one: '{{count}} warning' })}</summary>
+          <ul className="mt-1 ml-4 c-2">{r.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
         </details>
       )}
     </div>
@@ -118,7 +114,7 @@ export function ExchangePanel({ studyId, title }: { studyId: string | null; titl
   const [pushing, setPushing] = useState(false)
 
   if (!studyId) {
-    return <div style={{ padding: '0.5rem 0', color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Create or join a study to exchange models.')}</div>
+    return <div className="py-2 px-0 c-2 t-12">{t('Create or join a study to exchange models.')}</div>
   }
   const base = `${API}/studies/${studyId}`
   const slug = studyId.slice(0, 8)
@@ -142,40 +138,40 @@ export function ExchangePanel({ studyId, title }: { studyId: string | null; titl
   }
 
   return (
-    <div style={{ fontSize: fs.label }}>
-      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.15rem' }}>{title ?? t('Model exchange')}</div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+    <div className="t-12">
+      <div className="w-600 t-12 mb-1">{title ?? t('Model exchange')}</div>
+      <div className="t-12 c-2 mb-2">
         {t("Export the study's Arcadia spine (elements, functions, interfaces, exchange items, requirements, parameters) to standard formats, or import from them.")}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.6rem' }}>
+      <div className="stack gap-1 mb-2">
         {EXPORTS.map(f => (
-          <div key={f.id} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', padding: '0.35rem 0.5rem', borderRadius: '4px', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
-            <button style={{ ...btn(f.color), minWidth: 150 }} onClick={() => download(`${base}/${f.path}`, `${f.id}_${slug}.${f.ext}`, setErr)}>
+          <div key={f.id} className="flex gap-2 ai-s py-1 px-2 rounded bg-0 bd">
+            <button className="c2o-btn c2o-btn--sm" style={{ minWidth: 150 }} onClick={() => download(`${base}/${f.path}`, `${f.id}_${slug}.${f.ext}`, setErr)}>
               ↓ {f.label}
             </button>
-            <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{f.blurb}</div>
+            <div className="t-12 c-2 lh-text">{f.blurb}</div>
           </div>
         ))}
-        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', padding: '0.35rem 0.5rem', borderRadius: '4px', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
-          <button style={{ ...btn('var(--cat-6)'), minWidth: 150 }} disabled={pushing} onClick={pushComet}>
+        <div className="flex gap-2 ai-s py-1 px-2 rounded bg-0 bd">
+          <button className="c2o-btn c2o-btn--sm" style={{ minWidth: 150 }} disabled={pushing} onClick={pushComet}>
             {pushing ? t('Pushing…') : t('⇧ Push to COMET')}
           </button>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+          <div className="t-12 c-2 lh-text">
             {t('ECSS-E-TM-10-25 Annex C.2 REST push to a COMET / CDP4 server (ESA CDF). Requires COMET_URL on the server.')}
             {cometMsg && <div style={{ color: cometOk ? 'var(--status-ok)' : 'var(--status-caution)', marginTop: '0.2rem' }}>{cometMsg}</div>}
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="flex gap-2 wrap">
         <ImportZone label="Capella" accept=".zip" endpoint={`${base}/import/capella`} color="var(--interactive)"
           blurb={t('Capella project zip (.aird + .capella). Elements, functions, interfaces and exchange items are merged by external id.')} onDone={onImportDone} />
         <ImportZone label="ReqIF" accept=".reqif,.reqifz,.xml" endpoint={`${base}/import/reqif`} color="var(--status-ok)"
           blurb={t('ReqIF from DOORS / Polarion / Jama. Requirements and their parent/child relations are created or updated.')} onDone={onImportDone} />
       </div>
       {result && <ImportSummary r={result} />}
-      {err && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginTop: '0.4rem' }}>{err}</div>}
+      {err && <div className="c-alarm t-12 mt-2">{err}</div>}
     </div>
   )
 }

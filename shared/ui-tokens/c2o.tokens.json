@@ -1,0 +1,255 @@
+{
+  "$description": "C2O design tokens: the single source of truth for the SMO consoles (sim/) and SpaceCDF (design/). W3C DTCG format. Edit here, then run `python3 shared/ui-tokens/build.py`. Brief: docs/ui/C2O_UI_BRIEF.md §2-3.",
+
+  "font": {
+    "$type": "fontFamily",
+    "sans": { "$value": ["IBM Plex Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+              "$description": "Interface text: labels, prose, buttons." },
+    "mono": { "$value": ["IBM Plex Mono", "ui-monospace", "Menlo", "Consolas", "monospace"],
+              "$description": "Values and identifiers, always with tabular figures." }
+  },
+
+  "weight": {
+    "$type": "fontWeight",
+    "regular":  { "$value": 400 },
+    "medium":   { "$value": 500, "$description": "Values (mono 500 is the heaviest mono shipped)." },
+    "semibold": { "$value": 600, "$description": "Emphasis in sans only; there is no mono 600." }
+  },
+
+  "size": {
+    "$type": "dimension",
+    "label": { "$value": "12px", "$description": "Floor. Labels, captions, chips, table headers." },
+    "body":  { "$value": "13px", "$description": "Body text, buttons, table cells." },
+    "value": { "$value": "15px", "$description": "Readouts (primary readouts are >= 14 px)." },
+    "title": { "$value": "20px", "$description": "Screen titles and the big number of a triad." }
+  },
+
+  "lineHeight": {
+    "$type": "number",
+    "text":  { "$value": 1.4 },
+    "value": { "$value": 1.2 }
+  },
+
+  "space": {
+    "$type": "dimension",
+    "1": { "$value": "4px" },
+    "2": { "$value": "8px" },
+    "3": { "$value": "12px" },
+    "4": { "$value": "16px" },
+    "5": { "$value": "24px" },
+    "6": { "$value": "32px" }
+  },
+
+  "radius": {
+    "$type": "dimension",
+    "sm": { "$value": "2px", "$description": "Chips, inputs inside dense tables." },
+    "md": { "$value": "3px", "$description": "Default: buttons, fields, panels." },
+    "lg": { "$value": "4px", "$description": "Dialogs and popovers. Nothing is rounder." }
+  },
+
+  "motion": {
+    "duration": { "$type": "duration", "$value": "140ms",
+                  "$description": "State changes and disclosure only; no idle animation." },
+    "easing":   { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1] }
+  },
+
+  "theme": {
+    "dark": {
+      "$description": "Control-room theme: default for MCS, planner, instructor and tools. Text >= 7:1 on surface.0/1 (AAA).",
+      "surface": {
+        "$type": "color",
+        "0": { "$value": "#0B0D10", "$description": "Page." },
+        "1": { "$value": "#14171C", "$description": "Panels." },
+        "2": { "$value": "#1C2129", "$description": "Raised rows, inputs." },
+        "3": { "$value": "#262C36", "$description": "Hover, pressed, tracks." }
+      },
+      "line": {
+        "$type": "color",
+        "base":   { "$value": "#2B313A", "$description": "Decorative hairline (exempt from 3:1)." },
+        "strong": { "$value": "#3B4450", "$description": "Control outlines, table header rule." }
+      },
+      "text": {
+        "$type": "color",
+        "value":     { "$value": "#F5F7FA", "$description": "Telemetry numerals: brighter than labels." },
+        "primary":   { "$value": "#E9EDF2" },
+        "secondary": { "$value": "#C0C9D4" },
+        "tertiary":  { "$value": "#9BA7B4", "$description": "Also the stale-value ink (with italic)." },
+        "disabled":  { "$value": "#5D6672", "$description": "40 % treatment for disabled controls; never information." }
+      },
+      "accent": {
+        "$type": "color",
+        "base":   { "$value": "#5CC6EB", "$description": "The one accent: interactive, selected, active, commanded, focus. Flight-deck cyan." },
+        "wash":   { "$value": "#1E3039" },
+        "onFill": { "$value": "#0B0D10", "$description": "Text on an accent fill." }
+      },
+      "status": {
+        "$type": "color",
+        "ok":          { "$value": "#00C896", "$description": "Affirmative verdicts only (GO, PASS, lock). Never resting telemetry." },
+        "okWash":      { "$value": "#0E2A23" },
+        "caution":     { "$value": "#F0B429" },
+        "cautionWash": { "$value": "#2E2410" },
+        "alarm":       { "$value": "#FF7B72" },
+        "alarmWash":   { "$value": "#33191A" },
+        "shelved":     { "$value": "#A79BF8" },
+        "stale":       { "$value": "#7E8697", "$description": "Graphics only (dashed outlines, cut marks); never text." }
+      },
+      "category": {
+        "$type": "color",
+        "$description": "Subsystem identity, low chroma, never red or amber, always with a letter badge.",
+        "1": { "$value": "#7FA7C9" }, "2": { "$value": "#9C8FD1" }, "3": { "$value": "#6FB7A8" },
+        "4": { "$value": "#B7A07A" }, "5": { "$value": "#8FA3B8" }, "6": { "$value": "#C2879E" },
+        "7": { "$value": "#7FB38A" }, "8": { "$value": "#A7A7A7" }
+      },
+      "graphic": {
+        "$type": "color",
+        "fill": { "$value": "#7F8A98", "$description": "Neutral data ink: gauge fills, sparklines at rest. >= 3:1 on surface.3 (the track)." }
+      },
+      "brand":    { "$type": "color", "$value": "#E0707F", "$description": "uOttawa garnet, wordmark only." },
+      "overlay":  { "$type": "color", "$value": "rgba(0, 0, 0, 0.6)" },
+      "hatchInk": { "$type": "color", "$value": "rgba(255, 255, 255, 0.06)", "$description": "Legacy --hatch stripe. Not a state treatment any more." }
+    },
+
+    "light": {
+      "$description": "Design-work theme: default for SpaceCDF, optional on the consoles. Text >= 4.5:1 (AA), most >= 7:1.",
+      "surface": {
+        "$type": "color",
+        "0": { "$value": "#F4F5F7" },
+        "1": { "$value": "#FFFFFF" },
+        "2": { "$value": "#EEF0F3" },
+        "3": { "$value": "#E3E6EA" }
+      },
+      "line": {
+        "$type": "color",
+        "base":   { "$value": "#D5D9DE" },
+        "strong": { "$value": "#B8BEC6" }
+      },
+      "text": {
+        "$type": "color",
+        "value":     { "$value": "#0B0D10" },
+        "primary":   { "$value": "#141619" },
+        "secondary": { "$value": "#383C42" },
+        "tertiary":  { "$value": "#4A4F56" },
+        "disabled":  { "$value": "#8A9099" }
+      },
+      "accent": {
+        "$type": "color",
+        "base":   { "$value": "#0B5577" },
+        "wash":   { "$value": "#E7EEF1" },
+        "onFill": { "$value": "#FFFFFF" }
+      },
+      "status": {
+        "$type": "color",
+        "ok":          { "$value": "#0B5A42" },
+        "okWash":      { "$value": "#E0F1EA" },
+        "caution":     { "$value": "#6E4300" },
+        "cautionWash": { "$value": "#FBF1DE" },
+        "alarm":       { "$value": "#8F1D12" },
+        "alarmWash":   { "$value": "#FBE7E4" },
+        "shelved":     { "$value": "#453A96" },
+        "stale":       { "$value": "#53575D" }
+      },
+      "category": {
+        "$type": "color",
+        "1": { "$value": "#3F6A8F" }, "2": { "$value": "#5E5596" }, "3": { "$value": "#2F6E64" },
+        "4": { "$value": "#6A5F45" }, "5": { "$value": "#4F6276" }, "6": { "$value": "#85506A" },
+        "7": { "$value": "#4A6B57" }, "8": { "$value": "#5B5F66" }
+      },
+      "graphic": {
+        "$type": "color",
+        "fill": { "$value": "#7A818B" }
+      },
+      "brand":    { "$type": "color", "$value": "#8F001A" },
+      "overlay":  { "$type": "color", "$value": "rgba(11, 13, 16, 0.45)" },
+      "hatchInk": { "$type": "color", "$value": "rgba(0, 0, 0, 0.10)" }
+    }
+  },
+
+  "$extensions": {
+    "org.c2o.outputs": {
+      "$description": "Output variable names per target. Token path -> CSS custom properties (several = aliases). `ts` is the key in SpaceCDF tokens.ts `c`.",
+      "console": {
+        "scale": {
+          "font.sans": ["--font-sans", "--sans"],
+          "font.mono": ["--font-mono", "--mono"],
+          "weight.regular": ["--fw-regular"], "weight.medium": ["--fw-medium"], "weight.semibold": ["--fw-semibold"],
+          "size.label": ["--fs-label"], "size.body": ["--fs-body"], "size.value": ["--fs-value"], "size.title": ["--fs-title"],
+          "lineHeight.text": ["--lh-text"], "lineHeight.value": ["--lh-value"],
+          "space.1": ["--sp-1"], "space.2": ["--sp-2"], "space.3": ["--sp-3"],
+          "space.4": ["--sp-4"], "space.5": ["--sp-5"], "space.6": ["--sp-6"],
+          "radius.sm": ["--radius-sm"], "radius.md": ["--radius", "--r"], "radius.lg": ["--radius-lg"],
+          "motion.duration": ["--motion"], "motion.easing": ["--ease"]
+        },
+        "theme": {
+          "surface.0": ["--bg"], "surface.1": ["--s1"], "surface.2": ["--s2"], "surface.3": ["--s3"],
+          "line.base": ["--line"], "line.strong": ["--line-2"],
+          "text.value": ["--val"], "text.primary": ["--tx"], "text.secondary": ["--tx2"],
+          "text.tertiary": ["--tx3"], "text.disabled": ["--tx-off"],
+          "accent.base": ["--accent", "--info"], "accent.wash": ["--accent-wash", "--info-wash"],
+          "accent.onFill": ["--on-accent"],
+          "status.ok": ["--ok"], "status.okWash": ["--ok-wash"],
+          "status.caution": ["--warn"], "status.cautionWash": ["--warn-wash"],
+          "status.alarm": ["--alarm"], "status.alarmWash": ["--alarm-wash"],
+          "status.shelved": ["--shelf"], "status.stale": ["--stale"], "graphic.fill": ["--fill"],
+          "category.1": ["--cat-1"], "category.2": ["--cat-2"], "category.3": ["--cat-3"], "category.4": ["--cat-4"],
+          "category.5": ["--cat-5"], "category.6": ["--cat-6"], "category.7": ["--cat-7"], "category.8": ["--cat-8"],
+          "brand": ["--brand"], "overlay": ["--overlay"], "hatchInk": ["--hatch-ink"]
+        }
+      },
+      "cdf": {
+        "scale": {
+          "font.sans": ["--font-sans"], "font.mono": ["--font-mono"],
+          "size.label": ["--fs-label"], "size.body": ["--fs-body"], "size.value": ["--fs-value"], "size.title": ["--fs-title"],
+          "lineHeight.text": ["--lh-text"], "lineHeight.value": ["--lh-value"],
+          "space.1": ["--sp-1"], "space.2": ["--sp-2"], "space.3": ["--sp-3"],
+          "space.4": ["--sp-4"], "space.5": ["--sp-5"], "space.6": ["--sp-6"],
+          "radius.md": ["--radius"], "radius.sm": ["--radius-sm"], "radius.lg": ["--radius-lg"],
+          "motion.duration": ["--motion"], "motion.easing": ["--ease"]
+        },
+        "theme": {
+          "surface.0": {"css": "--surface-0", "ts": "surface0"},
+          "surface.1": {"css": "--surface-1", "ts": "surface1"},
+          "surface.2": {"css": "--surface-2", "ts": "surface2"},
+          "surface.3": {"css": "--surface-3", "ts": "surface3"},
+          "line.base": {"css": "--line", "ts": "line"},
+          "line.strong": {"css": "--line-strong", "ts": "lineStrong"},
+          "text.value": {"css": "--text-value", "ts": "textValue"},
+          "text.primary": {"css": "--text", "ts": "text"},
+          "text.secondary": {"css": "--text-2", "ts": "text2"},
+          "text.tertiary": {"css": "--text-3", "ts": "text3"},
+          "text.disabled": {"css": "--text-disabled", "ts": "textDisabled"},
+          "accent.base": {"css": "--interactive", "ts": "interactive"},
+          "accent.wash": {"css": "--interactive-wash", "ts": "interactiveWash"},
+          "accent.onFill": {"css": "--on-fill", "ts": "onFill"},
+          "status.caution": {"css": "--status-caution", "ts": "caution"},
+          "status.cautionWash": {"css": "--status-caution-wash", "ts": "cautionWash"},
+          "status.alarm": {"css": "--status-alarm", "ts": "alarm"},
+          "status.alarmWash": {"css": "--status-alarm-wash", "ts": "alarmWash"},
+          "status.ok": {"css": "--status-ok", "ts": "ok"},
+          "status.okWash": {"css": "--status-ok-wash", "ts": "okWash"},
+          "status.shelved": {"css": "--status-shelved", "ts": "shelved"},
+          "status.stale": {"css": "--status-stale", "ts": "stale"},
+          "graphic.fill": {"css": "--graphic-fill", "ts": "graphicFill"},
+          "brand": {"css": "--brand", "ts": "brand"},
+          "category.1": {"css": "--cat-1"}, "category.2": {"css": "--cat-2"},
+          "category.3": {"css": "--cat-3"}, "category.4": {"css": "--cat-4"},
+          "category.5": {"css": "--cat-5"}, "category.6": {"css": "--cat-6"},
+          "category.7": {"css": "--cat-7"}, "category.8": {"css": "--cat-8"},
+          "overlay": {"css": "--overlay"}
+        }
+      }
+    },
+    "org.c2o.contrast": {
+      "$description": "Checked by build.py (--check fails on a miss); table written into the design-system.css header.",
+      "dark":  { "surfaces": ["surface.0", "surface.1", "surface.2", "surface.3"], "primary": 2, "textFloor": 7.0,
+                 "text": ["text.value", "text.primary", "text.secondary", "text.tertiary",
+                          "accent.base", "status.ok", "status.caution", "status.alarm", "status.shelved"],
+                 "graphics": ["status.stale", "graphic.fill"], "disabled": ["text.disabled"] },
+      "light": { "surfaces": ["surface.0", "surface.1", "surface.2", "surface.3"], "primary": 2, "textFloor": 4.5,
+                 "text": ["text.value", "text.primary", "text.secondary", "text.tertiary",
+                          "accent.base", "status.ok", "status.caution", "status.alarm", "status.shelved"],
+                 "graphics": ["status.stale", "graphic.fill"], "disabled": ["text.disabled"] },
+      "onFill": [["accent.onFill", "accent.base"]],
+      "pairs": [["graphic.fill", "surface.3", 3.0]]
+    }
+  }
+}

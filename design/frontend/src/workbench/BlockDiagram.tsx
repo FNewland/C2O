@@ -27,7 +27,6 @@ import { displayElementName } from './BlocksPanel'
 import { subsystemStyle } from '../theme/tokens'
 import { useTheme } from '../theme/useTheme'
 import { askChoice, askText } from '../components/ui/Dialog'
-import { fs } from '../theme/tokens'
 
 const API = '/api'
 
@@ -44,68 +43,48 @@ function ElementNode({ data }: NodeProps) {
   const accent = ss ? ss.color : 'var(--line-strong)'
   const isMulti = quantity > 1
   const outOfScope = in_scope === false
-  const border = `1px ${outOfScope ? 'dashed' : 'solid'} ${outOfScope ? 'var(--line-strong)' : 'var(--line-strong)'}`
   const typeLabel = domain ? domain.toUpperCase() : t(TYPE_LABEL[elementType] ?? elementType)
 
+  const cls = ['c2o-node', frozen && 'is-frozen', outOfScope && 'is-external'].filter(Boolean).join(' ')
   const box = (
-    <div style={{
-      padding: '8px 12px 8px 14px', borderRadius: 'var(--radius)', minWidth: 160,
-      background: frozen ? 'var(--surface-2)' : 'var(--surface-1)',
-      border, borderLeft: `4px solid ${accent}`,
-      cursor: 'pointer', position: 'relative',
-    }}>
-      <Handle type="target" position={Position.Top} style={{ background: 'var(--text-3)', width: 6, height: 6 }} />
+    <div className={cls} style={{ borderLeftColor: accent }}>
+      <Handle type="target" position={Position.Top} className="c2o-node__handle" />
 
-      {isMulti && (
-        <div style={{
-          position: 'absolute', top: -9, right: -9,
-          background: 'var(--text)', color: 'var(--surface-1)', fontWeight: 600,
-          fontFamily: 'var(--font-mono)', fontSize: fs.label, minWidth: 22, height: 20, padding: '0 4px', borderRadius: 'var(--radius-sm)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          ×{quantity}
-        </div>
-      )}
+      {isMulti && <div className="c2o-node__qty">×{quantity}</div>}
 
       {/* Identity row: badge + type, then state words (text, not colour) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, fontSize: fs.label, color: 'var(--text-3)' }}>
+      <div className="c2o-node__kind">
         {ss?.badge && <span className="c2o-ss-badge" style={{ background: ss.color }} aria-hidden="true">{ss.badge}</span>}
-        <span style={{ fontWeight: 500 }}>{typeLabel}</span>
-        {frozen && <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{t('FROZEN')}</span>}
-        {outOfScope && <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>{t('EXT')}</span>}
+        <span className="w-500">{typeLabel}</span>
+        {frozen && <span className="w-600 c-2">{t('FROZEN')}</span>}
+        {outOfScope && <span className="w-600 c-2">{t('EXT')}</span>}
       </div>
 
-      <div style={{ fontSize: fs.value, fontWeight: 600, color: 'var(--text)', lineHeight: 'var(--lh-value)', marginBottom: 4 }}>
-        {label}
-      </div>
+      <div className="c2o-node__name">{label}</div>
 
-      <div style={{ fontSize: fs.label, color: 'var(--text-2)', display: 'flex', gap: 8, flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+      <div className="c2o-node__vals">
         {mass_kg != null && <span>{isMulti ? t('{{mass}} kg ea ({{total}} total)', { mass: mass_kg.toFixed(1), total: (mass_kg * quantity).toFixed(1) }) : `${mass_kg.toFixed(1)} kg`}</span>}
         {power_w != null && <span>{power_w.toFixed(0)} W</span>}
-        {childCount > 0 && <span style={{ fontFamily: 'var(--font-sans)' }}>{t('{{count}} children', { count: childCount })}</span>}
+        {childCount > 0 && <span className="c2o-node__sans">{t('{{count}} children', { count: childCount })}</span>}
       </div>
 
-      {location && (
-        <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: 2 }}>{location}</div>
-      )}
+      {location && <div className="c2o-node__meta">{location}</div>}
 
       {externalInterfaces > 0 && (
-        <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginTop: 2 }}>
+        <div className="c2o-node__meta">
           {t('{{count}} ext ifaces', { count: externalInterfaces, defaultValue_one: '{{count}} ext iface' })}
         </div>
       )}
 
-      <Handle type="source" position={Position.Bottom} style={{ background: 'var(--text-3)', width: 6, height: 6 }} />
+      <Handle type="source" position={Position.Bottom} className="c2o-node__handle" />
     </div>
   )
 
   if (isMulti) {
-    const layer = (o: number) => (
-      <div style={{ position: 'absolute', top: o, left: o, width: '100%', height: '100%', borderRadius: 'var(--radius)', background: 'var(--surface-1)', border }} />
-    )
     return (
-      <div style={{ position: 'relative' }}>
-        {layer(6)}{layer(3)}
+      <div className="rel">
+        <div className={`c2o-node__layer${outOfScope ? ' is-external' : ''}`} style={{ top: 6, left: 6 }} />
+        <div className={`c2o-node__layer${outOfScope ? ' is-external' : ''}`} style={{ top: 3, left: 3 }} />
         {box}
       </div>
     )
@@ -122,21 +101,14 @@ const TYPE_LABEL: Record<string, string> = {
 /** External port node — represents a parent-level interface flowing into this block */
 function ExternalPortNode({ data }: NodeProps) {
   const { label, interfaceType, peerName } = data as any
-  const color = 'var(--text-3)'
 
   return (
-    <div style={{
-      padding: '6px 10px', borderRadius: 'var(--radius)', minWidth: 120,
-      background: 'var(--surface-1)', border: '1px dashed var(--line-strong)',
-      fontSize: fs.label, textAlign: 'center',
-    }}>
-      <Handle type="target" position={Position.Left} style={{ background: color, width: 6, height: 6 }} id="target" />
-      <Handle type="source" position={Position.Right} style={{ background: color, width: 6, height: 6 }} id="source" />
-      <div style={{ color, fontWeight: 700, textTransform: 'uppercase', fontSize: fs.label }}>
-        EXT {interfaceType}
-      </div>
-      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{label}</div>
-      <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>↔ {peerName}</div>
+    <div className="c2o-node c2o-node--port">
+      <Handle type="target" position={Position.Left} className="c2o-node__handle" id="target" />
+      <Handle type="source" position={Position.Right} className="c2o-node__handle" id="source" />
+      <div className="c2o-node__kind caps">EXT {interfaceType}</div>
+      <div className="c-1 w-500">{label}</div>
+      <div className="c-2 t-12">↔ {peerName}</div>
     </div>
   )
 }
@@ -394,14 +366,10 @@ export function BlockDiagram() {
 
   if (initialNodes.length === 0) {
     return (
-      <div style={{
-        height: '100%', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-secondary)', fontSize: fs.body, gap: '0.5rem',
-      }}>
-        <span style={{ fontSize: fs.title }}>+</span>
+      <div className="c2o-diagram-empty">
+        <span className="t-20">+</span>
         <span>{t('No elements at this level yet.')}</span>
-        <span style={{ fontSize: fs.label }}>{t('Use the Blocks panel below to add elements.')}</span>
+        <span className="t-12">{t('Use the Blocks panel below to add elements.')}</span>
       </div>
     )
   }
@@ -418,7 +386,6 @@ export function BlockDiagram() {
       fitView
       fitViewOptions={{ padding: 0.3 }}
       colorMode={theme}
-      style={{ background: 'var(--surface-0)' }}
     >
       <Background color="var(--line)" gap={20} />
       <Controls showInteractive={false} />

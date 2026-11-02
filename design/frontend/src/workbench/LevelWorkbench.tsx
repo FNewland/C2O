@@ -19,7 +19,6 @@ import { ICDTable } from '../components/ICDTable'
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
-import { fs } from '../theme/tokens'
 
 const PANELS: ActivityPanel[] = ['blocks', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
 
@@ -27,7 +26,6 @@ const PANELS: ActivityPanel[] = ['blocks', 'budget', 'requirements', 'functions'
 const TABLE_PANELS = new Set<ActivityPanel>(['budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
 
 const MIN_PANEL = 160
-const STRIP = 40
 
 function storageKey(user: string) { return `scdf.panelHeight.${user || 'anon'}` }
 function readHeight(user: string): number {
@@ -115,23 +113,12 @@ export function LevelWorkbench() {
   const tabLabel = t(PANEL_LABELS[activePanel] ?? activePanel)
 
   return (
-    <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {collapsed ? (
-        <div style={{
-          flex: 'none', height: STRIP, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)',
-          padding: '0 var(--sp-3)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)',
-          fontSize: fs.body, color: 'var(--text-2)',
-        }}>
-          <span>{t('Block diagram collapsed while {{tab}} is open.', { tab: tabLabel })}</span>
-          <button type="button" className="c2o-btn" onClick={() => setShowDiagram(m => ({ ...m, [activePanel]: true }))}>
-            {t('Show diagram')}
-          </button>
-        </div>
-      ) : (
-        <div style={{ flex: 1, minHeight: 120, position: 'relative' }}>
+    <div ref={rootRef} className="c2o-wb">
+      {!collapsed && (
+        <div className="c2o-wb__diagram">
           <BlockDiagram />
           {TABLE_PANELS.has(activePanel) && (
-            <button type="button" className="c2o-btn" style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}
+            <button type="button" className="c2o-btn c2o-btn--sm c2o-wb__hide"
               onClick={() => setShowDiagram(m => ({ ...m, [activePanel]: false }))}>
               {t('Hide diagram')}
             </button>
@@ -156,10 +143,10 @@ export function LevelWorkbench() {
       )}
 
       {/* Activity panel tabs + content */}
-      <div style={{ height: collapsed ? undefined : panelHeight, flex: collapsed ? 1 : 'none', minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--surface-0)' }}>
-        <div ref={tabsRef} role="tablist" aria-label={t('Activity panel')} className="c2o-tabs"
-          onKeyDown={onTabKey}
-          style={{ padding: '0 var(--sp-2)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)' }}>
+      <div className="c2o-wb__activity" style={{ height: collapsed ? undefined : panelHeight, flex: collapsed ? 1 : 'none' }}>
+        <div className="c2o-wb__tabbar">
+        <div ref={tabsRef} role="tablist" aria-label={t('Activity panel')} className="c2o-tabs c2o-wb__tabs"
+          onKeyDown={onTabKey}>
           {PANELS.map(id => {
             const active = activePanel === id
             return (
@@ -179,16 +166,24 @@ export function LevelWorkbench() {
             )
           })}
         </div>
+        {collapsed && (
+          <button type="button" className="c2o-btn c2o-btn--sm c2o-btn--quiet c2o-wb__show"
+            title={t('Block diagram collapsed while {{tab}} is open.', { tab: tabLabel })}
+            onClick={() => setShowDiagram(m => ({ ...m, [activePanel]: true }))}>
+            {t('Show diagram')}
+          </button>
+        )}
+        </div>
 
         {/* Panel content */}
-        <div id="act-panel" role="tabpanel" aria-labelledby={`act-tab-${activePanel}`} style={{ flex: 1, overflow: 'auto', background: 'var(--surface-0)' }}>
+        <div id="act-panel" role="tabpanel" aria-labelledby={`act-tab-${activePanel}`} className="c2o-wb__panel">
           {activePanel === 'blocks' && <BlocksPanel />}
           {activePanel === 'budget' && <BudgetPanel />}
           {activePanel === 'requirements' && <RequirementsPanel />}
           {activePanel === 'functions' && <ErrorBoundary phaseName="Functions"><FunctionTree /></ErrorBoundary>}
           {activePanel === 'interfaces' && <InterfacesPanel />}
           {activePanel === 'icd' && <ErrorBoundary phaseName="ICD"><ICDTable /></ErrorBoundary>}
-          {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div style={{ padding: '0.5rem 1rem' }}><TraceabilityTree /></div></ErrorBoundary>}
+          {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
           {activePanel === 'analyses' && <ErrorBoundary phaseName="Analyses"><AnalysesPanel /></ErrorBoundary>}
         </div>

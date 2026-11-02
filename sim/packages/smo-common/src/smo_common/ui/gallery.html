@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C2O design system</title>
+<link rel="stylesheet" href="/static/shared/design-system.css">
+<style>
+  /* Gallery layout only. Every colour, size and space is a token. */
+  body{ min-height:100%; }
+  .g-top{ position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:var(--sp-4);
+    min-height:48px; padding:0 var(--sp-5); background:var(--bg); border-bottom:1px solid var(--line); }
+  .g-top .ds-h{ font-size:var(--fs-value); }
+  .g-top .ctl{ margin-left:auto; display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap; }
+  .g-wrap{ display:grid; grid-template-columns:184px minmax(0,1fr); max-width:1360px; }
+  .g-nav{ position:sticky; top:48px; align-self:start; height:calc(100vh - 48px); overflow:auto;
+    padding:var(--sp-5) var(--sp-4); border-right:1px solid var(--line); }
+  .g-nav ol{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .g-nav a{ display:block; padding:4px var(--sp-2); color:var(--tx2); text-decoration:none;
+    border-radius:var(--radius-sm); font-size:var(--fs-body); }
+  .g-nav a:hover{ color:var(--tx); background:var(--s2); }
+  .g-nav a[aria-current="true"]{ color:var(--val); box-shadow:inset 2px 0 0 var(--accent); }
+  .g-nav .g-ver{ margin-top:var(--sp-5); font-size:var(--fs-label); color:var(--tx3); line-height:1.5; }
+  main{ padding:var(--sp-5) var(--sp-6) var(--sp-6); min-width:0; }
+  section{ padding:var(--sp-5) 0 var(--sp-6); border-top:1px solid var(--line); scroll-margin-top:56px; }
+  section:first-of-type{ border-top:0; padding-top:0; }
+  .g-sh{ display:flex; align-items:baseline; gap:var(--sp-4); flex-wrap:wrap; margin-bottom:var(--sp-2); }
+  .g-sh h2{ font-size:var(--fs-value); font-weight:600; color:var(--val); }
+  .g-api{ display:flex; gap:var(--sp-3); flex-wrap:wrap; margin-left:auto; }
+  .g-api code{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+  .g-lede{ max-width:72ch; color:var(--tx2); margin-bottom:var(--sp-4); }
+  .g-cols{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:var(--sp-4); }
+  .g-cols-2{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:var(--sp-5); }
+  .g-cap{ font-size:var(--fs-label); color:var(--tx3); margin:0 0 6px; }
+  pre.g-code{ font-family:var(--mono); font-size:var(--fs-label); line-height:1.6; color:var(--tx2);
+    background:var(--s1); border:1px solid var(--line); border-radius:var(--radius);
+    padding:var(--sp-3) var(--sp-4); overflow-x:auto; white-space:pre; }
+  pre.g-code b{ color:var(--val); font-weight:500; }
+  .g-rules{ list-style:none; counter-reset:r; display:flex; flex-direction:column; gap:var(--sp-2); }
+  .g-rules li{ display:grid; grid-template-columns:20px 1fr; gap:var(--sp-2); color:var(--tx2); }
+  .g-rules li::before{ counter-increment:r; content:counter(r); font-family:var(--mono);
+    font-size:var(--fs-label); color:var(--tx3); padding-top:1px; }
+  code.i{ white-space:nowrap; font-family:var(--mono); font-size:var(--fs-label); color:var(--tx); background:var(--s2);
+    padding:1px 4px; border-radius:var(--radius-sm); }
+
+  /* "In context" composition */
+  .g-ctx{ display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:var(--sp-4); }
+  .g-ctx .ds-panel-b{ display:flex; flex-direction:column; gap:2px; }
+  .g-ctx .g-trend{ display:grid; grid-template-columns:auto 1fr; align-items:center; gap:var(--sp-3);
+    padding:var(--sp-2) 0; border-top:1px solid var(--line); margin-top:var(--sp-2); }
+  .g-actions{ display:flex; gap:var(--sp-2); flex-wrap:wrap; padding:var(--sp-3) var(--sp-4);
+    border-top:1px solid var(--line); }
+  .g-banners{ display:flex; flex-direction:column; margin-bottom:var(--sp-4); border-radius:var(--radius);
+    overflow:hidden; border:1px solid var(--line); }
+  .g-banners .ds-banner{ border-left:0; border-right:0; }
+  .g-banners .ds-banner+.ds-banner{ border-top:0; }
+
+  /* State matrix */
+  table.g-matrix{ width:100%; border-collapse:collapse; }
+  .g-matrix th{ text-align:left; font-size:var(--fs-label); font-weight:500; color:var(--tx3);
+    padding:6px var(--sp-3); border-bottom:1px solid var(--line-2); }
+  .g-matrix td{ padding:10px var(--sp-3); border-bottom:1px solid var(--line); vertical-align:middle; }
+  .g-matrix td:first-child{ font-weight:600; color:var(--val); white-space:nowrap; }
+  .g-matrix td.tr{ color:var(--tx2); max-width:34ch; font-size:var(--fs-label); }
+  .g-matrix .ds-gauge{ min-width:220px; }
+
+  /* Buttons grid */
+  table.g-btns{ border-collapse:collapse; }
+  .g-btns th{ font-size:var(--fs-label); font-weight:500; color:var(--tx3); text-align:left;
+    padding:4px var(--sp-4) 8px 0; }
+  .g-btns td{ padding:6px var(--sp-4) 6px 0; }
+  .g-btns th[scope="row"]{ padding-right:var(--sp-5); color:var(--tx2); font-size:var(--fs-body); }
+  .g-try{ display:flex; gap:var(--sp-4); align-items:center; flex-wrap:wrap; margin-top:var(--sp-4);
+    padding:var(--sp-3) var(--sp-4); border:1px dashed var(--line-2); border-radius:var(--radius); }
+  .g-log{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+
+  /* Tokens */
+  .g-sw{ display:grid; grid-template-columns:repeat(auto-fill, minmax(208px, 1fr)); gap:0 var(--sp-4); }
+  .g-sw div{ display:grid; grid-template-columns:28px 1fr auto; gap:var(--sp-2); align-items:center;
+    padding:6px 0; border-bottom:1px solid var(--line); }
+  .g-sw i{ width:28px; height:20px; border-radius:var(--radius-sm); border:1px solid var(--line-2); }
+  .g-sw code{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx); }
+  .g-sw span{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+  .g-type div{ display:grid; grid-template-columns:120px 1fr; gap:var(--sp-3); align-items:baseline;
+    padding:6px 0; border-bottom:1px solid var(--line); }
+  .g-sp{ display:flex; gap:var(--sp-4); align-items:flex-end; flex-wrap:wrap; }
+  .g-sp div{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+  .g-sp i{ display:block; height:12px; background:var(--tx3); border-radius:1px; }
+
+  @media (max-width: 960px){
+    .g-wrap{ grid-template-columns:minmax(0,1fr); }
+    .g-nav{ position:static; height:auto; border-right:0; border-bottom:1px solid var(--line);
+      padding:var(--sp-2) var(--sp-4); }
+    .g-nav ol{ flex-direction:row; overflow-x:auto; }
+    .g-nav a{ white-space:nowrap; }
+    .g-nav .g-ver{ display:none; }
+    .g-ctx,.g-cols-2{ grid-template-columns:minmax(0,1fr); }
+    main{ padding:var(--sp-4); }
+  }
+  @media (max-width: 560px){
+    .g-top{ padding:var(--sp-2) var(--sp-4); flex-wrap:wrap; }
+    .g-top .ctl{ margin-left:0; gap:var(--sp-3); }
+    .g-top .ds-meta{ display:none; }
+    .g-matrix thead{ display:none; }
+    .g-matrix tr{ display:grid; grid-template-columns:1fr; padding:var(--sp-2) 0; border-bottom:1px solid var(--line); }
+    .g-matrix td{ border:0; padding:4px 0; }
+    .g-matrix .ds-gauge{ min-width:0; }
+    .g-btns-wrap{ overflow-x:auto; }
+    .g-cols{ grid-template-columns:minmax(0,1fr); }
+  }
+</style>
+</head>
+<body>
+<a class="ds-skip" href="#main" data-i18n>Skip to content</a>
+
+<header class="g-top">
+  <h1 class="ds-h">C2O design system</h1>
+  <span class="ds-meta" data-i18n>Reference for every console and SpaceCDF</span>
+  <div class="ctl">
+    <div class="ds-seg" role="group" aria-label="Theme" data-i18n-aria-label id="theme">
+      <button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button>
+      <button type="button" data-theme-set="light" aria-pressed="false" data-i18n>Light</button>
+    </div>
+    <label class="ds-check"><input type="checkbox" id="grey"> <span data-i18n>Greyscale check</span></label>
+    <span id="lang"></span>
+  </div>
+</header>
+
+<div class="g-wrap">
+  <nav class="g-nav" aria-label="Sections" data-i18n-aria-label>
+    <ol>
+      <li><a href="#use" data-i18n>How to use</a></li>
+      <li><a href="#context" data-i18n>In context</a></li>
+      <li><a href="#states" data-i18n>States</a></li>
+      <li><a href="#buttons" data-i18n>Buttons</a></li>
+      <li><a href="#values" data-i18n>Values</a></li>
+      <li><a href="#gauges" data-i18n>Gauges and trends</a></li>
+      <li><a href="#tables" data-i18n>Tables</a></li>
+      <li><a href="#chips" data-i18n>Chips and steppers</a></li>
+      <li><a href="#alarms" data-i18n>Alarms and events</a></li>
+      <li><a href="#banners" data-i18n>Link and mode</a></li>
+      <li><a href="#layout" data-i18n>Panels, tabs, disclosure</a></li>
+      <li><a href="#forms" data-i18n>Form fields</a></li>
+      <li><a href="#tokens" data-i18n>Tokens</a></li>
+    </ol>
+    <p class="g-ver"><span data-i18n>Tokens</span><br><code class="ds-id">shared/ui-tokens/</code><br>
+      <span data-i18n>Brief</span><br><code class="ds-id">docs/ui/C2O_UI_BRIEF.md</code></p>
+  </nav>
+
+  <main id="main">
+    <section id="use" aria-labelledby="use-h">
+      <div class="g-sh"><h2 id="use-h" data-i18n>How to use</h2>
+        <div class="g-api"><code>design-system.css</code><code>components.js</code><code>state.js</code></div></div>
+      <div class="g-cols-2">
+        <div>
+          <p class="g-cap" data-i18n>Every console page starts with these two lines.</p>
+<pre class="g-code" tabindex="0">&lt;link rel="stylesheet" href="<b>/static/shared/design-system.css</b>"&gt;
+&lt;script type="module"&gt;
+import { renderValue, renderGauge, renderButton,
+         armButton, setDisabled } from "<b>/static/shared/components.js</b>";
+import { linkState, modeState } from "<b>/static/shared/state.js</b>";
+&lt;/script&gt;</pre>
+        </div>
+        <ol class="g-rules">
+          <li><span data-i18n-html>Use tokens such as <code class="i">var(--tx)</code> or <code class="i">var(--accent)</code>, never a hex value.</span></li>
+          <li><span data-i18n-html>One modifier per state: <code class="i">is-disabled</code>, <code class="i">is-armed</code>, <code class="i">is-active</code>, <code class="i">is-stale</code>, <code class="i">is-nodata</code>, <code class="i">is-caution</code>, <code class="i">is-alarm</code>.</span></li>
+          <li><span data-i18n-html>Disable with a reason: <code class="i">setDisabled(el, reason)</code>. The control stays focusable and the reason shows on hover and on focus.</span></li>
+          <li><span data-i18n-html>Critical commands go through <code class="i">armButton()</code>: the first press arms, the second executes within 5 s.</span></li>
+          <li><span data-i18n-html>Never print a dash for a value. Stale keeps the last value with its age; never received says “no data”.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="context" aria-labelledby="ctx-h">
+      <div class="g-sh"><h2 id="ctx-h" data-i18n>In context: power during a pass</h2></div>
+      <p class="g-lede" data-i18n>A subsystem view built only from the shared components. At rest it is grey; the one amber line is the only thing asking for attention.</p>
+      <div class="g-banners" id="ctx-banners"></div>
+      <div class="g-ctx">
+        <div class="ds-panel" id="ctx-eps"></div>
+        <div class="ds-panel" id="ctx-side"></div>
+      </div>
+    </section>
+
+    <section id="states" aria-labelledby="states-h">
+      <div class="g-sh"><h2 id="states-h" data-i18n>States</h2>
+        <div class="g-api"><code>.is-disabled</code><code>.is-armed</code><code>.is-active</code><code>.is-stale</code><code>.is-nodata</code><code>.is-alarm</code></div></div>
+      <p class="g-lede" data-i18n>Every control and value is in exactly one of these states. Hover or tab to a disabled control to read why it is disabled.</p>
+      <div id="matrix"></div>
+    </section>
+
+    <section id="buttons" aria-labelledby="buttons-h">
+      <div class="g-sh"><h2 id="buttons-h" data-i18n>Buttons</h2>
+        <div class="g-api"><code>renderButton()</code><code>armButton()</code><code>setDisabled()</code><code>.ds-btn</code></div></div>
+      <p class="g-lede" data-i18n>Default buttons are grey outlines. The raised button is the one main action of a panel. Amber stripes mark a critical command, which always takes two presses.</p>
+      <div class="g-btns-wrap" id="btns"></div>
+      <div class="g-try" id="try"></div>
+    </section>
+
+    <section id="values" aria-labelledby="values-h">
+      <div class="g-sh"><h2 id="values-h" data-i18n>Values</h2>
+        <div class="g-api"><code>renderParam()</code><code>renderValue()</code><code>renderAge()</code><code>renderNoData()</code></div></div>
+      <p class="g-lede" data-i18n>The parameter triad: name and identifier, the value with its unit, and a scale with the limit bands drawn under it. Hover the scale to read the limits.</p>
+      <div class="g-cols ds-panel" id="params" style="gap:0"></div>
+    </section>
+
+    <section id="gauges" aria-labelledby="gauges-h">
+      <div class="g-sh"><h2 id="gauges-h" data-i18n>Gauges and trends</h2>
+        <div class="g-api"><code>renderGauge()</code><code>renderDeviationBar()</code><code>renderSparkline()</code></div></div>
+      <p class="g-lede" data-i18n>The compact readout for overviews: picture first, exact value beside it. The fill stays grey until the value leaves its limits.</p>
+      <div class="g-cols-2">
+        <div class="ds-panel"><div class="ds-panel-b" id="gauges-list"></div></div>
+        <div class="ds-panel"><div class="ds-panel-b" id="sparks"></div></div>
+      </div>
+    </section>
+
+    <section id="tables" aria-labelledby="tables-h">
+      <div class="g-sh"><h2 id="tables-h" data-i18n>Tables</h2>
+        <div class="g-api"><code>renderAndTable()</code><code>.ds-table</code></div></div>
+      <p class="g-lede" data-i18n>The alphanumeric display, one row per state. Numbers are right-aligned in tabular figures.</p>
+      <div class="ds-panel" id="and" style="overflow-x:auto" tabindex="0" role="region" aria-label="Alphanumeric display" data-i18n-aria-label></div>
+    </section>
+
+    <section id="chips" aria-labelledby="chips-h">
+      <div class="g-sh"><h2 id="chips-h" data-i18n>Chips and steppers</h2>
+        <div class="g-api"><code>renderChip()</code><code>renderStepper()</code></div></div>
+      <div class="ds-stack" id="chiplist" style="gap:var(--sp-4)"></div>
+    </section>
+
+    <section id="alarms" aria-labelledby="alarms-h">
+      <div class="g-sh"><h2 id="alarms-h" data-i18n>Alarms and events</h2>
+        <div class="g-api"><code>renderAlarmRow()</code><code>renderEventRow()</code></div></div>
+      <p class="g-lede" data-i18n>One alarm list. Only an unacknowledged P1 blinks, and not when the system asks for reduced motion.</p>
+      <div class="ds-panel" id="alarmlist" role="list" aria-label="Alarms" data-i18n-aria-label></div>
+      <div class="ds-panel" id="eventlist" role="log" aria-label="Events" data-i18n-aria-label style="margin-top:var(--sp-4)"></div>
+    </section>
+
+    <section id="banners" aria-labelledby="banners-h">
+      <div class="g-sh"><h2 id="banners-h" data-i18n>Link and mode</h2>
+        <div class="g-api"><code>linkState()</code><code>modeState()</code><code>renderLinkBanner()</code><code>renderModeBanner()</code></div></div>
+      <p class="g-lede" data-i18n>Built from state.js, so every panel gives the same answer to “are we in contact” and “what mode is the spacecraft in”.</p>
+      <div class="g-cols-2">
+        <div class="g-banners" id="linkb"></div>
+        <div class="g-banners" id="modeb"></div>
+      </div>
+    </section>
+
+    <section id="layout" aria-labelledby="layout-h">
+      <div class="g-sh"><h2 id="layout-h" data-i18n>Panels, tabs, disclosure</h2>
+        <div class="g-api"><code>.ds-panel</code><code>renderTabs()</code><code>mountTabs()</code><code>renderDisclosure()</code></div></div>
+      <p class="g-lede" data-i18n>Three levels: overview, subsystem, detail. A disclosure opens downward, so nothing you were looking at moves.</p>
+      <div class="ds-panel" id="tabbed"></div>
+    </section>
+
+    <section id="forms" aria-labelledby="forms-h">
+      <div class="g-sh"><h2 id="forms-h" data-i18n>Form fields</h2>
+        <div class="g-api"><code>renderField()</code><code>.ds-input</code><code>.ds-seg</code></div></div>
+      <div class="g-cols" id="fields"></div>
+    </section>
+
+    <section id="tokens" aria-labelledby="tokens-h">
+      <div class="g-sh"><h2 id="tokens-h" data-i18n>Tokens</h2>
+        <div class="g-api"><code>c2o.tokens.json</code><code>build.py</code></div></div>
+      <p class="g-lede" data-i18n>Generated from one JSON file for the consoles and SpaceCDF. Ratios are measured live against the panel surface of the current theme.</p>
+      <div id="swatches" class="g-sw"></div>
+      <div class="g-cols-2" style="margin-top:var(--sp-5)">
+        <div class="g-type" id="type"></div>
+        <div class="ds-stack" style="gap:var(--sp-4)">
+          <div class="g-sp" id="space"></div>
+          <div class="g-sp" id="radii"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+import {
+  esc, glyph, renderParam, renderSparkline, renderAndTable, renderChip, renderStepper,
+  renderAlarmRow, renderEventRow, mountLangToggle, renderValue, renderNoData, renderGauge,
+  renderButton, renderField, renderTabs, renderDisclosure, renderBanner, renderLinkBanner,
+  renderModeBanner, armButton, setDisabled, setEnabled, mountTabs,
+} from "/static/shared/components.js";
+import { linkState, modeState, linkLimited } from "/static/shared/state.js";
+import { I18n, init, t, tText, onLangChange } from "/static/shared/i18n.js";
+
+const $ = (id) => document.getElementById(id);
+
+/* ── theme + greyscale ─────────────────────────────────────────────── */
+const THEME_KEY = "c2o.theme";
+function setTheme(th) {
+  document.documentElement.dataset.theme = th;
+  document.querySelectorAll("[data-theme-set]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.themeSet === th)));
+  try { localStorage.setItem(THEME_KEY, th); } catch (e) { /* private mode */ }
+  drawTokens();
+}
+$("theme").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-theme-set]"); if (b) setTheme(b.dataset.themeSet);
+});
+$("grey").addEventListener("change", (ev) => {
+  if (ev.target.checked) document.documentElement.dataset.greyscale = "1";
+  else delete document.documentElement.dataset.greyscale;
+});
+
+/* ── sample data: EOSAT-1, real parameter ids and ground limits ─────── */
+const P = {
+  soc:  { hex: "0x0101", name: "eps.bat_soc", units: "%", hk_interval_s: 4 },
+  bus:  { hex: "0x0105", name: "eps.bus_voltage", units: "V", hk_interval_s: 1 },
+  bv:   { hex: "0x0100", name: "eps.bat_voltage", units: "V", hk_interval_s: 4 },
+  bt:   { hex: "0x0102", name: "eps.bat_temp", units: "°C", hk_interval_s: 8 },
+  dod:  { hex: "0x0120", name: "eps.bat_dod", units: "%", hk_interval_s: 8 },
+  pm:   { hex: "0x0135", name: "eps.power_margin_w", units: "W" },
+  rate: { hex: "0x0204", name: "aocs.rate_roll", units: "deg/s", hk_interval_s: 1 },
+  tobc: { hex: "0x0406", name: "tcs.temp_obc", units: "°C", hk_interval_s: 8 },
+  mode: { hex: "0x020F", name: "aocs.mode" },
+  scene:{ hex: "0x0606", name: "payload.scene_id" },
+};
+const LIM = {
+  soc: { yellow_low: 25, yellow_high: 95, red_low: 15, red_high: 100, lo: 0, hi: 100 },
+  bus: { yellow_low: 27, yellow_high: 29, red_low: 26.5, red_high: 29.5 },
+  bv:  { yellow_low: 23, yellow_high: 29, red_low: 22, red_high: 29.5 },
+  bt:  { yellow_low: 2, yellow_high: 40, red_low: 0, red_high: 45 },
+  dod: { yellow_high: 60, red_high: 80, lo: 0, hi: 100 },
+  rate:{ yellow_low: -0.5, yellow_high: 0.5, red_low: -2, red_high: 2 },
+  tobc:{ yellow_low: 5, yellow_high: 60, red_low: 0, red_high: 70 },
+};
+const socTrend = [88.2, 88.0, 87.7, 87.3, 86.8, 86.1, 85.5, 84.9, 84.4, 83.9, 83.5, 83.1, 82.8, 82.5, 82.3, 82.1];
+const btTrend = [36.1, 36.6, 37.0, 37.6, 38.1, 38.7, 39.2, 39.8, 40.3, 40.7, 41.0, 41.4];
+
+function spark(series, lim, o = {}) {
+  // Sparkline with its limit lines drawn in: a plot is never shown without
+  // its scale (brief §1.1).
+  const w = o.w || 160, h = o.h || 32;
+  const lo = o.min, hi = o.max;
+  let svg = renderSparkline(series, { w, h, min: lo, max: hi, stale: o.stale, cls: o.cls || "" });
+  const y = (v) => h - 2 - ((v - lo) / (hi - lo)) * (h - 4);
+  const lines = [["yellow_high", ""], ["yellow_low", ""], ["red_high", " r"], ["red_low", " r"]]
+    .filter(([k]) => lim[k] !== undefined && lim[k] > lo && lim[k] < hi)
+    .map(([k, c]) => `<line class="lim${c}" x1="0" x2="${w}" y1="${y(lim[k]).toFixed(1)}" y2="${y(lim[k]).toFixed(1)}"></line>`).join("");
+  return svg.replace("<path", lines + "<path");
+}
+
+/* ── sections ─────────────────────────────────────────────────────── */
+function drawContext() {
+  const snap = { sa: { in_contact: true, ground_station_name: "Svalbard", last_frame_age_s: 1.2, speed: 1 },
+                 params: { "0x0300": 0, "0x0700": 0 } };
+  $("ctx-banners").innerHTML = renderLinkBanner(linkState(snap)) + renderModeBanner(modeState(snap));
+  $("ctx-eps").innerHTML =
+    `<div class="ds-panel-h">${t("Electrical power")}<span class="r">${renderChip({ kind: "warn", dir: "up", label: "1 " + tText("caution") })}</span></div>` +
+    `<div class="ds-panel-b">` +
+      renderGauge(82.1, LIM.soc, { label: "bat_soc", units: "%", digits: 1, ageS: 2 }) +
+      renderGauge(28.1, LIM.bus, { label: "bus_voltage", units: "V", digits: 2, ageS: 0.6, intervalS: 1 }) +
+      renderGauge(26.4, LIM.bv, { label: "bat_voltage", units: "V", digits: 2, ageS: 3 }) +
+      renderGauge(41.4, LIM.bt, { label: "bat_temp", units: "°C", digits: 1, ageS: 5, intervalS: 8 }) +
+      renderGauge(17.9, LIM.dod, { label: "bat_dod", units: "%", digits: 1, ageS: 59, intervalS: 8, verdict: "stale" }) +
+      renderGauge(null, null, { label: "power_margin_w", units: "W" }) +
+      `<div class="g-trend"><span class="ds-meta">${t("bat_temp, last 12 samples")}</span>` +
+      spark(btTrend, LIM.bt, { min: 30, max: 46, w: 380, h: 36, cls: "is-caution" }) + `</div>` +
+    `</div>` +
+    `<div class="g-actions">` +
+      renderButton({ label: tText("Shed payload (L1)"), kind: "critical", id: "ctx-shed" }) +
+      renderButton({ label: tText("Start procedure"), state: "disabled", reason: tText("No procedure loaded"), id: "ctx-start" }) +
+      renderButton({ label: tText("Tracking"), state: "active" }) +
+    `</div>`;
+  armButton($("ctx-shed"), { seconds: 5, onExecute: () => {} });
+  $("ctx-side").innerHTML =
+    `<div class="ds-panel-h">${t("Battery temperature")}<span class="r ds-id">0x0102</span></div>` +
+    renderParam(P.bt, 41.4, { ...LIM.bt, age_s: 5, state: "yellow_high" }) +
+    renderDisclosure(tText("Why it is amber"),
+      `<p class="ds-label" style="max-width:48ch">${t("Above the 40 °C caution limit while charging at the end of eclipse. Next step: CTG-001 if it reaches 45 °C.")}</p>`,
+      { open: true, meta: "CTG-001" }) +
+    renderDisclosure(tText("Parameters"), "", { meta: "7" }) +
+    renderDisclosure(tText("Raw packets"), "", { meta: "S3,25" });
+}
+
+function drawMatrix() {
+  const rows = [
+    [t("Enabled"), t("Solid outline or fill, full contrast."),
+      renderButton({ label: tText("Send") }), renderValue(82.1, { units: "%", digits: 1 }),
+      renderChip({ kind: "neutral", label: "SID 1" }),
+      renderGauge(82.1, LIM.soc, { units: "%", digits: 1 })],
+    [t("Disabled"), t("40 % contrast, no hover, a reason on hover and focus."),
+      renderButton({ label: tText("Send"), state: "disabled", reason: tText("No contact: the next pass starts at 14:32 UTC") }),
+      renderNoData({ off: true }), renderChip({ kind: "off", label: "SID 4" }),
+      renderGauge(null, LIM.soc, { units: "%", reason: tText("HK structure 4 is not enabled") })],
+    [t("Armed"), t("Amber border and a countdown: press again to execute."),
+      renderButton({ label: tText("Send"), state: "armed", kind: "critical" }), "", renderChip({ kind: "cmd", label: "TC 8,1" }), ""],
+    [t("Active"), t("Accent fill and a label that says what is running."),
+      renderButton({ label: tText("Running"), state: "active" }), "", renderChip({ kind: "active", label: "AUTO" }), ""],
+    [t("Stale"), t("Last value kept, dimmed and italic, with its age."),
+      "", renderValue(82.1, { units: "%", digits: 1, ageS: 59, intervalS: 4 }),
+      renderChip({ kind: "stale", label: "SID 1" }),
+      renderGauge(82.1, LIM.soc, { units: "%", digits: 1, ageS: 59, intervalS: 4 })],
+    [t("No data"), t("Never received: the words “no data”, never a dash."),
+      "", renderNoData(), renderChip({ kind: "nodata", label: tText("no data") }),
+      renderGauge(null, LIM.soc, { units: "%" })],
+    [t("Alarm"), t("Status colour, plus a shape, plus text."),
+      "", renderValue(12.4, { units: "%", digits: 1, limits: LIM.soc }) + " " + renderValue(26.8, { units: "V", digits: 1, limits: LIM.bus }),
+      renderChip({ kind: "alarm", dir: "down", label: "LL" }) + " " + renderChip({ kind: "warn", dir: "down", label: "L" }),
+      renderGauge(12.4, LIM.soc, { units: "%", digits: 1 })],
+  ];
+  $("matrix").innerHTML = `<table class="g-matrix"><thead><tr>` +
+    `<th>${t("State")}</th><th>${t("Treatment")}</th><th>${t("Control")}</th><th>${t("Value")}</th>` +
+    `<th>${t("Chip")}</th><th>${t("Readout")}</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr><td>${r[0]}</td><td class="tr">${r[1]}</td>` +
+      r.slice(2).map((c) => `<td>${c}</td>`).join("") + `</tr>`).join("") +
+    `</tbody></table>`;
+}
+
+function drawButtons() {
+  const kinds = [["default", t("Default")], ["primary", t("Primary")], ["critical", t("Critical")], ["ghost", t("Ghost")]];
+  const states = [["enabled", t("Enabled")], ["disabled", t("Disabled")], ["armed", t("Armed")], ["active", t("Active")]];
+  const lab = { default: tText("Refresh"), primary: tText("Load procedure"), critical: tText("Send TC"), ghost: tText("Export") };
+  $("btns").innerHTML = `<table class="g-btns"><thead><tr><td></td>` +
+    states.map(([, l]) => `<th scope="col">${l}</th>`).join("") + `</tr></thead><tbody>` +
+    kinds.map(([k, kl]) => `<tr><th scope="row">${kl}</th>` + states.map(([s]) => {
+      if (s === "armed" && k !== "critical") return `<td><span class="ds-meta">${t("critical only")}</span></td>`;
+      const o = { label: s === "active" ? tText("Running") : lab[k], kind: k, state: s };
+      if (s === "disabled") o.reason = k === "critical" ? tText("Blind commanding is off: no contact") : tText("No procedure loaded");
+      return `<td>${renderButton(o)}</td>`;
+    }).join("") + `</tr>`).join("") + `</tbody></table>`;
+
+  $("try").innerHTML = `<span class="ds-label">${t("Try it")}</span>` +
+    renderButton({ label: tText("Send TC"), kind: "critical", id: "try-arm" }) +
+    renderButton({ label: tText("Disable it"), id: "try-toggle", toggle: true }) +
+    `<span class="g-log" id="try-log" aria-live="polite"></span>`;
+  const log = $("try-log");
+  armButton($("try-arm"), { seconds: 5,
+    onExecute: () => { log.textContent = tText("Executed: TC sent"); },
+    onDisarm: () => { log.textContent = tText("Disarmed"); } });
+  $("try-toggle").addEventListener("click", () => {
+    const b = $("try-arm"), tg = $("try-toggle");
+    const off = b.getAttribute("aria-disabled") === "true";
+    if (off) { setEnabled(b); tg.setAttribute("aria-pressed", "false"); tg.classList.remove("is-active"); }
+    else { setDisabled(b, tText("No contact: the next pass starts at 14:32 UTC")); tg.setAttribute("aria-pressed", "true"); }
+  });
+}
+
+function drawParams() {
+  const items = [
+    renderParam(P.soc, 82.1, { ...LIM.soc, age_s: 1 }),
+    renderParam(P.bus, 26.3, { ...LIM.bus, age_s: 0.4 }),
+    renderParam(P.bt, 41.4, { ...LIM.bt, age_s: 3 }),
+    renderParam(P.rate, 0.03, { ...LIM.rate, age_s: 14, verdict: "degraded" }),
+    renderParam(P.bv, 26.4, { ...LIM.bv, age_s: 59, verdict: "stale" }),
+    renderParam(P.tobc, null, LIM.tobc),
+    renderParam(P.dod, 17.9, { ...LIM.dod, age_s: 900, verdict: "disabled" }),
+    renderParam({ ...P.mode, eng: "COARSE_SUN (3)" }, 3, null),
+    renderParam(P.pm, 11.4, null),
+  ];
+  const caps = [t("Live"), t("Alarm"), t("Caution"), t("Late"), t("Stale"), t("No data"), t("Not enabled"), t("Discrete"), t("No limit defined")];
+  $("params").innerHTML = items.map((h, i) =>
+    `<div style="border-right:1px solid var(--line)"><p class="g-cap" style="padding:8px 16px 0">${caps[i]}</p>${h}</div>`).join("");
+}
+
+function drawGauges() {
+  $("gauges-list").innerHTML =
+    `<p class="g-cap">renderGauge</p>` +
+    renderGauge(82.1, LIM.soc, { label: "bat_soc", units: "%", digits: 1 }) +
+    renderGauge(41.4, LIM.bt, { label: "bat_temp", units: "°C", digits: 1 }) +
+    renderGauge(26.3, LIM.bus, { label: "bus_voltage", units: "V", digits: 2 }) +
+    renderGauge(0.03, LIM.rate, { label: "rate_roll", units: "deg/s", digits: 2, ageS: 14, verdict: "degraded" }) +
+    renderGauge(26.4, LIM.bv, { label: "bat_voltage", units: "V", digits: 2, ageS: 59, verdict: "stale" }) +
+    renderGauge(null, LIM.tobc, { label: "temp_obc", units: "°C" }) +
+    renderGauge(null, LIM.dod, { label: "fpa_temp", units: "°C", reason: tText("Payload is off") });
+  $("sparks").innerHTML =
+    `<p class="g-cap">renderSparkline</p>` +
+    [["bat_soc", spark(socTrend, LIM.soc, { min: 70, max: 100, w: 220 }), renderValue(82.1, { units: "%", digits: 1 })],
+     ["bat_temp", spark(btTrend, LIM.bt, { min: 30, max: 46, w: 220, cls: "is-caution" }), renderValue(41.4, { units: "°C", digits: 1, limits: LIM.bt })],
+     ["bat_voltage", spark([27.1, 27.0, 26.9, 26.8, 26.6, 26.5, 26.4, NaN, NaN], LIM.bv, { min: 21, max: 30, w: 220, stale: true }),
+       renderValue(26.4, { units: "V", digits: 1, ageS: 59, verdict: "stale" })]]
+      .map(([n, s, v]) => `<div class="ds-gauge" style="grid-template-columns:96px 1fr auto"><span class="nm">${n}</span>${s}<span>${v}</span></div>`).join("") +
+    `<p class="g-cap" style="margin-top:12px">renderDeviationBar</p>` +
+    `<div style="padding:4px 0 16px">${renderDevbarDemo()}</div>`;
+}
+function renderDevbarDemo() {
+  return renderParam({ hex: "0x0207", name: "aocs.rw1_speed", units: "RPM" }, 3120,
+    { yellow_low: -5000, yellow_high: 5000, red_low: -5500, red_high: 5500, age_s: 1 })
+    .replace('class="ds-param"', 'class="ds-param" style="border:0;padding:0"');
+}
+
+function drawTable() {
+  const params = [
+    { id: 0x0101, hex: "0x0101", name: "eps.bat_soc", units: "%", description: tText("Battery state of charge") },
+    { id: 0x0102, hex: "0x0102", name: "eps.bat_temp", units: "°C", description: tText("Battery temperature") },
+    { id: 0x0105, hex: "0x0105", name: "eps.bus_voltage", units: "V", description: tText("Bus voltage") },
+    { id: 0x0100, hex: "0x0100", name: "eps.bat_voltage", units: "V", description: tText("Battery voltage") },
+    { id: 0x0120, hex: "0x0120", name: "eps.bat_dod", units: "%", description: tText("Battery depth of discharge") },
+    { id: 0x0406, hex: "0x0406", name: "tcs.temp_obc", units: "°C" },
+    { id: 0x020F, hex: "0x020F", name: "aocs.mode", units: "" },
+    { id: 0x0135, hex: "0x0135", name: "eps.power_margin_w", units: "W" },
+  ];
+  const values = {
+    params: { "0x0101": 82.1, "0x0102": 41.4, "0x0105": 26.4, "0x0100": 26.4, "0x0120": 17.9, "0x020F": 3, "0x0135": 11.4 },
+    ages: { "257": 1, "258": 3, "261": 0.4, "256": 59, "288": 900, "527": 2, "309": 1 },
+    limitState: { "0x0102": "yellow_high", "0x0105": "red_low" },
+    limits: { "0x0101": LIM.soc, "0x0102": LIM.bt, "0x0105": LIM.bus, "0x0100": LIM.bv, "0x0120": LIM.dod, "0x0406": LIM.tobc },
+    verdicts: { "0x0100": "stale", "0x0120": "disabled" },
+    states: { "0x020F": { "0": "OFF", "3": "COARSE_SUN" } },
+    raw: { "0x0101": 3363, "0x0102": 2210, "0x0105": 1802, "0x0100": 1690, "0x020F": 3, "0x0135": 114 },
+  };
+  $("and").innerHTML = renderAndTable(params, values);
+}
+
+function drawChips() {
+  const chips = [
+    { kind: "neutral", label: "SID 1" }, { kind: "ok", label: "GO" }, { kind: "warn", dir: "up", label: "H" },
+    { kind: "warn", dir: "down", label: "L" }, { kind: "alarm", dir: "up", label: "HH" }, { kind: "stale", label: tText("stale") },
+    { kind: "nodata", label: tText("no data") }, { kind: "cmd", label: tText("commanded") }, { kind: "active", label: "AUTO" },
+    { kind: "off", label: "OFF" }, { kind: "shelved", label: tText("shelved") },
+  ];
+  $("chiplist").innerHTML =
+    `<div class="ds-row">${chips.map(renderChip).join("")}</div>` +
+    `<div><p class="g-cap">${t("TC verification")}</p>${renderStepper(["ACCEPTED", "STARTED", "PROGRESS", "COMPLETED"], 2)}</div>` +
+    `<div><p class="g-cap">${t("TC verification, failed at start")}</p>${renderStepper(["ACCEPTED", { label: "STARTED", fail: true }, "PROGRESS", "COMPLETED"], 1)}</div>` +
+    `<div><p class="g-cap">${t("Load-shed ladder")}</p>${renderStepper(["L0 NOMINAL", "L1 PAYLOAD", "L2 NON-ESS", "L3 SURVIVAL"], 0)}</div>`;
+}
+
+function drawAlarms() {
+  const rows = [
+    { id: 1, priority: 1, utc: "14:21:07", subsystem: "eps", message: tText("Bus undervoltage"), value: 26.3, acknowledged: false,
+      rationalisation: { cause: tText("load exceeds generation"), response: "CTG-001" }, procedure: { id: "CTG-001" } },
+    { id: 2, priority: 2, utc: "14:19:55", subsystem: "ttc", message: tText("Frame lock lost"), acknowledged: true, procedure: { id: "CTG-003" } },
+    { id: 3, priority: 3, utc: "14:18:40", subsystem: "eps", message: tText("Battery temperature high"), value: 41.4, acknowledged: false },
+    { id: 4, priority: 4, utc: "14:02:13", subsystem: "tcs", message: tText("Panel −Y below caution limit"), acknowledged: true, shelved: true },
+    { id: 5, priority: 3, utc: "13:58:02", subsystem: "aocs", message: tText("Wheel 2 speed high"), acknowledged: true, rtn: true },
+  ];
+  $("alarmlist").innerHTML = rows.map((r) => renderAlarmRow(r, { role: "listitem" })).join("");
+  const ev = [
+    { utc: "14:21:07", severity: 3, subsystem: "eps", name: "EPS_UV", description: tText("Bus voltage below 26.5 V") },
+    { utc: "14:20:31", severity: 2, subsystem: "ttc", name: "TTC_LOCK", description: tText("Bit lock lost, carrier held") },
+    { utc: "14:20:02", severity: 1, subsystem: "obdh", name: "TC_ACC", description: "TC(8,1) 0x1F2A" },
+    { utc: "14:19:40", severity: 1, subsystem: "fdir", name: "INJECT", description: tText("Battery cell short"), instructor: true },
+  ];
+  $("eventlist").innerHTML = ev.map((e) => renderEventRow(e)).join("");
+}
+
+function drawBanners() {
+  const base = { params: {} };
+  const s = (sa, params = {}) => ({ sa, params });
+  $("linkb").innerHTML =
+    renderLinkBanner(linkState(s({ in_contact: true, ground_station_name: "Svalbard", last_frame_age_s: 1.2 }))) +
+    renderLinkBanner(linkState(s({ in_contact: true, ground_station_name: "Inuvik", last_frame_age_s: 82 }))) +
+    renderLinkBanner(linkState(s({ in_contact: false, last_frame_age_s: 1460 }))) +
+    renderLinkBanner(linkState(s({ in_contact: true, ground_station_name: "Troll", last_frame_age_s: 41, speed: 10 })),
+      { limited: linkLimited(s({ in_contact: true, last_frame_age_s: 41, speed: 10 })) });
+  $("modeb").innerHTML =
+    renderModeBanner(modeState(s({}, { "0x0300": 0, "0x0700": 0 }))) +
+    renderModeBanner(modeState(s({}, { "0x0300": 1, "0x0700": 1 }))) +
+    renderModeBanner(modeState(s({}, { "0x0300": 2, "0x0700": 3 }))) +
+    renderModeBanner(modeState(base));
+}
+
+let curTab = "eps";
+function tabBody() {
+  return renderDisclosure(tText("Overview: is everything nominal?"),
+      `<div class="ds-row">${renderChip({ kind: "ok", label: "GO" })}<span class="ds-label">${t("All subsystems nominal except one caution.")}</span></div>`, { open: true }) +
+    renderDisclosure(tText("Subsystem: what is off and why?"),
+      renderGauge(41.4, LIM.bt, { label: "bat_temp", units: "°C", digits: 1 }), { open: true, meta: "EPS" }) +
+    renderDisclosure(tText("Detail: parameters, history, raw packets"), "", { meta: "0x0102" });
+}
+function drawTabs() {
+  const tabs = [
+    { id: "ovr", label: tText("Overview") },
+    { id: "eps", label: "EPS", count: 1, countKind: "warn" },
+    { id: "aocs", label: "AOCS" },
+    { id: "pld", label: tText("Payload"), reason: tText("Payload is off: no telemetry to show") },
+  ];
+  $("tabbed").innerHTML = renderTabs(tabs, curTab, { label: tText("Subsystems"), panel: "tab-body" }) +
+    `<div id="tab-body" role="tabpanel" aria-labelledby="tab-${curTab}">${tabBody()}</div>`;
+}
+mountTabs($("tabbed"), (id) => {
+  curTab = id;
+  const b = $("tab-body"); b.setAttribute("aria-labelledby", "tab-" + id); b.innerHTML = tabBody();
+});
+
+function drawFields() {
+  $("fields").innerHTML =
+    renderField({ label: tText("Target attitude rate"), units: "deg/s", value: "0.05", hint: tText("Between −0.5 and 0.5") }) +
+    renderField({ label: tText("Ground station"), type: "select", value: "svalbard",
+      options: [{ value: "svalbard", label: "Svalbard" }, { value: "inuvik", label: "Inuvik" }, { value: "troll", label: "Troll" }] }) +
+    renderField({ label: tText("Heater set point"), units: "°C", value: "140", state: "invalid",
+      error: tText("Enter a value between −20 and 40") }) +
+    renderField({ label: tText("Dump start time"), value: "2026-11-02T14:32:00Z", state: "disabled",
+      reason: tText("Set by the pass plan; edit it in the planner") }) +
+    renderField({ label: tText("Repeat every pass"), type: "checkbox", checked: true }) +
+    renderField({ label: tText("Verify before sending"), type: "checkbox", state: "disabled",
+      reason: tText("Required for critical commands") , checked: true }) +
+    `<div class="ds-field"><span class="lbl" id="seg-l">${t("Time base")}</span>` +
+    `<div class="ds-seg" role="group" aria-labelledby="seg-l"><button type="button" aria-pressed="true">UTC</button>` +
+    `<button type="button" aria-pressed="false">MET</button><button type="button" aria-pressed="false">OBT</button></div></div>`;
+}
+
+const SWATCH = ["--bg", "--s1", "--s2", "--s3", "--line", "--line-2", "--val", "--tx", "--tx2", "--tx3", "--tx-off",
+  "--accent", "--accent-wash", "--ok", "--warn", "--alarm", "--shelf", "--stale", "--ok-wash", "--warn-wash", "--alarm-wash"];
+function lum(rgb) {
+  const m = rgb.match(/\d+(\.\d+)?/g); if (!m) return 0;
+  const f = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(+m[0]) + 0.7152 * f(+m[1]) + 0.0722 * f(+m[2]);
+}
+function drawTokens() {
+  const cs = getComputedStyle(document.documentElement);
+  const probe = document.createElement("i"); document.body.appendChild(probe);
+  const rgbOf = (v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; };
+  const s1 = lum(rgbOf("--s1"));
+  $("swatches").innerHTML = SWATCH.map((v) => {
+    const L = lum(rgbOf(v)); const r = (Math.max(L, s1) + 0.05) / (Math.min(L, s1) + 0.05);
+    return `<div><i style="background:var(${v})"></i><code>${v}</code><span>${cs.getPropertyValue(v).trim()} ${r.toFixed(1)}</span></div>`;
+  }).join("");
+  probe.remove();
+  $("type").innerHTML = [["--fs-title", "20", "ds-title", "Battery temperature"],
+    ["--fs-value", "15", "ds-value", "41.4 °C"], ["--fs-body", "13", "", tText("Above the caution limit since 14:18 UTC")],
+    ["--fs-label", "12", "ds-meta", "eps.bat_temp 0x0102"]]
+    .map(([v, px, c, s]) => `<div><code class="ds-id">${v} ${px}px</code><span class="${c}" style="font-size:var(${v})">${esc(s)}</span></div>`).join("");
+  $("space").innerHTML = [1, 2, 3, 4, 5, 6].map((n) =>
+    `<div><i style="width:var(--sp-${n})"></i><code class="ds-id">--sp-${n}</code></div>`).join("");
+  $("radii").innerHTML = [["--radius-sm", "2"], ["--radius", "3"], ["--radius-lg", "4"]].map(([v, px]) =>
+    `<div><i style="width:40px;height:24px;background:transparent;border:1px solid var(--tx3);border-radius:var(${v})"></i><code class="ds-id">${v} ${px}px</code></div>`).join("") +
+    `<div><code class="ds-id">--motion ${cs.getPropertyValue("--motion").trim()}</code></div>`;
+}
+
+function drawAll() {
+  drawContext(); drawMatrix(); drawButtons(); drawParams(); drawGauges(); drawTable();
+  drawChips(); drawAlarms(); drawBanners(); drawTabs(); drawFields(); drawTokens();
+}
+
+/* nav: mark the section in view */
+const links = Array.from(document.querySelectorAll(".g-nav a"));
+const io = new IntersectionObserver((es) => {
+  for (const e of es) if (e.isIntersecting) {
+    links.forEach((a) => a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + e.target.id)));
+  }
+}, { rootMargin: "-50% 0px -45% 0px" });
+document.querySelectorAll("main section").forEach((s) => io.observe(s));
+
+let th = "dark";
+try { th = new URLSearchParams(location.search).get("theme") || localStorage.getItem(THEME_KEY) || "dark"; } catch (e) { /* */ }
+init({ app: "/static/shared/i18n/", db: false }).then(() => {
+  mountLangToggle($("lang"));
+  setTheme(th === "light" ? "light" : "dark");
+  drawAll();
+  document.documentElement.dataset.ready = "1";
+});
+onLangChange(drawAll);
+</script>
+</body>
+</html>

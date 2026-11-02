@@ -20,14 +20,6 @@ import { askConfirm } from './ui/Dialog'
 
 const API = '/api'
 
-const inputStyle: React.CSSProperties = {
-  padding: '0.15rem 0.35rem', fontSize: fs.label, borderRadius: '3px',
-  background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-}
-const smallBtn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
-  background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
-  fontSize: fs.label, padding: '0.1rem 0.35rem', color,
-})
 
 async function jsonOrThrow(res: Response) {
   if (!res.ok) {
@@ -56,7 +48,7 @@ export function LayerBadge({ layer, onChange }: { layer: string; onChange?: (l: 
   return (
     <select value={layer} onChange={e => onChange(e.target.value as ArcadiaLayer)}
       title={t('Arcadia layer: {{layer}}', { layer: layerLabel })}
-      style={{ ...inputStyle, fontSize: fs.label, fontWeight: 700, padding: '0 0.2rem', color, borderColor: `color-mix(in srgb, ${color} 38%, transparent)`, background: `color-mix(in srgb, ${color} 8%, transparent)` }}>
+      className="c2o-select c2o-select--sm" style={{ fontSize: fs.label, fontWeight: 700, padding: '0 0.2rem', color, borderColor: `color-mix(in srgb, ${color} 38%, transparent)`, background: `color-mix(in srgb, ${color} 8%, transparent)` }}>
       {ARCADIA_LAYERS.map(l => <option key={l} value={l}>{l}</option>)}
     </select>
   )
@@ -152,7 +144,7 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
   })
 
   if (!studyId) {
-    return <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Create or join a study to edit functions.')}</div>
+    return <div className="p-4 c-2 t-12">{t('Create or join a study to edit functions.')}</div>
   }
 
   const all = flatten(tree)
@@ -165,43 +157,43 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
   })
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label, overflow: 'auto', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: fs.label }}>{t('Functions ({{n}})', { n: all.length })}</span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>
+    <div className="c2o-pane">
+      <div className="flex ai-c gap-2 mb-2 wrap">
+        <span className="w-600 t-12">{t('Functions ({{n}})', { n: all.length })}</span>
+        <span className="c-2 t-12">
           {unallocated > 0 ? t('{{n}} unallocated', { n: unallocated }) : t('all allocated')} · {t('{{n}} exchanges', { n: exchanges.length })}
         </span>
-        <span style={{ flex: 1 }} />
+        <span className="grow" />
         {ARCADIA_LAYERS.map(l => <LayerBadge key={l} layer={l} />)}
-        <button style={smallBtn('var(--interactive)')}
+        <button className="c2o-btn c2o-btn--sm"
           onClick={() => createFn.mutate({ name: t('New function'), parent_id: null, layer: 'SA', level: 0 })}>
           {t('+ Root function')}
         </button>
-        <button style={smallBtn()} onClick={() => setShowExchanges(v => !v)}>
+        <button className="c2o-btn c2o-btn--sm" onClick={() => setShowExchanges(v => !v)}>
           {showExchanges ? t('Hide exchanges') : t('Show exchanges')}
         </button>
       </div>
 
       {error && (
-        <div style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginBottom: '0.4rem', display: 'flex', gap: '0.5rem' }}>
+        <div className="c-alarm t-12 mb-2 flex gap-2">
           <span>{error}</span>
-          <button style={smallBtn('var(--status-alarm)')} onClick={() => setError(null)}>{t('dismiss')}</button>
+          <button className="c2o-btn c2o-btn--sm" onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
 
-      {isLoading && <div style={{ color: 'var(--text-secondary)' }}>{t('Loading…')}</div>}
+      {isLoading && <div className="c-2">{t('Loading…')}</div>}
 
       {!isLoading && tree.length === 0 && (
-        <div className="card" style={{ borderLeft: '3px solid var(--status-caution)', marginBottom: '0.5rem' }}>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+        <div className="card bl-caution mb-2">
+          <div className="t-12 c-2 mb-2">
             {t("No functions in the model yet. Add a root function, or import the functions stored in the study's legacy functional decomposition.")}
           </div>
-          <button style={{ ...smallBtn('var(--status-caution)'), padding: '0.25rem 0.6rem' }} disabled={migrate.isPending}
+          <button className="c2o-btn c2o-btn--sm py-1 px-2" disabled={migrate.isPending}
             onClick={() => migrate.mutate()}>
             {migrate.isPending ? t('Migrating…') : t('Migrate legacy functions')}
           </button>
           {migrate.data && (
-            <div style={{ fontSize: fs.label, color: 'var(--status-ok)', marginTop: '0.3rem' }}>
+            <div className="t-12 c-ok mt-1">
               {Object.entries(migrate.data).filter(([k]) => k !== 'study_id').map(([k, v]) => `${k}: ${v}`).join(' · ')}
             </div>
           )}
@@ -269,7 +261,7 @@ function FunctionRowView(p: RowProps) {
 
   return (
     <div style={{ marginLeft: depth ? '1rem' : 0, borderLeft: depth ? '1px solid var(--border)' : 'none', paddingLeft: depth ? '0.5rem' : 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.15rem 0', flexWrap: 'wrap' }}>
+      <div className="flex ai-c gap-1 py-1 px-0 wrap">
         <button onClick={() => p.toggle(node.id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', width: 14, padding: 0, fontSize: fs.label }}>
           {kids.length > 0 ? (isCollapsed ? '▸' : '▾') : '·'}
         </button>
@@ -277,14 +269,14 @@ function FunctionRowView(p: RowProps) {
         {editing ? (
           <input autoFocus value={name} onChange={e => setName(e.target.value)} onBlur={commitName}
             onKeyDown={e => { if (e.key === 'Enter') commitName(); if (e.key === 'Escape') { setName(node.name); setEditing(false) } }}
-            style={{ ...inputStyle, minWidth: 180 }} />
+            className="c2o-input c2o-input--sm" style={{ minWidth: 180 }} />
         ) : (
           <span onDoubleClick={() => setEditing(true)} title={t('Double-click to rename')}
             style={{ fontWeight: depth === 0 ? 600 : 400, cursor: 'text' }}>
             {node.name}
           </span>
         )}
-        {node.function_type && <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{node.function_type}</span>}
+        {node.function_type && <span className="t-12 c-2">{node.function_type}</span>}
 
         {/* allocations */}
         {allocs.map(a => (
@@ -294,56 +286,56 @@ function FunctionRowView(p: RowProps) {
           }}>
             → {a.element?.name || a.element_id.slice(0, 8)} <span style={{ opacity: 0.6 }}>[{a.layer}]</span>
             <button onClick={() => p.onUnallocate(node.id, a.layer)} title={t('Remove allocation')}
-              style={{ background: 'none', border: 'none', color: 'var(--status-ok)', cursor: 'pointer', padding: '0 0 0 0.2rem', fontSize: fs.label }}>×</button>
+              className="bg-none bd-0 c-ok cursor-p py-0 pl-1 pr-0 t-12">×</button>
           </span>
         ))}
-        {allocs.length === 0 && <span style={{ fontSize: fs.label, color: 'var(--status-caution)' }}>{t('unallocated')}</span>}
+        {allocs.length === 0 && <span className="t-12 c-caution">{t('unallocated')}</span>}
 
-        <span style={{ flex: 1 }} />
-        <button style={smallBtn()} onClick={() => setEditing(true)}>{t('rename')}</button>
-        <button style={smallBtn()} onClick={() => setPicking(v => !v)}>{t('Allocate to…')}</button>
-        <button style={smallBtn()} onClick={() => setAddingPort(v => !v)}>{t('+ port')}</button>
-        <button style={smallBtn('var(--interactive)')} onClick={() => p.onAddChild(node)}>{t('+ child')}</button>
-        <button style={smallBtn('var(--status-alarm)')} onClick={() => p.onDelete(node.id)}>{t('delete')}</button>
+        <span className="grow" />
+        <button className="c2o-btn c2o-btn--sm" onClick={() => setEditing(true)}>{t('rename')}</button>
+        <button className="c2o-btn c2o-btn--sm" onClick={() => setPicking(v => !v)}>{t('Allocate to…')}</button>
+        <button className="c2o-btn c2o-btn--sm" onClick={() => setAddingPort(v => !v)}>{t('+ port')}</button>
+        <button className="c2o-btn c2o-btn--sm" onClick={() => p.onAddChild(node)}>{t('+ child')}</button>
+        <button className="c2o-btn c2o-btn--sm" onClick={() => p.onDelete(node.id)}>{t('delete')}</button>
       </div>
 
       {picking && (
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', margin: '0.15rem 0 0.25rem 1.2rem' }}>
-          <select value={pickId} onChange={e => setPickId(e.target.value)} style={{ ...inputStyle, minWidth: 220 }}>
+        <div className="flex gap-1 ai-c my-1 ml-4">
+          <select value={pickId} onChange={e => setPickId(e.target.value)} className="c2o-select c2o-select--sm" style={{ minWidth: 220 }}>
             <option value="">{t('Select element…')}</option>
             {p.elements.map((el: any) => (
               <option key={el.id} value={el.id}>{el.name} ({el.element_type}{el.subsystem_domain ? ` / ${el.subsystem_domain}` : ''})</option>
             ))}
           </select>
-          <button style={smallBtn('var(--status-ok)')} disabled={!pickId}
+          <button className="c2o-btn c2o-btn--sm" disabled={!pickId}
             onClick={() => { p.onAllocate(node.id, pickId, node.layer); setPicking(false); setPickId('') }}>
             {t('Allocate at {{layer}}', { layer: node.layer })}
           </button>
-          <button style={smallBtn()} onClick={() => setPicking(false)}>{t('cancel')}</button>
+          <button className="c2o-btn c2o-btn--sm" onClick={() => setPicking(false)}>{t('cancel')}</button>
         </div>
       )}
 
       {addingPort && (
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', margin: '0.15rem 0 0.25rem 1.2rem' }}>
-          <input value={portName} placeholder={t('port name')} onChange={e => setPortName(e.target.value)} style={inputStyle}
+        <div className="flex gap-1 ai-c my-1 ml-4">
+          <input value={portName} placeholder={t('port name')} onChange={e => setPortName(e.target.value)} className="c2o-input c2o-input--sm"
             onKeyDown={e => { if (e.key === 'Enter' && portName.trim()) { p.onAddPort(node.id, portName.trim(), portDir); setPortName(''); setAddingPort(false) } }} />
-          <select value={portDir} onChange={e => setPortDir(e.target.value)} style={inputStyle}>
+          <select value={portDir} onChange={e => setPortDir(e.target.value)} className="c2o-select c2o-select--sm">
             <option value="in">in</option><option value="out">out</option><option value="inout">inout</option>
           </select>
-          <button style={smallBtn('var(--status-ok)')} disabled={!portName.trim()}
+          <button className="c2o-btn c2o-btn--sm" disabled={!portName.trim()}
             onClick={() => { p.onAddPort(node.id, portName.trim(), portDir); setPortName(''); setAddingPort(false) }}>{t('add')}</button>
-          <button style={smallBtn()} onClick={() => setAddingPort(false)}>{t('cancel')}</button>
+          <button className="c2o-btn c2o-btn--sm" onClick={() => setAddingPort(false)}>{t('cancel')}</button>
         </div>
       )}
 
       {ports.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', margin: '0 0 0.2rem 1.2rem' }}>
+        <div className="flex gap-1 wrap mb-1 ml-4">
           {ports.map(port => (
-            <span key={port.id} style={{ fontSize: fs.label, padding: '0 0.3rem', borderRadius: '3px', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+            <span key={port.id} className="t-12 py-0 px-1 rounded bg-2 bd c-2">
               {port.direction === 'in' ? '⇥' : port.direction === 'out' ? '⇤' : '⇆'} {port.name}
               {(port.exchange_item_ids || []).length > 0 && <span style={{ opacity: 0.7 }}> {t('({{n}} items)', { n: port.exchange_item_ids.length })}</span>}
               <button onClick={() => p.onDeletePort(port.id)} title={t('Delete port')}
-                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0 0 0 0.2rem', fontSize: fs.label }}>×</button>
+                className="bg-none bd-0 c-2 cursor-p py-0 pl-1 pr-0 t-12">×</button>
             </span>
           ))}
         </div>
@@ -370,31 +362,31 @@ function ExchangesSection({ exchanges, portsById, onCreate, onDelete }: {
   }
   const portOptions = [...portsById.values()]
   return (
-    <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.3rem' }}>{t('Functional exchanges ({{n}})', { n: exchanges.length })}</div>
-      {exchanges.length === 0 && <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('None yet — add ports to functions, then connect them.')}</div>}
+    <div className="mt-3 bt pt-2">
+      <div className="w-600 t-12 mb-1">{t('Functional exchanges ({{n}})', { n: exchanges.length })}</div>
+      {exchanges.length === 0 && <div className="c-2 t-12">{t('None yet — add ports to functions, then connect them.')}</div>}
       {exchanges.map(x => (
-        <div key={x.id} style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: fs.label, padding: '0.1rem 0' }}>
+        <div key={x.id} className="flex gap-2 ai-c t-12 py-1 px-0">
           <span style={{ color: 'var(--cat-2)' }}>{x.name || t('(unnamed)')}</span>
-          <span style={{ color: 'var(--text-secondary)' }}>{label(x.from_port_id)} → {label(x.to_port_id)}</span>
-          {x.realized_by_interface_id && <span style={{ fontSize: fs.label, color: 'var(--status-ok)' }}>{t('realized')}</span>}
-          <span style={{ flex: 1 }} />
-          <button style={smallBtn('var(--status-alarm)')} onClick={() => onDelete(x.id)}>×</button>
+          <span className="c-2">{label(x.from_port_id)} → {label(x.to_port_id)}</span>
+          {x.realized_by_interface_id && <span className="t-12 c-ok">{t('realized')}</span>}
+          <span className="grow" />
+          <button className="c2o-btn c2o-btn--sm" onClick={() => onDelete(x.id)}>×</button>
         </div>
       ))}
       {portOptions.length >= 2 && (
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('exchange name')} style={inputStyle} />
-          <select value={from} onChange={e => setFrom(e.target.value)} style={inputStyle}>
+        <div className="flex gap-1 ai-c mt-1 wrap">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('exchange name')} className="c2o-input c2o-input--sm" />
+          <select value={from} onChange={e => setFrom(e.target.value)} className="c2o-select c2o-select--sm">
             <option value="">{t('from port…')}</option>
             {portOptions.map(({ port, fn }) => <option key={port.id} value={port.id}>{fn.name}.{port.name} ({port.direction})</option>)}
           </select>
           <span>→</span>
-          <select value={to} onChange={e => setTo(e.target.value)} style={inputStyle}>
+          <select value={to} onChange={e => setTo(e.target.value)} className="c2o-select c2o-select--sm">
             <option value="">{t('to port…')}</option>
             {portOptions.map(({ port, fn }) => <option key={port.id} value={port.id}>{fn.name}.{port.name} ({port.direction})</option>)}
           </select>
-          <button style={smallBtn('var(--status-ok)')} disabled={!from || !to || from === to}
+          <button className="c2o-btn c2o-btn--sm" disabled={!from || !to || from === to}
             onClick={() => { onCreate({ name, from_port_id: from, to_port_id: to }); setName(''); setFrom(''); setTo('') }}>
             {t('+ exchange')}
           </button>

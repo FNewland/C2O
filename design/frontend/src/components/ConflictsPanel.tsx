@@ -67,18 +67,18 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
   const byId = new Map(elements.map(e => [e.id, e]))
   return (
     <div className="card" style={{ borderLeft: `4px solid ${sev}`, background: `color-mix(in srgb, ${sev} 6%, transparent)`, marginBottom: '0.5rem', padding: '0.5rem 0.65rem', opacity: c.resolved ? 0.55 : 1 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+      <div className="flex ai-c gap-2 mb-1 wrap">
         <span style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${src} 13%, transparent)`, color: src, border: `1px solid color-mix(in srgb, ${src} 33%, transparent)`, whiteSpace: 'nowrap' }}>
           {ANALYSIS_LABELS[c.analysis] ? t(ANALYSIS_LABELS[c.analysis]) : c.analysis}
         </span>
         <span style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${sev} 13%, transparent)`, color: sev, border: `1px solid color-mix(in srgb, ${sev} 33%, transparent)`, textTransform: 'uppercase' }}>
           {SEVERITY_LABELS[c.severity] ? t(SEVERITY_LABELS[c.severity]) : c.severity}
         </span>
-        <h3 style={{ fontSize: fs.body, margin: 0 }}>{c.title}</h3>
-        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', fontFamily: 'ui-monospace, monospace' }}>{c.code}</span>
-        <span style={{ flex: 1 }} />
+        <h3 className="t-13 m-0">{c.title}</h3>
+        <span className="t-12 c-2 mono">{c.code}</span>
+        <span className="grow" />
         {c.resolved ? (
-          <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('resolved')}</span>
+          <span className="t-12 c-ok">{t('resolved')}</span>
         ) : (
           <button onClick={() => onResolve(c.id)} disabled={resolving}
             style={{ cursor: 'pointer', fontSize: fs.label, padding: '0.1rem 0.5rem', borderRadius: 4, border: '1px solid var(--success)', background: 'rgba(16,185,129,0.12)', color: 'var(--success)' }}>
@@ -86,9 +86,9 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
           </button>
         )}
       </div>
-      {c.detail && <p style={{ fontSize: fs.label, marginBottom: '0.3rem' }}>{c.detail}</p>}
+      {c.detail && <p className="t-12 mb-1">{c.detail}</p>}
       {c.element_ids?.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
+        <div className="flex gap-1 wrap mb-1">
           {c.element_ids.map(id => {
             const el = byId.get(id)
             return (
@@ -102,11 +102,11 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
         </div>
       )}
       {c.requirement_ids?.length > 0 && (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>{t('requirements: {{ids}}', { ids: c.requirement_ids.join(', ') })}</div>
+        <div className="t-12 c-2 mb-1">{t('requirements: {{ids}}', { ids: c.requirement_ids.join(', ') })}</div>
       )}
       {c.suggested_fix && (
-        <div style={{ fontSize: fs.label, borderTop: '1px solid color-mix(in srgb, var(--text) 5%, transparent)', paddingTop: '0.25rem' }}>
-          <span style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)' }}>{t('SUGGESTED FIX:')} </span>{c.suggested_fix}
+        <div className="t-12 bt pt-1">
+          <span className="t-12 w-600 c-2">{t('SUGGESTED FIX:')} </span>{c.suggested_fix}
         </div>
       )}
     </div>
@@ -132,7 +132,7 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['conflicts', studyId] }); qc.invalidateQueries({ queryKey: ['analyses', studyId] }) },
   })
 
-  if (error) return <div style={{ fontSize: fs.label, color: 'var(--danger)' }}>{t('conflicts: {{message}}', { message: (error as Error).message })}</div>
+  if (error) return <div className="t-12 c-alarm">{t('conflicts: {{message}}', { message: (error as Error).message })}</div>
   if (!data) return null
   let rows = [...data.design, ...data.analysis]
   if (analysisFilter) rows = rows.filter(c => c.analysis === analysisFilter)
@@ -142,7 +142,7 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
 
   if (rows.length === 0) {
     return (
-      <div style={{ fontSize: fs.label, color: 'var(--success)', padding: '0.3rem 0' }}>
+      <div className="t-12 c-ok py-1 px-0">
         {analysisFilter
           ? (optionId
             ? t('No {{analysis}} conflicts in this option.', { analysis: ANALYSIS_LABELS[analysisFilter] ? t(ANALYSIS_LABELS[analysisFilter]) : analysisFilter })
@@ -153,14 +153,14 @@ function AnalysisConflicts({ studyId, optionId, analysisFilter }: { studyId: str
   }
   return (
     <div>
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="flex gap-2 mb-2 ai-c wrap">
         {Object.entries(counts).map(([sev, n]) => (
           <span key={sev} style={{ fontSize: fs.label, padding: '0 0.4rem', borderRadius: 3, background: `color-mix(in srgb, ${SEVERITY_COLORS[sev] || 'var(--text-3)'} 13%, transparent)`, color: SEVERITY_COLORS[sev] || 'var(--text-3)', border: `1px solid color-mix(in srgb, ${SEVERITY_COLORS[sev] || 'var(--text-3)'} 33%, transparent)` }}>
             {t('{{n}} {{severity}}', { n, severity: SEVERITY_LABELS[sev] ? t(SEVERITY_LABELS[sev]) : sev })}
           </span>
         ))}
-        {open.length === 0 && <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('all resolved')}</span>}
-        {resolve.error && <span style={{ fontSize: fs.label, color: 'var(--danger)' }}>{(resolve.error as Error).message}</span>}
+        {open.length === 0 && <span className="t-12 c-ok">{t('all resolved')}</span>}
+        {resolve.error && <span className="t-12 c-alarm">{(resolve.error as Error).message}</span>}
       </div>
       {rows.map(c => <AnalysisConflictCard key={c.id} c={c} elements={elements} onResolve={id => resolve.mutate(id)} resolving={resolve.isPending} />)}
     </div>
@@ -188,8 +188,8 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
     if (persisted) return persisted
     return (
       <div className="card" style={{ borderColor: 'var(--success)' }}>
-        <h3 style={{ color: 'var(--success)' }}>{t('No Cross-Domain Conflicts')}</h3>
-        <p style={{ fontSize: fs.body, color: 'var(--text-secondary)' }}>
+        <h3 className="c-ok">{t('No Cross-Domain Conflicts')}</h3>
+        <p className="t-13 c-2">
           {t('All subsystem designs are compatible. No position conflicts detected.')}
         </p>
       </div>
@@ -204,10 +204,10 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
     <div>
       {persisted}
       {/* Summary bar */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+      <div className="flex gap-2 mb-3">
         {critical > 0 && <span className="badge badge-red">{t('{{count}} Critical', { count: critical })}</span>}
         {major > 0 && <span className="badge badge-amber">{t('{{count}} Major', { count: major })}</span>}
-        {minor > 0 && <span className="badge" style={{ background: 'rgba(6,182,212,0.2)', color: 'var(--info)' }}>{t('{{count}} Minor', { count: minor })}</span>}
+        {minor > 0 && <span className="badge bg-accent c-accent">{t('{{count}} Minor', { count: minor })}</span>}
       </div>
 
       {/* Conflict cards */}
@@ -219,17 +219,17 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
             className="card"
             style={{ borderLeft: `4px solid ${style.border}`, background: style.bg, marginBottom: '0.75rem' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <h3 style={{ fontSize: fs.body }}>{conflict.title}</h3>
+            <div className="flex jc-sb ai-c mb-2">
+              <h3 className="t-13">{conflict.title}</h3>
               <span className={`badge badge-${conflict.severity === 'critical' ? 'red' : conflict.severity === 'major' ? 'amber' : 'green'}`}>
                 {t(style.label)}
               </span>
             </div>
 
-            <p style={{ fontSize: fs.body, marginBottom: '0.5rem' }}>{conflict.description}</p>
+            <p className="t-13 mb-2">{conflict.description}</p>
 
             {/* Positions involved */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>
+            <div className="flex gap-4 mb-2 t-12 c-2">
               <span><strong>{conflict.position_a?.replace('_', ' ')}</strong>: {conflict.value_a_str}</span>
               <span>↔</span>
               <span><strong>{conflict.position_b?.replace('_', ' ')}</strong>: {conflict.value_b_str}</span>
@@ -237,14 +237,14 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
 
             {/* Resolutions */}
             {conflict.resolutions?.length > 0 && (
-              <div style={{ marginTop: '0.5rem' }}>
-                <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+              <div className="mt-2">
+                <div className="t-12 w-600 c-2 mb-1">
                   {t('SUGGESTED RESOLUTIONS:')}
                 </div>
                 {conflict.resolutions.map((res: any, i: number) => (
-                  <div key={i} style={{ fontSize: fs.label, padding: '0.25rem 0', borderTop: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }}>
+                  <div key={i} className="t-12 py-1 px-0 bt">
                     <strong>{res.position_responsible?.replace('_', ' ')}:</strong> {res.description}
-                    {res.estimated_impact && <span style={{ color: 'var(--text-secondary)' }}> — {res.estimated_impact}</span>}
+                    {res.estimated_impact && <span className="c-2"> — {res.estimated_impact}</span>}
                   </div>
                 ))}
               </div>

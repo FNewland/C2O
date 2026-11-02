@@ -18,7 +18,7 @@ import { useDesignStore } from '../stores/designStore'
 import { useActiveParameters } from '../hooks/useActiveParameters'
 import { useUIStore } from '../stores/uiStore'
 import { useActiveOptionId, optionQuery } from '../stores/optionStore'
-import { fs } from '../theme/tokens'
+import { StatusBadge } from './ui/StatusBadge'
 
 const API = '/api'
 
@@ -96,35 +96,26 @@ export function MarginTower() {
     return p && typeof p.value === 'number' ? p.value : null
   }
 
+  const tone = (c: string) => c.includes('alarm') ? 'alarm' : c.includes('caution') ? 'caution' : 'ok'
+  const item = (key: string, label: string, pct: number, display: string, status: string, title?: string) => (
+    <div key={key} className={`c2o-tower__item c2o-tower__item--${status}`} title={title}>
+      <span className="c-2">{label}</span>
+      <span className="c2o-tower__bar" aria-hidden="true"><span className="c2o-tower__fill" style={{ width: `${pct}%` }} /></span>
+      {status === 'ok' || status === 'nodata'
+        ? <span className={status === 'nodata' ? 'c2o-nodata' : 'mono c-v'}>{display}</span>
+        : <StatusBadge status={status as 'caution' | 'alarm'}>{display}</StatusBadge>}
+    </div>
+  )
+
   return (
-    <div style={{ display: 'flex', gap: '0.4rem', padding: '0.25rem 0.5rem', background: 'var(--bg-secondary, var(--surface-2))', borderBottom: '1px solid var(--border, var(--line))', fontSize: fs.label }}>
+    <div className="c2o-tower" role="group" aria-label={t('Design margins')}>
       {result && MARGINS.map(m => {
         const val = get(m.paramId)
-        const color = val === null ? 'var(--text-3)' : val >= m.goodAbove ? 'var(--status-ok)' : val >= m.warnAbove ? 'var(--status-caution)' : 'var(--status-alarm)'
+        const status = val === null ? 'nodata' : val >= m.goodAbove ? 'ok' : val >= m.warnAbove ? 'caution' : 'alarm'
         const barPct = val !== null ? Math.min(100, Math.max(0, (val / m.goodAbove) * 50 + 50)) : 0
-        return (
-          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: '80px' }}>
-            <span style={{ color: 'var(--text-2)', width: '30px', textAlign: 'right', fontSize: fs.label }}>{t(MARGIN_LABELS[m.id] ?? m.label, { context: 'short' })}</span>
-            <div style={{ flex: 1, height: 6, background: 'var(--surface-1)', borderRadius: 3, minWidth: 30, position: 'relative' }}>
-              <div style={{ height: '100%', width: `${barPct}%`, background: color, borderRadius: 3, transition: 'width 0.3s' }} />
-            </div>
-            <span style={{ color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: fs.label }}>
-              {val !== null ? `${val.toFixed(0)}${m.unit}` : '—'}
-            </span>
-          </div>
-        )
+        return item(m.id, t(MARGIN_LABELS[m.id] ?? m.label, { context: 'short' }), barPct, val !== null ? `${val.toFixed(0)} ${m.unit}` : t('no data'), status)
       })}
-      {analysisBars.map(b => (
-        <div key={b.id} title={b.title} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: '80px' }}>
-          <span style={{ color: 'var(--text-2)', width: '30px', textAlign: 'right', fontSize: fs.label }}>{b.label}</span>
-          <div style={{ flex: 1, height: 6, background: 'var(--surface-1)', borderRadius: 3, minWidth: 30, position: 'relative' }}>
-            <div style={{ height: '100%', width: `${b.barPct}%`, background: b.color, borderRadius: 3, transition: 'width 0.3s' }} />
-          </div>
-          <span style={{ color: b.color, fontFamily: 'monospace', fontWeight: 600, minWidth: '35px', textAlign: 'right', fontSize: fs.label }}>
-            {b.display}
-          </span>
-        </div>
-      ))}
+      {analysisBars.map(b => item(b.id, b.label, b.barPct, b.display, tone(b.color), b.title))}
     </div>
   )
 }
