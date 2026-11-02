@@ -507,6 +507,7 @@ function handleState(data) {
     S.linkMeasured.push({ t: simNowSec(), eb, rssi: Number.isFinite(rssi) ? rssi : null });
     if (S.linkMeasured.length > 300) S.linkMeasured.shift();
   }
+  if (PIC) PIC.onState();
   updateChartGate();
   updateSaHeader();
   updateRailHealth();
@@ -1130,9 +1131,10 @@ function buildOverviewPage() {
          next. Columns scroll internally on a short screen. -->
     <div class="g ovr-grid">
       <div class="g ovr-left" tabindex="0" aria-label="Schematic and contacts" data-i18n-aria-label="Schematic and contacts">
-        <div class="ds-card ovr-schem-card"><h2><span data-i18n="EOSAT-1 functional schematic">EOSAT-1 functional schematic</span>
+        <div class="ds-card ovr-schem-card"><h2><span data-i18n="EOSAT-1 overview">EOSAT-1 overview</span>
           <span class="r" data-i18n="grey is nominal; colour marks a deviation">grey is nominal; colour marks a deviation</span></h2>
           <div class="bd" id="ovr-schematic"></div></div>
+
         <div class="ds-card"><h2><span data-i18n="Contacts, next 12 h">Contacts, next 12 h</span>
           <span class="r" id="ovr-timeline-src">/api/contacts</span></h2>
           <div class="bd">
@@ -1144,6 +1146,9 @@ function buildOverviewPage() {
           </div></div>
       </div>
       <div class="g ovr-right" tabindex="0" aria-label="Ground track and system board" data-i18n-aria-label="Ground track and system board">
+        <div class="ds-card" id="ovr-power-card"><h2><span data-i18n="Power">Power</span>
+          <span class="r" data-i18n="line width is power on a fixed scale">line width is power on a fixed scale</span></h2>
+          <div class="bd" id="ovr-power"><span class="ds-meta" data-i18n>awaiting data…</span></div></div>
         <div class="ds-card"><h2 data-i18n="Ground track">Ground track</h2>
           <div class="bd" id="ovr-map" style="min-height:180px"></div></div>
         <div class="ds-card"><h2><span data-i18n="System board">System board</span> <span class="r">/api/displays/system-overview</span></h2>
@@ -1177,6 +1182,14 @@ function updateOverview() {
     `<span class="ds-src" title="${esc(tText("computed on the ground from the orbit state, not downlinked"))}">${t("ground")}</span>` +
     (eclKnown ? renderChip({ kind: "neutral", label: Number(ecl) ? tText("Eclipse") : tText("Sunlit") }) : renderNoData()) +
     renderChip(contact ? { kind: "ok", glyph: "lock", label: tText("In contact") } : { kind: "off", label: tText("No contact") }));
+  // pictorial synoptic + power summary (shared/ui-viz); the schematic is
+  // the fallback when the shared modules are not available
+  if (PIC && PIC.render("ovr")) {
+    renderContactTimeline();
+    renderPassTable();
+    renderGroundTrack();
+    return;
+  }
   // schematic
   const host = $("ovr-schematic");
   if (host && !host.dataset.mounted && schematicsDoc) {
@@ -1433,6 +1446,13 @@ function buildSubsystemPage(pageId) {
     </div>
     <div class="g l2-grid">
       <div class="g l2-col">
+        ${pageId === "eps" ? `<div class="ds-card"><h2><span data-i18n>Power flow</span>
+          <span class="r" data-i18n>arrays to bus to loads and battery; raw values in Parameters below</span></h2>
+          <div class="bd" id="eps-flow"><span class="ds-meta" data-i18n>awaiting data…</span></div></div>` : ""}
+        ${pageId === "aocs" ? `<div class="ds-card"><h2><span data-i18n>Attitude</span>
+          <span class="r" data-i18n>interpreted from the quaternions; raw values in Parameters below</span></h2>
+          <div class="bd"><div id="att3d" hidden></div>
+            <div id="aocs-att2d"><span class="ds-meta" data-i18n>awaiting data…</span></div></div></div>` : ""}
         <div class="ds-card"><h2 data-i18n>Schematic <span class="r" data-i18n>click a block to navigate; values live</span></h2>
           <div class="bd" id="${pageId}-schematic"></div></div>
         <div class="ds-card"><h2 data-i18n>Parameters <span class="r" data-i18n>AND — generated from /api/param-catalog (P10)</span></h2>
@@ -1577,6 +1597,7 @@ function updateSubsystemPage(pageId, full) {
     I18n.applyDom(host);          // SVG <text data-i18n> in the mounted symbol
   }
   bindPageSchematic(pageId);
+  if (PIC && (pageId === "eps" || pageId === "aocs")) PIC.render(pageId);
   // key param triads + embedded sparklines
   setHTML(`${pageId}-params`, cfg.key.map((h) =>
     `<div class="kp">${paramTriad(h)}${spark(h)}</div>`).join(""));
@@ -5312,6 +5333,9 @@ const _TPL_KEYS_4 = [
   "Magnetometer & MTQ", "measured B (0x020B-0D) beside the duties it drives",
   "GPS navigation (PVT)", "valid only with a 3D fix — zeros otherwise", "Software state",
   "Procedure controls", "Data (hex)", "Service", "Subtype", "Step type", "Saved procedures", "Subsystem",
+  "EOSAT-1 overview", "Power", "line width is power on a fixed scale", "Power flow",
+  "arrays to bus to loads and battery; raw values in Parameters below", "Attitude",
+  "interpreted from the quaternions; raw values in Parameters below",
   ];
 const TEMPLATE_I18N_KEYS = [..._TPL_KEYS_1, ..._TPL_KEYS_2, ..._TPL_KEYS_3, ..._TPL_KEYS_4];
 
@@ -5697,6 +5721,33 @@ async function loadVerifLogRest() {
   } catch (e) { /* offline */ }
 }
 
+/* ═══ 19b. PICTORIAL VIEWS ═══════════════════════════════════════════════════
+ * The shared pictorial displays (shared/ui-viz -> /static/shared/viz/) are
+ * mounted by static/modern/pictorial.js, loaded with a dynamic import so the
+ * console still boots (with its schematics) when they are absent. */
+let PIC = null;
+async function loadPictorial() {
+  if (globalThis.__MCS_TEST__) return;
+  try {
+    const m = await import("/static/modern/pictorial.js");
+    await m.init({
+      state: () => S.state, limits: () => S.limits, freshness: paramFreshness,
+      alarmSummary: () => alarmSummary(), scModeInfo, linkState: () => linkState(),
+      nowS: simNowSec, showPage, t: tText, engValue,
+      visibleSubsystems: () => {
+        const pos = S.positions[S.position];
+        if (!pos || S.position === "flight_director") return null;
+        const list = pos.overview_subsystems || pos.subsystems || [];
+        return list.length ? list : null;
+      },
+    });
+    PIC = m;
+  } catch (e) {
+    PIC = null;
+    try { console.warn("pictorial views unavailable; schematics kept", e); } catch (e2) { /* no console */ }
+  }
+}
+
 async function boot() {
   // Catalogs first (English: resolves at once, no fetch; otherwise bounded
   // by i18n.js's load timeout) so the first render is already translated.
@@ -5723,6 +5774,7 @@ async function boot() {
   await Promise.all([loadTcCatalog(), loadSchematics(), loadDisplayConfig(),
     loadHkStructures(), loadMemoryMap(), loadAlarms(), loadFailureCodes(),
     loadFaultGraph(), loadGonogoMatrix(), loadConsoleLog()]);
+  await loadPictorial();
   const sel = $("pos-select");
   if (sel) sel.value = S.position;
   connectWS();
@@ -5760,6 +5812,7 @@ function onLanguageChange() {
   document.querySelectorAll("svg[data-schematic]").forEach((svg) => I18n.applyDom(svg));
   const ovrMode = $("sch-ovr-mode");   // inside a data-i18n <text>; only re-set while OVR is showing
   if (ovrMode) ovrMode.textContent = scModeInfo().label;
+  if (PIC) { PIC.relabel(); renderCurrentPage(false); }
   retitleRail();
   renderPosSelect();
   applyPositionFilter();          // position title, quick commands, manual TOC

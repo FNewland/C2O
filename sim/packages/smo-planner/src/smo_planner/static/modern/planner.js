@@ -250,161 +250,90 @@ function socHint() {
   }
 }
 
-/* ── Ground track map (svg-world-map from /static/vendor/) ────────────── */
-let map = null;
-let trackLayers = [], gsMarkers = [], gsCircles = [], gsLabels = [];
-let scMarker = null, scFootprint = null, nightOverlay = null;
-const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-
-function loadVendorMap() {
-  // index.html already loads it with a <script> tag; injecting it again threw
-  // "Identifier 'SMO_COASTLINE' has already been declared" on every load.
-  if (typeof window.SvgWorldMap !== "undefined") return Promise.resolve(true);
-  return new Promise((resolve) => {
-    const s = document.createElement("script");
-    s.src = "/static/vendor/js/svg-world-map.js";
-    s.onload = () => resolve(typeof window.SvgWorldMap !== "undefined");
-    s.onerror = () => resolve(false);
-    document.head.appendChild(s);
-  });
-}
+/* ── Ground track map + next-pass sky plot (shared/ui-viz) ──────────────
+ * Both pictures are the shared modules served at /static/shared/viz/
+ * (source: shared/ui-viz/groundtrack.js, skyplot.js), fed only what this
+ * page already fetched: the served track, position, stations and contacts.
+ * Numbers sit in each view's fixed strip, never on the moving marker. A
+ * module that fails to load shows the designed #mapFallback state. */
+let gtView = null, skyView = null;
+let skyKey = "", skyTrack = [];     // dense served track covering the next pass
 
 async function initMap() {
-  const ok = await loadVendorMap();
-  if (!ok) {
-    // Designed vendor-missing state (risk R3) — never a silent black box.
+  try {
+    const GT = await import("/static/shared/viz/groundtrack.js");
+    gtView = GT.mount($("groundTrackMap"), { t: tText });
+  } catch (e) {
     $("groundTrackMap").style.display = "none";
     $("mapFallback").style.display = "block";
-    return;
   }
-  map = new SvgWorldMap("groundTrackMap");
-  updateTerminator();
-  setInterval(updateTerminator, 60000);           // 60 s (classic cadence)
+  try {
+    const SK = await import("/static/shared/viz/skyplot.js");
+    skyView = SK.mount($("skyPlot"), { t: tText, showBar: false });
+  } catch (e) {
+    $("skyPlot").innerHTML = renderNoData({ label: tText("sky plot unavailable") });
+  }
   drawGroundTrack();
-  updateGroundStationMarkers();
-  updateSpacecraftMarker();
 }
 
-function computeSubsolarPoint(date) {
-  const JD = date.getTime() / 86400000 + 2440587.5;
-  const n = JD - 2451545.0;
-  const L0 = (280.460 + 0.9856474 * n) % 360;
-  const g = ((357.528 + 0.9856003 * n) % 360) * Math.PI / 180;
-  const lambda = (L0 + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * Math.PI / 180;
-  const epsilon = (23.439 - 0.0000004 * n) * Math.PI / 180;
-  const decl = Math.asin(Math.sin(epsilon) * Math.sin(lambda));
-  const RA = Math.atan2(Math.cos(epsilon) * Math.sin(lambda), Math.cos(lambda));
-  const eqTime = (L0 * Math.PI / 180 - RA) * 720 / Math.PI;
-  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-  const subLon = (12 - utcHours - eqTime / 60) * 15;
-  return { lat: decl * 180 / Math.PI, lon: ((subLon + 180) % 360 + 360) % 360 - 180 };
-}
-
-function terminatorLatAtLon(lonDeg, subsolar) {
-  const declR = subsolar.lat * Math.PI / 180;
-  if (Math.abs(declR) < 1e-6) return 0;
-  const H = (lonDeg - subsolar.lon) * Math.PI / 180;
-  return Math.atan(-Math.cos(H) / Math.tan(declR)) * 180 / Math.PI;
-}
-
-function updateTerminator() {
-  if (!map) return;
-  const subsolar = computeSubsolarPoint(simNowDate());
-  const poly = [];
-  for (let lon = -180; lon <= 180; lon += 2) {
-    poly.push([terminatorLatAtLon(lon, subsolar), lon]);
-  }
-  const nightPoleLat = subsolar.lat >= 0 ? -90 : 90;
-  poly.push([nightPoleLat, 180]); poly.push([nightPoleLat, -180]);
-  if (nightOverlay) map.removeLayer(nightOverlay);
-  nightOverlay = map.addPolygon(poly, { fillColor: "#000000", fillOpacity: 0.4, color: "none" });
-}
-
-function updateGroundStationMarkers() {
-  if (!map) return;
-  for (const l of [...gsMarkers, ...gsCircles, ...gsLabels]) map.removeLayer(l);
-  gsMarkers = []; gsCircles = []; gsLabels = [];
-  const ink = tok("--tx2"), dim = tok("--tx3");
-  for (const gs of groundStations) {
-    gsMarkers.push(map.addMarker(gs.lat_deg, gs.lon_deg, {
-      color: tok("--bg"), strokeColor: ink, radius: 3.5 }));
-    gsLabels.push(map.addLabel(gs.lat_deg, gs.lon_deg, gs.name, { color: ink, fontSize: "6" }));
-    gsCircles.push(map.addCircle(gs.lat_deg, gs.lon_deg, 2200, {
-      color: dim, weight: 0.5, opacity: 0.35, fillColor: dim, fillOpacity: 0.03, dashArray: "2 3" }));
-  }
-}
+/* Kept as named entry points for the pollers; all redraw the one view. */
+function updateTerminator() { drawGroundTrack(); }
+function updateGroundStationMarkers() { drawGroundTrack(); }
 
 function drawGroundTrack() {
-  if (!map || mapTrack.length < 2) return;
-  for (const l of trackLayers) map.removeLayer(l);
-  trackLayers = [];
-  const nowMs = simNow();
-  const sun = tok("--val"), dim = tok("--tx3");
-  let seg = [], segEclipse = mapTrack[0].in_eclipse;
-  let segPast = new Date(mapTrack[0].utc).getTime() < nowMs;
-  const flush = () => {
-    if (seg.length > 1) {
-      // Calm by default (brief §1.4): the track is ink, not colour; eclipse
-      // is dashed, the past is a faint dotted line.
-      trackLayers.push(map.addPolyline(seg, {
-        color: segPast || segEclipse ? dim : sun,
-        weight: segPast ? 1 : 2,
-        opacity: segPast ? 0.6 : 0.95,
-        dashArray: segPast ? "1 4" : (segEclipse ? "5 4" : null) }));
-    }
-  };
-  for (let i = 0; i < mapTrack.length; i++) {
-    const pt = mapTrack[i];
-    const isPast = new Date(pt.utc).getTime() < nowMs;
-    const prev = i > 0 ? mapTrack[i - 1] : null;
-    const lonJump = prev ? Math.abs(pt.lon - prev.lon) : 0;
-    if ((lonJump > 180 || pt.in_eclipse !== segEclipse || isPast !== segPast) && seg.length) {
-      flush(); seg = [];
-    }
-    segEclipse = pt.in_eclipse; segPast = isPast;
-    seg.push([pt.lat, pt.lon]);
+  if (gtView) {
+    const fov = plannerConfig && plannerConfig.imaging && plannerConfig.imaging.fov_deg;
+    gtView.update({
+      nowMs: simNow(),
+      track: mapTrack,
+      position: scState ? { lat: scState.lat, lon: scState.lon, altKm: scState.alt_km,
+        src: tText("planner /api/spacecraft-state") } : null,
+      stations: groundStations,
+      contacts: contacts.map((c) => ({ station: c.station, aos: c.aos.getTime(), los: c.los.getTime(), maxEl: c.maxEl })),
+      inContact: (scState && scState.in_contact && scState.active_gs) || "",
+      fovDeg: fov || null,
+      inEclipse: scState ? !!scState.in_eclipse : undefined,
+      sunFraction: scState ? scState.sun_fraction : undefined,
+      eclipseSource: scState ? scState.eclipse_source : undefined,
+    });
   }
-  flush();
+  drawSkyPlot();
 }
 
-function scGlyph(headingDeg) {
-  return '<svg width="18" height="18" viewBox="0 0 24 24" style="transform:rotate('
-    + (headingDeg || 0) + 'deg)"><polygon points="12,2 18,20 12,16 6,20" fill="'
-    + tok("--val") + '" stroke="' + tok("--bg") + '" stroke-width="1.5"/></svg>';
+/* Next pass: the first contact not yet over; its look angles come from a
+ * dense (10 s) SERVED track over [AOS-1 min, LOS+1 min], fetched once per pass. */
+function nextContact() {
+  const now = simNow();
+  return contacts.filter((c) => c.los.getTime() > now).sort((a, b) => a.aos - b.aos)[0] || null;
 }
-
-const latStr = (lat) => Math.abs(lat).toFixed(2) + "°" + (lat >= 0 ? "N" : "S");
-const lonStr = (lon) => Math.abs(lon).toFixed(2) + "°" + (lon >= 0 ? "E" : "W");
+async function loadSkyTrack(c) {
+  const key = c.station + "@" + c.aos.toISOString();
+  if (key === skyKey) return;
+  skyKey = key;
+  skyTrack = [];
+  const off = (c.aos.getTime() - simNow()) / 60000 - 1;
+  const dur = ((c.los.getTime() - c.aos.getTime()) / 60000 + 2) / 60;
+  try {
+    const res = await fetch("/api/ground-track?offset_minutes=" + off.toFixed(2)
+      + "&duration_hours=" + dur.toFixed(4) + "&step_s=10");
+    if (res.ok && skyKey === key) skyTrack = (await res.json()).ground_track || [];
+  } catch (e) { /* the view says no pass in the served track */ }
+  drawSkyPlot();
+}
+function drawSkyPlot() {
+  if (!skyView) return;
+  const c = nextContact();
+  const st = c ? groundStations.find((g) => g.name === c.station) : null;
+  $("skyStation").textContent = c ? c.station : "";
+  if (c && st) loadSkyTrack(c);
+  skyView.update({ nowMs: simNow(), station: st || null,
+    track: skyTrack.length ? skyTrack : mapTrack });
+}
 
 function updateSpacecraftMarker() {
-  if (!scState) {
-    for (const id of ["mapLat", "mapLon", "mapAlt", "mapBeta"]) $(id).innerHTML = renderNoData();
-    return;
-  }
-  const { lat, lon } = scState;
-  $("mapLat").textContent = latStr(lat);
-  $("mapLon").textContent = lonStr(lon);
-  $("mapAlt").textContent = num(scState.alt_km, 1) !== null ? num(scState.alt_km, 1) + " km" : "";
-  $("mapBeta").textContent = num(scState.solar_beta_deg, 1) !== null ? num(scState.solar_beta_deg, 1) + "°" : "";
-  if (!map) return;
-  if (!scMarker) {
-    scMarker = map.addMarker(lat, lon, { html: scGlyph(scState.heading_deg), size: 18 });
-  } else {
-    scMarker.setLatLng(lat, lon);
-    scMarker.setIcon({ html: scGlyph(scState.heading_deg) });
-  }
-  // Sensor footprint from the CONFIGURED payload FOV (P4), not a literal.
-  const fov = plannerConfig && plannerConfig.imaging && plannerConfig.imaging.fov_deg;
-  if (fov && scState.alt_km) {
-    const rKm = scState.alt_km * Math.tan((fov / 2) * Math.PI / 180);
-    if (!scFootprint) {
-      scFootprint = map.addCircle(lat, lon, rKm, {
-        color: tok("--val"), weight: 0.8, opacity: 0.35,
-        fillColor: tok("--val"), fillOpacity: 0.06, dashArray: "2 3" });
-    } else {
-      scFootprint.setLatLng(lat, lon);
-    }
-  }
+  const beta = scState ? num(scState.solar_beta_deg, 1) : null;
+  $("bbBeta").innerHTML = beta !== null ? esc(beta) + "°" : renderNoData();
+  drawGroundTrack();
 }
 
 /* ── Spacecraft state (header + map overlay) ──────────────────────────── */
@@ -497,7 +426,7 @@ async function pollAPIs() {
 
 /** Redraw everything that depends on "now" (10 s) and on the last poll. */
 function redraw() {
-  renderFacts(); updateCountdowns(); drawTimeline(); updateContactsTable();
+  renderFacts(); updateCountdowns(); drawTimeline(); updateContactsTable(); drawGroundTrack();
 }
 
 /* Schedule validation on every poll: it flags the rows and gates Upload. */

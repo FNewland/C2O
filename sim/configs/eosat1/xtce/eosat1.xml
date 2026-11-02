@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+fb2c0d99b60e" classification="Unclassified — Simulation"/>
+  <Header version="1.0+a14e11c0c833" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -2846,7 +2846,7 @@
           <LongDescription>0=INERTIAL, 1=LVLH_NADIR, 2=TARGET_TRACK, 3=SUN</LongDescription>
         </Parameter>
         <Parameter name="aocs_nadir_body_x" parameterTypeRef="aocs_nadir_body_x_Type">
-          <LongDescription>Nadir unit vector in body frame X</LongDescription>
+          <LongDescription>Nadir unit vector in body frame X (from the estimated attitude)</LongDescription>
         </Parameter>
         <Parameter name="aocs_nadir_body_y" parameterTypeRef="aocs_nadir_body_y_Type">
           <LongDescription>Nadir unit vector in body frame Y</LongDescription>

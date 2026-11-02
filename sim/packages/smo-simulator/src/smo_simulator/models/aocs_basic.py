@@ -3461,7 +3461,12 @@ class AOCSBasicModel(SubsystemModel):
             0 if s.mode == MODE_INERTIAL else s.pointing_frame)
         env = self._env
         C_true = att.quat_to_dcm(np.asarray(s.q_true, float))
-        nadir_b = C_true @ (-env['r_m'] / np.linalg.norm(env['r_m']))
+        # 0x02B0-B2 is operator telemetry, so it is what the flight software
+        # knows: nadir from its ESTIMATED attitude (orbit position from the
+        # on-board orbit knowledge). Built from q_true it leaked the truth to
+        # operator screens. The true sun vector below stays instructor-only.
+        C_est = att.quat_to_dcm(np.asarray(q_est, float))
+        nadir_b = C_est @ (-env['r_m'] / np.linalg.norm(env['r_m']))
         shared_params[0x02B0] = float(nadir_b[0])
         shared_params[0x02B1] = float(nadir_b[1])
         shared_params[0x02B2] = float(nadir_b[2])

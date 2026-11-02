@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C2O geometry views</title>
+<link rel="stylesheet" href="../design-system.css">
+<style>
+  /* Demo layout only; the views style themselves from tokens. */
+  body{ min-height:100%; background:var(--bg); }
+  .d-top{ display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap; min-height:48px;
+    padding:var(--sp-2) var(--sp-5); border-bottom:1px solid var(--line); }
+  .d-top h1{ font-size:var(--fs-value); font-weight:600; color:var(--val); }
+  .d-top .ctl{ margin-left:auto; display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap; }
+  main{ max-width:1360px; padding:var(--sp-5); display:flex; flex-direction:column; gap:var(--sp-5); }
+  .d-note{ max-width:80ch; color:var(--tx2); }
+  .d-two{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:var(--sp-5); }
+  .ds-panel-b{ padding:var(--sp-3) var(--sp-4) var(--sp-4); }
+  @media (max-width: 1100px){ .d-two{ grid-template-columns:minmax(0,1fr); } }
+  .d-top .ds-seg{ flex-wrap:wrap; max-width:100%; }
+  .d-top .ctl{ min-width:0; max-width:100%; }
+  @media (max-width: 560px){ main{ padding:var(--sp-4) var(--sp-4); } .d-top{ padding:var(--sp-2) var(--sp-4); } }
+</style>
+</head>
+<body>
+<header class="d-top">
+  <h1 data-i18n>Geometry views</h1>
+  <span class="ds-training" data-i18n>Demo data: synthetic orbit</span>
+  <div class="ctl">
+    <div class="ds-seg" role="group" aria-label="Scenario" data-i18n-aria-label id="scn">
+      <button type="button" data-scn="nominal" data-i18n>Nominal</button>
+      <button type="button" data-scn="slew" data-i18n>Slewing</button>
+      <button type="button" data-scn="blind" data-i18n>Sun in ST2</button>
+      <button type="button" data-scn="eclipse" data-i18n>Eclipse</button>
+      <button type="button" data-scn="stale" data-i18n>Stale</button>
+      <button type="button" data-scn="nodata" data-i18n>No attitude</button>
+    </div>
+    <div class="ds-seg" role="group" aria-label="Theme" data-i18n-aria-label id="theme">
+      <button type="button" data-theme-set="dark" data-i18n>Dark</button>
+      <button type="button" data-theme-set="light" data-i18n>Light</button>
+    </div>
+    <span id="lang"></span>
+  </div>
+</header>
+<main id="main">
+  <p class="d-note" data-i18n>Each view is a framework-free module from shared/ui-viz, fed plain interpreted values. Drag the 3D view to move the camera; it stays fixed in the frame.</p>
+  <section class="ds-panel" aria-labelledby="h-att">
+    <div class="ds-panel-h"><span id="h-att" data-i18n>Attitude</span></div>
+    <div class="ds-panel-b" id="att3d"></div>
+  </section>
+  <div class="d-two">
+    <section class="ds-panel" aria-labelledby="h-gt">
+      <div class="ds-panel-h"><span id="h-gt" data-i18n>Ground track</span></div>
+      <div class="ds-panel-b" id="gt"></div>
+    </section>
+    <section class="ds-panel" aria-labelledby="h-sky">
+      <div class="ds-panel-h"><span id="h-sky" data-i18n>Next pass</span><span class="r" id="sky-st"></span></div>
+      <div class="ds-panel-b" id="sky"></div>
+    </section>
+  </div>
+</main>
+<script type="module">
+import { init, tText, applyDom, onLangChange } from "../i18n.js";
+import { mountLangToggle } from "../components.js";
+import * as A3 from "./attitude3d.js";
+import * as GT from "./groundtrack.js";
+import * as SK from "./skyplot.js";
+
+const $ = (id) => document.getElementById(id);
+const q = new URLSearchParams(location.search);
+
+/* theme */
+function setTheme(th) {
+  document.documentElement.dataset.theme = th;
+  document.querySelectorAll("[data-theme-set]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeSet === th)));
+}
+setTheme(q.get("theme") || "dark");
+$("theme").addEventListener("click", (e) => { const b = e.target.closest("[data-theme-set]"); if (b) setTheme(b.dataset.themeSet); });
+
+await init({ app: "../i18n/", db: false });
+mountLangToggle($("lang"));
+const t = (en, v) => tText(en, v);
+
+/* ── synthetic EOSAT-1-like orbit (demo only; the consoles feed served data) ── */
+const RE = 6378.137, MU = 398600.4418, ALT = 513, A = RE + ALT, INC = 97.39 * Math.PI / 180;
+const N = Math.sqrt(MU / A ** 3);
+const T0 = Date.UTC(2026, 10, 2, 9, 40, 0);
+const D2R = Math.PI / 180;
+function sunEci(ms) {
+  const n = ms / 86400000 + 2440587.5 - 2451545.0;
+  const L = (280.460 + 0.9856474 * n) % 360, g = ((357.528 + 0.9856003 * n) % 360) * D2R;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * D2R, eps = 23.439 * D2R;
+  return [Math.cos(lam), Math.cos(eps) * Math.sin(lam), Math.sin(eps) * Math.sin(lam)];
+}
+const gmst = (ms) => ((280.46061837 + 360.98564736629 * (ms / 86400000 + 2440587.5 - 2451545.0)) % 360) * D2R;
+const sub = (a, b) => a.map((c, i) => c - b[i]), dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const crs = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const nrm = (a) => { const n = Math.hypot(...a); return a.map((c) => c / n); };
+// RAAN for LTAN 10:00 (sun RA - 30 deg)
+const s0 = sunEci(T0);
+const RAAN = Math.atan2(s0[1], s0[0]) - 30 * D2R;
+const U0 = Number(q.get("u0") ?? 0.6);
+function rv(ms) {
+  const u = U0 + N * (ms - T0) / 1000;
+  const cO = Math.cos(RAAN), sO = Math.sin(RAAN), ci = Math.cos(INC), si = Math.sin(INC);
+  const P = [cO, sO, 0], Q = [-sO * ci, cO * ci, si];
+  const r = P.map((p, i) => A * (Math.cos(u) * p + Math.sin(u) * Q[i]));
+  const vv = Math.sqrt(MU / A);
+  const v = P.map((p, i) => vv * (-Math.sin(u) * p + Math.cos(u) * Q[i]));
+  return { r, v };
+}
+function shadow(r, s) {
+  const along = dot(r, s);
+  if (along > 0) return 1;
+  const perp = Math.hypot(...sub(r, s.map((c) => c * along)));
+  return perp < RE ? 0 : 1;
+}
+function geod(r, ms) {
+  const g = gmst(ms);
+  const lon = ((Math.atan2(r[1], r[0]) - g) * 180 / Math.PI + 540) % 360 - 180;
+  return { lat: Math.asin(r[2] / Math.hypot(...r)) * 180 / Math.PI, lon, alt: Math.hypot(...r) - RE };
+}
+function lvlh(r, v) { const z = nrm(r.map((c) => -c)), y = nrm(crs(r, v).map((c) => -c)); return [nrm(crs(y, z)), y, z]; }
+const mm = (A_, B) => A_.map((row) => [0, 1, 2].map((j) => row[0] * B[0][j] + row[1] * B[1][j] + row[2] * B[2][j]));
+const mvv = (M, x) => M.map((row) => dot(row, x));
+function dcmToQuat(C) {   // ECI->body DCM -> scalar-last quaternion (smo_common.attitude.dcm_to_quat)
+  const tr = C[0][0] + C[1][1] + C[2][2];
+  let x, y, z, w;
+  if (tr > 0) { const s = Math.sqrt(tr + 1) * 2; w = s / 4; x = (C[1][2] - C[2][1]) / s; y = (C[2][0] - C[0][2]) / s; z = (C[0][1] - C[1][0]) / s; }
+  else if (C[0][0] > C[1][1] && C[0][0] > C[2][2]) { const s = Math.sqrt(1 + C[0][0] - C[1][1] - C[2][2]) * 2; w = (C[1][2] - C[2][1]) / s; x = s / 4; y = (C[0][1] + C[1][0]) / s; z = (C[0][2] + C[2][0]) / s; }
+  else if (C[1][1] > C[2][2]) { const s = Math.sqrt(1 + C[1][1] - C[0][0] - C[2][2]) * 2; w = (C[2][0] - C[0][2]) / s; x = (C[0][1] + C[1][0]) / s; y = s / 4; z = (C[1][2] + C[2][1]) / s; }
+  else { const s = Math.sqrt(1 + C[2][2] - C[0][0] - C[1][1]) * 2; w = (C[0][1] - C[1][0]) / s; x = (C[0][2] + C[2][0]) / s; y = (C[1][2] + C[2][1]) / s; z = s / 4; }
+  const q = [x, y, z, w], n = Math.hypot(...q);
+  return q.map((c) => c / n * (w < 0 ? -1 : 1));
+}
+function rotAbout(axis, deg) {   // passive rotation matrix: body axes turned by deg about axis
+  const [x, y, z] = nrm(axis), c = Math.cos(deg * D2R), s = Math.sin(deg * D2R), k = 1 - c;
+  return [[c + x * x * k, x * y * k + z * s, x * z * k - y * s], [y * x * k - z * s, c + y * y * k, y * z * k + x * s], [z * x * k + y * s, z * y * k - x * s, c + z * z * k]];
+}
+function rotTo(a, b) {           // passive DCM R with R·a = b
+  const ax = crs(a, b), s = Math.hypot(...ax), c = dot(a, b);
+  if (s < 1e-9) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  return rotAbout(ax, -Math.atan2(s, c) * 180 / Math.PI);
+}
+const BODY_FROM_LVLH = [[1, 0, 0], [0, -1, 0], [0, 0, -1]];
+
+const stations = [
+  { name: "Iqaluit", lat_deg: 63.7303, lon_deg: -68.5442, alt_km: 0.08, min_elevation_deg: 5 },
+  { name: "Troll", lat_deg: -72.0114, lon_deg: 2.5350, alt_km: 1.27, min_elevation_deg: 5 },
+  { name: "Svalbard", lat_deg: 78.2298, lon_deg: 15.4078, alt_km: 0.5, min_elevation_deg: 5 },
+  { name: "Inuvik", lat_deg: 68.3194, lon_deg: -133.5490, alt_km: 0.1, min_elevation_deg: 5 },
+  { name: "O'Higgins", lat_deg: -63.3210, lon_deg: -57.9008, alt_km: 0.01, min_elevation_deg: 5 },
+];
+try {
+  const r = await fetch("/api/ground-stations");
+  if (r.ok) { const j = await r.json(); if (j.ground_stations && j.ground_stations.length) stations.splice(0, stations.length, ...j.ground_stations); }
+} catch (e) { /* demo list */ }
+
+function scenario(name, offMin) {
+  const now = T0 + offMin * 60000;
+  const { r, v } = rv(now);
+  const s = sunEci(now);
+  const L = lvlh(r, v);
+  const Cref = mm(BODY_FROM_LVLH, L);
+  let Cest = mm(rotAbout([0.3, 1, 0.2], 0.35), Cref);
+  if (name === "slew") Cest = mm(rotAbout([0.2, 0.4, 1], 28), Cref);
+  if (name === "blind") {
+    const sb = mvv(Cref, s);
+    Cest = mm(rotTo(sb, nrm([0.05, 0.72, 0.62])), Cref);
+  }
+  const sf = name === "eclipse" ? 0 : shadow(r, s);
+  const sunB = mvv(Cest, s);
+  const nadB = mvv(Cest, nrm(r.map((c) => -c)));
+  const drive = Math.atan2(sunB[2], sunB[0]) * 180 / Math.PI;
+  const stale = name === "stale";
+  const qEst = dcmToQuat(Cest), qRef = dcmToQuat(Cref);
+  const att = {
+    q: name === "nodata" ? { q: null, valid: false, reason: "no attitude solution", verdict: "fresh" }
+      : { q: qEst, valid: true, verdict: stale ? "stale" : "fresh", ageS: stale ? 74 : 1 },
+    ref: { q: qRef, valid: true, verdict: "fresh" },
+    sun: sf > 0 ? { v: sunB, valid: true } : { v: null, valid: false, reason: "sun sensors not valid (eclipse or off)" },
+    nadir: { v: nadB, valid: true },
+    driveDeg: { v: drive, verdict: stale ? "stale" : "fresh", ageS: stale ? 74 : 1 },
+    errLimits: { warn: 2, alarm: 5 },
+    frame: "LVLH_NADIR",
+    lvlh: { r, v },
+    illum: { sunFraction: sf },
+    wingStatus: 3,
+    altKm: ALT,
+  };
+  // ground track: 90 min back, 150 min ahead, 30 s steps (as the planner serves)
+  const track = [];
+  for (let k = -180; k <= 300; k++) {
+    const ms = now + k * 30000, p = rv(ms), g = geod(p.r, ms);
+    track.push({ utc: new Date(ms).toISOString(), lat: g.lat, lon: g.lon, alt_km: g.alt,
+      in_eclipse: (name === "eclipse" && Math.abs(k) < 4) ? true : shadow(p.r, sunEci(ms)) === 0 });
+  }
+  const contacts = [];
+  for (const st of stations) for (const p of SK.passesFromTrack(st, track)) {
+    contacts.push({ station: st.name, aos: p.aos, los: p.los, maxEl: p.maxEl, st });
+  }
+  contacts.sort((a, b) => a.aos - b.aos);
+  const g = geod(r, now);
+  return { now, att, track, contacts, pos: { lat: g.lat, lon: g.lon, altKm: g.alt, verdict: stale ? "stale" : "fresh", ageS: stale ? 74 : 1, src: "demo" } };
+}
+
+/* geometry: the MCS serves it; the static demo server too (api/geometry) */
+let geo = null;
+try { const r = await fetch("/api/geometry"); if (r.ok) geo = (await r.json()).geometry; } catch (e) { /* none */ }
+
+const a3 = A3.mount($("att3d"), { geometry: geo, t, preserveDrawingBuffer: true });
+$("att3d").addEventListener("vz:webgl-unavailable", (e) => console.warn("3D fallback:", e.detail.reason));
+const gt = GT.mount($("gt"), { t });
+const sk = SK.mount($("sky"), { t });
+
+let scn = q.get("scenario") || "nominal";
+const off = Number(q.get("t") || 0);
+function run() {
+  document.querySelectorAll("[data-scn]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.scn === scn)));
+  const S = scenario(scn, off);
+  a3.update(S.att);
+  const live = S.contacts.find((c) => c.aos <= S.now && c.los >= S.now);
+  gt.update({ nowMs: S.now, track: S.track, position: S.pos, stations, contacts: S.contacts,
+    inContact: live ? live.station : "", fovDeg: 29.856, eclipseSource: "spacecraft",
+    inEclipse: S.att.illum.sunFraction < 0.5, sunFraction: S.att.illum.sunFraction });
+  const next = live || S.contacts.find((c) => c.aos > S.now);
+  $("sky-st").textContent = next ? next.station : "";
+  sk.update({ nowMs: S.now, station: next ? next.st : null, track: S.track });
+}
+$("scn").addEventListener("click", (e) => { const b = e.target.closest("[data-scn]"); if (b) { scn = b.dataset.scn; run(); } });
+onLangChange(() => { applyDom(); run(); });
+run();
+document.documentElement.dataset.ready = "1";
+</script>
+</body>
+</html>

@@ -84,6 +84,11 @@ _TABLE: list[FileClass] = [
               True, ALL,
               "Canonical station list; t0_epoch changes every eclipse and "
               "pass in the run."),
+    FileClass("geometry.yaml", "mission", "Spacecraft geometry (displays)",
+              True, ("mcs",),
+              "Drawn by the 3D attitude view only; its panel and sensor "
+              "numbers are cross-checked against eps.yaml and planner.yaml "
+              "by smo_common.config.geometry."),
     # ── simulation tuning ──
     FileClass("simulation.yaml", "simulation", "Simulation tuning", True,
               ("simulator",),
