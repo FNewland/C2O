@@ -32,4 +32,5 @@ packages = ["src/smo_common"]
 # <lang>.db.json) is a SUBDIRECTORY, so it is pinned with its own pattern.
 artifacts = ["src/smo_common/ui/*", "src/smo_common/ui/i18n/*.json",
              "src/smo_common/ui/i18n/tools/*.json",
-             "src/smo_common/ui/fonts/*"]
+             "src/smo_common/ui/fonts/*", "src/smo_common/ui/viz/*",
+             "src/smo_common/ui/viz/vendor/three/*"]
