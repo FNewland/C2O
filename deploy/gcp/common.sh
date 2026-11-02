@@ -47,12 +47,17 @@ export CLOUDSDK_CORE_PROJECT="$PROJECT"
 # retried up to 4 times with a growing pause, so a flaky network does not
 # stop setup.sh halfway. Real errors (permissions, bad arguments) are not
 # retried: they fail at once as before.
+#
+# The real binary is called by its path, not as `command gcloud`: under
+# macOS bash 3.2 a failing `command X || ...` still ends a `set -e` script,
+# so every "does it exist?" check that answered no would stop the script.
 gcloud() {
-    local n=0 rc errf
+    local n=0 rc errf bin
+    bin="$(type -P gcloud)" || { echo "gcloud not found on PATH" >&2; return 127; }
     errf="$(mktemp)"
     while :; do
         rc=0
-        command gcloud "$@" 2>"$errf" || rc=$?
+        "$bin" "$@" 2>"$errf" || rc=$?
         if [ "$rc" -ne 0 ] && [ "$n" -lt 4 ] && grep -qE \
             'gcloud crashed \((ConnectTimeout|ConnectionError|SSLError|ReadTimeout|RemoteDisconnected|ProtocolError)|Connection (aborted|reset)|timed out' "$errf"; then
             n=$((n + 1))

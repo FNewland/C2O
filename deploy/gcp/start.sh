@@ -60,7 +60,7 @@ if [ "$wait" = yes ]; then
         states="$(for b in "$BE_PORTAL" "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK"; do
             gcloud compute backend-services get-health "$b" --global \
                 --format='value(status.healthStatus[0].healthState)' 2>/dev/null || echo UNKNOWN
-        done | paste -sd' ')"
+        done | paste -sd' ' -)"  # '-': macOS paste needs the operand
         info "welcome ops plan sim link: $states"
         case "$states" in *UNHEALTHY*|*UNKNOWN*|"") sleep 10 ;; *) break ;; esac
     done
