@@ -59,6 +59,10 @@ et réévaluer après un passage éclairé supplémentaire.
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — demander les données de servitude TCS
 **Verify:** `tcs.htr_battery` (0x040A) — consigner l'état actuel
 **Verify:** `tcs.htr_obc` (0x040B) — consigner l'état actuel
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — données de servitude EPS : les états de ligne ci-dessous sont dans le SID 1
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 et `eps.pl_htr_obc` (0x0116) = 1 — une consigne ne fait rien sur une ligne de réchauffeur non alimentée. La recette en vol peut laisser les deux lignes sur OFF (COM-002 rétablit son état d'entrée), et la batterie passe alors sous la limite jaune de 2 C en ~2 h (mesuré le 2026-11-02) : si l'une d'elles vaut 0, l'alimenter d'abord
+**TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — ligne `htr_bat`, seulement si 0x0115 = 0
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — ligne `htr_obc`, seulement si 0x0116 = 0
 **Verify:** `tcs.temp_battery` (0x0407) > 5 °C
 **Verify:** `tcs.temp_obc` (0x0406) > 10 °C
 **Note:** Si la marge de température de la batterie est faible (< 8 °C), relever la consigne du réchauffeur batterie
@@ -70,6 +74,7 @@ et réévaluer après un passage éclairé supplémentaire.
 ### Étape 3 : Couper le refroidisseur du FPA pour économiser la puissance
 **Note:** Si la charge utile est en STANDBY ou OFF, couper le refroidisseur du FPA pour réduire la puissance consommée pendant l'éclipse :
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — refroidisseur du FPA sur OFF
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) sous 5 s
 **Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
 **Note:** Le refroidisseur du FPA sera réactivé après la sortie d'éclipse, lorsque le bilan de puissance sera positif.
@@ -123,6 +128,7 @@ réchauffeurs.
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — réactiver le refroidisseur du FPA.
 Depuis la phase 4, cette voie alimente aussi la ligne EPS 4 (`eps.pl_fpa_cooler`, 0x0114) ;
 ce n'était pas le cas auparavant, d'où le fait que le FPA n'atteignait jamais sa consigne.
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 (ACTIVE) sous 5 s
 **Note:** Rétablir les consignes nominales des réchauffeurs si elles ont été modifiées à l'étape 2.
 **TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) — circuit batterie rendu au thermostat

@@ -45,7 +45,7 @@ le bit 4 de `0x02C5` (enveloppe de moment cinétique >= 70 %) : c'est l'averti
 « une désaturation approche », à consulter AVANT de s'engager dans une longue bande.
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg sous 5 s
 **Verify:** `aocs.rate_roll` (0x0204) < 0.01 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.01 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) dans la plage [0.053, 0.073] deg/s (le suivi du nadir impose la vitesse orbitale, +0.063 deg/s sur cette console ; une vitesse de tangage nulle signifierait que le satellite NE suit PAS le nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.01 deg/s
 **GO/NO-GO:** Si att_error >= 0.1 deg, se mettre en attente (HOLD). Attendre jusqu'à 60 s la convergence.
 Si la condition n'est toujours pas remplie, interrompre la prise de vue et analyser les performances de l'AOCS.

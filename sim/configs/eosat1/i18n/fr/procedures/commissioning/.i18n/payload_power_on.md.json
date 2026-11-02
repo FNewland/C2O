@@ -29,8 +29,8 @@
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-1-pre-power-on-eps-baseline",
-   "en_hash": "79f036795ff3484f",
-   "fr_hash": "6296b3c741421445"
+   "en_hash": "f131a40f6fcb2394",
+   "fr_hash": "427d933d90b14e13"
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-2-verify-payload-currently-off",
@@ -39,8 +39,8 @@
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-3-energise-the-payload-line-then-command-standby",
-   "en_hash": "586e31505708db79",
-   "fr_hash": "ee10d6df520c6ccb"
+   "en_hash": "edc74946d46a9a8e",
+   "fr_hash": "f25a45b93f2700cd"
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-4-verify-payload-power-draw",
@@ -88,5 +88,5 @@
    "fr_hash": "88218906d72b5eaa"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

@@ -76,6 +76,7 @@ de la branche correspond à ce que la prose appelait « attendre 30 s et cont
 ### Étape 3 : Délester la charge de priorité 2 — refroidisseur du FPA sur OFF
 **LABEL:** `STEP-3`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Désactiver le refroidisseur du FPA
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) en 5 s
 **Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
@@ -141,10 +142,12 @@ la puissance disponible du générateur solaire.
 **TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — 1. Roues AOCS : vérifier que `aocs.mode` (0x020F)
    revient dans un mode commandable. Il peut être nécessaire de passer d'abord par `AOCS_SET_MODE(mode=3)` (COARSE_SUN).
 **GO/NO-GO:** Bus stable pendant 5 min avec les roues AOCS rétablies — rétablir la charge suivante
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `ttc_tx`, si `eps.pl_ttc_tx` (0x0112) = 0 : ligne ouverte, `TTC_PA_ON` est refusé par un S1.8 « power line 'ttc_tx' is OFF » (la FDIR de bord l'ouvre lors d'un délestage profond)
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — 2. Émetteur TX : vérifier `ttc.pa_on` (0x0516) = 1
 **GO/NO-GO:** Bus stable pendant 5 min avec l'émetteur rétabli — rétablir la charge suivante
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — 3. Refroidisseur du FPA : vérifier `tcs.cooler_fpa` (0x040C) = 1
 **GO/NO-GO:** Bus stable pendant 5 min avec le refroidisseur du FPA rétabli — rétablir la charge suivante
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 : sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Charge utile en STANDBY : vérifier `payload.mode` = 1
 **Verify:** Après chaque ajout de charge, confirmer que `eps.bus_voltage` (0x0105) reste > 27.5 V
 et que `eps.bat_soc` (0x0101) reste > 35 %.

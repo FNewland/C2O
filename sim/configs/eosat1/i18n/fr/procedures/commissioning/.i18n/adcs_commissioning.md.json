@@ -29,8 +29,8 @@
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-1-consolidated-aocs-end-state-readback",
-   "en_hash": "2cdb35326aa9f9da",
-   "fr_hash": "b135efe496c7548c"
+   "en_hash": "9dd4fc4987909961",
+   "fr_hash": "3b05e6ef0327cec3"
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-2-consolidated-platform-end-state-readback",
@@ -44,8 +44,8 @@
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-4-declare-nominal-operations-phase-6",
-   "en_hash": "b81b49a341491fd9",
-   "fr_hash": "46b26ee5cab1aef9"
+   "en_hash": "9156b352b6de4fd2",
+   "fr_hash": "85505bced949f519"
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-5-hold-and-hand-over",
@@ -68,5 +68,5 @@
    "fr_hash": "4c735488e70ca893"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

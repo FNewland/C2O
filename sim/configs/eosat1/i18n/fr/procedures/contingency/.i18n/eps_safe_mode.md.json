@@ -54,13 +54,13 @@
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-6-re-enable-loads-payload-to-standby",
-   "en_hash": "138ca4877017fbc9",
-   "fr_hash": "56827a3c720f87bc"
+   "en_hash": "cf7e8fc3e5883aba",
+   "fr_hash": "2db69da2cddb11ce"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-7-restore-nominal-aocs-mode",
-   "en_hash": "0c8f022dd91edaa4",
-   "fr_hash": "992864748e8003c6"
+   "en_hash": "b83f9e87ab5e039b",
+   "fr_hash": "fb4d8b0f1f2b7d2a"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-8-restore-obc-to-nominal-mode",
@@ -83,5 +83,5 @@
    "fr_hash": "9154a20412ea27ef"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

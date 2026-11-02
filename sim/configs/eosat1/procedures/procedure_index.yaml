@@ -115,7 +115,7 @@ procedures:
     # Runs BEFORE -005/-006/-003 (they need the AOCS suite + GPS powered).
     # Exit: DETUMBLE on mag+MTQ, wheels DISABLED, payload/cooler/prop OFF.
     # NEXT: LEOP-005.
-    command_services: [2, 3, 8]
+    command_services: [2, 3, 8, 20]
 
   - id: LEOP-005
     name: "Sun Acquisition"
@@ -127,7 +127,7 @@ procedures:
       aocs: "Observe automatic detumble->sun-hold handover, monitor rates"
     # Observation-only: the DETUMBLE->COARSE_SUN transition is AUTOMATIC.
     # Exit: COARSE_SUN sun hold (LEOP parking state). NEXT: LEOP-006.
-    command_services: [3]
+    command_services: [3, 20]
 
   - id: LEOP-006
     name: "Time Synchronisation"
@@ -223,10 +223,11 @@ procedures:
     name: "TTC Link Verification"
     file: "commissioning/ttc_link_verification.md"
     category: commissioning
-    required_positions: [flight_director, ttc]
+    required_positions: [flight_director, ttc, eps_tcs]
     position_roles:
       flight_director: "Coordinate link test"
       ttc: "Verify uplink/downlink at all data rates"
+      eps_tcs: "Power the ttc_tx line for the link test (Step 0, EPS_POWER_ON)"
     command_services: [3, 8, 20]
 
   - id: COM-007
@@ -243,10 +244,11 @@ procedures:
     name: "FDIR Configuration & Protection Functions"
     file: "commissioning/fdir_configuration.md"
     category: commissioning
-    required_positions: [flight_director, fdir_systems]
+    required_positions: [flight_director, fdir_systems, eps_tcs]
     position_roles:
       flight_director: "Approve FDIR configuration"
       fdir_systems: "Inventory S12/S19 tables, run the load-shed latch test"
+      eps_tcs: "Send the commanded load-shed functional test (Step 4, EPS_EMERGENCY_LOAD_SHED)"
     command_services: [3, 8, 12, 19, 20]
 
   - id: COM-009
@@ -275,21 +277,23 @@ procedures:
     name: "Payload Calibration"
     file: "commissioning/payload_calibration.md"
     category: commissioning
-    required_positions: [flight_director, payload_ops]
+    required_positions: [flight_director, payload_ops, aocs]
     position_roles:
       flight_director: "Authorize calibration"
       payload_ops: "Execute calibration sequence, verify image quality"
+      aocs: "Fine-ready check and FINE_POINT / NOMINAL for the calibration site (Steps 6, 9)"
     command_services: [3, 8, 20]
 
   - id: COM-012
     name: "First Light"
     file: "commissioning/first_light.md"
     category: commissioning
-    required_positions: [flight_director, payload_ops, aocs]
+    required_positions: [flight_director, payload_ops, aocs, ttc]
     position_roles:
       flight_director: "Authorize first imaging"
       payload_ops: "Capture first image, downlink it over S13, assess quality"
       aocs: "Ensure pointing accuracy for imaging"
+      ttc: "Select DOWNLINK mode and the HIGH rung for the first-light transfer (Step 8)"
     # Runs BEFORE COM-011 in the definitive order (first light IS the first
     # image; radiometric calibration follows on a proven chain).
     command_services: [3, 8, 13, 20]
@@ -306,27 +310,29 @@ procedures:
     # The LAST commissioning card: consolidated readback only (no re-tests),
     # then SYS_SET_MISSION_PHASE(6). 2026-08c dedupe of the old "full
     # commissioning" card that re-ran COM-003/004/005 work.
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   # === Nominal Operations Procedures ===
   - id: NOM-001
     name: "Pass Startup"
     file: "nominal/startup.md"
     category: nominal
-    required_positions: [flight_director, ttc]
+    required_positions: [flight_director, ttc, payload_ops]
     position_roles:
       flight_director: "Authorize pass start, initial GO/NO-GO"
       ttc: "Verify link acquisition"
+      payload_ops: "Command the payload to STANDBY at pass start"
     command_services: [3, 8]
 
   - id: NOM-002
     name: "Imaging Session"
     file: "nominal/imaging_session.md"
     category: nominal
-    required_positions: [payload_ops, aocs]
+    required_positions: [payload_ops, aocs, eps_tcs]
     position_roles:
       payload_ops: "Configure and execute imaging"
       aocs: "Ensure pointing for imaging windows"
+      eps_tcs: "Monitor FPA thermal state and power draw during imaging (Steps 2, 4, 5a, 6)"
     command_services: [3, 8]
     # Exemplar 1: the commanding half of this procedure is exactly the
     # imaging_pass activity's verified command sequence.
@@ -373,11 +379,12 @@ procedures:
     name: "Software Upload"
     file: "nominal/software_upload.md"
     category: nominal
-    required_positions: [flight_director, fdir_systems]
+    required_positions: [flight_director, fdir_systems, payload_ops]
     position_roles:
       flight_director: "Authorize upload, GO/NO-GO at each stage"
       fdir_systems: "Execute memory load and verify"
-    command_services: [3, 6, 8, 11]
+      payload_ops: "Put the payload in a safe mode before the upload (Step 2)"
+    command_services: [3, 6, 8, 11, 20]
 
   - id: NOM-007
     name: "Momentum Management"
@@ -419,19 +426,21 @@ procedures:
     name: "Eclipse Transition"
     file: "nominal/eclipse_transition.md"
     category: nominal
-    required_positions: [eps_tcs, aocs]
+    required_positions: [eps_tcs, aocs, ttc]
     position_roles:
       eps_tcs: "Monitor power balance during eclipse"
       aocs: "Monitor attitude during eclipse transition"
-    command_services: [3, 8]
+      ttc: "Hold the link through the eclipse transition (card Cross-Position)"
+    command_services: [3, 8, 20]
 
   - id: NOM-011
     name: "Data Rate Change"
     file: "nominal/data_rate_change.md"
     category: nominal
-    required_positions: [ttc]
+    required_positions: [ttc, payload_ops]
     position_roles:
       ttc: "Configure and verify new data rate"
+      payload_ops: "Coordinate payload data volume with the rate change (card Cross-Position)"
     command_services: [3, 8]
 
   # NOM-012 is NOT advisory, against the initial expectation. It was proposed
@@ -456,12 +465,13 @@ procedures:
     name: "Orbit Maintenance Manoeuvre Execution"
     file: "nominal/orbit_manoeuvre_execution.md"
     category: nominal
-    required_positions: [flight_director, aocs, propulsion]
+    required_positions: [flight_director, aocs, propulsion, eps_tcs]
     position_roles:
       flight_director: "GO/NO-GO at arm, standing abort authority delegated"
       aocs: "Hold burn attitude, monitor att_error, post-burn momentum"
       propulsion: "Preheat, arm, execute, monitor thrust, post-burn OD"
-    command_services: [8]
+      eps_tcs: "Switch the propulsion power line on and off (Steps 1, 7)"
+    command_services: [8, 20]
 
   # Author ruling Q3 (amended 2026-10-30): disposal by an end-of-life
   # perigee-lowering burn (513 -> 390 km perigee, 34.3 m/s in six retrograde
@@ -471,14 +481,16 @@ procedures:
     name: "End-of-Life Disposal (Perigee Lowering and Passivation)"
     file: "nominal/eol_disposal.md"
     category: nominal
-    required_positions: [flight_director, propulsion, aocs, eps_tcs, ttc]
+    required_positions: [flight_director, propulsion, aocs, eps_tcs, ttc, payload_ops, fdir_systems]
     position_roles:
       flight_director: "Authorise the disposal plan, each burn and the final RF silence"
       propulsion: "Burn watchdog, preheat, six retrograde burns, depletion, safing"
       aocs: "Retrograde inertial hold for each burn, wheel spin-down"
       eps_tcs: "Battery passivation (charge regulator off)"
       ttc: "Confirm the disposal orbit, transmitters off, confirm loss of signal"
-    command_services: [2, 3, 8]
+      payload_ops: "Safe the payload before disposal (Step 10)"
+      fdir_systems: "Switch the UHF beacon off for RF silence (Step 12, TTC_BEACON_TX_OFF)"
+    command_services: [2, 3, 8, 20]
 
   # === Contingency Procedures ===
   # Runnable from 2026-08b. A five-rung escalation ladder whose decision
@@ -494,7 +506,7 @@ procedures:
     position_roles:
       flight_director: "Authorize load shedding sequence"
       eps_tcs: "Execute power line disconnections"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
     runnable: {kind: markdown}
 
   - id: CTG-002
@@ -526,7 +538,7 @@ procedures:
       flight_director: "Authorize thermal response"
       payload_ops: "Safe payload if affected"
       eps_tcs: "Adjust heaters and power"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: CTG-005
     name: "EPS Safe Mode"
@@ -602,7 +614,7 @@ procedures:
     position_roles:
       flight_director: "Authorize OBC switchover"
       fdir_systems: "Execute switchover, verify new OBC"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: CTG-012
     name: "Overcurrent Response"
@@ -622,7 +634,7 @@ procedures:
     position_roles:
       flight_director: "Authorize battery management"
       eps_tcs: "Assess cell failure, adjust charge limits"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: CTG-014
     name: "BER Anomaly"
@@ -638,19 +650,21 @@ procedures:
     name: "Corrupted Image Recovery"
     file: "contingency/corrupted_image.md"
     category: contingency
-    required_positions: [payload_ops]
+    required_positions: [payload_ops, eps_tcs]
     position_roles:
       payload_ops: "Assess corruption, retake if possible"
-    command_services: [3, 8]
+      eps_tcs: "Read FPA thermal state and command the FPA cooler (card Cross-Position)"
+    command_services: [3, 8, 20]
 
   - id: CTG-016
     name: "Memory Segment Failure"
     file: "contingency/memory_segment_failure.md"
     category: contingency
-    required_positions: [flight_director, fdir_systems]
+    required_positions: [flight_director, fdir_systems, payload_ops]
     position_roles:
       flight_director: "Authorize memory management"
       fdir_systems: "Isolate bad segment, remap storage"
+      payload_ops: "Position Lead: image catalogue, bad-segment marking, deletions"
     command_services: [3, 6, 8]
 
   - id: CTG-017
@@ -686,10 +700,11 @@ procedures:
     name: "No Telemetry at Pass Start"
     file: "contingency/no_telemetry_at_pass.md"
     category: contingency
-    required_positions: [flight_director, ttc]
+    required_positions: [flight_director, ttc, eps_tcs]
     position_roles:
       flight_director: "Coordinate RF chain diagnostics"
       ttc: "Diagnose transponder/antenna/GS issues"
+      eps_tcs: "Re-energise the ttc_tx line if it is off (Step 2, card Cross-Position)"
     command_services: [3, 8]
 
   - id: CTG-020
@@ -726,7 +741,7 @@ procedures:
     position_roles:
       flight_director: "Authorize OBC recovery sequence"
       fdir_systems: "Execute bootloader recovery, verify app boot"
-    command_services: [3, 6, 8, 9]
+    command_services: [3, 6, 8, 9, 20]
 
   - id: CTG-022
     name: "CAN Bus Failure Isolation"
@@ -736,7 +751,7 @@ procedures:
     position_roles:
       flight_director: "Authorize bus isolation"
       fdir_systems: "Isolate failed CAN bus, verify backup bus"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: CTG-023
     name: "Progressive Load Shed"
@@ -746,7 +761,7 @@ procedures:
     position_roles:
       flight_director: "Authorize progressive load shedding"
       eps_tcs: "Execute staged load shed by SoC threshold"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: CTG-024
     name: "Solar Panel Loss Response"
@@ -757,7 +772,7 @@ procedures:
       flight_director: "Authorize power budget revision"
       eps_tcs: "Assess panel loss impact, adjust power profile"
       aocs: "Adjust attitude for optimal remaining panel illumination"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: CTG-025
     name: "AOCS Sensor Loss Recovery"
@@ -855,7 +870,7 @@ procedures:
     position_roles:
       flight_director: "Authorize emergency reboot"
       fdir_systems: "Execute reboot, verify recovery"
-    command_services: [3, 8]
+    command_services: [3, 8, 20]
 
   - id: EMG-004
     name: "Loss of Communication"

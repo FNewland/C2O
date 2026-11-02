@@ -40,12 +40,14 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **LABEL:** `STEP-2A-BAT`
 **Note:** Battery cold:
 **TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40)
+**TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) within 5s
 **LABEL:** `STEP-2A-OBC`
 **BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2A-OBCON`
 **Note:** OBC cold:
 **TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41)
+**TC:** `GET_PARAM(param_id=0x040B)` (Service 20, Subtype 3) — `tcs.htr_obc`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_obc` (0x040B) = 1 (ON) within 5s
 **Verify:** `eps.power_cons` (0x0106) increases by expected heater draw (3-7W per circuit)
 **GO/NO-GO:** Heater confirmed active and power budget can sustain — proceed to monitoring
@@ -64,6 +66,7 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **Note:** OBC hot: switch the OBC heater off, then put the OBC in SAFE. There is
 no task-shedding parameter on board; OBC SAFE is the commanded reduction.
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) — OBC heater OFF
+**TC:** `GET_PARAM(param_id=0x040B)` (Service 20, Subtype 3) — `tcs.htr_obc`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_obc` (0x040B) = 0 (OFF) within 5s
 **TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) — OBC SAFE
 **Verify:** `obdh.mode == 1` (0x0300, timeout 10 s) — SAFE
@@ -74,6 +77,7 @@ no task-shedding parameter on board; OBC SAFE is the commanded reduction.
 **BRANCH:** `tcs.htr_battery == 1` -> GO `STEP-2B-BATOFF` | NO-GO `STEP-3` (timeout 10 s)
 **LABEL:** `STEP-2B-BATOFF`
 **TC:** `HEATER_BATTERY(on=0)` (Service 8, Subtype 1, func_id 40)
+**TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_battery` (0x040A) = 0 (OFF) within 5s
 **GO/NO-GO:** Load reduction actions confirmed — proceed to monitoring
 

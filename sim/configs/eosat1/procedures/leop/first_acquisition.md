@@ -52,12 +52,12 @@ application-running platform.
 **Action:** Service 17 ping is on the bootloader allow-list, so it is accepted by the OBC even before the application image is loaded. On acceptance, the platform's **auto-TX hold-down** kicks in: any accepted TC autonomously powers `ttc_tx` ON for 15 minutes, energising the downlink without further commanding.
 **Verify:** S1.1 (Service 1, Subtype 1) acceptance received within 10s
 **Verify:** S17.2 connection test report received within 10s
-**Verify:** `eps.pl_ttc_tx == 1` (0x0112, timeout 10 s) — auto-armed
+**Verify:** Beacon (SID 11) packets start arriving within 30 s — the downlink now exists. The bootloader emits SID 11 only, and SID 11 does not carry `eps.pl_ttc_tx` (0x0112): that line is confirmed in Step 7, once the application emits SID 1
 **GO/NO-GO:** Bidirectional link established, downlink visible to operator
 
 ### Step 3 — Verify Carrier Lock and Link Quality
 **Action:** Confirm ground station receiver has achieved carrier lock. Record measured Doppler offset for Flight Dynamics.
-**Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 30s
+**Verify:** Beacon frames decode continuously (top bar: "Can I see it?" live) within 30s. `ttc.link_status` (0x0501) is in SID 6, which the bootloader does not emit: it is verified = 2 (LOCKED) in Step 5a
 **Verify:** TT&C page (ground): `ttc.rssi` (0x0502) > -126 dBm within 30s
 **Verify:** TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB
 **GO/NO-GO:** Stable carrier lock with positive link margin
@@ -73,14 +73,15 @@ application-running platform.
 **TC:** `OBC_BOOT_APP` (Service 8, Subtype 1, func_id 55)
 **Action:** Issue the boot-app command. The OBDH model verifies the application CRC over a 10s window then transitions `sw_image` to APPLICATION (1). Until that transition completes, only the bootloader command set is accepted.
 **Verify:** S1.1 acceptance + S1.3 execution start received within 5s
-**Verify:** `obdh.boot_state` (0x0A15) = 1 (VERIFYING), `obdh.boot_time_remaining_s` (0x0A16) counting down — the CRC window is open
+**Note:** `obdh.boot_state` (0x0A15) = 1 (VERIFYING) and `obdh.boot_time_remaining_s` (0x0A16) counting down mark the open CRC window, but both are in SID 4, which the bootloader does not emit: during the window the console shows them only in a refusal notice. `obdh.boot_state` is verified after `HK_ENABLE(sid=4)` below
 **Verify:** S1.7 execution complete received within 15s. It arrives when the CRC window CLOSES, not on acceptance, so it is the confirmation that the boot actually happened. A CRC failure reports S1.8 naming the reason, plus event 0x0305 BOOT_FAILURE; success reports event 0x0310 BOOT_COMPLETE.
-**Verify:** `obdh.sw_image` (0x0311) = 1 (APPLICATION) and `obdh.boot_state` (0x0A15) = 2 within 15s
+**Verify:** `obdh.sw_image` (0x0311) = 1 (APPLICATION) within 15s (beacon SID 11 carries it)
 **Note:** Do not send the next telecommand until that S1.7 arrives. Inside the CRC window the OBC is still the bootloader, and anything outside its subset is refused S1.2 — the refusal notice reads `0x0A15 = 1 VERIFYING` and tells you to wait.
 **Verify:** Periodic HK **SID 1 (EPS) and SID 11 (Beacon)** — and only those two — begin appearing on the downlink. Application boot re-applies `simulation.yaml` `default_enabled_sids: [1, 11]` (`engine.py::_apply_default_hk_enable`, called from the boot handler), so every other SID (2 AOCS, 3 TCS, 4 OBDH/Platform, 5 Payload, 6 TT&C, 8 EPS-extended, 9 PROP) is DISABLED at boot and must be commanded on with `HK_ENABLE(sid=N)` (Service 3, Subtype 5). Powering a subsystem's line does not enable its SID.
 **TC:** `HK_ENABLE(sid=3)` (Service 3, Subtype 5) — TCS periodic housekeeping
 **TC:** `HK_ENABLE(sid=4)` (Service 3, Subtype 5) — OBDH / Platform periodic housekeeping
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) — TT&C periodic housekeeping
+**Verify:** `obdh.boot_state` (0x0A15) = 2 within 15s (SID 4, now enabled)
 **Verify:** Periodic SIDs 3, 4 and 6 begin appearing within one structure interval (SID 3 = 60 s, SID 4 = 8 s, SID 6 = 8 s). SIDs 2 (AOCS) and 5 (Payload) are enabled in LEOP-007 once their owning lines are powered.
 **Note:** Booting the application does **NOT** clear beacon mode. `ttc.beacon_mode` (0x0521) stays 1 and the spacecraft stays on the BEACON rung until it is cleared explicitly in Step 5a. Until then every `TTC_SET_DATA_RATE` is REFUSED with S1.8 error `0x0007` and the failure notice "TM rate is forced to the beacon tier in beacon mode (LOW refused)".
 **GO/NO-GO:** Application image running, full PUS service set available — Step 5a (clear beacon mode) comes before any rate change
@@ -90,6 +91,7 @@ application-running platform.
 **Action:** Clear beacon mode. This is the gate on the whole rate ladder: while beacon mode is latched, BEACON is the ONLY permitted tier and both LOW and HIGH are refused. It is a separate, deliberate step because the beacon rung is the lifeline — the spacecraft never leaves it by accident.
 **Verify:** S1.1 acceptance + S1.7 execution complete received within 5s
 **Verify:** `ttc.beacon_mode` (0x0521) = 0 within 10s
+**Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 15s (SID 6, enabled in Step 5)
 **TC:** `TTC_SET_DATA_RATE(rate=0)` (Service 8, Subtype 1, func_id 65) (LOW)
 **Action:** Select the ladder's `default_tier` — **LOW, 16 000 bps, BPSK conv(7,1/2)+RS, 16 kBd**. Re-configure the ground demodulator to 16 kBd BEFORE expecting the subsystem SIDs: the beacon demodulator will not lock 16 kbps.
 **Verify:** S1.1 acceptance + S1.7 execution complete (NOT an S1.8) within 5s
@@ -112,6 +114,7 @@ boot-then-sync logic is written exactly once. This card sends no time command.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.bus_voltage` (0x0105) in range [26.0V, 30.0V] within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 50% within 10s
+**Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — the auto-TX hold-down from Step 2 (SID 1)
 **Verify:** `eps.power_gen` (0x0107) reported (value will be small while spacecraft is tumbling and not yet sun-pointed)
 **GO/NO-GO:** Power state plausible for post-separation conditions
 

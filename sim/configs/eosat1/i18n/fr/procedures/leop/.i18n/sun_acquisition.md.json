@@ -44,13 +44,13 @@
   },
   {
    "id": "leop-005-sun-acquisition/procedure-steps/step-4-verify-the-sun-hold",
-   "en_hash": "fc1789fa848b64c9",
-   "fr_hash": "bbfe4089fa7c0d23"
+   "en_hash": "ba1da40db7e95b08",
+   "fr_hash": "ffc1e20ba2cd4361"
   },
   {
    "id": "leop-005-sun-acquisition/procedure-steps/step-5-verify-power-generation-in-the-hold",
-   "en_hash": "3603018707cb29a1",
-   "fr_hash": "271abf3159657b14"
+   "en_hash": "cb5ccda0e016412a",
+   "fr_hash": "48e4164dee273d97"
   },
   {
    "id": "leop-005-sun-acquisition/procedure-steps/step-6-log-final-aocs-state",
@@ -73,5 +73,5 @@
    "fr_hash": "1ef324e28f1d5900"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

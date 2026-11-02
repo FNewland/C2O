@@ -42,7 +42,7 @@ and serves as the primary tool for early anomaly detection and trend analysis.
 **Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL)
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Verify:** `aocs.rate_roll` (0x0204) < 0.05 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.05 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) in range [0.043, 0.083] deg/s (nadir tracking carries the orbit rate, +0.063 deg/s on this console; a zero pitch rate would mean the spacecraft is NOT tracking nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.05 deg/s
 **Verify:** |`aocs.rw1_speed`| (0x0207) < 5000 RPM
 **Verify:** |`aocs.rw2_speed`| (0x0208) < 5000 RPM

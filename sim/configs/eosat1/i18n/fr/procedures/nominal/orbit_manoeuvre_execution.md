@@ -32,6 +32,8 @@ du réservoir (0,85 m/s ~ 32 s en début de vie).
 **TC:** `EPS_POWER_ON(line_index=8)` (Service 8, Subtype 1) func_id = 19 --- alimenter la ligne de propulsion
 **Verify:** `eps.pl_prop` (0x014A) = 1
 **TC:** `HEATER_THRUSTER(on=1)` (Service 8, Subtype 1) func_id = 42 --- préchauffage du lit catalytique, 12 W
+**TC:** `GET_PARAM(param_id=0x0409)` (Service 20, Subtype 3) — `tcs.temp_thruster` (à la demande : aucun SID HK ne le transporte)
+**TC:** `GET_PARAM(param_id=0x041B)` (Service 20, Subtype 3) — `tcs.htr_thruster` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `tcs.htr_thruster` (0x041B) = 1 ; `tcs.temp_thruster` (0x0409)
 en hausse (~10 °C/min au début)
 **Note:** Le préchauffage jusqu'au verrouillage d'armement de 180 °C prend ~18-20 min (4 Wh). Une
@@ -51,6 +53,7 @@ fait fuir sin(theta) dans une composante latérale (normale à l'orbite).
 **Verify:** `prop.burn_dv_cmd` (0x0B0E) = dV prévu ; `prop.burn_time_cmd`
 (0x0B10) à 10 % près de la prévision du FDS — un désaccord signifie que le modèle sol
 et le satellite divergent sur l'état du réservoir : ARRÊTER et résoudre.
+**TC:** `GET_PARAM(param_id=0x0409)` (Service 20, Subtype 3) — `tcs.temp_thruster` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `tcs.temp_thruster` (0x0409) >= 180 ; `prop.arm_inhibit_mask`
 (0x0B15) = 0
 **TC:** `PROP_ARM(arm_code=0xA5C3)` (Service 8, Subtype 1) func_id = 108 --- armer (dans les 300 s qui suivent SET_BURN)

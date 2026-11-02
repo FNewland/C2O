@@ -44,8 +44,8 @@
   },
   {
    "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-4-power-preheat-and-valves-t-25-min",
-   "en_hash": "93f3ceb520102bbb",
-   "fr_hash": "495e6657f1a3f439"
+   "en_hash": "73e44dd5459e856d",
+   "fr_hash": "752d3c2a2c217175"
   },
   {
    "id": "nom-014-end-of-life-disposal-perigee-lowering-and-passivation/procedure-steps/step-5-retrograde-attitude",
@@ -98,5 +98,5 @@
    "fr_hash": "b5e23c1e6de38806"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

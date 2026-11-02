@@ -51,6 +51,7 @@ peut traverser une éclipse en sécurité avec la batterie dégradée.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander les données de servitude EPS
 **Verify:** `eps.bat_voltage` (0x0100) — consigner la valeur courante
 **Verify:** `eps.bat_soc` (0x0101) — consigner la valeur courante
+**TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — consigner la valeur (nominale = 120 Wh)
 **Verify:** `eps.bat_current` (0x0109) — consigner le courant (positif = charge, négatif = décharge)
 **Action:** Calculer la tension attendue pour le SoC courant :
@@ -84,6 +85,7 @@ problème thermique avant de poursuivre.
 
 ### Étape 3 : Évaluer la capacité restante de la batterie
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander les données de servitude EPS
+**TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — consigner la capacité rapportée
 **Action:** Si la capacité est rapportée, utiliser cette valeur. Sinon,
 estimer la capacité restante :
@@ -108,6 +110,7 @@ estimer la capacité restante :
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Charge utile sur OFF
    **Verify:** `payload.mode` (0x0600) = 0 en moins de 10 s
 2. Refroidisseur du FPA sur OFF (gain de ~15 W) : `FPA_COOLER(on=0)` (func_id 43)
+   **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
    **Verify:** `tcs.cooler_fpa` (0x040C) = 0 en moins de 5 s
 3. Émetteur sur OFF (gain de ~20 W) — uniquement si l'éclipse est imminente et que le bilan de charge reste négatif :
    `TTC_PA_OFF` (func_id 67)
@@ -140,6 +143,7 @@ délestage supplémentaire selon CTG-001 (Délestage sur sous-tension).
 **Action:** Au cours des 2-3 orbites suivantes, surveiller le comportement en charge/décharge de la batterie :
 **Verify:** `eps.bat_soc` (0x0101) — le SoC remonte-t-il entièrement à > 90 % pendant la phase éclairée ?
 **Verify:** `eps.bat_voltage` (0x0100) — la tension atteint-elle > 28.5 V en pleine charge ?
+**TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — la capacité rapportée a-t-elle changé ?
 **Action:** Évaluer l'impact à long terme :
 - si la capacité est réduite mais suffisante pour les opérations nominales avec marge : poursuivre

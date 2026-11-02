@@ -35,14 +35,12 @@ EPS. NE PAS poursuivre les opérations de charge utile.
 
 ### Étape 3 --- Vérifier le pointage AOCS
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- demander les données de servitude AOCS
-**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL, suivi du nadir) sous 10 s
+**Verify:** `aocs.mode` (0x020F) dans {4, 8} (NOMINAL, suivi du nadir ; 8 = ECLIPSE, le relais côté ombre du même état commandé) sous 10 s
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg sous 10 s si la convergence est déjà acquise ;
 admettre jusqu'à 400 s de reconvergence après une perturbation (phase C : stabilisation réelle,
 4/(ζωn) ≈ 140 s plus l'arc d'acquisition à vitesse limitée)
 **Verify:** |`aocs.rate_roll`| (0x0204) < 0.05 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) = -0.063 ± 0.02 deg/s (le suivi du nadir
-impose la vitesse orbitale autour de l'axe -Y satellite — une vitesse de tangage nulle signifierait ici que
-le satellite NE suit PAS le nadir)
+**Verify:** `aocs.rate_pitch` (0x0205) dans la plage [0.043, 0.083] deg/s (le suivi du nadir impose la vitesse orbitale, +0.063 deg/s sur cette console ; une vitesse de tangage nulle signifierait que le satellite NE suit PAS le nadir)
 **Verify:** |`aocs.rate_yaw`| (0x0206) < 0.05 deg/s
 **GO/NO-GO:** Si l'erreur d'attitude > 1 deg ou si une vitesse > 0.1 deg/s, se mettre en attente et
 évaluer. Envisager d'exécuter NOM-007 Gestion du moment cinétique avant de continuer.

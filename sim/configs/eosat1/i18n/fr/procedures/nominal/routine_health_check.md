@@ -42,7 +42,7 @@ et constitue le principal outil de détection précoce des anomalies et d'analys
 **Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL)
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg
 **Verify:** `aocs.rate_roll` (0x0204) < 0.05 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.05 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) dans la plage [0.043, 0.083] deg/s (le suivi du nadir impose la vitesse orbitale, +0.063 deg/s sur cette console ; une vitesse de tangage nulle signifierait que le satellite NE suit PAS le nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.05 deg/s
 **Verify:** |`aocs.rw1_speed`| (0x0207) < 5000 tr/min
 **Verify:** |`aocs.rw2_speed`| (0x0208) < 5000 tr/min

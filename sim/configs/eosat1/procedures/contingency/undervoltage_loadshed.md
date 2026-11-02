@@ -76,6 +76,7 @@ timeout is what the prose called "wait 30 s and re-check": it gives the bus two
 ### Step 3: Shed Load Priority 2 — FPA Cooler OFF
 **LABEL:** `STEP-3`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Disable FPA cooler
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check bus voltage
@@ -141,10 +142,12 @@ available solar array power.
 **TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — 1. AOCS wheels: verify `aocs.mode` (0x020F)
    returns to controllable mode. May need `AOCS_SET_MODE(mode=3)` for COARSE_SUN first.
 **GO/NO-GO:** Bus stable for 5 min with the AOCS wheels restored — restore the next load
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — the `ttc_tx` line first, if `eps.pl_ttc_tx` (0x0112) = 0: with the line open, `TTC_PA_ON` is refused S1.8 "power line 'ttc_tx' is OFF" (on-board FDIR opens it in a deep shed)
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — 2. TX transmitter: verify `ttc.pa_on` (0x0516) = 1
 **GO/NO-GO:** Bus stable for 5 min with the transmitter restored — restore the next load
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — 3. FPA cooler: verify `tcs.cooler_fpa` (0x040C) = 1
 **GO/NO-GO:** Bus stable for 5 min with the FPA cooler restored — restore the next load
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0: the mode command is otherwise refused S1.8 "power line 'payload' is OFF"
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Payload to STANDBY: verify `payload.mode` = 1
 **Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 27.5 V
 and `eps.bat_soc` (0x0101) remains > 35%.

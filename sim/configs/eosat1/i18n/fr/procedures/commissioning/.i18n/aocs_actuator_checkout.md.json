@@ -29,13 +29,13 @@
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-1-enable-the-four-reaction-wheels",
-   "en_hash": "bf90e5a70996bdbc",
-   "fr_hash": "a6c60f7387b990e5"
+   "en_hash": "805c03bb08b04712",
+   "fr_hash": "2bf157ad2363fda2"
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-1b-command-wheel-controlled-nominal",
-   "en_hash": "ec425aebd88a3070",
-   "fr_hash": "2cfa12ceac93304b"
+   "en_hash": "b7607a40dc8b782d",
+   "fr_hash": "24262157c13d72fe"
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-2-record-baseline-wheel-speeds",
@@ -93,5 +93,5 @@
    "fr_hash": "d8d817b8c2456954"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

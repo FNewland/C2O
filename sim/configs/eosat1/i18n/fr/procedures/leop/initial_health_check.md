@@ -29,7 +29,7 @@ ne met rien sous tension et ne commande aucun mode : elle observe.
 **Verify:** `eps.bus_voltage` (0x0105) dans la plage [26.0V, 30.0V] sous 10s
 **Verify:** `eps.bat_voltage` (0x0100) rapportée sous 10s
 **Verify:** `eps.bat_soc` (0x0101) > 50 % sous 10s
-**Verify:** `eps.power_gen` (0x0107) > 0W (confirme un éclairement au moins partiel) sous 10s
+**Verify:** `eps.power_gen` (0x0107) > 0W (confirme un éclairement au moins partiel) sous 10s — uniquement au Soleil : avec `eps.eclipse_flag` (0x0108) = 1, 0 W est attendu (la séparation par défaut place cette carte dans la première éclipse) ; le consigner et revérifier après la sortie d'éclipse
 **GO/NO-GO:** Paramètres EPS dans les limites nominales post-séparation
 
 ### Étape 2 --- Confirmer que les sous-systèmes non alimentés sont éteints

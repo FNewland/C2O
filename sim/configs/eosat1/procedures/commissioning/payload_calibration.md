@@ -86,6 +86,7 @@ rather than stopping early
 calibration produced nothing: 1 detector unpowered, 2 shutter moved, 3 lamp
 state changed, 4 FPA left its regulation band, 5 operator abort. Without it the
 operator sees a progress bar that stopped and no reason anywhere.
+**TC:** `GET_PARAM(param_id=0x0642)` (Service 20, Subtype 3) — `payload.dark_frame_cnt` (on-demand: no HK SID carries it)
 **Verify:** `payload.dark_frame_cnt` (0x0642) — dark frames acquired, non-zero
 **GO/NO-GO:** Dark frame set captured with `cal_abort_reason` = 0
 
@@ -99,6 +100,7 @@ the phase boundary.
 **TC:** `PAYLOAD_CAL_LAMP(on=1)` (Service 8, Subtype 1, func_id 95) — internal lamp ON
 **TC:** `GET_PARAM(param_id=0x0615)` (Service 20, Subtype 3) — `payload.cal_lamp_on`
 **Verify:** `payload.cal_lamp_on == 1` (0x0615, timeout 10 s)
+**TC:** `GET_PARAM(param_id=0x063C)` (Service 20, Subtype 3) — `payload.shutter_pos` (on-demand: no HK SID carries it)
 **Verify:** `payload.shutter_pos == 1` (0x063C, timeout 10 s) — OPEN
 **TC:** `PAYLOAD_START_CALIBRATION(mode=1)` (Service 8, Subtype 1, func_id 37) — FLAT phase
 **Wire:** `25 01`
@@ -123,6 +125,7 @@ the phase boundary.
 **Wire:** `77 01`
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — payload housekeeping
 **Verify:** `payload.mode == 1` (0x0600, timeout 15 s) — STANDBY
+**TC:** `GET_PARAM(param_id=0x063C)` (Service 20, Subtype 3) — `payload.shutter_pos` (on-demand: no HK SID carries it)
 **Verify:** `payload.shutter_pos == 1` (0x063C, timeout 10 s) — OPEN
 **GO/NO-GO:** Shutter open, payload in STANDBY
 

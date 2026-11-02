@@ -29,8 +29,8 @@
   },
   {
    "id": "leop-002-initial-health-check/procedure-steps/step-1-request-full-eps-housekeeping",
-   "en_hash": "06040c128220fc67",
-   "fr_hash": "af71b6c97e046fb5"
+   "en_hash": "20e3c5e71fd596cd",
+   "fr_hash": "8d913555b1a34748"
   },
   {
    "id": "leop-002-initial-health-check/procedure-steps/step-2-confirm-the-unpowered-subsystems-are-dark",
@@ -73,5 +73,5 @@
    "fr_hash": "3d773426e95d2f57"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

@@ -89,7 +89,7 @@ qu'il est en deçà de son mode commandé
 **Action:** ATTENDRE maintenant. Avec des CSS valides, une erreur d'attitude < 15° maintenue pendant 60 s
 et le senseur stellaire en suivi, l'AOCS se promeut de lui-même vers le mode
 COMMANDÉ (0x0297 = 4) sans autre action du sol.
-**Verify:** `aocs.mode` (0x020F) = 4 sous 1800s --- la promotion AUTOMATIQUE
+**Verify:** `aocs.mode` (0x020F) = 4 sous 3600s --- la promotion AUTOMATIQUE (mesurée à ~1850 s en plein Soleil le 2026-11-02)
 (prévoir en sus un arc d'éclipse complet si le maintien chevauche le terminateur)
 **Verify:** `aocs.mode_demoted` (0x0298) = 0 sous 30s après la promotion
 **Note:** NE PAS vérifier mode = 3 « quelques minutes plus tard » --- une fiche qui stationne en

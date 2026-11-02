@@ -44,8 +44,8 @@
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-3-energise-the-aocs-suite-line-and-enable-its-housekeeping",
-   "en_hash": "ca90fd771dc05ce6",
-   "fr_hash": "4bbe6358cc67631c"
+   "en_hash": "b93bf2c1f7b1a474",
+   "fr_hash": "9642324baa50816d"
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-4-enable-the-detumble-sensors-and-actuators-before-commanding-it",
@@ -59,8 +59,8 @@
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-6-confirm-the-exit-power-state",
-   "en_hash": "5ce79840489a0823",
-   "fr_hash": "e103c08354d001d8"
+   "en_hash": "5566209dd84bc036",
+   "fr_hash": "3305e9dc03cf3297"
   },
   {
    "id": "leop-007-sequential-power-on/off-nominal-handling",
@@ -78,5 +78,5 @@
    "fr_hash": "011d52389cc5f80f"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

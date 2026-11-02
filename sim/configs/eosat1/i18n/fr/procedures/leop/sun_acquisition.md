@@ -64,6 +64,7 @@ sous 0.5 deg/s
 ### Étape 4 --- Vérifier le maintien solaire
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- renouveler toutes les 60s pendant 5 minutes
 **Verify:** `aocs.att_error` (0x0217) < 15.0 deg sous 600s --- convergence vers le vecteur Soleil
+**TC:** `GET_PARAM(param_id=0x0215)` (Service 20, Subtype 3) — `aocs.css_sun_confidence` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `aocs.css_sun_confidence` (0x0215) > 0.5 sous 60s --- les CSS voient le Soleil
 **Verify:** `aocs.rate_roll` (0x0204) < 0.5 deg/s sous 10s
 **Verify:** `aocs.rate_pitch` (0x0205) < 0.5 deg/s sous 10s
@@ -75,7 +76,7 @@ du degré, oscillant lentement, et non à un maintien serré comme avec les roue
 
 ### Étape 5 --- Vérifier la production électrique pendant le maintien
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.power_gen` (0x0107) > 40W sous 60s (pointage solaire, panneaux déployés)
+**Verify:** `eps.power_gen` (0x0107) > 40W sous 60s (pointage solaire, panneaux déployés) — au Soleil uniquement : si `eps.eclipse_flag` (0x0108) = 1, attendre la sortie d'éclipse (jusqu'à 35 min) et revérifier
 **Verify:** `eps.bat_soc` (0x0101) stable ou en hausse sous 120s
 **GO/NO-GO:** Bilan de puissance positif en COARSE_SUN
 

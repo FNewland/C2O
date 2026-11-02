@@ -80,6 +80,7 @@ default values.
 **TC:** `PROP_ISO_OPEN(branch=2)` (Service 8, Subtype 1, func_id 113) --- open both latch-valve branches
 **Verify:** `eps.pl_prop` (0x014A) = 1 within 10s
 **Verify:** `prop.latch_a_state` (0x0B06) = 1 within 10s
+**TC:** `GET_PARAM(param_id=0x0409)` (Service 20, Subtype 3) — `tcs.temp_thruster` (on-demand: no HK SID carries it)
 **Verify:** `tcs.temp_thruster` (0x0409) >= 180 within 1500s
 **GO/NO-GO:** Catbed hot and propellant path open
 

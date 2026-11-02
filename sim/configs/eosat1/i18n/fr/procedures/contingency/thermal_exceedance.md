@@ -40,12 +40,14 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **LABEL:** `STEP-2A-BAT`
 **Note:** Batterie froide :
 **TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40)
+**TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) en 5 s
 **LABEL:** `STEP-2A-OBC`
 **BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2A-OBCON`
 **Note:** OBC froid :
 **TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41)
+**TC:** `GET_PARAM(param_id=0x040B)` (Service 20, Subtype 3) — `tcs.htr_obc` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_obc` (0x040B) = 1 (ON) en 5 s
 **Verify:** `eps.power_cons` (0x0106) augmente de la consommation attendue du réchauffeur (3 à 7 W par circuit)
 **GO/NO-GO:** Réchauffeur confirmé actif et bilan de puissance tenable — passer à la surveillance
@@ -65,6 +67,7 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 n'existe à bord aucun paramètre de délestage des tâches ; le mode SAFE de l'OBC est la
 réduction commandée.
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) — réchauffeur de l'OBC sur OFF
+**TC:** `GET_PARAM(param_id=0x040B)` (Service 20, Subtype 3) — `tcs.htr_obc` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_obc` (0x040B) = 0 (OFF) en 5 s
 **TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) — OBC en SAFE
 **Verify:** `obdh.mode == 1` (0x0300, timeout 10 s) — SAFE
@@ -75,6 +78,7 @@ réduction commandée.
 **BRANCH:** `tcs.htr_battery == 1` -> GO `STEP-2B-BATOFF` | NO-GO `STEP-3` (timeout 10 s)
 **LABEL:** `STEP-2B-BATOFF`
 **TC:** `HEATER_BATTERY(on=0)` (Service 8, Subtype 1, func_id 40)
+**TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_battery` (0x040A) = 0 (OFF) en 5 s
 **GO/NO-GO:** Actions de réduction de charge confirmées — passer à la surveillance
 

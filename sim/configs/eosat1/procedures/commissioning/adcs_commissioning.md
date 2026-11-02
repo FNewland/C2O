@@ -40,6 +40,7 @@ this card's telecommand and no other card carries it.
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27)
 **Verify:** `aocs.mode` (0x020F) in {4, 5, 8} --- operational family
 **Verify:** `aocs.commanded_mode` (0x0297) = 4 and `aocs.mode_demoted` (0x0298) = 0
+**TC:** `GET_PARAM(param_id=0x0260)` (Service 20, Subtype 3) — `aocs.wheels_enabled` (on-demand: no HK SID carries it)
 **Verify:** `aocs.wheels_enabled` (0x0260) = 4 (COM-004 exit state)
 **Verify:** `aocs.gyro_units_mask` (0x02D1) = 7 (COM-003 exit state)
 **Verify:** `aocs.st1_status` (0x0240) = 2 with `aocs.st1_num_stars` (0x0241) >= 5
@@ -82,6 +83,7 @@ fault-propagation model and the phase-gated FDIR rules are disarmed; and the
 propulsion interlock refuses to arm a burn (`prop.yaml min_phase: 6`).
 **TC:** `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (Service 8, Subtype 1, func_id 120)
 **Verify:** `eps.spacecraft_phase` (0x0129) = 6 within 5s
+**TC:** `GET_PARAM(param_id=0x0001)` (Service 20, Subtype 3) — `sat.mode` (on-demand: no HK SID carries it)
 **Verify:** `sat.mode` (0x0001) = 1 within 10s --- derived NOMINAL
 **Action:** Confirm event `MISSION_PHASE_CHANGED` (0x0055) appears in the
 event log carrying `5 (COMMISSIONING) -> 6 (NOMINAL)`, and record the

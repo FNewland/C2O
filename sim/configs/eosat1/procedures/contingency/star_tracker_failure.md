@@ -104,7 +104,7 @@ fault this card exists to handle. The star count is the honest confirmation
 that ST1 is out of the loop.
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg (fine pointing restored)
 **Verify:** `aocs.rate_roll` (0x0204) < 0.01 deg/s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.01 deg/s
+**Verify:** `aocs.rate_pitch` (0x0205) in range [0.053, 0.073] deg/s (nadir tracking carries the orbit rate, +0.063 deg/s on this console; a zero pitch rate would mean the spacecraft is NOT tracking nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.01 deg/s
 **Action:** Log ST1 failure and ST2 activation in anomaly report.
 **Note:** Spacecraft is now operating on the single remaining star tracker. Any

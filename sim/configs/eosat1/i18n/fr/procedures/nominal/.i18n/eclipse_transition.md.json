@@ -44,13 +44,13 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-2-verify-and-adjust-heater-setpoints-for-eclipse",
-   "en_hash": "374d8c055d775bde",
-   "fr_hash": "98b910c11ac9ceea"
+   "en_hash": "8410d173ea9b14e1",
+   "fr_hash": "44de053ca64e891f"
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-3-disable-fpa-cooler-to-conserve-power",
-   "en_hash": "7b6adc69319aa831",
-   "fr_hash": "7c58996b8c395b0b"
+   "en_hash": "114934e294a3e6df",
+   "fr_hash": "3ef8e3f8556446d2"
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-4-verify-aocs-eclipse-mode-transition",
@@ -74,8 +74,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-8-restore-nominal-configuration",
-   "en_hash": "3d3a7227c5f8c9b9",
-   "fr_hash": "54b0b25273d7e21d"
+   "en_hash": "37deff718ffb5ed4",
+   "fr_hash": "763c2927bd9125fd"
   },
   {
    "id": "nom-010-eclipse-transition/verification-criteria",
@@ -88,5 +88,5 @@
    "fr_hash": "913d780de571cd04"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

@@ -29,8 +29,8 @@
   },
   {
    "id": "com-012-first-light/procedure-steps/step-1-transition-aocs-to-finepoint",
-   "en_hash": "5db223b5c10f327d",
-   "fr_hash": "b0ecb5b6823e12ff"
+   "en_hash": "49864ceb21a5ce96",
+   "fr_hash": "9584d60aa803e742"
   },
   {
    "id": "com-012-first-light/procedure-steps/step-2-verify-fpa-temperature-before-imaging",
@@ -88,5 +88,5 @@
    "fr_hash": "ea1ed5cb17dea23a"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

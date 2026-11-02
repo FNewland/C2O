@@ -50,6 +50,7 @@ loads correctly, and verifies all subsystems return to nominal operation.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
 **Verify:** `obdh.mode` (0x0300) — record current mode
 **Verify:** `obdh.reboot_count` (0x030A) — record value (elevated if watchdog reboots)
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (on-demand: no HK SID carries it)
 **Verify:** `obdh.last_reboot_cause` (0x0316) — record cause:
 - 0 = none, 1 = commanded, 2 = watchdog, 3 = memory, 4 = switchover
 **Verify:** `obdh.cpu_load` (0x0302) — record value (may be anomalously high)
@@ -78,7 +79,9 @@ If `obdh.reboot_count` > 4, FDIR may have already triggered safe mode.
 **Note:** If no response within 15 s, retry the request. OBC-B may still be in early boot.
 **Verify:** `obdh.active_obc` (0x030C) = 1 (OBC-B is now active)
 **Verify:** `obdh.sw_image` (0x0311) = 0 (bootloader — not yet running application)
+**TC:** `GET_PARAM(param_id=0x0316)` (Service 20, Subtype 3) — `obdh.last_reboot_cause` (on-demand: no HK SID carries it)
 **Verify:** `obdh.last_reboot_cause` (0x0316) = 4 (switchover)
+**TC:** `GET_PARAM(param_id=0x0301)` (Service 20, Subtype 3) — `obdh.temp` (on-demand: no HK SID carries it)
 **Verify:** `obdh.temp` (0x0301) — OBC-B temperature within limits
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) — TTC link maintained
 **GO/NO-GO:** OBC-B in bootloader — proceed to boot application.
@@ -90,6 +93,7 @@ If `obdh.reboot_count` > 4, FDIR may have already triggered safe mode.
 **Verify:** Wait 30 s for application to initialize.
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
 **Verify:** `obdh.sw_image` (0x0311) = 1 (application running)
+**TC:** `GET_PARAM(param_id=0x030B)` (Service 20, Subtype 3) — `obdh.sw_version` (on-demand: no HK SID carries it)
 **Verify:** `obdh.sw_version` (0x030B) — correct application software version
 **Verify:** `obdh.mode` (0x0300) — OBC should enter SAFE or NOMINAL mode
 **Verify:** `obdh.cpu_load` (0x0302) < 80% (no anomalous load on new unit)

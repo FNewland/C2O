@@ -29,8 +29,8 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-1-baseline-bus-voltage-measurement",
-   "en_hash": "fb2a0fefb47dfc1e",
-   "fr_hash": "9ae7cd5ea80e2b2d"
+   "en_hash": "f12a3cbbd29f9f5c",
+   "fr_hash": "38b8b054c91d8669"
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-2-battery-voltage-and-state-of-charge",
@@ -39,8 +39,8 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-3-solar-array-sunlit-performance",
-   "en_hash": "d6f213390aaab731",
-   "fr_hash": "db1713aad2e93c00"
+   "en_hash": "832f3c842b2c4610",
+   "fr_hash": "cb20fa1b5c9ab6f2"
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-4-eclipse-discharge-monitoring",
@@ -69,8 +69,8 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/post-conditions",
-   "en_hash": "a11b4aeef3788b2f",
-   "fr_hash": "ac629f1487ae5473"
+   "en_hash": "ceb9ffe3067ffa7a",
+   "fr_hash": "15ed2cb33280b4b1"
   },
   {
    "id": "com-001-eps-power-system-checkout/exit-state",
@@ -78,5 +78,5 @@
    "fr_hash": "17e43cc1a8dd3741"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

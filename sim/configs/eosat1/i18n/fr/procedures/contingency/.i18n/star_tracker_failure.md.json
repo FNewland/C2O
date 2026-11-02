@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-008-star-tracker-failure/procedure-steps/step-4-isolate-failed-star-tracker-1",
-   "en_hash": "897b1d8cfd148ab3",
-   "fr_hash": "1662c07899befee9"
+   "en_hash": "bfca337160a1db53",
+   "fr_hash": "5418d5adca688637"
   },
   {
    "id": "ctg-008-star-tracker-failure/procedure-steps/step-5-fallback-both-star-trackers-failed-enter-coarsesun-mode",
@@ -78,5 +78,5 @@
    "fr_hash": "e284194cb01d1f0c"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

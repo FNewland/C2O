@@ -92,6 +92,7 @@ prepare for next shed level.
 **Trigger:** When `eps.bat_soc` (0x0101) < 35%:
 **Action:** Announce "SoC below 35% — shedding FPA cooler" on the operations loop.
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Disable FPA cooler
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
 **Note:** FPA detector temperature will begin to rise. Record current FPA temperature
@@ -169,6 +170,7 @@ threshold + 10% margin.
 **GO/NO-GO:** AOCS wheels restored and attitude recovering — proceed.
 
 **Step 7b — Restore TTC TX (if shed) — when SoC > 35%:**
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — the `ttc_tx` line first, if `eps.pl_ttc_tx` (0x0112) = 0 (on-board FDIR opens it in a deep shed; `TTC_PA_ON` is then refused S1.8 "power line 'ttc_tx' is OFF")
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66)
 **Verify:** `ttc.pa_on` (0x0516) = 1 within 5 s
 **Verify:** `eps.bus_voltage` (0x0105) remains > 26.5 V
@@ -177,6 +179,7 @@ threshold + 10% margin.
 
 **Step 7c — Restore FPA Cooler — when SoC > 45%:**
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
+**TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 within 5 s
 **Note:** FPA cool-down from ambient to operating temperature takes approximately
 20 minutes. Payload imaging should not resume until FPA reaches operating temperature.
@@ -185,6 +188,7 @@ threshold + 10% margin.
 **GO/NO-GO:** FPA cooler restored — proceed.
 
 **Step 7d — Restore Payload to STANDBY — when SoC > 60%:**
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0 (the mode command is otherwise refused S1.8 "power line 'payload' is OFF")
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10 s
 **Verify:** `eps.bus_voltage` (0x0105) remains > 27.5 V

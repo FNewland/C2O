@@ -32,6 +32,8 @@ pressure (0.85 m/s ~ 32 s at beginning of life).
 **TC:** `EPS_POWER_ON(line_index=8)` (Service 8, Subtype 1) func_id = 19 --- energise the propulsion line
 **Verify:** `eps.pl_prop` (0x014A) = 1
 **TC:** `HEATER_THRUSTER(on=1)` (Service 8, Subtype 1) func_id = 42 --- catbed preheat, 12 W
+**TC:** `GET_PARAM(param_id=0x0409)` (Service 20, Subtype 3) — `tcs.temp_thruster` (on-demand: no HK SID carries it)
+**TC:** `GET_PARAM(param_id=0x041B)` (Service 20, Subtype 3) — `tcs.htr_thruster` (on-demand: no HK SID carries it)
 **Verify:** `tcs.htr_thruster` (0x041B) = 1; `tcs.temp_thruster` (0x0409)
 rising (~10 C/min initially)
 **Note:** Preheat to the 180 C arm interlock takes ~18-20 min (4 Wh). A
@@ -51,6 +53,7 @@ leaks sin(theta) into a lateral (orbit-normal) component.
 **Verify:** `prop.burn_dv_cmd` (0x0B0E) = planned dV; `prop.burn_time_cmd`
 (0x0B10) within 10 % of the FDS prediction — a disagreement means the ground
 model and the spacecraft disagree about tank state: STOP and resolve.
+**TC:** `GET_PARAM(param_id=0x0409)` (Service 20, Subtype 3) — `tcs.temp_thruster` (on-demand: no HK SID carries it)
 **Verify:** `tcs.temp_thruster` (0x0409) >= 180; `prop.arm_inhibit_mask`
 (0x0B15) = 0
 **TC:** `PROP_ARM(arm_code=0xA5C3)` (Service 8, Subtype 1) func_id = 108 --- arm (within 300 s of SET_BURN)

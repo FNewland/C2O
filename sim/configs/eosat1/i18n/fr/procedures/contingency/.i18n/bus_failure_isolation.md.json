@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-2-diagnose-bus-status",
-   "en_hash": "001f87c4129bd5be",
-   "fr_hash": "599aeaefb4414e46"
+   "en_hash": "0905a8d4de627704",
+   "fr_hash": "c65f4ba34ab39fd4"
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-3-command-bus-switchover",
@@ -73,5 +73,5 @@
    "fr_hash": "1a018baaec88ff72"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

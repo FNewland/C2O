@@ -49,8 +49,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-3-shed-load-priority-2-fpa-cooler-off",
-   "en_hash": "2f462f63bec9dd53",
-   "fr_hash": "eae0142cb44e92ea"
+   "en_hash": "ba18a8aff92a2f4c",
+   "fr_hash": "1aa93480b2eb80cb"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-4-shed-load-priority-3-tx-transmitter-off",
@@ -74,8 +74,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "9690352c929c4689",
-   "fr_hash": "4a66a55b0b3a1664"
+   "en_hash": "620e788bf41c83eb",
+   "fr_hash": "9957eaee6c23183d"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/verification-criteria",
@@ -93,5 +93,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "d6b51dd"
 }

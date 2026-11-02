@@ -64,6 +64,7 @@ falling below 0.5 deg/s
 ### Step 4 --- Verify the Sun Hold
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- repeat every 60s for 5 minutes
 **Verify:** `aocs.att_error` (0x0217) < 15.0 deg within 600s --- converging on the sun vector
+**TC:** `GET_PARAM(param_id=0x0215)` (Service 20, Subtype 3) — `aocs.css_sun_confidence` (on-demand: no HK SID carries it)
 **Verify:** `aocs.css_sun_confidence` (0x0215) > 0.5 within 60s --- CSS sees the sun
 **Verify:** `aocs.rate_roll` (0x0204) < 0.5 deg/s within 10s
 **Verify:** `aocs.rate_pitch` (0x0205) < 0.5 deg/s within 10s
@@ -75,7 +76,7 @@ to ~0.2 deg/s while it hunts are normal here.
 
 ### Step 5 --- Verify Power Generation in the Hold
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.power_gen` (0x0107) > 40W within 60s (sun-pointed, wings deployed)
+**Verify:** `eps.power_gen` (0x0107) > 40W within 60s (sun-pointed, wings deployed) — in sunlight only: if `eps.eclipse_flag` (0x0108) = 1, wait for eclipse exit (up to 35 min) and re-verify
 **Verify:** `eps.bat_soc` (0x0101) stable or increasing within 120s
 **GO/NO-GO:** Positive power balance in COARSE_SUN
 

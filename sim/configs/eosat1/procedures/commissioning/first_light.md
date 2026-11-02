@@ -41,7 +41,7 @@ bitmask reads 0 (mode 5 is otherwise refused with TM(1,8))
 **Verify:** `aocs.total_pointing_err_3sig` (0x02AA) < 0.05 deg within 300s
 (the payload capture gate)
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg within 180s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.01 deg/s within 180s
+**Verify:** `aocs.rate_pitch` (0x0205) in range [0.053, 0.073] deg/s within 180s (nadir tracking carries the orbit rate, +0.063 deg/s on this console; a zero pitch rate would mean the spacecraft is NOT tracking nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.01 deg/s within 180s
 **GO/NO-GO:** FINE_POINT achieved — pointing accuracy meets imaging requirement
 

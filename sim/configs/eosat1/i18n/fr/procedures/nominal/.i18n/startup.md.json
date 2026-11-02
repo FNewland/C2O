@@ -39,8 +39,8 @@
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-3-verify-aocs-pointing",
-   "en_hash": "98b520f5416ce296",
-   "fr_hash": "2789dbf8651a21e1"
+   "en_hash": "f835b93107ecb47e",
+   "fr_hash": "946fc27f3ebf6714"
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-4-establish-ttc-link",
@@ -73,5 +73,5 @@
    "fr_hash": "4d6271f1c5d7d847"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "d6b51dd"
 }

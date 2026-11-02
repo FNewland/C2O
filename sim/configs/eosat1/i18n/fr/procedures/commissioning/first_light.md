@@ -41,7 +41,7 @@ vaut 0 (le mode 5 est sinon refusé par une TM(1,8))
 **Verify:** `aocs.total_pointing_err_3sig` (0x02AA) < 0.05 deg sous 300s
 (le verrou d'acquisition de la charge utile)
 **Verify:** `aocs.att_error` (0x0217) < 0.1 deg sous 180s
-**Verify:** `aocs.rate_pitch` (0x0205) < 0.01 deg/s sous 180s
+**Verify:** `aocs.rate_pitch` (0x0205) dans la plage [0.053, 0.073] deg/s sous 180s (le suivi du nadir impose la vitesse orbitale, +0.063 deg/s sur cette console ; une vitesse de tangage nulle signifierait que le satellite NE suit PAS le nadir)
 **Verify:** `aocs.rate_yaw` (0x0206) < 0.01 deg/s sous 180s
 **GO/NO-GO:** FINE_POINT atteint — la précision de pointage satisfait l'exigence de prise de vue
 
