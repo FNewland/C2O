@@ -14,6 +14,7 @@
 #   c2o-repo       git URL          c2o-ref     branch or tag
 #   c2o-domain     c2o.live         c2o-ground-ip  ground VM internal IP
 #   c2o-secret     Secret Manager secret holding SMO_LINK_SESSION/SECRET
+#   c2o-rf-mode    FRAME | RF: the ground VM's RF bridge mode (radio view)
 #   c2o-ai-secret  Secret Manager secret holding the Anthropic API key for
 #                  SpaceCDF's AI advisor (ground VM; optional: no version =
 #                  SpaceCDF runs in manual mode)
@@ -45,6 +46,8 @@ DOMAIN="$(attr c2o-domain c2o.live)"
 GROUND_IP="$(attr c2o-ground-ip)"
 SECRET="$(attr c2o-secret c2o-link-session)"
 AI_SECRET="$(attr c2o-ai-secret c2o-anthropic-key)"
+RF_MODE="$(attr c2o-rf-mode FRAME)"
+case "$RF_MODE" in FRAME|RF) ;; *) RF_MODE=FRAME ;; esac
 PROJECT="$(md project/project-id)"
 MY_IP="$(md instance/network-interfaces/0/ip)"
 
@@ -158,7 +161,7 @@ write_env() {
     tmp="$(mktemp "$ENV_FILE.XXXX")"
     chmod 600 "$tmp"
     {
-        sed -e "s|@DOMAIN@|$DOMAIN|g" -e "s|@GROUND_IP@|$GROUND_IP|g" -e "s|@MY_IP@|$MY_IP|g" "$tmpl" \
+        sed -e "s|@DOMAIN@|$DOMAIN|g" -e "s|@GROUND_IP@|$GROUND_IP|g" -e "s|@MY_IP@|$MY_IP|g" -e "s|@RF_MODE@|$RF_MODE|g" "$tmpl" \
             | grep -v -E '^SMO_LINK_(SESSION|SECRET)='
         echo
         echo "# From Secret Manager ($SECRET), written by vm-bootstrap.sh $(date -u +%FT%TZ)"

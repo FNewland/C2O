@@ -137,7 +137,7 @@ fi
 # vm NAME ROLE MACHINE IP TAG SA
 vm() {
     local name="$1" role="$2" mtype="$3" ip="$4" tag="$5" sa="$6"
-    local md="c2o-role=$role,c2o-repo=$REPO_URL,c2o-ref=$REPO_REF,c2o-domain=$DOMAIN,c2o-ground-ip=$GROUND_IP,c2o-secret=$SECRET,c2o-ai-secret=$SECRET_AI,enable-oslogin=TRUE"
+    local md="c2o-role=$role,c2o-repo=$REPO_URL,c2o-ref=$REPO_REF,c2o-domain=$DOMAIN,c2o-ground-ip=$GROUND_IP,c2o-secret=$SECRET,c2o-ai-secret=$SECRET_AI,c2o-rf-mode=$RF_MODE,enable-oslogin=TRUE"
     if [ "$(vm_status "$name")" = "NONE" ]; then
         info "creating $name ($mtype, no external IP); first boot installs Docker and builds the image (10-15 min)"
         gcloud compute instances create "$name" --zone="$ZONE" --machine-type="$mtype" \

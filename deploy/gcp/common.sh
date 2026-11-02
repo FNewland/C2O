@@ -24,6 +24,8 @@ C2O_ENV="${C2O_ENV:-$GCP_DIR/c2o.env}"
 : "${STUDENTS_GROUP:?set STUDENTS_GROUP in c2o.env}"
 INCLUDE_APEX="${INCLUDE_APEX:-yes}"
 SIM_MODE="${SIM_MODE:-cloud}"
+RF_MODE="${RF_MODE:-FRAME}"
+case "$RF_MODE" in FRAME|RF) ;; *) die "RF_MODE in c2o.env must be FRAME or RF (got $RF_MODE)" ;; esac
 REPO_URL="${REPO_URL:-https://github.com/FNewland/C2O.git}"
 REPO_REF="${REPO_REF:-main}"
 GROUND_MACHINE_TYPE="${GROUND_MACHINE_TYPE:-e2-standard-2}"
