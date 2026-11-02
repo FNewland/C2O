@@ -26,7 +26,7 @@ REPO = Path(__file__).resolve().parents[2]
 TOOLS = REPO / "tools"
 CATALOG = (REPO / "packages/smo-common/src/smo_common/ui/i18n/tools/fr.json")
 TOOL_FILES = ["doc_viewer.py", "delayed_tm_viewer.py", "orbit_tools.py",
-              "scenario_generator.py", "adcs_sim_viewer.py"]
+              "scenario_generator.py", "adcs_sim_viewer.py", "portal.py"]
 #: The page frame every tool shares (title bar, theme + language switches);
 #: it emits TOOL_HEAD (shared design system + language runtime).
 FRAME = "tool_frame.py"

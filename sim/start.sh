@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Start the SMO suite: Simulator ($SMO_SIM_HTTP_PORT, default 8080),
-# MCS (9090), Planner (9091)
+# MCS (9090), Planner (9091), the tool pages (8092-8097) and the welcome
+# page (8090) that links to all of them
 #
 # Usage:
 #   ./start.sh            # standard mode (no RF)
@@ -150,7 +151,7 @@ print("SMO_LINK_SECRET=" + secrets.token_hex(32))' > "$SMO_LINK_ENV_FILE" ) \
         # The simulator's web console (8080 by default) can move: the agent
         # follows SMO_SIM_HTTP_PORT. Pick a free port if 8080 is taken.
         if [ -z "${SMO_SIM_HTTP_PORT:-}" ] && (exec 3<>"/dev/tcp/127.0.0.1/8080") 2>/dev/null; then
-            for LINK_P in 8090 8180 8280 8380; do
+            for LINK_P in 8180 8280 8380; do   # not 8090: the welcome page
                 if ! (exec 3<>"/dev/tcp/127.0.0.1/$LINK_P") 2>/dev/null; then
                     export SMO_SIM_HTTP_PORT="$LINK_P"
                     echo "==> Port 8080 is already in use on this machine (see what by:"
@@ -573,6 +574,22 @@ fi
 echo "==> Starting Documentation viewer on port 8095..."
 python "$SCRIPT_DIR/tools/doc_viewer.py" --port 8095 --docs "$SCRIPT_DIR/configs/eosat1" &
 DOC_PID=$!
+
+# Start the welcome page (HTTP:8090): every screen with its live status. Its
+# instructor-console entry is the simulator here (all) or the GSG proxy
+# (ground); the probes go where this script bound each service.
+if [ "$SMO_PROFILE" = "ground" ]; then
+    PORTAL_SIM_PORT="$SMO_GSG_HTTP_PORT"
+    PORTAL_PROBE="sim=$GSG_PROBE:$SMO_GSG_HTTP_PORT"
+else
+    PORTAL_SIM_PORT="$SMO_SIM_HTTP_PORT"
+    PORTAL_PROBE=""
+fi
+echo "==> Starting Welcome page on $SMO_BIND:8090..."
+SMO_PORTAL_PORTS="sim=$PORTAL_SIM_PORT" SMO_PORTAL_PROBE="$PORTAL_PROBE" \
+    SMO_PORTAL_GROUND_HOST="$PROBE_HOST" SMO_PORTAL_SIM_HOST="$PROBE_HOST" \
+    python "$SCRIPT_DIR/tools/portal.py" --port 8090 --host "$SMO_BIND" &
+PORTAL_PID=$!
 fi
 
 if [ "$SMO_PROFILE" != "ground" ]; then
@@ -601,6 +618,7 @@ if [ "$SMO_PROFILE" != "space" ]; then
 check_optional "Delayed TM viewer"   8092 "$DTM_PID"
 if [ -n "${ORB_PID:-}" ]; then check_optional "Orbit Tools" 8093 "$ORB_PID"; fi
 check_optional "Documentation viewer" 8095 "$DOC_PID"
+check_optional "Welcome page"         8090 "$PORTAL_PID"
 fi
 if [ "$SMO_PROFILE" != "ground" ]; then
 check_optional "Scenario Generator"   8096 "$SCENGEN_PID"
@@ -612,6 +630,7 @@ echo ""
 echo "========================================="
 echo "  SMO Suite Running"
 echo "========================================="
+echo "  Welcome page:     http://$ACCESS_HOST:8090   <- start here: every screen and its status"
 echo "  Simulator:        http://$ACCESS_HOST:$SMO_SIM_HTTP_PORT   (classic: /classic  modern: /modern)"
 echo "  Config editor:    http://$ACCESS_HOST:$SMO_SIM_HTTP_PORT/config    (instructor, read-write)"
 echo "  Report generator: http://$ACCESS_HOST:$SMO_SIM_HTTP_PORT/reports"
@@ -681,6 +700,7 @@ echo ""
 echo "========================================="
 echo "  SMO Suite Running — profile: ground"
 echo "========================================="
+echo "  Welcome page:     http://$ACCESS_HOST:8090   <- start here: every screen and its status"
 echo "  GSG link:         $SMO_GSG_LINK_BIND:$SMO_GSG_LINK_PORT/link   (agent only; HMAC token)"
 echo "  GSG status:       http://$GSG_PROBE:$SMO_GSG_HTTP_PORT/link-status   (instructor proxy on the same port; loopback unless SMO_GSG_BIND is set)"
 echo "  MCS:              http://$ACCESS_HOST:9090"

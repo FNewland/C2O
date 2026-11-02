@@ -79,12 +79,15 @@ fw() {
 }
 log "Firewall (nothing else reaches the VMs: the VPC denies all other ingress)"
 # Google front ends and health checkers -> the published ground ports
-# (MCS, planner, instructor proxy, link, tool viewers 8092-8095, SpaceCDF 8000).
-fw "$FW_LB" tcp:8080,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8000 "$TAG_GROUND" \
+# (MCS, planner, instructor proxy, link, welcome page 8090, tool viewers
+# 8092-8095, SpaceCDF 8000).
+fw "$FW_LB" tcp:8080,tcp:8090,tcp:9090,tcp:9091,tcp:9100,tcp:8092-8095,tcp:8000 "$TAG_GROUND" \
     --source-ranges=130.211.0.0/22,35.191.0.0/16
 # ... and -> the instructor tools next to the cloud simulator.
 if [ "$CREATE_SIM_VM" = yes ]; then
     fw "$FW_LB_SIM" tcp:8096-8097 "$TAG_SIM" --source-ranges=130.211.0.0/22,35.191.0.0/16
+    # The welcome page on the ground VM checks whether those two tools are up.
+    fw "$FW_PORTAL_SIM" tcp:8096-8097 "$TAG_SIM" --source-tags="$TAG_GROUND"
 fi
 # IAP TCP forwarding -> SSH, both VMs (admin only; needs IAM on top).
 fw "$FW_IAP" tcp:22 "$TAG_GROUND,$TAG_SIM" --source-ranges=35.235.240.0/20
@@ -169,11 +172,11 @@ if ! gcloud compute instance-groups unmanaged list-instances "$IG" --zone="$ZONE
         --format='value(instance)' | grep -q "$VM_GROUND"; then
     gcloud compute instance-groups unmanaged add-instances "$IG" --zone="$ZONE" --instances="$VM_GROUND"
 fi
-# Named ports: the four core services, plus one per tool on that VM.
+# Named ports: the four core services, the welcome page, plus one per tool on that VM.
 tool_port() { [ "$4" = "$want" ] && printf ',%s:%s' "$1" "$3"; return 0; }
 want=ground; ground_tool_ports="$(tools_each tool_port)"
 gcloud compute instance-groups unmanaged set-named-ports "$IG" --zone="$ZONE" \
-    --named-ports="mcs:9090,planner:9091,instructor:8080,link:9100$ground_tool_ports"
+    --named-ports="mcs:9090,planner:9091,instructor:8080,link:9100,portal:8090$ground_tool_ports"
 if [ "$CREATE_SIM_VM" = yes ]; then
     # The sim VM gets its own group: a backend service sends traffic to every
     # VM in a group, and only the sim VM runs the instructor tools.
@@ -203,6 +206,7 @@ hc "$HC_OPS"  9090 /api/client-config
 hc "$HC_PLAN" 9091 /api/time-source
 hc "$HC_SIM"  8080 /healthz
 hc "$HC_LINK" 9100 /healthz
+hc "$HC_PORTAL" 8090 /healthz
 tool_hc() { hc "$PREFIX-hc-$1" "$3" /; }
 tools_each tool_hc
 
@@ -251,15 +255,16 @@ be "$BE_OPS"  mcs        "$HC_OPS"
 be "$BE_PLAN" planner    "$HC_PLAN"
 be "$BE_SIM"  instructor "$HC_SIM"
 be "$BE_LINK" link       "$HC_LINK"
+be "$BE_PORTAL" portal   "$HC_PORTAL"
 tool_be() {
     local group="$IG"; [ "$4" = sim ] && group="$IG_SIM"
     be "$PREFIX-be-$1" "$1" "$PREFIX-hc-$1" "$group"
 }
 tools_each tool_be
 
-log "IAP on ops, plan, sim and the tool pages (Google-managed OAuth client: @$DOMAIN accounts only)"
+log "IAP on the welcome page, ops, plan, sim and the tool pages (Google-managed OAuth client: @$DOMAIN accounts only)"
 tool_be_name() { printf '%s-be-%s\n' "$PREFIX" "$1"; }
-for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM" $(tools_each tool_be_name); do
+for b in "$BE_PORTAL" "$BE_OPS" "$BE_PLAN" "$BE_SIM" $(tools_each tool_be_name); do
     # No oauth2-client-id: IAP uses the Google-managed client.
     gcloud compute backend-services update "$b" --global --iap=enabled >/dev/null
 done
@@ -272,6 +277,8 @@ iap_grant() {  # iap_grant BACKEND GROUP
         --member="group:$2" --role=roles/iap.httpsResourceAccessor --condition=None >/dev/null
     info "$2 -> $1"
 }
+iap_grant "$BE_PORTAL" "$STUDENTS_GROUP"
+iap_grant "$BE_PORTAL" "$INSTRUCTORS_GROUP"
 iap_grant "$BE_OPS"  "$STUDENTS_GROUP"
 iap_grant "$BE_OPS"  "$INSTRUCTORS_GROUP"
 iap_grant "$BE_PLAN" "$STUDENTS_GROUP"
@@ -286,9 +293,18 @@ tools_each tool_iap
 # ── 6. Load balancer front end ──────────────────────────────────────────
 log "URL map (host rules; only link.$DOMAIN/link reaches the IAP-off back end)"
 bs() { printf 'https://www.googleapis.com/compute/v1/projects/%s/global/backendServices/%s' "$PROJECT" "$1"; }
-ops_hosts="- $HOST_OPS"
-[ "$INCLUDE_APEX" = "yes" ] && ops_hosts="$ops_hosts
-    - $DOMAIN"
+# The apex ($DOMAIN, with INCLUDE_APEX=yes) shows the welcome page; every
+# screen keeps its own host.
+# (Without the apex the portal back end exists but nothing routes to it: a
+# path matcher no host rule uses is left out.)
+apex_rule=""; apex_matcher=""
+if [ "$INCLUDE_APEX" = "yes" ]; then
+    apex_rule="  - hosts:
+    - $DOMAIN
+    pathMatcher: portal"
+    apex_matcher="  - name: portal
+    defaultService: $(bs "$BE_PORTAL")"
+fi
 tool_hostrule() { printf '  - hosts:\n    - %s.%s\n    pathMatcher: %s\n' "$2" "$DOMAIN" "$1"; }
 tool_matcher()  { printf '  - name: %s\n    defaultService: %s\n' "$1" "$(bs "$PREFIX-be-$1")"; }
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
@@ -296,8 +312,9 @@ cat > "$tmp/urlmap.yaml" <<EOF
 name: $URLMAP
 defaultService: $(bs "$BE_OPS")
 hostRules:
+$apex_rule
   - hosts:
-    $ops_hosts
+    - $HOST_OPS
     pathMatcher: ops
   - hosts:
     - $HOST_PLAN
@@ -310,6 +327,7 @@ hostRules:
     pathMatcher: link
 $(tools_each tool_hostrule)
 pathMatchers:
+$apex_matcher
   - name: ops
     defaultService: $(bs "$BE_OPS")
   - name: plan

@@ -43,11 +43,13 @@
 #   admitting only the Google load-balancer ranges and IAP (C2O
 #   deploy/gcp/README.md); never 0.0.0.0 on a host with a
 #   public or campus address (Docker-published ports bypass ufw).
-#   The tool viewers (delayed TM 8092, orbit 8093, radio 8094, docs 8095) and,
+#   The welcome page (8090), the tool viewers (delayed TM 8092, orbit 8093,
+#   radio 8094, docs 8095) and,
 #   on the space side, the scenario generator (8096) and ADCS failure viewer
 #   (8097) publish on SMO_PUBLISH_ADDR too: 127.0.0.1 on a laptop, the VM's
 #   internal IP on GCP, where each sits behind its own IAP-protected host
-#   (tm., orbit., radio., docs.; scenarios., adcs. for instructors only).
+#   (the apex for the welcome page; tm., orbit., radio., docs.; scenarios.,
+#   adcs. for instructors only).
 
 name: smo
 
@@ -181,6 +183,7 @@ services:
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8093:8093"     # orbit tools
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8094:8094"     # radio status (rf profile)
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8095:8095"     # documentation viewer
+      - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8090:8090"     # welcome page (portal)
     healthcheck:
       <<: *probe
       # /healthz AND the TM listener: rfsim connects to TM exactly once.
@@ -283,6 +286,26 @@ services:
       gsg:
         condition: service_started
     command: ["python", "tools/doc_viewer.py", "--port", "8095", "--docs", "configs/eosat1"]
+
+  # Welcome page (https://<domain> on GCP): every screen with a live status.
+  # It probes the ground services on 127.0.0.1 (this namespace), SpaceCDF
+  # and, in local-demo, the instructor tools by service name; on GCP the
+  # instructor tools on the sim VM (SMO_PORTAL_SIM_HOST, default 10.20.0.11
+  # once SMO_PORTAL_DOMAIN is set). SMO_PORTAL_DOMAIN (ground.env) switches
+  # the links from http://<host>:<port> to https://<name>.<domain>.
+  portal:
+    <<: [*image, *ground-env]
+    profiles: [ground, local-demo]
+    network_mode: "service:gsg"
+    depends_on:
+      gsg:
+        condition: service_started
+    command: ["python", "tools/portal.py", "--host", "0.0.0.0", "--port", "8090"]
+    environment:
+      SMO_PORTAL_PROBE: ${SMO_PORTAL_PROBE:-design=spacecdf:8000,scenarios=scenario-gen:8096,adcs=adcs-viewer:8097}
+    healthcheck:
+      <<: *probe
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8090/healthz', timeout=4); sys.exit(0)"]
 
   # Instructor tools next to the simulator (space profile). The scenario
   # generator saves into the space workspace volume, which the simulator

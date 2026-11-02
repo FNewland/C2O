@@ -41,11 +41,11 @@ del compute addresses describe "$LB_IP" --global -- compute addresses delete "$L
 log "Load balancer back end"
 tool_keys="$(awk 'NF{print $1}' <<<"$TOOLS")"
 # shellcheck disable=SC2086  # tool_keys is a plain word list
-for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK" $(printf "$PREFIX-be-%s " $tool_keys); do
+for b in "$BE_PORTAL" "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK" $(printf "$PREFIX-be-%s " $tool_keys); do
     del compute backend-services describe "$b" --global -- compute backend-services delete "$b" --global
 done
 # shellcheck disable=SC2086
-for h in "$HC_OPS" "$HC_PLAN" "$HC_SIM" "$HC_LINK" $(printf "$PREFIX-hc-%s " $tool_keys); do
+for h in "$HC_PORTAL" "$HC_OPS" "$HC_PLAN" "$HC_SIM" "$HC_LINK" $(printf "$PREFIX-hc-%s " $tool_keys); do
     del compute health-checks describe "$h" --global -- compute health-checks delete "$h" --global
 done
 del compute security-policies describe "$ARMOR" -- compute security-policies delete "$ARMOR"
@@ -64,7 +64,7 @@ done
 log "Network"
 del compute routers nats describe "$NAT" --router="$ROUTER" --region="$REGION" -- compute routers nats delete "$NAT" --router="$ROUTER" --region="$REGION"
 del compute routers describe "$ROUTER" --region="$REGION" -- compute routers delete "$ROUTER" --region="$REGION"
-for f in "$FW_LB" "$FW_LB_SIM" "$FW_IAP" "$FW_SIM"; do
+for f in "$FW_LB" "$FW_LB_SIM" "$FW_PORTAL_SIM" "$FW_IAP" "$FW_SIM"; do
     del compute firewall-rules describe "$f" -- compute firewall-rules delete "$f"
 done
 del compute networks subnets describe "$SUBNET" --region="$REGION" -- compute networks subnets delete "$SUBNET" --region="$REGION"
