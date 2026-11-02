@@ -151,5 +151,9 @@
   "No carrier: the spacecraft S-band transmitter is off": "Pas de porteuse : l'émetteur bande S du satellite est éteint",
   "Shown in RF mode only (current mode: {{mode}})": "Affiché en mode RF uniquement (mode actuel : {{mode}})",
   "Receiver not locked yet": "Récepteur pas encore verrouillé",
-  "No data yet": "Pas encore de données"
+  "No data yet": "Pas encore de données",
+  "Theme": "Thème",
+  "Dark": "Sombre",
+  "Light": "Clair",
+  "off": "arrêt"
 }

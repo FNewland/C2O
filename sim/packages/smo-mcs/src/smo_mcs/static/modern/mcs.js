@@ -561,7 +561,29 @@ function handleTMPacket(pkt) {
 /* Audible cue on a NEW alarm (classic playAlarmBeep capability; Agent 5
  * inventory fix). WebAudio, one short tone, swallowed silently when the
  * browser blocks audio before a user gesture. */
+/* Alarm sound on/off, remembered per browser (operator preference only —
+ * the visual and screen-reader cues never switch off). */
+const ALARM_SOUND_KEY = "c2o.mcs.alarmSound";
+export function alarmSoundOn() {
+  try { return localStorage.getItem(ALARM_SOUND_KEY) !== "off"; } catch (e) { return true; }
+}
+export function setAlarmSound(on) {
+  try { localStorage.setItem(ALARM_SOUND_KEY, on ? "on" : "off"); } catch (e) { /* not persisted */ }
+  playAlarmBeep._muted = !on;
+  renderAlarmSoundBtn();
+}
+function renderAlarmSoundBtn() {
+  const b = $("alarm-sound");
+  if (!b) return;
+  const on = !playAlarmBeep._muted && alarmSoundOn();
+  b.textContent = on ? "🔔" : "🔕";
+  b.setAttribute("aria-pressed", String(!on));
+  const lbl = on ? tText("Alarm sound on — click to mute") : tText("Alarm sound muted — click to unmute");
+  b.setAttribute("aria-label", lbl);
+  b.title = lbl;
+}
 function playAlarmBeep() {
+  if (playAlarmBeep._muted || !alarmSoundOn()) return;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
@@ -3896,7 +3918,7 @@ export function renderS12Block(mount) {
         <select class="in" id="s12-add-type-${mount}" aria-label="${t("Check type")}"><option value="0">${t("absolute")}</option><option value="1">${t("delta")}</option></select>
         <input class="in mono" id="s12-add-low-${mount}" placeholder="${t("low")}" style="width:80px">
         <input class="in mono" id="s12-add-high-${mount}" placeholder="${t("high")}" style="width:80px">
-        <button class="ds-btn" data-s12add="${mount}">ADD (12,5)</button>
+        <button class="ds-btn" data-s12add="${mount}">ADD (12,6)</button>
       </div>
       <table class="plain"><thead><tr><th>${t("Mon")}</th><th>${t("Param")}</th><th>${t("Name")}</th><th>${t("Check")}</th>
         <th>${t("Low")}</th><th>${t("High")}</th><th>${t("Value")}</th><th>En</th><th>${t("State")}</th><th></th></tr></thead>
@@ -4967,6 +4989,31 @@ function alarmLimit(a) {
   if (thr === null && a.band && st) thr = a.band[st] ?? null;
   return { kind, thr, dir: alarmDir(a) };
 }
+/* Where an alarm came from, so an operator can find what to tune or
+ * disable: a ground limit (mcs/limits.yaml), an on-board S12 monitor
+ * (disable it by mon_id on the FDIR page) or an S5 event. */
+export function alarmSourceHtml(a) {
+  const src = String(a.source || "").toUpperCase();
+  if (src === "LIMIT") {
+    return `<span class="src" title="${esc(tText("Ground limit check in the MCS. Change the band in {{file}}.", { file: a.config_file || "mcs/limits.yaml" }))}">` +
+      `${t("ground limit")} ${esc(alarmParamHex(a) || a.parameter || "")} · <span class="mono">${esc(a.config_file || "mcs/limits.yaml")}</span></span>`;
+  }
+  if (src === "S12") {
+    const mid = a.mon_id;
+    const label = mid !== undefined && mid !== null
+      ? tText("on-board monitor #{{id}}", { id: String(mid) }) : t("on-board monitor");
+    const nm = a.monitor_name ? ` ${esc(a.monitor_name)}` : "";
+    return `<span class="src">` +
+      (mid !== undefined && mid !== null
+        ? `<a href="#" data-mon-trace="${esc(String(a.monitor_name || mid))}" title="${esc(tText("Open the S12 monitor table on the FDIR page; disable it there with DIS (12,4)."))}">${esc(label)}</a>`
+        : esc(label)) +
+      `${nm}${a.limit ? ` · <span class="mono">${esc(String(a.limit))}</span>` : ""}</span>`;
+  }
+  if (src === "S5") {
+    return `<span class="src">${t("on-board event")} <span class="mono">${esc(String(a.event_id ?? a.parameter ?? ""))}</span></span>`;
+  }
+  return "";
+}
 /* Row: [P#] PARAM-NAME value unit ▲ limit (soft|hard) ×N
  *      first line is the fact; second line time · age · procedure + actions
  *      (actions sit on their own line, so they never overlap wrapped text). */
@@ -5004,7 +5051,7 @@ export function alarmRowHtml(g) {
   return `<div class="${cls}" data-id="${esc(String(a.id))}">
     <span class="pri mono" aria-label="${esc(tText("priority {{p}}", { p: pri }))}">P${pri}</span>
     <span class="fact">${fact}${pname && a.message ? ` <small class="why">${esc(String(a.message))}</small>` : ""}${a.count > 1 ? ` <span class="rep mono" title="${esc(tText("{{n}} occurrences since {{t}}", { n: String(g.ids ? g.ids.length : 1), t: fmtUTC(a.first_ts) }))}">×${a.count}</span>` : ""}</span>
-    <span class="meta"><span class="mono">${esc(fmtUTC(a.last_ts, { date: false }))}</span> · ${esc(tText("{{age}} ago", { age: fmtAge(age) }))}${proc ? " · " + proc : ""}${a.rtn ? " · " + t("returned to normal") : ""}</span>
+    <span class="meta"><span class="mono">${esc(fmtUTC(a.last_ts, { date: false }))}</span> · ${esc(tText("{{age}} ago", { age: fmtAge(age) }))}${proc ? " · " + proc : ""}${a.rtn ? " · " + t("returned to normal") : ""}${alarmSourceHtml(a) ? " · " + alarmSourceHtml(a) : ""}</span>
     <span class="act">${a.acknowledged ? `<span class="ackd">${t("acknowledged")}</span>`
       : `<button class="ds-btn" data-act="ack" data-id="${esc(String(a.id))}" data-ids="${esc(ids)}"
           aria-label="${esc(tText("Acknowledge {{name}}", { name: label }))}">${t("ACK")}</button>`}
@@ -5357,12 +5404,18 @@ function initDelegatedEvents() {
     });
   }
   document.addEventListener("click", (e) => {
-    const t = e.target.closest ? e.target.closest("[data-man-anchor],[data-page-nav],[data-quick],[data-alarm-filter],[data-dump-request],[data-chain],[data-act],[data-proc],[data-s3],[data-s11],[data-s11-del],[data-s12],[data-s12row],[data-s12add],[data-s19],[data-s19row],[data-s19add],[data-s15st],[data-od-get],[data-man],[data-gonogo],[data-hk],[data-pb-del],[data-diag],[data-bd],[data-blind-toggle],[data-group],[data-conlog]") : null;
+    const t = e.target.closest ? e.target.closest("[data-man-anchor],[data-page-nav],[data-quick],[data-alarm-filter],[data-dump-request],[data-chain],[data-act],[data-proc],[data-s3],[data-s11],[data-s11-del],[data-s12],[data-s12row],[data-s12add],[data-s19],[data-s19row],[data-s19add],[data-s15st],[data-od-get],[data-man],[data-gonogo],[data-hk],[data-pb-del],[data-diag],[data-bd],[data-blind-toggle],[data-group],[data-conlog],[data-mon-trace]") : null;
     if (!t) return;
     const d = t.dataset;
     if (d.manAnchor) { e.preventDefault(); return scrollToManualAnchor(t, d.manAnchor); }
     if (d.pageNav) return showPage(d.pageNav);
     if (d.blindToggle) return toggleBlindTc();
+    if (d.monTrace !== undefined) {
+      e.preventDefault();
+      s12Filter = String(d.monTrace);
+      toggleAlarmDrawer(false);
+      return showPage("fdir");
+    }
     if (d.group !== undefined) {
       S.alarmGroupsOpen[d.group] = !S.alarmGroupsOpen[d.group];
       return renderAlarmDrawer();
@@ -5515,6 +5568,8 @@ function initDelegatedEvents() {
   on("alarms-btn", () => toggleAlarmDrawer(true));
   on("alarm-close", () => toggleAlarmDrawer(false));
   on("alarm-ack-all", () => ackAllAlarms());
+  on("alarm-sound", () => setAlarmSound(!(alarmSoundOn() && !playAlarmBeep._muted)));
+  renderAlarmSoundBtn();
   on("grey-btn", () => setGreyscale(document.documentElement.getAttribute("data-greyscale") !== "1"));
   document.addEventListener("click", (e) => {
     const b = e.target.closest ? e.target.closest("[data-theme-set]") : null;
@@ -5604,14 +5659,16 @@ async function s12Command(action) {
   if (action === "refresh") setTimeout(loadFdir, 800);
 }
 async function s12RowCommand(action, monId) {
-  const map = { enable: 3, disable: 4, delete: 6 };
-  const data = (Number(monId) & 0xFF).toString(16).toUpperCase().padStart(2, "0");
+  // Simulator S12: 3 enable / 4 disable / 7 delete ONE definition, mon_id as
+  // u16 (config monitors are 0x8000+). A 1-byte id was silently ignored.
+  const map = { enable: 3, disable: 4, delete: 7 };
+  const data = (Number(monId) & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
   await sendPus({ service: 12, subtype: map[action], data_hex: data,
     name: `S12_${action.toUpperCase()}_${monId}`, position: S.position });
   setTimeout(loadFdir, 800);
 }
 async function s12Add(mount) {
-  const mid = Number($(`s12-add-mid-${mount}`).value) & 0xFF;
+  const mid = Number($(`s12-add-mid-${mount}`).value) & 0xFFFF;
   const pid = parseInt($(`s12-add-pid-${mount}`).value, 16) >>> 0;
   const type = Number($(`s12-add-type-${mount}`).value) & 0xFF;
   const lo = parseFloat($(`s12-add-low-${mount}`).value);
@@ -5620,15 +5677,17 @@ async function s12Add(mount) {
     const b = new ArrayBuffer(4); new DataView(b).setFloat32(0, v, false);
     return Array.from(new Uint8Array(b));
   };
-  const bytes = [mid, (pid >> 8) & 255, pid & 255, type, ...f32(lo), ...f32(hi)];
-  await sendPus({ service: 12, subtype: 5,
+  // TC(12,6) 13-byte form: mon_id u16, param_id u16, check_type u8, low f32, high f32.
+  const bytes = [(mid >> 8) & 255, mid & 255, (pid >> 8) & 255, pid & 255, type, ...f32(lo), ...f32(hi)];
+  await sendPus({ service: 12, subtype: 6,
     data_hex: bytes.map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" "),
     name: `S12_ADD_${mid}`, position: S.position });
   setTimeout(loadFdir, 800);
 }
 async function s19RowCommand(action, eaId) {
   const map = { enable: 4, disable: 5, delete: 2 };
-  const data = (Number(eaId) & 0xFF).toString(16).toUpperCase().padStart(2, "0");
+  // ea_id is u16 on the wire; the simulator ignores a 1-byte id.
+  const data = (Number(eaId) & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
   await sendPus({ service: 19, subtype: map[action], data_hex: data,
     name: `S19_${action.toUpperCase()}_${eaId}`, position: S.position });
   setTimeout(loadFdir, 800);

@@ -258,6 +258,8 @@ svg.sc{width:100%;height:auto;display:block;margin:0 auto}
 #alarm-drawer .hd .ds-select{width:auto}
 #alarm-drawer .hd .end{margin-left:auto;display:flex;gap:var(--sp-2)}
 #alarm-list{flex:1;overflow-y:auto}
+.ds-alarm-row .src{color:var(--tx3)}
+.ds-alarm-row .src a{color:inherit;text-decoration:underline dotted}
 #alarm-drawer .ft{padding:var(--sp-2) var(--sp-4);border-top:1px solid var(--line);font-size:var(--fs-label);color:var(--tx3)}
 
 /* ── overlays ─────────────────────────────────────────────────────────── */
@@ -499,6 +501,7 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
     <h2 data-i18n>Alarms</h2>
     <span class="ds-badge alarm" id="alarm-drawer-unack">0 UNACK</span>
     <div class="end">
+      <button class="ds-btn ghost" id="alarm-sound" aria-pressed="false" aria-label="Alarm sound on — click to mute" title="Alarm sound on — click to mute">🔔</button>
       <button class="ds-btn" id="alarm-ack-all" data-i18n>Acknowledge all</button>
       <button class="ds-btn ghost" id="alarm-close" data-i18n-aria-label aria-label="Close alarm drawer">✕</button>
     </div>
