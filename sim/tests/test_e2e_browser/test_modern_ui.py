@@ -137,7 +137,10 @@ def stack():
 @pytest.fixture(scope="session")
 def browser():
     from playwright.sync_api import sync_playwright
-    os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers")
+    # A pre-installed browser folder (some dev containers) is used only if it
+    # exists; elsewhere (GitHub Actions) Playwright's own default applies.
+    if os.path.isdir("/opt/pw-browsers"):
+        os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers")
     with sync_playwright() as pw:
         b = pw.chromium.launch()
         yield b

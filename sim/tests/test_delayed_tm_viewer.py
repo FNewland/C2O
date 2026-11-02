@@ -256,7 +256,8 @@ async def test_http_decode_carries_limit_verdicts(limits_dump_dir: Path):
         # The page ships the badge renderer and the band-shading plugin.
         page = await (await client.get("/")).text()
         assert "limitCell" in page and "limitBands" in page
-        assert "Ground limits" in page
+        # 2026-11 redesign: limit verdicts are a banner + timeline lanes.
+        assert "outside the alarm limits" in page
 
 
 @pytest.mark.asyncio
@@ -297,4 +298,4 @@ async def test_http_endpoints_return_real_data(populated_dump_dir: Path):
         # / serves the HTML page
         r = await client.get("/")
         assert r.status == 200
-        assert "DELAYED TM VIEWER" in (await r.text())
+        assert "<title data-i18n>Delayed TM</title>" in (await r.text())

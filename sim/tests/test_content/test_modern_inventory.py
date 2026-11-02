@@ -96,6 +96,7 @@ MCS_ROUTES = [
     "/api/procedure/cards",
     # Same-origin read-only planner proxy (R3 A2, 2026-11-01).
     "/planner/{path:api/.+}",
+    "/api/geometry",  # 2026-11: shared 3D attitude view
 ]
 
 PLANNER_ROUTES = [
