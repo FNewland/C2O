@@ -183,7 +183,9 @@ At the end it prints the **load balancer IP** and the exact DNS records for step
 The scripts read the project from `c2o.env`, but the plain `gcloud` commands in steps 6 to 14 use your
 shell's default project. If you have other projects, or open a new terminal, set it first:
 `gcloud config set account admin@c2o.live && gcloud config set project c2o-live-prod`. An error that
-names a different project in its URL means this step was skipped.
+names a different project in its URL means this step was skipped. To flip between several projects,
+use `switch.sh` (run it with `help` for usage): `bash deploy/gcp/switch.sh add c2o admin@c2o.live
+c2o-live-prod` once, then `bash deploy/gcp/switch.sh c2o`.
 
 If anything fails, read the message, fix the cause and **rerun `setup.sh`**. It checks every resource
 first and creates only what is missing.
