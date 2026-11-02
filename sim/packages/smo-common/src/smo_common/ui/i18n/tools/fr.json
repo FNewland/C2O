@@ -435,5 +435,7 @@
   "{{n}} min": "{{n}} min",
   "{{h}} h {{m}} min": "{{h}} h {{m}} min",
   "Next pass": "Prochain passage",
-  "Spacecraft mode": "Mode du satellite"
+  "Spacecraft mode": "Mode du satellite",
+  "Pass report, daily ops review or anomaly investigation from these dumps (Markdown / HTML)": "Rapport de passage, revue quotidienne des opérations ou enquête d'anomalie à partir de ces vidages (Markdown / HTML)",
+  "Generate report…": "Générer un rapport…"
 }

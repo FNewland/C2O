@@ -706,6 +706,8 @@ INDEX_HTML = r"""<!doctype html>
     </details>
     <div class="ds-row" style="padding:var(--sp-2) var(--sp-4); border-top:1px solid var(--line)">
       <button type="button" class="ds-btn ghost sm" id="btnRefresh" data-i18n>Refresh list</button>
+      <a class="ds-btn sm" href="reports" target="_blank" rel="noopener" id="btnReports"
+         title="Pass report, daily ops review or anomaly investigation from these dumps (Markdown / HTML)" data-i18n-title><span data-i18n>Generate report…</span></a>
       <span class="ds-meta" id="pollNote"></span>
     </div>
   </aside>
