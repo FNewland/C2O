@@ -57,6 +57,9 @@ log "VMs (and their boot disks)"
 for v in "$VM_GROUND" "$VM_SIM"; do
     del compute instances describe "$v" --zone="$ZONE" -- compute instances delete "$v" --zone="$ZONE" --delete-disks=all
 done
+# The automatic start/stop schedule (c2o schedule). Disk snapshots
+# (c2o data snapshot) are NOT deleted: c2o data prune --keep 0 removes them.
+del compute resource-policies describe "$PREFIX-schedule" --region="$REGION" -- compute resource-policies delete "$PREFIX-schedule" --region="$REGION"
 for a in "$ADDR_GROUND_INT" "$ADDR_SIM_INT"; do
     del compute addresses describe "$a" --region="$REGION" -- compute addresses delete "$a" --region="$REGION"
 done

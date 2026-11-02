@@ -1,0 +1,1216 @@
+#!/usr/bin/env bash
+# c2o: one command to run the C2O deployment on Google Cloud.
+#
+#   c2o help                  overview of every command
+#   c2o status                what is running, what is up, what it costs now
+#   c2o up / c2o down         class on / class off
+#   c2o schedule ...          start and stop the VMs automatically
+#   c2o data ...              recordings: sizes, clean-up, disk snapshots
+#   c2o users ...             student and instructor accounts (@DOMAIN)
+#
+# Install once (macOS zsh or bash; Cloud Shell bash), then open a new terminal:
+#   echo "alias c2o='bash ~/C2O/deploy/gcp/c2o'" >> ~/.zshrc     # macOS
+#   echo "alias c2o='bash ~/C2O/deploy/gcp/c2o'" >> ~/.bashrc    # Cloud Shell
+#
+# It calls the scripts beside it (start.sh, stop.sh, vm-bootstrap.sh) and
+# reads c2o.env. Runs under macOS bash 3.2 and Linux bash: no associative
+# arrays, no GNU-only flags.
+set -euo pipefail
+
+C2O_DIR="$(cd "$(dirname "$0")" && pwd)"
+ASSUME_YES=no
+
+# ── Prices (README §12, list prices retrieved 2026-10-30; rough) ─────────
+USD_CAD=1.39                 # assumed exchange rate
+VM_USD_H=0.0738              # e2-standard-2, Toronto
+DISK_USD_GB_MONTH=0.11       # balanced persistent disk
+FR_USD_H=0.025               # the two LB forwarding rules (first-5 bundle)
+IP_IDLE_USD_H=0.01           # reserved LB IP while no forwarding rule uses it
+ARMOR_USD_MONTH=7            # Cloud Armor policy + 2 rules
+NAT_IP_USD_H=0.005           # Cloud NAT address
+NAT_VM_USD_H=0.0014          # Cloud NAT, per running VM
+SNAP_USD_GB_MONTH=0.05       # standard snapshot storage [verify]
+
+ADMIN_API=https://admin.googleapis.com/admin/directory/v1
+ADMIN_SCOPES=https://www.googleapis.com/auth/admin.directory.user,https://www.googleapis.com/auth/admin.directory.group.member,https://www.googleapis.com/auth/cloud-platform
+
+# ── Help texts (shown without c2o.env) ────────────────────────────────────
+help_main() {
+    cat <<'EOF'
+c2o: run the C2O deployment on Google Cloud.          c2o COMMAND --help for details
+
+Everyday
+  c2o status                     what runs, what is up, what it costs per day now
+  c2o up [--sim=cloud|laptop]    class on: both VMs (or ground only + your laptop)
+  c2o down [--all]               class off: stop the VMs; --all also takes the site offline
+  c2o schedule set "Mon-Fri 08:00-18:00"   start/stop the VMs automatically
+  c2o schedule show | clear
+
+Users (accounts name@c2o.live; run `c2o users login` once first)
+  c2o users list | seats
+  c2o users add jdoe --name "Jane Doe" [--role student|instructor]
+  c2o users import class.csv [--apply]       email,first,last,role per line
+  c2o users remove | suspend | unsuspend | reset  jdoe
+  c2o users role jdoe instructor
+
+Data (recordings on the VMs; scenarios, breakpoints and designs are kept)
+  c2o data list                  size of each store, plus disk snapshots
+  c2o data clean --telemetry --dumps --reports | --all   [--snapshot]
+  c2o data snapshot | snapshots | prune --keep 3
+
+Setup (README steps 4-8)
+  bash deploy/gcp/setup.sh       create or repair everything (rerun after updates)
+  c2o users login                sign in for user management (once per laptop)
+
+Add --yes to skip the "are you sure?" questions.
+Install:  echo "alias c2o='bash ~/C2O/deploy/gcp/c2o'" >> ~/.zshrc   (Cloud Shell: ~/.bashrc)
+EOF
+}
+
+help_status() {
+    cat <<'EOF'
+c2o status [--quick]
+
+Shows the two VMs, the load balancer front end (forwarding rules), the health
+of every screen, both certificates, the simulator link (UP/DOWN), the automatic
+schedule, and a rough cost per day in CAD for the state things are in NOW.
+--quick skips the link check (it opens an SSH session to the ground VM).
+EOF
+}
+
+help_up() {
+    cat <<'EOF'
+c2o up [--sim=cloud|laptop] [--no-wait]
+
+Class on. Runs start.sh: recreates the load balancer rules if `c2o down --all`
+removed them, starts the ground VM and (--sim=cloud) the simulator VM, and
+waits until every screen is healthy (3-5 min). --sim=laptop stops the cloud
+simulator: only one simulator may be connected. Default: SIM_MODE in c2o.env.
+EOF
+}
+
+help_down() {
+    cat <<'EOF'
+c2o down [--all] [--sim]
+
+Class off. Stops both VMs (stop.sh): you then pay only for their disks; data,
+address, certificate and sign-in settings all stay.
+  --sim   stop only the cloud simulator VM
+  --all   ALSO delete the two load-balancer forwarding rules (saves about
+          CAD 0.50/day). The site is unreachable until `c2o up`, which takes a
+          few minutes longer to bring it back. Good between terms.
+EOF
+}
+
+help_schedule() {
+    cat <<'EOF'
+c2o schedule set "DAYS HH:MM-HH:MM" [--ground-only|--with-sim]
+c2o schedule show
+c2o schedule clear [--yes]
+
+Starts and stops the VMs automatically (a Compute Engine instance schedule,
+time zone America/Toronto). DAYS: Mon Tue Wed Thu Fri Sat Sun, ranges and
+lists, or "weekdays" / "daily". Examples:
+  c2o schedule set "Mon-Fri 08:00-18:00"
+  c2o schedule set "Mon,Wed 13:00-17:30"
+  c2o schedule set "Mon-Tue,Thu-Fri 08:45-12:15"
+One time window for all chosen days (Google allows one start and one stop
+time per schedule). Starts and stops may happen up to 15 minutes late, so
+start a little early. The simulator VM is included when SIM_MODE=cloud
+(--ground-only / --with-sim override). The load balancer is billed whether or
+not the VMs run: between terms use `c2o down --all` as well.
+EOF
+}
+
+help_data() {
+    cat <<'EOF'
+c2o data list
+c2o data clean [--telemetry] [--dumps] [--reports] [--all] [--designs] [--snapshot] [--yes]
+c2o data snapshot
+c2o data snapshots
+c2o data prune --keep N [--yes]
+
+Recordings live on the VMs' disks:
+  --telemetry  the MCS telemetry archive (ground VM)
+  --dumps      delayed-TM dumps (ground VM, and the simulator VM's own copies)
+  --reports    generated reports and RF pass roll-ups (ground VM)
+  --all        all three of the above
+Never touched by --all: saved scenarios, breakpoints, config history, link
+state. --designs also deletes every SpaceCDF design (asks twice, even with --yes).
+--snapshot first takes a disk snapshot of the affected VMs, so a clean-up can be
+undone. The VMs must be running (c2o up). The screens restart (about a minute).
+snapshot: snapshot both disks now.  snapshots: list them.  prune --keep N: keep
+the newest N per VM, delete older ones.
+EOF
+}
+
+help_users() {
+    cat <<'EOF'
+c2o users login                                   once per computer (browser sign-in as an admin)
+c2o users list                                    name, email, role, 2SV, suspended, last sign-in
+c2o users seats                                   accounts used vs the Cloud Identity Free cap
+c2o users add EMAIL --name "First Last" [--role student|instructor]
+c2o users import FILE.csv [--apply] [--out FILE]  class list: email,first,last[,role]
+c2o users remove EMAIL [--yes]                    delete the account (frees a seat)
+c2o users suspend EMAIL | unsuspend EMAIL         block / unblock sign-in (still uses a seat)
+c2o users reset EMAIL                             new temporary password
+c2o users role EMAIL student|instructor           move between the two groups
+
+EMAIL may be a bare name: jdoe means jdoe@<DOMAIN from c2o.env>.
+New and reset passwords are random, printed ONCE, and must be changed at the
+first sign-in. Send them to the person's university address. The person must
+then enrol in 2-step verification within the enrolment period.
+import is a dry run unless --apply; --out FILE also writes email,password to
+FILE (readable only by you; delete it once the passwords are sent).
+EOF
+}
+
+# ── Small helpers ─────────────────────────────────────────────────────────
+confirm() {  # confirm "question": yes, or exit
+    local a=""
+    [ "$ASSUME_YES" = yes ] && return 0
+    printf '\n%s [y/N] ' "$1"
+    read -r a || a=""
+    case "$a" in y|Y|yes|YES|Yes) return 0 ;; esac
+    die "Not confirmed: nothing changed. (Add --yes to skip this question.)"
+}
+
+confirm_typed() {  # confirm_typed "question" WORD: the user must type WORD (even with --yes)
+    local a=""
+    printf '\n%s\nType %s to confirm: ' "$1" "$2"
+    read -r a || a=""
+    [ "$a" = "$2" ] || die "Not confirmed: nothing changed."
+}
+
+calc() { awk "BEGIN { printf \"%.6f\", $1 }"; }    # calc 'expression' (numbers only)
+money() { awk "BEGIN { printf \"%.2f\", $1 }"; }   # money 'expression' -> 2 decimals
+
+human_kb() {  # human_kb KiB -> 1.2 GB / 340 MB / 12 KB
+    awk -v k="$1" 'BEGIN { if (k >= 1048576) printf "%.1f GB", k/1048576;
+        else if (k >= 1024) printf "%.0f MB", k/1024; else printf "%d KB", k }'
+}
+
+new_tmp() {
+    [ -n "${C2O_TMP:-}" ] && return 0
+    C2O_TMP="$(mktemp -d "${TMPDIR:-/tmp}/c2o.XXXXXX")"
+    chmod 700 "$C2O_TMP"
+    trap 'rm -rf "$C2O_TMP"' EXIT
+}
+
+vm_exists() { [ "$(vm_status "$1")" != NONE ]; }
+
+# run_bootstrap VM ACTION ARGS...: run THIS copy of vm-bootstrap.sh on the VM
+# (so the VM does not need the newest checkout), through IAP. The script goes
+# over stdin into a temp file; an empty file means the transfer failed.
+run_bootstrap() {
+    local vm="$1"; shift
+    gcloud compute ssh "$vm" --zone="$ZONE" --tunnel-through-iap --quiet \
+        --command="t=\$(mktemp) && cat > \"\$t\" && [ -s \"\$t\" ] || { echo 'c2o: script transfer failed' >&2; exit 9; }; sudo bash \"\$t\" $*; rc=\$?; rm -f \"\$t\"; exit \$rc" \
+        < "$C2O_DIR/vm-bootstrap.sh"
+}
+
+# ── status ────────────────────────────────────────────────────────────────
+vm_usd_h() {  # vm_usd_h MACHINE_TYPE -> USD/h (e2-standard-N scaled; else the e2-standard-2 price)
+    case "$1" in
+        e2-standard-*) calc "$VM_USD_H / 2 * ${1#e2-standard-}" ;;
+        *) printf '%s' "$VM_USD_H" ;;
+    esac
+}
+
+cmd_status() {
+    local quick=no a
+    for a in "$@"; do
+        case "$a" in --quick) quick=yes ;; *) die "status: unknown option $a (see c2o status --help)" ;; esac
+    done
+    require_gcloud_login
+
+    log "Virtual machines"
+    local g s vms_running=0 vms_exist=0 vm_cost=0 vm st mt rate
+    g="$(vm_status "$VM_GROUND")"; s="$(vm_status "$VM_SIM")"
+    for vm in "$VM_GROUND" "$VM_SIM"; do
+        if [ "$vm" = "$VM_GROUND" ]; then st="$g"; else st="$s"; fi
+        [ "$st" = NONE ] && { info "$(printf '%-16s %s' "$vm" 'not created')"; continue; }
+        vms_exist=$((vms_exist + 1))
+        info "$(printf '%-16s %s' "$vm" "$st")"
+        case "$st" in
+            RUNNING|PROVISIONING|STAGING|STOPPING)
+                vms_running=$((vms_running + 1))
+                mt="$GROUND_MACHINE_TYPE"; [ "$vm" = "$VM_SIM" ] && mt="$SIM_MACHINE_TYPE"
+                rate="$(vm_usd_h "$mt")"
+                vm_cost="$(calc "$vm_cost + ($rate + $NAT_VM_USD_H) * 24")" ;;
+        esac
+    done
+
+    log "Load balancer (the public front door)"
+    local lb=on fr
+    for fr in "$FR_HTTPS" "$FR_HTTP"; do
+        if exists compute forwarding-rules describe "$fr" --global; then
+            info "$(printf '%-16s %s' "$fr" present)"
+        else
+            info "$(printf '%-16s %s' "$fr" 'absent (site offline)')"; lb=off
+        fi
+    done
+
+    log "Screens (load balancer health)"
+    if [ "$lb" = off ] && [ "$g" != RUNNING ]; then
+        info "skipped: everything is down"
+    else
+        local b label h keys k
+        keys="portal:welcome ops:ops plan:plan sim:sim link:link"
+        for k in $(awk 'NF{print $1}' <<<"$TOOLS"); do keys="$keys $k:$k"; done
+        for k in $keys; do
+            b="$PREFIX-be-${k%%:*}"; label="${k#*:}"
+            [ "$label" = welcome ] && [ "$INCLUDE_APEX" != yes ] && continue
+            h="$(gcloud compute backend-services get-health "$b" --global \
+                --format='value(status.healthStatus[0].healthState)' 2>/dev/null || true)"
+            info "$(printf '%-10s %s' "$label" "${h:-UNKNOWN (VM stopped or still starting)}")"
+        done
+    fi
+
+    log "Certificates"
+    local certs
+    certs="$(gcloud compute ssl-certificates list --global --filter="name ~ ^$CERT" \
+        --format='value(name,managed.status)' 2>/dev/null || true)"
+    if [ -n "$certs" ]; then
+        while read -r c cst; do info "$(printf '%-28s %s' "$c" "${cst:-?}")"; done <<<"$certs"
+    else
+        info "none found (run setup.sh)"
+    fi
+
+    log "Simulator link"
+    if [ "$g" != RUNNING ]; then
+        info "DOWN (the ground VM is $g)"
+    elif [ "$quick" = yes ]; then
+        info "not checked (--quick)"
+    else
+        local ls_json state
+        ls_json="$(gcloud compute ssh "$VM_GROUND" --zone="$ZONE" --tunnel-through-iap --quiet \
+            --command="curl -s -m 5 http://$GROUND_IP:8080/link-status" 2>/dev/null </dev/null || true)"
+        state="$(printf '%s' "$ls_json" | grep -o '"state": *"[A-Z]*"' | head -n 1 | sed 's/.*"\([A-Z]*\)"$/\1/' || true)"
+        case "$state" in
+            UP)   info "UP: a simulator is connected" ;;
+            "")   info "unknown (could not ask the ground VM; it may still be starting)" ;;
+            *)    info "$state: no simulator connected (c2o up --sim=cloud, or start the laptop simulator)" ;;
+        esac
+    fi
+
+    log "Automatic schedule"
+    local sched
+    sched="$(schedule_summary)"
+    info "$sched"
+
+    log "Cost right now (rough, CAD per day; README §12)"
+    local disks lbc armor nat snapgb snapc total
+    disks="$(calc "$vms_exist * $BOOT_DISK_GB * $DISK_USD_GB_MONTH / 30.4")"
+    if [ "$lb" = on ]; then lbc="$(calc "$FR_USD_H * 24")"; else lbc="$(calc "$IP_IDLE_USD_H * 24")"; fi
+    armor="$(calc "$ARMOR_USD_MONTH / 30.4")"
+    nat="$(calc "$NAT_IP_USD_H * 24")"
+    snapgb="$(gcloud compute snapshots list --filter="$(snap_filter)" \
+        --format='value(storageBytes)' 2>/dev/null | awk '{t += $1} END {printf "%.1f", t / 1e9}' || true)"
+    snapc="$(calc "${snapgb:-0} * $SNAP_USD_GB_MONTH / 30.4")"
+    total="$(calc "$vm_cost + $disks + $lbc + $armor + $nat + $snapc")"
+    cad() { money "$1 * $USD_CAD"; }
+    info "$(printf '%-44s CAD %6s' "VMs running: $vms_running" "$(cad "$vm_cost")")"
+    info "$(printf '%-44s CAD %6s' "Disks ($vms_exist x ${BOOT_DISK_GB} GB, billed even when stopped)" "$(cad "$disks")")"
+    if [ "$lb" = on ]; then
+        info "$(printf '%-44s CAD %6s' "Load balancer rules (on)" "$(cad "$lbc")")"
+    else
+        info "$(printf '%-44s CAD %6s' "Load balancer off (reserved IP only)" "$(cad "$lbc")")"
+    fi
+    info "$(printf '%-44s CAD %6s' "Cloud Armor policy (always)" "$(cad "$armor")")"
+    info "$(printf '%-44s CAD %6s' "Cloud NAT address (always)" "$(cad "$nat")")"
+    [ "$snapgb" != "0.0" ] && info "$(printf '%-44s CAD %6s' "Snapshots (${snapgb} GB stored)" "$(cad "$snapc")")"
+    info "$(printf '%-44s CAD %6s  (about CAD %s a month at this rate)' "Total" "$(cad "$total")" "$(awk "BEGIN { printf \"%.0f\", $total * $USD_CAD * 30.4 }")")"
+    info "(plus traffic and requests, cents a day in class; exchange rate $USD_CAD assumed)"
+    if [ "$vms_running" -gt 0 ]; then
+        info "Save more: \`c2o down\` after class saves CAD $(cad "$vm_cost") a day; \`c2o schedule set\` does it automatically."
+    elif [ "$lb" = on ]; then
+        info "Save more: between terms, \`c2o down --all\` saves another CAD $(cad "$(calc "$lbc - $IP_IDLE_USD_H * 24")") a day (site offline until \`c2o up\`)."
+    else
+        info "This is the floor while the deployment exists; only teardown.sh goes lower."
+    fi
+}
+
+# ── up / down ─────────────────────────────────────────────────────────────
+cmd_up() { exec bash "$C2O_DIR/start.sh" "$@"; }
+
+cmd_down() {
+    local all=no pass=() a
+    for a in "$@"; do
+        case "$a" in
+            --all) all=yes ;;
+            --sim) pass+=(--sim) ;;
+            *) die "down: unknown option $a (see c2o down --help)" ;;
+        esac
+    done
+    if [ "$all" = yes ]; then
+        cat <<EOF
+
+c2o down --all stops both VMs AND deletes the two load-balancer forwarding rules.
+  + saves about CAD $(money "($FR_USD_H - $IP_IDLE_USD_H) * 24 * $USD_CAD") a day more than a plain \`c2o down\`
+  - https://$DOMAIN and every screen are unreachable (not even a sign-in page)
+  - \`c2o up\` recreates them; allow a few extra minutes before the site answers
+  - an automatic schedule (c2o schedule) starts the VMs but NOT the load balancer
+Address, certificates, sign-in and data are all kept.
+EOF
+        confirm "Take the site offline?"
+        pass+=(--lb)
+    fi
+    exec bash "$C2O_DIR/stop.sh" ${pass[@]+"${pass[@]}"}
+}
+
+# ── schedule ──────────────────────────────────────────────────────────────
+# parse_schedule "DAYS HH:MM-HH:MM" -> "START_CRON<TAB>STOP_CRON<TAB>normalised text", or an error on stderr.
+parse_schedule() {
+    python3 - "$1" <<'PY'
+import re, sys
+spec = " ".join(sys.argv[1].split())
+DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+def fail(msg):
+    sys.stderr.write("Schedule %r: %s\nExample: \"Mon-Fri 08:00-18:00\" or \"Mon,Wed 13:00-17:30\"\n" % (spec, msg))
+    sys.exit(2)
+m = re.fullmatch(r"(.+?)\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})", spec)
+if not m:
+    fail("expected DAYS then a time window HH:MM-HH:MM")
+days_txt, h1, m1, h2, m2 = m.groups()
+h1, m1, h2, m2 = int(h1), int(m1), int(h2), int(m2)
+for h, mi in ((h1, m1), (h2, m2)):
+    if h > 23 or mi > 59:
+        fail("%02d:%02d is not a time of day (00:00-23:59)" % (h, mi))
+start, stop = h1 * 60 + m1, h2 * 60 + m2
+if stop <= start:
+    fail("the stop time must be later the same day than the start time")
+if stop - start < 15:
+    fail("start and stop must be at least 15 minutes apart (Google's minimum)")
+d = days_txt.lower().replace(" ", "")
+alias = {"weekdays": "mon-fri", "daily": "mon-sun", "everyday": "mon-sun", "weekends": "sat-sun"}
+d = alias.get(d, d)
+def day(t):
+    t = t[:3]
+    if t not in DAYS:
+        fail("unknown day %r (use Mon Tue Wed Thu Fri Sat Sun)" % t)
+    return DAYS.index(t)
+chosen = set()
+for part in d.split(","):
+    if not part:
+        fail("empty day in the list")
+    if "-" in part:
+        a, b = part.split("-", 1)
+        ia, ib = day(a), day(b)
+        if ib < ia:
+            fail("day range %s runs backwards (write Mon-Fri, or a list like Sat,Sun,Mon)" % part)
+        chosen.update(range(ia, ib + 1))
+    else:
+        chosen.add(day(part))
+# cron day-of-week: Sun=0, Mon=1 .. Sat=6; compress runs into ranges.
+nums = sorted(((i + 1) % 7) for i in chosen)
+runs, cur = [], [nums[0]]
+for n in nums[1:]:
+    if n == cur[-1] + 1:
+        cur.append(n)
+    else:
+        runs.append(cur); cur = [n]
+runs.append(cur)
+dow = ",".join(str(r[0]) if len(r) == 1 else "%d-%d" % (r[0], r[-1]) for r in runs)
+if dow == "0-6":
+    dow = "*"
+# Human text in week order (Mon first).
+idx = sorted(chosen)
+hruns, cur = [], [idx[0]]
+for n in idx[1:]:
+    if n == cur[-1] + 1:
+        cur.append(n)
+    else:
+        hruns.append(cur); cur = [n]
+hruns.append(cur)
+text = ",".join(NAMES[r[0]] if len(r) == 1 else "%s-%s" % (NAMES[r[0]], NAMES[r[-1]]) for r in hruns)
+print("%d %d * * %s\t%d %d * * %s\t%s %02d:%02d-%02d:%02d" % (m1, h1, dow, m2, h2, dow, text, h1, m1, h2, m2))
+PY
+}
+
+schedule_summary() {  # one line for status / show
+    local d on="" vm pol
+    d="$(gcloud compute resource-policies describe "$SCHED" --region="$REGION" \
+        --format='value(description)' 2>/dev/null || true)"
+    [ -n "$d" ] || { printf 'none (VMs start and stop only when you say so)'; return 0; }
+    for vm in "$VM_GROUND" "$VM_SIM"; do
+        pol="$(gcloud compute instances describe "$vm" --zone="$ZONE" \
+            --format='value(resourcePolicies)' 2>/dev/null || true)"
+        case "$pol" in *"/$SCHED"*|"$SCHED") on="$on $vm" ;; esac
+    done
+    printf '%s; applies to:%s' "${d#c2o schedule: }" "${on:- no VM (run c2o schedule set again)}"
+}
+
+schedule_detach_all() {
+    local vm pol
+    for vm in "$VM_GROUND" "$VM_SIM"; do
+        pol="$(gcloud compute instances describe "$vm" --zone="$ZONE" \
+            --format='value(resourcePolicies)' 2>/dev/null || true)"
+        case "$pol" in
+            *"/$SCHED"*|"$SCHED")
+                info "detaching $SCHED from $vm"
+                gcloud compute instances remove-resource-policies "$vm" --zone="$ZONE" \
+                    --resource-policies="$SCHED" ;;
+        esac
+    done
+}
+
+grant_schedule_agent() {
+    # The schedule starts/stops VMs as the Compute Engine Service Agent, which
+    # needs compute.instances.start/stop: Google's documented role for it is
+    # Compute Instance Admin (v1). setup.sh grants it too.
+    local num
+    num="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+    gcloud projects add-iam-policy-binding "$PROJECT" \
+        --member="serviceAccount:service-$num@compute-system.iam.gserviceaccount.com" \
+        --role=roles/compute.instanceAdmin.v1 --condition=None --quiet >/dev/null
+}
+
+cmd_schedule() {
+    local sub="${1:-show}"; [ "$#" -gt 0 ] && shift
+    case "$sub" in
+        set)
+            local spec="" who="" a parsed start stop text targets vm
+            for a in "$@"; do
+                case "$a" in
+                    --ground-only) who=ground ;;
+                    --with-sim) who=both ;;
+                    -*) die "schedule set: unknown option $a" ;;
+                    *) [ -z "$spec" ] || die "schedule set: give the schedule as ONE quoted argument, e.g. \"Mon-Fri 08:00-18:00\""
+                       spec="$a" ;;
+                esac
+            done
+            [ -n "$spec" ] || die "usage: c2o schedule set \"Mon-Fri 08:00-18:00\""
+            parsed="$(parse_schedule "$spec")" || exit 2
+            start="$(printf '%s' "$parsed" | cut -f1)"
+            stop="$(printf '%s' "$parsed" | cut -f2)"
+            text="$(printf '%s' "$parsed" | cut -f3)"
+            if [ -z "$who" ]; then
+                if [ "$SIM_MODE" = cloud ]; then who=both; else who=ground; fi
+            fi
+            require_gcloud_login
+            targets="$VM_GROUND"
+            if [ "$who" = both ]; then
+                if vm_exists "$VM_SIM"; then targets="$targets $VM_SIM"
+                else warn "$VM_SIM does not exist: scheduling the ground VM only"; fi
+            fi
+            log "Schedule: $text ($SCHEDULE_TZ) for$(printf ' %s' $targets)"
+            info "start cron: $start    stop cron: $stop"
+            info "letting the Compute Engine service agent start and stop VMs"
+            grant_schedule_agent
+            if exists compute resource-policies describe "$SCHED" --region="$REGION"; then
+                schedule_detach_all
+                info "replacing the previous schedule"
+                gcloud compute resource-policies delete "$SCHED" --region="$REGION" --quiet
+            fi
+            gcloud compute resource-policies create instance-schedule "$SCHED" --region="$REGION" \
+                --vm-start-schedule="$start" --vm-stop-schedule="$stop" --timezone="$SCHEDULE_TZ" \
+                --description="c2o schedule: $text ($SCHEDULE_TZ)"
+            for vm in $targets; do
+                info "attaching to $vm"
+                gcloud compute instances add-resource-policies "$vm" --zone="$ZONE" --resource-policies="$SCHED"
+            done
+            cat <<EOF
+
+    Done. The VMs now start and stop on their own: $text ($SCHEDULE_TZ).
+    - Google may start or stop them up to 15 minutes late: start a little early.
+    - A VM you start by hand outside the window is stopped at the next stop time.
+    - The load balancer is still billed around the clock (about CAD $(money "$FR_USD_H * 24 * $USD_CAD") a day).
+      Between terms: \`c2o schedule clear\` and \`c2o down --all\`.
+EOF
+            exists compute forwarding-rules describe "$FR_HTTPS" --global \
+                || warn "The load balancer rules are absent (c2o down --all): the schedule starts the VMs, but the site stays offline until \`c2o up\`."
+            if [ "$SIM_MODE" = laptop ] && [ "$who" = both ]; then
+                warn "SIM_MODE is laptop but the cloud simulator is scheduled too: two simulators knock each other off the link."
+            fi
+            ;;
+        show)
+            require_gcloud_login
+            log "Automatic schedule"
+            info "$(schedule_summary)"
+            if exists compute resource-policies describe "$SCHED" --region="$REGION"; then
+                gcloud compute resource-policies describe "$SCHED" --region="$REGION" \
+                    --format='value(instanceSchedulePolicy.vmStartSchedule.schedule,instanceSchedulePolicy.vmStopSchedule.schedule,instanceSchedulePolicy.timeZone)' \
+                    | while IFS="$(printf '\t')" read -r a b c; do info "start cron: $a    stop cron: $b    time zone: $c"; done
+            fi
+            ;;
+        clear)
+            local a
+            for a in "$@"; do die "schedule clear: unknown option $a"; done
+            require_gcloud_login
+            if ! exists compute resource-policies describe "$SCHED" --region="$REGION"; then
+                info "No automatic schedule. Nothing to clear."; return 0
+            fi
+            confirm "Remove the automatic schedule? (The VMs stay in their current state.)"
+            schedule_detach_all
+            gcloud compute resource-policies delete "$SCHED" --region="$REGION" --quiet
+            log "Schedule removed. Start and stop by hand: c2o up / c2o down."
+            ;;
+        *) die "schedule: use set, show or clear (see c2o schedule --help)" ;;
+    esac
+}
+
+# ── data ──────────────────────────────────────────────────────────────────
+snap_filter() { printf 'sourceDisk ~ /disks/(%s|%s)$' "$VM_GROUND" "$VM_SIM"; }
+
+store_label() {  # store_label VOLUME -> "description|how to clean"
+    case "$1" in
+        ground-archive)   echo "MCS telemetry archive|--telemetry" ;;
+        ground-dumps)     echo "Dumps received by the ground|--dumps" ;;
+        space-dumps)      echo "Dumps written by the simulator|--dumps" ;;
+        ground-workspace) echo "Reports, RF pass roll-ups|--reports" ;;
+        space-workspace)  echo "Scenarios, breakpoints, link state|kept" ;;
+        spacecdf-data)    echo "SpaceCDF designs|--designs only" ;;
+        *)                echo "$1|-" ;;
+    esac
+}
+
+snapshot_now() {  # snapshot_now VM...
+    local vm name stamp
+    stamp="$(date +%Y%m%d-%H%M%S)"
+    for vm in "$@"; do
+        name="$vm-$stamp"
+        info "snapshot $name (the disk of $vm; takes a minute or two)"
+        gcloud compute disks snapshot "$vm" --zone="$ZONE" --snapshot-names="$name" \
+            --storage-location="$REGION" --labels=app=c2o \
+            --description="c2o data snapshot of $vm"
+    done
+}
+
+cmd_data() {
+    local sub="${1:-list}"; [ "$#" -gt 0 ] && shift
+    case "$sub" in
+        list)
+            [ "$#" -eq 0 ] || die "data list takes no options"
+            require_gcloud_login
+            local vm out kind name kb lbl
+            for vm in "$VM_GROUND" "$VM_SIM"; do
+                vm_exists "$vm" || continue
+                log "Recordings on $vm"
+                if [ "$(vm_status "$vm")" != RUNNING ]; then
+                    info "the VM is stopped: \`c2o up\` to measure (its disk is still billed)"; continue
+                fi
+                out="$(run_bootstrap "$vm" sizes 2>/dev/null)" || { warn "could not read sizes on $vm"; continue; }
+                info "$(printf '%-36s %10s   %s' Store Size 'Cleared by')"
+                while read -r kind name kb _; do
+                    case "$kind" in
+                        vol)
+                            lbl="$(store_label "$name")"
+                            info "$(printf '%-36s %10s   %s' "${lbl%%|*}" "$(human_kb "$kb")" "${lbl#*|}")" ;;
+                        disk)
+                            info "$(printf 'Disk: %s used of %s' "$(human_kb "$name")" "$(human_kb "$kb")")" ;;
+                    esac
+                done <<<"$out"
+            done
+            log "Disk snapshots"
+            cmd_snapshots_table
+            ;;
+        snapshots) require_gcloud_login; log "Disk snapshots"; cmd_snapshots_table ;;
+        snapshot)
+            require_gcloud_login
+            local vms="" vm
+            for vm in "$VM_GROUND" "$VM_SIM"; do vm_exists "$vm" && vms="$vms $vm"; done
+            # shellcheck disable=SC2086  # plain list of VM names
+            snapshot_now $vms
+            log "Done. List: c2o data snapshots"
+            ;;
+        clean) data_clean "$@" ;;
+        prune)
+            local keep="" a
+            while [ "$#" -gt 0 ]; do
+                case "$1" in
+                    --keep) [ "$#" -ge 2 ] || die "--keep needs a number"; keep="$2"; shift ;;
+                    --keep=*) keep="${1#--keep=}" ;;
+                    *) die "data prune: unknown option $1" ;;
+                esac
+                shift
+            done
+            case "$keep" in ''|*[!0-9]*) die "usage: c2o data prune --keep N   (N = snapshots to keep per VM, e.g. 3)" ;; esac
+            require_gcloud_login
+            local old
+            old="$(gcloud compute snapshots list --filter="$(snap_filter)" --sort-by=~creationTimestamp \
+                --format='value(name,sourceDisk.basename(),creationTimestamp)' \
+                | awk -v k="$keep" '{ n[$2]++; if (n[$2] > k) print $1 "\t" $3 }')"
+            if [ -z "$old" ]; then info "Nothing to prune: at most $keep snapshot(s) per VM."; return 0; fi
+            log "Snapshots to delete (keeping the newest $keep per VM)"
+            while IFS="$(printf '\t')" read -r a _; do info "$a"; done <<<"$old"
+            confirm "Delete these snapshots? This cannot be undone."
+            # shellcheck disable=SC2046  # snapshot names have no spaces
+            gcloud compute snapshots delete $(cut -f1 <<<"$old") --quiet
+            log "Deleted."
+            ;;
+        *) die "data: use list, clean, snapshot, snapshots or prune (see c2o data --help)" ;;
+    esac
+}
+
+cmd_snapshots_table() {
+    local rows
+    rows="$(gcloud compute snapshots list --filter="$(snap_filter)" --sort-by=~creationTimestamp \
+        --format='value(name,sourceDisk.basename(),storageBytes,creationTimestamp)' 2>/dev/null || true)"
+    if [ -z "$rows" ]; then info "none"; return 0; fi
+    info "$(printf '%-34s %-16s %10s  %s' Name 'From VM' Stored Taken)"
+    local n d b t
+    while IFS="$(printf '\t')" read -r n d b t; do
+        info "$(printf '%-34s %-16s %10s  %s' "$n" "$d" "$(human_kb "$(( ${b:-0} / 1024 ))")" "${t%%.*}")"
+    done <<<"$rows"
+}
+
+data_clean() {
+    local tel=no dumps=no reps=no designs=no snap=no a what_g="" what_s="" desc=""
+    [ "$#" -gt 0 ] || die "data clean: say what to clear: --telemetry, --dumps, --reports or --all (see c2o data --help)"
+    for a in "$@"; do
+        case "$a" in
+            --telemetry) tel=yes ;;
+            --dumps) dumps=yes ;;
+            --reports) reps=yes ;;
+            --all) tel=yes; dumps=yes; reps=yes ;;
+            --designs) designs=yes ;;
+            --snapshot) snap=yes ;;
+            *) die "data clean: unknown option $a (see c2o data --help)" ;;
+        esac
+    done
+    [ "$tel" = yes ] && { what_g="$what_g telemetry"; desc="$desc
+      - the MCS telemetry archive (all archived telemetry and its history plots)"; }
+    [ "$dumps" = yes ] && { what_g="$what_g dumps"; what_s="dumps"; desc="$desc
+      - every delayed-TM dump (ground VM and simulator VM)"; }
+    [ "$reps" = yes ] && { what_g="$what_g reports"; desc="$desc
+      - generated reports and RF pass roll-ups"; }
+    [ "$designs" = yes ] && { what_g="$what_g designs"; desc="$desc
+      - EVERY SpaceCDF design and analysis run of every student"; }
+    [ -n "$what_g" ] || die "data clean: nothing selected (--telemetry, --dumps, --reports, --all, --designs)"
+    require_gcloud_login
+
+    local gs ss
+    gs="$(vm_status "$VM_GROUND")"; ss="$(vm_status "$VM_SIM")"
+    [ "$gs" = RUNNING ] || die "$VM_GROUND is $gs. The clean-up runs on the VM: \`c2o up\` first."
+    if [ -n "$what_s" ] && [ "$ss" != RUNNING ]; then
+        warn "$VM_SIM is ${ss}: its own dump copies are left alone (start it with c2o up --sim=cloud to clear them too)."
+        what_s=""
+    fi
+    cat <<EOF
+
+This permanently deletes, in project $PROJECT:$desc
+Kept: saved scenarios, breakpoints, config history, link state$([ "$designs" = yes ] || printf ', SpaceCDF designs').
+The screens restart (about a minute); anyone using them will see them reconnect.
+EOF
+    [ "$snap" = yes ] && echo "A disk snapshot is taken first, so this can be undone (c2o data snapshots)."
+    [ "$snap" = yes ] || echo "No snapshot will be taken (add --snapshot to keep a way back)."
+    confirm "Delete these recordings?"
+    [ "$designs" = yes ] && confirm_typed "SpaceCDF designs are the students' own work and cannot be recovered without a snapshot." "delete-designs"
+
+    if [ "$snap" = yes ]; then
+        log "Snapshots first"
+        if [ -n "$what_s" ]; then snapshot_now "$VM_GROUND" "$VM_SIM"; else snapshot_now "$VM_GROUND"; fi
+    fi
+    log "Cleaning on $VM_GROUND:$what_g"
+    # shellcheck disable=SC2086  # fixed words
+    run_bootstrap "$VM_GROUND" clean $what_g
+    if [ -n "$what_s" ]; then
+        log "Cleaning on $VM_SIM: $what_s"
+        run_bootstrap "$VM_SIM" clean "$what_s"
+    fi
+    log "Done. Sizes now: c2o data list"
+}
+
+# ── users (Admin SDK Directory API) ───────────────────────────────────────
+full_email() {  # full_email NAME|EMAIL -> name@DOMAIN (lower case)
+    local e
+    e="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+    case "$e" in
+        "") die "missing email or name" ;;
+        *@"$DOMAIN") ;;
+        *@*) die "$1 is not an @$DOMAIN address: only @$DOMAIN accounts can be managed here" ;;
+        *) e="$e@$DOMAIN" ;;
+    esac
+    case "$e" in
+        *[!a-z0-9._@-]*|.*|*..*) die "$1 is not a valid account name (letters, digits, dot, dash, underscore)" ;;
+    esac
+    printf '%s' "$e"
+}
+
+need_login_msg() {
+    die "User management needs a sign-in with admin rights (it is missing or has expired).
+    Run:  c2o users login      (a browser opens: sign in as admin@$DOMAIN)"
+}
+
+# admin_auth: get an access token from Application Default Credentials and
+# keep it in a mode-600 curl config file (never on a command line).
+admin_auth() {
+    new_tmp
+    [ -f "$C2O_TMP/curl.cfg" ] && return 0
+    command -v curl >/dev/null || die "curl not found"
+    command -v python3 >/dev/null || die "python3 not found"
+    local tok
+    tok="$(gcloud auth application-default print-access-token 2>/dev/null)" || need_login_msg
+    [ -n "$tok" ] || need_login_msg
+    ( umask 077
+      printf 'header = "Authorization: Bearer %s"\nheader = "x-goog-user-project: %s"\n' "$tok" "$PROJECT" \
+          > "$C2O_TMP/curl.cfg" )
+    tok=""
+}
+
+# api METHOD URL [BODY_FILE]: response in $C2O_TMP/resp, HTTP code in API_CODE.
+API_CODE=000
+api() {
+    admin_auth
+    local copts=(-sS -K "$C2O_TMP/curl.cfg" -X "$1" -o "$C2O_TMP/resp" -w '%{http_code}')  # never empty
+    [ -n "${3:-}" ] && copts+=(-H 'Content-Type: application/json' --data-binary "@$3")
+    : > "$C2O_TMP/resp"
+    API_CODE="$(curl "${copts[@]}" "$2" 2>"$C2O_TMP/curl.err")" || API_CODE=000
+    case "$API_CODE" in
+        000) die "Could not reach Google ($(head -c 200 "$C2O_TMP/curl.err")). Check the network and retry." ;;
+        401) need_login_msg ;;
+        403)
+            if grep -qiE 'insufficient authentication scopes|ACCESS_TOKEN_SCOPE_INSUFFICIENT|invalid_grant' "$C2O_TMP/resp"; then
+                need_login_msg
+            elif grep -qiE 'SERVICE_DISABLED|has not been used in project|is disabled' "$C2O_TMP/resp"; then
+                die "The Admin SDK API is not enabled in $PROJECT. Rerun setup.sh (it enables admin.googleapis.com), wait a minute, retry."
+            elif grep -qiE 'USER_PROJECT_DENIED|serviceusage' "$C2O_TMP/resp"; then
+                die "Your sign-in may not bill API calls to $PROJECT. Run: c2o users login"
+            fi
+            die "Google refused (403): $(api_error). Sign in with an admin account: c2o users login" ;;
+    esac
+    return 0
+}
+
+api_error() {  # the "message" of an error response, one line
+    python3 - "$C2O_TMP/resp" <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get("error", {}).get("message", "")[:300])
+except Exception:
+    print(open(sys.argv[1]).read()[:300].replace("\n", " "))
+PY
+}
+
+urlenc() { python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe="@."))' "$1"; }
+
+group_for() {  # group_for student|instructor
+    case "$1" in
+        student) printf '%s' "$STUDENTS_GROUP" ;;
+        instructor) printf '%s' "$INSTRUCTORS_GROUP" ;;
+        *) die "role must be student or instructor (got $1)" ;;
+    esac
+}
+
+# fetch_all PATH OUT_PREFIX KEY: every page of a list call -> OUT_PREFIX.N files
+fetch_all() {
+    local path="$1" out="$2" tok="" n=0 sep url
+    case "$path" in *\?*) sep='&' ;; *) sep='?' ;; esac
+    while :; do
+        url="$ADMIN_API/$path"
+        [ -n "$tok" ] && url="$url${sep}pageToken=$(urlenc "$tok")"
+        api GET "$url"
+        [ "$API_CODE" = 200 ] || return 1
+        n=$((n + 1)); cp "$C2O_TMP/resp" "$out.$n"
+        tok="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("nextPageToken",""))' "$out.$n")"
+        [ -n "$tok" ] || break
+    done
+}
+
+# load_directory: users and both groups' members into $C2O_TMP (users.N, stu.N, ins.N)
+load_directory() {
+    rm -f "$C2O_TMP"/users.* "$C2O_TMP"/stu.* "$C2O_TMP"/ins.* 2>/dev/null || true
+    fetch_all "users?domain=$DOMAIN&maxResults=500&orderBy=email&projection=basic" "$C2O_TMP/users" \
+        || die "Could not list users (HTTP $API_CODE): $(api_error)"
+    fetch_all "groups/$(urlenc "$STUDENTS_GROUP")/members?maxResults=200" "$C2O_TMP/stu" \
+        || warn "Could not read $STUDENTS_GROUP (HTTP $API_CODE): does the group exist? (README step 3)"
+    fetch_all "groups/$(urlenc "$INSTRUCTORS_GROUP")/members?maxResults=200" "$C2O_TMP/ins" \
+        || warn "Could not read $INSTRUCTORS_GROUP (HTTP $API_CODE): does the group exist? (README step 3)"
+}
+
+# directory_py MODE [ARGS]: the Python side of list / seats / import planning.
+directory_py() {
+    python3 - "$C2O_TMP" "$DOMAIN" "$USER_CAP" "$@" <<'PY'
+import csv, glob, json, os, re, sys
+tmp, domain, cap, mode = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
+def pages(prefix, key):
+    out = []
+    for f in sorted(glob.glob(os.path.join(tmp, prefix + ".*")), key=lambda p: int(p.rsplit(".", 1)[1])):
+        out += json.load(open(f)).get(key, [])
+    return out
+users = pages("users", "users")
+stu = {m.get("email", "").lower() for m in pages("stu", "members")}
+ins = {m.get("email", "").lower() for m in pages("ins", "members")}
+def role(email, u=None):
+    e = email.lower()
+    r = []
+    if e in ins: r.append("instructor")
+    if e in stu: r.append("student")
+    if not r and u is not None and u.get("isAdmin"): r.append("admin")
+    return "+".join(r) or "-"
+if mode == "list":
+    rows = []
+    for u in users:
+        last = u.get("lastLoginTime", "") or ""
+        last = "never" if (not last or last.startswith("1970")) else last[:16].replace("T", " ")
+        rows.append((u.get("primaryEmail", ""), u.get("name", {}).get("fullName", ""), role(u.get("primaryEmail", ""), u),
+                     "yes" if u.get("isEnrolledIn2Sv") else "no", "yes" if u.get("suspended") else "no", last))
+    hdr = ("EMAIL", "NAME", "ROLE", "2SV", "SUSPENDED", "LAST SIGN-IN (UTC)")
+    w = [max(len(str(r[i])) for r in rows + [hdr]) for i in range(len(hdr))]
+    for r in [hdr] + rows:
+        print("    " + "  ".join(str(c).ljust(w[i]) for i, c in enumerate(r)).rstrip())
+    print("\n    %d account(s) of %d; %d without 2-step verification yet; %d suspended." % (
+        len(users), cap, sum(1 for u in users if not u.get("isEnrolledIn2Sv")), sum(1 for u in users if u.get("suspended"))))
+elif mode == "seats":
+    n, s = len(users), sum(1 for u in users if u.get("suspended"))
+    print("    %d of %d accounts used (%d suspended, which still count); %d free." % (n, cap, s, max(cap - n, 0)))
+    if n >= cap:
+        print("    FULL: remove accounts, or ask Google for more (README step 1, 'User limit').")
+elif mode == "exists":
+    e = sys.argv[5].lower()
+    u = [u for u in users if u.get("primaryEmail", "").lower() == e]
+    print("admin" if u and u[0].get("isAdmin") else ("yes" if u else "no"))
+elif mode == "plan":
+    # Plan for `users import`: tab-separated lines for the shell
+    #   create EMAIL FIRST LAST ROLE | move EMAIL ROLE | ok EMAIL ROLE | bad LINE REASON
+    path = sys.argv[5]
+    have = {u.get("primaryEmail", "").lower(): u for u in users}
+    seen, plan, new = set(), [], 0
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        for n, row in enumerate(csv.reader(fh), 1):
+            row = [c.strip() for c in row]
+            if not row or not any(row) or row[0].startswith("#"):
+                continue
+            if n == 1 and row[0].lower() in ("email", "e-mail", "email address", "username"):
+                continue
+            if len(row) < 3:
+                plan.append(("bad", "line %d" % n, "need email,first,last[,role]")); continue
+            e, first, last = row[0].lower(), row[1], row[2]
+            r = (row[3].lower() if len(row) > 3 and row[3] else "student")
+            r = {"students": "student", "instructors": "instructor", "ta": "instructor"}.get(r, r)
+            if "@" not in e:
+                e = e + "@" + domain
+            if not e.endswith("@" + domain):
+                plan.append(("bad", "line %d" % n, "%s is not an @%s address" % (e, domain))); continue
+            if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*@" + re.escape(domain), e) or ".." in e:
+                plan.append(("bad", "line %d" % n, "%s is not a valid account name" % e)); continue
+            if r not in ("student", "instructor"):
+                plan.append(("bad", "line %d" % n, "role %r (student or instructor)" % r)); continue
+            if not first or not last:
+                plan.append(("bad", "line %d" % n, "first and last name are required")); continue
+            if any(c in first + last for c in "\t\n"):
+                plan.append(("bad", "line %d" % n, "names may not contain tabs")); continue
+            if e in seen:
+                plan.append(("bad", "line %d" % n, "%s is listed twice" % e)); continue
+            seen.add(e)
+            if e in have:
+                cur = role(e, have[e])
+                plan.append(("ok", e, r) if r in cur.split("+") else ("move", e, r))
+            else:
+                plan.append(("create", e, first, last, r)); new += 1
+    for p in plan:
+        print("\t".join(p))
+    print("\t".join(("seats", str(len(users)), str(new), str(cap))))
+PY
+}
+
+user_body_py() {  # user_body_py OUT_FILE MODE(new|reset|suspend|unsuspend): body to OUT_FILE; prints the password (new/reset)
+    C2O_FIRST="${C2O_FIRST:-}" C2O_LAST="${C2O_LAST:-}" C2O_EMAIL="${C2O_EMAIL:-}" \
+    python3 - "$1" "$2" <<'PY'
+import json, os, secrets, string, sys
+out, mode = sys.argv[1], sys.argv[2]
+alphabet = [c for c in string.ascii_letters + string.digits if c not in "0O1lI"]
+def password():
+    while True:
+        p = "".join(secrets.choice(alphabet) for _ in range(14))
+        if any(c.islower() for c in p) and any(c.isupper() for c in p) and any(c.isdigit() for c in p):
+            return p
+body, pw = {}, ""
+if mode in ("new", "reset"):
+    pw = password()
+    body = {"password": pw, "changePasswordAtNextLogin": True}
+if mode == "new":
+    body.update({"primaryEmail": os.environ["C2O_EMAIL"],
+                 "name": {"givenName": os.environ["C2O_FIRST"], "familyName": os.environ["C2O_LAST"]}})
+if mode in ("suspend", "unsuspend"):
+    body = {"suspended": mode == "suspend"}
+fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, "w") as fh:
+    json.dump(body, fh)
+print(pw)
+PY
+}
+
+group_add() {  # group_add EMAIL ROLE
+    local g; g="$(group_for "$2")"
+    printf '{"email": "%s", "role": "MEMBER"}' "$1" > "$C2O_TMP/member.json"
+    api POST "$ADMIN_API/groups/$(urlenc "$g")/members" "$C2O_TMP/member.json"
+    case "$API_CODE" in
+        200|201) info "added to $g" ;;
+        409) info "already in $g" ;;
+        *) warn "could not add $1 to $g (HTTP $API_CODE): $(api_error)"; return 1 ;;
+    esac
+}
+
+group_del() {  # group_del EMAIL ROLE
+    local g; g="$(group_for "$2")"
+    api DELETE "$ADMIN_API/groups/$(urlenc "$g")/members/$(urlenc "$1")"
+    case "$API_CODE" in
+        200|204) info "removed from $g" ;;
+        404) ;;
+        *) warn "could not remove $1 from $g (HTTP $API_CODE): $(api_error)"; return 1 ;;
+    esac
+}
+
+# user_create EMAIL FIRST LAST ROLE -> prints the password line; appends to PW_OUT if set
+user_create() {
+    local pw
+    pw="$(C2O_EMAIL="$1" C2O_FIRST="$2" C2O_LAST="$3" user_body_py "$C2O_TMP/user.json" new)"
+    api POST "$ADMIN_API/users" "$C2O_TMP/user.json"
+    rm -f "$C2O_TMP/user.json"
+    case "$API_CODE" in
+        200|201) ;;
+        409) warn "$1 already exists: not changed"; return 1 ;;
+        *) warn "could not create $1 (HTTP $API_CODE): $(api_error)"; return 1 ;;
+    esac
+    info "created $1 ($2 $3)"
+    # A brand-new account can take a few seconds before groups accept it.
+    group_add "$1" "$4" || { sleep 5; group_add "$1" "$4"; } || warn "add $1 to $(group_for "$4") later: c2o users role $1 $4"
+    printf '    %-34s temporary password: %s\n' "$1" "$pw"
+    if [ -n "${PW_OUT:-}" ]; then printf '%s,%s\n' "$1" "$pw" >> "$PW_OUT"; fi
+    pw=""
+}
+
+user_guard_admin() {  # refuse to suspend/delete a super admin from here
+    api GET "$ADMIN_API/users/$(urlenc "$1")?projection=basic"
+    case "$API_CODE" in
+        200) ;;
+        404) die "No account $1." ;;
+        *) die "Could not look up $1 (HTTP $API_CODE): $(api_error)" ;;
+    esac
+    if python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("isAdmin") else 1)' "$C2O_TMP/resp"; then
+        die "$1 is an administrator. Change administrators in the Admin console (admin.google.com), not here."
+    fi
+}
+
+cmd_users() {
+    local sub="${1:-list}"; [ "$#" -gt 0 ] && shift
+    case "$sub" in
+        login)
+            local gbin
+            gbin="$(type -P gcloud)" || die "gcloud not found"
+            log "Sign in for user management: a browser opens; choose admin@$DOMAIN (or another super admin)"
+            # Called directly (not through the retrying wrapper), so its sign-in
+            # link and questions reach the terminal as they happen.
+            "$gbin" auth application-default login --scopes="$ADMIN_SCOPES"
+            "$gbin" auth application-default set-quota-project "$PROJECT" \
+                || warn "could not set the quota project; if users commands then fail, rerun: c2o users login"
+            api GET "$ADMIN_API/users?domain=$DOMAIN&maxResults=1"
+            [ "$API_CODE" = 200 ] || die "Signed in, but listing users failed (HTTP $API_CODE): $(api_error)"
+            log "Ready: try  c2o users list"
+            ;;
+        list)
+            [ "$#" -eq 0 ] || die "users list takes no options"
+            new_tmp; load_directory
+            log "Accounts in $DOMAIN"
+            directory_py list
+            ;;
+        seats)
+            new_tmp; load_directory
+            log "Seats (Cloud Identity Free)"
+            directory_py seats
+            ;;
+        add)
+            local email="" name="" role=student first last
+            while [ "$#" -gt 0 ]; do
+                case "$1" in
+                    --name) [ "$#" -ge 2 ] || die "--name needs a value"; name="$2"; shift ;;
+                    --name=*) name="${1#--name=}" ;;
+                    --role) [ "$#" -ge 2 ] || die "--role needs a value"; role="$2"; shift ;;
+                    --role=*) role="${1#--role=}" ;;
+                    -*) die "users add: unknown option $1" ;;
+                    *) [ -z "$email" ] || die "users add: one account at a time (use import for a list)"; email="$1" ;;
+                esac
+                shift
+            done
+            [ -n "$email" ] || die 'usage: c2o users add jdoe --name "Jane Doe" [--role student|instructor]'
+            email="$(full_email "$email")"
+            group_for "$role" >/dev/null
+            name="$(printf '%s' "$name" | awk '{$1=$1; print}')"
+            case "$name" in *" "*) ;; *) die "users add: give the full name, e.g. --name \"Jane Doe\"" ;; esac
+            first="${name% *}"; last="${name##* }"
+            new_tmp
+            log "Creating $email ($first $last, $role)"
+            user_create "$email" "$first" "$last" "$role" || exit 1
+            cat <<EOF
+
+    Send the address and password to the person (e.g. to their university
+    email). They sign in at https://$DOMAIN, choose a new password and set up
+    2-step verification within the enrolment period (README step 2).
+    This password is not shown again (c2o users reset $email makes a new one).
+EOF
+            ;;
+        import)
+            local file="" apply=no kind e f l r out=""
+            while [ "$#" -gt 0 ]; do
+                case "$1" in
+                    --apply) apply=yes ;;
+                    --out) [ "$#" -ge 2 ] || die "--out needs a file name"; out="$2"; shift ;;
+                    --out=*) out="${1#--out=}" ;;
+                    -*) die "users import: unknown option $1" ;;
+                    *) file="$1" ;;
+                esac
+                shift
+            done
+            [ -n "$file" ] || die "usage: c2o users import class.csv [--apply]   (lines: email,first,last[,role])"
+            [ -f "$file" ] || die "$file not found"
+            new_tmp; load_directory
+            directory_py plan "$file" > "$C2O_TMP/plan"
+            local ncreate=0 nmove=0 nbad=0 nok=0 used=0 add=0 cap="$USER_CAP"
+            log "Import plan for $file"
+            while IFS="$(printf '\t')" read -r kind e f l r; do
+                case "$kind" in
+                    create) ncreate=$((ncreate + 1)); info "create   $e  ($f $l, $r)" ;;
+                    move)   nmove=$((nmove + 1));     info "role     $e  -> $f" ;;
+                    ok)     nok=$((nok + 1));         info "exists   $e  ($f, nothing to do)" ;;
+                    bad)    nbad=$((nbad + 1));       info "SKIP     $e: $f" ;;
+                    seats)  used="$e"; add="$f"; cap="$l" ;;
+                esac
+            done < "$C2O_TMP/plan"
+            info ""
+            info "$ncreate to create, $nmove role change(s), $nok already fine, $nbad skipped; seats: $used used + $add new of $cap."
+            if [ $((used + add)) -gt "$cap" ]; then
+                warn "That exceeds the $cap-account cap: Google will refuse the extra accounts. Remove old accounts first (c2o users remove)."
+            fi
+            if [ "$apply" != yes ]; then
+                log "Dry run: nothing changed. To do it:  c2o users import $file --apply"
+                return 0
+            fi
+            [ $((ncreate + nmove)) -gt 0 ] || { log "Nothing to do."; return 0; }
+            confirm "Create $ncreate account(s) and change $nmove role(s)?"
+            if [ -n "$out" ]; then
+                ( umask 077; : > "$out" ) || die "cannot write $out"
+                chmod 600 "$out"; printf 'email,password\n' > "$out"; PW_OUT="$out"
+            fi
+            log "Applying"
+            local failed=0
+            while IFS="$(printf '\t')" read -r kind e f l r <&3; do
+                case "$kind" in
+                    create) user_create "$e" "$f" "$l" "$r" || failed=$((failed + 1)) ;;
+                    move) user_set_role "$e" "$f" || failed=$((failed + 1)) ;;
+                esac
+            done 3< "$C2O_TMP/plan"
+            log "Done$([ "$failed" -eq 0 ] || printf ' with %s failure(s) (see above)' "$failed"). The passwords above are not shown again."
+            [ -z "$out" ] || info "Also written to $out (only you can read it). Delete it once the passwords are sent."
+            ;;
+        remove|delete)
+            local email="" a
+            for a in "$@"; do case "$a" in -*) die "users remove: unknown option $a" ;; *) email="$a" ;; esac; done
+            [ -n "$email" ] || die "usage: c2o users remove jdoe"
+            email="$(full_email "$email")"
+            new_tmp; user_guard_admin "$email"
+            cat <<EOF
+
+Deleting $email removes the account and frees a seat. It is PERMANENT for
+the person: they lose access at once. (An admin can restore a deleted account
+in the Admin console for a short while: about 20 days [verify].)
+Their SpaceCDF designs and MCS history stay on the server.
+To only block sign-in, use:  c2o users suspend $email
+EOF
+            confirm "Delete $email?"
+            api DELETE "$ADMIN_API/users/$(urlenc "$email")"
+            case "$API_CODE" in
+                200|204) log "Deleted $email." ;;
+                *) die "Could not delete $email (HTTP $API_CODE): $(api_error)" ;;
+            esac
+            ;;
+        suspend|unsuspend)
+            local email="" a
+            for a in "$@"; do case "$a" in -*) die "users $sub: unknown option $a" ;; *) email="$a" ;; esac; done
+            [ -n "$email" ] || die "usage: c2o users $sub jdoe"
+            email="$(full_email "$email")"
+            new_tmp
+            [ "$sub" = suspend ] && user_guard_admin "$email"
+            user_body_py "$C2O_TMP/patch.json" "$sub" >/dev/null
+            api PATCH "$ADMIN_API/users/$(urlenc "$email")" "$C2O_TMP/patch.json"
+            case "$API_CODE" in
+                200) if [ "$sub" = suspend ]; then
+                         log "Suspended $email: cannot sign in; still uses a seat. Undo: c2o users unsuspend $email"
+                     else log "$email can sign in again."; fi ;;
+                404) die "No account $email." ;;
+                *) die "Could not $sub $email (HTTP $API_CODE): $(api_error)" ;;
+            esac
+            ;;
+        reset)
+            local email="" a pw
+            for a in "$@"; do case "$a" in -*) die "users reset: unknown option $a" ;; *) email="$a" ;; esac; done
+            [ -n "$email" ] || die "usage: c2o users reset jdoe"
+            email="$(full_email "$email")"
+            new_tmp
+            pw="$(user_body_py "$C2O_TMP/patch.json" reset)"
+            api PATCH "$ADMIN_API/users/$(urlenc "$email")" "$C2O_TMP/patch.json"
+            rm -f "$C2O_TMP/patch.json"
+            case "$API_CODE" in
+                200) log "New temporary password for $email (must be changed at the next sign-in; not shown again):"
+                     printf '    %s\n' "$pw" ;;
+                404) die "No account $email." ;;
+                *) die "Could not reset $email (HTTP $API_CODE): $(api_error)" ;;
+            esac
+            pw=""
+            ;;
+        role)
+            [ "$#" -eq 2 ] || die "usage: c2o users role jdoe student|instructor"
+            local email
+            email="$(full_email "$1")"
+            group_for "$2" >/dev/null
+            new_tmp
+            user_set_role "$email" "$2"
+            ;;
+        *) die "users: unknown command $sub (see c2o users --help)" ;;
+    esac
+}
+
+user_set_role() {  # user_set_role EMAIL ROLE: in ROLE's group, out of the other one
+    local other=student
+    [ "$2" = student ] && other=instructor
+    log "$1 -> $2"
+    group_add "$1" "$2" || return 1
+    group_del "$1" "$other" || return 1
+}
+
+# ── main ──────────────────────────────────────────────────────────────────
+main() {
+    local cmd="${1:-help}" args=() a want_help=no
+    [ "$#" -gt 0 ] && shift
+    for a in "$@"; do
+        case "$a" in
+            -y|--yes) ASSUME_YES=yes ;;
+            -h|--help) want_help=yes ;;
+            *) args+=("$a") ;;
+        esac
+    done
+    case "$cmd" in
+        help|-h|--help) help_main; return 0 ;;
+    esac
+    if [ "$want_help" = yes ]; then
+        case "$cmd" in
+            status) help_status ;; up) help_up ;; down) help_down ;;
+            schedule) help_schedule ;; data) help_data ;; users) help_users ;;
+            *) help_main ;;
+        esac
+        return 0
+    fi
+    case "$cmd" in
+        status|up|down|schedule|data|users) ;;
+        *) printf 'c2o: unknown command "%s"\n\n' "$cmd" >&2; help_main >&2; return 2 ;;
+    esac
+    # up/down hand over to start.sh / stop.sh, which load the settings themselves.
+    # shellcheck source=common.sh
+    . "$C2O_DIR/common.sh"
+    SCHED="$PREFIX-schedule"                          # the instance schedule (resource policy)
+    SCHEDULE_TZ="${SCHEDULE_TZ:-America/Toronto}"     # c2o.env may override
+    USER_CAP="${USER_CAP:-50}"                        # Cloud Identity Free default cap
+    case "$cmd" in
+        status)   cmd_status ${args[@]+"${args[@]}"} ;;
+        up)       cmd_up ${args[@]+"${args[@]}"} ;;
+        down)     cmd_down ${args[@]+"${args[@]}"} ;;
+        schedule) cmd_schedule ${args[@]+"${args[@]}"} ;;
+        data)     cmd_data ${args[@]+"${args[@]}"} ;;
+        users)    cmd_users ${args[@]+"${args[@]}"} ;;
+    esac
+}
+
+main "$@"

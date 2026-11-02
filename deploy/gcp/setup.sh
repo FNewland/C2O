@@ -46,7 +46,8 @@ parent="$(gcloud projects describe "$PROJECT" --format='value(parent.type)')"
 log "Enabling APIs (first time: about a minute)"
 gcloud services enable compute.googleapis.com iap.googleapis.com secretmanager.googleapis.com \
     oslogin.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com \
-    logging.googleapis.com
+    logging.googleapis.com admin.googleapis.com
+# admin.googleapis.com: the Admin SDK, for `c2o users` (accounts and groups).
 
 # ── 2. Network, NAT, firewall ───────────────────────────────────────────
 log "Network"
@@ -125,6 +126,15 @@ if ! exists secrets describe "$SECRET_AI"; then
 fi
 retry gcloud secrets add-iam-policy-binding "$SECRET_AI" --member="serviceAccount:$SA_GROUND_EMAIL" \
     --role=roles/secretmanager.secretAccessor --condition=None >/dev/null
+
+log "Automatic start/stop (c2o schedule): Compute Engine service agent may start and stop VMs"
+# Instance schedules act as the Compute Engine Service Agent; Google's
+# documented role for it is Compute Instance Admin (v1) (it needs
+# compute.instances.start and .stop). The agent exists once the Compute API is on.
+project_number="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+retry gcloud projects add-iam-policy-binding "$PROJECT" \
+    --member="serviceAccount:service-$project_number@compute-system.iam.gserviceaccount.com" \
+    --role=roles/compute.instanceAdmin.v1 --condition=None --quiet >/dev/null
 
 # ── 4. VMs ──────────────────────────────────────────────────────────────
 log "Fixed internal addresses ($GROUND_IP ground, $SIM_IP simulator)"
@@ -360,7 +370,7 @@ if ! exists compute ssl-policies describe "$SSL_POLICY" --global; then
 fi
 if exists compute ssl-certificates describe "$CERT" --global; then
     have="$(gcloud compute ssl-certificates describe "$CERT" --global --format='value(managed.domains)' | tr ';' ',')"
-    if [ "$(tr ',' '\n' <<<"$have" | sort | paste -sd,)" != "$(tr ',' '\n' <<<"$CERT_DOMAINS" | sort | paste -sd,)" ]; then
+    if [ "$(tr ',' '\n' <<<"$have" | sort | paste -sd, -)" != "$(tr ',' '\n' <<<"$CERT_DOMAINS" | sort | paste -sd, -)" ]; then
         warn "Certificate $CERT covers [$have] but c2o.env now wants [$CERT_DOMAINS]. A managed certificate's domains cannot change: see README Troubleshooting, 'Changing the certificate's names'."
     fi
 else

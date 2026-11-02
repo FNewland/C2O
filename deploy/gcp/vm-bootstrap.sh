@@ -25,6 +25,12 @@
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh rotate     # ground only: NEW credentials
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh update     # git pull c2o-ref, rebuild, restart
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh down       # stop the containers
+#   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh sizes      # size of each data volume (c2o data list)
+#   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh clean telemetry dumps reports [designs]
+#        empty those recording volumes on this VM: stops the containers that
+#        use them, deletes the files with the already-built image (no pulls),
+#        starts them again. Never touches scenarios, breakpoints, config
+#        history or link state (space-workspace). `c2o data clean` runs this.
 set -euo pipefail
 shopt -s inherit_errexit
 
@@ -212,6 +218,101 @@ up() {
     compose ps
 }
 
+# ── Recordings (c2o data list / clean) ──────────────────────────────────
+# Compose names its volumes <project>_<volume>; the project is "smo".
+VOL_PREFIX=smo_
+
+# recording_spec WHAT: "volume|services that mount it|paths inside it" for
+# this VM's role, or nothing if this VM holds no such recording. Paths are
+# relative to the volume root; "." = every file in the volume.
+recording_spec() {
+    case "$ROLE:$1" in
+        ground:telemetry) echo "ground-archive|mcs|." ;;
+        ground:dumps)     echo "ground-dumps|gsg mcs dtm-viewer|." ;;
+        ground:reports)   echo "ground-workspace|gsg mcs planner rfsim dtm-viewer|reports pass_rollups*" ;;
+        ground:designs)   echo "spacecdf-data|spacecdf|." ;;
+        sim:dumps)        echo "space-dumps|sim|." ;;
+        *:telemetry|*:dumps|*:reports|*:designs) ;;
+        *) die "clean: unknown recording '$1' (telemetry, dumps, reports, designs)" ;;
+    esac
+}
+
+vol_kb() {  # vol_kb VOLUME -> size in KiB, or nothing if the volume does not exist
+    local mp
+    mp="$(docker volume inspect -f '{{.Mountpoint}}' "$VOL_PREFIX$1" 2>/dev/null)" || return 0
+    du -sk "$mp" 2>/dev/null | awk '{print $1}' || true
+}
+
+# sizes: one line per data volume ("vol NAME KiB") plus the boot disk
+# ("disk USED_KiB SIZE_KiB"), for c2o data list.
+sizes() {
+    local v kb
+    echo "role $ROLE"
+    for v in $(docker volume ls -q 2>/dev/null | sed -n "s/^$VOL_PREFIX//p" | sort); do
+        kb="$(vol_kb "$v")"
+        echo "vol $v ${kb:-0}"
+    done
+    df -Pk / | awk 'NR == 2 {print "disk", $3, $2}'
+}
+
+# image_for SERVICE: the image an existing container of SERVICE was created
+# from (already on this VM, so nothing is pulled or built).
+image_for() {
+    local id
+    id="$(compose ps -a -q "$1" 2>/dev/null | head -n 1)"
+    [ -n "$id" ] && docker inspect -f '{{.Image}}' "$id" 2>/dev/null
+}
+
+clean() {
+    [ "$#" -gt 0 ] || die "usage: vm-bootstrap.sh clean telemetry|dumps|reports|designs ..."
+    local what spec vol svcs paths img stop_all=no todo=() stop=() s line
+    for what in "$@"; do
+        spec="$(recording_spec "$what")"
+        if [ -z "$spec" ]; then say "clean $what: nothing of that kind on the $ROLE VM"; continue; fi
+        todo+=("$spec")
+        svcs="${spec#*|}"; svcs="${svcs%%|*}"
+        for s in $svcs; do
+            case " ${stop[*]:-} " in *" $s "*) ;; *) stop+=("$s") ;; esac
+            # Other services share the GSG's (ground) or the simulator's
+            # (sim) network namespace: stopping either means stopping all.
+            case "$s" in gsg|sim) stop_all=yes ;; esac
+        done
+    done
+    [ "${#todo[@]}" -gt 0 ] || { say "clean: nothing to do on this VM"; return 0; }
+
+    if [ "$stop_all" = yes ]; then
+        say "stopping all containers (they share the ${ROLE} network namespace)"
+        compose stop
+    else
+        say "stopping ${stop[*]}"
+        compose stop "${stop[@]}"
+    fi
+    for line in "${todo[@]}"; do
+        vol="${line%%|*}"; svcs="${line#*|}"; paths="${svcs#*|}"; svcs="${svcs%%|*}"
+        if ! docker volume inspect "$VOL_PREFIX$vol" >/dev/null 2>&1; then
+            say "volume $VOL_PREFIX$vol does not exist yet: nothing to clean"; continue
+        fi
+        img="$(image_for "${svcs%% *}")" || img=""
+        [ -n "$img" ] || img="$(docker images -q "smo-suite" | head -n 1)"
+        [ -n "$img" ] || die "no local image to run the clean-up with (no pull is attempted)"
+        say "emptying $VOL_PREFIX$vol ($paths) - was $(vol_kb "$vol") KiB"
+        # Root inside a throw-away container of the SAME image, no network:
+        # the files belong to the image's runtime user. Directories are kept
+        # (with their owners), only files go.
+        docker run --rm --network none --user 0:0 --entrypoint sh \
+            -e C2O_PATHS="$paths" -v "$VOL_PREFIX$vol:/v" "$img" -c '
+                cd /v || exit 1
+                for p in $C2O_PATHS; do
+                    [ -e "$p" ] || continue
+                    if [ -d "$p" ]; then find "$p" -mindepth 1 ! -type d -exec rm -f {} +
+                    else rm -f "$p"; fi
+                done' </dev/null
+        say "now $(vol_kb "$vol") KiB"
+    done
+    say "starting the containers again"
+    compose up -d </dev/null
+}
+
 case "$ACTION" in
     boot)
         install_docker; clone_repo; write_env; write_design_env; up ;;
@@ -231,7 +332,11 @@ case "$ACTION" in
         exec bash "$APP_DIR/deploy/gcp/vm-bootstrap.sh" refresh ;;
     down)
         compose down ;;
+    sizes)
+        sizes; exit 0 ;;
+    clean)
+        shift; clean "$@" ;;
     *)
-        die "usage: vm-bootstrap.sh [boot|refresh|rotate|update|down]" ;;
+        die "usage: vm-bootstrap.sh [boot|refresh|rotate|update|down|sizes|clean WHAT...]" ;;
 esac
 say "done ($ACTION, role $ROLE, $MY_IP)"

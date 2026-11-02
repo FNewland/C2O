@@ -46,17 +46,28 @@ the sim VM's tool ports 8096-8097, so the welcome page can say whether they are 
 
 | File | What it is |
 |---|---|
+| `c2o` | **The everyday command**: status and costs, up/down, automatic schedule, recordings, users (§11) |
 | `c2o.env.example` | Settings; copy to `c2o.env` (git-ignored) and set `PROJECT` |
 | `setup.sh` | Creates or repairs everything. Idempotent, so rerun it after any failure |
 | `vm-bootstrap.sh` | The VMs' startup script: Docker, clone, credentials, `docker compose up` |
-| `start.sh` / `stop.sh` | Class day on and off |
+| `start.sh` / `stop.sh` | Class day on and off (what `c2o up` / `c2o down` run) |
 | `rotate-link-secret.sh` | New link session secret, rolled out to both VMs |
 | `teardown.sh` | Deletes everything `setup.sh` made |
 | `env/*.example` | The cloud `ground.env` / `space.env` templates that `vm-bootstrap.sh` fills in |
 
 Run every script from the repository root in **Google Cloud Shell** (gcloud is already signed in there),
-for example `bash deploy/gcp/start.sh`. Do not confuse `deploy/gcp/start.sh` (the cloud) with
-`sim/start.sh` (the simulator suite on your laptop).
+for example `bash deploy/gcp/start.sh`, or on your Mac with gcloud installed and signed in as
+`admin@c2o.live`. Do not confuse `deploy/gcp/start.sh` (the cloud) with `sim/start.sh` (the simulator
+suite on your laptop). Once set up, day-to-day work goes through one command, **`c2o`** (§11). Install
+it once, then open a new terminal:
+
+```bash
+echo "alias c2o='bash ~/C2O/deploy/gcp/c2o'" >> ~/.zshrc     # Mac (zsh)
+echo "alias c2o='bash ~/C2O/deploy/gcp/c2o'" >> ~/.bashrc    # Cloud Shell, or a bash user
+c2o help
+```
+
+(Adjust `~/C2O` if your checkout is elsewhere. `c2o` runs with the macOS bash 3.2 and with Linux bash.)
 
 **Before you begin:** commit and push `deploy/gcp/` (and the `sim/docker` fixes) to
 `github.com/FNewland/C2O` on `main`. The VMs clone the repository on first boot and read their env
@@ -128,14 +139,46 @@ Turn 2SV on for `admin@c2o.live` itself **before** enforcement reaches it.
 For each group, under *Access settings*, keep "Who can join the group" set to **Only invited users**.
 External members should stay **Off**.
 
-**Users.** **Directory → Users → Add new user**: first name, last name, primary email (`name@c2o.live`).
-Let Google generate the password and choose "ask for a password change at next sign-in". Send the
-sign-in details to the student's university address. Then add the user to the right group: open the
-group, choose **Add members**, and paste several addresses at once.
+**Users, with `c2o`** (after step 5; the groups above must exist). Sign in once per computer for
+user management. A browser opens: choose **admin@c2o.live** and allow the access it asks for.
 
-For a whole class, use **Users → Bulk update users → Download blank CSV template**. Fill in *First Name,
-Last Name, Email Address, Password, Change Password at Next Sign-In = TRUE* and upload it, then paste
-the addresses into the group's *Add members*.
+```bash
+c2o users login                                    # once per computer
+c2o users add test.student --name "Test Student"   # a bare name means @c2o.live; role student
+c2o users add franz --name "Franz Newland" --role instructor
+c2o users list                                     # role, 2SV enrolled, suspended, last sign-in
+```
+
+`add` creates the account with a random temporary password, **printed once**, that must be changed at
+the first sign-in, and puts it in `c2o-students` or `c2o-instructors`. Send the address and password
+to the person's university email. For a whole class, put one line per person in a CSV file,
+`email,first,last,role` (the header line is optional; role `student` if left empty; a bare name works
+for the email):
+
+```
+email,first,last,role
+jdoe,Jane,Doe,student
+asmith,Alex,Smith,
+ta.lee,Kim,Lee,instructor
+```
+
+```bash
+c2o users import class.csv                         # dry run: shows what would happen
+c2o users import class.csv --apply --out pw.csv    # does it; pw.csv (mode 600) = email,password
+```
+
+Delete `pw.csv` once the passwords are sent. Rerunning an import creates only the missing accounts.
+The other user commands are in §11. `c2o users login` runs `gcloud auth application-default login`
+with the Admin SDK scopes (`admin.directory.user`, `admin.directory.group.member`, plus
+`cloud-platform`) and sets the project as its quota project; `setup.sh` enables the Admin SDK API.
+**[verify]** that Google accepts those scopes with gcloud's own sign-in client; if it shows "This app
+is blocked", create a *Desktop* OAuth client in the project (APIs & Services → Credentials), download
+its JSON and run `gcloud auth application-default login --client-id-file=client.json
+--scopes=…` with the same scopes.
+
+**Or by hand in the Admin console:** **Directory → Users → Add new user** (first name, last name,
+`name@c2o.live`, generated password, "ask for a password change at next sign-in"), then open the
+group, **Add members**, and paste the addresses. For a class: **Users → Bulk update users**.
 
 Create at least one **test student** (e.g. `test.student@c2o.live`) and add yourself (`franz@c2o.live`,
 or `admin@c2o.live`) to `c2o-instructors`. Group changes reach IAP within minutes.
@@ -182,7 +225,7 @@ nano deploy/gcp/c2o.env          # set PROJECT; the rest is already c2o.live / T
 bash deploy/gcp/setup.sh
 ```
 
-It enables the APIs and creates the following:
+It enables the APIs (including the Admin SDK for `c2o users`) and creates the following:
 
 - the VPC, subnet, Cloud NAT and three firewall rules;
 - two service accounts and the Secret Manager secret `c2o-link-session`;
@@ -190,6 +233,8 @@ It enables the APIs and creates the following:
 - the instance group with named ports `mcs:9090 planner:9091 instructor:8080 link:9100`;
 - four health checks and four backend services (timeout 3600 s);
 - Cloud Armor, IAP and its group bindings;
+- permission for the Compute Engine service agent to start and stop the VMs (role *Compute Instance
+  Admin (v1)*), which the automatic schedule (`c2o schedule`) needs;
 - the URL map with host rules, the managed certificate, the TLS policy, the http→https redirect, the
   global IP and the two forwarding rules.
 
@@ -307,6 +352,8 @@ from an SSH session use `curl 10.20.0.10:8092/`.)
 sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh            # same as a boot
 sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh refresh    # re-read the secret, recreate containers
 sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh update     # git pull REPO_REF, rebuild, restart
+sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh sizes      # data volume sizes (c2o data list)
+sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh clean telemetry dumps reports   # c2o data clean
 # if /opt/c2o is missing because the clone failed, run the startup script again:
 sudo google_metadata_script_runner startup
 ```
@@ -398,30 +445,84 @@ Use a private browser window for each identity.
 
 ## 11. Daily operations
 
-**Class day**
+Everything here is one command, `c2o` (install: see the top of this runbook). `c2o help` shows the
+overview; `c2o COMMAND --help` the details. Anything that deletes asks first; `--yes` skips the
+question. Run it on your Mac or in Cloud Shell, from anywhere.
+
+**Everyday**
+
+| Command | What it does |
+|---|---|
+| `c2o status` | Both VMs, the load balancer rules, every screen's health, both certificates, the simulator link (UP/DOWN), the automatic schedule, and a rough **cost per day in CAD** for the state things are in now, with one line on how to save more. `--quick` skips the link check (an SSH session) |
+| `c2o up` | Class on: runs `start.sh` (3-5 min until healthy). `--sim=laptop` keeps the cloud simulator off (step 9); `--sim=cloud` uses it; default `SIM_MODE` in `c2o.env` |
+| `c2o down` | Class off: runs `stop.sh`. A stopped VM costs only its disk; data, IP, certificates and sign-in all stay. `--sim` stops only the cloud simulator |
+| `c2o down --all` | Also deletes the two load-balancer forwarding rules (`stop.sh --lb`): about CAD 0.50 a day less, but the site is unreachable until `c2o up`, which then takes a few minutes longer. For breaks of weeks |
+
+**Automatic start and stop**
 
 ```bash
-cd ~/C2O
-bash deploy/gcp/start.sh           # 3-5 min until healthy; SIM_MODE from c2o.env (or --sim=laptop / --sim=cloud)
-# … class …
-bash deploy/gcp/stop.sh            # stops both VMs; disks, data, IP, cert and IAP all stay
+c2o schedule set "Mon-Fri 08:00-18:00"      # or "Mon,Wed 13:00-17:30", "Mon-Tue,Thu-Fri 08:45-12:15", "weekdays 09:00-17:00"
+c2o schedule show
+c2o schedule clear
 ```
 
-- A stopped VM costs only its disk. The **load balancer** costs about USD 0.025/h while its forwarding
-  rules exist, whether or not the VMs run.
-- For a break of weeks, `bash deploy/gcp/stop.sh --lb` also deletes the two forwarding rules. That nets
-  about USD 11/month, because the reserved IP then costs USD 0.01/h. `start.sh` recreates them; allow a
-  few minutes. **[verify]** Managed certificates renew about 30 days before expiry, so if the rules are
-  gone at that moment, renewal may wait until they are back.
-- Cloud Armor's policy and rules are billed whether or not anything runs (~USD 7/month). Delete them
-  only with `teardown.sh`.
+This is a Compute Engine **instance schedule** (`c2o-schedule`, time zone America/Toronto) attached to
+the ground VM, and to the simulator VM when `SIM_MODE=cloud` (`--ground-only` / `--with-sim` override).
+One time window for all the chosen days: Google allows one start and one stop time per schedule.
+Starts and stops can run up to 15 minutes late, so start a little early; a VM you start by hand is
+stopped at the next stop time. The load balancer is billed around the clock either way, and the
+schedule does not recreate it after `c2o down --all`. Between terms: `c2o schedule clear` and
+`c2o down --all`.
 
-**Adding students:** step 3 (Admin console user plus `c2o-students` membership). They sign in at
-<https://c2o.live> (the welcome page), change their password and enrol 2SV within the enrolment period. At the end of
-term, **suspend** or **delete** accounts; deleting frees a place under the 50-user cap.
+**Users** (sign in once with `c2o users login`, step 3)
+
+| Command | What it does |
+|---|---|
+| `c2o users list` | Every account: name, email, role (student / instructor / admin), 2SV enrolled, suspended, last sign-in |
+| `c2o users seats` | Accounts used of the 50 Cloud Identity Free allows (suspended accounts count) |
+| `c2o users add jdoe --name "Jane Doe" [--role instructor]` | New account, temporary password printed once, put in the role's group |
+| `c2o users import class.csv [--apply]` | A class list (`email,first,last,role`), dry run first |
+| `c2o users reset jdoe` | New temporary password (lost password) |
+| `c2o users role jdoe instructor` | Move between `c2o-students` and `c2o-instructors` |
+| `c2o users suspend jdoe` / `unsuspend` | Block or allow sign-in; the account still uses a seat |
+| `c2o users remove jdoe` | Delete the account and free a seat. Permanent for the person; administrators are refused (use the Admin console for them) |
+
+They sign in at <https://c2o.live> (the welcome page), change their password and enrol 2SV within
+the enrolment period. At the end of term, `suspend` or `remove` accounts; removing frees a place
+under the 50-user cap. Passwords and the access token never appear on a command line (`ps`): they
+travel in temporary files readable only by you, deleted at once.
 
 **Lost phone / 2SV lockout:** Admin console → Users → the user → **Security** →
 *Get backup verification codes*, which you then give to the student.
+
+**Recordings** (the data that grows: telemetry, dumps, reports)
+
+```bash
+c2o data list                                   # size of each store on each VM, plus snapshots
+c2o data clean --telemetry                      # the MCS telemetry archive
+c2o data clean --dumps --reports                # delayed-TM dumps (both VMs); reports and RF pass roll-ups
+c2o data clean --all --snapshot                 # all three, after a disk snapshot (a way back)
+c2o data snapshot                               # snapshot both disks now
+c2o data snapshots                              # list them
+c2o data prune --keep 3                         # keep the newest 3 per VM, delete older
+```
+
+`clean` needs the VMs running (`c2o up`). It runs `vm-bootstrap.sh clean …` on each VM (your local copy,
+sent over the IAP SSH session, so a VM does not need updating first): it stops the containers that
+use those volumes, deletes the files with the image already on the VM (no downloads), and starts
+them again; the screens are back in about a minute. It **never** touches saved scenarios, breakpoints,
+config history or link state. `--designs` also deletes every SpaceCDF design; it asks twice, the
+second time by typing `delete-designs`, even with `--yes`. Snapshots cost about USD 0.05 per GB-month
+**[verify]**: prune them.
+
+| Store (Docker volume) | VM | Holds | Cleared by |
+|---|---|---|---|
+| `ground-archive` | ground | MCS telemetry archive (SQLite) | `--telemetry` |
+| `ground-dumps` | ground | Dumps received by the GSG | `--dumps` |
+| `space-dumps` | sim | Dumps written by the simulator | `--dumps` |
+| `ground-workspace` | ground | Reports, RF pass roll-ups | `--reports` |
+| `space-workspace` | sim | Scenarios, breakpoints, config history, link state | never |
+| `spacecdf-data` | ground | SpaceCDF designs | `--designs` only |
 
 **Rotating the link secret** (each term, or at once if `session.env` may have leaked):
 
@@ -443,7 +544,7 @@ for vm in c2o-ground-vm c2o-sim-vm; do
 done
 ```
 
-A stopped sim VM must be started for this (`start.sh --sim=cloud`). Otherwise it keeps its old
+A stopped sim VM must be started for this (`c2o up --sim=cloud`). Otherwise it keeps its old
 checkout. After editing anything in `deploy/gcp/` itself, rerun `setup.sh`: it refreshes the startup
 script in the VMs' metadata.
 
@@ -451,8 +552,13 @@ script in the VMs' metadata.
 `sudo docker compose --env-file docker/ground.env -f docker/compose.yaml --profile ground logs -f gsg mcs`.
 Link events are `key=value` lines (`event=link_up`, `link_down`, `link_superseded`, …).
 
-**Backing up the MCS TM archive** before risky changes:
-`gcloud compute disks snapshot c2o-ground-vm --zone=northamerica-northeast2-a`.
+**What `c2o` calls** (to do a step by hand): `c2o up` = `bash deploy/gcp/start.sh [--sim=…]`;
+`c2o down` = `bash deploy/gcp/stop.sh` (`--all` = `--lb`, removing the forwarding rules
+`c2o-fr-https` and `c2o-fr-http`); `c2o data snapshot` =
+`gcloud compute disks snapshot c2o-ground-vm --zone=northamerica-northeast2-a`; the schedule is
+`gcloud compute resource-policies create instance-schedule c2o-schedule` plus
+`gcloud compute instances add-resource-policies`; users go to the Admin SDK Directory API
+(`admin.googleapis.com/admin/directory/v1`, users and group members).
 
 ## 12. Costs
 
@@ -483,13 +589,18 @@ VM: subtract about CAD 9 (its hours, disk and NAT share), or about CAD 76 from t
 ² The default rule may also be billed at $1 **[verify]**.
 ³ Assumes the auto-allocated NAT IP is billed even while no VM uses it **[verify]**.
 
-Biggest levers: stop the VMs (`stop.sh`); the load balancer's ~CAD 25/month is the floor while the site
-exists. An e2-standard-2 for the ground VM is a guess. Check `docker stats` in a real class and resize if
+Biggest levers: stop the VMs (`c2o down`), or let a schedule do it:
+`c2o schedule set "Mon-Fri 08:00-18:00"` runs both VMs about 217 h a month, roughly CAD 45 of VM time
+instead of CAD 150 around the clock; a schedule for class hours only comes close to the "class
+schedule" column. The schedule does not touch the load balancer: its ~CAD 25/month is the floor while
+the site is up, and `c2o down --all` between terms removes most of it (the reserved IP then costs about
+CAD 10/month). `c2o status` shows the rate for the state things are in now. An e2-standard-2 for the ground VM is a guess. Check `docker stats` in a real class and resize if
 it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped).
 
 ## 13. Teardown
 
-1. Keep anything you want first: the snapshot from step 11, or copy reports and dumps off the VM
+1. Keep anything you want first: a snapshot (`c2o data snapshot`; note that teardown does not delete
+   snapshots, so `c2o data prune --keep 0` removes them when you no longer need them), or copy reports and dumps off the VM
    (`gcloud compute scp --tunnel-through-iap c2o-ground-vm:/path . --zone=…`).
 2. `bash deploy/gcp/teardown.sh`. Type the project id to confirm. It deletes the VMs **and their
    disks**, the LB, IP, certificate, Armor policy, network, secret and service accounts. The project,
@@ -523,6 +634,9 @@ it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped
 | MCS burn-plan card or classic map shows no planner data | The MCS now proxies the planner under its own origin (`/planner/api/...`, read-only), so this works behind the load balancer and IAP. If it still fails, check that the ground VM's MCS can reach the planner on `127.0.0.1:9091` (`docker compose logs mcs`). `SMO_PLANNER_PUBLIC_URL` overrides the address given to the browser |
 | Changing the certificate's names (e.g. `INCLUDE_APEX`) | Managed certs are immutable. `gcloud compute ssl-certificates create c2o-cert-2 --global --domains=…`, then `gcloud compute target-https-proxies update c2o-https-proxy --global --ssl-certificates=c2o-cert-2`. Once it is ACTIVE, delete the old one (`gcloud compute ssl-certificates delete c2o-cert --global`) and set `CERT="$PREFIX-cert-2"` in `common.sh` so `setup.sh` keeps using it |
 | Org-policy error adding a Gmail account to IAM | Intended (domain-restricted sharing). Use `@c2o.live` accounts |
+| `c2o users …`: "needs a sign-in with admin rights" | Run `c2o users login` and sign in as `admin@c2o.live`. In Cloud Shell too: its built-in credentials lack the Admin SDK scopes |
+| `c2o users …`: "Admin SDK API is not enabled" | Rerun `setup.sh` (it enables `admin.googleapis.com`), wait a minute |
+| `c2o schedule`: VMs never start or stop | The Compute Engine service agent needs *Compute Instance Admin (v1)*: rerun `setup.sh` (or `c2o schedule set` again). Check the schedule's audit logs (Logging, resource *VM instance*, `compute.instances.start`) |
 
 ---
 
@@ -569,8 +683,20 @@ ShellCheck 0.11.0, **without any Google Cloud credentials**:
   students + instructors); with `INCLUDE_APEX=no` the URL map has no apex rule and no portal
   matcher. `teardown.sh` deletes the portal back end, health check and the probe firewall rule.
 
+- **`c2o` (2026-11-02):** `sim/tests/test_content/test_gcp_admin_cli.py` runs it against stub
+  `gcloud`, `curl` and `ssh`: status and its cost line, schedule parsing and the resource-policy and
+  IAM calls, `data clean` (confirmation, the `vm-bootstrap.sh clean` action, snapshot first),
+  `data prune`, users add/remove/suspend/reset/role/import (dry run and apply), bare names, no
+  password or token in any process's arguments, the missing or expired sign-in message. The main
+  paths also ran under a real **bash 3.2.57** (the macOS version), which caught a bash 3.2 bug in
+  `common.sh` (a failing `command gcloud … || …` ended the script; it now calls gcloud by path).
+  `vm-bootstrap.sh clean` / `sizes` ran against a stub docker: right volumes and containers per
+  role, no pulls or builds, the in-container delete keeps directories and other files.
+  ShellCheck clean at `-S warning`.
+
 **Not checked (needs a real project):** anything that calls Google: API enablement, resource creation,
 IAP with the Google-managed client, WebSockets through IAP and the 3600 s reconnect, health-check
-results, the certificate, Secret Manager from the VM, the Docker image build and first-boot time on
+results, the certificate, Secret Manager from the VM, instance schedules firing, the Admin SDK
+with gcloud's sign-in client, script transfer over `gcloud compute ssh` stdin, the Docker image build and first-boot time on
 Debian 12, the Cloud Identity / Admin console / Squarespace click paths, and prices. All are marked
 **[verify]**, or covered by the smoke test in step 10.
