@@ -48,6 +48,8 @@ catalogs:
     fr: packages/smo-common/src/smo_common/ui/i18n/fr.json
     sources:
       - packages/smo-common/src/smo_common/ui/*.{js,html,svg}
+      # pictorial displays (generated copies of shared/ui-viz; vendor/ is not scanned)
+      - packages/smo-common/src/smo_common/ui/viz/*.{js,html}
   - name: tools
     fr: packages/smo-common/src/smo_common/ui/i18n/tools/fr.json
     fallback: [smo-common]

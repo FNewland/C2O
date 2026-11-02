@@ -221,7 +221,7 @@ parameters:
   - { id: 0x02AD, name: aocs.q_ref_z, subsystem: aocs, description: "Commanded reference quaternion Z" }
   - { id: 0x02AE, name: aocs.q_ref_w, subsystem: aocs, description: "Commanded reference quaternion W" }
   - { id: 0x02AF, name: aocs.pointing_frame, subsystem: aocs, description: "0=INERTIAL, 1=LVLH_NADIR, 2=TARGET_TRACK, 3=SUN" }
-  - { id: 0x02B0, name: aocs.nadir_body_x, subsystem: aocs, description: "Nadir unit vector in body frame X" }
+  - { id: 0x02B0, name: aocs.nadir_body_x, subsystem: aocs, description: "Nadir unit vector in body frame X (from the estimated attitude)" }
   - { id: 0x02B1, name: aocs.nadir_body_y, subsystem: aocs, description: "Nadir unit vector in body frame Y" }
   - { id: 0x02B2, name: aocs.nadir_body_z, subsystem: aocs, description: "Nadir unit vector in body frame Z" }
   - { id: 0x02B3, name: aocs.sun_body_true_x, subsystem: aocs, description: "TRUE sun vector in body X (distinct from the CSS estimate 0x0245)", visibility: instructor }  # TRUE sun vector from the truth quaternion

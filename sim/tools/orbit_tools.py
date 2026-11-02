@@ -468,6 +468,23 @@ def _two_body_eci(r0: np.ndarray, v0: np.ndarray, t_s: np.ndarray) -> np.ndarray
     return out
 
 
+def _eclipse_flags(epoch_utc: datetime, t_s: np.ndarray, r_eci: np.ndarray) -> List[bool]:
+    """Umbra flag per sample, from the same shadow model and sun ephemeris the
+    simulator and planner use (track rows: [t_min, lat, lon, alt_km, ecl])."""
+    from smo_common.orbit.eclipse import shadow_state
+    from smo_common.orbit.propagator import _sun_eci
+    jd, fr = jday(epoch_utc.year, epoch_utc.month, epoch_utc.day, epoch_utc.hour,
+                  epoch_utc.minute, epoch_utc.second + epoch_utc.microsecond * 1e-6)
+    out = []
+    for k in range(len(t_s)):
+        r = r_eci[k]
+        if not np.all(np.isfinite(r)):
+            out.append(False)
+            continue
+        out.append(bool(shadow_state(r, _sun_eci(jd + fr + float(t_s[k]) / 86400.0)).in_eclipse))
+    return out
+
+
 def orbit_geometry(epoch_utc: datetime, *, tle: Tuple[str, str] | None = None,
                    sv_ecef_km: Tuple[np.ndarray, np.ndarray] | None = None,
                    period_s: float = 5670.0, stations: List[Dict] | None = None) -> Dict:
@@ -499,8 +516,11 @@ def orbit_geometry(epoch_utc: datetime, *, tle: Tuple[str, str] | None = None,
     r_ecef = _eci_to_ecef_many(r_eci, _gmst_at(epoch_utc, t_s))
     lat, lon, alt = _geodetic(r_ecef)
     n_track = int(min(len(t_s), math.ceil(TRACK_ORBITS * max(period_s, 600.0) / _STEP_S) + 1))
+    # Spacecraft eclipse along the track: the suite's one shadow model
+    # (smo_common.orbit.eclipse.shadow_state, umbra) with the propagator's sun.
+    ecl = _eclipse_flags(epoch_utc, t_s[:n_track], r_eci[:n_track])
     track = [[round(float(t_s[k]) / 60.0, 2), round(float(lat[k]), 3), round(float(lon[k]), 3),
-              round(float(alt[k]), 1)]
+              round(float(alt[k]), 1), int(ecl[k])]
              for k in range(n_track) if np.isfinite(lat[k])]
     ok = np.isfinite(lat)
     return {
@@ -912,7 +932,27 @@ function visCircle(st, altKm) {     // station visibility edge at its mask, for 
   }
   return out;
 }
+/* The ground track is the shared pictorial module (shared/ui-viz/groundtrack.js,
+ * served at /static/shared/viz/): the same map as the planner, with the
+ * spacecraft eclipse along the track, station visibility at each mask and
+ * the next AOS in a fixed strip. "Now" is the conversion epoch. If the
+ * module cannot load, the inline SVG below draws the plain track. */
+let gtView = null;
+function gtModel() {
+  const stations = ((last && last.stations) || BOOT.stations || []).map((s) =>
+    ({ name: s.name, lat: s.lat, lon: s.lon, maskDeg: s.min_el }));
+  if (!last) return { stations };
+  const ep = new Date(last.epoch).getTime();
+  const tr = (last.track || []).map((p) => ({ t: ep + p[0] * 60000, lat: p[1], lon: p[2], alt_km: p[3], in_eclipse: !!p[4] }));
+  return {
+    nowMs: ep, track: tr, stations,
+    position: tr.length ? { lat: tr[0].lat, lon: tr[0].lon, altKm: tr[0].alt_km, src: T("epoch") } : null,
+    contacts: (last.passes || []).map((ps) => ({ station: ps.station, aos: ep + ps.aos_s * 1000, los: ep + ps.los_s * 1000, maxEl: ps.max_el })),
+    eclipseSource: "ground_propagator",
+  };
+}
 function drawMap() {
+  if (gtView) { gtView.update(gtModel()); return; }
   const host = $("map");
   const W = Math.max(280, host.clientWidth - 24), H = Math.round(W / 2);
   const P = proj(W, H);
@@ -965,6 +1005,7 @@ function mapDesc() {
     { n: last.orbits, epoch: last.epoch, p: (last.passes || []).length, h: last.horizon_h });
 }
 function legend() {
+  if (gtView) { $("map-legend").innerHTML = ""; return; }
   const sw = (cls, kind) => kind === "tri"
     ? `<svg viewBox="0 0 22 10" aria-hidden="true"><path class="stn" d="M11 0L16 9L6 9Z"/></svg>`
     : `<svg viewBox="0 0 22 10" aria-hidden="true"><line class="${cls}" x1="1" y1="5" x2="21" y2="5"/></svg>`;
@@ -1103,7 +1144,13 @@ $("tle1").value = BOOT.tle1; $("tle2").value = BOOT.tle2;
 if (!BOOT.tle1) $("load-eosat").hidden = true;
 drawTabs(); validateTle(false); validateSv(); renderAll();
 new ResizeObserver(() => { drawMap(); drawTimeline(); }).observe($("map"));
-import("/static/orbit/wide-basemap.js").then((m) => { LAND = m.LAND; drawMap(); }).catch(() => { /* graticule only */ });
+import("/static/shared/viz/groundtrack.js").then((GT) => {
+  $("map").innerHTML = "";
+  gtView = GT.mount($("map"), { t: T });
+  legend(); drawMap();
+}).catch(() => {
+  import("/static/orbit/wide-basemap.js").then((m) => { LAND = m.LAND; drawMap(); }).catch(() => { /* graticule only */ });
+});
 const rerender = () => { drawTabs(); renderAll(); validateTle(!!document.querySelector(".is-invalid")); validateSv(); };
 window.addEventListener("smo:i18nready", rerender);
 window.addEventListener("smo:langchange", rerender);

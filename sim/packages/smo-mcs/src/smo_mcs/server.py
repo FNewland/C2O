@@ -20,6 +20,13 @@ from pathlib import Path
 from typing import Any, Optional
 from collections import deque
 
+
+def _unit3(v) -> list[float]:
+    """3-vector as a rounded unit vector (zero vector -> zeros)."""
+    x, y, z = (float(c) for c in v)
+    n = math.sqrt(x * x + y * y + z * z) or 1.0
+    return [round(x / n, 6), round(y / n, 6), round(z / n, 6)]
+
 import aiohttp
 from aiohttp import web
 
@@ -1172,6 +1179,21 @@ class MCSServer:
                 "time_to_eclipse_entry_s": ecl["time_to_eclipse_entry_s"],
                 "time_to_eclipse_exit_s": ecl["time_to_eclipse_exit_s"],
             }
+            # Ground-propagated orbit state (SGP4 from the mission TLE; TEME,
+            # treated as inertial for display). It lets the 3D view build the
+            # LVLH frame whatever the spacecraft points at. Ground knowledge,
+            # labelled as such; optional (absent if the propagator lacks it).
+            try:
+                out["orbit_ground"] = {
+                    "r_eci_km": [round(float(x), 3) for x in o.pos_eci],
+                    "v_eci_kms": [round(float(x), 6) for x in o.vel_eci],
+                    "sun_eci_hat": _unit3(o.sun_eci),
+                    "beta_deg": round(float(o.solar_beta_deg), 2),
+                    "frame": "TEME",
+                    "source": "ground_propagator",
+                }
+            except (AttributeError, TypeError, ValueError):
+                pass
             # PRESENT time belongs to the on-board authority; the ground
             # propagation above stays for the future-transition scan (and for
             # real mode, where there is no authority to read).
@@ -1433,6 +1455,9 @@ class MCSServer:
         app.router.add_get("/api/schedule", self._handle_schedule_report)
         app.router.add_get("/api/memory-map", self._handle_memory_map)
         app.router.add_get("/api/ground-stations", self._handle_ground_stations)
+        # Spacecraft geometry for the pictorial displays (read-only;
+        # configs/<mission>/geometry.yaml, validated — see smo_common.config.geometry).
+        app.router.add_get("/api/geometry", self._handle_geometry)
         app.router.add_post("/api/ground-time", self._handle_ground_time_adjust)
         # Procedure execution endpoints
         app.router.add_post("/api/procedure/load", self._handle_proc_load)
@@ -4529,6 +4554,23 @@ class MCSServer:
     async def _handle_ground_stations(self, request):
         """GET /api/ground-stations — the mission's real ground network."""
         return web.json_response({"ground_stations": self.ground_stations()})
+
+    async def _handle_geometry(self, request):
+        """GET /api/geometry — the spacecraft geometry description.
+
+        Read-only: ``configs/<mission>/geometry.yaml`` parsed and validated
+        (cross-checked against eps.yaml and planner.yaml) by
+        ``smo_common.config.geometry.load_geometry``. The 3D attitude view
+        draws the spacecraft from it. A missing or invalid file answers 503
+        with every problem listed, never a guessed default shape.
+        """
+        from smo_common.config.geometry import GeometryError, load_geometry
+        try:
+            geo = load_geometry(self.config_dir)
+        except GeometryError as e:
+            return web.json_response(
+                {"error": "geometry unavailable", "problems": e.problems}, status=503)
+        return web.json_response({"geometry": geo})
 
     # ── Alarm journal ─────────────────────────────────────────────────
 

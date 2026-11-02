@@ -1,0 +1,102 @@
+# EOSAT-1 spacecraft geometry for the pictorial displays.
+#
+# A SMALL, SCHEMATIC description of the spacecraft: what the 3D attitude view
+# (shared/ui-viz/attitude3d.js) draws, and what SpaceCDF writes for a design.
+# It is not a CAD model and nothing in the simulator reads it: every physical
+# number below is copied from the subsystem file that owns it (cited per
+# key), and smo_common.config.geometry.validate_geometry() checks the copies
+# against those files so the picture cannot drift from the physics.
+# Served read-only by the MCS at GET /api/geometry (JSON, same shape).
+#
+# Body frame (ruling Q4): +X ~ velocity, +Y = orbit normal, +Z = zenith,
+# -Z = nadir (imager boresight) in NOMINAL. Lengths in metres, angles in
+# degrees, directions are body-frame unit vectors [x, y, z].
+schema: c2o.geometry/1
+spacecraft: EOSAT-1
+
+# Quaternion convention of every attitude this spacecraft publishes
+# (aocs.att_q1..4 0x0200-0x0203, aocs.q_est_1..4 0x02A0-0x02A3,
+# aocs.q_ref_x..w 0x02AB-0x02AE): smo_common.attitude, scalar LAST [x y z w],
+# mapping ECI to body (v_body = C(q) v_eci). The views print this.
+quaternion:
+  order: xyzw
+  maps: eci_to_body
+
+# 6U CDS envelope 100 x 226 x 366 mm (subsystems/eps.yaml solar_panels
+# comment): the +-X faces are 366 x 226, the +-Y faces 366 x 100, the +-Z
+# faces 226 x 100, so X = 0.100, Y = 0.226, Z = 0.366.
+bus:
+  size_m: [0.100, 0.226, 0.366]
+
+# Body-mounted cell areas per face (subsystems/eps.yaml solar_panels.*_area_m2).
+# The -Z face carries the imager aperture and radiator, no cells.
+body_panels:
+  - { face: px, normal: [1, 0, 0], cell_area_m2: 0.060 }
+  - { face: mx, normal: [-1, 0, 0], cell_area_m2: 0.060 }
+  - { face: py, normal: [0, 1, 0], cell_area_m2: 0.030 }
+  - { face: my, normal: [0, -1, 0], cell_area_m2: 0.030 }
+  - { face: pz, normal: [0, 0, 1], cell_area_m2: 0.018 }
+  - { face: mz, normal: [0, 0, -1], cell_area_m2: 0.000 }
+
+# Deployable wings on the +-Y faces: two folding panels of 209 x 342 mm per
+# wing (eps.yaml), 0.120 m2 of cells each. The panels run outward along the
+# mounting axis (209 mm each) and 342 mm along body Z.
+# Single-axis drive about body Y (eps.yaml sada_axis: y), angle in telemetry
+# eps.solar_array_drive_angle (0x0133). The cell normal at drive angle a is
+#   n(a) = cos(a) * normal_at_0deg + sin(a) * normal_at_90deg
+# exactly as eps_basic.EPSBasicModel._wing_normal computes it.
+wings:
+  - id: wing_py
+    face: py
+    mount_axis: [0, 1, 0]
+    panel_size_m: [0.209, 0.342]
+    panels: 2
+    cell_area_m2: 0.120
+    deployed_bit: 0
+  - id: wing_my
+    face: my
+    mount_axis: [0, -1, 0]
+    panel_size_m: [0.209, 0.342]
+    panels: 2
+    cell_area_m2: 0.120
+    deployed_bit: 1
+# Deployment state: bit `deployed_bit` of eps.wing_status (0x0144).
+array_drive:
+  axis: [0, 1, 0]
+  normal_at_0deg: [1, 0, 0]
+  normal_at_90deg: [0, 0, 1]
+  angle_param: eps.solar_array_drive_angle
+
+# Imager (subsystems/payload.yaml): pushbroom on the -Z face; full
+# cross-track FOV = 2 atan(8192 x 5.5 um / 2 / 84.5 mm) = 29.856 deg
+# (planning/planner.yaml imaging.fov_deg).
+payload:
+  boresight: [0, 0, -1]
+  position_m: [0.0, 0.0, -0.183]
+  fov_deg: 29.856
+
+# Star trackers (aocs_basic._ST_BORESIGHTS, ruling Q4): ST1 on +Z looking at
+# zenith; ST2 on +Z canted 45 deg towards +Y (the anti-sun side of this orbit).
+# fov_deg is the full field of view (Blue Canyon NST class, 10 x 12 deg; the
+# cone uses the larger). sun_exclusion_deg is the half-angle the simulator
+# blinds on (aocs_basic._ST_EXCLUSION_DEG). earth_exclusion_deg is the
+# baffle's Earth-limb exclusion, a DISPLAY constraint: the simulator models
+# sun blinding only, and the view labels the Earth check accordingly.
+star_trackers:
+  - { id: st1, boresight: [0, 0, 1], position_m: [0.025, -0.06, 0.183], fov_deg: 12.0 }
+  - { id: st2, boresight: [0, 0.70710678, 0.70710678], position_m: [0.025, 0.06, 0.183], fov_deg: 12.0 }
+star_tracker_sun_exclusion_deg: 15.0
+star_tracker_earth_exclusion_deg: 25.0
+
+# Antennas (subsystems/ttc.yaml): the S-band prime chain's body-fixed patch
+# on the nadir face, and the UHF beacon's deployable tape-spring dipole.
+# ttc.yaml does not fix the mounting face; nadir for the patch is the only
+# face that sees the ground in NOMINAL and is assumed here for the picture.
+antennas:
+  - { id: sband_patch, kind: patch, position_m: [0.0, 0.07, -0.183], boresight: [0, 0, -1] }
+  - { id: uhf_dipole, kind: dipole, position_m: [-0.05, 0.0, 0.15], boresight: [-1, 0, 0], length_m: 0.17 }
+
+# Propulsion (subsystems/prop.yaml): one thruster on the -X face thrusting
+# along +X body (prograde in the nominal nadir attitude).
+thrusters:
+  - { id: thr1, position_m: [-0.05, 0.0, 0.0], thrust_axis: [1, 0, 0] }

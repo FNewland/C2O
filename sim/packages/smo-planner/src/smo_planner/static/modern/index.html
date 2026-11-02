@@ -36,7 +36,6 @@
 <!-- Vendor world map (offline). The modern page once missed this tag and the
      map showed its "did not load" notice permanently (field report
      2026-08-19); planner.js no longer injects it a second time. -->
-<script src="/static/vendor/js/svg-world-map.js"></script>
 <link rel="stylesheet" href="/static/shared/design-system.css?v=2">
 <style>
 /* ── Page frame ─────────────────────────────────────────────────────── */
@@ -182,24 +181,11 @@ details.cx>.bd .kv span:nth-child(odd){ color:var(--tx3); }
 
 /* ── 2b. Ground track + contacts ────────────────────────────────────── */
 .map-wrap{ position:relative; }
-#groundTrackMap{ width:100%; min-height:300px; background:var(--bg); position:relative; }
+#groundTrackMap{ width:100%; padding:var(--sp-3) var(--sp-4) var(--sp-2); }
+#skyPlot{ padding:var(--sp-3) var(--sp-4); }
 #mapFallback{ display:none; padding:var(--sp-5) var(--sp-4); }
 #mapFallback .why{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); margin-top:var(--sp-1); }
-.map-overlay{ position:absolute; top:var(--sp-2); left:var(--sp-2); display:flex; gap:var(--sp-3);
-  padding:4px var(--sp-2); background:color-mix(in srgb, var(--s1) 88%, transparent);
-  border:1px solid var(--line-2); border-radius:var(--radius); font-family:var(--mono);
-  font-size:var(--fs-label); color:var(--val); }
-.map-overlay b{ font-family:var(--sans); font-weight:400; color:var(--tx3); margin-right:4px; }
-.map-legend{ display:flex; flex-wrap:wrap; gap:4px var(--sp-4); padding:var(--sp-2) var(--sp-4);
-  border-top:1px solid var(--line); font-size:var(--fs-label); color:var(--tx2); }
-.map-legend i{ display:inline-block; width:14px; height:0; margin-right:6px; vertical-align:3px; }
-.map-legend i.sc{ width:8px; height:8px; background:var(--val); border-radius:1px; transform:rotate(45deg); vertical-align:0; }
-.map-legend i.gs{ width:7px; height:7px; border:1.5px solid var(--tx2); border-radius:50%; vertical-align:0; }
-.map-legend i.sun{ border-top:2px solid var(--val); }
-.map-legend i.ecl{ border-top:2px dashed var(--tx3); }
-.map-legend i.past{ border-top:1px dotted var(--tx3); }
-.map-legend i.night{ width:12px; height:8px; background:var(--overlay); border:1px solid var(--line-2); vertical-align:0; }
-.orbit{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid var(--line); }
+.orbit{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); border-top:1px solid var(--line); }
 .orbit>div{ padding:var(--sp-2) var(--sp-4); border-right:1px solid var(--line); min-width:0; }
 .orbit>div:last-child{ border-right:0; }
 .orbit .k{ font-size:var(--fs-label); color:var(--tx2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -262,8 +248,6 @@ table.ds-table.dense td{ font-size:var(--fs-label); }
   .orbit{ grid-template-columns:repeat(2,minmax(0,1fr)); }
   .orbit>div:nth-child(2){ border-right:0; }
   .orbit>div:nth-child(-n+2){ border-bottom:1px solid var(--line); }
-  #groundTrackMap{ min-height:200px; }
-  .map-overlay{ position:static; border:0; border-bottom:1px solid var(--line); border-radius:0; flex-wrap:wrap; }
   .act-row{ grid-template-columns:44px minmax(0,1fr); }
   .act-row .ops{ grid-column:2; }
   #panel-contacts .ds-table th:nth-child(3),#panel-contacts .ds-table td:nth-child(3),
@@ -433,22 +417,8 @@ table.ds-table.dense td{ font-size:var(--fs-label); }
           <div id="mapFallback">
             <div class="nocompute"><b data-i18n>Map unavailable: the offline map asset did not load</b>
               <span data-i18n>Position, contacts and budgets on this page are unaffected.</span></div>
-            <div class="why">/static/vendor/js/svg-world-map.js</div>
+            <div class="why">/static/shared/viz/groundtrack.js</div>
           </div>
-          <div class="map-overlay" id="mapInfoOverlay">
-            <span><b data-i18n>Lat</b><span id="mapLat"></span></span>
-            <span><b data-i18n>Lon</b><span id="mapLon"></span></span>
-            <span><b data-i18n>Alt</b><span id="mapAlt"></span></span>
-            <span><b data-i18n>Beta</b><span id="mapBeta"></span></span>
-          </div>
-        </div>
-        <div class="map-legend" aria-hidden="true">
-          <span><i class="sc"></i><span data-i18n>Spacecraft</span></span>
-          <span><i class="gs"></i><span data-i18n>Ground station</span></span>
-          <span><i class="sun"></i><span data-i18n>Sunlit track</span></span>
-          <span><i class="ecl"></i><span data-i18n>Eclipse track</span></span>
-          <span><i class="past"></i><span data-i18n>Past track</span></span>
-          <span><i class="night"></i><span data-i18n>Night side</span></span>
         </div>
         <!-- P4: served or derived values only. -->
         <div class="orbit">
@@ -460,6 +430,8 @@ table.ds-table.dense td{ font-size:var(--fs-label); }
             data-i18n-title title="Not served by the planner API"></div></div>
           <div><div class="k" data-i18n>Revolutions per day</div><div class="v" id="bbRevDay"
             data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)"></div></div>
+          <div><div class="k" data-i18n>Beta angle</div><div class="v" id="bbBeta"
+            data-i18n-title title="Solar beta angle (/api/spacecraft-state)"></div></div>
         </div>
       </section>
 
@@ -472,6 +444,13 @@ table.ds-table.dense td{ font-size:var(--fs-label); }
             <th scope="col" data-i18n>Status</th></tr></thead>
           <tbody id="contactsBody"></tbody>
         </table>
+      </section>
+
+      <!-- ── 2c. Next pass sky plot (shared/ui-viz/skyplot.js) ─────────── -->
+      <section class="ds-panel" id="panel-sky" aria-labelledby="sky-h">
+        <div class="ds-panel-h"><span id="sky-h" data-i18n>Next pass</span>
+          <span class="r" id="skyStation"></span></div>
+        <div id="skyPlot"></div>
       </section>
 
       <!-- ── 3a. Budgets ───────────────────────────────────────────────── -->

@@ -47,16 +47,6 @@
   "past 90 min and next 90 min": "90 min passées et 90 min à venir",
   "Map unavailable: the offline map asset did not load": "Carte indisponible : le fond de carte hors ligne n'a pas été chargé",
   "Position, contacts and budgets on this page are unaffected.": "La position, les contacts et les bilans de cette page ne sont pas affectés.",
-  "Lat": "Lat",
-  "Lon": "Lon",
-  "Alt": "Alt",
-  "Beta": "Bêta",
-  "Spacecraft": "Satellite",
-  "Ground station": "Station sol",
-  "Sunlit track": "Trace éclairée",
-  "Eclipse track": "Trace en éclipse",
-  "Past track": "Trace passée",
-  "Night side": "Côté nuit",
   "Period": "Période",
   "Derived from the configured orbit altitude (/api/config/planner)": "Déduite de l'altitude d'orbite configurée (/api/config/planner)",
   "Inclination": "Inclinaison",
@@ -343,5 +333,10 @@
   "SEP": "SEPT.",
   "OCT": "OCT.",
   "NOV": "NOV.",
-  "DEC": "DÉC."
+  "DEC": "DÉC.",
+  "Beta angle": "Angle bêta",
+  "Solar beta angle (/api/spacecraft-state)": "Angle bêta solaire (/api/spacecraft-state)",
+  "Next pass": "Prochain passage",
+  "sky plot unavailable": "diagramme du ciel indisponible",
+  "planner /api/spacecraft-state": "planificateur /api/spacecraft-state"
 }
