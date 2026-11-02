@@ -120,12 +120,21 @@ class ElementUpdate(BaseModel):
 
 class InterfaceCreate(BaseModel):
     name: str = ""
-    interface_type: str  # electrical|data|rf|mechanical|thermal|optical
+    # Canonical type (spacecdf_common.models.interface_types); old spellings
+    # (electrical, propulsion, software, command, signal, ...) are mapped.
+    interface_type: str | None = None
+    type: str | None = None
+    subtype: str | None = None
     direction: str = "bidirectional"
     from_element_id: str
     to_element_id: str
     properties: dict[str, Any] | None = None
     diagram_label: str = ""
+    origin: str = "user"            # "user" | "import" | "rule:<id>"
+    status: str = "accepted"        # "suggested" | "accepted" | "rejected"
+    rationale: dict[str, str] | None = None
+    standard_ref: str | None = None
+    criticality: str = "standard"
 
 
 class BudgetAllocationCreate(BaseModel):
@@ -134,6 +143,27 @@ class BudgetAllocationCreate(BaseModel):
     unit: str = ""
     source: str = "manual"
     rationale: str = ""
+
+
+# Element fields whose change can change the expected links (Nov 2026 proposer)
+_LINK_RELEVANT_FIELDS = {"name", "parent_id", "kb_component_id", "subsystem_domain", "power_avg_w",
+                         "power_peak_w", "performance", "in_scope", "description"}
+
+
+async def _auto_propose(study_id: str | None) -> None:
+    """Re-run the rule-based link proposer after the tree changed (never raises).
+
+    Set SPACECDF_AUTO_PROPOSE=0 to turn the automatic run off (POST
+    /studies/{id}/interfaces/propose still works).
+    """
+    import os
+    if not study_id or os.environ.get("SPACECDF_AUTO_PROPOSE", "1") in ("0", "false", "no"):
+        return
+    try:
+        from .interfaces import run_proposer
+        await run_proposer(study_id)
+    except Exception:
+        logger.exception("automatic interface proposal failed for %s", study_id)
 
 
 # ─── Element CRUD ───
@@ -169,6 +199,7 @@ async def create_element(body: ElementCreate, study_id: str = Query(...)) -> dic
     except Exception as exc:
         logger.warning("Broadcast failed: %s", exc)
 
+    await _auto_propose(study_id)
     return element
 
 
@@ -218,6 +249,8 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
     except Exception as exc:
         logger.warning("Broadcast failed: %s", exc)
 
+    if set(updates) & _LINK_RELEVANT_FIELDS:
+        await _auto_propose(el["study_id"])
     return el
 
 
@@ -265,6 +298,7 @@ async def delete_element(element_id: str) -> dict:
         await db_soft_delete_element(child_id, deleted_at)
     for iface_id in iface_ids_to_delete:
         await db_soft_delete_interface(iface_id, deleted_at)
+        await _broadcast_interface(study_id_for_broadcast, {"type": "interface_deleted", "id": iface_id})
 
     result = {"id": element_id, "deleted": True, "children_deleted": len(children_to_delete), "interfaces_deleted": len(iface_ids_to_delete)}
 
@@ -278,6 +312,7 @@ async def delete_element(element_id: str) -> dict:
             })
         except Exception as exc:
             logger.warning("Broadcast failed: %s", exc)
+        await _auto_propose(study_id_for_broadcast)
 
     return result
 
@@ -655,29 +690,100 @@ async def list_allocations(study_id: str) -> list[dict]:
 
 
 # ─── Interfaces ───
+#
+# Nov 2026 contract: every interface carries a canonical ``type`` (also stored as
+# ``interface_type``), ``subtype``, ``properties``, ``origin`` ("user" | "import" |
+# "rule:<id>"), ``status`` ("suggested" | "accepted" | "rejected"), ``rationale``
+# {en, fr} and ``standard_ref``. Every create/update/delete is written through to
+# the database and broadcast on the study WebSocket as
+# ``{type: "interface_changed", interface}`` / ``{type: "interface_deleted", id}``.
+
+def _canonical_type_or_400(raw: Any) -> str:
+    from spacecdf_common.models.interface_types import INTERFACE_TYPE_VALUES, canonical_interface_type
+    canon = canonical_interface_type(raw)
+    if not canon:
+        raise HTTPException(400, f"interface type must be one of {INTERFACE_TYPE_VALUES} (got {raw!r})")
+    return canon
+
+
+def _status_or_400(raw: Any) -> str:
+    from spacecdf_common.models.interface_types import INTERFACE_STATUSES
+    if raw not in INTERFACE_STATUSES:
+        raise HTTPException(400, f"status must be one of {INTERFACE_STATUSES} (got {raw!r})")
+    return raw
+
+
+async def _broadcast_interface(study_id: str | None, message: dict) -> None:
+    if not study_id:
+        return
+    from .ws import _broadcast_study
+    try:
+        await _broadcast_study(study_id, message)
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Broadcast failed: %s", exc)
+
+
+def active_interfaces(study_id: str) -> list[dict]:
+    """Interfaces that count in analyses, exports and budgets: not deleted, not rejected."""
+    from ..services.interface_model import is_active
+    return [i for i in _interfaces.values() if i.get("study_id") == study_id and is_active(i)]
+
+
+async def store_interface(iface: dict, *, broadcast: bool = True) -> dict:
+    """Normalise, persist, cache and announce a NEW interface (used by REST, WebSocket and the proposer)."""
+    from ..services.interface_model import normalise_interface
+    iface.setdefault("id", uuid4().hex)
+    iface.setdefault("version", 1)
+    iface.setdefault("deleted_at", None)
+    normalise_interface(iface)
+    await db_create_interface(iface)
+    _interfaces[iface["id"]] = iface
+    if broadcast:
+        await _broadcast_interface(iface.get("study_id"), {"type": "interface_changed", "interface": iface})
+    return iface
+
+
+async def save_interface(iface: dict, *, broadcast: bool = True) -> dict:
+    """Write an EXISTING interface through to the DB (version bump) and announce it."""
+    iface["version"] = int(iface.get("version") or 1) + 1
+    await db_update_interface(iface["id"], iface)
+    if broadcast:
+        await _broadcast_interface(iface.get("study_id"), {"type": "interface_changed", "interface": iface})
+    return iface
+
+
+async def remove_interface(iface: dict, *, broadcast: bool = True) -> None:
+    from datetime import datetime, timezone
+    deleted_at = datetime.now(timezone.utc).isoformat()
+    iface["deleted_at"] = deleted_at
+    await db_soft_delete_interface(iface["id"], deleted_at)
+    if broadcast:
+        await _broadcast_interface(iface.get("study_id"), {"type": "interface_deleted", "id": iface["id"]})
+
 
 @router.post("/interfaces/")
 async def create_interface(body: InterfaceCreate, study_id: str = Query(...)) -> dict:
     """Create an interface (connection) between two elements."""
+    from ..services.interface_model import valid_origin
     if body.from_element_id not in _elements:
         raise HTTPException(400, f"from_element {body.from_element_id} not found")
     if body.to_element_id not in _elements:
         raise HTTPException(400, f"to_element {body.to_element_id} not found")
-
-    iface_id = uuid4().hex
+    itype = _canonical_type_or_400(body.type or body.interface_type)
+    status = _status_or_400(body.status)
+    if not valid_origin(body.origin):
+        raise HTTPException(400, "origin must be 'user', 'import' or 'rule:<rule_id>'")
+    data = body.model_dump(exclude={"type"})
     iface = {
-        "id": iface_id,
+        "id": uuid4().hex,
         "study_id": study_id,
-        **body.model_dump(),
-        "status": "defined",
-        "criticality": "standard",
+        **data,
+        "interface_type": itype,
+        "status": status,
         "version": 1,
         "deleted_at": None,
     }
-    # Write to DB first, then cache
-    await db_create_interface(iface)
-    _interfaces[iface_id] = iface
-    return iface
+    return await store_interface(iface)
 
 
 @router.get("/elements/{element_id}/interfaces")
@@ -690,52 +796,121 @@ async def get_element_interfaces(element_id: str) -> list[dict]:
 
 
 @router.get("/studies/{study_id}/interfaces")
-async def list_interfaces(study_id: str, interface_type: str | None = None) -> list[dict]:
-    """List all interfaces for a study."""
+async def list_interfaces(study_id: str, interface_type: str | None = None, type: str | None = None,
+                          status: str | None = None) -> list[dict]:
+    """List all interfaces for a study (rejected ones included; filter with ``status``)."""
+    want = None
+    if interface_type or type:
+        want = _canonical_type_or_400(type or interface_type)
     results = []
     for i in _interfaces.values():
         if i["study_id"] != study_id or i.get("deleted_at"):
             continue
-        if interface_type and i["interface_type"] != interface_type:
+        if want and i["interface_type"] != want:
+            continue
+        if status and i.get("status") != status:
             continue
         results.append(i)
     return results
 
 
+_EDIT_FIELDS = ("name", "interface_type", "subtype", "direction", "properties",
+                "from_element_id", "to_element_id")
+
+
+async def _patch_interface(iface: dict, body: dict[str, Any]) -> dict:
+    if "version" in body and body["version"] is not None and int(body["version"]) != int(iface.get("version") or 1):
+        raise HTTPException(409, {"error": "version_conflict", "your_version": body["version"],
+                                  "current_version": iface.get("version"), "current_state": iface})
+    body = dict(body)
+    if "type" in body:
+        body["interface_type"] = body.pop("type")
+    if "interface_type" in body:
+        body["interface_type"] = _canonical_type_or_400(body["interface_type"])
+    if "status" in body:
+        _status_or_400(body["status"])
+    for end in ("from_element_id", "to_element_id"):
+        if end in body and body[end] not in _elements:
+            raise HTTPException(400, f"{end} {body[end]} not found")
+    if "origin" in body:
+        from ..services.interface_model import valid_origin
+        if not valid_origin(body["origin"]):
+            raise HTTPException(400, "origin must be 'user', 'import' or 'rule:<rule_id>'")
+
+    edited = False
+    for key in ("name", "interface_type", "subtype", "direction", "properties", "status", "criticality",
+                "diagram_label", "from_element_id", "to_element_id", "rationale", "standard_ref", "origin"):
+        if key not in body:
+            continue
+        val = body[key]
+        if key == "properties":
+            if not isinstance(val, dict):
+                raise HTTPException(400, "properties must be an object")
+            # Merge; a key sent as null is removed
+            merged = dict(iface.get("properties") or {})
+            for k, v in val.items():
+                if v is None:
+                    merged.pop(k, None)
+                else:
+                    merged[k] = v
+            if merged != (iface.get("properties") or {}):
+                edited = True
+            iface["properties"] = merged
+            continue
+        if key in _EDIT_FIELDS and iface.get(key) != val:
+            edited = True
+        iface[key] = val
+    iface["type"] = iface["interface_type"]
+
+    # A user edit of a rule-made link makes it the user's: origin=user, accepted,
+    # never touched again by the proposer.
+    if edited and str(iface.get("origin") or "").startswith("rule:") and "origin" not in body:
+        iface["origin"] = "user"
+        if body.get("status") in (None, "suggested"):
+            iface["status"] = "accepted"
+    return await save_interface(iface)
+
+
 @router.patch("/interfaces/{interface_id}")
 async def update_interface(interface_id: str, body: dict[str, Any]) -> dict:
-    """Update interface properties."""
+    """Update an interface: status (accept/reject/restore), type, subtype, properties, endpoints.
+
+    Persisted (write-through) and broadcast as ``interface_changed``.
+    """
     iface = _interfaces.get(interface_id)
     if not iface or iface.get("deleted_at"):
         raise HTTPException(404)
-    for key in ("name", "interface_type", "direction", "properties", "status",
-                "criticality", "diagram_label"):
-        if key in body:
-            if key == "properties" and isinstance(body[key], dict):
-                # Merge properties rather than replace
-                existing = iface.get("properties") or {}
-                if isinstance(existing, dict):
-                    existing.update(body[key])
-                    iface["properties"] = existing
-                else:
-                    iface["properties"] = body[key]
-            else:
-                iface[key] = body[key]
-    return iface
+    return await _patch_interface(iface, body)
+
+
+@router.patch("/studies/{study_id}/interfaces/{interface_id}")
+async def update_study_interface(study_id: str, interface_id: str, body: dict[str, Any]) -> dict:
+    iface = _interfaces.get(interface_id)
+    if not iface or iface.get("deleted_at") or iface.get("study_id") != study_id:
+        raise HTTPException(404)
+    return await _patch_interface(iface, body)
 
 
 @router.delete("/interfaces/{interface_id}")
 async def delete_interface(interface_id: str) -> dict:
-    """Soft-delete an interface."""
+    """Soft-delete an interface (broadcast ``interface_deleted``).
+
+    To dismiss a rule suggestion use PATCH status=rejected instead: a deleted
+    suggestion is proposed again on the next run, a rejected one is not.
+    """
     iface = _interfaces.get(interface_id)
     if not iface:
         raise HTTPException(404)
-    from datetime import datetime, timezone
-    deleted_at = datetime.now(timezone.utc).isoformat()
-    iface["deleted_at"] = deleted_at
+    await remove_interface(iface)
+    return {"id": interface_id, "deleted": True}
 
-    # Persist soft-delete to DB
-    await db_soft_delete_interface(interface_id, deleted_at)
+
+@router.delete("/studies/{study_id}/interfaces/{interface_id}")
+async def delete_study_interface(study_id: str, interface_id: str) -> dict:
+    iface = _interfaces.get(interface_id)
+    if not iface or iface.get("study_id") != study_id:
+        raise HTTPException(404)
+    await remove_interface(iface)
     return {"id": interface_id, "deleted": True}
 
 
@@ -942,19 +1117,9 @@ _CLASS_HERITAGE_DEFAULTS: dict[str, dict[str, tuple[float, float]]] = {
 }
 _GROUND_HERITAGE_DEFAULTS: dict[str, tuple[float, float]] = {"ground_rf": (50.0, 500.0), "ground_ops": (0.0, 200.0)}
 
-# SCDF-170 N3: default interface set created by populate-subsystems (space segment).
-# (from_domain, to_domain, interface_type, direction, name, exchange item names)
-_POWERED_DOMAINS = ("payload", "aocs", "ttc", "obc", "thermal", "propulsion")
-_DATA_DOMAINS = ("payload", "power", "aocs", "ttc", "thermal", "propulsion")
-_DEFAULT_EXCHANGE_ITEMS: dict[str, dict] = {
-    "Regulated bus power": {"kind": "power", "properties": {"voltage_v": 28.0, "regulation": "regulated"}},
-    "Housekeeping telemetry": {"kind": "data", "properties": {"protocol": "CAN/CSP", "rate_hz": 1.0}},
-    "Telecommands": {"kind": "data", "properties": {"protocol": "CAN/CSP"}},
-    "Payload science data": {"kind": "data", "properties": {"protocol": "SpaceWire/LVDS"}},
-    "Uplink TC": {"kind": "rf", "properties": {"band": "UHF", "direction": "ground->space"}},
-    "Downlink TM": {"kind": "rf", "properties": {"band": "UHF", "direction": "space->ground"}},
-}
-_NANO_BUS_VOLTAGE = 7.4
+# SCDF-170 N3 → Nov 2026: the default interface set is no longer hard-coded here;
+# populate-subsystems calls the rule-based proposer (services/interface_proposer.py,
+# configs/interface_rules.yaml).
 
 
 def _heritage_default(spacecraft_class: str, domain: str) -> tuple[float, float]:
@@ -991,73 +1156,6 @@ async def _roll_up_subsystems(subsystem_ids: dict[str, str], spacecraft_class: s
     return updated
 
 
-async def _ensure_exchange_items(study_id: str, names: list[str]) -> dict[str, str]:
-    """``{name: exchange_item_id}`` — reuse the study's items by name, create the rest."""
-    from ..db.exchange_item_repo import create_exchange_item, list_exchange_items_by_study
-    existing = {x["name"]: x["id"] for x in await list_exchange_items_by_study(study_id)}
-    out: dict[str, str] = {}
-    for name in names:
-        if name in existing:
-            out[name] = existing[name]
-            continue
-        spec = _DEFAULT_EXCHANGE_ITEMS[name]
-        item = await create_exchange_item({"study_id": study_id, "name": name, "kind": spec["kind"],
-                                           "properties": dict(spec["properties"]), "description": "default (populate-subsystems)"})
-        out[name] = existing[name] = item["id"]
-    return out
-
-
-async def _create_default_interfaces(study_id: str, subsystem_ids: dict[str, str],
-                                     spacecraft_class: str) -> list[dict]:
-    """N3: power bus EPS→powered subsystems, data bus OBC↔subsystems, RF TTC↔ground
-    segment (when the study has one), each with sensible exchange items.
-    Existing interfaces between the same pair of the same type are kept."""
-    existing_pairs = {
-        (i["from_element_id"], i["to_element_id"], i["interface_type"])
-        for i in _interfaces.values() if i.get("study_id") == study_id and not i.get("deleted_at")
-    }
-    ground_el = next((e for e in _elements.values()
-                      if e.get("study_id") == study_id and not e.get("deleted_at")
-                      and e.get("segment") == "ground" and e.get("element_type") in ("segment", "system")), None)
-    plan: list[tuple[str, str, str, str, str, list[str]]] = []
-    eps, obc, ttc = subsystem_ids.get("power"), subsystem_ids.get("obc"), subsystem_ids.get("ttc")
-    if eps:
-        for d in _POWERED_DOMAINS:
-            if subsystem_ids.get(d):
-                plan.append((eps, subsystem_ids[d], "electrical", "unidirectional", "Power bus", ["Regulated bus power"]))
-    if obc:
-        for d in _DATA_DOMAINS:
-            if subsystem_ids.get(d):
-                items = ["Housekeeping telemetry", "Telecommands"] + (["Payload science data"] if d == "payload" else [])
-                plan.append((obc, subsystem_ids[d], "data", "bidirectional", "Data bus", items))
-    if ttc and ground_el:
-        plan.append((ttc, ground_el["id"], "rf", "bidirectional", "TT&C link", ["Uplink TC", "Downlink TM"]))
-
-    needed = sorted({n for *_, items in plan for n in items})
-    item_ids = await _ensure_exchange_items(study_id, needed) if needed else {}
-    created: list[dict] = []
-    for from_id, to_id, itype, direction, label, items in plan:
-        if (from_id, to_id, itype) in existing_pairs or (to_id, from_id, itype) in existing_pairs:
-            continue
-        props = {}
-        if itype == "electrical":
-            props = {"voltage_v": _NANO_BUS_VOLTAGE if spacecraft_class == "nano" else 28.0}
-        iface = {
-            "id": uuid4().hex, "study_id": study_id,
-            "name": f"{label}: {_elements[from_id]['name']} → {_elements[to_id]['name']}",
-            "interface_type": itype, "direction": direction,
-            "from_element_id": from_id, "to_element_id": to_id,
-            "properties": props, "diagram_label": label,
-            "exchange_item_ids_json": [item_ids[n] for n in items],
-            "status": "defined", "criticality": "standard", "version": 1, "deleted_at": None,
-        }
-        await db_create_interface(iface)
-        _interfaces[iface["id"]] = iface
-        existing_pairs.add((from_id, to_id, itype))
-        created.append(iface)
-    return created
-
-
 @router.post("/studies/{study_id}/populate-subsystems")
 async def populate_subsystems(
     study_id: str,
@@ -1076,8 +1174,9 @@ async def populate_subsystems(
 
     SCDF-170 N1/N3: every subsystem ends up with a numeric ``mass_kg`` /
     ``power_avg_w`` (children roll-up or class heritage default, so formulas
-    like ``mass_kg * 1.2`` work) and the space segment gets a default
-    interface set (power bus, data bus, TT&C RF link) with exchange items.
+    like ``mass_kg * 1.2`` work) and the study gets the expected interfaces
+    from the rule-based proposer (``configs/interface_rules.yaml``) as
+    *suggested* links with exchange items, for the user to accept or reject.
     """
     parent = _elements.get(parent_element_id)
     if not parent:
@@ -1112,6 +1211,8 @@ async def populate_subsystems(
             "deleted_at": None,
             "margin_percent": 20.0,
             "quantity": parent.get("quantity", 1),
+            # remembered so later proposer runs use the same class defaults (rails, bus, band)
+            "performance": {"spacecraft_class": body.spacecraft_class} if segment == "space" else None,
         }
         await db_create_element(system_el)
         _elements[system_el["id"]] = system_el
@@ -1119,6 +1220,10 @@ async def populate_subsystems(
         system_id = system_el["id"]
     else:
         system_id = next(c["id"] for c in existing_children if c.get("element_type") == "system")
+        sys_el = _elements[system_id]
+        if segment == "space" and not (sys_el.get("performance") or {}).get("spacecraft_class"):
+            sys_el["performance"] = {**(sys_el.get("performance") or {}), "spacecraft_class": body.spacecraft_class}
+            await db_update_element(system_id, sys_el)
 
     # Create subsystems
     subsystem_ids: dict[str, str] = {}
@@ -1211,13 +1316,15 @@ async def populate_subsystems(
     # N1: roll-up / heritage defaults so every subsystem has numeric mass & power
     rolled_up = await _roll_up_subsystems(subsystem_ids, body.spacecraft_class)
 
-    # N3: default interfaces + exchange items (space segment only)
+    # N3: expected interfaces from the rule set (suggested baseline, with exchange items)
     created_interfaces: list[dict] = []
-    if segment == "space":
-        try:
-            created_interfaces = await _create_default_interfaces(study_id, subsystem_ids, body.spacecraft_class)
-        except Exception:
-            logger.exception("populate-subsystems: default interfaces failed for %s", study_id)
+    proposal: dict = {}
+    try:
+        from .interfaces import run_proposer
+        proposal = await run_proposer(study_id, spacecraft_class=body.spacecraft_class)
+        created_interfaces = proposal.get("created", [])
+    except Exception:
+        logger.exception("populate-subsystems: interface proposal failed for %s", study_id)
 
     # Broadcast
     from .ws import _broadcast_study
@@ -1238,6 +1345,8 @@ async def populate_subsystems(
         "rolled_up": rolled_up,
         "interfaces_created": len(created_interfaces),
         "interface_ids": [i["id"] for i in created_interfaces],
+        "interfaces_unmet": proposal.get("unmet", []),
+        "interface_conflicts": proposal.get("conflicts", []),
         "message": (f"Created {len(created_elements)} elements ({equipment_count} equipment items from KB), "
                     f"{len(created_interfaces)} interfaces"),
     }

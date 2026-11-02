@@ -1,0 +1,64 @@
+/* Spacecraft view: picture on the left, the numbers that matter beside it. Tokens only. */
+.c2o-scv { max-width: 1480px; }
+
+.c2o-scv__head {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5);
+  padding-bottom: var(--sp-3); margin-bottom: var(--sp-3); border-bottom: 1px solid var(--line-strong);
+}
+.c2o-scv__title { margin: 0; font-size: var(--fs-title); line-height: var(--lh-value); font-weight: 600; color: var(--text-value); }
+.c2o-scv__kv { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-5); margin: 0; }
+.c2o-scv__kv > div { display: flex; flex-direction: column; gap: 1px; }
+.c2o-scv__kv dt { font-size: var(--fs-label); color: var(--text-3); }
+.c2o-scv__kv dd { margin: 0; font-size: var(--fs-value); line-height: var(--lh-value); color: var(--text-value); font-weight: 500; }
+.c2o-scv .u { font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 400; color: var(--text-3); }
+.c2o-scv__src { margin-left: auto; }
+.c2o-scv__link {
+  font: inherit; font-size: var(--fs-body); color: var(--interactive); background: none; border: 0; padding: 0;
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+
+.c2o-scv__row {
+  display: grid; grid-template-columns: minmax(0, 940px) minmax(260px, 1fr);
+  gap: var(--sp-3) var(--sp-5); padding: var(--sp-3) 0 var(--sp-4); border-bottom: 1px solid var(--line);
+}
+.c2o-scv__row--one { grid-template-columns: minmax(0, 1fr); }
+.c2o-scv__pic { min-width: 0; }
+.c2o-scv__h { margin: 0 0 var(--sp-2); font-size: var(--fs-body); font-weight: 600; color: var(--text); }
+.c2o-scv__side { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; padding-top: 30px; }
+.c2o-scv__links { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); padding-top: var(--sp-2); border-top: 1px solid var(--line); }
+.c2o-scv__a3 { min-height: 360px; }
+.c2o-scv__a3 .vz-stage { min-height: 360px; }
+
+.c2o-scv__facts { margin: 0; display: grid; grid-template-columns: 1fr; border-top: 1px solid var(--line); }
+.c2o-scv__facts > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); padding: 6px 0; border-bottom: 1px solid var(--line); }
+.c2o-scv__facts dt { font-size: var(--fs-label); color: var(--text-3); }
+.c2o-scv__facts dd { margin: 0; font-size: var(--fs-value); line-height: var(--lh-value); color: var(--text-value); text-align: right; }
+.c2o-scv__facts > div.is-caution dd { color: var(--status-caution); }
+.c2o-scv__facts > div.is-caution dt::before {
+  content: ''; display: inline-block; width: 0; height: 0; margin-right: 5px; vertical-align: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid var(--status-caution);
+}
+
+.c2o-scv .c2o-seg__item[aria-pressed='true'] { color: var(--interactive); background: var(--interactive-wash); font-weight: 600; box-shadow: inset 0 -2px 0 var(--interactive); }
+
+.c2o-scv__tab { width: 100%; border-collapse: collapse; font-size: var(--fs-body); }
+.c2o-scv__tab th, .c2o-scv__tab td { text-align: left; padding: 5px var(--sp-2); border-bottom: 1px solid var(--line); vertical-align: baseline; }
+.c2o-scv__tab thead th { font-size: var(--fs-label); font-weight: 500; color: var(--text-3); border-bottom-color: var(--line-strong); }
+.c2o-scv__tab tbody th { font-weight: 400; color: var(--text-2); }
+.c2o-scv__tab td:last-child { color: var(--text-3); font-size: var(--fs-label); }
+.c2o-scv__tab .ta-r { text-align: right; }
+
+@media (max-width: 1199px) {
+  .c2o-scv__row { grid-template-columns: minmax(0, 1fr); }
+  .c2o-scv__side { padding-top: 0; }
+}
+@media (max-width: 599px) {
+  .c2o-scv__src { margin-left: 0; flex-basis: 100%; }
+  .c2o-scv__tab td:last-child { display: none; }
+}
+
+/* Budget bars in the narrow side column: label above, bar and readout on one line. */
+.c2o-scv__side .c2o-mbar, .c2o-scv__side .c2o-mbar--lead {
+  grid-template-columns: minmax(60px, 1fr) auto; row-gap: 4px; min-height: 0;
+}
+.c2o-scv__side .c2o-mbar__label { grid-column: 1 / -1; }

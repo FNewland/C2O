@@ -1,0 +1,839 @@
+# SpaceCDF — expected interfaces between design elements (the link proposer's rules).
+#
+# Read by packages/spacecdf-server/src/spacecdf_server/services/interface_proposer.py,
+# validated at server start-up (errors are logged and returned by
+# POST /api/studies/{id}/interfaces/propose). Instructors may change any default
+# here without touching code; restart the server afterwards.
+#
+# WHAT IS A STANDARD AND WHAT IS NOT
+#   * The interface NATURES (types) follow ECSS-E-ST-10-24C Annex E (informative).
+#   * The CubeSat safety interfaces (deployment switch, RBF, >= 3 RF inhibits,
+#     >= 3 deployable inhibits, 30 min / 45 min timers) are from the CubeSat
+#     Design Specification (CDS) rev 14.1, clauses quoted per rule.
+#   * The EXPECTED-INTERFACE MATRIX itself (which unit links to which, default
+#     rails, default bus protocols, the heater threshold) is C2O default
+#     practice compiled from CubeSat/smallsat experience. It is NOT a standard;
+#     every such value says "C2O default" in its standard_ref or comment.
+#
+# SCHEMA (checked by interface_proposer.validate_rules):
+#   schema_version: 1
+#   disclaimer: {en, fr}
+#   defaults:   class tables and priorities (see comments)
+#   roles:      <role>: {label{en,fr}, kb_categories[], kb_types[], names[] (regex,
+#               case-insensitive), domains[] (fallback by subsystem_domain),
+#               powered?, data?, needs_heater?, adcs_unit?, deployable?}
+#               Order matters: the first role that matches a component wins.
+#   domains:    <subsystem_domain>: {powered?, data?, needs_heater?}  (subsystem level)
+#   exchange_items: <name>: {kind, properties{}}   (ICD line items the rules attach)
+#   rules:      list of
+#       id (unique), level: segment|subsystem|component, type (canonical),
+#       subtype, direction: bidirectional|unidirectional, name{en,fr},
+#       from: <selector>, to: <selector>,
+#       pairing: provider (one `from` per `to`, first match in selector order)
+#              | sink (one `to` per `from`) | all | rf_band (all band-compatible pairs),
+#       fallback_from / fallback_to: <selector> (looked up one level up, e.g. the
+#              Structure subsystem when no structure unit exists yet),
+#       scope: group (same spacecraft/system; default) | study,
+#       when: {cubesat: true|false},
+#       properties{}, refine[]: rail_voltage|battery_bus|protocol|payload_protocol|
+#              rf_band|mount_type, exchange_items[],
+#       unmet: {need, reason{en,fr}}  (reported when a `to` has no provider),
+#       rationale{en,fr} (one sentence), standard_ref.
+#   selector:   roles[] | domains[] | segments[], exclude_roles[], exclude_domains[],
+#               require[]: powered|data|needs_heater|deployable|space,
+#               exclude_when_present: {present[]: roles, roles[]: roles dropped then}
+#   coverage:   readiness "Interfaces defined" needs: id, type, label{en,fr},
+#               applies_to: <selector> + element_types[].
+
+schema_version: 1
+
+disclaimer:
+  en: >-
+    Suggested links come from the C2O default interface matrix (good CubeSat/smallsat
+    practice, not a standard). Interface natures follow ECSS-E-ST-10-24C Annex E; the
+    CubeSat safety interfaces cite the CubeSat Design Specification rev 14.1. Accept,
+    edit or reject each suggestion.
+  fr: >-
+    Les liaisons suggérées proviennent de la matrice d'interfaces par défaut de C2O
+    (bonne pratique CubeSat et petits satellites, pas une norme). Les natures
+    d'interface suivent l'annexe E de l'ECSS-E-ST-10-24C ; les interfaces de sécurité
+    CubeSat citent la CubeSat Design Specification rév. 14.1. Acceptez, modifiez ou
+    rejetez chaque suggestion.
+
+defaults:
+  # C2O default: regulated rails assumed when the EPS has no KB rail data.
+  rails_by_class:
+    nano: [3.3, 5.0]
+    micro: [3.3, 5.0, 12.0]
+    small: [5.0, 12.0, 28.0]
+    medium: [28.0]
+    large: [28.0]
+    flagship: [28.0]
+  # C2O default: unregulated battery bus (2s Li-ion on a CubeSat, 28 V class above).
+  battery_bus_by_class: {nano: 7.4, micro: 14.8, small: 28.0, medium: 28.0, large: 28.0, flagship: 28.0}
+  # C2O default: TM/TC bus when either end has no KB protocol data.
+  data_protocol_by_class: {nano: I2C, micro: CAN, small: RS422, medium: MIL-STD-1553, large: MIL-STD-1553, flagship: MIL-STD-1553}
+  # C2O default: space-ground TT&C band when no transceiver band is known.
+  ttc_band_by_class: {nano: UHF, micro: S, small: S, medium: S, large: S, flagship: S}
+  # Shared protocol chosen in this order (C2O default; CAN first because it is
+  # multi-drop and robust, as harness_designer.py also assumed).
+  protocol_priority: [CAN, I2C, RS422, RS485, UART, SPI, SpaceWire, MIL-STD-1553, LVDS, Ethernet, USB, analog]
+  payload_protocol_priority: [SpaceWire, LVDS, Ethernet, RS422, CAN, SPI, UART, I2C]
+  # C2O default: preferred regulated rail per consumer role / domain (first one the EPS offers wins).
+  rail_preference:
+    default: [5.0, 3.3, 12.0, 28.0]
+    obc: [3.3, 5.0, 28.0]
+    gnss: [3.3, 5.0, 28.0]
+    sun_sensor: [3.3, 5.0, 28.0]
+    magnetometer: [3.3, 5.0, 28.0]
+    adcs_computer: [3.3, 5.0, 28.0]
+    transceiver: [5.0, 12.0, 28.0]
+    reaction_wheel: [12.0, 5.0, 28.0]
+    payload: [12.0, 5.0, 28.0]
+    thruster: [12.0, 28.0, 5.0]
+    heater: [5.0, 12.0, 28.0]
+    domain:obc: [3.3, 5.0, 28.0]
+    domain:propulsion: [12.0, 28.0, 5.0]
+    domain:payload: [12.0, 5.0, 28.0]
+  # C2O default: a unit whose minimum operating temperature is above this needs a heater
+  # (typical LEO CubeSat cold case; replace with the thermal analysis result when known).
+  cold_case_c: -20
+
+roles:
+  heater:
+    label: {en: Heater, fr: Réchauffeur}
+    kb_categories: [thermal_hardware]
+    kb_types: [heater]
+    names: ['heater']
+    powered: true
+    data: false
+  thermal_passive:
+    label: {en: Passive thermal hardware, fr: Matériel thermique passif}
+    kb_categories: [thermal_hardware]
+    names: ['\bmli\b', 'radiator', 'thermal strap', 'heat pipe', 'coating', 'insulation']
+    powered: false
+    data: false
+  adcs_computer:
+    label: {en: ADCS computer, fr: Calculateur SCAO}
+    names: ['adcs (computer|controller|board|unit|module)', '\bacs computer', 'iadcs', 'aocs (computer|controller)']
+    powered: true
+    data: true
+  eps:
+    label: {en: EPS / PCDU, fr: Sous-système de puissance (EPS / PCDU)}
+    kb_categories: [eps_board]
+    names: ['\beps\b', 'pcdu', '\bpdu\b', 'power (distribution|conditioning|control)']
+    powered: false
+    data: true
+  battery:
+    label: {en: Battery, fr: Batterie}
+    kb_categories: [battery]
+    names: ['batter']
+    powered: false
+    data: false
+    needs_heater: true      # C2O default: Li-ion must stay above ~0 °C to charge
+  solar_array:
+    label: {en: Solar array, fr: Générateur solaire}
+    kb_categories: [solar_panel, solar_cell]
+    names: ['solar']
+    powered: false
+    data: false
+  obc:
+    label: {en: On-board computer, fr: Ordinateur de bord}
+    kb_categories: [obc]
+    names: ['\bobc\b', 'on-?board computer', 'flight computer', '\bc&dh\b', '\bcdh\b', 'nanomind']
+    domains: [obc]
+    powered: true
+    data: true
+  mass_memory:
+    label: {en: Payload data handling, fr: Traitement des données de charge utile}
+    names: ['mass memory', '\bpdh\b', 'payload data handl', 'data storage', 'solid.state recorder']
+    powered: true
+    data: true
+  transceiver:
+    label: {en: Transceiver, fr: Émetteur-récepteur}
+    kb_categories: [transponder]
+    names: ['transceiver', 'transponder', 'transmitter', 'receiver', '\bradio\b', '\btrx', '\btx\b']
+    powered: true
+    data: true
+  antenna:
+    label: {en: Antenna, fr: Antenne}
+    kb_categories: [antenna]
+    names: ['antenna']
+    domains: [ttc]
+    powered: false
+    data: false
+  gnss:
+    label: {en: GNSS receiver, fr: Récepteur GNSS}
+    kb_categories: [gps_receiver]
+    names: ['\bgps\b', 'gnss']
+    powered: true
+    data: true
+  star_tracker:
+    label: {en: Star tracker, fr: Viseur d'étoiles}
+    kb_categories: [star_tracker]
+    names: ['star ?tracker', 'star camera']
+    powered: true
+    data: true
+    adcs_unit: true
+  sun_sensor:
+    label: {en: Sun sensor, fr: Capteur solaire}
+    kb_categories: [sun_sensor]
+    names: ['sun sensor']
+    powered: true
+    data: true
+    adcs_unit: true
+  magnetometer:
+    label: {en: Magnetometer, fr: Magnétomètre}
+    names: ['magnetometer']
+    powered: true
+    data: true
+    adcs_unit: true
+  magnetorquer:
+    label: {en: Magnetorquer, fr: Magnétocoupleur}
+    kb_categories: [magnetorquer]
+    names: ['magnetorquer', 'torque ?rod', '\bmtq\b']
+    powered: true
+    data: true
+    adcs_unit: true
+  reaction_wheel:
+    label: {en: Reaction wheel, fr: Roue de réaction}
+    kb_categories: [reaction_wheel]
+    names: ['reaction wheel', 'momentum wheel', 'cubewheel']
+    powered: true
+    data: true
+    adcs_unit: true
+  tank:
+    label: {en: Propellant tank, fr: Réservoir d'ergol}
+    names: ['tank']
+    powered: false
+    data: false
+    needs_heater: true      # C2O default: propellant lines and tank kept above freezing
+  thruster:
+    label: {en: Thruster / propulsion unit, fr: Propulseur}
+    kb_categories: [thruster]
+    names: ['thruster', 'propulsion', '\bppu\b']
+    domains: [propulsion]
+    powered: true
+    data: true
+    needs_heater: true      # C2O default: catalyst bed / valves / lines need heating
+  structure:
+    label: {en: Structure, fr: Structure}
+    kb_categories: [cubesat_structure]
+    names: ['structure', '\bframe\b', 'chassis']
+    domains: [structure]
+    powered: false
+    data: false
+  mechanism:
+    label: {en: Mechanism, fr: Mécanisme}
+    kb_categories: [mechanical_hardware]
+    names: ['hinge', 'hdrm', 'release mechanism', 'burn.wire']
+    powered: false
+    data: false
+  deployer:
+    label: {en: Deployer, fr: Déployeur}
+    kb_categories: [deployer]
+    names: ['deployer', 'dispenser', 'pod\b']
+    powered: false
+    data: false
+  harness:
+    label: {en: Harness, fr: Faisceau}
+    kb_categories: [harnesses, harness]
+    names: ['harness', 'cable']
+    powered: false
+    data: false
+  payload:
+    label: {en: Payload, fr: Charge utile}
+    names: ['camera', 'imager', 'payload', 'instrument', 'spectrometer', 'telescope', '\bais\b', 'sdr']
+    domains: [payload]
+    powered: true
+    data: true
+
+domains:
+  payload: {powered: true, data: true}
+  power: {powered: false, data: true}
+  aocs: {powered: true, data: true}
+  ttc: {powered: true, data: true}
+  obc: {powered: true, data: true}
+  thermal: {powered: true, data: true}
+  structure: {powered: false, data: false}
+  propulsion: {powered: true, data: true, needs_heater: true}
+  ground_rf: {powered: false, data: true}
+  ground_ops: {powered: false, data: true}
+
+exchange_items:
+  "Regulated bus power": {kind: power, properties: {regulation: regulated}}
+  "Battery bus power": {kind: power, properties: {regulation: unregulated}}
+  "Housekeeping telemetry": {kind: data, properties: {rate_hz: 1.0}}
+  "Telecommands": {kind: data, properties: {}}
+  "Payload science data": {kind: data, properties: {}}
+  "Uplink TC": {kind: rf, properties: {direction: ground->space}}
+  "Downlink TM": {kind: rf, properties: {direction: space->ground}}
+  "Ground TM/TC": {kind: data, properties: {data_format: CCSDS space packet}}
+
+rules:
+  # ───────────────────────────── Segment level (L0) ─────────────────────────────
+  - id: seg-space-ground-rf
+    level: segment
+    type: rf
+    subtype: space_ground
+    direction: bidirectional
+    name: {en: TT&C link, fr: Liaison TT&C}
+    from: {segments: [space]}
+    to: {segments: [ground]}
+    pairing: provider
+    refine: [rf_band]
+    exchange_items: ["Uplink TC", "Downlink TM"]
+    rationale:
+      en: The space segment is commanded and sends telemetry over an RF link to the ground segment.
+      fr: Le segment spatial est télécommandé et envoie sa télémesure au segment sol par une liaison RF.
+    standard_ref: ECSS-E-ST-10-24C §5.2 (space–ground interface); C2O default matrix
+
+  - id: seg-space-launch-mech
+    level: segment
+    type: mechanical
+    subtype: launcher
+    direction: bidirectional
+    name: {en: Launcher interface, fr: Interface lanceur}
+    from: {segments: [launch]}
+    to: {segments: [space]}
+    pairing: provider
+    rationale:
+      en: The spacecraft is carried by the launcher through a mechanical adapter or deployer.
+      fr: Le satellite est porté par le lanceur au moyen d'un adaptateur mécanique ou d'un déployeur.
+    standard_ref: ECSS-E-ST-10-24C §5.2 (space–launch interface); CDS rev 14.1 §2.2
+
+  - id: seg-space-launch-separation
+    level: segment
+    type: electrical_signal
+    subtype: umbilical
+    direction: unidirectional
+    name: {en: Separation / umbilical, fr: Séparation / ombilical}
+    from: {segments: [launch]}
+    to: {segments: [space]}
+    pairing: provider
+    rationale:
+      en: The launcher signals separation (or holds the deployment switches) and may provide an umbilical.
+      fr: Le lanceur signale la séparation (ou maintient les interrupteurs de déploiement) et peut fournir un ombilical.
+    standard_ref: CDS rev 14.1 §2.3.2, §2.3.4; C2O default matrix
+
+  - id: seg-ground-operations-data
+    level: segment
+    type: data
+    subtype: tm_tc
+    direction: bidirectional
+    name: {en: Ground TM/TC, fr: TM/TC sol}
+    from: {segments: [operations]}
+    to: {segments: [ground]}
+    pairing: provider
+    exchange_items: ["Ground TM/TC"]
+    rationale:
+      en: Mission operations exchange telecommands and telemetry with the ground stations over a ground network.
+      fr: Les opérations échangent télécommandes et télémesure avec les stations sol par un réseau sol.
+    standard_ref: C2O default matrix
+
+  # ──────────────────────────── Subsystem level (L2) ────────────────────────────
+  - id: sub-power-distribution
+    level: subsystem
+    type: power
+    subtype: regulated
+    direction: unidirectional
+    name: {en: Power bus, fr: Bus d'alimentation}
+    from: {domains: [power]}
+    to: {require: [powered, space], exclude_domains: [power]}
+    pairing: provider
+    refine: [rail_voltage]
+    exchange_items: ["Regulated bus power"]
+    unmet:
+      need: power
+      reason:
+        en: No power subsystem (EPS) to supply this subsystem.
+        fr: Aucun sous-système de puissance (EPS) pour alimenter ce sous-système.
+    rationale:
+      en: The EPS supplies every powered subsystem from a regulated rail.
+      fr: L'EPS alimente chaque sous-système consommateur à partir d'un rail régulé.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Electrical); C2O default matrix
+
+  - id: sub-obc-tmtc
+    level: subsystem
+    type: data
+    subtype: tm_tc
+    direction: bidirectional
+    name: {en: Data bus, fr: Bus de données}
+    from: {domains: [obc]}
+    to: {require: [data, space], exclude_domains: [obc]}
+    pairing: provider
+    refine: [protocol]
+    exchange_items: ["Housekeeping telemetry", "Telecommands"]
+    unmet:
+      need: data
+      reason:
+        en: No on-board computer subsystem to command this subsystem and collect its telemetry.
+        fr: Aucun sous-système ordinateur de bord pour commander ce sous-système et recueillir sa télémesure.
+    rationale:
+      en: The on-board computer commands each subsystem and collects its housekeeping telemetry.
+      fr: L'ordinateur de bord commande chaque sous-système et recueille sa télémesure de servitude.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Data representation); C2O default matrix
+
+  - id: sub-payload-data
+    level: subsystem
+    type: data
+    subtype: payload_data
+    direction: unidirectional
+    name: {en: Payload data, fr: Données de charge utile}
+    from: {domains: [payload]}
+    to: {domains: [obc]}
+    pairing: sink
+    refine: [payload_protocol]
+    exchange_items: ["Payload science data"]
+    rationale:
+      en: Payload science data flow to the on-board computer for storage and downlink.
+      fr: Les données scientifiques de la charge utile vont à l'ordinateur de bord pour stockage et transmission.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Data representation); C2O default matrix
+
+  - id: sub-structure-mount
+    level: subsystem
+    type: mechanical
+    subtype: mount
+    direction: bidirectional
+    name: {en: Mount, fr: Fixation}
+    from: {domains: [structure]}
+    to: {require: [space], exclude_domains: [structure]}
+    pairing: provider
+    unmet:
+      need: mechanical
+      reason:
+        en: No structure subsystem to mount this subsystem to.
+        fr: Aucun sous-système structure sur lequel fixer ce sous-système.
+    rationale:
+      en: Every subsystem is mounted to the primary structure.
+      fr: Chaque sous-système est fixé à la structure primaire.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Structural); C2O default matrix
+
+  - id: sub-structure-thermal
+    level: subsystem
+    type: thermal
+    subtype: conductive
+    direction: bidirectional
+    name: {en: Conductive path, fr: Chemin conductif}
+    from: {domains: [structure]}
+    to: {require: [space], exclude_domains: [structure]}
+    pairing: provider
+    unmet:
+      need: thermal
+      reason:
+        en: No structure subsystem to provide this subsystem's conductive heat path.
+        fr: Aucun sous-système structure pour assurer le chemin thermique conductif de ce sous-système.
+    rationale:
+      en: The structure is the main conductive heat sink for the units mounted on it.
+      fr: La structure est le principal puits thermique conductif des équipements qui y sont fixés.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Thermal control); C2O default matrix
+
+  - id: sub-thermal-heaters
+    level: subsystem
+    type: thermal
+    subtype: heater
+    direction: unidirectional
+    name: {en: Heater, fr: Réchauffeur}
+    from: {domains: [thermal]}
+    to: {domains: [power, propulsion, payload]}
+    pairing: provider
+    rationale:
+      en: Batteries, propulsion lines and payloads usually need heaters in the cold case.
+      fr: Batteries, lignes de propulsion et charges utiles ont en général besoin de réchauffeurs en cas froid.
+    standard_ref: C2O default matrix
+
+  - id: sub-thermal-radiator
+    level: subsystem
+    type: thermal
+    subtype: radiative
+    direction: bidirectional
+    name: {en: Radiator, fr: Radiateur}
+    from: {domains: [thermal]}
+    to: {domains: [structure]}
+    pairing: provider
+    rationale:
+      en: Radiator surfaces are part of the structure panels and reject heat to space.
+      fr: Les surfaces radiatives font partie des panneaux de structure et rejettent la chaleur vers l'espace.
+    standard_ref: C2O default matrix
+
+  - id: sub-obc-time
+    level: subsystem
+    type: timing
+    subtype: clock
+    direction: unidirectional
+    name: {en: Onboard time, fr: Temps bord}
+    from: {domains: [obc]}
+    to: {domains: [aocs, payload]}
+    pairing: provider
+    rationale:
+      en: The on-board computer distributes onboard time to attitude control and the payload for time-tagging.
+      fr: L'ordinateur de bord distribue le temps bord au contrôle d'attitude et à la charge utile pour la datation.
+    standard_ref: C2O default matrix
+
+  - id: sub-rf-inhibits
+    level: subsystem
+    type: electrical_signal
+    subtype: inhibit
+    direction: unidirectional
+    name: {en: RF inhibits, fr: Inhibitions RF}
+    from: {domains: [power]}
+    to: {domains: [ttc]}
+    pairing: provider
+    when: {cubesat: true}
+    properties: {inhibit_count: 3, delay_min: 45}
+    rationale:
+      en: A CubeSat needs at least three independent RF inhibits and no transmission before 45 minutes after deployment.
+      fr: Un CubeSat doit avoir au moins trois inhibitions RF indépendantes et aucune émission avant 45 minutes après le déploiement.
+    standard_ref: CDS rev 14.1 §2.3.7, §2.4.5
+
+  - id: sub-deployment-switch
+    level: subsystem
+    type: electrical_signal
+    subtype: deployment_switch
+    direction: unidirectional
+    name: {en: Deployment switch / RBF, fr: Interrupteur de déploiement / RBF}
+    from: {domains: [structure]}
+    to: {domains: [power]}
+    pairing: provider
+    when: {cubesat: true}
+    properties: {signal: deployment switch and RBF in the power path}
+    rationale:
+      en: The deployment switch on the rails and the remove-before-flight pin must cut all power while the CubeSat is in the dispenser.
+      fr: L'interrupteur de déploiement sur les rails et la goupille RBF doivent couper toute alimentation tant que le CubeSat est dans le déployeur.
+    standard_ref: CDS rev 14.1 §2.3.1, §2.3.2, §2.3.4
+
+  - id: sub-ttc-ground
+    level: subsystem
+    type: rf
+    subtype: space_ground
+    direction: bidirectional
+    name: {en: TT&C link, fr: Liaison TT&C}
+    from: {domains: [ttc]}
+    to: {domains: [ground_rf], segments: [ground]}
+    fallback_to: {segments: [ground]}
+    pairing: sink
+    scope: study
+    refine: [rf_band]
+    exchange_items: ["Uplink TC", "Downlink TM"]
+    rationale:
+      en: The TT&C subsystem carries telecommands up and telemetry down to the ground station.
+      fr: Le sous-système TT&C transporte les télécommandes montantes et la télémesure descendante vers la station sol.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Communications); C2O default matrix
+
+  - id: sub-ground-baseband
+    level: subsystem
+    type: data
+    subtype: tm_tc
+    direction: bidirectional
+    name: {en: Ground TM/TC, fr: TM/TC sol}
+    from: {domains: [ground_ops]}
+    to: {domains: [ground_rf]}
+    pairing: provider
+    exchange_items: ["Ground TM/TC"]
+    rationale:
+      en: The control centre exchanges TM/TC frames with the ground station baseband.
+      fr: Le centre de contrôle échange des trames TM/TC avec la bande de base de la station sol.
+    standard_ref: C2O default matrix
+
+  # ──────────────────────────── Component level (L3) ────────────────────────────
+  - id: unit-power
+    level: component
+    type: power
+    subtype: regulated
+    direction: unidirectional
+    name: {en: Power, fr: Alimentation}
+    from: {roles: [eps]}
+    fallback_from: {domains: [power]}
+    to: {require: [powered, space], exclude_roles: [eps]}
+    pairing: provider
+    refine: [rail_voltage]
+    unmet:
+      need: power
+      reason:
+        en: No EPS or power subsystem to supply this unit.
+        fr: Aucun EPS ni sous-système de puissance pour alimenter cet équipement.
+    rationale:
+      en: The EPS supplies every powered unit from a switched, current-limited regulated rail.
+      fr: L'EPS alimente chaque équipement depuis un rail régulé, commuté et limité en courant.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Electrical); C2O default matrix
+
+  - id: unit-battery-bus
+    level: component
+    type: power
+    subtype: battery_bus
+    direction: bidirectional
+    name: {en: Battery bus, fr: Bus batterie}
+    from: {roles: [battery]}
+    to: {roles: [eps]}
+    pairing: sink
+    refine: [battery_bus]
+    rationale:
+      en: The battery is charged and discharged through the EPS on the unregulated battery bus.
+      fr: La batterie est chargée et déchargée par l'EPS sur le bus batterie non régulé.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Electrical); CDS rev 14.1 §2.3.6; C2O default matrix
+
+  - id: unit-array-input
+    level: component
+    type: power
+    subtype: array_input
+    direction: unidirectional
+    name: {en: Array input, fr: Entrée générateur}
+    from: {roles: [solar_array]}
+    to: {roles: [eps]}
+    pairing: sink
+    rationale:
+      en: Solar array strings feed the EPS power-point trackers.
+      fr: Les chaînes du générateur solaire alimentent les suiveurs de point de puissance de l'EPS.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Electrical); C2O default matrix
+
+  - id: unit-obc-tmtc
+    level: component
+    type: data
+    subtype: tm_tc
+    direction: bidirectional
+    name: {en: TM/TC bus, fr: Bus TM/TC}
+    from: {roles: [obc]}
+    fallback_from: {domains: [obc]}
+    to:
+      require: [data, space]
+      exclude_roles: [obc]
+      exclude_when_present: {present: [adcs_computer], roles: [star_tracker, sun_sensor, magnetometer, magnetorquer, reaction_wheel]}
+    pairing: provider
+    refine: [protocol]
+    unmet:
+      need: data
+      reason:
+        en: No on-board computer to command this unit and collect its telemetry.
+        fr: Aucun ordinateur de bord pour commander cet équipement et recueillir sa télémesure.
+    rationale:
+      en: The on-board computer is the bus master that commands the unit and collects its telemetry.
+      fr: L'ordinateur de bord est le maître du bus qui commande l'équipement et recueille sa télémesure.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Data representation); C2O default matrix
+
+  - id: unit-adcs-bus
+    level: component
+    type: data
+    subtype: bus
+    direction: bidirectional
+    name: {en: ADCS bus, fr: Bus SCAO}
+    from: {roles: [adcs_computer]}
+    to: {roles: [star_tracker, sun_sensor, magnetometer, magnetorquer, reaction_wheel]}
+    pairing: provider
+    refine: [protocol]
+    rationale:
+      en: The ADCS computer is master of its own sensor and actuator bus.
+      fr: Le calculateur SCAO est maître de son propre bus de capteurs et d'actionneurs.
+    standard_ref: C2O default matrix
+
+  - id: unit-payload-data
+    level: component
+    type: data
+    subtype: payload_data
+    direction: unidirectional
+    name: {en: Payload data, fr: Données de charge utile}
+    from: {roles: [payload]}
+    to: {roles: [mass_memory, obc]}
+    fallback_to: {domains: [obc]}
+    pairing: sink
+    refine: [payload_protocol]
+    rationale:
+      en: High-rate payload data go to payload data handling, or to the on-board computer when there is none.
+      fr: Les données à haut débit de la charge utile vont au traitement des données charge utile, ou à l'ordinateur de bord à défaut.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Data representation); C2O default matrix
+
+  - id: unit-rf-coax
+    level: component
+    type: rf
+    subtype: coax
+    direction: bidirectional
+    name: {en: RF coax, fr: Coaxial RF}
+    from: {roles: [transceiver]}
+    to: {roles: [antenna]}
+    pairing: rf_band
+    refine: [rf_band]
+    unmet:
+      need: rf
+      reason:
+        en: This transceiver has no antenna in the same band.
+        fr: Cet émetteur-récepteur n'a pas d'antenne dans la même bande.
+    rationale:
+      en: Each transceiver drives an antenna in its band through a coaxial cable.
+      fr: Chaque émetteur-récepteur attaque une antenne de sa bande par un câble coaxial.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Communications); C2O default matrix
+
+  - id: unit-gnss-pps
+    level: component
+    type: timing
+    subtype: pps
+    direction: unidirectional
+    name: {en: PPS, fr: PPS}
+    from: {roles: [gnss]}
+    to: {roles: [obc, adcs_computer]}
+    pairing: provider
+    properties: {signal: 1 PPS}
+    rationale:
+      en: The GNSS receiver's pulse-per-second disciplines the onboard clock and time-tags attitude data.
+      fr: L'impulsion par seconde du récepteur GNSS asservit l'horloge de bord et date les données d'attitude.
+    standard_ref: C2O default matrix
+
+  - id: unit-mount
+    level: component
+    type: mechanical
+    subtype: mount
+    direction: bidirectional
+    name: {en: Mount, fr: Fixation}
+    from: {roles: [structure]}
+    fallback_from: {domains: [structure]}
+    to: {require: [space], exclude_roles: [structure, harness]}
+    pairing: provider
+    refine: [mount_type]
+    unmet:
+      need: mechanical
+      reason:
+        en: No structure unit or structure subsystem to mount this unit to.
+        fr: Aucune structure (équipement ou sous-système) sur laquelle fixer cet équipement.
+    rationale:
+      en: Every unit is mounted to the primary structure (PC/104 stack, bracket or panel).
+      fr: Chaque équipement est fixé à la structure primaire (pile PC/104, support ou panneau).
+    standard_ref: ECSS-E-ST-10-24C Annex E (Structural); C2O default matrix
+
+  - id: unit-conductive
+    level: component
+    type: thermal
+    subtype: conductive
+    direction: bidirectional
+    name: {en: Conductive path, fr: Chemin conductif}
+    from: {roles: [structure]}
+    fallback_from: {domains: [structure]}
+    to: {require: [space], exclude_roles: [structure, harness, thermal_passive]}
+    pairing: provider
+    unmet:
+      need: thermal
+      reason:
+        en: No structure to give this unit a conductive heat path.
+        fr: Aucune structure pour donner à cet équipement un chemin thermique conductif.
+    rationale:
+      en: Each unit rejects its dissipation by conduction into the structure it is mounted on.
+      fr: Chaque équipement évacue sa dissipation par conduction vers la structure qui le porte.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Thermal control); C2O default matrix
+
+  - id: unit-heater
+    level: component
+    type: thermal
+    subtype: heater
+    direction: unidirectional
+    name: {en: Heater, fr: Réchauffeur}
+    from: {roles: [heater]}
+    fallback_from: {domains: [thermal]}
+    to: {require: [needs_heater, space], exclude_roles: [heater]}
+    pairing: provider
+    unmet:
+      need: heater
+      reason:
+        en: This unit's temperature range needs a heater but there is no heater or thermal subsystem.
+        fr: La plage de température de cet équipement exige un réchauffeur, mais il n'y a ni réchauffeur ni sous-système thermique.
+    rationale:
+      en: The unit's lower temperature limit is above the cold case, so a heater keeps it in range.
+      fr: La limite basse de température de l'équipement est au-dessus du cas froid ; un réchauffeur le maintient dans sa plage.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Thermal control); C2O default (cold case)
+
+  - id: unit-propellant
+    level: component
+    type: fluid
+    subtype: propellant
+    direction: unidirectional
+    name: {en: Propellant line, fr: Ligne d'ergol}
+    from: {roles: [tank]}
+    to: {roles: [thruster]}
+    pairing: provider
+    rationale:
+      en: The tank feeds propellant to the thrusters through the feed lines.
+      fr: Le réservoir alimente les propulseurs en ergol par les lignes d'alimentation.
+    standard_ref: ECSS-E-ST-10-24C Annex E (Propulsion); C2O default matrix
+
+  - id: unit-deployment-switch
+    level: component
+    type: electrical_signal
+    subtype: deployment_switch
+    direction: unidirectional
+    name: {en: Deployment switch, fr: Interrupteur de déploiement}
+    from: {roles: [structure]}
+    fallback_from: {domains: [structure]}
+    to: {roles: [eps]}
+    pairing: provider
+    when: {cubesat: true}
+    properties: {signal: deployment switch (normally open in dispenser)}
+    rationale:
+      en: At least one deployment switch on the rails must disconnect power while the CubeSat is in the dispenser.
+      fr: Au moins un interrupteur de déploiement sur les rails doit couper l'alimentation tant que le CubeSat est dans le déployeur.
+    standard_ref: CDS rev 14.1 §2.3.2
+
+  - id: unit-rbf
+    level: component
+    type: electrical_signal
+    subtype: rbf
+    direction: unidirectional
+    name: {en: Remove-before-flight, fr: Goupille RBF}
+    from: {roles: [structure]}
+    fallback_from: {domains: [structure]}
+    to: {roles: [eps]}
+    pairing: provider
+    when: {cubesat: true}
+    properties: {signal: RBF pin cuts all power when inserted}
+    rationale:
+      en: The remove-before-flight pin, reached through an access port, cuts all power while inserted.
+      fr: La goupille à retirer avant le vol, accessible par un port d'accès, coupe toute alimentation tant qu'elle est insérée.
+    standard_ref: CDS rev 14.1 §2.3.4, §2.3.5
+
+  - id: unit-rf-inhibits
+    level: component
+    type: electrical_signal
+    subtype: inhibit
+    direction: unidirectional
+    name: {en: RF inhibits, fr: Inhibitions RF}
+    from: {roles: [eps]}
+    fallback_from: {domains: [power]}
+    to: {roles: [transceiver]}
+    pairing: provider
+    when: {cubesat: true}
+    properties: {inhibit_count: 3, delay_min: 45}
+    rationale:
+      en: Each transmitter needs at least three independent RF inhibits and must stay silent for 45 minutes after deployment.
+      fr: Chaque émetteur exige au moins trois inhibitions RF indépendantes et doit rester muet 45 minutes après le déploiement.
+    standard_ref: CDS rev 14.1 §2.3.7, §2.4.5
+
+  - id: unit-deploy-release
+    level: component
+    type: electrical_signal
+    subtype: release
+    direction: unidirectional
+    name: {en: Deployment release, fr: Commande de déploiement}
+    from: {roles: [obc]}
+    fallback_from: {domains: [obc]}
+    to: {require: [deployable, space]}
+    pairing: provider
+    when: {cubesat: true}
+    properties: {inhibit_count: 3, delay_min: 30}
+    rationale:
+      en: Deployables are released on command behind at least three inhibits and not before 30 minutes after deployment.
+      fr: Les éléments déployables sont libérés sur commande derrière au moins trois inhibitions et pas avant 30 minutes après le déploiement.
+    standard_ref: CDS rev 14.1 §2.3.8, §2.4.4
+
+# Readiness "Interfaces defined": what every unit at a level must have.
+coverage:
+  - id: power
+    type: power
+    label: {en: power link, fr: liaison d'alimentation}
+    applies_to: {element_types: [subsystem, component], require: [powered, space]}
+  - id: data
+    type: data
+    label: {en: data link, fr: liaison de données}
+    applies_to: {element_types: [subsystem, component], require: [data, space]}
+  - id: mechanical
+    type: mechanical
+    label: {en: mechanical mount, fr: fixation mécanique}
+    applies_to: {element_types: [subsystem, component], require: [space], exclude_roles: [structure, harness], exclude_domains: [structure]}
+  - id: thermal
+    type: thermal
+    label: {en: thermal path, fr: chemin thermique}
+    applies_to: {element_types: [subsystem, component], require: [space], exclude_roles: [structure, harness, thermal_passive], exclude_domains: [structure]}

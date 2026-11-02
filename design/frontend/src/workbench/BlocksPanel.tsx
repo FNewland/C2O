@@ -772,10 +772,17 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
     setLoading(true)
     setResult(null)
     try {
+      // Send the study's spacecraft class so the rules pick the right bus (audit §4.2: '{}' always meant nano).
+      let spacecraftClass: string | undefined
+      try {
+        const st = await fetch(`${API}/studies/${studyId}`).then(r => (r.ok ? r.json() : null))
+        spacecraftClass = st?.requirements?.spacecraft_class ?? st?.spacecraft_class ?? undefined
+      } catch { /* keep the server default */ }
       const res = await fetch(
         `${API}/studies/${studyId}/populate-subsystems?parent_element_id=${focusElementId}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spacecraftClass ? { spacecraft_class: spacecraftClass } : {}) }
       )
+      qc.invalidateQueries({ queryKey: ['interfaces', studyId] })
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
       setResult(data.message)

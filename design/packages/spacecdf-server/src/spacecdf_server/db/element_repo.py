@@ -30,6 +30,7 @@ _ELEMENT_JSON_FIELDS = {
 
 _INTERFACE_JSON_FIELDS = {
     "properties": "properties_json",
+    "rationale": "rationale_json",
 }
 
 
@@ -63,7 +64,8 @@ def _element_row_to_dict(row: DesignElementRow) -> dict:
 
 
 def _dict_to_interface_row_kwargs(d: dict) -> dict:
-    skip = {"children"}
+    # ``type`` is the API alias of the ``interface_type`` column (Nov 2026 contract)
+    skip = {"children", "type"}
     kw = {}
     for k, v in d.items():
         if k in skip:
@@ -80,9 +82,12 @@ def _interface_row_to_dict(row: ElementInterfaceRow) -> dict:
         val = getattr(row, c.key)
         d[c.key] = val
     d["properties"] = d.pop("properties_json", None)
+    d["rationale"] = d.pop("rationale_json", None)
     if d.get("deleted_at") and isinstance(d["deleted_at"], datetime):
         d["deleted_at"] = d["deleted_at"].isoformat()
-    return d
+    # Canonical type / status / origin on read (old spellings migrated, Nov 2026)
+    from ..services.interface_model import normalise_interface
+    return normalise_interface(d)
 
 
 async def _mirror_parameters(element_dict: dict) -> None:
@@ -203,6 +208,7 @@ async def db_update_interface(interface_id: str, full_dict: dict) -> None:
             kw = _dict_to_interface_row_kwargs(full_dict)
             kw.pop("id", None)
             kw.pop("created_at", None)
+            kw["updated_at"] = datetime.now(timezone.utc)
             if isinstance(kw.get("deleted_at"), str):
                 kw["deleted_at"] = datetime.fromisoformat(kw["deleted_at"])
             stmt = sa_update(ElementInterfaceRow).where(ElementInterfaceRow.id == interface_id).values(**kw)

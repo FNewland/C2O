@@ -1,15 +1,15 @@
-"""SpaceCDF — AI Advisor Service.
+"""SpaceCDF — AI Advisor Service (legacy direct path, used when spacecdf-ai is absent).
 
-Provides Claude-powered decision support for space mission design.
-Two modes: manual (no AI) and AI-assisted (Claude provides suggestions).
+SpaceCDF designs with deterministic engines (docs/RULES_AND_AI.md). AI is off by
+default and limited to three optional prose tasks:
 
-Capabilities:
-  - Mission need critique: "Is this problem well-defined?"
-  - Requirement writing: "Turn this objective into shall statements"
-  - Trade study analysis: "Evaluate these alternatives"
-  - ConOps generation: "Suggest operational modes for this mission"
-  - Design review: "Critique this design from a systems engineering perspective"
-  - Component recommendation: "Which component best fits this requirement?"
+  - critique_need / general: critique of stakeholder and mission-need prose, free Q&A
+  - write_requirements: polish free-text objectives into shall statements
+  - narrative: narrative / executive-summary prose for documents
+
+The kill switch is ``configs/genai.yaml`` ``genai.enabled`` (plus the per-capability
+toggle): ``genai_allows()`` is checked by the router AND inside ``ask_ai`` so that
+no key, header or environment variable can bypass it.
 
 Token budget system prevents runaway costs. API key from environment
 or per-request header (never stored in code/git).
@@ -19,6 +19,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -80,38 +81,80 @@ CAPABILITY_PROMPTS: dict[str, str] = {
         "(3) Are objectives measurable? (4) What's missing? Be specific and constructive."
     ),
     "write_requirements": (
-        "Generate formal requirements in 'shall' form from these objectives. "
-        "Each requirement must be: verifiable, traceable to an objective, "
-        "have a threshold value, and specify a verification method. "
-        "Follow NASA SEH Appendix C guidelines."
+        "Rewrite these objectives as formal requirements, one 'shall' per requirement, "
+        "using an EARS pattern (The <system> shall ...; When <trigger>, the <system> shall ...). "
+        "Give every numeric value a unit and a bound. Do not use vague terms, escape clauses "
+        "or TBD. SpaceCDF checks every statement against EARS and INCOSE rules afterwards."
     ),
-    "analyze_trade": (
-        "Evaluate these design alternatives. For each, assess: technical feasibility, "
-        "cost-effectiveness, risk, heritage, and alignment with objectives. "
-        "Recommend the best option with clear rationale. Flag any showstoppers."
-    ),
-    "generate_conops": (
-        "Generate a Concept of Operations for this mission. Include: "
-        "mission phases (LEOP through disposal), operational modes with resource profiles, "
-        "ground segment concept, data flow to end users, contingency approach. "
-        "Follow NASA SEH Appendix S structure."
-    ),
-    "review_design": (
-        "Review this spacecraft design from a systems engineering perspective. "
-        "Check: budget closure (mass, power, data, pointing), single-point failures, "
-        "interface completeness, debris compliance, heritage assessment. "
-        "Identify the top 3 risks and suggest mitigations."
-    ),
-    "recommend_component": (
-        "Based on the derived requirements, recommend the best COTS component from "
-        "the available options. Explain the fit-gap analysis, flag any gaps that "
-        "need attention, and identify interface compatibility issues."
+    "narrative": (
+        "Write the requested document section as clear technical prose from the design data "
+        "given. Do not invent numbers: use only values present in the context."
     ),
     "general": (
         "Answer this space mission engineering question. Be specific, cite relevant "
         "standards (ECSS/NASA) where applicable, and provide actionable advice."
     ),
 }
+
+#: router / legacy capability name -> genai.yaml capability key
+GENAI_CAPABILITY: dict[str, str] = {
+    "critique_need": "design_advisor",
+    "general": "design_advisor",
+    "write_requirements": "requirements_decomposition",
+    "narrative": "report_narrative",
+}
+
+
+# ─── Kill switch ──────────────────────────────────────────────────────────────
+
+def _genai_yaml() -> Path | None:
+    env = os.environ.get("GENAI_CONFIG")
+    if env:
+        return Path(env)
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        p = parent / "configs" / "genai.yaml"
+        if p.is_file():
+            return p
+    return None
+
+
+def genai_settings() -> dict[str, Any]:
+    """{enabled, capabilities, model, max_tokens_per_call} from genai.yaml.
+
+    Uses spacecdf_ai's validated loader when the package is installed, else reads
+    the YAML directly. A missing or unreadable file means AI is disabled.
+    """
+    try:
+        from spacecdf_ai.config import RETAINED_CAPABILITIES, load_genai_config
+        cfg = load_genai_config()
+        return {"enabled": bool(cfg.enabled),
+                "capabilities": {k: bool(v) for k, v in cfg.capabilities.items() if k in RETAINED_CAPABILITIES},
+                "model": cfg.model, "max_tokens_per_call": cfg.budget.max_tokens_per_call}
+    except ImportError:
+        pass
+    path = _genai_yaml()
+    raw: dict[str, Any] = {}
+    if path and path.is_file():
+        try:
+            import yaml
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            raw = data.get("genai", data) if isinstance(data, dict) else {}
+        except Exception as exc:  # noqa: BLE001 — a broken file must disable AI, not crash
+            logger.warning("genai.yaml unreadable (%s): AI disabled", exc)
+            raw = {}
+    retained = set(GENAI_CAPABILITY.values())
+    return {"enabled": raw.get("enabled") is True,
+            "capabilities": {k: bool(v) for k, v in (raw.get("capabilities") or {}).items() if k in retained},
+            "model": raw.get("model") or "claude-sonnet-4-6",
+            "max_tokens_per_call": int((raw.get("budget") or {}).get("max_tokens_per_call") or 4096)}
+
+
+def genai_allows(capability: str) -> bool:
+    """The single kill-switch test: master switch on AND the mapped capability on."""
+    s = genai_settings()
+    key = GENAI_CAPABILITY.get(capability, capability)
+    return bool(s["enabled"] and s["capabilities"].get(key, False))
 
 
 async def ask_ai(
@@ -140,6 +183,11 @@ async def ask_ai(
     Returns:
         AIResponse with content and usage stats
     """
+    # Kill switch first: no key, header or env var can bypass genai.enabled: false.
+    if not genai_allows(capability):
+        return AIResponse(content="", capability=capability,
+                          error="AI is disabled (configs/genai.yaml genai.enabled: false or capability off).")
+
     # Resolve API key: header > environment
     key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
     if not key:
@@ -164,7 +212,9 @@ async def ask_ai(
         user_message += f"\n\n--- SPECIFIC QUESTION ---\n{question}"
 
     # Call Claude
-    resolved_model = model or os.environ.get("AI_MODEL", "claude-sonnet-4-20250514")
+    settings = genai_settings()
+    resolved_model = model or os.environ.get("AI_MODEL") or settings["model"]
+    max_tokens = min(max_tokens, settings["max_tokens_per_call"])
     start = time.monotonic()
 
     try:
@@ -290,6 +340,11 @@ def _format_context(context: dict[str, Any]) -> str:
     return "\n".join(parts) if parts else "No design context provided."
 
 
+def is_ai_enabled() -> bool:
+    """genai.yaml master switch (the key is irrelevant to this answer)."""
+    return bool(genai_settings()["enabled"])
+
+
 def is_ai_available() -> bool:
-    """Check if AI advisor is available (API key configured)."""
-    return bool(os.environ.get("ANTHROPIC_API_KEY", ""))
+    """AI can actually answer: switched on in genai.yaml AND a server key is configured."""
+    return is_ai_enabled() and bool(os.environ.get("ANTHROPIC_API_KEY", ""))

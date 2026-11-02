@@ -1,0 +1,96 @@
+# CubeSat Design Specification checks (deterministic; read by services/cds_checks.py)
+# ==================================================================================
+# Source: Cal Poly CubeSat Design Specification rev 14.1 (2022-02-09). Clause numbers
+# are given per check. Deployer-specific limits (mass, tuna can, rails) override the
+# "typical" CDS values: CDS 2.2.10.2 says the mass limit depends on the dispenser.
+# Values marked source: c2o_default are SpaceCDF choices, not CDS text.
+
+sources:
+  cds_14_1:
+    kind: standard
+    short: "CDS rev 14.1"
+    title: "Cal Poly CubeSat Design Specification rev 14.1 (2022-02-09)"
+    url: "https://www.nasa.gov/wp-content/uploads/2018/01/cubesatdesignspecificationrev14_12022-02-09.pdf"
+    verified: true
+  c2o_default:
+    kind: c2o_default
+    title: "C2O default (established practice / teaching choice; not a standard citation)"
+    verified: false
+
+# CDS Table 1 (2.2.10): typical maximum mass per form factor, kg.
+max_mass_kg:
+  source: cds_14_1
+  clause: "2.2.10, Table 1"
+  values: {"1U": 2.00, "1.5U": 3.00, "2U": 4.00, "3U": 6.00, "6U": 12.00, "12U": 24.00}
+
+# CDS Table 2 (2.2.11): allowed CoG offset from the geometric centre, cm (X, Y, Z).
+cog_limits_cm:
+  source: cds_14_1
+  clause: "2.2.11, Table 2"
+  values:
+    "1U":   [2.0, 2.0, 2.0]
+    "1.5U": [2.0, 2.0, 3.0]
+    "2U":   [2.0, 2.0, 4.5]
+    "3U":   [2.0, 2.0, 7.0]
+    "6U":   [4.5, 2.0, 7.0]
+    "12U":  [4.5, 4.5, 7.0]
+
+# Outer envelope used as the geometric reference, mm (X, Y, Z). CDS drawings; Z is the
+# rail (insertion) axis. Used only to find the geometric centre for the CoG check.
+envelope_mm:
+  source: cds_14_1
+  clause: "Appendix B drawings (nominal envelope)"
+  values:
+    "1U":   [100.0, 100.0, 113.5]
+    "1.5U": [100.0, 100.0, 170.2]
+    "2U":   [100.0, 100.0, 227.0]
+    "3U":   [100.0, 100.0, 340.5]
+    "6U":   [226.3, 100.0, 340.5]
+    "12U":  [226.3, 226.3, 340.5]
+
+mechanical:
+  max_protrusion_mm:   {value: 6.5,  source: cds_14_1, clause: "2.2.3"}
+  min_rail_width_mm:   {value: 8.5,  source: cds_14_1, clause: "2.2.5"}
+  rbf_max_protrusion_mm: {value: 6.5, source: cds_14_1, clause: "2.3.5.2"}
+
+safety:
+  min_rf_inhibits:          {value: 3,  source: cds_14_1, clause: "2.3.7 (a timer is not an independent inhibit, 2.3.7.2)"}
+  min_deployable_inhibits:  {value: 3,  source: cds_14_1, clause: "2.3.8"}
+  min_propulsion_inhibits:  {value: 3,  source: cds_14_1, clause: "2.1.4"}
+  min_deployment_switches:  {value: 1,  source: cds_14_1, clause: "2.3.2"}
+  rbf_required:             {value: true, source: cds_14_1, clause: "2.3.4 / 2.3.5"}
+  min_deploy_delay_min:     {value: 30, source: cds_14_1, clause: "2.4.4"}
+  min_rf_delay_min:         {value: 45, source: cds_14_1, clause: "2.4.5"}
+  rtc_max_current_ma:       {value: 10, source: cds_14_1, clause: "2.3.3.3"}
+  magnet_max_gauss:         {value: 0.5, source: cds_14_1, clause: "2.1.8"}
+
+materials:
+  max_tml_percent:  {value: 1.0, source: cds_14_1, clause: "2.1.7.1"}
+  max_cvcm_percent: {value: 0.1, source: cds_14_1, clause: "2.1.7.2"}
+
+# How SpaceCDF recognises safety features in the design (C2O conventions).
+# Links of canonical type electrical_signal are counted by subtype. "target" limits a
+# kind to links that end on (or above) a transmitter / deployable / propulsion unit.
+# A link counts as properties.inhibit_count inhibits (default 1) and states its delay
+# in properties.delay_min (these are what configs/interface_rules.yaml proposes).
+# An element can also declare values in performance.cds (see docs/RULES_AND_AI.md).
+recognition:
+  source: c2o_default
+  interface_type: electrical_signal
+  count_property: inhibit_count
+  delay_property: delay_min
+  links:
+    rf_inhibit:         {subtypes: [inhibit, rf_inhibit], target: transmitter}
+    deployable_inhibit: {subtypes: [release, deploy_inhibit, deployable_inhibit, inhibit], target: deployable}
+    propulsion_inhibit: {subtypes: [inhibit, propulsion_inhibit], target: propulsion}
+    deployment_switch:  {subtypes: [deployment_switch, separation_switch]}
+    rbf:                {subtypes: [rbf, remove_before_flight]}
+  # element-name keywords (lower case) that mark a transmitter, a deployable, a thruster
+  transmitter_keywords: [transceiver, transponder, transmitter, radio, " tx", modem]
+  deployable_keywords: [deploy, boom, sail, hinged, wing]   # the KB "deployment" field decides first
+  propulsion_keywords: [thruster, propulsion, tank]
+  transmitter_domains: [ttc]
+  propulsion_domains: [propulsion]
+
+# Form factors that make a study "a CubeSat" for these checks.
+cubesat_form_factors: ["1U", "1.5U", "2U", "3U", "6U", "12U"]

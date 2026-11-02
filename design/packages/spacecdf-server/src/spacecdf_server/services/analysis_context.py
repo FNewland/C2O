@@ -207,14 +207,15 @@ async def _load_elements(study_id: str) -> tuple[list[dict], list[dict]]:
     from ..routers import elements as elements_router
     els = [e for e in elements_router._elements.values()
            if e.get("study_id") == study_id and not e.get("deleted_at")]
+    from .interface_model import is_active   # rejected links never feed analyses
     ifs = [i for i in elements_router._interfaces.values()
-           if i.get("study_id") == study_id and not i.get("deleted_at")]
+           if i.get("study_id") == study_id and is_active(i)]
     if els:
         return els, ifs
     from ..db.element_repo import load_all_elements
     all_els, all_ifs = await load_all_elements()
     return ([e for e in all_els.values() if e.get("study_id") == study_id and not e.get("deleted_at")],
-            [i for i in all_ifs.values() if i.get("study_id") == study_id and not i.get("deleted_at")])
+            [i for i in all_ifs.values() if i.get("study_id") == study_id and is_active(i)])
 
 
 async def _load_params(study_id: str, option_id: str | None) -> dict[str, dict[str, EffectiveParam]]:

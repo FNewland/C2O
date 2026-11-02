@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from spacecdf_ai.capabilities.base import BaseCapability
-from spacecdf_ai.capabilities.consistency import _extract_json_array
 from spacecdf_ai.context import build_study_context
 
 
@@ -52,3 +52,26 @@ class RequirementsCapability(BaseCapability):
             "requirements": requirements,
             "count": len(requirements),
         }
+
+
+def _extract_json_array(text: str) -> list[dict]:
+    """Extract a JSON array from text that may contain markdown fences."""
+    try:
+        result = json.loads(text)
+        if isinstance(result, list):
+            return result
+    except json.JSONDecodeError:
+        pass
+    match = re.search(r"```(?:json)?\s*\n(\[.*?\])\s*\n```", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
+    start, end = text.find("["), text.rfind("]")
+    if start != -1 and end > start:
+        try:
+            return json.loads(text[start:end + 1])
+        except json.JSONDecodeError:
+            pass
+    return []

@@ -64,6 +64,7 @@ def run_consistency_check(
     requirements: list[dict[str, Any]] | None = None,
     functions: list[dict[str, Any]] | None = None,
     interfaces: list[dict[str, Any]] | None = None,
+    interface_coverage: dict[str, Any] | None = None,
     conops: dict[str, Any] | None = None,
     design_params: dict[str, Any] | None = None,
     equipment: list[dict[str, Any]] | None = None,
@@ -169,20 +170,27 @@ def run_consistency_check(
         ))
 
     # --- 4. Interface completeness ---
+    # Nov 2026: expected-link coverage from configs/interface_rules.yaml
+    # (services/readiness.interface_coverage), not a count of domain pairs.
     checks += 1
-    subsystems = {"power", "aocs", "link", "thermal", "structure", "propulsion", "data", "payload"}
-    expected_pairs = len(subsystems) * (len(subsystems) - 1) // 2  # C(8,2) = 28
-    if ifcs:
-        defined_count = len(ifcs)
-        if defined_count >= expected_pairs * 0.5:
+    cov = interface_coverage or {}
+    if cov.get("required"):
+        missing = cov.get("missing") or []
+        if not missing:
             passes += 1
         else:
             issues.append(ConsistencyIssue(
-                id="CON-IF-01", severity="minor", category="interfaces",
-                title=f"Interface matrix {defined_count}/{expected_pairs} pairs defined",
-                description="Less than 50% of subsystem pairs have defined interfaces.",
-                suggested_fix="Review the interface matrix and define missing interfaces.",
+                id="CON-IF-01", severity="major" if len(missing) > cov["required"] / 2 else "minor",
+                category="interfaces",
+                title=f"{cov['met']}/{cov['required']} expected interfaces present",
+                description="Units without their expected power, data, mechanical or thermal link: "
+                            + ", ".join(f"{m.get('name')} ({m.get('need')})" for m in missing[:8])
+                            + (" …" if len(missing) > 8 else ""),
+                affected_items=[m.get("element_id", "") for m in missing[:10]],
+                suggested_fix="Run 'Propose expected links' on the Interfaces tab, then accept, edit or reject each suggestion.",
             ))
+    elif ifcs:
+        passes += 1
     else:
         passes += 1  # No interface data available
 

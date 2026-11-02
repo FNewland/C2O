@@ -22,7 +22,16 @@ from .models import ExchangeItemRow
 
 logger = logging.getLogger(__name__)
 
-EXCHANGE_ITEM_KINDS = ("data", "power", "rf", "thermal", "mechanical", "optical", "fluid")
+from spacecdf_common.models.interface_types import INTERFACE_TYPE_VALUES, canonical_interface_type
+
+# Exchange-item kinds = the canonical interface types (Nov 2026); the frontend's
+# old "command"/"signal" kinds are mapped to data / electrical_signal.
+EXCHANGE_ITEM_KINDS = INTERFACE_TYPE_VALUES
+
+
+def canonical_kind(raw: object) -> str | None:
+    """Canonical kind for any accepted spelling; ``None`` when unknown."""
+    return canonical_interface_type(raw)
 
 
 async def load_all_exchange_items(study_id: str | None = None) -> dict[str, dict]:
@@ -49,7 +58,8 @@ async def create_exchange_item(d: dict) -> dict:
         raise ValueError("study_id is required")
     if not kw.get("name"):
         raise ValueError("name is required")
-    kind = kw.setdefault("kind", "data")
+    kind = canonical_kind(kw.setdefault("kind", "data")) or kw["kind"]
+    kw["kind"] = kind
     if kind not in EXCHANGE_ITEM_KINDS:
         raise ValueError(f"kind must be one of {EXCHANGE_ITEM_KINDS}")
     factory = get_session_factory()
@@ -68,6 +78,8 @@ async def get_exchange_item(item_id: str, *, include_deleted: bool = False) -> d
 
 
 async def update_exchange_item(item_id: str, updates: dict, expected_version: int | None = None) -> dict:
+    if "kind" in updates:
+        updates = {**updates, "kind": canonical_kind(updates["kind"]) or updates["kind"]}
     if "kind" in updates and updates["kind"] not in EXCHANGE_ITEM_KINDS:
         raise ValueError(f"kind must be one of {EXCHANGE_ITEM_KINDS}")
     factory = get_session_factory()

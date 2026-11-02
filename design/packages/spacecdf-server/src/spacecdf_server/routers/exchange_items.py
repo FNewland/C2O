@@ -27,7 +27,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from ..db import exchange_item_repo as repo
-from ..db.exchange_item_repo import EXCHANGE_ITEM_KINDS
+from ..db.exchange_item_repo import EXCHANGE_ITEM_KINDS, canonical_kind
 from ._arcadia_events import broadcast_mutation
 
 logger = logging.getLogger(__name__)
@@ -71,9 +71,10 @@ def _map_error(exc: ValueError) -> HTTPException:
 
 @router.post("/exchange-items/")
 async def create_exchange_item(body: ExchangeItemCreate, study_id: str = Query(...)) -> dict:
-    if body.kind not in EXCHANGE_ITEM_KINDS:
+    kind = canonical_kind(body.kind)
+    if kind not in EXCHANGE_ITEM_KINDS:
         raise HTTPException(400, f"kind must be one of {EXCHANGE_ITEM_KINDS}")
-    payload = {"study_id": study_id, **body.model_dump()}
+    payload = {"study_id": study_id, **body.model_dump(), "kind": kind}
     if payload.get("external_ids") is None:
         payload["external_ids"] = {}
     try:
@@ -126,8 +127,10 @@ async def delete_exchange_item(item_id: str) -> dict:
 
 @router.get("/studies/{study_id}/exchange-items")
 async def list_exchange_items(study_id: str, kind: str | None = None) -> list[dict]:
-    if kind is not None and kind not in EXCHANGE_ITEM_KINDS:
-        raise HTTPException(400, f"kind must be one of {EXCHANGE_ITEM_KINDS}")
+    if kind is not None:
+        kind = canonical_kind(kind)
+        if kind not in EXCHANGE_ITEM_KINDS:
+            raise HTTPException(400, f"kind must be one of {EXCHANGE_ITEM_KINDS}")
     return await repo.list_exchange_items_by_study(study_id, kind=kind)
 
 
@@ -185,13 +188,18 @@ async def build_icd_rows(study_id: str) -> list[dict]:
         return {"id": eid, "name": el.get("name") if el else None}
 
     rows: list[dict] = []
-    ifaces = [i for i in _interfaces.values() if i.get("study_id") == study_id and not i.get("deleted_at")]
+    # rejected suggestions are not part of the ICD
+    ifaces = [i for i in _interfaces.values() if i.get("study_id") == study_id and not i.get("deleted_at")
+              and i.get("status") != "rejected"]
     ifaces.sort(key=lambda i: (i.get("name") or "", i["id"]))
     for iface in ifaces:
         base = {
             "interface_id": iface["id"],
             "name": iface.get("name") or "",
             "interface_type": iface.get("interface_type"),
+            "subtype": iface.get("subtype"),
+            "status": iface.get("status"),
+            "origin": iface.get("origin"),
             "direction": iface.get("direction"),
             "from_element": _el(iface.get("from_element_id")),
             "to_element": _el(iface.get("to_element_id")),

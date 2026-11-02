@@ -75,6 +75,9 @@ export const EVIDENCE_KEYS = [
   'No subsystem elements defined',
   '{{ok}}/{{total}} subsystems have at least one component',
   'Reliability {{rel}} vs target {{target}}',
+  'All {{required}} expected subsystem links present and reviewed',
+  '{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed',
+  'Interface rules are invalid',
 ]
 
 /** Where "Go fix" goes, and what it says, for a criterion. */

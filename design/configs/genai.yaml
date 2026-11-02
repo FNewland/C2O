@@ -1,50 +1,41 @@
 # SpaceCDF GenAI Configuration
 # =============================
-# Master control for AI-assisted capabilities.
-# When enabled: false, the tool behaves identically to v1.0 (pure deterministic).
-# When enabled: true, AI capabilities enhance (but never replace) the design agents.
+# SpaceCDF designs with deterministic engines and rules (docs/RULES_AND_AI.md).
+# AI is OFF by default and no workflow needs it. When switched on, it is limited to
+# three optional prose tasks, and every AI output goes through the same rule checks
+# (EARS / INCOSE requirement checks) before it is shown.
 #
-# API key is NEVER stored here. Set ANTHROPIC_API_KEY in your environment or .env file,
-# or pass per-request via the X-API-Key header from the frontend.
+# Kill switch: with enabled: false every /api/ai endpoint answers 503 and no model is
+# called, whatever API key is present (environment or X-API-Key header).
+#
+# The API key is NEVER stored here. Set ANTHROPIC_API_KEY in your environment or .env
+# file, or pass it per request in the X-API-Key header.
 
 genai:
   enabled: false                      # Master kill switch
-  provider: "anthropic"               # Future: openai, local (ollama), etc.
-  model: "claude-sonnet-4-6"          # Default model for most capabilities
-  model_heavy: "claude-opus-4-6"      # For complex reasoning (consistency check, AOCS design)
-  model_fast: "claude-haiku-4-5-20251001"  # For high-volume, low-latency tasks
+  provider: "anthropic"
+  model: "claude-sonnet-4-6"          # Default model for the prose capabilities
+  model_heavy: "claude-opus-4-6"      # Unused since the heavy capabilities became rules
+  model_fast: "claude-haiku-4-5-20251001"
   api_key_env: "ANTHROPIC_API_KEY"    # Environment variable name (never the key itself)
 
-  # Per-capability toggles — each can be independently enabled/disabled
+  # The only capabilities that remain. Any other name is refused by the server
+  # (spacecdf_ai.config.RETAINED_CAPABILITIES); its deterministic replacement is
+  # listed in docs/RULES_AND_AI.md.
   capabilities:
-    # --- Phase A / Discovery Support ---
-    design_advisor: true              # SE advisor chat in GuidancePanel
-    requirements_decomposition: true  # Mission statement -> L0/L1 requirements
-    consistency_checking: true        # Cross-budget/cross-domain sanity checking
-    trade_analysis: true              # AI-structured trade studies
-    cost_estimation: true             # Parametric cost with AI sanity check
-
-    # --- Documentation ---
-    report_narrative: true            # AI-written narrative sections in ECSS docs
-    fmea_generation: true             # AI-assisted FMEA from element tree
-
-    # --- CDR-Quality Engineering (Advanced) ---
-    cad_scripting: false              # CAD model generation (CadQuery / FreeCAD / Fusion 360)
-    wiring_generation: false          # Harness & wiring diagram (KiCad netlist/schematic)
-    fsw_generation: false             # Flight software code generation
-    aocs_design: false                # AOCS control law design & closed-loop simulation
-    thermal_setup: false              # Thermal model input deck generation
-    structural_setup: false           # FEM input deck generation (Nastran / CalculiX)
+    design_advisor: true              # Critique of stakeholder / mission-need prose; free Q&A
+    requirements_decomposition: true  # Polish free-text objectives into shall statements (rule-checked)
+    report_narrative: true            # Narrative / executive-summary prose for documents
 
   # Resource management
   budget:
-    max_tokens_per_call: 4096         # Single API call output limit
+    max_tokens_per_call: 4096         # Single API call output limit (requests are capped to it)
     max_context_elements: 200         # Max element tree nodes serialized to context
     session_token_limit: 100000       # Per-session cumulative token budget
     rate_limit_rpm: 30                # Max requests per minute
 
   # Output control
   output:
-    include_reasoning: false          # Include AI reasoning chain in responses
+    include_reasoning: false
     include_references: true          # Cite ECSS/NASA standards in responses
     language: "en"                    # Default response language: en | fr. A request's UI language (AIRequest.language / ?language=) overrides it.

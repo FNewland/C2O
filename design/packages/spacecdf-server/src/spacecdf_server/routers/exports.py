@@ -841,7 +841,7 @@ async def export_mbse(study_id: str) -> JSONResponse:
                     if e.get("study_id") == study_id and not e.get("deleted_at")]
         interfaces = [
             i for i in _interfaces.values()
-            if not i.get("deleted_at") and (
+            if not i.get("deleted_at") and i.get("status") != "rejected" and (
                 i.get("study_id") == study_id
                 or i.get("source_element_id") in {e.get("id") for e in elements}
                 or i.get("target_element_id") in {e.get("id") for e in elements}
@@ -1071,7 +1071,7 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
                 ]
                 interfaces = [
                     i for i in _interfaces.values()
-                    if not i.get("deleted_at") and (
+                    if not i.get("deleted_at") and i.get("status") != "rejected" and (
                         i.get("study_id") == study_id
                         or i.get("source_element_id") in {e.get("id") for e in elements}
                         or i.get("target_element_id") in {e.get("id") for e in elements}
@@ -2094,7 +2094,7 @@ async def export_test_plan(
     # Read interfaces for integration test matrix
     study_interfaces = [
         i for i in _interfaces.values()
-        if not i.get("deleted_at") and (
+        if not i.get("deleted_at") and i.get("status") != "rejected" and (
             i.get("study_id") == study_id or
             i.get("source_element_id") in {e.get("id") for e in elements} or
             i.get("target_element_id") in {e.get("id") for e in elements}

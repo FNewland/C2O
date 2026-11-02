@@ -13,6 +13,16 @@ import yaml
 from pydantic import BaseModel, Field
 
 
+#: The only capabilities SpaceCDF still offers through an LLM (docs/RULES_AND_AI.md).
+#: Everything else has a deterministic engine; a capability not listed here is never
+#: capable, whatever genai.yaml says.
+RETAINED_CAPABILITIES: tuple[str, ...] = (
+    "design_advisor",              # stakeholder-text critique and free Q&A
+    "requirements_decomposition",  # polishing free-text objectives into shall statements
+    "report_narrative",            # narrative / executive-summary prose for documents
+)
+
+
 class BudgetConfig(BaseModel):
     max_tokens_per_call: int = 4096
     max_context_elements: int = 200
@@ -44,8 +54,9 @@ class GenAIConfig(BaseModel):
         return os.environ.get(self.api_key_env) or None
 
     def is_capable(self, capability: str) -> bool:
-        """Check if a specific capability is enabled."""
-        return self.enabled and self.capabilities.get(capability, False)
+        """True only when the master switch is on, the capability is retained and enabled."""
+        return bool(self.enabled and capability in RETAINED_CAPABILITIES
+                    and self.capabilities.get(capability, False))
 
 
 # Module-level singleton

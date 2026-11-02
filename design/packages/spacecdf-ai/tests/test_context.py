@@ -45,3 +45,20 @@ def test_build_review_context_includes_conflicts():
         conflicts=[{"severity": "critical", "description": "Mass budget exceeded"}],
     )
     assert "Mass budget exceeded" in ctx
+
+
+def test_build_review_context_uses_real_interface_keys():
+    """SpaceCDF interfaces carry from_/to_element_id and interface_type (audit §1.4.4)."""
+    ctx = build_review_context(
+        {"name": "Review"},
+        interfaces=[{"from_element_id": "eps-1", "to_element_id": "obc-1", "interface_type": "power"}],
+    )
+    assert "eps-1 -> obc-1 [power]" in ctx
+
+
+def test_context_to_kwargs_keeps_the_mission_need():
+    from spacecdf_ai.context import context_to_kwargs
+
+    kw = context_to_kwargs({"problem_statement": "P", "objectives": [{"text": "O"}], "stakeholders": []})
+    assert kw["mission_need"]["problem_statement"] == "P"
+    assert kw["study"]["mission_need"]["objectives"][0]["text"] == "O"

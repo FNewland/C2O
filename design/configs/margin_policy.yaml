@@ -1,0 +1,86 @@
+# SpaceCDF margin policy (deterministic; read by services/margin_policy.py)
+# ===========================================================================
+# Instructors may edit any value here; the server validates this file at start-up
+# (services/rule_config.py) and reports errors instead of using a broken policy.
+#
+# Every number names its source. Two kinds of source exist:
+#   * a cited document (kind: standard / guideline) that was read and checked;
+#   * a C2O default (kind: c2o_default): established practice or a teaching choice,
+#     NOT a standard citation. The UI and the rationale text say "C2O default".
+# See docs/RULES_AND_AI.md for the full list.
+
+sources:
+  esa_margin_1_3:
+    kind: guideline
+    short: "ESA margin philosophy (SCI) 1.3"
+    title: "ESA, Margin philosophy for science assessment studies, issue 1.3"
+    url: "https://sci.esa.int/documents/34375/36249/1567260131067-Margin_philosophy_for_science_assessment_studies_1.3.pdf"
+    verified: true
+  cds_14_1:
+    kind: standard
+    short: "CDS rev 14.1"
+    title: "Cal Poly CubeSat Design Specification rev 14.1 (2022-02-09)"
+    url: "https://www.nasa.gov/wp-content/uploads/2018/01/cubesatdesignspecificationrev14_12022-02-09.pdf"
+    verified: true
+  c2o_default:
+    kind: c2o_default
+    title: "C2O default (established practice / teaching choice; not a standard citation)"
+    verified: false
+
+# Equipment maturity margins (applied to each unit's current best estimate).
+# Category letters follow the ESA document (A/B off-the-shelf, C minor modification,
+# D new design or major modification).
+maturity_margins:
+  source: esa_margin_1_3
+  clause: "R-M1-4 / R-M2-4 (mass), R-P-11..13 (power)"
+  categories:
+    A: {percent: 5,  label: {en: "Off-the-shelf, qualified", fr: "Sur étagère, qualifié"}}
+    B: {percent: 5,  label: {en: "Off-the-shelf, qualified for another environment", fr: "Sur étagère, qualifié pour un autre environnement"}}
+    C: {percent: 10, label: {en: "Off-the-shelf with minor modifications", fr: "Sur étagère avec modifications mineures"}}
+    D: {percent: 20, label: {en: "New design or major modification", fr: "Nouvelle conception ou modification majeure"}}
+
+# How SpaceCDF picks a category when the designer has not set one on the element
+# (element.performance.maturity_category). This mapping is a C2O default.
+category_from_trl:
+  source: c2o_default
+  rules:            # first match wins
+    - {min_trl: 8, requires_heritage: true,  category: A}
+    - {min_trl: 8, requires_heritage: false, category: B}
+    - {min_trl: 6, requires_heritage: false, category: C}
+    - {min_trl: 0, requires_heritage: false, category: D}
+  no_kb_component: D   # an element without a KB part is treated as a new design
+
+mass:
+  system_margin_percent: {value: 20, source: esa_margin_1_3, clause: "2.1.1 R-M1-1 / 2.1.2"}
+  harness_percent:       {value: 5,  source: esa_margin_1_3, clause: "R-M1-7"}
+  propellant_residual_percent: {value: 2, source: esa_margin_1_3, clause: "R-M1-6"}
+  tank_volume_margin_percent:  {value: 10, source: esa_margin_1_3, clause: "R-M1-10"}
+
+power:
+  system_margin_percent: {value: 20, source: esa_margin_1_3, clause: "R-P-3"}
+
+delta_v:
+  # Margin per manoeuvre class, applied to the computed ΔV.
+  calculated_manoeuvre_percent: {value: 5,   source: esa_margin_1_3, clause: "R-DV-11"}
+  orbit_maintenance_percent:    {value: 100, source: esa_margin_1_3, clause: "R-DV-12"}
+  attitude_control_percent:     {value: 100, source: esa_margin_1_3, clause: "R-DV-13"}
+  # Which design parameter belongs to which class (C2O mapping of SpaceCDF ids).
+  parameter_classes:
+    source: c2o_default
+    calculated_manoeuvre: [orbit.delta_v_insertion_ms, orbit.delta_v_deorbit_ms]
+    orbit_maintenance: [orbit.delta_v_sk_ms, orbit.delta_v_maintenance_ms]
+    attitude_control: [aocs.delta_v_attitude_ms]
+
+data_handling:
+  ram_max_used_percent: {value: 50, source: esa_margin_1_3, clause: "R-SW-1 (RAM margin ≥ 50 %, read as ≤ 50 % of capacity used)"}
+  cpu_max_peak_percent: {value: 50, source: esa_margin_1_3, clause: "R-SW-2"}
+  storage_margin_percent: {value: 50, source: c2o_default, clause: "mirrors the RAM rule"}
+
+thermal:
+  heat_rejection_margin_percent: {value: 50, source: esa_margin_1_3, clause: "R-T-2"}
+
+# Which element types carry mass/power in the roll-up (leaves of the space segment).
+rollup:
+  source: c2o_default
+  element_types: [system, subsystem, component]
+  exclude_segments: [ground, operations, user]

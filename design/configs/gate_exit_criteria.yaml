@@ -190,8 +190,8 @@ phases:
       - id: PDR-EC-02
         question: "Are interface requirements defined between all subsystems?"
         category: interfaces
-        evidence: "Manual: IRD/ICD exists for each external interface"
-        status: manual
+        evidence: "Every subsystem has its expected power, data, mechanical and thermal links (configs/interface_rules.yaml coverage) and no suggested link is left unreviewed; the IRD/ICD for external interfaces is still checked by the board"
+        status: auto
         priority: must_pass
 
       - id: PDR-EC-03

@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from spacecdf_common.models.cubesat_standards import component_protocols
+
 
 # Standard CubeSat bus protocols with physical characteristics
 BUS_SPECS: dict[str, dict[str, Any]] = {
@@ -73,6 +75,15 @@ BUS_SPECS: dict[str, dict[str, Any]] = {
         "cable_mass_per_m_g": 0, "max_length_m": 0,  # no cable — direct stack
     },
 }
+
+
+def _protocol_priority() -> list[str]:
+    """Bus priority shared with the interface proposer (falls back to the historical order)."""
+    try:
+        from .interface_proposer import load_rules
+        return [p for p in load_rules()["defaults"]["protocol_priority"] if p in BUS_SPECS] or ["I2C", "SPI", "UART", "CAN"]
+    except Exception:  # noqa: BLE001 — invalid rules file: keep working
+        return ["I2C", "SPI", "UART", "CAN"]
 
 
 @dataclass
@@ -196,9 +207,11 @@ def design_harness(
         name = comp.get("name", cat)
         comp_ifaces = comp.get("interfaces", [])
 
-        # Find shared protocol with OBC
-        obc_ifaces = selected_components.get("obcs", {}).get("interfaces", [])
-        shared = [p for p in [primary_bus, "I2C", "SPI", "UART", "CAN"] if p in comp_ifaces and p in obc_ifaces]
+        # Find shared protocol with OBC — same normalisation and priority as the
+        # interface proposer (configs/interface_rules.yaml defaults.protocol_priority)
+        obc_ifaces = component_protocols(selected_components.get("obcs", {}))
+        comp_ifaces = component_protocols(comp)
+        shared = [p for p in [primary_bus, *_protocol_priority()] if p in comp_ifaces and p in obc_ifaces]
 
         if not shared:
             shared = [p for p in comp_ifaces if p in obc_ifaces]

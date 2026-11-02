@@ -187,17 +187,21 @@ def check_interface_compatibility(
     component_a: dict[str, Any],
     component_b: dict[str, Any],
 ) -> dict[str, Any]:
-    """Check if two components share a compatible digital interface."""
-    ifaces_a = set(_get_interfaces(component_a))
-    ifaces_b = set(_get_interfaces(component_b))
+    """Check if two components share a compatible digital interface and rail.
 
-    common = ifaces_a & ifaces_b
-    if common:
-        return {"compatible": True, "shared_interfaces": sorted(common)}
-    if not ifaces_a or not ifaces_b:
-        return {"compatible": True, "shared_interfaces": [], "note": "Interface data missing — manual check needed"}
-    return {"compatible": False, "shared_interfaces": [],
-            "note": f"No common interface: {sorted(ifaces_a)} vs {sorted(ifaces_b)}"}
+    Thin dict wrapper over the single implementation in
+    ``spacecdf_common.models.cubesat_standards.check_interface_compatibility``
+    (the two copies were consolidated in Nov 2026; protocol names are now
+    normalised and voltage rails are checked too).
+    """
+    from spacecdf_common.models.cubesat_standards import check_interface_compatibility as _check
+
+    r = _check(component_a, component_b)
+    out: dict[str, Any] = {"compatible": r.compatible, "shared_interfaces": r.shared_protocols}
+    note = "; ".join(r.incompatibilities) or r.notes
+    if note:
+        out["note"] = note
+    return out
 
 
 def _get_interfaces(comp: dict) -> list[str]:

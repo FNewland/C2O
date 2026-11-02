@@ -8,6 +8,7 @@ These connect the previously-orphaned utility services to the frontend.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
@@ -28,6 +29,8 @@ from ..services.traceability import trace_budget_to_need
 from ..services.session_guidance import recommend_next_session
 from ..services.mission_trade import compute_mission_trade
 from ..services.example_missions import list_example_missions, get_example_mission
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -694,10 +697,24 @@ async def run_consistency_check_endpoint(study_id: str) -> dict:
 
     phase_id = study.phase.value if hasattr(study.phase, "value") else str(study.phase)
 
+    # Nov 2026: interfaces and their expected-link coverage feed CON-IF-01
+    from .elements import _elements, active_interfaces
+    ifaces = active_interfaces(study_id)
+    coverage = None
+    try:
+        from ..services.readiness import build_context, interface_coverage
+        els = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+        if els:
+            coverage = interface_coverage(build_context(study_id, els), ifaces)
+    except Exception:  # noqa: BLE001 — invalid rules: fall back to "interfaces exist"
+        logger.exception("interface coverage unavailable for %s", study_id)
+
     report = run_consistency_check(
         mission_need=mn,
         requirements=reqs,
         functions=funcs,
+        interfaces=ifaces,
+        interface_coverage=coverage,
         phase_id=phase_id,
     )
 
