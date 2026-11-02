@@ -206,12 +206,12 @@ Columns:
 
 | ID | Name | Unit | HK SID | S20 | Ground limits (Y / R) | S12 | Stub |
 |---|---|---|---|:-:|---|---|:-:|
-| `0x0100` | eps.bat_voltage | V | 1, 11 |  | 23…29 / 22…29.5 |  |  |
-| `0x0101` | eps.bat_soc | % | 1, 11 |  | 25…95 / 15…100 | EPS Battery SoC Warning (20.0…100.0, WARNING)<br>EPS Battery SoC Critical (10.0…100.0, ALARM) |  |
+| `0x0100` | eps.bat_voltage | V | 1, 11 |  | 23…29.4 / 22…29.8 |  |  |
+| `0x0101` | eps.bat_soc | % | 1, 11 |  | 25…100 / 15…100 | EPS Battery SoC Warning (20.0…100.0, WARNING)<br>EPS Battery SoC Critical (10.0…100.0, ALARM) |  |
 | `0x0102` | eps.bat_temp | C | 1 |  | 2…40 / 0…45 | EPS Battery Overtemp (-5.0…45.0, WARNING)<br>EPS Battery Undertemp (-5.0…50.0, WARNING) |  |
 | `0x0103` | eps.sa_a_current | A | 1 |  |  | EPS Solar Array A Low Current (0.1…50.0, WARNING) |  |
 | `0x0104` | eps.sa_b_current | A | 1 |  |  | EPS Solar Array B Low Current (0.1…50.0, WARNING) |  |
-| `0x0105` | eps.bus_voltage | V | 1 |  | 27…29 / 26.5…29.5 | EPS Bus Voltage Low (27.0…35.0, WARNING)<br>EPS Bus Voltage Critical (25.0…35.0, ALARM) |  |
+| `0x0105` | eps.bus_voltage | V | 1 |  | 27…29.5 / 26.5…30 | EPS Bus Voltage Low (27.0…35.0, WARNING)<br>EPS Bus Voltage Critical (25.0…35.0, ALARM) |  |
 | `0x0106` | eps.power_cons | W | 1 |  |  |  |  |
 | `0x0107` | eps.power_gen | W | 1 |  |  |  |  |
 | `0x0108` | eps.eclipse_flag |  | 1 |  |  |  |  |

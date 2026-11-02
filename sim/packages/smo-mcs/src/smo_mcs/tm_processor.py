@@ -172,12 +172,44 @@ class TMProcessor:
         """Current ground-limit state of every limited parameter seen so far."""
         return dict(self._limit_status)
 
+    _SEVERITY = {"nominal": 0, "yellow_low": 1, "yellow_high": 1,
+                 "red_low": 2, "red_high": 2}
+
+    @staticmethod
+    def _deadband(limit) -> float:
+        """Clearing deadband for *limit* (see LimitDef.deadband)."""
+        db = getattr(limit, "deadband", None)
+        if db is not None:
+            return max(0.0, float(db))
+        lo, hi = limit.yellow_low, limit.yellow_high
+        if lo is not None and hi is not None and hi > lo:
+            return 0.01 * (hi - lo)
+        ref = next((v for v in (hi, lo, limit.red_high, limit.red_low)
+                    if v is not None), 0.0)
+        return 0.01 * abs(ref)
+
+    def _hold_state(self, limit, prev: str, value: float) -> bool:
+        """True while *value* is still within the deadband of the boundary
+        that put the parameter into *prev*: the state must not step down."""
+        db = self._deadband(limit)
+        bound = getattr(limit, prev, None)
+        if bound is None or db <= 0:
+            return False
+        if prev.endswith("_high"):
+            return value > bound - db
+        return value < bound + db
+
     def _check_limit(self, param_id: int, value: float) -> None:
         limit = self._limits.get(param_id)
         if not limit:
             return
         status = self.classify(param_id, value)
         prev = self._limit_status.get(param_id, "nominal")
+        # Hysteresis: a step DOWN in severity (alarm -> caution -> nominal)
+        # only once the value is back inside the boundary by the deadband.
+        if (self._SEVERITY.get(status, 0) < self._SEVERITY.get(prev, 0)
+                and self._hold_state(limit, prev, value)):
+            status = prev
         self._limit_status[param_id] = status
         if status == prev:
             # Steady state — already journalled (or already nominal).

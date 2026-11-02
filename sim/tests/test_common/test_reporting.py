@@ -213,9 +213,10 @@ def test_stats_numeric_and_ool_red_time(dataset, catalogs):
     assert st["max"] == pytest.approx(29.8, abs=0.02)
     expected_mean = (30 * 29.8 + 50 * 27.5) / 80
     assert st["mean"] == pytest.approx(expected_mean, abs=0.05)
-    # 30 samples above red_high 29.5 at 1.0 s cadence
-    assert st["ool_red_s"] == pytest.approx(30.0)
-    assert st["ool_yellow_s"] >= st["ool_red_s"]
+    # 30 samples at 29.8 V at 1.0 s cadence: above the caution limit
+    # (29.5 V) but below the alarm limit (30.0 V) since the 2026-11 limit fix
+    assert st["ool_red_s"] == pytest.approx(0.0)
+    assert st["ool_yellow_s"] == pytest.approx(30.0)
     assert st["first"] == pytest.approx(29.8, abs=0.02)
     assert st["last"] == pytest.approx(27.5, abs=0.02)
 

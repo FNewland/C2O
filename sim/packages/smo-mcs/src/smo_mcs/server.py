@@ -845,6 +845,7 @@ class MCSServer:
 
         params = {pid: meta.get("name", "") for pid, meta in self._param_meta.items()}
 
+        self._s12_ref = s12_ref
         self._fdir_model.load_reference(s12=s12_ref, s19=s19_ref,
                                         events=events, funcs=funcs,
                                         params=params)
@@ -1992,13 +1993,27 @@ class MCSServer:
         if pkt.secondary.service == 12 and pkt.secondary.subtype == 9:
             mon = info.get("monitoring")
             if mon:
+                # Trace back to the on-board monitor that fired, so an
+                # operator can disable the right one (S12.2 / S12.6 by mon_id).
+                mon_id = mon.get("mon_id")
+                ref = (getattr(self, "_s12_ref", {}) or {}).get(mon_id, {}) \
+                    if mon_id is not None else {}
+                lim = "OOL"
+                lo, hi = mon.get("low_limit", ref.get("low_limit")), \
+                    mon.get("high_limit", ref.get("high_limit"))
+                if lo is not None and hi is not None:
+                    lim = f"OOL [{float(lo):.4g} .. {float(hi):.4g}]"
                 await self._raise_alarm({
                     "severity": 3,
                     "subsystem": self._param_id_to_subsystem(mon["param_id"]),
                     "parameter": f"0x{mon['param_id']:04X}",
+                    "name": self._param_meta.get(int(mon["param_id"]), {}).get("name", ""),
                     "value": str(round(mon["value"], 4)),
-                    "limit": "OOL",
+                    "limit": lim,
                     "source": "S12",
+                    "mon_id": mon_id,
+                    "monitor_name": ref.get("name", ""),
+                    "config_file": "monitoring/s12_definitions.yaml",
                 })
 
         # -- Ground limit checking (WP-3) -----------------------------------
@@ -2034,6 +2049,7 @@ class MCSServer:
                           if thresh is not None else status.upper()),
                 "units": meta.get("units", ""),
                 "source": "LIMIT",
+                "config_file": "mcs/limits.yaml",
                 "limit_status": status,
                 "band": band,
             })

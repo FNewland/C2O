@@ -725,6 +725,11 @@ class LimitDef(StrictModel):
     red_low: float | None = None
     red_high: float | None = None
     check_interval_s: float = 4.0
+    #: Clearing deadband (engineering units, ISA-18.2): once a value is out
+    #: of limits it must come back inside by this much before the state
+    #: steps down, so noise on a limit cannot chatter the alarm. None = 1 %
+    #: of the caution band width (or of the limit's magnitude if one-sided).
+    deadband: float | None = None
 
 class TCFieldCalibration(StrictModel):
     """Raw <-> engineering conversion for one TC argument (Phase E WP-0).

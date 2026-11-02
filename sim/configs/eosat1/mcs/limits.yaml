@@ -1,9 +1,15 @@
 limits:
   # ===== EPS =====
-  - { param_id: 0x0100, yellow_low: 23.0, yellow_high: 29.0, red_low: 22.0, red_high: 29.5, check_interval_s: 4 }
-  - { param_id: 0x0101, yellow_low: 25.0, yellow_high: 95.0, red_low: 15.0, red_high: 100.0, check_interval_s: 4 }
+  # Battery: open-circuit voltage reaches 29.2 V at full charge (eps.yaml),
+  # so the high limits sit above it.
+  - { param_id: 0x0100, yellow_low: 23.0, yellow_high: 29.4, red_low: 22.0, red_high: 29.8, check_interval_s: 4 }
+  # SoC: full charge is normal (the charge regulator caps it): the high limits
+  # are set at 100 % so they never fire; only the low limits matter.
+  - { param_id: 0x0101, yellow_low: 25.0, yellow_high: 100.0, red_low: 15.0, red_high: 100.0, check_interval_s: 4 }
   - { param_id: 0x0102, yellow_low: 2.0, yellow_high: 40.0, red_low: 0.0, red_high: 45.0, check_interval_s: 8 }
-  - { param_id: 0x0105, yellow_low: 27.0, yellow_high: 29.0, red_low: 26.5, red_high: 29.5, check_interval_s: 1 }
+  # Bus is regulated to 29.0 V (bus = min(29.0, V_bat)): the high limits sit
+  # above regulation so noise at 29.0 cannot alarm; 29.5/30.0 = real overvoltage.
+  - { param_id: 0x0105, yellow_low: 27.0, yellow_high: 29.5, red_low: 26.5, red_high: 30.0, check_interval_s: 1 }
   # Per-line overcurrent thresholds (current in amps)
   - { param_id: 0x0118, yellow_low: 0.0, yellow_high: 1.8, red_low: 0.0, red_high: 2.0, check_interval_s: 1 }
   - { param_id: 0x0119, yellow_low: 0.0, yellow_high: 0.25, red_low: 0.0, red_high: 0.3, check_interval_s: 1 }
