@@ -45,12 +45,6 @@
   "Spacecraft transmitter ({{field}} from the sim)": "Émetteur du satellite ({{field}} fourni par la simulation)",
   "{{vc}} Playback": "{{vc}} Relecture",
   "{{vc}} Idle": "{{vc}} Inactif",
-  "No I/Q data": "Aucune donnée I/Q",
-  "Spectrum: RF mode only (current mode: {{mode}})": "Spectre : mode RF uniquement (mode actuel : {{mode}})",
-  "Eye diagram: RF mode only": "Diagramme de l'œil : mode RF uniquement",
-  "No spectrum data": "Aucune donnée de spectre",
-  "No eye data": "Aucune donnée d'œil",
-  "no data": "aucune donnée",
   "SMO Radio — Channel Model (Instructor)": "SMO Radio — Modèle de canal (instructeur)",
   "Instructor — RF channel model · simulation ground truth · not an operator display": "Instructeur — modèle de canal RF · vérité terrain de la simulation · pas un affichage opérateur",
   "Injected link impairments — instructor only": "Dégradations de liaison injectées — instructeur uniquement",
@@ -152,5 +146,10 @@
   "on": "activé",
   "power spectral density": "densité spectrale de puissance",
   "received symbols": "symboles reçus",
-  "two symbol periods": "deux périodes de symbole"
+  "two symbol periods": "deux périodes de symbole",
+  "Waiting for the receiver feed": "En attente du flux du récepteur",
+  "No carrier: the spacecraft S-band transmitter is off": "Pas de porteuse : l'émetteur bande S du satellite est éteint",
+  "Shown in RF mode only (current mode: {{mode}})": "Affiché en mode RF uniquement (mode actuel : {{mode}})",
+  "Receiver not locked yet": "Récepteur pas encore verrouillé",
+  "No data yet": "Pas encore de données"
 }
