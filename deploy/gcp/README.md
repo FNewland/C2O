@@ -4,6 +4,13 @@ This runbook puts the SMO ground segment (MCS, planner and the instructor consol
 gateway) on the web at `c2o.live`. It sits behind Google sign-in with mandatory 2-step verification. The
 simulator runs either on **your laptop** or on a **cloud simulator VM**.
 
+`https://c2o.live` itself is the **welcome page**: every screen (mission control, planner, SpaceCDF,
+the tool pages, and the instructor screens marked "instructors only") with its address and a live
+status (available / not running / waiting for a simulator), plus a mission strip (simulator link,
+spacecraft mode from telemetry, next pass) and the signed-in account. Every screen keeps its own
+address (`ops.c2o.live` and so on); the welcome page only links to them. It is `sim/tools/portal.py`
+on port 8090 of the ground VM.
+
 Written 2026-10-30. **Nothing here has been run against a real Google Cloud project yet.** See
 [What was checked offline](#what-was-checked-offline-and-what-was-not); every **[verify]** marks a point
 only a real run can settle.
@@ -11,7 +18,8 @@ only a real run can settle.
 ```
                   ┌──────────── Google global external Application Load Balancer (IP: c2o-lb-ip) ───────────┐
 browser ─HTTPS──► │ managed cert · TLS 1.2+ · Cloud Armor rate limits · http→https redirect                 │
-                  │  ops.c2o.live, c2o.live ─ IAP (students+instructors) ─► ground VM :9090 MCS           │
+                  │  c2o.live (welcome)     ─ IAP (students+instructors) ─► ground VM :8090 portal        │
+                  │  ops.c2o.live           ─ IAP (students+instructors) ─► ground VM :9090 MCS           │
                   │  plan.c2o.live          ─ IAP (students+instructors) ─► ground VM :9091 planner       │
                   │  sim.c2o.live           ─ IAP (instructors only)     ─► ground VM :8080 GSG proxy     │
 laptop agent ─WSS►│  link.c2o.live/link     ─ IAP OFF (HMAC secret)      ─► ground VM :9100 GSG /link     │
@@ -25,11 +33,14 @@ VPC c2o-vpc 10.20.0.0/24 (Toronto) · no external IPs on VMs · outbound via Clo
 ```
 
 **Who can reach what.** IAP admits only `@c2o.live` accounts, because the Google-managed OAuth client
-serves internal users only. Students and instructors reach ops, plan and the tool pages (tm, orbit,
-radio, docs); only instructors reach sim, scenarios and adcs. The
+serves internal users only. Students and instructors reach the welcome page (`c2o.live`), ops, plan,
+design and the tool pages (tm, orbit, radio, docs); only instructors reach sim, scenarios and adcs. The
+welcome page lists the instructor screens to everyone, labelled "instructors only"; a student who
+follows one gets IAP's "You don't have access". The
 `/link` path is the one way in without IAP: the agent proves the link session secret (HMAC upgrade header,
 then a mutual challenge, then a MAC on every frame). The VPC firewall lets in only Google's load-balancer
-ranges (and the sim VM on port 9100), plus IAP on port 22.
+ranges (and the sim VM on port 9100), plus IAP on port 22. One private rule lets the ground VM reach
+the sim VM's tool ports 8096-8097, so the welcome page can say whether they are up.
 
 **Files in this folder**
 
@@ -236,7 +247,8 @@ last seven are the tool pages and SpaceCDF):
 
 Keep the TTL the same on all of them; Squarespace asks for that on its Google-hosted DNS. Do **not** add
 AAAA records: the load balancer has an IPv4 address only, and a stray AAAA blocks the certificate. If
-you set `INCLUDE_APEX=no`, skip `@`.
+you set `INCLUDE_APEX=no`, skip `@`; there is then no welcome page (its back end exists but nothing
+routes to it) and every screen is reached by its own address.
 
 Check from Cloud Shell; every name must print the LB IP:
 
@@ -366,13 +378,14 @@ Use a private browser window for each identity.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | `bash deploy/gcp/start.sh` | All four backends `HEALTHY` |
+| 1 | `bash deploy/gcp/start.sh` | All five backends (welcome, ops, plan, sim, link) `HEALTHY` |
 | 2 | `curl -sI http://ops.c2o.live` | `301` to `https://ops.c2o.live/` |
 | 3 | `curl -sI https://ops.c2o.live` | `302` to `accounts.google.com` (IAP) |
 | 4 | `curl -si https://link.c2o.live/link \| head -1` | `401` from the GSG (IAP off, no HMAC header) **[verify]** (a 400 also means "reached the GSG, refused") |
 | 5 | Browser, a personal Gmail account → ops.c2o.live | Refused by Google (not an internal user) |
 | 6 | Browser, `test.student@c2o.live` → ops.c2o.live | Password, then 2SV enrolment or prompt, then the **MCS** |
 | 7 | Same student → plan.c2o.live | Planner |
+| 7b | Same student → https://c2o.live | The welcome page: "Signed in as test.student@c2o.live", every screen with its status; the simulator link reads "No simulator connected" until one binds |
 | 8 | Same student → sim.c2o.live | IAP "You don't have access" |
 | 9 | Instructor → sim.c2o.live | Instructor console (through the link) |
 | 10 | Instructor → sim.c2o.live/link-status | JSON, `"state": "UP"` |
@@ -404,7 +417,7 @@ bash deploy/gcp/stop.sh            # stops both VMs; disks, data, IP, cert and I
   only with `teardown.sh`.
 
 **Adding students:** step 3 (Admin console user plus `c2o-students` membership). They sign in at
-<https://ops.c2o.live>, change their password and enrol 2SV within the enrolment period. At the end of
+<https://c2o.live> (the welcome page), change their password and enrol 2SV within the enrolment period. At the end of
 term, **suspend** or **delete** accounts; deleting frees a place under the 50-user cap.
 
 **Lost phone / 2SV lockout:** Admin console → Users → the user → **Security** →
@@ -549,6 +562,12 @@ ShellCheck 0.11.0, **without any Google Cloud credentials**:
 - The agent's plaintext rule (`smo_link/channel.py host_is_private`) was exercised directly:
   `ws://10.20.0.10:9100/link` is accepted; `ws://link.c2o.live/link` and `ws://<public IP>` are refused;
   `wss://…` is accepted.
+
+- **Welcome page (2026-11-02):** `sim/tools/portal.py` run against stub services (some up, some
+  down); EN/FR, light/dark, 1440 and 390 px screenshots, axe clean. `setup.sh` dry run: the apex
+  host rule routes to `c2o-be-portal` (named port `portal:8090`, health check `/healthz`, IAP for
+  students + instructors); with `INCLUDE_APEX=no` the URL map has no apex rule and no portal
+  matcher. `teardown.sh` deletes the portal back end, health check and the probe firewall rule.
 
 **Not checked (needs a real project):** anything that calls Google: API enablement, resource creation,
 IAP with the Google-managed client, WebSockets through IAP and the 3600 s reconnect, health-check

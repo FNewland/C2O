@@ -57,16 +57,19 @@ esac
 if [ "$wait" = yes ]; then
     log "Waiting for the load balancer to see the ground VM as healthy (usually 2-4 min after boot)"
     for _ in $(seq 1 60); do
-        states="$(for b in "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK"; do
+        states="$(for b in "$BE_PORTAL" "$BE_OPS" "$BE_PLAN" "$BE_SIM" "$BE_LINK"; do
             gcloud compute backend-services get-health "$b" --global \
                 --format='value(status.healthStatus[0].healthState)' 2>/dev/null || echo UNKNOWN
         done | paste -sd' ')"
-        info "ops plan sim link: $states"
+        info "welcome ops plan sim link: $states"
         case "$states" in *UNHEALTHY*|*UNKNOWN*|"") sleep 10 ;; *) break ;; esac
     done
 fi
 
 log "Ready"
+if [ "$INCLUDE_APEX" = yes ]; then
+    printf '    %-17s https://%-14s (students + instructors; links to every screen below)\n' "Welcome page" "$DOMAIN"
+fi
 cat <<EOF
     MCS               https://$HOST_OPS       (students + instructors)
     Planner           https://$HOST_PLAN      (students + instructors)
