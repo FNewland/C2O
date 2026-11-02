@@ -7,7 +7,7 @@ import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
 import { ExchangePanel } from '../components/ExchangePanel'
 import { getLang } from '../i18n'
-import { fs } from '../theme/tokens'
+import { Button, Dialog, Note } from '../components/ui'
 
 const API = '/api'
 
@@ -193,49 +193,37 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)', padding: '1.5rem', width: 650, maxHeight: '85vh', overflow: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <h2 style={{ fontSize: fs.value, margin: 0 }}>{t('Export Documents & Data')}</h2>
-          <span style={{ flex: 1 }} />
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: fs.title }}>×</button>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', padding: '0.3rem 0.5rem', borderRadius: '4px', background: 'linear-gradient(90deg, color-mix(in srgb, var(--brand) 8%, transparent), transparent)', borderLeft: '3px solid var(--brand)' }}>
-          <span style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--brand)' }}>{t('University of Ottawa')}</span>
-          <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('| SEDTI — All documents branded')}</span>
-        </div>
+    <Dialog open title={t('Export Documents & Data')} onClose={onClose} width={680}
+      actions={<button type="button" className="c2o-btn" onClick={onClose}>{t('Close')}</button>}>
+      <div>
+        <p className="t-12 c-2 m-0 mb-3"><span className="w-600 c-1">{t('University of Ottawa')}</span> {t('| SEDTI — All documents branded')}</p>
 
-        {error && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(239,68,68,0.15)', borderRadius: '4px', color: 'var(--danger)', fontSize: fs.label, marginBottom: '0.5rem' }}>{error}</div>}
-        {success && <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.15)', borderRadius: '4px', color: 'var(--success)', fontSize: fs.label, marginBottom: '0.5rem' }}>{success}</div>}
+        {error && <Note tone="alarm" role="alert" className="mb-2">{error}</Note>}
+        {success && <Note tone="ok" role="status" className="mb-2">{success}</Note>}
 
-        <div style={{ marginBottom: '0.75rem', padding: '0.5rem 0.6rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <div className="mb-4">
           <ExchangePanel studyId={studyId} title={t('Model exchange (Capella / ECSS-E-TM-10-25 / ReqIF / SysML v2)')} />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="stack gap-3">
           {categories.map(cat => (
             <div key={cat.name}>
-              <div style={{ fontSize: fs.label, fontWeight: 700, color: cat.color, marginBottom: '0.25rem', textTransform: 'uppercase' }}>{cat.name}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <h3 className="c2o-panel__title mb-1">{cat.name}</h3>
+              <div className="stack gap-0 bt">
                 {cat.docs.map(doc => (
-                  <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.5rem', borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: fs.label }}>{doc.label}</div>
-                      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{doc.description}</div>
+                  <div key={doc.id} className="flex ai-c gap-2 py-2 px-2 bb">
+                    <div className="grow min0">
+                      <div className="w-600 t-12">{doc.label}</div>
+                      <div className="t-12 c-2">{doc.description}</div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.2rem', flexShrink: 0 }}>
+                    <div className="flex gap-1 shrink-0">
                       {doc.formats.map(f => (
-                        <button key={f.fmt} onClick={() => run(doc.id + f.fmt, doc.label, f.action)}
-                          disabled={running !== null}
-                          style={{
-                            padding: '0.2rem 0.4rem', fontSize: fs.label, fontWeight: 700, borderRadius: '3px',
-                            background: f.fmt === 'DOCX' ? 'rgba(59,130,246,0.15)' : f.fmt === 'XLSX' ? 'rgba(16,185,129,0.15)' : f.fmt === 'ZIP' ? 'rgba(245,158,11,0.15)' : 'var(--bg-secondary)',
-                            color: f.fmt === 'DOCX' ? 'var(--accent)' : f.fmt === 'XLSX' ? 'var(--success)' : f.fmt === 'ZIP' ? 'var(--warning)' : 'var(--text-secondary)',
-                            border: 'none', cursor: running ? 'wait' : 'pointer',
-                            opacity: running && running !== doc.id + f.fmt ? 0.4 : 1,
-                          }}>
-                          {running === doc.id + f.fmt ? '...' : f.label}
-                        </button>
+                        <Button key={f.fmt} size="sm" onClick={() => run(doc.id + f.fmt, doc.label, f.action)}
+                          busy={running === doc.id + f.fmt}
+                          disabledReason={running !== null && running !== doc.id + f.fmt ? t('Another export is running') : undefined}
+                          aria-label={`${doc.label}: ${f.label}`}>
+                          <span className="mono">{running === doc.id + f.fmt ? t('Exporting…') : f.label}</span>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -245,6 +233,6 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       </div>
-    </div>
+    </Dialog>
   )
 }

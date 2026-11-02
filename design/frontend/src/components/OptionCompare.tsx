@@ -43,9 +43,6 @@ function fmtDelta(d: number | null, a: number | null): string {
 }
 const deltaColor = (d: number | null) => d === null ? 'var(--text-secondary)' : d > 0 ? 'var(--status-caution)' : d < 0 ? 'var(--interactive)' : 'var(--text-primary)'
 
-const th: React.CSSProperties = { textAlign: 'left', padding: '0.15rem 0.35rem', fontSize: fs.label, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', verticalAlign: 'top', fontVariantNumeric: 'tabular-nums' }
-const sel: React.CSSProperties = { fontSize: fs.label, padding: '0.1rem 0.2rem', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '3px' }
 
 function OverrideDot({ on, side }: { on: boolean; side: 'A' | 'B' }) {
   const { t } = useTranslation()
@@ -85,81 +82,81 @@ export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
   const nameOf = (id: string) => { const o = options.find(x => x.id === id); return o ? (o.is_baseline ? t('Baseline') : o.name) : id }
 
   return (
-    <div style={{ fontSize: fs.label }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Compare')}</span>
-        <select value={a} onChange={e => setA(e.target.value)} style={sel}>
+    <div className="t-12">
+      <div className="flex ai-c gap-2 mb-2 wrap">
+        <span className="c-2 t-12">{t('Compare')}</span>
+        <select value={a} onChange={e => setA(e.target.value)} className="c2o-select c2o-select--sm">
           {options.map(o => <option key={o.id} value={o.id}>A: {o.is_baseline ? t('Baseline') : o.name}</option>)}
         </select>
-        <span style={{ color: 'var(--text-secondary)' }}>{t('vs')}</span>
-        <select value={b} onChange={e => setB(e.target.value)} style={sel}>
+        <span className="c-2">{t('vs')}</span>
+        <select value={b} onChange={e => setB(e.target.value)} className="c2o-select c2o-select--sm">
           {options.map(o => <option key={o.id} value={o.id}>B: {o.is_baseline ? t('Baseline') : o.name}</option>)}
         </select>
         <button onClick={() => { setA(b); setB(a) }} title={t('Swap A and B')}
-          style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer', fontSize: fs.label, color: 'var(--text-secondary)', padding: '0 0.3rem' }}>⇄</button>
-        {isFetching && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('loading…')}</span>}
+          className="bg-none bd rounded cursor-p t-12 c-2 py-0 px-1">⇄</button>
+        {isFetching && <span className="c-2 t-12">{t('loading…')}</span>}
         {data && (
-          <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)', fontSize: fs.label }}>
+          <span className="ml-auto c-2 t-12">
             {t('{{count}} parameters differ · conflicts A {{a}} / B {{b}}', { count: data.parameters.length, a: data.conflicts.a, b: data.conflicts.b, defaultValue_one: '{{count}} parameter differ · conflicts A {{a}} / B {{b}}' })}
           </span>
         )}
       </div>
-      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{(error as Error).message}</div>}
-      {options.length < 2 && <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Create or branch an option to compare it with the baseline.')}</div>}
-      {data && a === b && <div style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('Pick two different options.')}</div>}
+      {error && <div className="c-alarm t-12">{(error as Error).message}</div>}
+      {options.length < 2 && <div className="c-2 t-12">{t('Create or branch an option to compare it with the baseline.')}</div>}
+      {data && a === b && <div className="c-2 t-12">{t('Pick two different options.')}</div>}
 
       {data && data.parameters.length > 0 && (
-        <table style={{ borderCollapse: 'collapse', width: '100%', marginBottom: '0.6rem' }}>
+        <table className="c2o-table c2o-table--dense">
           <thead>
             <tr>
-              <th style={th}>{t('Element')}</th><th style={th}>{t('Parameter')}</th>
-              <th style={{ ...th, textAlign: 'right' }}>A: {nameOf(a)}</th>
-              <th style={{ ...th, textAlign: 'right' }}>B: {nameOf(b)}</th>
-              <th style={{ ...th, textAlign: 'right' }}>Δ (B − A)</th><th style={th}>{t('Unit')}</th>
+              <th>{t('Element')}</th><th>{t('Parameter')}</th>
+              <th className="ta-r">A: {nameOf(a)}</th>
+              <th className="ta-r">B: {nameOf(b)}</th>
+              <th className="ta-r">Δ (B − A)</th><th>{t('Unit')}</th>
             </tr>
           </thead>
           <tbody>
             {data.parameters.map(p => (
               <tr key={`${p.element_id}:${p.name}`}>
-                <td style={td}>{p.element}</td>
-                <td style={{ ...td, fontWeight: 600 }}>{p.name}</td>
-                <td style={{ ...td, textAlign: 'right' }}>{fmt(p.a)}<OverrideDot on={p.a_override} side="A" /></td>
-                <td style={{ ...td, textAlign: 'right' }}>{fmt(p.b)}<OverrideDot on={p.b_override} side="B" /></td>
-                <td style={{ ...td, textAlign: 'right', color: deltaColor(p.delta), fontWeight: 600 }}>{fmtDelta(p.delta, p.a)}</td>
-                <td style={{ ...td, color: 'var(--text-secondary)' }}>{p.unit}</td>
+                <td>{p.element}</td>
+                <td className="w-600">{p.name}</td>
+                <td className="ta-r">{fmt(p.a)}<OverrideDot on={p.a_override} side="A" /></td>
+                <td className="ta-r">{fmt(p.b)}<OverrideDot on={p.b_override} side="B" /></td>
+                <td style={{ textAlign: 'right', color: deltaColor(p.delta), fontWeight: 600 }}>{fmtDelta(p.delta, p.a)}</td>
+                <td className="c-2">{p.unit}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
       {data && a !== b && data.parameters.length === 0 && (
-        <div style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginBottom: '0.5rem' }}>{t('No parameter differs between the two options.')}</div>
+        <div className="c-2 t-12 mb-2">{t('No parameter differs between the two options.')}</div>
       )}
 
       {data && data.analyses.length > 0 && (
         <div>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{t('Analyses (last run per option)')}</div>
-          <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <div className="t-12 c-2 mb-1">{t('Analyses (last run per option)')}</div>
+          <table className="c2o-table c2o-table--dense">
             <thead>
               <tr>
-                <th style={th}>{t('Analysis')}</th><th style={th}>{t('A run')}</th><th style={th}>{t('B run')}</th><th style={th}>{t('Differences')}</th>
+                <th>{t('Analysis')}</th><th>{t('A run')}</th><th>{t('B run')}</th><th>{t('Differences')}</th>
               </tr>
             </thead>
             <tbody>
               {data.analyses.map(x => (
                 <tr key={x.analysis}>
-                  <td style={{ ...td, fontWeight: 600 }}>{x.analysis}</td>
-                  <td style={td}>{x.a_run_id ? `${x.a_status ?? ''} · ${x.a_finished_at?.slice(0, 16).replace('T', ' ') ?? ''}` : <span style={{ color: 'var(--text-secondary)' }}>{t('not run')}</span>}</td>
-                  <td style={td}>{x.b_run_id ? `${x.b_status ?? ''} · ${x.b_finished_at?.slice(0, 16).replace('T', ' ') ?? ''}` : <span style={{ color: 'var(--text-secondary)' }}>{t('not run')}</span>}</td>
-                  <td style={td}>
-                    {x.deltas.length === 0 && <span style={{ color: 'var(--text-secondary)' }}>—</span>}
+                  <td className="w-600">{x.analysis}</td>
+                  <td>{x.a_run_id ? `${x.a_status ?? ''} · ${x.a_finished_at?.slice(0, 16).replace('T', ' ') ?? ''}` : <span className="c-2">{t('not run')}</span>}</td>
+                  <td>{x.b_run_id ? `${x.b_status ?? ''} · ${x.b_finished_at?.slice(0, 16).replace('T', ' ') ?? ''}` : <span className="c-2">{t('not run')}</span>}</td>
+                  <td>
+                    {x.deltas.length === 0 && <span className="c-2">—</span>}
                     {x.deltas.slice(0, 12).map(d => (
-                      <div key={d.key} style={{ whiteSpace: 'nowrap' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>{d.key}</span>: {fmt(d.a)} → {fmt(d.b)}{' '}
+                      <div key={d.key} className="nowrap">
+                        <span className="c-2">{d.key}</span>: {fmt(d.a)} → {fmt(d.b)}{' '}
                         <span style={{ color: deltaColor(d.delta), fontWeight: 600 }}>{fmtDelta(d.delta, d.a)}</span>
                       </div>
                     ))}
-                    {x.deltas.length > 12 && <div style={{ color: 'var(--text-secondary)' }}>{t('… {{count}} more', { count: x.deltas.length - 12 })}</div>}
+                    {x.deltas.length > 12 && <div className="c-2">{t('… {{count}} more', { count: x.deltas.length - 12 })}</div>}
                   </td>
                 </tr>
               ))}
@@ -167,7 +164,7 @@ export function OptionCompare({ studyId: studyIdProp, initialA, initialB }: {
           </table>
         </div>
       )}
-      {data && data.warnings.length > 0 && <div style={{ color: 'var(--status-caution)', fontSize: fs.label, marginTop: '0.3rem' }}>{data.warnings.join('; ')}</div>}
+      {data && data.warnings.length > 0 && <div className="c-caution t-12 mt-1">{data.warnings.join('; ')}</div>}
     </div>
   )
 }

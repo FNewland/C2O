@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
-import { fs } from '../theme/tokens'
+import { ArmButton, Button, Chevron, Field, Input, Panel, Select, Tag } from '../components/ui'
 
 const API = '/api'
 
@@ -98,116 +98,58 @@ export function InterfacesPanel() {
 
   if (siblings.length < 2) {
     return (
-      <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: fs.body }}>
+      <div className="p-4 c-2 t-13">
         {t('Need at least 2 elements at this level to define interfaces.')}
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
-      <div style={{ fontWeight: 600, fontSize: fs.label, marginBottom: '0.5rem' }}>
-        {t('Interfaces ({{n}})', { n: interfaces.length })}
-      </div>
-
-      {/* Interface list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.5rem' }}>
+    <div className="c2o-pane">
+      <Panel title={t('Interfaces ({{n}})', { n: interfaces.length })}
+        actions={<Button variant="primary" size="sm" onClick={() => setShowAdd(true)}
+          disabledReason={showAdd ? t('The add form is already open below') : undefined}>{t('+ Add Interface')}</Button>}>
         {interfaces.length === 0 && !showAdd && (
-          <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-            {t('No interfaces defined. Click "Add Interface" to connect elements.')}
-          </div>
+          <p className="t-13 c-2 m-0 py-2">{t('No interfaces defined. Click "Add Interface" to connect elements.')}</p>
         )}
-        {interfaces.map((iface: any) => (
-          <InterfaceRow key={iface.id} iface={iface} nameOf={nameOf} studyId={studyId}
-            onDelete={() => deleteMutation.mutate(iface.id)} />
-        ))}
-      </div>
-
-      {/* Add form */}
-      {showAdd ? (
-        <div style={{
-          display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap',
-          padding: '0.4rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--success)',
-        }}>
-          <select
-            value={fromId}
-            onChange={e => setFromId(e.target.value)}
-            style={{
-              padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            }}
-          >
-            <option value="">{t('From...')}</option>
-            {siblings.map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
-          </select>
-
-          <span style={{ color: 'var(--text-secondary)' }}>→</span>
-
-          <select
-            value={toId}
-            onChange={e => setToId(e.target.value)}
-            style={{
-              padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            }}
-          >
-            <option value="">{t('To...')}</option>
-            {siblings.filter((el: any) => el.id !== fromId).map((el: any) => (
-              <option key={el.id} value={el.id}>{el.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={ifaceType}
-            onChange={e => setIfaceType(e.target.value)}
-            style={{
-              padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            }}
-          >
-            {INTERFACE_TYPES.map(it => <option key={it.value} value={it.value}>{t(it.label)}</option>)}
-          </select>
-
-          <input
-            value={ifaceName}
-            onChange={e => setIfaceName(e.target.value)}
-            placeholder={t('Label (optional)')}
-            style={{
-              width: 120, padding: '0.3rem 0.4rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            }}
-          />
-
-          <button
-            onClick={() => fromId && toId && addMutation.mutate()}
-            disabled={!fromId || !toId}
-            style={{
-              padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
-              background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
-            }}
-          >
-            {t('Add')}
-          </button>
-          <button
-            onClick={() => setShowAdd(false)}
-            style={{
-              padding: '0.3rem 0.6rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer',
-            }}
-          >
-            {t('Cancel')}
-          </button>
+        <div className="c2o-ifaces">
+          {interfaces.map((iface: any) => (
+            <InterfaceRow key={iface.id} iface={iface} nameOf={nameOf} studyId={studyId}
+              onDelete={() => deleteMutation.mutate(iface.id)} />
+          ))}
         </div>
-      ) : (
-        <button
-          onClick={() => setShowAdd(true)}
-          style={{
-            padding: '0.35rem 0.75rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
-            background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
-          }}
-        >
-          {t('+ Add Interface')}
-        </button>
+      </Panel>
+
+      {showAdd && (
+        <form className="c2o-blocks__add" aria-label={t('Add interface')}
+          onSubmit={e => { e.preventDefault(); if (fromId && toId) addMutation.mutate() }}>
+          <Field label={t('From')}>
+            <Select dense value={fromId} onChange={e => setFromId(e.target.value)}>
+              <option value="">{t('From...')}</option>
+              {siblings.map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
+            </Select>
+          </Field>
+          <span className="c-3 pb-1" aria-hidden="true">→</span>
+          <Field label={t('To')}>
+            <Select dense value={toId} onChange={e => setToId(e.target.value)}>
+              <option value="">{t('To...')}</option>
+              {siblings.filter((el: any) => el.id !== fromId).map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
+            </Select>
+          </Field>
+          <Field label={t('Type')}>
+            <Select dense value={ifaceType} onChange={e => setIfaceType(e.target.value)}>
+              {INTERFACE_TYPES.map(it => <option key={it.value} value={it.value}>{t(it.label)}</option>)}
+            </Select>
+          </Field>
+          <Field label={t('Label (optional)')}>
+            <Input dense value={ifaceName} onChange={e => setIfaceName(e.target.value)} />
+          </Field>
+          <span className="row gap-2">
+            <Button type="submit" variant="primary" size="sm"
+              disabledReason={!fromId || !toId ? t('Choose both ends of the interface first') : undefined}>{t('Add')}</Button>
+            <Button size="sm" onClick={() => setShowAdd(false)}>{t('Cancel')}</Button>
+          </span>
+        </form>
       )}
     </div>
   )
@@ -261,7 +203,6 @@ function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const qc = useQueryClient()
-  const typeInfo = INTERFACE_TYPES.find(t => t.value === iface.interface_type)
   const props = iface.properties || {}
   const fields = ifacePropertyFields(t)[iface.interface_type] || []
 
@@ -277,37 +218,31 @@ function InterfaceRow({ iface, nameOf, studyId, onDelete }: {
     qc.invalidateQueries({ queryKey: ['interfaces', studyId] })
   }
 
+  const typeLabel = INTERFACE_TYPE_LABELS[iface.interface_type] ? t(INTERFACE_TYPE_LABELS[iface.interface_type]) : iface.interface_type
+  const nProps = Object.keys(props).length
   return (
-    <div style={{ borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: '0.15rem' }}>
-      {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.5rem', cursor: 'pointer' }}
-        onClick={() => setExpanded(!expanded)}>
-        <span style={{ fontSize: fs.label, padding: '0.1rem 0.25rem', borderRadius: '2px', background: `color-mix(in srgb, ${typeInfo?.color || 'var(--text-3)'} 13%, transparent)`, color: typeInfo?.color || 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase', flexShrink: 0 }}>
-          {INTERFACE_TYPE_LABELS[iface.interface_type] ? t(INTERFACE_TYPE_LABELS[iface.interface_type]) : iface.interface_type}
-        </span>
-        <span style={{ fontWeight: 500, fontSize: fs.label }}>{nameOf(iface.from_element_id)}</span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>→</span>
-        <span style={{ fontWeight: 500, fontSize: fs.label }}>{nameOf(iface.to_element_id)}</span>
-        {iface.name && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>({iface.name})</span>}
-        <span style={{ flex: 1 }} />
-        {Object.keys(props).length > 0 && (
-          <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('{{n}} props', { n: Object.keys(props).length })}</span>
-        )}
-        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{expanded ? '▾' : '▸'}</span>
-        <button onClick={e => { e.stopPropagation(); onDelete() }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: fs.label }}>×</button>
+    <div className="c2o-ifaces__item">
+      <div className="c2o-ifaces__row">
+        <button type="button" className="c2o-ifaces__toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}
+          disabled={fields.length === 0}>
+          <Chevron />
+          <Tag>{typeLabel}</Tag>
+          <span className="w-500">{nameOf(iface.from_element_id)}</span>
+          <span className="c-3" aria-hidden="true">→</span>
+          <span className="sr-only">{t('to')}</span>
+          <span className="w-500">{nameOf(iface.to_element_id)}</span>
+          {iface.name && <span className="c-2">{iface.name}</span>}
+        </button>
+        <span className="t-12 c-3">{nProps > 0 ? t('{{n}} props', { n: nProps }) : t('no properties')}</span>
+        <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete interface {{from}} → {{to}}', { from: nameOf(iface.from_element_id), to: nameOf(iface.to_element_id) })}
+          onConfirm={onDelete} />
       </div>
-
-      {/* Expandable properties */}
       {expanded && fields.length > 0 && (
-        <div style={{ padding: '0.3rem 0.5rem', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.2rem' }}>
+        <div className="c2o-form-grid c2o-ifaces__props">
           {fields.map(f => (
-            <div key={f.key} style={{ fontSize: fs.label }}>
-              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.05rem' }}>{t('{{label}}:', { label: f.label })}</label>
-              <input value={props[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
-                placeholder={f.placeholder}
-                style={{ width: '100%', padding: '0.15rem 0.25rem', fontSize: fs.label, borderRadius: '2px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-            </div>
+            <Field key={f.key} label={f.label}>
+              <Input dense value={props[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)} placeholder={f.placeholder} />
+            </Field>
           ))}
         </div>
       )}

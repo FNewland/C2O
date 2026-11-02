@@ -14,9 +14,9 @@ import { DesignTools } from './DesignTools'
 import { useCollaboration } from './useCollaboration'
 
 import { ParameterSection } from '../components/ParameterPanel'
-import { fs } from '../theme/tokens'
 import { subsystemStyle } from '../theme/tokens'
-import { askConfirm, askText } from '../components/ui/Dialog'
+import { askText } from '../components/ui/Dialog'
+import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge } from '../components/ui'
 
 const API = '/api'
 
@@ -84,11 +84,8 @@ export function displayElementName(name: string, t: TFunction): string {
 
 // ─── Inline Edit Component ───
 
-function InlineEdit({ value, onCommit, style, inputStyle }: {
-  value: string
-  onCommit: (newValue: string) => void
-  style?: React.CSSProperties
-  inputStyle?: React.CSSProperties
+function InlineEdit({ value, onCommit, className, inputClassName, label }: {
+  value: string; onCommit: (newValue: string) => void; className?: string; inputClassName?: string; label: string
 }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
@@ -107,7 +104,8 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
       <button
         type="button"
         onClick={() => { setDraft(value); setEditing(true) }}
-        style={{ cursor: 'text', background: 'none', border: 0, padding: '0 2px', minHeight: 24, textAlign: 'left', font: 'inherit', color: 'inherit', ...style }}
+        className={`c2o-inline-edit ${className ?? ''}`}
+        aria-label={t('{{label}}: {{value}}. Click to edit', { label, value })}
         title={t('Click to edit')}
       >
         {value}
@@ -118,6 +116,7 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
   return (
     <input
       ref={inputRef}
+      aria-label={label}
       value={draft}
       onChange={e => setDraft(e.target.value)}
       onKeyDown={e => {
@@ -132,12 +131,7 @@ function InlineEdit({ value, onCommit, style, inputStyle }: {
         if (draft && draft !== value) onCommit(draft)
         setEditing(false)
       }}
-      style={{
-        padding: '0.1rem 0.3rem', fontSize: 'inherit', borderRadius: '3px',
-        background: 'var(--bg-primary)', border: '1px solid var(--accent)',
-        color: 'var(--text-primary)', outline: 'none',
-        ...inputStyle,
-      }}
+      className={`c2o-input c2o-input--sm ${inputClassName ?? ''}`}
     />
   )
 }
@@ -242,251 +236,119 @@ export function BlocksPanel() {
   const typeOptions = elementTypesByLevel(t)[currentLevel] || []
   const focusName = allElements.find((e: any) => e.id === focusElementId)?.name
 
+  const setQuantity = async (el: any) => {
+    const q = await askText(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), String(el.quantity || 1))
+    if (q && !isNaN(Number(q)) && Number(q) >= 1) {
+      fetch(`${API}/elements/${el.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: Number(q), version: getVersion(el.id) }),
+      }).then(() => qc.invalidateQueries({ queryKey: ['elements', studyId] }))
+    }
+  }
+
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
+    <div className="c2o-pane">
       {/* Element list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: '0.5rem', borderTop: '1px solid var(--line)' }}>
+      <div className="c2o-blocks" role="list" aria-label={t('Elements at this level')}>
         {children.length === 0 && !showAdd && (
-          <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-            {t('No elements at this level. Click "Add Element" to start.')}
-          </div>
+          <p className="c2o-blocks__empty">{t('No elements at this level. Click "Add Element" to start.')}</p>
         )}
-        {children.map((el: any) => (
-          <div key={el.id} style={{
-            display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', minHeight: 36,
-            padding: '0 var(--sp-2)', borderBottom: '1px solid var(--line)', background: 'var(--surface-1)',
-          }}>
-            {(() => {
-              const ss = el.subsystem_domain ? subsystemStyle(el.subsystem_domain) : null
-              return (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 128, fontSize: fs.label, color: 'var(--text-3)' }}>
-                  <span className="c2o-ss-badge" aria-hidden="true" style={{ background: ss ? ss.color : 'transparent' }}>{ss?.badge ?? ''}</span>
-                  <span style={{ textTransform: 'uppercase' }}>{el.subsystem_domain || el.element_type}</span>
-                </span>
-              )
-            })()}
-            {/* Lock indicator */}
-            {isLockedByOther(el.id) && (
-              <span style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(239,68,68,0.15)', color: 'var(--danger)', fontWeight: 600, flexShrink: 0 }}
-                title={t('Locked by {{name}}', { name: lockHolder(el.id) })}>
-                {t('Locked by {{name}}', { name: lockHolder(el.id) })}
+        {children.map((el: any) => {
+          const ss = el.subsystem_domain ? subsystemStyle(el.subsystem_domain) : null
+          const name = displayElementName(el.name, t)
+          const locked = isLockedByOther(el.id)
+          const outOfScope = el.in_scope === false
+          return (
+            <div key={el.id} role="listitem" className={outOfScope ? 'c2o-blocks__row is-external' : 'c2o-blocks__row'}>
+              <span className="c2o-blocks__kind">
+                <span className="c2o-ss-badge" aria-hidden="true" style={{ background: ss ? ss.color : 'transparent' }}>{ss?.badge ?? ''}</span>
+                <span className="ellipsis">{el.subsystem_domain || el.element_type}</span>
               </span>
-            )}
-            {isLockedByOther(el.id) ? (
-              <span style={{ fontWeight: 500, flex: 1, color: 'var(--text-secondary)' }}>{displayElementName(el.name, t)}</span>
-            ) : (
-              <InlineEdit
-                value={displayElementName(el.name, t)}
-                onCommit={(v) => { requestLock(el.id); patchElement(el.id, { name: v }); releaseLock(el.id) }}
-                style={{ fontWeight: 500, flex: 1 }}
-                inputStyle={{ width: 120, fontWeight: 500 }}
-              />
-            )}
-
-            {el.mass_kg != null && (
-              <InlineEdit
-                value={el.mass_kg.toFixed(1)}
-                onCommit={(v) => { const n = parseFloat(v); if (!isNaN(n)) patchElement(el.id, { mass_kg: n }) }}
-                style={{ color: 'var(--text-value)', fontSize: fs.value, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
-                inputStyle={{ width: 64, fontSize: fs.value, textAlign: 'right' }}
-              />
-            )}
-            {el.mass_kg != null && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>kg</span>
-            )}
-
-            {el.power_avg_w != null && (
-              <InlineEdit
-                value={el.power_avg_w.toFixed(1)}
-                onCommit={(v) => { const n = parseFloat(v); if (!isNaN(n)) patchElement(el.id, { power_avg_w: n }) }}
-                style={{ color: 'var(--text-value)', fontSize: fs.value, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
-                inputStyle={{ width: 64, fontSize: fs.value, textAlign: 'right' }}
-              />
-            )}
-            {el.power_avg_w != null && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>W</span>
-            )}
-
-            {/* Quantity */}
-            {(el.quantity || 1) > 1 ? (
-              <span style={{
-                fontSize: fs.label, padding: '0.05rem 0.25rem', borderRadius: '3px',
-                background: 'rgba(59,130,246,0.15)', color: 'var(--accent)', fontWeight: 600,
-                cursor: 'pointer',
-              }}
-              role="button" tabIndex={0}
-              onClick={async () => {
-                const q = await askText(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), String(el.quantity || 1))
-                if (q && !isNaN(Number(q))) {
-                  fetch(`${API}/elements/${el.id}`, {
-                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ quantity: Number(q), version: getVersion(el.id) }),
-                  }).then(() => qc.invalidateQueries({ queryKey: ['elements', studyId] }))
-                }
-              }}
-              title={t('Click to change quantity')}>
-                ×{el.quantity}
+              <span className="c2o-blocks__name">
+                {locked ? (
+                  <>
+                    <span className="w-500 c-2">{name}</span>
+                    <StatusBadge status="caution">{t('Locked by {{name}}', { name: lockHolder(el.id) })}</StatusBadge>
+                  </>
+                ) : (
+                  <InlineEdit value={name} label={t('Name')} className="w-500"
+                    onCommit={(v) => { requestLock(el.id); patchElement(el.id, { name: v }); releaseLock(el.id) }} />
+                )}
               </span>
-            ) : (
-              <button
-                onClick={async () => {
-                  const q = await askText(t('Quantity for "{{name}}":', { name: displayElementName(el.name, t) }), '1')
-                  if (q && Number(q) > 1) {
-                    fetch(`${API}/elements/${el.id}`, {
-                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ quantity: Number(q), version: getVersion(el.id) }),
-                    }).then(() => qc.invalidateQueries({ queryKey: ['elements', studyId] }))
-                  }
-                }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label, color: 'var(--text-secondary)' }}
-                title={t('Set quantity (for duplicates/constellation)')}
-              >
-                {t('qty')}
-              </button>
-            )}
-
-            {/* Scope toggle */}
-            <button
-              onClick={() => toggleScope(el.id, el.in_scope !== false)}
-              title={el.in_scope === false ? t('Mark in-scope') : t('Mark out-of-scope')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
-                color: el.in_scope === false ? 'var(--text-3)' : 'var(--success)',
-              }}
-            >
-              {el.in_scope === false ? t('EXT') : t('IN')}
-            </button>
-
-            {/* Freeze toggle */}
-            <button
-              onClick={() => toggleFreeze(el.id, !!el.frozen)}
-              title={el.frozen ? t('Unfreeze') : t('Freeze')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
-                color: el.frozen ? 'var(--warning)' : 'var(--text-secondary)',
-              }}
-            >
-              {el.frozen ? t('FROZEN') : t('freeze')}
-            </button>
-
-            {/* Delete */}
-            {!el.frozen && (
-              <button
-                aria-label={t('Delete "{{name}}"', { name: displayElementName(el.name, t) })}
-                onClick={async () => {
-                  if (await askConfirm(t('Delete "{{name}}" and all its children?', { name: displayElementName(el.name, t) }), { danger: true, confirmLabel: t('Delete') })) {
-                    deleteMutation.mutate(el.id)
-                  }
-                }}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24,
-                  color: 'var(--text-3)', fontSize: fs.value,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
+              <span className="c2o-blocks__val">
+                {el.mass_kg != null ? (
+                  <><InlineEdit value={el.mass_kg.toFixed(1)} label={t('Mass (kg)')} className="mono c2o-blocks__num" inputClassName="c2o-input--num c2o-blocks__numinput"
+                    onCommit={(v) => { const n = parseFloat(v); if (!isNaN(n)) patchElement(el.id, { mass_kg: n }) }} /><span className="c2o-blocks__unit">kg</span></>
+                ) : <span className="c2o-nodata">{t('no mass')}</span>}
+              </span>
+              <span className="c2o-blocks__val">
+                {el.power_avg_w != null ? (
+                  <><InlineEdit value={el.power_avg_w.toFixed(1)} label={t('Average power (W)')} className="mono c2o-blocks__num" inputClassName="c2o-input--num c2o-blocks__numinput"
+                    onCommit={(v) => { const n = parseFloat(v); if (!isNaN(n)) patchElement(el.id, { power_avg_w: n }) }} /><span className="c2o-blocks__unit">W</span></>
+                ) : <span className="c2o-nodata">{t('no power')}</span>}
+              </span>
+              <span className="c2o-blocks__ctl">
+                <Button size="sm" variant="quiet" onClick={() => setQuantity(el)}
+                  title={t('Set quantity (for duplicates/constellation)')} aria-label={t('Quantity: {{n}}', { n: el.quantity || 1 })}>
+                  <span className="mono">×{el.quantity || 1}</span>
+                </Button>
+                <label className="c2o-check t-12" title={outOfScope ? t('Mark in-scope') : t('Mark out-of-scope')}>
+                  <input type="checkbox" checked={!outOfScope} onChange={() => toggleScope(el.id, !outOfScope)} />
+                  {t('In scope')}
+                </label>
+                <label className="c2o-check t-12" title={el.frozen ? t('Unfreeze') : t('Freeze')}>
+                  <input type="checkbox" checked={!!el.frozen} onChange={() => toggleFreeze(el.id, !!el.frozen)} />
+                  {t('Frozen')}
+                </label>
+                <ArmButton variant="icon" label="×" armedLabel={t('Delete with children')}
+                  aria-label={t('Delete "{{name}}"', { name })}
+                  disabledReason={el.frozen ? t('Unfreeze the element before deleting it') : undefined}
+                  onConfirm={() => deleteMutation.mutate(el.id)} />
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       {/* Add element form */}
       {showAdd ? (
-        <div style={{
-          display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap',
-          padding: '0.4rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--accent)',
-        }}>
-          <input
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            placeholder={t('Element name')}
-            autoFocus
-            style={{
-              padding: '0.3rem 0.5rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)',
-              color: 'var(--text-primary)', width: 140,
-            }}
-            onKeyDown={e => e.key === 'Enter' && newName && addMutation.mutate()}
-          />
-
+        <form className="c2o-blocks__add" aria-label={t('Add element')}
+          onSubmit={e => { e.preventDefault(); if (newName) addMutation.mutate() }}>
+          <Field label={t('Element name')}>
+            <Input value={newName} onChange={e => setNewName(e.target.value)} autoFocus dense />
+          </Field>
           {typeOptions.length > 0 && (
-            <select
-              value={newType}
-              onChange={e => setNewType(e.target.value)}
-              style={{
-                padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
-                background: 'var(--bg-primary)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            <Field label={t('Type')}>
+              <Select value={newType} onChange={e => setNewType(e.target.value)} dense>
+                {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+            </Field>
           )}
-
           {currentLevel === 0 && (
-            <select
-              value={newSegment}
-              onChange={e => setNewSegment(e.target.value)}
-              style={{
-                padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
-                background: 'var(--bg-primary)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {segmentOptions(t).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+            <Field label={t('Segment')}>
+              <Select value={newSegment} onChange={e => setNewSegment(e.target.value)} dense>
+                {segmentOptions(t).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </Select>
+            </Field>
           )}
-
-          {(currentLevel >= 1) && (
-            <select
-              value={newDomain}
-              onChange={e => setNewDomain(e.target.value)}
-              style={{
-                padding: '0.3rem', fontSize: fs.label, borderRadius: '3px',
-                background: 'var(--bg-primary)', border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {domainOptions(t).map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-            </select>
+          {currentLevel >= 1 && (
+            <Field label={t('Subsystem domain')}>
+              <Select value={newDomain} onChange={e => setNewDomain(e.target.value)} dense>
+                {domainOptions(t).map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+              </Select>
+            </Field>
           )}
-
-          <button
-            onClick={() => newName && addMutation.mutate()}
-            disabled={!newName || addMutation.isPending}
-            style={{
-              padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600,
-              borderRadius: '3px', background: 'var(--accent)', color: 'white',
-              border: 'none', cursor: 'pointer',
-            }}
-          >
-            {t('Add')}
-          </button>
-          <button
-            onClick={() => setShowAdd(false)}
-            style={{
-              padding: '0.3rem 0.6rem', fontSize: fs.label,
-              borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
-              border: 'none', cursor: 'pointer',
-            }}
-          >
-            {t('Cancel')}
-          </button>
-        </div>
+          <span className="row gap-2">
+            <Button type="submit" variant="primary" size="sm" busy={addMutation.isPending}
+              disabledReason={!newName ? t('Enter a name first') : undefined}>{t('Add')}</Button>
+            <Button size="sm" onClick={() => setShowAdd(false)}>{t('Cancel')}</Button>
+          </span>
+        </form>
       ) : (
-        <button
-          onClick={() => {
-            setNewType(typeOptions[0]?.value || 'segment')
-            setShowAdd(true)
-          }}
-          style={{
-            padding: '0.35rem 0.75rem', fontSize: fs.label, fontWeight: 600,
-            borderRadius: '4px', background: 'var(--accent)', color: 'white',
-            border: 'none', cursor: 'pointer',
-          }}
-        >
+        <Button variant="primary" size="sm" className="mt-2"
+          onClick={() => { setNewType(typeOptions[0]?.value || 'segment'); setShowAdd(true) }}>
           {t('+ Add Element')}
-        </button>
+        </Button>
       )}
 
       {/* Auto-populate subsystem tree from KB */}
@@ -504,7 +366,7 @@ export function BlocksPanel() {
 
       {/* Equipment Browser at Level 3 */}
       {currentLevel === 3 && (
-        <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
+        <div className="mt-2 bt pt-2">
           <EquipmentBrowser />
         </div>
       )}
@@ -788,34 +650,24 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
   }
 
   return (
-    <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <button onClick={() => setExpanded(!expanded)} style={{
-        background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
-        color: 'var(--interactive)', fontWeight: 600, padding: 0,
-      }}>
-        {expanded ? '▾' : '▸'} {t('Properties: {{name}}', { name: displayElementName(focusElement.name, t) })}
-      </button>
-      {expanded && (
-        <div style={{ marginTop: '0.3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
-          {fields.map(f => (
-            <div key={f.key} style={{ fontSize: fs.label }}>
-              <label style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.1rem' }}>{t('{{label}}:', { label: f.label })}</label>
-              {f.type === 'select' ? (
-                <select value={perf[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}
-                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
-                  <option value="">—</option>
-                  {f.options?.map(o => <option key={o} value={o}>{OPTION_WORDS.includes(o) ? t(o) : o}</option>)}
-                </select>
-              ) : (
-                <input type={f.type} value={perf[f.key] ?? ''} onChange={e => updateProp(f.key, f.type === 'number' ? parseFloat(e.target.value) || null : e.target.value)}
-                  placeholder={f.label}
-                  style={{ width: '100%', padding: '0.15rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <Disclosure ruled open={expanded} onToggle={setExpanded}
+      summary={t('Properties: {{name}}', { name: displayElementName(focusElement.name, t) })}>
+      <div className="c2o-form-grid">
+        {fields.map(f => (
+          <Field key={f.key} label={f.label}>
+            {f.type === 'select' ? (
+              <Select dense value={perf[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}>
+                <option value="">{t('not set')}</option>
+                {f.options?.map(o => <option key={o} value={o}>{OPTION_WORDS.includes(o) ? t(o) : o}</option>)}
+              </Select>
+            ) : (
+              <Input dense numeric={f.type === 'number'} type={f.type} value={perf[f.key] ?? ''}
+                onChange={e => updateProp(f.key, f.type === 'number' ? parseFloat(e.target.value) || null : e.target.value)} />
+            )}
+          </Field>
+        ))}
+      </div>
+    </Disclosure>
   )
 }
 
@@ -877,40 +729,22 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
   }
 
   return (
-    <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        style={{
-          background: 'none', border: 'none', cursor: 'pointer', minWidth: 24, minHeight: 24, fontSize: fs.label,
-          color: 'var(--info)', fontWeight: 600, padding: 0,
-        }}
-      >
-        {expanded ? '▾' : '▸'} {t('Architecture Presets')}
-      </button>
-
-      {expanded && (
-        <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-          {presets.map(p => (
-            <button
-              key={p.id}
-              onClick={() => applyPreset(p)}
-              disabled={applying}
-              title={p.description}
-              style={{
-                padding: '0.3rem 0.6rem', fontSize: fs.label, borderRadius: '4px',
-                background: 'var(--bg-card)', border: '1px solid var(--info)',
-                color: 'var(--info)', cursor: 'pointer',
-              }}
-            >
-              {p.name}
-              <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
-                {t('({{count}} blocks)', { count: p.children.length })}
+    <Disclosure ruled open={expanded} onToggle={setExpanded} summary={t('Architecture Presets')}
+      meta={t('{{count}} presets', { count: presets.length, defaultValue_one: '{{count}} preset' })}>
+      <ul className="c2o-preset-list list-reset">
+        {presets.map(p => (
+          <li key={p.id}>
+            <button type="button" className="c2o-example-card" onClick={() => applyPreset(p)} disabled={applying} aria-busy={applying || undefined}>
+              <span className="row gap-2 jc-sb">
+                <span className="w-600 t-13">{p.name}</span>
+                <span className="t-12 c-3">{t('({{count}} blocks)', { count: p.children.length })}</span>
               </span>
+              <span className="c2o-example-card__desc">{p.description}</span>
             </button>
-          ))}
-        </div>
-      )}
-    </div>
+          </li>
+        ))}
+      </ul>
+    </Disclosure>
   )
 }
 
@@ -954,32 +788,20 @@ function PopulateButton({ studyId, focusElementId, currentLevel, childElements }
   }
 
   return (
-    <div style={{
-      marginTop: '0.5rem', padding: '0.5rem', borderRadius: '6px',
-      background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
-    }}>
-      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
-        {t('Quick Start')}
-      </div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+    <Panel boxed className="mt-3" title={t('Quick Start')}>
+      <p className="t-13 c-2 m-0 mb-2 measure">
         {t('Auto-create standard subsystems (EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.')}
-      </div>
-      <button
-        onClick={populate}
-        disabled={loading}
-        style={{
-          padding: '0.3rem 0.8rem', fontSize: fs.label, fontWeight: 600,
-          borderRadius: '4px', background: loading ? 'var(--border)' : 'var(--accent)',
-          color: 'white', border: 'none', cursor: loading ? 'wait' : 'pointer',
-        }}
-      >
+      </p>
+      <Button variant="primary" size="sm" onClick={populate} busy={loading} active={loading}>
         {loading ? t('Populating...') : t('Populate Subsystems + Equipment')}
-      </button>
+      </Button>
       {result && (
-        <div style={{ marginTop: '0.3rem', fontSize: fs.label, color: result.startsWith('Error') ? 'var(--danger)' : 'var(--success)' }}>
-          {result.startsWith('Error: ') ? t('Error: {{message}}', { message: result.slice('Error: '.length) }) : result}
+        <div className="mt-2">
+          {result.startsWith('Error')
+            ? <StatusBadge status="alarm">{t('Error: {{message}}', { message: result.slice('Error: '.length) })}</StatusBadge>
+            : <StatusBadge status="ok">{result}</StatusBadge>}
         </div>
       )}
-    </div>
+    </Panel>
   )
 }

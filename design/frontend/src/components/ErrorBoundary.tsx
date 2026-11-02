@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           height: '100%', gap: '1rem',
         }}>
-          <div style={{ fontSize: fs.title, color: 'var(--status-alarm)', fontWeight: 600 }}>
+          <div className="t-20 c-alarm w-600">
             {i18n.t('{{name}} encountered an error', { name: i18n.t(this.props.phaseName || 'Component') })}
           </div>
           <div style={{ fontSize: fs.label, color: 'var(--text-2)', maxWidth: '500px' }}>

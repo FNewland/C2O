@@ -30,7 +30,7 @@ import { OptionCompare } from '../components/OptionCompare'
 import { ConflictsPanel } from '../components/ConflictsPanel'
 import { BudgetPanel } from './BudgetPanel'
 import type { AnalysisRun, AnalysisConflict } from '../types/analyses'
-import { fs } from '../theme/tokens'
+import { Button, Chevron, Note, Panel, StatusBadge } from '../components/ui'
 
 const API = '/api'
 
@@ -161,14 +161,6 @@ function ago(iso: string | null | undefined, t: TFunction): string {
   return t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
-function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
-  return (
-    <span title={title} style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 33%, transparent)`, whiteSpace: 'nowrap' }}>
-      {text}
-    </span>
-  )
-}
-
 /** Query keys every analysis run touches. */
 export function invalidateAnalysisQueries(qc: ReturnType<typeof useQueryClient>, studyId: string | null) {
   for (const key of ['analyses', 'analysis', 'conflicts', 'study-parameters', 'element-parameters', 'parameters', 'verification-items', 'physics-placement', 'option-compare', 'elements', 'element-tree', 'budget', 'escalation']) {
@@ -213,64 +205,50 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
   const status = runMut.isPending || run?.status === 'running' ? 'running' : run?.status
   const running = status === 'running'
 
+  const metricView = (m: Metric) => m.tone?.includes('alarm')
+    ? <StatusBadge status="alarm">{m.value}</StatusBadge>
+    : m.tone?.includes('caution') ? <StatusBadge status="caution">{m.value}</StatusBadge>
+    : <span className="mono c-v t-15">{m.value}</span>
+
   return (
-    <div
-      onClick={onOpen}
-      style={{
-        cursor: 'pointer', borderRadius: 6, padding: '0.45rem 0.6rem', minWidth: 190, flex: '1 1 210px',
-        background: active ? 'var(--interactive-wash)' : 'var(--surface-1)',
-        border: `1px solid ${active ? 'var(--interactive)' : 'var(--line)'}`, borderLeft: `3px solid ${active ? 'var(--interactive)' : 'var(--line-strong)'}`,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
-        <span style={{ fontSize: fs.label, fontWeight: 600, color: def.color }}>{t(def.label)}</span>
-        <span style={{ flex: 1 }} />
-        {run?.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('Inputs changed since this run')} />}
-        {status === 'failed' && <Badge text={t('failed')} color="var(--status-alarm)" title={summary.error} />}
-        {running && <Badge text={t('running')} color="var(--interactive)" />}
-        {status === 'ok' && !run?.stale && <Badge text={t('ok')} color="var(--status-ok)" />}
-        {openConflicts > 0 && <Badge text={t('{{count}} conflicts', { count: openConflicts, defaultValue_one: '{{count}} conflict' })} color="var(--status-caution)" />}
-      </div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }} title={run?.finished_at || run?.started_at || ''}>
-        {run ? t('last run {{ago}}', { ago: ago(run.finished_at || run.started_at, t) }) : optionId ? t('never run in this option') : t('never run')}
-      </div>
-      {metrics.length > 0 ? (
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
-          {metrics.map(m => (
-            <div key={m.label} style={{ minWidth: 50 }}>
-              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{m.label}</div>
-              <div style={{ fontSize: fs.value, fontWeight: 600, fontFamily: 'var(--font-mono)', color: m.tone || 'var(--text-primary)' }}>{m.value}</div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem', fontStyle: 'italic' }} title={t(def.needs)}>
-          {t('needs: {{needs}}', { needs: t(def.needs) })}
-        </div>
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-        <button
-          onClick={e => { e.stopPropagation(); if (!running) runMut.mutate() }}
-          disabled={running}
-          type="button"
-          className="c2o-btn"
-          aria-busy={running}
-        >
+    <li className={active ? 'c2o-an__row is-open' : 'c2o-an__row'}>
+      <button type="button" className="c2o-an__name" aria-expanded={active} onClick={onOpen}>
+        <Chevron />
+        <span>{t(def.label)}</span>
+      </button>
+      <span className="c2o-an__state">
+        {running ? <StatusBadge status="info">{t('running')}</StatusBadge>
+          : status === 'failed' ? <span title={summary.error}><StatusBadge status="alarm">{t('failed')}</StatusBadge></span>
+          : run?.stale ? <span title={t('Inputs changed since this run')}><StatusBadge status="stale">{t('stale')}</StatusBadge></span>
+          : status === 'ok' ? <StatusBadge status="ok">{t('ok')}</StatusBadge>
+          : <StatusBadge status="nodata">{t('never run')}</StatusBadge>}
+        {openConflicts > 0 && <StatusBadge status="caution">{t('{{count}} conflicts', { count: openConflicts, defaultValue_one: '{{count}} conflict' })}</StatusBadge>}
+      </span>
+      <span className="c2o-an__when t-12 c-3" title={run?.finished_at || run?.started_at || ''}>
+        {run ? t('last run {{ago}}', { ago: ago(run.finished_at || run.started_at, t) }) : optionId ? t('never run in this option') : ''}
+      </span>
+      <span className="c2o-an__metrics">
+        {metrics.length > 0 ? metrics.map(m => (
+          <span key={m.label} className="c2o-an__metric">
+            <span className="t-12 c-3">{m.label}</span>
+            {metricView(m)}
+          </span>
+        )) : (
+          <span className="t-12 c-2" title={t(def.needs)}>{t('needs: {{needs}}', { needs: t(def.needs) })}</span>
+        )}
+      </span>
+      <span className="c2o-an__act">
+        {error && <span title={error}><StatusBadge status="alarm">{t('error')}</StatusBadge></span>}
+        <Button size="sm" onClick={() => runMut.mutate()} active={running} busy={running}>
           {running ? t('Running…') : run ? t('Re-run') : t('Run')}
-        </button>
-        {error && <span style={{ fontSize: fs.label, color: 'var(--status-alarm)' }} title={error}>{error.slice(0, 80)}</span>}
-      </div>
-    </div>
+        </Button>
+      </span>
+    </li>
   )
 }
 
-function Section({ title, color, children }: { title: string; color: string; children: ReactNode }) {
-  return (
-    <div style={{ marginTop: '0.6rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <div style={{ fontSize: fs.label, fontWeight: 600, color, marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</div>
-      {children}
-    </div>
-  )
+function Section({ title, children }: { title: string; color?: string; children: ReactNode }) {
+  return <Panel level={3} title={title} className="mt-4">{children}</Panel>
 }
 
 export function AnalysesPanel() {
@@ -288,7 +266,7 @@ export function AnalysesPanel() {
     enabled: !!studyId, structuralSharing: false,
   })
 
-  if (!studyId) return <div style={{ padding: '0.75rem', fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div className="p-3 t-12 c-2">{t('Select a study.')}</div>
 
   const byAnalysis = new Map(runs.map(r => [r.analysis, r]))
   const openByAnalysis = new Map<string, number>()
@@ -299,21 +277,21 @@ export function AnalysesPanel() {
   const openDef = ANALYSIS_CARDS.find(d => d.id === open)
 
   return (
-    <div style={{ padding: '0.5rem 0.75rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+    <div className="c2o-pane">
+      <div className="flex ai-c gap-3 mb-2 wrap">
+        <span className="t-12 c-2 measure">
           {optionId
-            ? t('Engineering analyses for this study (active option) — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.')
-            : t('Engineering analyses for this study (baseline) — click a card to open it; Run posts to the analysis and refreshes parameters, conflicts and margins.')}
+            ? t('Engineering analyses for the active option. Open one to see its results; Run recalculates it and refreshes parameters, conflicts and margins.')
+            : t('Engineering analyses for the baseline. Open one to see its results; Run recalculates it and refreshes parameters, conflicts and margins.')}
         </span>
-        <span style={{ flex: 1 }} />
-        <button onClick={() => setShowCompare(v => !v)} style={{ cursor: 'pointer', fontSize: fs.label, padding: '0.15rem 0.55rem', borderRadius: 4, border: '1px solid var(--border)', background: showCompare ? 'color-mix(in srgb, var(--status-caution) 13%, transparent)' : 'none', color: showCompare ? 'var(--status-caution)' : 'var(--text-secondary)' }}>
-          {t('Options')} {showCompare ? '▾' : '▸'}
-        </button>
+        <span className="grow" />
+        <Button size="sm" aria-pressed={showCompare} className="c2o-toggle" onClick={() => setShowCompare(v => !v)}>
+          {t('Compare options')}
+        </Button>
       </div>
-      {runsError && <div style={{ fontSize: fs.label, color: 'var(--status-alarm)', marginBottom: '0.3rem' }}>{t('analyses: {{message}}', { message: (runsError as Error).message })}</div>}
+      {runsError && <Note tone="alarm" className="mb-2">{t('analyses: {{message}}', { message: (runsError as Error).message })}</Note>}
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <ul className="list-reset c2o-an" aria-label={t('Analyses')}>
         {ANALYSIS_CARDS.map(def => (
           <AnalysisCard
             key={def.id} def={def} run={byAnalysis.get(def.id)} openConflicts={openByAnalysis.get(def.id) || 0}
@@ -321,7 +299,7 @@ export function AnalysesPanel() {
             studyId={studyId} optionId={optionId}
           />
         ))}
-      </div>
+      </ul>
 
       {showCompare && (
         <Section title={t('Options')} color="var(--text-2)">
@@ -334,11 +312,11 @@ export function AnalysesPanel() {
           <ErrorBoundary phaseName={openDef.label}>
             {open === 'design_loop' && (
               <div>
-                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                <div className="t-12 c-2 mb-1">
                   {t('Budgets after the last design loop (mission root or the focused element). Cross-domain conflicts from the loop are listed under Conflicts below.')}
                 </div>
                 <BudgetPanel />
-                <div style={{ marginTop: '0.5rem' }}><ConflictsPanel studyId={studyId} optionId={optionId} analysisFilter="design_loop" /></div>
+                <div className="mt-2"><ConflictsPanel studyId={studyId} optionId={optionId} analysisFilter="design_loop" /></div>
               </div>
             )}
             {open === 'mission_simulation' && <MissionSimulationPanel studyId={studyId} optionId={optionId} />}

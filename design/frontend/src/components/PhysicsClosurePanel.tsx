@@ -80,23 +80,6 @@ function marginTone(m: number | null | undefined, warn = 5): string {
   return m < 0 ? 'var(--status-alarm)' : m < warn ? 'var(--status-caution)' : 'var(--status-ok)'
 }
 
-const card: React.CSSProperties = {
-  flex: '1 1 120px', minWidth: 110, padding: '0.4rem 0.55rem', borderRadius: 6,
-  background: 'var(--bg-primary)', border: '1px solid var(--border)',
-}
-const btn = (primary = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? 'var(--interactive)' : 'var(--border)'}`,
-  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : 'var(--text-secondary)',
-})
-const th: React.CSSProperties = { padding: '0.15rem 0.4rem', textAlign: 'left', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', whiteSpace: 'nowrap' }
-const thR: React.CSSProperties = { ...th, textAlign: 'right' }
-const td: React.CSSProperties = { padding: '0.12rem 0.4rem', fontSize: fs.label, borderBottom: '1px solid var(--border)' }
-const tdR: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'ui-monospace, monospace' }
-const posInput: React.CSSProperties = {
-  width: 52, fontSize: fs.label, padding: '0.05rem 0.2rem', background: 'var(--bg-primary)', border: '1px solid var(--border)',
-  borderRadius: 3, color: 'var(--text-primary)', fontFamily: 'ui-monospace, monospace', textAlign: 'right',
-}
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
@@ -108,12 +91,12 @@ function Badge({ text, color, title }: { text: string; color: string; title?: st
 
 function SummaryCard({ label, value, unit, tone, sub }: { label: string; value: string; unit?: string; tone?: string; sub?: string }) {
   return (
-    <div style={card}>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
+    <div className="c2o-card">
+      <div className="t-12 c-2 caps">{label}</div>
       <div style={{ fontSize: fs.value, fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
         {value}{unit && <span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
       </div>
-      {sub && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{sub}</div>}
+      {sub && <div className="t-12 c-2">{sub}</div>}
     </div>
   )
 }
@@ -127,8 +110,8 @@ function MarginGauge({ label, value, limit, unit, marginText, tone, digits = 3 }
   const vw = Math.min(100, value / max * 100)
   const lw = limit !== null ? Math.min(100, limit / max * 100) : null
   return (
-    <div style={card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+    <div className="c2o-card">
+      <div className="flex jc-sb t-12 c-2 caps">
         <span>{label}</span><span style={{ color: tone, fontWeight: 600 }}>{marginText}</span>
       </div>
       <div style={{ position: 'relative', height: 12, background: 'var(--bg-secondary, var(--surface-2))', borderRadius: 3, marginTop: 4 }}>
@@ -137,7 +120,7 @@ function MarginGauge({ label, value, limit, unit, marginText, tone, digits = 3 }
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
         <span>{fmt(value, digits)} {unit}</span>
-        <span style={{ color: 'var(--text-secondary)' }}>{limit !== null ? t('limit {{value}} {{unit}}', { value: fmt(limit, digits), unit }) : t('no limit')}</span>
+        <span className="c-2">{limit !== null ? t('limit {{value}} {{unit}}', { value: fmt(limit, digits), unit }) : t('no limit')}</span>
       </div>
     </div>
   )
@@ -145,20 +128,20 @@ function MarginGauge({ label, value, limit, unit, marginText, tone, digits = 3 }
 
 function ConflictList({ conflicts, empty }: { conflicts: AnalysisConflict[]; empty: string }) {
   const { t } = useTranslation()
-  if (conflicts.length === 0) return <div style={{ color: 'var(--status-ok)', fontSize: fs.label }}>{empty}</div>
+  if (conflicts.length === 0) return <div className="c-ok t-12">{empty}</div>
   return (
-    <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+    <ul className="list-reset m-0 p-0 stack gap-1">
       {conflicts.map(c => {
         const color = SEVERITY_COLORS[c.severity] || 'var(--text-3)'
         return (
-          <li key={c.id} style={{ ...card, borderLeft: `3px solid ${color}` }}>
-            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <li key={c.id} className="c2o-card" style={{ borderLeft: `3px solid ${color}` }}>
+            <div className="flex gap-2 ai-c wrap">
               <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
-              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.code}</span>
-              <strong style={{ fontSize: fs.label }}>{c.title}</strong>
+              <span className="mono t-12 c-2">{c.code}</span>
+              <strong className="t-12">{c.title}</strong>
             </div>
             {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
-            {c.suggested_fix && <div style={{ fontSize: fs.label, marginTop: 2 }}><span style={{ color: 'var(--interactive)' }}>{t('Fix:')} </span>{c.suggested_fix}</div>}
+            {c.suggested_fix && <div style={{ fontSize: fs.label, marginTop: 2 }}><span className="c-accent">{t('Fix:')} </span>{c.suggested_fix}</div>}
           </li>
         )
       })}
@@ -173,19 +156,19 @@ function PositionRow({ item, onSave, busy }: { item: PlacementItem; onSave: (id:
   const { t } = useTranslation()
   return (
     <tr>
-      <td style={td}>{item.name}<span style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginLeft: 4 }}>{item.domain ?? ''}</span></td>
-      <td style={tdR}>{fmt(item.mass_kg, 3)}</td>
-      <td style={tdR}>{item.dims_m.map(d => (d * 1000).toFixed(0)).join(' × ')}</td>
+      <td>{item.name}<span style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginLeft: 4 }}>{item.domain ?? ''}</span></td>
+      <td className="num">{fmt(item.mass_kg, 3)}</td>
+      <td className="num">{item.dims_m.map(d => (d * 1000).toFixed(0)).join(' × ')}</td>
       {vals.map((v, i) => (
-        <td key={i} style={tdR}>
-          <input style={posInput} value={v} onChange={e => setVals(prev => { const n = [...prev] as [string, string, string]; n[i] = e.target.value; return n })} />
+        <td key={i} className="num">
+          <input className="c2o-input c2o-input--sm mono" value={v} onChange={e => setVals(prev => { const n = [...prev] as [string, string, string]; n[i] = e.target.value; return n })} />
         </td>
       ))}
-      <td style={td}>
+      <td>
         <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
           <Badge text={auto ? t('auto') : t('explicit')} color={auto ? 'var(--status-caution)' : 'var(--status-ok)'} title={item.source} />
-          {dirty && <button style={btn(true)} disabled={busy} onClick={() => onSave(item.element_id, [Number(vals[0]), Number(vals[1]), Number(vals[2])])}>{t('save')}</button>}
-          {!auto && !dirty && <button style={btn()} disabled={busy} title={t('Clear the position (back to auto-stack)')} onClick={() => onSave(item.element_id, null)}>{t('clear')}</button>}
+          {dirty && <button className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={busy} onClick={() => onSave(item.element_id, [Number(vals[0]), Number(vals[1]), Number(vals[2])])}>{t('save')}</button>}
+          {!auto && !dirty && <button className="c2o-btn c2o-btn--sm" disabled={busy} title={t('Clear the position (back to auto-stack)')} onClick={() => onSave(item.element_id, null)}>{t('clear')}</button>}
         </span>
       </td>
     </tr>
@@ -285,7 +268,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
     from: series.thermal.transient.eclipse_start_s / 60, to: series.thermal.transient.period_s / 60, label: t('eclipse'), color: 'var(--text-3)',
   }] : []
 
-  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div className="t-12 c-2">{t('Select a study.')}</div>
 
   const s = run?.summary ?? {}
   const mp = series?.mass_properties
@@ -298,37 +281,37 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
     : marginTone(aocs.pointing_margin_deg, (aocs.pointing_req_deg ?? 1) * 0.2)
 
   return (
-    <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+    <div className="t-12 stack gap-2">
       {/* header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: fs.label }}>{t('Physics closure')}</strong>
-        <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('mass properties → AOCS · thermal network')}</span>
+      <div className="flex ai-c gap-2 wrap">
+        <strong className="t-12">{t('Physics closure')}</strong>
+        <span className="c-2 t-12">{t('mass properties → AOCS · thermal network')}</span>
         {run ? (
           <>
             <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? 'var(--status-ok)' : 'var(--status-alarm)'} title={run.finished_at || undefined} />
             {run.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('The model (masses, positions, dimensions, power, orbit) changed since this run — re-run to refresh')} />}
           </>
-        ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>{t('loading…')}</span>
+        ) : runQ.isLoading ? <span className="c-2">{t('loading…')}</span>
           : <Badge text={t('never run')} color="var(--text-3)" />}
-        <span style={{ flex: 1 }} />
-        <button style={btn()} onClick={() => setShowPlacement(v => !v)}>{showPlacement ? t('Hide placement') : t('Placement')}</button>
-        <button style={btn(true)} disabled={runMut.isPending} onClick={() => runMut.mutate()}>
+        <span className="grow" />
+        <button className="c2o-btn c2o-btn--sm" onClick={() => setShowPlacement(v => !v)}>{showPlacement ? t('Hide placement') : t('Placement')}</button>
+        <button className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={runMut.isPending} onClick={() => runMut.mutate()}>
           {runMut.isPending ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
       </div>
-      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{error}</div>}
-      {run?.status === 'failed' && s.error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
+      {error && <div className="c-alarm t-12">{error}</div>}
+      {run?.status === 'failed' && s.error && <div className="c-alarm t-12">{t('Last run failed: {{error}}', { error: s.error })}</div>}
       {!!s.warnings?.length && (
-        <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--status-caution)', fontSize: fs.label }}>
+        <ul className="m-0 pl-4 c-caution t-12">
           {s.warnings.map((w, i) => <li key={i}>{w}</li>)}
         </ul>
       )}
 
       {/* ── 1. mass properties ─────────────────────────────────────────── */}
       <section>
-        <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.25rem' }}>{t('1 · Mass properties')}</div>
+        <div className="t-12 w-600 mb-1">{t('1 · Mass properties')}</div>
         {run?.status === 'ok' && (
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <div className="flex gap-2 wrap">
             <SummaryCard label={t('Total mass')} value={fmt(s.mp_total_mass_kg, 3)} unit="kg" sub={t('{{placed}} placed · {{auto}} auto', { placed: s.placed ?? '?', auto: s.mp_auto_placed_count ?? s.auto_placed ?? 0 })} />
             <SummaryCard label={t('CoM (x, y, z)')} value={mp ? mp.com_m.map(v => (v * 1000).toFixed(1)).join(', ') : '—'} unit="mm"
                          sub={s.envelope_m ? t('envelope {{dims}} mm', { dims: s.envelope_m.map(v => (v * 1000).toFixed(0)).join(' × ') }) : undefined} />
@@ -340,27 +323,27 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
           </div>
         )}
         {mp && (
-          <table style={{ borderCollapse: 'collapse', marginTop: '0.3rem' }}>
-            <thead><tr><th style={th}>{t('tensor')}</th><th style={thR}>x</th><th style={thR}>y</th><th style={thR}>z</th></tr></thead>
+          <table className="c2o-table c2o-table--dense">
+            <thead><tr><th>{t('tensor')}</th><th className="num">x</th><th className="num">y</th><th className="num">z</th></tr></thead>
             <tbody>
-              <tr><td style={td}>x</td><td style={tdR}>{mp.inertia.ixx.toFixed(5)}</td><td style={tdR}>{mp.inertia.ixy.toFixed(5)}</td><td style={tdR}>{mp.inertia.ixz.toFixed(5)}</td></tr>
-              <tr><td style={td}>y</td><td style={tdR}>{mp.inertia.ixy.toFixed(5)}</td><td style={tdR}>{mp.inertia.iyy.toFixed(5)}</td><td style={tdR}>{mp.inertia.iyz.toFixed(5)}</td></tr>
-              <tr><td style={td}>z</td><td style={tdR}>{mp.inertia.ixz.toFixed(5)}</td><td style={tdR}>{mp.inertia.iyz.toFixed(5)}</td><td style={tdR}>{mp.inertia.izz.toFixed(5)}</td></tr>
+              <tr><td>x</td><td className="num">{mp.inertia.ixx.toFixed(5)}</td><td className="num">{mp.inertia.ixy.toFixed(5)}</td><td className="num">{mp.inertia.ixz.toFixed(5)}</td></tr>
+              <tr><td>y</td><td className="num">{mp.inertia.ixy.toFixed(5)}</td><td className="num">{mp.inertia.iyy.toFixed(5)}</td><td className="num">{mp.inertia.iyz.toFixed(5)}</td></tr>
+              <tr><td>z</td><td className="num">{mp.inertia.ixz.toFixed(5)}</td><td className="num">{mp.inertia.iyz.toFixed(5)}</td><td className="num">{mp.inertia.izz.toFixed(5)}</td></tr>
             </tbody>
           </table>
         )}
         {(showPlacement || (!run && placement)) && (
-          <div style={{ marginTop: '0.3rem' }}>
-            {placementQ.isLoading && <span style={{ color: 'var(--text-secondary)' }}>{t('loading placement…')}</span>}
+          <div className="mt-1">
+            {placementQ.isLoading && <span className="c-2">{t('loading placement…')}</span>}
             {placement && (
               <>
                 <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: 2 }}>
                   {t('Positions in m, body frame with the origin at the envelope corner, +z along the stack · envelope {{source}}', { source: placement.envelope_source })}
-                  {placement.auto_placed.length > 0 && <> · <span style={{ color: 'var(--status-caution)' }}>{t('{{n}} auto-placed', { n: placement.auto_placed.length })}</span></>}
+                  {placement.auto_placed.length > 0 && <> · <span className="c-caution">{t('{{n}} auto-placed', { n: placement.auto_placed.length })}</span></>}
                 </div>
-                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                <table className="c2o-table c2o-table--dense">
                   <thead>
-                    <tr><th style={th}>{t('Element')}</th><th style={thR}>kg</th><th style={thR}>mm</th><th style={thR}>x</th><th style={thR}>y</th><th style={thR}>z</th><th style={th}>{t('Source')}</th></tr>
+                    <tr><th>{t('Element')}</th><th className="num">kg</th><th className="num">mm</th><th className="num">x</th><th className="num">y</th><th className="num">z</th><th>{t('Source')}</th></tr>
                   </thead>
                   <tbody>
                     {placement.items.map(it => (
@@ -369,31 +352,31 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
                     ))}
                   </tbody>
                 </table>
-                {'warnings' in placement && placement.warnings.map((w, i) => <div key={i} style={{ color: 'var(--status-caution)', fontSize: fs.label }}>{w}</div>)}
+                {'warnings' in placement && placement.warnings.map((w, i) => <div key={i} className="c-caution t-12">{w}</div>)}
               </>
             )}
           </div>
         )}
         {conflicts.some(c => c.code === 'AOCS_CG_OFFSET_HIGH') && (
-          <div style={{ marginTop: '0.3rem' }}><ConflictList conflicts={conflicts.filter(c => c.code === 'AOCS_CG_OFFSET_HIGH')} empty="" /></div>
+          <div className="mt-1"><ConflictList conflicts={conflicts.filter(c => c.code === 'AOCS_CG_OFFSET_HIGH')} empty="" /></div>
         )}
       </section>
 
       {/* ── 2. AOCS ────────────────────────────────────────────────────── */}
       {aocs && (
         <section>
-          <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.25rem' }}>{t('2 · AOCS — disturbances, momentum, pointing')}</div>
+          <div className="t-12 w-600 mb-1">{t('2 · AOCS — disturbances, momentum, pointing')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.5rem' }}>
-            <div style={card}>
+            <div className="c2o-card">
               <SVGBarChart title={t('Disturbance torques [µN m]')} data={torqueBars} height={170} width={320} unit="" />
-              <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+              <div className="t-12 c-2">
                 {t('{{alt}} km · {{body}} · dipole {{dipole}} A m² · offset {{offset}} mm · RSS {{rss}} N m', {
                   alt: aocs.inputs.altitude_km, body: aocs.inputs.body, dipole: aocs.inputs.residual_dipole_am2,
                   offset: fmt(aocs.inputs.cp_cg_offset_used_m * 1000, 1), rss: sci(aocs.torques_nm.rss),
                 })}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div className="stack gap-2">
               <MarginGauge label={t('Wheel momentum per orbit')} value={aocs.momentum_per_orbit_nms} limit={aocs.wheel_capacity_nms} unit="N m s" digits={4}
                            marginText={t('{{value}} % margin', { value: `${aocs.wheel_margin_pct >= 0 ? '+' : ''}${fmt(aocs.wheel_margin_pct, 0)}` })} tone={wheelTone} />
               <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: -4 }}>{t('capacity from {{source}} · {{n}} desaturation/orbit', { source: aocs.wheel_source, n: aocs.inputs.desaturations_per_orbit })}</div>
@@ -408,7 +391,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
               </div>
             </div>
           </div>
-          <div style={{ marginTop: '0.3rem' }}>
+          <div className="mt-1">
             <ConflictList conflicts={aocsConflicts.filter(c => c.code !== 'AOCS_CG_OFFSET_HIGH')} empty={t('Wheel momentum and pointing within margins.')} />
           </div>
         </section>
@@ -417,32 +400,32 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
       {/* ── 3. thermal ─────────────────────────────────────────────────── */}
       {thermal && (
         <section>
-          <div style={{ fontSize: fs.label, fontWeight: 600, marginBottom: '0.25rem' }}>
+          <div className="t-12 w-600 mb-1">
             {t('3 · Thermal network — {{nodes}} nodes, {{conductances}} conductances', { nodes: thermal.nodes.length, conductances: thermal.conductances.length })}
             <span style={{ color: marginTone(thermal.worst_margin_c), marginLeft: 8 }}>{t('worst margin {{value}} K', { value: fmt(thermal.worst_margin_c, 1) })}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '0.5rem' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+              <table className="c2o-table c2o-table--dense">
                 <thead>
                   <tr>
-                    <th style={th}>{t('Node')}</th><th style={thR}>{t('P hot')}</th><th style={thR}>{t('T hot')}</th><th style={thR}>{t('T cold')}</th>
-                    <th style={thR}>{t('allowable')}</th><th style={thR}>{t('margin hot')}</th><th style={thR}>{t('margin cold')}</th>
+                    <th>{t('Node')}</th><th className="num">{t('P hot')}</th><th className="num">{t('T hot')}</th><th className="num">{t('T cold')}</th>
+                    <th className="num">{t('allowable')}</th><th className="num">{t('margin hot')}</th><th className="num">{t('margin cold')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {thermal.nodes.map(n => (
                     <tr key={n.element_id} style={{ opacity: n.kind === 'structure' ? 0.75 : 1 }}>
-                      <td style={td}>
+                      <td>
                         <span style={{ paddingLeft: n.kind === 'component' ? 10 : 0 }}>{n.name}</span>
                         <span style={{ color: 'var(--text-secondary)', fontSize: fs.label, marginLeft: 4 }}>{t(NODE_KINDS[n.kind] ?? n.kind)}</span>
                       </td>
-                      <td style={tdR}>{fmt(n.dissipation_hot_w, 1)} W</td>
-                      <td style={tdR}>{fmt(n.t_hot_c, 1)}</td>
-                      <td style={tdR}>{fmt(n.t_cold_c, 1)}</td>
-                      <td style={tdR} title={t('from {{source}}', { source: n.allow_source })}>{n.allow_min_c} … {n.allow_max_c} °C</td>
-                      <td style={{ ...tdR, color: marginTone(n.margin_hot_c), fontWeight: n.margin_hot_c < 0 ? 700 : 400 }}>{n.margin_hot_c >= 0 ? '+' : ''}{fmt(n.margin_hot_c, 1)} K</td>
-                      <td style={{ ...tdR, color: marginTone(n.margin_cold_c), fontWeight: n.margin_cold_c < 0 ? 700 : 400 }}>{n.margin_cold_c >= 0 ? '+' : ''}{fmt(n.margin_cold_c, 1)} K</td>
+                      <td className="num">{fmt(n.dissipation_hot_w, 1)} W</td>
+                      <td className="num">{fmt(n.t_hot_c, 1)}</td>
+                      <td className="num">{fmt(n.t_cold_c, 1)}</td>
+                      <td className="num" title={t('from {{source}}', { source: n.allow_source })}>{n.allow_min_c} … {n.allow_max_c} °C</td>
+                      <td className="num" style={{ color: marginTone(n.margin_hot_c), fontWeight: n.margin_hot_c < 0 ? 700 : 400 }}>{n.margin_hot_c >= 0 ? '+' : ''}{fmt(n.margin_hot_c, 1)} K</td>
+                      <td className="num" style={{ color: marginTone(n.margin_cold_c), fontWeight: n.margin_cold_c < 0 ? 700 : 400 }}>{n.margin_cold_c >= 0 ? '+' : ''}{fmt(n.margin_cold_c, 1)} K</td>
                     </tr>
                   ))}
                 </tbody>
@@ -454,11 +437,11 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
                 })}
               </div>
             </div>
-            <div style={card}>
+            <div className="c2o-card">
               <SVGLineChart title={t('Cold-case orbit (periodic)')} series={thermalSeries} bands={eclipseBand} xLabel="min" yLabel="°C" height={220} />
             </div>
           </div>
-          <div style={{ marginTop: '0.3rem' }}>
+          <div className="mt-1">
             <ConflictList conflicts={thermalConflicts} empty={t('Every node inside its allowable range in both cases.')} />
           </div>
         </section>

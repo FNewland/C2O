@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { SUGGESTED_REQS } from './suggestedReqs'
-import { fs } from '../theme/tokens'
+import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge, Tag, type Status } from '../components/ui'
 import { askText, showAlert } from '../components/ui/Dialog'
 
 const API = '/api'
@@ -21,23 +21,22 @@ const REQ_TYPE_LABELS: Record<string, string> = {
   functional: 'Functional', performance: 'Performance', interface: 'Interface', regulatory: 'Regulatory', process: 'Process',
 }
 
+// Requirement type is a category, not a status: neutral tag with its initial (full name on hover).
 const REQ_TYPES = [
-  { value: 'functional', label: REQ_TYPE_LABELS.functional, color: 'var(--interactive)' },
-  { value: 'performance', label: REQ_TYPE_LABELS.performance, color: 'var(--status-ok)' },
-  { value: 'interface', label: REQ_TYPE_LABELS.interface, color: 'var(--status-caution)' },
-  { value: 'regulatory', label: REQ_TYPE_LABELS.regulatory, color: 'var(--status-alarm)' },
-  { value: 'process', label: REQ_TYPE_LABELS.process, color: 'var(--cat-2)' },
+  { value: 'functional', label: REQ_TYPE_LABELS.functional },
+  { value: 'performance', label: REQ_TYPE_LABELS.performance },
+  { value: 'interface', label: REQ_TYPE_LABELS.interface },
+  { value: 'regulatory', label: REQ_TYPE_LABELS.regulatory },
+  { value: 'process', label: REQ_TYPE_LABELS.process },
 ]
 
 const VERIFICATION_METHODS: Record<string, string> = {
   A: 'Analysis', T: 'Test', I: 'Inspection', R: 'Review', D: 'Demonstration',
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: 'var(--text-secondary)',
-  approved: 'var(--accent)',
-  verified: 'var(--success)',
-  violated: 'var(--danger)',
+// Requirement status → display status (colour + glyph + text).
+const REQ_STATUS: Record<string, Status> = {
+  draft: 'neutral', approved: 'info', verified: 'ok', violated: 'alarm',
 }
 
 export function RequirementsPanel() {
@@ -176,214 +175,121 @@ export function RequirementsPanel() {
     grouped.get(key)!.push(req)
   }
 
+  const linkParent = async (req: any) => {
+    const parentCode = await askText(req.derived_from_requirement_id
+      ? t('Enter parent requirement code to link to (or leave empty to unlink):')
+      : t('Enter parent requirement code to derive from:'))
+    if (parentCode === null || (!parentCode && !req.derived_from_requirement_id)) return
+    const parentReq = parentCode ? allRequirements.find((r: any) => r.code === parentCode) : null
+    if (parentCode && !parentReq) { void showAlert(t('Requirement "{{code}}" not found', { code: parentCode })); return }
+    fetch(`${API}/requirements/${req.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ derived_from_requirement_id: parentReq?.id || null }),
+    }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
+  }
+
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-        <span style={{ fontWeight: 600, fontSize: fs.label }}>
-          {t('Requirements ({{n}})', { n: requirements.length })}
-        </span>
-        <span style={{ flex: 1 }} />
-
-        {/* SMART verify button */}
-        <SmartVerifyButton studyId={studyId} />
-
-        {/* Type legend */}
-        <div style={{ display: 'flex', gap: '0.3rem', marginLeft: '0.5rem' }}>
-          {REQ_TYPES.map(rt => (
-            <span key={rt.value} style={{
-              fontSize: fs.label, padding: '0.1rem 0.3rem', borderRadius: '2px',
-              background: `color-mix(in srgb, ${rt.color} 8%, transparent)`, color: rt.color, fontWeight: 600,
-            }}>
-              {t(rt.label)[0]}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Grouped requirement list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem', maxHeight: 300, overflow: 'auto' }}>
+    <div className="c2o-pane">
+      <Panel
+        title={t('Requirements ({{n}})', { n: requirements.length })}
+        actions={<>
+          <SmartVerifyButton studyId={studyId} />
+          <Button variant="primary" size="sm" onClick={() => { setNewElementId(focusElementId || ''); setShowAdd(true) }}
+            disabledReason={showAdd ? t('The add form is already open below') : undefined}>
+            {t('+ Add Requirement')}
+          </Button>
+        </>}
+      >
         {requirements.length === 0 && !showAdd && (
-          <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>
-            {t('No requirements at this level.')}
-          </div>
+          <p className="t-13 c-2 m-0 py-2">{t('No requirements at this level.')}</p>
         )}
 
         {Array.from(grouped.entries()).map(([elementKey, reqs]) => (
-          <div key={elementKey}>
-            {/* Element header */}
-            <div style={{
-              fontSize: fs.label, fontWeight: 600, color: 'var(--text-secondary)',
-              padding: '0.15rem 0.4rem', background: 'var(--bg-secondary)', borderRadius: '3px 3px 0 0',
-              textTransform: 'uppercase',
-            }}>
+          <div key={elementKey} className="c2o-reqs">
+            <h4 className="c2o-reqs__group">
               {elementKey === '_mission' ? (focusElement?.name || t('Mission Level')) : nameOf(elementKey)}
-            </div>
-
+              <span className="c2o-panel__meta">{reqs.length}</span>
+            </h4>
             {reqs.map((req: any) => {
               const reqType = REQ_TYPES.find(rt => rt.value === req.rationale) || REQ_TYPES[0]
+              const parentCode = req.derived_from_requirement_id
+                ? allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || t('traced')
+                : null
+              const orphan = !parentCode && req.level !== 'mission'
               return (
-                <div key={req.id} style={{
-                  display: 'flex', alignItems: 'center', gap: '0.3rem',
-                  padding: '0.3rem 0.4rem',
-                  background: 'var(--bg-card)', borderBottom: '1px solid color-mix(in srgb, var(--text) 3%, transparent)',
-                }}>
-                  {/* Code */}
-                  <span style={{ fontSize: fs.label, fontFamily: 'monospace', color: 'var(--accent)', fontWeight: 600, minWidth: 65, flexShrink: 0 }}>
-                    {req.code}
-                  </span>
-
-                  {/* Type badge */}
-                  <span style={{
-                    fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px',
-                    background: `color-mix(in srgb, ${reqType.color} 13%, transparent)`, color: reqType.color,
-                    fontWeight: 600, flexShrink: 0,
-                  }}>
-                    {t(reqType.label)[0]}
-                  </span>
-
-                  {/* Text */}
-                  <span style={{ flex: 1, fontSize: fs.label, lineHeight: 1.3 }}>{req.text}</span>
-
-                  {/* Verification method */}
-                  {req.verification_method && (
-                    <span style={{
-                      fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px',
-                      background: 'rgba(16,185,129,0.15)', color: 'var(--success)',
-                      fontWeight: 600, flexShrink: 0,
-                    }}>
-                      {req.verification_method}
+                <div key={req.id} className="c2o-reqs__row">
+                  <span className="c2o-reqs__code mono">{req.code}</span>
+                  <Tag title={t(reqType.label)}>{t(reqType.label)[0]}</Tag>
+                  <span className="c2o-reqs__text">{req.text}</span>
+                  <span className="c2o-reqs__meta">
+                    {req.verification_method && (
+                      <Tag title={t('Verification method')}>{VERIFICATION_METHODS[req.verification_method] ? t(VERIFICATION_METHODS[req.verification_method]) : req.verification_method}</Tag>
+                    )}
+                    <span className="iflex ai-c gap-1">
+                      <StatusBadge status={REQ_STATUS[req.status] ?? 'neutral'}><span className="sr-only">{t('Status')}</span></StatusBadge>
+                      <Select dense className="c2o-reqs__status" aria-label={t('Status of {{code}}', { code: req.code })}
+                        value={req.status} onChange={e => updateStatus.mutate({ reqId: req.id, status: e.target.value })}>
+                        <option value="draft">{t('Draft', { context: 'requirement' })}</option>
+                        <option value="approved">{t('Approved', { context: 'requirement' })}</option>
+                        <option value="verified">{t('Verified', { context: 'requirement' })}</option>
+                        <option value="violated">{t('Violated', { context: 'requirement' })}</option>
+                      </Select>
                     </span>
-                  )}
-
-                  {/* Status */}
-                  <select
-                    value={req.status}
-                    onChange={e => updateStatus.mutate({ reqId: req.id, status: e.target.value })}
-                    style={{
-                      fontSize: fs.label, padding: '0.05rem', borderRadius: '2px',
-                      background: 'var(--bg-primary)', border: '1px solid var(--border)',
-                      color: STATUS_COLORS[req.status] || 'var(--text-secondary)', flexShrink: 0,
-                    }}
-                  >
-                    <option value="draft">{t('Draft', { context: 'requirement' })}</option>
-                    <option value="approved">{t('Approved', { context: 'requirement' })}</option>
-                    <option value="verified">{t('Verified', { context: 'requirement' })}</option>
-                    <option value="violated">{t('Violated', { context: 'requirement' })}</option>
-                  </select>
-
-                  {/* Traceability badge — click to link/unlink */}
-                  {req.derived_from_requirement_id ? (
-                    <button style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: 'rgba(16,185,129,0.15)', color: 'var(--success)', fontWeight: 600, flexShrink: 0, border: 'none', cursor: 'pointer' }}
-                      title={t('Derived from {{id}} — click to change', { id: req.derived_from_requirement_id })}
-                      onClick={async () => {
-                        const parentCode = (await askText(t('Enter parent requirement code to link to (or leave empty to unlink):')))
-                        if (parentCode === null) return
-                        const parentReq = parentCode ? allRequirements.find((r: any) => r.code === parentCode) : null
-                        fetch(`${API}/requirements/${req.id}`, {
-                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ derived_from_requirement_id: parentReq?.id || null }),
-                        }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
-                      }}>
-                      ↑ {allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || t('traced')}
-                    </button>
-                  ) : (
-                    <button style={{ fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px', background: req.level !== 'mission' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.1)', color: req.level !== 'mission' ? 'var(--warning)' : 'var(--accent)', fontWeight: 600, flexShrink: 0, border: 'none', cursor: 'pointer' }}
-                      title={t('Click to link to a parent requirement')}
-                      onClick={async () => {
-                        const parentCode = (await askText(t('Enter parent requirement code to derive from:')))
-                        if (!parentCode) return
-                        const parentReq = allRequirements.find((r: any) => r.code === parentCode)
-                        if (!parentReq) { void showAlert(t('Requirement "{{code}}" not found', { code: parentCode })); return }
-                        fetch(`${API}/requirements/${req.id}`, {
-                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ derived_from_requirement_id: parentReq.id }),
-                        }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
-                      }}>
-                      {req.level !== 'mission' ? t('orphan — link ↑') : t('link ↑')}
-                    </button>
-                  )}
-
-                  <button onClick={() => startDerive(req)} title={t('Flow down — derive a child requirement')}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: fs.label, flexShrink: 0 }}>
-                    {t('flow ↓')}
-                  </button>
-
-                  <button onClick={() => deleteMutation.mutate(req.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: fs.label, flexShrink: 0 }}>
-                    ×
-                  </button>
+                    {parentCode ? (
+                      <Button size="sm" variant="quiet" onClick={() => linkParent(req)}
+                        title={t('Derived from {{id}} — click to change', { id: parentCode })}>
+                        <span className="mono">↑ {parentCode}</span>
+                      </Button>
+                    ) : orphan ? (
+                      <button type="button" className="c2o-reqs__orphan" onClick={() => linkParent(req)} title={t('Click to link to a parent requirement')}>
+                        <StatusBadge status="caution">{t('Orphan')}</StatusBadge>
+                        <span className="c-accent">{t('link ↑')}</span>
+                      </button>
+                    ) : (
+                      <Button size="sm" variant="quiet" onClick={() => linkParent(req)} title={t('Click to link to a parent requirement')}>{t('link ↑')}</Button>
+                    )}
+                    <Button size="sm" variant="quiet" onClick={() => startDerive(req)} title={t('Flow down — derive a child requirement')}>{t('flow ↓')}</Button>
+                    <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete {{code}}', { code: req.code })}
+                      onConfirm={() => deleteMutation.mutate(req.id)} />
+                  </span>
                 </div>
               )
             })}
           </div>
         ))}
-      </div>
+      </Panel>
 
       {/* Add form */}
-      {showAdd ? (
-        <div style={{
-          display: 'flex', gap: '0.3rem', alignItems: 'center', flexWrap: 'wrap',
-          padding: '0.4rem', background: 'var(--bg-card)', borderRadius: '4px', border: '1px solid var(--accent)',
-        }}>
-          {/* Element picker */}
-          <select
-            value={newElementId}
-            onChange={e => setNewElementId(e.target.value)}
-            style={{
-              padding: '0.25rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            }}
-          >
-            <option value={focusElementId || ''}>{focusElement?.name || t('Mission Level')}</option>
-            {children.map((el: any) => (
-              <option key={el.id} value={el.id}>{el.name}</option>
-            ))}
-          </select>
-
-          {/* Requirement type */}
-          <select
-            value={newReqType}
-            onChange={e => setNewReqType(e.target.value)}
-            style={{
-              padding: '0.25rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            }}
-          >
-            {REQ_TYPES.map(rt => <option key={rt.value} value={rt.value}>{t(rt.label)}</option>)}
-          </select>
-
-          {/* Code */}
-          <input value={newCode} onChange={e => setNewCode(e.target.value)} placeholder={t('Code')}
-            style={{ width: 75, padding: '0.25rem 0.3rem', fontSize: fs.value, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontFamily: 'monospace' }}
-          />
-
-          {/* Text */}
-          <input value={newText} onChange={e => setNewText(e.target.value)} placeholder={t('Requirement text')} autoFocus
-            style={{ flex: 1, minWidth: 180, padding: '0.25rem 0.3rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            onKeyDown={e => e.key === 'Enter' && newText && addMutation.mutate()}
-          />
-
-          {/* Verification */}
-          <select value={newMethod} onChange={e => setNewMethod(e.target.value)}
-            style={{ padding: '0.25rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-primary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}>
-            {Object.keys(VERIFICATION_METHODS).map((k) => <option key={k} value={k}>{k}</option>)}
-          </select>
-
-          <button onClick={() => newText && addMutation.mutate()} disabled={!newText}
-            style={{ padding: '0.25rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            {t('Add')}
-          </button>
-          <button onClick={() => setShowAdd(false)}
-            style={{ padding: '0.25rem 0.5rem', fontSize: fs.label, borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
-            {t('Cancel')}
-          </button>
-        </div>
-      ) : (
-        <button onClick={() => { setNewElementId(focusElementId || ''); setShowAdd(true) }}
-          style={{ padding: '0.35rem 0.75rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px', background: 'var(--accent)', color: 'white', border: 'none', cursor: 'pointer' }}>
-          {t('+ Add Requirement')}
-        </button>
+      {showAdd && (
+        <form className="c2o-blocks__add" aria-label={t('Add requirement')}
+          onSubmit={e => { e.preventDefault(); if (newText) addMutation.mutate() }}>
+          <Field label={t('Allocated to')}>
+            <Select dense value={newElementId} onChange={e => setNewElementId(e.target.value)}>
+              <option value={focusElementId || ''}>{focusElement?.name || t('Mission Level')}</option>
+              {children.map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
+            </Select>
+          </Field>
+          <Field label={t('Type')}>
+            <Select dense value={newReqType} onChange={e => setNewReqType(e.target.value)}>
+              {REQ_TYPES.map(rt => <option key={rt.value} value={rt.value}>{t(rt.label)}</option>)}
+            </Select>
+          </Field>
+          <Field label={t('Code')}>
+            <Input dense className="mono c2o-reqs__codein" value={newCode} onChange={e => setNewCode(e.target.value)} />
+          </Field>
+          <Field label={t('Requirement text')} className="grow c2o-reqs__textfield">
+            <Input dense value={newText} onChange={e => setNewText(e.target.value)} autoFocus />
+          </Field>
+          <Field label={t('Verification method')}>
+            <Select dense value={newMethod} onChange={e => setNewMethod(e.target.value)}>
+              {Object.entries(VERIFICATION_METHODS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
+            </Select>
+          </Field>
+          <span className="row gap-2">
+            <Button type="submit" variant="primary" size="sm" disabledReason={!newText ? t('Write the requirement text first') : undefined}>{t('Add')}</Button>
+            <Button size="sm" onClick={() => setShowAdd(false)}>{t('Cancel')}</Button>
+          </span>
+        </form>
       )}
 
       {/* Suggested requirement templates */}
@@ -416,35 +322,23 @@ function SmartVerifyButton({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-      <button onClick={verify} disabled={loading} style={{
-        padding: '0.15rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
-        background: result ? (result.smart_fail > 0 || result.orphans > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)') : 'var(--bg-card)',
-        color: result ? (result.smart_fail > 0 || result.orphans > 0 ? 'var(--warning)' : 'var(--success)') : 'var(--text-secondary)',
-        border: 'none', cursor: 'pointer',
-      }}>
-        {loading ? '...' : t('SMART Check')}
-      </button>
+    <div className="flex ai-c gap-3 wrap">
       {result && (
-        <>
-          <span style={{ fontSize: fs.label, color: 'var(--success)' }}>{t('{{count}} ok', { count: result.smart_pass })}</span>
-          {result.smart_fail > 0 && <span style={{ fontSize: fs.label, color: 'var(--warning)' }}>{t('{{count}} issues', { count: result.smart_fail })}</span>}
-          {result.orphans > 0 && <span style={{ fontSize: fs.label, color: 'var(--danger)' }}>{t('{{count}} orphans', { count: result.orphans })}</span>}
-        </>
-      )}
-      {result?.issues?.length > 0 && (
-        <span title={result.issues.map((i: any) => `${i.code}: ${i.issues.join('; ')}`).join('\n')}
-          style={{ fontSize: fs.label, color: 'var(--warning)', cursor: 'help', textDecoration: 'underline dotted' }}>
-          {t('details')}
+        <span className="iflex ai-c gap-3" role="status">
+          <StatusBadge status="ok">{t('{{count}} ok', { count: result.smart_pass })}</StatusBadge>
+          {result.smart_fail > 0 && (
+            <span title={result.issues?.map((i: any) => `${i.code}: ${i.issues.join('; ')}`).join('\n')}>
+              <StatusBadge status="caution">{t('{{count}} issues', { count: result.smart_fail })}</StatusBadge>
+            </span>
+          )}
+          {result.orphans > 0 && <StatusBadge status="caution">{t('{{count}} orphans', { count: result.orphans })}</StatusBadge>}
         </span>
       )}
+      <Button size="sm" onClick={verify} busy={loading} title={t('Check each requirement is specific, measurable, achievable, relevant and traceable')}>
+        {loading ? t('Checking...') : t('SMART Check')}
+      </Button>
     </div>
   )
-}
-
-const REQ_TYPE_COLORS: Record<string, string> = {
-  functional: 'var(--interactive)', performance: 'var(--status-ok)', interface: 'var(--status-caution)',
-  regulatory: 'var(--status-alarm)', process: 'var(--cat-2)',
 }
 
 function SuggestedTemplates({ currentLevel, onUseTemplate }: {
@@ -452,45 +346,26 @@ function SuggestedTemplates({ currentLevel, onUseTemplate }: {
   onUseTemplate: (t: { type: string; text: string; method: string }) => void
 }) {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(false)
   const templates = SUGGESTED_REQS[currentLevel] || []
   if (templates.length === 0) return null
 
   return (
-    <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
-      <button onClick={() => setExpanded(!expanded)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: fs.label, color: 'var(--cat-2)', fontWeight: 600, padding: 0 }}>
-        {expanded ? '▾' : '▸'} {t('Suggested Templates ({{n}})', { n: templates.length })}
-      </button>
-      {expanded && (
-        <div style={{ marginTop: '0.3rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.1rem' }}>
-            {t('Click a template to pre-fill the add form — edit the [placeholders] before adding.')}
-          </div>
-          {templates.map((tpl, i) => {
-            const color = REQ_TYPE_COLORS[tpl.type] || 'var(--text-3)'
-            return (
-              // The stored template stays English (it becomes requirement text); only the list shows t(text).
-              <button key={i} onClick={() => onUseTemplate(tpl)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.3rem',
-                  padding: '0.2rem 0.4rem', borderRadius: '3px', textAlign: 'left',
-                  background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
-                }}>
-                <span style={{
-                  fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px',
-                  background: `color-mix(in srgb, ${color} 13%, transparent)`, color, fontWeight: 600, flexShrink: 0,
-                }}>
-                  {t(REQ_TYPE_LABELS[tpl.type] ?? tpl.type).slice(0, 4).toUpperCase()}
-                </span>
-                <span style={{ flex: 1 }}>{t(tpl.text)}</span>
-                <span style={{ fontSize: fs.label, color: 'var(--success)', flexShrink: 0 }}>{tpl.method}</span>
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
+    <Disclosure ruled summary={t('Suggested templates')} meta={t('{{count}} for this level', { count: templates.length, defaultValue_one: '{{count}} for this level' })}>
+      <p className="t-12 c-2 m-0 mb-2">
+        {t('Click a template to pre-fill the add form — edit the [placeholders] before adding.')}
+      </p>
+      <ul className="list-reset stack gap-1">
+        {templates.map((tpl, i) => (
+          // The stored template stays English (it becomes requirement text); only the list shows t(text).
+          <li key={i}>
+            <button type="button" onClick={() => onUseTemplate(tpl)} className="c2o-reqs__tpl">
+              <Tag>{t(REQ_TYPE_LABELS[tpl.type] ?? tpl.type)}</Tag>
+              <span className="grow">{t(tpl.text)}</span>
+              <Tag>{VERIFICATION_METHODS[tpl.method] ? t(VERIFICATION_METHODS[tpl.method]) : tpl.method}</Tag>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Disclosure>
   )
 }

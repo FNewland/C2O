@@ -10,9 +10,10 @@
        state (greyscale acceptance test, PRINCIPLES P6):
          warning   = HOLLOW triangle (up = high side, down = low side)
          alarm     = FILLED triangle
-         stale     = em-dash over hatch (the hatch comes from CSS)
+         stale     = slashed dash (the value itself is kept, dim italic)
          commanded = DASHED hollow diamond
          off       = hollow ring
+         running   = filled square        lock = ring with filled centre
        Monograms are 2-3 letter marks used by nav rails and schematic slots
        (identity is carried by slot + monogram, never hue — P1).
        ================================================================== -->
@@ -49,32 +50,41 @@
     <path d="M6 3.4 V6 L8 7.4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
   </symbol>
 
+  <!-- running (active state) + lock (link/frame lock acquired) -->
+  <symbol id="g-run" viewBox="0 0 12 12">
+    <rect x="2.5" y="2.5" width="7" height="7" rx="1" fill="currentColor"/>
+  </symbol>
+  <symbol id="g-lock" viewBox="0 0 12 12">
+    <circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="6" cy="6" r="2" fill="currentColor"/>
+  </symbol>
+
   <!-- subsystem monograms: 20x14 viewBox, mono caps, currentColor -->
   <symbol id="g-mono-ovr" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">OVR</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">OVR</text>
   </symbol>
   <symbol id="g-mono-eps" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">EPS</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">EPS</text>
   </symbol>
   <symbol id="g-mono-tcs" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">TCS</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">TCS</text>
   </symbol>
   <symbol id="g-mono-aocs" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="8" font-weight="700" fill="currentColor">AOC</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="8" font-weight="500" fill="currentColor">AOC</text>
   </symbol>
   <symbol id="g-mono-ttc" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">TTC</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">TTC</text>
   </symbol>
   <symbol id="g-mono-pld" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">PLD</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">PLD</text>
   </symbol>
   <symbol id="g-mono-prp" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">PRP</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">PRP</text>
   </symbol>
   <symbol id="g-mono-obd" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="9" font-weight="700" fill="currentColor">OBD</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="9" font-weight="500" fill="currentColor">OBD</text>
   </symbol>
   <symbol id="g-mono-fdir" viewBox="0 0 20 14">
-    <text x="10" y="11" text-anchor="middle" font-family="SFMono-Regular,Consolas,Menlo,monospace" font-size="7.5" font-weight="700" fill="currentColor">FDIR</text>
+    <text x="10" y="11" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,Menlo,monospace" font-size="7.5" font-weight="500" fill="currentColor">FDIR</text>
   </symbol>
 </svg>

@@ -75,18 +75,6 @@ function ago(iso: string | null | undefined, t: TFunction): string {
   return t('{{n}} d ago', { n: Math.floor(s / 86400) })
 }
 
-const card: React.CSSProperties = {
-  flex: '1 1 120px', minWidth: 110, padding: '0.4rem 0.55rem', borderRadius: 6,
-  background: 'var(--bg-primary)', border: '1px solid var(--border)',
-}
-const btn = (primary = false, danger = false): React.CSSProperties => ({
-  cursor: 'pointer', fontSize: fs.label, padding: '0.2rem 0.6rem', borderRadius: 4,
-  border: `1px solid ${primary ? 'var(--interactive)' : danger ? 'var(--status-alarm)' : 'var(--border)'}`,
-  background: primary ? 'color-mix(in srgb, var(--interactive) 13%, transparent)' : 'none', color: primary ? 'var(--interactive)' : danger ? 'var(--status-alarm)' : 'var(--text-secondary)',
-})
-const th: React.CSSProperties = { textAlign: 'left', fontWeight: 500, color: 'var(--text-secondary)', padding: '0.15rem 0.35rem', fontSize: fs.label, textTransform: 'uppercase', letterSpacing: '0.03em', borderBottom: '1px solid var(--border)' }
-const td: React.CSSProperties = { padding: '0.15rem 0.35rem', fontSize: fs.label, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }
-const num: React.CSSProperties = { ...td, textAlign: 'right', fontFamily: 'ui-monospace, monospace' }
 
 function Badge({ text, color, title }: { text: string; color: string; title?: string }) {
   return (
@@ -98,12 +86,12 @@ function Badge({ text, color, title }: { text: string; color: string; title?: st
 
 function SummaryCard({ label, value, unit, tone, sub }: { label: string; value: string; unit?: string; tone?: string; sub?: string }) {
   return (
-    <div style={card}>
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
+    <div className="c2o-card">
+      <div className="t-12 c-2 caps">{label}</div>
       <div style={{ fontSize: fs.value, fontWeight: 600, color: tone || 'var(--text-primary)', fontFamily: 'ui-monospace, monospace' }}>
         {value}{unit && <span style={{ fontSize: fs.label, marginLeft: 2, color: 'var(--text-secondary)' }}>{unit}</span>}
       </div>
-      {sub && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{sub}</div>}
+      {sub && <div className="t-12 c-2">{sub}</div>}
     </div>
   )
 }
@@ -114,8 +102,8 @@ function ClosureGauge({ returned, generated }: { returned: number; generated: nu
   const pct = generated > 0 ? Math.min(100, (100 * returned) / generated) : 100
   const tone = pct >= 95 ? 'var(--status-ok)' : pct >= 80 ? 'var(--status-caution)' : 'var(--status-alarm)'
   return (
-    <div style={{ ...card, flex: '2 1 240px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+    <div className="c2o-card" style={{ flex: '2 1 240px' }}>
+      <div className="flex jc-sb t-12 c-2 caps">
         <span>{t('Data closure')}</span><span style={{ color: tone, fontFamily: 'ui-monospace, monospace' }}>{fmt(pct, 0)} %</span>
       </div>
       <div title={t('{{ret}} GB returned of {{gen}} GB generated per day', { ret: fmt(returned, 2), gen: fmt(generated, 2) })}
@@ -124,7 +112,7 @@ function ClosureGauge({ returned, generated }: { returned: number; generated: nu
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: fs.label, marginTop: 3, fontFamily: 'ui-monospace, monospace' }}>
         <span style={{ color: tone }}>{t('{{value}} GB/day returned', { value: fmt(returned, 2) })}</span>
-        <span style={{ color: 'var(--text-secondary)' }}>{t('{{value}} GB/day generated', { value: fmt(generated, 2) })}</span>
+        <span className="c-2">{t('{{value}} GB/day generated', { value: fmt(generated, 2) })}</span>
       </div>
     </div>
   )
@@ -234,7 +222,7 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
   const bufferSeries: LineSeries[] = series ? [{ name: t('on-board data'), color: 'var(--cat-2)', points: series.buffer.t_s.map((t, i) => [toH(t), series.buffer.gb[i]]) }] : []
   const storage = series?.inputs?.storage_gb as number | null | undefined
 
-  if (!studyId) return <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Select a study.')}</div>
+  if (!studyId) return <div className="t-12 c-2">{t('Select a study.')}</div>
 
   const s = run?.summary ?? {}
   const rows: GroundStationRow[] = s.stations ?? []
@@ -242,33 +230,33 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
   const backlogTone = s.backlog_growth_gb_per_day === undefined ? undefined : s.backlog_growth_gb_per_day > 0.01 ? 'var(--status-caution)' : 'var(--status-ok)'
 
   return (
-    <div style={{ fontSize: fs.label, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="t-12 stack gap-2">
       {/* header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: fs.label }}>{t('Ground segment')}</strong>
+      <div className="flex ai-c gap-2 wrap">
+        <strong className="t-12">{t('Ground segment')}</strong>
         {run ? (
           <>
             <Badge text={run.status === 'ok' ? t('last run {{ago}}', { ago: ago(run.finished_at, t) }) : t('run {{status}}', { status: run.status })} color={run.status === 'ok' ? 'var(--status-ok)' : 'var(--status-alarm)'} title={run.finished_at || undefined} />
             {run.stale && <Badge text={t('stale')} color="var(--status-caution)" title={t('Stations, orbit or link parameters changed since this run — re-run to refresh')} />}
-            {s.band && <span style={{ color: 'var(--text-secondary)', fontSize: fs.label }}>{t('{{band}}-band · {{rate}} Mbps · {{source}}', { band: s.band, rate: fmt(s.downlink_rate_mbps, 2), source: s.data_source })}</span>}
+            {s.band && <span className="c-2 t-12">{t('{{band}}-band · {{rate}} Mbps · {{source}}', { band: s.band, rate: fmt(s.downlink_rate_mbps, 2), source: s.data_source })}</span>}
           </>
-        ) : runQ.isLoading ? <span style={{ color: 'var(--text-secondary)' }}>{t('loading…')}</span>
+        ) : runQ.isLoading ? <span className="c-2">{t('loading…')}</span>
           : <Badge text={t('never run')} color="var(--text-3)" />}
-        <span style={{ flex: 1 }} />
-        <button style={btn(true)} disabled={runMut.isPending} onClick={() => runMut.mutate()}>
+        <span className="grow" />
+        <button className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={runMut.isPending} onClick={() => runMut.mutate()}>
           {runMut.isPending ? t('Running…') : run ? t('Re-run') : t('Run')}
         </button>
       </div>
-      {error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{error}</div>}
-      {run?.status === 'failed' && s.error && <div style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>{t('Last run failed: {{error}}', { error: s.error })}</div>}
+      {error && <div className="c-alarm t-12">{error}</div>}
+      {run?.status === 'failed' && s.error && <div className="c-alarm t-12">{t('Last run failed: {{error}}', { error: s.error })}</div>}
 
       {/* station picker */}
-      <div style={card}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
-          <span style={{ fontSize: fs.label, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+      <div className="c2o-card">
+        <div className="flex ai-c gap-2 wrap mb-1">
+          <span className="t-12 c-2 caps">
             {t('Stations ({{n}})', { n: selected.length })}
           </span>
-          <span style={{ flex: 1 }} />
+          <span className="grow" />
           <input placeholder={t('filter catalogue…')} value={filter} onChange={e => setFilter(e.target.value)}
                  style={{ width: 120, fontSize: fs.label, padding: '0.1rem 0.3rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }} />
           <select value={pick} onChange={e => setPick(e.target.value)}
@@ -278,20 +266,20 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
               <option key={st.id} value={st.id}>{st.name} — {latLon(st.lat, st.lon, t)} — {bandsOf(st)}{st.operator ? ` (${st.operator})` : ''}</option>
             ))}
           </select>
-          <button style={btn(true)} disabled={!pick || addMut.isPending} onClick={() => pick && addMut.mutate(pick)}>{t('Add')}</button>
+          <button className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={!pick || addMut.isPending} onClick={() => pick && addMut.mutate(pick)}>{t('Add')}</button>
         </div>
         {selected.length === 0 ? (
-          <div style={{ color: 'var(--status-caution)', fontSize: fs.label }}>{t('No station selected — the closure will use the catalogue defaults and warn.')}</div>
+          <div className="c-caution t-12">{t('No station selected — the closure will use the catalogue defaults and warn.')}</div>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+          <div className="flex wrap gap-1">
             {selected.map(st => (
               <span key={st.element_id} title={`${st.kb_station_id}${st.operator ? ` · ${st.operator}` : ''}${st.g_over_t_db_k !== null ? ` · G/T ${st.g_over_t_db_k} dB/K` : ''}`}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.1rem 0.4rem', borderRadius: 10, border: '1px solid var(--border)', fontSize: fs.label }}>
                 <span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(st.kb_station_id) || 'var(--text-3)', display: 'inline-block' }} />
                 <strong>{st.name}</strong>
-                <span style={{ color: 'var(--text-secondary)' }}>{latLon(st.lat, st.lon, t)} · {(st.bands ?? []).join('/')}{st.min_elevation_deg !== null ? ` · ≥${st.min_elevation_deg}°` : ''}</span>
+                <span className="c-2">{latLon(st.lat, st.lon, t)} · {(st.bands ?? []).join('/')}{st.min_elevation_deg !== null ? ` · ≥${st.min_elevation_deg}°` : ''}</span>
                 <button title={t('Remove station')} disabled={removeMut.isPending} onClick={() => removeMut.mutate(st.element_id)}
-                        style={{ ...btn(false, true), padding: '0 0.3rem', lineHeight: 1.2 }}>×</button>
+                        className="c2o-btn c2o-btn--danger c2o-btn--sm py-0 px-1 lh-value">×</button>
               </span>
             ))}
           </div>
@@ -300,7 +288,7 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
 
       {/* closure + summary */}
       {run && run.status === 'ok' && (
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+        <div className="flex gap-2 wrap">
           <ClosureGauge returned={s.gs_data_return_gb_per_day ?? 0} generated={s.gs_data_generated_gb_per_day ?? 0} />
           <SummaryCard label={t('Contact')} value={fmt(s.gs_contact_min_per_day, 0)} unit={t('min/day')}
                        sub={t('{{passes}} passes · {{n}} stations', { passes: fmt(s.gs_contacts_per_day, 0), n: fmt(s.gs_station_count, 0), count: s.gs_station_count, defaultValue_one: '{{passes}} passes · {{n}} station' })} />
@@ -312,21 +300,21 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
 
       {/* warnings */}
       {!!s.warnings?.length && (
-        <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--status-caution)', fontSize: fs.label }}>
+        <ul className="m-0 pl-4 c-caution t-12">
           {s.warnings.map((w, i) => <li key={i}>{w}</li>)}
         </ul>
       )}
 
       {/* per-station table */}
       {rows.length > 0 && (
-        <div style={{ ...card, overflowX: 'auto', padding: 0 }}>
-          <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <div className="c2o-card" style={{ overflowX: 'auto', padding: 0 }}>
+          <table className="c2o-table c2o-table--dense">
             <thead>
               <tr>
-                <th style={th}>{t('Station')}</th><th style={th}>{t('Position')}</th><th style={th}>{t('Bands')}</th>
-                <th style={{ ...th, textAlign: 'right' }}>{t('Passes/day')}</th><th style={{ ...th, textAlign: 'right' }}>{t('Min/day')}</th>
-                <th style={{ ...th, textAlign: 'right' }}>{t('GB/day')}</th><th style={{ ...th, textAlign: 'right' }}>G/T dB/K</th>
-                <th style={{ ...th, textAlign: 'right' }}>{t('Margin dB')}</th><th style={th}>{t('Status')}</th>
+                <th>{t('Station')}</th><th>{t('Position')}</th><th>{t('Bands')}</th>
+                <th className="ta-r">{t('Passes/day')}</th><th className="ta-r">{t('Min/day')}</th>
+                <th className="ta-r">{t('GB/day')}</th><th className="ta-r">G/T dB/K</th>
+                <th className="ta-r">{t('Margin dB')}</th><th>{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -334,18 +322,18 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
                 const color = STATUS_COLORS[r.status] || 'var(--text-3)'
                 return (
                   <tr key={r.station_id} style={{ opacity: r.status === 'excluded' ? 0.6 : 1 }}>
-                    <td style={td}>
+                    <td>
                       <span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(r.station_id) || 'var(--text-3)', display: 'inline-block', marginRight: 4 }} />
                       {r.name}
                     </td>
-                    <td style={{ ...td, color: 'var(--text-secondary)' }}>{latLon(r.lat, r.lon, t)}</td>
-                    <td style={{ ...td, color: 'var(--text-secondary)' }}>{r.bands.join('/')} · {fmt(r.antenna_m, 1)} m</td>
-                    <td style={num}>{r.contacts_per_day}</td>
-                    <td style={num}>{fmt(r.contact_min_per_day, 0)}</td>
-                    <td style={num}>{fmt(r.data_gb_per_day, 2)}</td>
-                    <td style={num}>{fmt(r.g_t_db_k)}</td>
-                    <td style={{ ...num, color: r.margin_db === null ? undefined : r.margin_db < 0 ? 'var(--status-alarm)' : r.margin_db < 3 ? 'var(--status-caution)' : 'var(--status-ok)' }}>{fmt(r.margin_db)}</td>
-                    <td style={td}><Badge text={STATUS_LABEL[r.status] ? t(STATUS_LABEL[r.status]) : r.status} color={color} title={r.reason || undefined} /></td>
+                    <td className="c-2">{latLon(r.lat, r.lon, t)}</td>
+                    <td className="c-2">{r.bands.join('/')} · {fmt(r.antenna_m, 1)} m</td>
+                    <td className="num">{r.contacts_per_day}</td>
+                    <td className="num">{fmt(r.contact_min_per_day, 0)}</td>
+                    <td className="num">{fmt(r.data_gb_per_day, 2)}</td>
+                    <td className="num">{fmt(r.g_t_db_k)}</td>
+                    <td className="num" style={{ color: r.margin_db === null ? undefined : r.margin_db < 0 ? 'var(--status-alarm)' : r.margin_db < 3 ? 'var(--status-caution)' : 'var(--status-ok)' }}>{fmt(r.margin_db)}</td>
+                    <td><Badge text={STATUS_LABEL[r.status] ? t(STATUS_LABEL[r.status]) : r.status} color={color} title={r.reason || undefined} /></td>
                   </tr>
                 )
               })}
@@ -355,24 +343,24 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
       )}
 
       {/* buffer plot with contact bands */}
-      {seriesQ.isLoading && run?.status === 'ok' && <div style={{ color: 'var(--text-secondary)' }}>{t('loading series…')}</div>}
+      {seriesQ.isLoading && run?.status === 'ok' && <div className="c-2">{t('loading series…')}</div>}
       {series && (
-        <div style={card}>
+        <div className="c2o-card">
           <SVGLineChart title={t('On-board data over 24 h (bands = contact windows)')} series={bufferSeries} bands={contactBands} xLabel="h" yLabel="GB" yMin={0}
                         refLines={storage ? [{ y: storage, label: t('storage {{value}} GB', { value: fmt(storage, 1) }) }] : []} height={200} />
           {series.contacts.length > 0 && (
-            <details style={{ marginTop: '0.3rem' }}>
-              <summary style={{ cursor: 'pointer', fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('{{count}} contact windows', { count: series.contacts.length, defaultValue_one: '{{count}} contact windows' })}</summary>
-              <table style={{ borderCollapse: 'collapse', marginTop: '0.2rem' }}>
-                <thead><tr><th style={th}>{t('Station')}</th><th style={{ ...th, textAlign: 'right' }}>{t('Start')}</th><th style={{ ...th, textAlign: 'right' }}>{t('End')}</th><th style={{ ...th, textAlign: 'right' }}>{t('Max el °')}</th><th style={{ ...th, textAlign: 'right' }}>GB</th></tr></thead>
+            <details className="mt-1">
+              <summary className="cursor-p t-12 c-2">{t('{{count}} contact windows', { count: series.contacts.length, defaultValue_one: '{{count}} contact windows' })}</summary>
+              <table className="c2o-table c2o-table--dense">
+                <thead><tr><th>{t('Station')}</th><th className="ta-r">{t('Start')}</th><th className="ta-r">{t('End')}</th><th className="ta-r">{t('Max el °')}</th><th className="ta-r">GB</th></tr></thead>
                 <tbody>
                   {series.contacts.map((c, i) => {
                     const hm = (t: number) => `${String(Math.floor(t / 3600)).padStart(2, '0')}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}`
                     return (
                       <tr key={i}>
-                        <td style={td}><span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(c.station_id) || 'var(--text-3)', display: 'inline-block', marginRight: 4 }} />{c.station}</td>
-                        <td style={num}>{hm(c.start_s)}</td><td style={num}>{hm(c.end_s)}</td>
-                        <td style={num}>{fmt(c.max_elevation_deg, 0)}</td><td style={num}>{fmt(c.data_gb, 3)}</td>
+                        <td><span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(c.station_id) || 'var(--text-3)', display: 'inline-block', marginRight: 4 }} />{c.station}</td>
+                        <td className="num">{hm(c.start_s)}</td><td className="num">{hm(c.end_s)}</td>
+                        <td className="num">{fmt(c.max_elevation_deg, 0)}</td><td className="num">{fmt(c.data_gb, 3)}</td>
                       </tr>
                     )
                   })}
@@ -386,26 +374,26 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
       {/* conflicts */}
       {run && run.status === 'ok' && (
         <div>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+          <div className="t-12 c-2 mb-1">
             {t('What limited me')} {conflicts.length ? `(${conflicts.length})` : ''}
           </div>
           {conflicts.length === 0 ? (
-            <div style={{ color: 'var(--status-ok)', fontSize: fs.label }}>{t('Data return closes: every selected station closes the link and the daily volume comes down.')}</div>
+            <div className="c-ok t-12">{t('Data return closes: every selected station closes the link and the daily volume comes down.')}</div>
           ) : (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <ul className="list-reset m-0 p-0 stack gap-1">
               {conflicts.map(c => {
                 const color = SEVERITY_COLORS[c.severity] || 'var(--text-3)'
                 return (
-                  <li key={c.id} style={{ ...card, borderLeft: `3px solid ${color}` }}>
-                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <li key={c.id} className="c2o-card" style={{ borderLeft: `3px solid ${color}` }}>
+                    <div className="flex gap-2 ai-c wrap">
                       <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
-                      <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.code}</span>
-                      <strong style={{ fontSize: fs.label }}>{c.title}</strong>
+                      <span className="mono t-12 c-2">{c.code}</span>
+                      <strong className="t-12">{c.title}</strong>
                     </div>
                     {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
                     {c.suggested_fix && (
                       <div style={{ fontSize: fs.label, marginTop: 2 }}>
-                        <span style={{ color: 'var(--interactive)' }}>{t('Fix:')} </span>{c.suggested_fix}
+                        <span className="c-accent">{t('Fix:')} </span>{c.suggested_fix}
                       </div>
                     )}
                   </li>

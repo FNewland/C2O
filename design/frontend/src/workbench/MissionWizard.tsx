@@ -14,7 +14,10 @@ import { useUIStore } from '../stores/uiStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n, { fmtDate } from '../i18n'
-import { fs } from '../theme/tokens'
+import { Note } from '../components/ui/Panel'
+import { Tag } from '../components/ui/StatusBadge'
+import { ThemeToggle } from '../components/ui/ThemeToggle'
+import { LanguageToggle } from '../i18n/LanguageToggle'
 import { Dialog, askConfirm, showAlert } from '../components/ui/Dialog'
 import { HomeFrame } from '../components/ui/HomeFrame'
 
@@ -346,35 +349,30 @@ export function MissionWizard() {
 
   // ─── HOME SCREEN ───
   if (step === 'home') {
-    const row: React.CSSProperties = {
-      display: 'grid', gridTemplateColumns: 'minmax(180px, 220px) 1fr', alignItems: 'center',
-      columnGap: 'var(--sp-4)', rowGap: 'var(--sp-1)', padding: 'var(--sp-3) 0', borderTop: '1px solid var(--line)',
-    }
-    const note: React.CSSProperties = { fontSize: fs.body, color: 'var(--text-2)', margin: 0, minWidth: 0 }
     return (
       <HomeFrame title={t('Start a design study')} lead={t('Define a new mission from the problem up, join a study already in progress, or open a saved or example design.')}>
-        <div className="c2o-home" style={{ maxWidth: 760 }}>
-          <div style={row}>
+        <div className="c2o-home">
+          <div className="c2o-home__row">
             <button type="button" className="c2o-btn c2o-btn--primary c2o-btn--lg" onClick={() => setStep('problem')}>
               {t('Create New Mission')}
             </button>
-            <p style={note}>{t('Four guided steps: problem, stakeholders, alternatives, initial architecture.')}</p>
+            <p className="c2o-home__note">{t('Four guided steps: problem, stakeholders, alternatives, initial architecture.')}</p>
           </div>
-          <div style={{ ...row, alignItems: 'start' }}>
+          <div className="c2o-home__row ai-s">
             <ActiveStudies onJoin={(id) => { setStudyId(id); qc.invalidateQueries() }} />
           </div>
-          <div style={row}>
+          <div className="c2o-home__row">
             <button type="button" className="c2o-btn" onClick={handleLoad}>{t('Load from File')}</button>
-            <p style={note}>{t('Open a .json design saved from the workbench.')}</p>
+            <p className="c2o-home__note">{t('Open a .json design saved from the workbench.')}</p>
           </div>
-          <div style={{ ...row, borderBottom: '1px solid var(--line)' }}>
+          <div className="c2o-home__row c2o-home__row--last">
             <button type="button" className="c2o-btn" onClick={openExamples}>{t('Load Example Mission')}</button>
-            <p style={note}>{t('Start from a worked CubeSat mission.')}</p>
+            <p className="c2o-home__note">{t('Start from a worked CubeSat mission.')}</p>
           </div>
         </div>
         <Dialog open={!!examples} title={t('Example missions')} onClose={() => setExamples(null)} width={560}
           actions={<button type="button" className="c2o-btn" onClick={() => setExamples(null)}>{t('Cancel')}</button>}>
-          <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <ul role="list" className="list-reset m-0 p-0 stack gap-2">
             {(examples || []).map(m => (
               <li key={m.id}>
                 <button type="button" data-example-card={m.id} className="c2o-example-card"
@@ -397,27 +395,23 @@ export function MissionWizard() {
       <WizardFrame step={1} title={t('What problem does this mission solve?')} onBack={() => setStep('home')}
         onNext={() => setStep('stakeholders')} canNext={!!problemStatement}>
         <Field label={t('Mission Name')}>
-          <input value={missionName} onChange={e => setMissionName(e.target.value)} placeholder={t('e.g., ArcticWatch-1')} style={inputStyle} />
+          <input value={missionName} onChange={e => setMissionName(e.target.value)} placeholder={t('e.g., ArcticWatch-1')} className="c2o-input" />
         </Field>
         <Field label={t('Problem Statement *')} hint={t('What gap exists? Who is affected? What happens if we do nothing?')}>
           <textarea value={problemStatement} onChange={e => setProblemStatement(e.target.value)}
             placeholder={t('e.g., Agricultural monitoring in the Canadian prairies requires frequent multispectral imagery to detect crop stress early, but existing satellite data lacks the spatial resolution and revisit frequency needed for field-level decisions...')}
-            style={{ ...inputStyle, height: 100, resize: 'vertical' }} />
+            className="c2o-textarea" rows={5} />
         </Field>
         <Field label={t('Operational Context')} hint={t('When, where, and how will the mission products be used?')}>
           <textarea value={operationalContext} onChange={e => setOperationalContext(e.target.value)}
             placeholder={t('e.g., Data products will be delivered to farming cooperatives within 6 hours of acquisition during the growing season (May-September)...')}
-            style={{ ...inputStyle, height: 60, resize: 'vertical' }} />
+            className="c2o-textarea" rows={3} />
         </Field>
-        <Field label={t('Mission Type')}>
-          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+        <Field group label={t('Mission Type')}>
+          <div className="flex gap-1 wrap">
             {MISSION_TYPES.map(mt => (
-              <button key={mt.value} onClick={() => setMissionType(mt.value)} style={{
-                padding: '0.3rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
-                background: missionType === mt.value ? 'var(--accent)' : 'var(--bg-card)',
-                color: missionType === mt.value ? 'white' : 'var(--text-secondary)',
-                border: `1px solid ${missionType === mt.value ? 'var(--accent)' : 'var(--border)'}`,
-              }}>
+              <button key={mt.value} type="button" onClick={() => setMissionType(mt.value)} aria-pressed={missionType === mt.value}
+                className="c2o-choice-chip" title={t(mt.desc)}>
                 {t(MISSION_TYPE_LABELS[mt.value])}
               </button>
             ))}
@@ -433,50 +427,50 @@ export function MissionWizard() {
     return (
       <WizardFrame step={2} title={t('Who cares, and what do they need?')} onBack={() => setStep('problem')}
         onNext={() => { runTradeAnalysis(); setStep('alternatives') }} canNext={hasEnough}>
-        <Field label={t('Stakeholders')} hint={t('Who benefits from, funds, or operates this mission?')}>
+        <Field group label={t('Stakeholders')} hint={t('Who benefits from, funds, or operates this mission?')}>
           {stakeholders.map((s, i) => (
-            <div key={s.id} style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
+            <div key={s.id} className="flex gap-1 mb-1">
               <input value={s.name} onChange={e => { const n = [...stakeholders]; n[i].name = e.target.value; setStakeholders(n) }}
-                placeholder={t('Name / organisation')} style={{ ...inputStyle, flex: 1 }} />
+                placeholder={t('Name / organisation')} aria-label={t('Stakeholder {{n}}: name / organisation', { n: i + 1 })} className="c2o-input grow" />
               <select value={s.role} onChange={e => { const n = [...stakeholders]; n[i].role = e.target.value; setStakeholders(n) }}
-                style={{ ...inputStyle, width: 130 }}>
+                aria-label={t('Stakeholder {{n}}: role', { n: i + 1 })} className="c2o-select w-auto">
                 {Object.entries(STAKEHOLDER_ROLES).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}
               </select>
               <input value={s.need} onChange={e => { const n = [...stakeholders]; n[i].need = e.target.value; setStakeholders(n) }}
-                placeholder={t('Key need')} style={{ ...inputStyle, flex: 1 }} />
+                placeholder={t('Key need')} aria-label={t('Stakeholder {{n}}: key need', { n: i + 1 })} className="c2o-input grow" />
               {stakeholders.length > 1 && (
-                <button onClick={() => setStakeholders(stakeholders.filter((_, j) => j !== i))}
-                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>×</button>
+                <button type="button" onClick={() => setStakeholders(stakeholders.filter((_, j) => j !== i))}
+                  className="c2o-btn c2o-btn--icon" aria-label={t('Remove stakeholder {{n}}', { n: i + 1 })}>×</button>
               )}
             </div>
           ))}
           <button onClick={() => setStakeholders([...stakeholders, { id: String(Date.now()), name: '', role: 'user', need: '' }])}
-            style={{ fontSize: fs.label, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            type="button" className="c2o-btn c2o-btn--quiet c2o-btn--sm">
             {t('+ Add stakeholder')}
           </button>
         </Field>
 
-        <Field label={t('Mission Objectives (minimum 2)')} hint={t('What must the mission achieve? Be specific and measurable.')}>
+        <Field group label={t('Mission Objectives (minimum 2)')} hint={t('What must the mission achieve? Be specific and measurable.')}>
           {objectives.map((o, i) => (
-            <div key={o.id} style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
+            <div key={o.id} className="flex gap-1 mb-1">
               <select value={o.priority} onChange={e => { const n = [...objectives]; n[i].priority = e.target.value; setObjectives(n) }}
-                style={{ ...inputStyle, width: 90 }}>
+                aria-label={t('Objective {{n}}: priority', { n: i + 1 })} className="c2o-select w-auto">
                 <option value="primary">{t('Primary')}</option>
                 <option value="secondary">{t('Secondary', { context: 'priority' })}</option>
                 <option value="constraint">{t('Constraint', { context: 'priority' })}</option>
               </select>
               <input value={o.text} onChange={e => { const n = [...objectives]; n[i].text = e.target.value; setObjectives(n) }}
-                placeholder={t('e.g., Acquire 5m GSD multispectral imagery')} style={{ ...inputStyle, flex: 2 }} />
+                placeholder={t('e.g., Acquire 5m GSD multispectral imagery')} aria-label={t('Objective {{n}}', { n: i + 1 })} className="c2o-input c2o-grow-2" />
               <input value={o.measurable_criterion} onChange={e => { const n = [...objectives]; n[i].measurable_criterion = e.target.value; setObjectives(n) }}
-                placeholder={t('How to measure')} style={{ ...inputStyle, flex: 1 }} />
+                placeholder={t('How to measure')} aria-label={t('Objective {{n}}: how to measure', { n: i + 1 })} className="c2o-input grow" />
               {objectives.length > 1 && (
-                <button onClick={() => setObjectives(objectives.filter((_, j) => j !== i))}
-                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>×</button>
+                <button type="button" onClick={() => setObjectives(objectives.filter((_, j) => j !== i))}
+                  className="c2o-btn c2o-btn--icon" aria-label={t('Remove objective {{n}}', { n: i + 1 })}>×</button>
               )}
             </div>
           ))}
           <button onClick={() => setObjectives([...objectives, { id: String(Date.now()), text: '', priority: 'secondary', measurable_criterion: '' }])}
-            style={{ fontSize: fs.label, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            type="button" className="c2o-btn c2o-btn--quiet c2o-btn--sm">
             {t('+ Add objective')}
           </button>
         </Field>
@@ -489,36 +483,31 @@ export function MissionWizard() {
     return (
       <WizardFrame step={3} title={t('Is space the right answer?')} onBack={() => setStep('stakeholders')}
         onNext={() => setStep('architecture')} canNext={!!selectedAlt && !!selectionRationale}>
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
+        <div className="t-12 c-2 mb-2 lh-text">
           {t('Before committing to a space mission, consider all alternatives. Could existing satellite data, commercial services, drones, or ground sensors meet your objectives?')}
         </div>
 
-        {tradeLoading && <div style={{ color: 'var(--accent)', padding: '1rem', textAlign: 'center' }}>{t('Analysing alternatives...')}</div>}
+        {tradeLoading && <div className="c-accent p-4 ta-c">{t('Analysing alternatives...')}</div>}
 
         {tradeResult?.alternatives && (
           <>
             {tradeResult.key_question && (
-              <div style={{ padding: '0.4rem 0.5rem', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', borderLeft: '3px solid var(--warning)', marginBottom: '0.5rem', fontSize: fs.label, color: 'var(--warning)' }}>
+              <Note tone="caution" className="mb-2">
                 {t('Key question: {{question}}', { question: tradeResult.key_question })}
-              </div>
+              </Note>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: '0.5rem', maxHeight: 300, overflow: 'auto' }}>
+            <div className="stack gap-1 mb-3" role="group" aria-label={t('Alternatives')}>
               {tradeResult.alternatives.map((alt: any) => (
-                <button key={alt.name} onClick={() => setSelectedAlt(alt.name)}
-                  style={{
-                    padding: '0.4rem 0.5rem', borderRadius: '4px', textAlign: 'left', cursor: 'pointer',
-                    background: selectedAlt === alt.name ? 'rgba(59,130,246,0.15)' : 'var(--bg-card)',
-                    border: `2px solid ${selectedAlt === alt.name ? 'var(--accent)' : 'var(--border)'}`,
-                    color: 'var(--text-primary)',
-                  }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.15rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: fs.label }}>{alt.name}</span>
-                    <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>#{alt.rank} — {alt.category}</span>
+                <button key={alt.name} type="button" onClick={() => setSelectedAlt(alt.name)} aria-pressed={selectedAlt === alt.name}
+                  className="c2o-choice-card">
+                  <div className="flex jc-sb mb-1">
+                    <span className="w-600 t-12">{alt.name}</span>
+                    <span className="t-12 c-2">#{alt.rank} — {alt.category}</span>
                   </div>
-                  <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{alt.description?.slice(0, 120)}</div>
+                  <div className="t-12 c-2">{alt.description?.slice(0, 120)}</div>
                   {alt.gsd_m != null && (
-                    <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                    <div className="t-12 c-2 mt-1">
                       {t('GSD: {{gsd}}m | Revisit: {{revisit}}d | Cost: {{cost}} kEUR', { gsd: alt.gsd_m, revisit: alt.revisit_days, cost: alt.annual_cost_keur || alt.total_3yr_cost_keur })}
                     </div>
                   )}
@@ -530,20 +519,20 @@ export function MissionWizard() {
               <Field label={t('Why this approach?')} hint={t('Explain why the selected alternative best meets the mission objectives.')}>
                 <textarea value={selectionRationale} onChange={e => setSelectionRationale(e.target.value)}
                   placeholder={t('e.g., Existing commercial imagery (Sentinel-2, Planet) lacks the spectral bands needed for our specific crop stress detection algorithm. A dedicated instrument with custom band selection is required...')}
-                  style={{ ...inputStyle, height: 60, resize: 'vertical' }} />
+                  className="c2o-textarea" rows={3} />
               </Field>
             )}
 
             {tradeResult.recommendation && (
-              <div style={{ padding: '0.3rem 0.5rem', background: 'rgba(16,185,129,0.1)', borderRadius: '4px', fontSize: fs.label, color: 'var(--success)', marginTop: '0.3rem' }}>
+              <Note tone="info" className="mt-2">
                 {tradeResult.recommendation}
-              </div>
+              </Note>
             )}
           </>
         )}
 
         {!tradeResult && !tradeLoading && (
-          <button onClick={runTradeAnalysis} style={{ ...wizBtn, background: 'var(--accent)', color: 'white' }}>
+          <button type="button" onClick={runTradeAnalysis} className="c2o-btn c2o-btn--primary">
             {t('Analyse Alternatives')}
           </button>
         )}
@@ -556,22 +545,17 @@ export function MissionWizard() {
     return (
       <WizardFrame step={4} title={t('Select starting architecture')} onBack={() => setStep('alternatives')}
         onNext={createMission} canNext={!creating} nextLabel={creating ? t('Creating...') : t('Create Mission & Start Design')}>
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+        <div className="t-12 c-2 mb-2">
           {t('Choose an initial architecture to start with. You can modify this later by adding, removing, or renaming segments.')}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: '0.5rem' }}>
+        <div className="stack gap-1 mb-2">
           {ARCH_PRESETS.map(arch => (
-            <button key={arch.id} onClick={() => setSelectedArch(arch.id)}
-              style={{
-                padding: '0.4rem 0.5rem', borderRadius: '4px', textAlign: 'left', cursor: 'pointer',
-                background: selectedArch === arch.id ? 'rgba(59,130,246,0.15)' : 'var(--bg-card)',
-                border: `2px solid ${selectedArch === arch.id ? 'var(--accent)' : 'var(--border)'}`,
-                color: 'var(--text-primary)',
-              }}>
-              <span style={{ fontWeight: 600 }}>{t(ARCH_PRESET_NAMES[arch.id])}</span>
+            <button key={arch.id} type="button" onClick={() => setSelectedArch(arch.id)} aria-pressed={selectedArch === arch.id}
+              className="c2o-choice-card">
+              <span className="w-600">{t(ARCH_PRESET_NAMES[arch.id])}</span>
               {arch.segments.length > 0 && (
-                <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                <div className="t-12 c-2 mt-1">
                   {t('Segments: {{list}}', { list: arch.segments.map(sg => t(sg)).join(' → ') })}
                 </div>
               )}
@@ -579,12 +563,12 @@ export function MissionWizard() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="flex gap-2">
           <Field label={t('Design Lifetime (years)')}>
-            <input type="number" value={lifetime} onChange={e => setLifetime(e.target.value)} style={{ ...inputStyle, width: 60 }} />
+            <input type="number" value={lifetime} onChange={e => setLifetime(e.target.value)} className="c2o-input c2o-input--num c2o-w-num" />
           </Field>
           <Field label={t('Target Mass (kg)')}>
-            <input type="number" value={massTarget} onChange={e => setMassTarget(e.target.value)} style={{ ...inputStyle, width: 60 }} />
+            <input type="number" value={massTarget} onChange={e => setMassTarget(e.target.value)} className="c2o-input c2o-input--num c2o-w-num" />
           </Field>
         </div>
       </WizardFrame>
@@ -602,73 +586,72 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
 }) {
   const { t } = useTranslation()
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      {/* right padding keeps the step dots clear of the fixed language toggle (App.tsx) */}
-      <div style={{ padding: '0.5rem 7rem 0.5rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span style={{ fontSize: fs.label, color: 'var(--brand)', fontWeight: 700 }}>SpaceCDF</span>
-        <span style={{ color: 'var(--border)' }}>|</span>
-        <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{t('Mission Definition')}</span>
-        <span style={{ flex: 1 }} />
-        {/* Step indicators */}
-        {[1, 2, 3, 4].map(s => (
-          <span key={s} style={{
-            width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: fs.label, fontWeight: 700,
-            background: s === step ? 'var(--accent)' : s < step ? 'var(--success)' : 'var(--bg-card)',
-            color: s <= step ? 'white' : 'var(--text-secondary)',
-            border: `1px solid ${s === step ? 'var(--accent)' : s < step ? 'var(--success)' : 'var(--border)'}`,
-          }}>{s < step ? '✓' : s}</span>
-        ))}
-      </div>
+    <div className="c2o-wizard">
+      <header className="c2o-home-frame__bar">
+        <span className="c2o-appbar__mark">SpaceCDF</span>
+        <span className="t-13 c-2">{t('Mission Definition')}</span>
+        <ol className="c2o-steps list-reset" aria-label={t('Steps')}>
+          {STEP_NAMES.map((name, i) => {
+            const s = i + 1
+            return (
+              <li key={s} className={s === step ? 'c2o-steps__item is-current' : s < step ? 'c2o-steps__item is-done' : 'c2o-steps__item'}
+                aria-current={s === step ? 'step' : undefined}>
+                <span className="c2o-steps__num" aria-hidden="true">{s < step ? '✓' : s}</span>
+                <span className="c2o-steps__label">{t(name)}</span>
+                {s < step && <span className="sr-only">{t('done')}</span>}
+              </li>
+            )
+          })}
+        </ol>
+        <span className="ml-auto row gap-2">
+          <LanguageToggle />
+          <ThemeToggle />
+        </span>
+      </header>
 
-      {/* Content */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', maxWidth: 700, margin: '0 auto', width: '100%' }}>
-        <h2 style={{ fontSize: fs.title, margin: '0 0 1rem', color: 'var(--text-primary)' }}>
+      <main className="c2o-wizard__main">
+        <h1 className="t-20 w-600 mb-4 c-1">
           {t('Step {{step}}: {{title}}', { step, title })}
-        </h2>
+        </h1>
         {children}
-      </div>
+      </main>
 
-      {/* Footer */}
-      <div style={{ padding: '0.5rem 1rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
-        <button onClick={onBack} style={{ ...wizBtn, background: 'var(--bg-card)', width: 100 }}>{t('← Back')}</button>
-        <button onClick={onNext} disabled={!canNext} style={{
-          ...wizBtn, background: canNext ? 'var(--accent)' : 'var(--border)',
-          color: 'white', width: 200, opacity: canNext ? 1 : 0.5,
-        }}>
+      <footer className="c2o-wizard__foot">
+        <button type="button" onClick={onBack} className="c2o-btn">{t('← Back')}</button>
+        <button type="button" onClick={() => { if (canNext) onNext() }} aria-disabled={!canNext || undefined}
+          data-reason={!canNext ? t('Complete the required fields on this step first') : undefined}
+          className="c2o-btn c2o-btn--primary c2o-btn--lg c2o-reason-end c2o-reason-up">
           {nextLabel || t('Next →')}
         </button>
-      </div>
+      </footer>
     </div>
   )
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+// English text is the i18n key: wizard step names.
+const STEP_NAMES = ['Problem', 'Stakeholders', 'Alternatives', 'Architecture']
+
+function Field({ label, hint, children, group }: { label: string; hint?: string; children: React.ReactNode; group?: boolean }) {
+  // A single control: the label wraps it. Several controls: a fieldset with a legend.
+  if (group) {
+    return (
+      <fieldset className="c2o-wfield">
+        <legend className="c2o-wfield__label">{label}</legend>
+        {hint && <span className="c2o-wfield__hint">{hint}</span>}
+        {children}
+      </fieldset>
+    )
+  }
   return (
-    <div style={{ marginBottom: '0.75rem' }}>
-      <label style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.2rem' }}>
-        {label}
-      </label>
-      {hint && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{hint}</div>}
+    <label className="c2o-wfield">
+      <span className="c2o-wfield__label">{label}</span>
+      {hint && <span className="c2o-wfield__hint">{hint}</span>}
       {children}
-    </div>
+    </label>
   )
-}
-
-const inputStyle: React.CSSProperties = {
-  padding: '0.4rem 0.5rem', fontSize: fs.label, borderRadius: '4px', width: '100%',
-  background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)',
-}
-
-const wizBtn: React.CSSProperties = {
-  padding: '0.4rem 0.75rem', fontSize: fs.label, fontWeight: 600, borderRadius: '4px',
-  border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-secondary)',
-  background: 'var(--bg-card)',
 }
 
 // ─── Active Studies List ───
-
 function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
   const { t } = useTranslation()
   const directJoin = useCallback((id: string) => {
@@ -700,16 +683,16 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
         <button type="button" className="c2o-btn" aria-expanded={false} onClick={() => { setExpanded(true); refresh() }}>
           {t('Join Active Study')}
         </button>
-        <p style={{ fontSize: fs.body, color: 'var(--text-2)', margin: 0 }}>{t('Work on a study with your team in real time.')}</p>
+        <p className="t-13 c-2 m-0">{t('Work on a study with your team in real time.')}</p>
       </>
     )
   }
 
   return (
-    <div style={{ gridColumn: '1 / -1', padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--radius)', background: 'var(--surface-1)', border: '1px solid var(--line-strong)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
-        <h2 style={{ fontWeight: 600, fontSize: fs.body, margin: 0 }}>{t('Active Studies')}</h2>
-        <span style={{ flex: 1 }} />
+    <div className="c2o-studies">
+      <div className="flex ai-c gap-2 mb-2">
+        <h2 className="w-600 t-13 m-0">{t('Active Studies')}</h2>
+        <span className="grow" />
         <button type="button" className="c2o-btn c2o-btn--quiet" onClick={refresh} disabled={loading}>
           {loading ? t('Loading...') : t('Refresh')}
         </button>
@@ -719,32 +702,23 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
       </div>
 
       {studies.length === 0 ? (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', padding: '0.3rem 0' }}>
+        <div className="t-12 c-2 py-1 px-0">
           {loading ? t('Loading...') : t('No active studies found. Create a new mission to start.')}
         </div>
       ) : (
         <>
-          <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+          <div className="t-12 c-2 mb-1">
             {t('{{count}} studies — most recent first', { count: studies.length, defaultValue_one: '{{count}} studies — most recent first' })}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: 200, overflow: 'auto' }}>
+          <ul className="list-reset c2o-studies__list">
             {studies.slice().reverse().map((s: any) => (
-              <div key={s.id} style={{
-                display: 'flex', alignItems: 'center', gap: '0.3rem',
-                padding: '0.3rem 0.5rem', borderRadius: '4px',
-                background: 'var(--bg-primary)', border: '1px solid var(--border)',
-              }}>
-                <button type="button" onClick={() => directJoin(s.id)} style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--interactive)',
-                  fontWeight: 600, fontSize: fs.body, flex: 1, textAlign: 'left', padding: 0, minHeight: 24,
-                }}>
+              <li key={s.id} className="c2o-studies__row">
+                <button type="button" onClick={() => directJoin(s.id)} className="c2o-studies__join">
                   {s.name || s.id}
                 </button>
-                {s.phase && (
-                  <span style={{ fontSize: fs.label, color: 'var(--accent)', textTransform: 'uppercase' }}>{s.phase}</span>
-                )}
+                {s.phase && <Tag mono>{s.phase}</Tag>}
                 {s.created && (
-                  <span style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>
+                  <span className="t-12 c-2">
                     {fmtDate(s.created, {})}
                   </span>
                 )}
@@ -753,21 +727,18 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
                   if (!(await askConfirm(t('Delete study "{{name}}"? This cannot be undone.', { name: s.name || s.id }), { danger: true, confirmLabel: t('Delete') }))) return
                   await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' })
                   refresh()
-                }} style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)',
-                  fontSize: fs.label, padding: '0 0.2rem', flexShrink: 0,
-                }} title={t('Delete study')} aria-label={t('Delete study')}>
+                }} type="button" className="c2o-btn c2o-btn--icon" title={t('Delete study')} aria-label={t('Delete study "{{name}}"', { name: s.name || s.id })}>
                   ×
                 </button>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
           {studies.length > 5 && (
             <button onClick={async () => {
               if (!(await askConfirm(t('Delete all {{count}} studies? This cannot be undone.', { count: studies.length }), { danger: true, confirmLabel: t('Delete') }))) return
               for (const s of studies) { await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' }) }
               refresh()
-            }} style={{ fontSize: fs.label, color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', marginTop: '0.2rem' }}>
+            }} type="button" className="c2o-btn c2o-btn--danger c2o-btn--sm mt-2">
               {t('Delete all studies')}
             </button>
           )}

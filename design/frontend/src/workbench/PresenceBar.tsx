@@ -1,53 +1,32 @@
 /**
- * PresenceBar — Shows connected users and connection status.
+ * PresenceBar — connection status, who is in the study, the active design
+ * option and the GenAI status. Rendered inline in the app bar (no band of
+ * its own): grey when connected (calm), alarm glyph + text when the session
+ * socket is reconnecting.
  */
 import { useTranslation } from 'react-i18next'
 import { useCollaboration } from './useCollaboration'
 import { AIStatusIndicator } from '../ai'
 import { OptionSwitcher } from '../components/OptionSwitcher'
-import { fs } from '../theme/tokens'
+import { StatusBadge } from '../components/ui/StatusBadge'
 
 export function PresenceBar() {
   const { t } = useTranslation()
   const { connected, users, myName } = useCollaboration()
-
   if (!myName) return null
-
+  const others = users.filter(u => u.name !== myName).map(u => u.name)
+  const count = users.length || 1
+  const who = [t('{{name}} (you)', { name: myName }), ...others].join(', ')
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '0.4rem',
-      padding: '0.15rem 1rem', fontSize: fs.label,
-      background: connected ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-      borderBottom: `1px solid ${connected ? 'var(--success)' : 'var(--danger)'}`,
-    }}>
-      <span style={{
-        width: 6, height: 6, borderRadius: '50%',
-        background: connected ? 'var(--success)' : 'var(--danger)',
-      }} />
-      <span style={{ color: connected ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
-        {connected ? t('Connected') : t('Reconnecting...')}
+    <div className="c2o-presence">
+      <span className="iflex ai-c gap-2 t-12" title={who}>
+        {connected
+          ? <StatusBadge status="neutral">{t('{{count}} connected', { count, defaultValue_one: '{{count}} connected' })}</StatusBadge>
+          : <StatusBadge status="alarm">{t('Reconnecting...')}</StatusBadge>}
+        <span className="c2o-presence__names c-2 ellipsis">{who}</span>
       </span>
-      <span style={{ color: 'var(--border)' }}>|</span>
-      {users.length > 0 ? (
-        users.map((u, i) => (
-          <span key={u.name} style={{
-            color: u.name === myName ? 'var(--accent)' : 'var(--text-secondary)',
-            fontWeight: u.name === myName ? 600 : 400,
-          }}>
-            {u.name === myName ? t('{{name}} (you)', { name: u.name }) : u.name}
-            {i < users.length - 1 ? ' · ' : ''}
-          </span>
-        ))
-      ) : (
-        <span style={{ color: 'var(--text-secondary)' }}>{t('{{name}} (you)', { name: myName })}</span>
-      )}
-      <span style={{ color: 'var(--text-secondary)', marginLeft: '0.3rem' }}>
-        {t('— {{count}} connected', { count: users.length || 1 })}
-      </span>
-      <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.6rem' }}>
-        <OptionSwitcher />
-        <AIStatusIndicator />
-      </span>
+      <OptionSwitcher />
+      <AIStatusIndicator />
     </div>
   )
 }

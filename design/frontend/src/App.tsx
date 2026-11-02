@@ -24,7 +24,7 @@ import i18n from './i18n'
 import { LanguageToggle } from './i18n/LanguageToggle'
 import { DialogHost, showAlert } from './components/ui/Dialog'
 import { HomeFrame } from './components/ui/HomeFrame'
-import { fs } from './theme/tokens'
+import { ThemeToggle } from './components/ui/ThemeToggle'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
@@ -78,9 +78,7 @@ function LevelBar() {
   const names = useLevelNames()
 
   return (
-    <div role="tablist" aria-label={t('Product tree level')} className="c2o-tabs" style={{
-      padding: '0 var(--sp-3)', background: 'var(--surface-1)', borderBottom: '1px solid var(--line)',
-    }}>
+    <div role="tablist" aria-label={t('Product tree level')} className="c2o-tabs c2o-appbar__levels">
       {([0, 1, 2, 3, 4] as Level[]).map(level => {
         const active = currentLevel === level
         const reachable = level <= breadcrumb.length || level === 4  // V&V always accessible
@@ -224,26 +222,20 @@ function StatusBar() {
   }, [studyId, analysisRunning, setAnalysisRunning, qc])
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap',
-      padding: 'var(--sp-2) var(--sp-3)',
-      background: 'var(--surface-0)', borderBottom: '1px solid var(--line)',
-      fontSize: fs.body,
-    }}>
+    <div className="c2o-contextbar">
       {/* Breadcrumb */}
-      <nav aria-label={t('Breadcrumb')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)', minWidth: 0 }}>
-        <button type="button" className="c2o-btn c2o-btn--quiet" onClick={() => drillUp(-1)}
-          aria-current={breadcrumb.length === 0 ? 'page' : undefined} style={{ padding: '0 var(--sp-1)' }}>
+      <nav aria-label={t('Breadcrumb')} className="c2o-crumbs">
+        <button type="button" className="c2o-crumb" onClick={() => drillUp(-1)}
+          aria-current={breadcrumb.length === 0 ? 'page' : undefined}>
           {t('Top level')}
         </button>
         {breadcrumb.map((crumb, i) => {
           const last = i === breadcrumb.length - 1
           return (
-            <span key={crumb.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
-              <span aria-hidden="true" style={{ color: 'var(--text-3)' }}>/</span>
-              <button type="button" className="c2o-btn c2o-btn--quiet" onClick={() => drillUp(i)}
-                aria-current={last ? 'page' : undefined}
-                style={{ padding: '0 var(--sp-1)', color: last ? 'var(--text)' : undefined, fontWeight: last ? 600 : 500 }}>
+            <span key={crumb.id} className="iflex ai-c gap-1 min0">
+              <span aria-hidden="true" className="c-3">/</span>
+              <button type="button" className="c2o-crumb" onClick={() => drillUp(i)}
+                aria-current={last ? 'page' : undefined}>
                 {crumb.name}
               </button>
             </span>
@@ -251,19 +243,24 @@ function StatusBar() {
         })}
       </nav>
 
-      <span style={{ flex: 1 }} />
+      <ReadinessChecklist />
+      <EscalationBanner />
 
+      <span className="grow" />
+
+      <div className="c2o-contextbar__actions">
       {/* Run Analysis */}
       <button
         type="button"
-        className="c2o-btn c2o-btn--primary"
+        className={analysisRunning ? 'c2o-btn c2o-btn--active' : 'c2o-btn c2o-btn--primary'}
         onClick={runAnalysis}
-        disabled={analysisRunning}
+        aria-disabled={analysisRunning || undefined}
         aria-busy={analysisRunning}
-        title={analysisRunning ? t('Analysis is running') : undefined}
+        title={analysisRunning ? t('Analysis is running') : t('Fill empty mass, power and cost values from the design agents')}
       >
         {analysisRunning ? t('Analysing...') : t('Run Analysis')}
       </button>
+      <span className="c2o-contextbar__sep" aria-hidden="true" />
 
       {/* Save */}
       <button
@@ -467,8 +464,7 @@ function StatusBar() {
         {t('Guide')}
       </button>
 
-      {/* Language */}
-      <LanguageToggle />
+      </div>
     </div>
   )
 }
@@ -482,17 +478,16 @@ function NamePrompt() {
   const trimmed = name.trim()
   return (
     <>
-      <LanguageToggle style={{ position: 'fixed', top: 10, right: 16, zIndex: 1000 }} />
       <HomeFrame title={t('Join the design session')} lead={t('Your name is shown to everyone working in the same study.')}>
         <form
           onSubmit={e => { e.preventDefault(); if (trimmed) setUserName(trimmed) }}
-          style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--sp-2)', maxWidth: 480 }}
+          className="flex wrap ai-e gap-2 c2o-name-form"
         >
-          <label style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', fontSize: fs.label, color: 'var(--text-2)' }}>
-            {t('Your name')}
+          <label className="c2o-field c2o-name-form__field">
+            <span className="c2o-field__label">{t('Your name')}</span>
             <input className="c2o-input" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" />
           </label>
-          <button type="submit" className="c2o-btn c2o-btn--primary" style={{ minHeight: 32 }}
+          <button type="submit" className="c2o-btn c2o-btn--primary c2o-btn--tall"
             aria-disabled={!trimmed || undefined} data-reason={!trimmed ? t('Enter a name first') : undefined}>
             {t('Join')}
           </button>
@@ -511,21 +506,25 @@ function AppShell() {
   if (!userName) return <><NamePrompt /><DialogHost /></>
   if (!studyId) return (
     <>
-      <LanguageToggle style={{ position: 'fixed', top: 10, right: 16, zIndex: 1000 }} />
       <MissionWizard />
       <DialogHost />
     </>
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--surface-0)', color: 'var(--text)' }}>
-      <PresenceBar />
-      <LevelBar />
+    <div className="c2o-shell">
+      <header className="c2o-appbar">
+        <span className="c2o-appbar__mark">SpaceCDF</span>
+        <LevelBar />
+        <div className="c2o-appbar__end">
+          <PresenceBar />
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
+      </header>
       <StatusBar />
       <MarginTower />
-      <ReadinessChecklist />
-      <EscalationBanner />
-      <main style={{ flex: 1, overflow: 'hidden' }}>
+      <main className="c2o-shell__main">
         <LevelWorkbench />
       </main>
       {showExport && <ExportPanel onClose={() => useUIStore.getState().setShowExport(false)} />}

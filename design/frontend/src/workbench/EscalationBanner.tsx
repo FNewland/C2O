@@ -8,7 +8,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
-import { fs } from '../theme/tokens'
+import { StatusBadge } from '../components/ui/StatusBadge'
+import { displayElementName } from './BlocksPanel'
 
 const API = '/api'
 // English text is the i18n key (budget type shown as t(type); the value itself is an API path segment).
@@ -84,29 +85,21 @@ export function EscalationBanner() {
 
   if (violations.length === 0) return null
 
+  // Inline in the context bar: alarm glyph + text per broken ancestor; a click goes to that level.
   return (
-    <div style={{
-      padding: '0.4rem 1rem', fontSize: fs.label,
-      background: 'rgba(239,68,68,0.12)', borderBottom: '1px solid var(--danger)',
-      display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap',
-    }}>
-      <span style={{ fontWeight: 700, color: 'var(--danger)' }}>{t('ESCALATION')}</span>
+    <div className="c2o-escalation" role="alert" aria-label={t('Budget escalation')}>
       {violations.map((v) => (
         <button
           key={`${v.elementId}-${v.budgetType}`}
+          type="button"
+          className="c2o-escalation__item"
           onClick={() => drillUp(v.breadcrumbIndex)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.3rem',
-            padding: '0.2rem 0.5rem', borderRadius: '3px',
-            background: 'rgba(239,68,68,0.15)', border: '1px solid var(--danger)',
-            color: 'var(--text-primary)', cursor: 'pointer', fontSize: fs.label,
-          }}
+          title={t('Go to the level where {{name}} is allocated', { name: displayElementName(v.elementName, t) })}
         >
-          <span style={{ fontWeight: 600 }}>{v.elementName}</span>
-          <span style={{ color: 'var(--danger)' }}>
-            {t(v.budgetType)}: {v.actual.toFixed(1)}/{v.allocation.toFixed(1)} {v.unit}
-          </span>
-          <span style={{ color: 'var(--text-secondary)' }}>{t('— click to fix')}</span>
+          <StatusBadge status="alarm">
+            {t('{{name}} {{budget}} over allocation', { name: displayElementName(v.elementName, t), budget: t(v.budgetType) })}
+          </StatusBadge>
+          <span className="mono t-12 c-1">{v.actual.toFixed(2)} / {v.allocation.toFixed(2)} {v.unit}</span>
         </button>
       ))}
     </div>

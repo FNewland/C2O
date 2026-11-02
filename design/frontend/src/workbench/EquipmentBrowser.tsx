@@ -111,10 +111,10 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
   const domainInfo = DOMAINS.find(d => d.id === domain)!
 
   return (
-    <div style={{ padding: '0.5rem 1rem', fontSize: fs.label }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: fs.label }}>{t('Equipment Catalog')}</span>
-        <span style={{ flex: 1 }} />
+    <div className="py-2 px-4 t-12">
+      <div className="flex ai-c gap-2 mb-2 wrap">
+        <span className="w-600 t-12">{t('Equipment Catalog')}</span>
+        <span className="grow" />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -125,12 +125,12 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
           }}
         />
         {onClose && (
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} className="bg-none bd-0 c-2 cursor-p">×</button>
         )}
       </div>
 
       {/* Domain tabs */}
-      <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="flex gap-1 mb-2 wrap">
         {DOMAINS.map(d => (
           <button
             key={d.id}
@@ -147,10 +147,10 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
         ))}
       </div>
 
-      {isLoading && <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>{t('Loading components...')}</div>}
+      {isLoading && <div className="c-2 py-2 px-0">{t('Loading components...')}</div>}
 
       {!focusElementId && (
-        <div style={{ color: 'var(--warning)', padding: '0.3rem', background: 'rgba(245,158,11,0.1)', borderRadius: '3px', marginBottom: '0.4rem' }}>
+        <div className="c-caution p-1 bg-caution rounded mb-2">
           {t('Drill into a subsystem first to add equipment to it.')}
         </div>
       )}
@@ -158,16 +158,12 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
       {/* Component list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', maxHeight: 300, overflow: 'auto' }}>
         {filtered.length === 0 && !isLoading && (
-          <div style={{ color: 'var(--text-secondary)', padding: '0.5rem 0' }}>{t('No components found.')}</div>
+          <div className="c-2 py-2 px-0">{t('No components found.')}</div>
         )}
         {filtered.map((item, i) => {
           const c = item.component || {}
           return (
-            <div key={`${item.category}-${c.id || c.name || i}`} style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.3rem 0.4rem', borderRadius: '4px',
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-            }}>
+            <div key={`${item.category}-${c.id || c.name || i}`} className="flex ai-c gap-2 py-1 px-2 rounded bg-2 bd">
               {/* Category */}
               <span style={{
                 fontSize: fs.label, padding: '0.05rem 0.2rem', borderRadius: '2px',
@@ -178,13 +174,13 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
               </span>
 
               {/* Name + manufacturer */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 500, fontSize: fs.label }}>{c.name || c.id}</div>
-                {c.manufacturer && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)' }}>{c.manufacturer}</div>}
+              <div className="grow min0">
+                <div className="w-500 t-12">{c.name || c.id}</div>
+                {c.manufacturer && <div className="t-12 c-2">{c.manufacturer}</div>}
               </div>
 
               {/* Specs */}
-              <div style={{ display: 'flex', gap: '0.4rem', fontSize: fs.label, color: 'var(--text-secondary)', flexShrink: 0 }}>
+              <div className="flex gap-2 t-12 c-2 shrink-0">
                 {c.mass_kg != null && <span>{c.mass_kg} kg</span>}
                 {(c.power_w || c.power_avg_w) != null && <span>{c.power_w || c.power_avg_w} W</span>}
                 {c.cost_keur != null && <span>{c.cost_keur} kEUR</span>}
@@ -271,11 +267,7 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
 
   if (!expanded) {
     return (
-      <button onClick={() => setExpanded(true)} style={{
-        marginTop: '0.4rem', padding: '0.3rem 0.6rem', fontSize: fs.label, fontWeight: 600,
-        borderRadius: '4px', background: 'var(--bg-card)', border: '1px solid var(--border)',
-        color: 'var(--text-secondary)', cursor: 'pointer', width: '100%', textAlign: 'left',
-      }}>
+      <button onClick={() => setExpanded(true)} className="mt-2 py-1 px-2 t-12 w-600 rounded bg-2 bd c-2 cursor-p w-full ta-l">
         {t('+ Define Custom Equipment')}
       </button>
     )
@@ -291,7 +283,7 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
       marginTop: '0.4rem', padding: '0.4rem', borderRadius: '4px',
       background: 'var(--bg-card)', border: '1px solid var(--accent)',
     }}>
-      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
+      <div className="t-12 w-600 c-accent mb-1">
         {t('Custom Equipment')}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem', marginBottom: '0.3rem' }}>
@@ -303,15 +295,12 @@ function CustomEquipmentForm({ studyId, focusElementId, domain, onCreated }: {
         <input value={mfr} onChange={e => setMfr(e.target.value)} placeholder={t('Manufacturer')} style={inp} />
         <input value={qty} onChange={e => setQty(e.target.value)} placeholder={t('Qty')} type="number" min="1" style={inp} />
       </div>
-      <div style={{ display: 'flex', gap: '0.3rem' }}>
+      <div className="flex gap-1">
         <button onClick={create} disabled={!name || !focusElementId} style={{
           padding: '0.25rem 0.5rem', fontSize: fs.label, fontWeight: 600, borderRadius: '3px',
           background: 'var(--success)', color: 'white', border: 'none', cursor: 'pointer',
         }}>{t('Add')}</button>
-        <button onClick={() => setExpanded(false)} style={{
-          padding: '0.25rem 0.5rem', fontSize: fs.label, borderRadius: '3px',
-          background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer',
-        }}>{t('Cancel')}</button>
+        <button onClick={() => setExpanded(false)} className="py-1 px-2 t-12 rounded bg-1 c-2 bd-0 cursor-p">{t('Cancel')}</button>
       </div>
     </div>
   )

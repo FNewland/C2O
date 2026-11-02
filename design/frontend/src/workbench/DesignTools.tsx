@@ -84,11 +84,11 @@ export function DesignTools() {
   if (!isGroundStation && !isSpacecraft) return null
 
   return (
-    <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
+    <div className="mt-2 bt pt-2">
       {/* Show what element we're configuring */}
-      <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-        {t('Configuring:')} <b style={{ color: 'var(--text-primary)' }}>{focusElement.name}</b>
-        <span style={{ marginLeft: '0.3rem' }}>({focusElement.element_type}, {focusElement.segment})</span>
+      <div className="t-12 c-2 mb-1">
+        {t('Configuring:')} <b className="c-1">{focusElement.name}</b>
+        <span className="ml-1">({focusElement.element_type}, {focusElement.segment})</span>
       </div>
       {(isConstellation || isSpacecraft) && (
         <OrbitTools elementId={focusElement.id} element={focusElement} version={focusElement.version} />
@@ -130,27 +130,23 @@ function OrbitTools({ elementId, element, version }: { elementId: string; elemen
 
   return (
     <div>
-      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--info)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+      <div className="t-12 w-600 c-accent caps mb-1">
         {t('Orbit & Constellation')}
       </div>
 
       {/* Current orbit */}
       {perf.orbit_altitude_km && (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        <div className="t-12 c-2 mb-1">
           {t('Current: {{alt}} km, {{incl}}° incl', { alt: perf.orbit_altitude_km, incl: perf.orbit_inclination_deg })}
           {quantity > 1 && t(' | {{planes}} planes × {{sats}} sats = {{total}}', { planes: perf.orbital_planes || '?', sats: perf.sats_per_plane || '?', total: quantity })}
         </div>
       )}
 
       {/* Orbit presets */}
-      <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
+      <div className="flex gap-1 wrap mb-1">
         {ORBIT_PRESETS.map(o => (
           <button key={o.name} onClick={() => setOrbit(o.altitude, o.inclination)} title={t(ORBIT_PRESET_TEXT[o.name].desc)}
-            style={{
-              padding: '0.15rem 0.4rem', fontSize: fs.label, borderRadius: '3px',
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              color: 'var(--text-primary)', cursor: 'pointer',
-            }}>
+            className="py-1 px-2 t-12 rounded bg-2 bd c-1 cursor-p">
             {t(ORBIT_PRESET_TEXT[o.name].label)} ({o.altitude}km)
           </button>
         ))}
@@ -158,8 +154,8 @@ function OrbitTools({ elementId, element, version }: { elementId: string; elemen
 
       {/* Walker constellation config */}
       {quantity > 1 && (
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', fontSize: fs.label }}>
-          <span style={{ color: 'var(--text-secondary)' }}>{t('Walker:')}</span>
+        <div className="flex gap-1 ai-c t-12">
+          <span className="c-2">{t('Walker:')}</span>
           {[[1, 4], [2, 4], [3, 4], [4, 6], [6, 6]].map(([p, s]) => (
             <button key={`${p}x${s}`} onClick={() => setWalker(p, s)}
               style={{
@@ -218,22 +214,22 @@ function GroundStationTools({ elementId, element, version }: { elementId: string
 
   return (
     <div>
-      <div style={{ fontSize: fs.label, fontWeight: 600, color: 'var(--interactive)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+      <div className="t-12 w-600 c-accent caps mb-1">
         {t('Ground Station Configuration')}
       </div>
 
       {/* Current config */}
       {perf.location && (
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+        <div className="t-12 c-2 mb-1">
           {t('Location: {{name}} ({{lat}}°, {{lon}}°)', { name: perf.location, lat: perf.latitude?.toFixed(1), lon: perf.longitude?.toFixed(1) })}
           {perf.bands?.length > 0 && t(' | Bands: {{bands}}', { bands: perf.bands.join(', ') })}
         </div>
       )}
 
       {/* Location picker */}
-      <div style={{ marginBottom: '0.3rem' }}>
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>{t('Location:')}</div>
-        <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
+      <div className="mb-1">
+        <div className="t-12 c-2 mb-1">{t('Location:')}</div>
+        <div className="flex gap-1 wrap">
           {GS_LOCATIONS.map(loc => (
             <button key={loc.name} onClick={() => setLocation(loc)}
               title={`${loc.provider} — ${loc.lat.toFixed(1)}°N, ${loc.lon.toFixed(1)}°E`}
@@ -251,8 +247,8 @@ function GroundStationTools({ elementId, element, version }: { elementId: string
 
       {/* Frequency bands */}
       <div>
-        <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>{t('Frequency bands (click to toggle):')}</div>
-        <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
+        <div className="t-12 c-2 mb-1">{t('Frequency bands (click to toggle):')}</div>
+        <div className="flex gap-1 wrap">
           {FREQUENCY_BANDS.map(fb => {
             const active = (perf.bands || []).includes(fb.band)
             return (

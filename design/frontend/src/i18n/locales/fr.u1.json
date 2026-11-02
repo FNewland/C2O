@@ -8,6 +8,5 @@
   "parent": "parent",
   "{{count}} modes_many": "{{count}} de modes",
   "{{count}} modes_one": "{{count}} mode",
-  "{{count}} modes_other": "{{count}} modes",
-  "{{n}} comp.": "{{n}} comp."
+  "{{count}} modes_other": "{{count}} modes"
 }

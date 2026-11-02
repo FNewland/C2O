@@ -17,7 +17,8 @@ import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { useOptionStore } from '../stores/optionStore'
 import type { DesignOption } from '../types/options'
-import { fs } from '../theme/tokens'
+import { Button } from './ui/Button'
+import { StatusBadge } from './ui/StatusBadge'
 import { askConfirm, askText } from './ui/Dialog'
 
 const API = '/api'
@@ -30,11 +31,6 @@ async function jsonOrThrow(res: Response) {
   }
   return res.json()
 }
-
-const btn = (color = 'var(--text-secondary)'): React.CSSProperties => ({
-  background: 'none', border: '1px solid var(--border)', borderRadius: '3px', cursor: 'pointer',
-  fontSize: fs.label, padding: '0 0.3rem', color, lineHeight: '1.1rem',
-})
 
 export function useOptions(studyId: string | null) {
   return useQuery<DesignOption[]>({
@@ -114,16 +110,16 @@ export function OptionSwitcher({ studyId: studyIdProp }: { studyId?: string | nu
 
   const isBaseline = !active || active.is_baseline
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label }} title={t('Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option')}>
-      <label htmlFor="scdf-option-select" style={{ color: 'var(--text-secondary)' }}>{t('Option')}</label>
+    <span className="iflex ai-c gap-1 t-12" title={t('Design option (SCDF-172): parameter overrides and analysis runs are scoped to the active option')}>
+      <label htmlFor="scdf-option-select" className="c-2">{t('Option')}</label>
       <select id="scdf-option-select" value={active?.id ?? ''} onChange={e => onSelect(e.target.value)}
-        style={{ fontSize: fs.label, padding: '0 0.2rem', background: 'var(--bg-primary)', color: isBaseline ? 'var(--text-primary)' : 'var(--status-caution)', border: '1px solid var(--border)', borderRadius: '3px', fontWeight: isBaseline ? 400 : 600 }}>
+        className={isBaseline ? 'c2o-select c2o-select--sm c2o-option-select' : 'c2o-select c2o-select--sm c2o-option-select w-600 c-accent'}>
         {options.map(o => <option key={o.id} value={o.id}>{o.is_baseline ? t('Baseline') : o.name}</option>)}
       </select>
-      <button style={btn('var(--interactive)')} onClick={onBranch} disabled={branch.isPending} title={t("Copy the active option's overrides into a new option")}>{t('branch')}</button>
-      {!isBaseline && <button style={btn()} onClick={onRename} title={t('Rename')}>{t('rename')}</button>}
-      {!isBaseline && <button style={btn('var(--status-alarm)')} onClick={onDelete} title={t('Delete this option and its overrides')}>×</button>}
-      {error && <span style={{ color: 'var(--status-alarm)' }} title={error}>{t('error')} <button style={btn('var(--status-alarm)')} onClick={() => setError(null)}>{t('ok')}</button></span>}
+      <Button size="sm" variant="quiet" onClick={onBranch} busy={branch.isPending} title={t("Copy the active option's overrides into a new option")}>{t('branch')}</Button>
+      {!isBaseline && <Button size="sm" variant="quiet" onClick={onRename}>{t('rename')}</Button>}
+      {!isBaseline && <Button size="sm" variant="icon" onClick={onDelete} title={t('Delete this option and its overrides')} aria-label={t('Delete this option and its overrides')}>×</Button>}
+      {error && <span className="iflex ai-c gap-1" title={error}><StatusBadge status="alarm">{t('error')}</StatusBadge> <Button size="sm" variant="quiet" onClick={() => setError(null)}>{t('ok')}</Button></span>}
     </span>
   )
 }
