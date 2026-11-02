@@ -41,6 +41,7 @@ import {
   esc, glyph, freshness, limitClass, renderParam, renderDeviationBar,
   renderSparkline, renderAndTable, renderChip, renderStepper, renderAlarmRow,
   renderEventRow, bindSchematic, poller, wsClient, mountLangToggle,
+  renderValue, renderNoData, renderBanner, armButton,
 } from "/static/shared/components.js";
 import { fmtUTC, fmtMET, fmtCUC, fmtAge, fmtHex } from "/static/shared/format.js";
 // UI language (EN|FR). t() for HTML strings, tText() for textContent;
@@ -249,6 +250,11 @@ function paramStatesMap() {
   for (const p of S.paramCatalog || []) {
     if (p.states && Object.keys(p.states).length) out[p.hex] = p.states;
   }
+  // Sentinels read as words in the tables and schematics too.
+  for (const [hex, m] of Object.entries(SENTINELS)) {
+    out[hex] = { ...(out[hex] || {}) };
+    for (const [code, label] of Object.entries(m)) out[hex][code] = tText(label);
+  }
   return out;
 }
 /* {hex: 'fresh'|'degraded'|'stale'|'disabled'} for the catalogue. */
@@ -281,8 +287,24 @@ export function paramStates(hexId) {
   const st = (S.paramByHex[hexId] || {}).states;
   return st && Object.keys(st).length ? st : null;
 }
+/* Sentinel values (R3 / wave 2): a saturated counter is a STATE, not a
+ * number. obdh.time_since_sync_s holds UINT32_MAX until the first sync;
+ * printing "4294967295 s" reads as a 136-year-old sync. */
+const UINT32_MAX = 4294967295;
+// English text is the i18n key (sentinel labels, translated via tText)
+const SENTINELS = { "0x0A14": { [UINT32_MAX]: "never synced" } };
+export function sentinelLabel(hexId, raw) {
+  const n = Number(raw);
+  if (raw === null || raw === undefined || raw === "" || !Number.isFinite(n)) return null;
+  const m = SENTINELS[hexId];
+  if (m && m[n] !== undefined) return tText(m[n]);
+  if (n === UINT32_MAX) return tText("not set");
+  return null;
+}
 export function engValue(hexId, raw) {
   if (raw === undefined || raw === null) return "—";
+  const sl = sentinelLabel(hexId, raw);
+  if (sl) return sl;
   const st = paramStates(hexId);
   if (!st) return null;                 // not enumerated: caller formats numerically
   const code = Math.round(Number(raw));
@@ -295,43 +317,24 @@ export function paramTriad(hexId) {
   const band = S.limits[hexId] ? { ...S.limits[hexId] } : null;
   const st = (S.state.param_limit_state || {})[hexId];
   const age = paramAge(hexId);
-  // Freshness is judged HERE with the cadence-aware verdict, not by the
-  // shared component's flat 5 s / 15 s rule, so age_s is not passed down.
-  const lim = band || (st ? {} : null);
-  if (lim && st) lim.state = st;
+  // Freshness is judged HERE with the cadence-aware verdict (passed down as
+  // `verdict`, which wins over the shared flat rule); age_s only labels it.
   const raw = paramVal(hexId);
   const has = raw !== undefined && raw !== null && raw !== "";
   const fr = has ? paramFreshness(hexId) : "nodata";
-  const eng = engValue(hexId, raw);
+  // The shared triad owns the four data states (live / degraded / stale with
+  // the LAST value kept + age chip / no data / not enabled); the MCS only
+  // hands it its cadence-aware verdict and the age (wave 2: the page-local
+  // regex post-processing of the markup is retired).
+  const lim = { ...(band || {}), verdict: fr === "disabled" ? "disabled" : fr };
+  if (st) lim.state = st;
+  if (age !== undefined) lim.age_s = age;
+  const eng = has ? engValue(hexId, raw) : null;
   // The engineering STRING rides in `def.eng`; the numeric value is still
   // passed as the value so limits, banding and the deviation bar keep working.
-  // Passing the string as the value made Number() NaN, so renderParam treated
-  // the parameter as having no value and drew "—" with a stale class — the
-  // mode chips went blank. Units are dropped for a discrete parameter: a state
-  // name has no unit.
-  const html = eng !== null ? renderParam({ ...def, units: "", eng }, raw, lim)
+  // Units are dropped for a discrete parameter: a state name has no unit.
+  return eng !== null ? renderParam({ ...def, units: "", eng }, raw, lim)
     : renderParam(def, raw, lim);
-  return heldTriad(html, fr, age);
-}
-/* Stale / no-data treatment of a rendered triad (UI brief §1.3, R3 A4):
- * stale KEEPS the last value, dimmed and italic, with an age chip, and the
- * hatch sits on the value cell only; never-received reads "no data". */
-function heldTriad(html, fr, age) {
-  const chip = (txt, cls = "") => ` <span class="ds-age${cls}">${esc(txt)}</span>`;
-  if (fr === "nodata") {
-    return html.replace(/class="ds-param[^"]*"/, 'class="ds-param nodata"')
-      .replace(/<span class="vl">[^<]*/, `<span class="vl"><span class="vc nodata">${t("no data")}</span>`);
-  }
-  if (fr === "fresh") return html;
-  const ageTxt = fr === "disabled" ? tText("not enabled")
-    : age !== undefined ? tText("last received {{age}} ago", { age: fmtAge(age) }) : tText("age unknown");
-  // The age chip goes on the triad's meta row (under the bar), so a long
-  // parameter name never collides with "value + age" on the first row.
-  const withChip = html.replace(/<\/div>\s*$/,
-    `<span class="meta">${chip(ageTxt, fr === "degraded" ? " degraded" : "").trim()}</span></div>`);
-  if (fr === "degraded") return withChip;
-  // stale / disabled: drop any limit colouring — a held value is not live
-  return withChip.replace(/class="ds-param[^"]*"/, 'class="ds-param held"');
 }
 function pushSeries(hexId, v) {
   if (!Number.isFinite(Number(v))) return;
@@ -458,32 +461,30 @@ export function linkState(st = S.state) {
     || paramFreshness(hex) === "degraded", policy: stalePolicy() });
 }
 
-/* The value cell (UI brief §1.3, R3 A4): one rendering of a single value in
- * its four freshness states.
- *   live      value + unit
- *   degraded  value + unit + age chip
+/* One value in its data state (UI brief §1.3), through the shared
+ * renderValue so every readout on the console looks the same:
+ *   live      value + unit (caution/alarm: colour + triangle + H/HH/L/LL)
+ *   degraded  value + unit + amber age chip
  *   stale     LAST value, dimmed italic, + age chip ("82.1 % · 59 s")
- *   no data   a distinct "no data" label — never an em-dash on a hatch
- *   disabled  "not enabled" (the SID carrying it is switched off)
- * Returns inline HTML; the hatch (CSS .vc.stale) sits on this cell only. */
+ *   no data   the "no data" tag — never an em-dash
+ *   disabled  "not enabled" (the HK SID carrying it is switched off)
+ * The MCS supplies its cadence-aware verdict; sentinels read as words. */
 export function valueCell(hexId, digits = 2, units = "", opts = {}) {
   const raw = opts.value !== undefined ? opts.value : paramVal(hexId);
   const has = raw !== undefined && raw !== null && raw !== "";
-  const fr = opts.fresh || (hexId ? paramFreshness(hexId) : (has ? "fresh" : "nodata"));
-  if (!has || fr === "nodata") return `<span class="vc nodata">${t("no data")}</span>`;
-  const eng = hexId ? engValue(hexId, raw) : null;
+  const fr = !has ? "nodata"
+    : opts.fresh || (hexId ? paramFreshness(hexId) : "fresh");
+  if (fr === "nodata") return renderNoData();
   const n = Number(raw);
-  const txt = eng !== null && eng !== undefined ? esc(String(eng))
-    : Number.isFinite(n) ? num(n, digits) : esc(String(raw));
-  const u = units && (eng === null || eng === undefined) ? ` <u>${esc(units)}</u>` : "";
-  if (fr === "disabled") {
-    return `<span class="vc stale" title="${esc(tText("HK SID carrying this parameter is disabled"))}">${txt}${u}` +
-      ` <span class="ds-age">${t("not enabled")}</span></span>`;
-  }
-  const age = hexId ? paramAge(hexId) : undefined;
-  const chip = (fr === "stale" || fr === "degraded") && age !== undefined
-    ? ` <span class="ds-age">${esc(fmtAge(age))}</span>` : "";
-  return `<span class="vc ${fr}">${txt}${u}${chip}</span>`;
+  const eng = hexId ? engValue(hexId, raw) : null;
+  const engTxt = eng !== null && eng !== undefined ? String(eng)
+    : (Number.isFinite(n) ? undefined : String(raw));
+  return renderValue(Number.isFinite(n) ? n : 0, {
+    units: engTxt === undefined ? units : "", digits, eng: engTxt,
+    ageS: hexId ? paramAge(hexId) : undefined,
+    verdict: fr === "disabled" ? "disabled" : fr,
+    limitState: hexId ? (S.state.param_limit_state || {})[hexId] : undefined,
+  });
 }
 
 /* ═══ 4. TRANSPORT ════════════════════════════════════════════════════════ */
@@ -697,9 +698,20 @@ function startClocks() {
   }, 5000);
 }
 
-function saDot(id, cls) {
-  const el = $(id);
-  if (el) el.className = "sadot" + (cls ? " " + cls : "");
+/* The annunciator (one cell per SA question): shape + word + detail, so
+ * the verdict reads in greyscale and without reading any number.
+ *   ok       check          caution  hollow triangle
+ *   alarm    filled triangle stale   dashed ring, italic word
+ *   nodata   hollow ring     active  accent run mark (pass in progress) */
+const SA_GLYPH = { ok: "ack", caution: "warn-up", alarm: "alarm-up", stale: "stale",
+  nodata: "off", active: "run", neutral: "" };
+function saCell(id, state, value, sub) {
+  const card = $(id);
+  if (card) card.className = "sacard is-" + state;
+  const g = SA_GLYPH[state] || "";
+  setHTML(`${id}-dot`, g ? glyph(g) : "");
+  setText(`${id}-v`, value);
+  if (sub !== undefined) setText(`${id}-s`, sub);
 }
 
 export function updateSaHeader() {
@@ -708,8 +720,8 @@ export function updateSaHeader() {
   // SEE — link freshness, TM tier active vs commanded, store fill
   const age = sa.last_frame_age_s;
   const fr = freshness(age);
-  const link = (sa.link || fr).toUpperCase();
-  setText("sa-see-v", age === undefined || age === null ? tText("NO TM") : `${linkWord(link)} · ${fmtAge(age)}`);
+  const noTm = age === undefined || age === null;
+  const word = { fresh: tText("Live"), degraded: tText("Late"), stale: tText("Stale") }[fr] || tText("Stale");
   const tierBits = [];
   if (sa.tm_tier_name || sa.tm_tier !== undefined) {
     // rate tiers (BEACON/LOW/HIGH) are identifiers; server reason text stays English
@@ -719,10 +731,9 @@ export function updateSaHeader() {
   if (sa.store_fill_pct !== undefined && sa.store_fill_pct !== null)
     tierBits.push(tText("store {{pct}} % ({{src}})",
       { pct: num(sa.store_fill_pct, 0), src: sa.store_fill_source || "" }));
-  setText("sa-see-s", tierBits.join(" · ") || tText("awaiting HK"));
-  saDot("sa-see-dot", fr === "fresh" ? "" : fr === "degraded" ? "w" : "stale");
-  const seeCard = $("sa-see");
-  if (seeCard) seeCard.className = "sacard" + (fr === "stale" ? " a-st" : fr === "degraded" ? " w" : "");
+  saCell("sa-see", noTm ? "nodata" : fr === "fresh" ? "ok" : fr === "degraded" ? "caution" : "stale",
+    noTm ? tText("No telemetry") : `${word} · ${fmtAge(age)}`,
+    tierBits.join(" · ") || tText("awaiting HK"));
 
   // TALK — lock chain, last TC verdict, GS in contact
   const p = st.params || {};
@@ -730,37 +741,46 @@ export function updateSaHeader() {
   // reading left over from the previous pass no longer claims contact.
   const ls = linkState(st);
   const inContact = ls.contact;
-  const gs = ls.gs;
-  setText("sa-talk-v", inContact ? tText("LINK · {{gs}}", { gs: gs || tText("IN CONTACT") }) : tText("NO CONTACT"));
-  const lk = (on) => (on ? "✓" : "—");
+  const lk = (on) => (on ? "✓" : "✗");
   const lockTxt = tText("carrier {{c}} · bit {{b}} · frame {{f}}",
     { c: lk(ls.locks.carrier), b: lk(ls.locks.bit), f: lk(ls.locks.frame) });
   const lastV = S.verifLog[0];
-  setText("sa-talk-s", lockTxt + (lastV ? " · " + tText("last TC {{v}}", { v: lastV.verdict }) : ""));
-  saDot("sa-talk-dot", inContact ? "" : "stale");
+  saCell("sa-talk", inContact ? "ok" : "nodata",
+    inContact ? (ls.gs ? tText("In contact · {{gs}}", { gs: ls.gs }) : tText("In contact"))
+      : tText("No contact"),
+    lockTxt + (lastV ? " · " + tText("last TC {{v}}", { v: lastV.verdict }) : ""));
 
   // WELL — sc mode (TM-derived + provenance), alarm counts, load shed
   const mode = scModeInfo();
   // One alarm store feeds every count (P7.5): de-duplicated groups.
   const counts = alarmSummary();
   const unack = counts.unacked;
-  setText("sa-well-v", tText("{{mode}} · {{alarm}} ALM {{warn}} WRN",
-    { mode: mode.label, alarm: counts.alarm, warn: counts.warn }));
   const shed = p["0x0134"];
   // G1: SoC-at-eclipse-exit is one of the two header-grade projections.
   // Valid -> the number (ground-derived); invalid -> nothing here (the EPS
-  // page carries the full INVALID row with its reason — header space is
-  // rationed).
+  // page carries the full INVALID row with its reason).
   const socExit = derivedEntry("eps.soc_at_eclipse_exit_pred");
-  setText("sa-well-s", tText("mode src: {{src}} · {{n}} unacked", { src: mode.src, n: unack }) +
+  const modeBad = mode.label === "EMERGENCY" ? "alarm" : mode.label === "SAFE" ? "caution" : "";
+  const wellState = counts.alarm || modeBad === "alarm" ? "alarm"
+    : counts.warn || modeBad ? "caution" : mode.label === "—" ? "nodata" : "ok";
+  const tally = [counts.alarm ? tText("{{count}} alarm", { count: counts.alarm, plural: "{{count}} alarms" }) : "",
+    counts.warn ? tText("{{count}} caution", { count: counts.warn, plural: "{{count}} cautions" }) : ""]
+    .filter(Boolean).join(", ");
+  saCell("sa-well", wellState, mode.label === "—" ? tText("Mode unknown")
+      : mode.label + (tally ? " · " + tally : ""),
+    tText("{{n}} unacknowledged · mode from {{src}}", { n: unack, src: mode.src }) +
     (Number(shed) > 0 ? " · " + tText("LOAD SHED L{{n}}", { n: shed }) : "") +
     (socExit && socExit.valid
       ? " · " + tText("SoC@ecl-exit {{v}} % (gnd)", { v: num(socExit.value, 0) }) : ""));
-  saDot("sa-well-dot", counts.alarm ? "a" : counts.warn ? "w" : "");
-  const wellCard = $("sa-well");
-  if (wellCard) wellCard.className = "sacard" + (counts.alarm ? " a-st" : counts.warn ? " w" : "");
   setText("alarm-unack-n", String(unack));
-  setText("alarm-drawer-unack", tText("{{n}} UNACK", { n: unack }));
+  const ab = $("alarms-btn");
+  if (ab) {
+    ab.classList.toggle("is-alarm", unack > 0 && counts.alarm > 0);
+    ab.classList.toggle("is-caution", unack > 0 && !counts.alarm);
+    setHTML("alarm-btn-g", unack > 0 ? glyph(counts.alarm ? "alarm-up" : "warn-up") : "");
+    ab.setAttribute("aria-label", tText("{{n}} unacknowledged alarms — open the alarm journal", { n: unack }));
+  }
+  setText("alarm-drawer-unack", tText("{{n}} unacknowledged", { n: unack }));
 
   updateNextCard();
 }
@@ -777,17 +797,26 @@ function updateNextCard() {
   }
   const cd = (t) => {
     const d = Math.max(0, t - nowS);
-    const m = Math.floor(d / 60), s2 = Math.floor(d % 60);
-    return `${String(m).padStart(2, "0")}:${String(s2).padStart(2, "0")}`;
+    const h = Math.floor(d / 3600), m = Math.floor((d % 3600) / 60), s2 = Math.floor(d % 60);
+    const mmss = `${String(m).padStart(2, "0")}:${String(s2).padStart(2, "0")}`;
+    return h ? `${h}:${mmss}` : mmss;
   };
-  let v = "—", sub = tText("no pass schedule");
+  let v = tText("No pass scheduled"), sub = tText("no pass schedule"), state = "nodata";
+  // The track drains over the last hour before AOS (or across the pass to LOS).
+  let frac = null;
   if (cur) {
-    v = tText("LOS IN {{t}}", { t: cd(cur.los_time) });
+    v = tText("LOS in {{t}}", { t: cd(cur.los_time) });
     sub = tText("{{gs}} pass in progress", { gs: cur.ground_station || "" });
+    state = "active";
+    frac = (cur.los_time - nowS) / Math.max(1, cur.los_time - cur.aos_time);
+  } else if (next) {
+    v = tText("AOS in {{t}}", { t: cd(next.aos_time) });
+    sub = tText("{{gs}}, max elevation {{el}}°", { gs: next.ground_station || "", el: num(next.max_elevation, 0) });
+    state = "neutral";
+    frac = Math.min(1, (next.aos_time - nowS) / 3600);
   }
-  else if (next) { v = tText("AOS IN {{t}}", { t: cd(next.aos_time) }); sub = `${next.ground_station || ""}`; }
-  const ecl = S.state.next_eclipse_s ?? (S.state.orbit || {}).next_eclipse_s;
-  if (ecl !== undefined && ecl !== null) sub += " · " + tText("eclipse in {{t}}", { t: fmtAge(ecl) });
+  const ecl = S.state.time_to_eclipse_entry_s ?? S.state.next_eclipse_s ?? (S.state.orbit || {}).next_eclipse_s;
+  if (ecl !== undefined && ecl !== null && Number(ecl) > 0) sub += " · " + tText("eclipse in {{t}}", { t: fmtAge(ecl) });
   // G1/G3: pass-fit ratio (backlog ÷ capacity) is the second header-grade
   // projection — it answers "will this pass be enough?" next to the AOS/LOS
   // countdown it depends on.
@@ -796,10 +825,16 @@ function updateNextCard() {
     sub += " · " + (Number(fit.value) > 1.0
       ? tText("fit {{r}} WON'T FIT (gnd)", { r: num(fit.value, 2) })
       : tText("fit {{r}} fits (gnd)", { r: num(fit.value, 2) }));
+    if (Number(fit.value) > 1.0 && state !== "nodata") state = "caution";
   }
-  setText("sa-next-v", v);
-  setText("sa-next-s", sub);
-  saDot("sa-next-dot", cur || next ? "" : "stale");
+  saCell("sa-next", state, v, sub);
+  const tr = $("sa-next-track");
+  if (tr) {
+    tr.classList.toggle("hide", frac === null);
+    tr.classList.toggle("los", !!cur);
+    const bar = tr.querySelector ? tr.querySelector("i") : null;
+    if (bar && frac !== null) bar.style.width = `${(Math.max(0, Math.min(1, frac)) * 100).toFixed(1)}%`;
+  }
 }
 
 
@@ -813,10 +848,12 @@ function updateContingency() {
   if (!el) return;
   const bad = badMode || badFdir;
   el.classList.toggle("hide", !bad);
-  if (badMode) el.textContent = tText("CONTINGENCY — spacecraft mode {{mode}} (source: {{src}}). Open FDIR for recovery state; alarms drawer for the journal.",
-    { mode: mode.label, src: mode.src });
-  else if (badFdir) el.textContent = tText("CONTINGENCY — FDIR level {{lvl}} (TM fdir.level 0x0700) with OBC mode {{mode}}. Open FDIR for recovery state; alarms drawer for the journal.",
-    { lvl: lvl >= 3 ? "CRITICAL" : "WARNING", mode: mode.label });
+  // Glyph + colour + text (P6): the strip reads in greyscale too.
+  const say = (txt) => { el.innerHTML = glyph("alarm-up") + `<span>${esc(txt)}</span>`; };
+  if (badMode) say(tText("Contingency: spacecraft mode {{mode}} (source: {{src}}). Open FDIR for the recovery state and the alarm drawer for the journal.",
+    { mode: mode.label, src: mode.src }));
+  else if (badFdir) say(tText("Contingency: FDIR level {{lvl}} (TM fdir.level 0x0700) with OBC mode {{mode}}. Open FDIR for the recovery state and the alarm drawer for the journal.",
+    { lvl: lvl >= 3 ? "CRITICAL" : "WARNING", mode: mode.label }));
 }
 
 /* ═══ 6. NAV — rail, pages, position filtering, keyboard ══════════════════ */
@@ -927,16 +964,17 @@ function updateRailHealth() {
     const el = $(`rail-hd-${pageId}`);
     if (!el) continue;
     const c = summ.bySub[sub] || { w: 0, a: 0 };
-    // health dot + NUMERAL — never colour alone (P6)
-    if (c.a) { el.className = "hd a"; el.textContent = String(c.a); }
-    else if (c.w) { el.className = "hd w"; el.textContent = String(c.w); }
+    // corner pip: triangle (filled alarm / hollow caution) + NUMERAL — never
+    // colour alone (P6), and outside the label box so it never overlaps it
+    if (c.a) { el.className = "hd a"; el.innerHTML = glyph("alarm-up") + String(c.a); }
+    else if (c.w) { el.className = "hd w"; el.innerHTML = glyph("warn-up") + String(c.w); }
     else { el.className = "hd"; el.textContent = ""; }
   }
   const alarmsHd = $("rail-hd-fdir");
   if (alarmsHd) {
     const unack = summ.unacked;
     alarmsHd.className = unack ? "hd a" : "hd";
-    alarmsHd.textContent = unack ? String(unack) : "";
+    alarmsHd.innerHTML = unack ? glyph("alarm-up") + String(unack) : "";
   }
 }
 
@@ -1003,7 +1041,14 @@ async function loadSchematics() {
 function schematicMarkup(symbolId) {
   const sym = schematicsDoc && schematicsDoc[symbolId];
   if (!sym) return `<div class="ds-banner stale">${t("schematic unavailable")}</div>`;
-  return `<div class="stage"><svg class="sc" viewBox="${esc(sym.viewBox)}" ` +
+  // Drawn at no less than 1:1 (min-width = viewBox width): the 12 px labels
+  // in the drawing then never render below the 12 px floor. A narrower card
+  // scrolls the drawing sideways instead of shrinking its text.
+  const vbW = Number(String(sym.viewBox).split(/\s+/)[2]) || 0;
+  // tabindex: a drawing wider than its card scrolls, and a scroll region
+  // must be reachable from the keyboard (axe scrollable-region-focusable).
+  return `<div class="stage" tabindex="0" role="group" aria-label="${esc(tText("Schematic"))}"><svg class="sc" viewBox="${esc(sym.viewBox)}" ` +
+         (vbW ? `style="min-width:${vbW}px;max-width:${Math.round(vbW * 1.25)}px" ` : "") +
          `data-schematic="${esc(symbolId)}">${sym.body}</svg></div>`;
 }
 function bindPageSchematic(pageId) {
@@ -1075,51 +1120,63 @@ function initSchematicNav() {
 function buildOverviewPage() {
   return `
   <div class="pad" id="page-ovr" role="tabpanel" aria-label="Overview" data-i18n-aria-label>
-    <div class="row" style="justify-content:space-between">
+    <div class="pghd">
       <div><h1 class="pt" data-i18n>Spacecraft overview</h1>
-        <p class="sub" data-i18n>The schematic is the navigation — click the thing you are worried
-        about. Position: <span id="pos-detail">—</span></p></div>
-      <div class="row mono" id="ovr-orbit-bar" style="gap:16px;font-size:13px"></div>
+        <p class="sub"><span data-i18n="Click the block you are concerned about to open its subsystem.">Click the block you are concerned about to open its subsystem.</span>
+          <span data-i18n="Position:">Position:</span> <span id="pos-detail"></span></p></div>
+      <div class="orbit" id="ovr-orbit-bar" aria-live="off"></div>
     </div>
-    <!-- ovr-* classes (Agent 5 screenshot fix): L1 is viewport-fit — the
-         schematic absorbs the leftover height, so the work area never
-         scrolls at 1366x768 (plan §2.1 "L1/L2 fit ... without scroll"). -->
-    <div class="g ovr-grid" style="grid-template-columns:minmax(0,1fr) 400px">
-      <div class="g ovr-left">
-        <div class="ds-card ovr-schem-card"><h2 data-i18n>EOSAT-1 · functional schematic
-          <span class="r" data-i18n>grey is nominal — colour marks deviation (P1)</span></h2>
+    <!-- L1: the schematic is the navigation; the contact strip says what is
+         next. Columns scroll internally on a short screen. -->
+    <div class="g ovr-grid">
+      <div class="g ovr-left" tabindex="0" aria-label="Schematic and contacts" data-i18n-aria-label="Schematic and contacts">
+        <div class="ds-card ovr-schem-card"><h2><span data-i18n="EOSAT-1 functional schematic">EOSAT-1 functional schematic</span>
+          <span class="r" data-i18n="grey is nominal; colour marks a deviation">grey is nominal; colour marks a deviation</span></h2>
           <div class="bd" id="ovr-schematic"></div></div>
-        <div class="ds-card"><h2 data-i18n>Contact windows (24 h)
+        <div class="ds-card"><h2><span data-i18n="Contacts, next 12 h">Contacts, next 12 h</span>
           <span class="r" id="ovr-timeline-src">/api/contacts</span></h2>
           <div class="bd">
-            <canvas id="ovr-timeline" height="64" style="width:100%"></canvas>
-            <div id="ovr-timeline-legend" class="row" style="font-size:12px;margin-top:4px"></div>
-            <!-- capped + scrollable (Agent 5): keeps L1 inside 1366x768 -->
-            <div class="scroll-y" style="max-height:150px">
+            <canvas id="ovr-timeline" height="56" style="width:100%" role="img"
+              aria-label="Contact windows over the next 12 hours" data-i18n-aria-label="Contact windows over the next 12 hours"></canvas>
+            <div class="tl-leg" id="ovr-timeline-legend"></div>
+            <div class="scroll-y" style="max-height:168px;margin-top:8px">
               <table class="plain" id="ovr-pass-table"></table></div>
           </div></div>
       </div>
-      <div class="g ovr-right" style="align-content:start">
-        <div class="ds-card"><h2 data-i18n>Ground track</h2>
+      <div class="g ovr-right" tabindex="0" aria-label="Ground track and system board" data-i18n-aria-label="Ground track and system board">
+        <div class="ds-card"><h2 data-i18n="Ground track">Ground track</h2>
           <div class="bd" id="ovr-map" style="min-height:180px"></div></div>
-        <div class="ds-card"><h2 data-i18n>System board <span class="r">/api/displays/system-overview</span></h2>
+        <div class="ds-card"><h2><span data-i18n="System board">System board</span> <span class="r">/api/displays/system-overview</span></h2>
           <div class="bd" id="ovr-board"></div></div>
       </div>
     </div>
   </div>`;
 }
 
+/* Sub-satellite point: state.lat / state.lon / state.alt_km (the MCS
+ * /api/state names; `lat_deg` was never served, so the bar read "—"). */
+function orbitPoint(st = S.state) {
+  const o = st.orbit || {};
+  const pick = (...xs) => xs.find((x) => x !== undefined && x !== null && Number.isFinite(Number(x)));
+  return { lat: pick(st.lat, st.lat_deg, o.lat, o.lat_deg), lon: pick(st.lon, st.lon_deg, o.lon, o.lon_deg),
+           alt: pick(st.alt_km, o.alt_km) };
+}
+
 function updateOverview() {
-  // orbit bar
+  // orbit strip: where the spacecraft is, with ground-derived values labelled
   const st = S.state;
-  const orbitBits = [
-    `LAT ${num(st.lat_deg ?? (st.orbit || {}).lat_deg, 2)}°`,
-    `LON ${num(st.lon_deg ?? (st.orbit || {}).lon_deg, 2)}°`,
-    `ALT ${num(st.alt_km ?? (st.orbit || {}).alt_km, 0)} km`,
-    (st.eclipse ?? paramVal("0x0108")) ? tText("ECLIPSE") : tText("SUNLIT"),
-    linkState(st).contact ? tText("CONTACT") : tText("NO CONTACT"),
-  ];
-  setHTML("ovr-orbit-bar", orbitBits.map((b) => `<span>${esc(b)}</span>`).join(""));
+  const pt = orbitPoint(st);
+  const rv = (v, u, d) => valueCell(null, d, u, { value: v, fresh: v === undefined ? "nodata" : "fresh" });
+  const ecl = st.in_eclipse ?? st.eclipse ?? paramVal("0x0108");
+  const eclKnown = ecl !== undefined && ecl !== null;
+  const contact = linkState(st).contact;
+  setHTML("ovr-orbit-bar",
+    `<span><span class="k">${t("Lat")}</span>${rv(pt.lat, "°", 2)}</span>` +
+    `<span><span class="k">${t("Lon")}</span>${rv(pt.lon, "°", 2)}</span>` +
+    `<span><span class="k">${t("Alt")}</span>${rv(pt.alt, "km", 0)}</span>` +
+    `<span class="ds-src" title="${esc(tText("computed on the ground from the orbit state, not downlinked"))}">${t("ground")}</span>` +
+    (eclKnown ? renderChip({ kind: "neutral", label: Number(ecl) ? tText("Eclipse") : tText("Sunlit") }) : renderNoData()) +
+    renderChip(contact ? { kind: "ok", glyph: "lock", label: tText("In contact") } : { kind: "off", label: tText("No contact") }));
   // schematic
   const host = $("ovr-schematic");
   if (host && !host.dataset.mounted && schematicsDoc) {
@@ -1129,59 +1186,92 @@ function updateOverview() {
   }
   const mode = scModeInfo();
   const modeEl = document.getElementById("sch-ovr-mode");
-  if (modeEl) modeEl.textContent = `${mode.label} (${mode.src})`;
+  if (modeEl) modeEl.textContent = mode.label;
   bindPageSchematic("ovr");
   renderContactTimeline();
   renderPassTable();
   renderGroundTrack();
 }
 
+/* Contact strip: the next 12 h (and the last 1 h) as bars on one line, the
+ * next pass in the accent, NOW as a full-height tick, hour ticks below.
+ * Colours come from the tokens so the light theme follows. */
+function cssVar(name, fallback) {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  } catch (e) { return fallback; }
+}
 function renderContactTimeline() {
   const cv = $("ovr-timeline");
   if (!cv || !cv.getContext) return;
   const ctx = cv.getContext("2d");
   if (!ctx || !ctx.fillRect) return;
-  const W = cv.width = cv.clientWidth || 800, H = cv.height = 64;
+  const dpr = (typeof window !== "undefined" && window.devicePixelRatio) || 1;
+  const W = cv.clientWidth || 800, H = 56;
+  cv.width = W * dpr; cv.height = H * dpr;
+  if (ctx.setTransform) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
   const nowS = simNowSec();
-  const t0 = nowS - 2 * 3600, t1 = nowS + 22 * 3600;
-  const x = (t) => ((t - t0) / (t1 - t0)) * W;
-  ctx.fillStyle = "#22272F"; ctx.fillRect(0, 24, W, 16);
-  const stations = {};
-  let si = 0;
-  for (const c of S.contacts) {
-    const aos = c.aos_utc ?? c.aos_time, los = c.los_utc ?? c.los_time;
-    if (aos === undefined || los > t1 || los < t0) continue;
-    const gs = c.ground_station || "GS";
-    if (!(gs in stations)) stations[gs] = si++;
-    ctx.fillStyle = "#8A93A0";
-    ctx.globalAlpha = 0.55 + 0.15 * (stations[gs] % 3);
-    ctx.fillRect(x(aos), 24, Math.max(2, x(los) - x(aos)), 16);
-    ctx.globalAlpha = 1;
+  const t0 = nowS - 3600, t1 = nowS + 12 * 3600;
+  const x = (tt) => ((tt - t0) / (t1 - t0)) * W;
+  const C = { track: cssVar("--s3", "#262C36"), pass: cssVar("--fill", "#7F8A98"),
+    next: cssVar("--accent", "#5CC6EB"), now: cssVar("--val", "#F5F7FA"),
+    tick: cssVar("--line-2", "#3B4450"), lbl: cssVar("--tx3", "#9BA7B4") };
+  const font = cssVar("--font-mono", "monospace");
+  ctx.fillStyle = C.track; ctx.fillRect(0, 14, W, 14);
+  // hour ticks + labels every 2 h
+  ctx.font = `12px ${font}`; ctx.textBaseline = "top";
+  for (let h = -1; h <= 12; h++) {
+    const xx = Math.round(x(nowS + h * 3600)) + 0.5;
+    ctx.fillStyle = C.tick; ctx.fillRect(xx, 30, 1, 4);
+    if (h > 0 && h % 2 === 0 && xx < W - 30) {
+      ctx.fillStyle = C.lbl; ctx.fillText(`+${h} h`, xx - 12, 38);
+    }
   }
-  ctx.fillStyle = "#E6E9ED"; ctx.fillRect(x(nowS) - 1, 8, 2, 48);
-  ctx.fillStyle = "#8A93A0"; ctx.font = "10px monospace";
-  const nowLbl = tText("NOW");      // canvas: redrawn on every state tick
-  ctx.fillText(nowLbl, Math.min(W - 26 - 6 * Math.max(0, nowLbl.length - 3), x(nowS) + 4), 16);
-  setHTML("ovr-timeline-legend", Object.keys(stations)
-    .map((gs) => renderChip({ kind: "neutral", label: gs })).join(" "));
+  const src = S.contacts.length ? S.contacts : S.contactSchedule;
+  let nextAos = Infinity;
+  for (const c of src) {
+    const aos = c.aos_utc ?? c.aos_time;
+    if (aos > nowS && aos < nextAos) nextAos = aos;
+  }
+  const stations = new Set();
+  for (const c of src) {
+    const aos = c.aos_utc ?? c.aos_time, los = c.los_utc ?? c.los_time;
+    if (aos === undefined || los === undefined || los < t0 || aos > t1) continue;
+    stations.add(c.ground_station || "GS");
+    const isNext = aos === nextAos || (aos <= nowS && nowS < los);
+    ctx.fillStyle = isNext ? C.next : C.pass;
+    ctx.fillRect(x(aos), 14, Math.max(2, x(los) - x(aos)), 14);
+  }
+  ctx.fillStyle = C.now; ctx.fillRect(Math.round(x(nowS)) - 1, 6, 2, 28);
+  ctx.fillStyle = C.lbl; ctx.textBaseline = "alphabetic";
+  ctx.fillText(tText("now"), Math.round(x(nowS)) + 4, 11);
+  setHTML("ovr-timeline-legend",
+    `<span><i class="now"></i>${t("now")}</span>` +
+    `<span><i class="next"></i>${t("next or current pass")}</span>` +
+    `<span><i class="pass"></i>${t("later passes")}</span>` +
+    (stations.size ? `<span>${esc([...stations].join(", "))}</span>` : `<span>${t("no passes in the next 12 h")}</span>`));
 }
 
 function renderPassTable() {
+  const nowS = simNowSec();
   const rows = S.contactSchedule.slice(0, 8).map((c, i) => {
     const aos = c.aos_time, los = c.los_time;
     const dur = aos !== undefined && los !== undefined ? Math.round((los - aos) / 60) : null;
-    const nowS = simNowSec();
-    const status = los < nowS ? t("PAST") : aos <= nowS ? t("IN PROGRESS") : t("UPCOMING");
-    return `<tr><td>${i + 1}</td><td>${esc(c.ground_station || "")}</td>
+    const inPass = aos <= nowS && nowS < los;
+    const status = los < nowS ? renderChip({ kind: "off", label: tText("past") })
+      : inPass ? renderChip({ kind: "active", label: tText("in progress") })
+      : renderChip({ kind: "neutral", label: tText("upcoming") });
+    return `<tr${inPass ? ' class="is-active"' : ""}><td class="mono">${i + 1}</td><td>${esc(c.ground_station || "")}</td>
       <td class="mono">${fmtUTC(aos, { date: false })}</td>
       <td class="mono">${fmtUTC(los, { date: false })}</td>
-      <td class="mono">${dur === null ? "—" : dur + " m"}</td>
-      <td class="mono">${num(c.max_elevation, 0)}°</td><td>${status}</td></tr>`;
+      <td class="mono num">${dur === null ? renderNoData() : dur + " min"}</td>
+      <td class="mono num">${valueCell(null, 0, "°", { value: c.max_elevation })}</td><td>${status}</td></tr>`;
   }).join("");
   setHTML("ovr-pass-table",
-    `<thead><tr><th>#</th><th>${t("Station")}</th><th>AOS</th><th>LOS</th><th>${t("Dur")}</th>` +
-    `<th>${t("Max el")}</th><th>${t("Status")}</th></tr></thead>` +
+    `<thead><tr><th>#</th><th>${t("Station")}</th><th>AOS</th><th>LOS</th><th class="n">${t("Duration")}</th>` +
+    `<th class="n">${t("Max el")}</th><th>${t("Status")}</th></tr></thead>` +
     `<tbody>${rows || `<tr><td colspan="7">${t("no pass schedule")}</td></tr>`}</tbody>`);
 }
 
@@ -1189,9 +1279,7 @@ let worldMap = null;
 function renderGroundTrack() {
   const host = $("ovr-map");
   if (!host) return;
-  const st = S.state;
-  const lat = st.lat_deg ?? (st.orbit || {}).lat_deg;
-  const lon = st.lon_deg ?? (st.orbit || {}).lon_deg;
+  const { lat, lon } = orbitPoint();
   if (typeof SvgWorldMap === "undefined") {
     // Vendor asset guard (plan R3): designed absence, never an exception.
     host.innerHTML = `<div class="ds-banner stale">${t("map library not installed ({{path}})",
@@ -1202,11 +1290,20 @@ function renderGroundTrack() {
   }
   try {
     if (!worldMap) { host.innerHTML = ""; worldMap = new SvgWorldMap(host); }
-    worldMap.removeLayer && worldMap.removeLayer("sc");
-    if (lat !== undefined && lon !== undefined)
-      worldMap.addMarker && worldMap.addMarker(lat, lon, { layer: "sc" });
-    for (const gs of S.groundStations)
-      worldMap.addMarker && worldMap.addMarker(gs.lat ?? gs.lat_deg, gs.lon ?? gs.lon_deg, { layer: "gs" });
+    // One spacecraft marker, MOVED each tick (it used to be re-added every
+    // second under a layer name the library ignores, so markers piled up);
+    // stations drawn once, as grey rings. Colours: accent = the thing you
+    // are tracking; grey = context (P1).
+    const acc = cssVar("--accent", "#5CC6EB"), grey = cssVar("--fill", "#7F8A98");
+    if (lat !== undefined && lon !== undefined && worldMap.addMarker) {
+      if (!S.mapSc) S.mapSc = worldMap.addMarker(lat, lon, { radius: 4, color: acc, strokeColor: cssVar("--bg", "#0B0D10") });
+      else if (S.mapSc.setLatLng) S.mapSc.setLatLng(lat, lon);
+    }
+    if (!S.mapGsDrawn && S.groundStations.length && worldMap.addMarker) {
+      for (const gs of S.groundStations)
+        worldMap.addMarker(gs.lat ?? gs.lat_deg, gs.lon ?? gs.lon_deg, { radius: 3, color: "none", strokeColor: grey });
+      S.mapGsDrawn = true;
+    }
   } catch (e) {
     host.innerHTML = `<div class="ds-banner stale">${t("map render failed — {{err}}", { err: String(e.message || e) })}</div>`;
   }
@@ -1328,13 +1425,13 @@ function buildSubsystemPage(pageId) {
        the two columns scroll internally, the work area itself never
        scrolls (plan §2.1 "L1/L2 fit 1366×768 without scroll"). -->
   <div class="pad hide l2-page" id="page-${pageId}" role="tabpanel" aria-label="${esc(cfg.title)}" data-i18n-aria-label>
-    <div class="row" style="justify-content:space-between">
+    <div class="pghd">
       <div><h1 class="pt" data-i18n>${esc(cfg.title)}</h1>
-        <p class="sub"><span data-i18n>Level 2 · subsystem</span> <span class="mono">${esc(sub)}</span> ·
+        <p class="sub"><span data-i18n="Subsystem">Subsystem</span> <span class="mono">${esc(sub)}</span> ·
           <a href="#" data-alarm-filter="${esc(sub)}" data-i18n>alarms for this subsystem</a></p></div>
-      <button class="ibtn" data-page-nav="ovr" data-i18n>← Overview</button>
+      <button class="ds-btn ghost" data-page-nav="ovr" data-i18n>← Overview</button>
     </div>
-    <div class="g l2-grid" style="grid-template-columns:minmax(0,1fr) 420px">
+    <div class="g l2-grid">
       <div class="g l2-col">
         <div class="ds-card"><h2 data-i18n>Schematic <span class="r" data-i18n>click a block to navigate; values live</span></h2>
           <div class="bd" id="${pageId}-schematic"></div></div>
@@ -1405,7 +1502,7 @@ function buildSubsystemPage(pageId) {
         <div class="ds-card"><h2 id="${pageId}-stepper-title">Mode</h2>
           <div class="bd" id="${pageId}-stepper"></div></div>
         <div class="ds-card"><h2 data-i18n>Equipment</h2>
-          <div class="bd g" style="grid-template-columns:1fr 1fr" id="${pageId}-equip"></div></div>
+          <div class="eqg" id="${pageId}-equip"></div></div>
         <div class="ds-card"><h2 data-i18n>Command <span class="r" data-i18n>in place · position-gated (P9)</span></h2>
           <div class="bd" id="${pageId}-quick">
             <div id="${pageId}-quick-list"></div></div></div>
@@ -1439,9 +1536,10 @@ function renderGsNetwork() {
   host.innerHTML = `<table class="plain"><tbody>` + S.groundStations.map((g) => {
     const nm = g.name || g.id || "GS";
     const live = activeGs && nm === activeGs;
-    return `<tr><td>${live ? "●" : "○"} ${esc(nm)}${live ? " · " + t("IN CONTACT") : ""}</td>
+    return `<tr${live ? ' class="is-active"' : ""}><td>${live ? renderChip({ kind: "ok", glyph: "lock", label: nm })
+        : esc(nm)}</td>
       <td class="mono">${num(g.lat_deg ?? g.lat, 1)}° / ${num(g.lon_deg ?? g.lon, 1)}°</td>
-      <td class="mono">${live ? `EL ${num(el, 0)}° · ${num(rng, 0)} km` : "—"}</td></tr>`;
+      <td class="mono">${live ? `EL ${num(el, 0)}° · ${num(rng, 0)} km` : `<span class="ds-meta">${t("not in view")}</span>`}</td></tr>`;
   }).join("") + `</tbody></table>`;
 }
 
@@ -1453,7 +1551,7 @@ async function refreshPowerBudget() {
   try {
     const d = await getJSON("/api/displays/power-budget");
     if (!d.has_data) { host.innerHTML = `<div class="ds-banner stale">${t("no power telemetry yet")}</div>`; return; }
-    const row = (k2, v) => `<tr><td>${esc(k2)}</td><td class="mono">${esc(String(v ?? "—"))}</td></tr>`;
+    const row = (k2, v) => `<tr><td>${esc(k2)}</td><td class="mono">${v === null || v === undefined || v === "" ? renderNoData() : esc(String(v))}</td></tr>`;
     const per = Object.entries(d.per_subsystem_power || {})
       .map(([k2, v]) => row(k2.toUpperCase(), `${num(v, 1)} W`)).join("");
     host.innerHTML = `<table class="plain"><tbody>` +
@@ -1461,7 +1559,7 @@ async function refreshPowerBudget() {
       row(tText("CONSUMPTION"), `${num(d.power_cons_w, 1)} W`) +
       row(tText("MARGIN"), `${num(d.power_margin_w, 1)} W`) +
       row("SOC", `${num(d.battery_soc_percent, 1)} % (${esc(d.soc_trend || "")})`) +
-      row(tText("LOAD SHED"), esc(d.load_shedding_label || "—")) +
+      row(tText("LOAD SHED"), d.load_shedding_label || null) +
       per + `</tbody></table>` +
       (d.breakdown_note ? `<div style="font-size:12px;color:var(--tx3);margin-top:6px">${esc(d.breakdown_note)}</div>` : "");
   } catch (e) {
@@ -1481,8 +1579,7 @@ function updateSubsystemPage(pageId, full) {
   bindPageSchematic(pageId);
   // key param triads + embedded sparklines
   setHTML(`${pageId}-params`, cfg.key.map((h) =>
-    `<div class="row" style="gap:6px;align-items:center">
-       <div style="flex:1">${paramTriad(h)}</div>${spark(h)}</div>`).join(""));
+    `<div class="kp">${paramTriad(h)}${spark(h)}</div>`).join(""));
   // stepper (ONE component for all chains — P5)
   const stp = cfg.stepper();
   // A chain widget reads as "this IS the state right now". Without a staleness
@@ -1491,22 +1588,17 @@ function updateSubsystemPage(pageId, full) {
   // possible way to show nothing.
   const stpFr = stp.src ? paramFreshness(stp.src) : "fresh";
   const stpDead = stpFr === "stale" || stpFr === "disabled";
-  setText(`${pageId}-stepper-title`,
-    stp.label + (stpDead ? "  — " + (stpFr === "disabled" ? tText("HK DISABLED (TC 3,5)") : tText("STALE")) : ""));
+  setHTML(`${pageId}-stepper-title`, esc(stp.label) + (stpDead
+    ? " " + renderChip(stpFr === "disabled" ? { kind: "off", label: tText("HK disabled (TC 3,5)") }
+                                            : { kind: "stale", label: tText("stale") }) : ""));
   setHTML(`${pageId}-stepper`,
     renderStepper(stp.states, stpDead ? -1 : stp.active));
   // equipment cards
-  setHTML(`${pageId}-equip`, cfg.equipment.map(([nm, h, u]) => {
-    const v = paramVal(h);
-    const eng = engValue(h, v);
-    const fr = paramFreshness(h);
-    const lc = (fr === "stale" || fr === "disabled") ? "stale" : limitClass((S.state.param_limit_state || {})[h]);
-    return `<div class="ds-card" style="border-radius:6px"><div class="bd" style="padding:8px 10px">
-      <div style="font-size:12px;color:var(--tx3)">${esc(nm)} <span class="mono">${esc(h)}</span></div>
-      <div class="mono" style="font-size:15px;font-weight:600;
-        color:${lc === "a" ? "var(--alarm)" : lc === "w" ? "var(--warn)" : "var(--tx)"}">
-        ${fr === "stale" ? "—" : (eng !== null ? esc(eng) : num(v, 1) + (u ? " " + esc(u) : ""))}</div></div></div>`;
-  }).join(""));
+  // Equipment: a hairline grid of shared readouts (stale keeps the last
+  // value with its age; never received reads "no data").
+  setHTML(`${pageId}-equip`, cfg.equipment.map(([nm, h, u]) =>
+    `<div class="eq"><span class="nm">${esc(nm)}<span class="hexid">${esc(h)}</span></span>` +
+    `${valueCell(h, 1, u)}</div>`).join(""));
   // AND table from the catalog (never drifts from the dictionary).
   //
   // Field report 2026-08-20: "in the AOCS tab with the list of parameters I
@@ -1592,15 +1684,16 @@ function renderObdSwState() {
   const img = Number(paramVal("0x0311"));
   const mode = Number(paramVal("0x0300"));
   const MODES = ["NOMINAL", "SAFE", "EMERGENCY"];
-  const imgLabel = img === 0 ? "BOOTLOADER" : img === 1 ? "APPLICATION" : "—";
-  const modeLabel = MODES[mode] ?? (Number.isFinite(mode) ? `MODE_${mode}` : "—");
+  const ND = renderNoData();
+  const imgLabel = img === 0 ? "BOOTLOADER" : img === 1 ? "APPLICATION" : ND;
+  const modeLabel = MODES[mode] ?? (Number.isFinite(mode) ? `MODE_${mode}` : ND);
   /* Boot progress (0x0A15 / 0x0A16). OBC_BOOT_APP's S1.7 lands when the
      10 s CRC window CLOSES, so the window itself has to be visible: sw_image
      alone reads 0 both for "in the bootloader" and for "boot in flight". */
   const bstate = Number(paramVal("0x0A15"));
   const bleft = Number(paramVal("0x0A16"));
   const BOOT_STATES = ["BOOTLOADER", "VERIFYING", "APPLICATION", "FAILED"];
-  const bootLabel = BOOT_STATES[bstate] ?? "—";
+  const bootLabel = BOOT_STATES[bstate] ?? ND;
   const booting = bstate === 1;
   const bootFailed = bstate === 3;
   const bad = mode >= 1 || img === 0;
@@ -2521,25 +2614,38 @@ function buildCmdPage() {
             </div>
             <div id="cmd-provenance" style="font-size:12px;color:var(--tx3);margin:6px 0"></div>
             <div class="row" data-why-out="cmd-send-why">
-              <button class="ds-btn" id="cmd-pack" data-i18n>PACK FROM FIELDS</button>
-              <button class="ds-btn" id="cmd-decode" data-i18n>DECODE HEX → FIELDS</button>
+              <button class="ds-btn" id="cmd-pack" data-i18n="Pack from fields">Pack from fields</button>
+              <button class="ds-btn" id="cmd-decode" data-i18n="Decode hex into fields">Decode hex into fields</button>
               <span style="flex:1"></span>
-              <button class="ds-btn arm" id="cmd-arm" data-i18n>ARM</button>
-              <button class="ds-btn primary" id="cmd-send" aria-disabled="true" data-i18n>SEND</button>
+              <!-- Routine and caution commands: one press. Critical commands
+                   (catalogue criticality "critical"): the amber-striped
+                   button arms on the first press and sends on the second,
+                   within 8 s (armButton). -->
+              <button class="ds-btn primary" id="cmd-send" data-i18n="Send">Send</button>
+              <button class="ds-btn critical hide" id="cmd-send-crit" data-i18n="Send critical command">Send critical command</button>
             </div>
             <div class="why-off" id="cmd-send-why" aria-live="polite" style="text-align:right"></div>
             <div id="cmd-verif-stepper" style="margin-top:10px"></div>
             <div id="cmd-result" style="font-size:12.5px;margin-top:6px"></div>
           </div></div>
-        <div class="ds-card"><h2 data-i18n>Quick commands <span class="r" data-i18n>position-gated; denied entries say who owns them</span></h2>
-          <div class="bd" id="cmd-quick"></div></div>
+        <div class="ds-card"><h2><span data-i18n="Quick commands">Quick commands</span> <span class="r" data-i18n="position-gated; denied entries say who owns them">position-gated; denied entries say who owns them</span></h2>
+          <div class="bd">
+            <input id="qc-filter" class="in qc-filter" type="search" placeholder="Filter commands…"
+              data-i18n-placeholder="Filter commands…" aria-label="Filter quick commands" data-i18n-aria-label="Filter quick commands">
+            <div id="cmd-quick"></div>
+            <div class="qc-legend">
+              <span><span data-i18n="Routine: one press">Routine: one press</span></span>
+              <span><svg aria-hidden="true"><use href="/static/shared/glyphs.svg#g-warn-up"></use></svg><span data-i18n="Caution: check the effect first">Caution: check the effect first</span></span>
+              <span><span class="stripe" aria-hidden="true"></span><span data-i18n="Critical: press to arm, press again within 8 s to send">Critical: press to arm, press again within 8 s to send</span></span>
+            </div>
+          </div></div>
         <div class="ds-card"><h2 data-i18n>Verification log <span class="r">/api/verification-log · 5 s</span></h2>
           <div class="bd scroll-y" style="max-height:200px" id="cmd-verif-log"></div></div>
       </div>
       <div class="g" style="align-content:start">
         <div class="ds-card"><h2 data-i18n>Stored TM (S15) dump</h2><div class="bd">
           <div class="row">
-            <div class="fld"><label for="s15-target" data-i18n>Subsystem</label>
+            <div class="fld"><label for="s15-target" data-i18n="Subsystem">Subsystem</label>
               <select id="s15-target" class="in">
                 ${["eps", "tcs", "aocs", "ttc", "payload", "prop", "obdh", "orbit", "all"]
                   .map((s2) => `<option>${s2}</option>`).join("")}</select></div>
@@ -2547,7 +2653,7 @@ function buildCmdPage() {
               <select id="s15-store" class="in">
                 <option value="">auto</option><option>1</option><option>2</option><option>3</option><option>4</option>
               </select></div>
-            <button class="ds-btn" id="s15-dump" data-i18n>DUMP</button>
+            <button class="ds-btn" id="s15-dump" data-i18n="Dump">Dump</button>
           </div>
           <div id="s15-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
@@ -2555,9 +2661,9 @@ function buildCmdPage() {
           <div class="row">
             <div class="fld"><label for="hk-sid">SID</label>
               <input id="hk-sid" class="in" type="number" min="1" value="1" style="width:70px"></div>
-            <button class="ds-btn" data-hk="enable" data-i18n>ENABLE (3,5)</button>
-            <button class="ds-btn" data-hk="disable" data-i18n>DISABLE (3,6)</button>
-            <button class="ds-btn" data-hk="oneshot" data-i18n>ONE-SHOT (3,27)</button>
+            <button class="ds-btn" data-hk="enable" data-i18n="Enable (3,5)">Enable (3,5)</button>
+            <button class="ds-btn" data-hk="disable" data-i18n="Disable (3,6)">Disable (3,6)</button>
+            <button class="ds-btn" data-hk="oneshot" data-i18n="One-shot (3,27)">One-shot (3,27)</button>
           </div>
           <div id="hk-quick-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
@@ -2670,7 +2776,7 @@ function updateCmdBuilder() {
   const cmd = currentCatalogCmd();
   const authEl = $("cmd-authority");
   const sendBtn = $("cmd-send");
-  const armBtn = $("cmd-arm");
+  const critBtn = $("cmd-send-crit");
   if (cmd) {
     $("cmd-service").value = String(cmd.service);
     $("cmd-subtype").value = String(cmd.subtype);
@@ -2681,12 +2787,14 @@ function updateCmdBuilder() {
     // structured field editor (engineering units, enum names, validation)
     setHTML("cmd-fields", (cmd.fields || []).map((f) => cmdFieldWidget(f, cmd.name)).join(""));
     const critical = isCritical(cmd);
-    if (armBtn) armBtn.classList.toggle("hide", !critical);
-    if (sendBtn) {
-      const ok = auth.allowed && !(critical && !S.armed[cmd.name]);
-      setEnabled(sendBtn, ok, !auth.allowed ? auth.text
-        : tText("Critical command — press ARM first, then SEND within 8 s"));
-      setText("cmd-send-why", ok ? "" : sendBtn.dataset.why || "");
+    if (sendBtn) sendBtn.classList.toggle("hide", critical);
+    if (critBtn) critBtn.classList.toggle("hide", !critical);
+    const live = critical ? critBtn : sendBtn;
+    if (live) {
+      setEnabled(live, auth.allowed, auth.text);
+      setText("cmd-send-why", auth.allowed ? (critical
+        ? tText("Critical command: the first press arms, the second within 8 s sends.") : "")
+        : auth.text);
     }
     cmdLivePack();     // hex + length visible immediately, from the defaults
   } else {
@@ -2695,8 +2803,8 @@ function updateCmdBuilder() {
     setText("cmd-provenance", tText("raw command — no catalogue entry; length not validated"));
     setText("cmd-raw-preview", "");
     setText("cmd-field-errors", "");
-    if (armBtn) armBtn.classList.add("hide");
-    if (sendBtn) { setEnabled(sendBtn, true); setText("cmd-send-why", ""); }
+    if (critBtn) critBtn.classList.add("hide");
+    if (sendBtn) { sendBtn.classList.remove("hide"); setEnabled(sendBtn, true); setText("cmd-send-why", ""); }
     updateBytesChip();
   }
 }
@@ -2837,7 +2945,7 @@ function updateBytesChip() {
   chip.className = "ds-badge" + (entered === exp ? "" : " warn");
 }
 
-async function sendCommand() {
+async function sendCommand(opts = {}) {
   const cmd = currentCatalogCmd();
   const service = Number($("cmd-service").value);
   const subtype = Number($("cmd-subtype").value);
@@ -2855,8 +2963,10 @@ async function sendCommand() {
     }
     const auth = commandAuthority(cmd.name);
     if (!auth.allowed) { setHTML("cmd-result", `<span style="color:var(--alarm)">${esc(auth.text)}</span>`); return; }
-    if (isCritical(cmd) && !S.armed[cmd.name]) {
-      setHTML("cmd-result", `<span style="color:var(--warn)">${t("critical command — ARM first")}</span>`);
+    // Critical: only the armed button's second press (armButton onExecute)
+    // reaches here with confirmed set.
+    if (isCritical(cmd) && !opts.confirmed && !S.armed[cmd.name]) {
+      setHTML("cmd-result", `<span class="v-warn">${t("Critical command: press it once to arm, then again within 8 s to send.")}</span>`);
       return;
     }
     // 2026-08c item 5: GROUND-side HIGH-rate elevation policy (arm-through).
@@ -2882,7 +2992,7 @@ async function sendCommand() {
   setHTML("cmd-result", ok
     ? t("sent {{tc}}", { tc: `TC(${service},${subtype})` }) + (name ? " — " + esc(name) : "")
     : `<span style="color:var(--alarm)">${t("rejected — {{reason}}", { reason })}</span>`);
-  if (cmd && isCritical(cmd)) { S.armed[cmd.name] = false; updateCmdBuilder(); const a = $("cmd-arm"); if (a) a.classList.remove("armed"); }
+  if (cmd && isCritical(cmd)) { S.armed[cmd.name] = false; updateCmdBuilder(); }
   renderBottomDrawer();
 }
 
@@ -2969,8 +3079,12 @@ function renderQuickCommands() {
     const cmd = S.tcCatalog.find((c) => c.name === q.command);
     const auth = commandAuthority(q.command);
     const critical = isCritical(cmd);
+    const caution = !critical && String((cmd || {}).criticality || "").toLowerCase() === "caution";
+    const lbl = quickLabel(q);
     if (!auth.allowed) {
-      return `<span class="ds-chip off" title="${esc(auth.text)}">${esc(quickLabel(q))} — ${esc(auth.text)}</span>`;
+      // Disabled with its reason (hover and focus), not a lookalike chip.
+      return `<button class="ds-btn" aria-disabled="true" data-reason="${esc(auth.text)}"
+        aria-label="${esc(lbl + ": " + auth.text)}">${esc(lbl)}</button>`;
     }
     // data-quick carries the quick ENTRY name (unique), not the catalogue
     // command name: several quick entries share a command with different
@@ -2983,14 +3097,33 @@ function renderQuickCommands() {
     // S2_AOCS_GPS_RECEIVER(state=1). Neither could be turned off from the
     // console, silently, while the button reported success. An index cannot
     // collide -- fixed by construction, not by config hygiene.
-    return `<button class="ds-btn ${critical ? "danger" : ""}" data-quick="${q._qi}"
-      title="${esc(provenanceText(cmd))}">${esc(quickLabel(q))}${critical ? " ⚠" : ""}</button>`;
+    const tip = esc(provenanceText(cmd));
+    if (critical) {
+      // armButton() wires the two-step after render (data-quick-crit, so the
+      // delegated one-press handler never sees it).
+      return `<button class="ds-btn critical" data-quick-crit="${q._qi}" title="${tip}"
+        aria-label="${esc(tText("{{name}}, critical: press twice to send", { name: lbl }))}">${esc(lbl)}</button>`;
+    }
+    return `<button class="ds-btn" data-quick="${q._qi}" title="${tip}"` +
+      (caution ? ` aria-label="${esc(tText("{{name}}, caution", { name: lbl }))}"` : "") + `>` +
+      (caution ? glyph("warn-up") : "") + `${esc(lbl)}</button>`;
   };
-  setHTML("cmd-quick", Object.entries(groups).map(([g, qs]) =>
-    `<div style="margin-bottom:8px"><div style="font-size:12px;letter-spacing:1px;color:var(--tx3);
-      text-transform:uppercase;margin-bottom:4px">${esc(tdb(`qcgroup:${g}:group`, g))}</div>
-      <div class="row">${qs.map(btn).join("")}</div></div>`).join("") ||
-    `<div class="logrow nom">${t("no quick commands for this position")}</div>`);
+  // Progressive disclosure: one collapsible group per subsystem, with a
+  // count; open/closed survives re-renders; the filter narrows by label.
+  const f = (S.qcFilter || "").toLowerCase();
+  const match = (q) => !f || quickLabel(q).toLowerCase().includes(f) || String(q.command).toLowerCase().includes(f);
+  S.qcOpen = S.qcOpen || {};
+  setHTML("cmd-quick", Object.entries(groups).map(([g, qs]) => {
+    const vis = qs.filter(match);
+    if (!vis.length) return "";
+    const nCrit = vis.filter((q) => isCritical(S.tcCatalog.find((c) => c.name === q.command))).length;
+    const open = f || S.qcOpen[g] !== false;
+    return `<details class="ds-disclosure qc-grp" data-qc-group="${esc(g)}"${open ? " open" : ""}>` +
+      `<summary>${esc(tdb(`qcgroup:${g}:group`, g))}<span class="r">${vis.length}` +
+      (nCrit ? ` · ${esc(tText("{{count}} critical", { count: nCrit }))}` : "") + `</span></summary>` +
+      `<div class="bd"><div class="row">${vis.map(btn).join("")}</div></div></details>`;
+  }).join("") ||
+    `<div class="logrow nom">${f ? t("no command matches the filter") : t("no quick commands for this position")}</div>`);
   // per-subsystem in-place mirrors
   for (const pageId of SUB_PAGES) {
     const sub = PAGE_SUBSYSTEM[pageId];
@@ -3004,6 +3137,15 @@ function renderQuickCommands() {
       ? `<div class="row">${mine.map(btn).join("")}</div>`
       : `<div class="logrow nom">${t("no quick commands for {{sub}} — full builder on CMD", { sub })}</div>`);
   }
+  wireCriticalQuick();
+}
+/* Critical quick commands: arm on the first press, send on the second within
+ * 8 s (shared armButton: amber border, "Confirm: …", countdown, Esc cancels). */
+function wireCriticalQuick() {
+  if (typeof document === "undefined" || !document.querySelectorAll) return;
+  document.querySelectorAll("[data-quick-crit]").forEach((b) => {
+    armButton(b, { seconds: 8, onExecute: () => sendQuick(b.dataset.quickCrit, { confirmed: true }) });
+  });
 }
 
 /* Quick-command label: YAML overlay qc:<name|command>:label, else the mnemonic. */
@@ -3033,7 +3175,7 @@ function groundHighRateWarning(cmdName, rateVal) {
     { gate: num(gate, 0), why });
 }
 
-async function sendQuick(key) {
+async function sendQuick(key, opts = {}) {
   // `key` is the quick ENTRY name; fall back to a bare catalogue name so
   // older callers keep working.
   // `key` is the entry's index (see renderQuickCommands). Numeric first; the
@@ -3057,7 +3199,7 @@ async function sendQuick(key) {
     }
     S.armed[gk] = false;
   }
-  if (isCritical(cmd)) {
+  if (isCritical(cmd) && !opts.confirmed) {
     // arm→execute in place: first press arms, second within 8 s executes
     if (!S.armed[key]) {
       S.armed[key] = true;
@@ -3084,7 +3226,7 @@ const DIAG_TABS = [["s3", "S3 HK"], ["s11", "S11 SCHED"], ["s6", "S6 MEMORY"],
 function buildDiagPage() {
   return `
   <div class="pad hide" id="page-diag" role="tabpanel" aria-label="Diagnostics" data-i18n-aria-label>
-    <div class="row" style="justify-content:space-between">
+    <div class="pghd">
       <div><h1 class="pt" data-i18n>PUS services</h1>
         <p class="sub" data-i18n>All seven service panels from the classic PUS SERVICES tab —
           S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring ·
@@ -3093,11 +3235,11 @@ function buildDiagPage() {
       <div class="fld"><label for="hdr-param-search" data-i18n>Parameter search (global)</label>
         <input id="hdr-param-search" class="in" placeholder="name or 0xHHHH" data-i18n-placeholder style="min-width:240px"></div>
     </div>
-    <div class="row" role="tablist" id="diag-tabs">
+    <div class="ds-tabs" role="tablist" id="diag-tabs" aria-label="PUS service panels" data-i18n-aria-label="PUS service panels">
       ${DIAG_TABS.map(([id, l], i) =>
-        `<button class="ds-btn" role="tab" data-diag="${id}" aria-selected="${i === 0}">${l}</button>`).join("")}
+        `<button class="ds-tab" role="tab" data-diag="${id}" aria-selected="${i === 0}">${l}</button>`).join("")}
     </div>
-    <div style="margin-top:10px">
+    <div style="margin-top:12px">
       <div id="diag-s3" class="diag-pane"></div>
       <div id="diag-s11" class="diag-pane hide"></div>
       <div id="diag-s6" class="diag-pane hide"></div>
@@ -3643,27 +3785,28 @@ function renderParamsPanel() {
     (!paramsOnDemandOnly || p.on_demand) &&
     (!f || (p.name || "").toLowerCase().includes(f) || (p.hex || "").toLowerCase().includes(f)));
   const rows = list.slice(0, 400).map((p) => {
-    const v = paramVal(p.hex);
-    const eng = engValue(p.hex, v);
-    const fr = paramFreshness(p.hex);
-    return `<tr class="${(fr === "stale" || fr === "disabled") ? "stale" : ""}" title="${esc(fr)}">
-      <td class="mono">${esc(p.hex)}</td><td>${esc(p.name)}</td><td>${esc(p.subsystem)}</td>
-      <td>${esc(p.units || "")}</td><td>${p.in_hk ? "HK" : ""}</td><td>${p.on_demand ? "OD" : ""}</td>
-      <td class="mono">${fr === "stale" ? "—" : (eng !== null ? esc(eng) : num(v, 3))}</td>
+    // One readout per row in its data state: live, stale (last value kept,
+    // dim italic, age), never received ("no data"), HK disabled
+    // ("not enabled"); sentinels read as words ("never synced").
+    return `<tr>
+      <td class="mono hexid">${esc(p.hex)}</td><td>${esc(p.name)}</td><td>${esc(p.subsystem)}</td>
+      <td>${p.in_hk ? "HK" : ""}</td><td>${p.on_demand ? "OD" : ""}</td>
+      <td class="num">${valueCell(p.hex, null, p.units || "")}</td>
       <td>${p.on_demand || !p.in_hk
-        ? `<button class="ds-btn" data-od-get="${esc(p.hex)}">GET (20,3)</button>` : ""}</td></tr>`;
+        ? `<button class="ds-btn sm" data-od-get="${esc(p.hex)}"
+            aria-label="${esc(tText("Fetch {{name}} on demand, TC(20,3)", { name: p.name }))}">${t("Get")} (20,3)</button>` : ""}</td></tr>`;
   }).join("");
   setHTML("diag-params", `
     <div class="ds-card"><h2>${t("Parameter catalog · TC(20,3) on-demand fetch")}</h2><div class="bd">
       <div class="row" style="margin-bottom:6px">
-        <input id="params-filter" class="in" placeholder="${t("filter…")}" value="${esc(paramsFilter)}">
+        <input id="params-filter" class="in" placeholder="${t("filter…")}" aria-label="${t("Filter parameters")}" value="${esc(paramsFilter)}">
         <label style="font-size:12px"><input type="checkbox" id="params-od" ${paramsOnDemandOnly ? "checked" : ""}> ${t("on-demand only")}</label>
-        <button class="ds-btn" id="params-refresh">${t("REFRESH")}</button>
+        <button class="ds-btn" id="params-refresh">${t("Refresh")}</button>
         <span style="font-size:12px;color:var(--tx3)">${t("{{count}} parameters", { count: list.length })}</span>
       </div>
       <div class="scroll-y" style="max-height:420px">
-      <table class="plain"><thead><tr><th>ID</th><th>${t("Name")}</th><th>${t("Subsys")}</th><th>${t("Unit")}</th>
-        <th>HK</th><th>OD</th><th>${t("Value")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="plain"><thead><tr><th>ID</th><th>${t("Name")}</th><th>${t("Subsys")}</th>
+        <th>HK</th><th>OD</th><th class="n">${t("Value")}</th><th><span class="ds-sr">${t("Action")}</span></th></tr></thead><tbody>${rows}</tbody></table>
       </div></div></div>`);
 }
 async function onDemandGet(hexId) {
@@ -3908,13 +4051,14 @@ function buildProcPage() {
                control stays focusable and says why on hover and focus. -->
           <div class="ctl-grp" style="margin-top:8px" role="group" aria-label="Procedure controls"
             data-i18n-aria-label data-why-out="proc-why">
-            <button class="ds-btn primary" data-proc="load" id="proc-btn-load" data-i18n>LOAD</button>
-            <button class="ds-btn" data-proc="start" id="proc-btn-start" data-i18n>START</button>
-            <button class="ds-btn" data-proc="pause" id="proc-btn-pause" data-i18n>PAUSE</button>
-            <button class="ds-btn" data-proc="resume" id="proc-btn-resume" data-i18n>RESUME</button>
-            <button class="ds-btn" data-proc="step" id="proc-btn-step" data-i18n>STEP</button>
-            <button class="ds-btn" data-proc="skip" id="proc-btn-skip" data-i18n>SKIP</button>
-            <button class="ds-btn danger" data-proc="abort" id="proc-btn-abort" data-i18n>ABORT</button>
+            <button class="ds-btn primary" data-proc="load" id="proc-btn-load" data-i18n="Load">Load</button>
+            <button class="ds-btn" data-proc="start" id="proc-btn-start" data-i18n="Start">Start</button>
+            <button class="ds-btn" data-proc="pause" id="proc-btn-pause" data-i18n="Pause">Pause</button>
+            <button class="ds-btn" data-proc="resume" id="proc-btn-resume" data-i18n="Resume">Resume</button>
+            <button class="ds-btn" data-proc="step" id="proc-btn-step" data-i18n="Step">Step</button>
+            <button class="ds-btn" data-proc="skip" id="proc-btn-skip" data-i18n="Skip">Skip</button>
+            <!-- critical: shared two-step (armButton), wired at boot -->
+            <button class="ds-btn critical" id="proc-btn-abort" data-i18n="Abort">Abort</button>
           </div>
           <div class="why-off" id="proc-why" aria-live="polite"></div>
           <div id="proc-exec-status" style="margin-top:10px"></div>
@@ -3932,7 +4076,7 @@ function buildProcPage() {
               <input id="proc-ov-sub" class="in mono" inputmode="numeric" style="width:64px"></div>
             <div class="fld" style="flex:1"><label for="proc-ov-data" data-i18n>Data (hex)</label>
               <input id="proc-ov-data" class="in mono" placeholder="AA BB …"></div>
-            <button class="ds-btn" id="proc-ov-send" data-i18n>SEND OVERRIDE</button>
+            <button class="ds-btn" id="proc-ov-send" data-i18n="Send override">Send override</button>
           </div><div id="proc-ov-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div></div></div>
         <div class="ds-card"><h2 data-i18n>Procedure builder</h2><div class="bd">
           <div class="row">
@@ -3941,14 +4085,14 @@ function buildProcPage() {
               <option value="command" data-i18n>Command</option><option value="tlm_check" data-i18n>Telemetry check</option>
               <option value="wait" data-i18n>Wait</option><option value="gonogo">GO-NO-GO</option>
               <option value="note" data-i18n>Note</option></select>
-            <button class="ds-btn" id="pb-add" data-i18n>+ ADD</button>
+            <button class="ds-btn" id="pb-add" data-i18n="Add step">Add step</button>
           </div>
           <div id="pb-step-fields" class="row" style="margin-top:6px"></div>
           <ol id="pb-steps" style="margin:8px 0 0 18px;font-size:13px"></ol>
           <div class="row" style="margin-top:8px">
-            <button class="ds-btn" id="pb-save" data-i18n>SAVE PROCEDURE</button>
-            <button class="ds-btn" id="pb-run" data-i18n>RUN THESE STEPS</button>
-            <button class="ds-btn" id="pb-clear" data-i18n>CLEAR</button>
+            <button class="ds-btn" id="pb-save" data-i18n="Save procedure">Save procedure</button>
+            <button class="ds-btn" id="pb-run" data-i18n="Run these steps">Run these steps</button>
+            <button class="ds-btn" id="pb-clear" data-i18n="Clear">Clear</button>
             <select id="pb-saved" class="in" aria-label="Saved procedures" data-i18n-aria-label><option value="" data-i18n>— load saved —</option></select>
           </div>
           <div id="pb-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
@@ -4076,13 +4220,16 @@ export function setEnabled(el, ok, reason = "") {
   el.disabled = false;
   if (ok) {
     el.removeAttribute("aria-disabled");
+    el.removeAttribute("data-reason");
     if (el.dataset) delete el.dataset.why;
     if (el.getAttribute("title") === el.__whyTitle) el.removeAttribute("title");
   } else {
     el.setAttribute("aria-disabled", "true");
     if (el.dataset) el.dataset.why = reason;
-    el.setAttribute("title", reason);
-    el.__whyTitle = reason;
+    // The shared reason tip (components.js installReasonTips) shows
+    // data-reason on hover AND keyboard focus; no native title on top.
+    el.setAttribute("data-reason", reason);
+    if (el.getAttribute("title") === el.__whyTitle) el.removeAttribute("title");
   }
 }
 function showWhy(el) {
@@ -4099,7 +4246,7 @@ function updateProcButtons() {
     setEnabled($(`proc-btn-${a}`), r.ok, r.reason);
   }
   const why = $("proc-why");
-  if (why) why.textContent = st === "IDLE" ? tText("No procedure loaded — choose one and press LOAD") : "";
+  if (why) why.textContent = st === "IDLE" ? tText("No procedure loaded: choose one and press Load.") : "";
 }
 async function refreshProcStatus() {
   try { S.procStatus = await getJSON("/api/procedure/status"); } catch (e) { /* offline */ }
@@ -4110,23 +4257,8 @@ async function procAction(action) {
   const gate = procButtonState(action, (S.procStatus || {}).state,
     !!($("proc-type") && $("proc-type").value));
   if (!gate.ok) { announce(gate.reason); return; }
-  if (action === "abort" && !S.armed.procAbort) {
-    // critical: arm → execute (UI brief §1.3); disarms itself after 6 s
-    S.armed.procAbort = true;
-    const b = $("proc-btn-abort");
-    if (b) { b.classList.add("armed"); b.textContent = tText("CONFIRM ABORT"); }
-    announce(tText("ABORT armed — press again within 6 s to abort the procedure"));
-    setTimeout(() => {
-      S.armed.procAbort = false;
-      if (b) { b.classList.remove("armed"); b.textContent = tText("ABORT"); }
-    }, 6000);
-    return;
-  }
-  if (action === "abort") {
-    S.armed.procAbort = false;
-    const b = $("proc-btn-abort");
-    if (b) { b.classList.remove("armed"); b.textContent = tText("ABORT"); }
-  }
+  // ABORT is critical: it only reaches here from the armed button's second
+  // press (shared armButton, wired at boot), so no extra arming step here.
   if (action === "load") {
     const source = $("proc-source").value, id = $("proc-type").value;
     const body = { source, id, step_by_step: $("proc-stepwise").checked };
@@ -4832,9 +4964,10 @@ export function alarmRowHtml(g) {
   let fact;
   if (pname) {
     const v = Number(a.value);
-    const vTxt = Number.isFinite(v) ? num(v, Math.abs(v) >= 100 ? 0 : 2) : esc(String(a.value ?? ""));
+    const sl = sentinelLabel(hexId, a.value);
+    const vTxt = sl ? esc(sl) : Number.isFinite(v) ? num(v, Math.abs(v) >= 100 ? 0 : 2) : esc(String(a.value ?? ""));
     fact = `<span class="pn mono">${esc(pname)}</span>` +
-      ` <span class="pv mono">${vTxt}${units ? " " + esc(units) : ""}</span>` +
+      ` <span class="pv mono">${vTxt}${units && !sl ? " " + esc(units) : ""}</span>` +
       (arrow ? ` <span class="lim mono" title="${esc(String(a.limit || ""))}">${arrow} ${lim.thr !== null ? num(lim.thr, Math.abs(lim.thr) >= 100 ? 0 : 2) : ""}` +
         `${lim.kind ? ` <small>${lim.kind === "hard" ? t("hard") : t("soft")}</small>` : ""}</span>` : "");
   } else {
@@ -5022,8 +5155,9 @@ function setGreyscale(on) {
 }
 function setTheme(light) {
   document.documentElement.setAttribute("data-theme", light ? "light" : "dark");
-  const b = $("theme-btn");
-  if (b) b.setAttribute("aria-pressed", light ? "true" : "false");
+  const seg = $("theme-seg");
+  if (seg && seg.querySelectorAll) seg.querySelectorAll("[data-theme-set]").forEach((b) =>
+    b.setAttribute("aria-pressed", String((b.dataset.themeSet === "light") === light)));
   try { localStorage.setItem("mcs.theme", light ? "light" : "dark"); } catch (e) { /* */ }
 }
 
@@ -5148,9 +5282,8 @@ const _TPL_KEYS_1 = [
 ];
 // i18n-keys
 const _TPL_KEYS_2 = [
-  "Data (hex) — live from the fields; paste hex to decode; Enter sends", "PACK FROM FIELDS",
-  "DECODE HEX → FIELDS", "ARM", "SEND", "Quick commands", "position-gated; denied entries say who owns them",
-  "Verification log", "Stored TM (S15) dump", "Subsystem", "Store id", "DUMP", "HK SID control (S3)",
+  "Data (hex) — live from the fields; paste hex to decode; Enter sends", "Quick commands", "position-gated; denied entries say who owns them",
+  "Verification log", "Stored TM (S15) dump", "Subsystem", "Store id", "HK SID control (S3)",
   "Command history", "Diagnostics", "PUS services",
   "All seven service panels from the classic PUS SERVICES tab — S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring · S19 event-action · S9 time — plus the parameter catalog. S12/S19 tables are the same renderer FDIR mounts (one implementation, two mounts).",
   "Parameter search (global)", "name or 0xHHHH", "Fault detection, isolation & recovery",
@@ -5159,13 +5292,12 @@ const _TPL_KEYS_2 = [
   "S19 rule fires", "TC rejections", "mode changes", "Procedures",
   "Loader · step-by-step runner · document viewer · manual override · builder. Reachable from any alarm row (P7.6).",
   "Load & run", "Source", "Activity type", "Ops procedure", "Saved procedure", "Procedure", "step-by-step",
-  "LOAD", "START", "PAUSE", "RESUME", "STEP", "SKIP", "ABORT", "Procedure document", "select a procedure…",
-  "Manual override", "arbitrary TC during a run", "data hex", "SEND OVERRIDE", "Procedure builder",
-  "procedure name", "Telemetry check", "Wait", "Note", "+ ADD", "SAVE PROCEDURE",
-];
+  "LOAD", "Procedure document", "select a procedure…",
+  "Manual override", "arbitrary TC during a run", "data hex", "Procedure builder",
+  "procedure name", "Telemetry check", "Wait", "Note", ];
 // i18n-keys
 const _TPL_KEYS_3 = [
-  "RUN THESE STEPS", "CLEAR", "— load saved —", "Trends",
+  "CLEAR", "— load saved —", "Trends",
   "Ground archive · eclipse/contact context · alarm & event markers (P8)", "Query", "Window", "7 d",
   "Parameter filter", "filter…", "limit bands", "eclipse/contact shading", "event + alarm markers",
   "normalise 0–100 %", "REFRESH", "EXPORT CSV", "Parameters to trend", "Subsystem playback",
@@ -5180,8 +5312,7 @@ const _TPL_KEYS_4 = [
   "Magnetometer & MTQ", "measured B (0x020B-0D) beside the duties it drives",
   "GPS navigation (PVT)", "valid only with a 3D fix — zeros otherwise", "Software state",
   "Procedure controls", "Data (hex)", "Service", "Subtype", "Step type", "Saved procedures", "Subsystem",
-  "ENABLE (3,5)", "DISABLE (3,6)", "ONE-SHOT (3,27)",
-];
+  ];
 const TEMPLATE_I18N_KEYS = [..._TPL_KEYS_1, ..._TPL_KEYS_2, ..._TPL_KEYS_3, ..._TPL_KEYS_4];
 
 function initDelegatedEvents() {
@@ -5361,7 +5492,10 @@ function initDelegatedEvents() {
   on("alarm-close", () => toggleAlarmDrawer(false));
   on("alarm-ack-all", () => ackAllAlarms());
   on("grey-btn", () => setGreyscale(document.documentElement.getAttribute("data-greyscale") !== "1"));
-  on("theme-btn", () => setTheme(document.documentElement.getAttribute("data-theme") !== "light"));
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest ? e.target.closest("[data-theme-set]") : null;
+    if (b) setTheme(b.dataset.themeSet === "light");
+  });
   on("help-btn", () => toggleHelp());
   on("help-close", () => toggleHelp(false));
   on("chain-close", () => toggleChain(false));
@@ -5373,15 +5507,22 @@ function initDelegatedEvents() {
   });
   on("handover-add", addHandoverNote);
   on("gonogo-start", goNoGoStart);
-  on("cmd-send", sendCommand);
-  on("cmd-arm", () => {
-    const cmd = currentCatalogCmd();
-    if (!cmd) return;
-    S.armed[cmd.name] = !S.armed[cmd.name];
-    $("cmd-arm").classList.toggle("armed", !!S.armed[cmd.name]);
-    updateCmdBuilder();
-    if (S.armed[cmd.name]) announce(tText("{{name}} ARMED — SEND now executes", { name: cmd.name }));
+  on("cmd-send", () => sendCommand());
+  if ($("proc-btn-abort")) armButton($("proc-btn-abort"), { seconds: 6,
+    onExecute: () => procAction("abort") });
+  // Critical commands: the shared two-step (arm, then execute within 8 s).
+  if ($("cmd-send-crit")) armButton($("cmd-send-crit"), { seconds: 8,
+    onExecute: () => sendCommand({ confirmed: true }) });
+  document.addEventListener("input", (e) => {
+    if (e.target && e.target.id === "qc-filter") { S.qcFilter = e.target.value; renderQuickCommands(); }
   });
+  document.addEventListener("toggle", (e) => {
+    const d = e.target;
+    if (d && d.dataset && d.dataset.qcGroup !== undefined && !S.qcFilter) {
+      S.qcOpen = S.qcOpen || {};
+      S.qcOpen[d.dataset.qcGroup] = d.open;
+    }
+  }, true);
   on("cmd-pack", () => cmdLivePack());
   on("cmd-decode", () => cmdReverseDecode());
   on("s15-dump", () => requestTmDump($("s15-target").value, $("s15-store").value)
@@ -5618,7 +5759,7 @@ function onLanguageChange() {
   // mounted schematics (setLang's document-wide applyDom covers them too; explicit for clarity)
   document.querySelectorAll("svg[data-schematic]").forEach((svg) => I18n.applyDom(svg));
   const ovrMode = $("sch-ovr-mode");   // inside a data-i18n <text>; only re-set while OVR is showing
-  if (ovrMode) { const m = scModeInfo(); ovrMode.textContent = `${m.label} (${m.src})`; }
+  if (ovrMode) ovrMode.textContent = scModeInfo().label;
   retitleRail();
   renderPosSelect();
   applyPositionFilter();          // position title, quick commands, manual TOC
@@ -5690,7 +5831,7 @@ export const __test = {
   updateNextCard, renderDerivedCard,
   // one-derivation selectors, alarm store, value cell, control states (R3)
   linkState, valueCell, alarmGroups, alarmSummary, alarmRowHtml, alarmParamHex,
-  procButtonState, setEnabled, heldTriad,
+  procButtonState, setEnabled, sentinelLabel, orbitPoint, updateOverview, renderQuickCommands,
 };
 
 if (!globalThis.__MCS_TEST__) {

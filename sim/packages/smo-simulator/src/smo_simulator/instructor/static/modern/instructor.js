@@ -23,8 +23,10 @@
 
 import {
   esc, renderChip, renderEventRow, poller, wsClient, mountLangToggle,
-} from "/static/shared/components.js?v=1";
-import { fmtUTC, fmtHex } from "/static/shared/format.js?v=1";
+  renderValue, renderGauge, renderNoData, renderBanner, renderLinkBanner, renderModeBanner,
+  glyph, setDisabled, setEnabled, armButton,
+} from "/static/shared/components.js";
+import { fmtUTC, fmtHex } from "/static/shared/format.js";
 // One contact verdict for every console (R3 audit problem #10).
 import { linkState } from "/static/shared/state.js";
 // UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md. Import i18n.js
@@ -62,7 +64,8 @@ let selectedScenario = null;
 let activeScenarioName = null;
 let scenarioStartSimMs = null;   // scenario progress runs on SIM time
 let debriefWasActive = false;
-let frozen = false;
+let frozen = false;          // engine truth: state.speed === 0
+let lastStateOkMs = null;    // wall time of the last good /api/state poll
 let failureCatalog = null;
 let currentFailureSpec = null;
 let breakpoints = [];
@@ -72,8 +75,25 @@ const $$ = (sel) => document.querySelectorAll(sel);
 
 /* ── helpers ───────────────────────────────────────────────────────────── */
 
-function fmt(v, d) { return v != null && isFinite(v) ? Number(v).toFixed(d) : "—"; }
-function fmtInt(v) { return v != null && isFinite(v) ? String(Math.round(v)) : "—"; }
+/* Readouts go through the shared renderValue(): live / stale (last value,
+ * dim italic, age chip) / "no data" — never a dash. The truth feed is
+ * /api/state at 1 Hz; if it stops answering, every value turns stale with
+ * the age of the last good poll. */
+function stateAgeS() {
+  return lastStateOkMs === null ? null : (Date.now() - lastStateOkMs) / 1000;
+}
+function rv(value, units, digits, limits, extra) {
+  const age = stateAgeS();
+  const verdict = age !== null && age > 3 ? "stale" : "fresh";
+  return renderValue(value, Object.assign({ units, digits, limits, ageS: age, verdict }, extra || {}));
+}
+function pair(a, b, units, digits) {
+  const age = stateAgeS();
+  const verdict = age !== null && age > 3 ? "stale" : "fresh";
+  if ((a == null || !isFinite(a)) && (b == null || !isFinite(b))) return renderNoData();
+  const f = (v) => (v != null && isFinite(v) ? Number(v).toFixed(digits) : "?");
+  return renderValue(0, { eng: `${f(a)} / ${f(b)}`, units, verdict, ageS: age });
+}
 
 function formatDuration(totalSec) {
   const m = Math.floor(totalSec / 60);
@@ -96,15 +116,15 @@ function simNowMs() {
 
 /** Current SIM-time-of-day string for log rows ("—" before the first poll). */
 function simClock() {
-  return state && state.sim_time ? fmtUTC(state.sim_time) : "—";
+  return state && state.sim_time ? fmtUTC(state.sim_time) : "--:--:--";
 }
 
 function showToast(msg, type) {
   const el = $("toast");
-  el.textContent = msg;
-  el.className = (type || "") + " show";
+  el.innerHTML = renderBanner(type === "error" ? "alarm" : "ok", msg);
+  el.classList.add("show");
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => el.classList.remove("show"), 2500);
+  showToast._t = setTimeout(() => el.classList.remove("show"), type === "error" ? 6000 : 3000);
 }
 
 /* ── API (single command channel: POST /api/command) ───────────────────── */
@@ -157,8 +177,8 @@ let wsUp = false;
 function setConn(up) {
   wsUp = up;
   $("conn-chip").innerHTML = renderChip(
-    up ? { kind: "ok", label: tText("WS CONNECTED") }
-       : { kind: "stale", label: tText("WS DISCONNECTED") });
+    up ? { kind: "ok", label: tText("Live feed"), title: tText("WebSocket connected") }
+       : { kind: "stale", label: tText("Feed offline"), title: tText("WebSocket disconnected: reconnecting every 3 s") });
 }
 
 function startWs() {
@@ -201,7 +221,7 @@ const SUB_REGIONS = {
 };
 
 function formatParamValue(v) {
-  if (v == null) return "—";
+  if (v == null) return tText("no data");
   if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
   if (typeof v === "number") {
     if (!isFinite(v)) return String(v);
@@ -357,9 +377,9 @@ function updateCompletenessCounter() {
     }
   }
   const el = $("param-completeness");
-  el.textContent = `${populated}/${total}`;
+  el.textContent = tText("{{populated}}/{{total}} fields", { populated, total });
   el.title = tText("{{populated}} of {{total}} snapshot fields populated", { populated, total });
-  el.classList.toggle("warn", total > 0 && populated / total < 0.95);
+  el.classList.toggle("is-caution", total > 0 && populated / total < 0.95);
 }
 
 function updateRawSnapshot() {
@@ -424,21 +444,53 @@ function scnName(sc) { return sc.id ? tdb(`scn:${sc.id}:name`, sc.name) : sc.nam
 function scnLabel(name) { const sc = scenarios.find((x) => x.name === name); return sc ? scnName(sc) : name; }
 function scnBriefing(sc) { return sc.id && sc.briefing ? tdb(`scn:${sc.id}:briefing`, sc.briefing) : sc.briefing; }
 
+/** Run state of the scenario: "running" | "paused" (sim frozen) | null. */
+function scenarioRunState() {
+  if (!activeScenarioName) return null;
+  return frozen ? "paused" : "running";
+}
+function runChip(st) {
+  return st === "running" ? renderChip({ kind: "active", label: tText("Running") })
+    : st === "paused" ? renderChip({ kind: "stale", label: tText("Paused") }) : "";
+}
+
 function renderScenarios() {
   const list = $("scenario-list");
   if (!scenarios.length) {
-    list.innerHTML = `<div class="no-data">${t("No scenarios available")}</div>`;
+    list.innerHTML = `<div class="no-data" style="padding:var(--sp-3) var(--sp-4)">${t("No scenarios available")}</div>`;
     return;
   }
+  const had = list.contains(document.activeElement) ? document.activeElement.dataset.index : null;
   list.innerHTML = scenarios.map((sc, i) => `
-    <div class="scenario-item ${selectedScenario === i ? "selected" : ""}
-         ${activeScenarioName === sc.name ? "active" : ""}" data-index="${i}">
-      <div>${esc(scnName(sc))}</div>
-      <div class="sd"><span>${esc(difficultyLabel(sc.difficulty))}</span>
-        <span class="num">${formatDuration(sc.duration_s || 0)}</span></div>
-    </div>`).join("");
-  list.querySelectorAll(".scenario-item").forEach((el) =>
+    <button type="button" class="scn" data-index="${i}" aria-pressed="${selectedScenario === i}">
+      <span>${esc(scnName(sc))}</span>
+      ${activeScenarioName === sc.name ? runChip(scenarioRunState()) : ""}
+      <span class="sd"><span>${esc(difficultyLabel(sc.difficulty))}</span>
+        <span>${formatDuration(sc.duration_s || 0)}</span></span>
+    </button>`).join("");
+  list.querySelectorAll(".scn").forEach((el) =>
     el.addEventListener("click", () => selectScenario(parseInt(el.dataset.index, 10))));
+  if (had !== null && had !== undefined) {
+    const b = list.querySelector(`[data-index="${had}"]`);
+    if (b) b.focus();
+  }
+}
+
+/** Start / Stop: enabled, disabled with a reason, never ambiguous. */
+function updateScenarioButtons() {
+  const sc = selectedScenario != null ? scenarios[selectedScenario] : null;
+  const start = $("btn-start-scenario"), stop = $("btn-stop-scenario");
+  if (!sc) setDisabled(start, tText("Select a scenario first"));
+  else if (activeScenarioName === sc.name) setDisabled(start, tText("This scenario is already running"));
+  else if (activeScenarioName) {
+    setDisabled(start, tText("Stop \"{{name}}\" first", { name: scnLabel(activeScenarioName) }));
+  } else setEnabled(start);
+  if (!activeScenarioName) setDisabled(stop, tText("No scenario is running"));
+  else setEnabled(stop);
+  const st = scenarioRunState();
+  $("scenario-progress").hidden = !st;
+  $("progress-state").innerHTML = st ? runChip(st) : "";
+  $("progress-track").classList.toggle("paused", st === "paused");
 }
 
 function selectScenario(idx) {
@@ -447,9 +499,8 @@ function selectScenario(idx) {
   if (!sc) return;
   $("scenario-detail").hidden = false;
   $("scenario-briefing").textContent = scnBriefing(sc) || tText("No briefing available.");
-  $("btn-start-scenario").disabled = (activeScenarioName === sc.name);
-  $("btn-stop-scenario").disabled = (activeScenarioName !== sc.name);
   renderScenarios();
+  updateScenarioButtons();
 }
 
 async function startScenario() {
@@ -463,9 +514,7 @@ async function startScenario() {
   }
   activeScenarioName = sc.name;
   scenarioStartSimMs = simNowMs();
-  $("btn-start-scenario").disabled = true;
-  $("btn-stop-scenario").disabled = false;
-  $("scenario-progress").hidden = false;
+  updateScenarioButtons();
   addLog("info", "SCENARIO", tText("Started: {{name}}", { name: scnName(sc) }));
   showToast(tText("Scenario \"{{name}}\" started", { name: scnName(sc) }), "success");
   renderScenarios();
@@ -482,9 +531,7 @@ async function stopScenario() {
   addLog("info", "SCENARIO", tText("Stopped: {{name}}", { name: scnLabel(name) }));
   activeScenarioName = null;
   scenarioStartSimMs = null;
-  $("btn-start-scenario").disabled = false;
-  $("btn-stop-scenario").disabled = true;
-  $("scenario-progress").hidden = true;
+  updateScenarioButtons();
   renderScenarios();
   // The engine builds the debrief on stop; give it a tick then show it.
   setTimeout(() => fetchDebrief(true), 1200);
@@ -497,20 +544,21 @@ function renderDebrief(d) {
   lastDebrief = d;
   const body = $("debrief-body");
   if (!d) {
-    body.innerHTML = `<div class="no-data">${t("No debrief available yet — appears when a scenario ends (STOP or its duration elapsing).")}</div>`;
+    body.innerHTML = `<div class="no-data">${t("No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).")}</div>`;
     return;
   }
-  const secs = (v) => (v == null ? "—" : `${Number(v).toFixed(1)} s`);
+  const nd = renderNoData();
+  const secs = (v) => (v == null ? nd : `${Number(v).toFixed(1)} s`);
   const responses = (d.responses || []).map((r) =>
     `<div class="prow"><span class="pl">${esc(r.category || "?")}` +
-    `${r.description ? " — " + esc(r.description) : ""}</span>` +
-    `<span class="pv">${r.time_s != null ? Number(r.time_s).toFixed(1) + " s" : "—"}</span></div>`
+    `${r.description ? ": " + esc(r.description) : ""}</span>` +
+    `<span class="pv ds-mono">${r.time_s != null ? Number(r.time_s).toFixed(1) + " s" : nd}</span></div>`
   ).join("");
   body.innerHTML = `
     <table>
-      <tr><td>${t("Scenario")}</td><td>${esc(d.name || "—")}</td></tr>
+      <tr><td>${t("Scenario")}</td><td>${d.name ? esc(d.name) : nd}</td></tr>
       <tr><td>${t("Duration")}</td><td>${secs(d.duration_s)}</td></tr>
-      <tr><td>${t("Score")}</td><td>${d.score_pct != null ? Number(d.score_pct).toFixed(0) + " %" : "—"}</td></tr>
+      <tr><td>${t("Score")}</td><td>${d.score_pct != null ? Number(d.score_pct).toFixed(0) + " %" : nd}</td></tr>
       <tr><td>${t("MTTD (detect)")}</td><td>${secs(d.mttd_s)}</td></tr>
       <tr><td>${t("MTTI (isolate)")}</td><td>${secs(d.mtti_s)}</td></tr>
       <tr><td>${t("MTTR (recover)")}</td><td>${secs(d.mttr_s)}</td></tr>
@@ -527,15 +575,17 @@ async function fetchDebrief(announce) {
   try { d = await apiGet("/api/scenario/debrief"); } catch (e) { return; }
   const chip = $("scenario-chip");
   if (d.active && d.current) {
-    chip.innerHTML = renderChip({ kind: "warn", label: tText("SCENARIO: {{name}}", { name: scnLabel(d.current) }),
-                                  title: tText("A training scenario is running") });
+    chip.innerHTML = renderChip({ kind: frozen ? "stale" : "active",
+      label: (frozen ? tText("Paused: {{name}}", { name: scnLabel(d.current) })
+        : tText("Running: {{name}}", { name: scnLabel(d.current) })),
+      title: tText("A training scenario is running") });
     if (activeScenarioName !== d.current) {
       activeScenarioName = d.current;   // page reload during a run
-      if (scenarioStartSimMs == null) $("scenario-progress").hidden = false;
+      updateScenarioButtons();
       renderScenarios();
     }
   } else {
-    chip.innerHTML = renderChip({ kind: "neutral", label: tText("NO SCENARIO") });
+    chip.innerHTML = renderChip({ kind: "neutral", label: tText("No scenario running") });
     if (debriefWasActive && !d.active) {
       // active -> finished transition (auto-stop or STOP elsewhere)
       announce = true;
@@ -543,9 +593,7 @@ async function fetchDebrief(announce) {
         addLog("info", "SCENARIO", tText("Ended: {{name}}", { name: scnLabel(activeScenarioName) }));
         activeScenarioName = null;
         scenarioStartSimMs = null;
-        $("btn-start-scenario").disabled = false;
-        $("btn-stop-scenario").disabled = true;
-        $("scenario-progress").hidden = true;
+        updateScenarioButtons();
         renderScenarios();
       }
     }
@@ -567,6 +615,7 @@ async function loadFailureCatalog() {
   if (!data || !Array.isArray(data.subsystems)) {
     addLog("high", "FAIL", tText("Failure catalogue unavailable — injection form disabled"));
     $("fail-subsystem").innerHTML = `<option value="">${t("(catalogue unavailable)")}</option>`;
+    setDisabled($("btn-inject"), tText("The failure catalogue did not load"));
     return;
   }
   failureCatalog = data;
@@ -596,18 +645,18 @@ function updateFailureTypes() {
  *  unit; the permitted range is always shown. */
 function renderParamControl(p, idPrefix) {
   const id = `${idPrefix}-${p.name}`;
-  const unit = p.unit ? ` <span class="form-unit">[${esc(p.unit)}]</span>` : "";
+  const unit = p.unit ? ` <span class="form-unit">${esc(p.unit)}</span>` : "";
   const bits = [];
   if (p.min !== undefined && p.min !== null) bits.push(`min ${p.min}`);
   if (p.max !== undefined && p.max !== null) bits.push(`max ${p.max}`);
   if (p.description) bits.push(esc(p.description));
   const hint = bits.length ? `<span class="form-hint">${bits.join(" · ")}</span>` : "";
-  const label = `<label class="form-label" for="${id}">${esc(p.label || p.name)}${unit}${p.required ? " *" : ""}</label>`;
+  const label = `<label for="${id}">${esc(p.label || p.name)}${unit}${p.required ? " *" : ""}</label>`;
 
   if (p.type === "bool") {
     const checked = p.default ? " checked" : "";
-    return `<div class="form-group">
-      <label class="checkbox-label"><input type="checkbox" id="${id}"
+    return `<div class="ds-field">
+      <label class="ds-check"><input type="checkbox" id="${id}"
         data-param="${esc(p.name)}" data-ptype="bool"${checked}> ${esc(p.label || p.name)}</label>${hint}
     </div>`;
   }
@@ -620,8 +669,8 @@ function renderParamControl(p, idPrefix) {
       const sel = defaults.includes(String(v)) ? " selected" : "";
       return `<option value="${esc(String(v))}"${sel}>${esc(String(labels[i]))}</option>`;
     }).join("");
-    const multi = p.multi ? ` multiple size="4" class="form-select form-multi"` : ` class="form-select"`;
-    return `<div class="form-group">${label}
+    const multi = p.multi ? ` multiple size="4" class="ds-select"` : ` class="ds-select"`;
+    return `<div class="ds-field">${label}
       <select id="${id}" data-param="${esc(p.name)}" data-ptype="enum"
         data-multi="${p.multi ? "1" : ""}"${multi}>${opts}</select>${hint}
     </div>`;
@@ -635,8 +684,8 @@ function renderParamControl(p, idPrefix) {
     (isNum && p.max !== undefined && p.max !== null) ? `max="${p.max}"` : "",
     (p.default !== null && p.default !== undefined) ? `value="${esc(String(p.default))}"` : "",
   ].filter(Boolean).join(" ");
-  return `<div class="form-group">${label}
-    <input class="form-input" id="${id}" data-param="${esc(p.name)}"
+  return `<div class="ds-field">${label}
+    <input class="ds-input" id="${id}" data-param="${esc(p.name)}"
       data-ptype="${esc(p.type)}" ${attrs}>${hint}
   </div>`;
 }
@@ -648,14 +697,19 @@ function updateFailureParams() {
   currentFailureSpec = spec;
   setInjectError("");
   $("fail-effect").textContent = spec ? (spec.effect || "") : "";
-  if (!spec) { $("fail-params").innerHTML = ""; return; }
+  if (!spec) {
+    $("fail-params").innerHTML = "";
+    setDisabled($("btn-inject"), tText("Choose a failure type first"));
+    return;
+  }
+  setEnabled($("btn-inject"));
 
   const html = [];
   // Magnitude only when the failure uses one — with ITS unit and range.
   if (spec.magnitude) html.push(renderParamControl(spec.magnitude, "fail-mag"));
   (spec.params || []).forEach((p) => html.push(renderParamControl(p, "fail-p")));
   if (!spec.reversible && spec.notes) {
-    html.push(`<div class="fail-effect">${t("NOT FULLY REVERSIBLE — {{notes}}", { notes: spec.notes })}</div>`);
+    html.push(`<div class="fail-effect irrev">${t("Not fully reversible: {{notes}}", { notes: spec.notes })}</div>`);
   }
   $("fail-params").innerHTML = html.join("");
 }
@@ -663,7 +717,7 @@ function updateFailureParams() {
 /** The server-rejection error box: shows the engine's refusal REASON. */
 function setInjectError(msg) {
   const el = $("fail-error");
-  el.textContent = msg || "";
+  el.innerHTML = msg ? renderBanner("alarm", msg) : "";
   el.style.display = msg ? "block" : "none";
 }
 
@@ -734,7 +788,7 @@ async function injectFailure() {
 
   const res = await sendCommand(payload);
   if (res && res.status !== "ok") {
-    setInjectError(tText("REJECTED: {{reason}}", { reason: res.message || tText("unknown reason") }));
+    setInjectError(tText("Rejected: {{reason}}", { reason: res.message || tText("unknown reason") }));
     showToast(tText("Injection rejected — see the reason above"), "error");
     return;
   }
@@ -742,29 +796,44 @@ async function injectFailure() {
     .filter((k) => !["type", "subsystem", "failure", "onset", "onset_duration_s"].includes(k))
     .map((k) => `${k}=${JSON.stringify(payload[k])}`).join(" ");
   addLog("high", "INJECT", `${subsystem}/${spec.name} ${describe} onset=${onset}`);
-  showToast(tText("Failure injected: {{what}}", { what: `${subsystem}/${spec.name}` }), "error");
+  showToast(tText("Failure injected: {{what}}", { what: `${subsystem}/${spec.name}` }), "success");
   failuresPoll.kick();   // don't wait up to 5 s for the next cycle
 }
 
 /* ── active failures ───────────────────────────────────────────────────── */
 
+let lastFailures = [];
 function renderFailures(failures) {
+  lastFailures = failures || [];
   const list = $("failures-list");
-  if (!failures || !failures.length) {
-    list.innerHTML = `<div class="no-data">${t("No active failures")}</div>`;
+  const n = lastFailures.length;
+  $("failures-count").innerHTML = n ? renderChip({ kind: "alarm", label: tText("{{n}} injected", { n }) }) : "";
+  if (n) setEnabled($("btn-clear-all"));
+  else setDisabled($("btn-clear-all"), tText("No failures are active"));
+  // Mark the truth card of every subsystem carrying an injected failure.
+  const failed = new Set(lastFailures.map((f) => f.subsystem === "adcs" ? "aocs" : f.subsystem));
+  ["eps", "aocs", "tcs", "obdh", "ttc", "payload"].forEach((sub) => {
+    const card = $("card-" + sub);
+    if (!card) return;
+    card.classList.toggle("is-alarm", failed.has(sub));
+    const r = card.querySelector(".ds-panel-h .r");
+    if (r) r.dataset.failed = failed.has(sub) ? "1" : "";
+  });
+  if (!n) {
+    list.innerHTML = `<div class="no-data" style="padding:var(--sp-2) var(--sp-4)">${t("No active failures")}</div>`;
     return;
   }
-  list.innerHTML = failures.map((f) => {
+  list.innerHTML = lastFailures.map((f) => {
     const id = f.failure_id || f.id || `${f.subsystem}_${f.failure}`;
     const magPct = ((f.magnitude || 0) * 100).toFixed(0);
-    const elapsed = f.elapsed_s ? formatDuration(f.elapsed_s) : "--:--";
+    const elapsed = f.elapsed_s ? formatDuration(f.elapsed_s) : "00:00";
+    const what = `${(f.subsystem || "").toUpperCase()} / ${f.failure || f.type || ""}`;
     return `
-      <div class="failure-item" data-id="${esc(id)}">
-        <div class="fh">
-          <span class="fname">${esc((f.subsystem || "").toUpperCase())} / ${esc(f.failure || f.type || "")}</span>
-          <button class="ds-btn" data-act="clear-failure" data-id="${esc(id)}">${t("CLEAR")}</button>
-        </div>
-        <div class="fmeta"><span>${t("mag {{pct}}%", { pct: magPct })}</span><span class="num">${elapsed}</span></div>
+      <div class="item fail" data-id="${esc(id)}">
+        <span class="fname" title="${esc(what)}">${esc(what)}</span>
+        <button type="button" class="ds-btn sm" data-act="clear-failure" data-id="${esc(id)}"
+          aria-label="${esc(tText("Clear failure {{what}}", { what }))}">${t("Clear")}</button>
+        <div class="fmeta"><span>${t("magnitude {{pct}} %", { pct: magPct })}</span><span>${elapsed}</span></div>
       </div>`;
   }).join("");
 }
@@ -828,7 +897,8 @@ async function toggleOverride() {
     return;
   }
   addLog(newState ? "low" : "info", "OVERRIDE",
-         newState ? tText("Pass override ENABLED") : tText("Pass override DISABLED"));
+         newState ? tText("Pass override enabled") : tText("Pass override disabled"));
+  statePoll.kick();
 }
 
 async function setBatterySoc() {
@@ -854,8 +924,9 @@ async function setSpeed(speed) {
     showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
     return;
   }
-  $$("#speed-group button[data-speed]").forEach((b) =>
-    b.classList.toggle("on", parseFloat(b.dataset.speed) === speed));
+  if (state) state.speed = speed;
+  renderTimeControl();
+  statePoll.kick();
 }
 
 async function toggleFreeze() {
@@ -866,11 +937,29 @@ async function toggleFreeze() {
     return;
   }
   frozen = next;
-  const btn = $("freeze-btn");
-  btn.textContent = frozen ? tText("RESUME") : tText("FREEZE");
-  btn.classList.toggle("on", frozen);
+  if (state) state.speed = next ? 0 : Math.max(1, state.speed || 0);
+  renderTimeControl();
   addLog(frozen ? "low" : "info", "SIM",
-         frozen ? tText("Simulation FROZEN") : tText("Simulation RESUMED"));
+         frozen ? tText("Simulation frozen") : tText("Simulation resumed"));
+  statePoll.kick();
+}
+
+/** Time control states: Running ×N (accent) or Frozen (caution), the
+ *  selected speed pressed, and Freeze / Resume saying what it will do. */
+function renderTimeControl() {
+  const speed = state && state.speed != null ? Number(state.speed) : null;
+  const was = frozen;
+  frozen = speed === 0;
+  if (was !== frozen && scenarios.length) renderScenarios();
+  $("run-chip").innerHTML = speed === null ? renderChip({ kind: "nodata", label: tText("no data") })
+    : frozen ? renderChip({ kind: "warn", label: tText("Frozen"), title: tText("Simulation time is stopped") })
+      : renderChip({ kind: "active", label: tText("Running ×{{s}}", { s: speed }) });
+  $$("#speed-group button[data-speed]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(!frozen && parseFloat(b.dataset.speed) === speed)));
+  const btn = $("freeze-btn");
+  btn.textContent = frozen ? tText("Resume") : tText("Freeze");
+  btn.classList.toggle("primary", frozen);
+  btn.title = frozen ? tText("Resume the simulation at ×1") : tText("Stop simulation time for everyone");
 }
 
 /* ── breakpoints ───────────────────────────────────────────────────────── */
@@ -879,6 +968,7 @@ async function saveBreakpoint() {
   const name = $("breakpoint-name").value.trim();
   if (!name) return;
   $("breakpoint-name").value = "";
+  updateBpSave();
   const res = await apiPost("/api/breakpoint/save", { name });
   if (res && res.status !== "saved") {
     showToast(tText("Breakpoint save failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error");
@@ -903,19 +993,26 @@ async function refreshBreakpoints() {
 
 function renderBreakpoints() {
   const list = $("breakpoints-list");
+  if (list.querySelector(".is-armed")) return;   // never rebuild under a pending two-step
   if (!breakpoints.length) {
-    list.innerHTML = `<div class="no-data">${t("No breakpoints saved")}</div>`;
+    list.innerHTML = `<div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)">${t("No breakpoints saved")}</div>`;
     return;
   }
   list.innerHTML = breakpoints.map((bp) => `
-    <div class="failure-item bp">
-      <div class="fh">
-        <span class="fname">${esc(bp.name)}</span>
-        <button class="ds-btn" data-act="load-breakpoint" data-name="${esc(bp.name)}">${t("LOAD")}</button>
-      </div>
+    <div class="item">
+      <span class="fname">${esc(bp.name)}</span>
+      <button type="button" class="ds-btn critical sm" data-name="${esc(bp.name)}"
+        aria-label="${esc(tText("Load breakpoint {{name}}", { name: bp.name }))}">${t("Load")}</button>
       <div class="fmeta"><span>${t("tick {{n}}", { n: bp.tick })}</span>
-        <span class="num">${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div>
+        <span>${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div>
     </div>`).join("");
+  list.querySelectorAll("button[data-name]").forEach((b) =>
+    armButton(b, { onExecute: () => loadBreakpoint(b.dataset.name) }));
+}
+
+function updateBpSave() {
+  if ($("breakpoint-name").value.trim()) setEnabled($("btn-save-bp"));
+  else setDisabled($("btn-save-bp"), tText("Enter a breakpoint name first"));
 }
 
 async function loadBreakpoint(name) {
@@ -929,186 +1026,177 @@ async function loadBreakpoint(name) {
 }
 
 /* ── truth dashboard render (1 Hz, from /api/state) ────────────────────── */
+/* Instructor-side limits, the same thresholds the page always used; the
+ * shared renderers turn them into caution/alarm with glyph + ISA code. */
+const LIM = {
+  soc: { red_low: 30, yellow_low: 70, lo: 0, hi: 100 },
+  pct: { yellow_high: 60, red_high: 80, lo: 0, hi: 100 },
+  batT: { yellow_low: 5, red_high: 40 },
+  obcT: { yellow_low: -10, red_high: 50 },
+  fpaT: { yellow_low: -50, red_high: -10 },
+  att: { yellow_high: 0.5, red_high: 1 },
+  margin: { red_low: 3, yellow_low: 6 },
+};
 
-function setBar(id, pct, warnAt, alarmAt) {
-  const bar = $(id);
-  if (!bar) return;
-  const fill = bar.firstElementChild;
-  if (pct == null || !isFinite(pct)) { fill.style.width = "0%"; return; }
-  fill.style.width = Math.min(100, Math.max(0, pct)) + "%";
-  bar.classList.toggle("alarm", alarmAt !== undefined && pct >= alarmAt);
-  bar.classList.toggle("warn",
-    warnAt !== undefined && pct >= warnAt && !(alarmAt !== undefined && pct >= alarmAt));
+function gauge(id, label, v, lim, units) {
+  const age = stateAgeS();
+  $(id).innerHTML = renderGauge(v, lim, { label, units, digits: 1, ageS: age,
+    verdict: age !== null && age > 3 ? "stale" : "fresh" });
 }
 
-function setBarLow(id, pct, warnBelow, alarmBelow) {
-  const bar = $(id);
-  if (!bar) return;
-  const fill = bar.firstElementChild;
-  if (pct == null || !isFinite(pct)) { fill.style.width = "0%"; return; }
-  fill.style.width = Math.min(100, Math.max(0, pct)) + "%";
-  bar.classList.toggle("alarm", pct < alarmBelow);
-  bar.classList.toggle("warn", pct >= alarmBelow && pct < warnBelow);
-}
-
-function tempClass(val, low, high) {
-  if (val == null) return "";
-  if (val > high || val < low) return val > high ? "alarm" : "warn";
-  return "";
-}
-
-function setPv(id, text, cls) {
+function setPv(id, html) {
   const el = $(id);
-  if (!el) return;
-  el.textContent = text;
-  el.className = "pv" + (cls ? " " + cls : "");
+  if (el) el.innerHTML = html;
 }
 
 function onOff(id, on) {
-  $(id).innerHTML = renderChip(on ? { kind: "ok", label: "ON" }
-                                  : { kind: "off", label: "OFF" });
+  $(id).innerHTML = on == null ? renderNoData()
+    : renderChip(on ? { kind: "neutral", label: tText("On") } : { kind: "off", label: tText("Off") });
+}
+
+function modeLabel(id, text) {
+  const el = $(id);
+  if (!el) return;
+  const failed = el.dataset.failed === "1";
+  el.innerHTML = (failed ? renderChip({ kind: "alarm", label: tText("failure injected") }) + " " : "")
+    + (text ? `<span class="ds-id">${esc(text)}</span>` : "");
 }
 
 /* VR headset link (smo-vr/1, docs/VR_INTERFACE_ICD.md). The return line is
  * optional, so a connected headset that never replies is NO_REPLY (neutral),
- * not a fault; DEGRADED / SILENT warn, ERROR alarms. */
+ * not a fault; DEGRADED / SILENT caution, ERROR alarm. */
 function renderVrBadge(link) {
   const b = $("vr-badge");
   if (!b) return;
   if (!link || link.enabled === false) {
-    b.textContent = "VR OFF";
-    b.className = "ds-badge";
-    b.title = tText("VR bridge not running (--no-vr, SMO_VR=0 or port in use)");
+    b.innerHTML = renderChip({ kind: "off", label: tText("VR off"),
+      title: tText("VR bridge not running (--no-vr, SMO_VR=0 or port in use)") });
     return;
   }
   const n = link.n_clients || 0;
   const overall = link.overall || "NO_CLIENTS";
-  b.textContent = n ? `VR ${n} ${overall.replace("_", " ")}` : "VR —";
-  b.className = "ds-badge" + (overall === "ERROR" ? " alarm"
-    : (overall === "DEGRADED" || overall === "SILENT") ? " warn" : "");
   const rows = (link.clients || []).map((c) =>
     `${c.team || c.peer} [${c.transport}] ${c.health}` +
     (c.status_word_hex ? ` ${c.status_word_hex}` : "") +
     (c.text ? ` — ${c.text}` : ""));
-  b.title = tText("VR bridge TCP:{{tcp}} WS:{{ws}}", { tcp: link.tcp_port, ws: link.ws_port }) + "\n" +
+  const title = tText("VR bridge TCP:{{tcp}} WS:{{ws}}", { tcp: link.tcp_port, ws: link.ws_port }) + "\n" +
     (rows.length ? rows.join("\n") : tText("no headsets connected"));
+  const kind = overall === "ERROR" ? "alarm" : (overall === "DEGRADED" || overall === "SILENT") ? "warn" : "neutral";
+  b.innerHTML = renderChip({ kind, title,
+    label: n ? `VR ${n} ${overall.replace("_", " ")}` : tText("VR: no headsets") });
+}
+
+function renderBanners() {
+  // One contact verdict for every console (R3 audit problem #10); the
+  // instructor feed is truth, so the station comes straight from the sim.
+  const link = linkState(state);
+  if (link.contact && !link.gs) link.gs = state.ground_station_name || "";
+  if (link.contact && state.override_passes) link.source = tText("pass override");
+  $("link-banner").innerHTML = renderLinkBanner(link);
+  // Spacecraft mode from simulation truth (sc_mode), labelled as such.
+  const mode = SC_MODES[state.sc_mode] || null;
+  $("mode-banner").innerHTML = renderModeBanner({ mode, source: tText("simulation truth"),
+    contingency: mode === "SAFE" || mode === "EMERGENCY",
+    fdirLevel: state.fdir && Number.isFinite(state.fdir.level) ? state.fdir.level : null });
 }
 
 function renderDashboard() {
   if (!state) return;
 
-  // header: SIM TIME primary clock + speed group + SC mode badge
-  $("sim-time").textContent = state.sim_time
-    ? fmtUTC(state.sim_time, { date: true }) + " UTC" : "—";
-  if (state.speed != null) {
-    $$("#speed-group button[data-speed]").forEach((b) =>
-      b.classList.toggle("on", parseFloat(b.dataset.speed) === state.speed));
-  }
-  const badge = $("sc-mode-badge");
-  const mode = SC_MODES[state.sc_mode] || "UNKNOWN";
-  badge.textContent = "SC " + mode;
-  badge.className = "ds-badge" + (mode === "EMERGENCY" ? " alarm"
-    : mode === "SAFE" ? " warn" : "");
-
+  // header: SIM TIME primary clock + time control + SC mode chip
+  $("sim-time").textContent = state.sim_time ? fmtUTC(state.sim_time) : "--:--:--";
+  $("sim-date").textContent = state.sim_time ? String(state.sim_time).slice(0, 10) + " UTC" : "";
+  renderTimeControl();
+  const mode = SC_MODES[state.sc_mode] || null;
+  $("sc-mode-badge").innerHTML = "";
+  renderBanners();
   renderVrBadge(state.vr_link);
 
   // EPS
   const eps = state.eps || {};
-  setPv("eps-soc", fmt(eps.soc_pct, 1));
-  setBarLow("eps-soc-bar", eps.soc_pct, 70, 30);
-  setPv("eps-bus-v", fmt(eps.bus_voltage_V, 1) + " V");
-  setPv("eps-bat-v", fmt(eps.bat_voltage_V, 1) + " V");
-  setPv("eps-bat-temp", fmt(eps.bat_temp_C, 1) + " °C", tempClass(eps.bat_temp_C, 5, 40));
-  setPv("eps-pgen", fmt(eps.power_gen_W, 1) + " W");
-  setPv("eps-pcons", fmt(eps.power_cons_W, 1) + " W");
-  setPv("eps-sa", fmt(eps.sa_a_A, 2) + " / " + fmt(eps.sa_b_A, 2) + " A");
+  gauge("eps-soc-g", tText("Battery SoC"), eps.soc_pct, LIM.soc, "%");
+  setPv("eps-bus-v", rv(eps.bus_voltage_V, "V", 1));
+  setPv("eps-bat-v", rv(eps.bat_voltage_V, "V", 1));
+  setPv("eps-bat-temp", rv(eps.bat_temp_C, "°C", 1, LIM.batT));
+  setPv("eps-pgen", rv(eps.power_gen_W, "W", 1));
+  setPv("eps-pcons", rv(eps.power_cons_W, "W", 1));
+  setPv("eps-sa", pair(eps.sa_a_A, eps.sa_b_A, "A", 2));
+  modeLabel("eps-mode", "");
 
   // AOCS
   const aocs = state.aocs || {};
-  $("aocs-mode").textContent = AOCS_MODES[aocs.mode] || "—";
-  setPv("aocs-atterr", fmt(aocs.att_error_deg, 3) + " °",
-    aocs.att_error_deg > 1 ? "alarm" : aocs.att_error_deg > 0.5 ? "warn" : "");
-  setPv("aocs-rr", fmt(aocs.rate_roll, 4) + " °/s");
-  setPv("aocs-rp", fmt(aocs.rate_pitch, 4) + " °/s");
-  setPv("aocs-ry", fmt(aocs.rate_yaw, 4) + " °/s");
-  setPv("aocs-rw12", fmtInt(aocs.rw1_rpm) + " / " + fmtInt(aocs.rw2_rpm) + " rpm");
-  setPv("aocs-rw34", fmtInt(aocs.rw3_rpm) + " / " + fmtInt(aocs.rw4_rpm) + " rpm");
+  modeLabel("aocs-mode", AOCS_MODES[aocs.mode] || "");
+  setPv("aocs-atterr", rv(aocs.att_error_deg, "°", 3, LIM.att));
+  setPv("aocs-rr", rv(aocs.rate_roll, "°/s", 4));
+  setPv("aocs-rp", rv(aocs.rate_pitch, "°/s", 4));
+  setPv("aocs-ry", rv(aocs.rate_yaw, "°/s", 4));
+  setPv("aocs-rw12", pair(aocs.rw1_rpm, aocs.rw2_rpm, "rpm", 0));
+  setPv("aocs-rw34", pair(aocs.rw3_rpm, aocs.rw4_rpm, "rpm", 0));
 
   // TCS
   const tcs = state.tcs || {};
-  setPv("tcs-obc", fmt(tcs.temp_obc_C, 1) + " °C", tempClass(tcs.temp_obc_C, -10, 50));
-  setPv("tcs-bat", fmt(tcs.temp_bat_C, 1) + " °C", tempClass(tcs.temp_bat_C, 5, 40));
-  setPv("tcs-fpa", fmt(tcs.temp_fpa_C, 1) + " °C", tempClass(tcs.temp_fpa_C, -50, -10));
-  onOff("tcs-htr-bat", !!tcs.htr_bat);
-  onOff("tcs-htr-obc", !!tcs.htr_obc);
-  onOff("tcs-cooler", !!tcs.cooler_fpa);
+  modeLabel("tcs-mode", "");
+  setPv("tcs-obc", rv(tcs.temp_obc_C, "°C", 1, LIM.obcT));
+  setPv("tcs-bat", rv(tcs.temp_bat_C, "°C", 1, LIM.batT));
+  setPv("tcs-fpa", rv(tcs.temp_fpa_C, "°C", 1, LIM.fpaT));
+  onOff("tcs-htr-bat", tcs.htr_bat == null ? null : !!tcs.htr_bat);
+  onOff("tcs-htr-obc", tcs.htr_obc == null ? null : !!tcs.htr_obc);
+  onOff("tcs-cooler", tcs.cooler_fpa == null ? null : !!tcs.cooler_fpa);
 
   // OBDH
   const obdh = state.obdh || {};
-  $("obdh-mode").textContent = OBDH_MODES[obdh.mode] || "—";
-  setPv("obdh-cpu", fmt(obdh.cpu_load_pct, 1));
-  setBar("obdh-cpu-bar", obdh.cpu_load_pct, 60, 80);
-  setPv("obdh-mem", fmt(obdh.mem_used_pct, 1));
-  setBar("obdh-mem-bar", obdh.mem_used_pct, 60, 80);
-  setPv("obdh-reboots", obdh.reboot_count != null ? String(obdh.reboot_count) : "—",
-    obdh.reboot_count > 0 ? "warn" : "");
+  modeLabel("obdh-mode", OBDH_MODES[obdh.mode] || "");
+  gauge("obdh-cpu-g", tText("CPU load"), obdh.cpu_load_pct, LIM.pct, "%");
+  gauge("obdh-mem-g", tText("Memory"), obdh.mem_used_pct, LIM.pct, "%");
+  setPv("obdh-reboots", rv(obdh.reboot_count, "", 0, { yellow_high: 0.5 }));
 
   // TT&C
   const ttc = state.ttc || {};
-  $("ttc-mode").textContent = TTC_MODES[ttc.mode] || "—";
-  $("ttc-link").innerHTML = renderChip(ttc.link_status === 1
-    ? { kind: "ok", label: LINK_STATUS[1] }
-    : { kind: "off", label: LINK_STATUS[ttc.link_status] || "—" });
-  setPv("ttc-rssi", fmt(ttc.rssi_dBm, 1) + " dBm");
-  setPv("ttc-margin", fmt(ttc.link_margin_dB, 1) + " dB",
-    ttc.link_margin_dB != null && ttc.link_margin_dB < 3 ? "alarm"
-      : ttc.link_margin_dB < 6 ? "warn" : "");
-  setPv("ttc-range", fmt(ttc.range_km, 1) + " km");
-  setPv("ttc-elev", fmt(ttc.elevation_deg, 1) + " °");
+  modeLabel("ttc-mode", TTC_MODES[ttc.mode] || "");
+  $("ttc-link").innerHTML = ttc.link_status == null ? renderNoData()
+    : renderChip(ttc.link_status === 1 ? { kind: "ok", label: tText("Up") }
+      : { kind: "off", label: tText("Down") });
+  setPv("ttc-rssi", rv(ttc.rssi_dBm, "dBm", 1));
+  setPv("ttc-margin", ttc.link_status === 1 ? rv(ttc.link_margin_dB, "dB", 1, LIM.margin)
+    : rv(ttc.link_margin_dB, "dB", 1));
+  setPv("ttc-range", rv(ttc.range_km, "km", 1));
+  setPv("ttc-elev", rv(ttc.elevation_deg, "°", 1));
 
   // Payload
   const pl = state.payload || {};
-  $("payload-mode").textContent = PL_MODES[pl.mode] || "—";
-  setPv("pl-fpa", fmt(pl.fpa_temp_C, 1) + " °C", tempClass(pl.fpa_temp_C, -50, -10));
-  setPv("pl-store", fmt(pl.store_used_pct, 1));
-  setBar("pl-store-bar", pl.store_used_pct, 60, 80);
-  setPv("pl-images", pl.image_count != null ? String(pl.image_count) : "—");
+  modeLabel("payload-mode", PL_MODES[pl.mode] || "");
+  setPv("pl-fpa", pl.mode ? rv(pl.fpa_temp_C, "°C", 1, LIM.fpaT) : rv(pl.fpa_temp_C, "°C", 1));
+  gauge("pl-store-g", tText("Storage"), pl.store_used_pct, LIM.pct, "%");
+  setPv("pl-images", rv(pl.image_count, "", 0));
 
   // Orbit bar
-  $("orb-lat").textContent = fmt(state.lat, 4) + "°";
-  $("orb-lon").textContent = fmt(state.lon, 4) + "°";
-  $("orb-alt").textContent = fmt(state.alt_km, 2) + " km";
-  $("orb-eclipse").innerHTML = renderChip(state.in_eclipse
-    ? { kind: "off", label: tText("ECLIPSE") } : { kind: "ok", label: tText("SUNLIGHT") });
-  const link = linkState(state);
-  const gsName = link.gs || state.ground_station_name || "";
-  $("orb-contact").innerHTML = renderChip(link.contact
-    ? { kind: "ok", label: gsName
-        ? tText("CONTACT: {{gs}}", { gs: gsName.toUpperCase() }) : tText("CONTACT") }
-    : { kind: "off", label: tText("NO CONTACT") });
+  setPv("orb-lat", rv(state.lat, "°", 4));
+  setPv("orb-lon", rv(state.lon, "°", 4));
+  setPv("orb-alt", rv(state.alt_km, "km", 2));
+  $("orb-eclipse").innerHTML = state.in_eclipse == null ? "" : renderChip(state.in_eclipse
+    ? { kind: "neutral", label: tText("In eclipse") } : { kind: "neutral", label: tText("Sunlit") });
+  $("orb-contact").innerHTML = "";
 
-  // OVERRIDE PASSES — the single copy; label reflects engine truth.
+  // The pass override — the single copy; its state is engine truth.
   const ob = $("btn-override");
-  ob.textContent = state.override_passes ? tText("OVERRIDE ON") : tText("OVERRIDE PASSES");
-  ob.classList.toggle("danger", !!state.override_passes);
+  ob.textContent = state.override_passes ? tText("Pass override on") : tText("Override passes");
+  ob.setAttribute("aria-pressed", String(!!state.override_passes));
 
   // phase select mirrors engine truth when the user is not mid-change
-  if (state.spacecraft_phase != null && document.activeElement !== $("phase-select")) {
+  if (state.spacecraft_phase != null && document.activeElement !== $("phase-select")
+      && !$("btn-set-phase").classList.contains("is-armed")) {
     $("phase-select").value = String(state.spacecraft_phase);
   }
+  $("phase-now").innerHTML = state.spacecraft_phase != null
+    ? `<span class="ds-id" title="${esc(tText("now {{n}} {{name}}", { n: state.spacecraft_phase,
+      name: PHASE_NAMES[state.spacecraft_phase] || "" }))}">${esc(PHASE_NAMES[state.spacecraft_phase] || state.spacecraft_phase)}</span>` : "";
 
   // Active failures + card highlight
-  if (Array.isArray(state.active_failures)) {
-    renderFailures(state.active_failures);
-    const failed = new Set(state.active_failures.map((f) => f.subsystem));
-    ["eps", "aocs", "tcs", "obdh", "ttc", "payload"].forEach((sub) => {
-      const card = $("card-" + sub);
-      if (card) card.style.borderColor = failed.has(sub) ? "var(--alarm)" : "";
-    });
-  }
+  if (Array.isArray(state.active_failures)) renderFailures(state.active_failures);
 
   // Scenario progress in SIM time (freezes with the sim; speed changes do
   // not rescale already-elapsed time).
+  updateScenarioButtons();
   if (activeScenarioName && selectedScenario != null) {
     const sc = scenarios[selectedScenario];
     const nowSimMs = simNowMs();
@@ -1117,7 +1205,7 @@ function renderDashboard() {
       const totalS = sc.duration_s || 1;
       const pct = Math.min(100, (elapsedS / totalS) * 100);
       $("progress-elapsed").textContent = formatDuration(elapsedS);
-      $("progress-remaining").textContent = "-" + formatDuration(Math.max(0, totalS - elapsedS));
+      $("progress-remaining").textContent = formatDuration(totalS);
       $("progress-fill").style.width = pct + "%";
     }
   }
@@ -1135,37 +1223,48 @@ function formatClockAge(sec) {
                : `${m}m ${String(s % 60).padStart(2, "0")}s`;
 }
 
+const UINT32_MAX = 4294967295;   // "never synced" sentinel when it leaks through
+
 function updateClockTruth() {
   const c = (snapshot && snapshot.clock_truth) || null;
+  const nd = renderNoData();
   if (!c) {
-    ["clock-sim-utc", "clock-obc-utc", "clock-since-sync"].forEach((id) => setPv(id, "—"));
-    setPv("clock-drift", "— ppm");
-    setPv("clock-offset", "— s");
-    $("clock-ref").textContent = "—";
+    ["clock-sim-utc", "clock-obc-utc", "clock-since-sync", "clock-drift", "clock-offset"]
+      .forEach((id) => setPv(id, nd));
+    $("clock-ref").innerHTML = "";
+    $("clock-offset-note").textContent = "";
     return;
   }
-  $("clock-ref").textContent = c.time_ref_name || "—";
-  setPv("clock-sim-utc", c.sim_time ? fmtUTC(c.sim_time, { date: true }) : "—");
+  $("clock-ref").innerHTML = c.time_ref_name ? `<span class="ds-id">${esc(c.time_ref_name)}</span>` : "";
+  const mono = (txt) => `<span class="ds-value" style="font-size:var(--fs-body)">${esc(txt)}</span>`;
+  setPv("clock-sim-utc", c.sim_time ? mono(fmtUTC(c.sim_time, { date: true })) : nd);
   setPv("clock-obc-utc", c.obc_time_s != null
-    ? fmtUTC(new Date(CUC_EPOCH_MS + c.obc_time_s * 1000), { date: true }) : "—");
-  setPv("clock-since-sync", c.time_since_sync_s == null
-    ? tText("never synced") : formatClockAge(c.time_since_sync_s));
-  setPv("clock-drift", c.drift_ppm == null ? "— ppm" : fmt(c.drift_ppm, 2) + " ppm");
+    ? mono(fmtUTC(new Date(CUC_EPOCH_MS + c.obc_time_s * 1000), { date: true })) : nd);
+  setPv("clock-since-sync", c.time_since_sync_s == null || c.time_since_sync_s >= UINT32_MAX
+    ? renderNoData({ label: tText("never synced") }) : mono(formatClockAge(c.time_since_sync_s)));
+  setPv("clock-drift", c.drift_ppm == null ? nd : renderValue(c.drift_ppm, { units: "ppm", digits: 2 }));
   if (c.offset_s == null) {
-    setPv("clock-offset", "— s");
+    setPv("clock-offset", nd);
+    $("clock-offset-note").textContent = "";
   } else {
-    const a = Math.abs(c.offset_s);
     // 1 s: an operator starts to care. 5 s: the FDIR jump guard.
-    setPv("clock-offset", (c.offset_s >= 0 ? "+" : "") + c.offset_s.toFixed(3) + " s",
-          a >= 5 ? "alarm" : a >= 1 ? "warn" : "good");
+    setPv("clock-offset", renderValue(c.offset_s, { units: "s", digits: 3,
+      limits: { yellow_low: -1, yellow_high: 1, red_low: -5, red_high: 5 } }));
+    const a = Math.abs(c.offset_s);
+    $("clock-offset-note").textContent = a >= 86400
+      ? tText("about {{d}} days: the OBC clock has not been set since boot", { d: Math.round(a / 86400) }) : "";
   }
 }
 
 /* ── polling (shared poller helper; classic cadences) ──────────────────── */
 
 const statePoll = poller(async () => {
-  state = await apiGet("/api/state");
-  renderDashboard();
+  try {
+    state = await apiGet("/api/state");
+    lastStateOkMs = Date.now();
+  } finally {
+    renderDashboard();     // a failed poll turns the readouts stale, visibly
+  }
 }, 1000);
 
 const snapshotPoll = poller(async () => {
@@ -1188,8 +1287,7 @@ const failuresPoll = poller(async () => {
 
 /** Write every label the JS owns (button states, subpage chrome) in the
  *  current language, then rebuild the JS-built regions that are not
- *  re-rendered on each poll. Called once at init and on smo:langchange.
- *  In English every string is the literal the page always wrote. */
+ *  re-rendered on each poll. Called once at init and on smo:langchange. */
 function relabel(changed) {
   const q = new URLSearchParams(location.search);
   const requestedSub = q.get("sub");
@@ -1202,13 +1300,11 @@ function relabel(changed) {
     back.textContent = tText("← Back to dashboard");
   }
   $("full-snapshot-title").textContent = requestedSub
-    ? tText("SUBSYSTEM DEEP-DIVE — {{sub}}", { sub: requestedSub.toUpperCase() })
+    ? tText("Subsystem deep-dive: {{sub}}", { sub: requestedSub.toUpperCase() })
     : tText("Full simulator state");
-  $("freeze-btn").textContent = frozen ? tText("RESUME") : tText("FREEZE");
-  const collapsed = $("log-panel").classList.contains("collapsed");
-  $("btn-log-toggle").textContent = (collapsed ? "▸" : "▾") + " " + tText("EVENT LOG");
+  renderTimeControl();
   const showing = $("raw-snapshot-container").style.display === "block";
-  $("btn-toggle-raw").textContent = showing ? tText("HIDE RAW SNAPSHOT") : tText("SHOW RAW SNAPSHOT");
+  $("btn-toggle-raw").textContent = showing ? tText("Hide raw snapshot") : tText("Show raw snapshot");
   if (!snapshot) $("raw-snapshot-json").textContent = tText("Loading…");
   setConn(wsUp);
   if (scenarios.length) renderScenarios();
@@ -1218,17 +1314,41 @@ function relabel(changed) {
   }
   if (lastDebrief !== undefined) renderDebrief(lastDebrief);
   if (!changed) return;
+  armAll();     // re-bind the two-steps with the translated labels
   // the irreversibility notice only — re-rendering the generated failure
   // form would throw away values the instructor has typed
   const irrev = document.querySelector("#fail-params .fail-effect");
   if (irrev && currentFailureSpec) {
-    irrev.textContent = tText("NOT FULLY REVERSIBLE — {{notes}}", { notes: currentFailureSpec.notes });
+    irrev.textContent = tText("Not fully reversible: {{notes}}", { notes: currentFailureSpec.notes });
   }
   renderBreakpoints();
+  renderFailures(lastFailures);
   if (snapshotTabsBuilt) populateSubsystemLauncher();
   if (state) renderDashboard();
+  updateScenarioButtons(); updateBpSave();
   updateCompletenessCounter();
   fetchDebrief(false);   // scenario chip
+}
+
+/* ── two-step (arm -> execute) for everything that disrupts the class ──── */
+/* armButton() keeps the label it was bound with, so after a language change
+ * each button is cloned (dropping the old binding) and armed again. The
+ * disabled state (aria-disabled + reason) travels with the clone. */
+const ARMED = [
+  ["btn-inject", () => injectFailure()],
+  ["btn-clear-all", () => clearAllFailures()],
+  ["btn-set-phase", () => setSpacecraftPhase()],
+  ["btn-start-separation", () => startSeparation()],
+  ["btn-set-soc", () => setBatterySoc()],
+  ["btn-stop-scenario", () => stopScenario()],
+];
+function armAll() {
+  for (const [id, fn] of ARMED) {
+    const old = $(id);
+    const fresh = old.cloneNode(true);
+    old.replaceWith(fresh);
+    armButton(fresh, { seconds: 5, onExecute: fn });
+  }
 }
 
 /* ── init ──────────────────────────────────────────────────────────────── */
@@ -1254,6 +1374,7 @@ async function init() {
     if (titleEl) titleEl.removeAttribute("data-i18n");
     document.title = "SMO — " + requestedSub.toUpperCase();
   }
+  armAll();
   relabel();
 
   // header controls
@@ -1264,38 +1385,30 @@ async function init() {
   // scenarios + debrief
   $("refresh-scenarios").addEventListener("click", loadScenarios);
   $("btn-start-scenario").addEventListener("click", startScenario);
-  $("btn-stop-scenario").addEventListener("click", stopScenario);
   $("btn-fetch-debrief").addEventListener("click", () => fetchDebrief(true));
 
-  // interventions
+  // interventions (the armed ones are wired by armAll)
   $("fail-subsystem").addEventListener("change", updateFailureTypes);
   $("fail-type").addEventListener("change", updateFailureParams);
   $$("input[name=\"fail-onset\"]").forEach((r) =>
     r.addEventListener("change", updateOnsetDurationVisibility));
   updateOnsetDurationVisibility();
-  $("btn-inject").addEventListener("click", injectFailure);
-  $("btn-clear-all").addEventListener("click", clearAllFailures);
-  $("btn-set-phase").addEventListener("click", setSpacecraftPhase);
-  $("btn-start-separation").addEventListener("click", startSeparation);
   $("btn-override").addEventListener("click", toggleOverride);
-  $("btn-set-soc").addEventListener("click", setBatterySoc);
-  $("soc-override-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") setBatterySoc();
-  });
 
   // per-row actions (event delegation — no inline handlers, no globals)
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-act]");
     if (!btn) return;
     if (btn.dataset.act === "clear-failure") clearFailure(btn.dataset.id);
-    else if (btn.dataset.act === "load-breakpoint") loadBreakpoint(btn.dataset.name);
   });
 
   // breakpoints
   $("btn-save-bp").addEventListener("click", saveBreakpoint);
+  $("breakpoint-name").addEventListener("input", updateBpSave);
   $("breakpoint-name").addEventListener("keydown", (e) => {
     if (e.key === "Enter") saveBreakpoint();
   });
+  updateBpSave();
   refreshBreakpoints();
 
   // log panel: collapse + clear
@@ -1304,7 +1417,6 @@ async function init() {
     const panel = $("log-panel");
     const collapsed = panel.classList.toggle("collapsed");
     $("btn-log-toggle").setAttribute("aria-expanded", String(!collapsed));
-    $("btn-log-toggle").textContent = (collapsed ? "▸" : "▾") + " " + tText("EVENT LOG");
   });
 
   // parameter search + raw snapshot
@@ -1317,12 +1429,15 @@ async function init() {
     const container = $("raw-snapshot-container");
     const showing = container.style.display === "block";
     container.style.display = showing ? "none" : "block";
-    $("btn-toggle-raw").textContent = showing ? tText("SHOW RAW SNAPSHOT") : tText("HIDE RAW SNAPSHOT");
+    $("btn-toggle-raw").setAttribute("aria-expanded", String(!showing));
+    $("btn-toggle-raw").textContent = showing ? tText("Show raw snapshot") : tText("Hide raw snapshot");
     if (!showing) updateRawSnapshot();
   });
 
   setConn(false);
-  $("scenario-chip").innerHTML = renderChip({ kind: "neutral", label: tText("NO SCENARIO") });
+  $("scenario-chip").innerHTML = renderChip({ kind: "neutral", label: tText("No scenario running") });
+  updateScenarioButtons();
+  renderFailures([]);
   loadScenarios();
   loadFailureCatalog();
   startWs();

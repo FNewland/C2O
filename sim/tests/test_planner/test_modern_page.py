@@ -169,16 +169,20 @@ def test_index_uses_shared_design_system_and_module_script():
     assert 'type="module"' in html and "/static/modern/planner.js" in html
 
 
-def test_index_data_badges_default_to_em_dash():
-    """P3: no static SIMULATED/LIVE text before /api/time-source resolves."""
+def test_clock_source_chip_hidden_until_time_source_resolves():
+    """P3: no static SIM/REAL text before /api/time-source resolves.
+
+    Design-system pass 2026-11: the six per-panel source badges (each
+    repeating SIM) were folded into ONE clock-source chip in the app bar,
+    which stays hidden (no text at all) until the mode is known."""
     html = (MODERN / "index.html").read_text()
+    m = re.search(r'<span id="clockSourceBadge"([^>]*)>([^<]*)<', html)
+    assert m, "clock-source chip missing"
+    assert "hidden" in m.group(1), "clock-source chip must start hidden (P3)"
+    assert m.group(2).strip() == "", "clock-source chip must carry no static text (P3)"
     for bid in ("mapDataBadge", "contactDataBadge", "activityDataBadge",
                 "powerDataBadge", "dataDataBadge", "imagingDataBadge"):
-        m = re.search(rf'id="{bid}"[^>]*>([^<]*)<', html)
-        assert m, f"data badge {bid} missing"
-        assert m.group(1).strip() == "—", (
-            f"data badge {bid} defaults to '{m.group(1).strip()}' — must be "
-            f"an em-dash until /api/time-source resolves (disposition P3)")
+        assert f'id="{bid}"' not in html, f"per-panel badge {bid} is back"
 
 
 def test_vendor_missing_state_is_designed():
@@ -189,7 +193,7 @@ def test_vendor_missing_state_is_designed():
 
 def test_power_budget_cannot_compute_state_rendered():
     js = (MODERN / "planner.js").read_text()
-    assert "computable" in js and "CANNOT BE COMPUTED" in js, (
+    assert "computable" in js and "cannot be computed" in js.lower(), (
         "the power budget's computable:false answer must render as a "
         "designed state, never a 0%/100% bar (plan §2.2)")
 
@@ -199,9 +203,10 @@ def test_power_budget_cannot_compute_state_rendered():
 def test_fit_verdicts_computed_from_planner_budget_only():
     js = (MODERN / "planner.js").read_text()
     assert "computeFitVerdicts" in js, "G3 fit-verdict join missing"
-    assert "WILL NOT FIT" in js, "no will-not-fit highlight (G3)"
+    assert "will not fit" in js.lower(), "no will-not-fit highlight (G3)"
     # Per-activity achievable vs backlog + per-pass verdict are rendered.
-    assert "DUMP FIT" in js and "ACHIEVABLE" in js
+    html = (MODERN / "index.html").read_text().lower()
+    assert "dump fit" in html and "achievable" in html
     # The join uses served budget-tracker fields, never the MCS.
     assert "pass_downlink" in js and "capacity_mb" in js
     assert "onboard_data_mb" in js

@@ -18,6 +18,9 @@ import textwrap
 from pathlib import Path
 from datetime import datetime
 
+# The shared tool page frame (tools/tool_frame.py) sits next to this file.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 try:
     from aiohttp import web
 except ImportError:
@@ -360,680 +363,463 @@ HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title data-i18n>SMO scenario generator</title>
-__TOOL_HEAD__
+<title data-i18n>Scenario generator</title>
+__FRAME_HEAD__
 <style>
-  /* Light-touch restyle: page-local names mapped onto the shared
-     design-system tokens. Full restyle is a later phase. */
-  :root {
-    --surface: var(--s1); --border: var(--line-2);
-    --text: var(--tx); --muted: var(--tx3); --accent: var(--info);
-    --green: var(--ok); --yellow: var(--warn); --red: var(--alarm);
-    --input-bg: var(--s2);
-  }
-  body { background: var(--bg); color: var(--text); font: 14px/1.6 var(--sans); padding: 24px; max-width: 1280px; }
-  h1 { font-size: 20px; font-weight: 600; color: var(--tx); margin-bottom: 4px; }
-  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 20px; margin-bottom: 20px; }
-  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
-  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 12px; color: var(--tx2); }
-  input, select, textarea {
-    background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 3px; padding: 7px 10px; font-size: 13px; font-family: inherit;
-  }
-  input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--accent); }
-  textarea { resize: vertical; min-height: 72px; }
-  .f-grow { flex: 1 1 200px; }
-  .f-sm { flex: 0 0 120px; }
-  .f-xs { flex: 0 0 90px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--s2); color: var(--tx); font-weight: 600; font-size: 13px;
-    border: 1px solid var(--info); border-radius: 3px; padding: 8px 16px; cursor: pointer;
-  }
-  .btn:hover { background: var(--s3); }
-  .btn-ghost {
-    background: transparent; border: 1px solid var(--border); color: var(--text);
-    border-radius: 3px; padding: 6px 12px; font-size: 13px; cursor: pointer;
-  }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
-  .btn-danger:hover { background: var(--alarm-wash); }
-  #events-list { display: flex; flex-direction: column; gap: 10px; }
-  .event-card {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    padding: 14px; position: relative;
-  }
-  .event-card .ev-title {
-    font-size: 12px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .05em; color: var(--accent); margin-bottom: 10px;
-  }
-  .event-card .remove-btn {
-    position: absolute; top: 10px; right: 10px;
-    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px;
-  }
-  .event-card .remove-btn:hover { color: var(--red); }
-  .add-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  #resp-list { display: flex; flex-direction: column; gap: 8px; }
-  .resp-row { display: flex; gap: 8px; align-items: flex-start; }
-  .resp-row select { flex: 0 0 130px; }
-  .resp-row textarea { flex: 1; min-height: 52px; }
-  .resp-row button { flex: none; margin-top: 2px; }
-  #output-area { display: none; }
-  #yaml-out {
-    background: var(--bg); border: 1px solid var(--line); border-radius: 3px;
-    padding: 14px; font: 13px/1.7 var(--mono);
-    white-space: pre; overflow-x: auto; color: var(--val);
-  }
-  .success-banner {
-    background: var(--s1); border-left: 3px solid var(--ok); border-radius: 3px;
-    padding: 10px 14px; color: var(--tx); font-size: 13px; margin-bottom: 12px;
-    display: none;
-  }
-  .error-banner {
-    background: var(--alarm-wash); border-left: 3px solid var(--alarm); border-radius: 3px;
-    padding: 10px 14px; color: var(--alarm); font-size: 13px; margin-bottom: 12px;
-    display: none;
-  }
-  /* Success modal */
-  #success-modal {
-    display: none; position: fixed; inset: 0; z-index: 999;
-    background: rgba(0,0,0,.6);
-    align-items: center; justify-content: center;
-  }
-  #success-modal.show { display: flex; }
-  .modal-box {
-    background: var(--s1); border: 1px solid var(--line-2); border-left: 3px solid var(--ok);
-    border-radius: 4px; padding: 24px 28px; max-width: 460px; width: 90%;
-  }
-  .modal-title { font-size: 17px; font-weight: 700; color: var(--tx); margin-bottom: 8px; }
-  .modal-sub { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 24px; }
-  .modal-path { color: var(--text); font-family: monospace; }
-  .modal-close {
-    background: var(--s2); color: var(--tx); font-weight: 600;
-    border: 1px solid var(--info); border-radius: 3px; padding: 8px 24px;
-    font-size: 14px; cursor: pointer;
-  }
-  .modal-close:hover { background: var(--s3); }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-  /* Cascade timeline */
-  .cascade-row { display: flex; gap: 0; margin-bottom: 6px; align-items: stretch; }
-  .cascade-time {
-    flex: 0 0 72px; font-size: 12px; color: var(--muted); font-family: monospace;
-    padding-top: 10px; text-align: right; padding-right: 10px;
-  }
-  .cascade-spine { flex: 0 0 24px; display: flex; flex-direction: column; align-items: center; }
-  .cascade-dot {
-    width: 10px; height: 10px; border-radius: 50%; margin-top: 10px; flex-shrink: 0;
-    border: 2px solid;
-  }
-  .cascade-dot.info     { background:#1f3a52; border-color:#58a6ff; }
-  .cascade-dot.warning  { background:#3a2a00; border-color:#d29922; }
-  .cascade-dot.critical { background:#3a0d10; border-color:#f85149; }
-  .cascade-line { flex: 1; width: 2px; background: var(--border); margin-top: 2px; }
-  .cascade-body {
-    flex: 1; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 6px; padding: 8px 12px; margin-bottom: 4px;
-  }
-  .cascade-body.info     { border-left: 3px solid #58a6ff; }
-  .cascade-body.warning  { border-left: 3px solid #d29922; }
-  .cascade-body.critical { border-left: 3px solid #f85149; }
-  .cascade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-  .cascade-subsys {
-    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-    padding: 1px 6px; border-radius: 3px;
-  }
-  .subsys-eps     { background:#1a2a1a; color:#3fb950; }
-  .subsys-aocs    { background:#1a1a2a; color:#79c0ff; }
-  .subsys-tcs     { background:#2a1a00; color:#e3b341; }
-  .subsys-ttc     { background:#2a002a; color:#d2a8ff; }
-  .subsys-obdh    { background:#2a1500; color:#ffa657; }
-  .subsys-payload { background:#1a2a2a; color:#56d364; }
-  .cascade-sev { font-size: 12px; color: var(--muted); }
-  .cascade-sev.critical { color: #f85149; }
-  .cascade-sev.warning  { color: #d29922; }
-  .cascade-effect { font-size: 12px; color: var(--text); }
-  .cascade-source { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .cascade-group-label {
-    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-    color: var(--tx2); margin: 14px 0 6px 96px; padding-bottom: 4px;
-    border-bottom: 1px solid var(--border);
-  }
-  .cascade-empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
-  .extras { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .tag { background: var(--s2); border: 1px solid var(--border); border-radius: 4px;
-         padding: 2px 7px; font-size: 12px; color: var(--muted); }
+/* Scenario generator. Left: the form, one hairline section per concern.
+   Right: the scenario as a picture (events against the duration, with the
+   cascade the model predicts), then the YAML it will save, then Save. */
+.sg-wrap{ display:grid; grid-template-columns:minmax(0,1fr) 440px; gap:var(--sp-4); align-items:start; }
+.sg-side{ position:sticky; top:64px; display:flex; flex-direction:column; gap:var(--sp-4);
+  max-height:calc(100vh - 80px); }
+.sg-meta{ display:grid; grid-template-columns:minmax(0,1fr) 180px 140px; gap:var(--sp-3) var(--sp-4); padding:var(--sp-3) var(--sp-4) var(--sp-4); }
+.sg-meta .full{ grid-column:1 / -1; }
+textarea.ds-input{ min-height:72px; padding:var(--sp-2); font-family:var(--sans); resize:vertical; line-height:var(--lh-text); }
+.sg-ev{ border-top:1px solid var(--line); padding:var(--sp-3) var(--sp-4) var(--sp-4); }
+.sg-ev:first-child{ border-top:0; }
+.sg-ev-h{ display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-3); }
+.sg-ev-h .t{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); min-width:9ch; }
+.sg-ev-h .k{ font-weight:600; color:var(--tx); }
+.sg-ev-h .ds-btn{ margin-left:auto; }
+.sg-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sp-3) var(--sp-3); align-items:end; }
+.sg-grid .w2{ grid-column:span 2; }
+.sg-grid .w4{ grid-column:1 / -1; }
+.sg-grid .ds-field[hidden]{ display:none; }
+.sg-effect{ grid-column:1 / -1; font-size:var(--fs-label); color:var(--tx3); }
+.sg-add{ display:flex; gap:var(--sp-2); padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
+.sg-resp{ display:grid; grid-template-columns:150px minmax(0,1fr) auto; gap:var(--sp-2) var(--sp-3); align-items:start;
+  padding:var(--sp-2) var(--sp-4); border-top:1px solid var(--line); }
+.sg-tl{ padding:var(--sp-2) var(--sp-4) var(--sp-3); }
+.sg-tl .ln{ stroke:var(--line); }
+.sg-tl .inj{ fill:var(--val); }
+.sg-tl .set{ fill:none; stroke:var(--val); stroke-width:1.5; }
+.sg-tl .cw{ fill:var(--bg); stroke:var(--warn); stroke-width:1.5; }
+.sg-tl .cc{ fill:var(--alarm); }
+.sg-tl .ci{ fill:var(--tx3); }
+.sg-tl .lab{ fill:var(--tx2) !important; font-family:var(--sans) !important; }
+.sg-tl .end{ stroke:var(--tx3); stroke-dasharray:2 2; }
+.sg-yaml{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+.sg-yaml pre{ flex:1 1 auto; overflow:auto; margin:0; padding:var(--sp-3) var(--sp-4); font-family:var(--mono);
+  font-size:var(--fs-label); line-height:1.5; color:var(--tx2); background:var(--bg); white-space:pre; min-height:120px; max-height:42vh; }
+.sg-act{ display:flex; gap:var(--sp-2); align-items:center; padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); flex-wrap:wrap; }
+.sg-act .ds-meta{ flex:1 0 100%; }
+.sg-list-empty{ padding:var(--sp-4); color:var(--tx3); }
+@media (max-width:1100px){
+  .sg-wrap{ grid-template-columns:minmax(0,1fr); }
+  .sg-side{ position:static; max-height:none; }
+}
+@media (max-width:720px){
+  .sg-meta{ grid-template-columns:1fr 1fr; } .sg-meta .grow{ grid-column:1 / -1; }
+  .sg-grid{ grid-template-columns:1fr 1fr; } .sg-grid .w2{ grid-column:1 / -1; }
+  .sg-resp{ grid-template-columns:1fr auto; } .sg-resp textarea{ grid-column:1 / -1; }
+}
 </style>
 </head>
 <body>
-
-<h1 data-i18n>SMO scenario generator</h1>
-<p class="subtitle"><span data-i18n>Describe the failures and their timing; the tool writes the scenario YAML to</span> <code>configs/eosat1/scenarios/</code></p>
-
-<!-- METADATA -->
-<div class="card">
-  <h2 data-i18n>Scenario metadata</h2>
-  <div class="row">
-    <div class="field f-grow">
-      <label for="sc-name" data-i18n>Scenario name</label>
-      <input id="sc-name" type="text" placeholder="e.g. Battery thermal runaway" data-i18n-placeholder value="">
+<a class="ds-skip" href="#main" data-i18n>Skip to content</a>
+__FRAME_BAR__
+<main id="main" class="tf-main sg-wrap">
+<div class="ds-stack" style="gap:var(--sp-4)">
+  <section class="ds-panel" aria-labelledby="meta-h">
+    <div class="ds-panel-h"><span id="meta-h" data-i18n>Scenario</span></div>
+    <div class="sg-meta">
+      <div class="ds-field grow" id="f-sc-name">
+        <label for="sc-name" data-i18n>Scenario name</label>
+        <input class="ds-input text" id="sc-name" type="text" placeholder="e.g. Battery thermal runaway" data-i18n-placeholder>
+      </div>
+      <div class="ds-field">
+        <label for="sc-diff" data-i18n>Difficulty</label>
+        <select class="ds-select" id="sc-diff"><option>BASIC</option><option>INTERMEDIATE</option><option selected>ADVANCED</option><option>EXPERT</option></select>
+      </div>
+      <div class="ds-field" id="f-sc-dur">
+        <label for="sc-dur" data-i18n>Duration (s)</label>
+        <span class="ds-input-wrap"><input class="ds-input" id="sc-dur" inputmode="numeric" value="1800"><span class="u">s</span></span>
+      </div>
+      <div class="ds-field full">
+        <label for="sc-brief" data-i18n>Briefing (shown to operators before start)</label>
+        <textarea class="ds-input" id="sc-brief" data-i18n-placeholder placeholder="Describe the scenario narrative and what operators must achieve…"></textarea>
+      </div>
     </div>
-    <div class="field f-sm">
-      <label for="sc-diff" data-i18n>Difficulty</label>
-      <select id="sc-diff">
-        <option>BASIC</option><option>INTERMEDIATE</option>
-        <option selected>ADVANCED</option><option>EXPERT</option>
-      </select>
+  </section>
+
+  <section class="ds-panel" aria-labelledby="ev-h">
+    <div class="ds-panel-h"><span id="ev-h" data-i18n>Failure events and parameter overrides</span><span class="r" id="ev-count"></span></div>
+    <div id="events-list"></div>
+    <div class="sg-add">
+      <button type="button" class="ds-btn" id="add-inject" data-i18n>Add failure</button>
+      <button type="button" class="ds-btn" id="add-set" data-i18n>Add parameter override</button>
     </div>
-    <div class="field f-xs">
-      <label for="sc-dur" data-i18n>Duration (s)</label>
-      <input id="sc-dur" type="number" value="1800" min="60" step="60">
+  </section>
+
+  <section class="ds-panel" aria-labelledby="resp-h">
+    <div class="ds-panel-h"><span id="resp-h" data-i18n>Expected operator responses</span><span class="r" data-i18n>optional, used for scoring</span></div>
+    <div id="resp-list"></div>
+    <div class="sg-add"><button type="button" class="ds-btn" id="add-resp" data-i18n>Add response</button></div>
+  </section>
+</div>
+
+<aside class="sg-side">
+  <section class="ds-panel" aria-labelledby="tl-h">
+    <div class="ds-panel-h"><span id="tl-h" data-i18n>Scenario timeline</span><span class="r" id="tl-meta"></span></div>
+    <div class="sg-tl" id="timeline"></div>
+  </section>
+  <section class="ds-panel sg-yaml" aria-labelledby="y-h">
+    <div class="ds-panel-h"><span id="y-h" data-i18n>Generated YAML</span><span class="r" id="y-file"></span></div>
+    <pre id="yaml-out" tabindex="0" aria-labelledby="y-h"></pre>
+    <div class="sg-act">
+      <button type="button" class="ds-btn primary" id="save-btn" data-i18n>Save scenario</button>
+      <button type="button" class="ds-btn" id="copy-btn" data-i18n>Copy YAML</button>
+      <span class="ds-meta" id="save-note" role="status" aria-live="polite"></span>
     </div>
-  </div>
-  <div class="field">
-    <label for="sc-brief" data-i18n>Briefing (shown to operators before start)</label>
-    <textarea id="sc-brief" data-i18n-placeholder placeholder="Describe the scenario narrative and what operators must achieve…"></textarea>
-  </div>
-</div>
-
-<!-- EVENTS -->
-<div class="card">
-  <h2 data-i18n>Failure events and parameter overrides</h2>
-  <div id="events-list"></div>
-  <div class="add-btns">
-    <button class="btn-ghost" onclick="addInject()" data-i18n>+ Inject failure</button>
-    <button class="btn-ghost" onclick="addSetParam()" data-i18n>+ Set parameter</button>
-  </div>
-</div>
-
-<!-- CASCADE PREVIEW -->
-<div class="card" id="cascade-card" style="display:none">
-  <h2><span data-i18n>Cascade effect preview</span> <span style="color:var(--muted);font-weight:400;font-size:12px" data-i18n>(derived from your failure events)</span></h2>
-  <div id="cascade-timeline"></div>
-</div>
-
-<!-- EXPECTED RESPONSES -->
-<div class="card">
-  <h2><span data-i18n>Expected operator responses</span> <span style="color:var(--muted);font-weight:400;font-size:12px" data-i18n>(optional, used for scoring)</span></h2>
-  <div id="resp-list"></div>
-  <button class="btn-ghost" style="margin-top:10px" onclick="addResponse()" data-i18n>+ Add response</button>
-</div>
-
-<!-- GENERATE -->
-<div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
-  <button class="btn" onclick="generate()" data-i18n>Generate and save YAML</button>
-  <button class="btn-ghost" onclick="preview()" data-i18n>Preview YAML</button>
-</div>
-
-<!-- Success modal -->
-<div id="success-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal-box">
-    <div class="modal-title" id="modal-title" data-i18n>Scenario saved</div>
-    <div class="modal-sub"><span data-i18n>Saved to</span><br><span class="modal-path" id="modal-path"></span></div>
-    <button class="modal-close" onclick="closeModal()" data-i18n>OK</button>
-  </div>
-</div>
-
-<div class="success-banner" id="success-banner" role="status"></div>
-<div class="error-banner" id="error-banner" role="alert"></div>
-
-<div id="output-area">
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h2 style="margin:0" data-i18n>Generated YAML</h2>
-      <button class="btn-ghost" onclick="copyYaml()" data-i18n>Copy</button>
-    </div>
-    <div id="yaml-out"></div>
-  </div>
-</div>
-
-<script>
-// UI language (tool-page.js / i18n.js): T() = translated text.
-const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
-  : String(s).replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => (v && k in v ? v[k] : m));
-// Controls in generated event cards sit in a .field next to a bare <label>;
-// tie each label to its control so it has an accessible name (R3 audit §8).
-let _lblSeq = 0;
-function linkLabels(root) {
-  for (const f of root.querySelectorAll('.field')) {
-    const lab = f.querySelector(':scope > label');
-    const ctl = f.querySelector(':scope > input, :scope > select, :scope > textarea');
-    if (!lab || !ctl || lab.htmlFor) continue;
-    if (!ctl.id) ctl.id = 'fld-' + (++_lblSeq);
-    lab.htmlFor = ctl.id;
-  }
-  for (const c of root.querySelectorAll('input, select, textarea')) {
-    if (c.id && root.querySelector(`label[for="${c.id}"]`)) continue;
-    if (!c.getAttribute('aria-label') && c.placeholder) c.setAttribute('aria-label', c.placeholder);
-  }
-}
-let _inObs = false;
-const _obs = () => {
-  if (_inObs) return;
-  _inObs = true;
-  try {
-    linkLabels(document.body);
-    if (window.SMO_I18N) window.SMO_I18N.applyDom(document.body);   // generated cards
-  } finally { _inObs = false; }
-};
-new MutationObserver(_obs).observe(document.body, { childList: true, subtree: true });
+    <div id="banner"></div>
+  </section>
+</aside>
+</main>
+__FRAME_SCRIPT__
+<script type="module">
+import { renderBanner, renderButton, setDisabled, setEnabled, glyph, esc } from "/static/shared/components.js";
+import I18n from "/static/shared/i18n.js";
+const T = (s, v) => I18n.tText(s, v);
+const $ = (id) => document.getElementById(id);
 const SUBSYSTEMS = """ + json.dumps(SUBSYSTEMS) + r""";
 const PARAMS = """ + json.dumps(PARAMS) + r""";
-const FACES = """ + json.dumps(FACES) + r""";
+const CASCADE = __CASCADE_JSON__;
 
-let evId = 0;
+let evId = 0, saved = null, lastYaml = "", lastErr = {}, exists = false, previewTimer = null;
+
+/* ── building blocks ── */
+const field = (id, label, control, cls = "") => `<div class="ds-field ${cls}" id="f-${id}"><label for="${id}">${esc(label)}</label>${control}</div>`;
+const num = (id, val, unit, attrs = "") => `<span class="ds-input-wrap"><input class="ds-input" id="${id}" inputmode="decimal" value="${esc(val)}"${attrs}>${unit ? `<span class="u">${esc(unit)}</span>` : ""}</span>`;
+const sel = (id, opts, attrs = "") => `<select class="ds-select" id="${id}"${attrs}>${opts}</select>`;
+const opt = (v, l, on) => `<option value="${esc(v)}"${on ? " selected" : ""}>${esc(l)}</option>`;
 
 function addInject() {
   const id = ++evId;
-  const subsysOpts = Object.entries(SUBSYSTEMS).map(([k,v]) =>
-    `<option value="${k}">${v.label}</option>`).join('');
-
-  const div = document.createElement('div');
-  div.className = 'event-card';
-  div.id = `ev-${id}`;
-  div.dataset.type = 'inject';
+  const div = document.createElement("div");
+  div.className = "sg-ev"; div.id = `ev-${id}`; div.dataset.type = "inject";
   div.innerHTML = `
-    <div class="ev-title">${T('Failure injection')}</div>
-    <button class="remove-btn" onclick="removeEv(${id})" aria-label="${T('Remove event')}">&#x2715;</button>
-    <div class="row">
-      <div class="field f-xs">
-        <label>${T('Timing')}</label>
-        <select onchange="toggleTiming(${id}, this.value)">
-          <option value="time">${T('At time (s)')}</option>
-          <option value="condition">${T('Condition')}</option>
-        </select>
-      </div>
-      <div class="field f-xs" id="ev-${id}-time-field">
-        <label>${T('Time offset (s)')}</label>
-        <input type="number" id="ev-${id}-time" value="0" min="0">
-      </div>
-      <div class="field f-grow" id="ev-${id}-cond-field" style="display:none">
-        <label>${T('Condition (e.g. 257 < 60)')}</label>
-        <input type="text" id="ev-${id}-cond" placeholder="param_id_decimal op value">
-        <span class="hint">${T('Use decimal param ID. e.g. 257 < 60 means bat_soc(0x0101=257) < 60')}</span>
-      </div>
-    </div>
-    <div class="row">
-      <div class="field f-sm">
-        <label>${T('Subsystem')}</label>
-        <select id="ev-${id}-sub" onchange="updateFailures(${id})">${subsysOpts}</select>
-      </div>
-      <div class="field f-grow">
-        <label>${T('Failure')}</label>
-        <select id="ev-${id}-fail" onchange="updateExtras(${id})"></select>
-      </div>
-      <div class="field f-xs">
-        <label>${T('Magnitude (0–1)')}</label>
-        <input type="number" id="ev-${id}-mag" value="1.0" min="0" max="1" step="0.05">
-      </div>
-      <div class="field f-sm">
-        <label>${T('Onset')}</label>
-        <select id="ev-${id}-onset" onchange="updateExtras(${id})">
-          <option>step</option><option>gradual</option><option>intermittent</option>
-        </select>
-      </div>
-    </div>
-    <div id="ev-${id}-extras" class="extras"></div>
-    <div class="field" style="margin-top:8px">
-      <label>${T('Label / comment (optional)')}</label>
-      <input type="text" id="ev-${id}-label" placeholder="${T('e.g. SA-2B impact at T+0')}">
-    </div>
-  `;
-  document.getElementById('events-list').appendChild(div);
+    <div class="sg-ev-h"><span class="t" id="ev-${id}-tag"></span><span class="k">${esc(T("Failure injection"))}</span>
+      ${renderButton({ label: T("Remove"), kind: "ghost", size: "sm", attrs: `data-remove="ev-${id}" aria-label="${esc(T("Remove event"))}"` })}</div>
+    <div class="sg-grid">
+      ${field(`ev-${id}-timing`, T("Timing"), sel(`ev-${id}-timing`, opt("time", T("At time (s)")) + opt("condition", T("Condition"))))}
+      ${field(`ev-${id}-time`, T("Time offset (s)"), num(`ev-${id}-time`, 0, "s"))}
+      ${field(`ev-${id}-cond`, T("Condition (e.g. 257 < 60)"), `<input class="ds-input" id="ev-${id}-cond" placeholder="257 < 60">`, "w2").replace('class="ds-field w2"', 'class="ds-field w2" hidden')}
+      ${field(`ev-${id}-sub`, T("Subsystem"), sel(`ev-${id}-sub`, Object.entries(SUBSYSTEMS).map(([k, v]) => opt(k, v.label)).join("")), "w2")}
+      ${field(`ev-${id}-fail`, T("Failure"), sel(`ev-${id}-fail`, ""), "w2")}
+      ${field(`ev-${id}-mag`, T("Magnitude (0–1)"), num(`ev-${id}-mag`, "1.0", ""))}
+      ${field(`ev-${id}-onset`, T("Onset"), sel(`ev-${id}-onset`, ["step", "gradual", "intermittent"].map((o) => opt(o, o)).join("")))}
+      <div class="sg-grid w4" id="ev-${id}-extras" style="padding:0"></div>
+      <p class="sg-effect" id="ev-${id}-effect"></p>
+      ${field(`ev-${id}-label`, T("Label / comment (optional)"), `<input class="ds-input text" id="ev-${id}-label" placeholder="${esc(T("e.g. SA-2B impact at T+0"))}">`, "w4")}
+    </div>`;
+  $("events-list").appendChild(div);
   updateFailures(id);
-  scheduleCascadeUpdate();
+  changed();
 }
-
 function addSetParam() {
   const id = ++evId;
-  const paramOpts = PARAMS.map(p =>
-    `<option value="${p.id}" data-name="${p.name}">${p.desc} (${p.id})</option>`).join('');
-
-  const div = document.createElement('div');
-  div.className = 'event-card';
-  div.id = `ev-${id}`;
-  div.dataset.type = 'set_parameter';
+  const div = document.createElement("div");
+  div.className = "sg-ev"; div.id = `ev-${id}`; div.dataset.type = "set_parameter";
   div.innerHTML = `
-    <div class="ev-title">${T('Set parameter')}</div>
-    <button class="remove-btn" onclick="removeEv(${id})" aria-label="${T('Remove event')}">&#x2715;</button>
-    <div class="row">
-      <div class="field f-xs">
-        <label>${T('Time offset (s)')}</label>
-        <input type="number" id="ev-${id}-time" value="0" min="0">
-      </div>
-      <div class="field f-grow">
-        <label>${T('Parameter')}</label>
-        <select id="ev-${id}-param">${paramOpts}</select>
-      </div>
-      <div class="field f-xs">
-        <label>${T('Value')}</label>
-        <input type="number" id="ev-${id}-value" value="0" step="any">
-      </div>
-    </div>
-    <div class="field" style="margin-top:4px">
-      <label>${T('Label / comment (optional)')}</label>
-      <input type="text" id="ev-${id}-label" placeholder="${T('e.g. Force bus voltage low')}">
-    </div>
-  `;
-  document.getElementById('events-list').appendChild(div);
+    <div class="sg-ev-h"><span class="t" id="ev-${id}-tag"></span><span class="k">${esc(T("Set parameter"))}</span>
+      ${renderButton({ label: T("Remove"), kind: "ghost", size: "sm", attrs: `data-remove="ev-${id}" aria-label="${esc(T("Remove event"))}"` })}</div>
+    <div class="sg-grid">
+      ${field(`ev-${id}-time`, T("Time offset (s)"), num(`ev-${id}-time`, 0, "s"))}
+      ${field(`ev-${id}-param`, T("Parameter"), sel(`ev-${id}-param`, PARAMS.map((p) => `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-unit="${esc(p.unit || "")}">${esc(p.desc)} (${esc(p.id)})</option>`).join("")), "w2")}
+      ${field(`ev-${id}-value`, T("Value"), num(`ev-${id}-value`, 0, PARAMS[0] ? PARAMS[0].unit : ""))}
+      ${field(`ev-${id}-label`, T("Label / comment (optional)"), `<input class="ds-input text" id="ev-${id}-label" placeholder="${esc(T("e.g. Force bus voltage low"))}">`, "w4")}
+    </div>`;
+  $("events-list").appendChild(div);
+  changed();
 }
-
-function removeEv(id) {
-  document.getElementById(`ev-${id}`)?.remove();
-}
-
-function toggleTiming(id, val) {
-  document.getElementById(`ev-${id}-time-field`).style.display = val === 'time' ? '' : 'none';
-  document.getElementById(`ev-${id}-cond-field`).style.display = val === 'condition' ? '' : 'none';
+function addResponse() {
+  const id = ++evId;
+  const div = document.createElement("div");
+  div.className = "sg-resp"; div.id = `resp-${id}`;
+  div.innerHTML = `<select class="ds-select" aria-label="${esc(T("Response category"))}">${["detect", "isolate", "recover", "verify"].map((c) => opt(c, c)).join("")}</select>` +
+    `<textarea class="ds-input" aria-label="${esc(T("Expected response"))}" placeholder="${esc(T("Describe what the operator should do…"))}"></textarea>` +
+    renderButton({ label: T("Remove"), kind: "ghost", size: "sm", attrs: `data-remove="resp-${id}" aria-label="${esc(T("Remove response"))}"` });
+  $("resp-list").appendChild(div);
+  changed();
 }
 
 function updateFailures(id) {
-  const sub = document.getElementById(`ev-${id}-sub`).value;
-  const failures = SUBSYSTEMS[sub]?.failures || {};
-  const sel = document.getElementById(`ev-${id}-fail`);
-  sel.innerHTML = Object.entries(failures)
-    .map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+  const sub = $(`ev-${id}-sub`).value;
+  $(`ev-${id}-fail`).innerHTML = Object.entries(SUBSYSTEMS[sub]?.failures || {}).map(([k, v]) => opt(k, v.label)).join("");
   updateExtras(id);
 }
-
-// Render the typed parameter controls for the selected failure, straight from
-// its ParamSpec list. Nothing about a failure's parameters is written here:
-// the enum values, the ranges, the engineering units and the labels all come
-// from the model's own FAILURE_SPECS via /api catalogue -> SUBSYSTEMS.
+// Typed parameter controls straight from the failure's ParamSpec list.
 function updateExtras(id) {
-  const sub = document.getElementById(`ev-${id}-sub`).value;
-  const fail = document.getElementById(`ev-${id}-fail`).value;
-  const onset = document.getElementById(`ev-${id}-onset`).value;
+  const sub = $(`ev-${id}-sub`).value, fail = $(`ev-${id}-fail`).value, onset = $(`ev-${id}-onset`).value;
   const spec = SUBSYSTEMS[sub]?.failures?.[fail];
-  const container = document.getElementById(`ev-${id}-extras`);
-  let html = '';
-
+  let html = "";
   for (const p of (spec?.params || [])) {
-    const cid = `ev-${id}-p-${p.name}`;
-    const unit = p.unit ? ` [${p.unit}]` : '';
-    const label = `<label>${p.label || p.name}${unit}</label>`;
-    if (p.type === 'bool') {
-      html += `<div class="field f-xs">${label}
-        <select id="${cid}" data-param="${p.name}">
-          <option value="true"${p.default ? ' selected' : ''}>${T('Yes')}</option>
-          <option value="false"${p.default ? '' : ' selected'}>${T('No')}</option>
-        </select></div>`;
-    } else if (p.type === 'enum') {
-      const values = p.values || [];
-      const labels = p.value_labels || values.map(String);
-      const defs = Array.isArray(p.default) ? p.default.map(String)
-                 : (p.default === null || p.default === undefined ? [] : [String(p.default)]);
-      const opts = values.map((v, i) =>
-        `<option value="${v}"${defs.includes(String(v)) ? ' selected' : ''}>${labels[i]}</option>`).join('');
-      const multi = p.multi ? ' multiple size="4"' : '';
-      html += `<div class="field f-xs">${label}
-        <select id="${cid}" data-param="${p.name}" data-multi="${p.multi ? '1' : ''}"${multi}>${opts}</select></div>`;
+    const cid = `ev-${id}-p-${p.name}`, label = (p.label || p.name);
+    if (p.type === "bool") {
+      html += field(cid, label, sel(cid, opt("true", T("Yes"), !!p.default) + opt("false", T("No"), !p.default), ` data-param="${esc(p.name)}"`));
+    } else if (p.type === "enum") {
+      const values = p.values || [], labels = p.value_labels || values.map(String);
+      const defs = Array.isArray(p.default) ? p.default.map(String) : (p.default == null ? [] : [String(p.default)]);
+      html += field(cid, label, sel(cid, values.map((v, i) => opt(v, labels[i], defs.includes(String(v)))).join(""),
+        ` data-param="${esc(p.name)}" data-multi="${p.multi ? "1" : ""}"${p.multi ? ' multiple size="4"' : ""}`));
     } else {
-      const step = p.type === 'int' ? 1 : (p.step || 'any');
-      const min = (p.min === null || p.min === undefined) ? '' : ` min="${p.min}"`;
-      const max = (p.max === null || p.max === undefined) ? '' : ` max="${p.max}"`;
-      const val = (p.default === null || p.default === undefined) ? '' : ` value="${p.default}"`;
-      html += `<div class="field f-xs">${label}
-        <input type="number" id="${cid}" data-param="${p.name}" data-ptype="${p.type}" step="${step}"${min}${max}${val}></div>`;
+      const lim = [p.min, p.max];
+      html += field(cid, label, num(cid, p.default ?? "", p.unit || "",
+        ` data-param="${esc(p.name)}" data-ptype="${esc(p.type)}" data-min="${lim[0] ?? ""}" data-max="${lim[1] ?? ""}"`));
     }
   }
-  if (onset === 'gradual') {
-    html += `<div class="field f-xs"><label>${T('Onset duration (s)')}</label>
-      <input type="number" id="ev-${id}-onset-dur" value="60" min="1"></div>`;
-  }
-  container.innerHTML = html;
+  if (onset === "gradual") html += field(`ev-${id}-onset-dur`, T("Onset duration (s)"), num(`ev-${id}-onset-dur`, 60, "s"));
+  $(`ev-${id}-extras`).innerHTML = html;
+  $(`ev-${id}-effect`).textContent = spec && spec.effect ? spec.effect : "";
 }
-
-// Read every generated parameter control back, typed.
 function collectExtras(id) {
   const out = {};
-  document.querySelectorAll(`#ev-${id}-extras [data-param]`).forEach(el => {
+  document.querySelectorAll(`#ev-${id}-extras [data-param]`).forEach((el) => {
     const name = el.dataset.param;
     if (el.dataset.multi) {
-      const vals = Array.from(el.selectedOptions).map(o => {
-        const n = Number(o.value);
-        return Number.isFinite(n) && o.value.trim() !== '' ? n : o.value;
-      });
-      if (vals.length) out[name] = vals;
-      return;
+      const vals = Array.from(el.selectedOptions).map((o) => { const n = Number(o.value); return Number.isFinite(n) && o.value.trim() !== "" ? n : o.value; });
+      if (vals.length) out[name] = vals; return;
     }
-    const raw = (el.value ?? '').toString().trim();
-    if (raw === '') return;
-    if (raw === 'true' || raw === 'false') { out[name] = (raw === 'true'); return; }
-    const num = Number(raw);
-    out[name] = (Number.isFinite(num) && el.tagName !== 'SELECT') ? num
-              : (Number.isFinite(num) ? num : raw);
+    const raw = (el.value ?? "").toString().trim();
+    if (raw === "") return;
+    if (raw === "true" || raw === "false") { out[name] = raw === "true"; return; }
+    const n = Number(raw); out[name] = Number.isFinite(n) ? n : raw;
   });
   return out;
 }
 
-function addResponse() {
-  const id = ++evId;
-  const cats = ['detect','isolate','recover','verify'].map(c =>
-    `<option value="${c}">${c}</option>`).join('');
-  const div = document.createElement('div');
-  div.className = 'resp-row';
-  div.id = `resp-${id}`;
-  div.innerHTML = `
-    <select aria-label="${T('Response category')}">${cats}</select>
-    <textarea aria-label="${T('Expected response')}" placeholder="${T('Describe what the operator should do…')}"></textarea>
-    <button class="btn-ghost btn-danger" aria-label="${T('Remove response')}" onclick="document.getElementById('resp-${id}').remove()">&#x2715;</button>
-  `;
-  document.getElementById('resp-list').appendChild(div);
-}
-
 function collectData() {
-  const name = document.getElementById('sc-name').value.trim() || 'Custom Scenario';
-  const difficulty = document.getElementById('sc-diff').value;
-  const duration_s = parseInt(document.getElementById('sc-dur').value) || 1800;
-  const briefing = document.getElementById('sc-brief').value.trim();
-
   const events = [];
-  document.querySelectorAll('#events-list .event-card').forEach(card => {
-    const id = card.id.replace('ev-', '');
-    const type = card.dataset.type;
-
-    if (type === 'inject') {
-      const timingType = card.querySelector('select').value;
-      const ev = {
-        type: 'inject',
-        timing_type: timingType,
-        time_offset_s: parseInt(document.getElementById(`ev-${id}-time`)?.value) || 0,
-        condition: document.getElementById(`ev-${id}-cond`)?.value?.trim() || '',
-        subsystem: document.getElementById(`ev-${id}-sub`).value,
-        failure: document.getElementById(`ev-${id}-fail`).value,
-        magnitude: parseFloat(document.getElementById(`ev-${id}-mag`).value) || 1.0,
-        onset: document.getElementById(`ev-${id}-onset`).value,
-        onset_duration_s: document.getElementById(`ev-${id}-onset-dur`)?.value || '',
-        ...collectExtras(id),
-        label: document.getElementById(`ev-${id}-label`)?.value?.trim() || '',
-      };
-      events.push(ev);
-    } else {
-      const sel = document.getElementById(`ev-${id}-param`);
-      const opt = sel.options[sel.selectedIndex];
+  document.querySelectorAll("#events-list .sg-ev").forEach((card) => {
+    const id = card.id.replace("ev-", "");
+    if (card.dataset.type === "inject") {
       events.push({
-        type: 'set_parameter',
-        time_offset_s: parseInt(document.getElementById(`ev-${id}-time`).value) || 0,
-        param_id: sel.value,
-        param_name: opt.dataset.name || sel.value,
-        value: parseFloat(document.getElementById(`ev-${id}-value`).value) || 0,
-        label: document.getElementById(`ev-${id}-label`)?.value?.trim() || '',
+        type: "inject", timing_type: $(`ev-${id}-timing`).value,
+        time_offset_s: parseInt($(`ev-${id}-time`).value) || 0,
+        condition: ($(`ev-${id}-cond`).value || "").trim(),
+        subsystem: $(`ev-${id}-sub`).value, failure: $(`ev-${id}-fail`).value,
+        magnitude: parseFloat($(`ev-${id}-mag`).value) || 1.0, onset: $(`ev-${id}-onset`).value,
+        onset_duration_s: $(`ev-${id}-onset-dur`) ? $(`ev-${id}-onset-dur`).value : "",
+        ...collectExtras(id), label: ($(`ev-${id}-label`).value || "").trim(),
       });
-    }
-  });
-
-  const expected_responses = [];
-  document.querySelectorAll('#resp-list .resp-row').forEach(row => {
-    const cat = row.querySelector('select').value;
-    const desc = row.querySelector('textarea').value.trim();
-    if (desc) expected_responses.push({ category: cat, description: desc });
-  });
-
-  return { name, difficulty, duration_s, briefing, events, expected_responses };
-}
-
-async function generate() {
-  const data = collectData();
-  hideBanners();
-  try {
-    const res = await fetch('/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, save: true }),
-    });
-    const j = await res.json();
-    if (j.ok) {
-      showModal(j.path);
-      showYaml(j.yaml);
     } else {
-      showError(j.error || T('Unknown error'));
+      const s = $(`ev-${id}-param`), o = s.options[s.selectedIndex];
+      events.push({ type: "set_parameter", time_offset_s: parseInt($(`ev-${id}-time`).value) || 0,
+        param_id: s.value, param_name: o ? o.dataset.name : s.value,
+        value: parseFloat($(`ev-${id}-value`).value) || 0, label: ($(`ev-${id}-label`).value || "").trim() });
     }
-  } catch(e) { showError(String(e)); }
+  });
+  const expected_responses = [];
+  document.querySelectorAll("#resp-list .sg-resp").forEach((row) => {
+    const d = row.querySelector("textarea").value.trim();
+    if (d) expected_responses.push({ category: row.querySelector("select").value, description: d });
+  });
+  return { name: $("sc-name").value.trim() || "Custom Scenario", difficulty: $("sc-diff").value,
+    duration_s: parseInt($("sc-dur").value) || 1800, briefing: $("sc-brief").value.trim(), events, expected_responses };
 }
 
+/* ── validation: errors block saving; cautions are shown, never block ── */
+// Field messages appear once a field has been visited (or Save was tried):
+// an untouched form is not an error, the Save button's reason says what is missing.
+const touched = new Set();
+let showAll = false;
+function setErr(id, msg, kind = "err") {
+  if (msg && !showAll && !touched.has(id)) msg = "";
+  const f = $("f-" + id), inp = $(id);
+  if (!f || !inp) return;
+  f.classList.toggle("is-invalid", kind === "err" && !!msg);
+  f.querySelectorAll(".err,.hint.sg-c").forEach((e) => e.remove());
+  if (msg) {
+    const e = document.createElement("span");
+    e.id = id + "-msg";
+    if (kind === "err") { e.className = "err"; e.innerHTML = glyph("alarm-up") + esc(msg); inp.setAttribute("aria-invalid", "true"); }
+    else { e.className = "hint sg-c"; e.style.color = "var(--warn)"; e.innerHTML = glyph("warn-up") + " " + esc(msg); inp.removeAttribute("aria-invalid"); }
+    f.appendChild(e); inp.setAttribute("aria-describedby", e.id);
+  } else { inp.removeAttribute("aria-invalid"); inp.removeAttribute("aria-describedby"); }
+}
+function validate() {
+  const errs = [], dur = Number($("sc-dur").value);
+  const bad = (id, msg) => { setErr(id, msg); errs.push(msg); };
+  if (!$("sc-name").value.trim()) bad("sc-name", T("Name the scenario: the file name comes from it."));
+  else setErr("sc-name", "");
+  if (!Number.isInteger(dur) || dur < 60) bad("sc-dur", T("At least 60 s, whole seconds."));
+  else setErr("sc-dur", "");
+  const cards = document.querySelectorAll("#events-list .sg-ev");
+  cards.forEach((card) => {
+    const id = card.id.replace("ev-", "");
+    const timed = card.dataset.type !== "inject" || $(`ev-${id}-timing`).value === "time";
+    if (timed) {
+      const t = Number($(`ev-${id}-time`).value);
+      if (!Number.isFinite(t) || t < 0) bad(`ev-${id}-time`, T("A time of 0 s or later."));
+      else setErr(`ev-${id}-time`, t > dur ? T("After the end of the scenario ({{d}} s).", { d: dur }) : "", "caution");
+    } else {
+      const c = ($(`ev-${id}-cond`).value || "").trim();
+      if (!/^\d+\s*(<=|>=|==|!=|<|>)\s*-?\d+(\.\d+)?$/.test(c)) bad(`ev-${id}-cond`, T("Write it as: decimal parameter ID, operator, value (257 < 60)."));
+      else setErr(`ev-${id}-cond`, "");
+    }
+    if (card.dataset.type === "inject") {
+      const m = Number($(`ev-${id}-mag`).value);
+      if (!(m >= 0 && m <= 1)) bad(`ev-${id}-mag`, T("Between 0 and 1.")); else setErr(`ev-${id}-mag`, "");
+      card.querySelectorAll("[data-ptype]").forEach((el) => {
+        const v = el.value.trim(); if (v === "") return setErr(el.id, "");
+        const n = Number(v), lo = el.dataset.min, hi = el.dataset.max;
+        if (!Number.isFinite(n) || (lo !== "" && n < +lo) || (hi !== "" && n > +hi) || (el.dataset.ptype === "int" && !Number.isInteger(n)))
+          bad(el.id, lo !== "" && hi !== "" ? T("Between {{a}} and {{b}}.", { a: lo, b: hi }) : T("Enter a number."));
+        else setErr(el.id, "");
+      });
+    } else {
+      const v = Number($(`ev-${id}-value`).value);
+      if (!Number.isFinite(v) || $(`ev-${id}-value`).value.trim() === "") bad(`ev-${id}-value`, T("Enter a number.")); else setErr(`ev-${id}-value`, "");
+    }
+    const tag = $(`ev-${id}-tag`);
+    if (tag) tag.textContent = timed ? `T+${$(`ev-${id}-time`).value || 0} s` : T("on condition");
+  });
+  if (!cards.length) errs.push(T("Add at least one failure or parameter override."));
+  $("ev-count").textContent = cards.length ? T("{{n}} event(s)", { n: cards.length }) : "";
+  if (!cards.length && !$("events-list").querySelector(".sg-list-empty"))
+    $("events-list").innerHTML = `<p class="sg-list-empty">${esc(T("No events yet. A scenario needs at least one failure or parameter override."))}</p>`;
+  if (cards.length) { const e = $("events-list").querySelector(".sg-list-empty"); if (e) e.remove(); }
+  if (!$("resp-list").children.length) $("resp-list").innerHTML = `<p class="sg-list-empty">${esc(T("No expected responses. Add them to score the class."))}</p>`;
+  else if ($("resp-list").children.length > 1) { const e = $("resp-list").querySelector(".sg-list-empty"); if (e) e.remove(); }
+  const sb = $("save-btn");
+  if (errs.length) setDisabled(sb, errs.length === 1 ? errs[0] : T("{{n}} problems to fix first. The first: {{e}}", { n: errs.length, e: errs[0] }));
+  else setEnabled(sb);
+  return !errs.length;
+}
+
+/* ── saved / not saved ── */
+function paintSaveState() {
+  const st = $("tf-status");
+  const cur = JSON.stringify(collectData());
+  if (!saved) st.innerHTML = `<span class="ds-chip is-stale">${esc(T("Not saved"))}</span>`;
+  else if (saved.data !== cur) st.innerHTML = `<span class="ds-chip is-caution">${glyph("warn-up")}${esc(T("Changed since saved"))}</span>`;
+  else st.innerHTML = `<span class="ds-chip ok">${glyph("ack")}${esc(T("Saved"))}</span>`;
+  const note = $("save-note");
+  note.textContent = saved && saved.data === cur ? T("Saved to {{path}} at {{t}}", { path: saved.path, t: saved.time })
+    : exists ? T("A scenario file with this name exists: saving replaces it.") : "";
+  note.style.color = !(saved && saved.data === cur) && exists ? "var(--warn)" : "";
+}
+
+/* ── live preview: the YAML that Save would write ── */
 async function preview() {
-  const data = collectData();
-  hideBanners();
   try {
-    const res = await fetch('/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, save: false }),
-    });
-    const j = await res.json();
-    if (j.ok) showYaml(j.yaml);
-    else showError(j.error || T('Unknown error'));
-  } catch(e) { showError(String(e)); }
+    const r = await fetch("generate", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...collectData(), save: false }) });
+    const j = await r.json();
+    if (j.ok) { lastYaml = j.yaml; $("yaml-out").textContent = j.yaml; $("y-file").textContent = j.filename; exists = !!j.exists; }
+    else $("banner").innerHTML = renderBanner("alarm", j.error || T("Unknown error"));
+  } catch (e) { $("banner").innerHTML = renderBanner("alarm", String(e)); }
+  paintSaveState();
 }
-
-function showYaml(text) {
-  document.getElementById('yaml-out').textContent = text;
-  document.getElementById('output-area').style.display = '';
-  document.getElementById('output-area').scrollIntoView({ behavior: 'smooth' });
+function changed() {
+  validate(); drawTimeline(); paintSaveState();
+  clearTimeout(previewTimer); previewTimer = setTimeout(preview, 250);
 }
-function copyYaml() {
-  navigator.clipboard.writeText(document.getElementById('yaml-out').textContent);
-}
-// ── Cascade preview ──────────────────────────────────────────────────────────
-const CASCADE_MAP_DATA = __CASCADE_JSON__;
-
-function buildCascadeMap() {
-  return CASCADE_MAP_DATA;
-}
-
-const SUBSYS_COLOR = {
-  eps:'subsys-eps', aocs:'subsys-aocs', tcs:'subsys-tcs',
-  ttc:'subsys-ttc', obdh:'subsys-obdh', payload:'subsys-payload'
-};
-
-function renderCascades() {
-  const cmap = buildCascadeMap();
-  const cards = document.querySelectorAll('#events-list .event-card[data-type="inject"]');
-  const container = document.getElementById('cascade-timeline');
-  const card = document.getElementById('cascade-card');
-
-  // Collect all events with their base time
-  const allEffects = [];
-  cards.forEach(evCard => {
-    const id = evCard.id.replace('ev-', '');
-    const sub = document.getElementById(`ev-${id}-sub`)?.value;
-    const fail = document.getElementById(`ev-${id}-fail`)?.value;
-    const timeOffset = parseInt(document.getElementById(`ev-${id}-time`)?.value) || 0;
-    const timingType = evCard.querySelector('select')?.value;
-    const key = `${sub}::${fail}`;
-    const effects = cmap[key];
-    if (!effects) return;
-    effects.forEach(e => {
-      const absTime = timingType === 'condition' ? null : timeOffset + (e.delay_s || 0);
-      allEffects.push({ ...e, source_sub: sub, source_fail: fail, base_t: timeOffset, abs_t: absTime });
-    });
-  });
-
-  if (allEffects.length === 0) {
-    card.style.display = 'none';
-    return;
+async function save() {
+  showAll = true;
+  if (!validate()) return;
+  const sb = $("save-btn"), label = sb.textContent;
+  sb.classList.add("is-active"); sb.innerHTML = `<span class="ds-run" aria-hidden="true"></span>${esc(T("Saving…"))}`;
+  $("banner").innerHTML = "";
+  try {
+    const data = collectData();
+    const r = await fetch("generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, save: true }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || T("Unknown error"));
+    saved = { data: JSON.stringify(data), path: j.path, time: new Date().toTimeString().slice(0, 5) };
+    lastYaml = j.yaml; $("yaml-out").textContent = j.yaml; exists = true;
+  } catch (e) {
+    $("banner").innerHTML = renderBanner("alarm", T("Not saved: {{msg}}", { msg: e.message }), { role: "alert" });
+  } finally {
+    sb.classList.remove("is-active"); sb.textContent = label;
+    paintSaveState();
   }
-  card.style.display = '';
+}
 
-  // Sort by absolute time (null = conditional, goes at end)
-  allEffects.sort((a, b) => {
-    if (a.abs_t === null && b.abs_t === null) return 0;
-    if (a.abs_t === null) return 1;
-    if (b.abs_t === null) return -1;
-    return a.abs_t - b.abs_t;
+/* ── the picture: events and predicted cascade against the duration ── */
+const SUBS = ["eps", "aocs", "tcs", "obdh", "ttc", "payload", "prop"];
+function drawTimeline() {
+  const host = $("timeline"), data = collectData(), dur = Math.max(60, data.duration_s);
+  const W = Math.max(280, host.clientWidth - 32), L = 64, R = 10, laneH = 22, top = 6;
+  const used = new Set();
+  const items = [];
+  data.events.forEach((e) => {
+    const t = e.type === "inject" && e.timing_type === "condition" ? null : e.time_offset_s;
+    const sub = e.type === "inject" ? e.subsystem : (e.param_name || "").split(".")[0];
+    items.push({ t, sub, kind: e.type === "inject" ? "inj" : "set", tip: e.type === "inject" ? `${e.subsystem}: ${e.failure}` : `${e.param_name} = ${e.value}` });
+    if (e.type === "inject") for (const c of (CASCADE[`${e.subsystem}::${e.failure}`] || []))
+      items.push({ t: t == null ? null : t + (c.delay_s || 0), sub: c.to, kind: c.severity === "critical" ? "cc" : c.severity === "warning" ? "cw" : "ci", tip: c.effect });
   });
-
-  let html = '';
-  const seen = new Set();
-  allEffects.forEach((e, i) => {
-    const key = `${e.abs_t}|${e.to}|${e.effect}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    const isLast = i === allEffects.length - 1;
-    const timeLabel = e.abs_t === null ? 'condition' : `T+${fmtTime(e.abs_t)}`;
-    const subsysClass = SUBSYS_COLOR[e.to] || 'subsys-payload';
-    const sevLabel = e.severity === 'critical' ? 'CRITICAL' : e.severity === 'warning' ? 'WARNING' : 'INFO';
-    html += `
-      <div class="cascade-row">
-        <div class="cascade-time">${timeLabel}</div>
-        <div class="cascade-spine">
-          <div class="cascade-dot ${e.severity}"></div>
-          ${isLast ? '' : '<div class="cascade-line"></div>'}
-        </div>
-        <div class="cascade-body ${e.severity}">
-          <div class="cascade-header">
-            <span class="cascade-subsys ${subsysClass}">${e.to.toUpperCase()}</span>
-            <span class="cascade-sev ${e.severity}">${sevLabel}</span>
-          </div>
-          <div class="cascade-effect">${e.effect}</div>
-          <div class="cascade-source">← from ${e.source_sub}::${e.source_fail} at T+${fmtTime(e.base_t)}</div>
-        </div>
-      </div>`;
+  items.forEach((i) => used.add(i.sub));
+  const lanes = SUBS.filter((s) => used.has(s)).concat([...used].filter((s) => !SUBS.includes(s)));
+  if (!lanes.length) { host.innerHTML = `<p class="ds-meta" style="padding:var(--sp-3) 0">${esc(T("Add an event to see it on the timeline."))}</p>`; $("tl-meta").textContent = ""; return; }
+  const maxT = Math.max(dur, ...items.filter((i) => i.t != null).map((i) => i.t));
+  const X = (t) => L + (t / maxT) * (W - L - R);
+  const H = top + lanes.length * laneH + 22;
+  let s = `<svg class="tf-plot" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="tl-h tl-desc">` +
+    `<desc id="tl-desc">${esc(T("Events and the cascade the model predicts, one lane per subsystem, over the scenario duration."))}</desc>`;
+  const step = [60, 120, 300, 600, 900, 1800, 3600, 7200].find((x) => maxT / x <= 6) || 7200;
+  for (let t = 0; t <= maxT; t += step) s += `<line class="grid" x1="${X(t)}" y1="${top}" x2="${X(t)}" y2="${H - 18}"/><text x="${X(t)}" y="${H - 4}" text-anchor="${t ? "middle" : "start"}">${t >= 60 ? (t / 60) + " min" : t + " s"}</text>`;
+  if (maxT > dur) s += `<line class="end" x1="${X(dur)}" y1="${top}" x2="${X(dur)}" y2="${H - 18}"><title>${esc(T("End of the scenario"))}</title></line>`;
+  lanes.forEach((ln, i) => {
+    const y = top + i * laneH + laneH / 2;
+    s += `<line class="ln" x1="${L}" y1="${y + laneH / 2}" x2="${W - R}" y2="${y + laneH / 2}"/><text class="lab" x="0" y="${y + 4}">${esc(ln.toUpperCase())}</text>`;
+    for (const it of items.filter((q) => q.sub === ln)) {
+      const x = it.t == null ? W - R - 4 : X(it.t), tip = `<title>${esc((it.t == null ? T("on condition") : `T+${it.t} s`) + " · " + it.tip)}</title>`;
+      s += it.kind === "inj" ? `<rect class="inj" x="${x - 4}" y="${y - 6}" width="8" height="12" rx="1">${tip}</rect>`
+        : it.kind === "set" ? `<rect class="set" x="${x - 4}" y="${y - 5}" width="8" height="10" rx="1">${tip}</rect>`
+        : `<path class="${it.kind}" d="M${x} ${y - 6}L${x + 6} ${y + 5}L${x - 6} ${y + 5}Z">${tip}</path>`;
+    }
   });
-  container.innerHTML = html;
+  s += `</svg>`;
+  host.innerHTML = s +
+    `<div class="ds-row ds-meta" style="margin-top:var(--sp-2);gap:var(--sp-1) var(--sp-4)">` +
+    `<span><svg width="10" height="12" aria-hidden="true"><rect class="inj" x="1" y="0" width="8" height="12" style="fill:var(--val)"/></svg> ${esc(T("Failure"))}</span>` +
+    `<span><svg width="10" height="12" aria-hidden="true"><rect x="1" y="1" width="8" height="10" style="fill:none;stroke:var(--val);stroke-width:1.5"/></svg> ${esc(T("Override"))}</span>` +
+    `<span><svg width="12" height="12" aria-hidden="true"><path d="M6 0L12 11L0 11Z" style="fill:var(--bg);stroke:var(--warn);stroke-width:1.5"/></svg> ${esc(T("Predicted warning"))}</span>` +
+    `<span><svg width="12" height="12" aria-hidden="true"><path d="M6 0L12 11L0 11Z" style="fill:var(--alarm)"/></svg> ${esc(T("Predicted critical"))}</span></div>`;
+  $("tl-meta").textContent = T("{{d}} min", { d: (dur / 60).toFixed(0) });
 }
 
-function fmtTime(s) {
-  if (s === null) return '?';
-  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
-  return m > 0 ? `${m}m${sec.toString().padStart(2,'0')}s` : `${sec}s`;
-}
-
-function scheduleCascadeUpdate() {
-  clearTimeout(window._cascTimer);
-  window._cascTimer = setTimeout(renderCascades, 200);
-}
-// Observe events list for any change
-new MutationObserver(scheduleCascadeUpdate)
-  .observe(document.getElementById('events-list'), { childList: true, subtree: true, attributes: true, characterData: true });
-
-function showModal(path) {
-  document.getElementById('modal-path').textContent = path;
-  document.getElementById('success-modal').classList.add('show');
-}
-function closeModal() {
-  document.getElementById('success-modal').classList.remove('show');
-}
-// Close modal on backdrop click
-document.getElementById('success-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+/* ── wiring ── */
+$("add-inject").addEventListener("click", addInject);
+$("add-set").addEventListener("click", addSetParam);
+$("add-resp").addEventListener("click", addResponse);
+$("save-btn").addEventListener("click", save);
+$("copy-btn").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(lastYaml); $("save-note").textContent = T("YAML copied."); } catch (e) { /* no clipboard */ }
 });
-function showSuccess(msg) {
-  const b = document.getElementById('success-banner');
-  b.textContent = '✓ ' + msg; b.style.display = '';
-}
-function showError(msg) {
-  const b = document.getElementById('error-banner');
-  b.textContent = '✗ ' + msg; b.style.display = '';
-}
-function hideBanners() {
-  document.getElementById('success-banner').style.display = 'none';
-  document.getElementById('error-banner').style.display = 'none';
-}
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-remove]");
+  if (b) { $(b.dataset.remove)?.remove(); changed(); }
+});
+$("main").addEventListener("change", (ev) => {
+  const m = /^ev-(\d+)-(sub|fail|onset|timing|param)$/.exec(ev.target.id || "");
+  if (m) {
+    const id = m[1];
+    if (m[2] === "sub") updateFailures(id);
+    if (m[2] === "fail" || m[2] === "onset") updateExtras(id);
+    if (m[2] === "timing") {
+      const cond = ev.target.value === "condition";
+      $(`f-ev-${id}-time`).hidden = cond; $(`f-ev-${id}-cond`).hidden = !cond;
+    }
+    if (m[2] === "param") {
+      const o = ev.target.options[ev.target.selectedIndex], u = $(`f-ev-${id}-value`).querySelector(".u");
+      if (u) u.textContent = o.dataset.unit || "";
+    }
+  }
+  changed();
+});
+$("main").addEventListener("input", changed);
+$("main").addEventListener("focusout", (ev) => { if (ev.target.id) { touched.add(ev.target.id); validate(); } });
+window.addEventListener("beforeunload", (ev) => {
+  if ((saved && saved.data !== JSON.stringify(collectData())) || (!saved && document.querySelector("#events-list .sg-ev"))) { ev.preventDefault(); ev.returnValue = ""; }
+});
+new ResizeObserver(drawTimeline).observe($("timeline"));
+const rerender = () => { changed(); document.getElementById("tf-meta").innerHTML = `${esc(T("Writes the scenario YAML to"))} <code>configs/eosat1/scenarios/</code>`; };
+window.addEventListener("smo:i18nready", rerender);
+window.addEventListener("smo:langchange", rerender);
+rerender();
 </script>
 </body>
 </html>
@@ -1043,9 +829,13 @@ function hideBanners() {
 # ── aiohttp handlers ──────────────────────────────────────────────────────────
 
 async def handle_index(request):
-    from smo_common.web.http import TOOL_HEAD, tool_html_response
+    from smo_common.web.http import tool_html_response
+    import tool_frame          # shared page frame: TOOL_HEAD + title bar
     cascade_json = json.dumps({f"{k[0]}::{k[1]}": v for k, v in CASCADE_MAP.items()})
-    page = HTML.replace("__CASCADE_JSON__", cascade_json).replace("__TOOL_HEAD__", TOOL_HEAD)
+    page = (HTML.replace("__CASCADE_JSON__", cascade_json.replace("</", "<\\/"))
+            .replace("__FRAME_HEAD__", tool_frame.head())
+            .replace("__FRAME_BAR__", tool_frame.bar('<span data-i18n>Scenario generator</span>'))
+            .replace("__FRAME_SCRIPT__", tool_frame.SCRIPT))
     return tool_html_response(page, request.app)
 
 
@@ -1062,6 +852,9 @@ async def handle_generate(request):
 
     save = data.get("save", False)
     saved_path = ""
+    # Saving writes configs/<mission>/scenarios/<slug>.yaml and REPLACES a
+    # file of the same name; the page warns before that happens.
+    exists = (SCENARIO_DIR / filename).is_file()
     if save:
         try:
             SCENARIO_DIR.mkdir(parents=True, exist_ok=True)
@@ -1074,7 +867,8 @@ async def handle_generate(request):
             msg = str(e).replace(str(REPO_ROOT) + os.sep, "").replace(str(REPO_ROOT), ".")
             return web.json_response({"ok": False, "error": f"Could not write file: {msg}"})
 
-    return web.json_response({"ok": True, "yaml": yaml_text, "path": saved_path, "filename": filename})
+    return web.json_response({"ok": True, "yaml": yaml_text, "path": saved_path,
+                              "filename": filename, "exists": exists})
 
 
 def main():

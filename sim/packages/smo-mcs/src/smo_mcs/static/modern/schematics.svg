@@ -23,97 +23,90 @@
 <defs>
 
 <!-- ═══════════════ L1 OVERVIEW - SPACECRAFT BUS (traced from #ov-bus-svg) ═══ -->
-<symbol id="sch-ovr" viewBox="0 0 960 500">
+<symbol id="sch-ovr" viewBox="0 0 768 330">
+  <!-- L1 bus schematic, redrawn 2026-11 (wave 2) at a 1:1 scale: every label
+       is 12 px in the drawing and the console never shrinks the drawing, so
+       the 12 px floor holds. Two columns of subsystem blocks inside the bus,
+       solar wings either side. Hex ids live on the L2 pages and tooltips. -->
   <!-- solar wings -->
   <g class="wing" data-nav="eps">
-    <rect x="24" y="150" width="120" height="200" rx="4" class="panelfill"/>
-    <g class="cell"><line x1="24" y1="200" x2="144" y2="200"/><line x1="24" y1="250" x2="144" y2="250"/>
-      <line x1="24" y1="300" x2="144" y2="300"/><line x1="84" y1="150" x2="84" y2="350"/></g>
-    <g data-param="0x0103" data-units="A"><text x="84" y="368" text-anchor="middle" class="sm">SA-A +Y <tspan class="vl">—</tspan></text></g>
+    <rect x="12" y="104" width="92" height="132" rx="3" class="panelfill"/>
+    <g class="cell"><line x1="12" y1="148" x2="104" y2="148"/><line x1="12" y1="192" x2="104" y2="192"/><line x1="58" y1="104" x2="58" y2="236"/></g>
+    <g data-param="0x0103" data-units="A"><text x="58" y="258" text-anchor="middle" class="sm">SA-A <tspan class="vl">—</tspan></text></g>
   </g>
   <g class="wing" data-nav="eps">
-    <rect x="816" y="150" width="120" height="200" rx="4" class="panelfill"/>
-    <g class="cell"><line x1="816" y1="200" x2="936" y2="200"/><line x1="816" y1="250" x2="936" y2="250"/>
-      <line x1="816" y1="300" x2="936" y2="300"/><line x1="876" y1="150" x2="876" y2="350"/></g>
-    <g data-param="0x0104" data-units="A"><text x="876" y="368" text-anchor="middle" class="sm">SA-B -Y <tspan class="vl">—</tspan></text></g>
+    <rect x="664" y="104" width="92" height="132" rx="3" class="panelfill"/>
+    <g class="cell"><line x1="664" y1="148" x2="756" y2="148"/><line x1="664" y1="192" x2="756" y2="192"/><line x1="710" y1="104" x2="710" y2="236"/></g>
+    <g data-param="0x0104" data-units="A"><text x="710" y="258" text-anchor="middle" class="sm">SA-B <tspan class="vl">—</tspan></text></g>
   </g>
-  <path class="wire flow" d="M144 250 H196"/><path class="wire flow" d="M816 250 H764"/>
-
+  <path class="wire flow" d="M104 170 H120"/><path class="wire flow" d="M664 170 H648"/>
   <!-- bus body -->
-  <rect class="body" x="196" y="86" width="568" height="330" rx="14"/>
-  <text x="480" y="72" text-anchor="middle" class="cap" data-i18n>SPACECRAFT BUS · <tspan id="sch-ovr-mode">MODE —</tspan></text>
-
-  <!-- EPS -->
+  <rect class="body" x="120" y="36" width="528" height="286" rx="4"/>
+  <text x="136" y="24" class="cap"><tspan data-i18n>Spacecraft bus, mode</tspan> <tspan id="sch-ovr-mode" class="vl">—</tspan></text>
+  <!-- antenna to ground -->
+  <path class="wire" d="M600 36 V22"/><circle cx="600" cy="15" r="7" class="ant"/>
+  <text x="614" y="20" class="sm" id="sch-ovr-downlink" data-i18n>downlink</text>
   <g class="ds-node" id="ovr-node-eps" data-nav="eps">
-    <rect class="bx" x="222" y="106" width="252" height="96" rx="8"/>
-    <text x="240" y="130" class="nm">EPS</text>
-    <g data-param="0x0101" data-units="%"><text x="240" y="162" class="vl">—</text><text x="240" y="180" class="sm">SoC · 0x0101</text></g>
-    <g data-param="0x0105" data-units="V"><text x="360" y="162" class="vl">—</text><text x="360" y="180" class="sm">BUS · 0x0105</text></g>
-    <g data-param="0x0135" data-units="W"><text x="240" y="198" class="sm"><tspan data-i18n>margin</tspan> · 0x0135 <tspan class="vl">—</tspan></text></g>
+    <rect class="bx" x="136" y="52" width="240" height="80" rx="3"/>
+    <text x="150" y="74" class="nm">EPS</text>
+    <g data-param="0x0101" data-units="%"><text x="150" y="102" class="vl">—</text><text x="150" y="120" class="sm">SoC</text></g>
+    <g data-param="0x0105" data-units="V"><text x="228" y="102" class="vl">—</text><text x="228" y="120" class="sm"><tspan data-i18n>bus</tspan></text></g>
+    <g data-param="0x0135" data-units="W"><text x="306" y="102" class="vl">—</text><text x="306" y="120" class="sm"><tspan data-i18n>margin</tspan></text></g>
   </g>
-  <!-- OBDH -->
-  <g class="ds-node" id="ovr-node-obd" data-nav="obd">
-    <rect class="bx" x="222" y="216" width="252" height="86" rx="8"/>
-    <text x="240" y="240" class="nm">OBDH</text>
-    <g data-param="0x0302" data-units="%"><text x="240" y="272" class="vl">—</text><text x="240" y="290" class="sm">CPU · 0x0302</text></g>
-    <g data-param="0x0312" data-units="%"><text x="360" y="272" class="vl">—</text><text x="360" y="290" class="sm">TM BUF · 0x0312</text></g>
-  </g>
-  <!-- TCS -->
-  <g class="ds-node" id="ovr-node-tcs" data-nav="tcs">
-    <rect class="bx" x="222" y="316" width="252" height="86" rx="8"/>
-    <text x="240" y="340" class="nm">TCS</text>
-    <g data-param="0x0406" data-units="°C"><text x="240" y="372" class="vl">—</text><text x="240" y="390" class="sm">OBC · 0x0406</text></g>
-    <g data-param="0x0407" data-units="°C"><text x="360" y="372" class="vl">—</text><text x="360" y="390" class="sm">BAT · 0x0407</text></g>
-  </g>
-  <!-- AOCS -->
   <g class="ds-node" id="ovr-node-aocs" data-nav="aocs">
-    <rect class="bx" x="500" y="106" width="252" height="96" rx="8"/>
-    <text x="518" y="130" class="nm">AOCS</text>
-    <g data-param="0x0217" data-units="°"><text x="518" y="162" class="vl">—</text><text x="518" y="180" class="sm">ATT ERR · 0x0217</text></g>
-    <g data-param="0x025B" data-units="N·m·s"><text x="638" y="162" class="vl">—</text><text x="638" y="180" class="sm">|h| · 0x025B</text></g>
+    <rect class="bx" x="392" y="52" width="240" height="80" rx="3"/>
+    <text x="406" y="74" class="nm">AOCS</text>
+    <g data-param="0x0217" data-units="°"><text x="406" y="102" class="vl">—</text><text x="406" y="120" class="sm"><tspan data-i18n>att. error</tspan></text></g>
+    <g data-param="0x025B" data-units="N·m·s"><text x="518" y="102" class="vl">—</text><text x="518" y="120" class="sm">|h|</text></g>
   </g>
-  <!-- TTC -->
+  <g class="ds-node" id="ovr-node-obd" data-nav="obd">
+    <rect class="bx" x="136" y="142" width="240" height="80" rx="3"/>
+    <text x="150" y="164" class="nm">OBDH</text>
+    <g data-param="0x0302" data-units="%"><text x="150" y="192" class="vl">—</text><text x="150" y="210" class="sm">CPU</text></g>
+    <g data-param="0x0312" data-units="%"><text x="262" y="192" class="vl">—</text><text x="262" y="210" class="sm">TM buffer</text></g>
+  </g>
   <g class="ds-node" id="ovr-node-ttc" data-nav="ttc">
-    <rect class="bx" x="500" y="216" width="252" height="86" rx="8"/>
-    <text x="518" y="240" class="nm">TT&amp;C</text>
-    <g data-param="0x0502" data-units="dBm"><text x="518" y="272" class="vl">—</text><text x="518" y="290" class="sm">RSSI · 0x0502</text></g>
-    <g data-param="0x050F" data-units="°C"><text x="638" y="272" class="vl">—</text><text x="638" y="290" class="sm">PA TEMP · 0x050F</text></g>
+    <rect class="bx" x="392" y="142" width="240" height="80" rx="3"/>
+    <text x="406" y="164" class="nm">TT&amp;C</text>
+    <g data-param="0x0502" data-units="dBm"><text x="406" y="192" class="vl">—</text><text x="406" y="210" class="sm">RSSI</text></g>
+    <g data-param="0x050F" data-units="°C"><text x="518" y="192" class="vl">—</text><text x="518" y="210" class="sm">PA temp</text></g>
   </g>
-  <!-- PAYLOAD + PROP strip -->
+  <g class="ds-node" id="ovr-node-tcs" data-nav="tcs">
+    <rect class="bx" x="136" y="232" width="240" height="80" rx="3"/>
+    <text x="150" y="254" class="nm">TCS</text>
+    <g data-param="0x0406" data-units="°C"><text x="150" y="282" class="vl">—</text><text x="150" y="300" class="sm">OBC</text></g>
+    <g data-param="0x0407" data-units="°C"><text x="262" y="282" class="vl">—</text><text x="262" y="300" class="sm"><tspan data-i18n>battery</tspan></text></g>
+  </g>
   <g class="ds-node" id="ovr-node-pld" data-nav="pld">
-    <rect class="bx" x="500" y="316" width="122" height="86" rx="8"/>
-    <text x="512" y="340" class="nm">PLD</text>
-    <g data-param="0x0601" data-units="°C"><text x="512" y="372" class="vl">—</text><text x="512" y="390" class="sm">FPA · 0x0601</text></g>
+    <rect class="bx" x="392" y="232" width="116" height="80" rx="3"/>
+    <text x="406" y="254" class="nm">PLD</text>
+    <g data-param="0x0601" data-units="°C"><text x="406" y="282" class="vl">—</text><text x="406" y="300" class="sm">FPA</text></g>
   </g>
   <g class="ds-node" id="ovr-node-prp" data-nav="prp">
-    <rect class="bx" x="630" y="316" width="122" height="86" rx="8"/>
-    <text x="642" y="340" class="nm">PRP</text>
-    <g data-param="0x0B01" data-units="bar"><text x="642" y="372" class="vl">—</text><text x="642" y="390" class="sm">TANK · 0x0B01</text></g>
+    <rect class="bx" x="516" y="232" width="116" height="80" rx="3"/>
+    <text x="530" y="254" class="nm">PRP</text>
+    <g data-param="0x0B01" data-units="bar"><text x="530" y="282" class="vl">—</text><text x="530" y="300" class="sm"><tspan data-i18n>tank</tspan></text></g>
   </g>
-  <!-- antenna to ground -->
-  <path class="wire" d="M480 86 V52"/><circle cx="480" cy="44" r="9" class="ant"/>
-  <path class="wire flow" d="M480 34 V10"/>
-  <text x="496" y="20" class="sm" id="sch-ovr-downlink" data-i18n>↓ downlink</text>
 </symbol>
 
 <!-- ═══════════════ EPS L2 - POWER DISTRIBUTION (traced from #eps-diagram) ══ -->
 <symbol id="sch-eps" viewBox="0 0 880 260">
-  <g class="ds-node"><rect class="bx" x="12" y="18" width="112" height="62" rx="8"/>
+  <g class="ds-node"><rect class="bx" x="12" y="18" width="112" height="62" rx="3"/>
     <text x="68" y="40" class="nm" text-anchor="middle">SA-A</text>
     <g data-param="0x0103" data-units="A"><text x="68" y="64" class="vl" text-anchor="middle">—</text></g></g>
-  <g class="ds-node"><rect class="bx" x="12" y="108" width="112" height="62" rx="8"/>
+  <g class="ds-node"><rect class="bx" x="12" y="108" width="112" height="62" rx="3"/>
     <text x="68" y="130" class="nm" text-anchor="middle">SA-B</text>
     <g data-param="0x0104" data-units="A"><text x="68" y="154" class="vl" text-anchor="middle">—</text></g></g>
   <path class="wire flow" d="M124 49 H160 V88 H188"/><path class="wire flow" d="M124 139 H160 V104 H188"/>
-  <g class="ds-node"><rect class="bx" x="188" y="60" width="124" height="70" rx="8"/>
+  <g class="ds-node"><rect class="bx" x="188" y="60" width="124" height="70" rx="3"/>
     <text x="250" y="84" class="nm" text-anchor="middle" data-i18n>MPPT / GEN</text>
     <g data-param="0x0107" data-units="W"><text x="250" y="110" class="vl" text-anchor="middle">—</text></g></g>
   <path class="wire flow" d="M312 95 H352"/>
-  <g class="ds-node"><rect class="bx" x="352" y="30" width="140" height="62" rx="8"/>
+  <g class="ds-node"><rect class="bx" x="352" y="30" width="140" height="62" rx="3"/>
     <text x="422" y="52" class="nm" text-anchor="middle">BUS 28 V</text>
     <g data-param="0x0105" data-units="V"><text x="422" y="78" class="vl" text-anchor="middle">—</text></g></g>
   <path class="wire flow" d="M422 92 V122"/>
-  <g class="ds-node"><rect class="bx" x="352" y="122" width="140" height="76" rx="8"/>
+  <g class="ds-node"><rect class="bx" x="352" y="122" width="140" height="76" rx="3"/>
     <text x="422" y="144" class="nm" text-anchor="middle" data-i18n>BATTERY</text>
     <g data-param="0x0101" data-units="%"><text x="422" y="168" class="vl" text-anchor="middle">—</text></g>
     <g data-param="0x0109" data-units="A"><text x="422" y="188" class="sm" text-anchor="middle">I <tspan class="vl">—</tspan></text></g></g>
@@ -135,17 +128,17 @@
 
 <!-- ═══════════════ TCS L2 - THERMAL MAP (traced from #tcs-diagram) ═════════ -->
 <symbol id="sch-tcs" viewBox="0 0 880 240">
-  <rect class="body" x="230" y="20" width="420" height="200" rx="12"/>
+  <rect class="body" x="230" y="20" width="420" height="200" rx="3"/>
   <text x="440" y="14" text-anchor="middle" class="cap" data-i18n>THERMAL ZONES</text>
-  <g class="ds-node" data-param="0x0400" data-units="°C"><rect class="bx" x="244" y="34" width="120" height="40" rx="6"/><text x="252" y="50" class="sm" data-i18n>PANEL +X</text><text x="252" y="68" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0401" data-units="°C"><rect class="bx" x="380" y="34" width="120" height="40" rx="6"/><text x="388" y="50" class="sm" data-i18n>PANEL -X</text><text x="388" y="68" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0404" data-units="°C"><rect class="bx" x="516" y="34" width="120" height="40" rx="6"/><text x="524" y="50" class="sm" data-i18n>PANEL +Z</text><text x="524" y="68" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0406" data-units="°C"><rect class="bx" x="244" y="90" width="120" height="52" rx="6"/><text x="252" y="106" class="sm" data-i18n>OBC NODE</text><text x="252" y="128" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0407" data-units="°C"><rect class="bx" x="380" y="90" width="120" height="52" rx="6"/><text x="388" y="106" class="sm" data-i18n>BATTERY</text><text x="388" y="128" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0408" data-units="°C"><rect class="bx" x="516" y="90" width="120" height="52" rx="6"/><text x="524" y="106" class="sm">FPA</text><text x="524" y="128" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x040A"><rect class="bx" x="244" y="158" width="120" height="40" rx="6"/><text x="252" y="174" class="sm" data-i18n>HTR BAT</text><text x="252" y="192" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x040B"><rect class="bx" x="380" y="158" width="120" height="40" rx="6"/><text x="388" y="174" class="sm" data-i18n>HTR OBC</text><text x="388" y="192" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x040C"><rect class="bx" x="516" y="158" width="120" height="40" rx="6"/><text x="524" y="174" class="sm" data-i18n>COOLER FPA</text><text x="524" y="192" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0400" data-units="°C"><rect class="bx" x="244" y="34" width="120" height="40" rx="3"/><text x="252" y="50" class="sm" data-i18n>PANEL +X</text><text x="252" y="68" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0401" data-units="°C"><rect class="bx" x="380" y="34" width="120" height="40" rx="3"/><text x="388" y="50" class="sm" data-i18n>PANEL -X</text><text x="388" y="68" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0404" data-units="°C"><rect class="bx" x="516" y="34" width="120" height="40" rx="3"/><text x="524" y="50" class="sm" data-i18n>PANEL +Z</text><text x="524" y="68" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0406" data-units="°C"><rect class="bx" x="244" y="90" width="120" height="52" rx="3"/><text x="252" y="106" class="sm" data-i18n>OBC NODE</text><text x="252" y="128" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0407" data-units="°C"><rect class="bx" x="380" y="90" width="120" height="52" rx="3"/><text x="388" y="106" class="sm" data-i18n>BATTERY</text><text x="388" y="128" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0408" data-units="°C"><rect class="bx" x="516" y="90" width="120" height="52" rx="3"/><text x="524" y="106" class="sm">FPA</text><text x="524" y="128" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x040A"><rect class="bx" x="244" y="158" width="120" height="40" rx="3"/><text x="252" y="174" class="sm" data-i18n>HTR BAT</text><text x="252" y="192" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x040B"><rect class="bx" x="380" y="158" width="120" height="40" rx="3"/><text x="388" y="174" class="sm" data-i18n>HTR OBC</text><text x="388" y="192" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x040C"><rect class="bx" x="516" y="158" width="120" height="40" rx="3"/><text x="524" y="174" class="sm" data-i18n>COOLER FPA</text><text x="524" y="192" class="vl">—</text></g>
   <g data-param="0x0409" data-units="°C"><text x="680" y="50" class="sm" data-i18n>THRUSTER <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0411" data-units="W"><text x="680" y="75" class="sm" data-i18n>HTR POWER <tspan class="vl">—</tspan></text></g>
   <g data-param="0x041A" data-units="°C"><text x="680" y="100" class="sm" data-i18n>REG MARGIN <tspan class="vl">—</tspan></text></g>
@@ -156,35 +149,35 @@
 
 <!-- ═══════════════ AOCS L2 - EQUIPMENT (traced from #aocs-diagram) ═════════ -->
 <symbol id="sch-aocs" viewBox="0 0 880 240">
-  <rect class="body" x="290" y="30" width="300 " height="180" rx="12"/>
+  <rect class="body" x="290" y="30" width="300 " height="180" rx="3"/>
   <text x="440" y="22" text-anchor="middle" class="cap" data-i18n>AOCS CORE</text>
   <g data-param="0x020F"><text x="440" y="60" text-anchor="middle" class="sm">MODE <tspan class="vl">—</tspan></text></g>
-  <g class="ds-node" data-param="0x0217" data-units="°"><rect class="bx" x="310" y="76" width="126" height="52" rx="6"/><text x="318" y="92" class="sm" data-i18n>ATT ERROR</text><text x="318" y="114" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x025B" data-units="N·m·s"><rect class="bx" x="446" y="76" width="126" height="52" rx="6"/><text x="454" y="92" class="sm" data-i18n>MOMENTUM |h|</text><text x="454" y="114" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0204" data-units="°/s"><rect class="bx" x="310" y="140" width="82" height="46" rx="6"/><text x="316" y="156" class="sm" data-i18n>ROLL</text><text x="316" y="176" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0205" data-units="°/s"><rect class="bx" x="400" y="140" width="82" height="46" rx="6"/><text x="406" y="156" class="sm" data-i18n>PITCH</text><text x="406" y="176" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0206" data-units="°/s"><rect class="bx" x="490" y="140" width="82" height="46" rx="6"/><text x="496" y="156" class="sm" data-i18n>YAW</text><text x="496" y="176" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0217" data-units="°"><rect class="bx" x="310" y="76" width="126" height="52" rx="3"/><text x="318" y="92" class="sm" data-i18n>ATT ERROR</text><text x="318" y="114" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x025B" data-units="N·m·s"><rect class="bx" x="446" y="76" width="126" height="52" rx="3"/><text x="454" y="92" class="sm" data-i18n>MOMENTUM |h|</text><text x="454" y="114" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0204" data-units="°/s"><rect class="bx" x="310" y="140" width="82" height="46" rx="3"/><text x="316" y="156" class="sm" data-i18n>ROLL</text><text x="316" y="176" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0205" data-units="°/s"><rect class="bx" x="400" y="140" width="82" height="46" rx="3"/><text x="406" y="156" class="sm" data-i18n>PITCH</text><text x="406" y="176" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0206" data-units="°/s"><rect class="bx" x="490" y="140" width="82" height="46" rx="3"/><text x="496" y="156" class="sm" data-i18n>YAW</text><text x="496" y="176" class="vl">—</text></g>
   <!-- wheels -->
-  <g class="ds-node" data-param="0x0207" data-units="RPM"><rect class="bx" x="640" y="34" width="120" height="38" rx="6"/><text x="648" y="49" class="sm">RW1</text><text x="648" y="65" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0208" data-units="RPM"><rect class="bx" x="640" y="80" width="120" height="38" rx="6"/><text x="648" y="95" class="sm">RW2</text><text x="648" y="111" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0209" data-units="RPM"><rect class="bx" x="640" y="126" width="120" height="38" rx="6"/><text x="648" y="141" class="sm">RW3</text><text x="648" y="157" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x020A" data-units="RPM"><rect class="bx" x="640" y="172" width="120" height="38" rx="6"/><text x="648" y="187" class="sm">RW4</text><text x="648" y="203" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0207" data-units="RPM"><rect class="bx" x="640" y="34" width="120" height="38" rx="3"/><text x="648" y="49" class="sm">RW1</text><text x="648" y="65" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0208" data-units="RPM"><rect class="bx" x="640" y="80" width="120" height="38" rx="3"/><text x="648" y="95" class="sm">RW2</text><text x="648" y="111" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0209" data-units="RPM"><rect class="bx" x="640" y="126" width="120" height="38" rx="3"/><text x="648" y="141" class="sm">RW3</text><text x="648" y="157" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x020A" data-units="RPM"><rect class="bx" x="640" y="172" width="120" height="38" rx="3"/><text x="648" y="187" class="sm">RW4</text><text x="648" y="203" class="vl">—</text></g>
   <!-- sensors -->
-  <g class="ds-node" data-param="0x0241"><rect class="bx" x="120" y="34" width="140" height="38" rx="6"/><text x="128" y="49" class="sm" data-i18n>ST1 STARS</text><text x="128" y="65" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0242"><rect class="bx" x="120" y="80" width="140" height="38" rx="6"/><text x="128" y="95" class="sm" data-i18n>ST2 STARS</text><text x="128" y="111" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0273" data-units="°C"><rect class="bx" x="120" y="126" width="140" height="38" rx="6"/><text x="128" y="141" class="sm" data-i18n>GYRO TEMP</text><text x="128" y="157" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0276"><rect class="bx" x="120" y="172" width="140" height="38" rx="6"/><text x="128" y="187" class="sm" data-i18n>GPS SATS</text><text x="128" y="203" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0241"><rect class="bx" x="120" y="34" width="140" height="38" rx="3"/><text x="128" y="49" class="sm" data-i18n>ST1 STARS</text><text x="128" y="65" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0242"><rect class="bx" x="120" y="80" width="140" height="38" rx="3"/><text x="128" y="95" class="sm" data-i18n>ST2 STARS</text><text x="128" y="111" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0273" data-units="°C"><rect class="bx" x="120" y="126" width="140" height="38" rx="3"/><text x="128" y="141" class="sm" data-i18n>GYRO TEMP</text><text x="128" y="157" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0276"><rect class="bx" x="120" y="172" width="140" height="38" rx="3"/><text x="128" y="187" class="sm" data-i18n>GPS SATS</text><text x="128" y="203" class="vl">—</text></g>
 </symbol>
 
 <!-- ═══════════════ TTC L2 - RF SIGNAL CHAIN (traced from #ttc-diagram) ═════ -->
 <symbol id="sch-ttc" viewBox="0 0 880 200">
-  <g class="ds-node" data-param="0x0520"><rect class="bx" x="20" y="60" width="120" height="60" rx="8"/><text x="30" y="82" class="sm" data-i18n>ANTENNA</text><text x="30" y="104" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0520"><rect class="bx" x="20" y="60" width="120" height="60" rx="3"/><text x="30" y="82" class="sm" data-i18n>ANTENNA</text><text x="30" y="104" class="vl">—</text></g>
   <path class="wire flow" d="M140 90 H180"/>
-  <g class="ds-node" data-param="0x0507" data-units="°C"><rect class="bx" x="180" y="60" width="130" height="60" rx="8"/><text x="190" y="82" class="sm" data-i18n>XPDR TEMP</text><text x="190" y="104" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0507" data-units="°C"><rect class="bx" x="180" y="60" width="130" height="60" rx="3"/><text x="190" y="82" class="sm" data-i18n>XPDR TEMP</text><text x="190" y="104" class="vl">—</text></g>
   <path class="wire flow" d="M310 90 H350"/>
-  <g class="ds-node" data-param="0x050F" data-units="°C"><rect class="bx" x="350" y="60" width="130" height="60" rx="8"/><text x="360" y="82" class="sm" data-i18n>PA TEMP</text><text x="360" y="104" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x050F" data-units="°C"><rect class="bx" x="350" y="60" width="130" height="60" rx="3"/><text x="360" y="82" class="sm" data-i18n>PA TEMP</text><text x="360" y="104" class="vl">—</text></g>
   <path class="wire flow" d="M480 90 H520"/>
-  <g class="ds-node" data-param="0x0502" data-units="dBm"><rect class="bx" x="520" y="60" width="130" height="60" rx="8"/><text x="530" y="82" class="sm">RSSI</text><text x="530" y="104" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0502" data-units="dBm"><rect class="bx" x="520" y="60" width="130" height="60" rx="3"/><text x="530" y="82" class="sm">RSSI</text><text x="530" y="104" class="vl">—</text></g>
   <!-- lock chain readouts -->
   <g data-param="0x0510"><text x="690" y="46" class="sm" data-i18n>CARRIER <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0511"><text x="690" y="72" class="sm">BIT <tspan class="vl">—</tspan></text></g>
@@ -199,13 +192,13 @@
 
 <!-- ═══════════════ PAYLOAD L2 - INSTRUMENT CHAIN ═══════════════════════════ -->
 <symbol id="sch-pld" viewBox="0 0 880 200">
-  <g class="ds-node" data-param="0x0601" data-units="°C"><rect class="bx" x="30" y="50" width="150" height="70" rx="8"/><text x="40" y="72" class="sm">FPA</text><text x="40" y="98" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0601" data-units="°C"><rect class="bx" x="30" y="50" width="150" height="70" rx="3"/><text x="40" y="72" class="sm">FPA</text><text x="40" y="98" class="vl">—</text></g>
   <path class="wire flow" d="M180 85 H230"/>
-  <g class="ds-node" data-param="0x0602" data-units="W"><rect class="bx" x="230" y="50" width="150" height="70" rx="8"/><text x="240" y="72" class="sm" data-i18n>COOLER PWR</text><text x="240" y="98" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0602" data-units="W"><rect class="bx" x="230" y="50" width="150" height="70" rx="3"/><text x="240" y="72" class="sm" data-i18n>COOLER PWR</text><text x="240" y="98" class="vl">—</text></g>
   <path class="wire flow" d="M380 85 H430"/>
-  <g class="ds-node" data-param="0x0604" data-units="%"><rect class="bx" x="430" y="50" width="150" height="70" rx="8"/><text x="440" y="72" class="sm" data-i18n>STORE USED</text><text x="440" y="98" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0604" data-units="%"><rect class="bx" x="430" y="50" width="150" height="70" rx="3"/><text x="440" y="72" class="sm" data-i18n>STORE USED</text><text x="440" y="98" class="vl">—</text></g>
   <path class="wire flow" d="M580 85 H630"/>
-  <g class="ds-node" data-param="0x0605"><rect class="bx" x="630" y="50" width="150" height="70" rx="8"/><text x="640" y="72" class="sm">IMAGES</text><text x="640" y="98" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0605"><rect class="bx" x="630" y="50" width="150" height="70" rx="3"/><text x="640" y="72" class="sm">IMAGES</text><text x="640" y="98" class="vl">—</text></g>
   <g data-param="0x0600"><text x="30" y="160" class="sm">MODE <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0610"><text x="180" y="160" class="sm" data-i18n>FPA READY <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0616" data-units="dB"><text x="340" y="160" class="sm">SNR <tspan class="vl">—</tspan></text></g>
@@ -215,16 +208,16 @@
 
 <!-- ═══════════════ PROP L2 - FEED SYSTEM (traced from #prop-diagram) ═══════ -->
 <symbol id="sch-prp" viewBox="0 0 880 220">
-  <g class="ds-node" data-param="0x0B01" data-units="bar"><rect class="bx" x="40" y="30" width="170" height="80" rx="10"/><text x="52" y="54" class="sm" data-i18n>TANK PRESSURE</text><text x="52" y="84" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0B01" data-units="bar"><rect class="bx" x="40" y="30" width="170" height="80" rx="3"/><text x="52" y="54" class="sm" data-i18n>TANK PRESSURE</text><text x="52" y="84" class="vl">—</text></g>
   <g data-param="0x0B04" data-units="°C"><text x="52" y="132" class="sm" data-i18n>TANK TEMP <tspan class="vl">—</tspan></text></g>
   <path class="wire flow" d="M210 70 H260"/>
-  <g class="ds-node" data-param="0x0B06"><rect class="bx" x="260" y="40" width="120" height="60" rx="8"/><text x="270" y="62" class="sm" data-i18n>LATCH A</text><text x="270" y="86" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0B06"><rect class="bx" x="260" y="40" width="120" height="60" rx="3"/><text x="270" y="62" class="sm" data-i18n>LATCH A</text><text x="270" y="86" class="vl">—</text></g>
   <path class="wire flow" d="M380 70 H430"/>
-  <g class="ds-node" data-param="0x0B07"><rect class="bx" x="430" y="40" width="120" height="60" rx="8"/><text x="440" y="62" class="sm" data-i18n>LATCH B</text><text x="440" y="86" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0B07"><rect class="bx" x="430" y="40" width="120" height="60" rx="3"/><text x="440" y="62" class="sm" data-i18n>LATCH B</text><text x="440" y="86" class="vl">—</text></g>
   <path class="wire flow" d="M550 70 H600"/>
-  <g class="ds-node" data-param="0x0B08"><rect class="bx" x="600" y="40" width="120" height="60" rx="8"/><text x="610" y="62" class="sm">FCV</text><text x="610" y="86" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0B08"><rect class="bx" x="600" y="40" width="120" height="60" rx="3"/><text x="610" y="62" class="sm">FCV</text><text x="610" y="86" class="vl">—</text></g>
   <path class="wire flow" d="M720 70 H770"/>
-  <g class="ds-node" data-param="0x0B05" data-units="°C"><rect class="bx" x="770" y="30" width="100" height="80" rx="10"/><text x="778" y="54" class="sm" data-i18n>CATBED</text><text x="778" y="84" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0B05" data-units="°C"><rect class="bx" x="770" y="30" width="100" height="80" rx="3"/><text x="778" y="54" class="sm" data-i18n>CATBED</text><text x="778" y="84" class="vl">—</text></g>
   <g data-param="0x0B15"><text x="260" y="150" class="sm">ARM INHIBIT 0x0B15 <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0B03" data-units="%"><text x="470" y="150" class="sm" data-i18n>PROPELLANT <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0B0C" data-units="m/s"><text x="640" y="150" class="sm" data-i18n>dV REMAINING <tspan class="vl">—</tspan></text></g>
@@ -234,15 +227,15 @@
 
 <!-- ═══════════════ OBDH L2 - OBC ARCHITECTURE (traced from #obdh-diagram) ══ -->
 <symbol id="sch-obd" viewBox="0 0 880 220">
-  <g class="ds-node" data-param="0x0302" data-units="%"><rect class="bx" x="60" y="30" width="180" height="90" rx="10"/><text x="72" y="54" class="sm">OBC-A · CPU</text><text x="72" y="86" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x030D"><rect class="bx" x="60" y="140" width="180" height="56" rx="10"/><text x="72" y="162" class="sm" data-i18n>OBC-B STATUS</text><text x="72" y="184" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0302" data-units="%"><rect class="bx" x="60" y="30" width="180" height="90" rx="3"/><text x="72" y="54" class="sm">OBC-A · CPU</text><text x="72" y="86" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x030D"><rect class="bx" x="60" y="140" width="180" height="56" rx="3"/><text x="72" y="162" class="sm" data-i18n>OBC-B STATUS</text><text x="72" y="184" class="vl">—</text></g>
   <path class="wire" d="M240 75 H300"/><path class="wire" d="M240 168 H300"/>
   <line class="wire" x1="300" y1="40" x2="300" y2="196"/>
   <g data-param="0x0A11"><text x="312" y="30" class="sm" data-i18n>CAN BUS <tspan class="vl">—</tspan></text></g>
-  <g class="ds-node" data-param="0x0312" data-units="%"><rect class="bx" x="340" y="44" width="150" height="52" rx="8"/><text x="350" y="62" class="sm" data-i18n>HKTM BUF</text><text x="350" y="84" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0313" data-units="%"><rect class="bx" x="340" y="112" width="150" height="52" rx="8"/><text x="350" y="130" class="sm" data-i18n>EVENT BUF</text><text x="350" y="152" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0A10" data-units="%"><rect class="bx" x="510" y="44" width="150" height="52" rx="8"/><text x="520" y="62" class="sm" data-i18n>S15 STORE</text><text x="520" y="84" class="vl">—</text></g>
-  <g class="ds-node" data-param="0x0303" data-units="%"><rect class="bx" x="510" y="112" width="150" height="52" rx="8"/><text x="520" y="130" class="sm" data-i18n>MEMORY USED</text><text x="520" y="152" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0312" data-units="%"><rect class="bx" x="340" y="44" width="150" height="52" rx="3"/><text x="350" y="62" class="sm" data-i18n>HKTM BUF</text><text x="350" y="84" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0313" data-units="%"><rect class="bx" x="340" y="112" width="150" height="52" rx="3"/><text x="350" y="130" class="sm" data-i18n>EVENT BUF</text><text x="350" y="152" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0A10" data-units="%"><rect class="bx" x="510" y="44" width="150" height="52" rx="3"/><text x="520" y="62" class="sm" data-i18n>S15 STORE</text><text x="520" y="84" class="vl">—</text></g>
+  <g class="ds-node" data-param="0x0303" data-units="%"><rect class="bx" x="510" y="112" width="150" height="52" rx="3"/><text x="520" y="130" class="sm" data-i18n>MEMORY USED</text><text x="520" y="152" class="vl">—</text></g>
   <g data-param="0x030A"><text x="690" y="60" class="sm" data-i18n>REBOOTS <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0308" data-units="s"><text x="690" y="86" class="sm" data-i18n>UPTIME <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0319"><text x="690" y="112" class="sm" data-i18n>SEU COUNT <tspan class="vl">—</tspan></text></g>

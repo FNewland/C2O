@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 REPO = Path(__file__).resolve().parents[0].parent
 DEFAULT_DOCS = REPO / "configs" / "eosat1"
+# The shared tool page frame (tools/tool_frame.py) sits next to this file.
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
 # smo_common (shared HTTP policy + design system) from the checkout when the
 # suite is not pip-installed.
 _COMMON_SRC = REPO / "packages" / "smo-common" / "src"
@@ -65,8 +68,15 @@ def md_to_html(text: str) -> str:
     in_table = False
     in_list = False
     list_type = 'ul'
+    para_open = False
 
     for line in lines:
+        if not line.strip().startswith('```') and not in_code_block and line.strip():
+            # anything that is not a plain paragraph line closes the paragraph
+            st = line.strip()
+            if (st.startswith(('#', '|', '> ')) or re.match(r'^[-*+] ', st)
+                    or re.match(r'^\d+\. ', st) or re.match(r'^[-*_]{3,}\s*$', st)):
+                para_open = False
         # Fenced code blocks
         if line.strip().startswith('```'):
             if in_code_block:
@@ -75,7 +85,7 @@ def md_to_html(text: str) -> str:
             else:
                 lang = line.strip()[3:].strip()
                 cls = f' class="lang-{html.escape(lang)}"' if lang else ''
-                out.append(f'<pre><code{cls}>')
+                out.append(f'<pre tabindex="0"><code{cls}>')
                 in_code_block = True
             continue
         if in_code_block:
@@ -84,6 +94,12 @@ def md_to_html(text: str) -> str:
 
         # Close open list if non-list line
         stripped = line.strip()
+        # An indented line under a list item continues that item.
+        if (in_list and stripped and line[:1] in (" ", "\t") and out
+                and out[-1].endswith('</li>')
+                and not re.match(r'^([-*+]|\d+\.) ', stripped)):
+            out[-1] = out[-1][:-5] + ' ' + _inline(stripped) + '</li>'
+            continue
         is_list_item = bool(re.match(r'^[-*+] ', stripped) or re.match(r'^\d+\. ', stripped))
         if in_list and not is_list_item and stripped:
             out.append(f'</{list_type}>')
@@ -91,13 +107,12 @@ def md_to_html(text: str) -> str:
 
         # Close table
         if in_table and not stripped.startswith('|'):
-            out.append('</tbody></table>')
+            out.append('</tbody></table></div>')
             in_table = False
 
-        # Empty line
+        # Empty line: ends a paragraph (spacing is the stylesheet's job)
         if not stripped:
-            if not in_list and not in_table:
-                out.append('<br>')
+            para_open = False
             continue
 
         # Headings
@@ -127,7 +142,7 @@ def md_to_html(text: str) -> str:
                 # Separator row — skip (already started table)
                 continue
             if not in_table:
-                out.append('<table><thead><tr>')
+                out.append('<div class="tbl"><table><thead><tr>')
                 for c in cells:
                     out.append(f'<th>{_inline(c)}</th>')
                 out.append('</tr></thead><tbody>')
@@ -159,14 +174,21 @@ def md_to_html(text: str) -> str:
             out.append(f'<li>{_inline(m.group(1))}</li>')
             continue
 
-        # Paragraph
-        out.append(f'<p>{_inline(line)}</p>')
+        # Paragraph: consecutive lines are one paragraph
+        if para_open and out and out[-1].endswith('</p>'):
+            # "**Label:** value" lines (document headers) keep their own line
+            sep = '<br>' if re.match(r'^\*\*[^*]+:\*\*', stripped) else ' '
+            out[-1] = out[-1][:-4] + sep + _inline(stripped) + '</p>'
+        else:
+            out.append(f'<p>{_inline(stripped)}</p>')
+            para_open = True
+        continue
 
     # Close open blocks
     if in_code_block:
         out.append('</code></pre>')
     if in_table:
-        out.append('</tbody></table>')
+        out.append('</tbody></table></div>')
     if in_list:
         out.append(f'</{list_type}>')
 
@@ -272,54 +294,76 @@ def _extract_title(path: Path) -> str:
 # portal chrome are a later phase.
 
 PAGE_CSS = """
-body { font-size:15px; line-height:1.6; display:flex; height:100vh; }
-#sidebar { width:300px; min-width:300px; background:var(--s1);
-  border-right:1px solid var(--line); overflow-y:auto; padding:12px 12px 24px; }
-#sidebar .home { display:block; color:var(--tx); font-weight:600; font-size:15px;
-  text-decoration:none; padding:4px 8px 10px; }
-#sidebar h2 { color:var(--tx3); font-size:12px; font-weight:600; text-transform:uppercase;
-  letter-spacing:1px; margin:16px 8px 4px; }
-#sidebar a.doc-link { display:block; padding:3px 8px; color:var(--tx2); text-decoration:none;
-  font-size:13px; border-radius:3px; }
-#sidebar a.doc-link:hover, #sidebar a.doc-link[aria-current] { background:var(--s3); color:var(--tx); }
-#sidebar a.doc-link.en-only::after { content:" EN"; font-family:var(--mono); font-size:12px;
-  color:var(--tx3); }
-#sidebar label { display:block; font-size:12px; color:var(--tx3); margin:0 8px 4px; }
-#sidebar input { width:100%; padding:6px 8px; background:var(--s2); border:1px solid var(--line-2);
-  border-radius:3px; color:var(--tx); font:inherit; font-size:13px; margin-bottom:4px; }
-#content { flex:1; overflow-y:auto; padding:24px 40px 64px; }
-#content > * { max-width:820px; }
-#content h1 { font-size:24px; line-height:1.25; border-bottom:1px solid var(--line);
-  padding-bottom:8px; margin-bottom:16px; color:var(--val); }
-#content h2 { font-size:19px; margin-top:28px; border-bottom:1px solid var(--line); padding-bottom:4px; }
-#content h3 { font-size:16px; margin-top:20px; }
-#content p { margin:8px 0; }
-#content a { color:var(--info); }
-#content code { font-family:var(--mono); background:var(--s2); padding:1px 5px; border-radius:3px; font-size:13px; }
-#content pre { background:var(--s1); border:1px solid var(--line); padding:12px; border-radius:3px;
-  overflow-x:auto; margin:12px 0; }
-#content pre code { padding:0; background:none; }
-#content table { border-collapse:collapse; margin:12px 0; width:100%; font-size:14px; }
-#content th, #content td { border:1px solid var(--line); padding:6px 10px; text-align:left; vertical-align:top; }
-#content th { background:var(--s1); color:var(--tx2); font-weight:600; }
-#content blockquote { border-left:3px solid var(--line-2); padding-left:12px; color:var(--tx2); margin:8px 0; }
-#content hr { border:none; border-top:1px solid var(--line); margin:16px 0; }
-#content img { max-width:100%; }
-#content ul, #content ol { padding-left:24px; margin:8px 0; }
-#content li { margin:2px 0; }
-.docbar { display:flex; gap:16px; align-items:baseline; justify-content:space-between;
-  font-size:13px; color:var(--tx3); margin-bottom:12px; }
-.docbar a { color:var(--info); text-decoration:none; }
-.note-lang { font-size:13px; color:var(--tx2); border:1px solid var(--line-2); border-radius:3px;
-  padding:6px 10px; margin-bottom:16px; }
-.cats { list-style:none; padding:0 !important; }
-.cats li { display:flex; gap:12px; padding:4px 0; border-bottom:1px solid var(--line); }
-.cats .n { font-family:var(--mono); color:var(--tx3); margin-left:auto; }
-@media (max-width: 760px) {
-  body { flex-direction:column; height:auto; }
-  #sidebar { width:auto; min-width:0; max-height:40vh; border-right:none;
-    border-bottom:1px solid var(--line); }
-  #content { padding:16px; }
+/* Documentation. A reading page: the text sits at ~70 characters a line,
+   the document list on the left, this document's contents on the right
+   (sticky), both scrolling on their own. Tokens only. */
+.dv{ display:grid; grid-template-columns:280px minmax(0,1fr) 240px; align-items:start; }
+.dv-nav{ position:sticky; top:49px; height:calc(100vh - 49px); overflow:auto;
+  border-right:1px solid var(--line); padding:var(--sp-3) var(--sp-3) var(--sp-5); }
+.dv-nav .ds-field{ margin:0 var(--sp-1) var(--sp-3); }
+.dv-nav h2{ font-size:var(--fs-label); font-weight:600; color:var(--tx3); margin:var(--sp-4) var(--sp-2) var(--sp-1); }
+.dv-nav a.doc-link{ display:block; padding:4px var(--sp-2); color:var(--tx2); text-decoration:none;
+  font-size:var(--fs-body); line-height:1.35; border-radius:var(--radius-sm); }
+.dv-nav a.doc-link:hover{ background:var(--s2); color:var(--tx); }
+.dv-nav a.doc-link[aria-current]{ color:var(--val); background:var(--s2); box-shadow:inset 2px 0 0 var(--accent); }
+.dv-nav a.doc-link.en-only::after{ content:" EN"; font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+.dv-nav .none{ display:none; padding:var(--sp-2); color:var(--tx3); font-size:var(--fs-label); }
+.dv-main{ min-width:0; padding:var(--sp-5) var(--sp-6) var(--sp-6); }
+.dv-toc{ position:sticky; top:49px; max-height:calc(100vh - 49px); overflow:auto;
+  padding:var(--sp-5) var(--sp-4) var(--sp-5) 0; font-size:var(--fs-label); }
+.dv-toc h2{ font-size:var(--fs-label); font-weight:600; color:var(--tx3); margin:0 0 var(--sp-2) var(--sp-3); }
+.dv-toc ol{ list-style:none; border-left:1px solid var(--line); }
+.dv-toc a{ display:block; padding:3px var(--sp-3); color:var(--tx2); text-decoration:none; line-height:1.35; }
+.dv-toc a:hover{ color:var(--tx); }
+.dv-toc a.l3{ padding-left:var(--sp-5); color:var(--tx3); }
+.dv-toc a[aria-current="true"]{ color:var(--val); box-shadow:-1px 0 0 var(--accent); }
+.dv-toc-inline{ display:none; margin-bottom:var(--sp-4); border:1px solid var(--line); border-radius:var(--radius); }
+.docbar{ display:flex; gap:var(--sp-4); align-items:baseline; justify-content:space-between; flex-wrap:wrap;
+  font-size:var(--fs-label); color:var(--tx3); max-width:70ch; margin-bottom:var(--sp-4); }
+.docbar a{ color:var(--tx2); }
+.note-lang{ max-width:70ch; font-size:var(--fs-body); color:var(--tx2); border:1px solid var(--line-2);
+  border-left:3px solid var(--tx3); border-radius:var(--radius-sm); padding:var(--sp-2) var(--sp-3); margin-bottom:var(--sp-4); }
+article{ max-width:70ch; font-size:15px; line-height:1.6; color:var(--tx); }
+article h1{ font-size:var(--fs-title); line-height:1.25; font-weight:600; color:var(--val); margin:0 0 var(--sp-4); }
+article h2{ font-size:17px; font-weight:600; line-height:1.3; color:var(--val); margin:var(--sp-6) 0 var(--sp-2);
+  padding-top:var(--sp-3); border-top:1px solid var(--line); scroll-margin-top:64px; }
+article h3{ font-size:15px; font-weight:600; color:var(--tx); margin:var(--sp-5) 0 var(--sp-1); scroll-margin-top:64px; }
+article h4,article h5,article h6{ font-size:var(--fs-body); font-weight:600; color:var(--tx2); margin:var(--sp-4) 0 var(--sp-1); }
+article p{ margin:0 0 var(--sp-3); }
+article a{ color:var(--accent); }
+article strong{ font-weight:600; color:var(--val); }
+article code{ font-family:var(--mono); font-size:.87em; background:var(--s2); padding:1px 4px; border-radius:var(--radius-sm); }
+article pre{ background:var(--s1); border:1px solid var(--line); padding:var(--sp-3); border-radius:var(--radius);
+  overflow-x:auto; margin:0 0 var(--sp-3); font-size:var(--fs-label); line-height:1.5; }
+article pre code{ padding:0; background:none; font-size:inherit; }
+article .tbl{ overflow-x:auto; margin:0 0 var(--sp-4); }
+article table{ border-collapse:collapse; width:100%; font-size:var(--fs-body); line-height:1.4; }
+article th,article td{ border-bottom:1px solid var(--line); padding:6px 10px 6px 0; text-align:left; vertical-align:top; }
+article th{ color:var(--tx3); font-weight:500; font-size:var(--fs-label); border-bottom-color:var(--line-2); }
+article blockquote{ border-left:3px solid var(--line-2); padding:0 0 0 var(--sp-3); color:var(--tx2); margin:0 0 var(--sp-3); }
+article hr{ border:none; border-top:1px solid var(--line); margin:var(--sp-5) 0; }
+article hr + h2{ border-top:0; padding-top:0; margin-top:0; }
+article img{ max-width:100%; }
+article ul,article ol{ padding-left:var(--sp-5); margin:0 0 var(--sp-3); }
+article li{ margin:2px 0; }
+.dv-cats{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-5) var(--sp-6); max-width:none; margin-top:var(--sp-5); }
+.dv-cats h2{ border:0; margin:0 0 var(--sp-2); padding:0; font-size:var(--fs-body); display:flex; gap:var(--sp-2); align-items:baseline; }
+.dv-cats h2 .n{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); font-weight:400; }
+.dv-cats ul{ list-style:none; padding:0; margin:0; font-size:var(--fs-body); }
+.dv-cats li{ border-top:1px solid var(--line); margin:0; }
+.dv-cats li a{ display:block; padding:5px 0; color:var(--tx); text-decoration:none; }
+.dv-cats li a:hover{ color:var(--accent); }
+@media (max-width:1280px){
+  .dv{ grid-template-columns:260px minmax(0,1fr); }
+  .dv-toc{ display:none; }
+  .dv-toc-inline{ display:block; }
+}
+@media (max-width:760px){
+  .dv{ grid-template-columns:minmax(0,1fr); }
+  .dv-nav{ position:static; height:auto; max-height:45vh; border-right:0; border-bottom:1px solid var(--line); }
+  .dv-main{ padding:var(--sp-4); }
+  .dv-cats{ grid-template-columns:minmax(0,1fr); }
+  article{ font-size:var(--fs-body); }
 }
 """
 
@@ -345,9 +389,8 @@ def _q(lang: str) -> str:
 
 
 def _sidebar(categories: dict[str, list[dict]], lang: str, current: str | None) -> str:
-    out = ['<a class="home" href="/' + _q(lang) + '" data-i18n>EOSAT-1 documentation</a>',
-           '<label for="search" data-i18n>Filter documents</label>',
-           '<input type="search" id="search" oninput="filterDocs()">']
+    out = ['<div class="ds-field"><label for="search" data-i18n>Filter documents</label>',
+           '<input class="ds-input text" type="search" id="search" autocomplete="off"></div>']
     cat_order = sorted(categories.keys(), key=lambda c: (c == '_root', c))
     for cat in cat_order:
         out.append(f'<h2 {_DYN_I18N}>{html.escape(_cat_label(cat))}</h2>')
@@ -358,48 +401,109 @@ def _sidebar(categories: dict[str, list[dict]], lang: str, current: str | None) 
             out.append(
                 f'<a href="/doc/{html.escape(doc["path"])}{_q(lang)}" class="{cls}"{cur} '
                 f'data-title="{html.escape(title.lower())}">{html.escape(title)}</a>')
+    out.append('<p class="none" id="none" data-i18n>No document matches.</p>')
     return "\n".join(out)
 
 
-_FILTER_JS = """<script>
-function filterDocs() {
-  const q = document.getElementById('search').value.toLowerCase();
-  document.querySelectorAll('.doc-link').forEach(a => {
-    a.style.display = a.dataset.title.includes(q) ? '' : 'none';
+#: Filter, the language switch (the server picks the document language, so a
+#: language change reloads with ?lang=) and the contents highlight.
+_PAGE_JS = """<script type="module">
+const q = document.getElementById("search");
+if (q) q.addEventListener("input", () => {
+  const v = q.value.trim().toLowerCase();
+  let shown = 0;
+  document.querySelectorAll(".doc-link").forEach((a) => {
+    const on = a.dataset.title.includes(v); a.style.display = on ? "" : "none"; if (on) shown++;
   });
+  document.querySelectorAll(".dv-nav h2").forEach((h) => {
+    let n = h.nextElementSibling, any = false;
+    while (n && n.tagName === "A") { if (n.style.display !== "none") any = true; n = n.nextElementSibling; }
+    h.style.display = any ? "" : "none";
+  });
+  document.getElementById("none").style.display = shown ? "" : "block";
+});
+window.addEventListener("smo:langchange", (e) => {
+  const u = new URL(location.href);
+  if (u.searchParams.get("lang") !== e.detail.lang) { u.searchParams.set("lang", e.detail.lang); location.replace(u); }
+});
+const cur = document.querySelector('.doc-link[aria-current]');
+if (cur) cur.scrollIntoView({ block: "center" });
+const links = [...document.querySelectorAll(".dv-toc a")];
+const heads = links.map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1)))).filter(Boolean);
+if (heads.length && "IntersectionObserver" in window) {
+  const seen = new Map();
+  const io = new IntersectionObserver((es) => {
+    es.forEach((e) => seen.set(e.target.id, e.isIntersecting));
+    const first = heads.find((h) => seen.get(h.id)) ;
+    if (!first) return;
+    links.forEach((a) => a.setAttribute("aria-current", String(a.hash.slice(1) === first.id)));
+  }, { rootMargin: "-56px 0px -70% 0px" });
+  heads.forEach((h) => io.observe(h));
 }
 </script>"""
 
 
-def _page(title: str, lang: str, sidebar: str, content: str) -> str:
-    from smo_common.web.http import TOOL_HEAD
+def _page(title: str, lang: str, sidebar: str, content: str, toc: str = "",
+          meta: str = "") -> str:
+    import tool_frame
+    bar = tool_frame.bar('<span data-i18n>Documentation</span>', meta_html=meta)
     return f"""<!DOCTYPE html>
 <html lang="{lang}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>{html.escape(title)}</title>
-{TOOL_HEAD}<style>{PAGE_CSS}</style>
+{tool_frame.head(extra_css=PAGE_CSS)}
 </head><body data-server-lang="{lang}">
-<nav id="sidebar" aria-label="Documents" data-i18n-aria-label>
+<a class="ds-skip" href="#content" data-i18n>Skip to content</a>
+{bar}
+<div class="dv">
+<nav class="dv-nav" aria-label="Documents" data-i18n-aria-label>
 {sidebar}
 </nav>
-<main id="content">
+<main id="content" class="dv-main">
 {content}
 </main>
-{_FILTER_JS}
+{toc}
+</div>
+{tool_frame.SCRIPT}
+{_PAGE_JS}
 </body></html>"""
 
 
 def build_index_html(categories: dict[str, list[dict]], lang: str = "en") -> str:
-    rows = "".join(
-        f'<li><span {_DYN_I18N}>{html.escape(_cat_label(cat))}</span>'
-        f'<span class="n">{len(docs)}</span></li>'
-        for cat, docs in sorted(categories.items(), key=lambda kv: (kv[0] == '_root', kv[0])))
-    content = ('<h1 data-i18n>EOSAT-1 mission documentation</h1>\n'
+    cols = []
+    for cat, docs in sorted(categories.items(), key=lambda kv: (kv[0] == '_root', kv[0])):
+        items = "".join(
+            f'<li><a href="/doc/{html.escape(d["path"])}{_q(lang)}">'
+            f'{html.escape(d["fr_title"] if lang == "fr" and d.get("fr_title") else d["title"])}</a></li>'
+            for d in docs)
+        cols.append(f'<section><h2><span {_DYN_I18N}>{html.escape(_cat_label(cat))}</span>'
+                    f'<span class="n">{len(docs)}</span></h2><ul>{items}</ul></section>')
+    content = ('<article>'
+               '<h1 data-i18n>EOSAT-1 mission documentation</h1>\n'
                '<p data-i18n="Choose a document from the list. Documents open in the interface language when a translation exists.">'
                'Choose a document from the list. Documents open in the interface '
-               'language when a translation exists.</p>\n'
-               f'<ul class="cats">{rows}</ul>')
-    return _page("EOSAT-1 documentation", lang, _sidebar(categories, lang, None), content)
+               'language when a translation exists.</p></article>\n'
+               f'<div class="dv-cats">{"".join(cols)}</div>')
+    n = sum(len(d) for d in categories.values())
+    return _page("EOSAT-1 documentation", lang, _sidebar(categories, lang, None), content,
+                 meta=f'<span class="num">{n}</span> <span data-i18n>documents</span>')
+
+
+_HEAD_RE = re.compile(r'<h([23]) id="([^"]+)">(.*?)</h\1>')
+
+
+def _toc(body_html: str) -> tuple[str, str]:
+    """(sticky contents column, inline disclosure for narrow screens)."""
+    items = [(int(m.group(1)), m.group(2), re.sub(r"<[^>]+>", "", m.group(3)))
+             for m in _HEAD_RE.finditer(body_html)]
+    if len(items) < 2:
+        return "", ""
+    lis = "".join(f'<li><a class="l{lv}" href="#{html.escape(i)}">{t}</a></li>' for lv, i, t in items)
+    side = (f'<nav class="dv-toc" aria-labelledby="toc-h"><h2 id="toc-h" data-i18n>On this page</h2>'
+            f'<ol>{lis}</ol></nav>')
+    inline = (f'<details class="ds-disclosure dv-toc-inline"><summary data-i18n>On this page</summary>'
+              f'<div class="bd dv-toc" style="position:static;display:block;padding:0 0 var(--sp-2)"><ol>{lis}</ol></div></details>')
+    return side, inline
 
 
 def build_doc_html(title: str, body_html: str, breadcrumb: str,
@@ -421,8 +525,11 @@ def build_doc_html(title: str, body_html: str, breadcrumb: str,
     if lang == "fr" and served_lang == "en":
         note = ('<p class="note-lang" data-i18n="No French translation of this document yet; showing the English original.">'
                 'No French translation of this document yet; showing the English original.</p>')
-    content = f'{bar}\n{note}\n<article lang="{served_lang}">\n{body_html}\n</article>'
-    return _page(f"{title} — EOSAT-1", lang, _sidebar(categories, lang, rel_path), content)
+    side, inline = _toc(body_html)
+    content = f'{bar}\n{note}\n{inline}\n<article lang="{served_lang}">\n{body_html}\n</article>'
+    meta = f'<code>{html.escape(rel_path)}</code>' if rel_path else ""
+    return _page(f"{title} — EOSAT-1", lang, _sidebar(categories, lang, rel_path), content,
+                 toc=side, meta=meta)
 
 
 # ── aiohttp server ────────────────────────────────────────────────────

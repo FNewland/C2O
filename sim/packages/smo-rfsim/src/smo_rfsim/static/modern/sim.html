@@ -15,35 +15,40 @@
   (POST /api/channel, /api/pipeline, /api/link) — the impairment workflow
   is unchanged, only its home moved off the operator page.
 -->
+<script>
+(function(){var d=document.documentElement,t=null;
+try{t=new URLSearchParams(location.search).get("theme")||localStorage.getItem("c2o.theme");}catch(e){}
+d.setAttribute("data-theme",t==="light"?"light":"dark");})();
+</script>
 <link rel="stylesheet" href="/static/shared/design-system.css">
 <style>
-  header{ display:flex; align-items:center; gap:14px; padding:10px 18px;
-    border-bottom:1px solid var(--line); background:var(--s1); }
-  header .mark b{ font-size:14px; letter-spacing:1.5px; }
-  header .mark span{ display:block; font-size:12px; color:var(--tx3); }
-  header .grow{ flex:1; }
-  .grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
-    gap:12px; padding:14px 18px; max-width:1100px; margin:0 auto; }
-  .full{ grid-column:1 / -1; }
-  @media (max-width:900px){ .grid{ grid-template-columns:1fr; } }
-  .rows .row{ display:flex; justify-content:space-between; gap:12px;
-    padding:5px 0; border-bottom:1px solid var(--line); }
+  /* Page-local layout only; tokens and components from the design system. */
+  .rb{ display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:0 var(--sp-5);
+    background:var(--bg); border-bottom:1px solid var(--line); }
+  .rb .mark{ font-family:var(--mono); font-size:var(--fs-label); font-weight:500; color:var(--tx2);
+    letter-spacing:.06em; padding-right:var(--sp-3); border-right:1px solid var(--line-2); line-height:20px; }
+  .rb h1{ font-size:var(--fs-value); font-weight:600; color:var(--val); white-space:nowrap; }
+  .rb .meta{ font-size:var(--fs-label); color:var(--tx3); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rb .ctl{ margin-left:auto; display:flex; align-items:center; gap:var(--sp-3); }
+  .rb .upd{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+  main{ max-width:1180px; margin:0 auto; padding:var(--sp-4) var(--sp-5) var(--sp-6); display:flex; flex-direction:column; gap:var(--sp-4); }
+  .grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-4); }
+  .rows .row{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-3);
+    padding:6px 0; border-bottom:1px solid var(--line); }
   .rows .row:last-child{ border-bottom:none; }
-  .rows .k{ color:var(--tx3); font-size:13px; }
-  .rows .v{ font-family:var(--mono); font-size:14px; font-weight:600; }
-  .ctl-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-    gap:10px 16px; }
-  .ctl-grid label{ display:flex; flex-direction:column; gap:4px;
-    font-size:12.5px; color:var(--tx2); }
-  .ctl-grid label.inline{ flex-direction:row; align-items:center; gap:8px; }
-  .ctl-grid input, .ctl-grid select{ background:var(--s2); color:var(--tx);
-    border:1px solid var(--line-2); border-radius:var(--r); padding:4px 6px;
-    font-family:var(--mono); font-size:12.5px; }
-  .ctl-grid input[type=range]{ padding:0; accent-color:var(--shelf); }
-  .ctl-grid input[type=checkbox]{ accent-color:var(--shelf); }
-  .msg{ font-size:12.5px; margin-left:10px; }
-  .msg.ok{ color:var(--tx2); }
-  .msg.err{ color:var(--alarm); font-weight:600; }
+  .rows .k{ color:var(--tx2); }
+  .ctl-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sp-3) var(--sp-4); align-items:end; }
+  .ctl-grid .w2{ grid-column:span 2; }
+  .sec{ padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
+  .sec:first-child{ border-top:0; }
+  .sec h3{ font-size:var(--fs-label); font-weight:600; color:var(--tx3); margin-bottom:var(--sp-2); }
+  input[type=range]{ width:100%; accent-color:var(--shelf); }
+  .rv{ font-family:var(--mono); color:var(--val); }
+  .acts{ display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap; padding:var(--sp-3) var(--sp-4);
+    border-top:1px solid var(--line); background:var(--s2); }
+  .acts .note{ font-size:var(--fs-label); color:var(--tx2); margin-left:auto; }
+  .int-list{ display:flex; gap:var(--sp-2); flex-wrap:wrap; margin-top:var(--sp-2); }
+  @media (max-width:900px){ .grid{ grid-template-columns:minmax(0,1fr); } .ctl-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 </style>
 </head>
 <body>
@@ -52,126 +57,106 @@
      must never be mistaken for an operator display (house convention). -->
 <div class="ds-instructor-strip" data-i18n>Instructor — RF channel model · simulation ground truth · not an operator display</div>
 
-<header>
-  <div class="mark"><b data-i18n>SMO RADIO / CHANNEL MODEL</b><span data-i18n>Injected link impairments — instructor only</span></div>
-  <span class="ds-badge" id="ctl-badge" data-i18n-title title="Control plane state">CONTROL —</span>
-  <div class="grow"></div>
-  <span class="num" id="last-update" style="font-size:12px;color:var(--tx3)">—</span>
-  <span id="lang-toggle"></span>
+<header class="rb">
+  <span class="mark" aria-hidden="true">C2O</span>
+  <h1 data-i18n>Radio channel model</h1>
+  <span class="meta" data-i18n>Injected link impairments — instructor only</span>
+  <div class="ctl">
+    <span id="ctl-badge" role="status"></span>
+    <span class="upd" id="last-update"></span>
+    <span id="lang-toggle"></span>
+  </div>
 </header>
 
-<div class="ds-banner warn" id="ctl-banner" hidden data-i18n-html>
-  Control plane disabled — start the bridge with <code>--radio-control</code>
-  to inject impairments. The channel-model status below stays read-only.
-</div>
+<main>
+  <div id="ctl-banner"></div>
 
-<div class="grid">
-
-  <div class="ds-card">
-    <h2 data-i18n>Channel model status <span class="r" data-i18n>injected truth</span></h2>
-    <div class="bd rows">
-      <div class="row"><span class="k">AWGN</span><span class="v" id="ch-awgn">—</span></div>
-      <div class="row"><span class="k" data-i18n>Phase noise</span><span class="v" id="ch-phasenoise">—</span></div>
-      <div class="row"><span class="k" data-i18n>Fading</span><span class="v" id="ch-fading">—</span></div>
-      <div class="row"><span class="k" data-i18n>Fading K</span><span class="v" id="ch-fading-k">—</span></div>
-      <div class="row"><span class="k" data-i18n>Interferers</span><span class="v" id="ch-interferers">—</span></div>
-      <div class="row"><span class="k" data-i18n>GS Eb/N0 penalty (injected)</span><span class="v" id="gs-penalty">—</span></div>
-      <div class="row"><span class="k" data-i18n>Manual overrides</span><span class="v" id="ch-overrides">—</span></div>
-    </div>
+  <div class="grid">
+    <section class="ds-panel ds-card" aria-labelledby="st-h">
+      <div class="ds-panel-h"><span id="st-h" data-i18n>Channel model status</span><span class="r" data-i18n>injected truth</span></div>
+      <div class="ds-panel-b rows">
+        <div class="row"><span class="k">AWGN</span><span id="ch-awgn"></span></div>
+        <div class="row"><span class="k" data-i18n>Phase noise</span><span id="ch-phasenoise"></span></div>
+        <div class="row"><span class="k" data-i18n>Fading</span><span id="ch-fading"></span></div>
+        <div class="row"><span class="k" data-i18n>Interferers</span><span id="ch-interferers"></span></div>
+        <div class="row"><span class="k" data-i18n>GS Eb/N0 penalty (injected)</span><span id="gs-penalty"></span></div>
+        <div class="row"><span class="k" data-i18n>Manual overrides</span><span id="ch-overrides"></span></div>
+      </div>
+    </section>
+    <section class="ds-panel" aria-labelledby="fx-h">
+      <div class="ds-panel-h"><span id="fx-h" data-i18n>Observed effect</span><span class="r" data-i18n>what the operator sees</span></div>
+      <div class="ds-panel-b rows">
+        <div class="row"><span class="k" data-i18n>Eb/N0 at receiver</span><span id="fx-ebn0"></span></div>
+        <div class="row"><span class="k" data-i18n>BER</span><span id="fx-ber"></span></div>
+        <div class="row"><span class="k" data-i18n>Carrier lock</span><span id="fx-carrier"></span></div>
+        <div class="row"><span class="k" data-i18n>Frame sync</span><span id="fx-frame"></span></div>
+        <div class="row"><span class="k" data-i18n>Bad frames</span><span id="fx-bad"></span></div>
+      </div>
+    </section>
   </div>
 
-  <div class="ds-card">
-    <h2 data-i18n>Observed effect <span class="r" data-i18n>what the operator sees</span></h2>
-    <div class="bd rows">
-      <div class="row"><span class="k" data-i18n>Eb/N0 at receiver</span><span class="v" id="fx-ebn0">—</span></div>
-      <div class="row"><span class="k" data-i18n>BER</span><span class="v" id="fx-ber">—</span></div>
-      <div class="row"><span class="k" data-i18n>Carrier lock</span><span class="v" id="fx-carrier">—</span></div>
-      <div class="row"><span class="k" data-i18n>Frame sync</span><span class="v" id="fx-frame">—</span></div>
-      <div class="row"><span class="k" data-i18n>Bad frames</span><span class="v" id="fx-bad">—</span></div>
-    </div>
-  </div>
-
-  <div class="ds-card full" id="config-panel">
-    <h2 data-i18n>Impairment injection <span class="r" id="cfg-state">control disabled</span></h2>
-    <div class="bd">
+  <section class="ds-panel" id="config-panel" aria-labelledby="cfg-h">
+    <div class="ds-panel-h"><span id="cfg-h" data-i18n>Impairment injection</span><span class="r" id="cfg-state"></span></div>
+    <div class="sec">
       <div class="ctl-grid">
-        <label>Eb/N0 <span><b class="num" id="cfg-ebn0-val">10.0</b> dB</span>
-          <input id="cfg-ebn0" type="range" min="-5" max="25" step="0.5" value="10"></label>
-        <label data-i18n>Doppler ramp <span><b class="num" id="cfg-dopp-val">0</b> Hz</span>
-          <input id="cfg-dopp" type="range" min="-60000" max="60000" step="500" value="0"></label>
-        <label data-i18n>Modulation
-          <select id="cfg-mod">
+        <div class="ds-field w2"><label for="cfg-ebn0">Eb/N0 · <span class="rv" id="cfg-ebn0-val">10.0</span> dB</label>
+          <input id="cfg-ebn0" type="range" min="-5" max="25" step="0.5" value="10"></div>
+        <div class="ds-field w2"><label for="cfg-dopp"><span data-i18n>Doppler offset</span> · <span class="rv" id="cfg-dopp-val">0</span> Hz</label>
+          <input id="cfg-dopp" type="range" min="-60000" max="60000" step="500" value="0"></div>
+        <div class="ds-field"><label for="cfg-mod" data-i18n>Modulation</label>
+          <select class="ds-select" id="cfg-mod">
             <option value="0">BPSK</option><option value="1">QPSK</option>
             <option value="2">8PSK</option><option value="3">OQPSK</option>
             <option value="4">16-APSK</option><option value="5">&pi;/4-DQPSK</option>
             <option value="6">GMSK</option><option value="7">GFSK</option>
-          </select></label>
-        <label data-i18n>Symbol rate (Bd)
-          <input id="cfg-symrate" type="number" min="250" max="200000" step="250" value="32000"></label>
-        <label class="inline"><input id="cfg-awgn" type="checkbox" checked> AWGN</label>
-        <label class="inline" data-i18n><input id="cfg-pn" type="checkbox"> Phase noise</label>
-        <label data-i18n>PN linewidth (Hz)
-          <input id="cfg-pn-lw" type="number" min="0" max="10000" step="1" value="10"></label>
-        <label class="inline" data-i18n><input id="cfg-fade" type="checkbox"> Rician fading</label>
-        <label data-i18n>Fading K (dB)
-          <input id="cfg-fade-k" type="number" min="-30" max="40" step="1" value="10"></label>
-        <label data-i18n>Fade rate (Hz)
-          <input id="cfg-fade-fd" type="number" min="0" max="1000" step="1" value="50"></label>
-      </div>
-      <div style="margin-top:14px;">
-        <div class="k" style="color:var(--tx3);font-size:12px;text-transform:uppercase;letter-spacing:1px;" data-i18n>Interferers</div>
-        <div class="ctl-grid" style="margin-top:6px;">
-          <label data-i18n>Type
-            <select id="cfg-int-type"><option value="cw">CW</option><option value="wideband" data-i18n>Wideband</option></select></label>
-          <label data-i18n>Offset (Hz)
-            <input id="cfg-int-off" type="number" step="500" value="20000"></label>
-          <label data-i18n>Power (dBm)
-            <input id="cfg-int-pwr" type="number" step="1" value="-35"></label>
-          <label data-i18n>Bandwidth (Hz)
-            <input id="cfg-int-bw" type="number" step="1000" value="50000"></label>
-        </div>
-        <div id="cfg-int-list" style="margin-top:6px;font-size:12.5px;color:var(--tx2);">none</div>
-        <div style="margin-top:6px;">
-          <button id="cfg-int-add" class="ds-btn" data-i18n>Add interferer</button>
-          <button id="cfg-int-clear" class="ds-btn" data-i18n>Clear all</button>
-        </div>
-      </div>
-      <div style="margin-top:14px;">
-        <button id="cfg-apply" class="ds-btn primary" data-i18n>Apply</button>
-        <button id="cfg-release" class="ds-btn" data-i18n>Release to sim</button>
-        <span id="cfg-msg" class="msg"></span>
+          </select></div>
+        <div class="ds-field"><label for="cfg-symrate" data-i18n>Symbol rate (Bd)</label>
+          <input class="ds-input" id="cfg-symrate" inputmode="numeric" value="32000"></div>
+        <div class="ds-field"><label for="cfg-pn-lw" data-i18n>PN linewidth (Hz)</label>
+          <input class="ds-input" id="cfg-pn-lw" inputmode="decimal" value="10"></div>
+        <div class="ds-field"><label for="cfg-fade-k" data-i18n>Fading K (dB)</label>
+          <input class="ds-input" id="cfg-fade-k" inputmode="decimal" value="10"></div>
+        <label class="ds-check"><input id="cfg-awgn" type="checkbox" checked> AWGN</label>
+        <label class="ds-check"><input id="cfg-pn" type="checkbox"> <span data-i18n>Phase noise</span></label>
+        <label class="ds-check"><input id="cfg-fade" type="checkbox"> <span data-i18n>Rician fading</span></label>
+        <div class="ds-field"><label for="cfg-fade-fd" data-i18n>Fade rate (Hz)</label>
+          <input class="ds-input" id="cfg-fade-fd" inputmode="decimal" value="50"></div>
       </div>
     </div>
-  </div>
-
-</div>
+    <div class="sec">
+      <h3 data-i18n>Interferers</h3>
+      <div class="ctl-grid">
+        <div class="ds-field"><label for="cfg-int-type" data-i18n>Type</label>
+          <select class="ds-select" id="cfg-int-type"><option value="cw">CW</option><option value="wideband" data-i18n>Wideband</option></select></div>
+        <div class="ds-field"><label for="cfg-int-off" data-i18n>Offset (Hz)</label><input class="ds-input" id="cfg-int-off" inputmode="decimal" value="20000"></div>
+        <div class="ds-field"><label for="cfg-int-pwr" data-i18n>Power (dBm)</label><input class="ds-input" id="cfg-int-pwr" inputmode="decimal" value="-35"></div>
+        <div class="ds-field"><label for="cfg-int-bw" data-i18n>Bandwidth (Hz)</label><input class="ds-input" id="cfg-int-bw" inputmode="decimal" value="50000"></div>
+      </div>
+      <div class="int-list" id="cfg-int-list"></div>
+      <div class="ds-row" style="margin-top:var(--sp-2)">
+        <button type="button" id="cfg-int-add" class="ds-btn sm" data-i18n>Add interferer</button>
+        <button type="button" id="cfg-int-clear" class="ds-btn ghost sm" data-i18n>Clear all</button>
+      </div>
+    </div>
+    <div class="acts">
+      <button type="button" id="cfg-apply" class="ds-btn critical" data-i18n>Apply</button>
+      <button type="button" id="cfg-release" class="ds-btn critical" data-i18n>Release to sim</button>
+      <span id="cfg-msg" role="status" aria-live="polite"></span>
+      <span class="note" data-i18n>These controls affect everyone: every operator's receiver changes the moment you apply.</span>
+    </div>
+  </section>
+</main>
 
 <script type="module">
-// UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md. This page's own script
-// below is a classic (non-module) script: it reaches the runtime through
-// window.SMO_I18N (same object as I18n) once this module has run, i.e.
-// from its DOMContentLoaded handler onwards.
-import { I18n } from "/static/shared/i18n.js";
-import { mountLangToggle } from "/static/shared/components.js";
-I18n.ready.then(() => {
-  mountLangToggle(document.getElementById("lang-toggle"));
-  if (typeof window.i18nRefresh === "function") window.i18nRefresh();
-});
-I18n.onLangChange(() => { if (typeof window.i18nRefresh === "function") window.i18nRefresh(); });
-</script>
-<script>
+// UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md.
+import { I18n, tText } from "/static/shared/i18n.js";
+import { mountLangToggle, renderChip, renderValue, renderNoData, renderBanner, setDisabled, setEnabled, armButton, esc } from "/static/shared/components.js";
+I18n.ready.then(() => { mountLangToggle(document.getElementById("lang-toggle")); i18nRefresh(); });
+I18n.onLangChange(() => i18nRefresh());
+
 const $ = (id) => document.getElementById(id);
-// i18n: window.SMO_I18N exists once the module above has run; until then
-// English with {{var}} filled in (same output as the runtime in EN).
-function tText(s, v) {
-  const I = window.SMO_I18N;
-  if (I && typeof I.tText === "function") return I.tText(s, v);
-  return v ? s.replace(/\{\{-?\s*(\w+)\s*\}\}/g, (m, k) => (k in v ? String(v[k]) : m)) : s;
-}
-let lastData = null;
-function i18nRefresh() { renderInterferers(); if (lastData) render(lastData); }
-let cfgInterferers = [];
-let cfgInitialised = false;
+let lastData = null, cfgInterferers = [], cfgInitialised = false, dirty = false;
+function i18nRefresh() { renderInterferers(); if (lastData) render(lastData); else paintControls(null); }
 
 let ws;
 function connect() {
@@ -183,53 +168,51 @@ function connect() {
 }
 connect();
 
+const onoff = (on) => on ? renderChip({ kind: "active", label: tText("on") }) : renderChip({ kind: "neutral", label: tText("off") });
 function render(d) {
   lastData = d;
-  // Channel-model truth
-  const cfg = d.config || {};
-  const ch = cfg.channel || {};
-  $("ch-awgn").textContent = ch.awgn_enabled === false ? "OFF" : "ON";
-  $("ch-phasenoise").textContent = d.phase_noise_enabled ? "ON" : "OFF";
-  $("ch-fading").textContent = d.fading_enabled
-      ? "ON (K=" + (d.fading_k_db || 10).toFixed(0) + " dB)" : "OFF";
-  $("ch-fading-k").textContent = (d.fading_k_db || 10).toFixed(1) + " dB";
-  $("ch-interferers").textContent = "" + (d.n_interferers || 0);
+  const cfg = d.config || {}, ch = cfg.channel || {};
+  $("ch-awgn").innerHTML = onoff(ch.awgn_enabled !== false);
+  $("ch-phasenoise").innerHTML = onoff(!!d.phase_noise_enabled);
+  $("ch-fading").innerHTML = d.fading_enabled ? renderChip({ kind: "active", label: `${tText("on")} · K ${(d.fading_k_db || 10).toFixed(0)} dB` }) : onoff(false);
+  $("ch-interferers").innerHTML = renderValue(d.n_interferers || 0, { digits: 0 });
   const gsPen = d.gs_penalty_db || 0;
-  const gsEl = $("gs-penalty");
-  gsEl.textContent = (gsPen > 0 ? "-" : "") + gsPen.toFixed(1) + " dB";
-  gsEl.style.color = gsPen > 3 ? "var(--alarm)" : gsPen > 0 ? "var(--warn)" : "";
-  $("ch-overrides").textContent =
-      (cfg.manual_overrides && cfg.manual_overrides.length)
-        ? cfg.manual_overrides.join(", ") : tText("none");
-
-  // Observed effect (feedback so the instructor sees what landed)
-  $("fx-ebn0").textContent = d.eb_n0_db.toFixed(1) + " dB";
-  $("fx-ber").textContent = "10^" + d.ber_log10.toFixed(1);
-  $("fx-carrier").textContent = d.carrier_lock;
-  $("fx-frame").textContent = d.frame_sync;
-  $("fx-bad").textContent = d.bad_frames;
-
-  // Control plane state
-  const badge = $("ctl-badge");
-  badge.textContent = d.control_enabled ? tText("CONTROL ENABLED") : tText("CONTROL DISABLED");
-  badge.className = "ds-badge" + (d.control_enabled ? " warn" : "");
-  $("ctl-banner").hidden = !!d.control_enabled;
+  $("gs-penalty").innerHTML = renderValue(-gsPen, { units: "dB", digits: 1, limitState: gsPen > 3 ? "red_low" : gsPen > 0 ? "yellow_low" : "" });
+  $("ch-overrides").textContent = (cfg.manual_overrides && cfg.manual_overrides.length) ? cfg.manual_overrides.join(", ") : tText("none");
+  $("fx-ebn0").innerHTML = renderValue(d.eb_n0_db, { units: "dB", digits: 1 });
+  $("fx-ber").innerHTML = renderValue(d.ber_log10, { units: "log10", digits: 1 });
+  $("fx-carrier").innerHTML = renderChip(d.carrier_lock === "LOCKED" ? { kind: "ok", glyph: "lock", label: tText("Locked") } : { kind: "off", label: d.carrier_lock || "" });
+  $("fx-frame").innerHTML = renderChip(d.frame_sync === "LOCKED" ? { kind: "ok", glyph: "lock", label: tText("Locked") } : { kind: "off", label: d.frame_sync || "" });
+  $("fx-bad").innerHTML = renderValue(d.bad_frames, { digits: 0 });
+  $("ctl-badge").innerHTML = d.control_enabled ? renderChip({ kind: "warn", label: tText("CONTROL ENABLED") }) : renderChip({ kind: "off", label: tText("CONTROL DISABLED") });
+  $("ctl-banner").innerHTML = d.control_enabled ? "" : renderBanner("nodata", "", { html: tText("Control plane disabled — start the bridge with <code>--radio-control</code> to inject impairments. The channel-model status below stays read-only.") });
   syncConfigPanel(d);
-
-  $("last-update").textContent =
-      new Date(d.timestamp * 1000).toLocaleTimeString();
+  $("last-update").textContent = new Date(d.timestamp * 1000).toISOString().substr(11, 8) + " UTC";
 }
 
+const CONTROLS = () => document.querySelectorAll("#config-panel input, #config-panel select, #config-panel button");
+function paintControls(d) {
+  const on = !!(d && d.control_enabled);
+  const why = !d ? tText("Waiting for the receiver feed.") : tText("Control plane is off: the bridge was started without --radio-control.");
+  CONTROLS().forEach((el) => {
+    if (el.id === "cfg-apply" || el.id === "cfg-release") return;
+    if (on) { el.disabled = false; el.removeAttribute("data-reason"); el.closest(".ds-field, .ds-check")?.classList.remove("is-disabled"); }
+    else { el.disabled = true; el.closest(".ds-field, .ds-check")?.classList.add("is-disabled"); }
+  });
+  for (const id of ["cfg-int-add", "cfg-int-clear"]) on ? setEnabled($(id)) : setDisabled($(id), why);
+  if (!on) { setDisabled($("cfg-apply"), why); setDisabled($("cfg-release"), why); }
+  else {
+    dirty ? setEnabled($("cfg-apply")) : setDisabled($("cfg-apply"), tText("Nothing to apply: change a setting first."));
+    setEnabled($("cfg-release"));
+  }
+  $("cfg-state").innerHTML = !on ? esc(tText("control disabled"))
+    : dirty ? renderChip({ kind: "cmd", label: tText("changes not applied") }) : esc(tText("in step with the receiver"));
+}
 function syncConfigPanel(d) {
-  const controls = document.querySelectorAll(
-      "#config-panel input, #config-panel select, #config-panel button");
-  controls.forEach((el) => { el.disabled = !d.control_enabled; });
-  $("cfg-state").textContent =
-      d.control_enabled ? tText("control enabled") : tText("control disabled");
+  paintControls(d);
   if (!d.control_enabled || cfgInitialised) return;
   cfgInitialised = true;
-  const cfg = d.config || {};
-  const ch = cfg.channel || {}, pl = cfg.pipeline || {};
+  const cfg = d.config || {}, ch = cfg.channel || {}, pl = cfg.pipeline || {};
   const set = (id, v) => { const e = $(id); if (e !== null && v !== undefined && v !== null) e.value = v; };
   const chk = (id, v) => { const e = $(id); if (e) e.checked = !!v; };
   set("cfg-ebn0", ch.eb_n0_db); set("cfg-dopp", ch.doppler_hz);
@@ -243,64 +226,49 @@ function syncConfigPanel(d) {
   $("cfg-ebn0-val").textContent = Number(ch.eb_n0_db || 10).toFixed(1);
   $("cfg-dopp-val").textContent = Math.round(ch.doppler_hz || 0);
 }
-
 function renderInterferers() {
-  const el = $("cfg-int-list");
-  if (!el) return;
-  el.textContent = cfgInterferers.length === 0 ? tText("none")
-    : cfgInterferers.map((i) => i.type + " @ " +
-        (i.freq_offset_hz ?? i.center_offset_hz ?? 0) + " Hz, " +
-        i.power_dbm + " dBm").join(" | ");
+  $("cfg-int-list").innerHTML = cfgInterferers.length === 0 ? `<span class="ds-meta">${esc(tText("none"))}</span>`
+    : cfgInterferers.map((i) => renderChip({ kind: "neutral", label: `${i.type} @ ${i.freq_offset_hz ?? i.center_offset_hz ?? 0} Hz, ${i.power_dbm} dBm` })).join("");
 }
-
 async function postCfg(path, body) {
   const msg = $("cfg-msg");
   try {
-    const r = await fetch(path, { method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body) });
+    const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json();
-    msg.textContent = r.ok ? tText("applied") : tText("error: {{error}}", { error: j.error || r.status });
-    msg.className = "msg " + (r.ok ? "ok" : "err");
+    msg.innerHTML = r.ok ? renderChip({ kind: "ok", label: tText("applied") }) : renderChip({ kind: "alarm", label: tText("error: {{error}}", { error: j.error || r.status }) });
+    return r.ok;
   } catch (e) {
-    msg.textContent = tText("error: {{error}}", { error: String(e) });
-    msg.className = "msg err";
+    msg.innerHTML = renderChip({ kind: "alarm", label: tText("error: {{error}}", { error: String(e) }) });
+    return false;
   }
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-  const ebn0 = $("cfg-ebn0"), dopp = $("cfg-dopp");
-  if (ebn0) ebn0.oninput = () => $("cfg-ebn0-val").textContent = Number(ebn0.value).toFixed(1);
-  if (dopp) dopp.oninput = () => $("cfg-dopp-val").textContent = dopp.value;
-  $("cfg-int-add").onclick = () => {
-    const type = $("cfg-int-type").value;
-    const spec = { type: type, power_dbm: Number($("cfg-int-pwr").value) };
-    if (type === "cw") spec.freq_offset_hz = Number($("cfg-int-off").value);
-    else { spec.center_offset_hz = Number($("cfg-int-off").value);
-           spec.bandwidth_hz = Number($("cfg-int-bw").value); }
-    cfgInterferers.push(spec);
-    renderInterferers();
-  };
-  $("cfg-int-clear").onclick = () => { cfgInterferers = []; renderInterferers(); };
-  $("cfg-apply").onclick = async () => {
-    await postCfg("/api/channel", {
-      eb_n0_db: Number($("cfg-ebn0").value),
-      doppler_hz: Number($("cfg-dopp").value),
-      awgn_enabled: $("cfg-awgn").checked,
-      phase_noise_enabled: $("cfg-pn").checked,
-      phase_noise_linewidth_hz: Number($("cfg-pn-lw").value),
-      fading_enabled: $("cfg-fade").checked,
-      fading_k_factor_db: Number($("cfg-fade-k").value),
-      fading_max_doppler_hz: Number($("cfg-fade-fd").value),
-      interferers: cfgInterferers
-    });
-    await postCfg("/api/pipeline", {
-      modulation: Number($("cfg-mod").value),
-      symbol_rate: Number($("cfg-symrate").value)
-    });
-  };
-  $("cfg-release").onclick = () => postCfg("/api/channel", { release: "all" });
+const markDirty = () => { dirty = true; $("cfg-msg").innerHTML = ""; paintControls(lastData); };
+$("config-panel").addEventListener("input", (ev) => {
+  if (ev.target.id === "cfg-ebn0") $("cfg-ebn0-val").textContent = Number(ev.target.value).toFixed(1);
+  if (ev.target.id === "cfg-dopp") $("cfg-dopp-val").textContent = ev.target.value;
+  if (ev.target.closest(".sec") && !/^cfg-int-(type|off|pwr|bw)$/.test(ev.target.id)) markDirty();
 });
+$("cfg-int-add").addEventListener("click", () => {
+  const type = $("cfg-int-type").value;
+  const spec = { type: type, power_dbm: Number($("cfg-int-pwr").value) };
+  if (type === "cw") spec.freq_offset_hz = Number($("cfg-int-off").value);
+  else { spec.center_offset_hz = Number($("cfg-int-off").value); spec.bandwidth_hz = Number($("cfg-int-bw").value); }
+  cfgInterferers.push(spec); renderInterferers(); markDirty();
+});
+$("cfg-int-clear").addEventListener("click", () => { cfgInterferers = []; renderInterferers(); markDirty(); });
+// Two-step: these change every operator's receiver at once (P9 arm -> execute).
+armButton($("cfg-apply"), { onExecute: async () => {
+  const ok1 = await postCfg("/api/channel", {
+    eb_n0_db: Number($("cfg-ebn0").value), doppler_hz: Number($("cfg-dopp").value),
+    awgn_enabled: $("cfg-awgn").checked, phase_noise_enabled: $("cfg-pn").checked,
+    phase_noise_linewidth_hz: Number($("cfg-pn-lw").value), fading_enabled: $("cfg-fade").checked,
+    fading_k_factor_db: Number($("cfg-fade-k").value), fading_max_doppler_hz: Number($("cfg-fade-fd").value),
+    interferers: cfgInterferers });
+  const ok2 = await postCfg("/api/pipeline", { modulation: Number($("cfg-mod").value), symbol_rate: Number($("cfg-symrate").value) });
+  if (ok1 && ok2) { dirty = false; paintControls(lastData); }
+} });
+armButton($("cfg-release"), { onExecute: () => postCfg("/api/channel", { release: "all" }) });
+paintControls(null);
 </script>
 </body>
 </html>

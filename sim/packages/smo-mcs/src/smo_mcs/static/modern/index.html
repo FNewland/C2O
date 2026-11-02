@@ -3,308 +3,381 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title data-i18n>SMO MCS — EOSAT-1 — Modern Console</title>
+<title data-i18n>EOSAT-1 mission control</title>
+<!-- generation marker: /, /modern and ?ui=modern are told apart from /classic by it -->
+<meta name="application-name" content="SMO MCS Modern Console">
 <!-- ==========================================================================
-  SMO MCS MODERN CONSOLE — shell (execution plan §2.1)
-  Mockup B console shell + Mockup A ISA-101 component discipline + Mockup C
-  teaching layer. One HTML file, one ES module (mcs.js), one schematic file
-  (schematics.svg). No build step. All shared assets from /static/shared/
-  (frozen Agent-1 contract). The classic console is byte-untouched at /classic.
+  C2O MCS — modern console shell.
+  One HTML file, one ES module (mcs.js), one schematic file (schematics.svg).
+  No build step. Components, tokens and states come from the C2O design
+  system at /static/shared/ (design-system.css, components.js, state.js);
+  this file holds page LAYOUT only: no hex values, radius <= 4 px, hairlines
+  instead of shadows, the four type sizes. The classic console is untouched
+  at /classic.
+
+  Layout: SA header (identity + clocks, then the four-question annunciator)
+  over a rail + work area, with the log drawer docked at the bottom. Below
+  1000 px the console becomes a read-only "monitor view": two-row header,
+  2 x 2 annunciator, the rail as a bottom bar, cards stacked.
 =========================================================================== -->
-<!-- Vendor libraries. These were MISSING from the modern shell (field report
-     2026-08-19): the page carried only the graceful-degradation notices, so
-     "Chart.js not installed" and "map library not installed" rendered
-     permanently even though vendor/ is present and correct. Classic loads both
-     the same way. Plain (not deferred): mcs.js is an ES module and so already
-     runs after parse, and it reads window.Chart / window.svgWorldMap at render
-     time -- the degradation guards stay and now only fire when the assets are
-     genuinely absent. -->
+<!-- Vendor libraries (plain, not deferred: mcs.js is a module and runs after
+     parse; it reads window.Chart / window.svgWorldMap at render time and
+     keeps its degradation guards for when they are genuinely absent). -->
 <script src="/static/vendor/js/chart.umd.min.js"></script>
 <script src="/static/vendor/js/svg-world-map.js"></script>
-<link rel="stylesheet" href="/static/shared/design-system.css?v=1">
+<link rel="stylesheet" href="/static/shared/design-system.css?v=2">
 <style>
-/* Page-layout CSS only — components/tokens come from the design system.  */
+/* ── base ─────────────────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;
-  line-height:1.45;display:flex;flex-direction:column;overflow:hidden}
-button,select,input,textarea{font:inherit;color:inherit}
-button{background:none;border:none;cursor:pointer}
-:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+body{display:flex;flex-direction:column;overflow:hidden}
 .hide{display:none!important}
-a{color:var(--info)}
 
-/* ── SA header (chrome budget: 58px row + 52px SA cards + optional strips) ── */
+/* ── header: identity row ─────────────────────────────────────────────── */
 header{flex:0 0 auto;background:var(--s1);border-bottom:1px solid var(--line)}
-/* min-height + wrap (Agent 5 screenshot fix): at 1366 px the row content is
-   wider than the viewport; the old fixed 58 px height clipped the brand and
-   clocks. Wrapping costs ~30 px of chrome at narrow widths only. */
-.hrow{display:flex;align-items:center;gap:6px 14px;min-height:58px;
-  flex-wrap:wrap;padding:4px 16px}
-.mark{display:flex;align-items:center;gap:10px;padding-right:14px;border-right:1px solid var(--line)}
-.mark .g{width:30px;height:30px;border:1.5px solid var(--tx3);border-radius:7px;display:grid;
-  place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2)}
-.mark b{font-size:15px;display:block;line-height:1.1}
-.mark span{font-size:12px;color:var(--tx3);letter-spacing:1.4px}
-.clk{display:flex;flex-direction:column;line-height:1.12}
-.clk label{font-size:12px;letter-spacing:1px;color:var(--tx3);text-transform:uppercase}
-.clk b{font-family:var(--mono);font-size:16px;font-weight:600}
+.hrow{display:flex;align-items:center;gap:var(--sp-2) var(--sp-4);min-height:48px;
+  flex-wrap:wrap;padding:var(--sp-1) var(--sp-4)}
+.mark{display:flex;align-items:baseline;gap:var(--sp-2);padding-right:var(--sp-4);
+  border-right:1px solid var(--line);align-self:stretch;align-items:center}
+.mark b{font-size:var(--fs-value);font-weight:600;color:var(--val);letter-spacing:-.01em}
+.mark span{font-size:var(--fs-label);color:var(--tx3)}
+.clk{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.clk label{font-size:var(--fs-label);color:var(--tx3)}
+.clk b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-body);
+  font-weight:500;color:var(--val);white-space:nowrap}
 .grow{flex:1}
-.pos-wrap{display:flex;align-items:center;gap:8px;background:var(--s2);
-  border:1px solid var(--line);border-radius:var(--r);padding:4px 10px}
-.pos-wrap label{font-size:12px;letter-spacing:1px;color:var(--tx3)}
-.pos-wrap select{background:var(--s2);border:none;font-size:13px;color:var(--tx)}
-.abtn{display:flex;align-items:center;gap:8px;background:var(--alarm-wash);
-  border:1px solid var(--alarm);border-radius:var(--r);padding:5px 12px;
-  color:var(--alarm);font-weight:600;font-size:13px}
-.abtn .n{font-family:var(--mono);font-size:15px}
-.ibtn{border:1px solid var(--line-2);border-radius:var(--r);padding:5px 10px;
-  font-size:12.5px;color:var(--tx2);text-decoration:none;white-space:nowrap}
-.ibtn:hover{background:var(--s2);color:var(--tx)}
-.ibtn[aria-pressed="true"]{border-color:var(--info);color:var(--info)}
-#ws-dot{width:9px;height:9px;border-radius:50%;background:var(--alarm)}
-#ws-dot.on{background:var(--ok)}
-.sa{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
-  border-top:1px solid var(--line)}
-.sacard{background:var(--s1);padding:7px 16px;display:flex;align-items:center;gap:12px;min-width:0}
-.sacard .q{font-size:12px;letter-spacing:1px;color:var(--tx3);text-transform:uppercase;flex:0 0 78px}
-.sacard .a{min-width:0}
-.sacard .a b{display:block;font-family:var(--mono);font-size:14px;font-weight:600;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sacard .a span{display:block;font-size:12px;color:var(--tx3);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sacard.w .a b{color:var(--warn)} .sacard.a-st .a b{color:var(--alarm)}
-.sadot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:0 0 auto}
-.sadot.w{background:var(--warn)} .sadot.a{background:var(--alarm)} .sadot.stale{background:var(--stale)}
+.tools{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+.tools a.ds-btn{text-decoration:none}
+.pos-wrap{display:flex;align-items:center;gap:var(--sp-2)}
+.pos-wrap label{font-size:var(--fs-label);color:var(--tx3)}
+.pos-wrap .ds-select{min-width:170px;width:auto}
+/* The alarm button is the one header control that may carry status colour:
+   grey with no unacknowledged alarm, red + filled triangle + count with. */
+.abtn{gap:var(--sp-2)}
+.abtn .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+.abtn svg{width:11px;height:11px}
+.abtn.is-alarm{border-color:var(--alarm);color:var(--alarm);background:var(--alarm-wash)}
+.abtn.is-alarm:hover{background:var(--alarm-wash);border-color:var(--alarm)}
+.abtn.is-caution{border-color:var(--warn);color:var(--warn)}
+.linkpip{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-label);color:var(--tx3)}
+#ws-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--alarm);background:transparent}
+#ws-dot.on{border-color:var(--ok);background:var(--ok)}
 
-/* ── shell ── */
+/* ── header: the annunciator (one cell per SA question) ───────────────── */
+/* Each cell answers one question with a SHAPE + a word, then the detail:
+   check = nominal, hollow triangle = caution, filled triangle = alarm,
+   dashed ring = no data / stale. The verdict reads in greyscale. */
+.sa{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);border-top:1px solid var(--line)}
+.sacard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto;
+  column-gap:var(--sp-2);padding:var(--sp-2) var(--sp-4) 10px;min-width:0;
+  border-left:1px solid var(--line);position:relative}
+.sacard:first-child{border-left:0}
+.sacard .q{grid-column:1 / -1;font-size:var(--fs-label);color:var(--tx3);margin-bottom:2px}
+.sacard .ann{grid-row:2;align-self:center;width:14px;height:14px;display:grid;place-items:center;color:var(--tx3)}
+.sacard .ann svg{width:12px;height:12px}
+.sacard .a{display:contents}
+.sacard .a b{grid-row:2;grid-column:2;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:var(--fs-value);font-weight:500;line-height:var(--lh-value);color:var(--val);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sacard .a>span{grid-row:3;grid-column:1 / -1;font-size:var(--fs-label);color:var(--tx2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sacard.is-ok .ann{color:var(--ok)}
+.sacard.is-active .ann{color:var(--accent)}
+.sacard.is-caution{box-shadow:inset 0 -2px 0 var(--warn)}
+.sacard.is-caution .ann,.sacard.is-caution .a b{color:var(--warn)}
+.sacard.is-alarm{box-shadow:inset 0 -2px 0 var(--alarm);background:var(--alarm-wash)}
+.sacard.is-alarm .ann,.sacard.is-alarm .a b{color:var(--alarm)}
+.sacard.is-stale .a b{color:var(--tx3);font-style:italic;font-weight:400}
+.sacard.is-nodata .a b{color:var(--tx2);font-family:var(--sans);font-size:var(--fs-body)}
+/* "What's next?": the countdown is drawn as well as written — a 60-minute
+   track that empties towards AOS (or LOS). */
+.nexttrack{position:absolute;left:var(--sp-4);right:var(--sp-4);bottom:4px;height:2px;background:var(--s3)}
+.nexttrack i{position:absolute;left:0;top:0;bottom:0;background:var(--fill)}
+.nexttrack.los i{background:var(--accent)}
+
+/* ── shell: rail + work area ──────────────────────────────────────────── */
 .shell{flex:1;display:flex;min-height:0}
-nav.rail{flex:0 0 62px;background:var(--s1);border-right:1px solid var(--line);
-  display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:4px;overflow-y:auto}
-.rail button{width:46px;height:40px;border-radius:var(--r);display:grid;place-items:center;
-  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx3);position:relative}
+nav.rail{flex:0 0 64px;background:var(--s1);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;padding:var(--sp-2) 0;overflow-y:auto}
+.rail-tabs{display:flex;flex-direction:column;align-items:center;gap:2px}
+.rail button{width:52px;height:36px;border-radius:var(--radius);display:grid;place-items:center;
+  font-family:var(--mono);font-size:var(--fs-label);font-weight:500;color:var(--tx2);position:relative;
+  transition:background-color var(--motion) var(--ease),color var(--motion) var(--ease)}
 /* Position filtering sets `hidden` on the rail buttons a position does not
-   own. The UA stylesheet's [hidden]{display:none} is an AUTHOR-beaten rule,
-   so the `display:grid` above silently won and every tab stayed on screen
-   regardless of position (field report 2026-08-20: "shows tabs that the
-   position does not see telemetry in"). The logic was right; the CSS undid
-   it. Keep this rule next to the display declaration it defends against. */
+   own; the display:grid above would beat the UA [hidden] rule. */
 .rail button[hidden]{display:none}
-/* A step attributed to the current position, on the MAN procedure cards. */
+.rail button:hover{background:var(--s2);color:var(--tx)}
+.rail button.on{background:var(--s3);color:var(--val);box-shadow:inset 2px 0 0 var(--accent)}
+/* Health pip: a corner mark OUTSIDE the label box, shape + count. */
+.rail button .hd{position:absolute;top:1px;right:1px;font-family:var(--mono);font-size:var(--fs-label);
+  line-height:12px;display:flex;align-items:center;gap:1px}
+.rail button .hd svg{width:9px;height:9px}
+.rail button .hd.w{color:var(--warn)} .rail button .hd.a{color:var(--alarm)}
+.rail .sep{width:32px;border-top:1px solid var(--line-2);margin:6px 0}
 tr.pcard-mine{background:var(--s3)}
-tr.pcard-mine td{border-left:2px solid var(--info)}
-.rail button:hover{background:var(--s2);color:var(--tx2)}
-.rail button.on{background:var(--s3);color:var(--tx);box-shadow:inset 2px 0 0 var(--info)}
-.rail button .hd{position:absolute;top:3px;right:4px;font-family:var(--mono);font-size:10px;
-  font-weight:700;display:flex;align-items:center;gap:2px}
-.rail button .hd::before{content:"";width:6px;height:6px;border-radius:50%;background:transparent}
-.rail button .hd.w{color:var(--warn)} .rail button .hd.w::before{background:var(--warn)}
-.rail button .hd.a{color:var(--alarm)} .rail button .hd.a::before{background:var(--alarm)}
-.rail .sep{width:34px;border-top:1px solid var(--line-2);margin:5px 0}
-.work{flex:1;overflow:auto;min-width:0;position:relative}
-.pad{padding:14px 18px 20px;max-width:1780px}
-h1.pt{font-size:20px;font-weight:600;margin-bottom:2px}
-p.sub{color:var(--tx3);font-size:13px;margin-bottom:12px}
-.g{display:grid;gap:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.fld{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--tx3)}
-.fld input,.fld select,.fld textarea,.in{background:var(--s2);border:1px solid var(--line-2);
-  border-radius:var(--r);padding:6px 9px;font-size:13px;color:var(--tx)}
-.mono{font-family:var(--mono)}
-table.plain{width:100%;border-collapse:collapse;font-size:13px}
-table.plain th{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);
-  text-align:left;padding:5px 8px;border-bottom:1px solid var(--line-2)}
-table.plain td{padding:4px 8px;border-bottom:1px solid var(--line)}
-.scroll-y{overflow-y:auto}
-.stage{background:radial-gradient(120% 90% at 50% 0%,#171B21 0%,#0F1216 70%);border-radius:10px;padding:8px}
-:root[data-theme="light"] .stage{background:var(--s2)}
-/* Height clamp (Agent 5 screenshot fix): schematics keep their aspect but
-   never render taller than ~46vh, so an L2 page's first card leaves room
-   for the panels below it at 1366×768. */
-svg.sc{width:100%;display:block;max-height:min(46vh,500px);margin:0 auto}
+tr.pcard-mine td{box-shadow:inset 2px 0 0 var(--accent)}
+.work{flex:1;overflow:auto;min-width:0;position:relative;background:var(--bg)}
+.pad{padding:var(--sp-4) var(--sp-5) var(--sp-5);max-width:1780px}
+h1.pt{font-size:var(--fs-title);font-weight:600;line-height:1.2;color:var(--val);letter-spacing:-.01em}
+p.sub{color:var(--tx3);font-size:var(--fs-body);margin:2px 0 var(--sp-3);max-width:90ch}
+.pghd{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-4);flex-wrap:wrap}
+.g{display:grid;gap:var(--sp-3)}
+.row{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-label);color:var(--tx2)}
+.fld input,.fld select,.fld textarea,.in{background:var(--bg);border:1px solid var(--line-2);
+  border-radius:var(--radius);min-height:28px;padding:0 var(--sp-2);font-size:var(--fs-body);color:var(--val)}
+.fld textarea{padding:var(--sp-1) var(--sp-2)}
+.fld input:focus,.fld select:focus,.in:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 1px var(--accent)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.plain{width:100%;border-collapse:collapse;font-size:var(--fs-body)}
+table.plain th{font-size:var(--fs-label);font-weight:500;color:var(--tx3);text-align:left;
+  padding:6px var(--sp-2);border-bottom:1px solid var(--line-2);white-space:nowrap}
+table.plain td{padding:5px var(--sp-2);border-bottom:1px solid var(--line);vertical-align:baseline}
+table.plain th.n{text-align:right}
+table.plain tr.is-active{background:var(--accent-wash);box-shadow:inset 2px 0 0 var(--accent)}
+table.plain tbody tr:hover{background:var(--s2)}
+.scroll-y{overflow-y:auto;position:relative}   /* contains .ds-sr spans of rows scrolled out of view */
+.ds-card .bd{position:relative}
+/* Panels on this console: the shared .ds-card with its header row. */
+.ds-card>h2{min-height:36px}
+.ds-card>h2 .r{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 
-/* L1 viewport fit (Agent 5 screenshot fix, plan §2.1 "L1 fits 1366×768
-   without scroll"): the overview page is a column that exactly fills the
-   work area; the schematic card absorbs the leftover height (the svg
-   scales down inside it) and the side column scrolls internally if the
-   live map ever outgrows it. */
-#pages{height:100%}
-#page-ovr{height:100%;display:flex;flex-direction:column;overflow:hidden}
-#page-ovr .ovr-grid{flex:1;min-height:0;align-items:stretch}
-.ovr-left{grid-template-rows:minmax(0,1fr) auto;min-height:0}
-.ovr-schem-card{display:flex;flex-direction:column;min-height:0}
-.ovr-schem-card .bd{flex:1;min-height:0;display:flex}
-.ovr-schem-card .stage{flex:1;display:flex;min-height:0}
-.ovr-schem-card svg.sc{width:100%;height:100%;max-height:100%}
-.ovr-right{overflow-y:auto;min-height:0;grid-auto-rows:max-content}
-
-/* L2 viewport fit (Agent 5 screenshot fix): each subsystem page fills the
-   work area exactly; its two columns scroll internally. No content is
-   removed — the work area itself just never grows a scrollbar. */
-.l2-page{height:100%;display:flex;flex-direction:column;overflow:hidden}
-.l2-grid{flex:1;min-height:0;align-items:stretch}
-/* grid-auto-rows:max-content: without it a constrained-height grid column
-   shrinks its auto rows (the cards clip instead of the column scrolling) */
-.l2-col{overflow-y:auto;min-height:0;align-content:start;grid-auto-rows:max-content}
-.sc .body{fill:var(--s2);stroke:var(--line-2);stroke-width:1.5}
+/* ── schematics ───────────────────────────────────────────────────────── */
+/* The schematic is drawn at no less than 1:1 (svg min-width = viewBox
+   width, set by mcs.js) so its 12 px text never renders below the 12 px
+   floor; a narrow card scrolls the drawing instead of shrinking it. */
+.stage{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--sp-2);overflow-x:auto}
+svg.sc{width:100%;height:auto;display:block;margin:0 auto}
+.sc .body{fill:var(--s1);stroke:var(--line-2);stroke-width:1}
 .sc .panelfill{fill:var(--s1);stroke:var(--line-2)}
 .sc .cell line{stroke:var(--line);stroke-width:1}
-.sc .wire{stroke:var(--line-2);stroke-width:1.4;fill:none}
-.sc .wire.flow{stroke-dasharray:5 5;animation:flow 2.4s linear infinite}
-@keyframes flow{to{stroke-dashoffset:-20}}
-@media (prefers-reduced-motion:reduce){.sc .wire.flow{animation:none}}
-.sc .cap{font-family:var(--mono);font-size:12px;fill:var(--tx3);letter-spacing:2px}
+.sc .wire{stroke:var(--line-2);stroke-width:1.25;fill:none}
+/* Power/data flow is drawn as a dashed line, not animated: a calm screen
+   has no idle motion (brief §1.4). */
+.sc .wire.flow{stroke-dasharray:4 3}
+.sc .cap{font-family:var(--sans);font-size:12px;fill:var(--tx3)}
 .sc .sm{font-family:var(--mono);font-size:12px;fill:var(--tx3)}
-.sc .ant{fill:none;stroke:var(--line-2);stroke-width:1.5}
+.sc .ant{fill:none;stroke:var(--line-2);stroke-width:1.25}
 .sc [data-nav]{cursor:pointer}
-.sc [data-nav]:hover rect.bx{stroke:var(--info)}
-.sc .ds-node.stale rect.bx{stroke-dasharray:3 3;stroke:var(--stale)}
-.sc .ds-node.stale .vl{fill:var(--tx2)}
+.sc [data-nav]:hover rect.bx,.sc [data-nav]:focus-visible rect.bx{stroke:var(--accent)}
+.sc [data-param] .vl{fill:var(--val)}
 .sc g.warn .vl,.sc [data-param].warn .vl{fill:var(--warn)}
 .sc g.alarm .vl,.sc [data-param].alarm .vl{fill:var(--alarm)}
-.sc [data-param] .vl{fill:var(--tx)}
+.sc .ds-node.stale rect.bx{stroke-dasharray:3 3;stroke:var(--stale)}
+.sc [data-param].stale .vl,.sc [data-param].held .vl{fill:var(--tx3);font-style:italic;font-weight:400}
+.sc [data-param].nodata .vl{fill:var(--tx2);font-family:var(--sans);font-size:12px;font-weight:400;font-style:normal}
+.sc .cap .vl{fill:var(--val);font-family:var(--mono);font-weight:500}
 
-/* ── bottom drawer ── */
+/* L1 overview: the schematic and the contact strip on the left, map and
+   system board on the right. Columns scroll internally if a short screen
+   cannot hold them; the 1:1 schematic rule wins over viewport fit. */
+#pages{height:100%}
+#page-ovr{height:100%;display:flex;flex-direction:column;overflow:hidden}
+#page-ovr .ovr-grid{flex:1;min-height:0;align-items:stretch;grid-template-columns:minmax(0,1fr) 380px}
+.ovr-left,.ovr-right{overflow-y:auto;min-height:0;align-content:start;grid-auto-rows:max-content}
+/* the orbit strip: picture-first facts about where the spacecraft is */
+.orbit{display:flex;align-items:center;gap:var(--sp-2) var(--sp-4);flex-wrap:wrap;font-size:var(--fs-body)}
+.orbit .k{font-size:var(--fs-label);color:var(--tx3);margin-right:4px}
+.orbit .ds-value{font-size:var(--fs-body)}
+/* ground track: the vendor map drawn in the console's tokens (both themes) */
+#ovr-map svg{background:var(--bg)!important;border:1px solid var(--line);border-radius:var(--radius)}
+#ovr-map svg rect{fill:var(--bg)}
+#ovr-map svg path{fill:var(--s2);stroke:var(--line-2)}
+#ovr-map svg line{stroke:var(--line)}
+/* contact timeline legend */
+.tl-leg{display:flex;gap:var(--sp-3);flex-wrap:wrap;font-size:var(--fs-label);color:var(--tx3);margin-top:var(--sp-1)}
+.tl-leg i{display:inline-block;width:12px;height:8px;vertical-align:0;margin-right:4px;border-radius:1px}
+.tl-leg i.pass{background:var(--fill)} .tl-leg i.next{background:var(--accent)}
+.tl-leg i.now{width:2px;height:12px;background:var(--val);vertical-align:-2px}
+
+/* L2 subsystem pages: two columns that scroll internally. */
+.l2-page{height:100%;display:flex;flex-direction:column;overflow:hidden}
+.l2-grid{flex:1;min-height:0;align-items:stretch;grid-template-columns:minmax(0,1fr) 420px}
+.l2-col{overflow-y:auto;min-height:0;align-content:start;grid-auto-rows:max-content}
+.kp{display:flex;align-items:center;gap:var(--sp-2)}
+.kp>.ds-param{flex:1;min-width:0}
+.kp .ds-param .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kp>.ds-spark{flex:0 0 auto;margin-right:var(--sp-3)}
+/* equipment: a hairline grid of readouts, not nested cards */
+.eqg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.eq{display:flex;flex-direction:column;gap:2px;padding:var(--sp-2) var(--sp-3);
+  border-bottom:1px solid var(--line);min-width:0}
+.eq:nth-child(odd){border-right:1px solid var(--line)}
+.eq .nm{font-size:var(--fs-label);color:var(--tx2)}
+.eq .nm .hexid{margin-left:4px}
+
+/* ── bottom drawer ────────────────────────────────────────────────────── */
 #bottom-drawer{flex:0 0 auto;background:var(--s1);border-top:1px solid var(--line);
-  display:flex;flex-direction:column;min-height:24px}
-#bottom-drawer .bd-tabs{display:flex;align-items:center;gap:2px;height:24px;padding:0 8px}
-#bottom-drawer .bd-tabs button{font-size:12px;letter-spacing:.6px;color:var(--tx3);
-  padding:2px 10px;border-radius:4px 4px 0 0}
-#bottom-drawer .bd-tabs button[aria-selected="true"]{color:var(--tx);background:var(--s3)}
-#bottom-drawer .bd-tablist{display:flex;align-items:center;gap:2px}
-.rail-tabs{display:flex;flex-direction:column;align-items:center;gap:4px}
-#bottom-drawer .bd-body{height:168px;overflow:hidden;display:none}
+  display:flex;flex-direction:column}
+#bottom-drawer .bd-tabs{display:flex;align-items:center;gap:var(--sp-2);min-height:32px;padding:0 var(--sp-2)}
+#bottom-drawer .bd-tablist{display:flex;align-items:stretch;gap:2px;overflow-x:auto;min-width:0}
+#bottom-drawer .bd-tablist button{font-size:var(--fs-label);font-weight:500;color:var(--tx2);
+  padding:0 10px;min-height:30px;position:relative;white-space:nowrap}
+#bottom-drawer .bd-tablist button:hover{color:var(--tx)}
+#bottom-drawer .bd-tablist button[aria-selected="true"]{color:var(--val)}
+#bottom-drawer .bd-tablist button[aria-selected="true"]::after{content:"";position:absolute;
+  left:8px;right:8px;top:0;height:2px;background:var(--accent)}
+#bottom-drawer .ds-select{width:auto;min-height:24px;font-size:var(--fs-label)}
+#bd-toggle{min-width:28px}
+#bottom-drawer .bd-body{height:176px;overflow:hidden;display:none;border-top:1px solid var(--line)}
 #bottom-drawer.open .bd-body{display:block}
-.bd-pane{height:100%;overflow-y:auto;padding:4px 10px;font-size:12.5px}
-.logrow{font-family:var(--mono);font-size:12px;padding:1px 0;color:var(--tx2);white-space:pre-wrap}
-.logrow.warn{color:var(--warn)} .logrow.alarm{color:var(--alarm)} .logrow.nom{color:var(--tx3)}
+.bd-pane{height:100%;overflow-y:auto;padding:var(--sp-1) var(--sp-3);font-size:var(--fs-body)}
+.logrow{font-family:var(--mono);font-size:var(--fs-label);padding:1px 0;color:var(--tx2);white-space:pre-wrap}
+.logrow.warn{color:var(--warn)} .logrow.alarm{color:var(--alarm)} .logrow.nom{color:var(--tx3);font-family:var(--sans)}
 .jump-chip{position:sticky;top:0;float:right;background:var(--s3);border:1px solid var(--line-2);
-  border-radius:10px;font-size:12px;padding:1px 9px;color:var(--info);cursor:pointer}
+  border-radius:var(--radius-sm);font-size:var(--fs-label);padding:0 var(--sp-2);color:var(--accent);cursor:pointer}
 
-/* blind-TC tagging (G12): visually distinct from every limit colour — an
-   outlined violet chip, because "unconfirmed" is neither nominal nor alarm */
-.blind-chip{display:inline-block;border:1.5px dashed #B48EE0;color:#B48EE0;
-  border-radius:9px;font-family:var(--mono);font-size:11px;font-weight:700;
-  padding:0 7px;letter-spacing:.5px;vertical-align:middle}
-.blind-chip.confirmed{border-style:solid;opacity:.75}
+/* Blind-TC tagging: commanded-but-unconfirmed is the accent dashed diamond
+   idiom (P6 "commanded / pending"), never a limit colour. */
+.blind-chip{display:inline-flex;align-items:center;border:1px dashed var(--accent);color:var(--accent);
+  border-radius:var(--radius-sm);font-family:var(--mono);font-size:var(--fs-label);
+  padding:0 6px;vertical-align:middle}
+.blind-chip.confirmed{border-style:solid;color:var(--tx2);border-color:var(--line-2)}
 
 /* first-out alarm grouping (G6) */
-.alarm-group{border-left:3px solid var(--alarm);margin:4px 0;padding-left:2px}
-.alarm-group-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  font-size:12px;color:var(--tx2);padding:4px 8px}
-.alarm-group-hd b{color:var(--alarm);letter-spacing:.5px}
-.alarm-group-note{flex-basis:100%;font-size:11.5px;color:var(--tx3)}
-.alarm-group-kids{margin-left:14px;border-left:1px solid var(--line-2)}
+.alarm-group{box-shadow:inset 3px 0 0 var(--alarm);margin:var(--sp-1) 0}
+.alarm-group-hd{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;
+  font-size:var(--fs-label);color:var(--tx2);padding:var(--sp-1) var(--sp-3)}
+.alarm-group-hd b{color:var(--alarm);font-weight:600}
+.alarm-group-note{flex-basis:100%;font-size:var(--fs-label);color:var(--tx3)}
+.alarm-group-kids{margin-left:var(--sp-4);border-left:1px solid var(--line-2)}
 
 /* derived projection rows (G1) */
 .derived-row{padding:3px 0;border-bottom:1px solid var(--line)}
 
-/* ── alarm drawer (docked, non-modal) ── */
-#alarm-drawer{position:fixed;top:0;right:0;bottom:0;width:520px;background:var(--s1);
-  border-left:1px solid var(--line-2);box-shadow:-20px 0 60px rgba(0,0,0,.5);
-  transform:translateX(100%);transition:transform .2s;z-index:60;display:flex;flex-direction:column}
-#alarm-drawer.open{transform:none}
-@media (prefers-reduced-motion:reduce){#alarm-drawer{transition:none}}
-#alarm-drawer .hd{padding:12px 16px;border-bottom:1px solid var(--line);
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#alarm-drawer .hd h2{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3)}
+/* ── alarm drawer (docked, non-modal) ─────────────────────────────────── */
+#alarm-drawer{position:fixed;top:0;right:0;bottom:0;width:540px;max-width:100vw;background:var(--s1);
+  border-left:1px solid var(--line-2);transform:translateX(100%);visibility:hidden;
+  transition:transform var(--motion) var(--ease),visibility 0s linear var(--motion);
+  z-index:60;display:flex;flex-direction:column}
+#alarm-drawer.open{transform:none;visibility:visible;transition:transform var(--motion) var(--ease)}
+@media (prefers-reduced-motion:reduce){#alarm-drawer,#alarm-drawer.open{transition:none}}
+#alarm-drawer .hd{padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+#alarm-drawer .hd h2{font-size:var(--fs-value);font-weight:600;color:var(--val);margin-right:var(--sp-1)}
+#alarm-drawer .hd .ds-select{width:auto}
+#alarm-drawer .hd .end{margin-left:auto;display:flex;gap:var(--sp-2)}
 #alarm-list{flex:1;overflow-y:auto}
-#alarm-drawer .ft{padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--tx3)}
+#alarm-drawer .ft{padding:var(--sp-2) var(--sp-4);border-top:1px solid var(--line);font-size:var(--fs-label);color:var(--tx3)}
 
-/* ── overlays ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:70;display:none;
+/* ── overlays ─────────────────────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;background:var(--overlay);z-index:70;display:none;
   align-items:center;justify-content:center}
 .overlay.open{display:flex}
-.dlg{background:var(--s1);border:1px solid var(--line-2);border-radius:10px;
-  max-width:860px;width:92%;max-height:86vh;overflow-y:auto;padding:18px 22px}
-.dlg h2{font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
+.dlg{background:var(--s1);border:1px solid var(--line-2);border-radius:var(--radius-lg);
+  max-width:860px;width:92%;max-height:86vh;overflow-y:auto;padding:var(--sp-4) var(--sp-5)}
+.dlg h2{display:flex;align-items:center;font-size:var(--fs-value);font-weight:600;color:var(--val);margin-bottom:var(--sp-3)}
+.dlg h2 .ds-btn{margin-left:auto}
 
-@media(max-width:1280px){.sa{grid-template-columns:repeat(2,1fr)}}
-/* Compact header ≤1500px (Agent 5 screenshot fix): keeps the top row on a
-   single 58 px line at 1366 px instead of wrapping to two. */
-@media(max-width:1500px){
-  .hrow{gap:6px 8px}
-  .pos-wrap label{display:none}   /* SX: the select's aria-label names it; keeps "?" on row 1 at 1366 px (FR) */
-  .clk b{font-size:13.5px}
-  .mark span{display:none}
-  .ibtn{padding:4px 7px;font-size:11.5px}
-  .abtn{padding:4px 9px;font-size:12px}
-  .pos-wrap{padding:2px 7px}
-}
+/* Manual viewer: the shipped manual is table-heavy. */
+.man-tbl{border-collapse:collapse;width:100%;margin:var(--sp-2) 0;font-size:var(--fs-label)}
+.man-tbl th,.man-tbl td{border:1px solid var(--line);padding:4px var(--sp-2);text-align:left;vertical-align:top}
+.man-tbl th{background:var(--s2);color:var(--tx2);font-weight:600}
+.man-toc-item{padding:2px 0}
 
-/* Manual viewer (field fix 2026-08-20). The shipped manual is table-heavy;
-   without table styling a rendered page is unreadable even once it parses. */
-.man-tbl{ border-collapse:collapse; width:100%; margin:8px 0; font-size:12px; }
-.man-tbl th,.man-tbl td{ border:1px solid var(--line); padding:4px 8px;
-  text-align:left; vertical-align:top; }
-.man-tbl th{ background:var(--s2); color:var(--tx2); font-weight:700; }
-.man-toc-item{ padding:2px 0; }
-.man-toc-item a{ color:var(--info); text-decoration:none; }
-.man-toc-item a:hover{ text-decoration:underline; }
-
-/* ── Value states (UI brief §1.3, R3 A4) ──────────────────────────────────
-   live: plain. stale: the LAST value kept, dimmed + italic, age chip, and
-   the hatch on the value cell only. no data: a distinct label, never an
-   em-dash on a hatch. One treatment for triads, tables and schematics. */
-.vc{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.vc u{text-decoration:none;color:var(--tx3);font-size:12px}
-.vc.stale,.vc.disabled{color:var(--tx3);font-style:italic;background:var(--hatch);padding:0 4px;border-radius:2px}
-.vc.nodata,.ds-param .vc.nodata{font-family:var(--sans);font-style:normal;font-size:12px;font-weight:500;
-  color:var(--tx3);border:1px dashed var(--line-2);border-radius:2px;padding:0 5px;letter-spacing:.2px}
-.ds-param.held,.ds-param.nodata{background:none;box-shadow:none}
-.ds-param.held .vl{color:var(--tx3);font-style:italic;font-weight:500;background:var(--hatch);
-  padding:0 4px;border-radius:2px}
-.ds-param.held .ds-devbar{opacity:.45}
-.ds-param.nodata .vl{font-size:12px}
-.ds-param .vl .ds-age{font-style:normal;margin-left:6px}
-.sc [data-param].held .vl{fill:var(--tx3);font-style:italic}
-.sc [data-param].nodata .vl{fill:var(--tx3);font-family:var(--sans)}
+/* ── value states (UI brief §1.3) ─────────────────────────────────────── */
+/* Values are drawn by the shared renderValue/renderParam; only page tweaks
+   live here. */
+.ds-param .vl .ds-age{font-style:normal}
 #linklimit-banner{border-left:3px solid var(--stale)}
-
-/* Small readout tables and notes on L2 cards (Mag/MTQ, GPS, OBDH software) */
-.hexid{color:var(--tx3);font-size:12px}
+.hexid{font-family:var(--mono);color:var(--tx3);font-size:var(--fs-label)}
 td.num{text-align:right}
-.v-warn{color:var(--warn)} .v-alarm{color:var(--alarm);font-weight:700}
-p.note{font-size:12px;color:var(--tx3);margin:0 0 6px;line-height:1.45}
+.v-warn{color:var(--warn)} .v-alarm{color:var(--alarm);font-weight:600}
+p.note{font-size:var(--fs-label);color:var(--tx3);margin:0 0 6px;line-height:var(--lh-text)}
 p.note.warn{color:var(--warn)} p.note.bad{color:var(--alarm)}
 
-/* ── Alarm row (R3 A3): [P#] PARAM value unit ▲ limit ×N / time · age ·
-   procedure, actions on their own grid cell so wrapped text never runs
-   under the ACK button. */
+/* ── alarm row: [P#] PARAM value unit ▲ limit ×N / time · age · procedure,
+   actions in their own grid cell so wrapped text never runs under them. */
 .ds-alarm-row.mcs-al{display:grid;grid-template-columns:34px minmax(0,1fr) auto;
-  grid-template-areas:"pri fact act" "pri meta act";gap:2px 10px;align-items:start;
-  padding:8px 12px;border-bottom:1px solid var(--line)}
-.mcs-al .pri{grid-area:pri;text-align:center;align-self:start;margin-top:1px}
-.mcs-al .fact{grid-area:fact;font-size:13px;min-width:0;overflow-wrap:anywhere;line-height:1.35}
-.mcs-al .pn{color:var(--tx);font-weight:600}
-.mcs-al .pv{color:var(--val);font-weight:600;margin-left:4px}
+  grid-template-areas:"pri fact act" "pri meta act";gap:2px var(--sp-3);align-items:start;
+  padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--line)}
+.mcs-al .pri{grid-area:pri;justify-content:center;align-self:start;margin-top:1px}
+.mcs-al .fact{grid-area:fact;font-size:var(--fs-body);min-width:0;overflow-wrap:anywhere;line-height:1.35}
+.mcs-al .pn{color:var(--tx);font-weight:500}
+.mcs-al .pv{color:var(--val);font-weight:500;margin-left:4px}
 .mcs-al .lim{color:var(--tx2);margin-left:6px;white-space:nowrap}
-.mcs-al .lim small{font-family:var(--sans);font-size:12px;color:var(--tx3)}
+.mcs-al .lim small{font-family:var(--sans);font-size:var(--fs-label);color:var(--tx3)}
 .mcs-al.p1 .lim,.mcs-al.p2 .lim{color:var(--alarm)}
 .mcs-al.p3 .lim{color:var(--warn)}
-.mcs-al .why{display:block;font-size:12px;color:var(--tx3);font-weight:400}
-.mcs-al .rep{margin-left:8px;font-size:12px;font-weight:700;color:var(--tx2);
-  border:1px solid var(--line-2);border-radius:2px;padding:0 4px}
-.mcs-al .meta{grid-area:meta;font-size:12px;color:var(--tx3);min-width:0}
-.mcs-al .meta .proc{color:var(--info);text-decoration:none}
-.mcs-al .meta .proc:hover,.mcs-al .meta .proc:focus-visible{text-decoration:underline}
+.mcs-al .why{display:block;font-size:var(--fs-label);color:var(--tx3);font-weight:400}
+.mcs-al .rep{margin-left:var(--sp-2);font-size:var(--fs-label);font-weight:500;color:var(--tx2);
+  border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:0 4px}
+.mcs-al .meta{grid-area:meta;font-size:var(--fs-label);color:var(--tx3);min-width:0}
+/* procedure links are underlined: colour is never the only cue (1.4.1) */
+.mcs-al .meta .proc{color:var(--accent)}
 .mcs-al .act{grid-area:act;display:flex;gap:6px;align-items:center;align-self:center}
-.mcs-al .ackd{font-size:12px;color:var(--tx3)}
-.mcs-al.acked{opacity:1}
-.mcs-al.acked .fact,.mcs-al.acked .pri{opacity:.7}
+.mcs-al .ackd{font-size:var(--fs-label);color:var(--tx3)}
+.mcs-al.acked .fact,.mcs-al.acked .pri{opacity:.75}
 .mcs-al.rtn .pv{color:var(--tx2)}
 
-/* ── Enabled / disabled controls (UI brief §1.3, R3 A5) ── */
-.ds-btn[disabled],.ds-btn[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
-.ds-btn[disabled]:hover,.ds-btn[aria-disabled="true"]:hover{background:none}
-.why-off{font-size:12px;color:var(--tx3);margin-top:6px;min-height:1.4em}
+/* ── enabled / disabled controls ──────────────────────────────────────── */
+.why-off{font-size:var(--fs-label);color:var(--tx3);margin-top:6px;min-height:1.4em}
 .ctl-grp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.ctl-grp .ds-btn.primary:not([disabled]){border-color:var(--info);color:var(--info)}
-/* Links inside running text are underlined, not colour-only (WCAG 1.4.1) */
+/* Commands, grouped. Criticality from the TC catalogue (ECSS-E-ST-70-31):
+   routine = plain; caution = hollow triangle; critical = amber-striped
+   button that arms first (armButton) and executes on the second press. */
+.qc-filter{max-width:280px;margin-bottom:var(--sp-2)}
+.qc-grp>summary{padding-left:0}
+.qc-grp>.bd{padding:var(--sp-1) 0 var(--sp-3)}
+.qc-grp .ds-btn svg{width:11px;height:11px;color:var(--warn)}
+.qc-legend{display:flex;gap:var(--sp-4);flex-wrap:wrap;font-size:var(--fs-label);color:var(--tx3);margin-top:var(--sp-2)}
+.qc-legend svg{width:10px;height:10px;color:var(--warn);vertical-align:-1px;margin-right:4px}
+.qc-legend .stripe{display:inline-block;width:6px;height:10px;margin-right:4px;vertical-align:-1px;
+  background:repeating-linear-gradient(135deg,var(--warn) 0 2px,transparent 2px 4px)}
+.qc-off{font-size:var(--fs-label)}
 p.sub a,p.note a{text-decoration:underline;text-underline-offset:2px}
-/* Checkbox targets >= 24 px (WCAG 2.5.8) */
-label>input[type="checkbox"]{width:16px;height:16px;margin:4px 6px 4px 0;vertical-align:middle}
+label>input[type="checkbox"]{width:16px;height:16px;margin:4px 6px 4px 0;vertical-align:middle;accent-color:var(--accent)}
 label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-height:24px}
+
+/* ── narrower desks ───────────────────────────────────────────────────── */
+@media(max-width:1500px){
+  .hrow{gap:var(--sp-2) var(--sp-3)}
+  .pos-wrap label{display:none}   /* the select's aria-label names it */
+  .mark span{display:none}
+}
+@media(max-width:1280px){
+  .l2-grid,#page-ovr .ovr-grid{grid-template-columns:minmax(0,1fr) 340px}
+}
+
+/* ── monitor view (< 1000 px): read-only glance, nothing overflows ───── */
+@media(max-width:999px){
+  body{overflow:auto;height:auto;min-height:100%}
+  .hrow{padding:var(--sp-2) var(--sp-3);gap:var(--sp-2) var(--sp-3)}
+  .mark{border-right:0;padding-right:0}
+  .grow{display:none}
+  .tools{flex-basis:100%;order:5}
+  .tools .opt{display:none}             /* archive links, greyscale, theme: desk only */
+  #sc-time-clock{font-size:var(--fs-label)}
+  .sa{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sacard{padding:6px var(--sp-3) 8px}
+  .sacard .a b{white-space:normal;font-size:var(--fs-body)}
+  .sacard .a>span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .pos-wrap{flex:1 1 150px;min-width:0}
+  .pos-wrap .ds-select{min-width:0;width:100%}
+  .tools{flex-wrap:nowrap}
+  .sacard:nth-child(3){border-left:0}
+  .sacard:nth-child(n+3){border-top:1px solid var(--line)}
+  .nexttrack{left:var(--sp-3);right:var(--sp-3)}
+  .shell{flex-direction:column-reverse;min-height:auto}
+  nav.rail{flex:0 0 auto;flex-direction:row;border-right:0;border-top:1px solid var(--line);
+    position:sticky;bottom:0;z-index:5;padding:var(--sp-1);overflow-x:auto;overflow-y:hidden}
+  .rail-tabs{flex-direction:row}
+  .rail .sep{width:0;height:24px;border-top:0;border-left:1px solid var(--line-2);margin:0 4px}
+  .rail button{width:48px}
+  .rail button.on{box-shadow:inset 0 2px 0 var(--accent)}
+  .work{overflow:visible}
+  .pad{padding:var(--sp-3)}
+  #pages,#page-ovr,.l2-page{height:auto;overflow:visible}
+  #page-ovr .ovr-grid,.l2-grid,.pad>.g[style]{grid-template-columns:minmax(0,1fr)!important}
+  .ovr-left,.ovr-right,.l2-col{overflow:visible}
+  .pad .g[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
+  .ds-card .bd{overflow-x:auto}
+  .eqg{grid-template-columns:minmax(0,1fr)}
+  .eq:nth-child(odd){border-right:0}
+  #bottom-drawer{display:none}
+  .ds-card>h2 .r{display:none}
+  #alarm-drawer{width:100vw}
+}
 </style>
 </head>
 <body>
@@ -312,36 +385,39 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
 
 <header id="top-bar">
   <div class="hrow">
-    <div class="mark"><div class="g">EO1</div><div><b>EOSAT-1</b><span data-i18n>MCS · MODERN</span></div></div>
-    <div class="clk"><label>UTC</label><b id="utc-clock" class="num">—</b></div>
-    <div class="clk"><label>MET</label><b id="met-clock" class="num">—</b></div>
-    <div class="clk"><label data-i18n>SC time</label><b id="sc-time-clock" class="num">—</b></div>
+    <div class="mark"><b>EOSAT-1</b><span data-i18n>Mission control</span></div>
+    <div class="clk"><label>UTC</label><b id="utc-clock">—</b></div>
+    <div class="clk"><label>MET</label><b id="met-clock">—</b></div>
+    <div class="clk"><label data-i18n>SC time</label><b id="sc-time-clock">—</b></div>
     <span id="training-chip" class="ds-training hide" data-i18n-title title="Ground clock is simulator time (training). Absent on a real mission.">TRAINING</span>
     <div class="grow"></div>
-    <div class="pos-wrap" id="pos-bar"><label for="pos-select" data-i18n>POSITION</label>
-      <select id="pos-select" data-i18n-aria-label aria-label="Console position"></select></div>
-    <button class="abtn" id="alarms-btn" aria-haspopup="dialog" data-i18n>
-      <span class="n" id="alarm-unack-n">0</span> ALARMS</button>
-    <a class="ibtn" href="/dumps" target="_blank" rel="noopener" data-i18n>DELAYED&nbsp;TM</a>
-    <a class="ibtn" href="/reports" target="_blank" rel="noopener" data-i18n>REPORTS</a>
-    <button class="ibtn" id="grey-btn" aria-pressed="false" data-i18n data-i18n-title
-      title="Greyscale check: the console must stay operable without colour (P6)">GREY</button>
-    <button class="ibtn" id="theme-btn" aria-pressed="false" data-i18n data-i18n-title title="Light/dark theme">THEME</button>
-    <span id="lang-toggle"></span>
-    <button class="ibtn" id="help-btn" data-i18n-title title="Keyboard shortcuts and design notes">?</button>
-    <span id="ws-dot" role="img" data-i18n-aria-label aria-label="server link"></span>
+    <div class="tools">
+      <div class="pos-wrap" id="pos-bar"><label for="pos-select" data-i18n>Position</label>
+        <select id="pos-select" class="ds-select" data-i18n-aria-label aria-label="Console position"></select></div>
+      <button class="ds-btn abtn" id="alarms-btn" aria-haspopup="dialog"><span id="alarm-btn-g" aria-hidden="true"></span><span class="n" id="alarm-unack-n">0</span> <span data-i18n>alarms</span></button>
+      <a class="ds-btn ghost opt" href="/dumps" target="_blank" rel="noopener" data-i18n>Delayed TM</a>
+      <a class="ds-btn ghost opt" href="/reports" target="_blank" rel="noopener" data-i18n>Reports</a>
+      <button class="ds-btn ghost opt" id="grey-btn" aria-pressed="false" data-i18n data-i18n-title
+        title="Greyscale check: the console must stay operable without colour (P6)">Greyscale</button>
+      <div class="ds-seg opt" id="theme-seg" role="group" data-i18n-aria-label aria-label="Theme">
+        <button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button><button type="button" data-theme-set="light" aria-pressed="false" data-i18n>Light</button></div>
+      <span id="lang-toggle"></span>
+      <button class="ds-btn ghost" id="help-btn" data-i18n-title title="Keyboard shortcuts and design notes" data-i18n-aria-label aria-label="Keyboard shortcuts and design notes">?</button>
+      <span class="linkpip"><span id="ws-dot" role="img" data-i18n-aria-label aria-label="server link"></span></span>
+    </div>
   </div>
   <div id="contingency-banner" class="ds-banner alarm hide" role="alert"></div>
   <div id="linklimit-banner" class="ds-banner stale hide" role="status"></div>
   <div class="sa" id="sa-strip">
-    <div class="sacard" id="sa-see"><div class="q" data-i18n>Can I see it?</div><span class="sadot" id="sa-see-dot"></span>
+    <div class="sacard is-nodata" id="sa-see"><div class="q" data-i18n>Can I see it?</div><span class="ann" id="sa-see-dot"></span>
       <div class="a"><b id="sa-see-v">—</b><span id="sa-see-s"><span data-i18n>no telemetry yet</span></span></div></div>
-    <div class="sacard" id="sa-talk"><div class="q" data-i18n>Can I talk?</div><span class="sadot" id="sa-talk-dot"></span>
+    <div class="sacard is-nodata" id="sa-talk"><div class="q" data-i18n>Can I talk?</div><span class="ann" id="sa-talk-dot"></span>
       <div class="a"><b id="sa-talk-v">—</b><span id="sa-talk-s"><span data-i18n>no link data</span></span></div></div>
-    <div class="sacard" id="sa-well"><div class="q" data-i18n>Is it well?</div><span class="sadot" id="sa-well-dot"></span>
+    <div class="sacard is-nodata" id="sa-well"><div class="q" data-i18n>Is it well?</div><span class="ann" id="sa-well-dot"></span>
       <div class="a"><b id="sa-well-v">—</b><span id="sa-well-s"><span data-i18n>no alarm data</span></span></div></div>
-    <div class="sacard" id="sa-next"><div class="q" data-i18n>What's next?</div><span class="sadot" id="sa-next-dot"></span>
-      <div class="a"><b id="sa-next-v">—</b><span id="sa-next-s"><span data-i18n>no schedule</span></span></div></div>
+    <div class="sacard is-nodata" id="sa-next"><div class="q" data-i18n>What's next?</div><span class="ann" id="sa-next-dot"></span>
+      <div class="a"><b id="sa-next-v">—</b><span id="sa-next-s"><span data-i18n>no schedule</span></span></div>
+      <div class="nexttrack hide" id="sa-next-track" aria-hidden="true"><i></i></div></div>
   </div>
 </header>
 
@@ -353,23 +429,24 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
   </main>
 </div>
 
-<!-- collapsible bottom drawer: EVENTS / TM PACKETS / CMD HISTORY / HANDOVER / GO-NOGO -->
+<!-- collapsible bottom drawer: events / TM packets / command history / log / handover / GO-NO-GO -->
 <div id="bottom-drawer" role="region" data-i18n-aria-label aria-label="Console log drawer">
   <div class="bd-tabs" id="bd-tabs">
     <div class="bd-tablist" role="tablist" aria-label="Log drawer" data-i18n-aria-label>
-    <button role="tab" data-bd="events" aria-selected="true" data-i18n>EVENTS</button>
-    <button role="tab" data-bd="tm" aria-selected="false" data-i18n>TM PACKETS</button>
-    <button role="tab" data-bd="cmdhist" aria-selected="false" data-i18n>CMD HISTORY</button>
-    <button role="tab" data-bd="conlog" aria-selected="false" data-i18n>LOG</button>
-    <button role="tab" data-bd="handover" aria-selected="false" data-i18n>HANDOVER</button>
+    <button role="tab" data-bd="events" aria-selected="true" data-i18n>Events</button>
+    <button role="tab" data-bd="tm" aria-selected="false" data-i18n>TM packets</button>
+    <button role="tab" data-bd="cmdhist" aria-selected="false" data-i18n>Command history</button>
+    <button role="tab" data-bd="conlog" aria-selected="false" data-i18n>Log</button>
+    <button role="tab" data-bd="handover" aria-selected="false" data-i18n>Handover</button>
     <button role="tab" data-bd="gonogo" aria-selected="false" id="bd-tab-gonogo">GO/NO-GO</button>
     </div>
     <span class="grow" style="flex:1"></span>
-    <select id="evt-sev-filter" class="in" style="padding:0 4px;font-size:12px" data-i18n-aria-label aria-label="Event severity filter">
+    <select id="evt-sev-filter" class="ds-select" data-i18n-aria-label aria-label="Event severity filter">
       <option value="all" data-i18n>All</option><option value="info" data-i18n>Info</option><option value="nom" data-i18n>Nominal</option>
       <option value="warn" data-i18n>Warning</option><option value="alarm" data-i18n>High/Alarm</option><option value="warnplus" data-i18n>Warning+</option>
     </select>
-    <button id="bd-toggle" aria-expanded="false" data-i18n-title title="Expand/collapse log drawer">▤</button>
+    <button class="ds-btn ghost sm" id="bd-toggle" aria-expanded="false" data-i18n-title title="Expand/collapse log drawer"
+      data-i18n-aria-label aria-label="Expand/collapse log drawer">▴</button>
   </div>
   <div class="bd-body">
     <div class="bd-pane" id="bdp-events" role="tabpanel"></div>
@@ -380,30 +457,32 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
          auto-entries + operator notes/marks), filterable by kind -->
     <div class="bd-pane hide" id="bdp-conlog" role="tabpanel">
       <div class="row" style="margin:4px 0">
-        <select id="conlog-kind" class="in" data-i18n-aria-label aria-label="Console log kind filter" style="font-size:12px">
+        <select id="conlog-kind" class="in" data-i18n-aria-label aria-label="Console log kind filter">
           <option value="all" data-i18n>All kinds</option><option value="tc">TC</option>
           <option value="ack" data-i18n>Alarm ack</option><option value="shelve" data-i18n>Shelve</option>
           <option value="procedure" data-i18n>Procedure</option><option value="gonogo">GO/NO-GO</option>
           <option value="mark" data-i18n>Mark</option><option value="note" data-i18n>Note</option>
         </select>
-        <input id="conlog-input" class="in" style="flex:1" data-i18n-placeholder
+        <input id="conlog-input" class="in" style="flex:1" data-i18n-placeholder data-i18n-aria-label aria-label="Console note"
           placeholder="Console note… (Enter logs it as your position)">
-        <button class="ds-btn" data-conlog="note" data-i18n>NOTE</button>
-        <button class="ds-btn" data-conlog="mark" data-i18n data-i18n-title title="timestamped MARK in the mission log (book §7)">MARK</button>
+        <button class="ds-btn" data-conlog="note" data-i18n>Add note</button>
+        <button class="ds-btn" data-conlog="mark" data-i18n data-i18n-title title="timestamped MARK in the mission log (book §7)">Mark</button>
       </div>
       <div id="conlog-list"></div>
     </div>
     <div class="bd-pane hide" id="bdp-handover" role="tabpanel">
       <div class="row" style="margin:4px 0">
-        <input id="handover-input" class="in" style="flex:1" data-i18n-placeholder placeholder="Handover note… (Enter to add)">
-        <button class="ds-btn" id="handover-add" data-i18n>ADD</button>
+        <input id="handover-input" class="in" style="flex:1" data-i18n-placeholder data-i18n-aria-label aria-label="Handover note"
+          placeholder="Handover note… (Enter to add)">
+        <button class="ds-btn" id="handover-add" data-i18n>Add</button>
       </div>
       <div id="handover-list"></div>
     </div>
     <div class="bd-pane hide" id="bdp-gonogo" role="tabpanel">
       <div class="row" style="margin:4px 0">
-        <input id="gonogo-label" class="in" data-i18n-placeholder placeholder="Poll label (e.g. BURN GO/NO-GO)">
-        <button class="ds-btn" id="gonogo-start" data-i18n>START POLL</button>
+        <input id="gonogo-label" class="in" data-i18n-placeholder data-i18n-aria-label aria-label="Poll label"
+          placeholder="Poll label (e.g. BURN GO/NO-GO)">
+        <button class="ds-btn" id="gonogo-start" data-i18n>Start poll</button>
         <span class="grow" style="flex:1"></span>
         <button class="ds-btn" data-gonogo="GO">GO</button>
         <button class="ds-btn" data-gonogo="NOGO">NO-GO</button>
@@ -419,18 +498,20 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
   <div class="hd">
     <h2 data-i18n>Alarms</h2>
     <span class="ds-badge alarm" id="alarm-drawer-unack">0 UNACK</span>
-    <select id="alarm-f-sub" class="in" data-i18n-aria-label aria-label="Filter subsystem">
+    <div class="end">
+      <button class="ds-btn" id="alarm-ack-all" data-i18n>Acknowledge all</button>
+      <button class="ds-btn ghost" id="alarm-close" data-i18n-aria-label aria-label="Close alarm drawer">✕</button>
+    </div>
+    <select id="alarm-f-sub" class="ds-select" data-i18n-aria-label aria-label="Filter subsystem">
       <option value="" data-i18n>All subsystems</option>
       <option value="eps">EPS</option><option value="tcs">TCS</option><option value="aocs">AOCS</option>
       <option value="ttc">TTC</option><option value="payload">PAYLOAD</option>
       <option value="prop">PROP</option><option value="obdh">OBDH</option>
     </select>
-    <select id="alarm-f-sev" class="in" data-i18n-aria-label aria-label="Filter severity">
+    <select id="alarm-f-sev" class="ds-select" data-i18n-aria-label aria-label="Filter severity">
       <option value="0" data-i18n>All severities</option><option value="2" data-i18n>Medium+</option><option value="3" data-i18n>High only</option>
     </select>
-    <button class="ds-btn" id="alarm-ack-all" data-i18n>ACK ALL</button>
-    <a class="ibtn" href="/dumps" target="_blank" rel="noopener" data-i18n>ARCHIVE</a>
-    <button class="ds-btn" id="alarm-close" data-i18n-aria-label aria-label="Close alarm drawer">✕</button>
+    <a class="ds-btn ghost" href="/dumps" target="_blank" rel="noopener" data-i18n>Archive</a>
   </div>
   <div id="alarm-list" role="group" data-i18n-aria-label aria-label="Alarm rows"></div>
   <div class="ft" data-i18n-html>Blink is reserved for unacknowledged P1 and stops on acknowledgement.
@@ -439,16 +520,16 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
 
 <!-- causal chain screen (Mockup C spine) -->
 <div class="overlay" id="chain-overlay">
-  <div class="dlg" role="dialog" aria-modal="true" data-i18n-aria-label aria-label="Causal chain">
-    <h2 data-i18n>Causal chain <button class="ds-btn" id="chain-close" style="float:right">✕</button></h2>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="chain-h">
+    <h2><span id="chain-h" data-i18n>Causal chain</span> <button class="ds-btn ghost" id="chain-close" data-i18n-aria-label aria-label="Close">✕</button></h2>
     <div id="chain-body"></div>
   </div>
 </div>
 
 <!-- keyboard help -->
 <div class="overlay" id="help-overlay">
-  <div class="dlg" role="dialog" aria-modal="true" data-i18n-aria-label aria-label="Keyboard shortcuts">
-    <h2 data-i18n>Keyboard &amp; design <button class="ds-btn" id="help-close" style="float:right">✕</button></h2>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="help-h">
+    <h2><span id="help-h" data-i18n>Keyboard and design</span> <button class="ds-btn ghost" id="help-close" data-i18n-aria-label aria-label="Close">✕</button></h2>
     <div id="help-body">
       <table class="plain">
         <tr><td><kbd class="ds-kbd">F6</kbd></td><td data-i18n>cycle regions (header → rail → main → drawer)</td></tr>
@@ -463,8 +544,8 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
   </div>
 </div>
 
-<div id="alert-live" role="alert" aria-live="assertive" class="ds-skip"></div>
+<div id="alert-live" role="alert" aria-live="assertive" class="ds-sr"></div>
 
-<script type="module" src="/static/modern/mcs.js?v=1"></script>
+<script type="module" src="/static/modern/mcs.js?v=2"></script>
 </body>
 </html>

@@ -211,7 +211,10 @@ class TestOfflineTools:
         assert len(out["s12_transitions"]) == 3
         assert out["s12_transitions"][0]["param_name"] == "eps.bat_soc"
         assert len(out["s12_definitions"]) == 3
-        assert 'id="s12"' in viewer.INDEX_HTML
+        # The redesigned viewer shows S12 as its own tab ("On-board
+        # monitoring") rendered by s12Panel(), not a static id="s12" block.
+        assert '{ id: "s12"' in viewer.INDEX_HTML
+        assert "function s12Panel()" in viewer.INDEX_HTML
 
 
 # ── the real-time path keeps every field too ────────────────────────

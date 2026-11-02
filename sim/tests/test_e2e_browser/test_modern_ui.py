@@ -204,7 +204,8 @@ class TestMcsBrowser:
         # SA SEE card leaves its placeholder once TM flows
         page.wait_for_function(
             "() => { const t = document.getElementById('sa-see-v').textContent;"
-            " return t && t !== '—' && t !== 'NO TM'; }", timeout=30000)
+            " return t && t !== '—' && t !== 'NO TM'"
+            " && t !== 'No telemetry' && t !== 'Pas de télémesure'; }", timeout=30000)
         assert page.inner_text("#sa-well-v").strip() != ""
         assert page.inner_text("#sa-next-v").strip() != ""
 
@@ -304,7 +305,10 @@ class TestPlannerBrowser:
                     or a.get("duration_min", 0) * 60)
         assert any(_dur(a) == 1200 for a in self._schedule()), self._schedule()
 
-        # DELETE (the confirm dialog is auto-accepted above)
+        # DELETE is a two-step since the 2026-11 design-system pass: the
+        # first press arms the button ("Confirm: Delete"), the second executes.
+        page.click("#activityList [data-act='delete']")
+        page.wait_for_selector("#activityList [data-act='delete'].is-armed", timeout=3000)
         page.click("#activityList [data-act='delete']")
         deadline = time.time() + 10
         while time.time() < deadline and len(self._schedule()) != n0:
@@ -342,14 +346,17 @@ class TestInstructorBrowser:
         page.wait_for_function(
             "() => document.querySelectorAll('#fail-type option').length > 0",
             timeout=10000)
+        # Inject is a two-step (arm, then execute within 5 s).
+        page.click("#btn-inject")
+        page.wait_for_selector("#btn-inject.is-armed", timeout=3000)
         page.click("#btn-inject")
         page.wait_for_function(
-            "() => document.getElementById('failures-list')"
-            ".textContent.includes('CLEAR')", timeout=15000)
-        page.click("#failures-list button")
+            "() => document.querySelector('#failures-list [data-act=\"clear-failure\"]')",
+            timeout=15000)
+        page.click("#failures-list [data-act='clear-failure']")
         page.wait_for_function(
-            "() => !document.getElementById('failures-list')"
-            ".textContent.includes('CLEAR')", timeout=15000)
+            "() => !document.querySelector('#failures-list [data-act=\"clear-failure\"]')",
+            timeout=15000)
 
     def test_scenario_start_stop_and_debrief(self, page):
         self._open(page)
@@ -364,6 +371,9 @@ class TestInstructorBrowser:
             "() => document.getElementById('scenario-chip')"
             ".textContent.trim().length > 0", timeout=15000)
         time.sleep(2)
+        # Stop disrupts the class: a two-step (arm, then execute).
+        page.click("#btn-stop-scenario")
+        page.wait_for_selector("#btn-stop-scenario.is-armed", timeout=3000)
         page.click("#btn-stop-scenario")
         # debrief: fetch and expect the placeholder to be replaced
         page.wait_for_selector("#btn-fetch-debrief", timeout=5000)

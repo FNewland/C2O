@@ -27,6 +27,9 @@ TOOLS = REPO / "tools"
 CATALOG = (REPO / "packages/smo-common/src/smo_common/ui/i18n/tools/fr.json")
 TOOL_FILES = ["doc_viewer.py", "delayed_tm_viewer.py", "orbit_tools.py",
               "scenario_generator.py", "adcs_sim_viewer.py"]
+#: The page frame every tool shares (title bar, theme + language switches);
+#: it emits TOOL_HEAD (shared design system + language runtime).
+FRAME = "tool_frame.py"
 
 
 def _load(name):
@@ -102,6 +105,7 @@ async def test_delayed_tm_listing_has_no_absolute_path(tmp_path):
         assert str(dtm.REPO) not in j["dump_dir"]
         page = await (await c.get("/")).text()
         assert "/static/shared/tool-page.js" in page
+        assert str(dtm.REPO) not in page
     finally:
         await c.close()
 
@@ -120,10 +124,14 @@ def _marked_strings(src: str) -> set[str]:
     return keys
 
 
-@pytest.mark.parametrize("tool", TOOL_FILES)
+@pytest.mark.parametrize("tool", TOOL_FILES + [FRAME])
 def test_tool_page_strings_have_french(tool):
     src = (TOOLS / tool).read_text(encoding="utf-8")
-    assert "TOOL_HEAD" in src and "setup_tool_app" in src
+    if tool == FRAME:
+        assert "TOOL_HEAD" in src
+    else:
+        assert "setup_tool_app" in src
+        assert "TOOL_HEAD" in src or "tool_frame" in src
     fr = json.loads(CATALOG.read_text(encoding="utf-8"))
     missing = sorted(k for k in _marked_strings(src) if k not in fr)
     assert not missing, f"{tool}: no French for {missing}"

@@ -3,517 +3,315 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-i18n>SMO Radio — Ground Station Receiver</title>
+<title data-i18n>Radio</title>
 <!--
-  SMO RADIO — MODERN OPERATOR CONSOLE (design_2026-08)
+  SMO RADIO — OPERATOR CONSOLE (design_2026-08, restyled 2026-11 on the C2O
+  design system: the same title bar as the tool pages, a lock-chain state
+  strip first, then the receiver plots with scales and units).
 
   Standing rule: ground tools are spacecraft-agnostic. This page shows ONLY
   what real ground-station receive equipment shows — lock states, measured
   signal levels, spectrum, constellation, eye diagram, Doppler as MEASURED,
-  frame/CLTU counters. Simulation truth (injected link degradations and
-  their settings) is NOT displayed and NOT linked from here; its effects
-  appear only as what the receiver genuinely sees.
+  frame/CLTU counters. Simulation truth is NOT displayed and NOT linked from
+  here; its effects appear only as what the receiver genuinely sees. The
+  page is observational: it sends nothing to the receiver.
 -->
+<script>
+(function(){var d=document.documentElement,t=null;
+try{t=new URLSearchParams(location.search).get("theme")||localStorage.getItem("c2o.theme");}catch(e){}
+d.setAttribute("data-theme",t==="light"?"light":"dark");})();
+</script>
 <link rel="stylesheet" href="/static/shared/design-system.css">
 <style>
-  /* Page-local layout only; all tokens/components from the design system. */
-  header{ display:flex; align-items:center; gap:14px; padding:10px 18px;
-    border-bottom:1px solid var(--line); background:var(--s1); }
-  header .mark b{ font-size:14px; letter-spacing:1.5px; }
-  header .mark span{ display:block; font-size:12px; color:var(--tx3);
-    letter-spacing:.5px; }
-  header .grow{ flex:1; }
-  .grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
-    grid-auto-flow:row dense; gap:12px; padding:14px 18px; max-width:1400px; margin:0 auto; }
-  .two-col{ grid-column:span 2; }
-  @media (max-width:1000px){ .grid{ grid-template-columns:1fr; }
-    .two-col{ grid-column:auto; } }
-  .rows .row{ display:flex; justify-content:space-between; gap:12px;
-    padding:5px 0; border-bottom:1px solid var(--line); }
+  /* Page-local layout only; every colour, size and space is a token. */
+  .rb{ position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:var(--sp-3);
+    min-height:48px; padding:0 var(--sp-5); background:var(--bg); border-bottom:1px solid var(--line); }
+  .rb .mark{ font-family:var(--mono); font-size:var(--fs-label); font-weight:500; color:var(--tx2);
+    letter-spacing:.06em; padding-right:var(--sp-3); border-right:1px solid var(--line-2); line-height:20px; }
+  .rb h1{ font-size:var(--fs-value); font-weight:600; color:var(--val); white-space:nowrap; }
+  .rb .meta{ font-size:var(--fs-label); color:var(--tx3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .rb .meta .k{ font-family:var(--mono); color:var(--tx2); }
+  .rb .ctl{ margin-left:auto; display:flex; align-items:center; gap:var(--sp-3); flex:0 0 auto; }
+  .rb .upd{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+  main{ padding:var(--sp-4) var(--sp-5) var(--sp-5); display:flex; flex-direction:column; gap:var(--sp-4); }
+  .grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-4); }
+  .span2{ grid-column:span 2; }
+  /* Lock chain: the receiver acquires in order, left to right. */
+  .chain{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.6fr); }
+  .chain .st{ padding:var(--sp-3) var(--sp-4); border-right:1px solid var(--line); display:flex;
+    flex-direction:column; gap:6px; position:relative; min-width:0; }
+  .chain .st .k{ font-size:var(--fs-label); color:var(--tx3); }
+  .chain .st .ds-chip{ align-self:flex-start; font-size:var(--fs-body); min-height:24px; padding:0 8px; }
+  .chain .st+.st::before{ content:""; position:absolute; left:-5px; top:50%; width:8px; height:8px;
+    border-top:1px solid var(--line-2); border-right:1px solid var(--line-2); transform:translateY(-50%) rotate(45deg);
+    background:var(--s1); }
+  .chain .lvl{ padding:var(--sp-2) var(--sp-4); display:flex; flex-direction:column; justify-content:center; }
+  .chain .lvl .ds-gauge{ grid-template-columns:96px minmax(80px,1fr) auto; }
+  .plot{ display:block; width:100%; }
+  .plot.sq{ aspect-ratio:1 / 1; max-height:300px; margin:0 auto; }
+  .plot.h220{ height:220px; } .plot.h120{ height:120px; } .plot.h300{ height:300px; } .plot.h250{ height:250px; }
+  .ds-panel-b.plot-b{ padding:var(--sp-2) var(--sp-3) var(--sp-3); }
+  .legend{ display:flex; gap:var(--sp-4); flex-wrap:wrap; font-size:var(--fs-label); color:var(--tx3);
+    padding:0 var(--sp-4) var(--sp-3); }
+  .legend i{ display:inline-block; width:14px; height:2px; vertical-align:middle; margin-right:6px; }
+  .legend i.ring{ width:8px; height:8px; border:1.5px solid var(--tx3); border-radius:50%; }
+  .legend i.dot{ width:4px; height:4px; background:var(--tx2); }
+  .rows .row{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-3);
+    padding:6px 0; border-bottom:1px solid var(--line); }
   .rows .row:last-child{ border-bottom:none; }
-  .rows .k{ color:var(--tx3); font-size:13px; }
-  .rows .v{ font-family:var(--mono); font-size:14px; font-weight:600;
-    font-variant-numeric:tabular-nums; }
-  .chart-container{ position:relative; height:150px; }
-  canvas{ width:100%; height:100%; display:block; }
-  canvas.fixed{ height:auto; }
-  .meter{ height:8px; background:var(--s3); border-radius:4px;
-    overflow:hidden; margin-top:4px; }
-  .meter .fill{ height:100%; border-radius:4px; transition:width .3s;
-    background:var(--tx3); }
-  .meter .fill.w{ background:var(--warn); }
-  .meter .fill.a{ background:var(--alarm); }
-  .stat-row{ display:flex; gap:10px; flex-wrap:wrap; }
-  .stat-box{ flex:1; min-width:90px; text-align:center; padding:8px 4px;
-    background:var(--s2); border:1px solid var(--line); border-radius:var(--r); }
-  .stat-box .big{ font-family:var(--mono); font-size:20px; font-weight:600; }
-  .stat-box .big.a{ color:var(--alarm); }
-  .stat-box .lbl{ font-size:12px; color:var(--tx3); margin-top:2px; }
-  .locks{ display:flex; flex-direction:column; gap:8px; }
-  .locks .lk{ display:flex; align-items:center; justify-content:space-between; }
-  .vc-list{ display:flex; gap:10px; flex-wrap:wrap; }
-  #footer{ text-align:center; color:var(--tx3); font-size:12px;
-    padding:10px 0 16px; }
-  .diag-grid{ display:grid; grid-template-columns:1fr auto; gap:2px 10px;
-    font-size:12.5px; }
+  .rows .k{ color:var(--tx2); font-size:var(--fs-body); }
+  .rows .k small{ color:var(--tx3); font-size:var(--fs-label); }
+  .counts{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-bottom:1px solid var(--line); }
+  .counts>div{ padding:var(--sp-2) var(--sp-4) var(--sp-3); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; gap:2px; }
+  .counts>div:last-child{ border-right:0; }
+  .counts .k{ font-size:var(--fs-label); color:var(--tx3); }
+  .vc-list{ display:flex; gap:var(--sp-2); flex-wrap:wrap; }
+  .gl-params .ds-param{ padding-left:0; padding-right:0; }
+  .gl-params .ds-param .vl.nosig{ font-family:var(--sans); font-size:var(--fs-label); font-style:italic;
+    color:var(--tx3); font-weight:400; }
+  .gl-log .bd{ padding-left:0; padding-right:0; }
+  .diag-grid{ display:grid; grid-template-columns:1fr auto; gap:2px var(--sp-3); font-size:var(--fs-label); }
   .diag-grid .k{ color:var(--tx3); }
-  .diag-grid .v{ font-family:var(--mono); }
-  body.stale-feed .v, body.stale-feed .stat-box .big{ color:var(--tx2); }
-  /* Ground limit check (plan decision 2026-11-01): BER and AGC are measured
-     by this receiver, so their limits are checked here, labelled "ground". */
-  .gl-head{ display:flex; align-items:center; justify-content:space-between;
-    gap:8px; margin-bottom:8px; }
-  .gl-head .why{ font-size:12px; color:var(--tx3); text-align:right; }
-  .gl-params{ display:flex; flex-direction:column; gap:6px; }
-  .gl-params .ds-param .vl.nosig{ font-family:var(--sans, inherit);
-    font-size:12px; font-style:italic; color:var(--tx3); font-weight:400; }
-  .gl-log{ margin-top:10px; border-top:1px solid var(--line); padding-top:6px; }
-  .gl-log .cap{ font-size:12px; color:var(--tx3); cursor:pointer; }
-  .gl-log .cap .num{ font-family:var(--mono); color:var(--tx2); }
-  .gl-log[open] .cap{ margin-bottom:4px; }
-  .gl-log .empty{ font-size:12px; color:var(--tx3); }
-  #ber.w{ color:var(--warn); } #ber.a{ color:var(--alarm); }
+  .diag-grid .v{ font-family:var(--mono); color:var(--tx2); }
+  body.stale-feed .ds-value, body.stale-feed .rows .ds-value{ color:var(--tx3); font-style:italic; font-weight:400; }
+  footer{ text-align:center; color:var(--tx3); font-size:var(--fs-label); padding:0 0 var(--sp-5); }
+  @media (max-width:1100px){
+    .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .chain{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .chain .lvl{ grid-column:1 / -1; border-top:1px solid var(--line); }
+  }
+  @media (max-width:720px){
+    .rb{ flex-wrap:wrap; padding:var(--sp-2) var(--sp-4); }
+    .rb .meta{ order:9; flex:1 0 100%; }
+    .rb .upd{ display:none; }
+    main{ padding:var(--sp-3) var(--sp-4); }
+    .grid{ grid-template-columns:minmax(0,1fr); } .span2{ grid-column:auto; }
+    .chain{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .chain .st+.st::before{ display:none; }
+    .chain .st{ border-bottom:1px solid var(--line); }
+    .counts{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
 </style>
 </head>
 <body>
 <a class="ds-skip" href="#main-grid" data-i18n>Skip to receiver status</a>
 
-<header>
-  <div class="mark"><b>SMO RADIO</b><span data-i18n>Ground station receiver</span></div>
-  <span class="ds-badge" id="mode-badge" data-i18n-title title="Bridge operating mode">MODE —</span>
-  <span class="ds-badge" id="mod-badge" data-i18n-title title="Detected downlink scheme">—</span>
-  <div class="grow"></div>
-  <span id="feed-chip"><span class="ds-chip"><span>FEED —</span></span></span>
-  <span class="num" id="last-update" style="font-size:12px;color:var(--tx3)">—</span>
-  <span id="lang-toggle"></span>
+<header class="rb">
+  <span class="mark" aria-hidden="true">C2O</span>
+  <h1 data-i18n>Radio</h1>
+  <span class="meta" id="rb-meta"><span data-i18n>Ground station receiver</span></span>
+  <div class="ctl">
+    <span id="feed-chip" role="status"></span>
+    <span class="upd" id="last-update"></span>
+    <div class="ds-seg" role="group" id="theme" aria-label="Theme" data-i18n-aria-label>
+      <button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button>
+      <button type="button" data-theme-set="light" aria-pressed="false" data-i18n>Light</button>
+    </div>
+    <span id="lang-toggle"></span>
+  </div>
 </header>
 
-<div class="ds-banner stale" id="stale-banner" hidden data-i18n>
-  RECEIVER FEED STALE — displayed values are the last received; charts have
-  stopped appending.
-</div>
+<main id="main-grid">
+  <div id="stale-banner" hidden></div>
 
-<div class="grid" id="main-grid">
-
-  <div class="ds-card">
-    <h2 data-i18n>Lock status</h2>
-    <div class="bd locks">
-      <div class="lk"><span class="rows k" data-i18n>SC transmitter</span><span id="sctx-chip"></span></div>
-      <div class="lk"><span class="rows k" data-i18n>Carrier</span><span id="carrier-chip"></span></div>
-      <div class="lk"><span class="rows k" data-i18n>Bit sync</span><span id="bitsync-chip"></span></div>
-      <div class="lk"><span class="rows k" data-i18n>Frame sync</span><span id="framesync-chip"></span></div>
-      <div>
-        <div class="rows k" data-i18n>Signal quality (Eb/N0 vs 15 dB ref)</div>
-        <div class="meter"><div id="signal-bar" class="fill" style="width:0%"></div></div>
-      </div>
+  <section class="ds-panel" aria-labelledby="lock-h">
+    <div class="ds-panel-h"><span id="lock-h" data-i18n>Lock status</span><span class="r" data-i18n>acquisition runs left to right</span></div>
+    <div class="chain">
+      <div class="st"><span class="k" data-i18n>SC transmitter</span><span id="sctx-chip"></span></div>
+      <div class="st"><span class="k" data-i18n>Carrier</span><span id="carrier-chip"></span></div>
+      <div class="st"><span class="k" data-i18n>Bit sync</span><span id="bitsync-chip"></span></div>
+      <div class="st"><span class="k" data-i18n>Frame sync</span><span id="framesync-chip"></span></div>
+      <div class="lvl" id="levels"></div>
     </div>
-  </div>
+  </section>
 
-  <div class="ds-card" id="gl-card">
-    <h2 data-i18n>Ground limits <span class="r" data-i18n data-i18n-title title="Checked by this receiver, not by the spacecraft">ground</span></h2>
-    <div class="bd">
-      <div class="gl-head"><span id="gl-chip"></span><span class="why" id="gl-why"></span></div>
-      <div class="gl-params" id="gl-params"></div>
-      <details class="gl-log">
-        <summary class="cap"><span data-i18n>Limit transitions</span> <span class="num" id="gl-count">0</span></summary>
-        <div id="gl-log"></div>
+  <div class="grid">
+    <section class="ds-panel ds-card" aria-labelledby="con-h">
+      <div class="ds-panel-h"><span id="con-h" data-i18n>Baseband constellation</span><span class="r" id="con-meta">I/Q</span></div>
+      <div class="ds-panel-b plot-b"><canvas id="constellation" class="plot sq" role="img" aria-labelledby="con-h"></canvas></div>
+      <div class="legend"><span><i class="dot"></i><span data-i18n>received symbols</span></span><span><i class="ring"></i><span data-i18n>ideal points</span></span></div>
+    </section>
+    <section class="ds-panel span2" aria-labelledby="spec-h">
+      <div class="ds-panel-h"><span id="spec-h" data-i18n>Spectrum analyzer</span><span class="r" data-i18n>baseband, relative to the carrier</span></div>
+      <div class="ds-panel-b plot-b"><canvas id="spectrum-chart" class="plot h300" role="img" aria-labelledby="spec-h"></canvas></div>
+      <div class="legend"><span><i style="background:var(--tx2)"></i><span data-i18n>power spectral density</span></span><span><i style="border-top:1px dashed var(--tx3);height:0"></i><span data-i18n>occupied bandwidth</span></span></div>
+    </section>
+
+    <section class="ds-panel" aria-labelledby="eye-h">
+      <div class="ds-panel-h"><span id="eye-h" data-i18n>Eye diagram</span><span class="r" data-i18n>two symbol periods</span></div>
+      <div class="ds-panel-b plot-b"><canvas id="eye-diagram" class="plot h250" role="img" aria-labelledby="eye-h"></canvas></div>
+      <div class="legend"><span><i style="background:var(--tx2)"></i>I</span><span><i style="background:var(--cat-1)"></i>Q</span><span><i style="border-top:1px dashed var(--tx3);height:0"></i><span data-i18n>decision instant</span></span></div>
+    </section>
+    <section class="ds-panel span2" aria-labelledby="hist-h">
+      <div class="ds-panel-h"><span id="hist-h" data-i18n>Eb/N0 &amp; BER history</span><span class="r" data-i18n>last 60 s</span></div>
+      <div class="ds-panel-b plot-b">
+        <canvas id="ebn0-chart" class="plot h120" role="img" aria-label="Eb/N0, dB, last 60 s"></canvas>
+        <canvas id="ber-chart" class="plot h120" role="img" aria-label="BER, log10, last 60 s" style="margin-top:var(--sp-2)"></canvas>
+      </div>
+      <div class="legend"><span><i style="border-top:1px dashed var(--warn);height:0"></i><span data-i18n>caution limit</span></span><span><i style="border-top:1px dashed var(--alarm);height:0"></i><span data-i18n>alarm limit</span></span></div>
+    </section>
+
+    <section class="ds-panel" aria-labelledby="rf-h">
+      <div class="ds-panel-h"><span id="rf-h" data-i18n>RF measurements</span><span class="r" data-i18n data-i18n-title title="As measured at the receiver">measured</span></div>
+      <div class="ds-panel-b rows">
+        <div class="row"><span class="k">RSSI</span><span id="rssi"></span></div>
+        <div class="row"><span class="k">Eb/N0</span><span id="ebn0"></span></div>
+        <div class="row"><span class="k" data-i18n>BER</span><span id="ber"></span></div>
+        <div class="row"><span class="k" data-i18n>Link margin</span><span id="margin"></span></div>
+        <div class="row"><span class="k" data-i18n>RX SNR (EVM)</span><span id="pl-evm"></span></div>
+        <div class="row"><span class="k" data-i18n>Doppler (measured)</span><span id="doppler"></span></div>
+        <div class="row"><span class="k" data-i18n>Range</span><span id="range"></span></div>
+        <div class="row"><span class="k" data-i18n>Prop delay</span><span id="delay"></span></div>
+      </div>
+    </section>
+    <section class="ds-panel" id="gl-card" aria-labelledby="gl-h">
+      <div class="ds-panel-h"><span id="gl-h" data-i18n>Ground limits</span><span class="r"><span class="ds-src" data-i18n data-i18n-title title="Checked by this receiver, not by the spacecraft">ground</span></span></div>
+      <div class="ds-panel-b">
+        <div class="ds-row" style="justify-content:space-between"><span id="gl-chip"></span><span class="ds-meta" id="gl-why"></span></div>
+        <div class="gl-params" id="gl-params"></div>
+        <details class="ds-disclosure gl-log">
+          <summary><span data-i18n>Limit transitions</span><span class="r num" id="gl-count">0</span></summary>
+          <div class="bd" id="gl-log"></div>
+        </details>
+      </div>
+    </section>
+    <section class="ds-panel" aria-labelledby="dyn-h">
+      <div class="ds-panel-h"><span id="dyn-h" data-i18n>Data link</span><span class="r" data-i18n>tracking</span></div>
+      <div class="ds-panel-b rows">
+        <div class="row"><span class="k" data-i18n>Data rate</span><span id="datarate"></span></div>
+        <div class="row"><span class="k" data-i18n>Symbol rate</span><span id="pl-symrate"></span></div>
+        <div class="row"><span class="k" data-i18n>Achieved TM</span><span id="pl-thr"></span></div>
+        <div class="row"><span class="k" data-i18n>Uplink CLTU rate</span><span id="cltu-rate"></span></div>
+        <div class="row"><span class="k" data-i18n>Virtual channels</span><span class="vc-list"><span id="vc0-chip"></span><span id="vc1-chip"></span><span id="vc7-chip"></span></span></div>
+      </div>
+    </section>
+
+    <section class="ds-panel span2" aria-labelledby="fr-h">
+      <div class="ds-panel-h"><span id="fr-h" data-i18n>Frame counters</span><span class="r" id="fer"></span></div>
+      <div class="counts">
+        <div><span class="k" data-i18n>Good frames</span><span id="good-frames"></span></div>
+        <div><span class="k" data-i18n>Bad frames</span><span id="bad-frames"></span></div>
+        <div><span class="k" data-i18n>CLTU sent</span><span id="cltu-sent"></span></div>
+        <div><span class="k" data-i18n>CLTU ack</span><span id="cltu-ack"></span></div>
+      </div>
+      <div class="ds-panel-b plot-b"><canvas id="frame-chart" class="plot h120" role="img" aria-label="Frame rate, frames per second, last 60 s"></canvas></div>
+      <div class="legend"><span><i style="background:var(--tx2)"></i><span data-i18n>good frames/s</span></span><span><i style="background:var(--alarm)"></i><span data-i18n>bad frames/s</span></span></div>
+    </section>
+    <section class="ds-panel" aria-labelledby="lb-h">
+      <div class="ds-panel-h"><span id="lb-h" data-i18n>Link budget</span><span class="r" data-i18n data-i18n-title title="Predicted from the configured link geometry">predicted</span></div>
+      <div class="ds-panel-b rows">
+        <div class="row"><span class="k" data-i18n>EIRP</span><span id="lb-eirp"></span></div>
+        <div class="row"><span class="k">FSPL</span><span id="lb-fspl"></span></div>
+        <div class="row"><span class="k">C/N0</span><span id="lb-cn0"></span></div>
+        <div class="row"><span class="k" data-i18n>Coding gain</span><span id="lb-coding"></span></div>
+        <div class="row"><span class="k" data-i18n>Frequency</span><span id="lb-freq"></span></div>
+        <div class="row"><span class="k" data-i18n>Bandwidth</span><span id="lb-bw"></span></div>
+      </div>
+      <details class="ds-disclosure">
+        <summary data-i18n>Receiver diagnostics</summary>
+        <div class="bd" id="diag-body"></div>
       </details>
-    </div>
+    </section>
   </div>
+</main>
 
-  <div class="ds-card">
-    <h2 data-i18n>RF measurements <span class="r" data-i18n data-i18n-title title="As measured at the receiver">measured</span></h2>
-    <div class="bd rows">
-      <div class="row"><span class="k">RSSI</span><span class="v" id="rssi">—</span></div>
-      <div class="row"><span class="k">Eb/N0</span><span class="v" id="ebn0">—</span></div>
-      <div class="row"><span class="k" data-i18n>BER</span><span class="v" id="ber">—</span></div>
-      <div class="row"><span class="k" data-i18n>Link margin</span><span class="v" id="margin">—</span></div>
-      <div class="row"><span class="k" data-i18n>RX SNR (EVM)</span><span class="v" id="pl-evm">—</span></div>
-      <div>
-        <div class="k" data-i18n>Link margin</div>
-        <div class="meter"><div id="margin-bar" class="fill" style="width:0%"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="ds-card two-col">
-    <h2 data-i18n>Eb/N0 &amp; BER history</h2>
-    <div class="bd"><div class="chart-container"><canvas id="ebn0-chart"></canvas></div></div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Dynamics <span class="r" data-i18n>tracking</span></h2>
-    <div class="bd rows">
-      <div class="row"><span class="k" data-i18n>Doppler (measured)</span><span class="v" id="doppler">—</span></div>
-      <div class="row"><span class="k" data-i18n>Range</span><span class="v" id="range">—</span></div>
-      <div class="row"><span class="k" data-i18n>Data rate</span><span class="v" id="datarate">—</span></div>
-      <div class="row"><span class="k" data-i18n>Prop delay</span><span class="v" id="delay">—</span></div>
-      <div class="row"><span class="k" data-i18n>Symbol rate</span><span class="v" id="pl-symrate">—</span></div>
-      <div class="row"><span class="k" data-i18n>Achieved TM</span><span class="v" id="pl-thr">—</span></div>
-    </div>
-  </div>
-
-  <div class="ds-card two-col">
-    <h2 data-i18n>Frame rate <span class="r" data-i18n>frames/sec</span></h2>
-    <div class="bd"><div class="chart-container"><canvas id="frame-chart"></canvas></div></div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Frame counters</h2>
-    <div class="bd">
-      <div class="stat-row">
-        <div class="stat-box"><div id="good-frames" class="big">0</div><div class="lbl" data-i18n>Good frames</div></div>
-        <div class="stat-box"><div id="bad-frames" class="big a">0</div><div class="lbl" data-i18n>Bad frames</div></div>
-      </div>
-      <div class="stat-row" style="margin-top:8px;">
-        <div class="stat-box"><div id="cltu-sent" class="big">0</div><div class="lbl" data-i18n>CLTU sent</div></div>
-        <div class="stat-box"><div id="cltu-ack" class="big">0</div><div class="lbl" data-i18n>CLTU ack</div></div>
-      </div>
-      <div style="margin-top:8px;">
-        <div class="rows k" data-i18n>Frame error rate</div>
-        <div class="meter"><div id="fer-bar" class="fill" style="width:0%"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Virtual channels</h2>
-    <div class="bd">
-      <div class="vc-list">
-        <span id="vc0-chip"></span>
-        <span id="vc1-chip"></span>
-        <span id="vc7-chip"></span>
-      </div>
-      <div class="rows" style="margin-top:10px;">
-        <div class="row"><span class="k" data-i18n>Uplink CLTU rate</span><span class="v" id="cltu-rate">—</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Baseband constellation <span class="r">I/Q</span></h2>
-    <div class="bd">
-      <canvas id="constellation" class="fixed" width="500" height="360"
-              style="height:190px;background:var(--bg);border-radius:var(--r);"></canvas>
-    </div>
-  </div>
-
-  <div class="ds-card two-col">
-    <h2 data-i18n>Spectrum analyzer <span class="r" data-i18n>baseband</span></h2>
-    <div class="bd"><div class="chart-container"><canvas id="spectrum-chart"></canvas></div></div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Eye diagram</h2>
-    <div class="bd">
-      <canvas id="eye-diagram" class="fixed" width="400" height="300"
-              style="height:160px;background:var(--bg);border-radius:var(--r);"></canvas>
-    </div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Link budget <span class="r" data-i18n data-i18n-title title="Predicted from the configured link geometry">predicted</span></h2>
-    <div class="bd rows">
-      <div class="row"><span class="k" data-i18n>EIRP</span><span class="v" id="lb-eirp">—</span></div>
-      <div class="row"><span class="k">FSPL</span><span class="v" id="lb-fspl">—</span></div>
-      <div class="row"><span class="k">C/N0</span><span class="v" id="lb-cn0">—</span></div>
-      <div class="row"><span class="k" data-i18n>Coding gain</span><span class="v" id="lb-coding">—</span></div>
-      <div class="row"><span class="k" data-i18n>Frequency</span><span class="v" id="lb-freq">—</span></div>
-      <div class="row"><span class="k" data-i18n>Bandwidth</span><span class="v" id="lb-bw">—</span></div>
-    </div>
-  </div>
-
-  <div class="ds-card">
-    <h2 data-i18n>Receiver diagnostics</h2>
-    <div class="bd"><div id="diag-body" class="rows k">no data</div></div>
-  </div>
-
-</div>
-
-<div id="footer" data-i18n>SMO Ground Segment — radio receiver console ·
-  <a href="/classic" data-i18n>classic page</a></div>
+<footer><span data-i18n>SMO Ground Segment — radio receiver console</span> ·
+  <a href="/classic" data-i18n>classic page</a></footer>
 
 <script type="module">
-import { renderChip, freshness, mountLangToggle, renderParam, renderEventRow, limitClass } from "/static/shared/components.js";
+import { renderChip, freshness, mountLangToggle, renderParam, renderEventRow, limitClass,
+         renderValue, renderNoData, renderGauge, renderBanner, esc } from "/static/shared/components.js";
 import { fmtAge } from "/static/shared/format.js";
 // UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md. The WS feed below
 // starts at once; only the toggle waits for the catalogs.
 import { I18n, t, tText, onLangChange } from "/static/shared/i18n.js";
 I18n.ready.then(() => {
   mountLangToggle(document.getElementById("lang-toggle"));
-  renderDiagnostics(lastDiag);   // the "no data" placeholder, translated
+  redrawAll();
 });
-// Regions redrawn on every WS message need nothing; these may sit idle.
-onLangChange(() => { renderDiagnostics(lastDiag); renderGroundLimits(lastFeed); ebn0Chart.draw(); frameChart.draw(); });
+onLangChange(redrawAll);
 
-/* ── Mini chart (dependency-free canvas line chart, from the classic page,
-      restyled to the design-system palette) ──────────────────────────── */
-const CSS = getComputedStyle(document.documentElement);
-const TOK = (n) => CSS.getPropertyValue(n).trim();
-const C_LINE = TOK("--line") || "#2B313A";
-const C_TX3  = TOK("--tx3")  || "#8A93A0";
-const C_TX2  = TOK("--tx2")  || "#A3ACB9";
-const C_INFO = TOK("--info") || "#5AA9FF";
-const C_WARN = TOK("--warn") || "#E8A317";
-const C_ALRM = TOK("--alarm")|| "#FF5C4D";
-const C_OK   = TOK("--ok")   || "#8A93A0";
-const C_BG   = TOK("--bg")   || "#0E1013";
-
-class MiniChart {
-  constructor(canvasId, opts) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext("2d");
-    this.maxPoints = opts.maxPoints || 120;
-    this.series = {};
-    this.colors = opts.colors || {};
-    this.yMin = opts.yMin ?? null;
-    this.yMax = opts.yMax ?? null;
-    this.labels = opts.labels || {};
-    this.refLines = opts.refLines || [];   // [{y, color}] limit lines
-    for (const key of (opts.keys || [])) this.series[key] = [];
-  }
-  push(values) {
-    for (const [key, val] of Object.entries(values)) {
-      if (!this.series[key]) this.series[key] = [];
-      this.series[key].push(val);
-      if (this.series[key].length > this.maxPoints) this.series[key].shift();
-    }
-    this.draw();
-  }
-  draw() {
-    const c = this.canvas, ctx = this.ctx;
-    const dpr = window.devicePixelRatio || 1;
-    const w = c.clientWidth, h = c.clientHeight;
-    c.width = w * dpr; c.height = h * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, w, h);
-    let allVals = [];
-    for (const arr of Object.values(this.series)) allVals.push(...arr);
-    if (allVals.length === 0) return;
-    let yMin = this.yMin ?? Math.min(...allVals);
-    let yMax = this.yMax ?? Math.max(...allVals);
-    if (yMax === yMin) { yMax += 1; yMin -= 1; }
-    const pad = (yMax - yMin) * 0.1;
-    if (this.yMin === null) yMin -= pad;
-    if (this.yMax === null) yMax += pad;
-    ctx.strokeStyle = C_LINE; ctx.lineWidth = 0.5;
-    for (let i = 0; i <= 4; i++) {
-      const y = h - (i / 4) * h;
-      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w, y); ctx.stroke();
-      ctx.fillStyle = C_TX3; ctx.font = "10px monospace";
-      ctx.fillText((yMin + (i / 4) * (yMax - yMin)).toFixed(1), 0, y + 3);
-    }
-    // Limit reference lines (dashed), drawn under the data.
-    ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
-    for (const r of this.refLines) {
-      if (r.y === null || r.y === undefined || r.y < yMin || r.y > yMax) continue;
-      const y = h - ((r.y - yMin) / (yMax - yMin)) * h;
-      ctx.strokeStyle = r.color;
-      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w, y); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    for (const [key, arr] of Object.entries(this.series)) {
-      if (arr.length < 2) continue;
-      ctx.strokeStyle = this.colors[key] || C_INFO;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      for (let i = 0; i < arr.length; i++) {
-        const x = 30 + (i / (this.maxPoints - 1)) * (w - 35);
-        const y = h - ((arr[i] - yMin) / (yMax - yMin)) * h;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
-    let lx = 35;
-    ctx.font = "10px monospace";
-    for (const [key, color] of Object.entries(this.colors)) {
-      ctx.fillStyle = color;
-      ctx.fillRect(lx, 4, 12, 3);
-      ctx.fillStyle = C_TX2;
-      const lbl = typeof this.labels[key] === "function" ? this.labels[key]() : this.labels[key];
-      ctx.fillText(lbl || key, lx + 15, 9);
-      lx += 80;
-    }
-  }
-}
-
-const ebn0Chart = new MiniChart("ebn0-chart", {
-  keys: ["ebn0", "ber"], maxPoints: 120,
-  colors: { ebn0: C_TX2, ber: C_ALRM },
-  labels: { ebn0: "Eb/N0 dB", ber: () => tText("BER log10") },
-  yMin: -12, yMax: 20,
-  // BER ground limits (yellow / red), set from the feed's own bands.
-  refLines: []
-});
-const frameChart = new MiniChart("frame-chart", {
-  keys: ["good", "bad"], maxPoints: 120,
-  colors: { good: C_TX2, bad: C_ALRM },
-  labels: { good: () => tText("Good/s"), bad: () => tText("Bad/s") },
-  yMin: 0
-});
-
-/* ── Chips ─────────────────────────────────────────────────────────────── */
 const $ = (id) => document.getElementById(id);
-function lockChip(el, state) {
-  const kind = state === "LOCKED" ? "ok"
-             : state === "ACQUIRING" ? "warn" : "alarm";
-  el.innerHTML = renderChip({ kind, label: state || "—",
-    dir: "down", title: tText("Receiver lock state") });
+const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const FONT = () => `12px ${tok("--font-mono") || "monospace"}`;
+
+/* ── theme (same key as the tool pages: c2o.theme) ─────────────────── */
+function paintTheme() {
+  const th = document.documentElement.getAttribute("data-theme");
+  document.querySelectorAll("#theme [data-theme-set]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeSet === th)));
 }
-function vcChip(el, label, vcActive, vcid, ts) {
-  const age = ts - (vcActive[vcid] || 0);
-  const f = freshness(age);
-  const kind = f === "fresh" ? "ok" : f === "degraded" ? "warn" : "stale";
-  el.innerHTML = renderChip({ kind, label,
-    title: tText("Last frame {{age}}", { age: fmtAge(Math.min(age, 9e5)) }) });
+$("theme").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-theme-set]"); if (!b) return;
+  document.documentElement.setAttribute("data-theme", b.dataset.themeSet);
+  try { localStorage.setItem("c2o.theme", b.dataset.themeSet); } catch (e) { /* private mode */ }
+  paintTheme(); redrawAll();
+});
+paintTheme();
+
+/* ── one plot frame for every canvas: scale, ticks, units ──────────── */
+function frame(id) {
+  const c = $(id); if (!c) return null;
+  const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) return null;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = tok("--bg"); ctx.fillRect(0, 0, w, h);
+  return { c, ctx, w, h };
+}
+function axes(f, o) {
+  // o: {x:[min,max], y:[min,max], xt:[...], yt:[...], xl:fn, yl:fn, xu, yu, L, B}
+  const { ctx, w, h } = f, L = o.L ?? 52, R = 10, T = 8, B = o.B ?? 22;
+  const X = (v) => L + ((v - o.x[0]) / (o.x[1] - o.x[0])) * (w - L - R);
+  const Y = (v) => h - B - ((v - o.y[0]) / (o.y[1] - o.y[0])) * (h - B - T);
+  ctx.font = FONT(); ctx.lineWidth = 1;
+  ctx.strokeStyle = tok("--line"); ctx.fillStyle = tok("--tx3");
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const v of o.yt) { const y = Math.round(Y(v)) + .5; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke(); ctx.fillText((o.yl || String)(v), L - 6, y); }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (const v of o.xt) { const x = Math.round(X(v)) + .5; ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, h - B); ctx.stroke(); ctx.fillText((o.xl || String)(v), Math.min(Math.max(x, L + 14), w - R - 18), h - B + 5); }
+  ctx.strokeStyle = tok("--line-2"); ctx.strokeRect(L + .5, T + .5, w - L - R - 1, h - B - T - 1);
+  if (o.yu) { ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillStyle = tok("--tx3"); ctx.fillText(o.yu, L + 6, T + 4); }
+  return { X, Y, L, R, T, B };
+}
+function note(id, msg) {
+  const f = frame(id); if (!f) return;
+  f.ctx.font = `13px ${tok("--font-sans") || "sans-serif"}`; f.ctx.fillStyle = tok("--tx2");
+  f.ctx.textAlign = "center"; f.ctx.textBaseline = "middle"; f.ctx.fillText(msg, f.w / 2, f.h / 2);
 }
 
-/* ── WS feed with display-wide freshness (P4) ──────────────────────────── */
-let lastGood = 0, lastBad = 0, lastCltu = 0, lastTs = 0;
-let lastMsgWall = 0;
-const FEED_LABEL = {   // freshness() word -> chip label
-  fresh: () => tText("FEED FRESH"),
-  degraded: () => tText("FEED DEGRADED"),
-  stale: () => tText("FEED STALE"),
-};
-
-setInterval(() => {
-  const age = lastMsgWall ? (Date.now() - lastMsgWall) / 1000 : null;
-  const f = freshness(age);
-  const kind = f === "fresh" ? "ok" : f === "degraded" ? "warn" : "stale";
-  $("feed-chip").innerHTML = renderChip({ kind,
-    label: FEED_LABEL[f] ? FEED_LABEL[f]() : "FEED " + f.toUpperCase(),
-    title: age === null ? tText("no data received yet")
-                        : tText("last message {{age}}", { age: fmtAge(age) }) });
-  $("stale-banner").hidden = f !== "stale";
-  document.body.classList.toggle("stale-feed", f === "stale");
-}, 1000);
-
-let ws;
-function connect() {
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  ws = new WebSocket(proto + "//" + location.host + "/ws");
-  ws.onmessage = (e) => { lastMsgWall = Date.now(); render(JSON.parse(e.data)); };
-  ws.onclose = () => setTimeout(connect, 2000);
-  ws.onerror = () => ws.close();
-}
-connect();
-
-function meter(el, pct, cls) {
-  el.style.width = Math.max(0, Math.min(100, pct)) + "%";
-  el.className = "fill" + (cls ? " " + cls : "");
-}
-
-function render(d) {
-  $("mode-badge").textContent = "MODE " + (d.mode || "—");
-  $("mod-badge").textContent = d.modulation_name || "—";
-  // Spacecraft transmitter state (2026-08c item 6): the sim's tx_active
-  // gate. PA off ⇒ no downlink carrier whatever the pass geometry — and the
-  // instructor pass override forces GEOMETRIC visibility only; it cannot
-  // resurrect a transmitter that is off.
-  const sctx = $("sctx-chip");
-  if (sctx) {
-    const on = d.sc_tx_on;
-    const ovrTitle = d.pass_override
-      ? tText("Instructor pass override ON — geometric visibility forced; TX state is still the spacecraft's own")
-      : tText("Spacecraft transmitter ({{field}} from the sim)", { field: "tx_active" });
-    if (on === true) {
-      sctx.innerHTML = renderChip({ kind: "ok",
-        label: d.pass_override ? tText("RADIATING") + " · OVR" : tText("RADIATING"), title: ovrTitle });
-    } else if (on === false) {
-      const why = d.sc_pa_on === false ? "TX OFF · PA OFF" : "TX OFF";
-      sctx.innerHTML = renderChip({ kind: "alarm",
-        label: d.pass_override ? why + " · OVR" : why, title: ovrTitle });
-    } else {
-      sctx.innerHTML = renderChip({ kind: "stale", label: "—",
-        title: tText("no sim feedback yet") });
-    }
+/* ── rolling history (last 60 s at the 0.5 s feed) ─────────────────── */
+const HIST = 120;
+const hist = { ebn0: [], ber: [], good: [], bad: [] };
+const pushH = (k, v) => { hist[k].push(v); if (hist[k].length > HIST) hist[k].shift(); };
+let berBand = null;
+function drawHistory(id, series, y, yt, yu, refs) {
+  const f = frame(id); if (!f) return;
+  if (!series.some((s) => s.data.length)) { note(id, tText("no data")); return; }
+  const a = axes(f, { x: [-60, 0], y, xt: [-60, -45, -30, -15, 0], yt, xl: (v) => v === 0 ? tText("now") : `${v} s`, yu });
+  const { ctx } = f;
+  ctx.setLineDash([4, 3]);
+  for (const r of refs || []) { if (r.v == null || r.v < y[0] || r.v > y[1]) continue; ctx.strokeStyle = r.c; ctx.beginPath(); ctx.moveTo(a.L, a.Y(r.v)); ctx.lineTo(f.w - a.R, a.Y(r.v)); ctx.stroke(); }
+  ctx.setLineDash([]);
+  for (const s of series) {
+    ctx.strokeStyle = s.c; ctx.lineWidth = 1.5; ctx.beginPath();
+    const n = s.data.length;
+    s.data.forEach((v, i) => { const x = a.X(-60 + (60 * (HIST - n + i)) / (HIST - 1)), yy = a.Y(Math.max(y[0], Math.min(y[1], v))); i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); });
+    ctx.stroke();
   }
-  lockChip($("carrier-chip"), d.carrier_lock);
-  lockChip($("bitsync-chip"), d.bit_sync);
-  lockChip($("framesync-chip"), d.frame_sync);
-
-  const sigPct = (d.eb_n0_db / 15) * 100;
-  meter($("signal-bar"), sigPct, sigPct > 60 ? "" : sigPct > 30 ? "w" : "a");
-
-  $("rssi").textContent = d.rssi_dbm.toFixed(1) + " dBm";
-  $("ebn0").textContent = d.eb_n0_db.toFixed(1) + " dB";
-  $("ber").textContent = "10^" + d.ber_log10.toFixed(1);
-  $("ber").className = "v " + limitClass((d.ground_limit_state || {})["0x050C"]);
-  $("margin").textContent = d.link_margin_db.toFixed(1) + " dB";
-  $("pl-evm").textContent = (d.evm_snr_db || 0).toFixed(1) + " dB";
-  const mPct = ((d.link_margin_db + 5) / 20) * 100;
-  meter($("margin-bar"), mPct,
-        d.link_margin_db > 3 ? "" : d.link_margin_db > 0 ? "w" : "a");
-
-  $("doppler").textContent = (d.doppler_hz >= 0 ? "+" : "") +
-                             d.doppler_hz.toFixed(1) + " Hz";
-  $("range").textContent = d.range_km.toFixed(1) + " km";
-  $("datarate").textContent = d.data_rate_kbps.toFixed(1) + " kbps";
-  $("delay").textContent = (d.range_km / 299.792).toFixed(2) + " ms";
-  $("pl-symrate").textContent = ((d.symbol_rate_bd || 0) / 1000).toFixed(2) + " kBd";
-  $("pl-thr").textContent = ((d.throughput_bps || 0) / 1000).toFixed(2) + " kbps";
-
-  $("good-frames").textContent = d.good_frames;
-  $("bad-frames").textContent = d.bad_frames;
-  $("cltu-sent").textContent = d.cltu_sent;
-  $("cltu-ack").textContent = d.cltu_acked;
-  const total = d.good_frames + d.bad_frames;
-  const fer = total > 0 ? (d.bad_frames / total) * 100 : 0;
-  meter($("fer-bar"), fer * 10, fer < 1 ? "" : fer < 5 ? "w" : "a");
-
-  const dt = d.timestamp - lastTs;
-  if (dt > 0 && lastTs > 0) {
-    frameChart.push({ good: (d.good_frames - lastGood) / dt,
-                      bad: (d.bad_frames - lastBad) / dt });
-    $("cltu-rate").textContent = ((d.cltu_sent - lastCltu) / dt).toFixed(1) + "/s";
-  }
-  lastGood = d.good_frames; lastBad = d.bad_frames;
-  lastCltu = d.cltu_sent; lastTs = d.timestamp;
-
-  ebn0Chart.push({ ebn0: d.eb_n0_db, ber: d.ber_log10 });
-
-  vcChip($("vc0-chip"), "VC0 RT HK", d.vc_active || {}, 0, d.timestamp);
-  vcChip($("vc1-chip"), tText("{{vc}} Playback", { vc: "VC1" }), d.vc_active || {}, 1, d.timestamp);
-  vcChip($("vc7-chip"), tText("{{vc}} Idle", { vc: "VC7" }), d.vc_active || {}, 7, d.timestamp);
-
-  if (d.iq_samples && d.iq_samples.length > 0) {
-    drawConstellation(d.iq_samples, d.modulation || 0);
-  } else {
-    canvasNote("constellation", tText("No I/Q data"));
-  }
-
-  const setTxt = (id, v) => { const e = $(id); if (e) e.textContent = v; };
-  setTxt("lb-eirp", (d.eirp_dbw || 0).toFixed(1) + " dBW");
-  setTxt("lb-fspl", (d.fspl_db || 0).toFixed(1) + " dB");
-  setTxt("lb-cn0", (d.cn0_dbhz || 0).toFixed(1) + " dBHz");
-  setTxt("lb-coding", (d.coding_gain_db || 0).toFixed(1) + " dB");
-  setTxt("lb-freq", ((d.frequency_hz || 437e6) / 1e6).toFixed(3) + " MHz");
-  setTxt("lb-bw", ((d.bandwidth_hz || 0) / 1e3).toFixed(1) + " kHz");
-
-  if (d.mode !== "RF") {
-    canvasNote("spectrum-chart", tText("Spectrum: RF mode only (current mode: {{mode}})", { mode: d.mode }));
-    canvasNote("eye-diagram", tText("Eye diagram: RF mode only"));
-  } else {
-    if (d.spectrum_db && d.spectrum_db.length > 4) {
-      drawSpectrum(d.spectrum_db, d.spectrum_freq_range_hz || 256000);
-    } else {
-      canvasNote("spectrum-chart", tText("No spectrum data"));
-    }
-    if (d.eye_i && d.eye_i.length > 4) {
-      drawEyeDiagram(d.eye_i, d.eye_q || [], d.eye_sps || 8);
-    } else {
-      canvasNote("eye-diagram", tText("No eye data"));
-    }
-  }
-
-  renderDiagnostics(d.diagnostics || {});
-  renderGroundLimits(d);
-  $("last-update").textContent =
-      new Date(d.timestamp * 1000).toLocaleTimeString();
+}
+function drawHistories() {
+  drawHistory("ebn0-chart", [{ data: hist.ebn0, c: tok("--tx2") }], [0, 20], [0, 5, 10, 15, 20], "Eb/N0 [dB]");
+  drawHistory("ber-chart", [{ data: hist.ber, c: tok("--tx2") }], [-12, 0], [-12, -9, -6, -3, 0], tText("BER [log10]"),
+    berBand ? [{ v: berBand.yellow_high, c: tok("--warn") }, { v: berBand.red_high, c: tok("--alarm") }] : []);
+  const mx = Math.max(4, ...hist.good, ...hist.bad);
+  const top = Math.ceil(mx / 4) * 4;
+  drawHistory("frame-chart", [{ data: hist.good, c: tok("--tx2") }, { data: hist.bad, c: tok("--alarm") }], [0, top], [0, top / 4, top / 2, 3 * top / 4, top], tText("frames/s"));
 }
 
-/* ── Canvas renderers (kept from the classic page, palette retokened) ──── */
+/* ── constellation / spectrum / eye ────────────────────────────────── */
 const IDEAL_CONSTELLATIONS = {
   0: [[-1,0],[1,0]],
   1: [[0.707,0.707],[-0.707,0.707],[-0.707,-0.707],[0.707,-0.707]],
@@ -526,136 +324,190 @@ const IDEAL_CONSTELLATIONS = {
 };
 (function () {
   const r1 = 1, r2 = 2.7, pts = [];
-  for (let k = 0; k < 4; k++)
-    pts.push([r1*Math.cos(Math.PI/4+k*Math.PI/2), r1*Math.sin(Math.PI/4+k*Math.PI/2)]);
-  for (let k = 0; k < 12; k++)
-    pts.push([r2*Math.cos(Math.PI/12+k*Math.PI/6), r2*Math.sin(Math.PI/12+k*Math.PI/6)]);
+  for (let k = 0; k < 4; k++) pts.push([r1*Math.cos(Math.PI/4+k*Math.PI/2), r1*Math.sin(Math.PI/4+k*Math.PI/2)]);
+  for (let k = 0; k < 12; k++) pts.push([r2*Math.cos(Math.PI/12+k*Math.PI/6), r2*Math.sin(Math.PI/12+k*Math.PI/6)]);
   const norm = Math.sqrt((4*r1*r1 + 12*r2*r2) / 16);
   IDEAL_CONSTELLATIONS[4] = pts.map(p => [p[0]/norm, p[1]/norm]);
 })();
 const MOD_NAMES = {0:"BPSK",1:"QPSK",2:"8PSK",3:"OQPSK",4:"16-APSK",5:"π/4-DQPSK",6:"GMSK",7:"GFSK"};
 
-function canvasNote(id, msg) {
-  const c = $(id);
-  if (!c) return;
-  const ctx = c.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  const w = c.clientWidth || c.width, h = c.clientHeight || c.height;
-  if (c.clientWidth && !c.classList.contains("fixed")) {
-    c.width = w * dpr; c.height = h * dpr; ctx.scale(dpr, dpr);
-  }
-  ctx.clearRect(0, 0, c.width, c.height);
-  ctx.fillStyle = C_BG; ctx.fillRect(0, 0, c.width, c.height);
-  ctx.fillStyle = C_TX3; ctx.font = "12px monospace";
-  ctx.fillText(msg, 8, (c.classList.contains("fixed") ? c.height : h) / 2);
+function drawConstellation(samples, modulation) {
+  const f = frame("constellation"); if (!f) return;
+  const t5 = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5];
+  const a = axes(f, { x: [-1.5, 1.5], y: [-1.5, 1.5], xt: [-1, 0, 1], yt: [-1, 0, 1], L: 34, xl: (v) => v.toFixed(0), yl: (v) => v.toFixed(0) });
+  const { ctx } = f;
+  ctx.fillStyle = tok("--tx3"); ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+  ctx.fillText("I", f.w - 14, a.Y(0) - 2); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("Q", a.X(0) + 4, a.T + 4);
+  ctx.strokeStyle = tok("--tx3"); ctx.lineWidth = 1.5;
+  for (const [ri, rq] of IDEAL_CONSTELLATIONS[modulation] || IDEAL_CONSTELLATIONS[0]) { ctx.beginPath(); ctx.arc(a.X(ri), a.Y(rq), 5, 0, 2 * Math.PI); ctx.stroke(); }
+  ctx.fillStyle = tok("--tx2");
+  for (const [i, q] of samples) { if (Math.abs(i) <= 1.5 && Math.abs(q) <= 1.5) ctx.fillRect(a.X(i) - 1, a.Y(q) - 1, 2, 2); }
+  void t5;
 }
-
-function drawSpectrum(specDb, freqRange) {
-  const c = $("spectrum-chart");
-  if (!c) return;
-  const ctx = c.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  const w = c.clientWidth, h = c.clientHeight;
-  c.width = w * dpr; c.height = h * dpr;
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, w, h);
-  const yMin = -40, yMax = 10;
-  ctx.strokeStyle = C_LINE; ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 4; i++) {
-    const y = h - (i / 4) * h;
-    ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w, y); ctx.stroke();
-    ctx.fillStyle = C_TX3; ctx.font = "10px monospace";
-    ctx.fillText((yMin + (i / 4) * (yMax - yMin)).toFixed(0) + " dB", 0, y + 3);
+function drawSpectrum(specDb, freqRange, bw) {
+  const f = frame("spectrum-chart"); if (!f) return;
+  const half = freqRange / 2e3;
+  const step = half > 100 ? 64 : half > 50 ? 25 : 10;
+  const xt = []; for (let v = -Math.floor(half / step) * step; v <= half; v += step) xt.push(v);
+  const a = axes(f, { x: [-half, half], y: [-40, 10], xt, yt: [-40, -30, -20, -10, 0, 10], xl: (v) => `${v > 0 ? "+" : ""}${v} kHz`, yl: (v) => `${v}`, yu: tText("dB, relative") });
+  const { ctx } = f;
+  if (bw > 0) {
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = tok("--tx3");
+    for (const s of [-1, 1]) { const x = a.X((s * bw) / 2e3); ctx.beginPath(); ctx.moveTo(x, a.T); ctx.lineTo(x, f.h - a.B); ctx.stroke(); }
+    ctx.setLineDash([]);
   }
-  ctx.strokeStyle = C_TX2; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  for (let i = 0; i < specDb.length; i++) {
-    const x = 30 + (i / (specDb.length - 1)) * (w - 35);
-    const y = h - ((specDb[i] - yMin) / (yMax - yMin)) * h;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  }
+  ctx.strokeStyle = tok("--tx2"); ctx.lineWidth = 1.5; ctx.beginPath();
+  specDb.forEach((v, i) => { const x = a.X(-half + (2 * half * i) / (specDb.length - 1)), y = a.Y(Math.max(-40, Math.min(10, v))); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
   ctx.stroke();
-  ctx.fillStyle = C_TX3; ctx.font = "10px monospace";
-  ctx.fillText("-" + (freqRange / 2e3).toFixed(0) + "kHz", 30, h - 2);
-  ctx.fillText("+" + (freqRange / 2e3).toFixed(0) + "kHz", w - 48, h - 2);
-  ctx.fillText("0", w / 2, h - 2);
 }
-
 function drawEyeDiagram(eyeI, eyeQ, sps) {
-  const c = $("eye-diagram");
-  if (!c) return;
-  const ctx = c.getContext("2d");
-  const w = c.width, h = c.height;
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = C_BG; ctx.fillRect(0, 0, w, h);
-  if (eyeI.length < 4) return;
-  const period = 2 * (sps || 8);
-  const nTraces = Math.min(30, Math.floor(eyeI.length / period));
-  const scale = h / 4;
-  ctx.strokeStyle = C_LINE; ctx.lineWidth = 0.5;
-  ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
-  ctx.strokeStyle = C_WARN; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
-  ctx.setLineDash([]);
-  const rails = [
-    { data: eyeI, color: "rgba(90,169,255,0.35)" },
-    { data: eyeQ || [], color: "rgba(163,172,185,0.35)" },
-  ];
-  for (const rail of rails) {
-    if (!rail.data || rail.data.length < period) continue;
-    ctx.strokeStyle = rail.color; ctx.lineWidth = 1;
-    for (let t = 0; t < nTraces; t++) {
+  const f = frame("eye-diagram"); if (!f) return;
+  const a = axes(f, { x: [0, 2], y: [-1.5, 1.5], xt: [0, 0.5, 1, 1.5, 2], yt: [-1, 0, 1], L: 34, xl: (v) => `${v} T`, yl: (v) => v.toFixed(0) });
+  const { ctx } = f, period = 2 * (sps || 8);
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = tok("--tx3");
+  ctx.beginPath(); ctx.moveTo(a.X(1), a.T); ctx.lineTo(a.X(1), f.h - a.B); ctx.stroke(); ctx.setLineDash([]);
+  const rails = [{ data: eyeQ || [], c: tok("--cat-1") }, { data: eyeI, c: tok("--tx2") }];
+  ctx.globalAlpha = 0.35; ctx.lineWidth = 1;
+  for (const r of rails) {
+    if (!r.data || r.data.length < period) continue;
+    const n = Math.min(30, Math.floor(r.data.length / period));
+    ctx.strokeStyle = r.c;
+    for (let k = 0; k < n; k++) {
       ctx.beginPath();
-      for (let i = 0; i < period && t*period + i < rail.data.length; i++) {
-        const x = (i / (period - 1)) * w;
-        const y = h/2 - rail.data[t*period + i] * scale;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
+      for (let i = 0; i < period; i++) { const x = a.X((2 * i) / (period - 1)), y = a.Y(Math.max(-1.5, Math.min(1.5, r.data[k * period + i]))); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
       ctx.stroke();
     }
   }
-  ctx.fillStyle = C_INFO; ctx.font = "10px monospace";
-  ctx.fillText("I", 5, 12);
-  ctx.fillStyle = C_TX2;
-  ctx.fillText("Q", 16, 12);
-  ctx.fillStyle = C_WARN;
-  ctx.fillText(tText("decision"), w/2 + 4, 12);
-  ctx.fillStyle = C_TX3;
-  ctx.fillText("+1", w - 18, h/2 - scale + 5);
-  ctx.fillText("-1", w - 18, h/2 + scale + 5);
+  ctx.globalAlpha = 1;
 }
 
-function drawConstellation(samples, modulation) {
-  const c = $("constellation");
-  if (!c) return;
-  const ctx = c.getContext("2d");
-  const w = c.width, h = c.height;
-  ctx.clearRect(0, 0, w, h);
-  const cx = w / 2, cy = h / 2;
-  const scale = Math.min(w, h) / 4.0;
-  ctx.fillStyle = C_BG; ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = C_LINE; ctx.lineWidth = 0.5;
-  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, scale, 0, 2 * Math.PI); ctx.stroke();
-  const ideal = IDEAL_CONSTELLATIONS[modulation] || IDEAL_CONSTELLATIONS[0];
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  for (const [ri, rq] of ideal) {
-    ctx.beginPath();
-    ctx.arc(cx + ri * scale, cy - rq * scale, 3, 0, 2 * Math.PI);
-    ctx.fill();
+/* ── states ─────────────────────────────────────────────────────────── */
+// Lock chain: LOCKED = ok + lock glyph; ACQUIRING = caution. UNLOCKED is
+// only an alarm while the spacecraft is radiating (it should be locking);
+// outside a pass it is the calm resting state.
+function lockChip(el, state, radiating) {
+  const s = state || "";
+  el.innerHTML = s === "LOCKED" ? renderChip({ kind: "ok", glyph: "lock", label: tText("Locked") })
+    : s === "ACQUIRING" ? renderChip({ kind: "warn", label: tText("Acquiring") })
+    : s === "UNLOCKED" ? renderChip(radiating ? { kind: "alarm", dir: "down", label: tText("Unlocked") } : { kind: "off", label: tText("Unlocked") })
+    : renderNoData();
+}
+function vcChip(el, label, vcActive, vcid, ts) {
+  if (!(vcid in vcActive)) { el.innerHTML = renderChip({ kind: "nodata", label }); return; }
+  const age = ts - vcActive[vcid];
+  const f = freshness(age);
+  el.innerHTML = renderChip({ kind: f === "fresh" ? "neutral" : f === "degraded" ? "warn" : "stale", label,
+    title: tText("Last frame {{age}}", { age: fmtAge(Math.min(age, 9e5)) }) });
+}
+const v = (x, units, digits) => renderValue(x, { units, digits });
+
+/* ── WS feed with display-wide freshness (P4) ──────────────────────── */
+let last = null, lastMsgWall = 0, lastGood = 0, lastBad = 0, lastCltu = 0, lastTs = 0;
+function paintFeed() {
+  const age = lastMsgWall ? (Date.now() - lastMsgWall) / 1000 : null;
+  const f = age === null ? "nodata" : freshness(age);
+  $("feed-chip").innerHTML = f === "nodata" ? renderChip({ kind: "nodata", label: tText("No feed yet") })
+    : renderChip({ kind: f === "fresh" ? "ok" : f === "degraded" ? "warn" : "stale",
+        label: f === "fresh" ? tText("Feed live") : f === "degraded" ? tText("Feed late") : tText("Feed stale"),
+        title: tText("last message {{age}}", { age: fmtAge(age) }) });
+  const stale = f === "stale";
+  $("stale-banner").hidden = !stale;
+  if (stale) $("stale-banner").innerHTML = renderBanner("stale", tText("Receiver feed stale: values are the last received and the history has stopped."), { meta: [tText("last message {{age}}", { age: fmtAge(age) })] });
+  document.body.classList.toggle("stale-feed", stale);
+}
+setInterval(paintFeed, 1000);
+
+let ws;
+function connect() {
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  ws = new WebSocket(proto + "//" + location.host + "/ws");
+  ws.onmessage = (e) => { const first = !lastMsgWall; lastMsgWall = Date.now(); render(JSON.parse(e.data)); if (first) paintFeed(); };
+  ws.onclose = () => setTimeout(connect, 2000);
+  ws.onerror = () => ws.close();
+}
+connect();
+
+function render(d) {
+  last = d;
+  $("rb-meta").innerHTML = `${esc(tText("Ground station receiver"))} · ${esc(tText("mode"))} <span class="k">${esc(d.mode || "")}</span>` +
+    (d.mode === "RF" ? ` · <span class="k">${esc(d.modulation_name || "")}</span> · <span class="k">${(d.frequency_hz / 1e6).toFixed(3)} MHz</span>` : "");
+  const radiating = d.sc_tx_on === true;
+  const sctx = $("sctx-chip");
+  const ovr = d.pass_override ? " · OVR" : "";
+  const ovrTitle = d.pass_override
+    ? tText("Instructor pass override ON — geometric visibility forced; TX state is still the spacecraft's own")
+    : tText("Spacecraft transmitter ({{field}} from the sim)", { field: "tx_active" });
+  sctx.innerHTML = d.sc_tx_on === true ? renderChip({ kind: "ok", glyph: "run", label: tText("Radiating") + ovr, title: ovrTitle })
+    : d.sc_tx_on === false ? renderChip({ kind: "off", label: (d.sc_pa_on === false ? tText("Off, PA off") : tText("Off")) + ovr, title: ovrTitle })
+    : renderNoData();
+  lockChip($("carrier-chip"), d.carrier_lock, radiating);
+  lockChip($("bitsync-chip"), d.bit_sync, radiating);
+  lockChip($("framesync-chip"), d.frame_sync, radiating);
+
+  const rf = d.mode === "RF" && d.carrier_lock === "LOCKED";
+  const band = (d.ground_limits || {})["0x050C"]; berBand = band || berBand;
+  $("levels").innerHTML =
+    renderGauge(rf ? d.eb_n0_db : null, { lo: 0, hi: 20, yellow_low: 6, red_low: 3 }, { label: "Eb/N0", units: "dB", digits: 1 }) +
+    renderGauge(rf ? d.link_margin_db : null, { lo: -5, hi: 15, yellow_low: 3, red_low: 0 }, { label: tText("Link margin"), units: "dB", digits: 1 }) +
+    renderGauge(rf ? d.ber_log10 : null, band ? { lo: -12, hi: 0, yellow_high: band.yellow_high, red_high: band.red_high } : { lo: -12, hi: 0 }, { label: "BER", units: "log10", digits: 1 });
+
+  $("rssi").innerHTML = rf ? v(d.rssi_dbm, "dBm", 1) : renderNoData({ label: tText("no lock") });
+  $("ebn0").innerHTML = rf ? v(d.eb_n0_db, "dB", 1) : renderNoData({ label: tText("no lock") });
+  $("ber").innerHTML = rf ? renderValue(d.ber_log10, { units: "log10", digits: 1, limitState: (d.ground_limit_state || {})["0x050C"] }) : renderNoData({ label: tText("no lock") });
+  $("margin").innerHTML = rf ? v(d.link_margin_db, "dB", 1) : renderNoData({ label: tText("no lock") });
+  $("pl-evm").innerHTML = rf && d.evm_snr_db != null ? v(d.evm_snr_db, "dB", 1) : renderNoData();
+  $("doppler").innerHTML = rf ? renderValue(d.doppler_hz, { units: "Hz", eng: (d.doppler_hz >= 0 ? "+" : "") + Math.round(d.doppler_hz).toLocaleString("en-US").replace(/,/g, " ") }) : renderNoData({ label: tText("no lock") });
+  $("range").innerHTML = d.range_km > 0 ? v(d.range_km, "km", 1) : renderNoData();
+  $("delay").innerHTML = d.range_km > 0 ? v(d.range_km / 299.792, "ms", 2) : renderNoData();
+  $("datarate").innerHTML = v(d.data_rate_kbps, "kbps", 1);
+  $("pl-symrate").innerHTML = d.symbol_rate_bd ? v(d.symbol_rate_bd / 1000, "kBd", 2) : renderNoData();
+  $("pl-thr").innerHTML = rf ? v((d.throughput_bps || 0) / 1000, "kbps", 2) : renderNoData({ label: tText("no lock") });
+
+  $("good-frames").innerHTML = v(d.good_frames, "", 0);
+  $("bad-frames").innerHTML = renderValue(d.bad_frames, { digits: 0 });
+  $("cltu-sent").innerHTML = v(d.cltu_sent, "", 0);
+  $("cltu-ack").innerHTML = v(d.cltu_acked, "", 0);
+  const total = d.good_frames + d.bad_frames;
+  $("fer").textContent = total ? tText("frame error rate {{p}} %", { p: ((d.bad_frames / total) * 100).toFixed(2) }) : "";
+  const dt = d.timestamp - lastTs;
+  if (dt > 0 && lastTs > 0) {
+    pushH("good", (d.good_frames - lastGood) / dt); pushH("bad", (d.bad_frames - lastBad) / dt);
+    $("cltu-rate").innerHTML = v((d.cltu_sent - lastCltu) / dt, "/s", 1);
+  } else if (!lastTs) $("cltu-rate").innerHTML = renderNoData();
+  lastGood = d.good_frames; lastBad = d.bad_frames; lastCltu = d.cltu_sent; lastTs = d.timestamp;
+  if (rf) { pushH("ebn0", d.eb_n0_db); pushH("ber", d.ber_log10); }
+
+  vcChip($("vc0-chip"), "VC0 RT HK", d.vc_active || {}, 0, d.timestamp);
+  vcChip($("vc1-chip"), tText("{{vc}} Playback", { vc: "VC1" }), d.vc_active || {}, 1, d.timestamp);
+  vcChip($("vc7-chip"), tText("{{vc}} Idle", { vc: "VC7" }), d.vc_active || {}, 7, d.timestamp);
+
+  $("lb-eirp").innerHTML = v(d.eirp_dbw || 0, "dBW", 1);
+  $("lb-fspl").innerHTML = v(d.fspl_db || 0, "dB", 1);
+  $("lb-cn0").innerHTML = v(d.cn0_dbhz || 0, "dBHz", 1);
+  $("lb-coding").innerHTML = v(d.coding_gain_db || 0, "dB", 1);
+  $("lb-freq").innerHTML = v((d.frequency_hz || 437e6) / 1e6, "MHz", 3);
+  $("lb-bw").innerHTML = d.bandwidth_hz ? v(d.bandwidth_hz / 1e3, "kHz", 1) : renderNoData();
+  $("last-update").textContent = new Date(d.timestamp * 1000).toISOString().substr(11, 8) + " UTC";
+  drawPlots();
+  renderDiagnostics(d.diagnostics || {});
+  renderGroundLimits(d);
+}
+function drawPlots() {
+  const d = last;
+  if (!d) { note("constellation", tText("No I/Q data")); note("spectrum-chart", tText("No spectrum data")); note("eye-diagram", tText("No eye data")); drawHistories(); return; }
+  $("con-meta").textContent = d.mode === "RF" ? (MOD_NAMES[d.modulation] || "") + " · " + tText("normalised amplitude") : "I/Q";
+  if (d.iq_samples && d.iq_samples.length > 0) drawConstellation(d.iq_samples, d.modulation || 0);
+  else note("constellation", tText("No I/Q data"));
+  if (d.mode !== "RF") {
+    note("spectrum-chart", tText("Spectrum: RF mode only (current mode: {{mode}})", { mode: d.mode }));
+    note("eye-diagram", tText("Eye diagram: RF mode only"));
+  } else {
+    if (d.spectrum_db && d.spectrum_db.length > 4) drawSpectrum(d.spectrum_db, d.spectrum_freq_range_hz || 256000, d.occupied_bw_hz || d.bandwidth_hz || 0);
+    else note("spectrum-chart", tText("No spectrum data"));
+    if (d.eye_i && d.eye_i.length > 4) drawEyeDiagram(d.eye_i, d.eye_q || [], d.eye_sps || 8);
+    else note("eye-diagram", tText("No eye data"));
   }
-  ctx.fillStyle = C_INFO;
-  for (const [i, q] of samples) {
-    ctx.fillRect(cx + i * scale - 1, cy - q * scale - 1, 2, 2);
-  }
-  ctx.fillStyle = C_TX3; ctx.font = "10px monospace";
-  ctx.fillText("I", w - 12, cy - 4);
-  ctx.fillText("Q", cx + 4, 10);
-  ctx.fillText("+1", cx + scale - 6, cy + 12);
-  ctx.fillText("-1", cx - scale - 8, cy + 12);
-  ctx.fillStyle = C_TX2; ctx.font = "11px monospace";
-  ctx.fillText(MOD_NAMES[modulation] || "BPSK", w - 60, h - 6);
+  drawHistories();
 }
 
 /* ── Ground limit check (BER, AGC) ─────────────────────────────────────
@@ -670,7 +522,7 @@ const GL_SUMMARY = {
   nominal:   () => ({ kind: "ok",    label: tText("WITHIN LIMITS") }),
   yellow:    () => ({ kind: "warn",  label: tText("WARNING") }),
   red:       () => ({ kind: "alarm", label: tText("ALARM") }),
-  no_signal: () => ({ kind: "stale", label: tText("NOT CHECKED") }),
+  no_signal: () => ({ kind: "off",   label: tText("NOT CHECKED") }),
 };
 const GL_STATUS = {
   nominal: () => tText("nominal"), yellow_low: () => tText("yellow low"),
@@ -678,68 +530,65 @@ const GL_STATUS = {
   red_high: () => tText("red high"), no_signal: () => tText("no signal"),
 };
 const glStatus = (s) => (GL_STATUS[s] ? GL_STATUS[s]() : s);
-let lastFeed = null, refLinesSet = false;
 function renderGroundLimits(d) {
-  if (!d) return;
-  lastFeed = d;
+  if (!d) {
+    $("gl-chip").innerHTML = renderNoData(); $("gl-params").innerHTML = ""; $("gl-why").textContent = "";
+    $("gl-log").innerHTML = `<p class="ds-meta">${esc(tText("No transitions since the receiver started"))}</p>`;
+    return;
+  }
   const limits = d.ground_limits || {}, state = d.ground_limit_state || {};
   const sum = d.ground_limit_summary || "no_signal";
-  $("gl-chip").innerHTML = renderChip({ ...(GL_SUMMARY[sum] || GL_SUMMARY.no_signal)(),
-    dir: "down", title: tText("Worst ground limit state") });
+  $("gl-chip").innerHTML = renderChip({ ...(GL_SUMMARY[sum] || GL_SUMMARY.no_signal)(), dir: "down", title: tText("Worst ground limit state") });
   $("gl-why").textContent = sum !== "no_signal" ? ""
-    : d.mode === "PACKET" ? tText("PACKET mode: no RF receiver")
-    : tText("No carrier lock: nothing to measure");
+    : d.mode === "PACKET" ? tText("PACKET mode: no RF receiver") : tText("No carrier lock: nothing to measure");
   $("gl-params").innerHTML = GL_ROWS.map((r) => {
     const band = limits[r.hex];
     const st = state[r.hex] || "no_signal";
-    const def = { name: r.label(), hex: r.hex, units: r.units,
-                  description: band ? band.description : "" };
+    const def = { name: r.label(), hex: r.hex, units: r.units, description: band ? band.description : "" };
     const range = r.hex === "0x050C" ? { lo: -12, hi: -2 } : {};
     if (st === "no_signal") {
       return renderParam(def, null, band ? { ...band, ...range } : null).replace(
-        /<span class="vl">—(<u>[^<]*<\/u>)?<\/span>/,
-        `<span class="vl nosig">${tText("no signal")}</span>`)
-        .replace('class="ds-param stale"', 'class="ds-param nosignal"');
+        /<span class="vl">[\s\S]*?<\/span>(?=\s*<)/, `<span class="vl nosig">${esc(tText("no signal"))}</span>`);
     }
-    const lim = band ? { ...band, ...range, state: st } : null;
-    return renderParam(def, d[r.key], lim);
+    return renderParam(def, d[r.key], band ? { ...band, ...range, state: st } : null);
   }).join("");
-  if (!refLinesSet && limits["0x050C"]) {
-    ebn0Chart.refLines = [
-      { y: limits["0x050C"].yellow_high, color: C_WARN },
-      { y: limits["0x050C"].red_high, color: C_ALRM },
-    ];
-    refLinesSet = true;
-  }
   const all = d.ground_limit_transitions || [];
   $("gl-count").textContent = String(d.ground_limit_seq ?? all.length);
   const rows = all.slice(-4).reverse();
   $("gl-log").innerHTML = rows.length === 0
-    ? `<div class="empty">${tText("No transitions since the receiver started")}</div>`
+    ? `<p class="ds-meta">${esc(tText("No transitions since the receiver started"))}</p>`
     : rows.map((x) => renderEventRow({
         severity: x.status.startsWith("red") ? 3 : x.status.startsWith("yellow") ? 2 : 1,
         name: x.param_id, subsystem: "ground",
-        description: tText("{{name}} {{from}} → {{to}}", { name: x.name,
-          from: glStatus(x.previous), to: glStatus(x.status) }) +
+        description: tText("{{name}} {{from}} → {{to}}", { name: x.name, from: glStatus(x.previous), to: glStatus(x.status) }) +
           (x.value !== null && x.value !== undefined ? ` (${Number(x.value).toFixed(1)})` : ""),
-        utc: new Date(x.timestamp * 1000).toLocaleTimeString(),
+        utc: new Date(x.timestamp * 1000).toISOString().substr(11, 8),
       })).join("");
 }
 
-let lastDiag = {};
 function renderDiagnostics(diag) {
-  lastDiag = diag;
   const el = $("diag-body");
-  if (!el) return;
-  const keys = Object.keys(diag);
-  if (keys.length === 0) { el.textContent = tText("no data"); return; }
-  let html = '<div class="diag-grid">';
-  for (const k of keys) {
-    html += '<span class="k">' + k.replace(/_/g, " ") +
-            '</span><span class="v">' + diag[k] + "</span>";
-  }
-  el.innerHTML = html + "</div>";
+  const keys = Object.keys(diag || {});
+  if (keys.length === 0) { el.innerHTML = renderNoData(); return; }
+  el.innerHTML = '<div class="diag-grid">' + keys.map((k) =>
+    `<span class="k">${esc(k.replace(/_/g, " "))}</span><span class="v">${esc(String(diag[k]))}</span>`).join("") + "</div>";
 }
+
+function redrawAll() {
+  paintFeed();
+  if (last) render(last);
+  else {
+    for (const id of ["sctx-chip", "carrier-chip", "bitsync-chip", "framesync-chip", "rssi", "ebn0", "ber", "margin", "pl-evm", "doppler",
+      "range", "delay", "datarate", "pl-symrate", "pl-thr", "cltu-rate", "good-frames", "bad-frames", "cltu-sent", "cltu-ack",
+      "lb-eirp", "lb-fspl", "lb-cn0", "lb-coding", "lb-freq", "lb-bw"]) $(id).innerHTML = renderNoData();
+    $("levels").innerHTML = renderGauge(null, { lo: 0, hi: 20 }, { label: "Eb/N0", units: "dB" }) +
+      renderGauge(null, { lo: -5, hi: 15 }, { label: tText("Link margin"), units: "dB" }) + renderGauge(null, { lo: -12, hi: 0 }, { label: "BER", units: "log10" });
+    renderDiagnostics({}); renderGroundLimits(null); drawPlots();
+  }
+}
+let rz = 0;
+new ResizeObserver(() => { cancelAnimationFrame(rz); rz = requestAnimationFrame(drawPlots); }).observe(document.querySelector(".grid"));
+redrawAll();
 </script>
 </body>
 </html>

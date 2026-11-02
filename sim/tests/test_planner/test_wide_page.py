@@ -116,11 +116,15 @@ def test_watchdog_present_with_120s_threshold():
 
 
 def test_per_block_stale_treatment():
+    """Stale keeps the last value (brief §1.3, design-system pass 2026-11):
+    the block is dimmed with a dashed edge and an age tag; the numerals are
+    no longer blanked to an em-dash on a hatch."""
     js = WIDE_JS.read_text()
     html = WIDE_HTML.read_text()
     assert "isStale" in js, "no per-block staleness predicate in wide.js"
-    # The hatch affordance comes from the design-system --hatch token.
-    assert "--hatch" in html, "stale blocks must use the hatch affordance"
+    assert "section.blk.stale" in html and "dashed" in html, (
+        "stale blocks must carry the dashed stale treatment")
+    assert re.search(r'Stale · \{\{age\}\}', js), "stale tag must carry the age"
 
 
 def test_no_meta_refresh():
@@ -368,19 +372,20 @@ def test_aos_los_marks_share_the_next_passes_dataset():
 
 # ── G1 on the wall: mission-level derived readouts ───────────────────────
 
-def test_mission_readouts_present_and_default_to_em_dash():
+def test_mission_readouts_present_and_default_to_no_data():
     """PASS FIT + SoC @ ECLIPSE EXIT readouts on the budgets block, and the
-    LAST PASS rollup line on the link block — all defaulting to an em-dash
-    (invalid / unconfigured / unreachable must NEVER show a number)."""
+    LAST PASS rollup line on the link block — all defaulting to "no data"
+    (invalid / unconfigured / unreachable must NEVER show a number, and,
+    since the 2026-11 design-system pass, never a bare dash either)."""
     html = WIDE_HTML.read_text()
     for rid in ("wPassFit", "wSocExit", "wLastPass"):
         m = re.search(rf'id="{rid}"[^>]*>([^<]*)<', html)
         assert m, f"wall readout #{rid} missing"
-        assert m.group(1).strip() == "—", (
+        assert m.group(1).strip() == "no data", (
             f"wall readout #{rid} defaults to '{m.group(1).strip()}' — must "
-            f"be an em-dash until real, valid data arrives")
-    # The absent state carries the hatch affordance.
-    assert "absent" in html and "--hatch" in html
+            f"say 'no data' until real, valid data arrives")
+    # The absent state is a designed tag.
+    assert ".absent" in html
 
 
 def test_mission_readouts_render_invalid_as_dash_never_a_number():

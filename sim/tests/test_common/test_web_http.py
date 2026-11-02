@@ -179,4 +179,7 @@ def _load_tool(name):
                                   "scenario_generator", "adcs_sim_viewer"])
 def test_tool_sources_use_the_shared_policy(tool):
     src = (REPO / "tools" / f"{tool}.py").read_text(encoding="utf-8")
-    assert "setup_tool_app" in src and "TOOL_HEAD" in src
+    # TOOL_HEAD directly, or through the shared page frame that emits it.
+    assert "setup_tool_app" in src and ("TOOL_HEAD" in src or "tool_frame" in src)
+    if "tool_frame" in src:
+        assert "TOOL_HEAD" in (REPO / "tools" / "tool_frame.py").read_text(encoding="utf-8")

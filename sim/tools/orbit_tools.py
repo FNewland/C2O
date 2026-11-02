@@ -15,6 +15,7 @@ Spacecraft Parameter IDs (SET_PARAM S20.1):
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 import asyncio
@@ -40,7 +41,9 @@ try:
     import aiohttp
     from aiohttp import web
     # Shared HTTP policy + design-system / language runtime for tool pages.
-    from smo_common.web.http import TOOL_HEAD, setup_tool_app, tool_html_response
+    from smo_common.web.http import setup_tool_app, tool_html_response
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import tool_frame          # shared page frame (TOOL_HEAD + title bar)
     HAS_AIOHTTP = True
 except ImportError:
     HAS_AIOHTTP = False
@@ -319,6 +322,196 @@ class OrbitSummary:
         return "\n".join(lines)
 
 
+def _state_dict(pos_m: np.ndarray, vel_ms: np.ndarray) -> Dict[str, float]:
+    return {k: float(v) for k, v in zip(
+        ('x_pos', 'y_pos', 'z_pos', 'x_vel', 'y_vel', 'z_vel'),
+        list(pos_m) + list(vel_ms))}
+
+
+_BASEMAP = (Path(__file__).resolve().parents[1] / "packages" / "smo-planner" / "src"
+            / "smo_planner" / "static" / "modern" / "wide-basemap.js")
+
+
+# Ground track and station passes (the picture the web page leads with)
+
+_WGS84_A_KM = 6378.137
+_WGS84_E2 = _EARTH_FLATTENING * (2.0 - _EARTH_FLATTENING)
+_OMEGA_EARTH = 7.2921150e-5          # rad/s
+TRACK_ORBITS = 3                     # ground track drawn for this many orbits
+PASS_HORIZON_H = 24                  # pass list horizon
+_STEP_S = 30.0                       # sampling step for track and passes
+
+_ORBIT_YAML = Path(__file__).resolve().parents[1] / "configs" / "eosat1" / "orbit.yaml"
+
+
+def mission_orbit() -> Dict:
+    """EOSAT-1 elements and the canonical ground stations from orbit.yaml.
+
+    Empty lists/strings when the file or PyYAML is missing (the tool still
+    works on a pasted TLE; it just has no stations to draw)."""
+    out = {"tle1": "", "tle2": "", "stations": []}
+    try:
+        import yaml
+        d = yaml.safe_load(_ORBIT_YAML.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return out
+    out["tle1"] = str(d.get("tle_line1", "")).strip()
+    out["tle2"] = str(d.get("tle_line2", "")).strip()
+    for s in d.get("ground_stations") or []:
+        try:
+            out["stations"].append({
+                "name": str(s["name"]), "lat": float(s["lat_deg"]),
+                "lon": float(s["lon_deg"]), "alt_km": float(s.get("alt_km", 0.0)),
+                "min_el": float(s.get("min_elevation_deg", 5.0))})
+        except (KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
+def _gmst_at(epoch_utc: datetime, t_s: np.ndarray) -> np.ndarray:
+    jd, fr = jday(epoch_utc.year, epoch_utc.month, epoch_utc.day, epoch_utc.hour,
+                  epoch_utc.minute, epoch_utc.second + epoch_utc.microsecond * 1e-6)
+    jd_all = jd + fr + t_s / 86400.0
+    T = (jd_all - 2451545.0) / 36525.0
+    g = (280.46061837 + 360.98564736629 * (jd_all - 2451545.0)
+         + 0.000387933 * T * T - T * T * T / 38710000.0) % 360.0
+    return g * _DEG
+
+
+def _eci_to_ecef_many(r_eci: np.ndarray, gmst: np.ndarray) -> np.ndarray:
+    c, s = np.cos(gmst), np.sin(gmst)
+    return np.column_stack([c * r_eci[:, 0] + s * r_eci[:, 1],
+                            -s * r_eci[:, 0] + c * r_eci[:, 1], r_eci[:, 2]])
+
+
+def _geodetic(r_ecef: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """(lat deg, lon deg, alt km), WGS-84, a few fixed-point iterations."""
+    x, y, z = r_ecef[:, 0], r_ecef[:, 1], r_ecef[:, 2]
+    p = np.hypot(x, y)
+    lat = np.arctan2(z, p * (1 - _WGS84_E2))
+    for _ in range(4):
+        n = _WGS84_A_KM / np.sqrt(1 - _WGS84_E2 * np.sin(lat) ** 2)
+        alt = p / np.cos(lat) - n
+        lat = np.arctan2(z, p * (1 - _WGS84_E2 * n / (n + alt)))
+    n = _WGS84_A_KM / np.sqrt(1 - _WGS84_E2 * np.sin(lat) ** 2)
+    alt = p / np.cos(lat) - n
+    return lat * _RAD, np.arctan2(y, x) * _RAD, alt
+
+
+def _station_ecef(st: Dict) -> Tuple[np.ndarray, np.ndarray]:
+    la, lo = st["lat"] * _DEG, st["lon"] * _DEG
+    n = _WGS84_A_KM / math.sqrt(1 - _WGS84_E2 * math.sin(la) ** 2)
+    h = st.get("alt_km", 0.0)
+    r = np.array([(n + h) * math.cos(la) * math.cos(lo),
+                  (n + h) * math.cos(la) * math.sin(lo),
+                  (n * (1 - _WGS84_E2) + h) * math.sin(la)])
+    up = np.array([math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)])
+    return r, up
+
+
+def _passes(epoch_utc: datetime, t_s: np.ndarray, r_ecef: np.ndarray,
+            stations: List[Dict]) -> List[Dict]:
+    """AOS/LOS (linear interpolation on the elevation curve) and max elevation."""
+    out = []
+    for st in stations:
+        rs, up = _station_ecef(st)
+        rho = r_ecef - rs
+        el = np.degrees(np.arcsin(np.clip((rho @ up) / np.linalg.norm(rho, axis=1), -1, 1)))
+        above = el >= st["min_el"]
+        i = 0
+        n = len(t_s)
+        while i < n:
+            if not above[i]:
+                i += 1
+                continue
+            j = i
+            while j + 1 < n and above[j + 1]:
+                j += 1
+
+            def cross(a, b):
+                if a < 0 or b >= n:
+                    return t_s[max(0, min(n - 1, a if a >= 0 else b))]
+                ea, eb = el[a] - st["min_el"], el[b] - st["min_el"]
+                return t_s[a] + (t_s[b] - t_s[a]) * (ea / (ea - eb) if ea != eb else 0.5)
+            aos = cross(i - 1, i) if i > 0 else t_s[0]
+            los = cross(j, j + 1) if j + 1 < n else t_s[-1]
+            k = i + int(np.argmax(el[i:j + 1]))
+            out.append({"station": st["name"],
+                        "aos": (epoch_utc + timedelta(seconds=float(aos))).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "los": (epoch_utc + timedelta(seconds=float(los))).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "aos_s": round(float(aos), 1), "los_s": round(float(los), 1),
+                        "max_el": round(float(el[k]), 1),
+                        "truncated": bool(i == 0 or j + 1 >= n)})
+            i = j + 1
+    out.sort(key=lambda p: p["aos_s"])
+    return out
+
+
+def _two_body_eci(r0: np.ndarray, v0: np.ndarray, t_s: np.ndarray) -> np.ndarray:
+    """Two-body (no J2, no drag) RK4 positions at t_s (monotonic, from 0)."""
+    def acc(r):
+        return -_MU_EARTH * r / np.linalg.norm(r) ** 3
+    out = np.empty((len(t_s), 3))
+    r, v, t = r0.astype(float).copy(), v0.astype(float).copy(), 0.0
+    h_max = 10.0
+    for k, tk in enumerate(t_s):
+        while t < tk - 1e-9:
+            h = min(h_max, tk - t)
+            k1v, k1r = acc(r), v
+            k2v, k2r = acc(r + 0.5 * h * k1r), v + 0.5 * h * k1v
+            k3v, k3r = acc(r + 0.5 * h * k2r), v + 0.5 * h * k2v
+            k4v, k4r = acc(r + h * k3r), v + h * k3v
+            r = r + h / 6 * (k1r + 2 * k2r + 2 * k3r + k4r)
+            v = v + h / 6 * (k1v + 2 * k2v + 2 * k3v + k4v)
+            t += h
+        out[k] = r
+    return out
+
+
+def orbit_geometry(epoch_utc: datetime, *, tle: Tuple[str, str] | None = None,
+                   sv_ecef_km: Tuple[np.ndarray, np.ndarray] | None = None,
+                   period_s: float = 5670.0, stations: List[Dict] | None = None) -> Dict:
+    """Ground track (TRACK_ORBITS orbits) and station passes (PASS_HORIZON_H).
+
+    ``tle`` propagates with SGP4; ``sv_ecef_km`` (position km, velocity km/s,
+    ECEF at the epoch) with a two-body model, said so in ``model``."""
+    stations = mission_orbit()["stations"] if stations is None else stations
+    horizon = PASS_HORIZON_H * 3600.0
+    t_s = np.arange(0.0, horizon + _STEP_S, _STEP_S)
+    if tle is not None:
+        sat = Satrec.twoline2rv(tle[0], tle[1])
+        jd, fr = jday(epoch_utc.year, epoch_utc.month, epoch_utc.day, epoch_utc.hour,
+                      epoch_utc.minute, epoch_utc.second + epoch_utc.microsecond * 1e-6)
+        frs = fr + t_s / 86400.0
+        err, r, _v = sat.sgp4_array(np.full_like(frs, jd), frs)
+        r_eci = np.asarray(r)
+        bad = np.asarray(err) != 0
+        if bad.any():
+            r_eci[bad] = np.nan
+        model = "SGP4"
+    else:
+        r0e, v0e = sv_ecef_km
+        g0 = _gmst_at(epoch_utc, np.array([0.0]))[0]
+        r0 = EciEcefConverter.ecef_to_eci(r0e, g0)
+        v0 = EciEcefConverter.ecef_to_eci(v0e, g0) + np.cross([0, 0, _OMEGA_EARTH], r0)
+        r_eci = _two_body_eci(r0, v0, t_s)
+        model = "two-body"
+    r_ecef = _eci_to_ecef_many(r_eci, _gmst_at(epoch_utc, t_s))
+    lat, lon, alt = _geodetic(r_ecef)
+    n_track = int(min(len(t_s), math.ceil(TRACK_ORBITS * max(period_s, 600.0) / _STEP_S) + 1))
+    track = [[round(float(t_s[k]) / 60.0, 2), round(float(lat[k]), 3), round(float(lon[k]), 3),
+              round(float(alt[k]), 1)]
+             for k in range(n_track) if np.isfinite(lat[k])]
+    ok = np.isfinite(lat)
+    return {
+        "model": model, "step_s": _STEP_S, "horizon_h": PASS_HORIZON_H,
+        "orbits": TRACK_ORBITS, "track": track,
+        "stations": stations,
+        "passes": _passes(epoch_utc, t_s[ok], r_ecef[ok], stations) if ok.any() else [],
+        "epoch": epoch_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+
 # CLI Interface
 
 def cli_tle_mode(args) -> None:
@@ -437,232 +630,506 @@ def cli_sv_mode(args) -> None:
 # Web Server Interface
 
 if HAS_AIOHTTP:
-    HTML_TEMPLATE = """
-<!DOCTYPE html>
+    HTML_TEMPLATE = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title data-i18n>Orbit tools: TLE and state vector to TC</title>
-    <!--TOOL_HEAD-->
-    <style>
-        /* Light-touch restyle onto the shared design-system tokens (this page
-           used to be a light theme in Courier New, "from another product",
-           R3 audit). Full restyle is a later phase. */
-        body { max-width: 1200px; margin: 0 auto; padding: 20px 24px 48px; }
-        h1 { font-size: 20px; font-weight: 600; color: var(--tx); margin-bottom: 20px; }
-        h2 { font-size: 15px; font-weight: 600; color: var(--tx); margin: 0 0 14px;
-             padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-        h3 { font-size: 13px; font-weight: 600; color: var(--tx2); margin: 0 0 10px; }
-        .container { background: var(--s1); border: 1px solid var(--line); border-radius: 4px;
-                     padding: 16px 20px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 14px; }
-        label { display: block; margin-bottom: 4px; font-size: 13px; color: var(--tx2); }
-        input, textarea { width: 100%; padding: 8px 10px; background: var(--bg); color: var(--tx);
-            border: 1px solid var(--line-2); border-radius: 3px; font-family: var(--mono);
-            font-size: 13px; }
-        input::placeholder, textarea::placeholder { color: var(--tx3); }
-        button.run { background: var(--s2); color: var(--tx); border: 1px solid var(--info);
-            padding: 8px 16px; border-radius: 3px; font-size: 13px; font-weight: 600; }
-        button.run:hover { background: var(--s3); }
-        .output { background: var(--bg); border: 1px solid var(--line); padding: 12px;
-            border-radius: 3px; white-space: pre-wrap; font-family: var(--mono); font-size: 12px;
-            max-height: 600px; overflow-y: auto; }
-        code { font-family: var(--mono); font-size: 12px; color: var(--val); word-break: break-all; }
-        .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
-        .tab-button { padding: 8px 14px; font-size: 13px; color: var(--tx3);
-            border-bottom: 2px solid transparent; margin-bottom: -1px; }
-        .tab-button[aria-selected="true"] { color: var(--tx); border-bottom-color: var(--info); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .error { color: var(--alarm); border-left: 3px solid var(--alarm); background: var(--alarm-wash);
-            padding: 8px 10px; margin-bottom: 14px; }
-        .success { color: var(--tx2); border-left: 3px solid var(--line-2);
-            padding: 8px 10px; margin-bottom: 14px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n>Orbit tools</title>
+__FRAME_HEAD__
+<style>
+/* Orbit tools. Picture first: the ground track and the passes it implies,
+   then the elements, then the telecommands one disclosure deeper. */
+.ot-in{ display:grid; grid-template-columns:minmax(0,1fr) 220px auto; gap:var(--sp-3) var(--sp-4);
+  align-items:start; padding:var(--sp-3) var(--sp-4) var(--sp-4); }
+.ot-in[hidden]{ display:none; }
+.ot-in .ds-field>label{ white-space:nowrap; }
+.ot-in .ds-input.tle{ font-size:var(--fs-label); letter-spacing:0; }
+.ot-in .act{ display:flex; flex-direction:column; gap:var(--sp-2); padding-top:20px; }
+.ot-sv{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-3) var(--sp-3); }
+.ot-tabs{ padding:0 var(--sp-4); }
+.ot-grid{ display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:var(--sp-4); margin-top:var(--sp-4); }
+.ot-map{ position:relative; padding:var(--sp-2) var(--sp-3) var(--sp-3); }
+.ot-map svg{ display:block; width:100%; }
+.ot-legend{ display:flex; flex-wrap:wrap; gap:var(--sp-1) var(--sp-4); padding:0 var(--sp-4) var(--sp-3);
+  font-size:var(--fs-label); color:var(--tx3); }
+.ot-legend span{ display:inline-flex; align-items:center; gap:6px; }
+.ot-legend svg{ width:22px; height:10px; overflow:visible; }
+.land{ fill:var(--s2); stroke:var(--line-2); stroke-width:.75; }
+.sea{ fill:var(--bg); }
+.trk1{ stroke:var(--fill); stroke-width:1.5; fill:none; stroke-linejoin:round; }
+.trk2{ stroke:var(--tx3); stroke-width:1; fill:none; stroke-dasharray:3 3; }
+.trkc{ stroke:var(--val); stroke-width:3; fill:none; stroke-linecap:round; }
+.vis{ stroke:var(--tx3); stroke-width:1; fill:none; stroke-dasharray:2 3; }
+.stn{ fill:var(--tx2); }
+.stn-l{ fill:var(--tx2) !important; font-family:var(--sans) !important; }
+.ep{ fill:var(--val); stroke:var(--bg); stroke-width:2; }
+.ep-l{ fill:var(--val) !important; }
+.ot-passes td{ white-space:nowrap; }
+.ot-passes .elbar{ display:inline-block; vertical-align:middle; width:48px; height:6px; background:var(--s3);
+  position:relative; margin-right:6px; border-radius:1px; }
+.ot-passes .elbar i{ position:absolute; left:0; top:0; bottom:0; background:var(--fill); border-radius:1px; }
+.ot-passes tr.next td{ color:var(--val); }
+.ot-passes tr.next td:first-child{ box-shadow:inset 2px 0 0 var(--accent); }
+.ot-passes{ display:flex; flex-direction:column; }
+.ot-passes .ds-panel-b{ padding:0; flex:1 1 0; min-height:240px; overflow:auto; position:relative; }
+.ot-tl{ padding:var(--sp-2) var(--sp-4) var(--sp-3); }
+.ot-tl .bar{ fill:var(--fill); }
+.ot-tl .bar:hover{ fill:var(--val); }
+.ot-tl .lane{ stroke:var(--line); }
+.ot-tl .lab{ fill:var(--tx2) !important; font-family:var(--sans) !important; font-size:13px !important; }
+.ot-el{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
+.ot-el>div{ padding:var(--sp-2) var(--sp-4) var(--sp-3); border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  display:flex; flex-direction:column; gap:2px; }
+.ot-el .k{ font-size:var(--fs-label); color:var(--tx3); }
+.ot-tc td.hex{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); word-break:break-all; white-space:normal; }
+.ot-msg{ margin:0 var(--sp-4) var(--sp-3); }
+.ot-note{ font-size:var(--fs-label); color:var(--tx3); }
+.ot-sec{ margin-top:var(--sp-4); }
+@media (max-width:1100px){ .ot-grid{ grid-template-columns:minmax(0,1fr); } }
+@media (max-width:720px){
+  .ot-in{ grid-template-columns:minmax(0,1fr); }
+  .ot-in .act{ padding-top:0; flex-direction:row; }
+  .ot-sv{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ot-el{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ot-passes .elbar{ display:none; }
+  .ot-passes .ds-table th,.ot-passes .ds-table td{ padding-left:8px; padding-right:8px; }
+  .ot-passes .ds-panel-b{ flex:none; max-height:360px; }
+}
+</style>
 </head>
 <body>
-    <h1 data-i18n>Orbit tools: telecommand generator</h1>
+<a class="ds-skip" href="#main" data-i18n>Skip to content</a>
+__FRAME_BAR__
+<main id="main" class="tf-main">
 
-    <div class="tabs" role="tablist">
-        <button class="tab-button" role="tab" id="tab-tle" aria-controls="tle" aria-selected="true" onclick="switchTab('tle')" data-i18n>TLE to TC</button>
-        <button class="tab-button" role="tab" id="tab-sv" aria-controls="sv" aria-selected="false" onclick="switchTab('sv')" data-i18n>State vector to TC</button>
+<section class="ds-panel" aria-labelledby="in-h">
+  <h2 class="ds-sr" id="in-h" data-i18n>Orbit input</h2>
+  <div class="ot-tabs" id="mode-tabs"></div>
+  <form class="ot-in" id="form-tle" data-mode="tle" novalidate>
+    <div class="ds-stack" style="gap:var(--sp-3)">
+      <div class="ds-field" id="f-tle1">
+        <label for="tle1" data-i18n>TLE line 1</label>
+        <input class="ds-input tle" id="tle1" type="text" spellcheck="false" autocomplete="off" maxlength="80">
+      </div>
+      <div class="ds-field" id="f-tle2">
+        <label for="tle2" data-i18n>TLE line 2</label>
+        <input class="ds-input tle" id="tle2" type="text" spellcheck="false" autocomplete="off" maxlength="80">
+      </div>
     </div>
-
-    <div id="tle" class="tab-content active" role="tabpanel" aria-labelledby="tab-tle">
-        <div class="container">
-            <h2 data-i18n>TLE to telecommand</h2>
-            <div class="form-group">
-                <label for="tle1" data-i18n>TLE line 1</label>
-                <textarea id="tle1" rows="2" placeholder="1 25544U 98067A   24001.00000000  .00016717  00000-0  29667-3 0  9990"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="tle2" data-i18n>TLE line 2</label>
-                <textarea id="tle2" rows="2" placeholder="2 25544  51.6416 124.6269 0001884  25.3126 334.8141 15.54084607435286"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="tle_epoch" data-i18n>Epoch (ISO format, UTC)</label>
-                <input type="text" id="tle_epoch" placeholder="2024-01-15T12:30:00" value="">
-            </div>
-            <button class="run" onclick="convertTLE()" data-i18n>Convert TLE to commands</button>
-            <div id="tle_output" style="margin-top: 20px;"></div>
-        </div>
+    <div class="ds-stack" style="gap:var(--sp-3)">
+      <div class="ds-field" id="f-tle_epoch">
+        <label for="tle_epoch" data-i18n>Epoch (UTC)</label>
+        <input class="ds-input" id="tle_epoch" type="text" spellcheck="false" placeholder="2026-11-02T12:00:00">
+      </div>
+      <button type="button" class="ds-btn ghost sm" id="load-eosat" data-i18n>Use EOSAT-1 elements</button>
     </div>
-
-    <div id="sv" class="tab-content" role="tabpanel" aria-labelledby="tab-sv">
-        <div class="container">
-            <h2 data-i18n>State vector to telecommand</h2>
-            <div class="grid">
-                <div>
-                    <h3 data-i18n>Position (ECEF, m)</h3>
-                    <div class="form-group">
-                        <label for="sv_x">X (m)</label>
-                        <input type="number" id="sv_x" step="any" placeholder="6378000">
-                    </div>
-                    <div class="form-group">
-                        <label for="sv_y">Y (m)</label>
-                        <input type="number" id="sv_y" step="any" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="sv_z">Z (m)</label>
-                        <input type="number" id="sv_z" step="any" placeholder="0">
-                    </div>
-                </div>
-                <div>
-                    <h3 data-i18n>Velocity (ECEF, m/s)</h3>
-                    <div class="form-group">
-                        <label for="sv_vx">VX (m/s)</label>
-                        <input type="number" id="sv_vx" step="any" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="sv_vy">VY (m/s)</label>
-                        <input type="number" id="sv_vy" step="any" placeholder="7600">
-                    </div>
-                    <div class="form-group">
-                        <label for="sv_vz">VZ (m/s)</label>
-                        <input type="number" id="sv_vz" step="any" placeholder="0">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="sv_epoch" data-i18n>Epoch (ISO format, UTC), optional</label>
-                <input type="text" id="sv_epoch" placeholder="2024-01-15T12:30:00" value="">
-            </div>
-            <button class="run" onclick="convertSV()" data-i18n>Convert state vector to commands</button>
-            <div id="sv_output" style="margin-top: 20px;"></div>
-        </div>
+    <div class="act">
+      <button type="submit" class="ds-btn primary" id="go-tle" data-i18n>Convert TLE</button>
     </div>
+  </form>
+  <form class="ot-in" id="form-sv" data-mode="sv" hidden novalidate>
+    <div class="ot-sv">
+      <div class="ds-field"><label for="sv_x" data-i18n>Position X (ECEF)</label><span class="ds-input-wrap"><input class="ds-input" id="sv_x" inputmode="decimal" placeholder="6878000"><span class="u">m</span></span></div>
+      <div class="ds-field"><label for="sv_y" data-i18n>Position Y (ECEF)</label><span class="ds-input-wrap"><input class="ds-input" id="sv_y" inputmode="decimal" placeholder="0"><span class="u">m</span></span></div>
+      <div class="ds-field"><label for="sv_z" data-i18n>Position Z (ECEF)</label><span class="ds-input-wrap"><input class="ds-input" id="sv_z" inputmode="decimal" placeholder="0"><span class="u">m</span></span></div>
+      <div class="ds-field"><label for="sv_vx" data-i18n>Velocity X (ECEF)</label><span class="ds-input-wrap"><input class="ds-input" id="sv_vx" inputmode="decimal" placeholder="0"><span class="u">m/s</span></span></div>
+      <div class="ds-field"><label for="sv_vy" data-i18n>Velocity Y (ECEF)</label><span class="ds-input-wrap"><input class="ds-input" id="sv_vy" inputmode="decimal" placeholder="-1000"><span class="u">m/s</span></span></div>
+      <div class="ds-field"><label for="sv_vz" data-i18n>Velocity Z (ECEF)</label><span class="ds-input-wrap"><input class="ds-input" id="sv_vz" inputmode="decimal" placeholder="7550"><span class="u">m/s</span></span></div>
+    </div>
+    <div class="ds-field" id="f-sv_epoch">
+      <label for="sv_epoch" data-i18n>Epoch (UTC)</label>
+      <input class="ds-input" id="sv_epoch" type="text" spellcheck="false" placeholder="2026-11-02T12:00:00">
+      <span class="hint" data-i18n>Propagated two-body: no J2, no drag.</span>
+    </div>
+    <div class="act">
+      <button type="submit" class="ds-btn primary" id="go-sv" data-i18n>Convert state vector</button>
+    </div>
+  </form>
+  <div class="ot-msg" id="msg" role="alert"></div>
+</section>
 
-    <script>
-        // UI language (tool-page.js / i18n.js): T() = translated text.
-        const T = (s, v) => window.SMO_I18N ? window.SMO_I18N.tText(s, v)
-          : String(s).replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (m, k) => (v && k in v ? v[k] : m));
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(e => e.setAttribute('aria-selected', 'false'));
-            document.getElementById(tab).classList.add('active');
-            document.getElementById('tab-' + tab).setAttribute('aria-selected', 'true');
-        }
-        const PARAM_LABELS = {
-            'x_pos': () => T('X position (m)'), 'y_pos': () => T('Y position (m)'),
-            'z_pos': () => T('Z position (m)'), 'x_vel': () => T('X velocity (m/s)'),
-            'y_vel': () => T('Y velocity (m/s)'), 'z_vel': () => T('Z velocity (m/s)'),
-        };
-        function renderResult(output, data) {
-            if (data.error) {
-                output.innerHTML = `<div class="error">${escapeHtml(String(data.error))}</div>`;
-                return;
-            }
-            let html = `<div class="success">${escapeHtml(T('Converted.'))}</div>`;
-            html += `<div class="output">${escapeHtml(data.summary)}</div>`;
-            html += `<h3 style="margin-top: 20px;">${escapeHtml(T('Telecommand sequences'))}</h3>`;
-            for (const [param, cmd] of Object.entries(data.commands)) {
-                const label = PARAM_LABELS[param] ? PARAM_LABELS[param]() : param;
-                html += `<div style="margin-top: 12px;"><strong>${escapeHtml(label)}</strong><br><code>${escapeHtml(String(cmd))}</code></div>`;
-            }
-            output.innerHTML = html;
-        }
+<div class="ot-grid">
+  <section class="ds-panel" aria-labelledby="map-h">
+    <div class="ds-panel-h"><span id="map-h" data-i18n>Ground track</span><span class="r" id="map-meta"></span></div>
+    <div class="ot-map" id="map"></div>
+    <div class="ot-legend" id="map-legend"></div>
+  </section>
+  <section class="ds-panel ot-passes" aria-labelledby="pass-h">
+    <div class="ds-panel-h"><span id="pass-h" data-i18n>Passes</span><span class="r" id="pass-meta"></span></div>
+    <div class="ds-panel-b" id="passes" tabindex="0" aria-labelledby="pass-h"></div>
+  </section>
+</div>
 
-        async function convertTLE() {
-            const output = document.getElementById('tle_output');
-            output.innerHTML = `<div class="success">${escapeHtml(T('Converting…'))}</div>`;
+<section class="ds-panel ot-sec" aria-labelledby="tl-h">
+  <div class="ds-panel-h"><span id="tl-h" data-i18n>Contact timeline</span><span class="r" id="tl-meta"></span></div>
+  <div class="ot-tl" id="timeline"></div>
+</section>
 
-            const tle1 = document.getElementById('tle1').value.trim();
-            const tle2 = document.getElementById('tle2').value.trim();
-            const epoch = document.getElementById('tle_epoch').value.trim();
+<section class="ds-panel ot-sec" aria-labelledby="el-h">
+  <div class="ds-panel-h"><span id="el-h" data-i18n>Orbit at epoch</span><span class="r" id="el-meta"></span></div>
+  <div class="ot-el" id="elements"></div>
+  <div id="tcs"></div>
+</section>
+</main>
+__FRAME_SCRIPT__
+<script type="module">
+import { renderValue, renderNoData, renderTabs, mountTabs, renderBanner, renderButton,
+         setDisabled, setEnabled, glyph, esc } from "/static/shared/components.js";
+import I18n from "/static/shared/i18n.js";
+const T = (s, v) => I18n.tText(s, v);
+const $ = (id) => document.getElementById(id);
+const BOOT = __BOOT_JSON__;
+let LAND = null;
+let mode = "tle", last = null, lastSrc = "", busy = false;
 
-            if (!tle1 || !tle2) {
-                output.innerHTML = `<div class="error">${escapeHtml(T('Enter both TLE lines.'))}</div>`;
-                return;
-            }
+/* ── input validation (TLE format: 69 columns, modulo-10 checksum) ── */
+function tleChecksum(line) {
+  let s = 0;
+  for (const c of line.slice(0, 68)) { if (c >= "0" && c <= "9") s += +c; else if (c === "-") s += 1; }
+  return s % 10;
+}
+function checkTle(line, n) {
+  if (!line) return T("Enter TLE line {{n}}.", { n });
+  if (!line.startsWith(n + " ")) return T('Line {{n}} must start with "{{n}} ".', { n });
+  if (line.length !== 69) return T("69 characters expected, {{got}} entered.", { got: line.length });
+  const want = tleChecksum(line), got = line[68];
+  if (String(want) !== got) return T("Checksum fails: column 69 should be {{want}}.", { want });
+  return "";
+}
+function parseEpoch(s) {
+  if (!s) return null;
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : s + "Z");
+  return isNaN(d) ? null : d;
+}
+function setField(id, err) {
+  const f = $("f-" + id), inp = $(id);
+  if (!f) return;
+  f.classList.toggle("is-invalid", !!err);
+  let e = f.querySelector(".err");
+  if (err) {
+    if (!e) { e = document.createElement("span"); e.className = "err"; e.id = id + "-err"; f.appendChild(e); }
+    e.innerHTML = glyph("alarm-up") + esc(err);
+    inp.setAttribute("aria-invalid", "true"); inp.setAttribute("aria-describedby", id + "-err");
+  } else {
+    if (e) e.remove();
+    inp.removeAttribute("aria-invalid"); inp.removeAttribute("aria-describedby");
+  }
+}
+function tleEpoch(l1) {           // TLE epoch from line 1 columns 19-32 (YYDDD.DDDDDDDD)
+  const m = /^1 .{16}(\d{2})(\d{3}\.\d+)/.exec(l1 || "");
+  if (!m) return null;
+  const yy = +m[1], y = yy < 57 ? 2000 + yy : 1900 + yy;
+  return new Date(Date.UTC(y, 0, 1) + (parseFloat(m[2]) - 1) * 86400000);
+}
+function validateTle(show) {
+  const e1 = checkTle($("tle1").value.trim(), 1), e2 = checkTle($("tle2").value.trim(), 2);
+  const ep = parseEpoch($("tle_epoch").value.trim());
+  const e3 = ep ? "" : T("Use ISO 8601, for example 2026-11-02T12:00:00.");
+  if (show) { setField("tle1", e1); setField("tle2", e2); setField("tle_epoch", e3); }
+  const reason = e1 ? T("TLE line 1: {{e}}", { e: e1 }) : e2 ? T("TLE line 2: {{e}}", { e: e2 })
+    : e3 ? T("Epoch: {{e}}", { e: e3 }) : "";
+  if (busy) return !reason;
+  if (reason) setDisabled($("go-tle"), reason); else setEnabled($("go-tle"));
+  return !reason;
+}
+const SV = ["sv_x", "sv_y", "sv_z", "sv_vx", "sv_vy", "sv_vz"];
+function validateSv() {
+  const bad = SV.filter((k) => !Number.isFinite(parseFloat($(k).value)));
+  const ep = parseEpoch($("sv_epoch").value.trim());
+  const reason = bad.length ? T("Enter all six state vector components ({{n}} missing).", { n: bad.length })
+    : !ep ? T("Epoch: {{e}}", { e: T("Use ISO 8601, for example 2026-11-02T12:00:00.") }) : "";
+  if (!busy) { if (reason) setDisabled($("go-sv"), reason); else setEnabled($("go-sv")); }
+  return !reason;
+}
 
-            try {
-                const response = await fetch('/api/tle', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tle1, tle2, epoch: epoch || new Date().toISOString().split('.')[0] })
-                });
+/* ── running state on the button that was pressed ── */
+function setBusy(btn, on) {
+  busy = on;
+  if (on) {
+    btn.dataset.label = btn.textContent;
+    btn.classList.add("is-active");
+    btn.innerHTML = `<span class="ds-run" aria-hidden="true"></span>${esc(T("Computing…"))}`;
+    btn.setAttribute("aria-busy", "true");
+  } else {
+    btn.classList.remove("is-active");
+    btn.textContent = btn.dataset.label || btn.textContent;
+    btn.removeAttribute("aria-busy");
+  }
+}
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+async function run(kind) {
+  const btn = $(kind === "tle" ? "go-tle" : "go-sv");
+  if (btn.getAttribute("aria-disabled") === "true" || busy) return;
+  const body = kind === "tle"
+    ? { tle1: $("tle1").value.trim(), tle2: $("tle2").value.trim(), epoch: $("tle_epoch").value.trim() }
+    : Object.assign({ epoch: $("sv_epoch").value.trim() },
+        Object.fromEntries(SV.map((k) => [k.slice(3), parseFloat($(k).value)])));
+  setBusy(btn, true);
+  $("msg").innerHTML = "";
+  try {
+    const r = await fetch(kind === "tle" ? "api/tle" : "api/sv", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({ error: T("Server error {{status}}", { status: r.status }) }));
+    if (!r.ok || j.error) throw new Error(j.error || T("Server error {{status}}", { status: r.status }));
+    last = j; lastSrc = kind;
+    renderAll();
+  } catch (e) {
+    $("msg").innerHTML = renderBanner("alarm", T("Could not convert: {{msg}}", { msg: e.message }));
+  } finally {
+    setBusy(btn, false);
+    kind === "tle" ? validateTle(false) : validateSv();
+  }
+}
 
-                renderResult(output, await response.json());
-            } catch (e) {
-                output.innerHTML = `<div class="error">${escapeHtml(T('Error: {{msg}}', { msg: e.message }))}</div>`;
-            }
-        }
+/* ── formatting ── */
+const pad = (n) => String(n).padStart(2, "0");
+const hhmm = (d) => `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+const mmss = (s) => `${Math.floor(s / 60)}:${pad(Math.round(s % 60))}`;
+const fmtNum = (x, d) => Number(x).toLocaleString(I18n.getLang() === "fr" ? "fr-FR" : "en-GB",
+  { minimumFractionDigits: d, maximumFractionDigits: d });
 
-        async function convertSV() {
-            const output = document.getElementById('sv_output');
-            output.innerHTML = `<div class="success">${escapeHtml(T('Converting…'))}</div>`;
+/* ── ground track ── */
+function proj(W, H) { return (lon, lat) => [((lon + 180) / 360) * W, ((90 - lat) / 180) * H]; }
+function pathOf(pts, P) {          // split where the track wraps the antimeridian
+  let d = "", prev = null;
+  for (const [lon, lat] of pts) {
+    const [x, y] = P(lon, lat);
+    d += (prev === null || Math.abs(lon - prev) > 180 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
+    prev = lon;
+  }
+  return d;
+}
+function visCircle(st, altKm) {     // station visibility edge at its mask, for the mean altitude
+  const Re = 6371, el = st.min_el * Math.PI / 180;
+  const lam = Math.acos((Re / (Re + altKm)) * Math.cos(el)) - el;
+  const la = st.lat * Math.PI / 180, lo = st.lon * Math.PI / 180, out = [];
+  for (let k = 0; k <= 96; k++) {
+    const az = (k / 96) * 2 * Math.PI;
+    const lat2 = Math.asin(Math.sin(la) * Math.cos(lam) + Math.cos(la) * Math.sin(lam) * Math.cos(az));
+    const lon2 = lo + Math.atan2(Math.sin(az) * Math.sin(lam) * Math.cos(la), Math.cos(lam) - Math.sin(la) * Math.sin(lat2));
+    out.push([((lon2 * 180 / Math.PI + 540) % 360) - 180, lat2 * 180 / Math.PI]);
+  }
+  return out;
+}
+function drawMap() {
+  const host = $("map");
+  const W = Math.max(280, host.clientWidth - 24), H = Math.round(W / 2);
+  const P = proj(W, H);
+  let s = `<svg class="tf-plot" viewBox="0 0 ${W} ${H + 20}" width="${W}" height="${H + 20}" role="img" aria-labelledby="map-h map-desc">`;
+  s += `<desc id="map-desc">${esc(mapDesc())}</desc>`;
+  s += `<rect class="sea" x="0" y="0" width="${W}" height="${H}"/>`;
+  if (LAND) for (const ring of LAND) {
+    let d = "";
+    for (let i = 0; i < ring.length; i += 2) { const [x, y] = P(ring[i], ring[i + 1]); d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }
+    s += `<path class="land" d="${d}Z"/>`;
+  }
+  for (let lon = -150; lon <= 150; lon += 30) { const [x] = P(lon, 0); s += `<line class="grid" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`; }
+  for (let lat = -60; lat <= 60; lat += 30) { const [, y] = P(0, lat); s += `<line class="grid" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; }
+  s += `<rect class="ax" x="0" y="0" width="${W}" height="${H}"/>`;
+  const lonStep = W < 520 ? 120 : 60, latStep = H < 240 ? 60 : 30;
+  for (let lon = -180; lon <= 180; lon += lonStep) {
+    const [x] = P(lon, 0);
+    s += `<text x="${x}" y="${H + 14}" text-anchor="${lon === -180 ? "start" : lon === 180 ? "end" : "middle"}">${Math.abs(lon)}°${lon < 0 ? "W" : lon > 0 ? "E" : ""}</text>`;
+  }
+  for (let lat = -60; lat <= 60; lat += latStep) { const [, y] = P(-180, lat); s += `<text x="4" y="${y - 3}">${Math.abs(lat)}°${lat < 0 ? "S" : lat > 0 ? "N" : ""}</text>`; }
+  const stations = (last && last.stations) || BOOT.stations || [];
+  const meanAlt = last && last.track && last.track.length
+    ? last.track.reduce((a, p) => a + p[3], 0) / last.track.length : 513;
+  for (const st of stations) s += `<path class="vis" d="${pathOf(visCircle(st, meanAlt), P)}"/>`;
+  if (last && last.track && last.track.length) {
+    const per = (last.elements && last.elements.period_min) || 94.5;
+    const o1 = last.track.filter((p) => p[0] <= per), o2 = last.track.filter((p) => p[0] >= per);
+    s += `<path class="trk2" d="${pathOf(o2.map((p) => [p[2], p[1]]), P)}"/>`;
+    s += `<path class="trk1" d="${pathOf(o1.map((p) => [p[2], p[1]]), P)}"/>`;
+    const inC = (tmin) => (last.passes || []).some((ps) => tmin * 60 >= ps.aos_s && tmin * 60 <= ps.los_s);
+    let run = [];
+    const flush = () => { if (run.length > 1) s += `<path class="trkc" d="${pathOf(run, P)}"/>`; run = []; };
+    for (const p of last.track) { if (inC(p[0])) run.push([p[2], p[1]]); else flush(); }
+    flush();
+    const [ex, ey] = P(last.track[0][2], last.track[0][1]);
+    s += `<circle class="ep" cx="${ex}" cy="${ey}" r="5"/><text class="ep-l" x="${ex + 8}" y="${ey + 4}">${esc(T("epoch"))}</text>`;
+  }
+  for (const st of stations) {
+    const [x, y] = P(st.lon, st.lat);
+    s += `<path class="stn" d="M${x} ${y - 6}L${x + 5} ${y + 3}L${x - 5} ${y + 3}Z"/>`;
+    const right = x < W - 90;
+    s += `<text class="stn-l" x="${right ? x + 8 : x - 8}" y="${y + 4}" text-anchor="${right ? "start" : "end"}">${esc(st.name)}</text>`;
+  }
+  s += `</svg>`;
+  host.innerHTML = s;
+}
+function mapDesc() {
+  if (!last) return T("Map of the ground stations; no orbit converted yet.");
+  return T("Ground track for {{n}} orbits from {{epoch}}, {{p}} passes in the next {{h}} h.",
+    { n: last.orbits, epoch: last.epoch, p: (last.passes || []).length, h: last.horizon_h });
+}
+function legend() {
+  const sw = (cls, kind) => kind === "tri"
+    ? `<svg viewBox="0 0 22 10" aria-hidden="true"><path class="stn" d="M11 0L16 9L6 9Z"/></svg>`
+    : `<svg viewBox="0 0 22 10" aria-hidden="true"><line class="${cls}" x1="1" y1="5" x2="21" y2="5"/></svg>`;
+  $("map-legend").innerHTML =
+    `<span>${sw("trk1")}${esc(T("First orbit"))}</span>` +
+    `<span>${sw("trk2")}${esc(T("Next orbits"))}</span>` +
+    `<span>${sw("trkc")}${esc(T("In contact"))}</span>` +
+    `<span>${sw("", "tri")}${esc(T("Ground station"))}</span>` +
+    `<span>${sw("vis")}${esc(T("Visibility edge at the elevation mask"))}</span>`;
+}
 
-            const x = parseFloat(document.getElementById('sv_x').value);
-            const y = parseFloat(document.getElementById('sv_y').value);
-            const z = parseFloat(document.getElementById('sv_z').value);
-            const vx = parseFloat(document.getElementById('sv_vx').value);
-            const vy = parseFloat(document.getElementById('sv_vy').value);
-            const vz = parseFloat(document.getElementById('sv_vz').value);
-            const epoch = document.getElementById('sv_epoch').value.trim();
+/* ── passes: list + 24 h contact timeline ── */
+function drawPasses() {
+  const host = $("passes");
+  if (!last) { host.innerHTML = `<p class="tf-empty">${esc(T("Convert an orbit to list its passes."))}</p>`; $("pass-meta").textContent = ""; return; }
+  const ps = last.passes || [];
+  const mask = (last.stations[0] || {}).min_el ?? 5;
+  $("pass-meta").textContent = T("next {{h}} h · mask {{m}}°", { h: last.horizon_h, m: mask });
+  if (!ps.length) { host.innerHTML = `<p class="tf-empty">${esc(T("No pass above the elevation mask in the next {{h}} h.", { h: last.horizon_h }))}</p>`; return; }
+  const ep = new Date(last.epoch);
+  host.innerHTML = `<table class="ds-table"><thead><tr><th>${esc(T("Station"))}</th><th>${esc(T("AOS (UTC)"))}</th>` +
+    `<th class="n">${esc(T("Duration"))}</th><th>${esc(T("Max elevation"))}</th></tr></thead><tbody>` +
+    ps.map((p, i) => {
+      const a = new Date(ep.getTime() + p.aos_s * 1000);
+      const day = a.getUTCDate() !== ep.getUTCDate() ? ` <small>+1 d</small>` : "";
+      return `<tr class="${i === 0 ? "next" : ""}"><td>${esc(p.station)}</td>` +
+        `<td class="num">${hhmm(a)}${day}</td><td class="n">${mmss(p.los_s - p.aos_s)}</td>` +
+        `<td class="num"><span class="elbar" aria-hidden="true"><i style="width:${(p.max_el / 90 * 100).toFixed(0)}%"></i></span>${fmtNum(p.max_el, 1)}°</td></tr>`;
+    }).join("") + `</tbody></table>`;
+}
+function drawTimeline() {
+  const host = $("timeline");
+  const stations = (last && last.stations) || BOOT.stations || [];
+  const W = Math.max(300, host.clientWidth - 32), L = W < 500 ? 76 : 104, laneH = 26, top = 4;
+  const H = top + stations.length * laneH + 22, span = ((last && last.horizon_h) || 24) * 3600;
+  const X = (t) => L + (t / span) * (W - L - 8);
+  let s = `<svg class="tf-plot" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="tl-h tl-desc">` +
+    `<desc id="tl-desc">${esc(T("One lane per ground station over the next {{h}} h; each bar is a pass, its height the maximum elevation.", { h: (last && last.horizon_h) || 24 }))}</desc>`;
+  const ep = last ? new Date(last.epoch) : new Date();
+  const step = W < 600 ? 6 : 3;
+  for (let h = 0; h <= span / 3600; h += step) {
+    const x = X(h * 3600), d = new Date(ep.getTime() + h * 3600000);
+    s += `<line class="grid" x1="${x}" y1="${top}" x2="${x}" y2="${H - 18}"/>` +
+         `<text x="${x}" y="${H - 4}" text-anchor="${h === 0 ? "start" : "middle"}">${hhmm(d)}</text>`;
+  }
+  stations.forEach((st, i) => {
+    const y = top + i * laneH;
+    s += `<line class="lane" x1="${L}" y1="${y + laneH}" x2="${W - 8}" y2="${y + laneH}"/>` +
+         `<text class="lab" x="0" y="${y + laneH - 8}">${esc(st.name)}</text>`;
+    for (const p of (last && last.passes || []).filter((q) => q.station === st.name)) {
+      const h = 4 + (laneH - 8) * Math.min(1, p.max_el / 90);
+      const a = new Date(ep.getTime() + p.aos_s * 1000), b = new Date(ep.getTime() + p.los_s * 1000);
+      s += `<rect class="bar" x="${X(p.aos_s).toFixed(1)}" y="${(y + laneH - 2 - h).toFixed(1)}" width="${Math.max(2, X(p.los_s) - X(p.aos_s)).toFixed(1)}" height="${h.toFixed(1)}">` +
+           `<title>${esc(`${st.name} ${hhmm(a)}–${hhmm(b)} UTC · ${T("max elevation")} ${fmtNum(p.max_el, 1)}°`)}</title></rect>`;
+    }
+  });
+  s += `<line class="ax" x1="${L}" y1="${H - 18}" x2="${W - 8}" y2="${H - 18}"/></svg>`;
+  host.innerHTML = s;
+  $("tl-meta").textContent = last ? T("UTC from epoch · bar height = maximum elevation") : "";
+}
 
-            if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(vx) || isNaN(vy) || isNaN(vz)) {
-                output.innerHTML = `<div class="error">${escapeHtml(T('Enter all six state vector components.'))}</div>`;
-                return;
-            }
+/* ── elements + telecommands ── */
+const PARAM = {
+  x_pos: ["0x0231", () => T("Position X"), "m"], y_pos: ["0x0232", () => T("Position Y"), "m"], z_pos: ["0x0233", () => T("Position Z"), "m"],
+  x_vel: ["0x0234", () => T("Velocity X"), "m/s"], y_vel: ["0x0235", () => T("Velocity Y"), "m/s"], z_vel: ["0x0236", () => T("Velocity Z"), "m/s"],
+};
+function drawElements() {
+  const host = $("elements");
+  if (!last) { host.innerHTML = ""; $("tcs").innerHTML = ""; $("el-meta").textContent = ""; return; }
+  const e = last.elements, Re = 6371;
+  const cell = (k, v, u, d) => `<div><span class="k">${esc(k)}</span>${renderValue(v, { units: u, digits: d })}</div>`;
+  host.innerHTML = [
+    cell(T("Semi-major axis"), e.a_km, "km", 1), cell(T("Eccentricity"), e.e, "", 5),
+    cell(T("Inclination"), e.i_deg, "°", 3), cell(T("RAAN"), e.raan_deg, "°", 3),
+    cell(T("Argument of perigee"), e.aop_deg, "°", 2), cell(T("True anomaly"), e.ta_deg, "°", 2),
+    cell(T("Period"), e.period_min, "min", 2), cell(T("Altitude"), e.altitude_km, "km", 1),
+    cell(T("Perigee altitude"), e.a_km * (1 - e.e) - Re, "km", 1), cell(T("Apogee altitude"), e.a_km * (1 + e.e) - Re, "km", 1),
+  ].join("");
+  $("el-meta").textContent = `${last.epoch} · ${lastSrc === "tle" ? "SGP4" : T("two-body")}`;
+  const st = last.state_ecef || {};
+  const rows = Object.entries(last.commands || {}).map(([k, hex]) => {
+    const [pid, nameFn, u] = PARAM[k] || [k, () => k, ""];
+    const name = nameFn();
+    const val = st[k];
+    return `<tr><td class="num">${pid}</td><td>${esc(name)}</td>` +
+      `<td class="n">${val === undefined ? renderNoData() : renderValue(val, { units: u, digits: u === "m" ? 1 : 3 })}</td>` +
+      `<td class="hex">${esc(hex)}</td><td>${renderButton({ label: T("Copy"), kind: "ghost", size: "sm", attrs: `data-copy="${esc(hex)}"` })}</td></tr>`;
+  }).join("");
+  const n = Object.keys(last.commands || {}).length;
+  $("tcs").innerHTML = `<details class="ds-disclosure" id="tc-d"${$("tc-d") && $("tc-d").open ? " open" : ""}>` +
+    `<summary>${esc(T("Telecommands: {{n}} × TC(20,1) set parameter", { n }))}<span class="r">${esc(T("ECEF state at epoch"))}</span></summary>` +
+    `<div class="bd ot-tc" style="padding-left:var(--sp-4)"><table class="ds-table"><thead><tr><th>${esc(T("Parameter"))}</th><th>${esc(T("Name"))}</th>` +
+    `<th class="n">${esc(T("Value"))}</th><th>${esc(T("Command (hex)"))}</th><th><span class="ds-sr">${esc(T("Copy"))}</span></th></tr></thead><tbody>${rows}</tbody></table>` +
+    `<div class="ds-row" style="margin-top:var(--sp-2)">${renderButton({ label: T("Copy all commands"), size: "sm", attrs: `data-copy-all="1"` })}</div></div></details>`;
+}
 
-            try {
-                const response = await fetch('/api/sv', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ x, y, z, vx, vy, vz, epoch: epoch || new Date().toISOString().split('.')[0] })
-                });
+function drawMeta() {
+  const tle1 = $("tle1").value.trim();
+  const te = tleEpoch(tle1), ep = parseEpoch($("tle_epoch").value.trim());
+  let meta = last ? T("{{n}} orbits from epoch", { n: last.orbits }) + " · " + (lastSrc === "tle" ? "SGP4" : T("two-body")) : "";
+  if (last && lastSrc === "tle" && te && ep) {
+    const days = Math.abs(ep - te) / 86400000;
+    if (days > 14) meta += " · " + T("{{d}} days from the TLE epoch: accuracy degrades", { d: Math.round(days) });
+  }
+  $("map-meta").textContent = meta;
+  document.getElementById("tf-meta").textContent = last
+    ? `${T("Epoch")} ${last.epoch}` : T("EOSAT-1 · TLE or state vector to TC(20,1)");
+}
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+function renderAll() { drawMeta(); drawMap(); legend(); drawPasses(); drawTimeline(); drawElements(); }
 
-                renderResult(output, await response.json());
-            } catch (e) {
-                output.innerHTML = `<div class="error">${escapeHtml(T('Error: {{msg}}', { msg: e.message }))}</div>`;
-            }
-        }
-
-        function escapeHtml(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return String(text).replace(/[&<>"']/g, m => map[m]);
-        }
-
-        // Set default epoch to now
-        const now = new Date().toISOString().split('T')[0] + 'T12:00:00';
-        document.getElementById('tle_epoch').value = now;
-        document.getElementById('sv_epoch').value = now;
-    </script>
+/* ── wiring ── */
+function drawTabs() {
+  $("mode-tabs").innerHTML = renderTabs([{ id: "tle", label: T("Two-line elements") }, { id: "sv", label: T("State vector") }],
+    mode, { label: T("Input"), panel: "form-" + mode });
+  mountTabs($("mode-tabs"), (id) => { mode = id; $("form-tle").hidden = id !== "tle"; $("form-sv").hidden = id !== "sv"; drawTabs(); });
+}
+$("form-tle").addEventListener("submit", (ev) => { ev.preventDefault(); validateTle(true); run("tle"); });
+$("form-sv").addEventListener("submit", (ev) => { ev.preventDefault(); validateSv(); run("sv"); });
+for (const id of ["tle1", "tle2", "tle_epoch"]) {
+  $(id).addEventListener("input", () => validateTle(!!$("f-" + id).querySelector(".err")));
+  $(id).addEventListener("blur", () => validateTle(true));
+}
+for (const id of [...SV, "sv_epoch"]) $(id).addEventListener("input", validateSv);
+$("load-eosat").addEventListener("click", () => { $("tle1").value = BOOT.tle1; $("tle2").value = BOOT.tle2; validateTle(true); });
+document.addEventListener("click", async (ev) => {
+  const b = ev.target.closest("[data-copy],[data-copy-all]");
+  if (!b) return;
+  const text = b.dataset.copy || Object.values(last.commands || {}).join("\n");
+  try { await navigator.clipboard.writeText(text); b.textContent = T("Copied"); setTimeout(() => drawElements(), 1200); } catch (e) { /* no clipboard */ }
+});
+const now = new Date(); now.setUTCSeconds(0, 0);
+const iso = now.toISOString().slice(0, 16) + ":00";
+$("tle_epoch").value = iso; $("sv_epoch").value = iso;
+$("tle1").value = BOOT.tle1; $("tle2").value = BOOT.tle2;
+if (!BOOT.tle1) $("load-eosat").hidden = true;
+drawTabs(); validateTle(false); validateSv(); renderAll();
+new ResizeObserver(() => { drawMap(); drawTimeline(); }).observe($("map"));
+import("/static/orbit/wide-basemap.js").then((m) => { LAND = m.LAND; drawMap(); }).catch(() => { /* graticule only */ });
+const rerender = () => { drawTabs(); renderAll(); validateTle(!!document.querySelector(".is-invalid")); validateSv(); };
+window.addEventListener("smo:i18nready", rerender);
+window.addEventListener("smo:langchange", rerender);
+if (BOOT.tle1) run("tle");
+</script>
 </body>
 </html>
 """
 
     async def handle_index(request):
         """Serve the web interface."""
-        return tool_html_response(
-            HTML_TEMPLATE.replace("<!--TOOL_HEAD-->", TOOL_HEAD), request.app)
+        m = mission_orbit()
+        boot = json.dumps({"tle1": m["tle1"], "tle2": m["tle2"], "stations": m["stations"]})
+        page = (HTML_TEMPLATE
+                .replace("__FRAME_HEAD__", tool_frame.head())
+                .replace("__FRAME_BAR__", tool_frame.bar('<span data-i18n>Orbit tools</span>'))
+                .replace("__FRAME_SCRIPT__", tool_frame.SCRIPT)
+                .replace("__BOOT_JSON__", boot.replace("</", "<\\/")))
+        return tool_html_response(page, request.app)
+
+    async def handle_basemap(request):
+        """Natural Earth 110 m land rings, shared with the planner wall view
+        (one copy of the data in the repo). 404 -> the map draws a graticule only."""
+        if _BASEMAP.is_file():
+            return web.FileResponse(_BASEMAP, headers={"Cache-Control": "public, max-age=86400"})
+        raise web.HTTPNotFound()
 
     async def handle_tle_api(request):
         """API endpoint for TLE conversion."""
@@ -710,7 +1177,10 @@ if HAS_AIOHTTP:
             return web.json_response({
                 'summary': summary,
                 'commands': commands,
-                'elements': elements
+                'elements': elements,
+                'state_ecef': _state_dict(pos_ecef_m, vel_ecef_ms),
+                **orbit_geometry(epoch_utc, tle=(tle1, tle2),
+                                 period_s=elements['period_s']),
             })
 
         except Exception as e:
@@ -748,10 +1218,17 @@ if HAS_AIOHTTP:
             elements = OrbitAnalyzer.compute_orbital_elements(pos_eci_km, vel_eci_km_s)
             summary = OrbitSummary.format_summary(elements, epoch_utc)
 
+            if not np.isfinite(elements.get('period_s', float('nan'))) or elements['a_km'] <= 0:
+                return web.json_response(
+                    {'error': 'State vector is not a closed orbit (check the units: metres and m/s)'},
+                    status=400)
             return web.json_response({
                 'summary': summary,
                 'commands': commands,
-                'elements': elements
+                'elements': elements,
+                'state_ecef': _state_dict(pos_ecef_m, vel_ecef_ms),
+                **orbit_geometry(epoch_utc, sv_ecef_km=(pos_eci_km, vel_eci_km_s),
+                                 period_s=elements['period_s']),
             })
 
         except Exception as e:
@@ -764,6 +1241,7 @@ if HAS_AIOHTTP:
         app.router.add_get('/', handle_index)
         app.router.add_post('/api/tle', handle_tle_api)
         app.router.add_post('/api/sv', handle_sv_api)
+        app.router.add_get('/static/orbit/wide-basemap.js', handle_basemap)
 
         runner = web.AppRunner(app)
         await runner.setup()

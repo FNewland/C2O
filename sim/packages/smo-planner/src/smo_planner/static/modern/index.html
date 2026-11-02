@@ -1,433 +1,560 @@
 <!DOCTYPE html>
 <!-- ==========================================================================
-  SMO MISSION PLANNER — modern interactive console (design_2026-08 plan §2.2)
+  C2O MISSION PLANNER — modern interactive console
+  (design_2026-08 plan §2.2; design-system pass 2026-11, docs/ui/C2O_UI_BRIEF.md)
 
   Classic reference: ../index.html (frozen — do not edit).
   Shared design system: /static/shared/design-system.css + components.js +
-  format.js (Agent 1 frozen contract). No build step; ES modules only.
+  format.js + i18n.js. No build step; ES modules only. Page-local CSS below is
+  LAYOUT ONLY plus the timeline picture; every colour is a token.
 
-  Sim-coupling dispositions honoured here (plan §4):
-    P1  clock-source badge kept, speed tooltip deleted.
-    P2  simNow() kept as the single time primitive (planner.js).
-    P3  no static SIMULATED text — every data badge defaults to an em-dash
-        until /api/time-source resolves.
+  Reading order (progressive disclosure, brief §1.2):
+    1. Overview  — the next-24 h picture (passes, eclipses, activities and the
+                   predicted battery SoC against its minimum) with the numbers
+                   that answer "what is next" beside it.
+    2. Working   — the activity schedule (with conflicts flagged per row) and
+                   the ground track with the next contacts.
+    3. Detail    — budgets, per-pass tables, constraint breakdown, imaging:
+                   one click deeper, in disclosures.
+
+  Sim-coupling dispositions kept:
+    P1  clock-source chip kept, speed tooltip deleted.
+    P2  simNow() is the single time primitive (planner.js).
+    P3  nothing claims SIM or REAL until /api/time-source resolves.
     P4  no hard-coded orbit literals: period/altitude/inclination derive from
         /api/config/planner + /api/spacecraft-state + /api/ground-track.
-        Values the planner does not serve render as an em-dash, honestly.
-    P5  Validate Constraints takes an EXPLICIT, labelled SoC assumption;
-        blank means "server default" and the request then carries no
-        battery_soc parameter at all — there is no hidden SoC literal.
-    L4  MET renders the standard absent affordance in real mode.
+        Values the planner does not serve say "not served", honestly.
+    P5  constraint checks take an EXPLICIT, labelled SoC assumption; blank
+        means "server default" and the request carries no battery_soc.
+    L4  MET says so when the planner has none (real mode).
 ========================================================================== -->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n>SMO Mission Planner</title>
-<!-- Vendor: the modern planner pages were missing this script tag
-     (field report 2026-08-19, same defect as the MCS shell) -- the
-     ground-track map rendered its "did not load" notice permanently
-     even where vendor/ is present. Classic loads it identically. -->
+<!-- Vendor world map (offline). The modern page once missed this tag and the
+     map showed its "did not load" notice permanently (field report
+     2026-08-19); planner.js no longer injects it a second time. -->
 <script src="/static/vendor/js/svg-world-map.js"></script>
-<link rel="stylesheet" href="/static/shared/design-system.css?v=1">
+<link rel="stylesheet" href="/static/shared/design-system.css?v=2">
 <style>
-/* Page-local layout only — component styling comes from the design system. */
+/* ── Page frame ─────────────────────────────────────────────────────── */
 body{ display:flex; flex-direction:column; min-height:100vh; }
+.wrap{ width:100%; max-width:1680px; margin:0 auto; padding:0 var(--sp-4); }
 
-/* ── Header ─────────────────────────────────────────────────────────── */
-header.top{
-  display:flex; align-items:center; gap:18px; padding:8px 16px;
-  background:var(--s1); border-bottom:1px solid var(--line); flex-wrap:wrap;
+/* App bar: name · clock · source chips · tools. One line at 1440 in FR. */
+.appbar{ background:var(--s1); border-bottom:1px solid var(--line); }
+.appbar .wrap{ display:flex; align-items:center; gap:var(--sp-4); min-height:48px;
+  flex-wrap:wrap; padding-top:var(--sp-1); padding-bottom:var(--sp-1); }
+.appbar .name{ font-size:var(--fs-value); font-weight:600; color:var(--val); white-space:nowrap; }
+.appbar .name small{ font-weight:400; font-size:var(--fs-body); color:var(--tx3); margin-left:var(--sp-2); }
+.clock{ display:flex; align-items:baseline; gap:var(--sp-2); white-space:nowrap; }
+.clock .t{ font-family:var(--mono); font-size:var(--fs-title); font-weight:500; color:var(--val);
+  font-variant-numeric:tabular-nums; }
+.clock .d,.clock .z{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+#metReadout{ font-family:var(--mono); font-size:var(--fs-body); color:var(--tx2); white-space:nowrap; }
+.appbar .sp{ flex:1; }
+.appbar .tools{ display:flex; align-items:center; gap:var(--sp-2); }
+#clockSourceBadge[hidden]{ display:none; }
+#clockSourceBadge.wall{ color:var(--alarm); border:1px solid var(--alarm); background:var(--alarm-wash);
+  border-radius:var(--radius-sm); padding:2px 8px; font-family:var(--mono); font-size:var(--fs-label); font-weight:500; }
+
+main{ flex:1; padding-top:var(--sp-4); padding-bottom:var(--sp-5); display:flex; flex-direction:column;
+  gap:var(--sp-4); }
+.cols{ display:grid; gap:var(--sp-4); grid-template-columns:minmax(0,5fr) minmax(0,6fr); align-items:start; }
+.stack{ display:flex; flex-direction:column; gap:var(--sp-4); min-width:0; }
+@media (max-width:1100px){ .cols{ grid-template-columns:minmax(0,1fr); } }
+
+.ds-panel-h .r .ds-chip{ font-size:var(--fs-label); }
+.sect{ font-size:var(--fs-label); font-weight:600; color:var(--tx2); margin:var(--sp-3) 0 var(--sp-1); }
+.muted{ color:var(--tx3); font-size:var(--fs-label); }
+.ds-panel-b>.muted:only-child{ padding:var(--sp-1) 0; }
+
+/* ── 1. Overview: the next-24 h picture + the numbers beside it ─────── */
+#panel-overview .ov{ display:grid; grid-template-columns:minmax(0,1fr) 300px; }
+#panel-overview .pic{ min-width:0; padding:var(--sp-3) var(--sp-4) var(--sp-2); border-right:1px solid var(--line); }
+#panel-overview .pic .scroll{ overflow-x:auto; overflow-y:hidden; }
+#timeline{ display:block; width:100%; min-width:680px; }
+.tl-legend{ display:flex; flex-wrap:wrap; gap:4px var(--sp-4); padding-top:var(--sp-2);
+  font-size:var(--fs-label); color:var(--tx2); }
+.tl-legend i{ display:inline-block; width:14px; height:8px; margin-right:6px; vertical-align:0; }
+.tl-legend i.pass{ border:1px solid var(--tx3); }
+.tl-legend i.dump{ background:var(--fill); }
+.tl-legend i.now{ width:2px; height:12px; background:var(--accent); vertical-align:-2px; }
+.tl-legend i.ecl{ background:var(--s3); }
+.tl-legend i.soc{ height:2px; background:var(--val); vertical-align:2px; }
+.tl-legend i.min{ height:0; border-top:1px dashed var(--alarm); vertical-align:2px; }
+.tl-legend i.act{ background:var(--tx3); }
+/* SVG marks: all tokens, so the picture follows the theme. */
+#timeline text{ font-family:var(--mono); font-size:12px; fill:var(--tx3); }
+#timeline .lane{ font-family:var(--sans); fill:var(--tx2); }
+#timeline .grid{ stroke:var(--line); stroke-width:1; }
+#timeline .base{ stroke:var(--line-2); stroke-width:1; }
+#timeline .ecl{ fill:var(--s3); }
+#timeline .pass{ fill:none; stroke:var(--tx3); stroke-width:1; }
+#timeline .pass.dump{ fill:var(--fill); stroke:var(--fill); }
+#timeline .pass.live{ fill:var(--accent); stroke:var(--accent); }
+#timeline .act{ fill:var(--tx3); }
+#timeline .act.is-caution{ fill:var(--warn); }
+#timeline .act.is-alarm{ fill:var(--alarm); }
+#timeline .act.is-active{ fill:var(--accent); }
+#timeline .flag-c{ fill:none; stroke:var(--warn); stroke-width:1.5; }
+#timeline .flag-a{ fill:var(--alarm); }
+#timeline .soc{ fill:none; stroke:var(--val); stroke-width:1.5; stroke-linejoin:round; }
+#timeline .soc-dot{ fill:var(--val); }
+#timeline .lim-r{ stroke:var(--alarm); stroke-width:1; stroke-dasharray:3 3; }
+#timeline .lim-y{ stroke:var(--warn); stroke-width:1; stroke-dasharray:1 3; }
+#timeline .now{ stroke:var(--accent); stroke-width:2; }
+#timeline text.now-t{ fill:var(--accent); font-family:var(--sans); font-weight:500; }
+#timeline text.soc-v{ fill:var(--val); font-size:13px; font-weight:500; }
+#timeline text.lim-t{ fill:var(--alarm); }
+#timeline text.empty{ font-family:var(--sans); font-size:13px; fill:var(--tx2); }
+
+/* The numbers beside the picture: what is next, is the plan sound. */
+.facts{ display:flex; flex-direction:column; align-self:start; }
+.fact{ padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--line); }
+.fact:last-child{ border-bottom:0; }
+.fact .k{ font-size:var(--fs-label); color:var(--tx2); }
+.fact .big{ display:flex; align-items:baseline; gap:var(--sp-2); margin-top:2px; }
+.fact .big b{ font-size:var(--fs-value); font-weight:600; color:var(--val); }
+.fact .big .ds-value{ font-size:var(--fs-title); }
+.fact .sub{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); margin-top:2px; }
+.fact .ds-gauge{ grid-template-columns:minmax(60px,1fr) auto; padding:2px 0 0; }
+.fact .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.fact .chips .ds-chip{ white-space:normal; line-height:1.3; padding-top:2px; padding-bottom:2px; }
+@media (max-width:1100px){
+  #panel-overview .ov{ grid-template-columns:minmax(0,1fr); }
+  #panel-overview .pic{ border-right:0; border-bottom:1px solid var(--line); }
+  .facts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }
+  .fact{ border-right:1px solid var(--line); }
 }
-header.top .brand{ font-size:14px; font-weight:700; letter-spacing:2px; }
-header.top .brand span{ color:var(--tx3); font-weight:400; }
-header.top .clock{ display:flex; align-items:baseline; gap:10px; }
-header.top .clock .lbl{ font-size:12px; color:var(--tx3); letter-spacing:1px; }
-header.top .clock .d{ font-family:var(--mono); font-size:13px; color:var(--tx2); }
-header.top .clock .t{ font-family:var(--mono); font-size:20px; font-weight:600; }
-header.top .met{ font-family:var(--mono); font-size:13px; color:var(--tx2); }
-.hdr-kv{ display:flex; flex-direction:column; gap:1px; min-width:70px; }
-.hdr-kv .k{ font-size:12px; color:var(--tx3); letter-spacing:.6px; }
-.hdr-kv .v{ font-family:var(--mono); font-size:14px; }
-header.top .spacer{ flex:1; }
-#clockSourceBadge.wall{ border-color:var(--alarm); color:var(--alarm); font-weight:700; }
 
-/* ── Main grid ──────────────────────────────────────────────────────── */
-main{ flex:1; display:grid; gap:10px; padding:10px 12px;
-  grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(320px,.9fr);
-  grid-template-rows:auto auto;
-  grid-template-areas:"map map sched" "contacts budgets sched";
-  align-items:start; }
-@media (max-width:1500px){
-  main{ grid-template-columns:minmax(0,1.4fr) minmax(320px,1fr);
-    grid-template-areas:"map sched" "contacts sched" "budgets budgets"; }
-}
-#panel-map{ grid-area:map; } #panel-contacts{ grid-area:contacts; }
-#panel-sched{ grid-area:sched; }
-#col-budgets{ grid-area:budgets; display:grid; gap:10px;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); align-items:start; }
+/* ── 2a. Activity schedule ──────────────────────────────────────────── */
+.toolbar{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2);
+  padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--line); }
+.toolbar .ds-select{ width:auto; flex:1 1 200px; min-width:0; }
+.act-row{ display:grid; grid-template-columns:52px minmax(0,1fr) auto; gap:2px var(--sp-3);
+  align-items:center; padding:var(--sp-2) var(--sp-4); border-bottom:1px solid var(--line); }
+.act-row:last-child{ border-bottom:0; }
+.act-row.is-caution{ box-shadow:inset 2px 0 0 var(--warn); }
+.act-row.is-alarm{ box-shadow:inset 3px 0 0 var(--alarm); background:var(--alarm-wash); }
+.act-row .when{ font-family:var(--mono); font-size:var(--fs-value); font-weight:500; color:var(--val);
+  font-variant-numeric:tabular-nums; }
+.act-row .nm{ display:flex; align-items:center; flex-wrap:wrap; gap:4px var(--sp-2);
+  font-size:var(--fs-body); font-weight:500; color:var(--tx); }
+.act-row .meta{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+.act-row .why{ grid-column:2 / -1; display:flex; align-items:flex-start; gap:6px;
+  font-size:var(--fs-label); }
+.act-row .why svg{ width:10px; height:10px; flex:0 0 auto; margin-top:3px; }
+.act-row .why.is-caution{ color:var(--warn); }
+.act-row .why.is-alarm{ color:var(--alarm); }
+.act-row .ops{ display:flex; gap:var(--sp-1); }
+.act-empty{ padding:var(--sp-4); color:var(--tx2); font-size:var(--fs-body); }
+#activityList{ max-height:560px; overflow-y:auto; }
 
-/* ── Map panel ──────────────────────────────────────────────────────── */
-#groundTrackMap{ width:100%; min-height:340px; background:var(--bg); position:relative; }
-#mapFallback{ display:none; padding:28px 20px; text-align:center; }
-#mapFallback .big{ font-size:14px; font-weight:600; color:var(--tx2); margin-bottom:6px; }
-#mapFallback .why{ font-size:12px; color:var(--tx3); font-family:var(--mono); }
+/* Upload: what goes, how, and the two-step. */
+.upload{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--sp-2) var(--sp-3);
+  align-items:center; padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); background:var(--s2); }
+.upload .what{ font-size:var(--fs-body); color:var(--tx2); min-width:0; }
+.upload .what b{ color:var(--val); font-weight:500; }
+.upload .how{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:var(--sp-2) var(--sp-4); align-items:center; }
+#scheduleValidation:empty{ display:none; }
+#scheduleValidation .ds-banner{ border-left:0; border-right:0; }
+
+/* Constraint checks (detail, inside the schedule panel). */
+.checks{ padding:var(--sp-3) var(--sp-4) var(--sp-2); border-top:1px solid var(--line); }
+.soc-row{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:var(--sp-2) var(--sp-3); }
+.soc-row .ds-field{ width:150px; }
+#constraintsResult{ margin-top:var(--sp-2); }
+.vrow{ display:flex; align-items:flex-start; gap:6px; padding:3px 0; font-size:var(--fs-label);
+  border-bottom:1px solid var(--line); color:var(--tx2); }
+.vrow svg{ width:10px; height:10px; flex:0 0 auto; margin-top:3px; }
+.vrow.is-alarm{ color:var(--alarm); } .vrow.is-caution{ color:var(--warn); }
+.vrow.is-ok{ color:var(--tx); } .vrow.is-ok svg{ color:var(--ok); }
+details.cx>.bd{ font-size:var(--fs-label); color:var(--tx2); max-height:220px; overflow:auto;
+  padding-left:var(--sp-4); }
+details.cx>.bd .kv{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px var(--sp-3);
+  font-family:var(--mono); margin-top:var(--sp-1); }
+details.cx>.bd .kv span:nth-child(odd){ color:var(--tx3); }
+.checks .ds-disclosure:last-child{ border-bottom:0; }
+.checks .ds-disclosure>summary{ padding-left:0; padding-right:0; }
+
+/* ── 2b. Ground track + contacts ────────────────────────────────────── */
 .map-wrap{ position:relative; }
-.map-overlay{ position:absolute; top:8px; left:8px; background:rgba(14,16,19,.82);
-  border:1px solid var(--line-2); border-radius:var(--r); padding:6px 10px;
-  display:flex; gap:14px; font-family:var(--mono); font-size:12px; }
-:root[data-theme="light"] .map-overlay{ background:rgba(222,223,225,.9); }
-.map-overlay b{ color:var(--tx3); font-weight:400; margin-right:4px; }
-.map-legend{ display:flex; flex-wrap:wrap; gap:12px; padding:7px 12px;
-  border-top:1px solid var(--line); font-size:12px; color:var(--tx2); }
-.map-legend .sw{ display:inline-block; width:14px; height:3px; margin-right:5px;
-  vertical-align:middle; }
-.map-legend .dot{ display:inline-block; width:8px; height:8px; border-radius:50%;
-  margin-right:5px; vertical-align:middle; }
+#groundTrackMap{ width:100%; min-height:300px; background:var(--bg); position:relative; }
+#mapFallback{ display:none; padding:var(--sp-5) var(--sp-4); }
+#mapFallback .why{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); margin-top:var(--sp-1); }
+.map-overlay{ position:absolute; top:var(--sp-2); left:var(--sp-2); display:flex; gap:var(--sp-3);
+  padding:4px var(--sp-2); background:color-mix(in srgb, var(--s1) 88%, transparent);
+  border:1px solid var(--line-2); border-radius:var(--radius); font-family:var(--mono);
+  font-size:var(--fs-label); color:var(--val); }
+.map-overlay b{ font-family:var(--sans); font-weight:400; color:var(--tx3); margin-right:4px; }
+.map-legend{ display:flex; flex-wrap:wrap; gap:4px var(--sp-4); padding:var(--sp-2) var(--sp-4);
+  border-top:1px solid var(--line); font-size:var(--fs-label); color:var(--tx2); }
+.map-legend i{ display:inline-block; width:14px; height:0; margin-right:6px; vertical-align:3px; }
+.map-legend i.sc{ width:8px; height:8px; background:var(--val); border-radius:1px; transform:rotate(45deg); vertical-align:0; }
+.map-legend i.gs{ width:7px; height:7px; border:1.5px solid var(--tx2); border-radius:50%; vertical-align:0; }
+.map-legend i.sun{ border-top:2px solid var(--val); }
+.map-legend i.ecl{ border-top:2px dashed var(--tx3); }
+.map-legend i.past{ border-top:1px dotted var(--tx3); }
+.map-legend i.night{ width:12px; height:8px; background:var(--overlay); border:1px solid var(--line-2); vertical-align:0; }
+.orbit{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid var(--line); }
+.orbit>div{ padding:var(--sp-2) var(--sp-4); border-right:1px solid var(--line); min-width:0; }
+.orbit>div:last-child{ border-right:0; }
+.orbit .k{ font-size:var(--fs-label); color:var(--tx2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.orbit .v{ font-family:var(--mono); font-size:var(--fs-body); font-weight:500; color:var(--val); margin-top:2px; }
+#panel-contacts .ds-table td:first-child{ font-family:var(--sans); }
+#panel-contacts .ds-table{ font-family:var(--mono); }
 
-/* ── Timeline / tables ──────────────────────────────────────────────── */
-#timelineCanvas{ width:100%; display:block; }
-table.plain{ width:100%; border-collapse:collapse; }
-table.plain th{ font-size:12px; font-weight:700; letter-spacing:1px; color:var(--tx3);
-  text-align:left; padding:5px 8px; border-bottom:1px solid var(--line-2); }
-table.plain td{ font-size:13px; padding:5px 8px; border-bottom:1px solid var(--line);
-  font-family:var(--mono); }
-.sect{ font-size:12px; font-weight:700; letter-spacing:1.2px; color:var(--tx3);
-  margin:10px 0 5px; }
+/* ── 3. Budgets + imaging ───────────────────────────────────────────── */
+.bgrid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-3) var(--sp-5); }
+.bgrid .ds-gauge{ grid-column:1 / -1; grid-template-columns:minmax(110px,auto) minmax(80px,1fr) auto; }
+.kv{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px var(--sp-3); font-size:var(--fs-label);
+  align-content:start; }
+.kv>span:nth-child(odd){ color:var(--tx2); }
+.kv>span:nth-child(even){ font-family:var(--mono); color:var(--val); text-align:right; white-space:nowrap; }
+.verdict{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; margin-top:var(--sp-2); }
+.notes{ margin-top:var(--sp-2); display:flex; flex-direction:column; gap:var(--sp-1); }
+.notes .vrow{ border-bottom:0; }
+.nocompute{ display:flex; flex-direction:column; gap:var(--sp-1); }
+.nocompute b{ color:var(--warn); font-weight:600; display:flex; align-items:center; gap:6px; }
+.nocompute b svg{ width:12px; height:12px; }
+.nocompute span{ color:var(--tx2); font-size:var(--fs-label); }
+.ds-panel .ds-disclosure:last-child{ border-bottom:0; }
+.ds-panel .ds-disclosure>.bd{ padding-left:var(--sp-4); }
+table.ds-table.dense td,table.ds-table.dense th{ padding:4px 8px; }
+table.ds-table.dense td{ font-size:var(--fs-label); }
+.fit{ font-family:var(--mono); font-size:var(--fs-label); white-space:nowrap; display:inline-flex; align-items:center; gap:4px; }
+.fit svg{ width:10px; height:10px; }
+.fit.is-alarm{ color:var(--alarm); font-weight:500; }
+.fit.ok{ color:var(--tx2); }
+#imagingOpportunitiesPanel td .ds-btn{ white-space:nowrap; }
 
-/* ── Activity schedule ──────────────────────────────────────────────── */
-.act-row{ display:grid; grid-template-columns:auto minmax(0,1fr) auto;
-  gap:10px; padding:7px 4px; border-bottom:1px solid var(--line); align-items:center; }
-.act-row .when{ font-family:var(--mono); font-size:15px; font-weight:600; }
-.act-row .when small{ display:block; font-size:12px; color:var(--tx3); font-weight:400; }
-.act-row .nm{ font-size:13px; font-weight:600; }
-.act-row .meta{ font-size:12px; color:var(--tx3); font-family:var(--mono); }
-.act-row .st{ font-family:var(--mono); font-size:12px; }
-.act-row .ops{ display:flex; gap:5px; }
-.btn-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
-.btn-row .grow{ flex:1; }
-#scheduleValidation{ display:none; font-size:12px; padding:7px 9px;
-  border-radius:var(--r); margin-top:8px; border:1px solid var(--line-2); }
-#scheduleValidation.ok{ color:var(--tx2); }
-#scheduleValidation.bad{ color:var(--warn); border-color:var(--warn); }
-#scheduleValidation.err{ color:var(--alarm); border-color:var(--alarm); }
+/* ── Toast: action results (replaces native alert()) ────────────────── */
+#toast{ position:fixed; right:var(--sp-4); bottom:var(--sp-4); z-index:60; width:min(440px, calc(100vw - 32px));
+  display:none; }
+#toast.show{ display:block; }
+#toast .ds-banner{ border:1px solid var(--line-2); border-radius:var(--radius); white-space:pre-line; }
 
-/* Constraints block */
-.soc-row{ display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
-.soc-row label{ font-size:12px; color:var(--tx2); }
-.soc-row input{ width:88px; background:var(--s2); color:var(--tx);
-  border:1px solid var(--line-2); border-radius:var(--r); padding:5px 7px;
-  font-family:var(--mono); font-size:13px; }
-.soc-row .hint{ font-size:12px; color:var(--tx3); flex-basis:100%; }
-#constraintsResult{ font-size:12px; margin-top:6px; }
-#constraintsResult .v{ padding:3px 0; border-bottom:1px solid var(--line); }
-#constraintsResult .v.error{ color:var(--alarm); }
-#constraintsResult .v.warning{ color:var(--warn); }
-details.cx{ border:1px solid var(--line); border-radius:var(--r); margin-top:6px; }
-details.cx summary{ cursor:pointer; padding:6px 9px; font-size:12px;
-  font-weight:600; letter-spacing:.8px; color:var(--tx2); list-style-position:inside; }
-details.cx[open] summary{ border-bottom:1px solid var(--line); }
-details.cx .bd{ padding:7px 9px; font-size:12px; font-family:var(--mono);
-  color:var(--tx2); max-height:180px; overflow:auto; }
-
-/* ── Budget panels ──────────────────────────────────────────────────── */
-.tiles{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
-.tile{ background:var(--s2); border-radius:var(--r); padding:8px 10px; }
-.tile .k{ font-size:12px; color:var(--tx3); }
-.tile .v{ font-family:var(--mono); font-size:18px; font-weight:600; }
-.tile .v.warn{ color:var(--warn); } .tile .v.alarm{ color:var(--alarm); }
-.kv-grid{ display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; font-size:12px; }
-.kv-grid b{ color:var(--tx3); font-weight:400; }
-.kv-grid span{ font-family:var(--mono); }
-.nocompute{ padding:8px 10px; }
-.nocompute .t{ color:var(--warn); font-weight:700; font-size:13px; margin-bottom:4px; }
-.nocompute .r{ color:var(--tx2); font-size:12px; line-height:1.45; }
-.fillbar{ position:relative; height:12px; background:var(--s3);
-  border-radius:3px; overflow:hidden; margin:4px 0; }
-.fillbar .fl{ position:absolute; top:0; bottom:0; left:0; background:var(--tx3); }
-.fillbar.w .fl{ background:var(--warn); } .fillbar.a .fl{ background:var(--alarm); }
-.warns{ margin-top:6px; font-size:12px; color:var(--alarm); }
-.warns div{ margin:3px 0; }
-.opp{ border-left:3px solid var(--line-2); background:var(--s2);
-  border-radius:0 var(--r) var(--r) 0; padding:6px 9px; margin:6px 0; }
-.opp.high{ border-left-color:var(--warn); }
-.opp .nm{ font-size:13px; font-weight:600; }
-.opp .meta{ font-size:12px; color:var(--tx3); font-family:var(--mono); }
-.tgt{ display:flex; justify-content:space-between; gap:8px; font-size:12px;
-  padding:3px 0; border-bottom:1px solid var(--line); font-family:var(--mono); }
-.tgt .n{ color:var(--tx); }
-
-/* ── Bottom bar ─────────────────────────────────────────────────────── */
-footer.bot{ display:flex; align-items:center; gap:22px; flex-wrap:wrap;
-  padding:6px 16px; background:var(--s1); border-top:1px solid var(--line); }
-footer.bot .it{ display:flex; align-items:baseline; gap:6px; }
-footer.bot .k{ font-size:12px; color:var(--tx3); letter-spacing:.6px; }
-footer.bot .v{ font-family:var(--mono); font-size:13px; }
-footer.bot .v.hi{ font-weight:700; }
-footer.bot .spacer{ flex:1; }
-.api-dot{ display:inline-block; width:8px; height:8px; border-radius:50%;
-  background:var(--stale); vertical-align:middle; margin-right:6px; }
-.api-dot.connected{ background:var(--ok); }
-.api-dot.error{ background:var(--alarm); }
-
-/* ── Modal ──────────────────────────────────────────────────────────── */
-.modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
-  z-index:50; align-items:center; justify-content:center; }
+/* ── Modal (add / edit activity) ────────────────────────────────────── */
+.modal-overlay{ display:none; position:fixed; inset:0; background:var(--overlay); z-index:50;
+  align-items:center; justify-content:center; }
 .modal-overlay.active{ display:flex; }
-.modal{ background:var(--s1); border:1px solid var(--line-2); border-radius:var(--r);
-  width:min(440px,92vw); max-height:90vh; overflow:auto; }
-.modal .mh{ display:flex; align-items:center; justify-content:space-between;
-  padding:10px 14px; border-bottom:1px solid var(--line); }
-.modal .mh .t{ font-size:13px; font-weight:700; letter-spacing:1px; }
-.modal .mb{ padding:12px 14px; }
-.modal .mf{ padding:10px 14px; border-top:1px solid var(--line); text-align:right; }
-.fg{ margin-bottom:10px; }
-.fg label{ display:block; font-size:12px; color:var(--tx2); margin-bottom:3px; }
-.fg .ctl{ width:100%; background:var(--s2); color:var(--tx);
-  border:1px solid var(--line-2); border-radius:var(--r); padding:6px 8px;
-  font-size:13px; font-family:var(--mono); }
-.fg .ctl:disabled{ opacity:.5; }
-.fg .note{ font-size:12px; color:var(--tx3); margin-top:3px; }
-#actTypeInfo{ display:none; font-size:12px; color:var(--tx2); margin-top:4px;
-  padding:5px 7px; background:var(--s2); border-radius:var(--r); }
+.modal{ background:var(--s1); border:1px solid var(--line-2); border-radius:var(--radius-lg);
+  width:min(480px, 94vw); max-height:92vh; overflow:auto; }
+.modal .ds-panel-h{ justify-content:space-between; }
+.modal .mb{ padding:var(--sp-4); display:flex; flex-direction:column; gap:var(--sp-3); }
+.modal .mf{ padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); display:flex;
+  justify-content:flex-end; gap:var(--sp-2); }
+.modal .row2{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
+#actTypeInfo{ display:none; font-size:var(--fs-label); color:var(--tx2); padding:6px var(--sp-2);
+  background:var(--s2); border-radius:var(--radius); }
+#actStartTimeHint{ font-family:var(--mono); }
+#editNote{ font-size:var(--fs-label); color:var(--tx3); }
+
+/* ── Monitor view (< 700 px): read first, operate on a desk. ────────── */
+@media (max-width:700px){
+  .wrap{ padding:0 var(--sp-3); }
+  .appbar .name small, #metReadout{ display:none; }
+  .clock .t{ font-size:var(--fs-value); }
+  .bgrid{ grid-template-columns:minmax(0,1fr); }
+  .orbit{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .orbit>div:nth-child(2){ border-right:0; }
+  .orbit>div:nth-child(-n+2){ border-bottom:1px solid var(--line); }
+  #groundTrackMap{ min-height:200px; }
+  .map-overlay{ position:static; border:0; border-bottom:1px solid var(--line); border-radius:0; flex-wrap:wrap; }
+  .act-row{ grid-template-columns:44px minmax(0,1fr); }
+  .act-row .ops{ grid-column:2; }
+  #panel-contacts .ds-table th:nth-child(3),#panel-contacts .ds-table td:nth-child(3),
+  #panel-contacts .ds-table th:nth-child(4),#panel-contacts .ds-table td:nth-child(4){ display:none; }
+  #dataPassBody th:nth-child(3),#dataPassBody td:nth-child(3){ display:none; }
+  #imagingOpportunitiesPanel th:nth-child(n+3):nth-child(-n+5),
+  #imagingOpportunitiesPanel td:nth-child(n+3):nth-child(-n+5){ display:none; }
+  .ds-panel table{ table-layout:auto; }
+  .ds-panel .ds-disclosure>.bd{ padding-left:var(--sp-3); padding-right:var(--sp-3); }
+  .fit{ white-space:normal; }
+  table.ds-table.dense td,table.ds-table.dense th{ padding:4px 4px; }
+  table.ds-table.dense th{ white-space:normal; }
+}
 </style>
 </head>
 <body>
 <a class="ds-skip" href="#panel-sched" data-i18n>Skip to activity schedule</a>
 
-<header class="top">
-  <div class="brand">SMO <span data-i18n>MISSION PLANNER</span></div>
-  <div class="clock">
-    <span class="lbl">UTC</span>
-    <span class="d num" id="utcDate">—</span>
-    <span class="t num" id="utcClock">--:--:--</span>
+<header class="appbar">
+  <div class="wrap">
+    <div class="name"><span data-i18n>Mission planner</span><small>EOSAT-1</small></div>
+    <div class="clock" title="Planner time" data-i18n-title>
+      <span class="t" id="utcClock">--:--:--</span><span class="z">UTC</span>
+      <span class="d" id="utcDate"></span>
+    </div>
+    <!-- P1: chip kept, speed tooltip deleted. P3: hidden until the source is known. -->
+    <span id="clockSourceBadge" hidden></span>
+    <span id="metReadout"></span>
+    <span id="scStateBadge"></span>
+    <span class="sp"></span>
+    <div class="tools">
+      <span id="apiChip"></span>
+      <a class="ds-btn ghost sm" id="config-link" href="/config" target="_blank" rel="noopener"
+         data-i18n data-i18n-title title="Browse mission configuration (read-only)">Configuration</a>
+      <span id="lang-toggle"></span>
+    </div>
   </div>
-  <!-- P1: badge kept, speed tooltip deleted. -->
-  <span class="ds-badge" id="clockSourceBadge" title="Planner clock source">—</span>
-  <!-- L4: MET renders the absent affordance when the planner has none. -->
-  <span class="met num" id="metReadout"
-        title="Mission elapsed time as published by the planner">MET —</span>
-  <span class="ds-chip" id="scStateBadge"><span>—</span></span>
-  <div class="spacer"></div>
-  <div class="hdr-kv"><span class="k">LAT / LON</span>
-    <span class="v" id="scLatLon">—</span></div>
-  <div class="hdr-kv"><span class="k" data-i18n>ALTITUDE</span>
-    <span class="v" id="scAlt">—</span></div>
-  <!-- P4: period is derived from the served configuration, never a literal. -->
-  <div class="hdr-kv"><span class="k" data-i18n>PERIOD</span>
-    <span class="v" id="scPeriod" data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)">—</span></div>
-  <div class="hdr-kv"><span class="k" data-i18n>MISSION</span>
-    <span class="v"><a id="config-link" href="/config" target="_blank" rel="noopener"
-      style="color:inherit" data-i18n-title title="Browse mission configuration (read-only)">CONFIG</a></span></div>
-  <span id="lang-toggle"></span>
 </header>
 
-<main>
-  <!-- ── Ground track ─────────────────────────────────────────────── -->
-  <section class="ds-card" id="panel-map">
-    <h2 data-i18n>GROUND TRACK <span class="r"><span class="ds-badge" id="mapDataBadge">—</span></span></h2>
-    <div class="map-wrap">
-      <div id="groundTrackMap"></div>
-      <!-- Designed vendor-missing state (risk R3): the page says so instead
-           of rendering a silent black rectangle. -->
-      <div id="mapFallback">
-        <div class="big" data-i18n>MAP UNAVAILABLE — vendor assets missing</div>
-        <div class="why">/static/vendor/js/svg-world-map.js <span data-i18n>did not load.
-          Position, contacts and budgets remain live below.</span></div>
-      </div>
-      <div class="map-overlay num" id="mapInfoOverlay">
-        <span><b>LAT</b><span id="mapLat">—</span></span>
-        <span><b>LON</b><span id="mapLon">—</span></span>
-        <span><b>ALT</b><span id="mapAlt">—</span></span>
-        <span><b data-i18n>BETA</b><span id="mapBeta">—</span></span>
-      </div>
-    </div>
-    <div class="map-legend">
-      <span data-i18n><span class="dot" style="background:var(--tx)"></span>Spacecraft</span>
-      <span data-i18n><span class="dot" style="background:var(--info)"></span>Ground station</span>
-      <span data-i18n><span class="sw" style="background:var(--warn)"></span>Sunlit track</span>
-      <span data-i18n><span class="sw" style="background:var(--info)"></span>Eclipse track</span>
-      <span data-i18n><span class="sw" style="background:var(--tx3);opacity:.5"></span>Past track (90 min)</span>
-      <span data-i18n><span class="sw" style="background:#000;border:1px solid var(--line-2)"></span>Night side</span>
-    </div>
-  </section>
+<main class="wrap">
 
-  <!-- ── Contact windows ──────────────────────────────────────────── -->
-  <section class="ds-card" id="panel-contacts">
-    <h2 data-i18n>CONTACT WINDOWS — NEXT 24 H
-      <span class="r"><span class="ds-badge" id="contactDataBadge">—</span></span></h2>
-    <div class="bd">
-      <canvas id="timelineCanvas" height="180"></canvas>
-      <div class="sect" data-i18n>NEXT 5 CONTACTS</div>
-      <table class="plain">
-        <thead><tr><th data-i18n>STATION</th><th>AOS (UTC)</th><th>LOS (UTC)</th>
-          <th data-i18n>DUR</th><th data-i18n>MAX EL</th><th data-i18n>STATUS</th></tr></thead>
-        <tbody id="contactsBody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ── Activity schedule ────────────────────────────────────────── -->
-  <section class="ds-card" id="panel-sched">
-    <h2 data-i18n>ACTIVITY SCHEDULE
-      <span class="r"><span class="ds-badge" id="activityDataBadge">—</span></span></h2>
-    <div class="bd">
-      <div id="activityList"></div>
-      <div class="btn-row">
-        <button class="ds-btn primary grow" id="btnAddActivity" data-i18n>+ ADD ACTIVITY</button>
+  <!-- ── 1. Overview: the next 24 h ───────────────────────────────────── -->
+  <section class="ds-panel" id="panel-overview" aria-labelledby="ov-h">
+    <div class="ds-panel-h"><span id="ov-h" data-i18n>Next 24 hours</span>
+      <span class="r" id="ovMeta"></span></div>
+    <div class="ov">
+      <div class="pic">
+        <div class="scroll" tabindex="0" aria-label="Timeline, scrolls sideways on narrow screens" data-i18n-aria-label>
+          <svg id="timeline" role="img" aria-labelledby="tl-desc" height="300"><desc id="tl-desc"></desc></svg>
+        </div>
+        <div class="tl-legend" aria-hidden="true">
+          <span><i class="now"></i><span data-i18n>Now</span></span>
+          <span><i class="ecl"></i><span data-i18n>Eclipse</span></span>
+          <span><i class="pass"></i><span data-i18n>Pass</span></span>
+          <span><i class="dump"></i><span data-i18n>Pass with planned dump</span></span>
+          <span><i class="act"></i><span data-i18n>Activity</span></span>
+          <span><i class="soc"></i><span data-i18n>Predicted battery SoC</span></span>
+          <span><i class="min"></i><span data-i18n>Minimum SoC</span></span>
+        </div>
       </div>
-      <div class="btn-row">
-        <select class="ctl" id="templateSelect" aria-label="Standard activity template"
-          data-i18n-aria-label style="flex:1;background:var(--s2);
-          color:var(--tx);border:1px solid var(--line-2);border-radius:var(--r);
-          padding:5px 7px;font-size:12px;">
-          <option value="" data-i18n>Standard activities…</option>
-        </select>
-        <button class="ds-btn" id="btnLoadTemplate" data-i18n data-i18n-title
-          title="Instantiate the selected template at the current planner time, on real passes">LOAD</button>
-        <button class="ds-btn" id="btnClearSchedule" data-i18n data-i18n-title title="Remove every activity">CLEAR</button>
+      <div class="facts">
+        <div class="fact" id="factAos">
+          <div class="k" data-i18n>Next contact</div>
+          <div class="big"><b id="nextAosStation"></b><span class="ds-value" id="nextAos"></span></div>
+          <div class="sub" id="nextAosSub"></div>
+        </div>
+        <div class="fact" id="factEclipse">
+          <div class="k" data-i18n>Next eclipse</div>
+          <div class="big"><span class="ds-value" id="nextEclipse"></span></div>
+          <div class="sub" id="nextEclipseSub"></div>
+        </div>
+        <div class="fact" id="factSoc">
+          <div class="k" data-i18n>Battery SoC at end of horizon</div>
+          <div id="factSocBody"></div>
+        </div>
+        <div class="fact" id="factData">
+          <div class="k" data-i18n>Peak onboard storage</div>
+          <div id="factDataBody"></div>
+        </div>
+        <div class="fact" id="factPlan">
+          <div class="k" data-i18n>Plan check</div>
+          <div class="chips" id="factPlanBody"></div>
+        </div>
       </div>
-      <div class="btn-row">
-        <button class="ds-btn grow" id="btnValidate" data-i18n>VALIDATE</button>
-        <button class="ds-btn grow" id="btnUpload" data-i18n>UPLOAD TO MCS</button>
-      </div>
-      <div id="scheduleValidation" role="status"></div>
-
-      <div class="sect" data-i18n>CONSTRAINT VALIDATION</div>
-      <!-- P5: the SoC assumption is explicit and labelled. Blank = the
-           server's configured default; the request then carries no
-           battery_soc parameter. There is no hidden literal. -->
-      <div class="soc-row">
-        <label for="socInput" data-i18n>Assumed battery SoC (%)</label>
-        <input type="number" id="socInput" min="0" max="100" step="0.1"
-               placeholder="server default"
-               title="State of charge the constraint check assumes. Leave blank to use the server's configured default.">
-        <button class="ds-btn primary" id="btnValidateConstraints" data-i18n>VALIDATE CONSTRAINTS</button>
-        <span class="hint" data-i18n>Blank uses the planner's configured default
-          (shown once the configuration loads).</span>
-      </div>
-      <div id="constraintsResult" role="status"></div>
-      <div class="sect" style="margin-top:8px;" data-i18n>PER-DOMAIN BREAKDOWN</div>
-      <details class="cx" id="cx-power" data-domain="power">
-        <summary data-i18n>POWER</summary><div class="bd"><span data-i18n>Expand to run the power constraint check.</span></div>
-      </details>
-      <details class="cx" id="cx-aocs" data-domain="aocs">
-        <summary>AOCS</summary><div class="bd"><span data-i18n>Expand to run the AOCS (slew / momentum) check.</span></div>
-      </details>
-      <details class="cx" id="cx-thermal" data-domain="thermal">
-        <summary data-i18n>THERMAL</summary><div class="bd"><span data-i18n>Expand to run the thermal duty-cycle check.</span></div>
-      </details>
-      <details class="cx" id="cx-data-volume" data-domain="data-volume">
-        <summary data-i18n>DATA VOLUME</summary><div class="bd"><span data-i18n>Expand to run the data-volume / storage check.</span></div>
-      </details>
-      <details class="cx" id="cx-conflicts" data-domain="conflicts">
-        <summary data-i18n>CONFLICTS</summary><div class="bd"><span data-i18n>Expand to run the resource-conflict check.</span></div>
-      </details>
     </div>
   </section>
 
-  <!-- ── Budgets + imaging ────────────────────────────────────────── -->
-  <div id="col-budgets">
-    <section class="ds-card" id="panel-power">
-      <h2 data-i18n>POWER BUDGET <span class="r"><span class="ds-badge" id="powerDataBadge">—</span></span></h2>
-      <div class="bd" id="powerBudgetPanel"><div class="nocompute">
-        <div class="r"><span data-i18n>Waiting for</span> /api/budget/power…</div></div></div>
-    </section>
-    <section class="ds-card" id="panel-data">
-      <h2 data-i18n>DATA BUDGET <span class="r"><span class="ds-badge" id="dataDataBadge">—</span></span></h2>
-      <div class="bd" id="dataBudgetPanel"><div class="nocompute">
-        <div class="r"><span data-i18n>Waiting for</span> /api/budget/data…</div></div></div>
-      <!-- G14: achieved RF rollup of the last completed pass, read from the
-           rfsim store at the CONFIGURED services.rfsim_url. Unset URL is a
-           designed absent state (planner.js says so explicitly). -->
-      <div class="bd" style="border-top:1px solid var(--line);">
-        <div class="sect" style="margin-top:0;" data-i18n>LAST PASS — ACHIEVED (RF)</div>
-        <div id="passRollupPanel"><span style="font-size:12px;color:var(--tx3)" data-i18n>
-          Waiting for configuration…</span></div>
-      </div>
-    </section>
-    <section class="ds-card" id="panel-imaging">
-      <h2 data-i18n>IMAGING <span class="r"><span class="ds-badge" id="imagingDataBadge">—</span></span></h2>
-      <div class="bd">
-        <div class="sect" style="margin-top:0;" data-i18n>TARGETS</div>
-        <div id="imagingTargets"><span style="font-size:12px;color:var(--tx3)"><span data-i18n>Waiting for</span> /api/imaging/targets…</span></div>
-        <div class="sect" data-i18n>OPPORTUNITIES — NEXT 24 H</div>
-        <div id="imagingOpportunitiesPanel"><span style="font-size:12px;color:var(--tx3)"><span data-i18n>Waiting for</span> /api/imaging/opportunities…</span></div>
-      </div>
-    </section>
+  <div class="cols">
+    <div class="stack">
+      <!-- ── 2a. Activity schedule ─────────────────────────────────────── -->
+      <section class="ds-panel" id="panel-sched" aria-labelledby="sched-h">
+        <div class="ds-panel-h"><span id="sched-h" data-i18n>Activity schedule</span>
+          <span class="r" id="schedMeta"></span></div>
+        <div class="toolbar">
+          <button type="button" class="ds-btn primary" id="btnAddActivity" data-i18n>Add activity</button>
+          <select class="ds-select" id="templateSelect" aria-label="Standard activity set" data-i18n-aria-label>
+            <option value="" data-i18n>Standard activities…</option>
+          </select>
+          <button type="button" class="ds-btn" id="btnLoadTemplate" data-i18n>Load set</button>
+          <button type="button" class="ds-btn critical" id="btnClearSchedule" data-i18n>Clear schedule</button>
+        </div>
+        <div id="activityList"></div>
+        <div id="scheduleValidation" role="status"></div>
+        <div class="upload">
+          <div class="what" id="uploadWhat"></div>
+          <div class="ops" style="display:flex;gap:var(--sp-2)">
+            <button type="button" class="ds-btn" id="btnValidate" data-i18n>Validate</button>
+            <button type="button" class="ds-btn critical" id="btnUpload" data-i18n>Upload next activity</button>
+          </div>
+          <div class="how">
+            <div class="ds-seg" role="group" aria-label="Upload mode" data-i18n-aria-label id="uploadMode">
+              <button type="button" data-mode="s11" aria-pressed="true" data-i18n>On board (S11)</button>
+              <button type="button" data-mode="immediate" aria-pressed="false" data-i18n>MCS procedure</button>
+            </div>
+            <label class="ds-check" id="stepWrap"><input type="checkbox" id="stepMode"><span data-i18n>Step by step</span></label>
+          </div>
+        </div>
+        <div class="checks">
+          <div class="sect" style="margin-top:0" data-i18n>Constraint checks</div>
+          <!-- P5: the SoC assumption is explicit and labelled. Blank = the
+               server's configured default; the request then carries no
+               battery_soc parameter. There is no hidden literal. -->
+          <div class="soc-row">
+            <div class="ds-field">
+              <label for="socInput" data-i18n>Assumed battery SoC</label>
+              <span class="ds-input-wrap"><input class="ds-input" type="text" inputmode="decimal" id="socInput"
+                aria-describedby="socHint"><span class="u">%</span></span>
+            </div>
+            <button type="button" class="ds-btn primary" id="btnValidateConstraints" data-i18n>Run constraint check</button>
+          </div>
+          <div class="muted" id="socHint" style="margin-top:4px" data-i18n>Blank uses the planner's configured default.</div>
+          <div id="constraintsResult" role="status"></div>
+          <details class="ds-disclosure cx" id="cx-power" data-domain="power">
+            <summary data-i18n>Power</summary><div class="bd"></div></details>
+          <details class="ds-disclosure cx" id="cx-aocs" data-domain="aocs">
+            <summary>AOCS</summary><div class="bd"></div></details>
+          <details class="ds-disclosure cx" id="cx-thermal" data-domain="thermal">
+            <summary data-i18n>Thermal</summary><div class="bd"></div></details>
+          <details class="ds-disclosure cx" id="cx-data-volume" data-domain="data-volume">
+            <summary data-i18n>Data volume</summary><div class="bd"></div></details>
+          <details class="ds-disclosure cx" id="cx-conflicts" data-domain="conflicts">
+            <summary data-i18n>Resource conflicts</summary><div class="bd"></div></details>
+        </div>
+      </section>
+
+      <!-- ── 3b. Imaging ───────────────────────────────────────────────── -->
+      <section class="ds-panel" id="panel-imaging" aria-labelledby="img-h">
+        <div class="ds-panel-h"><span id="img-h" data-i18n>Imaging opportunities</span>
+          <span class="r" data-i18n>next 24 h</span></div>
+        <div id="imagingOpportunitiesPanel"><div class="ds-panel-b muted" data-i18n>Waiting for the planner…</div></div>
+        <details class="ds-disclosure">
+          <summary><span data-i18n>Targets</span><span class="r" id="targetCount"></span></summary>
+          <div class="bd" id="imagingTargets"></div>
+        </details>
+      </section>
+    </div>
+
+    <div class="stack">
+      <!-- ── 2b. Ground track ──────────────────────────────────────────── -->
+      <section class="ds-panel" id="panel-map" aria-labelledby="map-h">
+        <div class="ds-panel-h"><span id="map-h" data-i18n>Ground track</span>
+          <span class="r" data-i18n>past 90 min and next 90 min</span></div>
+        <div class="map-wrap">
+          <div id="groundTrackMap"></div>
+          <!-- Designed vendor-missing state (risk R3): the page says so instead
+               of rendering a silent black rectangle. -->
+          <div id="mapFallback">
+            <div class="nocompute"><b data-i18n>Map unavailable: the offline map asset did not load</b>
+              <span data-i18n>Position, contacts and budgets on this page are unaffected.</span></div>
+            <div class="why">/static/vendor/js/svg-world-map.js</div>
+          </div>
+          <div class="map-overlay" id="mapInfoOverlay">
+            <span><b data-i18n>Lat</b><span id="mapLat"></span></span>
+            <span><b data-i18n>Lon</b><span id="mapLon"></span></span>
+            <span><b data-i18n>Alt</b><span id="mapAlt"></span></span>
+            <span><b data-i18n>Beta</b><span id="mapBeta"></span></span>
+          </div>
+        </div>
+        <div class="map-legend" aria-hidden="true">
+          <span><i class="sc"></i><span data-i18n>Spacecraft</span></span>
+          <span><i class="gs"></i><span data-i18n>Ground station</span></span>
+          <span><i class="sun"></i><span data-i18n>Sunlit track</span></span>
+          <span><i class="ecl"></i><span data-i18n>Eclipse track</span></span>
+          <span><i class="past"></i><span data-i18n>Past track</span></span>
+          <span><i class="night"></i><span data-i18n>Night side</span></span>
+        </div>
+        <!-- P4: served or derived values only. -->
+        <div class="orbit">
+          <div><div class="k" data-i18n>Period</div><div class="v" id="bbPeriod"
+            data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)"></div></div>
+          <div><div class="k" data-i18n>Inclination</div><div class="v" id="bbIncl"
+            data-i18n-title title="Estimated from the served ground track (/api/ground-track)"></div></div>
+          <div><div class="k" data-i18n>Eccentricity</div><div class="v" id="bbEcc"
+            data-i18n-title title="Not served by the planner API"></div></div>
+          <div><div class="k" data-i18n>Revolutions per day</div><div class="v" id="bbRevDay"
+            data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)"></div></div>
+        </div>
+      </section>
+
+      <section class="ds-panel" id="panel-contacts" aria-labelledby="ct-h">
+        <div class="ds-panel-h"><span id="ct-h" data-i18n>Next contacts</span>
+          <span class="r" id="contactMeta"></span></div>
+        <table class="ds-table">
+          <thead><tr><th scope="col" data-i18n>Station</th><th scope="col" class="n">AOS</th><th scope="col" class="n">LOS</th>
+            <th scope="col" class="n" data-i18n>Duration</th><th scope="col" class="n" data-i18n>Max elevation</th>
+            <th scope="col" data-i18n>Status</th></tr></thead>
+          <tbody id="contactsBody"></tbody>
+        </table>
+      </section>
+
+      <!-- ── 3a. Budgets ───────────────────────────────────────────────── -->
+      <section class="ds-panel" id="panel-power" aria-labelledby="pw-h">
+        <div class="ds-panel-h"><span id="pw-h" data-i18n>Power budget</span><span class="r" id="powerMeta"></span></div>
+        <div class="ds-panel-b" id="powerBudgetPanel"><span class="muted" data-i18n>Waiting for the planner…</span></div>
+        <details class="ds-disclosure" id="powerPasses">
+          <summary><span data-i18n>SoC per pass</span><span class="r" id="powerPassCount"></span></summary>
+          <div class="bd" id="powerPassBody"></div>
+        </details>
+      </section>
+
+      <section class="ds-panel" id="panel-data" aria-labelledby="db-h">
+        <div class="ds-panel-h"><span id="db-h" data-i18n>Data budget</span><span class="r" id="dataMeta"></span></div>
+        <div class="ds-panel-b" id="dataBudgetPanel"><span class="muted" data-i18n>Waiting for the planner…</span></div>
+        <details class="ds-disclosure" id="dataFit">
+          <summary><span data-i18n>Dump fit: achievable against backlog</span><span class="r" id="dataFitMeta"></span></summary>
+          <div class="bd" id="dataFitBody"></div>
+        </details>
+        <details class="ds-disclosure" id="dataPasses">
+          <summary><span data-i18n>Downlink per pass</span><span class="r" data-i18n>next 5</span></summary>
+          <div class="bd" id="dataPassBody"></div>
+        </details>
+        <!-- G14: achieved RF rollup of the last completed pass, read from the
+             rfsim store at the CONFIGURED services.rfsim_url. Unset URL is a
+             designed absent state (planner.js says so explicitly). -->
+        <details class="ds-disclosure">
+          <summary data-i18n>Last pass, as achieved (RF)</summary>
+          <div class="bd" id="passRollupPanel"></div>
+        </details>
+      </section>
+    </div>
   </div>
 </main>
 
-<footer class="bot">
-  <!-- P4: served / derived values only. Anything the planner does not serve
-       renders as an em-dash with a title saying why — never a literal. -->
-  <span class="it"><span class="k" data-i18n>PERIOD</span>
-    <span class="v" id="bbPeriod" data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)">—</span></span>
-  <span class="it"><span class="k" data-i18n>INCLINATION</span>
-    <span class="v" id="bbIncl" data-i18n-title title="Estimated from the served ground track (/api/ground-track)">—</span></span>
-  <span class="it"><span class="k" data-i18n>ECCENTRICITY</span>
-    <span class="v" id="bbEcc" data-i18n-title title="Not served by the planner API — rendered honestly as absent">—</span></span>
-  <span class="it"><span class="k" data-i18n>REV/DAY</span>
-    <span class="v" id="bbRevDay" data-i18n-title title="Derived from the configured orbit altitude (/api/config/planner)">—</span></span>
-  <span class="spacer"></span>
-  <span class="it"><span class="k" data-i18n>NEXT AOS</span>
-    <span class="v hi num" id="nextAos">—</span></span>
-  <span class="it"><span class="k" data-i18n>NEXT ECLIPSE</span>
-    <span class="v num" id="nextEclipse" data-i18n-title title="From the served ground track's eclipse flags">—</span></span>
-  <span class="it"><span class="api-dot" id="apiDot"></span>
-    <span class="v" id="apiStatusText">API: checking…</span></span>
-</footer>
+<div id="toast" role="status" aria-live="polite"></div>
 
-<!-- ── Add / Edit Activity modal ──────────────────────────────────── -->
-<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true"
-     aria-labelledby="modalTitle">
+<!-- ── Add / edit activity ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
-    <div class="mh"><span class="t" id="modalTitle">ADD ACTIVITY</span>
-      <button class="ds-btn" id="btnModalClose" data-i18n-aria-label aria-label="Close">&times;</button></div>
+    <div class="ds-panel-h"><span id="modalTitle"></span>
+      <button type="button" class="ds-btn ghost sm" id="btnModalClose" data-i18n data-i18n-aria-label aria-label="Close">Close</button></div>
     <div class="mb">
-      <div class="fg">
+      <div class="ds-field">
         <label for="actType" data-i18n>Activity type</label>
-        <select class="ctl" id="actType">
-          <option value="" data-i18n>Select activity type…</option>
-        </select>
+        <select class="ds-select" id="actType"><option value="" data-i18n>Select activity type…</option></select>
         <div id="actTypeInfo"></div>
       </div>
-      <div class="fg">
+      <div class="ds-field">
         <label for="actStartTime" data-i18n>Start time (UTC)</label>
-        <input type="datetime-local" class="ctl" id="actStartTime">
         <!-- The classic page's proven UTC handling: the field is genuinely
-             UTC (Date.UTC both ways); this hint is the ONLY use of the
+             UTC (Date.UTC both ways); the hint is the ONLY use of the
              browser's zone anywhere in the planner, display-only. -->
-        <div class="note num" id="actStartTimeHint"></div>
+        <input type="datetime-local" class="ds-input" id="actStartTime" aria-describedby="actStartTimeHint">
+        <span class="hint" id="actStartTimeHint"></span>
       </div>
-      <div class="fg">
-        <label for="actDuration" data-i18n>Duration (minutes)</label>
-        <input type="number" class="ctl" id="actDuration" data-i18n-placeholder placeholder="e.g. 15" min="1" max="120">
+      <div class="row2">
+        <div class="ds-field">
+          <label for="actDuration" data-i18n>Duration</label>
+          <span class="ds-input-wrap"><input type="text" inputmode="numeric" class="ds-input" id="actDuration"><span class="u">min</span></span>
+        </div>
+        <div class="ds-field">
+          <label for="actPriority" data-i18n>Priority</label>
+          <select class="ds-select" id="actPriority">
+            <option value="high" data-i18n>High</option>
+            <option value="medium" selected data-i18n>Medium</option>
+            <option value="low" data-i18n>Low</option>
+          </select>
+        </div>
       </div>
-      <div class="fg">
-        <label for="actPriority" data-i18n>Priority</label>
-        <select class="ctl" id="actPriority">
-          <option value="" data-i18n>Select priority…</option>
-          <option value="high" data-i18n>High</option>
-          <option value="medium" data-i18n>Medium</option>
-          <option value="low" data-i18n>Low</option>
-        </select>
-      </div>
-      <div class="fg">
+      <div class="ds-field">
         <label for="actStation" data-i18n>Ground station dependency</label>
-        <select class="ctl" id="actStation">
-          <option value="" data-i18n>None</option>
-        </select>
+        <select class="ds-select" id="actStation"><option value="" data-i18n>None</option></select>
       </div>
-      <div class="note" id="editNote" style="display:none">
-        <span data-i18n>Editing updates start time, duration and priority</span>
-        (PUT /api/schedule/&lt;id&gt;). <span data-i18n>Type and station are fixed at creation.</span>
-      </div>
+      <div id="editNote" hidden data-i18n>Editing changes the start time, duration and priority. Type and station are fixed at creation.</div>
     </div>
-    <div class="mf"><button class="ds-btn primary" id="btnModalSubmit" data-i18n>SUBMIT</button></div>
+    <div class="mf">
+      <button type="button" class="ds-btn ghost" id="btnModalCancel" data-i18n>Cancel</button>
+      <button type="button" class="ds-btn primary" id="btnModalSubmit" data-i18n>Save activity</button>
+    </div>
   </div>
 </div>
 
-<script type="module" src="/static/modern/planner.js?v=1"></script>
+<script type="module" src="/static/modern/planner.js?v=2"></script>
 </body>
 </html>
