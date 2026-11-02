@@ -223,7 +223,12 @@ case "$ACTION" in
         new_creds | secret_add
         write_env; write_design_env; up ;;
     update)
-        update_repo; write_env; write_design_env; up ;;
+        # Pull, then hand over to the NEW copy of this script: bash keeps
+        # running the version it started with, which would apply the old
+        # profiles and env templates to the new code.
+        update_repo
+        say "re-running the updated bootstrap (refresh)"
+        exec bash "$APP_DIR/deploy/gcp/vm-bootstrap.sh" refresh ;;
     down)
         compose down ;;
     *)
