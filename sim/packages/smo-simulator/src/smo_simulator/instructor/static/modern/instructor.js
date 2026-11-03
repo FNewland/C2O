@@ -1,128 +1,148 @@
 /* ============================================================================
- * SMO INSTRUCTOR — modern console page logic (design_2026-08 plan §2.4)
+ * SMO INSTRUCTOR — modern console page logic (redesign 2026-11)
  * ============================================================================
- * ES module, no build step. Uses the frozen Agent-1 shared design system:
- * pure renderers + poller/wsClient from /static/shared/components.js, time
- * formatters from /static/shared/format.js.
+ * docs/plan_2026-11/INSTRUCTOR_CONSOLE_DESIGN.md. ES module, no build step.
  *
- * TRANSPORT RULES (deliberate deviations from the classic page):
+ *   overview strip  <- /api/instructor/views (tiles)            1 s
+ *   focus pane      <- focus.js state machine + the views bundle
+ *   rail            <- /api/failure-catalog, /api/instructor/fault-menu,
+ *                      views.schedule, /api/failures, /api/breakpoints
+ *   timeline        <- /api/instructor/timeline?since=<seq>     2 s
+ *   app bar, power  <- /api/state (truth params)                 1 s
+ *   raw state, clock<- /api/instructor/snapshot                  2 s
+ *
+ * TRANSPORT RULES (kept from the 2026-08 page):
  *  - Every instructor command goes ONCE via POST /api/command — the
  *    synchronous error surface; a 400/403 body carries the engine's REASON.
- *    The classic page sent each command twice (WS + POST), enqueuing it
- *    twice. Do not reintroduce that.
- *  - The WebSocket is INBOUND-ONLY: `event`, `state_update`,
- *    `failure_injected`, `failure_cleared`. This module never calls the WS
- *    client's send().
- *  - Event-log timestamps are SIM time (from the last /api/state poll), not
- *    the browser wall clock the classic page used.
- *
- * POLLING (classic cadences preserved): /api/state 1 s ·
- * /api/instructor/snapshot 2 s · /api/failures 5 s (debrief piggybacks the
- * 5 s cycle so a scenario auto-stop surfaces without a click).
+ *  - The WebSocket is INBOUND-ONLY (state_update). This module never calls
+ *    the WS client's send(). /ws is shared with rfsim and the planner, so no
+ *    instructor truth is ever put on it: the truth feeds are polled.
+ *  - Event-list timestamps are SIM time.
  * ========================================================================== */
 
 import {
   esc, renderChip, renderEventRow, poller, wsClient, mountLangToggle,
-  renderValue, renderGauge, renderNoData, renderBanner, renderLinkBanner, renderModeBanner,
-  glyph, setDisabled, setEnabled, armButton,
+  renderValue, renderNoData, renderBanner, renderTabs, mountTabs,
+  setDisabled, setEnabled, armButton,
 } from "/static/shared/components.js";
 import { fmtUTC, fmtHex } from "/static/shared/format.js";
-// One contact verdict for every console (R3 audit problem #10).
-import { linkState } from "/static/shared/state.js";
-// UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md. Import i18n.js
-// WITHOUT a ?v= query (state is shared via globalThis either way).
+// UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md.
 import { I18n, t, tText, tdb, onLangChange, getLang } from "/static/shared/i18n.js";
-// Participant logbook (LOGBOOK_SPEC.md §6): the instructor keeps their own
-// private logbook here; the worksheets panes below only list questions and
-// never read anyone's answers.
+// Participant logbook (LOGBOOK_SPEC.md §6): the instructor's own private
+// logbook; the worksheet panes only list questions, never anyone's answers.
 import { mountLogbook } from "/static/shared/logbook.js";
+import * as D from "/static/shared/viz/derive.js";
+import * as PF from "/static/shared/viz/powerflow.js";
+import { createFocus } from "/static/modern/focus.js";
+import { mountTimeline } from "/static/modern/timeline.js";
+import * as V from "/static/modern/views.js";
+import { createDebrief } from "/static/modern/debrief.js";
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 
 const MAX_LOG_ENTRIES = 200;
-
-// Mode names follow the telemetry decoders (configs/eosat1/aocs/aocs_mode_codes.yaml,
-// rulings Q5/Q6). OBC mode 2 is EMERGENCY; the bootloader is not an OBC mode —
-// it is indicated by obdh.sw_image = 0.
-const AOCS_MODES = { 0: "OFF", 1: "SAFE_BOOT", 2: "DETUMBLE", 3: "COARSE_SUN", 4: "NOMINAL",
-                     5: "FINE_POINT", 6: "SLEW", 7: "DESAT", 8: "ECLIPSE", 9: "INERTIAL" };
-const OBDH_MODES = { 0: "NOMINAL", 1: "SAFE", 2: "EMERGENCY" };
-const TTC_MODES  = { 0: "NOMINAL", 1: "REDUNDANT", 2: "OFF" };
-const PL_MODES   = { 0: "OFF", 1: "STANDBY", 2: "IMAGING", 3: "PLAYBACK" };
-const LINK_STATUS = { 0: "DOWN", 1: "UP" };
-// Authoritative sc_mode convention (engine SC_* constants):
-const SC_MODES = { 0: "SAFE", 1: "NOMINAL", 2: "SCIENCE", 3: "EMERGENCY" };
 const PHASE_NAMES = ["PRE_SEPARATION", "SEPARATION_TIMER", "INITIAL_POWER_ON",
                      "BOOTLOADER_OPS", "LEOP", "COMMISSIONING", "NOMINAL"];
-// Scenario difficulty (YAML `difficulty:`): display label only, never compared.
+// One difficulty scale (BASIC / INTERMEDIATE / ADVANCED / EXPERT, as the
+// scenario generator writes it); the legacy BEGINNER reads as BASIC.
 // English text is the i18n key
-const DIFFICULTY_LABELS = { ADVANCED: "ADVANCED", BASIC: "BASIC", BEGINNER: "BEGINNER",
-                            INTERMEDIATE: "INTERMEDIATE" };
+const DIFFICULTY_LABELS = { BASIC: "BASIC", BEGINNER: "BASIC", INTERMEDIATE: "INTERMEDIATE",
+                            ADVANCED: "ADVANCED", EXPERT: "EXPERT" };
+
+/* The focus-pane views, in tab order; "|" separates run views from the
+ * prep / debrief modes. English labels are i18n keys. */
+const VIEWS = [
+  { id: "situation", label: "Situation" },
+  { id: "divergence", label: "Truth vs trainees" },
+  { id: "fault", label: "Fault" },
+  { id: "power", label: "Power" },
+  { id: "thermal", label: "Thermal" },
+  { id: "attitude", label: "Attitude" },
+  { id: "orbit", label: "Orbit & link" },
+  { id: "obc", label: "OBC & FDIR" },
+  { id: "storage", label: "Storage" },
+  { id: "raw", label: "Raw state" },
+  { id: "|" },
+  { id: "prep", label: "Prep" },
+  { id: "debrief", label: "Debrief" },
+];
+// English text is the i18n key (reasons the server gives for a focus switch)
+const REASON_KEYS = [
+  "ok", "caution", "alarm", "injected", "nodata", "roll", "pitch", "yaw", "gradual", "intermittent", "step",
+  "pass override", "Situation", "Truth vs trainees", "Fault", "Power", "Thermal", "Attitude", "Orbit & link",
+  "OBC & FDIR", "Storage", "Raw state", "Prep", "Debrief","inject fired", "phase change", "spacecraft mode change", "acquisition of signal",
+  "loss of signal", "eclipse entry", "FDIR recovery started", "alarm not acted on",
+  "telemetry diverges from truth", "scenario started", "scenario ended", "on-board alarm"];
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 
-let state = null;           // last /api/state
-let snapshot = null;        // last /api/instructor/snapshot
+let state = null;            // last /api/state (truth summary + raw params)
+let snapshot = null;         // last /api/instructor/snapshot
+let views = null;            // last /api/instructor/views
 let scenarios = [];
 let selectedScenario = null;
 let activeScenarioName = null;
-let scenarioStartSimMs = null;   // scenario progress runs on SIM time
+let scenarioStartSimMs = null;
 let debriefWasActive = false;
-let frozen = false;          // engine truth: state.speed === 0
-let lastStateOkMs = null;    // wall time of the last good /api/state poll
+let frozen = false;
+let lastStateOkMs = null;
 let failureCatalog = null;
+let faultMenu = null;
 let currentFailureSpec = null;
+let currentFailureSub = null;
+let selectedElement = null;
+let batch = [];
 let breakpoints = [];
+let tlItems = [];
+let tlSeq = 0;
+let tlSeqAtLoad = null;
+let tlPending = [];
+let tlFaults = [];
+let tlSegment = 0;
+let tlWindowS = 3600;
+let tlSelected = null;
+let selectedFault = null;
+const sparkHist = {};
+const attHist = { point: [], know: [] };
+const powerHist = D.createHistory(900);
+
+const focus = createFocus("situation");
+let timeline = null;
+let powerView = null;
+let debrief = null;
 
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 /* ── helpers ───────────────────────────────────────────────────────────── */
 
-/* Readouts go through the shared renderValue(): live / stale (last value,
- * dim italic, age chip) / "no data" — never a dash. The truth feed is
- * /api/state at 1 Hz; if it stops answering, every value turns stale with
- * the age of the last good poll. */
 function stateAgeS() {
   return lastStateOkMs === null ? null : (Date.now() - lastStateOkMs) / 1000;
 }
-function rv(value, units, digits, limits, extra) {
-  const age = stateAgeS();
-  const verdict = age !== null && age > 3 ? "stale" : "fresh";
-  return renderValue(value, Object.assign({ units, digits, limits, ageS: age, verdict }, extra || {}));
-}
-function pair(a, b, units, digits) {
-  const age = stateAgeS();
-  const verdict = age !== null && age > 3 ? "stale" : "fresh";
-  if ((a == null || !isFinite(a)) && (b == null || !isFinite(b))) return renderNoData();
-  const f = (v) => (v != null && isFinite(v) ? Number(v).toFixed(digits) : "?");
-  return renderValue(0, { eng: `${f(a)} / ${f(b)}`, units, verdict, ageS: age });
-}
-
 function formatDuration(totalSec) {
   const m = Math.floor(totalSec / 60);
   const s = Math.floor(totalSec % 60);
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
-
-/** Scenario difficulty for display; unknown values pass through untranslated. */
 function difficultyLabel(d) {
   if (!d) return "?";
   const en = DIFFICULTY_LABELS[String(d).toUpperCase()];
   return en ? tText(en) : String(d);
 }
-
+/** Display-only clean-up of scenario names (editing leftovers). */
+function cleanScenarioName(s) {
+  return String(s || "").replace(/\s*\((?:corrected|corrigé)\)\s*$/i, "").replace(/^Sc[ée]nario\s+\d+\s+[—-]\s+/i, "");
+}
 function simNowMs() {
   if (!state || !state.sim_time) return null;
-  const t = Date.parse(state.sim_time);
-  return isNaN(t) ? null : t;
+  const v = Date.parse(state.sim_time);
+  return isNaN(v) ? null : v;
 }
-
-/** Current SIM-time-of-day string for log rows ("—" before the first poll). */
+function simNowTs() { const m = simNowMs(); return m === null ? Date.now() / 1000 : m / 1000; }
+/** Current SIM-time-of-day string for log rows. */
 function simClock() {
-  return state && state.sim_time ? fmtUTC(state.sim_time) : "--:--:--";
+  return state && state.sim_time ? fmtUTC(state.sim_time) : tText("no sim time");
 }
-
 function showToast(msg, type) {
   const el = $("toast");
   el.innerHTML = renderBanner(type === "error" ? "alarm" : "ok", msg);
@@ -130,6 +150,7 @@ function showToast(msg, type) {
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => el.classList.remove("show"), type === "error" ? 6000 : 3000);
 }
+function setPv(id, html) { const el = $(id); if (el) el.innerHTML = html; }
 
 /* ── API (single command channel: POST /api/command) ───────────────────── */
 
@@ -138,15 +159,10 @@ async function apiGet(path) {
   if (!r.ok) throw new Error(`HTTP ${r.status} on ${path}`);
   return r.json();
 }
-
 async function apiPost(path, body) {
   try {
-    const r = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    // A 400/403 carries the REASON the server refused — return it either way.
+    const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify(body) });
     let payload = null;
     try { payload = await r.json(); } catch (e) { payload = null; }
     if (!r.ok) return payload || { status: "error", message: `HTTP ${r.status}` };
@@ -155,24 +171,21 @@ async function apiPost(path, body) {
     return { status: "error", message: String(e) };
   }
 }
-
-/** Send one instructor command, ONCE, over the documented HTTP path.
- *  Returns the response object; callers surface `message` on non-ok. */
+/** Send one instructor command, ONCE, over the documented HTTP path. */
 function sendCommand(payload) {
   return apiPost("/api/command", payload);
 }
 
-/* ── event log (SIM-time stamps, 200-entry cap, severity-coloured) ─────── */
+/* ── event list (the timeline's text alternative; SIM-time stamps) ─────── */
 
-function addLog(severity, source, message) {
+const SEV_KIND = { 1: "info", 2: "low", 3: "high", 4: "critical" };
+function addLog(severity, source, message, utc) {
   const log = $("event-log");
   const holder = document.createElement("div");
-  holder.innerHTML = renderEventRow({
-    severity, source, text: message, utc: simClock(),
-  });
+  holder.innerHTML = renderEventRow({ severity, source, text: message, utc: utc || simClock() });
   log.appendChild(holder.firstElementChild);
   while (log.children.length > MAX_LOG_ENTRIES) log.removeChild(log.firstChild);
-  log.scrollTop = log.scrollHeight;
+  if (!log.hidden) log.scrollTop = log.scrollHeight;
 }
 
 /* ── WebSocket — INBOUND ONLY ──────────────────────────────────────────── */
@@ -184,45 +197,37 @@ function setConn(up) {
     up ? { kind: "ok", label: tText("Live feed"), title: tText("WebSocket connected") }
        : { kind: "stale", label: tText("Feed offline"), title: tText("WebSocket disconnected: reconnecting every 3 s") });
 }
-
 function startWs() {
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  // Return value deliberately unused: no instructor command is ever sent on
-  // the WS — POST /api/command is the single outbound channel.
+  // Return value deliberately unused: no command is ever sent on the WS.
   wsClient(`${proto}//${location.host}/ws`, {
-    _open: () => { setConn(true); addLog("info", "SYSTEM", tText("WebSocket connected")); },
+    _open: () => setConn(true),
     _close: () => setConn(false),
-    event: (msg) => {
-      addLog(msg.severity || "info", msg.source || msg.subsystem || "SIM",
-             msg.message || JSON.stringify(msg));
-    },
     state_update: (msg) => { if (msg.state) state = msg.state; },
-    failure_injected: (msg) =>
-      addLog("high", "FAIL", tText("Injected: {{what}}", { what: `${msg.subsystem}/${msg.failure}` })),
-    failure_cleared: (msg) =>
-      addLog("info", "FAIL", tText("Cleared: {{id}}", { id: msg.failure_id })),
   });
 }
 
-/* ── snapshot browser (full god-mode state; ?sub= deep-dive) ───────────── */
+/* ── raw state browser (every parameter has a rendering home; ?sub=) ───── */
 
 let snapshotTabs = [];
 let snapshotActiveTab = null;
 let snapshotTabsBuilt = false;
 
-/** Normalise a snapshot.parameters key to "0xHHHH". The endpoint serialises
- *  integer param ids as decimal strings ("257"); accept both forms. */
+/** Normalise a snapshot.parameters key to "0xHHHH". */
 function paramHexId(key) {
   if (/^0x/i.test(key)) return key;
   const n = parseInt(key, 10);
   return Number.isFinite(n) ? fmtHex(n, 4) : key;
 }
-
+/* Raw parameter banks, named by subsystem (screen review §8: no developer
+ * buckets). Unknown banks still get a "0xNNxx" home (completeness). */
 const SUB_REGIONS = {
-  "01": "EPS·raw", "02": "AOCS·raw", "03": "TCS·raw", "04": "OBDH·raw",
+  "00": "SYS·raw", "01": "EPS·raw", "02": "AOCS·raw", "03": "TCS·raw", "04": "OBDH·raw",
   "05": "TTC·raw", "06": "PAYLOAD·raw", "07": "FDIR·raw", "08": "ORBIT·raw",
-  "0B": "PROP·raw",
+  "09": "PROC·raw", "0A": "OBDH·raw", "0B": "PROP·raw",
 };
+const RAW_OWNER = { "EPS·raw": "eps", "AOCS·raw": "aocs", "TCS·raw": "tcs", "OBDH·raw": "obdh",
+  "TTC·raw": "ttc", "PAYLOAD·raw": "payload", "PROP·raw": "prop" };
 
 function formatParamValue(v) {
   if (v == null) return tText("no data");
@@ -245,62 +250,53 @@ function buildSnapshotTabs() {
   tabsRoot.innerHTML = "";
   body.innerHTML = "";
   snapshotTabs = [];
-
-  // 1. One tab per subsystem model from snapshot.subsystems
+  const subTabs = [];
+  // 1. one tab per subsystem model (generic: Object.keys, never a list)
   if (snapshot.subsystems && typeof snapshot.subsystems === "object") {
     for (const sub of Object.keys(snapshot.subsystems).sort()) {
       const st = snapshot.subsystems[sub];
       if (st == null || typeof st !== "object") continue;
       const fields = Object.keys(st).sort().map((k) => ({
-        key: k,
-        getter: () => (snapshot.subsystems[sub] ? snapshot.subsystems[sub][k] : undefined),
-      }));
-      snapshotTabs.push({ id: "sub:" + sub, label: sub.toUpperCase(), fields, cells: new Map() });
+        key: k, getter: () => (snapshot.subsystems[sub] ? snapshot.subsystems[sub][k] : undefined) }));
+      subTabs.push({ id: "sub:" + sub, label: sub.toUpperCase(), sub, fields, cells: new Map() });
     }
   }
-
-  // 2. Raw parameter dict grouped by hex high byte (subsystem region);
-  //    unknown regions fall back to a "0xNNxx" group so EVERY parameter in
-  //    the snapshot has a rendering home (completeness guarantee).
+  // 2. raw parameters grouped by bank, each placed right after its
+  //    subsystem's model tab as its "raw" sub-tab.
+  const rawTabs = [];
   if (snapshot.parameters && typeof snapshot.parameters === "object") {
     const groups = {};
     for (const rawId of Object.keys(snapshot.parameters)) {
       const hex = paramHexId(rawId);
       const m = hex.match(/^0x([0-9A-Fa-f]{2})/);
-      const region = m ? (SUB_REGIONS[m[1].toUpperCase()] || ("0x" + m[1].toUpperCase() + "xx"))
-                       : "OTHER·raw";
+      const region = m ? (SUB_REGIONS[m[1].toUpperCase()] || ("0x" + m[1].toUpperCase() + "xx")) : "OTHER·raw";
       (groups[region] = groups[region] || []).push(rawId);
     }
     for (const region of Object.keys(groups).sort()) {
-      const fields = groups[region]
-        .sort((a, b) => paramHexId(a).localeCompare(paramHexId(b)))
-        .map((rawId) => ({
-          key: paramHexId(rawId),
-          getter: () => (snapshot.parameters ? snapshot.parameters[rawId] : undefined),
-        }));
-      snapshotTabs.push({ id: "raw:" + region, label: region, fields, cells: new Map() });
+      const fields = groups[region].sort((a, b) => paramHexId(a).localeCompare(paramHexId(b)))
+        .map((rawId) => ({ key: paramHexId(rawId), getter: () => (snapshot.parameters ? snapshot.parameters[rawId] : undefined) }));
+      rawTabs.push({ id: "raw:" + region, label: region, raw: true, owner: RAW_OWNER[region], fields, cells: new Map() });
     }
   }
+  for (const st of subTabs) {
+    snapshotTabs.push(st);
+    for (const rt of rawTabs.filter((r) => r.owner === st.sub)) snapshotTabs.push(rt);
+  }
+  for (const rt of rawTabs.filter((r) => !subTabs.some((s) => s.sub === r.owner))) snapshotTabs.push(rt);
 
   for (const tab of snapshotTabs) {
     const btn = document.createElement("button");
-    btn.className = "snap-tab";
+    btn.type = "button";
+    btn.className = "snap-tab" + (tab.raw ? " raw" : "");
     btn.dataset.tabId = tab.id;
     btn.innerHTML = `${esc(tab.label)}<span class="count">${tab.fields.length}</span>`;
-    btn.addEventListener("click", () => {
-      snapshotActiveTab = tab.id;
-      renderActiveSnapshotTab();
-    });
+    btn.addEventListener("click", () => { snapshotActiveTab = tab.id; renderActiveSnapshotTab(); });
     tabsRoot.appendChild(btn);
   }
-
-  // Honour ?sub=<id> in subpage mode (accepts "sub:eps", "eps" or "raw:…").
   const requested = new URLSearchParams(location.search).get("sub");
   if (requested) {
-    const want = snapshotTabs.find((t) => t.id === requested
-      || t.id === "sub:" + requested || t.id === "raw:" + requested);
-    snapshotActiveTab = want ? want.id
-      : (snapshotTabs.length ? snapshotTabs[0].id : null);
+    const want = snapshotTabs.find((x) => x.id === requested || x.id === "sub:" + requested || x.id === "raw:" + requested);
+    snapshotActiveTab = want ? want.id : (snapshotTabs.length ? snapshotTabs[0].id : null);
   } else if (snapshotTabs.length) {
     snapshotActiveTab = snapshotTabs[0].id;
   }
@@ -308,9 +304,7 @@ function buildSnapshotTabs() {
   renderActiveSnapshotTab();
 }
 
-/** Deep-dive launcher: one link per snapshot tab. ?sub= COMPOSES with ?ui= —
- *  the current ui override (if any) is propagated so a deep-dive opened from
- *  /?ui=modern stays modern. ?lang= is carried the same way (i18n S4). */
+/** Deep-dive launcher: ?sub= COMPOSES with ?ui= and ?lang=. */
 function populateSubsystemLauncher() {
   const root = $("subsystem-launcher-buttons");
   if (!root) return;
@@ -329,38 +323,28 @@ function populateSubsystemLauncher() {
     root.appendChild(a);
   }
 }
-
 function renderActiveSnapshotTab() {
   const body = $("full-snapshot-body");
   if (!body) return;
   body.innerHTML = "";
-  $$("#full-snapshot-tabs .snap-tab").forEach((b) =>
-    b.classList.toggle("active", b.dataset.tabId === snapshotActiveTab));
-
-  const tab = snapshotTabs.find((t) => t.id === snapshotActiveTab);
+  $$("#full-snapshot-tabs .snap-tab").forEach((b) => b.classList.toggle("active", b.dataset.tabId === snapshotActiveTab));
+  const tab = snapshotTabs.find((x) => x.id === snapshotActiveTab);
   if (!tab) return;
   tab.cells = new Map();
   const frag = document.createDocumentFragment();
   for (const f of tab.fields) {
     const row = document.createElement("div");
     row.className = "param-cell";
-    const k = document.createElement("span");
-    k.className = "pkey";
-    k.textContent = f.key;
-    const v = document.createElement("span");
-    v.className = "pval";
-    v.textContent = formatParamValue(f.getter());
-    row.appendChild(k);
-    row.appendChild(v);
+    const k = document.createElement("span"); k.className = "pkey"; k.textContent = f.key;
+    const v = document.createElement("span"); v.className = "pval"; v.textContent = formatParamValue(f.getter());
+    row.appendChild(k); row.appendChild(v);
     frag.appendChild(row);
     tab.cells.set(f.key, v);
   }
   body.appendChild(frag);
 }
-
 function updateActiveSnapshotTab() {
-  // In-place text update of the visible tab only — no innerHTML rebuild.
-  const tab = snapshotTabs.find((t) => t.id === snapshotActiveTab);
+  const tab = snapshotTabs.find((x) => x.id === snapshotActiveTab);
   if (!tab) return;
   for (const f of tab.fields) {
     const cell = tab.cells.get(f.key);
@@ -369,38 +353,29 @@ function updateActiveSnapshotTab() {
     if (cell.textContent !== formatted) cell.textContent = formatted;
   }
 }
-
 function updateCompletenessCounter() {
   if (!snapshot) return;
   let total = 0, populated = 0;
-  for (const t of snapshotTabs) {
-    total += t.fields.length;
-    for (const f of t.fields) {
-      const v = f.getter();
-      if (v !== undefined && v !== null) populated++;
-    }
+  for (const tb of snapshotTabs) {
+    total += tb.fields.length;
+    for (const f of tb.fields) { const v = f.getter(); if (v !== undefined && v !== null) populated++; }
   }
   const el = $("param-completeness");
   el.textContent = tText("{{populated}}/{{total}} fields", { populated, total });
   el.title = tText("{{populated}} of {{total}} snapshot fields populated", { populated, total });
   el.classList.toggle("is-caution", total > 0 && populated / total < 0.95);
 }
-
 function updateRawSnapshot() {
   const container = $("raw-snapshot-container");
   if (snapshot && container && container.style.display === "block") {
     $("raw-snapshot-json").textContent = JSON.stringify(snapshot, null, 2);
   }
 }
-
-/* ── parameter search (name or hex id, across params + subsystem state) ── */
-
 function performParameterSearch() {
   const query = $("param-search").value.trim().toLowerCase();
   const results = $("param-search-results");
   if (!query) { results.style.display = "none"; return; }
   if (!snapshot) return;
-
   const all = [];
   if (snapshot.parameters) {
     for (const [rawId, value] of Object.entries(snapshot.parameters)) {
@@ -411,29 +386,53 @@ function performParameterSearch() {
   if (snapshot.subsystems) {
     for (const [subName, subState] of Object.entries(snapshot.subsystems)) {
       if (subState && typeof subState === "object") {
-        for (const [key, val] of Object.entries(subState)) {
-          all.push({ id: `${subName}.${key}`, name: `${subName}.${key}`, value: val });
-        }
+        for (const [key, val] of Object.entries(subState)) all.push({ id: `${subName}.${key}`, name: `${subName}.${key}`, value: val });
       }
     }
   }
-
   const isHexQuery = query.startsWith("0x");
-  const matches = all.filter((p) => {
-    if (isHexQuery) return p.id.toLowerCase().includes(query);
-    return p.name.toLowerCase().includes(query)
-        || String(p.value).toLowerCase().includes(query);
-  }).slice(0, 10);
-
+  const matches = all.filter((p) => (isHexQuery ? p.id.toLowerCase().includes(query)
+    : p.name.toLowerCase().includes(query) || String(p.value).toLowerCase().includes(query))).slice(0, 10);
   results.innerHTML = matches.length
-    ? matches.map((m) =>
-        `<div class="hit"><span class="k">${esc(m.id)}</span>` +
-        `<span>${esc(formatParamValue(m.value))}</span></div>`).join("")
+    ? matches.map((m) => `<div class="hit"><span class="k">${esc(m.id)}</span><span>${esc(formatParamValue(m.value))}</span></div>`).join("")
     : `<div class="no-data">${t("No parameters found")}</div>`;
   results.style.display = "block";
 }
 
-/* ── scenarios & session ───────────────────────────────────────────────── */
+/* ── clock truth (instructor only — never downlinked) ──────────────────── */
+
+const CUC_EPOCH_MS = Date.UTC(2000, 0, 1, 12, 0, 0);   // mission time_epoch
+const UINT32_MAX = 4294967295;
+function formatClockAge(sec) {
+  const s = Math.max(0, Math.floor(sec));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m ${String(s % 60).padStart(2, "0")}s`;
+}
+function updateClockTruth() {
+  const c = (snapshot && snapshot.clock_truth) || null;
+  const nd = renderNoData();
+  if (!c) {
+    ["clock-sim-utc", "clock-obc-utc", "clock-since-sync", "clock-drift", "clock-offset"].forEach((id) => setPv(id, nd));
+    setPv("clock-ref", ""); $("clock-offset-note").textContent = "";
+    return;
+  }
+  setPv("clock-ref", c.time_ref_name ? `<span class="ds-id">${esc(c.time_ref_name)}</span>` : "");
+  const mono = (txt) => `<span class="ds-value" style="font-size:var(--fs-body)">${esc(txt)}</span>`;
+  setPv("clock-sim-utc", c.sim_time ? mono(fmtUTC(c.sim_time, { date: true })) : nd);
+  setPv("clock-obc-utc", c.obc_time_s != null ? mono(fmtUTC(new Date(CUC_EPOCH_MS + c.obc_time_s * 1000), { date: true })) : nd);
+  setPv("clock-since-sync", c.time_since_sync_s == null || c.time_since_sync_s >= UINT32_MAX
+    ? renderNoData({ label: tText("never synced") }) : mono(formatClockAge(c.time_since_sync_s)));
+  setPv("clock-drift", c.drift_ppm == null ? nd : renderValue(c.drift_ppm, { units: "ppm", digits: 2 }));
+  if (c.offset_s == null) { setPv("clock-offset", nd); $("clock-offset-note").textContent = ""; return; }
+  const a = Math.abs(c.offset_s);
+  // Lead with the natural scale (days for a never-set clock), the exact
+  // seconds underneath — never a bare nine-digit second count.
+  setPv("clock-offset", a >= 3600 ? mono(V.fmtOffset(c.offset_s))
+    : renderValue(c.offset_s, { units: "s", digits: 3, limits: { yellow_low: -1, yellow_high: 1, red_low: -5, red_high: 5 } }));
+  $("clock-offset-note").textContent = a >= 3600 ? tText("exactly {{s}} s", { s: Number(c.offset_s).toFixed(3) }) : "";
+}
+
+/* ── scenarios & session (Prep) ────────────────────────────────────────── */
 
 async function loadScenarios() {
   let data = null;
@@ -441,54 +440,34 @@ async function loadScenarios() {
   scenarios = data ? (Array.isArray(data) ? data : (data.scenarios || [])) : [];
   renderScenarios();
 }
-
-/* Display text only: sc.name stays the command/compare key (start_scenario).
- * The overlay is keyed by the YAML file stem the API returns as sc.id. */
-function scnName(sc) { return sc.id ? tdb(`scn:${sc.id}:name`, sc.name) : sc.name; }
-function scnLabel(name) { const sc = scenarios.find((x) => x.name === name); return sc ? scnName(sc) : name; }
+function scnName(sc) { return cleanScenarioName(sc.id ? tdb(`scn:${sc.id}:name`, sc.name) : sc.name); }
+function scnLabel(name) { const sc = scenarios.find((x) => x.name === name); return sc ? scnName(sc) : cleanScenarioName(name); }
 function scnBriefing(sc) { return sc.id && sc.briefing ? tdb(`scn:${sc.id}:briefing`, sc.briefing) : sc.briefing; }
-
-/** Run state of the scenario: "running" | "paused" (sim frozen) | null. */
-function scenarioRunState() {
-  if (!activeScenarioName) return null;
-  return frozen ? "paused" : "running";
-}
+function scenarioRunState() { if (!activeScenarioName) return null; return frozen ? "paused" : "running"; }
 function runChip(st) {
   return st === "running" ? renderChip({ kind: "active", label: tText("Running") })
     : st === "paused" ? renderChip({ kind: "stale", label: tText("Paused") }) : "";
 }
-
 function renderScenarios() {
   const list = $("scenario-list");
-  if (!scenarios.length) {
-    list.innerHTML = `<div class="no-data" style="padding:var(--sp-3) var(--sp-4)">${t("No scenarios available")}</div>`;
-    return;
-  }
+  if (!scenarios.length) { list.innerHTML = `<div class="no-data" style="padding:var(--sp-3)">${t("No scenarios available")}</div>`; return; }
   const had = list.contains(document.activeElement) ? document.activeElement.dataset.index : null;
   list.innerHTML = scenarios.map((sc, i) => `
     <button type="button" class="scn" data-index="${i}" aria-pressed="${selectedScenario === i}">
       <span>${esc(scnName(sc))}</span>
       ${activeScenarioName === sc.name ? runChip(scenarioRunState()) : ""}
-      <span class="sd"><span>${esc(difficultyLabel(sc.difficulty))}</span>
-        <span>${formatDuration(sc.duration_s || 0)}</span></span>
+      <span class="sd"><span>${esc(difficultyLabel(sc.difficulty))}</span><span>${formatDuration(sc.duration_s || 0)}</span></span>
     </button>`).join("");
-  list.querySelectorAll(".scn").forEach((el) =>
-    el.addEventListener("click", () => selectScenario(parseInt(el.dataset.index, 10))));
-  if (had !== null && had !== undefined) {
-    const b = list.querySelector(`[data-index="${had}"]`);
-    if (b) b.focus();
-  }
+  list.querySelectorAll(".scn").forEach((el) => el.addEventListener("click", () => selectScenario(parseInt(el.dataset.index, 10))));
+  if (had !== null && had !== undefined) { const b = list.querySelector(`[data-index="${had}"]`); if (b) b.focus(); }
 }
-
-/** Start / Stop: enabled, disabled with a reason, never ambiguous. */
 function updateScenarioButtons() {
   const sc = selectedScenario != null ? scenarios[selectedScenario] : null;
   const start = $("btn-start-scenario"), stop = $("btn-stop-scenario");
   if (!sc) setDisabled(start, tText("Select a scenario first"));
   else if (activeScenarioName === sc.name) setDisabled(start, tText("This scenario is already running"));
-  else if (activeScenarioName) {
-    setDisabled(start, tText("Stop \"{{name}}\" first", { name: scnLabel(activeScenarioName) }));
-  } else setEnabled(start);
+  else if (activeScenarioName) setDisabled(start, tText("Stop \"{{name}}\" first", { name: scnLabel(activeScenarioName) }));
+  else setEnabled(start);
   if (!activeScenarioName) setDisabled(stop, tText("No scenario is running"));
   else setEnabled(stop);
   const st = scenarioRunState();
@@ -496,7 +475,6 @@ function updateScenarioButtons() {
   $("progress-state").innerHTML = st ? runChip(st) : "";
   $("progress-track").classList.toggle("paused", st === "paused");
 }
-
 function selectScenario(idx) {
   selectedScenario = idx;
   const sc = scenarios[idx];
@@ -507,8 +485,6 @@ function selectScenario(idx) {
   updateScenarioButtons();
   loadPrepWorksheets();
 }
-
-/* ── course-workbook worksheets (prep / debrief), from the logbook API ── */
 async function fetchWorksheets(ctx) {
   try {
     const r = await fetch(`/api/logbook/worksheets?tool=instructor&lang=${getLang()}` +
@@ -539,171 +515,141 @@ async function loadPrepWorksheets() {
   const sheets = await fetchWorksheets({ scenario: sc.id, phase: "prep" });
   if (seq !== prepSeq) return;
   box.innerHTML = sheets.length
-    ? `<div class="ws-h">${t("Prep worksheets")}</div>` +
-      `<div class="ws-note">${t("From the course workbook. Participants fill these in their logbook before the pass.")}</div>` +
-      worksheetListHtml(sheets, false)
+    ? `<div class="ws-h">${t("Prep worksheets")}</div><div class="ws-note">${t("From the course workbook. Participants fill these in their logbook before the pass.")}</div>` + worksheetListHtml(sheets, false)
     : `<div class="ws-note">${t("No prep worksheet for this scenario in the course workbook.")}</div>`;
 }
 async function loadDebriefWorksheets() {
   const box = $("debrief-ws");
   if (!box) return;
-  const sc = scenarios.find((x) => x.name === (lastDebrief && lastDebrief.name)) ||
-    (selectedScenario != null ? scenarios[selectedScenario] : null);
+  const sc = scenarios.find((x) => x.name === (lastDebrief && lastDebrief.name)) || (selectedScenario != null ? scenarios[selectedScenario] : null);
   const ctx = { phase: "debrief", ...(sc && sc.id ? { scenario: sc.id } : {}) };
   const key = getLang() + JSON.stringify(ctx);
-  if (key === debriefWsKey) return;          // polled every 5 s: keep open disclosures
+  if (key === debriefWsKey) return;
   debriefWsKey = key;
   const sheets = await fetchWorksheets(ctx);
-  // the reflection questions (WB-5.x-DB) lead the spoken debrief
   sheets.sort((a, b) => Number(!/-DB$/.test(a.id)) - Number(!/-DB$/.test(b.id)));
   box.innerHTML = sheets.length
-    ? `<div class="ws-h">${t("Debrief questions")}</div>` +
-      `<div class="ws-note">${t("Use them in the spoken debrief. Participants answer these in their logbook and download it; you never see their answers.")}</div>` +
-      worksheetListHtml(sheets, true)
+    ? `<div class="ws-h">${t("Debrief questions")}</div><div class="ws-note">${t("Use them in the spoken debrief. Participants answer these in their logbook and download it; you never see their answers.")}</div>` + worksheetListHtml(sheets, true)
     : "";
 }
-
 async function startScenario() {
   if (selectedScenario == null) return;
   const sc = scenarios[selectedScenario];
   if (!sc) return;
   const res = await sendCommand({ type: "start_scenario", scenario: sc.name });
-  if (res && res.status !== "ok") {
-    showToast(tText("Scenario start refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
+  if (res && res.status !== "ok") { showToast(tText("Scenario start refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   activeScenarioName = sc.name;
   scenarioStartSimMs = simNowMs();
   updateScenarioButtons();
-  addLog("info", "SCENARIO", tText("Started: {{name}}", { name: scnName(sc) }));
   showToast(tText("Scenario \"{{name}}\" started", { name: scnName(sc) }), "success");
   renderScenarios();
+  goView("situation");
 }
-
 async function stopScenario() {
   if (!activeScenarioName) return;
-  const name = activeScenarioName;
   const res = await sendCommand({ type: "stop_scenario" });
-  if (res && res.status !== "ok") {
-    showToast(tText("Stop refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("info", "SCENARIO", tText("Stopped: {{name}}", { name: scnLabel(name) }));
+  if (res && res.status !== "ok") { showToast(tText("Stop refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   activeScenarioName = null;
   scenarioStartSimMs = null;
   updateScenarioButtons();
   renderScenarios();
-  // The engine builds the debrief on stop; give it a tick then show it.
   setTimeout(() => fetchDebrief(true), 1200);
 }
 
-/* ── DEBRIEF (new — wires the previously-unreferenced endpoint) ────────── */
+/* ── scenario-engine debrief (score panel inside the Debrief view) ─────── */
 
-let lastDebrief;              // undefined: static markup still shown
+let lastDebrief;
 function renderDebrief(d) {
   lastDebrief = d;
   loadDebriefWorksheets();
   const body = $("debrief-body");
-  if (!d) {
-    body.innerHTML = `<div class="no-data">${t("No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).")}</div>`;
-    return;
-  }
+  if (!d) { body.innerHTML = `<div class="no-data">${t("No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).")}</div>`; return; }
   const nd = renderNoData();
   const secs = (v) => (v == null ? nd : `${Number(v).toFixed(1)} s`);
-  const responses = (d.responses || []).map((r) =>
-    `<div class="prow"><span class="pl">${esc(r.category || "?")}` +
-    `${r.description ? ": " + esc(r.description) : ""}</span>` +
-    `<span class="pv ds-mono">${r.time_s != null ? Number(r.time_s).toFixed(1) + " s" : nd}</span></div>`
-  ).join("");
-  body.innerHTML = `
-    <table>
-      <tr><td>${t("Scenario")}</td><td>${d.name ? esc(d.name) : nd}</td></tr>
+  const responses = (d.responses || []).map((r) => `<div class="kv"><span>${esc(r.category || "?")}${r.description ? ": " + esc(r.description) : ""}</span>` +
+    `<span class="mono">${r.time_s != null ? Number(r.time_s).toFixed(1) + " s" : nd}</span></div>`).join("");
+  body.innerHTML = `<table>
+      <tr><td>${t("Scenario")}</td><td>${d.name ? esc(cleanScenarioName(d.name)) : nd}</td></tr>
       <tr><td>${t("Duration")}</td><td>${secs(d.duration_s)}</td></tr>
       <tr><td>${t("Score")}</td><td>${d.score_pct != null ? Number(d.score_pct).toFixed(0) + " %" : nd}</td></tr>
       <tr><td>${t("MTTD (detect)")}</td><td>${secs(d.mttd_s)}</td></tr>
       <tr><td>${t("MTTI (isolate)")}</td><td>${secs(d.mtti_s)}</td></tr>
-      <tr><td>${t("MTTR (recover)")}</td><td>${secs(d.mttr_s)}</td></tr>
-    </table>
-    ${responses ? `<div class="note" style="margin-top:6px;">${t("Operator responses")}</div>${responses}`
-                : `<div class="note" style="margin-top:6px;">${t("No operator responses recorded.")}</div>`}`;
+      <tr><td>${t("MTTR (recover)")}</td><td>${secs(d.mttr_s)}</td></tr></table>
+    ${responses ? `<div class="note">${t("Operator responses")}</div>${responses}` : `<div class="note">${t("No operator responses recorded by the scenario engine; use the timeline gaps above.")}</div>`}`;
 }
-
-/** Poll GET /api/scenario/debrief. Also the authority for the header
- *  scenario chip; announces a debrief when a scenario ends (incl. auto-stop
- *  on duration_s, which the page cannot see any other way). */
 async function fetchDebrief(announce) {
   let d = null;
   try { d = await apiGet("/api/scenario/debrief"); } catch (e) { return; }
   const chip = $("scenario-chip");
   if (d.active && d.current) {
     chip.innerHTML = renderChip({ kind: frozen ? "stale" : "active",
-      label: (frozen ? tText("Paused: {{name}}", { name: scnLabel(d.current) })
-        : tText("Running: {{name}}", { name: scnLabel(d.current) })),
+      label: frozen ? tText("Paused: {{name}}", { name: scnLabel(d.current) }) : tText("Running: {{name}}", { name: scnLabel(d.current) }),
       title: tText("A training scenario is running") });
-    if (activeScenarioName !== d.current) {
-      activeScenarioName = d.current;   // page reload during a run
-      updateScenarioButtons();
-      renderScenarios();
-    }
+    if (activeScenarioName !== d.current) { activeScenarioName = d.current; updateScenarioButtons(); renderScenarios(); }
   } else {
     chip.innerHTML = renderChip({ kind: "neutral", label: tText("No scenario running") });
     if (debriefWasActive && !d.active) {
-      // active -> finished transition (auto-stop or STOP elsewhere)
       announce = true;
-      if (activeScenarioName) {
-        addLog("info", "SCENARIO", tText("Ended: {{name}}", { name: scnLabel(activeScenarioName) }));
-        activeScenarioName = null;
-        scenarioStartSimMs = null;
-        updateScenarioButtons();
-        renderScenarios();
-      }
+      if (activeScenarioName) { activeScenarioName = null; scenarioStartSimMs = null; updateScenarioButtons(); renderScenarios(); }
     }
   }
   debriefWasActive = !!d.active;
-  if (d.debrief) {
-    renderDebrief(d.debrief);
-    if (announce) showToast(tText("Scenario debrief available"), "success");
-  } else if (announce) {
-    renderDebrief(null);
-  }
+  if (d.debrief) { renderDebrief(d.debrief); if (announce) showToast(tText("Scenario debrief available"), "success"); }
+  else if (announce) renderDebrief(null);
 }
 
-/* ── failure injection (form generated from /api/failure-catalog) ──────── */
+/* ── fault menu by control-loop element + typed form + trigger ─────────── */
 
 async function loadFailureCatalog() {
-  let data = null;
-  try { data = await apiGet("/api/failure-catalog"); } catch (e) { data = null; }
+  let data = null, menu = null;
+  try { [data, menu] = await Promise.all([apiGet("/api/failure-catalog"), apiGet("/api/instructor/fault-menu")]); }
+  catch (e) { data = data || null; }
   if (!data || !Array.isArray(data.subsystems)) {
     addLog("high", "FAIL", tText("Failure catalogue unavailable — injection form disabled"));
     $("fail-subsystem").innerHTML = `<option value="">${t("(catalogue unavailable)")}</option>`;
     setDisabled($("btn-inject"), tText("The failure catalogue did not load"));
+    setDisabled($("btn-add-batch"), tText("The failure catalogue did not load"));
     return;
   }
   failureCatalog = data;
-  $("fail-subsystem").innerHTML = data.subsystems
-    .map((s) => `<option value="${esc(s.name)}">${esc(s.label || s.name.toUpperCase())}</option>`)
-    .join("");
+  faultMenu = menu && Array.isArray(menu.elements) ? menu : null;
+  selectedElement = selectedElement || (faultMenu ? (faultMenu.elements.find((e) => e.failures.length) || {}).id : null);
+  renderElements();
   updateFailureTypes();
 }
-
-function currentSubsystemEntry() {
-  if (!failureCatalog) return null;
-  const name = $("fail-subsystem").value;
-  return failureCatalog.subsystems.find((s) => s.name === name) || null;
+function elementEntry() { return faultMenu ? faultMenu.elements.find((e) => e.id === selectedElement) : null; }
+function renderElements() {
+  if (!faultMenu) { $("elements").innerHTML = ""; return; }
+  $("elements").innerHTML = faultMenu.elements.map((e) => `<button type="button" class="el-btn" data-el="${esc(e.id)}"
+      aria-pressed="${e.id === selectedElement}"${e.failures.length ? "" : ` aria-disabled="true" data-reason="${esc(tText("No failure of this kind in the catalogue"))}"`}>
+      <b>${esc(tText(e.label))}</b><span class="ct">${e.failures.length}</span></button>`).join("");
+  const e = elementEntry();
+  $("el-hint").textContent = e ? tText(e.hint) : "";
 }
-
+function updateSubsystemFilter() {
+  const e = elementEntry();
+  const subs = e ? [...new Set(e.failures.map((f) => f.subsystem))] : (failureCatalog ? failureCatalog.subsystems.map((s) => s.name) : []);
+  const prev = $("fail-subsystem").value;
+  const label = (s) => { const c = failureCatalog && failureCatalog.subsystems.find((x) => x.name === s); return c ? (c.label || s.toUpperCase()) : s.toUpperCase(); };
+  $("fail-subsystem").innerHTML = `<option value="">${esc(tText("All subsystems"))}</option>` +
+    subs.map((s) => `<option value="${esc(s)}">${esc(label(s))}</option>`).join("");
+  if (subs.includes(prev)) $("fail-subsystem").value = prev;
+}
 function updateFailureTypes() {
-  const entry = currentSubsystemEntry();
-  const failures = entry ? entry.failures : [];
-  $("fail-type").innerHTML = failures
-    .map((f) => `<option value="${esc(f.name)}">${esc(f.label || f.name)}</option>`)
-    .join("");
+  updateSubsystemFilter();
+  const e = elementEntry();
+  const filt = $("fail-subsystem").value;
+  let list = [];
+  if (e) list = e.failures.filter((f) => !filt || f.subsystem === filt);
+  else if (failureCatalog) {
+    for (const s of failureCatalog.subsystems) if (!filt || s.name === filt) for (const f of s.failures) list.push({ subsystem: s.name, name: f.name, label: f.label });
+  }
+  const prev = $("fail-type").value;
+  $("fail-type").innerHTML = list.map((f) => `<option value="${esc(f.subsystem + "|" + f.name)}">${esc(f.label || f.name)} — ${esc(f.subsystem.toUpperCase())}</option>`).join("");
+  if (list.some((f) => f.subsystem + "|" + f.name === prev)) $("fail-type").value = prev;
   updateFailureParams();
 }
-
-/** One typed control per ParamSpec: bool→checkbox, enum→select (multi →
- *  multi-select), int/float→number with min/max/step and the engineering
- *  unit; the permitted range is always shown. */
+/** One typed control per ParamSpec (bool/enum/int/float/text). */
 function renderParamControl(p, idPrefix) {
   const id = `${idPrefix}-${p.name}`;
   const unit = p.unit ? ` <span class="form-unit">${esc(p.unit)}</span>` : "";
@@ -713,75 +659,57 @@ function renderParamControl(p, idPrefix) {
   if (p.description) bits.push(esc(p.description));
   const hint = bits.length ? `<span class="form-hint">${bits.join(" · ")}</span>` : "";
   const label = `<label for="${id}">${esc(p.label || p.name)}${unit}${p.required ? " *" : ""}</label>`;
-
   if (p.type === "bool") {
-    const checked = p.default ? " checked" : "";
-    return `<div class="ds-field">
-      <label class="ds-check"><input type="checkbox" id="${id}"
-        data-param="${esc(p.name)}" data-ptype="bool"${checked}> ${esc(p.label || p.name)}</label>${hint}
-    </div>`;
+    return `<div class="ds-field"><label class="ds-check"><input type="checkbox" id="${id}" data-param="${esc(p.name)}" data-ptype="bool"${p.default ? " checked" : ""}> ${esc(p.label || p.name)}</label>${hint}</div>`;
   }
   if (p.type === "enum") {
     const values = p.values || [];
     const labels = p.value_labels || values.map(String);
-    const defaults = Array.isArray(p.default) ? p.default.map(String)
-      : (p.default === null || p.default === undefined ? [] : [String(p.default)]);
-    const opts = values.map((v, i) => {
-      const sel = defaults.includes(String(v)) ? " selected" : "";
-      return `<option value="${esc(String(v))}"${sel}>${esc(String(labels[i]))}</option>`;
-    }).join("");
+    const defaults = Array.isArray(p.default) ? p.default.map(String) : (p.default == null ? [] : [String(p.default)]);
+    const opts = values.map((v, i) => `<option value="${esc(String(v))}"${defaults.includes(String(v)) ? " selected" : ""}>${esc(String(labels[i]))}</option>`).join("");
     const multi = p.multi ? ` multiple size="4" class="ds-select"` : ` class="ds-select"`;
-    return `<div class="ds-field">${label}
-      <select id="${id}" data-param="${esc(p.name)}" data-ptype="enum"
-        data-multi="${p.multi ? "1" : ""}"${multi}>${opts}</select>${hint}
-    </div>`;
+    return `<div class="ds-field">${label}<select id="${id}" data-param="${esc(p.name)}" data-ptype="enum" data-multi="${p.multi ? "1" : ""}"${multi}>${opts}</select>${hint}</div>`;
   }
   const isNum = (p.type === "int" || p.type === "float");
   const step = p.type === "int" ? 1 : (p.step || "any");
-  const attrs = [
-    isNum ? `type="number"` : `type="text"`,
-    isNum ? `step="${step}"` : "",
-    (isNum && p.min !== undefined && p.min !== null) ? `min="${p.min}"` : "",
-    (isNum && p.max !== undefined && p.max !== null) ? `max="${p.max}"` : "",
-    (p.default !== null && p.default !== undefined) ? `value="${esc(String(p.default))}"` : "",
-  ].filter(Boolean).join(" ");
-  return `<div class="ds-field">${label}
-    <input class="ds-input" id="${id}" data-param="${esc(p.name)}"
-      data-ptype="${esc(p.type)}" ${attrs}>${hint}
-  </div>`;
+  const attrs = [isNum ? `type="number"` : `type="text"`, isNum ? `step="${step}"` : "",
+    (isNum && p.min != null) ? `min="${p.min}"` : "", (isNum && p.max != null) ? `max="${p.max}"` : "",
+    (p.default != null) ? `value="${esc(String(p.default))}"` : ""].filter(Boolean).join(" ");
+  return `<div class="ds-field">${label}<input class="ds-input" id="${id}" data-param="${esc(p.name)}" data-ptype="${esc(p.type)}" ${attrs}>${hint}</div>`;
 }
-
+function currentMenuEntry() {
+  const e = elementEntry();
+  return e ? e.failures.find((f) => f.subsystem === currentFailureSub && f.name === (currentFailureSpec && currentFailureSpec.name)) : null;
+}
 function updateFailureParams() {
-  const entry = currentSubsystemEntry();
-  const name = $("fail-type").value;
+  const [sub, name] = ($("fail-type").value || "").split("|");
+  const entry = failureCatalog ? failureCatalog.subsystems.find((s) => s.name === sub) : null;
   const spec = entry ? entry.failures.find((f) => f.name === name) : null;
-  currentFailureSpec = spec;
+  currentFailureSpec = spec || null;
+  currentFailureSub = spec ? sub : null;
   setInjectError("");
-  $("fail-effect").textContent = spec ? (spec.effect || "") : "";
+  const m = currentMenuEntry();
+  $("fail-effect").innerHTML = spec ? `${esc(spec.effect || "")}${m ? ` <span class="${m.inject_class === "indication" ? "inj-chip" : "cls-chip"}">${esc(m.inject_class === "indication" ? tText("indication: a sensor lies, the truth is unchanged") : tText("physical"))}</span>` : ""}` : "";
   if (!spec) {
     $("fail-params").innerHTML = "";
-    setDisabled($("btn-inject"), tText("Choose a failure type first"));
+    if (!batch.length) setDisabled($("btn-inject"), tText("Choose a failure first"));
+    setDisabled($("btn-add-batch"), tText("Choose a failure first"));
+    renderReview();
     return;
   }
-  setEnabled($("btn-inject"));
-
+  setEnabled($("btn-inject")); setEnabled($("btn-add-batch"));
   const html = [];
-  // Magnitude only when the failure uses one — with ITS unit and range.
   if (spec.magnitude) html.push(renderParamControl(spec.magnitude, "fail-mag"));
   (spec.params || []).forEach((p) => html.push(renderParamControl(p, "fail-p")));
-  if (!spec.reversible && spec.notes) {
-    html.push(`<div class="fail-effect irrev">${t("Not fully reversible: {{notes}}", { notes: spec.notes })}</div>`);
-  }
+  if (!spec.reversible && spec.notes) html.push(`<div class="fail-effect irrev">${t("Not fully reversible: {{notes}}", { notes: spec.notes })}</div>`);
   $("fail-params").innerHTML = html.join("");
+  renderReview();
 }
-
-/** The server-rejection error box: shows the engine's refusal REASON. */
 function setInjectError(msg) {
   const el = $("fail-error");
   el.innerHTML = msg ? renderBanner("alarm", msg) : "";
   el.style.display = msg ? "block" : "none";
 }
-
 function readParamControl(p, idPrefix) {
   const el = $(`${idPrefix}-${p.name}`);
   if (!el) return { ok: true, skip: true };
@@ -797,216 +725,238 @@ function readParamControl(p, idPrefix) {
     return { ok: true, value: el.value };
   }
   const raw = (el.value || "").trim();
-  if (raw === "") {
-    if (p.required) return { ok: false, reason: tText("{{where}} is required", { where }) };
-    return { ok: true, skip: true };
-  }
+  if (raw === "") return p.required ? { ok: false, reason: tText("{{where}} is required", { where }) } : { ok: true, skip: true };
   if (p.type === "int" || p.type === "float") {
-    const num = Number(raw);
-    if (!Number.isFinite(num)) return { ok: false, reason: tText("{{where}} must be a number (got \"{{raw}}\")", { where, raw }) };
-    if (p.type === "int" && !Number.isInteger(num)) {
-      return { ok: false, reason: tText("{{where}} must be a whole number (got {{num}})", { where, num }) };
-    }
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return { ok: false, reason: tText("{{where}} must be a number (got \"{{raw}}\")", { where, raw }) };
+    if (p.type === "int" && !Number.isInteger(n)) return { ok: false, reason: tText("{{where}} must be a whole number (got {{num}})", { where, num: n }) };
     const u = p.unit ? ` ${p.unit}` : "";
-    if (p.min !== undefined && p.min !== null && num < p.min) {
-      return { ok: false, reason: tText("{{where}} must be >= {{min}}{{u}} (got {{num}}{{u}})", { where, min: p.min, u, num }) };
-    }
-    if (p.max !== undefined && p.max !== null && num > p.max) {
-      return { ok: false, reason: tText("{{where}} must be <= {{max}}{{u}} (got {{num}}{{u}})", { where, max: p.max, u, num }) };
-    }
-    return { ok: true, value: num };
+    if (p.min != null && n < p.min) return { ok: false, reason: tText("{{where}} must be >= {{min}}{{u}} (got {{num}}{{u}})", { where, min: p.min, u, num: n }) };
+    if (p.max != null && n > p.max) return { ok: false, reason: tText("{{where}} must be <= {{max}}{{u}} (got {{num}}{{u}})", { where, max: p.max, u, num: n }) };
+    return { ok: true, value: n };
   }
   return { ok: true, value: raw };
 }
-
+function onsetValue() { return document.querySelector("input[name=\"fail-onset\"]:checked").value; }
 function updateOnsetDurationVisibility() {
-  const onset = document.querySelector("input[name=\"fail-onset\"]:checked").value;
-  // Duration applies to every non-step onset (gradual ramp / intermittent).
-  $("onset-duration-group").style.display = (onset === "step") ? "none" : "block";
+  $("onset-duration-group").style.display = (onsetValue() === "step") ? "none" : "block";
+  renderReview();
 }
-
-async function injectFailure() {
+/** Build the failure_inject payload from the form; {ok, payload|reason}. */
+function readInjectForm() {
   const spec = currentFailureSpec;
-  if (!spec) { setInjectError(tText("No failure selected (catalogue not loaded).")); return; }
-  let subsystem = $("fail-subsystem").value;
-  if (subsystem === "adcs") subsystem = "aocs";   // legacy alias
-  const onset = document.querySelector("input[name=\"fail-onset\"]:checked").value;
-  const onset_duration_s = parseInt($("fail-onset-dur").value, 10) || 30;
-
-  const payload = { type: "failure_inject", subsystem, failure: spec.name,
-                    onset, onset_duration_s };
+  if (!spec) return { ok: false, reason: tText("No failure selected (catalogue not loaded).") };
+  let subsystem = currentFailureSub;
+  if (subsystem === "adcs") subsystem = "aocs";
+  const onset = onsetValue();
+  const payload = { subsystem, failure: spec.name, onset, onset_duration_s: parseInt($("fail-onset-dur").value, 10) || 30 };
   if (spec.magnitude) {
     const r = readParamControl(spec.magnitude, "fail-mag");
-    if (!r.ok) { setInjectError(r.reason); return; }
+    if (!r.ok) return r;
     if (!r.skip) payload.magnitude = r.value;
   }
   for (const p of (spec.params || [])) {
     const r = readParamControl(p, "fail-p");
-    if (!r.ok) { setInjectError(r.reason); return; }
+    if (!r.ok) return r;
     if (!r.skip) payload[p.name] = r.value;
   }
+  return { ok: true, payload, label: spec.label || spec.name };
+}
+function readTrigger() {
+  const kind = $("fail-trigger").value;
+  if (kind === "delay") {
+    const d = Number($("fail-delay").value);
+    if (!Number.isFinite(d) || d < 0) return { ok: false, reason: tText("Delay must be a number of seconds") };
+    return { ok: true, trigger: { kind, delay_s: d } };
+  }
+  if (kind === "tc") {
+    const m = ($("fail-tc").value || "").trim().match(/^(\d+)\.(\d+)(?:\.(\d+))?$/);
+    if (!m) return { ok: false, reason: tText("Write the telecommand as service.subtype or service.subtype.func, e.g. 8.1.26") };
+    return { ok: true, trigger: { kind, service: +m[1], subtype: +m[2], ...(m[3] ? { func_id: +m[3] } : {}) } };
+  }
+  return { ok: true, trigger: { kind } };
+}
+function triggerText(tr) {
+  if (!tr) return "";
+  return {
+    now: () => tText("now"), delay: () => tText("in {{s}} s of sim time", { s: tr.delay_s }),
+    aos: () => tText("at the next AOS"), los: () => tText("at the next LOS"),
+    eclipse_entry: () => tText("at eclipse entry"), eclipse_exit: () => tText("at eclipse exit"),
+    tc: () => tText("when TC {{s}}.{{t}}{{f}} is received", { s: tr.service, t: tr.subtype, f: tr.func_id != null ? "." + tr.func_id : "" }),
+  }[tr.kind]();
+}
+function describeInject(p) {
+  return Object.keys(p).filter((k) => !["subsystem", "failure", "onset", "onset_duration_s"].includes(k))
+    .map((k) => `${k}=${JSON.stringify(p[k])}`).join(" ");
+}
+/** The confirm step: target, severity, ramp and trigger, always visible. */
+function renderReview() {
+  const f = readInjectForm();
+  const tr = readTrigger();
+  const snap = $("fail-snapshot").checked;
+  const rows = [];
+  if (batch.length) rows.push([tText("Batch"), batch.map((b) => `${b.subsystem}/${b.failure}`).join(", ")]);
+  if (f.ok) {
+    rows.push([tText("Target"), `${f.payload.subsystem.toUpperCase()} / ${f.payload.failure}`]);
+    rows.push([tText("Severity"), describeInject(f.payload) || tText("as catalogued")]);
+    rows.push([tText("Onset"), f.payload.onset === "step" ? tText("step (immediate)") : `${tText(f.payload.onset)} · ${f.payload.onset_duration_s} s`]);
+  }
+  rows.push([tText("When"), tr.ok ? triggerText(tr.trigger) : tr.reason]);
+  rows.push([tText("Snapshot before"), snap ? tText("yes (kept in memory, newest six)") : tText("no")]);
+  $("inject-review").innerHTML = `<dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
+  $("batch-list").innerHTML = batch.length ? batch.map((b, i) => `<div class="item fail"><span class="fname">${esc(`${b.subsystem}/${b.failure}`)}</span>
+      <button type="button" class="ds-btn sm ghost" data-act="unbatch" data-i="${i}" aria-label="${esc(tText("Remove {{what}} from the batch", { what: `${b.subsystem}/${b.failure}` }))}">${t("Remove")}</button>
+      <div class="fmeta"><span>${esc(describeInject(b))}</span></div></div>`).join("") : "";
+  const btn = $("btn-inject");
+  const want = batch.length ? tText("Inject batch ({{n}})", { n: batch.length }) : tText("Inject");
+  // armButton keeps the label it was bound with: re-bind when it changes
+  if (!btn.classList.contains("is-armed") && btn.textContent.trim() !== want) {
+    btn.textContent = want;
+    armInject();
+  }
+}
+function addToBatch() {
+  const f = readInjectForm();
+  if (!f.ok) { setInjectError(f.reason); return; }
+  if (batch.length >= 8) { setInjectError(tText("At most 8 faults fire together")); return; }
+  batch.push(f.payload);
   setInjectError("");
-
-  const res = await sendCommand(payload);
+  setEnabled($("btn-inject"));
+  renderReview();
+}
+async function injectFailure() {
+  const tr = readTrigger();
+  if (!tr.ok) { setInjectError(tr.reason); return; }
+  const snap = $("fail-snapshot").checked;
+  let injects = batch.slice();
+  if (!injects.length) {
+    const f = readInjectForm();
+    if (!f.ok) { setInjectError(f.reason); return; }
+    injects = [f.payload];
+  }
+  setInjectError("");
+  let res;
+  if (injects.length === 1 && tr.trigger.kind === "now") {
+    // The established command (scenario generator, tests): failure_inject.
+    res = await sendCommand({ type: "failure_inject", ...injects[0], snapshot_before: snap });
+  } else {
+    res = await sendCommand({ type: "failure_schedule", injects, trigger: tr.trigger, snapshot_before: snap });
+  }
   if (res && res.status !== "ok") {
     setInjectError(tText("Rejected: {{reason}}", { reason: res.message || tText("unknown reason") }));
     showToast(tText("Injection rejected — see the reason above"), "error");
     return;
   }
-  const describe = Object.keys(payload)
-    .filter((k) => !["type", "subsystem", "failure", "onset", "onset_duration_s"].includes(k))
-    .map((k) => `${k}=${JSON.stringify(payload[k])}`).join(" ");
-  addLog("high", "INJECT", `${subsystem}/${spec.name} ${describe} onset=${onset}`);
-  showToast(tText("Failure injected: {{what}}", { what: `${subsystem}/${spec.name}` }), "success");
-  failuresPoll.kick();   // don't wait up to 5 s for the next cycle
+  const what = injects.map((i) => `${i.subsystem}/${i.failure}`).join(", ");
+  showToast(tr.trigger.kind === "now" ? tText("Failure injected: {{what}}", { what }) : tText("Scheduled: {{what}} {{when}}", { what, when: triggerText(tr.trigger) }), "success");
+  batch = [];
+  renderReview();
+  failuresPoll.kick(); viewsPoll.kick(); timelinePoll.kick();
+  setTimeout(refreshBreakpoints, 1500);
 }
 
-/* ── active failures ───────────────────────────────────────────────────── */
+/* ── scheduled + active failures ───────────────────────────────────────── */
 
+function renderSchedule(list) {
+  const box = $("schedule-list");
+  const n = (list || []).length;
+  $("schedule-count").innerHTML = n ? `<span class="inj-chip">${esc(tText("{{n}} pending", { n }))}</span>` : "";
+  if (!n) { box.innerHTML = `<div class="no-data" style="padding:var(--sp-2) var(--sp-4)">${t("Nothing scheduled")}</div>`; return; }
+  box.innerHTML = list.map((e) => `<div class="item fail"><span class="fname">${esc(e.injects.map((i) => `${i.subsystem}/${i.failure}`).join(", "))}</span>
+    <button type="button" class="ds-btn sm" data-act="cancel-schedule" data-id="${esc(e.id)}" aria-label="${esc(tText("Cancel scheduled inject {{id}}", { id: e.id }))}">${t("Cancel")}</button>
+    <div class="fmeta"><span>${esc(e.id)}</span><span>${esc(triggerText(e.trigger))}</span>${e.due_ts ? `<span>${esc(V.fmtClockSec(e.due_ts))}</span>` : ""}${e.snapshot_before ? `<span>${t("snapshot")}</span>` : ""}</div></div>`).join("");
+}
+async function cancelSchedule(id) {
+  const res = await sendCommand({ type: "schedule_cancel", schedule_id: id });
+  if (res && res.status !== "ok") { showToast(tText("Cancel refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
+  viewsPoll.kick(); timelinePoll.kick();
+}
 let lastFailures = [];
 function renderFailures(failures) {
   lastFailures = failures || [];
   const list = $("failures-list");
   const n = lastFailures.length;
-  $("failures-count").innerHTML = n ? renderChip({ kind: "alarm", label: tText("{{n}} injected", { n }) }) : "";
-  if (n) setEnabled($("btn-clear-all"));
-  else setDisabled($("btn-clear-all"), tText("No failures are active"));
-  // Mark the truth card of every subsystem carrying an injected failure.
-  const failed = new Set(lastFailures.map((f) => f.subsystem === "adcs" ? "aocs" : f.subsystem));
-  ["eps", "aocs", "tcs", "obdh", "ttc", "payload"].forEach((sub) => {
-    const card = $("card-" + sub);
-    if (!card) return;
-    card.classList.toggle("is-alarm", failed.has(sub));
-    const r = card.querySelector(".ds-panel-h .r");
-    if (r) r.dataset.failed = failed.has(sub) ? "1" : "";
-  });
-  if (!n) {
-    list.innerHTML = `<div class="no-data" style="padding:var(--sp-2) var(--sp-4)">${t("No active failures")}</div>`;
-    return;
-  }
+  $("failures-count").innerHTML = n ? `<span class="inj-chip">${esc(tText("{{n}} injected", { n }))}</span>` : "";
+  if (n) setEnabled($("btn-clear-all")); else setDisabled($("btn-clear-all"), tText("No failures are active"));
+  if (list.querySelector(".is-armed")) return;
+  if (!n) { list.innerHTML = `<div class="no-data" style="padding:var(--sp-2) var(--sp-4)">${t("No active failures")}</div>`; return; }
   list.innerHTML = lastFailures.map((f) => {
     const id = f.failure_id || f.id || `${f.subsystem}_${f.failure}`;
     const magPct = ((f.magnitude || 0) * 100).toFixed(0);
     const elapsed = f.elapsed_s ? formatDuration(f.elapsed_s) : "00:00";
     const what = `${(f.subsystem || "").toUpperCase()} / ${f.failure || f.type || ""}`;
-    return `
-      <div class="item fail" data-id="${esc(id)}">
-        <span class="fname" title="${esc(what)}">${esc(what)}</span>
-        <button type="button" class="ds-btn sm" data-act="clear-failure" data-id="${esc(id)}"
-          aria-label="${esc(tText("Clear failure {{what}}", { what }))}">${t("Clear")}</button>
-        <div class="fmeta"><span>${t("magnitude {{pct}} %", { pct: magPct })}</span><span>${elapsed}</span></div>
-      </div>`;
+    return `<div class="item fail" data-id="${esc(id)}"><span class="fname" title="${esc(what)}">${esc(what)}</span>
+        <button type="button" class="ds-btn sm" data-act="clear-failure" data-id="${esc(id)}" aria-label="${esc(tText("Clear failure {{what}}", { what }))}">${t("Clear")}</button>
+        <div class="fmeta"><span>${t("magnitude {{pct}} %", { pct: magPct })}</span><span>${elapsed}</span></div></div>`;
   }).join("");
 }
-
 async function clearFailure(id) {
   const res = await sendCommand({ type: "failure_clear", failure_id: id });
-  if (res && res.status !== "ok") {
-    showToast(tText("Clear refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("info", "FAIL", tText("Clearing failure: {{id}}", { id }));
+  if (res && res.status !== "ok") { showToast(tText("Clear refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   failuresPoll.kick();
 }
-
 async function clearAllFailures() {
   const res = await sendCommand({ type: "failure_clear_all" });
-  if (res && res.status !== "ok") {
-    showToast(tText("Clear-all refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("info", "FAIL", tText("Clearing all failures"));
+  if (res && res.status !== "ok") { showToast(tText("Clear-all refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   showToast(tText("All failures cleared"), "success");
   failuresPoll.kick();
 }
 
-/* ── mission phase & separation ────────────────────────────────────────── */
+/* ── phase, overrides, marks ───────────────────────────────────────────── */
 
 async function setSpacecraftPhase() {
   const phase = parseInt($("phase-select").value, 10);
-  if (!Number.isInteger(phase) || phase < 0 || phase > 6) {
-    showToast(tText("Phase must be 0-6"), "error");
-    return;
-  }
+  if (!Number.isInteger(phase) || phase < 0 || phase > 6) { showToast(tText("Phase must be 0-6"), "error"); return; }
   const res = await sendCommand({ type: "set_phase", phase });
-  if (res && res.status !== "ok") {
-    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("high", "PHASE", `set_phase ${phase} (${PHASE_NAMES[phase]})`);
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   showToast(tText("Phase set: {{phase}} {{name}}", { phase, name: PHASE_NAMES[phase] }), "success");
 }
-
 async function startSeparation() {
   const res = await sendCommand({ type: "start_separation" });
-  if (res && res.status !== "ok") {
-    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("high", "PHASE", "start_separation");
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   showToast(tText("Separation sequence started"), "success");
 }
-
-/* ── overrides ─────────────────────────────────────────────────────────── */
-
 async function toggleOverride() {
-  // Desired state from the TRUE engine state, not the button class.
   const newState = !(state && state.override_passes);
   const res = await sendCommand({ type: "override_passes", enabled: newState });
-  if (res && res.status !== "ok") {
-    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog(newState ? "low" : "info", "OVERRIDE",
-         newState ? tText("Pass override enabled") : tText("Pass override disabled"));
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   statePoll.kick();
 }
-
 async function setBatterySoc() {
   const soc = parseFloat($("soc-override-input").value);
-  if (!isFinite(soc) || soc < 0 || soc > 100) {
-    showToast(tText("Battery SoC override must be 0-100 %"), "error");
-    return;
-  }
+  if (!isFinite(soc) || soc < 0 || soc > 100) { showToast(tText("Battery SoC override must be 0-100 %"), "error"); return; }
   const res = await sendCommand({ type: "set_battery_soc", soc_pct: soc });
-  if (res && res.status !== "ok") {
-    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("low", "OVERRIDE", tText("Battery SoC override -> {{soc}} %", { soc }));
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   showToast(tText("Battery SoC set to {{soc}} %", { soc }), "success");
 }
+async function mark(kind, disposition) {
+  const text = $("mark-text").value.trim();
+  const res = await sendCommand({ type: "timeline_mark", kind, text, ...(disposition ? { disposition } : {}) });
+  if (res && res.status !== "ok") { showToast(tText("Mark refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
+  $("mark-text").value = "";
+  showToast(kind === "anomaly" && disposition === "restart"
+    ? tText("Marked. To restart, load a snapshot from the Snapshots list.") : tText("Marked on the timeline"), "success");
+  timelinePoll.kick();
+}
 
-/* ── speed group (one stepper: 0.5/1/2/5/10x + FREEZE) ─────────────────── */
+/* ── time control ──────────────────────────────────────────────────────── */
 
 async function setSpeed(speed) {
   const res = await sendCommand({ type: "set_speed", value: speed });
-  if (res && res.status !== "ok") {
-    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   if (state) state.speed = speed;
   renderTimeControl();
   statePoll.kick();
 }
-
 async function toggleFreeze() {
   const next = !frozen;
   const res = await sendCommand({ type: next ? "freeze" : "resume" });
-  if (res && res.status !== "ok") {
-    showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error");
-    return;
-  }
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
   frozen = next;
   if (state) state.speed = next ? 0 : Math.max(1, state.speed || 0);
   renderTimeControl();
-  addLog(frozen ? "low" : "info", "SIM",
-         frozen ? tText("Simulation frozen") : tText("Simulation resumed"));
   statePoll.kick();
 }
-
-/** Time control states: Running ×N (accent) or Frozen (caution), the
- *  selected speed pressed, and Freeze / Resume saying what it will do. */
 function renderTimeControl() {
   const speed = state && state.speed != null ? Number(state.speed) : null;
   const was = frozen;
@@ -1014,9 +964,9 @@ function renderTimeControl() {
   if (was !== frozen && scenarios.length) renderScenarios();
   $("run-chip").innerHTML = speed === null ? renderChip({ kind: "nodata", label: tText("no data") })
     : frozen ? renderChip({ kind: "warn", label: tText("Frozen"), title: tText("Simulation time is stopped") })
-      : renderChip({ kind: "active", label: tText("Running ×{{s}}", { s: speed }) });
-  $$("#speed-group button[data-speed]").forEach((b) =>
-    b.setAttribute("aria-pressed", String(!frozen && parseFloat(b.dataset.speed) === speed)));
+      : renderChip({ kind: "active", label: tText("Running ×{{s}}", { s: speed }),
+        title: speed > 1 ? tText("Accelerated: physics is sub-stepped; housekeeping, pacing and the planner see the same accelerated time") : "" });
+  $$("#speed-group button[data-speed]").forEach((b) => b.setAttribute("aria-pressed", String(!frozen && parseFloat(b.dataset.speed) === speed)));
   const btn = $("freeze-btn");
   btn.textContent = frozen ? tText("Resume") : tText("Freeze");
   btn.classList.toggle("primary", frozen);
@@ -1026,19 +976,14 @@ function renderTimeControl() {
 /* ── session label (published to the ground in the state feed) ────────── */
 
 let sessionLabelSeeded = false;
-function publishedLabel() {
-  return state && typeof state.session_label === "string" ? state.session_label : null;
-}
+function publishedLabel() { return state && typeof state.session_label === "string" ? state.session_label : null; }
 function renderSessionLabel() {
   const cur = publishedLabel();
   const el = $("session-label-now");
   if (!el) return;
   el.textContent = cur === null ? tText("Published label: no data from the simulator")
     : cur ? tText("Published: {{label}}", { label: cur }) : tText("Nothing published: the consoles leave it blank.");
-  if (!sessionLabelSeeded && cur !== null) {
-    sessionLabelSeeded = true;
-    if (!$("session-label").value) $("session-label").value = cur;
-  }
+  if (!sessionLabelSeeded && cur !== null) { sessionLabelSeeded = true; if (!$("session-label").value) $("session-label").value = cur; }
   updateSessionLabelBtn();
 }
 function updateSessionLabelBtn() {
@@ -1053,322 +998,324 @@ async function publishSessionLabel() {
   if ($("btn-session-label").getAttribute("aria-disabled") === "true") return;
   const label = $("session-label").value.trim().replace(/\s+/g, " ");
   const res = await sendCommand({ type: "set_session_label", label });
-  if (!res || res.status !== "ok") {
-    showToast(tText("Label not published: {{reason}}", { reason: (res && res.message) || tText("unknown") }), "error");
-    return;
-  }
-  addLog("info", "SESSION", label ? tText("Session label published: \"{{label}}\"", { label }) : tText("Session label cleared"));
+  if (!res || res.status !== "ok") { showToast(tText("Label not published: {{reason}}", { reason: (res && res.message) || tText("unknown") }), "error"); return; }
   showToast(label ? tText("Published to the consoles") : tText("Session label cleared"), "success");
   setTimeout(() => statePoll.kick(), 600);
 }
 
-/* ── breakpoints ───────────────────────────────────────────────────────── */
+/* ── snapshots (breakpoints) ───────────────────────────────────────────── */
 
-async function saveBreakpoint() {
-  const name = $("breakpoint-name").value.trim();
+async function saveBreakpoint(nameIn) {
+  const name = (nameIn || $("breakpoint-name").value).trim();
   if (!name) return;
-  $("breakpoint-name").value = "";
-  updateBpSave();
+  if (!nameIn) { $("breakpoint-name").value = ""; updateBpSave(); }
   const res = await apiPost("/api/breakpoint/save", { name });
-  if (res && res.status !== "saved") {
-    showToast(tText("Breakpoint save failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error");
-    return;
-  }
-  addLog("info", "BRKPT", tText("Saved: \"{{name}}\"", { name }));
-  showToast(tText("Breakpoint \"{{name}}\" saved", { name }), "success");
-  setTimeout(refreshBreakpoints, 1200);
+  if (res && res.status !== "saved") { showToast(tText("Snapshot save failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error"); return; }
+  showToast(tText("Snapshot \"{{name}}\" saved", { name }), "success");
+  setTimeout(refreshBreakpoints, 600);
 }
-
 async function refreshBreakpoints() {
   let data = null;
   try { data = await apiGet("/api/breakpoints"); } catch (e) { return; }
   if (!Array.isArray(data)) return;
-  breakpoints = data.map((b) => ({
-    name: b.name,
-    tick: b.tick != null ? b.tick : (b.tick_count != null ? b.tick_count : 0),
-    time: b.sim_time || null,
-  }));
+  breakpoints = data.map((b) => ({ name: b.name, auto: !!b.auto, tick: b.tick != null ? b.tick : (b.tick_count != null ? b.tick_count : 0), time: b.sim_time || null }));
+  breakpoints.sort((a, b) => String(b.time || "").localeCompare(String(a.time || "")));
   renderBreakpoints();
 }
-
 function renderBreakpoints() {
   const list = $("breakpoints-list");
-  if (list.querySelector(".is-armed")) return;   // never rebuild under a pending two-step
-  if (!breakpoints.length) {
-    list.innerHTML = `<div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)">${t("No breakpoints saved")}</div>`;
-    return;
-  }
-  list.innerHTML = breakpoints.map((bp) => `
-    <div class="item">
+  if (list.querySelector(".is-armed")) return;
+  if (!breakpoints.length) { list.innerHTML = `<div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)">${t("No snapshots saved")}</div>`; return; }
+  list.innerHTML = breakpoints.map((bp) => `<div class="item">
       <span class="fname">${esc(bp.name)}</span>
-      <button type="button" class="ds-btn critical sm" data-name="${esc(bp.name)}"
-        aria-label="${esc(tText("Load breakpoint {{name}}", { name: bp.name }))}">${t("Load")}</button>
-      <div class="fmeta"><span>${t("tick {{n}}", { n: bp.tick })}</span>
-        <span>${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div>
-    </div>`).join("");
-  list.querySelectorAll("button[data-name]").forEach((b) =>
-    armButton(b, { onExecute: () => loadBreakpoint(b.dataset.name) }));
+      <button type="button" class="ds-btn critical sm" data-name="${esc(bp.name)}" aria-label="${esc(tText("Load snapshot {{name}}", { name: bp.name }))}">${t("Load")}</button>
+      <div class="fmeta">${bp.auto ? `<span class="inj-chip">${t("auto")}</span>` : ""}<span>${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div></div>`).join("");
+  list.querySelectorAll("button[data-name]").forEach((b) => armButton(b, { onExecute: () => loadBreakpoint(b.dataset.name) }));
 }
-
 function updateBpSave() {
   if ($("breakpoint-name").value.trim()) setEnabled($("btn-save-bp"));
-  else setDisabled($("btn-save-bp"), tText("Enter a breakpoint name first"));
+  else setDisabled($("btn-save-bp"), tText("Enter a snapshot name first"));
 }
-
 async function loadBreakpoint(name) {
   const res = await apiPost("/api/breakpoint/load", { name });
-  if (res && res.status !== "loaded") {
-    showToast(tText("Breakpoint load failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error");
-    return;
+  if (res && res.status !== "loaded") { showToast(tText("Snapshot load failed: {{reason}}", { reason: res.error || res.message || tText("unknown") }), "error"); return; }
+  showToast(tText("Snapshot \"{{name}}\" loaded", { name }), "success");
+  timelinePoll.kick();
+}
+
+/* ── focus pane ────────────────────────────────────────────────────────── */
+
+function viewLabel(id) { const v = VIEWS.find((x) => x.id === id); return v ? tText(v.label) : id; }
+function renderTabsBar() {
+  const fs = focus.state();
+  const tabs = VIEWS.filter((v) => v.id !== "|").map((v) => ({ id: v.id, label: tText(v.label) }));
+  const html = renderTabs(tabs, fs.view, { label: tText("Focus views"), panel: "focus-body" });
+  const host = $("focus-tabs");
+  host.innerHTML = html;
+  const list = host.querySelector('[role="tablist"]');
+  // a hairline between the run views and Prep / Debrief
+  const prep = host.querySelector('[data-tab="prep"]');
+  if (prep) prep.insertAdjacentHTML("beforebegin", '<span class="sep" aria-hidden="true"></span>');
+  if (list && !list.__wired) { list.__wired = true; mountTabs(list, (id) => goView(id, true)); }
+  $("view-select").innerHTML = tabs.map((tb) => `<option value="${esc(tb.id)}"${tb.id === fs.view ? " selected" : ""}>${esc(tb.label)}</option>`).join("");
+}
+function renderFocusHead() {
+  const fs = focus.state();
+  $("focus-title").textContent = viewLabel(fs.view);
+  const r = fs.reason;
+  $("focus-reason").innerHTML = r
+    ? `<span class="auto">${esc(tText("auto"))}</span> · ${esc(tText("because {{reason}}: {{subject}} at {{time}}", {
+        reason: tText(r.reason || ""), subject: r.subject || "", time: V.fmtClockSec(r.ts) }))}`
+    : esc(fs.pinned ? tText("pinned") : !fs.auto ? tText("auto-follow off") : tText("chosen by you"));
+  const sg = fs.suggestion;
+  $("focus-suggest").innerHTML = sg ? `${esc(tText("Suggested: {{view}} — {{reason}}", { view: viewLabel(sg.view), reason: tText(sg.reason || "") }))}
+    <button type="button" class="ds-btn sm primary" id="btn-suggest-go">${t("Go")}</button>
+    <button type="button" class="ds-btn sm ghost" id="btn-suggest-x" aria-label="${esc(tText("Dismiss the suggestion"))}">×</button>` : "";
+  const back = $("btn-focus-back");
+  if (fs.canBack) { setEnabled(back); back.title = tText("Back to {{view}}", { view: viewLabel(fs.backView) }); }
+  else setDisabled(back, tText("No previous view"));
+  $("btn-focus-pin").setAttribute("aria-pressed", String(fs.pinned));
+  $("btn-focus-pin").textContent = fs.pinned ? tText("Pinned") : tText("Pin");
+  $("focus-auto").checked = fs.auto;
+}
+function showView() {
+  const fs = focus.state();
+  $$(".view").forEach((v) => { v.hidden = v.id !== "view-" + fs.view; });
+  $$("#focus-tabs [role=tab]").forEach((b) => { const s = b.dataset.tab === fs.view; b.setAttribute("aria-selected", String(s)); b.tabIndex = s ? 0 : -1; });
+  if ($("view-select").value !== fs.view) $("view-select").value = fs.view;
+  $$("#overview .tile[data-view]").forEach((b) => b.classList.toggle("is-focus", b.dataset.view === fs.view));
+  renderFocusHead();
+  renderActiveView();
+  if (fs.view === "debrief" && debrief) debrief.refresh();
+  if (fs.view === "raw" || fs.view === "obc") snapshotPoll.kick();
+}
+function goView(id, manual) {
+  if (manual) focus.select(id, Date.now());
+  else focus.select(id, Date.now());
+  showView();
+}
+function applyFocusResult(res) {
+  if (res && (res.action === "switch" || res.action === "accept")) {
+    showView();
+    addLog("info", "FOCUS", tText("Focus → {{view}} ({{reason}})", { view: viewLabel(res.view), reason: tText((focus.state().reason || {}).reason || "") }));
+  } else if (res && (res.action === "suggest" || res.action === "queued")) {
+    renderFocusHead();
   }
-  addLog("info", "BRKPT", tText("Loaded: \"{{name}}\"", { name }));
-  showToast(tText("Breakpoint \"{{name}}\" loaded", { name }), "success");
 }
 
-/* ── truth dashboard render (1 Hz, from /api/state) ────────────────────── */
-/* Instructor-side limits, the same thresholds the page always used; the
- * shared renderers turn them into caution/alarm with glyph + ISA code. */
-const LIM = {
-  soc: { red_low: 30, yellow_low: 70, lo: 0, hi: 100 },
-  pct: { yellow_high: 60, red_high: 80, lo: 0, hi: 100 },
-  batT: { yellow_low: 5, red_high: 40 },
-  obcT: { yellow_low: -10, red_high: 50 },
-  fpaT: { yellow_low: -50, red_high: -10 },
-  att: { yellow_high: 0.5, red_high: 1 },
-  margin: { red_low: 3, yellow_low: 6 },
-};
-
-function gauge(id, label, v, lim, units) {
-  const age = stateAgeS();
-  $(id).innerHTML = renderGauge(v, lim, { label, units, digits: 1, ageS: age,
-    verdict: age !== null && age > 3 ? "stale" : "fresh" });
+/* keep <details> open state and scroll across re-renders */
+function swapHtml(el, html) {
+  const open = [...el.querySelectorAll("details")].map((d) => d.open);
+  el.innerHTML = html;
+  [...el.querySelectorAll("details")].forEach((d, i) => { if (open[i] !== undefined) d.open = open[i]; });
 }
 
-function setPv(id, html) {
-  const el = $(id);
-  if (el) el.innerHTML = html;
+function situationHtml() {
+  const nowTs = simNowTs();
+  const active = tlFaults.filter((f) => f.seg === tlSegment && f.cleared_ts == null);
+  const cleared = tlFaults.filter((f) => f.seg === tlSegment && f.cleared_ts != null).slice(-4);
+  const card = (f) => {
+    const stage = [...V.STAGES].reverse().find((s) => f[s.k] != null);
+    return `<button type="button" class="fcard${f.cleared_ts ? " cleared" : ""}" data-fault="${esc(f.fault_id)}">
+      <span class="ft"><span>${esc(`${f.subsystem.toUpperCase()} / ${f.failure}`)}</span><span class="dim">T+${esc(V.fmtAge(nowTs - f.inserted_ts))}</span></span>
+      <span class="st">${esc(tText(f.inject_class === "indication" ? "indication (sensor lie)" : "physical"))} · ${esc(tText((faultMenu && (faultMenu.elements.find((e) => e.id === f.element) || {}).label) || f.element))}</span>
+      <span class="st">${esc(tText("Latest: {{stage}}", { stage: stage ? tText(stage.label) : "" }))}</span></button>`;
+  };
+  const div = views && views.divergence ? views.divergence.summary : null;
+  const pend = tlPending.slice().sort((a, b) => (a.ts ?? 9e12) - (b.ts ?? 9e12)).slice(0, 8);
+  const noScenario = !activeScenarioName;
+  return `<div class="sit"><div>
+      ${noScenario ? `<p class="lede">${t("No scenario is running. Choose one in Prep, or inject faults by hand in free run.")} <button type="button" class="ds-btn sm" data-goview="prep">${t("Open Prep")}</button></p>` : ""}
+      <h3>${t("Active injects")}</h3>
+      ${active.length ? `<div class="fault-cards">${active.map(card).join("")}</div>` : `<div class="no-data">${t("No inject is active.")}</div>`}
+      ${cleared.length ? `<h3>${t("Recently cleared")}</h3><div class="fault-cards">${cleared.map(card).join("")}</div>` : ""}
+      <h3>${t("Coming up")}</h3>
+      ${pend.length ? `<ul class="plain">${pend.map((p) => `<li><span class="mono dim">${p.ts ? esc(V.fmtClockSec(p.ts)) : esc(tText("gate"))}</span> ${p.source === "scenario" ? esc(tText("scenario")) + ": " : ""}${esc(p.text)}${p.gate ? ` <span class="why">${esc(p.gate)}</span>` : ""}</li>`).join("")}</ul>`
+        : `<div class="no-data">${t("Nothing scheduled by you or the scenario.")}</div>`}
+    </div><div class="side">
+      <h3>${t("Truth vs trainees")}</h3>
+      ${div ? `<div class="kv"><span>${t("Injected indication faults")}</span><span class="cause cause-injected">${div.by_cause.injected}</span></div>
+        <div class="kv"><span>${t("Spacecraft estimate or clock off")}</span><span class="cause cause-estimator">${div.by_cause.estimator}</span></div>
+        <div class="kv"><span>${t("Ground does not have it yet")}</span><span class="cause cause-delay">${div.by_cause.delay}</span></div>
+        <button type="button" class="ds-btn sm" data-goview="divergence" style="margin-top:var(--sp-2)">${t("Open the comparison")}</button>` : V.num(null)}
+      <h3>${t("Team activity the simulator can see")}</h3>
+      ${teamActivityHtml(nowTs)}
+      <p class="note">${t("Alarm acknowledgements, procedure steps and voice loops happen on the ground and are not visible to the simulator.")}</p>
+    </div></div>`;
 }
-
-function onOff(id, on) {
-  $(id).innerHTML = on == null ? renderNoData()
-    : renderChip(on ? { kind: "neutral", label: tText("On") } : { kind: "off", label: tText("Off") });
+function teamActivityHtml(nowTs) {
+  const seg = tlItems.filter((i) => i.seg === tlSegment);
+  const tcs = seg.filter((i) => i.kind === "tc_rx");
+  const last10 = tcs.filter((i) => nowTs - i.ts <= 600).length;
+  const rej = seg.filter((i) => i.lane === "tc" && (i.kind === "tc_rej" || i.kind === "tc_fail" || i.kind === "tc_link") && nowTs - i.ts <= 600).length;
+  const lastTc = tcs.length ? tcs[tcs.length - 1] : null;
+  const missed = seg.filter((i) => i.kind === "missed_cue").length;
+  return `<div class="kv"><span>${t("Telecommands, last 10 min")}</span><span class="mono">${last10}</span></div>
+    <div class="kv"><span>${t("Rejected, last 10 min")}</span><span class="mono">${rej}</span></div>
+    <div class="kv"><span>${t("Last telecommand")}</span>${lastTc ? `<span class="mono">${esc(tText("{{age}} ago", { age: V.fmtAge(nowTs - lastTc.ts) }))}</span>` : `<span class="dim">${t("none")}</span>`}</div>
+    <div class="kv"><span>${t("Alarms not acted on")}</span><span class="mono">${missed}</span></div>`;
 }
+function rowsFor(sub) { return views && views.divergence ? views.divergence.rows.filter((r) => r.subsystem === sub) : []; }
 
-function modeLabel(id, text) {
-  const el = $(id);
+function renderActiveView() {
+  const fs = focus.state();
+  const nowTs = simNowTs();
+  const el = $("view-" + fs.view);
   if (!el) return;
-  const failed = el.dataset.failed === "1";
-  el.innerHTML = (failed ? renderChip({ kind: "alarm", label: tText("failure injected") }) + " " : "")
-    + (text ? `<span class="ds-id">${esc(text)}</span>` : "");
-}
-
-/* VR headset link (smo-vr/1, docs/VR_INTERFACE_ICD.md). The return line is
- * optional, so a connected headset that never replies is NO_REPLY (neutral),
- * not a fault; DEGRADED / SILENT caution, ERROR alarm. */
-function renderVrBadge(link) {
-  const b = $("vr-badge");
-  if (!b) return;
-  if (!link || link.enabled === false) {
-    b.innerHTML = renderChip({ kind: "off", label: tText("VR off"),
-      title: tText("VR bridge not running (--no-vr, SMO_VR=0 or port in use)") });
-    return;
+  switch (fs.view) {
+    case "situation": swapHtml(el, situationHtml()); break;
+    case "divergence": swapHtml(el, views ? V.renderDivergence(views.divergence) : V.num(null)); break;
+    case "fault": {
+      const f = tlFaults.find((x) => x.fault_id === selectedFault) || tlFaults.filter((x) => x.seg === tlSegment).slice(-1)[0];
+      if (f && faultMenu) f.element_label = (faultMenu.elements.find((e) => e.id === f.element) || {}).label;
+      const others = tlFaults.filter((x) => x.seg === tlSegment && (!f || x.fault_id !== f.fault_id));
+      swapHtml(el, V.renderFault(f, nowTs) + (others.length ? `<h3>${t("Other injects in this run")}</h3><div class="fault-cards">${others.map((x) =>
+        `<button type="button" class="fcard${x.cleared_ts ? " cleared" : ""}" data-fault="${esc(x.fault_id)}"><span class="ft">${esc(`${x.subsystem.toUpperCase()} / ${x.failure}`)}</span></button>`).join("")}</div>` : ""));
+      break;
+    }
+    case "power": renderPowerSide(); break;
+    case "thermal": swapHtml(el, views ? V.renderThermal(views.thermal) + V.pairTable(rowsFor("tcs")) : ""); break;
+    case "attitude": swapHtml(el, views ? V.renderAttitude(views.attitude, attHist) + V.pairTable(rowsFor("aocs")) : ""); break;
+    case "orbit": swapHtml(el, views ? V.renderOrbit(views.orbit, nowTs) : ""); break;
+    case "obc": swapHtml($("obc-main"), views ? V.renderObc(views.obc, rowsFor("obdh")) : ""); break;
+    case "storage": swapHtml(el, views ? V.renderStorage(views.storage) + V.pairTable(rowsFor("payload")) : ""); break;
+    default: break;
   }
-  const n = link.n_clients || 0;
-  const overall = link.overall || "NO_CLIENTS";
-  const rows = (link.clients || []).map((c) =>
-    `${c.team || c.peer} [${c.transport}] ${c.health}` +
-    (c.status_word_hex ? ` ${c.status_word_hex}` : "") +
-    (c.text ? ` — ${c.text}` : ""));
-  const title = tText("VR bridge TCP:{{tcp}} WS:{{ws}}", { tcp: link.tcp_port, ws: link.ws_port }) + "\n" +
-    (rows.length ? rows.join("\n") : tText("no headsets connected"));
-  const kind = overall === "ERROR" ? "alarm" : (overall === "DEGRADED" || overall === "SILENT") ? "warn" : "neutral";
-  b.innerHTML = renderChip({ kind, title,
-    label: n ? `VR ${n} ${overall.replace("_", " ")}` : tText("VR: no headsets") });
 }
 
-function renderBanners() {
-  // One contact verdict for every console (R3 audit problem #10); the
-  // instructor feed is truth, so the station comes straight from the sim.
-  const link = linkState(state);
-  if (link.contact && !link.gs) link.gs = state.ground_station_name || "";
-  if (link.contact && state.override_passes) link.source = tText("pass override");
-  $("link-banner").innerHTML = renderLinkBanner(link);
-  // Spacecraft mode from simulation truth (sc_mode), labelled as such.
-  const mode = SC_MODES[state.sc_mode] || null;
-  $("mode-banner").innerHTML = renderModeBanner({ mode, source: tText("simulation truth"),
-    contingency: mode === "SAFE" || mode === "EMERGENCY",
-    fdirLevel: state.fdir && Number.isFinite(state.fdir.level) ? state.fdir.level : null });
-}
-
-function renderDashboard() {
-  if (!state) return;
-
-  // header: SIM TIME primary clock + time control + SC mode chip
-  $("sim-time").textContent = state.sim_time ? fmtUTC(state.sim_time) : "--:--:--";
-  $("sim-date").textContent = state.sim_time ? String(state.sim_time).slice(0, 10) + " UTC" : "";
-  renderTimeControl();
-  const mode = SC_MODES[state.sc_mode] || null;
-  $("sc-mode-badge").innerHTML = "";
-  renderBanners();
-  renderVrBadge(state.vr_link);
-
-  // EPS
-  const eps = state.eps || {};
-  gauge("eps-soc-g", tText("Battery SoC"), eps.soc_pct, LIM.soc, "%");
-  setPv("eps-bus-v", rv(eps.bus_voltage_V, "V", 1));
-  setPv("eps-bat-v", rv(eps.bat_voltage_V, "V", 1));
-  setPv("eps-bat-temp", rv(eps.bat_temp_C, "°C", 1, LIM.batT));
-  setPv("eps-pgen", rv(eps.power_gen_W, "W", 1));
-  setPv("eps-pcons", rv(eps.power_cons_W, "W", 1));
-  setPv("eps-sa", pair(eps.sa_a_A, eps.sa_b_A, "A", 2));
-  modeLabel("eps-mode", "");
-
-  // AOCS
-  const aocs = state.aocs || {};
-  modeLabel("aocs-mode", AOCS_MODES[aocs.mode] || "");
-  setPv("aocs-atterr", rv(aocs.att_error_deg, "°", 3, LIM.att));
-  setPv("aocs-rr", rv(aocs.rate_roll, "°/s", 4));
-  setPv("aocs-rp", rv(aocs.rate_pitch, "°/s", 4));
-  setPv("aocs-ry", rv(aocs.rate_yaw, "°/s", 4));
-  setPv("aocs-rw12", pair(aocs.rw1_rpm, aocs.rw2_rpm, "rpm", 0));
-  setPv("aocs-rw34", pair(aocs.rw3_rpm, aocs.rw4_rpm, "rpm", 0));
-
-  // TCS
-  const tcs = state.tcs || {};
-  modeLabel("tcs-mode", "");
-  setPv("tcs-obc", rv(tcs.temp_obc_C, "°C", 1, LIM.obcT));
-  setPv("tcs-bat", rv(tcs.temp_bat_C, "°C", 1, LIM.batT));
-  setPv("tcs-fpa", rv(tcs.temp_fpa_C, "°C", 1, LIM.fpaT));
-  onOff("tcs-htr-bat", tcs.htr_bat == null ? null : !!tcs.htr_bat);
-  onOff("tcs-htr-obc", tcs.htr_obc == null ? null : !!tcs.htr_obc);
-  onOff("tcs-cooler", tcs.cooler_fpa == null ? null : !!tcs.cooler_fpa);
-
-  // OBDH
-  const obdh = state.obdh || {};
-  modeLabel("obdh-mode", OBDH_MODES[obdh.mode] || "");
-  gauge("obdh-cpu-g", tText("CPU load"), obdh.cpu_load_pct, LIM.pct, "%");
-  gauge("obdh-mem-g", tText("Memory"), obdh.mem_used_pct, LIM.pct, "%");
-  setPv("obdh-reboots", rv(obdh.reboot_count, "", 0, { yellow_high: 0.5 }));
-
-  // TT&C
-  const ttc = state.ttc || {};
-  modeLabel("ttc-mode", TTC_MODES[ttc.mode] || "");
-  $("ttc-link").innerHTML = ttc.link_status == null ? renderNoData()
-    : renderChip(ttc.link_status === 1 ? { kind: "ok", label: tText("Up") }
-      : { kind: "off", label: tText("Down") });
-  setPv("ttc-rssi", rv(ttc.rssi_dBm, "dBm", 1));
-  setPv("ttc-margin", ttc.link_status === 1 ? rv(ttc.link_margin_dB, "dB", 1, LIM.margin)
-    : rv(ttc.link_margin_dB, "dB", 1));
-  setPv("ttc-range", rv(ttc.range_km, "km", 1));
-  setPv("ttc-elev", rv(ttc.elevation_deg, "°", 1));
-
-  // Payload
-  const pl = state.payload || {};
-  modeLabel("payload-mode", PL_MODES[pl.mode] || "");
-  setPv("pl-fpa", pl.mode ? rv(pl.fpa_temp_C, "°C", 1, LIM.fpaT) : rv(pl.fpa_temp_C, "°C", 1));
-  gauge("pl-store-g", tText("Storage"), pl.store_used_pct, LIM.pct, "%");
-  setPv("pl-images", rv(pl.image_count, "", 0));
-
-  // Orbit bar
-  setPv("orb-lat", rv(state.lat, "°", 4));
-  setPv("orb-lon", rv(state.lon, "°", 4));
-  setPv("orb-alt", rv(state.alt_km, "km", 2));
-  $("orb-eclipse").innerHTML = state.in_eclipse == null ? "" : renderChip(state.in_eclipse
-    ? { kind: "neutral", label: tText("In eclipse") } : { kind: "neutral", label: tText("Sunlit") });
-  $("orb-contact").innerHTML = "";
-
-  // The pass override — the single copy; its state is engine truth.
-  const ob = $("btn-override");
-  ob.textContent = state.override_passes ? tText("Pass override on") : tText("Override passes");
-  ob.setAttribute("aria-pressed", String(!!state.override_passes));
-
-  // phase select mirrors engine truth when the user is not mid-change
-  if (state.spacecraft_phase != null && document.activeElement !== $("phase-select")
-      && !$("btn-set-phase").classList.contains("is-armed")) {
-    $("phase-select").value = String(state.spacecraft_phase);
+/* power flow: the shared powerflow.js fed with the simulator's own values */
+function truthSource() {
+  const p = (state && state.params) || {};
+  const hexv = {};
+  for (const [k, v] of Object.entries(p)) {
+    const n = parseInt(k, 10);
+    if (Number.isFinite(n)) hexv["0x" + n.toString(16).toUpperCase().padStart(4, "0")] = v;
   }
-  $("phase-now").innerHTML = state.spacecraft_phase != null
-    ? `<span class="ds-id" title="${esc(tText("now {{n}} {{name}}", { n: state.spacecraft_phase,
-      name: PHASE_NAMES[state.spacecraft_phase] || "" }))}">${esc(PHASE_NAMES[state.spacecraft_phase] || state.spacecraft_phase)}</span>` : "";
+  return {
+    state: state || {}, limits: {},
+    get(hex) {
+      const v = hexv[hex];
+      return D.qty(Number.isFinite(Number(v)) && v !== null ? Number(v) : null, "", { verdict: v == null ? "nodata" : "fresh", src: `sim ${hex}` });
+    },
+  };
+}
+function renderPower() {
+  if (!state || focus.state().view !== "power") return;
+  if (!powerView) powerView = PF.mount($("powerflow"), { t: tText, variant: "full" });
+  const src = truthSource();
+  powerHist.push(simNowTs(), { gen: src.get("0x0107").v });
+  try { powerView.update(D.derivePower(src, { history: powerHist })); } catch (e) { /* model mid-boot */ }
+}
+function renderPowerSide() {
+  const pw = views && views.power;
+  if (!pw || !pw.available) { $("power-side").innerHTML = ""; return; }
+  const trips = Object.entries(pw.oc_trips || {}).filter(([, v]) => v).map(([k]) => k);
+  $("power-side").innerHTML = `<h3 style="margin-top:0">${t("Model truth")}</h3>
+    <div class="kv"><span>${t("State of charge")}</span>${V.num(pw.soc, 1, "%")}</div>
+    <div class="kv"><span>${t("Bus voltage")}</span>${V.num(pw.bus_v, 2, "V")}</div>
+    <div class="kv"><span>${t("Generated / consumed")}</span><span class="mono">${esc(`${(pw.p_gen ?? 0).toFixed(1)} / ${(pw.p_cons ?? 0).toFixed(1)} W`)}</span></div>
+    <div class="kv"><span>${t("Battery current (+ charging)")}</span>${V.num(pw.bat_current, 2, "A")}</div>
+    <div class="kv"><span>${t("Sun fraction")}</span>${V.num(pw.sun_fraction, 2, "")}</div>
+    <div class="kv"><span>${t("Array output factor A / B")}</span><span class="mono">${esc((pw.sa_degradation || []).map((v) => v == null ? "?" : (v * 100).toFixed(0) + " %").join(" / "))}</span></div>
+    <div class="kv"><span>${t("Load-shed stage")}</span><span class="mono">${esc(String(pw.shed_stage))}</span></div>
+    <div class="kv"><span>${t("Overcurrent trips")}</span>${trips.length ? `<span class="mono">${esc(trips.join(", "))}</span>` : `<span class="dim">${t("none")}</span>`}</div>`;
+  swapHtml($("power-pairs"), V.pairTable(rowsFor("eps")));
+}
 
-  // Active failures + card highlight
-  if (Array.isArray(state.active_failures)) renderFailures(state.active_failures);
+/* ── overview strip ────────────────────────────────────────────────────── */
 
-  // Scenario progress in SIM time (freezes with the sim; speed changes do
-  // not rescale already-elapsed time).
-  updateScenarioButtons();
-  if (activeScenarioName && selectedScenario != null) {
-    const sc = scenarios[selectedScenario];
-    const nowSimMs = simNowMs();
-    if (sc && scenarioStartSimMs != null && nowSimMs != null) {
-      const elapsedS = Math.max(0, (nowSimMs - scenarioStartSimMs) / 1000);
-      const totalS = sc.duration_s || 1;
-      const pct = Math.min(100, (elapsedS / totalS) * 100);
-      $("progress-elapsed").textContent = formatDuration(elapsedS);
-      $("progress-remaining").textContent = formatDuration(totalS);
-      $("progress-fill").style.width = pct + "%";
+function renderOverview() {
+  if (!views || !views.overview) return;
+  for (const tl of views.overview.tiles) {
+    const a = (sparkHist[tl.id] = sparkHist[tl.id] || []);
+    a.push(tl.value == null ? NaN : Number(tl.value));
+    while (a.length > 120) a.shift();
+  }
+  $("overview").innerHTML = V.renderTiles(views.overview, sparkHist, focus.state().view);
+}
+
+/* ── timeline ──────────────────────────────────────────────────────────── */
+
+function renderTimeline() {
+  if (!timeline) return;
+  timeline.update({ items: tlItems, pending: tlPending, nowTs: simNowTs(), windowS: tlWindowS,
+                    futureFrac: 0.2, segment: tlSegment, selectedSeq: tlSelected });
+}
+function ingestTimeline(d) {
+  if (!d || !Array.isArray(d.items)) return;
+  const first = tlSeqAtLoad === null;
+  if (first) tlSeqAtLoad = d.seq;
+  for (const it of d.items) {
+    tlItems.push(it);
+    if (it.lane !== "link" || it.kind === "aos" || it.kind === "los") {
+      if (it.kind !== "ev_down" || it.sev >= 3) {
+        addLog(SEV_KIND[it.sev] || "info", it.lane.toUpperCase(), it.text, V.fmtClockSec(it.ts));
+      }
+    }
+    if (!first && it.focus && it.seq > tlSeqAtLoad) {
+      if (it.lane === "fault" && it.kind === "inject") selectedFault = it.ref;
+      applyFocusResult(focus.offer({ view: it.focus.view, prio: it.focus.prio, reason: it.focus.reason,
+        subject: it.text, ts: it.ts, seq: it.seq }, Date.now()));
     }
   }
+  if (tlItems.length > 6000) tlItems = tlItems.slice(-6000);
+  tlSeq = d.seq;
+  tlPending = d.pending || [];
+  tlFaults = d.faults || [];
+  if (d.segment !== tlSegment) { tlSegment = d.segment; }
+  renderTimeline();
+}
+function showTimelineDetail(seq) {
+  tlSelected = seq;
+  const it = tlItems.find((i) => i.seq === seq);
+  $("tl-detail").textContent = it ? `${V.fmtClockSec(it.ts)} · ${tText((timelineLaneLabel(it.lane)))} · ${it.text}` : "";
+  if (it && it.lane === "fault" && it.ref && tlFaults.some((f) => f.fault_id === it.ref)) { selectedFault = it.ref; goView("fault", true); }
+  renderTimeline();
+}
+function timelineLaneLabel(id) {
+  return ({ phase: "Phase & modes", fault: "Injects", alarm: "On-board alarms", tc: "Telecommands", proc: "Procedures",
+    link: "Link & sun", instr: "Instructor", voice: "Voice loops" })[id] || id;
 }
 
-/* ── clock truth card (instructor only — never downlinked) ─────────────── */
-
-const CUC_EPOCH_MS = Date.UTC(2000, 0, 1, 12, 0, 0);   // mission time_epoch
-
-function formatClockAge(sec) {
-  const s = Math.max(0, Math.floor(sec));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m`
-               : `${m}m ${String(s % 60).padStart(2, "0")}s`;
-}
-
-const UINT32_MAX = 4294967295;   // "never synced" sentinel when it leaks through
-
-function updateClockTruth() {
-  const c = (snapshot && snapshot.clock_truth) || null;
-  const nd = renderNoData();
-  if (!c) {
-    ["clock-sim-utc", "clock-obc-utc", "clock-since-sync", "clock-drift", "clock-offset"]
-      .forEach((id) => setPv(id, nd));
-    $("clock-ref").innerHTML = "";
-    $("clock-offset-note").textContent = "";
-    return;
-  }
-  $("clock-ref").innerHTML = c.time_ref_name ? `<span class="ds-id">${esc(c.time_ref_name)}</span>` : "";
-  const mono = (txt) => `<span class="ds-value" style="font-size:var(--fs-body)">${esc(txt)}</span>`;
-  setPv("clock-sim-utc", c.sim_time ? mono(fmtUTC(c.sim_time, { date: true })) : nd);
-  setPv("clock-obc-utc", c.obc_time_s != null
-    ? mono(fmtUTC(new Date(CUC_EPOCH_MS + c.obc_time_s * 1000), { date: true })) : nd);
-  setPv("clock-since-sync", c.time_since_sync_s == null || c.time_since_sync_s >= UINT32_MAX
-    ? renderNoData({ label: tText("never synced") }) : mono(formatClockAge(c.time_since_sync_s)));
-  setPv("clock-drift", c.drift_ppm == null ? nd : renderValue(c.drift_ppm, { units: "ppm", digits: 2 }));
-  if (c.offset_s == null) {
-    setPv("clock-offset", nd);
-    $("clock-offset-note").textContent = "";
-  } else {
-    // 1 s: an operator starts to care. 5 s: the FDIR jump guard.
-    setPv("clock-offset", renderValue(c.offset_s, { units: "s", digits: 3,
-      limits: { yellow_low: -1, yellow_high: 1, red_low: -5, red_high: 5 } }));
-    const a = Math.abs(c.offset_s);
-    $("clock-offset-note").textContent = a >= 86400
-      ? tText("about {{d}} days: the OBC clock has not been set since boot", { d: Math.round(a / 86400) }) : "";
-  }
-}
-
-/* ── polling (shared poller helper; classic cadences) ──────────────────── */
+/* ── polling ───────────────────────────────────────────────────────────── */
 
 const statePoll = poller(async () => {
   try {
     state = await apiGet("/api/state");
     lastStateOkMs = Date.now();
   } finally {
-    renderDashboard();     // a failed poll turns the readouts stale, visibly
+    renderAppBar();
     renderSessionLabel();
+    renderPower();
   }
 }, 1000);
 
+const viewsPoll = poller(async () => {
+  const v = await apiGet("/api/instructor/views");
+  if (!v || v.pending || v.error) return;
+  views = v;
+  const a = views.attitude || {};
+  attHist.point.push(a.point_err_true ?? NaN); attHist.know.push(a.knowledge_err ?? NaN);
+  for (const k of ["point", "know"]) while (attHist[k].length > 120) attHist[k].shift();
+  renderOverview();
+  renderSchedule(views.schedule || []);
+  if (debrief && views.divergence) debrief.setPairsMeta(views.divergence.rows);
+  if (focus.state().view !== "debrief" && focus.state().view !== "prep" && focus.state().view !== "raw") renderActiveView();
+}, 1000);
+
+const timelinePoll = poller(async () => {
+  const d = await apiGet(`/api/instructor/timeline?since=${tlSeq}`);
+  if (d.segment !== tlSegment && tlSeq) {
+    addLog("low", "SIM", tText("A snapshot was loaded: new timeline segment {{n}}", { n: d.segment }));
+  }
+  ingestTimeline(d);
+}, 2000);
+
 const snapshotPoll = poller(async () => {
+  const v = focus.state().view;
+  if (snapshot && v !== "raw" && v !== "obc" && !document.body.classList.contains("subpage")
+      && Date.now() - (snapshotPoll.last || 0) < 10000) return;
+  snapshotPoll.last = Date.now();
   snapshot = await apiGet("/api/instructor/snapshot");
   updateRawSnapshot();
   updateClockTruth();
@@ -1384,11 +1331,60 @@ const failuresPoll = poller(async () => {
   await fetchDebrief(false);
 }, 5000);
 
-/* ── language: JS-owned labels (static markup is re-keyed by I18n) ────── */
+/* VR headset link (smo-vr/1, docs/VR_INTERFACE_ICD.md). The return line is
+ * optional, so a connected headset that never replies is NO_REPLY (neutral),
+ * not a fault; DEGRADED / SILENT caution, ERROR alarm. */
+function renderVrBadge(link) {
+  const b = $("vr-badge");
+  if (!b) return;
+  if (!link || link.enabled === false) {
+    b.innerHTML = renderChip({ kind: "off", label: tText("VR off"),
+      title: tText("VR bridge not running (--no-vr, SMO_VR=0 or port in use)") });
+    return;
+  }
+  const n = link.n_clients || 0;
+  const overall = link.overall || "NO_CLIENTS";
+  const rows = (link.clients || []).map((c) => `${c.team || c.peer} [${c.transport}] ${c.health}` +
+    (c.status_word_hex ? ` ${c.status_word_hex}` : "") + (c.text ? ` — ${c.text}` : ""));
+  const title = tText("VR bridge TCP:{{tcp}} WS:{{ws}}", { tcp: link.tcp_port, ws: link.ws_port }) + "\n" +
+    (rows.length ? rows.join("\n") : tText("no headsets connected"));
+  const kind = overall === "ERROR" ? "alarm" : (overall === "DEGRADED" || overall === "SILENT") ? "warn" : "neutral";
+  b.innerHTML = renderChip({ kind, title, label: n ? `VR ${n} ${overall.replace("_", " ")}` : tText("VR: no headsets") });
+}
 
-/** Write every label the JS owns (button states, subpage chrome) in the
- *  current language, then rebuild the JS-built regions that are not
- *  re-rendered on each poll. Called once at init and on smo:langchange. */
+function renderAppBar() {
+  if (!state) { renderTimeControl(); return; }
+  $("sim-time").textContent = state.sim_time ? fmtUTC(state.sim_time) : tText("no data");
+  $("sim-date").textContent = state.sim_time ? String(state.sim_time).slice(0, 10) + " UTC" : "";
+  renderTimeControl();
+  renderVrBadge(state.vr_link);
+  const ob = $("btn-override");
+  ob.textContent = state.override_passes ? tText("Pass override on") : tText("Override passes");
+  ob.setAttribute("aria-pressed", String(!!state.override_passes));
+  ob.classList.toggle("primary", !!state.override_passes);
+  if (state.spacecraft_phase != null && document.activeElement !== $("phase-select") && !$("btn-set-phase").classList.contains("is-armed")) {
+    $("phase-select").value = String(state.spacecraft_phase);
+  }
+  $("phase-now").innerHTML = state.spacecraft_phase != null
+    ? `<span class="ds-id">${esc(PHASE_NAMES[state.spacecraft_phase] || state.spacecraft_phase)}</span>` : "";
+  if (Array.isArray(state.active_failures)) renderFailures(state.active_failures);
+  updateScenarioButtons();
+  if (activeScenarioName && selectedScenario != null) {
+    const sc = scenarios[selectedScenario];
+    const nowSimMs = simNowMs();
+    if (sc && scenarioStartSimMs != null && nowSimMs != null) {
+      const elapsedS = Math.max(0, (nowSimMs - scenarioStartSimMs) / 1000);
+      const totalS = sc.duration_s || 1;
+      $("progress-elapsed").textContent = formatDuration(elapsedS);
+      $("progress-remaining").textContent = formatDuration(totalS);
+      $("progress-fill").style.width = Math.min(100, (elapsedS / totalS) * 100) + "%";
+    }
+  }
+  if (stateAgeS() !== null && stateAgeS() > 3) $("run-chip").innerHTML = renderChip({ kind: "stale", label: tText("no data"), title: tText("The simulator stopped answering") });
+}
+
+/* ── language ──────────────────────────────────────────────────────────── */
+
 function relabel(changed) {
   const q = new URLSearchParams(location.search);
   const requestedSub = q.get("sub");
@@ -1401,146 +1397,179 @@ function relabel(changed) {
     back.textContent = tText("← Back to dashboard");
   }
   $("full-snapshot-title").textContent = requestedSub
-    ? tText("Subsystem deep-dive: {{sub}}", { sub: requestedSub.toUpperCase() })
-    : tText("Full simulator state");
+    ? tText("Subsystem deep-dive: {{sub}}", { sub: requestedSub.toUpperCase() }) : tText("Full simulator state");
   renderTimeControl();
   const showing = $("raw-snapshot-container").style.display === "block";
   $("btn-toggle-raw").textContent = showing ? tText("Hide raw snapshot") : tText("Show raw snapshot");
   if (!snapshot) $("raw-snapshot-json").textContent = tText("Loading…");
   setConn(wsUp);
+  renderTabsBar();
+  renderFocusHead();
   if (scenarios.length) renderScenarios();
-  if (selectedScenario != null && scenarios[selectedScenario]) {
-    $("scenario-briefing").textContent =
-      scnBriefing(scenarios[selectedScenario]) || tText("No briefing available.");
-  }
+  if (selectedScenario != null && scenarios[selectedScenario]) $("scenario-briefing").textContent = scnBriefing(scenarios[selectedScenario]) || tText("No briefing available.");
   if (lastDebrief !== undefined) renderDebrief(lastDebrief);
   if (!changed) return;
-  armAll();     // re-bind the two-steps with the translated labels
-  // the irreversibility notice only — re-rendering the generated failure
-  // form would throw away values the instructor has typed
-  const irrev = document.querySelector("#fail-params .fail-effect");
-  if (irrev && currentFailureSpec) {
-    irrev.textContent = tText("Not fully reversible: {{notes}}", { notes: currentFailureSpec.notes });
-  }
+  armAll();
+  renderElements();
+  updateFailureTypes();
   renderBreakpoints();
   renderFailures(lastFailures);
+  renderSchedule(views ? views.schedule : []);
   if (snapshotTabsBuilt) populateSubsystemLauncher();
-  if (state) renderDashboard();
-  updateScenarioButtons(); updateBpSave();
-  updateCompletenessCounter();
-  fetchDebrief(false);   // scenario chip
+  if (powerView) { powerView.destroy(); powerView = null; }
+  renderAppBar(); renderOverview(); renderActiveView(); renderTimeline(); renderPower();
+  updateScenarioButtons(); updateBpSave(); updateCompletenessCounter();
+  if (debrief) debrief.relabel();
+  fetchDebrief(false);
 }
 
 /* ── two-step (arm -> execute) for everything that disrupts the class ──── */
-/* armButton() keeps the label it was bound with, so after a language change
- * each button is cloned (dropping the old binding) and armed again. The
- * disabled state (aria-disabled + reason) travels with the clone. */
+
 const ARMED = [
-  ["btn-inject", () => injectFailure()],
   ["btn-clear-all", () => clearAllFailures()],
   ["btn-set-phase", () => setSpacecraftPhase()],
   ["btn-start-separation", () => startSeparation()],
   ["btn-set-soc", () => setBatterySoc()],
   ["btn-stop-scenario", () => stopScenario()],
 ];
+function rearm(id, fn) {
+  const old = $(id);
+  const fresh = old.cloneNode(true);
+  old.replaceWith(fresh);
+  armButton(fresh, { seconds: 5, onExecute: fn });
+}
+function armInject() { rearm("btn-inject", () => injectFailure()); }
 function armAll() {
-  for (const [id, fn] of ARMED) {
-    const old = $(id);
-    const fresh = old.cloneNode(true);
-    old.replaceWith(fresh);
-    armButton(fresh, { seconds: 5, onExecute: fn });
-  }
+  for (const [id, fn] of ARMED) rearm(id, fn);
+  armInject();
 }
 
 /* ── init ──────────────────────────────────────────────────────────────── */
 
 async function init() {
-  await I18n.ready;            // English: immediate; else bounded catalog load
+  await I18n.ready;
   mountLangToggle($("lang-toggle"));
   onLangChange(() => relabel(true));
   mountLogbook({ tool: "instructor", buttonHost: $("lb-slot"),
     getContext: () => {
       const sc = selectedScenario != null ? scenarios[selectedScenario] : null;
-      return { ...(sc && sc.id ? { scenario: sc.id } : {}),
-        ...(activeScenarioName ? { sim_status: frozen ? "stopped" : "running" } : {}) };
+      return { ...(sc && sc.id ? { scenario: sc.id } : {}), ...(activeScenarioName ? { sim_status: frozen ? "stopped" : "running" } : {}) };
     } });
   onLangChange(() => { loadPrepWorksheets(); debriefWsKey = ""; loadDebriefWorksheets(); });
   loadDebriefWorksheets();
-  // ?sub= subpage deep-dive mode (preserved exactly, composing with ?ui=
-  // and ?lang=): hide the dashboard chrome, render only the requested
-  // snapshot tab full-width with a back link.
   const q = new URLSearchParams(location.search);
   const requestedSub = q.get("sub");
   if (requestedSub) {
     document.body.classList.add("subpage");
+    focus.select("raw", Date.now());
     const cont = $("full-snapshot-container");
     const back = document.createElement("a");
     back.className = "subpage-back";
     back.id = "subpage-back";
     cont.parentNode.insertBefore(back, cont);
-    // the JS owns the title from here on: stop the DOM pass re-keying it
     const titleEl = document.querySelector("title");
     if (titleEl) titleEl.removeAttribute("data-i18n");
     document.title = "SMO — " + requestedSub.toUpperCase();
   }
+  timeline = mountTimeline($("timeline"), { t: tText, onSelect: showTimelineDetail });
+  debrief = createDebrief($("view-debrief"), { onToast: (m) => showToast(m, "success") });
   armAll();
   relabel();
+  showView();
 
-  // header controls
-  $$("#speed-group button[data-speed]").forEach((btn) =>
-    btn.addEventListener("click", () => setSpeed(parseFloat(btn.dataset.speed))));
+  // header
+  $$("#speed-group button[data-speed]").forEach((btn) => btn.addEventListener("click", () => setSpeed(parseFloat(btn.dataset.speed))));
   $("freeze-btn").addEventListener("click", toggleFreeze);
+  $("btn-quick-snap").addEventListener("click", () => saveBreakpoint(tText("snapshot {{t}}", { t: simClock() })));
+
+  // focus pane
+  $("view-select").addEventListener("change", (e) => goView(e.target.value, true));
+  $("btn-focus-back").addEventListener("click", () => { focus.back(Date.now()); showView(); });
+  $("btn-focus-pin").addEventListener("click", () => { focus.pin(!focus.state().pinned); renderFocusHead(); });
+  $("focus-auto").addEventListener("change", (e) => { focus.setAuto(e.target.checked); renderFocusHead(); });
+  setInterval(() => applyFocusResult(focus.tick(Date.now())), 1000);
 
   // scenarios + debrief
   $("refresh-scenarios").addEventListener("click", loadScenarios);
   $("btn-start-scenario").addEventListener("click", startScenario);
   $("btn-fetch-debrief").addEventListener("click", () => fetchDebrief(true));
 
-  // interventions (the armed ones are wired by armAll)
+  // fault menu + form
   $("fail-subsystem").addEventListener("change", updateFailureTypes);
   $("fail-type").addEventListener("change", updateFailureParams);
-  $$("input[name=\"fail-onset\"]").forEach((r) =>
-    r.addEventListener("change", updateOnsetDurationVisibility));
+  $$("input[name=\"fail-onset\"]").forEach((r) => r.addEventListener("change", updateOnsetDurationVisibility));
+  $("fail-trigger").addEventListener("change", () => {
+    $("trigger-delay-group").hidden = $("fail-trigger").value !== "delay";
+    $("trigger-tc-group").hidden = $("fail-trigger").value !== "tc";
+    renderReview();
+  });
+  for (const id of ["fail-params", "fail-onset-dur", "fail-delay", "fail-tc", "fail-snapshot"]) {
+    $(id).addEventListener("input", renderReview);
+    $(id).addEventListener("change", renderReview);
+  }
   updateOnsetDurationVisibility();
+  $("btn-add-batch").addEventListener("click", addToBatch);
   $("btn-override").addEventListener("click", toggleOverride);
+  $("btn-bookmark").addEventListener("click", () => mark("bookmark"));
+  $("anomaly-disp").addEventListener("change", (e) => { if (e.target.value) { mark("anomaly", e.target.value); e.target.value = ""; } });
 
-  // per-row actions (event delegation — no inline handlers, no globals)
+  // delegated clicks (no inline handlers, no globals)
   document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-el]");
+    if (el && el.getAttribute("aria-disabled") !== "true") { selectedElement = el.dataset.el; renderElements(); updateFailureTypes(); return; }
+    const tile = e.target.closest("#overview .tile[data-view]");
+    if (tile) { goView(tile.dataset.view, true); return; }
+    const gv = e.target.closest("[data-goview]");
+    if (gv) { goView(gv.dataset.goview, true); return; }
+    const fc = e.target.closest("[data-fault]");
+    if (fc) { selectedFault = fc.dataset.fault; goView("fault", true); return; }
+    if (e.target.id === "btn-suggest-go") { applyFocusResult(focus.accept(Date.now())); showView(); return; }
+    if (e.target.id === "btn-suggest-x") { focus.dismiss(); renderFocusHead(); return; }
     const btn = e.target.closest("[data-act]");
     if (!btn) return;
     if (btn.dataset.act === "clear-failure") clearFailure(btn.dataset.id);
+    if (btn.dataset.act === "cancel-schedule") cancelSchedule(btn.dataset.id);
+    if (btn.dataset.act === "unbatch") { batch.splice(+btn.dataset.i, 1); renderReview(); }
   });
 
-  // session label for the consoles
+  // session label
   $("btn-session-label").addEventListener("click", publishSessionLabel);
   $("session-label").addEventListener("input", updateSessionLabelBtn);
-  $("session-label").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") publishSessionLabel();
-  });
+  $("session-label").addEventListener("keydown", (e) => { if (e.key === "Enter") publishSessionLabel(); });
 
-  // breakpoints
-  $("btn-save-bp").addEventListener("click", saveBreakpoint);
+  // snapshots
+  $("btn-save-bp").addEventListener("click", () => saveBreakpoint());
   $("breakpoint-name").addEventListener("input", updateBpSave);
-  $("breakpoint-name").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") saveBreakpoint();
-  });
+  $("breakpoint-name").addEventListener("keydown", (e) => { if (e.key === "Enter") saveBreakpoint(); });
   updateBpSave();
   refreshBreakpoints();
+  setInterval(refreshBreakpoints, 15000);
 
-  // log panel: collapse + clear
+  // timeline panel
   $("clear-log").addEventListener("click", () => { $("event-log").innerHTML = ""; });
   $("btn-log-toggle").addEventListener("click", () => {
-    const panel = $("log-panel");
+    const panel = $("timeline-panel");
     const collapsed = panel.classList.toggle("collapsed");
     $("btn-log-toggle").setAttribute("aria-expanded", String(!collapsed));
   });
+  $$("#tl-window button[data-win]").forEach((b) => b.addEventListener("click", () => {
+    tlWindowS = +b.dataset.win;
+    $$("#tl-window button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderTimeline();
+  }));
+  const setTlMode = (list) => {
+    $("timeline").hidden = list; $("event-log").hidden = !list;
+    $("btn-tl-graph").setAttribute("aria-pressed", String(!list));
+    $("btn-tl-list").setAttribute("aria-pressed", String(list));
+    if (list) $("event-log").scrollTop = $("event-log").scrollHeight; else renderTimeline();
+  };
+  $("btn-tl-graph").addEventListener("click", () => setTlMode(false));
+  $("btn-tl-list").addEventListener("click", () => setTlMode(true));
+  setInterval(renderTimeline, 2000);
 
-  // parameter search + raw snapshot
+  // raw state: search + raw JSON
   $("param-search").addEventListener("input", performParameterSearch);
-  $("btn-clear-search").addEventListener("click", () => {
-    $("param-search").value = "";
-    $("param-search-results").style.display = "none";
-  });
+  $("btn-clear-search").addEventListener("click", () => { $("param-search").value = ""; $("param-search-results").style.display = "none"; });
   $("btn-toggle-raw").addEventListener("click", () => {
     const container = $("raw-snapshot-container");
     const showing = container.style.display === "block";
@@ -1558,13 +1587,11 @@ async function init() {
   loadFailureCatalog();
   startWs();
   statePoll.start();
+  viewsPoll.start();
+  timelinePoll.start();
   snapshotPoll.start();
   failuresPoll.start();
-  addLog("info", "SYSTEM", tText("Instructor console (modern) initialised"));
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();

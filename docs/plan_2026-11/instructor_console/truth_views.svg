@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" font-family="IBM Plex Sans, Helvetica, Arial, sans-serif" font-size="12">
+  <title>Per-subsystem truth views (focus pane), each with its truth-vs-ground pairs below</title>
+  <style>.p{fill:#fff;stroke:#8a9099}.s{fill:#4a4f56;font-size:11px}.h{font-weight:600}.m{font-family:IBM Plex Mono,monospace;font-size:11px}
+  .n{fill:#eef0f3;stroke:#4a4f56}.inj{fill:none;stroke:#7a6ce0}.injt{fill:#7a6ce0}.ok{fill:#0b5a42}.bad{fill:#d1453b}</style>
+  <rect width="960" height="640" fill="#f4f5f7"/>
+  <!-- 1 power -->
+  <g transform="translate(10 10)"><rect width="305" height="300" class="p"/>
+    <text x="10" y="20" class="h">1 · Power flow (shared powerflow.js)</text>
+    <rect x="12" y="40" width="40" height="22" class="n"/><text x="15" y="55" class="m">+Y</text>
+    <rect x="12" y="70" width="40" height="22" class="n"/><text x="15" y="85" class="m">−Y</text>
+    <rect x="12" y="100" width="40" height="22" class="n"/><text x="15" y="115" class="m">body</text>
+    <path d="M52 51C80 51 80 80 100 80M52 81h48M52 111C80 111 80 82 100 82" stroke="#7f8a98" stroke-width="3" fill="none"/>
+    <rect x="100" y="66" width="60" height="30" class="n"/><text x="104" y="85" class="m">MPPT</text>
+    <path d="M160 81h20" stroke="#7f8a98" stroke-width="5"/><rect x="180" y="40" width="8" height="140" fill="#e3e6ea" stroke="#4a4f56"/>
+    <path d="M188 60h40M188 90h40M188 120h40" stroke="#7f8a98" stroke-width="2"/>
+    <rect x="228" y="50" width="66" height="20" class="n"/><text x="232" y="64" class="m">Platform</text>
+    <rect x="228" y="80" width="66" height="20" class="n"/><text x="232" y="94" class="m">Comms</text>
+    <rect x="228" y="110" width="66" height="20" class="n"/><text x="232" y="124" class="m">Payload</text>
+    <path d="M184 180v20" stroke="#7f8a98" stroke-width="3"/><rect x="150" y="200" width="70" height="30" class="n"/><text x="155" y="219" class="m">Battery</text>
+    <text x="10" y="252" class="s">Width = watts on a fixed scale; fed with the</text><text x="10" y="266" class="s">simulator's own values. Side card: model truth</text><text x="10" y="280" class="s">(array output factor, OC trips, shed stage).</text></g>
+  <!-- 2 thermal -->
+  <g transform="translate(325 10)"><rect width="305" height="300" class="p"/>
+    <text x="10" y="20" class="h">2 · Thermal network (16 nodes + FPA)</text>
+    <path d="M150 140L60 70M150 140L240 70M150 140L60 210M150 140L240 210M150 140V40M150 140V250" stroke="#b8bec6" stroke-width="3"/>
+    <path d="M150 140L90 160" stroke="#b8bec6" stroke-dasharray="3 3"/>
+    <rect x="110" y="126" width="80" height="28" class="n"/><text x="114" y="140" class="s">Structure</text><text x="186" y="150" text-anchor="end" class="m">15.1 °C</text>
+    <rect x="20" y="56" width="80" height="28" class="n"/><text x="24" y="70" class="s">OBC</text><text x="96" y="80" text-anchor="end" class="m">15.4 °C</text>
+    <rect x="20" y="88" width="72" height="16" class="inj"/><text x="24" y="100" class="m injt">TM +8.0 K</text>
+    <rect x="200" y="56" width="80" height="28" class="n"/><text x="204" y="70" class="s">Battery</text><text x="276" y="80" text-anchor="end" class="m">10.3 °C</text>
+    <rect x="110" y="26" width="80" height="28" class="n"/><text x="114" y="40" class="s">+Z panel</text>
+    <rect x="20" y="196" width="80" height="28" class="n"/><text x="24" y="210" class="s">TT&amp;C</text>
+    <rect x="200" y="196" width="80" height="28" class="n" stroke="#c48a00" stroke-width="2"/><text x="204" y="210" class="s">AOCS</text>
+    <rect x="110" y="236" width="80" height="28" class="n"/><text x="114" y="250" class="s">−Z radiator</text>
+    <text x="10" y="282" class="s">Line width = heat flow (W), arrow = direction;</text><text x="10" y="294" class="s">dashed = radiative; lilac tag = injected sensor lie.</text></g>
+  <!-- 3 attitude -->
+  <g transform="translate(640 10)"><rect width="310" height="300" class="p"/>
+    <text x="10" y="20" class="h">3 · Attitude: truth body, estimate ghost</text>
+    <g transform="translate(10 40)"><text y="12" class="s">Roll</text><line x1="50" x2="260" y1="8" y2="8" stroke="#b8bec6"/><line x1="155" x2="155" y1="0" y2="16" stroke="#8a9099"/><path d="M180 2l5 9h-10z" fill="#141619"/><circle cx="168" cy="8" r="5.5" fill="none" stroke="#0b5577" stroke-width="1.6"/></g>
+    <g transform="translate(10 66)"><text y="12" class="s">Pitch</text><line x1="50" x2="260" y1="8" y2="8" stroke="#b8bec6"/><line x1="155" x2="155" y1="0" y2="16" stroke="#8a9099"/><path d="M140 2l5 9h-10z" fill="#141619"/><circle cx="152" cy="8" r="5.5" fill="none" stroke="#0b5577" stroke-width="1.6"/></g>
+    <g transform="translate(10 92)"><text y="12" class="s">Yaw</text><line x1="50" x2="260" y1="8" y2="8" stroke="#b8bec6"/><line x1="155" x2="155" y1="0" y2="16" stroke="#8a9099"/><path d="M200 2l5 9h-10z" fill="#141619"/><circle cx="200" cy="8" r="5.5" fill="none" stroke="#0b5577" stroke-width="1.6"/></g>
+    <text x="10" y="134" class="s">▲ truth  ○ on-board estimate · one scale (±1°) for all three</text>
+    <path d="M10 180l30-6 30 4 30-12 30 2 30-20 30-4" stroke="#4a4f56" fill="none"/><text x="10" y="196" class="s">pointing error, truth (sparkline)</text>
+    <path d="M160 180l30-2 30-8 30-14 30-6" stroke="#4a4f56" fill="none"/><text x="160" y="196" class="s">knowledge error (est − truth)</text>
+    <text x="10" y="222" class="s">Side: mode + last mode-change reason, ST / CSS / MAG,</text><text x="10" y="236" class="s">injected gyro bias (lilac), rates truth vs estimate,</text><text x="10" y="250" class="s">wheel bars. 2D on purpose: magnitudes are read on</text><text x="10" y="264" class="s">tapes, not on a rotating model.</text></g>
+  <!-- 4 orbit -->
+  <g transform="translate(10 320)"><rect width="305" height="310" class="p"/>
+    <text x="10" y="20" class="h">4 · Orbit, visibility and link</text>
+    <text x="10" y="42" class="s">"The operators have a link only because of the pass</text><text x="10" y="56" class="s">override: no station is in view."</text>
+    <g class="m"><rect x="10" y="66" width="96" height="18" rx="2" fill="none" stroke="#0b5a42"/><text x="16" y="79" class="ok">✓ station</text>
+    <rect x="110" y="66" width="62" height="18" rx="2" fill="none" stroke="#0b5a42"/><text x="116" y="79" class="ok">✓ line</text>
+    <rect x="176" y="66" width="58" height="18" rx="2" fill="none" stroke="#d1453b"/><text x="182" y="79" class="bad">○ PA</text>
+    <rect x="10" y="88" width="96" height="18" rx="2" fill="none" stroke="#0b5a42"/><text x="16" y="101" class="ok">✓ radio</text>
+    <rect x="110" y="88" width="96" height="18" rx="2" fill="none" stroke="#0b5a42"/><text x="116" y="101" class="ok">✓ antenna</text></g>
+    <text x="10" y="128" class="s">Gates are a SET (all must hold), not a sequence.</text>
+    <text x="10" y="150" class="h s">Contacts, next 4 h (truth geometry)</text>
+    <g fill="#7f8a98"><rect x="40" y="160" width="20" height="8"/><rect x="150" y="160" width="24" height="8"/><rect x="250" y="160" width="18" height="8"/>
+    <rect x="60" y="176" width="16" height="8"/><rect x="170" y="176" width="22" height="8"/><rect x="100" y="192" width="20" height="8"/></g>
+    <line x1="20" x2="20" y1="156" y2="204" stroke="#0b5577"/>
+    <text x="10" y="226" class="s">Side: station, elevation / range or "no geometry",</text><text x="10" y="240" class="s">override, downlink / uplink, margin, TM rate, sun and</text><text x="10" y="254" class="s">next eclipse, position, last HK on the ground.</text></g>
+  <!-- 5 obc -->
+  <g transform="translate(325 320)"><rect width="305" height="310" class="p"/>
+    <text x="10" y="20" class="h">5 · OBC modes and FDIR</text>
+    <g class="s"><circle cx="16" cy="40" r="4" fill="#8a9099"/><text x="24" y="44">PRE_SEP</text><circle cx="80" cy="40" r="4" fill="#8a9099"/><text x="88" y="44">… LEOP</text><circle cx="140" cy="40" r="4" fill="#8a9099"/><text x="148" y="44">COMM.</text><circle cx="200" cy="40" r="5" fill="#0b5577"/><text x="208" y="44">NOMINAL</text></g>
+    <text x="10" y="70" class="h s">Modes: truth and what the ground has</text>
+    <text x="10" y="88" class="m">sat.mode   SAFE  SAFE  no data</text><text x="10" y="102" class="m">obdh.mode  NOM   NOM   NOM  4 s</text>
+    <text x="10" y="124" class="s">Note: two different quantities, both correct.</text>
+    <text x="10" y="150" class="h s">Last transitions and what triggered them</text>
+    <text x="10" y="168" class="m">12:04:12 sat.mode → SAFE</text><text x="22" y="182" class="s">trigger: FDIR aocs.att_error_safe_mode</text>
+    <text x="10" y="198" class="m">12:04:12 AOCS NOMINAL → SAFE_BOOT</text>
+    <text x="10" y="226" class="s">Side: OBC image, CPU / memory, reboots, CAN bus,</text><text x="10" y="240" class="s">FDIR level, triggered rules, recoveries, on-board</text><text x="10" y="254" class="s">procedures; clock truth card (offset in days first).</text></g>
+  <!-- 6 storage -->
+  <g transform="translate(640 320)"><rect width="310" height="310" class="p"/>
+    <text x="10" y="20" class="h">6 · Storage (S15 and payload)</text>
+    <g class="s"><text x="10" y="46">HK_Store</text><rect x="90" y="38" width="140" height="8" fill="#e3e6ea"/><rect x="90" y="38" width="12" height="8" fill="#7f8a98"/><text x="238" y="46" class="m">0.6 %</text>
+    <text x="10" y="66">Event_Store</text><rect x="90" y="58" width="140" height="8" fill="#e3e6ea"/><rect x="90" y="58" width="6" height="8" fill="#7f8a98"/>
+    <text x="10" y="86">Alarm_Store</text><rect x="90" y="78" width="140" height="8" fill="#e3e6ea"/><rect x="90" y="78" width="120" height="8" fill="#c48a00"/><text x="238" y="86" class="m">86 %</text>
+    <text x="10" y="116">Image store</text><rect x="90" y="108" width="140" height="8" fill="#e3e6ea"/><rect x="90" y="108" width="28" height="8" fill="#7f8a98"/></g>
+    <text x="10" y="150" class="s">Side: dump in progress (packets queued), real-time</text><text x="10" y="164" class="s">backlog at the active TM rate, TM packets dropped,</text><text x="10" y="178" class="s">HK packets on the ground (of which played back).</text>
+    <text x="10" y="210" class="s">Every view ends with the truth / spacecraft / ground</text><text x="10" y="224" class="s">pairs of its subsystem (same rows as figure 3).</text></g>
+</svg>

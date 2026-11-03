@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="IBM Plex Sans, Helvetica, Arial, sans-serif" font-size="12">
+  <title>Instructor console: overall layout at 1440 px</title>
+  <style>
+    .box{fill:#fff;stroke:#8a9099;stroke-width:1}
+    .fix{fill:#eef0f3;stroke:#8a9099}
+    .inj{fill:#a79bf8}
+    .t{fill:#141619} .s{fill:#4a4f56;font-size:11px} .h{font-weight:600}
+    .acc{stroke:#0b5577;stroke-width:2;fill:none}
+  </style>
+  <rect width="960" height="600" fill="#f4f5f7"/>
+  <!-- band -->
+  <rect x="10" y="10" width="940" height="18" class="inj"/>
+  <text x="480" y="23" text-anchor="middle" class="t h">INSTRUCTOR · TRUTH — simulation ground truth · not an operator display (persistent)</text>
+  <!-- app bar -->
+  <rect x="10" y="30" width="940" height="34" class="fix"/>
+  <text x="20" y="51" class="t">Sim time 12:04:10</text>
+  <rect x="140" y="38" width="70" height="18" class="box"/><text x="175" y="51" text-anchor="middle" class="s">Running ×1</text>
+  <rect x="216" y="38" width="200" height="18" class="box"/><text x="316" y="51" text-anchor="middle" class="s">0.5× 1× 2× 5× 10× 60×</text>
+  <rect x="422" y="38" width="52" height="18" class="box"/><text x="448" y="51" text-anchor="middle" class="s">Freeze</text>
+  <rect x="480" y="38" width="170" height="18" class="box"/><text x="565" y="51" text-anchor="middle" class="s">Scenario chip</text>
+  <text x="940" y="51" text-anchor="end" class="s">Snapshot · Logbook · EN|FR · feed</text>
+  <!-- overview -->
+  <g>
+    <rect x="10" y="68" width="940" height="62" class="fix"/>
+    <text x="20" y="82" class="s h">OVERVIEW STRIP (Level 1, never moves): one grey tile per subsystem, click = open its view</text>
+    <g class="s">
+      <rect x="20" y="88" width="104" height="36" class="box"/><text x="26" y="102">EPS  SoC 90 %</text><text x="26" y="117">sparkline</text>
+      <rect x="130" y="88" width="104" height="36" class="box"/><text x="136" y="102">AOCS pointing</text>
+      <rect x="240" y="88" width="104" height="36" class="box"/><rect x="240" y="88" width="3" height="36" class="inj"/><text x="246" y="102">TCS  OBC 15 °C</text><text x="246" y="117">inj 1 · ≠ 1</text>
+      <rect x="350" y="88" width="104" height="36" class="box"/><text x="356" y="102">OBC / FDIR</text>
+      <rect x="460" y="88" width="104" height="36" class="box"/><text x="466" y="102">TT&amp;C / link</text>
+      <rect x="570" y="88" width="104" height="36" class="box"/><text x="576" y="102">Payload / storage</text>
+      <rect x="680" y="88" width="104" height="36" class="box"/><text x="686" y="102">Propulsion</text>
+      <rect x="790" y="88" width="150" height="36" class="box"/><text x="796" y="102">Orbit: downlink · eclipse</text><text x="796" y="117">pass override chip</text>
+    </g>
+  </g>
+  <!-- focus pane -->
+  <rect x="10" y="134" width="640" height="300" class="box"/>
+  <rect x="10" y="134" width="640" height="26" class="fix"/>
+  <text x="20" y="151" class="t h">Truth vs trainees</text>
+  <text x="130" y="151" class="s">auto · because inject fired: TCS/sensor_drift 12:04</text>
+  <text x="640" y="151" text-anchor="end" class="s">[Suggested: Power Go ×] Back Pin ☑Auto</text>
+  <rect x="10" y="160" width="640" height="22" class="fix"/>
+  <text x="16" y="175" class="s" font-size="10">Situation · Truth vs trainees · Fault · Power · Thermal · Attitude · Orbit &amp; link · OBC &amp; FDIR · Storage · Raw state │ Prep · Debrief</text>
+  <line x1="82" x2="152" y1="181" y2="181" class="acc"/>
+  <text x="330" y="300" text-anchor="middle" class="t h" font-size="16">FOCUS PANE</text>
+  <text x="330" y="322" text-anchor="middle" class="s">the ONE element that changes: switches only on focus-worthy events,</text>
+  <text x="330" y="338" text-anchor="middle" class="s">says why, rate-limited, pin and Back (focus.js)</text>
+  <!-- rail -->
+  <rect x="654" y="134" width="296" height="300" class="box"/>
+  <text x="664" y="152" class="t h">INTERVENTIONS (rail, scrolls)</text>
+  <g class="s">
+    <rect x="664" y="160" width="276" height="96" class="fix"/><text x="672" y="176">Inject a fault: element grid → failure → typed form</text>
+    <text x="672" y="192">→ onset/ramp → When (now / delay / AOS / LOS /</text><text x="672" y="206">eclipse / on TC) → ☑ snapshot → review box</text>
+    <text x="672" y="222">→ [Add to batch] [Inject] (two-step arm)</text>
+    <rect x="664" y="262" width="276" height="30" class="fix"/><text x="672" y="281">Scheduled injects (cancel)</text>
+    <rect x="664" y="296" width="276" height="30" class="fix"/><text x="672" y="315">Active failures (clear · clear all)</text>
+    <rect x="664" y="330" width="276" height="30" class="fix"/><text x="672" y="349">Snapshots (auto + named, load = two-step)</text>
+    <rect x="664" y="364" width="276" height="30" class="fix"/><text x="672" y="383">Overrides: SoC · pass override</text>
+    <rect x="664" y="398" width="276" height="30" class="fix"/><text x="672" y="417">Phase &amp; separation ▸ · Mark the timeline</text>
+  </g>
+  <!-- timeline -->
+  <rect x="10" y="438" width="940" height="152" class="fix"/>
+  <text x="20" y="454" class="t h">TIMELINE (never moves): 15 min | 1 h | 3 h · Lanes | Event list</text>
+  <g class="s">
+    <text x="20" y="474">Phase &amp; modes</text><text x="20" y="490">Injects</text><text x="20" y="506">On-board alarms</text>
+    <text x="20" y="522">Telecommands</text><text x="20" y="538">Procedures</text><text x="20" y="554">Link &amp; sun</text>
+    <text x="20" y="570">Instructor</text><text x="20" y="586">Voice (n/a)</text>
+  </g>
+  <rect x="120" y="464" width="820" height="124" class="box"/>
+  <line x1="776" x2="776" y1="460" y2="590" stroke="#0b5577" stroke-width="2"/>
+  <text x="780" y="472" class="s">now</text>
+  <text x="560" y="530" text-anchor="middle" class="s">past (80 %)</text><text x="860" y="530" text-anchor="middle" class="s">pending (20 %)</text>
+  <path d="M836 482l5 8h-10z" fill="none" stroke="#7a6ce0" stroke-dasharray="2 1.5"/>
+  <path d="M700 480l5 9h-10z" class="inj"/>
+</svg>

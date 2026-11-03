@@ -180,7 +180,7 @@ The secret is a per-session key of at least 32 bytes (`SMO_LINK_SECRET`, hex; sh
 `path` is the **canonical** path that passed the allowlist below, re-encoded. `headers` are only the allowlisted request headers. `Host` is set by the agent to the sim's address, and `Origin` is checked at the GSG and then rewritten to the sim's own origin.
 
 **Route allowlist (GSG and agent).** Only these requests are proxied; everything else gets **403**:
-- `GET`/`HEAD`: `/`, `/classic`, `/modern`, `/static/**` (no dot-files), `/api/instructor/snapshot`, `/api/vr`, `/api/scenarios`, `/api/scenario/debrief`, `/api/failures`, `/api/failure-catalog`, `/api/breakpoints`, and the **read-only** dump and report views `/dumps`, `/api/dumps`, `/api/dumps/`, `/api/dumps/{file,summary}`, `/api/dumps/<name>`, `/api/dumps/<name>/summary`, `/reports`, `/api/reports`, `/api/reports/`, `/api/reports/templates`, `/api/reports/templates/<id>`, `/api/reports/file`;
+- `GET`/`HEAD`: `/`, `/classic`, `/modern`, `/static/**` (no dot-files), `/api/instructor/snapshot`, `/api/instructor/{views,timeline,fault-menu,history,debrief}` (the instructor console's truth, divergence, timeline and debrief feeds), `/api/vr`, `/api/scenarios`, `/api/scenario/debrief`, `/api/failures`, `/api/failure-catalog`, `/api/breakpoints`, and the **read-only** dump and report views `/dumps`, `/api/dumps`, `/api/dumps/`, `/api/dumps/{file,summary}`, `/api/dumps/<name>`, `/api/dumps/<name>/summary`, `/reports`, `/api/reports`, `/api/reports/`, `/api/reports/templates`, `/api/reports/templates/<id>`, `/api/reports/file`;
 - `POST`: `/api/command`, `/api/breakpoint/save`, `/api/breakpoint/load` (the instructor commands);
 - WebSocket upgrade: `/ws` only (instructor console and rfsim).
 

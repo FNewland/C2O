@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" font-family="IBM Plex Sans, Helvetica, Arial, sans-serif" font-size="12">
+  <title>Fault menu organised by control-loop element (Ames SimSup taxonomy)</title>
+  <style>.b{fill:#fff;stroke:#4a4f56}.o{fill:#fbfaff;stroke:#7a6ce0}.s{fill:#4a4f56;font-size:11px}.h{font-weight:600}.a{stroke:#4a4f56;fill:none;marker-end:url(#ar)}</style>
+  <defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#4a4f56"/></marker></defs>
+  <rect width="960" height="360" fill="#f4f5f7"/>
+  <text x="10" y="20" class="h">The control loop the menu follows (counts = failures in the catalogue, 2026-11)</text>
+  <rect x="20" y="60" width="140" height="50" class="b"/><text x="30" y="80" class="h">Control input</text><text x="30" y="98" class="s">uplink loss, receiver · 2</text>
+  <rect x="200" y="60" width="140" height="50" class="b"/><text x="210" y="80" class="h">Controller</text><text x="210" y="98" class="s">OBC, watchdog, gains · 7</text>
+  <rect x="380" y="60" width="140" height="50" class="b"/><text x="390" y="80" class="h">Actuator</text><text x="390" y="98" class="s">wheels, heaters, LCL · 14</text>
+  <rect x="560" y="60" width="140" height="50" class="b"/><text x="570" y="80" class="h">Process</text><text x="570" y="98" class="s">arrays, battery, tanks · 9</text>
+  <rect x="560" y="150" width="140" height="44" class="b"/><text x="570" y="168" class="h">Disturbance</text><text x="570" y="184" class="s">SEU, heat leaks · 4</text>
+  <rect x="740" y="60" width="200" height="50" class="b"/><text x="750" y="80" class="h">Process input</text><text x="750" y="98" class="s">ground station, RF path · 7</text>
+  <rect x="380" y="220" width="140" height="56" class="o"/><text x="390" y="240" class="h">Observer (sensor)</text><text x="390" y="256" class="s">gyro bias, ST, CSS, MAG,</text><text x="390" y="270" class="s">thermistor, clock · 8</text>
+  <rect x="200" y="220" width="140" height="56" class="b"/><text x="210" y="240" class="h">Data path &amp; products</text><text x="210" y="256" class="s">CAN bus, transponders,</text><text x="210" y="270" class="s">mass memory, images · 10</text>
+  <path d="M160 85h36" class="a"/><path d="M340 85h36" class="a"/><path d="M520 85h36" class="a"/>
+  <path d="M840 110v30h-140" class="a"/><path d="M630 150v-36" class="a"/>
+  <path d="M630 110v0"/><path d="M700 85h0"/>
+  <path d="M630 194v54h-106" class="a"/><path d="M380 248h-36" class="a"/><path d="M270 220v-106" class="a"/>
+  <text x="600" y="232" class="s">sensing</text><text x="150" y="160" class="s">telemetry back to the controller and the ground</text>
+  <rect x="20" y="300" width="920" height="48" fill="#fff" stroke="#8a9099"/>
+  <text x="30" y="318" class="s"><tspan class="h" fill="#141619">Rail form:</tspan> element grid (counts; empty = disabled with a reason) → subsystem filter → failure (label — SUBSYSTEM) → effect + class chip</text>
+  <text x="30" y="336" class="s">(lilac "indication: a sensor lies, the truth is unchanged" or grey "physical") → typed parameters from /api/failure-catalog (one source of truth).</text>
+</svg>

@@ -70,6 +70,16 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     app.router.add_get("/ws", handle_ws)
     app.router.add_get("/api/state", handle_state)
     app.router.add_get("/api/instructor/snapshot", handle_instructor_snapshot)
+    # Instructor console redesign (docs/plan_2026-11/INSTRUCTOR_CONSOLE_DESIGN.md).
+    # Truth views, the truth-vs-trainee divergence, the one timeline and the
+    # fault menu. INSTRUCTOR ONLY: never mounted by the MCS or planner, never
+    # put in /api/state or on /ws (rfsim and the planner read those), and
+    # listed one by one on the space-link proxy allowlist (smo_link.httpproxy).
+    app.router.add_get("/api/instructor/views", handle_instructor_views)
+    app.router.add_get("/api/instructor/timeline", handle_instructor_timeline)
+    app.router.add_get("/api/instructor/fault-menu", handle_fault_menu)
+    app.router.add_get("/api/instructor/history", handle_instructor_history)
+    app.router.add_get("/api/instructor/debrief", handle_instructor_debrief)
     # VR visualisation bridge (smo-vr/1): headset link status + latest frame.
     app.router.add_get("/api/vr", handle_vr)
     app.router.add_post("/api/command", handle_command)
@@ -179,7 +189,12 @@ TC_BACK_CHANNEL_DENIED = (
 # Keys of a `failure_inject` payload that belong to the failure MANAGER
 # (severity/timing), not to the failure's own declarative parameter spec.
 _INJECT_META_KEYS = ("type", "subsystem", "failure", "mode", "magnitude",
-                     "onset", "duration_s", "onset_duration_s")
+                     "onset", "duration_s", "onset_duration_s",
+                     "snapshot_before", "label")
+
+#: Commands whose refusal reason the console must see: run synchronously on
+#: the tick thread instead of fire-and-forget on the queue.
+_SYNC_CMDS = ("failure_schedule", "schedule_cancel", "timeline_mark")
 
 
 def _validate_failure_inject(cmd) -> tuple[bool, str]:
@@ -193,6 +208,17 @@ def _validate_failure_inject(cmd) -> tuple[bool, str]:
     re-validates — this is the client-facing half of the same check, and both
     reject rather than clamp.
     """
+    if isinstance(cmd, dict) and cmd.get("type") == "failure_schedule":
+        injects = cmd.get("injects")
+        if not isinstance(injects, list) or not injects:
+            return False, "failure_schedule needs a non-empty injects list"
+        for i, inj in enumerate(injects):
+            if not isinstance(inj, dict):
+                return False, f"injects[{i}] must be an object"
+            ok, reason = _validate_failure_inject({**inj, "type": "failure_inject"})
+            if not ok:
+                return False, f"injects[{i}]: {reason}"
+        return True, ""
     if not isinstance(cmd, dict) or cmd.get("type") != "failure_inject":
         return True, ""
     try:
@@ -365,6 +391,16 @@ async def handle_command(request):
             return web.json_response(
                 {"status": "denied", "message": reason}, status=400)
 
+        if cmd_type in _SYNC_CMDS:
+            ok, reason = engine.validate_instructor_cmd(cmd)
+            if ok:
+                ok, reason = await asyncio.get_running_loop().run_in_executor(
+                    None, engine.submit_instructor_cmd_sync, cmd)
+            if not ok:
+                return web.json_response({"status": "denied", "message": reason},
+                                         status=400)
+            return web.json_response({"status": "ok"})
+
         # One allowlist + type/range validator for every channel (roadmap N-1);
         # SimulationEngine.INSTRUCTOR_CMD_TYPES is its single definition.
         ok, reason = engine.submit_instructor_cmd(cmd)
@@ -451,6 +487,8 @@ async def handle_breakpoint_list(request):
             "name": name,
             "tick": (state or {}).get("tick_count"),
             "sim_time": (state or {}).get("sim_time"),
+            # in-memory snapshot taken automatically before an inject
+            "auto": bool((state or {}).get("auto")),
         })
     return web.json_response(out)
 
@@ -498,3 +536,88 @@ async def handle_instructor_snapshot(request):
     """
     engine = request.app["engine"]
     return web.json_response(engine.get_instructor_snapshot())
+
+
+# ── instructor console redesign (INSTRUCTOR_CONSOLE_DESIGN.md) ─────────────
+
+def _recorder(request):
+    return getattr(request.app["engine"], "instructor_rec", None)
+
+
+def _no_store(payload, status=200):
+    # Truth must not sit in a shared cache (the GSG relays Cache-Control).
+    return web.json_response(payload, status=status,
+                             headers={"Cache-Control": "no-store"})
+
+
+async def handle_instructor_views(request):
+    """GET /api/instructor/views — the truth views, the divergence table and
+    the overview tiles, as last built on the tick thread (<= 1 Hz)."""
+    rec = _recorder(request)
+    if rec is None:
+        return _no_store({"error": "instructor recorder not available"}, 503)
+    views = rec.published()
+    if views is None:
+        return _no_store({"pending": True, "reason": "first views not built yet"})
+    return _no_store(views)
+
+
+async def handle_instructor_timeline(request):
+    """GET /api/instructor/timeline?since=<seq> — timeline items after
+    ``since``, the pending (future) injects and the fault swimlanes."""
+    rec = _recorder(request)
+    if rec is None:
+        return _no_store({"error": "instructor recorder not available"}, 503)
+    try:
+        since = int(request.query.get("since", "0"))
+    except ValueError:
+        return _no_store({"error": "since must be an integer"}, 400)
+    return _no_store(rec.timeline_since(max(0, since)))
+
+
+async def handle_fault_menu(request):
+    """GET /api/instructor/fault-menu — the failure catalogue grouped by
+    control-loop element (form specs stay in /api/failure-catalog)."""
+    from smo_simulator.instructor import taxonomy
+    return _no_store(taxonomy.fault_menu())
+
+
+async def handle_instructor_history(request):
+    """GET /api/instructor/history[?seg=N] — sampled truth / onboard / ground
+    triples (every 10 sim s) for the debrief replay."""
+    rec = _recorder(request)
+    if rec is None:
+        return _no_store({"error": "instructor recorder not available"}, 503)
+    seg = request.query.get("seg")
+    try:
+        seg_n = int(seg) if seg not in (None, "") else rec.segment
+    except ValueError:
+        return _no_store({"error": "seg must be an integer"}, 400)
+    return _no_store({"segment": seg_n, "samples": rec.history(seg_n)})
+
+
+async def handle_instructor_debrief(request):
+    """GET /api/instructor/debrief — everything the debrief view and its
+    export need in one document: the scenario debrief, the fault swimlanes
+    with their latencies, and the current segment's timeline."""
+    rec = _recorder(request)
+    engine = request.app["engine"]
+    if rec is None:
+        return _no_store({"error": "instructor recorder not available"}, 503)
+    tl = rec.timeline_since(0, limit=MAX_DEBRIEF_ITEMS)
+    seg = tl["segment"]
+    se = getattr(engine, "_scenario_engine", None)
+    d = se.last_debrief() if se is not None else None
+    return _no_store({
+        "segment": seg,
+        "now": tl["now"],
+        "scenario": None if d is None else {
+            "name": d.name, "duration_s": d.duration_s, "score_pct": d.score_pct,
+            "mttd_s": d.mttd_s, "mtti_s": d.mtti_s, "mttr_s": d.mttr_s,
+            "responses": d.responses},
+        "faults": [f for f in tl["faults"] if f.get("seg") == seg],
+        "items": [i for i in tl["items"] if i.get("seg") == seg],
+    })
+
+
+MAX_DEBRIEF_ITEMS = 6000
