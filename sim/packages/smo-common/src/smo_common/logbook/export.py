@@ -38,7 +38,9 @@ LABELS = {
                 "scenario": "scenario", "sim_status": "sim state", "report": "report", "dump": "dump",
                 "station": "station", "pass": "pass", "doc": "document", "phase": "phase",
                 "anomaly": "anomaly", "command": "command", "gonogo": "GO/NO-GO",
-                "gate": "gate", "proposal": "proposal"},
+                "gate": "gate", "proposal": "proposal",
+                "study_name": "study", "tab": "tab", "level": "level",
+                "element": "element", "decision": "on"},
         "done": "done", "not_done": "not done",
     },
     "fr": {
@@ -60,7 +62,9 @@ LABELS = {
                 "scenario": "scénario", "sim_status": "état de la sim", "report": "rapport", "dump": "vidage",
                 "station": "station", "pass": "passage", "doc": "document", "phase": "phase",
                 "anomaly": "anomalie", "command": "commande", "gonogo": "GO/NO-GO",
-                "gate": "jalon", "proposal": "proposition"},
+                "gate": "jalon", "proposal": "proposition",
+                "study_name": "étude", "tab": "onglet", "level": "niveau",
+                "element": "élément", "decision": "sur"},
         "done": "fait", "not_done": "non fait",
     },
 }
@@ -134,7 +138,10 @@ def _ws_text(e: dict, lookup: QuestionLookup | None, lang: str) -> tuple[str, st
 def _ctx_line(e: dict, lang: str) -> str:
     L = LABELS[lang]["ctx"]
     ctx = e.get("context") or {}
-    parts = [f"{L.get(k, k)} {v}" for k, v in ctx.items() if v not in (None, "")]
+    # SpaceCDF entries carry both study_id (a UUID) and study_name: show the name.
+    hidden = {"study_id"} if ctx.get("study_name") else set()
+    parts = [f"{L.get(k, k)} {v}" for k, v in ctx.items()
+             if v not in (None, "") and k not in hidden]
     if e.get("sim_ts"):
         parts.append(f"{LABELS[lang]['sim']} {e['sim_ts']}")
     return " · ".join(parts)

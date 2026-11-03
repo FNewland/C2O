@@ -268,7 +268,9 @@ class LogbookStore:
         unsaved = 0
         for e in fo.entries:
             t = parse_ts(e.get("updated_ts")) or parse_ts(e.get("ts"))
-            if t and (fo.last_download is None or t > fo.last_download):
+            # >= : an edit in the same millisecond as the download counts as unsaved
+            # (conservative: at worst one extra "not downloaded" warning).
+            if t and (fo.last_download is None or t >= fo.last_download):
                 unsaved += 1
         return {
             "retention_h": self.retention_h,
