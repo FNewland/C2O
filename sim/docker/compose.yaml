@@ -70,6 +70,10 @@ x-image: &image
   build:
     context: ..
     dockerfile: docker/Dockerfile
+    # Course PDFs listed in smo_common/downloads.yaml (copied by one
+    # Dockerfile step; only the listed files enter the image).
+    additional_contexts:
+      course_pdfs: ../../design/docs/pdf
     args:
       SMO_CONFIG_HASH: ${SMO_CONFIG_HASH:-unknown}
       SMO_VERSION: ${SMO_VERSION:-dev}

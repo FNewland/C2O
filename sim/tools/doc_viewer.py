@@ -391,6 +391,11 @@ def _q(lang: str) -> str:
 def _sidebar(categories: dict[str, list[dict]], lang: str, current: str | None) -> str:
     out = ['<div class="ds-field"><label for="search" data-i18n>Filter documents</label>',
            '<input class="ds-input text" type="search" id="search" autocomplete="off"></div>']
+    # Course PDFs (smo_common/downloads.yaml, student list): one page.
+    cur_dl = ' aria-current="page"' if current == "/downloads" else ""
+    out.append('<h2 data-i18n>Downloads</h2>')
+    out.append(f'<a href="/downloads{_q(lang)}" class="doc-link"{cur_dl} data-title="pdf" '
+               f'data-i18n>Course PDFs</a>')
     cat_order = sorted(categories.keys(), key=lambda c: (c == '_root', c))
     for cat in cat_order:
         out.append(f'<h2 {_DYN_I18N}>{html.escape(_cat_label(cat))}</h2>')
@@ -532,6 +537,20 @@ def build_doc_html(title: str, body_html: str, breadcrumb: str,
                  toc=side, meta=meta)
 
 
+def build_downloads_html(categories: dict[str, list[dict]], lang: str = "en") -> str:
+    """The course-PDF page: drawn in the browser by the shared
+    /static/shared/downloads.js from GET /api/downloads (student list)."""
+    content = ('<div class="docbar"><span><a href="/' + _q(lang) + '" data-i18n>Home</a></span></div>'
+               '<article><h1 data-i18n>Course PDFs</h1>\n'
+               '<p data-i18n="Textbooks, workbooks and references for the course, in English and French. Open a PDF in a new tab or download it.">'
+               'Textbooks, workbooks and references for the course, in English and '
+               'French. Open a PDF in a new tab or download it.</p></article>\n'
+               '<div id="dl-list" style="max-width:920px"></div>\n'
+               '<script type="module">import { mountDownloads } from "/static/shared/downloads.js";\n'
+               'mountDownloads(document.getElementById("dl-list"));</script>')
+    return _page("Course PDFs — EOSAT-1", lang, _sidebar(categories, lang, "/downloads"), content)
+
+
 # ── aiohttp server ────────────────────────────────────────────────────
 
 def create_app(docs_root: Path) -> web.Application:
@@ -562,8 +581,15 @@ def create_app(docs_root: Path) -> web.Application:
             build_doc_html(title, body, breadcrumb, categories, lang,
                            rel_path=rel_path, served_lang=served), app)
 
+    async def downloads_page(request):
+        return tool_html_response(build_downloads_html(categories, request_lang(request)), app)
+
     app.router.add_get('/', index)
     app.router.add_get('/doc/{path:.+}', doc_handler)
+    # Course PDFs: student audience only (docs.c2o.live is student-visible).
+    from smo_common.downloads import register_download_routes
+    app.router.add_get('/downloads', downloads_page)
+    register_download_routes(app, audience="student")
     return app
 
 

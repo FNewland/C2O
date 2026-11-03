@@ -439,5 +439,8 @@
   "Pass report, daily ops review or anomaly investigation from these dumps (Markdown / HTML)": "Rapport de passage, revue quotidienne des opérations ou enquête d'anomalie à partir de ces vidages (Markdown / HTML)",
   "Generate report…": "Générer un rapport…",
   "Logbook": "Journal de bord",
-  "step": "étape"
+  "step": "étape",
+  "Textbooks, workbooks and references for the course, in English and French. Open a PDF in a new tab or download it.": "Manuels, cahiers d’exercices et références du cours, en anglais et en français. Ouvrez un PDF dans un nouvel onglet ou téléchargez-le.",
+  "Downloads": "Téléchargements",
+  "Course PDFs": "PDF du cours"
 }

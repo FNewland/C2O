@@ -8,7 +8,10 @@
 #   SMO_CONFIG_HASH=$(docker/config-hash.sh)
 #   docker build -f docker/Dockerfile \
 #       --build-arg SMO_CONFIG_HASH=$SMO_CONFIG_HASH \
+#       --build-context course_pdfs=../design/docs/pdf \
 #       -t smo-suite:$SMO_CONFIG_HASH .
+# (course_pdfs: the C2O course books, a second build context; compose.yaml
+# passes it as additional_contexts. See "Course PDFs" below.)
 # (docker compose does this for you; see docker/compose.yaml.)
 #
 # The mission config is BAKED IN, and the tag and label carry its hash, so the
@@ -71,6 +74,18 @@ COPY ADCS_failure_sim/cubesat_adcs_sim.py ADCS_failure_sim/cubesat_adcs_sim.py
 COPY configs/eosat1/ configs/eosat1/
 COPY docker/config-hash.sh docker/config-hash.sh
 
+# Course PDFs (smo_common/downloads.yaml): copy EXACTLY the listed files to
+# /opt/smo/downloads/<repo-relative source>. The books live outside this
+# context (C2O design/docs/pdf), so they arrive as the named context
+# `course_pdfs`, bind-mounted for this one step: nothing unlisted (drafts,
+# pre-cleanup builds, flyers) reaches a layer. sim/docs and configs PDFs come
+# from the main context (.dockerignore re-includes docs/*.pdf). A listed file
+# missing from either fails the build rather than shipping a hole.
+# ~56 MB (textbooks are most of it).
+RUN --mount=type=bind,from=course_pdfs,target=/tmp/c2o/design/docs/pdf \
+    --mount=type=bind,target=/tmp/c2o/sim \
+    python -m smo_common.downloads bundle --src /tmp/c2o --out /opt/smo/downloads
+
 # Record the hash of the config actually baked in, and refuse to build an
 # image whose tag/label would lie about it.
 RUN actual="$(sh docker/config-hash.sh configs/eosat1)" \
@@ -93,6 +108,7 @@ RUN mkdir -p /opt/smo/workspace/dumps /opt/smo/workspace/link /var/lib/smo/archi
  && chmod 2770 /opt/smo/workspace/logbook
 
 ENV SMO_CONFIG_DIR=/opt/smo/configs/eosat1 \
+    SMO_DOWNLOADS_DIR=/opt/smo/downloads \
     SMO_DUMP_DIR=/opt/smo/workspace/dumps \
     SMO_LINK_STATE_DIR=/opt/smo/workspace/link \
     SMO_TM_ARCHIVE=/var/lib/smo/archive/tm_archive.db \
