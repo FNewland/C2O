@@ -20,6 +20,8 @@ import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
 import { SpacecraftView } from '../spacecraft/SpacecraftView'
+import { useSeatView } from '../seats/view'
+import { useSeatStore } from '../seats/api'
 
 const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
 
@@ -58,6 +60,14 @@ export function LevelWorkbench() {
   const [showDiagram, setShowDiagram] = useState<Partial<Record<ActivityPanel, boolean>>>({})
   const rootRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
+  // Seats (WP9): the tabs of the active seat's domain; "Show all" adds the others read-only.
+  const seat = useSeatView()
+  const setShowAll = useSeatStore(s => s.setShowAll)
+  const visiblePanels = PANELS.filter(p => seat.visible(p))
+  useEffect(() => {
+    if (visiblePanels.length && !visiblePanels.includes(activePanel)) setActivePanel(visiblePanels[0])
+  }, [visiblePanels.join(','), activePanel, setActivePanel])  // eslint-disable-line react-hooks/exhaustive-deps
+  const readOnly = seat.readOnly(activePanel)
 
   // Persist per user (the name entered at sign-in).
   useEffect(() => { setPanelHeight(readHeight(userName)) }, [userName])
@@ -94,21 +104,24 @@ export function LevelWorkbench() {
   }
 
   const onTabKey = (e: React.KeyboardEvent) => {
-    const i = PANELS.indexOf(activePanel)
+    const list = visiblePanels
+    const i = list.indexOf(activePanel)
     let j = i
-    if (e.key === 'ArrowRight') j = (i + 1) % PANELS.length
-    else if (e.key === 'ArrowLeft') j = (i - 1 + PANELS.length) % PANELS.length
+    if (e.key === 'ArrowRight') j = (i + 1) % list.length
+    else if (e.key === 'ArrowLeft') j = (i - 1 + list.length) % list.length
     else if (e.key === 'Home') j = 0
-    else if (e.key === 'End') j = PANELS.length - 1
+    else if (e.key === 'End') j = list.length - 1
     else return
     e.preventDefault()
-    setActivePanel(PANELS[j])
+    setActivePanel(list[j])
     tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[j]?.focus()
   }
 
   // Level 4 = V&V — full-screen panel, no diagram
   if (currentLevel === 4) {
-    return <VVPanel />
+    return seat.readOnly('requirements') && seat.readOnly('blocks')
+      ? <fieldset disabled className="c2o-roset"><VVPanel /></fieldset>
+      : <VVPanel />
   }
 
   const collapsed = TABLE_PANELS.has(activePanel) && !showDiagram[activePanel]
@@ -149,8 +162,9 @@ export function LevelWorkbench() {
         <div className="c2o-wb__tabbar">
         <div ref={tabsRef} role="tablist" aria-label={t('Activity panel')} className="c2o-tabs c2o-wb__tabs"
           onKeyDown={onTabKey}>
-          {PANELS.map(id => {
+          {visiblePanels.map(id => {
             const active = activePanel === id
+            const ro = seat.ownTabs && !seat.ownTabs.includes(id)
             return (
               <button
                 key={id}
@@ -160,14 +174,22 @@ export function LevelWorkbench() {
                 aria-selected={active}
                 aria-controls="act-panel"
                 tabIndex={active ? 0 : -1}
-                className="c2o-tab"
+                className={ro ? 'c2o-tab c2o-tab--ro' : 'c2o-tab'}
                 onClick={() => setActivePanel(id)}
               >
                 {t(PANEL_LABELS[id] ?? id)}
+                {ro && <span className="sr-only"> {t('(read-only)')}</span>}
               </button>
             )
           })}
         </div>
+        {seat.ownTabs && (
+          <button type="button" className="c2o-btn c2o-btn--sm c2o-btn--quiet" aria-pressed={seat.showAll}
+            onClick={() => setShowAll(!seat.showAll)} data-testid="show-all"
+            title={t('Tabs outside your seat open read-only')}>
+            {seat.showAll ? t('My tabs only') : t('Show all')}
+          </button>
+        )}
         {collapsed && (
           <button type="button" className="c2o-btn c2o-btn--sm c2o-btn--quiet c2o-wb__show"
             title={t('Block diagram collapsed while {{tab}} is open.', { tab: tabLabel })}
@@ -179,6 +201,8 @@ export function LevelWorkbench() {
 
         {/* Panel content */}
         <div id="act-panel" role="tabpanel" aria-labelledby={`act-tab-${activePanel}`} className="c2o-wb__panel">
+          {readOnly && <p className="c2o-roset__note t-12">{t('Read-only for your seat.')}</p>}
+          <fieldset disabled={readOnly} className="c2o-roset">
           {activePanel === 'blocks' && <BlocksPanel />}
           {activePanel === 'spacecraft' && <ErrorBoundary phaseName="Spacecraft"><SpacecraftView /></ErrorBoundary>}
           {activePanel === 'budget' && <BudgetPanel />}
@@ -189,6 +213,7 @@ export function LevelWorkbench() {
           {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
           {activePanel === 'analyses' && <ErrorBoundary phaseName="Analyses"><AnalysesPanel /></ErrorBoundary>}
+          </fieldset>
         </div>
       </div>
     </div>

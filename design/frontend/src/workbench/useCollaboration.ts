@@ -33,7 +33,7 @@ export interface CollaborationUser {
 }
 
 /** A stable id for this browser, sent with the study socket so presence is not keyed by name. */
-function clientId(): string {
+export function clientId(): string {
   const KEY = 'scdf.client_id'
   try {
     let id = localStorage.getItem(KEY)
@@ -122,6 +122,11 @@ function _connect(studyId: string, userName: string) {
           case 'gate_profile_changed':
           case 'study_records_changed':
             for (const key of ['gates', 'gate-review', 'risks', 'trade', 'logbook-decisions', 'margin-ladder']) _qcRef?.invalidateQueries({ queryKey: [key] })
+            break
+          case 'team_changed':
+            // Seats (WP9): holders, requests, pending changes, messages, freeze, timer
+            for (const key of ['team', 'seat-pending', 'seat-subs', 'seat-ledger', 'seat-next', 'seat-events', 'gates', 'gate-review']) _qcRef?.invalidateQueries({ queryKey: [key] })
+            if (msg.what === 'inject' || msg.what === 'pending') _qcRef?.refetchQueries({ type: 'active' })
             break
           case 'users_update':
             store.setUsers(msg.users || [])

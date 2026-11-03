@@ -17,6 +17,7 @@ import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
+import { useSeatStore } from '../seats/api'
 import { GateActionError, gateAction, pick, setGateProfile, useGateProfiles, useGateReview, useStudyGates, type GateState } from '../components/useGateReview'
 import { FIX_LABEL, STATE_LABEL, STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
 import { getLang } from '../i18n'
@@ -50,7 +51,13 @@ const BUDGET_LABEL: Record<string, string> = {
 export function VVPanel() {
   const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
-  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace' | 'risks' | 'bom' | 'maturity'>('budget')
+  const [activeSection, setActiveSection] = useState<'budget' | 'reqs' | 'gates' | 'fmeca' | 'trace' | 'risks' | 'bom' | 'maturity'>(
+    () => (useSeatStore.getState().vvSection as 'gates' | null) ?? 'budget')
+  // Seats (WP9): the Team leader opens on the gate checklist; the Next card opens it too.
+  const wantSection = useSeatStore(st => st.vvSection)
+  useEffect(() => {
+    if (wantSection === 'gates') { setActiveSection('gates'); useSeatStore.getState().openVV(null) }
+  }, [wantSection])
 
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
@@ -277,6 +284,14 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
   // Default tab: the gate the study is preparing for (first not passed).
   const activeGate = picked && gates.some(g => g.id === picked) ? picked : (overview?.current_gate ?? gates[0]?.id ?? null)
   const { data: gateResult, isLoading, isError } = useGateReview(studyId, activeGate)
+  // Seats (WP9): gate decisions belong to the Team leader and the instructor (checked on the
+  // server too); Customer and Observer do not record go / no-go.
+  const seatTeam = useSeatStore(st => st.team)
+  const seatShadow = useSeatStore(st => st.shadow)
+  const seatHeld = seatTeam?.me?.held ?? []
+  const canGate = !seatShadow && (!seatTeam?.enabled || !!seatTeam.me?.instructor || seatHeld.includes('team_leader'))
+  const canRecordGo = !seatShadow && (!seatTeam?.enabled || !!seatTeam.me?.instructor
+    || seatHeld.some(h => !['customer', 'observer'].includes(h)))
   const [busy, setBusy] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -377,22 +392,23 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
                 </span>
               )}
               <span className="row gap-2 ml-auto wrap">
-                {(state === 'ready' || (state === 'reopened' && gateResult.ready)) && (
+                {!canGate && <span className="t-12 c-3">{t('Gate decisions: Team leader or instructor')}</span>}
+                {canGate && (state === 'ready' || (state === 'reopened' && gateResult.ready)) && (
                   <Button size="sm" variant="primary" busy={busy === 'start'} onClick={() => void act('start')}>{t('Start {{gate}} review', { gate: short })}</Button>
                 )}
-                {state === 'reopened' && !gateResult.ready && (
+                {canGate && state === 'reopened' && !gateResult.ready && (
                   <Button size="sm" disabledReason={t('Every must-pass item must pass first')}>{t('Start {{gate}} review', { gate: short })}</Button>
                 )}
-                {state === 'under_review' && (<>
+                {canGate && state === 'under_review' && (<>
                   <Button size="sm" variant="primary" busy={busy === 'pass'} onClick={() => void act('pass')}
                     disabledReason={!gateResult.ready ? t('A must-pass item failed during the review') : undefined}
                     title={t('Pass the gate and save a baseline snapshot')}>{t('Pass {{gate}}', { gate: short })}</Button>
                   <Button size="sm" busy={busy === 'cancel'} onClick={() => void act('cancel')}>{t('Cancel review')}</Button>
                 </>)}
-                {state === 'passed' && (
+                {canGate && state === 'passed' && (
                   <Button size="sm" busy={busy === 'reopen'} onClick={() => void act('reopen')}>{t('Reopen {{gate}}', { gate: short })}</Button>
                 )}
-                <RecordDecision decision={gateDecisionId(gateResult.gate.covers, gateResult.gate.id)} capture="gate:review" context={{ gate: gateResult.gate.id }}
+                {canRecordGo && <RecordDecision decision={gateDecisionId(gateResult.gate.covers, gateResult.gate.id)} capture="gate:review" context={{ gate: gateResult.gate.id }}
                   label={t('Record go / no-go')}
                   prefill={() => {
                     const failed = gateResult.criteria.filter(c => c.verdict === 'fail')
@@ -412,7 +428,7 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
                       ],
                       open_issues: [...failed, ...manual].slice(0, 12).map(c => `${c.id}: ${t(c.question)}`).join('\n') || undefined,
                     }
-                  }} />
+                  }} />}
                 <Button size="sm" onClick={() => requestEnd('gate', activeGate)}
                   title={t('Close this review and download your logbook')}>
                   {t('Finish {{gate}} review', { gate: short })}

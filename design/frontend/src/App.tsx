@@ -26,6 +26,12 @@ import { DialogHost, showAlert } from './components/ui/Dialog'
 import { HomeFrame } from './components/ui/HomeFrame'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { LogbookBanner, LogbookButton, LogbookRoot } from './logbook'
+import { SeatBanners, SeatBar, SeatNext } from './seats/SeatLayer'
+import { useSeesFirst } from './seats/view'
+import { SeatDrawer } from './seats/SeatDrawer'
+import { ClassBoard } from './seats/ClassBoard'
+import { useSeatStore } from './seats/api'
+import { useSeatBootstrap } from './seats/hooks'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
@@ -119,6 +125,8 @@ function StatusBar() {
   const analysisRunning = useUIStore(s => s.analysisRunning)
   const setAnalysisRunning = useUIStore(s => s.setAnalysisRunning)
   const qc = useQueryClient()
+  // Seats (WP9): the active seat's "Next" card replaces the readiness "Next: …" label.
+  const seatNext = useSeatStore(s => !!(s.team?.enabled && s.team.me?.active && !s.shadow))
 
   const runAnalysis = useCallback(async () => {
     if (!studyId || analysisRunning) return
@@ -256,7 +264,8 @@ function StatusBar() {
         })}
       </nav>
 
-      <ReadinessChecklist />
+      <ReadinessChecklist hideNext={seatNext} />
+      {seatNext && <SeatNext />}
       <EscalationBanner />
 
       <span className="grow" />
@@ -479,7 +488,7 @@ function StatusBar() {
 
       {/* Close study: back to the start screen (the logbook offers its download) */}
       <button
-        onClick={() => { useUIStore.getState().drillUp(-1); useUIStore.getState().setStudyId(null) }}
+        onClick={() => { useSeatStore.getState().setShadow(null); useUIStore.getState().drillUp(-1); useUIStore.getState().setStudyId(null) }}
         type="button"
         className="c2o-btn c2o-btn--quiet"
         title={t('Leave this study and go back to the start screen. The study stays on the server.')}
@@ -528,9 +537,28 @@ function NamePrompt() {
   )
 }
 
+/** Start screen: the wizard, plus the class board button for the instructor (WP9). */
+function Home() {
+  const { t } = useTranslation()
+  const { me } = useSeatBootstrap()
+  const setBoard = useSeatStore(s => s.setBoard)
+  return (
+    <>
+      {me?.instructor && (
+        <div className="c2o-seatbanner c2o-seatbanner--info">
+          <span className="grow">{t('You are an instructor on this server.')}</span>
+          <button type="button" className="c2o-btn c2o-btn--sm c2o-btn--primary" onClick={() => setBoard(true)}>{t('Open the class board')}</button>
+        </div>
+      )}
+      <MissionWizard />
+    </>
+  )
+}
+
 function AppShell() {
   const studyId = useUIStore(s => s.studyId)
   const userName = useUIStore(s => s.userName)
+  const board = useSeatStore(s => s.board)
 
   // The study id survives a reload (stores/studySession.ts); forget it if the study is gone.
   useEffect(() => {
@@ -548,8 +576,9 @@ function AppShell() {
   // being closed (it offers the logbook download then).
   return (
     <>
-      {studyId ? <Workbench /> : <MissionWizard />}
+      {board ? <ClassBoard /> : studyId ? <Workbench /> : <Home />}
       <LogbookRoot />
+      <SeatDrawer />
       <DialogHost />
     </>
   )
@@ -558,12 +587,14 @@ function AppShell() {
 function Workbench() {
   const showExport = useUIStore(s => s.showExport)
   const showGuide = useUIStore(s => s.showGuide)
+  useSeesFirst()
   return (
     <div className="c2o-shell">
       <header className="c2o-appbar">
         <span className="c2o-appbar__mark">SpaceCDF</span>
         <LevelBar />
         <div className="c2o-appbar__end">
+          <SeatBar />
           <PresenceBar />
           <LogbookButton />
           <LanguageToggle />
@@ -571,6 +602,7 @@ function Workbench() {
         </div>
       </header>
       <LogbookBanner />
+      <SeatBanners />
       <StatusBar />
       <MarginTower />
       <main className="c2o-shell__main">
