@@ -333,6 +333,13 @@ body.subpage #full-snapshot-container{ display:block; }
       </div>
       <div id="breakpoints-list" tabindex="-1" aria-label="Saved breakpoints" data-i18n-aria-label><div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)" data-i18n>No breakpoints saved</div></div>
     </section>
+
+    <!-- Course PDFs: every entry of smo_common/downloads.yaml, instructor-only
+         books included (GET /api/downloads, drawn by /static/shared/downloads.js). -->
+    <section class="ds-panel" aria-labelledby="dl-h">
+      <div class="ds-panel-h"><span id="dl-h" data-i18n>Course PDFs</span><span class="r" data-i18n>students see only theirs</span></div>
+      <div class="ds-panel-b" id="downloads-list"></div>
+    </section>
   </div>
 
   <!-- ══ CENTRE — TRUTH DASHBOARD ══ -->
@@ -570,5 +577,9 @@ body.subpage #full-snapshot-container{ display:block; }
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script type="module" src="/static/modern/instructor.js?v=2"></script>
+<script type="module">
+import { mountDownloads } from "/static/shared/downloads.js";
+mountDownloads(document.getElementById("downloads-list"), { compact: true });
+</script>
 </body>
 </html>

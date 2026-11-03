@@ -375,6 +375,13 @@ class Gateway:
         local.router.add_get("/api/state", self._h_state)
         local.router.add_get("/healthz", self._h_health)
         local.router.add_get("/link-status", self._h_link_status)
+        # Course PDFs for the instructor console, served from the ground image
+        # (never over the link): same routes as the simulator's instructor app.
+        try:
+            from smo_common.downloads import register_download_routes
+            register_download_routes(local, audience="instructor")
+        except Exception as e:  # noqa: BLE001 -- never block the gateway
+            logger.warning("course PDF downloads not mounted: %s", e)
         local.router.add_route("*", "/{tail:.*}", self._h_proxy)
         runner = web.AppRunner(local, access_log=None, handle_signals=False)
         await runner.setup()

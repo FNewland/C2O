@@ -128,6 +128,15 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     except Exception as e:  # noqa: BLE001
         logger.warning("Config editor not mounted: %s", e)
 
+    # Course PDFs, instructor list (every entry, incl. instructor-only
+    # books): smo_common/downloads.yaml. The GSG serves the same routes
+    # locally in a split deployment (smo_link.gateway).
+    try:
+        from smo_common.downloads import register_download_routes
+        register_download_routes(app, audience="instructor")
+    except Exception as e:  # noqa: BLE001
+        logger.warning("Course PDF downloads not mounted: %s", e)
+
     # Shared design system (design_2026-08 plan §1.1): one canonical runtime
     # copy served from smo_common package data at the SAME URL on all three
     # servers. Mounted BEFORE /static/ so the broader mount cannot shadow it
