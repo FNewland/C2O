@@ -15,7 +15,7 @@ Three things stay on screen and never move, and one thing changes.
 - The fixed elements are:
   - a persistent **INSTRUCTOR · TRUTH** band;
   - a grey **overview strip** with one tile per subsystem;
-  - **one timeline** with eight lanes on a single sim-time axis.
+  - **one timeline** with nine lanes on a single sim-time axis (eight before WP10 added Consoles).
 - The changing element is the **focus pane** in the middle. It follows the simulation, but only on events the server marks as focus-worthy. Every switch says why, switches are rate-limited, and the instructor can pin the pane or go back with one click.
 - Every intervention lives in a rail on the right. The fault menu is ordered by **control-loop element**. Faults can be batched and triggered on time, AOS, LOS, eclipse or a team telecommand, and the simulation is snapshotted automatically before each one fires.
 - The central view is the **truth-versus-trainees** comparison. For each quantity it shows the truth, what the spacecraft measures or estimates, and what the ground last received with its age, with every gap classified by cause:
@@ -42,7 +42,8 @@ Three things stay on screen and never move, and one thing changes.
 **What the simulator can and cannot know.** In the split deployment no identity crosses the link (`LINK_DESIGN.md`).
 
 - **Built from simulator-side data:** telecommands received, accepted, rejected and completed; on-board events and when their S5 packet reached the ground; the housekeeping the ground actually received; and the simulator's own truth and state changes.
-- **Ground-side only:** alarm acknowledgements, procedure steps, voice loops and logbooks. The Voice lane is drawn and labelled "not available on the simulator side". The proxy for "not acted on" is a *missed cue*: no telecommand within 5 minutes after an ALARM reached the ground. The seat board (REDESIGN_DECISIONS #6) stays in the MCS.
+- **Ground-side only:** alarm acknowledgements, procedure steps, voice loops and logbooks. The proxy for "not acted on" is a *missed cue*: no telecommand within 5 minutes after an ALARM reached the ground. The seat board (REDESIGN_DECISIONS #6) stays in the MCS.
+- **Ground activity, anonymous (2026-11-03, WP10).** The console now also reads the MCS's identity-free ground-activity summary at `/api/seats/activity`. The GSG answers that route on the ground; it never crosses the link (`LINK_DESIGN.md` §3.9). The summary carries, by **position only**: desk staffing, alarm acknowledgements, procedure-runner steps, GO/NO-GO answers and push-to-talk spans per loop. It feeds the Alarms, Procedures, **Consoles** and Voice lanes and the Situation view's "On the ground" card. The **Crew** view shows the seat board, which has names; it is for instructors, served on the ground and shown only there. Without the ground feed (no MCS, not an instructor), the Consoles and Voice lanes say why, as before. Logbooks stay private (L1).
 
 ## 3. Information architecture
 
@@ -70,7 +71,7 @@ Lilac (`--shelf`, already the instructor colour) is reserved for **what the inst
 
 ![Timeline lanes](instructor_console/timeline_lanes.svg)
 
-*Figure 2. Eight lanes on one sim-time axis: 80 % past, 20 % future. The window can be 15 min, 1 h or 3 h. Pending injects (yours and the scenario's) are drawn dashed ahead of "now". Untimed scenario gates are counted at the right edge. Clicking an item shows it in the header line. Clicking an inject opens its Fault view. "Event list" is the text alternative, with SIM-time stamps and the last 200 rows.*
+*Figure 2. Eight lanes (nine since WP10 added Consoles) on one sim-time axis: 80 % past, 20 % future. The window can be 15 min, 1 h or 3 h. Pending injects (yours and the scenario's) are drawn dashed ahead of "now". Untimed scenario gates are counted at the right edge. Clicking an item shows it in the header line. Clicking an inject opens its Fault view. "Event list" is the text alternative, with SIM-time stamps and the last 200 rows.*
 
 Lanes and their sources (`recorder.py`):
 
@@ -83,7 +84,10 @@ Lanes and their sources (`recorder.py`):
 | Procedures | on-board procedures start/end, FDIR recovery start, FDIR level | procedure executor, fault propagator |
 | Link & sun | AOS/LOS (contact span), eclipse entry/exit (eclipse span) | edge detection; the override is labelled |
 | Instructor | speed, freeze, overrides, phase, snapshots (incl. auto), loads, session label, bookmarks, sim anomalies | `_handle_instructor_cmd` |
-| Voice loops | not available on the simulator side | (ground-side) |
+| Consoles (WP10) | desk staffed / idle / reclaimable / vacant, by position | ground-activity summary (MCS seat registry, via the GSG) |
+| Voice loops | talk spans per position and loop; "not available" when the ground does not answer | ground-activity summary (the voice panel reports push-to-talk edges to the MCS) |
+
+The Alarms lane also shows ground acknowledgements (squares, by position), and the Procedures lane shows ground procedure steps and GO/NO-GO, all from the same summary.
 
 **Segments.** A snapshot load rewinds sim time, so it starts a new timeline **segment**. The live view, the swimlanes and the debrief show only the current segment, and the instructor lane records the load.
 
@@ -290,6 +294,7 @@ All existing routes and payloads still work (`/api/instructor/snapshot`, `/api/f
 3. **`ScenarioEngine.record_response` is never called**, so the scenario score is always 0 %. The timeline gaps replace it in the debrief. Should the score be retired or wired to TC/procedure evidence?
    **Ruled 2026-11-03: score from the commands the team sends. Built** (`smo_simulator/scenario_scoring.py`). Each expected response may declare `tc` (procedure notation, with arguments), `state` (`<parameter> <op> <value>`), `within_s`, `after`, `ref`, `weight`; top-level `harmful_commands` carry a penalty. Status per response: done 100 %, late 50 %, wrong 0 (rejected / failed on board / before its prerequisite / state never followed), missed 0; responses without evidence are listed for the instructor and not scored; a scenario with nothing checkable is "not scored", not 0 %. Score = weighted credit − harmful penalties (once per entry), 0..100. MTTD = first detect response met, else the first matching command (inferred); MTTI = first isolate, else first recovery (inferred); MTTR = all scored recoveries met. Evidence: TCs at `_dispatch_tc` (and link refusals), S1 reports, declared states sampled every tick. 34 of 38 shipped scenarios are now scored; declarations are checked at load. `record_response` is kept as an instructor *mark* (listed, used for a mean time only without command evidence).
 4. **Ground-side lanes** (alarm acks, procedure steps, voice) need a deliberate, identity-free summary from the GSG if you want them on the instructor timeline in a split deployment.
+   **Approved and built 2026-11-03 (WP10):** `/api/seats/activity`, a GSG-local route to the MCS (no link frame); by position only; a test asserts that no name, email or id is in it.
 5. **Failure labels and effects** come from `FAILURE_SPECS` in English. A French overlay (`tdb`) would complete the bilingual rail.
    **Done 2026-11-03.** `tools/gen_failure_strings.py` exports the catalogue's text to `configs/eosat1/i18n/en/failure_catalog.yaml` (generated, freshness-tested); overlay rules `failsub`, `fail` (label, effect, notes), `failparam`, `failval`; the inject form looks them up with `tdb()`.
 6. **Auto snapshots live in RAM only** (newest six). Should they be persisted with the named ones?

@@ -383,7 +383,9 @@ def test_compose_livekit_dev_service_is_loopback_and_matches_the_mcs_dev_key():
 
 
 def test_image_installs_the_pinned_token_library():
-    assert '-e "packages/smo-mcs[voice]"' in (SIM / "docker" / "Dockerfile").read_text()
+    # [voice] (LiveKit tokens) and, since WP10, [iap] (IAP JWT verification)
+    assert re.search(r'-e "packages/smo-mcs\[(?:[a-z]+,)*voice(?:,[a-z]+)*\]"',
+                     (SIM / "docker" / "Dockerfile").read_text())
     py = (SIM / "packages" / "smo-mcs" / "pyproject.toml").read_text()
     assert re.search(r'voice = \["livekit-api==\d+\.\d+\.\d+"\]', py)
 

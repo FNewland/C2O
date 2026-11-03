@@ -16,7 +16,7 @@ Covers:
   - GET /api/procedure/activity-types returns list
   - GET /api/procedure/index returns procedure index
   - GET /api/state returns latest state dict
-  - _check_position_access allow-all, service filtering, func_id filtering
+  - _check_position_access allow-all (no config), unknown denied, service and func_id filtering
 
 Uses aiohttp.test_utils.TestServer/TestClient for HTTP endpoint tests,
 and direct unit tests for internal methods.
@@ -621,10 +621,13 @@ class TestCheckPositionAccess:
         allowed, reason = server._check_position_access("eps_tcs", 8, 1, "10")
         assert allowed is True
 
-    def test_unknown_position_allowed_by_default(self):
+    def test_unknown_position_denied(self):
+        """Redesign WP10: an unknown position is refused (it used to be
+        allowed by default, so a made-up name could send anything)."""
         server = _make_server_with_positions()
         allowed, reason = server._check_position_access("unknown_pos", 8, 1, "10")
-        assert allowed is True
+        assert allowed is False
+        assert "Unknown position" in reason
 
 
 # ── _proc_get_telemetry (unit test) ────────────────────────────────
