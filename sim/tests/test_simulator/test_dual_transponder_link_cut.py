@@ -157,9 +157,10 @@ def test_selected_unit_failed_override_still_reaches_the_standby_receiver(engine
 
 def test_command_loss_timer_is_the_only_onboard_recovery(engine):
     """EMG-004 Step 5 / CTG-003 Step 6: the on-board autonomy is FDIR TTC-01
-    — 24 h without an accepted TC raises 0x0514 and S19 ea 4003 switches to
-    the redundant transponder. With the primary dead that brings the link
-    back; with BOTH dead the switch is refused and the link stays cut."""
+    — every 24 h without an accepted TC raises 0x0514 and S19 ea 4003 toggles
+    to the other transponder. With the selected unit dead that brings the
+    link back; with BOTH dead the toggle changes nothing and the link stays
+    cut."""
     ttc = engine.subsystems["ttc"]
     _tick(engine, 30)
     ttc.inject_failure("primary_failure", 1.0)
@@ -170,13 +171,13 @@ def test_command_loss_timer_is_the_only_onboard_recovery(engine):
     _tick(engine, 30)
     assert engine.downlink_active and engine.uplink_active
 
-    # Second episode: the redundant unit dies too. The timer fires again but
-    # its switch (to the redundant unit) cannot help, and nothing radiates.
+    # Second episode: the redundant unit dies too. The timer fires again and
+    # toggles (blindly) back to the dead primary; nothing radiates.
     ttc.inject_failure("redundant_failure", 1.0)
-    ttc._state.mode = 0
-    ttc._state._cmd_loss_fired = False
+    ttc._state._cmd_loss_fires = 0
     ttc._state.time_since_last_tc_s = 86400.0 - 3.0
     _tick(engine, 10)
+    assert ttc._state.mode == 0, "the toggle is blind: it goes back anyway"
     _drain(engine)
     _tick(engine, 30)
     assert not engine.uplink_active and not engine.downlink_active

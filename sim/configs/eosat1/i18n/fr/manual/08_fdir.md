@@ -109,7 +109,7 @@ charge utile déjà correctement éteinte, à chaque orbite.
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TTC-01  | Aucune télécommande valide depuis > 24 heures | 0x053D ≥ 86400 s → événement 0x0514 | Basculer sur le transpondeur redondant (S19 ea 4003) |
+| TTC-01  | Aucune télécommande valide depuis > 24 heures | 0x053D ≥ 86400 s (puis à chaque nouvelle tranche de 86400 s) → événement 0x0514 | Basculer sur l'autre transpondeur (S19 ea 4003) |
 | TTC-02  | Température du transpondeur hors plage | 0x0507  | Changer de transpondeur     |
 | TTC-03  | Décrochage de la liaison montante (verrouillage perdu puis retrouvé en moins de 60 s) | événement 0x0513 | Puissance TX HIGH, 5 W (S19 ea 4001) |
 
@@ -124,11 +124,21 @@ récepteur et l'OBC de bord observent réellement :
 - **TTC-01 : minuterie de perte de commande (ea 4003).** 0x053D `ttc.time_since_last_tc`
   compte les secondes écoulées depuis la dernière télécommande acceptée par l'OBC ; chaque
   acceptation S1.1 la remet à zéro. Lorsqu'elle atteint `cmd_loss_switch_timeout_s` dans
-  `subsystems/ttc.yaml` (86400 s), l'événement 0x0514 CMD_LOSS_TIMEOUT est émis une fois,
-  et la règle S19 ea 4003 envoie `TTC_SWITCH_REDUNDANT` (S8 func 64). Si la chaîne de
-  réception principale est devenue sourde, l'autre peut encore entendre le sol. La valeur
-  de 24 h est longue à dessein : un week-end calme ne doit pas faire changer de
-  transpondeur. Le sol peut toujours commander le basculement (`TTC_SWITCH_REDUNDANT`, voir
+  `subsystems/ttc.yaml` (86400 s), l'événement 0x0514 CMD_LOSS_TIMEOUT est émis et la
+  règle S19 ea 4003 envoie `TTC_SWITCH_OTHER` (S8 func 99), qui sélectionne le
+  transpondeur qui n'est pas sélectionné. Si la chaîne de réception sélectionnée est
+  devenue sourde, l'autre peut encore entendre le sol. La minuterie se réarme : toujours
+  sans télécommande acceptée, elle se déclenche de nouveau à 48 h, 72 h, ..., en basculant
+  à chaque fois ; la règle fonctionne donc dans les deux sens (un transpondeur REDONDANT
+  en panne est quitté au profit du principal ; jusqu'au 2026-11-02 l'action était
+  `TTC_SWITCH_REDUNDANT`, qui ne le permettait pas). Le basculement se fait à l'aveugle :
+  l'équipement de secours est hors tension (redondance froide), et l'OBC ne peut donc pas
+  le vérifier avant de le sélectionner. Si les deux équipements sont en panne, la
+  minuterie continue de basculer toutes les 24 h, sans conséquence, et retrouve en moins
+  de 24 h un équipement qui se rétablit. Le basculement autonome n'est pas une
+  télécommande acceptée : il ne remet pas la minuterie à zéro. La valeur de 24 h est
+  longue à dessein : un week-end calme ne doit pas faire changer de transpondeur. Une fois
+  la liaison rétablie, toute télécommande acceptée empêche le basculement suivant. Le sol peut toujours commander le basculement (`TTC_SWITCH_REDUNDANT`, voir
   `05_ttc.md` §6.1). L'événement 0x0511 UPLINK_TIMEOUT est un autre signal (pas de
   verrouillage de la liaison montante pendant 300 s) et il est émis après chaque LOS.
 - **TTC-03 : décrochage de la liaison montante (ea 4001).** À bord, une LOS normale et

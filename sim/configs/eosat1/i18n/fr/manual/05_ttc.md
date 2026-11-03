@@ -36,7 +36,10 @@ Les trois débits descendants sont les échelons de l'**échelle de débits TM**
 augmenter le débit descendant n'augmente jamais le débit montant.
 
 Un seul transpondeur est actif à la fois. L'équipement redondant est hors tension (redondance froide)
-et peut être activé par commande sol au moyen de `TTC_SWITCH_REDUNDANT`.
+et peut être activé par commande sol au moyen de `TTC_SWITCH_REDUNDANT`. Si aucune télécommande
+n'est acceptée pendant 24 h, la minuterie de perte de commande de bord bascule d'elle-même sur
+l'autre équipement, puis de nouveau toutes les 24 h jusqu'à ce qu'une télécommande soit
+acceptée (FDIR TTC-01, §8).
 
 ### 2.2 Canal de commande PDM dédié {#22-dedicated-pdm-command-channel}
 
@@ -292,6 +295,7 @@ de la télémesure et des données, avec un intervalle médian d'environ 33 minu
 |-----------------------|----------|------------|--------------------------------------|
 | TTC_SWITCH_PRIMARY    | S8,S1    | —          | Activer le transpondeur principal    |
 | TTC_SWITCH_REDUNDANT  | S8,S1    | —          | Activer le transpondeur redondant    |
+| TTC_SWITCH_OTHER      | S8,S1    | —          | Activer l'équipement non sélectionné (à l'aveugle ; action de FDIR TTC-01) |
 | HK_REQUEST            | S3,S27   | sid=5      | Demander le paquet de servitude TTC  |
 | GET_PARAM             | S20,S3   | param_id   | Lire un paramètre TTC individuel     |
 | SET_PARAM             | S20,S1   | param_id, value | Modifier un paramètre de configuration TTC |
@@ -340,7 +344,7 @@ Programmer les commandes de basculement en conservant un temps de contact restan
 
 | Défaillance                 | Détection                   | Réaction                        |
 |-----------------------------|-----------------------------|---------------------------------|
-| Défaillance du transpondeur principal | Aucune télécommande valide depuis > 24 h (`cmd_loss_switch_timeout_s`) | Basculement sur le redondant (FDIR TTC-01, voir `08_fdir.md` §4.5) |
+| Défaillance du transpondeur sélectionné (principal ou redondant) | Aucune télécommande valide depuis > 24 h (`cmd_loss_switch_timeout_s`) | Basculement sur l'autre équipement, puis de nouveau toutes les 24 h jusqu'à l'acceptation d'une TC (FDIR TTC-01, voir `08_fdir.md` §4.5) |
 | Dégradation du RSSI         | rssi < -105 dBm (`cmd_loss_rssi_threshold_dbm`) | Passage au bas débit, analyse   |
 | Échec du déploiement de l'antenne | Aucun RSSI après la fusion du fil | Essayer le circuit de fil thermofusible redondant |
 | Extinction automatique du TX (minuterie de 15 min) | Aucune liaison descendante, RX toujours actif | Comportement attendu ; envoyer une commande pour réactiver le TX |

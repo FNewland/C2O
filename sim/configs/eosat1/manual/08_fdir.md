@@ -109,7 +109,7 @@ payload that was correctly switched off already, on every orbit.
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TTC-01  | No valid telecommand for > 24 hours | 0x053D ≥ 86400 s → event 0x0514 | Switch to redundant XPDR (S19 ea 4003) |
+| TTC-01  | No valid telecommand for > 24 hours | 0x053D ≥ 86400 s (then every further 86400 s) → event 0x0514 | Switch to the other XPDR (S19 ea 4003) |
 | TTC-02  | XPDR temp out of range         | 0x0507         | Switch transponder          |
 | TTC-03  | Uplink lock dropout (lock lost and regained within 60 s) | event 0x0513 | TX power HIGH, 5 W (S19 ea 4001) |
 
@@ -124,10 +124,20 @@ observe:
 - **TTC-01: command-loss timer (ea 4003).** 0x053D `ttc.time_since_last_tc`
   counts the seconds since the OBC last accepted a telecommand, and every S1.1
   acceptance restarts it. When it reaches `cmd_loss_switch_timeout_s` in
-  `subsystems/ttc.yaml` (86400 s), event 0x0514 CMD_LOSS_TIMEOUT fires once,
-  and S19 ea 4003 dispatches `TTC_SWITCH_REDUNDANT` (S8 func 64). If the prime
-  receiver chain has gone deaf, the other one may still hear the ground. The
-  24 h value is long on purpose: a quiet weekend must not swap transponders.
+  `subsystems/ttc.yaml` (86400 s), event 0x0514 CMD_LOSS_TIMEOUT fires and
+  S19 ea 4003 dispatches `TTC_SWITCH_OTHER` (S8 func 99), which selects
+  whichever transponder is not selected. If the selected receiver chain has
+  gone deaf, the other one may still hear the ground. The timer re-arms: with
+  still no accepted telecommand it fires again at 48 h, 72 h, ..., toggling
+  each time, so the rule works both ways (a dead REDUNDANT unit is switched
+  back to the primary; until 2026-11-02 the action was `TTC_SWITCH_REDUNDANT`,
+  which could not). The switch is blind: the spare unit is unpowered (cold
+  redundancy), so the OBC cannot check it before selecting it. With both
+  units dead the timer keeps toggling every 24 h, which is harmless, and it
+  finds a unit that recovers within 24 h. The autonomous switch is not an
+  accepted telecommand, so it does not reset the timer. The 24 h value is
+  long on purpose: a quiet weekend must not swap transponders. Once the link
+  is back, any accepted telecommand stops the next toggle.
   The ground can always command the switch (`TTC_SWITCH_REDUNDANT`, see
   `05_ttc.md` §6.1). Event 0x0511 UPLINK_TIMEOUT is a different signal (no
   uplink lock for 300 s) and fires after every LOS.

@@ -65,7 +65,9 @@ positions:
     # 79 = TTC_SET_DOWNLINK_MODE (defect #85). It is the mode gate on the HIGH
     # tier of the TM rate ladder, so the TT&C position must be able to send it
     # or func 65's HIGH tier is unreachable from this console.
-    allowed_func_ids: [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+    # 99 = TTC_SWITCH_OTHER (2026-11-02): the FDIR TTC-01 blind toggle that S19
+    # ea 4003 dispatches on board; the transponder owner can send it too.
+    allowed_func_ids: [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 99]
     visible_tabs: [overview, ttc, commanding, procedures, trends, manual]
     overview_subsystems: [ttc]
     manual_sections: [05_ttc]

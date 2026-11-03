@@ -184,8 +184,8 @@
   },
   {
    "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-19-event-action",
-   "en_hash": "7f8e3aee6ad8d7b0",
-   "fr_hash": "7f58aba55b74e9c5"
+   "en_hash": "79469b8b82497b8e",
+   "fr_hash": "3cabb5286061c6ed"
   },
   {
    "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-20-parameter-management",
@@ -273,5 +273,5 @@
    "fr_hash": "f9b410c9af7972da"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "094c1d3"
 }

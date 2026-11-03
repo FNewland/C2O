@@ -11,7 +11,9 @@ They are now retriggered on on-board observables:
   within 60 s, i.e. a fade mid-pass) -> TTC_SET_TX_POWER level 2 (HIGH);
 * ea 4003 — event 0x0514 CMD_LOSS_TIMEOUT (no telecommand accepted for
   ttc.yaml ``cmd_loss_switch_timeout_s`` = 24 h, timer 0x053D) ->
-  TTC_SWITCH_REDUNDANT (FDIR TTC-01).
+  TTC_SWITCH_OTHER (FDIR TTC-01). Since 2026-11-02 the switch goes both
+  ways: the timer re-arms after each expiry and toggles to whichever unit is
+  not selected, so a dead REDUNDANT unit is switched away from too.
 
 These tests fly the real engine end to end: model -> S5 event -> S19 -> S8.
 """
@@ -49,10 +51,10 @@ def test_4001_is_uplink_dropout_to_tx_power_high():
     assert 0x0513 in _event_ids()
 
 
-def test_4003_is_cmd_loss_timer_to_switch_redundant():
+def test_4003_is_cmd_loss_timer_to_switch_other():
     rule = _rule(4003)
     assert rule["trigger"] == {"kind": "event", "id": 0x0514}
-    assert rule["action_func_id"] == 64            # TTC_SWITCH_REDUNDANT
+    assert rule["action_func_id"] == 99            # TTC_SWITCH_OTHER
     assert not rule.get("action_data")             # the command takes no args
     assert 0x0514 in _event_ids()
 
@@ -160,17 +162,121 @@ def test_cmd_loss_timer_runs_and_resets_on_accepted_tc(engine):
     assert ttc._state.time_since_last_tc_s <= 2.0
 
 
+def _fires(eng):
+    return sum(1 for f in eng._fired if f[0] == 4003)
+
+
 def test_24h_without_a_tc_fires_4003_and_switches_transponder(engine):
     ttc = engine.subsystems["ttc"]
     assert ttc._state.mode == 0                    # primary
     # Fast-forward the on-board timer to just short of 24 h.
     ttc._state.time_since_last_tc_s = 86400.0 - 3.0
-    assert _tick_until(engine, lambda: any(f[0] == 4003 for f in engine._fired),
-                       10), engine._fired
-    assert (4003, 64, b"") in engine._fired
+    assert _tick_until(engine, lambda: _fires(engine) > 0, 10), engine._fired
+    assert (4003, 99, b"") in engine._fired
     assert ttc._state.mode == 1, "FDIR TTC-01 must select the redundant XPDR"
-    # Once per loss episode: the timer keeps running but the rule does not
+    # One firing per expiry: the timer keeps running but the rule does not
     # re-fire every tick.
-    n = sum(1 for f in engine._fired if f[0] == 4003)
+    n = _fires(engine)
     _tick_until(engine, lambda: False, 5)
-    assert sum(1 for f in engine._fired if f[0] == 4003) == n
+    assert _fires(engine) == n == 1
+
+
+def test_primary_dead_switches_to_redundant_after_24h(engine):
+    """Franz 2026-11-02, case 1: the selected PRIMARY dies; nobody can
+    command; 24 h after the last accepted TC the spacecraft is on the
+    redundant unit and the link is back."""
+    ttc = engine.subsystems["ttc"]
+    _in_pass(engine)
+    ttc.inject_failure("primary_failure", 1.0)
+    _tick_until(engine, lambda: False, 2)
+    assert not ttc.selected_transponder_alive()
+    ttc._state.time_since_last_tc_s = 86400.0 - 3.0
+    assert _tick_until(engine, lambda: ttc._state.mode == 1, 10)
+    assert ttc.selected_transponder_alive()
+    assert _fires(engine) == 1
+
+
+def test_redundant_selected_and_dead_switches_back_to_primary(engine):
+    """Franz 2026-11-02, case 2: the switch must go both ways. With the
+    REDUNDANT unit selected and dead, the old rule (func 64, switch to
+    redundant) could never recover the link; the toggle returns to the
+    primary 24 h after the last accepted TC."""
+    ttc = engine.subsystems["ttc"]
+    _in_pass(engine)
+    ttc._state.mode = 1
+    ttc.inject_failure("redundant_failure", 1.0)
+    _tick_until(engine, lambda: False, 2)
+    assert not ttc.selected_transponder_alive()
+    ttc._state.time_since_last_tc_s = 86400.0 - 3.0
+    assert _tick_until(engine, lambda: ttc._state.mode == 0, 10)
+    assert ttc.selected_transponder_alive()
+    assert (4003, 99, b"") in engine._fired
+
+
+def test_timer_rearms_and_toggles_again_every_24h(engine):
+    """Re-arming: no TC after the first switch -> another toggle at 48 h, and
+    so on. The autonomous switch itself is not an accepted TC, so it does not
+    reset the timer, which keeps counting from the last accepted TC."""
+    ttc = engine.subsystems["ttc"]
+    ttc._state.time_since_last_tc_s = 86400.0 - 3.0
+    assert _tick_until(engine, lambda: ttc._state.mode == 1, 10)
+    t1 = ttc._state.time_since_last_tc_s
+    assert t1 >= 86400.0, "the autonomous switch must not reset the timer"
+    ttc._state.time_since_last_tc_s = 2 * 86400.0 - 3.0
+    assert _tick_until(engine, lambda: ttc._state.mode == 0, 10)
+    assert _fires(engine) == 2
+    ttc._state.time_since_last_tc_s = 3 * 86400.0 - 3.0
+    assert _tick_until(engine, lambda: ttc._state.mode == 1, 10)
+    assert _fires(engine) == 3
+
+
+def test_both_dead_keeps_toggling_harmlessly(engine):
+    """Both units dead: the on-board timer cannot tell a deaf receiver from a
+    quiet ground, so it keeps toggling every 24 h. Nothing else changes, and
+    the moment a unit recovers the toggle will eventually land on it."""
+    ttc = engine.subsystems["ttc"]
+    ttc.inject_failure("primary_failure", 1.0)
+    ttc.inject_failure("redundant_failure", 1.0)
+    for k in range(1, 4):
+        ttc._state.time_since_last_tc_s = k * 86400.0 - 3.0
+        assert _tick_until(engine, lambda: _fires(engine) == k, 10)
+        assert ttc._state.mode == k % 2
+        assert not ttc.any_transponder_alive()
+
+
+def test_accepted_tc_resets_the_timer_and_the_toggle_count(engine):
+    """Any accepted TC restarts the on-board timer: an expiry that was 3 s
+    away is pushed back a full 24 h, and the next loss episode starts from
+    the first expiry again."""
+    ttc = engine.subsystems["ttc"]
+    obdh = engine.subsystems["obdh"]
+    ttc._state.time_since_last_tc_s = 86400.0 - 3.0
+    assert _tick_until(engine, lambda: _fires(engine) == 1, 10)
+    assert ttc._state.mode == 1
+    # Ground gets a TC in (on the redundant unit), 3 s before the 48 h toggle.
+    ttc._state.time_since_last_tc_s = 2 * 86400.0 - 3.0
+    obdh.record_tc_accepted()
+    _tick_until(engine, lambda: False, 10)
+    assert ttc._state.time_since_last_tc_s <= 10.0
+    assert _fires(engine) == 1 and ttc._state.mode == 1, \
+        "an accepted TC must cancel the pending toggle"
+    assert ttc._state._cmd_loss_fires == 0
+    # A new episode: the first expiry is again at 24 h after that TC.
+    ttc._state.time_since_last_tc_s = 86400.0 - 3.0
+    assert _tick_until(engine, lambda: ttc._state.mode == 0, 10)
+    assert _fires(engine) == 2
+
+
+def test_switch_other_is_ground_commandable_and_blind(engine):
+    """TTC_SWITCH_OTHER (func 99) is in the catalogue; it toggles even onto
+    a unit the simulator knows is failed (the OBC cannot know: cold
+    redundancy), unlike the named 63/64 selections."""
+    ttc = engine.subsystems["ttc"]
+    cat = _yaml("commands/tc_catalog.yaml")["commands"]
+    entry = next(c for c in cat if c["name"] == "TTC_SWITCH_OTHER")
+    assert (entry["service"], entry["subtype"], entry["func_id"]) == (8, 1, 99)
+    ttc.inject_failure("redundant_failure", 1.0)
+    engine._dispatcher._s19_dispatch(0, 99, b"")
+    assert ttc._state.mode == 1
+    engine._dispatcher._s19_dispatch(0, 99, b"")
+    assert ttc._state.mode == 0
