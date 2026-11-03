@@ -160,9 +160,10 @@ export function mount(el, opts = {}) {
     const lab = [name + ":", st === "nominal" ? t("nominal") : word]
       .concat(rows.map((r) => `${r.label} ${tvText(r.q, r.digits)}`)).join(" ");
     if (sub && sub.hidden) {
-      // not this position's subsystem: the outline stays, the block is inert
-      return `<g class="o-blk is-hidden" aria-hidden="true"><rect class="o-bx" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="3"/>` +
-        s("text", { x: b.x + 10, y: b.y + 19, class: "t-off" }, esc(name)) + "</g>";
+      // Not this position's subsystem: not drawn. Empty "ghost" frames read
+      // as missing data (screen review #15); the host summarises the other
+      // subsystems in one line instead.
+      return "";
     }
     const bid = opts.blockId ? ` id="${esc(opts.blockId(id))}"` : "";
     let g = `<g class="o-blk ${cls}"${bid} data-sub="${esc(id)}" tabindex="0" role="link" aria-label="${esc(lab)}">`;

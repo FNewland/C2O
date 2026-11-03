@@ -398,7 +398,7 @@ PAGE_CSS = """
 .pt-sec h2{ font-size:var(--fs-body); font-weight:600; color:var(--tx); }
 .pt-sec header p{ font-size:var(--fs-label); color:var(--tx3); margin-top:2px; }
 .pt-list{ list-style:none; }
-.pt-row{ display:grid; grid-template-columns:12rem minmax(0,1fr) 11.5rem 8.5rem;
+.pt-row{ display:grid; grid-template-columns:12rem minmax(0,1fr) 10rem;
   column-gap:var(--sp-4); align-items:center; min-height:48px; padding:var(--sp-2) var(--sp-3);
   border-bottom:1px solid var(--line); color:inherit; text-decoration:none;
   border-radius:var(--radius-sm); transition:background-color var(--motion,140ms); }
@@ -427,8 +427,6 @@ PAGE_CSS = """
 
 @media (max-width:1100px){
   .pt-row{ grid-template-columns:11rem minmax(0,1fr) 9.5rem; }
-  .pt-addr{ grid-column:2; grid-row:2; }
-  .pt-state{ grid-column:3; grid-row:1 / span 2; }
 }
 @media (max-width:720px){
   .pt-main{ padding:var(--sp-4) var(--sp-4) var(--sp-5); }

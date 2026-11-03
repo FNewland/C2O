@@ -1289,6 +1289,7 @@ function updateOverview() {
   // the fallback when the shared modules are not available
   if (PIC && PIC.render("ovr")) {
     renderContactTimeline();
+    applyOverviewFilter();
     renderPassTable();
     renderGroundTrack();
     return;
@@ -2733,9 +2734,21 @@ function buildCmdPage() {
           </div>
           <div id="s15-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
+        <!-- One HK control (review #14): PUS S3 where the position has the
+             PUS page, this card where it does not. -->
+        <div class="ds-card" id="cmd-hk-card"><h2 data-i18n>HK SID control (S3)</h2><div class="bd">
+          <div class="row">
+            <div class="fld"><label for="hk-sid">SID</label>
+              <input id="hk-sid" class="in" type="number" min="1" value="1" style="width:70px"></div>
+            <button class="ds-btn" data-hk="enable" data-i18n="Enable (3,5)">Enable (3,5)</button>
+            <button class="ds-btn" data-hk="disable" data-i18n="Disable (3,6)">Disable (3,6)</button>
+            <button class="ds-btn" data-hk="oneshot" data-i18n="One-shot (3,27)">One-shot (3,27)</button>
+          </div>
+          <div id="hk-quick-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
+        </div></div>
         <div class="ds-card"><div class="bd" style="font-size:12.5px;color:var(--tx2)">
-          <span data-i18n>HK enable and disable: PUS services page, S3.</span>
-          <a href="#" data-page-nav="diag" data-i18n>Open S3</a> ·
+          <span id="cmd-hk-note"><span data-i18n>HK enable and disable: PUS services page, S3.</span>
+          <a href="#" data-page-nav="diag" data-i18n>Open S3</a> · </span>
           <span data-i18n>Command history: the drawer below.</span></div></div>
       </div>
     </div>
@@ -5490,7 +5503,12 @@ function renderCurrentPage(full) {
     if (full && S.page === "ttc") loadLinkPrediction();   // G5 warm fetch
     if (full && S.page === "prp") loadBurnPlan();         // G9 warm fetch
   }
-  else if (S.page === "cmd") { if (full) { renderCmdCatalogSelect(); updateCmdBuilder(); renderQuickCommands(); renderVerifLog(); } }
+  else if (S.page === "cmd") {
+    const pus = railVisibleForPosition("diag", S.positions[S.position], S.position === "flight_director");
+    show("cmd-hk-card", !pus);
+    show("cmd-hk-note", pus);
+    if (full) { renderCmdCatalogSelect(); updateCmdBuilder(); renderQuickCommands(); renderVerifLog(); }
+  }
   else if (S.page === "diag") { if (full) { renderDiag(); loadFdir(); } else refreshDiagLive(); }
   else if (S.page === "fdir") { if (full) loadFdir(); else renderFdirPage(); }
   else if (S.page === "proc") {
