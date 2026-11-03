@@ -5,6 +5,7 @@ endpoints for study management, design execution, and real-time updates.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -21,6 +22,7 @@ from .routers import analyses_common as analyses_common_router
 from .routers import functions as functions_router, exchange_items as exchange_items_router, relations as relations_router, parameters as parameters_router, exchange as exchange_router
 from .routers import interfaces as interfaces_router
 from .routers import rules as rules_router
+from . import logbook
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
 
@@ -101,6 +103,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Interface rules could not be checked: %s", e)
 
+    # Participant logbook (docs/plan_2026-11/LOGBOOK_SPEC.md): retention purge at
+    # start-up and hourly; the files are shared with the ops tools.
+    purge_task = asyncio.create_task(logbook.purge_loop())
+
     # Start WebSocket edit-lock heartbeat checker
     from .routers.ws import start_heartbeat_checker
     start_heartbeat_checker()
@@ -130,6 +136,7 @@ async def lifespan(app: FastAPI):
 
     yield
     logger.info("SpaceCDF server shutting down...")
+    purge_task.cancel()
     try:
         await stop_worker()
     except Exception as e:
@@ -195,6 +202,8 @@ app.include_router(analyses_vv_router.router, prefix="/api", tags=["Analyses: V&
 app.include_router(analyses_physics_router.router, prefix="/api", tags=["Analyses: Physics"])
 # Deterministic design rules replacing AI (docs/RULES_AND_AI.md)
 app.include_router(rules_router.router, prefix="/api", tags=["Design rules"])
+# Participant logbook + worksheets (same API as the ops tools)
+app.include_router(logbook.router, prefix="/api/logbook", tags=["Logbook"])
 app.include_router(ws.router, tags=["WebSocket"])
 
 
