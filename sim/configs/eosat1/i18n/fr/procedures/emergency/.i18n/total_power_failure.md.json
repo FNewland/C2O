@@ -9,8 +9,8 @@
   },
   {
    "id": "emg-002-total-power-failure",
-   "en_hash": "93af8fbb2396c7a5",
-   "fr_hash": "8ee452efe67fcc99"
+   "en_hash": "19fcd41fb4d7ebf9",
+   "fr_hash": "d7d8965207660783"
   },
   {
    "id": "emg-002-total-power-failure/purpose",
@@ -34,13 +34,13 @@
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-1-immediate-load-shed-critical-execute-within-60s",
-   "en_hash": "c79cd57125856235",
-   "fr_hash": "8551abc8b605c5c2"
+   "en_hash": "6bbe8fd9d9bb9fa5",
+   "fr_hash": "80e298da3caf39be"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-2-set-battery-heater-to-thermostat-only-mode",
-   "en_hash": "03332d4eb7c72135",
-   "fr_hash": "c0068dbc5e0f4d19"
+   "en_hash": "ec3c1c80a9ef5bbb",
+   "fr_hash": "5644594ddbea93a8"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-3-command-obc-emergency-mode",
@@ -49,8 +49,8 @@
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-4-verify-or-command-sun-acquisition",
-   "en_hash": "30d797761b030347",
-   "fr_hash": "0cd4317b05d56c10"
+   "en_hash": "640d621e890787fa",
+   "fr_hash": "fde3225df575be8f"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-5-monitor-power-recovery-first-sunlit-phase",
@@ -69,8 +69,8 @@
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-8-load-recovery-gate-soc-30",
-   "en_hash": "07e5f7d453fdfb9a",
-   "fr_hash": "f6f89cc1bb7ce6fc"
+   "en_hash": "0850705be3e42641",
+   "fr_hash": "38044de2939a1e53"
   },
   {
    "id": "emg-002-total-power-failure/recovery-staging-thresholds",
@@ -79,8 +79,8 @@
   },
   {
    "id": "emg-002-total-power-failure/off-nominal-handling",
-   "en_hash": "ceb03bc5a0360645",
-   "fr_hash": "f2eb6f5903a44cce"
+   "en_hash": "8341fc85d32a97cf",
+   "fr_hash": "6029afb734fbee0a"
   },
   {
    "id": "emg-002-total-power-failure/post-conditions",
@@ -93,5 +93,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "9bdac94"
 }

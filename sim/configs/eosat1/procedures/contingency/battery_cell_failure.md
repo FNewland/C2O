@@ -4,6 +4,8 @@
 **Position Lead:** Power & Thermal (EPS/TCS)
 **Cross-Position:** (Flight Director for awareness)
 **Difficulty:** Advanced
+**Revision:** 1.1 --- 2026-11-02 (Franz's ruling P3): Step 4 checks which lines
+on-board FDIR has already shed before shedding anything from the ground.
 
 ## Objective
 Respond to a suspected battery cell failure indicated by anomalous voltage drop, and
@@ -105,14 +107,19 @@ estimate remaining capacity:
 
 ### Step 4: Reduce Loads If Needed
 **LABEL:** `STEP-4`
-**Note:** If eclipse survival margin is negative, reduce loads in priority order:
-1. Payload OFF (saves ~8-45 W):
+**Note:** If eclipse survival margin is negative, reduce loads in priority order ---
+but CHECK THE SPACECRAFT FIRST: a failed cell drags the bus down and the EPS may
+already have shed lines on its own. A line it has opened cannot be shed again
+(the command is refused S1.8 "power line … is OFF") and its unit's mode
+parameter freezes at its last value, so skip any load whose line already reads 0.
+**Verify:** `eps.load_shed_stage` (0x0134), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112) — record each: 0 = already shed on board
+1. Payload OFF (saves ~8-45 W) — only if `eps.pl_payload` (0x0113) = 1:
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Payload OFF
    **Verify:** `payload.mode` (0x0600) = 0 within 10 s
-2. FPA cooler OFF (saves ~15 W): `FPA_COOLER(on=0)` (func_id 43)
+2. FPA cooler OFF (saves ~15 W) — only if `eps.pl_fpa_cooler` (0x0114) = 1: `FPA_COOLER(on=0)` (func_id 43)
    **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
    **Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 5 s
-3. TX OFF (saves ~20 W) — only if eclipse is imminent and load budget is still negative:
+3. TX OFF (saves ~20 W) — only if eclipse is imminent, the load budget is still negative and `eps.pl_ttc_tx` (0x0112) = 1 (with the line open `TTC_PA_OFF` is refused):
    `TTC_PA_OFF` (func_id 67)
    **Verify:** `ttc.pa_on` (0x0516) = 0 within 5 s
 **Action:** After each load shed, recalculate eclipse survival margin.

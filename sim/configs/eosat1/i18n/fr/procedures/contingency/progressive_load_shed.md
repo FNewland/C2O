@@ -1,7 +1,11 @@
 # CTG-023 : Délestage progressif
 **Sous-système :** EPS
 **Phase :** CONTINGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz P3 : « si le satellite ne déleste pas, le sol
+doit le faire --- mais vérifier d'abord le satellite »). Chaque niveau de délestage lit d'abord sa
+ligne : la FDIR de bord (délesteur sur tension de bus de l'EPS, modes safe/emergency de l'EPS, règles
+S19 sur l'état de charge) l'a peut-être déjà ouverte ; la commande sol serait alors refusée S1.8 et le
+paramètre de mode de l'unité ne se mettrait jamais à jour.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -76,6 +80,12 @@ monitoring » sur la boucle opérations.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Télémesure de servitude EPS ; surveiller `eps.bat_soc` (0x0101) toutes les 60 s
 **Déclencheur :** Lorsque `eps.bat_soc` < 50 % :
 **Action:** Annoncer « SoC below 50 % — shedding payload » sur la boucle opérations.
+**Contrôler :** `eps.pl_payload` (0x0113) et `eps.load_shed_stage` (0x0134) — le satellite a-t-il déjà délesté la charge utile ?
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-2-SHED` | NO-GO `STEP-3` (timeout 10 s)
+**Note:** GO — la ligne de la charge utile est encore sur ON : la délester depuis le sol. NO-GO — la
+FDIR de bord l'a déjà ouverte (la charge utile est coupée ; `payload.mode` reste figé à sa dernière
+valeur parce que le SID 5 s'est arrêté) : rien à envoyer, passer au niveau suivant.
+**LABEL:** `STEP-2-SHED`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Mettre la charge utile sur OFF
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) en 10 s
 **Verify:** `eps.power_cons` (0x0106) diminue (-45 W attendus en prise de vue, -8 W en STANDBY)
@@ -88,9 +98,13 @@ monitoring » sur la boucle opérations.
 prévue, MAINTENIR (HOLD) ce niveau et surveiller. Si le SoC doit atteindre 35 % avant la sortie d'éclipse,
 préparer le niveau de délestage suivant.
 
-### Étape 3 : SoC < 35 % — délester la charge de priorité 2 (refroidisseur du FPA sur OFF)
+### Étape 3 : SoC < 35 % — délester la charge de priorité 2 (refroidisseur du FPA sur OFF)
+**LABEL:** `STEP-3`
 **Déclencheur :** Lorsque `eps.bat_soc` (0x0101) < 35 % :
 **Action:** Annoncer « SoC below 35 % — shedding FPA cooler » sur la boucle opérations.
+**BRANCH:** `eps.pl_fpa_cooler == 1` -> GO `STEP-3-SHED` | NO-GO `STEP-4` (timeout 10 s)
+**Note:** GO — la ligne du refroidisseur est encore sur ON : la délester. NO-GO — déjà délestée à bord.
+**LABEL:** `STEP-3-SHED`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Désactiver le refroidisseur du FPA
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) en 5 s
@@ -105,10 +119,16 @@ pour l'évaluation après la reprise. Le redémarrage du refroidisseur nécessit
 **GO/NO-GO:** Refroidisseur du FPA délesté. Si la vitesse de décharge est tenable jusqu'à la sortie d'éclipse,
 MAINTENIR et surveiller. Si le SoC doit atteindre 25 % avant la sortie d'éclipse, préparer le niveau suivant.
 
-### Étape 4 : SoC < 25 % — délester la charge de priorité 3 (émetteur TTC sur OFF)
+### Étape 4 : SoC < 25 % — délester la charge de priorité 3 (émetteur TTC sur OFF)
+**LABEL:** `STEP-4`
 **Déclencheur :** Lorsque `eps.bat_soc` (0x0101) < 25 % :
 **Action:** Annoncer « SoC below 25 % — shedding TTC transmitter. DOWNLINK WILL BE
 LOST. Spacecraft will receive commands only. » sur la boucle opérations.
+**BRANCH:** `eps.pl_ttc_tx == 1` -> GO `STEP-4-SHED` | NO-GO `STEP-5` (timeout 10 s)
+**Note:** GO — la ligne `ttc_tx` est encore sur ON : couper le PA. NO-GO — la FDIR de bord a déjà
+ouvert la ligne (`TTC_PA_OFF` serait refusé S1.8) ; la liaison descendante en bande S a déjà disparu et
+seule la balise UHF (SID 11) parvient au sol.
+**LABEL:** `STEP-4-SHED`
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — Désactiver l'amplificateur de puissance
 **Verify:** `ttc.pa_on` (0x0516) = 0 en 5 s
 **Verify:** `eps.power_cons` (0x0106) diminue d'environ 20 W
@@ -121,10 +141,16 @@ mis en file d'attente mais non transmis).
 **GO/NO-GO:** TX délesté. La tension du bus devrait se stabiliser. Si le SoC continue de baisser
 sous 15 %, passer au niveau d'urgence. Le directeur de vol doit autoriser l'étape suivante.
 
-### Étape 5 : SoC < 15 % — délester la charge de priorité 4 (roues AOCS sur OFF) — URGENCE
+### Étape 5 : SoC < 15 % — délester la charge de priorité 4 (roues AOCS sur OFF) — URGENCE
+**LABEL:** `STEP-5`
 **Déclencheur :** Lorsque `eps.bat_soc` (0x0101) < 15 % (estimé à partir de la vitesse mesurée avant le délestage du TX) :
 **Action:** Annoncer « SoC below 15 % — EMERGENCY — shedding AOCS reaction wheels.
 Spacecraft will LOSE active attitude control. » sur la boucle opérations.
+**BRANCH:** `eps.pl_aocs_wheels == 1` -> GO `STEP-5-SHED` | NO-GO `STEP-6` (timeout 10 s)
+**Note:** GO — la ligne des roues est encore sur ON : la délester. NO-GO — déjà délestée à bord : le
+SCAO est déjà sur OFF (`aocs.mode` 0) et refuse les commandes de mode ; sauter entièrement ce niveau, y
+compris le DETUMBLE ci-dessous.
+**LABEL:** `STEP-5-SHED`
 **TC:** `EPS_POWER_OFF(line_index=7)` (Service 8, Subtype 1, func_id 20) — Mettre hors tension les roues AOCS
 **Note:** AVERTISSEMENT — Le satellite va perdre le contrôle d'attitude actif trois axes.
 Le moment cinétique résiduel provoquera un lent culbutage. L'amortissement magnétique passif
@@ -139,10 +165,14 @@ Si la tension du bus descend sous 25.0 V malgré le délestage de toutes les ch
 `OBC_SET_MODE(mode=2)` pour passer en mode EMERGENCY en dernier recours.
 
 ### Étape 6 : Surveiller la sortie d'éclipse et la recharge de la batterie
+**LABEL:** `STEP-6`
 **Action:** Surveiller `eps.eclipse_flag` (0x0108) — attendre son passage à 0 (éclairé).
 **Note:** Si le TX est coupé, l'opérateur ne peut pas recevoir de télémesure. Utiliser l'heure prévue de sortie d'éclipse
 fournie par la dynamique du vol. Après la sortie prévue + 60 s, tenter de réactiver le TX :
-**Note:** Uniquement si le TX a été délesté à l'étape 4.
+**Note:** Uniquement si le TX a été délesté (à l'étape 4 ou à bord). Si la FDIR de bord a ouvert la
+ligne `ttc_tx`, réalimenter d'abord la ligne : `TTC_PA_ON` est refusé S1.8 tant qu'elle est hors tension
+(`EPS_POWER_ON` sur une ligne déjà sur ON est sans effet).
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — la ligne `ttc_tx`
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — réactiver l'amplificateur de puissance
 **Verify:** `ttc.pa_on` (0x0516) = 1 en 10 s (si la télémesure reprend)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander la télémesure de servitude EPS
@@ -161,6 +191,7 @@ de délestage + 10 % de marge.
 
 **Étape 7a — Rétablir les roues AOCS (si délestées) — lorsque SoC > 25 % :**
 **TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 en 5 s — la ligne AVANT la commande de mode
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, pour amorcer la reprise d'attitude.
 **Verify:** `aocs.mode` (0x020F) = 3 (COARSE_SUN) en 15 s
 **Verify:** Vitesses angulaires `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205),
@@ -170,7 +201,7 @@ de délestage + 10 % de marge.
 **GO/NO-GO:** Roues AOCS rétablies et attitude en cours de reprise — continuer.
 
 **Étape 7b — Rétablir le TTC TX (si délesté) — lorsque SoC > 35 % :**
-**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `ttc_tx`, si `eps.pl_ttc_tx` (0x0112) = 0 (la FDIR de bord l'ouvre lors d'un délestage profond ; `TTC_PA_ON` est alors refusé par un S1.8 « power line 'ttc_tx' is OFF »)
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `ttc_tx`, si `eps.pl_ttc_tx` (0x0112) = 0 (la FDIR de bord l'ouvre lors d'un délestage profond ; `TTC_PA_ON` est alors refusé par un S1.8 « power line 'ttc_tx' is OFF »)
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66)
 **Verify:** `ttc.pa_on` (0x0516) = 1 en 5 s
 **Verify:** `eps.bus_voltage` (0x0105) reste > 26.5 V

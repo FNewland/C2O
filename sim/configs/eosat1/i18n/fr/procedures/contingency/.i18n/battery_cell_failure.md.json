@@ -9,8 +9,8 @@
   },
   {
    "id": "ctg-013-battery-cell-failure",
-   "en_hash": "9c3c5fa04a752c0d",
-   "fr_hash": "0b206a5ae1f7100d"
+   "en_hash": "22f3afa08698f8c9",
+   "fr_hash": "46867694c3fae6e7"
   },
   {
    "id": "ctg-013-battery-cell-failure/objective",
@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-4-reduce-loads-if-needed",
-   "en_hash": "c7ccba426446e6b1",
-   "fr_hash": "c500063246c62aab"
+   "en_hash": "a98382f8480da5e3",
+   "fr_hash": "e18f6f2e84af8d1c"
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-5-monitor-battery-through-eclipse-if-applicable",
@@ -78,5 +78,5 @@
    "fr_hash": "7858c6405ff8b7b2"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "9bdac94"
 }

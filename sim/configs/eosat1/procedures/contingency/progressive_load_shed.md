@@ -1,7 +1,11 @@
 # CTG-023: Progressive Load Shed
 **Subsystem:** EPS
 **Phase:** CONTINGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's ruling P3: "if the spacecraft does not
+shed, the ground should --- but check the spacecraft first"). Each shed level first
+reads its line: on-board FDIR (the EPS bus-voltage shedder, EPS safe/emergency
+mode, the S19 SoC rules) may already have opened it, in which case the ground
+command would be refused S1.8 and the unit's mode parameter would never update.
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -76,6 +80,12 @@ to threshold monitoring.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping; monitor `eps.bat_soc` (0x0101) at 60 s intervals
 **Trigger:** When `eps.bat_soc` < 50%:
 **Action:** Announce "SoC below 50% — shedding payload" on the operations loop.
+**Check:** `eps.pl_payload` (0x0113) and `eps.load_shed_stage` (0x0134) — has the spacecraft already shed the payload?
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-2-SHED` | NO-GO `STEP-3` (timeout 10 s)
+**Note:** GO — the payload line is still ON: shed it from the ground. NO-GO — on-board
+FDIR already opened it (the payload is off; `payload.mode` is frozen at its last
+value because SID 5 stopped): nothing to send, go on to the next level.
+**LABEL:** `STEP-2-SHED`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Command payload to OFF
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10 s
 **Verify:** `eps.power_cons` (0x0106) decreases (expected -45 W if imaging, -8 W if standby)
@@ -89,8 +99,12 @@ exit, HOLD at this level and monitor. If SoC will reach 35% before eclipse exit,
 prepare for next shed level.
 
 ### Step 3: SoC < 35% — Shed Load Priority 2 (FPA Cooler OFF)
+**LABEL:** `STEP-3`
 **Trigger:** When `eps.bat_soc` (0x0101) < 35%:
 **Action:** Announce "SoC below 35% — shedding FPA cooler" on the operations loop.
+**BRANCH:** `eps.pl_fpa_cooler == 1` -> GO `STEP-3-SHED` | NO-GO `STEP-4` (timeout 10 s)
+**Note:** GO — the cooler line is still ON: shed it. NO-GO — already shed on board.
+**LABEL:** `STEP-3-SHED`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Disable FPA cooler
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) within 5 s
@@ -106,9 +120,15 @@ for post-recovery assessment. Cooler restart will require gradual cool-down.
 HOLD and monitor. If SoC will reach 25% before eclipse exit, prepare for next level.
 
 ### Step 4: SoC < 25% — Shed Load Priority 3 (TTC Transmitter OFF)
+**LABEL:** `STEP-4`
 **Trigger:** When `eps.bat_soc` (0x0101) < 25%:
 **Action:** Announce "SoC below 25% — shedding TTC transmitter. DOWNLINK WILL BE
 LOST. Spacecraft will receive commands only." on the operations loop.
+**BRANCH:** `eps.pl_ttc_tx == 1` -> GO `STEP-4-SHED` | NO-GO `STEP-5` (timeout 10 s)
+**Note:** GO — the `ttc_tx` line is still ON: switch the PA off. NO-GO — on-board
+FDIR already opened the line (`TTC_PA_OFF` would be refused S1.8); the S-band
+downlink is already gone and only the UHF beacon (SID 11) reaches the ground.
+**LABEL:** `STEP-4-SHED`
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — Disable power amplifier
 **Verify:** `ttc.pa_on` (0x0516) = 0 within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~20 W
@@ -122,9 +142,15 @@ be queued but not transmitted).
 below 15%, proceed to emergency level. Flight Director must authorise next step.
 
 ### Step 5: SoC < 15% — Shed Load Priority 4 (AOCS Wheels OFF) — EMERGENCY
+**LABEL:** `STEP-5`
 **Trigger:** When `eps.bat_soc` (0x0101) < 15% (estimated from pre-TX-shed rate):
 **Action:** Announce "SoC below 15% — EMERGENCY — shedding AOCS reaction wheels.
 Spacecraft will LOSE active attitude control." on the operations loop.
+**BRANCH:** `eps.pl_aocs_wheels == 1` -> GO `STEP-5-SHED` | NO-GO `STEP-6` (timeout 10 s)
+**Note:** GO — the wheels line is still ON: shed it. NO-GO — already shed on board:
+the AOCS is already OFF (`aocs.mode` 0) and refuses mode commands, so skip this
+level entirely, including the DETUMBLE below.
+**LABEL:** `STEP-5-SHED`
 **TC:** `EPS_POWER_OFF(line_index=7)` (Service 8, Subtype 1, func_id 20) — Power off AOCS wheels
 **Note:** WARNING — The spacecraft will lose active three-axis attitude control.
 Residual angular momentum will cause slow tumbling. Passive magnetic detumbling
@@ -139,10 +165,14 @@ If bus voltage drops below 25.0 V despite all loads shed, command
 `OBC_SET_MODE(mode=2)` for EMERGENCY mode as last resort.
 
 ### Step 6: Monitor for Eclipse Exit and Battery Recovery
+**LABEL:** `STEP-6`
 **Action:** Monitor `eps.eclipse_flag` (0x0108) — wait for transition to 0 (sunlit).
 **Note:** If TX is off, operator cannot receive telemetry. Use predicted eclipse exit
 time from flight dynamics. After predicted exit + 60 s, attempt to re-enable TX:
-**Note:** Only if the TX was shed in Step 4.
+**Note:** Only if the TX was shed (in Step 4 or on board). If on-board FDIR opened
+the `ttc_tx` line, re-power the line first: `TTC_PA_ON` is refused S1.8 while it
+is dark (`EPS_POWER_ON` on a line that is already ON is a no-op).
+**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — the `ttc_tx` line
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — re-enable the power amplifier
 **Verify:** `ttc.pa_on` (0x0516) = 1 within 10 s (if telemetry resumes)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
@@ -161,6 +191,7 @@ threshold + 10% margin.
 
 **Step 7a — Restore AOCS Wheels (if shed) — when SoC > 25%:**
 **TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 within 5 s — the line BEFORE the mode command
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) — COARSE_SUN, to begin attitude recovery.
 **Verify:** `aocs.mode` (0x020F) = 3 (COARSE_SUN) within 15 s
 **Verify:** Body rates `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205),

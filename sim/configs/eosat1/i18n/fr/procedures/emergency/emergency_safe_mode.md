@@ -1,7 +1,11 @@
 # EMG-001 : Mode survie d'urgence
 **Sous-système :** OBDH / All Subsystems
 **Phase :** EMERGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décisions de Franz P1/P3) : vérifier ce que la FDIR de bord
+a déjà délesté AVANT de délester depuis le sol, et alimenter la ligne EPS d'une unité avant toute
+commande de réchauffeur ou de mode qui lui est destinée. L'ancienne fiche commandait des charges dont la
+FDIR avait déjà ouvert la ligne (refus S1.8 « power line … is OFF ») et allumait des réchauffeurs
+dont la ligne était hors tension.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -36,13 +40,25 @@ jusqu'au retour aux opérations nominales.
 désactive toutes les opérations programmées et active la distribution de puissance de survie seule.
 **GO/NO-GO:** Mode d'urgence de l'OBC confirmé. Si l'OBC ne répond pas, poursuivre par la commande manuelle de l'étape 2.
 
-### Étape 2 --- Vérifier le délestage automatique
+### Étape 2 --- Vérifier le délestage automatique (vérifier d'abord le satellite)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- données de servitude EPS complètes.
+**Verify:** `eps.load_shed_stage` (0x0134) --- consigner ce que le délesteur de bord a déjà fait (événements LOAD_SHED_STAGE_1..3, 0x0106-0x0108)
+**Verify:** `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112), `eps.pl_aocs_wheels` (0x0117) --- consigner chacune : 0 = déjà délestée à bord
+**Note:** Une ligne que la FDIR de bord a ouverte ne peut pas être délestée une seconde fois --- les
+commandes de son unité sont refusées S1.8 « power line … is OFF » et ses données de servitude s'arrêtent,
+si bien que son paramètre de mode (p. ex. `payload.mode`) reste figé à sa dernière valeur. Juger un
+délestage d'après l'état de la LIGNE. Ne délester depuis le sol que ce qui est encore alimenté.
+**Verify:** `eps.power_cons` (0x0106) < 50 W.
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-2-PLD` | NO-GO `STEP-2-HTR` (timeout 10 s)
+**Note:** GO --- la ligne de la charge utile est encore sur ON : délester la charge utile depuis le sol.
+NO-GO --- la FDIR l'a déjà ouverte : rien à envoyer.
+
+**LABEL:** `STEP-2-PLD`
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- charge utile OFF.
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — données de servitude de la charge utile
-**Verify:** `payload.mode` (0x0600) = OFF.
-**Verify:** `eps.power_cons` (0x0106) < 50 W.
-**Action:** Si une charge non essentielle est encore active, la commander manuellement :
-**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- charge utile OFF (si encore active).
+**Verify:** `payload.mode` (0x0600) = 0 (OFF) sous 10 s.
+
+**LABEL:** `STEP-2-HTR`
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) --- réchauffeur OBC OFF (si nécessaire).
 **TC:** `HEATER_THRUSTER(on=0)` (Service 8, Subtype 1, func_id 42) --- réchauffeur du propulseur OFF.
 **Verify:** `eps.power_cons` (0x0106) < 50 W dans les 15 s qui suivent la commande manuelle.
@@ -60,6 +76,13 @@ inutile, et un COARSE_SUN engagé au-dessus du seuil de vitesse ne tient pas.
 déjà dans un mode : ne rien commander et attendre la tenue de pointage solaire.
 
 **LABEL:** `STEP-3-DETUMBLE`
+**Note:** Un AOCS qui indique OFF a généralement perdu sa ligne `aocs_wheels` lors d'un délestage de
+bord (l'AOCS retombe sur OFF quand la ligne s'ouvre) ; DETUMBLE est alors refusé « EPS aocs_wheels
+line (0x0117) is off ». Réalimenter d'abord la ligne --- `EPS_POWER_ON` sur une ligne déjà sur ON
+est sans effet.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) --- la ligne `aocs_wheels` (suite AOCS)
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- données de servitude EPS (états des lignes)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 sous 5 s
 **TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) --- DETUMBLE (l'AOCS était OFF).
 
 **LABEL:** `STEP-3-WAIT`
@@ -80,7 +103,12 @@ l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
 **Verify:** `eps.sa_b_current` (0x0104) > 0.5 A --- générateur solaire B éclairé.
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) --- bilan de puissance positif.
 **Verify:** `eps.bat_soc` (0x0101) --- consigner la valeur et commencer le suivi de tendance.
-**TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40) --- s'assurer que le thermostat de la batterie est actif.
+**TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne du réchauffeur batterie : un réchauffeur dont la ligne est hors tension ne chauffe rien et sa commande ON est refusée
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 sous 5 s
+**TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) --- s'assurer que le thermostat de la batterie est actif (ON sous +5 °C, OFF au-dessus de +10 °C).
+**Note:** Si la batterie est déjà plus froide que la plage du thermostat et ne remonte pas, forcer le
+réchauffeur : `HEATER_BATTERY(on=1)` (func_id 40) ; le rendre à `HEATER_AUTO_MODE(circuit=0)` dès que
+`tcs.temp_battery` (0x0407) est revenue au-dessus de +10 °C.
 **GO/NO-GO:** Bilan de puissance positif confirmé. Sinon, exécuter EMG-002.
 
 ### Étape 5 --- Établir une communication stable
@@ -115,8 +143,12 @@ l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
 
 ## Calendrier de rétablissement orbite par orbite
 
-### Orbite de rétablissement R+1 --- Rétablir le contrôle thermique (SoC > 30 % requis)
-**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- rétablir le réchauffeur OBC.
+### Orbite de rétablissement R+1 --- Rétablir le contrôle thermique (SoC > 30 % requis)
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne du réchauffeur OBC (sans effet si déjà sur ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5 s
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- rendre le réchauffeur OBC à son thermostat (l'étape 2 l'a mis sur OFF manuellement).
+**Note:** Si l'OBC est sous +5 °C et ne remonte pas, le forcer sur ON avec `HEATER_OBC(on=1)`
+(func_id 41) et le rendre au mode AUTO une fois réchauffé.
 **Verify:** `tcs.temp_obc` (0x0406) tendant vers la plage nominale (-10 °C à +40 °C).
 **Verify:** hausse de `eps.power_cons` (0x0106) < 10 W. Le bilan de puissance du satellite reste positif.
 **GO/NO-GO:** Sous-système thermique nominal, le bilan de puissance absorbe la charge ajoutée ; aucune nouvelle anomalie -> GO `STEP-R2` | NO-GO `STEP-7` (max 2)
@@ -125,14 +157,22 @@ l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
 **LABEL:** `STEP-R2`
 **TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) --- OBC en mode SAFE (depuis EMERGENCY).
 **Verify:** `obdh.mode` (0x0300) = SAFE (1) sous 5 s.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) --- la ligne `aocs_wheels` avant la commande de mode (sans effet si l'étape 3 l'a déjà réalimentée)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 sous 5 s
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- mode NOMINAL.
-**Verify:** `aocs.mode` (0x020F) = NOMINAL (4) sous 5 s.
+**Verify:** `aocs.mode` (0x020F) = NOMINAL (4) sous 5 s.
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg sous 20 minutes.
 **Verify:** `aocs.rw1_speed` (0x0207) à `aocs.rw4_speed` (0x020A) toutes dans les limites.
 **GO/NO-GO:** Contrôle d'attitude complet rétabli, les 4 roues opérationnelles ; aucune nouvelle anomalie -> GO `STEP-R3` | NO-GO `STEP-7` (max 2)
 
 ### Orbite de rétablissement R+3 --- Rétablir le réchauffeur du propulseur et le contrôle thermique complet (SoC > 50 % requis)
 **LABEL:** `STEP-R3`
+**Note:** Le réchauffeur du lit catalytique (propulseur) est sur OFF en opérations nominales, et sa
+ligne `prop` (8) aussi : il n'est alimenté que pour le préchauffage d'une manœuvre (NOM-013). N'envoyer
+les deux commandes ci-dessous que si une manœuvre est prévue ; sinon, il n'y a rien à rétablir et cette
+orbite ne fait que vérifier l'état thermique.
+**TC:** `EPS_POWER_ON(line_index=8)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne `prop` ; HEATER_THRUSTER est refusé tant qu'elle est hors tension
+**Verify:** `eps.pl_prop` (0x014A) = 1 sous 5 s
 **TC:** `HEATER_THRUSTER(on=1)` (Service 8, Subtype 1, func_id 42) --- rétablir le réchauffeur du propulseur.
 **Verify:** `eps.power_cons` (0x0106) dans le bilan nominal (< 90 W).
 **Verify:** toutes les températures dans les plages nominales.
@@ -148,6 +188,8 @@ l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
 
 ### Orbite de rétablissement R+5 --- Rétablir la charge utile (SoC > 60 % requis)
 **LABEL:** `STEP-R5`
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne `payload` : un délestage de bord l'a ouverte, et la commande de mode est refusée S1.8 tant qu'elle est hors tension
+**Verify:** `eps.pl_payload` (0x0113) = 1 sous 5 s
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- charge utile en STANDBY.
 **Verify:** `payload.mode` (0x0600) = STANDBY (1) sous 10 s.
 **Verify:** `eps.power_cons` (0x0106) dans le bilan opérationnel complet (< 110 W).
@@ -161,7 +203,7 @@ l'étape 4, que lorsque EMG-005 a laissé l'AOCS en COARSE_SUN.
 | Attente d'urgence | R+0 à R+3 | -- | 0 à 4,75 h | Stabiliser, évaluer, planifier |
 | Rétablissement thermique | R+1 rétablissement | > 30 % | ~6,3 h | Réchauffeur OBC ON |
 | Rétablissement AOCS | R+2 rétablissement | > 40 % | ~7,9 h | Pointage nadir |
-| Thermique complet | R+3 rétablissement | > 50 % | ~9,5 h | Réchauffeur du propulseur ON |
+| Thermique complet | R+3 rétablissement | > 50 % | ~9,5 h | Réchauffeur du propulseur ON (seulement si une manœuvre est prévue) |
 | OBC nominal | R+4 rétablissement | > 55 % | ~11,1 h | Reprise de l'ordonnancement |
 | Charge utile en attente | R+5 rétablissement | > 60 % | ~12,6 h | Mission reprise |
 

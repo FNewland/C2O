@@ -9,8 +9,8 @@
   },
   {
    "id": "ctg-005-eps-safe-mode",
-   "en_hash": "d221edf1897d28cd",
-   "fr_hash": "8c87db3e88d7553b"
+   "en_hash": "9739ff5cd8243060",
+   "fr_hash": "4f20365bb9fc5296"
   },
   {
    "id": "ctg-005-eps-safe-mode/purpose",
@@ -29,23 +29,23 @@
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-1-verify-safe-mode-entry-and-eps-state",
-   "en_hash": "c1a5d335a78d25fa",
-   "fr_hash": "031d0566be885ac5"
+   "en_hash": "8ff5e495d84fec02",
+   "fr_hash": "bd4e54b2ebc4c445"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-2-shed-non-essential-loads-payload-off",
-   "en_hash": "01d6c6700177bd04",
-   "fr_hash": "12f00f72cacad433"
+   "en_hash": "425c30e6b3fa2f42",
+   "fr_hash": "fe32f9a4f8d01a51"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-3-verify-aocs-is-in-minimum-power-configuration",
-   "en_hash": "8b18bc7e5e4e87ba",
-   "fr_hash": "074c34f765b170b2"
+   "en_hash": "938c15facc638e3d",
+   "fr_hash": "8d941cb191ac4fb6"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-4-assess-solar-array-performance",
-   "en_hash": "2b970bd11b20fd1c",
-   "fr_hash": "0cac30873846efd2"
+   "en_hash": "693d8e76898648d4",
+   "fr_hash": "d851dd021f559464"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-5-monitor-battery-recovery-during-sunlit-phase",
@@ -55,12 +55,12 @@
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-6-re-enable-loads-payload-to-standby",
    "en_hash": "cf7e8fc3e5883aba",
-   "fr_hash": "2db69da2cddb11ce"
+   "fr_hash": "6aba7c2079e63754"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-7-restore-nominal-aocs-mode",
-   "en_hash": "b83f9e87ab5e039b",
-   "fr_hash": "fb4d8b0f1f2b7d2a"
+   "en_hash": "5aa2ef9d64cd8749",
+   "fr_hash": "50e062cf061d67ce"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-8-restore-obc-to-nominal-mode",
@@ -83,5 +83,5 @@
    "fr_hash": "9154a20412ea27ef"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "9bdac94"
 }

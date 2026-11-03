@@ -9,8 +9,8 @@
   },
   {
    "id": "emg-001-emergency-safe-mode",
-   "en_hash": "25c025d2dcbbc8bd",
-   "fr_hash": "8625fe06f742bb5f"
+   "en_hash": "fcace8859565541f",
+   "fr_hash": "c5446c4605cef093"
   },
   {
    "id": "emg-001-emergency-safe-mode/purpose",
@@ -38,19 +38,19 @@
    "fr_hash": "2edf8ea6922e6efb"
   },
   {
-   "id": "emg-001-emergency-safe-mode/procedure-steps/step-2-verify-automatic-load-shedding",
-   "en_hash": "6bdc828809769091",
-   "fr_hash": "674fe48763cc442f"
+   "id": "emg-001-emergency-safe-mode/procedure-steps/step-2-verify-automatic-load-shedding-check-the-spacecraft-first",
+   "en_hash": "c29179abe5b94fd8",
+   "fr_hash": "087c696a3d546001"
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-3-verify-aocs-safe-pointing",
-   "en_hash": "611778fc71150f7e",
-   "fr_hash": "e148f5709a100a00"
+   "en_hash": "8aea4bdcf78ebfad",
+   "fr_hash": "1ce45b414b5f3f1d"
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-4-verify-sun-acquisition-and-power-state",
-   "en_hash": "8656c524cb1bc372",
-   "fr_hash": "a0a16359b5de11e3"
+   "en_hash": "71d31ae3aea68574",
+   "fr_hash": "c23bb0642c49ec0b"
   },
   {
    "id": "emg-001-emergency-safe-mode/procedure-steps/step-5-establish-stable-communication",
@@ -74,18 +74,18 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-1-restore-thermal-control-soc-30-required",
-   "en_hash": "bb0d5dfec33f293a",
-   "fr_hash": "1296fa571f22d3d8"
+   "en_hash": "70cd4f8aec7d4488",
+   "fr_hash": "c12f68599f93670f"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-2-restore-full-aocs-soc-40-required",
-   "en_hash": "45636be0c60adb5f",
-   "fr_hash": "40a9309702edc5cd"
+   "en_hash": "b54992838faac5fc",
+   "fr_hash": "0025addcf13b06b9"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-3-restore-thruster-heater-and-full-thermal-soc-50-required",
-   "en_hash": "7a7e3a18db2fe1ea",
-   "fr_hash": "b7a0e0ca7de55d20"
+   "en_hash": "23a11508ff8dc72d",
+   "fr_hash": "24b65cf83cd0ec9d"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-4-restore-obc-nominal-mode-soc-55-required",
@@ -94,13 +94,13 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-5-restore-payload-soc-60-required",
-   "en_hash": "45cb8dcecf101d04",
-   "fr_hash": "7a2ef88272889d57"
+   "en_hash": "581658d2f38a3ab4",
+   "fr_hash": "bc824c0675872f69"
   },
   {
    "id": "emg-001-emergency-safe-mode/recovery-timeline-summary",
-   "en_hash": "057c578a7c535a1a",
-   "fr_hash": "fe857bd4c34e27e2"
+   "en_hash": "50f31eaef3036f66",
+   "fr_hash": "d6039943dbaa56d0"
   },
   {
    "id": "emg-001-emergency-safe-mode/off-nominal-handling",
@@ -118,5 +118,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "9bdac94"
 }
