@@ -5,271 +5,411 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title data-i18n>SMO Instructor — EOSAT-1</title>
 <!-- ==========================================================================
-  C2O INSTRUCTOR CONSOLE — modern page
-  (design_2026-08 plan §2.4; design-system pass 2026-11, docs/ui/C2O_UI_BRIEF.md)
+  C2O INSTRUCTOR CONSOLE — modern page (redesign 2026-11)
+  Design: docs/plan_2026-11/INSTRUCTOR_CONSOLE_DESIGN.md (figures in
+  docs/plan_2026-11/instructor_console/). Brief: docs/ui/C2O_UI_BRIEF.md.
 
-  This page is SIM-SIDE BY DEFINITION: it may (and does) show simulation
-  speed, scenarios, failure injection and onboard-clock ground truth. The
-  labelled instructor strip at the top exists so a projected instructor
-  screen is never mistaken for the operator console.
+  Three things never move and one thing changes:
+    - the persistent INSTRUCTOR · TRUTH band and the app bar (time control);
+    - the overview strip: one grey tile per subsystem (Level 1);
+    - the timeline at the bottom: one time axis, eight lanes;
+    - the FOCUS PANE in the middle follows the simulation (focus.js): it
+      switches only on events the server marks as focus-worthy, says why,
+      can be pinned, has Back, and is rate-limited.
+  The rail on the right holds every intervention (inject, scheduled and
+  active faults, snapshots, overrides, phase, marks). Prep (scenarios,
+  briefing, session label, PDFs) and Debrief are views of the focus pane.
 
-  States (brief §1.3) carry the page:
-    - time control: one run-state chip (Running ×N / Frozen) beside the speed
-      segmented control and the Freeze/Resume button;
-    - scenario: Running / Paused (sim frozen) / none, with a progress bar in
-      SIM time;
-    - everything that disrupts the class (inject, clear all, set phase,
-      separation, SoC override, load breakpoint, stop scenario) is a
-      two-step arm -> execute (armButton, 5 s);
-    - controls that cannot act say why (setDisabled + reason on hover/focus);
-    - the link and spacecraft-mode banners come from the shared selectors.
+  This page is SIM-SIDE BY DEFINITION and instructor-only: its feeds
+  (/api/instructor/*) are never mounted on the MCS or planner and never
+  put on /ws or in /api/state. Every instructor command is sent ONCE via
+  POST /api/command; the WebSocket is inbound only.
 
   Functional parity source: ../index.html (CLASSIC — frozen, do not edit).
-  Intentional deviations from classic:
-    - The pass override appears ONCE (interventions column); the classic
-      duplicate in the orbit bar is removed by design.
-    - Every instructor command is sent ONCE via POST /api/command (the
-      synchronous error surface); the WebSocket is INBOUND-ONLY. The classic
-      page double-sent via WS+POST.
-    - Event-log timestamps are SIM time.
-    - Debrief panel wiring GET /api/scenario/debrief.
-    - No fonts.css / static/vendor dependency: IBM Plex ships with the
-      shared design system.
-
   Assets: /static/shared/* (design system, read-only here).
-  Page logic: /static/modern/instructor.js (ES module).
 ========================================================================== -->
 <link rel="stylesheet" href="/static/shared/design-system.css?v=2">
 <style>
-/* Page layout only; components come from the design system. 12 px floor. */
 html,body{ height:100%; }
 body{ display:flex; flex-direction:column; overflow:hidden; }
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.dim{ color:var(--tx3); }
+.note{ font-size:var(--fs-label); color:var(--tx3); margin:var(--sp-1) 0; }
+.lede{ font-size:var(--fs-body); color:var(--tx2); margin:0 0 var(--sp-2); max-width:78ch; }
+.no-data{ color:var(--tx3); font-size:var(--fs-label); padding:var(--sp-2) 0; }
+.grow{ flex:1; }
+h3{ font-size:var(--fs-label); font-weight:600; color:var(--tx2); margin:var(--sp-3) 0 var(--sp-2); }
+ul.plain{ list-style:none; margin:0; padding:0; font-size:var(--fs-label); color:var(--tx2); }
+ul.plain li{ padding:2px 0; border-bottom:1px solid var(--line); }
+.why{ font-size:var(--fs-label); color:var(--tx3); }
+.u{ color:var(--tx3); font-size:var(--fs-label); }
 
-/* ── app bar ────────────────────────────────────────────────────────── */
-.appbar{ flex:0 0 auto; background:var(--s1); border-bottom:1px solid var(--line);
-  display:flex; align-items:center; gap:var(--sp-2) var(--sp-3); padding:6px var(--sp-4); flex-wrap:wrap; }
-@media (max-width:1560px){ .clk small{ display:none; } }
-.mark{ white-space:nowrap; }
-.mark b{ font-size:var(--fs-value); font-weight:600; color:var(--val); }
-.mark span{ font-size:var(--fs-body); color:var(--tx3); margin-left:var(--sp-2); }
+/* the inject colour: only what the INSTRUCTOR did */
+.inj-chip{ display:inline-flex; align-items:center; gap:4px; font-family:var(--mono); font-size:var(--fs-label);
+  color:var(--shelf); border:1px solid var(--shelf); border-radius:var(--radius-sm); padding:0 6px; line-height:18px; white-space:nowrap; }
+.cls-chip{ display:inline-flex; font-size:var(--fs-label); color:var(--tx2); border:1px solid var(--line-2);
+  border-radius:var(--radius-sm); padding:0 6px; line-height:18px; white-space:nowrap; }
+.div-chip{ white-space:nowrap; display:inline-flex; font-family:var(--mono); font-size:var(--fs-label); color:var(--warn);
+  border:1px dashed var(--warn); border-radius:var(--radius-sm); padding:0 5px; line-height:18px; }
+
+/* band + app bar */
+.band{ flex:0 0 auto; display:flex; justify-content:center; gap:var(--sp-3); }
+.band b{ letter-spacing:.08em; }
+.appbar{ flex:0 0 auto; background:var(--s1); border-bottom:1px solid var(--line); display:flex; align-items:center;
+  gap:var(--sp-2) var(--sp-3); padding:6px var(--sp-4); flex-wrap:wrap; }
+.mark b{ font-size:var(--fs-value); font-weight:600; color:var(--val); white-space:nowrap; }
 .clk{ display:flex; align-items:baseline; gap:var(--sp-2); white-space:nowrap; }
 .clk .lbl{ font-size:var(--fs-label); color:var(--tx3); }
-.clk b{ font-family:var(--mono); font-size:var(--fs-title); font-weight:500; color:var(--val);
-  font-variant-numeric:tabular-nums; }
+.clk b{ font-family:var(--mono); font-size:var(--fs-title); font-weight:500; color:var(--val); font-variant-numeric:tabular-nums; }
 .clk small{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
-.timectl{ display:flex; align-items:center; gap:var(--sp-2); }
-#run-chip .ds-chip{ min-width:96px; justify-content:center; }
+@media (max-width:1560px){ .clk small{ display:none; } }
+.timectl{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; }
+#run-chip .ds-chip{ min-width:92px; justify-content:center; }
 .speed-group button{ font-family:var(--mono); }
-.grow{ flex:1; }
-#scenario-chip .ds-chip{ max-width:300px; }
-#scenario-chip .ds-chip span{ overflow:hidden; text-overflow:ellipsis; }
+#scenario-chip .ds-chip{ max-width:320px; }
+#scenario-chip .ds-chip span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tools{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; }
 
-/* link + mode banners: one row, two halves */
-.banners{ flex:0 0 auto; display:grid; grid-template-columns:1fr 1fr; }
-.banners .ds-banner{ border-top:0; }
-.banners>div+div .ds-banner{ border-left:1px solid var(--line); }
+/* overview strip (Level 1) */
+#overview{ flex:0 0 auto; display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:1px; background:var(--line);
+  border-bottom:1px solid var(--line); }
+.tile{ display:flex; flex-direction:column; gap:2px; text-align:left; background:var(--s1); padding:5px var(--sp-3) 5px;
+  min-height:68px; color:var(--tx); border:0; border-top:2px solid transparent; min-width:0; }
+button.tile:hover{ background:var(--s2); }
+.tile.is-focus{ border-top-color:var(--accent); background:var(--s2); }
+.tile .tl-h{ display:flex; align-items:center; gap:6px; justify-content:space-between; min-width:0; }
+.tile .nm{ font-size:var(--fs-label); font-weight:600; color:var(--tx2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tile .tl-v{ display:flex; align-items:baseline; gap:6px; justify-content:space-between; }
+.tile .tl-v .k{ font-size:var(--fs-label); color:var(--tx3); white-space:nowrap; }
+.tile .tl-f{ display:flex; align-items:center; justify-content:space-between; gap:4px; min-height:18px; }
+.tile .tl-f .bd{ display:flex; gap:4px; flex-wrap:nowrap; }
+.tile .tl-f .ds-spark{ flex:0 1 auto; min-width:0; }
+.tile .tl-n{ font-size:var(--fs-label); color:var(--tx3); }
+.tile.st-caution{ box-shadow:inset 3px 0 0 var(--warn); }
+.tile.st-alarm{ box-shadow:inset 3px 0 0 var(--alarm); }
+.tile.st-injected{ box-shadow:inset 3px 0 0 var(--shelf); }
+.tile .ds-spark path{ stroke:var(--fill); }
+.tile.ribbon .rb{ display:flex; gap:4px; flex-wrap:wrap; min-width:0; }
+.tile{ overflow:hidden; }
+.tile .ds-chip, .tile .inj-chip{ max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+@media (max-width:1400px){ .clk .lbl{ display:none; } }
 
-/* ── shell: three columns + collapsible bottom log ──────────────────── */
-main{ flex:1; display:grid; min-height:0;
-  grid-template-columns:minmax(280px,320px) minmax(0,1fr) minmax(320px,360px);
-  gap:var(--sp-3); padding:var(--sp-3); }
-.col{ display:flex; flex-direction:column; gap:var(--sp-3); min-height:0;
-  overflow-y:auto; scrollbar-gutter:stable; }
-/* INSTRUCTOR SCROLL FIX (field report 2026-08-20): cards keep their natural
-   height so the column really overflows and scrolls; the three unbounded
-   lists get their own bounded scroll region. */
-.col > *{ flex:0 0 auto; }
-#scenario-list{ max-height:34vh; overflow-y:auto; }
-#failures-list{ max-height:30vh; overflow-y:auto; }
-#breakpoints-list{ max-height:24vh; overflow-y:auto; }
-/* Visible scrollbars on an ops console (overlay bars read as "none"). */
-.col::-webkit-scrollbar, #scenario-list::-webkit-scrollbar, #failures-list::-webkit-scrollbar,
-#breakpoints-list::-webkit-scrollbar, .snap-body::-webkit-scrollbar,
-#raw-snapshot-container::-webkit-scrollbar, #event-log::-webkit-scrollbar{ width:10px; }
-.col::-webkit-scrollbar-track, #scenario-list::-webkit-scrollbar-track, #failures-list::-webkit-scrollbar-track,
-#breakpoints-list::-webkit-scrollbar-track, .snap-body::-webkit-scrollbar-track,
-#raw-snapshot-container::-webkit-scrollbar-track, #event-log::-webkit-scrollbar-track{ background:var(--s1); }
-.col::-webkit-scrollbar-thumb, #scenario-list::-webkit-scrollbar-thumb, #failures-list::-webkit-scrollbar-thumb,
-#breakpoints-list::-webkit-scrollbar-thumb, .snap-body::-webkit-scrollbar-thumb,
-#raw-snapshot-container::-webkit-scrollbar-thumb, #event-log::-webkit-scrollbar-thumb{
-  background:var(--line-2); border:2px solid var(--s1); border-radius:var(--radius); }
-.col-head{ font-size:var(--fs-label); font-weight:600; color:var(--tx2); padding:0 2px; }
-.col-head small{ font-weight:400; color:var(--tx3); }
+/* shell */
+main{ flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,360px); }
+#focus{ display:flex; flex-direction:column; min-width:0; min-height:0; border-right:1px solid var(--line); }
+.fhead{ display:flex; align-items:center; gap:var(--sp-2) var(--sp-3); padding:6px var(--sp-4); border-bottom:1px solid var(--line);
+  background:var(--s1); flex-wrap:wrap; }
+.fhead .ftitle{ font-size:var(--fs-value); font-weight:600; color:var(--val); white-space:nowrap; }
+#focus-reason{ font-size:var(--fs-label); color:var(--tx2); min-width:0; }
+#focus-reason .auto{ color:var(--accent); }
+#focus-suggest:empty{ display:none; }
+#focus-suggest{ display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-label); color:var(--tx2);
+  border:1px dashed var(--accent); border-radius:var(--radius); padding:2px 4px 2px 8px; }
+.ftabs{ display:flex; gap:0; flex-wrap:wrap; padding:0 var(--sp-3); border-bottom:1px solid var(--line); background:var(--s1); }
+.ftabs .ds-tab{ white-space:nowrap; padding-left:10px; padding-right:10px; }
+.ftabs [role="tablist"]{ flex-wrap:wrap; }
+.ftabs .sep{ width:1px; background:var(--line-2); margin:6px var(--sp-2); }
+#view-select{ display:none; }
+#focus-body{ flex:1; min-height:0; overflow:auto; padding:var(--sp-3) var(--sp-4) var(--sp-5); scrollbar-gutter:stable; }
+.view[hidden], .ds-field[hidden]{ display:none !important; }
 
-/* ── truth dashboard ────────────────────────────────────────────────── */
-.sub-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:var(--sp-3); }
-.sub-grid .ds-panel-b{ padding:var(--sp-2) var(--sp-4) var(--sp-3); }
-.prow{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-2);
-  min-height:24px; padding:1px 0; }
-.prow .pl{ color:var(--tx2); font-size:var(--fs-label); white-space:nowrap; }
-.prow .pv{ text-align:right; }
-.prow .pv .ds-value{ font-size:var(--fs-body); }
-.prow.hero .pv .ds-value{ font-size:var(--fs-value); }
-.sub-grid .ds-gauge{ grid-template-columns:minmax(64px,auto) minmax(60px,1fr) auto; min-height:26px; }
-.sub-grid .ds-gauge>.nm{ font-size:var(--fs-label); }
-.sub-grid .ds-gauge .ds-value{ font-size:var(--fs-body); }
-.ds-panel-h .r .ds-chip{ font-size:var(--fs-label); }
-.note{ font-size:var(--fs-label); color:var(--tx3); margin-top:var(--sp-1); }
-.truth{ border-top:1px solid var(--line); margin-top:var(--sp-2); padding-top:var(--sp-2); }
-#clock-offset{ white-space:nowrap; }
-
-.orbit-bar{ display:flex; align-items:center; gap:var(--sp-2) var(--sp-5); flex-wrap:wrap;
-  padding:var(--sp-2) var(--sp-4); }
-.orbit-bar .op{ display:flex; align-items:baseline; gap:var(--sp-2); }
-.orbit-bar .op label{ font-size:var(--fs-label); color:var(--tx2); }
-.orbit-bar .op b{ font-family:var(--mono); font-size:var(--fs-body); font-weight:500; color:var(--val); }
-
-.launcher-grid{ display:flex; flex-wrap:wrap; gap:var(--sp-1); }
-.launcher-grid a{ display:inline-flex; align-items:center; gap:6px; min-height:24px;
-  border:1px solid var(--line-2); border-radius:var(--radius); padding:0 var(--sp-2);
-  font-family:var(--mono); font-size:var(--fs-label); color:var(--tx); text-decoration:none; }
-.launcher-grid a:hover{ background:var(--s2); border-color:var(--tx3); }
-.launcher-grid a .ct{ color:var(--tx3); }
-.searchrow{ display:flex; gap:var(--sp-2); align-items:center; }
-.searchrow .ds-input{ flex:1; }
-
-/* full snapshot browser (?sub= deep-dive) */
-.snap-tabs{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-bottom:var(--sp-2); }
-.snap-tab{ min-height:26px; border:1px solid var(--line-2); border-radius:var(--radius);
-  padding:0 var(--sp-2); font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); }
-.snap-tab:hover{ background:var(--s2); color:var(--tx); }
-.snap-tab.active{ background:var(--s3); color:var(--val); box-shadow:inset 0 -2px 0 var(--accent); }
-.snap-tab .count{ color:var(--tx3); margin-left:6px; }
-.snap-body{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:0 var(--sp-4); max-height:72vh; overflow-y:auto; }
-.param-cell{ display:flex; justify-content:space-between; gap:var(--sp-2);
-  padding:3px 4px; border-bottom:1px solid var(--line); font-size:var(--fs-label); }
-.param-cell .pkey{ font-family:var(--mono); color:var(--tx3); }
-.param-cell .pval{ font-family:var(--mono); color:var(--val);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:55%; }
-#raw-snapshot-container{ display:none; margin-top:var(--sp-2); max-height:300px;
-  overflow-y:auto; background:var(--bg); border:1px solid var(--line);
-  border-radius:var(--radius); padding:var(--sp-2);
-  font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); }
-#raw-snapshot-container pre{ margin:0; white-space:pre-wrap; word-break:break-all; }
-#param-search-results{ display:none; margin:var(--sp-2) 0; }
-#param-search-results .hit{ display:flex; justify-content:space-between; gap:var(--sp-2);
-  padding:3px 6px; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:var(--fs-label); }
-#param-search-results .hit .k{ color:var(--tx2); }
-
-/* ── forms (interventions) ──────────────────────────────────────────── */
+/* rail */
+#rail{ min-height:0; overflow:auto; padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-3); scrollbar-gutter:stable; }
+#rail > *{ flex:0 0 auto; }
+.rail-h{ font-size:var(--fs-label); font-weight:600; color:var(--tx2); }
+.rail-h small{ font-weight:400; color:var(--tx3); }
 .form-stack{ display:flex; flex-direction:column; gap:var(--sp-3); }
 .form-unit{ color:var(--tx3); font-family:var(--mono); }
 .form-hint{ display:block; font-size:var(--fs-label); color:var(--tx3); }
 .ds-select[multiple]{ height:auto; padding:2px; background-image:none; }
-.radio-group{ display:flex; gap:var(--sp-4); flex-wrap:wrap; }
+.radio-group{ display:flex; gap:var(--sp-3) var(--sp-4); flex-wrap:wrap; }
 .radio-label{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-body); cursor:pointer; }
 .radio-label input{ accent-color:var(--accent); margin:0; }
-.fail-effect{ font-size:var(--fs-label); color:var(--tx2); border-left:2px solid var(--line-2);
-  padding:2px 0 2px var(--sp-2); }
+.fail-effect{ font-size:var(--fs-label); color:var(--tx2); border-left:2px solid var(--line-2); padding:2px 0 2px var(--sp-2); }
 .fail-effect:empty{ display:none; }
 .fail-effect.irrev{ border-left-color:var(--warn); color:var(--warn); }
 .fail-error{ display:none; }
 .fail-error .ds-banner{ border:1px solid var(--alarm); border-radius:var(--radius); }
 .affects{ display:flex; align-items:center; gap:6px; font-size:var(--fs-label); color:var(--tx3); }
-.affects svg{ width:10px; height:10px; color:var(--warn); }
+.affects svg{ width:10px; height:10px; color:var(--warn); flex:0 0 auto; }
 .wfull{ width:100%; }
 .pair{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--sp-2); align-items:end; }
 .btn2{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
-
+.elements{ display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.el-btn{ text-align:left; border:1px solid var(--line-2); border-radius:var(--radius); padding:3px 6px; color:var(--tx); min-height:30px;
+  display:flex; align-items:center; justify-content:space-between; gap:4px; font-size:var(--fs-label); }
+.el-btn b{ font-weight:500; font-size:var(--fs-label); line-height:1.25; }
+.el-btn .ct{ color:var(--tx3); font-family:var(--mono); }
+.el-btn:hover{ background:var(--s2); }
+.el-btn[aria-pressed="true"]{ background:var(--accent-wash); border-color:var(--accent); }
+#el-hint{ font-size:var(--fs-label); color:var(--tx3); }
+.review{ border:1px solid var(--line-2); border-radius:var(--radius); padding:var(--sp-2) var(--sp-3); font-size:var(--fs-label); }
+.review dl{ display:grid; grid-template-columns:auto 1fr; gap:2px var(--sp-3); margin:0; }
+.review dt{ color:var(--tx3); }
+.review dd{ margin:0; font-family:var(--mono); color:var(--val); overflow-wrap:anywhere; }
+.batch-list:empty{ display:none; }
 .item{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px var(--sp-2); align-items:center;
   padding:var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); border-bottom:1px solid var(--line); }
 .item:last-child{ border-bottom:0; }
-.item.fail{ box-shadow:inset 2px 0 0 var(--alarm); }
-.item .fname{ font-family:var(--mono); font-size:var(--fs-body); color:var(--val); min-width:0;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.item .fmeta{ grid-column:1; display:flex; gap:var(--sp-3); font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+.item.fail{ box-shadow:inset 2px 0 0 var(--shelf); }
+.item .fname{ font-family:var(--mono); font-size:var(--fs-body); color:var(--val); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.item .fmeta{ grid-column:1; display:flex; gap:var(--sp-3); flex-wrap:wrap; font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
 .item .ds-btn{ grid-row:1 / span 2; grid-column:2; }
-.no-data{ color:var(--tx3); font-size:var(--fs-label); padding:var(--sp-2) 0; }
+#failures-list,#schedule-list{ max-height:28vh; overflow-y:auto; }
+#breakpoints-list{ max-height:24vh; overflow-y:auto; }
 
-/* scenario list: one button per scenario (keyboard reachable) */
-.scn{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px var(--sp-2); width:100%;
-  text-align:left; padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--line);
-  color:var(--tx); font-size:var(--fs-body); }
+/* views: shared */
+.viewgrid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,300px); gap:var(--sp-4) var(--sp-5); align-items:start; }
+.fig{ min-width:0; margin:0; }
+.fig > h3:first-child, .side > h3:first-child{ margin-top:0; }
+figcaption{ font-size:var(--fs-label); color:var(--tx3); margin-top:var(--sp-1); }
+.side{ min-width:0; }
+.kv{ display:flex; justify-content:space-between; gap:var(--sp-3); align-items:baseline; padding:3px 0; border-bottom:1px solid var(--line);
+  font-size:var(--fs-label); color:var(--tx2); }
+.kv > :last-child{ text-align:right; overflow-wrap:anywhere; min-width:0; }
+table.mini{ width:100%; border-collapse:collapse; font-size:var(--fs-label); margin-top:var(--sp-2); }
+table.mini th,table.mini td{ padding:2px 4px; border-bottom:1px solid var(--line); text-align:right; }
+table.mini th:first-child{ text-align:left; color:var(--tx2); font-weight:400; }
+.legend{ display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-label); color:var(--tx2); margin-bottom:var(--sp-2); }
+.legend .lg-true{ width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:9px solid var(--val); }
+.legend .lg-est{ width:9px; height:9px; border-radius:50%; border:1.5px solid var(--accent); margin-left:var(--sp-3); }
+
+/* divergence table */
+.div-sum{ display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap; margin-bottom:var(--sp-2); }
+.cause{ display:inline-flex; font-size:var(--fs-label); border-radius:var(--radius-sm); padding:0 6px; line-height:18px; white-space:nowrap; font-family:var(--mono); }
+.cause-injected{ color:var(--shelf); border:1px solid var(--shelf); }
+.cause-estimator{ color:var(--warn); border:1px solid var(--warn); }
+.cause-delay{ color:var(--tx2); border:1px dashed var(--stale); font-style:italic; }
+table.pairs{ width:100%; border-collapse:collapse; font-size:var(--fs-label); }
+table.pairs th,table.pairs td{ padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; text-align:left; }
+table.pairs thead th{ color:var(--tx3); font-weight:400; }
+table.pairs th[scope=row]{ font-weight:400; color:var(--tx); }
+table.pairs .pl{ display:block; }
+table.pairs .pid{ font-family:var(--mono); color:var(--tx3); }
+table.pairs td.v{ white-space:nowrap; }
+table.pairs td.v .ds-value{ font-size:var(--fs-body); }
+table.pairs td.truth .ds-value{ color:var(--val); font-weight:500; }
+table.pairs .age{ display:block; color:var(--tx3); font-family:var(--mono); }
+table.pairs .age.late{ font-style:italic; }
+table.pairs .gap{ display:block; font-family:var(--mono); color:var(--tx2); }
+table.pairs .why{ display:block; }
+tr.c-injected{ box-shadow:inset 3px 0 0 var(--shelf); }
+tr.c-estimator{ box-shadow:inset 3px 0 0 var(--warn); }
+tr.c-delay td.v:nth-child(4) .ds-value{ color:var(--tx3); font-style:italic; }
+.grp{ margin-bottom:var(--sp-2); }
+
+/* thermal */
+.th-svg{ width:100%; height:auto; max-height:420px; }
+.th-link line{ stroke:var(--line-2); stroke-linecap:round; }
+.th-link.rad line{ stroke-dasharray:3 3; }
+.th-link .th-dir{ stroke:var(--tx3); stroke-width:1.2; }
+.th-link.is-zero line{ stroke:var(--line); }
+.th-arrh{ fill:var(--tx3); }
+.th-node rect{ fill:var(--s2); stroke:var(--line-2); }
+.th-node .nm{ font-size:11px; fill:var(--tx2); }
+.th-node .val{ font-size:12px; fill:var(--val); font-family:var(--mono); }
+.th-node .pub{ font-size:10px; fill:var(--tx3); font-family:var(--mono); }
+.th-node .htr{ font-size:10px; fill:var(--tx3); }
+.th-node .htr.on{ fill:var(--accent); }
+.th-node .htr.bad{ fill:var(--alarm); }
+.th-node.is-caution rect{ stroke:var(--warn); stroke-width:2; }
+.th-node.is-alarm rect{ stroke:var(--alarm); stroke-width:2; }
+.th-lie rect{ fill:var(--bg); stroke:var(--shelf); }
+.th-lie text{ font-size:11px; fill:var(--shelf); font-family:var(--mono); }
+
+/* attitude */
+.tape{ display:grid; grid-template-columns:52px minmax(0,280px) auto; align-items:center; gap:var(--sp-2); }
+.tape .k{ font-size:var(--fs-label); color:var(--tx2); }
+.tape svg{ width:100%; height:auto; }
+.tape .vv{ font-size:var(--fs-label); white-space:nowrap; }
+.tp-ax{ stroke:var(--line-2); } .tp-t{ stroke:var(--tx3); stroke-width:1; }
+.tp-s{ font-size:10px; fill:var(--tx3); font-family:var(--mono); }
+.tp-true{ fill:var(--val); } .tp-est{ fill:none; stroke:var(--accent); stroke-width:1.75; }
+.sparks{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); margin-top:var(--sp-3); }
+.sparks > div{ display:flex; flex-direction:column; gap:2px; font-size:var(--fs-label); color:var(--tx2); }
+.sparks .ds-spark path{ stroke:var(--tx2); }
+.wh,.store{ display:grid; grid-template-columns:110px minmax(60px,1fr) auto auto; gap:var(--sp-2); align-items:center; font-size:var(--fs-label); padding:2px 0; }
+.wh{ grid-template-columns:40px minmax(60px,1fr) auto auto; }
+.wh .k,.store .k{ color:var(--tx2); }
+.bar{ height:8px; background:var(--s3); border-radius:1px; overflow:hidden; display:block; }
+.bar > span{ display:block; height:100%; background:var(--fill); }
+.store.is-caution .bar > span{ background:var(--warn); } .store.is-alarm .bar > span{ background:var(--alarm); }
+
+/* orbit */
+ul.gates{ list-style:none; margin:0 0 var(--sp-2); padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.passes{ width:100%; height:auto; }
+.passes .ps{ fill:var(--fill); } .passes .pn{ font-size:11px; fill:var(--tx2); }
+ul.trans li{ display:block; }
+
+/* fault */
+.chain{ display:flex; align-items:stretch; gap:var(--sp-2); flex-wrap:wrap; margin-bottom:var(--sp-3); }
+.ch-box{ flex:1 1 160px; border:1px solid var(--line-2); border-radius:var(--radius); padding:var(--sp-2) var(--sp-3);
+  display:flex; flex-direction:column; gap:2px; font-size:var(--fs-label); }
+.ch-box .k{ color:var(--tx3); } .ch-box b{ font-weight:600; color:var(--val); font-size:var(--fs-body); }
+.ch-comp{ border-color:var(--shelf); }
+.ch-arr{ align-self:center; color:var(--tx3); }
+.swim{ width:100%; max-width:620px; height:auto; }
+.sl-ax{ stroke:var(--line-2); } .sl-now{ stroke:var(--accent); stroke-dasharray:2 2; }
+.sl-m line{ stroke:var(--tx3); } .sl-m circle{ fill:var(--s1); stroke:var(--tx2); stroke-width:1.5; }
+.sl-0 circle{ fill:var(--shelf); stroke:var(--shelf); } .sl-2 circle{ stroke:var(--warn); } .sl-3 circle{ fill:var(--accent); stroke:var(--accent); }
+.sl-gap{ font-size:10px; fill:var(--tx2); font-family:var(--mono); }
+ol.stages{ list-style:none; margin:var(--sp-2) 0 0; padding:0; font-size:var(--fs-label); }
+ol.stages li{ display:flex; justify-content:space-between; gap:var(--sp-3); padding:2px 0; border-bottom:1px solid var(--line); color:var(--tx3); }
+ol.stages li.done{ color:var(--tx); }
+.fault-cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:var(--sp-3); }
+.fcard{ border:1px solid var(--line-2); border-left:3px solid var(--shelf); border-radius:var(--radius); padding:var(--sp-2) var(--sp-3);
+  text-align:left; color:var(--tx); display:flex; flex-direction:column; gap:4px; }
+.fcard:hover{ background:var(--s2); }
+.fcard.cleared{ border-left-color:var(--line-2); }
+.fcard .ft{ display:flex; justify-content:space-between; gap:var(--sp-2); font-family:var(--mono); font-size:var(--fs-body); color:var(--val); }
+.fcard .st{ font-size:var(--fs-label); color:var(--tx2); }
+.sit{ display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,300px); gap:var(--sp-4) var(--sp-5); }
+
+/* prep */
+.scn{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px var(--sp-2); width:100%; text-align:left;
+  padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--line); color:var(--tx); font-size:var(--fs-body); }
 .scn:hover{ background:var(--s2); }
 .scn[aria-pressed="true"]{ background:var(--accent-wash); box-shadow:inset 2px 0 0 var(--accent); }
 .scn .sd{ display:flex; gap:var(--sp-3); font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
 .scn .ds-chip{ grid-row:1 / span 2; grid-column:2; align-self:center; }
-#scenario-detail{ padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
-/* course-workbook worksheets (logbook): prep under the briefing, debrief
-   questions under the debrief; participants answer them in their logbook */
-.ws-block:empty{ display:none; }
-.ws-block{ border-top:1px solid var(--line); }
-.ws-block .ws-h{ display:flex; align-items:baseline; gap:var(--sp-2); padding:var(--sp-2) var(--sp-4) 0;
-  font-size:var(--fs-label); color:var(--tx2); font-weight:600; }
-.ws-block .ws-note{ padding:2px var(--sp-4) var(--sp-2); font-size:var(--fs-label); color:var(--tx3); }
-.ws-block .ds-disclosure>summary{ align-items:baseline; }
-.ws-block .ds-disclosure>summary .ti{ flex:1; min-width:0; }
-.ws-block .ds-disclosure>summary .r{ white-space:nowrap; }
-.ws-block .ds-disclosure>summary .id{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3);
-  font-weight:400; white-space:nowrap; margin-right:var(--sp-1); }
-.ws-block .ds-disclosure>.bd{ padding-left:var(--sp-4); }
-.ws-block ol{ margin:0 0 0 var(--sp-4); padding:0; font-size:var(--fs-label); color:var(--tx2); }
-.ws-block ol li{ padding:2px 0; }
-.ws-block ol li.sec{ list-style:none; margin-left:calc(-1 * var(--sp-4)); color:var(--tx3); padding-top:var(--sp-2); }
-#scenario-briefing{ font-size:var(--fs-label); color:var(--tx2); max-height:100px; overflow:auto;
-  white-space:pre-line; }
+#scenario-list{ max-height:48vh; overflow:auto; border:1px solid var(--line); border-radius:var(--radius); }
+#scenario-briefing{ font-size:var(--fs-body); color:var(--tx2); max-height:180px; overflow:auto; white-space:pre-line; }
 .scn-actions{ display:flex; gap:var(--sp-2); margin-top:var(--sp-3); flex-wrap:wrap; }
-#scenario-progress{ padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
-.progress-label{ display:flex; justify-content:space-between; align-items:center;
-  font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); margin-bottom:6px; }
+.progress-label{ display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); margin-bottom:6px; }
 .progress-track{ position:relative; height:6px; background:var(--s3); border-radius:1px; overflow:hidden; }
 .progress-fill{ position:absolute; left:0; top:0; bottom:0; width:0%; background:var(--accent); }
 .progress-track.paused .progress-fill{ background:var(--tx3); }
+.ws-block:empty{ display:none; }
+.ws-block .ws-h{ font-size:var(--fs-label); color:var(--tx2); font-weight:600; margin-top:var(--sp-3); }
+.ws-block .ws-note{ font-size:var(--fs-label); color:var(--tx3); }
+.ws-block ol{ margin:0 0 0 var(--sp-4); padding:0; font-size:var(--fs-label); color:var(--tx2); }
+.ws-block ol li.sec{ list-style:none; margin-left:calc(-1 * var(--sp-4)); color:var(--tx3); padding-top:var(--sp-2); }
+.ws-block .ds-disclosure>summary .id{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); font-weight:400; margin-right:4px; }
 
 /* debrief */
+.pearls{ display:flex; gap:0; border:1px solid var(--line-2); border-radius:var(--radius); overflow:hidden; margin-bottom:var(--sp-3); flex-wrap:wrap; }
+.pearls button{ flex:1 1 120px; padding:6px var(--sp-3); text-align:left; font-size:var(--fs-label); color:var(--tx2); border-right:1px solid var(--line-2); }
+.pearls button:last-child{ border-right:0; }
+.pearls button b{ display:block; font-size:var(--fs-body); color:var(--tx); }
+.pearls button[aria-pressed="true"]{ background:var(--accent-wash); box-shadow:inset 0 -2px 0 var(--accent); }
+.prompts{ margin:0; padding-left:var(--sp-4); font-size:var(--fs-body); color:var(--tx2); }
+.prompts li{ padding:3px 0; }
+#debrief-tl{ border:1px solid var(--line); border-radius:var(--radius); padding:4px 0; }
+.lat-table{ width:100%; border-collapse:collapse; font-size:var(--fs-label); }
+.lat-table th,.lat-table td{ padding:4px 6px; border-bottom:1px solid var(--line); text-align:right; font-family:var(--mono); }
+.lat-table th:first-child,.lat-table td:first-child{ text-align:left; font-family:var(--sans); }
+.lat-table td.big{ color:var(--warn); }
+.cursor-panel{ font-size:var(--fs-label); }
+textarea.ds-input{ min-height:72px; resize:vertical; font-family:var(--sans); padding:6px 8px; height:auto; }
 #debrief-body table{ width:100%; border-collapse:collapse; font-size:var(--fs-label); }
 #debrief-body td{ padding:3px 0; border-bottom:1px solid var(--line); }
 #debrief-body td:first-child{ color:var(--tx2); }
 #debrief-body td:last-child{ font-family:var(--mono); text-align:right; color:var(--val); }
 
-/* ── bottom log (collapsible) ───────────────────────────────────────── */
-#log-panel{ flex:0 0 auto; border-top:1px solid var(--line); background:var(--s1);
-  display:flex; flex-direction:column; }
-#log-panel .log-head{ display:flex; align-items:center; gap:var(--sp-3); padding:4px var(--sp-4); }
-#btn-log-toggle::before{ content:""; width:6px; height:6px; border-right:1.5px solid var(--tx3);
-  border-bottom:1.5px solid var(--tx3); transform:rotate(45deg) translate(-1px,-1px);
-  transition:transform var(--motion) var(--ease); margin-right:4px; }
-#log-panel.collapsed #btn-log-toggle::before{ transform:rotate(-45deg); }
-#event-log{ height:100px; overflow-y:auto; }
-#log-panel.collapsed #event-log{ display:none; }
+/* raw state (deep dive) */
+.snap-tabs{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-bottom:var(--sp-2); }
+.snap-tab{ min-height:26px; border:1px solid var(--line-2); border-radius:var(--radius); padding:0 var(--sp-2); font-size:var(--fs-label); color:var(--tx2); }
+.snap-tab:hover{ background:var(--s2); color:var(--tx); }
+.snap-tab.active{ background:var(--s3); color:var(--val); box-shadow:inset 0 -2px 0 var(--accent); }
+.snap-tab .count{ color:var(--tx3); margin-left:6px; font-family:var(--mono); }
+.snap-tab.raw{ font-family:var(--mono); border-style:dashed; }
+.snap-body{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0 var(--sp-4); max-height:60vh; overflow-y:auto; }
+.param-cell{ display:flex; justify-content:space-between; gap:var(--sp-2); padding:3px 4px; border-bottom:1px solid var(--line); font-size:var(--fs-label); }
+.param-cell .pkey{ font-family:var(--mono); color:var(--tx3); }
+.param-cell .pval{ font-family:var(--mono); color:var(--val); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:55%; }
+#raw-snapshot-container{ display:none; margin-top:var(--sp-2); max-height:300px; overflow-y:auto; background:var(--bg);
+  border:1px solid var(--line); border-radius:var(--radius); padding:var(--sp-2); font-family:var(--mono); font-size:var(--fs-label); color:var(--tx2); }
+#raw-snapshot-container pre{ margin:0; white-space:pre-wrap; word-break:break-all; }
+#param-search-results{ display:none; margin:var(--sp-2) 0; }
+#param-search-results .hit{ display:flex; justify-content:space-between; gap:var(--sp-2); padding:3px 6px; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:var(--fs-label); }
+.searchrow{ display:flex; gap:var(--sp-2); align-items:center; }
+.searchrow .ds-input{ flex:1; }
+.launcher-grid{ display:flex; flex-wrap:wrap; gap:var(--sp-1); }
+.launcher-grid a{ display:inline-flex; align-items:center; gap:6px; min-height:24px; border:1px solid var(--line-2); border-radius:var(--radius);
+  padding:0 var(--sp-2); font-size:var(--fs-label); color:var(--tx); text-decoration:none; }
+.launcher-grid a .ct{ color:var(--tx3); font-family:var(--mono); }
 
-/* toast */
-#toast{ position:fixed; right:var(--sp-4); bottom:var(--sp-4); z-index:50; width:min(420px, calc(100vw - 32px));
-  display:none; }
+/* timeline panel */
+#timeline-panel{ flex:0 0 auto; border-top:1px solid var(--line); background:var(--s1); display:flex; flex-direction:column; }
+.tl-head{ display:flex; align-items:center; gap:var(--sp-2) var(--sp-3); padding:4px var(--sp-4); flex-wrap:wrap; }
+.tl-head .ds-seg button{ font-family:var(--mono); }
+#tl-detail{ font-size:var(--fs-label); color:var(--tx2); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+#timeline{ padding:0 0 4px; overflow:hidden; }
+#timeline-panel.collapsed #timeline,#timeline-panel.collapsed #event-log{ display:none; }
+#event-log{ height:184px; overflow-y:auto; }
+#event-log[hidden]{ display:none; }
+.tl-svg{ display:block; }
+.tl-lane{ fill:var(--s1); } .tl-lane.odd{ fill:var(--bg); }
+.tl-lbl{ font-size:11px; fill:var(--tx2); }
+.tl-ax{ font-size:10px; fill:var(--tx3); font-family:var(--mono); }
+.tl-grid{ stroke:var(--line); }
+.tl-now{ stroke:var(--accent); stroke-width:1.5; } .tl-now-t{ font-size:10px; fill:var(--accent); }
+.tl-cursor{ stroke:var(--val); stroke-dasharray:3 2; }
+.tl-contact{ fill:var(--fill); } .tl-eclipse{ fill:var(--bg); stroke:var(--tx3); stroke-width:1; }
+.tl-na{ fill:var(--hatch-ink); } .tl-na-t{ font-size:10px; fill:var(--tx3); font-style:italic; }
+.tl-gate{ font-size:11px; fill:var(--shelf); font-family:var(--mono); }
+.tl-pt{ cursor:pointer; }
+.tl-pt.is-sel > :first-child{ stroke:var(--val); stroke-width:2; }
+.m-inject{ fill:var(--shelf); stroke:var(--shelf); }
+.m-clear{ stroke:var(--shelf); }
+.m-pending{ stroke:var(--shelf); stroke-dasharray:2 1.5; }
+.m-alarm{ fill:var(--alarm); stroke:var(--alarm); }
+.m-warn{ fill:var(--warn); stroke:var(--warn); }
+.m-info{ fill:var(--tx3); stroke:var(--tx3); }
+.m-down{ fill:var(--tx2); }
+.m-tc{ fill:var(--accent); }
+.m-phase{ fill:var(--tx2); }
+.m-instr{ fill:var(--shelf); stroke:var(--shelf); }
+
+#toast{ position:fixed; right:var(--sp-4); bottom:var(--sp-4); z-index:50; width:min(420px, calc(100vw - 32px)); display:none; }
 #toast.show{ display:block; }
 #toast .ds-banner{ border:1px solid var(--line-2); border-radius:var(--radius); }
 
-/* ── ?sub= subpage deep-dive mode (preserved from classic): hides the
-     dashboard chrome and renders the requested snapshot tab full-width. */
-body.subpage .appbar, body.subpage .banners, body.subpage #left-col, body.subpage #right-col,
-body.subpage #log-panel, body.subpage .sub-grid, body.subpage .orbit-card,
-body.subpage #launcher-card, body.subpage #search-block,
-body.subpage #centre-head, body.subpage #conn-chip{ display:none !important; }
+/* ?sub= deep-dive subpage (preserved): only the raw state browser */
+body.subpage .appbar, body.subpage #overview, body.subpage #rail, body.subpage #timeline-panel,
+body.subpage .fhead, body.subpage .ftabs, body.subpage .view:not(#view-raw), body.subpage #raw-tools{ display:none !important; }
 body.subpage main{ grid-template-columns:1fr; }
-#full-snapshot-container{ display:none; }
-body.subpage #full-snapshot-container{ display:block; }
 .subpage-back{ display:inline-block; margin:0 0 var(--sp-2); font-size:var(--fs-body); }
 
-@media (max-width:1240px){ main{ grid-template-columns:260px minmax(0,1fr) 300px; } }
+@media (max-width:1180px){ #overview{ grid-template-columns:repeat(4,minmax(0,1fr)); } .tile{ min-height:64px; } }
+@media (max-height:820px) and (min-width:981px){ .tile{ min-height:58px; } .tile .tl-n{ display:none; } }
+@media (max-width:1300px){ main{ grid-template-columns:minmax(0,1fr) 300px; } .viewgrid,.sit{ grid-template-columns:minmax(0,1fr); } }
 @media (max-width:980px){
   body{ overflow:auto; height:auto; }
   main{ grid-template-columns:minmax(0,1fr); }
-  .col{ overflow:visible; }
-  .banners{ grid-template-columns:1fr; }
+  #focus{ border-right:0; }
+  #focus-body,#rail{ overflow:visible; }
+  .ftabs{ display:none; } #view-select{ display:block; }
+  #timeline-panel{ position:static; }
+}
+@media (max-width:560px){
+  #overview{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .clk b{ font-size:var(--fs-value); }
+  .appbar{ padding:6px var(--sp-3); }
+  #focus-body{ padding:var(--sp-3); }
+  .sparks{ grid-template-columns:1fr; }
+  .tape{ grid-template-columns:44px minmax(0,1fr); } .tape .vv{ grid-column:2; }
+  table.pairs, table.pairs tbody{ display:block; width:100%; }
+  table.pairs thead{ display:none; }
+  table.pairs td.v, table.pairs td.v .ds-value{ white-space:normal; overflow-wrap:anywhere; min-width:0; }
+  table.pairs tr{ display:grid; grid-template-columns:1fr 1fr 1fr; border-bottom:1px solid var(--line); padding:4px 0; }
+  table.pairs th[scope=row]{ grid-column:1 / -1; border:0; }
+  table.pairs td{ border:0; }
+  table.pairs td.c{ grid-column:1 / -1; }
+  .elements{ grid-template-columns:1fr; }
 }
 </style>
 </head>
 <body>
-<a class="ds-skip" href="#centre-col" data-i18n>Skip to truth dashboard</a>
+<a class="ds-skip" href="#focus-body" data-i18n>Skip to the focus pane</a>
 
-<!-- Instructor strip: a projected instructor screen must never be mistaken
-     for the operator console (plan §2.4). -->
-<div class="ds-instructor-strip" data-i18n>Instructor console — simulation ground truth · not an operator display</div>
+<!-- Persistent band: a projected instructor screen must never be mistaken
+     for the operator console. -->
+<div class="ds-instructor-strip band" role="note"><b data-i18n>INSTRUCTOR · TRUTH</b><span data-i18n>Instructor console — simulation ground truth · not an operator display</span></div>
 
 <header class="appbar">
-  <div class="mark"><b data-i18n>Instructor console</b></div>
+  <h1 class="sr-only" data-i18n>Instructor console</h1>
   <div class="clk"><span class="lbl" data-i18n>Sim time</span><b id="sim-time"></b><small id="sim-date"></small></div>
   <div class="timectl" role="group" aria-label="Simulation time control" data-i18n-aria-label>
     <span id="run-chip"></span>
@@ -286,248 +426,171 @@ body.subpage #full-snapshot-container{ display:block; }
   <span id="scenario-chip"></span>
   <div class="grow"></div>
   <div class="tools">
-    <span id="sc-mode-badge"></span>
-    <a class="ds-btn ghost sm" id="config-tab-link" href="/config" target="_blank" rel="noopener"
-       data-i18n data-i18n-title title="Mission configuration editor — read-write (instructor only)">Configuration</a>
+    <button type="button" class="ds-btn ghost sm" id="btn-quick-snap" data-i18n data-i18n-title
+      title="Save a snapshot of the whole simulation now (named by sim time)">Snapshot</button>
     <span id="lb-slot"></span>
     <span id="lang-toggle"></span>
     <span id="conn-chip"></span>
   </div>
 </header>
-<div class="banners" aria-live="polite">
-  <div id="link-banner"></div>
-  <div id="mode-banner"></div>
-</div>
+
+<!-- Level 1: one grey tile per subsystem; never moves. -->
+<nav id="overview" aria-label="Subsystem overview — open a view" data-i18n-aria-label></nav>
 
 <main>
-  <!-- ══ LEFT — SCENARIOS & SESSION ══ -->
-  <div class="col" id="left-col">
-    <div class="col-head" data-i18n>Scenarios and session</div>
-
-    <section class="ds-panel" aria-labelledby="scn-h">
-      <div class="ds-panel-h"><span id="scn-h" data-i18n>Scenarios</span><span class="r">
-        <button type="button" class="ds-btn ghost sm" id="refresh-scenarios"
-          data-i18n data-i18n-title title="Refresh scenario list">Refresh</button></span></div>
-      <div id="scenario-list" tabindex="-1" aria-label="Scenario list" data-i18n-aria-label><div class="no-data" style="padding:var(--sp-3) var(--sp-4)" data-i18n>Loading scenarios…</div></div>
-      <div id="scenario-detail" hidden>
-        <div id="scenario-briefing" tabindex="0" aria-label="Scenario briefing" data-i18n-aria-label></div>
-        <div id="scenario-prep" class="ws-block" aria-live="polite"></div>
-        <div class="scn-actions">
-          <button type="button" class="ds-btn primary" id="btn-start-scenario" data-i18n>Start scenario</button>
-          <button type="button" class="ds-btn critical" id="btn-stop-scenario" data-i18n>Stop scenario</button>
-        </div>
-      </div>
-      <div id="scenario-progress" hidden>
-        <div class="progress-label">
-          <span id="progress-state"></span>
-          <span><span id="progress-elapsed">00:00</span> / <span id="progress-remaining"></span></span>
-        </div>
-        <div class="progress-track" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-        <div class="note" data-i18n>Progress runs on sim time and stops while the simulation is frozen.</div>
-      </div>
-    </section>
-
-    <!-- Session label: the ONE piece of session context the instructor
-         publishes to the ground (sim state feed -> MCS logbook hand-in
-         header and handover form). Never the scenario name. -->
-    <section class="ds-panel" aria-labelledby="sl-h">
-      <div class="ds-panel-h"><span id="sl-h" data-i18n>Session label for the consoles</span></div>
-      <div class="ds-panel-b">
-        <div class="pair">
-          <div class="ds-field"><label for="session-label" data-i18n>Label</label>
-            <input type="text" class="ds-input text" id="session-label" maxlength="80" autocomplete="off"
-                   data-i18n-placeholder placeholder="e.g. Day 3, LEOP shift B"></div>
-          <button type="button" class="ds-btn primary" id="btn-session-label" data-i18n>Publish</button>
-        </div>
-        <div class="note" id="session-label-now" aria-live="polite"></div>
-        <div class="affects">
-          <svg aria-hidden="true"><use href="/static/shared/glyphs.svg#g-warn-up"></use></svg>
-          <span data-i18n>Every console shows it in the logbook hand-in header. Do not name the failure: that would brief the operators.</span></div>
-      </div>
-    </section>
-
-    <section class="ds-panel" id="debrief-panel" aria-labelledby="deb-h">
-      <div class="ds-panel-h"><span id="deb-h" data-i18n>Debrief</span><span class="r">
-        <button type="button" class="ds-btn ghost sm" id="btn-fetch-debrief"
-          data-i18n data-i18n-title title="Fetch the debrief for the most recently finished scenario">Fetch</button></span></div>
-      <div class="ds-panel-b" id="debrief-body">
-        <div class="no-data" data-i18n>No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).</div>
-      </div>
-      <div id="debrief-ws" class="ws-block"></div>
-    </section>
-
-    <section class="ds-panel" aria-labelledby="bp-h">
-      <div class="ds-panel-h"><span id="bp-h" data-i18n>Breakpoints</span></div>
-      <div class="ds-panel-b">
-        <div class="pair">
-          <div class="ds-field"><label for="breakpoint-name" data-i18n>Name</label>
-            <input type="text" class="ds-input text" id="breakpoint-name"
-                   data-i18n-placeholder placeholder="e.g. before eclipse"></div>
-          <button type="button" class="ds-btn primary" id="btn-save-bp" data-i18n>Save</button>
-        </div>
-        <div class="affects">
-          <svg aria-hidden="true"><use href="/static/shared/glyphs.svg#g-warn-up"></use></svg>
-          <span data-i18n>Loading a breakpoint rewinds the simulation for every student.</span></div>
-      </div>
-      <div id="breakpoints-list" tabindex="-1" aria-label="Saved breakpoints" data-i18n-aria-label><div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)" data-i18n>No breakpoints saved</div></div>
-    </section>
-
-    <!-- Course PDFs: every entry of smo_common/downloads.yaml, instructor-only
-         books included (GET /api/downloads, drawn by /static/shared/downloads.js). -->
-    <section class="ds-panel" aria-labelledby="dl-h">
-      <div class="ds-panel-h"><span id="dl-h" data-i18n>Course PDFs</span><span class="r" data-i18n>students see only theirs</span></div>
-      <div class="ds-panel-b" id="downloads-list"></div>
-    </section>
-  </div>
-
-  <!-- ══ CENTRE — TRUTH DASHBOARD ══ -->
-  <div class="col" id="centre-col">
-    <div class="col-head" id="centre-head"><span data-i18n>Truth dashboard</span>
-      <small data-i18n>simulation ground truth, not gated by the RF link</small></div>
-
-    <div class="sub-grid">
-      <section class="ds-panel" id="card-eps"><div class="ds-panel-h">EPS <span class="r" id="eps-mode"></span></div>
-        <div class="ds-panel-b">
-          <div id="eps-soc-g"></div>
-          <div class="prow"><span class="pl" data-i18n>Bus voltage</span><span class="pv" id="eps-bus-v"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Battery voltage</span><span class="pv" id="eps-bat-v"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Battery temperature</span><span class="pv" id="eps-bat-temp"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Power generated</span><span class="pv" id="eps-pgen"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Power consumed</span><span class="pv" id="eps-pcons"></span></div>
-          <div class="prow"><span class="pl">SA-A / SA-B</span><span class="pv" id="eps-sa"></span></div>
-        </div>
-      </section>
-      <section class="ds-panel" id="card-aocs"><div class="ds-panel-h">AOCS <span class="r" id="aocs-mode"></span></div>
-        <div class="ds-panel-b">
-          <div class="prow hero"><span class="pl" data-i18n>Attitude error</span><span class="pv" id="aocs-atterr"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Rate roll</span><span class="pv" id="aocs-rr"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Rate pitch</span><span class="pv" id="aocs-rp"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Rate yaw</span><span class="pv" id="aocs-ry"></span></div>
-          <div class="prow"><span class="pl">RW 1 / 2</span><span class="pv" id="aocs-rw12"></span></div>
-          <div class="prow"><span class="pl">RW 3 / 4</span><span class="pv" id="aocs-rw34"></span></div>
-        </div>
-      </section>
-      <section class="ds-panel" id="card-tcs"><div class="ds-panel-h">TCS <span class="r" id="tcs-mode" data-i18n>Thermal</span></div>
-        <div class="ds-panel-b">
-          <div class="prow"><span class="pl" data-i18n>OBC temperature</span><span class="pv" id="tcs-obc"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Battery temperature</span><span class="pv" id="tcs-bat"></span></div>
-          <div class="prow"><span class="pl" data-i18n>FPA temperature</span><span class="pv" id="tcs-fpa"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Battery heater</span><span class="pv" id="tcs-htr-bat"></span></div>
-          <div class="prow"><span class="pl" data-i18n>OBC heater</span><span class="pv" id="tcs-htr-obc"></span></div>
-          <div class="prow"><span class="pl" data-i18n>FPA cooler</span><span class="pv" id="tcs-cooler"></span></div>
-        </div>
-      </section>
-      <section class="ds-panel" id="card-obdh"><div class="ds-panel-h">OBDH <span class="r" id="obdh-mode"></span></div>
-        <div class="ds-panel-b">
-          <div id="obdh-cpu-g"></div>
-          <div id="obdh-mem-g"></div>
-          <div class="prow"><span class="pl" data-i18n>Reboots</span><span class="pv" id="obdh-reboots"></span></div>
-        </div>
-      </section>
-      <!-- ONBOARD CLOCK — instructor ground truth (TIME_ARCHITECTURE.md
-           Part B). The true onboard-vs-sim offset is NOT downlinked; it is
-           shown here only, fed from /api/instructor/snapshot -> clock_truth. -->
-      <section class="ds-panel" id="card-clock"><div class="ds-panel-h"><span data-i18n>Onboard clock truth</span> <span class="r" id="clock-ref"></span></div>
-        <div class="ds-panel-b">
-          <div class="prow"><span class="pl">SIM UTC</span><span class="pv" id="clock-sim-utc"></span></div>
-          <div class="prow"><span class="pl">OBC UTC</span><span class="pv" id="clock-obc-utc"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Since sync</span><span class="pv" id="clock-since-sync"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Drift (this run)</span><span class="pv" id="clock-drift"></span></div>
-          <div class="truth">
-            <div class="prow hero">
-              <span class="pl" data-i18n data-i18n-title title="Ground truth — instructor only, never downlinked">True offset</span>
-              <span class="pv" id="clock-offset"></span>
-            </div>
-            <div class="note" id="clock-offset-note"></div>
-            <div class="note" data-i18n>OBC − SIM. Instructor only: not downlinked, not in telemetry.</div>
-          </div>
-        </div>
-      </section>
-      <section class="ds-panel" id="card-ttc"><div class="ds-panel-h">TT&amp;C <span class="r" id="ttc-mode"></span></div>
-        <div class="ds-panel-b">
-          <div class="prow"><span class="pl" data-i18n>Link</span><span class="pv" id="ttc-link"></span></div>
-          <div class="prow"><span class="pl">RSSI</span><span class="pv" id="ttc-rssi"></span></div>
-          <div class="prow hero"><span class="pl" data-i18n>Link margin</span><span class="pv" id="ttc-margin"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Range</span><span class="pv" id="ttc-range"></span></div>
-          <div class="prow"><span class="pl" data-i18n>Elevation</span><span class="pv" id="ttc-elev"></span></div>
-        </div>
-      </section>
-      <section class="ds-panel" id="card-payload"><div class="ds-panel-h"><span data-i18n>Payload</span> <span class="r" id="payload-mode"></span></div>
-        <div class="ds-panel-b">
-          <div class="prow"><span class="pl" data-i18n>FPA temperature</span><span class="pv" id="pl-fpa"></span></div>
-          <div id="pl-store-g"></div>
-          <div class="prow"><span class="pl" data-i18n>Images</span><span class="pv" id="pl-images"></span></div>
-        </div>
-      </section>
-    </div>
-
-    <!-- orbit bar: lat/lon/alt/eclipse. The classic pass-override duplicate
-         that lived here is intentionally removed — the one copy is in the
-         interventions column; contact is in the link banner. -->
-    <section class="ds-panel orbit-card"><div class="orbit-bar">
-      <span class="op"><label data-i18n>Lat</label><b id="orb-lat"></b></span>
-      <span class="op"><label data-i18n>Lon</label><b id="orb-lon"></b></span>
-      <span class="op"><label data-i18n>Alt</label><b id="orb-alt"></b></span>
-      <span class="op" id="orb-eclipse"></span>
-      <span class="op" id="orb-contact"></span>
+  <section id="focus" aria-labelledby="focus-title">
+    <div class="fhead">
+      <span class="ftitle" id="focus-title"></span>
+      <span id="focus-reason" aria-live="polite"></span>
       <span class="grow"></span>
-      <span class="op" id="vr-badge"></span>
-    </div></section>
+      <span id="focus-suggest" aria-live="polite"></span>
+      <button type="button" class="ds-btn ghost sm" id="btn-focus-back" data-i18n>Back</button>
+      <button type="button" class="ds-btn ghost sm" id="btn-focus-pin" aria-pressed="false" data-i18n>Pin</button>
+      <label class="ds-check" style="font-size:var(--fs-label)"><input type="checkbox" id="focus-auto" checked> <span data-i18n>Auto-follow</span></label>
+    </div>
+    <div class="ftabs" id="focus-tabs"></div>
+    <div style="padding:6px var(--sp-4) 0"><select class="ds-select" id="view-select" aria-label="View" data-i18n-aria-label></select></div>
+    <div id="focus-body" tabindex="-1">
 
-    <!-- subsystem deep-dive launcher (?sub= links, propagating ?ui=) -->
-    <section class="ds-panel" id="launcher-card">
-      <div class="ds-panel-h"><span data-i18n>Subsystem deep-dive pages</span><span class="r" data-i18n>open in a new tab</span></div>
-      <div class="ds-panel-b"><div id="subsystem-launcher-buttons" class="launcher-grid">
-        <span class="no-data" data-i18n>Loading subsystem list…</span>
-      </div></div>
-    </section>
+      <!-- Situation: what is injected, what is scheduled, what the gap is -->
+      <div class="view" id="view-situation"></div>
+      <div class="view" id="view-divergence" hidden></div>
+      <div class="view" id="view-fault" hidden></div>
+      <div class="view" id="view-power" hidden>
+        <div class="viewgrid"><figure class="fig" style="margin:0"><div id="powerflow"></div>
+          <figcaption data-i18n>Energy flow drawn from the simulator's own values (line width = watts, fixed scale).</figcaption></figure>
+          <div class="side" id="power-side"></div></div>
+        <div id="power-pairs"></div>
+      </div>
+      <div class="view" id="view-thermal" hidden></div>
+      <div class="view" id="view-attitude" hidden></div>
+      <div class="view" id="view-orbit" hidden></div>
+      <div class="view" id="view-obc" hidden>
+        <div id="obc-main"></div>
+        <!-- ONBOARD CLOCK — instructor ground truth (TIME_ARCHITECTURE.md
+             Part B). The true onboard-vs-sim offset is NOT downlinked; it is
+             shown here only, fed from /api/instructor/snapshot -> clock_truth. -->
+        <section id="card-clock" aria-labelledby="clk-h" style="max-width:520px">
+          <h3 id="clk-h"><span data-i18n>Onboard clock truth</span> <span id="clock-ref"></span></h3>
+          <div class="kv"><span>SIM UTC</span><span id="clock-sim-utc"></span></div>
+          <div class="kv"><span>OBC UTC</span><span id="clock-obc-utc"></span></div>
+          <div class="kv"><span data-i18n>Since sync</span><span id="clock-since-sync"></span></div>
+          <div class="kv"><span data-i18n>Drift (this run)</span><span id="clock-drift"></span></div>
+          <div class="kv"><span data-i18n data-i18n-title title="Ground truth — instructor only, never downlinked">True offset</span><span id="clock-offset"></span></div>
+          <div class="note" id="clock-offset-note"></div>
+          <div class="note" data-i18n>OBC − SIM. Instructor only: not downlinked, not in telemetry.</div>
+        </section>
+      </div>
+      <div class="view" id="view-storage" hidden></div>
 
-    <section class="ds-panel" id="search-block">
-      <div class="ds-panel-h"><span data-i18n>Parameter search</span><span class="r"><span class="ds-chip" id="param-completeness"></span></span></div>
-      <div class="ds-panel-b">
-        <div class="searchrow">
-          <input type="text" class="ds-input" id="param-search"
-                 data-i18n-placeholder placeholder="Name or hex ID, e.g. 0x0143"
-                 data-i18n-aria-label aria-label="Parameter search">
-          <button type="button" class="ds-btn ghost" id="btn-clear-search" data-i18n>Clear</button>
+      <!-- Raw state: the generic snapshot browser (every parameter has a
+           rendering home), parameter search and the raw JSON. -->
+      <div class="view" id="view-raw" hidden>
+        <div id="raw-tools">
+          <div class="searchrow">
+            <input type="text" class="ds-input" id="param-search" data-i18n-placeholder placeholder="Name or hex ID, e.g. 0x0143"
+                   data-i18n-aria-label aria-label="Parameter search">
+            <button type="button" class="ds-btn ghost" id="btn-clear-search" data-i18n>Clear</button>
+            <span class="ds-chip" id="param-completeness"></span>
+          </div>
+          <div id="param-search-results"></div>
+          <h3 data-i18n>Open a subsystem in its own tab</h3>
+          <div id="subsystem-launcher-buttons" class="launcher-grid"><span class="no-data" data-i18n>Loading subsystem list…</span></div>
         </div>
-        <div id="param-search-results"></div>
+        <section id="full-snapshot-container">
+          <h3 id="full-snapshot-title">Full simulator state</h3>
+          <div id="full-snapshot-tabs" class="snap-tabs"></div>
+          <div id="full-snapshot-body" class="snap-body"></div>
+        </section>
         <button type="button" class="ds-btn ghost sm" id="btn-toggle-raw" aria-expanded="false" style="margin-top:var(--sp-2)"
                 data-i18n-title title="Show/hide the raw JSON of /api/instructor/snapshot">Show raw snapshot</button>
         <div id="raw-snapshot-container"><pre id="raw-snapshot-json">Loading…</pre></div>
       </div>
-    </section>
 
-    <!-- full god-mode snapshot browser — only visible on ?sub= subpages -->
-    <section class="ds-panel" id="full-snapshot-container">
-      <div class="ds-panel-h" id="full-snapshot-title">Full simulator state</div>
-      <div class="ds-panel-b">
-        <div id="full-snapshot-tabs" class="snap-tabs"></div>
-        <div id="full-snapshot-body" class="snap-body"></div>
+      <!-- PREP: scenarios, briefing, worksheets, session label, PDFs -->
+      <div class="view" id="view-prep" hidden>
+        <div class="viewgrid">
+          <section class="fig" aria-labelledby="scn-h">
+            <h3 id="scn-h" style="margin-top:0"><span data-i18n>Scenarios</span>
+              <button type="button" class="ds-btn ghost sm" id="refresh-scenarios" data-i18n data-i18n-title title="Refresh scenario list">Refresh</button></h3>
+            <div id="scenario-list" tabindex="-1" aria-label="Scenario list" data-i18n-aria-label><div class="no-data" style="padding:var(--sp-3)" data-i18n>Loading scenarios…</div></div>
+          </section>
+          <div class="side">
+            <div id="scenario-detail" hidden>
+              <h3 style="margin-top:0" data-i18n>Instructor briefing</h3>
+              <div id="scenario-briefing" tabindex="0" aria-label="Scenario briefing" data-i18n-aria-label></div>
+              <p class="note" data-i18n>Instructor-only: it names the failure. Never read it to the operators.</p>
+              <div class="scn-actions">
+                <button type="button" class="ds-btn primary" id="btn-start-scenario" data-i18n>Start scenario</button>
+                <button type="button" class="ds-btn critical" id="btn-stop-scenario" data-i18n>Stop scenario</button>
+              </div>
+              <div id="scenario-prep" class="ws-block" aria-live="polite"></div>
+            </div>
+            <div id="scenario-progress" hidden style="margin-top:var(--sp-3)">
+              <div class="progress-label"><span id="progress-state"></span>
+                <span><span id="progress-elapsed">00:00</span> / <span id="progress-remaining"></span></span></div>
+              <div class="progress-track" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+              <div class="note" data-i18n>Progress runs on sim time and stops while the simulation is frozen.</div>
+            </div>
+            <!-- Session label: the ONE piece of session context the
+                 instructor publishes to the ground. Never the scenario name. -->
+            <section aria-labelledby="sl-h">
+              <h3 id="sl-h" data-i18n>Session label for the consoles</h3>
+              <div class="pair">
+                <div class="ds-field"><label for="session-label" data-i18n>Label</label>
+                  <input type="text" class="ds-input text" id="session-label" maxlength="80" autocomplete="off"
+                         data-i18n-placeholder placeholder="e.g. Day 3, LEOP shift B"></div>
+                <button type="button" class="ds-btn primary" id="btn-session-label" data-i18n>Publish</button>
+              </div>
+              <div class="note" id="session-label-now" aria-live="polite"></div>
+              <div class="affects"><svg aria-hidden="true"><use href="/static/shared/glyphs.svg#g-warn-up"></use></svg>
+                <span data-i18n>Every console shows it in the logbook hand-in header. Do not name the failure: that would brief the operators.</span></div>
+            </section>
+            <h3 data-i18n>Configuration and documents</h3>
+            <a class="ds-btn ghost sm" id="config-tab-link" href="/config" target="_blank" rel="noopener"
+               data-i18n data-i18n-title title="Mission configuration editor — read-write (instructor only)">Configuration</a>
+            <details class="ds-disclosure" style="margin-top:var(--sp-2)"><summary data-i18n>Course PDFs (instructor list)</summary>
+              <div class="bd" id="downloads-list"></div></details>
+          </div>
+        </div>
       </div>
-    </section>
-  </div>
 
-  <!-- ══ RIGHT — INTERVENTIONS ══ -->
-  <div class="col" id="right-col">
-    <div class="col-head"><span data-i18n>Interventions</span> <small data-i18n>affect every student</small></div>
+      <!-- DEBRIEF: the same timeline replayed in PEARLS phases -->
+      <div class="view" id="view-debrief" hidden>
+        <div class="pearls" role="group" aria-label="PEARLS phases" data-i18n-aria-label id="pearls"></div>
+        <div id="pearls-body"></div>
+        <h3 data-i18n>Replay</h3>
+        <div id="debrief-tl"></div>
+        <div class="cursor-panel" id="debrief-cursor"></div>
+        <section id="debrief-panel" aria-labelledby="deb-h">
+          <h3 id="deb-h"><span data-i18n>Scenario engine score</span>
+            <button type="button" class="ds-btn ghost sm" id="btn-fetch-debrief" data-i18n data-i18n-title
+              title="Fetch the debrief for the most recently finished scenario">Fetch</button></h3>
+          <div id="debrief-body"><div class="no-data" data-i18n>No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).</div></div>
+          <div id="debrief-ws" class="ws-block"></div>
+        </section>
+      </div>
+    </div>
+  </section>
 
-    <!-- Typed failure-injection form — every control GENERATED from
-         GET /api/failure-catalog (bool→checkbox, enum→select/multi,
-         number→min/max/step with engineering unit). Do NOT hand-write a
-         control for a new failure: add a ParamSpec to the model's
-         FAILURE_SPECS and it appears here, validated on both sides. -->
+  <!-- ══ RAIL — every intervention (affects every student) ══ -->
+  <aside id="rail" aria-label="Interventions" data-i18n-aria-label>
+    <div class="rail-h"><span data-i18n>Interventions</span> <small data-i18n>affect every student</small></div>
+
+    <!-- Fault menu by control-loop element; the typed form is GENERATED
+         from GET /api/failure-catalog. -->
     <section class="ds-panel" aria-labelledby="fi-h">
-      <div class="ds-panel-h"><span id="fi-h" data-i18n>Failure injection</span></div>
+      <div class="ds-panel-h"><span id="fi-h" data-i18n>Inject a fault</span></div>
       <div class="ds-panel-b form-stack">
-        <div class="ds-field">
-          <label for="fail-subsystem" data-i18n>Subsystem</label>
-          <select class="ds-select" id="fail-subsystem"></select>
+        <div>
+          <span class="lbl" id="el-lbl" style="font-size:var(--fs-label);color:var(--tx2)" data-i18n>Where in the control loop</span>
+          <div class="elements" id="elements" role="group" aria-labelledby="el-lbl"></div>
+          <div id="el-hint"></div>
         </div>
-        <div class="ds-field">
-          <label for="fail-type" data-i18n>Failure type</label>
-          <select class="ds-select" id="fail-type"></select>
-        </div>
+        <div class="ds-field"><label for="fail-subsystem" data-i18n>Subsystem</label>
+          <select class="ds-select" id="fail-subsystem"></select></div>
+        <div class="ds-field"><label for="fail-type" data-i18n>Failure</label>
+          <select class="ds-select" id="fail-type"></select></div>
         <div class="fail-effect" id="fail-effect"></div>
         <div id="fail-params" class="form-stack"></div>
         <div class="ds-field">
@@ -539,12 +602,38 @@ body.subpage #full-snapshot-container{ display:block; }
           </div>
         </div>
         <div class="ds-field" id="onset-duration-group">
-          <label for="fail-onset-dur" data-i18n>Onset duration</label>
+          <label for="fail-onset-dur" data-i18n>Ramp / onset duration</label>
           <span class="ds-input-wrap"><input type="text" inputmode="numeric" class="ds-input" id="fail-onset-dur" value="30"><span class="u">s</span></span>
         </div>
+        <div class="ds-field"><label for="fail-trigger" data-i18n>When</label>
+          <select class="ds-select" id="fail-trigger">
+            <option value="now" data-i18n>Now</option>
+            <option value="delay" data-i18n>After a delay</option>
+            <option value="aos" data-i18n>At the next AOS</option>
+            <option value="los" data-i18n>At the next LOS</option>
+            <option value="eclipse_entry" data-i18n>At eclipse entry</option>
+            <option value="eclipse_exit" data-i18n>At eclipse exit</option>
+            <option value="tc" data-i18n>When the team sends a telecommand…</option>
+          </select></div>
+        <div class="ds-field" id="trigger-delay-group" hidden><label for="fail-delay" data-i18n>Delay (sim time)</label>
+          <span class="ds-input-wrap"><input type="text" inputmode="numeric" class="ds-input" id="fail-delay" value="120"><span class="u">s</span></span></div>
+        <div class="ds-field" id="trigger-tc-group" hidden><label for="fail-tc" data-i18n>Telecommand (service.subtype[.func])</label>
+          <input type="text" class="ds-input" id="fail-tc" data-i18n-placeholder placeholder="e.g. 8.1.26" autocomplete="off"></div>
+        <label class="ds-check"><input type="checkbox" id="fail-snapshot" checked> <span data-i18n>Snapshot the simulation just before it fires</span></label>
+        <div class="review" id="inject-review" aria-live="polite"></div>
+        <div class="batch-list" id="batch-list"></div>
         <div class="fail-error" id="fail-error" role="alert"></div>
-        <button type="button" class="ds-btn critical wfull" id="btn-inject" data-i18n>Inject failure</button>
+        <div class="btn2">
+          <button type="button" class="ds-btn" id="btn-add-batch" data-i18n data-i18n-title
+            title="Add this fault to a batch that fires together">Add to batch</button>
+          <button type="button" class="ds-btn critical" id="btn-inject" data-i18n>Inject</button>
+        </div>
       </div>
+    </section>
+
+    <section class="ds-panel" aria-labelledby="sc-h">
+      <div class="ds-panel-h"><span id="sc-h" data-i18n>Scheduled injects</span><span class="r" id="schedule-count"></span></div>
+      <div id="schedule-list"><div class="no-data" style="padding:var(--sp-2) var(--sp-4)" data-i18n>Nothing scheduled</div></div>
     </section>
 
     <section class="ds-panel" aria-labelledby="af-h">
@@ -555,66 +644,97 @@ body.subpage #full-snapshot-container{ display:block; }
       </div>
     </section>
 
-    <section class="ds-panel" aria-labelledby="ph-h">
-      <div class="ds-panel-h"><span id="ph-h" data-i18n>Mission phase and separation</span><span class="r" id="phase-now"></span></div>
-      <div class="ds-panel-b form-stack">
-          <div class="ds-field">
-            <label for="phase-select" data-i18n>Spacecraft phase</label>
-            <select class="ds-select" id="phase-select">
-              <option value="0">0 — PRE_SEPARATION</option>
-              <option value="1">1 — SEPARATION_TIMER</option>
-              <option value="2">2 — INITIAL_POWER_ON</option>
-              <option value="3">3 — BOOTLOADER_OPS</option>
-              <option value="4">4 — LEOP</option>
-              <option value="5">5 — COMMISSIONING</option>
-              <option value="6" selected>6 — NOMINAL</option>
-            </select>
-          </div>
-        <div class="btn2">
-          <button type="button" class="ds-btn critical" id="btn-set-phase" data-i18n>Set phase</button>
-          <button type="button" class="ds-btn critical" id="btn-start-separation" data-i18n>Start separation</button>
+    <section class="ds-panel" aria-labelledby="bp-h">
+      <div class="ds-panel-h"><span id="bp-h" data-i18n>Snapshots</span></div>
+      <div class="ds-panel-b">
+        <div class="pair">
+          <div class="ds-field"><label for="breakpoint-name" data-i18n>Name</label>
+            <input type="text" class="ds-input text" id="breakpoint-name" data-i18n-placeholder placeholder="e.g. before eclipse"></div>
+          <button type="button" class="ds-btn primary" id="btn-save-bp" data-i18n>Save</button>
         </div>
+        <div class="affects"><svg aria-hidden="true"><use href="/static/shared/glyphs.svg#g-warn-up"></use></svg>
+          <span data-i18n>Loading a snapshot rewinds the simulation for every student and starts a new timeline segment.</span></div>
       </div>
+      <div id="breakpoints-list" tabindex="-1" aria-label="Saved snapshots" data-i18n-aria-label><div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)" data-i18n>No snapshots saved</div></div>
     </section>
 
     <section class="ds-panel" aria-labelledby="ov-h">
       <div class="ds-panel-h"><span id="ov-h" data-i18n>Overrides</span></div>
       <div class="ds-panel-b form-stack">
-        <!-- Battery SoC override: the instructor editing the world to keep a
-             lesson running — logged as an instructor override, never physics. -->
         <div class="pair">
-          <div class="ds-field">
-            <label for="soc-override-input" data-i18n>Battery SoC</label>
-            <span class="ds-input-wrap"><input type="text" inputmode="decimal" class="ds-input" id="soc-override-input"
-                   value="80" aria-describedby="soc-ov-hint"><span class="u">%</span></span>
-          </div>
-          <button type="button" class="ds-btn critical" id="btn-set-soc" data-i18n
-                  data-i18n-title title="Set battery SoC now (0–100 %) — logged as an instructor override">Set SoC</button>
+          <div class="ds-field"><label for="soc-override-input" data-i18n>Battery SoC</label>
+            <span class="ds-input-wrap"><input type="text" inputmode="decimal" class="ds-input" id="soc-override-input" value="80" aria-describedby="soc-ov-hint"><span class="u">%</span></span></div>
+          <button type="button" class="ds-btn critical" id="btn-set-soc" data-i18n data-i18n-title
+                  title="Set battery SoC now (0–100 %) — logged as an instructor override">Set SoC</button>
         </div>
         <span class="form-hint" id="soc-ov-hint" data-i18n>Logged as an instructor override, not physics.</span>
-        <!-- The ONE copy of the pass override (classic had two). -->
-        <button type="button" class="ds-btn wfull" id="btn-override" aria-pressed="false"
-                data-i18n-title title="Training aid: force ground contact (TM/TC regardless of pass). It cannot revive a dead radio: with both transponders failed the link stays cut.">Override passes</button>
+        <button type="button" class="ds-btn wfull" id="btn-override" aria-pressed="false" data-i18n-title
+                title="Training aid: force ground contact (TM/TC regardless of pass). It cannot revive a dead radio: with both transponders failed the link stays cut.">Override passes</button>
       </div>
     </section>
-  </div>
+
+    <details class="ds-panel ds-disclosure" aria-labelledby="ph-h">
+      <summary><span id="ph-h" data-i18n>Mission phase and separation</span><span class="r" id="phase-now"></span></summary>
+      <div class="ds-panel-b form-stack">
+        <div class="ds-field"><label for="phase-select" data-i18n>Spacecraft phase</label>
+          <select class="ds-select" id="phase-select">
+            <option value="0">0 — PRE_SEPARATION</option>
+            <option value="1">1 — SEPARATION_TIMER</option>
+            <option value="2">2 — INITIAL_POWER_ON</option>
+            <option value="3">3 — BOOTLOADER_OPS</option>
+            <option value="4">4 — LEOP</option>
+            <option value="5">5 — COMMISSIONING</option>
+            <option value="6" selected>6 — NOMINAL</option>
+          </select></div>
+        <div class="btn2">
+          <button type="button" class="ds-btn critical" id="btn-set-phase" data-i18n>Set phase</button>
+          <button type="button" class="ds-btn critical" id="btn-start-separation" data-i18n>Start separation</button>
+        </div>
+      </div>
+    </details>
+
+    <section class="ds-panel" aria-labelledby="mk-h">
+      <div class="ds-panel-h"><span id="mk-h" data-i18n>Mark the timeline</span></div>
+      <div class="ds-panel-b form-stack">
+        <div class="ds-field"><label for="mark-text" data-i18n>Note</label>
+          <input type="text" class="ds-input text" id="mark-text" maxlength="160" autocomplete="off" data-i18n-placeholder placeholder="e.g. team missed the low-SoC alarm"></div>
+        <div class="btn2">
+          <button type="button" class="ds-btn" id="btn-bookmark" data-i18n>Bookmark</button>
+          <select class="ds-select" id="anomaly-disp" aria-label="Sim anomaly: what to do with it" data-i18n-aria-label>
+            <option value="" data-i18n>Sim anomaly…</option>
+            <option value="ignore" data-i18n>Anomaly: ignore</option>
+            <option value="work" data-i18n>Anomaly: work as real</option>
+            <option value="restart" data-i18n>Anomaly: restart from snapshot</option>
+          </select>
+        </div>
+      </div>
+    </section>
+  </aside>
 </main>
 
-<!-- ══ collapsible bottom log — timestamps in SIM time ══ -->
-<div id="log-panel">
-  <div class="log-head">
-    <button type="button" class="ds-btn ghost sm" id="btn-log-toggle" aria-expanded="true" aria-controls="event-log"
-            data-i18n-title title="Collapse/expand the event log"><span data-i18n>Event log</span></button>
-    <span class="note" style="margin:0" data-i18n>sim-time stamps · last 200 entries</span>
-    <div class="grow"></div>
-    <button type="button" class="ds-btn ghost sm" id="clear-log" data-i18n data-i18n-title title="Clear log">Clear</button>
+<!-- ══ the one timeline (and its text alternative, the event list) ══ -->
+<section id="timeline-panel" aria-labelledby="tl-title">
+  <div class="tl-head">
+    <button type="button" class="ds-btn ghost sm" id="btn-log-toggle" aria-expanded="true" aria-controls="timeline"><span id="tl-title" data-i18n>Timeline</span></button>
+    <span class="ds-seg" role="group" aria-label="Timeline window" data-i18n-aria-label id="tl-window">
+      <button type="button" data-win="900" aria-pressed="false">15 min</button>
+      <button type="button" data-win="3600" aria-pressed="true">1 h</button>
+      <button type="button" data-win="10800" aria-pressed="false">3 h</button>
+    </span>
+    <span class="ds-seg" role="group" aria-label="Timeline or list" data-i18n-aria-label>
+      <button type="button" id="btn-tl-graph" aria-pressed="true" data-i18n>Lanes</button>
+      <button type="button" id="btn-tl-list" aria-pressed="false" data-i18n>Event list</button>
+    </span>
+    <span id="tl-detail" aria-live="polite"></span>
+    <button type="button" class="ds-btn ghost sm" id="clear-log" data-i18n data-i18n-title title="Clear the event list on this screen (the timeline is kept)">Clear list</button>
   </div>
-  <div id="event-log" role="log" aria-live="polite" tabindex="-1"></div>
-</div>
+  <div id="timeline"></div>
+  <div id="event-log" role="log" aria-live="polite" tabindex="-1" hidden></div>
+</section>
 
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="/static/modern/instructor.js?v=2"></script>
+<script type="module" src="/static/modern/instructor.js?v=3"></script>
 <script type="module">
 import { mountDownloads } from "/static/shared/downloads.js";
 mountDownloads(document.getElementById("downloads-list"), { compact: true });
