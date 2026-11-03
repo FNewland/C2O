@@ -42,10 +42,8 @@ with decision gates at 12h, 24h (the on-board command-loss timer) and 48h elapse
   until a telecommand is accepted. The switch is blind: the spare unit is
   unpowered, so the spacecraft cannot know whether it works. Blind commands that
   are not received do not reset the timer; any accepted telecommand does.
-- **Training note (simulator):** the instructor recovers a failed transponder by
-  clearing its failure. The instructor pass override is a training aid: with only
-  the selected unit dead it lets the team command the switch blind; it cannot
-  revive a spacecraft whose two units are dead.
+- With both units dead nothing the ground sends can revive the link; keep
+  listening on every scheduled pass.
 
 ## Procedure Steps
 

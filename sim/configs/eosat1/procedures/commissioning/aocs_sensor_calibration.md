@@ -219,8 +219,7 @@ if the bias grows again, the hardware is drifting.
 tracker is NOT available: with the gyro compensated the estimate coasts on the
 gyro through a tracker outage almost flat, where an uncompensated 0.05 deg/s
 bias walks the estimate tens of degrees off in ten minutes and trips the
-`aocs.att_error` FDIR rule. Do not manufacture a tracker outage to prove this on
-a real spacecraft; it is demonstrated in the training scenario.
+`aocs.att_error` FDIR rule. Do not manufacture a tracker outage to prove this.
 **GO/NO-GO:** AOCS determination stable after calibration
 
 ## Off-Nominal Handling

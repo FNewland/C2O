@@ -25,7 +25,7 @@ et poursuivre la détermination d'attitude avec les capteurs restants.
 axe du corps, et **aucune unité de secours** : équipements S2 `S2_AOCS_GYROSCOPE_0/1/2`
 (identifiants 0x0206, 0x0207, 0x0208 = 518, 519, 520). Il n'existe ni ligne d'alimentation IMU
 ni unité sur laquelle basculer.
-- Une panne `gyro_bias` injectée est un décalage matériel **persistant** sur un axe ou
+- Une panne de biais gyroscopique est un décalage matériel **persistant** sur un axe ou
   sur les trois. Il ne disparaît pas avec le temps. L'étalonnage à bord
   (`AOCS_GYRO_CALIBRATION`, func_id 13) le compense dans la chaîne de mesure ; il
   ne répare pas l'unité.
@@ -165,8 +165,8 @@ mesuré sur le résidu ; la panne matérielle est toujours là.
   `aocs.gyro_temp` (0x0273) ; relancer l'étalonnage après le transitoire thermique.
   Un biais qui revient à température constante signale une unité qui se dégrade : ouvrir un rapport
   d'anomalie.
-- **L'étalonnage surcompense après la levée de la panne.** Si l'instructeur
-  retire un biais injecté après un étalonnage, la compensation enregistrée surcompense désormais
+- **L'étalonnage surcompense après la disparition de la panne.** Si le biais
+  matériel disparaît après un étalonnage, la compensation enregistrée surcompense désormais
   avec le signe opposé (0x02D2 et 0x02CE tous deux non nuls). Relancer
   l'étape 4 pour charger une nouvelle compensation.
 

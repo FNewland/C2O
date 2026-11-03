@@ -2,8 +2,8 @@
 
 **Sous-système :** TT&C / OBDH / segment sol
 **Phase :** LEOP
-**Révision :** 3.0 — refonte du déroulement 2026-08c (états d'entrée et de sortie, plus de forçage du
-passage par l'opérateur, synchronisation temporelle déplacée dans LEOP-006, nommage du palier SAFE)
+**Révision :** 3.0 — refonte du déroulement 2026-08c (états d'entrée et de sortie, contact
+uniquement pendant les passages prédits, synchronisation temporelle déplacée dans LEOP-006, nommage du palier SAFE)
 **Approuvé par :** Directeur des opérations de vol
 
 **État d'entrée :** démarrage à froid — OBC dans le chargeur d'amorçage, seules les lignes `obc` et `ttc_rx`
@@ -30,9 +30,8 @@ exécutant son logiciel applicatif.
       (`subsystems/ttc.yaml` `beacon_tier: SAFE`) ; le démodulateur
       doit être reconfiguré à 16 kBd après l'amorçage de l'application (étape 5)
 - [ ] Un passage réel de station sol est PROGRAMMÉ pour cette fiche (AOS/LOS prédits
-      à partir du TLE de lancement). Le forçage de passage est une commande INSTRUCTEUR, pas une
-      action opérateur — aucune fiche de ce déroulement ne demande à l'opérateur de forcer le
-      contact
+      à partir du TLE de lancement). Le contact n'est attendu que pendant un passage prédit
+      — aucune fiche de ce déroulement ne demande à l'opérateur de forcer le contact
 - [ ] Chronologie AOS/LOS prédite chargée dans le planning de la station sol
 - [ ] La dynamique du vol a fourni le TLE initial du fournisseur de lancement
 - [ ] Base de données du MCS chargée avec les définitions TM/TC d'EOSAT-1

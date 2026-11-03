@@ -21,11 +21,18 @@ class TCManager:
         self._seq_counter = itertools.count(1)
         self._seq_count = 0  # last used sequence number (for external reads)
         self._pending_verifications: dict[int, dict] = {}
+        # HK enable bits as COMMANDED from this ground segment (TC(3,5) /
+        # TC(3,6)). The spacecraft does not downlink its enable set; the
+        # ground knows what it asked for and sees what arrives
+        # (SCREEN_REVIEW #5: never the simulator's own map).
+        self.hk_commanded: dict[int, bool] = {}
 
     def build_command(self, service: int, subtype: int,
                       data: bytes = b'') -> bytes:
         seq = next(self._seq_counter) & 0x3FFF
         self._seq_count = seq  # store for external reads
+        if service == 3 and subtype in (5, 6) and len(data) >= 2:
+            self.hk_commanded[struct.unpack('>H', data[:2])[0]] = subtype == 5
         return build_tc_packet(
             apid=self._apid, service=service,
             subtype=subtype, data=data,

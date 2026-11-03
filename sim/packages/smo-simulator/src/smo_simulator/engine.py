@@ -728,9 +728,8 @@ class SimulationEngine:
         # which is what the operations manual and the commissioning cards say.
         self._apply_default_hk_enable(
             reason=("OBC application software booted — the OBSW starts from "
-                    "its configured power-up HK set (simulation.yaml "
-                    "housekeeping.default_enabled_sids); re-send TC(3,5) "
-                    "HK_ENABLE for every other SID"))
+                    "its power-up HK set; re-send TC(3,5) HK_ENABLE for "
+                    "every other SID"))
 
         # TM stores come online (empty but enabled)
         if self._tm_storage is not None:

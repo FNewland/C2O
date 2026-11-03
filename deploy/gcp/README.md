@@ -628,7 +628,8 @@ state when the panel opens.
 - **Name:** the talker indicator shows the IAP email, which nobody can type over.
 - **Instructor and SIM role-player seats, and the Instructor/SIM loop:** these need an account listed
   in `VOICE_INSTRUCTORS` in `c2o.env`. The app cannot read the `c2o-instructors` group, so keep the two
-  lists in step.
+  lists in step. The same list decides who sees the instructor tools on the welcome page
+  (`SMO_INSTRUCTORS` in `sim/docker/ground.env`, written by `vm-bootstrap.sh`); students do not see them.
 
 ### Set it up (once, about 20 minutes plus DNS)
 

@@ -29,10 +29,10 @@ This class owns the *observed* FDIR state:
   per-rule fire history inferred by correlating the trigger that fired, and a
   journal of S5 events and S12 transitions in one time-ordered stream.
 
-Everything is derived from telemetry that actually reaches the ground. The one
-exception is ``sc_mode``, which the spacecraft does not downlink at all; the
-server feeds it in from the simulator state endpoint and it is tagged with its
-source so the display can say where it came from.
+Everything is derived from telemetry that actually reaches the ground,
+``sc_mode`` included: the server feeds it from TM sat.mode (0x0001) when that
+parameter has been downlinked, and leaves it unknown otherwise. The
+simulator's own mode never reaches this model (SCREEN_REVIEW #4).
 """
 from __future__ import annotations
 
@@ -200,7 +200,7 @@ class FDIRDisplayModel:
             entry["reason"] = rejection.get("reason", "")
         return self._journal_add(entry)
 
-    def set_sc_mode(self, mode: Optional[int], source: str = "sim_state",
+    def set_sc_mode(self, mode: Optional[int], source: str = "TM sat.mode 0x0001",
                     ts: Optional[float] = None) -> None:
         """Record the spacecraft mode and where it came from.
 
@@ -450,11 +450,12 @@ class FDIRDisplayModel:
             "sc_mode_name": SC_MODE_NAMES.get(self._sc_mode, "--"),
             "sc_mode_source": self._sc_mode_source,
             # The two latching FDIR flags are not downlinked as such; SAFE and
-            # EMERGENCY sc_mode are the observable consequence of each latch
-            # (engine._update_sc_mode), so they are reported as DERIVED.
-            "safe_latched": self._sc_mode == 0,
-            "emergency_latched": self._sc_mode == 3,
-            "latch_source": "derived_from_sc_mode",
+            # EMERGENCY spacecraft mode (TM sat.mode) are the observable
+            # consequence of each latch. Unknown (None) until that mode has
+            # been received.
+            "safe_latched": None if self._sc_mode is None else self._sc_mode == 0,
+            "emergency_latched": None if self._sc_mode is None else self._sc_mode == 3,
+            "latch_source": self._sc_mode_source if self._sc_mode is not None else "",
             "load_shed_stage": int(load_shed_stage or 0),
             "monitors_out_of_limits": len(ool),
             "monitors_out_of_limits_ids": sorted(ool),

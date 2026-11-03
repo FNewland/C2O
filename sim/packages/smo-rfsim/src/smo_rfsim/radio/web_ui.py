@@ -17,10 +17,21 @@ Doppler knobs, fading/phase-noise/interferer toggles — is simulation truth
 and lives on the instructor-only sim view:
 
     /            resolved page: ?ui= > --ui/env-resolved server mode
-    /classic     the original single-file page (byte-frozen, live A/B)
+    /classic     the original single-file page (channel model, pipeline
+                 diagnostics): instructor-only
     /modern      the operator console (no channel model)
     /sim         instructor-only channel-model view (INSTRUCTOR strip);
                  the operator page never links here
+
+Instructor-only (SCREEN_REVIEW #2/#3, closed in the feed, not only on the
+page): ``/classic``, ``/sim``, ``/api/config`` and ``/api/diagnostics``
+answer 403 to anyone but an instructor (smo_common.web.identity: an IAP
+account in ``SMO_INSTRUCTORS``; on a laptop with no IAP, the person at the
+keyboard), and ``/api/status`` and ``/ws`` send students and operators the
+receiver's view only — :data:`TRUTH_FIELDS` (the channel model, the
+instructor's ground-segment penalty, the spacecraft transmitter state, the
+pass override, the simulator's range) are removed and the pipeline
+diagnostics are cut to named receiver-side counters.
 
 House precedence, same as the other three servers: CLI ``--ui`` > ``SMO_UI``
 env > default "modern". Both UIs (and the sim view) hit the SAME endpoints;
@@ -42,6 +53,47 @@ logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
+#: Simulator truth and instructor settings in the RadioStatus snapshot; never
+#: sent to a student or operator (SCREEN_REVIEW #2/#3).
+TRUTH_FIELDS = frozenset({
+    "gs_penalty_db", "phase_noise_enabled", "fading_enabled", "fading_k_db",
+    "n_interferers", "config", "sc_tx_on", "sc_pa_on", "pass_override",
+    "range_km", "control_enabled",
+})
+#: Pipeline counters a real ground receiver reports; everything else
+#: (spacecraft-side tx_* counters, simulator queues) is instructor-only.
+RECEIVER_DIAGNOSTICS = ("rx_good_frames", "rx_bad_frames", "rx_rs_failures",
+                        "rx_fecf_failures", "rx_packets_recovered",
+                        "rx_flywheel_misses", "rx_pll_resets")
+
+
+def operator_view(status: dict) -> dict:
+    """The receiver's view of a status snapshot (no simulator truth)."""
+    out = {k: v for k, v in status.items() if k not in TRUTH_FIELDS}
+    diag = status.get("diagnostics") or {}
+    out["diagnostics"] = {k: diag[k] for k in RECEIVER_DIAGNOSTICS if k in diag}
+    return out
+
+
+def _is_instructor(request) -> bool:
+    try:
+        from smo_common.web.identity import is_instructor
+    except ImportError:                              # pragma: no cover
+        return False
+    return is_instructor(request.headers)
+
+
+def _status_for(request, status: dict) -> dict:
+    return status if _is_instructor(request) else operator_view(status)
+
+
+def _forbidden_page():
+    return web.Response(
+        status=403, content_type="text/html",
+        text="<!doctype html><title>Radio</title><p>This page is for "
+             "instructors. The radio receiver console is at "
+             "<a href=\"/\">/</a>.</p>")
+
 
 def _json(obj):
     return json.dumps(obj, default=str)
@@ -62,6 +114,9 @@ async def _read_json(request) -> dict:
 def _control_route(control, method_name: str):
     """Wrap a bridge control method as an aiohttp POST handler."""
     async def handler(request):
+        if not _is_instructor(request):
+            return web.json_response({"error": "instructor only"}, status=403,
+                                     dumps=_json)
         if control is None:
             return web.json_response({"error": "control plane unavailable"},
                                      status=503, dumps=_json)
@@ -131,9 +186,14 @@ def _add_page_routes(app: web.Application, ui_mode: str | None = None):
         return q if q in ("classic", "modern") else resolved
 
     async def index_handler(request):
-        return _serve_index(_request_ui(request), lang)
+        mode = _request_ui(request)
+        if mode == "classic" and not _is_instructor(request):
+            mode = "modern"
+        return _serve_index(mode, lang)
 
     async def classic_handler(request):
+        if not _is_instructor(request):
+            return _forbidden_page()
         return _serve_index("classic")
 
     async def modern_handler(request):
@@ -142,6 +202,8 @@ def _add_page_routes(app: web.Application, ui_mode: str | None = None):
     async def sim_handler(request):
         # Instructor-only channel-model view. Simulation truth: the
         # operator page must never link here.
+        if not _is_instructor(request):
+            return _forbidden_page()
         return _serve_page("modern/sim.html",
                            "sim view assets not installed", lang)
 
@@ -170,14 +232,25 @@ def _add_api_routes(app: web.Application, frontend: RadioFrontend, control):
     """The API surface. BINDING: no route removed, renamed or retyped."""
 
     async def api_status(request):
-        return web.json_response(asdict(frontend.snapshot()), dumps=_json)
+        return web.json_response(_status_for(request, asdict(frontend.snapshot())),
+                                 dumps=_json)
+
+    def _instructor_only(request):
+        if not _is_instructor(request):
+            return web.json_response({"error": "instructor only"}, status=403,
+                                     dumps=_json)
+        return None
 
     async def api_config(request):
+        if (deny := _instructor_only(request)) is not None:
+            return deny
         if control is None or not hasattr(control, "get_effective_config"):
             return web.json_response(frontend.status.config or {}, dumps=_json)
         return web.json_response(control.get_effective_config(), dumps=_json)
 
     async def api_diagnostics(request):
+        if (deny := _instructor_only(request)) is not None:
+            return deny
         if control is None or not hasattr(control, "get_diagnostics"):
             return web.json_response(frontend.status.diagnostics or {},
                                      dumps=_json)
@@ -254,10 +327,13 @@ async def run_web_ui(frontend: RadioFrontend, host: str = "0.0.0.0",
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         logger.info("Radio WS client connected")
+        instructor = _is_instructor(request)
         try:
             while True:
                 status = frontend.snapshot()
                 data = asdict(status)
+                if not instructor:
+                    data = operator_view(data)
                 await ws.send_str(json.dumps(data, default=str))
                 await asyncio.sleep(0.5)
         except Exception:

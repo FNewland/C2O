@@ -68,8 +68,10 @@ def test_reset_record_is_absorbed_from_the_sim_state_poll():
     assert rec["reason"] == RESET["reason"]
     assert rec["sids_disabled"] == [2, 3, 4, 5, 6, 9, 12]
     assert rec["enabled_now"] == [1, 11]
-    assert rec["source"] == "sim_state", (
-        "the record does not come from telemetry and must say so")
+    assert rec["source"] == "S5 0x0056", (
+        "the record is the spacecraft's HK_ENABLE_SET_RESET event")
+    # The commanded enable set follows the reset the spacecraft reported.
+    assert server._tc_manager.hk_commanded[2] is False
 
 
 @pytest.mark.parametrize("junk", [None, {}, [], "boom", {"sids_disabled": [1]}])

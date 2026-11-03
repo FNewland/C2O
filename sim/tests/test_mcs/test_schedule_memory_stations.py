@@ -356,4 +356,6 @@ class TestSimTimeJumpDetection:
         assert srv._sim_health["rt_tm_backlog"] == 17
         assert srv._sim_health["scheduler_enabled"] is False
         assert srv._sim_health["source"] == "sim_state"
-        assert srv._fdir_model.state_strip("nominal")["sc_mode_name"] == "EMERGENCY"
+        # The simulator's sc_mode never reaches the FDIR model (review #4).
+        assert "sc_mode" not in srv._sim_health
+        assert srv._fdir_model.state_strip("nominal")["sc_mode"] is None

@@ -14,8 +14,8 @@
   },
   {
    "id": "ctg-029-gyro-failure-recovery/purpose",
-   "en_hash": "6cc585a39086fb71",
-   "fr_hash": "921e84a986d9cb57"
+   "en_hash": "d1f348b1e6f6085d",
+   "fr_hash": "0d458e4d512239fa"
   },
   {
    "id": "ctg-029-gyro-failure-recovery/prerequisites",
@@ -69,8 +69,8 @@
   },
   {
    "id": "ctg-029-gyro-failure-recovery/off-nominal-handling",
-   "en_hash": "d004d0cefac40325",
-   "fr_hash": "1012161c648d2bfc"
+   "en_hash": "bf026e563e3792af",
+   "fr_hash": "b307bf53996a1287"
   },
   {
    "id": "ctg-029-gyro-failure-recovery/post-conditions",
@@ -83,5 +83,5 @@
    "fr_hash": "58ae515b69ccd238"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "5f4fa5a"
 }

@@ -153,8 +153,8 @@ compute the rate error:
 per-unit spread. `obdh.uptime` (0x0308) increments at the same rate and is a
 useful corroboration --- rate only, never an epoch.
 **Note:** Above ~50 ppm, flag the oscillator for trending and shorten the sync
-interval. Around 500 ppm (~43 s/day) is the signature of the instructor's
-`clock_drift` failure injection rather than an ageing oscillator.
+interval. Around 500 ppm (~43 s/day) is far outside the oscillator
+specification: treat it as an oscillator failure, not ageing.
 **Note:** A rate check is meaningless while `obdh.time_ref` (0x0A13) = 2 (GPS):
 the clock is being held to true time, so what you measure is the discipline
 loop, not the oscillator.

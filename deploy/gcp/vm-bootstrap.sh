@@ -18,7 +18,7 @@
 #   c2o-ai-secret  Secret Manager secret holding the Anthropic API key for
 #                  SpaceCDF's AI advisor (ground VM; optional: no version =
 #                  SpaceCDF runs in manual mode)
-#   c2o-voice-secret, c2o-voice-host, c2o-voice-instructors
+#   c2o-voice-secret, c2o-voice-host, c2o-voice-instructors, c2o-instructors
 #                  voice loops (ground VM; optional): the LiveKit key pair the
 #                  MCS signs tokens with, the voice server's name, and the
 #                  accounts with the instructor role -> sim/docker/voice.env
@@ -176,6 +176,10 @@ write_env() {
         echo
         echo "# From Secret Manager ($SECRET), written by vm-bootstrap.sh $(date -u +%FT%TZ)"
         printf '%s\n' "$creds"
+        # Instructor accounts (c2o.env VOICE_INSTRUCTORS, mirrors the
+        # c2o-instructors group): the welcome page and the voice loops read
+        # SMO_INSTRUCTORS; empty = nobody (closed by default behind IAP).
+        echo "SMO_INSTRUCTORS=$(printf '%s' "$(attr c2o-instructors)" | tr -cd 'A-Za-z0-9._%+@ -')"
     } > "$tmp"
     mv -f "$tmp" "$ENV_FILE"
     say "wrote $ENV_FILE (session $(sed -n 's/^SMO_LINK_SESSION=//p' "$ENV_FILE"))"

@@ -250,13 +250,16 @@ class TestFDIRLevelDerivation:
 
     def test_state_strip_reports_latches_and_their_provenance(self):
         m = self._m()
-        m.set_sc_mode(3, source="sim_state")
+        # Unknown until the mode is downlinked: no latch is claimed.
+        strip = m.state_strip("nominal")
+        assert strip["safe_latched"] is None and strip["latch_source"] == ""
+        m.set_sc_mode(3)          # default source: TM sat.mode (review #4)
         strip = m.state_strip("system", load_shed_stage=2)
         assert strip["sc_mode_name"] == "EMERGENCY"
         assert strip["emergency_latched"] is True
         assert strip["safe_latched"] is False
-        assert strip["latch_source"] == "derived_from_sc_mode"
-        assert strip["sc_mode_source"] == "sim_state"
+        assert strip["latch_source"] == "TM sat.mode 0x0001"
+        assert strip["sc_mode_source"] == "TM sat.mode 0x0001"
         assert strip["load_shed_stage"] == 2
 
     def test_mode_change_is_journalled(self):

@@ -40,10 +40,8 @@ avec des jalons de décision à 12 h, 24 h (le temporisateur de perte de command
   Le basculement se fait à l'aveugle : l'unité de secours est hors tension, et le satellite ne peut donc
   pas savoir si elle fonctionne. Les commandes en aveugle qui ne sont pas reçues ne remettent pas le
   temporisateur à zéro ; toute télécommande acceptée le fait.
-- **Note de formation (simulateur) :** l'instructeur rétablit un transpondeur en panne en effaçant sa
-  panne. Le forçage des passages de l'instructeur est une aide à la formation : si seule l'unité
-  sélectionnée est en panne, il permet à l'équipe de commander le basculement en aveugle ; il ne peut
-  pas ranimer un satellite dont les deux unités sont en panne.
+- Si les deux unités sont en panne, rien de ce que le sol envoie ne peut rétablir la liaison ; rester
+  à l'écoute à chaque passage programmé.
 
 ## Déroulement
 

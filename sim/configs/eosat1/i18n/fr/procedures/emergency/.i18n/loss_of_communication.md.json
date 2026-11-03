@@ -24,8 +24,8 @@
   },
   {
    "id": "emg-004-loss-of-communication/what-the-spacecraft-can-and-cannot-do",
-   "en_hash": "3f5d5a3b41f9184e",
-   "fr_hash": "bc805bf2a68e3557"
+   "en_hash": "9aff9aff58ac34d4",
+   "fr_hash": "c01cecd3bf60f82a"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps",
@@ -88,5 +88,5 @@
    "fr_hash": "bf561b76262141ea"
   }
  ],
- "en_commit": "094c1d3"
+ "en_commit": "5f4fa5a"
 }

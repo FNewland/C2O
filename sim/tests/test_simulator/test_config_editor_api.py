@@ -256,3 +256,47 @@ async def test_readonly_has_no_write_routes(readonly_app):
         r = await client.post("/api/config/baselines/x/apply", json={})
         assert r.status in (404, 405)
     assert (cfg / "scenarios" / "nominal_ops.yaml").read_text() == before
+
+
+async def test_readonly_mount_hides_instructor_only_files(readonly_app):
+    """SCREEN_REVIEW #1: the MCS/planner config browser never lists or
+    serves the scenario library, the fault model, the RF channel model,
+    simulator tuning or the translated briefings, and strips the
+    instructor-visibility parameter rows (a feed-level guarantee, not a
+    hidden link)."""
+    app, _cfg = readonly_app
+    hidden = ["scenarios/aocs_actuator_stuck.yaml",
+              "fdir/fault_propagation.yaml", "rfsim.yaml",
+              "simulation.yaml", "subsystems/obdh.yaml",
+              "i18n/fr/db.yaml", "xtce/eosat1.xml"]
+    async with TestClient(TestServer(app)) as client:
+        r = await client.get("/api/config/files")
+        listing = await r.json()
+        paths = {f["path"] for f in listing["files"]}
+        assert "config_dir" not in listing
+        assert "mission.yaml" in paths
+        for p in hidden:
+            assert p not in paths, p
+            r = await client.get("/api/config/file", params={"path": p})
+            assert r.status == 404, p
+            r = await client.get("/api/config/history", params={"path": p})
+            assert r.status == 404, p
+            r = await client.get("/api/config/revisions/HEAD",
+                                 params={"path": p})
+            assert r.status == 404, p
+        assert not any(p.startswith("scenarios/") for p in paths)
+        r = await client.get("/api/config/file",
+                             params={"path": "telemetry/parameters.yaml"})
+        assert r.status == 200
+        text = (await r.json())["text"]
+        assert "visibility: instructor" not in text
+        assert "aocs.gyro_bias_injected" not in text
+        assert "eps.bat_soc" in text
+
+
+async def test_instructor_mount_still_serves_scenarios(instructor_app):
+    app, _engine, _cfg = instructor_app
+    async with TestClient(TestServer(app)) as client:
+        r = await client.get("/api/config/file",
+                             params={"path": "scenarios/nominal_ops.yaml"})
+        assert r.status == 200

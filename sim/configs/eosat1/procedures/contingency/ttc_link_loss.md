@@ -88,7 +88,7 @@ selected and dead, the timer switches back to the primary. It is still worth sen
 ## Off-Nominal Handling
 - If link restores but RSSI < -95 dBm or margin < 1.5 dB: Step the TM rate ladder down to LOW (16 kbps) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) to improve margin. LOW is the routine operations rung — the link keeps full housekeeping, it just cannot dump
 - If OBC is found in SAFE mode after link restoration: Execute CTG-010 (OBDH Watchdog Recovery) before resuming nominal operations
-- If redundant transponder also fails: no telecommand can be received and no telemetry is transmitted, beacon included; the TTC-01 timer keeps toggling between the two dead units every 24 h, which changes nothing until one recovers. Nothing from the ground can recover this: escalate to EMG-004 and keep listening for a transponder recovery (in the simulator, the instructor clearing a transponder failure)
+- If redundant transponder also fails: no telecommand can be received and no telemetry is transmitted, beacon included; the TTC-01 timer keeps toggling between the two dead units every 24 h, which changes nothing until one recovers. Nothing from the ground can recover this: escalate to EMG-004 and keep listening for a transponder recovery
 - If link is intermittent (toggling): Suspect antenna deployment anomaly or attitude issue — request AOCS telemetry and check `aocs.att_error` (0x0217)
 
 ## Post-Conditions

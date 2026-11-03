@@ -2,8 +2,8 @@
 
 **Subsystem:** TT&C / OBDH / Ground Segment
 **Phase:** LEOP
-**Revision:** 3.0 — 2026-08c flow redesign (entry/exit states, no operator
-pass override, time sync moved to LEOP-006, SAFE-tier naming)
+**Revision:** 3.0 — 2026-08c flow redesign (entry/exit states, contact only
+in predicted passes, time sync moved to LEOP-006, SAFE-tier naming)
 **Approved:** Flight Operations Director
 
 **Entry state:** cold boot — OBC in the bootloader, only `obc` and `ttc_rx`
@@ -30,9 +30,8 @@ application-running platform.
       transmits (`subsystems/ttc.yaml` `beacon_tier: SAFE`); the demodulator
       must be re-configured for 16 kBd after application boot (Step 5)
 - [ ] A real ground-station pass is SCHEDULED for this card (predicted AOS/LOS
-      from the launch TLE). Pass override is an INSTRUCTOR control, not an
-      operator action — no card in this flow instructs the operator to force
-      contact
+      from the launch TLE). Contact is expected only inside a predicted
+      pass — no card in this flow instructs the operator to force contact
 - [ ] Predicted AOS/LOS timeline loaded into ground station schedule
 - [ ] Flight Dynamics have provided initial TLE from launch provider
 - [ ] MCS database loaded with EOSAT-1 TM/TC definitions

@@ -54,8 +54,8 @@
   },
   {
    "id": "leop-006-time-synchronisation/procedure-steps/step-6-validate-the-clock-rate",
-   "en_hash": "ec38d5e42eeec7f0",
-   "fr_hash": "ab3c01f72750834f"
+   "en_hash": "db15def470d00ee0",
+   "fr_hash": "7fa1436fa5fe3791"
   },
   {
    "id": "leop-006-time-synchronisation/procedure-steps/step-6a-path-b-gps-time-discipline-once-the-receiver-has-a-fix",
@@ -83,5 +83,5 @@
    "fr_hash": "1926580074b69d8a"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "5f4fa5a"
 }

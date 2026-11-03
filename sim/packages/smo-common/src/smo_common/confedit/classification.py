@@ -15,7 +15,9 @@ from __future__ import annotations
 import fnmatch
 from dataclasses import dataclass, field
 
-__all__ = ["FileClass", "classify", "classification_table", "GROUP_ORDER"]
+__all__ = ["FileClass", "classify", "classification_table", "GROUP_ORDER",
+           "is_instructor_only", "redact_for_students",
+           "INSTRUCTOR_ONLY_PATTERNS"]
 
 
 @dataclass(frozen=True)
@@ -189,6 +191,49 @@ def classify(relpath: str) -> FileClass:
         if fnmatch.fnmatch(rp, rule.pattern):
             return rule
     return _FALLBACKS[-1]  # pragma: no cover — '**/*' always matches
+
+
+#: Files that carry simulator truth or instructor knowledge: the scenario
+#: library (failure, onset time, briefing, expected response), the fault
+#: model, the RF channel model, the simulator's own tuning and subsystem
+#: model coefficients (failure magnitudes, noise), the generated XTCE/SMDL
+#: (they list every instructor-visibility parameter) and the translation
+#: database (it holds the translated scenario briefings). Student- and
+#: operator-facing config browsers (the MCS and planner mount the editor
+#: read-only) never list or serve these; only the instructor host does.
+INSTRUCTOR_ONLY_PATTERNS: tuple[str, ...] = (
+    "scenarios/*",
+    "scenarios/**",
+    "fdir/fault_propagation.yaml",
+    "rfsim.yaml",
+    "simulation.yaml",
+    "subsystems/*",
+    "xtce/*",
+    "smdl/*",
+    "i18n/*",
+    "i18n/**",
+    "mcs/role_analysis/*",
+)
+
+
+def is_instructor_only(relpath: str) -> bool:
+    """True when ``relpath`` must never reach a student or operator."""
+    rp = relpath.replace("\\", "/").lstrip("/")
+    return any(fnmatch.fnmatch(rp, pat) for pat in INSTRUCTOR_ONLY_PATTERNS)
+
+
+def redact_for_students(relpath: str, text: str) -> str:
+    """Drop instructor-only rows from a student-visible file's text.
+
+    ``telemetry/parameters.yaml`` lists simulator-truth parameters with
+    ``visibility: instructor`` (one flow mapping per line); students see the
+    file without those rows. Other files pass through unchanged.
+    """
+    if not text or "visibility: instructor" not in text:
+        return text
+    return "\n".join(
+        line for line in text.split("\n")
+        if "visibility: instructor" not in line)
 
 
 def classification_table() -> list[dict]:

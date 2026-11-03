@@ -140,7 +140,9 @@ async def test_page_renders_en_and_fr_with_local_links():
         t = await r.text()
         assert r.status == 200 and '<html lang="en">' in t
         assert "/static/shared/tool-page.js" in t and "design-system.css" in t
-        assert 'href="http://127.0.0.1:9090/"' in t and ">127.0.0.1:9090<" in t
+        assert 'href="http://127.0.0.1:9090/"' in t
+        assert ">127.0.0.1:9090<" not in t          # no address line (review §1)
+        assert "start.sh" not in t
         for s in pt.SERVICES:
             assert f'id="row-{s.key}"' in t and s.name in t
         for _, title, _ in pt.SECTIONS:
@@ -155,7 +157,8 @@ async def test_page_renders_en_and_fr_with_local_links():
         await c.close()
 
 
-async def test_page_in_the_cloud_shows_the_iap_account_escaped():
+async def test_page_in_the_cloud_shows_the_iap_account_escaped(monkeypatch):
+    monkeypatch.setenv("SMO_INSTRUCTORS", "franz@c2o.live")
     cfg = pt.Config.from_env({"SMO_PORTAL_DOMAIN": "c2o.live"})
     app = pt.create_app(cfg, FakeProber(cfg, {}))
     c = await _client(app)
@@ -169,6 +172,43 @@ async def test_page_in_the_cloud_shows_the_iap_account_escaped():
         t = await (await c.get("/", headers={
             pt.IAP_USER_HEADER: "accounts.google.com:<script>x</script>"})).text()
         assert "<script>x</script>" not in t and "&lt;script&gt;" in t
+    finally:
+        await c.close()
+
+
+async def test_instructor_section_only_for_instructors(monkeypatch):
+    """SCREEN_REVIEW #17: behind IAP a student sees neither the instructor
+    tiles nor their status in the feed; an account in SMO_INSTRUCTORS sees
+    both; with no list configured nobody does (closed by default). Laptop
+    mode (no domain, no IAP header) keeps everything."""
+    monkeypatch.setenv("SMO_INSTRUCTORS", "prof@c2o.live")
+    cfg = pt.Config.from_env({"SMO_PORTAL_DOMAIN": "c2o.live"})
+    c = await _client(pt.create_app(cfg, FakeProber(cfg, _cloud_table())))
+    stu = {pt.IAP_USER_HEADER: "accounts.google.com:student@c2o.live"}
+    prof = {pt.IAP_USER_HEADER: "accounts.google.com:Prof@c2o.live"}
+    try:
+        t = await (await c.get("/", headers=stu)).text()
+        assert 'id="row-sim"' not in t and 'id="row-adcs"' not in t
+        assert "Instructors only" not in t and 'id="row-ops"' in t
+        d = await (await c.get("/api/status", headers=stu)).json()
+        assert not {"sim", "scenarios", "adcs"} & set(d["services"])
+        assert all("port" not in v for v in d["services"].values())
+        t = await (await c.get("/", headers=prof)).text()
+        assert 'id="row-sim"' in t and 'id="row-adcs"' in t
+        d = await (await c.get("/api/status", headers=prof)).json()
+        assert {"sim", "scenarios", "adcs"} <= set(d["services"])
+        monkeypatch.delenv("SMO_INSTRUCTORS")
+        t = await (await c.get("/", headers=prof)).text()
+        assert 'id="row-sim"' not in t
+        t = await (await c.get("/")).text()          # IAP bypassed: still closed
+        assert 'id="row-sim"' not in t
+    finally:
+        await c.close()
+    cfg = pt.Config()
+    c = await _client(pt.create_app(cfg, FakeProber(cfg, {})))
+    try:
+        t = await (await c.get("/")).text()
+        assert 'id="row-sim"' in t
     finally:
         await c.close()
 
@@ -210,12 +250,14 @@ def _cloud_table(link_state="UP"):
     }
 
 
-async def test_status_reports_each_screen_link_mode_and_pass():
+async def test_status_reports_each_screen_link_mode_and_pass(monkeypatch):
+    monkeypatch.setenv("SMO_INSTRUCTORS", "prof@c2o.live")
     cfg = pt.Config.from_env({"SMO_PORTAL_DOMAIN": "c2o.live"})
     prober = FakeProber(cfg, _cloud_table())
     c = await _client(pt.create_app(cfg, prober))
     try:
-        r = await c.get("/api/status")
+        r = await c.get("/api/status", headers={
+            pt.IAP_USER_HEADER: "accounts.google.com:prof@c2o.live"})
         assert r.headers["Cache-Control"] == "no-store"
         d = await r.json()
         st = {k: v["state"] for k, v in d["services"].items()}
@@ -226,7 +268,7 @@ async def test_status_reports_each_screen_link_mode_and_pass():
         assert d["mode"] == {"mode": "SAFE", "source": "TM obdh.mode 0x0300",
                              "age_s": 3.0, "stale": False}
         assert d["pass"] == {"in_contact": False, "station": "Svalbard", "seconds": 754.0}
-        assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", d["checked_at"])
+        assert "checked_at" not in d          # no wall clock beside sim time
         n = prober.calls
         await c.get("/api/status")                       # cached: no new probes
         assert prober.calls == n

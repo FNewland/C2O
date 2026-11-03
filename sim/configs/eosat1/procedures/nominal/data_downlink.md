@@ -112,10 +112,10 @@ go to Step 6; the transfer can be resumed at the next AOS from the same
 **LABEL:** `STEP-5`
 **Action:** CRC-32 the reassembled product on the ground and compare with the
 value TM(13,2) reported in Step 3a.
-**Note:** This is a real check, not a formality. An `image_corrupt`-injected
-product serves DAMAGED bytes against the CLEAN checksum the instrument computed
-at capture, so a corrupted image now genuinely fails verification instead of
-being byte-for-byte identical to a good one.
+**Note:** This is a real check, not a formality. A product damaged on board
+after capture serves DAMAGED bytes against the CLEAN checksum the instrument
+computed at capture, so a corrupted image genuinely fails verification instead
+of being byte-for-byte identical to a good one.
 **GO/NO-GO:** CHECKSUM OK --- the product downlinked intact
 
 ### Step 5 --- Verify Ground Reception

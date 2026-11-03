@@ -54,8 +54,8 @@
   },
   {
    "id": "nom-008-clock-synchronisation/procedure-steps/step-6-validate-the-clock-rate",
-   "en_hash": "798067d68f1d0577",
-   "fr_hash": "13f61b68276a600f"
+   "en_hash": "e28bf3b14724eba6",
+   "fr_hash": "68ff4bfca47d7928"
   },
   {
    "id": "nom-008-clock-synchronisation/procedure-steps/step-7-log-the-result",
@@ -73,5 +73,5 @@
    "fr_hash": "e8413e4bfd043404"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "5f4fa5a"
 }
