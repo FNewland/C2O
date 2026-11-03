@@ -1,0 +1,100 @@
+/* SpaceCDF seats (WP9): app-bar seat switch, banners, toasts, seat panel, class board. */
+
+.c2o-seatbar { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.c2o-seatbar__switch { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.c2o-seatbar__lbl { font-size: var(--fs-label); color: var(--text-3); }
+.c2o-seatbar__count {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+  margin-left: var(--sp-1); padding: 0 var(--sp-1); border-radius: 9px;
+  font-size: 11px; font-weight: 600; color: var(--on-fill); background: var(--status-caution);
+}
+
+.c2o-seatbanner {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3);
+  min-height: 32px; padding: var(--sp-1) var(--sp-4); font-size: var(--fs-body);
+  color: var(--text); background: var(--surface-2); border-bottom: 1px solid var(--line);
+}
+.c2o-seatbanner--info { background: var(--interactive-wash); border-bottom-color: var(--interactive); }
+.c2o-seatbanner--caution { background: var(--status-caution-wash); border-bottom-color: var(--status-caution); }
+.c2o-seatbanner--quiet { min-height: 24px; color: var(--text-2); font-size: var(--fs-label); }
+
+.c2o-toasts {
+  position: fixed; right: var(--sp-4); bottom: var(--sp-4); z-index: 1200;
+  display: flex; flex-direction: column; gap: var(--sp-2); max-width: min(440px, calc(100vw - 32px));
+}
+.c2o-toast {
+  display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-body); background: var(--surface-1); border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--interactive); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.c2o-toast .c2o-status { white-space: normal; }
+.c2o-toast--ok { border-left-color: var(--status-ok); }
+.c2o-toast--caution { border-left-color: var(--status-caution); }
+.c2o-toast--alarm { border-left-color: var(--status-alarm); }
+
+.c2o-seatnext {
+  display: inline-flex; align-items: center; min-width: 0; max-width: 46ch; padding: 2px var(--sp-2);
+  font: inherit; font-size: var(--fs-label); color: var(--text); background: transparent;
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
+.c2o-seatnext:disabled { cursor: default; }
+.c2o-seatnext:not(:disabled):hover { background: var(--surface-2); }
+.c2o-seatnext .c2o-status { min-width: 0; }
+
+/* Read-only panels: "Show all" tabs outside the seat, Observer, shadow */
+.c2o-roset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.c2o-roset__note { margin: 0; padding: var(--sp-1) var(--sp-3); color: var(--text-2); background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.c2o-tab.c2o-tab--ro { font-style: italic; color: var(--text-3); }
+
+/* Seat panel */
+.c2o-seatpanel { --lb-width: min(560px, 100vw); z-index: 950; }
+.c2o-seatgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--sp-2); }
+.c2o-seatcard {
+  display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--radius-lg);
+}
+.c2o-seatcard.is-mine { border-color: var(--interactive); box-shadow: inset 3px 0 0 var(--interactive); }
+.c2o-seatcard--shared { background: var(--surface-0); }
+.c2o-seatcard__seat { display: flex; flex-direction: column; gap: var(--sp-1); padding-bottom: var(--sp-1); border-bottom: 1px dashed var(--line); }
+.c2o-seatcard__seat:last-of-type { border-bottom: 0; }
+.c2o-pcrow {
+  display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-1); border: 1px solid var(--line); border-left: 3px solid var(--status-caution); border-radius: var(--radius);
+}
+.c2o-subrow { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) var(--sp-2); background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--radius); }
+.c2o-subrow.is-changed { border-color: var(--status-caution); background: var(--status-caution-wash); }
+.c2o-actrow { padding: 2px 0; border-bottom: 1px solid var(--line); }
+
+/* Class board */
+.c2o-board { display: flex; flex-direction: column; min-height: 100vh; background: var(--surface-0); color: var(--text); }
+.c2o-board__head {
+  position: sticky; top: 0; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4); background: var(--surface-1); border-bottom: 1px solid var(--line-strong);
+}
+.c2o-board__title { margin: 0 var(--sp-3) 0 0; font-size: var(--fs-title); font-weight: 600; }
+.c2o-board__wrap { width: auto; min-width: 0; margin: var(--sp-3) var(--sp-4); background: var(--surface-1); overflow-x: auto; }
+.c2o-board__table th, .c2o-board__table td { vertical-align: top; }
+.c2o-board__table th.c2o-board__col { font-size: var(--fs-label); min-width: 72px; white-space: normal; }
+.c2o-board__study { min-width: 170px; text-align: left; }
+.c2o-board__name { padding: 0; font: inherit; font-weight: 600; color: var(--interactive); background: none; border: 0; cursor: pointer; text-align: left; }
+.c2o-board__name:hover { text-decoration: underline; }
+.c2o-board__gate { white-space: nowrap; }
+.c2o-board__cell { max-width: 140px; font-size: var(--fs-label); }
+.c2o-board__cell .c2o-status { max-width: 100%; }
+.c2o-board__cell.is-free { color: var(--text-3); }
+.c2o-board__hand {
+  display: inline-block; margin: 2px 0 0 var(--sp-1); white-space: nowrap; padding: 0 var(--sp-1); font-size: 11px; font-weight: 600;
+  color: var(--status-caution); background: var(--status-caution-wash); border: 1px solid var(--status-caution); border-radius: var(--radius-sm);
+}
+.c2o-board__attn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.c2o-board__note { margin: 0 var(--sp-4) var(--sp-4); }
+.c2o-board__table { width: 100%; }
+.c2o-board__detail > td { background: var(--surface-0); }
+.c2o-board__drill { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-2) 0; }
+.c2o-board__item { padding: var(--sp-1) 0; border-bottom: 1px solid var(--line); }
+tr.is-open > th, tr.is-open > td { background: var(--interactive-wash); }
+
+@media (max-width: 720px) {
+  .c2o-board__head { padding: var(--sp-2) var(--sp-3); }
+  .c2o-board__wrap { margin: var(--sp-2); }
+}
