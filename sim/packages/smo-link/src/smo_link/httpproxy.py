@@ -51,6 +51,9 @@ _SEG = r"[A-Za-z0-9_~-][A-Za-z0-9._~-]*"       # no leading dot: no hidden files
 READ_EXACT = frozenset({
     "/", "/classic", "/modern",
     "/api/instructor/snapshot", "/api/vr", "/api/scenarios", "/api/scenario/debrief",
+    # instructor console redesign (docs/plan_2026-11/INSTRUCTOR_CONSOLE_DESIGN.md)
+    "/api/instructor/views", "/api/instructor/timeline", "/api/instructor/fault-menu",
+    "/api/instructor/history", "/api/instructor/debrief",
     "/api/failures", "/api/failure-catalog", "/api/breakpoints",
     "/dumps", "/api/dumps", "/api/dumps/", "/api/dumps/file", "/api/dumps/summary",
     "/reports", "/api/reports", "/api/reports/", "/api/reports/templates",

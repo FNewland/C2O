@@ -1,0 +1,16 @@
+stateDiagram-v2
+  [*] --> Following
+  Following --> Switched: focus event (no dwell running)
+  Switched --> Dwelling: show view + reason
+  Dwelling --> Dwelling: event, prio not higher → queue best (prio, then newest)
+  Dwelling --> Switched: event with strictly higher prio after 5 s (pre-empt)
+  Dwelling --> Switched: dwell 15 s over and queued event younger than 90 s
+  Dwelling --> Following: dwell over, queue empty or stale (dropped)
+  Following --> Grace: instructor picks a view / Back / accepts a suggestion
+  Dwelling --> Grace: instructor picks a view / Back
+  Grace --> Grace: event → Suggestion chip "Suggested: View — reason [Go] [x]"
+  Grace --> Following: 45 s without a manual action
+  Following --> Pinned: Pin or Auto-follow off
+  Pinned --> Pinned: event → Suggestion (best kept)
+  Pinned --> Following: Unpin / Auto-follow on
+  Pinned --> Pinned: Go = accept suggestion (manual)

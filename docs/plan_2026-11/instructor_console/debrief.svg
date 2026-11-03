@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" font-family="IBM Plex Sans, Helvetica, Arial, sans-serif" font-size="12">
+  <title>Debrief view: the run replayed in PEARLS phases</title>
+  <style>.p{fill:#fff;stroke:#8a9099}.s{fill:#4a4f56;font-size:11px}.h{font-weight:600}.m{font-family:IBM Plex Mono,monospace;font-size:11px}</style>
+  <rect width="960" height="420" fill="#f4f5f7"/>
+  <g transform="translate(10 10)">
+    <rect width="940" height="40" class="p"/>
+    <rect x="0" y="0" width="235" height="40" fill="#fff" stroke="#8a9099"/><text x="10" y="17" class="h">Reactions</text><text x="10" y="32" class="s">How did that feel?</text>
+    <rect x="235" y="0" width="235" height="40" fill="#e7eef1" stroke="#0b5577"/><text x="245" y="17" class="h">Description</text><text x="245" y="32" class="s">What happened, in order</text>
+    <rect x="470" y="0" width="235" height="40" fill="#fff" stroke="#8a9099"/><text x="480" y="17" class="h">Analysis</text><text x="480" y="32" class="s">Why the gaps</text>
+    <rect x="705" y="0" width="235" height="40" fill="#fff" stroke="#8a9099"/><text x="715" y="17" class="h">Summary</text><text x="715" y="32" class="s">Plus / delta, take-aways</text>
+  </g>
+  <g transform="translate(10 60)"><rect width="460" height="180" class="p"/>
+    <text x="10" y="20" class="h">Description: key events (click = cursor)</text>
+    <text x="10" y="42" class="m">[12:00:21] Scenario started: Solar Array Degradation</text>
+    <text x="10" y="60" class="m">[12:05:24] Injected eps/solar_array_partial (array=A)</text>
+    <text x="10" y="78" class="m">[12:06:45] SOC_LOW reached the ground</text>
+    <text x="10" y="96" class="m">[12:11:45] No TC 5 min after SOC_LOW reached the ground</text>
+    <text x="10" y="114" class="m">[12:12:02] Bookmark: team starts eclipse prep</text>
+    <text x="10" y="144" class="s">Cursor panel: at T, every pair that diverged (truth /</text><text x="10" y="158" class="s">spacecraft / ground / cause, from 10 s history samples)</text><text x="10" y="172" class="s">and the timeline items within a minute.</text></g>
+  <g transform="translate(490 60)"><rect width="460" height="180" class="p"/>
+    <text x="10" y="20" class="h">Analysis: gaps per fault (largest highlighted)</text>
+    <text x="10" y="44" class="s">Fault</text><text x="180" y="44" class="s">→ symptom</text><text x="260" y="44" class="s">→ ground</text><text x="330" y="44" class="s">→ first TC</text><text x="410" y="44" class="s">→ clear</text>
+    <text x="10" y="64" class="m">EPS/solar_array_partial</text><text x="180" y="64" class="m" fill="#8a6400">81 s</text><text x="260" y="64" class="m">0 s</text><text x="330" y="64" class="m">—</text><text x="410" y="64" class="m">85 s</text>
+    <text x="10" y="92" class="s">spacecraft (inserted→symptom) · link (symptom→ground) · team (ground→TC)</text>
+    <text x="10" y="116" class="s">Component → Degrades → Objective at risk (abstraction hierarchy)</text>
+    <text x="10" y="140" class="s">Prompts keyed to the gap: "No telecommand followed the alarm.</text><text x="10" y="154" class="s">Was that a decision (monitor first) or a miss?"</text></g>
+  <g transform="translate(10 250)"><rect width="940" height="120" class="p"/>
+    <text x="10" y="20" class="h">Replay: the same eight-lane timeline over the whole segment, with the cursor</text>
+    <rect x="120" y="32" width="810" height="70" fill="#eef0f3"/>
+    <line x1="520" x2="520" y1="28" y2="106" stroke="#141619" stroke-dasharray="3 2"/><text x="524" y="40" class="s">cursor 12:06:45</text>
+    <path d="M420 44l5 9h-10z" fill="#a79bf8"/><path d="M520 60l5 9h-10z" fill="#d1453b"/>
+  </g>
+  <text x="10" y="392" class="s">Summary: plus / delta notes (this browser only, localStorage) · Export debrief (Markdown) · Export data (JSON: timeline, faults, history, notes).</text>
+  <text x="10" y="408" class="s">Below: scenario-engine score (kept) and the workbook debrief questions (participants answer them in their own logbook; never read here).</text>
+</svg>
