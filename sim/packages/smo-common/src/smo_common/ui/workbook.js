@@ -398,7 +398,10 @@ export function createWorkbook(host) {
           `<label class="ds-sr" for="${fid(q)}">${t("Note")}</label>` +
           `<input id="${fid(q)}" class="ds-input wb-in" maxlength="4000" value="${esc(val)}" placeholder="${esc(tText("Note or actual value (optional)"))}">${preChip}</div>`;
       }
-      const long = /[?？]\s*$/.test(q.text) || q.text.length > 90 || /actions|hypothes|reason|why|conflict|ordre|notes?\b/i.test(q.text);
+      // a long (or long prefilled) answer gets a box that wraps: a one-line
+      // field hid most of a prefilled pass or alarm line
+      const long = /[?？]\s*$/.test(q.text) || q.text.length > 90 || String(val || "").length > 44 ||
+        /actions|hypothes|reason|why|conflict|ordre|notes?\b/i.test(q.text);
       const input = long
         ? `<textarea id="${fid(q)}" class="lb-ta sm wb-in" maxlength="4000">${esc(val)}</textarea>`
         : `<input id="${fid(q)}" class="ds-input wb-in" maxlength="4000" value="${esc(val)}">`;

@@ -3849,7 +3849,15 @@ class SimulationEngine:
         # overwritten by EPS on the next tick, and breakpoints are far too
         # blunt.
         'set_battery_soc',
+        # 2026-11-03: a session label the instructor PUBLISHES to the ground
+        # (logbook hand-in header, handover form). Free text the instructor
+        # chooses, never the scenario's name (that would brief the
+        # operators on the failure); it crosses the link in the STATE feed.
+        'set_session_label',
     })
+
+    #: longest session label accepted (it rides in every state summary)
+    SESSION_LABEL_MAX = 80
 
     # Numeric fields validated (and range-checked) before enqueueing, so a
     # malformed value is rejected at the door instead of raising inside the
@@ -4114,6 +4122,12 @@ class SimulationEngine:
             self._handle_start_scenario(cmd)
         elif t == 'stop_scenario':
             self._handle_stop_scenario(cmd)
+        elif t == 'set_session_label':
+            raw = str(cmd.get('label') or '')
+            # one printable line: no control characters, collapsed spaces
+            clean = ''.join(ch if ch.isprintable() else ' ' for ch in raw)
+            self.session_label = ' '.join(clean.split())[:self.SESSION_LABEL_MAX]
+            logger.info("Instructor session label: %r", self.session_label)
         else:
             # Defect #9/#10/#12 class: previously, unknown instructor command
             # types were silently dropped here, which is how broken UI buttons
@@ -4535,6 +4549,9 @@ class SimulationEngine:
             'met_s': self.met_s,
             'speed': self.speed,
             'sc_mode': self.sc_mode,
+            # Published by the instructor for the ground (set_session_label);
+            # '' until they do. Not the scenario name.
+            'session_label': getattr(self, 'session_label', ''),
             # ── Illumination: the single authority, published for the ground ──
             # The MCS and the planner each own an orbit propagator (they must,
             # to PREDICT future eclipse), but for PRESENT time they consume

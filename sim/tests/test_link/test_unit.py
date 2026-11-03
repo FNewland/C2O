@@ -452,3 +452,12 @@ def test_config_hash_strict_vs_warn(tmp_path):
     assert compare(base["files"], other["files"])[0] == ["telemetry/hk_structures.yaml"]
     (tmp_path / "orbit.yaml").unlink()
     assert compute(tmp_path)["files"]["orbit.yaml"] == "missing"
+
+
+def test_retime_state_carries_the_session_label_unchanged():
+    # the instructor's published session label rides in the STATE feed; the
+    # GSG re-times only the time fields
+    from smo_link.clock import retime_state
+    st = {"speed": 10.0, "sim_time": "2026-03-10T04:00:00+00:00", "session_label": "Day 3, shift B"}
+    out = retime_state(st, t_agent_wall=1000.0, offset=0.0, now_wall=1002.0)
+    assert out["session_label"] == "Day 3, shift B" and out["sim_time"] != st["sim_time"]

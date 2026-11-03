@@ -501,6 +501,12 @@ class MCSServer:
                 self._activity_types = data.get("activity_types", [])
         except Exception:
             pass
+        # Passes seen by this console (ground propagator AOS/LOS + TM
+        # evidence): the handover form's "last completed pass".
+        from smo_mcs.pass_log import PassLog
+        self._pass_log = PassLog()
+        # Session label the instructor publishes (sim state feed, training).
+        self._session_label = ""
         # Activity-type runner step -> procedure-card step (logbook checklist
         # ticks for NOM-002/003/004/009; mcs/runner_step_map.yaml).
         self._runner_step_maps: dict = {}
@@ -2177,6 +2183,7 @@ class MCSServer:
                 self._station_link.ingest_sim_state(payload)
                 self._ingest_orbit_elset(payload)
                 self._ingest_sim_illumination(payload)
+                self._ingest_session_label(payload)
             except Exception as e:
                 logger.debug("sim-state poll failed (keeping last anchor): %s", e)
             await asyncio.sleep(1.5)
@@ -2201,6 +2208,18 @@ class MCSServer:
             except Exception as e:  # noqa: BLE001
                 logger.debug("radio status poll failed: %s", e)
             await asyncio.sleep(1.0)
+
+    def _ingest_session_label(self, payload: dict) -> None:
+        """The session label the instructor chose to publish to the ground
+        (``set_session_label``; logbook hand-in header). SIM-ONLY: a real
+        mission has no instructor. Only this field is read: the scenario's
+        name, which would tell the operators what is going to fail, is not
+        in the state feed and is never asked for."""
+        if self._time_source != "sim" or not isinstance(payload, dict):
+            return
+        v = payload.get("session_label")
+        if isinstance(v, str):
+            self._session_label = " ".join(v.split())[:80]
 
     def _ingest_sim_illumination(self, payload: dict) -> None:
         """Cache the simulator's PRESENT-TIME eclipse state (the authority).
@@ -2707,6 +2726,12 @@ class MCSServer:
                     logger.debug("derived-param compute failed: %s", e)
                     data["derived"] = {}
                 data["sa"] = self._build_sa_block(data, age_s, stale)
+                # Pass log (ground knowledge: propagator visibility + TM).
+                self._pass_log.update(now, data.get("in_contact"),
+                                      data.get("ground_station_name", ""),
+                                      data.get("gs_elevation_deg"), last_tm_ts)
+                data["pass_log"] = self._pass_log.view()
+                data["session_label"] = self._session_label
                 # Per-SID observation for the HK Manager: how long since each
                 # configured SID last arrived, and any enable bit the
                 # spacecraft actually reported. Lets the table show PERIODIC /

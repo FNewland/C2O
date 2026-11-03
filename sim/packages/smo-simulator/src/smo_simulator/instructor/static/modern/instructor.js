@@ -1023,6 +1023,45 @@ function renderTimeControl() {
   btn.title = frozen ? tText("Resume the simulation at ×1") : tText("Stop simulation time for everyone");
 }
 
+/* ── session label (published to the ground in the state feed) ────────── */
+
+let sessionLabelSeeded = false;
+function publishedLabel() {
+  return state && typeof state.session_label === "string" ? state.session_label : null;
+}
+function renderSessionLabel() {
+  const cur = publishedLabel();
+  const el = $("session-label-now");
+  if (!el) return;
+  el.textContent = cur === null ? tText("Published label: no data from the simulator")
+    : cur ? tText("Published: {{label}}", { label: cur }) : tText("Nothing published: the consoles leave it blank.");
+  if (!sessionLabelSeeded && cur !== null) {
+    sessionLabelSeeded = true;
+    if (!$("session-label").value) $("session-label").value = cur;
+  }
+  updateSessionLabelBtn();
+}
+function updateSessionLabelBtn() {
+  const btn = $("btn-session-label");
+  const v = $("session-label").value.trim().replace(/\s+/g, " ");
+  const cur = publishedLabel();
+  if (cur !== null && v === cur) setDisabled(btn, v ? tText("Already published") : tText("Type a label first"));
+  else setEnabled(btn);
+  btn.textContent = !v && cur ? tText("Clear") : tText("Publish");
+}
+async function publishSessionLabel() {
+  if ($("btn-session-label").getAttribute("aria-disabled") === "true") return;
+  const label = $("session-label").value.trim().replace(/\s+/g, " ");
+  const res = await sendCommand({ type: "set_session_label", label });
+  if (!res || res.status !== "ok") {
+    showToast(tText("Label not published: {{reason}}", { reason: (res && res.message) || tText("unknown") }), "error");
+    return;
+  }
+  addLog("info", "SESSION", label ? tText("Session label published: \"{{label}}\"", { label }) : tText("Session label cleared"));
+  showToast(label ? tText("Published to the consoles") : tText("Session label cleared"), "success");
+  setTimeout(() => statePoll.kick(), 600);
+}
+
 /* ── breakpoints ───────────────────────────────────────────────────────── */
 
 async function saveBreakpoint() {
@@ -1325,6 +1364,7 @@ const statePoll = poller(async () => {
     lastStateOkMs = Date.now();
   } finally {
     renderDashboard();     // a failed poll turns the readouts stale, visibly
+    renderSessionLabel();
   }
 }, 1000);
 
@@ -1469,6 +1509,13 @@ async function init() {
     const btn = e.target.closest("[data-act]");
     if (!btn) return;
     if (btn.dataset.act === "clear-failure") clearFailure(btn.dataset.id);
+  });
+
+  // session label for the consoles
+  $("btn-session-label").addEventListener("click", publishSessionLabel);
+  $("session-label").addEventListener("input", updateSessionLabelBtn);
+  $("session-label").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") publishSessionLabel();
   });
 
   // breakpoints

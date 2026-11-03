@@ -6009,6 +6009,22 @@ function lbPassText(p) {
   return `${p.ground_station || p.station || "?"} AOS ${hm(p.aos_time)} LOS ${hm(p.los_time)}` +
     (Number.isFinite(Number(p.max_elevation)) ? ` · ${tText("max el")} ${num(p.max_elevation, 0)}°` : "");
 }
+/* The last completed pass from the MCS pass log (server: smo_mcs/pass_log.py,
+ * ground propagator AOS/LOS + the TM frames received in it). */
+function lbDonePassText(p) {
+  if (!p) return "";
+  const hm = (x) => (x ? fmtUTC(x, { date: false }) : "—");
+  const aos = p.aos_seen === false ? tText("before this console started") : hm(p.aos);
+  const tm = p.tm
+    ? tText("TM {{a}}–{{b}}", { a: hm(p.tm_first), b: hm(p.tm_last) })
+    : tText("no TM received");
+  return `${p.station || "?"} AOS ${aos} LOS ${hm(p.los)}` +
+    (Number.isFinite(Number(p.max_el_deg)) ? ` · ${tText("max el")} ${num(p.max_el_deg, 0)}°` : "") +
+    ` · ${tm} (${tText("sim")})`;
+}
+function lbSessionLabel() {
+  return typeof S.state.session_label === "string" ? S.state.session_label : "";
+}
 function lbOpenAlarms() {
   return alarmGroups(S.alarms.filter((a) => !a.rtn)).filter((g) => !g.acknowledged || g.pri <= 2);
 }
@@ -6078,10 +6094,11 @@ function lbPrefill(key, ctx) {
       return lbOpenAlarms().filter((g) => ["S12", "S19", "S5"].includes(String(g.source || "").toUpperCase()))
         .map(lbAlarmLine).join("; ");
     case "phase_time": {
+      // no phase in TM yet: say so instead of "phase ?"
       const ph = lbReadParam("eps.spacecraft_phase", "0x0129");
-      return `${tText("phase")} ${ph && !ph.nodata ? ph.text : "?"} · ${tsShort()} (${tText("sim")})`;
+      return `${tText("phase")} ${ph && !ph.nodata ? ph.text : tText("no data")} · ${tsShort()} (${tText("sim")})`;
     }
-    case "last_pass": return "";
+    case "last_pass": return lbDonePassText((S.state.pass_log || {}).last);
     case "next_pass": case "next_aos": return lbPassText(next);
     case "gonogo_open": return S.goNoGo && S.goNoGo.active ? lbGoNoGoText(S.goNoGo) : "";
     case "gonogo": return lbGoNoGoText(S.goNoGo);
@@ -6104,6 +6121,11 @@ function lbInfo(kind, ctx) {
   } else if (kind === "handover") {
     out.push({ label: tText("Position"), value: lbPrefill("position", ctx) });
     out.push({ label: tText("Console time"), value: tsShort() + ` (${tText("sim")})` });
+    const cur = (S.state.pass_log || {}).current;
+    if (cur) out.push({ label: tText("Pass in progress"), value: lbDonePassText({ ...cur, los: null }) });
+  }
+  if (["handover", "briefing", "debrief"].includes(kind) && lbSessionLabel()) {
+    out.push({ label: tText("Session"), value: `${lbSessionLabel()} (${tText("published by the instructor")})` });
   }
   return out;
 }
@@ -6117,7 +6139,10 @@ function initLogbook() {
   LB = mountLogbook({ tool: "mcs", getContext: lbContext, buttonHost: slot,
     bannerHost: $("top-bar"), buttonClass: "ds-btn ghost lb-btn",
     readParam: lbReadParam, prefill: lbPrefill, info: lbInfo,
-    handIn: () => ({ position: POSITION_INFO[S.position] ? `${tText(POSITION_INFO[S.position].title)} (${S.position})` : S.position }) });
+    // scenario: the session label the instructor published (never the
+    // scenario's own name, which would brief the operators)
+    handIn: () => ({ position: POSITION_INFO[S.position] ? `${tText(POSITION_INFO[S.position].title)} (${S.position})` : S.position,
+      scenario: lbSessionLabel() }) });
   const gn = $("gonogo-logthis");
   if (gn) gn.innerHTML = renderLogThis({}, { kind: "decision" });
   lbLoadProcIndex();

@@ -268,3 +268,27 @@ def test_classic_instructor_page_untouched():
     assert actual == CLASSIC_SHA256, (
         "classic instructor page changed — it is frozen during the 2026-08 "
         "UI reorganisation; modern work belongs in static/modern/")
+
+
+# ── session label (2026-11-03): the instructor publishes it to the ground ──
+
+def test_session_label_is_published_in_the_state_feed(engine):
+    ok, why = engine.submit_instructor_cmd_sync(
+        {"type": "set_session_label", "label": "  Day 3,\n LEOP\tshift B  " + "x" * 200})
+    assert ok, why
+    lab = engine._build_state_summary()["session_label"]
+    assert lab.startswith("Day 3, LEOP shift B x") and len(lab) == engine.SESSION_LABEL_MAX
+    assert "\n" not in lab and "\t" not in lab
+    ok, _ = engine.submit_instructor_cmd_sync({"type": "set_session_label", "label": ""})
+    assert ok and engine._build_state_summary()["session_label"] == ""
+    # it is a published label, not the scenario: the state feed carries no
+    # scenario name (that would tell the operators what will fail)
+    summary = engine._build_state_summary()
+    assert not any("scenario" in k for k in summary)
+
+
+def test_instructor_page_publishes_the_session_label(html, js):
+    assert 'id="session-label"' in html and 'id="btn-session-label"' in html
+    assert 'type: "set_session_label", label' in js
+    # read back from the state feed, never from the scenario list
+    assert "state.session_label" in js

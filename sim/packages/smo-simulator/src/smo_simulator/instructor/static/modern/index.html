@@ -327,6 +327,25 @@ body.subpage #full-snapshot-container{ display:block; }
       </div>
     </section>
 
+    <!-- Session label: the ONE piece of session context the instructor
+         publishes to the ground (sim state feed -> MCS logbook hand-in
+         header and handover form). Never the scenario name. -->
+    <section class="ds-panel" aria-labelledby="sl-h">
+      <div class="ds-panel-h"><span id="sl-h" data-i18n>Session label for the consoles</span></div>
+      <div class="ds-panel-b">
+        <div class="pair">
+          <div class="ds-field"><label for="session-label" data-i18n>Label</label>
+            <input type="text" class="ds-input text" id="session-label" maxlength="80" autocomplete="off"
+                   data-i18n-placeholder placeholder="e.g. Day 3, LEOP shift B"></div>
+          <button type="button" class="ds-btn primary" id="btn-session-label" data-i18n>Publish</button>
+        </div>
+        <div class="note" id="session-label-now" aria-live="polite"></div>
+        <div class="affects">
+          <svg aria-hidden="true"><use href="/static/shared/glyphs.svg#g-warn-up"></use></svg>
+          <span data-i18n>Every console shows it in the logbook hand-in header. Do not name the failure: that would brief the operators.</span></div>
+      </div>
+    </section>
+
     <section class="ds-panel" id="debrief-panel" aria-labelledby="deb-h">
       <div class="ds-panel-h"><span id="deb-h" data-i18n>Debrief</span><span class="r">
         <button type="button" class="ds-btn ghost sm" id="btn-fetch-debrief"
