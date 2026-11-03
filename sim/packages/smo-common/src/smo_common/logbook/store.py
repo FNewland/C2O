@@ -58,6 +58,13 @@ CONTEXT_KEYS = ("page", "procedure", "step", "alarm_id", "param", "study_id",
                 "pass", "doc", "phase", "anomaly", "command", "gonogo", "gate",
                 "proposal")
 _CTX_VALUE_MAX = 200
+#: Optional structured payloads on a worksheet entry (ops workbook, 2026-11):
+#: ``check`` — one procedure-checklist step ticked (see ``_clean_check``);
+#: ``form``  — one filled workbook form (anomaly ticket, handover, …).
+#: Both ride beside ``text``, which always carries a readable summary, so a
+#: reader that ignores them (SpaceCDF's twin) still shows something true.
+CHECK_RESULTS = ("pass", "fail", "skip", "go", "nogo", "done", "open")
+CHECK_SOURCES = ("operator", "runner")
 #: Rewrite the file as its folded state once it holds this many records
 #: more than its live entries (edit churn must not grow it without bound).
 COMPACT_SLACK = 2000
@@ -231,6 +238,9 @@ class LogbookStore:
                     continue
                 e = {k: r.get(k) for k in ("id", "ts", "sim_ts", "tool", "kind", "text",
                                             "context", "worksheet", "lang")}
+                for k in ("check", "form"):
+                    if isinstance(r.get(k), dict):
+                        e[k] = r[k]
                 e["updated_ts"] = r.get("ts")
                 e["edited"] = False
                 entries[eid] = e
@@ -240,6 +250,10 @@ class LogbookStore:
                     entries[eid]["text"] = r["text"]
                 if isinstance(r.get("worksheet"), dict) and entries[eid].get("worksheet"):
                     entries[eid]["worksheet"] = {**entries[eid]["worksheet"], **r["worksheet"]}
+                if isinstance(r.get("check"), dict):
+                    entries[eid]["check"] = {**(entries[eid].get("check") or {}), **r["check"]}
+                if isinstance(r.get("form"), dict):
+                    entries[eid]["form"] = r["form"]      # a form is saved whole
                 entries[eid]["updated_ts"] = r.get("ts")
                 entries[eid]["edited"] = True
             elif op == "delete":
@@ -323,8 +337,91 @@ class LogbookStore:
         for k in ("title", "q_text", "section"):
             if isinstance(ws.get(k), str) and ws[k]:
                 out[k] = ws[k][:1000]
+        if isinstance(ws.get("instance"), str) and ws["instance"].strip():
+            out["instance"] = ws["instance"].strip()[:64]
         if isinstance(ws.get("checked"), bool):
             out["checked"] = ws["checked"]
+        return out
+
+    @staticmethod
+    def _s(v: Any, n: int) -> str | None:
+        if v is None or isinstance(v, (dict, list)):
+            return None
+        if isinstance(v, bool):
+            return "true" if v else "false"
+        v = str(v).strip()
+        return v[:n] if v else None
+
+    @classmethod
+    def _clean_check(cls, c: Any) -> dict | None:
+        """One checklist step: ``{procedure, step, key, title, run, result,
+        source, position, sim_ts, note, values: [{param, pid, expect, value,
+        units, ok, stale}]}``. Unknown keys are dropped, strings clipped."""
+        if not isinstance(c, dict):
+            return None
+        out: dict[str, Any] = {}
+        for k, n in (("procedure", 32), ("step", 16), ("key", 16), ("title", 300),
+                     ("run", 64), ("position", 64), ("sim_ts", 40), ("note", 4000),
+                     ("gonogo", 300), ("runner_run", 32)):
+            v = cls._s(c.get(k), n)
+            if v is not None:
+                out[k] = v
+        if isinstance(c.get("order"), int) and not isinstance(c.get("order"), bool) \
+                and 0 <= c["order"] < 1000:
+            out["order"] = c["order"]
+        if c.get("result") in CHECK_RESULTS:
+            out["result"] = c["result"]
+        if c.get("source") in CHECK_SOURCES:
+            out["source"] = c["source"]
+        vals = []
+        for v in (c.get("values") or [])[:24] if isinstance(c.get("values"), list) else []:
+            if not isinstance(v, dict):
+                continue
+            item: dict[str, Any] = {}
+            for k, n in (("param", 80), ("pid", 8), ("expect", 300), ("value", 120), ("units", 16)):
+                s = cls._s(v.get(k), n)
+                if s is not None:
+                    item[k] = s
+            for k in ("ok", "stale"):
+                if isinstance(v.get(k), bool):
+                    item[k] = v[k]
+            if item:
+                vals.append(item)
+        if vals:
+            out["values"] = vals
+        return out or None
+
+    @classmethod
+    def _clean_form(cls, f: Any) -> dict | None:
+        """One filled form: ``{instance, fields: [{q, value, checked,
+        prefilled}], info: [{label, value}]}``."""
+        if not isinstance(f, dict):
+            return None
+        out: dict[str, Any] = {}
+        inst = cls._s(f.get("instance"), 64)
+        if inst:
+            out["instance"] = inst
+        fields = []
+        for x in (f.get("fields") or [])[:80] if isinstance(f.get("fields"), list) else []:
+            if not isinstance(x, dict) or not cls._s(x.get("q"), 32):
+                continue
+            item: dict[str, Any] = {"q": cls._s(x.get("q"), 32)}
+            v = cls._s(x.get("value"), 4000)
+            if v is not None:
+                item["value"] = v
+            for k in ("checked", "prefilled"):
+                if isinstance(x.get(k), bool):
+                    item[k] = x[k]
+            if len(item) > 1:
+                fields.append(item)
+        out["fields"] = fields
+        info = []
+        for x in (f.get("info") or [])[:24] if isinstance(f.get("info"), list) else []:
+            if isinstance(x, dict) and cls._s(x.get("label"), 200):
+                info.append({"label": cls._s(x.get("label"), 200),
+                             "value": cls._s(x.get("value"), 1000) or ""})
+        if info:
+            out["info"] = info
         return out
 
     def add(self, person_id: str, body: dict, *, now: datetime | None = None) -> dict:
@@ -346,6 +443,12 @@ class LogbookStore:
             rec["sim_ts"] = body["sim_ts"][:40]
         if ws:
             rec["worksheet"] = ws
+            chk = self._clean_check(body.get("check"))
+            if chk:
+                rec["check"] = chk
+            form = self._clean_form(body.get("form"))
+            if form is not None:
+                rec["form"] = form
         with self._locked(self.path_for(person_id), create=True, exclusive=True) as f:
             recs = self._read_records(f)
             fo = self.fold(recs)
@@ -363,6 +466,12 @@ class LogbookStore:
         rec = {"v": 1, "id": entry_id, "op": "edit", "ts": iso(now), "text": text}
         if isinstance(body.get("checked"), bool):
             rec["worksheet"] = {"checked": body["checked"]}
+        chk = self._clean_check(body.get("check"))
+        if chk:
+            rec["check"] = chk
+        form = self._clean_form(body.get("form"))
+        if form is not None:
+            rec["form"] = form
         with self._locked(self.path_for(person_id), create=False, exclusive=True) as f:
             if f is None:
                 raise LogbookError("no such entry", 404)
@@ -423,6 +532,9 @@ class LogbookStore:
                 r["sim_ts"] = e["sim_ts"]
             if e.get("worksheet"):
                 r["worksheet"] = e["worksheet"]
+            for k in ("check", "form"):
+                if e.get(k):
+                    r[k] = e[k]
             out.append(r)
             if e.get("edited"):
                 out.append({"v": 1, "id": e["id"], "op": "edit", "ts": e.get("updated_ts"),

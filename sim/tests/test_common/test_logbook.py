@@ -265,9 +265,11 @@ def test_markdown_export(store):
     assert md.startswith("# C2O logbook")
     assert f"- Person: {P}" in md and "- Entries: 3" in md
     assert "Mission control, Delayed TM" in md
-    assert "### Mission control" in md and "### Delayed TM" in md
+    # ops workbook (2026-11): worksheets first, then the chronological log
+    assert md.index("## Workbook") < md.index("## Log")
+    assert "Mission control · Decision" in md and "Delayed TM · Observation" in md
     assert "procedure CTG-001" in md and "sim time 2026-03-10T04:18:22Z" in md
-    assert "#### WB-5.5-DB — Day 3 Post-Shift Debrief Reflection" in md
+    assert "### WB-5.5-DB — Day 3 Post-Shift Debrief Reflection" in md
     assert "What is one decision you took during the shift" in md
     assert "[x] I would not have shed" in md
     assert "Deleted from the C2O server on" in md.splitlines()[-1]

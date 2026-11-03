@@ -173,3 +173,42 @@ only if positions are known; otherwise omit.
 - `deploy/gcp/c2o data` lists logbooks in sizes and can clean them;
   README documents retention and privacy.
 - Never commit any logbook data; add `workspace/logbook/` to `.gitignore`.
+
+## 8. Ops workbook (2026-11-02, additive)
+
+Franz: "I want the teams to really use them as work books … make the
+checklists part of the log books." The logbook panel's second tab is the
+**Workbook** (`smo_common/ui/workbook.js`): the live checklist of the
+procedure open or running in the MCS, the forms (anomaly ticket, handover,
+GO/NO-GO scorecard, pre-pass briefing, debrief) and an index of every
+sheet. Entries stay private per person; nothing is shared on the server.
+
+**Checklists follow the card.** `GET /api/logbook/checklist?procedure=&lang=`
+(MCS only; `smo_common/logbook/checklist.py`) builds the checklist from the
+procedure CARD, because the card is what is executed; the printed
+confirm-each-step row is shown beside each step and every disagreement
+between the two is listed (`mismatches`). `python3 -m
+smo_common.logbook.checklist configs/eosat1` prints the full report.
+
+**Record additions** (all optional; a reader that ignores them still shows
+the record's `text`, which always carries a readable summary):
+
+| Field | Where | Shape |
+|---|---|---|
+| `worksheet.instance` | worksheet entries | string ≤ 64: the checklist run (`"1"`, `"2"`…) or the form copy (`"AT-0820-42"`, a position) |
+| `check` | worksheet entry = one checklist step | `{procedure, step, key, order (int), title, run, result: pass\|fail\|skip\|go\|nogo\|done\|open, source: operator\|runner, position, sim_ts, note, gonogo, runner_run, values: [{param, pid, expect, value, units, ok (bool), stale (bool)}]}` |
+| `form` | worksheet entry = one filled form (`worksheet.q = "form"`) | `{instance, fields: [{q, value, checked (bool), prefilled (bool)}], info: [{label, value}]}` |
+
+An `edit` record may carry `check` (merged into the entry's `check`) and
+`form` (replaces it). Deviations are `fail`, `skip` and `nogo`.
+
+**Export additions**: `GET /api/logbook/export` also takes `team`,
+`position`, `scenario`, `session` (hand-in header), `sheet=<worksheet id>`
+(one sheet; file name `c2o-logbook-<sheet>-…`) and `copy=1` (clipboard:
+`inline`, no download marker). The document is ordered **Workbook** (sheets
+in printed workbook order; checklists as tables — step, check, observed,
+time UTC · sim, by, result, note; forms as field/entry tables) then **Log**
+(the other entries, chronological). `GET /api/logbook/worksheets?all=1`
+lists every sheet of the tool in workbook order (`match` set where it
+applies here). Generated sheets carry `form`, `instances`, and per question
+`step` (a confirm-each-step row) and `prefill` (a console key).
