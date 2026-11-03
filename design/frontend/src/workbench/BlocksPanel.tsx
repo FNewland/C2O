@@ -18,6 +18,8 @@ import { subsystemStyle } from '../theme/tokens'
 import { askText } from '../components/ui/Dialog'
 import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge } from '../components/ui'
 
+import { placement, showQuickStart, structuralLevel } from './blockLevels'
+
 const API = '/api'
 
 // Option values are stored enums; only the labels are translated (display time).
@@ -140,7 +142,6 @@ export function BlocksPanel() {
   const { t } = useTranslation()
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
-  const currentLevel = useUIStore(s => s.currentLevel)
   const qc = useQueryClient()
   const { isLockedByOther, lockHolder, requestLock, releaseLock } = useCollaboration()
 
@@ -155,6 +156,9 @@ export function BlocksPanel() {
   const children = allElements.filter((el: any) =>
     focusElementId ? el.parent_id === focusElementId : !el.parent_id
   )
+  const place = placement(allElements, focusElementId)
+  const blockLevel = structuralLevel(place.childType)
+  const focusEl = allElements.find((e: any) => e.id === focusElementId)
 
   // Add element form state
   const [showAdd, setShowAdd] = useState(false)
@@ -165,16 +169,15 @@ export function BlocksPanel() {
 
   const addMutation = useMutation({
     mutationFn: async () => {
+      // Type and parent follow the element in focus, not the breadcrumb depth (blockLevels.ts)
       const body: any = {
         name: newName,
-        element_type: newType || (({ 0: 'segment', 1: 'system', 2: 'subsystem', 3: 'component' } as Record<number, string>)[currentLevel] || 'system'),
-        parent_id: focusElementId || undefined,
+        element_type: newType || place.childType || 'component',
+        parent_id: place.parentId || undefined,
         segment: newSegment,
       }
-      // For mission root (level 0, no focus), create mission element
-      if (currentLevel === 0 && !focusElementId) {
-        body.element_type = 'mission'
-      }
+      // Inside a segment, children belong to that segment
+      if (focusEl?.segment && place.childType !== 'segment') body.segment = focusEl.segment
       if (newDomain) body.subsystem_domain = newDomain
       const res = await fetch(`${API}/elements/?study_id=${studyId}`, {
         method: 'POST',
@@ -233,7 +236,7 @@ export function BlocksPanel() {
     qc.invalidateQueries({ queryKey: ['elements', studyId] })
   }, [studyId, qc, allElements])
 
-  const typeOptions = elementTypesByLevel(t)[currentLevel] || []
+  const typeOptions = elementTypesByLevel(t)[blockLevel] || []
   const focusName = allElements.find((e: any) => e.id === focusElementId)?.name
 
   const setQuantity = async (el: any) => {
@@ -324,14 +327,14 @@ export function BlocksPanel() {
               </Select>
             </Field>
           )}
-          {currentLevel === 0 && (
+          {blockLevel === 0 && (
             <Field label={t('Segment')}>
               <Select value={newSegment} onChange={e => setNewSegment(e.target.value)} dense>
                 {segmentOptions(t).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </Select>
             </Field>
           )}
-          {currentLevel >= 1 && (
+          {blockLevel >= 1 && (
             <Field label={t('Subsystem domain')}>
               <Select value={newDomain} onChange={e => setNewDomain(e.target.value)} dense>
                 {domainOptions(t).map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
@@ -352,7 +355,7 @@ export function BlocksPanel() {
       )}
 
       {/* Auto-populate subsystem tree from KB */}
-      <PopulateButton studyId={studyId} focusElementId={focusElementId} currentLevel={currentLevel} childElements={children} />
+      <PopulateButton studyId={studyId} focusElementId={focusElementId} show={showQuickStart(allElements, focusElementId)} />
 
       {/* Element properties editor (Tier C data capture for exports) */}
       <ElementProperties studyId={studyId} focusElementId={focusElementId} allElements={allElements} />
@@ -365,14 +368,14 @@ export function BlocksPanel() {
       <DesignTools />
 
       {/* Equipment Browser at Level 3 */}
-      {currentLevel === 3 && (
+      {blockLevel === 3 && (
         <div className="mt-2 bt pt-2">
           <EquipmentBrowser />
         </div>
       )}
 
       {/* Design Assist */}
-      <DesignAssist studyId={studyId} focusElementId={focusElementId} currentLevel={currentLevel} />
+      <DesignAssist studyId={studyId} parentId={place.parentId} blockLevel={blockLevel} />
     </div>
   )
 }
@@ -673,13 +676,13 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
 
 // Suggested requirements moved to RequirementsPanel (suggestedReqs.ts)
 
-function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: string | null; focusElementId: string | null; currentLevel: Level }) {
+function DesignAssist({ studyId, parentId: placeParent, blockLevel }: { studyId: string | null; parentId: string | null; blockLevel: Level }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [applying, setApplying] = useState(false)
   const qc = useQueryClient()
 
-  const presets = presetsByLevel(t)[currentLevel] || []
+  const presets = presetsByLevel(t)[blockLevel] || []
 
   if (presets.length === 0) return null
 
@@ -687,10 +690,11 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
     if (!studyId) return
     setApplying(true)
     try {
-      // Find or create parent element
-      let parentId = focusElementId
+      // Parent: the element in focus, or the study's mission root at the top level;
+      // a mission root is created only for a study that has none.
+      let parentId = placeParent
       if (!parentId) {
-        // At root level 0, create mission element first
+        // At root level 0 with no mission root, create the mission element first
         const res = await fetch(`${API}/elements/?study_id=${studyId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -751,21 +755,16 @@ function DesignAssist({ studyId, focusElementId, currentLevel }: { studyId: stri
 
 // ─── Populate Button: auto-create subsystems + equipment from KB ───
 
-function PopulateButton({ studyId, focusElementId, currentLevel, childElements }: {
-  studyId: string | null; focusElementId: string | null; currentLevel: number; childElements: any[]
+function PopulateButton({ studyId, focusElementId, show }: {
+  studyId: string | null; focusElementId: string | null; show: boolean
 }) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const qc = useQueryClient()
 
-  // Show at Level 1 (segment focused) when no system children exist yet
-  const focusEl = (qc.getQueryData(['elements', studyId]) as any[] || [])
-    .find((e: any) => e.id === focusElementId)
-  const isSegment = focusEl?.element_type === 'segment'
-  const hasSystem = childElements.some((c: any) => c.element_type === 'system')
-
-  if (currentLevel !== 1 || !isSegment || hasSystem) return null
+  // Shown on a segment with no system yet, whatever the breadcrumb depth (blockLevels.ts)
+  if (!show) return null
 
   const populate = async () => {
     if (!studyId || !focusElementId) return

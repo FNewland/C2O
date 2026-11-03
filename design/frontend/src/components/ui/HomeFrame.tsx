@@ -17,7 +17,7 @@ export function HomeFrame({ title, lead, children, logbook = false }: { title: s
       <header className="c2o-home-frame__bar">
         <span className="c2o-appbar__mark">SpaceCDF</span>
         <span className="t-13 c-2">{t('Concurrent Design Facility')}</span>
-        <span className="c2o-hide-narrow t-12 c-3">{t('University of Ottawa — SEDTI')}</span>
+        <span className="c2o-hide-narrow t-12 c-3">{t('C2O — from Concept to Orbit')}</span>
         <span className="ml-auto row gap-2">
           {logbook && <LogbookButton />}
           <LanguageToggle />

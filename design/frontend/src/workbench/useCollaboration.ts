@@ -25,32 +25,54 @@ function invalidateAnalysisKeys(qc: any) {
 }
 
 export interface CollaborationUser {
+  /** Identity (IAP email, else this browser's client id): two people may share a name (WP0). */
+  id?: string
   name: string
+  connections?: number
   connected_at?: string
+}
+
+/** A stable id for this browser, sent with the study socket so presence is not keyed by name. */
+function clientId(): string {
+  const KEY = 'scdf.client_id'
+  try {
+    let id = localStorage.getItem(KEY)
+    if (!id) {
+      id = (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_-]/g, '')
+      localStorage.setItem(KEY, id)
+    }
+    return id
+  } catch { return '' }
 }
 
 // ─── Shared collaboration state (Zustand) ───
 
+interface LockHolder { name: string; id: string }
+
 interface CollabStore {
   connected: boolean
+  me: string                       // my identity, from the server's welcome message
   users: CollaborationUser[]
-  locks: Map<string, string>  // element_id → held_by
+  locks: Map<string, LockHolder>   // element_id → holder
   setConnected: (c: boolean) => void
+  setMe: (id: string) => void
   setUsers: (u: CollaborationUser[]) => void
-  setLock: (elementId: string, heldBy: string) => void
+  setLock: (elementId: string, heldBy: LockHolder) => void
   removeLock: (elementId: string) => void
-  setLocksFromState: (locks: Array<{ element_id: string; held_by: string }>) => void
+  setLocksFromState: (locks: Array<{ element_id: string; held_by: string; held_by_id?: string }>) => void
 }
 
 const useCollabStore = create<CollabStore>((set) => ({
   connected: false,
+  me: '',
   users: [],
   locks: new Map(),
   setConnected: (c) => set({ connected: c }),
+  setMe: (id) => set({ me: id }),
   setUsers: (u) => set({ users: u }),
   setLock: (elementId, heldBy) => set(s => { const n = new Map(s.locks); n.set(elementId, heldBy); return { locks: n } }),
   removeLock: (elementId) => set(s => { const n = new Map(s.locks); n.delete(elementId); return { locks: n } }),
-  setLocksFromState: (locks) => set({ locks: new Map(locks.map(l => [l.element_id, l.held_by])) }),
+  setLocksFromState: (locks) => set({ locks: new Map(locks.map(l => [l.element_id, { name: l.held_by, id: l.held_by_id || '' }])) }),
 }))
 
 // ─── Module-level singleton WebSocket ───
@@ -73,7 +95,7 @@ function _connect(studyId: string, userName: string) {
   if (_ws) { _ws.close(); _ws = null }
 
   const base = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
-  const url = `${base}/ws/study/${studyId}?name=${encodeURIComponent(userName)}`
+  const url = `${base}/ws/study/${studyId}?name=${encodeURIComponent(userName)}&client_id=${encodeURIComponent(clientId())}`
 
   try {
     const ws = new WebSocket(url)
@@ -93,6 +115,14 @@ function _connect(studyId: string, userName: string) {
         const msg = JSON.parse(event.data)
         const store = useCollabStore.getState()
         switch (msg.type) {
+          case 'welcome':
+            store.setMe(msg.you?.id || '')
+            break
+          case 'gate_state_changed':
+          case 'gate_profile_changed':
+          case 'study_records_changed':
+            for (const key of ['gates', 'gate-review', 'risks', 'trade', 'logbook-decisions', 'margin-ladder']) _qcRef?.invalidateQueries({ queryKey: [key] })
+            break
           case 'users_update':
             store.setUsers(msg.users || [])
             break
@@ -101,7 +131,7 @@ function _connect(studyId: string, userName: string) {
             break
           case 'element_locked':
           case 'lock_granted':
-            store.setLock(msg.element_id, msg.held_by || userName)
+            store.setLock(msg.element_id, { name: msg.held_by || userName, id: msg.held_by_id || '' })
             break
           case 'lock_denied':
             break
@@ -188,14 +218,16 @@ export function useCollaboration() {
     _send({ type: 'lock_release', element_id: elementId })
   }, [])
 
+  const me = useCollabStore(s => s.me)
   const isLockedByOther = useCallback((elementId: string) => {
     const holder = locks.get(elementId)
-    return holder != null && holder !== userName
-  }, [locks, userName])
+    if (holder == null) return false
+    return holder.id && me ? holder.id !== me : holder.name !== userName
+  }, [locks, userName, me])
 
   const lockHolder = useCallback((elementId: string) => {
-    return locks.get(elementId) || null
+    return locks.get(elementId)?.name || null
   }, [locks])
 
-  return { connected, users, locks, myName: userName || '', requestLock, releaseLock, isLockedByOther, lockHolder }
+  return { connected, users, locks, me, myName: userName || '', requestLock, releaseLock, isLockedByOther, lockHolder }
 }

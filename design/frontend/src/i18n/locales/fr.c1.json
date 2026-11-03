@@ -321,7 +321,6 @@
   "Unit": "Unité",
   "Unit cost decreases with production experience (Wright learning curve)": "Le coût unitaire diminue avec l'expérience de production (courbe d'apprentissage de Wright)",
   "Unit {{n}}: {{cost}} kEUR": "Unité {{n}} : {{cost}} kEUR",
-  "University of Ottawa — SEDTI": "Université d'Ottawa — ECIPG",
   "User Segment": "Segment utilisateur",
   "Uses your design's orbit parameters and ground stations from the element tree.": "Utilise les paramètres d'orbite de votre conception et les stations sol de l'arborescence des éléments.",
   "Using: {{alt}}km, {{incl}}° inc, {{count}} ground stations, {{sc}} spacecraft_many": "Données : {{alt}}km, incl. {{incl}}°, {{count}} de stations sol, {{sc}} satellite(s)",
