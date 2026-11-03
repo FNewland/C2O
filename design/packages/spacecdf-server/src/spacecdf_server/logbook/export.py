@@ -5,6 +5,10 @@ grouped under their worksheet with the question text. Both document formats
 carry a header (person, export time UTC, tools used, entry count) and the
 footer "Deleted from the C2O server on <expires_at>".
 
+Times print in the participant's time zone when the UI sends one (``tz``,
+an IANA name such as ``America/Toronto``), else in UTC; the day grouping
+follows the same zone so an evening session is not split at midnight UTC.
+
 The HTML is self-contained (no scripts, no external files) and prints on A4
 or Letter, so "Save as PDF" in the browser gives the PDF.
 """
@@ -13,8 +17,9 @@ from __future__ import annotations
 import html
 import json
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, tzinfo
 from typing import Any, Callable
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .store import parse_ts
 
@@ -27,6 +32,7 @@ _S: dict[str, dict[str, str]] = {
     "person": {"en": "Person", "fr": "Personne"},
     "exported": {"en": "Exported", "fr": "Exporté le"},
     "tools": {"en": "Tools", "fr": "Outils"},
+    "tz": {"en": "Times in", "fr": "Heures en"},
     "entries": {"en": "Entries", "fr": "Entrées"},
     "none": {"en": "No entries.", "fr": "Aucune entrée."},
     "this_browser": {"en": "this browser", "fr": "ce navigateur"},
@@ -80,6 +86,22 @@ CONTEXT_LABEL = {
     "position": {"en": "position", "fr": "poste"},
     "scenario": {"en": "scenario", "fr": "scénario"},
 }
+# SpaceCDF context values that are ids: printed as words.
+TAB_LABEL = {
+    "blocks": {"en": "Blocks", "fr": "Blocs"}, "spacecraft": {"en": "Spacecraft", "fr": "Véhicule spatial"},
+    "budget": {"en": "Budget", "fr": "Bilan"}, "requirements": {"en": "Requirements", "fr": "Exigences"},
+    "functions": {"en": "Functions", "fr": "Fonctions"}, "interfaces": {"en": "Interfaces", "fr": "Interfaces"},
+    "icd": {"en": "ICD", "fr": "ICD"}, "trace": {"en": "Traceability", "fr": "Traçabilité"},
+    "decide": {"en": "Decide", "fr": "Décider"}, "analyses": {"en": "Analyses", "fr": "Analyses"},
+    "vv": {"en": "V&V", "fr": "V&V"},
+}
+STEP_LABEL = {
+    "wizard:home": {"en": "start screen", "fr": "écran d’accueil"},
+    "wizard:problem": {"en": "mission wizard, problem", "fr": "assistant de mission, problème"},
+    "wizard:stakeholders": {"en": "mission wizard, stakeholders", "fr": "assistant de mission, parties prenantes"},
+    "wizard:alternatives": {"en": "mission wizard, alternatives", "fr": "assistant de mission, solutions de rechange"},
+    "wizard:architecture": {"en": "mission wizard, architecture", "fr": "assistant de mission, architecture"},
+}
 # Ids that only matter to software; the readable twin is printed instead.
 _HIDDEN_CONTEXT = {"study_id"}
 
@@ -94,11 +116,28 @@ def _label(table: dict, key: str, lang: str) -> str:
     return (entry.get(lang) or entry["en"]) if entry else key
 
 
-def fmt_utc(dt: datetime | None, with_date: bool = True) -> str:
+def zone(name: str | None) -> tzinfo:
+    """An IANA zone name from the UI, else UTC (unknown names fall back to UTC)."""
+    if not name or name == "UTC":
+        return timezone.utc
+    try:
+        return ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return timezone.utc
+
+
+def _zone_abbr(dt: datetime) -> str:
+    if dt.tzinfo is timezone.utc:
+        return "UTC"
+    return dt.strftime("%Z") or dt.strftime("UTC%z")
+
+
+def fmt_utc(dt: datetime | None, with_date: bool = True, tz: tzinfo = timezone.utc) -> str:
+    """Date and time in ``tz`` (UTC by default), with the zone named on full stamps."""
     if dt is None:
         return ""
-    dt = dt.astimezone(timezone.utc)
-    return dt.strftime("%Y-%m-%d %H:%M UTC" if with_date else "%H:%M")
+    dt = dt.astimezone(tz)
+    return f"{dt.strftime('%Y-%m-%d %H:%M')} {_zone_abbr(dt)}" if with_date else dt.strftime("%H:%M")
 
 
 WorksheetLookup = Callable[[str, str, str], tuple[str | None, str | None, int]]
@@ -115,26 +154,37 @@ def _ws_texts(entry: dict, lookup: WorksheetLookup | None, lang: str) -> tuple[s
     return (title or ws.get("title") or wid, question or ws.get("question") or q, order)
 
 
+def _context_value(k: str, v: Any, lang: str) -> str:
+    sv = str(v)
+    if k == "tab" and sv in TAB_LABEL:
+        return _label(TAB_LABEL, sv, lang)
+    if k == "step" and sv in STEP_LABEL:
+        return _label(STEP_LABEL, sv, lang)
+    if k == "gate":
+        return sv.upper()
+    if k == "level" and sv == "4":
+        return "V&V"
+    return sv
+
+
 def _context_items(entry: dict, lang: str) -> list[tuple[str, str]]:
     ctx = entry.get("context") or {}
     items = []
     for k, v in ctx.items():
-        if v in (None, "", False) or k in _HIDDEN_CONTEXT:
+        if v is None or v == "" or v is False or k in _HIDDEN_CONTEXT:
             continue
-        if k == "study_id" and ctx.get("study_name"):
-            continue
-        items.append((_label(CONTEXT_LABEL, k, lang), str(v)))
+        items.append((_label(CONTEXT_LABEL, k, lang), _context_value(k, v, lang)))
     return items
 
 
-def group(entries: list[dict]) -> "OrderedDict[str, OrderedDict[str, list[dict]]]":
-    """day (YYYY-MM-DD UTC) → tool → entries, all ascending in time."""
+def group(entries: list[dict], tz: tzinfo = timezone.utc) -> "OrderedDict[str, OrderedDict[str, list[dict]]]":
+    """day (YYYY-MM-DD in ``tz``) → tool → entries, all ascending in time."""
     epoch = datetime.min.replace(tzinfo=timezone.utc)
     ordered = sorted(entries, key=lambda e: parse_ts(e.get("ts")) or epoch)
     days: OrderedDict[str, OrderedDict[str, list[dict]]] = OrderedDict()
     for e in ordered:
         dt = parse_ts(e.get("ts"))
-        day = dt.strftime("%Y-%m-%d") if dt else "—"
+        day = dt.astimezone(tz).strftime("%Y-%m-%d") if dt else "—"
         days.setdefault(day, OrderedDict()).setdefault(str(e.get("tool") or "?"), []).append(e)
     return days
 
@@ -156,13 +206,13 @@ def _split(items: list[dict], lookup: WorksheetLookup | None, lang: str):
     return plain, sheets
 
 
-def _meta_bits(e: dict, lang: str) -> list[str]:
+def _meta_bits(e: dict, lang: str, tz: tzinfo = timezone.utc) -> list[str]:
     bits = []
     sim = parse_ts(e.get("sim_ts"))
     if sim:
-        bits.append(s("sim", lang, t=fmt_utc(sim)))
+        bits.append(s("sim", lang, t=fmt_utc(sim)))     # simulated time stays UTC
     if e.get("edited"):
-        bits.append(s("edited", lang, t=fmt_utc(parse_ts(e.get("updated_ts")), with_date=False)))
+        bits.append(s("edited", lang, t=fmt_utc(parse_ts(e.get("updated_ts")), with_date=False, tz=tz)))
     return bits
 
 
@@ -190,22 +240,24 @@ def _md_text(text: str) -> str:
 
 def render_markdown(*, entries: list[dict], person_label: str, exported_at: datetime,
                     expires_at: datetime | None, retention_h: float, lang: str,
-                    lookup: WorksheetLookup | None = None) -> str:
+                    lookup: WorksheetLookup | None = None, tz: tzinfo = timezone.utc) -> str:
     L = []
     L.append(f"# {s('title', lang)}")
     L.append("")
     L.append(f"| | |\n|---|---|")
     L.append(f"| **{s('person', lang)}** | {person_label} |")
-    L.append(f"| **{s('exported', lang)}** | {fmt_utc(exported_at)} |")
+    L.append(f"| **{s('exported', lang)}** | {fmt_utc(exported_at, tz=tz)} |")
     L.append(f"| **{s('tools', lang)}** | {', '.join(tools_used(entries, lang)) or '—'} |")
     L.append(f"| **{s('entries', lang)}** | {len(entries)} |")
+    if tz is not timezone.utc:
+        L.append(f"| **{s('tz', lang)}** | {getattr(tz, 'key', str(tz))} |")
     L.append("")
     L.append(f"*{s('private', lang)}*")
     L.append("")
     if not entries:
         L.append(s("none", lang))
         L.append("")
-    for day, tools in group(entries).items():
+    for day, tools in group(entries, tz).items():
         L.append(f"## {day}")
         L.append("")
         for tool, items in tools.items():
@@ -213,8 +265,8 @@ def render_markdown(*, entries: list[dict], person_label: str, exported_at: date
             L.append("")
             plain, sheets = _split(items, lookup, lang)
             for e in plain:
-                head = f"**{fmt_utc(parse_ts(e.get('ts')), with_date=False)} · {_label(KIND_LABEL, str(e.get('kind')), lang)}**"
-                meta = _meta_bits(e, lang)
+                head = f"**{fmt_utc(parse_ts(e.get('ts')), with_date=False, tz=tz)} · {_label(KIND_LABEL, str(e.get('kind')), lang)}**"
+                meta = _meta_bits(e, lang, tz)
                 if meta:
                     head += f" _({'; '.join(meta)})_"
                 L.append(head)
@@ -233,15 +285,15 @@ def render_markdown(*, entries: list[dict], person_label: str, exported_at: date
                     L.append(f"**{q['text']}**")
                     L.append("")
                     for a in q["answers"]:
-                        meta = _meta_bits(a, lang)
-                        stamp = fmt_utc(parse_ts(a.get("ts")), with_date=False)
+                        meta = _meta_bits(a, lang, tz)
+                        stamp = fmt_utc(parse_ts(a.get("ts")), with_date=False, tz=tz)
                         L.append(f"_{stamp}{' · ' + '; '.join(meta) if meta else ''}_  ")
                         L.append(_md_text(a.get("text", "")))
                         L.append("")
     L.append("---")
     L.append("")
     if expires_at:
-        L.append(s("footer", lang, t=fmt_utc(expires_at), h=f"{retention_h:g}"))
+        L.append(s("footer", lang, t=fmt_utc(expires_at, tz=tz), h=f"{retention_h:g}"))
     else:
         L.append(s("footer_none", lang))
     L.append("")
@@ -289,7 +341,7 @@ def _h(text: Any) -> str:
 
 def render_html(*, entries: list[dict], person_label: str, exported_at: datetime,
                 expires_at: datetime | None, retention_h: float, lang: str,
-                lookup: WorksheetLookup | None = None) -> str:
+                lookup: WorksheetLookup | None = None, tz: tzinfo = timezone.utc) -> str:
     title = s("title", lang)
     P = [f'<!doctype html>\n<html lang="{_h(lang)}">\n<head>\n<meta charset="utf-8">',
          '<meta name="viewport" content="width=device-width, initial-scale=1">',
@@ -298,23 +350,25 @@ def render_html(*, entries: list[dict], person_label: str, exported_at: datetime
          f"<h1>{_h(title)}</h1>",
          '<table class="meta">',
          f"<tr><th>{_h(s('person', lang))}</th><td>{_h(person_label)}</td></tr>",
-         f"<tr><th>{_h(s('exported', lang))}</th><td>{_h(fmt_utc(exported_at))}</td></tr>",
+         f"<tr><th>{_h(s('exported', lang))}</th><td>{_h(fmt_utc(exported_at, tz=tz))}</td></tr>",
          f"<tr><th>{_h(s('tools', lang))}</th><td>{_h(', '.join(tools_used(entries, lang)) or '—')}</td></tr>",
          f"<tr><th>{_h(s('entries', lang))}</th><td>{len(entries)}</td></tr>",
+         (f"<tr><th>{_h(s('tz', lang))}</th><td>{_h(getattr(tz, 'key', str(tz)))}</td></tr>"
+          if tz is not timezone.utc else ""),
          "</table>",
          f'<p class="private">{_h(s("private", lang))}</p>']
     if not entries:
         P.append(f"<p>{_h(s('none', lang))}</p>")
-    for day, tools in group(entries).items():
+    for day, tools in group(entries, tz).items():
         P.append(f"<section><h2>{_h(day)}</h2>")
         for tool, items in tools.items():
             P.append(f"<h3>{_h(_label(TOOL_LABEL, tool, lang))}</h3>")
             plain, sheets = _split(items, lookup, lang)
             for e in plain:
                 kind = str(e.get("kind"))
-                meta = _meta_bits(e, lang)
+                meta = _meta_bits(e, lang, tz)
                 P.append(f'<div class="entry {_h(kind)}">'
-                         f'<span class="stamp">{_h(fmt_utc(parse_ts(e.get("ts")), with_date=False))}</span>'
+                         f'<span class="stamp">{_h(fmt_utc(parse_ts(e.get("ts")), with_date=False, tz=tz))}</span>'
                          f'<span class="kind">{_h(_label(KIND_LABEL, kind, lang))}</span>'
                          + (f'<span class="meta-bits">{_h("; ".join(meta))}</span>' if meta else "")
                          + f'<p class="text">{_h(e.get("text", ""))}</p>')
@@ -328,14 +382,14 @@ def render_html(*, entries: list[dict], person_label: str, exported_at: datetime
                 for q in sheet["questions"].values():
                     P.append(f'<p class="q">{_h(q["text"])}</p>')
                     for a in q["answers"]:
-                        meta = _meta_bits(a, lang)
+                        meta = _meta_bits(a, lang, tz)
                         P.append('<div class="entry worksheet">'
-                                 f'<span class="stamp">{_h(fmt_utc(parse_ts(a.get("ts")), with_date=False))}</span>'
+                                 f'<span class="stamp">{_h(fmt_utc(parse_ts(a.get("ts")), with_date=False, tz=tz))}</span>'
                                  + (f'<span class="meta-bits">{_h("; ".join(meta))}</span>' if meta else "")
                                  + f'<p class="text">{_h(a.get("text", ""))}</p></div>')
                 P.append("</div>")
         P.append("</section>")
-    footer = (s("footer", lang, t=fmt_utc(expires_at), h=f"{retention_h:g}") if expires_at
+    footer = (s("footer", lang, t=fmt_utc(expires_at, tz=tz), h=f"{retention_h:g}") if expires_at
               else s("footer_none", lang))
     P.append(f"<footer>{_h(footer)}</footer>\n</body>\n</html>\n")
     return "\n".join(P)
@@ -345,7 +399,7 @@ def render_html(*, entries: list[dict], person_label: str, exported_at: datetime
 
 def render_json(*, entries: list[dict], person_label: str, exported_at: datetime,
                 expires_at: datetime | None, retention_h: float, lang: str,
-                lookup: WorksheetLookup | None = None) -> str:
+                lookup: WorksheetLookup | None = None, tz: tzinfo = timezone.utc) -> str:
     from .store import iso
     epoch = datetime.min.replace(tzinfo=timezone.utc)
     ordered = sorted(entries, key=lambda e: parse_ts(e.get("ts")) or epoch)
