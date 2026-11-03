@@ -162,13 +162,42 @@ def test_nom001_checklist_follows_the_card_with_the_printed_sheet_beside(provide
     s4 = cl["steps"][3]
     assert s4["title"] == "Establish TTC Link" and s4["tcs"] == ["TTC_SWITCH_PRIMARY"]
     assert any(c.get("param") == "ttc.link_status" and c["op"] == "==" for c in s4["checks"])
-    assert any(r["n"] == "3" for r in s4["ref"])        # printed row 3 is about link lock
+    assert [r["n"] for r in s4["ref"]] == ["4"]          # printed row 4 is the link step
     assert cl["steps"][6]["gonogo"]                     # the FD poll is a GO/NO-GO gate
     assert [q["text"] for q in cl["extra"]] == ["Off-nominal items observed"]
-    kinds = {m["kind"] for m in cl["mismatches"]}
-    assert {"count", "row_unmatched", "step_unprinted"} <= kinds
-    count = next(m for m in cl["mismatches"] if m["kind"] == "count")
-    assert (count["n_sheet"], count["n_card"]) == (10, 7)
+    # the printed sheet was rewritten from the card (2026-11-03): one row per step
+    assert cl["mismatches"] == []
+    assert all([r["n"] for r in s["ref"]] == [s["n"]] for s in cl["steps"])
+
+
+def test_every_printed_step_sheet_lines_up_with_its_card(provider):
+    """Each confirm-each-step sheet prints one row per card step, numbered as
+    the card numbers it, and names nothing the card does not send or check."""
+    for r in provider.report():
+        assert r["mismatches"] == [], (r["sheet"], r["mismatches"][:3])
+        cl = provider(r["procedure"], "en")
+        assert all([x["n"] for x in s["ref"]] == [s["n"]] for s in cl["steps"]), r["sheet"]
+
+
+def test_compare_sheet_ties_go_to_the_next_step():
+    """HK_REQUEST is on most steps: a row that only shares it with several
+    steps belongs to the first of them after the previous row's step."""
+    card = parse_card("""# X
+### Step 1 --- OBC
+**TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27)
+**Verify:** `obdh.mode` (0x0300) = 0
+### Step 2 --- Link
+**TC:** `TTC_SWITCH_PRIMARY` (Service 8, Subtype 1)
+### Step 3 --- All HK
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
+""")
+    sheet = {"id": "WB-T", "questions": [
+        {"id": "q1", "step": "1", "text": {"en": "1. HK_REQUEST(sid=4); obdh.mode = 0"}},
+        {"id": "q2", "step": "2", "text": {"en": "2. TTC_SWITCH_PRIMARY"}},
+        {"id": "q3", "step": "3", "text": {"en": "3. HK_REQUEST of SIDs 1-6"}}]}
+    out = compare_sheet(card, sheet)
+    assert out["mismatches"] == []
+    assert [r["n"] for r in out["rows"]["s3"]] == ["3"]
 
 
 def test_french_checklist_uses_the_french_card_and_keeps_english_parsing(provider):
@@ -226,8 +255,8 @@ def test_checklist_for_a_card_without_a_sheet():
 def test_generated_sheets_mark_steps_forms_and_prefill():
     c = WorksheetCatalog(CFG / "worksheets")
     n001 = c.get("WB-5.4-N001")
-    assert [q.get("step") for q in n001["questions"][:10]] == [str(i) for i in range(1, 11)]
-    assert "step" not in n001["questions"][10]
+    assert [q.get("step") for q in n001["questions"][:7]] == [str(i) for i in range(1, 8)]
+    assert "step" not in n001["questions"][7]
     at = c.get("WB-5.5-AT")
     assert at["form"] == "anomaly" and at["instances"] is True
     assert {q.get("prefill") for q in at["questions"]} >= {"ticket_id", "param_value", "procedure"}
@@ -387,7 +416,7 @@ def test_old_records_still_export(store):
     store.add(P, {"kind": "worksheet", "tool": "mcs", "text": "Done", "worksheet":
                   {"id": "WB-5.4-N001", "q": "q3", "checked": True}})
     md = to_markdown(store.summary(P), P, lookup=WorksheetCatalog(CFG / "worksheets").question, now=NOW)
-    assert "3. TT&C: At AOS, verify link lock acquired" in md and "[x] Done" in md
+    assert "3. AOCS: Verify AOCS pointing: HK_REQUEST(sid=2)" in md and "[x] Done" in md
 
 
 # ── the SpaceCDF twin reads the same file safely ───────────────────────

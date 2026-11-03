@@ -274,7 +274,8 @@ def compare_sheet(card: dict, sheet: dict | None, lang: str = "en") -> dict:
 
     Returns ``{rows: {step key: [row refs]}, mismatches: [{kind, row?, step?,
     detail}]}``. A row matches the card step that shares most commands,
-    parameter names and parameter ids with it (ties go to the earlier step).
+    parameter names and parameter ids with it (ties go to the first tied step
+    after the one the previous row matched, else to the earliest).
     Reported: a different number of steps; a printed row whose command or
     parameter is nowhere on the card; a card step no printed row covers; a
     printed row matched out of order.
@@ -304,11 +305,15 @@ def compare_sheet(card: dict, sheet: dict | None, lang: str = "en") -> dict:
         en = txt(q.get("text")) + " " + txt(q.get("hint"))
         tok = _tokens((q.get("text") or {}).get("en", "") + " " + (q.get("hint") or {}).get("en", ""))
         best, best_score = None, 0
-        for i, ct in enumerate(card_tok):
-            score = 3 * len(tok["cmd"] & ct["cmd"]) + 2 * len(tok["pid"] & ct["pid"]) \
-                + len(tok["param"] & ct["param"])
-            if score > best_score:
-                best, best_score = i, score
+        scores = [3 * len(tok["cmd"] & ct["cmd"]) + 2 * len(tok["pid"] & ct["pid"])
+                  + len(tok["param"] & ct["param"]) for ct in card_tok]
+        top = max(scores, default=0)
+        if top > 0:
+            # Ties (HK_REQUEST is on half the steps of a card) go to the first
+            # tied step after the previous row's, then to the earliest one.
+            tied = [i for i, s in enumerate(scores) if s == top]
+            best = next((i for i in tied if i > last_idx), tied[0])
+            best_score = top
         ref = {"q": q.get("id"), "n": q.get("step"), "text": txt(q.get("text")),
                "hint": txt(q.get("hint"))}
         if best is None:

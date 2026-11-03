@@ -71,7 +71,7 @@ documents:
     audience: student
     category: workbook
     source: design/docs/pdf/en/SpaceCDF_Workbook.pdf
-    size: 1416828
+    size: 1522631
     pair: spacecdf-workbook-fr
   - id: spacecdf-workbook-fr
     title: {en: "SpaceCDF course workbook", fr: "Cahier d’exercices du cours SpaceCDF"}
@@ -79,7 +79,7 @@ documents:
     audience: student
     category: workbook
     source: design/docs/pdf/fr/SpaceCDF_Workbook_FR.pdf
-    size: 1461667
+    size: 1575160
     pair: spacecdf-workbook-en
   - id: on-w3-peer-review-en
     title: {en: "Peer-review worksheet pack (week 3)", fr: "Fiches d’évaluation par les pairs (semaine 3)"}

@@ -71,7 +71,8 @@ async def test_checklist_for_a_manual_card(server, tmp_path):
     try:
         cl = await (await c.get("/api/logbook/checklist?procedure=LEOP-001&lang=fr", headers=H)).json()
         assert cl["sheet_id"] == "WB-5.5-L001" and not cl["runnable"] and "runner_map" not in cl
-        assert cl["steps"][0]["title"] and cl["mismatches"]
+        assert cl["steps"][0]["title"]
+        assert cl["mismatches"] == []              # the printed sheet follows the card
         r = await c.get("/api/logbook/checklist?procedure=CTG-018", headers=H)
         assert r.status == 404                     # retired card: no steps, no checklist
     finally:
