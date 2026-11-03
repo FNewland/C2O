@@ -877,6 +877,34 @@ class TTCBasicModel(SubsystemModel):
             return s.device_states.get(0x0401, True)
         return True
 
+    def _unit_alive(self, s: TTCState, unit: int) -> bool:
+        """True if transponder ``unit`` (0 primary, 1 redundant) is neither
+        failed nor switched OFF via S2 device access (0x0400/0x0401)."""
+        if unit == 0:
+            return not s.primary_failed and s.device_states.get(0x0400, True)
+        return not s.redundant_failed and s.device_states.get(0x0401, True)
+
+    def selected_transponder_alive(self) -> bool:
+        """The transponder selected by ``mode`` can receive and transmit."""
+        s = self._state
+        if s.mode in (0, 1):
+            return self._unit_alive(s, s.mode)
+        return self._unit_alive(s, 0) or self._unit_alive(s, 1)
+
+    def any_transponder_alive(self) -> bool:
+        """At least one S-band transponder is alive.
+
+        With BOTH units dead the spacecraft has no S-band radio at all: it can
+        neither receive a telecommand nor send telemetry, and nothing on the
+        ground — not even the instructor pass override, which only stands in
+        for "a station is in view" — can change that (Franz, 2026-11-02, S4).
+        Recovery is the failure clearing (a transient) or the instructor
+        clearing it; the on-board command-loss timer (FDIR TTC-01) still runs
+        and fires its switch, which a dead redundant unit refuses.
+        """
+        s = self._state
+        return self._unit_alive(s, 0) or self._unit_alive(s, 1)
+
     def _device_lna_on(self, s: TTCState) -> bool:
         """True if the LNA (0x0403) is powered. With the LNA off the receiver
         is dead — no uplink lock can be acquired."""

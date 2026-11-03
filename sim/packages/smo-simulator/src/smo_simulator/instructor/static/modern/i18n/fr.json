@@ -92,7 +92,7 @@
   "Set battery SoC now (0–100 %) — logged as an instructor override": "Régler le SoC batterie maintenant (0–100 %) — journalisé comme forçage instructeur",
   "Set SoC": "Régler le SoC",
   "Logged as an instructor override, not physics.": "Consigné comme forçage instructeur, pas comme physique.",
-  "Force ground contact (TM/TC available regardless of pass)": "Forcer le contact sol (TM/TC disponibles hors passage)",
+  "Training aid: force ground contact (TM/TC regardless of pass). It cannot revive a dead radio: with both transponders failed the link stays cut.": "Aide à la formation : forcer le contact sol (TM/TC hors passage). Ne ranime pas une radio en panne : si les deux transpondeurs sont en panne, la liaison reste coupée.",
   "Collapse/expand the event log": "Replier/déplier le journal des événements",
   "Event log": "Journal des événements",
   "sim-time stamps · last 200 entries": "horodatage en temps SIM · 200 dernières entrées",
