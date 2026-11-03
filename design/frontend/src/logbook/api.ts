@@ -22,7 +22,7 @@ export interface Entry {
   kind: EntryKind
   text: string
   context: Context
-  worksheet: { id: string; q: string; title?: string; question?: string } | null
+  worksheet: { id: string; q: string; title?: string; q_text?: string; checked?: boolean } | null
   sim_ts?: string | null
   lang?: string | null
 }
@@ -35,8 +35,8 @@ export interface Summary {
   last_write: string | null
   last_download: string | null
   entries: Entry[]
+  /** Every live entry, all tools (filters only narrow `entries`). */
   count: number
-  total: number
   unsaved: number
 }
 

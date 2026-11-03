@@ -23,7 +23,7 @@ export function LogbookButton() {
   const open = useLogbookUI(s => s.open)
   const toggle = useLogbookUI(s => s.toggle)
   const { data } = useLogbook()
-  const n = data?.total ?? 0
+  const n = data?.count ?? 0
   return (
     <button type="button" className="c2o-btn c2o-lb-btn" aria-pressed={open} aria-controls="c2o-logbook"
       onClick={toggle}

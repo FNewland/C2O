@@ -44,9 +44,9 @@ export function LogbookRoot() {
   const prev = useRef(studyId)
   const requestEnd = useLogbookUI(s => s.requestEndSession)
   useEffect(() => {
-    if (prev.current && prev.current !== studyId && (data?.total ?? 0) > 0) requestEnd('leave')
+    if (prev.current && prev.current !== studyId && (data?.count ?? 0) > 0) requestEnd('leave')
     prev.current = studyId
-  }, [studyId, data?.total, requestEnd])
+  }, [studyId, data?.count, requestEnd])
 
   return (
     <>
@@ -111,7 +111,7 @@ function EndSessionDialog() {
   const title = end.reason === 'gate' ? t('Review finished: download your logbook')
     : end.reason === 'leave' ? t('You left the study: download your logbook')
     : t('End session')
-  const total = data?.total ?? 0
+  const total = data?.count ?? 0
   const unsaved = data?.unsaved ?? 0
   return (
     <Dialog open title={title} onClose={close} width={520}
@@ -153,7 +153,7 @@ function DebriefQuestion({ ws, qid, context }: { ws: Worksheet; qid: string; con
           onClick={async () => {
             setBusy(true)
             try {
-              await add({ kind: 'worksheet', text, context, worksheet: { id: ws.id, q: q.id, title: ws.title, question: q.text } })
+              await add({ kind: 'worksheet', text, context, worksheet: { id: ws.id, q: q.id, title: ws.title, q_text: q.text } })
               setSaved(true)
             } finally { setBusy(false) }
           }}>{t('Save answer')}</Button>

@@ -26,9 +26,9 @@ export function fmtDeadline(ts: string | null | undefined): string {
 }
 
 /** Footer line: private, and when the server deletes it. */
-export function deletionText(data: { total: number; expires_at: string | null; retention_h: number } | undefined,
+export function deletionText(data: { count: number; expires_at: string | null; retention_h: number } | undefined,
   t: TFunction): string {
-  if (!data || !data.expires_at || data.total === 0) return t('Private to you · nothing is stored on the server yet')
+  if (!data || !data.expires_at || data.count === 0) return t('Private to you · nothing is stored on the server yet')
   return t('Private to you · deleted from the server on {{when}} ({{hours}} h after your last entry)',
     { when: fmtDeadline(data.expires_at), hours: data.retention_h })
 }

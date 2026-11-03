@@ -16,7 +16,8 @@ from fastapi.responses import JSONResponse
 from . import export as export_mod
 from . import worksheets as ws_mod
 from .store import (
-    COOKIE_MAX_AGE, COOKIE_NAME, IAP_HEADER, LANGS, TOOLS, LogbookError, LogbookStore,
+    COOKIE_MAX_AGE, COOKIE_NAME, ENTRY_LIMIT, IAP_HEADER, LANGS, TEXT_LIMIT, TOOLS, LogbookError,
+    LogbookStore,
     fold, iso, new_local_id, now_utc, parse_ts, person_from_cookie, person_from_iap,
 )
 
@@ -69,7 +70,7 @@ def _summary(ident: Identity, tool: str | None, since: str | None, lang: str) ->
         entries = [e for e in entries if e.get("tool") == tool]
     since_dt = parse_ts(since) if since else None
     if since_dt:
-        entries = [e for e in entries if (parse_ts(e.get("updated_ts")) or since_dt) > since_dt]
+        entries = [e for e in entries if (parse_ts(e.get("ts")) or since_dt) > since_dt]
     exp = store.expires_at(f)
     return {
         "person": {"id_label": ident.label(lang), "local": ident.local},
@@ -79,10 +80,12 @@ def _summary(ident: Identity, tool: str | None, since: str | None, lang: str) ->
         "last_write": iso(f.last_write) if f.last_write else None,
         "last_download": iso(f.last_download) if f.last_download else None,
         "entries": entries,
-        "count": len(entries),
-        # Extras for the UI (not in the spec table; additive):
-        "total": total,          # entries across every tool, ignoring filters
+        "count": total,          # every live entry, as smo-common (filters only narrow `entries`)
+        # Extras beyond the spec table (smo-common sends the same first three):
         "unsaved": f.unsaved,    # added or edited since the last download
+        "max_entries": ENTRY_LIMIT,
+        "max_text": TEXT_LIMIT,
+        "total": total,
     }
 
 
@@ -107,14 +110,23 @@ def get_logbook(request: Request, response: Response,
 def delete_logbook(request: Request, response: Response):
     ident = identify(request)
     _set_cookie(request, response, ident)
-    store.delete_all(ident.person_id)
-    return {"ok": True}
+    return {"ok": True, "deleted": store.delete_all(ident.person_id)}
 
 
-@router.post("/entries")
+@router.post("/entries", status_code=201)
 def add_entry(request: Request, response: Response, body: Any = Body(...)):
     ident = identify(request)
     try:
+        if isinstance(body, dict):
+            body.setdefault("tool", TOOL)
+            ws = body.get("worksheet")
+            if isinstance(ws, dict) and ws.get("id"):
+                # Self-contained exports (as smo-common): keep the question with the answer.
+                title, q_text, _ = ws_mod.lookup()(str(ws["id"]), str(ws.get("q") or ""), _lang(body.get("lang")))
+                if title:
+                    ws.setdefault("title", title)
+                if q_text:
+                    ws.setdefault("q_text", q_text)
         entry = store.add(ident.person_id, body)
     except LogbookError as e:
         return _error(e, request, ident)
@@ -128,7 +140,7 @@ def edit_entry(entry_id: str, request: Request, response: Response, body: Any = 
     try:
         if not isinstance(body, dict):
             raise LogbookError(400, "body must be {text}")
-        entry = store.edit(ident.person_id, entry_id, body.get("text"))
+        entry = store.edit(ident.person_id, entry_id, body.get("text"), checked=body.get("checked"))
     except LogbookError as e:
         return _error(e, request, ident)
     _set_cookie(request, response, ident)
@@ -160,7 +172,8 @@ def export_logbook(request: Request, format: str = Query("md"), lang: str | None
     text = render(entries=list(f.entries.values()), person_label=ident.label(lg), exported_at=now,
                   expires_at=store.expires_at(f), retention_h=store.retention_h, lang=lg,
                   lookup=ws_mod.lookup(), tz=export_mod.zone(tz))
-    store.mark_downloaded(ident.person_id, fmt, now=now)
+    if f.entries:
+        store.mark_downloaded(ident.person_id, fmt, now=now)
     name = f"c2o-logbook-{now.strftime('%Y%m%d-%H%M')}.{fmt}"
     resp = Response(content=text.encode("utf-8"), media_type=media, headers={
         "Content-Disposition": f'attachment; filename="{name}"',
