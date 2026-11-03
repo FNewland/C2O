@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="TTC" Creator="EOSAT-1 SMDL Generator" Version="1.0+2b1bee2e2620">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="TTC" Creator="EOSAT-1 SMDL Generator" Version="1.0+bb21390bb1f6">
   <Description>SMP2 model catalogue for TTC subsystem</Description>
   <Type Name="UInt8" Uuid="ab46787a-5742-5d41-9471-82b8d26b3826" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="00ba295b-550c-5551-b87d-d604e30c7592" xsi:type="Integer" Size="2" Signed="false"/>
@@ -90,7 +90,7 @@
     <Field Name="ttc_antenna_deployment_ready" Uuid="64c2fad3-2c76-579b-80f9-9f4ec0f1846f" Type="Float32" Kind="Output" View="true">
       <Description>Antenna deployment ready (pyro continuity OK; 0=fault, 1=ready)</Description>
     </Field>
-    <Field Name="ttc_antenna_deployment_sensor" Uuid="91d368aa-24a9-54d8-a930-4893defa6475" Type="Float32" Kind="Output" View="true">
+    <Field Name="ttc_antenna_deployment_sensor" Uuid="91d368aa-24a9-54d8-a930-4893defa6475" Type="UInt8" Kind="Output" View="true">
       <Description>Antenna deployment sensor status (0=unknown, 1=stowed, 2=deployed, 3=partial/jammed)</Description>
     </Field>
     <Field Name="ttc_modulation_mode" Uuid="19826d69-92f0-5463-ba31-d68611ada04a" Type="Float32" Kind="Output" View="true">
