@@ -1293,9 +1293,22 @@ class PlannerServer:
             else:
                 url = f"{self._mcs_url}/api/schedule/upload-s11"
 
+            # Console seats (WP10): the MCS sends these commands AS the
+            # person who clicked upload, from a desk they hold. Pass their
+            # identity on (ground to ground; the MCS verifies the IAP
+            # assertion, whose audience is this planner's backend).
+            hdrs = getattr(request, "headers", None) or {}
+            cookies = getattr(request, "cookies", None) or {}
+            fwd = {k: hdrs[k] for k in (
+                "X-Goog-Authenticated-User-Email", "X-Goog-IAP-JWT-Assertion")
+                if k in hdrs}
+            if cookies.get("c2o_lb"):
+                fwd["Cookie"] = f"c2o_lb={cookies['c2o_lb']}"
+            if body.get("position"):
+                payload["position"] = str(body["position"])[:40]
             async with _aiohttp.ClientSession() as session:
                 async with session.post(
-                    url, json=payload,
+                    url, json=payload, headers=fwd,
                     timeout=_aiohttp.ClientTimeout(total=5),
                 ) as resp:
                     result = await resp.json()

@@ -199,7 +199,12 @@ CREATE TABLE IF NOT EXISTS tc_log (
     -- utc_epoch: one is ground sim time, the other is the spacecraft's clock,
     -- and the gap between them is the whole point of the time-correlation
     -- exercise.
-    sched_cuc   REAL
+    sched_cuc   REAL,
+    -- Console seats (redesign WP10): who sent it, from which screen, and
+    -- whether the identity was verified (IAP JWT) or self-asserted.
+    person      TEXT    DEFAULT '',
+    screen      TEXT    DEFAULT '',
+    verified    INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_tc_log_seq ON tc_log (seq);
@@ -302,7 +307,8 @@ class TMArchive:
         wanted = {
             "tm_parameters": [("obc_cuc", "REAL")],
             "tm_events": [("obc_cuc", "REAL")],
-            "tc_log": [("sched_cuc", "REAL")],
+            "tc_log": [("sched_cuc", "REAL"), ("person", "TEXT DEFAULT ''"),
+                       ("screen", "TEXT DEFAULT ''"), ("verified", "INTEGER")],
         }
         for table, cols in wanted.items():
             have = {r[1] for r in
@@ -765,7 +771,9 @@ class TMArchive:
                       subtype: int = 0, data_hex: str = "",
                       position: str = "", state: str = "SENT",
                       *, utc_epoch: float,
-                      sched_cuc: float | None = None) -> None:
+                      sched_cuc: float | None = None,
+                      person: str = "", screen: str = "",
+                      verified: bool | None = None) -> None:
         """Archive one uplinked telecommand.
 
         ``utc_epoch`` is required sim time (when the ground sent it).
@@ -777,10 +785,11 @@ class TMArchive:
             "store_command",
             "INSERT INTO tc_log "
             "(utc_epoch, seq, name, service, subtype, data_hex, position, "
-            " state, sched_cuc) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " state, sched_cuc, person, screen, verified) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (float(utc_epoch), seq, name, service, subtype, data_hex,
-             position, state, sched_cuc),
+             position, state, sched_cuc, str(person or ""), str(screen or ""),
+             None if verified is None else int(bool(verified))),
         )
 
     def update_command_state(self, seq: int, state: str) -> None:
@@ -799,7 +808,8 @@ class TMArchive:
     ) -> list[dict]:
         """Command history, newest last (same ordering as query_alarms)."""
         sql = ("SELECT id, utc_epoch, seq, name, service, subtype, data_hex, "
-               "position, state, sched_cuc FROM tc_log WHERE 1=1")
+               "position, state, sched_cuc, person, screen, verified "
+               "FROM tc_log WHERE 1=1")
         args: list[Any] = []
         if start_epoch is not None:
             sql += " AND utc_epoch >= ?"
@@ -813,7 +823,9 @@ class TMArchive:
         return [
             {"id": r[0], "utc_epoch": r[1], "seq": r[2], "name": r[3],
              "service": r[4], "subtype": r[5], "data_hex": r[6],
-             "position": r[7], "state": r[8], "sched_cuc": r[9]}
+             "position": r[7], "state": r[8], "sched_cuc": r[9],
+             "person": r[10] or "", "screen": r[11] or "",
+             "verified": None if r[12] is None else bool(r[12])}
             for r in reversed(rows)
         ]
 
