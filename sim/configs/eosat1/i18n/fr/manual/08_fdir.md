@@ -476,7 +476,45 @@ dérivation (`Engine._update_sc_mode`), et 0x0001 est écrit à partir d'elle.
 6. Les liens événement-action S19 peuvent être désactivés individuellement à des fins d'essai. Cela permet de
    générer les événements FDIR (pour la visibilité) sans déclencher d'action corrective automatique.
 7. Le journal des alarmes du MCS affiche tous les événements S5 et toutes les violations S12 avec des badges de gravité,
-   des fonctions d'acquittement et d'effacement et un filtrage par sous-système.
+   des fonctions d'acquittement et d'effacement et un filtrage par sous-système. La section 12 donne les règles
+   qui décident du moment où une alarme quitte la liste active.
+
+## 12. Cycle de vie des alarmes du MCS {#12-mcs-alarm-lifecycle}
+
+Le tiroir des alarmes du MCS suit les états d'alarme de la norme ISA-18.2. Chaque alarme porte deux
+informations indépendantes : la condition est-elle toujours présente (active ou revenue à la normale), et un
+opérateur l'a-t-il acquittée ?
+
+| État | Condition | Acquittée | Liste des alarmes actives |
+|-------|-----------|--------------|-----------------|
+| Non acquittée, active | présente | non | affichée, signalée |
+| Acquittée, active | présente | oui | affichée (alarme permanente) |
+| Non acquittée, revenue à la normale | disparue | non | affichée, marquée « revenue à la normale » |
+| Acquittée, revenue à la normale | disparue | oui | retirée (conservée dans le journal et l'archive) |
+
+Une alarme ne quitte donc la liste active que lorsque sa condition a disparu **et** qu'elle a été
+acquittée, dans un ordre ou dans l'autre. Ce qui ramène une alarme à la normale dépend de sa source :
+
+- **Limite sol** (`mcs/limits.yaml`) : le paramètre est revenu dans sa bande (avec
+  hystérésis), ou une nouvelle bande sur le même paramètre la remplace (du jaune au rouge, du rouge au jaune).
+- **Surveillance S12** : TM(12,10) de retour dans les limites pour la même surveillance, ou la surveillance est désactivée
+  ou supprimée (TM(12,13)). Au début de chaque passage, après une reconnexion TM et après une
+  discontinuité du temps de mission (rechargement ou redémarrage de l'état de bord), le MCS compare aussi les valeurs
+  temps réel récentes à la bande de la surveillance, car la TM(12,10) peut ne jamais arriver en temps réel (celle émise hors
+  couverture se trouve dans la mémoire de bord).
+- **Événement S5** : un événement n'a pas de condition qui puisse revenir à la normale. Il reste dans la liste jusqu'à ce qu'il
+  soit acquitté, et son acquittement le retire. Les événements S5 0x9xxx et 0xAxxx reflètent
+  les transitions S12 et ne lèvent pas d'alarme propre.
+
+Une alarme sur un paramètre qui n'est plus transmis reste active : sa dernière valeur connue est
+toujours hors limites, et le paramètre est affiché comme périmé.
+
+**La télémesure stockée n'atteint jamais les affichages temps réel.** Un vidage S15 transmet les paquets stockés sur
+le canal virtuel 1 (VC1), et la télémesure temps réel utilise le VC0. Le MCS archive les événements S5
+relus à leur heure de bord et compte les paquets (`/api/tm-stored`). Les paquets relus
+ne lèvent ni n'effacent d'alarme, ne modifient pas les valeurs temps réel et n'alimentent ni le journal
+FDIR, ni le GO/NO-GO, ni les tracés temps réel, ni le journal des paquets. Analysez un vidage hors ligne dans le
+visualiseur de TM différée ou sur la page `/dumps` du MCS.
 
 ---
 

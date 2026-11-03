@@ -18,6 +18,7 @@ from smo_common.config.loader import (
     load_fdir_config, load_hk_structures, load_simulation_config,
 )
 from smo_common.state import DEFAULT_SEED, derive_rng
+from smo_common.protocol.framing import tag_vc, VC_PLAYBACK
 from smo_common.orbit.propagator import OrbitPropagator, GroundStation
 from smo_common.models.registry import create_model
 from smo_common.telemetry.tm_builder import TMBuilder
@@ -3596,9 +3597,15 @@ class SimulationEngine:
             self._dump_byte_budget -= len(pkt)
             released_stores.add(store_id)
             if downlink:
-                # Bypass _enqueue_tm to avoid re-storing the dumped packet
+                # Bypass _enqueue_tm to avoid re-storing the dumped packet.
+                # Played-back TM goes down on VC1, not VC0: it is the same
+                # bytes the packet had when it was stored, and the virtual
+                # channel is the only thing that tells the ground it is
+                # history, not the spacecraft's state now (alarm-lifecycle,
+                # 2026-11 — a dump of the alarm store used to re-raise every
+                # stored alarm and overwrite live values with old ones).
                 try:
-                    self.tm_queue.put_nowait(pkt)
+                    self.tm_queue.put_nowait(tag_vc(pkt, VC_PLAYBACK))
                 except queue.Full:
                     pass
             # else: lost — RF off, radio transmitted into the void

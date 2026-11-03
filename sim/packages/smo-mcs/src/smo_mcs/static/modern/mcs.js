@@ -630,7 +630,23 @@ function handleAlarmMsg(alarm) {
   announce(tText("Alarm: {{sub}} {{msg}}", { sub: alarm.subsystem || "",
     msg: alarm.message || [alarm.name, alarm.value, alarm.units, alarm.limit].filter((x) => x !== undefined && x !== "").join(" ") }));
 }
+/* ISA-18.2 lifecycle (server: smo_mcs/alarm_state.py). S.alarms is the LIVE
+ * list: an alarm leaves it only in ACK_RTN (condition gone AND acknowledged,
+ * either order). UNACK_RTN stays, marked "returned to normal". */
+export function applyAlarmUpdate(alarm) {
+  if (!alarm || alarm.id === undefined) return;
+  const i = S.alarms.findIndex((a) => a.id === alarm.id);
+  if (alarm.state === "ACK_RTN" || alarm.live === false) {
+    if (i >= 0) S.alarms.splice(i, 1);
+  } else if (i >= 0) S.alarms[i] = alarm;
+}
+function handleAlarmUpdate(msg) {
+  for (const a of msg.alarms || []) applyAlarmUpdate(a);
+  renderAlarmDrawer();
+  updateSaHeader();
+}
 function handleAlarmCleared(msg) {
+  if (msg.alarms) { handleAlarmUpdate(msg); return; }
   const ids = msg.ids || (msg.id !== undefined ? [msg.id] : []);
   for (const id of ids) {
     const a = S.alarms.find((x) => x.id === id);
@@ -647,10 +663,13 @@ export function connectWS() {
     tm: (m) => handleTMPacket(m.packet),
     alarm: (m) => handleAlarmMsg(m.alarm),
     alarm_cleared: (m) => handleAlarmCleared(m),
+    alarm_update: (m) => handleAlarmUpdate(m),
     go_nogo_poll: (m) => handleGoNoGo(m),
     go_nogo_status: (m) => handleGoNoGo(m),
     go_nogo_result: (m) => handleGoNoGo(m),
-    _open() { S.wsConnected = true; wsDot(true); },
+    // (Re)connect: refetch the live alarm list — anything that cleared or
+    // was acknowledged elsewhere while we were away must not linger here.
+    _open() { S.wsConnected = true; wsDot(true); loadAlarms(); },
     _close() { S.wsConnected = false; wsDot(false); },
     _unknown() { /* forward-compatible: ignore */ },
   });
@@ -5213,6 +5232,8 @@ export async function ackAlarm(id, ids) {
   const todo = S.alarms.filter((x) => all.includes(String(x.id)) && !x.acknowledged);
   for (const a of todo) a.acknowledged = true;
   if (!todo.length && !S.alarms.some((x) => String(x.id) === String(id))) todo.push({ id });
+  // Acknowledging a returned-to-normal alarm (or an S5 event) closes it.
+  S.alarms = S.alarms.filter((x) => !(all.includes(String(x.id)) && (x.rtn || x.point_event)));
   renderAlarmDrawer();
   updateSaHeader();
   for (const a of todo) {
