@@ -94,5 +94,13 @@ def instructor_emails() -> set[str]:
 
 
 def instructor_mode() -> str:
-    """``list`` when an instructor list is configured, else ``laptop``."""
-    return "list" if instructor_emails() else "laptop"
+    """``list`` when an instructor list is configured, else ``laptop``.
+
+    A list variable that is *set but empty* (the hosted deployment with no
+    instructors listed yet) is still ``list`` mode: nobody is instructor,
+    and nobody can self-promote with "Become instructor"."""
+    if instructor_emails():
+        return "list"
+    if any(v in os.environ for v in ("SPACECDF_INSTRUCTORS", "SMO_INSTRUCTORS")):
+        return "list"
+    return "laptop"

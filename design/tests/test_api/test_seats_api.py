@@ -487,3 +487,13 @@ async def test_timeline_export_per_person_and_seat(client, study_obj, study):
     assert "Synthèse par personne × poste" in md
     assert "Alex — Puissance" in md and "Alex — Chef d’équipe" in md
     assert "POST /api/requirements/" in md          # every write records person and seat
+
+
+def test_empty_instructor_list_is_closed_not_first_come(monkeypatch):
+    """Hosted with SPACECDF_INSTRUCTORS set but empty: nobody may self-promote."""
+    from spacecdf_server.seats.identity import instructor_mode
+    monkeypatch.delenv("SMO_INSTRUCTORS", raising=False)
+    monkeypatch.setenv("SPACECDF_INSTRUCTORS", "")
+    assert instructor_mode() == "list"
+    monkeypatch.delenv("SPACECDF_INSTRUCTORS")
+    assert instructor_mode() == "laptop"
