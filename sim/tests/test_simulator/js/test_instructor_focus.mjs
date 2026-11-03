@@ -129,7 +129,15 @@ const T0 = 1_000_000;
   eq(TL.markOf({ lane: "alarm", kind: "event", sev: 3 }).cls, "m-alarm", "alarms use the alarm colour");
   eq(TL.markOf({ lane: "alarm", kind: "event", sev: 1 }).cls, "m-info", "info events stay grey");
   eq(TL.markOf({ lane: "tc", kind: "tc_rej", sev: 2 }).shape, "x", "rejected TC is a cross");
-  ok(TL.LANES.length === 8 && TL.LANES[7].id === "voice", "eight lanes, voice last");
+  ok(TL.LANES.length === 9 && TL.LANES[8].id === "voice" && TL.LANES[7].id === "crew",
+     "nine lanes: consoles (ground staffing) then voice last");
+  // ground-side items (anonymous MCS activity, WP10)
+  eq(TL.markOf({ lane: "alarm", kind: "g_ack" }).cls, "m-ground", "a ground acknowledgement is a team mark");
+  eq(TL.markOf({ lane: "proc", kind: "g_step", result: "FAILED" }).shape, "x", "a failed ground step is a cross");
+  eq(TL.markOf({ lane: "crew", kind: "seat", state: "vacant" }).cls, "m-alarm", "a vacated desk is red");
+  const ts = TL.talkSpans([{ lane: "voice", kind: "talk", ts: 10, ts_end: 14, position: "ttc", loop: "fd" }],
+    [{ position: "aocs", loop: "fd", since: 20 }], 30);
+  eq(ts.map((x) => [x[0], x[1]]), [[10, 14], [20, 30]], "talk spans: closed and still open");
 }
 
 if (fails.length) { console.log(fails.join("\n")); process.exit(1); }

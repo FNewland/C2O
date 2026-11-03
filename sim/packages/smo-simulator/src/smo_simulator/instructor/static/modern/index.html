@@ -387,6 +387,8 @@ details.cmds .lat-table td:first-child{ font-family:var(--mono); }
 .m-tc{ fill:var(--accent); }
 .m-phase{ fill:var(--tx2); }
 .m-instr{ fill:var(--shelf); stroke:var(--shelf); }
+.m-ground{ fill:var(--ok); stroke:var(--ok); }
+.tl-talk{ fill:var(--cat-3); } .tl-talk.open{ fill:var(--accent); }
 
 #toast{ position:fixed; right:var(--sp-4); bottom:var(--sp-4); z-index:50; width:min(420px, calc(100vw - 32px)); display:none; }
 #toast.show{ display:block; }
@@ -509,6 +511,8 @@ body.subpage main{ grid-template-columns:1fr; }
         </section>
       </div>
       <div class="view" id="view-storage" hidden></div>
+      <!-- Crew: the console seat board, answered on the ground (GSG -> MCS) -->
+      <div class="view" id="view-crew" hidden><div id="crew-board"></div></div>
 
       <!-- Raw state: the generic snapshot browser (every parameter has a
            rendering home), parameter search and the raw JSON. -->

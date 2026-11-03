@@ -4,7 +4,11 @@
  * One time axis carries the scenario phase, the injects (scheduled ahead of
  * "now", fired, cleared), on-board alarms (and when they reached the
  * ground), telecommands, procedures, link and sun, the instructor's own
- * actions, and the voice lane (ground-side: shown as not available). Live,
+ * actions, console staffing and the voice loops. Ground-side items (alarm
+ * acknowledgements, procedure steps, GO/NO-GO, desk staffing, who talked on
+ * which loop) come from the MCS's anonymous ground-activity summary
+ * (/api/seats/activity, served on the ground by the GSG; positions only, no
+ * names). Without it those lanes say "not available on the simulator side". Live,
  * it is the instructor's situational awareness; after the run the debrief
  * replays the same picture with a cursor (INSTRUCTOR_CONSOLE_DESIGN.md §4).
  *
@@ -23,13 +27,23 @@ export const LANES = [
   { id: "proc", label: "Procedures" },
   { id: "link", label: "Link & sun" },
   { id: "instr", label: "Instructor" },
+  { id: "crew", label: "Consoles" },
   { id: "voice", label: "Voice loops" },
 ];
 // i18n-keys (dynamic labels)
 export const DYNAMIC_KEYS = ["Phase & modes", "Injects", "On-board alarms", "Telecommands", "Procedures",
-  "Link & sun", "Instructor", "Voice loops",
+  "Link & sun", "Instructor", "Consoles", "Voice loops",
   "not available on the simulator side", "now", "contact", "eclipse", "{{n}} gated",
+  "talking", "ground activity not available: {{why}}",
 ];
+
+/** Talk spans per loop from ground "talk" items (+ talk still open now). */
+export function talkSpans(items, talking, nowTs) {
+  const out = [];
+  for (const it of items) if (it.lane === "voice" && it.kind === "talk") out.push([it.ts, it.ts_end ?? it.ts, it]);
+  for (const tk of talking || []) out.push([tk.since, nowTs, { position: tk.position, loop: tk.loop, open: true }]);
+  return out;
+}
 
 const LABEL_W = 112;
 const LANE_H = 17;
@@ -63,6 +77,15 @@ export function windowRange(nowTs, windowS, futureFrac = 0.2) {
 /** Which mark to draw for an item: {shape, cls}. */
 export function markOf(it) {
   const k = it.kind;
+  // ground-side (anonymous MCS activity): squares, so they read as "the team"
+  if (k === "g_ack") return { shape: "sq", cls: "m-ground" };
+  if (k === "g_step") return (it.result === "PASSED") ? { shape: "sq", cls: "m-ground" }
+    : (it.result === "SKIPPED") ? { shape: "dot-o", cls: "m-info" } : { shape: "x", cls: "m-alarm" };
+  if (k === "g_proc") return { shape: "dia", cls: it.outcome === "failed" || it.outcome === "aborted" ? "m-warn" : "m-ground" };
+  if (k === "g_poll" || k === "g_result") return { shape: "flag", cls: it.outcome === "NO_GO" ? "m-warn" : "m-ground" };
+  if (k === "g_vote") return { shape: "tick", cls: it.response === "GO" ? "m-ground" : "m-warn" };
+  if (k === "seat") return it.state === "vacant" ? { shape: "x", cls: "m-alarm" }
+    : it.state === "staffed" ? { shape: "tick", cls: "m-ground" } : { shape: "ring", cls: "m-warn" };
   if (it.lane === "fault") {
     if (k === "inject") return { shape: "tri", cls: "m-inject" };
     if (k === "clear") return { shape: "tri-o", cls: "m-clear" };
@@ -162,10 +185,27 @@ export function mountTimeline(el, opts = {}) {
       const xa = Math.max(LABEL_W, x(a ?? t0)), xb = Math.min(LABEL_W + plotW, x(b));
       if (xb > xa) out.push(`<rect class="tl-eclipse" x="${xa.toFixed(1)}" y="${yl + 9}" width="${(xb - xa).toFixed(1)}" height="6"><title>${svgEsc(t("eclipse"))}</title></rect>`);
     }
-    // voice lane: ground-side, not available here
+    // voice and consoles lanes: from the ground-activity summary, when the
+    // ground answers; otherwise drawn as not available
+    const ground = model.ground || {};
     const yv = AXIS_H + LANES.findIndex((l) => l.id === "voice") * LANE_H;
-    out.push(`<rect class="tl-na" x="${LABEL_W}" y="${yv + 2}" width="${plotW}" height="${LANE_H - 4}"/>`);
-    out.push(`<text class="tl-na-t" x="${LABEL_W + 8}" y="${yv + LANE_H / 2 + 4}">${svgEsc(t("not available on the simulator side"))}</text>`);
+    const yc = AXIS_H + LANES.findIndex((l) => l.id === "crew") * LANE_H;
+    if (!ground.available) {
+      const why = ground.reason ? t("ground activity not available: {{why}}", { why: ground.reason })
+        : t("not available on the simulator side");
+      for (const y of [yc, yv]) {
+        out.push(`<rect class="tl-na" x="${LABEL_W}" y="${y + 2}" width="${plotW}" height="${LANE_H - 4}"/>`);
+        out.push(`<text class="tl-na-t" x="${LABEL_W + 8}" y="${y + LANE_H / 2 + 4}">${svgEsc(why)}</text>`);
+      }
+    } else {
+      for (const [a, b, it] of talkSpans(items, ground.talking, nowTs)) {
+        const xa = Math.max(LABEL_W, x(a)), xb = Math.min(LABEL_W + plotW, Math.max(x(b), x(a) + 2));
+        if (xb <= LABEL_W || xa >= LABEL_W + plotW) continue;
+        const label = `${it.position || ""} · ${it.loop || ""}${it.open ? " · " + t("talking") : ""}`;
+        out.push(`<rect class="tl-talk${it.open ? " open" : ""}" x="${xa.toFixed(1)}" y="${yv + 3}" width="${Math.max(2, xb - xa).toFixed(1)}" height="${LANE_H - 6}"` +
+          (it.seq != null ? ` data-seq="${it.seq}"` : "") + `><title>${svgEsc(fmtHM(a, true) + " · " + label)}</title></rect>`);
+      }
+    }
     // points
     for (const it of items) {
       if (it.ts < t0 || it.ts > t1 || it.lane === "voice") continue;
