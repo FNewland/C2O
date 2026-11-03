@@ -73,8 +73,8 @@ def _summary(ident: Identity, tool: str | None, since: str | None, lang: str) ->
     exp = store.expires_at(f)
     return {
         "person": {"id_label": ident.label(lang), "local": ident.local},
-        "retention_h": store.retention_h,
-        "max_age_h": store.max_age_h,
+        "retention_h": _num(store.retention_h),
+        "max_age_h": _num(store.max_age_h),
         "expires_at": iso(exp) if exp else None,
         "last_write": iso(f.last_write) if f.last_write else None,
         "last_download": iso(f.last_download) if f.last_download else None,
@@ -84,6 +84,10 @@ def _summary(ident: Identity, tool: str | None, since: str | None, lang: str) ->
         "total": total,          # entries across every tool, ignoring filters
         "unsaved": f.unsaved,    # added or edited since the last download
     }
+
+
+def _num(x: float) -> float | int:
+    return int(x) if float(x).is_integer() else x
 
 
 def _lang(value: str | None) -> str:
@@ -143,7 +147,8 @@ def delete_entry(entry_id: str, request: Request, response: Response):
 
 
 @router.get("/export")
-def export_logbook(request: Request, format: str = Query("md"), lang: str | None = Query(None)):
+def export_logbook(request: Request, format: str = Query("md"), lang: str | None = Query(None),
+                   tz: str | None = Query(None)):
     ident = identify(request)
     fmt = format if format in export_mod.RENDERERS else None
     if fmt is None:
@@ -154,7 +159,7 @@ def export_logbook(request: Request, format: str = Query("md"), lang: str | None
     render, media = export_mod.RENDERERS[fmt]
     text = render(entries=list(f.entries.values()), person_label=ident.label(lg), exported_at=now,
                   expires_at=store.expires_at(f), retention_h=store.retention_h, lang=lg,
-                  lookup=ws_mod.lookup())
+                  lookup=ws_mod.lookup(), tz=export_mod.zone(tz))
     store.mark_downloaded(ident.person_id, fmt, now=now)
     name = f"c2o-logbook-{now.strftime('%Y%m%d-%H%M')}.{fmt}"
     resp = Response(content=text.encode("utf-8"), media_type=media, headers={

@@ -94,3 +94,20 @@ def test_html_is_self_contained_and_escaped():
     assert "@page" in html and "@media print" in html
     assert "http://" not in html and "https://" not in html, "no external resources"
     assert "Deleted from the C2O server on 2026-11-05 08:00 UTC" in html
+
+
+def test_local_time_zone_groups_and_labels():
+    from datetime import timezone as _tz
+    entries = [_e(1, "2026-11-03T00:30:00Z", text="evening in Ottawa")]
+    md = ex.render_markdown(entries=entries, person_label="p", exported_at=NOW, expires_at=EXP,
+                            retention_h=48, lang="en", tz=ex.zone("America/Toronto"))
+    assert "## 2026-11-02" in md and "**19:30 · Thought**" in md
+    assert "| **Times in** | America/Toronto |" in md and "2026-11-03 04:30 EST" in md
+    assert ex.zone("Not/AZone") is _tz.utc and ex.zone(None) is _tz.utc
+
+
+def test_context_values_are_words_and_level_0_prints():
+    e = _e(1, "2026-11-02T14:00:00Z", context={"tab": "vv", "level": 0, "gate": "pdr", "step": "wizard:problem"})
+    md = _md(entries=[e])
+    assert "tab V&V" in md and "level 0" in md and "gate PDR" in md and "step mission wizard, problem" in md
+    assert "onglet V&V" in _md("fr", entries=[e])
