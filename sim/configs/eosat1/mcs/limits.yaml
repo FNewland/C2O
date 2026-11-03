@@ -41,7 +41,12 @@ limits:
   - { param_id: 0x0275, yellow_low: 0.0, yellow_high: 4.0, red_low: 0.0, red_high: 6.0, check_interval_s: 8 }
 
   # ===== TCS =====
-  - { param_id: 0x0406, yellow_low: 5.0, yellow_high: 60.0, red_low: 0.0, red_high: 70.0, check_interval_s: 8 }
+  # OBC (2026-11, Franz: "move towards hardware"): CubeSat OBCs are rated
+  # -25..-40 C at the cold end (ISIS iOBC -25, NanoMind A3200 -30, EDDIE
+  # -40; OBC_THERMAL_ANALYSIS.md §5). Red -20 = iOBC class with 5 K margin,
+  # yellow -10; the OBC heater is a survival heater at ON -10 / OFF -5 C.
+  # The high side (60 / 70) was already within the hardware ratings.
+  - { param_id: 0x0406, yellow_low: -10.0, yellow_high: 60.0, red_low: -20.0, red_high: 70.0, check_interval_s: 8 }
   - { param_id: 0x0407, yellow_low: 2.0, yellow_high: 40.0, red_low: 0.0, red_high: 45.0, check_interval_s: 8 }
   # FPA node. DERIVED from subsystems/tcs.yaml `fpa_envelope` (G3-d) —
   # do not hand-edit; change the envelope and re-derive. The old -20.0 low

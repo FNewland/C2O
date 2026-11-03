@@ -23,7 +23,7 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 ### Référence des limites jaunes thermiques
 | Zone | Paramètre | ID TM | Jaune froid | Jaune chaud |
 |-------------|---------------------|--------|-------------|------------|
-| OBC | `tcs.temp_obc` | 0x0406 | -5 °C | +55 °C |
+| OBC | `tcs.temp_obc` | 0x0406 | -10 °C | +55 °C |
 | Batterie | `tcs.temp_battery` | 0x0407 | +2 °C | +42 °C |
 | FPA | `tcs.temp_fpa` | 0x0408 | -45 °C | -15 °C |
 
@@ -48,7 +48,7 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) en 5 s
 **LABEL:** `STEP-2A-OBC`
-**BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
+**BRANCH:** `tcs.temp_obc < -10` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2A-OBCON`
 **Note:** OBC froid :
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `htr_obc` (sans effet si déjà sur ON)

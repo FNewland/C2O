@@ -149,7 +149,7 @@ unit. Escalate to OBDH engineer for investigation.
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- the OBC heater line first (no-op if already ON)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5 s
 **TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- restore OBC heater: back on its thermostat (Step 2 switched it OFF manually)
-**Verify:** `tcs.htr_obc` (0x040B) consistent with the thermostat --- 1 while `tcs.temp_obc` (0x0406) is below +5 C, 0 above +10 C
+**Verify:** `tcs.htr_obc` (0x040B) consistent with the thermostat --- 1 while `tcs.temp_obc` (0x0406) is below -10 C, 0 above -5 C
 **Note:** If the OBC is cold and not recovering, force the heater with
 `HEATER_OBC(on=1)` (func_id 41) and return it to AUTO once warm.
 **Action:** Log reboot results:

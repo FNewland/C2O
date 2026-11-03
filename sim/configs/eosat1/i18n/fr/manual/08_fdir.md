@@ -116,7 +116,7 @@ conséquence. Diagnostic : CTG-009.
 |---------|--------------------------------|----------------|-----------------------------|
 | TCS-01  | bat_temp < 1 C                 | 0x0407 < 1     | Réchauffeur de batterie rendu au thermostat (`HEATER_AUTO_MODE`) |
 | TCS-02  | obc_temp > 70 C (rouge haut)   | 0x0406 > 70    | OBC en SAFE (S19 ea 3003, limite haute seulement) |
-| TCS-03  | obc_temp < 0 C (rouge bas)     | 0x0406 < 0     | Aucune action à bord : thermostat du réchauffeur de l'OBC ; rapport S12 au sol |
+| TCS-03  | obc_temp < -20 C (rouge bas)   | 0x0406 < -20   | Aucune action à bord : thermostat du réchauffeur de l'OBC ; rapport S12 au sol |
 | TCS-04  | fpa_temp au-dessus de +17.5 C  | Alarme S12 sur 0x0408 | Mettre la charge utile hors tension (S19 ea_id 3001) |
 | TCS-05  | bat_temp > 42 C                | 0x0407 > 42    | Réchauffeur de batterie arrêté ; rendu au thermostat à ≤ 42 C |
 

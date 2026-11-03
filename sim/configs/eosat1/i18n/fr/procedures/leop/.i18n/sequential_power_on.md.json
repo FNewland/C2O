@@ -39,8 +39,8 @@
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-2-energise-heater-lines-as-needed-conditional",
-   "en_hash": "25abc30f87da65fc",
-   "fr_hash": "93b12c55659f1c86"
+   "en_hash": "cf374cca5dc62e0b",
+   "fr_hash": "863affb8dc2d9eef"
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-3-energise-the-aocs-suite-line-and-enable-its-housekeeping",
@@ -78,5 +78,5 @@
    "fr_hash": "011d52389cc5f80f"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "21af365"
 }

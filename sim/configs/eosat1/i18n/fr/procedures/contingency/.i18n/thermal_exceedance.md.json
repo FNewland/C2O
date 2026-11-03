@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/prerequisites/thermal-yellow-limits-reference",
-   "en_hash": "3297c2767aecec31",
-   "fr_hash": "85a701fdabce660a"
+   "en_hash": "96068ee06404a5d2",
+   "fr_hash": "33d46229fac8fdf6"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps",
@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-2a-cold-case-enable-heater-for-affected-zone",
-   "en_hash": "681b22a7f24d07e1",
-   "fr_hash": "535e5ad0765d1037"
+   "en_hash": "cc312f568ac2f7d3",
+   "fr_hash": "46153dedbf56003f"
   },
   {
    "id": "ctg-004-thermal-exceedance/procedure-steps/step-2b-hot-case-reduce-thermal-load-in-affected-zone",
@@ -78,5 +78,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "204d5cd"
+ "en_commit": "21af365"
 }

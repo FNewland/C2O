@@ -40,7 +40,7 @@ propulsion (le cas échéant). Établir les profils thermiques de référence su
 
 ### Étape 1 — Demander les données de servitude thermiques
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
-**Verify:** `tcs.temp_obc` (0x0406) dans la plage [-5C, +45C] sous 10s
+**Verify:** `tcs.temp_obc` (0x0406) dans la plage [-10C, +50C] sous 10s
 **Verify:** `tcs.temp_battery` (0x0407) dans la plage [+5C, +35C] sous 10s
 **Verify:** `tcs.temp_fpa` (0x0408) rapportée (charge utile hors tension, non refroidie : +8C à +14C attendus) sous 10s
 **GO/NO-GO:** Toutes les zones thermiques dans les limites opérationnelles
@@ -55,7 +55,7 @@ propulsion (le cas échéant). Établir les profils thermiques de référence su
 ### Étape 3 — Surveiller le profil thermique pendant l'éclipse
 **Action:** Poursuivre la surveillance thermique pendant l'entrée en éclipse et toute la durée de l'éclipse.
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — à l'entrée en éclipse, à mi-éclipse, à la sortie d'éclipse
-**Verify:** `tcs.temp_obc` (0x0406) > -5C pendant toute l'éclipse sous 10s
+**Verify:** `tcs.temp_obc` (0x0406) > -10C pendant toute l'éclipse sous 10s
 **Verify:** `tcs.temp_battery` (0x0407) > +5C pendant toute l'éclipse sous 10s
 **Action:** Consigner les vitesses de baisse de température. Refroidissement attendu de l'OBC ~0,5 °C/min ; la batterie doit être protégée par son inertie thermique.
 **GO/NO-GO:** Toutes les zones au-dessus des limites opérationnelles minimales pendant l'éclipse
@@ -85,7 +85,7 @@ piège dans lequel l'ancienne fiche était tombée.
 **Verify:** `tcs.temp_obc` (0x0406) stable ou en hausse sous 120s
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41)
 **Verify:** Mise sur OFF du réchauffeur OBC acquittée sous 5s
-**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) — rendre le circuit OBC à son thermostat (ON sous +5 C, OFF au-dessus de +10 C)
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) — rendre le circuit OBC à son thermostat (ON sous -10 C, OFF au-dessus de -5 C)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 --- la ligne RESTE sur ON : c'est désormais la configuration nominale
 **GO/NO-GO:** Circuit du réchauffeur OBC opérationnel, ligne sur ON sous contrôle thermostatique
 
