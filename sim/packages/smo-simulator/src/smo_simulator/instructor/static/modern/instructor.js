@@ -1010,7 +1010,8 @@ async function refreshBreakpoints() {
   let data = null;
   try { data = await apiGet("/api/breakpoints"); } catch (e) { return; }
   if (!Array.isArray(data)) return;
-  breakpoints = data.map((b) => ({ name: b.name, auto: !!b.auto, tick: b.tick != null ? b.tick : (b.tick_count != null ? b.tick_count : 0), time: b.sim_time || null }));
+  breakpoints = data.map((b) => ({ name: b.name, auto: !!b.auto, tick: b.tick != null ? b.tick : (b.tick_count != null ? b.tick_count : 0), time: b.sim_time || null,
+    fault: b.fault || "", onDisk: !!b.on_disk, bytes: b.bytes, previous: !!b.previous_process, note: b.note || "" }));
   breakpoints.sort((a, b) => String(b.time || "").localeCompare(String(a.time || "")));
   renderBreakpoints();
 }
@@ -1018,10 +1019,16 @@ function renderBreakpoints() {
   const list = $("breakpoints-list");
   if (list.querySelector(".is-armed")) return;
   if (!breakpoints.length) { list.innerHTML = `<div class="no-data" style="padding:0 var(--sp-4) var(--sp-3)">${t("No snapshots saved")}</div>`; return; }
+  // Auto snapshots (taken just before each injected fault) are kept on disk
+  // too, so they survive a restart: "restore" puts the team back before it.
+  const autoLine = (bp) => [
+    bp.onDisk ? tText("on disk{{size}}", { size: bp.bytes ? ` (${Math.max(1, Math.round(bp.bytes / 1024))} kB)` : "" }) : tText("in memory only"),
+    bp.previous ? tText("from before the restart") : "", bp.note || ""].filter(Boolean).join(" · ");
   list.innerHTML = breakpoints.map((bp) => `<div class="item">
-      <span class="fname">${esc(bp.name)}</span>
-      <button type="button" class="ds-btn critical sm" data-name="${esc(bp.name)}" aria-label="${esc(tText("Load snapshot {{name}}", { name: bp.name }))}">${t("Load")}</button>
-      <div class="fmeta">${bp.auto ? `<span class="inj-chip">${t("auto")}</span>` : ""}<span>${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div></div>`).join("");
+      <span class="fname">${esc(bp.auto && bp.fault ? tText("Before {{fault}}", { fault: bp.fault }) : bp.name)}</span>
+      <button type="button" class="ds-btn critical sm" data-name="${esc(bp.name)}" aria-label="${esc(bp.auto ? tText("Restore snapshot {{name}}", { name: bp.name }) : tText("Load snapshot {{name}}", { name: bp.name }))}">${bp.auto ? t("Restore") : t("Load")}</button>
+      <div class="fmeta">${bp.auto ? `<span class="inj-chip">${t("auto")}</span>` : ""}<span>${bp.time ? fmtUTC(bp.time, { date: true }) : ""}</span></div>
+      ${bp.auto ? `<div class="fmeta dim">${esc(autoLine(bp))}</div>` : ""}</div>`).join("");
   list.querySelectorAll("button[data-name]").forEach((b) => armButton(b, { onExecute: () => loadBreakpoint(b.dataset.name) }));
 }
 function updateBpSave() {

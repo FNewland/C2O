@@ -1,6 +1,8 @@
 """Shared test fixtures."""
+import os
 import sys
 import struct
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -15,6 +17,12 @@ for pkg in ["smo-common", "smo-simulator", "smo-gateway", "smo-mcs", "smo-planne
 
 
 CONFIG_DIR = str(Path(__file__).parent.parent / "configs" / "eosat1")
+
+# Auto snapshots before injected faults are written to disk
+# (smo_simulator/auto_snapshots.py). Keep the test run's out of the
+# working tree's workspace/ (one private folder per test process).
+os.environ.setdefault("SMO_AUTO_SNAPSHOT_DIR",
+                      tempfile.mkdtemp(prefix="smo-auto-snapshots-"))
 
 
 # ── Test tiers (R4 §6; docs/TESTING.md) ─────────────────────────────

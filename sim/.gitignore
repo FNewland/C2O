@@ -65,3 +65,6 @@ htmlcov/
 # Session transfer scratch (bridge cannot unlink; delete manually)
 _to_delete/
 _xfer/
+
+# auto snapshots before injected faults (auto_snapshots.py)
+workspace/snapshots/

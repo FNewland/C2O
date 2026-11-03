@@ -148,6 +148,46 @@ expected_responses:
 4. **Monitor**: The progress bar shows elapsed time and scenario duration
 5. **Stop**: Click **STOP** to end the scenario. Active failures are preserved unless manually cleared.
 
+### Scoring a Scenario
+
+The score comes from what the simulator can see: the telecommands the team
+sends (which command, which arguments, when after the fault, what the
+spacecraft's S1 reports said) and the state the spacecraft ends up in. Each
+expected response may declare its evidence:
+
+```yaml
+expected_responses:
+  - category: recover
+    id: disable_rw1
+    description: "Disable RW1 and continue on three wheels"
+    tc: AOCS_DISABLE_WHEEL(wheel_idx=0)
+    within_s: 600
+  - category: recover
+    description: "Verify stable pointing on three wheels"
+    state: "aocs.att_error < 2.0"
+    after: disable_rw1
+harmful_commands:
+  - tc: AOCS_ENABLE_WHEEL(wheel_idx=0)
+    reason: "Re-enables the seized wheel RW1"
+    penalty: 10
+```
+
+`tc` uses the procedure notation (a list means any of them; `a=1|2` accepts
+either value); `state` is `<parameter> <op> <value>` (a list means all of
+them). Times count from the first injected fault (`ref: start` or
+`ref: event:<n>` to change that). Each response is **done** (100 %), **late**
+after `within_s` (50 %), **wrong** (0: the command was rejected or failed on
+board, came before its `after:` prerequisite, or the declared state never
+followed) or **missed** (0). A response with neither `tc` nor `state` is
+listed for you to judge and not scored. Each harmful entry sent after the
+fault costs its penalty once. MTTD is the first detect response met, or else
+the first command that matches any response (marked *inferred*); MTTI the
+first isolate response, or else the first recovery; MTTR when every scored
+recovery is met. The debrief lists every expected response with the command
+and time that met it, or "not seen", and every command sent. Misspelt
+commands or parameters are reported when the scenarios load. The scenario
+generator writes these fields. Details: `smo_simulator/scenario_scoring.py`.
+
 ### Event Actions
 
 Common event action types:
@@ -225,6 +265,33 @@ exercise setup.
 ### Stored Breakpoints
 
 Breakpoint metadata (name, tick, time) is displayed in the instructor UI. Full state snapshots are available via the `/api/breakpoint/load` endpoint.
+
+### Automatic Snapshots Before Faults
+
+Just before every injected fault (an instructor inject with "Snapshot the
+simulation just before it fires" ticked, or a scenario inject event) the
+simulator saves a snapshot in memory **and on disk**, so you can put the team
+back just before the fault even after a simulator restart or crash. Restoring
+a snapshot taken before a scenario inject replays that inject.
+
+- Folder: `workspace/snapshots/auto/` under the simulator's working directory
+  (`/opt/smo/workspace/snapshots/auto` in the container); set
+  `SMO_AUTO_SNAPSHOT_DIR` or `auto_snapshots.dir` in `simulation.yaml` to move
+  it. File names carry the run, the simulated time and the fault, for example
+  `auto_scn-rw_bearing-20261103T140501Z__20260820T120300Z__aocs.rw_bearing.json.gz`.
+- Kept: the newest 10 per run (a scenario run, or the free run since the
+  simulator started). Starting a scenario deletes the previous runs' auto
+  snapshots; files older than 48 h are deleted too. A restart deletes nothing:
+  the auto snapshots of the interrupted run are listed again, marked "from
+  before the restart".
+- Size: each is compressed JSON (typically tens to hundreds of kB). One above
+  `max_snapshot_mb` (25 MB) stays in memory only; the folder is kept under
+  `max_total_mb` (250 MB), and nothing is written below `min_free_mb` (200 MB)
+  of free disk.
+- Manual snapshots (`workspace/breakpoints/`) are never touched.
+
+They appear in the **Snapshots** panel with an *auto* chip and a **Restore**
+button.
 
 ---
 

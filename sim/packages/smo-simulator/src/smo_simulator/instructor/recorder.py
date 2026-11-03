@@ -48,8 +48,6 @@ MAX_ITEMS = 6000
 #: "missed cue" — the simulator's proxy for "not acted on" (it cannot see
 #: acknowledgements, which happen on the ground).
 MISSED_CUE_S = 300.0
-#: Auto snapshots kept (oldest dropped first).
-MAX_AUTO_SNAPSHOTS = 6
 #: Views bundle rebuilt at most this often (wall seconds).
 VIEWS_MIN_INTERVAL_S = 0.9
 #: Debrief history sample spacing (sim seconds) and length.
@@ -385,8 +383,8 @@ class InstructorRecorder:
         entry["state"] = "fired"
         snap = None
         if entry.get("snapshot_before"):
-            what = "+".join(i["failure"] for i in entry["injects"])
-            snap = self.auto_snapshot(f"before {what}")
+            what = "+".join(f"{i['subsystem']}/{i['failure']}" for i in entry["injects"])
+            snap = self.auto_snapshot(what)
         fired, errors = [], []
         for inj in entry["injects"]:
             cmd = {"type": "failure_inject", **inj}
@@ -419,23 +417,19 @@ class InstructorRecorder:
             with self._lock:
                 self._schedule = [e for e in self._schedule if e["state"] == "pending"][-200:]
 
-    def auto_snapshot(self, why: str) -> Optional[str]:
-        """Save an in-memory breakpoint before an inject (the "return to
-        interrupted scenario" slot). Kept in RAM only, newest six."""
+    def auto_snapshot(self, fault: str, source: str = "instructor") -> Optional[str]:
+        """Save a breakpoint just before an inject (the "return to interrupted
+        scenario" slot): in memory and on disk (auto_snapshots.py: newest 10
+        per run, 48 h, size-bounded), restorable after a restart."""
         eng = self.engine
+        store = getattr(eng, "_auto_snapshots", None)
         try:
-            from smo_simulator.breakpoints import BreakpointManager
-            name = f"auto {self.engine._sim_time.strftime('%H:%M:%S')} {why}"[:80]
-            state = BreakpointManager(eng).save(name=name)
-            state["auto"] = True
-            bps = eng._breakpoints
-            bps[state["name"]] = state
-            autos = [n for n, s in bps.items() if isinstance(s, dict) and s.get("auto")]
-            for old in autos[:-MAX_AUTO_SNAPSHOTS]:
-                bps.pop(old, None)
-            self.add("instr", "snapshot", f"Auto snapshot \"{state['name']}\"",
-                     ref=state["name"])
-            return state["name"]
+            if store is None:
+                raise RuntimeError("auto snapshot store unavailable")
+            name, _note = store.take(fault)
+            self.add("instr", "snapshot", f"Auto snapshot \"{name}\"", ref=name,
+                     data={"fault": fault, "source": source})
+            return name
         except Exception as e:  # noqa: BLE001 — never block the inject
             logger.warning("Auto snapshot before inject failed: %s", e)
             self.add("instr", "snapshot_fail", f"Auto snapshot failed: {e}", sev=2)

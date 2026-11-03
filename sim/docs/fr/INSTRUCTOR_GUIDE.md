@@ -148,6 +148,48 @@ expected_responses:
 4. **Suivre** : la barre de progression indique le temps écoulé et la durée du scénario
 5. **Arrêter** : cliquer sur **ARRÊTER** pour terminer le scénario. Les pannes actives sont conservées sauf si elles sont effacées manuellement.
 
+### Noter un scénario
+
+Le score vient de ce que le simulateur peut voir : les télécommandes envoyées
+par l'équipe (quelle commande, quels arguments, combien de temps après la
+panne, ce qu'ont dit les rapports S1 du satellite) et l'état dans lequel le
+satellite se retrouve. Chaque réponse attendue peut déclarer sa preuve :
+
+```yaml
+expected_responses:
+  - category: recover
+    id: disable_rw1
+    description: "Disable RW1 and continue on three wheels"
+    tc: AOCS_DISABLE_WHEEL(wheel_idx=0)
+    within_s: 600
+  - category: recover
+    description: "Verify stable pointing on three wheels"
+    state: "aocs.att_error < 2.0"
+    after: disable_rw1
+harmful_commands:
+  - tc: AOCS_ENABLE_WHEEL(wheel_idx=0)
+    reason: "Re-enables the seized wheel RW1"
+    penalty: 10
+```
+
+`tc` suit la notation des procédures (une liste signifie l'une quelconque ;
+`a=1|2` accepte l'une ou l'autre valeur) ; `state` s'écrit `<parameter> <op> <value>` (une liste signifie toutes). Les temps sont comptés depuis la
+première panne injectée (`ref: start` ou `ref: event:<n>` pour changer cela).
+Chaque réponse est **faite** (100 %), **en retard** après `within_s` (50 %),
+**erronée** (0 : la commande a été rejetée ou a échoué à bord, est venue avant
+son prérequis `after:`, ou l'état déclaré n'a jamais suivi) ou **manquée**
+(0). Une réponse sans `tc` ni `state` est listée pour que vous l'évaluiez,
+sans être notée. Chaque commande nuisible envoyée après la panne coûte sa
+pénalité une fois. Le MTTD est la première réponse de détection obtenue, à
+défaut la première commande qui correspond à une réponse (marquée *déduit*) ;
+le MTTI la première réponse d'isolement, à défaut le premier rétablissement ;
+le MTTR le moment où tous les rétablissements notés sont obtenus. Le
+débriefing liste chaque réponse attendue avec la commande et l'heure qui l'ont
+satisfaite, ou « non observé », et toutes les commandes envoyées. Les
+commandes ou paramètres mal orthographiés sont signalés au chargement des
+scénarios. Le générateur de scénarios écrit ces champs. Détails :
+`smo_simulator/scenario_scoring.py`.
+
 ### Actions d'événement
 
 Types d'actions d'événement courants :
@@ -225,6 +267,36 @@ exercice par script.
 ### Points de reprise enregistrés
 
 Les métadonnées des points de reprise (nom, pas, temps) sont affichées dans l'interface instructeur. Les instantanés d'état complets sont accessibles via le point d'accès `/api/breakpoint/load`.
+
+### Instantanés automatiques avant les pannes
+
+Juste avant chaque panne injectée (injection de l'instructeur avec « Prendre
+un instantané juste avant le déclenchement » coché, ou événement d'injection
+d'un scénario), le simulateur enregistre un instantané en mémoire **et sur
+disque** : vous pouvez ramener l'équipe juste avant la panne, même après un
+redémarrage ou un plantage du simulateur. Restaurer un instantané pris avant
+une injection de scénario rejoue cette injection.
+
+- Dossier : `workspace/snapshots/auto/` sous le répertoire de travail du
+  simulateur (`/opt/smo/workspace/snapshots/auto` dans le conteneur) ; le
+  déplacer avec `SMO_AUTO_SNAPSHOT_DIR` ou `auto_snapshots.dir` dans
+  `simulation.yaml`. Les noms de fichier portent la séance, l'heure simulée et
+  la panne, par exemple
+  `auto_scn-rw_bearing-20261103T140501Z__20260820T120300Z__aocs.rw_bearing.json.gz`.
+- Conservation : les 10 plus récents par séance (une séance de scénario, ou la
+  séance libre depuis le démarrage du simulateur). Démarrer un scénario
+  supprime les instantanés automatiques des séances précédentes ; les fichiers
+  de plus de 48 h sont aussi supprimés. Un redémarrage ne supprime rien : les
+  instantanés automatiques de la séance interrompue sont de nouveau listés,
+  marqués « d'avant le redémarrage ».
+- Taille : chacun est un JSON compressé (de quelques dizaines à quelques
+  centaines de ko en général). Celui qui dépasse `max_snapshot_mb` (25 Mo)
+  reste en mémoire seulement ; le dossier est maintenu sous `max_total_mb`
+  (250 Mo), et rien n'est écrit sous `min_free_mb` (200 Mo) d'espace libre.
+- Les instantanés manuels (`workspace/breakpoints/`) ne sont jamais touchés.
+
+Ils apparaissent dans le panneau **Instantanés** avec une puce *auto* et un
+bouton **Restaurer**.
 
 ---
 
