@@ -113,16 +113,66 @@ def validate(subsystem: str, failure: str, magnitude: Any = None,
     return canonical_subsystem(subsystem), mag, out
 
 
-def to_dict() -> dict[str, Any]:
-    """JSON-serialisable catalogue for the instructor API."""
+#: Mission data file with each failure's EXPECTED first symptoms (2026-11-03,
+#: Franz's ruling): ``<config_dir>/instructor/expected_symptoms.yaml``. The
+#: instructor recorder times "inject -> first symptom" to the first of THESE,
+#: not to the first warning of any kind. Derived and checked by
+#: ``tools/failure_symptoms.py`` (headless inject of every failure).
+EXPECTED_SYMPTOMS_RELPATH = ("instructor", "expected_symptoms.yaml")
+
+
+def load_expected_symptoms(config_dir) -> dict[tuple[str, str], dict]:
+    """``{(subsystem, failure): {"symptoms": [...], ...}}`` from the mission
+    config; empty when the file is absent. Symptom ids are normalised to int.
+    """
+    from pathlib import Path
+    import yaml
+    if config_dir is None:
+        return {}
+    path = Path(config_dir).joinpath(*EXPECTED_SYMPTOMS_RELPATH)
+    if not path.exists():
+        return {}
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    out: dict[tuple[str, str], dict] = {}
+    for key, entry in (doc.get("expected_symptoms") or {}).items():
+        sub, _, fail = str(key).partition(".")
+        entry = dict(entry or {})
+        syms = []
+        for sym in entry.get("symptoms") or []:
+            sym = dict(sym)
+            for k in ("event", "s12", "param"):
+                if k in sym:
+                    sym[k] = int(sym[k])
+            if isinstance(sym.get("when"), dict):
+                sym["when"] = {"param": int(sym["when"]["param"]),
+                               "value": sym["when"]["value"]}
+            syms.append(sym)
+        entry["symptoms"] = syms
+        out[(canonical_subsystem(sub), fail)] = entry
+    return out
+
+
+def to_dict(config_dir=None) -> dict[str, Any]:
+    """JSON-serialisable catalogue for the instructor API.
+
+    With ``config_dir`` each failure also carries its ``expected_symptoms``.
+    """
     subs = catalog()
+    expected = load_expected_symptoms(config_dir)
+
+    def row(sub, f):
+        d = subs[sub][f].to_dict()
+        if expected:
+            d["expected_symptoms"] = list(
+                (expected.get((sub, f)) or {}).get("symptoms") or [])
+        return d
     return {
         "aliases": dict(SUBSYSTEM_ALIASES),
         "subsystems": [
             {
                 "name": sub,
                 "label": SUBSYSTEM_LABELS.get(sub, sub.upper()),
-                "failures": [subs[sub][f].to_dict() for f in sorted(subs[sub])],
+                "failures": [row(sub, f) for f in sorted(subs[sub])],
             }
             for sub in sorted(subs) if subs[sub]
         ],
