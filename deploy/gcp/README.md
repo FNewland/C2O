@@ -50,6 +50,7 @@ the sim VM's tool ports 8096-8097, so the welcome page can say whether they are 
 | `c2o.env.example` | Settings; copy to `c2o.env` (git-ignored) and set `PROJECT` |
 | `setup.sh` | Creates or repairs everything. Idempotent, so rerun it after any failure |
 | `vm-bootstrap.sh` | The VMs' startup script: Docker, clone, credentials, `docker compose up` |
+| `voice-bootstrap.sh` | The voice loops VM's startup script: Docker, LiveKit + Caddy config, `docker compose up` ([Voice loops](#voice-loops)) |
 | `start.sh` / `stop.sh` | Class day on and off (what `c2o up` / `c2o down` run) |
 | `rotate-link-secret.sh` | New link session secret, rolled out to both VMs |
 | `teardown.sh` | Deletes everything `setup.sh` made |
@@ -294,6 +295,9 @@ Keep the TTL the same on all of them; Squarespace asks for that on its Google-ho
 AAAA records: the load balancer has an IPv4 address only, and a stray AAAA blocks the certificate. If
 you set `INCLUDE_APEX=no`, skip `@`; there is then no welcome page (its back end exists but nothing
 routes to it) and every screen is reached by its own address.
+
+The voice loops need **two more** A records, `voice` and `voice-turn`, pointing at the voice VM's own
+address rather than the LB IP: see [Voice loops](#voice-loops). `setup.sh` prints them.
 
 Check from Cloud Shell; every name must print the LB IP:
 
@@ -584,6 +588,183 @@ Link events are `key=value` lines (`event=link_up`, `link_down`, `link_supersede
 `gcloud compute instances add-resource-policies`; users go to the Admin SDK Directory API
 (`admin.googleapis.com/admin/directory/v1`, users and group members).
 
+## Voice loops
+
+Mission-control voice loops in the browser (WP-4 prototype; Franz's rulings V1-V4 of 2026-11-02 in
+`docs/plan_2026-11/REDESIGN_DECISIONS.md`): **LiveKit**, on **its own small VM with a static public
+IP**, started and stopped with `c2o up` / `c2o down`, **recordings off**.
+
+```
+browser on ops.c2o.live (IAP)                       c2o-voice-vm  e2-small, static IP, Debian 12 + Docker
+  /voice  keyset panel ──POST /api/voice/token──► MCS (ground VM): IAP identity + position
+          (or the Voice button in the MCS header)     + voice_loops.yaml -> one JWT per loop (10 min)
+          ──WSS 443  voice.c2o.live ─────────────────► Caddy ─► LiveKit :7880  (signalling)
+          ──UDP 50000-60000 / TCP 7881 ──────────────► LiveKit  (audio, ICE)
+          ──UDP 3478 / TLS 443 voice-turn.c2o.live ──► LiveKit embedded TURN (restrictive networks)
+```
+
+**Why audio does not go through the load balancer.** WebRTC media is UDP (or TURN) and cannot pass
+the HTTPS load balancer or IAP. So the voice VM has a public address and only LiveKit's ports open.
+Nobody gets in without a **token**, and only the MCS mints tokens, behind IAP. The token names
+the person (the IAP email), their position, the one loop it is for, and whether they may talk. It
+is valid for 10 minutes; the panel fetches new ones at 7.5 minutes.
+
+**Loops are data**: `sim/configs/eosat1/voice/voice_loops.yaml`. Today there are nine: the FD loop (all
+positions), Ops coordination, one per subsystem (EPS/TCS, AOCS/FD, TT&C, Payload, FDIR/Systems,
+Propulsion) and Instructor/SIM. Each loop is one LiveKit room, `c2o-<loop id>`. For each position the
+file gives the highest state (`OFF`, `MON` to listen, `TALK` to listen and push-to-talk) and the
+state when the panel opens.
+
+- A student's browser is **never told** that a loop with `OFF` access exists. The Instructor/SIM loop is
+  `instructor_only`, and the MCS refuses to load a file that gives any student position access to it.
+- `canPublish` is set only on TALK loops, so even a modified browser cannot talk on a MON loop.
+- You talk on one loop at a time.
+- The microphone is published muted and opened only while push-to-talk is held (Space, or the button)
+  or latched. Echo cancellation, noise suppression and automatic gain are on.
+
+**Who is who.**
+- **Position:** until seat binding exists (WP10), the position is the one selected in the MCS
+  header. It is browser-claimed, exactly like the MCS's own commanding position today.
+- **Name:** the talker indicator shows the IAP email, which nobody can type over.
+- **Instructor and SIM role-player seats, and the Instructor/SIM loop:** these need an account listed
+  in `VOICE_INSTRUCTORS` in `c2o.env`. The app cannot read the `c2o-instructors` group, so keep the two
+  lists in step.
+
+### Set it up (once, about 20 minutes plus DNS)
+
+1. **`c2o.env`** (see `c2o.env.example`): leave `CREATE_VOICE_VM=yes`. List the instructor accounts:
+   `VOICE_INSTRUCTORS="admin@c2o.live prof@c2o.live"`. Optionally set `VOICE_ACME_EMAIL` (the address
+   Let's Encrypt writes to).
+2. **`bash deploy/gcp/setup.sh`**. In addition to everything else, it creates:
+   - the secret `c2o-livekit-keys`. The API key pair is generated on your computer and piped
+     into Secret Manager; it never appears on a command line or in a file.
+   - the service account `c2o-voice`
+   - the static IP `c2o-voice-ip`
+   - the firewall rule `c2o-allow-voice`
+   - the VM `c2o-voice-vm`
+
+   It also gives the ground VM the voice settings (instance metadata).
+3. **Two A records at Squarespace**, printed at the end of `setup.sh`. Both point to the **voice VM's
+   address**, *not* the load balancer's:
+
+   | Name (host) | Type | Data |
+   |---|---|---|
+   | `voice` | A | *voice IP* |
+   | `voice-turn` | A | *voice IP* |
+
+   To show the address again:
+   `gcloud compute addresses describe c2o-voice-ip --region=northamerica-northeast2 --format='value(address)'`.
+   TURN over TLS needs its own name and certificate, hence the second record. Caddy on the VM gets
+   both certificates from Let's Encrypt as soon as the names resolve. It retries by itself, so the
+   order does not matter.
+4. **Ground VM:** push the branch, then bring the ground VM's code up to date. The new MCS code and the
+   `livekit-api` package are in the image, and `voice.env` is written from the secret:
+
+   ```bash
+   gcloud compute ssh c2o-ground-vm --zone=northamerica-northeast2-a --tunnel-through-iap \
+       --command='sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh update'
+   ```
+
+5. **Check:**
+   - `curl https://voice.c2o.live/` prints `OK`.
+   - `c2o status` shows "Voice loops server … UP".
+   - In the MCS, the **Voice** button opens the panel; **Join voice loops**, then hold Space to talk.
+   - The direct address is `https://ops.c2o.live/voice`.
+
+### Every day
+
+`c2o up` starts the voice VM along with the others and prints the voice address. `c2o down` stops it.
+`c2o schedule set …` includes it, because the voice VM follows the ground VM. `c2o status` shows it,
+whether LiveKit answers, and its cost. Stopped, it costs only its disk and its reserved IP.
+
+**Using the panel.** Open it from the **Voice** button in the MCS header, or **Pop out** to a window
+of its own (useful when you move around the console).
+- Hiding the docked panel keeps you on the loops. **Leave** disconnects.
+- Space talks while the panel has the keyboard focus, so click into the panel first. In a pop-out
+  window this is always the case.
+- Use a headset.
+
+### Ports (firewall rule `c2o-allow-voice`, source anywhere)
+
+These are LiveKit's documented ports for a single VM (checked 2026-11-02 against docs.livekit.io,
+"Firewall configuration" and "Deploy to a VM", and the v1.13.10 source):
+
+| Port | What |
+|---|---|
+| TCP 443 | Caddy, split by TLS name: `voice.` → LiveKit signalling (WSS); `voice-turn.` → TURN/TLS. TURN/TLS is the path through networks that allow only HTTPS |
+| TCP 80 | Let's Encrypt HTTP-01 challenges |
+| TCP 7881 | WebRTC over TCP, when UDP is blocked |
+| UDP 3478 | Embedded TURN/UDP (also STUN) |
+| UDP 50000-60000 | WebRTC over UDP, the normal path |
+
+Port 7880 (LiveKit's HTTP) listens on 127.0.0.1 only. TURN/TLS: Caddy ends TLS and passes the
+client address with a PROXY v2 header (`turn.proxy_protocol: true`); without it Firefox rejects the
+TURN allocation. The two images are pinned by tag and digest in `voice-bootstrap.sh`
+(`livekit/livekit-server:v1.13.10`, `livekit/caddyl4:v2.11.3`). No Redis, because a single node does
+not need it.
+
+### Change the loops
+
+1. Edit `sim/configs/eosat1/voice/voice_loops.yaml` (comments at the top). Write `"OFF"` in quotes:
+   YAML reads a bare OFF as false.
+2. Run `python3 -m pytest -q sim/tests/test_content/test_voice_loops_config.py`.
+3. Push, then run `vm-bootstrap.sh update` on the ground VM.
+
+An invalid file switches off only voice: the MCS log says why and the panel says "unavailable".
+Nothing on the voice VM changes, because rooms are created when someone joins.
+
+### Rotate the voice keys
+
+```bash
+python3 -c 'import secrets; print("LIVEKIT_API_KEY=API" + secrets.token_hex(6)); print("LIVEKIT_API_SECRET=" + secrets.token_urlsafe(32))' \
+  | gcloud secrets versions add c2o-livekit-keys --data-file=-
+gcloud compute ssh c2o-voice-vm  --zone=northamerica-northeast2-a --tunnel-through-iap --command='sudo bash /opt/c2o-voice/voice-bootstrap.sh refresh'
+gcloud compute ssh c2o-ground-vm --zone=northamerica-northeast2-a --tunnel-through-iap --command='sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh refresh'
+```
+
+People on the loops are disconnected once and must press **Rejoin**.
+
+### On a laptop (no cloud)
+
+From `sim/`:
+
+```bash
+docker compose -f docker/compose.yaml --profile voice up -d livekit   # LiveKit dev mode, loopback only
+SMO_VOICE=dev ./start.sh                                             # or SMO_VOICE=dev in docker/ground.env
+```
+
+Open `http://localhost:9090`, then **Voice**. The `livekit` service runs `livekit-server --dev` on
+127.0.0.1:7880 (signalling), 7881/tcp and 7882/udp with a fixed development key that the MCS knows
+under `SMO_VOICE=dev`. Locally there is no sign-in: you type a name, which the panel shows as
+"unverified", and anyone on the machine may take the instructor seats (`SMO_VOICE_LOCAL_INSTRUCTOR=0`
+turns that off). Two browser windows with two names are enough to try a loop.
+
+### Costs (list prices, Toronto, retrieved 2026-11-02)
+
+| Item | Unit price | 24/7 | Class schedule (40 h/month) |
+|---|---|---|---|
+| Voice VM e2-small | $0.0184/h | $13.43 | $0.74 |
+| 10 GB balanced disk | $0.11/GB-month | $1.10 | $1.10 |
+| Static IPv4 | $0.005/h in use, $0.01/h reserved while the VM is stopped | $3.65 | $7.10 |
+| Internet egress (audio flows only while someone talks: Opus about 30-50 kbit/s per listener) | $0.12/GiB | < $1 | < $0.20 |
+| **Total** | | **≈ US$18 (CAD 25)** | **≈ US$9 (CAD 13)** |
+
+The reserved IP is the largest part of the class-schedule cost. Releasing it would change the address
+every term, and with it the two DNS records. One e2-small comfortably serves a class on audio only
+(LiveKit forwards Opus packets, it does not mix) **[verify]** in a real class with `docker stats`.
+
+### Not in the prototype
+
+- **Recordings:** they stay off (`recordings: false`). The plan is an instructor-only switch using
+  LiveKit egress into a Toronto bucket, stamped with UTC and sim time and indexed in the console log.
+  `smo_mcs/voice.py: start_recording` is the stub.
+- **Seat binding (WP10):** the position is still taken from the MCS header.
+- **Verifying the IAP-signed JWT (WP-3):** the MCS trusts the IAP email header. The ground VM has no
+  public IP and admits only the load balancer, so the header cannot be forged from outside.
+- **Private lines and bots on the loops (WP-8).**
+- **Per-session room prefixes:** the prefix is `c2o` for everyone. Set `SMO_VOICE_ROOM_PREFIX` per
+  ground stack once there is more than one team.
+
 ## 12. Costs
 
 List prices in USD from Google's pricing pages, retrieved **2026-10-30**. CAD at an **assumed 1.39**: if
@@ -616,7 +797,8 @@ VM: subtract about CAD 9 (its hours, disk and NAT share), or about CAD 76 from t
 Biggest levers: stop the VMs (`c2o down`), or let a schedule do it:
 `c2o schedule set "Mon-Fri 08:00-18:00"` runs both VMs about 217 h a month, roughly CAD 45 of VM time
 instead of CAD 150 around the clock; a schedule for class hours only comes close to the "class
-schedule" column. The schedule does not touch the load balancer: its ~CAD 25/month is the floor while
+schedule" column. The voice loops VM adds about CAD 13 a month on a class schedule, CAD 25 around the
+clock ([Voice loops](#voice-loops)). The schedule does not touch the load balancer: its ~CAD 25/month is the floor while
 the site is up, and `c2o down --all` between terms removes most of it (the reserved IP then costs about
 CAD 10/month). `c2o status` shows the rate for the state things are in now. An e2-standard-2 for the ground VM is a guess. Check `docker stats` in a real class and resize if
 it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped).
@@ -631,7 +813,8 @@ it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped
    billing link and Cloud Identity remain.
    *Or*, if the project holds nothing else: `gcloud projects delete c2o-live-prod`. Google keeps it
    recoverable for 30 days, and billing stops at once.
-3. Delete the A records at Squarespace (twelve, including the tool pages and SpaceCDF).
+3. Delete the A records at Squarespace (twelve, including the tool pages and SpaceCDF, plus `voice` and
+   `voice-turn`).
 4. Cloud Identity Free costs nothing, so keep it for next term. To close it, delete the users, then
    remove the subscription in the Admin console under *Billing*.
 
@@ -717,6 +900,16 @@ ShellCheck 0.11.0, **without any Google Cloud credentials**:
   `vm-bootstrap.sh clean` / `sizes` ran against a stub docker: right volumes and containers per
   role, no pulls or builds, the in-container delete keeps directories and other files.
   ShellCheck clean at `-S warning`.
+
+- **Voice loops (2026-11-02):** the MCS token service and the `/voice` panel ran against a real
+  **livekit-server v1.13.10** (built from source; dev mode, loopback). In two Chromium browsers with
+  fake microphones, a Flight Director talking on the FD loop was shown as the active speaker
+  ("Flight Director · name") in a Power & Thermal console monitoring it. The student never received
+  the Instructor/SIM loop. Repeat it with
+  `SMO_E2E=1 LIVEKIT_SERVER_BIN=<livekit-server> python3 -m pytest sim/tests/test_mcs/test_voice_livekit_e2e.py`.
+  `voice-bootstrap.sh` rendered its config against stub metadata and Secret
+  Manager, and that `livekit.yaml` was loaded by the same server binary. Not checked: Caddy's
+  certificates and TURN/TLS on the real VM, and a class-sized load **[verify]**.
 
 **Not checked (needs a real project):** anything that calls Google: API enablement, resource creation,
 IAP with the Google-managed client, WebSockets through IAP and the 3600 s reconnect, health-check

@@ -211,6 +211,13 @@ services:
 
   mcs:
     <<: [*image, *ground-env]
+    # ground.env + voice.env: the LiveKit keys for /api/voice/token
+    # (vm-bootstrap.sh writes voice.env from Secret Manager; absent = no voice).
+    env_file:
+      - path: ./ground.env
+        required: false
+      - path: ./voice.env
+        required: false
     profiles: [ground, local-demo]
     network_mode: "service:gsg"
     depends_on:
@@ -398,6 +405,34 @@ services:
       - ground-workspace:/opt/smo/workspace
     ports:
       - "${SMO_PUBLISH_ADDR:-127.0.0.1}:8000:8000"
+
+  # Voice loops on a laptop (profile "voice"): LiveKit in dev mode, loopback
+  # only. The MCS mints tokens for it with SMO_VOICE=dev (ground.env, or the
+  # environment of sim/start.sh); the browser connects to ws://localhost:7880.
+  #   docker compose -f docker/compose.yaml --profile voice up -d livekit
+  # Signal 7880/tcp, ICE 7881/tcp and 7882/udp (dev mode multiplexes all UDP
+  # on one port). --node-ip 127.0.0.1: the only address a laptop browser can
+  # reach the container on through the published ports. Never on a VM: the
+  # cloud voice server is deploy/gcp/voice-bootstrap.sh.
+  livekit:
+    image: livekit/livekit-server:v1.13.10@sha256:89ca9ce0791e18d6e03bf6e2c49ceb27e1c754eae8bd50c989386c1a5963791a
+    profiles: [voice]
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    command:
+      - --dev
+      - --bind
+      - 0.0.0.0
+      - --node-ip
+      - 127.0.0.1
+      - --keys
+      - "c2odev: c2o-local-development-secret-not-for-production"
+    ports:
+      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
 
 volumes:
   spacecdf-data:       # SpaceCDF database and analysis runs

@@ -1571,6 +1571,16 @@ class MCSServer:
         except Exception as e:  # noqa: BLE001
             logger.warning("Config browser not mounted: %s", e)
 
+        # Voice loops (WP-4 prototype): /voice keyset panel and the LiveKit
+        # token service. All in smo_mcs/voice.py; a bad voice_loops.yaml
+        # disables only voice, never the console.
+        try:
+            from smo_mcs.voice import register_voice_routes
+            register_voice_routes(app, self.config_dir,
+                                  default_lang=getattr(self, "_ui_lang", "en"))
+        except Exception as e:  # noqa: BLE001 — never block the MCS UI
+            logger.warning("Voice loops not mounted: %s", e)
+
         static_dir = Path(__file__).parent / "static"
         # Serve the top-level vendor directory directly so that
         # /static/vendor/ requests resolve even when the symlink

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-i18n>Voice loops</title>
+<!-- ==========================================================================
+  C2O voice loops: the keyset panel (WP-4 prototype). Served by the MCS at
+  /voice, opened from the MCS header as a docked panel (iframe) or a pop-out
+  window. One key per loop (configs/eosat1/voice/voice_loops.yaml): OFF, MON
+  or TALK, a volume, and who is talking. Push-to-talk: hold the button or
+  Space; Latch keeps the microphone open. Logic: voice.js. Layout only here:
+  design-system tokens, no hex values, radius <= 4 px, hairlines.
+=========================================================================== -->
+<link rel="stylesheet" href="/static/shared/design-system.css">
+<!-- livekit-client 2.23.0 (Apache-2.0), vendored: sim/vendor/js/livekit/NOTICE.txt -->
+<script src="/static/vendor/js/livekit/livekit-client.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{display:flex;flex-direction:column;background:var(--bg);min-width:300px}
+[hidden]{display:none!important}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ── header: title + connection state, then position + identity ───────── */
+header{flex:0 0 auto;background:var(--s1);border-bottom:1px solid var(--line)}
+.vrow{display:flex;align-items:center;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;padding:var(--sp-2) var(--sp-3)}
+.vrow+.vrow{border-top:1px solid var(--line);padding-top:6px;padding-bottom:6px}
+.vtitle{font-size:var(--fs-value);font-weight:600;color:var(--val)}
+.grow{flex:1}
+.vpos{display:flex;align-items:center;gap:var(--sp-2);min-width:0}
+.vpos label{font-size:var(--fs-label);color:var(--tx3)}
+.vpos .ds-select{width:auto;min-width:11rem}
+.vwho{font-size:var(--fs-label);color:var(--tx2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vwho b{font-family:var(--mono);font-weight:500;color:var(--tx)}
+.vwho .unv{color:var(--warn)}
+
+/* ── join card (before any audio: start on a user gesture) ────────────── */
+main{flex:1;overflow:auto;min-height:0}
+.vjoin{padding:var(--sp-4) var(--sp-3);display:grid;gap:var(--sp-3);max-width:34rem}
+.vjoin p{color:var(--tx2);max-width:60ch}
+.vjoin .ds-btn{justify-self:start}
+.vjoin ul{margin-left:1.2em;color:var(--tx3);font-size:var(--fs-label);display:grid;gap:2px}
+
+/* ── the keyset: one row per loop, hairlines between ──────────────────── */
+.keyset{list-style:none}
+.key{display:grid;grid-template-columns:4px minmax(0,1fr) auto;column-gap:var(--sp-3);row-gap:2px;
+  padding:var(--sp-2) var(--sp-3) var(--sp-2) 0;border-bottom:1px solid var(--line);
+  transition:background-color var(--motion) var(--ease)}
+.key .sw{grid-row:1 / span 2;background:var(--loop,var(--tx3));align-self:stretch;opacity:.85}
+.key .nm{display:flex;align-items:baseline;gap:var(--sp-2);min-width:0}
+.key .nm b{font-size:var(--fs-body);font-weight:600;color:var(--val);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.key .nm .id{font-family:var(--mono);font-size:var(--fs-label);color:var(--tx3)}
+.key .ds-seg{grid-column:3;grid-row:1;align-self:center}
+.key .ds-seg button{min-width:3.4rem;font-family:var(--mono)}
+.key .ds-seg button[aria-disabled="true"]{color:var(--tx-off);cursor:not-allowed}
+.key .ds-seg button[aria-disabled="true"]:hover{background:transparent;color:var(--tx-off)}
+.key .ln2{grid-column:2 / span 2;display:flex;align-items:center;gap:var(--sp-3);min-height:24px}
+.key .tk{flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:var(--fs-label);color:var(--tx3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.key .tk .who{color:var(--val);font-weight:500}
+.key .tk .pos{color:var(--tx2)}
+.key .tk i{width:8px;height:8px;border-radius:1px;background:var(--accent);flex:0 0 auto}
+.key .vol{display:flex;align-items:center;gap:6px;font-size:var(--fs-label);color:var(--tx3)}
+.key .vol input{width:6.5rem;accent-color:var(--accent)}
+.key .vol output{font-family:var(--mono);min-width:2.2em;text-align:right;color:var(--tx2)}
+.key .vol input:disabled{opacity:.4;cursor:not-allowed}
+/* key states: OFF resting grey; MON/TALK pressed segment; someone talking =
+   accent bar + filled square + name; my own transmission = accent wash */
+.key[data-state="OFF"] .nm b{color:var(--tx2);font-weight:500}
+.key[data-state="OFF"] .ln2{display:none}          /* volume only once you listen */
+.key[data-state="OFF"] .sw{grid-row:1}
+.key.is-heard{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.key.is-tx{background:var(--accent-wash);box-shadow:inset -3px 0 0 var(--accent)}
+.key.is-stale .tk{font-style:italic}
+.key .ds-chip{font-size:var(--fs-label)}
+
+/* ── push-to-talk bar ─────────────────────────────────────────────────── */
+footer{flex:0 0 auto;border-top:1px solid var(--line-2);background:var(--s1);padding:var(--sp-3);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2) var(--sp-2);align-items:center}
+.ptt{min-height:52px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border:1px solid var(--line-2);border-radius:var(--radius);background:var(--s2);color:var(--val);
+  font-family:var(--sans);font-size:var(--fs-value);font-weight:600;cursor:pointer;user-select:none;
+  -webkit-user-select:none;touch-action:none;transition:background-color var(--motion) var(--ease)}
+.ptt small{font-size:var(--fs-label);font-weight:400;color:var(--tx2)}
+.ptt:hover{border-color:var(--tx3)}
+.ptt:focus-visible{outline:2px solid var(--focus,var(--accent));outline-offset:2px}
+.ptt.is-active{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ptt.is-active small{color:var(--on-accent)}
+.ptt.is-armed{box-shadow:inset 0 0 0 2px var(--warn)}
+.ptt[aria-disabled="true"]{color:var(--tx-off);background:transparent;cursor:not-allowed}
+.ptt[aria-disabled="true"] small{color:var(--tx-off)}
+.pttside{display:flex;flex-direction:column;gap:var(--sp-2)}
+.pttnote{grid-column:1 / -1;font-size:var(--fs-label);color:var(--tx3)}
+.vbanner{margin:var(--sp-2) var(--sp-3) 0}
+@media (max-width:420px){ .key .vol input{width:4.5rem} .key .ds-seg button{min-width:2.8rem;padding:0 6px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="vrow">
+    <span class="vtitle" data-i18n>Voice loops</span>
+    <span id="conn" role="status" aria-live="polite"></span>
+    <span class="grow"></span>
+    <span id="lang-toggle"></span>
+    <button type="button" class="ds-btn ghost sm" id="popout" data-i18n data-i18n-title
+      title="Open the loops in their own window (keeps talking when you navigate the console)">Pop out</button>
+  </div>
+  <div class="vrow">
+    <div class="vpos"><label for="pos" data-i18n>Position</label>
+      <select id="pos" class="ds-select"></select></div>
+    <span class="vwho" id="who"></span>
+  </div>
+</header>
+<div id="banner" class="vbanner" hidden></div>
+<main id="main">
+  <section class="vjoin" id="join" aria-labelledby="join-h">
+    <h1 class="ds-sr" id="join-h" data-i18n>Join the voice loops</h1>
+    <p data-i18n>Each key is one loop. MON lets you hear it; TALK also lets you speak on it with push-to-talk. Your microphone stays closed until you press to talk.</p>
+    <div class="ds-field" id="name-field" hidden>
+      <label for="name" data-i18n>Your name (shown to the others)</label>
+      <input id="name" class="ds-input text" maxlength="40" autocomplete="name" spellcheck="false">
+      <span class="hint" data-i18n>No sign-in on this computer: the name is not verified.</span>
+    </div>
+    <button type="button" class="ds-btn primary" id="join-btn" data-i18n>Join voice loops</button>
+    <ul>
+      <li data-i18n>Use a headset: loudspeakers feed the loops back into your microphone.</li>
+      <li data-i18n>Hold Space or the talk button to speak. Latch keeps the microphone open.</li>
+      <li data-i18n>Recordings are off.</li>
+    </ul>
+  </section>
+  <ol class="keyset" id="keys" hidden aria-label="Loops" data-i18n-aria-label></ol>
+</main>
+<footer id="pttbar" hidden>
+  <button type="button" class="ptt" id="ptt" aria-describedby="ptt-note" aria-disabled="true"><span id="ptt-l"></span><small id="ptt-s"></small></button>
+  <div class="pttside">
+    <button type="button" class="ds-btn" id="latch" aria-pressed="false" aria-disabled="true" data-i18n data-i18n-title
+      title="Keep the microphone open without holding (press again to close)">Latch</button>
+    <button type="button" class="ds-btn ghost sm" id="leave" data-i18n>Leave</button>
+  </div>
+  <p class="pttnote" id="ptt-note"></p>
+</footer>
+<div id="sink" hidden></div>
+<script type="module" src="/static/modern/voice.js"></script>
+</body>
+</html>
