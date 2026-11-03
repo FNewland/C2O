@@ -14,7 +14,13 @@ same frame, built only on the shared design system (smo_common/ui, mounted at
                      EN | FR language switch.
   * ``SCRIPT``       at the end of <body>: wires the two switches and
                      exposes the shared components as ``window.DS`` for the
-                     tools' classic inline scripts.
+                     tools' classic inline scripts. When the bar was built
+                     with ``logbook="<tool>"`` it also mounts the participant
+                     logbook (smo_common/ui/logbook.js) in the bar; the page
+                     supplies its context with ``window.c2oLogbookContext =
+                     () => ({...})`` and reaches the panel as
+                     ``window.C2O_LOGBOOK`` (the server mounts /api/logbook
+                     with ``smo_common.logbook.register_logbook_routes``).
 
 Theme rule (same key as the gallery): ``?theme=`` > localStorage
 ``c2o.theme`` > the page default (dark: the tools are operations pages).
@@ -86,8 +92,12 @@ def head(*, default_theme: str = "dark", extra_css: str = "") -> str:
             + TOOL_HEAD + f"<style>{FRAME_CSS}{extra_css}</style>\n")
 
 
-def bar(name_html: str, *, meta_html: str = "", status_id: str = "tf-status") -> str:
-    """The title bar. ``name_html`` is trusted markup (usually a data-i18n span)."""
+def bar(name_html: str, *, meta_html: str = "", status_id: str = "tf-status",
+        logbook: str | None = None) -> str:
+    """The title bar. ``name_html`` is trusted markup (usually a data-i18n span).
+    ``logbook``: the tool id for the participant logbook button (None: none)."""
+    lb = (f'<span id="tf-logbook" data-logbook-tool="{_html.escape(logbook)}"></span>'
+          if logbook else "")
     return (
         '<header class="tf-bar">'
         '<span class="tf-mark" aria-hidden="true">C2O</span>'
@@ -95,6 +105,7 @@ def bar(name_html: str, *, meta_html: str = "", status_id: str = "tf-status") ->
         f'<span class="tf-meta" id="tf-meta">{meta_html}</span>'
         '<div class="tf-ctl">'
         f'<span class="tf-status" id="{_html.escape(status_id)}" role="status" aria-live="polite"></span>'
+        + lb +
         '<div class="ds-seg" role="group" id="tf-theme" aria-label="Theme" data-i18n-aria-label>'
         '<button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button>'
         '<button type="button" data-theme-set="light" aria-pressed="false" data-i18n>Light</button>'
@@ -129,6 +140,16 @@ if (seg) seg.addEventListener("click", (ev) => {
 });
 paintTheme();
 DS.mountLangToggle(document.getElementById("tf-lang"));
+const lbSlot = document.getElementById("tf-logbook");
+if (lbSlot) {
+  const LB = await import("/static/shared/logbook.js");
+  window.C2O_LOGBOOK = LB.mountLogbook({
+    tool: lbSlot.dataset.logbookTool,
+    getContext: () => (typeof window.c2oLogbookContext === "function" ? window.c2oLogbookContext() : {}),
+    buttonHost: lbSlot,
+  });
+  window.C2O_LOGBOOK_MODULE = LB;
+}
 window.dispatchEvent(new CustomEvent("c2o:frameready"));
 </script>"""
 
