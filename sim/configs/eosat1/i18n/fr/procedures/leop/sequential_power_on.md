@@ -62,7 +62,7 @@ le propriétaire a rencontrée en vol --- COM-002 a ensuite trouvé un réchauff
 n'avait jamais été légitimement allumé.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) --- htr_bat, UNIQUEMENT si `tcs.temp_battery` < +5C
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 sous 5s --- seulement si commandée
-**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- htr_obc, UNIQUEMENT si `tcs.temp_obc` < 0C
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- htr_obc, UNIQUEMENT si `tcs.temp_obc` < -10C (seuil ON du réchauffeur OBC)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5s --- seulement si commandée
 **Action:** Consigner dans le journal LEOP QUELLES lignes de réchauffeurs cette fiche a alimentées (la
 vérification des réchauffeurs de COM-002 lit cet enregistrement comme état d'entrée).

@@ -29,8 +29,8 @@
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-1-request-thermal-housekeeping",
-   "en_hash": "290588de29a31a39",
-   "fr_hash": "d9e58d984aa520ab"
+   "en_hash": "83ebba17c65f0bf0",
+   "fr_hash": "e92e963e30506f92"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-2-monitor-thermal-profile-through-sunlit-phase",
@@ -39,8 +39,8 @@
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-3-monitor-thermal-profile-through-eclipse",
-   "en_hash": "4588c60b1d639690",
-   "fr_hash": "e7221f03f82f3eab"
+   "en_hash": "0e5a4eb8d5d0e8e4",
+   "fr_hash": "6d64ae128806713b"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-4-test-battery-heater-circuit-establish-state-first",
@@ -49,8 +49,8 @@
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-5-test-obc-heater-circuit-establish-state-first",
-   "en_hash": "226c921b6310f5d5",
-   "fr_hash": "f5f0ee17b76392f2"
+   "en_hash": "5edfbe9418b3bf6a",
+   "fr_hash": "f39a7a36c8e40aa1"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-6-verify-autonomous-heater-thermostat-settings",
@@ -83,5 +83,5 @@
    "fr_hash": "7984bd73e55c7de5"
   }
  ],
- "en_commit": "204d5cd"
+ "en_commit": "21af365"
 }

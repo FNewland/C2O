@@ -73,7 +73,7 @@ timeout has to exceed one collection interval or the check races the downlink.
 **Verify:** Record temperature and confirm it is above the heater OFF setpoint
 (the heater should have turned off by now).
 **Note:** Setpoints from `subsystems/tcs.yaml`: battery ON +5 C / OFF +10 C
-(8 W), OBC ON +5 C / OFF +10 C (4 W), thruster catbed ON +190 C / OFF +230 C
+(8 W), OBC ON -10 C / OFF -5 C (4 W), thruster catbed ON +190 C / OFF +230 C
 (12 W). If temperature is well above these values
 and the heater is still ON, the thermostat has failed.
 **GO/NO-GO:** Thermal runaway confirmed — proceed to command the heater OFF

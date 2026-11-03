@@ -51,7 +51,7 @@ LEOP-007 and COM-004 respectively.
 
 ### Step 3 --- Request Thermal Housekeeping
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
-**Verify:** `tcs.temp_obc` (0x0406) in range [-5C, +45C] within 10s
+**Verify:** `tcs.temp_obc` (0x0406) in range [-10C, +50C] within 10s
 **Verify:** `tcs.temp_battery` (0x0407) in range [0C, +35C] within 10s
 **Verify:** `tcs.temp_fpa` (0x0408) reported (payload unpowered, expect ambient) within 10s
 **Note:** All heater LINES are off. If `tcs.temp_battery` is trending toward

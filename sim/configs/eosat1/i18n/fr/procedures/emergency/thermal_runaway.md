@@ -73,7 +73,7 @@ délai maximal doit donc dépasser un intervalle de collecte, faute de quoi le c
 **Verify:** Consigner la température et confirmer qu'elle est au-dessus de la consigne d'arrêt du réchauffeur
 (le réchauffeur aurait déjà dû se couper).
 **Note:** Consignes issues de `subsystems/tcs.yaml` : batterie ON +5 °C / OFF +10 °C
-(8 W), OBC ON +5 °C / OFF +10 °C (4 W), lit catalytique du propulseur ON +190 °C / OFF +230 °C
+(8 W), OBC ON -10 °C / OFF -5 °C (4 W), lit catalytique du propulseur ON +190 °C / OFF +230 °C
 (12 W). Si la température est nettement au-dessus de ces valeurs
 et que le réchauffeur est toujours ON, le thermostat est défaillant.
 **GO/NO-GO:** Emballement thermique confirmé — commander l'arrêt du réchauffeur

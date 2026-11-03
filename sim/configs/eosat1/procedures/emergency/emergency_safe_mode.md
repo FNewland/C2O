@@ -147,7 +147,7 @@ recovering, force the heater: `HEATER_BATTERY(on=1)` (func_id 40); return it to
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- the OBC heater line first (no-op if already ON)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5s
 **TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- restore the OBC heater to its thermostat (Step 2 switched it OFF manually).
-**Note:** If the OBC is colder than +5 degC and not recovering, force it ON with
+**Note:** If the OBC is colder than -10 degC and not recovering, force it ON with
 `HEATER_OBC(on=1)` (func_id 41) and return it to AUTO once warm.
 **Verify:** `tcs.temp_obc` (0x0406) trending toward nominal range (-10 degC to +40 degC).
 **Verify:** `eps.power_cons` (0x0106) increase < 10W. Spacecraft remains power-positive.

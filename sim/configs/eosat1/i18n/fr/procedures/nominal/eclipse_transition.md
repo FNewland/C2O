@@ -30,7 +30,7 @@ la sortie d'éclipse.
 | tcs.htr_battery | 0x040A | État du réchauffeur |
 | tcs.htr_obc | 0x040B | État du réchauffeur |
 | tcs.temp_battery | 0x0407 | Entre 0 et 40 °C |
-| tcs.temp_obc | 0x0406 | Entre 5 et 55 °C |
+| tcs.temp_obc | 0x0406 | Entre -10 et 55 °C |
 | aocs.mode | 0x020F | 8 (ECLIPSE) pendant l'éclipse |
 | aocs.att_error | 0x0217 | < 1.0 deg |
 
@@ -64,11 +64,11 @@ et réévaluer après un passage éclairé supplémentaire.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — ligne `htr_bat`, seulement si 0x0115 = 0
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — ligne `htr_obc`, seulement si 0x0116 = 0
 **Verify:** `tcs.temp_battery` (0x0407) > 5 °C
-**Verify:** `tcs.temp_obc` (0x0406) > 10 °C
+**Verify:** `tcs.temp_obc` (0x0406) > 0 °C
 **Note:** Si la marge de température de la batterie est faible (< 8 °C), relever la consigne du réchauffeur batterie
 **TC:** `HEATER_SET_SETPOINT(circuit=0, on_temp=3.0, off_temp=8.0)` (Service 8, Subtype 1, func_id 44) — consigne
-**Note:** Si la marge de température de l'OBC est faible (< 12 °C), relever la consigne du réchauffeur OBC :
-**TC:** `HEATER_SET_SETPOINT(circuit=1, on_temp=8.0, off_temp=13.0)` (Service 8, Subtype 1, func_id 44) — réchauffeur OBC ON 8 °C / OFF 13 °C
+**Note:** Si la marge de température de l'OBC est faible (< 0 °C), relever la consigne du réchauffeur OBC :
+**TC:** `HEATER_SET_SETPOINT(circuit=1, on_temp=-5.0, off_temp=0.0)` (Service 8, Subtype 1, func_id 44) — réchauffeur OBC ON -5 °C / OFF 0 °C
 **GO/NO-GO:** Consignes des réchauffeurs configurées pour la phase froide de l'éclipse — continuer.
 
 ### Étape 3 : Couper le refroidisseur du FPA pour économiser la puissance
@@ -102,7 +102,7 @@ CTG-001 (délestage sur sous-tension).
 ### Étape 6 : Surveiller les conditions thermiques pendant l'éclipse
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — surveiller la télémesure TCS toutes les 60 s
 **Verify:** `tcs.temp_battery` (0x0407) reste > 0 °C
-**Verify:** `tcs.temp_obc` (0x0406) reste > 5 °C
+**Verify:** `tcs.temp_obc` (0x0406) reste > -10 °C
 **Verify:** `tcs.htr_battery` (0x040A) — le réchauffeur cycle comme prévu
 **Verify:** `tcs.htr_obc` (0x040B) — le réchauffeur cycle comme prévu
 **Action:** Si une température approche de sa limite basse, vérifier que le réchauffeur est ON. Si le réchauffeur
