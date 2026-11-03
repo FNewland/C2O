@@ -54,8 +54,8 @@
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-4-tt-c",
-   "en_hash": "4efeb6cd728b7b93",
-   "fr_hash": "85bcdb50a1e26b33"
+   "en_hash": "b01a64bebc340f07",
+   "fr_hash": "bad006c76ab20355"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-5-payload-operations",
@@ -89,13 +89,13 @@
   },
   {
    "id": "worksheet-wb-5-4-n001-nom-001-pass-startup-confirm-each-step",
-   "en_hash": "05600e81780da26f",
-   "fr_hash": "2987c71ce6315720"
+   "en_hash": "5fab7bef50ac73e2",
+   "fr_hash": "cd4bbcf725e902db"
   },
   {
    "id": "worksheet-wb-5-4-c003-ctg-003-ttc-link-loss-recovery-confirm-each-step",
-   "en_hash": "5346f32bb79d9e57",
-   "fr_hash": "10b96cc43d61ba28"
+   "en_hash": "27fae5c455469b33",
+   "fr_hash": "d91e882b2dd09fa4"
   },
   {
    "id": "worksheet-wb-5-4-n012-nom-012-shift-handover-template",
@@ -109,8 +109,8 @@
   },
   {
    "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-1-predict-next-three-aos-times",
-   "en_hash": "c2b29136a2ea47a8",
-   "fr_hash": "f3f4001478358ce2"
+   "en_hash": "4bbd475dab754d9a",
+   "fr_hash": "ae59765d63887aed"
   },
   {
    "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-2-pass-duration-vs-max-elevation",
@@ -159,38 +159,38 @@
   },
   {
    "id": "worksheet-wb-5-5-pb-day-3-leop-pre-pass-briefing-checklist",
-   "en_hash": "e3bafbdc1348bffb",
-   "fr_hash": "b8911907f6a824b4"
+   "en_hash": "8cfa54f6281f2e6f",
+   "fr_hash": "fff3caa62f29eb07"
   },
   {
    "id": "worksheet-wb-5-5-l001-leop-001-first-acquisition-of-signal-obc-boot-confirm-each-step",
-   "en_hash": "8e5ce24787009e72",
-   "fr_hash": "d17f243a92c75acc"
+   "en_hash": "631809f50b4fa10a",
+   "fr_hash": "46aa5f00780a1e7a"
   },
   {
    "id": "worksheet-wb-5-5-l006-leop-006-time-synchronisation-confirm-each-step",
-   "en_hash": "2cc6c2373773afa5",
-   "fr_hash": "2080a5b9d01405cb"
+   "en_hash": "8eb14624632792af",
+   "fr_hash": "493420778f944f2d"
   },
   {
    "id": "worksheet-wb-5-5-l002-leop-002-initial-health-check-confirm-each-step",
-   "en_hash": "b040466046c99ed5",
-   "fr_hash": "8ac97efb60a3d6df"
+   "en_hash": "0d238b810c0998dd",
+   "fr_hash": "e0f00c81df7d5323"
   },
   {
    "id": "worksheet-wb-5-5-l007-leop-007-sequential-power-on-confirm-each-step",
-   "en_hash": "c1f73e16f3fe20cd",
-   "fr_hash": "1fc7daca74b64b90"
+   "en_hash": "db9dd249915aeffc",
+   "fr_hash": "ed81371783eb6d12"
   },
   {
    "id": "worksheet-wb-5-5-l005-leop-005-sun-acquisition-observe-confirm-each-step",
-   "en_hash": "c113f91c23ad8892",
-   "fr_hash": "9eb47fad2162a708"
+   "en_hash": "890e840a24692057",
+   "fr_hash": "159b20ea87d2c070"
   },
   {
    "id": "worksheet-wb-5-5-l003-leop-003-initial-orbit-determination-and-end-of-leop-confirm-each-step",
-   "en_hash": "8280a510bd75a21a",
-   "fr_hash": "1d8d249559982021"
+   "en_hash": "3f4dcff04fd65abb",
+   "fr_hash": "d35b1e0700abe0e9"
   },
   {
    "id": "worksheet-wb-5-5-at-day-3-anomaly-ticket-3-copies",
@@ -214,8 +214,8 @@
   },
   {
    "id": "worksheet-wb-5-5-go-day-3-end-of-pass-go-no-go-scorecard",
-   "en_hash": "a9d0ec5df1ac58bf",
-   "fr_hash": "cc6d9a4d78bf34b5"
+   "en_hash": "533036339a1b94a0",
+   "fr_hash": "137fc4d414378dcd"
   },
   {
    "id": "worksheet-wb-5-5-obs-day-3-observer-worksheets-axes-used-communications-technical",
@@ -249,48 +249,48 @@
   },
   {
    "id": "worksheet-wb-5-6-pb-day-4-commissioning-pre-pass-set-briefing",
-   "en_hash": "2c948460ac546913",
-   "fr_hash": "410888754b2da84b"
+   "en_hash": "9260bb3e1d395c6b",
+   "fr_hash": "d956ce5ba116fc08"
   },
   {
    "id": "worksheet-wb-5-6-c001-com-001-eps-checkout-confirm-each-step",
-   "en_hash": "0acbcc638576b3cf",
-   "fr_hash": "93b7577494afe611"
+   "en_hash": "de157e0871917f5a",
+   "fr_hash": "c038cfbc13d294fe"
   },
   {
    "id": "worksheet-wb-5-6-c002-com-002-tcs-verification-confirm-each-step",
-   "en_hash": "a0479facedf7fcf4",
-   "fr_hash": "a7d67f3162ff36e0"
+   "en_hash": "cb46d1504501f3fa",
+   "fr_hash": "689c50117a51c936"
   },
   {
    "id": "worksheet-wb-5-6-c005-com-005-aocs-mode-transitions-confirm-each-step",
-   "en_hash": "b1b64bea2c03f29d",
-   "fr_hash": "558ad444d96ea739"
+   "en_hash": "63eddfb7b9fbf638",
+   "fr_hash": "6dc15da6694b61d0"
   },
   {
    "id": "worksheet-wb-5-6-c006-com-006-ttc-link-verification-confirm-each-step",
-   "en_hash": "f7abd4ee8e3db401",
-   "fr_hash": "e0e8278ef96bf8c2"
+   "en_hash": "6c1d0d268fab12b7",
+   "fr_hash": "62eede7c112e9b6d"
   },
   {
    "id": "worksheet-wb-5-6-c007-com-007-obdh-checkout-confirm-each-step",
-   "en_hash": "d3d75a05bd6bb436",
-   "fr_hash": "2e2e32f5023d420f"
+   "en_hash": "be5c38da7c9c2e77",
+   "fr_hash": "acace22bff483b4b"
   },
   {
    "id": "worksheet-wb-5-6-c008-com-008-fdir-configuration-confirm-each-step",
-   "en_hash": "9bab3ee2917957e0",
-   "fr_hash": "2d079f25be378a74"
+   "en_hash": "6ebd34f75a420936",
+   "fr_hash": "549fbc07779c4923"
   },
   {
    "id": "worksheet-wb-5-6-c009-com-009-payload-power-on-confirm-each-step",
-   "en_hash": "efb428e0689af7a8",
-   "fr_hash": "d8686129e6de887e"
+   "en_hash": "84773b26b71f5f76",
+   "fr_hash": "7addc12bc59b281f"
   },
   {
    "id": "worksheet-wb-5-6-c010-com-010-fpa-cooler-activation-confirm-each-step-spans-eclipse",
-   "en_hash": "244532e57fd4b93a",
-   "fr_hash": "7955792e035653dc"
+   "en_hash": "41f0852100f8eca2",
+   "fr_hash": "bdcd7c019fa883f3"
   },
   {
    "id": "worksheet-wb-5-6-fpa-fpa-cool-down-monitor-sheet",
@@ -299,18 +299,18 @@
   },
   {
    "id": "worksheet-wb-5-6-c011-com-011-payload-calibration-confirm-each-step",
-   "en_hash": "77646e7ddf772b56",
-   "fr_hash": "c612003af630c078"
+   "en_hash": "788527b14ebd5c11",
+   "fr_hash": "7680940a50b394b6"
   },
   {
    "id": "worksheet-wb-5-6-c012-com-012-first-light-confirm-each-step",
-   "en_hash": "905c145fcc1df69a",
-   "fr_hash": "b1094bdb6634c8a5"
+   "en_hash": "1f9d590c1e72cd41",
+   "fr_hash": "81b7d6cd8ff178fb"
   },
   {
    "id": "worksheet-wb-5-6-fl-first-light-image-assessment",
-   "en_hash": "8e441a326e1cb78b",
-   "fr_hash": "4d8d6366a4b0d923"
+   "en_hash": "6391bd32c27f0597",
+   "fr_hash": "ba2f935572e6d14f"
   },
   {
    "id": "worksheet-wb-5-6-ma-day-4-multi-anomaly-response-form",
@@ -429,53 +429,53 @@
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-001-under-voltage-load-shed",
-   "en_hash": "3e6094f00fdcb0f6",
-   "fr_hash": "22c3bcfc135c7023"
+   "en_hash": "d9410ac461cceef1",
+   "fr_hash": "bdd97af63892fd37"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-002-aocs-anomaly-recovery",
-   "en_hash": "3182f15c6c102e04",
-   "fr_hash": "3852bd70b435c7ab"
+   "en_hash": "3e72ffe5023ed702",
+   "fr_hash": "7f805fac0ef68271"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-007-reaction-wheel-anomaly",
-   "en_hash": "e70ae22abeca86ac",
-   "fr_hash": "ee3c97fa09d552c0"
+   "en_hash": "88b63893ed4c388b",
+   "fr_hash": "b906404c15988ac7"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-008-star-tracker-failure",
-   "en_hash": "706b4543fde17bef",
-   "fr_hash": "a415d8f45ef5a4f6"
+   "en_hash": "1eaae16f2d06bf86",
+   "fr_hash": "aa75253da01640a4"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-010-obdh-watchdog-recovery",
-   "en_hash": "811f960c812408f7",
-   "fr_hash": "4c02b6bd21895eda"
+   "en_hash": "96b1ee56516b5fd2",
+   "fr_hash": "9e8f944087e5edde"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-012-overcurrent-response",
-   "en_hash": "1079c29905c13e51",
-   "fr_hash": "ccda7976880d7394"
+   "en_hash": "af6aa984db0d9887",
+   "fr_hash": "c8ea7aa6473d247e"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-015-corrupted-image-recovery",
-   "en_hash": "00318b18dba1e7dd",
-   "fr_hash": "0b121093d8cc9be4"
+   "en_hash": "ae554820aebc09b7",
+   "fr_hash": "a569587fc665401a"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-017-bus-failure-switchover",
-   "en_hash": "bebee9739eddb8de",
-   "fr_hash": "7f160715a01c275b"
+   "en_hash": "9fb697e6529ed1cd",
+   "fr_hash": "6356b44494f29c8b"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-019-no-telemetry-at-pass-start",
-   "en_hash": "81a0dd092581614a",
-   "fr_hash": "553912eb9e40fc08"
+   "en_hash": "b0ed00e5dcd772fe",
+   "fr_hash": "8ebd9e2e734c4226"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-020-ground-station-antenna-failure",
-   "en_hash": "250dc5cceecd8171",
-   "fr_hash": "29af9c71a144e2dd"
+   "en_hash": "8dec1b836b999459",
+   "fr_hash": "3ce2fa52927cdb4d"
   },
   {
    "id": "appendix-wb-b-end-of-week-shift-log-cohort-copy",
@@ -488,5 +488,5 @@
    "fr_hash": "4a357d00633e9454"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "21af365"
 }
