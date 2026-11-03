@@ -23,6 +23,8 @@ recording
 configs/data
 tests
 docs
+# ...except its PDFs: the instructor list ships two of them (downloads.yaml).
+!docs/*.pdf
 deploy
 scripts
 docker/*.env

@@ -384,6 +384,13 @@ class Gateway:
             local.middlewares.append(self._logbook_host_guard)
         except ImportError:                       # pragma: no cover
             logger.warning("smo_common.logbook not importable: no logbook on the GSG")
+        # Course PDFs for the instructor console, served from the ground image
+        # (never over the link): same routes as the simulator's instructor app.
+        try:
+            from smo_common.downloads import register_download_routes
+            register_download_routes(local, audience="instructor")
+        except Exception as e:  # noqa: BLE001 -- never block the gateway
+            logger.warning("course PDF downloads not mounted: %s", e)
         local.router.add_route("*", "/{tail:.*}", self._h_proxy)
         runner = web.AppRunner(local, access_log=None, handle_signals=False)
         await runner.setup()
