@@ -592,6 +592,27 @@ async function fetchDebrief(announce) {
 
 /* ── fault menu by control-loop element + typed form + trigger ─────────── */
 
+/* The failure catalogue's text in the viewer's language. FAILURE_SPECS are
+ * English Python; tools/gen_failure_strings.py exports them for the French
+ * overlay (i18n.yaml rules failsub / fail / failparam / failval), read here
+ * with tdb() like every other config prose. Identifiers stay English. */
+function fSubLabel(name) {
+  const c = failureCatalog && failureCatalog.subsystems.find((x) => x.name === name);
+  return tdb(`failsub:${name}:label`, c ? (c.label || name.toUpperCase()) : name.toUpperCase());
+}
+function fLabel(sub, f) { return f ? tdb(`fail:${sub}.${f.name}:label`, f.label || f.name) : ""; }
+function fText(sub, f, field) { return f && f[field] ? tdb(`fail:${sub}.${f.name}:${field}`, f[field]) : ""; }
+function locParam(sub, fail, p) {
+  if (!p) return p;
+  const k = `${sub}.${fail}.${p.name}`;
+  const out = { ...p, label: tdb(`failparam:${k}:label`, p.label || p.name) };
+  if (p.description) out.description = tdb(`failparam:${k}:description`, p.description);
+  if (Array.isArray(p.values) && Array.isArray(p.value_labels)) {
+    out.value_labels = p.values.map((v, i) => tdb(`failval:${k}.${v}:label`, p.value_labels[i]));
+  }
+  return out;
+}
+
 async function loadFailureCatalog() {
   let data = null, menu = null;
   try { [data, menu] = await Promise.all([apiGet("/api/failure-catalog"), apiGet("/api/instructor/fault-menu")]); }
@@ -622,7 +643,7 @@ function updateSubsystemFilter() {
   const e = elementEntry();
   const subs = e ? [...new Set(e.failures.map((f) => f.subsystem))] : (failureCatalog ? failureCatalog.subsystems.map((s) => s.name) : []);
   const prev = $("fail-subsystem").value;
-  const label = (s) => { const c = failureCatalog && failureCatalog.subsystems.find((x) => x.name === s); return c ? (c.label || s.toUpperCase()) : s.toUpperCase(); };
+  const label = (s) => fSubLabel(s);
   $("fail-subsystem").innerHTML = `<option value="">${esc(tText("All subsystems"))}</option>` +
     subs.map((s) => `<option value="${esc(s)}">${esc(label(s))}</option>`).join("");
   if (subs.includes(prev)) $("fail-subsystem").value = prev;
@@ -637,7 +658,7 @@ function updateFailureTypes() {
     for (const s of failureCatalog.subsystems) if (!filt || s.name === filt) for (const f of s.failures) list.push({ subsystem: s.name, name: f.name, label: f.label });
   }
   const prev = $("fail-type").value;
-  $("fail-type").innerHTML = list.map((f) => `<option value="${esc(f.subsystem + "|" + f.name)}">${esc(f.label || f.name)} — ${esc(f.subsystem.toUpperCase())}</option>`).join("");
+  $("fail-type").innerHTML = list.map((f) => `<option value="${esc(f.subsystem + "|" + f.name)}">${esc(fLabel(f.subsystem, f))} — ${esc(f.subsystem.toUpperCase())}</option>`).join("");
   if (list.some((f) => f.subsystem + "|" + f.name === prev)) $("fail-type").value = prev;
   updateFailureParams();
 }
@@ -681,7 +702,7 @@ function updateFailureParams() {
   currentFailureSub = spec ? sub : null;
   setInjectError("");
   const m = currentMenuEntry();
-  $("fail-effect").innerHTML = spec ? `${esc(spec.effect || "")}${m ? ` <span class="${m.inject_class === "indication" ? "inj-chip" : "cls-chip"}">${esc(m.inject_class === "indication" ? tText("indication: a sensor lies, the truth is unchanged") : tText("physical"))}</span>` : ""}` : "";
+  $("fail-effect").innerHTML = spec ? `${esc(fText(sub, spec, "effect"))}${m ? ` <span class="${m.inject_class === "indication" ? "inj-chip" : "cls-chip"}">${esc(m.inject_class === "indication" ? tText("indication: a sensor lies, the truth is unchanged") : tText("physical"))}</span>` : ""}` : "";
   if (!spec) {
     $("fail-params").innerHTML = "";
     if (!batch.length) setDisabled($("btn-inject"), tText("Choose a failure first"));
@@ -691,9 +712,9 @@ function updateFailureParams() {
   }
   setEnabled($("btn-inject")); setEnabled($("btn-add-batch"));
   const html = [];
-  if (spec.magnitude) html.push(renderParamControl(spec.magnitude, "fail-mag"));
-  (spec.params || []).forEach((p) => html.push(renderParamControl(p, "fail-p")));
-  if (!spec.reversible && spec.notes) html.push(`<div class="fail-effect irrev">${t("Not fully reversible: {{notes}}", { notes: spec.notes })}</div>`);
+  if (spec.magnitude) html.push(renderParamControl(locParam(sub, spec.name, spec.magnitude), "fail-mag"));
+  (spec.params || []).forEach((p) => html.push(renderParamControl(locParam(sub, spec.name, p), "fail-p")));
+  if (!spec.reversible && spec.notes) html.push(`<div class="fail-effect irrev">${t("Not fully reversible: {{notes}}", { notes: fText(sub, spec, "notes") })}</div>`);
   $("fail-params").innerHTML = html.join("");
   renderReview();
 }
@@ -752,7 +773,7 @@ function readInjectForm() {
     if (!r.ok) return r;
     if (!r.skip) payload[p.name] = r.value;
   }
-  return { ok: true, payload, label: spec.label || spec.name };
+  return { ok: true, payload, label: fLabel(currentFailureSub, spec) };
 }
 function readTrigger() {
   const kind = $("fail-trigger").value;

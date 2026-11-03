@@ -1,0 +1,529 @@
+# GENERATED FILE — DO NOT EDIT BY HAND.
+# Written by tools/gen_failure_strings.py from the models' FAILURE_SPECS
+# (smo_simulator/failure_catalog.py). It only carries the English text of the
+# instructor inject form for the French overlay (tools/i18n rules fail,
+# failsub, failparam, failval -> configs/eosat1/i18n/fr/db.yaml). The
+# simulator does not read it.
+subsystems:
+  - name: aocs
+    label: "ADCS — Attitude Determination & Control"
+    failures:
+      - name: css_failure
+        label: "Coarse sun sensor assembly failure"
+        effect: "Whole CSS assembly invalid — sun vector unavailable, coarse sun pointing degraded."
+      - name: css_head_fail
+        label: "Coarse sun sensor head failure"
+        effect: "One CSS head on the selected body face reads zero; the sun vector skews toward the remaining heads."
+        params:
+          - name: face
+            label: "CSS head (body face)"
+      - name: gain_corruption
+        label: "Control gain register corruption"
+        effect: "Writes a wrong scale factor into the AOCS torque-gain register for one body axis (0x20100000 block). The control law over/under-drives that axis and attitude error diverges; diagnose with S6 MEM_DUMP, recover with MEM_LOAD."
+        params:
+          - name: axis
+            label: "Body axis"
+            values:
+              - {value: "x", label: "X (roll)"}
+              - {value: "y", label: "Y (pitch)"}
+              - {value: "z", label: "Z (yaw)"}
+          - name: factor
+            label: "Corrupted gain"
+      - name: gyro_bias
+        label: "Gyro rate bias"
+        effect: "Adds a PERSISTENT rate bias to the selected gyro channel (0x0210-0x0212 and the MEKF input). Not the mean-reverting Gauss-Markov state — this one does not heal itself."
+        notes: "Three gyros, no spare: a biased channel is not switchable away from."
+        params:
+          - name: axis
+            label: "Gyro axis"
+            values:
+              - {value: "0", label: "X (roll)"}
+              - {value: "1", label: "Y (pitch)"}
+              - {value: "2", label: "Z (yaw)"}
+              - {value: "all", label: "All three axes"}
+          - name: bias
+            label: "Rate bias"
+      - name: mag_failure
+        label: "Magnetometer assembly failure"
+        effect: "Both magnetometers invalid — B-dot detumble and MTQ momentum dumping lose their field reference."
+      - name: mtq_failure
+        label: "Magnetorquer failure"
+        effect: "Selected magnetorquer produces no dipole: that axis loses detumble/momentum-dump authority."
+        params:
+          - name: axis
+            label: "Magnetorquer axis"
+            values:
+              - {value: "x", label: "MTQ-X"}
+              - {value: "y", label: "MTQ-Y"}
+              - {value: "z", label: "MTQ-Z"}
+      - name: multi_wheel_failure
+        label: "Multiple wheel failure"
+        effect: "Fails two or more wheels at once; with fewer than 3 active the AOCS drops to COARSE_SUN."
+        params:
+          - name: wheels
+            label: "Wheels to fail"
+            values:
+              - {value: "0", label: "RW1 (pyramid +X)"}
+              - {value: "1", label: "RW2 (pyramid +Y)"}
+              - {value: "2", label: "RW3 (pyramid -X)"}
+              - {value: "3", label: "RW4 (pyramid -Y)"}
+      - name: rw_bearing
+        label: "Reaction wheel bearing degradation"
+        effect: "Adds bearing friction on the selected wheel: current and temperature rise, torque authority falls; >= 0.95 takes the wheel offline."
+        params:
+          - name: magnitude
+            label: "Bearing degradation"
+          - name: wheel
+            label: "Reaction wheel"
+            values:
+              - {value: "0", label: "RW1 (pyramid +X)"}
+              - {value: "1", label: "RW2 (pyramid +Y)"}
+              - {value: "2", label: "RW3 (pyramid -X)"}
+              - {value: "3", label: "RW4 (pyramid -Y)"}
+      - name: rw_seizure
+        label: "Reaction wheel seizure"
+        effect: "Selected wheel seizes: speed to zero, wheel disabled, momentum dumped to the body — the 4-wheel pyramid drops to 3-wheel control."
+        notes: "Clear removes the friction but the wheel stays disabled until re-enabled by command."
+        params:
+          - name: wheel
+            label: "Reaction wheel"
+            values:
+              - {value: "0", label: "RW1 (pyramid +X)"}
+              - {value: "1", label: "RW2 (pyramid +Y)"}
+              - {value: "2", label: "RW3 (pyramid -X)"}
+              - {value: "3", label: "RW4 (pyramid -Y)"}
+      - name: st_blind
+        label: "Star tracker blinded"
+        effect: "Selected tracker reports BLIND (status 3) and stops supplying attitude; the MEKF coasts on gyros."
+        params:
+          - name: magnitude
+            label: "Blinded"
+          - name: unit
+            label: "Star tracker"
+            values:
+              - {value: "1", label: "STR-1 (primary)"}
+              - {value: "2", label: "STR-2 (redundant)"}
+      - name: st_failure
+        label: "Star tracker hardware failure"
+        effect: "Selected tracker permanently FAILED (status 4, 0 stars); redundancy logic must switch to the other unit."
+        params:
+          - name: unit
+            label: "Star tracker"
+            values:
+              - {value: "1", label: "STR-1 (primary)"}
+              - {value: "2", label: "STR-2 (redundant)"}
+  - name: eps
+    label: "EPS — Electrical Power"
+    failures:
+      - name: bat_cell
+        label: "Battery cell failure"
+        effect: "Marks one cell string failed: capacity and bus voltage drop."
+        params:
+          - name: magnitude
+            label: "Failed"
+      - name: bus_short
+        label: "Main bus short"
+        effect: "Adds a large parasitic load to the 28 V bus; SoC collapses."
+        params:
+          - name: magnitude
+            label: "Shorted"
+      - name: overcurrent
+        label: "Power line overcurrent"
+        effect: "Multiplies the selected line's draw; above its OC threshold the LCL trips and the line drops out."
+        params:
+          - name: magnitude
+            label: "Current multiplier"
+          - name: line_index
+            label: "Power line"
+            values:
+              - {value: "0", label: "0 — OBC computer"}
+              - {value: "1", label: "1 — TTC receiver"}
+              - {value: "2", label: "2 — TTC transmitter"}
+              - {value: "3", label: "3 — Payload imager"}
+              - {value: "4", label: "4 — FPA cooler"}
+              - {value: "5", label: "5 — Battery heater"}
+              - {value: "6", label: "6 — OBC heater"}
+              - {value: "7", label: "7 — Reaction wheels"}
+              - {value: "8", label: "8 — Propulsion (catbed htr + valves)"}
+      - name: overvoltage
+        label: "Overvoltage detection threshold drop"
+        effect: "Lowers the OV trip threshold so the OV flag sets at the current bus voltage."
+        params:
+          - name: magnitude
+            label: "Threshold reduction"
+      - name: sada_stuck
+        label: "Solar array drive stuck"
+        effect: "Freezes the SADA shaft: 0x0133 goes flat, wing currents develop a |sin| ripple, orbit-average yield falls ~36 %."
+        params:
+          - name: angle_deg
+            label: "Seize at angle"
+            description: "Omit to seize at the current shaft angle."
+      - name: solar_array_partial
+        label: "Solar array partial degradation"
+        effect: "Scales one wing's output by (1 - magnitude); array current 0x0146/0x0147 and bus power fall, SoC follows."
+        params:
+          - name: magnitude
+            label: "Output loss"
+            description: "0 = healthy, 1 = wing dead"
+          - name: array
+            label: "Wing"
+            values:
+              - {value: "A", label: "Wing A (+Y)"}
+              - {value: "B", label: "Wing B (-Y)"}
+      - name: solar_array_total_loss
+        label: "Total solar array loss"
+        effect: "Both wings and all body faces dead — worst-case power contingency, drives the progressive load-shed ladder."
+      - name: solar_panel_loss
+        label: "Solar panel (body face) loss"
+        effect: "Zeroes/derates one body face's contribution to array current."
+        params:
+          - name: magnitude
+            label: "Output loss"
+          - name: face
+            label: "Panel face"
+      - name: undervoltage
+        label: "Battery undervoltage (SoC drain)"
+        effect: "One-shot removal of state of charge, to drive the undervoltage protection ladder."
+        notes: "Not reversible by clear: SoC recovers physically by charging."
+        params:
+          - name: magnitude
+            label: "Severity (legacy: x10 % SoC)"
+            description: "Ignored when an explicit SoC drop is given."
+          - name: soc_pct
+            label: "SoC to remove"
+            description: "Absolute value; overrides magnitude."
+  - name: obdh
+    label: "OBDH — On-Board Data Handling"
+    failures:
+      - name: boot_image_corrupt
+        label: "Application image corrupt"
+        effect: "The application image fails its CRC — the NEXT boot stops in the bootloader."
+      - name: bus_failure
+        label: "CAN bus failure"
+        effect: "Marks one of the redundant CAN buses FAILED; the bus isolation logic must cross over to the other."
+        params:
+          - name: bus
+            label: "CAN bus"
+            values:
+              - {value: "A", label: "Bus A (nominal)"}
+              - {value: "B", label: "Bus B (redundant)"}
+      - name: clock_drift
+        label: "Onboard clock oscillator drift"
+        effect: "Forces the OBC oscillator drift rate. The onboard clock walks away from UTC until a GPS/S9 time sync pulls it back (500 ppm is about 43 s/day; nominal is about 12 ppm)."
+        params:
+          - name: magnitude
+            label: "Severity (x the 500 ppm failure drift)"
+            description: "Ignored when an explicit ppm is given."
+          - name: ppm
+            label: "Drift rate"
+            description: "Absolute drift; overrides magnitude."
+      - name: cpu_spike
+        label: "CPU load spike"
+        effect: "Holds the OBC CPU load at the given percentage; task overruns and buffer backlog follow."
+        params:
+          - name: load
+            label: "CPU load"
+      - name: memory_corruption
+        label: "Uncorrectable memory error"
+        effect: "Uncorrectable EDAC event: emits MEMORY_ERROR (0x0302) and reboots the OBC."
+        params:
+          - name: count
+            label: "Errors to add"
+      - name: memory_errors
+        label: "EDAC correctable memory errors"
+        effect: "Bumps the corrected-error counter; the operator sees the EDAC rate climb without a reboot."
+        params:
+          - name: count
+            label: "Errors to add"
+      - name: memory_segment_fail
+        label: "Mass-memory segment failure"
+        effect: "Permanently fails one of the 4 OBC memory segments; usable capacity shrinks and mmm_used_pct rises."
+        params:
+          - name: segment
+            label: "Memory segment"
+            values:
+              - {value: "0", label: "Segment 0"}
+              - {value: "1", label: "Segment 1"}
+              - {value: "2", label: "Segment 2"}
+              - {value: "3", label: "Segment 3"}
+      - name: obc_crash
+        label: "OBC crash (watchdog reboot)"
+        effect: "Immediate watchdog reboot: uptime resets, reboot counter increments, cause = WATCHDOG, TM stops for the boot time."
+        notes: "One-shot: nothing to clear, the reboot already happened."
+      - name: stuck_in_bootloader
+        label: "Stuck in bootloader"
+        effect: "Drops the OBC into the bootloader image now and inhibits the application boot: sw_image = 0 immediately."
+      - name: watchdog_reset
+        label: "Watchdog armed / about to bite"
+        effect: "Arms the watchdog with a full period; unless the application kicks it, the OBC reboots."
+  - name: payload
+    label: "Payload — Multispectral Imager"
+    failures:
+      - name: ccd_line_dropout
+        label: "CCD line dropout"
+        effect: "Dropped detector lines: a striped product, visible in the image quality metric and the downloaded thumbnail."
+        params:
+          - name: magnitude
+            label: "Dropping lines"
+      - name: cooler_failure
+        label: "FPA cooler failure"
+        effect: "The miniature Stirling-class FPA cooler stops: the focal plane warms off its centi-kelvin setpoint, dark current rises and per-band SNR collapses."
+        params:
+          - name: magnitude
+            label: "Failed"
+      - name: fpa_degraded
+        label: "Focal plane degraded"
+        effect: "Detector responsivity degraded — image quality metric and per-band SNR fall even at the correct FPA temperature."
+        params:
+          - name: magnitude
+            label: "Degraded"
+      - name: image_corrupt
+        label: "Corrupted image products"
+        effect: "The next N captured images are marked corrupt (bad CRC on download), then capture returns to normal."
+        params:
+          - name: count
+            label: "Images to corrupt"
+      - name: memory_segment_fail
+        label: "Payload memory segment failure"
+        effect: "Fails one of the 8 payload mass-memory segments; usable storage shrinks by one segment."
+        params:
+          - name: segment
+            label: "Memory segment"
+            values:
+              - {value: "0", label: "Segment 0"}
+              - {value: "1", label: "Segment 1"}
+              - {value: "2", label: "Segment 2"}
+              - {value: "3", label: "Segment 3"}
+              - {value: "4", label: "Segment 4"}
+              - {value: "5", label: "Segment 5"}
+              - {value: "6", label: "Segment 6"}
+              - {value: "7", label: "Segment 7"}
+  - name: prop
+    label: "PROP — Propulsion"
+    failures:
+      - name: latch_stuck_open
+        label: "Latch valve stuck open"
+        effect: "Selected latch valve reads FAULT and cannot be closed; with a seeping FCV the module loses propellant. Emits PROP_VALVE_FAULT (0x080A)."
+        params:
+          - name: branch
+            label: "Latch valve"
+            values:
+              - {value: "0", label: "Latch A (branch 0)"}
+              - {value: "1", label: "Latch B (branch 1)"}
+          - name: rate_mg_s
+            label: "Resulting leak rate"
+      - name: leak
+        label: "Propellant leak"
+        effect: "Continuous propellant loss: tank mass (0x0B02) falls and blowdown pressure (0x0B01) decays faster than the burn plan predicts."
+        params:
+          - name: rate_mg_s
+            label: "Leak rate"
+      - name: tank_overpressure
+        label: "Tank overpressure"
+        effect: "Pressurant thermal runaway: tank pressure (0x0B01) is forced to 24 bar + 4 bar x magnitude, over the red limit."
+        params:
+          - name: magnitude
+            label: "Overpressure severity"
+      - name: thrust_degraded
+        label: "Thruster underperformance"
+        effect: "Scales delivered thrust (catalyst bed degradation): the burn under-delivers dv. Emits PROP_UNDERPERFORMANCE (0x080C)."
+        params:
+          - name: magnitude
+            label: "Performance factor"
+            description: "1.0 = nominal, 0.0 = no thrust at all."
+  - name: tcs
+    label: "TCS — Thermal Control"
+    failures:
+      - name: cold_soak
+        label: "Zone cold soak (heater test)"
+        effect: "Opens an extra heat leak from a heated zone (as if its mounting interface were `offset` colder) and steps it cold: the zone really cools, its thermostat sees it, and the heater can recover it once its EPS line is powered (EMG-001/002/003, CTG-004 heater steps)."
+        params:
+          - name: zone
+            label: "Heated zone"
+          - name: offset_c
+            label: "Sink offset"
+            description: "Blank = the zone's default depth (tcs.yaml network.cold_soak), sized so its heater can recover it."
+      - name: cooler_failure
+        label: "FPA cooler failure"
+        effect: "The Stirling-class FPA cooler stops: the focal plane warms off its centi-kelvin setpoint and imaging quality degrades."
+        params:
+          - name: magnitude
+            label: "Failed"
+      - name: heater_failure
+        label: "Heater circuit failure"
+        effect: "Selected heater cannot energise — its zone cools to the passive equilibrium and the low-temperature limit trips."
+        params:
+          - name: magnitude
+            label: "Failed"
+          - name: circuit
+            label: "Heater circuit"
+            values:
+              - {value: "battery", label: "Battery heater"}
+              - {value: "obc", label: "OBC heater"}
+              - {value: "thruster", label: "Thruster catbed heater"}
+      - name: heater_open_circuit
+        label: "Heater open circuit"
+        effect: "Heater commands are accepted and the status reads ON, but no heat is delivered and no current is drawn — the 'commanded on but still cooling' teaching case."
+        params:
+          - name: circuit
+            label: "Heater circuit"
+            values:
+              - {value: "battery", label: "Battery heater"}
+              - {value: "obc", label: "OBC heater"}
+              - {value: "thruster", label: "Thruster catbed heater"}
+      - name: heater_stuck_on
+        label: "Heater stuck ON"
+        effect: "Selected heater cannot be commanded off — the zone overheats and heater power stays on the EPS budget."
+        params:
+          - name: circuit
+            label: "Heater circuit"
+            values:
+              - {value: "battery", label: "Battery heater"}
+              - {value: "obc", label: "OBC heater"}
+              - {value: "thruster", label: "Thruster catbed heater"}
+      - name: obc_thermal
+        label: "OBC internal heat rise"
+        effect: "Extra dissipation inside the OBC box drives temp_obc (0x0406) up toward its red limit."
+        params:
+          - name: heat_w
+            label: "Extra dissipation"
+      - name: sensor_drift
+        label: "Temperature sensor drift"
+        effect: "Adds a fixed offset to ONE reported zone temperature while the true temperature is unchanged — the classic 'is it the sensor or the hardware?' exercise."
+        params:
+          - name: magnitude
+            label: "Sensor offset"
+          - name: zone
+            label: "Thermal zone"
+            values:
+              - {value: "panel_px", label: "PANEL PX"}
+              - {value: "panel_mx", label: "PANEL MX"}
+              - {value: "panel_py", label: "PANEL PY"}
+              - {value: "panel_my", label: "PANEL MY"}
+              - {value: "panel_pz", label: "PANEL PZ"}
+              - {value: "panel_mz", label: "PANEL MZ"}
+      - name: temp_anomaly
+        label: "Zone over-temperature"
+        effect: "Pushes a zone over its red limit and holds it there, driving the thermal-exceedance contingency."
+        params:
+          - name: zone
+            label: "Thermal zone"
+            values:
+              - {value: "panel_px", label: "PANEL PX"}
+              - {value: "panel_mx", label: "PANEL MX"}
+              - {value: "panel_py", label: "PANEL PY"}
+              - {value: "panel_my", label: "PANEL MY"}
+              - {value: "panel_pz", label: "PANEL PZ"}
+              - {value: "panel_mz", label: "PANEL MZ"}
+          - name: offset_c
+            label: "Temperature rise"
+  - name: ttc
+    label: "TT&C — Telemetry, Tracking & Command"
+    failures:
+      - name: antenna_deploy_failed
+        label: "UHF antenna deployment failure"
+        effect: "Burn-wire fails: the antenna stays stowed/jammed (sensor reads 3) and the deployment command cannot succeed."
+        notes: "Clear re-arms deployment; the operator must redeploy."
+      - name: gs_antenna_mispoint
+        label: "Ground antenna mispointing"
+        effect: "Pointing loss on both directions of the link."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 10 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground antenna mispointing penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: gs_feed_loss
+        label: "Ground antenna feed loss"
+        effect: "Extra loss between feed and LNA/HPA."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 4 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground antenna feed loss penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: gs_hpa_degradation
+        label: "Ground station HPA degradation"
+        effect: "Station EIRP falls: the UPLINK closes late or not at all."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 5 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground station HPA degradation penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: gs_lna_degradation
+        label: "Ground station LNA degradation"
+        effect: "Station receive G/T falls: downlink Eb/N0 and margin drop, BER rises."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 6 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground station LNA degradation penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: gs_ref_osc_drift
+        label: "Ground reference oscillator drift"
+        effect: "Frequency error degrades carrier/bit lock."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 3 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground reference oscillator drift penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: gs_rfi_interference
+        label: "Ground RFI / interference"
+        effect: "Raises the effective noise floor at the station."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 8 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground RFI / interference penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: gs_tracking_loss
+        label: "Ground antenna tracking loss"
+        effect: "Antenna stops following the pass — large, sudden link loss."
+        params:
+          - name: magnitude
+            label: "Severity (1.0 = 15 dB)"
+            description: "Ignored when an explicit dB value is given."
+          - name: db
+            label: "Ground antenna tracking loss penalty"
+            description: "Absolute value; overrides magnitude."
+      - name: high_ber
+        label: "Degraded link (BER offset)"
+        effect: "Subtracts the offset from the effective Eb/N0, so BER rises and frame lock becomes marginal."
+        params:
+          - name: offset
+            label: "Eb/N0 penalty"
+      - name: pa_overheat
+        label: "Power amplifier overheating"
+        effect: "Extra dissipation in the PA: temperature climbs toward the auto-shutdown limit and the TX trips off."
+        params:
+          - name: heat_w
+            label: "Extra PA dissipation"
+      - name: primary_failure
+        label: "Primary transponder failure"
+        effect: "Primary transponder dead; on the primary side the link drops until the operator switches to the redundant unit."
+        params:
+          - name: magnitude
+            label: "Failed"
+      - name: receiver_degrade
+        label: "Receiver noise-figure degradation"
+        effect: "Raises the receiver noise figure; uplink margin falls and the command threshold moves up."
+        params:
+          - name: nf_db
+            label: "Noise figure penalty"
+      - name: redundant_failure
+        label: "Redundant transponder failure"
+        effect: "Redundant transponder dead — removes the fallback."
+        params:
+          - name: magnitude
+            label: "Failed"
+      - name: uplink_loss
+        label: "Uplink loss (no carrier lock)"
+        effect: "Receiver loses carrier lock: no telecommands are accepted even though the downlink keeps running."

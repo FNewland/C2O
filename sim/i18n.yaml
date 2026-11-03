@@ -142,3 +142,11 @@ yaml_overlay:
     - {kind: reportaxis, files: reports/*.yaml, items: sections.*.axes.*, id: "{^^$key}.{^id}.{$key}", fields: [label]}
     # memory map
     - {kind: mem, files: memory/memory_map.yaml, items: regions.*, id: "{name}", fields: [description]}
+    # scenario scoring: why a command is harmful (scenario_scoring.py)
+    - {kind: scnharm, files: scenarios/*.yaml, items: harmful_commands.*, id: "{^$key}.{$key}", fields: [reason]}
+    # instructor inject form: the failure catalogue's text (GENERATED from the
+    # models' FAILURE_SPECS by tools/gen_failure_strings.py)
+    - {kind: failsub, files: i18n/en/failure_catalog.yaml, items: subsystems.*, id: "{name}", fields: [label]}
+    - {kind: fail, files: i18n/en/failure_catalog.yaml, items: subsystems.*.failures.*, id: "{^name}.{name}", fields: [label, effect, notes]}
+    - {kind: failparam, files: i18n/en/failure_catalog.yaml, items: subsystems.*.failures.*.params.*, id: "{^^name}.{^name}.{name}", fields: [label, description]}
+    - {kind: failval, files: i18n/en/failure_catalog.yaml, items: subsystems.*.failures.*.params.*.values.*, id: "{^^^name}.{^^name}.{^name}.{value}", fields: [label]}
