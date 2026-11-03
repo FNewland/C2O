@@ -75,6 +75,13 @@ class WorksheetCatalog:
             self._sheets, self._stamp = sheets, stamp
         return self._sheets
 
+    def order(self, wid: str) -> int | None:
+        """Position of *wid* in the catalogue (the printed workbook order)."""
+        for i, w in enumerate(self.sheets()):
+            if w.get("id") == wid:
+                return i
+        return None
+
     def get(self, wid: str) -> dict | None:
         return next((w for w in self.sheets() if w.get("id") == wid), None)
 
@@ -118,6 +125,19 @@ class WorksheetCatalog:
         out.sort(key=lambda t: (t[0], t[1]))
         return [w for _, _, w in out]
 
+    def all_for(self, tool: str, context: dict | None = None, lang: str = "en") -> list[dict]:
+        """Every worksheet the tool offers, in the printed workbook's order;
+        ``match`` says why one applies here (absent: not in this context).
+        The workbook index ("All sheets") uses it."""
+        ctx = context if isinstance(context, dict) else {}
+        lang = "fr" if lang == "fr" else "en"
+        out = []
+        for w in self.sheets():
+            if tool not in ((w.get("applies") or {}).get("tools") or []):
+                continue
+            out.append(self.localise(w, lang, self._why(w, tool, ctx)))
+        return out
+
     @staticmethod
     def localise(w: dict, lang: str, why: str | None = None) -> dict:
         qs = []
@@ -128,10 +148,17 @@ class WorksheetCatalog:
                 item["hint"] = _loc(q["hint"], lang)
             if q.get("section"):
                 item["section"] = _loc(q["section"], lang)
+            for k in ("step", "prefill"):
+                if q.get(k):
+                    item[k] = str(q[k])
             qs.append(item)
         out = {"id": w.get("id"), "title": _loc(w.get("title"), lang),
                "phase": w.get("phase"), "applies": w.get("applies") or {},
                "questions": qs}
+        if w.get("form"):
+            out["form"] = w["form"]
+        if w.get("instances"):
+            out["instances"] = True
         if why:
             out["match"] = why
         return out

@@ -38,11 +38,18 @@ def _lang(v) -> str:
 
 def register_logbook_routes(app: web.Application, tool: str, store_dir=None, *,
                             worksheets_dir=None, purge_interval_s: float = PURGE_INTERVAL_S,
-                            store: LogbookStore | None = None) -> LogbookStore:
+                            store: LogbookStore | None = None,
+                            checklists=None) -> LogbookStore:
+    """``checklists``: optional ``provider(procedure_id, lang) -> dict | None``
+    (``checklist.ChecklistProvider``) serving ``GET /api/logbook/checklist``;
+    a callable taking the worksheet catalogue is also accepted, so a tool can
+    build the provider around the same catalogue."""
     if tool not in TOOLS:
         raise ValueError(f"unknown logbook tool {tool!r}")
     store = store or LogbookStore(store_dir)
     catalog = WorksheetCatalog(worksheets_dir)
+    if checklists is not None and getattr(checklists, "wants_catalog", False):
+        checklists = checklists(catalog)
     app[STORE_KEY] = store
 
     def who(request: web.Request):
@@ -130,21 +137,31 @@ def register_logbook_routes(app: web.Application, tool: str, store_dir=None, *,
         return reply(request, ident, {"ok": True, "deleted": existed})
 
     async def export(request: web.Request) -> web.Response:
+        """``?format=md|html|json&lang=`` plus, optional (ops workbook):
+        ``team, position, scenario, session`` for the hand-in header,
+        ``sheet=<worksheet id>`` for one sheet only, and ``copy=1`` when the
+        text goes to the clipboard (no download marker: nothing was saved)."""
         ident = who(request)
-        fmt = request.query.get("format", "md")
+        q = request.query
+        fmt = q.get("format", "md")
         if fmt not in ("md", "html", "json"):
             return fail(request, ident, LogbookError("format must be md, html or json"))
-        lang = _lang(request.query.get("lang"))
+        lang = _lang(q.get("lang"))
         now = datetime.now(timezone.utc)
+        header = {k: q.get(k, "")[:120] for k in ("team", "position", "scenario", "session")
+                  if q.get(k, "").strip()}
+        sheet = (q.get("sheet") or "").strip()[:64] or None
         s = await asyncio.to_thread(store.summary, ident.person_id)
         render = {"md": to_markdown, "html": to_html, "json": to_json}[fmt]
-        text = render(s, ident.label, lang=lang, lookup=lookup, now=now)
-        if s["count"]:
+        text = render(s, ident.label, lang=lang, lookup=lookup, now=now,
+                      order=catalog.order, header=header, sheet=sheet)
+        if s["count"] and q.get("copy") != "1":
             await asyncio.to_thread(store.mark_downloaded, ident.person_id, fmt, now=now)
         ctype = {"md": "text/markdown", "html": "text/html", "json": "application/json"}[fmt]
+        disp = "inline" if q.get("copy") == "1" else "attachment"
         resp = web.Response(text=text, content_type=ctype, charset="utf-8", headers={
             **_NO_STORE,
-            "Content-Disposition": f'attachment; filename="{export_filename(fmt, now)}"'})
+            "Content-Disposition": f'{disp}; filename="{export_filename(fmt, now, sheet)}"'})
         if ident.new_cookie:
             resp.headers.add("Set-Cookie", cookie_header(ident.new_cookie))
         return resp
@@ -159,8 +176,28 @@ def register_logbook_routes(app: web.Application, tool: str, store_dir=None, *,
             ctx = {}
         t = request.query.get("tool") or tool
         lang = _lang(request.query.get("lang"))
-        sheets = await asyncio.to_thread(catalog.match, t, ctx, lang)
+        if request.query.get("all") == "1":
+            sheets = await asyncio.to_thread(catalog.all_for, t, ctx, lang)
+        else:
+            sheets = await asyncio.to_thread(catalog.match, t, ctx, lang)
         return reply(request, ident, {"tool": t, "lang": lang, "worksheets": sheets})
+
+    async def checklist(request: web.Request) -> web.Response:
+        """The live checklist of a procedure (``?procedure=NOM-001&lang=``),
+        built from its card; 404 where this tool has no procedures."""
+        ident = who(request)
+        pid = (request.query.get("procedure") or "").strip()[:32]
+        if checklists is None or not pid:
+            return fail(request, ident, LogbookError("no checklist here", 404))
+        lang = _lang(request.query.get("lang"))
+        try:
+            cl = await asyncio.to_thread(checklists, pid, lang)
+        except Exception:  # noqa: BLE001 - a bad card must not break the panel
+            logger.exception("checklist for %s", pid)
+            cl = None
+        if not cl:
+            return fail(request, ident, LogbookError(f"no checklist for {pid}", 404))
+        return reply(request, ident, cl)
 
     r = app.router
     r.add_get("/api/logbook", get_logbook)
@@ -170,6 +207,7 @@ def register_logbook_routes(app: web.Application, tool: str, store_dir=None, *,
     r.add_delete("/api/logbook/entries/{entry_id}", delete_entry)
     r.add_get("/api/logbook/export", export)
     r.add_get("/api/logbook/worksheets", worksheets)
+    r.add_get("/api/logbook/checklist", checklist)
 
     async def _purge_loop():
         while True:
