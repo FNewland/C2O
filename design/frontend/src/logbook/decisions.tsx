@@ -171,8 +171,8 @@ function GateStrip({ cat, seat }: { cat: Catalogue; seat: string }) {
         const done = mine.filter(d => d.status === 'recorded').length
         const pct = mine.length ? Math.round((done / mine.length) * 100) : 0
         return (
-          <li key={g.id} className="c2o-lb-gstrip__item" title={t('{{gate}}: {{n}} of {{total}} decisions recorded', { gate: g.id.toUpperCase(), n: done, total: mine.length })}>
-            <span className="mono w-600">{g.id.toUpperCase()}</span>
+          <li key={g.id} className="c2o-lb-gstrip__item" title={t('{{gate}}: {{n}} of {{total}} decisions recorded', { gate: g.short ?? g.id.toUpperCase(), n: done, total: mine.length })}>
+            <span className="mono w-600">{g.short ?? g.id.toUpperCase()}</span>
             <span className="c2o-lb-gstrip__bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>
             <span className="mono t-12 c-2">{done}/{mine.length}</span>
           </li>
@@ -300,7 +300,7 @@ function DecisionEditor({ draft }: { draft: DecisionDraft }) {
       <header className="c2o-lb-dr__head">
         <p className="c2o-lb-dr__meta t-12">
           <span className="mono c-2">{decisionId}</span>
-          {d && <span className="c2o-tag mono">{d.gate.toUpperCase()}</span>}
+          {d && <span className="c2o-tag mono">{cat?.gates.find(g => g.id === d.gate)?.short ?? d.gate.toUpperCase()}</span>}
           {d && <span className="c2o-tag">{d.seat_label}</span>}
         </p>
         <h3 className="c2o-lb-dr__q">{d?.question ?? decisionId}</h3>
@@ -567,7 +567,7 @@ export function GateDecisions({ gate }: { gate: string }) {
   return (
     <section className="c2o-lb-gatedec" aria-labelledby="gatedec-h">
       <div className="c2o-lb-gatedec__head">
-        <h4 id="gatedec-h" className="m-0 t-13 w-600">{t('Decision records due by {{gate}}', { gate: due.gate.toUpperCase() })}</h4>
+        <h4 id="gatedec-h" className="m-0 t-13 w-600">{t('Decision records due by {{gate}}', { gate: due.short ?? due.gate.toUpperCase() })}</h4>
         <span className="c2o-lb-gstrip__bar c2o-lb-gatedec__bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>
         <span className="mono t-12">{t('{{n}} of {{total}} recorded', { n: done, total: due.total })}</span>
         <span className="grow" />

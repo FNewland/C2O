@@ -97,6 +97,9 @@ export const CUBESAT_SIZES = [
   { u: '6U', maxKg: 12.0, size: [0.100, 0.2263, 0.366] },
   { u: '12U', maxKg: 24.0, size: [0.2263, 0.2263, 0.366] },
 ] as const
+/** Fallback system margin when the study's margin-ladder step is not known yet. The live
+ *  value is the C2O default ladder of margin_policy.yaml (25 / 20 / 20 / 10 % at
+ *  MDR / PRR–SRR / PDR / CDR), served by GET /api/studies/{id}/rules/margin-ladder. */
 export const SYSTEM_MARGIN = 0.20
 
 export interface FormFactor {
@@ -109,7 +112,7 @@ export interface FormFactor {
   maxKg: number | null
 }
 
-export function formFactor(sc: El | null, massKg: number | null): FormFactor {
+export function formFactor(sc: El | null, massKg: number | null, systemMargin: number = SYSTEM_MARGIN): FormFactor {
   const dims = sc?.dimensions ?? null
   const dx = n(dims?.x_m ?? dims?.length_m), dy = n(dims?.y_m ?? dims?.width_m), dz = n(dims?.z_m ?? dims?.height_m)
   if (dx && dy && dz) return { label: `${Math.round(dx * 1000)} × ${Math.round(dy * 1000)} × ${Math.round(dz * 1000)} mm`, size: [dx, dy, dz], massKg, how: 'design', fits: true, maxKg: null }
@@ -117,7 +120,7 @@ export function formFactor(sc: El | null, massKg: number | null): FormFactor {
   const byName = CUBESAT_SIZES.find(s => s.u === named)
   if (byName) return { label: byName.u, size: [...byName.size] as [number, number, number], massKg, how: 'design', fits: massKg === null || massKg <= byName.maxKg, maxKg: byName.maxKg }
   if (massKg === null) { const s = CUBESAT_SIZES[3]; return { label: s.u, size: [...s.size] as [number, number, number], massKg, how: 'default', fits: true, maxKg: s.maxKg } }
-  const need = massKg * (1 + SYSTEM_MARGIN)
+  const need = massKg * (1 + systemMargin)
   const s = CUBESAT_SIZES.find(c => c.maxKg >= need) ?? CUBESAT_SIZES[CUBESAT_SIZES.length - 1]
   return { label: s.u, size: [...s.size] as [number, number, number], massKg, how: 'mass', fits: need <= s.maxKg, maxKg: s.maxKg }
 }
