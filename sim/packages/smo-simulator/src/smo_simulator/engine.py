@@ -2316,9 +2316,14 @@ class SimulationEngine:
         # EPS, TTC, and OBDH are always-on (OBC + TTC RX are non-switchable
         # power lines), so they tick even in bootloader phases 0-1 to keep
         # beacon telemetry, link budget, and power modelling alive.
+        # 2026-11-03 (Franz's ruling): the THERMAL network ticks in phases
+        # 0-1 too. Physics does not wait for the OBC: between separation and
+        # application boot the spacecraft tumbles unpowered and cools. TCS
+        # applies no electrical dissipation and no heater before phase 2
+        # (separation switches open; tcs_basic._electrical_inputs).
         _ALWAYS_ON = {"eps", "ttc", "obdh"}
         if self._spacecraft_phase < 2:
-            active_subsystems = _ALWAYS_ON
+            active_subsystems = _ALWAYS_ON | {"tcs"}
         elif self._spacecraft_phase < 4:
             # Early application phases: critical subsystems + TCS
             active_subsystems = _ALWAYS_ON | {"tcs"}
