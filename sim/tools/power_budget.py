@@ -22,7 +22,7 @@ occurs in the nominal profile — CI, not a human, owns the closure claim.
 
 Usage:
     python tools/power_budget.py [--config configs/eosat1]
-        [--profile quiescent|nominal|nominal_imaging|worst|all]
+        [--profile quiescent|nominal|nominal_imaging|imaging_continuous|worst|all]
         [--orbits 12] [--report md|json] [--bol] [--min-margin-ratio 1.10]
 """
 from __future__ import annotations
@@ -201,7 +201,18 @@ def sun_body_nominal(beta_deg: float, phase_deg: float) -> tuple[float, float, f
 
 # ─────────────────────────── profiles ───────────────────────────
 
-PROFILES = ("quiescent", "nominal", "nominal_imaging", "manoeuvre", "worst")
+PROFILES = ("quiescent", "nominal", "nominal_imaging", "imaging_continuous",
+            "manoeuvre", "worst")
+
+#: 2026-11-03 (Franz's ruling: "continuous imaging drains the battery: keep
+#: it, and say so"). `imaging_continuous` is the nominal profile with the
+#: payload in IMAGING, the FPA cooler on and the AOCS in FINE for the whole
+#: orbit (eclipse included), at the nominal TX duty. With `nominal` it gives
+#: the SUSTAINABLE IMAGING DUTY CYCLE printed in the report: the fraction of
+#: an orbit the spacecraft can spend in that configuration with the
+#: orbit-average energy balance still closed (break-even) or still at the
+#: --min-margin-ratio design margin. The planner warns above the design
+#: figure (planning/planner.yaml imaging.sustainable_duty_pct).
 
 #: Fraction of the time OUTSIDE contact windows that the TX line is held on by
 #: the auto-TX hold re-arming on operator telecommands (2026-08b P-e; see
@@ -211,6 +222,7 @@ COMMANDING_DUTY = {
     "quiescent": 0.00,
     "nominal": 0.25,
     "nominal_imaging": 0.25,
+    "imaging_continuous": 0.25,
     "manoeuvre": 0.35,
     "worst": 0.60,
 }
@@ -278,8 +290,8 @@ def run_profile(cfg: dict, profile: str, epoch: datetime, orbits: int,
     # profile switches
     payload_standby = profile in ("nominal", "nominal_imaging", "manoeuvre",
                                   "worst")
-    imaging = profile in ("nominal_imaging", "worst")
-    imaging_through_eclipse = profile == "worst"
+    imaging = profile in ("nominal_imaging", "imaging_continuous", "worst")
+    imaging_through_eclipse = profile in ("worst", "imaging_continuous")
     manoeuvring = profile == "manoeuvre"
     hold_s = 900.0 if profile == "worst" else cstats["auto_tx_hold_s"]
 
@@ -453,6 +465,33 @@ def run_profile(cfg: dict, profile: str, epoch: datetime, orbits: int,
 
 # ─────────────────────────── report ───────────────────────────
 
+def sustainable_imaging_duty(results: dict, min_ratio: float = 1.10
+                             ) -> list[dict]:
+    """Imaging duty cycle that still closes the orbit-average budget.
+
+    Interpolates linearly between `nominal` (duty 0) and
+    `imaging_continuous` (duty 1) for each beta case. `breakeven_pct`: load
+    equals generation (the battery neither gains nor loses over an orbit);
+    `design_pct`: generation / load stays at `min_ratio`.
+    """
+    out = []
+    for tag, runs in results.items():
+        by = {r["profile"]: r for r in runs}
+        nom, cont = by.get("nominal"), by.get("imaging_continuous")
+        if not nom or not cont:
+            continue
+        gen = nom["gen_avg_w"]
+        inc = cont["load_avg_w"] - nom["load_avg_w"]
+        if inc <= 0:
+            continue
+
+        def pct(load_cap):
+            return max(0.0, min(100.0, 100.0 * (load_cap - nom["load_avg_w"]) / inc))
+        out.append({"case": tag, "increment_w": inc, "ratio": min_ratio,
+                    "breakeven_pct": pct(gen), "design_pct": pct(gen / min_ratio)})
+    return out
+
+
 def fmt_md(cstats, sweep, results, eol, worst, best) -> str:
     L = []
     L.append("# EOSAT-1 power budget (derived, not assumed)")
@@ -479,6 +518,22 @@ def fmt_md(cstats, sweep, results, eol, worst, best) -> str:
     L.append(f"- max-eclipse epoch: day {best['day']} "
              f"(beta {best['beta_deg']:.1f}°, ecl {best['eclipse_fraction']:.3f})")
     L.append("")
+    duty = sustainable_imaging_duty(results)
+    if duty:
+        L.append("## Sustainable imaging duty cycle")
+        L.append("")
+        L.append("Fraction of an orbit the spacecraft can spend imaging "
+                 "(payload IMAGING, FPA cooler on, AOCS FINE) on top of the "
+                 "`nominal` profile: linear between `nominal` (0 %) and "
+                 "`imaging_continuous` (100 %).")
+        L.append("")
+        L.append("| case | imaging increment W | break-even duty % "
+                 f"| duty % at ratio {duty[0]['ratio']:.2f} |")
+        L.append("|---|---|---|---|")
+        for d in duty:
+            L.append(f"| {d['case']} | {d['increment_w']:+.1f} | "
+                     f"{d['breakeven_pct']:.0f} | {d['design_pct']:.0f} |")
+        L.append("")
     for tag, runs in results.items():
         L.append(f"## Profiles at {tag}")
         L.append("")
@@ -540,7 +595,9 @@ def main() -> int:
     if args.report == "json":
         out = {"contact_stats": {k: v for k, v in cstats.items()
                                  if k not in ("windows", "tx_intervals")},
-               "beta_sweep": sweep, "results": results}
+               "beta_sweep": sweep, "results": results,
+               "sustainable_imaging_duty": sustainable_imaging_duty(
+                   results, args.min_margin_ratio)}
         print(json.dumps(out, indent=2, default=str))
     else:
         print(fmt_md(cstats, sweep, results, eol, worst, deepest))

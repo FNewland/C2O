@@ -261,25 +261,49 @@ models over the real propagated orbit — not a spreadsheet.
 
 | Profile | Generation | Load | Margin | Ratio |
 |---------|-----------|------|--------|-------|
-| quiescent        | 45.1 W | 25.6 W | +19.5 W | 1.76 |
-| nominal          | 45.1 W | 28.8 W | +16.3 W | 1.57 |
-| nominal + imaging| 45.1 W | 32.8 W | +12.3 W | 1.38 |
-| manoeuvre        | 45.1 W | 32.1 W | +12.9 W | 1.40 |
+| quiescent        | 45.1 W | 19.7 W | +25.4 W | 2.29 |
+| nominal          | 45.1 W | 22.7 W | +22.4 W | 1.98 |
+| nominal + imaging| 45.1 W | 26.4 W | +18.7 W | 1.71 |
+| imaging all orbit| 45.1 W | 46.6 W | -1.4 W | 0.97 |
+| manoeuvre        | 45.1 W | 25.8 W | +19.4 W | 1.75 |
+
+(Re-run 2026-11-03 with the thermal network and the FPA cooler off in
+STANDBY: `nominal` is payload STANDBY without the cooler, which is now what
+the spacecraft does.)
 
 The acceptance criterion — orbit-average generation exceeds orbit-average load
-with ALL nominal systems on, including ADCS — closes at 1.57x in NOMINAL nadir
+with ALL nominal systems on, including ADCS — closes at 1.98x in NOMINAL nadir
 pointing at the worst-generation beta angle of the year (−31.2 deg) at 3-year EOL.
 Over the year beta stays between −20.8 and −31.2 deg (eclipse fraction 0.351–0.372,
 33.2–35.2 min per orbit). With the drive tracking, generation follows cos(beta), so the
 largest |beta| is the worst generation case even though its eclipse is the shortest; at
 the longest-eclipse beta (−20.8 deg) EOL generation is 47.0 W and nominal closes at
-1.63x.
+2.05x.
 
 **Imaging is duty-cycled, not continuous.** The budget above assumes three
 90-second captures per orbit with the FPA cooler running for ~20 minutes
 around them. Holding FINE pointing and the cooler for a whole orbit
 (the `worst` profile) is power-NEGATIVE by design: it is the exercise, not a
 sizing failure.
+
+**Continuous imaging drains the battery.** The imaging configuration
+(payload IMAGING 5.5 W, FPA cooler 15 W, AOCS FINE 15 W instead of 9 W) adds
+about 23.8 W to the 22.7 W nominal load. Held for a whole orbit at the worst
+beta it needs 46.6 W against 45.1 W generated: -1.4 W orbit-average, about
+2.3 Wh (2.3 % of the 100 Wh battery) lost every orbit, so the spacecraft
+sheds its loads within a day or so. The sustainable imaging duty cycle is the
+share of an orbit that still closes the budget:
+
+| Case | Break-even (margin 0) | With the 10 % design margin |
+|------|-----------------------|-----------------------------|
+| worst beta −31.2 deg (EOL) | 94 % of the orbit | 77 % (73 min of 95) |
+| longest eclipse, beta −20.8 deg (EOL) | 100 % | 84 % |
+
+The mission planner warns when the imaging activities planned in one orbit
+exceed 77 % of it (`activity_types.yaml` `imaging_pass.power_constraints`).
+The thermal limit binds first: 30 minutes of imaging per orbit (32 %), and
+continuous imaging in the hot case loses FPA regulation
+(`03_tcs.md`, `06_payload.md` §8).
 
 During eclipse transitions, the PCDU autonomously switches from solar array to battery
 supply. The `eclipse_flag` telemetry parameter (0x0108) indicates the current illumination

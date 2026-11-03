@@ -23,9 +23,13 @@ class ConstraintViolation:
     activity_name: str | None
     message: str
     suggested_fix: str | None = None
+    #: Optional translation handle for the planner UI (EN+FR): a stable key
+    #: and the values its sentence needs. `message` stays the English text.
+    message_key: str | None = None
+    message_params: dict | None = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "checker": self.checker_name,
             "severity": self.severity,
             "activity_id": self.activity_id,
@@ -33,6 +37,22 @@ class ConstraintViolation:
             "message": self.message,
             "suggested_fix": self.suggested_fix,
         }
+        if self.message_key:
+            d["message_key"] = self.message_key
+            d["message_params"] = dict(self.message_params or {})
+        return d
+
+
+#: Sustainable imaging duty cycle, % of an orbit (2026-11-03, Franz's ruling
+#: "continuous imaging drains the battery: keep it, and say so"). The share
+#: of an orbit the spacecraft can spend in the imaging configuration (payload
+#: IMAGING, FPA cooler on, AOCS FINE) and still close the orbit-average power
+#: budget with the 10 % design margin, at the worst beta (-31.2 deg, EOL):
+#: tools/power_budget.py "Sustainable imaging duty cycle" (77 %; break-even
+#: 94 %; continuous imaging is -1.4 W, -2.3 Wh per orbit). The activity type
+#: carries the number (activity_types.yaml imaging_pass power_constraints);
+#: this is the fallback.
+SUSTAINABLE_IMAGING_DUTY_PCT = 77.0
 
 
 class PowerConstraintChecker:
@@ -101,6 +121,62 @@ class PowerConstraintChecker:
                 suggested_fix="Reduce concurrent high-power activities or increase bus capacity",
             ))
 
+        return violations
+
+    def check_imaging_duty_cycle(
+        self,
+        activities: list[dict],
+        orbit_period_minutes: float = 95.0,
+    ) -> list[ConstraintViolation]:
+        """Warn when planned imaging exceeds the sustainable duty cycle.
+
+        Imaging time per orbit is the booked duration of the imaging
+        activities that start in that orbit (the whole activity: the FPA
+        cool-down, FINE pointing and the capture), as a share of the orbit
+        period. Above the activity's `power_constraints.sustainable_duty_pct`
+        (fallback SUSTAINABLE_IMAGING_DUTY_PCT) the orbit-average power
+        budget no longer closes with margin: the battery drains orbit after
+        orbit. A warning, not an error — the team may choose to spend
+        battery.
+        """
+        violations: list[ConstraintViolation] = []
+        period_s = orbit_period_minutes * 60.0
+        orbits: dict[int, list[dict]] = {}
+        for activity in activities:
+            if "imaging" not in (activity.get("name") or "").lower():
+                continue
+            if activity.get("state_name") in ("CANCELLED", "FAILED"):
+                continue
+            start = _parse_iso(activity.get("start_time", ""))
+            if start is None:
+                continue
+            orbits.setdefault(int(start.timestamp() / period_s), []).append(activity)
+        for orbit_num, acts in sorted(orbits.items()):
+            imaging_s = sum(float(a.get("duration_s", 0) or 0) for a in acts)
+            pct = 100.0 * imaging_s / period_s
+            limit = min(
+                float(((a.get("power_constraints") or {}).get(
+                    "sustainable_duty_pct", SUSTAINABLE_IMAGING_DUTY_PCT)))
+                for a in acts)
+            if pct <= limit:
+                continue
+            params = {"orbit": orbit_num, "min": round(imaging_s / 60.0, 1),
+                      "pct": round(pct), "limit": round(limit)}
+            violations.append(ConstraintViolation(
+                checker_name="PowerConstraintChecker",
+                severity="warning",
+                activity_id=acts[0].get("id"),
+                activity_name="imaging_pass (multiple)",
+                message=(
+                    f"Imaging {params['min']} min in orbit {orbit_num} is "
+                    f"{params['pct']} % of the orbit, above the sustainable "
+                    f"imaging duty cycle of {params['limit']} %: the battery "
+                    f"drains orbit after orbit"),
+                suggested_fix="Spread imaging over more orbits, or accept the "
+                              "battery drain and plan a recovery orbit",
+                message_key="imaging_power_duty",
+                message_params=params,
+            ))
         return violations
 
     def check_plan_power(
@@ -905,6 +981,8 @@ def validate_plan(
         "final_soc": power_result["final_soc"],
         "soc_timeline": power_result["soc_timeline"],
     }
+    # 2026-11-03: sustainable imaging duty cycle (orbit-average power).
+    result.add_violations(power_checker.check_imaging_duty_cycle(activities))
 
     # AOCS constraints
     aocs_checker = AOCSConstraintChecker()

@@ -337,5 +337,6 @@
   "Blank uses the planner's default assumption ({{soc}} %).": "Laissé vide, le planificateur prend son hypothèse par défaut ({{soc}} %).",
   "The plan is infeasible: the battery model reaches 0 %, and every SoC after that is the floor, not a prediction.": "Le plan est irréalisable : le modèle de batterie atteint 0 %, et chaque SoC ensuite est le plancher, pas une prévision.",
   "Achieved pass figures are not available on this installation.": "Les valeurs réalisées des passages ne sont pas disponibles sur cette installation.",
-  "Feed": "Flux"
+  "Feed": "Flux",
+  "Imaging {{min}} min in orbit {{orbit}} is {{pct}} % of the orbit, above the sustainable imaging duty cycle of {{limit}} %: the battery drains orbit after orbit": "Prise de vue de {{min}} min sur l'orbite {{orbit}}, soit {{pct}} % de l'orbite, au-dessus du rapport cyclique de prise de vue soutenable de {{limit}} % : la batterie se vide d'orbite en orbite"
 }

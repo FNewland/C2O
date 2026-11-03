@@ -447,6 +447,17 @@ async function loadConstraintCheck() {
 /* Per-activity verdicts from both checks: alarm (constraint error, or a
  * time conflict) wins over caution (any other validation issue, warning). */
 const ALARM_ISSUES = new Set(["conflict", "time_overlap"]);
+/* Server violation text in the reader's language. A violation that carries
+   a `message_key` (constraint_checkers.ConstraintViolation) is rendered from
+   the catalogue; everything else keeps the server's English `message`. */
+function violationText(v) {
+  const p = v.message_params || {};
+  if (v.message_key === "imaging_power_duty") {
+    return tText("Imaging {{min}} min in orbit {{orbit}} is {{pct}} % of the orbit, above the sustainable imaging duty cycle of {{limit}} %: the battery drains orbit after orbit", p);
+  }
+  return v.message || "";
+}
+
 function activityVerdicts() {
   const out = new Map();
   const add = (id, level, msg) => {
@@ -460,8 +471,8 @@ function activityVerdicts() {
     add(i.activity_id, ALARM_ISSUES.has(i.type) ? "alarm" : "caution", i.message || i.type);
   }
   for (const v of (constraintCheck && constraintCheck.violations) || []) {
-    if (v.severity === "error") add(v.activity_id, "alarm", v.message);
-    else if (v.severity === "warning") add(v.activity_id, "caution", v.message);
+    if (v.severity === "error") add(v.activity_id, "alarm", violationText(v));
+    else if (v.severity === "warning") add(v.activity_id, "caution", violationText(v));
   }
   return out;
 }
@@ -1196,7 +1207,7 @@ async function validateConstraints() {
         { e: data.error_count ?? "?", w: data.warning_count ?? "?" }));
     const rows = (data.violations || []).slice(0, 12).map((v) =>
       vrow(v.severity === "error" ? "alarm" : "caution",
-        (v.activity_name ? v.activity_name : tText("System")) + ": " + (v.message || "")));
+        (v.activity_name ? v.activity_name : tText("System")) + ": " + violationText(v)));
     elOut.innerHTML = head + rows.join("");
     renderFacts(); updateActivityList(); drawTimeline();
   } catch (e) {
