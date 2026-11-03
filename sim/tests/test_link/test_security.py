@@ -856,3 +856,116 @@ async def test_gsg_serves_the_logbook_itself(stack, tmp_path, monkeypatch):
             assert r.status == 403
     assert stack.sim.logbook_hits == 0
     assert (tmp_path / "lb").is_dir()
+
+
+# ================================================================== console seats (WP10)
+
+@pytest.mark.parametrize("method,path", [
+    ("GET", "/api/seats"), ("GET", "/api/seats/board"), ("GET", "/api/seats/activity"),
+    ("POST", "/api/seats/claim"), ("POST", "/api/seats/assign"), ("GET", "/api/seats/events"),
+    ("GET", "/static/../api/seats/board"), ("GET", "/seats"),
+])
+def test_seats_are_never_on_the_link_allowlist(method, path):
+    """REDESIGN_DECISIONS #6: seat authority and identity stay on the ground.
+    Neither the GSG proxy nor the agent may forward /api/seats*."""
+    from smo_link.httpproxy import deny_reason
+    assert deny_reason(method, path) is not None
+
+
+class FakeMcs:
+    """The MCS on the ground host, as the GSG's seat route sees it."""
+
+    def __init__(self):
+        self.calls: list[tuple[str, str, dict, bytes]] = []
+
+    async def start(self):
+        app = web.Application()
+        app.router.add_route("*", "/api/seats{tail:.*}", self._h)
+        self._runner = web.AppRunner(app, access_log=None)
+        await self._runner.setup()
+        site = web.TCPSite(self._runner, "127.0.0.1", 0)
+        await site.start()
+        self.url = f"http://127.0.0.1:{site._server.sockets[0].getsockname()[1]}"
+        return self
+
+    async def _h(self, r):
+        self.calls.append((r.method, r.path_qs, dict(r.headers), await r.read()))
+        resp = web.json_response({"ok": True, "from": "mcs"})
+        resp.headers["Set-Cookie"] = "c2o_lb=local:" + "a" * 32 + "; Path=/"
+        resp.headers["X-Evil"] = "1"
+        return resp
+
+    async def stop(self):
+        await self._runner.cleanup()
+
+
+async def test_gsg_answers_seats_on_the_ground_and_nothing_crosses_the_link(tmp_path):
+    """The instructor console (sim.<domain>, served by the GSG) reads the seat
+    board and the ground-activity summary from the MCS on the GSG's host:
+    the route is local, it carries the IAP pair (the MCS verifies it), no
+    request reaches the simulator, and no identity is in any link frame."""
+    mcs = await FakeMcs().start()
+    s = await Stack(tmp_path, mcs_url=mcs.url).start()
+    try:
+        await wait_for(lambda: s.gw.bound(), msg="link bound")
+        frames: list[bytes] = []
+        for link in (s.gw.link, s.agent.link):
+            orig = link.enqueue
+
+            def rec(prio, frame, deadline=None, _orig=orig):
+                frames.append(bytes(frame))
+                return _orig(prio, frame, deadline)
+            link.enqueue = rec
+        email = "prof.secret@c2o.live"
+        jwt = "eyJhbGciOiJFUzI1NiJ9.eyJlbWFpbCI6InByb2YifQ.c2lnbmF0dXJl"
+        cookie = "local:" + "b" * 32
+        H = {"Host": "localhost:8080", "X-Goog-Authenticated-User-Email":
+             f"accounts.google.com:{email}", "X-Goog-IAP-JWT-Assertion": jwt,
+             "Cookie": f"c2o_lb={cookie}; GCP_IAP_AUTH_TOKEN_x=SECRET",
+             "Authorization": "Bearer XYZ", "X-SMO-Screen": "conn-abcdefgh"}
+        async with aiohttp.ClientSession() as http:
+            async with http.get(s.http + "/api/seats/board?x=1", headers=H) as r:
+                assert r.status == 200 and (await r.json())["from"] == "mcs"
+                assert "X-Evil" not in r.headers
+                assert r.headers.get("Set-Cookie", "").startswith("c2o_lb=")
+            async with http.post(s.http + "/api/seats/assign", headers=H,
+                                 json={"position": "ttc", "person": "bob@c2o.live"}) as r:
+                assert r.status == 200
+            async with http.get(s.http + "/api/seats/activity", headers=H) as r:
+                assert r.status == 200
+            # Host check, as for the proxy and the logbook
+            async with http.get(s.http + "/api/seats/board",
+                                headers={**H, "Host": "evil.example:8080"}) as r:
+                assert r.status == 403
+            # a proxied instructor route with the same identity headers
+            async with http.get(s.http + "/api/instructor/snapshot", headers=H) as r:
+                assert r.status == 200
+        assert s.sim.seats_hits == 0
+        assert [c[1] for c in mcs.calls] == ["/api/seats/board?x=1", "/api/seats/assign",
+                                            "/api/seats/activity"]
+        fwd = mcs.calls[0][2]
+        assert fwd["X-Goog-IAP-JWT-Assertion"] == jwt
+        assert fwd["Cookie"] == f"c2o_lb={cookie}"
+        assert "Authorization" not in fwd and fwd["X-SMO-Screen"] == "conn-abcdefgh"
+        assert mcs.calls[1][3] and b"bob@c2o.live" in mcs.calls[1][3]
+        blob = b"".join(frames).lower()
+        assert frames, "the proxied request must have produced link frames"
+        for secret in (email, jwt, cookie, "bob@c2o.live", "conn-abcdefgh", "bearer xyz"):
+            assert secret.lower().encode() not in blob, secret
+    finally:
+        await s.stop()
+        await mcs.stop()
+
+
+async def test_gsg_seats_route_without_an_mcs_is_502_not_proxied(tmp_path):
+    s = await Stack(tmp_path, mcs_url="http://127.0.0.1:9").start()
+    try:
+        await wait_for(lambda: s.gw.bound(), msg="link bound")
+        async with aiohttp.ClientSession() as http:
+            async with http.get(s.http + "/api/seats/board",
+                                headers={"Host": "localhost:8080"}) as r:
+                assert r.status == 502
+                assert (await r.json())["code"] == "mcs-unreachable"
+        assert s.sim.seats_hits == 0
+    finally:
+        await s.stop()
