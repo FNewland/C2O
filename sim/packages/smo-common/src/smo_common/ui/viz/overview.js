@@ -17,13 +17,17 @@
  *     mode:      { label: "NOMINAL", contingency: false, src: "TM obdh.mode 0x0300" },
  *     aocsMode:  "NOMINAL",            eclipse: true|false|null,
  *     contact:   true|false,           gs: "Svalbard",
+ *     deploy:    deriveDeployment() (derive.js): antenna stowed / deployed /
+ *                jammed, each wing stowed or deployed and sunlit or dark,
+ *                the six body faces, the on-board string-lit flags. Each
+ *                item carries its verdict (fresh / stale / no data).
  *     subsystems: { eps|aocs|obdh|tcs|prop|payload|ttc: {
  *        state: "nominal"|"caution"|"alarm"|"stale"|"nodata",
  *        alarms: { a: 0, w: 0 },
  *        rows: [{ label, q: quantity, digits, limits: {red_low, yellow_low, yellow_high, red_high} }] } } }
  * ============================================================================ */
 import { esc, fmt, fmtDur, withUnit, stateClass, s, mountFrame, valuesTable, readout,
-  tDefault, uid, ensureStyle } from "./common.js";
+  tDefault, uid, ensureStyle, fin } from "./common.js";
 
 const CSS = `
 .vz-ov .o-bus{fill:var(--vz-s1);stroke:var(--vz-tx3);stroke-width:1.25}
@@ -71,6 +75,38 @@ const CSS = `
 .vz-ov .is-caution .o-th em{color:var(--vz-warn)} .vz-ov .is-alarm .o-th em{color:var(--vz-alarm)}
 .vz-ov .o-tr{display:flex;justify-content:space-between;gap:var(--sp-2);font-size:var(--fs-label);color:var(--vz-tx2);margin-top:2px}
 .vz-ov .o-tr .vz-v{font-size:var(--fs-body)}
+.vz-ov .o-wing.is-lit{fill:var(--vz-s3)}
+.vz-ov .o-wing.is-nodata,.vz-ov .o-wing.is-unk{fill:none;stroke:var(--vz-stale);stroke-dasharray:4 3}
+.vz-ov .o-wing.is-stale{stroke:var(--vz-stale);stroke-dasharray:4 3}
+.vz-ov .o-stow{fill:var(--vz-s2);stroke:var(--vz-tx3);stroke-width:1}
+.vz-ov .o-stow.is-stale,.vz-ov .o-ant.is-stale{stroke-dasharray:4 3;stroke:var(--vz-stale)}
+.vz-ov .o-ghost{fill:none;stroke:var(--vz-line);stroke-width:1;stroke-dasharray:1 5}
+.vz-ov .o-ant{fill:var(--vz-s2);stroke:var(--vz-tx3);stroke-width:1.25}
+.vz-ov .o-ant.is-nodata{fill:none;stroke:var(--vz-stale);stroke-dasharray:4 3}
+.vz-ov .o-ant.is-caution{stroke:var(--vz-warn);stroke-width:1.75}
+.vz-ov .o-sun{fill:none;stroke:var(--vz-tx2);stroke-width:1.25}
+.vz-ov .o-sun-c{fill:var(--vz-tx2)}
+.vz-ov .t-lab.is-stale{font-style:italic}
+.vz-ov .t-lab.is-caution{fill:var(--vz-warn);font-weight:600}
+.vz-ov .o-sa{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-1) var(--sp-3);align-items:start;
+  margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--vz-line);font-size:var(--fs-label);color:var(--vz-tx3)}
+.vz-ov .o-sa .k{color:var(--vz-tx3);line-height:22px}
+.vz-ov .o-faces{display:flex;flex-wrap:wrap;gap:4px;list-style:none;margin:0;padding:0}
+.vz-ov .o-face{display:inline-flex;align-items:center;gap:4px;min-width:84px;line-height:20px;padding:0 6px;
+  border:1px solid var(--vz-line2);border-radius:var(--radius-sm);color:var(--vz-tx2);background:var(--vz-bg)}
+.vz-ov .o-face b{font-family:var(--vz-mono);font-weight:500;color:var(--vz-tx)}
+.vz-ov .o-face.is-lit{background:var(--vz-s3);color:var(--vz-tx)}
+.vz-ov .o-face.is-stale{border-style:dashed;border-color:var(--vz-stale);font-style:italic}
+.vz-ov .o-face.is-nodata{border-style:dashed;border-color:var(--vz-stale)}
+.vz-ov .o-face svg{flex:0 0 auto}
+.vz-ov .o-legend{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);list-style:none;margin:0;padding:0;line-height:22px}
+.vz-ov .o-legend li{display:inline-flex;align-items:center;gap:6px}
+.vz-ov .o-sw{display:inline-block;width:18px;height:10px;border:1px solid var(--vz-tx3);border-radius:1px;background:var(--vz-bg)}
+.vz-ov .o-sw.is-lit{background:var(--vz-s3)}
+.vz-ov .o-sw.is-stale{border-style:dashed;border-color:var(--vz-stale)}
+.vz-ov .o-sw.is-nodata{border-style:dashed;border-color:var(--vz-stale);background:transparent}
+.vz-ov .o-sw.is-stow{width:6px;height:14px;background:var(--vz-s2)}
+.vz-ov .o-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .vz-ov .o-blk.is-hidden{cursor:default}
 .vz-ov .o-blk.is-hidden rect.o-bx{fill:none;stroke:var(--vz-line);stroke-dasharray:2 3}
 `;
@@ -179,11 +215,136 @@ export function mount(el, opts = {}) {
   }
   function tvText(q, digits) { return tv(q, digits).txt; }
 
-  function wing(x, y, w, h, dark) {
-    let g = `<rect class="o-wing ${dark ? "is-dark" : ""}" x="${x}" y="${y}" width="${w}" height="${h}" rx="1"/>`;
-    for (let i = 1; i < 4; i++) g += `<line class="o-cell" x1="${x + (w * i) / 4}" y1="${y}" x2="${x + (w * i) / 4}" y2="${y + h}"/>`;
-    g += `<line class="o-cell" x1="${x}" y1="${y + h / 2}" x2="${x + w}" y2="${y + h / 2}"/>`;
+  /* ── deployables + illumination (m.deploy, derive.js deriveDeployment) ── */
+  const SUN = (cx, cy) => `<g aria-hidden="true"><circle class="o-sun-c" cx="${cx}" cy="${cy}" r="3"/>` +
+    [0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+      const r = (a * Math.PI) / 180, c = Math.cos(r), sn = Math.sin(r);
+      return `<line class="o-sun" x1="${cx + 5 * c}" y1="${cy + 5 * sn}" x2="${cx + 8 * c}" y2="${cy + 8 * sn}"/>`;
+    }).join("") + "</g>";
+  const SUN_HTML = '<svg aria-hidden="true" width="14" height="14" viewBox="-8 -8 16 16">' +
+    '<circle class="o-sun-c" r="3"/>' + [0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+      const r = (a * Math.PI) / 180, c = Math.cos(r), sn = Math.sin(r);
+      return `<line class="o-sun" x1="${(5 * c).toFixed(2)}" y1="${(5 * sn).toFixed(2)}" x2="${(7.5 * c).toFixed(2)}" y2="${(7.5 * sn).toFixed(2)}"/>`;
+    }).join("") + "</svg>";
+
+  /** One-line words for an illumination item (sunlit / dark / no data). */
+  function illumWords(il) {
+    if (!il || !il.state) return t("no data");
+    if (il.state === "stowed") return t("stowed");
+    const amp = il.i && il.i.v !== null ? " " + withUnit(fmt(il.i.v, 2), "A") : "";
+    if (il.state === "sunlit") return t("sunlit") + amp;
+    return il.eclipse ? t("dark (eclipse)") : t("dark") + amp;
+  }
+  function ageSuffix(q) { return q && q.verdict === "stale" && fin(q.ageS) ? " · " + fmtDur(q.ageS) : ""; }
+
+  function wingWords(w) {
+    if (!w || w.deployed === null) return t("no data");
+    if (w.deployed === false) return t("stowed") + ageSuffix(w);
+    return t("deployed") + " · " + illumWords(w.illum) + ageSuffix(w.illum && w.illum.state ? w.illum : w);
+  }
+  function antennaWords(a) {
+    const st = a && a.state;
+    const w = st === "deployed" ? t("antenna deployed") : st === "stowed" ? t("antenna stowed")
+      : st === "jammed" ? t("antenna partly deployed (jammed)") : st === "unknown" ? t("antenna: state unknown")
+      : t("antenna: no data");
+    return w + ageSuffix(a);
+  }
+
+  /** A wing on ±Y: deployed (beside the bus, cells shown) or stowed (folded
+   *  flat against the bus wall), filled by its illumination. */
+  function wingSvg(side, w, legacyDark) {
+    const left = side === "my";
+    const x = left ? 16 : 736, y = 196, ww = 148, hh = 80;
+    const cx = x + ww / 2;
+    let g = "";
+    const deployed = w ? w.deployed : null;
+    const il = w ? w.illum : null;
+    const stale = (w && w.verdict === "stale") || (il && il.verdict === "stale");
+    if (deployed === false) {
+      // folded: a narrow stack against the bus wall, the deployed outline ghosted
+      const sx = left ? BUS.x - 18 : BUS.x + BUS.w + 4;
+      g += `<rect class="o-ghost" x="${x}" y="${y}" width="${ww}" height="${hh}" rx="1"/>`;
+      g += `<rect class="o-stow${stale ? " is-stale" : ""}" x="${sx}" y="${y - 30}" width="14" height="${hh + 60}" rx="1"/>`;
+    } else {
+      const cls = deployed === null && (!il || !il.state) ? "is-nodata"
+        : !il || !il.state ? "is-unk" : il.state === "sunlit" ? "is-lit" : il.state === "dark" ? "is-dark" : "";
+      const dark = cls === "is-dark" || (cls === "" && legacyDark);
+      g += `<line class="o-yoke" x1="${left ? 164 : BUS.x + BUS.w}" y1="236" x2="${left ? BUS.x : 736}" y2="236"/>`;
+      g += `<rect class="o-wing ${cls}${dark && cls !== "is-dark" ? " is-dark" : ""}${stale ? " is-stale" : ""}" x="${x}" y="${y}" width="${ww}" height="${hh}" rx="1"/>`;
+      for (let i = 1; i < 4; i++) g += `<line class="o-cell" x1="${x + (ww * i) / 4}" y1="${y}" x2="${x + (ww * i) / 4}" y2="${y + hh}"/>`;
+      g += `<line class="o-cell" x1="${x}" y1="${y + hh / 2}" x2="${x + ww}" y2="${y + hh / 2}"/>`;
+      if (il && il.state === "sunlit") g += SUN(left ? x + 12 : x + ww - 12, y + 12);
+    }
+    g += s("text", { x: cx, y: 188, class: "t-lab", "text-anchor": "middle" }, esc(left ? t("−Y wing") : t("+Y wing")));
+    const words = w ? wingWords(w) : "";
+    if (words) {
+      g += s("text", { x: cx, y: 296, class: `t-lab${stale ? " is-stale" : ""}`, "text-anchor": "middle" }, esc(words));
+    }
     return g;
+  }
+
+  /** The S-band patch on −Z: flush when stowed, on its hinge arm when
+   *  deployed, askew with a caution mark when the sensor reads jammed. */
+  function antennaSvg(a, contact) {
+    const x = 620, y0 = BUS.y + BUS.h;
+    const st = a ? a.state : null;
+    const stale = a && a.verdict === "stale";
+    const sc = stale ? " is-stale" : "";
+    let g = "";
+    if (st === "deployed") {
+      g += `<path class="o-ant${sc}" d="M${x} ${y0} v22" fill="none"/>` +
+        `<rect class="o-ant${sc}" x="${x - 14}" y="${y0 + 22}" width="28" height="6" rx="1"/>`;
+    } else if (st === "stowed") {
+      g += `<rect class="o-ant${sc}" x="${x - 14}" y="${y0}" width="28" height="5" rx="1"/>` +
+        `<path class="o-ghost" d="M${x} ${y0 + 5} v17 m-14 0 h28 v6 h-28 z"/>`;
+    } else if (st === "jammed") {
+      g += `<path class="o-ant is-caution${sc}" d="M${x} ${y0} l14 12" fill="none"/>` +
+        `<rect class="o-ant is-caution${sc}" x="${x + 6}" y="${y0 + 10}" width="26" height="6" rx="1" transform="rotate(40 ${x + 19} ${y0 + 13})"/>` +
+        `<path class="gl-caution" d="M${x - 22} ${y0 + 4} l6 10 h-12 z"/>`;
+    } else {
+      g += `<path class="o-ant is-nodata" d="M${x} ${y0} v22 m-14 0 h28 v6 h-28 z"/>`;
+    }
+    const cls = st === "jammed" ? "t-lab is-caution" : `t-lab${stale ? " is-stale" : ""}`;
+    g += s("text", { x: x + 22, y: y0 + 20, class: cls }, esc(antennaWords(a)) +
+      (contact ? " · " + esc(t("in contact")) : ""));
+    return g;
+  }
+
+  /** Under the drawing: the six body faces, the on-board string judgement
+   *  and the legend. HTML, so it wraps and reads in French too. */
+  function solarHtml(d) {
+    if (!d) return "";
+    const face = (f) => {
+      const cls = !f.state ? "is-nodata" : f.state === "sunlit" ? "is-lit" : "";
+      const st = f.verdict === "stale" ? " is-stale" : "";
+      const words = !f.state ? t("no data") : f.state === "sunlit"
+        ? (f.i && f.i.v !== null ? withUnit(fmt(f.i.v, 2), "A") : t("sunlit"))
+        : f.eclipse ? t("dark (eclipse)") : t("dark");
+      const tip = `${t("face {{f}}", { f: f.face })}: ${illumWords(f)}${f.withWing ? " · " + t("includes the wing") : ""}` +
+        `${ageSuffix(f)}${f.src ? " · " + f.src : ""}`;
+      return `<li class="o-face ${cls}${st}" title="${esc(tip)}">${f.state === "sunlit" ? SUN_HTML : ""}` +
+        `<b>${esc(f.face)}</b> <span>${esc(words)}${f.withWing ? "*" : ""}</span>` +
+        (f.state === "sunlit" ? `<span class="o-vh"> ${esc(t("sunlit"))}</span>` : "") + "</li>";
+    };
+    const str = d.strings || {};
+    const sw = (on) => (on === null || on === undefined ? t("no data") : on ? t("lit") : t("not lit"));
+    const strWords = str.a === null || str.a === undefined
+      ? t("on-board string check: no data")
+      : t("on-board string check: string A {{a}} · string B {{b}}", { a: sw(str.a), b: sw(str.b) }) + ageSuffix(str);
+    const anyWith = (d.faces || []).some((f) => f.withWing);
+    return `<div class="o-sa">` +
+      `<span class="k">${esc(t("Body faces"))}</span>` +
+      `<div><ul class="o-faces" aria-label="${esc(t("Body-face illumination, from the panel currents"))}">${(d.faces || []).map(face).join("")}</ul>` +
+      `<div class="${str.verdict === "stale" ? "vz-v is-stale" : ""}" style="margin-top:4px">${esc(strWords)}</div>` +
+      (anyWith ? `<div>${esc(t("* includes the deployed wing: its own current is not downlinked (enable HK SID 8)"))}</div>` : "") +
+      `</div>` +
+      `<span class="k">${esc(t("Key"))}</span><ul class="o-legend">` +
+      `<li><i class="o-sw is-lit"></i>${SUN_HTML}${esc(t("sunlit: delivering current"))}</li>` +
+      `<li><i class="o-sw"></i>${esc(t("dark: no current, or eclipse"))}</li>` +
+      `<li><i class="o-sw is-stow"></i>${esc(t("stowed"))}</li>` +
+      `<li><i class="o-sw is-stale"></i>${esc(t("stale: last value, dimmed"))}</li>` +
+      `<li><i class="o-sw is-nodata"></i>${esc(t("no data: not downlinked"))}</li></ul>` +
+      `</div>`;
   }
 
   function draw(m) {
@@ -213,13 +374,12 @@ export function mount(el, opts = {}) {
       s("text", { x: 6, y: 10, class: "t-lab" }, "+Z") + s("text", { x: 40, y: 38, class: "t-lab" }, "+Y") +
       `<circle class="o-axis" cx="0" cy="34" r="4"/><circle class="o-axhead" cx="0" cy="34" r="1.5"/>` +
       s("text", { x: 76, y: 58, class: "t-lab", "text-anchor": "end" }, esc(t("+X: velocity, towards you"))) + "</g>";
-    // wings: seen from ahead, +Y is to the right (axes key)
+    // wings: seen from ahead, +Y is to the right (axes key); stowed or
+    // deployed from eps.wing_status, sunlit or dark from the wing currents
     const dark = m.eclipse === true;
-    g += `<line class="o-yoke" x1="164" y1="236" x2="${BUS.x}" y2="236"/><line class="o-yoke" x1="${BUS.x + BUS.w}" y1="236" x2="736" y2="236"/>`;
-    g += wing(16, 196, 148, 80, dark) + wing(736, 196, 148, 80, dark);
-    g += s("text", { x: 90, y: 188, class: "t-lab", "text-anchor": "middle" }, esc(t("−Y wing")));
-    g += s("text", { x: 810, y: 188, class: "t-lab", "text-anchor": "middle" }, esc(t("+Y wing")));
-    if (dark) g += s("text", { x: 90, y: 296, class: "t-lab", "text-anchor": "middle" }, esc(t("in eclipse")));
+    const dep = m.deploy || null;
+    g += wingSvg("my", dep ? dep.wings.my : null, dark) + wingSvg("py", dep ? dep.wings.py : null, dark);
+    if (!dep && dark) g += s("text", { x: 90, y: 296, class: "t-lab", "text-anchor": "middle" }, esc(t("in eclipse")));
     // bus outline
     g += `<rect class="o-bus" x="${BUS.x}" y="${BUS.y}" width="${BUS.w}" height="${BUS.h}" rx="4"/>`;
     // zenith star tracker (+Z) above AOCS, imager + antenna on −Z
@@ -228,9 +388,12 @@ export function mount(el, opts = {}) {
     g += `<rect class="o-dev" x="354" y="${BUS.y + BUS.h}" width="24" height="12" rx="1"/>`;
     g += `<path class="o-bore" d="M366 ${BUS.y + BUS.h + 12} V${H - 40}"/>`;
     g += s("text", { x: 386, y: BUS.y + BUS.h + 26, class: "t-lab" }, esc(t("imager boresight")));
-    g += `<path class="o-dev" d="M620 ${BUS.y + BUS.h} v14 m-8 0 h16"/>`;
-    g += s("text", { x: 640, y: BUS.y + BUS.h + 20, class: "t-lab" }, esc(t("antenna")) +
-      (m.contact ? " · " + esc(t("in contact")) : ""));
+    if (dep) g += antennaSvg(dep.antenna, m.contact);
+    else {
+      g += `<path class="o-dev" d="M620 ${BUS.y + BUS.h} v14 m-8 0 h16"/>`;
+      g += s("text", { x: 640, y: BUS.y + BUS.h + 20, class: "t-lab" }, esc(t("antenna")) +
+        (m.contact ? " · " + esc(t("in contact")) : ""));
+    }
     // blocks
     const subs = m.subsystems || {};
     for (const [id, b] of Object.entries(BLOCKS)) g += blockSvg(id, b, subs[id]);
@@ -250,8 +413,11 @@ export function mount(el, opts = {}) {
     const subs = m.subsystems || {};
     const bad = Object.entries(subs).filter(([, v]) => v && v.state !== "nominal")
       .map(([k, v]) => `${BLOCKS[k] ? BLOCKS[k].name : k} ${stateWord(v.state, v.alarms).toLowerCase()}`);
+    const d = m.deploy;
+    const dep = d ? " " + [antennaWords(d.antenna), `${t("−Y wing")} ${wingWords(d.wings.my)}`,
+      `${t("+Y wing")} ${wingWords(d.wings.py)}`].join("; ") + "." : "";
     return t("Mode {{m}}.", { m: (m.mode && m.mode.label) || t("not downlinked") }) + " " +
-      (bad.length ? t("Not nominal: {{list}}.", { list: bad.join(", ") }) : t("All subsystems nominal."));
+      (bad.length ? t("Not nominal: {{list}}.", { list: bad.join(", ") }) : t("All subsystems nominal.")) + dep;
   }
 
   function values(m) {
@@ -261,6 +427,16 @@ export function mount(el, opts = {}) {
       if (!sub) continue;
       rows.push([b.name, esc(sub.state === "nominal" ? t("nominal") : stateWord(sub.state, sub.alarms)), ""]);
       for (const r of sub.rows || []) rows.push([`${b.name} · ${r.label}`, r.q && r.q.text ? esc(r.q.text) : readout(r.q, r.digits ?? 1, t), r.q && r.q.src]);
+    }
+    const d = m.deploy;
+    if (d) {
+      rows.push([t("antenna"), esc(antennaWords(d.antenna)), d.antenna && d.antenna.src]);
+      rows.push([t("−Y wing"), esc(wingWords(d.wings.my)), [d.wings.my.src, d.wings.my.illum && d.wings.my.illum.src].filter(Boolean).join(" · ")]);
+      rows.push([t("+Y wing"), esc(wingWords(d.wings.py)), [d.wings.py.src, d.wings.py.illum && d.wings.py.illum.src].filter(Boolean).join(" · ")]);
+      for (const f of d.faces || []) rows.push([t("face {{f}}", { f: f.face }), esc(illumWords(f) + ageSuffix(f)), f.src]);
+      const str = d.strings || {};
+      rows.push([t("on-board string check"), esc(str.a === null || str.a === undefined ? t("no data")
+        : `A ${str.a ? t("lit") : t("not lit")} · B ${str.b ? t("lit") : t("not lit")}`), str.src]);
     }
     return valuesTable(rows, t, t("Spacecraft overview values"));
   }
@@ -285,7 +461,14 @@ export function mount(el, opts = {}) {
           return `<span class="o-tr"><span>${esc(r.label)}</span><span class="vz-v ${v.cls}">${esc(v.txt)}</span></span>`;
         }).join("") + (sub.mode ? `<span class="o-tr"><span>${esc(sub.mode)}</span></span>` : "") + "</button></li>";
     }
-    return h + "</ul>";
+    const d = m.deploy;
+    if (d) {
+      h += `<li class="o-tile" role="group" aria-label="${esc(t("Deployables and illumination"))}" style="cursor:default">` +
+        `<span class="o-th">${esc(t("Deployables"))}</span>` +
+        [[t("antenna"), antennaWords(d.antenna)], [t("−Y wing"), wingWords(d.wings.my)], [t("+Y wing"), wingWords(d.wings.py)]]
+          .map(([k, v]) => `<span class="o-tr"><span>${esc(k)}</span><span>${esc(v)}</span></span>`).join("") + "</li>";
+    }
+    return h + "</ul>" + solarHtml(d);
   }
 
   function update(m) {
@@ -307,7 +490,8 @@ export function mount(el, opts = {}) {
     parts.pic.innerHTML = `<div class="vz-stage" tabindex="-1">` +
       `<svg viewBox="0 0 ${r.W} ${r.H}" role="group" aria-labelledby="${tid} ${did}" ` +
       `style="width:100%;min-width:${Math.round(r.W * 0.93)}px;max-width:${Math.round(r.W * 1.3)}px">` +
-      `<title id="${tid}">${esc(t("Spacecraft overview"))}</title><desc id="${did}">${esc(summaryText(m))}</desc>${r.g}</svg></div>`;
+      `<title id="${tid}">${esc(t("Spacecraft overview"))}</title><desc id="${did}">${esc(summaryText(m))}</desc>${r.g}</svg></div>` +
+      solarHtml(m.deploy);
     if (focusSub) { const n = parts.pic.querySelector(`[data-sub="${focusSub}"]`); if (n && n.focus) n.focus({ preventScroll: true }); }
     if (!parts.values.hidden) parts.values.innerHTML = values(m);
   }

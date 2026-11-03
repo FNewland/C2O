@@ -158,5 +158,63 @@ eq(D.eclipseFraction(500, 70), 0, "no eclipse above β*");
   eq(D.worst("fresh", "nodata"), "nodata", "no data dominates");
 }
 
+/* 8. deployables and illumination (overview): TM only */
+{
+  // nothing downlinked: every item says no data, nothing is invented
+  const none = D.deriveDeployment(src({}));
+  eq(none.antenna.state, null, "antenna: no TM, no state");
+  eq(none.antenna.verdict, "nodata", "antenna: no data verdict");
+  eq(none.wings.py.deployed, null, "wing: no TM, deployment unknown");
+  eq(none.wings.py.illum.state, null, "wing: no TM, illumination unknown");
+  eq(none.faces.length, 6, "six body faces");
+  eq(none.faces.every((f) => f.state === null), true, "faces: no data");
+  eq(none.strings.a, null, "strings: no data");
+
+  // LEOP: wings stowed, antenna stowed (sensor), sunlit body faces
+  const leop = D.deriveDeployment(src({ "0x0144": 0, "0x0536": 1, "0x0520": 0, "0x0108": 0,
+    "0x012B": 0.8, "0x012C": 0, "0x012D": 0.3, "0x012E": 0, "0x012F": 0.01, "0x0130": 0, "0x014E": 1 }));
+  eq(leop.antenna.state, "stowed", "antenna stowed from the sensor");
+  eq(leop.wings.py.deployed, false, "+Y wing stowed");
+  eq(leop.wings.py.illum.state, "stowed", "stowed wing is not part of the lit array");
+  eq(leop.faces[0].state, "sunlit", "+X face lit at 0.8 A");
+  eq(leop.faces[1].state, "dark", "−X face dark at 0 A");
+  eq(leop.faces[2].withWing, false, "+Y face: wing stowed, current is the body's");
+  eq(leop.faces[4].state, "dark", "+Z face at 0.01 A is below the lit threshold");
+  eq(leop.strings.a, true, "string A lit (bit0)"); eq(leop.strings.b, false, "string B not lit");
+
+  // deployed: the sensor wins over the commanded flag; wing currents decide;
+  // the ±Y faces lose the wing's own current
+  const dep = D.deriveDeployment(src({ "0x0144": 3, "0x0536": 2, "0x0520": 1, "0x0108": 0,
+    "0x0146": 3.2, "0x0147": 0.0, "0x012D": 3.5, "0x012E": 0.02, "0x014E": 3 }));
+  eq(dep.antenna.state, "deployed", "antenna deployed");
+  eq(dep.wings.py.deployed && dep.wings.my.deployed, true, "both wings deployed (bits 0 and 1)");
+  eq(dep.wings.py.illum.state, "sunlit", "+Y wing sunlit at 3.2 A");
+  near(dep.wings.py.illum.i.v, 3.2, 1e-9, "+Y wing current carried");
+  eq(dep.wings.my.illum.state, "dark", "−Y wing dark at 0 A");
+  near(dep.faces[2].i.v, 0.3, 1e-9, "+Y body face = face current − wing current");
+  eq(dep.faces[2].withWing, false, "wing current downlinked: taken off the face");
+
+  // jammed sensor; sensor 0 (unknown) falls back to the commanded flag
+  eq(D.deriveDeployment(src({ "0x0536": 3, "0x0520": 0 })).antenna.state, "jammed", "sensor 3 = jammed");
+  eq(D.deriveDeployment(src({ "0x0536": 0, "0x0520": 1 })).antenna.state, "deployed", "sensor unknown: commanded flag");
+  eq(D.deriveDeployment(src({ "0x0536": 0 })).antenna.state, "unknown", "sensor unknown, no flag");
+
+  // eclipse with no wing current downlinked (SID 8 off): dark, from the flag;
+  // deployed, no wing current, sunlit: the ±Y face says it includes the wing
+  const ecl = D.deriveDeployment(src({ "0x0144": 3, "0x0108": 1, "0x012D": 0 }));
+  eq(ecl.wings.py.illum.state, "dark", "eclipse: wing dark without its current");
+  eq(ecl.wings.py.illum.eclipse, true, "dark because of the eclipse flag");
+  eq(ecl.faces[0].state, "dark", "eclipse: a face with no current is dark");
+  const sun = D.deriveDeployment(src({ "0x0144": 3, "0x0108": 0, "0x012D": 3.4 }));
+  eq(sun.wings.py.illum.state, null, "sunlit orbit, no wing current: unknown");
+  eq(sun.faces[2].withWing, true, "+Y face includes the wing");
+
+  // stale TM keeps its last state, marked stale
+  const st = D.sourceFromState({ params: { "0x0144": 1, "0x0146": 2.0 }, params_age: { [String(0x0144)]: 1, [String(0x0146)]: 300 } }, {});
+  const sd = D.deriveDeployment(st);
+  eq(sd.wings.py.illum.state, "sunlit", "stale wing current keeps its state");
+  eq(sd.wings.py.illum.verdict, "stale", "…marked stale");
+}
+
 if (fails.length) { console.log(fails.join("\n")); process.exit(1); }
 console.log(`ok ${n}`);
