@@ -223,6 +223,14 @@ panel would not fit, the one opened longest ago closes (voice only hides).
 Below 1000 px one full-height panel at a time. Tools without a dock keep
 the logbook as an overlay.
 
+**Tools without a dock** (delayed TM, radio, orbit tools): on a wide screen
+the logbook overlay starts below the page header (language, theme and the
+Logbook button stay usable) and follows it on scroll; on a phone it is full
+height and never wider than the viewport minus its scrollbar. Only the MCS
+serves live checklists: elsewhere a confirm-each-step sheet opens as the
+printed sheet, row by row (it used to request the MCS-only checklist route,
+get a 404 and show nothing).
+
 **Activity-type cards tick their checklist.** NOM-002/003/004/009 run a
 planner activity's command sequence, not the card's TC lines.
 `configs/eosat1/mcs/runner_step_map.yaml` maps each runner step to its card

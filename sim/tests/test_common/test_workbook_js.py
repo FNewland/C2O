@@ -121,3 +121,24 @@ def test_every_workbook_string_is_translated():
     assert len(keys) > 40
     missing = [k for k in keys if not (fr.get(k) or fr.get(k + "_one"))]
     assert not missing, missing
+
+
+def test_tools_without_checklists_work_step_sheets_row_by_row():
+    """Only the MCS serves /api/logbook/checklist. In the radio view and the
+    orbit tools a confirm-each-step sheet (WB-5.5-L001, WB-5.5-L003…) used to
+    call it (404 in the console) and show nothing; it now opens as the
+    printed sheet with its step rows."""
+    wb = (UI / "workbook.js").read_text(encoding="utf-8")
+    assert 'host.tool === "mcs" && w && (w.questions || []).some((q) => q.step)' in wb
+    assert 'const isList = host.tool === "mcs" &&' in wb
+    assert '!q.step || host.tool !== "mcs"' in wb
+    assert "Pick a sheet below. Everything you fill in is saved to your logbook." in wb
+    lb = (UI / "logbook.js").read_text(encoding="utf-8")
+    assert 'S.tool === "mcs"' in lb
+
+
+def test_overlay_panel_stays_clear_of_header_and_scrollbar():
+    lb = (UI / "logbook.js").read_text(encoding="utf-8")
+    assert "function placeOverlay()" in lb and 'window.addEventListener("scroll", placeOverlay' in lb
+    css = (UI / "logbook.css").read_text(encoding="utf-8")
+    assert "width:440px; max-width:100%;" in css and "max-width:100vw" not in css

@@ -43,7 +43,7 @@
 import { t, tText, getLang, onLangChange } from "/static/shared/i18n.js";
 import { esc, armButton } from "/static/shared/components.js";
 import { createWorkbook } from "/static/shared/workbook.js";
-import { dockPanel } from "/static/shared/dock.js";
+import { dockPanel, isNarrow } from "/static/shared/dock.js";
 
 const API = "/api/logbook";
 const KINDS = ["decision", "thought", "observation", "reflection"];
@@ -280,7 +280,10 @@ function buildPanel() {
     `<ol class="lb-list" aria-label="${esc(tText("Your entries, newest first"))}"></ol>` +
     `</section>` +
     `<section class="lb-pane" id="lb-pane-ws" role="tabpanel" aria-labelledby="lb-tab-ws" hidden>` +
-    `<p class="lb-wsintro">${t("Your course workbook: the live checklist of the procedure you are working, the forms for this shift and every sheet. Each answer is saved to your logbook.")}</p>` +
+    // only the MCS runs procedures, so only it has live checklists
+    `<p class="lb-wsintro">${S.tool === "mcs"
+      ? t("Your course workbook: the live checklist of the procedure you are working, the forms for this shift and every sheet. Each answer is saved to your logbook.")
+      : t("Your course workbook: the forms for this shift and every sheet. Each answer is saved to your logbook.")}</p>` +
     `<div class="lb-wslist"></div></section>` +
     `</div>` +
     `<div class="lb-ft"><div class="priv"></div>` +
@@ -514,6 +517,16 @@ export async function refresh() {
 }
 
 /* ── open / close ────────────────────────────────────────────────────── */
+/* A page without a dock (delayed TM, radio, orbit tools…): on a wide
+ * screen the overlay starts below the header that holds the Logbook
+ * button, so the header (language, theme, the button itself) stays usable;
+ * on a phone it is full height. Follows the header while the page scrolls. */
+function placeOverlay() {
+  if (!S.panel || !S.dock || S.dock.docked || !S.open) return;
+  const hd = S.btn && S.btn.closest("header");
+  const top = hd && !isNarrow() ? Math.max(0, Math.round(hd.getBoundingClientRect().bottom)) : 0;
+  S.panel.style.top = top ? `${top}px` : "";
+}
 function open(opts = {}) {
   if (!S.panel) return;
   if (!S.panel.firstChild) buildPanel();
@@ -522,6 +535,7 @@ function open(opts = {}) {
   S.panel.classList.add("open");
   S.panel.removeAttribute("inert");
   S.dock.opened();                // beside, never over, another docked panel
+  placeOverlay();
   if (opts.tab) selectTab(opts.tab, false);
   renderButton();
   renderCtx();
@@ -719,6 +733,8 @@ function wire() {
     if (S.panel.firstChild) { S.ctxSig = ""; S.wb.reset(); buildPanel(); if (S.tab === "ws") S.wb.sync(true); }
     renderButton(); renderBanner();
   });
+  window.addEventListener("scroll", placeOverlay, { passive: true });
+  window.addEventListener("resize", placeOverlay);
   S.timers.push(setInterval(() => { if (!document.hidden) refresh(); }, POLL_MS));
   S.timers.push(setInterval(() => {
     if (!S.open) return;

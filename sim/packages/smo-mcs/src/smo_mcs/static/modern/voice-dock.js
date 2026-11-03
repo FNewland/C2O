@@ -11,7 +11,7 @@
  * its postMessage: connected (check), reconnecting (dashed), lost (filled
  * triangle), microphone open (accent fill).
  * ============================================================================ */
-import { tText, onLangChange } from "/static/shared/i18n.js";
+import I18n, { tText, onLangChange } from "/static/shared/i18n.js";
 import { glyph } from "/static/shared/components.js";
 import { dockPanel } from "/static/shared/dock.js";
 
@@ -88,4 +88,6 @@ if (btn) {
   });
   onLangChange(paint);
   paint();
+  // the first paint can run before the French catalogue has loaded
+  Promise.resolve(I18n.ready).then(paint, () => {});
 }

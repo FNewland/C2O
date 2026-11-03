@@ -659,5 +659,7 @@
   "{{count}} deviation_one": "{{count}} écart",
   "{{count}} deviation_other": "{{count}} écarts",
   "{{count}} answer_one": "{{count}} réponse",
-  "{{count}} answer_other": "{{count}} réponses"
+  "{{count}} answer_other": "{{count}} réponses",
+  "Your course workbook: the forms for this shift and every sheet. Each answer is saved to your logbook.": "Votre cahier d’exercices du cours : les formulaires de ce quart et toutes les fiches. Chaque réponse est enregistrée dans votre journal de bord.",
+  "Pick a sheet below. Everything you fill in is saved to your logbook.": "Choisissez une fiche ci-dessous. Tout ce que vous remplissez est enregistré dans votre journal de bord."
 }
