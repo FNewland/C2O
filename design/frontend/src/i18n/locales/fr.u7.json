@@ -84,5 +84,6 @@
   "{{count}} entries_other": "{{count}} entrées",
   "{{count}} logbook entries not downloaded · the server deletes your logbook on {{when}}_one": "{{count}} entrée du journal de bord non téléchargée · le serveur supprime votre journal le {{when}}",
   "{{count}} logbook entries not downloaded · the server deletes your logbook on {{when}}_other": "{{count}} entrées du journal de bord non téléchargées · le serveur supprime votre journal le {{when}}",
-  "{{done}} of {{total}} answered": "{{done}} sur {{total}} traitées"
+  "{{done}} of {{total}} answered": "{{done}} sur {{total}} traitées",
+  "V&V readiness {{passed}}/{{total}}": "Maturité V&V : {{passed}}/{{total}}"
 }

@@ -277,6 +277,7 @@ export function MissionArchitectureEditor() {
       {/* Diagram */}
       <div style={{ flex: 1 }}>
         <ReactFlow
+          proOptions={{ hideAttribution: true }}
           nodes={nodes} edges={edges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect} onNodeDragStop={onNodeDragStop}

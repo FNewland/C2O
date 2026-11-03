@@ -78,7 +78,7 @@
   "Node": "Nœud",
   "On-board data buffer": "Mémoire tampon de données à bord",
   "On-board data over 24 h (bands = contact windows)": "Données à bord sur 24 h (bandes = fenêtres de visibilité)",
-  "Operational modes (power, data rate, payload on/off), battery capacity_wh, solar array EOL power, orbit.": "Modes opérationnels (puissance, débit, charge utile en marche / arrêt), capacity_wh de la batterie, puissance EOL du générateur solaire, orbite.",
+  "Operational modes (power, data rate, payload on/off), battery capacity (Wh), solar array EOL power, orbit.": "Modes opérationnels (puissance, débit, charge utile en marche / arrêt), capacité de la batterie (Wh), puissance EOL du générateur solaire, orbite.",
   "Options": "Options",
   "P hot": "P chaud",
   "Parameters & equations": "Paramètres et équations",

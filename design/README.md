@@ -105,3 +105,7 @@ See `docs/REDESIGN.md` for the architecture redesign plan addressing:
 ## License
 
 MIT
+
+Diagrams are drawn with [React Flow](https://reactflow.dev) (xyflow, MIT
+licence). The in-canvas attribution badge is hidden to keep the work area
+clear; this note is the credit.

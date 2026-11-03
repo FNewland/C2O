@@ -70,7 +70,7 @@ const CARD_LABELS: Record<AnalysisId, string> = {
 // English text is the i18n key
 const CARD_NEEDS: Record<AnalysisId, string> = {
   design_loop: 'Mission root with requirements (orbit, payload, lifetime); subsystems by domain.',
-  mission_simulation: 'Operational modes (power, data rate, payload on/off), battery capacity_wh, solar array EOL power, orbit.',
+  mission_simulation: 'Operational modes (power, data rate, payload on/off), battery capacity (Wh), solar array EOL power, orbit.',
   ground_segment: 'At least one selected ground station (ground segment element), TT&C band / data rate, orbit, payload data rate.',
   physics: 'Component masses and dimensions, body positions (or auto-placement in a structure envelope), a reaction wheel, pointing requirement, dissipations.',
   vv: 'Requirements with verification method / threshold parameters; analysis runs close threshold items automatically.',

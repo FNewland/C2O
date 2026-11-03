@@ -307,6 +307,7 @@ export function GroundSystemsArch() {
         <div style={{ height: '300px' }}>
           {groundSystems.length > 0 ? (
             <ReactFlow
+              proOptions={{ hideAttribution: true }}
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
