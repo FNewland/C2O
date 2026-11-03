@@ -41,6 +41,7 @@ DECLARATIVE_FILES = (
     "procedures/procedure_index.yaml",
     "mcs/displays.yaml",
     "mcs/positions.yaml",
+    "worksheets/ops_week3.yaml",      # generated course-workbook text
 )
 
 #: Dotted-path prefixes whose CHILD keys are consumed by iteration rather than
@@ -54,6 +55,7 @@ DYNAMICALLY_KEYED = (
     "parameter_sets.",                              # report template sets
     "vars.",                                        # report template variables
     "positions.",                                   # operator position table
+    "worksheets.",                                  # worksheet_map.yaml: id -> where offered
 )
 
 #: Leaf keys with no consumer, kept deliberately. Each needs a reason.
