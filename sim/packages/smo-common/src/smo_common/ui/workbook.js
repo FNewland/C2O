@@ -267,7 +267,8 @@ export function createWorkbook(host) {
     const prev = ticksFor(entries(), cl.sheet_id, run)[key];
     const c = ctx();
     const noteEl = W.pane && $(`.wb-st[data-key="${CSS.escape(key)}"] .wb-note`);
-    const note = opts.note !== undefined ? opts.note : (noteEl ? noteEl.value.trim() : (prev && prev.check.note) || "");
+    const note = (opts.note !== undefined ? opts.note : (noteEl ? noteEl.value.trim() : (prev && prev.check.note) || ""))
+      || opts.runnerNote || "";      // where the activity did the step differently (runner_step_map.yaml)
     const keep = prev && stepState(prev) !== "open" && result === "note";
     const res = result === "note" ? (prev ? stepState(prev) : "open") : result;
     const values = keep ? (prev.check.values || []) : (res === "open" ? [] : captureValues(s));
@@ -358,7 +359,7 @@ export function createWorkbook(host) {
       if (W.runnerSeen.has(seen)) continue;
       W.runnerSeen.add(seen);
       if (tk[key] && stepState(tk[key]) !== "open") continue;   // the operator's tick stands
-      tick(key, r, { source: "runner", runnerRun: rk });
+      tick(key, r, { source: "runner", runnerRun: rk, runnerNote: (W.cl.runner_notes || {})[key] || "" });
     }
   }
 

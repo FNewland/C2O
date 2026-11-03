@@ -4341,7 +4341,7 @@ async function procAction(action) {
     if (source === "activity") body.activity_type = id;
     if (source === "ops") body.path = id;
     const r = await postJSON("/api/procedure/load", body);
-    if (!r.ok && r.json && r.json.manual) {
+    if (r.ok && r.json && r.json.runnable === false) {
       // A card the console cannot run: it is worked by hand, step by step,
       // from its live checklist in the logbook.
       setHTML("proc-exec-status", `<div class="logrow nom">${t("{{id}} is worked by hand: confirm each step in its checklist (Logbook › Workbook).",

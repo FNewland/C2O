@@ -501,6 +501,17 @@ class MCSServer:
                 self._activity_types = data.get("activity_types", [])
         except Exception:
             pass
+        # Activity-type runner step -> procedure-card step (logbook checklist
+        # ticks for NOM-002/003/004/009; mcs/runner_step_map.yaml).
+        self._runner_step_maps: dict = {}
+        try:
+            import yaml
+            sm_path = self.config_dir / "mcs" / "runner_step_map.yaml"
+            if sm_path.exists():
+                with open(sm_path, encoding="utf-8") as f:
+                    self._runner_step_maps = (yaml.safe_load(f) or {}).get("procedures") or {}
+        except Exception as e:  # noqa: BLE001
+            logger.warning("runner_step_map.yaml not loaded: %s", e)
 
         # Alarm journal — last 1000 alarms (Feature 2)
         self._alarm_journal: deque[dict] = deque(maxlen=1000)
@@ -3963,7 +3974,7 @@ class MCSServer:
         return ChecklistProvider(
             lambda: self._procedure_index, self.config_dir / "procedures",
             self.config_dir / "i18n" / "fr" / "procedures", catalog.sheets,
-            self._tc_mnemonic_catalog)
+            self._tc_mnemonic_catalog, step_maps=lambda: self._runner_step_maps)
     _checklist_provider.wants_catalog = True
 
     def _tc_mnemonic_catalog(self) -> dict[str, dict]:
@@ -4055,10 +4066,14 @@ class MCSServer:
                 body = {**body, "procedure_id": entry.get("id", "")}
                 body.pop("path", None)
                 if self._indexed_procedure(body["procedure_id"]) is None:
+                    # Not an error: the card is worked by hand. A 200 keeps
+                    # the browser console quiet (a 4xx is logged as a failed
+                    # request) and the client branches on `runnable`.
                     return web.json_response(
-                        {"error": f"{body['procedure_id']} is not runnable from the console: "
-                                  "work it step by step from its checklist",
-                         "procedure_id": body["procedure_id"], "manual": True}, status=409)
+                        {"runnable": False, "manual": True,
+                         "procedure_id": body["procedure_id"],
+                         "reason": f"{body['procedure_id']} is not runnable from the console: "
+                                   "work it step by step from its checklist"})
 
             if steps is None and body.get("path"):
                 saved = self._load_saved_procedure(body["path"])
@@ -4104,6 +4119,7 @@ class MCSServer:
                               if e.get("id") == procedure_ref), None)
                 document = (entry or {}).get("file", "")
             result["document"] = document
+            result.setdefault("runnable", True)
             return web.json_response(result)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)

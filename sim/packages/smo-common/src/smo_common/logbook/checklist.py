@@ -19,7 +19,11 @@ Runner mapping (``runner_map``): for a card the MCS can run (``runnable:
 {kind: markdown}``), the runner's atomic steps are the card's TC / Verify /
 GO/NO-GO lines in document order (``smo_common.procedures.markdown_steps``).
 The map gives, for each runner step index, the checklist step it belongs to,
-so "runner step 7 PASSED" ticks card step 3.
+so "runner step 7 PASSED" ticks card step 3. A card run from a planner
+activity type (``runnable: {kind: activity_type}``) executes the activity's
+own command sequence, so its map is data: ``mcs/runner_step_map.yaml`` (one
+card step key per runner step, plus ``notes`` where the activity does a
+step differently from the card; they ride with the runner's tick).
 """
 from __future__ import annotations
 
@@ -372,8 +376,13 @@ def _plain(s: str) -> str:
 def build_checklist(proc_id: str, card_md: str, *, card_md_fr: str | None = None,
                     sheet: dict | None = None, name: str = "", file: str = "",
                     runnable: bool = False, catalog: dict | None = None,
-                    lang: str = "en") -> dict:
-    """The checklist the logbook renders for *proc_id* (see module doc)."""
+                    lang: str = "en", step_map: list | None = None,
+                    runner_notes: dict | None = None) -> dict:
+    """The checklist the logbook renders for *proc_id* (see module doc).
+
+    ``step_map``: the runner map of an activity-type card (from
+    ``runner_step_map.yaml``) instead of one derived from the card's TC
+    lines; ``runner_notes``: ``{step key: text}`` already in *lang*."""
     lang = "fr" if lang == "fr" else "en"
     en = parse_card(card_md)
     fr = parse_card(card_md_fr) if card_md_fr else None
@@ -428,7 +437,12 @@ def build_checklist(proc_id: str, card_md: str, *, card_md_fr: str | None = None
         "mismatches": cmp["mismatches"],
     }
     if runnable:
-        out["runner_map"] = runner_map(card_md, catalog)
+        out["runner_map"] = (list(step_map) if step_map is not None
+                             else runner_map(card_md, catalog))
+        keys = {st["key"] for st in steps}
+        notes = {k: str(v) for k, v in (runner_notes or {}).items() if k in keys and v}
+        if notes:
+            out["runner_notes"] = notes
     return out
 
 
@@ -438,13 +452,17 @@ class ChecklistProvider:
     ``index``: procedure_index.yaml entries; ``proc_dir``: the cards;
     ``fr_dir``: the French cards (``i18n/fr/procedures``); ``sheets``: a
     callable returning the worksheet catalogue's raw sheets; ``catalog``: the
-    TC catalogue (mnemonic -> {service, subtype, func_id}) for the runner map.
+    TC catalogue (mnemonic -> {service, subtype, func_id}) for the runner map;
+    ``step_maps``: ``runner_step_map.yaml``'s ``procedures`` (a dict or a
+    callable returning one) for the activity-type cards.
     Cards are re-read when they change on disk (cheap: mtime check).
     """
 
     def __init__(self, index: list[dict] | Callable[[], list[dict]], proc_dir: Path,
                  fr_dir: Path | None = None, sheets: Callable[[], list[dict]] | None = None,
-                 catalog: Callable[[], dict] | dict | None = None):
+                 catalog: Callable[[], dict] | dict | None = None,
+                 step_maps: Callable[[], dict] | dict | None = None):
+        self._step_maps = step_maps
         self._index = index
         self.proc_dir = Path(proc_dir)
         self.fr_dir = Path(fr_dir) if fr_dir else None
@@ -479,17 +497,31 @@ class ChecklistProvider:
         hit = self._cache.get(key)
         if hit:
             return hit[0]
-        runnable = isinstance(e.get("runnable"), dict) and e["runnable"].get("kind") == "markdown"
+        link = e.get("runnable") if isinstance(e.get("runnable"), dict) else {}
+        runnable = link.get("kind") == "markdown"
+        step_map, notes = None, None
+        if link.get("kind") == "activity_type":
+            sm = self.step_map(proc_id)
+            if sm and sm.get("activity_type") == link.get("ref") and isinstance(sm.get("steps"), list):
+                runnable, step_map = True, sm["steps"]
+                notes = {k: _loc(v, lang) for k, v in (sm.get("notes") or {}).items()}
         cat = self._catalog() if callable(self._catalog) else (self._catalog or {})
         out = build_checklist(proc_id, md, card_md_fr=fr, sheet=sheet_for_procedure(sheets, proc_id),
                               name=str(e.get("name") or ""), file=e["file"],
-                              runnable=runnable, catalog=cat, lang=lang)
+                              runnable=runnable, catalog=cat, lang=lang,
+                              step_map=step_map, runner_notes=notes)
         if not out["steps"]:
             out = None                # a retired / prose-only card: no checklist
         if len(self._cache) > 256:
             self._cache.clear()
         self._cache[key] = (out,)
         return out
+
+    def step_map(self, proc_id: str) -> dict | None:
+        """The ``runner_step_map.yaml`` entry of an activity-type card."""
+        maps = self._step_maps() if callable(self._step_maps) else (self._step_maps or {})
+        m = (maps or {}).get(proc_id)
+        return m if isinstance(m, dict) else None
 
     def report(self) -> list[dict]:
         """Every printed confirm-each-step sheet against its card (EN)."""
@@ -519,7 +551,11 @@ def _main(argv=None) -> int:          # pragma: no cover - a report for people
     cfg = Path(args[0]) if args else Path("configs/eosat1")
     index = (yaml.safe_load((cfg / "procedures" / "procedure_index.yaml").read_text()) or {}).get("procedures", [])
     cat = WorksheetCatalog(cfg / "worksheets")
-    prov = ChecklistProvider(index, cfg / "procedures", cfg / "i18n" / "fr" / "procedures", cat.sheets)
+    sm_path = cfg / "mcs" / "runner_step_map.yaml"
+    maps = ((yaml.safe_load(sm_path.read_text(encoding="utf-8")) or {}).get("procedures") or {}) \
+        if sm_path.is_file() else {}
+    prov = ChecklistProvider(index, cfg / "procedures", cfg / "i18n" / "fr" / "procedures", cat.sheets,
+                             step_maps=maps)
     for r in prov.report():
         print(f"{r['sheet']}  <->  {r['procedure']}  ({r['card']})")
         for m in r["mismatches"] or [{"detail": "lines up"}]:
