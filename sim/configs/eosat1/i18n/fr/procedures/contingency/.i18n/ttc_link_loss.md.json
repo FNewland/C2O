@@ -9,8 +9,8 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery",
-   "en_hash": "38d71d3e698aab45",
-   "fr_hash": "04d2a1c562b01301"
+   "en_hash": "411f3977871da5b2",
+   "fr_hash": "0ae6a679a471db88"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/purpose",
@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-3-switch-to-redundant-transponder",
-   "en_hash": "178dff830c19f2f9",
-   "fr_hash": "c410472e7dc3c55c"
+   "en_hash": "e86be13cb7d7899b",
+   "fr_hash": "d75b7740b73dd5f9"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-4-second-attempt-retry-primary-transponder",
@@ -54,13 +54,13 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-6-escalation-no-link-recovery",
-   "en_hash": "ae8c74ddfdab37bc",
-   "fr_hash": "076254e0ca841fec"
+   "en_hash": "9a157f5ac824e1a8",
+   "fr_hash": "558f79e16637f51a"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/off-nominal-handling",
-   "en_hash": "5fcdd5aa50f701b1",
-   "fr_hash": "75e3b36159df5568"
+   "en_hash": "2441b930673c6c84",
+   "fr_hash": "33d5f1006be8e3e6"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/post-conditions",
@@ -68,5 +68,5 @@
    "fr_hash": "d1aaa876820b5a1b"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "ac86ac7"
 }

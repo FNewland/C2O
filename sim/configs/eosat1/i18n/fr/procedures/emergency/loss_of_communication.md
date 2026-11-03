@@ -1,14 +1,19 @@
 # EMG-004 : Perte de communication
 **Sous-système :** TT&C / Ground Segment
 **Phase :** EMERGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz S4) : quand les deux transpondeurs sont en
+panne, la liaison est désormais réellement coupée --- aucune télécommande n'est reçue ni exécutée et aucune
+télémesure ne quitte le satellite, balise comprise --- et cette fiche peut donc être exercée comme une
+véritable perte de communication. L'étape 5 décrit maintenant l'autonomie que le satellite possède
+réellement (FDIR TTC-01 : un seul basculement vers le transpondeur redondant 24 h après la dernière
+télécommande acceptée), et non une séquence de cyclage à 6 h qu'il n'a jamais eue.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
 Procédure de reprise lorsqu'aucune télémesure n'a été reçue d'EOSAT-1 pendant au moins deux
 fenêtres de passage consécutives. Cette procédure définit une escalade structurée allant de la vérification
 des stations sol à la commande en aveugle, puis à l'évaluation de la reprise autonome,
-avec des jalons de décision à 6 h, 12 h, 24 h et 48 h écoulées depuis le dernier contact.
+avec des jalons de décision à 12 h, 24 h (le temporisateur de perte de commande de bord) et 48 h écoulées depuis le dernier contact.
 
 ## Prérequis
 - [ ] Perte de télémesure confirmée pendant >= 2 fenêtres de passage consécutives (~3 heures)
@@ -16,6 +21,23 @@ avec des jalons de décision à 6 h, 12 h, 24 h et 48 h écoulées depuis le
 - [ ] Jeu d'éléments à deux lignes (TLE) à jour disponible (propagé il y a < 24 h)
 - [ ] Pile de commandes en aveugle préparée et validée sur simulateur
 - [ ] Directeur de vol à la console et équipe d'intervention d'urgence prévenue
+
+## Ce que le satellite peut faire, et ce qu'il ne peut pas faire
+- Les deux transpondeurs en bande S sont en **redondance froide** : seule l'unité sélectionnée est
+  alimentée. Une unité sélectionnée en panne n'entend rien et n'émet rien ; les commandes en aveugle ne
+  sont donc reçues que si la perte ne vient PAS d'un récepteur en panne (par exemple l'émetteur a été
+  coupé, sa ligne `ttc_tx` a été délestée ou le PA a disjoncté). On les envoie quand même à chaque
+  passage, puisque le sol ne peut pas savoir de quel cas il s'agit.
+- Avec les **deux** unités en panne, rien n'atteint le satellite et rien n'en sort, pas même la balise.
+  Aucune commande ne peut y remédier ; seul un transpondeur qui se rétablit le peut.
+- La seule autonomie de bord est le **temporisateur de perte de commande** (FDIR TTC-01,
+  `ttc.time_since_last_tc` 0x053D) : 24 h après la dernière télécommande ACCEPTÉE, il lève
+  CMD_LOSS_TIMEOUT (0x0514) et bascule sur le transpondeur redondant (S19 ea 4003), une fois par épisode
+  de perte. Les commandes en aveugle qui ne sont pas reçues ne le remettent pas à zéro.
+- **Note de formation (simulateur) :** l'instructeur rétablit un transpondeur en panne en effaçant sa
+  panne. Le forçage des passages de l'instructeur est une aide à la formation : si seule l'unité
+  sélectionnée est en panne, il permet à l'équipe de commander le basculement en aveugle ; il ne peut
+  pas ranimer un satellite dont les deux unités sont en panne.
 
 ## Déroulement
 
@@ -51,14 +73,22 @@ d'intervalle. (Était annotée Subtype 2 ; toute exécution de fonction S8 est
 **GO/NO-GO:** Si la liaison est acquise, rester sur le transpondeur redondant et évaluer le principal. Sans réponse, l'attente du temporisateur de reprise autonome (étape 5) s'applique.
 **BRANCH:** `ttc.link_status == 2` -> GO `STEP-END` | NO-GO `STEP-5` (timeout 45 s)
 
-### Étape 5 --- Attendre le temporisateur de reprise autonome
+### Étape 5 --- Attendre le temporisateur de perte de commande de bord (FDIR TTC-01)
 **LABEL:** `STEP-5`
-**Action:** L'autonomie de bord d'EOSAT-1 déclenche une séquence de reprise des communications après 6 heures
-sans contact sol. Le satellite passe successivement par différentes configurations de transpondeur et
-augmente la puissance de la balise.
+**Action:** Relever l'heure de la dernière télécommande que le satellite a ACCEPTÉE (le dernier S1.1 de
+l'archive). À cette heure + 24 h, le temporisateur de perte de commande expire : le satellite lève
+CMD_LOSS_TIMEOUT (0x0514) et bascule de lui-même sur le transpondeur redondant (S8 func 64,
+envoyée à bord par S19 ea 4003). C'est toute son autonomie en matière de communication : il ne cycle pas les
+configurations, ne réessaie pas le transpondeur principal et ne modifie pas la puissance de la balise.
+Planifier les passages qui suivent immédiatement T+24 h sur les meilleures stations ; les étapes 6 et 7
+se poursuivent entre-temps.
+**Note:** Si l'unité en panne était le transpondeur principal, la liaison revient sur l'unité redondante
+au premier passage après le basculement. Si l'unité redondante était déjà sélectionnée, ou si les deux
+unités sont en panne, le basculement ne change rien et la liaison reste coupée jusqu'au rétablissement
+d'un transpondeur.
 **Surveiller :** Toutes les stations sol en écoute seule sur les fréquences principale et redondante.
-**Verify:** Détection de la balise sur une station quelconque --- relevés de `ttc.rssi` (0x0502) sur la page TT&C (sol) consignés en continu.
-**Durée :** Attendre au moins 4 périodes orbitales (~6,3 heures) après l'activation prévue du temporisateur de bord.
+**Verify:** Détection d'un signal sur une station quelconque --- `ttc.rssi` (0x0502) sur la page TT&C (mesuré par la station, sol) consigné en continu ; il indique « aucun signal » tant que le satellite n'émet pas.
+**Durée :** Écouter pendant au moins 2 périodes orbitales (~3,2 heures) après T(dernière télécommande acceptée) + 24 h.
 
 ### Étape 6 --- Campagne ciblée sur les passages polaires (seuil de 12 h)
 **Action:** Si 12 heures se sont écoulées depuis le dernier contact, concentrer toutes les ressources sur les stations
@@ -94,15 +124,15 @@ des conditions de bilan de puissance positif reviendront (phase orbitale éclair
 ## Synthèse de l'arbre de décision
 | Temps écoulé | Action | Escalade |
 |---|---|---|
-| 0--6 h | Passer par toutes les stations sol, commander en aveugle les deux transpondeurs | Directeur de vol |
-| 6--12 h | Attendre le temporisateur de reprise autonome de bord | Équipe d'intervention d'urgence |
-| 12--24 h | Campagne ciblée sur les passages polaires, commande en aveugle du mode d'urgence | Responsable de mission |
+| 0--12 h | Passer par toutes les stations sol, commander en aveugle les deux transpondeurs | Directeur de vol |
+| 12--24 h | Campagne ciblée sur les passages polaires, commande en aveugle du mode d'urgence ; planifier les passages qui suivent le temporisateur TTC-01 | Responsable de mission |
+| 24 h + 2 orbites | La FDIR TTC-01 de bord bascule sur le transpondeur redondant : écouter (étape 5) | Équipe d'intervention d'urgence |
 | 24--48 h | Escalade vers le réseau d'urgence, appui d'agences partenaires | Commission d'examen des anomalies |
 | >48 h | Évaluation de la perte prolongée, poursuite radar, écoute de 30 jours | Directeur de programme |
 
 ## Conduite à tenir hors nominal
 - Si une panne matérielle de station sol est confirmée : basculer sur la source (feed) d'antenne de secours ; contacter l'exploitant de la station pour une maintenance d'urgence.
-- Si le satellite est détecté par radar mais sans signal RF : supposer une panne totale des transpondeurs ; prévoir une liaison montante sur la voie de secours en bande S si elle existe.
+- Si le satellite est détecté par radar mais sans signal RF après le basculement TTC-01 : supposer que les deux transpondeurs sont en panne. Aucune commande ne peut atteindre le satellite et il n'émet rien (balise comprise) ; continuer l'écoute en attendant le rétablissement d'un transpondeur.
 - Si la télémesure est reçue mais corrompue ou fragmentée : redescendre l'échelle des débits TM jusqu'à LOW
   (`TTC_SET_DATA_RATE(rate=0)`, func_id 65 — 16 kbit/s BPSK conv(7,1/2)+RS, ce qui apporte à la fois
   9,03 dB de marge de débit et 1,5 dB de gain de codage supplémentaire par rapport à HIGH). Si la liaison

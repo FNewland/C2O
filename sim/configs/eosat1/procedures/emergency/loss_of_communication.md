@@ -1,14 +1,19 @@
 # EMG-004: Loss of Communication
 **Subsystem:** TT&C / Ground Segment
 **Phase:** EMERGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's ruling S4): with both transponders
+failed the link is now really cut --- no telecommand is received or executed and
+no telemetry leaves the spacecraft, beacon included --- so this card can be
+practised as a true loss of communication. Step 5 now describes the autonomy the
+spacecraft actually has (FDIR TTC-01: one switch to the redundant transponder
+24 h after the last accepted telecommand), not a 6 h cycling sequence it never had.
 **Approved:** Flight Operations Director
 
 ## Purpose
 Recovery procedure when no telemetry has been received from EOSAT-1 for two or more
 consecutive pass windows. This procedure defines a structured escalation from ground
 station verification through blind commanding and autonomous recovery assessment,
-with decision gates at 6h, 12h, 24h, and 48h elapsed time since last contact.
+with decision gates at 12h, 24h (the on-board command-loss timer) and 48h elapsed time since last contact.
 
 ## Prerequisites
 - [ ] Confirmed loss of telemetry for >= 2 consecutive pass windows (~3 hours)
@@ -16,6 +21,25 @@ with decision gates at 6h, 12h, 24h, and 48h elapsed time since last contact.
 - [ ] Current Two-Line Element set available (propagated < 24h ago)
 - [ ] Blind command stack prepared and validated in simulator
 - [ ] Flight Director on console and Emergency Response Team notified
+
+## What the Spacecraft Can and Cannot Do
+- The two S-band transponders are **cold-redundant**: only the selected unit is
+  powered. A dead selected unit hears nothing and sends nothing, so blind
+  commands are only received if the loss is NOT a dead receiver (for example the
+  transmitter was switched off, its `ttc_tx` line was shed, or the PA tripped).
+  They are still sent on every pass, because the ground cannot tell which case it is.
+- With **both** units failed nothing reaches the spacecraft and nothing leaves it,
+  not even the beacon. No command can recover this; only a transponder that
+  recovers can.
+- The only on-board autonomy is the **command-loss timer** (FDIR TTC-01,
+  `ttc.time_since_last_tc` 0x053D): 24 h after the last ACCEPTED telecommand it
+  raises CMD_LOSS_TIMEOUT (0x0514) and switches to the redundant transponder
+  (S19 ea 4003), once per loss episode. Blind commands that are not received do
+  not reset it.
+- **Training note (simulator):** the instructor recovers a failed transponder by
+  clearing its failure. The instructor pass override is a training aid: with only
+  the selected unit dead it lets the team command the switch blind; it cannot
+  revive a spacecraft whose two units are dead.
 
 ## Procedure Steps
 
@@ -51,14 +75,22 @@ spacing. (Was annotated Subtype 2; every S8 function-perform is Subtype 1.)
 **GO/NO-GO:** If link acquired, remain on redundant transponder and assess primary. If no response, proceed to Step 5.
 **BRANCH:** `ttc.link_status == 2` -> GO `STEP-END` | NO-GO `STEP-5` (timeout 45 s)
 
-### Step 5 --- Wait for Autonomous Recovery Timer
+### Step 5 --- Wait for the On-Board Command-Loss Timer (FDIR TTC-01)
 **LABEL:** `STEP-5`
-**Action:** EOSAT-1 onboard autonomy triggers a communication recovery sequence after 6 hours
-of no ground contact. The spacecraft will cycle through transponder configurations and
-increase beacon power.
+**Action:** Take the time of the last telecommand the spacecraft ACCEPTED (the
+last S1.1 in the archive). At that time + 24 h the command-loss timer expires:
+the spacecraft raises CMD_LOSS_TIMEOUT (0x0514) and switches itself to the
+redundant transponder (S8 func 64, dispatched on board by S19 ea 4003). That is the whole
+of its communication autonomy: it does not cycle configurations, retry the
+primary, or change beacon power. Plan the passes immediately after T+24 h on the
+best stations; Steps 6 and 7 continue meanwhile.
+**Note:** If the primary was the dead unit, the link returns on the redundant
+unit at the first pass after the switch. If the redundant unit was already
+selected, or both units are dead, the switch changes nothing and the link stays
+cut until a transponder recovers.
 **Monitor:** All ground stations in listen-only mode on both primary and redundant frequencies.
-**Verify:** Beacon detection on any station --- `ttc.rssi` (0x0502) readings on the TT&C page (ground) logged continuously.
-**Duration:** Wait through at least 4 orbit periods (~6.3 hours) after onboard timer expected activation.
+**Verify:** Signal detection on any station --- `ttc.rssi` (0x0502) on the TT&C page (station-measured, ground) logged continuously; it shows "no signal" until the spacecraft transmits.
+**Duration:** Listen through at least 2 orbit periods (~3.2 hours) after T(last accepted TC) + 24 h.
 
 ### Step 6 --- Polar Pass Focused Campaign (12h Threshold)
 **Action:** If 12 hours elapsed since last contact, concentrate all resources on high-latitude
@@ -94,15 +126,15 @@ power-positive conditions resume (sunlit orbit phase with favourable beta angle)
 ## Decision Tree Summary
 | Elapsed Time | Action | Escalation |
 |---|---|---|
-| 0--6h | Cycle all ground stations, blind command both transponders | Flight Director |
-| 6--12h | Wait for onboard autonomous recovery timer | Emergency Response Team |
-| 12--24h | Polar pass focused campaign, blind emergency mode command | Mission Manager |
+| 0--12h | Cycle all ground stations, blind command both transponders | Flight Director |
+| 12--24h | Polar pass focused campaign, blind emergency mode command; plan the passes after the TTC-01 timer | Mission Manager |
+| 24h + 2 orbits | On-board TTC-01 switches to the redundant transponder: listen (Step 5) | Emergency Response Team |
 | 24--48h | Emergency network escalation, partner agency support | Anomaly Review Board |
 | >48h | Extended loss assessment, radar tracking, 30-day listen | Programme Director |
 
 ## Off-Nominal Handling
 - If ground station hardware fault confirmed: reroute to backup antenna feed; contact station provider for emergency maintenance.
-- If spacecraft detected by radar but no RF signal: assume total transponder failure; plan uplink on S-band backup if available.
+- If spacecraft detected by radar but no RF signal after the TTC-01 switch: assume both transponders have failed. No command can reach the spacecraft and it transmits nothing (beacon included); keep listening for a transponder recovery.
 - If telemetry received but corrupt/fragmented: step the TM rate ladder down to LOW
   (`TTC_SET_DATA_RATE(rate=0)`, func_id 65 — 16 kbps BPSK conv(7,1/2)+RS, which is both
   9.03 dB of rate margin and 1.5 dB of extra coding gain relative to HIGH). If that

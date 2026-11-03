@@ -1,7 +1,10 @@
 # CTG-003 : Rétablissement après perte de liaison TTC
 **Sous-système :** TT&C
 **Phase :** CONTINGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz S4) : quand les deux transpondeurs sont en
+panne, la liaison est réellement coupée (aucune TC reçue, aucune TM, balise comprise) ; la fiche indique
+donc ce que les étapes en aveugle peuvent atteindre ou non, et l'étape 6 nomme l'autonomie de bord réelle
+(temporisateur de perte de commande FDIR TTC-01, 24 h).
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -37,7 +40,12 @@ et le rétablissement de la liaison avant de passer aux opérations autonomes d'
 ### Étape 3 — Basculer sur le transpondeur redondant
 **LABEL:** `STEP-3`
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1) — commande en aveugle
-**Action:** Attendre 45 s la mise sous tension et le verrouillage en fréquence du transpondeur redondant
+**Note:** Les transpondeurs sont en redondance froide : le basculement n'est reçu que par l'unité
+SÉLECTIONNÉE. Si le transpondeur principal est en panne, il n'entend rien et cette commande est perdue ---
+le basculement ne se fait alors qu'à bord, à l'expiration du temporisateur de perte de commande (étape 6).
+Il vaut quand même la peine de l'envoyer : si la perte vient de la chaîne d'émission (PA coupé, ligne
+`ttc_tx` délestée), le récepteur fonctionne et l'exécute.
+**Action:** Attendre 45 s la mise sous tension et le verrouillage en fréquence du transpondeur redondant
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) en 45 s
 **Verify:** `ttc.mode` (0x0500) indique que l'unité redondante est active
 **GO/NO-GO:** Si la liaison se rétablit sur l'unité redondante, l'étape 5 s'applique. Sans réponse, l'étape 4 s'applique.
@@ -70,13 +78,13 @@ et le rétablissement de la liaison avant de passer aux opérations autonomes d'
 **Action:** Consigner l'échec de la tentative de rétablissement avec l'horodatage de toutes les commandes envoyées en aveugle
 **Action:** Informer le directeur de mission et la dynamique du vol de la perte de liaison persistante
 **Action:** Programmer le prochain passage disponible sur une station sol pour une tentative de réacquisition
-**Action:** Si le satellite dispose d'une temporisation autonome de passage en mode survie (24 h sans contact), confirmer que la temporisation bord est en cours
+**Action:** Consigner l'heure de la dernière télécommande ACCEPTÉE (dernier S1.1). Le temporisateur de perte de commande de bord (FDIR TTC-01, `ttc.time_since_last_tc` 0x053D) bascule le satellite sur le transpondeur redondant 24 h après celle-ci (événement CMD_LOSS_TIMEOUT 0x0514, S19 ea 4003) : programmer les premiers passages qui suivent cette heure. Les commandes en aveugle qui ne sont pas reçues ne le remettent pas à zéro
 **GO/NO-GO:** Sans liaison après deux passages consécutifs, passer à EMG-004 (Perte de communication)
 
 ## Conduite à tenir hors nominal
 - Si la liaison se rétablit mais avec un RSSI < -95 dBm ou une marge < 1.5 dB : descendre l'échelle de débits TM jusqu'au échelon LOW (16 kbit/s) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) pour améliorer la marge. LOW est le échelon des opérations de routine — la liaison conserve toute la télémesure de servitude, elle ne peut simplement pas effectuer de vidage
 - Si l'OBC est en mode SAFE après le rétablissement de la liaison : exécuter CTG-010 (Reprise après chien de garde OBDH) avant de reprendre les opérations nominales
-- Si le transpondeur redondant est lui aussi défaillant : le satellite s'en remettra au mode survie autonome ; coordonner une campagne de rétablissement multistation via EMG-004
+- Si le transpondeur redondant est lui aussi défaillant : aucune télécommande ne peut être reçue et aucune télémesure n'est émise, balise comprise ; le basculement TTC-01 est refusé. Rien depuis le sol ne peut y remédier : passer à EMG-004 et rester à l'écoute du rétablissement d'un transpondeur (dans le simulateur, l'instructeur qui efface une panne de transpondeur)
 - Si la liaison est intermittente (bascule) : suspecter une anomalie de déploiement d'antenne ou un problème d'attitude — demander la télémesure AOCS et contrôler `aocs.att_error` (0x0217)
 
 ## Postconditions
