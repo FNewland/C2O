@@ -629,6 +629,11 @@ class TCSBasicModel(SubsystemModel):
         net = self._net
         pw = [0.0] * len(net.names)
         array_w: dict[str, float] = {}
+        if self._unpowered():
+            # Phases 0-1 (pre-separation / separation timer): the separation
+            # switches are open, nothing on board is powered, so the only
+            # heat is what the tumbling body absorbs (2026-11-03).
+            return pw, array_w
         if 0x0106 not in p:
             # No EPS in the loop (bare TCS harness): use the configured
             # default loads so the network still has its nominal dissipation.
@@ -672,6 +677,17 @@ class TCSBasicModel(SubsystemModel):
             if node in net.index:
                 pw[net.index[node]] += w
         return pw, array_w
+
+    def _unpowered(self) -> bool:
+        """True before the separation timer expires (spacecraft phase < 2):
+        separation switches open, no load and no heater is powered."""
+        eng = self._engine
+        if eng is None or not hasattr(eng, "_spacecraft_phase"):
+            return False
+        try:
+            return int(eng._spacecraft_phase) < 2
+        except (TypeError, ValueError):
+            return False
 
     def _thermostat_control(self, circuit: str, temp: float) -> None:
         """Apply thermostat control for a heater circuit (auto mode only)."""
@@ -895,6 +911,10 @@ class TCSBasicModel(SubsystemModel):
             if limit < 100.0 and getattr(s, f"htr_duty_{circuit}", 0.0) >= limit:
                 setattr(s, f"htr_{circuit}", False)
 
+        if self._unpowered():
+            # Before the separation timer expires nothing is powered — not
+            # even a heater line that was left ON in the configuration.
+            s.htr_battery = s.htr_obc = s.htr_thruster = False
         htr_w = {}
         for circuit in ("battery", "obc", "thruster"):
             on = getattr(s, f"htr_{circuit}")
