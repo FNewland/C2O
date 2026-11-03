@@ -6,6 +6,7 @@ import App from './App'
 import './index.css'
 import './components/ui/primitives.css'  // after index.css: variants override the base
 import './styles/shell.css'
+import './logbook/logbook.css'
 import './styles/utilities.css'          // last: utilities win over component defaults
 
 createRoot(document.getElementById('root')!).render(

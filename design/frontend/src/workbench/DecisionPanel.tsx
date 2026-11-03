@@ -10,6 +10,7 @@
  */
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { LogThis } from '../logbook'
 import { useTranslation } from 'react-i18next'
 import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
@@ -224,6 +225,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                     }} type="button" className="c2o-btn c2o-btn--sm">
                       {t('Apply')}
                     </button>
+                    <LogThis subject={t('Orbit trade: {{name}} ({{alt}} km)', { name: c.name || c.orbit_type, alt: c.altitude_km })} />
                   </td>
                 </tr>
               ))}
@@ -310,6 +312,7 @@ function ConstellationWidget(_props: { studyId: string | null }) {
               }} type="button" className="c2o-btn c2o-btn--sm mt-1">
                 {t('Apply to Design')}
               </button>
+              <LogThis subject={t('Constellation: {{what}}', { what: opt.walker_notation || t('{{planes}}P × {{sats}}S = {{total}} sats', { planes: opt.num_planes || opt.planes, sats: opt.sats_per_plane, total: opt.total_satellites || opt.total_sats }) })} />
             </div>
           ))}
           {result.count != null && (

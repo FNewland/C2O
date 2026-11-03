@@ -7,8 +7,10 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '../../i18n/LanguageToggle'
 import { ThemeToggle } from './ThemeToggle'
+import { LogbookBanner, LogbookButton } from '../../logbook'
 
-export function HomeFrame({ title, lead, children }: { title: string; lead?: string; children: ReactNode }) {
+/** logbook: show the Logbook button and expiry banner (not on the name prompt). */
+export function HomeFrame({ title, lead, children, logbook = false }: { title: string; lead?: string; children: ReactNode; logbook?: boolean }) {
   const { t } = useTranslation()
   return (
     <div className="c2o-home-frame">
@@ -17,10 +19,12 @@ export function HomeFrame({ title, lead, children }: { title: string; lead?: str
         <span className="t-13 c-2">{t('Concurrent Design Facility')}</span>
         <span className="c2o-hide-narrow t-12 c-3">{t('University of Ottawa — SEDTI')}</span>
         <span className="ml-auto row gap-2">
+          {logbook && <LogbookButton />}
           <LanguageToggle />
           <ThemeToggle />
         </span>
       </header>
+      {logbook && <LogbookBanner />}
       <main className="c2o-home-frame__main">
         <h1 className="t-20 w-600 m-0">{title}</h1>
         {lead && <p className="c2o-home-frame__lead">{lead}</p>}

@@ -25,6 +25,7 @@ import { LanguageToggle } from './i18n/LanguageToggle'
 import { DialogHost, showAlert } from './components/ui/Dialog'
 import { HomeFrame } from './components/ui/HomeFrame'
 import { ThemeToggle } from './components/ui/ThemeToggle'
+import { LogbookBanner, LogbookButton, LogbookRoot } from './logbook'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2_000 } },
@@ -464,6 +465,16 @@ function StatusBar() {
         {t('Guide')}
       </button>
 
+      {/* Close study: back to the start screen (the logbook offers its download) */}
+      <button
+        onClick={() => { useUIStore.getState().drillUp(-1); useUIStore.getState().setStudyId(null) }}
+        type="button"
+        className="c2o-btn c2o-btn--quiet"
+        title={t('Leave this study and go back to the start screen. The study stays on the server.')}
+      >
+        {t('Close study')}
+      </button>
+
       </div>
     </div>
   )
@@ -508,17 +519,23 @@ function NamePrompt() {
 function AppShell() {
   const studyId = useUIStore(s => s.studyId)
   const userName = useUIStore(s => s.userName)
-  const showExport = useUIStore(s => s.showExport)
-  const showGuide = useUIStore(s => s.showGuide)
 
   if (!userName) return <><NamePrompt /><DialogHost /></>
-  if (!studyId) return (
+
+  // One LogbookRoot for the wizard and the workbench, so it sees the study
+  // being closed (it offers the logbook download then).
+  return (
     <>
-      <MissionWizard />
+      {studyId ? <Workbench /> : <MissionWizard />}
+      <LogbookRoot />
       <DialogHost />
     </>
   )
+}
 
+function Workbench() {
+  const showExport = useUIStore(s => s.showExport)
+  const showGuide = useUIStore(s => s.showGuide)
   return (
     <div className="c2o-shell">
       <header className="c2o-appbar">
@@ -526,10 +543,12 @@ function AppShell() {
         <LevelBar />
         <div className="c2o-appbar__end">
           <PresenceBar />
+          <LogbookButton />
           <LanguageToggle />
           <ThemeToggle />
         </div>
       </header>
+      <LogbookBanner />
       <StatusBar />
       <MarginTower />
       <main className="c2o-shell__main">
@@ -537,7 +556,6 @@ function AppShell() {
       </main>
       {showExport && <ExportPanel onClose={() => useUIStore.getState().setShowExport(false)} />}
       {showGuide && <GuidancePanel onClose={() => useUIStore.getState().setShowGuide(false)} />}
-      <DialogHost />
     </div>
   )
 }
