@@ -34,8 +34,8 @@
   },
   {
    "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-2-inventory-the-s19-event-action-table",
-   "en_hash": "c74655177c291680",
-   "fr_hash": "b8f8ea8868e8edb7"
+   "en_hash": "cb8deaebf6b64e00",
+   "fr_hash": "61b4e9d90a36be93"
   },
   {
    "id": "com-008-fdir-configuration-protection-functions/procedure-steps/step-3-read-the-fdir-summary-telemetry",
@@ -68,5 +68,5 @@
    "fr_hash": "2b565a6fff12c2f7"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "21af365"
 }

@@ -719,12 +719,15 @@ it stays in violation.
 ```
 When a parameter crosses a threshold (OK → violated):
   1. S12 violation detected by ServiceDispatcher.check_monitoring()
-     (skipped entirely if the parameter's source subsystem is unpowered)
+     (skipped entirely if the parameter's source subsystem is unpowered,
+     or while the definition's PUS-C validity condition is false; reported
+     only after `repetition` consecutive out-of-limit checks)
   2. TM(12,9) check-transition report "limit entered" — the real monitoring
      telemetry the ground decodes (added by defect #69)
   3. S5 event generated, event_id = 0x9000 | (param_id & 0x0FFF)
   4. S19 rule triggered (if one matches the event id, or the parameter id in
-     the parameter namespace — trigger_kind disambiguates the two)
+     the parameter namespace — trigger_kind disambiguates the two; a param
+     rule with `limit: high` or `limit: low` fires only on that limit)
   5. S8 command executed autonomously
   6. Event logged in S15 TM storage
 
@@ -973,6 +976,13 @@ object). See `docs/OBCP_GUIDE.md` for authoring procedures.
 live in 0x0000–0x0FFF, so an id alone is ambiguous; matching requires the id
 *and* the namespace to agree. Before defect #70 the id alone was matched and 17
 of the 26 shipped rules dual-triggered.
+
+**One-sided param rules (2026-11-03).** A param rule may carry `limit: high`
+or `limit: low` in `s19_rules.yaml`; it then ignores the other limit of the
+monitor, which is still reported to the ground. The overtemperature rules
+(3001, 3002, 3003, 4002, 6002) are `high`; until this change they also fired
+on cold (3003 put the OBC in SAFE on every cold soak). The setting is not
+carried in TC(19,1) or TM(19,128): a rule added from the ground is two-sided.
 
 **An action is exactly one parameter-less S8 function call** — no sequences, no
 arguments, no delays, no conditionals. Use an OBCP (Service 18) when you need a

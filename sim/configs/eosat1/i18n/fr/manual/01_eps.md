@@ -302,6 +302,9 @@ d'éclairement courant.
 | 0x010A   | bat_capacity    | Ah     | Capacité restante de la batterie     |
 | 0x0144   | wing_status     | masque de bits | État de déploiement des ailes solaires (bit0=+Y, bit1=-Y) |
 | 0x0145   | wing_deploy_timer| s     | Minuterie de compte à rebours du déploiement des ailes |
+| 0x014C   | sa_a_yield_pct  | %      | Rendement de la chaîne A par rapport à une chaîne saine (FDIR, à la demande) |
+| 0x014D   | sa_b_yield_pct  | %      | Rendement de la chaîne B par rapport à une chaîne saine (FDIR, à la demande) |
+| 0x014E   | sa_string_lit   | masque de bits | Chaînes assez éclairées pour être jugées (bit0=A, bit1=B) ; validité des surveillances de rendement |
 
 ## 5. Définition des limites {#5-limit-definitions}
 

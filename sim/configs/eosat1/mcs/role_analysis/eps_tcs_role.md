@@ -168,8 +168,8 @@
 | eps.bat_soc < 20% | Level 1 | Autonomous payload_poweroff |
 | eps.bat_soc < 15% | Level 2 | safe_mode_eps |
 | eps.bus_voltage < 26 V | Level 2 | safe_mode_eps |
-| tcs.temp_battery > 42 C | Level 1 | heater_off_battery |
-| tcs.temp_battery < 1 C | Level 1 | heater_on_battery |
+| tcs.temp_battery > 42 C | Level 1 | heater_off_battery (back to thermostat on clear) |
+| tcs.temp_battery < 1 C | Level 1 | heater_auto_battery (thermostat) |
 
 ## 4. GO/NO-GO Responsibilities
 

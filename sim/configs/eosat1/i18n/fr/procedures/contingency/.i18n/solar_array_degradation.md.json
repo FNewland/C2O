@@ -29,8 +29,8 @@
   },
   {
    "id": "ctg-009-solar-array-degradation/procedure-steps/step-1-quantify-the-degradation",
-   "en_hash": "05800971a61b330b",
-   "fr_hash": "fd44ce111e280e7a"
+   "en_hash": "b828778088e082dc",
+   "fr_hash": "aa7fe99466552e2c"
   },
   {
    "id": "ctg-009-solar-array-degradation/procedure-steps/step-2-compare-sa-a-versus-sa-b-performance",
@@ -73,5 +73,5 @@
    "fr_hash": "dc82d78bc70ba839"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "21af365"
 }

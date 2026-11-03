@@ -928,6 +928,14 @@ class SimulationEngine:
         if tcs:
             self._fdir_callbacks["heater_on_battery"] = lambda: tcs.handle_command({"command": "heater", "circuit": "battery", "on": True})
             self._fdir_callbacks["heater_off_battery"] = lambda: tcs.handle_command({"command": "heater", "circuit": "battery", "on": False})
+            # 2026-11-03: hand the battery heater back to its thermostat.
+            # The battery-cold response (fdir.yaml) and the release of the
+            # battery-overtemp response. `heater_on_battery` (manual ON) is
+            # kept for ground scripts, but no rule uses it any more: it
+            # bypassed the thermostat and nothing ever undid it, so after a
+            # cold excursion the battery ran at +15..+18 C, above the +10 C
+            # OFF point (OBC_THERMAL_ANALYSIS.md §3.3).
+            self._fdir_callbacks["heater_auto_battery"] = lambda: tcs.handle_command({"command": "auto_mode", "circuit": "battery"})
         if aocs:
             # Phase C WP-9: AOCS safe mode = COARSE_SUN (mode 3), a sun-safe
             # power-positive hold — not DETUMBLE (mode 2), which is a rate-
@@ -2450,6 +2458,8 @@ class SimulationEngine:
             # contingency pinning sc_mode to SAFE.
             if not self._fdir_rule_armed(rule):
                 gated_key = f"{param_name}_{rule.action}"
+                if self._fdir_triggered.get(gated_key, False):
+                    self._fdir_release(rule)
                 self._fdir_triggered[gated_key] = False
                 if hasattr(self, '_fdir_persist'):
                     self._fdir_persist[gated_key] = 0.0
@@ -2514,6 +2524,7 @@ class SimulationEngine:
                 })
             elif not condition_met and was_triggered:
                 self._fdir_triggered[rule_key] = False
+                self._fdir_release(rule)
 
         # Recompute the latched FDIR mode flags that drive sc_mode. A safe- or
         # emergency-level flag is active whenever ANY rule of that level is still
@@ -2537,6 +2548,21 @@ class SimulationEngine:
         # that isn't itself L>=3; honour the recomputed level-based result, which
         # is the authoritative source for emergency latching.
         self._fdir_emergency_active = emergency_active
+
+    def _fdir_release(self, rule) -> None:
+        """Run a rule's ``on_clear`` action when its latch releases."""
+        action = getattr(rule, 'on_clear', None)
+        if not action:
+            return
+        cb = self._fdir_callbacks.get(action)
+        if cb is None:
+            logger.warning("FDIR on_clear action %s has no callback", action)
+            return
+        try:
+            cb()
+            logger.info("FDIR release: %s -> %s", rule.parameter, action)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("FDIR on_clear action %s error: %s", action, e)
 
     def _update_sc_mode(self) -> None:
         """Recompute the derived spacecraft mode (sc_mode).
@@ -3368,6 +3394,9 @@ class SimulationEngine:
                     f"{name}: {description} | "
                     f"value={value:.2f} limits=[{low_limit:.2f}, {high_limit:.2f}]"
                 ),
+                # Which limit was crossed, so a one-sided S19 rule (e.g. ea
+                # 3003 OBC OVERtemp) does not act on the other side.
+                's12_limit': v.get('limit'),
             })
 
         # Emit "return to nominal" reports for violations that have cleared
@@ -3434,7 +3463,8 @@ class SimulationEngine:
             )
             if (event_id & 0xF000) == 0x9000:
                 self._dispatcher.trigger_event_action(
-                    event_id & 0x0FFF, kind=TRIGGER_KIND_PARAM)
+                    event_id & 0x0FFF, kind=TRIGGER_KIND_PARAM,
+                    limit=ev.get('s12_limit'))
             else:
                 self._dispatcher.trigger_event_action(
                     event_id, kind=TRIGGER_KIND_EVENT)

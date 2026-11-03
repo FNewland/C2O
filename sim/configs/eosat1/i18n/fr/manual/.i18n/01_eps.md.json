@@ -89,8 +89,8 @@
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/4-telemetry-parameters",
-   "en_hash": "e6f2be3cff620448",
-   "fr_hash": "9c62a9b17156af4e"
+   "en_hash": "1fdffb8aaaf51af3",
+   "fr_hash": "e9c5be51e38815c8"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/5-limit-definitions",
@@ -133,5 +133,5 @@
    "fr_hash": "6cef7a38a10a69c9"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "21af365"
 }

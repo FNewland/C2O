@@ -206,8 +206,8 @@ The fdir_systems position configures and maintains all onboard FDIR rules throug
 | EPS low SoC | eps.bat_soc | < 20% | 1 | payload_poweroff |
 | EPS critical SoC | eps.bat_soc | < 15% | 2 | safe_mode_eps |
 | EPS undervoltage | eps.bus_voltage | < 26 V | 2 | safe_mode_eps |
-| TCS battery hot | tcs.temp_battery | > 42 C | 1 | heater_off_battery |
-| TCS battery cold | tcs.temp_battery | < 1 C | 1 | heater_on_battery |
+| TCS battery hot | tcs.temp_battery | > 42 C | 1 | heater_off_battery (on_clear: heater_auto_battery) |
+| TCS battery cold | tcs.temp_battery | < 1 C | 1 | heater_auto_battery |
 | AOCS attitude loss | aocs.att_error | > 5 deg | 2 | safe_mode_aocs |
 | OBDH overtemp | obdh.temp_obc* | > 65 C | 2 | safe_mode_obc |
 | Excessive reboots | obdh.reboot_count | > 4 | 3 | spacecraft_emergency |
