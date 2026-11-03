@@ -130,8 +130,8 @@ SERVICES: tuple[Service, ...] = (
 )
 
 SECTIONS: tuple[tuple[str, str, str], ...] = (
-    ("operate", T("Operate"), T("Fly the spacecraft")),
     ("design", T("Design"), T("Build the mission")),
+    ("operate", T("Operate"), T("Fly the spacecraft")),
     ("analyse", T("Analyse"), T("Review passes, prepare the next")),
     ("instructor", T("Instructor"), T("Instructors only")),
 )
