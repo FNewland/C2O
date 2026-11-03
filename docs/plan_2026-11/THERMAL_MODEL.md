@@ -108,7 +108,8 @@ Design choices worth knowing:
 * **Battery on the +Y wall.** EOSAT-1's β is −21° to −31° all year, so the Sun is always on the −Y side and
   +Y is the cold, never-sunlit face (the star tracker ST2 is canted to +Y for the same reason). The battery
   therefore runs colder than the electronics, which keeps it in its charge range without cooking it.
-* **Imager thermal island.** The 15 W cooler runs whenever the payload is in STANDBY or IMAGING; with it on,
+* **Imager thermal island.** The 15 W cooler ran whenever the payload was in STANDBY or IMAGING when this
+  note was written; since 2026-11-03 it runs only to prepare for imaging and while imaging. With it on,
   the whole bus sits about 15 K warmer. If the imager were bolted to the frame its sink would follow, and the
   cooler (whose lift falls with sink temperature) could not hold −15 °C. The imager and its −Z radiator
   are therefore isolated from the frame (0.04 + 0.02 W/K, low-e back), the arrangement real cooled imagers
@@ -175,8 +176,9 @@ takes the zone default (`tcs.yaml network.cold_soak.default_offset_c`):
 * Wings do not shadow the body and the body does not shadow the wings; no inter-face external radiation.
 * Albedo uses the `max(0, r̂·ŝ)` sub-satellite approximation; short-term albedo/OLR extremes over
   particular regions are not modelled (orbit-average constants).
-* TCS (and therefore the network) is not ticked in spacecraft phases 0–1 (bootloader, engine rule), so the
-  spacecraft does not cool between separation and application boot.
+* ~~TCS (and therefore the network) is not ticked in spacecraft phases 0–1~~ — fixed 2026-11-03 (Franz's
+  ruling): the network ticks from separation on, with no electrical dissipation and no heater before the
+  separation timer expires (phase < 2), so the spacecraft cools or warms between separation and boot.
 * The FPA is still a controlled first-order node, not a physical cold finger.
 * EPS still uses its fixed `array_temp_sunlit_c` (65 °C) for the cell temperature loss rather than the panel
   node temperatures.

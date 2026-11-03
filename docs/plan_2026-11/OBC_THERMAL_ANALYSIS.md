@@ -377,3 +377,20 @@ lines OFF; lines ON after 4 h (thruster: auto mode for the catbed hold); soak cl
    +38 °C.
 5. **The workbook** (`configs/eosat1/worksheets/ops_week3.yaml`) still quotes "line 6 if temp_obc < 0 °C" and
    "temp_obc ∈ [−5, +45] °C" — owned by the workbook work; not changed here.
+
+### 8.6 Rulings on §8.5 (Franz, 2026-11-03)
+
+Recorded in [`REDESIGN_DECISIONS.md`](REDESIGN_DECISIONS.md) ("Model round 2").
+
+1. **FPA monitors in long survival → gated.** The S12 monitors on 0x0408 / 0x0601 and the ground limits on
+   0x0408 / 0x0601 / 0x0617 carry a validity condition on the new 0x0426 `tcs.fpa_limits_valid` (1 while the
+   payload is powered or the cooler / decontamination heater runs; TCS HK SID 3). An unpowered imager at
+   −23…−27 °C is unchecked, not alarmed. No realistic non-operating band exists in the configuration, so none
+   was invented.
+2. **FPA margin** — unchanged (≈ 2 K at β −30° with the cooler running).
+3. **STANDBY means no cooler.** STANDBY and OFF release the cooler; IMAGING and CALIBRATION request it; imaging
+   preparation is `FPA_COOLER(on=1)`. Nominal is now the 24 W, +10 °C spacecraft of the power-budget `nominal`
+   profile (§8.1 row 2). Cool-down from the STANDBY equilibrium (detector +10.6 °C) [Sim, nominal engine,
+   3 h settled, 1 s steps]: `payload.fpa_ready` after **378 s**; detector inside −16…−15 °C after **579 s**.
+4. High OBC limits — unchanged.
+5. The workbook line ("line 6 if temp_obc < 0 °C") is still for the workbook owners.
