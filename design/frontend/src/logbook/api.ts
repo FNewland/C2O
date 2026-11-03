@@ -22,10 +22,80 @@ export interface Entry {
   kind: EntryKind
   text: string
   context: Context
-  worksheet: { id: string; q: string; title?: string; q_text?: string; checked?: boolean } | null
+  worksheet: { id: string; q: string; title?: string; q_text?: string; checked?: boolean; section?: string } | null
   sim_ts?: string | null
   lang?: string | null
+  /** A structured decision record (kind "decision"; see decisions.ts). */
+  record?: DecisionRecord | null
 }
+
+// ─── Decision records (logbook/decisions.py on the server) ───
+
+export interface RecordOption {
+  name: string
+  summary?: string
+  values?: Record<string, string | number | boolean>
+  score?: number
+  chosen?: boolean
+}
+export interface RecordCriterion { name: string; weight?: number; direction?: 'higher' | 'lower' }
+export interface RecordEvidence {
+  label: string
+  value?: string | number | boolean
+  unit?: string
+  before?: string | number
+  after?: string | number
+}
+export interface DecisionRecord {
+  decision_id: string
+  subject?: string
+  question?: string
+  part?: string
+  part_title?: string
+  gate?: string
+  seat?: string
+  options?: RecordOption[]
+  criteria?: RecordCriterion[]
+  choice?: string
+  rationale?: string
+  evidence?: RecordEvidence[]
+  consequences?: string
+  margin_impact?: string
+  open_issues?: string
+  capture?: string
+}
+export type RecordField = 'options' | 'criteria' | 'choice' | 'rationale' | 'evidence' | 'consequences' | 'margin_impact' | 'open_issues'
+
+export interface CatalogueDecision {
+  id: string
+  part: string
+  worksheet: string
+  q: string
+  worksheet_title: string | null
+  part_title: string | null
+  question: string
+  hint: string | null
+  seat: string
+  seat_label: string
+  gate: string
+  fields: RecordField[]
+  prefill: string[]
+  capture: string[]
+  entries: string[]
+  status: 'open' | 'recorded'
+}
+export interface Catalogue {
+  lang: string
+  study_id: string | null
+  gates: { id: string; label: string; ui_gates: string[] }[]
+  seats: { id: string; label: string }[]
+  fields: Record<RecordField, string>
+  sources: Record<string, { label: string; server: boolean }>
+  decisions: CatalogueDecision[]
+  counts: Record<string, { total: number; open: number }>
+  due?: { gate: string; total: number; open: string[]; recorded: string[] }
+}
+export interface Prefill extends Partial<DecisionRecord> { sources?: string[] }
 
 export interface Summary {
   person: { id_label: string; local: boolean }
@@ -91,17 +161,54 @@ export function useWorksheets(context: Context, all: boolean, enabled = true) {
   })
 }
 
+export const DECISIONS_KEY = ['logbook-decisions'] as const
+
+/** The decision catalogue with this person's status for the study (and what is due by `gate`). */
+export function useDecisions(studyId: string | null, gate?: string | null, enabled = true) {
+  const lang = getLang()
+  const q = new URLSearchParams({ lang })
+  if (studyId) q.set('study_id', studyId)
+  if (gate) q.set('gate', gate)
+  return useQuery<Catalogue>({
+    queryKey: [...DECISIONS_KEY, lang, studyId, gate ?? null],
+    queryFn: () => call<Catalogue>(`/decisions?${q}`),
+    enabled,
+    staleTime: 15_000,
+  })
+}
+
+/** What SpaceCDF can fill in for a decision from the study (open-decision list). */
+export function fetchPrefill(decisionId: string, studyId: string | null): Promise<Prefill> {
+  const q = new URLSearchParams({ lang: getLang() })
+  if (studyId) q.set('study_id', studyId)
+  return call<Prefill>(`/decisions/${encodeURIComponent(decisionId)}/prefill?${q}`)
+}
+
 export function useLogbookMutations() {
   const qc = useQueryClient()
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: LOGBOOK_KEY })
     void qc.invalidateQueries({ queryKey: ['logbook-worksheets'] })
+    void qc.invalidateQueries({ queryKey: DECISIONS_KEY })
   }
   return {
     refresh,
     add: async (body: { kind: EntryKind; text: string; context?: Context; worksheet?: Entry['worksheet'] }) => {
       const e = await call<Entry>('/entries', { method: 'POST',
         body: JSON.stringify({ ...body, tool: TOOL, lang: getLang() }) })
+      refresh()
+      return e
+    },
+    /** A decision record: the server writes the text, workbook part and decision id. */
+    addDecision: async (record: DecisionRecord, context: Context) => {
+      const e = await call<Entry>('/entries', { method: 'POST',
+        body: JSON.stringify({ kind: 'decision', text: '-', record, context, tool: TOOL, lang: getLang() }) })
+      refresh()
+      return e
+    },
+    editDecision: async (id: string, record: DecisionRecord) => {
+      const e = await call<Entry>(`/entries/${encodeURIComponent(id)}`, { method: 'PATCH',
+        body: JSON.stringify({ text: '-', record, lang: getLang() }) })
       refresh()
       return e
     },
@@ -121,12 +228,40 @@ export function useLogbookMutations() {
   }
 }
 
-/** Download the whole logbook (every tool). The server records the download. */
-export function download(format: 'md' | 'html', onDone?: () => void) {
+function localZone(): string {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' } catch { return 'UTC' /* old browser */ }
+}
+
+function exportQuery(format: string, opts: { studyId?: string | null; worksheet?: string; inline?: boolean } = {}): string {
+  const q = new URLSearchParams({ format, lang: getLang(), tz: localZone() })
+  if (opts.studyId) q.set('study_id', opts.studyId)
+  if (opts.worksheet) q.set('worksheet', opts.worksheet)
+  if (opts.inline) q.set('inline', '1')
+  return q.toString()
+}
+
+/** One worksheet as Markdown text, for "Copy as Markdown" (not counted as a download). */
+export async function worksheetMarkdown(worksheet: string, studyId: string | null): Promise<string> {
+  const res = await fetch(`${BASE}/export?${exportQuery('md', { studyId, worksheet, inline: true })}`, { credentials: 'same-origin' })
+  if (!res.ok) throw new LogbookHttpError(res.status, res.statusText)
+  return res.text()
+}
+
+/** "Download this worksheet": one worksheet, every part, its open decisions. */
+export function downloadWorksheet(worksheet: string, studyId: string | null, format: 'md' | 'html' = 'md') {
   const a = document.createElement('a')
-  let tz = 'UTC'
-  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' } catch { /* old browser: UTC */ }
-  a.href = `${BASE}/export?format=${format}&lang=${getLang()}&tz=${encodeURIComponent(tz)}`
+  a.href = `${BASE}/export?${exportQuery(format, { studyId, worksheet })}`
+  a.download = ''
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
+
+/** Download the whole logbook (every tool), laid out as the workbook. The server records the download. */
+export function download(format: 'md' | 'html', onDone?: () => void, studyId?: string | null) {
+  const a = document.createElement('a')
+  a.href = `${BASE}/export?${exportQuery(format, { studyId })}`
   a.download = ''
   a.rel = 'noopener'
   document.body.appendChild(a)

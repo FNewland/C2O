@@ -31,7 +31,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { LogThis } from '../logbook'
+import { RecordDecision } from '../logbook'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { displayElementName } from './BlocksPanel'
@@ -42,7 +42,7 @@ import { Button } from '../components/ui'
 import { INTERFACE_TYPES, TYPE_META, pickLang, type DesignInterface, type InterfaceType } from '../types/interfaces'
 import { InterfaceGlyph } from './InterfaceGlyph'
 import { createInterface, patchInterface, useInterfaces, useInvalidateLinks } from './interfaceApi'
-import { LinkEditor, LinkStatusChip, TypeLabel, originText, propsSummary, type EndpointOption } from './linkParts'
+import { LinkEditor, LinkStatusChip, TypeLabel, linkDecision, originText, propsSummary, type EndpointOption } from './linkParts'
 
 const API = '/api'
 
@@ -281,7 +281,8 @@ function EdgePopover({ iface, x, y, nameOf, endpoints, onClose, studyId }: {
             {iface.status === 'suggested' && <Button size="sm" variant="primary" busy={busy} onClick={() => act({ status: 'accepted' })}>{t('Accept')}</Button>}
             <Button size="sm" onClick={() => setEditing(true)}>{t('Edit')}</Button>
             <Button size="sm" busy={busy} onClick={() => act({ status: 'rejected' })}>{t('Reject')}</Button>
-            <LogThis subject={t('Link {{from}} to {{to}}', { from: nameOf(iface.from_element_id), to: nameOf(iface.to_element_id) })} />
+            <RecordDecision decision="D-2.4-INTERFACES" capture="blocks:link" label={t('Record')}
+              prefill={() => linkDecision(iface, nameOf, t, i18n.language, iface.status === 'accepted' ? 'accept' : iface.status === 'rejected' ? 'reject' : undefined)} />
           </div>
         )}
     </div>

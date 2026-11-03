@@ -13,6 +13,7 @@ import { useUIStore } from '../stores/uiStore'
 import { SUGGESTED_REQS } from './suggestedReqs'
 import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge, Tag, type Status } from '../components/ui'
 import { askText, showAlert } from '../components/ui/Dialog'
+import { RecordDecision } from '../logbook'
 
 const API = '/api'
 
@@ -194,6 +195,20 @@ export function RequirementsPanel() {
         title={t('Requirements ({{n}})', { n: requirements.length })}
         actions={<>
           <SmartVerifyButton studyId={studyId} />
+          <RecordDecision decision="D-2.1-FLOWDOWN" capture="requirements:flowdown" label={t('Record flow-down decision')}
+            prefill={() => {
+              const by = (lvl: string) => allRequirements.filter((r: any) => r.level === lvl).length
+              const traced = allRequirements.filter((r: any) => r.level !== 'mission' && r.derived_from_requirement_id).length
+              const below = allRequirements.filter((r: any) => r.level !== 'mission').length
+              return {
+                evidence: [
+                  { label: t('Mission requirements'), value: by('mission') },
+                  { label: t('System requirements'), value: by('system') },
+                  { label: t('Subsystem requirements'), value: by('subsystem') },
+                  { label: t('Derived requirements traced to a parent'), value: `${traced} / ${below}` },
+                ],
+              }
+            }} />
           <Button variant="primary" size="sm" onClick={() => { setNewElementId(focusElementId || ''); setShowAdd(true) }}
             disabledReason={showAdd ? t('The add form is already open below') : undefined}>
             {t('+ Add Requirement')}
@@ -332,6 +347,18 @@ function SmartVerifyButton({ studyId }: { studyId: string | null }) {
             </span>
           )}
           {result.orphans > 0 && <StatusBadge status="caution">{t('{{count}} orphans', { count: result.orphans })}</StatusBadge>}
+          <RecordDecision decision="D-2.1-QUALITY" capture="requirements:verify" prefill={() => ({
+            evidence: [
+              { label: t('Requirements passing the SMART check'), value: result.smart_pass ?? 0 },
+              { label: t('Requirements with quality issues'), value: result.smart_fail ?? 0 },
+              { label: t('Orphan requirements (no parent)'), value: result.orphans ?? 0 },
+            ],
+            // The tool's findings, one line per requirement: the student says which get rewritten, split or deleted.
+            open_issues: [
+              ...(result.issues ?? []).slice(0, 12).map((i: any) => `${i.code ?? i.id ?? '?'}: ${(i.issues ?? []).join('; ')}`.slice(0, 160)),
+              ...((result.issues ?? []).length > 12 ? [t('{{n}} more requirements with issues', { n: result.issues.length - 12 })] : []),
+            ].join('\n') || undefined,
+          })} />
         </span>
       )}
       <Button size="sm" onClick={verify} busy={loading} title={t('Check each requirement is specific, measurable, achievable, relevant and traceable')}>
