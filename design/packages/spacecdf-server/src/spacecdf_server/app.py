@@ -205,6 +205,11 @@ app.include_router(rules_router.router, prefix="/api", tags=["Design rules"])
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)
 from .routers import gates as gates_router  # noqa: E402
 app.include_router(gates_router.router, prefix="/api", tags=["Review gates"])
+# SpaceCDF seats (WP9): seat API, instructor class board, server-side write guard
+from . import seats as seats_pkg  # noqa: E402
+app.include_router(seats_pkg.router, prefix="/api", tags=["Seats"])
+app.include_router(seats_pkg.instructor_router, prefix="/api/instructor", tags=["Instructor"])
+app.add_middleware(seats_pkg.SeatGuard)
 # Participant logbook + worksheets (same API as the ops tools)
 app.include_router(logbook.router, prefix="/api/logbook", tags=["Logbook"])
 app.include_router(ws.router, tags=["WebSocket"])
