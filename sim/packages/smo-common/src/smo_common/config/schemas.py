@@ -303,11 +303,15 @@ class TCSConfig(StrictModel):
     fpa_cooler_power_w: float = 15.0          # matches subsystems/payload.yaml
     fpa_cooler_carnot_fraction: float = 0.23  # miniature Stirling class
     fpa_imaging_load_w: float = 2.0           # detector/ROIC dissipation
-    # Declared so tcs.yaml's thermal_coupling / event_thresholds sections
-    # actually reach the TCS model (pydantic drops undeclared keys — that is
-    # why these sections read as "never used", defect #51).
-    thermal_coupling: dict[str, Any] = Field(default_factory=dict)
+    # Declared so tcs.yaml's event_thresholds section actually reaches the
+    # TCS model (pydantic drops undeclared keys — defect #51).
     event_thresholds: dict[str, Any] = Field(default_factory=dict)
+    #: The lumped-parameter thermal network (2026-11): nodes, external
+    #: surfaces, conductive / radiative couplings, dissipation map, cold-soak
+    #: parameters. Validated by smo_simulator.models.thermal_network.
+    #: build_network (unknown keys and dangling node names are errors).
+    #: Replaces the old `thermal_coupling:` block.
+    network: dict[str, Any] = Field(default_factory=dict)
     param_ids: dict[str, int] = Field(default_factory=dict)
 
 class OBDHConfig(StrictModel):
@@ -955,24 +959,25 @@ class SimEPSConfig(StrictModel):
 
 
 class SimTCSEnvironmentConfig(StrictModel):
-    """Thermal environment driving zone temperatures."""
-    eclipse_external_c: float = -30.0
-    eclipse_internal_c: float = 10.0
-    sunlit_external_base_c: float = -10.0
-    sunlit_external_beta_gain_c: float = 50.0
-    sunlit_internal_c: float = 12.0
-    # Battery-zone internal sink. The battery pack sits against the radiator
-    # side of the bus, colder than the electronics stack, so the battery
-    # thermostat is genuinely exercised (brief 05 defect 2 / WP-3). None =
-    # inherit eclipse_internal_c / sunlit_internal_c (legacy behaviour).
-    eclipse_battery_c: float | None = None
-    sunlit_battery_c: float | None = None
-    panel_solar_heat_fraction: float = 0.3
-    # TRIM multiplier on the physically-derived panel solar gain (1/UA per
-    # node). The old value 10.0 was applied ON TOP of an implicit 1/UA and
-    # made the gain ~80x too large (brief 05 finding 1 / WP-8): panel
-    # equilibrium temperatures reached +362 C. 1.0 = physical.
-    panel_solar_heat_gain: float = 1.0
+    """Orbital thermal environment for the TCS thermal network (2026-11).
+
+    The fixed-sink keys of the zone model (eclipse/sunlit internal and
+    external sink temperatures, a battery sink, panel solar-heat fractions)
+    went with that model: the network computes absorbed solar, albedo and
+    Earth-IR flux per surface from the attitude and the orbit instead
+    (docs/plan_2026-11/THERMAL_MODEL.md).
+    """
+    #: Solar flux at 1 AU [W/m2] (Kopp & Lean 2011 TSI, 1360.8 +- 0.5).
+    solar_flux_w_m2: float = 1361.0
+    #: Scale the solar flux with the true Sun-Earth distance from the
+    #: propagator (1/r^2: about 1322 W/m2 in July, 1414 W/m2 in January).
+    scale_solar_with_distance: bool = True
+    #: Earth bond albedo, orbit-average design value (Gilmore, Spacecraft
+    #: Thermal Control Handbook Vol. I, ch. 2: 0.30 +- 0.05 long-term).
+    albedo: float = 0.30
+    #: Earth outgoing long-wave radiation [W/m2] (Gilmore ch. 2: 237 mean,
+    #: 218 cold / 261 hot design cases).
+    earth_ir_w_m2: float = 237.0
 
 
 class SimTCSConfig(StrictModel):

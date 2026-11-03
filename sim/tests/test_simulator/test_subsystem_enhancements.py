@@ -420,14 +420,15 @@ class TestTCSBatteryHeater:
         never ON with the line dark."""
         model = self._make_model()
         orbit = make_orbit_state()
-        model._state.temp_obc = 0.0           # below the +5 C ON setpoint
+        # 2026-11: survival heater, ON -10 / OFF -5 C (was +5 / +10).
+        model._state.temp_obc = -15.0         # below the -10 C ON setpoint
         params = {0x0116: 1}
         model.tick(1.0, orbit, params)
         assert model._state.htr_obc is True
-        model._state.temp_obc = 25.0          # above the +10 C OFF setpoint
+        model._state.temp_obc = 25.0          # above the -5 C OFF setpoint
         model.tick(1.0, orbit, params)
         assert model._state.htr_obc is False
-        model._state.temp_obc = 0.0
+        model._state.temp_obc = -15.0
         model.tick(1.0, orbit, {0x0116: 0})   # line dark: no heater
         assert model._state.htr_obc is False
 
@@ -488,13 +489,19 @@ class TestTCSPanelTempCoupling:
             assert pid in params
 
     def test_illuminated_panel_warmer(self):
-        """A panel receiving solar current should be warmer."""
+        """A panel facing the sun should be warmer.
+
+        2026-11 (thermal network): illumination comes from the sun vector in
+        the body frame (here the standalone path, 0x02B3-B5), not from the
+        panel's solar CURRENT — the electrical power a face generates is now
+        heat it does NOT keep. The old version drove +X with 1 A of current
+        and no sun vector."""
         model = self._make_model()
         params = {}
         orbit = make_orbit_state(in_eclipse=False)
-        # Set per-panel solar current for +X face
-        params[0x012B] = 1.0  # px high solar current
-        params[0x012C] = 0.0  # mx no solar current
+        params[0x02B3] = 1.0  # sun along +X body
+        params[0x02B4] = 0.0
+        params[0x02B5] = 0.0
         initial_px = model._state.temp_panel_px
         initial_mx = model._state.temp_panel_mx
         # Set similar initial temps

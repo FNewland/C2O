@@ -53,7 +53,8 @@ def test_tcs_basic_tick():
     assert 0x0330 in params  # setpoint_bat (battery heater ON setpoint)
     assert 0x0331 in params  # setpoint_obc (OBC heater ON setpoint)
     assert params[0x0330] > 0  # Should have default value
-    assert params[0x0331] > 0  # Should have default value
+    # 2026-11: the OBC heater is a survival heater, ON at -10 C (tcs.yaml).
+    assert params[0x0331] == -10.0
 
 
 def test_obdh_basic_tick():
@@ -115,7 +116,7 @@ def test_tcs_setpoint_readback_defect3():
     # Phase B (brief 05 WP-3): default battery thermostat ON setpoint is
     # +5 C (was +1 C, which the battery node could never reach).
     assert params[0x0330] == 5.0  # Default battery ON setpoint
-    assert params[0x0331] == 5.0  # Default OBC ON setpoint
+    assert params[0x0331] == -10.0  # Default OBC ON setpoint (2026-11: survival heater)
 
     # Command new setpoints via set_setpoint
     model.handle_command({

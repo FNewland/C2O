@@ -88,24 +88,37 @@ def test_battery_heater_refused_until_its_line_is_powered_then_recovers(engine):
         f"battery did not recover: {cold:.1f} -> {tcs._state.temp_battery:.1f} C")
 
 
-def test_obc_heater_same_story_on_line_6(engine):
+def test_obc_heater_same_story_on_line_6(engine, tmp_path):
     tcs = engine.subsystems["tcs"]
-    _run(engine, 30)
-    # The 4 W OBC heater has ~4.5 K of authority (UA = 800 J/K / 900 s), so
-    # it can only claw back a few kelvin: that is the physics, not a bug.
-    tcs.inject_failure("cold_soak", zone="obc", offset_c=-10.0)
-    _run(engine, 2700)
-    cold = tcs._state.temp_obc
+    # Thermal network (2026-11): the 4 W OBC heater has P / G = 4 / 0.6 =
+    # 6.7 K of authority over the OBC's mount, while the rest of this bare
+    # fixture spacecraft keeps cooling through the orbit. The heater is
+    # therefore judged against a TWIN engine that never gets it (same seed,
+    # same commands otherwise), not against an absolute temperature — the old
+    # test assumed a fixed sink.
+    twin = engine.__class__(CONFIG_DIR)
+    twin._spacecraft_phase = 6
+    twin.subsystems["obdh"]._state.sw_image = 1
+    twin.subsystems["obdh"]._state.mode = 0
+    twin.subsystems["eps"]._state.power_lines["htr_bat"] = False
+    twin.subsystems["eps"]._state.power_lines["htr_obc"] = False
+    for eng in (engine, twin):
+        _run(eng, 30)
+        eng.subsystems["tcs"].inject_failure("cold_soak", zone="obc",
+                                             offset_c=-10.0)
+        _run(eng, 2700)
     _s8(engine, 41, 1)
     _run(engine, 10)
-    assert tcs._state.htr_obc is False
+    assert tcs._state.htr_obc is False          # line 6 dark: refused
     _s8(engine, 19, 6)
     _run(engine, 20)
     _s8(engine, 41, 1)
     _run(engine, 20)
     assert tcs._state.htr_obc is True
     _run(engine, 2700)
-    assert tcs._state.temp_obc > cold + 2.5
+    _run(twin, 2750)
+    gain = tcs.node_temperature("obc") - twin.subsystems["tcs"].node_temperature("obc")
+    assert gain > 4.0, f"OBC heater gained only {gain:.1f} K over the twin"
 
 
 def test_line_on_in_auto_holds_the_battery_without_ground_action(engine):
