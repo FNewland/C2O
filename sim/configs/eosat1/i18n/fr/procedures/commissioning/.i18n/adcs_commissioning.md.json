@@ -34,8 +34,8 @@
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-2-consolidated-platform-end-state-readback",
-   "en_hash": "e758035e2d6ea921",
-   "fr_hash": "8445a81b24bb40b9"
+   "en_hash": "343e5e8085803dcc",
+   "fr_hash": "c5c2358a9376b1fe"
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-3-consolidated-payload-end-state-readback",
@@ -68,5 +68,5 @@
    "fr_hash": "4c735488e70ca893"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "204d5cd"
 }

@@ -9,12 +9,20 @@ then cycle the heater, then restore the line to its entry state. The old
 Steps 4/5 also commanded the WRONG functions (func 41 HEATER_OBC labelled
 "battery", func 42 HEATER_THRUSTER labelled "OBC"); the funcs now match the
 circuits: 40 = battery, 41 = OBC.
+**Revision:** 2.1 --- 2026-11-02 (finding P1, Franz's ruling): the card no
+longer switches the heater lines back OFF. With lines 5/6 dark for the whole
+nominal phase the battery drifted from +17 C to the red (-0.3 C) in eclipse,
+and every emergency card's heater command was refused. A smallsat leaves its
+battery and OBC heater lines powered under thermostat control after
+commissioning; so does EOSAT-1 now. Each test ends with `HEATER_AUTO_MODE`,
+which hands the circuit back to its thermostat.
 **Approved:** Flight Operations Director
 
 **Entry state:** COM-001 exit state --- COARSE_SUN hold, phase 5. Heater lines
 `htr_bat` (5) / `htr_obc` (6) are OFF unless LEOP-007 Step 2 energised one for
 cause; read the LEOP log and `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc`
-(0x0116) before starting, and record both as the entry state to restore.
+(0x0116) before starting, and record both. This card leaves both lines ON
+with the heaters under thermostat control, whatever the entry state was.
 
 ## Purpose
 Verify the Thermal Control System by checking all monitored thermal zones against
@@ -65,9 +73,9 @@ trap the old card fell into.
 **Verify:** `tcs.temp_battery` (0x0407) rising or stable (heater counteracting cooling) within 180s
 **TC:** `HEATER_BATTERY(on=0)` (Service 8, Subtype 1, func_id 40)
 **Verify:** Battery heater OFF acknowledged within 5s
-**TC:** `EPS_POWER_OFF(line_index=5)` (Service 8, Subtype 1, func_id 20) — restore, ONLY if the line was OFF at entry
-**Verify:** `eps.pl_htr_bat` (0x0115) back to its recorded entry value within 5s
-**GO/NO-GO:** Battery heater circuit operational, line state restored
+**TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) — hand the battery circuit back to its thermostat (ON below +5 C, OFF above +10 C)
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 --- the line STAYS ON: this is the nominal configuration from now on
+**GO/NO-GO:** Battery heater circuit operational, line ON under thermostat control
 
 ### Step 5 — Test OBC Heater Circuit (establish state FIRST)
 **Action:** Record the entry state of `eps.pl_htr_obc` (0x0116).
@@ -78,9 +86,9 @@ trap the old card fell into.
 **Verify:** `tcs.temp_obc` (0x0406) stable or increasing within 120s
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41)
 **Verify:** OBC heater OFF acknowledged within 5s
-**TC:** `EPS_POWER_OFF(line_index=6)` (Service 8, Subtype 1, func_id 20) — restore, ONLY if the line was OFF at entry
-**Verify:** `eps.pl_htr_obc` (0x0116) back to its recorded entry value within 5s
-**GO/NO-GO:** OBC heater circuit operational, line state restored
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) — hand the OBC circuit back to its thermostat (ON below +5 C, OFF above +10 C)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 --- the line STAYS ON: this is the nominal configuration from now on
+**GO/NO-GO:** OBC heater circuit operational, line ON under thermostat control
 
 ### Step 6 — Verify Autonomous Heater Thermostat Settings
 **TC:** `GET_PARAM(param_id=0x0410)` (Service 20, Subtype 3) — battery heater ON threshold
@@ -123,8 +131,9 @@ trap the old card fell into.
 - [ ] Thermal Baseline Report generated
 
 ## Exit state
-- Heater lines restored to their recorded entry state (LEOP-007's
-  as-needed configuration); heater switches OFF
+- Heater lines `htr_bat` (5) and `htr_obc` (6) ON, both circuits in AUTO
+  (thermostat): the nominal configuration for the rest of the mission. A
+  heater command in any later card finds its line already powered
 - No mode, tier or latch changed by this card
 
 **NEXT:** COM-004 (AOCS Actuator Checkout --- enables the wheels and commands NOMINAL; COM-003 follows it, ruling Q16)

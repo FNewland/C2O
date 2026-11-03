@@ -9,12 +9,19 @@ puis cycler le réchauffeur, puis rétablir la ligne dans son état d'entrée. L
 étapes 4/5 commandaient en outre les MAUVAISES fonctions (func 41 HEATER_OBC étiquetée
 « batterie », func 42 HEATER_THRUSTER étiquetée « OBC ») ; les fonctions correspondent désormais aux
 circuits : 40 = batterie, 41 = OBC.
+**Révision :** 2.1 --- 2026-11-02 (constat P1, décision de Franz) : la fiche ne remet plus
+les lignes de réchauffeurs sur OFF. Avec les lignes 5/6 hors tension pendant toute la phase nominale,
+la batterie dérivait de +17 C jusqu'au rouge (-0,3 C) en éclipse, et toutes les commandes de réchauffeur
+des fiches d'urgence étaient refusées. Un petit satellite laisse ses lignes de réchauffeurs batterie et OBC
+sous tension, sous contrôle thermostatique, après la mise en service ; EOSAT-1 aussi, désormais. Chaque essai
+se termine par `HEATER_AUTO_MODE`, qui rend le circuit à son thermostat.
 **Approuvé par :** Directeur des opérations de vol
 
 **État d'entrée :** état de sortie de COM-001 --- maintien COARSE_SUN, phase 5. Les lignes de réchauffeurs
 `htr_bat` (5) / `htr_obc` (6) sont sur OFF, sauf si LEOP-007, étape 2, en a alimenté une pour
 une raison précise ; lire le journal LEOP ainsi que `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc`
-(0x0116) avant de commencer, et consigner les deux comme état d'entrée à rétablir.
+(0x0116) avant de commencer, et consigner les deux. Cette fiche laisse les deux lignes sur ON,
+réchauffeurs sous contrôle thermostatique, quel que soit l'état d'entrée.
 
 ## Objet
 Vérifier le sous-système de contrôle thermique en comparant toutes les zones thermiques surveillées
@@ -65,9 +72,9 @@ piège dans lequel l'ancienne fiche était tombée.
 **Verify:** `tcs.temp_battery` (0x0407) en hausse ou stable (le réchauffeur compense le refroidissement) sous 180s
 **TC:** `HEATER_BATTERY(on=0)` (Service 8, Subtype 1, func_id 40)
 **Verify:** Mise sur OFF du réchauffeur batterie acquittée sous 5s
-**TC:** `EPS_POWER_OFF(line_index=5)` (Service 8, Subtype 1, func_id 20) — rétablir, UNIQUEMENT si la ligne était sur OFF à l'entrée
-**Verify:** `eps.pl_htr_bat` (0x0115) revenu à sa valeur d'entrée consignée sous 5s
-**GO/NO-GO:** Circuit du réchauffeur batterie opérationnel, état de la ligne rétabli
+**TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) — rendre le circuit batterie à son thermostat (ON sous +5 C, OFF au-dessus de +10 C)
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 --- la ligne RESTE sur ON : c'est désormais la configuration nominale
+**GO/NO-GO:** Circuit du réchauffeur batterie opérationnel, ligne sur ON sous contrôle thermostatique
 
 ### Étape 5 — Essayer le circuit du réchauffeur OBC (établir l'état D'ABORD)
 **Action:** Consigner l'état d'entrée de `eps.pl_htr_obc` (0x0116).
@@ -78,9 +85,9 @@ piège dans lequel l'ancienne fiche était tombée.
 **Verify:** `tcs.temp_obc` (0x0406) stable ou en hausse sous 120s
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41)
 **Verify:** Mise sur OFF du réchauffeur OBC acquittée sous 5s
-**TC:** `EPS_POWER_OFF(line_index=6)` (Service 8, Subtype 1, func_id 20) — rétablir, UNIQUEMENT si la ligne était sur OFF à l'entrée
-**Verify:** `eps.pl_htr_obc` (0x0116) revenu à sa valeur d'entrée consignée sous 5s
-**GO/NO-GO:** Circuit du réchauffeur OBC opérationnel, état de la ligne rétabli
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) — rendre le circuit OBC à son thermostat (ON sous +5 C, OFF au-dessus de +10 C)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 --- la ligne RESTE sur ON : c'est désormais la configuration nominale
+**GO/NO-GO:** Circuit du réchauffeur OBC opérationnel, ligne sur ON sous contrôle thermostatique
 
 ### Étape 6 — Vérifier les réglages des thermostats autonomes des réchauffeurs
 **TC:** `GET_PARAM(param_id=0x0410)` (Service 20, Subtype 3) — seuil de mise sur ON du réchauffeur batterie
@@ -123,8 +130,9 @@ piège dans lequel l'ancienne fiche était tombée.
 - [ ] Rapport thermique de référence établi
 
 ## État de sortie
-- Lignes de réchauffeurs rétablies dans leur état d'entrée consigné (la configuration
-  « si nécessaire » de LEOP-007) ; interrupteurs des réchauffeurs sur OFF
+- Lignes de réchauffeurs `htr_bat` (5) et `htr_obc` (6) sur ON, les deux circuits en mode AUTO
+  (thermostat) : la configuration nominale pour le reste de la mission. Toute commande de réchauffeur
+  d'une fiche ultérieure trouve sa ligne déjà alimentée
 - Aucun mode, palier ou verrou modifié par cette fiche
 
 **PROCÉDURE SUIVANTE :** COM-004 (Vérification des actionneurs SCAO --- active les roues et commande NOMINAL ; COM-003 la suit, décision Q16)

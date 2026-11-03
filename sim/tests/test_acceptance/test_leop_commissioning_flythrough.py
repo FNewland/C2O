@@ -384,11 +384,10 @@ class TestLeopCommissioningFlyThrough:
 
     # ── COM-002: TCS verification (finding #11) ─────────────────────
     def test_com_002_tcs_heaters(self, fly):
-        bat_line_before = int(fly.p(0x0115) or 0)
-        obc_line_before = int(fly.p(0x0116) or 0)
-
         # Establish state FIRST: power the heater line, then cycle the
-        # heater, then restore the line to its entry state.
+        # heater, then hand it back to its thermostat with the line LEFT ON
+        # (P1, Franz 2026-11-02: a dark battery-heater line let the battery
+        # drift into the red in nominal ops).
         fly.s8(19, 5, label="EPS_POWER_ON htr_bat")
         fly.run(2)
         fly.verify(0x0115, lambda v: int(v) == 1, "htr_bat line on")
@@ -403,14 +402,14 @@ class TestLeopCommissioningFlyThrough:
         fly.run(20)
         fly.s8(41, 0, label="HEATER_OBC off")
 
-        # Exit state: restore what the card changed (finding #9).
-        if not bat_line_before:
-            fly.s8(20, 5, label="EPS_POWER_OFF htr_bat")
-        if not obc_line_before:
-            fly.s8(20, 6, label="EPS_POWER_OFF htr_obc")
+        # Exit state: both lines ON, both circuits back in AUTO (thermostat).
+        fly.s8(45, 0, label="HEATER_AUTO_MODE battery")
+        fly.s8(45, 1, label="HEATER_AUTO_MODE obc")
         fly.run(2)
-        assert int(fly.p(0x0115) or 0) == bat_line_before
-        assert int(fly.p(0x0116) or 0) == obc_line_before
+        assert int(fly.p(0x0115) or 0) == 1
+        assert int(fly.p(0x0116) or 0) == 1
+        tcs = fly.eng.subsystems["tcs"]._state
+        assert tcs.htr_battery_manual is False and tcs.htr_obc_manual is False
 
     # ── COM-004: actuator checkout (enable BEFORE exercising, #6) ───
     # Ruling Q16 (2026-10-30): COM-004 now flies straight after COM-002,
@@ -689,6 +688,8 @@ class TestLeopCommissioningFlyThrough:
         fly.verify(0x0260, lambda v: int(v) == 4, "wheels enabled")
         fly.verify(0x02D1, lambda v: int(v) == 7, "gyros powered")
         fly.verify(0x0129, lambda v: int(v) == 5, "still COMMISSIONING")
+        fly.verify(0x0115, lambda v: int(v) == 1, "htr_bat line ON (COM-002)")
+        fly.verify(0x0116, lambda v: int(v) == 1, "htr_obc line ON (COM-002)")
 
         fly.s8(120, 6, 0, label="SYS_SET_MISSION_PHASE(6)")
         fly.run(5)

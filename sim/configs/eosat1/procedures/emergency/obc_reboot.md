@@ -1,7 +1,9 @@
 # EMG-003: OBC Reboot
 **Subsystem:** OBDH
 **Phase:** EMERGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's ruling P1): Step 8 powers the OBC
+heater line before restoring the heater (the old `HEATER_OBC(on=1)` was refused
+S1.8 "EPS power line 6 is OFF") and returns it to its thermostat.
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -144,8 +146,12 @@ unit. Escalate to OBDH engineer for investigation.
 ### Step 8 --- Restore Operational Mode and Log Results
 **TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) --- transition OBC to NOMINAL mode
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) within 5 s
-**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- restore OBC heater
-**Verify:** `tcs.htr_obc` (0x040B) = 1 (active)
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- the OBC heater line first (no-op if already ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5 s
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- restore OBC heater: back on its thermostat (Step 2 switched it OFF manually)
+**Verify:** `tcs.htr_obc` (0x040B) consistent with the thermostat --- 1 while `tcs.temp_obc` (0x0406) is below +5 C, 0 above +10 C
+**Note:** If the OBC is cold and not recovering, force the heater with
+`HEATER_OBC(on=1)` (func_id 41) and return it to AUTO once warm.
 **Action:** Log reboot results:
   - Reboot cause (anomaly description)
   - Pre-reboot state: CPU load, memory errors, mode, SEU count

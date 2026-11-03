@@ -1,7 +1,10 @@
 # CTG-004: Thermal Exceedance
 **Subsystem:** TCS
 **Phase:** CONTINGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's ruling P1): each cold-case heater
+command is preceded by `EPS_POWER_ON` for its line, with a check. With the line
+dark the heater ON is refused S1.8 and nothing heats --- so in a contingency
+where a zone has gone cold the team can always switch its heater on.
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -39,6 +42,8 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **BRANCH:** `tcs.temp_battery < 2` -> GO `STEP-2A-BAT` | NO-GO `STEP-2A-OBC` (timeout 10 s)
 **LABEL:** `STEP-2A-BAT`
 **Note:** Battery cold:
+**TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — the `htr_bat` line first (no-op if already ON)
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 within 5s
 **TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40)
 **TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) within 5s
@@ -46,6 +51,8 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2A-OBCON`
 **Note:** OBC cold:
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — the `htr_obc` line first (no-op if already ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5s
 **TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41)
 **TC:** `GET_PARAM(param_id=0x040B)` (Service 20, Subtype 3) — `tcs.htr_obc`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_obc` (0x040B) = 1 (ON) within 5s
