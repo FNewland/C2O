@@ -187,11 +187,14 @@ class TTCState:
     # Seconds since the OBC last ACCEPTED a telecommand (S1.1). The OBC's own
     # accepted-TC counter (0x0305 obdh.tc_acc_count) is the evidence: every
     # increment restarts the timer. Published as 0x053D ttc.time_since_last_tc.
-    # When it crosses ttc.yaml `cmd_loss_switch_timeout_s` (24 h) the model
-    # raises event 0x0514 CMD_LOSS_TIMEOUT once per loss episode.
+    # Every time it crosses a whole multiple of ttc.yaml
+    # `cmd_loss_switch_timeout_s` (24 h, 48 h, 72 h ...) the model raises event
+    # 0x0514 CMD_LOSS_TIMEOUT, and S19 ea 4003 toggles to the OTHER transponder
+    # (TTC_SWITCH_OTHER, S8 func 99). The timer is re-armed by each expiry and
+    # reset by any accepted TC (Franz, 2026-11-02: the switch goes both ways).
     time_since_last_tc_s: float = 0.0
     _last_tc_acc_count: float = -1.0
-    _cmd_loss_fired: bool = False
+    _cmd_loss_fires: int = 0     # expiries already raised in this loss episode
 
     # ── Uplink lock dropout (S19 ea 4001) ──
     # What a receiver can really see of a weak uplink: carrier lock lost and
@@ -1162,7 +1165,7 @@ class TTCBasicModel(SubsystemModel):
             tc_acc = float(tc_acc)
             if s._last_tc_acc_count >= 0.0 and tc_acc > s._last_tc_acc_count:
                 s.time_since_last_tc_s = 0.0
-                s._cmd_loss_fired = False
+                s._cmd_loss_fires = 0
             else:
                 s.time_since_last_tc_s += dt
             s._last_tc_acc_count = tc_acc
@@ -1839,16 +1842,23 @@ class TTCBasicModel(SubsystemModel):
         self._prev_uplink_timeout = uplink_timeout
 
         # ── Command-loss timeout (0x0514, FDIR TTC-01) ──
-        if (s.time_since_last_tc_s >= self._cmd_loss_timeout_s
-                and not s._cmd_loss_fired):
+        # Re-arming: the timer expires at 1x, 2x, 3x ... the timeout after the
+        # last accepted TC, and each expiry raises 0x0514 once (S19 ea 4003
+        # then toggles to the other transponder). With both units dead it
+        # keeps toggling every 24 h — harmless, and exactly what a real
+        # on-board timer would do: it cannot tell a deaf receiver from a quiet
+        # ground. 0x053D keeps meaning "time since the last accepted TC".
+        if (self._cmd_loss_timeout_s > 0.0
+                and s.time_since_last_tc_s
+                >= (s._cmd_loss_fires + 1) * self._cmd_loss_timeout_s):
+            s._cmd_loss_fires += 1
             events.append({
                 'event_id': 0x0514,
                 'severity': 'HIGH',
                 'description': (
                     f"Command-loss timer expired: no valid telecommand for "
-                    f"{self._cmd_loss_timeout_s / 3600.0:.0f} h"),
+                    f"{s._cmd_loss_fires * self._cmd_loss_timeout_s / 3600.0:.0f} h"),
             })
-            s._cmd_loss_fired = True
 
         # ── Emit events to shared store and engine event queue ──
         for evt in events:
@@ -1882,6 +1892,19 @@ class TTCBasicModel(SubsystemModel):
                 return {"success": False, "message": "Redundant XPDR failed"}
             self._state.mode = 1
             return {"success": True}
+
+        elif command == "switch_other":
+            # TTC_SWITCH_OTHER (S8 func 99), the action of FDIR TTC-01 (S19
+            # ea 4003): select whichever transponder is NOT selected. It is
+            # BLIND on purpose — the units are cold-redundant, so the OBC has
+            # no health telemetry from the unpowered one and cannot know
+            # whether it works. Switching onto a dead unit is possible; the
+            # next 24 h expiry toggles back. (The ground's explicit 63/64
+            # selections keep refusing a unit the simulator knows is failed.)
+            self._state.mode = 1 if self._state.mode == 0 else 0
+            return {"success": True,
+                    "message": ("redundant" if self._state.mode == 1
+                                else "primary") + " transponder selected"}
 
         elif command == "switch_primary":
             if self._state.primary_failed:

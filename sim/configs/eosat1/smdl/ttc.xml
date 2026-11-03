@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="TTC" Creator="EOSAT-1 SMDL Generator" Version="1.0+a14e11c0c833">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="TTC" Creator="EOSAT-1 SMDL Generator" Version="1.0+57d9b01ba55c">
   <Description>SMP2 model catalogue for TTC subsystem</Description>
   <Type Name="UInt8" Uuid="ab46787a-5742-5d41-9471-82b8d26b3826" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="00ba295b-550c-5551-b87d-d604e30c7592" xsi:type="Integer" Size="2" Signed="false"/>
@@ -109,7 +109,7 @@
       <Description>DOWNLINK / payload-dump mode (TTC_SET_DOWNLINK_MODE, S8 func 79). 0=off, 1=on. This is the mode gate on the HIGH tier</Description>
     </Field>
     <Field Name="ttc_time_since_last_tc" Uuid="badedadc-a2d8-5e93-b265-10d2410f7830" Type="Float32" Kind="Output" View="true">
-      <Description>On-board command-loss timer: seconds since the OBC last accepted a telecommand (restarts on every S1.1). At ttc.yaml cmd_loss_switch_timeout_s (24 h) event 0x0514 CMD_LOSS_TIMEOUT fires and S19 ea 4003 switches to the redundant transponder (FDIR TTC-01) [s]</Description>
+      <Description>On-board command-loss timer: seconds since the OBC last accepted a telecommand (restarts on every S1.1). Every ttc.yaml cmd_loss_switch_timeout_s (24 h, 48 h, ...) event 0x0514 CMD_LOSS_TIMEOUT fires and S19 ea 4003 switches to the other transponder (FDIR TTC-01) [s]</Description>
     </Field>
     <Field Name="ttc_active_gs" Uuid="948b7ba0-81b4-577d-afb4-8b32929f3f1b" Type="Float32" Kind="Output" View="true">
       <Description>Active ground station: 1-based index into orbit.yaml ground_stations, 0 = out of contact</Description>

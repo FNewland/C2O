@@ -36,7 +36,9 @@ The three downlink rates are the rungs of the **TM data-rate ladder**
 raising the downlink rate never raises the uplink rate.
 
 Only one transponder is active at any time. The redundant unit is powered off (cold standby)
-and can be activated by ground command via `TTC_SWITCH_REDUNDANT`.
+and can be activated by ground command via `TTC_SWITCH_REDUNDANT`. If no telecommand is
+accepted for 24 h, the on-board command-loss timer switches to the other unit by itself, and
+keeps switching every 24 h until a telecommand is accepted (FDIR TTC-01, §8).
 
 ### 2.2 Dedicated PDM Command Channel {#22-dedicated-pdm-command-channel}
 
@@ -292,6 +294,7 @@ downlink, and a median gap of about 33 minutes between contacts (`tools/pass_gap
 |-----------------------|----------|------------|--------------------------------------|
 | TTC_SWITCH_PRIMARY    | S8,S1    | —          | Activate primary transponder         |
 | TTC_SWITCH_REDUNDANT  | S8,S1    | —          | Activate redundant transponder       |
+| TTC_SWITCH_OTHER      | S8,S1    | —          | Activate the unit not selected (blind; the FDIR TTC-01 action) |
 | HK_REQUEST            | S3,S27   | sid=5      | Request TTC housekeeping packet      |
 | GET_PARAM             | S20,S3   | param_id   | Read individual TTC parameter        |
 | SET_PARAM             | S20,S1   | param_id, value | Modify TTC configuration parameter |
@@ -340,7 +343,7 @@ Schedule switchover commands with sufficient contact time remaining.
 
 | Failure                     | Detection                   | Response                        |
 |-----------------------------|-----------------------------|---------------------------------|
-| Primary transponder failure | No valid telecommand for > 24 h (`cmd_loss_switch_timeout_s`) | Switch to redundant (FDIR TTC-01, see `08_fdir.md` §4.5) |
+| Selected transponder failure (primary or redundant) | No valid telecommand for > 24 h (`cmd_loss_switch_timeout_s`) | Switch to the other unit, then again every 24 h until a TC is accepted (FDIR TTC-01, see `08_fdir.md` §4.5) |
 | RSSI degradation            | rssi < -105 dBm (`cmd_loss_rssi_threshold_dbm`) | Switch to low-rate, investigate |
 | Antenna deployment failure  | No RSSI after burn wire     | Try redundant burn wire circuit |
 | TX auto-off (15 min timer)  | No downlink, RX still active| Expected behaviour; send command to re-enable TX |
