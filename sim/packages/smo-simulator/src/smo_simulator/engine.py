@@ -1840,6 +1840,21 @@ class SimulationEngine:
         return bool(self._override_passes
                     or getattr(self, "_auto_tx_remaining", 0.0) > 0.0)
 
+    def _station_measurements(self) -> dict:
+        """The TT&C model's ground-receiver monitoring block (see
+        ``TTCBasicModel.station_measurements``); ``{"signal": False}`` with a
+        reason when there is no TT&C model."""
+        ttc = self.subsystems.get("ttc") if hasattr(self, "subsystems") else None
+        fn = getattr(ttc, "station_measurements", None)
+        if fn is None:
+            return {"source": "link_model", "signal": False,
+                    "reason": "no TT&C model"}
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001 — a state read must not raise
+            return {"source": "link_model", "signal": False,
+                    "reason": f"station model error: {e}"}
+
     def _ttc_radio_alive(self, selected: bool) -> bool:
         """Is an S-band transponder alive? ``selected=True`` asks about the
         unit currently selected (it carries the downlink); ``False`` about
@@ -4633,6 +4648,13 @@ class SimulationEngine:
                 # Mirrored here so the TT&C tab does not have to reach into
                 # the EPS block to explain an inhibited downlink.
                 'ttc_tx_line_on': bool(p.get(0x0112, 0)),
+                # Ground-station receiver monitoring data (M1, 2026-11-02):
+                # RSSI / margin / BER / Eb/N0 / AGC as the STATION measures
+                # them, or no numbers and a reason when it has no signal. The
+                # MCS shows these on the TT&C page as station-measured and
+                # uses them in GO/NO-GO checks; the flat fields above are the
+                # model's raw values and keep their old meaning.
+                'station': self._station_measurements(),
             },
             'payload': {
                 'mode': int(p.get(0x0600, 0)),

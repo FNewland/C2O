@@ -516,6 +516,9 @@ if [ "$SMO_PROFILE" != "space" ]; then
 # simulator (all) or the GSG (ground; UP_* and MCS_TC_ARGS are set above).
 if [ -n "$RF_MODE" ]; then
     echo "==> Starting MCS on $SMO_BIND:9090 (via RF bridge: TM:8012, TC:8011)..."
+    # The station receiver's monitoring data (RSSI, margin, BER, Eb/N0, AGC)
+    # comes from the RF bridge's radio status when it runs (finding M1).
+    SMO_RADIO_STATUS_URL="${SMO_RADIO_STATUS_URL:-http://$PROBE_HOST:8094/api/status}" \
     smo-mcs --config configs/eosat1/ --port 9090 --host "$SMO_BIND" --connect "$PROBE_HOST:8012" --tc-port 8011 --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
 elif [ "$SMO_PROFILE" = "ground" ]; then
     echo "==> Starting MCS on $SMO_BIND:9090 (via GSG: TM:$UP_TM_PORT, TC:$SMO_GSG_TC_PORT)..."

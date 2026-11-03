@@ -338,6 +338,24 @@ export function paramTriad(hexId) {
   return eng !== null ? renderParam({ ...def, units: "", eng }, raw, lim)
     : renderParam(def, raw, lim);
 }
+/* Where the station-measured link figures came from (M1). RSSI, margin,
+   BER, Eb/N0 and AGC are the ground receiver's monitoring data, not
+   spacecraft TM; with no signal there are no numbers, and this says why. */
+export function stationLinkNote() {
+  const st = (S.state || {}).station_link;
+  const ids = "0x0502 · 0x0503 · 0x050C · 0x0519 · 0x051A";
+  if (!st || !st.source) {
+    return `${t("Station-measured ({{ids}}): no station monitoring data", { ids })}`;
+  }
+  const src = st.source === "radio" ? tText("station receiver (RF bridge)")
+    : tText("station receiver (simulated from the link budget; no RF bridge)");
+  if (!st.signal) {
+    return `${t("Station-measured ({{ids}}) from {{src}}: no signal", { ids, src })}` +
+      (st.reason ? ` — ${esc(st.reason)}` : "");
+  }
+  const band = st.band === "UHF" ? ` · ${t("UHF beacon")}` : "";
+  return `${t("Station-measured ({{ids}}) from {{src}}, not spacecraft TM", { ids, src })}${band}`;
+}
 function pushSeries(hexId, v) {
   if (!Number.isFinite(Number(v))) return;
   const s = S.series[hexId] || (S.series[hexId] = []);
@@ -1416,7 +1434,10 @@ const L2 = {
       ["RW4", "0x020A", "RPM"], ["ST1", "0x0241", "stars"], ["ST2", "0x0242", "stars"],
       ["GYRO", "0x0273", "°C"], ["GPS", "0x0276", "sats"]] },
   ttc: { title: "Telemetry, tracking & command", sym: "sch-ttc",
-    key: ["0x0502", "0x0503", "0x050C", "0x050F", "0x0506", "0x0519"],
+    // 0x0502/0x0503/0x050C/0x0519/0x051A are STATION-measured (M1): they
+    // come from the ground receiver's monitoring feed (`station_link`), not
+    // from the spacecraft, and the note under the card says so.
+    key: ["0x0502", "0x0503", "0x050C", "0x0519", "0x051A", "0x050F", "0x0506"],
     stepper: () => {
       const locks = [paramVal("0x0510"), paramVal("0x0511"), paramVal("0x0512")]
         .map((v) => Number(v) >= 1);
@@ -1495,7 +1516,8 @@ function buildSubsystemPage(pageId) {
       </div>
       <div class="g l2-col" style="align-content:start">
         <div class="ds-card"><h2 data-i18n>Key parameters</h2>
-          <div class="bd" id="${pageId}-params"></div></div>
+          <div class="bd" id="${pageId}-params"></div>
+          ${pageId === "ttc" ? `<div class="bd ds-meta" id="ttc-station-note"></div>` : ""}</div>
         ${(DERIVED_BY_PAGE[pageId] || []).length || FIT_PAGES.includes(pageId) ? `
         <div class="ds-card"><h2 data-i18n>Projections <span class="r" data-i18n>ground-derived · not downlinked</span></h2>
           <div class="bd">
@@ -1626,6 +1648,7 @@ function updateSubsystemPage(pageId, full) {
   // key param triads + embedded sparklines
   setHTML(`${pageId}-params`, cfg.key.map((h) =>
     `<div class="kp">${paramTriad(h)}${spark(h)}</div>`).join(""));
+  if (pageId === "ttc") setHTML("ttc-station-note", stationLinkNote());
   // stepper (ONE component for all chains — P5)
   const stp = cfg.stepper();
   // A chain widget reads as "this IS the state right now". Without a staleness
@@ -3839,7 +3862,7 @@ function renderParamsPanel() {
       <td class="mono hexid">${esc(p.hex)}</td><td>${esc(p.name)}</td><td>${esc(p.subsystem)}</td>
       <td>${p.in_hk ? "HK" : ""}</td><td>${p.on_demand ? "OD" : ""}</td>
       <td class="num">${valueCell(p.hex, null, p.units || "")}</td>
-      <td>${p.on_demand || !p.in_hk
+      <td>${p.origin !== "station" && (p.on_demand || !p.in_hk)
         ? `<button class="ds-btn sm" data-od-get="${esc(p.hex)}"
             aria-label="${esc(tText("Fetch {{name}} on demand, TC(20,3)", { name: p.name }))}">${t("Get")} (20,3)</button>` : ""}</td></tr>`;
   }).join("");

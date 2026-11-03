@@ -236,6 +236,10 @@ services:
       SMO_BIND: 0.0.0.0
       SMO_SIM_STATE_URL: http://127.0.0.1:8080/api/state
       SMO_PLANNER_URL: http://127.0.0.1:9091
+      # Station receiver monitoring data (finding M1): the RF bridge's radio
+      # status when the rf profile runs. Without the bridge the poll is
+      # refused and the MCS uses the simulator's link-model figures instead.
+      SMO_RADIO_STATUS_URL: http://127.0.0.1:8094/api/status
       <<: *logbook-env
     volumes:
       - ground-workspace:/opt/smo/workspace
