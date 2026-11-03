@@ -463,7 +463,11 @@ async def handle_failure_catalog(request):
     model puts it in this response — and therefore in the UI — with no UI edit.
     """
     from smo_simulator import failure_catalog
-    return web.json_response(failure_catalog.to_dict())
+    # 2026-11-03: each failure also carries its expected first symptoms
+    # (configs/<mission>/instructor/expected_symptoms.yaml).
+    engine = request.app.get("engine") if hasattr(request.app, "get") else None
+    return web.json_response(failure_catalog.to_dict(
+        getattr(engine, "config_dir", None)))
 
 
 async def handle_breakpoint_list(request):

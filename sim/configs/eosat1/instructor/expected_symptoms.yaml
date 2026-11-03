@@ -1,0 +1,317 @@
+# Expected first symptoms per failure (Franz's ruling, 2026-11-03;
+# docs/plan_2026-11/REDESIGN_DECISIONS.md "Model round 2", M6).
+#
+# The instructor console times "inject -> first symptom" to the first of THESE
+# (instructor/recorder.py), not to the first warning of any kind: an eclipse,
+# another failure or a team action can raise a warning that has nothing to do
+# with the inject. Served with each failure by GET /api/failure-catalog.
+#
+# Every failure in the catalogue (smo_simulator.failure_catalog) has an entry;
+# tests/test_simulator/test_expected_symptoms.py enforces it. Derived and
+# checked by injecting each failure headless at its default parameters,
+# against a run without it:
+#     python3 tools/failure_symptoms.py --report     (what trips, and when)
+#     python3 tools/failure_symptoms.py --check      (exit 1 on a mismatch)
+#
+# Per failure (key `subsystem.failure`):
+#   context    spacecraft state for the check: nominal (NOMINAL nadir, payload
+#              STANDBY, heater lines and transmitter on), imaging (FPA cooled,
+#              FINE, IMAGING, a capture every 60 s) or contact (nominal with
+#              the pass override on). Default nominal.
+#   window_s   how long the check waits for a symptom. Default 1800.
+#   checkable  false when the symptom needs something the check does not do
+#              (a reboot, a burn, a magnetorquer dump); `reason` says what.
+#   symptoms   any of
+#                {event: id}            S5 event (any severity)
+#                {s12: param_id}        S12 monitor violation (S5 0x9xxx)
+#                {param: id, limit: true}   leaves its mcs/limits.yaml band
+#                {param: id, below: x} / {param: id, above: x}
+#                {param: id, change: x} moves by x from its value at inject
+#                {clock_offset_s: x}    on-board clock moves x s from true
+#                                       time (relative to its offset at
+#                                       the inject)
+#              A `param` symptom may carry `when: {param, value}`: judged
+#              only while that parameter has that value (0x0108 = 0: sunlit),
+#              and `for_s: n`: the condition must hold n s without a break.
+#              The recorder takes the earliest one met.
+
+expected_symptoms:
+  # ── AOCS ──────────────────────────────────────────────────────────────
+  aocs.css_failure:
+    window_s: 3600                           # may be injected in eclipse
+    symptoms:
+      - {param: 0x0248, below: 0.5, when: {param: 0x0108, value: 0}}   # CSS invalid in sunlight
+  aocs.css_head_fail:
+    window_s: 3600
+    checkable: false
+    reason: "the skew depends on where the sun is in the body frame; in NOMINAL nadir pointing it shows only while the sun is on the failed head's face, and the AOCS does not use the CSS there"
+    symptoms:
+      - {param: 0x0245, change: 0.3, when: {param: 0x0108, value: 0}}  # CSS sun X skews in sunlight (px head)
+  aocs.gain_corruption:
+    checkable: false
+    reason: "measured: with the default factor 10 on Y the loop stays stable in NOMINAL nadir pointing for 30 min (no attitude-error monitor trips); the corrupted register shows on an S6 memory dump of the gain block"
+    symptoms:
+      - {s12: 0x0217}                        # attitude error monitor
+      - {param: 0x02A9, change: 30.0}        # fine control error moves
+  aocs.gyro_bias:
+    symptoms:
+      - {event: 0x020B}                      # GYRO_BIAS_HIGH
+      - {param: 0x02C2, change: 3.0}         # star-tracker fixes rejected
+  aocs.mag_failure:
+    symptoms:
+      - {param: 0x025C, below: 0.5}          # aocs.mag_enabled / valid
+  aocs.mtq_failure:
+    checkable: false
+    reason: "a magnetorquer only matters while it is used (detumble or a momentum dump); in NOMINAL nadir pointing the momentum envelope grows first"
+    symptoms:
+      - {s12: 0x02BA}                        # momentum envelope monitor
+  aocs.multi_wheel_failure:
+    symptoms:
+      - {event: 0x0202}                      # RW_BEARING_DEGRADED
+      - {s12: 0x0217}
+  aocs.rw_bearing:
+    symptoms:
+      - {s12: 0x0217}                        # pointing degrades first
+      - {param: 0x0218, limit: true}         # wheel temperature
+      - {event: 0x0202}
+  aocs.rw_seizure:
+    symptoms:
+      - {event: 0x0202}
+      - {s12: 0x0217}
+  aocs.st_blind:
+    symptoms:
+      - {s12: 0x0240}
+      - {event: 0x0203}                      # ST_BLIND
+  aocs.st_failure:
+    symptoms:
+      - {s12: 0x0240}
+
+  # ── EPS ───────────────────────────────────────────────────────────────
+  eps.bat_cell:
+    symptoms:
+      - {s12: 0x0105}
+      - {event: 0x0104}                      # BUS_UNDERVOLTAGE_CRITICAL
+      - {event: 0x0106}                      # LOAD_SHED_STAGE_1
+  eps.bus_short:
+    symptoms:
+      - {s12: 0x0105}
+      - {event: 0x0103}                      # BUS_UNDERVOLTAGE_WARNING
+      - {param: 0x0106, change: 15.0}        # power consumption jumps
+  eps.overcurrent:
+    symptoms:
+      - {event: 0x010F}                      # PDU_OVERCURRENT (line trips)
+      - {param: 0x011B, change: 0.1}         # payload line current x3
+  eps.overvoltage:
+    symptoms:
+      - {param: 0x010F, above: 0.5}          # eps.ov_flag
+  eps.sada_stuck:
+    window_s: 5400
+    # Measured: the string-yield monitors do NOT see it — their validity
+    # ("a healthy string would give >= 0.2 A") is computed at the actual,
+    # frozen drive angle, so the strings read "not lit", not "degraded".
+    symptoms:
+      - {param: 0x0147, below: 0.3, for_s: 180, when: {param: 0x0108, value: 0}}   # -Y wing current low in sunlight
+      - {param: 0x0146, below: 0.3, for_s: 180, when: {param: 0x0108, value: 0}}   # +Y wing current low in sunlight
+  eps.solar_array_partial:
+    window_s: 3600
+    symptoms:
+      - {s12: 0x014C}                        # string A yield, while lit
+  eps.solar_array_total_loss:
+    window_s: 3600
+    symptoms:
+      - {s12: 0x014C}
+      - {s12: 0x014D}
+      - {event: 0x010B}                      # SOLAR_ARRAY_DEGRADED
+  eps.solar_panel_loss:
+    window_s: 3600
+    symptoms:
+      - {s12: 0x014C}
+  eps.undervoltage:
+    symptoms:
+      - {s12: 0x0105}
+      - {event: 0x0103}
+
+  # ── OBDH ──────────────────────────────────────────────────────────────
+  obdh.boot_image_corrupt:
+    checkable: false
+    reason: "the image is checked at the NEXT application boot; until then nothing on board shows it"
+    symptoms:
+      - {event: 0x0305}                      # BOOT_FAILURE
+      - {param: 0x0A15, above: 2.5}          # obdh.boot_state = FAILED
+  obdh.bus_failure:
+    symptoms:
+      - {event: 0x0304}                      # BUS_FAILURE
+  obdh.clock_drift:
+    window_s: 3600
+    symptoms:
+      - {clock_offset_s: 1.0}                # packet time stamps walk away
+  obdh.cpu_spike:
+    symptoms:
+      - {s12: 0x0302}
+      - {param: 0x0302, limit: true}
+  obdh.memory_corruption:
+    symptoms:
+      - {event: 0x0301}                      # OBC_REBOOT
+      - {event: 0x0302}                      # MEMORY_ERROR
+      - {event: 0x0054}                      # reverted to the bootloader
+  obdh.memory_errors:
+    symptoms:
+      - {event: 0x0302}                      # MEMORY_ERROR
+      - {event: 0x0301}
+      - {param: 0x031E, change: 1.0}         # obdh.mem_errors
+  obdh.memory_segment_fail:
+    symptoms:
+      - {param: 0x031E, change: 1.0}
+      - {param: 0x0303, change: 3.0}         # mmm_used rises
+  obdh.obc_crash:
+    symptoms:
+      - {event: 0x0301}
+      - {event: 0x0054}
+  obdh.stuck_in_bootloader:
+    symptoms:
+      - {event: 0x0054}
+      - {event: 0x0301}
+  obdh.watchdog_reset:
+    symptoms:
+      - {event: 0x0303}                      # WATCHDOG_TIMEOUT
+      - {event: 0x0301}
+      - {event: 0x0054}
+
+  # ── Payload (imaging: FPA cooled, FINE, IMAGING, captures) ────────────
+  payload.ccd_line_dropout:
+    context: imaging
+    symptoms:
+      - {param: 0x060D, below: 95.0}         # quality of the last product
+  payload.cooler_failure:
+    context: imaging
+    symptoms:
+      - {event: 0x0606}                      # COOLER_FAILURE
+  payload.fpa_degraded:
+    context: imaging
+    symptoms:
+      - {param: 0x0620, change: 2.5}         # band SNR falls
+  payload.image_corrupt:
+    context: imaging
+    symptoms:
+      - {s12: 0x0609}                        # checksum errors monitor
+      - {event: 0x0607}                      # IMAGE_CHECKSUM_ERROR
+  payload.memory_segment_fail:
+    context: imaging
+    symptoms:
+      - {event: 0x060A}                      # BAD_SEGMENT_DETECTED
+
+  # ── Propulsion ────────────────────────────────────────────────────────
+  prop.latch_stuck_open:
+    symptoms:
+      - {event: 0x080A}                      # PROP_VALVE_FAULT
+  prop.leak:
+    symptoms:
+      - {event: 0x080B}                      # PROP_LEAK_DETECTED
+  prop.tank_overpressure:
+    symptoms:
+      - {s12: 0x0B01}
+  prop.thrust_degraded:
+    symptoms:
+      - {event: 0x080C}                      # PROP_UNDERPERFORMANCE
+
+  # ── TCS ───────────────────────────────────────────────────────────────
+  tcs.cold_soak:
+    symptoms:
+      - {s12: 0x0407}                        # default zone: battery
+      - {event: 0x0402}                      # undertemp warning
+  tcs.cooler_failure:
+    context: imaging
+    symptoms:
+      - {event: 0x040B}                      # FPA_THERMAL_NOT_READY
+      - {event: 0x0604}                      # FPA_OVERTEMP
+  tcs.heater_failure:
+    symptoms:
+      - {event: 0x0407}                      # HEATER_STUCK_OFF
+  tcs.heater_open_circuit:
+    checkable: false
+    reason: "shows only when the thermostat calls for heat (battery at its +5 C ON point): the heater then reads ON and the battery keeps cooling; in the nominal state the battery can stay above +5 C for hours"
+    window_s: 5400
+    symptoms:
+      - {param: 0x0407, below: 3.5}          # battery keeps cooling below
+                                             # its +5 C thermostat ON point
+      - {param: 0x0407, limit: true}
+  tcs.heater_stuck_on:
+    symptoms:
+      - {event: 0x0406}                      # HEATER_STUCK_ON
+  tcs.obc_thermal:
+    symptoms:
+      - {param: 0x0406, change: 10.0}        # OBC temperature climbs
+      - {s12: 0x0406}
+  tcs.sensor_drift:
+    symptoms:
+      - {param: 0x0407, above: 14.0}         # battery reads +10 K high
+  tcs.temp_anomaly:
+    symptoms:
+      - {s12: 0x0407}
+      - {event: 0x0400}
+
+  # ── TT&C (contact: pass override on) ──────────────────────────────────
+  ttc.antenna_deploy_failed:
+    symptoms:
+      - {event: 0x050D}
+  ttc.gs_antenna_mispoint:
+    context: contact
+    symptoms:
+      - {param: 0x0524, below: 14.5}         # GS equipment health bits
+      - {param: 0x0503, change: 3.0}         # downlink margin
+  ttc.gs_feed_loss:
+    context: contact
+    symptoms:
+      - {param: 0x0524, below: 14.5}
+      - {param: 0x0503, change: 3.0}
+  ttc.gs_hpa_degradation:
+    context: contact
+    symptoms:
+      - {param: 0x0524, below: 14.5}
+  ttc.gs_lna_degradation:
+    context: contact
+    symptoms:
+      - {param: 0x0524, below: 14.5}
+      - {param: 0x0503, change: 3.0}
+  ttc.gs_ref_osc_drift:
+    context: contact
+    symptoms:
+      - {param: 0x0524, below: 14.5}
+  ttc.gs_rfi_interference:
+    context: contact
+    symptoms:
+      - {param: 0x0503, change: 3.0}
+  ttc.gs_tracking_loss:
+    context: contact
+    symptoms:
+      - {param: 0x0524, below: 14.5}
+      - {param: 0x0503, change: 3.0}
+  ttc.high_ber:
+    context: contact
+    symptoms:
+      - {param: 0x0503, change: 3.0}         # margin collapses
+      - {event: 0x050C}                      # BER_THRESHOLD_EXCEEDED
+  ttc.pa_overheat:
+    symptoms:
+      - {event: 0x0508}                      # PA_OVERTEMP_WARNING
+      - {param: 0x050F, limit: true}
+  ttc.primary_failure:
+    symptoms:
+      - {param: 0x052C, below: -20.0}        # EIRP collapses (ttc.eirp_dbw)
+      - {param: 0x0525, below: 0.5}          # S-band downlink stops
+  ttc.receiver_degrade:
+    context: contact
+    # Measured: the model applies the noise-figure rise to the link Eb/N0
+    # (0x0519) and margin (0x0503); lock loss follows only at large values.
+    symptoms:
+      - {param: 0x0503, change: 3.0}
+      - {event: 0x0501}                      # CARRIER_LOCK_LOST
+  ttc.redundant_failure:
+    checkable: false
+    reason: "the redundant transponder is cold; its loss shows only when the spacecraft switches to it (CTG-003, 24 h command-loss timer)"
+    symptoms:
+      - {event: 0x050B}                      # TRANSPONDER_SWITCH
+  ttc.uplink_loss:
+    context: contact
+    symptoms:
+      - {event: 0x0501}

@@ -212,6 +212,13 @@ class InstructorRecorder:
         self._grounded_alarms: list[dict] = []
         self._tc_seen_ts: list[float] = []
         self._scenario_name = ""
+        # 2026-11-03 (Franz's ruling): "inject -> first symptom" is timed to
+        # the first of the failure's EXPECTED symptoms (failure catalogue,
+        # configs/<mission>/instructor/expected_symptoms.yaml), not to the
+        # first warning of any kind, which another failure, an eclipse or a
+        # team action could raise.
+        self._expected = self._load_expected(getattr(engine, "config_dir", None))
+        self._limit_bands = self._load_limit_bands(getattr(engine, "config_dir", None))
 
     # ── catalogues ──────────────────────────────────────────────────────
     @staticmethod
@@ -249,6 +256,123 @@ class InstructorRecorder:
         except Exception as e:  # noqa: BLE001
             logger.debug("Event catalogue not loaded for the timeline: %s", e)
         return out
+
+    @staticmethod
+    def _load_expected(config_dir) -> dict:
+        try:
+            from smo_simulator import failure_catalog as fc
+            return fc.load_expected_symptoms(config_dir or "configs/eosat1")
+        except Exception as e:  # noqa: BLE001 — the old heuristic still works
+            logger.debug("Expected symptoms not loaded: %s", e)
+            return {}
+
+    @staticmethod
+    def _load_limit_bands(config_dir) -> dict:
+        out: dict = {}
+        try:
+            import yaml
+            path = Path(config_dir or "configs/eosat1") / "mcs" / "limits.yaml"
+            for r in (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("limits") or []:
+                out[int(r["param_id"])] = r
+        except Exception as e:  # noqa: BLE001
+            logger.debug("Limits not loaded for the symptom check: %s", e)
+        return out
+
+    def _limit_out(self, pid: int) -> bool:
+        """Is parameter `pid` outside its mcs/limits.yaml caution band now
+        (honouring `valid_when`)?"""
+        lim = self._limit_bands.get(int(pid))
+        p = self.engine.params
+        if not lim or p.get(int(pid)) is None:
+            return False
+        vw = lim.get("valid_when")
+        if vw:
+            raw = p.get(int(vw["param_id"]))
+            if raw is None or (int(round(float(raw))) & int(vw.get("mask", 0xFFFFFFFF))) \
+                    != int(vw.get("value", 1)):
+                return False
+        v = float(p[int(pid)])
+        lo = lim.get("yellow_low", lim.get("red_low"))
+        hi = lim.get("yellow_high", lim.get("red_high"))
+        return (lo is not None and v < float(lo)) or (hi is not None and v > float(hi))
+
+    @staticmethod
+    def _sym_event_ids(rec: dict) -> set[int]:
+        ids = set()
+        for sym in rec.get("expected") or []:
+            if "event" in sym:
+                ids.add(int(sym["event"]))
+            elif "s12" in sym:
+                ids.add(0x9000 | (int(sym["s12"]) & 0x0FFF))
+        return ids
+
+    def _set_symptom(self, rec: dict, ts: float, text: str, *, seq=None,
+                     param=None, kind: str = "event") -> None:
+        rec["symptom_ts"] = ts
+        rec["symptom_seq"] = seq
+        rec["symptom_text"] = text[:120]
+        rec["symptom_kind"] = kind
+        rec["symptom_param"] = param
+
+    def _clock_offset(self):
+        try:
+            return (self.engine._build_clock_truth() or {}).get("offset_s")
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _check_param_symptoms(self, now: float) -> None:
+        """Parameter-kind expected symptoms (limit / below / above /
+        change), judged on the on-board values each tick."""
+        p = self.engine.params
+        for rec in self._failures.values():
+            if rec.get("symptom_ts") is not None or rec.get("cleared_ts") is not None:
+                continue
+            for sym in rec.get("expected") or []:
+                if "clock_offset_s" in sym:
+                    off = self._clock_offset()
+                    b = (rec.get("param_base") or {}).get("clock_offset_s")
+                    if off is not None and b is not None and \
+                            abs(off - b) >= float(sym["clock_offset_s"]):
+                        self._set_symptom(rec, now, f"on-board clock {off - b:+.2f} s "
+                                          "from its offset at the inject", kind="clock")
+                        break
+                    continue
+                if "param" not in sym:
+                    continue
+                pid = int(sym["param"])
+                v = p.get(pid)
+                if v is None:
+                    continue
+                when = sym.get("when")
+                hold = float(sym.get("for_s", 0.0) or 0.0)
+                hkey = f"_hold_{id(sym)}"
+                if when and p.get(int(when["param"])) != when["value"]:
+                    rec.pop(hkey, None)
+                    continue        # judged only while the gate holds
+                v = float(v)
+                hit = None
+                if sym.get("limit") and self._limit_out(pid):
+                    hit = "outside its limits"
+                elif "below" in sym and v < float(sym["below"]):
+                    hit = f"below {sym['below']}"
+                elif "above" in sym and v > float(sym["above"]):
+                    hit = f"above {sym['above']}"
+                elif "change" in sym:
+                    base = (rec.get("param_base") or {}).get(pid)
+                    if base is not None and abs(v - base) >= float(sym["change"]):
+                        hit = f"moved by {abs(v - base):.3g}"
+                if hit and hold > 0.0:
+                    since = rec.setdefault(hkey, now)
+                    if now - since < hold:
+                        hit = None          # must persist `for_s` seconds
+                elif not hit:
+                    rec.pop(hkey, None)
+                if hit:
+                    for k in [k for k in rec if k.startswith("_hold_")]:
+                        rec.pop(k, None)
+                    self._set_symptom(rec, now, f"0x{pid:04X} = {v:.4g}, {hit}",
+                                      param=pid, kind="param")
+                    break
 
     # ── time ────────────────────────────────────────────────────────────
     def now_ts(self) -> float:
@@ -506,6 +630,14 @@ class InstructorRecorder:
                 sample = self._cuc_to_sim_ts(getattr(p.secondary, "cuc_seconds", None), now)
             self.ground.observe(p.data_field[2:], sid=sid, sample_ts=sample,
                                 rx_ts=now, playback=playback)
+            # A parameter symptom reaches the ground with the first downlinked
+            # HK packet that carries the parameter, sampled after the symptom.
+            for rec in self._failures.values():
+                pid = rec.get("symptom_param")
+                if pid is not None and rec.get("ground_ts") is None \
+                        and rec.get("symptom_ts") is not None and sample >= rec["symptom_ts"] \
+                        and sid in self.ground.sids_of(pid):
+                    rec["ground_ts"] = now
         elif svc == 5:
             key = (p.primary.apid, p.primary.sequence_count)
             ev = self._pending_ev.pop(key, None)
@@ -580,13 +712,17 @@ class InstructorRecorder:
                                  "sub": sub, "name": name, "event_id": int(event_id)}
         while len(self._pending_ev) > 3000:
             self._pending_ev.popitem(last=False)
-        if sev >= 2:
-            for rec in self._failures.values():
-                if rec.get("symptom_ts") is None and rec.get("cleared_ts") is None \
-                        and (sub == rec["subsystem"] or sev >= 3 or not sub):
-                    rec["symptom_ts"] = item["ts"]
-                    rec["symptom_seq"] = item["seq"]
-                    rec["symptom_text"] = item["text"][:120]
+        for rec in self._failures.values():
+            if rec.get("symptom_ts") is not None or rec.get("cleared_ts") is not None:
+                continue
+            if rec.get("expected"):
+                # The failure's own expected symptoms, at any severity.
+                if int(event_id) in self._sym_event_ids(rec):
+                    self._set_symptom(rec, item["ts"], item["text"], seq=item["seq"])
+            elif sev >= 2 and (sub == rec["subsystem"] or sev >= 3 or not sub):
+                # No expectation declared: the first warning (legacy rule).
+                self._set_symptom(rec, item["ts"], item["text"], seq=item["seq"],
+                                  kind="first_warning")
 
     # ── TC hooks ────────────────────────────────────────────────────────
     def on_tc_received(self, svc: int, sub: int, data: bytes, apid: int, seq: int,
@@ -749,6 +885,7 @@ class InstructorRecorder:
             cur["_fdir_trig"] = dict(getattr(eng, "_fdir_triggered", {}) or {})
         self._prev = cur
         self._diff_failures(now)
+        self._check_param_symptoms(now)
         self._diff_procedures()
         self._diff_scenario()
         self._check_missed_cues(now)
@@ -781,7 +918,13 @@ class InstructorRecorder:
             fn, obj = tx.function_of(af.subsystem, af.failure)
             extra = {k: v for k, v in (af.extra_params or {}).items()
                      if isinstance(v, (int, float, str, bool, list))}
+            exp = (self._expected.get((af.subsystem, af.failure)) or {}).get("symptoms") or []
             self._failures[fid] = {
+                "expected": [dict(x) for x in exp],
+                "param_base": {**{int(x["param"]): float(self.engine.params[int(x["param"])])
+                                  for x in exp if "param" in x
+                                  and self.engine.params.get(int(x["param"])) is not None},
+                               "clock_offset_s": self._clock_offset()},
                 "fault_id": fid, "subsystem": af.subsystem, "failure": af.failure,
                 "element": el, "inject_class": cls, "function": fn, "objective": obj,
                 "element_label": next((e["label"] for e in tx.ELEMENTS if e["id"] == el), el),
@@ -793,14 +936,21 @@ class InstructorRecorder:
             # A model may raise its first alarm in the same tick the inject
             # lands, before this diff runs: look back over the last seconds.
             rec_new = self._failures[fid]
+            exp_ids = self._sym_event_ids(rec_new)
             with self._lock:
-                recent = [i for i in list(self._items)[-80:]
-                          if i["lane"] == "alarm" and i["kind"] == "event" and i["sev"] >= 2
-                          and i["ts"] >= now - 2.0 and (i["sub"] == af.subsystem or i["sev"] >= 3)]
+                if exp:
+                    recent = [i for i in list(self._items)[-80:]
+                              if i["lane"] == "alarm" and i["kind"] == "event"
+                              and i["ts"] >= now - 2.0
+                              and int((i.get("data") or {}).get("event_id", -1)) in exp_ids]
+                else:
+                    recent = [i for i in list(self._items)[-80:]
+                              if i["lane"] == "alarm" and i["kind"] == "event" and i["sev"] >= 2
+                              and i["ts"] >= now - 2.0 and (i["sub"] == af.subsystem or i["sev"] >= 3)]
             if recent:
-                rec_new["symptom_ts"] = recent[0]["ts"]
-                rec_new["symptom_seq"] = recent[0]["seq"]
-                rec_new["symptom_text"] = recent[0]["text"][:120]
+                self._set_symptom(rec_new, recent[0]["ts"], recent[0]["text"],
+                                  seq=recent[0]["seq"],
+                                  kind="event" if exp else "first_warning")
                 downs = [i for i in list(self._items)[-80:] if i["kind"] == "ev_down"
                          and i["ref"] == str(recent[0]["seq"])]
                 if downs:
@@ -894,6 +1044,9 @@ class InstructorRecorder:
                 "to_response_s": gap(r.get("ground_ts") or r.get("symptom_ts"), r.get("response_ts")),
                 "to_clear_s": gap(ins, r.get("cleared_ts")),
             }
+            r.pop("param_base", None)
+            for k in [k for k in r if k.startswith("_hold_")]:
+                r.pop(k)
             out.append(r)
         return out
 
