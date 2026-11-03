@@ -236,15 +236,24 @@ def fold(records: list[dict]) -> Folded:
                 "lang": r.get("lang"),
             }
             if isinstance(r.get("record"), dict):
-                # SpaceCDF's structured decision record (decisions.py); an
-                # optional field the ops tools' implementation ignores.
+                # SpaceCDF's structured decision record (decisions.py).
                 out.entries[rid]["record"] = r["record"]
+            for k in ("check", "form"):
+                # The ops tools' workbook checklist step / form (smo-common);
+                # kept so SpaceCDF's compaction never drops them.
+                if isinstance(r.get(k), dict):
+                    out.entries[rid][k] = r[k]
             out.last_write = _later(out.last_write, ts)
         elif op == "edit":
             e = out.entries.get(rid) if isinstance(rid, str) else None
-            if e is None or not isinstance(r.get("text"), str):
+            if e is None:
                 continue
-            e["text"] = r["text"]
+            if isinstance(r.get("text"), str):
+                e["text"] = r["text"]
+            if isinstance(r.get("check"), dict):
+                e["check"] = {**(e.get("check") or {}), **r["check"]}
+            if isinstance(r.get("form"), dict):
+                e["form"] = r["form"]
             if isinstance(r.get("worksheet"), dict) and e.get("worksheet"):
                 e["worksheet"] = {**e["worksheet"], **r["worksheet"]}   # e.g. {"checked": true}
             if isinstance(r.get("record"), dict):
@@ -280,8 +289,9 @@ def compacted(records: list[dict], keep=lambda e: True) -> list[dict]:
             r["sim_ts"] = e["sim_ts"]
         if e.get("worksheet"):
             r["worksheet"] = e["worksheet"]
-        if e.get("record"):
-            r["record"] = e["record"]
+        for k in ("record", "check", "form"):
+            if e.get(k):
+                r[k] = e[k]
         out.append(r)
         if e.get("edited"):
             out.append({"v": SCHEMA_VERSION, "id": e["id"], "op": "edit", "ts": e.get("updated_ts"),

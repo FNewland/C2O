@@ -173,7 +173,7 @@ async def test_the_ops_implementation_reads_a_decision_record(client, lbdir):
     recs = [json.loads(line) for line in f.read_text(encoding="utf-8").splitlines()]
     folded = smo.LogbookStore.fold(recs)
     (e,) = folded.entries
-    assert e["kind"] == "decision" and "record" not in e
+    assert e["kind"] == "decision" and e.get("record")   # ops keeps it (compaction-safe)
     assert "Choice: SSO 550 km" in e["text"] and "Rationale:" in e["text"]
     assert e["context"]["decision_id"] == "D-2.3-ORBIT"
     assert e["worksheet"]["id"] == "LW-2.3"

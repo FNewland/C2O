@@ -524,3 +524,22 @@ def test_mcs_log_this_beside_decisions():
     assert js.count("renderLogThis(") >= 4     # send, procedure controls, alarm row, GO/NO-GO
     assert 'id="gonogo-logthis"' in html and 'id="lb-slot"' in html
     assert "LB.endSession({ reason: \"stopped\" })" in js
+
+
+def test_compaction_keeps_spacecdf_decision_record(tmp_path):
+    """SpaceCDF writes a structured ``record`` into the shared file; the ops
+    store must carry it through fold and compaction (shared format, §8)."""
+    from smo_common.logbook.store import LogbookStore
+    st = LogbookStore(tmp_path)
+    rec = {"question": "Orbit?", "choice": "SSO 525 km", "options": [{"name": "SSO 525 km"}]}
+    recs = [
+        {"v": 1, "id": "d1", "op": "add", "ts": "2026-11-02T10:00:00.000Z", "tool": "design",
+         "kind": "decision", "text": "Orbit: SSO 525 km", "context": {"decision_id": "D-ORBIT"},
+         "record": rec, "lang": "en"},
+        {"v": 1, "id": "d1", "op": "edit", "ts": "2026-11-02T10:05:00.000Z",
+         "text": "Orbit: SSO 530 km", "record": {**rec, "choice": "SSO 530 km"}},
+    ]
+    out = st._compacted(recs)
+    folded = st.fold(out).entries
+    assert folded[0]["record"]["choice"] == "SSO 530 km"
+    assert folded[0]["text"] == "Orbit: SSO 530 km"
