@@ -235,6 +235,10 @@ def fold(records: list[dict]) -> Folded:
                 "sim_ts": r.get("sim_ts"),
                 "lang": r.get("lang"),
             }
+            if isinstance(r.get("record"), dict):
+                # SpaceCDF's structured decision record (decisions.py); an
+                # optional field the ops tools' implementation ignores.
+                out.entries[rid]["record"] = r["record"]
             out.last_write = _later(out.last_write, ts)
         elif op == "edit":
             e = out.entries.get(rid) if isinstance(rid, str) else None
@@ -243,6 +247,8 @@ def fold(records: list[dict]) -> Folded:
             e["text"] = r["text"]
             if isinstance(r.get("worksheet"), dict) and e.get("worksheet"):
                 e["worksheet"] = {**e["worksheet"], **r["worksheet"]}   # e.g. {"checked": true}
+            if isinstance(r.get("record"), dict):
+                e["record"] = r["record"]                                # whole record replaced
             e["updated_ts"] = r.get("ts")
             e["edited"] = True
             out.last_write = _later(out.last_write, ts)
@@ -274,6 +280,8 @@ def compacted(records: list[dict], keep=lambda e: True) -> list[dict]:
             r["sim_ts"] = e["sim_ts"]
         if e.get("worksheet"):
             r["worksheet"] = e["worksheet"]
+        if e.get("record"):
+            r["record"] = e["record"]
         out.append(r)
         if e.get("edited"):
             out.append({"v": SCHEMA_VERSION, "id": e["id"], "op": "edit", "ts": e.get("updated_ts"),
@@ -358,10 +366,14 @@ def validate_new(payload: Any) -> dict:
     sim_ts = payload.get("sim_ts")
     if sim_ts is not None and (not isinstance(sim_ts, str) or parse_ts(sim_ts) is None):
         raise LogbookError(400, "sim_ts must be an ISO 8601 time")
+    from .decisions import clean_record     # lazy: decisions imports this module
+    record = clean_record(payload.get("record"))
+    if record is not None and kind != "decision":
+        raise LogbookError(400, "only a decision entry carries a record")
     return {
         "tool": tool, "kind": kind, "text": text,
         "context": _clean_context(payload.get("context")),
-        "worksheet": worksheet, "sim_ts": sim_ts, "lang": lang,
+        "worksheet": worksheet, "sim_ts": sim_ts, "lang": lang, "record": record,
     }
 
 
@@ -511,6 +523,8 @@ class LogbookStore:
                     "context": fields["context"]})
         if fields["worksheet"]:
             rec["worksheet"] = fields["worksheet"]
+        if fields.get("record"):
+            rec["record"] = fields["record"]
         rec["lang"] = fields["lang"]
         with self._locked(self.path_for(person_id), exclusive=True, create=True) as fd:
             records = _parse_lines(_read_fd(fd))
@@ -523,17 +537,23 @@ class LogbookStore:
         return fold([rec]).entries[rec["id"]]
 
     def edit(self, person_id: str, entry_id: str, text: Any, *, checked: bool | None = None,
-             now: datetime | None = None) -> dict:
+             record: Any = None, now: datetime | None = None) -> dict:
         text = _check_text(text)
         rec = {"v": SCHEMA_VERSION, "id": entry_id, "op": "edit", "ts": iso(now or now_utc()), "text": text}
         if isinstance(checked, bool):
             rec["worksheet"] = {"checked": checked}
+        if record is not None:
+            from .decisions import clean_record
+            rec["record"] = clean_record(record)
         with self._locked(self.path_for(person_id), exclusive=True, create=False) as fd:
             if fd is None:
                 raise LogbookError(404, "no such entry")
             records = _parse_lines(_read_fd(fd))
-            if entry_id not in fold(records).entries:
+            current = fold(records).entries.get(entry_id)
+            if current is None:
                 raise LogbookError(404, "no such entry")
+            if "record" in rec and current.get("kind") != "decision":
+                raise LogbookError(400, "only a decision entry carries a record")
             self._write(fd, [rec])
             self._maybe_compact(fd, records + [rec])
             return fold(records + [rec]).entries[entry_id]

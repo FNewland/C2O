@@ -133,6 +133,16 @@ def for_context(tool: str, ctx: dict, lang: str, include_all: bool = False,
     return out
 
 
+def parts(directory: Path | None = None):
+    """(worksheet id, lang) → [(question id, question text)] in workbook order."""
+    sheets = {w.get("id"): w for w in all_worksheets(directory)}
+
+    def _parts(wid: str, lang: str) -> list[tuple[str, str]]:
+        ws = sheets.get(wid) or {}
+        return [(str(q.get("id")), _tr(q.get("text"), lang)) for q in ws.get("questions") or []]
+    return _parts
+
+
 def lookup(directory: Path | None = None):
     """(worksheet id, question id, lang) → (title, question text, order) for exports."""
     sheets = {w.get("id"): w for w in all_worksheets(directory)}
