@@ -205,6 +205,16 @@ activity_types:
       # demands and what the sequence above now commands.
       # (configs/eosat1/aocs/aocs_mode_codes.yaml is the enum.)
       - "aocs.mode == 5"
+    # 2026-11-03 (Franz's ruling): continuous imaging drains the battery,
+    # and the planner says so. tools/power_budget.py (EOL, worst beta -31.2
+    # deg): imaging all orbit (payload IMAGING, cooler on, FINE) is a
+    # +23.8 W increment on the 22.7 W nominal load against 45.1 W generated,
+    # i.e. -1.4 W (-2.3 Wh per orbit). Break-even duty 94 %; with the 10 %
+    # design margin 77 %. The planner warns above this share of an orbit
+    # (PowerConstraintChecker.check_imaging_duty_cycle). The thermal limit
+    # below (30 min per orbit, 32 %) is tighter and binds first.
+    power_constraints:
+      sustainable_duty_pct: 77
     thermal_constraints:
       max_continuous_minutes: 30
       max_per_orbit_minutes: 30

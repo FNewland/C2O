@@ -84,8 +84,8 @@
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/3-power-modes/32-orbit-average-budget-worst-beta-eol",
-   "en_hash": "fe2f317452878b56",
-   "fr_hash": "e97be056d76a9e6c"
+   "en_hash": "8571bf90d9b50682",
+   "fr_hash": "9bfeb81ec27872fe"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/4-telemetry-parameters",
@@ -133,5 +133,5 @@
    "fr_hash": "6cef7a38a10a69c9"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "b41c0a9"
 }

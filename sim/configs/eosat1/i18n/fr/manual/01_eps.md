@@ -261,25 +261,48 @@ sur l'orbite réelle propagée — et non par un tableur.
 
 | Profil | Production | Charge | Marge | Rapport |
 |---------|-----------|------|--------|-------|
-| repos            | 45,1 W | 25,6 W | +19,5 W | 1,76 |
-| nominal          | 45,1 W | 28,8 W | +16,3 W | 1,57 |
-| nominal + prise de vue | 45,1 W | 32,8 W | +12,3 W | 1,38 |
-| manœuvre         | 45,1 W | 32,1 W | +12,9 W | 1,40 |
+| repos            | 45,1 W | 19,7 W | +25,4 W | 2,29 |
+| nominal          | 45,1 W | 22,7 W | +22,4 W | 1,98 |
+| nominal + prise de vue | 45,1 W | 26,4 W | +18,7 W | 1,71 |
+| prise de vue sur toute l'orbite | 45,1 W | 46,6 W | −1,4 W | 0,97 |
+| manœuvre         | 45,1 W | 25,8 W | +19,4 W | 1,75 |
+
+(Recalculé le 2026-11-03 avec le réseau thermique et le refroidisseur du FPA arrêté en
+STANDBY : le profil `nominal` est la charge utile en STANDBY sans refroidisseur, ce que fait désormais le satellite.)
 
 Le critère d'acceptation — la production moyenne sur l'orbite dépasse la charge moyenne sur l'orbite
-avec TOUS les systèmes nominaux sous tension, SCAO compris — est satisfait avec un rapport de 1,57x en pointage nadir NOMINAL
+avec TOUS les systèmes nominaux sous tension, SCAO compris — est satisfait avec un rapport de 1,98x en pointage nadir NOMINAL
 à l'angle bêta le plus défavorable de l'année pour la production (−31,2°), en EOL à 3 ans.
 Sur l'année, bêta reste entre −20,8° et −31,2° (fraction d'éclipse 0,351–0,372,
 33,2–35,2 min par orbite). L'entraînement suivant le Soleil, la production varie comme cos(bêta) :
 le |bêta| le plus grand est donc le cas de production le plus défavorable, bien que son éclipse soit la plus courte ;
 au bêta de l'éclipse la plus longue (−20,8°), la production EOL est de 47,0 W et le cas nominal est satisfait avec
-un rapport de 1,63x.
+un rapport de 2,05x.
 
 **La prise de vue fonctionne par intermittence, et non en continu.** Le bilan ci-dessus suppose trois
 acquisitions de 90 secondes par orbite, le refroidisseur du FPA fonctionnant environ 20 minutes
 autour de celles-ci. Maintenir le pointage FINE et le refroidisseur pendant une orbite entière
 (le profil `worst`) donne un bilan de puissance NÉGATIF par construction : c'est l'objet de l'exercice, et non une
 erreur de dimensionnement.
+
+**La prise de vue continue vide la batterie.** La configuration de prise de vue
+(charge utile en IMAGING 5,5 W, refroidisseur du FPA 15 W, SCAO en FINE 15 W au lieu de 9 W) ajoute
+environ 23,8 W à la charge nominale de 22,7 W. Maintenue pendant une orbite entière au bêta le plus défavorable,
+elle demande 46,6 W pour 45,1 W produits : −1,4 W en moyenne sur l'orbite, soit environ
+2,3 Wh (2,3 % de la batterie de 100 Wh) perdus à chaque orbite ; le satellite déleste donc ses charges en
+un jour environ. Le rapport cyclique de prise de vue soutenable est la part d'une orbite qui permet encore de
+boucler le bilan :
+
+| Cas | Équilibre (marge 0) | Avec la marge de conception de 10 % |
+|------|-----------------------|-----------------------------|
+| bêta le plus défavorable −31,2° (EOL) | 94 % de l'orbite | 77 % (73 min sur 95) |
+| éclipse la plus longue, bêta −20,8° (EOL) | 100 % | 84 % |
+
+Le planificateur de mission émet un avertissement lorsque les activités de prise de vue prévues sur une orbite
+dépassent 77 % de celle-ci (`activity_types.yaml` `imaging_pass.power_constraints`).
+La limite thermique s'applique en premier : 30 minutes de prise de vue par orbite (32 %), et
+la prise de vue continue dans le cas chaud fait perdre la régulation du FPA
+(`03_tcs.md`, `06_payload.md` §8).
 
 Lors des transitions d'éclipse, le PCDU bascule de manière autonome de l'alimentation par le générateur solaire à
 l'alimentation par la batterie. Le paramètre de télémesure `eclipse_flag` (0x0108) indique l'état

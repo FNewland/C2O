@@ -83,6 +83,9 @@ class ActivityScheduler:
             # list has to travel with the instance — see check_time_overlap.
             "requires_subsystems": atype.get("requires_subsystems", []),
             "pre_conditions": atype.get("pre_conditions", []),
+            # 2026-11-03: the sustainable imaging duty cycle travels with the
+            # instance (PowerConstraintChecker.check_imaging_duty_cycle).
+            "power_constraints": atype.get("power_constraints", {}) or {},
             "state": int(ActivityState.PLANNED),
             "state_name": "PLANNED",
             **kwargs,
