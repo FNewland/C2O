@@ -630,12 +630,16 @@ class TestSharedS12S19Renderers:
             return { s12d: T.renderS12Block("diag"), s12f: T.renderS12Block("fdir"),
                      s19d: T.renderS19Block("diag"), s19f: T.renderS19Block("fdir") };
         """, tmp_path)
-        # same table body from both mounts; only the mount tag differs
-        strip = lambda h: h.replace("diag", "M").replace("fdir", "M")
-        assert strip(out["s12d"]) == strip(out["s12f"])
-        assert strip(out["s19d"]) == strip(out["s19f"])
-        assert "0x0101" in out["s12d"] and "OOL" in out["s12d"]
-        assert "EPS_LOAD_SHED" in out["s19d"]
+        # One renderer: the same rows on both pages; the editors (add,
+        # enable/disable/delete per row) only on PUS (review: not mounted
+        # twice). FDR is the state view.
+        for h in (out["s12d"], out["s12f"]):
+            assert "0x0101" in h and "OOL" in h
+        for h in (out["s19d"], out["s19f"]):
+            assert "EPS_LOAD_SHED" in h
+        assert "data-s12add" in out["s12d"] and "data-s12add" not in out["s12f"]
+        assert "data-s12row" in out["s12d"] and "data-s12row" not in out["s12f"]
+        assert "data-s19add" in out["s19d"] and "data-s19add" not in out["s19f"]
 
 
 @requires_node
@@ -871,8 +875,10 @@ class TestDerivedRows:
             T.renderDerivedCard("eps");
             return __registry["eps-derived"].innerHTML;
         """, tmp_path)
-        assert "SoC at eclipse exit" in out       # valid row
-        assert "INVALID" in out                    # invalid row, same card
+        # SoC at eclipse exit lives in the power-flow picture only (one
+        # answer in one place, review #12); the card keeps the other rows.
+        assert "SoC at eclipse exit" not in out
+        assert "Time to SoC yellow limit" in out
 
 
 @requires_node
@@ -1157,7 +1163,7 @@ class TestBaselineHealth:
             T.renderBaselineCard();
             return __registry["trnd-baseline"].innerHTML;
         """, tmp_path)
-        assert "no commissioning baseline" in out
+        assert "No commissioning baseline" in out
 
     def test_real_display_config_yaml_carries_the_baselines(self):
         data = yaml.safe_load(DISPLAY_CFG.read_text())

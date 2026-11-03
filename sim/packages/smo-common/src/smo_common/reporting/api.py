@@ -326,8 +326,9 @@ function renderPlotting(p){
   if (!p){ el.style.display = "none"; return; }
   el.style.display = "";
   if (p.available){
-    el.className = "sub";
-    el.textContent = "Plots: " + p.summary;
+    // Working plots need no diagnostics (and the summary names the
+    // server's interpreter path: SCREEN_REVIEW §4.2).
+    el.style.display = "none";
     return;
   }
   el.className = "err";

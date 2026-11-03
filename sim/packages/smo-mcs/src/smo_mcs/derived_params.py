@@ -271,8 +271,7 @@ class DerivedParamEngine:
         band = self._limits_by_id.get(0x0101)
         if band is None or band.yellow_low is None:
             return {name: _entry(
-                name, "s", reason="no yellow-low limit for eps.bat_soc "
-                "in mcs/limits.yaml")}
+                name, "s", reason="no yellow-low limit for battery SoC")}
         slope, why = self._slope_per_s("eps.bat_soc")
         if slope is None:
             return {name: _entry(name, "s", reason=why)}
@@ -412,8 +411,7 @@ class DerivedParamEngine:
         if threshold is None:
             return {name: _entry(
                 name, "s",
-                reason="catbed ready threshold not configured "
-                "(subsystems/prop.yaml interlocks.catbed_min_c)")}
+                reason="catbed ready threshold not configured")}
         slope, why = self._slope_per_s("prop.catbed_temp")
         if slope is None:
             slope, why = self._slope_per_s("tcs.temp_thruster")

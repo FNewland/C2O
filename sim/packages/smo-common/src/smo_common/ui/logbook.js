@@ -86,6 +86,17 @@ const S = {
   timers: [], busy: false, wb: null, hooks: {}, refreshTimer: null, team: "", dock: null,
 };
 
+/* A context value as people read it ("Overview", "Flight Director"); the
+ * stored value stays the id the worksheets match on. Tools supply the
+ * names through the `ctxValue(key, value)` hook (review §2.5). */
+function ctxValueLabel(k, v) {
+  try {
+    const l = S.hooks.ctxValue && S.hooks.ctxValue(k, v);
+    if (l) return String(l);
+  } catch (e) { /* fall back to the raw value */ }
+  return String(v);
+}
+
 /* ── small utilities ─────────────────────────────────────────────────── */
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -352,7 +363,7 @@ function renderCtx() {
   if (sig === S.ctxSig && box.childElementCount) return;
   S.ctxSig = sig;
   const chips = Object.entries(ctx).filter(([k]) => !HIDDEN_CTX.has(k)).map(([k, v]) =>
-    `<span class="ds-chip">${esc(ctxLabel(k))} ${esc(String(v))}` +
+    `<span class="ds-chip" title="${esc(String(v))}">${esc(ctxLabel(k))} ${esc(ctxValueLabel(k, v))}` +
     `<button type="button" data-rm="${esc(k)}" aria-label="${esc(tText("Remove {{what}} from this entry", { what: ctxLabel(k) }))}">✕</button></span>`).join("");
   box.innerHTML = chips
     ? `<span class="lbl">${t("Context")}</span>${chips}`
@@ -373,7 +384,7 @@ function renderList() {
     const d = fmtDay(e.ts);
     if (d !== day) { day = d; html += `<li class="lb-day" aria-hidden="true">${esc(d)}</li>`; }
     const ctx = Object.entries(e.context || {}).filter(([k]) => !HIDDEN_CTX.has(k))
-      .map(([k, v]) => `${ctxLabel(k)} ${v}`).join(" · ");
+      .map(([k, v]) => `${ctxLabel(k)} ${ctxValueLabel(k, v)}`).join(" · ");
     const ws = e.kind === "worksheet" && e.worksheet
       ? `<div class="ws">${esc(e.worksheet.id)} · ${esc(e.worksheet.q_text || e.worksheet.q || "")}</div>` : "";
     const mark = e.worksheet && e.worksheet.checked === true ? "☑ " : e.worksheet && e.worksheet.checked === false ? "☐ " : "";
@@ -402,7 +413,7 @@ function renderFooter() {
     p.innerHTML = t("<b>Private to you</b> · deleted from the server on {{- when}} ({{h}} h after your last entry)",
       { when: `<span class="num">${esc(fmtWhen(d.expires_at))}</span>`, h: Math.round(d.retention_h) });
   } else {
-    p.innerHTML = t("<b>Private to you</b> · nothing is stored on the server yet. Entries are kept {{h}} h after your last one.",
+    p.innerHTML = t("<b>Private to you</b> · your entries are kept on the server for {{h}} h after your last one.",
       { h: Math.round(d.retention_h) });
   }
   const q = exportQuery();
@@ -772,7 +783,8 @@ export function mountLogbook(o = {}) {
   if (S.mounted) return S.apiObj;
   S.tool = o.tool || "mcs";
   S.getContext = typeof o.getContext === "function" ? o.getContext : () => ({});
-  S.hooks = { readParam: o.readParam, prefill: o.prefill, info: o.info, handIn: o.handIn };
+  S.hooks = { readParam: o.readParam, prefill: o.prefill, info: o.info, handIn: o.handIn,
+    ctxValue: o.ctxValue };
   S.team = teamGet();
   S.wb = makeWorkbook();
   if (!document.querySelector('link[data-lb-css]')) {

@@ -316,8 +316,22 @@ export function engValue(hexId, raw) {
   const name = st[String(code)];
   return name ? `${name} (${code})` : `UNKNOWN (${code})`;
 }
+/* A parameter's operator label: the start of its (translated) description
+ * when there is a short one, else its mnemonic read as words
+ * ("obdh.cpu_load" -> "cpu load"). The mnemonic stays in the tooltip and
+ * the parameter table (review #20). */
+export function paramLabel(def) {
+  const d = def || {};
+  const desc = d.description ? tdb(`tm:${d.name}:description`, d.description) : "";
+  const head = String(desc).split(/ \(| — |; |\. /)[0].trim();
+  if (head && head.length <= 40) return head;
+  const bare = String(d.name || d.hex || "").split(".").pop().replace(/_/g, " ");
+  return bare || String(d.hex || "");
+}
 export function paramTriad(hexId) {
-  const def = S.paramByHex[hexId] || { hex: hexId, name: hexId };
+  const base = S.paramByHex[hexId] || { hex: hexId, name: hexId };
+  const def = { ...base, name: paramLabel(base),
+    description: `${base.name || ""}${base.description ? " — " + base.description : ""}` };
   const band = S.limits[hexId] ? { ...S.limits[hexId] } : null;
   const st = (S.state.param_limit_state || {})[hexId];
   const age = paramAge(hexId);
@@ -438,8 +452,9 @@ function paramSids(hexId) {
 export function paramFreshness(hexId) {
   const sids = paramSids(hexId);
   if (sids.length) {
-    const en = S.state.hk_enabled || {};
-    // only claim "disabled" when we actually know the enable state
+    // Commanded from the ground (TC 3,5/3,6); the spacecraft does not
+    // downlink its enable set. Only claim "disabled" when it was commanded off.
+    const en = S.state.hk_enabled_commanded || {};
     const known = sids.filter((sid) => en[String(sid)] !== undefined);
     if (known.length && known.every((sid) => !en[String(sid)])) return "disabled";
   }
@@ -599,7 +614,7 @@ function renderAlarmSoundBtn() {
   const b = $("alarm-sound");
   if (!b) return;
   const on = !playAlarmBeep._muted && alarmSoundOn();
-  b.textContent = on ? "🔔" : "🔕";
+  b.innerHTML = glyph(on ? "sound" : "sound-off");     // design-system glyph, not emoji
   b.setAttribute("aria-pressed", String(!on));
   const lbl = on ? tText("Alarm sound on — click to mute") : tText("Alarm sound muted — click to unmute");
   b.setAttribute("aria-label", lbl);
@@ -817,23 +832,27 @@ export function updateSaHeader() {
 
   // WELL — sc mode (TM-derived + provenance), alarm counts, load shed
   const mode = scModeInfo();
-  // One alarm store feeds every count (P7.5): de-duplicated groups.
-  const counts = alarmSummary();
+  // One alarm store feeds every count (P7.5): de-duplicated groups, cut to
+  // this position's subsystems (FD sees all; review #15).
+  const counts = alarmSummary(positionAlarms());
   const unack = counts.unacked;
+  const lvl = fdirLevelInfo();
+  const contingency = lvl !== null && lvl >= 2;
   const shed = p["0x0134"];
   // G1: SoC-at-eclipse-exit is one of the two header-grade projections.
   // Valid -> the number (ground-derived); invalid -> nothing here (the EPS
   // page carries the full INVALID row with its reason).
   const socExit = derivedEntry("eps.soc_at_eclipse_exit_pred");
   const modeBad = mode.label === "EMERGENCY" ? "alarm" : mode.label === "SAFE" ? "caution" : "";
-  const wellState = counts.alarm || modeBad === "alarm" ? "alarm"
-    : counts.warn || modeBad ? "caution" : mode.label === "—" ? "nodata" : "ok";
+  // Same verdict as the contingency banner: never "NOMINAL" under it.
+  const wellState = counts.alarm || modeBad === "alarm" || (contingency && lvl >= 3) ? "alarm"
+    : counts.warn || modeBad || contingency ? "caution" : mode.label === "—" ? "nodata" : "ok";
   const tally = [counts.alarm ? tText("{{count}} alarm", { count: counts.alarm, plural: "{{count}} alarms" }) : "",
     counts.warn ? tText("{{count}} caution", { count: counts.warn, plural: "{{count}} cautions" }) : ""]
     .filter(Boolean).join(", ");
   saCell("sa-well", wellState, mode.label === "—" ? tText("Mode unknown")
-      : mode.label + (tally ? " · " + tally : ""),
-    tText("{{n}} unacknowledged · mode from {{src}}", { n: unack, src: mode.src }) +
+      : (contingency ? tText("CONTINGENCY") + " · " + mode.label : mode.label) + (tally ? " · " + tally : ""),
+    tText("{{n}} unacknowledged", { n: unack }) +
     (Number(shed) > 0 ? " · " + tText("LOAD SHED L{{n}}", { n: shed }) : "") +
     (socExit && socExit.valid
       ? " · " + tText("SoC@ecl-exit {{v}} % (gnd)", { v: num(socExit.value, 0) }) : ""));
@@ -917,8 +936,9 @@ function updateContingency() {
   const say = (txt) => { el.innerHTML = glyph("alarm-up") + `<span>${esc(txt)}</span>`; };
   if (badMode) say(tText("Contingency: spacecraft mode {{mode}} (source: {{src}}). Open FDIR for the recovery state and the alarm drawer for the journal.",
     { mode: mode.label, src: mode.src }));
-  else if (badFdir) say(tText("Contingency: FDIR level {{lvl}} (TM fdir.level 0x0700) with OBC mode {{mode}}. Open FDIR for the recovery state and the alarm drawer for the journal.",
+  else if (badFdir) say(tText("Contingency: on-board FDIR at {{lvl}} with OBC mode {{mode}}. Open FDIR for the recovery state and the alarm drawer for the journal.",
     { lvl: lvl >= 3 ? "CRITICAL" : "WARNING", mode: mode.label }));
+  el.title = badFdir && !badMode ? "TM fdir.level 0x0700" : (mode.src || "");
 }
 
 /* ═══ 6. NAV — rail, pages, position filtering, keyboard ══════════════════ */
@@ -1008,17 +1028,39 @@ export function applyPositionFilter() {
     if (b) b.hidden = !railVisibleForPosition(id, pos, seeAll);
   }
   if (!railVisibleForPosition(S.page, pos, seeAll)) showPage("ovr");
-  // overview schematic node filtering
+  applyOverviewFilter();
+  // GO/NO-GO: only the Flight Director starts a poll; everyone responds.
+  show("gonogo-start", S.position === "flight_director");
+  show("gonogo-label", S.position === "flight_director");
+  renderQuickCommands();     // in-place quick commands re-filter
+  renderManual();            // manual section filter
+  if (S.page === "man") loadProcedureCards();   // cards are per position
+  const pi = POSITION_INFO[S.position] || {};
+  setText("pos-detail", pi.title ? tText(pi.title) : S.position);   // no-op when absent
+}
+
+/* Overview for a single-subsystem position (review #15): its own blocks,
+ * the Power card only for EPS/TCS and the FD, and the other subsystems
+ * collapsed to one line of alarm counts. Runs again once the schematic is
+ * mounted (it is mounted lazily, after the first position filter). */
+function applyOverviewFilter() {
+  const pos = S.positions[S.position];
+  const seeAll = S.position === "flight_director" || !pos;
   const overview = pos ? (pos.overview_subsystems || pos.subsystems || []) : [];
   for (const [pageId, sub] of Object.entries(PAGE_SUBSYSTEM)) {
     const node = $(`ovr-node-${pageId === "pld" ? "pld" : pageId}`);
     if (node) node.style.display = (seeAll || overview.includes(sub)) ? "" : "none";
   }
-  renderQuickCommands();     // in-place quick commands re-filter
-  renderManual();            // manual section filter
-  if (S.page === "man") loadProcedureCards();   // cards are per position
-  const pi = POSITION_INFO[S.position] || {};
-  setText("pos-detail", pi.title ? tText(pi.title) : S.position);
+  show("ovr-power-card", seeAll || overview.includes("eps"));
+  const strip = $("ovr-others");
+  if (!strip) return;
+  if (seeAll) { strip.classList.add("hide"); return; }
+  const others = S.alarms.filter((a) => !overview.includes(String(a.subsystem || "").toLowerCase()));
+  const n = alarmSummary(others).active;
+  strip.classList.remove("hide");
+  strip.innerHTML = n
+    ? `${glyph("warn-up")} ${t("Other subsystems: {{count}} active alarm", { count: n, plural: "Other subsystems: {{count}} active alarms" })}`
+    : t("Other subsystems: no active alarms");
 }
 
 function updateRailHealth() {
@@ -1187,8 +1229,7 @@ function buildOverviewPage() {
   <div class="pad" id="page-ovr" role="tabpanel" aria-label="Overview" data-i18n-aria-label>
     <div class="pghd">
       <div><h1 class="pt" data-i18n>Spacecraft overview</h1>
-        <p class="sub"><span data-i18n="Click the block you are concerned about to open its subsystem.">Click the block you are concerned about to open its subsystem.</span>
-          <span data-i18n="Position:">Position:</span> <span id="pos-detail"></span></p></div>
+        <p class="sub"><span data-i18n="Click the block you are concerned about to open its subsystem.">Click the block you are concerned about to open its subsystem.</span></p></div>
       <div class="orbit" id="ovr-orbit-bar" aria-live="off"></div>
     </div>
     <!-- L1: the schematic is the navigation; the contact strip says what is
@@ -1197,10 +1238,10 @@ function buildOverviewPage() {
       <div class="g ovr-left" tabindex="0" aria-label="Schematic and contacts" data-i18n-aria-label="Schematic and contacts">
         <div class="ds-card ovr-schem-card"><h2><span data-i18n="EOSAT-1 overview">EOSAT-1 overview</span>
           <span class="r" data-i18n="grey is nominal; colour marks a deviation">grey is nominal; colour marks a deviation</span></h2>
-          <div class="bd" id="ovr-schematic"></div></div>
+          <div class="bd" id="ovr-schematic"></div>
+          <div class="bd sub hide" id="ovr-others"></div></div>
 
-        <div class="ds-card"><h2><span data-i18n="Contacts, next 12 h">Contacts, next 12 h</span>
-          <span class="r" id="ovr-timeline-src">/api/contacts</span></h2>
+        <div class="ds-card"><h2><span data-i18n="Contacts, next 12 h">Contacts, next 12 h</span></h2>
           <div class="bd">
             <canvas id="ovr-timeline" height="56" style="width:100%" role="img"
               aria-label="Contact windows over the next 12 hours" data-i18n-aria-label="Contact windows over the next 12 hours"></canvas>
@@ -1215,8 +1256,6 @@ function buildOverviewPage() {
           <div class="bd" id="ovr-power"><span class="ds-meta" data-i18n>awaiting data…</span></div></div>
         <div class="ds-card"><h2 data-i18n="Ground track">Ground track</h2>
           <div class="bd" id="ovr-map" style="min-height:180px"></div></div>
-        <div class="ds-card"><h2><span data-i18n="System board">System board</span> <span class="r">/api/displays/system-overview</span></h2>
-          <div class="bd" id="ovr-board"></div></div>
       </div>
     </div>
   </div>`;
@@ -1261,6 +1300,7 @@ function updateOverview() {
     host.dataset.mounted = "1";
     I18n.applyDom(host);          // SVG <text data-i18n> (schematics.svg) is markup: translate after mount
   }
+  applyOverviewFilter();
   const mode = scModeInfo();
   const modeEl = document.getElementById("sch-ovr-mode");
   if (modeEl) modeEl.textContent = mode.label;
@@ -1333,7 +1373,9 @@ function renderContactTimeline() {
 
 function renderPassTable() {
   const nowS = simNowSec();
-  const rows = S.contactSchedule.slice(0, 8).map((c, i) => {
+  // The next three passes; the rest behind "more" (review #13: the planner
+  // and the SA "What's next" already answer the longer view).
+  const rowsAll = S.contactSchedule.slice(0, 8).map((c, i) => {
     const aos = c.aos_time, los = c.los_time;
     const dur = aos !== undefined && los !== undefined ? Math.round((los - aos) / 60) : null;
     const inPass = aos <= nowS && nowS < los;
@@ -1345,11 +1387,15 @@ function renderPassTable() {
       <td class="mono">${fmtUTC(los, { date: false })}</td>
       <td class="mono num">${dur === null ? renderNoData() : dur + " min"}</td>
       <td class="mono num">${valueCell(null, 0, "°", { value: c.max_elevation })}</td><td>${status}</td></tr>`;
-  }).join("");
+  });
+  const more = rowsAll.length > 3 && !S.ovrAllPasses;
+  const rows = (more ? rowsAll.slice(0, 3) : rowsAll).join("");
   setHTML("ovr-pass-table",
     `<thead><tr><th>#</th><th>${t("Station")}</th><th>AOS</th><th>LOS</th><th class="n">${t("Duration")}</th>` +
     `<th class="n">${t("Max el")}</th><th>${t("Status")}</th></tr></thead>` +
-    `<tbody>${rows || `<tr><td colspan="7">${t("no pass schedule")}</td></tr>`}</tbody>`);
+    `<tbody>${rows || `<tr><td colspan="7">${t("no pass schedule")}</td></tr>`}` +
+    (more ? `<tr><td colspan="7"><a href="#" data-ovr-more="1">${t("{{n}} more passes", { n: rowsAll.length - 3 })}</a></td></tr>` : "") +
+    `</tbody>`);
 }
 
 let worldMap = null;
@@ -1383,37 +1429,6 @@ function renderGroundTrack() {
     }
   } catch (e) {
     host.innerHTML = `<div class="ds-banner stale">${t("map render failed — {{err}}", { err: String(e.message || e) })}</div>`;
-  }
-}
-
-// English text is the i18n key (system-overview key_parameters names)
-const BOARD_NAMES = ["Battery SoC", "Attitude Error", "FPA Temperature", "Link Margin", "Storage %"];
-async function refreshSystemBoard() {
-  try {
-    // Server shape: subsystem_health[{name,status,description}],
-    // key_parameters[{name,value,units,status,param_id}] (the old reads of
-    // `subsystems` / `id` / `state` matched nothing, so the chips never drew).
-    const d = await getJSON("/api/displays/system-overview");
-    const subs = d.subsystem_health || [];
-    const chips = subs.map((s2) => renderChip({
-        kind: /alarm|red/i.test(s2.status || "") ? "alarm"
-          : /warn|yellow/i.test(s2.status || "") ? "warn" : "neutral",
-        label: String(s2.name || "?").toUpperCase(), title: s2.description || "" })).join(" ");
-    const params = d.key_parameters || [];
-    const rows = params.slice(0, 12).map((r) => {
-      const hexId = r.param_id || null;
-      const live = hexId && paramVal(hexId) !== undefined;
-      return `<tr><td>${esc(BOARD_NAMES.includes(r.name) ? tText(r.name) : String(r.name || ""))}</td>
-        <td class="mono hexid">${esc(hexId || "")}</td>
-        <td class="num">${live ? valueCell(hexId, 1, r.units || "")
-          : valueCell(null, 1, r.units || "", { value: r.value ?? undefined,
-              fresh: r.value === null || r.value === undefined ? "nodata" : "fresh" })}</td></tr>`;
-    }).join("");
-    setHTML("ovr-board", (chips ? `<div class="row">${chips}</div>` : "") +
-      (rows ? `<table class="plain" style="margin-top:8px"><tbody>${rows}</tbody></table>` : "") +
-      `<div style="font-size:12px;color:var(--tx3);margin-top:6px">${t("source: {{src}}", { src: "/api/displays/system-overview" })}</div>`);
-  } catch (e) {
-    setHTML("ovr-board", `<div class="ds-banner stale">${t("system overview unavailable")}</div>`);
   }
 }
 
@@ -1507,8 +1522,7 @@ function buildSubsystemPage(pageId) {
   <div class="pad hide l2-page" id="page-${pageId}" role="tabpanel" aria-label="${esc(cfg.title)}" data-i18n-aria-label>
     <div class="pghd">
       <div><h1 class="pt" data-i18n>${esc(cfg.title)}</h1>
-        <p class="sub"><span data-i18n="Subsystem">Subsystem</span> <span class="mono">${esc(sub)}</span> ·
-          <a href="#" data-alarm-filter="${esc(sub)}" data-i18n>alarms for this subsystem</a></p></div>
+        <p class="sub"><a href="#" data-alarm-filter="${esc(sub)}" data-i18n>Alarms for this subsystem</a></p></div>
       <button class="ds-btn ghost" data-page-nav="ovr" data-i18n>← Overview</button>
     </div>
     <div class="g l2-grid">
@@ -1522,9 +1536,9 @@ function buildSubsystemPage(pageId) {
             <div id="aocs-att2d"><span class="ds-meta" data-i18n>awaiting data…</span></div></div></div>` : ""}
         <div class="ds-card"><h2 data-i18n>Schematic <span class="r" data-i18n>click a block to navigate; values live</span></h2>
           <div class="bd" id="${pageId}-schematic"></div></div>
-        <div class="ds-card"><h2 data-i18n>Parameters <span class="r" data-i18n>AND — generated from /api/param-catalog (P10)</span></h2>
+        <div class="ds-card"><h2 data-i18n>Parameters</h2>
           <div class="bd scroll-y" style="max-height:300px" id="${pageId}-and"></div></div>
-        <div class="ds-card"><h2 data-i18n>Stored TM playback <span class="r" data-i18n>S15 dump → /api/tm-dump-data</span></h2>
+        <div class="ds-card"><h2 data-i18n>Stored TM playback</h2>
           <div class="bd" id="${pageId}-dump">
             <div class="row">
               <button class="ds-btn" data-dump-request="${esc(sub)}" data-i18n>REQUEST DUMP (S15)</button>
@@ -1536,21 +1550,19 @@ function buildSubsystemPage(pageId) {
           </div></div>
       </div>
       <div class="g l2-col" style="align-content:start">
-        <div class="ds-card"><h2 data-i18n>Key parameters</h2>
+        ${pageId === "eps" ? "" : `<div class="ds-card"><h2 data-i18n>Key parameters</h2>
           <div class="bd" id="${pageId}-params"></div>
-          ${pageId === "ttc" ? `<div class="bd ds-meta" id="ttc-station-note"></div>` : ""}</div>
+          ${pageId === "ttc" ? `<div class="bd ds-meta" id="ttc-station-note"></div>` : ""}</div>`}
         ${(DERIVED_BY_PAGE[pageId] || []).length || FIT_PAGES.includes(pageId) ? `
         <div class="ds-card"><h2 data-i18n>Projections <span class="r" data-i18n>ground-derived · not downlinked</span></h2>
           <div class="bd">
             <div id="${pageId}-derived"></div>
           </div></div>` : ""}
-        ${pageId === "pld" ? `<div class="ds-card"><h2 data-i18n>Capture readiness (NOM-002)
-          <span class="r" data-i18n>gates from display_config.yaml</span></h2>
+        ${pageId === "pld" ? `<div class="ds-card"><h2 data-i18n>Capture readiness (NOM-002)</h2>
           <div class="bd">
             <div id="pld-capture"></div>
           </div></div>` : ""}
-        ${pageId === "aocs" ? `<div class="ds-card"><h2 data-i18n>FINE-entry readiness
-          <span class="r" data-i18n>aocs.fine_ready 0x02C5 decoded</span></h2>
+        ${pageId === "aocs" ? `<div class="ds-card"><h2 data-i18n>FINE-entry readiness</h2>
           <div class="bd">
             <div id="aocs-fineready"></div>
           </div></div>
@@ -1560,21 +1572,17 @@ function buildSubsystemPage(pageId) {
         <div class="ds-card"><h2 data-i18n>GPS navigation (PVT)
           <span class="r" data-i18n>valid only with a 3D fix — zeros otherwise</span></h2>
           <div class="bd" id="aocs-gpsnav"></div></div>` : ""}
-        ${pageId === "obd" ? `<div class="ds-card"><h2 data-i18n>Software state
-          <span class="r">obdh.sw_image 0x0311 · obdh.mode 0x0300</span></h2>
+        ${pageId === "obd" ? `<div class="ds-card"><h2 data-i18n>Software state</h2>
           <div class="bd" id="obd-swstate"></div></div>` : ""}
-        ${pageId === "prp" ? `<div class="ds-card"><h2 data-i18n>Arm interlocks
-          <span class="r" data-i18n>prop.arm_inhibit_mask 0x0B15 decoded</span></h2>
+        ${pageId === "prp" ? `<div class="ds-card"><h2 data-i18n>Arm interlocks</h2>
           <div class="bd">
             <div id="prp-inhibit"></div>
           </div></div>
-        <div class="ds-card"><h2 data-i18n>Loaded vs planned burn
-          <span class="r" data-i18n>TM 0x0B0E/0x0B10 vs planner orbit_manoeuvre</span></h2>
+        <div class="ds-card"><h2 data-i18n>Loaded vs planned burn</h2>
           <div class="bd">
             <div id="prp-burnplan"><span data-i18n>awaiting planner…</span></div>
           </div></div>` : ""}
-        ${pageId === "ttc" ? `<div class="ds-card"><h2 data-i18n>Predicted vs measured link
-          <span class="r">/api/displays/link-prediction</span></h2>
+        ${pageId === "ttc" ? `<div class="ds-card"><h2 data-i18n>Predicted vs measured link</h2>
           <div class="bd">
             <div id="ttc-linkpred-now"></div>
             <canvas id="ttc-linkpred-chart" height="140" class="hide"></canvas>
@@ -1589,17 +1597,13 @@ function buildSubsystemPage(pageId) {
           </div></div>` : ""}
         <div class="ds-card"><h2 id="${pageId}-stepper-title">Mode</h2>
           <div class="bd" id="${pageId}-stepper"></div></div>
-        <div class="ds-card"><h2 data-i18n>Equipment</h2>
-          <div class="eqg" id="${pageId}-equip"></div></div>
-        <div class="ds-card"><h2 data-i18n>Command <span class="r" data-i18n>in place · position-gated (P9)</span></h2>
+        ${pageId === "eps" ? "" : `<div class="ds-card" id="${pageId}-equip-card"><h2 data-i18n>Equipment</h2>
+          <div class="eqg" id="${pageId}-equip"></div></div>`}
+        <div class="ds-card"><h2 data-i18n>Command</h2>
           <div class="bd" id="${pageId}-quick">
             <div id="${pageId}-quick-list"></div></div></div>
-        ${pageId === "ttc" ? `<div class="ds-card"><h2 data-i18n>Ground station network
-          <span class="r">/api/ground-stations</span></h2>
+        ${pageId === "ttc" ? `<div class="ds-card"><h2 data-i18n>Ground station network</h2>
           <div class="bd" id="ttc-gs-panel"><span data-i18n>awaiting station list…</span></div></div>` : ""}
-        ${pageId === "eps" ? `<div class="ds-card"><h2 data-i18n>Power budget
-          <span class="r">/api/displays/power-budget</span></h2>
-          <div class="bd" id="eps-power-budget"><span data-i18n>awaiting data…</span></div></div>` : ""}
         <div class="ds-card"><h2 data-i18n>Events</h2>
           <div class="bd scroll-y" style="max-height:180px" id="${pageId}-events"></div></div>
       </div>
@@ -1615,7 +1619,7 @@ function renderGsNetwork() {
   const host = $("ttc-gs-panel");
   if (!host) return;
   if (!S.groundStations.length) {
-    host.innerHTML = `<div class="ds-banner stale">${t("station list unavailable ({{src}})", { src: "/api/ground-stations" })}</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("Station list not loaded yet.")}</div>`;
     return;
   }
   const ls = linkState();
@@ -1629,30 +1633,6 @@ function renderGsNetwork() {
       <td class="mono">${num(g.lat_deg ?? g.lat, 1)}° / ${num(g.lon_deg ?? g.lon, 1)}°</td>
       <td class="mono">${live ? `EL ${num(el, 0)}° · ${num(rng, 0)} km` : `<span class="ds-meta">${t("not in view")}</span>`}</td></tr>`;
   }).join("") + `</tbody></table>`;
-}
-
-/* Power budget board (classic EPS tab capability; Agent 5 inventory fix —
- * checklist row "POWER BUDGET board <- /api/displays/power-budget"). */
-async function refreshPowerBudget() {
-  const host = $("eps-power-budget");
-  if (!host || S.page !== "eps") return;
-  try {
-    const d = await getJSON("/api/displays/power-budget");
-    if (!d.has_data) { host.innerHTML = `<div class="ds-banner stale">${t("no power telemetry yet")}</div>`; return; }
-    const row = (k2, v) => `<tr><td>${esc(k2)}</td><td class="mono">${v === null || v === undefined || v === "" ? renderNoData() : esc(String(v))}</td></tr>`;
-    const per = Object.entries(d.per_subsystem_power || {})
-      .map(([k2, v]) => row(k2.toUpperCase(), `${num(v, 1)} W`)).join("");
-    host.innerHTML = `<table class="plain"><tbody>` +
-      row(tText("GENERATION"), `${num(d.power_gen_w, 1)} W`) +
-      row(tText("CONSUMPTION"), `${num(d.power_cons_w, 1)} W`) +
-      row(tText("MARGIN"), `${num(d.power_margin_w, 1)} W`) +
-      row("SOC", `${num(d.battery_soc_percent, 1)} % (${esc(d.soc_trend || "")})`) +
-      row(tText("LOAD SHED"), d.load_shedding_label || null) +
-      per + `</tbody></table>` +
-      (d.breakdown_note ? `<div style="font-size:12px;color:var(--tx3);margin-top:6px">${esc(d.breakdown_note)}</div>` : "");
-  } catch (e) {
-    host.innerHTML = `<div class="ds-banner stale">${t("power budget unavailable")}</div>`;
-  }
 }
 
 function updateSubsystemPage(pageId, full) {
@@ -1686,8 +1666,11 @@ function updateSubsystemPage(pageId, full) {
   // equipment cards
   // Equipment: a hairline grid of shared readouts (stale keeps the last
   // value with its age; never received reads "no data").
-  setHTML(`${pageId}-equip`, cfg.equipment.map(([nm, h, u]) =>
-    `<div class="eq"><span class="nm">${esc(nm)}<span class="hexid">${esc(h)}</span></span>` +
+  // Only what Key parameters does not already show (review #13).
+  const equip = cfg.equipment.filter(([, h]) => !cfg.key.includes(h));
+  show(`${pageId}-equip-card`, equip.length > 0);
+  setHTML(`${pageId}-equip`, equip.map(([nm, h, u]) =>
+    `<div class="eq"><span class="nm" title="${esc(h)}">${esc(nm)}</span>` +
     `${valueCell(h, 1, u)}</div>`).join(""));
   // AND table from the catalog (never drifts from the dictionary).
   //
@@ -1818,7 +1801,9 @@ function renderObdSwState() {
 
 /* — G1: derived-parameter rows (server block `state.derived`, 0x0803-0x080A) — */
 const DERIVED_BY_PAGE = {
-  eps: ["eps.soc_at_eclipse_exit_pred", "eps.time_to_soc_yellow"],
+  // SoC at eclipse exit: the power-flow picture carries it (one answer in
+  // one place, review #12).
+  eps: ["eps.time_to_soc_yellow"],
   aocs: ["aocs.time_to_mom_70pct"],
   obd: ["obdh.time_to_buf_full", "obdh.time_offset_ms"],
   ttc: ["ttc.pass_data_capacity_bytes"],
@@ -1846,7 +1831,12 @@ export function fmtDerivedValue(ent) {
   const u = String(ent.units || "");
   if (u === "s") return fmtAge(v);
   if (u === "bytes") return v >= 1e6 ? `${(v / 1e6).toFixed(1)} MB` : `${Math.round(v / 1e3)} kB`;
-  if (u === "ms") return `${num(v, 0)} ms`;
+  if (u === "ms") {
+    // An offset of more than a day is an unset clock, not a number to read
+    // (review #20: "−840499231115 ms").
+    if (Math.abs(v) > 86400e3) return tText("OBC clock not set (never synchronised)");
+    return Math.abs(v) >= 10e3 ? `${num(v / 1000, 1)} s` : `${num(v, 0)} ms`;
+  }
   if (u === "ratio") return num(v, 2);
   return `${num(v, 1)}${u ? " " + u : ""}`;
 }
@@ -1857,16 +1847,14 @@ export function renderDerivedRow(name) {
   const ent = derivedEntry(name);
   const label = DERIVED_LABELS[name] ? tText(DERIVED_LABELS[name]) : name;
   if (!ent) {
-    return `<div class="logrow nom">${t("{{label}} — no derived block in /api/state (server predates POSITION_NEEDS G1?)",
-      { label })}</div>`;
+    return `<div class="logrow nom">${t("{{label}} — not computed yet", { label })}</div>`;
   }
-  const head = `<span style="font-size:12px;color:var(--tx3)">${esc(label)} ` +
-               `<span class="mono">${esc(ent.id)}</span></span>`;
+  const head = `<span style="font-size:12px;color:var(--tx3)" title="${esc(ent.id || "")}">${esc(label)}</span>`;
   if (!ent.valid) {
     // The server NEVER sends a number when invalid; say why, prominently.
     return `<div class="row derived-row" style="justify-content:space-between;gap:6px">
       ${head}
-      <span style="font-size:12px;color:var(--stale)">${t("INVALID — {{reason}}", { reason: ent.reason || tText("no reason given") })}
+      <span style="font-size:12px;color:var(--stale)">${t("INVALID — {{reason}}", { reason: ent.reason ? tText(ent.reason) : tText("no reason given") })}
         ${GND_MARK(ent.id)}</span></div>`;
   }
   return `<div class="row derived-row" style="justify-content:space-between;gap:6px">
@@ -1998,8 +1986,7 @@ function renderCaptureCard() {
   if (!host) return;
   const c = computeCaptureReadiness();
   if (!c.available) {
-    host.innerHTML = `<div class="ds-banner stale">${t("no gate table — add {{key}} to {{file}}",
-      { key: "capture_gates", file: "configs/<mission>/mcs/display_config.yaml" })}</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("No capture gates configured for this mission.")}</div>`;
     return;
   }
   const chips = c.rows.map((r) => renderChip({
@@ -2014,7 +2001,7 @@ function renderCaptureCard() {
       <span style="font-size:12px;color:var(--tx3)">${t("capture readiness — all gates from three subsystems, one verdict")}</span>
     </div>
     <div class="row" style="gap:4px">${chips}</div>
-    <div style="margin-top:8px;font-size:12px;color:var(--tx3)">${t("FINE-entry preconditions (aocs.fine_ready — PL4: bit4 set means a desat is coming):")}</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--tx3)">${t("FINE-entry preconditions:")}</div>
     ${renderBitmaskChips("0x02C5", { clearLabel: tText("READY FOR FINE") })}`;
 }
 
@@ -2389,8 +2376,7 @@ export function renderBaselineCard() {
   if (!host) return;
   const c = computeBaselineDeltas();
   if (!c.available) {
-    host.innerHTML = `<div class="ds-banner stale">${t("no commissioning baseline — the instructor fills {{key}} in {{file}}",
-      { key: "health_baselines", file: "configs/<mission>/mcs/display_config.yaml" })}</div>`;
+    host.innerHTML = `<div class="ds-banner stale">${t("No commissioning baseline recorded yet.")}</div>`;
     return;
   }
   const rows = c.rows.map((r) => {
@@ -2411,8 +2397,8 @@ export function renderBaselineCard() {
   host.innerHTML = `<table class="plain">
     <thead><tr><th>${t("Metric")}</th><th>ID</th><th>${t("Baseline")}</th><th>${t("Now")}</th><th>${t("Drift")}</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <div style="font-size:12px;color:var(--tx3);margin-top:6px">${t("baseline: commissioning snapshot ({{file}}) · drift computed on the console, flagged {{thr}} per NOM-011",
-      { file: "display_config.yaml", thr: ">5 %" })}</div>`;
+    <div style="font-size:12px;color:var(--tx3);margin-top:6px">${t("baseline: commissioning · drift computed on the console, flagged {{thr}} per NOM-011",
+      { thr: ">5 %" })}</div>`;
 }
 
 /* ═══ 10. FRESHNESS — display-wide staleness gate (P4) ════════════════════ */
@@ -2676,15 +2662,16 @@ function buildCmdPage() {
   return `
   <div class="pad hide" id="page-cmd" role="tabpanel" aria-label="Commanding" data-i18n-aria-label>
     <h1 class="pt" data-i18n>Commanding</h1>
-    <p class="sub" data-i18n>PUS telecommand builder · verification is a stepper attached to the
-      command, not a separate log (P9)</p>
+    <p class="sub" data-i18n>Build and send PUS telecommands; each command shows its own verification steps.</p>
     <div class="g" style="grid-template-columns:minmax(0,1fr) 420px;align-items:start">
       <div class="g">
         <div class="ds-card"><h2 data-i18n>Command builder <span class="r" id="cmd-authority"></span></h2>
           <div class="bd">
             <div class="row">
               <div class="fld"><label for="cmd-catalog" data-i18n>Catalogue command</label>
-                <select id="cmd-catalog" class="in" style="min-width:280px"></select></div>
+                <select id="cmd-catalog" class="in" style="min-width:280px"></select>
+                <label class="sub" style="font-size:12px"><input type="checkbox" id="cmd-show-all">
+                  <span data-i18n>show other positions' commands (read-only)</span></label></div>
               <div class="fld"><label for="cmd-service" data-i18n>Service</label>
                 <select id="cmd-service" class="in">
                   ${[3, 5, 6, 8, 9, 11, 12, 15, 17, 19, 20].map((s2) => `<option>${s2}</option>`).join("")}
@@ -2730,8 +2717,6 @@ function buildCmdPage() {
               <span><span class="stripe" aria-hidden="true"></span><span data-i18n="Critical: press to arm, press again within 8 s to send">Critical: press to arm, press again within 8 s to send</span></span>
             </div>
           </div></div>
-        <div class="ds-card"><h2 data-i18n>Verification log <span class="r">/api/verification-log · 5 s</span></h2>
-          <div class="bd scroll-y" style="max-height:200px" id="cmd-verif-log"></div></div>
       </div>
       <div class="g" style="align-content:start">
         <div class="ds-card"><h2 data-i18n>Stored TM (S15) dump</h2><div class="bd">
@@ -2748,18 +2733,10 @@ function buildCmdPage() {
           </div>
           <div id="s15-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
         </div></div>
-        <div class="ds-card"><h2 data-i18n>HK SID control (S3)</h2><div class="bd">
-          <div class="row">
-            <div class="fld"><label for="hk-sid">SID</label>
-              <input id="hk-sid" class="in" type="number" min="1" value="1" style="width:70px"></div>
-            <button class="ds-btn" data-hk="enable" data-i18n="Enable (3,5)">Enable (3,5)</button>
-            <button class="ds-btn" data-hk="disable" data-i18n="Disable (3,6)">Disable (3,6)</button>
-            <button class="ds-btn" data-hk="oneshot" data-i18n="One-shot (3,27)">One-shot (3,27)</button>
-          </div>
-          <div id="hk-quick-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
-        </div></div>
-        <div class="ds-card"><h2 data-i18n>Command history</h2>
-          <div class="bd scroll-y" style="max-height:280px" id="cmd-history"></div></div>
+        <div class="ds-card"><div class="bd" style="font-size:12.5px;color:var(--tx2)">
+          <span data-i18n>HK enable and disable: PUS services page, S3.</span>
+          <a href="#" data-page-nav="diag" data-i18n>Open S3</a> ·
+          <span data-i18n>Command history: the drawer below.</span></div></div>
       </div>
     </div>
   </div>`;
@@ -2771,14 +2748,51 @@ function currentCatalogCmd() {
   return S.tcCatalog.find((c) => c.name === sel.value) || null;
 }
 
+/* A position's display name in the interface language. */
+export function positionLabel(pos) {
+  const p = S.positions[pos] || {};
+  return p.label ? tdb(`pos:${pos}:label`, p.label) : String(pos || "");
+}
+/* Raw service/subtype building is an expert function (FD and FDIR). */
+export function rawCommandingAllowed(pos = S.position) {
+  return pos === "flight_director" || pos === "fdir_systems";
+}
+/* The services this position may command (positions.yaml
+ * allowed_services; "all" or absent = every service). */
+export function positionServices(pos = S.position) {
+  const all = [3, 5, 6, 8, 9, 11, 12, 15, 17, 19, 20];
+  const p = S.positions[pos] || {};
+  const al = p.allowed_services;
+  if (!Array.isArray(al) || !al.length) return all;
+  return all.filter((s2) => al.map(Number).includes(s2));
+}
+/* Review #14: the catalogue lists what this position may send. Commands of
+ * other positions appear only with "show all", disabled and labelled; the
+ * superseded *_LEGACY entries never appear. */
 function renderCmdCatalogSelect() {
   const sel = $("cmd-catalog");
   if (!sel) return;
   const cur = sel.value;
-  sel.innerHTML = `<option value="">${t("— raw service/subtype —")}</option>` +
-    S.tcCatalog.map((c) => `<option value="${esc(c.name)}"${c.allowed ? "" : " data-denied=\"1\""}>` +
-      `${esc(c.name)} (S${c.service},${c.subtype})${c.allowed ? "" : " 🔒"}</option>`).join("");
-  if (cur) sel.value = cur;
+  const showAll = !!($("cmd-show-all") && $("cmd-show-all").checked);
+  const live = S.tcCatalog.filter((c) => !/_LEGACY$/.test(String(c.name || "")));
+  const mine = live.filter((c) => c.allowed);
+  const other = showAll ? live.filter((c) => !c.allowed) : [];
+  const opt = (c, denied) => `<option value="${esc(c.name)}"${denied ? " disabled data-denied=\"1\"" : ""}>` +
+    `${esc(c.name)} (S${c.service},${c.subtype})${denied ? " — " + esc(tText("not permitted")) : ""}</option>`;
+  sel.innerHTML = (rawCommandingAllowed() ? `<option value="">${t("— raw service/subtype —")}</option>`
+                                         : `<option value="">${t("— choose a command —")}</option>`) +
+    mine.map((c) => opt(c, false)).join("") +
+    (other.length ? `<optgroup label="${esc(tText("Other positions (read-only)"))}">` +
+      other.map((c) => opt(c, true)).join("") + `</optgroup>` : "");
+  if (cur && mine.some((c) => c.name === cur)) sel.value = cur;
+  const svc = $("cmd-service");
+  if (svc) {
+    const keep = svc.value;
+    svc.innerHTML = positionServices().map((s2) => `<option>${s2}</option>`).join("");
+    if (positionServices().includes(Number(keep))) svc.value = keep;
+    svc.disabled = !rawCommandingAllowed();
+  }
+  if ($("cmd-subtype")) $("cmd-subtype").disabled = !rawCommandingAllowed();
 }
 
 /* "NOT PERMITTED — belongs to <position>" (plan §2.1): authority is shown,
@@ -2891,11 +2905,17 @@ function updateCmdBuilder() {
   } else {
     if (authEl) authEl.textContent = "";
     setHTML("cmd-fields", "");
-    setText("cmd-provenance", tText("raw command — no catalogue entry; length not validated"));
+    const raw = rawCommandingAllowed();
+    setText("cmd-provenance", raw ? tText("raw command — no catalogue entry; length not validated")
+                                  : tText("Choose a command from the catalogue."));
     setText("cmd-raw-preview", "");
     setText("cmd-field-errors", "");
     if (critBtn) critBtn.classList.add("hide");
-    if (sendBtn) { sendBtn.classList.remove("hide"); setEnabled(sendBtn, true); setText("cmd-send-why", ""); }
+    if (sendBtn) {
+      sendBtn.classList.remove("hide");
+      setEnabled(sendBtn, raw, raw ? "" : tText("Raw telecommands are for the Flight Director and FDIR positions."));
+      setText("cmd-send-why", "");
+    }
     updateBytesChip();
   }
 }
@@ -3042,6 +3062,10 @@ async function sendCommand(opts = {}) {
   const subtype = Number($("cmd-subtype").value);
   const data = $("cmd-data").value.trim();
   const name = $("cmd-name").value.trim() || (cmd ? cmd.name : "");
+  if (!cmd && !rawCommandingAllowed()) {
+    setHTML("cmd-result", `<span style="color:var(--alarm)">${esc(tText("Raw telecommands are for the Flight Director and FDIR positions."))}</span>`);
+    return;
+  }
   if (cmd) {
     // Length gate BEFORE anything else: a short data field is not a command
     // with a default, it is a command the spacecraft will refuse (and used
@@ -3319,10 +3343,7 @@ function buildDiagPage() {
   <div class="pad hide" id="page-diag" role="tabpanel" aria-label="Diagnostics" data-i18n-aria-label>
     <div class="pghd">
       <div><h1 class="pt" data-i18n>PUS services</h1>
-        <p class="sub" data-i18n>All seven service panels from the classic PUS SERVICES tab —
-          S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring ·
-          S19 event-action · S9 time — plus the parameter catalog. S12/S19 tables are
-          the same renderer FDIR mounts (one implementation, two mounts).</p></div>
+        <p class="sub" data-i18n>On-board service configuration: S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring · S19 event-action · S9 time, and the parameter catalog.</p></div>
       <div class="fld"><label for="hdr-param-search" data-i18n>Parameter search (global)</label>
         <input id="hdr-param-search" class="in" placeholder="name or 0xHHHH" data-i18n-placeholder style="min-width:240px"></div>
     </div>
@@ -3451,22 +3472,24 @@ function hkObserved(sid) {
   if (age <= interval * 2.5 + 1) return { label: tText("PERIODIC · {{age}}", { age: fmtAge(age) }), cls: "ok" };
   return { label: tText("SILENT · {{age}}", { age: fmtAge(age) }), cls: "warn" };
 }
-/** The enable bit the SPACECRAFT reported for a SID, or undefined. */
+/** The enable bit COMMANDED from the ground for a SID (TC 3,5/3,6, or the
+ * spacecraft's S5 0x0056 reset report), or undefined. The spacecraft does
+ * not downlink its enable set; what arrives is the Observed column. */
 function hkEnabledBit(sid) {
-  const rep = S.state.hk_enabled || {};
+  const rep = S.state.hk_enabled_commanded || {};
   if (rep[String(sid)] !== undefined) return !!rep[String(sid)];
   const meta = ((S.hkStructures || {}).structures || [])
     .find((s2) => Number(s2.sid) === Number(sid)) || {};
-  return meta.enabled === null || meta.enabled === undefined
-    ? undefined : !!meta.enabled;
+  return meta.commanded === null || meta.commanded === undefined
+    ? undefined : !!meta.commanded;
 }
 
 /**
  * "Who turned my SIDs off?" A boot or a bootloader entry legitimately
- * replaces the on-board HK enable set with simulation.yaml
- * `default_enabled_sids`. The spacecraft raises S5 0x0056 and publishes the
- * same record (state.hk_enable_reset), which is printed here as an explicit
- * banner naming the SIDs it silenced and the fix (HK_ENABLE, TC 3,5).
+ * replaces the on-board HK enable set with its power-up default. The
+ * spacecraft raises S5 0x0056 (state.hk_enable_reset), which is printed here
+ * as an explicit banner naming the SIDs it silenced and the fix (HK_ENABLE,
+ * TC 3,5).
  */
 function hkEnableSummaryHtml() {
   const structures = ((S.hkStructures || {}).structures) || [];
@@ -3478,9 +3501,9 @@ function hkEnableSummaryHtml() {
   }
   const known = on.length || off.length;
   const line = known
-    ? t("<strong>Enable set reported by the spacecraft:</strong> enabled [{{on}}] · disabled [{{off}}]",
+    ? t("<strong>Enable set commanded from the ground:</strong> enabled [{{on}}] · disabled [{{off}}]. The Observed column shows what actually arrives.",
       { on: on.join(", ") || "—", off: off.join(", ") || "—" })
-    : t("Enable set not reported by the spacecraft — the Observed column is inferred from arriving telemetry.");
+    : t("No HK enable command sent this session. The spacecraft does not report its enable set: the Observed column is inferred from arriving telemetry.");
   const rst = S.state.hk_enable_reset;
   let why = "";
   if (rst && rst.reason) {
@@ -3504,8 +3527,8 @@ function renderS3Panel() {
     const nParams = s2.param_count ?? (s2.parameters || []).length;
     const bit = hkEnabledBit(s2.sid);
     const enChip = bit === undefined
-      ? renderChip({ kind: "stale", label: tText("NOT REPORTED") })
-      : renderChip({ kind: bit ? "ok" : "warn", label: bit ? tText("ENABLED") : tText("DISABLED") });
+      ? renderChip({ kind: "stale", label: tText("NOT COMMANDED") })
+      : renderChip({ kind: bit ? "ok" : "warn", label: bit ? tText("COMMANDED ON") : tText("COMMANDED OFF") });
     return `<tr><td class="mono">${s2.sid}</td><td>${esc(s2.name || "")}</td>
       <td class="mono">${s2.apid ?? "—"}</td>
       <td class="mono">${s2.interval_s ?? "—"} s</td>
@@ -3920,10 +3943,13 @@ async function loadFdir() {
   if (S.page === "diag" && (diagTab === "s12" || diagTab === "s19")) renderDiag();
 }
 
-/* ONE implementation, two mounts (FDIR + DIAG). */
+/* One renderer for the FDIR page (state, read-only) and the PUS page
+ * (configuration: add, enable, disable, delete). Review: the S12/S19
+ * editors are not mounted twice. */
 let s12Filter = "";
 let s12OolOnly = false;
 export function renderS12Block(mount) {
+  const edit = mount !== "fdir";
   const monitors = ((S.fdir || {}).monitors) || ((S.fdir || {}).s12) || [];
   // /api/fdir marks a violated monitor with status "VIOLATION"; older
   // fixtures use out_of_limits. Accept both (this was one of the "content is
@@ -3947,33 +3973,38 @@ export function renderS12Block(mount) {
     <td>${m.enabled ? "EN" : "dis"}</td>
     <td>${isOol(m) ? renderChip({ kind: "alarm", label: "OOL" })
       : esc(String(m.status || ""))}</td>
-    <td><button class="ds-btn" data-s12row="enable" data-mid="${m.mon_id ?? m.id}">EN</button>
+    ${edit ? `<td><button class="ds-btn" data-s12row="enable" data-mid="${m.mon_id ?? m.id}">EN</button>
         <button class="ds-btn" data-s12row="disable" data-mid="${m.mon_id ?? m.id}">DIS</button>
-        <button class="ds-btn" data-s12row="delete" data-mid="${m.mon_id ?? m.id}">✕</button></td></tr>`).join("");
+        <button class="ds-btn" data-s12row="delete" data-mid="${m.mon_id ?? m.id}">✕</button></td>` : ""}</tr>`).join("");
+  // Until TM(12,13) arrives the table is the GROUND configuration with live
+  // values beside it, not the on-board monitor state: say so.
+  const reported = !!(((S.fdir || {}).state || {}).s12_reported);
   return `
-    <div class="ds-card"><h2>${t("On-board monitoring (S12)")} <span class="r">${t("{{mount}} mount — one renderer", { mount })}</span></h2>
+    <div class="ds-card"><h2>${t("On-board monitoring (S12)")}${reported ? ""
+      : ` <span class="r">${t("configured on the ground; not yet reported by the spacecraft")}</span>`}</h2>
       <div class="bd">
       <div class="row" style="margin-bottom:6px">
-        <button class="ds-btn" data-s12="refresh">REFRESH (12,12)</button>
-        <button class="ds-btn" data-s12="enable">ENABLE MON (12,1)</button>
-        <button class="ds-btn" data-s12="disable">DISABLE MON (12,2)</button>
+        ${edit ? `<button class="ds-btn" data-s12="refresh">${t("REFRESH (12,12)")}</button>
+        <button class="ds-btn" data-s12="enable">${t("ENABLE MON (12,1)")}</button>
+        <button class="ds-btn" data-s12="disable">${t("DISABLE MON (12,2)")}</button>` : ""}
         <input class="in" data-s12filter placeholder="${t("filter…")}" value="${esc(s12Filter)}">
         <label style="font-size:12px"><input type="checkbox" data-s12ool ${s12OolOnly ? "checked" : ""}> ${t("out-of-limits only")}</label>
       </div>
-      <div class="row" style="margin-bottom:6px">
+      ${edit ? `<div class="row" style="margin-bottom:6px">
         <input class="in mono" id="s12-add-mid-${mount}" placeholder="${t("mon id")}" style="width:70px">
         <input class="in mono" id="s12-add-pid-${mount}" placeholder="${t("param 0xHHHH")}" style="width:110px">
         <select class="in" id="s12-add-type-${mount}" aria-label="${t("Check type")}"><option value="0">${t("absolute")}</option><option value="1">${t("delta")}</option></select>
         <input class="in mono" id="s12-add-low-${mount}" placeholder="${t("low")}" style="width:80px">
         <input class="in mono" id="s12-add-high-${mount}" placeholder="${t("high")}" style="width:80px">
-        <button class="ds-btn" data-s12add="${mount}">ADD (12,6)</button>
-      </div>
+        <button class="ds-btn" data-s12add="${mount}">${t("ADD (12,6)")}</button>
+      </div>` : ""}
       <table class="plain"><thead><tr><th>${t("Mon")}</th><th>${t("Param")}</th><th>${t("Name")}</th><th>${t("Check")}</th>
-        <th>${t("Low")}</th><th>${t("High")}</th><th>${t("Value")}</th><th>En</th><th>${t("State")}</th><th></th></tr></thead>
+        <th>${t("Low")}</th><th>${t("High")}</th><th>${t("Value")}</th><th>En</th><th>${t("State")}</th>${edit ? "<th></th>" : ""}</tr></thead>
         <tbody>${rows || `<tr><td colspan="10">${t("no monitor table — REFRESH (12,12)")}</td></tr>`}</tbody></table>
       </div></div>`;
 }
 export function renderS19Block(mount) {
+  const edit = mount !== "fdir";
   // /api/fdir serves the rule table under `rules` (row shape: ea_id, name,
   // trigger_kind_name, trigger_label, action_label, fire_count). The old
   // code only read `ea_rules`/`s19`, so the LIVE rule table always rendered
@@ -3991,23 +4022,23 @@ export function renderS19Block(mount) {
       (r.action_func_id != null ? `func ${r.action_func_id}` : "")))}</td>
     <td>${r.enabled ? "EN" : "dis"}</td>
     <td class="mono">${r.fire_count ?? "—"}</td>
-    <td><button class="ds-btn" data-s19row="enable" data-eid="${r.ea_id ?? r.id}">EN</button>
+    ${edit ? `<td><button class="ds-btn" data-s19row="enable" data-eid="${r.ea_id ?? r.id}">EN</button>
         <button class="ds-btn" data-s19row="disable" data-eid="${r.ea_id ?? r.id}">DIS</button>
-        <button class="ds-btn" data-s19row="delete" data-eid="${r.ea_id ?? r.id}">✕</button></td></tr>`).join("");
+        <button class="ds-btn" data-s19row="delete" data-eid="${r.ea_id ?? r.id}">✕</button></td>` : ""}</tr>`).join("");
   return `
-    <div class="ds-card"><h2>${t("Event-action rules (S19)")} <span class="r">${t("{{mount}} mount — one renderer", { mount })}</span></h2>
+    <div class="ds-card"><h2>${t("Event-action rules (S19)")}</h2>
       <div class="bd">
-      <div class="row" style="margin-bottom:6px">
-        <button class="ds-btn" data-s19="refresh">REFRESH (19,8)</button>
+      ${edit ? `<div class="row" style="margin-bottom:6px">
+        <button class="ds-btn" data-s19="refresh">${t("REFRESH (19,8)")}</button>
         <input class="in mono" id="s19-add-eid-${mount}" placeholder="${t("EA id")}" style="width:70px">
         <select class="in" id="s19-add-kind-${mount}" aria-label="${t("Trigger kind")}">
           <option value="0">${t("0 — S5 event id")}</option><option value="1">${t("1 — S12 parameter id")}</option></select>
         <input class="in mono" id="s19-add-trig-${mount}" placeholder="${t("trigger 0xHHHH")}" style="width:110px">
         <select class="in" id="s19-add-action-${mount}" aria-label="${t("Action")}">${actions.map((a) => `<option>${esc(a)}</option>`).join("")}</select>
-        <button class="ds-btn" data-s19add="${mount}">ADD RULE (19,1)</button>
-      </div>
+        <button class="ds-btn" data-s19add="${mount}">${t("ADD RULE (19,1)")}</button>
+      </div>` : ""}
       <table class="plain"><thead><tr><th>EA</th><th>${t("Name")}</th><th>${t("Kind")}</th><th>${t("Trigger")}</th>
-        <th>${t("Action")}</th><th>En</th><th>${t("Fires")}</th><th></th></tr></thead>
+        <th>${t("Action")}</th><th>En</th><th>${t("Fires")}</th>${edit ? "<th></th>" : ""}</tr></thead>
         <tbody>${rows || `<tr><td colspan="8">${t("no rule table — REFRESH (19,8)")}</td></tr>`}</tbody></table>
       </div></div>`;
 }
@@ -4020,10 +4051,10 @@ function buildFdirPage() {
     <div class="ds-card"><h2 data-i18n>FDIR state</h2><div class="bd row" id="fdir-strip" style="gap:18px"></div></div>
     <div class="row" style="margin:10px 0">
       <button class="ds-btn" id="fdir-refresh-all" data-i18n>REFRESH ALL</button>
-      <button class="ds-btn" data-s12="refresh">REPORT MONITORS (12,12)</button>
-      <button class="ds-btn" data-s19="refresh">REPORT RULES (19,8)</button>
-      <button class="ds-btn" data-s12="enable">ENABLE MONITORING (12,1)</button>
-      <button class="ds-btn" data-s12="disable">DISABLE MONITORING (12,2)</button>
+      <button class="ds-btn" data-s12="refresh" data-i18n>REPORT MONITORS (12,12)</button>
+      <button class="ds-btn" data-s19="refresh" data-i18n>REPORT RULES (19,8)</button>
+      <button class="ds-btn" data-s12="enable" data-i18n>ENABLE MONITORING (12,1)</button>
+      <button class="ds-btn" data-s12="disable" data-i18n>DISABLE MONITORING (12,2)</button>
       <button class="ds-btn" id="fdir-ack-all" data-i18n>ACK ALL ALARMS</button>
     </div>
     <div id="fdir-autonomy-host"></div>
@@ -4059,9 +4090,11 @@ function renderFdirPage() {
       : (fst.fdir_level ?? d.fdir_level ?? "—"),
       fdirLevelInfo() !== null ? "TM 0x0700" : ""],
     [tText("SC MODE"), mode.label, tText("src: {{src}}", { src: mode.src })],
-    [tText("LATCHED"), (fst.safe_latched ?? d.latched_safe) ? "SAFE"
-      : (fst.emergency_latched ?? d.latched_emergency) ? "EMERG" : "—",
-      fst.latch_source || ""],
+    // TM sat.mode (0x0001) only, never the simulator's mode (review #4).
+    [tText("LATCHED"), fst.safe_latched === true ? "SAFE"
+      : fst.emergency_latched === true ? "EMERG"
+      : fst.safe_latched === false ? tText("none") : "—",
+      fst.latch_source ? "TM 0x0001" : tText("mode not downlinked yet")],
     [tText("LOAD SHED"), fst.load_shed_stage ?? paramVal("0x0134") ?? "—", ""],
     [tText("MONITORS OOL"), oolCount, ""],
     // Two different quantities, labelled as such: the spacecraft's own
@@ -4074,28 +4107,14 @@ function renderFdirPage() {
     <div class="mono" style="font-size:16px;font-weight:600">${esc(String(v))}</div>
     ${s2 ? `<div style="font-size:12px;color:var(--tx3)">${esc(s2)}</div>` : ""}</div>`).join(""));
 
-  // M4: SIMULATED ON-BOARD AUTONOMY — sim mode only, retitled; real mode
-  // shows the TM-derived story instead (designed empty state, not accident).
+  // On-board autonomy as telemetered. The simulator's fault-cascade state
+  // is instructor knowledge and never reaches this page (review #4).
   const host = $("fdir-autonomy-host");
   if (host) {
-    if (S.timeMode === "sim" && (S.state.sim_health || {}).fdir) {
-      const a = S.state.sim_health.fdir;
-      host.innerHTML = `<div class="ds-card"><h2>${t("SIMULATED ON-BOARD AUTONOMY")}
-        <span class="r">${t("instructor truth — not downlinked")}</span></h2><div class="bd">
-        <div class="row" style="gap:18px">
-          <div>${t("active faults:")} <b class="mono">${(a.active_faults || []).length}</b></div>
-          <div>${t("pending cascades:")} <b class="mono">${(a.pending_cascades || []).length}</b></div>
-          <div>${t("recovery attempts:")} <b class="mono">${(a.recovery_attempts || []).length || (a.recoveries || []).length || 0}</b></div>
-        </div>
-        ${(a.procedures || []).map((p) => `<div style="margin-top:6px;font-size:12.5px">
-          ${p.name ? esc(p.name) : t("on-board procedure")} — ${num(p.progress, 0)} %</div>`).join("")}
-        </div></div>`;
-    } else {
-      host.innerHTML = `<div class="ds-card"><h2>${t("On-board autonomy — as telemetered")}</h2>
-        <div class="bd" style="font-size:13px;color:var(--tx2)">
-        ${t("A real spacecraft does not downlink its fault-cascade queue. The honest ground view is what it <em>told</em> us: S5 events (drawer below), S12 monitor transitions (table), S19 rule fires, and the mode itself ({{mode}}, {{src}}).",
-          { mode: mode.label, src: mode.src })}</div></div>`;
-    }
+    host.innerHTML = `<div class="ds-card"><h2>${t("On-board autonomy — as telemetered")}</h2>
+      <div class="bd" style="font-size:13px;color:var(--tx2)">
+      ${t("A real spacecraft does not downlink its fault-cascade queue. The honest ground view is what it <em>told</em> us: S5 events (drawer below), S12 monitor transitions (table), S19 rule fires, and the mode itself ({{mode}}, {{src}}).",
+        { mode: mode.label, src: mode.src })}</div></div>`;
   }
   setHTML("fdir-s12", renderS12Block("fdir"));
   setHTML("fdir-s19", renderS19Block("fdir"));
@@ -4123,8 +4142,7 @@ function buildProcPage() {
   return `
   <div class="pad hide" id="page-proc" role="tabpanel" aria-label="Procedures" data-i18n-aria-label>
     <h1 class="pt" data-i18n>Procedures</h1>
-    <p class="sub" data-i18n>Loader · step-by-step runner · document viewer · manual override · builder.
-      Reachable from any alarm row (P7.6).</p>
+    <p class="sub" data-i18n>Loader · step-by-step runner · document viewer · manual override · builder.</p>
     <div class="g" style="grid-template-columns:minmax(0,1fr) 420px;align-items:start">
       <div class="g">
         <div class="ds-card"><h2 data-i18n>Load &amp; run</h2><div class="bd">
@@ -4160,7 +4178,7 @@ function buildProcPage() {
         </div></div>
       </div>
       <div class="g" style="align-content:start">
-        <div class="ds-card"><h2 data-i18n>Manual override <span class="r" data-i18n>arbitrary TC during a run</span></h2>
+        <div class="ds-card" id="proc-ov-card"><h2 data-i18n>Manual override <span class="r" data-i18n>arbitrary TC during a run</span></h2>
           <div class="bd"><div class="row" style="align-items:flex-end">
             <div class="fld"><label for="proc-ov-svc" data-i18n>Service</label>
               <input id="proc-ov-svc" class="in mono" inputmode="numeric" style="width:64px"></div>
@@ -4211,10 +4229,17 @@ async function loadProcSources() {
     let opts = [];
     if (src === "activity") {
       const d = await getJSON("/api/procedure/activity-types");
-      opts = (d.activity_types || d.types || []).map((t) => [t.id || t.name || t, t.label || t.name || t]);
+      // Described in operator words with the card number, the id as value
+      // (review: "imaging_pass", "data_dump" as labels).
+      opts = (d.activity_types || d.types || []).map((t) => {
+        const id = t.id || t.name || t;
+        const desc = t.description ? tdb(`activity:${t.name}:description`, t.description) : (t.label || id);
+        return [id, t.procedure_ref ? `${desc} (${t.procedure_ref})` : desc];
+      });
     } else if (src === "ops") {
       const d = await getJSON("/api/procedures");
-      opts = (d.procedures || []).map((p) => [p.path || p.id || p, p.name || p.path || p]);
+      opts = (d.procedures || []).map((p) => [p.path || p.id || p,
+        (getLang() === "fr" && p.title_fr) || p.name || p.path || p]);
     } else {
       const d = await getJSON("/api/procedure/custom");
       opts = (d.procedures || []).map((p) => [p.id || p.name, p.name || p.id]);
@@ -4508,7 +4533,7 @@ function buildTrndPage() {
   return `
   <div class="pad hide" id="page-trnd" role="tabpanel" aria-label="Trends" data-i18n-aria-label>
     <h1 class="pt" data-i18n>Trends</h1>
-    <p class="sub" data-i18n>Ground archive · eclipse/contact context · alarm &amp; event markers (P8)</p>
+    <p class="sub" data-i18n>Ground archive · eclipse/contact context · alarm &amp; event markers</p>
     <div id="trnd-provenance"></div>
     <div class="g" style="grid-template-columns:280px minmax(0,1fr);align-items:start">
       <div class="g" style="align-content:start">
@@ -4550,7 +4575,7 @@ function buildTrndPage() {
         <div class="ds-card"><h2 data-i18n>Command history (archived)</h2>
           <div class="bd scroll-y" style="max-height:150px" id="trnd-cmds"></div></div>
         <div class="ds-card"><h2 data-i18n>Baseline vs now — health (NOM-011)
-          <span class="r" data-i18n>baseline: display_config.yaml commissioning snapshot</span></h2>
+          <span class="r" data-i18n>baseline: commissioning</span></h2>
           <div class="bd">
             <div id="trnd-baseline"></div>
           </div></div>
@@ -4578,8 +4603,18 @@ async function loadTrndParamNames() {
     const names = d.names || d.parameters || [];
     const f = ($("trnd-filter") ? $("trnd-filter").value : "").toLowerCase();
     const sel = $("trnd-params");
-    if (sel) sel.innerHTML = names.filter((n) => !f || String(n).toLowerCase().includes(f))
-      .map((n) => `<option>${esc(String(n))}</option>`).join("");
+    // Operator label first, the archive name as the value and tooltip
+    // (review #20: "eps.bat_current_A" as a label).
+    const byName = {};
+    for (const p of S.paramCatalog || []) byName[p.name] = p;
+    const lab = (n) => {
+      const base = String(n).replace(/_(A|V|W|C|pct|deg|s)$/, "");
+      const p = byName[n] || byName[base];
+      return p ? `${paramLabel(p)} (${n})` : String(n);
+    };
+    if (sel) sel.innerHTML = names
+      .filter((n) => !f || `${n} ${lab(n)}`.toLowerCase().includes(f))
+      .map((n) => `<option value="${esc(String(n))}" title="${esc(String(n))}">${esc(lab(n))}</option>`).join("");
     archiveBanner(d.status || "ok", d.detail);
   } catch (e) { archiveBanner("unavailable"); }
 }
@@ -4715,9 +4750,6 @@ function buildManPage() {
         </div>
         <div id="pcard-list" class="scroll-y" style="max-height:520px"></div>
       </div></div>
-    <div class="ds-card" style="margin-top:12px"><h2><span data-i18n>Course PDFs</span>
-      <span class="r" data-i18n>textbooks · workbooks · references</span></h2>
-      <div class="bd scroll-y" style="max-height:520px" id="man-downloads"></div></div>
   </div>`;
 }
 
@@ -4776,9 +4808,7 @@ function renderProcedureCards() {
       : (c.relevant
           ? `<div class="sub" style="margin:2px 0 6px">${t("Your position is required; no per-position role recorded for this card.")}</div>`
           : "");
-    const mineChip = c.my_step_count
-      ? `<span class="ds-badge">${t("{{count}} step yours", { count: c.my_step_count, plural: "{{count}} steps yours" })}</span>`
-      : "";
+    const mineChip = "";
     const body = open ? `
       ${roleLine}
       <div class="sub" style="margin-bottom:6px">${t("Required: {{list}}",
@@ -4795,17 +4825,14 @@ function renderProcedureCards() {
     return `<div class="ds-card" style="border-radius:6px;margin-bottom:6px"><div class="bd" style="padding:8px 10px">
       <a href="#" data-pcard="${esc(c.id)}" style="font-weight:600">${esc(c.id)} — ${esc(c.name ? tdb(`proc:${c.id}:name`, c.name) : c.name)}</a>
       ${mineChip}
-      <span class="sub"> ${t("{{cat}} · {{count}} steps", { cat: c.category || "", count: (c.steps || []).length })}</span>
+      <span class="sub"> ${esc(String(c.category || "").toUpperCase())} · ${t("{{count}} steps", { count: (c.steps || []).length })}${c.my_step_count
+        ? " · " + t("{{count}} for you", { count: c.my_step_count }) : ""}</span>
       ${body}</div></div>`;
   }).join("");
 }
 async function loadManual() {
-  // Course PDFs (GET /api/downloads, student list): shared renderer, mounted once.
-  const dl = $("man-downloads");
-  if (dl && !dl.dataset.mounted) {
-    dl.dataset.mounted = "1";
-    import("/static/shared/downloads.js").then((m) => m.mountDownloads(dl)).catch(() => {});
-  }
+  // Course PDFs moved to the documentation viewer's Downloads page
+  // (SCREEN_REVIEW #16): this page is the spacecraft manual and the cards.
   try { S.manual = await getJSON("/api/manual"); }
   catch (e) { S.manual = null; }
   renderManual();
@@ -4830,7 +4857,9 @@ function manualSectionsForPosition() {
            pos.manual_sections.some((m) => stem.includes(m));
   });
 }
-function manualTitle(s2) { return s2.name || s2.title || s2.path || tText("(untitled)"); }
+function manualTitle(s2) {
+  return (getLang() === "fr" && s2.title_fr) || s2.name || s2.title || s2.path || tText("(untitled)");
+}
 function renderManual() {
   const host = $("man-toc");
   if (!host) return;
@@ -4926,7 +4955,15 @@ export function renderBottomDrawer() {
   } else if (bdTab === "tm") {
     setHTML("bdp-tm", S.tmLog.slice(0, 120).map((r) => `<div class="logrow">${esc(r)}</div>`).join(""));
   } else if (bdTab === "cmdhist") {
-    setHTML("bdp-cmdhist", S.cmdHistory.slice(0, 120).map(cmdHistoryRow).join("") ||
+    // One history: the ground verification log (every command sent to the
+    // spacecraft this session, from any console or procedure, with its S1
+    // state), plus this console's blind-TC marks (review #14).
+    const blind = S.cmdHistory.filter((h) => h.blind).slice(0, 20).map(cmdHistoryRow).join("");
+    setHTML("bdp-cmdhist", blind + (S.verifLog.length
+      ? S.verifLog.slice(0, 120).map((v) =>
+          `<div class="logrow ${/FAIL|REJ/i.test(v.verdict) ? "alarm" : ""}">${esc(v.ts)} ${esc(v.text)} — ${esc(v.verdict)}` +
+          `${v.pos ? ` <span class="sub">${esc(positionLabel(v.pos))}</span>` : ""}</div>`).join("")
+      : S.cmdHistory.slice(0, 120).map(cmdHistoryRow).join("")) ||
       `<div class="logrow nom">${t("no commands this session")}</div>`);
   } else if (bdTab === "conlog") {
     renderConsoleLog();
@@ -4996,7 +5033,11 @@ async function goNoGoRespond(response) {
   await postJSON("/api/go-nogo/respond", { position: S.position, response });
 }
 async function goNoGoStart() {
-  await postJSON("/api/go-nogo/poll", { label: ($("gonogo-label") || {}).value || "GO/NO-GO" });
+  // The server accepts a poll from the Flight Director only; it was never
+  // told who was asking, so every poll was refused (review §2.3).
+  if (S.position !== "flight_director") return;
+  await postJSON("/api/go-nogo/poll", { position: S.position,
+    label: ($("gonogo-label") || {}).value || "GO/NO-GO" });
 }
 
 /* ═══ 18. ALARMS — docked drawer + causal chain ═══════════════════════════ */
@@ -5016,11 +5057,26 @@ function persistAlarmFilters() {
       sev: $("alarm-f-sev") ? $("alarm-f-sev").value : "0" }));
   } catch (e) { /* private mode */ }
 }
+/* The subsystems this position owns (positions.yaml `subsystems`); null =
+ * every subsystem (the Flight Director, or no position model loaded). */
+export function mySubsystems(pos = S.position) {
+  if (pos === "flight_director") return null;
+  const p = S.positions[pos];
+  const subs = p && Array.isArray(p.subsystems) ? p.subsystems.map((x) => String(x).toLowerCase()) : null;
+  return subs && subs.length ? subs : null;
+}
+export function isMyAlarm(a, pos = S.position) {
+  const mine = mySubsystems(pos);
+  return !mine || mine.includes(String(a.subsystem || "").toLowerCase());
+}
+/** This position's alarms: what the header counts and what it may ack. */
+export function positionAlarms(list = S.alarms) { return list.filter((a) => isMyAlarm(a)); }
 export function filteredAlarms() {
-  const sub = $("alarm-f-sub") ? $("alarm-f-sub").value : "";
+  const sub = $("alarm-f-sub") ? $("alarm-f-sub").value : "mine";
   const sevMin = Number($("alarm-f-sev") ? $("alarm-f-sev").value : 0);
   return S.alarms.filter((a) =>
-    (!sub || a.subsystem === sub) && (!sevMin || Number(a.severity) >= sevMin));
+    (sub === "mine" ? isMyAlarm(a) : (!sub || a.subsystem === sub)) &&
+    (!sevMin || Number(a.severity) >= sevMin));
 }
 /* ── One alarm store (P7.5, R3 A3) ────────────────────────────────────────
  * S.alarms is the journal; EVERY count on the page (header button, IS-IT-
@@ -5110,8 +5166,10 @@ function alarmLimit(a) {
 export function alarmSourceHtml(a) {
   const src = String(a.source || "").toUpperCase();
   if (src === "LIMIT") {
-    return `<span class="src" title="${esc(tText("Ground limit check in the MCS. Change the band in {{file}}.", { file: a.config_file || "mcs/limits.yaml" }))}">` +
-      `${t("ground limit")} ${esc(alarmParamHex(a) || a.parameter || "")} · <span class="mono">${esc(a.config_file || "mcs/limits.yaml")}</span></span>`;
+    // Operator words on the row; the parameter id is the tooltip (review §2.4).
+    const lim = alarmLimit(a);
+    return `<span class="src" title="${esc(tText("Ground limit check in the MCS on {{id}}", { id: alarmParamHex(a) || a.parameter || "" }))}">` +
+      `${lim.kind === "hard" ? t("ground limit (hard)") : lim.kind === "soft" ? t("ground limit (soft)") : t("ground limit")}</span>`;
   }
   if (src === "S12") {
     const mid = a.mon_id;
@@ -5170,8 +5228,8 @@ export function alarmRowHtml(g) {
     <span class="act">${a.acknowledged ? `<span class="ackd">${t("acknowledged")}</span>`
       : `<button class="ds-btn" data-act="ack" data-id="${esc(String(a.id))}" data-ids="${esc(ids)}"
           aria-label="${esc(tText("Acknowledge {{name}}", { name: label }))}">${t("ACK")}</button>`}
-      <button class="ds-btn" data-chain="${esc(String(a.id))}" title="${t("causal chain (P9)")}"
-        aria-label="${esc(tText("Causal chain for {{name}}", { name: label }))}">⛓</button>
+      <button class="ds-btn" data-chain="${esc(String(a.id))}" title="${t("causal chain")}"
+        aria-label="${esc(tText("Causal chain for {{name}}", { name: label }))}">${glyph("chain")}</button>
       <button class="ds-btn" data-act="ticket" data-id="${esc(String(a.id))}"
         title="${esc(tText("File an anomaly ticket from this alarm (logbook)"))}"
         aria-label="${esc(tText("Anomaly ticket for {{name}}", { name: label }))}">${t("Ticket")}</button>
@@ -5183,7 +5241,7 @@ export function renderAlarmDrawer() {
   // cascade to its first-out root; the consequents expand on demand.
   const { groups, rest } = groupAlarmsByAncestry(alarmGroups(filteredAlarms()), S.faultGraph);
   const semantics = (S.faultGraph && S.faultGraph.edge_semantics) ||
-    tText("edges are inferred fault-to-fault ancestry from fdir/fault_propagation.yaml");
+    tText("edges are inferred from the FDIR fault tree");
   const groupHtml = groups.map((g) => {
     const gid = String(g.root.id);
     const open = !!S.alarmGroupsOpen[gid];
@@ -5240,13 +5298,16 @@ export async function ackAlarm(id, ids) {
     await postJSON(`/api/alarms/${encodeURIComponent(a.id)}/ack`, { position: S.position });
   }
 }
+/* "Acknowledge all" acknowledges what is shown AND this position owns: the
+ * Flight Director all of it, any other position only its own subsystems
+ * (review #15). */
 export async function ackAllAlarms() {
   for (const a of filteredAlarms()) {
-    if (!a.acknowledged) await ackAlarm(a.id);
+    if (!a.acknowledged && isMyAlarm(a)) await ackAlarm(a.id);
   }
 }
 function ackFirstUnacked() {
-  const g = alarmGroups(filteredAlarms()).find((x) => !x.acknowledged);
+  const g = alarmGroups(filteredAlarms().filter((a) => isMyAlarm(a))).find((x) => !x.acknowledged);
   if (g) { ackAlarm(g.id, g.ids); announce(tText("acknowledged {{sub}} {{msg}}", { sub: g.subsystem || "", msg: String(g.name || g.message || g.id) })); }
 }
 async function loadAlarms() {
@@ -5307,7 +5368,7 @@ export async function openCausalChain(alarmId) {
     </div>
     <div class="ds-card" style="margin-top:10px"><h2>${t("5 · The alarm")}</h2><div class="bd">
       ${alarmRowHtml(alarmGroups([a])[0])}
-      <p style="font-size:12.5px;color:var(--tx2);margin-top:8px">${t("Read the chain backwards: did a command (1) or an on-board event (2) move the parameter (3) across the ground limit (4) to raise this alarm (5)? This is the mental model the console teaches (P9).")}</p>
+      <p style="font-size:12.5px;color:var(--tx2);margin-top:8px">${t("Read the chain backwards: did a command (1) or an on-board event (2) move the parameter (3) across the ground limit (4) to raise this alarm (5)?")}</p>
     </div></div>`);
 }
 function toggleChain(open) {
@@ -5432,7 +5493,11 @@ function renderCurrentPage(full) {
   else if (S.page === "cmd") { if (full) { renderCmdCatalogSelect(); updateCmdBuilder(); renderQuickCommands(); renderVerifLog(); } }
   else if (S.page === "diag") { if (full) { renderDiag(); loadFdir(); } else refreshDiagLive(); }
   else if (S.page === "fdir") { if (full) loadFdir(); else renderFdirPage(); }
-  else if (S.page === "proc") { if (full) { loadProcSources(); refreshProcStatus(); } }
+  else if (S.page === "proc") {
+    // Arbitrary TCs during a run: the same rule as raw commanding (review).
+    show("proc-ov-card", rawCommandingAllowed());
+    if (full) { loadProcSources(); refreshProcStatus(); }
+  }
   else if (S.page === "trnd") { if (full) loadTrndParamNames(); renderBaselineCard(); }
   else if (S.page === "man") { if (full) { loadManual(); loadProcedureCards(); } }
 }
@@ -5457,6 +5522,30 @@ function buildPages() {
     if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "0");
   });
 }
+// Page-skeleton texts added by the screen review (data-i18n inside template
+// strings, which the table scan does not reach).
+// i18n-keys
+const _TPL_KEYS_REVIEW = [
+  "Alarms for this subsystem", "HK enable and disable: PUS services page, S3.", "Open S3",
+  "Command history: the drawer below.", "show other positions' commands (read-only)",
+  "REPORT MONITORS (12,12)", "REPORT RULES (19,8)", "ENABLE MONITORING (12,1)",
+  "DISABLE MONITORING (12,2)",
+];
+// Fixed reasons the server gives for an INVALID projection (derived_params.py);
+// renderDerivedRow translates them through the catalog (review §2.7).
+// i18n-keys
+const _SERVER_REASON_KEYS = [
+  "not in eclipse — nothing to project", "no eps.bat_soc telemetry received",
+  "eclipse exit time not predictable (orbit propagator unavailable)",
+  "no yellow-low limit for battery SoC", "no aocs.momentum_saturation_pct telemetry received",
+  "no OBDH buffer-fill telemetry received", "no buffer filling",
+  "active TM tier unknown (no ttc.tm_tier telemetry / rate ladder)",
+  "no downlink backlog telemetry received (payload.mem_used_mb / S15 store report)",
+  "pass capacity is zero", "no catbed temperature telemetry received",
+  "catbed ready threshold not configured",
+  "no on-board clock telemetry received (obdh.obc_time)",
+  "TM archive unavailable — no history to project from",
+];
 // The data-i18n / -aria-label / -placeholder / -html texts of the page skeletons
 // above, listed for `i18n check` (its table scan reads <= 2000 chars per table).
 // i18n-keys
@@ -5464,19 +5553,19 @@ const _TPL_KEYS_1 = [
   "Overview", "Spacecraft overview",
   "The schematic is the navigation — click the thing you are worried about. Position:",
   "EOSAT-1 · functional schematic", "grey is nominal — colour marks deviation (P1)",
-  "Contact windows (24 h)", "Ground track", "System board", "Electrical power", "Thermal control",
+  "Contact windows (24 h)", "Ground track", "Electrical power", "Thermal control",
   "Attitude & orbit control", "Telemetry, tracking & command", "Payload", "Propulsion",
   "On-board data handling", "Level 2 · subsystem", "alarms for this subsystem", "← Overview", "Schematic",
   "click a block to navigate; values live", "Parameters", "AND — generated from /api/param-catalog (P10)",
   "Stored TM playback", "S15 dump → /api/tm-dump-data", "REQUEST DUMP (S15)", "no dump loaded",
   "Playback position", "Key parameters", "Projections", "ground-derived · not downlinked",
-  "Capture readiness (NOM-002)", "gates from display_config.yaml", "FINE-entry readiness",
+  "Capture readiness (NOM-002)", "FINE-entry readiness",
   "aocs.fine_ready 0x02C5 decoded", "Arm interlocks", "prop.arm_inhibit_mask 0x0B15 decoded",
   "Loaded vs planned burn", "TM 0x0B0E/0x0B10 vs planner orbit_manoeuvre", "awaiting planner…",
   "Predicted vs measured link", "Blind commanding (CON-004)", "requires FD GO — armed toggle", "Equipment",
   "Command", "in place · position-gated (P9)", "Ground station network", "awaiting station list…",
   "Power budget", "awaiting data…", "Events", "Commanding",
-  "PUS telecommand builder · verification is a stepper attached to the command, not a separate log (P9)",
+  "Build and send PUS telecommands; each command shows its own verification steps.",
   "Command builder", "Catalogue command", "Service", "Subtype", "Name", "optional",
 ];
 // i18n-keys
@@ -5484,12 +5573,12 @@ const _TPL_KEYS_2 = [
   "Data (hex) — live from the fields; paste hex to decode; Enter sends", "Quick commands", "position-gated; denied entries say who owns them",
   "Verification log", "Stored TM (S15) dump", "Subsystem", "Store id", "HK SID control (S3)",
   "Command history", "Diagnostics", "PUS services",
-  "All seven service panels from the classic PUS SERVICES tab — S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring · S19 event-action · S9 time — plus the parameter catalog. S12/S19 tables are the same renderer FDIR mounts (one implementation, two mounts).",
+  "On-board service configuration: S3 housekeeping · S11 scheduler · S6 memory · S15 stores · S12 monitoring · S19 event-action · S9 time, and the parameter catalog.",
   "Parameter search (global)", "name or 0xHHHH", "Fault detection, isolation & recovery",
   "What the spacecraft <em>told</em> us (S5 / S12 / S19 / mode), plus recovery controls.", "FDIR state",
   "REFRESH ALL", "ACK ALL ALARMS", "Alarm / anomaly journal", "S5 events", "S12 transitions",
   "S19 rule fires", "TC rejections", "mode changes", "Procedures",
-  "Loader · step-by-step runner · document viewer · manual override · builder. Reachable from any alarm row (P7.6).",
+  "Loader · step-by-step runner · document viewer · manual override · builder.",
   "Load & run", "Source", "Activity type", "Ops procedure", "Saved procedure", "Procedure", "step-by-step",
   "LOAD", "Procedure document", "select a procedure…",
   "Manual override", "arbitrary TC during a run", "data hex", "Procedure builder",
@@ -5497,15 +5586,14 @@ const _TPL_KEYS_2 = [
 // i18n-keys
 const _TPL_KEYS_3 = [
   "CLEAR", "— load saved —", "Trends",
-  "Ground archive · eclipse/contact context · alarm & event markers (P8)", "Query", "Window", "7 d",
+  "Ground archive · eclipse/contact context · alarm & event markers", "Query", "Window", "7 d",
   "Parameter filter", "filter…", "limit bands", "eclipse/contact shading", "event + alarm markers",
   "normalise 0–100 %", "REFRESH", "EXPORT CSV", "Parameters to trend", "Subsystem playback",
   "LOAD SUBSYSTEM", "Chart", "Alarms in window", "Events in window", "Command history (archived)",
-  "Baseline vs now — health (NOM-011)", "baseline: display_config.yaml commissioning snapshot", "Manual",
+  "Baseline vs now — health (NOM-011)", "baseline: commissioning", "Manual",
   "Operations manual", "Sections filtered to your position; search covers titles and body text.", "Contents",
   "search…", "select a section…", "Procedure cards — your position",
   "only cards my position is required for", "filter cards…",
-  "Course PDFs", "textbooks · workbooks · references",
 ];
 // i18n-keys
 const _TPL_KEYS_4 = [
@@ -5629,6 +5717,7 @@ function initDelegatedEvents() {
       return;
     }
     if (t.id === "pos-select") setPosition(t.value);
+    else if (t.id === "cmd-show-all") renderCmdCatalogSelect();
     else if (t.id === "pcard-mine-only") preservingUi("pcard-list", renderProcedureCards);
     else if (t.id === "cmd-catalog") { S.armed = {}; updateCmdBuilder(); }
     else if (t.id === "alarm-f-sub" || t.id === "alarm-f-sev") { persistAlarmFilters(); renderAlarmDrawer(); }
@@ -5663,6 +5752,13 @@ function initDelegatedEvents() {
           { crc: `0x${crc16Ccitt(hexStr).toString(16).toUpperCase().padStart(4, "0")}` }));
       });
     }
+  });
+  document.addEventListener("click", (e) => {
+    const m = e.target && e.target.closest ? e.target.closest("[data-ovr-more]") : null;
+    if (!m) return;
+    e.preventDefault();
+    S.ovrAllPasses = true;
+    renderPassTable();
   });
   document.addEventListener("click", (e) => {
     const a = e.target && e.target.closest ? e.target.closest("[data-pcard]") : null;
@@ -5909,6 +6005,7 @@ async function loadVerifLogRest() {
       // never emits, rendering "TC(undefined,undefined)".)
       S.verifLog = rows.slice(0, 80).map((v) => ({
         ts: fmtUTC(v.timestamp),
+        pos: v.position || "",
         verdict: `${v.state || "?"}`,
         text: `TC(${v.service},${v.subtype})` +
               (v.name ? ` ${v.name}` : "") +
@@ -6112,11 +6209,11 @@ function lbPrefill(key, ctx) {
       const src = String(a.source || "").toUpperCase();
       if (src === "S12") return `S12 ${tText("on-board monitor")} #${a.mon_id ?? "?"}${a.monitor_name ? " " + a.monitor_name : ""}`;
       if (src === "S5") return `S5 ${tText("on-board event")} ${a.event_id ?? ""}`.trim();
-      if (src === "LIMIT") return `${tText("ground limit")} (${a.config_file || "mcs/limits.yaml"})`;
+      if (src === "LIMIT") return tText("ground limit");
       return "";
     }
     case "severity": return a && a.severity !== undefined ? String(a.severity) : "";
-    case "position": return POSITION_INFO[S.position] ? `${tText(POSITION_INFO[S.position].title)} (${S.position})` : S.position;
+    case "position": return POSITION_INFO[S.position] ? tText(POSITION_INFO[S.position].title) : positionLabel(S.position);
     case "first_action": return tsShort() + ` (${tText("sim")})`;
     case "procedure": return (a && a.procedure && (a.procedure.id || a.procedure.name)) || proc || "";
     case "procedure_state":
@@ -6189,8 +6286,18 @@ function initLogbook() {
     readParam: lbReadParam, prefill: lbPrefill, info: lbInfo,
     // scenario: the session label the instructor published (never the
     // scenario's own name, which would brief the operators)
-    handIn: () => ({ position: POSITION_INFO[S.position] ? `${tText(POSITION_INFO[S.position].title)} (${S.position})` : S.position,
-      scenario: lbSessionLabel() }) });
+    handIn: () => ({ position: POSITION_INFO[S.position] ? tText(POSITION_INFO[S.position].title) : positionLabel(S.position),
+      scenario: lbSessionLabel() }),
+    // chips read "page Overview", "position Flight Director" (review §2.5)
+    ctxValue: (k, v) => {
+      if (k === "position") return POSITION_INFO[v] ? tText(POSITION_INFO[v].title) : positionLabel(v);
+      if (k === "page") {
+        if (v === "ovr") return tText("Overview");
+        if (v === "diag") return tText("PUS services");
+        return RAIL.some(([id]) => id === v) ? pageTitle(v) : "";
+      }
+      return "";
+    } });
   const gn = $("gonogo-logthis");
   if (gn) gn.innerHTML = renderLogThis({}, { kind: "decision" });
   lbLoadProcIndex();
@@ -6220,8 +6327,10 @@ async function boot() {
   restoreAlarmFilters();
   await Promise.all([loadParamCatalog(), loadLimits(), loadPositions()]);
   try { S.clientConfig = await getJSON("/api/client-config"); } catch (e) { S.clientConfig = {}; }
+  if ($("dtm-link") && S.clientConfig.dtm_url) $("dtm-link").href = S.clientConfig.dtm_url;
   await Promise.all([loadTcCatalog(), loadSchematics(), loadDisplayConfig(),
     loadHkStructures(), loadMemoryMap(), loadAlarms(), loadFailureCodes(),
+    loadGroundStations(),
     loadFaultGraph(), loadGonogoMatrix(), loadConsoleLog()]);
   await loadPictorial();
   const sel = $("pos-select");
@@ -6237,8 +6346,6 @@ async function boot() {
   poller(loadContactSchedule, 30000).start();       // 30 s pass schedule
   poller(loadContacts, 60000).start();              // 60 s contact windows
   poller(loadVerifLogRest, 5000).start();           // 5 s verification log
-  poller(refreshSystemBoard, 5000).start();         // 5 s system overview
-  poller(refreshPowerBudget, 5000).start();         // 5 s power budget (EPS page)
   poller(loadAlarms, 10000).start();                // journal reconciliation
   poller(loadHandover, 15000).start();
   poller(async () => { if (S.page === "fdir" || (S.page === "diag" && (diagTab === "s12" || diagTab === "s19"))) await loadFdir(); }, 2000).start();
@@ -6279,8 +6386,6 @@ function onLanguageChange() {
   renderProcStatus();
   renderProcedureCards();
   renderBaselineCard();
-  refreshSystemBoard();           // 5 s pollers: redo now rather than show stale wording
-  refreshPowerBudget();
   const pbf = $("pb-step-fields");     // placeholders only; keep anything typed
   if (pbf && !Array.from(pbf.querySelectorAll("input")).some((i) => i.value)) {
     setHTML("pb-step-fields", pbFieldMarkup());
@@ -6297,7 +6402,9 @@ function refreshCmdBuilderText() {
     setText("cmd-provenance", provenanceText(cmd));
     if (authEl) authEl.textContent = commandAuthority(cmd.name).text;
   } else {
-    setText("cmd-provenance", tText("raw command — no catalogue entry; length not validated"));
+    setText("cmd-provenance", rawCommandingAllowed()
+      ? tText("raw command — no catalogue entry; length not validated")
+      : tText("Choose a command from the catalogue."));
   }
 }
 

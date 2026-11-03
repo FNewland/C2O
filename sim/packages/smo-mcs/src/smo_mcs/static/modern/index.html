@@ -434,16 +434,13 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
       <div class="pos-wrap" id="pos-bar"><label for="pos-select" data-i18n>Position</label>
         <select id="pos-select" class="ds-select" data-i18n-aria-label aria-label="Console position"></select></div>
       <button class="ds-btn abtn" id="alarms-btn" aria-controls="alarm-drawer" aria-expanded="false"><span id="alarm-btn-g" aria-hidden="true"></span><span class="n" id="alarm-unack-n">0</span> <span data-i18n>alarms</span></button>
-      <a class="ds-btn ghost opt" href="/dumps" target="_blank" rel="noopener" data-i18n>Delayed TM</a>
-      <a class="ds-btn ghost opt" href="/reports" target="_blank" rel="noopener" data-i18n>Reports</a>
+      <a class="ds-btn ghost opt" id="dtm-link" href="/dumps" target="_blank" rel="noopener" data-i18n>Delayed TM</a>
       <button class="ds-btn ghost" id="voice-btn" aria-expanded="false">Voice</button>
-      <button class="ds-btn ghost opt" id="grey-btn" aria-pressed="false" data-i18n data-i18n-title
-        title="Greyscale check: the console must stay operable without colour (P6)">Greyscale</button>
       <div class="ds-seg opt" id="theme-seg" role="group" data-i18n-aria-label aria-label="Theme">
         <button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button><button type="button" data-theme-set="light" aria-pressed="false" data-i18n>Light</button></div>
       <span id="lang-toggle"></span>
       <span id="lb-slot"></span>
-      <button class="ds-btn ghost" id="help-btn" data-i18n-title title="Keyboard shortcuts and design notes" data-i18n-aria-label aria-label="Keyboard shortcuts and design notes">?</button>
+      <button class="ds-btn ghost" id="help-btn" data-i18n-title title="Keyboard shortcuts" data-i18n-aria-label aria-label="Keyboard shortcuts">?</button>
       <span class="linkpip"><span id="ws-dot" role="img" data-i18n-aria-label aria-label="server link"></span></span>
     </div>
   </div>
@@ -477,11 +474,12 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
         <h2 data-i18n>Alarms</h2>
         <span class="ds-badge alarm" id="alarm-drawer-unack">0 UNACK</span>
         <div class="end">
-          <button class="ds-btn ghost" id="alarm-sound" aria-pressed="false" aria-label="Alarm sound on — click to mute" title="Alarm sound on — click to mute">🔔</button>
+          <button class="ds-btn ghost" id="alarm-sound" aria-pressed="false" aria-label="Alarm sound on — click to mute" title="Alarm sound on — click to mute"></button>
           <button class="ds-btn" id="alarm-ack-all" data-i18n>Acknowledge all</button>
         </div>
         <button class="ds-btn ghost x" id="alarm-close" data-i18n-aria-label aria-label="Close alarm drawer">✕</button>
         <select id="alarm-f-sub" class="ds-select" data-i18n-aria-label aria-label="Filter subsystem">
+          <option value="mine" data-i18n selected>My subsystems</option>
           <option value="" data-i18n>All subsystems</option>
           <option value="eps">EPS</option><option value="tcs">TCS</option><option value="aocs">AOCS</option>
           <option value="ttc">TTC</option><option value="payload">PAYLOAD</option>
@@ -490,11 +488,11 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
         <select id="alarm-f-sev" class="ds-select" data-i18n-aria-label aria-label="Filter severity">
           <option value="0" data-i18n>All severities</option><option value="2" data-i18n>Medium+</option><option value="3" data-i18n>High only</option>
         </select>
-        <a class="ds-btn ghost" href="/dumps" target="_blank" rel="noopener" data-i18n>Archive</a>
+        <a class="ds-btn ghost" href="#" data-page-nav="trnd" data-i18n data-i18n-title title="Alarms in a time window: Trends page">Archive</a>
       </div>
       <div id="alarm-list" role="group" data-i18n-aria-label aria-label="Alarm rows"></div>
       <div class="ft" data-i18n-html>Blink is reserved for unacknowledged P1 and stops on acknowledgement.
-        <kbd class="ds-kbd">a</kbd> open · <kbd class="ds-kbd">k</kbd> ack first · click ⛓ for the causal chain.</div>
+        <kbd class="ds-kbd">a</kbd> open · <kbd class="ds-kbd">k</kbd> ack first · the chain button opens the causal chain.</div>
     </aside>
   </div>
 </div>
@@ -576,7 +574,7 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
 <!-- keyboard help -->
 <div class="overlay" id="help-overlay">
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="help-h">
-    <h2><span id="help-h" data-i18n>Keyboard and design</span> <button class="ds-btn ghost" id="help-close" data-i18n-aria-label aria-label="Close">✕</button></h2>
+    <h2><span id="help-h" data-i18n>Keyboard shortcuts</span> <button class="ds-btn ghost" id="help-close" data-i18n-aria-label aria-label="Close">✕</button></h2>
     <div id="help-body">
       <table class="plain">
         <tr><td><kbd class="ds-kbd">F6</kbd></td><td data-i18n>cycle regions (header → rail → main → drawer)</td></tr>
@@ -587,6 +585,8 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
         <tr><td><kbd class="ds-kbd">k</kbd></td><td data-i18n>acknowledge the first unacknowledged alarm</td></tr>
         <tr><td><kbd class="ds-kbd">?</kbd></td><td data-i18n>this dialog</td></tr>
       </table>
+      <p style="margin-top:10px"><button class="ds-btn ghost" id="grey-btn" aria-pressed="false" data-i18n>Greyscale</button>
+        <span class="sub" data-i18n>check that the console stays readable without colour</span></p>
     </div>
   </div>
 </div>

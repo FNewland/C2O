@@ -101,7 +101,7 @@ class SystemOverviewDashboard:
              _pick("aocs", "att_error_deg", "att_error")),
             ("fpa_temp", "FPA Temperature", "°C", "0x0601", -10, -20,
              _pick("payload", "fpa_temp_C", "fpa_temp")),
-            ("link_margin", "Link Margin", "dB", "0x0507", 3, 1,
+            ("link_margin", "Link Margin", "dB", "0x0503", 3, 1,
              _pick("ttc", "link_margin_dB", "link_margin")),
             ("storage_percent", "Storage %", "%", "0x0312", 80, 95,
              _pick("obdh", "hktm_buf_fill", "storage_fill")),
