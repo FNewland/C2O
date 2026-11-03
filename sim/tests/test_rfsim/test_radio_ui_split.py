@@ -204,6 +204,7 @@ EXPECTED_ROUTES = {
     ("GET", "/api/logbook"),
     ("POST", "/api/logbook/entries"),
     ("GET", "/api/logbook/export"),
+    ("GET", "/api/logbook/checklist"),
     ("GET", "/api/logbook/worksheets"),
 }
 
