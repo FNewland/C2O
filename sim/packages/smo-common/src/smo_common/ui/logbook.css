@@ -223,6 +223,14 @@
 .wb-ix:hover{ background:var(--s2); }
 .wb-ix .id{ font-family:var(--mono); color:var(--tx3); min-width:96px; }
 .wb-ix .ti{ flex:1; min-width:0; }
+.wb-pres{ padding:var(--sp-2) var(--sp-4); border-top:1px solid var(--line); }
+.wb-pres .lbl{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); margin-bottom:2px; }
+.wb-pres ul{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+.wb-pre{ display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--sp-2); font-size:var(--fs-label); color:var(--tx2); }
+.wb-pre .ds-check{ flex:1 1 260px; min-width:0; align-items:baseline; }
+.wb-pre .ds-check input{ flex:0 0 auto; }
+.wb-pre .n{ font-family:var(--mono); color:var(--tx3); }
+.wb-pre[data-state="done"] .ds-check span{ color:var(--tx3); }
 .wb-cl-empty{ padding:var(--sp-3) var(--sp-4); font-size:var(--fs-label); color:var(--tx2); border-bottom:1px solid var(--line); }
 .lb-dlg-wt{ font-weight:500; color:var(--tx); }
 
@@ -230,3 +238,47 @@
   #c2o-logbook{ width:100vw; }
   .lb-btn .lb-t{ display:none; }
 }
+
+/* ── procedure card as the working surface (procard.js) ─────────────────
+ * The card keeps its document look; each step ends with a compact control
+ * block on a hairline, the state rides in the step heading. Calm when open,
+ * a left rule once recorded (grey done, caution for a deviation). */
+.pc-bar{ position:sticky; top:0; z-index:2; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-3);
+  padding:var(--sp-2) 0; margin-bottom:var(--sp-2); background:var(--s1); border-bottom:1px solid var(--line-2);
+  font-size:var(--fs-label); color:var(--tx2); }
+.pc-bar-t b{ color:var(--val); font-weight:600; }
+.pc-bar-p{ font-family:var(--mono); color:var(--tx); }
+.pc-bar-p .dev{ color:var(--warn); }
+.pc-bar-r{ display:flex; gap:var(--sp-1); align-items:center; margin-left:auto; }
+.pc-bar select{ height:24px; font-size:var(--fs-label); }
+.pc-step{ border-left:2px solid transparent; padding-left:var(--sp-3); margin-left:calc(-1 * var(--sp-3) - 2px); }
+.pc-step:not([data-state="open"]):not([data-state=""]){ border-left-color:var(--tx3); }
+.pc-step[data-state="fail"], .pc-step[data-state="skip"], .pc-step[data-state="nogo"]{ border-left-color:var(--warn); }
+.pc-chip{ margin-left:var(--sp-2); font-family:var(--mono); font-size:var(--fs-label); font-weight:600; color:var(--tx2);
+  vertical-align:middle; }
+.pc-chip.ok{ color:var(--ok); }
+.pc-chip.dev{ color:var(--warn); }
+.pc-ctl{ margin:var(--sp-2) 0 var(--sp-4); padding:var(--sp-2) var(--sp-3); background:var(--s2);
+  border-top:1px solid var(--line-2); display:flex; flex-direction:column; gap:var(--sp-2); font-size:var(--fs-label);
+  line-height:var(--lh-text); }
+.pc-hd{ display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--sp-2); }
+.pc-lbl{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); }
+.pc-res{ font-family:var(--mono); font-weight:600; color:var(--tx3); }
+.pc-res.ok{ color:var(--ok); }
+.pc-res.dev{ color:var(--warn); }
+.pc-tm{ font-family:var(--mono); color:var(--tx3); margin-left:auto; }
+.pc-go{ color:var(--tx2); white-space:pre-line; }
+.pc-vals{ width:100%; border-collapse:collapse; }
+.pc-vals th{ text-align:left; font-weight:500; color:var(--tx3); border-bottom:1px solid var(--line-2); padding:2px var(--sp-2) 2px 0; }
+.pc-vals td{ border-bottom:1px solid var(--line); padding:3px var(--sp-2) 3px 0; vertical-align:baseline; }
+.pc-vals td.ex{ width:46%; overflow-wrap:anywhere; }
+.pc-vals code{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx); background:none; }
+.pc-acts{ display:flex; flex-wrap:wrap; gap:var(--sp-1); align-items:center; }
+.pc-acts [data-pc="capture"]{ margin-left:var(--sp-2); }
+.pc-acts .ds-btn[aria-pressed="true"]{ background:var(--s3); border-color:var(--tx3); color:var(--val);
+  box-shadow:inset 0 -2px 0 var(--accent); }
+.pc-nt .pc-note{ width:100%; }
+.pc-pre-li{ list-style:none; position:relative; padding-left:24px; margin-left:-1.2em; }
+.pc-pre-li .pc-pre{ position:absolute; left:2px; top:.2em; width:15px; height:15px; margin:0; accent-color:var(--accent); }
+.pc-pre-li[data-state="done"]{ color:var(--tx3); }
+.pc-prelive{ white-space:nowrap; }
