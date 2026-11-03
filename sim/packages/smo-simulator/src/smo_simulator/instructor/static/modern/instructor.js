@@ -35,6 +35,7 @@ import * as D from "/static/shared/viz/derive.js";
 import * as PF from "/static/shared/viz/powerflow.js";
 import { createFocus } from "/static/modern/focus.js";
 import { mountTimeline } from "/static/modern/timeline.js";
+import { mountSeatBoard } from "/static/shared/seatboard.js";
 import * as V from "/static/modern/views.js";
 import { createDebrief } from "/static/modern/debrief.js";
 import { renderScore } from "/static/modern/score.js";
@@ -62,6 +63,7 @@ const VIEWS = [
   { id: "orbit", label: "Orbit & link" },
   { id: "obc", label: "OBC & FDIR" },
   { id: "storage", label: "Storage" },
+  { id: "crew", label: "Crew" },
   { id: "raw", label: "Raw state" },
   { id: "|" },
   { id: "prep", label: "Prep" },
@@ -71,7 +73,7 @@ const VIEWS = [
 const REASON_KEYS = [
   "ok", "caution", "alarm", "injected", "nodata", "roll", "pitch", "yaw", "gradual", "intermittent", "step",
   "pass override", "Situation", "Truth vs trainees", "Fault", "Power", "Thermal", "Attitude", "Orbit & link",
-  "OBC & FDIR", "Storage", "Raw state", "Prep", "Debrief","inject fired", "phase change", "spacecraft mode change", "acquisition of signal",
+  "OBC & FDIR", "Storage", "Crew", "Raw state", "Prep", "Debrief","inject fired", "phase change", "spacecraft mode change", "acquisition of signal",
   "loss of signal", "eclipse entry", "FDIR recovery started", "alarm not acted on",
   "telemetry diverges from truth", "scenario started", "scenario ended", "on-board alarm"];
 
@@ -102,6 +104,12 @@ let tlFaults = [];
 let tlSegment = 0;
 let tlWindowS = 3600;
 let tlSelected = null;
+/* Ground activity (WP10): the MCS's anonymous summary, read from the GSG on
+ * the ground (/api/seats/activity: positions only, never names). */
+const GROUND_SEQ0 = 1e9;
+let ground = { available: false, reason: "", seq: 0, positions: [], talking: [] };
+let crewBoard = null;
+let mcsPositions = null;
 let selectedFault = null;
 const sparkHist = {};
 const attHist = { point: [], know: [] };
@@ -1107,6 +1115,7 @@ function showView() {
   renderFocusHead();
   renderActiveView();
   if (fs.view === "debrief" && debrief) debrief.refresh();
+  if (fs.view === "crew") mountCrew();
   if (fs.view === "raw" || fs.view === "obc") snapshotPoll.kick();
 }
 function goView(id, manual) {
@@ -1160,7 +1169,8 @@ function situationHtml() {
         <button type="button" class="ds-btn sm" data-goview="divergence" style="margin-top:var(--sp-2)">${t("Open the comparison")}</button>` : V.num(null)}
       <h3>${t("Team activity the simulator can see")}</h3>
       ${teamActivityHtml(nowTs)}
-      <p class="note">${t("Alarm acknowledgements, procedure steps and voice loops happen on the ground and are not visible to the simulator.")}</p>
+      <h3>${t("On the ground")}</h3>
+      ${groundActivityHtml(nowTs)}
     </div></div>`;
 }
 function teamActivityHtml(nowTs) {
@@ -1174,6 +1184,25 @@ function teamActivityHtml(nowTs) {
     <div class="kv"><span>${t("Rejected, last 10 min")}</span><span class="mono">${rej}</span></div>
     <div class="kv"><span>${t("Last telecommand")}</span>${lastTc ? `<span class="mono">${esc(tText("{{age}} ago", { age: V.fmtAge(nowTs - lastTc.ts) }))}</span>` : `<span class="dim">${t("none")}</span>`}</div>
     <div class="kv"><span>${t("Alarms not acted on")}</span><span class="mono">${missed}</span></div>`;
+}
+function groundActivityHtml(nowTs) {
+  if (!ground.available) {
+    return `<p class="note">${t("Alarm acknowledgements, procedure steps and voice loops happen on the ground and are not visible to the simulator.")}` +
+      (ground.reason ? ` ${esc(tText("Ground activity not available: {{why}}", { why: ground.reason }))}` : "") + `</p>`;
+  }
+  const pos = ground.positions || [];
+  const staffed = pos.filter((p) => p.state === "staffed").length;
+  const gaps = pos.filter((p) => p.state !== "staffed" && p.state !== "unknown");
+  const seg = tlItems.filter((i) => i.ground && i.seg === tlSegment);
+  const acks = seg.filter((i) => i.kind === "g_ack" && nowTs - i.ts <= 600).length;
+  const steps = seg.filter((i) => i.kind === "g_step" && nowTs - i.ts <= 600).length;
+  const talking = (ground.talking || []).map((x) => `${esc(deskName(x.position))} · ${esc(x.loop)}`).join(", ");
+  return `<div class="kv"><span>${t("Desks staffed")}</span><span class="mono">${pos.some((p) => p.state === "unknown") ? esc(tText("seats off")) : `${staffed} / ${pos.length}`}</span></div>
+    ${gaps.length ? `<div class="kv"><span>${t("Not staffed")}</span><span>${gaps.map((p) => `${esc(deskName(p.id))} (${esc(tText(p.state))})`).join(", ")}</span></div>` : ""}
+    <div class="kv"><span>${t("Alarms acknowledged, last 10 min")}</span><span class="mono">${acks}</span></div>
+    <div class="kv"><span>${t("Procedure steps, last 10 min")}</span><span class="mono">${steps}</span></div>
+    <div class="kv"><span>${t("Talking now")}</span><span>${talking || `<span class="dim">${t("nobody")}</span>`}</span></div>
+    <button type="button" class="ds-btn sm" data-goview="crew" style="margin-top:var(--sp-2)">${t("Open the seat board")}</button>`;
 }
 function rowsFor(sub) { return views && views.divergence ? views.divergence.rows.filter((r) => r.subsystem === sub) : []; }
 
@@ -1259,7 +1288,73 @@ function renderOverview() {
 function renderTimeline() {
   if (!timeline) return;
   timeline.update({ items: tlItems, pending: tlPending, nowTs: simNowTs(), windowS: tlWindowS,
-                    futureFrac: 0.2, segment: tlSegment, selectedSeq: tlSelected });
+                    futureFrac: 0.2, segment: tlSegment, selectedSeq: tlSelected,
+                    ground: { available: ground.available, reason: ground.reason, talking: ground.talking } });
+}
+
+/* ── ground activity (anonymous, from the MCS on the ground) ─────────── */
+function deskName(id) {
+  const p = (mcsPositions || {})[id] || {};
+  return p.label ? tdb(`pos:${id}:label`, p.label) : (id || tText("unknown desk"));
+}
+function groundText(g) {
+  const desk = deskName(g.position);
+  switch (g.kind) {
+    case "g_ack": return tText("{{desk}} acknowledged alarm {{id}} {{label}}", { desk, id: g.alarm_id, label: g.label || "" });
+    case "g_step": return tText("{{desk}} · {{proc}} step {{n}}: {{result}}", { desk, proc: g.procedure || "", n: g.step, result: g.result });
+    case "g_proc": return tText("{{desk}} · procedure {{proc}} {{outcome}}", { desk, proc: g.procedure || "", outcome: g.outcome });
+    case "g_poll": return tText("GO/NO-GO poll opened: {{label}}", { label: g.label || "" });
+    case "g_vote": return tText("{{desk}} answered {{response}} ({{label}})", { desk, response: g.response, label: g.label || "" });
+    case "g_result": return tText("GO/NO-GO result: {{outcome}} ({{label}})", { outcome: g.outcome, label: g.label || "" });
+    case "talk": return tText("{{desk}} talked on {{loop}} for {{s}} s", { desk, loop: g.loop, s: Math.max(0, Math.round((g.ts_end || g.ts) - g.ts)) });
+    case "seat": return tText("{{desk}}: {{state}}", { desk, state: tText(g.state) });
+    default: return `${desk} ${g.kind}`;
+  }
+}
+// i18n-keys (desk states shown by groundText)
+const _GROUND_STATE_KEYS = ["staffed", "vacant", "idle", "reclaimable"];
+function ingestGround(d) {
+  ground.available = true; ground.reason = "";
+  ground.positions = d.positions || [];
+  ground.talking = d.talking || [];
+  for (const g of d.items || []) {
+    const it = Object.assign({}, g, { seq: GROUND_SEQ0 + g.seq, seg: tlSegment, sev: g.kind === "g_ack" ? g.severity : 1,
+      ground: true, text: groundText(g) });
+    tlItems.push(it);
+    if (g.kind !== "seat" || g.state !== "staffed") addLog(g.kind === "seat" && g.state === "vacant" ? "medium" : "info",
+      g.lane === "crew" ? "CREW" : "GROUND", it.text, V.fmtClockSec(g.ts));
+  }
+  ground.seq = d.seq || ground.seq;
+  renderTimeline();
+}
+const groundPoll = poller(async () => {
+  let r;
+  try { r = await fetch(`/api/seats/activity?since=${ground.seq}`, { cache: "no-store" }); }
+  catch (e) { ground.available = false; ground.reason = tText("the ground is not reachable"); return; }
+  if (!r.ok) {
+    ground.available = false;
+    ground.reason = r.status === 403 ? tText("instructor sign-in needed on the MCS")
+      : r.status === 404 ? tText("no MCS on the ground") : tText("the MCS is not reachable");
+    renderTimeline();
+    return;
+  }
+  if (!mcsPositions) {
+    try { mcsPositions = (await (await fetch("/api/seats", { cache: "no-store" })).json()).positions_meta || null; }
+    catch (e) { /* labels fall back to ids */ }
+  }
+  ingestGround(await r.json());
+}, 3000);
+let crewMounting = false;
+async function mountCrew() {
+  if (crewBoard) { crewBoard.refresh(); return; }
+  if (crewMounting) return;
+  crewMounting = true;
+  if (!mcsPositions) {
+    try { mcsPositions = (await (await fetch("/api/seats", { cache: "no-store" })).json()).positions_meta || null; }
+    catch (e) { /* */ }
+  }
+  crewBoard = mountSeatBoard($("crew-board"), { base: "/api/seats", positions: mcsPositions || {},
+    onToast: (m, k) => showToast(m, k === "error" ? "error" : "success") });
 }
 function ingestTimeline(d) {
   if (!d || !Array.isArray(d.items)) return;
@@ -1294,7 +1389,7 @@ function showTimelineDetail(seq) {
 }
 function timelineLaneLabel(id) {
   return ({ phase: "Phase & modes", fault: "Injects", alarm: "On-board alarms", tc: "Telecommands", proc: "Procedures",
-    link: "Link & sun", instr: "Instructor", voice: "Voice loops" })[id] || id;
+    link: "Link & sun", instr: "Instructor", crew: "Consoles", voice: "Voice loops" })[id] || id;
 }
 
 /* ── polling ───────────────────────────────────────────────────────────── */
@@ -1609,6 +1704,7 @@ async function init() {
   statePoll.start();
   viewsPoll.start();
   timelinePoll.start();
+  groundPoll.start();
   snapshotPoll.start();
   failuresPoll.start();
 }
