@@ -56,7 +56,7 @@ async def test_study_rules(client, study_obj):
     f = (await client.get(f"/api/studies/{sid}/rules/fmeca-skeleton")).json()
     assert f["summary"]["modes"] >= 3
     g = (await client.get(f"/api/studies/{sid}/rules/gates/PDR")).json()
-    assert g["gate"] == "PDR" and g["criteria"] and len(g["checks"]) == 8
+    assert g["gate"]["id"] == "pdr" and g["criteria"] and len(g["checks"]) == 8
     assert (await client.get(f"/api/studies/{sid}/rules/gates/XYZ")).status_code == 404
     s = (await client.get(f"/api/studies/{sid}/rules/summary")).json()
     assert {"margins", "cds", "requirements_quality", "verification", "fmeca"} <= set(s)

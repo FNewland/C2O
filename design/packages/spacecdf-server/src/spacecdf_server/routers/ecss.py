@@ -211,62 +211,47 @@ async def list_review_gates() -> list[dict]:
 
 
 async def _evaluate_gate_for_study(study_id: str, phase_id: str, body: dict | None = None) -> dict:
-    """Shared by the GET and POST gate-evaluate routes.
+    """Shared by the GET and POST gate-evaluate routes: one *canonical* gate (MDR, PRR, SRR,
+    PDR; ``mcr`` = MDR) evaluated from the stored study only.
 
-    ``phase_id`` is a phase id (``phase_b1``) or a gate name (``pdr``).
-    ``body`` (POST only) may carry the client's current ``mission_need`` and
-    ``parameters`` ({id: number | {value: number}}); they take precedence over
-    the stored study, so the gate reflects what the user is looking at.
+    Nov 2026 (WP0): the POST body is ignored. Before, the client's ``mission_need`` and
+    ``parameters`` took precedence over the stored study, and the V&V panel sent the empty
+    legacy store, so the MDR always failed "Problem statement is empty" (walkthrough top
+    problem 2). The profile-aware checklist is GET /api/studies/{id}/rules/gates/{gate}.
     """
     from ..services.gate_evaluator import evaluate_gate, resolve_phase
-    from .elements import _elements, _interfaces
-    from .requirements import _requirements, ensure_requirements_loaded
+    from .gates import gate_inputs
 
     if resolve_phase(phase_id) is None:
         raise HTTPException(status_code=404, detail=f"Unknown review gate: {phase_id}")
 
-    body = body or {}
-    study = get_study_store().get(study_id)
-
-    mission_need = body.get("mission_need")
-    target_mass = target_cost = rel_target = None
-    params: dict = {}
-    if study:
-        if mission_need is None:
-            mission_need = getattr(study, "mission_need", None)
-        reqs_model = getattr(study, "requirements", None)
-        if reqs_model is not None:
-            target_mass = getattr(reqs_model, "target_mass_kg", None)
-            target_cost = getattr(reqs_model, "target_cost_meur", None)
-            rel_target = getattr(reqs_model, "reliability_target", None)
-        iterations = getattr(study, "iterations", None) or []
-        if iterations:
-            params.update(iterations[-1].parameter_snapshot or {})
-    if isinstance(body.get("parameters"), dict):
-        params.update(body["parameters"])
-
-    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    try:
+        ctx = await gate_inputs(study_id)
+    except HTTPException:
+        ctx = {"study": None, "elements": [], "interfaces": [], "requirements": [], "params": {},
+               "function_count": 0, "risks": []}
+    study = ctx["study"]
+    reqs_model = getattr(study, "requirements", None) if study else None
+    params = dict(ctx["params"])
+    elements = ctx["elements"]
     params["_elements"] = elements
     params["_element_count"] = len(elements)
     params["_component_count"] = len([e for e in elements if e.get("element_type") == "component"])
     params["_frozen_count"] = len([e for e in elements if e.get("frozen")])
 
-    try:
-        await ensure_requirements_loaded()
-    except Exception:  # noqa: BLE001 — DB unavailable: evaluate with what is cached
-        pass
-    reqs = [r for r in _requirements.values() if r.get("study_id") == study_id]
-
     result = evaluate_gate(
         phase_id=phase_id,
-        mission_need=mission_need,
+        mission_need=getattr(study, "mission_need", None) if study else None,
         design_params=params,
-        target_mass_kg=target_mass,
-        target_cost_meur=target_cost,
-        reliability_target=rel_target,
-        requirements=reqs,
+        target_mass_kg=getattr(reqs_model, "target_mass_kg", None) if reqs_model else None,
+        target_cost_meur=getattr(reqs_model, "target_cost_meur", None) if reqs_model else None,
+        reliability_target=getattr(reqs_model, "reliability_target", None) if reqs_model else None,
+        requirements=ctx["requirements"],
         elements=elements,
-        interfaces=[i for i in _interfaces.values() if i.get("study_id") == study_id and not i.get("deleted_at")],
+        interfaces=ctx["interfaces"],
+        mission=reqs_model,
+        function_count=ctx.get("function_count"),
+        risks=ctx.get("risks"),
     )
     result["study_id"] = study_id
     result["study_found"] = study is not None
@@ -281,5 +266,5 @@ async def evaluate_gate_endpoint(study_id: str, phase_id: str) -> dict:
 
 @router.post("/gate-evaluate/{study_id}/{phase_id}")
 async def evaluate_gate_with_state(study_id: str, phase_id: str, body: dict | None = None) -> dict:
-    """Evaluate review gate exit criteria using the client's current state."""
+    """Kept for old clients: same as GET (the body is ignored; server state only)."""
     return await _evaluate_gate_for_study(study_id, phase_id, body)

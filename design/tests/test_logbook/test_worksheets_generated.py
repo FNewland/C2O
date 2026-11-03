@@ -72,7 +72,7 @@ def test_map_names_real_steps_tabs_and_gates():
     panels = set(re.findall(r"'(\w+)'", re.search(r"const PANELS[^=]*=\s*\[([^\]]+)\]", src).group(1)))
     tabs = panels | {"vv"}
     steps = {"wizard:home", "wizard:problem", "wizard:stakeholders", "wizard:alternatives", "wizard:architecture"}
-    gates = {"mcr", "srr", "pdr"}
+    gates = {"mdr", "prr", "srr", "pdr"}   # canonical ECSS gates (Nov 2026; mcr was the old MDR)
     wmap = yaml.safe_load(MAP.read_text(encoding="utf-8"))
     for wid, m in wmap["worksheets"].items():
         assert set(m.get("tabs", [])) <= tabs, (wid, set(m["tabs"]) - tabs)

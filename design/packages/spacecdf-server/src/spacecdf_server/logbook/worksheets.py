@@ -63,6 +63,27 @@ def _tr(value: Any, lang: str) -> str:
     return "" if value is None else str(value)
 
 
+def _canon(gate: str) -> str:
+    g = str(gate or "").strip().lower()
+    return "mdr" if g == "mcr" else g   # MCR = the old name of MDR (ruling 3)
+
+
+def _gate_ids(gate: str) -> set[str]:
+    """Canonical gates a context gate stands for: itself, or those a merged profile gate
+    covers (the ESA IOD concept review ``cr`` → mdr + prr)."""
+    g = _canon(gate)
+    out = {g}
+    try:
+        from ..services import gate_profiles as gp
+        for p in gp.load().get("profiles", {}).values():
+            for pg in p.get("gates") or []:
+                if pg.get("id") == g and g not in gp.CANONICAL:
+                    out |= set(pg.get("covers") or [])
+    except Exception:  # noqa: BLE001
+        pass
+    return out
+
+
 def match_score(ws: dict, tool: str, ctx: dict) -> int:
     """0 = not offered here; higher = more specific match."""
     ap = ws.get("applies") or {}
@@ -78,7 +99,7 @@ def match_score(ws: dict, tool: str, ctx: dict) -> int:
     score = 0
     if step and step in (ap.get("steps") or []):
         score = max(score, 3)
-    if gate and gate in (ap.get("gates") or []):
+    if gate and _gate_ids(gate) & {_canon(g) for g in ap.get("gates") or []}:
         score = max(score, 3)
     if tab and tab in tabs:
         if not levels or level is None:

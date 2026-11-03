@@ -648,3 +648,23 @@ class VerificationItemRow(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class GateBaselineRow(Base):
+    """Baseline snapshot saved when a review gate passes (WP6, Nov 2026).
+
+    One row per pass: the study's mission need and requirements model, its element
+    tree, interfaces, requirements, risk register, the gate evaluation and the products
+    the gate baselines (configs/gate_profiles.yaml) — frozen as JSON.
+    """
+
+    __tablename__ = "gate_baselines"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), index=True)
+    gate: Mapped[str] = mapped_column(String(32))
+    profile: Mapped[str] = mapped_column(String(32), default="")
+    created_by: Mapped[str] = mapped_column(String(255), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)

@@ -1,8 +1,11 @@
 """SpaceCDF — Gate exit criteria evaluator.
 
 Loads ``configs/gate_exit_criteria.yaml`` and evaluates each criterion of one
-review gate (MCR / SRR / PDR) against the current study state: the Mission
-Need, the design parameters, the study's requirements and its element tree.
+canonical review gate (MDR / PRR / SRR / PDR) against the stored study state:
+the Mission Need, the design parameters, the study's requirements, its element
+tree, functions and risk register. ``MCR`` (the old name of MDR, ruling 3) and
+``pre_phase_a`` still resolve to the MDR. Which gates a study holds is its gate
+profile's business (services/gate_profiles.py, services/gate_reviews.py).
 
 Every criterion comes back with
 
@@ -74,6 +77,19 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "All {{required}} expected subsystem links present and reviewed",
     "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
     "Interface rules are invalid",
+    # PRR (Nov 2026, WP6) and the margin ladder (margin_policy.yaml system_margin_ladder)
+    "Concept selected with rationale; {{n}} alternative(s) considered",
+    "Orbit baseline: {{orbit}} {{alt}} km, {{inc}}°, {{life}} year(s)",
+    "No orbit baseline",
+    "{{n}} function(s) in the function tree",
+    "{{systems}} system(s), {{subsystems}} subsystem(s) in the product tree",
+    "Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; power {{power}} W + {{margin}}% = {{ptotal}} W vs {{avail}} W",
+    "No mass target or form factor to check the mass budget against",
+    "{{mission}} mission and {{system}} system requirement(s); {{nomethod}} without a verification method",
+    "{{rated}}/{{total}} components have a TRL",
+    "No components selected yet",
+    "{{n}} ground station(s) identified",
+    "{{n}} risk(s) in the risk register",
 )
 
 
@@ -86,14 +102,26 @@ def _criteria_file() -> Path:
     raise FileNotFoundError("configs/gate_exit_criteria.yaml not found")
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=4)
+def _load_file(path: str, stamp: int) -> dict[str, Any]:
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {"phases": {}}
+
+
 def _load() -> dict[str, Any]:
     try:
         path = _criteria_file()
-        return yaml.safe_load(path.read_text(encoding="utf-8")) or {"phases": {}}
-    except (FileNotFoundError, yaml.YAMLError) as exc:
+        return _load_file(str(path), path.stat().st_mtime_ns)
+    except (FileNotFoundError, OSError, yaml.YAMLError) as exc:
         logger.warning("Gate criteria file failed to load: %s", exc)
         return {"phases": {}}
+
+
+def canonical_criterion_id(cid: str) -> str:
+    """``MCR-EC-03`` (stored before Nov 2026) → ``MDR-EC-03``."""
+    for old, new in ((_load().get("aliases") or {}).get("criteria_prefix") or {}).items():
+        if cid.startswith(old):
+            return new + cid[len(old):]
+    return cid
 
 
 def list_gates() -> list[str]:
@@ -110,13 +138,20 @@ def list_gate_options() -> list[dict[str, str]]:
 
 
 def resolve_phase(key: str) -> str | None:
-    """Accept a phase id (``phase_b1``) or a gate name (``PDR``/``pdr``)."""
-    phases = _load().get("phases", {})
+    """Accept a phase id (``phase_b``) or a gate name (``PDR``/``pdr``; ``MCR`` = MDR)."""
+    data = _load()
+    phases = data.get("phases", {})
     if not key:
         return None
     if key in phases:
         return key
+    aliases = data.get("aliases") or {}
+    phase_alias = aliases.get("phases") or {}
+    if phase_alias.get(key) in phases:
+        return phase_alias[key]
+    gate_alias = {a.lower(): v for a, v in (aliases.get("gates") or {}).items()}
     k = key.strip().lower()
+    k = str(gate_alias.get(k, k)).lower()
     for pid, g in phases.items():
         if pid.lower() == k or str(g.get("gate", "")).lower() == k:
             return pid
@@ -147,6 +182,14 @@ def _mn_view(mission_need: Any) -> dict[str, Any]:
     if not d.get("alternatives_considered") and d.get("alternatives"):
         d["alternatives_considered"] = d["alternatives"]
     return d
+
+
+def _plain(obj: Any) -> dict[str, Any]:
+    if obj is None:
+        return {}
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump(mode="json")
+    return dict(obj) if isinstance(obj, dict) else {}
 
 
 def _flat_params(design_params: Any) -> dict[str, Any]:
@@ -197,10 +240,17 @@ def evaluate_gate(
     requirements: list[dict] | None = None,
     elements: list[dict] | None = None,
     interfaces: list[dict] | None = None,
+    mission: Any = None,
+    function_count: int | None = None,
+    risks: list[dict] | None = None,
+    margin_gate: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
-    ``phase_id`` is a phase id from the YAML or a gate name (MCR/SRR/PDR).
+    ``phase_id`` is a phase id from the YAML or a gate name (MDR/PRR/SRR/PDR; MCR = MDR).
+    ``mission``: the study's MissionRequirements (orbit, ground stations); ``function_count``:
+    functions in the study's function tree; ``risks``: the study's risk register;
+    ``margin_gate``: the margin-ladder step for budget criteria (default: this gate).
 
     Returns::
 
@@ -235,6 +285,10 @@ def evaluate_gate(
                      if not e.get("deleted_at")],
         "interfaces": [i for i in (interfaces or (design_params or {}).get("_interfaces") or [])
                        if not i.get("deleted_at")],
+        "mission": _plain(mission),
+        "function_count": function_count,
+        "risks": list(risks or []),
+        "margin_gate": (margin_gate or str(gate.get("gate", ""))).lower(),
     }
 
     results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])]
@@ -331,6 +385,9 @@ def _evaluate_criterion(ec: dict, ctx: dict) -> dict[str, Any]:
         "id": cid,
         "question": ec.get("question", ""),
         "category": ec.get("category", ""),
+        "owner_seat": ec.get("owner_seat"),
+        "step": ec.get("step"),
+        "fix": ec.get("fix"),
         "priority": priority,
         "advisory": priority != "must_pass",
         "evidence_required": ec.get("evidence", ""),
@@ -367,23 +424,23 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
     mn, dp = ctx["mn"], ctx["dp"]
     reqs, elements = ctx["reqs"], ctx["elements"]
 
-    # ---------------------------------------------------------------- MCR
-    if cid == "MCR-EC-01":
+    # ---------------------------------------------------------------- MDR (was MCR)
+    if cid == "MDR-EC-01":
         if (mn.get("problem_statement") or "").strip():
             _set(result, "pass", "Problem statement defined")
         else:
             _set(result, "fail", "Problem statement is empty")
 
-    elif cid == "MCR-EC-02":
+    elif cid == "MDR-EC-02":
         n = len(mn.get("stakeholders") or [])
         _set(result, "pass" if n >= 1 else "fail", "{{n}} stakeholder(s) identified", n=n)
 
-    elif cid == "MCR-EC-03":
+    elif cid == "MDR-EC-03":
         n = len([o for o in mn.get("objectives") or []
                  if o.get("priority", "primary") == "primary" and (o.get("measurable_criterion") or "").strip()])
         _set(result, "pass" if n >= 1 else "fail", "{{n}} primary objective(s) with measurable criteria", n=n)
 
-    elif cid == "MCR-EC-04":
+    elif cid == "MDR-EC-04":
         alts = mn.get("alternatives_considered") or []
         non_space = {"aerial_drone", "aerial_aircraft", "ground_sensor", "ground_network", "space_existing"}
         has_ns = any(a.get("type") in non_space for a in alts)
@@ -392,7 +449,7 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                else "{{n}} alternative(s), no non-space option")
         _set(result, "pass" if ok else "fail", key, n=len(alts))
 
-    elif cid == "MCR-EC-05":
+    elif cid == "MDR-EC-05":
         sel = bool(mn.get("selected_alternative_id"))
         rat = bool((mn.get("selection_rationale") or "").strip())
         if sel and rat:
@@ -402,20 +459,20 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         else:
             _set(result, "fail", "No concept selected")
 
-    elif cid == "MCR-EC-06":
+    elif cid == "MDR-EC-06":
         if (mn.get("conops_summary") or "").strip():
             _set(result, "pass", "ConOps summary documented")
         else:
             _set(result, "fail", "ConOps summary is empty")
 
-    elif cid == "MCR-EC-07":
+    elif cid == "MDR-EC-07":
         v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
         if v:
             mass, power = v
             _set(result, "pass" if mass > -50 and power > 0 else "fail",
                  "Mass margin {{mass}}%, power margin {{power}}%", mass=_fmt(mass), power=_fmt(power))
 
-    elif cid == "MCR-EC-08":
+    elif cid == "MDR-EC-08":
         target = ctx["target_cost"]
         if not target or target <= 0:
             _set(result, "pass", "No cost target set")
@@ -427,12 +484,12 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                 _set(result, "pass" if cost <= target * 1.2 else "fail",
                      "Cost {{cost}} MEUR vs target {{target}} MEUR", cost=_fmt(cost, 1), target=_fmt(target, 1))
 
-    elif cid == "MCR-EC-09":
+    elif cid == "MDR-EC-09":
         v = _need(result, dp, "risk.total_risks")
         if v:
             _set(result, "pass", "Risk analysis run: {{n}} risk(s) identified", n=int(v[0]))
 
-    elif cid == "MCR-EC-10":
+    elif cid == "MDR-EC-10":
         v = _need(result, dp, "debris.compliance_score")
         if v:
             _set(result, "pass" if v[0] >= 50 else "fail",
@@ -470,13 +527,8 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                  "{{met}}/{{total}} checkable requirements met ({{pct}}%)",
                  met=met, total=len(res), pct=_fmt(pct))
 
-    elif cid == "SRR-EC-06":
-        v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
-        if v:
-            mass, power = v
-            _set(result, "pass" if mass >= 0 and power >= 0 else "fail",
-                 "Mass margin {{mass}}%, power margin {{power}}% (required ≥ {{min}}%)",
-                 mass=_fmt(mass), power=_fmt(power), min=0)
+    elif cid in ("SRR-EC-06", "PDR-EC-03", "PRR-EC-05"):
+        _ladder_budget(result, ctx)
 
     elif cid == "SRR-EC-10":
         v = _need(result, dp, "sustainability.score", "debris.casualty_compliant")
@@ -527,13 +579,6 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                          "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
                          met=cov["met"], required=cov["required"], suggested=suggested)
 
-    elif cid == "PDR-EC-03":
-        v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
-        if v:
-            mass, power = v
-            _set(result, "pass" if mass >= 10 and power >= 10 else "fail",
-                 "Mass margin {{mass}}%, power margin {{power}}% (required ≥ {{min}}%)",
-                 mass=_fmt(mass), power=_fmt(power), min=10)
 
     elif cid == "PDR-EC-04":
         subs = [e for e in elements if e.get("element_type") == "subsystem"]
@@ -562,5 +607,113 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             _set(result, "pass" if v[0] >= target else "fail",
                  "Reliability {{rel}} vs target {{target}}", rel=_fmt(v[0], 3), target=_fmt(target, 2))
 
+    # ---------------------------------------------------------------- PRR
+    elif cid == "PRR-EC-01":
+        alts = mn.get("alternatives_considered") or []
+        sel = bool(mn.get("selected_alternative_id"))
+        rat = bool((mn.get("selection_rationale") or "").strip())
+        if not sel:
+            _set(result, "fail", "No concept selected")
+        elif not rat:
+            _set(result, "fail", "Concept selected, rationale missing")
+        else:
+            _set(result, "pass" if len(alts) >= 2 else "fail",
+                 "Concept selected with rationale; {{n}} alternative(s) considered", n=len(alts))
+
+    elif cid == "PRR-EC-02":
+        orbit = (ctx["mission"] or {}).get("orbit") or {}
+        alt = orbit.get("altitude_km")
+        if orbit.get("orbit_type") and isinstance(alt, (int, float)) and alt > 0:
+            life = orbit.get("mission_duration_years") or (ctx["mission"] or {}).get("design_lifetime_years") or 0
+            _set(result, "pass" if life else "fail", "Orbit baseline: {{orbit}} {{alt}} km, {{inc}}°, {{life}} year(s)",
+                 orbit=str(orbit.get("orbit_type")).upper(), alt=_fmt(float(alt)),
+                 inc=_fmt(float(orbit.get("inclination_deg") or 0), 1), life=_fmt(float(life), 1))
+        else:
+            _set(result, "fail", "No orbit baseline")
+
+    elif cid == "PRR-EC-03":
+        n = ctx["function_count"] or 0
+        _set(result, "pass" if n >= 1 else "fail", "{{n}} function(s) in the function tree", n=n)
+
+    elif cid == "PRR-EC-04":
+        hw = [e for e in elements if e.get("segment", "space") == "space" and e.get("in_scope") is not False]
+        systems = sum(1 for e in hw if e.get("element_type") == "system")
+        subs = sum(1 for e in hw if e.get("element_type") == "subsystem")
+        _set(result, "pass" if systems >= 1 and subs >= 1 else "fail",
+             "{{systems}} system(s), {{subsystems}} subsystem(s) in the product tree", systems=systems, subsystems=subs)
+
+    elif cid == "PRR-EC-06":
+        n_mission = sum(1 for r in reqs if r.get("level") == "mission")
+        n_system = sum(1 for r in reqs if r.get("level") == "system")
+        nomethod = sum(1 for r in reqs if not (r.get("verification_method") or "").strip())
+        ok = n_mission >= 1 and n_system >= 1 and nomethod == 0
+        _set(result, "pass" if ok else "fail",
+             "{{mission}} mission and {{system}} system requirement(s); {{nomethod}} without a verification method",
+             mission=n_mission, system=n_system, nomethod=nomethod)
+
+    elif cid == "PRR-EC-07":
+        comps = [e for e in elements if e.get("element_type") == "component"]
+        if not comps:
+            _set(result, "not_evaluated", "No components selected yet")
+        else:
+            rated = sum(1 for e in comps if e.get("trl") is not None)
+            _set(result, "pass" if rated == len(comps) else "fail",
+                 "{{rated}}/{{total}} components have a TRL", rated=rated, total=len(comps))
+
+    elif cid == "PRR-EC-09":
+        stations = list((ctx["mission"] or {}).get("ground_stations") or [])
+        ground_els = [e for e in elements if e.get("segment") == "ground" and e.get("element_type") != "segment"]
+        n = len(stations) or len(ground_els)
+        _set(result, "pass" if n >= 1 else "fail", "{{n}} ground station(s) identified", n=n)
+
+    elif cid == "PRR-EC-10":
+        n = len([r for r in ctx["risks"] if (r.get("status") or "open") != "deleted"])
+        _set(result, "pass" if n >= 1 else "fail", "{{n}} risk(s) in the risk register", n=n)
+
+    elif cid == "PRR-EC-11":
+        target = ctx["target_cost"]
+        if not target or target <= 0:
+            _set(result, "pass", "No cost target set")
+        else:
+            v = _need(result, dp, "cost.total_meur")
+            if v:
+                _set(result, "pass" if v[0] <= target else "fail",
+                     "Cost {{cost}} MEUR vs target {{target}} MEUR", cost=_fmt(v[0], 1), target=_fmt(target, 1))
+
+    elif cid == "PRR-EC-12":
+        v = _need(result, dp, "debris.compliance_score")
+        if v:
+            _set(result, "pass" if v[0] >= 50 else "fail",
+                 "Debris compliance score {{score}}/100", score=_fmt(v[0]))
+
     else:
         _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
+
+
+def _ladder_budget(result: dict, ctx: dict) -> None:
+    """Mass and power close with the system margin of the gate (margin_policy.yaml ladder).
+
+    Convention (stated in the ladder): total = nominal × (1 + margin). Mass is the design
+    loop's dry mass against the study mass target; power is the orbit demand in sunlight
+    against the EOL array power.
+    """
+    from .margin_policy import system_margin_percent
+
+    dp = ctx["dp"]
+    v = _need(result, dp, "mass.dry_mass_kg", "power.total_sunlight_w", "power.sa_power_eol_w")
+    if not v:
+        return
+    dry, demand, avail = v
+    limit = ctx["target_mass"]
+    if not limit or limit <= 0:
+        _set(result, "not_evaluated", "No mass target or form factor to check the mass budget against")
+        return
+    m_pct = system_margin_percent(ctx["margin_gate"], "mass")
+    p_pct = system_margin_percent(ctx["margin_gate"], "power")
+    total = dry * (1 + m_pct / 100)
+    ptotal = demand * (1 + p_pct / 100)
+    ok = total <= limit and (avail > 0 and ptotal <= avail)
+    _set(result, "pass" if ok else "fail",
+         "Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; power {{power}} W + {{margin}}% = {{ptotal}} W vs {{avail}} W",
+         mass=_fmt(dry, 2), margin=_fmt(m_pct), total=_fmt(total, 2), limit=_fmt(limit, 2),
+         power=_fmt(demand, 1), ptotal=_fmt(ptotal, 1), avail=_fmt(avail, 1))

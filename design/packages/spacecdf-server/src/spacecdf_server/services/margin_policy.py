@@ -25,6 +25,45 @@ from .rule_inputs import kb_component, leaves_with, param, perf, qty
 
 CONFIG = "margin_policy"
 
+#: Review gates of the margin ladder, in maturity order.
+LADDER_GATES = ("mdr", "prr", "srr", "pdr", "cdr")
+
+
+def ladder(cfg: dict | None = None) -> dict[str, Any]:
+    """The system margin ladder ("C2O default"): label, convention and one value per gate."""
+    cfg = cfg or rc.load(CONFIG)
+    lad = cfg["system_margin_ladder"]
+    rows = []
+    for g in LADDER_GATES:
+        node = lad["by_gate"][g]
+        ref = rc.ref_of(cfg, node)
+        rows.append({"gate": g, "percent": float(node["value"]), "standard_ref": ref["standard_ref"],
+                     "c2o_default": ref["c2o_default"]})
+    return {"label": lad["label"], "convention": lad["convention"], "applies_to": lad.get("applies_to", []),
+            "standard_ref": rc.ref_of(cfg, lad)["standard_ref"], "by_gate": rows}
+
+
+def system_margin_percent(gate: str | None, resource: str = "mass", cfg: dict | None = None) -> float:
+    """System margin (%) for ``resource`` at review ``gate`` (mdr/prr/srr/pdr/cdr).
+
+    With no gate (or a gate outside the ladder) the flat ``mass``/``power`` value applies.
+    """
+    cfg = cfg or rc.load(CONFIG)
+    g = (gate or "").strip().lower()
+    if g == "mcr":   # the old name of MDR (ruling 3)
+        g = "mdr"
+    lad = cfg.get("system_margin_ladder") or {}
+    if g in (lad.get("by_gate") or {}) and resource in (lad.get("applies_to") or ["mass", "power"]):
+        return float(lad["by_gate"][g]["value"])
+    return float(cfg[resource]["system_margin_percent"]["value"])
+
+
+def _system_node(cfg: dict, gate: str | None, resource: str) -> dict:
+    g = (gate or "").strip().lower()
+    g = "mdr" if g == "mcr" else g
+    by = (cfg.get("system_margin_ladder") or {}).get("by_gate") or {}
+    return by[g] if g in by else cfg[resource]["system_margin_percent"]
+
 
 def _category(e: dict, cfg: dict) -> tuple[str, str]:
     """(category letter, how it was chosen: element | trl | no_kb)."""
@@ -68,8 +107,13 @@ def evaluate_margins(
     *,
     mass_limit_kg: float | None = None,
     mass_limit_ref: dict[str, Any] | None = None,
+    gate: str | None = None,
 ) -> dict[str, Any]:
-    """Margin policy applied to the design. ``mass_limit_kg`` is the CDS or target limit."""
+    """Margin policy applied to the design. ``mass_limit_kg`` is the CDS or target limit.
+
+    ``gate`` (mdr/prr/srr/pdr/cdr) picks the system margin from the ladder; without it the
+    flat ``system_margin_percent`` applies.
+    """
     cfg = rc.load(CONFIG)
     params = params or {}
     checks: list[dict] = []
@@ -82,7 +126,8 @@ def evaluate_margins(
     maturity = sum(u["with_margin"] for u in units)
     harness = maturity * _val(m["harness_percent"]) / 100
     nominal_dry = maturity + harness
-    system = nominal_dry * _val(m["system_margin_percent"]) / 100
+    sys_mass_node = _system_node(cfg, gate, "mass")
+    system = nominal_dry * _val(sys_mass_node) / 100
     total_dry = nominal_dry + system
     prop = param(params, "propulsion.propellant_mass_kg") or param(params, "mass.propellant_kg")
     residual = (prop or 0) * _val(m["propellant_residual_percent"]) / 100
@@ -93,8 +138,9 @@ def evaluate_margins(
         "system_margin_kg": round(system, 3), "total_dry_kg": round(total_dry, 3),
         "propellant_kg": prop, "propellant_residual_kg": round(residual, 3) if prop else None,
         "total_wet_kg": round(total_wet, 3), "limit_kg": mass_limit_kg,
+        "system_margin_percent": _val(sys_mass_node),
     }
-    sys_ref = rc.ref_of(cfg, m["system_margin_percent"])
+    sys_ref = rc.ref_of(cfg, sys_mass_node)
     if not units:
         checks.append(rc.check_item(
             "MP-MASS-01", {"en": "Mass with margins", "fr": "Masse avec marges"}, "not_evaluated",
@@ -106,9 +152,9 @@ def evaluate_margins(
             "MP-MASS-01", {"en": "Mass with margins within the limit", "fr": "Masse avec marges dans la limite"},
             "pass" if ok else "fail",
             {"en": f"{rc.fmt(total_wet, 2)} kg with maturity, harness ({_val(m['harness_percent']):g} %) and "
-                   f"system ({_val(m['system_margin_percent']):g} %) margins vs limit {rc.fmt(mass_limit_kg, 2)} kg.",
+                   f"system ({_val(sys_mass_node):g} %) margins vs limit {rc.fmt(mass_limit_kg, 2)} kg.",
              "fr": f"{rc.fmt_fr(total_wet, 2)} kg avec les marges de maturité, de harnais ({_val(m['harness_percent']):g} %) "
-                   f"et système ({_val(m['system_margin_percent']):g} %) pour une limite de {rc.fmt_fr(mass_limit_kg, 2)} kg."},
+                   f"et système ({_val(sys_mass_node):g} %) pour une limite de {rc.fmt_fr(mass_limit_kg, 2)} kg."},
             mass_limit_ref or sys_ref, value=round(total_wet, 3), limit=mass_limit_kg, unit="kg"))
     else:
         checks.append(rc.check_item(
@@ -133,19 +179,23 @@ def evaluate_margins(
     punits = _units(elements, "power_avg_w", cfg)
     p_cbe = sum(u["cbe"] for u in punits)
     p_mat = sum(u["with_margin"] for u in punits)
-    p_sys = p_mat * _val(p["system_margin_percent"]) / 100
+    sys_power_node = _system_node(cfg, gate, "power")
+    p_sys = p_mat * _val(sys_power_node) / 100
     p_total = p_mat + p_sys
     available = param(params, "power.sa_power_eol_w")
     power = {"units": punits, "cbe_w": round(p_cbe, 3), "with_maturity_w": round(p_mat, 3),
-             "system_margin_w": round(p_sys, 3), "total_w": round(p_total, 3), "available_eol_w": available}
-    pref = rc.ref_of(cfg, p["system_margin_percent"])
+             "system_margin_w": round(p_sys, 3), "total_w": round(p_total, 3), "available_eol_w": available,
+             "system_margin_percent": _val(sys_power_node)}
+    pref = rc.ref_of(cfg, sys_power_node)
     if punits and available:
         ok = p_total <= available
         checks.append(rc.check_item(
             "MP-PWR-01", {"en": "Power with margins within EOL generation", "fr": "Puissance avec marges sous la production en fin de vie"},
             "pass" if ok else "fail",
-            {"en": f"{rc.fmt(p_total)} W orbit-average demand with margins vs {rc.fmt(available)} W EOL array power.",
-             "fr": f"Demande moyenne de {rc.fmt_fr(p_total)} W avec marges pour {rc.fmt_fr(available)} W produits en fin de vie."},
+            {"en": f"{rc.fmt(p_total)} W orbit-average demand with maturity and system ({_val(sys_power_node):g} %) "
+                   f"margins vs {rc.fmt(available)} W EOL array power.",
+             "fr": f"Demande moyenne de {rc.fmt_fr(p_total)} W avec les marges de maturité et système "
+                   f"({_val(sys_power_node):g} %) pour {rc.fmt_fr(available)} W produits en fin de vie."},
             pref, value=round(p_total, 2), limit=available, unit="W"))
     else:
         checks.append(rc.check_item(
@@ -234,7 +284,12 @@ def evaluate_margins(
            for sect in ("mass", "power", "delta_v", "data_handling", "thermal")
            for k, v in cfg[sect].items() if isinstance(v, dict) and "value" in v},
     }
-    return {"policy": policy, "mass": mass, "power": power, "delta_v": delta_v,
+    lad = ladder(cfg)
+    g = (gate or "").strip().lower()
+    system_margin = {"gate": "mdr" if g == "mcr" else (g or None), "mass_percent": _val(sys_mass_node),
+                     "power_percent": _val(sys_power_node), "label": lad["label"],
+                     "convention": lad["convention"], "ladder": lad["by_gate"]}
+    return {"policy": policy, "system_margin": system_margin, "mass": mass, "power": power, "delta_v": delta_v,
             "checks": checks, "summary": rc.summarise(checks)}
 
 
