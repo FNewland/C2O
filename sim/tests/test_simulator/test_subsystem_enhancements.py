@@ -414,13 +414,22 @@ class TestTCSBatteryHeater:
         model.tick(1.0, orbit, params)
         assert model._state.htr_thruster is False
 
-    def test_obc_heater_follows_eps_power_line(self):
-        """OBC heater state should follow EPS power line param 0x0116."""
+    def test_obc_heater_is_thermostatic_on_its_eps_line(self):
+        """Line 6 (0x0116) powered: the OBC heater runs its thermostat
+        (P1, 2026-11-02) — ON when the OBC is cold, OFF when it is warm, and
+        never ON with the line dark."""
         model = self._make_model()
-        params = {0x0116: 1}  # EPS power line for htr_obc is ON
         orbit = make_orbit_state()
+        model._state.temp_obc = 0.0           # below the +5 C ON setpoint
+        params = {0x0116: 1}
         model.tick(1.0, orbit, params)
         assert model._state.htr_obc is True
+        model._state.temp_obc = 25.0          # above the +10 C OFF setpoint
+        model.tick(1.0, orbit, params)
+        assert model._state.htr_obc is False
+        model._state.temp_obc = 0.0
+        model.tick(1.0, orbit, {0x0116: 0})   # line dark: no heater
+        assert model._state.htr_obc is False
 
     def test_heater_stuck_on_failure(self):
         """Stuck-on heater should stay on regardless of commands."""

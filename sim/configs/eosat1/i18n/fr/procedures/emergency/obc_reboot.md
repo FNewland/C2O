@@ -1,7 +1,9 @@
 # EMG-003 : Redémarrage de l'OBC
 **Sous-système :** OBDH
 **Phase :** EMERGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz P1) : l'étape 8 alimente la ligne du
+réchauffeur OBC avant de rétablir le réchauffeur (l'ancien `HEATER_OBC(on=1)` était refusé S1.8
+« EPS power line 6 is OFF ») et le rend à son thermostat.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -144,8 +146,12 @@ principale. Faire remonter à l'ingénieur OBDH pour analyse.
 ### Étape 8 --- Rétablir le mode opérationnel et consigner les résultats
 **TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50) --- faire passer l'OBC en mode NOMINAL
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) sous 5 s
-**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- rétablir le réchauffeur OBC
-**Verify:** `tcs.htr_obc` (0x040B) = 1 (actif)
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne du réchauffeur OBC (sans effet si déjà sur ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5 s
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- rétablir le réchauffeur OBC : de nouveau sous thermostat (l'étape 2 l'a mis sur OFF manuellement)
+**Verify:** `tcs.htr_obc` (0x040B) cohérent avec le thermostat --- 1 tant que `tcs.temp_obc` (0x0406) est sous +5 C, 0 au-dessus de +10 C
+**Note:** Si l'OBC est froid et ne remonte pas, forcer le réchauffeur avec `HEATER_OBC(on=1)`
+(func_id 41) et le rendre au mode AUTO une fois réchauffé.
 **Action:** Consigner les résultats du redémarrage :
   - cause du redémarrage (description de l'anomalie)
   - état avant redémarrage : charge CPU, erreurs mémoire, mode, nombre de SEU

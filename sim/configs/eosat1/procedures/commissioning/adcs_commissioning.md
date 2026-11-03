@@ -59,6 +59,9 @@ spacecraft about to declare NOMINAL must not be carrying a SAFE OBC)
 **Verify:** `ttc.tm_tier` (0x0539) = 1 (LOW) and `ttc.downlink_mode` (0x053C) = 0
 --- no card left the HIGH gate open (COM-006/COM-012 exit states)
 **Verify:** `eps.load_shed_stage` (0x0134) = 0 --- no shed latch left set (COM-008)
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 and `eps.pl_htr_obc` (0x0116) = 1 --- heater
+lines left ON under thermostat control (COM-002 exit state); a NOMINAL spacecraft
+with a dark battery-heater line drifts into the red in eclipse
 **Verify:** `eps.bus_voltage` (0x0105) in [26.5, 29.5] V; `eps.bat_soc`
 (0x0101) > 60%
 **Verify:** `obdh.time_ref` (0x0A13) != 0 --- clock referenced (LEOP-006)

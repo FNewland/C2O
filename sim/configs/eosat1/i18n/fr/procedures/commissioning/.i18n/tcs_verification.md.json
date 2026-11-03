@@ -9,8 +9,8 @@
   },
   {
    "id": "com-002-tcs-verification",
-   "en_hash": "8115e68658dc5814",
-   "fr_hash": "ee5081560024a347"
+   "en_hash": "877715bbeac6d3f0",
+   "fr_hash": "3976be79a599adda"
   },
   {
    "id": "com-002-tcs-verification/purpose",
@@ -44,13 +44,13 @@
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-4-test-battery-heater-circuit-establish-state-first",
-   "en_hash": "8f117ba33cb39134",
-   "fr_hash": "002f58065ff70a65"
+   "en_hash": "ac36602af82de20f",
+   "fr_hash": "a0d98c62f18ba544"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-5-test-obc-heater-circuit-establish-state-first",
-   "en_hash": "a31fff658d56d9e9",
-   "fr_hash": "e1c284a8ed0fd227"
+   "en_hash": "226c921b6310f5d5",
+   "fr_hash": "f5f0ee17b76392f2"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-6-verify-autonomous-heater-thermostat-settings",
@@ -79,9 +79,9 @@
   },
   {
    "id": "com-002-tcs-verification/exit-state",
-   "en_hash": "5b7134b922d3a95a",
-   "fr_hash": "885c131f45a863f2"
+   "en_hash": "3cec737f0c121dc1",
+   "fr_hash": "7984bd73e55c7de5"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "204d5cd"
 }

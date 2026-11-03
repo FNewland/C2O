@@ -5,7 +5,8 @@ Enhanced with heater setpoint commands, auto mode, sensor drift, heater stuck-on
 
 Active thermal control (EOSAT-1):
   - Battery heater: thermostat-controlled
-  - OBC heater: manual control only (via EPS power line state)
+  - OBC heater: thermostat-controlled while its EPS line (6) is powered
+    (manual override via HEATER_OBC, back to auto via HEATER_AUTO_MODE)
   - Thruster (catalyst-bed) heater: REAL as of Phase D — 12 W catbed preheat
     for the green-monoprop module, commanded via HEATER_THRUSTER (S8 func 42,
     circuit 2), powered from the EPS `prop` line (0x014A), state published at
@@ -66,6 +67,11 @@ class TCSState:
     htr_thruster_manual: bool = True
     # Sensor drift offsets (failure injection)
     sensor_drift: dict = field(default_factory=dict)
+    # Instructor "cold soak" (P1, 2026-11-02): a PHYSICAL sink offset per
+    # heated zone (battery / obc / thruster), in degC (negative = colder).
+    # Unlike temp_anomaly (a held sensor offset) the zone really cools, the
+    # thermostat sees it, and a powered heater can win it back.
+    cold_soak: dict = field(default_factory=dict)
     # Heater stuck-on flags
     htr_battery_stuck_on: bool = False
     htr_obc_stuck_on: bool = False
@@ -647,7 +653,8 @@ class TCSBasicModel(SubsystemModel):
         bat_pwr = self._HEATER_POWER["battery"] if s.htr_battery else 0.0
         if s.htr_battery_open_circuit:
             bat_pwr = 0.0  # Heater appears ON but provides no heat
-        s.temp_battery += ((env_bat-s.temp_battery)/self._TAU["battery"]+bat_pwr/self._CAP["battery"])*dt+self.rng.gauss(0,0.02)*math.sqrt(dt)
+        soak = s.cold_soak
+        s.temp_battery += ((env_bat+soak.get("battery", 0.0)-s.temp_battery)/self._TAU["battery"]+bat_pwr/self._CAP["battery"])*dt+self.rng.gauss(0,0.02)*math.sqrt(dt)
 
         # --- OBC temp (defect #11) ---
         # By default the OBC heater follows its EPS power line (line 6, 0x0116).
@@ -656,15 +663,24 @@ class TCSBasicModel(SubsystemModel):
         # overwriting it every tick — but the heater can only actually energise
         # if its EPS line has power. This mirrors the battery-circuit logic and
         # stops func 41 from reporting success while having no lasting effect.
+        #
+        # Auto mode is now a THERMOSTAT on the obc setpoints (ON +5 / OFF +10 C
+        # from tcs.yaml), exactly like the battery circuit (finding P1,
+        # 2026-11-02). It used to follow the line ("line on = heater on"), so
+        # leaving line 6 powered after commissioning burned 4 W around the
+        # clock; a real smallsat leaves its heater lines powered under
+        # thermostat control, which is what commissioning now does.
         obc_eps_on = bool(shared_params.get(0x0116, 0))
         if getattr(s, "htr_obc_manual", False):
             s.htr_obc = bool(s.htr_obc) and obc_eps_on
+        elif obc_eps_on:
+            self._thermostat_control("obc", s.temp_obc)
         else:
-            s.htr_obc = obc_eps_on
+            s.htr_obc = False
         pwr = self._HEATER_POWER["obc"] if s.htr_obc else 0.0
         if s.htr_obc_open_circuit:
             pwr = 0.0
-        s.temp_obc += ((env_int-s.temp_obc)/self._TAU["obc"]+(pwr+s.obc_internal_heat_w)/self._CAP["obc"])*dt+self.rng.gauss(0,0.03)*math.sqrt(dt)
+        s.temp_obc += ((env_int+s.cold_soak.get("obc", 0.0)-s.temp_obc)/self._TAU["obc"]+(pwr+s.obc_internal_heat_w)/self._CAP["obc"])*dt+self.rng.gauss(0,0.03)*math.sqrt(dt)
 
         # --- FPA temp (single thermal node — brief 05 defect 1 / WP-1) ---
         # The cooler is a CONTROLLED device driving the node to its setpoint,
@@ -720,7 +736,7 @@ class TCSBasicModel(SubsystemModel):
         if s.htr_thruster_open_circuit:
             thr_pwr = 0.0
         q_comb_w = 30.0 if int(shared_params.get(0x0B00, 0)) == 2 else 0.0
-        s.temp_thruster += ((env_int-5-s.temp_thruster)/self._TAU["thruster"]
+        s.temp_thruster += ((env_int-5+s.cold_soak.get("thruster", 0.0)-s.temp_thruster)/self._TAU["thruster"]
                             + (thr_pwr + q_comb_w)/self._CAP["thruster"])*dt \
             + self.rng.gauss(0, 0.03)*math.sqrt(dt)
 
@@ -1061,6 +1077,20 @@ class TCSBasicModel(SubsystemModel):
                          labels=[z.replace("_", " ").upper() for z in _ZONES],
                          default="battery"),),
         ),
+        "cold_soak": FailureSpec(
+            name="cold_soak", label="Zone cold soak (heater test)",
+            effect="Lowers the thermal sink of a heated zone and steps it "
+                   "cold: the zone really cools, its thermostat sees it, and "
+                   "the heater can recover it once its EPS line is powered "
+                   "(EMG-001/002/003, CTG-004 heater steps).",
+            magnitude=None,
+            params=(
+                enum("zone", "Heated zone", ["battery", "obc", "thruster"],
+                     labels=["BATTERY", "OBC", "THRUSTER"], default="battery"),
+                number("offset_c", "Sink offset", unit="degC", lo=-60.0,
+                       hi=0.0, default=-25.0, step=0.5),
+            ),
+        ),
         "temp_anomaly": FailureSpec(
             name="temp_anomaly", label="Zone over-temperature",
             effect="Pushes a zone over its red limit and holds it there, "
@@ -1097,6 +1127,14 @@ class TCSBasicModel(SubsystemModel):
             c = kw.get("circuit", "battery")
             setattr(self._state, f"htr_{c}_open_circuit", True)
 
+        elif failure == "cold_soak":
+            zone = kw.get("zone", "battery")
+            if zone in ("battery", "obc", "thruster"):
+                offset_c = float(kw.get("offset_c", -25.0 * magnitude))
+                self._state.cold_soak[zone] = offset_c
+                attr = f"temp_{zone}"
+                setattr(self._state, attr, getattr(self._state, attr) + offset_c)
+
         elif failure == "temp_anomaly":
             # Force a sensor over its red line — drives thermal_exceedance.md.
             zone = kw.get("zone", "battery")
@@ -1128,6 +1166,12 @@ class TCSBasicModel(SubsystemModel):
         elif failure == "temp_anomaly":
             zone = kw.get("zone", "battery")
             self._state.sensor_drift.pop(zone, None)
+        elif failure == "cold_soak":
+            zone = kw.get("zone")
+            if zone:
+                self._state.cold_soak.pop(zone, None)
+            else:
+                self._state.cold_soak.clear()
 
     def get_state(self) -> dict[str, Any]:
         import dataclasses

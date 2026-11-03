@@ -1,7 +1,10 @@
 # CTG-004 : Dépassement thermique
 **Sous-système :** TCS
 **Phase :** CONTINGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz P1) : chaque commande de réchauffeur du
+cas froid est précédée d'un `EPS_POWER_ON` de sa ligne, avec contrôle. Ligne hors tension, la mise sur
+ON du réchauffeur est refusée S1.8 et rien ne chauffe --- ainsi, en contingence, quand une zone s'est
+refroidie, l'équipe peut toujours allumer son réchauffeur.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -39,6 +42,8 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **BRANCH:** `tcs.temp_battery < 2` -> GO `STEP-2A-BAT` | NO-GO `STEP-2A-OBC` (timeout 10 s)
 **LABEL:** `STEP-2A-BAT`
 **Note:** Batterie froide :
+**TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `htr_bat` (sans effet si déjà sur ON)
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 sous 5s
 **TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40)
 **TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) en 5 s
@@ -46,6 +51,8 @@ dans les cas chauds) et surveille la tendance de température jusqu'au retour de
 **BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2A-OBCON`
 **Note:** OBC froid :
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `htr_obc` (sans effet si déjà sur ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5s
 **TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41)
 **TC:** `GET_PARAM(param_id=0x040B)` (Service 20, Subtype 3) — `tcs.htr_obc` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.htr_obc` (0x040B) = 1 (ON) en 5 s
