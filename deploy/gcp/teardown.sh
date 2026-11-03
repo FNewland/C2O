@@ -54,9 +54,11 @@ for g in "$IG" "$IG_SIM"; do
 done
 
 log "VMs (and their boot disks)"
-for v in "$VM_GROUND" "$VM_SIM"; do
+for v in "$VM_GROUND" "$VM_SIM" "$VM_VOICE"; do
     del compute instances describe "$v" --zone="$ZONE" -- compute instances delete "$v" --zone="$ZONE" --delete-disks=all
 done
+# The voice VM's static public IP (after the VM that holds it).
+del compute addresses describe "$ADDR_VOICE" --region="$REGION" -- compute addresses delete "$ADDR_VOICE" --region="$REGION"
 # The automatic start/stop schedule (c2o schedule). Disk snapshots
 # (c2o data snapshot) are NOT deleted: c2o data prune --keep 0 removes them.
 del compute resource-policies describe "$PREFIX-schedule" --region="$REGION" -- compute resource-policies delete "$PREFIX-schedule" --region="$REGION"
@@ -67,7 +69,7 @@ done
 log "Network"
 del compute routers nats describe "$NAT" --router="$ROUTER" --region="$REGION" -- compute routers nats delete "$NAT" --router="$ROUTER" --region="$REGION"
 del compute routers describe "$ROUTER" --region="$REGION" -- compute routers delete "$ROUTER" --region="$REGION"
-for f in "$FW_LB" "$FW_LB_SIM" "$FW_PORTAL_SIM" "$FW_IAP" "$FW_SIM"; do
+for f in "$FW_LB" "$FW_LB_SIM" "$FW_PORTAL_SIM" "$FW_IAP" "$FW_SIM" "$FW_VOICE"; do
     del compute firewall-rules describe "$f" -- compute firewall-rules delete "$f"
 done
 del compute networks subnets describe "$SUBNET" --region="$REGION" -- compute networks subnets delete "$SUBNET" --region="$REGION"
@@ -76,10 +78,11 @@ del compute networks describe "$NET" -- compute networks delete "$NET"
 log "Secret and service accounts"
 del secrets describe "$SECRET" -- secrets delete "$SECRET"
 del secrets describe "$SECRET_AI" -- secrets delete "$SECRET_AI"
-for sa in "$SA_GROUND_EMAIL" "$SA_SIM_EMAIL"; do
+del secrets describe "$SECRET_VOICE" -- secrets delete "$SECRET_VOICE"
+for sa in "$SA_GROUND_EMAIL" "$SA_SIM_EMAIL" "$SA_VOICE_EMAIL"; do
     del iam service-accounts describe "$sa" -- iam service-accounts delete "$sa"
 done
 
 log "Teardown finished. Left in place: the project, its billing link, the IAP"
 info "settings, the Squarespace DNS records and Cloud Identity (users, groups, 2SV)."
-info "Remove the DNS A records at Squarespace so the names stop pointing at a released IP."
+info "Remove the DNS A records at Squarespace (voice and voice-turn too) so the names stop pointing at a released IP."

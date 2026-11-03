@@ -18,6 +18,10 @@
 #   c2o-ai-secret  Secret Manager secret holding the Anthropic API key for
 #                  SpaceCDF's AI advisor (ground VM; optional: no version =
 #                  SpaceCDF runs in manual mode)
+#   c2o-voice-secret, c2o-voice-host, c2o-voice-instructors
+#                  voice loops (ground VM; optional): the LiveKit key pair the
+#                  MCS signs tokens with, the voice server's name, and the
+#                  accounts with the instructor role -> sim/docker/voice.env
 #
 # By hand on a VM (gcloud compute ssh ... --tunnel-through-iap):
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh            # same as a boot
@@ -202,6 +206,49 @@ write_design_env() {
     mv -f "$tmp" "$file"
 }
 
+# Voice loops (ground VM only): sim/docker/voice.env for the MCS token
+# service. No secret or no voice VM = an empty file = the Voice panel says
+# "unavailable"; never fatal.
+write_voice_env() {
+    [ "$ROLE" = ground ] || return 0
+    local file="$SIM_DIR/docker/voice.env" vsecret vhost vinstr body code tmp kv=""
+    vsecret="$(attr c2o-voice-secret)"; vhost="$(attr c2o-voice-host)"; vinstr="$(attr c2o-voice-instructors)"
+    tmp="$(mktemp "$file.XXXX")"; chmod 600 "$tmp"
+    if [ -n "$vsecret" ] && [ -n "$vhost" ]; then
+        body="$(mktemp)"
+        code="$(curl -sS -o "$body" -w '%{http_code}' -H "Authorization: Bearer $(token)" \
+            "https://secretmanager.googleapis.com/v1/projects/$PROJECT/secrets/$vsecret/versions/latest:access" \
+            2>/dev/null)" || code=000
+        if [ "$code" = 200 ]; then
+            kv="$(python3 - "$body" <<'PY'
+import base64, json, re, sys
+raw = base64.b64decode(json.load(open(sys.argv[1]))["payload"]["data"]).decode()
+kv = dict(l.split("=", 1) for l in raw.replace("\r", "").splitlines() if "=" in l)
+k, s = kv.get("LIVEKIT_API_KEY", ""), kv.get("LIVEKIT_API_SECRET", "")
+if re.fullmatch(r"[A-Za-z0-9_-]{3,64}", k) and re.fullmatch(r"[A-Za-z0-9_-]{32,128}", s):
+    print("LIVEKIT_API_KEY=" + k)
+    print("LIVEKIT_API_SECRET=" + s)
+PY
+)" || kv=""
+        fi
+        rm -f "$body"
+    fi
+    if [ -n "$kv" ] && [[ "$vhost" =~ ^[a-z0-9.-]+$ ]]; then
+        {
+            echo "# Voice loops, written by vm-bootstrap.sh $(date -u +%FT%TZ) from $vsecret"
+            echo "LIVEKIT_URL=wss://$vhost"
+            printf '%s\n' "$kv"
+            echo "SMO_VOICE_REQUIRE_IAP=1"
+            echo "SMO_VOICE_INSTRUCTORS=$(printf '%s' "$vinstr" | tr -cd 'A-Za-z0-9._%+@ -')"
+        } > "$tmp"
+        say "wrote $file (voice loops via wss://$vhost)"
+    else
+        [ -n "$vsecret" ] && say "voice loops off: no readable LiveKit key pair in ${vsecret} (HTTP ${code:-none})"
+        : > "$tmp"
+    fi
+    mv -f "$tmp" "$file"
+}
+
 # ── Compose ─────────────────────────────────────────────────────────────
 compose() {
     # --env-file: the compose file interpolates SMO_PUBLISH_ADDR (and the
@@ -315,14 +362,14 @@ clean() {
 
 case "$ACTION" in
     boot)
-        install_docker; clone_repo; write_env; write_design_env; up ;;
+        install_docker; clone_repo; write_env; write_design_env; write_voice_env; up ;;
     refresh)
-        write_env; write_design_env; up ;;
+        write_env; write_design_env; write_voice_env; up ;;
     rotate)
         [ "$ROLE" = ground ] || die "rotate runs on the ground VM only (the sim VM then runs: refresh)"
         say "issuing NEW link credentials"
         new_creds | secret_add
-        write_env; write_design_env; up ;;
+        write_env; write_design_env; write_voice_env; up ;;
     update)
         # Pull, then hand over to the NEW copy of this script: bash keeps
         # running the version it started with, which would apply the old

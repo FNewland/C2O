@@ -38,6 +38,13 @@ CREATE_SIM_VM="${CREATE_SIM_VM:-yes}"
 UI_RATE_PER_MIN="${UI_RATE_PER_MIN:-6000}"
 LINK_RATE_PER_MIN="${LINK_RATE_PER_MIN:-30}"
 PREFIX="${PREFIX:-c2o}"
+# Voice loops (README "Voice loops"): LiveKit on its own small VM with a
+# static public IP (audio cannot pass through IAP).
+CREATE_VOICE_VM="${CREATE_VOICE_VM:-yes}"
+VOICE_MACHINE_TYPE="${VOICE_MACHINE_TYPE:-e2-small}"
+VOICE_DISK_GB="${VOICE_DISK_GB:-10}"
+VOICE_INSTRUCTORS="${VOICE_INSTRUCTORS:-}"   # emails with the instructor role on the loops
+VOICE_ACME_EMAIL="${VOICE_ACME_EMAIL:-}"     # Let's Encrypt contact (optional)
 
 # Every gcloud call goes to this project, whatever the Cloud Shell default is.
 export CLOUDSDK_CORE_PROJECT="$PROJECT"
@@ -114,11 +121,24 @@ T_HTTP="$PREFIX-http-proxy"
 LB_IP="$PREFIX-lb-ip"
 FR_HTTPS="$PREFIX-fr-https"
 FR_HTTP="$PREFIX-fr-http"
+VM_VOICE="$PREFIX-voice-vm"
+TAG_VOICE="$PREFIX-voice"
+SA_VOICE="$PREFIX-voice"
+SA_VOICE_EMAIL="$SA_VOICE@$PROJECT.iam.gserviceaccount.com"
+ADDR_VOICE="$PREFIX-voice-ip"
+FW_VOICE="$PREFIX-allow-voice"
+SECRET_VOICE="$PREFIX-livekit-keys"
+# LiveKit's documented single-VM ports: 443 (WSS signalling + TURN/TLS, split
+# by SNI in Caddy), 80 (Let's Encrypt), 7881/tcp (ICE over TCP), 3478/udp
+# (TURN/UDP), 50000-60000/udp (ICE over UDP).
+VOICE_PORTS="tcp:80,tcp:443,tcp:7881,udp:3478,udp:50000-60000"
 
 HOST_OPS="ops.$DOMAIN"
 HOST_PLAN="plan.$DOMAIN"
 HOST_SIM="sim.$DOMAIN"
 HOST_LINK="link.$DOMAIN"
+HOST_VOICE="voice.$DOMAIN"            # A record -> the voice VM's own IP (not the LB)
+HOST_VOICE_TURN="voice-turn.$DOMAIN"  # same IP; TURN/TLS needs its own name and certificate
 CERT_DOMAINS="$HOST_OPS,$HOST_PLAN,$HOST_SIM,$HOST_LINK"
 [ "$INCLUDE_APEX" = "yes" ] && CERT_DOMAINS="$DOMAIN,$CERT_DOMAINS"
 

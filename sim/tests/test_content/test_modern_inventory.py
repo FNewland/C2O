@@ -38,6 +38,7 @@ INSTRUCTOR_APP = (REPO / "packages/smo-simulator/src/smo_simulator"
 DUMP_STORE = REPO / "packages/smo-common/src/smo_common/dump_store.py"
 REPORTING_API = REPO / "packages/smo-common/src/smo_common/reporting/api.py"
 CONFEDIT_API = REPO / "packages/smo-common/src/smo_common/confedit/api.py"
+VOICE_API = REPO / "packages/smo-mcs/src/smo_mcs/voice.py"
 
 MCS_MODERN = REPO / "packages/smo-mcs/src/smo_mcs/static/modern"
 PLANNER_MODERN = REPO / "packages/smo-planner/src/smo_planner/static/modern"
@@ -129,6 +130,9 @@ INSTRUCTOR_ROUTES = [
 DUMP_STORE_ROUTES = ["/", "/file", "/summary", "/{name}", "/{name}/summary"]
 REPORTING_ROUTES = ["/", "/templates", "/templates/{id}", "/validate",
                     "/generate", "/file"]
+# Voice loops (smo_mcs/voice.py register_voice_routes, mounted by the MCS
+# at the root; WP-4 prototype 2026-11-02).
+VOICE_ROUTES = ["/voice", "/api/voice/config", "/api/voice/token"]
 CONFEDIT_ROUTES = ["/files", "/file", "/schema", "/validate", "/diff",
                    "/history", "/revisions/{rev}", "/diff/{a}..{b}",
                    "/crosschecks", "/baselines", "/file", "/revert",
@@ -142,6 +146,7 @@ CONFEDIT_ROUTES = ["/files", "/file", "/schema", "/validate", "/diff",
     (DUMP_STORE, DUMP_STORE_ROUTES),
     (REPORTING_API, REPORTING_ROUTES),
     (CONFEDIT_API, CONFEDIT_ROUTES),
+    (VOICE_API, VOICE_ROUTES),
 ], ids=lambda p: p.name if isinstance(p, Path) else "")
 def test_no_pre_existing_route_disappears(src, snapshot):
     current = routes_in(src)
@@ -203,7 +208,7 @@ def route_matches(ref: str, routes: list[str]) -> bool:
 
 
 @pytest.mark.parametrize("js_dir,routes,foreign", [
-    (MCS_MODERN, MCS_ROUTES,
+    (MCS_MODERN, MCS_ROUTES + VOICE_ROUTES,
      # documented cross-origin planner call through client-config planner_url
      {"/api/time-source"}),
     (PLANNER_MODERN, PLANNER_ROUTES, set()),
