@@ -79,6 +79,11 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
         ctx["params"] = await design_params(study_id, study)
     ctx["function_count"] = await _function_count(study_id, study)
     ctx["risks"] = list(getattr(study, "risk_register", None) or []) if study else []
+    try:  # instructor sign-offs of manual / hybrid items (WP9)
+        from ..seats import store as seat_store
+        ctx["signoffs"] = dict((await seat_store.get_team(study_id)).get("signoffs") or {})
+    except Exception:  # noqa: BLE001
+        ctx["signoffs"] = {}
     return ctx
 
 
@@ -122,6 +127,14 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
         )
         for c in res.get("criteria", []):
             c["canonical_gate"] = canon
+            so = (ctx.get("signoffs") or {}).get(c.get("id"))
+            if so and c.get("mode") in ("manual", "hybrid"):
+                c["signoff"] = so
+                if c["status"] != "pass":
+                    c["status"] = c["verdict"] = "pass"
+                    c["evidence_key"] = ""
+                    c["evidence_found"] = f"Signed off by {so.get('by', 'the instructor')}" + (
+                        f": {so['note']}" if so.get("note") else "")
             c["owner_seat_label"] = seats.get(c.get("owner_seat") or "")
             c["step_label"] = gp.step_label(c.get("step"))
             criteria.append(c)
@@ -237,8 +250,10 @@ class ProfileBody(BaseModel):
 
 
 @router.put("/studies/{study_id}/gate-profile")
-async def set_gate_profile(study_id: str, body: ProfileBody) -> dict:
+async def set_gate_profile(study_id: str, body: ProfileBody, request: Request) -> dict:
     study = _study_or_404(study_id)
+    from ..seats.service import require_gate_role
+    await require_gate_role(request, study_id)
     if body.profile not in gp.profile_ids():
         raise HTTPException(status_code=400, detail=f"Unknown gate profile: {body.profile}")
     study.gate_profile = body.profile
@@ -261,8 +276,11 @@ def _who(request: Request, body_by: str) -> str:
 
 @router.post("/studies/{study_id}/gates/{gate}/review")
 async def gate_review_action(study_id: str, gate: str, body: ReviewBody, request: Request) -> dict:
-    """start | cancel | pass | reopen. ``pass`` saves a baseline snapshot."""
+    """start | cancel | pass | reopen. ``pass`` saves a baseline snapshot.
+    Seat studies: the Team leader or the instructor only (WP9)."""
     study = _study_or_404(study_id)
+    from ..seats.service import require_gate_role
+    seat = await require_gate_role(request, study_id)
     ctx = await gate_inputs(study_id)
     profile = study_profile(study)
     pg = gp.gate_of(profile, gate)
@@ -282,6 +300,11 @@ async def gate_review_action(study_id: str, gate: str, body: ReviewBody, request
     study.gate_states = states
     await _save(study)
     await _broadcast(study_id, "gate_state_changed", {"gate": pg["id"], "state": entry.get("state")})
+    if seat.enabled:
+        from ..seats import store as seat_store
+        await seat_store.log_event(study_id, "team_leader" if seat.holds("team_leader") else "instructor", seat.person,
+                                   f"gate_{body.action}", pg["id"], {"note": body.note})
+        request.state.seat_logged = True
     return await evaluate_study_gate(study_id, pg["id"])
 
 
