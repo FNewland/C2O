@@ -52,6 +52,7 @@ LABELS = {
         "field": "Field", "entry": "Entry", "printed_ref": "Printed sheet",
         "from_console": "prefilled from the console",
         "deviations": "Deviations", "not_reached": "not reached",
+        "decisions": "Decisions recorded on this card",
         "result": {"pass": "PASS", "fail": "FAIL", "skip": "SKIPPED", "go": "GO",
                    "nogo": "NO-GO", "done": "done", "open": "open"},
         "kind": {"decision": "Decision", "thought": "Thought", "reflection": "Reflection",
@@ -66,7 +67,7 @@ LABELS = {
                 "anomaly": "anomaly", "command": "command", "gonogo": "GO/NO-GO",
                 "gate": "gate", "proposal": "proposal",
                 "study_name": "study", "tab": "tab", "level": "level",
-                "element": "element", "decision": "on"},
+                "element": "element", "decision": "on", "run": "run"},
         "done": "done", "not_done": "not done",
     },
     "fr": {
@@ -86,6 +87,7 @@ LABELS = {
         "field": "Champ", "entry": "Inscription", "printed_ref": "Fiche imprimée",
         "from_console": "prérempli depuis la console",
         "deviations": "Écarts", "not_reached": "non atteinte",
+        "decisions": "Décisions consignées sur cette carte",
         "result": {"pass": "CONFORME", "fail": "NON CONFORME", "skip": "SAUTÉE", "go": "GO",
                    "nogo": "NO-GO", "done": "faite", "open": "ouverte"},
         "kind": {"decision": "Décision", "thought": "Pensée",
@@ -101,7 +103,7 @@ LABELS = {
                 "anomaly": "anomalie", "command": "commande", "gonogo": "GO/NO-GO",
                 "gate": "jalon", "proposal": "proposition",
                 "study_name": "étude", "tab": "onglet", "level": "niveau",
-                "element": "élément", "decision": "sur"},
+                "element": "élément", "decision": "sur", "run": "exécution"},
         "done": "fait", "not_done": "non fait",
     },
 }
@@ -203,9 +205,18 @@ def build_document(summary: dict, person_label: str, *, lang: str = "en",
     lang = "fr" if lang == "fr" else "en"
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     entries = sorted(summary["entries"], key=lambda e: e.get("ts") or "")
+    # Decisions recorded from a procedure card ("Record decision": context
+    # procedure + run) belong to that run of the filled card, so they are
+    # printed under its table instead of in the log.
+    card_dec: dict[tuple[str, str], list] = {}
+    for e in entries:
+        ctx = e.get("context") or {}
+        if e.get("kind") == "decision" and ctx.get("procedure") and ctx.get("run") not in (None, ""):
+            card_dec.setdefault((str(ctx["procedure"]), str(ctx["run"])), []).append(e)
     if sheet:
         entries = [e for e in entries if (e.get("worksheet") or {}).get("id") == sheet]
     doc_summary = dict(summary, entries=entries)
+    placed: set[str] = set()
     sheets: "OrderedDict[str, dict]" = OrderedDict()
     log: "OrderedDict[str, list]" = OrderedDict()
     for e in entries:
@@ -233,9 +244,13 @@ def build_document(summary: dict, person_label: str, *, lang: str = "en",
     out_sheets = []
     for wid, s in sheets.items():
         for r in s["runs"].values():
+            # prerequisites first, then the steps in card order
             r["rows"].sort(key=lambda e: (
+                0 if e["check"].get("part") == "pre" else 1,
                 e["check"]["order"] if isinstance(e["check"].get("order"), int) else 10 ** 6,
                 _natkey(e["check"].get("step") or e["check"].get("key")), e.get("ts") or ""))
+            r["decisions"] = card_dec.get((str(r["procedure"]), str(r["run"])), [])
+            placed.update(e.get("id") for e in r["decisions"])
         s["runs"] = list(s["runs"].values())
         s["answers"] = [(_ws_text(v[0], lookup, lang)[1], v) for v in s["answers"].values()]
         out_sheets.append(s)
@@ -243,6 +258,9 @@ def build_document(summary: dict, person_label: str, *, lang: str = "en",
         k = order(s["id"]) if order else None
         return (k if k is not None else 10 ** 6, _natkey(s["id"]), s["first"] or "")
     out_sheets.sort(key=sheet_key)
+    if placed:
+        log = OrderedDict((d, [e for e in es if e.get("id") not in placed]) for d, es in log.items())
+        log = OrderedDict((d, es) for d, es in log.items() if es)
     return {"lang": lang, "header": _header(doc_summary, person_label, lang, now, header),
             "sheet": sheet, "sheets": out_sheets, "log": list(log.items()), "summary": doc_summary}
 
@@ -363,6 +381,15 @@ def to_markdown(summary: dict, person_label: str, *, lang: str = "en",
             out.append("")
             if devs:
                 out += [f"_{L['deviations']}{c}{'; '.join(devs)}_", ""]
+            if r.get("decisions"):
+                out += [f"**{L['decisions']}**", ""]
+                for e in r["decisions"]:
+                    step = (e.get("context") or {}).get("step")
+                    body = (e.get("text") or "").splitlines() or [""]
+                    out.append(f"- {_hm(e.get('ts'))}" + (f" · {L['ctx']['step']} {step}" if step else "")
+                               + f" — {body[0]}" + ("  " if len(body) > 1 else ""))
+                    out += ["  " + ln + "  " for ln in body[1:]]
+                out.append("")
         for e in s["forms"]:
             inst = (e.get("form") or {}).get("instance") or (e.get("worksheet") or {}).get("instance")
             out += [f"**{inst}** · {_when(e.get('updated_ts') or e.get('ts'))}" if inst
@@ -499,6 +526,14 @@ def to_html(summary: dict, person_label: str, *, lang: str = "en",
             body.append("</tbody></table>")
             if devs:
                 body.append(f"<p class='devs'><b>{esc(L['deviations'])}</b> — {esc('; '.join(devs))}</p>")
+            if r.get("decisions"):
+                body.append(f"<h4>{esc(L['decisions'])}</h4>")
+                for e in r["decisions"]:
+                    step = (e.get("context") or {}).get("step")
+                    body.append(
+                        f"<div class='e'><span class='t'>{esc(_hm(e.get('ts')))}</span><div>"
+                        + (f"<span class='c'>{esc(L['ctx']['step'])} {esc(str(step))}</span>" if step else "")
+                        + f"<div class='x'>{esc(e.get('text') or '')}</div></div></div>")
         for e in s["forms"]:
             inst = (e.get("form") or {}).get("instance") or (e.get("worksheet") or {}).get("instance")
             body.append(f"<h4>{esc(inst) + ' · ' if inst else ''}<span class='id'>"

@@ -15,6 +15,12 @@ step too (recovery orbits, recovery actions). Each ``**Verify:**`` becomes a
 check: the quoted parameter, its id, the comparison and the expected value
 when the line states one, so the tick can capture the observed value.
 
+Prerequisites (``parse_prereqs``): every ``- [ ]`` item of the card's
+``## Prerequisites`` (``## Prérequis``) section, keyed ``p1``, ``p2``… in
+document order, its indented continuation lines folded in. They are ticked
+like steps (``check.part = "pre"``), on the card in the MCS and in the
+Workbook tab, and come first in the exported run.
+
 Runner mapping (``runner_map``): for a card the MCS can run (``runnable:
 {kind: markdown}``), the runner's atomic steps are the card's TC / Verify /
 GO/NO-GO lines in document order (``smo_common.procedures.markdown_steps``).
@@ -31,7 +37,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-__all__ = ["parse_card", "parse_check", "runner_map", "build_checklist",
+__all__ = ["parse_card", "parse_check", "parse_prereqs", "runner_map", "build_checklist",
            "compare_sheet", "ChecklistProvider", "sheet_for_procedure"]
 
 _STEP_HEAD = re.compile(
@@ -213,6 +219,40 @@ def parse_card(md: str) -> dict:
     # a titled section with nothing to do or check is reference text, not a step
     steps = [s for s in steps if s["n"] or s["tcs"] or s["checks"] or s["gonogo"] or s["actions"]]
     return {"title": title, "steps": steps}
+
+
+_PREREQ_HEAD = re.compile(r"^##\s+(?:Prerequisites|Pr[ée]requis|Conditions\s+pr[ée]alables)\b", re.I)
+#: a checkbox item at the start of a line (indented items are continuation)
+_PREREQ_ITEM = re.compile(r"^[-*]\s+\[[ xX]\]\s+(.*\S)\s*$")
+
+
+def parse_prereqs(md: str) -> list[dict]:
+    """``[{key: "p1", text, line}]``: the ``- [ ]`` items of the card's
+    Prerequisites section, in order, with indented continuation lines
+    folded in. The MCS card view and the documentation viewer number the
+    same items the same way (``procard.js``)."""
+    out: list[dict] = []
+    inside = False
+    for i, raw in enumerate((md or "").splitlines()):
+        line = raw.rstrip()
+        if _H2.match(line) or _H1.match(line) or _H3.match(line):
+            inside = bool(_PREREQ_HEAD.match(line))
+            continue
+        if not inside:
+            continue
+        m = _PREREQ_ITEM.match(line)
+        if m:
+            out.append({"key": f"p{len(out) + 1}", "text": m.group(1), "line": i + 1})
+        elif out and line[:1] in (" ", "\t") and line.strip() and not re.match(r"^\s*[-*]\s", line):
+            out[-1]["text"] += " " + line.strip()
+        elif not line.strip():
+            continue
+        elif out:
+            # any other line ends the item list's continuation
+            out[-1].setdefault("_closed", True)
+    for p in out:
+        p.pop("_closed", None)
+    return out
 
 
 def runner_map(md: str, catalog: dict | None = None) -> list[str | None]:
@@ -418,6 +458,19 @@ def build_checklist(proc_id: str, card_md: str, *, card_md_fr: str | None = None
     for m in cmp["mismatches"]:
         if m.get("kind") == "step_unprinted" and m.get("key") in titles:
             m["title"] = titles[m["key"]]
+    pre_en = parse_prereqs(card_md)
+    pre_fr = parse_prereqs(card_md_fr) if (card_md_fr and lang == "fr") else []
+    if len(pre_fr) != len(pre_en):
+        pre_fr = []                   # the twin must list the same items
+    prereqs = []
+    for i, p in enumerate(pre_en):
+        c = parse_check(p["text"])
+        item = {"key": p["key"], "n": f"P{i + 1}",
+                "text": _plain(pre_fr[i]["text"] if pre_fr else p["text"])}
+        if c.get("param"):
+            c["text"] = item["text"]
+            item["checks"] = [c]
+        prereqs.append(item)
     sheet_id = sheet["id"] if sheet else f"PROC-{proc_id}"
     extra = []
     if sheet:
@@ -438,6 +491,7 @@ def build_checklist(proc_id: str, card_md: str, *, card_md_fr: str | None = None
         "sheet_title": _loc(sheet.get("title"), lang) if sheet else "",
         "runnable": bool(runnable),
         "steps": steps,
+        "prereqs": prereqs,
         "extra": extra,
         "mismatches": cmp["mismatches"],
     }
