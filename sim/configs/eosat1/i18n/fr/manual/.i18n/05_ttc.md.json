@@ -24,8 +24,8 @@
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/21-transponder-configuration",
-   "en_hash": "4cc2e9c4d9079843",
-   "fr_hash": "e882d376d3c8d034"
+   "en_hash": "43225260e475f39e",
+   "fr_hash": "7f36f72432f9730b"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/2-architecture/22-dedicated-pdm-command-channel",
@@ -89,8 +89,8 @@
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/6-commands",
-   "en_hash": "449e976af12b4d57",
-   "fr_hash": "978e29278984c0e6"
+   "en_hash": "8aa3543bba12c9ea",
+   "fr_hash": "afe25f7e4ed004e9"
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/6-commands/61-transponder-switchover-procedure",
@@ -104,9 +104,9 @@
   },
   {
    "id": "eosat-1-telemetry-tracking-and-command-ttc/8-failure-modes",
-   "en_hash": "ccc4a7ba13d1ca42",
-   "fr_hash": "331d028507540102"
+   "en_hash": "578f8f33ce70d963",
+   "fr_hash": "9830d42f9f7bb047"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "094c1d3"
 }

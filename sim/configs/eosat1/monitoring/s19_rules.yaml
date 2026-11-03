@@ -166,13 +166,13 @@ s19_rules:
     description: "TTC PA Overheat -> PA Off"
     enabled: true
 
-  - name: ttc_cmd_loss_switch_redundant
+  - name: ttc_cmd_loss_switch_other
     ea_id: 4003
     trigger:
-      kind: event          # 0x0514 = CMD_LOSS_TIMEOUT: no telecommand accepted for ttc.yaml cmd_loss_switch_timeout_s (24 h), timer published as 0x053D ttc.time_since_last_tc
+      kind: event          # 0x0514 = CMD_LOSS_TIMEOUT: raised every cmd_loss_switch_timeout_s (24 h, 48 h, ...) without an accepted telecommand, timer published as 0x053D ttc.time_since_last_tc
       id: 0x0514   # was: param 0x050C ttc.ber (ground_derived, unobservable on board)
-    action_func_id: 64   # S8 func 64: TTC_SWITCH_REDUNDANT (no argument). FDIR TTC-01: if the prime receiver chain has gone deaf, the other one may still hear the ground.
-    description: "TTC Command-Loss Timer (24 h) -> Switch to Redundant Transponder"
+    action_func_id: 99   # S8 func 99: TTC_SWITCH_OTHER (no argument). FDIR TTC-01: if the selected receiver chain has gone deaf, the other one may still hear the ground. Goes both ways (Franz, 2026-11-02): was func 64 TTC_SWITCH_REDUNDANT, so a dead REDUNDANT unit was never switched away from.
+    description: "TTC Command-Loss Timer (every 24 h) -> Switch to the Other Transponder"
     enabled: true
 
   # ===== OBDH System Management =====

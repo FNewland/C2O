@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+a14e11c0c833" classification="Unclassified — Simulation"/>
+  <Header version="1.0+57d9b01ba55c" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -5089,7 +5089,7 @@
           <LongDescription>DOWNLINK / payload-dump mode (TTC_SET_DOWNLINK_MODE, S8 func 79). 0=off, 1=on. This is the mode gate on the HIGH tier</LongDescription>
         </Parameter>
         <Parameter name="ttc_time_since_last_tc" parameterTypeRef="ttc_time_since_last_tc_Type">
-          <LongDescription>On-board command-loss timer: seconds since the OBC last accepted a telecommand (restarts on every S1.1). At ttc.yaml cmd_loss_switch_timeout_s (24 h) event 0x0514 CMD_LOSS_TIMEOUT fires and S19 ea 4003 switches to the redundant transponder (FDIR TTC-01)</LongDescription>
+          <LongDescription>On-board command-loss timer: seconds since the OBC last accepted a telecommand (restarts on every S1.1). Every ttc.yaml cmd_loss_switch_timeout_s (24 h, 48 h, ...) event 0x0514 CMD_LOSS_TIMEOUT fires and S19 ea 4003 switches to the other transponder (FDIR TTC-01)</LongDescription>
         </Parameter>
         <Parameter name="ttc_active_gs" parameterTypeRef="ttc_active_gs_Type">
           <LongDescription>Active ground station: 1-based index into orbit.yaml ground_stations, 0 = out of contact</LongDescription>
@@ -8290,6 +8290,15 @@ Idempotent: commanding CLOSED twice leaves it CLOSED. Refused (0x0007) when the 
           <CommandContainer name="TTC_BEACON_TX_OFF_Container">
             <EntryList>
               <FixedValueEntry name="func_id" binaryValue="62" sizeInBits="8"/>
+            </EntryList>
+          </CommandContainer>
+        </MetaCommand>
+        <MetaCommand name="TTC_SWITCH_OTHER">
+          <LongDescription>Select the S-band transponder that is NOT currently selected (primary to redundant, or redundant to primary). This is the action of the on-board command-loss autonomy (FDIR TTC-01, S19 ea 4003), which toggles units every 24 h without an accepted telecommand. It is blind: the units are cold-redundant, so it does not check that the newly selected unit works. From the ground, prefer TTC_SWITCH_PRIMARY / TTC_SWITCH_REDUNDANT, which name the unit.</LongDescription>
+          <DefaultSignificance consequenceLevel="caution"/>
+          <CommandContainer name="TTC_SWITCH_OTHER_Container">
+            <EntryList>
+              <FixedValueEntry name="func_id" binaryValue="63" sizeInBits="8"/>
             </EntryList>
           </CommandContainer>
         </MetaCommand>

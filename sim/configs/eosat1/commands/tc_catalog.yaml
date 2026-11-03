@@ -1974,6 +1974,21 @@ commands:
       only for RFI de-confliction or a deliberate radio-silence exercise.
     readback: { param_id: 0x0526, description: "ttc.beacon_tx_on" }
     fields: []
+  - name: TTC_SWITCH_OTHER
+    service: 8
+    subtype: 1
+    func_id: 99
+    criticality: caution
+    description: >-
+      Select the S-band transponder that is NOT currently selected (primary to
+      redundant, or redundant to primary). This is the action of the on-board
+      command-loss autonomy (FDIR TTC-01, S19 ea 4003), which toggles units
+      every 24 h without an accepted telecommand. It is blind: the units are
+      cold-redundant, so it does not check that the newly selected unit works.
+      From the ground, prefer TTC_SWITCH_PRIMARY / TTC_SWITCH_REDUNDANT, which
+      name the unit.
+    readback: { param_id: 0x0500, description: "ttc.mode (0 primary, 1 redundant)" }
+    fields: []
 
   # ===== S9 Time Management =====
   - name: SET_TIME

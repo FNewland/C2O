@@ -9,8 +9,8 @@
   },
   {
    "id": "emg-004-loss-of-communication",
-   "en_hash": "728265f7d5688d7c",
-   "fr_hash": "559b5ce7e54f1ee5"
+   "en_hash": "d49bbe46ddbf007d",
+   "fr_hash": "be7fd587549fe922"
   },
   {
    "id": "emg-004-loss-of-communication/purpose",
@@ -24,8 +24,8 @@
   },
   {
    "id": "emg-004-loss-of-communication/what-the-spacecraft-can-and-cannot-do",
-   "en_hash": "6bbcd1deb221ebcf",
-   "fr_hash": "4d46404b3fcc6357"
+   "en_hash": "3f5d5a3b41f9184e",
+   "fr_hash": "bc805bf2a68e3557"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps",
@@ -54,8 +54,8 @@
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-5-wait-for-the-on-board-command-loss-timer-fdir-ttc-01",
-   "en_hash": "00e91f885cd2f29e",
-   "fr_hash": "1008e055729e9efd"
+   "en_hash": "4bef07e27e28b0eb",
+   "fr_hash": "978c19b3e3de2cb8"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-6-polar-pass-focused-campaign-12h-threshold",
@@ -74,13 +74,13 @@
   },
   {
    "id": "emg-004-loss-of-communication/decision-tree-summary",
-   "en_hash": "9bcefd6285d83a64",
-   "fr_hash": "3cb9ef33dafec477"
+   "en_hash": "c3afcc31e2c5bab5",
+   "fr_hash": "66bd9858b9f2e71f"
   },
   {
    "id": "emg-004-loss-of-communication/off-nominal-handling",
-   "en_hash": "276a0afa3b92b70f",
-   "fr_hash": "a8eb6417ffea6f89"
+   "en_hash": "6bf36633e8478b5c",
+   "fr_hash": "68133c785c9221aa"
   },
   {
    "id": "emg-004-loss-of-communication/post-conditions",
@@ -88,5 +88,5 @@
    "fr_hash": "bf561b76262141ea"
   }
  ],
- "en_commit": "ac86ac7"
+ "en_commit": "094c1d3"
 }

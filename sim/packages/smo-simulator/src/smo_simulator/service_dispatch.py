@@ -766,7 +766,13 @@ class ServiceDispatcher:
             # from the free 97-99 block rather than extended out of the 63-79
             # TT&C range on purpose: everything in 63-79 is gated on the
             # `ttc_tx` power line, and the beacon must stay commandable when
-            # that line is dead. 99 remains free.
+            # that line is dead.
+            return self._route_ttc_cmd(func_id, data[1:])
+        elif func_id == 99:
+            # TTC_SWITCH_OTHER — the FDIR TTC-01 command-loss toggle (S19 ea
+            # 4003). Takes the last free slot of 97-99. Not gated on ttc_tx:
+            # the transponder selection is an OBC-side switch, and the
+            # autonomy that uses it must work exactly when the link is dead.
             return self._route_ttc_cmd(func_id, data[1:])
         elif func_id in range(108, 119):
             # Phase D propulsion block 108-118. NOTE: brief 03 planned 85-95,
@@ -2139,6 +2145,8 @@ class ServiceDispatcher:
             # which selects a rung of the S-band TM rate ladder and touches
             # no hardware. See ttc.yaml's `beacon:` block.
             self._cmd(ttc, {"command": "beacon_tx_off"})
+        elif func_id == 99:  # TTC_SWITCH_OTHER — blind toggle (FDIR TTC-01)
+            self._cmd(ttc, {"command": "switch_other"})
         return []
 
     # ─── S9 Time Management ─────────────────────────────────────────
