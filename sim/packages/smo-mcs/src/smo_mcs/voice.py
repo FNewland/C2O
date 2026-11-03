@@ -2,16 +2,19 @@
 
 Why the MCS and not the portal
 ------------------------------
-* ``/voice`` must know the operator's console position. Until seat binding
-  exists (WP10), that position is the one chosen in the MCS header and kept
-  in ``localStorage["mcs.position"]`` on the MCS origin. Served from the MCS
-  (``ops.<domain>``), the voice panel reads it directly and follows changes;
-  from the portal (the apex) it could not.
+* ``/voice`` must know the operator's console position. With console seats
+  on (``SMO_SEATS=iap|local``, WP10) the position comes from the seat
+  registry: a token is minted only for a desk the caller holds (or, for an
+  instructor, the instructor/SIM roles). With seats off it is the one chosen
+  in the MCS header (``localStorage["mcs.position"]`` on the MCS origin),
+  self-asserted as before. Served from the MCS (``ops.<domain>``), the
+  voice panel reads it directly and follows changes.
 * The docked panel is an ``<iframe>`` inside the MCS page. Same origin means
   no cross-origin microphone/autoplay delegation and one IAP cookie.
 * Decision 6 (REDESIGN_DECISIONS.md): seat authority lives in the MCS on the
-  ground. When seats arrive, the token endpoint takes the position from the
-  seat instead of the request, here and nowhere else.
+  ground; the token endpoint takes the position from the seat registry
+  (``smo_mcs.seats_http``), and the identity from it too (the IAP JWT is
+  verified there).
 
 What it serves (all behind IAP in the cloud)
 --------------------------------------------
@@ -460,7 +463,7 @@ _NO_STORE = {"Cache-Control": "no-store"}
 def register_voice_routes(app: web.Application, config_dir, *,
                           env: Mapping[str, str] | None = None,
                           static_dir: str | os.PathLike | None = None,
-                          default_lang: str = "en") -> None:
+                          default_lang: str = "en", seats=None) -> None:
     """Mount /voice, /api/voice/config and /api/voice/token on *app*.
 
     An invalid voice_loops.yaml is logged and the endpoints answer 503 with
@@ -494,13 +497,42 @@ def register_voice_routes(app: web.Application, config_dir, *,
         return web.Response(text=stamp_asset_versions(html, app), content_type="text/html",
                             headers={"Cache-Control": "no-cache"})
 
+    async def seat_caller(request, typed_name):
+        """(caller, desks) from the seat registry, or (None, None) when
+        seats are off. Raises SeatHttpError for 401."""
+        if seats is None or not seats.enforced:
+            return None, None
+        ident = await seats.person(request, typed_name=typed_name or "", require=False)
+        if ident is None or not ident.name:
+            return None, []
+        desks = seats.registry.command_positions(ident.person_id)
+        return Caller(who=ident.person_id, name=ident.name, verified=ident.verified,
+                      instructor=ident.instructor), desks
+
     async def voice_config(request):
         if cfg is None:
             return _err(503, "bad-config", cfg_error or "voice_loops.yaml invalid")
+        from smo_mcs.seats_http import SeatHttpError
         try:
-            caller = caller_for(request.headers, request.query.get("name"), settings)
-        except web.HTTPUnauthorized:
+            caller, desks = await seat_caller(request, request.query.get("name"))
+            if desks is None:
+                caller = caller_for(request.headers, request.query.get("name"), settings)
+        except (web.HTTPUnauthorized, SeatHttpError):
             return _err(401, "sign-in", "sign-in required")
+        if desks is not None:
+            labels = {p: cfg.label_for(p) for p in cfg.all_positions}
+            ident = None if caller is None else {"name": caller.name, "verified": caller.verified,
+                                                 "instructor": caller.instructor}
+            return web.json_response({
+                "available": settings.problem() is None, "reason": settings.problem(),
+                "recordings": cfg.recordings, "identity": ident,
+                "needs_name": caller is None, "seats": True,
+                "local_instructor": False,
+                "positions": [p for p in cfg.positions if p in desks] +
+                (list(ROLE_POSITIONS) if caller is not None and caller.instructor else []),
+                "role_positions": list(ROLE_POSITIONS),
+                "position_labels": labels, "ttl_s": settings.ttl_s,
+            }, headers=_NO_STORE)
         labels = {p: cfg.label_for(p) for p in cfg.all_positions}
         ident = None
         if caller is not None:
@@ -539,9 +571,12 @@ def register_voice_routes(app: web.Application, config_dir, *,
             return _err(400, "json", "body is not JSON")
         if not isinstance(body, dict):
             return _err(400, "json", "body must be an object")
+        from smo_mcs.seats_http import SeatHttpError
         try:
-            caller = caller_for(request.headers, body.get("name"), settings)
-        except web.HTTPUnauthorized:
+            caller, desks = await seat_caller(request, body.get("name"))
+            if desks is None:
+                caller = caller_for(request.headers, body.get("name"), settings)
+        except (web.HTTPUnauthorized, SeatHttpError):
             return _err(401, "sign-in", "sign-in required")
         if caller is None:
             return _err(400, "name", "type your name first")
@@ -550,6 +585,10 @@ def register_voice_routes(app: web.Application, config_dir, *,
             return _err(400, "position", f"unknown position {position[:40]!r}")
         if position in ROLE_POSITIONS and not caller.instructor:
             return _err(403, "instructor", "this position needs the instructor role")
+        if desks is not None and position not in ROLE_POSITIONS and position not in desks:
+            # Seats on: the loops follow the desk the caller HOLDS, never a
+            # position typed into the request (WP10).
+            return _err(403, "not-holder", f"you do not hold the {position[:40]} desk")
         result = mint(cfg, settings, caller, position, request_host=request.url.host)
         logger.info("voice token: %s as %s, %d loops", caller.who, position, len(result["loops"]))
         return web.json_response(result, headers=_NO_STORE)
