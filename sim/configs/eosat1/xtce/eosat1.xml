@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+57d9b01ba55c" classification="Unclassified — Simulation"/>
+  <Header version="1.0+836035f564b2" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -176,11 +176,6 @@
           <UnitSet>
             <Unit>A</Unit>
           </UnitSet>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <WarningRange minInclusive="0.1" maxInclusive="50.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
         </IntegerParameterType>
         <IntegerParameterType name="eps_sa_b_current_Type" signed="false">
           <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
@@ -193,11 +188,6 @@
           <UnitSet>
             <Unit>A</Unit>
           </UnitSet>
-          <DefaultAlarm>
-            <StaticAlarmRanges>
-              <WarningRange minInclusive="0.1" maxInclusive="50.0"/>
-            </StaticAlarmRanges>
-          </DefaultAlarm>
         </IntegerParameterType>
         <IntegerParameterType name="eps_bus_voltage_Type" signed="false">
           <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
@@ -675,6 +665,31 @@
             <Unit>A</Unit>
           </UnitSet>
         </IntegerParameterType>
+        <FloatParameterType name="eps_sa_a_yield_pct_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+          <UnitSet>
+            <Unit>%</Unit>
+          </UnitSet>
+          <DefaultAlarm>
+            <StaticAlarmRanges>
+              <WarningRange minInclusive="70.0" maxInclusive="1000.0"/>
+            </StaticAlarmRanges>
+          </DefaultAlarm>
+        </FloatParameterType>
+        <FloatParameterType name="eps_sa_b_yield_pct_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+          <UnitSet>
+            <Unit>%</Unit>
+          </UnitSet>
+          <DefaultAlarm>
+            <StaticAlarmRanges>
+              <WarningRange minInclusive="70.0" maxInclusive="1000.0"/>
+            </StaticAlarmRanges>
+          </DefaultAlarm>
+        </FloatParameterType>
+        <FloatParameterType name="eps_sa_string_lit_Type">
+          <FloatDataEncoding sizeInBits="32"/>
+        </FloatParameterType>
         <IntegerParameterType name="eps_eclipse_active_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
@@ -982,6 +997,15 @@
         </Parameter>
         <Parameter name="eps_line_current_8" parameterTypeRef="eps_line_current_8_Type">
           <LongDescription>Power line 8 (Propulsion) current</LongDescription>
+        </Parameter>
+        <Parameter name="eps_sa_a_yield_pct" parameterTypeRef="eps_sa_a_yield_pct_Type">
+          <LongDescription>String A yield: measured current as % of what a healthy string A delivers at the present geometry (0 while not lit, see eps.sa_string_lit)</LongDescription>
+        </Parameter>
+        <Parameter name="eps_sa_b_yield_pct" parameterTypeRef="eps_sa_b_yield_pct_Type">
+          <LongDescription>String B yield: measured current as % of what a healthy string B delivers at the present geometry (0 while not lit, see eps.sa_string_lit)</LongDescription>
+        </Parameter>
+        <Parameter name="eps_sa_string_lit" parameterTypeRef="eps_sa_string_lit_Type">
+          <LongDescription>Solar-array strings lit enough to judge (bit0 = A, bit1 = B): sunlit, enabled and a healthy string would give at least 0.2 A. Validity parameter of the string-yield monitors</LongDescription>
         </Parameter>
         <Parameter name="eps_eclipse_active" parameterTypeRef="eps_eclipse_active_Type">
           <LongDescription>Eclipse active flag (0=sun, 1=eclipse)</LongDescription>

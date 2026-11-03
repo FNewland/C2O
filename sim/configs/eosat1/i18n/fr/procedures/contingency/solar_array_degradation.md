@@ -26,6 +26,10 @@ bilan de puissance positif sur chaque orbite.
 **Verify:** `eps.sa_a_current` (0x0103) — consigner la valeur et la comparer à la prévision (> 1.0 A attendu en conditions optimales)
 **Verify:** `eps.sa_b_current` (0x0104) — consigner la valeur et la comparer à la prévision (> 1.0 A attendu en conditions optimales)
 **Verify:** `eps.power_gen` (0x0107) — consigner la production totale
+**TC:** `GET_PARAM(param_id=0x014C)` (Service 20, Subtype 3) — `eps.sa_a_yield_pct`
+**TC:** `GET_PARAM(param_id=0x014D)` (Service 20, Subtype 3) — `eps.sa_b_yield_pct`
+**TC:** `GET_PARAM(param_id=0x014E)` (Service 20, Subtype 3) — `eps.sa_string_lit`
+**Verify:** `eps.sa_a_yield_pct` (0x014C) et `eps.sa_b_yield_pct` (0x014D) — rendement bord de chaque chaîne par rapport à une chaîne saine dans la même géométrie solaire (valide seulement tant que le bit de la chaîne est positionné dans `eps.sa_string_lit` (0x014E)). Sous 70 % pendant 30 s en éclairement, S19 ea 1004 (A) / 1005 (B) a déjà mis la ligne de la charge utile hors tension — consulter le journal d'événements avant de la rétablir
 **Action:** Calculer le déficit en pourcentage : (prévu - réel) / prévu x 100 pour chaque générateur
 **GO/NO-GO:** Si le déficit dépasse 20 % sur l'un des générateurs pendant une phase éclairée confirmée, continuer. S'il est < 20 %, consigner pour le seul suivi de tendance. -> GO `STEP-2` | NO-GO `STEP-END`
 

@@ -302,6 +302,9 @@ state.
 | 0x010A   | bat_capacity    | Ah     | Remaining battery capacity           |
 | 0x0144   | wing_status     | bitmask| Solar wing deployment status (bit0=+Y, bit1=-Y) |
 | 0x0145   | wing_deploy_timer| s     | Wing deployment countdown timer      |
+| 0x014C   | sa_a_yield_pct  | %      | String A yield vs a healthy string (FDIR, on demand) |
+| 0x014D   | sa_b_yield_pct  | %      | String B yield vs a healthy string (FDIR, on demand) |
+| 0x014E   | sa_string_lit   | bitmask| Strings lit enough to judge (bit0=A, bit1=B); validity of the yield monitors |
 
 ## 5. Limit Definitions {#5-limit-definitions}
 

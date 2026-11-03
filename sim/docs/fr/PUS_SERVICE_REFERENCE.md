@@ -719,12 +719,15 @@ qu'il reste en violation.
 ```
 Quand un paramètre franchit un seuil (OK → violé) :
   1. Violation S12 détectée par ServiceDispatcher.check_monitoring()
-     (entièrement ignorée si le sous-système source du paramètre n'est pas alimenté)
+     (entièrement ignorée si le sous-système source du paramètre n'est pas alimenté,
+     ou tant que la condition de validité PUS-C de la définition est fausse ; signalée
+     seulement après `repetition` contrôles consécutifs hors limites)
   2. Rapport de transition de contrôle TM(12,9) « limite atteinte » — la vraie télémesure
      de surveillance que décode le sol (ajoutée par le défaut #69)
   3. Événement S5 généré, event_id = 0x9000 | (param_id & 0x0FFF)
   4. Règle S19 déclenchée (si l'une correspond à l'identifiant d'événement, ou à l'identifiant
-     de paramètre dans l'espace des paramètres — trigger_kind lève l'ambiguïté)
+     de paramètre dans l'espace des paramètres — trigger_kind lève l'ambiguïté ; une règle
+     de paramètre avec `limit: high` ou `limit: low` ne se déclenche que sur cette limite)
   5. Commande S8 exécutée de façon autonome
   6. Événement consigné dans le stockage TM S15
 
@@ -973,6 +976,13 @@ inconnu). Voir `docs/OBCP_GUIDE.md` pour la rédaction des procédures.
 occupent tous la plage 0x0000–0x0FFF : un ID seul est donc ambigu, et la correspondance exige que l'ID
 *et* l'espace de noms concordent. Avant le défaut n° 70, seul l'ID était comparé, et 17
 des 26 règles livrées se déclenchaient deux fois.
+
+**Règles de paramètre à un seul côté (2026-11-03).** Une règle de paramètre peut porter
+`limit: high` ou `limit: low` dans `s19_rules.yaml` ; elle ignore alors l'autre limite de la
+surveillance, qui reste signalée au sol. Les règles de surchauffe (3001, 3002, 3003, 4002,
+6002) sont `high` ; avant cette modification, elles se déclenchaient aussi sur le froid (3003
+mettait l'OBC en SAFE à chaque refroidissement prolongé). Ce réglage ne figure ni dans
+TC(19,1) ni dans TM(19,128) : une règle ajoutée depuis le sol agit des deux côtés.
 
 **Une action est exactement un appel de fonction S8 sans paramètre** — ni séquence, ni
 argument, ni délai, ni condition. Utilisez une OBCP (service 18) lorsqu'il vous faut une

@@ -1,5 +1,12 @@
 # S12 On-Board Monitoring Definitions
 # Format: param_id, check_type (0=absolute, 1=delta), low_limit, high_limit, severity
+# Optional (PUS-C, 2026-11-03):
+#   repetition: N   the out-of-limit state must hold for N consecutive checks
+#                   (1 Hz) before the monitor reports it. Default 1.
+#   validity: { param_id, mask, value }  check only while
+#                   (int(param) & mask) == value; otherwise UNCHECKED.
+# The S12 report (TM(12,9) + S5 0x9xxx) says which limit was crossed; an S19
+# rule may be armed on one side only (`trigger.limit` in s19_rules.yaml).
 #
 # This configuration defines 25+ monitoring rules covering all spacecraft subsystems.
 # Rules are loaded at engine startup and checked every tick via S12 framework.
@@ -66,22 +73,37 @@ s12_definitions:
     severity: WARNING
     description: "Battery temperature below -5°C"
 
-  # Solar array current monitoring (during sunlit)
-  - param_id: 0x0103  # eps.sa_a_current
-    name: "EPS Solar Array A Low Current"
+  # Solar-array string health (2026-11-03). These two monitors used to watch
+  # the raw string currents 0x0103/0x0104 with a 0.1 A low limit and no
+  # validity condition: every eclipse entry drove both below the limit, and
+  # S19 ea 1004/1005 fired at every eclipse. They now watch the string YIELD
+  # (measured current as % of a healthy string at the same geometry) and are
+  # judged only while that string is lit — PUS-C validity parameter 0x014E
+  # eps.sa_string_lit, bit0 = A, bit1 = B (sunlit, enabled, expected
+  # current >= 0.2 A). Eclipse, deep penumbra and a string facing away from
+  # the sun leave the monitor UNCHECKED, not violated. Repetition 30 (30 s
+  # at the 1 Hz check rate) rides through slews and the shadow edge.
+  # Low limit 70 % = eps `sa_degraded_fraction`, the same threshold as the
+  # S5 SOLAR_ARRAY_DEGRADED event (0x010B).
+  - param_id: 0x014C  # eps.sa_a_yield_pct (was 0x0103 eps.sa_a_current)
+    name: "EPS Solar Array A Low Yield"
     check_type: 0  # absolute
-    low_limit: 0.1
-    high_limit: 50.0
+    low_limit: 70.0
+    high_limit: 1000.0
     severity: WARNING
-    description: "Solar array A current below 0.1A in sunlight"
+    validity: { param_id: 0x014E, mask: 0x1, value: 0x1 }
+    repetition: 30
+    description: "Solar array string A below 70% of expected output while lit"
 
-  - param_id: 0x0104  # eps.sa_b_current
-    name: "EPS Solar Array B Low Current"
+  - param_id: 0x014D  # eps.sa_b_yield_pct (was 0x0104 eps.sa_b_current)
+    name: "EPS Solar Array B Low Yield"
     check_type: 0  # absolute
-    low_limit: 0.1
-    high_limit: 50.0
+    low_limit: 70.0
+    high_limit: 1000.0
     severity: WARNING
-    description: "Solar array B current below 0.1A in sunlight"
+    validity: { param_id: 0x014E, mask: 0x2, value: 0x2 }
+    repetition: 30
+    description: "Solar array string B below 70% of expected output while lit"
 
   # ===== AOCS (0x0200-0x027F) =====
   # Reaction wheel speed monitoring (per wheel, max ~5000 RPM)
