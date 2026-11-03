@@ -196,7 +196,7 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
     <Dialog open title={t('Export Documents & Data')} onClose={onClose} width={680}
       actions={<button type="button" className="c2o-btn" onClick={onClose}>{t('Close')}</button>}>
       <div>
-        <p className="t-12 c-2 m-0 mb-3"><span className="w-600 c-1">{t('University of Ottawa')}</span> {t('| SEDTI — All documents branded')}</p>
+        <p className="t-12 c-2 m-0 mb-3"><span className="w-600 c-1">C2O</span> {t('— from Concept to Orbit. All documents carry the C2O branding.')}</p>
 
         {error && <Note tone="alarm" role="alert" className="mb-2">{error}</Note>}
         {success && <Note tone="ok" role="status" className="mb-2">{success}</Note>}

@@ -38,6 +38,5 @@
   "Sum of child elements": "Somme des éléments enfants",
   "Σ marks a block without its own value: the figure is the sum of its children.": "Σ signale un bloc sans valeur propre : le chiffre affiché est la somme de ses enfants.",
   "NOT READY ({{n}} failed)": "NON PRÊT ({{n}} en échec)",
-  "NOT READY ({{n}} manual/advisory)": "NON PRÊT ({{n}} manuels/indicatifs)",
   "Your name is shown to everyone working in the same study.": "Votre nom est visible par toutes les personnes qui travaillent sur la même étude."
 }

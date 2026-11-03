@@ -12,9 +12,10 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 
 export function PresenceBar() {
   const { t } = useTranslation()
-  const { connected, users, myName } = useCollaboration()
+  const { connected, users, myName, me } = useCollaboration()
   if (!myName) return null
-  const others = users.filter(u => u.name !== myName).map(u => u.name)
+  // Users are distinct identities (WP0): someone else with my display name still counts.
+  const others = users.filter(u => (u.id && me ? u.id !== me : u.name !== myName)).map(u => u.name)
   const count = users.length || 1
   const who = [t('{{name}} (you)', { name: myName }), ...others].join(', ')
   return (
