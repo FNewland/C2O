@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from smo_common.protocol.framing import frame_packet, read_framed_packet
+from smo_common.protocol.framing import frame_packet, read_framed_packet, vcid_of
 
 from .config import RFSimConfig
 from .mode import RFSimMode
@@ -361,7 +361,7 @@ class RFSimBridge:
 
     async def _process_tm_frame_mode(self, packet: bytes):
         """FRAME mode: byte-level CCSDS framing (no real signal processing)."""
-        self._vc_mux.add_packet(packet, vcid=0)
+        self._vc_mux.add_packet(packet, vcid=vcid_of(packet))
         while self._vc_mux.has_data():
             frame = self._vc_mux.get_next_frame()
             frame_bytes = frame.header.pack() + frame.data

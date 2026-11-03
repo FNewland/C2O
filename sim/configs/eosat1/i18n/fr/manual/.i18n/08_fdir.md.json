@@ -154,9 +154,14 @@
   },
   {
    "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/11-operational-notes",
-   "en_hash": "c5e99ada439973ec",
-   "fr_hash": "166a4f6f2298d073"
+   "en_hash": "54537fe4319e7cd3",
+   "fr_hash": "59811629955d8515"
+  },
+  {
+   "id": "eosat-1-fault-detection-isolation-and-recovery-fdir/12-mcs-alarm-lifecycle",
+   "en_hash": "80ae759861a43942",
+   "fr_hash": "0b330f55346e2ce4"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "9da3724"
 }

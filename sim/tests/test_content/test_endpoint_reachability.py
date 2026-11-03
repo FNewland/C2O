@@ -37,6 +37,11 @@ INTENTIONALLY_API_ONLY: dict[str, str] = {
     # were the `files/*.html` pages (deleted with the `files/` tree) and the
     # April `docs/gap_analysis/` write-ups that describe them. Nothing current
     # cites it, so a shim "for printed handouts" was a guess, not a reason.
+    "mcs /api/tm-stored":
+        "counter of S15 playback (VC1) packets the MCS received and kept out "
+        "of the live displays (2026-11 alarm-lifecycle); for scripts, tests "
+        "and the instructor — the content is analysed at /dumps and in the "
+        "delayed-TM viewer, not on the live console",
     "mcs /api/sim-state":
         "same payload as /api/state under the pre-rename path; kept for "
         "student scripts and the acceptance suite",
