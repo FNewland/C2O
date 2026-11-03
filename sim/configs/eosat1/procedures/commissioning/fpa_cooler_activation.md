@@ -8,9 +8,9 @@ early, burning power through the whole of LEOP). Entry/exit states declared.
 
 **Entry state:** COM-009 exit state --- payload in STANDBY on its own line,
 SID 5 emitting, FPA at the uncooled equilibrium. The cooler EPS line
-(`eps.pl_fpa_cooler` 0x0114) may ALREADY read 1 --- COM-009's mode command is
-itself a cooler-line path since Phase 4 --- but the cooler has not been
-commanded and `tcs.cooler_fpa`/`payload.fpa_ready` still read 0.
+(`eps.pl_fpa_cooler` 0x0114), `tcs.cooler_fpa` and `payload.fpa_ready` all read 0:
+since 2026-11-03 STANDBY does not run the cooler, so this card is the first
+time it is switched on.
 
 ## Purpose
 Activate the Focal Plane Array (FPA) cooler on the multispectral imager. Monitor
@@ -185,8 +185,9 @@ and above 1.0C indicates a degraded loop.
 
 ## Exit state
 - Cooler RUNNING (`tcs.cooler_fpa` 0x040C = 1, line 0x0114 = 1) and left
-  running --- COM-011/COM-012 and every imaging card need the FPA regulating;
-  restoring "cooler off" here would defeat the card's purpose
+  running for COM-012 (first light), which images straight away. Any later
+  `PAYLOAD_SET_MODE(mode=1)` (STANDBY) switches it off again: in routine
+  operations the cooler runs only to prepare for imaging and while imaging
 - `payload.fpa_ready` (0x0610) = 1 --- FPA at setpoint
 - No other state touched
 

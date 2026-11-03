@@ -28,8 +28,8 @@ procedures:
       - s1      # 0  AOCS_SET_MODE_NOMINAL (base mode before fine pointing)
       - s1      # 1  wait 10 s
       - s1      # 2  wait aocs.mode == 4
-      - s2      # 3  PAYLOAD_SET_MODE_STANDBY (FPA cooler on)
-      - s2      # 4  wait 60 s
+      - s2      # 3  FPA_COOLER_ON (imaging preparation)
+      - s2      # 4  wait 480 s (FPA cool-down)
       - s2      # 5  wait payload.fpa_ready == 1
       - s1      # 6  wait aocs.fine_ready == 0 (AOCS_FINE_READY_CHECK)
       - s1      # 7  AOCS_SET_MODE_FINE_POINT
@@ -46,11 +46,11 @@ procedures:
       - s6      # 18 AOCS_SET_MODE_NOMINAL
     notes:
       s2:
-        en: "Runner: payload to STANDBY and waited for payload.fpa_ready; the FPA temperature and cooler checks are yours."
-        fr: "Exécuteur : charge utile en STANDBY et attente de payload.fpa_ready ; les vérifications de température du plan focal et du refroidisseur restent à faire."
+        en: "Runner: FPA cooler switched on and waited for payload.fpa_ready; the FPA temperature and cooler checks are yours."
+        fr: "Exécuteur : refroidisseur du plan focal mis en marche et attente de payload.fpa_ready ; les vérifications de température du plan focal et du refroidisseur restent à faire."
       s6:
-        en: "Runner: payload to STANDBY, then AOCS back to NOMINAL."
-        fr: "Exécuteur : charge utile en STANDBY, puis SCAO revenu en NOMINAL."
+        en: "Runner: payload to STANDBY (cooler off), then AOCS back to NOMINAL."
+        fr: "Exécuteur : charge utile en STANDBY (refroidisseur arrêté), puis SCAO revenu en NOMINAL."
 
   NOM-003:
     activity_type: data_dump

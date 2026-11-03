@@ -967,7 +967,7 @@ commands:
     service: 8
     subtype: 1
     func_id: 16
-    description: "Set payload power mode"
+    description: "Set payload power mode (2 = imaging also requests the FPA cooler; 0 and 1 release it)"
     fields:
       - { name: mode, type: uint8, description: "0=off, 1=standby, 2=imaging" }
   - name: EPS_FPA_COOLER
@@ -1050,11 +1050,11 @@ commands:
     func_id: 26
     arg_schema_version: 1
     description: >-
-      Set payload mode. Modes 1 (STANDBY), 2 (IMAGING) and 3 (CALIBRATION) all
-      request the FPA cooler; mode 0 releases it. The request now drives BOTH
-      the TCS cooler flag and the EPS `fpa_cooler` power line (2026-08b PL-a) —
-      previously this path set a flag against a dark line and the detector
-      never cooled, so FPA READY (0x0610) stayed NO forever with no error.
+      Set payload mode. Modes 2 (IMAGING) and 3 (CALIBRATION) request the FPA
+      cooler; modes 0 (OFF) and 1 (STANDBY) release it (the cooler runs only to
+      prepare for imaging and while imaging; switch it on with FPA_COOLER a
+      cool-down time before the window). The request drives BOTH
+      the TCS cooler flag and the EPS `fpa_cooler` power line (2026-08b PL-a).
     readback: { param_id: 0x0600, description: "payload.mode" }
     fields:
       - name: mode
@@ -1066,8 +1066,8 @@ commands:
         range: { min: 0, max: 3 }
         enum:
           - { value: 0, label: "OFF", description: "Imager off, cooler released" }
-          - { value: 1, label: STANDBY, description: "FPA cooler on, detector idle" }
-          - { value: 2, label: IMAGING, description: "Detector integrating; capture enabled" }
+          - { value: 1, label: STANDBY, description: "Detector idle, FPA cooler released" }
+          - { value: 2, label: IMAGING, description: "FPA cooler on, detector integrating; capture enabled" }
           # 2026-08b PL-d. Value 2 is deliberately UNCHANGED: AOCS keys its
           # automatic desaturation inhibit on payload.mode == 2 meaning
           # IMAGING (DISPLAY_REQUESTS_AOCS.md section 3), so CALIBRATION had to
@@ -1573,7 +1573,7 @@ commands:
     service: 8
     subtype: 1
     func_id: 43
-    description: "FPA cooler on/off"
+    description: "FPA cooler on/off. ON is the imaging preparation: STANDBY runs without the cooler, and the FPA needs about 6.5 min to reach FPA READY from the uncooled state"
     fields:
       - { name: "on", type: uint8, description: "0=off, 1=on" }
   - name: HEATER_SET_SETPOINT

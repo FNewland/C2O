@@ -730,6 +730,18 @@ class ParameterDef(StrictModel):
     #:   Not the spacecraft's to report.
     visibility: Literal["real", "instructor", "ground_derived"] = "real"
 
+class LimitValidity(StrictModel):
+    """Ground twin of the PUS-C S12 validity condition (2026-11-03).
+
+    The limit is checked only while ``(int(value of param_id) & mask) ==
+    value``; otherwise the limit state is ``"unchecked"``. A validity
+    parameter that has not been received yet also leaves it unchecked.
+    """
+    param_id: int
+    mask: int = 0xFFFFFFFF
+    value: int = 1
+
+
 class LimitDef(StrictModel):
     param_id: int
     yellow_low: float | None = None
@@ -742,6 +754,8 @@ class LimitDef(StrictModel):
     #: steps down, so noise on a limit cannot chatter the alarm. None = 1 %
     #: of the caution band width (or of the limit's magnitude if one-sided).
     deadband: float | None = None
+    #: Optional validity condition (``mcs/limits.yaml`` ``valid_when``).
+    valid_when: LimitValidity | None = None
 
 class TCFieldCalibration(StrictModel):
     """Raw <-> engineering conversion for one TC argument (Phase E WP-0).
@@ -1295,6 +1309,10 @@ class ActivityTypeConfig(StrictModel):
     max_duration_s: float | None = None
     requires_subsystems: list[str] = Field(default_factory=list)
     thermal_constraints: dict[str, Any] = Field(default_factory=dict)
+    #: 2026-11-03: `sustainable_duty_pct` — imaging share of an orbit above
+    #: which the planner warns that the orbit-average power budget no longer
+    #: closes (PowerConstraintChecker.check_imaging_duty_cycle).
+    power_constraints: dict[str, Any] = Field(default_factory=dict)
     aocs_constraints: dict[str, Any] = Field(default_factory=dict)
     # 2026-08d PLAN-7. The activity's real timing, as DATA rather than prose,
     # so the scheduler and the conflict checker can reason about it:

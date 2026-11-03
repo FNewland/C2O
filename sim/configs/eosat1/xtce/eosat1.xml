@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+b63a32ebb825" classification="Unclassified — Simulation"/>
+  <Header version="1.0+e64ce48fb013" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -1118,7 +1118,7 @@
       </ArgumentTypeSet>
       <MetaCommandSet>
         <MetaCommand name="EPS_PAYLOAD_MODE">
-          <LongDescription>Set payload power mode</LongDescription>
+          <LongDescription>Set payload power mode (2 = imaging also requests the FPA cooler; 0 and 1 release it)</LongDescription>
           <ArgumentList>
             <Argument name="mode" argumentTypeRef="uint8_ArgType">
               <LongDescription>0=off, 1=standby, 2=imaging</LongDescription>
@@ -3881,6 +3881,9 @@
             <Unit>K</Unit>
           </UnitSet>
         </FloatParameterType>
+        <IntegerParameterType name="tcs_fpa_limits_valid_Type" signed="false">
+          <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+        </IntegerParameterType>
         <FloatParameterType name="tcs_htr_duty_z1_Type">
           <FloatDataEncoding sizeInBits="32"/>
           <UnitSet>
@@ -4012,6 +4015,9 @@
         <Parameter name="tcs_fpa_cooler_margin_k" parameterTypeRef="tcs_fpa_cooler_margin_k_Type">
           <LongDescription>Commanded FPA setpoint minus achievable floor; &lt;= 0 means the setpoint is out of reach</LongDescription>
         </Parameter>
+        <Parameter name="tcs_fpa_limits_valid" parameterTypeRef="tcs_fpa_limits_valid_Type">
+          <LongDescription>FPA limit validity: 1 = payload powered (mode &gt;= 1) or FPA cooler / decontamination running, the FPA monitors are checked; 0 = unchecked (uncooled imager in survival)</LongDescription>
+        </Parameter>
         <Parameter name="tcs_htr_duty_z1" parameterTypeRef="tcs_htr_duty_z1_Type">
           <LongDescription>Heater zone 1 duty cycle</LongDescription>
         </Parameter>
@@ -4073,6 +4079,7 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/TCS/tcs_htr_total_power"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TCS/tcs_decontamination_active"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TCS/tcs_thermal_gradient"/>
+            <ParameterRefEntry parameterRef="/EOSAT-1/TCS/tcs_fpa_limits_valid"/>
           </EntryList>
         </SequenceContainer>
       </ContainerSet>
@@ -4130,7 +4137,7 @@
           </CommandContainer>
         </MetaCommand>
         <MetaCommand name="FPA_COOLER">
-          <LongDescription>FPA cooler on/off</LongDescription>
+          <LongDescription>FPA cooler on/off. ON is the imaging preparation: STANDBY runs without the cooler, and the FPA needs about 6.5 min to reach FPA READY from the uncooled state</LongDescription>
           <ArgumentList>
             <Argument name="on" argumentTypeRef="uint8_ArgType">
               <LongDescription>0=off, 1=on</LongDescription>
@@ -6015,8 +6022,8 @@
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned" byteOrder="mostSignificantByteFirst"/>
           <EnumerationList>
             <Enumeration value="0" label="OFF" shortDescription="Imager off, cooler released"/>
-            <Enumeration value="1" label="STANDBY" shortDescription="FPA cooler on, detector idle"/>
-            <Enumeration value="2" label="IMAGING" shortDescription="Detector integrating; capture enabled"/>
+            <Enumeration value="1" label="STANDBY" shortDescription="Detector idle, FPA cooler released"/>
+            <Enumeration value="2" label="IMAGING" shortDescription="FPA cooler on, detector integrating; capture enabled"/>
             <Enumeration value="3" label="CALIBRATION" shortDescription="Radiometric calibration; capture disabled, shutter and lamp gated by the cal sequencer"/>
           </EnumerationList>
         </EnumeratedArgumentType>
@@ -6200,7 +6207,7 @@
       </ArgumentTypeSet>
       <MetaCommandSet>
         <MetaCommand name="PAYLOAD_SET_MODE">
-          <LongDescription>Set payload mode. Modes 1 (STANDBY), 2 (IMAGING) and 3 (CALIBRATION) all request the FPA cooler; mode 0 releases it. The request now drives BOTH the TCS cooler flag and the EPS `fpa_cooler` power line (2026-08b PL-a) — previously this path set a flag against a dark line and the detector never cooled, so FPA READY (0x0610) stayed NO forever with no error.</LongDescription>
+          <LongDescription>Set payload mode. Modes 2 (IMAGING) and 3 (CALIBRATION) request the FPA cooler; modes 0 (OFF) and 1 (STANDBY) release it (the cooler runs only to prepare for imaging and while imaging; switch it on with FPA_COOLER a cool-down time before the window). The request drives BOTH the TCS cooler flag and the EPS `fpa_cooler` power line (2026-08b PL-a).</LongDescription>
           <ArgumentList>
             <Argument name="mode" argumentTypeRef="PAYLOAD_SET_MODE_mode_ArgType" initialValue="0">
               <LongDescription>0=off, 1=standby, 2=imaging, 3=calibration</LongDescription>

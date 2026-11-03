@@ -107,18 +107,20 @@ can be commanded off as an isolation measure.
 
 The focal plane array cooler is a miniature Stirling-cycle cryocooler that maintains the
 imager detector at its operational temperature of approximately -15 deg C. The cooler
-draws up to 15 W and requires a 30-minute cooldown period from ambient temperature.
+draws up to 15 W. From the uncooled STANDBY equilibrium (about +10 deg C) it brings the
+detector to FPA READY in about 6.5 minutes and to the setpoint in about 10 minutes.
 
 | Parameter         | Value                        |
 |-------------------|------------------------------|
 | Cooler Type       | Stirling-cycle cryocooler    |
 | Target FPA Temp   | -15 deg C (nominal)          |
-| Cooldown Time     | ~30 min from ambient         |
+| Cooldown Time     | ~6.5 min to FPA READY (377 s measured), ~10 min to settle |
 | Power Consumption | 15 W                         |
-| Control           | Autonomous via payload mode   |
+| Control           | `FPA_COOLER` (imaging preparation); IMAGING / CALIBRATION request it, STANDBY / OFF release it |
 
-The cooler is activated automatically when the payload transitions to STANDBY, IMAGING or
-CALIBRATION mode and deactivated when the payload is set to OFF.
+The cooler runs only to prepare for imaging and while imaging (2026-11-03): `FPA_COOLER`
+(on=1) switches it on in STANDBY, a cool-down time ahead of the imaging window, and
+the IMAGING and CALIBRATION modes request it. STANDBY and OFF switch it off.
 
 ## 4. Temperature Zones {#4-temperature-zones}
 
@@ -135,8 +137,8 @@ Typical orbit ranges (beta -30 deg; the bus tracks the power it dissipates):
 
 | Case                                   | Structure      | OBC            | Battery        |
 |----------------------------------------|----------------|----------------|----------------|
-| Nominal, payload STANDBY (cooler running) | +15 to +29 deg C | +22 to +33 deg C | +16 to +22 deg C |
-| Nominal, cooler off                    | +2 to +16 deg C  | +8 to +20 deg C  | +5 to +10 deg C (heater cycling) |
+| Cooler running all orbit (payload STANDBY + cooler) | +15 to +29 deg C | +22 to +33 deg C | +16 to +22 deg C |
+| Nominal: payload STANDBY, cooler off   | +2 to +16 deg C  | +8 to +20 deg C  | +5 to +10 deg C (heater cycling) |
 | Safe mode (sun-pointing)               | -7 to +7 deg C   | -1 to +10 deg C  | +5 to +10 deg C (heater cycling) |
 | Long load shed, heater lines OFF       | -15 to -2 deg C  | -9 to +2 deg C   | -11 to -3 deg C  |
 

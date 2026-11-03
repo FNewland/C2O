@@ -151,7 +151,9 @@ async def test_imaging_activity_executes_on_board_at_planned_time():
         # offsets (the old +1/+30 pins encoded the unflyable 3-command form).
         # The payload must reach IMAGING before any capture fires.
         saw_imaging_before_capture = False
-        for t in range(1, 601):
+        # 2026-11-03: 617 s of dwell since the FPA cool-down (480 s) became
+        # part of the sequence (the cooler is off in STANDBY).
+        for t in range(1, 901):
             for pkt in engine._tc_scheduler.tick(start_cuc + t):
                 engine._dispatch_tc(pkt)
             if payload._state.mode == 2 and \

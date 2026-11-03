@@ -239,8 +239,8 @@
   },
   {
    "id": "chapter-6-the-control-room-nine-positions-in-depth/6-7-payload-operations-engineer",
-   "en_hash": "4eef58329b25a39d",
-   "fr_hash": "52e05f11f86c02bc"
+   "en_hash": "8cb7dabc216adb34",
+   "fr_hash": "ce049ab84a1cd6d7"
   },
   {
    "id": "chapter-6-the-control-room-nine-positions-in-depth/6-8-flight-dynamics-system-fds-orbit-analyst",
@@ -389,8 +389,8 @@
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/payload-funcid-26-39-92-95-119",
-   "en_hash": "8cdf01607663d90c",
-   "fr_hash": "d37c43e818c0b9b6"
+   "en_hash": "84310f21fb4e25cb",
+   "fr_hash": "5e5eb73a5f6ac137"
   },
   {
    "id": "chapter-7-tools-consoles-and-command-types/7-7-onboard-functions-s8-function-id-working-operator-subset/tcs-funcid-40-49",
@@ -1369,8 +1369,8 @@
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-2-commissioning-procedure-cards",
-   "en_hash": "1752181bca603c92",
-   "fr_hash": "cd3052b52d16c26b"
+   "en_hash": "e2ec9e1241f3b85c",
+   "fr_hash": "1e9ed9928e82a1d2"
   },
   {
    "id": "chapter-14-procedure-catalogue-quick-reference-cards/14-3-nominal-procedure-cards",
@@ -1424,8 +1424,8 @@
   },
   {
    "id": "chapter-15-telemetry-fdir-monitoring-reference/15-5-command-reference-full-list-by-subsystem",
-   "en_hash": "2908b291d718ebba",
-   "fr_hash": "b40e7a0f10d4d972"
+   "en_hash": "279837d43e0bbaa0",
+   "fr_hash": "fee7c1fae0facb79"
   },
   {
    "id": "chapter-15-telemetry-fdir-monitoring-reference/15-6-references",
@@ -1492,5 +1492,5 @@
   "chapter-10-leop-operations: numbers: missing in FR []  extra in FR ['24', '7']",
   "chapter-10-leop-operations: numbers: missing in FR []  extra in FR ['7', '24']"
  ],
- "en_commit": "8067e5b"
+ "en_commit": "b41c0a9"
 }

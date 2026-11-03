@@ -9,8 +9,8 @@
   },
   {
    "id": "com-010-fpa-cooler-activation",
-   "en_hash": "cca02686410ba9df",
-   "fr_hash": "a3167164f217b6e1"
+   "en_hash": "98835acbc5ae55ce",
+   "fr_hash": "d7d396242f303f6f"
   },
   {
    "id": "com-010-fpa-cooler-activation/purpose",
@@ -84,9 +84,9 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/exit-state",
-   "en_hash": "16433a597d1ea835",
-   "fr_hash": "00405028673f282b"
+   "en_hash": "47cf9268bd53224a",
+   "fr_hash": "a9973e4843e5b74f"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "b41c0a9"
 }

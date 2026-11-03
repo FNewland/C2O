@@ -199,8 +199,9 @@ commande de mode de l'unité : ligne ouverte, toute commande de mode est refus�
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — 2. Émetteur TX : vérifier `ttc.pa_on` (0x0516) = 1
 **GO/NO-GO:** Bus stable pendant 5 min avec l'émetteur rétabli — rétablir la charge suivante
 **TC:** `EPS_POWER_ON(line_index=4)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `fpa_cooler`, si `eps.pl_fpa_cooler` (0x0114) = 0
-**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — 3. Refroidisseur du FPA : vérifier `tcs.cooler_fpa` (0x040C) = 1
-**GO/NO-GO:** Bus stable pendant 5 min avec le refroidisseur du FPA rétabli — rétablir la charge suivante
+**Note:** 3. Refroidisseur du FPA : le laisser ARRÊTÉ. Depuis le 2026-11-03, il ne fonctionne que pour préparer une prise de vue
+(étape 2 de NOM-002), et la commande STANDBY de la charge utile ci-dessous (4.) l'arrêterait de nouveau.
+**GO/NO-GO:** Bus stable pendant 5 min avec la ligne du refroidisseur du FPA rétablie — rétablir la charge suivante
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 : sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Charge utile en STANDBY : vérifier `payload.mode` = 1
 **Verify:** Après chaque ajout de charge, confirmer que `eps.bus_voltage` (0x0105) reste > 27.5 V

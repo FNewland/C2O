@@ -44,18 +44,18 @@
   },
   {
    "id": "eosat-1-payload--multispectral-imager/3-payload-modes",
-   "en_hash": "71b53d1b1b75ecec",
-   "fr_hash": "51b89cff0fcef37d"
+   "en_hash": "cb5bafbbfa4a51ae",
+   "fr_hash": "2086155f978ee8bd"
   },
   {
    "id": "eosat-1-payload--multispectral-imager/3-payload-modes/31-mode-transitions",
-   "en_hash": "4c9dbf0bda27b0a2",
-   "fr_hash": "b502e0d808730b55"
+   "en_hash": "fe3af7db1d7f97f9",
+   "fr_hash": "d97a8040b36156c9"
   },
   {
    "id": "eosat-1-payload--multispectral-imager/3-payload-modes/32-imaging-constraints",
-   "en_hash": "4c403a831af3f9f0",
-   "fr_hash": "c8239f1ae8fee2b9"
+   "en_hash": "e27b60f1fcd4fba9",
+   "fr_hash": "82c2d83c84f07549"
   },
   {
    "id": "eosat-1-payload--multispectral-imager/4-data-storage-and-management",
@@ -74,8 +74,8 @@
   },
   {
    "id": "eosat-1-payload--multispectral-imager/6-limit-definitions/61-fpa-temperature-interpretation",
-   "en_hash": "d8df4c8c4aa5383b",
-   "fr_hash": "24ef9c907b9c3249"
+   "en_hash": "94a8979535534547",
+   "fr_hash": "321c47161d032e97"
   },
   {
    "id": "eosat-1-payload--multispectral-imager/7-commands",
@@ -84,13 +84,13 @@
   },
   {
    "id": "eosat-1-payload--multispectral-imager/7-commands/71-typical-imaging-sequence",
-   "en_hash": "2cc68c9e4eb8dd84",
-   "fr_hash": "cb378f0e4d6750e5"
+   "en_hash": "f785ab09973ed6cf",
+   "fr_hash": "f4f16711c612e732"
   },
   {
    "id": "eosat-1-payload--multispectral-imager/8-operational-notes",
-   "en_hash": "08d599d3b863e1ff",
-   "fr_hash": "34b66a3c6744ae25"
+   "en_hash": "44e2de83dbeb5d86",
+   "fr_hash": "c6f2bb232faafd6d"
   },
   {
    "id": "eosat-1-payload--multispectral-imager/commandable-settings",
@@ -98,5 +98,5 @@
    "fr_hash": "8836081cede7678b"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "b41c0a9"
 }

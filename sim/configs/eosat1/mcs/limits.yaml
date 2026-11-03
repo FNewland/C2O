@@ -1,3 +1,9 @@
+# Optional per limit (2026-11-03):
+#   valid_when: { param_id, mask, value }  the limit is checked only while
+#       (int(param) & mask) == value — the ground twin of the S12 validity
+#       condition. Otherwise the parameter's limit state is "unchecked"
+#       (no colour, no alarm; an active LIMIT alarm returns to normal). A
+#       validity parameter not yet received also leaves it unchecked.
 limits:
   # ===== EPS =====
   # Battery: open-circuit voltage reaches 29.2 V at full charge (eps.yaml),
@@ -54,7 +60,10 @@ limits:
   # PAYLOAD_COOLER_SETPOINT(-20 C) chattered a yellow at ~50 % of samples.
   #   yellow: setpoint_min - 3sigma - 1.5 K .. uncooled_max + 1.5 K
   #   red:    setpoint_min - 3sigma - 5.0 K .. uncooled_max + 5.0 K
-  - { param_id: 0x0408, yellow_low: -22.0, yellow_high: 14.0, red_low: -25.5, red_high: 17.5, check_interval_s: 8 }
+  # valid_when (2026-11-03): checked only while 0x0426 tcs.fpa_limits_valid
+  # is 1 (payload powered, or FPA cooler / decontamination running) — the
+  # same validity condition as the S12 monitors. Otherwise UNCHECKED.
+  - { param_id: 0x0408, yellow_low: -22.0, yellow_high: 14.0, red_low: -25.5, red_high: 17.5, check_interval_s: 8, valid_when: { param_id: 0x0426, mask: 0x1, value: 0x1 } }
 
   # TCS Phase 4: Total heater power
   # Phase B (brief 05 finding 16): installed heater power is 12 W max.
@@ -122,14 +131,14 @@ limits:
   # DERIVED from subsystems/tcs.yaml `fpa_envelope` (G3-d): the node bands
   # shifted by that offset. The old -17.0/-20.0 pair predates the commandable
   # setpoint and turned a legal -20 C command into a red alarm.
-  - { param_id: 0x0601, yellow_low: -22.5, yellow_high: 13.5, red_low: -26.0, red_high: 17.0, check_interval_s: 8 }
+  - { param_id: 0x0601, yellow_low: -22.5, yellow_high: 13.5, red_low: -26.0, red_high: 17.0, check_interval_s: 8, valid_when: { param_id: 0x0426, mask: 0x1, value: 0x1 } }
   # Payload detector temp. (The 0x0616 band was removed on 2026-11-01:
   # image quality is judged on the ground, from the downlinked image.)
   # Detector die = cold finger + die_offset_c (+0.5 K), i.e. the bracket node.
   # DERIVED from subsystems/tcs.yaml `fpa_envelope` (G3-d). The old
   # -18/+8, -20/+12 pair was the operations manual's table, and was the fifth
   # of the five disagreeing FPA bands.
-  - { param_id: 0x0617, yellow_low: -22.0, yellow_high: 14.0, red_low: -25.5, red_high: 17.5, check_interval_s: 8 }
+  - { param_id: 0x0617, yellow_low: -22.0, yellow_high: 14.0, red_low: -25.5, red_high: 17.5, check_interval_s: 8, valid_when: { param_id: 0x0426, mask: 0x1, value: 0x1 } }
 
   # ===== PROP (Phase D) — mirrors monitoring/s12_definitions.yaml =====
   - { param_id: 0x0B01, yellow_low: 6.0, yellow_high: 24.0, red_low: 4.0, red_high: 26.0, check_interval_s: 4 }

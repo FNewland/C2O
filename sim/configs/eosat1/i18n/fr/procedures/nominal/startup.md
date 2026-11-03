@@ -66,9 +66,10 @@ et répéter la vérification. Si le transpondeur redondant échoue aussi, décl
 ### Étape 6 --- Préparation de la charge utile (si une prise de vue ou un vidage est prévu)
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1) --- commander STANDBY
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) sous 20 s
-**Verify:** `tcs.temp_fpa` (0x0408) en baisse (refroidisseur actif)
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 --- le mode STANDBY ne fait pas fonctionner le refroidisseur du FPA (2026-11-03)
 **Verify:** `payload.store_used` (0x0604) < 90 % (stockage suffisant)
-**Note:** NE PAS commander IMAGING tant que la température du FPA n'est pas < -10 °C (voir NOM-002).
+**Note:** NE PAS commander IMAGING tant que la température du FPA n'est pas < -10 °C (voir NOM-002). Le refroidisseur
+est mis en marche lors de la préparation de la prise de vue, étape 2 de NOM-002, au moins 10 min avant la fenêtre.
 
 ### Étape 7 --- Déclaration de disponibilité pour le passage
 **Jalon GO/NO-GO --- Tour de table du directeur de vol :**

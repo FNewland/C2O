@@ -367,7 +367,10 @@ class TestPayloadEnhanced:
         """Set fpa_temp to nominal range and tick long enough for hysteresis,
         verify fpa_ready = True."""
         model = self._make_model()
-        model._state.mode = 1  # STANDBY (cooler on)
+        model._state.mode = 1  # STANDBY
+        # 2026-11-03: STANDBY no longer runs the cooler; this is a STANDBY
+        # with the cooler switched on for imaging preparation.
+        model._state.cooler_active = True
         model._state.cooler_active = True
         model._state.fpa_temp = -14.0  # In range: -16 to -10
 
@@ -524,7 +527,10 @@ class TestDefect2FPAReadinessHysteresis:
     def test_fpa_ready_has_hysteresis(self):
         """FPA readiness uses hysteresis timer for settling."""
         model = self._make_model()
-        model._state.mode = 1  # STANDBY (cooler on)
+        model._state.mode = 1  # STANDBY
+        # 2026-11-03: STANDBY no longer runs the cooler; this is a STANDBY
+        # with the cooler switched on for imaging preparation.
+        model._state.cooler_active = True
         # Manually set FPA to nominal ready temp to test hysteresis logic
         model._state.fpa_temp = -14.0  # In range: -16 to -10
         model._fpa_target = -15.0

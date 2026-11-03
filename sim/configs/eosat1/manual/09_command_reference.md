@@ -2,7 +2,7 @@
 
 **Document ID:** EOSAT1-UM-REF-010  
 **Issue:** 2.0  
-**Source revision:** `tc_catalog.yaml@12438df1edbb`  
+**Source revision:** `tc_catalog.yaml@dad10d3c795d`  
 **Classification:** UNCLASSIFIED — Mission Operations
 
 > **GENERATED FILE — DO NOT EDIT BY HAND.**  
@@ -646,7 +646,7 @@ Example: `5B 01`  (mode=1)
 
 **S8.1** · func_id **16** (0x10) · 2 data byte(s)
 
-Set payload power mode
+Set payload power mode (2 = imaging also requests the FPA cooler; 0 and 1 release it)
 
 *Aliases:* SET_PAYLOAD_MODE
 
@@ -812,7 +812,7 @@ Example: `53 00`  (mode=0)
 
 **S8.1** · func_id **26** (0x1A) · 2 data byte(s) · readback payload.mode (0x0600)
 
-Set payload mode. Modes 1 (STANDBY), 2 (IMAGING) and 3 (CALIBRATION) all request the FPA cooler; mode 0 releases it. The request now drives BOTH the TCS cooler flag and the EPS `fpa_cooler` power line (2026-08b PL-a) — previously this path set a flag against a dark line and the detector never cooled, so FPA READY (0x0610) stayed NO forever with no error.
+Set payload mode. Modes 2 (IMAGING) and 3 (CALIBRATION) request the FPA cooler; modes 0 (OFF) and 1 (STANDBY) release it (the cooler runs only to prepare for imaging and while imaging; switch it on with FPA_COOLER a cool-down time before the window). The request drives BOTH the TCS cooler flag and the EPS `fpa_cooler` power line (2026-08b PL-a).
 
 | Argument | Type | Offset | Unit | Raw ↔ engineering | Range | Default |
 |---|---|---|---|---|---|---|
@@ -823,8 +823,8 @@ Set payload mode. Modes 1 (STANDBY), 2 (IMAGING) and 3 (CALIBRATION) all request
 | Value | Label | Meaning |
 |---|---|---|
 | 0 | `OFF` | Imager off, cooler released |
-| 1 | `STANDBY` | FPA cooler on, detector idle |
-| 2 | `IMAGING` | Detector integrating; capture enabled |
+| 1 | `STANDBY` | Detector idle, FPA cooler released |
+| 2 | `IMAGING` | FPA cooler on, detector integrating; capture enabled |
 | 3 | `CALIBRATION` | Radiometric calibration; capture disabled, shutter and lamp gated by the cal sequencer |
 
 - `mode` — 0=off, 1=standby, 2=imaging, 3=calibration
@@ -1166,7 +1166,7 @@ Example: `2A 00`  (on=0)
 
 **S8.1** · func_id **43** (0x2B) · 2 data byte(s)
 
-FPA cooler on/off
+FPA cooler on/off. ON is the imaging preparation: STANDBY runs without the cooler, and the FPA needs about 6.5 min to reach FPA READY from the uncooled state
 
 | Argument | Type | Offset | Unit | Raw ↔ engineering | Range | Default |
 |---|---|---|---|---|---|---|

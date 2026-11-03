@@ -72,12 +72,15 @@ et réévaluer après un passage éclairé supplémentaire.
 **GO/NO-GO:** Consignes des réchauffeurs configurées pour la phase froide de l'éclipse — continuer.
 
 ### Étape 3 : Couper le refroidisseur du FPA pour économiser la puissance
-**Note:** Si la charge utile est en STANDBY ou OFF, couper le refroidisseur du FPA pour réduire la puissance consommée pendant l'éclipse :
+**Note:** Depuis le 2026-11-03, le refroidisseur du FPA ne fonctionne que pour préparer une prise de vue et pendant la prise de vue :
+les modes STANDBY et OFF l'arrêtent. Si `tcs.cooler_fpa` (0x040C) vaut déjà 0, ne pas envoyer la TC.
+S'il vaut 1 et qu'aucune prise de vue n'est prévue avant la sortie d'éclipse (préparation lancée trop
+tôt), le couper pour réduire la puissance consommée pendant l'éclipse :
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — refroidisseur du FPA sur OFF
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) sous 5 s
 **Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
-**Note:** Le refroidisseur du FPA sera réactivé après la sortie d'éclipse, lorsque le bilan de puissance sera positif.
+**Note:** Le refroidisseur du FPA est remis en marche par la préparation de prise de vue suivante (étape 2 de NOM-002).
 **GO/NO-GO:** Refroidisseur coupé et consommation réduite — continuer.
 
 ### Étape 4 : Vérifier la transition de l'AOCS en mode éclipse

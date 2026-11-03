@@ -1,13 +1,14 @@
 # COM-011 : Étalonnage de la charge utile
 **Sous-système :** Charge utile
 **Phase :** COMMISSIONING
-**Révision :** 1.1 --- 2026-08c : états d'entrée et de sortie déclarés ; s'exécute APRÈS COM-012
+**Révision :** 1.2 --- 2026-11-03 : le refroidisseur du FPA est arrêté en STANDBY ; l'étape 1 le met
+en marche, les étapes 3 et 5 ne commandent plus STANDBY. 1.1 --- 2026-08c : états d'entrée et de sortie déclarés ; s'exécute APRÈS COM-012
 (première lumière) selon l'ordre définitif de la recette en orbite.
 **Approuvé par :** Directeur des opérations de vol
 
 **État d'entrée :** état de sortie de COM-012 --- chaîne image vérifiée de bout en bout,
-charge utile en STANDBY avec le refroidisseur en régulation (`payload.fpa_ready` 0x0610 = 1),
-AOCS en NOMINAL commandé, liaison descendante en LOW.
+charge utile en STANDBY avec le refroidisseur du FPA ARRÊTÉ (le mode STANDBY l'arrête depuis le 2026-11-03 ;
+l'étape 1 le met en marche), AOCS en NOMINAL commandé, liaison descendante en LOW.
 
 ## Objet
 Effectuer l'étalonnage radiométrique initial de l'imageur multispectral. Acquérir des images
@@ -18,8 +19,9 @@ et le recalage entre bandes.
 
 ## Prérequis
 - [ ] COM-012 (Première lumière) terminée — chaîne image vérifiée
-- [ ] Charge utile en STANDBY (mode 1) avec le refroidisseur du FPA en marche
-- [ ] `payload.fpa_temp` (0x0601) stable à la consigne commandée (-15C : bande de -16.5C à -14.5C) et `payload.fpa_ready` (0x0610) = 1 depuis plus de 10 minutes
+- [ ] Charge utile en STANDBY (mode 1) ; le refroidisseur du FPA est mis en marche à l'étape 1
+- [ ] Prévoir environ 10 minutes pour la mise en froid du FPA à l'étape 1 (environ 6.5 min jusqu'à
+      `payload.fpa_ready` (0x0610) = 1 depuis l'état non refroidi, puis stabilisation à -15C : bande de -16.5C à -14.5C)
 - [ ] AOCS capable de FINE_POINT — c'est-à-dire le **mode 5**, et non 4 (4 est NOMINAL) —
       avec une précision < 0.1 deg. Depuis la phase 1, FINE est autorisé sur une pyramide à TROIS
       roues ; `aocs.fine_degraded` (0x0299) = 1 l'indique, et un FINE dégradé est
@@ -33,11 +35,15 @@ et le recalage entre bandes.
 ## Déroulement
 
 ### Étape 1 — Vérifier l'état avant étalonnage
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — refroidisseur du FPA en marche : le mode STANDBY ne le fait pas fonctionner
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — données de servitude TCS (`tcs.cooler_fpa`)
+**Verify:** `tcs.cooler_fpa` (0x040C) = 1 sous 10 s
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) sous 10s
+**Verify:** `payload.fpa_ready == 1` (0x0610, timeout 600 s) — la mise en froid depuis
+l'état non refroidi dure environ 6.5 min
 **Verify:** `payload.fpa_temp` (0x0601) dans la plage **[-16.5 C, -14.5 C]** — la bande
-autour de la consigne nominale de -15 C — sous 10 s
-**Verify:** `payload.fpa_ready == 1` (0x0610, timeout 10 s)
+autour de la consigne nominale de -15 C — sous 300 s
 **Note:** Cette étape exigeait [-32 C, -28 C]. L'enveloppe de consigne commandable va de
 **−20 °C à 0 °C** (`subsystems/tcs.yaml`) ; une plage de −32 à −28 °C sortait donc de tout ce que le
 satellite pouvait être commandé à atteindre : le contrôle ne pouvait jamais réussir. Vérifier
@@ -67,7 +73,9 @@ est **refusé depuis IMAGING** avec `code="CAL_REFUSED_IMAGING"` — « a cali
 frame must not see the scene ». Cette étape commandait auparavant IMAGING en premier, ce qui
 est exactement le défaut supprimé par la phase 4. Partir de STANDBY (mode 1) ; la charge utile
 se promeut d'elle-même dans le nouveau **mode 3 = CALIBRATION** pendant la durée de l'opération.
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
+**Note:** La charge utile est déjà en STANDBY (étape 1). Ne pas commander
+`PAYLOAD_SET_MODE(mode=1)` ici : depuis le 2026-11-03, cette commande arrête le refroidisseur du FPA,
+le FPA sort de sa bande et l'opération est interrompue avec `cal_abort_reason` = 4.
 **TC:** `PAYLOAD_CAL_LAMP(on=0)` (Service 8, Subtype 1, func_id 95) — lampe éteinte pour une image d'obscurité
 **TC:** `PAYLOAD_START_CALIBRATION(mode=0)` (Service 8, Subtype 1, func_id 37) — phase DARK
 **Octets émis :** `25 00`
@@ -120,7 +128,10 @@ changement de phase.
 **GO/NO-GO:** Statistiques des images d'obscurité conformes à la spécification
 
 ### Étape 5 — Ouvrir l'obturateur et revenir en STANDBY
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
+**Note:** Ne pas commander `PAYLOAD_SET_MODE(mode=1)` ici. Le séquenceur d'étalonnage
+a déjà ramené la charge utile en STANDBY avec le refroidisseur du FPA toujours en marche ;
+depuis le 2026-11-03, une commande STANDBY arrête le refroidisseur, et l'étape 7 devrait alors
+attendre une nouvelle mise en froid.
 **TC:** `PAYLOAD_SET_SHUTTER(position=1)` (Service 8, Subtype 1, func_id 119) — OPEN
 **Octets émis :** `77 01`
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — données de servitude de la charge utile
@@ -163,8 +174,9 @@ changement de phase.
 **GO/NO-GO:** Jeu d'images de linéarité acquis
 
 ### Étape 9 — Ramener la charge utile en STANDBY
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
+**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY (arrête aussi le refroidisseur du FPA)
 **Verify:** `payload.mode == 1` (0x0600, timeout 15 s) — STANDBY
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 sous 10 s
 **TC:** `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=2.00, green_ms=2.00, red_ms=2.00, nir_ms=2.00)` (Service 8, Subtype 1, func_id 34) — rétablir le nominal  
 **Octets émis :** `22 00 C8 00 C8 00 C8 00 C8`
 **Verify:** Temps d'intégration rétabli sous 10s
@@ -213,12 +225,12 @@ mode opérationnel à pointage nadir est le 4. La fiche appelait le mode 3 « 
 - [ ] Jeu d'images à temps d'intégration multiples acquis pour l'évaluation de la linéarité
 - [ ] Toutes les données d'étalonnage stockées en mémoire de masse
 - [ ] Vidage des données programmé
-- [ ] Charge utile ramenée en STANDBY, refroidisseur en marche
+- [ ] Charge utile ramenée en STANDBY, refroidisseur arrêté
 - [ ] AOCS ramené en NOMINAL (mode 4)
 - [ ] Rapport d'étalonnage radiométrique à établir après l'analyse des données
 
 ## État de sortie
-- Charge utile en STANDBY, refroidisseur en marche, obturateur OUVERT, temps d'intégration rétablis à la
+- Charge utile en STANDBY, refroidisseur arrêté, obturateur OUVERT, temps d'intégration rétablis à la
   valeur nominale (2,00 ms), lampe d'étalonnage éteinte
 - AOCS ramené en NOMINAL commandé (mode 4)
 - Produits d'étalonnage stockés à bord, en attente du passage de vidage programmé

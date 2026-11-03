@@ -1295,7 +1295,9 @@ class ServiceDispatcher:
             self._cmd(self._engine.subsystems.get("payload"),
                       {"command": "set_mode", "mode": mode})
             # 2026-08b PL-a: shared helper — TCS flag AND the EPS line.
-            self._request_fpa_cooler(mode >= 1)
+            # 2026-11-03 (Franz): the cooler runs for IMAGING only; STANDBY
+            # and OFF release it (see _route_payload_cmd func 26).
+            self._request_fpa_cooler(mode >= 2)
         elif func_id == 17:  # fpa cooler
             on = self._require_u8(data, "EPS_FPA_COOLER", "`on`",
                                   "0=off, 1=on")
@@ -1547,13 +1549,20 @@ class ServiceDispatcher:
             if mode is None:
                 return []
             result = self._cmd(payload, {"command": "set_mode", "mode": mode})
-            # STANDBY / IMAGING / CALIBRATION all imply the FPA cooler; OFF
-            # releases it. 2026-08b PL-a: this is now the shared helper, which
-            # drives the EPS line as well as the TCS flag — before, the COM-010
-            # payload-only path set a request flag against a dark power line
-            # and the detector never cooled.
+            # IMAGING and CALIBRATION imply the FPA cooler; STANDBY and OFF
+            # release it. 2026-11-03 (Franz's ruling, REDESIGN_DECISIONS.md):
+            # "cooler off in standby, on only when preparing to image". Until
+            # then STANDBY ran the 15 W cooler, so the nominal spacecraft was a
+            # 38 W one at +23 C instead of the 24 W the power budget assumes.
+            # Imaging preparation is FPA_COOLER(on=1) (func 43, or any other
+            # cooler path) in STANDBY, a cool-down lead time ahead of the
+            # window; IMAGING switches it on too, if the team forgot.
+            # 2026-08b PL-a: the shared helper drives the EPS line as well as
+            # the TCS flag — before, the COM-010 payload-only path set a
+            # request flag against a dark power line and the detector never
+            # cooled.
             if result.get("success", False):
-                self._request_fpa_cooler(mode >= 1)
+                self._request_fpa_cooler(mode >= 2)
         elif func_id == 27:  # set scene
             if not self._require_bytes(data, 2, "PAYLOAD_SET_SCENE",
                                        "scene_id as uint16"):

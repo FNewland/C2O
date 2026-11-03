@@ -212,8 +212,10 @@ de délestage + 10 % de marge.
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 en 5 s
-**Note:** La mise en froid du FPA de la température ambiante à la température de fonctionnement prend environ
-20 minutes. Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa température de fonctionnement.
+**Note:** Depuis le 2026-11-03, le refroidisseur ne fonctionne que pour préparer une prise de vue : n'envoyer cette étape
+que si une préparation de prise de vue est prévue, et après l'étape 7d, dont la commande STANDBY l'arrêterait.
+La mise en froid du FPA, de l'état non refroidi à FPA READY, prend environ 6.5 minutes.
+Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa température de fonctionnement.
 **Verify:** `eps.bus_voltage` (0x0105) reste > 27.0 V
 **Action:** Attendre 5 minutes et confirmer que le SoC poursuit sa hausse.
 **GO/NO-GO:** Refroidisseur du FPA rétabli — continuer.

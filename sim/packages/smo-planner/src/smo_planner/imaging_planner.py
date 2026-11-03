@@ -219,17 +219,18 @@ class ImagingPlanner:
     """Plans imaging activities for ocean current monitoring targets."""
 
     #: 2026-08d PLAN-1b. Total explicit dwell in `generate_capture_sequence`:
-    #: 10 s mode lead-in + 60 s FPA cooler settle + 90 s FINE settle + 5 s
-    #: payload IMAGING + 2 s shutter + 30 s readout = 197 s, plus the
-    #: 1 s-per-telecommand allowance ActivityScheduler costs a sequence at
-    #: (8 telecommands). Kept in step with
+    #: 10 s mode lead-in + 480 s FPA cool-down (the cooler is off in STANDBY
+    #: since 2026-11-03; imaging preparation switches it on) + 90 s FINE
+    #: settle + 5 s payload IMAGING + 2 s shutter + 30 s readout = 617 s,
+    #: plus the 1 s-per-telecommand allowance ActivityScheduler costs a
+    #: sequence at (8 telecommands). Kept in step with
     #: configs/eosat1/planning/activity_types.yaml imaging_pass (asserted in
     #: tests/test_planner/test_fly_a_plan.py).
-    CAPTURE_SEQUENCE_MIN_DURATION_S = 205.0
+    CAPTURE_SEQUENCE_MIN_DURATION_S = 625.0
 
     #: Of that, the part BEFORE PAYLOAD_CAPTURE — how far ahead of the
     #: intended acquisition instant the activity has to start.
-    CAPTURE_SEQUENCE_LEAD_S = 167.0
+    CAPTURE_SEQUENCE_LEAD_S = 587.0
 
     def __init__(
         self,
@@ -660,11 +661,11 @@ class ImagingPlanner:
                           "timeout_s": 120}},
             {
                 "service": 8, "subtype": 1,
-                "func_id": 0x1A,
-                "args": {"mode": 1},          # STANDBY starts the FPA cooler
-                "description": "PAYLOAD_SET_MODE_STANDBY",
+                "func_id": 0x2B,              # 43 = FPA_COOLER: imaging prep
+                "args": {"on": 1},            # (off in STANDBY since 2026-11)
+                "description": "FPA_COOLER_ON",
             },
-            {"wait_s": 60},
+            {"wait_s": 480},                  # FPA cool-down to fpa_ready
             {"wait_for": {"parameter": "payload.fpa_ready", "value": 1,
                           "timeout_s": 900}},
             # The 0x02C5 FINE-entry precondition bitmask, read before FINE is
@@ -736,7 +737,7 @@ class ImagingPlanner:
             "lines": self.capture_lines,
             "start_time": start_time,
             # 2026-08d PLAN-1b: the booking has to cover the whole sequence,
-            # not just the shutter. 10+60+90+5+2+30 = 197 s of mandatory
+            # not just the shutter. 10+480+90+5+2+30 = 617 s of mandatory
             # dwell; `capture_duration_s` (planner.yaml imaging, 120 s) is the
             # ACQUISITION and is kept as `capture_duration_s` in the returned
             # activity for the geometry code that centres on closest approach.

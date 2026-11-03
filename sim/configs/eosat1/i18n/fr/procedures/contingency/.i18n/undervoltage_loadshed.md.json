@@ -74,8 +74,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "6a9d492905578eda",
-   "fr_hash": "876f61c9d621e78f"
+   "en_hash": "86e60c39af66edd1",
+   "fr_hash": "54b8cf18e528c5bb"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/verification-criteria",
@@ -93,5 +93,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "9bdac94"
+ "en_commit": "b41c0a9"
 }

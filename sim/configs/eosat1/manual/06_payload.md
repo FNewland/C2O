@@ -98,8 +98,8 @@ PLD-02 will abort imaging if `att_error` exceeds 1 deg.
 | Mode ID | Mode Name  | Description                                           |
 |---------|------------|-------------------------------------------------------|
 | 0       | OFF        | Payload powered off, no thermal control               |
-| 1       | STANDBY    | Electronics powered, FPA cooler active, no imaging    |
-| 2       | IMAGING    | Active image acquisition and onboard processing       |
+| 1       | STANDBY    | Electronics powered, FPA cooler OFF unless commanded on to prepare imaging, no imaging |
+| 2       | IMAGING    | FPA cooler on; active image acquisition and onboard processing |
 | 3       | CALIBRATION | Radiometric calibration (shutter closed, dark frame / flat field) |
 
 **Note:** A PLAYBACK function is managed by the OBDH mass memory subsystem and does not
@@ -112,16 +112,26 @@ during ground contacts.
 OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 ```
 
-- **OFF to STANDBY**: Ground commanded via `PAYLOAD_SET_MODE` (mode=1). FPA cooler begins
-  cooldown. The loop reaches the setpoint band in about 10 minutes from the uncooled
-  equilibrium and `fpa_ready` (0x0610) sets after a further 60 s of hysteresis.
+- **OFF to STANDBY**: Ground commanded via `PAYLOAD_SET_MODE` (mode=1). The FPA cooler
+  stays OFF: since 2026-11-03 STANDBY does not run it (and `PAYLOAD_SET_MODE` (mode=1)
+  switches it off). The uncooled detector rests at about +10 deg C.
+- **Imaging preparation (STANDBY, cooler on)**: `FPA_COOLER` (on=1, S8 func 43) at least
+  10 minutes before the imaging window. From the uncooled +10 deg C equilibrium
+  `fpa_ready` (0x0610) sets after about 6.5 minutes (measured 377 s, including the 60 s
+  readiness hysteresis) and the detector settles at the setpoint in about 10 minutes. The
+  planner's `imaging_pass` books 480 s for it. IMAGING (mode=2) and CALIBRATION (mode=3)
+  also switch the cooler on if the preparation was forgotten, but then the team waits
+  for the cool-down with the window running.
 - **STANDBY to IMAGING**: Ground commanded via `PAYLOAD_SET_MODE` (mode=2). The FPA must
   be thermally ready — `fpa_ready` (0x0610) = 1. That flag is the gate; it means the loop
   has settled about the **active** cooler setpoint (-1 K / +5 K) *and* `fpa_temp` is at or
   below **-3.0 deg C**. At the default -15 deg C setpoint that works out to
   **-16.0 … -10.0 deg C**. Do not key on a remembered number: the setpoint is commandable
   over -20…0 deg C, so any fixed threshold is wrong for most of the envelope.
-- **IMAGING to STANDBY**: Ground commanded or autonomous at end of imaging window.
+- **IMAGING to STANDBY**: Ground commanded or autonomous at end of imaging window. The FPA
+  cooler is switched off with it (about 15 W less load); the detector warms back to its
+  uncooled equilibrium, which is not an over-temperature (`FPA_OVERTEMP` is judged only
+  while cooled operation is expected).
 - **STANDBY to OFF**: Ground commanded via `PAYLOAD_SET_MODE` (mode=0).
 
 ### 3.2 Imaging Constraints {#32-imaging-constraints}
@@ -130,6 +140,7 @@ OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 |------------------------------|--------------------------------------|
 | FPA thermal gate             | `fpa_ready` (0x0610) = 1 — settled about the active setpoint (-1 K/+5 K) **and** at or below -3.0 deg C |
 | Max. Continuous Imaging      | 10 min (thermal/power limited)       |
+| Sustainable imaging duty cycle | 77 % of an orbit (power, worst beta, EOL, 10 % margin); continuous imaging drains the battery, see §8 note 9 |
 | Min. Battery SoC             | 40% (for imaging activation)         |
 | Required AOCS Mode           | NOMINAL (4) or FINE_POINT (5)        |
 | Required Attitude Error      | < 0.5 deg                            |
@@ -183,6 +194,15 @@ Limits answer "is the hardware healthy". Readiness answers "can I image".
 They are different questions and they used to be the same table, which is why
 five files disagreed.
 
+**The FPA limits apply only while the detector is powered or regulated**
+(2026-11-03). The S12 monitors on 0x0408 and 0x0601 and the ground limits on
+0x0408, 0x0601 and 0x0617 carry a validity condition on 0x0426
+`tcs.fpa_limits_valid`, which is 1 while the payload is powered (mode 1 or
+higher) or the FPA cooler or decontamination heater runs. With the payload OFF
+in a long survival the uncooled imager follows its isolated radiator down to
+about -23 deg C (-27 deg C in the cold season): the monitors are UNCHECKED, not
+violated, and nothing alarms.
+
 - **Below -22.5 deg C**: colder than the cooler can command. The loop has lost
   control — this is a fault, not an over-performing cooler.
 - **Inside the commanded band** (active setpoint -1 K / +5 K) **and at or below
@@ -207,13 +227,15 @@ five files disagreed.
 
 1. Verify spacecraft is in AOCS NOMINAL mode (4) with `att_error` < 0.5 deg.
 2. Verify battery SoC > 40% and sufficient mass memory available.
-3. Send `PAYLOAD_SET_MODE` (mode=1) to enter STANDBY. Monitor `fpa_temp` (0x0601).
-4. Wait for FPA cooldown: `fpa_ready` (0x0610) = 1 — about 10 minutes from the uncooled
-   equilibrium, plus 60 s of readiness hysteresis.
+3. Send `PAYLOAD_SET_MODE` (mode=1) to enter STANDBY (the cooler stays off).
+4. Imaging preparation, at least 10 minutes before the window: `FPA_COOLER` (on=1).
+   Monitor `fpa_temp` (0x0601) and wait for `fpa_ready` (0x0610) = 1 — about 6.5 minutes
+   from the uncooled equilibrium, the 60 s of readiness hysteresis included.
    At the default -15 deg C setpoint that corresponds to `fpa_temp` in -16.0 … -10.0 deg C.
 5. At imaging window start, send `PAYLOAD_SET_MODE` (mode=2).
 6. Monitor `image_count` (0x0605) incrementing during acquisition.
-7. At imaging window end, send `PAYLOAD_SET_MODE` (mode=1) to return to STANDBY.
+7. At imaging window end, send `PAYLOAD_SET_MODE` (mode=1) to return to STANDBY; this
+   also switches the FPA cooler off.
 8. If no further imaging is planned, send `PAYLOAD_SET_MODE` (mode=0).
 
 ## 8. Operational Notes {#8-operational-notes}
@@ -231,8 +253,9 @@ five files disagreed.
    time, which is most of a day's usable network. Downlink scheduling must account for
    available contact time across all five stations, and the HIGH tier is only available
    on passes reaching 10 deg elevation with DOWNLINK mode commanded.
-5. The payload should not be left in STANDBY for more than 4 hours continuously to
-   manage cooler lifetime.
+5. The FPA cooler runs only to prepare for imaging and while imaging (2026-11-03):
+   STANDBY switches it off. Start the preparation about 10 minutes before the window,
+   not earlier: every minute of cooler costs 15 W, and cooler running hours are life.
 6. For ocean current monitoring, prioritise imaging over regions with known current
    boundaries (e.g., Gulf Stream, Kuroshio, Antarctic Circumpolar Current). The 443 nm
    blue band provides the highest sensitivity to chlorophyll-a gradients at current
@@ -243,6 +266,13 @@ five files disagreed.
 8. Attitude stability is critical for ocean colour measurements. Verify `att_error` < 0.5 deg
    before commanding IMAGING mode. Degraded attitude produces blurred images that are
    unusable for ocean current velocity estimation.
+9. **Continuous imaging drains the battery.** Imaging all orbit (payload IMAGING, FPA
+   cooler on, AOCS FINE) adds about 23.8 W to the nominal load: 46.6 W against 45.1 W
+   generated at the worst beta (EOL), -1.4 W orbit-average, about 2.3 Wh per orbit.
+   The sustainable imaging duty cycle is 77 % of an orbit with the 10 % design
+   margin (94 % break-even); the mission planner warns above 77 %. The thermal limit
+   is tighter (30 minutes per orbit), and in the hot case continuous imaging loses
+   FPA regulation (+5 deg C). See `01_eps.md` §3.2.
 
 ---
 

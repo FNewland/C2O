@@ -237,6 +237,8 @@ structures:
       # Phase 5: Event generation and advanced thermal control
       - { param_id: 0x0418, pack_format: B, scale: 1 }
       - { param_id: 0x0419, pack_format: h, scale: 100 }
+      # 2026-11-03: FPA limit validity (S12 validity / mcs valid_when)
+      - { param_id: 0x0426, pack_format: B, scale: 1 }
 
   - sid: 4
     name: Platform

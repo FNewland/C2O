@@ -212,8 +212,10 @@ threshold + 10% margin.
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43)
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 1 within 5 s
-**Note:** FPA cool-down from ambient to operating temperature takes approximately
-20 minutes. Payload imaging should not resume until FPA reaches operating temperature.
+**Note:** Since 2026-11-03 the cooler runs only to prepare for imaging: send this step only
+if an imaging preparation is due, and after Step 7d, whose STANDBY command would switch it off.
+The FPA cool-down from the uncooled state to FPA READY takes about 6.5 minutes.
+Payload imaging should not resume until FPA reaches operating temperature.
 **Verify:** `eps.bus_voltage` (0x0105) remains > 27.0 V
 **Action:** Wait 5 minutes and confirm SoC still trending upward.
 **GO/NO-GO:** FPA cooler restored — proceed.

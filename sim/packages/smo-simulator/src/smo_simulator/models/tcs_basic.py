@@ -1053,6 +1053,16 @@ class TCSBasicModel(SubsystemModel):
         # the payload mirrors them at 0x064A/0x064B for its own HK structure.
         shared_params[0x0424] = s.fpa_cooler_floor_c
         shared_params[0x0425] = s.fpa_cooler_margin_k
+        # 2026-11-03 (Franz's ruling): FPA/imager limit validity. The FPA
+        # bands (S12 0x0408 / 0x0601, MCS 0x0408 / 0x0601 / 0x0617) describe a
+        # detector that is powered or regulated. With the payload OFF in a
+        # long survival the uncooled imager follows its isolated radiator to
+        # -23...-27 C, which is not a fault. 1 = payload powered (mode >= 1)
+        # or the cooler / decontamination heater running: the monitors are
+        # checked; 0 = unchecked (PUS-C validity, s12_definitions.yaml).
+        shared_params[0x0426] = 1 if (
+            int(shared_params.get(0x0600, 0) or 0) >= 1
+            or s.cooler_fpa_active or s.decontamination_active) else 0
         # Phase 4: Flight hardware params
         shared_params[0x040E] = s.htr_duty_battery
         shared_params[0x040F] = s.htr_duty_obc

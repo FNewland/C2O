@@ -72,14 +72,15 @@ EXPECTED_S8_FUNCS = {
     # wheel desaturation and the capture was refused (S1.8 / 0x0021, "AOCS
     # not in FINE_POINT"). The sequence is now
     #   0  AOCS_SET_MODE NOMINAL      (a defined mode to enter FINE from)
-    #   26 PAYLOAD_SET_MODE STANDBY   (starts the FPA cooler)
+    #   43 FPA_COOLER ON              (imaging preparation: the cooler is
+    #                                  off in STANDBY since 2026-11-03)
     #   0  AOCS_SET_MODE FINE_POINT   (the capture gate's mode)
     #   26 PAYLOAD_SET_MODE IMAGING
     #   119 PAYLOAD_SET_SHUTTER OPEN  (capture refuses 0x0028 when closed)
     #   28 PAYLOAD_CAPTURE
     #   26 PAYLOAD_SET_MODE STANDBY   } restoration: not left in IMAGING/FINE,
     #   0  AOCS_SET_MODE NOMINAL      } which would refuse the next desat
-    "imaging_pass": [0, 26, 0, 26, 119, 28, 26, 0],
+    "imaging_pass": [0, 43, 0, 26, 119, 28, 26, 0],
     # The HIGH tier is gated: enter DOWNLINK mode (79), raise the rate (65),
     # dump, hold HIGH for the whole dump window, then step the ladder back
     # DOWN to LOW (65) before leaving DOWNLINK mode (79) — leaving DOWNLINK
@@ -207,9 +208,11 @@ class TestImagingPlannerSequence:
         activity_types.yaml imaging_pass step for step."""
         seq = self._sequence()
         funcs = [_func_id(s) for s in seq if s.get("service") == 8]
-        assert funcs == [0, 26, 0, 26, 119, 28, 26, 0]
+        # 43 = FPA_COOLER ON (TCS): the imaging preparation, since the
+        # cooler is off in STANDBY (2026-11-03).
+        assert funcs == [0, 43, 0, 26, 119, 28, 26, 0]
         for f in funcs:
-            assert _route_subsystem(f) in ("payload", "aocs")
+            assert _route_subsystem(f) in ("payload", "aocs", "tcs")
 
     def test_generated_capture_reaches_fine_point_before_the_shutter(self):
         """The FINE_POINT command must PRECEDE the capture, and it must be

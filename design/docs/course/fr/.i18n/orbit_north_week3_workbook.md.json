@@ -89,8 +89,8 @@
   },
   {
    "id": "worksheet-wb-5-4-n001-nom-001-pass-startup-confirm-each-step",
-   "en_hash": "5fab7bef50ac73e2",
-   "fr_hash": "cd4bbcf725e902db"
+   "en_hash": "6dd27fbf47fdf07a",
+   "fr_hash": "c0d4e198dd3e2506"
   },
   {
    "id": "worksheet-wb-5-4-c003-ctg-003-ttc-link-loss-recovery-confirm-each-step",
@@ -299,13 +299,13 @@
   },
   {
    "id": "worksheet-wb-5-6-c011-com-011-payload-calibration-confirm-each-step",
-   "en_hash": "788527b14ebd5c11",
-   "fr_hash": "7680940a50b394b6"
+   "en_hash": "50636d994767d97e",
+   "fr_hash": "d9416c06bb031179"
   },
   {
    "id": "worksheet-wb-5-6-c012-com-012-first-light-confirm-each-step",
-   "en_hash": "1f9d590c1e72cd41",
-   "fr_hash": "81b7d6cd8ff178fb"
+   "en_hash": "7de5a9133936e34e",
+   "fr_hash": "eae482e4f598f96b"
   },
   {
    "id": "worksheet-wb-5-6-fl-first-light-image-assessment",
@@ -319,8 +319,8 @@
   },
   {
    "id": "worksheet-wb-5-6-go-day-4-pass-set-criteria-scorecard",
-   "en_hash": "bf63e3c970f51bd2",
-   "fr_hash": "a050a31695847c0f"
+   "en_hash": "8a1a1eec7d8b878d",
+   "fr_hash": "382f1fa77b7b1552"
   },
   {
    "id": "worksheet-wb-5-6-obs-day-4-observer-worksheets-axes-team-space-usage",
@@ -429,8 +429,8 @@
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-001-under-voltage-load-shed",
-   "en_hash": "d9410ac461cceef1",
-   "fr_hash": "bdd97af63892fd37"
+   "en_hash": "27c989b01b2551c7",
+   "fr_hash": "2ce2f3584ec0f5a3"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-002-aocs-anomaly-recovery",
@@ -493,5 +493,5 @@
    "fr_hash": "4a357d00633e9454"
   }
  ],
- "en_commit": "b78d710"
+ "en_commit": "b41c0a9"
 }

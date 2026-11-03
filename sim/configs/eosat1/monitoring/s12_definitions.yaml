@@ -216,12 +216,21 @@ s12_definitions:
   # an empty admissible set) and fired at t=0 every session; Phase B fixed
   # that but pinned the band to a -15 C setpoint that Phase E then made
   # commandable, so a legal -20 C command sat exactly on the low limit.
+  # 2026-11-03 (Franz's ruling): the FPA bands below describe a powered or
+  # regulated detector. They carry a validity condition on 0x0426
+  # tcs.fpa_limits_valid (payload mode >= 1, or the FPA cooler or the
+  # decontamination heater running): with the payload OFF in a long survival
+  # the uncooled imager follows its isolated radiator to -23...-27 C, which
+  # used to raise the FPA yellow and, in the cold season, the red. The
+  # monitors are then UNCHECKED, not violated. mcs/limits.yaml carries the
+  # same condition (`valid_when`).
   - param_id: 0x0408  # tcs.temp_fpa
     name: "TCS FPA Temperature Warning"
     check_type: 0  # absolute
     low_limit: -22.0
     high_limit: 14.0
     severity: WARNING
+    validity: { param_id: 0x0426, mask: 0x1, value: 0x1 }   # payload or cooler on
     description: "FPA temperature outside -22..+14°C (overcooled or overheating)"
 
   - param_id: 0x0408  # tcs.temp_fpa (alarm tier)
@@ -230,6 +239,7 @@ s12_definitions:
     low_limit: -25.5
     high_limit: 17.5
     severity: ALARM
+    validity: { param_id: 0x0426, mask: 0x1, value: 0x1 }   # payload or cooler on
     description: "FPA temperature outside -25.5..+17.5°C (thermal anomaly)"
 
   # Battery temperature monitoring (internal to TCS)
@@ -331,6 +341,7 @@ s12_definitions:
     low_limit: -22.5
     high_limit: 13.5
     severity: WARNING
+    validity: { param_id: 0x0426, mask: 0x1, value: 0x1 }   # payload or cooler on
     description: "Payload detector outside -22.5..+13.5°C (overcooled or overheating)"
 
   # Storage utilization monitoring
