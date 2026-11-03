@@ -483,6 +483,16 @@ class SimulationEngine:
         # Persisted to disk (workspace/breakpoints/) so they survive a sim restart.
         self._breakpoints: dict[str, dict] = {}
         self._load_persisted_breakpoints()
+        # Automatic snapshots before injected faults, kept on disk as well as
+        # in memory so they survive a restart (auto_snapshots.py; manual
+        # breakpoints above are a separate store and never touched by it).
+        from smo_simulator.auto_snapshots import AutoSnapshotStore
+        try:
+            self._auto_snapshots = AutoSnapshotStore(
+                self, getattr(self._sim_cfg, "auto_snapshots", None))
+        except Exception as e:  # noqa: BLE001 — never block startup
+            logger.warning("Auto snapshot store unavailable: %s", e)
+            self._auto_snapshots = None
 
         # Scenario engine (defect #9): instantiate and load YAML scenarios so the
         # instructor UI's scenario list / start / stop are actually functional.
@@ -493,6 +503,10 @@ class SimulationEngine:
             failure_manager=self._failure_manager, engine=self,
             defaults=self._sim_cfg.scenario_defaults,
         )
+        # A scenario start is a new run (its auto snapshots replace the old
+        # ones); a scenario inject is snapshotted first, like an instructor's.
+        self._scenario_engine.on_start = self._on_scenario_start
+        self._scenario_engine.on_before_inject = self._on_scenario_before_inject
         try:
             self._scenario_engine.load_scenarios_from_dir(self.config_dir / "scenarios")
             # Scenarios authored in the scenario generator on a hosted
@@ -4144,7 +4158,7 @@ class SimulationEngine:
             # scenario" slot, INSTRUCTOR_CONSOLE_DESIGN.md §7.3).
             cmd = {k: v for k, v in cmd.items() if k not in ('_done', '_outcome')}
             if cmd.pop('snapshot_before', False) and rec is not None:
-                rec.auto_snapshot(f"before {cmd.get('failure') or cmd.get('mode', '')}")
+                rec.auto_snapshot(f"{cmd.get('subsystem', '')}/{cmd.get('failure') or cmd.get('mode', '')}")
             cmd.pop('label', None)
             # Support both 'failure' (backend) and 'mode' (UI) parameter names
             failure_mode = cmd.get('failure') or cmd.get('mode', '')
@@ -4338,6 +4352,10 @@ class SimulationEngine:
         state = cmd.get('state')
         if state is None:
             state = self._breakpoints.get(name)
+        store = self.__dict__.get("_auto_snapshots")
+        if state is None and store is not None:
+            # An auto snapshot: from memory, or from disk after a restart.
+            state = store.get(name)
         if state is None:
             logger.warning("Breakpoint load failed: no snapshot named %r", name)
             if isinstance(cmd.get('_outcome'), dict):
@@ -4373,6 +4391,18 @@ class SimulationEngine:
             logger.error("Breakpoint load failed for %r: %s", name, e)
             if isinstance(cmd.get('_outcome'), dict):
                 cmd['_outcome'].update({'ok': False, 'reason': str(e)})
+
+    def _on_scenario_start(self, defn) -> None:
+        """A scenario start begins a new run: older auto snapshots go."""
+        store = self.__dict__.get("_auto_snapshots")
+        if store is not None:
+            store.new_run(f"scn-{defn.file_id or defn.name}")
+
+    def _on_scenario_before_inject(self, params: dict, index: int) -> None:
+        rec = self.__dict__.get("instructor_rec")
+        what = f"{params.get('subsystem', '')}/{params.get('failure', '')}"
+        if rec is not None:
+            rec.auto_snapshot(what, source="scenario")
 
     def _handle_start_scenario(self, cmd: dict) -> None:
         """Start a training scenario by name (defect #9)."""

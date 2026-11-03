@@ -1079,6 +1079,8 @@ class SimulationConfig(StrictModel):
     failures: SimFailureConfig = Field(default_factory=SimFailureConfig)
     scenario_defaults: SimScenarioDefaultsConfig = Field(
         default_factory=SimScenarioDefaultsConfig)
+    auto_snapshots: SimAutoSnapshotConfig = Field(
+        default_factory=SimAutoSnapshotConfig)
 
 
 class ScenarioEventConfig(StrictModel):

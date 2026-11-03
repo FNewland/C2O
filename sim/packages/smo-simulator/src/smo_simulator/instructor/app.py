@@ -480,8 +480,17 @@ async def handle_breakpoint_list(request):
             "name": name,
             "tick": (state or {}).get("tick_count"),
             "sim_time": (state or {}).get("sim_time"),
-            # in-memory snapshot taken automatically before an inject
             "auto": bool((state or {}).get("auto")),
+        })
+    # Auto snapshots taken before injected faults (memory + disk, survive a
+    # restart): auto_snapshots.py. Restored with the same /api/breakpoint/load.
+    autos = getattr(engine, "_auto_snapshots", None)
+    for row in (autos.list() if autos is not None else []):
+        out.append({
+            "name": row["name"], "tick": None, "sim_time": row["sim_time"],
+            "auto": True, "fault": row.get("fault"), "on_disk": bool(row.get("on_disk")),
+            "bytes": row.get("bytes"), "previous_process": bool(row.get("previous_process")),
+            "note": row.get("note") or "",
         })
     return web.json_response(out)
 

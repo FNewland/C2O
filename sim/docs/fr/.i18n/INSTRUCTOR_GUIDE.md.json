@@ -48,6 +48,11 @@
    "fr_hash": "b61bd4fc277db8ae"
   },
   {
+   "id": "smo-simulator-instructor-operator-guide/scenarios/scoring-a-scenario",
+   "en_hash": "d833fdf1197726c9",
+   "fr_hash": "32c0ee8c0651aaca"
+  },
+  {
    "id": "smo-simulator-instructor-operator-guide/scenarios/event-actions",
    "en_hash": "38de8b9e06b62a88",
    "fr_hash": "3a4eab1e93937831"
@@ -74,8 +79,13 @@
   },
   {
    "id": "smo-simulator-instructor-operator-guide/breakpoints/stored-breakpoints",
-   "en_hash": "b6b2b8cbc2403892",
-   "fr_hash": "341014f46ab401df"
+   "en_hash": "a5a9e82a8e997907",
+   "fr_hash": "512103d7f9926d98"
+  },
+  {
+   "id": "smo-simulator-instructor-operator-guide/breakpoints/automatic-snapshots-before-faults",
+   "en_hash": "e5fa30b0b5e2dce8",
+   "fr_hash": "5089551223ef2e74"
   },
   {
    "id": "smo-simulator-instructor-operator-guide/parameter-display",
@@ -248,5 +258,5 @@
    "fr_hash": "e8f19b113b5a44d4"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "b78d710"
 }

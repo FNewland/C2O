@@ -32,7 +32,7 @@ NODE = shutil.which("node")
 
 def _engine(tmp_path=None, monkeypatch=None):
     if monkeypatch is not None and tmp_path is not None:
-        # auto snapshots stay in memory; a manual save would write here
+        # a manual save would write here (auto snapshots: conftest tmp dir)
         monkeypatch.setattr(SimulationEngine, "_BREAKPOINT_DIR", tmp_path / "bp")
     e = SimulationEngine(REPO / "configs" / "eosat1", speed=1.0)
     return e
@@ -182,8 +182,10 @@ def test_other_zones_agree(drift_engine):
 
 
 def test_auto_snapshot_before_inject(drift_engine):
-    autos = [n for n, s in drift_engine._breakpoints.items() if s.get("auto")]
-    assert any("before sensor_drift" in n for n in autos)
+    autos = [r["name"] for r in drift_engine._auto_snapshots.list()]
+    assert any("before tcs/sensor_drift" in n for n in autos)
+    # the manual store is untouched
+    assert not any(s.get("auto") for s in drift_engine._breakpoints.values())
 
 
 def test_inject_on_timeline_with_focus_hint(drift_engine):
@@ -256,7 +258,8 @@ def test_delay_schedule_fires_once_with_snapshot(tmp_path, monkeypatch):
     assert subs == {"eps", "tcs"}, "a batch fires together"
     assert not e.instructor_rec.schedule_list()
     assert len(_items(e, kind="sched_fire")) == 1
-    assert any(s.get("auto") for s in e._breakpoints.values())
+    assert any("eps/solar_array_partial+tcs/heater_failure" in r["name"]
+               for r in e._auto_snapshots.list())
 
 
 def test_aos_trigger_and_cancel():

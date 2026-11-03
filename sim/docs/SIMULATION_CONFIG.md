@@ -61,11 +61,15 @@ the engine logs a warning if the two diverge.
 | `scenario_defaults.default_duration_s` | Scenario duration when the YAML omits it | 1800.0 | Auto-stop point |
 | `scenario_defaults.default_difficulty` / `valid_difficulties` | Difficulty default and accepted values | BASIC / BASIC, BEGINNER, INTERMEDIATE, ADVANCED | Load-time validation warning |
 | `scenario_defaults.eq_tolerance` | Tolerance of `==` in scenario `condition:` | 0.01 | Condition sensitivity |
+| `scenario_defaults.response_targets_s` | Scenario score: target time (s after the first fault) per response category, unless the response sets `within_s` | detect 300, isolate 600, recover 900, verify 1200, command/action/monitor 600, plan 1800 | "done" vs "late" (50 %) in the debrief (`scenario_scoring.py`) |
+| `auto_snapshots.dir` | Folder of the automatic snapshots taken before each injected fault (`SMO_AUTO_SNAPSHOT_DIR` overrides) | `workspace/snapshots/auto` | Where an instructor restores from after a restart |
+| `auto_snapshots.keep_per_run` / `max_age_h` | Newest N per scenario run (or free run); age limit | 10 / 48 h | Disk use; a new scenario run deletes the previous runs' files |
+| `auto_snapshots.max_snapshot_mb` / `max_total_mb` / `min_free_mb` | Per-snapshot cap (above: memory only), folder cap, free-disk floor | 25 / 250 / 200 MB | Bounded disk use |
 
 ## Scenario YAML schema (validated at load — defect #52)
 
 Top level: `name`, `difficulty`, `duration_s`, `briefing`, `initial_conditions`,
-`events`, `expected_responses`.
+`events`, `expected_responses`, `harmful_commands`.
 
 ```yaml
 initial_conditions:      # applied by the scenario engine on start()
@@ -91,6 +95,30 @@ event 0x0F20) any event that:
 * injects a failure mode the target subsystem model does not implement
   (the registry is introspected from the model's own `inject_failure`);
 * has neither `time_offset_s` nor `condition` (it could never fire).
+
+The score is computed from the team's telecommands and the resulting state
+(`smo_simulator/scenario_scoring.py`; the instructor guide, "Scoring a
+Scenario", has the model):
+
+```yaml
+expected_responses:
+  - category: recover            # detect | isolate | recover | verify | command | ...
+    description: "..."           # FR overlay key scnresp:<file>.<index>:description
+    id: shed                     # optional, for `after:`
+    tc: [PAYLOAD_SET_MODE(mode=0|1), EPS_POWER_OFF(line_index=3)]   # any of
+    state: "payload.mode <= 1"   # or a list: all of them
+    within_s: 900                # default: scenario_defaults.response_targets_s
+    after: [isolate_a]           # only counts once these are met
+    ref: inject                  # inject (default) | start | event:<index>
+    weight: 1
+harmful_commands:
+  - tc: PAYLOAD_SET_MODE(mode=2)
+    reason: "..."                # FR overlay key scnharm:<file>.<index>:reason
+    penalty: 10                  # percentage points, once per entry
+```
+
+An unknown command, argument or parameter in these fields is a load issue
+(same `SCENARIO_CONFIG_INVALID` path); the response stays listed but unchecked.
 
 Ground-segment failures (`ground_failure`) are **not** simulator failures: the
 ground station RF chain is modelled in `packages/smo-rfsim` and injected from

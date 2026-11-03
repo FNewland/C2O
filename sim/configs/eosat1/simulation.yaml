@@ -211,3 +211,20 @@ scenario_defaults:
   default_difficulty: BASIC
   eq_tolerance: 0.01                    # '==' comparison tolerance in conditions
   valid_difficulties: [BASIC, BEGINNER, INTERMEDIATE, ADVANCED]
+  # Scenario score (smo_simulator/scenario_scoring.py): target time, seconds
+  # after the first fault, for an expected response of each category that
+  # does not set its own `within_s`. Later than this = "late" (50 % credit).
+  response_targets_s: {detect: 300, isolate: 600, recover: 900, verify: 1200,
+                       command: 600, action: 600, monitor: 600, plan: 1800}
+
+auto_snapshots:
+  # Snapshots taken just before every injected fault, kept on disk so an
+  # instructor can roll back after a restart (smo_simulator/auto_snapshots.py).
+  # SMO_AUTO_SNAPSHOT_DIR overrides `dir`; relative to the working directory
+  # (/opt/smo in the container -> /opt/smo/workspace/snapshots/auto).
+  dir: workspace/snapshots/auto
+  keep_per_run: 10                      # newest N per scenario run / free run
+  max_age_h: 48.0                       # older files are deleted
+  max_snapshot_mb: 25.0                 # a bigger one stays in memory only
+  max_total_mb: 250.0                   # folder cap, oldest dropped first
+  min_free_mb: 200.0                    # never fill the disk below this
