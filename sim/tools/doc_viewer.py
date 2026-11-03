@@ -324,6 +324,9 @@ PAGE_CSS = """
 .note-lang{ max-width:70ch; font-size:var(--fs-body); color:var(--tx2); border:1px solid var(--line-2);
   border-left:3px solid var(--tx3); border-radius:var(--radius-sm); padding:var(--sp-2) var(--sp-3); margin-bottom:var(--sp-4); }
 article{ max-width:70ch; font-size:15px; line-height:1.6; color:var(--tx); }
+/* procedure card working copy (smo_common/ui/procard.js): below the frame bar */
+article .pc-bar{ top:48px; }
+article .pc-ctl{ font-size:var(--fs-label); }
 article h1{ font-size:var(--fs-title); line-height:1.25; font-weight:600; color:var(--val); margin:0 0 var(--sp-4); }
 article h2{ font-size:17px; font-weight:600; line-height:1.3; color:var(--val); margin:var(--sp-6) 0 var(--sp-2);
   padding-top:var(--sp-3); border-top:1px solid var(--line); scroll-margin-top:64px; }
@@ -511,9 +514,27 @@ def _toc(body_html: str) -> tuple[str, str]:
     return side, inline
 
 
+#: A procedure card in the documentation viewer is a working copy too
+#: (smo_common/ui/procard.js, 2026-11-03): its steps and prerequisites are
+#: recorded into the participant's logbook, the same records the MCS card
+#: and the Workbook tab write. No live telemetry here, so no capture: the
+#: values are captured in the MCS. ### renders as <h3> and ## as <h2>.
+_CARD_JS = """<script type="module">
+import { mountProcCard } from "/static/shared/procard.js";
+const art = document.querySelector("article[data-procedure]");
+window.c2oLogbookContext = () => ({ doc: art.dataset.doc, procedure: art.dataset.procedure });
+function go() {
+  if (window.C2O_LOGBOOK) mountProcCard(art, { procedure: art.dataset.procedure, lb: window.C2O_LOGBOOK,
+    levels: { step: "H3", section: "H2" }, live: false });
+}
+if (window.C2O_LOGBOOK) go(); else window.addEventListener("c2o:frameready", go, { once: true });
+</script>"""
+
+
 def build_doc_html(title: str, body_html: str, breadcrumb: str,
                    categories: dict[str, list[dict]], lang: str = "en",
-                   rel_path: str | None = None, served_lang: str | None = None) -> str:
+                   rel_path: str | None = None, served_lang: str | None = None,
+                   procedure: str | None = None) -> str:
     served_lang = served_lang or lang
     bar = f'<div class="docbar"><span>{breadcrumb}</span>'
     if rel_path:
@@ -531,7 +552,10 @@ def build_doc_html(title: str, body_html: str, breadcrumb: str,
         note = ('<p class="note-lang" data-i18n="No French translation of this document yet; showing the English original.">'
                 'No French translation of this document yet; showing the English original.</p>')
     side, inline = _toc(body_html)
-    content = f'{bar}\n{note}\n{inline}\n<article lang="{served_lang}">\n{body_html}\n</article>'
+    card = (f' data-procedure="{html.escape(procedure)}" data-doc="{html.escape(rel_path or "")}"'
+            if procedure else "")
+    content = (f'{bar}\n{note}\n{inline}\n<article lang="{served_lang}"{card}>\n{body_html}\n</article>'
+               + (_CARD_JS if procedure else ""))
     meta = f'<code>{html.escape(rel_path)}</code>' if rel_path else ""
     return _page(f"{title} — EOSAT-1", lang, _sidebar(categories, lang, rel_path), content,
                  toc=side, meta=meta)
@@ -553,12 +577,32 @@ def build_downloads_html(categories: dict[str, list[dict]], lang: str = "en") ->
 
 # ── aiohttp server ────────────────────────────────────────────────────
 
+def _procedure_cards(docs_root: Path):
+    """({card file -> procedure id}, checklist provider factory | None) from
+    ``procedures/procedure_index.yaml`` under *docs_root*: the logbook's
+    ``/api/logbook/checklist`` for the cards shown here."""
+    idx_path = docs_root / "procedures" / "procedure_index.yaml"
+    if not idx_path.is_file():
+        return {}, None
+    import yaml
+    from smo_common.logbook.checklist import ChecklistProvider
+    index = (yaml.safe_load(idx_path.read_text(encoding="utf-8")) or {}).get("procedures") or []
+    ids = {e["file"]: e["id"] for e in index if e.get("file") and e.get("id")}
+
+    def factory(catalog):
+        return ChecklistProvider(index, docs_root / "procedures",
+                                 docs_root / "i18n" / "fr" / "procedures", catalog.sheets)
+    factory.wants_catalog = True
+    return ids, factory
+
+
 def create_app(docs_root: Path) -> web.Application:
     from smo_common.web.http import setup_tool_app, tool_html_response
     categories = discover_docs(docs_root)
     app = setup_tool_app(web.Application())
     from smo_common.logbook import register_logbook_routes   # participant logbook
-    register_logbook_routes(app, tool="docs")
+    proc_ids, checklists = _procedure_cards(docs_root)
+    register_logbook_routes(app, tool="docs", checklists=checklists)
 
     async def index(request):
         return tool_html_response(build_index_html(categories, request_lang(request)), app)
@@ -577,9 +621,10 @@ def create_app(docs_root: Path) -> web.Application:
         if len(parts) > 1:
             breadcrumb += (f' / <a href="/{_q(lang)}" {_DYN_I18N}>'
                            f'{html.escape(_cat_label(parts[0]))}</a>')
+        proc = proc_ids.get(rel_path[len("procedures/"):]) if rel_path.startswith("procedures/") else None
         return tool_html_response(
             build_doc_html(title, body, breadcrumb, categories, lang,
-                           rel_path=rel_path, served_lang=served), app)
+                           rel_path=rel_path, served_lang=served, procedure=proc), app)
 
     async def downloads_page(request):
         return tool_html_response(build_downloads_html(categories, request_lang(request)), app)

@@ -23,6 +23,13 @@
  * `form` (smo_common/logbook/store.py). Everything is optimistic and
  * asynchronous: a tick never waits for the server before the row updates,
  * and the tool's own action is never blocked.
+ *
+ * The procedure card is a second surface on the SAME records (procard.js,
+ * 2026-11-03: "the procedure cards become part of the logbook as they get
+ * filled in"): useCard(proc) loads the card's checklist here, tick() /
+ * capture() write it, subscribe() tells the card when ticks change (its
+ * own, this tab's, the runner's). Prerequisites (cl.prereqs) are ticked
+ * like steps with check.part = "pre".
  * ============================================================================ */
 
 import { t, tText, getLang } from "/static/shared/i18n.js";
@@ -50,7 +57,10 @@ export function createWorkbook(host) {
     pane: null, proc: "", manualProc: "", cl: null, clKey: "", clErr: "", run: "", sheets: [],
     sheetsKey: "", open: new Set(), editing: {}, queue: new Map(), ids: new Map(),
     runnerSeen: new Set(), runnerKey: "", lastRunner: null, liveTimer: null, mmOpen: false, prefillCtx: {},
+    pending: new Map(), subs: new Set(),
   };
+  /* Tell the card surfaces (procard.js) that ticks or the checklist changed. */
+  function notify() { for (const fn of W.subs) { try { fn(); } catch (e) { /* a card problem stays there */ } } }
   const $ = (sel, root) => (root || W.pane).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || W.pane).querySelectorAll(sel));
   const entries = () => host.entries() || [];
@@ -102,6 +112,7 @@ export function createWorkbook(host) {
       W.cl = null;
       W.clErr = proc;
     }
+    notify();
     return true;
   }
   const sheet = (id) => W.sheets.find((w) => w.id === id);
@@ -136,7 +147,24 @@ export function createWorkbook(host) {
   }
 
   /* ── checklist ────────────────────────────────────────────────────── */
-  function ticks() { return W.cl ? ticksFor(entries(), W.cl.sheet_id, W.run) : {}; }
+  /** Ticks of the current run, with the optimistic ones not yet saved. */
+  function ticks() {
+    if (!W.cl) return {};
+    const out = ticksFor(entries(), W.cl.sheet_id, W.run);
+    for (const [k, fake] of W.pending) {
+      const [sheet, run, key] = k.split("|");
+      if (sheet === W.cl.sheet_id && run === W.run) out[key] = fake;
+    }
+    return out;
+  }
+  /** A card step or a Prerequisites item by key: {item, i, pre}. */
+  function itemOf(key) {
+    if (!W.cl) return null;
+    const i = W.cl.steps.findIndex((x) => x.key === key);
+    if (i >= 0) return { item: W.cl.steps[i], i, pre: false };
+    const j = (W.cl.prereqs || []).findIndex((x) => x.key === key);
+    return j >= 0 ? { item: W.cl.prereqs[j], i: j, pre: true } : null;
+  }
   function stepState(tick) {
     if (!tick) return "open";
     return tick.check.result || (tick.worksheet && tick.worksheet.checked ? "done" : "open");
@@ -161,7 +189,7 @@ export function createWorkbook(host) {
       ` aria-pressed="${st === r}" aria-describedby="wb-st-${esc(s.key)}">${label}</button>`;
     const acts = go
       ? btn("go", "GO") + btn("nogo", "NO-GO") + btn("skip", t("Skip"))
-      : btn("pass", t("Confirm"), " primary") + btn("fail", t("Failed")) + btn("skip", t("Skip"));
+      : btn("pass", t("Done"), " primary") + btn("fail", t("Failed")) + btn("skip", t("Skip"));
     const vals = (c && c.values) || [];
     const checks = (s.checks || []).map((ck, ci) => {
       const v = vals.find((x) => x.param && x.param === ck.param);
@@ -194,6 +222,23 @@ export function createWorkbook(host) {
       `<textarea id="wb-nt-${esc(s.key)}" class="ds-input wb-note" maxlength="2000" ` +
       `rows="${Math.min(4, Math.max(1, Math.ceil(String((c && c.note) || "").length / 56)))}" ` +
       `placeholder="${esc(tText("Note or deviation (Enter saves)"))}">${esc((c && c.note) || "")}</textarea></div></li>`;
+  }
+  function prereqHtml(tk) {
+    const ps = (W.cl && W.cl.prereqs) || [];
+    if (!ps.length) return "";
+    const done = ps.filter((p) => tk[p.key] && stepState(tk[p.key]) !== "open").length;
+    return `<div class="wb-pres"><div class="lbl">${t("Prerequisites")} · ${t("{{done}} of {{total}}", { done, total: ps.length })}</div>` +
+      `<ul>${ps.map((p) => {
+        const tick = tk[p.key];
+        const on = !!tick && stepState(tick) !== "open";
+        const ck = (p.checks || [])[0];
+        const live = ck && !on ? ` <span class="lvh" data-pre="${esc(p.key)}">${readingHtml(ck, reading(ck.param, ck.pid))}</span>` : "";
+        const v = on && tick.check.values && tick.check.values[0];
+        const cap = v ? ` <span class="lv cap${v.ok === false ? " off" : ""}">${esc(v.value || "")}${v.units ? " " + esc(v.units) : ""}</span>` : "";
+        return `<li class="wb-pre" data-key="${esc(p.key)}" data-state="${on ? "done" : "open"}">` +
+          `<label class="ds-check"><input type="checkbox" data-wb="pre"${on ? " checked" : ""}> ` +
+          `<span><span class="n">${esc(p.n)}</span> ${esc(p.text)}</span></label>${live}${cap}</li>`;
+      }).join("")}</ul></div>`;
   }
   function checklistHtml() {
     const proc = currentProc();
@@ -228,7 +273,7 @@ export function createWorkbook(host) {
       `<span class="rn">${runSel}</span></div>` +
       `<div class="wb-src">${t("From the procedure card")}${cl.runnable ? " · " + t("the runner ticks steps as it completes them") : ""}` +
       `${cl.sheet_title ? ` · ${t("printed sheet")} <span class="id">${esc(cl.sheet_id)}</span>` : ""}</div>` +
-      mmHtml +
+      mmHtml + prereqHtml(tk) +
       `<ol class="wb-steps" aria-label="${esc(tText("Checklist steps"))}">${cl.steps.map((s, i) => stepHtml(s, i, tk[s.key])).join("")}</ol>` +
       extra +
       `<div class="wb-sheet-dl">${sheetDownloads(cl.sheet_id)}</div>` +
@@ -257,83 +302,118 @@ export function createWorkbook(host) {
         const ok = evalCheck(ck, r.raw);
         if (ok !== null) v.ok = ok;
         if (r.stale) v.stale = true;
-      } else v.value = tText("no data");
+      } else if (!host.hasReadings || host.hasReadings()) v.value = tText("no data");
+      // a tool without live TM (documentation viewer) records the expectation only
       out.push(v);
     }
     return out;
   }
-  function tickText(s, result, values, note) {
-    const head = `${s.n ? tText("Step {{n}}", { n: s.n }) + " · " : ""}${s.title} — ${resultLabel(result)}`;
+  function tickText(s, result, values, note, pre) {
+    const head = pre
+      ? `${tText("Prerequisite {{n}}", { n: s.n })} · ${s.text} — ${resultLabel(result)}`
+      : `${s.n ? tText("Step {{n}}", { n: s.n }) + " · " : ""}${s.title} — ${resultLabel(result)}`;
     const vals = values.filter((v) => v.value).map((v) => `${v.param} = ${v.value}${v.units ? " " + v.units : ""}` +
       `${v.ok === false ? " ✗" : ""} (${tText("expected")} ${v.expect})`);
     return [head, ...vals, note ? `${tText("Note")}: ${note}` : ""].filter(Boolean).join("\n");
   }
 
   /** Record a step result. Optimistic: the row changes now; the write is
-   *  queued per step so ticks and notes never race each other. */
+   *  queued per step so ticks and notes never race each other.
+   *  result: pass | fail | skip | go | nogo | done | open, or
+   *    "note"    keep the result and the captured values, save the note;
+   *    "capture" keep the result, record the live values now (procard.js).
+   *  opts: {note, source, runnerRun, runnerNote}. */
   function tick(key, result, opts = {}) {
     if (!W.cl) return Promise.resolve();
     const cl = W.cl, run = W.run;
-    const i = cl.steps.findIndex((s) => s.key === key);
-    if (i < 0) return Promise.resolve();
-    const s = cl.steps[i];
-    const prev = ticksFor(entries(), cl.sheet_id, run)[key];
+    const it = itemOf(key);
+    if (!it) return Promise.resolve();
+    const s = it.item, i = it.i, pre = it.pre;
+    const prev = ticks()[key];
     const c = ctx();
     const noteEl = W.pane && $(`.wb-st[data-key="${CSS.escape(key)}"] .wb-note`);
     const note = (opts.note !== undefined ? opts.note : (noteEl ? noteEl.value.trim() : (prev && prev.check.note) || ""))
       || opts.runnerNote || "";      // where the activity did the step differently (runner_step_map.yaml)
-    const keep = prev && stepState(prev) !== "open" && result === "note";
-    const res = result === "note" ? (prev ? stepState(prev) : "open") : result;
-    const values = keep ? (prev.check.values || []) : (res === "open" ? [] : captureValues(s));
+    const keepRes = result === "note" || result === "capture";
+    const res = keepRes ? (prev ? stepState(prev) : "open") : result;
+    const prevVals = (prev && prev.check.values) || [];
+    // Values: "capture" records them now; "note" keeps them; a result keeps
+    // values captured on an OPEN step (the operator captured, then decided);
+    // otherwise a result captures them at the tick, as before.
+    const values = result === "capture" ? captureValues(s)
+      : result === "note" ? prevVals
+      : res === "open" ? (prev && stepState(prev) === "open" ? prevVals : [])
+      : (prev && stepState(prev) === "open" && prevVals.length ? prevVals : captureValues(s));
     const simTs = c.sim_ts ? String(c.sim_ts) : "";
+    const label = pre ? s.n : (s.n || "");
     const check = {
-      procedure: cl.procedure, step: s.n || "", key, order: i, title: s.title, run,
+      procedure: cl.procedure, step: label, key, order: i, title: pre ? s.text.slice(0, 300) : s.title, run,
       result: res, source: opts.source || "operator", position: c.position || "",
-      sim_ts: keep ? (prev.check.sim_ts || simTs) : simTs, note, values,
-      ...(s.gonogo ? { gonogo: s.gonogo.slice(0, 280) } : {}),
+      sim_ts: result === "note" && prev ? (prev.check.sim_ts || simTs) : simTs, note, values,
+      ...(pre ? { part: "pre" } : {}),
+      ...(!pre && s.gonogo ? { gonogo: s.gonogo.slice(0, 280) } : {}),
       ...(opts.runnerRun || W.runnerKey ? { runner_run: opts.runnerRun || W.runnerKey } : {}),
     };
-    const text = tickText(s, res, values, note);
-    const id = W.ids.get(`${cl.sheet_id}|${run}|${key}`) || (prev && prev.id);
-    const rowEl = W.pane && $(`.wb-st[data-key="${CSS.escape(key)}"]`);
-    if (rowEl) {                       // optimistic row update
+    const text = tickText(s, res, values, note, pre);
+    const idKey = `${cl.sheet_id}|${run}|${key}`;
+    const id = W.ids.get(idKey) || (prev && prev.id && !prev.pending ? prev.id : "");
+    const checked = res !== "open" && !isDeviation(res);
+    // optimistic: this tab's row and every card surface change now
+    W.pending.set(idKey, { id: id || "", pending: true, ts: new Date().toISOString(),
+      updated_ts: new Date().toISOString(), check, worksheet: { id: cl.sheet_id, q: key, instance: run, checked } });
+    const rowEl = W.pane && $(`.wb-st[data-key="${CSS.escape(key)}"], .wb-pre[data-key="${CSS.escape(key)}"]`);
+    if (rowEl) {
       rowEl.dataset.state = res;
       const r = $(".res", rowEl);
-      r.textContent = res === "open" ? "" : resultLabel(res);
-      r.classList.toggle("dev", isDeviation(res));
+      if (r) { r.textContent = res === "open" ? "" : resultLabel(res); r.classList.toggle("dev", isDeviation(res)); }
       for (const b of $$('[data-wb="tick"]', rowEl)) b.setAttribute("aria-pressed", String(b.dataset.r === res));
+      const cb = $('input[type="checkbox"]', rowEl);
+      if (cb) cb.checked = res !== "open";
     }
+    notify();
     const job = async () => {
-      const known = W.ids.get(`${cl.sheet_id}|${run}|${key}`) || id;
+      const known = W.ids.get(idKey) || id;
       try {
+        let saved = null;
         if (known) {
-          await host.api("PATCH", `/entries/${encodeURIComponent(known)}`,
-            { text, checked: res !== "open" && !isDeviation(res), check });
+          saved = await host.api("PATCH", `/entries/${encodeURIComponent(known)}`, { text, checked, check });
         } else {
+          const qText = pre ? `${tText("Prerequisite {{n}}", { n: s.n })} — ${s.text}`
+            : `${s.n ? tText("Step {{n}}", { n: s.n }) + " — " : ""}${s.title}`;
           const body = {
             kind: "worksheet", tool: host.tool, lang: getLang(), text,
-            context: { ...host.cleanContext(c), procedure: cl.procedure, step: s.n || key },
+            context: { ...host.cleanContext(c), procedure: cl.procedure, step: label || key },
             worksheet: { id: cl.sheet_id, q: key, title: cl.sheet_title || `${cl.procedure} ${cl.name || cl.title}`,
-              q_text: `${s.n ? tText("Step {{n}}", { n: s.n }) + " — " : ""}${s.title}`,
-              checked: res !== "open" && !isDeviation(res), instance: run },
+              q_text: qText.slice(0, 1000), checked, instance: run },
             check,
           };
           if (simTs) body.sim_ts = simTs;
           const e = await host.api("POST", "/entries", body);
-          if (e && e.id) W.ids.set(`${cl.sheet_id}|${run}|${key}`, e.id);
+          if (e && e.id) W.ids.set(idKey, e.id);
+          saved = e;
+        }
+        // until the logbook's next read has it, the saved record stands in
+        const p = W.pending.get(idKey);
+        if (p && p.check === check) {
+          W.pending.set(idKey, saved && saved.check ? { ...saved, saved: true } : { ...p, saved: true });
         }
         if (opts.source !== "runner") {
-          host.announce(res === "open" ? tText("Step {{n}} cleared", { n: s.n || s.title })
-            : tText("Step {{n}}: {{r}}", { n: s.n || s.title, r: resultLabel(res) }));
+          const who = pre ? s.n : (s.n || s.title);
+          host.announce(result === "capture" ? tText("Values captured for {{n}}", { n: who })
+            : res === "open" ? tText("Step {{n}} cleared", { n: who })
+            : tText("Step {{n}}: {{r}}", { n: who, r: resultLabel(res) }));
         }
       } catch (e) {
+        W.pending.delete(idKey);
+        notify();
         host.announce(tText("Not saved: {{why}}", { why: e.message }));
+        throw e;
       }
     };
     const chain = (W.queue.get(key) || Promise.resolve()).then(job);
-    W.queue.set(key, chain);
-    chain.then(() => host.refreshSoon());
-    return chain;
+    W.queue.set(key, chain.catch(() => {}));
+    chain.then(() => host.refreshSoon(), () => {});
+    return chain.catch(() => {});
   }
 
   /** The MCS runner's status (procedure_runner.status()). Ticks the card
@@ -552,7 +632,10 @@ export function createWorkbook(host) {
   }
   /** Data changed (refresh): update in place when the structure is the same. */
   function onData() {
-    if (!W.pane || !W.pane.firstChild) return;
+    // the logbook re-read its entries: saved ticks are in them now
+    for (const [k, p] of W.pending) if (p.saved) W.pending.delete(k);
+    notify();
+    if (!W.pane || !W.pane.firstChild || (W.pane.closest && W.pane.closest("[hidden]"))) return;
     render();
   }
   async function sync(force) {
@@ -562,6 +645,11 @@ export function createWorkbook(host) {
   }
   function liveTick() {
     if (!W.pane || W.pane.hidden || !W.cl) return;
+    for (const span of $$(".lvh[data-pre]")) {
+      const p = (W.cl.prereqs || []).find((x) => x.key === span.dataset.pre);
+      const ck = p && (p.checks || [])[0];
+      if (ck) span.innerHTML = readingHtml(ck, reading(ck.param, ck.pid));
+    }
     for (const li of $$(".wb-st")) {
       if (li.dataset.state !== "open") continue;
       const s = W.cl.steps[Number(li.dataset.i)];
@@ -675,8 +763,7 @@ export function createWorkbook(host) {
         const cur = li.dataset.state;
         tick(li.dataset.key, cur === el.dataset.r ? "open" : el.dataset.r);
       } else if (a === "new-run" && W.cl) {
-        W.run = nextRunId(entries(), W.cl.sheet_id); W.runnerSeen.clear(); render();
-        host.announce(tText("Run {{n}} started", { n: W.run }));
+        newRun();
       } else if (a === "close-cl") { W.manualProc = ""; W.clKey = ""; sync(false); }
       else if (a === "open-cl") openChecklist(el.dataset.proc);
       else if (a === "quick" || a === "ix") {
@@ -708,7 +795,9 @@ export function createWorkbook(host) {
       } else if (d.matches && d.matches("details.wb-mm")) W.mmOpen = d.open;
     }, true);
     pane.addEventListener("change", (ev) => {
-      if (ev.target.id === "wb-run") { W.run = ev.target.value; W.runnerSeen.clear(); render(); }
+      if (ev.target.id === "wb-run") { W.run = ev.target.value; W.runnerSeen.clear(); render(); notify(); }
+      const pre = ev.target.dataset && ev.target.dataset.wb === "pre" && ev.target.closest(".wb-pre");
+      if (pre) tick(pre.dataset.key, ev.target.checked ? "done" : "open");
     });
     pane.addEventListener("keydown", (ev) => {
       const t = ev.target;
@@ -732,12 +821,43 @@ export function createWorkbook(host) {
     });
   }
 
+  function newRun() {
+    if (!W.cl) return;
+    W.run = nextRunId(entries(), W.cl.sheet_id); W.runnerSeen.clear(); render(); notify();
+    host.announce(tText("Run {{n}} started", { n: W.run }));
+  }
+
+  /* ── the procedure card as a working surface (procard.js) ─────────── */
+  /** Load *proc*'s checklist here (the Workbook tab follows it). */
+  async function useCard(proc) {
+    proc = String(proc || "");
+    if (!proc) return null;
+    if (currentProc() !== proc) W.manualProc = String(ctx().procedure || "") === proc ? "" : proc;
+    else if (W.manualProc && String(ctx().procedure || "") === proc) W.manualProc = "";
+    await loadChecklist(false);
+    if (W.pane && W.pane.firstChild && !(W.pane.closest && W.pane.closest("[hidden]"))) render();
+    return W.cl && W.cl.procedure === proc ? W.cl : null;
+  }
+  function cardState() {
+    if (!W.cl) return null;
+    const tk = ticks();
+    const runs = runIds(entries(), W.cl.sheet_id);
+    if (!runs.includes(W.run)) runs.push(W.run);
+    const pre = (W.cl.prereqs || []).filter((p) => tk[p.key] && stepState(tk[p.key]) !== "open").length;
+    return { cl: W.cl, run: W.run, runs, ticks: tk, progress: progress(W.cl.steps, tk),
+      prereqs: { done: pre, total: (W.cl.prereqs || []).length }, stepState, readingHtml, expectText };
+  }
+  function setRun(r) { if (!W.cl) return; W.run = String(r); W.runnerSeen.clear(); render(); notify(); }
+
   return {
     mount(pane) {
       W.pane = pane; wire(pane);
       W.liveTimer = setInterval(liveTick, LIVE_MS);
     },
-    sync, render, onData, onRunner, openForm, openChecklist, tick,
+    sync, render, onData, onRunner, openForm, openChecklist, tick, newRun, setRun, useCard, cardState,
+    capture: (key) => tick(key, "capture"),
+    reading,
+    subscribe(fn) { W.subs.add(fn); return () => W.subs.delete(fn); },
     get checklist() { return W.cl; },
     get run() { return W.run; },
     get procedure() { return currentProc(); },

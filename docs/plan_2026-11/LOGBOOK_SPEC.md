@@ -249,3 +249,38 @@ procedure_id, reason}` (was 409); runnable loads carry `runnable: true`.
 | Last completed pass (handover `last_pass`), pass in progress (handover info) | The MCS pass log (`smo_mcs/pass_log.py`, `pass_log` in the MCS state): AOS/LOS from the MCS's own ground propagator (the contact-schedule geometry), first/last TM frame received inside the pass, max elevation. A pass already in progress at console start has no AOS of its own; a backwards time jump forgets passes that now lie in the future. | Ground knowledge a real control centre has; nothing is asked of the simulator. |
 | Scenario (export header), Session (handover/briefing/debrief info) | `session_label`, typed by the instructor in the instructor console ("Session label for the consoles") and sent as the `set_session_label` instructor command; the simulator publishes it in `/api/state`, which reaches the ground in the link's STATE feed. The MCS reads only that field, in sim mode only. Empty until the instructor publishes one. | The scenario's own name would brief the operators on the failure (e.g. "Reaction Wheel Stuck at Speed"), and instructor state must not cross the link. A label the instructor chooses to publish, on an existing allowed channel, carries neither. |
 
+
+## 10. The procedure card is the working copy (2026-11-03)
+
+Franz: "The procedure cards should help the user to go to the workbook to
+mark steps as done or not, capture values, and capture decisions (the
+procedure cards become part of the logbook as they get filled in)."
+
+`smo_common/ui/procard.js` works on the card as the tool already renders
+it. The MCS procedure page (full width, under Load & run) and the
+documentation viewer's procedure pages mount it:
+
+- every `### Step N` ends with its controls: **Done / Failed / Skip**
+  (**GO / NO-GO / Skip** on a GO/NO-GO gate), the expected value of each
+  `**Verify:**` line beside its live value and the value captured,
+  **Capture values** (records the live values now, on an open step too; a
+  later result keeps them), a note/deviation field (Enter saves) and
+  **Record decision** (a logbook `decision` entry prefilled with the
+  procedure, step, run and the captured values; context `run` is new);
+- every `[ ]` item of `## Prerequisites` / `## Prérequis` is a checkbox;
+- a sticky bar: run, progress, deviations, New run, Open in the Workbook.
+
+**One source of truth.** The card calls the Workbook's own `tick()` /
+`capture()` (workbook.js): the records are the §8 `check` records, so a
+tick in either place shows in both, and the MCS runner's automatic ticks
+show on the card. The card keys its headings with `checklist.js`
+`cardStepKeys()`, which mirrors `parse_card()` (a test runs every card, EN
+and FR). Prerequisites: `checklist.py` `parse_prereqs()` → checklist
+`prereqs: [{key: "p1", n: "P1", text, checks?}]`; a prerequisite tick is a
+check record with `part: "pre"`, `step: "P1"`. The documentation viewer has
+no live TM: no capture there, the tick records the expectation only.
+
+**Export.** The run table is the filled card: prerequisites first, then the
+steps; decisions recorded from the card (`context.procedure` + `context.run`)
+are printed under the run ("Decisions recorded on this card") instead of in
+the log.

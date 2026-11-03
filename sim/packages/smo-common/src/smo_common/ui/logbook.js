@@ -49,7 +49,7 @@ const API = "/api/logbook";
 const KINDS = ["decision", "thought", "observation", "reflection"];
 const CTX_KEYS = ["page", "procedure", "step", "alarm_id", "param", "study_id", "position",
   "scenario", "report", "dump", "station", "pass", "doc", "command", "gonogo", "gate",
-  "proposal", "anomaly", "sim_status", "phase"];
+  "proposal", "anomaly", "sim_status", "phase", "run"];
 const HIDDEN_CTX = new Set(["sim_status", "phase"]);   // sent, not shown as chips
 const POLL_MS = 60000;
 const CTX_POLL_MS = 2500;
@@ -76,7 +76,7 @@ const ctxLabel = (k) => ({
   scenario: tText("scenario"), report: tText("report"), dump: tText("dump"),
   station: tText("station"), pass: tText("pass"), doc: tText("document"),
   command: tText("command"), gonogo: "GO/NO-GO", gate: tText("gate"),
-  proposal: tText("proposal"), anomaly: tText("anomaly"), sim_ts: tText("sim time"),
+  proposal: tText("proposal"), anomaly: tText("anomaly"), sim_ts: tText("sim time"), run: tText("run"),
 }[k] || k);
 
 const S = {
@@ -322,12 +322,12 @@ function selectTab(tab, focus) {
 function renderAll() {
   renderButton();
   renderBanner();
-  if (!S.panel || !S.panel.firstChild) return;
+  if (!S.panel || !S.panel.firstChild) { if (S.wb) S.wb.onData(); return; }
   renderWho();
   renderCtx();
   renderList();
   renderFooter();
-  if (S.tab === "ws") S.wb.onData();
+  S.wb.onData();          // the Workbook tab (when shown) and the procedure card
 }
 
 function renderWho() {
@@ -428,6 +428,7 @@ function makeWorkbook() {
     afterDownload: () => afterDownload(),
     context: () => ({ ...liveContext(), ...S.override }),
     readParam: (name, pid) => (S.hooks.readParam ? S.hooks.readParam(name, pid) : null),
+    hasReadings: () => !!S.hooks.readParam,
     prefill: (key, ctx, sheet) => (S.hooks.prefill ? S.hooks.prefill(key, ctx, sheet) : ""),
     info: (kind, ctx, sheet) => (S.hooks.info ? S.hooks.info(kind, ctx, sheet) : []),
     onCount: (n) => { const c = S.panel && $(".lb-c-w", S.panel); if (c) c.textContent = String(n); },
@@ -820,6 +821,8 @@ export function mountLogbook(o = {}) {
   S.apiObj = {
     open, close: () => close(), toggle: () => (S.open ? close() : open()), refresh, endSession, logThis,
     openChecklist, openForm, onRunner,
+    /** The procedure-card surface (procard.js) works the same records. */
+    workbook: S.wb,
     get isOpen() { return S.open; },
     get state() { return S.data; },
   };

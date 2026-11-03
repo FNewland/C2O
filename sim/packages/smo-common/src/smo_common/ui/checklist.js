@@ -13,6 +13,10 @@
  *   ticksFor(entries, sheetId, run)  -> {stepKey: entry}
  *   progress(steps, ticks)           -> {done, total, deviations}
  *   isDeviation(result)              -> fail / skip / NO-GO
+ *   cardStepKeys(headings)           -> ["s0", "s1", "h1", …] for the card's
+ *                                       ### headings (checklist.py parse_card)
+ *   isPrereqHeading(text)            -> a "## Prerequisites" / "## Prérequis"
+ *   prereqItem(text)                 -> the item text of "[ ] …", else null
  * ============================================================================ */
 
 export const RESULTS = ["pass", "fail", "skip", "go", "nogo", "done", "open"];
@@ -150,4 +154,33 @@ export function progress(steps, ticks) {
   return { done, total: (steps || []).length, deviations };
 }
 
-export default { evalCheck, parseInlineCheck, runnerResults, runIds, nextRunId, ticksFor, progress, isDeviation };
+/* ── card structure (mirrors smo_common/logbook/checklist.py) ─────────── */
+const STEP_HEAD = /^(?:Step|[ÉE]tape)\s+([0-9]+[A-Za-z]?)(?![0-9A-Za-z])/;
+const ANCHOR = /\s*\{#[A-Za-z0-9_][\w.:-]*(?:\s[^}]*)?\}\s*$/;
+
+/** Checklist keys of a card's ### headings, in document order: "s<N>" for
+ *  "Step N — …" / "Étape N — …", "h<i>" for the i-th other ### heading
+ *  (parse_card numbers every one of them, kept or not). */
+export function cardStepKeys(headings) {
+  let h = 0;
+  return (headings || []).map((raw) => {
+    const text = String(raw || "").replace(ANCHOR, "").trim();
+    const m = STEP_HEAD.exec(text);
+    if (m) return `s${m[1].toLowerCase()}`;
+    h += 1;
+    return `h${h}`;
+  });
+}
+
+/** "## Prerequisites" (EN) / "## Prérequis" (FR) / "Conditions préalables". */
+export function isPrereqHeading(text) {
+  return /^(?:Prerequisites|Pr[ée]requis|Conditions\s+pr[ée]alables)\b/i.test(String(text || "").trim());
+}
+
+/** "[ ] OBC in NOMINAL mode" -> "OBC in NOMINAL mode"; anything else -> null. */
+export function prereqItem(text) {
+  const m = /^\s*\[[ xX]\]\s+([\s\S]*\S)\s*$/.exec(String(text || ""));
+  return m ? m[1] : null;
+}
+
+export default { cardStepKeys, isPrereqHeading, prereqItem, evalCheck, parseInlineCheck, runnerResults, runIds, nextRunId, ticksFor, progress, isDeviation };

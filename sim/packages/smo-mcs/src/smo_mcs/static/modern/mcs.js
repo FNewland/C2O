@@ -52,6 +52,7 @@ import { I18n, t, tText, tdb, getLang, onLangChange } from "/static/shared/i18n.
 import { linkState as _linkState, modeState, linkLimited, FDIR_LEVELS } from "/static/shared/state.js";
 // Participant logbook (LOGBOOK_SPEC.md): docked panel + "Log this" buttons.
 import { mountLogbook, renderLogThis } from "/static/shared/logbook.js";
+import { mountProcCard } from "/static/shared/procard.js";
 import { dockPanel } from "/static/shared/dock.js";
 
 /* ═══ 1. TIME — the single time primitive ═════════════════════════════════ */
@@ -4138,8 +4139,6 @@ function buildProcPage() {
           <div id="proc-exec-status" style="margin-top:10px"></div>
           <div class="scroll-y" style="max-height:220px;margin-top:6px" id="proc-exec-log"></div>
         </div></div>
-        <div class="ds-card"><h2 data-i18n>Procedure document</h2>
-          <div class="bd scroll-y" style="max-height:320px" id="proc-doc"><span data-i18n>select a procedure…</span></div></div>
       </div>
       <div class="g" style="align-content:start">
         <div class="ds-card"><h2 data-i18n>Manual override <span class="r" data-i18n>arbitrary TC during a run</span></h2>
@@ -4173,6 +4172,13 @@ function buildProcPage() {
         </div></div>
       </div>
     </div>
+    <!-- The card is the working surface (procard.js), the full width of the
+         page: each step records Done / Failed / Skip, values, notes and
+         decisions into the logbook, the same records as Logbook › Workbook. -->
+    <div class="ds-card" style="margin-top:12px"><h2><span data-i18n="Procedure card">Procedure card</span>
+      <span class="r" data-i18n="fill it in: each step is saved to your logbook">fill it in: each step is saved to your logbook</span></h2>
+      <div class="bd scroll-y proc-doc" tabindex="0" role="region" aria-label="Procedure card" data-i18n-aria-label="Procedure card"
+        id="proc-doc"><span data-i18n>select a procedure…</span></div></div>
   </div>`;
 }
 
@@ -4202,10 +4208,12 @@ async function loadProcSources() {
   loadProcDoc();
   updateProcButtons();
 }
+let procCard = null;          // procard.js on the open card
 async function loadProcDoc() {
   const src = $("proc-source") ? $("proc-source").value : "activity";
   const v = $("proc-type") ? $("proc-type").value : "";
   if (src !== "ops" || !v) { return; }
+  if (procCard) { procCard.destroy(); procCard = null; }
   try {
     // ?lang= is DISPLAY-only (i18n S0): the server returns the translated
     // document when one exists, else English. Execution never reads this.
@@ -4217,7 +4225,21 @@ async function loadProcDoc() {
     try { const j = JSON.parse(txt); if (j && typeof j === "object") md = j.content_md || ""; }
     catch (e) { /* plain markdown */ }
     setHTML("proc-doc", renderMarkdown(md));
+    await mountProcDocCard(v);
   } catch (e) { setHTML("proc-doc", t("document unavailable")); }
+}
+/* The rendered card becomes the working copy: step controls, prerequisite
+ * checkboxes and the run bar (shared procard.js), writing the logbook's
+ * check records. ### renders as <h4> and ## as <h3> here. */
+async function mountProcDocCard(path) {
+  if (!LB) return;
+  if (!lbProcIndex) await lbLoadProcIndex();
+  const id = (lbProcIndex || {})[path] || "";
+  const host = $("proc-doc");
+  const box = host && host.firstElementChild;
+  if (!id || !box || ($("proc-type") && $("proc-type").value !== path)) return;
+  if (procCard) procCard.destroy();
+  procCard = mountProcCard(box, { procedure: id, lb: LB, levels: { step: "H4", section: "H3" }, live: true });
 }
 /* Explicit heading anchors (author ruling Q33, 2026-10-30): the EN and FR
  * manuals carry pandoc-style `{#id}` attribute blocks at the end of heading
@@ -4234,7 +4256,10 @@ function mdHeading(tag) {
 }
 export function renderMarkdown(md) {
   // Small, safe markdown subset (headings, bold, code, lists, in-document
-  // links) — classic parity.
+  // links) — classic parity. An indented line under a list item continues
+  // that item (a long Prerequisites item wraps in the card source).
+  md = String(md || "").replace(/^([-*] .*)((?:\n[ \t]+(?![-*] |\d+\. )\S.*)+)/gm,
+    (_m, head, rest) => head + " " + rest.split("\n").map((x) => x.trim()).filter(Boolean).join(" "));
   let h = esc(md);
   h = h.replace(/^### (.*)$/gm, mdHeading("h4"))
        .replace(/^## (.*)$/gm, mdHeading("h3"))
@@ -4242,6 +4267,8 @@ export function renderMarkdown(md) {
        .replace(/\[([^\]\n]+)\]\(#([A-Za-z0-9_][\w.:-]*)\)/g,
                 '<a href="#$2" data-man-anchor="$2">$1</a>')
        .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+       // a "**TC:**" / "**Verify:**" line keeps its own line (procedure cards)
+       .replace(/([^\n])\n(?=<b>[^<\n]{1,40}:<\/b>)/g, "$1<br>\n")
        .replace(/`([^`]+)`/g, "<code>$1</code>")
        .replace(/^---+$/gm, "<hr>")
        .replace(/^[-*] (.*)$/gm, "<li>$1</li>");
