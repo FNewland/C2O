@@ -133,6 +133,9 @@ INSTRUCTOR_ROUTES = [
     "/api/instructor/views", "/api/instructor/timeline",
     "/api/instructor/fault-menu", "/api/instructor/history",
     "/api/instructor/debrief",
+    # 2026-11-03 console seats (WP10): one-host laptop forwarder to the MCS
+    # (behind the GSG these are answered on the ground, never proxied).
+    "/api/seats", "/api/seats/{tail:.*}", "/api/seats/{tail:.*}",
 ]
 
 # Shared one-implementation-many-hosts registrars (mounted under /dumps,
@@ -143,6 +146,16 @@ REPORTING_ROUTES = ["/", "/templates", "/templates/{id}", "/validate",
 # Voice loops (smo_mcs/voice.py register_voice_routes, mounted by the MCS
 # at the root; WP-4 prototype 2026-11-02).
 VOICE_ROUTES = ["/voice", "/api/voice/config", "/api/voice/token"]
+# Console seats (smo_mcs/seats_http.py register_seat_routes, mounted by the
+# MCS at the root; redesign WP10, 2026-11-03).
+SEATS_API = REPO / "packages/smo-mcs/src/smo_mcs/seats_http.py"
+SEATS_ROUTES = ["/seats", "/api/seats", "/api/seats/connect", "/api/seats/heartbeat",
+                "/api/seats/disconnect", "/api/seats/claim", "/api/seats/release",
+                "/api/seats/request", "/api/seats/answer", "/api/seats/screen",
+                "/api/seats/talk", "/api/seats/board", "/api/seats/assign",
+                "/api/seats/bench", "/api/seats/vacate", "/api/seats/lock",
+                "/api/seats/rotate", "/api/seats/pair", "/api/seats/events",
+                "/api/seats/activity"]
 CONFEDIT_ROUTES = ["/files", "/file", "/schema", "/validate", "/diff",
                    "/history", "/revisions/{rev}", "/diff/{a}..{b}",
                    "/crosschecks", "/baselines", "/file", "/revert",
@@ -157,6 +170,7 @@ CONFEDIT_ROUTES = ["/files", "/file", "/schema", "/validate", "/diff",
     (REPORTING_API, REPORTING_ROUTES),
     (CONFEDIT_API, CONFEDIT_ROUTES),
     (VOICE_API, VOICE_ROUTES),
+    (SEATS_API, SEATS_ROUTES),
 ], ids=lambda p: p.name if isinstance(p, Path) else "")
 def test_no_pre_existing_route_disappears(src, snapshot):
     current = routes_in(src)
@@ -230,7 +244,7 @@ def test_logbook_routes_found():
 
 
 @pytest.mark.parametrize("js_dir,routes,foreign", [
-    (MCS_MODERN, MCS_ROUTES + LOGBOOK_ROUTES + VOICE_ROUTES,
+    (MCS_MODERN, MCS_ROUTES + LOGBOOK_ROUTES + VOICE_ROUTES + SEATS_ROUTES,
      # documented cross-origin planner call through client-config planner_url
      {"/api/time-source"}),
     (PLANNER_MODERN, PLANNER_ROUTES, set()),

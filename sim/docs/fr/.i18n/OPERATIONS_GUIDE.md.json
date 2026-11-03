@@ -69,8 +69,13 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/limit-colouring",
-   "en_hash": "1329bb13df63fd61",
-   "fr_hash": "4e790cf648a8ded6"
+   "en_hash": "60c32570be142271",
+   "fr_hash": "f39c421ce0d8e238"
+  },
+  {
+   "id": "operations-guide-eosat-1-spacecraft-simulator/mission-control-system-mcs/console-seats",
+   "en_hash": "f2968873b0d4a5f0",
+   "fr_hash": "1499b264036e87f0"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring",
@@ -468,5 +473,5 @@
    "fr_hash": "be0fc2c2cfac45ae"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "30d5743"
 }

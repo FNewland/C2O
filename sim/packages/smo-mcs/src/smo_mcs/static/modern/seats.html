@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-i18n>Console seats</title>
+<!-- ==========================================================================
+  The SMO console seat board (redesign WP10), served by the MCS at /seats.
+  Instructors: one column per position plus Bench and Wall, cards per
+  participant with their screens (shared component seatboard.js; the same
+  board is the instructor console's Crew view). Participants opening this
+  page see the desk list. Every action is checked on the server.
+=========================================================================== -->
+<link rel="stylesheet" href="/static/shared/design-system.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:var(--fs-body)}
+header{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;padding:var(--sp-2) var(--sp-4);background:var(--s1);border-bottom:1px solid var(--line)}
+header .mark b{color:var(--val);margin-right:6px}
+header .grow{flex:1}
+main{padding:var(--sp-3) var(--sp-4)}
+#toast{position:fixed;bottom:16px;right:16px;max-width:min(420px,calc(100vw - 32px));z-index:50}
+#toast div{background:var(--s2);border:1px solid var(--line-2);border-left:3px solid var(--ok);padding:6px 10px;margin-top:6px;border-radius:var(--radius)}
+#toast div.error{border-left-color:var(--alarm)}
+.plist{max-width:640px}
+.plist td{padding:4px 6px;border-bottom:1px solid var(--line)}
+@media (max-width:600px){main,header{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="mark"><b>EOSAT-1</b><span data-i18n>Console seats</span></div>
+  <span class="grow"></span>
+  <a class="ds-btn ghost" href="/" data-i18n>Back to the console</a>
+  <span id="lang-toggle"></span>
+</header>
+<main id="main"><div id="board"></div></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module">
+import { I18n, tText, tdb } from "/static/shared/i18n.js";
+import { esc, mountLangToggle } from "/static/shared/components.js";
+import { mountSeatBoard } from "/static/shared/seatboard.js";
+
+try { if (localStorage.getItem("mcs.theme") === "light") document.documentElement.setAttribute("data-theme", "light"); } catch (e) { /* */ }
+await I18n.ready;
+mountLangToggle(document.getElementById("lang-toggle"));
+let positions = {};
+try { positions = (await (await fetch("/api/positions")).json()).positions || {}; } catch (e) { /* */ }
+function toast(msg, kind) {
+  const d = document.createElement("div");
+  d.className = kind || "";
+  d.textContent = msg;
+  document.getElementById("toast").appendChild(d);
+  setTimeout(() => d.remove(), 5000);
+}
+const host = document.getElementById("board");
+let seats = {};
+try { seats = await (await fetch("/api/seats")).json(); } catch (e) { /* */ }
+if (seats.me && seats.me.instructor || !seats.enforced) {
+  mountSeatBoard(host, { base: "/api/seats", positions, onToast: toast });
+} else {
+  // A participant: the desk list (claim and request from the console's Desk button).
+  const rows = ((seats.board || {}).positions || []).map((c) => {
+    const p = positions[c.position] || {};
+    const label = p.label ? tdb(`pos:${c.position}:label`, p.label) : c.position;
+    return `<tr><td>${esc(label)}</td><td>${c.holder ? esc(c.holder.name) : `<i>${esc(tText("vacant"))}</i>`}</td></tr>`;
+  }).join("");
+  host.innerHTML = `<p>${esc(tText("Claim, release or request a desk with the Desk button in the console header."))}</p>
+    <table class="plist">${rows}</table>`;
+}
+</script>
+</body>
+</html>

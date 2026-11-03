@@ -157,6 +157,20 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     except Exception as e:  # noqa: BLE001
         logger.warning("Course PDF downloads not mounted: %s", e)
 
+    # Console seats (redesign WP10): the seat board and the anonymous
+    # ground-activity summary live in the MCS on the ground. In a split
+    # deployment the GSG answers /api/seats* itself (it is not on the link
+    # allowlist, so a request through the link never reaches this route).
+    # On a one-host laptop run (start.sh all) this app forwards them to the
+    # MCS on the same host: SMO_INSTRUCTOR_SEATS_URL (default
+    # http://127.0.0.1:9090; "off" disables).
+    seats_url = (os.environ.get("SMO_INSTRUCTOR_SEATS_URL") or "http://127.0.0.1:9090").strip()
+    if seats_url.lower() != "off":
+        app[SEATS_URL_KEY] = seats_url.rstrip("/")
+        app.router.add_get("/api/seats", handle_seats_local)
+        app.router.add_get("/api/seats/{tail:.*}", handle_seats_local)
+        app.router.add_post("/api/seats/{tail:.*}", handle_seats_local)
+
     # Shared design system (design_2026-08 plan §1.1): one canonical runtime
     # copy served from smo_common package data at the SAME URL on all three
     # servers. Mounted BEFORE /static/ so the broader mount cannot shadow it
@@ -178,6 +192,41 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
 
     return app
 
+
+
+SEATS_URL_KEY = web.AppKey("seats_url", str)
+_SEAT_FWD_HEADERS = ("Content-Type", "Accept", "Accept-Language", "X-SMO-Screen")
+
+
+async def handle_seats_local(request):
+    """One-host laptop run: /api/seats* to the MCS on this host (WP10).
+    Never reached through the space link (the GSG answers these itself)."""
+    import aiohttp
+    if request.method not in ("GET", "POST"):
+        return web.json_response({"error": "method not allowed"}, status=405)
+    if (request.content_length or 0) > 64 * 1024:
+        return web.json_response({"error": "request too large"}, status=413)
+    body = await request.read() if request.method == "POST" else None
+    headers = {k: request.headers[k] for k in _SEAT_FWD_HEADERS if k in request.headers}
+    lb = request.cookies.get("c2o_lb")
+    if lb:
+        headers["Cookie"] = f"c2o_lb={lb}"
+    url = request.app[SEATS_URL_KEY] + request.rel_url.path
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as s:
+            async with s.request(request.method, url, params=request.rel_url.query,
+                                 data=body, headers=headers, allow_redirects=False) as r:
+                out = web.Response(body=await r.read(), status=r.status)
+                for k in ("Content-Type", "Cache-Control", "Content-Disposition"):
+                    if k in r.headers:
+                        out.headers[k] = r.headers[k]
+                ck = r.headers.get("Set-Cookie", "")
+                if ck.startswith("c2o_lb="):
+                    out.headers["Set-Cookie"] = ck
+                return out
+    except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
+        return web.json_response({"error": "the MCS is not reachable from this host",
+                                  "code": "mcs-unreachable"}, status=502)
 
 
 TC_BACK_CHANNEL_DENIED = (

@@ -189,6 +189,27 @@ equivalent — bus current, per-line currents, gyro temperature, GPS PDOP — so
 before ground limits were wired those gave no visual cue on either side.
 `docs/PARAMETER_MAP.md` lists which parameter has which.
 
+### Console seats
+
+Each console position (a desk) has one holder, and the MCS decides who that is. The position selector in the header only switches among the desks you hold.
+
+- **Who you are.** On Google Cloud you are your C2O sign-in, verified by IAP. In a laptop class (`SMO_SEATS=local`) you type your name, and it is shown as *unverified*. With `SMO_SEATS=off`, the laptop default, there are no seats: the selector works as before and every command is logged *unverified*.
+- **Taking a desk.** Open **Desk** beside the position selector. *Claim* a vacant desk. A held desk offers *Request*: its holder sees the request and has 60 s to *Hand over* or *Keep it*. A desk whose holder has sent no heartbeat for 3 min is *idle*. After 5 min it is *reclaimable*, and anyone can claim it. *Release* gives a desk back.
+- **Several desks.** One person may hold several desks, as in a small team. The selector then switches the *active* desk among them. Desks you do not hold are greyed out, with their holder's name.
+- **Commanding.** Every telecommand, procedure run, S11 upload, dump request, GO/NO-GO answer and voice-loop token goes out *as a desk you hold*. A desk you do not hold, or an unknown position, is refused ("You do not hold the … desk"). A procedure runs as the desk that loaded it. Each of its commands needs that desk's authority, and only that desk or the Flight Director may start, pause, step or abort it.
+- **The log names you.** The command history and the console log record the position, the person and the screen.
+- **This screen.** Each browser tab is one screen ("screen 1", renamed under *This screen*). *Shows* sets what it displays: your active desk; a tile of all your desks (one rail and overview cover them, and commands still go from the active desk); or the wall (the whole spacecraft, without the commanding pages). The instructor can set it too.
+- **Instructor.** The seat board (*Open the seat board*, `/seats`, and the *Crew* view of the instructor console) has one column per desk, plus *Bench* (connected, no desk) and *Wall*. A vacant desk shows a red dot and the word *vacant*. The instructor can:
+  - drag a person onto a desk to assign it (from the bench this adds a desk, from another desk it moves the person);
+  - drag a screen chip onto a desk or the wall;
+  - *Vacate* a person (a "sick member");
+  - *Rotate roles* (everyone moves one desk along);
+  - *Lock board* (no self-service), or lock one desk;
+  - allow a *pair* at a desk: a read-only shadow or a second commander.
+
+  Every move is logged. *Export seat log* downloads the log, with names; it stays on the ground.
+- **What the simulator sees.** Nothing about people. The instructor console's timeline gets an anonymous summary from the ground, by position only: which desks are staffed, alarms acknowledged, procedure steps, GO/NO-GO answers, and who talked on which loop.
+
 ---
 
 ## Telemetry Monitoring

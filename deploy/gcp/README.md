@@ -759,12 +759,45 @@ every term, and with it the two DNS records. One e2-small comfortably serves a c
 - **Recordings:** they stay off (`recordings: false`). The plan is an instructor-only switch using
   LiveKit egress into a Toronto bucket, stamped with UTC and sim time and indexed in the console log.
   `smo_mcs/voice.py: start_recording` is the stub.
-- **Seat binding (WP10):** the position is still taken from the MCS header.
-- **Verifying the IAP-signed JWT (WP-3):** the MCS trusts the IAP email header. The ground VM has no
-  public IP and admits only the load balancer, so the header cannot be forged from outside.
+- Seat binding (WP10) and the IAP-signed JWT are now done: see "Console seats" below. A voice
+  token is minted only for a desk the caller holds.
 - **Private lines and bots on the loops (WP-8).**
 - **Per-session room prefixes:** the prefix is `c2o` for everyone. Set `SMO_VOICE_ROOM_PREFIX` per
   ground stack once there is more than one team.
+
+## Console seats
+
+Who holds which MCS desk is decided by the MCS on the ground VM, from the IAP sign-in (redesign WP10,
+REDESIGN_DECISIONS #4 and #6). The MCS manual explains the screens (`sim/docs/OPERATIONS_GUIDE.md`,
+"Console seats"). What the deployment needs:
+
+- **Identity.** The MCS verifies IAP's signed header `X-Goog-IAP-JWT-Assertion` (ES256, Google's
+  public keys from `www.gstatic.com/iap/verify/public_key-jwk`, cached 12 h, fetched through Cloud
+  NAT) and takes the person from its `email` claim. The audience must be one of the backend services
+  the request can come through: `ops` (the MCS), `sim` (the instructor console's `/api/seats*`, which
+  the GSG forwards to the MCS on the same VM) and `plan` (the planner's uploads, which now carry the
+  person). `setup.sh` reads their numeric ids and the project number and stores them in the ground VM's
+  metadata `c2o-iap-audiences`; `vm-bootstrap.sh` writes them to `sim/docker/ground.env` as
+  `SMO_IAP_AUDIENCES`. `deploy/gcp/env/ground.env.example` sets `SMO_SEATS=iap`.
+- **After updating to this version:** rerun `bash deploy/gcp/setup.sh` once (it only adds the metadata;
+  nothing else changes), then on the ground VM
+  `sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh refresh`. Until then the MCS refuses every command
+  with "Sign-in could not be verified (audience-unset)", and the bootstrap log says so. No `c2o.env`
+  change is needed.
+- **Instructors** are the accounts in `VOICE_INSTRUCTORS` (c2o.env), written as `SMO_INSTRUCTORS`. Only
+  they get the seat board (`https://ops.<domain>/seats`, and the *Crew* view at `https://sim.<domain>`),
+  the anonymous ground-activity feed, and the assign / vacate / rotate / lock / pair actions. The
+  server checks; hiding the buttons is not the guard.
+- **No identity crosses the link.** `/api/seats*` is answered on the ground by the GSG (forwarded to the
+  MCS on `127.0.0.1:9090`, `SMO_GSG_MCS_URL`). It is not on the link allowlist, and the instructor
+  timeline's ground lanes (alarm acknowledgements, procedure steps, GO/NO-GO, voice talk, desk staffing)
+  come from an identity-free summary by position (`sim/docs/web_2026-10/LINK_DESIGN.md` §3.9).
+- **Escape hatch (not for classes):** `SMO_IAP_VERIFY=0` in `ground.env` trusts the plain email header
+  (logged as a warning; every person is then marked unverified). `SMO_SEATS=off` removes the seats:
+  positions are self-asserted again and every command is logged unverified.
+- **Smoke test:** a student opens `https://ops.<domain>`, *Desk* → *Claim* a desk; *Desk* shows the
+  name; a command sent from a desk they do not hold is refused; the instructor sees them on
+  `https://sim.<domain>` → *Crew*.
 
 ## 12. Costs
 
@@ -823,6 +856,9 @@ it is idle or saturated (`gcloud compute instances set-machine-type`, VM stopped
 
 | Symptom | Check |
 |---|---|
+| MCS: every command refused, "Sign-in could not be verified (audience-unset)" | `SMO_IAP_AUDIENCES` is empty in `sim/docker/ground.env`: rerun `setup.sh`, then `vm-bootstrap.sh refresh` on the ground VM (Console seats) |
+| MCS: "You do not hold the … desk" | Working as designed: claim the desk under *Desk*, or ask the instructor (seat board) |
+| Instructor console *Crew* view: "The MCS on the ground is not reachable" | The GSG forwards `/api/seats*` to `SMO_GSG_MCS_URL` (default `127.0.0.1:9090`): is the `mcs` container up? |
 | Certificate stays `PROVISIONING`, a domain says `FAILED_NOT_VISIBLE` | `dig +short NAME` must give the LB IP for **every** name on the cert. Remove old Squarespace A/AAAA/CNAME/forwarding on those names. A CAA record on the domain must allow `pki.goog`. After DNS is right, wait up to an hour |
 | Browser: *"The server encountered a temporary error"* / 502 / `no healthy upstream` | Backend unhealthy. `gcloud compute backend-services get-health c2o-be-ops --global`. VM stopped or still building (step 8)? On the VM: `compose ps`, then `ss -ltnp \| grep -E '9090\|9091\|8080\|9100'`. Those ports must listen on **10.20.0.10**, not 127.0.0.1 (see the `--env-file` note below) |
 | Ports listen on 127.0.0.1 only | Compose was started without `--env-file docker/ground.env`. `SMO_PUBLISH_ADDR` is read for the `ports:` lines only from the shell or `--env-file`, not from `env_file:`. Use `vm-bootstrap.sh refresh` |

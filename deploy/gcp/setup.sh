@@ -379,6 +379,23 @@ tool_iap() {
 }
 tools_each tool_iap
 
+# Console seats (WP10): the MCS verifies IAP's signed header
+# (X-Goog-IAP-JWT-Assertion); its audience names the backend service the
+# request came through: ops (the MCS itself), sim (the instructor console's
+# /api/seats*, answered on the ground by the GSG) and plan (the planner's
+# uploads to the MCS carry the person). vm-bootstrap.sh writes them into the
+# ground env as SMO_IAP_AUDIENCES; the VM's own account cannot read them.
+log "IAP audiences for the MCS (signed-header verification)"
+iap_aud=""
+for b in "$BE_OPS" "$BE_SIM" "$BE_PLAN"; do
+    bid="$(gcloud compute backend-services describe "$b" --global --format='value(id)')"
+    [[ "$bid" =~ ^[0-9]+$ ]] || die "backend service $b has no numeric id ('$bid')"
+    iap_aud="${iap_aud:+$iap_aud }/projects/$project_number/global/backendServices/$bid"
+done
+gcloud compute instances add-metadata "$VM_GROUND" --zone="$ZONE" \
+    --metadata="c2o-iap-audiences=$iap_aud" >/dev/null
+info "ground VM metadata c2o-iap-audiences set (applied by vm-bootstrap.sh refresh or the next boot)"
+
 # ── 6. Load balancer front end ──────────────────────────────────────────
 log "URL map (host rules; only link.$DOMAIN/link reaches the IAP-off back end)"
 bs() { printf 'https://www.googleapis.com/compute/v1/projects/%s/global/backendServices/%s' "$PROJECT" "$1"; }

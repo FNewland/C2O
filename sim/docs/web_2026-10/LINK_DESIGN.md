@@ -213,6 +213,8 @@ The match is case-sensitive and runs on the **fully normalised** path: fragment 
 - `/api/state` (§3.5)
 - `/healthz` (always 200 while the process is up)
 - `/link-status` (JSON: state, rtt, offset, session, last_state_age, counters)
+- `/api/logbook*` and the course PDFs (the instructor's logbook stays on the ground, LOGBOOK_SPEC §1)
+- `/api/seats*` (console seats, redesign WP10; §3.9)
 
 ### 3.8 Scheduling and back-pressure
 - **One writer task per side, strict priority:**
@@ -245,6 +247,16 @@ The match is case-sensitive and runs on the **fully normalised** path: fragment 
   - At the GSG, a TC still in the link queue when the writer would send it, and older than the TTL, is discarded, never sent. It is logged as `event=notice code=tc-expired`, counted (`tc_expired`) and reported to the agent in a NOTICE. The deadline is checked after the writer has transport room, at the moment of sending.
   - At the agent, a TC whose stamp (§3.2) is older than the TTL is discarded, counted and NOTICEd to the GSG. Its age is measured in GSG time, using the PING/PONG clock offset (or, before the first sample, WELCOME's `server_time`). This bounds the whole delay, including the kernel buffers of a silently dead path.
   - The agent writes a TC to the simulator only if the payload is a whole number of valid records (review L4); otherwise it is refused (`tc-malformed`).
+
+### 3.9 Console seats and the ground-activity summary (WP10, 2026-11-03)
+
+REDESIGN_DECISIONS #6: seat authority lives in the MCS on the ground, and no identity crosses the link.
+
+- **Route, not frame.** The instructor console's browser talks to the GSG (`sim.<domain>` → GSG :8080), and the GSG runs on the same ground host as the MCS. So the seat board and the anonymous ground-activity summary are a **GSG-local route**: `/api/seats` and `/api/seats/{tail}` (GET and POST) are answered by forwarding them to the MCS at `SMO_GSG_MCS_URL` (default `http://127.0.0.1:9090`; compose shares the GSG's network namespace). They are matched before the proxy catch-all and are **not** on the route allowlist, so the agent and the simulator never see them (a request that somehow reached the proxy would get 403). No new frame type and no `roster` frame were added: nothing about the team needs to reach the space side today.
+- **Headers on that hop** (ground to ground): `Content-Type`, `Accept`, `Accept-Language`, `X-Goog-Authenticated-User-Email`, `X-Goog-Authenticated-User-Id`, `X-Goog-IAP-JWT-Assertion`, `X-SMO-Screen`, and the `c2o_lb` cookie only. The MCS verifies the IAP assertion itself (its accepted audiences include the `sim` backend). Response headers relayed: `Content-Type`, `Cache-Control`, `Content-Disposition`, and a `Set-Cookie` only for `c2o_lb`. The route has the proxy's Host check, accepts GET and POST only, bodies ≤ 64 KiB, and answers **502** `mcs-unreachable` when the MCS is down.
+- **What the summary holds** (`GET /api/seats/activity?since=<seq>`, instructors only): per position `staffed | idle | reclaimable | vacant`, alarm acknowledgements (alarm id, subsystem, severity, parameter), procedure-runner steps (procedure, step, result) and lifecycle, GO/NO-GO poll / votes / result, push-to-talk spans per loop, and desk staffing changes, all stamped in sim time. Items are built from a fixed key set (`seats_http.ITEM_KEYS`); no name, email, person id, screen or connection id is ever in one. Personal logbook checklist ticks are not included (logbook ruling L1).
+- **Laptop (`SMO_PROFILE=all`).** The simulator's instructor app forwards `/api/seats*` to the MCS on the same host (`SMO_INSTRUCTOR_SEATS_URL`, default `http://127.0.0.1:9090`, `off` to disable). Behind the GSG that route is never reached.
+- **Tests:** `tests/test_link/test_security.py` (`test_seats_are_never_on_the_link_allowlist`, `test_gsg_answers_seats_on_the_ground_and_nothing_crosses_the_link`: every frame either direction is captured while seat and proxied requests carrying an IAP email, assertion and cookie pass through, and none of them appears; the simulator's `/api/seats` is never hit), `tests/test_mcs/test_seats.py::test_activity_summary_carries_no_identity`.
 
 ## 4. Configuration (environment first, CLI flags mirror it)
 
@@ -282,6 +294,7 @@ The match is case-sensitive and runs on the **fully normalised** path: fragment 
 | `SMO_GSG_ALLOWED_ORIGINS` | comma list for proxied browser requests; empty means same host only. Their host names are also accepted as `Host` |
 | `SMO_GSG_ALLOWED_HOSTS` | extra `Host` names the instructor proxy answers (IP literals and `localhost` always) |
 | `SMO_LINK_TC_TTL_S` | 5: the TC time-to-live (§3.8) |
+| `SMO_GSG_MCS_URL` | `http://127.0.0.1:9090`: the MCS on this ground host, which answers `/api/seats*` (§3.9) |
 
 **Log format.** Logs are structured key=value lines on stdout. No secrets are ever logged. `--secret` on the command line works but logs a warning (it is visible in `ps`); use `SMO_LINK_SECRET_FILE`.
 

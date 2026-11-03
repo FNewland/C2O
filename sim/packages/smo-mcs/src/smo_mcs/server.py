@@ -453,6 +453,20 @@ class MCSServer:
         # Position access control
         self._positions = load_positions(self.config_dir)
 
+        # Console seats (redesign WP10, REDESIGN_DECISIONS #4/#6): who holds
+        # which desk, decided HERE on the ground. Every command's position
+        # comes from this registry (SMO_SEATS=iap|local), or is self-asserted
+        # and logged unverified (SMO_SEATS=off, the laptop default).
+        from smo_mcs.seats_http import SeatService
+        self._seats = SeatService(
+            list((self._positions or {}).keys()), sim_clock=self.sim_now_ts,
+            labels={k: (getattr(v, "label", "") or getattr(v, "display_name", "") or k)
+                    for k, v in (self._positions or {}).items()})
+        #: Who loaded the procedure in the runner: its commands are checked
+        #: against THAT position's authority (walkthrough M2).
+        self._proc_actor = None
+        self._proc_seen: dict = {"key": None, "results": {}}
+
         # TC catalog for command metadata
         try:
             self._tc_catalog = load_tc_catalog(self.config_dir)
@@ -1034,6 +1048,22 @@ class MCSServer:
             gs["color"] = _GS_COLORS[i % len(_GS_COLORS)]
         return out
 
+    async def _actor(self, request, requested=""):
+        """The position (and person, screen) a request acts for, decided on
+        the server from the seat registry. Raises ``SeatHttpError``.
+
+        A request may name a position only to choose among the desks its
+        person holds; ``?position=`` and ``set_position`` grant nothing."""
+        from smo_mcs.seats_http import Actor, SeatHttpError
+        svc = getattr(self, "_seats", None)
+        if svc is None:     # servers built without __init__ (house tests)
+            pos = str(requested or "flight_director")
+            if getattr(self, "_positions", None) and pos not in self._positions:
+                raise SeatHttpError(403, "unknown-position", "Unknown position {position}",
+                                    position=pos[:40])
+            return Actor(pos)
+        return await svc.actor_for(request, requested)
+
     def _check_position_access(self, position: str, service: int,
                                subtype: int, data_hex: str) -> tuple[bool, str]:
         """Check if the given position is allowed to send this command.
@@ -1045,7 +1075,9 @@ class MCSServer:
 
         pos_config = self._positions.get(position)
         if pos_config is None:
-            return True, ""  # Unknown position, allow by default
+            # Redesign WP10: an unknown position is refused (it used to be
+            # allowed by default, so any made-up name could send anything).
+            return False, f"Unknown position {str(position)[:40]}"
 
         # "all" positions bypass
         if pos_config.allowed_commands == "all":
@@ -1633,9 +1665,17 @@ class MCSServer:
         try:
             from smo_mcs.voice import register_voice_routes
             register_voice_routes(app, self.config_dir,
-                                  default_lang=getattr(self, "_ui_lang", "en"))
+                                  default_lang=getattr(self, "_ui_lang", "en"),
+                                  seats=self._seats)
         except Exception as e:  # noqa: BLE001 — never block the MCS UI
             logger.warning("Voice loops not mounted: %s", e)
+
+        # Console seats (redesign WP10): the seat board page /seats and
+        # /api/seats*. The GSG forwards /api/seats* here from the instructor
+        # host, on the ground (never over the space link).
+        from smo_mcs.seats_http import register_seat_routes
+        register_seat_routes(app, self._seats,
+                             default_lang=getattr(self, "_ui_lang", "en"))
 
         static_dir = Path(__file__).parent / "static"
         # Serve the top-level vendor directory directly so that
@@ -1688,6 +1728,7 @@ class MCSServer:
             loops.append(self._sim_state_poll_loop())
         if self._radio_status_url:
             loops.append(self._radio_status_poll_loop())
+        loops.append(self._seats_tick_loop())
         try:
             await asyncio.gather(*loops)
         finally:
@@ -1704,6 +1745,47 @@ class MCSServer:
             self._archive.close()
         except Exception as e:
             logger.debug("Archive close failed: %s", e)
+
+    async def _seats_tick_loop(self):
+        """Seat presence (idle/away edges, request timeouts) and the
+        procedure-step feed of the anonymous ground-activity summary."""
+        while self._running:
+            try:
+                self._seats.tick()
+                self._feed_procedure_activity()
+            except Exception as e:  # noqa: BLE001 -- never stop the MCS
+                logger.debug("seat tick: %s", e)
+            await asyncio.sleep(2.0)
+
+    _STEP_RESULT_NAMES = {2: "PASSED", 3: "FAILED", 4: "SKIPPED", 5: "TIMEOUT"}
+
+    def _feed_procedure_activity(self) -> None:
+        """Diff the runner's step results into the activity feed: one item
+        per step that reached a result, under the loader's position."""
+        svc = getattr(self, "_seats", None)
+        runner = getattr(self, "_procedure_runner", None)
+        if svc is None or runner is None:
+            return
+        st = runner.status()
+        key = (st.get("procedure_name"), st.get("loaded_at"))
+        seen = self._proc_seen
+        actor = getattr(self, "_proc_actor", None)
+        pos = actor.position if actor is not None else ""
+        proc = st.get("procedure_ref") or st.get("procedure_name") or ""
+        if key != seen.get("key"):
+            seen["key"], seen["results"], seen["state"] = key, {}, None
+        for r in st.get("step_results") or []:
+            name = self._STEP_RESULT_NAMES.get(int(r.get("result", 0)))
+            idx = int(r.get("index", 0))
+            if name and seen["results"].get(idx) != name:
+                seen["results"][idx] = name
+                svc.activity.proc_step(pos, proc, idx + 1, r.get("description", ""), name)
+        state = st.get("state")
+        if state != seen.get("state"):
+            if state in ("RUNNING", "COMPLETED", "FAILED", "ABORTED") and seen.get("state") != state:
+                if not (state == "RUNNING" and seen.get("state") == "PAUSED"):
+                    svc.activity.proc_event(pos, proc, state.lower())
+            seen["state"] = state
 
     async def _command_processor(self):
         """Serialize all TC commands through a single queue for FIFO ordering."""
@@ -3240,7 +3322,14 @@ class MCSServer:
             subtype = int(body.get("subtype", 0))
             data_hex = body.get("data_hex", "")
             name = body.get("name", f"S{service}.{subtype}")
-            position = body.get("position", "flight_director")
+            # The position comes from the seat registry, not from the body:
+            # the body may only pick among the desks this person holds.
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                actor = await self._actor(request, body.get("position"))
+            except SeatHttpError as e:
+                return e.response()
+            position = actor.position
 
             # Position-based access control
             allowed, reason = self._check_position_access(
@@ -3254,9 +3343,19 @@ class MCSServer:
             # Sanitise hex string: strip whitespace, ensure even length
             clean_hex = data_hex.replace(" ", "").strip() if data_hex else ""
             data = bytes.fromhex(clean_hex) if clean_hex else b''
+            # A time-tagged S11.4 carries another TC: that one needs the same
+            # authority, or S11 would be a way round the desk's command list.
+            if service == 11 and subtype == 4:
+                inner = self._s11_inner_command(data)
+                if inner is not None:
+                    ok_inner, why = self._check_position_access(position, *inner)
+                    if not ok_inner:
+                        return web.json_response(
+                            {"status": "denied", "message": f"embedded TC: {why}"}, status=403)
             # Defect #46: S11.4 payloads built as exec_time+svc+st+data must
             # carry a complete CCSDS/PUS TC packet — re-embed if needed.
-            data = self._embed_s11_packet(service, subtype, data)
+            data = self._embed_s11_packet(service, subtype, data, position,
+                                          actor.log_fields())
             pkt = self._tc_manager.build_command(service, subtype, data)
             seq = self._tc_manager._seq_count
 
@@ -3270,6 +3369,7 @@ class MCSServer:
                 "timestamp": self.sim_now_ts(),
                 "error_code": 0,
                 "position": position,
+                **actor.log_fields(),
             }
             # An S11.4 built by hand in the console carries its own on-board
             # time tag in the first four octets; record what it was scheduled
@@ -3337,16 +3437,25 @@ class MCSServer:
                 state=str(entry.get("state", "SENT")),
                 utc_epoch=float(entry["timestamp"]),
                 sched_cuc=None if sched_cuc is None else float(sched_cuc),
+                person=str(entry.get("person", "")),
+                screen=str(entry.get("screen", "")),
+                verified=entry.get("verified"),
             )
         except Exception as e:  # noqa: BLE001 — archiving must never block a TC
             logger.debug("store_command failed: %s", e)
         # Console/mission log (G8): every TC send is a decision-record line.
-        # The S1 verdict is appended by _process_tm when it arrives.
+        # The S1 verdict is appended by _process_tm when it arrives. The
+        # sender (console seats, WP10) is named when the server knows it.
+        who = ""
+        if entry.get("person"):
+            who = f" by {entry['person']}" + (
+                "" if entry.get("verified") else " (unverified)") + (
+                f", {entry['screen']}" if entry.get("screen") else "")
         self._console_log(
             "tc",
             f"TC sent: {entry.get('name', '')} "
             f"(S{entry.get('service', 0)}.{entry.get('subtype', 0)}, "
-            f"seq {entry.get('seq', 0)})",
+            f"seq {entry.get('seq', 0)}){who}",
             position=str(entry.get("position", "")),
             ref=f"seq:{entry.get('seq', 0)}")
 
@@ -3450,8 +3559,26 @@ class MCSServer:
     async def _handle_ws(self, request):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-        # Position from query param: /ws?position=eps_tcs
+        # Position from query param: /ws?position=eps_tcs. It only selects
+        # what this socket is about; it grants nothing. With seats on, the
+        # person is identified once here and every position-bearing message
+        # is checked against the desks they hold (set_position may only
+        # switch among them; a GO/NO-GO vote only for one of them).
         position = request.query.get("position", "flight_director")
+        svc = getattr(self, "_seats", None)
+        ws_person = None
+        if svc is not None and svc.enforced:
+            try:
+                ident = await svc.identify(request)
+                ws_person = ident.person_id if ident is not None and ident.name else None
+            except Exception:  # noqa: BLE001 -- an unidentified socket only listens
+                ws_person = None
+
+        def _may(pos: str) -> bool:
+            if svc is None or not svc.enforced:
+                return not self._positions or pos in self._positions
+            return ws_person is not None and svc.may_act_for(ws_person, pos)
+
         async with self._ws_lock:
             self._ws_clients.append((ws, position))
         try:
@@ -3462,6 +3589,10 @@ class MCSServer:
                         data = json.loads(msg.data)
                         if data.get("type") == "set_position":
                             new_pos = data.get("position", "flight_director")
+                            if svc is not None and svc.enforced and not _may(new_pos):
+                                await ws.send_str(json.dumps({
+                                    "type": "seat_refused", "position": str(new_pos)[:40]}))
+                                continue
                             async with self._ws_lock:
                                 for i, (w, p) in enumerate(self._ws_clients):
                                     if w is ws:
@@ -3472,10 +3603,17 @@ class MCSServer:
                             go_pos = data.get("position", position)
                             go_resp = data.get("response", "").upper()
                             status_msg = None
+                            if not _may(go_pos):
+                                await ws.send_str(json.dumps({
+                                    "type": "seat_refused", "position": str(go_pos)[:40]}))
+                                continue
                             async with self._go_nogo_lock:
                                 if (self._go_nogo_active
                                         and go_resp in ("GO", "NOGO", "STANDBY")):
                                     self._go_nogo_responses[go_pos] = go_resp
+                                    self._ground_activity("gonogo", "g_vote", go_pos,
+                                                          response=go_resp,
+                                                          label=str(self._go_nogo_label))
                                     status_msg = json.dumps({
                                         "type": "go_nogo_status",
                                         "active": True,
@@ -3769,8 +3907,20 @@ class MCSServer:
     async def _proc_send_command(
         self, service: int, subtype: int, data_hex: str = ""
     ) -> dict:
-        """Send a PUS command on behalf of the procedure runner."""
+        """Send a PUS command on behalf of the procedure runner.
+
+        Console authority applies (walkthrough M2): the runner sends AS the
+        position that loaded the procedure, and a command that position may
+        not send is refused here, which fails the step."""
         clean_hex = data_hex.replace(" ", "").strip() if data_hex else ""
+        actor = getattr(self, "_proc_actor", None)
+        position = actor.position if actor is not None else "flight_director"
+        allowed, reason = self._check_position_access(position, service, subtype, clean_hex)
+        if not allowed:
+            self._console_log("procedure", f"Procedure command refused for {position}: {reason}",
+                              position=position)
+            return {"status": "error", "denied": True,
+                    "message": f"not permitted for {position}: {reason}"}
         data = bytes.fromhex(clean_hex) if clean_hex else b""
         data = self._embed_s11_packet(service, subtype, data)
         pkt = self._tc_manager.build_command(service, subtype, data)
@@ -3784,7 +3934,9 @@ class MCSServer:
             "state": "SENT",
             "timestamp": self.sim_now_ts(),
             "error_code": 0,
-            "position": "procedure_runner",
+            "position": position,
+            "source": "procedure_runner",
+            **(actor.log_fields() if actor is not None else {}),
         }
         if service == 11 and subtype == 4 and len(data) >= 4:
             entry["sched_cuc"] = float(struct.unpack(">I", data[:4])[0])
@@ -3840,8 +3992,24 @@ class MCSServer:
 
     # ── S11 time-tagged scheduling helpers (defects #44/#46) ─────────
 
+    def _s11_inner_command(self, data: bytes):
+        """(service, subtype, data_hex) of the TC embedded in an S11.4
+        payload (a complete packet or the bare svc+st+data form), or None."""
+        if len(data) < 6:
+            return None
+        embedded = data[4:]
+        try:
+            parsed = decommutate_packet(embedded)
+        except Exception:
+            parsed = None
+        if parsed is not None and parsed.secondary is not None:
+            return (int(parsed.secondary.service), int(parsed.secondary.subtype),
+                    bytes(parsed.data_field or b"").hex())
+        return int(embedded[0]), int(embedded[1]), bytes(embedded[2:]).hex()
+
     def _embed_s11_packet(self, service: int, subtype: int,
-                          data: bytes) -> bytes:
+                          data: bytes, position: str = "s11_scheduler",
+                          log_fields: dict | None = None) -> bytes:
         """Ensure an S11.4 (insert time-tagged TC) payload embeds a FULL TC.
 
         The simulator stores ``data[4:]`` verbatim and, at fire time, runs
@@ -3882,7 +4050,8 @@ class MCSServer:
             # S11.4 time tag in front of it.
             "sched_cuc": float(struct.unpack(">I", data[:4])[0]),
             "error_code": 0,
-            "position": "s11_scheduler",
+            "position": position,
+            **(log_fields or {}),
         }, data_hex=inner_data.hex())
         return data[:4] + inner_pkt
 
@@ -3952,6 +4121,29 @@ class MCSServer:
                 return web.json_response(
                     {"error": f"Invalid start_time: {start_time}"}, status=400)
 
+            # Console authority: the uploading desk must be allowed S11.4
+            # AND every command it schedules.
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                actor = await self._actor(request, body.get("position"))
+            except SeatHttpError as e:
+                return e.response()
+            denied = []
+            ok_s11, why = self._check_position_access(actor.position, 11, 4, "")
+            if not ok_s11:
+                denied.append(why)
+            for step in steps:
+                if isinstance(step, dict) and "service" in step:
+                    dh = step.get("data_hex", "") or ProcedureRunner._build_data_hex(step)
+                    ok_c, why = self._check_position_access(
+                        actor.position, int(step["service"]), int(step["subtype"]),
+                        str(dh).replace(" ", ""))
+                    if not ok_c:
+                        denied.append(why)
+            if denied:
+                return web.json_response({"status": "denied", "message": "; ".join(denied[:5]),
+                                          "position": actor.position}, status=403)
+
             if self._tc_writer is None or self._tc_writer.is_closing():
                 return web.json_response(
                     {"status": "error", "message": "No TC connection"},
@@ -4005,7 +4197,9 @@ class MCSServer:
                     "timestamp": self.sim_now_ts(),
                     "sched_cuc": float(exec_cuc),
                     "error_code": 0,
-                    "position": "s11_scheduler",
+                    "position": actor.position,
+                    "source": "s11_scheduler",
+                    **actor.log_fields(),
                 }, data_hex=s11_data.hex())
                 self._tc_manager.track_verification(
                     outer_seq, f"S11.4[{name}:{desc}]")
@@ -4196,6 +4390,14 @@ class MCSServer:
         """
         try:
             body = await request.json()
+            # Console authority (M2): the procedure runs as the loader's
+            # position, taken from the seat registry.
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                loader = await self._actor(request, body.get("position"))
+            except SeatHttpError as e:
+                return e.response()
+            busy = self._procedure_runner.state.name in ("RUNNING", "PAUSED")
             name = body.get("name", "")
             steps = body.get("steps")
             procedure_ref = body.get("procedure_ref", "")
@@ -4264,6 +4466,9 @@ class MCSServer:
                 name, steps, procedure_ref=procedure_ref,
                 step_by_step=step_by_step, start_time=start_time,
             )
+            if not busy and "error" not in result:
+                self._proc_actor = loader
+                result["position"] = loader.position
             if not document and procedure_ref:
                 entry = next((e for e in self._procedure_index
                               if e.get("id") == procedure_ref), None)
@@ -4290,27 +4495,73 @@ class MCSServer:
         return web.json_response(
             {"parameters": sorted(vocabulary), "source": "live_state"})
 
+    async def _proc_control_actor(self, request):
+        """Who may drive the loaded procedure: the position that loaded it,
+        or the Flight Director. Returns (actor, None) or (None, response)."""
+        from smo_mcs.seats_http import SeatHttpError
+        try:
+            body = await request.json() if request.can_read_body else {}
+        except Exception:  # noqa: BLE001 -- an empty POST is the usual case
+            body = {}
+        owner = getattr(self, "_proc_actor", None)
+        requested = (body or {}).get("position") if isinstance(body, dict) else None
+        try:
+            actor = await self._actor(request, requested or (owner.position if owner else ""))
+        except SeatHttpError as e:
+            if owner is not None and not requested and e.code == "not-holder":
+                try:
+                    actor = await self._actor(request, "flight_director")
+                except SeatHttpError:
+                    return None, e.response()
+            else:
+                return None, e.response()
+        if owner is not None and actor.position not in (owner.position, "flight_director"):
+            return None, SeatHttpError(
+                403, "proc-owner", "The procedure belongs to {position}: only that desk or the "
+                "Flight Director may drive it", position=owner.position).response()
+        return actor, None
+
     async def _handle_proc_start(self, request):
+        actor, err = await self._proc_control_actor(request)
+        if err is not None:
+            return err
+        if getattr(self, "_proc_actor", None) is None:
+            self._proc_actor = actor
         result = await self._procedure_runner.start()
         return web.json_response(result)
 
     async def _handle_proc_pause(self, request):
+        _a, err = await self._proc_control_actor(request)
+        if err is not None:
+            return err
         result = await self._procedure_runner.pause()
         return web.json_response(result)
 
     async def _handle_proc_resume(self, request):
+        _a, err = await self._proc_control_actor(request)
+        if err is not None:
+            return err
         result = await self._procedure_runner.resume()
         return web.json_response(result)
 
     async def _handle_proc_abort(self, request):
+        _a, err = await self._proc_control_actor(request)
+        if err is not None:
+            return err
         result = await self._procedure_runner.abort()
         return web.json_response(result)
 
     async def _handle_proc_step(self, request):
+        _a, err = await self._proc_control_actor(request)
+        if err is not None:
+            return err
         result = await self._procedure_runner.step_advance()
         return web.json_response(result)
 
     async def _handle_proc_skip(self, request):
+        _a, err = await self._proc_control_actor(request)
+        if err is not None:
+            return err
         result = await self._procedure_runner.skip_step()
         return web.json_response(result)
 
@@ -4323,9 +4574,25 @@ class MCSServer:
             service = int(body.get("service", 0))
             subtype = int(body.get("subtype", 0))
             data_hex = body.get("data_hex", "")
-            result = await self._procedure_runner.override_command(
-                service, subtype, data_hex
-            )
+            # A manual override is a command like any other: the overriding
+            # desk's own authority applies (and it must hold that desk).
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                actor = await self._actor(request, body.get("position"))
+            except SeatHttpError as e:
+                return e.response()
+            allowed, reason = self._check_position_access(
+                actor.position, service, subtype, data_hex)
+            if not allowed:
+                return web.json_response({"status": "denied", "message": reason}, status=403)
+            owner = getattr(self, "_proc_actor", None)
+            self._proc_actor = actor
+            try:
+                result = await self._procedure_runner.override_command(
+                    service, subtype, data_hex
+                )
+            finally:
+                self._proc_actor = owner
             return web.json_response(result)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
@@ -4486,7 +4753,7 @@ class MCSServer:
         try:
             body = await request.json()
             note = body.get("note", "").strip()
-            position = body.get("position", "unknown")
+            position = await self._attributed_position(request, body.get("position", "unknown"))
             if not note:
                 return web.json_response(
                     {"error": "Note text required"}, status=400)
@@ -5280,7 +5547,7 @@ class MCSServer:
         except (TypeError, ValueError):
             return web.json_response({"error": "ts must be a number"},
                                      status=400)
-        position = str(body.get("position", ""))
+        position = await self._attributed_position(request, body.get("position", ""))
         ref = str(body.get("ref", ""))
         try:
             row_id = self._archive.store_console_entry(
@@ -5384,6 +5651,55 @@ class MCSServer:
                 pass
         return web.json_response({"alarms": alarms})
 
+    async def _attributed_position(self, request, requested) -> str:
+        """Position a log line or note is filed under: as sent with seats
+        off; with seats on, the writer's own desk ("" if they hold none)."""
+        svc = getattr(self, "_seats", None)
+        if svc is None or not svc.enforced:
+            return str(requested or "")
+        from smo_mcs.seats_http import SeatHttpError
+        try:
+            return (await self._actor(request, requested if requested in
+                                      (svc.registry.positions or []) else "")).position
+        except SeatHttpError:
+            return ""
+
+    async def _ack_position(self, request):
+        """The desk acknowledging an alarm: with seats on, the person must
+        hold a desk (any desk: acknowledging is not commanding). Returns the
+        position, or a refusal response."""
+        from smo_mcs.seats_http import SeatHttpError
+        body = {}
+        if request.can_read_body:
+            try:
+                body = await request.json()
+            except Exception:  # noqa: BLE001
+                body = {}
+        requested = body.get("position") if isinstance(body, dict) else None
+        svc = getattr(self, "_seats", None)
+        if svc is None or not svc.enforced:
+            req = str(requested or "")
+            return req if (not self._positions or req in self._positions) else ""
+        try:
+            return (await self._actor(request, requested)).position
+        except SeatHttpError as e:
+            return e.response()
+
+    def _ground_activity(self, what: str, kind: str, position: str, **kw) -> None:
+        """Feed the anonymous ground-activity summary (never raises)."""
+        svc = getattr(self, "_seats", None)
+        if svc is None:
+            return
+        try:
+            act = svc.activity
+            if what == "ack":
+                act.alarm_ack(position, kw.get("alarm") or {})
+            elif what == "gonogo":
+                act.gonogo(kind, position, label=kw.get("label", ""),
+                           response=kw.get("response", ""), outcome=kw.get("outcome", ""))
+        except Exception as e:  # noqa: BLE001
+            logger.debug("ground activity: %s", e)
+
     async def _handle_alarm_ack(self, request):
         """Acknowledge an alarm by ID.
 
@@ -5393,8 +5709,12 @@ class MCSServer:
         """
         try:
             alarm_id = int(request.match_info["alarm_id"])
+            position = await self._ack_position(request)
+            if not isinstance(position, str):
+                return position                      # a refusal response
             alarm = await self._acknowledge_alarm(alarm_id)
             if alarm is not None:
+                self._ground_activity("ack", "", position, alarm=alarm)
                 return web.json_response({
                     "status": "acknowledged", "id": alarm_id,
                     "state": alarm.get("state"),
@@ -5646,6 +5966,14 @@ class MCSServer:
             body = await request.json()
             store_id = int(body.get("store_id", 1))
             subsystem = body.get("subsystem", "unknown")
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                actor = await self._actor(request, body.get("position"))
+            except SeatHttpError as e:
+                return e.response()
+            ok_dump, why = self._check_position_access(actor.position, 15, 9, "")
+            if not ok_dump:
+                return web.json_response({"status": "denied", "message": why}, status=403)
 
             # Send S15.9 (start dump) command
             data = bytes([store_id])
@@ -5660,7 +5988,9 @@ class MCSServer:
                 "state": "SENT",
                 "timestamp": self.sim_now_ts(),
                 "error_code": 0,
-                "position": "tm_dump",
+                "position": actor.position,
+                "source": "tm_dump",
+                **actor.log_fields(),
             }
             self._record_command(entry, data_hex=data.hex())
 
@@ -5816,8 +6146,15 @@ class MCSServer:
         """Initiate a GO/NO-GO poll (Flight Director only)."""
         try:
             body = await request.json()
-            position = body.get("position", "")
             label = body.get("label", "GO/NO-GO Poll")
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                position = (await self._actor(request, body.get("position") or "")).position
+            except SeatHttpError as e:
+                if e.code in ("not-holder", "unknown-position", "no-desk"):
+                    position = ""
+                else:
+                    return e.response()
 
             if position != "flight_director":
                 return web.json_response(
@@ -5836,6 +6173,7 @@ class MCSServer:
             # Console/mission log (G8): poll opened.
             self._console_log("gonogo", f"GO/NO-GO poll opened: {label}",
                               position=position)
+            self._ground_activity("gonogo", "g_poll", position, label=str(label))
 
             # Broadcast poll to all WebSocket clients
             msg = json.dumps({
@@ -5865,8 +6203,14 @@ class MCSServer:
         """Submit a GO/NO-GO response for a position."""
         try:
             body = await request.json()
-            position = body.get("position", "")
             response = body.get("response", "").upper()
+            # GO/NO-GO is keyed by position, and a desk has one holder: the
+            # position is the responder's own desk (seat registry).
+            from smo_mcs.seats_http import SeatHttpError
+            try:
+                position = (await self._actor(request, body.get("position"))).position
+            except SeatHttpError as e:
+                return e.response()
 
             async with self._go_nogo_lock:
                 if not self._go_nogo_active:
@@ -5909,8 +6253,12 @@ class MCSServer:
 
                 all_responses = dict(self._go_nogo_responses)
 
+            self._ground_activity("gonogo", "g_vote", position, response=response,
+                                  label=str(self._go_nogo_label))
             # Console/mission log (G8): poll resolved (outside the lock).
             if result_msg is not None:
+                self._ground_activity("gonogo", "g_result", "flight_director",
+                                      label=str(self._go_nogo_label), outcome=result)
                 votes = ", ".join(f"{p}:{v}"
                                   for p, v in sorted(all_responses.items()))
                 self._console_log(
@@ -6040,11 +6388,16 @@ class MCSServer:
         """POST /api/displays/alarms/{alarm_id}/ack — Acknowledge an alarm."""
         try:
             alarm_id = int(request.match_info.get("alarm_id", 0))
+            position = await self._ack_position(request)
+            if not isinstance(position, str):
+                return position
             self._fdir_alarm_panel.acknowledge_alarm(alarm_id)
             # Keep the journal and the archive in step — the display route
             # used to ack only the in-memory FDIR panel, so the same alarm
             # read back unacknowledged from /api/alarms and from the archive.
-            await self._acknowledge_alarm(alarm_id)
+            alarm = await self._acknowledge_alarm(alarm_id)
+            if alarm is not None:
+                self._ground_activity("ack", "", position, alarm=alarm)
             return web.json_response({"status": "acknowledged", "alarm_id": alarm_id})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
