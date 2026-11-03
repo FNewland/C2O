@@ -8,10 +8,11 @@
  * 4. FMECA Summary: failure mode analysis results
  * 5. Budget Traceability: trace budget exceedance to stakeholder impact
  */
-import { Fragment, useState, useMemo } from 'react'
+import { Fragment, useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
+import { LogThis, useLogbookUI } from '../logbook'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
@@ -268,6 +269,27 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
   const openCount = gateResult?.summary ? (gateResult.summary.manual || 0) + (gateResult.summary.advisory || 0) : 0
   const verdict: Status = gateResult?.ready ? 'ok' : failCount > 0 ? 'alarm' : 'caution'
 
+  // Logbook: the gate under review is context for entries and worksheets.
+  // Passing a gate (NOT READY → READY while watching) prompts the logbook
+  // download, as does "Finish review"; neither blocks anything.
+  const requestEnd = useLogbookUI(st => st.requestEndSession)
+  useEffect(() => {
+    useLogbookUI.getState().setGate(activeGate)
+    return () => useLogbookUI.getState().setGate(null)
+  }, [activeGate])
+  const wasReady = useRef<Record<string, boolean>>({})
+  useEffect(() => {
+    if (!gateResult) return
+    const before = wasReady.current[activeGate]
+    wasReady.current[activeGate] = gateResult.ready
+    if (before === false && gateResult.ready) requestEnd('gate', activeGate)
+  }, [gateResult, activeGate, requestEnd])
+  const verdictText = gateResult
+    ? (gateResult.ready ? t('READY')
+      : failCount > 0 ? t('NOT READY ({{n}} failed)', { n: failCount })
+      : t('NOT READY ({{n}} manual/advisory)', { n: openCount }))
+    : ''
+
   return (
     <Panel level={2} title={t('Review Gate Evaluation')}
       actions={<Tabs idBase="gate" variant="segmented" label={t('Review gate')} value={activeGate} onChange={setActiveGate}
@@ -280,9 +302,7 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
           <>
             <div role="status" className="c2o-verdict">
               <StatusBadge status={verdict} boxed className="t-15">
-                {gateResult.ready ? t('READY')
-                  : failCount > 0 ? t('NOT READY ({{n}} failed)', { n: failCount })
-                  : t('NOT READY ({{n}} manual/advisory)', { n: openCount })}
+                {verdictText}
               </StatusBadge>
               {pending && <span className="c-2">{t('Ready for {{gate}}, pending manual sign-off', { gate: activeGate.toUpperCase() })}</span>}
               {gateResult.summary && (
@@ -293,6 +313,14 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
                   <span>{t('Manual: {{n}}', { n: gateResult.summary.manual })}</span>
                 </span>
               )}
+              <span className="row gap-2 ml-auto">
+                <LogThis subject={t('{{gate}} review: {{verdict}}', { gate: activeGate.toUpperCase(), verdict: verdictText })}
+                  context={{ gate: activeGate }} />
+                <Button size="sm" onClick={() => requestEnd('gate', activeGate)}
+                  title={t('Close this review and download your logbook')}>
+                  {t('Finish {{gate}} review', { gate: activeGate.toUpperCase() })}
+                </Button>
+              </span>
             </div>
 
             <ul className="list-reset c2o-criteria">
