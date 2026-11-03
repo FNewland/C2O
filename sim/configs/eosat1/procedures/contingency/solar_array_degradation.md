@@ -12,6 +12,13 @@ deployable solar wings (+/-Y) that together produce approximately 64W at optimal
 array requires investigation and potential operational adjustments to maintain a positive
 power budget throughout each orbit.
 
+The spacecraft detects a degraded string (S12 yield monitor, TM(12,9) and S5 event
+0x914C / 0x914D) but takes no action on it: whether the payload goes off is the
+team's decision, made at Step 4 from how serious the loss is (string yield and power
+balance). If the power really runs out first, the on-board bus-voltage load shed
+(below 25.0 V, payload first) takes the payload off by itself; that is the safety net,
+not the plan.
+
 ## Prerequisites
 - [ ] EPS telemetry (SID 1) is being received at >= 0.5 Hz
 - [ ] Current orbit illumination data is available — beta angle, sunlit fraction, incidence angles
@@ -29,7 +36,7 @@ power budget throughout each orbit.
 **TC:** `GET_PARAM(param_id=0x014C)` (Service 20, Subtype 3) — `eps.sa_a_yield_pct`
 **TC:** `GET_PARAM(param_id=0x014D)` (Service 20, Subtype 3) — `eps.sa_b_yield_pct`
 **TC:** `GET_PARAM(param_id=0x014E)` (Service 20, Subtype 3) — `eps.sa_string_lit`
-**Verify:** `eps.sa_a_yield_pct` (0x014C) and `eps.sa_b_yield_pct` (0x014D) — the on-board yield of each string against a healthy string at the same sun geometry (valid only while `eps.sa_string_lit` (0x014E) has the string's bit set). Below 70 % for 30 s in sunlight, S19 ea 1004 (A) / 1005 (B) has already switched the payload line OFF — check the event log before restoring it
+**Verify:** `eps.sa_a_yield_pct` (0x014C) and `eps.sa_b_yield_pct` (0x014D) — the on-board yield of each string against a healthy string at the same sun geometry (valid only while `eps.sa_string_lit` (0x014E) has the string's bit set). Below 70 % for 30 s in sunlight the spacecraft reports it (TM(12,9) and S5 event 0x914C for A, 0x914D for B) and does nothing else: the payload is still as you left it. Check `eps.pl_payload` (0x0113): if it is already OFF, the bus-voltage load shed took it (event 0x0106) and the power situation is already serious
 **Action:** Calculate percentage shortfall: (predicted - actual) / predicted x 100 for each array
 **GO/NO-GO:** If shortfall > 20% on either array during confirmed sunlit phase, proceed. If < 20%, log for trend monitoring only. -> GO `STEP-2` | NO-GO `STEP-END`
 
@@ -48,14 +55,16 @@ power budget throughout each orbit.
 **Action:** If attitude error > 5 deg, execute CTG-002 first, then reassess array performance
 **GO/NO-GO:** Attitude confirmed nominal — degradation is intrinsic to array hardware or environment
 
-### Step 4 — Recalculate Power Budget
+### Step 4 — Decide: Shed the Payload or Continue
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.power_gen` (0x0107) — actual generation
 **Verify:** `eps.power_cons` (0x0106) — current consumption
 **Action:** Compute power margin = generation - consumption (must be > 0W averaged over orbit)
 **Action:** Compute worst-case eclipse energy deficit using degraded generation values
 **Verify:** `eps.bat_soc` (0x0101) — project minimum SoC at end of next eclipse
-**GO/NO-GO:** If projected minimum SoC > 25%, continue nominal ops with monitoring. If < 25%, proceed to Step 5. -> GO `STEP-7` | NO-GO `STEP-5`
+**Action:** Judge the severity from the yield (Step 1) and this power balance. One string below 70 % with a positive orbit-average margin is a trend to watch; a string near 0 %, both strings low, or a negative margin with the payload on is serious. The payload is the load that decides it: continue only if the budget closes with the payload in its planned mode
+**Action:** The Flight Director announces the decision on the loop ("PAYLOAD SHED" or "CONTINUE, MONITORING") and it is logged with the yield and the projected SoC
+**GO/NO-GO:** If projected minimum SoC > 25% and the orbit-average margin is positive, continue nominal ops with monitoring. If < 25% or the margin is negative, shed the payload at Step 5. -> GO `STEP-7` | NO-GO `STEP-5`
 
 ### Step 5 — Reduce Loads to Match Degraded Power Budget
 **LABEL:** `STEP-5`

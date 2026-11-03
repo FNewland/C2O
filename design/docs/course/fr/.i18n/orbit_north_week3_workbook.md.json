@@ -448,6 +448,11 @@
    "fr_hash": "aa75253da01640a4"
   },
   {
+   "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-009-solar-array-degradation",
+   "en_hash": "cedd707ac5e6a251",
+   "fr_hash": "e7eda1ec6469b336"
+  },
+  {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-010-obdh-watchdog-recovery",
    "en_hash": "96b1ee56516b5fd2",
    "fr_hash": "9e8f944087e5edde"
@@ -488,5 +493,5 @@
    "fr_hash": "4a357d00633e9454"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "b78d710"
 }

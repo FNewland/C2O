@@ -1575,6 +1575,26 @@ l'estimateur est `AOCS_EST_RESET` (S8.1 func **91**, `mode` 0 = à froid,
 `ST_SELECT(unit=1)` resélectionnerait sans bruit le ST1 en panne : 0 est
 refusé, 1 est ST1, 2 est ST2.
 
+## CTG-009 Dégradation du générateur solaire
+
+Le satellite **signale** une chaîne dégradée (surveillance S12 du
+rendement sous 70 % en éclairement : TM(12,9) et événement S5 0x914C pour
+A, 0x914D pour B) mais n'agit pas. Mettre ou non la charge utile hors
+tension est une décision de l'équipe, prise à la ligne 4 selon la gravité
+de la perte. Si personne ne décide et que la batterie se vide, le
+délestage sur tension bus coupe la charge utile à 25.0 V : c'est le filet
+de sécurité, pas le plan.
+
+| N° | Action | Vérification | ☐ | Note |
+|---|--------|--------------|:-:|------|
+| 1 | Quantifier la perte : `HK_REQUEST(sid=1)` (S3.27), `GET_PARAM(param_id=0x014C)`, `GET_PARAM(param_id=0x014D)`, `GET_PARAM(param_id=0x014E)` (S20.3) | consigner `eps.sa_a_current` (0x0103), `eps.sa_b_current` (0x0104), `eps.power_gen` (0x0107) ; `eps.sa_a_yield_pct` (0x014C) et `eps.sa_b_yield_pct` (0x014D) sont valides tant que le bit de la chaîne est positionné dans `eps.sa_string_lit` (0x014E) ; `eps.pl_payload` (0x0113) toujours dans l'état où vous l'avez laissée (déjà 0 = le délestage l'a coupée) | ☐ | rendement A __ % B __ % |
+| 2 | Comparer les chaînes : `HK_REQUEST(sid=1)` trois fois, à 30 s d'intervalle | rapport `eps.sa_a_current` / `eps.sa_b_current` (nominal 0.9–1.1) : une chaîne dégradée ou les deux | ☐ | rapport : ____ |
+| 3 | Écarter l'attitude : `HK_REQUEST(sid=2)` | `aocs.mode` (0x020F) = 4 ou 3 ; `aocs.att_error` (0x0217) < 2.0° ; au-delà de 5° → CTG-002 d'abord | ☐ | |
+| 4 | **Décider : délester la charge utile ou poursuivre.** `HK_REQUEST(sid=1)` ; juger la gravité d'après le rendement (ligne 1) et le bilan de puissance ; le FD annonce « PAYLOAD SHED » ou « CONTINUE, MONITORING » | `eps.power_gen` − `eps.power_cons` (0x0106) positif sur l'orbite **et** `eps.bat_soc` (0x0101) extrapolé au-dessus de 25 % en fin de prochaine éclipse → poursuivre (ligne 7) ; sinon délester (ligne 5) | ☐ | DÉLESTER ☐ POURSUIVRE ☐ SoC min __ % |
+| 5 | Délester : `PAYLOAD_SET_MODE(mode=1)` (S8.1 func **26**, STANDBY) ; toujours insuffisant : `PAYLOAD_SET_MODE(mode=0)` et, si aucune manœuvre n'est prévue, `HEATER_THRUSTER(on=0)` (func **42**) | `payload.mode` (0x0600) = 1 (ou 0) en 10 s ; `eps.power_cons` en baisse d'au moins 12 W ; marge ≥ 3 W | ☐ | |
+| 6 | Attitude optimale au Soleil : `AOCS_SET_MODE(mode=3)` (S8.1 func **0**, COARSE_SUN) | `aocs.mode` = 3 en 15 s ; `eps.sa_a_current`, `eps.sa_b_current` et `eps.power_gen` plus élevés qu'en NOMINAL | ☐ | |
+| 7 | Plan de surveillance : `HK_REQUEST(sid=1)` comme nouvelle référence ; un panneau perdu : `GET_PARAM(param_id=0x0144)` | référence de `eps.sa_a_current`, `eps.sa_b_current`, `eps.power_gen`, `eps.bat_soc` consignée ; `eps.wing_status` (0x0144) lu ; tendance quotidienne pendant 7 jours | ☐ | |
+
 ## CTG-010 Reprise après chien de garde OBDH
 
 | N° | Action | Vérification | ☐ | Note |

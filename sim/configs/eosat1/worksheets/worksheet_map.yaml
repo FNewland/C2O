@@ -160,6 +160,7 @@ worksheets:
   WB-A-CTG-002: {phase: during, tools: [mcs], procedures: [CTG-002]}
   WB-A-CTG-007: {phase: during, tools: [mcs], procedures: [CTG-007]}
   WB-A-CTG-008: {phase: during, tools: [mcs], procedures: [CTG-008]}
+  WB-A-CTG-009: {phase: during, tools: [mcs], procedures: [CTG-009], scenarios: [eps_anomaly]}
   WB-A-CTG-010: {phase: during, tools: [mcs], procedures: [CTG-010]}
   WB-A-CTG-012: {phase: during, tools: [mcs], procedures: [CTG-012]}
   WB-A-CTG-015: {phase: during, tools: [mcs, delayed_tm], procedures: [CTG-015]}

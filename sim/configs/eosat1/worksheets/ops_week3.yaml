@@ -3575,6 +3575,104 @@ worksheets:
       en: final AOCS state recorded; ST1 failure and ST2 activation in the anomaly report
       fr: état final de l'AOCS consigné ; panne de ST1 et activation de ST2 dans le rapport d'anomalie
     step: '6'
+- id: WB-A-CTG-009
+  title:
+    en: CTG-009 Solar Array Degradation
+    fr: CTG-009 Dégradation du générateur solaire
+  phase: during
+  applies:
+    tools:
+    - mcs
+    procedures:
+    - CTG-009
+    pages: []
+    scenarios:
+    - eps_anomaly
+    context_keys: []
+  questions:
+  - id: q1
+    kind: check
+    text:
+      en: '1. Quantify the loss: HK_REQUEST(sid=1) (S3.27), GET_PARAM(param_id=0x014C), GET_PARAM(param_id=0x014D),
+        GET_PARAM(param_id=0x014E) (S20.3)'
+      fr: '1. Quantifier la perte : HK_REQUEST(sid=1) (S3.27), GET_PARAM(param_id=0x014C), GET_PARAM(param_id=0x014D),
+        GET_PARAM(param_id=0x014E) (S20.3)'
+    hint:
+      en: record eps.sa_a_current (0x0103), eps.sa_b_current (0x0104), eps.power_gen (0x0107); eps.sa_a_yield_pct
+        (0x014C) and eps.sa_b_yield_pct (0x014D) are valid while the string's bit is set in eps.sa_string_lit
+        (0x014E); eps.pl_payload (0x0113) still as you left it (already 0 = the load shed took it)
+      fr: consigner eps.sa_a_current (0x0103), eps.sa_b_current (0x0104), eps.power_gen (0x0107) ; eps.sa_a_yield_pct
+        (0x014C) et eps.sa_b_yield_pct (0x014D) sont valides tant que le bit de la chaîne est positionné
+        dans eps.sa_string_lit (0x014E) ; eps.pl_payload (0x0113) toujours dans l'état où vous l'avez
+        laissée (déjà 0 = le délestage l'a coupée)
+    step: '1'
+  - id: q2
+    kind: check
+    text:
+      en: '2. Compare the strings: HK_REQUEST(sid=1) three times, 30 s apart'
+      fr: '2. Comparer les chaînes : HK_REQUEST(sid=1) trois fois, à 30 s d''intervalle'
+    hint:
+      en: 'eps.sa_a_current / eps.sa_b_current ratio (nominal 0.9–1.1): one string degraded or both'
+      fr: 'rapport eps.sa_a_current / eps.sa_b_current (nominal 0.9–1.1) : une chaîne dégradée ou les
+        deux'
+    step: '2'
+  - id: q3
+    kind: check
+    text:
+      en: '3. Rule out attitude: HK_REQUEST(sid=2)'
+      fr: '3. Écarter l''attitude : HK_REQUEST(sid=2)'
+    hint:
+      en: aocs.mode (0x020F) = 4 or 3; aocs.att_error (0x0217) < 2.0°; above 5° → CTG-002 first
+      fr: aocs.mode (0x020F) = 4 ou 3 ; aocs.att_error (0x0217) < 2.0° ; au-delà de 5° → CTG-002 d'abord
+    step: '3'
+  - id: q4
+    kind: check
+    text:
+      en: '4. Decide: shed the payload or continue. HK_REQUEST(sid=1); judge the severity from the yield
+        (row 1) and the power balance; FD announces "PAYLOAD SHED" or "CONTINUE, MONITORING"'
+      fr: '4. Décider : délester la charge utile ou poursuivre. HK_REQUEST(sid=1) ; juger la gravité d''après
+        le rendement (ligne 1) et le bilan de puissance ; le FD annonce « PAYLOAD SHED » ou « CONTINUE,
+        MONITORING »'
+    hint:
+      en: eps.power_gen − eps.power_cons (0x0106) positive over the orbit and eps.bat_soc (0x0101) projected
+        above 25 % at the end of the next eclipse → continue (row 7); otherwise shed (row 5)
+      fr: eps.power_gen − eps.power_cons (0x0106) positif sur l'orbite et eps.bat_soc (0x0101) extrapolé
+        au-dessus de 25 % en fin de prochaine éclipse → poursuivre (ligne 7) ; sinon délester (ligne 5)
+    step: '4'
+  - id: q5
+    kind: check
+    text:
+      en: '5. Shed: PAYLOAD_SET_MODE(mode=1) (S8.1 func 26, STANDBY); still short: PAYLOAD_SET_MODE(mode=0)
+        and, if no manoeuvre is planned, HEATER_THRUSTER(on=0) (func 42)'
+      fr: '5. Délester : PAYLOAD_SET_MODE(mode=1) (S8.1 func 26, STANDBY) ; toujours insuffisant : PAYLOAD_SET_MODE(mode=0)
+        et, si aucune manœuvre n''est prévue, HEATER_THRUSTER(on=0) (func 42)'
+    hint:
+      en: payload.mode (0x0600) = 1 (or 0) within 10 s; eps.power_cons down by ≥ 12 W; margin ≥ 3 W
+      fr: payload.mode (0x0600) = 1 (ou 0) en 10 s ; eps.power_cons en baisse d'au moins 12 W ; marge
+        ≥ 3 W
+    step: '5'
+  - id: q6
+    kind: check
+    text:
+      en: '6. Sun-optimal attitude: AOCS_SET_MODE(mode=3) (S8.1 func 0, COARSE_SUN)'
+      fr: '6. Attitude optimale au Soleil : AOCS_SET_MODE(mode=3) (S8.1 func 0, COARSE_SUN)'
+    hint:
+      en: aocs.mode = 3 within 15 s; eps.sa_a_current, eps.sa_b_current and eps.power_gen higher than
+        in NOMINAL
+      fr: aocs.mode = 3 en 15 s ; eps.sa_a_current, eps.sa_b_current et eps.power_gen plus élevés qu'en
+        NOMINAL
+    step: '6'
+  - id: q7
+    kind: check
+    text:
+      en: '7. Monitoring plan: HK_REQUEST(sid=1) as the new baseline; one wing lost: GET_PARAM(param_id=0x0144)'
+      fr: '7. Plan de surveillance : HK_REQUEST(sid=1) comme nouvelle référence ; un panneau perdu : GET_PARAM(param_id=0x0144)'
+    hint:
+      en: baseline of eps.sa_a_current, eps.sa_b_current, eps.power_gen, eps.bat_soc recorded; eps.wing_status
+        (0x0144) read; daily trend for 7 days
+      fr: référence de eps.sa_a_current, eps.sa_b_current, eps.power_gen, eps.bat_soc consignée ; eps.wing_status
+        (0x0144) lu ; tendance quotidienne pendant 7 jours
+    step: '7'
 - id: WB-A-CTG-010
   title:
     en: CTG-010 OBDH Watchdog Recovery

@@ -283,7 +283,7 @@ class TestS19Report:
 
         data = decommutate_packet(responses[0]).data_field
         count = struct.unpack('>H', data[:2])[0]
-        assert count == 32
+        assert count == 30      # 1004/1005 deleted 2026-11-03 (degradation reported only)
         assert len(data) == 2 + 7 * count, "TM(19,128) record is not 7 bytes"
 
         rules = {}

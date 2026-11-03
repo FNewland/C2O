@@ -14,8 +14,8 @@
   },
   {
    "id": "ctg-009-solar-array-degradation/purpose",
-   "en_hash": "fabf7227be0234fa",
-   "fr_hash": "7b101976a09385c1"
+   "en_hash": "2059352f8fa7c013",
+   "fr_hash": "6fd67074a802f90c"
   },
   {
    "id": "ctg-009-solar-array-degradation/prerequisites",
@@ -29,8 +29,8 @@
   },
   {
    "id": "ctg-009-solar-array-degradation/procedure-steps/step-1-quantify-the-degradation",
-   "en_hash": "b828778088e082dc",
-   "fr_hash": "aa7fe99466552e2c"
+   "en_hash": "9b161ebceee0ae56",
+   "fr_hash": "b06e7e402d910496"
   },
   {
    "id": "ctg-009-solar-array-degradation/procedure-steps/step-2-compare-sa-a-versus-sa-b-performance",
@@ -43,9 +43,9 @@
    "fr_hash": "9be39dabb3fc22ab"
   },
   {
-   "id": "ctg-009-solar-array-degradation/procedure-steps/step-4-recalculate-power-budget",
-   "en_hash": "81ddf93b01a387cc",
-   "fr_hash": "058017d6c62ae17c"
+   "id": "ctg-009-solar-array-degradation/procedure-steps/step-4-decide-shed-the-payload-or-continue",
+   "en_hash": "346b556c7831514a",
+   "fr_hash": "86333a762e9dd593"
   },
   {
    "id": "ctg-009-solar-array-degradation/procedure-steps/step-5-reduce-loads-to-match-degraded-power-budget",
@@ -73,5 +73,5 @@
    "fr_hash": "dc82d78bc70ba839"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "b78d710"
 }

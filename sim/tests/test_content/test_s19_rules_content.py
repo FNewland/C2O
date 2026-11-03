@@ -54,8 +54,8 @@ RULE_INTENT = {
     1001: "eps",      # -> Payload Off (Load Shed)
     1002: "eps",      # -> FPA Cooler Off
     1003: "eps",      # -> Payload Power Off
-    1004: "eps",      # -> Load Shedding
-    1005: "eps",      # -> Load Shedding
+    # 1004/1005 (solar array degraded -> load shedding) deleted 2026-11-03:
+    # degradation is reported (S12 + S5) and the ground decides (CTG-009).
     2001: "aocs",     # -> Trigger Desaturation
     2002: "aocs",     # -> Switch to ST2
     2003: "aocs",     # -> ST Fallback
@@ -97,8 +97,8 @@ KNOWN_MISROUTED = {
     1001: ("aocs", "slew_to_quaternion"),   # func 10 is AOCS_SLEW_TO, not payload off
     1002: ("aocs", "check_momentum"),       # func 11 is AOCS_CHECK_MOMENTUM, not FPA cooler
     1003: ("aocs", "rw_ramp_down"),         # func 14 is AOCS_RW_RAMP_DOWN, not power line off
-    # 1004/1005 (func 10 again) corrected 2026-11-03 to EPS_POWER_OFF(3),
-    # together with their eclipse-proof trigger.
+    # 1004/1005 (func 10 again) were corrected 2026-11-03 to EPS_POWER_OFF(3)
+    # and then deleted the same day (no autonomous action on degradation).
     5001: ("tcs", "heater"),                # func 42 is a TCS heater circuit, not OBC reboot
     5002: ("tcs", "set_setpoint"),          # func 44 is TCS heater setpoint, not CAN bus switch
 }
