@@ -165,3 +165,32 @@ def test_served_copy_is_reachable_by_the_shared_mount():
     """/static/shared/ serves smo_common/ui/, so viz/ lands at /static/shared/viz/."""
     for name in V1_MODULES:
         assert (SERVED / name).is_file(), name
+
+
+def test_overview_deployables_come_from_downlinked_tm_only():
+    """Franz (2026-11-03): antenna and wings stowed or deployed, panels in
+    sunlight or not — "if telemetry is available for this". Every parameter
+    deriveDeployment() reads is a real (not ground-derived, not instructor)
+    parameter carried by a housekeeping SID, so the picture shows what the
+    spacecraft says and never simulator truth."""
+    import yaml
+    src = (VIZ / "derive.js").read_text(encoding="utf-8")
+    i = src.index("export function deriveDeployment")
+    body = src[src.index("/* ── 9. Deployables"):src.index("export function deriveAll")]
+    used = set(re.findall(r'"(0x[0-9A-F]{4})"', body))
+    assert {"0x0536", "0x0520", "0x0144", "0x0146", "0x0147", "0x0108", "0x014E",
+            "0x012B", "0x0130"} <= used
+    cfg = REPO / "sim/configs/eosat1/telemetry"
+    params = {int(str(p["id"]), 0): p for p in yaml.safe_load((cfg / "parameters.yaml").read_text())["parameters"]}
+    in_sid = {int(str(x["param_id"]), 0) for s in yaml.safe_load((cfg / "hk_structures.yaml").read_text())["structures"]
+              for x in s["parameters"]}
+    for h in used:
+        n = int(h, 16)
+        assert params[n].get("visibility", "real") == "real", h
+        assert n in in_sid, f"{h} is in no HK SID"
+    # the overview is fed the model, and draws stowed / deployed and the key
+    assert i > 0 and "deploy: m.deploy" in (MCS_MODERN / "pictorial.js").read_text(encoding="utf-8")
+    ov = (VIZ / "overview.js").read_text(encoding="utf-8")
+    for s in ("function wingSvg", "function antennaSvg", "function solarHtml", '"antenna stowed"',
+              '"sunlit: delivering current"', '"no data: not downlinked"'):
+        assert s in ov, s

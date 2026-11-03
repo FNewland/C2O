@@ -659,6 +659,91 @@ export function momentumEta(att, history) {
 /* ── 7. Everything at once ──────────────────────────────────────────────── */
 
 /** deriveAll(src, ctx) — the full model the MCS hands its views. */
+/* ── 9. Deployables and illumination (overview) ──────────────────────────
+ * Only what the spacecraft downlinks; no simulator truth, no ground model.
+ *   antenna  ttc.antenna_deployment_sensor 0x0536 (SID 6: 0 unknown,
+ *            1 stowed, 2 deployed, 3 partial/jammed), else the commanded
+ *            flag ttc.antenna_deployed 0x0520 (SID 6) when the sensor says
+ *            nothing.
+ *   wings    eps.wing_status 0x0144 (SID 1: bit0 +Y, bit1 −Y deployed);
+ *            lit from the wing-only currents 0x0146 / 0x0147 (SID 8): a
+ *            wing delivering more than LIT_CURRENT_A is in the sun.
+ *   faces    the six body-face currents 0x012B–0x0130 (SID 1). The ±Y face
+ *            currents include the deployed wing; the wing current is taken
+ *            off when it is downlinked, otherwise the face says so.
+ *   eclipse  eps.eclipse_flag 0x0108 (SID 1): in eclipse nothing is lit,
+ *            even when no current is downlinked.
+ *   strings  eps.sa_string_lit 0x014E (SID 8): the on-board judgement
+ *            (bit0 string A, bit1 string B) that gates the yield monitors.
+ * Current is a proxy for sunlight: a dead string reads dark in the sun,
+ * which is why the on-board string flag is shown beside it. */
+export const LIT_CURRENT_A = 0.05;
+export const FACE_HEX = [["+X", "0x012B"], ["−X", "0x012C"], ["+Y", "0x012D"],
+  ["−Y", "0x012E"], ["+Z", "0x012F"], ["−Z", "0x0130"]];
+
+const pick = (q, extra = {}) => ({ verdict: q.verdict, ageS: q.ageS, src: q.src, ...extra });
+const usable = (q) => q.v !== null && q.verdict !== "nodata";
+
+export function deriveDeployment(src) {
+  const ecl = src.get("0x0108");
+  const eclipse = { v: usable(ecl) ? ecl.v >= 0.5 : null, ...pick(ecl) };
+  const darkByEclipse = eclipse.v === true && ecl.verdict !== "stale";
+
+  // antenna: the deployment sensor first, the commanded flag as fallback
+  const sen = src.get("0x0536"), flag = src.get("0x0520");
+  let antenna;
+  if (usable(sen) && sen.v !== 0) {
+    antenna = pick(sen, { state: ({ 1: "stowed", 2: "deployed", 3: "jammed" })[Math.round(sen.v)] || "unknown" });
+  } else if (usable(flag)) {
+    antenna = pick(flag, { state: flag.v >= 0.5 ? "deployed" : "stowed" });
+  } else if (usable(sen)) {
+    antenna = pick(sen, { state: "unknown" });
+  } else {
+    antenna = pick(sen, { state: null, verdict: "nodata" });
+  }
+
+  const ws = src.get("0x0144");
+  const illum = (q) => {
+    // a downlinked current decides, unless it is stale and a fresh eclipse
+    // flag says nothing can be lit
+    if (usable(q) && !(q.verdict === "stale" && darkByEclipse)) {
+      return pick(q, { state: q.v > LIT_CURRENT_A ? "sunlit" : "dark", i: { ...q, units: "A" } });
+    }
+    if (darkByEclipse) return pick(ecl, { state: "dark", eclipse: true, i: null });
+    return { state: null, verdict: "nodata", ageS: null, src: q.src, i: null };
+  };
+  const wing = (bit, curHex) => {
+    const deployed = usable(ws) ? ((Math.round(ws.v) >> bit) & 1) === 1 : null;
+    const cur = src.get(curHex);
+    return {
+      deployed, ...pick(ws, usable(ws) ? {} : { verdict: "nodata" }),
+      // a stowed wing is folded against the bus: not part of the lit array
+      illum: deployed === false ? { state: "stowed", verdict: ws.verdict, ageS: ws.ageS, src: ws.src, i: null }
+        : illum(cur),
+    };
+  };
+  const wings = { py: wing(0, "0x0146"), my: wing(1, "0x0147") };
+
+  const faces = FACE_HEX.map(([face, hex]) => {
+    let q = src.get(hex);
+    let withWing = false;
+    const side = face === "+Y" ? "py" : face === "−Y" ? "my" : null;
+    if (side && usable(q) && wings[side].deployed !== false) {
+      const w = src.get(side === "py" ? "0x0146" : "0x0147");
+      if (usable(w)) q = from([q, w], Math.max(0, q.v - w.v), "A", { src: `${q.src} − ${w.src}`, ground: false });
+      else withWing = wings[side].deployed === true;
+    }
+    return { face, withWing, ...illum(q) };
+  });
+
+  const sl = src.get("0x014E");
+  const strings = usable(sl)
+    ? pick(sl, { a: (Math.round(sl.v) & 1) === 1, b: (Math.round(sl.v) & 2) === 2 })
+    : { a: null, b: null, verdict: "nodata", ageS: null, src: sl.src };
+
+  return { eclipse, antenna, wings, faces, strings };
+}
+
 export function deriveAll(src, ctx = {}) {
   const attitude = deriveAttitude(src, ctx);
   attitude.momentum.etaS = momentumEta(attitude, ctx.history);
@@ -668,6 +753,7 @@ export function deriveAll(src, ctx = {}) {
     orbit: deriveOrbit(src),
     storage: deriveStorage(src, ctx),
     link: deriveLink(src),
+    deploy: deriveDeployment(src),
   };
 }
 

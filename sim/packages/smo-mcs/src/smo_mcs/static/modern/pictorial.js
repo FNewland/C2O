@@ -4,7 +4,8 @@
  * Mounts the shared pictorial displays (/static/shared/viz/, source
  * shared/ui-viz/) on the console pages and feeds them interpreted values:
  *
- *   Overview   spacecraft synoptic (overview.js) + power-flow summary
+ *   Overview   spacecraft synoptic (overview.js: subsystem blocks, antenna and
+ *              wings stowed/deployed, panels sunlit/dark) + power-flow summary
  *   EPS        power flow, full (powerflow.js)
  *   AOCS       2D attitude instruments (attitude2d.js) and, when the module
  *              is present and WebGL works, the 3D view (attitude3d.js) in #att3d
@@ -138,6 +139,9 @@ function overviewModel(m) {
     mode: { label: mi.label === "—" ? null : mi.label, src: mi.src },
     aocsMode: aocsModeName ? String(aocsModeName).replace(/\s*\(\d+\)$/, "") : null,
     eclipse: m.orbit.inEclipse, contact: link.contact, gs: link.gs, subsystems: subs,
+    // antenna / wings stowed or deployed, panels sunlit or dark: TM only
+    // (derive.js deriveDeployment documents the parameters)
+    deploy: m.deploy,
   };
 }
 
