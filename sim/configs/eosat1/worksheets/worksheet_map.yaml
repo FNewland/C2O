@@ -1,0 +1,93 @@
+# worksheet_map.yaml — where each course-workbook worksheet is offered.
+#
+# Hand-maintained. tools/gen_worksheets.py reads this map, parses the named
+# worksheets out of the OrbitNorth Week 3 workbook (EN + FR twin under
+# design/docs/course/) and writes ops_week3.yaml next to this file. Edit
+# here, then re-run:
+#
+#     python3 tools/gen_worksheets.py
+#
+# Only the worksheets listed below are generated. Per worksheet:
+#   phase        prep | during | debrief | exercise
+#   tools        tools that offer it: mcs, delayed_tm, orbit, radio, docs,
+#                instructor, portal
+#   procedures   offered when this procedure is open (MCS procedure panel)
+#   pages        offered on these MCS pages
+#   scenarios    offered for these scenarios (file stem in scenarios/);
+#                the instructor briefing/debrief panes use this
+#   context_keys offered first when the context carries one of these keys
+#                (alarm_id: an alarm is selected; anomaly: a delayed-TM
+#                anomaly or report row)
+# A worksheet with no procedures, pages or scenarios is offered everywhere
+# in its tools.
+
+source: design/docs/course/orbit_north_week3_workbook.md
+source_fr: design/docs/course/fr/orbit_north_week3_workbook.md
+
+worksheets:
+  # ── orientation ─────────────────────────────────────────────────────────
+  WB-5.0: {phase: prep, tools: [portal, docs]}
+
+  # ── Day 2: nominal pass, link loss, handover, flight dynamics ───────────
+  WB-5.4-N001: {phase: during, tools: [mcs], procedures: [NOM-001]}
+  WB-5.4-C003: {phase: during, tools: [mcs, radio], procedures: [CTG-003]}
+  WB-5.4-N012: {phase: during, tools: [mcs], procedures: [NOM-012]}
+  WB-5.4-FD: {phase: exercise, tools: [orbit]}
+
+  # ── Day 3: LEOP ─────────────────────────────────────────────────────────
+  WB-5.5-PB:
+    phase: prep
+    tools: [mcs, instructor]
+    scenarios: [first_contact, separation, separation_sequence]
+  WB-5.5-L001: {phase: during, tools: [mcs, radio], procedures: [LEOP-001]}
+  WB-5.5-L006: {phase: during, tools: [mcs], procedures: [LEOP-006]}
+  WB-5.5-L002: {phase: during, tools: [mcs], procedures: [LEOP-002]}
+  WB-5.5-L007: {phase: during, tools: [mcs], procedures: [LEOP-007]}
+  WB-5.5-L005: {phase: during, tools: [mcs], procedures: [LEOP-005]}
+  WB-5.5-L003: {phase: during, tools: [mcs, orbit], procedures: [LEOP-003]}
+  WB-5.5-AT:
+    phase: during
+    tools: [mcs, delayed_tm, radio]
+    context_keys: [alarm_id, anomaly]
+  WB-5.5-GO: {phase: debrief, tools: [mcs, instructor]}
+  WB-5.5-HO: {phase: during, tools: [mcs]}
+  WB-5.5-DB:
+    phase: debrief
+    tools: [mcs, instructor, delayed_tm, orbit, radio, portal]
+
+  # ── Day 4: commissioning ────────────────────────────────────────────────
+  WB-5.6-PB:
+    phase: prep
+    tools: [mcs, instructor]
+    scenarios: [sequential_checkout]
+  WB-5.6-C001: {phase: during, tools: [mcs], procedures: [COM-001]}
+  WB-5.6-C002: {phase: during, tools: [mcs], procedures: [COM-002]}
+  WB-5.6-C005: {phase: during, tools: [mcs], procedures: [COM-005]}
+  WB-5.6-C006: {phase: during, tools: [mcs, radio], procedures: [COM-006]}
+  WB-5.6-C007: {phase: during, tools: [mcs], procedures: [COM-007]}
+  WB-5.6-C008: {phase: during, tools: [mcs], procedures: [COM-008]}
+  WB-5.6-C009: {phase: during, tools: [mcs], procedures: [COM-009]}
+  WB-5.6-C010: {phase: during, tools: [mcs], procedures: [COM-010]}
+  WB-5.6-C011: {phase: during, tools: [mcs], procedures: [COM-011]}
+  WB-5.6-C012: {phase: during, tools: [mcs], procedures: [COM-012]}
+  WB-5.6-FL: {phase: during, tools: [mcs, delayed_tm], procedures: [COM-012]}
+  WB-5.6-MA:
+    phase: during
+    tools: [mcs, delayed_tm]
+    context_keys: [alarm_id, anomaly]
+  WB-5.6-GO:
+    phase: debrief
+    tools: [mcs, instructor]
+    scenarios: [sequential_checkout]
+
+  # ── Appendix A: contingency confirm-each-step pages ─────────────────────
+  WB-A-CTG-001: {phase: during, tools: [mcs], procedures: [CTG-001]}
+  WB-A-CTG-002: {phase: during, tools: [mcs], procedures: [CTG-002]}
+  WB-A-CTG-007: {phase: during, tools: [mcs], procedures: [CTG-007]}
+  WB-A-CTG-008: {phase: during, tools: [mcs], procedures: [CTG-008]}
+  WB-A-CTG-010: {phase: during, tools: [mcs], procedures: [CTG-010]}
+  WB-A-CTG-012: {phase: during, tools: [mcs], procedures: [CTG-012]}
+  WB-A-CTG-015: {phase: during, tools: [mcs, delayed_tm], procedures: [CTG-015]}
+  WB-A-CTG-017: {phase: during, tools: [mcs], procedures: [CTG-017]}
+  WB-A-CTG-019: {phase: during, tools: [mcs, radio], procedures: [CTG-019]}
+  WB-A-CTG-020: {phase: during, tools: [mcs, radio], procedures: [CTG-020]}
