@@ -467,7 +467,45 @@ derivation (`Engine._update_sc_mode`) and 0x0001 is written from it.
 6. S19 event-action links can be disabled individually for testing. This allows FDIR
    event generation (for visibility) without triggering automatic corrective action.
 7. The MCS alarm journal displays all S5 events and S12 violations with severity badges,
-   acknowledge/clear functionality, and per-subsystem filtering.
+   acknowledge/clear functionality, and per-subsystem filtering. Section 12 gives the rules
+   that decide when an alarm leaves the live list.
+
+## 12. MCS Alarm Lifecycle {#12-mcs-alarm-lifecycle}
+
+The MCS alarm drawer follows the ISA-18.2 alarm states. Each alarm has two independent
+facts: is the condition still present (active or returned to normal) and has an operator
+acknowledged it.
+
+| State | Condition | Acknowledged | Live alarm list |
+|-------|-----------|--------------|-----------------|
+| Unacknowledged, active | present | no | shown, annunciated |
+| Acknowledged, active | present | yes | shown (standing alarm) |
+| Unacknowledged, returned to normal | gone | no | shown, marked "returned to normal" |
+| Acknowledged, returned to normal | gone | yes | removed (kept in the journal and the archive) |
+
+An alarm therefore leaves the live list only when its condition has gone **and** it has been
+acknowledged, in either order. What returns an alarm to normal depends on its source:
+
+- **Ground limit** (`mcs/limits.yaml`): the parameter is back inside its band (with
+  hysteresis), or a new band on the same parameter replaces it (yellow to red, red to yellow).
+- **S12 monitor**: TM(12,10) back-to-limits for the same monitor, or the monitor is disabled
+  or deleted (TM(12,13)). At the start of each pass, after a TM reconnect, and after a
+  discontinuity in mission time (an on-board state reload or restart), the MCS also compares
+  fresh real-time values with the monitor's band, because the TM(12,10) may never arrive in
+  real time (one sent out of coverage is in the on-board store).
+- **S5 event**: an event has no condition to return to normal. It stays on the list until it
+  is acknowledged, and acknowledging it removes it. The S5 events 0x9xxx and 0xAxxx mirror
+  the S12 transitions and raise no alarm of their own.
+
+An alarm on a parameter that is no longer reported stays active: its last known value is
+still out of limits, and the parameter is shown as stale.
+
+**Stored telemetry never reaches the live displays.** An S15 dump downlinks stored packets on
+virtual channel 1 (VC1), and real-time telemetry uses VC0. The MCS archives played-back
+S5 events at their on-board time and counts the packets (`/api/tm-stored`). Played-back
+packets do not raise or clear alarms, do not change live values, and do not feed the FDIR
+journal, GO/NO-GO, the live plots or the packet log. Analyse a dump offline in the
+delayed-TM viewer or on the MCS `/dumps` page.
 
 ---
 

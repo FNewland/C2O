@@ -255,6 +255,8 @@ class TMFrameParser:
         fecf_size = FECF_LENGTH if fecf_present else 0
         self.data_zone_length = frame_length - TF_HEADER_LENGTH - fecf_size
         self._reassembly_buffer = bytearray()
+        # Per-VCID reassembly buffers (see extract_packets).
+        self._vc_buffers: dict[int, bytearray] = {}
         self.good_frames = 0
         self.bad_frames = 0
 
@@ -282,6 +284,27 @@ class TMFrameParser:
         return TMFrame(header=header, data=data, fecf=fecf)
 
     def extract_packets(self, frame: TMFrame) -> list[bytes]:
+        """Extract ECSS packets from a parsed TM frame, per virtual channel.
+
+        Each VC is its own packet stream (a packet spanning two VC1 frames
+        may have VC0 frames between them), so reassembly state is kept per
+        VCID. Packets from a VC other than 0 come back tagged with it
+        (``smo_common.protocol.framing.VcPacket``) so the ground can tell
+        S15 playback (VC1) from real-time TM (VC0).
+        """
+        from smo_common.protocol.framing import tag_vc
+        if frame.is_idle:
+            return []
+        vc = int(frame.header.vcid)
+        bufs = self._vc_buffers
+        self._reassembly_buffer = bufs.get(vc, bytearray())
+        try:
+            packets = self._extract_packets_one_vc(frame)
+        finally:
+            bufs[vc] = self._reassembly_buffer
+        return [tag_vc(p, vc) for p in packets] if vc else packets
+
+    def _extract_packets_one_vc(self, frame: TMFrame) -> list[bytes]:
         """Extract ECSS packets from a parsed TM frame.
 
         Uses the First Header Pointer (FHP) from the frame header to

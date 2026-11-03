@@ -28,6 +28,9 @@ class Alarm:
     limit: str
     acknowledged: bool
     source: str  # "S12", "S19", "S6", etc.
+    # False once the condition has returned to normal (ISA-18.2 RTN). An RTN
+    # alarm no longer counts as active for the FDIR level.
+    active: bool = True
 
 
 @dataclass
@@ -86,9 +89,20 @@ class FDIRAlarmPanel:
                 return True
         return False
 
+    def set_alarm_state(self, alarm_id: int, *, acknowledged: bool,
+                        active: bool) -> bool:
+        """Mirror the MCS journal's alarm state (smo_mcs.alarm_state)."""
+        for alarm in self._alarms:
+            if alarm.alarm_id == alarm_id:
+                alarm.acknowledged = bool(acknowledged)
+                alarm.active = bool(active)
+                return True
+        return False
+
     def get_active_alarms(self) -> list[dict]:
-        """Get active (unacknowledged) alarms sorted by severity."""
-        unacked = [a for a in self._alarms if not a.acknowledged]
+        """Unacknowledged alarms whose condition is still present, by
+        severity (a returned-to-normal alarm no longer drives FDIR level)."""
+        unacked = [a for a in self._alarms if not a.acknowledged and a.active]
         unacked.sort(key=lambda a: (a.severity.value, -a.timestamp))
         return [
             {
