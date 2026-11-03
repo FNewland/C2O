@@ -113,7 +113,8 @@ if pos[:2] == ["compute", "ssh"]:
     entry["stdin_file"] = "ssh-stdin-%d" % n
     if " sizes" in command:
         out("role ground\nvol ground-archive 2097152\nvol ground-dumps 51200\n"
-            "vol ground-workspace 300\nvol spacecdf-data 4096\ndisk 9437184 30832548")
+            "vol ground-workspace 300\nsub ground-workspace/logbook 120 7\n"
+            "vol spacecdf-data 4096\ndisk 9437184 30832548")
     out("c2o-bootstrap: cleaned (stub)")
 out()
 '''
@@ -579,6 +580,22 @@ def test_data_clean_designs_needs_typed_confirmation(env):
     assert [c for _, c, _ in _ssh_cleans(env)] == ["clean designs"]
 
 
+def test_data_clean_logbooks_on_both_vms_not_in_all(env):
+    """Logbooks (LOGBOOK_SPEC §7): their own switch, never part of --all."""
+    r = env.run("data", "clean", "--logbooks", stdin="y\n")
+    assert r.returncode == 0, _out(r)
+    assert "participant logbook" in r.stdout
+    assert [(vm, c) for vm, c, _ in _ssh_cleans(env)] == [
+        ("c2o-ground-vm", "clean logbooks"), ("c2o-sim-vm", "clean logbooks")]
+
+
+def test_data_clean_dumps_and_logbooks_sim_gets_both(env):
+    r = env.run("data", "clean", "--dumps", "--logbooks", "--yes")
+    assert r.returncode == 0, _out(r)
+    assert [(vm, c) for vm, c, _ in _ssh_cleans(env)] == [
+        ("c2o-ground-vm", "clean dumps logbooks"), ("c2o-sim-vm", "clean dumps logbooks")]
+
+
 def test_data_clean_needs_running_vm(tmp_path):
     e = Env(tmp_path, vms={"c2o-ground-vm": "TERMINATED", "c2o-sim-vm": "TERMINATED"})
     r = e.run("data", "clean", "--all", "--yes")
@@ -596,6 +613,7 @@ def test_data_list(env):
     o = r.stdout
     assert re.search(r"MCS telemetry archive\s+2\.0 GB\s+--telemetry", o)
     assert re.search(r"SpaceCDF designs\s+4 MB\s+--designs only", o)
+    assert re.search(r"of which participant logbooks\s+120 KB\s+--logbooks", o)
     assert "Disk: 9.0 GB used of 29.4 GB" in o
     assert "c2o-ground-vm-20261101-120000" in o
 
@@ -889,6 +907,19 @@ def test_bootstrap_clean_sim_and_never_scenarios(tmp_path):
     assert vols == ["smo_space-dumps:/v"]
     assert "nothing of that kind on the sim VM" in r.stderr
     assert not any("space-workspace" in x for c in calls for x in c if c[:1] == ["run"])
+
+
+def test_bootstrap_clean_logbooks(tmp_path):
+    r, calls = _bootstrap(tmp_path / "g", "ground", "clean", "logbooks")
+    assert r.returncode == 0, r.stderr
+    run = [c for c in calls if c[:1] == ["run"]]
+    assert len(run) == 1 and "smo_ground-workspace:/v" in run[0]
+    assert "C2O_PATHS=logbook" in run[0]
+    assert ["stop"] in [_compose_verb(c) for c in calls if c[:1] == ["compose"]]
+    r, calls = _bootstrap(tmp_path / "s", "sim", "clean", "logbooks")
+    assert r.returncode == 0, r.stderr
+    run = [c for c in calls if c[:1] == ["run"]]
+    assert len(run) == 1 and "smo_space-workspace:/v" in run[0] and "C2O_PATHS=logbook" in run[0]
 
 
 def test_bootstrap_clean_rejects_unknown(tmp_path):

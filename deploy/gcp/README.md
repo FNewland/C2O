@@ -502,6 +502,7 @@ c2o data list                                   # size of each store on each VM,
 c2o data clean --telemetry                      # the MCS telemetry archive
 c2o data clean --dumps --reports                # delayed-TM dumps (both VMs); reports and RF pass roll-ups
 c2o data clean --all --snapshot                 # all three, after a disk snapshot (a way back)
+c2o data clean --logbooks                       # every participant logbook, now (see below)
 c2o data snapshot                               # snapshot both disks now
 c2o data snapshots                              # list them
 c2o data prune --keep 3                         # keep the newest 3 per VM, delete older
@@ -521,8 +522,31 @@ second time by typing `delete-designs`, even with `--yes`. Snapshots cost about 
 | `ground-dumps` | ground | Dumps received by the GSG | `--dumps` |
 | `space-dumps` | sim | Dumps written by the simulator | `--dumps` |
 | `ground-workspace` | ground | Reports, RF pass roll-ups | `--reports` |
+| `ground-workspace/logbook` | ground | Participant logbooks (all screens and SpaceCDF) | `--logbooks` |
 | `space-workspace` | sim | Scenarios, breakpoints, config history, link state | never |
+| `space-workspace/logbook` | sim | The instructor's own logbook (console on the sim host) | `--logbooks` |
 | `spacecdf-data` | ground | SpaceCDF designs | `--designs` only |
+
+**Logbooks: privacy and retention.** Every screen has a **Logbook** button: participants note
+decisions, observations and reflections and answer the course-workbook worksheets in context
+(docs/plan_2026-11/LOGBOOK_SPEC.md).
+
+- **Private.** A logbook belongs to the signed-in account (the IAP email; "this browser" when run
+  locally). Only its owner can read it, through the screen they are using. Instructors get no view of
+  participants' text, and `c2o` has no command that shows it. Students hand in the download if it is to
+  be graded.
+- **Kept 48 hours.** The server deletes a person's whole logbook 48 h after their last entry, and any
+  entry older than 7 days even if they keep writing. Every screen runs this purge at start-up and
+  hourly. Participants download it (Markdown, or printable HTML for a PDF) from the panel; the screens
+  remind them at the end of a session and when less than 12 h remain.
+- **Where.** One JSON-lines file per person (named by a hash of the account) in
+  `ground-workspace/logbook/` on the ground VM, `space-workspace/logbook/` on the simulator VM for the
+  instructor console. The logbook never crosses the space link. `c2o data list` shows its size;
+  `c2o data clean --logbooks` deletes all of them at once (for example at the end of a term). It is not
+  part of `--all`. Disk snapshots taken with `c2o data snapshot` contain logbooks for as long as the
+  snapshot exists: prune them.
+- **Settings** (ground.env / space.env): `SMO_LOGBOOK_RETENTION_H` (default 48) and
+  `SMO_LOGBOOK_MAX_AGE_H` (default 168).
 
 **Rotating the link secret** (each term, or at once if `session.env` may have leaked):
 

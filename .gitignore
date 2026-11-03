@@ -16,3 +16,5 @@ venv-rfsim.tar.gz
 sim/sim_captures/*.cf32
 # Link credentials
 **/workspace/link/
+# Participant logbooks (private, 48 h retention; never committed)
+**/workspace/logbook/

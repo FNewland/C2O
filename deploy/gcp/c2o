@@ -55,7 +55,7 @@ Users (accounts name@c2o.live; run `c2o users login` once first)
 
 Data (recordings on the VMs; scenarios, breakpoints and designs are kept)
   c2o data list                  size of each store, plus disk snapshots
-  c2o data clean --telemetry --dumps --reports | --all   [--snapshot]
+  c2o data clean --telemetry --dumps --reports | --all   [--logbooks] [--snapshot]
   c2o data snapshot | snapshots | prune --keep 3
 
 Setup (README steps 4-8)
@@ -125,7 +125,7 @@ EOF
 help_data() {
     cat <<'EOF'
 c2o data list
-c2o data clean [--telemetry] [--dumps] [--reports] [--all] [--designs] [--snapshot] [--yes]
+c2o data clean [--telemetry] [--dumps] [--reports] [--all] [--logbooks] [--designs] [--snapshot] [--yes]
 c2o data snapshot
 c2o data snapshots
 c2o data prune --keep N [--yes]
@@ -135,8 +135,11 @@ Recordings live on the VMs' disks:
   --dumps      delayed-TM dumps (ground VM, and the simulator VM's own copies)
   --reports    generated reports and RF pass roll-ups (ground VM)
   --all        all three of the above
-Never touched by --all: saved scenarios, breakpoints, config history, link
-state. --designs also deletes every SpaceCDF design (asks twice, even with --yes).
+  --logbooks   every participant logbook now (ground VM, and the instructor's
+               on the simulator VM). Logbooks are private and delete
+               themselves 48 h after the person's last entry (7 days at most).
+Never touched by --all: logbooks, saved scenarios, breakpoints, config history,
+link state. --designs also deletes every SpaceCDF design (asks twice, even with --yes).
 --snapshot first takes a disk snapshot of the affected VMs, so a clean-up can be
 undone. The VMs must be running (c2o up). The screens restart (about a minute).
 snapshot: snapshot both disks now.  snapshots: list them.  prune --keep N: keep
@@ -559,7 +562,9 @@ store_label() {  # store_label VOLUME -> "description|how to clean"
         ground-archive)   echo "MCS telemetry archive|--telemetry" ;;
         ground-dumps)     echo "Dumps received by the ground|--dumps" ;;
         space-dumps)      echo "Dumps written by the simulator|--dumps" ;;
-        ground-workspace) echo "Reports, RF pass roll-ups|--reports" ;;
+        ground-workspace) echo "Reports, RF pass roll-ups, logbooks|--reports" ;;
+        ground-workspace/logbook) echo "  of which participant logbooks|--logbooks" ;;
+        space-workspace/logbook)  echo "  of which instructor logbooks|--logbooks" ;;
         space-workspace)  echo "Scenarios, breakpoints, link state|kept" ;;
         spacecdf-data)    echo "SpaceCDF designs|--designs only" ;;
         *)                echo "$1|-" ;;
@@ -595,7 +600,7 @@ cmd_data() {
                 info "$(printf '%-36s %10s   %s' Store Size 'Cleared by')"
                 while read -r kind name kb _; do
                     case "$kind" in
-                        vol)
+                        vol|sub)
                             lbl="$(store_label "$name")"
                             info "$(printf '%-36s %10s   %s' "${lbl%%|*}" "$(human_kb "$kb")" "${lbl#*|}")" ;;
                         disk)
@@ -657,8 +662,8 @@ cmd_snapshots_table() {
 }
 
 data_clean() {
-    local tel=no dumps=no reps=no designs=no snap=no a what_g="" what_s="" desc=""
-    [ "$#" -gt 0 ] || die "data clean: say what to clear: --telemetry, --dumps, --reports or --all (see c2o data --help)"
+    local tel=no dumps=no reps=no designs=no logs=no snap=no a what_g="" what_s="" desc=""
+    [ "$#" -gt 0 ] || die "data clean: say what to clear: --telemetry, --dumps, --reports, --logbooks or --all (see c2o data --help)"
     for a in "$@"; do
         case "$a" in
             --telemetry) tel=yes ;;
@@ -666,6 +671,7 @@ data_clean() {
             --reports) reps=yes ;;
             --all) tel=yes; dumps=yes; reps=yes ;;
             --designs) designs=yes ;;
+            --logbooks) logs=yes ;;
             --snapshot) snap=yes ;;
             *) die "data clean: unknown option $a (see c2o data --help)" ;;
         esac
@@ -676,9 +682,11 @@ data_clean() {
       - every delayed-TM dump (ground VM and simulator VM)"; }
     [ "$reps" = yes ] && { what_g="$what_g reports"; desc="$desc
       - generated reports and RF pass roll-ups"; }
+    [ "$logs" = yes ] && { what_g="$what_g logbooks"; what_s="${what_s:+$what_s }logbooks"; desc="$desc
+      - every participant logbook (private notes not yet downloaded are lost)"; }
     [ "$designs" = yes ] && { what_g="$what_g designs"; desc="$desc
       - EVERY SpaceCDF design and analysis run of every student"; }
-    [ -n "$what_g" ] || die "data clean: nothing selected (--telemetry, --dumps, --reports, --all, --designs)"
+    [ -n "$what_g" ] || die "data clean: nothing selected (--telemetry, --dumps, --reports, --all, --logbooks, --designs)"
     require_gcloud_login
 
     local gs ss
@@ -691,7 +699,7 @@ data_clean() {
     cat <<EOF
 
 This permanently deletes, in project $PROJECT:$desc
-Kept: saved scenarios, breakpoints, config history, link state$([ "$designs" = yes ] || printf ', SpaceCDF designs').
+Kept: saved scenarios, breakpoints, config history, link state$([ "$logs" = yes ] || printf ', logbooks')$([ "$designs" = yes ] || printf ', SpaceCDF designs').
 The screens restart (about a minute); anyone using them will see them reconnect.
 EOF
     [ "$snap" = yes ] && echo "A disk snapshot is taken first, so this can be undone (c2o data snapshots)."
@@ -708,7 +716,8 @@ EOF
     run_bootstrap "$VM_GROUND" clean $what_g
     if [ -n "$what_s" ]; then
         log "Cleaning on $VM_SIM: $what_s"
-        run_bootstrap "$VM_SIM" clean "$what_s"
+        # shellcheck disable=SC2086  # fixed words
+        run_bootstrap "$VM_SIM" clean $what_s
     fi
     log "Done. Sizes now: c2o data list"
 }
