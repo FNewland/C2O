@@ -802,6 +802,8 @@ const $ = (id) => document.getElementById(id);
 const BOOT = __BOOT_JSON__;
 let LAND = null;
 let mode = "tle", last = null, lastSrc = "", busy = false;
+// Logbook context (tool_frame mounts the panel): which input is in use.
+window.c2oLogbookContext = () => ({ page: mode });
 
 /* ── input validation (TLE format: 69 columns, modulo-10 checksum) ── */
 function tleChecksum(line) {
@@ -1166,7 +1168,8 @@ if (BOOT.tle1) run("tle");
         boot = json.dumps({"tle1": m["tle1"], "tle2": m["tle2"], "stations": m["stations"]})
         page = (HTML_TEMPLATE
                 .replace("__FRAME_HEAD__", tool_frame.head())
-                .replace("__FRAME_BAR__", tool_frame.bar('<span data-i18n>Orbit tools</span>'))
+                .replace("__FRAME_BAR__", tool_frame.bar('<span data-i18n>Orbit tools</span>',
+                                                        logbook="orbit"))
                 .replace("__FRAME_SCRIPT__", tool_frame.SCRIPT)
                 .replace("__BOOT_JSON__", boot.replace("</", "<\\/")))
         return tool_html_response(page, request.app)
@@ -1285,6 +1288,10 @@ if (BOOT.tle1) run("tle");
         """Start the aiohttp web server."""
         # Shared HTTP policy + design system / language runtime (R3 A8, §8).
         app = setup_tool_app(web.Application())
+        # Participant logbook (LOGBOOK_SPEC.md): private, /api/logbook here.
+        from smo_common.logbook import register_logbook_routes
+        register_logbook_routes(app, tool="orbit", worksheets_dir=(
+            Path(__file__).resolve().parents[1] / "configs" / "eosat1" / "worksheets"))
         app.router.add_get('/', handle_index)
         app.router.add_post('/api/tle', handle_tle_api)
         app.router.add_post('/api/sv', handle_sv_api)

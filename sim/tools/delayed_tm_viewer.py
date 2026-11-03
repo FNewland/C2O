@@ -503,7 +503,8 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
     app = setup_tool_app(web.Application())
     page_html = (INDEX_HTML
                  .replace("<!--FRAME_HEAD-->", tool_frame.head())
-                 .replace("<!--FRAME_BAR-->", tool_frame.bar('<span data-i18n>Delayed TM</span>'))
+                 .replace("<!--FRAME_BAR-->", tool_frame.bar('<span data-i18n>Delayed TM</span>',
+                                                             logbook="delayed_tm"))
                  .replace("<!--FRAME_SCRIPT-->", tool_frame.SCRIPT))
     # Never print the absolute server path on a web page (R3 audit A9):
     # show the store relative to the suite root instead.
@@ -565,6 +566,12 @@ def make_app(dump_dir: Path | None, api_base: str | None = None) -> web.Applicat
                                limits_by_pid=app["limits_by_pid"],
                                hk_structs=app.get("hk_structs"))
         return web.json_response(result)
+
+    # Participant logbook (LOGBOOK_SPEC.md): private, /api/logbook on this
+    # origin; "Log this" on step changes, events and check transitions.
+    from smo_common.logbook import register_logbook_routes
+    register_logbook_routes(app, tool="delayed_tm",
+                            worksheets_dir=REPO / "configs" / "eosat1" / "worksheets")
 
     app.router.add_get("/", index)
     app.router.add_get("/api/dumps", api_dumps)
@@ -670,6 +677,7 @@ INDEX_HTML = r"""<!doctype html>
 .dt-gaps{ margin:var(--sp-2) var(--sp-4); }
 .dt-cnt .bar{ display:inline-block; height:8px; background:var(--fill); border-radius:1px; vertical-align:middle; }
 .dt-scroll{ overflow:auto; max-height:560px; position:relative; }
+.ds-table td.lb-cell{ width:1%; padding-top:2px; padding-bottom:2px; text-align:right; }
 @media (max-width:980px){
   .dt-wrap{ grid-template-columns:minmax(0,1fr); }
   .dt-rail{ position:static; max-height:none; }
@@ -708,6 +716,7 @@ INDEX_HTML = r"""<!doctype html>
       <button type="button" class="ds-btn ghost sm" id="btnRefresh" data-i18n>Refresh list</button>
       <a class="ds-btn sm" href="reports" target="_blank" rel="noopener" id="btnReports"
          title="Pass report, daily ops review or anomaly investigation from these dumps (Markdown / HTML)" data-i18n-title><span data-i18n>Generate report…</span></a>
+      <span id="lbReport"></span>
       <span class="ds-meta" id="pollNote"></span>
     </div>
   </aside>
@@ -735,6 +744,16 @@ INDEX_HTML = r"""<!doctype html>
 import { renderValue, renderNoData, renderTabs, mountTabs, renderBanner, renderChip, renderFlag,
          setDisabled, setEnabled, glyph, esc } from "/static/shared/components.js";
 import I18n from "/static/shared/i18n.js";
+import { renderLogThis } from "/static/shared/logbook.js";
+/* Logbook context: the dumps on screen and the open tab. A "Log this" on
+ * a step change, a high/medium event or an S12 transition adds what it is
+ * about ("anomaly"), which puts the anomaly ticket (WB-5.5-AT) first. */
+window.c2oLogbookContext = () => {
+  const names = [...loadedNames];
+  const PAGES = { hk: "housekeeping", ev: "events", s12: "on-board monitoring", pk: "packet counts", an: "step changes" };
+  return { page: PAGES[tab] || tab, ...(names.length ? { dump: names.length > 2 ? `${names[0]} … ${names[names.length - 1]} (${names.length})` : names.join(", ") } : {}) };
+};
+const lbThis = (ctx) => `<td class="lb-cell">${renderLogThis(ctx, { kind: "observation", iconOnly: true })}</td>`;
 const T = (s, v) => I18n.tText(s, v);
 const $ = (id) => document.getElementById(id);
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -1070,12 +1089,13 @@ function hkPanel() {
 function evPanel() {
   const ev = decoded.events;
   if (!ev.length) return `<p class="tf-empty">${esc(T("No events."))}</p>`;
-  return `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Events"))}"><table class="ds-table"><thead><tr><th>${esc(T("On-board time"))}</th><th>${esc(T("Severity"))}</th><th>${esc(T("Event ID"))}</th><th>${esc(T("Description"))}</th></tr></thead><tbody>` +
+  return `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Events"))}"><table class="ds-table"><thead><tr><th>${esc(T("On-board time"))}</th><th>${esc(T("Severity"))}</th><th>${esc(T("Event ID"))}</th><th>${esc(T("Description"))}</th><th><span class="ds-sr">${esc(T("Logbook"))}</span></th></tr></thead><tbody>` +
     ev.map((e) => {
       const sv = e.severity >= 4 ? `<span class="ds-chip is-alarm">${glyph("alarm-up")}${esc(T("High"))}</span>`
         : e.severity >= 3 ? `<span class="ds-chip is-caution">${glyph("warn-up")}${esc(T("Medium"))}</span>`
         : `<span class="ds-chip">${esc((SEV[e.severity] || SEV[1])())}</span>`;
-      return `<tr><td class="num">${hmsms(e.cuc)}</td><td>${sv}</td><td class="num">${hex4(e.event_id)}</td><td>${e.description ? esc(e.description) : renderNoData({ label: T("no text") })}</td></tr>`;
+      const lb = e.severity >= 3 ? lbThis({ anomaly: `${hex4(e.event_id)} ${e.description || ""}`.trim() }) : "<td></td>";
+      return `<tr><td class="num">${hmsms(e.cuc)}</td><td>${sv}</td><td class="num">${hex4(e.event_id)}</td><td>${e.description ? esc(e.description) : renderNoData({ label: T("no text") })}</td>${lb}</tr>`;
     }).join("") + `</tbody></table></div>`;
 }
 function s12Panel() {
@@ -1086,12 +1106,13 @@ function s12Panel() {
     const entered = tr.filter((t) => t.entered).length;
     h += `<div style="padding:var(--sp-2) var(--sp-4)" class="ds-meta">${esc(T("{{n}} check transition(s): {{a}} out of limits, {{b}} back to nominal.", { n: tr.length, a: entered, b: tr.length - entered }))}</div>` +
       `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Check transitions"))}"><table class="ds-table"><thead><tr><th>${esc(T("On-board time"))}</th><th class="n">${esc(T("Monitor"))}</th><th>${esc(T("Parameter"))}</th><th>${esc(T("Transition"))}</th>` +
-      `<th class="n">${esc(T("Value"))}</th><th>${esc(T("Check"))}</th><th>${esc(T("Severity"))}</th><th>${esc(T("Limit band"))}</th></tr></thead><tbody>` +
+      `<th class="n">${esc(T("Value"))}</th><th>${esc(T("Check"))}</th><th>${esc(T("Severity"))}</th><th>${esc(T("Limit band"))}</th><th><span class="ds-sr">${esc(T("Logbook"))}</span></th></tr></thead><tbody>` +
       tr.map((t) => `<tr><td class="num">${t.cuc == null ? renderNoData() : hmsms(t.cuc)}</td><td class="n">${t.mon_id ?? ""}</td>` +
         `<td><span class="ds-id">${esc(t.param_hex || "")}</span> ${esc(t.param_name || "")}</td>` +
         `<td>${t.entered ? `<span class="ds-chip is-alarm">${glyph("alarm-up")}${esc(T("Out of limits"))}</span>` : `<span class="ds-chip ok">${esc(T("Back to nominal"))}</span>`}</td>` +
         `<td class="n">${renderValue(t.value, { units: t.units || "" })}</td><td>${esc(t.check_type_name || "")}</td>` +
-        `<td>${esc(t.severity_name || "")}</td><td class="num">${t.band ? esc(t.band) : renderNoData({ label: T("not reported") })}</td></tr>`).join("") +
+        `<td>${esc(t.severity_name || "")}</td><td class="num">${t.band ? esc(t.band) : renderNoData({ label: T("not reported") })}</td>` +
+        (t.entered ? lbThis({ anomaly: `${t.param_name || t.param_hex || ""} ${T("Out of limits")}`.trim(), ...(t.param_hex ? { param: t.param_hex } : {}) }) : "<td></td>") + `</tr>`).join("") +
       `</tbody></table></div>`;
   }
   if (defs.length) h += `<details class="ds-disclosure"><summary>${esc(T("Monitoring definitions (TM 12,13)"))}<span class="r">${defs.length}</span></summary><div class="bd">` +
@@ -1117,8 +1138,9 @@ function anPanel() {
   const an = [...decoded.anomalies].sort((a, b) => b.peak_delta / b.mean_delta - a.peak_delta / a.mean_delta);
   if (!an.length) return `<p class="tf-empty">${esc(T("No step changes: no parameter jumped by more than five times its mean sample-to-sample change."))}</p>`;
   return `<p class="ds-meta" style="padding:var(--sp-2) var(--sp-4)">${esc(T("Parameters whose largest sample-to-sample change is more than five times their mean change. Often a mode change, sometimes a fault."))}</p>` +
-    `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Step changes"))}"><table class="ds-table"><thead><tr><th>SID</th><th>${esc(T("Name"))}</th><th class="n">${esc(T("Largest step"))}</th><th class="n">${esc(T("Mean step"))}</th><th class="n">${esc(T("Ratio"))}</th></tr></thead><tbody>` +
-    an.map((a) => `<tr><td class="num">${a.sid}</td><td>${esc(a.name)}</td><td class="n">${fmtNum(a.peak_delta)}</td><td class="n">${fmtNum(a.mean_delta)}</td><td class="n">×${(a.peak_delta / a.mean_delta).toFixed(0)}</td></tr>`).join("") +
+    `<div class="dt-scroll" tabindex="0" aria-label="${esc(T("Step changes"))}"><table class="ds-table"><thead><tr><th>SID</th><th>${esc(T("Name"))}</th><th class="n">${esc(T("Largest step"))}</th><th class="n">${esc(T("Mean step"))}</th><th class="n">${esc(T("Ratio"))}</th><th><span class="ds-sr">${esc(T("Logbook"))}</span></th></tr></thead><tbody>` +
+    an.map((a) => `<tr><td class="num">${a.sid}</td><td>${esc(a.name)}</td><td class="n">${fmtNum(a.peak_delta)}</td><td class="n">${fmtNum(a.mean_delta)}</td><td class="n">×${(a.peak_delta / a.mean_delta).toFixed(0)}</td>` +
+      lbThis({ anomaly: `SID ${a.sid} ${a.name}: ${T("step")} ×${(a.peak_delta / a.mean_delta).toFixed(0)}`, param: a.name }) + `</tr>`).join("") +
     `</tbody></table></div>`;
 }
 
@@ -1222,7 +1244,10 @@ window.addEventListener("c2o:themechange", () => {
 /* ── boot ── */
 let lastW = 0;
 new ResizeObserver(() => { const w = $("timeline").clientWidth; if (decoded && Math.abs(w - lastW) > 4) { lastW = w; drawTimeline(); } }).observe($("timeline"));
-const rerender = () => { renderFiles(); render(); $("pollNote").textContent = T("checks for new files every 30 s"); };
+const rerender = () => {
+  renderFiles(); render(); $("pollNote").textContent = T("checks for new files every 30 s");
+  $("lbReport").innerHTML = renderLogThis({}, { kind: "observation" });
+};
 window.addEventListener("smo:i18nready", rerender);
 window.addEventListener("smo:langchange", rerender);
 rerender();

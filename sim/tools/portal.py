@@ -498,7 +498,8 @@ def build_page(cfg: Config, *, request_host: str | None, user: str | None,
     else:
         who = ""
     bar = tool_frame.bar('<span data-i18n>Welcome to C2O</span>',
-                         meta_html='<span data-i18n>EOSAT-1 mission operations training</span>')
+                         meta_html='<span data-i18n>EOSAT-1 mission operations training</span>',
+                         logbook="portal")
     # The account sits in the bar's status slot (server-rendered, not live).
     bar = bar.replace('aria-live="polite"></span>', f'aria-live="polite">{who}</span>', 1)
     strip = (
@@ -651,6 +652,10 @@ def create_app(cfg: Config | None = None, prober: Prober | None = None) -> web.A
     cfg = cfg or Config.from_env()
     app = setup_tool_app(web.Application())
     prober = prober or Prober(cfg)
+    # Participant logbook (LOGBOOK_SPEC.md): the welcome page has the button
+    # too, so a participant can download before leaving.
+    from smo_common.logbook import register_logbook_routes
+    register_logbook_routes(app, tool="portal")
 
     async def index(request):
         lang = (request.query.get("lang") or "en").strip().lower()[:2]
