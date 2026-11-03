@@ -1831,8 +1831,39 @@ class SimulationEngine:
         gate = self.params.get(0x052B)
         if gate is None or not (int(gate) & 0x01):
             return False
+        # Nor is a dead transponder (S4, 2026-11-02): the pass override and
+        # the auto-TX grace stand in for a station and a power line, never for
+        # a radio. A failed (or S2-unpowered) selected transponder radiates
+        # nothing, override or not.
+        if not self._ttc_radio_alive(selected=True):
+            return False
         return bool(self._override_passes
                     or getattr(self, "_auto_tx_remaining", 0.0) > 0.0)
+
+    def _ttc_radio_alive(self, selected: bool) -> bool:
+        """Is an S-band transponder alive? ``selected=True`` asks about the
+        unit currently selected (it carries the downlink); ``False`` about
+        either unit. No TT&C model => True.
+
+        Why the uplink asks the weaker question: with the instructor pass
+        override on, a team whose SELECTED unit failed can still command the
+        switch to the healthy unit blind. That is an explicit TRAINING AID
+        (labelled as such on the instructor console): EOSAT-1's transponders
+        are cold-redundant, so on the real design — and in this simulator
+        without the override — only the on-board command-loss timer (FDIR
+        TTC-01, 24 h, S19 ea 4003) makes that switch. With BOTH units dead
+        nothing reaches the spacecraft, override or not (Franz, S4)."""
+        ttc = self.subsystems.get("ttc") if hasattr(self, "subsystems") else None
+        if ttc is None:
+            return True
+        fn = getattr(ttc, "selected_transponder_alive" if selected
+                     else "any_transponder_alive", None)
+        if fn is None:
+            return True
+        try:
+            return bool(fn())
+        except Exception:  # noqa: BLE001 — a gate must not crash the tick
+            return True
 
     @property
     def uplink_active(self) -> bool:
@@ -1858,6 +1889,12 @@ class SimulationEngine:
         what the override is FOR: it lets an instructor command outside a real
         pass. It no longer forces the downlink.
         """
+        # Both transponders dead => no receiver on board at all. This check
+        # sits ABOVE the pass override on purpose (S4, 2026-11-02): the
+        # override pretends a station is in view; it cannot resurrect a radio,
+        # and a real spacecraft has no override for dead receivers.
+        if not self._ttc_radio_alive(selected=False):
+            return False
         if self._override_passes:
             return True
         link_status = self.params.get(0x0501)
@@ -3704,10 +3741,15 @@ class SimulationEngine:
         about what the radio and the MCS actually saw (defect #74).
         """
         self._rt_byte_budget += (self._current_tm_rate_bps() / 8.0) * max(dt, 0.0)
+        # A packet queued while the radio was up and released after it died
+        # (both transponders failed, PA tripped) goes into the void, exactly as
+        # `_tick_dump_emission` treats dump packets (S4, 2026-11-02).
+        downlink = self.downlink_active
         while self._rt_pending and self._rt_byte_budget >= len(self._rt_pending[0]):
             pkt = self._rt_pending.pop(0)
             self._rt_byte_budget -= len(pkt)
-            _put_tm(self, pkt)
+            if downlink:
+                _put_tm(self, pkt)
         if self._rt_pending:
             # Cap the carried budget so an idle period cannot bank credit and
             # then burst the whole backlog in one tick.
