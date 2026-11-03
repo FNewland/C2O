@@ -30,7 +30,7 @@ eclipse exit.
 | tcs.htr_battery | 0x040A | Heater status |
 | tcs.htr_obc | 0x040B | Heater status |
 | tcs.temp_battery | 0x0407 | Within 0 to 40 C |
-| tcs.temp_obc | 0x0406 | Within 5 to 55 C |
+| tcs.temp_obc | 0x0406 | Within -10 to 55 C |
 | aocs.mode | 0x020F | 8 (ECLIPSE) during eclipse |
 | aocs.att_error | 0x0217 | < 1.0 deg |
 
@@ -64,11 +64,11 @@ and reassess after one additional sunlit pass.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — `htr_bat` line, only if 0x0115 = 0
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — `htr_obc` line, only if 0x0116 = 0
 **Verify:** `tcs.temp_battery` (0x0407) > 5 C
-**Verify:** `tcs.temp_obc` (0x0406) > 10 C
+**Verify:** `tcs.temp_obc` (0x0406) > 0 C
 **Note:** If battery temperature margin is tight (< 8 C), raise battery heater
 **TC:** `HEATER_SET_SETPOINT(circuit=0, on_temp=3.0, off_temp=8.0)` (Service 8, Subtype 1, func_id 44) — setpoint
-**Note:** If OBC temperature margin is tight (< 12 C), raise the OBC heater setpoint:
-**TC:** `HEATER_SET_SETPOINT(circuit=1, on_temp=8.0, off_temp=13.0)` (Service 8, Subtype 1, func_id 44) — OBC heater ON 8 C / OFF 13 C
+**Note:** If OBC temperature margin is tight (< 0 C), raise the OBC heater setpoint:
+**TC:** `HEATER_SET_SETPOINT(circuit=1, on_temp=-5.0, off_temp=0.0)` (Service 8, Subtype 1, func_id 44) — OBC heater ON -5 C / OFF 0 C
 **GO/NO-GO:** Heater setpoints configured for eclipse cold phase — proceed.
 
 ### Step 3: Disable FPA Cooler to Conserve Power
@@ -102,7 +102,7 @@ CTG-001 (Undervoltage Load Shedding).
 ### Step 6: Monitor Thermal Conditions During Eclipse
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Monitor TCS telemetry at 60 s intervals
 **Verify:** `tcs.temp_battery` (0x0407) remains > 0 C
-**Verify:** `tcs.temp_obc` (0x0406) remains > 5 C
+**Verify:** `tcs.temp_obc` (0x0406) remains > -10 C
 **Verify:** `tcs.htr_battery` (0x040A) — heater cycling as expected
 **Verify:** `tcs.htr_obc` (0x040B) — heater cycling as expected
 **Action:** If any temperature approaches lower limit, verify heater is ON. If heater

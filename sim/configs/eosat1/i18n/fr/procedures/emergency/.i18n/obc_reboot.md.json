@@ -69,8 +69,8 @@
   },
   {
    "id": "emg-003-obc-reboot/procedure-steps/step-8-restore-operational-mode-and-log-results",
-   "en_hash": "150482855d6efc40",
-   "fr_hash": "4d32ead6b3fe6737"
+   "en_hash": "5d4d28a0071c9115",
+   "fr_hash": "6d4f41e26d0bf34e"
   },
   {
    "id": "emg-003-obc-reboot/recovery-actions",
@@ -98,5 +98,5 @@
    "fr_hash": "01018e2c2027bcb3"
   }
  ],
- "en_commit": "204d5cd"
+ "en_commit": "21af365"
 }

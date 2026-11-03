@@ -94,8 +94,8 @@
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/46-verify-tcs-baseline-temperatures",
-   "en_hash": "6a6b738bc8f5aba5",
-   "fr_hash": "1c480f4ba91cb7e5"
+   "en_hash": "744eb8083cb9e23b",
+   "fr_hash": "63e6f07c952e34ff"
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/47-verify-aocs-and-payload-are-off",
@@ -363,5 +363,5 @@
    "fr_hash": "2a99c955a0ad5e99"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "21af365"
 }

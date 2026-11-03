@@ -147,7 +147,7 @@ réchauffeur : `HEATER_BATTERY(on=1)` (func_id 40) ; le rendre à `HEATER_AUT
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne du réchauffeur OBC (sans effet si déjà sur ON)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5 s
 **TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- rendre le réchauffeur OBC à son thermostat (l'étape 2 l'a mis sur OFF manuellement).
-**Note:** Si l'OBC est sous +5 °C et ne remonte pas, le forcer sur ON avec `HEATER_OBC(on=1)`
+**Note:** Si l'OBC est sous -10 °C et ne remonte pas, le forcer sur ON avec `HEATER_OBC(on=1)`
 (func_id 41) et le rendre au mode AUTO une fois réchauffé.
 **Verify:** `tcs.temp_obc` (0x0406) tendant vers la plage nominale (-10 °C à +40 °C).
 **Verify:** hausse de `eps.power_cons` (0x0106) < 10 W. Le bilan de puissance du satellite reste positif.

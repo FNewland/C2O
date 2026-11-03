@@ -8,6 +8,10 @@ driven headless through the real `SimulationEngine`. No model parameters were ch
 **Reproduce:** `docs/plan_2026-11/obc_thermal/obc_thermal_runs.py` (instructions are in its docstring).
 It writes `summary.json` and the three PNGs in `docs/plan_2026-11/obc_thermal/`.
 
+> **2026-11-03:** §1–§7 describe the fixed-sink zone model as it was (commit 21af365). Franz ruled
+> "make it physical"; the model is now a thermal network (`THERMAL_MODEL.md`) and §8 re-runs the
+> analysis on it. Read §8 for the current numbers.
+
 Labels used for every number: **[Sim]** measured from the simulator run; **[Calc]** hand
 calculation; **[Cfg]** read from configuration or code; **[Assumed]** an assumption made for
 this analysis; **[Datasheet]** a published vendor value.
@@ -256,3 +260,120 @@ manual ON. These are behaviour questions, not thermal parameters, so they are le
   indicative of the size of the mode effect, not a thermal model of EOSAT-1.
 * The soak runs switched **both** heater lines (battery and OBC) together, as in a load shed. That is why
   the battery contributes about 2 K when the lines come back.
+
+---
+
+## 8. After the thermal network (2026-11-03)
+
+Franz's rulings: "Move [OBC limits] towards hardware, plus model more realistic cooling in the simulator
+(less power used = colder spacecraft). If possible, build a proper thermal simulation." and "Yes, make it
+physical". The fixed +10/+12 °C sink is gone. Every temperature now comes from a 16-node lumped-parameter
+network driven by the true attitude, the eclipse, the Earth view factors and what the EPS actually delivers
+to each unit. The design, all values and their sources are in [`THERMAL_MODEL.md`](THERMAL_MODEL.md).
+
+**Reproduce:** `docs/plan_2026-11/obc_thermal/thermal_network_runs.py` (docstring). It drives the real
+`SimulationEngine` (spacecraft flown to NOMINAL by telecommand, then each case set up), 10 h to settle plus a
+3 h measurement window, 1 s physics steps, epoch β −30.4°, eclipse 32 %. FDIR is disabled in these runs so the
+load state is the one set up (S19 1004/1005 would otherwise switch the payload off at every eclipse entry,
+§3.3 item 3). Results: `network_summary.json` and the four `network_*.png`.
+
+### 8.1 Operating cases — periodic steady state [Sim]
+
+Orbit-average [orbit min … max], °C.
+
+| Case | Load P_int | Structure | OBC | Battery (heater duty) | Imager / FPA |
+|---|---|---|---|---|---|
+| **Nominal**: payload STANDBY with the cooler running (what STANDBY does), nadir, heater lines ON | 38.5 W | +23.1 [+15.4…+29.4] | **+27.6 [+21.7…+33.1]** | +19.5 [+16.2…+21.9] (0 %) | imager +16.4, FPA **held at −15.0** |
+| Nominal, cooler off (NOM-010 step 3; power-budget `nominal`) | 23.7 W | +9.9 [+2.1…+16.3] | +14.4 [+8.4…+20.1] | +8.8 [+5.0…+10.0] (7 %) | +10.9 (uncooled) |
+| **Long safe mode**: COARSE_SUN (+X at the Sun), payload and cooler off | 18.1 W | +0.6 [−7.0…+6.6] | **+5.0 [−0.9…+10.4]** | +7.4 [+5.0…+10.0] (22 %) | −18.4 |
+| **Load shed / survival**: OBC + receiver only, AOCS line off, heater lines OFF | 7.7 W | −7.5 [−15.1…−1.9] | **−2.9 [−9.1…+2.0]** | −7.0 [−11.4…−2.9] (off) | −23.5 |
+| Load shed, heater lines ON | 10.8 W | −4.9 [−12.5…+0.9] | −0.3 [−6.5…+4.8] | +7.5 [+5.0…+10.0] (37 %) | −22.4 |
+| Load shed, **cold season** (1322 W/m², albedo 0.25, OLR 218), lines OFF | 7.7 W | −11.4 [−18.5…−6.1] | **−6.7 [−12.6…−2.2]** | −10.9 [−15.0…−6.9] | −26.7 |
+| Cold season, heater lines ON | 11.7 W | −8.0 [−15.1…−2.5] | −3.4 [−9.1…+1.4] | +7.4 [+5.0…+10.0] (49 %) | −25.2 |
+| **Hot case**: 1414 W/m², albedo 0.35, OLR 261, IMAGING all orbit, cooler on, TX on | 41.6 W | +27.7 [+19.5…+34.3] | **+32.0 [+25.8…+38.0]** | +24.1 [+20.6…+26.9] (0 %) | imager +37.9, **FPA lost: +5.1** |
+
+![OBC by case](obc_thermal/network_obc_cases.png)
+
+![Nominal nodes](obc_thermal/network_nominal_nodes.png)
+
+* **Less power = colder spacecraft.** From nominal with the cooler (38.5 W) to a load shed (7.7 W) the
+  structure drops 31 K and the OBC 30 K: about 1 K per watt, as §4.4 estimated (0.9 K/W). Safe mode is 22 K
+  colder than nominal: its load is lower **and** pointing +X at the Sun puts less sunlit area on the body than
+  the nadir hold, which sweeps the Sun across ±X and +Z and keeps −Y lit by β.
+* **OBC.** Nominal +22…+33 °C (cooler running) or +8…+20 °C (cooler off), inside the target +10…+35 °C apart
+  from the eclipse dips of the cooler-off case. Long load shed in the cold season averages −6.7 °C with lows of
+  −12.6 °C — the analysis estimate (≈ −5 °C, lows −10…−20 °C) — and crosses the new −10 °C heater ON point at the
+  bottom of each eclipse. The OBC sits P/G = 3 W / 0.66 W/K = **4.5 K above the structure** in every case [Calc];
+  measured 4.5 K (nominal) and 4.6 K (load shed) [Sim].
+* **Battery.** Mounted on the never-sunlit +Y wall: +16…+22 °C in nominal with the cooler (heater idle), and its
+  thermostat holds +5…+10 °C whenever the bus is cold (7–49 % duty). Heater lines OFF in a load shed take it to
+  −7 °C (cold season −11 °C): below the 0 °C charge limit — the lesson stays "keep line 5 powered".
+* **FPA.** With the imager on its isolated nadir radiator the cooler's sink is +16.4 °C in nominal STANDBY, so
+  −15 °C holds with ≈ 2 K of margin (floor ≈ −17 °C; the old fixed +12 °C sink gave 5 K). Imaging continuously in
+  the hot case drives the imager to +38 °C and the FPA settles at +5 °C: the cooler loses the detector. Normal
+  short captures cost about 0.3 K each [Calc: 3.1 W extra × 120 s / 1125 J/K].
+* **Panels and wings** now have physical swings: body panels −20…+37 °C, the deployable wings −52…+63 °C.
+
+### 8.2 Instructor cold soak, per zone [Sim]
+
+Same sequence as §3.2 from the cooler-off nominal state: inject at the zone's **default** depth with heater
+lines OFF; lines ON after 4 h (thruster: auto mode for the catbed hold); soak cleared after 10 h.
+
+| Zone (default) | Before | Soak, lines OFF (mean / min) | Lines ON (mean / min) | Heater duty | After clear |
+|---|---|---|---|---|---|
+| OBC (−20 K) | +14.9 | −13.6 / −20.4 (yellow, touching red) | −8.6 / −12.8 | 55 %, cycling | +12.6 |
+| Battery (−25 K) | +8.9 | −26.4 / −29.5 (red) | +6.6 / +3.0 | 93 % | +8.9 |
+| Thruster (−25 K) | +8.2 | −18.3 / −20.4 | +211 (190…230 hold) | auto hold | +211 (hold continues) |
+
+![Cold soak per zone](obc_thermal/network_cold_soak.png)
+
+* `cold_soak` is now a heat leak G_zone × offset out of the zone plus the step (THERMAL_MODEL.md §6). Because
+  the leak also drains the frame through the zone's mount, the zone moves about 1.4× the offset [Sim].
+* **OBC default −20 K** (the analysis suggested −8 K for the old model): passive it lands in yellow below the
+  −10 °C ON point, and the 4 W heater brings it back to the −10/−5 °C thermostat band. An earlier −40 K trial
+  went to −42 °C passive and −34 °C with the heater (100 % duty): red either way.
+* Battery and thruster keep −25 K: the 8 W battery heater recovers its thermostat band from −26 °C; the catbed
+  heater's 288 K of authority makes the thruster soak irrelevant once auto mode runs.
+
+### 8.3 Sanity checks
+
+* **Energy balance [Sim vs Calc].** Over each 3 h window the change in stored network energy equals
+  ∫(absorbed + dissipated − radiated) dt to within 1 J on a throughput of 2.7–3.7 MJ (every case). The FPA's
+  exchange with the imager is counted as dissipation on the imager node.
+* **OBC self-heating [Calc].** 3 W across 0.6 W/K conduction + 4εσAT³ = 0.06 W/K internal radiation =
+  4.5 K; simulated 4.5–4.6 K above the structure.
+* **Unit tests** (`sim/tests/test_simulator/test_thermal_network.py`): adiabatic conservation, two-node radiator
+  steady state against T⁴ = P/(εAσ), Earth view factor closed forms / continuity / sphere average 0.311 at
+  513 km, eclipse cooling, dissipation coupling, open-circuit heater, heater recovery, large-step sub-stepping
+  and the engine at speed.max (1000×) against a 10× reference within 1 K.
+
+### 8.4 Limits now
+
+| Item | Before | Now |
+|---|---|---|
+| OBC MCS limits (`mcs/limits.yaml` 0x0406) | yellow +5 / +60, red 0 / +70 | **yellow −10 / +60, red −20 / +70** |
+| S12 0x0406 (ALARM) | 0 … +60 | **−20 … +60** |
+| TCS events (`tcs.yaml event_thresholds.obc`) | warn +5 / +50, alarm −5 / +60 | **warn −10 / +50, alarm −20 / +60** |
+| OBC heater thermostat | ON +5 / OFF +10 | **ON −10 / OFF −5** |
+| Battery | yellow +2 / +40, red 0 / +45, heater +5 / +10 | unchanged (Li-ion is not charged below 0 °C) |
+| Manual 03 "OBC nominal 15–50 °C" | contradicted the model (+9…+12.5) | +20…+35 °C (cooler running), +10…+20 °C (cooler off) |
+
+### 8.5 For Franz
+
+1. **FPA monitors in long survival.** With the payload off, the uncooled imager follows its isolated radiator
+   down to −23 °C (load shed) and −27 °C (cold season). The FPA S12 bands are built around the *regulated*
+   detector (warning −22, alarm −25.5 °C), so a long load shed now raises the FPA yellow, and in the cold season
+   the red — and S19 3001 "FPA overtemp → payload off" fires (harmless: the payload is already off). Options:
+   accept it as a true cold-detector alarm, gate the FPA monitors on cooler/payload state, or give the FPA a
+   separate non-operating band.
+2. **FPA margin.** STANDBY with the cooler running holds −15 °C with ≈ 2 K of margin; −20 °C (the coldest
+   commandable setpoint) is no longer reachable in steady STANDBY at β −30° (floor ≈ −17 °C). It still is in the
+   colder seasons and modes. More margin would need a larger imager radiator, which the 100 × 226 mm nadir face
+   does not have.
+3. **STANDBY means a 15 W cooler.** The payload model runs the cooler in STANDBY, so "nominal" is a 38 W
+   spacecraft at +23 °C; the power-budget `nominal` profile assumes the cooler off (24 W, +10 °C). Both are
+   plotted; which is the reference nominal is an operations decision.
+4. **High OBC limits** were left at yellow +60 / red +70 °C (within the 65–85 °C ratings); the hot case peaks at
+   +38 °C.
+5. **The workbook** (`configs/eosat1/worksheets/ops_week3.yaml`) still quotes "line 6 if temp_obc < 0 °C" and
+   "temp_obc ∈ [−5, +45] °C" — owned by the workbook work; not changed here.

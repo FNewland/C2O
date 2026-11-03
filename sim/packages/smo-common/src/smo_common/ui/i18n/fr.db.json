@@ -1145,7 +1145,7 @@
  "reportsec:pass_report.summary:text": "**Station :** {{period.station}}  **AOS :** {{period.start_utc}}  **LOS :** {{period.end_utc}}\n**Durée :** {{period.duration_min}} min\n\nRetour de données {{gaps.received_pct}} % de l'attendu. {{counts.commands.total}} commandes\nenvoyées, {{counts.commands.rejected}} rejetées. {{counts.events.severity_3plus}}\névénements de gravité 3 ou plus.\n\n*Opérateur : consignez ici ce que vous cherchiez à accomplir pendant ce passage, ce que vous avez réellement\naccompli, et ce que le quart suivant doit reprendre. Un rapport de passage qui ne fait qu'aligner des chiffres\nn'est pas un rapport de passage.*",
  "reportsec:pass_report.summary:title": "Synthèse du passage",
  "reportsec:pass_report.vitals:title": "Paramètres vitaux pendant le passage",
- "s12:1030.23:description": "Température OBC au-delà de 60 °C",
+ "s12:1030.23:description": "Température OBC hors de -20..+60 °C",
  "s12:1030.23:name": "TCS surchauffe OBC",
  "s12:1031.22:description": "Température batterie au-delà de 45 °C",
  "s12:1031.22:name": "TCS surchauffe batterie",

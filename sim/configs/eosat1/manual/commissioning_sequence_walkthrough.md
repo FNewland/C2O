@@ -204,7 +204,7 @@ All OFF lines are expected — we haven't powered them on yet.
 
 | Parameter | Hex ID | Expected (ambient) | Acceptable Range |
 |-----------|--------|---------------------|-----------------|
-| `temp_obc` | 0x0406 | ~20°C | [-5, +45]°C |
+| `temp_obc` | 0x0406 | ~20°C | [-10, +50]°C |
 | `temp_battery` | 0x0407 | ~15°C | [0, +35]°C |
 | `temp_fpa` | 0x0408 | ~+11.5°C (internal ambient, uncooled) | [-22.0, +14.0]°C (yellow band) |
 | Panel temps | 0x0400–0x0405 | 8–20°C range | [-40, +60]°C |

@@ -23,7 +23,7 @@ for hot cases), and monitors the temperature trend until the zone returns within
 ### Thermal Yellow Limits Reference
 | Zone        | Parameter           | TM ID  | Cold Yellow | Hot Yellow |
 |-------------|---------------------|--------|-------------|------------|
-| OBC         | `tcs.temp_obc`      | 0x0406 | -5 deg-C    | +55 deg-C  |
+| OBC         | `tcs.temp_obc`      | 0x0406 | -10 deg-C   | +55 deg-C  |
 | Battery     | `tcs.temp_battery`  | 0x0407 | +2 deg-C    | +42 deg-C  |
 | FPA         | `tcs.temp_fpa`      | 0x0408 | -45 deg-C   | -15 deg-C  |
 
@@ -48,7 +48,7 @@ for hot cases), and monitors the temperature trend until the zone returns within
 **TC:** `GET_PARAM(param_id=0x040A)` (Service 20, Subtype 3) — `tcs.htr_battery`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.htr_battery` (0x040A) = 1 (ON) within 5s
 **LABEL:** `STEP-2A-OBC`
-**BRANCH:** `tcs.temp_obc < -5` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
+**BRANCH:** `tcs.temp_obc < -10` -> GO `STEP-2A-OBCON` | NO-GO `STEP-2B` (timeout 10 s)
 **LABEL:** `STEP-2A-OBCON`
 **Note:** OBC cold:
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) — the `htr_obc` line first (no-op if already ON)

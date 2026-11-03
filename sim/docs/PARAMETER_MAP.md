@@ -472,7 +472,7 @@ Columns:
 | `0x0403` | tcs.temp_panel_my | C | 3 |  |  |  |  |
 | `0x0404` | tcs.temp_panel_pz | C | 3 |  |  |  |  |
 | `0x0405` | tcs.temp_panel_mz | C | 3 |  |  |  |  |
-| `0x0406` | tcs.temp_obc | C | 3 |  | 5…60 / 0…70 | TCS OBC Overtemp (0.0…60.0, ALARM) |  |
+| `0x0406` | tcs.temp_obc | C | 3 |  | -10…60 / -20…70 | TCS OBC Overtemp (-20.0…60.0, ALARM) |  |
 | `0x0407` | tcs.temp_battery | C | 3 |  | 2…40 / 0…45 | TCS Battery Overtemp (-10.0…45.0, WARNING) |  |
 | `0x0408` | tcs.temp_fpa | C | 3 |  | -22…14 / -25.5…17.5 | TCS FPA Temperature Warning (-22.0…14.0, WARNING)<br>TCS FPA Temperature Alarm (-25.5…17.5, ALARM) |  |
 | `0x0409` | tcs.temp_thruster | C |  | yes |  |  |  |

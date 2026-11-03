@@ -41,7 +41,7 @@ propulsion (if applicable). Establish baseline thermal profiles over a full orbi
 
 ### Step 1 — Request Thermal Housekeeping
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
-**Verify:** `tcs.temp_obc` (0x0406) in range [-5C, +45C] within 10s
+**Verify:** `tcs.temp_obc` (0x0406) in range [-10C, +50C] within 10s
 **Verify:** `tcs.temp_battery` (0x0407) in range [+5C, +35C] within 10s
 **Verify:** `tcs.temp_fpa` (0x0408) reported (payload off, uncooled: expect +8C to +14C) within 10s
 **GO/NO-GO:** All thermal zones within operational limits
@@ -56,7 +56,7 @@ propulsion (if applicable). Establish baseline thermal profiles over a full orbi
 ### Step 3 — Monitor Thermal Profile Through Eclipse
 **Action:** Continue thermal monitoring through eclipse entry and eclipse period.
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — at eclipse entry, mid-eclipse, eclipse exit
-**Verify:** `tcs.temp_obc` (0x0406) > -5C throughout eclipse within 10s
+**Verify:** `tcs.temp_obc` (0x0406) > -10C throughout eclipse within 10s
 **Verify:** `tcs.temp_battery` (0x0407) > +5C throughout eclipse within 10s
 **Action:** Record temperature drop rates. OBC expected to cool ~0.5C/min; battery should be thermally buffered.
 **GO/NO-GO:** All zones above minimum operational limits during eclipse
@@ -86,7 +86,7 @@ trap the old card fell into.
 **Verify:** `tcs.temp_obc` (0x0406) stable or increasing within 120s
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41)
 **Verify:** OBC heater OFF acknowledged within 5s
-**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) — hand the OBC circuit back to its thermostat (ON below +5 C, OFF above +10 C)
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) — hand the OBC circuit back to its thermostat (ON below -10 C, OFF above -5 C)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 --- the line STAYS ON: this is the nominal configuration from now on
 **GO/NO-GO:** OBC heater circuit operational, line ON under thermostat control
 

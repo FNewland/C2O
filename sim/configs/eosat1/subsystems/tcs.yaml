@@ -1,46 +1,16 @@
 model: tcs_basic
 
+# Legacy first-order zones. Only the FPA remains one: it is a CONTROLLED
+# node (the cooler law in tcs_basic, sink = the payload network node) and its
+# C / tau set the cooler's parasitic UA = C / tau = 0.833 W/K (see the cooler
+# derivation below). Every other temperature comes from `network:` (2026-11);
+# the old panel / battery / thruster zone entries were removed with the
+# fixed-sink model they parameterised.
 zones:
-  - name: panel_px
-    capacitance_j_per_c: 5000
-    time_constant_s: 600
-    initial_temp_c: 15.0
-  - name: panel_mx
-    capacitance_j_per_c: 5000
-    time_constant_s: 600
-    initial_temp_c: 12.0
-  - name: panel_py
-    capacitance_j_per_c: 4000
-    time_constant_s: 500
-    initial_temp_c: 20.0
-  - name: panel_my
-    capacitance_j_per_c: 4000
-    time_constant_s: 500
-    initial_temp_c: 18.0
-  - name: panel_pz
-    capacitance_j_per_c: 3000
-    time_constant_s: 800
-    initial_temp_c: 10.0
-  - name: panel_mz
-    capacitance_j_per_c: 3000
-    time_constant_s: 800
-    initial_temp_c: 8.0
-  # Battery pack node (Phase B, brief 05 WP-3): ~0.9 kg of Li-ion at
-  # ~900 J/kg/K gives C = 800 J/K; the pack is mounted on thermal standoffs
-  # against the radiator side, UA = C/tau = 0.30 W/K, so the 8 W heater has
-  # ~27 K of authority and the thermostat genuinely cycles.
-  - name: battery
-    capacitance_j_per_c: 800
-    time_constant_s: 2667
-    initial_temp_c: 8.0
-  # Thruster catalyst-bed node (Phase D): small catalyst bed + heater
-  # blanket, C = 50 J/K, tau = 1200 s => UA = 0.042 W/K. The 12 W heater has
-  # ~288 K of authority: 180 C (propulsion arm interlock) in ~18 min, 200 C
-  # in ~22 min — the design sheet's "12 W for 20 min = 4.0 Wh" preheat.
-  - name: thruster
-    capacitance_j_per_c: 50
-    time_constant_s: 1200
-    initial_temp_c: 5.0
+  - name: fpa
+    capacitance_j_per_c: 100
+    time_constant_s: 120
+    initial_temp_c: -5.0
 
 heaters:
   # Phase B (brief 05 defect 2 / WP-3): setpoints reconciled to the manual
@@ -51,10 +21,15 @@ heaters:
     power_w: 8.0
     on_temp_c: 5.0
     off_temp_c: 10.0
+  # OBC survival heater (2026-11): ON -10 / OFF -5 C, at the hardware-based
+  # yellow-low (-10 C). It used to switch at +5 / +10 C — the old yellow-low
+  # — so any heater activity was by construction a yellow alarm, and in the
+  # thermal network the nominal OBC (+10..+20 C) never needs it. It earns its
+  # keep in long load shed / survival and against a cold soak.
   - name: obc
     power_w: 4.0
-    on_temp_c: 5.0
-    off_temp_c: 10.0
+    on_temp_c: -10.0
+    off_temp_c: -5.0
   # Catbed heater (Phase D): HEATER_THRUSTER (S8 func 42) makes this circuit
   # load-bearing for the first time. MANUAL by default (preheat is an
   # explicit NOM-013 step); HEATER_AUTO_MODE circuit=2 enables the 190/230 C
@@ -162,16 +137,199 @@ fpa_envelope:
   warning_margin_k: 1.5
   alarm_margin_k: 5.0
 
-# Thermal zone coupling (conduction/radiation parameters)
-thermal_coupling:
-  zone_conductance:
-    # Phase B: 0.5 -> 0.1 W/K. The battery pack is on thermal standoffs; at
-    # 0.5 W/K the warm OBC swamped the battery node's own 0.3 W/K sink and
-    # parked it above the thermostat band forever (brief 05 WP-3).
-    battery_obc: 0.1
-    structure_electronics: 0.8
-    payload_structure: 0.4
-  space_radiation_g: 0.2  # W/K radiative coupling to space (3K sink)
+# ---------------------------------------------------------------------------
+# THERMAL NETWORK (2026-11) — docs/plan_2026-11/THERMAL_MODEL.md
+# ---------------------------------------------------------------------------
+# A lumped-parameter network replaces the fixed-surroundings zone model, in
+# which the OBC, battery and thruster relaxed towards a configured +10/+12 C
+# "internal sink" whatever was powered (OBC_THERMAL_ANALYSIS.md §4.4). Now:
+#
+#   C_i dT_i/dt = Q_sun + Q_albedo + Q_earthIR        (external faces, attitude-
+#               - eps A sigma T^4                       and eclipse-dependent)
+#               + sum G_ij (T_j - T_i)                 conduction
+#               + sum (eps A)_ij sigma (T_j^4 - T_i^4)  internal radiation
+#               + P_i                                  what the EPS actually delivers
+#                                                      to the unit + heaters
+#
+# so safe mode, a load shed or a dark payload really cools the spacecraft.
+# Solver: smo_simulator/models/thermal_network.py (explicit Euler, internally
+# sub-stepped to <= 0.4 x the smallest node time constant — stable at any dt).
+#
+# Sources for the numbers (full table with references in THERMAL_MODEL.md):
+#   * TJ GaAs cells with ceria-doped coverglass: alpha 0.91 (AZUR 3G30A
+#     datasheet, <= 0.91), eps 0.85 (Spectrolab TNJ datasheet: 0.92 / 0.85).
+#   * White paint Z-93: alpha 0.17, eps 0.92 (Henninger, NASA RP-1121, 1984).
+#   * Black paint / aperture baffle: alpha 0.90, eps 0.88 (RP-1121 Chemglaze
+#     Z306 0.87-0.96 class).
+#   * Al 6061 cp 896 J/kg/K; Li-ion 18650 cp ~830-1040 J/kg/K (Maleki et al.
+#     1999) -> 900 used.
+#   * Masses: the 12.0 kg dry budget (aocs.yaml / prop.yaml), split with the
+#     named parts already in the configs (TriScape100 1.1 kg, BPX 0.5 kg,
+#     Endurosat wing 1.07 kg each, S-band 0.25 kg, prop module 1.15 kg + 0.4 kg
+#     propellant).
+#   * Geometry: 6U CDS envelope 100 x 226 x 366 mm (geometry.yaml): +-X faces
+#     0.0827 m2, +-Y 0.0366 m2, +-Z 0.0226 m2; cell fractions = eps.yaml cell
+#     areas / face areas.
+#   * Conductances: engineering estimates for bolted CubeSat joints (0.1-0.5
+#     W/K per fastened joint, a few joints per panel / unit), calibrated so
+#     the cases in THERMAL_MODEL.md §4 reproduce the design intent.
+network:
+  # Thermistor measurement noise on the published temperatures (1 sigma).
+  # The physics is deterministic; noise lives in the measurement.
+  sensor_noise_k: 0.05
+  integration:
+    stability_fraction: 0.4   # sub-step <= 0.4 x smallest node time constant
+    max_step_s: 20.0          # and never more than this
+  nodes:
+    # Primary structure: 6U frame, rails, mounting decks, brackets, harness
+    # (the 12 kg budget minus every unit below = 3.2 kg).
+    - {name: structure, mass_kg: 3.2, cp_j_per_kg_k: 896, initial_c: 15}
+    # Body panels (wall + PCB + cells, ~5 kg/m2). Published at 0x0400-05.
+    - {name: panel_px, mass_kg: 0.42, cp_j_per_kg_k: 900, initial_c: 15}
+    - {name: panel_mx, mass_kg: 0.42, cp_j_per_kg_k: 900, initial_c: 15}
+    - {name: panel_py, mass_kg: 0.19, cp_j_per_kg_k: 900, initial_c: 15}
+    - {name: panel_my, mass_kg: 0.19, cp_j_per_kg_k: 900, initial_c: 15}
+    - {name: panel_pz, mass_kg: 0.12, cp_j_per_kg_k: 900, initial_c: 15}
+    - {name: panel_mz, mass_kg: 0.15, cp_j_per_kg_k: 900, initial_c: 15, note: "nadir: radiator + imager aperture"}
+    # Deployable wings (Endurosat 6U double-deployable, 1.07 kg each).
+    - {name: wing_py, mass_kg: 1.07, cp_j_per_kg_k: 900, initial_c: 15}
+    - {name: wing_my, mass_kg: 1.07, cp_j_per_kg_k: 900, initial_c: 15}
+    # OBC / avionics stack (boards + stack hardware). Published 0x0406.
+    - {name: obc, mass_kg: 0.35, cp_j_per_kg_k: 900, initial_c: 15}
+    # Battery: GomSpace BPX 0.5 kg x 900 + 0.1 kg Al bracket x 896. 0x0407.
+    - {name: battery, capacitance_j_per_k: 540, initial_c: 10}
+    # S-band transponder + patch antenna (Endurosat, 0.25 kg + mount).
+    - {name: ttc, mass_kg: 0.30, cp_j_per_kg_k: 900, initial_c: 15}
+    # Imager (Simera TriScape100, 1.1 kg); the FPA's thermal sink.
+    - {name: payload, mass_kg: 1.1, cp_j_per_kg_k: 900, initial_c: 12}
+    # AOCS suite: 4 wheels, star trackers, IMU, MTQ electronics (~0.9 kg).
+    - {name: aocs, mass_kg: 0.9, cp_j_per_kg_k: 900, initial_c: 15}
+    # Propulsion module: 1.15 kg dry x 896 + 0.4 kg propellant x 2000
+    # (ADN/HAN green monoprop blends ~2 kJ/kg/K) = 1830 J/K.
+    - {name: prop, capacitance_j_per_k: 1830, initial_c: 10}
+    # Catalyst bed + heater blanket (Phase D): C 50 J/K; its 0.0417 W/K link
+    # to the module gives the 12 W heater ~288 K of authority (unchanged).
+    - {name: thruster, capacitance_j_per_k: 50, initial_c: 5}
+
+  # External surfaces: each radiates eps A sigma T^4 to space and absorbs
+  # sun (alpha), albedo (alpha) and Earth IR (eps) through the flat-plate
+  # Earth view factor. `array_face` = the EPS face whose generated electrical
+  # power is taken OUT of the absorbed heat (it leaves as electricity).
+  surfaces:
+    - {node: panel_px, normal: [1, 0, 0], area_m2: 0.0827, array_face: px,
+       coatings: [{fraction: 0.73, alpha: 0.91, epsilon: 0.85},     # cells
+                  {fraction: 0.27, alpha: 0.17, epsilon: 0.92}]}    # Z-93 white
+    - {node: panel_mx, normal: [-1, 0, 0], area_m2: 0.0827, array_face: mx,
+       coatings: [{fraction: 0.73, alpha: 0.91, epsilon: 0.85},
+                  {fraction: 0.27, alpha: 0.17, epsilon: 0.92}]}
+    - {node: panel_py, normal: [0, 1, 0], area_m2: 0.0366, array_face: py,
+       coatings: [{fraction: 0.82, alpha: 0.91, epsilon: 0.85},
+                  {fraction: 0.18, alpha: 0.17, epsilon: 0.92}]}
+    - {node: panel_my, normal: [0, -1, 0], area_m2: 0.0366, array_face: my,
+       coatings: [{fraction: 0.82, alpha: 0.91, epsilon: 0.85},
+                  {fraction: 0.18, alpha: 0.17, epsilon: 0.92}]}
+    - {node: panel_pz, normal: [0, 0, 1], area_m2: 0.0226, array_face: pz,
+       coatings: [{fraction: 0.80, alpha: 0.91, epsilon: 0.85},
+                  {fraction: 0.20, alpha: 0.17, epsilon: 0.92}]}
+    - {node: panel_mz, normal: [0, 0, -1], area_m2: 0.0226,
+       coatings: [{fraction: 0.85, alpha: 0.17, epsilon: 0.92},     # Z-93 radiator
+                  {fraction: 0.15, alpha: 0.90, epsilon: 0.88}]}    # aperture/baffle
+    # Wings: cells on the front (normal = SADA angle about +Y, same
+    # convention as eps_basic._wing_normal), bare PCB on the back. Stowed
+    # wings have no view of space (folded on their body face).
+    - {node: wing_py, wing: py, side: front, area_m2: 0.143, array_face: wing_py,
+       coatings: [{fraction: 0.84, alpha: 0.91, epsilon: 0.85},
+                  {fraction: 0.16, alpha: 0.75, epsilon: 0.85}]}
+    - {node: wing_py, wing: py, side: back, area_m2: 0.143, alpha: 0.75, epsilon: 0.85}
+    - {node: wing_my, wing: my, side: front, area_m2: 0.143, array_face: wing_my,
+       coatings: [{fraction: 0.84, alpha: 0.91, epsilon: 0.85},
+                  {fraction: 0.16, alpha: 0.75, epsilon: 0.85}]}
+    - {node: wing_my, wing: my, side: back, area_m2: 0.143, alpha: 0.75, epsilon: 0.85}
+
+  conductors:   # G [W/K]
+    - {a: panel_px, b: structure, g_w_per_k: 1.5}
+    - {a: panel_mx, b: structure, g_w_per_k: 1.5}
+    - {a: panel_py, b: structure, g_w_per_k: 1.0}
+    - {a: panel_my, b: structure, g_w_per_k: 1.0}
+    - {a: panel_pz, b: structure, g_w_per_k: 0.6}
+    # The nadir (-Z) face is the IMAGER's radiator: it and the imager form a
+    # thermal island on low-conductance (titanium / G10) mounts, so the 15 W
+    # of the cooler and the bus electronics do not raise the FPA's sink —
+    # without that isolation the cooler could not hold -15 C with the payload
+    # in STANDBY (cooler running) and the whole bus at +20..+30 C.
+    - {a: panel_mz, b: structure, g_w_per_k: 0.04}
+    - {a: wing_py, b: panel_py, g_w_per_k: 0.05, note: "hinges + HDRM"}
+    - {a: wing_my, b: panel_my, g_w_per_k: 0.05}
+    # Avionics stack on its rails: 3 W of OBC self-heating puts it ~5 K
+    # above the structure; the 4 W heater has 6.7 K of authority.
+    - {a: obc, b: structure, g_w_per_k: 0.6}
+    # Battery on the +Y wall — the anti-sun face for EOSAT-1's negative beta
+    # (sun on -Y all year) — on standoffs to the frame, so it runs colder
+    # than the electronics and its thermostat cycles (brief 05 WP-3 intent).
+    - {a: battery, b: panel_py, g_w_per_k: 0.25}
+    - {a: battery, b: structure, g_w_per_k: 0.05}
+    - {a: ttc, b: structure, g_w_per_k: 0.8}
+    # The imager is bolted to its nadir radiator / baseplate (aperture side)
+    # and isolated from the frame.
+    - {a: payload, b: panel_mz, g_w_per_k: 1.5}
+    - {a: payload, b: structure, g_w_per_k: 0.02}
+    - {a: aocs, b: structure, g_w_per_k: 1.0}
+    - {a: prop, b: structure, g_w_per_k: 0.4}
+    - {a: prop, b: panel_mx, g_w_per_k: 0.3, note: "thruster on -X"}
+    - {a: thruster, b: prop, g_w_per_k: 0.0417}
+
+  radiative:    # internal radiation, (eps A)_eff [m2]
+    - {a: panel_px, b: structure, ea_m2: 0.03}
+    - {a: panel_mx, b: structure, ea_m2: 0.03}
+    - {a: panel_py, b: structure, ea_m2: 0.015}
+    - {a: panel_my, b: structure, ea_m2: 0.015}
+    - {a: panel_pz, b: structure, ea_m2: 0.01}
+    - {a: panel_mz, b: structure, ea_m2: 0.003, note: "low-e (VDA) back of the imager radiator"}
+    - {a: obc, b: structure, ea_m2: 0.01}
+
+  # Where each EPS line's power becomes heat (shares of I x V as EPS bills
+  # it). Heater lines are NOT here: TCS applies its own heater state, so an
+  # open-circuit heater bills but does not heat. The catbed heater share of
+  # the prop line is likewise applied to `thruster` by TCS.
+  dissipation:
+    obc: {obc: 0.5, structure: 0.5}   # OBC 3 W + PDU/EPS housekeeping 3 W (eps.yaml)
+    ttc_rx: {ttc: 1.0}
+    ttc_tx: {ttc: 0.85}               # ~15 % of the DC draw leaves as RF (0.5 W of 5 W, 2 W of 11 W)
+    payload: {payload: 1.0}
+    fpa_cooler: {structure: 1.0}      # cooler rejects to the frame / heat-pipe saddle
+    aocs_wheels: {aocs: 1.0}
+    prop: {prop: 1.0}                 # valve drivers (catbed heater -> thruster)
+  # Bus load not attributed to a line (measurement noise, an injected bus
+  # short) is dissipated here.
+  residual_node: structure
+  heater_nodes: {battery: battery, obc: obc, thruster: thruster}
+  # Battery heat = I^2 R + (1 - charge efficiency) x charge power, read off
+  # the live EPS model (eps.yaml internal_r_ohm / charge_efficiency).
+  battery_heat: {node: battery}
+  fpa: {sink_node: payload}
+  wing_panels: {wing_py: panel_py, wing_my: panel_my}
+  stowed_wing_contact_w_per_k: 1.0
+  # Loads assumed when TCS runs with no EPS in the loop (bare unit-test
+  # harness): nominal standby (OBC 6, RX 1.5, AOCS NOMINAL 9, payload idle).
+  default_dissipation_w: {obc: 3.0, structure: 3.0, ttc: 1.5, aocs: 9.0, payload: 2.4}
+
+  # Instructor `cold_soak` (FailureSpec in tcs_basic): an extra heat leak
+  # G x offset out of the zone — as if its mounting interface were `offset`
+  # colder — plus an immediate step of the zone by `offset`. G is the zone's
+  # own mounting conductance, so the passive zone settles about `offset`
+  # below where it was and its heater recovers P_heater / G of it.
+  # Defaults re-derived on this network (THERMAL_MODEL.md §5):
+  cold_soak:
+    conductance_w_per_k: {battery: 0.30, obc: 0.6, thruster: 0.0417}
+    # OBC: the leak G x offset (12 W at -20 K) also drains the frame through
+    # the OBC's mount, so the zone moves ~1.4 x the offset. From the nominal
+    # OBC with the cooler off (~+15 C) -20 K lands it near -13 C passive
+    # (yellow, below the -10 C heater ON point) and the 4 W heater brings it
+    # back to the -10/-5 C thermostat band. -25 K (the old default) leaves it
+    # yellow even with the heater on; -40 K is red either way. Battery and
+    # thruster keep -25 K: their heaters (27 K and 288 K of authority) win it
+    # back. Measured: OBC_THERMAL_ANALYSIS.md "After the thermal network".
+    default_offset_c: {battery: -25.0, obc: -20.0, thruster: -25.0}
 
 # Event thresholds
 #
@@ -186,11 +344,11 @@ thermal_coupling:
 event_thresholds:
   temperature_warning:
     battery: [0.0, 40.0]    # [low_warn_C, high_warn_C]
-    obc: [5.0, 50.0]
+    obc: [-10.0, 50.0]     # 2026-11: was [5, 50]; hardware-based (mcs/limits.yaml)
     fpa: [-22.0, 14.0]      # derived: setpoint_min - 3sigma - 1.5 .. uncooled_max + 1.5
   temperature_alarm:
     battery: [-10.0, 50.0]
-    obc: [-5.0, 60.0]
+    obc: [-20.0, 60.0]     # 2026-11: was [-5, 60]
     fpa: [-25.5, 17.5]      # derived: setpoint_min - 3sigma - 5.0 .. uncooled_max + 5.0
   thermal_runaway_rate_deg_per_min: 2.0
 

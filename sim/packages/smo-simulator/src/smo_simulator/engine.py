@@ -4383,6 +4383,10 @@ class SimulationEngine:
             s.temp_battery = ambient
             s.temp_fpa = ambient
             s.temp_thruster = ambient
+            # Thermal network (2026-11): the structure, wings, payload, ...
+            # nodes have no temp_* field — put the whole network at ambient.
+            if hasattr(tcs, "set_uniform_temperature"):
+                tcs.set_uniform_temperature(ambient)
             logger.info("TCS configured: all heaters OFF, zones at %.1f°C", ambient)
 
         # TTC configuration

@@ -112,7 +112,7 @@ each eclipse exit; repeating the action does no harm. Diagnosis: CTG-009.
 |---------|--------------------------------|----------------|-----------------------------|
 | TCS-01  | bat_temp < 1 C                | 0x0407 < 1     | Battery heater back to thermostat control (`HEATER_AUTO_MODE`) |
 | TCS-02  | obc_temp > 70 C (red high)    | 0x0406 > 70    | OBC SAFE (S19 ea 3003, high limit only) |
-| TCS-03  | obc_temp < 0 C (red low)      | 0x0406 < 0     | No on-board action: OBC heater thermostat; S12 report to ground |
+| TCS-03  | obc_temp < -20 C (red low)    | 0x0406 < -20   | No on-board action: OBC heater thermostat; S12 report to ground |
 | TCS-04  | fpa_temp above +17.5 C        | 0x0408 S12 alarm | Power off payload (S19 ea_id 3001) |
 | TCS-05  | bat_temp > 42 C               | 0x0407 > 42    | Battery heater OFF; back to thermostat when ≤ 42 C |
 

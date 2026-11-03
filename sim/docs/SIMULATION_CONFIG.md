@@ -54,11 +54,8 @@ the engine logs a warning if the two diverge.
 | `eps.event_thresholds.bus_warning_v` / `bus_critical_v` | Bus undervoltage events | 27.0 / 25.0 | — |
 | `eps.event_thresholds.bat_overtemp_c` / `bat_undertemp_c` | Battery temperature events | 45 / −5 | — |
 | `eps.event_thresholds.sa_degraded_fraction` | Array-degraded event trigger (actual < fraction × expected) | 0.7 | Sensitivity of array-degradation detection |
-| `tcs.environment.eclipse_external_c` / `eclipse_internal_c` | Eclipse sink temperatures | −30 / 10 | Zone cool-down rate in eclipse |
-| `tcs.environment.sunlit_external_base_c` / `sunlit_external_beta_gain_c` | Sunlit env = base + gain·\|sin β\| (Phase B: was \|cos β\|, inverted) | −10 / 50 | Panel temperatures vs beta angle — orbit-average sink rises with \|β\| |
-| `tcs.environment.sunlit_internal_c` | Sunlit internal sink | 12.0 | OBC zone equilibrium |
-| `tcs.environment.eclipse_battery_c` / `sunlit_battery_c` | Battery-zone internal sink (Phase B, brief 05 WP-3) | inherit internal (**EOSAT-1: −8 / 0**) | Makes the battery thermostat genuinely cycle; the pack sits against the radiator side |
-| `tcs.environment.panel_solar_heat_fraction` / `panel_solar_heat_gain` | Share of panel solar power becoming heat; gain is a TRIM multiplier on the physical 1/UA per node (Phase B: the old 10.0 was an ~80× error) | 0.3 / 1.0 | Panel temperature swing under illumination |
+| `tcs.environment.solar_flux_w_m2` / `scale_solar_with_distance` | Solar flux at 1 AU; scaled by (1 AU / r)² from the propagator's Sun vector (2026-11 thermal network) | 1361 / true | Absorbed sunlight on every external surface (≈1322 W/m² July, 1414 January) |
+| `tcs.environment.albedo` / `earth_ir_w_m2` | Orbit-average Earth albedo and outgoing long-wave radiation (Gilmore ch. 2) | 0.30 / 237 | Albedo and Earth-IR heating through the flat-plate Earth view factor. The old fixed sink keys (eclipse/sunlit internal and external sinks, battery sink, panel solar-heat fraction/gain) were removed with the zone model; the network itself lives in `subsystems/tcs.yaml network:` (docs/plan_2026-11/THERMAL_MODEL.md) |
 | `failures.default_onset_duration_s` | `onset: gradual` ramp time | 90.0 | How fast injected failures reach full magnitude |
 | `failures.intermittent.first_flicker_s` / `on_s` / `off_s` | Intermittent-failure timing ranges | [2,6] / [2,8] / [5,20] | Flicker cadence of intermittent injects |
 | `scenario_defaults.default_duration_s` | Scenario duration when the YAML omits it | 1800.0 | Auto-stop point |

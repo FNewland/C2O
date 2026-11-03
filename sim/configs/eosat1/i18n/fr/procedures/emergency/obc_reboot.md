@@ -149,7 +149,7 @@ principale. Faire remonter à l'ingénieur OBDH pour analyse.
 **TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne du réchauffeur OBC (sans effet si déjà sur ON)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5 s
 **TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- rétablir le réchauffeur OBC : de nouveau sous thermostat (l'étape 2 l'a mis sur OFF manuellement)
-**Verify:** `tcs.htr_obc` (0x040B) cohérent avec le thermostat --- 1 tant que `tcs.temp_obc` (0x0406) est sous +5 C, 0 au-dessus de +10 C
+**Verify:** `tcs.htr_obc` (0x040B) cohérent avec le thermostat --- 1 tant que `tcs.temp_obc` (0x0406) est sous -10 C, 0 au-dessus de -5 C
 **Note:** Si l'OBC est froid et ne remonte pas, forcer le réchauffeur avec `HEATER_OBC(on=1)`
 (func_id 41) et le rendre au mode AUTO une fois réchauffé.
 **Action:** Consigner les résultats du redémarrage :
