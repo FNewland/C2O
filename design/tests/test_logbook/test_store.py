@@ -229,3 +229,15 @@ def test_default_dir_prefers_env(monkeypatch, tmp_path):
     monkeypatch.setenv("SMO_LOGBOOK_DIR", str(tmp_path / "x"))
     assert st.default_dir() == tmp_path / "x"
     assert LogbookStore().root == tmp_path / "x"
+
+
+def test_dev_default_never_creates_a_dir_in_the_repo(monkeypatch):
+    """The repo is public: without SMO_LOGBOOK_DIR SpaceCDF only reuses an existing ops logbook dir."""
+    from pathlib import Path
+    monkeypatch.delenv("SMO_LOGBOOK_DIR", raising=False)
+    if st.CONTAINER_DIR.parent.is_dir():
+        pytest.skip("running inside a C2O container")
+    repo = Path(st.__file__).resolve().parents[6]
+    d = st.default_dir()
+    ops = repo / "sim" / "workspace" / "logbook"
+    assert d == ops if ops.is_dir() else repo not in d.parents
