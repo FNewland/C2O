@@ -52,3 +52,6 @@ docs/assets/figures/_math/
 # `make clean` removes it. The copy in git is a stale snapshot kept only because
 # it was committed; untrack it with `git rm --cached docs/oer/book.math.md`.
 docs/oer/book.math.md
+
+# Participant logbooks (docs/plan_2026-11/LOGBOOK_SPEC.md): private, never committed
+**/workspace/logbook/

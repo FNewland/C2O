@@ -81,10 +81,10 @@ def max_age_hours() -> float:
 def default_dir() -> Path:
     """``$SMO_LOGBOOK_DIR``, else the container workspace, else a dev default.
 
-    Dev default: ``<repo>/sim/workspace/logbook`` when SpaceCDF runs from the
-    C2O monorepo (the ops tools' local workspace is ``sim/workspace``, so a
-    laptop running both shares one logbook), otherwise
-    ``~/.local/share/c2o/logbook``.
+    Dev default: the ops tools' local logbook ``<repo>/sim/workspace/logbook``
+    when it already exists (a laptop running both then shares one logbook);
+    otherwise ``~/.local/share/c2o/logbook``. SpaceCDF never creates a
+    logbook directory inside the repository by itself (the repo is public).
     """
     env = os.environ.get("SMO_LOGBOOK_DIR")
     if env:
@@ -94,7 +94,10 @@ def default_dir() -> Path:
     here = Path(__file__).resolve()
     for parent in here.parents:
         if (parent / "design").is_dir() and (parent / "sim").is_dir():
-            return parent / "sim" / "workspace" / "logbook"
+            ops = parent / "sim" / "workspace" / "logbook"
+            if ops.is_dir():
+                return ops
+            break
     return Path.home() / ".local" / "share" / "c2o" / "logbook"
 
 
