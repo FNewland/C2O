@@ -74,11 +74,15 @@ class TestSimulationConfigFile:
 
     def test_tcs_model_reads_previously_dead_yaml_sections(self, engine):
         tcs = engine.subsystems["tcs"]
-        # tcs.yaml thermal_coupling
-        # Phase B (brief 05 WP-3): battery pack on standoffs, 0.1 W/K.
-        assert tcs._zone_conductance[("battery", "obc")] == 0.1
-        assert tcs._zone_conductance[("payload", "structure")] == 0.4
-        assert tcs._space_radiation_g == 0.2
+        # tcs.yaml network (2026-11): the thermal network replaced the old
+        # thermal_coupling block (zone-conductance dict + 3 K "radiation
+        # conductance"). The YAML values must reach the solver.
+        net = tcs._net
+        g = {(net.names[i], net.names[j]): v for i, j, v in net.conductors}
+        assert g[("obc", "structure")] == 0.6
+        assert g[("battery", "panel_py")] == 0.25
+        assert net.cap[net.index["battery"]] == 540.0
+        assert tcs._soak_g["obc"] == 0.6
         # tcs.yaml event_thresholds
         assert tcs._temp_warning_limits["battery"] == (0.0, 40.0)
         # G3-d: the `fpa` rows are DERIVED from tcs.yaml `fpa_envelope`, not
@@ -87,9 +91,10 @@ class TestSimulationConfigFile:
         assert tcs._temp_alarm_limits["fpa"] == tcs._fpa_env.node_alarm().as_tuple()
         assert tcs._temp_warning_limits["fpa"] == tcs._fpa_env.node_warning().as_tuple()
         assert tcs._thermal_runaway_rate == 2.0
-        # simulation.yaml tcs.environment
-        assert tcs._env["eclipse_external_c"] == -30.0
-        assert tcs._env["sunlit_external_beta_gain_c"] == 50.0
+        # simulation.yaml tcs.environment (orbital heating constants)
+        assert tcs._env["solar_flux_w_m2"] == 1361.0
+        assert tcs._env["albedo"] == 0.30
+        assert tcs._env["earth_ir_w_m2"] == 237.0
 
     def test_mission_network_tick_rate_is_parsed(self):
         from smo_common.config.loader import load_mission_config

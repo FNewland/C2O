@@ -173,30 +173,17 @@ eps:
     sa_degraded_fraction: 0.7  # actual < fraction x expected => array degraded
 
 tcs:
+  # Orbital thermal environment for the TCS thermal network (2026-11,
+  # docs/plan_2026-11/THERMAL_MODEL.md). The network computes absorbed solar,
+  # albedo and Earth-IR flux per surface from the true attitude and orbit;
+  # the old fixed sink temperatures (eclipse/sunlit internal +10/+12 C,
+  # external -30/-10 C + beta gain, battery -8/0 C, panel solar-heat
+  # fraction) went with the zone model they drove.
   environment:
-    eclipse_external_c: -30.0
-    eclipse_internal_c: 10.0
-    sunlit_external_base_c: -10.0
-    # Phase B (brief 05 finding 8 / WP-8): env = base + gain * |sin(beta)|.
-    # The old |cos(beta)| put the maximum external temperature at beta = 0 —
-    # the maximum-eclipse geometry — exactly inverted. Orbit-average external
-    # sink now rises with |beta| (less eclipse, more continuous sun).
-    sunlit_external_beta_gain_c: 50.0
-    sunlit_internal_c: 12.0
-    # Battery-zone internal sink (brief 05 defect 2 / WP-3). The pack sits
-    # against the radiator side of the bus, colder than the electronics stack.
-    # With the old shared 10/12 C sink the coldest achievable battery
-    # temperature was +9.2 C — 9 C above the thermostat trip, so the battery
-    # heater could NEVER energise and its 6 W bill was fiction. These values
-    # are tuned so the thermostat genuinely cycles every orbit.
-    eclipse_battery_c: -8.0
-    sunlit_battery_c: 0.0
-    panel_solar_heat_fraction: 0.3      # share of panel solar power as heat
-    # Phase B (brief 05 finding 1 / WP-8): the panel solar gain is now the
-    # physical 1/UA per node (tau/C); this key is only a trim multiplier.
-    # The old 10.0 was applied ON TOP of 1/UA-equivalent scaling and produced
-    # +362 C panels at full wing current.
-    panel_solar_heat_gain: 1.0
+    solar_flux_w_m2: 1361.0           # at 1 AU (Kopp & Lean 2011 TSI)
+    scale_solar_with_distance: true   # 1/r^2 from the propagator: ~1322 W/m2 July, ~1414 January
+    albedo: 0.30                      # orbit-average Earth albedo (Gilmore ch. 2)
+    earth_ir_w_m2: 237.0              # orbit-average Earth OLR (Gilmore ch. 2; 218 cold / 261 hot)
 
 # Phase D — propulsion sim behaviour (hardware sheet: subsystems/prop.yaml).
 prop:

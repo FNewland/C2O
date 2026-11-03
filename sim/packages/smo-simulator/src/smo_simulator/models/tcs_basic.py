@@ -12,14 +12,19 @@ Active thermal control (EOSAT-1):
     circuit 2), powered from the EPS `prop` line (0x014A), state published at
     0x041B and the bed temperature at 0x0409 (the propulsion arm interlock).
     Manual by default; HEATER_AUTO_MODE circuit=2 enables the thermostat hold.
-  - Panel temperatures coupled to solar illumination via EPS per-panel currents
+  - Temperatures (2026-11): a lumped-parameter thermal network
+    (models/thermal_network.py, configured in subsystems/tcs.yaml `network:`)
+    replaces the fixed +10/+12 C sinks — sun / albedo / Earth IR on the
+    external faces from the true attitude, radiation to space, conduction and
+    internal radiation, and the electrical power the EPS really delivers to
+    each unit. Design note: docs/plan_2026-11/THERMAL_MODEL.md.
 """
 import math
 import random
 from dataclasses import dataclass, field
 from typing import Any
 from smo_common.config.fpa_envelope import FPAEnvelope
-from smo_common.config.schemas import TCSConfig
+from smo_common.config.schemas import SimTCSEnvironmentConfig, TCSConfig
 from smo_common.models.subsystem import SubsystemModel
 from smo_simulator.failure_spec import (
     FailureSpec, ParamSpec, T_FLOAT, T_BOOL, enum, number,
@@ -29,6 +34,7 @@ from smo_simulator.failure_spec import (
 # must apply the same decode tolerance or the two will disagree about which
 # setpoints are legal. One helper, imported.
 from smo_simulator.models.payload_basic import snap_to_envelope
+from smo_simulator.models import thermal_network as tn
 
 #: Schema defaults, so the model's fallbacks and `subsystems/tcs.yaml`'s
 #: accepted keys cannot drift apart (DISPLAY_REQUESTS_PAYLOAD.md §8.2).
@@ -58,6 +64,9 @@ class TCSState:
     htr_battery_failed: bool = False; htr_obc_failed: bool = False
     htr_thruster_failed: bool = False; cooler_failed: bool = False
     obc_internal_heat_w: float = 0.0
+    # Thermal network nodes WITHOUT a legacy temp_* field (structure,
+    # wings, ttc, payload, aocs, prop) — deg C, keyed by node name.
+    node_temps: dict = field(default_factory=dict)
     # Manual override flags (False = auto thermostat, True = manual control)
     htr_battery_manual: bool = False
     htr_obc_manual: bool = False
@@ -97,8 +106,8 @@ class TCSState:
     # state fields kept their old defaults and silently won).
     htr_battery_setpoint_on_c: float = 5.0
     htr_battery_setpoint_off_c: float = 10.0
-    htr_obc_setpoint_on_c: float = 5.0
-    htr_obc_setpoint_off_c: float = 10.0
+    htr_obc_setpoint_on_c: float = -10.0
+    htr_obc_setpoint_off_c: float = -5.0
     # Phase D: catbed hold band (auto mode) — thermostat on below 190 C,
     # off at 230 C; the propulsion arm interlock needs >= 180 C (prop.yaml).
     htr_thruster_setpoint_on_c: float = 190.0
@@ -150,16 +159,16 @@ class TCSState:
 
 class TCSBasicModel(SubsystemModel):
     _HEATER_POWER = {"battery": 6.0, "obc": 4.0, "thruster": 12.0}
-    _THERMOSTAT = {"battery": (5.0, 1.0), "obc": (10.0, 5.0),
+    _THERMOSTAT = {"battery": (5.0, 1.0), "obc": (-5.0, -10.0),
                    "thruster": (230.0, 190.0)}
     # Phase D retires the last leg of defect #31: the thruster circuit now
     # drives the REAL green-monoprop catalyst-bed heater (12 W, EPS `prop`
     # line), so every heater circuit accepts setpoint/auto-mode commands.
     _NO_HEATER_CIRCUITS = frozenset()
-    # Thruster node (Phase D): small catalyst bed + heater blanket,
-    # C = 50 J/K, tau = 1200 s => UA = 0.042 W/K, so 12 W has ~288 K of
-    # authority and reaches the 180 C arm interlock in ~18 min, 200 C in
-    # ~22 min — the "12 W for 20 min = 4.0 Wh" preheat of the design sheet.
+    # Legacy zone constants. Only `fpa` is still used (the controlled FPA
+    # node and the cooler's parasitic UA = C / tau); every other temperature
+    # comes from the thermal network. The rest are kept so code that reads
+    # them (and old breakpoints) does not break.
     _TAU = {"panel_px":600,"panel_mx":600,"panel_py":500,"panel_my":500,
             "panel_pz":800,"panel_mz":800,"obc":900,"battery":1200,"fpa":120,"thruster":1200}
     _CAP = {"panel_px":5000,"panel_mx":5000,"panel_py":4000,"panel_my":4000,
@@ -183,44 +192,42 @@ class TCSBasicModel(SubsystemModel):
         self._CAP = dict(TCSBasicModel._CAP)
         self._HEATER_POWER = dict(TCSBasicModel._HEATER_POWER)
         self._THERMOSTAT = dict(TCSBasicModel._THERMOSTAT)
-        # Thermal zone conductance matrix (conduction between adjacent zones) [W/K]
-        self._zone_conductance = {
-            ("obc", "battery"): 0.5,
-            ("battery", "obc"): 0.5,
-            ("structure", "electronics"): 0.8,
-            ("electronics", "structure"): 0.8,
-            ("payload", "structure"): 0.4,
-            ("structure", "payload"): 0.4,
-        }
-        # Radiation to space (effective conductance)
-        self._space_radiation_g = 0.2  # W/K (radiative coupling to 3K sink)
+        # ── Thermal network (2026-11, THERMAL_MODEL.md) ──────────────────
+        # The fixed-surroundings zone model (+10/+12 C "internal sink", a
+        # zone-conductance dict and a 3 K "radiation conductance") is gone:
+        # temperatures now come from a lumped-parameter network whose
+        # definition lives in subsystems/tcs.yaml `network:`. An
+        # unconfigured model (unit tests construct TCSBasicModel() bare)
+        # loads the shipped EOSAT-1 network so it is still physical.
+        self._net_cfg: dict = {}
+        self._net = None
+        self._solver = None
+        self._load_network(None)
         # Event thresholds (can be overridden by config)
         self._temp_warning_limits = {
             "battery": (0.0, 40.0),  # (low_warn, high_warn)
-            "obc": (5.0, 50.0),
+            "obc": (-10.0, 50.0),
             "fpa": (-50.0, -5.0),
         }
         self._temp_alarm_limits = {
             "battery": (-10.0, 50.0),
-            "obc": (-5.0, 60.0),
+            "obc": (-20.0, 60.0),
             "fpa": (-60.0, 0.0),
         }
         self._thermal_runaway_rate = 2.0  # deg/min
-        # Thermal environment (simulation.yaml tcs.environment overrides these)
+        # Thermal environment (simulation.yaml tcs.environment overrides
+        # these; the defaults are the schema's, i.e. one source).
+        _env_defaults = SimTCSEnvironmentConfig()
         self._env = {
-            "eclipse_external_c": -30.0,
-            "eclipse_internal_c": 10.0,
-            "sunlit_external_base_c": -10.0,
-            "sunlit_external_beta_gain_c": 50.0,
-            "sunlit_internal_c": 12.0,
-            # Battery-zone sink (brief 05 WP-3). None = inherit the internal
-            # sink (legacy behaviour, thermostat unreachable).
-            "eclipse_battery_c": None,
-            "sunlit_battery_c": None,
-            "panel_solar_heat_fraction": 0.3,
-            # Trim multiplier on the physical 1/UA panel solar gain (WP-8).
-            "panel_solar_heat_gain": 1.0,
+            "solar_flux_w_m2": _env_defaults.solar_flux_w_m2,
+            "albedo": _env_defaults.albedo,
+            "earth_ir_w_m2": _env_defaults.earth_ir_w_m2,
+            "scale_solar_with_distance": _env_defaults.scale_solar_with_distance,
         }
+        # Standalone harnesses (no engine, no AOCS model) that publish a sun
+        # vector are assumed to be holding the NOMINAL nadir attitude; once
+        # seen, keep assuming it through eclipse (the vector is zeroed there).
+        self._standalone_nadir = False
         # Bounded cooler heat lift (brief 05 WP-1): the FPA cannot be driven
         # more than this many kelvin below its ambient sink. Retained as the
         # ABSOLUTE ceiling on the machine; the achievable lift at any instant
@@ -368,20 +375,11 @@ class TCSBasicModel(SubsystemModel):
         # limit bands (DECISIONS §3, ruled in G3-d).
         self._fpa_env = FPAEnvelope.from_config(config)
 
-        # ── tcs.yaml thermal_coupling ────────────────────────────────────
-        # Previously this section was never read (the TCSConfig schema dropped
-        # it before the model saw it), so the YAML values were dead config and
-        # the code literals below were the real model — defect #51.
-        coupling = config.get("thermal_coupling", {}) or {}
-        for pair_key, g in (coupling.get("zone_conductance", {}) or {}).items():
-            if "_" not in str(pair_key):
-                continue
-            a, b = str(pair_key).split("_", 1)
-            self._zone_conductance[(a, b)] = float(g)
-            self._zone_conductance[(b, a)] = float(g)
-        if coupling.get("space_radiation_g") is not None:
-            self._space_radiation_g = float(coupling["space_radiation_g"])
-
+        # ── tcs.yaml `network:` — the thermal network (2026-11) ──────────
+        # Replaces `thermal_coupling:` (a zone-conductance dict + a 3 K
+        # "radiation conductance") and the fixed-sink environment.
+        if config.get("network"):
+            self._load_network(config["network"])
         # ── tcs.yaml event_thresholds (same dead-config story) ───────────
         evt = config.get("event_thresholds", {}) or {}
         for zone, limits in (evt.get("temperature_warning", {}) or {}).items():
@@ -394,14 +392,286 @@ class TCSBasicModel(SubsystemModel):
             self._thermal_runaway_rate = float(evt["thermal_runaway_rate_deg_per_min"])
 
         # ── simulation.yaml `tcs.environment:` block (defect #51) ────────
+        # Orbital heating constants (solar flux at 1 AU, Earth albedo,
+        # Earth OLR). The old fixed-sink keys are gone with the zone model.
         env = (config.get("simulation", {}) or {}).get("environment", {}) or {}
         self._env = dict(self._env)
-        self._env.update({k: float(v) for k, v in env.items() if v is not None})
-        # Effective battery sink: dedicated keys, else the internal sink.
-        if self._env.get("eclipse_battery_c") is None:
-            self._env["eclipse_battery_c"] = self._env["eclipse_internal_c"]
-        if self._env.get("sunlit_battery_c") is None:
-            self._env["sunlit_battery_c"] = self._env["sunlit_internal_c"]
+        for k, v in env.items():
+            if v is None:
+                continue
+            self._env[k] = bool(v) if isinstance(v, bool) else float(v)
+
+    # ── Thermal network plumbing (2026-11) ──────────────────────────────
+    #: Network node -> legacy TCSState field. These nodes keep their
+    #: published parameters (0x0400-0x0409) and every existing reader of
+    #: `_state.temp_*`; the other nodes live in `_state.node_temps`.
+    _FIELD_NODES = ("panel_px", "panel_mx", "panel_py", "panel_my",
+                    "panel_pz", "panel_mz", "obc", "battery", "thruster")
+
+    @staticmethod
+    def _default_network_spec() -> dict:
+        """The shipped EOSAT-1 network (subsystems/tcs.yaml `network:`).
+
+        Used only by a model that is never configured (bare unit-test
+        construction). Same lookup rule as the commanding catalog:
+        $SMO_CONFIG_DIR, else the repository's configs/eosat1.
+        """
+        import os
+        from pathlib import Path
+        import yaml
+        cands = []
+        if os.environ.get("SMO_CONFIG_DIR"):
+            cands.append(Path(os.environ["SMO_CONFIG_DIR"]))
+        cands.append(Path(__file__).resolve().parents[5] / "configs" / "eosat1")
+        for c in cands:
+            f = c / "subsystems" / "tcs.yaml"
+            if f.is_file():
+                net = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("network")
+                if net:
+                    return net
+        raise RuntimeError("TCS: no thermal network configured and no "
+                           "subsystems/tcs.yaml `network:` found")
+
+    _NETWORK_KEYS = frozenset({
+        "sensor_noise_k", "integration", "nodes", "surfaces", "conductors",
+        "radiative", "dissipation", "residual_node", "heater_nodes",
+        "battery_heat", "fpa", "wing_panels", "stowed_wing_contact_w_per_k",
+        "default_dissipation_w", "cold_soak"})
+
+    def _load_network(self, spec: dict | None) -> None:
+        spec = dict(spec) if spec else self._default_network_spec()
+        unknown = set(spec) - self._NETWORK_KEYS
+        if unknown:
+            raise ValueError(f"tcs.yaml network: unknown key(s) {sorted(unknown)}")
+        net, init = tn.build_network(spec)
+        integ = spec.get("integration", {}) or {}
+        self._net_cfg = spec
+        self._net = net
+        self._solver = tn.NetworkSolver(
+            net, init,
+            stability_fraction=float(integ.get("stability_fraction", 0.4)),
+            max_step_s=float(integ.get("max_step_s", 20.0)))
+        self._sensor_noise_k = float(spec.get("sensor_noise_k", 0.0))
+        self._dissipation = {str(k): {str(n): float(f) for n, f in (v or {}).items()}
+                             for k, v in (spec.get("dissipation", {}) or {}).items()}
+        for line, shares in self._dissipation.items():
+            for node in shares:
+                if node not in net.index:
+                    raise ValueError(f"TCS network dissipation {line}: unknown node {node!r}")
+        self._residual_node = spec.get("residual_node", "structure")
+        self._heater_nodes = dict(spec.get("heater_nodes", {
+            "battery": "battery", "obc": "obc", "thruster": "thruster"}))
+        bh = spec.get("battery_heat", {}) or {}
+        self._battery_heat_node = bh.get("node", "battery")
+        self._fpa_sink_node = (spec.get("fpa", {}) or {}).get("sink_node", "payload")
+        self._stowed_contact = float(spec.get("stowed_wing_contact_w_per_k", 1.0))
+        self._wing_panels = dict(spec.get("wing_panels", {"wing_py": "panel_py",
+                                                         "wing_my": "panel_my"}))
+        cs = spec.get("cold_soak", {}) or {}
+        self._soak_g = {k: float(v) for k, v in (cs.get("conductance_w_per_k", {}) or {}).items()}
+        self._soak_default = {k: float(v) for k, v in (cs.get("default_offset_c", {}) or {}).items()}
+        # Seed the published / extra node temperatures from the network's
+        # initial conditions.
+        s = self._state
+        s.node_temps = {}
+        for name in net.names:
+            if name in self._FIELD_NODES:
+                setattr(s, f"temp_{name}", init[name])
+            else:
+                s.node_temps[name] = init[name]
+
+    def set_uniform_temperature(self, temp_c: float) -> None:
+        """Put every network node (and the FPA) at one temperature.
+
+        The engine's separation state uses this (all zones at ambient)."""
+        s = self._state
+        for name in self._net.names:
+            if name in self._FIELD_NODES:
+                setattr(s, f"temp_{name}", float(temp_c))
+            else:
+                s.node_temps[name] = float(temp_c)
+        s.temp_fpa = float(temp_c)
+
+    def node_temperature(self, name: str) -> float:
+        """Current temperature of any network node (deg C)."""
+        if name in self._FIELD_NODES:
+            return float(getattr(self._state, f"temp_{name}"))
+        if name == "fpa":
+            return float(self._state.temp_fpa)
+        return float(self._state.node_temps[name])
+
+    def _sync_in(self) -> None:
+        s = self._state
+        sol = self._solver
+        for name in self._net.names:
+            if name in self._FIELD_NODES:
+                sol.set_temp_c(name, getattr(s, f"temp_{name}"))
+            else:
+                sol.set_temp_c(name, s.node_temps.get(name, sol.temp_c(name)))
+
+    def _sync_out(self) -> None:
+        s = self._state
+        for name, t in self._solver.temps_c().items():
+            if name in self._FIELD_NODES:
+                setattr(s, f"temp_{name}", t)
+            else:
+                s.node_temps[name] = t
+
+    def _geometry(self, orbit_state: Any, p: dict[int, float]) -> "tn.Geometry":
+        """Sun / nadir in the body frame, illumination and altitude.
+
+        Attitude priority: the AOCS model's TRUE quaternion (engine runs,
+        AOCS ticking: phase >= 4); else a published sun-body vector
+        (standalone harnesses) with the nominal nadir hold (-Z); else a
+        tumbling body (orientation averages) — the same rule EPS uses for
+        array power, so the thermal and power pictures agree.
+        """
+        import numpy as np
+        alt = getattr(orbit_state, "alt_km", 513.0)
+        alt = float(alt) if isinstance(alt, (int, float)) and alt else 513.0
+        re = 6378.137
+        h_ratio = (re + max(alt, 100.0)) / re
+        in_ecl = bool(getattr(orbit_state, "in_eclipse", False))
+        sun_frac = getattr(orbit_state, "sun_fraction", None)
+        if not isinstance(sun_frac, (int, float)) or isinstance(sun_frac, bool):
+            sun_frac = 0.0 if in_ecl else 1.0     # duck-typed orbit stub
+        sun_frac = max(0.0, min(1.0, float(sun_frac)))
+        pos = getattr(orbit_state, "pos_eci", None)
+        sun = getattr(orbit_state, "sun_eci", None)
+        if not isinstance(pos, (np.ndarray, list, tuple)) or \
+                not isinstance(sun, (np.ndarray, list, tuple)):
+            pos = sun = None
+        r_hat = s_hat = None
+        sun_dist_km = None
+        try:
+            if pos is not None and sun is not None:
+                pos = np.asarray(pos, float)
+                sun = np.asarray(sun, float)
+                rn, sn = float(np.linalg.norm(pos)), float(np.linalg.norm(sun))
+                if rn > 1.0 and sn > 1.0:
+                    r_hat, s_hat, sun_dist_km = pos / rn, sun / sn, sn
+        except Exception:  # noqa: BLE001 — duck-typed orbit stubs
+            r_hat = s_hat = None
+        if r_hat is not None:
+            albedo_cos = max(0.0, float(r_hat @ s_hat))
+        else:
+            beta = math.radians(float(getattr(orbit_state, "solar_beta_deg", 0.0)))
+            albedo_cos = 0.0 if in_ecl else 0.5 * math.cos(beta)
+
+        sun_b = nadir_b = None
+        eng = self._engine
+        aocs = eng.subsystems.get("aocs") if eng is not None and hasattr(eng, "subsystems") else None
+        if (aocs is not None and r_hat is not None
+                and int(getattr(eng, "_spacecraft_phase", 0)) >= 4
+                and hasattr(getattr(aocs, "_state", None), "q_true")):
+            from smo_common import attitude as att
+            C = att.quat_to_dcm(np.asarray(aocs._state.q_true, float))
+            sb = C @ s_hat
+            nb = C @ (-r_hat)
+            sun_b = (float(sb[0]), float(sb[1]), float(sb[2]))
+            nadir_b = (float(nb[0]), float(nb[1]), float(nb[2]))
+        elif eng is None:
+            sx, sy, sz = (p.get(0x02B3, 0.0) or 0.0, p.get(0x02B4, 0.0) or 0.0,
+                          p.get(0x02B5, 0.0) or 0.0)
+            mag = math.sqrt(sx * sx + sy * sy + sz * sz)
+            if mag > 0.01:
+                self._standalone_nadir = True
+                sun_b = (sx / mag, sy / mag, sz / mag)
+            if self._standalone_nadir:
+                nadir_b = (0.0, 0.0, -1.0)
+                if sun_b is None:
+                    sun_b = (0.0, 0.0, 0.0)   # eclipse: no direct sun
+        # Wings: deployment bits (0x0144 bit0 = +Y, bit1 = -Y) and the SADA
+        # shaft angle (0x0133). Absent (reduced harness) = deployed.
+        ws = p.get(0x0144)
+        if ws is None:
+            dep = (True, True)
+        else:
+            ws = int(ws)
+            dep = (bool(ws & 1), bool(ws & 2))
+        if 0x0133 in p:
+            sada = float(p[0x0133])
+        elif sun_b is not None and (sun_b[0] or sun_b[2]):
+            sada = math.degrees(math.atan2(sun_b[2], sun_b[0]))
+        else:
+            sada = 0.0
+        geo = tn.Geometry(sun_body=sun_b, nadir_body=nadir_b,
+                          sun_fraction=sun_frac, albedo_cos=albedo_cos,
+                          h_ratio=h_ratio, sada_angle_deg=sada,
+                          wings_deployed=dep)
+        geo.sun_dist_km = sun_dist_km
+        return geo
+
+    #: EPS line -> (current parameter). Lines 0-7 publish at 0x0118+i,
+    #: prop at 0x014B (eps_basic POWER_LINE_DEFS / _EXTRA_LINE_PARAM_IDS).
+    _LINE_CURRENT_IDS = {"obc": 0x0118, "ttc_rx": 0x0119, "ttc_tx": 0x011A,
+                         "payload": 0x011B, "fpa_cooler": 0x011C,
+                         "htr_bat": 0x011D, "htr_obc": 0x011E,
+                         "aocs_wheels": 0x011F, "prop": 0x014B}
+    #: Array face -> EPS current parameter (body faces 0x012B-0x0130 include
+    #: the wing on +-Y; the wings alone are 0x0146 / 0x0147).
+    _ARRAY_CURRENT_IDS = {"px": 0x012B, "mx": 0x012C, "py": 0x012D,
+                          "my": 0x012E, "pz": 0x012F, "mz": 0x0130,
+                          "wing_py": 0x0146, "wing_my": 0x0147}
+
+    def _electrical_inputs(self, p: dict[int, float], htr_w: dict[str, float]
+                           ) -> tuple[list[float], dict[str, float]]:
+        """Dissipation per node [W] from what the EPS actually delivers.
+
+        Every watt a load draws ends up as heat in the node that carries it
+        (minus the RF that leaves the antenna, via the share < 1 on ttc_tx).
+        Line powers are I x V exactly as EPS computed them (I = P / max(V,
+        20)). The unattributed rest of the bus load (EPS housekeeping noise,
+        an injected bus short) goes to `residual_node`. Heaters are added
+        from TCS's own heater state, not the EPS line, so an open-circuit
+        heater bills but does not heat (the failure's teaching point).
+        """
+        net = self._net
+        pw = [0.0] * len(net.names)
+        array_w: dict[str, float] = {}
+        if 0x0106 not in p:
+            # No EPS in the loop (bare TCS harness): use the configured
+            # default loads so the network still has its nominal dissipation.
+            for node, w in (self._net_cfg.get("default_dissipation_w", {}) or {}).items():
+                if node in net.index:
+                    pw[net.index[node]] += float(w)
+        else:
+            v = max(float(p.get(0x0105, 28.0) or 28.0), 20.0)
+            attributed = 0.0
+            for line, pid in self._LINE_CURRENT_IDS.items():
+                w = float(p.get(pid, 0.0) or 0.0) * v
+                attributed += w
+                if line == "prop" and self._state.htr_thruster:
+                    # The catbed heater rides on the prop line; its heat is
+                    # applied to the thruster node below.
+                    w = max(0.0, w - self._HEATER_POWER["thruster"])
+                for node, share in self._dissipation.get(line, {}).items():
+                    pw[net.index[node]] += w * share
+            residual = float(p.get(0x0106, 0.0) or 0.0) - attributed
+            if self._residual_node in net.index:
+                pw[net.index[self._residual_node]] += residual
+            # Battery: I^2 R plus the charge inefficiency (eps.yaml
+            # internal_r_ohm / charge_efficiency, read off the live EPS model
+            # when the engine runs — no second copy of the numbers).
+            eps = self._engine.subsystems.get("eps") if (
+                self._engine is not None and hasattr(self._engine, "subsystems")) else None
+            r_int = float(getattr(eps, "_internal_r", 0.05))
+            eta_c = float(getattr(eps, "_charge_eff", 0.94))
+            i_bat = float(p.get(0x0109, 0.0) or 0.0)
+            q_bat = i_bat * i_bat * r_int
+            if i_bat > 0:
+                q_bat += (1.0 - eta_c) * i_bat * v
+            if self._battery_heat_node in net.index:
+                pw[net.index[self._battery_heat_node]] += q_bat
+            for face, pid in self._ARRAY_CURRENT_IDS.items():
+                array_w[face] = float(p.get(pid, 0.0) or 0.0) * v
+            for wf, body in (("wing_py", "py"), ("wing_my", "my")):
+                array_w[body] = max(0.0, array_w.get(body, 0.0) - array_w.get(wf, 0.0))
+        for circuit, w in htr_w.items():
+            node = self._heater_nodes.get(circuit)
+            if node in net.index:
+                pw[net.index[node]] += w
+        return pw, array_w
 
     def _thermostat_control(self, circuit: str, temp: float) -> None:
         """Apply thermostat control for a heater circuit (auto mode only)."""
@@ -431,22 +701,6 @@ class TCSBasicModel(SubsystemModel):
             setattr(s, f"htr_{circuit}", True)
         elif temp >= hi:
             setattr(s, f"htr_{circuit}", False)
-
-    def _apply_thermal_coupling(self, dt: float) -> None:
-        """Apply conductive and radiative heat transfer between zones."""
-        s = self._state
-        # Coupling between battery and OBC (shared electronics box)
-        g_bat_obc = self._zone_conductance.get(("battery", "obc"), 0.5)
-        heat_flow = g_bat_obc * (s.temp_obc - s.temp_battery)
-        s.temp_battery += (heat_flow / self._CAP["battery"]) * dt
-        s.temp_obc -= (heat_flow / self._CAP["obc"]) * dt
-
-        # Radiation cooling to space (all external zones)
-        for zone in ["panel_px", "panel_mx", "panel_py", "panel_my", "panel_pz", "panel_mz"]:
-            T = getattr(s, f"temp_{zone}", 0.0)
-            # Stefan-Boltzmann: rad cooling proportional to T difference from 3K space
-            rad_loss = self._space_radiation_g * (T - (-270.15))  # 3K in Celsius
-            setattr(s, f"temp_{zone}", T - (rad_loss / self._CAP.get(zone, 1000)) * dt)
 
     def _generate_events(self, dt: float) -> None:
         """Generate TCS events with edge detection."""
@@ -596,80 +850,23 @@ class TCSBasicModel(SubsystemModel):
 
     def tick(self, dt: float, orbit_state: Any, shared_params: dict[int, float]) -> None:
         s = self._state
-        e = self._env
-        if orbit_state.in_eclipse:
-            env_ext = e["eclipse_external_c"]
-            env_int = e["eclipse_internal_c"]
-            env_bat = e["eclipse_battery_c"]
-        else:
-            beta = orbit_state.solar_beta_deg
-            # Beta dependence un-inverted (brief 05 finding 8 / WP-8): the
-            # orbit-average external sink RISES with |beta| (less eclipse,
-            # more continuous sun). The old |cos(beta)| peaked at beta = 0 —
-            # the maximum-eclipse geometry.
-            sun_f = abs(math.sin(math.radians(beta)))
-            env_ext = e["sunlit_external_base_c"] + e["sunlit_external_beta_gain_c"] * sun_f
-            env_int = e["sunlit_internal_c"]
-            env_bat = e["sunlit_battery_c"]
 
-        # Apply thermal coupling between zones
-        self._apply_thermal_coupling(dt)
-
-        # --- Panel temperatures with solar illumination coupling ---
-        # Read per-panel solar currents from EPS (proxy for illumination)
-        panel_faces = ['px', 'mx', 'py', 'my', 'pz', 'mz']
-        panel_solar_param_ids = [0x012B, 0x012C, 0x012D, 0x012E, 0x012F, 0x0130]
-        panel_base_envs = [env_ext+5, env_ext, env_ext+8, env_ext, env_ext-5, env_ext-5]
-
-        for face, pid, base_env in zip(panel_faces, panel_solar_param_ids, panel_base_envs):
-            attr = f"temp_panel_{face}"
-            key = f"panel_{face}"
-            T = getattr(s, attr)
-            solar_current = shared_params.get(pid, 0.0)
-            # Solar heating proportional to current (fraction of solar power
-            # that becomes heat). The equivalent environment rise for heat Q
-            # into a first-order node is Q/UA with UA = C/tau — the previous
-            # code multiplied by a flat 10 K/W ON TOP of that, ~80x too much:
-            # +362 C panels at full wing current (brief 05 finding 1 / WP-8).
-            # panel_solar_heat_gain is now only a trim multiplier (default 1).
-            solar_heat_w = solar_current * 28.0 * e["panel_solar_heat_fraction"]
-            ua_node = self._CAP.get(key, 1000.0) / max(self._TAU.get(key, 600.0), 1e-6)
-            heat_input = solar_heat_w / max(ua_node, 1e-6) * e["panel_solar_heat_gain"]
-            env = base_env + heat_input
-            # Integrator process noise: sqrt(dt) scaling (plan A-3)
-            T += (env - T) / self._TAU[key] * dt + self.rng.gauss(0, 0.05) * math.sqrt(dt)
-            setattr(s, attr, T)
-
-        # --- Battery temp: thermostat-controlled, gated on EPS power line ---
-        # EPS power line 5 (htr_bat) must be ON for battery heater to operate
+        # ── 1. Heater circuits: thermostat / manual / failure state ─────
+        # (logic unchanged from the zone model; only the physics moved)
+        # Battery: thermostat-controlled, gated on EPS power line 5 (0x0115).
         bat_eps_on = bool(shared_params.get(0x0115, 0))
         if bat_eps_on:
             self._thermostat_control("battery", s.temp_battery)
         else:
-            s.htr_battery = False  # No power → heater off
-        # Apply heater stuck-on / open-circuit failure overrides
+            s.htr_battery = False  # No power -> heater off
         if s.htr_battery_stuck_on:
             s.htr_battery = True  # Cannot turn off
-        bat_pwr = self._HEATER_POWER["battery"] if s.htr_battery else 0.0
-        if s.htr_battery_open_circuit:
-            bat_pwr = 0.0  # Heater appears ON but provides no heat
-        soak = s.cold_soak
-        s.temp_battery += ((env_bat+soak.get("battery", 0.0)-s.temp_battery)/self._TAU["battery"]+bat_pwr/self._CAP["battery"])*dt+self.rng.gauss(0,0.02)*math.sqrt(dt)
 
-        # --- OBC temp (defect #11) ---
-        # By default the OBC heater follows its EPS power line (line 6, 0x0116).
-        # If the operator has issued a direct heater command (S8 func 41, which
-        # sets htr_obc_manual), honour that commanded state instead of blindly
-        # overwriting it every tick — but the heater can only actually energise
-        # if its EPS line has power. This mirrors the battery-circuit logic and
-        # stops func 41 from reporting success while having no lasting effect.
-        #
-        # Auto mode is now a THERMOSTAT on the obc setpoints (ON +5 / OFF +10 C
-        # from tcs.yaml), exactly like the battery circuit (finding P1,
-        # 2026-11-02). It used to follow the line ("line on = heater on"), so
-        # leaving line 6 powered after commissioning burned 4 W around the
-        # clock; a real smallsat leaves its heater lines powered under
-        # thermostat control, which is what commissioning now does.
+        # OBC (defect #11): auto = thermostat on the obc setpoints while
+        # line 6 (0x0116) is powered; a direct HEATER_OBC command (manual)
+        # is honoured but can only energise with the line powered (P1,
+        # 2026-11-02: a real smallsat leaves its heater lines powered under
+        # thermostat control).
         obc_eps_on = bool(shared_params.get(0x0116, 0))
         if getattr(s, "htr_obc_manual", False):
             s.htr_obc = bool(s.htr_obc) and obc_eps_on
@@ -677,54 +874,10 @@ class TCSBasicModel(SubsystemModel):
             self._thermostat_control("obc", s.temp_obc)
         else:
             s.htr_obc = False
-        pwr = self._HEATER_POWER["obc"] if s.htr_obc else 0.0
-        if s.htr_obc_open_circuit:
-            pwr = 0.0
-        s.temp_obc += ((env_int+s.cold_soak.get("obc", 0.0)-s.temp_obc)/self._TAU["obc"]+(pwr+s.obc_internal_heat_w)/self._CAP["obc"])*dt+self.rng.gauss(0,0.03)*math.sqrt(dt)
 
-        # --- FPA temp (single thermal node — brief 05 defect 1 / WP-1) ---
-        # The cooler is a CONTROLLED device driving the node to its setpoint,
-        # bounded by a maximum heat lift below the ambient sink. The previous
-        # code applied the -15 C setpoint as an additive -35 K environment
-        # offset (`target - 20`), so TCS asymptoted to env-35, never to the
-        # setpoint, and diverged from the payload's own integrator by up to
-        # 26 C on the command path the shipped procedures use.
-        # Effective cooler state = commanded (any path, s.cooler_fpa) AND the
-        # EPS fpa_cooler line (0x0114) powered AND not failed (WP-2).
-        fpa_line_on = (bool(shared_params.get(0x0114, 0))
-                       if 0x0114 in shared_params else True)
-        s.cooler_fpa_active = bool(s.cooler_fpa and fpa_line_on
-                                   and not s.cooler_failed)
-        if s.decontamination_active:
-            # Defect #31: decontamination bake-out actively heats the FPA toward
-            # its target temperature, overriding the cooler. Previously the
-            # command set a flag the thermal model never read, so the FPA never
-            # warmed and the procedure was untrainable.
-            s.temp_fpa += (s.decontam_fpa_target_c - s.temp_fpa) / self._TAU["fpa"] * dt \
-                + self.rng.gauss(0, 0.02) * math.sqrt(dt)
-        else:
-            if s.cooler_fpa_active:
-                # 2026-08b: authority now falls with the lift the cooler is
-                # being asked for, and with the detector's own dissipation
-                # while it is reading out (payload.mode 0x0600 == 2 IMAGING).
-                q_load = (self._fpa_imaging_load_w
-                          if int(shared_params.get(0x0600, 0)) == 2 else 0.0)
-                s.fpa_cooler_floor_c = env_int - self._fpa_achievable_lift_k(
-                    env_int, q_load)
-                fpa_target = max(self._fpa_cooler_target, s.fpa_cooler_floor_c)
-            else:
-                s.fpa_cooler_floor_c = env_int
-                fpa_target = env_int
-            s.fpa_cooler_margin_k = (self._fpa_cooler_target
-                                     - s.fpa_cooler_floor_c)
-            s.temp_fpa += (fpa_target-s.temp_fpa)/self._TAU["fpa"]*dt+self.rng.gauss(0,0.02)*math.sqrt(dt)
-
-        # --- Thruster (catalyst-bed) temp — Phase D, real heater ---
-        # Gated on the EPS `prop` power line (0x014A). Manual by default
-        # (HEATER_THRUSTER func 42 commands it; the "fail loudly" gate in
-        # handle_command refuses ON while the line is dark); auto mode runs
-        # the 190/230 C thermostat hold. During a burn (prop.state 0x0B00 ==
-        # FIRING) decomposition heat soaks the bed.
+        # Thruster catbed (Phase D): gated on the EPS `prop` line (0x014A);
+        # manual by default, HEATER_AUTO_MODE circuit=2 runs the 190/230 C
+        # hold.
         prop_line_on = bool(shared_params.get(0x014A, 0))
         if not prop_line_on:
             s.htr_thruster = False   # no power -> heater off
@@ -732,23 +885,95 @@ class TCSBasicModel(SubsystemModel):
             self._thermostat_control("thruster", s.temp_thruster)
         if s.htr_thruster_stuck_on:
             s.htr_thruster = True
-        thr_pwr = self._HEATER_POWER["thruster"] if s.htr_thruster else 0.0
-        if s.htr_thruster_open_circuit:
-            thr_pwr = 0.0
-        q_comb_w = 30.0 if int(shared_params.get(0x0B00, 0)) == 2 else 0.0
-        s.temp_thruster += ((env_int-5+s.cold_soak.get("thruster", 0.0)-s.temp_thruster)/self._TAU["thruster"]
-                            + (thr_pwr + q_comb_w)/self._CAP["thruster"])*dt \
-            + self.rng.gauss(0, 0.03)*math.sqrt(dt)
 
-        # Defect #31: enforce heater duty-cycle limits. If the measured duty for
-        # a circuit has reached its configured limit (<100%), force the heater
-        # off this tick so the duty cannot climb further. Only active when an
-        # operator has actually set a limit below 100%, so nominal behaviour is
-        # unchanged.
+        # Defect #31: heater duty-cycle limits. If the measured duty for a
+        # circuit has reached its configured limit (<100 %), the heater is
+        # forced off. Applied BEFORE the physics now, so a limited heater
+        # really delivers no heat this step (it used to heat, then switch).
         for circuit in ("battery", "obc", "thruster"):
             limit = getattr(s, f"htr_{circuit}_duty_limit_pct", 100.0)
             if limit < 100.0 and getattr(s, f"htr_duty_{circuit}", 0.0) >= limit:
                 setattr(s, f"htr_{circuit}", False)
+
+        htr_w = {}
+        for circuit in ("battery", "obc", "thruster"):
+            on = getattr(s, f"htr_{circuit}")
+            open_c = getattr(s, f"htr_{circuit}_open_circuit", False)
+            htr_w[circuit] = self._HEATER_POWER[circuit] if (on and not open_c) else 0.0
+
+        # ── 2. Thermal network step (THERMAL_MODEL.md) ──────────────────
+        net = self._net
+        self._sync_in()
+        geo = self._geometry(orbit_state, shared_params)
+        env = dict(self._env)
+        d_km = getattr(geo, "sun_dist_km", None)
+        if env.get("scale_solar_with_distance", True) and d_km:
+            env["solar_flux_w_m2"] = env["solar_flux_w_m2"] * (
+                tn.AU_KM / d_km) ** 2
+        power, array_w = self._electrical_inputs(shared_params, htr_w)
+        q_abs, emit_ea = tn.absorbed_flux(net, geo, env, array_w)
+        idx = net.index
+        # Failure: extra dissipation inside the OBC box.
+        if "obc" in idx:
+            power[idx["obc"]] += s.obc_internal_heat_w
+        # Catbed decomposition heat while FIRING (prop.state 0x0B00 == 2).
+        if "thruster" in idx and int(shared_params.get(0x0B00, 0)) == 2:
+            power[idx["thruster"]] += 30.0
+        # Instructor cold soak: an extra heat leak G_soak x offset out of the
+        # zone (offset < 0), i.e. the zone's mounting interface is `offset`
+        # colder than the rest of the spacecraft. The thermostat sees the
+        # result and a powered heater fights it.
+        for zone, off in s.cold_soak.items():
+            if zone in idx:
+                power[idx[zone]] += self._soak_g.get(zone, 0.0) * float(off)
+        # Stowed wings lie on their body face (contact conductance).
+        extra = []
+        for wing, panel in self._wing_panels.items():
+            side = 0 if wing.endswith("py") else 1
+            if wing in idx and panel in idx and not geo.wings_deployed[side]:
+                extra.append((idx[wing], idx[panel], self._stowed_contact))
+
+        # ── 3. FPA (single node, controlled; brief 05 WP-1 / 2026-08b) ──
+        # Unchanged control law: the cooler drives the node towards its
+        # setpoint, bounded by the efficiency-limited lift below the sink.
+        # The sink is now the PAYLOAD node (the instrument the cold finger
+        # is mounted in) instead of the fixed +12 C internal sink, and the
+        # heat the FPA gains/loses is taken from/given to that node, so
+        # energy is conserved. The cooler's 15 W of electrical input is
+        # dissipation in the network (fpa_cooler line, tcs.yaml).
+        sink_c = self._solver.temp_c(self._fpa_sink_node) \
+            if self._fpa_sink_node in idx else 12.0
+        fpa_line_on = (bool(shared_params.get(0x0114, 0))
+                       if 0x0114 in shared_params else True)
+        s.cooler_fpa_active = bool(s.cooler_fpa and fpa_line_on
+                                   and not s.cooler_failed)
+        t_fpa0 = s.temp_fpa
+        if s.decontamination_active:
+            # Defect #31: the bake-out actively heats the FPA towards its
+            # target, overriding the cooler.
+            s.temp_fpa += (s.decontam_fpa_target_c - s.temp_fpa) / self._TAU["fpa"] * dt
+        else:
+            if s.cooler_fpa_active:
+                q_load = (self._fpa_imaging_load_w
+                          if int(shared_params.get(0x0600, 0)) == 2 else 0.0)
+                s.fpa_cooler_floor_c = sink_c - self._fpa_achievable_lift_k(
+                    sink_c, q_load)
+                fpa_target = max(self._fpa_cooler_target, s.fpa_cooler_floor_c)
+            else:
+                s.fpa_cooler_floor_c = sink_c
+                fpa_target = sink_c
+            s.fpa_cooler_margin_k = (self._fpa_cooler_target
+                                     - s.fpa_cooler_floor_c)
+            k = min(1.0, dt / self._TAU["fpa"]) if dt > 0 else 0.0
+            s.temp_fpa += (fpa_target - s.temp_fpa) * k
+        if dt > 0 and self._fpa_sink_node in idx:
+            power[idx[self._fpa_sink_node]] -= (
+                self._CAP["fpa"] * (s.temp_fpa - t_fpa0) / dt)
+
+        self._last_radiated_j = self._solver.step(dt, q_abs, emit_ea, power, extra)
+        self._last_inputs = {"q_abs": q_abs, "emit_ea": emit_ea,
+                             "power": power, "geometry": geo}
+        self._sync_out()
 
         # Phase 4: Heater duty cycle tracking
         decay = dt / s._duty_window_s
@@ -772,7 +997,18 @@ class TCSBasicModel(SubsystemModel):
 
         # Write shared params — apply sensor drift offsets for failure simulation
         p = self._param_ids
-        drift = s.sensor_drift
+        # Sensor drift (failure) plus thermistor measurement noise. The
+        # physics itself is deterministic now (the zone model's process
+        # noise is gone); the noise lives where it does on a spacecraft, in
+        # the measurement. sensor_noise_k in tcs.yaml `network:`.
+        sig = self._sensor_noise_k
+        if sig > 0.0:
+            drift = {z: s.sensor_drift.get(z, 0.0) + self.rng.gauss(0.0, sig)
+                     for z in ("panel_px", "panel_mx", "panel_py", "panel_my",
+                               "panel_pz", "panel_mz", "obc", "battery",
+                               "fpa", "thruster")}
+        else:
+            drift = s.sensor_drift
 
         shared_params[p.get("temp_panel_px",0x0400)] = s.temp_panel_px + drift.get("panel_px", 0.0)
         shared_params[p.get("temp_panel_mx",0x0401)] = s.temp_panel_mx + drift.get("panel_mx", 0.0)
@@ -1010,7 +1246,11 @@ class TCSBasicModel(SubsystemModel):
                 "temp_fpa": self._state.temp_fpa,
                 "temp_thruster": self._state.temp_thruster,
             }
-            return {"success": True, "thermal_map": thermal_map}
+            # Every thermal-network node (2026-11), including the ones with
+            # no published parameter (structure, wings, payload, ...).
+            nodes = {n: self.node_temperature(n) for n in self._net.names}
+            return {"success": True, "thermal_map": thermal_map,
+                    "network_nodes": nodes}
         return {"success": False, "message": f"Unknown: {command}"}
 
     # ─── Failure injection ───────────────────────────────────────────
@@ -1079,7 +1319,8 @@ class TCSBasicModel(SubsystemModel):
         ),
         "cold_soak": FailureSpec(
             name="cold_soak", label="Zone cold soak (heater test)",
-            effect="Lowers the thermal sink of a heated zone and steps it "
+            effect="Opens an extra heat leak from a heated zone (as if its "
+                   "mounting interface were `offset` colder) and steps it "
                    "cold: the zone really cools, its thermostat sees it, and "
                    "the heater can recover it once its EPS line is powered "
                    "(EMG-001/002/003, CTG-004 heater steps).",
@@ -1087,8 +1328,14 @@ class TCSBasicModel(SubsystemModel):
             params=(
                 enum("zone", "Heated zone", ["battery", "obc", "thruster"],
                      labels=["BATTERY", "OBC", "THRUSTER"], default="battery"),
+                # No default: blank = the zone's own default from tcs.yaml
+                # network.cold_soak.default_offset_c, sized so that zone's
+                # heater can win it back (THERMAL_MODEL.md §5).
                 number("offset_c", "Sink offset", unit="degC", lo=-60.0,
-                       hi=0.0, default=-25.0, step=0.5),
+                       hi=0.0, default=None, step=0.5,
+                       description="Blank = the zone's default depth "
+                                   "(tcs.yaml network.cold_soak), sized so "
+                                   "its heater can recover it."),
             ),
         ),
         "temp_anomaly": FailureSpec(
@@ -1130,7 +1377,12 @@ class TCSBasicModel(SubsystemModel):
         elif failure == "cold_soak":
             zone = kw.get("zone", "battery")
             if zone in ("battery", "obc", "thruster"):
-                offset_c = float(kw.get("offset_c", -25.0 * magnitude))
+                # No offset given = the zone's own default, re-derived on the
+                # thermal network (tcs.yaml network.cold_soak).
+                if kw.get("offset_c") is None:
+                    offset_c = self._soak_default.get(zone, -25.0) * float(magnitude or 1.0)
+                else:
+                    offset_c = float(kw["offset_c"])
                 self._state.cold_soak[zone] = offset_c
                 attr = f"temp_{zone}"
                 setattr(self._state, attr, getattr(self._state, attr) + offset_c)

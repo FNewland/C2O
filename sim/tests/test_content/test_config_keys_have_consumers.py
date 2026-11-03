@@ -72,13 +72,6 @@ KNOWN_UNUSED: dict[str, str] = {
     "mcs/pus_services.yaml:services.s18.max_steps_per_procedure":
         "same as max_procedures: pus_services.yaml awaits promotion to THE "
         "routing table (X-2 / WP-16)",
-    "subsystems/tcs.yaml:thermal_coupling.zone_conductance.battery_obc":
-        "declared zone conductances; the single-node thermal model does not "
-        "solve a coupled network yet (brief 08 finding 19, thermal workstream)",
-    "subsystems/tcs.yaml:thermal_coupling.zone_conductance.payload_structure":
-        "as battery_obc — declared coupling the current model does not use",
-    "subsystems/tcs.yaml:thermal_coupling.zone_conductance.structure_electronics":
-        "as battery_obc — declared coupling the current model does not use",
     "subsystems/eps.yaml:solar_panels.sada_max_rate_deg_s":
         "SADA slew-rate limit; the drive is commanded to an angle and settles "
         "within a tick, so the rate limit is not yet integrated (Phase B SADA)",
