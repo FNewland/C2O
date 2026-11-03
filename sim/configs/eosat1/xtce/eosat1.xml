@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+2b1bee2e2620" classification="Unclassified — Simulation"/>
+  <Header version="1.0+bb21390bb1f6" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -687,9 +687,9 @@
             </StaticAlarmRanges>
           </DefaultAlarm>
         </FloatParameterType>
-        <FloatParameterType name="eps_sa_string_lit_Type">
-          <FloatDataEncoding sizeInBits="32"/>
-        </FloatParameterType>
+        <IntegerParameterType name="eps_sa_string_lit_Type" signed="false">
+          <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+        </IntegerParameterType>
         <IntegerParameterType name="eps_eclipse_active_Type" signed="false">
           <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
         </IntegerParameterType>
@@ -4947,9 +4947,9 @@
         <FloatParameterType name="ttc_antenna_deployment_ready_Type">
           <FloatDataEncoding sizeInBits="32"/>
         </FloatParameterType>
-        <FloatParameterType name="ttc_antenna_deployment_sensor_Type">
-          <FloatDataEncoding sizeInBits="32"/>
-        </FloatParameterType>
+        <IntegerParameterType name="ttc_antenna_deployment_sensor_Type" signed="false">
+          <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+        </IntegerParameterType>
         <FloatParameterType name="ttc_modulation_mode_Type">
           <FloatDataEncoding sizeInBits="32"/>
         </FloatParameterType>
@@ -5177,6 +5177,7 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_total_bytes_tx"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_total_bytes_rx"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_antenna_deployed"/>
+            <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_antenna_deployment_sensor"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_beacon_mode"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_cmd_decode_timer"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/TTC/ttc_tm_tier"/>

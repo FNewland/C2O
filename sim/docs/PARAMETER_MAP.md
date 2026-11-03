@@ -20,7 +20,7 @@ Columns:
 | | Count |
 |---|---:|
 | Catalogued parameters | 456 |
-| In at least one HK SID | 319 |
+| In at least one HK SID | 321 |
 | On-demand (S20-readable) | 129 |
 | Declared stubs (model does not compute) | 14 |
 | Ground limit bands | 49 |
@@ -36,9 +36,9 @@ Columns:
 | 3 | TCS | 17 |
 | 4 | Platform | 36 |
 | 5 | Payload | 29 |
-| 6 | TTC | 24 |
+| 6 | TTC | 25 |
 | 7 | AOCS_DETERMINATION | 42 |
-| 8 | EPS Power Management | 14 |
+| 8 | EPS Power Management | 15 |
 | 9 | PROP | 23 |
 | 11 | Beacon | 7 |
 | 12 | GPS_NAV | 12 |
@@ -284,7 +284,7 @@ Columns:
 | `0x014B` | eps.line_current_8 | A | 1 |  |  |  |  |
 | `0x014C` | eps.sa_a_yield_pct | % |  | yes |  | EPS Solar Array A Low Yield (70.0…1000.0, WARNING) |  |
 | `0x014D` | eps.sa_b_yield_pct | % |  | yes |  | EPS Solar Array B Low Yield (70.0…1000.0, WARNING) |  |
-| `0x014E` | eps.sa_string_lit |  |  | yes |  |  |  |
+| `0x014E` | eps.sa_string_lit |  | 8 | yes |  |  |  |
 
 ## fdir
 
@@ -541,7 +541,7 @@ Columns:
 | `0x052B` | ttc.tx_gate_status |  |  | yes |  |  |  |
 | `0x052C` | ttc.eirp_dbw | dBW |  | yes |  |  |  |
 | `0x0535` | ttc.antenna_deployment_ready |  |  | yes |  |  |  |
-| `0x0536` | ttc.antenna_deployment_sensor |  |  | yes |  |  |  |
+| `0x0536` | ttc.antenna_deployment_sensor |  | 6 | yes |  |  |  |
 | `0x0537` | ttc.modulation_mode |  |  | yes |  |  |  |
 | `0x0539` | ttc.tm_tier |  | 6 | yes | 1…2 / -1…2.5 |  |  |
 | `0x053A` | ttc.tm_tier_cmd |  | 6 | yes | 1…2 / -1…2.5 |  |  |

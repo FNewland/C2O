@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="EPS" Creator="EOSAT-1 SMDL Generator" Version="1.0+2b1bee2e2620">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="EPS" Creator="EOSAT-1 SMDL Generator" Version="1.0+bb21390bb1f6">
   <Description>SMP2 model catalogue for EPS subsystem</Description>
   <Type Name="UInt8" Uuid="1b57882a-4b2d-53f8-a27f-be0563caa586" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="5fcf9bfd-72b9-5f0c-b036-3cad6f5a8506" xsi:type="Integer" Size="2" Signed="false"/>
@@ -212,7 +212,7 @@
     <Field Name="eps_sa_b_yield_pct" Uuid="fc8446a8-2a5b-5f75-9bc6-daefce598d66" Type="Float32" Kind="Output" View="true">
       <Description>String B yield: measured current as % of what a healthy string B delivers at the present geometry (0 while not lit, see eps.sa_string_lit) [%]</Description>
     </Field>
-    <Field Name="eps_sa_string_lit" Uuid="99ec6779-9e86-5544-940c-b320ad85a176" Type="Float32" Kind="Output" View="true">
+    <Field Name="eps_sa_string_lit" Uuid="99ec6779-9e86-5544-940c-b320ad85a176" Type="UInt8" Kind="Output" View="true">
       <Description>Solar-array strings lit enough to judge (bit0 = A, bit1 = B): sunlit, enabled and a healthy string would give at least 0.2 A. Validity parameter of the string-yield monitors</Description>
     </Field>
     <Field Name="eps_eclipse_active" Uuid="67f3e8b4-3f75-57a3-a175-f15ee8de8070" Type="UInt8" Kind="Output" View="true">

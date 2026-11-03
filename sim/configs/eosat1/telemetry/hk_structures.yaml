@@ -92,6 +92,13 @@ structures:
       # same packet as the power terms so an operator can never see
       # generation and an eclipse flag from two different instants.
       - { param_id: 0x0142, pack_format: H, scale: 10000 } # sun_fraction
+      # 2026-11-03: the on-board string-lit flags (bit0 = string A, bit1 =
+      # string B: sunlit, enabled and a healthy string would give >= 0.2 A),
+      # the validity parameter of the S12 string-yield monitors. On demand
+      # only, the console could not say whether a yield monitor was being
+      # checked or why each wing read no current; one byte every 8 s
+      # (+1 bps) puts it beside the wing currents it explains.
+      - { param_id: 0x014E, pack_format: B, scale: 1 }     # sa_string_lit
       - { param_id: 0x013B, pack_format: h, scale: 10 }    # power_margin
       - { param_id: 0x013C, pack_format: H, scale: 10 }    # subsys_power_eps
       - { param_id: 0x013D, pack_format: H, scale: 10 }    # subsys_power_aocs
@@ -372,6 +379,12 @@ structures:
       - { param_id: 0x051E, pack_format: I, scale: 1 }
       - { param_id: 0x051F, pack_format: I, scale: 1 }
       - { param_id: 0x0520, pack_format: B, scale: 1 }
+      # 2026-11-03: the antenna deployment SENSOR (0 unknown, 1 stowed,
+      # 2 deployed, 3 partial/jammed) beside the commanded-state flag 0x0520.
+      # 0x0520 cannot tell a jammed antenna from a stowed one, and only the
+      # sensor says the burn wire fired but the element did not latch. One
+      # byte every 8 s (+1 bps); 0x0535 (pyro continuity) stays on demand.
+      - { param_id: 0x0536, pack_format: B, scale: 1 }     # antenna_deployment_sensor
       - { param_id: 0x0521, pack_format: B, scale: 1 }
       - { param_id: 0x0522, pack_format: H, scale: 10 }
       # Rate ladder (brief 08 finding 13). 0x0539-0x053C carry limit bands in
