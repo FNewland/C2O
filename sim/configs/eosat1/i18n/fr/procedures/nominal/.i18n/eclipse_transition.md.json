@@ -49,8 +49,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-3-disable-fpa-cooler-to-conserve-power",
-   "en_hash": "114934e294a3e6df",
-   "fr_hash": "3ef8e3f8556446d2"
+   "en_hash": "5357fdfc6a7f5170",
+   "fr_hash": "62ffa865af5ad5ed"
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-4-verify-aocs-eclipse-mode-transition",
@@ -88,5 +88,5 @@
    "fr_hash": "913d780de571cd04"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "b41c0a9"
 }

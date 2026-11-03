@@ -69,8 +69,8 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "2e04a667c8fbfcf9",
-   "fr_hash": "9c20ee86948a401f"
+   "en_hash": "3a127c1b150e3b0b",
+   "fr_hash": "d9db9fd416547099"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-8-post-recovery-verification",
@@ -93,5 +93,5 @@
    "fr_hash": "2a26fa93111780b1"
   }
  ],
- "en_commit": "9bdac94"
+ "en_commit": "b41c0a9"
 }

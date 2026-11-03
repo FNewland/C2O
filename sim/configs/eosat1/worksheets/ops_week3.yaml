@@ -304,10 +304,12 @@ worksheets:
       fr: '6. Charge utile : Préparation de la charge utile, seulement si une prise de vue ou un vidage
         est prévu : PAYLOAD_SET_MODE(mode=1) STANDBY (S8.1 func 26)'
     hint:
-      en: payload.mode (0x0600) = 1 within 20 s; tcs.temp_fpa (0x0408) trending down (cooler running);
-        payload.store_used (0x0604) < 90 %
-      fr: payload.mode (0x0600) = 1 en 20 s ; tcs.temp_fpa (0x0408) en baisse (refroidisseur en marche)
-        ; payload.store_used (0x0604) < 90 %
+      en: payload.mode (0x0600) = 1 within 20 s; tcs.cooler_fpa (0x040C) = 0 (STANDBY does not run the
+        cooler; it is switched on as the imaging preparation, NOM-002 step 2); payload.store_used (0x0604)
+        < 90 %
+      fr: payload.mode (0x0600) = 1 en 20 s ; tcs.cooler_fpa (0x040C) = 0 (le mode STANDBY ne fait pas
+        fonctionner le refroidisseur ; il est mis en marche lors de la préparation de la prise de vue,
+        étape 2 de NOM-002) ; payload.store_used (0x0604) < 90 %
     step: '6'
   - id: q7
     kind: check
@@ -2606,15 +2608,18 @@ worksheets:
   - id: q1
     kind: check
     text:
-      en: '1. Pre-calibration state: HK_REQUEST(sid=5) (S3.27), GET_PARAM(param_id=0x060B), GET_PARAM(param_id=0x060A)
-        (S20.3)'
-      fr: '1. État avant étalonnage : HK_REQUEST(sid=5) (S3.27), GET_PARAM(param_id=0x060B), GET_PARAM(param_id=0x060A)
+      en: '1. Pre-calibration state, cooler ON first: FPA_COOLER(on=1) (S8.1 func 43), HK_REQUEST(sid=3),
+        HK_REQUEST(sid=5) (S3.27), GET_PARAM(param_id=0x060B), GET_PARAM(param_id=0x060A) (S20.3)'
+      fr: '1. État avant étalonnage, refroidisseur EN MARCHE d''abord : FPA_COOLER(on=1) (S8.1 func 43),
+        HK_REQUEST(sid=3), HK_REQUEST(sid=5) (S3.27), GET_PARAM(param_id=0x060B), GET_PARAM(param_id=0x060A)
         (S20.3)'
     hint:
-      en: payload.mode (0x0600) = 1 (STANDBY); payload.fpa_temp (0x0601) ∈ [−16.5, −14.5] °C; payload.fpa_ready
-        (0x0610) = 1; free store (total − used) > 1000 MB
-      fr: payload.mode (0x0600) = 1 (STANDBY) ; payload.fpa_temp (0x0601) ∈ [−16.5, −14.5] °C ; payload.fpa_ready
-        (0x0610) = 1 ; mémoire libre (total − occupé) > 1000 Mo
+      en: tcs.cooler_fpa (0x040C) = 1 within 10 s; payload.mode (0x0600) = 1 (STANDBY); payload.fpa_ready
+        (0x0610) = 1 within 600 s (cool-down about 6.5 min); payload.fpa_temp (0x0601) ∈ [−16.5, −14.5]
+        °C; free store (total − used) > 1000 MB
+      fr: tcs.cooler_fpa (0x040C) = 1 en 10 s ; payload.mode (0x0600) = 1 (STANDBY) ; payload.fpa_ready
+        (0x0610) = 1 en 600 s (mise en froid d'environ 6.5 min) ; payload.fpa_temp (0x0601) ∈ [−16.5,
+        −14.5] °C ; mémoire libre (total − occupé) > 1000 Mo
     step: '1'
   - id: q2
     kind: check
@@ -2628,10 +2633,11 @@ worksheets:
   - id: q3
     kind: check
     text:
-      en: '3. Dark set: PAYLOAD_SET_MODE(mode=1) (func 26), PAYLOAD_CAL_LAMP(on=0) (func 95), PAYLOAD_START_CALIBRATION(mode=0)
-        (func 37, 0 = DARK), HK_REQUEST(sid=5) twice, GET_PARAM(param_id=0x0642)'
-      fr: '3. Jeu d''obscurité : PAYLOAD_SET_MODE(mode=1) (func 26), PAYLOAD_CAL_LAMP(on=0) (func 95),
-        PAYLOAD_START_CALIBRATION(mode=0) (func 37, 0 = DARK), HK_REQUEST(sid=5) deux fois, GET_PARAM(param_id=0x0642)'
+      en: '3. Dark set, from STANDBY with no mode command (STANDBY would switch the cooler off): PAYLOAD_CAL_LAMP(on=0)
+        (func 95), PAYLOAD_START_CALIBRATION(mode=0) (func 37, 0 = DARK), HK_REQUEST(sid=5) twice, GET_PARAM(param_id=0x0642)'
+      fr: '3. Jeu d''obscurité, depuis STANDBY sans commande de mode (STANDBY arrêterait le refroidisseur)
+        : PAYLOAD_CAL_LAMP(on=0) (func 95), PAYLOAD_START_CALIBRATION(mode=0) (func 37, 0 = DARK), HK_REQUEST(sid=5)
+        deux fois, GET_PARAM(param_id=0x0642)'
     hint:
       en: payload.mode = 3 (CALIBRATION) within 15 s; payload.calibration_active (0x062A) = 1, then 0
         within 120 s; payload.cal_abort_reason (0x0645) = 0; payload.dark_frame_cnt (0x0642) > 0
@@ -2665,10 +2671,10 @@ worksheets:
   - id: q6
     kind: check
     text:
-      en: '5. Open the shutter, back to STANDBY: PAYLOAD_SET_MODE(mode=1), PAYLOAD_SET_SHUTTER(position=1),
-        HK_REQUEST(sid=5), GET_PARAM(param_id=0x063C)'
-      fr: '5. Ouvrir l''obturateur, revenir en STANDBY : PAYLOAD_SET_MODE(mode=1), PAYLOAD_SET_SHUTTER(position=1),
-        HK_REQUEST(sid=5), GET_PARAM(param_id=0x063C)'
+      en: '5. Open the shutter; the sequencer has already put the payload back in STANDBY, cooler running
+        — no mode command: PAYLOAD_SET_SHUTTER(position=1), HK_REQUEST(sid=5), GET_PARAM(param_id=0x063C)'
+      fr: '5. Ouvrir l''obturateur ; le séquenceur a déjà ramené la charge utile en STANDBY, refroidisseur
+        en marche — aucune commande de mode : PAYLOAD_SET_SHUTTER(position=1), HK_REQUEST(sid=5), GET_PARAM(param_id=0x063C)'
     hint:
       en: payload.mode = 1 within 15 s; payload.shutter_pos (0x063C) = 1
       fr: payload.mode = 1 en 15 s ; payload.shutter_pos (0x063C) = 1
@@ -2722,8 +2728,10 @@ worksheets:
       fr: '9. Revenir à la configuration standard : PAYLOAD_SET_MODE(mode=1), PAYLOAD_SET_INTEGRATION_TIME(blue_ms=2.00,
         green_ms=2.00, red_ms=2.00, nir_ms=2.00), AOCS_SET_MODE(mode=4)'
     hint:
-      en: payload.mode = 1 within 15 s; integration time restored; aocs.mode = 4 within 30 s
-      fr: payload.mode = 1 en 15 s ; temps d'intégration rétabli ; aocs.mode = 4 en 30 s
+      en: payload.mode = 1 within 15 s; tcs.cooler_fpa (0x040C) = 0 (STANDBY releases the cooler); integration
+        time restored; aocs.mode = 4 within 30 s
+      fr: payload.mode = 1 en 15 s ; tcs.cooler_fpa (0x040C) = 0 (le mode STANDBY arrête le refroidisseur)
+        ; temps d'intégration rétabli ; aocs.mode = 4 en 30 s
     step: '9'
   - id: q11
     kind: check
@@ -2830,8 +2838,9 @@ worksheets:
       en: '7. Back to STANDBY: PAYLOAD_SET_MODE(mode=1)'
       fr: '7. Retour en STANDBY : PAYLOAD_SET_MODE(mode=1)'
     hint:
-      en: payload.mode = 1 within 15 s; the cooler keeps running
-      fr: payload.mode = 1 en 15 s ; le refroidisseur reste en marche
+      en: payload.mode = 1 within 15 s; tcs.cooler_fpa (0x040C) = 0 within 10 s — STANDBY switches the
+        cooler off
+      fr: payload.mode = 1 en 15 s ; tcs.cooler_fpa (0x040C) = 0 en 10 s — le mode STANDBY arrête le refroidisseur
     step: '7'
   - id: q8
     kind: check
@@ -2857,11 +2866,11 @@ worksheets:
       en: '9. First Light assessment: AOCS_SET_MODE(mode=4), HK_REQUEST(sid=2), HK_REQUEST(sid=5)'
       fr: '9. Évaluation de la première lumière : AOCS_SET_MODE(mode=4), HK_REQUEST(sid=2), HK_REQUEST(sid=5)'
     hint:
-      en: 'aocs.mode = 4 within 30 s; payload.mode = 1; payload.fpa_temp (0x0601) ∈ [−16.5, −14.5] °C;
-        payload team: geometry, all four bands, no artefacts, dark current; First Light Report'
-      fr: 'aocs.mode = 4 en 30 s ; payload.mode = 1 ; payload.fpa_temp (0x0601) ∈ [−16.5, −14.5] °C ;
-        équipe charge utile : géométrie, quatre bandes présentes, aucun artefact, courant d''obscurité
-        ; rapport de première lumière'
+      en: 'aocs.mode = 4 within 30 s; payload.mode = 1; payload.cooler_pwr (0x0602) = 0 (cooler released
+        at step 7); payload team: geometry, all four bands, no artefacts, dark current; First Light Report'
+      fr: 'aocs.mode = 4 en 30 s ; payload.mode = 1 ; payload.cooler_pwr (0x0602) = 0 (refroidisseur arrêté
+        à l''étape 7) ; équipe charge utile : géométrie, quatre bandes présentes, aucun artefact, courant
+        d''obscurité ; rapport de première lumière'
     step: '9'
   - id: q10
     kind: text
@@ -3051,10 +3060,10 @@ worksheets:
   - id: q6
     kind: check
     text:
-      en: FPA cooler at its commanded setpoint (−15 °C default), payload.fpa_ready (0x0610) = 1, cooler_margin_k
-        > 0
-      fr: Refroidisseur du FPA à sa consigne commandée (−15 °C par défaut), payload.fpa_ready (0x0610)
-        = 1, cooler_margin_k > 0
+      en: FPA cooler demonstrated at its commanded setpoint (−15 °C default) in COM-010, payload.fpa_ready
+        (0x0610) = 1, cooler_margin_k > 0
+      fr: Refroidisseur du FPA démontré à sa consigne commandée (−15 °C par défaut) dans COM-010, payload.fpa_ready
+        (0x0610) = 1, cooler_margin_k > 0
   - id: q7
     kind: check
     text:
@@ -3302,13 +3311,14 @@ worksheets:
       en: '7. EPS: Restore in reverse priority, bus stable 5 min between loads, each line powered before
         its unit: EPS_POWER_ON(line_index=7) (+ AOCS_SET_MODE(mode=2) only if aocs.mode (0x020F) = 0);
         EPS_POWER_ON(line_index=2) if eps.pl_ttc_tx = 0, then TTC_PA_ON; EPS_POWER_ON(line_index=4) if
-        eps.pl_fpa_cooler = 0, then FPA_COOLER(on=1); EPS_POWER_ON(line_index=3) if eps.pl_payload = 0,
-        then PAYLOAD_SET_MODE(mode=1)'
+        eps.pl_fpa_cooler = 0, the cooler itself left OFF (it runs only for imaging preparation; the STANDBY
+        command below would switch it off); EPS_POWER_ON(line_index=3) if eps.pl_payload = 0, then PAYLOAD_SET_MODE(mode=1)'
       fr: '7. EPS : Rétablir dans l''ordre de priorité inverse, bus stable 5 min entre deux charges, chaque
         ligne alimentée avant son équipement : EPS_POWER_ON(line_index=7) (+ AOCS_SET_MODE(mode=2) seulement
         si aocs.mode (0x020F) = 0) ; EPS_POWER_ON(line_index=2) si eps.pl_ttc_tx = 0, puis TTC_PA_ON ;
-        EPS_POWER_ON(line_index=4) si eps.pl_fpa_cooler = 0, puis FPA_COOLER(on=1) ; EPS_POWER_ON(line_index=3)
-        si eps.pl_payload = 0, puis PAYLOAD_SET_MODE(mode=1)'
+        EPS_POWER_ON(line_index=4) si eps.pl_fpa_cooler = 0, le refroidisseur lui-même restant ARRÊTÉ
+        (il ne fonctionne que pour préparer une prise de vue ; la commande STANDBY ci-dessous l''arrêterait)
+        ; EPS_POWER_ON(line_index=3) si eps.pl_payload = 0, puis PAYLOAD_SET_MODE(mode=1)'
     hint:
       en: eps.pl_aocs_wheels = 1 within 5 s; after each load eps.bus_voltage > 27.5 V and eps.bat_soc
         > 35 %; all loads back, power budget positive

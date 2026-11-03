@@ -1378,9 +1378,11 @@ Table 6.5 — Payload telemetry parameters with SIDs and nominal, yellow, and re
   bring the payload to standby. There is no single
   `PAYLOAD_POWER_ON` opcode in the telecommand catalogue.
 - `PAYLOAD_SET_MODE` (S8 func_id 26) — 0=OFF, 1=STANDBY,
-  2=IMAGING, **3=CALIBRATION**. Modes 1, 2 and 3 all request the
-  FPA cooler; mode 0 releases it, and the request now drives both
-  the TCS cooler flag and the EPS `fpa_cooler` power line.
+  2=IMAGING, **3=CALIBRATION**. Modes 2 and 3 request the FPA
+  cooler; modes 0 and 1 release it (the cooler is off in STANDBY and
+  is switched on with `FPA_COOLER` to prepare for imaging), and the
+  request drives both the TCS cooler flag and the EPS `fpa_cooler`
+  power line.
 - `PAYLOAD_CAPTURE` (S8 func_id 28) with `scene_id`, `lines`.
 - `PAYLOAD_START_CALIBRATION` (S8 func_id 37) with `mode`;
   `PAYLOAD_STOP_CALIBRATION` (func_id 38). Dark calibration no
@@ -2289,7 +2291,7 @@ scene management, calibration, and detector configuration.
 
 | Func ID | Name | Purpose |
 |---|---|---|
-| 26 | `PAYLOAD_SET_MODE(mode=0…3)` | 0=OFF, 1=STANDBY, 2=IMAGING, **3=CALIBRATION**. Modes 1/2/3 all request the FPA cooler; mode 0 releases it |
+| 26 | `PAYLOAD_SET_MODE(mode=0…3)` | 0=OFF, 1=STANDBY, 2=IMAGING, **3=CALIBRATION**. Modes 2/3 request the FPA cooler; modes 0/1 release it (STANDBY runs without the cooler) |
 | 27 | `PAYLOAD_SET_SCENE(scene_id=…)` | Set scene ID for imaging, uint16 |
 | 28 | `PAYLOAD_CAPTURE(scene_id=…, lines=…)` | Trigger capture — **caution** |
 | 29 | `PAYLOAD_DOWNLOAD_IMAGE(scene_id=…)` | Queue image for downlink |
@@ -7520,7 +7522,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[MULTI] COM-012 — First Light</div>
 
-**Entry point:** After COM-010 — COM-012 runs **before** COM-011, because calibration needs a verified imaging chain. Payload STANDBY, cooler running with `payload.fpa_ready` (0x0610) = 1 at −15 °C, AOCS in commanded NOMINAL, downlink LOW, SoC > 70 %, approaching a known ground target. The headline procedure.
+**Entry point:** After COM-010 — COM-012 runs **before** COM-011, because calibration needs a verified imaging chain. Payload STANDBY, cooler running (switched on by COM-010) with `payload.fpa_ready` (0x0610) = 1 at −15 °C, AOCS in commanded NOMINAL, downlink LOW, SoC > 70 %, approaching a known ground target. The headline procedure.
 
 **Goal:** Acquire the first science image, verify it is stored, and downlink it over the real Service-13 chain for a first quality assessment.
 
@@ -7544,7 +7546,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 3 | Payload: command IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.mode` = 2 within 30 s |
 | 4 | Payload: trigger the acquisition | `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8 func_id 28) | □ | `payload.last_scene_id` (0x060C) = 1 within 30 s; `payload.image_count` incremented. Geolocation is stamped on board, not an argument |
 | 5 | Payload: confirm the product is stored | `GET_PARAM(param_id=0x0604)`, `GET_PARAM(param_id=0x060B)` (S20.3) | □ | `payload.store_used` increased; `payload.mem_used_mb` up 1.0–4.0 MB on the step 2 baseline (4 MB raw, 1.0–2.7 MB compressed) |
-| 6 | Payload: return to STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 within 15 s; cooler keeps running |
+| 6 | Payload: return to STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 within 15 s; STANDBY switches the cooler off (`tcs.cooler_fpa` (0x040C) = 0) |
 | 7 | TT&C + Payload: downlink the product over S13 | `TTC_SET_DOWNLINK_MODE(on=1)`; `TTC_SET_DATA_RATE(rate=1)`; `S13_CREATE_TRANSFER(scene_id=1, size_mb=0)`; `S13_END_TRANSFER(transfer_id=T)`; then `TTC_SET_DATA_RATE(rate=0)`, `TTC_SET_DOWNLINK_MODE(on=0)` | □ | `ttc.tm_data_rate` (0x0506) = 128000 bps; `payload.transfer_active` (0x062D) = 1, `payload.transfer_progress` (0x062E) increasing, then 0x062D = 0; CRC-32 on the ground; back to 16000 bps |
 | 8 | AOCS: release FINE_POINT; FD declares First Light | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` = 4 within 30 s; payload STANDBY, FPA still in band. "COM-012 complete" |
 
@@ -9464,7 +9466,7 @@ Table 15.8 — Payload — imager & data commands.
 
 | Command | Purpose |
 |---|---|
-| `PAYLOAD_SET_MODE` | 0=off, 1=standby, 2=imaging, **3=calibration**. Modes 1, 2 and 3 all request the FPA cooler; mode 0 releases it |
+| `PAYLOAD_SET_MODE` | 0=off, 1=standby, 2=imaging, **3=calibration**. Modes 2 and 3 request the FPA cooler; modes 0 and 1 release it (STANDBY runs without the cooler) |
 | `PAYLOAD_SET_SCENE` | *Deprecated* — pre-set the next scene ID. Superseded by `PAYLOAD_CAPTURE`'s own argument |
 | `PAYLOAD_CAPTURE` | Trigger one image acquisition. The *where* is set by the *when*: schedule the capture over the target. Refused with the shutter closed |
 | `PAYLOAD_DOWNLOAD_IMAGE` | Report one stored image product |

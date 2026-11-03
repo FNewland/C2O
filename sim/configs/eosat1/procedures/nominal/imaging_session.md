@@ -1,7 +1,8 @@
 # NOM-002: Imaging Session
 **Subsystem:** PAYLOAD / AOCS / TCS
 **Phase:** NOMINAL
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-03: the FPA cooler is OFF in STANDBY; Step 2
+switches it on (imaging preparation) and Step 6 releases it.
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -13,6 +14,8 @@ thermal conditions must be confirmed before imaging begins.
 ## Prerequisites
 - [ ] NOM-001 Pass Startup completed with all-GO declaration
 - [ ] Payload in STANDBY mode (`payload.mode` (0x0600) = 1)
+- [ ] FPA cooler switched on (Step 2) at least 10 min before the imaging window.
+      STANDBY no longer runs the cooler: the cool-down is part of the preparation.
 - [ ] Target scene parameters uploaded to onboard scheduler
 - [ ] AOCS in FINE_POINT (`aocs.mode` (0x020F) = **5**). The payload capture gate
       demands EXACTLY mode 5. There is no NOMINAL mode and mode 0 is OFF —
@@ -50,12 +53,23 @@ planning warning BEFORE committing to a long strip.
 **GO/NO-GO:** If att_error >= 0.1 deg, HOLD. Wait up to 60 s for convergence.
 If still not met, abort imaging and investigate AOCS performance.
 
-### Step 2 --- Verify Focal Plane Thermal Condition
+### Step 2 --- Prepare the Focal Plane (FPA Cooler On)
+**Note:** The FPA cooler is OFF in STANDBY (2026-11-03). Switching it on is the
+imaging preparation: from the uncooled STANDBY equilibrium (about +10 C) the
+detector needs about 6.5 min to reach `payload.fpa_ready` = 1 (60 s of that is
+the readiness hysteresis). Send this step at least 10 min before the imaging
+window, before Step 1 if the window is close; the planner's `imaging_pass` books
+480 s for it. If `tcs.cooler_fpa` (0x040C) already reads 1, skip the TC.
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) --- FPA cooler ON
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) --- request TCS housekeeping
+**Verify:** `tcs.cooler_fpa` (0x040C) = 1 (ACTIVE) within 10 s
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- payload housekeeping (`payload.fpa_ready`)
+**Verify:** `payload.fpa_ready` (0x0610) = 1 within 600 s
 **Verify:** `tcs.temp_fpa` (0x0408) < -10.0 C within 5 s
-**Verify:** `tcs.cooler_fpa` (0x040C) = 1 (ACTIVE)
-**GO/NO-GO:** If FPA temp >= -10.0 C, HOLD. Monitor trend for up to 120 s. If
-temperature is not decreasing, check cooler status and abort if necessary.
+**GO/NO-GO:** If `payload.fpa_ready` is still 0 after 10 min, HOLD. Read
+`payload.cooler_margin_k` (0x064B): a value <= 0 means the setpoint is out of
+reach at the present sink. If the temperature is not decreasing, check the
+cooler status and abort if necessary.
 
 ### Step 3 --- Verify Storage Capacity
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- request Payload housekeeping
@@ -110,7 +124,8 @@ notice names which gate refused it.
 ### Step 6 --- Terminate Imaging Session
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- command STANDBY
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 15 s
-**Verify:** `eps.power_cons` (0x0106) decrease observed (payload powered down)
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 10 s --- STANDBY releases the FPA cooler
+**Verify:** `eps.power_cons` (0x0106) decrease observed (imaging load and the 15 W cooler off)
 **Note:** Record final `payload.image_count` (0x0605) as Nf. Images acquired = Nf - N0.
 
 ### Step 7 --- Post-Imaging Assessment
@@ -132,7 +147,7 @@ notice names which gate refused it.
   power margin for safe spacecraft operations.
 
 ## Post-Conditions
-- [ ] Payload returned to STANDBY mode
+- [ ] Payload returned to STANDBY mode, FPA cooler off
 - [ ] Image count and storage usage logged
 - [ ] AOCS remained in fine-pointing throughout (att_error < 0.1 deg)
 - [ ] FPA temperature remained at setpoint (<= -10.0 C) throughout

@@ -9,8 +9,8 @@
   },
   {
    "id": "com-011-payload-calibration",
-   "en_hash": "60eefca14a78b418",
-   "fr_hash": "724398b63e3fe027"
+   "en_hash": "1b28641372ab5ebe",
+   "fr_hash": "763cb6c042c335b8"
   },
   {
    "id": "com-011-payload-calibration/purpose",
@@ -19,8 +19,8 @@
   },
   {
    "id": "com-011-payload-calibration/prerequisites",
-   "en_hash": "25dcdbc9ba05ed91",
-   "fr_hash": "7d94bafed9595478"
+   "en_hash": "681f31e1e97cf7fc",
+   "fr_hash": "895e9effe86071e5"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps",
@@ -29,8 +29,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-1-verify-pre-calibration-state",
-   "en_hash": "41222589b8fc75a6",
-   "fr_hash": "b55123792b5677c1"
+   "en_hash": "164d0aac7ec262fd",
+   "fr_hash": "fa6dc77b094844b6"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-2-close-the-shutter-for-dark-frame-acquisition",
@@ -39,8 +39,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-3-capture-the-dark-frame-set",
-   "en_hash": "b19a9cf3d9669411",
-   "fr_hash": "0c486ce29b9b2e11"
+   "en_hash": "abfc9ec622dce4cd",
+   "fr_hash": "75a41a0303504659"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-3a-capture-the-flat-field-set",
@@ -54,8 +54,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-5-open-the-shutter-and-return-to-standby",
-   "en_hash": "2944fdc033e0fc2f",
-   "fr_hash": "a96b5a4eda24176f"
+   "en_hash": "4a2d71be29a6645b",
+   "fr_hash": "8afa1de375b7fc56"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-6-prepare-for-calibration-site-overpass",
@@ -74,8 +74,8 @@
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-9-return-payload-to-standby",
-   "en_hash": "34718dc627a39ceb",
-   "fr_hash": "6b42bea6dfdfcb81"
+   "en_hash": "72d7a9908d2d045e",
+   "fr_hash": "61a35234ed31d921"
   },
   {
    "id": "com-011-payload-calibration/procedure-steps/step-10-verify-data-stored-and-schedule-downlink",
@@ -89,14 +89,14 @@
   },
   {
    "id": "com-011-payload-calibration/post-conditions",
-   "en_hash": "bf1e0005d2096a94",
-   "fr_hash": "03eaaed98dbd5eda"
+   "en_hash": "83060deec3b80567",
+   "fr_hash": "1b7ce2deebb702db"
   },
   {
    "id": "com-011-payload-calibration/exit-state",
-   "en_hash": "d72dbc5ec449f816",
-   "fr_hash": "7f8c5f710caa7ba1"
+   "en_hash": "02df9baf9addbeba",
+   "fr_hash": "56b944a54839f18d"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "b41c0a9"
 }

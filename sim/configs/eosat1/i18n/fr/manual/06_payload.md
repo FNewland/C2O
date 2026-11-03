@@ -98,8 +98,8 @@ PLD-02 interrompt la prise de vue si `att_error` dépasse 1 deg.
 | ID de mode | Nom du mode | Description                                        |
 |---------|------------|-------------------------------------------------------|
 | 0       | OFF        | Charge utile hors tension, aucun contrôle thermique   |
-| 1       | STANDBY    | Électronique sous tension, refroidisseur du FPA actif, pas de prise de vue |
-| 2       | IMAGING    | Acquisition d'images active et traitement bord        |
+| 1       | STANDBY    | Électronique sous tension, refroidisseur du FPA ARRÊTÉ sauf s'il est mis en marche pour préparer une prise de vue, pas de prise de vue |
+| 2       | IMAGING    | Refroidisseur du FPA en marche ; acquisition d'images active et traitement bord |
 | 3       | CALIBRATION | Étalonnage radiométrique (obturateur fermé, image d'obscurité / champ plat) |
 
 **Remarque :** une fonction PLAYBACK est gérée par le sous-système de mémoire de masse de l'OBDH et ne
@@ -112,16 +112,26 @@ pendant les contacts sol.
 OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 ```
 
-- **De OFF à STANDBY** : sur commande sol via `PAYLOAD_SET_MODE` (mode=1). Le refroidisseur du FPA commence
-  la mise en froid. La boucle atteint la bande de consigne en 10 minutes environ depuis l'équilibre
-  non refroidi, et `fpa_ready` (0x0610) est positionné après 60 s supplémentaires d'hystérésis.
+- **De OFF à STANDBY** : sur commande sol via `PAYLOAD_SET_MODE` (mode=1). Le refroidisseur du FPA
+  reste ARRÊTÉ : depuis le 2026-11-03, le mode STANDBY ne le fait pas fonctionner (et `PAYLOAD_SET_MODE` (mode=1)
+  l'arrête). Le détecteur non refroidi se stabilise vers +10 °C.
+- **Préparation de la prise de vue (STANDBY, refroidisseur en marche)** : `FPA_COOLER` (on=1, fonction S8 43) au moins
+  10 minutes avant la fenêtre de prise de vue. Depuis l'équilibre non refroidi de +10 °C,
+  `fpa_ready` (0x0610) est positionné après environ 6.5 minutes (377 s mesurées, y compris les 60 s
+  d'hystérésis de disponibilité) et le détecteur se stabilise à la consigne en 10 minutes environ.
+  L'activité `imaging_pass` du planificateur lui réserve 480 s. Les modes IMAGING (mode=2) et CALIBRATION (mode=3)
+  mettent aussi le refroidisseur en marche si la préparation a été oubliée, mais l'équipe attend alors
+  la mise en froid pendant que la fenêtre s'écoule.
 - **De STANDBY à IMAGING** : sur commande sol via `PAYLOAD_SET_MODE` (mode=2). Le FPA doit
   être prêt thermiquement — `fpa_ready` (0x0610) = 1. Cet indicateur constitue la condition ; il signifie que la boucle
   s'est stabilisée autour de la consigne **active** du refroidisseur (-1 K / +5 K) *et* que `fpa_temp` est à
   **-3.0 °C** ou en dessous. Avec la consigne par défaut de -15 °C, cela correspond à
   **-16.0 … -10.0 °C**. Ne vous fiez pas à une valeur mémorisée : la consigne est commandable
   sur -20…0 °C, si bien que tout seuil fixe est faux sur la majeure partie de l'enveloppe.
-- **De IMAGING à STANDBY** : sur commande sol ou de façon autonome à la fin de la fenêtre de prise de vue.
+- **De IMAGING à STANDBY** : sur commande sol ou de façon autonome à la fin de la fenêtre de prise de vue. Le refroidisseur
+  du FPA s'arrête en même temps (environ 15 W de charge en moins) ; le détecteur se réchauffe jusqu'à son équilibre
+  non refroidi, ce qui n'est pas une surchauffe (`FPA_OVERTEMP` n'est évalué que lorsqu'un fonctionnement
+  refroidi est attendu).
 - **De STANDBY à OFF** : sur commande sol via `PAYLOAD_SET_MODE` (mode=0).
 
 ### 3.2 Contraintes de prise de vue {#32-imaging-constraints}
@@ -130,6 +140,7 @@ OFF --> STANDBY --> IMAGING --> STANDBY --> OFF
 |------------------------------|--------------------------------------|
 | Condition thermique du FPA   | `fpa_ready` (0x0610) = 1 — stabilisé autour de la consigne active (-1 K/+5 K) **et** à -3.0 °C ou en dessous |
 | Prise de vue continue max.   | 10 min (limitée par la thermique et la puissance) |
+| Rapport cyclique de prise de vue soutenable | 77 % d'une orbite (puissance, bêta le plus défavorable, EOL, marge de 10 %) ; la prise de vue continue vide la batterie, voir §8 remarque 9 |
 | SoC min. de la batterie      | 40 % (pour l'activation de la prise de vue) |
 | Mode AOCS requis             | NOMINAL (4) ou FINE_POINT (5)        |
 | Erreur d'attitude requise    | < 0.5 deg                            |
@@ -183,6 +194,15 @@ Les limites répondent à la question « le matériel est-il sain ? ». La
 Ce sont deux questions différentes, et elles figuraient autrefois dans le même tableau, ce qui explique pourquoi
 cinq fichiers se contredisaient.
 
+**Les limites du FPA ne s'appliquent que lorsque le détecteur est alimenté ou régulé**
+(2026-11-03). Les surveillances S12 sur 0x0408 et 0x0601 et les limites sol sur
+0x0408, 0x0601 et 0x0617 portent une condition de validité sur 0x0426
+`tcs.fpa_limits_valid`, qui vaut 1 lorsque la charge utile est alimentée (mode 1 ou
+plus) ou que le refroidisseur du FPA ou le réchauffeur de décontamination fonctionne. Charge utile ARRÊTÉE
+lors d'une longue survie, l'imageur non refroidi suit son radiateur isolé jusqu'à
+environ -23 °C (-27 °C en saison froide) : les surveillances sont NON VÉRIFIÉES, et non
+en violation, et rien ne déclenche d'alarme.
+
 - **En dessous de -22.5 °C** : plus froid que ce que le refroidisseur peut commander. La boucle a perdu le
   contrôle — il s'agit d'un défaut, et non d'un refroidisseur trop performant.
 - **À l'intérieur de la bande commandée** (consigne active -1 K / +5 K) **et à -3.0 °C
@@ -207,13 +227,15 @@ cinq fichiers se contredisaient.
 
 1. Vérifier que le satellite est en mode AOCS NOMINAL (4) avec `att_error` < 0.5 deg.
 2. Vérifier que le SoC de la batterie est > 40 % et que la mémoire de masse disponible est suffisante.
-3. Envoyer `PAYLOAD_SET_MODE` (mode=1) pour passer en STANDBY. Surveiller `fpa_temp` (0x0601).
-4. Attendre la mise en froid du FPA : `fpa_ready` (0x0610) = 1 — environ 10 minutes depuis l'équilibre
-   non refroidi, plus 60 s d'hystérésis de disponibilité.
+3. Envoyer `PAYLOAD_SET_MODE` (mode=1) pour passer en STANDBY (le refroidisseur reste arrêté).
+4. Préparation de la prise de vue, au moins 10 minutes avant la fenêtre : `FPA_COOLER` (on=1).
+   Surveiller `fpa_temp` (0x0601) et attendre `fpa_ready` (0x0610) = 1 — environ 6.5 minutes
+   depuis l'équilibre non refroidi, les 60 s d'hystérésis de disponibilité comprises.
    Avec la consigne par défaut de -15 °C, cela correspond à `fpa_temp` dans -16.0 … -10.0 °C.
 5. Au début de la fenêtre de prise de vue, envoyer `PAYLOAD_SET_MODE` (mode=2).
 6. Surveiller l'incrémentation de `image_count` (0x0605) pendant l'acquisition.
-7. À la fin de la fenêtre de prise de vue, envoyer `PAYLOAD_SET_MODE` (mode=1) pour revenir en STANDBY.
+7. À la fin de la fenêtre de prise de vue, envoyer `PAYLOAD_SET_MODE` (mode=1) pour revenir en STANDBY ;
+   cette commande arrête aussi le refroidisseur du FPA.
 8. Si aucune autre prise de vue n'est prévue, envoyer `PAYLOAD_SET_MODE` (mode=0).
 
 ## 8. Remarques d'exploitation {#8-operational-notes}
@@ -231,8 +253,9 @@ cinq fichiers se contredisaient.
    contact, soit l'essentiel du réseau utilisable en une journée. La programmation des transmissions au sol doit tenir compte du
    temps de contact disponible sur l'ensemble des cinq stations, et le palier HIGH n'est disponible
    que sur les passages atteignant 10° d'élévation, avec le mode DOWNLINK commandé.
-5. La charge utile ne devrait pas rester en STANDBY plus de 4 heures d'affilée, afin de
-   préserver la durée de vie du refroidisseur.
+5. Le refroidisseur du FPA ne fonctionne que pour préparer une prise de vue et pendant la prise de vue (2026-11-03) :
+   le mode STANDBY l'arrête. Lancer la préparation environ 10 minutes avant la fenêtre,
+   pas plus tôt : chaque minute de refroidisseur coûte 15 W, et ses heures de fonctionnement sont sa durée de vie.
 6. Pour la surveillance des courants océaniques, donner la priorité aux prises de vue au-dessus des régions où les limites des courants
    sont connues (p. ex. Gulf Stream, Kuroshio, courant circumpolaire antarctique). La bande bleue à
    443 nm offre la plus grande sensibilité aux gradients de chlorophylle a aux limites
@@ -243,6 +266,13 @@ cinq fichiers se contredisaient.
 8. La stabilité d'attitude est essentielle pour les mesures de couleur de l'océan. Vérifier que `att_error` < 0.5 deg
    avant de commander le mode IMAGING. Une attitude dégradée produit des images floues,
    inexploitables pour l'estimation de la vitesse des courants océaniques.
+9. **La prise de vue continue vide la batterie.** La prise de vue sur toute l'orbite (charge utile en IMAGING,
+   refroidisseur du FPA en marche, SCAO en FINE) ajoute environ 23.8 W à la charge nominale : 46.6 W pour 45.1 W
+   produits au bêta le plus défavorable (EOL), −1.4 W en moyenne sur l'orbite, environ 2.3 Wh par orbite.
+   Le rapport cyclique de prise de vue soutenable est de 77 % d'une orbite avec la marge de conception de 10 %
+   (94 % à l'équilibre) ; le planificateur de mission émet un avertissement au-delà de 77 %. La limite thermique
+   est plus stricte (30 minutes par orbite), et dans le cas chaud la prise de vue continue fait perdre
+   la régulation du FPA (+5 °C). Voir `01_eps.md` §3.2.
 
 ---
 

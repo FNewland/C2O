@@ -160,10 +160,16 @@ class TMProcessor:
         limit = self._limits.get(param_id)
         if not limit:
             return None
-        return {
+        band = {
             "yellow_low": limit.yellow_low, "yellow_high": limit.yellow_high,
             "red_low": limit.red_low, "red_high": limit.red_high,
         }
+        cond = getattr(limit, "valid_when", None)
+        if cond is not None:
+            band["valid_when"] = {"param_id": f"0x{int(cond.param_id):04X}",
+                                  "mask": int(cond.mask),
+                                  "value": int(cond.value)}
+        return band
 
     def limit_bands(self) -> dict[int, dict]:
         return {pid: self.limit_band(pid) for pid in self._limits}
@@ -199,12 +205,45 @@ class TMProcessor:
             return value > bound - db
         return value < bound + db
 
+    def limit_valid(self, param_id: int) -> bool:
+        """Is *param_id*'s limit applicable now (its ``valid_when``)?
+
+        No condition = always valid. A validity parameter not received yet
+        = not valid (unchecked), the same rule as the on-board S12 check.
+        """
+        limit = self._limits.get(param_id)
+        cond = getattr(limit, "valid_when", None) if limit else None
+        if cond is None:
+            return True
+        raw = self._params.get(int(cond.param_id))
+        if raw is None:
+            return False
+        try:
+            v = int(round(float(raw)))
+        except (TypeError, ValueError):
+            return False
+        return (v & int(cond.mask)) == int(cond.value)
+
     def _check_limit(self, param_id: int, value: float) -> None:
         limit = self._limits.get(param_id)
         if not limit:
             return
-        status = self.classify(param_id, value)
         prev = self._limit_status.get(param_id, "nominal")
+        if not self.limit_valid(param_id):
+            # Validity condition false: the limit does not apply. The state
+            # is "unchecked" (no colour); leaving an alarm state journals a
+            # return to normal.
+            self._limit_status[param_id] = "unchecked"
+            if prev not in ("unchecked", "nominal"):
+                self._alarms.append({
+                    "param_id": param_id, "value": value,
+                    "status": "unchecked", "previous": prev, "cleared": True,
+                    "band": self.limit_band(param_id),
+                })
+            return
+        status = self.classify(param_id, value)
+        if prev == "unchecked":
+            prev = "nominal"     # re-armed: judged afresh, no hysteresis
         # Hysteresis: a step DOWN in severity (alarm -> caution -> nominal)
         # only once the value is back inside the boundary by the deadband.
         if (self._SEVERITY.get(status, 0) < self._SEVERITY.get(prev, 0)

@@ -8,9 +8,9 @@ tôt et consommait de l'énergie pendant toute la LEOP). États d'entrée et de 
 
 **État d'entrée :** état de sortie de COM-009 --- charge utile en STANDBY sur sa propre ligne,
 SID 5 émis, FPA à l'équilibre non refroidi. La ligne EPS du refroidisseur
-(`eps.pl_fpa_cooler` 0x0114) peut DÉJÀ valoir 1 --- la commande de mode de COM-009 est
-elle-même une voie de la ligne du refroidisseur depuis la phase 4 --- mais le refroidisseur n'a pas été
-commandé et `tcs.cooler_fpa`/`payload.fpa_ready` valent toujours 0.
+(`eps.pl_fpa_cooler` 0x0114), `tcs.cooler_fpa` et `payload.fpa_ready` valent tous 0 :
+depuis le 2026-11-03, le mode STANDBY ne fait pas fonctionner le refroidisseur ; cette fiche
+est donc la première à le mettre en marche.
 
 ## Objet
 Activer le refroidisseur du plan focal (FPA) de l'imageur multispectral. Surveiller
@@ -185,8 +185,9 @@ et au-delà de 1,0 °C elle indique une boucle dégradée.
 
 ## État de sortie
 - Refroidisseur EN MARCHE (`tcs.cooler_fpa` 0x040C = 1, ligne 0x0114 = 1) et laissé
-  en marche --- COM-011/COM-012 et toutes les fiches de prise de vue ont besoin d'un FPA régulé ;
-  rétablir ici « refroidisseur à l'arrêt » irait à l'encontre de l'objet de la fiche
+  en marche pour COM-012 (première lumière), qui prend une image aussitôt. Toute commande
+  `PAYLOAD_SET_MODE(mode=1)` (STANDBY) ultérieure l'arrête de nouveau : en exploitation courante,
+  le refroidisseur ne fonctionne que pour préparer une prise de vue et pendant la prise de vue
 - `payload.fpa_ready` (0x0610) = 1 --- FPA à la consigne
 - Aucun autre état touché
 

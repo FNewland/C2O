@@ -9,8 +9,8 @@
   },
   {
    "id": "nom-002-imaging-session",
-   "en_hash": "97172195fb179fdd",
-   "fr_hash": "3f7d487466788635"
+   "en_hash": "246c2c31817902ec",
+   "fr_hash": "88ef70173edb6352"
   },
   {
    "id": "nom-002-imaging-session/purpose",
@@ -19,8 +19,8 @@
   },
   {
    "id": "nom-002-imaging-session/prerequisites",
-   "en_hash": "d2e9e29590f7ac6f",
-   "fr_hash": "933d13b317c4eb3d"
+   "en_hash": "d7638d44e6484664",
+   "fr_hash": "157950f85ae4df5d"
   },
   {
    "id": "nom-002-imaging-session/procedure-steps",
@@ -33,9 +33,9 @@
    "fr_hash": "92bef09010331511"
   },
   {
-   "id": "nom-002-imaging-session/procedure-steps/step-2-verify-focal-plane-thermal-condition",
-   "en_hash": "43fda5b7f238f668",
-   "fr_hash": "66668443d2189496"
+   "id": "nom-002-imaging-session/procedure-steps/step-2-prepare-the-focal-plane-fpa-cooler-on",
+   "en_hash": "fde6fe217c18f9e6",
+   "fr_hash": "974757c2759515c8"
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-3-verify-storage-capacity",
@@ -59,8 +59,8 @@
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-6-terminate-imaging-session",
-   "en_hash": "530f31e27f414781",
-   "fr_hash": "b854e7f9d97e03a7"
+   "en_hash": "e17a43ffaa0453ff",
+   "fr_hash": "f61f8774fb813360"
   },
   {
    "id": "nom-002-imaging-session/procedure-steps/step-7-post-imaging-assessment",
@@ -74,9 +74,9 @@
   },
   {
    "id": "nom-002-imaging-session/post-conditions",
-   "en_hash": "7205335cd74d9ca3",
-   "fr_hash": "18b2e92a54e17bee"
+   "en_hash": "37ec9f536258a4dc",
+   "fr_hash": "fd71d3e57314a847"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "b41c0a9"
 }

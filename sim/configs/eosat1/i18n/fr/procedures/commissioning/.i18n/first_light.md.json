@@ -59,8 +59,8 @@
   },
   {
    "id": "com-012-first-light/procedure-steps/step-7-return-payload-to-standby",
-   "en_hash": "f962cec0d2c5b436",
-   "fr_hash": "615a50cbc5e21d16"
+   "en_hash": "8ca3ae2fe7879696",
+   "fr_hash": "195201d868c30d23"
   },
   {
    "id": "com-012-first-light/procedure-steps/step-8-downlink-the-product-over-service-13",
@@ -69,8 +69,8 @@
   },
   {
    "id": "com-012-first-light/procedure-steps/step-9-first-light-assessment",
-   "en_hash": "4d297ec3718dd2a0",
-   "fr_hash": "3c9e2fc4b5d12583"
+   "en_hash": "131af53c8560099a",
+   "fr_hash": "59a3ae2d9863b0cc"
   },
   {
    "id": "com-012-first-light/off-nominal-handling",
@@ -79,14 +79,14 @@
   },
   {
    "id": "com-012-first-light/post-conditions",
-   "en_hash": "6036b346d6d63098",
-   "fr_hash": "f183e379d2138556"
+   "en_hash": "377c46c13a6e3af5",
+   "fr_hash": "94324f1e182c9cc2"
   },
   {
    "id": "com-012-first-light/exit-state",
-   "en_hash": "15aaca743a6d9e7b",
-   "fr_hash": "ea1ed5cb17dea23a"
+   "en_hash": "805fed60d4cca6fa",
+   "fr_hash": "816df0208f1359ab"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "b41c0a9"
 }

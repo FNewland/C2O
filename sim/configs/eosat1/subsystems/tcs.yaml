@@ -257,6 +257,8 @@ network:
     # of the cooler and the bus electronics do not raise the FPA's sink —
     # without that isolation the cooler could not hold -15 C with the payload
     # in STANDBY (cooler running) and the whole bus at +20..+30 C.
+    # (2026-11-03: STANDBY no longer runs the cooler; the island still
+    # matters while imaging and in the hot case.)
     - {a: panel_mz, b: structure, g_w_per_k: 0.04}
     - {a: wing_py, b: panel_py, g_w_per_k: 0.05, note: "hinges + HDRM"}
     - {a: wing_my, b: panel_my, g_w_per_k: 0.05}

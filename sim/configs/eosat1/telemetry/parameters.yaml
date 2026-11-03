@@ -369,6 +369,9 @@ parameters:
   # an S20.3 read returns the live value instead of a plausible 0.0.
   - { id: 0x0424, name: tcs.fpa_cooler_floor_c, subsystem: tcs, units: C, description: "Coldest FPA temperature the cooler can hold at the present sink and load", on_demand: true }
   - { id: 0x0425, name: tcs.fpa_cooler_margin_k, subsystem: tcs, units: K, description: "Commanded FPA setpoint minus achievable floor; <= 0 means the setpoint is out of reach", on_demand: true }
+  # 2026-11-03: validity of the FPA/imager limit monitors (S12 0x0408/0x0601
+  # and mcs/limits.yaml 0x0408/0x0601/0x0617). In TCS HK (SID 3).
+  - { id: 0x0426, name: tcs.fpa_limits_valid, subsystem: tcs, description: "FPA limit validity: 1 = payload powered (mode >= 1) or FPA cooler / decontamination running, the FPA monitors are checked; 0 = unchecked (uncooled imager in survival)" }
 
   # ===== PROP (Phase D — block 0x0B00; 0x01=EPS … 0x0A=OBDH, 0x0B free) =====
   # 1U green-monoprop blowdown module: debris avoidance, drag make-up and the

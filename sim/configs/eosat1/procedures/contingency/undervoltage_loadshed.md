@@ -200,8 +200,9 @@ before the unit's mode command: with the line open every mode command is refused
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — 2. TX transmitter: verify `ttc.pa_on` (0x0516) = 1
 **GO/NO-GO:** Bus stable for 5 min with the transmitter restored — restore the next load
 **TC:** `EPS_POWER_ON(line_index=4)` (Service 8, Subtype 1, func_id 19) — the `fpa_cooler` line first, if `eps.pl_fpa_cooler` (0x0114) = 0
-**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — 3. FPA cooler: verify `tcs.cooler_fpa` (0x040C) = 1
-**GO/NO-GO:** Bus stable for 5 min with the FPA cooler restored — restore the next load
+**Note:** 3. FPA cooler: leave it OFF. Since 2026-11-03 it runs only to prepare for imaging
+(NOM-002 Step 2), and the payload STANDBY command below (4.) would switch it off again.
+**GO/NO-GO:** Bus stable for 5 min with the FPA cooler line restored — restore the next load
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0: the mode command is otherwise refused S1.8 "power line 'payload' is OFF"
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Payload to STANDBY: verify `payload.mode` = 1
 **Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 27.5 V

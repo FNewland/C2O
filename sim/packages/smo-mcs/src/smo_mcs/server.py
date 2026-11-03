@@ -5101,7 +5101,7 @@ class MCSServer:
             if src == "LIMIT":
                 # Invariant: an active LIMIT alarm needs a non-nominal ground
                 # limit state. The state machine is the authority.
-                if statuses.get(pid, "nominal") == "nominal":
+                if statuses.get(pid, "nominal") in ("nominal", "unchecked"):
                     await self._rtn_alarms(
                         lambda x, _id=a["id"]: x.get("id") == _id,
                         reason="ground limit state nominal",

@@ -66,9 +66,10 @@ and repeat verification. If redundant also fails, declare TTC anomaly.
 ### Step 6 --- Payload Preparation (if imaging or downlink planned)
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1) --- command STANDBY
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 20 s
-**Verify:** `tcs.temp_fpa` (0x0408) trending downward (cooler active)
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 --- STANDBY does not run the FPA cooler (2026-11-03)
 **Verify:** `payload.store_used` (0x0604) < 90 % (sufficient storage)
-**Note:** Do NOT proceed to IMAGING until FPA temp < -10 C (see NOM-002).
+**Note:** Do NOT proceed to IMAGING until FPA temp < -10 C (see NOM-002). The cooler is
+switched on as the imaging preparation, NOM-002 Step 2, at least 10 min before the window.
 
 ### Step 7 --- Pass Readiness Declaration
 **GO/NO-GO Gate --- Flight Director Poll:**

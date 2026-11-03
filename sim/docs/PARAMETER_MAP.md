@@ -19,8 +19,8 @@ Columns:
 
 | | Count |
 |---|---:|
-| Catalogued parameters | 456 |
-| In at least one HK SID | 321 |
+| Catalogued parameters | 457 |
+| In at least one HK SID | 322 |
 | On-demand (S20-readable) | 129 |
 | Declared stubs (model does not compute) | 14 |
 | Ground limit bands | 49 |
@@ -33,7 +33,7 @@ Columns:
 |---:|---|---:|
 | 1 | EPS | 52 |
 | 2 | AOCS | 75 |
-| 3 | TCS | 17 |
+| 3 | TCS | 18 |
 | 4 | Platform | 36 |
 | 5 | Payload | 29 |
 | 6 | TTC | 25 |
@@ -497,6 +497,7 @@ Columns:
 | `0x0421` | tcs.temp_radiator_s | C |  | yes |  |  |  |
 | `0x0424` | tcs.fpa_cooler_floor_c | C |  | yes |  |  |  |
 | `0x0425` | tcs.fpa_cooler_margin_k | K |  | yes |  |  |  |
+| `0x0426` | tcs.fpa_limits_valid |  | 3 |  |  |  |  |
 
 ## ttc
 

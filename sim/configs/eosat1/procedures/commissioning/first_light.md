@@ -87,7 +87,8 @@ the -15C setpoint band (`payload.fpa_ready` 0x0610 = 1 is the same statement)
 ### Step 7 — Return Payload to STANDBY
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 15s
-**Action:** Payload returns to STANDBY. FPA cooler continues running. Image data preserved in storage.
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 10 s --- STANDBY switches the FPA cooler off (2026-11-03)
+**Action:** Payload returns to STANDBY and the FPA cooler stops (about 15 W less load). Image data preserved in storage.
 **GO/NO-GO:** Payload safely returned to STANDBY after capture
 
 ### Step 8 — Downlink the Product Over Service 13
@@ -130,7 +131,7 @@ value; payload team assesses geometry, band presence, dead pixels, content.
 **Verify:** `aocs.mode` (0x020F) = 4 within 30s
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — final payload state check
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10s
-**Verify:** `payload.fpa_temp` (0x0601) in range [-16.5C, -14.5C] (cooler maintained) within 10s
+**Verify:** `payload.cooler_pwr` (0x0602) = 0 within 10s --- the cooler was released at Step 7 (STANDBY); the FPA is warming towards its uncooled equilibrium
 **Action:** Record First Light timestamp, image metadata, and preliminary quality assessment. Distribute First Light Report.
 **GO/NO-GO:** First Light milestone achieved — imaging chain functional
 
@@ -146,12 +147,12 @@ value; payload team assesses geometry, band presence, dead pixels, content.
 - [ ] First image captured and stored on mass memory
 - [ ] Product downlinked over S13 with CRC-32 verified
 - [ ] Scene geometry, spectral content, and image quality preliminary PASS
-- [ ] Payload returned to STANDBY (cooler still running)
+- [ ] Payload returned to STANDBY (cooler off)
 - [ ] Image metadata and quality metrics recorded
 - [ ] First Light Report distributed to mission team
 
 ## Exit state
-- Payload STANDBY, cooler running, `payload.transfer_active` (0x062D) = 0
+- Payload STANDBY, cooler off (STANDBY releases it), `payload.transfer_active` (0x062D) = 0
 - AOCS returned to commanded NOMINAL (mode 4) after the imaging window
 - Downlink back at LOW, DOWNLINK mode released — the HIGH gate is never left
   open at card exit

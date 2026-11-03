@@ -129,6 +129,11 @@ def test_every_shipped_band_reaches_the_alarm_journal(lim):
         "the ground check can never see it")
     srv = _make_server()
     _ws(srv)
+    if lim.valid_when is not None:
+        # 2026-11-03: a limit with a validity condition is checked only
+        # while its validity parameter says so (the FPA bands: payload or
+        # cooler on); state it as already received from earlier HK.
+        srv._tm_processor._params[lim.valid_when.param_id] = lim.valid_when.value
     payload = _hk_payload(hk, {lim.param_id: _violating_value(lim)})
     asyncio.run(srv._process_tm(_pkt(3, 25, payload)))
 

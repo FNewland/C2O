@@ -101,7 +101,11 @@ class ImageMetadata:
 
 @dataclass
 class PayloadState:
-    # 0=OFF, 1=STANDBY (cooler on), 2=IMAGING, 3=CALIBRATION.
+    # 0=OFF, 1=STANDBY, 2=IMAGING (cooler on), 3=CALIBRATION (cooler on).
+    # 2026-11-03: STANDBY no longer runs the FPA cooler (Franz's ruling: off
+    # in standby, on only to prepare for imaging — FPA_COOLER(on=1)). The
+    # mode command drives the cooler in service_dispatch; this model only
+    # mirrors the TCS cooler state when TCS is in the loop.
     #
     # 2026-08b PL-d: mode 3 CALIBRATION is new. Radiometric calibration is a
     # shutter-closed / lamp-lit activity that a real EO payload performs in its
@@ -981,17 +985,20 @@ class PayloadBasicModel(SubsystemModel):
             s.line_rate = 0.0
             s.data_rate_mbps = 0.0
             s.duty_cycle_pct = 0.0
-        elif s.mode in (1, 3):  # STANDBY / CALIBRATION (cooler on, no scene)
-            # CALIBRATION is thermally and electrically a STANDBY: the cooler
-            # runs and the detector is powered, but nothing is being read out
-            # to the mass memory — the frames are consumed on board into
-            # coefficients, they are not products.
-            if not _tcs_in_loop:
+        elif s.mode in (1, 3):  # STANDBY / CALIBRATION (no scene)
+            # CALIBRATION is electrically a STANDBY with the cooler running:
+            # the detector is powered, but nothing is being read out to the
+            # mass memory — the frames are consumed on board into
+            # coefficients, they are not products. STANDBY leaves the cooler
+            # as commanded (off unless the team prepares for imaging).
+            if not _tcs_in_loop and s.mode == 3:
                 s.cooler_active = True
             s.line_rate = 0.0
             s.data_rate_mbps = 0.0
             s.duty_cycle_pct = 0.0
         elif s.mode == 2:  # IMAGING
+            if not _tcs_in_loop:
+                s.cooler_active = True   # IMAGING requests the cooler
             # ── 2026-08b PL-b: readout ONLY during a commanded strip ──
             # This block used to run whenever the payload was in IMAGING with a
             # ready FPA, and it accreted `data_rate_mbps` worth of volume every
@@ -1264,8 +1271,13 @@ class PayloadBasicModel(SubsystemModel):
         # FPA_OVERTEMP — warmer than the science can tolerate. Derived from
         # fpa_envelope.imaging_max_c (G3-d), which is where the textbook's
         # -3 C upper bound and the planner precondition now both come from.
+        # 2026-11-03: judged only while cooled operation is expected (cooler
+        # running, or IMAGING / CALIBRATION, which request it). Since the
+        # cooler is off in STANDBY, the FPA warms through -3 C after every
+        # imaging session; that is not an over-temperature.
         _over = self._fpa_env.overtemp_c()
-        if s.fpa_temp > _over and s.prev_fpa_temp <= _over:
+        _cooled_ops = s.cooler_active or s.mode in (2, 3)
+        if _cooled_ops and s.fpa_temp > _over and s.prev_fpa_temp <= _over:
             events_to_emit.append(0x0604)  # FPA_OVERTEMP
 
         # FPA_UNDERTEMP — colder than the loop can command. The old -15.0
@@ -1273,8 +1285,12 @@ class PayloadBasicModel(SubsystemModel):
         # nominal cooldown; the -18.0 that replaced it then fired on any
         # setpoint at or below -17 C, which Phase E made an ordinary thing to
         # command. Derived: setpoint_min - 3 sigma = -20.5 C.
+        # Judged only while the detector is powered or regulated (the same
+        # validity as the S12 FPA monitors, tcs.fpa_limits_valid 0x0426): an
+        # unpowered imager in a long survival legitimately sits below it.
         _under = self._fpa_env.undertemp_c()
-        if s.fpa_temp < _under and s.prev_fpa_temp >= _under:
+        _fpa_valid = s.mode >= 1 or s.cooler_active
+        if _fpa_valid and s.fpa_temp < _under and s.prev_fpa_temp >= _under:
             events_to_emit.append(0x0605)  # FPA_UNDERTEMP
 
         # COOLER_FAILURE — rising-edge only

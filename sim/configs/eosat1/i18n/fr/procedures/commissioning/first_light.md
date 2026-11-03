@@ -87,7 +87,8 @@ la bande de consigne de -15C (`payload.fpa_ready` 0x0610 = 1 exprime la même ch
 ### Étape 7 — Ramener la charge utile en STANDBY
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) sous 15s
-**Action:** La charge utile revient en STANDBY. Le refroidisseur du FPA continue de fonctionner. Les données d'image restent en mémoire.
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 sous 10 s --- le mode STANDBY arrête le refroidisseur du FPA (2026-11-03)
+**Action:** La charge utile revient en STANDBY et le refroidisseur du FPA s'arrête (environ 15 W de charge en moins). Les données d'image restent en mémoire.
 **GO/NO-GO:** Charge utile ramenée sans incident en STANDBY après l'acquisition
 
 ### Étape 8 — Vider le produit par le service 13
@@ -130,7 +131,7 @@ de la TM(13,2) ; l'équipe charge utile évalue la géométrie, la présence d
 **Verify:** `aocs.mode` (0x020F) = 4 sous 30s
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — contrôle final de l'état de la charge utile
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) sous 10s
-**Verify:** `payload.fpa_temp` (0x0601) dans la plage [-16.5C, -14.5C] (refroidisseur maintenu) sous 10s
+**Verify:** `payload.cooler_pwr` (0x0602) = 0 sous 10s --- le refroidisseur a été arrêté à l'étape 7 (STANDBY) ; le FPA se réchauffe vers son équilibre non refroidi
 **Action:** Consigner l'horodatage de la première lumière, les métadonnées de l'image et l'évaluation préliminaire de la qualité. Diffuser le rapport de première lumière.
 **GO/NO-GO:** Jalon de première lumière atteint — chaîne image fonctionnelle
 
@@ -146,12 +147,12 @@ de la TM(13,2) ; l'équipe charge utile évalue la géométrie, la présence d
 - [ ] Première image acquise et stockée en mémoire de masse
 - [ ] Produit vidé par le S13 avec CRC-32 vérifié
 - [ ] Géométrie de la scène, contenu spectral et qualité d'image : résultat préliminaire PASS
-- [ ] Charge utile ramenée en STANDBY (refroidisseur toujours en marche)
+- [ ] Charge utile ramenée en STANDBY (refroidisseur arrêté)
 - [ ] Métadonnées de l'image et indicateurs de qualité consignés
 - [ ] Rapport de première lumière diffusé à l'équipe de mission
 
 ## État de sortie
-- Charge utile en STANDBY, refroidisseur en marche, `payload.transfer_active` (0x062D) = 0
+- Charge utile en STANDBY, refroidisseur arrêté (le mode STANDBY l'arrête), `payload.transfer_active` (0x062D) = 0
 - AOCS ramené en NOMINAL commandé (mode 4) après la fenêtre de prise de vue
 - Liaison descendante revenue en LOW, mode DOWNLINK libéré — le verrou HIGH n'est jamais laissé
   ouvert en sortie de fiche

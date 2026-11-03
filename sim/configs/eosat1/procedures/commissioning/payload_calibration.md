@@ -1,13 +1,14 @@
 # COM-011: Payload Calibration
 **Subsystem:** Payload
 **Phase:** COMMISSIONING
-**Revision:** 1.1 --- 2026-08c: entry/exit states declared; runs AFTER COM-012
+**Revision:** 1.2 --- 2026-11-03: the FPA cooler is off in STANDBY; Step 1 switches
+it on, Steps 3 and 5 no longer command STANDBY. 1.1 --- 2026-08c: entry/exit states declared; runs AFTER COM-012
 (first light) per the definitive commissioning order.
 **Approved:** Flight Operations Director
 
 **Entry state:** COM-012 exit state --- imaging chain verified end to end,
-payload STANDBY with the cooler regulating (`payload.fpa_ready` 0x0610 = 1),
-AOCS commanded NOMINAL, downlink LOW.
+payload STANDBY with the FPA cooler OFF (STANDBY releases it since 2026-11-03;
+Step 1 switches it on), AOCS commanded NOMINAL, downlink LOW.
 
 ## Purpose
 Perform initial radiometric calibration of the multispectral imager. Capture dark
@@ -18,8 +19,9 @@ and inter-band registration.
 
 ## Prerequisites
 - [ ] COM-012 (First Light) completed — imaging chain verified
-- [ ] Payload in STANDBY (mode 1) with FPA cooler running
-- [ ] `payload.fpa_temp` (0x0601) stable at the commanded setpoint (-15C: band -16.5C to -14.5C) and `payload.fpa_ready` (0x0610) = 1 for > 10 minutes
+- [ ] Payload in STANDBY (mode 1); the FPA cooler is switched on in Step 1
+- [ ] Allow about 10 minutes for the FPA cool-down in Step 1 (about 6.5 min to
+      `payload.fpa_ready` (0x0610) = 1 from the uncooled state, then settling at -15C: band -16.5C to -14.5C)
 - [ ] AOCS capable of FINE_POINT — that is **mode 5**, not 4 (4 is NOMINAL) —
       with < 0.1 deg accuracy. Since Phase 1, FINE is legal on a THREE-wheel
       pyramid; `aocs.fine_degraded` (0x0299) = 1 says so, and a degraded FINE is
@@ -33,11 +35,15 @@ and inter-band registration.
 ## Procedure Steps
 
 ### Step 1 — Verify Pre-Calibration State
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — FPA cooler ON: STANDBY does not run it
+**TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — TCS HK (`tcs.cooler_fpa`)
+**Verify:** `tcs.cooler_fpa` (0x040C) = 1 within 10 s
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10s
+**Verify:** `payload.fpa_ready == 1` (0x0610, timeout 600 s) — the cool-down from
+the uncooled state takes about 6.5 min
 **Verify:** `payload.fpa_temp` (0x0601) in range **[-16.5 C, -14.5 C]** — the band
-about the nominal -15 C setpoint — within 10 s
-**Verify:** `payload.fpa_ready == 1` (0x0610, timeout 10 s)
+about the nominal -15 C setpoint — within 300 s
 **Note:** This step demanded [-32 C, -28 C]. The commandable setpoint envelope is
 **-20 C to 0 C** (`subsystems/tcs.yaml`), so -32 to -28 C was outside anything the
 spacecraft could be commanded to reach: the check could never pass. Verify
@@ -67,7 +73,9 @@ is **refused from IMAGING** with `code="CAL_REFUSED_IMAGING"` — "a calibration
 frame must not see the scene". This step used to command IMAGING first, which
 is exactly the defect Phase 4 removed. Start from STANDBY (mode 1); the payload
 promotes itself to the new **mode 3 = CALIBRATION** for the duration.
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
+**Note:** The payload is already in STANDBY (Step 1). Do not command
+`PAYLOAD_SET_MODE(mode=1)` here: since 2026-11-03 it switches the FPA cooler off,
+the FPA leaves its band and the run aborts with `cal_abort_reason` = 4.
 **TC:** `PAYLOAD_CAL_LAMP(on=0)` (Service 8, Subtype 1, func_id 95) — lamp OFF for a dark frame
 **TC:** `PAYLOAD_START_CALIBRATION(mode=0)` (Service 8, Subtype 1, func_id 37) — DARK phase
 **Wire:** `25 00`
@@ -120,7 +128,10 @@ the phase boundary.
 **GO/NO-GO:** Dark frame statistics within specification
 
 ### Step 5 — Open the Shutter and Return to STANDBY
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
+**Note:** Do not command `PAYLOAD_SET_MODE(mode=1)` here. The calibration sequencer
+has already returned the payload to STANDBY with the FPA cooler still running;
+since 2026-11-03 a STANDBY command switches the cooler off, and Step 7 would then
+have to wait for a new cool-down.
 **TC:** `PAYLOAD_SET_SHUTTER(position=1)` (Service 8, Subtype 1, func_id 119) — OPEN
 **Wire:** `77 01`
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — payload housekeeping
@@ -163,8 +174,9 @@ the phase boundary.
 **GO/NO-GO:** Linearity image set captured
 
 ### Step 9 — Return Payload to STANDBY
-**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY
+**TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — STANDBY (also switches the FPA cooler off)
 **Verify:** `payload.mode == 1` (0x0600, timeout 15 s) — STANDBY
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 within 10 s
 **TC:** `PAYLOAD_SET_INTEGRATION_TIME(blue_ms=2.00, green_ms=2.00, red_ms=2.00, nir_ms=2.00)` (Service 8, Subtype 1, func_id 34) — restore nominal  
 **Wire:** `22 00 C8 00 C8 00 C8 00 C8`
 **Verify:** Integration time restored within 10s
@@ -213,12 +225,12 @@ nadir-pointing operational mode is 4. The card called mode 3 "NOMINAL".
 - [ ] Multi-integration-time image set captured for linearity assessment
 - [ ] All calibration data stored on mass memory
 - [ ] Data downlink scheduled
-- [ ] Payload returned to STANDBY, cooler running
+- [ ] Payload returned to STANDBY, cooler off
 - [ ] AOCS returned to NOMINAL (mode 4)
 - [ ] Radiometric Calibration Report to be generated after data analysis
 
 ## Exit state
-- Payload STANDBY, cooler running, shutter OPEN, integration times restored to
+- Payload STANDBY, cooler off, shutter OPEN, integration times restored to
   nominal (2.00 ms), cal lamp OFF
 - AOCS returned to commanded NOMINAL (mode 4)
 - Calibration products stored on board awaiting the scheduled dump pass

@@ -54,8 +54,8 @@
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-6-payload-preparation-if-imaging-or-downlink-planned",
-   "en_hash": "60a62983e3d39f30",
-   "fr_hash": "3be845bf3560e02e"
+   "en_hash": "77dcbcf98c66d926",
+   "fr_hash": "58a4897561d8082f"
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-7-pass-readiness-declaration",
@@ -73,5 +73,5 @@
    "fr_hash": "4d6271f1c5d7d847"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "b41c0a9"
 }

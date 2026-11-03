@@ -72,12 +72,15 @@ and reassess after one additional sunlit pass.
 **GO/NO-GO:** Heater setpoints configured for eclipse cold phase — proceed.
 
 ### Step 3: Disable FPA Cooler to Conserve Power
-**Note:** If payload is in STANDBY or OFF, disable FPA cooler to reduce eclipse power draw:
+**Note:** Since 2026-11-03 the FPA cooler runs only to prepare for imaging and while imaging:
+STANDBY and OFF switch it off. If `tcs.cooler_fpa` (0x040C) already reads 0, skip the TC.
+If it reads 1 and no imaging is planned before eclipse exit (a preparation started too
+early), switch it off to reduce the eclipse power draw:
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — FPA cooler OFF
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`: SID 3 is periodic only every 60 s, so fetch the value this check reads
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) within 5 s
 **Verify:** `eps.power_cons` (0x0106) decreases by ~15 W
-**Note:** FPA cooler will be re-enabled after eclipse exit when power budget is positive.
+**Note:** The FPA cooler is switched on again by the next imaging preparation (NOM-002 Step 2).
 **GO/NO-GO:** Cooler disabled and power consumption reduced — proceed.
 
 ### Step 4: Verify AOCS Eclipse Mode Transition

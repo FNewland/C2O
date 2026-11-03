@@ -1,7 +1,8 @@
 # NOM-002 : Séance de prise de vue
 **Sous-système :** PAYLOAD / AOCS / TCS
 **Phase :** NOMINAL
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-03 : le refroidisseur du FPA est ARRÊTÉ en STANDBY ; l'étape 2
+le met en marche (préparation de la prise de vue) et l'étape 6 l'arrête.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -13,6 +14,8 @@ du plan focal doivent être confirmées avant le début de la prise de vue.
 ## Prérequis
 - [ ] NOM-001 Ouverture de passage achevée avec une déclaration tout GO
 - [ ] Charge utile en mode STANDBY (`payload.mode` (0x0600) = 1)
+- [ ] Refroidisseur du FPA mis en marche (étape 2) au moins 10 min avant la fenêtre de prise de vue.
+      Le mode STANDBY ne fait plus fonctionner le refroidisseur : la mise en froid fait partie de la préparation.
 - [ ] Paramètres de la scène visée envoyés à l'ordonnanceur de bord
 - [ ] AOCS en FINE_POINT (`aocs.mode` (0x020F) = **5**). La condition d'acquisition de la charge utile
       exige EXACTEMENT le mode 5. Il n'existe pas de mode NOMINAL et le mode 0 est OFF —
@@ -50,12 +53,23 @@ le bit 4 de `0x02C5` (enveloppe de moment cinétique >= 70 %) : c'est l'averti
 **GO/NO-GO:** Si att_error >= 0.1 deg, se mettre en attente (HOLD). Attendre jusqu'à 60 s la convergence.
 Si la condition n'est toujours pas remplie, interrompre la prise de vue et analyser les performances de l'AOCS.
 
-### Étape 2 --- Vérifier l'état thermique du plan focal
+### Étape 2 --- Préparer le plan focal (refroidisseur du FPA en marche)
+**Note:** Le refroidisseur du FPA est ARRÊTÉ en STANDBY (2026-11-03). Le mettre en marche
+constitue la préparation de la prise de vue : depuis l'équilibre non refroidi en STANDBY (environ +10 °C),
+le détecteur a besoin d'environ 6.5 min pour atteindre `payload.fpa_ready` = 1 (dont 60 s
+d'hystérésis de disponibilité). Envoyer cette étape au moins 10 min avant la fenêtre de
+prise de vue, avant l'étape 1 si la fenêtre est proche ; l'activité `imaging_pass` du planificateur
+lui réserve 480 s. Si `tcs.cooler_fpa` (0x040C) vaut déjà 1, ne pas envoyer la TC.
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) --- refroidisseur du FPA en marche
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) --- demander les données de servitude TCS
-**Verify:** `tcs.temp_fpa` (0x0408) < -10.0 °C sous 5 s
-**Verify:** `tcs.cooler_fpa` (0x040C) = 1 (ACTIVE)
-**GO/NO-GO:** Si la température du FPA >= -10.0 °C, se mettre en attente (HOLD). Surveiller la tendance pendant 120 s au plus. Si
-la température ne baisse pas, vérifier l'état du refroidisseur et interrompre si nécessaire.
+**Verify:** `tcs.cooler_fpa` (0x040C) = 1 (ACTIVE) sous 10 s
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- données de servitude de la charge utile (`payload.fpa_ready`)
+**Verify:** `payload.fpa_ready` (0x0610) = 1 sous 600 s
+**Verify:** `tcs.temp_fpa` (0x0408) < -10.0 °C sous 5 s
+**GO/NO-GO:** Si `payload.fpa_ready` vaut encore 0 après 10 min, se mettre en attente (HOLD). Lire
+`payload.cooler_margin_k` (0x064B) : une valeur <= 0 signifie que la consigne est hors de portée
+avec le puits thermique actuel. Si la température ne baisse pas, vérifier l'état du
+refroidisseur et interrompre si nécessaire.
 
 ### Étape 3 --- Vérifier la capacité de stockage
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- demander les données de servitude de la charge utile
@@ -109,8 +123,9 @@ nomme la condition qui a refusé.
 
 ### Étape 6 --- Mettre fin à la séance de prise de vue
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- commander STANDBY
-**Verify:** `payload.mode` (0x0600) = 1 (STANDBY) sous 15 s
-**Verify:** baisse de `eps.power_cons` (0x0106) observée (charge utile hors tension)
+**Verify:** `payload.mode` (0x0600) = 1 (STANDBY) sous 15 s
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 sous 10 s --- le mode STANDBY arrête le refroidisseur du FPA
+**Verify:** baisse de `eps.power_cons` (0x0106) observée (charge de prise de vue et refroidisseur de 15 W arrêtés)
 **Note:** Consigner la valeur finale de `payload.image_count` (0x0605) sous le nom Nf. Images acquises = Nf - N0.
 
 ### Étape 7 --- Bilan après prise de vue
@@ -132,7 +147,7 @@ nomme la condition qui a refusé.
   la marge de puissance nécessaire à la sécurité du satellite.
 
 ## Postconditions
-- [ ] Charge utile revenue en mode STANDBY
+- [ ] Charge utile revenue en mode STANDBY, refroidisseur du FPA arrêté
 - [ ] Nombre d'images et occupation de la mémoire consignés
 - [ ] AOCS resté en pointage fin tout du long (att_error < 0.1 deg)
 - [ ] Température du FPA restée à la consigne (<= -10.0 °C) tout du long

@@ -107,18 +107,20 @@ peut être mise hors tension par commande, à titre de mesure d'isolation.
 
 Le refroidisseur du plan focal est un cryoréfrigérateur miniature à cycle de Stirling qui maintient le
 détecteur de l'imageur à sa température de fonctionnement d'environ -15 °C. Le refroidisseur
-consomme jusqu'à 15 W et nécessite une mise en froid de 30 minutes à partir de la température ambiante.
+consomme jusqu'à 15 W. Depuis l'équilibre non refroidi en STANDBY (environ +10 °C), il amène le
+détecteur à FPA READY en 6.5 minutes environ et à la consigne en 10 minutes environ.
 
 | Paramètre         | Valeur                       |
 |-------------------|------------------------------|
 | Type de refroidisseur | Cryoréfrigérateur à cycle de Stirling |
 | Température cible du FPA | -15 °C (nominale)     |
-| Durée de mise en froid | ~30 min depuis l'ambiante |
+| Durée de mise en froid | ~6.5 min jusqu'à FPA READY (377 s mesurées), ~10 min jusqu'à stabilisation |
 | Consommation      | 15 W                         |
-| Commande          | Autonome selon le mode de la charge utile |
+| Commande          | `FPA_COOLER` (préparation de la prise de vue) ; IMAGING / CALIBRATION le demandent, STANDBY / OFF l'arrêtent |
 
-Le refroidisseur est activé automatiquement lorsque la charge utile passe en mode STANDBY, IMAGING ou
-CALIBRATION, et désactivé lorsque la charge utile est mise sur OFF.
+Le refroidisseur ne fonctionne que pour préparer une prise de vue et pendant la prise de vue (2026-11-03) : `FPA_COOLER`
+(on=1) le met en marche en STANDBY, une durée de mise en froid avant la fenêtre de prise de vue, et
+les modes IMAGING et CALIBRATION le demandent. Les modes STANDBY et OFF l'arrêtent.
 
 ## 4. Zones de température {#4-temperature-zones}
 
@@ -135,8 +137,8 @@ Plages orbitales typiques (bêta -30 ° ; la plateforme suit la puissance qu'
 
 | Cas                                    | Structure      | OBC            | Batterie       |
 |----------------------------------------|----------------|----------------|----------------|
-| Nominal, charge utile en STANDBY (refroidisseur en marche) | +15 à +29 °C | +22 à +33 °C | +16 à +22 °C |
-| Nominal, refroidisseur arrêté          | +2 à +16 °C  | +8 à +20 °C  | +5 à +10 °C (réchauffeur en cycle) |
+| Refroidisseur en marche sur toute l'orbite (STANDBY + refroidisseur) | +15 à +29 °C | +22 à +33 °C | +16 à +22 °C |
+| Nominal : charge utile en STANDBY, refroidisseur arrêté | +2 à +16 °C  | +8 à +20 °C  | +5 à +10 °C (réchauffeur en cycle) |
 | Mode survie (pointage solaire)         | -7 à +7 °C   | -1 à +10 °C  | +5 à +10 °C (réchauffeur en cycle) |
 | Délestage prolongé, lignes de réchauffeur sur OFF | -15 à -2 °C | -9 à +2 °C | -11 à -3 °C |
 

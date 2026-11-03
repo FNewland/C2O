@@ -1378,8 +1378,9 @@ Tableau 6.5 — Paramètres de télémesure de la charge utile, avec SID et plag
   amener la charge utile en attente. Il n'existe pas de code d'opération unique
   `PAYLOAD_POWER_ON` dans le catalogue des télécommandes.
 - `PAYLOAD_SET_MODE` (S8 func_id 26) — 0=OFF, 1=STANDBY,
-  2=IMAGING, **3=CALIBRATION**. Les modes 1, 2 et 3 demandent tous le
-  refroidisseur du FPA ; le mode 0 le libère, et la demande pilote désormais à la fois
+  2=IMAGING, **3=CALIBRATION**. Les modes 2 et 3 demandent le
+  refroidisseur du FPA ; les modes 0 et 1 le libèrent (le refroidisseur est arrêté en STANDBY
+  et se met en marche avec `FPA_COOLER` pour préparer une prise de vue), et la demande pilote à la fois
   l'indicateur de refroidisseur du TCS et la ligne d'alimentation `fpa_cooler` de l'EPS.
 - `PAYLOAD_CAPTURE` (S8 func_id 28) avec `scene_id`, `lines`.
 - `PAYLOAD_START_CALIBRATION` (S8 func_id 37) avec `mode` ;
@@ -2288,7 +2289,7 @@ la gestion des scènes, l'étalonnage et la configuration du détecteur.
 
 | Func ID | Nom | Rôle |
 |---|---|---|
-| 26 | `PAYLOAD_SET_MODE(mode=0…3)` | 0=OFF, 1=STANDBY, 2=IMAGING, **3=CALIBRATION**. Les modes 1/2/3 demandent tous le refroidisseur du FPA ; le mode 0 le libère |
+| 26 | `PAYLOAD_SET_MODE(mode=0…3)` | 0=OFF, 1=STANDBY, 2=IMAGING, **3=CALIBRATION**. Les modes 2/3 demandent le refroidisseur du FPA ; les modes 0/1 le libèrent (STANDBY fonctionne sans le refroidisseur) |
 | 27 | `PAYLOAD_SET_SCENE(scene_id=…)` | Régler l'identifiant de scène pour la prise de vue, uint16 |
 | 28 | `PAYLOAD_CAPTURE(scene_id=…, lines=…)` | Déclencher l'acquisition — **caution** |
 | 29 | `PAYLOAD_DOWNLOAD_IMAGE(scene_id=…)` | Mettre une image en file pour la liaison descendante |
@@ -7718,7 +7719,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 
 <div class="procedure-card-header" markdown="1">[MULTI] COM-012 — Première lumière</div>
 
-**Point d'entrée :** après COM-010 — COM-012 passe **avant** COM-011, car l'étalonnage exige une chaîne de prise de vue vérifiée. Charge utile en STANDBY, refroidisseur en marche avec `payload.fpa_ready` (0x0610) = 1 à −15 °C, AOCS en NOMINAL commandé, liaison descendante en LOW, SoC > 70 %, à l'approche d'une cible sol connue. La procédure phare.
+**Point d'entrée :** après COM-010 — COM-012 passe **avant** COM-011, car l'étalonnage exige une chaîne de prise de vue vérifiée. Charge utile en STANDBY, refroidisseur en marche (mis en marche par COM-010) avec `payload.fpa_ready` (0x0610) = 1 à −15 °C, AOCS en NOMINAL commandé, liaison descendante en LOW, SoC > 70 %, à l'approche d'une cible sol connue. La procédure phare.
 
 **Objectif :** acquérir la première image scientifique, vérifier qu'elle est stockée, et la transmettre au sol par la vraie chaîne du service 13 pour une première évaluation de qualité.
 
@@ -7742,7 +7743,7 @@ beaucoup plus bas, et cette fiche adopte l'enveloppe de vol.)*
 | 3 | Charge utile : commander IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.mode` = 2 en 30 s |
 | 4 | Charge utile : déclencher l'acquisition | `PAYLOAD_CAPTURE(scene_id=1, lines=2048)` (S8 func_id 28) | □ | `payload.last_scene_id` (0x060C) = 1 en 30 s ; `payload.image_count` incrémenté. La géolocalisation est horodatée à bord, ce n'est pas un argument |
 | 5 | Charge utile : confirmer que le produit est stocké | `GET_PARAM(param_id=0x0604)`, `GET_PARAM(param_id=0x060B)` (S20.3) | □ | `payload.store_used` en hausse ; `payload.mem_used_mb` en hausse de 1.0–4.0 MB par rapport à la référence de l'étape 2 (4 MB brut, 1.0–2.7 MB compressé) |
-| 6 | Charge utile : revenir en STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 en 15 s ; le refroidisseur continue de tourner |
+| 6 | Charge utile : revenir en STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 en 15 s ; le mode STANDBY arrête le refroidisseur (`tcs.cooler_fpa` (0x040C) = 0) |
 | 7 | TT&C + charge utile : transmettre le produit par S13 | `TTC_SET_DOWNLINK_MODE(on=1)` ; `TTC_SET_DATA_RATE(rate=1)` ; `S13_CREATE_TRANSFER(scene_id=1, size_mb=0)` ; `S13_END_TRANSFER(transfer_id=T)` ; puis `TTC_SET_DATA_RATE(rate=0)`, `TTC_SET_DOWNLINK_MODE(on=0)` | □ | `ttc.tm_data_rate` (0x0506) = 128000 bit/s ; `payload.transfer_active` (0x062D) = 1, `payload.transfer_progress` (0x062E) en hausse, puis 0x062D = 0 ; CRC-32 au sol ; retour à 16000 bit/s |
 | 8 | AOCS : quitter FINE_POINT ; le FD déclare la première lumière | `AOCS_SET_MODE(mode=4)` (S8 func_id 0) | □ | `aocs.mode` = 4 en 30 s ; charge utile en STANDBY, FPA toujours dans sa plage. « COM-012 complete » |
 
@@ -9664,7 +9665,7 @@ Tableau 15.8 — Commandes charge utile — imageur et données.
 
 | Commande | Objet |
 |---|---|
-| `PAYLOAD_SET_MODE` | 0=off, 1=standby, 2=imaging, **3=calibration**. Les modes 1, 2 et 3 sollicitent tous le refroidisseur du FPA ; le mode 0 le libère |
+| `PAYLOAD_SET_MODE` | 0=off, 1=standby, 2=imaging, **3=calibration**. Les modes 2 et 3 sollicitent le refroidisseur du FPA ; les modes 0 et 1 le libèrent (STANDBY fonctionne sans le refroidisseur) |
 | `PAYLOAD_SET_SCENE` | *Obsolète* — prérégler l'identifiant de la scène suivante. Remplacée par l'argument propre de `PAYLOAD_CAPTURE` |
 | `PAYLOAD_CAPTURE` | Déclencher une acquisition d'image. Le *où* est fixé par le *quand* : programmez la prise de vue au-dessus de la cible. Refusée si l'obturateur est fermé |
 | `PAYLOAD_DOWNLOAD_IMAGE` | Rapporter un produit image stocké |

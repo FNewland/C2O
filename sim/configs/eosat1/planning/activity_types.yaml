@@ -2,14 +2,19 @@ activity_types:
   - name: imaging_pass
     description: "Payload imaging acquisition"
     # 2026-08d PLAN-1: 120 s was the CAPTURE, not the activity. The command
-    # sequence below carries 197 s of mandatory dwell (mode lead-in, FPA
-    # cooler settle, FINE settle, readout) before the restoration steps, so a
-    # 120 s booking under-booked the spacecraft by a factor of two and the
-    # conflict checker could not see the overlap it caused. 300 s = 197 s of
-    # sequence + margin for the six telecommand round trips.
-    duration_s: 300
-    min_duration_s: 240
-    max_duration_s: 600
+    # sequence below carries the mandatory dwell (mode lead-in, FPA cool-down,
+    # FINE settle, readout) before the restoration steps, so a 120 s booking
+    # under-booked the spacecraft and the conflict checker could not see the
+    # overlap it caused.
+    # 2026-11-03 (Franz's ruling): the FPA cooler is OFF in STANDBY and is
+    # switched on only to prepare for imaging, so the activity now carries the
+    # cool-down: 480 s (measured 377 s from the uncooled +10 C STANDBY
+    # equilibrium to payload.fpa_ready, OBC_THERMAL_ANALYSIS.md section 8.6;
+    # a warmer imager takes longer). 617 s of dwell + 8 telecommands = 625 s;
+    # booked 660 s.
+    duration_s: 660
+    min_duration_s: 630
+    max_duration_s: 900
     power_w: 75
     # One raw frame. MUST track subsystems/payload.yaml image_size_mb
     # (defect #82; 800 -> 4, textbook pp. 360/404). The planner budgets the
@@ -21,6 +26,7 @@ activity_types:
     requires_subsystems:
       - payload
       - aocs
+      - tcs                # FPA cooler (imaging preparation, func 43)
     priority: high
     # Was NOM-001 "Pass Startup"; the imaging activity's procedure is
     # NOM-002 "Imaging Session", which is also the one whose `runnable:`
@@ -66,8 +72,9 @@ activity_types:
     #   2. total pointing error < 0.05 deg and rate stability < 0.005 deg/s
     #      HELD at the shutter (0x0022 / 0x0023) — hence the 90 s dwell.
     #   3. payload.mode == 2 IMAGING and payload.fpa_ready (0x0610), which is
-    #      the FPA temperature in band for a 60 s hysteresis. STANDBY (mode 1)
-    #      is what starts the cooler, so it leads the IMAGING transition.
+    #      the FPA temperature in band for a 60 s hysteresis. The cooler is
+    #      OFF in STANDBY (2026-11-03), so FPA_COOLER(on=1) leads the IMAGING
+    #      transition by the cool-down time.
     #   4. shutter_position == 1 OPEN (0x0028) — PAYLOAD_SET_SHUTTER, func 119.
     #
     # WHY THE LEAD TIME IS `wait_s` AND NOT ONLY `wait_for`.
@@ -90,15 +97,17 @@ activity_types:
           parameter: aocs.mode
           value: 4
           timeout_s: 120
-      # ── Lead-in: FPA cooler. STANDBY requests it (service_dispatch
-      # _route_payload_cmd drives both the TCS flag and the EPS fpa_cooler
-      # line); fpa_ready needs the temperature in band for 60 s.
+      # ── Imaging preparation: FPA cooler ON (2026-11-03). STANDBY no
+      # longer runs it. FPA_COOLER (func 43) drives both the TCS flag and the
+      # EPS fpa_cooler line (service_dispatch._request_fpa_cooler);
+      # fpa_ready needs the detector in band for 60 s: 377 s measured from
+      # the uncooled STANDBY equilibrium, 480 s booked.
       - service: 8
         subtype: 1
-        func_id: 0x1A
-        params: [1]            # mode 1 = STANDBY
-        description: "PAYLOAD_SET_MODE_STANDBY"
-      - wait_s: 60
+        func_id: 0x2B          # 43 = FPA_COOLER
+        params: [1]            # 1 = ON
+        description: "FPA_COOLER_ON"
+      - wait_s: 480
       - wait_for:
           parameter: payload.fpa_ready
           value: 1
@@ -163,7 +172,7 @@ activity_types:
       - service: 8
         subtype: 1
         func_id: 0x1A
-        params: [1]            # back to STANDBY (cooler stays on)
+        params: [1]            # back to STANDBY (switches the cooler off)
         description: "PAYLOAD_SET_MODE_STANDBY"
       - service: 8
         subtype: 1
@@ -171,13 +180,14 @@ activity_types:
         params: [4]            # back to NOMINAL
         description: "AOCS_SET_MODE_NOMINAL"
     # Machine-checked timing (see `timing:` on every type below and
-    # ActivityScheduler.check_sequence_timing). 10+60+90+5+2+30 = 197 s of
+    # ActivityScheduler.check_sequence_timing). 10+480+90+5+2+30 = 617 s of
     # explicit dwell; duration_s must cover it.
     timing:
-      sequence_min_duration_s: 197
+      sequence_min_duration_s: 617
       # Everything before PAYLOAD_CAPTURE: the plan must place the activity
-      # START this far ahead of the intended acquisition instant.
-      lead_time_s: 167
+      # START this far ahead of the intended acquisition instant (includes
+      # the 480 s FPA cool-down, the imaging preparation).
+      lead_time_s: 587
       restore_time_s: 30
       # A momentum dump immediately before an imaging pass cannot work: the
       # dump runs 20-50 min, holds the attitude at DESAT entry and refuses to
