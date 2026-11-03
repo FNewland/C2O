@@ -105,6 +105,9 @@ function paintHeader() {
     const ids = c.positions || [];
     sel.innerHTML = ids.map((p) => `<option value="${esc(p)}">${esc(posLabel(p))}</option>`).join("");
     if (S.position && ids.includes(S.position)) sel.value = S.position;
+    // Docked in the console, the header's position selector is the one
+    // control; this one only shows it (review §2.6).
+    if (IN_FRAME) { sel.disabled = true; sel.title = tText("Change the position in the console header"); }
     const id = c.identity;
     if (id) {
       $("who").innerHTML = id.verified

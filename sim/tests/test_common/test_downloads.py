@@ -264,13 +264,15 @@ async def test_doc_viewer_downloads_page_and_student_api(tmp_path):
         await c.close()
 
 
-def test_mcs_offers_the_student_list_on_the_manual_page():
+def test_mcs_serves_only_the_student_list_and_not_on_the_manual_page():
+    """The MAN page is the spacecraft manual and the procedure cards; the
+    course PDFs live on the documentation viewer's Downloads page
+    (SCREEN_REVIEW #16). The MCS route stays student-only."""
     src = (SIM / "packages/smo-mcs/src/smo_mcs/server.py").read_text(encoding="utf-8")
     assert 'register_download_routes(app, audience="student")' in src
     js = (SIM / "packages/smo-mcs/src/smo_mcs/static/modern/mcs.js").read_text(encoding="utf-8")
     man = js[js.index("function buildManPage"):js.index("async function loadProcedureCards")]
-    assert 'id="man-downloads"' in man
-    assert 'import("/static/shared/downloads.js")' in js
+    assert 'id="man-downloads"' not in man
 
 
 def test_instructor_console_and_gsg_offer_every_entry():

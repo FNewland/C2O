@@ -287,10 +287,15 @@ export function mount(el, opts = {}) {
     g += `<rect class="p-out" x="${x + lab}" y="${y0 + 21}" width="${len(eout)}" height="12" rx="1"/>`;
     g += vtext(x + lab + len(eout) + 6, y0 + 32, bal.outWh, 0, t);
     const net = bal.netWh;
-    const neg = net.v < 0;
+    // The words follow the rounded number: a zero band, so "Net 0 Wh" never
+    // reads "ends the orbit lower" (review #12).
+    const flat = Math.abs(net.v) < 0.5;
+    const neg = !flat && net.v < 0;
+    const n = tv(net, 0, t, { signed: true }).txt;
     g += s("text", { x, y: y0 + 54, class: neg ? "t-warn" : "t-lab" },
-      esc(neg ? t("Net {{n}}: the battery ends the orbit lower", { n: tv(net, 0, t, { signed: true }).txt })
-        : t("Net {{n}}: the battery can recharge", { n: tv(net, 0, t, { signed: true }).txt })));
+      esc(flat ? t("Net {{n}}: the orbit is balanced", { n })
+        : neg ? t("Net {{n}}: the battery ends the orbit lower", { n })
+        : t("Net {{n}}: the battery can recharge", { n })));
     return g;
   }
 

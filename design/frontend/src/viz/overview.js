@@ -350,21 +350,17 @@ export function mount(el, opts = {}) {
   function draw(m) {
     const W = 900, H = 476;
     let g = "";
-    // mode ladder
+    // The spacecraft mode as ONE read-only value: a row of four segments read
+    // as a mode-command control (review §2.2 OVR).
     const mode = (m.mode && m.mode.label) || null;
     g += s("text", { x: 16, y: 24, class: "t-lab" }, esc(t("Spacecraft mode")));
-    let mx = 132;
-    MODES.forEach((md, i) => {
-      const on = md === mode;
-      const w = 22 + md.length * 7.4;
-      const alarm = on && (md === "SAFE" || md === "EMERGENCY");
-      if (i) g += `<line class="o-link" x1="${mx - 10}" y1="20" x2="${mx - 2}" y2="20"/>`;
-      g += `<g class="o-mode ${on ? "is-on" : ""} ${alarm ? "is-alarm" : ""}"><rect x="${mx}" y="8" width="${w}" height="24" rx="2"/>` +
-        s("text", { x: mx + w / 2, y: 24, "text-anchor": "middle" }, esc(md)) + "</g>";
-      mx += w + 12;
-    });
-    if (!mode) g += s("text", { x: mx + 4, y: 24, class: "t-val is-nodata" }, esc(t("mode not downlinked")));
-    else if (!MODES.includes(mode)) g += s("text", { x: mx + 4, y: 24, class: "t-val" }, esc(mode));
+    if (!mode) g += s("text", { x: 132, y: 24, class: "t-val is-nodata" }, esc(t("mode not downlinked")));
+    else {
+      const alarm = mode === "SAFE" || mode === "EMERGENCY";
+      const w = 22 + mode.length * 7.4;
+      g += `<g class="o-mode is-on ${alarm ? "is-alarm" : ""}"><rect x="132" y="8" width="${w}" height="24" rx="2"/>` +
+        s("text", { x: 132 + w / 2, y: 24, "text-anchor": "middle" }, esc(mode)) + "</g>";
+    }
     // Earth below, nadir
     g += `<path class="o-earth" d="M0 ${H} L0 ${H - 16} Q${W / 2} ${H - 52} ${W} ${H - 16} L${W} ${H} Z"/>`;
     g += s("text", { x: W - 16, y: H - 6, class: "t-lab", "text-anchor": "end" }, esc(t("Earth: nadir is down (−Z)")));
@@ -401,11 +397,10 @@ export function mount(el, opts = {}) {
   }
 
   function chips(m) {
+    // Sunlit/eclipse and contact are on the page header strip already
+    // (review §2.2 OVR: the same facts twice); the AOCS mode only when known.
     const out = [];
-    if (m.aocsMode) out.push(`<span class="vz-chip">${esc(t("AOCS"))} <b>${esc(m.aocsMode)}</b></span>`);
-    if (m.eclipse === true) out.push(`<span class="vz-chip is-ecl">${esc(t("Eclipse"))}</span>`);
-    else if (m.eclipse === false) out.push(`<span class="vz-chip">${esc(t("Sunlit"))}</span>`);
-    out.push(`<span class="vz-chip">${esc(m.contact ? t("In contact") : t("No contact"))}${m.contact && m.gs ? ` · ${esc(m.gs)}` : ""}</span>`);
+    if (m.aocsMode && m.aocsMode !== "—") out.push(`<span class="vz-chip">${esc(t("AOCS"))} <b>${esc(m.aocsMode)}</b></span>`);
     return out.join("");
   }
 

@@ -524,7 +524,6 @@
   "Edit": "Modifier",
   "Delete": "Supprimer",
   "<b>Private to you</b> · deleted from the server on {{- when}} ({{h}} h after your last entry)": "<b>Privé</b> · supprimé du serveur le {{- when}} ({{h}} h après votre dernière entrée)",
-  "<b>Private to you</b> · nothing is stored on the server yet. Entries are kept {{h}} h after your last one.": "<b>Privé</b> · rien n’est encore conservé sur le serveur. Les entrées sont gardées {{h}} h après la dernière.",
   "Nothing to download yet": "Rien à télécharger pour l’instant",
   "Note": "Note",
   "Note or actual value (optional)": "Note ou valeur réelle (facultatif)",
@@ -714,5 +713,7 @@
   "Prerequisite {{n}}": "Prérequis {{n}}",
   "Values captured for {{n}}": "Valeurs relevées pour {{n}}",
   "Decision:": "Décision :",
-  "values are captured in the MCS": "les valeurs se relèvent dans le MCS"
+  "values are captured in the MCS": "les valeurs se relèvent dans le MCS",
+  "<b>Private to you</b> · your entries are kept on the server for {{h}} h after your last one.": "<b>Privé</b> · vos entrées sont conservées sur le serveur {{h}} h après la dernière.",
+  "Net {{n}}: the orbit is balanced": "Bilan net {{n}} : orbite équilibrée"
 }
