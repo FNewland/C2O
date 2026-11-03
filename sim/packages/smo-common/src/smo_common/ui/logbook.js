@@ -16,6 +16,17 @@
  *   lb.open() / lb.close() / lb.toggle()
  *   lb.endSession({reason})                // the download prompt dialog
  *   lb.refresh()
+ *   lb.openChecklist("NOM-001")            // Workbook tab, that card's checklist
+ *   lb.openForm("anomaly", {alarm})        // Workbook tab, a form prefilled
+ *   lb.onRunner(procedureStatus)           // MCS runner progress -> step ticks
+ *
+ * Ops workbook (2026-11): the "Workbook" tab (workbook.js) holds the live
+ * procedure checklist, the forms (anomaly ticket, handover, scorecard,
+ * briefing, debrief) and the index of every sheet. Optional mount hooks:
+ *   readParam(name, pid) -> {text, raw, units, stale, nodata} | null
+ *   prefill(key, context, sheet) -> string      (worksheet_map.yaml keys)
+ *   info(formKind, context, sheet) -> [{label, value}]
+ *   handIn() -> {position, scenario, session}   (export header)
  *   logThis({alarm_id: 42}, {kind: "decision"})   // opens the panel, context prefilled
  *   renderLogThis({procedure: "NOM-001", step: 3}) // "Log this" button markup;
  *                                                  // clicks are delegated here
@@ -31,6 +42,7 @@
 
 import { t, tText, getLang, onLangChange } from "/static/shared/i18n.js";
 import { esc, armButton } from "/static/shared/components.js";
+import { createWorkbook } from "/static/shared/workbook.js";
 
 const API = "/api/logbook";
 const KINDS = ["decision", "thought", "observation", "reflection"];
@@ -68,9 +80,9 @@ const ctxLabel = (k) => ({
 
 const S = {
   tool: null, getContext: () => ({}), mounted: false, open: false, tab: "write",
-  data: null, sheets: [], sheetsKey: "", kind: "decision", override: {}, removed: new Set(),
+  data: null, kind: "decision", override: {}, removed: new Set(),
   btn: null, panel: null, banner: null, dlg: null, lastFocus: null, ctxSig: "",
-  timers: [], busy: false,
+  timers: [], busy: false, wb: null, hooks: {}, refreshTimer: null, team: "",
 };
 
 /* ── small utilities ─────────────────────────────────────────────────── */
@@ -78,15 +90,19 @@ const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 const hostOf = (h) => (typeof h === "string" ? document.querySelector(h) : h) || null;
 const lsKey = () => `c2o.lb.draft.${S.tool}`;
+// The team name for the hand-in header: a per-tab convenience, never text.
+function teamGet() { try { return sessionStorage.getItem("c2o.lb.team") || ""; } catch (e) { return ""; } }
+function teamSet(v) { try { if (v) sessionStorage.setItem("c2o.lb.team", v); else sessionStorage.removeItem("c2o.lb.team"); } catch (e) { /* private mode */ } }
 function draftGet() { try { return sessionStorage.getItem(lsKey()) || ""; } catch (e) { return ""; } }
 function draftSet(v) {
   try { if (v) sessionStorage.setItem(lsKey(), v); else sessionStorage.removeItem(lsKey()); } catch (e) { /* private mode */ }
 }
 function locale() { return getLang() === "fr" ? "fr-CA" : "en-CA"; }
-function fmtTime(iso) {
+function fmtTime(iso, seconds) {
   const d = iso ? new Date(iso) : null;
   if (!d || isNaN(d)) return "";
-  return d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
+  return d.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit",
+    ...(seconds ? { second: "2-digit" } : {}), hour12: false, timeZone: "UTC" }) + (seconds ? " UTC" : "");
 }
 function fmtDay(iso) {
   const d = iso ? new Date(iso) : null;
@@ -142,13 +158,61 @@ function worksheetContext() {
   }
   return out;
 }
+/* Context keys the store keeps, without sim_ts (that rides beside it). */
+function cleanContext(c) {
+  const out = {};
+  for (const [k, v] of Object.entries(c || {})) {
+    if (v === null || v === undefined || v === "" || k === "sim_ts") continue;
+    if (CTX_KEYS.includes(k)) out[k] = v;
+  }
+  return out;
+}
+/* Export header fields (team, position, scenario, session) as a query. */
+function exportQuery() {
+  let h = {};
+  try { h = (S.hooks.handIn && S.hooks.handIn()) || {}; } catch (e) { h = {}; }
+  const c = liveContext();
+  const q = new URLSearchParams({ lang: getLang() });
+  const team = S.team || teamGet();
+  if (team) q.set("team", team);
+  for (const k of ["position", "scenario", "session"]) {
+    const v = h[k] || c[k];
+    if (v) q.set(k, String(v).slice(0, 120));
+  }
+  return q.toString();
+}
+async function copyMarkdown(sheet) {
+  try {
+    const r = await fetch(`${API}/export?format=md&copy=1&${exportQuery()}` +
+      (sheet ? `&sheet=${encodeURIComponent(sheet)}` : ""), { credentials: "same-origin" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const text = await r.text();
+    let ok = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); ok = true; }
+    } catch (e) { ok = false; }
+    if (!ok) {
+      // http on a LAN address is not a secure context: the old way still works
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      ta.remove();
+    }
+    announce(ok ? (sheet ? tText("{{id}} copied as Markdown: paste it into your team document", { id: sheet })
+      : tText("Logbook copied as Markdown: paste it into your team document"))
+      : tText("Copy failed: use Download Markdown instead"));
+  } catch (e) {
+    announce(tText("Copy failed: {{why}}", { why: e.message }));
+  }
+}
+function refreshSoon() {
+  clearTimeout(S.refreshTimer);
+  S.refreshTimer = setTimeout(refresh, 350);
+}
 
 /* ── derived state ───────────────────────────────────────────────────── */
 function entries() { return (S.data && S.data.entries) || []; }
-function answersFor(wid, qid) {
-  return entries().filter((e) => e.kind === "worksheet" && e.worksheet &&
-    e.worksheet.id === wid && e.worksheet.q === qid);
-}
 function hoursLeft() {
   if (!S.data || !S.data.expires_at) return null;
   return (new Date(S.data.expires_at) - Date.now()) / 3600e3;
@@ -198,7 +262,7 @@ function buildPanel() {
     `<div class="lb-warn-slot"></div>` +
     `<div class="ds-tabs lb-tabs" role="tablist" aria-label="${esc(tText("Logbook sections"))}">` +
     `<button type="button" role="tab" class="ds-tab" id="lb-tab-write" data-tab="write" aria-controls="lb-pane-write">${t("Entries")} <span class="ds-chip lb-c-e">0</span></button>` +
-    `<button type="button" role="tab" class="ds-tab" id="lb-tab-ws" data-tab="ws" aria-controls="lb-pane-ws">${t("Worksheets")} <span class="ds-chip lb-c-w">0</span></button>` +
+    `<button type="button" role="tab" class="ds-tab" id="lb-tab-ws" data-tab="ws" aria-controls="lb-pane-ws">${t("Workbook")} <span class="ds-chip lb-c-w">0</span></button>` +
     `</div>` +
     `<div class="lb-body">` +
     `<section class="lb-pane" id="lb-pane-write" role="tabpanel" aria-labelledby="lb-tab-write">` +
@@ -215,20 +279,25 @@ function buildPanel() {
     `<ol class="lb-list" aria-label="${esc(tText("Your entries, newest first"))}"></ol>` +
     `</section>` +
     `<section class="lb-pane" id="lb-pane-ws" role="tabpanel" aria-labelledby="lb-tab-ws" hidden>` +
-    `<p class="lb-wsintro">${t("Worksheets from the course workbook that apply here. Each answer is saved to your logbook.")}</p>` +
+    `<p class="lb-wsintro">${t("Your course workbook: the live checklist of the procedure you are working, the forms for this shift and every sheet. Each answer is saved to your logbook.")}</p>` +
     `<div class="lb-wslist"></div></section>` +
     `</div>` +
     `<div class="lb-ft"><div class="priv"></div>` +
+    `<div class="lb-row lb-team"><label for="lb-team-in">${t("Team")}</label>` +
+    `<input id="lb-team-in" class="ds-input" maxlength="60" autocomplete="off" placeholder="${esc(tText("for the hand-in header"))}"></div>` +
     `<div class="lb-row">` +
     `<a class="ds-btn sm" data-lb="dl-md" download>${t("Download Markdown")}</a>` +
     `<a class="ds-btn sm" data-lb="dl-html" download>${t("Download printable HTML")}</a>` +
+    `<button type="button" class="ds-btn sm" data-lb="copy">${t("Copy as Markdown")}</button>` +
     `<span class="lb-grow"></span>` +
     `<button type="button" class="ds-btn sm" data-lb="end">${t("End session…")}</button>` +
     `<button type="button" class="ds-btn sm critical" data-lb="wipe">${t("Delete now")}</button>` +
     `</div></div>` +
     `<div class="ds-sr lb-live" aria-live="polite"></div>`;
   $("#lb-text", p).value = draftGet();
+  $("#lb-team-in", p).value = S.team || teamGet();
   armButton($('[data-lb="wipe"]', p), { seconds: 5, onExecute: wipe });
+  S.wb.mount($(".lb-wslist", p));
   selectTab(S.tab, false);
   renderAll();
 }
@@ -243,7 +312,7 @@ function selectTab(tab, focus) {
   }
   $("#lb-pane-write", S.panel).hidden = tab !== "write";
   $("#lb-pane-ws", S.panel).hidden = tab !== "ws";
-  if (tab === "ws") loadSheets();
+  if (tab === "ws") S.wb.sync(false);
 }
 
 function renderAll() {
@@ -254,7 +323,7 @@ function renderAll() {
   renderCtx();
   renderList();
   renderFooter();
-  renderSheets();
+  if (S.tab === "ws") S.wb.onData();
 }
 
 function renderWho() {
@@ -332,11 +401,11 @@ function renderFooter() {
     p.innerHTML = t("<b>Private to you</b> · nothing is stored on the server yet. Entries are kept {{h}} h after your last one.",
       { h: Math.round(d.retention_h) });
   }
-  const lang = getLang();
-  $('[data-lb="dl-md"]', S.panel).href = `${API}/export?format=md&lang=${lang}`;
-  $('[data-lb="dl-html"]', S.panel).href = `${API}/export?format=html&lang=${lang}`;
+  const q = exportQuery();
+  $('[data-lb="dl-md"]', S.panel).href = `${API}/export?format=md&${q}`;
+  $('[data-lb="dl-html"]', S.panel).href = `${API}/export?format=html&${q}`;
   const none = !d || !d.count;
-  for (const a of $$('[data-lb^="dl-"]', S.panel)) {
+  for (const a of $$('[data-lb^="dl-"], [data-lb="copy"]', S.panel)) {
     if (none) { a.setAttribute("aria-disabled", "true"); a.setAttribute("data-reason", tText("Nothing to download yet")); }
     else { a.removeAttribute("aria-disabled"); a.removeAttribute("data-reason"); }
   }
@@ -345,135 +414,20 @@ function renderFooter() {
   else { wipeBtn.removeAttribute("aria-disabled"); wipeBtn.removeAttribute("data-reason"); }
 }
 
-/* ── worksheets ──────────────────────────────────────────────────────── */
-async function loadSheets(force) {
-  const ctx = worksheetContext();
-  const key = JSON.stringify([getLang(), ctx]);
-  if (!force && key === S.sheetsKey) return;
-  S.sheetsKey = key;
-  try {
-    const j = await api("GET", `/worksheets?tool=${encodeURIComponent(S.tool)}&lang=${getLang()}` +
-      `&context=${encodeURIComponent(JSON.stringify(ctx))}`);
-    if (S.sheetsKey !== key) return;
-    S.sheets = j.worksheets || [];
-  } catch (e) {
-    S.sheets = [];
-  }
-  renderSheets(true);
-}
-
-function questionHtml(w, q) {
-  const id = `lbq-${w.id}-${q.id}`.replace(/[^\w-]/g, "_");
-  const prev = answersFor(w.id, q.id).slice().reverse();
-  const answers = prev.map((a) => {
-    const mark = a.worksheet.checked === true ? "☑ " : a.worksheet.checked === false ? "☐ " : "";
-    return `<div class="qa"><span class="tm">${esc(fmtTime(a.ts))}</span> ${esc(mark)}${esc(a.text)}</div>`;
-  }).join("");
-  const short = q.kind !== "check" && q.text.length < 90 && !/[?？]\s*$/.test(q.text);
-  const oneLine = short || q.kind === "check";
-  // one-line rows keep the button short so the field keeps its width
-  const btn = `<button type="button" class="ds-btn sm" data-answer aria-describedby="${id}-t">` +
-    `${prev.length ? t("Add answer") : oneLine ? t("Save") : t("Save answer")}</button>`;
-  // A confirm-each-step row is one line: tick, optional note, save. A
-  // form field ("Pass / shift", "Image ID") is one line too; a reflection
-  // question (ends in "?") gets room to write.
-  const input = short
-    ? `<div class="lb-row lb-chk"><label class="ds-sr" for="${id}">${t("Your answer")}</label>` +
-      `<textarea id="${id}" class="lb-ta line" rows="1" maxlength="8000" placeholder="${esc(tText("Your answer"))}"></textarea>${btn}</div>`
-    : q.kind === "check"
-    ? `<div class="lb-row lb-chk"><label class="ds-check"><input type="checkbox" id="${id}-c" aria-describedby="${id}-t"> ${t("Done")}</label>` +
-      `<label class="ds-sr" for="${id}">${t("Note")}</label>` +
-      `<textarea id="${id}" class="lb-ta line" rows="1" maxlength="8000" placeholder="${esc(tText("Note or actual value (optional)"))}"></textarea>${btn}</div>`
-    : `<label class="ds-sr" for="${id}">${t("Your answer")}</label>` +
-      `<textarea id="${id}" class="lb-ta sm" maxlength="8000" placeholder="${esc(tText("Your answer"))}"></textarea>` +
-      `<div class="lb-row"><span class="lb-grow"></span>${btn}</div>`;
-  return `<div class="lb-q" data-w="${esc(w.id)}" data-q="${esc(q.id)}" data-kind="${esc(q.kind)}">` +
-    `<div class="qt" id="${id}-t">${esc(q.text)}</div>` +
-    (q.hint ? `<div class="qh">${q.kind === "check" ? t("Expected:") + " " : ""}${esc(q.hint)}</div>` : "") +
-    answers + input + `</div>`;
-}
-
-function sheetHtml(w, open) {
-  const total = w.questions.length;
-  const done = w.questions.filter((q) => answersFor(w.id, q.id).length).length;
-  let sec = "", body = "";
-  for (const q of w.questions) {
-    if (q.section && q.section !== sec) { sec = q.section; body += `<div class="qs">${esc(sec)}</div>`; }
-    body += questionHtml(w, q);
-  }
-  return `<details class="ds-disclosure lb-ws" data-w="${esc(w.id)}"${open ? " open" : ""}>` +
-    `<summary><span class="id">${esc(w.id)}</span> <span class="ti">${esc(w.title)}</span>` +
-    `<span class="r">${t("{{done}} of {{total}} answered", { done, total })}</span></summary>` +
-    `<div class="bd">${body}</div></details>`;
-}
-
-function renderSheets(fresh) {
-  if (!S.panel || !S.panel.firstChild) return;
-  const specific = S.sheets.filter((w) => w.match && w.match !== "general");
-  $(".lb-c-w", S.panel).textContent = String(specific.length || S.sheets.length);
-  const box = $(".lb-wslist", S.panel);
-  if (!fresh && box.childElementCount) {
-    // keep open state and typed answers: refresh only answer counts/lists
-    for (const d of $$("details.lb-ws", box)) {
-      const w = S.sheets.find((x) => x.id === d.dataset.w);
-      if (!w) continue;
-      const done = w.questions.filter((q) => answersFor(w.id, q.id).length).length;
-      $("summary .r", d).textContent = tText("{{done}} of {{total}} answered", { done, total: w.questions.length });
-    }
-    return;
-  }
-  if (!S.sheets.length) {
-    box.innerHTML = `<p class="lb-empty">${t("No worksheet applies here. Open a procedure, or use the entries tab for free notes.")}</p>`;
-    return;
-  }
-  // Keep what the person opened; a worksheet that newly applies (the
-  // procedure just opened) opens itself if it is the first specific one.
-  const openIds = new Set($$("details.lb-ws[open]", box).map((d) => d.dataset.w));
-  const shown = new Set($$("details.lb-ws", box).map((d) => d.dataset.w));
-  let html = "";
-  specific.forEach((w, i) => { html += sheetHtml(w, openIds.has(w.id) || (i === 0 && (!shown.has(w.id) || !openIds.size))); });
-  const general = S.sheets.filter((w) => !w.match || w.match === "general");
-  if (general.length) {
-    if (specific.length) html += `<div class="lb-sep">${t("Also for this tool")}</div>`;
-    general.forEach((w, i) => { html += sheetHtml(w, openIds.has(w.id) || (!specific.length && !openIds.size && i === 0)); });
-  }
-  box.innerHTML = html;
-}
-
-async function saveAnswer(qel) {
-  const ta = $("textarea", qel);
-  const cb = $('input[type="checkbox"]', qel);
-  let text = ta.value.trim();
-  const checked = cb ? cb.checked : undefined;
-  if (!text && cb) text = checked ? tText("Done") : tText("Not done");
-  if (!text) { ta.focus(); return; }
-  const w = S.sheets.find((x) => x.id === qel.dataset.w) ||
-    (S.dlgSheets || []).find((x) => x.id === qel.dataset.w);
-  const q = w && w.questions.find((x) => x.id === qel.dataset.q);
-  const body = {
-    kind: "worksheet", text, tool: S.tool, lang: getLang(), context: draftContext(),
-    worksheet: { id: qel.dataset.w, q: qel.dataset.q, ...(w ? { title: w.title } : {}),
-      ...(q ? { q_text: q.text } : {}), ...(cb ? { checked } : {}) },
-  };
-  if (body.context.sim_ts) { body.sim_ts = String(body.context.sim_ts); delete body.context.sim_ts; }
-  try {
-    await api("POST", "/entries", body);
-    ta.value = ""; if (cb) cb.checked = false;
-    announce(tText("Answer saved to your logbook"));
-    await refresh();
-    // re-render just this worksheet so its answers show; keep it open
-    const d = qel.closest("details.lb-ws");
-    if (d && w) {
-      const tmp = document.createElement("div");
-      tmp.innerHTML = sheetHtml(w, true);
-      const fresh = tmp.firstChild;
-      d.replaceWith(fresh);
-      const same = $(`.lb-q[data-q="${CSS.escape(qel.dataset.q)}"] [data-answer]`, fresh);
-      if (same) same.focus();
-    }
-  } catch (e) {
-    announce(tText("Not saved: {{why}}", { why: e.message }));
-  }
+/* ── workbook (workbook.js) ───────────────────────────────────────── */
+function makeWorkbook() {
+  return createWorkbook({
+    tool: S.tool, API, api, announce, fmtTime, cleanContext, exportQuery, copyMarkdown,
+    entries: () => entries(),
+    refresh: () => refresh(),
+    refreshSoon,
+    afterDownload: () => afterDownload(),
+    context: () => ({ ...liveContext(), ...S.override }),
+    readParam: (name, pid) => (S.hooks.readParam ? S.hooks.readParam(name, pid) : null),
+    prefill: (key, ctx, sheet) => (S.hooks.prefill ? S.hooks.prefill(key, ctx, sheet) : ""),
+    info: (kind, ctx, sheet) => (S.hooks.info ? S.hooks.info(kind, ctx, sheet) : []),
+    onCount: (n) => { const c = S.panel && $(".lb-c-w", S.panel); if (c) c.textContent = String(n); },
+  });
 }
 
 /* ── actions ─────────────────────────────────────────────────────────── */
@@ -570,7 +524,7 @@ function open(opts = {}) {
   renderButton();
   renderCtx();
   refresh();
-  loadSheets();           // also gives the Worksheets tab its count
+  S.wb.sync(false);       // also gives the Workbook tab its count
   const ta = $("#lb-text", S.panel);
   if (opts.focus !== false) setTimeout(() => (S.tab === "write" ? ta : $("#lb-tab-ws", S.panel)).focus(), 20);
 }
@@ -625,23 +579,21 @@ export async function endSession(opts = {}) {
   await refresh();
   let debrief = [];
   try {
-    const ctx = { ...worksheetContext(), phase: "debrief" };
-    const j = await api("GET", `/worksheets?tool=${encodeURIComponent(S.tool)}&lang=${getLang()}` +
-      `&context=${encodeURIComponent(JSON.stringify(ctx))}`);
-    debrief = (j.worksheets || []).filter((w) => w.questions.some((q) => !answersFor(w.id, q.id).length));
-    // the reflection sheet first (WB-5.5-DB), then scorecards
+    await S.wb.sync(false);
+    // unanswered debrief sheets that apply here, the reflection (…-DB) first
+    debrief = S.wb.debriefSheets().filter((w) => w.match);
     debrief.sort((a, b) => Number(!/-DB$/.test(a.id)) - Number(!/-DB$/.test(b.id)));
   } catch (e) { /* no worksheets: the dialog still offers the download */ }
-  S.dlgSheets = debrief;
   const d = S.data || { count: 0 };
-  const lang = getLang();
+  const q = exportQuery();
   const head = opts.reason === "stopped"
     ? t("The scenario has stopped")
     : opts.reason === "gate" ? t("Gate passed") : t("End of session");
   const w = debrief[0];
   const deb = w
-    ? `<div class="sec"><div class="lbl">${t("Debrief worksheet, not answered yet")}</div>` +
-      sheetHtml(w, true) + `</div>` : "";
+    ? `<div class="sec lb-dlg-deb"><div class="lbl">${t("Debrief worksheet, not answered yet")}</div>` +
+      `<div class="lb-dlg-wt"><span class="id">${esc(w.id)}</span> ${esc(w.title)}</div>` +
+      S.wb.formHtml(w, null) + `</div>` : "";
   const when = d.expires_at
     ? t("The server deletes it on {{- when}}.", { when: `<b class="num">${esc(fmtWhen(d.expires_at))}</b>` })
     : t("Nothing is stored on the server.");
@@ -653,8 +605,9 @@ export async function endSession(opts = {}) {
     (d.unsaved ? ` · ${t("{{n}} not downloaded", { n: d.unsaved })}` : "") + `</div>` +
     `<div class="lb-hint">${t("Download your logbook before you leave. Hand in the file if it is to be graded.")} ${when}</div>` +
     `<div class="lb-row">` +
-    `<a class="ds-btn primary" data-lb="dl-md" href="${API}/export?format=md&lang=${lang}" download>${t("Download Markdown")}</a>` +
-    `<a class="ds-btn" data-lb="dl-html" href="${API}/export?format=html&lang=${lang}" download>${t("Download printable HTML")}</a>` +
+    `<a class="ds-btn primary" data-lb="dl-md" href="${API}/export?format=md&${q}" download>${t("Download Markdown")}</a>` +
+    `<a class="ds-btn" data-lb="dl-html" href="${API}/export?format=html&${q}" download>${t("Download printable HTML")}</a>` +
+    `<button type="button" class="ds-btn" data-lb="copy">${t("Copy as Markdown")}</button>` +
     `</div></div>` + deb +
     `<div class="sec"><div class="lb-row"><span class="lb-grow"></span>` +
     `<button type="button" class="ds-btn" data-lb="dlg-close">${t("Close")}</button></div></div></div>`;
@@ -684,21 +637,20 @@ function wire() {
     else if (el.dataset.edit) editEntry(el.dataset.edit);
     else if (el.hasAttribute("data-ed-cancel")) { const id = el.closest(".lb-e").dataset.id; renderList(); focusEntry(id, "edit"); }
     else if (el.dataset.edSave) commitEdit(el.dataset.edSave, $("textarea", el.closest(".lb-e")).value);
-    else if (el.hasAttribute("data-answer")) saveAnswer(el.closest(".lb-q"));
+    else if (a === "copy") copyMarkdown();
     else if (el.getAttribute("role") === "tab") selectTab(el.dataset.tab, true);
   });
   p.addEventListener("submit", (ev) => { ev.preventDefault(); saveEntry(); });
-  p.addEventListener("input", (ev) => { if (ev.target.id === "lb-text") draftSet(ev.target.value); });
+  p.addEventListener("input", (ev) => {
+    if (ev.target.id === "lb-text") draftSet(ev.target.value);
+    if (ev.target.id === "lb-team-in") { S.team = ev.target.value.trim(); teamSet(S.team); renderFooter(); }
+  });
   p.addEventListener("keydown", (ev) => {
     // The panel's keys are its own: a page's single-key shortcuts and its
     // Esc handler must not fire while the person writes here.
     if (ev.key !== "F6" && ev.key !== "Tab") ev.stopPropagation();
     if (ev.target.id === "lb-text" && ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
       ev.preventDefault(); saveEntry(); return;
-    }
-    if (ev.target.closest && ev.target.closest(".lb-q") && ev.target.tagName === "TEXTAREA" &&
-        ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
-      ev.preventDefault(); saveAnswer(ev.target.closest(".lb-q")); return;
     }
     const rg = ev.target.closest && ev.target.closest('[role="radiogroup"], [role="tablist"]');
     if (rg && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(ev.key)) {
@@ -724,7 +676,14 @@ function wire() {
     if (!el) return;
     if (el.dataset.lb === "dlg-close") closeDialog();
     else if (el.dataset.lb && el.dataset.lb.startsWith("dl-")) afterDownload();
-    else if (el.hasAttribute("data-answer")) saveAnswer(el.closest(".lb-q"));
+    else if (el.dataset.lb === "copy") copyMarkdown();
+    else if (el.dataset.wb === "form-close") { const sec = el.closest(".lb-dlg-deb"); if (sec) sec.remove(); }
+    else if (el.dataset.wb === "form-save") {
+      const sec = el.closest(".lb-dlg-deb");
+      S.wb.saveForm(el.closest(".wb-form")).then((ok) => {
+        if (ok && sec) sec.innerHTML = `<div class="lbl">${t("Debrief saved to your logbook")}</div>`;
+      });
+    }
   });
   S.dlg.addEventListener("keydown", (ev) => {
     if (ev.key !== "Tab") ev.stopPropagation();
@@ -752,14 +711,14 @@ function wire() {
     if (S.data && S.data.unsaved > 0) { ev.preventDefault(); ev.returnValue = ""; }
   });
   onLangChange(() => {
-    if (S.panel.firstChild) { S.ctxSig = ""; buildPanel(); S.sheetsKey = ""; if (S.tab === "ws") loadSheets(); }
+    if (S.panel.firstChild) { S.ctxSig = ""; S.wb.reset(); buildPanel(); if (S.tab === "ws") S.wb.sync(true); }
     renderButton(); renderBanner();
   });
   S.timers.push(setInterval(() => { if (!document.hidden) refresh(); }, POLL_MS));
   S.timers.push(setInterval(() => {
     if (!S.open) return;
     renderCtx();
-    if (S.tab === "ws") loadSheets();
+    if (S.tab === "ws") S.wb.sync(false);
   }, CTX_POLL_MS));
 }
 
@@ -791,6 +750,9 @@ export function mountLogbook(o = {}) {
   if (S.mounted) return S.apiObj;
   S.tool = o.tool || "mcs";
   S.getContext = typeof o.getContext === "function" ? o.getContext : () => ({});
+  S.hooks = { readParam: o.readParam, prefill: o.prefill, info: o.info, handIn: o.handIn };
+  S.team = teamGet();
+  S.wb = makeWorkbook();
   if (!document.querySelector('link[data-lb-css]')) {
     const l = document.createElement("link");
     l.rel = "stylesheet"; l.href = "/static/shared/logbook.css"; l.setAttribute("data-lb-css", "");
@@ -833,10 +795,32 @@ export function mountLogbook(o = {}) {
   refresh();
   S.apiObj = {
     open, close, toggle: () => (S.open ? close() : open()), refresh, endSession, logThis,
+    openChecklist, openForm, onRunner,
     get isOpen() { return S.open; },
     get state() { return S.data; },
   };
   return S.apiObj;
 }
 
-export default { mountLogbook, logThis, renderLogThis, endSession, refresh };
+/** Open the Workbook tab on a procedure's live checklist. */
+export function openChecklist(proc, opts = {}) {
+  if (!S.mounted) return;
+  open({ tab: "ws", focus: false });
+  S.wb.openChecklist(proc);
+  if (opts.focus === false) return;
+}
+/** Open the Workbook tab on a form ("anomaly", "handover", … or a sheet id),
+ *  prefilled from `prefillCtx` (e.g. {alarm}) and the console. */
+export async function openForm(kindOrId, prefillCtx = {}) {
+  if (!S.mounted) return false;
+  open({ tab: "ws", focus: false });
+  await S.wb.sync(false);
+  return S.wb.openForm(kindOrId, prefillCtx);
+}
+/** MCS procedure runner status -> checklist ticks (never blocks). */
+export function onRunner(status) {
+  if (!S.mounted || !S.wb) return;
+  try { S.wb.onRunner(status); } catch (e) { /* a checklist problem never stops the console */ }
+}
+
+export default { mountLogbook, logThis, renderLogThis, endSession, refresh, openChecklist, openForm, onRunner };
