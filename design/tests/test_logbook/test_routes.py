@@ -155,7 +155,8 @@ async def test_worksheet_export_prints_question_text(client):
         "kind": "worksheet", "tool": "design", "text": "We pick SSO 550 km.",
         "worksheet": {"id": "LW-2.3", "q": "B"}})
     md = (await client.get("/api/logbook/export?format=md", headers=IAP)).text
-    assert "LW-2.3" in md and "Part B: Orbit Trade Matrix" in md and "We pick SSO 550 km." in md
+    assert "Worksheet 2.3 · Orbit Selection" in md and "#### Part B: Orbit Trade Matrix" in md
+    assert "We pick SSO 550 km." in md
 
 
 def test_main_app_mounts_the_logbook():
