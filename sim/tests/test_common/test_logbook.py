@@ -329,7 +329,7 @@ def test_worksheet_localisation():
     w = WorksheetCatalog().match("mcs", {"procedure": "NOM-001"}, lang="fr")[0]
     assert w["title"].startswith("NOM-001 Ouverture de passage")
     assert w["questions"][0]["kind"] == "check"
-    assert w["questions"][0]["text"].startswith("1. Segment sol")
+    assert w["questions"][0]["text"].startswith("1. SPACON : Vérifier l'état de l'OBC")
 
 
 # ── HTTP routes ────────────────────────────────────────────────────────
