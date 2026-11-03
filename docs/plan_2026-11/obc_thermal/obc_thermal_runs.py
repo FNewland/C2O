@@ -1,4 +1,9 @@
-"""OBC thermal analysis runs (docs/plan_2026-11/OBC_THERMAL_ANALYSIS.md).
+"""OBC thermal analysis runs (docs/plan_2026-11/OBC_THERMAL_ANALYSIS.md §1-§7).
+
+HISTORICAL: this measured the fixed-sink zone model as it was at commit
+21af365 (before the 2026-11-03 thermal network). Against the network it no
+longer reproduces those numbers (its hand replay assumes the old C/tau/sink).
+The current runs are thermal_network_runs.py ("After the thermal network").
 
 Drives the real SimulationEngine headless (the way the tests do: construct the
 engine on configs/eosat1 and call _tick_once) and records the OBC node.
