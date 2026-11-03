@@ -85,8 +85,12 @@ RUN actual="$(sh docker/config-hash.sh configs/eosat1)" \
 # MCS TM archive. Create them owned by the runtime user so a fresh named
 # volume inherits that ownership. configs/ stays root-owned: the image's
 # config is the hashed one.
+# workspace/logbook: the participant logbooks (LOGBOOK_SPEC.md), setgid
+# 2770 so SpaceCDF (another uid, smo group added) writes there too.
 RUN mkdir -p /opt/smo/workspace/dumps /opt/smo/workspace/link /var/lib/smo/archive \
- && chown -R smo:smo /opt/smo/workspace /var/lib/smo
+             /opt/smo/workspace/logbook \
+ && chown -R smo:smo /opt/smo/workspace /var/lib/smo \
+ && chmod 2770 /opt/smo/workspace/logbook
 
 ENV SMO_CONFIG_DIR=/opt/smo/configs/eosat1 \
     SMO_DUMP_DIR=/opt/smo/workspace/dumps \

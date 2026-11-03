@@ -26,7 +26,7 @@
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh update     # git pull c2o-ref, rebuild, restart
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh down       # stop the containers
 #   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh sizes      # size of each data volume (c2o data list)
-#   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh clean telemetry dumps reports [designs]
+#   sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh clean telemetry dumps reports [designs] [logbooks]
 #        empty those recording volumes on this VM: stops the containers that
 #        use them, deletes the files with the already-built image (no pulls),
 #        starts them again. Never touches scenarios, breakpoints, config
@@ -231,9 +231,13 @@ recording_spec() {
         ground:dumps)     echo "ground-dumps|gsg mcs dtm-viewer|." ;;
         ground:reports)   echo "ground-workspace|gsg mcs planner rfsim dtm-viewer|reports pass_rollups*" ;;
         ground:designs)   echo "spacecdf-data|spacecdf|." ;;
+        # Participant logbooks (LOGBOOK_SPEC.md): every ground screen and
+        # SpaceCDF write workspace/logbook; on the sim VM only the instructor.
+        ground:logbooks)  echo "ground-workspace|gsg mcs planner rfsim dtm-viewer orbit-tools doc-viewer portal spacecdf|logbook" ;;
         sim:dumps)        echo "space-dumps|sim|." ;;
-        *:telemetry|*:dumps|*:reports|*:designs) ;;
-        *) die "clean: unknown recording '$1' (telemetry, dumps, reports, designs)" ;;
+        sim:logbooks)     echo "space-workspace|sim|logbook" ;;
+        *:telemetry|*:dumps|*:reports|*:designs|*:logbooks) ;;
+        *) die "clean: unknown recording '$1' (telemetry, dumps, reports, designs, logbooks)" ;;
     esac
 }
 
@@ -243,14 +247,23 @@ vol_kb() {  # vol_kb VOLUME -> size in KiB, or nothing if the volume does not ex
     du -sk "$mp" 2>/dev/null | awk '{print $1}' || true
 }
 
-# sizes: one line per data volume ("vol NAME KiB") plus the boot disk
-# ("disk USED_KiB SIZE_KiB"), for c2o data list.
+# sizes: one line per data volume ("vol NAME KiB"), the participant logbooks
+# inside a workspace volume ("sub VOLUME/logbook KiB FILES"), plus the boot
+# disk ("disk USED_KiB SIZE_KiB"), for c2o data list.
 sizes() {
-    local v kb
+    local v kb mp n
     echo "role $ROLE"
     for v in $(docker volume ls -q 2>/dev/null | sed -n "s/^$VOL_PREFIX//p" | sort); do
         kb="$(vol_kb "$v")"
         echo "vol $v ${kb:-0}"
+        case "$v" in
+            ground-workspace|space-workspace)
+                mp="$(docker volume inspect -f '{{.Mountpoint}}' "$VOL_PREFIX$v" 2>/dev/null)" || continue
+                [ -d "$mp/logbook" ] || continue
+                kb="$(du -sk "$mp/logbook" 2>/dev/null | awk '{print $1}')"
+                n="$(find "$mp/logbook" -maxdepth 1 -name '*.jsonl' 2>/dev/null | wc -l | tr -d ' ')"
+                echo "sub $v/logbook ${kb:-0} ${n:-0}" ;;
+        esac
     done
     df -Pk / | awk 'NR == 2 {print "disk", $3, $2}'
 }
@@ -264,7 +277,7 @@ image_for() {
 }
 
 clean() {
-    [ "$#" -gt 0 ] || die "usage: vm-bootstrap.sh clean telemetry|dumps|reports|designs ..."
+    [ "$#" -gt 0 ] || die "usage: vm-bootstrap.sh clean telemetry|dumps|reports|designs|logbooks ..."
     local what spec vol svcs paths img stop_all=no todo=() stop=() s line
     for what in "$@"; do
         spec="$(recording_spec "$what")"
