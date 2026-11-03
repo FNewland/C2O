@@ -4,6 +4,8 @@
 **Poste responsable :** Puissance et thermique (EPS/TCS)
 **Postes associés :** (directeur de vol pour information)
 **Difficulté :** Avancé
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz P3) : l'étape 4 vérifie quelles lignes la FDIR
+de bord a déjà délestées avant de délester quoi que ce soit depuis le sol.
 
 ## Objectif
 Traiter une défaillance présumée d'un élément de batterie, signalée par une chute de tension anormale, et
@@ -105,14 +107,19 @@ estimer la capacité restante :
 
 ### Étape 4 : Réduire les charges si nécessaire
 **LABEL:** `STEP-4`
-**Note:** Si la marge de survie en éclipse est négative, réduire les charges par ordre de priorité :
-1. Charge utile sur OFF (gain de ~8-45 W) :
+**Note:** Si la marge de survie en éclipse est négative, réduire les charges par ordre de priorité ---
+mais VÉRIFIER D'ABORD LE SATELLITE : un élément défaillant fait chuter le bus et l'EPS a peut-être déjà
+délesté des lignes de lui-même. Une ligne qu'il a ouverte ne peut pas être délestée une seconde fois (la
+commande est refusée S1.8 « power line … is OFF ») et le paramètre de mode de son unité reste figé à sa
+dernière valeur ; sauter donc toute charge dont la ligne indique déjà 0.
+**Verify:** `eps.load_shed_stage` (0x0134), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112) — consigner chacune : 0 = déjà délestée à bord
+1. Charge utile sur OFF (gain de ~8-45 W) — seulement si `eps.pl_payload` (0x0113) = 1 :
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Charge utile sur OFF
-   **Verify:** `payload.mode` (0x0600) = 0 en moins de 10 s
-2. Refroidisseur du FPA sur OFF (gain de ~15 W) : `FPA_COOLER(on=0)` (func_id 43)
+   **Verify:** `payload.mode` (0x0600) = 0 en moins de 10 s
+2. Refroidisseur du FPA sur OFF (gain de ~15 W) — seulement si `eps.pl_fpa_cooler` (0x0114) = 1 : `FPA_COOLER(on=0)` (func_id 43)
    **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
    **Verify:** `tcs.cooler_fpa` (0x040C) = 0 en moins de 5 s
-3. Émetteur sur OFF (gain de ~20 W) — uniquement si l'éclipse est imminente et que le bilan de charge reste négatif :
+3. Émetteur sur OFF (gain de ~20 W) — uniquement si l'éclipse est imminente, que le bilan de charge reste négatif et que `eps.pl_ttc_tx` (0x0112) = 1 (ligne ouverte, `TTC_PA_OFF` est refusé) :
    `TTC_PA_OFF` (func_id 67)
    **Verify:** `ttc.pa_on` (0x0516) = 0 en moins de 5 s
 **Action:** Après chaque délestage, recalculer la marge de survie en éclipse.

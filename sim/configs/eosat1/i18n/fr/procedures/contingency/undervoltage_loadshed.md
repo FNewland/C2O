@@ -4,10 +4,18 @@
 **Poste responsable :** Puissance et thermique (EPS/TCS)
 **Postes associés :** directeur de vol, tous les postes
 **Difficulté :** Avancé
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz P3 : « si le satellite ne déleste pas, le sol
+doit le faire --- mais vérifier d'abord le satellite »). Chaque niveau de délestage lit maintenant
+d'abord l'état de la ligne et ne déleste depuis le sol que ce que la FDIR de bord n'a pas déjà coupé ;
+le rétablissement réalimente chaque ligne avant la commande de mode de son unité.
 
 ## Objectif
-Traiter une sous-tension sur le bus d'alimentation principal en effectuant un délestage manuel
-dans un ordre de priorité maîtrisé. Les charges sont délestées en commençant par la plus basse
+Traiter une sous-tension sur le bus d'alimentation principal en achevant depuis le sol le délestage
+que le satellite n'a pas déjà fait, dans un ordre de priorité maîtrisé. L'EPS déleste de lui-même sous
+25,0 V (charge utile → refroidisseur du FPA → `ttc_tx` → roues AOCS → prop, une ligne par seconde,
+événements LOAD_SHED_STAGE_1..3 0x0106-0x0108), et les modes safe/emergency de l'EPS ainsi que les
+règles S19 sur l'état de charge ouvrent aussi des lignes : au moment où cette fiche est exécutée,
+certaines lignes peuvent déjà être coupées. Les charges sont délestées en commençant par la plus basse
 priorité (charge utile), puis le refroidisseur du FPA, l'émetteur TX et les roues
 de réaction, afin d'enrayer la baisse de la tension du bus et de protéger les fonctions critiques du satellite. Le rétablissement
 est surveillé jusqu'au retour de l'état de charge de la batterie et de la tension du bus à des niveaux sûrs.
@@ -33,6 +41,11 @@ est surveillé jusqu'au retour de l'état de charge de la batterie et de la tens
 | tcs.cooler_fpa | 0x040C | État courant du refroidisseur |
 | ttc.pa_on | 0x0516 | État courant de l'amplificateur de puissance |
 | aocs.mode | 0x020F | Mode courant du SCAO |
+| eps.load_shed_stage | 0x0134 | Palier de délestage de bord (0 = rien de délesté à bord) |
+| eps.pl_payload | 0x0113 | Ligne charge utile (0 = déjà délestée) |
+| eps.pl_fpa_cooler | 0x0114 | Ligne du refroidisseur du FPA (0 = déjà délestée) |
+| eps.pl_ttc_tx | 0x0112 | Ligne TX (0 = déjà délestée) |
+| eps.pl_aocs_wheels | 0x0117 | Ligne des roues AOCS (0 = déjà délestée) |
 
 ## Télécommandes requises
 | Commande | Service | Sous-type | Func ID | Description |
@@ -43,6 +56,9 @@ est surveillé jusqu'au retour de l'état de charge de la batterie et de la tens
 | TTC_PA_OFF | 8 | 1 | 67 | Désactiver l'amplificateur de puissance (TX) |
 | EPS_POWER_OFF | 8 | 1 | 20 | Mettre une ligne d'alimentation sur OFF |
 | OBC_SET_MODE | 8 | 1 | 50 | Régler le mode de l'OBC (safe/emergency) |
+| EPS_POWER_ON | 8 | 1 | 19 | Réalimenter une ligne avant de rétablir son unité |
+| TTC_PA_ON | 8 | 1 | 66 | Réactiver l'amplificateur de puissance |
+| AOCS_SET_MODE | 8 | 1 | 0 | Relancer le SCAO une fois sa ligne rétablie |
 
 ## Déroulement
 
@@ -56,16 +72,30 @@ est surveillé jusqu'au retour de l'état de charge de la batterie et de la tens
 **Verify:** `eps.power_cons` (0x0106) — consigner la consommation totale
 **Verify:** `eps.power_gen` (0x0107) — consigner la production de puissance
 **Verify:** `eps.eclipse_flag` (0x0108) — déterminer si le satellite est en éclipse
-**Action:** Annoncer « UNDERVOLTAGE — initiating manual load shed » sur la boucle opérations.
+**Verify:** `eps.load_shed_stage` (0x0134) — consigner ce que le délesteur de bord a déjà fait
+**Verify:** `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112), `eps.pl_aocs_wheels` (0x0117) — consigner chacune : 1 = encore sur ON, 0 = déjà délestée à bord
+**Note:** VÉRIFIER D'ABORD LE SATELLITE. Une ligne que la FDIR a déjà ouverte ne peut pas être
+délestée une seconde fois : sa commande est refusée S1.8 « power line … is OFF », et les données de
+servitude de l'unité s'arrêtent, si bien que son paramètre de mode (p. ex. `payload.mode`) reste figé à
+sa dernière valeur et ne peut jamais indiquer le nouvel état. Chaque niveau ci-dessous se branche donc sur
+la LIGNE : ne délester depuis le sol que ce qui est encore sur ON.
+**Action:** Annoncer « UNDERVOLTAGE — completing load shed from the ground » sur la boucle opérations.
 **GO/NO-GO:** Sous-tension confirmée. Le directeur de vol autorise le délestage — continuer.
 
 ### Étape 2 : Délester la charge de priorité 1 — charge utile sur OFF
 **LABEL:** `STEP-2`
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-2-SHED` | NO-GO `STEP-2-CHECK` (timeout 10 s)
+**Note:** GO — la ligne de la charge utile est encore sur ON : la délester depuis le sol. NO-GO — la
+FDIR de bord l'a déjà ouverte : ne rien envoyer et passer au contrôle de tension.
+
+**LABEL:** `STEP-2-SHED`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Mettre la charge utile sur OFF
-**Verify:** `payload.mode` (0x0600) = 0 (OFF) en 10 s
-**Verify:** `eps.power_cons` (0x0106) diminue (-45 W attendus en prise de vue, -8 W en STANDBY)
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Télémesure de servitude charge utile
+**Verify:** `payload.mode` (0x0600) = 0 (OFF) en 10 s
+**Verify:** `eps.power_cons` (0x0106) diminue (-45 W attendus en prise de vue, -8 W en STANDBY)
+
+**LABEL:** `STEP-2-CHECK`
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
 **BRANCH:** `eps.bus_voltage > 26.5` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
 **Note:** GO — le délestage a suffi ; MAINTENIR (HOLD) ce niveau, la suite est directement la surveillance.
@@ -75,24 +105,37 @@ de la branche correspond à ce que la prose appelait « attendre 30 s et cont
 
 ### Étape 3 : Délester la charge de priorité 2 — refroidisseur du FPA sur OFF
 **LABEL:** `STEP-3`
+**BRANCH:** `eps.pl_fpa_cooler == 1` -> GO `STEP-3-SHED` | NO-GO `STEP-3-CHECK` (timeout 10 s)
+**Note:** GO — la ligne du refroidisseur est encore sur ON : la délester. NO-GO — déjà délestée à bord.
+
+**LABEL:** `STEP-3-SHED`
 **TC:** `FPA_COOLER(on=0)` (Service 8, Subtype 1, func_id 43) — Désactiver le refroidisseur du FPA
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa` : le SID 3 n'est périodique que toutes les 60 s : lire la valeur que ce contrôle utilise
-**Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) en 5 s
-**Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Télémesure de servitude TCS
+**Verify:** `tcs.cooler_fpa` (0x040C) = 0 (OFF) en 5 s
+**Verify:** `eps.power_cons` (0x0106) diminue d'environ 15 W
+
+**LABEL:** `STEP-3-CHECK`
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
 **BRANCH:** `eps.bus_voltage > 26.0` -> GO `STEP-6` | NO-GO `STEP-4` (timeout 60 s)
 
 ### Étape 4 : Délester la charge de priorité 3 — émetteur TX sur OFF
 **LABEL:** `STEP-4`
+**BRANCH:** `eps.pl_ttc_tx == 1` -> GO `STEP-4-SHED` | NO-GO `STEP-4-CHECK` (timeout 10 s)
+**Note:** GO — la ligne `ttc_tx` est encore sur ON : couper le PA. NO-GO — la ligne est déjà ouverte
+à bord (`TTC_PA_OFF` serait refusé S1.8) et la liaison descendante en bande S a déjà disparu.
+
+**LABEL:** `STEP-4-SHED`
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — Désactiver l'amplificateur de puissance
-**Verify:** `ttc.pa_on` (0x0516) = 0 en 5 s
-**Verify:** `eps.power_cons` (0x0106) diminue d'environ 20 W
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Télémesure de servitude TT&C
+**Verify:** `ttc.pa_on` (0x0516) = 0 en 5 s
+**Verify:** `eps.power_cons` (0x0106) diminue d'environ 20 W
 **Note:** AVERTISSEMENT — Cette action supprime la capacité de liaison descendante. La liaison montante (RX) reste active.
 Le satellite peut encore recevoir des commandes mais ne peut plus émettre de télémesure.
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Télémesure de servitude TT&C
+
+**LABEL:** `STEP-4-CHECK`
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
 **BRANCH:** `eps.bus_voltage > 25.5` -> GO `STEP-6` | NO-GO `STEP-5` (timeout 60 s)
 **Note:** Après cette étape, la liaison descendante en bande S est INHIBÉE — `ttc.tx_active`
@@ -103,12 +146,19 @@ voir l'état du satellite ; le prédicat de la branche est évalué à partir 
 
 ### Étape 5 : Délester la charge de priorité 4 — roues de réaction sur OFF
 **LABEL:** `STEP-5`
+**BRANCH:** `eps.pl_aocs_wheels == 1` -> GO `STEP-5-SHED` | NO-GO `STEP-5-CHECK` (timeout 10 s)
+**Note:** GO — la ligne des roues est encore sur ON : l'ouvrir. NO-GO — déjà délestée à bord (le SCAO
+est déjà retombé sur OFF, `aocs.mode` 0).
+
+**LABEL:** `STEP-5-SHED`
 **TC:** `EPS_POWER_OFF(line_index=7)` (Service 8, Subtype 1, func_id 20) — Mettre hors tension les roues AOCS
-**Verify:** `eps.pl_aocs_wheels` (0x0117) = 0 (OFF) en 5 s
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 0 (OFF) en 5 s
 **Note:** AVERTISSEMENT — Le satellite va perdre le contrôle d'attitude actif. Le moment cinétique résiduel
 provoquera une lente dérive. L'amortissement magnétique (s'il existe) ou le gradient de gravité
 n'assureront qu'une stabilisation passive.
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau
+
+**LABEL:** `STEP-5-CHECK`
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
 **BRANCH:** `eps.bus_voltage > 25.0` -> GO `STEP-6` | NO-GO `STEP-5B` (timeout 60 s)
 
@@ -138,13 +188,17 @@ la puissance disponible du générateur solaire.
 **GO/NO-GO:** Tension du bus > 28.0 V et SoC > 40 % — passer au rétablissement des charges.
 
 ### Étape 7 : Rétablir les charges dans l'ordre de priorité inverse
-**Note:** Réactiver les charges une par une, en attendant 5 min entre chacune pour vérifier la stabilité :
-**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — 1. Roues AOCS : vérifier que `aocs.mode` (0x020F)
-   revient dans un mode commandable. Il peut être nécessaire de passer d'abord par `AOCS_SET_MODE(mode=3)` (COARSE_SUN).
+**Note:** Réactiver les charges une par une, en attendant 5 min entre chacune pour vérifier la stabilité.
+Ne rétablir que ce qui a été délesté (à bord ou par cette fiche), et toujours réalimenter la LIGNE avant la
+commande de mode de l'unité : ligne ouverte, toute commande de mode est refusée S1.8.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — 1. Ligne des roues AOCS, si `eps.pl_aocs_wheels` (0x0117) = 0
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 en 5 s
+**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — DETUMBLE, seulement si `aocs.mode` (0x020F) = 0 : le SCAO est retombé sur OFF quand sa ligne s'est ouverte et ne redémarre pas seul ; il passe de lui-même en COARSE_SUN une fois les vitesses faibles
 **GO/NO-GO:** Bus stable pendant 5 min avec les roues AOCS rétablies — rétablir la charge suivante
 **TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `ttc_tx`, si `eps.pl_ttc_tx` (0x0112) = 0 : ligne ouverte, `TTC_PA_ON` est refusé par un S1.8 « power line 'ttc_tx' is OFF » (la FDIR de bord l'ouvre lors d'un délestage profond)
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — 2. Émetteur TX : vérifier `ttc.pa_on` (0x0516) = 1
 **GO/NO-GO:** Bus stable pendant 5 min avec l'émetteur rétabli — rétablir la charge suivante
+**TC:** `EPS_POWER_ON(line_index=4)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `fpa_cooler`, si `eps.pl_fpa_cooler` (0x0114) = 0
 **TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — 3. Refroidisseur du FPA : vérifier `tcs.cooler_fpa` (0x040C) = 1
 **GO/NO-GO:** Bus stable pendant 5 min avec le refroidisseur du FPA rétabli — rétablir la charge suivante
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 : sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »

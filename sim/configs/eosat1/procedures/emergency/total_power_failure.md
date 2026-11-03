@@ -1,7 +1,10 @@
 # EMG-002: Total Power Failure
 **Subsystem:** EPS
 **Phase:** EMERGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's rulings P1/P3): check what on-board
+FDIR has already shed before shedding from the ground; power a unit's EPS line
+before a heater or mode command to it; the battery heater goes to its
+thermostat with `HEATER_AUTO_MODE`, not to manual ON.
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -39,10 +42,24 @@ Orbit-average power generation at sun-pointing: ~35W. Margin over survival: ~15W
 ## Procedure Steps
 
 ### Step 1 --- Immediate Load Shed (CRITICAL --- Execute Within 60s)
+**Check:** At this bus voltage the on-board shedder has usually acted already
+(below 25.0 V it opens payload, fpa_cooler, ttc_tx, aocs_wheels, prop in that
+order, one line per second). Read `eps.load_shed_stage` (0x0134) and the line
+states before commanding: a line FDIR has opened cannot be shed again --- the
+command is refused S1.8 and the unit's mode parameter freezes at its last value.
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- EPS housekeeping (line states)
+**Verify:** `eps.pl_payload` (0x0113), `eps.pl_aocs_wheels` (0x0117), `eps.pl_ttc_tx` (0x0112) --- record each (0 = already shed on board)
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-1-PLD` | NO-GO `STEP-1-HTR` (timeout 10 s)
+**Note:** GO --- payload still powered: shed it now. NO-GO --- FDIR already opened its line.
+
+**LABEL:** `STEP-1-PLD`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- payload OFF immediately.
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- payload housekeeping
+**Verify:** `payload.mode` (0x0600) = OFF within 5s.
+
+**LABEL:** `STEP-1-HTR`
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) --- OBC heater OFF.
 **TC:** `HEATER_THRUSTER(on=0)` (Service 8, Subtype 1, func_id 42) --- thruster heater OFF.
-**Verify:** `payload.mode` (0x0600) = OFF within 5s.
 **Verify:** `eps.power_cons` (0x0106) < 50W within 15s.
 **GO/NO-GO:** Total power consumption confirmed below 50W. If not, identify and disable remaining non-essential loads.
 
@@ -52,10 +69,12 @@ The battery heater thermostat requires this power line to operate.
 **Note:** `EPS_POWER_ON` on a line that is already energised is a no-op, so
 this is sent unconditionally rather than being a hidden branch.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — battery heater power line
-**TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40) --- ensure battery heater
-is enabled but under thermostat control only (activates below +5 degC, deactivates above +10 degC).
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 (power line ON) — prerequisite for thermostat operation.
-**Verify:** `tcs.htr_battery` (0x040A) = THERMOSTAT mode.
+**TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) --- battery heater
+under thermostat control only (activates below +5 degC, deactivates above +10 degC).
+`HEATER_BATTERY(on=1)` would instead force it ON continuously (manual), which is
+the opposite of what this power state can afford.
+**Verify:** `tcs.htr_battery` (0x040A) consistent with the thermostat: 1 only while `tcs.temp_battery` (0x0407) is below +5 degC.
 **Verify:** `tcs.temp_battery` (0x0407) within survival range (-10 degC to +45 degC).
 **Rationale:** Battery must not freeze during eclipse but heater must not run continuously at this power state.
 The power line must be ON for the thermostat to engage.
@@ -70,6 +89,12 @@ generation rate to 1/60s, disables non-essential data recording.
 
 ### Step 4 --- Verify or Command Sun Acquisition
 **Check:** `aocs.mode` (0x020F) --- if not COARSE_SUN (3), command sun acquisition.
+**Check:** `eps.pl_aocs_wheels` (0x0117) --- an AOCS reading OFF (0) has usually
+lost this line to the on-board shedder, and its mode commands are refused S1.8
+while it is dark. Re-power it first (a no-op if it is already ON): the
+survival budget above includes the AOCS for exactly this reason.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) --- the `aocs_wheels` line (AOCS suite), if 0x0117 = 0
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 within 5s
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) --- COARSE_SUN mode (if needed).
 **Verify:** `aocs.mode` (0x020F) = COARSE_SUN (3) within 5s.
 **Verify:** `aocs.att_error` (0x0217) < 10.0 deg within 15 minutes.
@@ -108,7 +133,9 @@ under-voltage protection will disconnect non-essential buses automatically.
 
 ### Step 8 --- Load Recovery Gate (SoC > 30%)
 **Gate:** DO NOT re-enable ANY loads until `eps.bat_soc` (0x0101) > 30% confirmed on 3 consecutive HK samples.
-**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- restore OBC heater first.
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- the OBC heater line first (no-op if already ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5s
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- restore OBC heater first, back on its thermostat (Step 1 switched it OFF manually).
 **Verify:** `eps.power_cons` (0x0106) increase < 10W after heater enable.
 **Verify:** Spacecraft remains power-positive after heater restore.
 **Next:** When SoC > 40%, transition to EMG-001 for staged recovery to nominal.
@@ -127,7 +154,7 @@ under-voltage protection will disconnect non-essential buses automatically.
 ## Off-Nominal Handling
 - If bus voltage drops below 25.0V: under-voltage protection activates autonomously. Expect loss of TT&C until next sunlit phase. Monitor via ground station for beacon re-acquisition.
 - If SoC does not increase in sunlit phase: possible solar array failure. Compare `eps.sa_a_current` (0x0103) vs `eps.sa_b_current` (0x0104). If one wing at zero, single-wing survival is possible but with reduced margin (~42W peak generation).
-- If battery temperature drops below -10 degC: battery heater thermostat may have failed. Command `HEATER_BATTERY(on=1)` manually. Accept increased power consumption to prevent battery damage.
+- If battery temperature drops below -10 degC: battery heater thermostat may have failed. Confirm `eps.pl_htr_bat` (0x0115) = 1 (`EPS_POWER_ON(line_index=5)` if not), then command `HEATER_BATTERY(on=1)` manually. Accept increased power consumption to prevent battery damage.
 - If `obdh.reboot_count` (0x030A) incrementing: OBC may be experiencing brown-out resets. Disable all remaining optional loads and accept reduced telemetry.
 - If AOCS cannot maintain sun-pointing: accept tumbling with degraded average power generation (~15-20W average). Survival is still possible if battery temperature maintained.
 

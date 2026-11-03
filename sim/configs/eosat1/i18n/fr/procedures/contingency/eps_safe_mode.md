@@ -1,7 +1,10 @@
 # CTG-005 : Mode survie EPS
 **Sous-système :** EPS
 **Phase :** CONTINGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décision de Franz P3) : vérifier ce que la FDIR de bord a déjà
+délesté avant de délester depuis le sol, et réalimenter les lignes avant les commandes de mode. Une
+sous-tension EPS ne place pas à elle seule l'OBC en SAFE ; l'étape 1 consigne donc le mode de l'OBC
+au lieu d'exiger SAFE.
 **Approuvé par :** Directeur des opérations de vol
 
 ## Objet
@@ -22,25 +25,48 @@ au-dessus de 40 % de SoC.
 ### Étape 1 — Vérifier l'entrée en mode survie et l'état de l'EPS
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Données de servitude plateforme/OBDH
-**Verify:** `obdh.mode` (0x0300) = 1 (SAFE) en moins de 5 s
+**Verify:** `obdh.mode` (0x0300) — consigner (1 = SAFE si l'OBC a été mis en survie ; une sous-tension EPS seule le laisse en NOMINAL)
+**Verify:** `eps.eps_mode` (0x0137) et `eps.load_shed_stage` (0x0134) — consigner ce que l'EPS a fait de lui-même
+**Verify:** `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112), `eps.pl_aocs_wheels` (0x0117) — consigner chacune : 0 = déjà délestée à bord
+**Note:** VÉRIFIER D'ABORD LE SATELLITE. Une ligne que la FDIR de bord a ouverte ne peut pas être
+délestée une seconde fois (la commande est refusée S1.8 « power line … is OFF »), et les données de
+servitude de son unité s'arrêtent, si bien que son paramètre de mode reste figé à sa dernière valeur.
+Ne délester depuis le sol que ce qui est encore alimenté.
 **Verify:** `eps.bat_soc` (0x0101) — consigner la valeur courante (attendue < 20 %)
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la valeur courante (attendue < 26.5 V)
 **Verify:** `eps.bat_voltage` (0x0100) — consigner la valeur courante
 **GO/NO-GO:** La télémesure confirme l'état de faible énergie — engager le délestage
 
 ### Étape 2 — Délester les charges non essentielles : charge utile sur OFF
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-2-SHED` | NO-GO `STEP-3` (timeout 10 s)
+**Note:** GO — la ligne de la charge utile est encore sur ON : la délester depuis le sol. NO-GO —
+l'EPS l'a déjà ouverte : rien à envoyer, la charge utile est coupée.
+**LABEL:** `STEP-2-SHED`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26)
-**Verify:** `payload.mode` (0x0600) = 0 (OFF) en moins de 10 s
-**Verify:** `eps.power_cons` (0x0106) baisse d'au moins (>=) 15 W en moins de 15 s
-**GO/NO-GO:** Charge utile confirmée sur OFF et consommation réduite — continuer
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Données de servitude de la charge utile
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Données de servitude EPS
+**Verify:** `payload.mode` (0x0600) = 0 (OFF) en moins de 10 s
+**Verify:** `eps.power_cons` (0x0106) baisse d'au moins (>=) 15 W en moins de 15 s
+**GO/NO-GO:** Charge utile confirmée sur OFF (par le sol ou déjà à bord) et consommation réduite — continuer
 
 ### Étape 3 — Vérifier que le SCAO est en configuration de puissance minimale
+**LABEL:** `STEP-3`
+**BRANCH:** `eps.pl_aocs_wheels == 1` -> GO `STEP-3-ATT` | NO-GO `STEP-3-OFF` (timeout 10 s)
+**Note:** GO — la suite SCAO est alimentée : contrôler son pointage solaire. NO-GO — un délestage
+profond a ouvert la ligne `aocs_wheels` : le SCAO est sur OFF (`aocs.mode` 0), le satellite dérive, et
+`ttc_tx` l'a précédée dans l'ordre de délestage ; seule la balise UHF (SID 11) parvient donc au sol. Ne
+pas commander le SCAO maintenant ; l'étape 7 le réalimente une fois la batterie rétablie.
+**LABEL:** `STEP-3-OFF`
+**Note:** SCAO non alimenté à la suite du délestage de bord — continuer à l'étape 4.
+**GO/NO-GO:** Délestage profond confirmé — continuer avec le SCAO sur OFF -> GO `STEP-4` | NO-GO `STEP-4`
+**LABEL:** `STEP-3-ATT`
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27)
 **Verify:** `aocs.mode` (0x020F) = 3 (COARSE_SUN) — pointage solaire pour un éclairement maximal du générateur
 **Note:** Si le SCAO n'est pas en COARSE_SUN, commander `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) et vérifier la transition en moins de 30 s
 **GO/NO-GO:** SCAO en COARSE_SUN, garantissant l'orientation optimale du générateur solaire — continuer
 
 ### Étape 4 — Évaluer les performances du générateur solaire
+**LABEL:** `STEP-4`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.sa_a_current` (0x0103) — consigner la valeur (attendue > 0.5 A au Soleil)
 **Verify:** `eps.sa_b_current` (0x0104) — consigner la valeur (attendue > 0.5 A au Soleil)
@@ -55,7 +81,7 @@ au-dessus de 40 % de SoC.
 **GO/NO-GO:** SoC en hausse et température batterie nominale — poursuivre la surveillance jusqu'à un SoC > 40 %
 
 ### Étape 6 — Réactiver les charges : charge utile en veille
-**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 (un délestage de bord l'ouvre ; la commande de mode est alors refusée par un S1.8 « power line 'payload' is OFF »)
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 (un délestage de bord l'ouvre ; la commande de mode est alors refusée par un S1.8 « power line 'payload' is OFF »)
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) en moins de 10 s
 **Verify:** `eps.bat_soc` (0x0101) reste > 35 % après l'ajout de charge (laisser 60 s de stabilisation)
@@ -63,9 +89,17 @@ au-dessus de 40 % de SoC.
 **GO/NO-GO:** SoC stable au-dessus de 35 % avec la charge utile en veille — continuer
 
 ### Étape 7 — Rétablir le mode SCAO nominal
-**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `aocs_wheels`, si `eps.pl_aocs_wheels` (0x0117) = 0 (un délestage profond l'ouvre et fait tomber `aocs.mode` à 0 ; la commande de mode est alors refusée par un S1.8 « power line 'aocs_wheels' is OFF »)
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `aocs_wheels`, si `eps.pl_aocs_wheels` (0x0117) = 0 (un délestage profond l'ouvre et fait tomber `aocs.mode` à 0 ; la commande de mode est alors refusée par un S1.8 « power line 'aocs_wheels' is OFF »)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 en moins de 5 s
+**BRANCH:** `aocs.mode == 0` -> GO `STEP-7-DET` | NO-GO `STEP-7-NOM` (timeout 10 s)
+**Note:** GO — le SCAO est retombé sur OFF quand sa ligne s'est ouverte et ne redémarre pas seul :
+d'abord DETUMBLE. NO-GO — il fonctionne déjà : passer en NOMINAL.
+**LABEL:** `STEP-7-DET`
+**TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — DETUMBLE ; le SCAO passe de lui-même en COARSE_SUN une fois les vitesses faibles
+**BRANCH:** `aocs.mode == 3` -> GO `STEP-7-NOM` | NO-GO `STEP-7-NOM` (timeout 1800 s)
+**LABEL:** `STEP-7-NOM`
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0)
-**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) en moins de 30 s
+**Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) en moins de 30 s
 **Verify:** `eps.bat_soc` (0x0101) reste > 30 % après la transition du SCAO
 **GO/NO-GO:** Attitude nominale et SoC stable — engager le rétablissement du mode OBC
 

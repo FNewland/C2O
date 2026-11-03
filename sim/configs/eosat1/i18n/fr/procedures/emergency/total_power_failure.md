@@ -1,7 +1,10 @@
 # EMG-002 : Perte totale d'alimentation
 **Sous-système :** EPS
 **Phase :** EMERGENCY
-**Révision :** 1.0
+**Révision :** 1.1 --- 2026-11-02 (décisions de Franz P1/P3) : vérifier ce que la FDIR de bord
+a déjà délesté avant de délester depuis le sol ; alimenter la ligne EPS d'une unité avant toute commande
+de réchauffeur ou de mode qui lui est destinée ; le réchauffeur batterie passe sous thermostat avec
+`HEATER_AUTO_MODE`, et non en ON manuel.
 **Approuvé par :** directeur des opérations de vol
 
 ## Objet
@@ -38,12 +41,26 @@ Puissance produite moyenne sur l'orbite en pointage solaire : ~35 W. Marge par
 
 ## Déroulement
 
-### Étape 1 --- Délestage immédiat (CRITIQUE --- à exécuter sous 60 s)
+### Étape 1 --- Délestage immédiat (CRITIQUE --- à exécuter sous 60 s)
+**Contrôler :** À cette tension de bus, le délesteur de bord a généralement déjà agi (sous 25,0 V,
+il ouvre payload, fpa_cooler, ttc_tx, aocs_wheels, prop dans cet ordre, une ligne par seconde). Lire
+`eps.load_shed_stage` (0x0134) et l'état des lignes avant de commander : une ligne que la FDIR a
+ouverte ne peut pas être délestée une seconde fois --- la commande est refusée S1.8 et le paramètre de
+mode de l'unité reste figé à sa dernière valeur.
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- données de servitude EPS (états des lignes)
+**Verify:** `eps.pl_payload` (0x0113), `eps.pl_aocs_wheels` (0x0117), `eps.pl_ttc_tx` (0x0112) --- consigner chacune (0 = déjà délestée à bord)
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-1-PLD` | NO-GO `STEP-1-HTR` (timeout 10 s)
+**Note:** GO --- charge utile encore alimentée : la délester maintenant. NO-GO --- la FDIR a déjà ouvert sa ligne.
+
+**LABEL:** `STEP-1-PLD`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- charge utile OFF immédiatement.
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) --- données de servitude de la charge utile
+**Verify:** `payload.mode` (0x0600) = OFF sous 5 s.
+
+**LABEL:** `STEP-1-HTR`
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) --- réchauffeur OBC OFF.
 **TC:** `HEATER_THRUSTER(on=0)` (Service 8, Subtype 1, func_id 42) --- réchauffeur du propulseur OFF.
-**Verify:** `payload.mode` (0x0600) = OFF sous 5 s.
-**Verify:** `eps.power_cons` (0x0106) < 50 W sous 15 s.
+**Verify:** `eps.power_cons` (0x0106) < 50 W sous 15 s.
 **GO/NO-GO:** Consommation totale confirmée sous 50 W. Sinon, identifier et couper les charges non essentielles restantes.
 
 ### Étape 2 --- Placer le réchauffeur batterie en mode thermostat seul
@@ -52,10 +69,12 @@ Le thermostat du réchauffeur batterie a besoin de cette ligne pour fonctionner.
 **Note:** `EPS_POWER_ON` sur une ligne déjà sous tension est sans effet ; la commande
 est donc envoyée sans condition plutôt que de constituer un branchement caché.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — ligne d'alimentation du réchauffeur batterie
-**TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40) --- s'assurer que le réchauffeur batterie
-est activé, mais uniquement sous contrôle du thermostat (enclenchement sous +5 °C, déclenchement au-dessus de +10 °C).
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 (ligne d'alimentation ON) — condition préalable au fonctionnement du thermostat.
-**Verify:** `tcs.htr_battery` (0x040A) = mode THERMOSTAT.
+**TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) --- réchauffeur batterie
+uniquement sous contrôle du thermostat (enclenchement sous +5 °C, déclenchement au-dessus de +10 °C).
+`HEATER_BATTERY(on=1)` le forcerait au contraire sur ON en continu (manuel), exactement ce que cet
+état de puissance ne peut pas se permettre.
+**Verify:** `tcs.htr_battery` (0x040A) cohérent avec le thermostat : 1 seulement tant que `tcs.temp_battery` (0x0407) est sous +5 °C.
 **Verify:** `tcs.temp_battery` (0x0407) dans la plage de survie (-10 °C à +45 °C).
 **Justification :** La batterie ne doit pas geler pendant l'éclipse, mais le réchauffeur ne doit pas fonctionner en continu dans cet état de puissance.
 La ligne d'alimentation doit être ON pour que le thermostat puisse s'enclencher.
@@ -70,6 +89,12 @@ de production des données de servitude à 1/60 s et désactive l'enregistremen
 
 ### Étape 4 --- Vérifier ou commander l'acquisition du Soleil
 **Contrôler :** `aocs.mode` (0x020F) --- s'il n'est pas en COARSE_SUN (3), commander l'acquisition du Soleil.
+**Contrôler :** `eps.pl_aocs_wheels` (0x0117) --- un AOCS qui indique OFF (0) a généralement perdu
+cette ligne au profit du délesteur de bord, et ses commandes de mode sont refusées S1.8 tant qu'elle
+est hors tension. La réalimenter d'abord (sans effet si elle est déjà sur ON) : le bilan de survie
+ci-dessus inclut l'AOCS précisément pour cette raison.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) --- la ligne `aocs_wheels` (suite AOCS), si 0x0117 = 0
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 sous 5 s
 **TC:** `AOCS_SET_MODE(mode=3)` (Service 8, Subtype 1, func_id 0) --- mode COARSE_SUN (si nécessaire).
 **Verify:** `aocs.mode` (0x020F) = COARSE_SUN (3) sous 5 s.
 **Verify:** `aocs.att_error` (0x0217) < 10.0 deg sous 15 minutes.
@@ -108,7 +133,9 @@ la protection contre les sous-tensions déconnecte automatiquement les bus non e
 
 ### Étape 8 --- Condition de reprise des charges (SoC > 30 %)
 **Condition :** NE réactiver AUCUNE charge tant que `eps.bat_soc` (0x0101) > 30 % n'est pas confirmé sur 3 échantillons HK consécutifs.
-**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- rétablir d'abord le réchauffeur OBC.
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- d'abord la ligne du réchauffeur OBC (sans effet si déjà sur ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 sous 5 s
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- rétablir d'abord le réchauffeur OBC, de nouveau sous thermostat (l'étape 1 l'a mis sur OFF manuellement).
 **Verify:** hausse de `eps.power_cons` (0x0106) < 10 W après l'activation du réchauffeur.
 **Verify:** le bilan de puissance du satellite reste positif après le rétablissement du réchauffeur.
 **Suite :** Lorsque le SoC > 40 %, enchaîner sur EMG-001 pour le rétablissement par étapes vers le nominal.
@@ -127,7 +154,7 @@ la protection contre les sous-tensions déconnecte automatiquement les bus non e
 ## Conduite à tenir hors nominal
 - Si la tension du bus descend sous 25.0 V : la protection contre les sous-tensions s'active de façon autonome. S'attendre à une perte du TT&C jusqu'à la phase éclairée suivante. Surveiller depuis la station sol la réacquisition de la balise.
 - Si le SoC n'augmente pas en phase éclairée : panne possible d'un générateur solaire. Comparer `eps.sa_a_current` (0x0103) et `eps.sa_b_current` (0x0104). Si une aile est à zéro, la survie sur une seule aile est possible, mais avec une marge réduite (~42 W de production de crête).
-- Si la température de la batterie descend sous -10 °C : le thermostat du réchauffeur batterie est peut-être défaillant. Commander `HEATER_BATTERY(on=1)` manuellement. Accepter une consommation accrue pour éviter d'endommager la batterie.
+- Si la température de la batterie descend sous -10 °C : le thermostat du réchauffeur batterie est peut-être défaillant. Confirmer `eps.pl_htr_bat` (0x0115) = 1 (`EPS_POWER_ON(line_index=5)` sinon), puis commander `HEATER_BATTERY(on=1)` manuellement. Accepter une consommation accrue pour éviter d'endommager la batterie.
 - Si `obdh.reboot_count` (0x030A) s'incrémente : l'OBC subit peut-être des réinitialisations par baisse de tension. Couper toutes les charges optionnelles restantes et accepter une télémesure réduite.
 - Si l'AOCS ne parvient pas à maintenir le pointage solaire : accepter le culbutage avec une production moyenne de puissance dégradée (~15-20 W en moyenne). La survie reste possible si la température de la batterie est maintenue.
 

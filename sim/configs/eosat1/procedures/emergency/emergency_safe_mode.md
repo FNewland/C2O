@@ -1,7 +1,11 @@
 # EMG-001: Emergency Safe Mode
 **Subsystem:** OBDH / All Subsystems
 **Phase:** EMERGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's rulings P1/P3): check what on-board
+FDIR has already shed BEFORE shedding from the ground, and power a unit's EPS
+line before any heater or mode command to it. The old card commanded loads
+whose lines FDIR had already opened (refused S1.8 "power line … is OFF") and
+switched heaters on with their lines dark.
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -36,13 +40,25 @@ timeline back to nominal operations.
 disables all scheduled operations, and enables survival-only power distribution.
 **GO/NO-GO:** OBC emergency mode confirmed. If OBC not responding, proceed with manual commanding at Step 2.
 
-### Step 2 --- Verify Automatic Load Shedding
+### Step 2 --- Verify Automatic Load Shedding (check the spacecraft first)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- full EPS housekeeping.
-**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
-**Verify:** `payload.mode` (0x0600) = OFF.
+**Verify:** `eps.load_shed_stage` (0x0134) --- record what the on-board shedder has done (events LOAD_SHED_STAGE_1..3, 0x0106-0x0108)
+**Verify:** `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112), `eps.pl_aocs_wheels` (0x0117) --- record each: 0 = already shed on board
+**Note:** A line that on-board FDIR has opened cannot be shed again --- its unit's
+commands are refused S1.8 "power line … is OFF" and its housekeeping stops, so
+its mode parameter (e.g. `payload.mode`) freezes at its last value. Judge a shed
+by the LINE state. Shed from the ground only what is still powered.
 **Verify:** `eps.power_cons` (0x0106) < 50W.
-**Action:** If any non-essential load still active, command manually:
-**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- payload OFF (if still on).
+**BRANCH:** `eps.pl_payload == 1` -> GO `STEP-2-PLD` | NO-GO `STEP-2-HTR` (timeout 10 s)
+**Note:** GO --- the payload line is still ON: shed the payload from the ground.
+NO-GO --- FDIR has already opened it: nothing to send.
+
+**LABEL:** `STEP-2-PLD`
+**TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) --- payload OFF.
+**TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
+**Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10s.
+
+**LABEL:** `STEP-2-HTR`
 **TC:** `HEATER_OBC(on=0)` (Service 8, Subtype 1, func_id 41) --- OBC heater OFF (if needed).
 **TC:** `HEATER_THRUSTER(on=0)` (Service 8, Subtype 1, func_id 42) --- thruster heater OFF.
 **Verify:** `eps.power_cons` (0x0106) < 50W within 15s of manual commanding.
@@ -60,6 +76,13 @@ COARSE_SUN entered above the rate threshold will not hold.
 already in a mode: command nothing and wait for the sun hold.
 
 **LABEL:** `STEP-3-DETUMBLE`
+**Note:** An AOCS that reads OFF has usually lost its `aocs_wheels` line to an
+on-board shed (the AOCS collapses to OFF when the line opens); DETUMBLE is then
+refused "EPS aocs_wheels line (0x0117) is off". Re-power the line first ---
+`EPS_POWER_ON` on a line that is already ON is a no-op.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) --- the `aocs_wheels` line (AOCS suite)
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- EPS housekeeping (line states)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 within 5s
 **TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) --- DETUMBLE (AOCS was OFF).
 
 **LABEL:** `STEP-3-WAIT`
@@ -80,7 +103,12 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 **Verify:** `eps.sa_b_current` (0x0104) > 0.5A --- solar array B illuminated.
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) --- power-positive.
 **Verify:** `eps.bat_soc` (0x0101) --- record value and start trend tracking.
-**TC:** `HEATER_BATTERY(on=1)` (Service 8, Subtype 1, func_id 40) --- ensure battery thermostat active.
+**TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) --- the battery heater line first: a heater with its line dark heats nothing and its ON command is refused
+**Verify:** `eps.pl_htr_bat` (0x0115) = 1 within 5s
+**TC:** `HEATER_AUTO_MODE(circuit=0)` (Service 8, Subtype 1, func_id 45) --- ensure battery thermostat active (ON below +5 degC, OFF above +10 degC).
+**Note:** If the battery is already colder than its thermostat band and not
+recovering, force the heater: `HEATER_BATTERY(on=1)` (func_id 40); return it to
+`HEATER_AUTO_MODE(circuit=0)` once `tcs.temp_battery` (0x0407) is back above +10 degC.
 **GO/NO-GO:** Power-positive state confirmed. If not, execute EMG-002.
 
 ### Step 5 --- Establish Stable Communication
@@ -116,7 +144,11 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 ## Orbit-by-Orbit Recovery Timeline
 
 ### Recovery Orbit R+1 --- Restore Thermal Control (SoC > 30% Required)
-**TC:** `HEATER_OBC(on=1)` (Service 8, Subtype 1, func_id 41) --- restore OBC heater.
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- the OBC heater line first (no-op if already ON)
+**Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5s
+**TC:** `HEATER_AUTO_MODE(circuit=1)` (Service 8, Subtype 1, func_id 45) --- restore the OBC heater to its thermostat (Step 2 switched it OFF manually).
+**Note:** If the OBC is colder than +5 degC and not recovering, force it ON with
+`HEATER_OBC(on=1)` (func_id 41) and return it to AUTO once warm.
 **Verify:** `tcs.temp_obc` (0x0406) trending toward nominal range (-10 degC to +40 degC).
 **Verify:** `eps.power_cons` (0x0106) increase < 10W. Spacecraft remains power-positive.
 **GO/NO-GO:** Thermal subsystem nominal, power budget accommodates added load; no new anomaly -> GO `STEP-R2` | NO-GO `STEP-7` (max 2)
@@ -125,6 +157,8 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 **LABEL:** `STEP-R2`
 **TC:** `OBC_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 50) --- OBC SAFE mode (from EMERGENCY).
 **Verify:** `obdh.mode` (0x0300) = SAFE (1) within 5s.
+**TC:** `EPS_POWER_ON(line_index=7)` (Service 8, Subtype 1, func_id 19) --- the `aocs_wheels` line before the mode command (no-op if Step 3 already re-powered it)
+**Verify:** `eps.pl_aocs_wheels` (0x0117) = 1 within 5s
 **TC:** `AOCS_SET_MODE(mode=4)` (Service 8, Subtype 1, func_id 0) --- NOMINAL mode.
 **Verify:** `aocs.mode` (0x020F) = NOMINAL (4) within 5s.
 **Verify:** `aocs.att_error` (0x0217) < 1.0 deg within 20 minutes.
@@ -133,6 +167,12 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 
 ### Recovery Orbit R+3 --- Restore Thruster Heater and Full Thermal (SoC > 50% Required)
 **LABEL:** `STEP-R3`
+**Note:** The catalyst-bed (thruster) heater is OFF in nominal operations and
+its `prop` line (8) with it: it is powered only for manoeuvre preheat (NOM-013).
+Send the two commands below only if a manoeuvre is planned; otherwise there is
+nothing to restore and this orbit verifies thermal state only.
+**TC:** `EPS_POWER_ON(line_index=8)` (Service 8, Subtype 1, func_id 19) --- the `prop` line first; HEATER_THRUSTER is refused while it is dark
+**Verify:** `eps.pl_prop` (0x014A) = 1 within 5s
 **TC:** `HEATER_THRUSTER(on=1)` (Service 8, Subtype 1, func_id 42) --- restore thruster heater.
 **Verify:** `eps.power_cons` (0x0106) within nominal budget (< 90W).
 **Verify:** All temperatures within nominal ranges.
@@ -148,6 +188,8 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 
 ### Recovery Orbit R+5 --- Restore Payload (SoC > 60% Required)
 **LABEL:** `STEP-R5`
+**TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) --- the `payload` line first: an on-board shed opened it, and the mode command is refused S1.8 while it is dark
+**Verify:** `eps.pl_payload` (0x0113) = 1 within 5s
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) --- payload STANDBY.
 **Verify:** `payload.mode` (0x0600) = STANDBY (1) within 10s.
 **Verify:** `eps.power_cons` (0x0106) within full operational budget (< 110W).
@@ -161,7 +203,7 @@ when EMG-005 has left the AOCS in COARSE_SUN.
 | Emergency hold | R+0 to R+3 | -- | 0 to 4.75h | Stabilise, assess, plan |
 | Thermal restore | R+1 recovery | > 30% | ~6.3h | OBC heater ON |
 | AOCS restore | R+2 recovery | > 40% | ~7.9h | Nadir pointing |
-| Full thermal | R+3 recovery | > 50% | ~9.5h | Thruster heater ON |
+| Full thermal | R+3 recovery | > 50% | ~9.5h | Thruster heater ON (only if a manoeuvre is planned) |
 | OBC nominal | R+4 recovery | > 55% | ~11.1h | Resume scheduling |
 | Payload standby | R+5 recovery | > 60% | ~12.6h | Mission resumed |
 

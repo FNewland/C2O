@@ -9,8 +9,8 @@
   },
   {
    "id": "ctg-023-progressive-load-shed",
-   "en_hash": "c7a24867e8b87442",
-   "fr_hash": "8c72ac8a096f9b30"
+   "en_hash": "3069812a5749faf5",
+   "fr_hash": "28990d8f57d8c039"
   },
   {
    "id": "ctg-023-progressive-load-shed/purpose",
@@ -44,33 +44,33 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-2-soc-50-shed-load-priority-1-payload-off",
-   "en_hash": "e11f2d9c781c80e6",
-   "fr_hash": "3a7fbd4a01372e71"
+   "en_hash": "fafdb9ad94b8fb00",
+   "fr_hash": "c25dadf805f4b789"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-3-soc-35-shed-load-priority-2-fpa-cooler-off",
-   "en_hash": "bbd84bf17f33139c",
-   "fr_hash": "5cc8a017ce482315"
+   "en_hash": "0fec06d445299889",
+   "fr_hash": "f8945d61ab3ed340"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-4-soc-25-shed-load-priority-3-ttc-transmitter-off",
-   "en_hash": "8df5cb08d6032c44",
-   "fr_hash": "06af90826ce17db4"
+   "en_hash": "9dbaa8e6cb19c95d",
+   "fr_hash": "3c10c034ff1c48c2"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-5-soc-15-shed-load-priority-4-aocs-wheels-off-emergency",
-   "en_hash": "0a1b7b4bd5a29a5a",
-   "fr_hash": "9a932ab790e56642"
+   "en_hash": "7e0d42378b79ef93",
+   "fr_hash": "c7d993e78dfc10c9"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-6-monitor-for-eclipse-exit-and-battery-recovery",
-   "en_hash": "45bc5030296914b0",
-   "fr_hash": "6b98b3d2953c344f"
+   "en_hash": "70dd2e1eb5cb738f",
+   "fr_hash": "a845e3b2c4ef7a56"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "613197e303728e05",
-   "fr_hash": "c83f4300f3ab0753"
+   "en_hash": "2e04a667c8fbfcf9",
+   "fr_hash": "9c20ee86948a401f"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-8-post-recovery-verification",
@@ -93,5 +93,5 @@
    "fr_hash": "2a26fa93111780b1"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "9bdac94"
 }
