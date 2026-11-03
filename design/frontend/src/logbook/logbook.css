@@ -1,0 +1,121 @@
+/*
+ * Logbook (docs/plan_2026-11/LOGBOOK_SPEC.md §5, docs/ui/C2O_UI_BRIEF.md).
+ * A docked side panel: hairline rules, no cards, one accent for selection,
+ * status colours only for status. Tokens from theme/tokens.css only.
+ */
+:root { --lb-width: 400px; }
+
+/* Header button: glyph · label · count badge */
+.c2o-lb-btn { gap: 6px; padding: 0 var(--sp-2); }
+.c2o-lb-btn[aria-pressed='true'] .c2o-lb-badge { background: var(--on-fill); color: var(--interactive); border-color: transparent; }
+.c2o-lb-glyph { flex: none; }
+.c2o-lb-badge {
+  min-width: 20px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--fs-label); font-weight: 600; line-height: 1; color: var(--text-2);
+  background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+}
+
+/* "Log this": quiet, small, never competes with the action it sits next to */
+.c2o-btn.c2o-lb-logthis { gap: 4px; padding: 0 6px; color: var(--text-2); font-weight: 500; }
+.c2o-btn.c2o-lb-logthis:hover:not([aria-disabled='true']) { color: var(--interactive); background: var(--interactive-wash); }
+
+/* Docking: the page narrows; the panel never covers the work on wide screens */
+body.c2o-logbook-docked .c2o-shell,
+body.c2o-logbook-docked .c2o-wizard,
+body.c2o-logbook-docked .c2o-home-frame { margin-right: var(--lb-width); }
+
+.c2o-logbook {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 900; width: var(--lb-width);
+  display: flex; flex-direction: column; min-height: 0;
+  color: var(--text); background: var(--surface-1); border-left: 1px solid var(--line-strong);
+}
+.c2o-logbook__head {
+  flex: none; display: flex; align-items: center; gap: var(--sp-2);
+  min-height: 40px; padding: 0 var(--sp-2) 0 var(--sp-3); border-bottom: 1px solid var(--line);
+}
+.c2o-logbook__title { margin: 0; font-size: var(--fs-value); font-weight: 600; }
+.c2o-logbook__who { flex: 1 1 auto; min-width: 0; text-align: right; }
+.c2o-logbook__tabs { flex: none; padding: 0 var(--sp-2); border-bottom: 1px solid var(--line); }
+.c2o-logbook__body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--sp-3); background: var(--surface-0); }
+.c2o-logbook__h {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  margin: var(--sp-4) 0 var(--sp-2); padding-bottom: var(--sp-1);
+  font-size: var(--fs-label); font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--line);
+}
+.c2o-logbook__foot {
+  flex: none; display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3); border-top: 1px solid var(--line-strong); background: var(--surface-1);
+}
+.c2o-logbook__foot-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* Quick entry */
+.c2o-lb-quick { display: flex; flex-direction: column; gap: var(--sp-2); }
+.c2o-lb-kinds { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.c2o-choice-chip.c2o-lb-kind { min-height: 26px; padding: 0 var(--sp-2); font-size: var(--fs-label); }
+.c2o-lb-text { min-height: 84px; }
+.c2o-lb-chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.c2o-lb-chip {
+  display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-height: 22px; padding: 0 2px 0 6px;
+  font-size: var(--fs-label); background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.c2o-lb-chip__v { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 500; }
+.c2o-lb-chip__x {
+  width: 18px; height: 18px; padding: 0; line-height: 1; font-size: var(--fs-body);
+  color: var(--text-3); background: none; border: 0; border-radius: var(--radius-sm); cursor: pointer;
+}
+.c2o-lb-chip__x:hover { color: var(--text); background: var(--surface-3); }
+
+/* Entries, newest first: a ruled list, kind as a left rule */
+.c2o-lb-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.c2o-lb-entry {
+  display: flex; flex-direction: column; gap: 2px; padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  background: var(--surface-1); border-bottom: 1px solid var(--line); border-left: 2px solid var(--line-strong);
+}
+.c2o-lb-entry.is-decision { border-left-color: var(--text-2); }
+.c2o-lb-entry.is-worksheet { border-left-style: dashed; }
+.c2o-lb-entry__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0 var(--sp-2); min-height: 24px; font-size: var(--fs-label); }
+.c2o-lb-entry__meta time { white-space: nowrap; }
+.c2o-lb-entry__kind { font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.c2o-lb-entry__meta .c2o-btn--sm { min-height: 22px; }
+.c2o-lb-entry__ws { margin: 0; }
+.c2o-lb-entry__text { margin: 0; font-size: var(--fs-body); line-height: var(--lh-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.c2o-lb-entry__ctx { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); margin: 2px 0 0; }
+
+/* Worksheets */
+.c2o-lb-ws { padding: var(--sp-1) 0; border-bottom: 1px solid var(--line); }
+.c2o-lb-ws .c2o-disclosure__btn { align-items: baseline; text-align: left; white-space: normal; }
+.c2o-lb-ws .c2o-disclosure__meta { white-space: nowrap; }
+.c2o-lb-ws__title { font-weight: 600; }
+.c2o-lb-q { display: flex; flex-direction: column; gap: var(--sp-1); padding-left: var(--sp-3); border-left: 1px solid var(--line); }
+.c2o-lb-q__text { font-size: var(--fs-body); font-weight: 600; color: var(--text); }
+.c2o-lb-q__prompt { margin: 0; font-size: var(--fs-label); line-height: var(--lh-text); color: var(--text-2); }
+.c2o-lb-q__points { margin: 0; padding-left: var(--sp-4); font-size: var(--fs-label); line-height: var(--lh-text); color: var(--text-2); }
+.c2o-lb-q__answers { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-1) var(--sp-2); background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.c2o-lb-q__answer { margin: 0; font-size: var(--fs-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Download group */
+.c2o-lb-dl { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); }
+
+/* End-of-session prompt */
+.c2o-lb-debrief { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-left: 2px solid var(--interactive); background: var(--surface-0); }
+
+/* Expiry banner: slim, caution (it is a status: data is about to go) */
+.c2o-lb-banner {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3);
+  min-height: 32px; padding: var(--sp-1) var(--sp-4); font-size: var(--fs-body);
+  color: var(--text); background: var(--status-caution-wash); border-bottom: 1px solid var(--status-caution);
+}
+.c2o-lb-banner .c2o-lb-glyph { color: var(--status-caution); }
+
+@media (max-width: 899px) {
+  /* No room to dock: the panel overlays the page, full width. */
+  body.c2o-logbook-docked .c2o-shell,
+  body.c2o-logbook-docked .c2o-wizard,
+  body.c2o-logbook-docked .c2o-home-frame { margin-right: 0; }
+  .c2o-logbook { width: 100vw; z-index: 1500; }
+  .c2o-lb-btn__label { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .c2o-lb-entry, .c2o-lb-chip { transition: background-color var(--motion) var(--ease); }
+}
