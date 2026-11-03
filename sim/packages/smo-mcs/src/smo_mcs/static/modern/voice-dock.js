@@ -1,6 +1,7 @@
 /* ============================================================================
- * MCS header "Voice" button: opens the voice loops (/voice) as a panel docked
- * to the right of the console, or as a pop-out window from inside the panel.
+ * MCS header "Voice" button: opens the voice loops (/voice) as a panel in the
+ * console's right dock (shared dock.js, beside the alarm journal and the
+ * logbook), or as a pop-out window from inside the panel.
  * Self-contained (no change to mcs.js): it adds itself to #voice-btn.
  *
  * The panel is a same-origin iframe, so it shares the console's sign-in and
@@ -12,12 +13,13 @@
  * ============================================================================ */
 import { tText, onLangChange } from "/static/shared/i18n.js";
 import { glyph } from "/static/shared/components.js";
+import { dockPanel } from "/static/shared/dock.js";
 
 const btn = document.getElementById("voice-btn");
-let dock = null, frame = null, state = { conn: "idle", tx: false };
+let dock = null, frame = null, slot = null, state = { conn: "idle", tx: false };
 
 const CSS = `
-#voice-dock{flex:0 0 400px;display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line-2);background:var(--bg)}
+#voice-dock{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line-2);background:var(--bg)}
 #voice-dock[hidden]{display:none}
 #voice-dock iframe{flex:1;border:0;width:100%;min-height:0;background:var(--bg)}
 #voice-dock.is-overlay{position:fixed;right:0;bottom:0;top:0;width:min(400px,100vw);z-index:40}
@@ -27,7 +29,6 @@ const CSS = `
 #voice-btn.is-stale{font-style:italic}
 #voice-btn.is-alarm{border-color:var(--alarm);color:var(--alarm)}
 #voice-btn.is-tx{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-@media (max-width:999px){#voice-dock{position:fixed;right:0;bottom:0;top:0;width:min(400px,100vw);z-index:40}}
 `;
 
 function ensureDock() {
@@ -40,10 +41,17 @@ function ensureDock() {
   frame.src = "/voice";
   frame.title = tText("Voice loops");
   frame.allow = "microphone; autoplay";
+  // Into the dock BEFORE the frame loads: moving a loaded iframe reloads it
+  // (and would drop the loops).
+  slot = dockPanel(dock, { width: 400, min: 340, order: 3,
+    close: () => { if (dock) dock.hidden = true; paint(); } });
+  if (!slot.docked) { dock.classList.add("is-overlay"); document.body.appendChild(dock); }
   dock.appendChild(frame);
-  const shell = document.querySelector(".shell");
-  if (shell) shell.appendChild(dock); else { dock.classList.add("is-overlay"); document.body.appendChild(dock); }
   return dock;
+}
+function show(on) {
+  dock.hidden = !on;
+  if (on) slot.opened(); else slot.closed();
 }
 
 function paint() {
@@ -63,15 +71,15 @@ function paint() {
 if (btn) {
   btn.setAttribute("aria-controls", "voice-dock");
   btn.addEventListener("click", () => {
-    if (!dock) ensureDock();             // first click: create it, shown
-    else dock.hidden = !dock.hidden;
+    if (!dock) { ensureDock(); show(true); }     // first click: create it, shown
+    else show(dock.hidden);
     paint();
     if (!dock.hidden) try { frame.focus(); } catch (e) { /* */ }
   });
   window.addEventListener("message", (e) => {
     if (e.origin !== location.origin || !e.data || e.data.source !== "c2o-voice") return;
     if (e.data.action === "popped-out") {
-      if (dock) dock.hidden = true;
+      if (dock) show(false);
       state = { conn: "idle", tx: false };
     } else {
       state = { conn: e.data.conn || "idle", tx: !!e.data.tx };
