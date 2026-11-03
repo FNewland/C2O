@@ -15,7 +15,15 @@ events:
       onset: gradual
       onset_duration_s: 600
       array: A
+
 expected_responses:
-  - { category: detect, description: "Detect power generation drop on SA-A" }
-  - { category: isolate, description: "Identify SA-A as the degraded array" }
-  - { category: recover, description: "Shed non-essential loads or switch to safe mode" }
+  - category: detect
+    description: "Detect power generation drop on SA-A"
+  - category: isolate
+    description: "Identify SA-A as the degraded string: read the string yields 0x014C/0x014D (CTG-009 step 1)"
+    tc: ["GET_PARAM(param_id=0x014C)", "GET_PARAM(param_id=0x014D)"]
+    within_s: 900
+  - category: recover
+    description: "Decide from the yield and the power balance (CTG-009 step 4): with string A at about 30 % imaging is no longer sustainable, so put the payload in STANDBY or OFF (left on, the bus-voltage load shed takes it off later)"
+    tc: ["PAYLOAD_SET_MODE(mode=0|1)", "EPS_PAYLOAD_MODE(mode=0|1)", "EPS_POWER_OFF(line_index=3)"]
+    within_s: 1500

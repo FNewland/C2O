@@ -17,7 +17,13 @@ events:
       soc_pct: 30.0
       onset: gradual
       onset_duration_s: 600
+
 expected_responses:
-  - { category: detect, description: "Detect bus voltage declining below 27V" }
-  - { category: isolate, description: "Correlate with eclipse phase and power balance" }
-  - { category: recover, description: "Shed non-essential loads in priority order" }
+  - category: detect
+    description: "Detect bus voltage declining below 27V"
+  - category: isolate
+    description: "Correlate with eclipse phase and power balance"
+  - category: recover
+    description: "Shed non-essential loads in priority order"
+    tc: ["PAYLOAD_SET_MODE(mode=0)", "EPS_PAYLOAD_MODE(mode=0)", "EPS_POWER_OFF(line_index=3)", "EPS_EMERGENCY_LOAD_SHED(stage=1|2|3)"]
+    within_s: 900

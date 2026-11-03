@@ -302,10 +302,36 @@ ol.stages li.done{ color:var(--tx); }
 .lat-table td.big{ color:var(--warn); }
 .cursor-panel{ font-size:var(--fs-label); }
 textarea.ds-input{ min-height:72px; resize:vertical; font-family:var(--sans); padding:6px 8px; height:auto; }
-#debrief-body table{ width:100%; border-collapse:collapse; font-size:var(--fs-label); }
-#debrief-body td{ padding:3px 0; border-bottom:1px solid var(--line); }
-#debrief-body td:first-child{ color:var(--tx2); }
-#debrief-body td:last-child{ font-family:var(--mono); text-align:right; color:var(--val); }
+/* scenario score (score.js): the number, its sources, every response */
+.score-head{ display:flex; gap:var(--sp-4); align-items:center; flex-wrap:wrap; margin-bottom:var(--sp-2); }
+.score-big{ font-family:var(--mono); font-size:32px; line-height:1; color:var(--val); min-width:4ch; }
+.score-big.none{ font-family:var(--sans); font-size:var(--fs-body); color:var(--tx2); }
+.score-sub{ font-size:var(--fs-label); color:var(--tx2); display:flex; flex-direction:column; gap:2px; min-width:0; }
+.score-sub .name{ color:var(--tx); font-weight:600; font-size:var(--fs-body); }
+.score-sub .pen{ color:var(--alarm); }
+.dim{ color:var(--tx3); }
+.score-metrics{ width:100%; border-collapse:collapse; font-size:var(--fs-label); margin-bottom:var(--sp-2); }
+.score-metrics th,.score-metrics td{ padding:3px 6px 3px 0; border-bottom:1px solid var(--line); text-align:left; vertical-align:baseline; }
+.score-metrics th{ color:var(--tx2); font-weight:400; white-space:nowrap; width:1%; }
+.score-metrics td.mono{ color:var(--val); white-space:nowrap; width:1%; }
+#debrief-body h4{ font-size:var(--fs-label); font-weight:600; color:var(--tx2); margin:var(--sp-3) 0 var(--sp-1); }
+.resp-list{ list-style:none; margin:0; padding:0; font-size:var(--fs-label); }
+.resp-list li{ padding:5px 0; border-bottom:1px solid var(--line); }
+.resp-list .r1{ display:flex; gap:var(--sp-2); align-items:baseline; flex-wrap:wrap; }
+.resp-list .cat{ color:var(--tx3); text-transform:uppercase; letter-spacing:.04em; font-size:11px; }
+.resp-list .desc{ color:var(--tx); flex:1 1 240px; min-width:0; }
+.resp-list .when{ color:var(--val); white-space:nowrap; }
+.resp-list .r2{ display:flex; gap:var(--sp-1) var(--sp-3); flex-wrap:wrap; padding:2px 0 0 var(--sp-4); color:var(--tx2); }
+.resp-list .ev{ white-space:nowrap; }
+.resp-list .ev.none{ color:var(--alarm); }
+.resp-list .note-t{ color:var(--warn); }
+.resp-list li.st-observed .desc, .resp-list li.st-not_reached .desc{ color:var(--tx2); }
+.resp-list li.st-observed .note-t, .resp-list li.st-not_reached .note-t{ color:var(--tx3); }
+ul.harm{ list-style:none; margin:0; padding:0; font-size:var(--fs-label); }
+ul.harm li{ padding:4px 0; border-bottom:1px solid var(--line); display:flex; gap:var(--sp-2); align-items:baseline; flex-wrap:wrap; }
+details.cmds{ margin-top:var(--sp-3); font-size:var(--fs-label); }
+details.cmds .lat-table td:nth-child(3), details.cmds .lat-table th:nth-child(3){ text-align:left; font-family:var(--sans); }
+details.cmds .lat-table td:first-child{ font-family:var(--mono); }
 
 /* raw state (deep dive) */
 .snap-tabs{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-bottom:var(--sp-2); }
@@ -564,7 +590,7 @@ body.subpage main{ grid-template-columns:1fr; }
         <div id="debrief-tl"></div>
         <div class="cursor-panel" id="debrief-cursor"></div>
         <section id="debrief-panel" aria-labelledby="deb-h">
-          <h3 id="deb-h"><span data-i18n>Scenario engine score</span>
+          <h3 id="deb-h"><span data-i18n>Scenario score</span>
             <button type="button" class="ds-btn ghost sm" id="btn-fetch-debrief" data-i18n data-i18n-title
               title="Fetch the debrief for the most recently finished scenario">Fetch</button></h3>
           <div id="debrief-body"><div class="no-data" data-i18n>No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).</div></div>

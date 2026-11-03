@@ -54,11 +54,22 @@ events:
       onset: step
       axis: all
       bias: 0.05
+
 expected_responses:
-  - { category: detect, description: "Detect ST1 failure (status=4) and verify ST2 acquisition" }
-  - { category: detect, description: "Detect CSS +X head failure from per-head illumination telemetry" }
-  - { category: detect, description: "Detect magnetometer failure from readings going invalid (single-string unit — no redundant B mag to swap to)" }
-  - { category: detect, description: "Detect the IMU bias from gyro_bias_x/y/z (0x0270-0x0272) diverging from the MEKF estimate, and from the rising ST innovation-rejection count (0x02C2)" }
-  - { category: isolate, description: "Diagnose each failure independently and assess cumulative impact" }
-  - { category: recover, description: "Switch to MAG-B, verify adequate sensor suite, or transition to safe mode" }
-  - { category: recover, description: "Recover gyro knowledge: AOCS_EST_RESET warm (S8 func 91) once the bias is bounded, or accept ST-only determination" }
+  - category: detect
+    description: "Detect ST1 failure (status=4) and verify ST2 acquisition"
+  - category: detect
+    description: "Detect CSS +X head failure from per-head illumination telemetry"
+  - category: detect
+    description: "Detect magnetometer failure from readings going invalid (single-string unit — no redundant B mag to swap to)"
+  - category: detect
+    description: "Detect the IMU bias from gyro_bias_x/y/z (0x0270-0x0272) diverging from the MEKF estimate, and from the rising ST innovation-rejection count (0x02C2)"
+  - category: isolate
+    description: "Diagnose each failure independently and assess cumulative impact"
+  - category: recover
+    description: "Switch to MAG-B, verify adequate sensor suite, or transition to safe mode"
+  - category: recover
+    description: "Recover gyro knowledge: AOCS_EST_RESET warm (S8 func 91) once the bias is bounded, or accept ST-only determination"
+    tc: "AOCS_EST_RESET(mode=1)"
+    within_s: 900
+    ref: "event:3"

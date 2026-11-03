@@ -46,8 +46,13 @@ events:
     note: "Antenna servo drift — 3 dB pointing loss"
 
 expected_responses:
-  - { category: detect, description: "Detect Eb/N0 dropping and BER rising on Radio display" }
-  - { category: isolate, description: "Compare RSSI vs Eb/N0 to distinguish space vs ground degradation" }
-  - { category: isolate, description: "Check ground equipment status (LNA, tracking) on Radio failure panel" }
-  - { category: recover, description: "If ground: clear LNA failure, re-calibrate tracking" }
-  - { category: recover, description: "If space: command PA power increase or switch to redundant transponder" }
+  - category: detect
+    description: "Detect Eb/N0 dropping and BER rising on Radio display"
+  - category: isolate
+    description: "Compare RSSI vs Eb/N0 to distinguish space vs ground degradation"
+  - category: isolate
+    description: "Check ground equipment status (LNA, tracking) on Radio failure panel"
+  - category: recover
+    description: "If ground: clear LNA failure, re-calibrate tracking"
+  - category: recover
+    description: "If space: command PA power increase or switch to redundant transponder"

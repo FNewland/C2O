@@ -16,7 +16,20 @@ events:
       subsystem: payload
       failure: cooler_failure
       magnitude: 1.0
+
 expected_responses:
-  - { category: detect, description: "Detect rising FPA temperature" }
-  - { category: isolate, description: "Identify cooler failure" }
-  - { category: recover, description: "Transition payload to standby or off" }
+  - category: detect
+    description: "Detect rising FPA temperature"
+  - category: isolate
+    description: "Identify cooler failure"
+  - category: recover
+    description: "Transition payload to standby or off"
+    tc: ["PAYLOAD_SET_MODE(mode=0|1)", "EPS_PAYLOAD_MODE(mode=0|1)", "EPS_POWER_OFF(line_index=3)"]
+    within_s: 600
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "PAYLOAD_SET_MODE(mode=2|3)"
+    reason: "Starts imaging or calibration with the FPA cooler failed"
+    penalty: 10

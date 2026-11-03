@@ -27,9 +27,17 @@ events:
     note: "Mechanical failure of the station antenna — ~30 dB signal loss"
 
 expected_responses:
-  - { category: detect, description: "Detect sudden loss of link margin and RSSI drop" }
-  - { category: isolate, description: "Recognise that spacecraft TTC telemetry was nominal before drop — suspect ground issue" }
-  - { category: isolate, description: "Confirm antenna tracking anomaly or GS equipment status via ground network" }
-  - { category: command, description: "Attempt blind S17 connection test to verify spacecraft is still transmitting" }
-  - { category: recover, description: "Coordinate with FD to switch to Troll ground station for next pass" }
-  - { category: recover, description: "Replan contact schedule around GS outage" }
+  - category: detect
+    description: "Detect sudden loss of link margin and RSSI drop"
+  - category: isolate
+    description: "Recognise that spacecraft TTC telemetry was nominal before drop — suspect ground issue"
+  - category: isolate
+    description: "Confirm antenna tracking anomaly or GS equipment status via ground network"
+  - category: command
+    description: "Attempt blind S17 connection test to verify spacecraft is still transmitting"
+    tc: "CONNECTION_TEST"
+    within_s: 900
+  - category: recover
+    description: "Coordinate with FD to switch to Troll ground station for next pass"
+  - category: recover
+    description: "Replan contact schedule around GS outage"

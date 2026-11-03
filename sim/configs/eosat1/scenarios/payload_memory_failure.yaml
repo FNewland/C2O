@@ -14,7 +14,20 @@ events:
       magnitude: 1.0
       onset: step
       segment: 5
+
 expected_responses:
-  - { category: detect, description: "Detect increased bad segment count in payload HK" }
-  - { category: isolate, description: "Identify failed memory segment" }
-  - { category: recover, description: "Mark bad segment, verify reduced capacity, adjust imaging plan" }
+  - category: detect
+    description: "Detect increased bad segment count in payload HK"
+  - category: isolate
+    description: "Identify failed memory segment"
+  - category: recover
+    description: "Mark bad segment, verify reduced capacity, adjust imaging plan"
+    tc: "PAYLOAD_MARK_BAD_SEGMENT(segment_id=5)"
+    within_s: 900
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "PAYLOAD_MARK_BAD_SEGMENT(segment_id=0|1|2|3|4|6|7)"
+    reason: "Marks a healthy memory segment bad"
+    penalty: 5

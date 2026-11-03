@@ -287,10 +287,16 @@ def test_full_fast_run_fires_events_and_debriefs():
     debrief = engine.last_debrief()
     assert debrief is not None
     assert debrief.name == name
-    assert debrief.mttd_s is not None, "detect response not timed in debrief"
-    assert debrief.mtti_s is not None, "isolate response not timed in debrief"
-    assert 0.0 <= debrief.score_pct <= 100.0
-    assert len(debrief.responses) == 2
+    # Instructor-recorded responses are marks: they time MTTD/MTTI where no
+    # command evidence exists but never score (scenario_scoring.py).
+    assert debrief.mttd_s is not None, "detect mark not timed in debrief"
+    assert debrief.mtti_s is not None, "isolate mark not timed in debrief"
+    assert len(debrief.marks) == 2
+    # Every expected response is listed, each with a status.
+    assert len(debrief.responses) == len(defn.expected_responses)
+    assert all(r["status"] for r in debrief.responses)
+    # No telecommand was sent, so nothing machine-checkable was met.
+    assert debrief.score_pct in (None, 0.0)
 
 
 def test_scenario_can_be_rerun_after_auto_stop():

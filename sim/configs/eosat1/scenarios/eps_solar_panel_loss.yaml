@@ -25,8 +25,13 @@ events:
       magnitude: 1.0
       onset: step
       face: py
+
 expected_responses:
-  - { category: detect, description: "Detect power generation drop and identify +X panel degradation via per-panel current (0x012B)" }
-  - { category: detect, description: "Detect complete +Y panel loss via per-panel current (0x012D) dropping to zero" }
-  - { category: isolate, description: "Compare per-panel currents (0x012B-0x0130) to identify affected panels vs attitude error" }
-  - { category: recover, description: "Recalculate power budget, shed loads if margin insufficient, adjust operations plan" }
+  - category: detect
+    description: "Detect power generation drop and identify +X panel degradation via per-panel current (0x012B)"
+  - category: detect
+    description: "Detect complete +Y panel loss via per-panel current (0x012D) dropping to zero"
+  - category: isolate
+    description: "Compare per-panel currents (0x012B-0x0130) to identify affected panels vs attitude error"
+  - category: recover
+    description: "Recalculate power budget, shed loads if margin insufficient, adjust operations plan"

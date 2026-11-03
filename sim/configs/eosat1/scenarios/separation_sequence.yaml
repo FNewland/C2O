@@ -34,9 +34,25 @@ events:
     note: "Timer expired — slow to real-time for first contact"
 
 expected_responses:
-  - { category: detect, description: "Observe separation timer expiry and OBC bootloader power-on" }
-  - { category: detect, description: "Detect beacon telemetry (SID 11) during first contact" }
-  - { category: command, description: "Boot application software (OBC_BOOT_APP, S8 func_id 55)" }
-  - { category: command, description: "Set onboard time (S9.1)" }
-  - { category: detect, description: "Verify full HK (all SIDs) after app boot" }
-  - { category: command, description: "Deploy antennas (TTC_DEPLOY_ANTENNA, S8 func_id 69)" }
+  - category: detect
+    description: "Observe separation timer expiry and OBC bootloader power-on"
+  - category: detect
+    description: "Detect beacon telemetry (SID 11) during first contact"
+  - category: command
+    id: boot_app
+    description: "Boot application software (OBC_BOOT_APP, S8 func_id 55)"
+    tc: "OBC_BOOT_APP"
+    state: "obdh.sw_image == 1"
+    within_s: 3000
+  - category: command
+    description: "Set onboard time (S9.1)"
+    tc: "SET_TIME"
+    within_s: 3300
+    after: "boot_app"
+  - category: detect
+    description: "Verify full HK (all SIDs) after app boot"
+  - category: command
+    description: "Deploy antennas (TTC_DEPLOY_ANTENNA, S8 func_id 69)"
+    tc: "TTC_DEPLOY_ANTENNA"
+    within_s: 3600
+    after: "boot_app"

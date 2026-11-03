@@ -18,9 +18,27 @@ initial_conditions:
 events: []
 
 expected_responses:
-  - { category: detect, description: "Verify carrier lock and beacon reception" }
-  - { category: command, description: "Send S17.1 connection test" }
-  - { category: command, description: "Boot application software (OBC_BOOT_APP, S8 func_id 55)" }
-  - { category: command, description: "Set onboard time via S9.1" }
-  - { category: command, description: "Deploy antennas (TTC_DEPLOY_ANTENNA, S8 func_id 69)" }
-  - { category: detect, description: "Confirm high-rate link after antenna deployment" }
+  - category: detect
+    description: "Verify carrier lock and beacon reception"
+  - category: command
+    description: "Send S17.1 connection test"
+    tc: "CONNECTION_TEST"
+    within_s: 600
+  - category: command
+    id: boot_app
+    description: "Boot application software (OBC_BOOT_APP, S8 func_id 55)"
+    tc: "OBC_BOOT_APP"
+    state: "obdh.sw_image == 1"
+    within_s: 900
+  - category: command
+    description: "Set onboard time via S9.1"
+    tc: "SET_TIME"
+    within_s: 1200
+    after: "boot_app"
+  - category: command
+    description: "Deploy antennas (TTC_DEPLOY_ANTENNA, S8 func_id 69)"
+    tc: "TTC_DEPLOY_ANTENNA"
+    within_s: 1500
+    after: "boot_app"
+  - category: detect
+    description: "Confirm high-rate link after antenna deployment"

@@ -37,6 +37,7 @@ import { createFocus } from "/static/modern/focus.js";
 import { mountTimeline } from "/static/modern/timeline.js";
 import * as V from "/static/modern/views.js";
 import { createDebrief } from "/static/modern/debrief.js";
+import { renderScore } from "/static/modern/score.js";
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 
@@ -563,19 +564,10 @@ function renderDebrief(d) {
   lastDebrief = d;
   loadDebriefWorksheets();
   const body = $("debrief-body");
-  if (!d) { body.innerHTML = `<div class="no-data">${t("No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).")}</div>`; return; }
-  const nd = renderNoData();
-  const secs = (v) => (v == null ? nd : `${Number(v).toFixed(1)} s`);
-  const responses = (d.responses || []).map((r) => `<div class="kv"><span>${esc(r.category || "?")}${r.description ? ": " + esc(r.description) : ""}</span>` +
-    `<span class="mono">${r.time_s != null ? Number(r.time_s).toFixed(1) + " s" : nd}</span></div>`).join("");
-  body.innerHTML = `<table>
-      <tr><td>${t("Scenario")}</td><td>${d.name ? esc(cleanScenarioName(d.name)) : nd}</td></tr>
-      <tr><td>${t("Duration")}</td><td>${secs(d.duration_s)}</td></tr>
-      <tr><td>${t("Score")}</td><td>${d.score_pct != null ? Number(d.score_pct).toFixed(0) + " %" : nd}</td></tr>
-      <tr><td>${t("MTTD (detect)")}</td><td>${secs(d.mttd_s)}</td></tr>
-      <tr><td>${t("MTTI (isolate)")}</td><td>${secs(d.mtti_s)}</td></tr>
-      <tr><td>${t("MTTR (recover)")}</td><td>${secs(d.mttr_s)}</td></tr></table>
-    ${responses ? `<div class="note">${t("Operator responses")}</div>${responses}` : `<div class="note">${t("No operator responses recorded by the scenario engine; use the timeline gaps above.")}</div>`}`;
+  // Score from the commands the team sent: every expected response with the
+  // evidence that met it, or "not seen" (score.js, scenario_scoring.py).
+  const name = d ? (d.name ? scnLabel(d.name) : "") : "";
+  body.innerHTML = renderScore(d, { nd: renderNoData(), scenarioName: name });
 }
 async function fetchDebrief(announce) {
   let d = null;

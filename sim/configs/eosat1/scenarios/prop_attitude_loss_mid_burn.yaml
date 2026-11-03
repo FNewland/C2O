@@ -29,7 +29,14 @@ events:
       failure: rw_seizure
       magnitude: 1.0
       wheel: 1
+
 expected_responses:
-  - { category: detect, description: "Detect attitude error growth during the burn and the rule-8001 auto-abort (PROP_BURN_ABORTED reason 1)" }
-  - { category: isolate, description: "AOCS anomaly first: CTG-002 (star tracker blind + wheel seizure); confirm partial dV via 0x0B0F and the orbit fit" }
-  - { category: recover, description: "Recover attitude, post-burn OD on the partial burn, PROP state cleanup, re-plan remainder under NOM-004 without latching the double-abort inhibit" }
+  - category: detect
+    description: "Detect attitude error growth during the burn and the rule-8001 auto-abort (PROP_BURN_ABORTED reason 1)"
+  - category: isolate
+    description: "AOCS anomaly first: CTG-002 (star tracker blind + wheel seizure); confirm partial dV via 0x0B0F and the orbit fit"
+  - category: recover
+    description: "Recover attitude, post-burn OD on the partial burn, PROP state cleanup, re-plan remainder under NOM-004 without latching the double-abort inhibit"
+    tc: "AOCS_DISABLE_WHEEL(wheel_idx=1)"
+    within_s: 900
+    ref: "event:2"

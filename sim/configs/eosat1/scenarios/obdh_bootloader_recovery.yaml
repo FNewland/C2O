@@ -20,9 +20,24 @@ events:
       onset: step
 
 expected_responses:
-  - { category: detect, description: "Detect loss of full HK — only beacon SID 11 on bootloader APID 0x002 available" }
-  - { category: isolate, description: "Verify bootloader mode from obdh.sw_image = 0 and reboot cause" }
-  - { category: command, description: "Attempt application boot via OBC_BOOT_APP (func_id 55)" }
-  - { category: detect, description: "Verify application running — obdh.sw_image = 1, all SIDs resume" }
-  - { category: command, description: "If boot fails: inhibit auto-boot (OBC_BOOT_INHIBIT, func_id 56), run MEM_CHECK (S6.9)" }
-  - { category: recover, description: "Restore OBC to nominal application mode with full HK" }
+  - category: detect
+    description: "Detect loss of full HK — only beacon SID 11 on bootloader APID 0x002 available"
+  - category: isolate
+    description: "Verify bootloader mode from obdh.sw_image = 0 and reboot cause"
+  - category: command
+    id: boot_app
+    description: "Attempt application boot via OBC_BOOT_APP (func_id 55)"
+    tc: "OBC_BOOT_APP"
+    within_s: 600
+  - category: detect
+    description: "Verify application running — obdh.sw_image = 1, all SIDs resume"
+    state: "obdh.sw_image == 1"
+    within_s: 900
+    after: "boot_app"
+  - category: command
+    description: "If boot fails: inhibit auto-boot (OBC_BOOT_INHIBIT, func_id 56), run MEM_CHECK (S6.9)"
+  - category: recover
+    description: "Restore OBC to nominal application mode with full HK"
+    state: ["obdh.sw_image == 1", "obdh.mode == 0"]
+    within_s: 1500
+    after: "boot_app"

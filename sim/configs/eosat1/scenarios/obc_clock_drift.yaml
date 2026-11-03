@@ -30,7 +30,13 @@ events:
         against the ground log. Check the onboard clock before replanning.
 
 expected_responses:
-  - { category: detect, description: "Detect the growing onboard/ground time difference" }
-  - { category: isolate, description: "Confirm the drift rate is the oscillator, not a ground correlation error" }
-  - { category: recover, description: "Re-sync the onboard clock with an S9 time update" }
-  - { category: plan, description: "Reassess the S11 time-tagged schedule after the clock jump" }
+  - category: detect
+    description: "Detect the growing onboard/ground time difference"
+  - category: isolate
+    description: "Confirm the drift rate is the oscillator, not a ground correlation error"
+  - category: recover
+    description: "Re-sync the onboard clock with an S9 time update"
+    tc: ["SET_TIME", "OBC_GPS_TIME_SYNC"]
+    within_s: 1500
+  - category: plan
+    description: "Reassess the S11 time-tagged schedule after the clock jump"

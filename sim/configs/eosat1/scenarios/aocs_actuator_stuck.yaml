@@ -18,9 +18,28 @@ events:
       magnitude: 1.0
       onset: step
       wheel: 0
+
 expected_responses:
-  - { category: detect, description: "Detect RW-1 speed anomaly — speed frozen, not responding to commands" }
-  - { category: detect, description: "Detect RW-1 temperature rising due to bearing seizure" }
-  - { category: isolate, description: "Confirm wheel 0 is seized by correlating speed freeze with temperature rise" }
-  - { category: recover, description: "Disable wheel 0 (AOCS_DISABLE_WHEEL, S8 func_id 2), continue on three wheels, perform momentum dump" }
-  - { category: recover, description: "Verify stable pointing in 3-wheel mode with relaxed error tolerance" }
+  - category: detect
+    description: "Detect RW-1 speed anomaly — speed frozen, not responding to commands"
+  - category: detect
+    description: "Detect RW-1 temperature rising due to bearing seizure"
+  - category: isolate
+    description: "Confirm wheel 0 is seized by correlating speed freeze with temperature rise"
+  - category: recover
+    id: disable_rw1
+    description: "Disable wheel 0 (AOCS_DISABLE_WHEEL, S8 func_id 2), continue on three wheels, perform momentum dump"
+    tc: "AOCS_DISABLE_WHEEL(wheel_idx=0)"
+    within_s: 600
+  - category: recover
+    description: "Verify stable pointing in 3-wheel mode with relaxed error tolerance"
+    state: "aocs.att_error < 2.0"
+    within_s: 1200
+    after: "disable_rw1"
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "AOCS_ENABLE_WHEEL(wheel_idx=0)"
+    reason: "Re-enables the seized wheel RW1"
+    penalty: 10

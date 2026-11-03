@@ -14,7 +14,14 @@ events:
       magnitude: 1.0
       onset: step
       bus: A
+
 expected_responses:
-  - { category: detect, description: "Detect missing or stale HK from subsystems on Bus A" }
-  - { category: isolate, description: "Identify Bus A failure from bus status telemetry" }
-  - { category: recover, description: "Command OBC_SELECT_BUS to switch to Bus B, verify all HK resumes" }
+  - category: detect
+    description: "Detect missing or stale HK from subsystems on Bus A"
+  - category: isolate
+    description: "Identify Bus A failure from bus status telemetry"
+  - category: recover
+    description: "Command OBC_SELECT_BUS to switch to Bus B, verify all HK resumes"
+    tc: "OBC_SELECT_BUS(bus=1)"
+    state: "obdh.active_bus == 1"
+    within_s: 600

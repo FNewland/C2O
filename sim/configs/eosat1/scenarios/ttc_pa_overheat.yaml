@@ -15,7 +15,20 @@ events:
       magnitude: 1.0
       onset: gradual
       onset_duration_s: 300
+
 expected_responses:
-  - { category: detect, description: "Detect PA temperature rising above 55C" }
-  - { category: isolate, description: "Identify thermal control anomaly on PA" }
-  - { category: recover, description: "Reduce TX power or cycle PA off to cool, switch to redundant if needed" }
+  - category: detect
+    description: "Detect PA temperature rising above 55C"
+  - category: isolate
+    description: "Identify thermal control anomaly on PA"
+  - category: recover
+    description: "Reduce TX power or cycle PA off to cool, switch to redundant if needed"
+    tc: ["TTC_SET_TX_POWER(level=0)", "TTC_PA_OFF", "TTC_SWITCH_REDUNDANT", "TTC_SWITCH_OTHER"]
+    within_s: 600
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "TTC_SET_TX_POWER(level=2)"
+    reason: "Raises the PA to HIGH while it is overheating"
+    penalty: 10

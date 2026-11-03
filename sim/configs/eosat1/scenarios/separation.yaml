@@ -16,10 +16,29 @@ briefing: |
   5. Enable thermal control and nominal power loads
 
 events: []
+
 expected_responses:
-  - { category: monitor, description: "Observe separation timer countdown" }
-  - { category: action, description: "Boot OBC when separation timer expires" }
-  - { category: action, description: "Deploy antenna via mechanical deployment" }
-  - { category: action, description: "Establish command link and verify comms" }
-  - { category: action, description: "Initiate AOCS detumble sequence" }
-  - { category: monitor, description: "Monitor attitudes rates during detumble" }
+  - category: monitor
+    description: "Observe separation timer countdown"
+  - category: action
+    description: "Boot OBC when separation timer expires"
+    tc: "OBC_BOOT_APP"
+    within_s: 3600
+    ref: "start"
+  - category: action
+    description: "Deploy antenna via mechanical deployment"
+    tc: "TTC_DEPLOY_ANTENNA"
+    within_s: 3600
+    ref: "start"
+  - category: action
+    description: "Establish command link and verify comms"
+    tc: "CONNECTION_TEST"
+    within_s: 3600
+    ref: "start"
+  - category: action
+    description: "Initiate AOCS detumble sequence"
+    tc: "AOCS_SET_MODE(mode=2)"
+    within_s: 3600
+    ref: "start"
+  - category: monitor
+    description: "Monitor attitudes rates during detumble"

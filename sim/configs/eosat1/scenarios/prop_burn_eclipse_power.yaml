@@ -25,7 +25,11 @@ events:
     action: message
     params:
       text: "CONJUNCTION ALERT: red Pc threshold. FD directs 0.20 m/s prograde CAM this pass per NOM-004/NOM-013. Watch the power budget."
+
 expected_responses:
-  - { category: detect, description: "Detect degraded charge rate and project SoC through preheat + burn; recognise the eclipse/SoC arm interlocks (0x0B15 bits 5/7)" }
-  - { category: isolate, description: "Correlate SA-A current loss with the SoC trend; distinguish power shortfall from a propulsion fault" }
-  - { category: recover, description: "Re-time preheat/burn inside daylight with SoC margin, or brief the FD on a one-orbit CAM slip; never defeat the interlocks" }
+  - category: detect
+    description: "Detect degraded charge rate and project SoC through preheat + burn; recognise the eclipse/SoC arm interlocks (0x0B15 bits 5/7)"
+  - category: isolate
+    description: "Correlate SA-A current loss with the SoC trend; distinguish power shortfall from a propulsion fault"
+  - category: recover
+    description: "Re-time preheat/burn inside daylight with SoC margin, or brief the FD on a one-orbit CAM slip; never defeat the interlocks"

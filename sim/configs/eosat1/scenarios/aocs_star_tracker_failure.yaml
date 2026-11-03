@@ -14,7 +14,14 @@ events:
       magnitude: 1.0
       onset: step
       unit: 1
+
 expected_responses:
-  - { category: detect, description: "Detect ST1 status change to FAILED and attitude error increase" }
-  - { category: isolate, description: "Identify ST1 hardware failure vs temporary blinding" }
-  - { category: recover, description: "Power on ST2, select as primary, verify pointing recovery" }
+  - category: detect
+    description: "Detect ST1 status change to FAILED and attitude error increase"
+  - category: isolate
+    description: "Identify ST1 hardware failure vs temporary blinding"
+  - category: recover
+    description: "Power on ST2, select as primary, verify pointing recovery"
+    tc: "ST_SELECT(unit=2)"
+    state: ["aocs.st_selected == 2", "aocs.st2_status == 2"]
+    within_s: 900

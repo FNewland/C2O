@@ -15,7 +15,21 @@ events:
       onset: gradual
       onset_duration_s: 300
       wheel: 1
+
 expected_responses:
-  - { category: detect, description: "Detect RW-2 temperature anomaly" }
-  - { category: isolate, description: "Identify bearing degradation on RW-2" }
-  - { category: recover, description: "Disable RW-2 and command desaturation" }
+  - category: detect
+    description: "Detect RW-2 temperature anomaly"
+  - category: isolate
+    description: "Identify bearing degradation on RW-2"
+  - category: recover
+    description: "Disable RW-2 and command desaturation"
+    tc: "AOCS_DISABLE_WHEEL(wheel_idx=1)"
+    state: "aocs.rw2_enabled == 0"
+    within_s: 900
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "AOCS_ENABLE_WHEEL(wheel_idx=1)"
+    reason: "Re-enables the degraded wheel RW2"
+    penalty: 10
