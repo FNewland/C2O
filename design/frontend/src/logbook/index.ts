@@ -2,3 +2,4 @@
 export { LogbookRoot, LogbookBanner } from './LogbookRoot'
 export { LogbookButton, LogThis } from './parts'
 export { useLogbookUI } from './store'
+export { RecordDecision, GateDecisions } from './decisions'

@@ -8,7 +8,6 @@
   "Close this review and download your logbook": "Clore cette revue et télécharger votre journal de bord",
   "Confirm delete": "Confirmer la suppression",
   "Confirm: delete all entries": "Confirmer : tout supprimer",
-  "Constellation: {{what}}": "Constellation : {{what}}",
   "Context saved with this entry": "Contexte enregistré avec cette entrée",
   "Ctrl+Enter to save": "Ctrl+Entrée pour enregistrer",
   "Decision": "Décision",
@@ -50,9 +49,7 @@
   "Open logbook": "Ouvrir le journal de bord",
   "Open your logbook: decisions, thoughts and worksheet answers": "Ouvrir votre journal de bord : décisions, idées et réponses aux fiches",
   "Optional. It goes into the download.": "Facultatif. La réponse figure dans le téléchargement.",
-  "Orbit trade: {{name}} ({{alt}} km)": "Compromis d’orbite : {{name}} ({{alt}} km)",
   "Page": "Page",
-  "Plain text with headings; opens in any editor": "Texte brut avec titres ; s’ouvre dans n’importe quel éditeur",
   "Portal": "Portail",
   "Printable HTML": "HTML imprimable",
   "Private to you · deleted from the server on {{when}} ({{hours}} h after your last entry)": "Privé · supprimé du serveur le {{when}} ({{hours}} h après votre dernière entrée)",
@@ -72,7 +69,6 @@
   "The logbook did not save: {{message}}": "Le journal de bord n’a pas enregistré : {{message}}",
   "The logbook service is unreachable. Nothing you type here is saved until it is back.": "Le service du journal de bord est injoignable. Rien de ce que vous saisissez ici n’est enregistré tant qu’il n’est pas rétabli.",
   "Thought": "Idée",
-  "Trade: {{name}} selected": "Compromis : {{name}} retenu",
   "What did you decide, and why? What did you reject?": "Qu’avez-vous décidé, et pourquoi ? Qu’avez-vous écarté ?",
   "What did you see? Which value, where?": "Qu’avez-vous observé ? Quelle valeur, où ?",
   "What would you do differently next time?": "Que feriez-vous autrement la prochaine fois ?",
@@ -88,6 +84,5 @@
   "{{count}} entries_other": "{{count}} entrées",
   "{{count}} logbook entries not downloaded · the server deletes your logbook on {{when}}_one": "{{count}} entrée du journal de bord non téléchargée · le serveur supprime votre journal le {{when}}",
   "{{count}} logbook entries not downloaded · the server deletes your logbook on {{when}}_other": "{{count}} entrées du journal de bord non téléchargées · le serveur supprime votre journal le {{when}}",
-  "{{done}} of {{total}} answered": "{{done}} sur {{total}} traitées",
-  "{{gate}} review: {{verdict}}": "Revue {{gate}} : {{verdict}}"
+  "{{done}} of {{total}} answered": "{{done}} sur {{total}} traitées"
 }

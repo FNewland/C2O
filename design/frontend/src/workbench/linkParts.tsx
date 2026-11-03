@@ -166,3 +166,31 @@ export function LinkEditor({ iface, endpoints, onSave, onCancel, saving, compact
     </form>
   )
 }
+
+/**
+ * A link as a decision record prefill (decision D-2.4-INTERFACES): the three
+ * choices the panel offers, the one taken (when known), and what the rule said.
+ */
+export function linkDecision(iface: DesignInterface, nameOf: (id: string) => string,
+  t: (k: string, o?: any) => string, lang: string, taken?: 'accept' | 'edit' | 'reject') {
+  const from = nameOf(iface.from_element_id), to = nameOf(iface.to_element_id)
+  const kind = t(TYPE_META[iface.type]?.label ?? iface.type)
+  const why = pickLang(iface.rationale, lang)
+  const sum = propsSummary(iface, t)
+  return {
+    subject: `${from} ↔ ${to} (${kind})`,
+    options: [
+      { name: t('Accept the link as proposed'), chosen: taken === 'accept' || undefined },
+      { name: t('Edit the link (type, direction, properties)'), chosen: taken === 'edit' || undefined },
+      { name: t('Reject the link (left out of budgets and analyses)'), chosen: taken === 'reject' || undefined },
+    ],
+    choice: taken === 'accept' ? t('Accepted: {{from}} to {{to}} ({{type}})', { from, to, type: kind })
+      : taken === 'reject' ? t('Rejected: {{from}} to {{to}} ({{type}})', { from, to, type: kind }) : undefined,
+    evidence: [
+      { label: t('Interface type'), value: kind },
+      ...(sum ? [{ label: t('Properties'), value: sum }] : []),
+      ...(why ? [{ label: t('Rule rationale'), value: why.slice(0, 200) }] : []),
+      ...(iface.standard_ref || iface.origin ? [{ label: t('Source'), value: [iface.standard_ref, originText(iface, t)].filter(Boolean).join(' · ') }] : []),
+    ],
+  }
+}

@@ -10,7 +10,7 @@
  */
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { LogThis } from '../logbook'
+import { RecordDecision } from '../logbook'
 import { useTranslation } from 'react-i18next'
 import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
@@ -143,10 +143,59 @@ function MissionTradeWidget(_props: { studyId: string | null }) {
               {result.recommendation}
             </div>
           )}
+          <div className="row mt-1">
+            <RecordDecision decision="D-1.4-SPACE" capture="decide:mission-trade" prefill={() => ({
+              options: result.alternatives.map((alt: any, i: number) => ({
+                name: String(alt.name),
+                summary: String(alt.description || '').slice(0, 200),
+                values: {
+                  ...(alt.gsd_m != null ? { 'GSD (m)': alt.gsd_m } : {}),
+                  ...(alt.revisit_days != null ? { [t('Revisit (d)')]: alt.revisit_days } : {}),
+                  ...(alt.annual_cost_keur != null ? { [t('kEUR/yr')]: alt.annual_cost_keur } : {}),
+                  [t('Rank')]: alt.rank || i + 1,
+                },
+                ...(typeof alt.score === 'number' ? { score: alt.score } : {}),
+              })),
+              criteria: [
+                { name: t('GSD (m)'), direction: 'lower' as const },
+                { name: t('Revisit (days)'), direction: 'lower' as const },
+                { name: t('Budget (kEUR/yr)'), direction: 'lower' as const },
+              ],
+              evidence: [
+                { label: t('Target GSD'), value: parseFloat(gsd) || gsd, unit: 'm' },
+                { label: t('Target revisit'), value: parseFloat(revisit) || revisit, unit: t('days') },
+                { label: t('Budget'), value: parseFloat(budget) || budget, unit: t('kEUR/yr') },
+                ...(result.recommendation ? [{ label: t('Tool recommendation'), value: String(result.recommendation).slice(0, 200) }] : []),
+              ],
+            })} />
+          </div>
         </div>
       )}
     </ToolSection>
   )
+}
+
+/** The candidates the orbit trade showed, as record options (the picked one chosen). */
+function orbitName(c: any): string {
+  return c.name || `${String(c.orbit_type || '').toUpperCase()} ${c.altitude_km} km`
+}
+
+/** The trade's top five (the workbook asks for the top three) plus the one picked. */
+function orbitOptions(candidates: any[], picked: any) {
+  const top = candidates.slice(0, 5)
+  if (!top.includes(picked)) top.push(picked)
+  return top.map((c: any) => ({
+    name: orbitName(c),
+    values: {
+      'i (°)': Number((c.inclination_deg ?? 0).toFixed(1)),
+      ...(c.achievable_gsd_m != null ? { 'GSD (m)': Number(c.achievable_gsd_m.toFixed(1)) } : {}),
+      ...(c.revisit_days != null ? { [i18n.t('Revisit (d)')]: Number(c.revisit_days.toFixed(0)) } : {}),
+      ...(c.natural_lifetime_years != null ? { [i18n.t('Lifetime (yr)')]: Number(c.natural_lifetime_years.toFixed(0)) } : {}),
+      ...(c.compliant_25yr != null ? { [i18n.t('25-yr rule')]: !!c.compliant_25yr } : {}),
+    },
+    score: c.total_score || c.weighted_score || c.score || 0,
+    chosen: c === picked || undefined,
+  }))
 }
 
 // ─── Orbit Trade ───
@@ -225,7 +274,26 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                     }} type="button" className="c2o-btn c2o-btn--sm">
                       {t('Apply')}
                     </button>
-                    <LogThis subject={t('Orbit trade: {{name}} ({{alt}} km)', { name: c.name || c.orbit_type, alt: c.altitude_km })} />
+                    <RecordDecision decision="D-2.3-ORBIT" capture="decide:orbit-trade" label={t('Record')}
+                      context={{ element: (() => {
+                        const els: any[] = qc.getQueryData(['elements', useUIStore.getState().studyId]) || []
+                        return els.find((e: any) => e.id === useUIStore.getState().focusElementId)?.name ?? null
+                      })() }}
+                      prefill={() => {
+                        const els: any[] = qc.getQueryData(['elements', useUIStore.getState().studyId]) || []
+                        const el = els.find((e: any) => e.id === useUIStore.getState().focusElementId)
+                        const perf = el?.performance || {}
+                        return {
+                          options: orbitOptions(result.candidates, c),
+                          choice: `${orbitName(c)}, ${Number(c.inclination_deg ?? 0).toFixed(1)}°`,
+                          evidence: [
+                            { label: t('Altitude'), unit: 'km', after: c.altitude_km, ...(perf.orbit_altitude_km != null ? { before: perf.orbit_altitude_km } : {}) },
+                            { label: t('Inclination'), unit: '°', after: Number(Number(c.inclination_deg ?? 0).toFixed(1)), ...(perf.orbit_inclination_deg != null ? { before: perf.orbit_inclination_deg } : {}) },
+                            ...(c.natural_lifetime_years != null ? [{ label: t('Natural lifetime'), value: Number(c.natural_lifetime_years.toFixed(1)), unit: t('yr') }] : []),
+                            ...(c.achievable_gsd_m != null ? [{ label: 'GSD', value: Number(c.achievable_gsd_m.toFixed(1)), unit: 'm' }] : []),
+                          ],
+                        }
+                      }} />
                   </td>
                 </tr>
               ))}
@@ -312,7 +380,27 @@ function ConstellationWidget(_props: { studyId: string | null }) {
               }} type="button" className="c2o-btn c2o-btn--sm mt-1">
                 {t('Apply to Design')}
               </button>
-              <LogThis subject={t('Constellation: {{what}}', { what: opt.walker_notation || t('{{planes}}P × {{sats}}S = {{total}} sats', { planes: opt.num_planes || opt.planes, sats: opt.sats_per_plane, total: opt.total_satellites || opt.total_sats }) })} />
+              <RecordDecision decision="D-2.3-CONSTELLATION" capture="decide:constellation" prefill={() => {
+                const label = (o: any) => o.walker_notation || t('{{planes}}P × {{sats}}S = {{total}} sats', { planes: o.num_planes || o.planes, sats: o.sats_per_plane, total: o.total_satellites || o.total_sats })
+                return {
+                  options: (result.candidates || result.options || []).map((o: any) => ({
+                    name: label(o),
+                    values: {
+                      [t('Max revisit (h)')]: Number(((o.max_revisit_hours || o.revisit_hours) ?? 0).toFixed(1)),
+                      ...(o.coverage_percent != null ? { [t('Coverage (%)')]: Number(o.coverage_percent.toFixed(0)) } : {}),
+                      ...(o.total_cost_meur != null ? { 'M€': Number(o.total_cost_meur.toFixed(1)) } : {}),
+                      ...(o.total_mass_kg != null ? { kg: o.total_mass_kg } : {}),
+                    },
+                    chosen: o === opt || undefined,
+                  })),
+                  choice: label(opt),
+                  evidence: [
+                    { label: t('Altitude'), value: parseFloat(altitude), unit: 'km' },
+                    { label: t('Inclination'), value: parseFloat(inclination), unit: '°' },
+                    { label: t('Target revisit'), value: parseFloat(revisitHours), unit: 'h' },
+                  ],
+                }
+              }} />
             </div>
           ))}
           {result.count != null && (
@@ -360,6 +448,20 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
                 {alt.contact_minutes_per_day && t(' | {{min}} min/day contact', { min: alt.contact_minutes_per_day.toFixed(0) })}
                 {alt.annual_cost_keur && t(' | {{cost}} kEUR/yr', { cost: alt.annual_cost_keur })}
               </div>
+              <RecordDecision decision="D-5.1-GROUND" capture="decide:ground-trade" prefill={() => ({
+                options: result.alternatives.map((a: any) => ({
+                  name: String(a.name),
+                  summary: (a.stations?.join(', ') || a.description || '').slice(0, 200),
+                  values: {
+                    ...(a.contact_minutes_per_day ? { [t('min/day')]: Number(a.contact_minutes_per_day.toFixed(0)) } : {}),
+                    ...(a.annual_cost_keur ? { [t('kEUR/yr')]: a.annual_cost_keur } : {}),
+                  },
+                  score: a.score || 0,
+                  chosen: a === alt || undefined,
+                })),
+                choice: String(alt.name),
+                evidence: result.recommendation ? [{ label: t('Tool recommendation'), value: String(result.recommendation).slice(0, 200) }] : undefined,
+              })} />
             </div>
           ))}
           {result.recommendation && (
@@ -559,6 +661,22 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
           onKeyDown={e => { if (e.key === 'Enter' && newCriterion) { onCriteriaChanged([...criteria, newCriterion]); setNewCriterion('') } }} />
         <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder={t('+ option')} className="c2o-input c2o-input--sm c2o-w-num"
           onKeyDown={e => { if (e.key === 'Enter' && newOption) { setOptions(p => [...p, newOption]); setNewOption('') } }} />
+        <span className="grow" />
+        <RecordDecision decision="D-3.4-TRADE" capture="decide:pugh" prefill={() => ({
+          options: options.map((opt, i) => ({
+            name: opt,
+            summary: i === datum ? t('Datum (reference)') : undefined,
+            // Pugh totals run −2…+2 per criterion: a value, not a 0–1 score.
+            values: i === datum ? {} : {
+              ...Object.fromEntries(criteria.map(c => [t(c, { context: 'criterion' }), getScore(opt, c)])),
+              [hasWeights ? t('Weighted Total') : t('Total')]: hasWeights ? totals[i].weighted : totals[i].unweighted,
+            },
+            chosen: (i === best && i !== datum) || undefined,
+          })),
+          criteria: criteria.map(c => ({ name: t(c, { context: 'criterion' }), ...(hasWeights ? { weight: Math.round((weights?.[c] ?? 0) * 100) / 100 } : {}) })),
+          choice: options[best],
+          evidence: [{ label: t('Method'), value: hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)') }],
+        })} />
       </div>
     </ToolSection>
   )
@@ -855,6 +973,15 @@ const ARCH_TRADES_THERMAL: ArchTrades = {
 
 const ARCH_TRADES: ArchTrades = { ...ARCH_TRADES_AOCS_EPS, ...ARCH_TRADES_TTC_PROP, ...ARCH_TRADES_THERMAL }
 
+/** Architecture trade → the workbook decision it settles (decision_catalogue.yaml). */
+const ARCH_DECISION: Record<string, string> = {
+  'AOCS Architecture': 'D-3.2-AOCS',
+  'EPS Architecture': 'D-3.1-EPS',
+  'TTC Architecture': 'D-3.3-BAND',
+  'Propulsion Architecture': 'D-3.4-PROPULSION',
+  'Thermal Architecture': 'D-3.1-THERMAL',
+}
+
 function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel: number; focusElement: any }) {
   const { t } = useTranslation()
   const domain = focusElement?.subsystem_domain
@@ -868,7 +995,17 @@ function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel:
       </div>
       {trades.map((trade, i) => (
         <div key={i} className="mb-2">
-          <div className="w-600 t-12 mb-1">{t(trade.name)}</div>
+          <div className="flex ai-c gap-2 mb-1">
+            <span className="w-600 t-12">{t(trade.name)}</span>
+            <span className="grow" />
+            {ARCH_DECISION[trade.name] && (
+              <RecordDecision decision={ARCH_DECISION[trade.name]} capture="decide:arch-trade" prefill={() => ({
+                options: trade.options.map(o => ({ name: t(o.name), summary: t(o.when) })),
+                criteria: [{ name: t(trade.driver) }],
+                evidence: focusElement?.name ? [{ label: t('Element'), value: String(focusElement.name) }] : undefined,
+              })} />
+            )}
+          </div>
           <div className="t-12 c-caution mb-1">{t('Driver: {{driver}}', { driver: t(trade.driver) })}</div>
           {trade.options.map((opt, j) => (
             <div key={j} className="flex gap-1 p-1 t-12 bl ml-1 mb-1">

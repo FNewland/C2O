@@ -20,7 +20,7 @@ import { ThemeToggle } from '../components/ui/ThemeToggle'
 import { LanguageToggle } from '../i18n/LanguageToggle'
 import { Dialog, askConfirm, showAlert } from '../components/ui/Dialog'
 import { HomeFrame } from '../components/ui/HomeFrame'
-import { LogbookBanner, LogbookButton, LogThis, useLogbookUI } from '../logbook'
+import { LogbookBanner, LogbookButton, RecordDecision, useLogbookUI } from '../logbook'
 
 const API = '/api'
 
@@ -423,6 +423,17 @@ export function MissionWizard() {
             ))}
           </div>
         </Field>
+        {problemStatement.trim() && (
+          <div className="row mb-3">
+            <RecordDecision decision="D-1.4-PROBLEM" capture="wizard:problem" prefill={() => ({
+              choice: problemStatement.trim(),
+              evidence: [
+                { label: t('Mission type'), value: t(MISSION_TYPE_LABELS[missionType]) },
+                ...(operationalContext.trim() ? [{ label: t('Operational Context'), value: operationalContext.trim().slice(0, 200) }] : []),
+              ],
+            })} />
+          </div>
+        )}
       </WizardFrame>
     )
   }
@@ -480,6 +491,23 @@ export function MissionWizard() {
             {t('+ Add objective')}
           </button>
         </Field>
+        <div className="row gap-2 mb-3">
+          <RecordDecision decision="D-1.4-STAKEHOLDERS" capture="wizard:stakeholders" label={t('Record stakeholder decision')}
+            prefill={() => ({
+              options: stakeholders.filter(x => x.name.trim()).map(x => ({
+                name: x.name.trim(), summary: x.need.trim(), values: { [t('Role')]: t(STAKEHOLDER_ROLES[x.role] ?? x.role) },
+              })),
+            })} />
+          <RecordDecision decision="D-1.4-OBJECTIVES" capture="wizard:stakeholders" label={t('Record objectives decision')}
+            prefill={() => ({
+              options: objectives.filter(o => o.text.trim()).map(o => ({
+                name: o.text.trim(), summary: o.measurable_criterion.trim(),
+                values: { [t('Priority')]: o.priority === 'primary' ? t('Primary') : o.priority === 'secondary' ? t('Secondary', { context: 'priority' }) : t('Constraint', { context: 'priority' }) },
+                chosen: o.priority === 'primary' || undefined,
+              })),
+              evidence: [{ label: t('Objectives with a measurable criterion'), value: `${objectives.filter(o => o.text.trim() && o.measurable_criterion.trim()).length} / ${objectives.filter(o => o.text.trim()).length}` }],
+            })} />
+        </div>
       </WizardFrame>
     )
   }
@@ -529,7 +557,24 @@ export function MissionWizard() {
               </Field>
             )}
             {selectedAlt && (
-              <div className="row mb-3"><LogThis subject={t('Trade: {{name}} selected', { name: selectedAlt })} /></div>
+              <div className="row mb-3">
+                <RecordDecision decision="D-1.4-SPACE" capture="wizard:alternatives" prefill={() => ({
+                  options: (tradeResult?.alternatives ?? []).map((a: any) => ({
+                    name: String(a.name), summary: String(a.description || '').slice(0, 200),
+                    values: {
+                      ...(a.gsd_m != null ? { 'GSD (m)': a.gsd_m } : {}),
+                      ...(a.revisit_days != null ? { [t('Revisit (d)')]: a.revisit_days } : {}),
+                      ...((a.annual_cost_keur ?? a.total_3yr_cost_keur) != null ? { kEUR: a.annual_cost_keur ?? a.total_3yr_cost_keur } : {}),
+                      ...(a.rank != null ? { [t('Rank')]: a.rank } : {}),
+                    },
+                    ...(typeof a.total_score === 'number' ? { score: a.total_score } : {}),
+                    chosen: a.name === selectedAlt || undefined,
+                  })),
+                  choice: selectedAlt,
+                  rationale: selectionRationale.trim() || undefined,
+                  evidence: tradeResult?.recommendation ? [{ label: t('Tool recommendation'), value: String(tradeResult.recommendation).slice(0, 200) }] : undefined,
+                })} />
+              </div>
             )}
 
             {tradeResult.recommendation && (
@@ -572,6 +617,20 @@ export function MissionWizard() {
           ))}
         </div>
 
+        <div className="row mb-2">
+          <RecordDecision decision="D-1.4-ARCHITECTURE" capture="wizard:architecture" prefill={() => ({
+            options: ARCH_PRESETS.map(a => ({
+              name: t(ARCH_PRESET_NAMES[a.id]),
+              summary: a.segments.map(sg => t(sg)).join(' → '),
+              chosen: a.id === selectedArch || undefined,
+            })),
+            choice: t(ARCH_PRESET_NAMES[selectedArch]),
+            evidence: [
+              { label: t('Design Lifetime (years)'), value: Number(lifetime) || lifetime },
+              { label: t('Target Mass (kg)'), value: Number(massTarget) || massTarget },
+            ],
+          })} />
+        </div>
         <div className="flex gap-2">
           <Field label={t('Design Lifetime (years)')}>
             <input type="number" value={lifetime} onChange={e => setLifetime(e.target.value)} className="c2o-input c2o-input--num c2o-w-num" />
