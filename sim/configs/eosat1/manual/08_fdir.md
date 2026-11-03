@@ -70,6 +70,14 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 | EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Battery heater thermostat (see TCS-01) |
 | EPS-05  | String yield < 70 % while lit, 30 s | 0x014C / 0x014D (valid while 0x014E bit set) | Report only: TM(12,9) + S5 event 0x914C / 0x914D. The ground decides (CTG-009) |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Shunt excess power          |
+| EPS-07  | Battery SoC critical (< 10 %)  | S5 event 0x0102 BATTERY_SOC_CRITICAL | Payload line OFF: S19 ea 1001 dispatches `EPS_POWER_OFF` (S8 func 20, line 3) |
+
+**EPS-07 takes the payload off.** Until November 2026, S19 ea 1001 fired on the
+SoC-critical event but dispatched S8 func 10, which is `AOCS_SLEW_TO`: the rule
+reported that it had fired and the payload stayed on. It now dispatches
+`EPS_POWER_OFF` with line 3 (payload), the same action as ea 3001 and ea 6001,
+so the imager and its detector lose power together. Switching the payload line
+back on after the battery recovers is a ground decision (CTG-001).
 
 **EPS-05 is judged only in sunlight.** Until November 2026 the solar-array
 rules (S19 ea 1004/1005) watched the raw string currents 0x0103/0x0104 against

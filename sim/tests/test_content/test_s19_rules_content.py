@@ -94,7 +94,8 @@ RULE_INTENT = {
 # decision. Once a rule is remapped, delete its entry — the paired
 # test_rule_action_matches_declared_intent case will then enforce the fix.
 KNOWN_MISROUTED = {
-    1001: ("aocs", "slew_to_quaternion"),   # func 10 is AOCS_SLEW_TO, not payload off
+    # 1001 (func 10 = AOCS_SLEW_TO) corrected 2026-11-03 to EPS_POWER_OFF(3),
+    # the payload line, by Franz's ruling; the intent check now enforces it.
     1002: ("aocs", "check_momentum"),       # func 11 is AOCS_CHECK_MOMENTUM, not FPA cooler
     1003: ("aocs", "rw_ramp_down"),         # func 14 is AOCS_RW_RAMP_DOWN, not power line off
     # 1004/1005 (func 10 again) were corrected 2026-11-03 to EPS_POWER_OFF(3)

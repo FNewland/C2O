@@ -76,3 +76,36 @@ def test_injected_obc_overtemp_fires_3003_and_safes_the_obc(engine):
     assert obdh._state.mode == 1, "OBC must end in SAFE (mode 1)"
     assert tcs._state.htr_battery == htr_before, "battery heater must not change"
     assert eps._state.power_lines.get("htr_bat") == line_before
+
+
+def test_rule_1001_is_eps_power_off_payload_line():
+    """Franz's ruling 2026-11-03: ea 1001 used to dispatch func 10
+    (AOCS_SLEW_TO), so it fired and the payload stayed on."""
+    rule = _rule(1001)
+    assert rule["action_func_id"] == 20            # EPS_POWER_OFF
+    assert list(rule["action_data"]) == [3]        # line 3 = payload
+
+
+def test_soc_critical_event_fires_1001_and_switches_the_payload_off(engine):
+    eps = engine.subsystems["eps"]
+    eps._state.power_lines["payload"] = True
+    engine.subsystems["payload"].handle_command({"command": "set_mode", "mode": 1})
+    engine._tick_once(1.0)
+    assert engine.params.get(0x0113) == 1
+
+    fired = []
+    dispatch = engine._dispatcher._s19_dispatch
+
+    def spy(ea_id, func_id, action_data=b""):
+        fired.append((ea_id, func_id, bytes(action_data)))
+        return dispatch(ea_id, func_id, action_data)
+
+    engine._dispatcher._s19_dispatch = spy
+    engine._emit_event({'event_id': 0x0102, 'severity': 3,
+                        'description': 'BATTERY_SOC_CRITICAL'})
+    for _ in range(3):
+        engine._tick_once(1.0)
+
+    assert (1001, 20, b"\x03") in fired, fired
+    assert eps._state.power_lines.get("payload") is False
+    assert engine.subsystems["payload"]._state.mode == 0
