@@ -4609,6 +4609,9 @@ function buildManPage() {
         </div>
         <div id="pcard-list" class="scroll-y" style="max-height:520px"></div>
       </div></div>
+    <div class="ds-card" style="margin-top:12px"><h2><span data-i18n>Course PDFs</span>
+      <span class="r" data-i18n>textbooks · workbooks · references</span></h2>
+      <div class="bd scroll-y" style="max-height:520px" id="man-downloads"></div></div>
   </div>`;
 }
 
@@ -4691,6 +4694,12 @@ function renderProcedureCards() {
   }).join("");
 }
 async function loadManual() {
+  // Course PDFs (GET /api/downloads, student list): shared renderer, mounted once.
+  const dl = $("man-downloads");
+  if (dl && !dl.dataset.mounted) {
+    dl.dataset.mounted = "1";
+    import("/static/shared/downloads.js").then((m) => m.mountDownloads(dl)).catch(() => {});
+  }
   try { S.manual = await getJSON("/api/manual"); }
   catch (e) { S.manual = null; }
   renderManual();
@@ -5374,6 +5383,7 @@ const _TPL_KEYS_3 = [
   "Operations manual", "Sections filtered to your position; search covers titles and body text.", "Contents",
   "search…", "select a section…", "Procedure cards — your position",
   "only cards my position is required for", "filter cards…",
+  "Course PDFs", "textbooks · workbooks · references",
 ];
 // i18n-keys
 const _TPL_KEYS_4 = [

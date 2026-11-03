@@ -1,0 +1,318 @@
+# Course PDFs offered for download (smo_common/downloads.py).
+#
+# One list for every server that offers them:
+#   * the documentation viewer (docs.c2o.live, students)   audience student
+#   * the MCS operations-manual page (students)             audience student
+#   * the instructor console (behind IAP, instructors)      every entry
+#
+# Why here and not in configs/eosat1/: that tree is the mission config, baked
+# into the image and identified by docker/config-hash.sh. Course books are not
+# mission config and must not change the config hash; smo_common is installed
+# in every process that serves them.
+#
+# Fields
+#   id        stable URL id ([a-z0-9-]); the ONLY thing a request can name
+#   title     {en, fr}: shown in the interface language
+#   lang      en | fr: the language of the PDF itself
+#   audience  student | instructor (instructor = never on a student server)
+#   category  textbook | workbook | reference | guide
+#   source    repository-relative path (from the C2O root)
+#   size      bytes; `python3 -m smo_common.downloads sizes` refreshes it
+#   pair      id of the same document in the other language (both ways)
+#   licence   optional, shown beside the title
+#
+# Every PDF tracked in the repository is either a document below or an
+# `excluded:` entry with a reason (tests/test_common/test_downloads.py), so a
+# new book cannot go missing silently and a stale one cannot leak.
+# Inside the image the files sit under $SMO_DOWNLOADS_DIR/<source>
+# (docker/Dockerfile copies exactly the listed files).
+
+documents:
+  # ── textbooks ───────────────────────────────────────────────────────
+  - id: oer-textbook-en
+    title: {en: "Concurrent Spacecraft Design — an open textbook", fr: "Conception concourante d’engins spatiaux — manuel ouvert"}
+    lang: en
+    audience: student
+    category: textbook
+    source: design/docs/pdf/Concurrent_Spacecraft_Design_OER.pdf
+    size: 12402724
+    pair: oer-textbook-fr
+    licence: CC BY 4.0
+  - id: oer-textbook-fr
+    title: {en: "Concurrent Spacecraft Design — an open textbook", fr: "Conception concourante d’engins spatiaux — manuel ouvert"}
+    lang: fr
+    audience: student
+    category: textbook
+    source: design/docs/pdf/Concurrent_Spacecraft_Design_OER_FR.pdf
+    size: 14088814
+    pair: oer-textbook-en
+    licence: CC BY 4.0
+  - id: spacecdf-textbook-en
+    title: {en: "SpaceCDF course textbook", fr: "Manuel du cours SpaceCDF"}
+    lang: en
+    audience: student
+    category: textbook
+    source: design/docs/pdf/en/SpaceCDF_Textbook.pdf
+    size: 9194084
+    pair: spacecdf-textbook-fr
+  - id: spacecdf-textbook-fr
+    title: {en: "SpaceCDF course textbook", fr: "Manuel du cours SpaceCDF"}
+    lang: fr
+    audience: student
+    category: textbook
+    source: design/docs/pdf/fr/SpaceCDF_Textbook_FR.pdf
+    size: 10144257
+    pair: spacecdf-textbook-en
+
+  # ── workbooks ───────────────────────────────────────────────────────
+  - id: spacecdf-workbook-en
+    title: {en: "SpaceCDF course workbook", fr: "Cahier d’exercices du cours SpaceCDF"}
+    lang: en
+    audience: student
+    category: workbook
+    source: design/docs/pdf/en/SpaceCDF_Workbook.pdf
+    size: 1416828
+    pair: spacecdf-workbook-fr
+  - id: spacecdf-workbook-fr
+    title: {en: "SpaceCDF course workbook", fr: "Cahier d’exercices du cours SpaceCDF"}
+    lang: fr
+    audience: student
+    category: workbook
+    source: design/docs/pdf/fr/SpaceCDF_Workbook_FR.pdf
+    size: 1461667
+    pair: spacecdf-workbook-en
+  - id: on-w3-peer-review-en
+    title: {en: "Peer-review worksheet pack (week 3)", fr: "Fiches d’évaluation par les pairs (semaine 3)"}
+    lang: en
+    audience: student
+    category: workbook
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Peer_Review_Worksheets.pdf
+    size: 41162
+    pair: on-w3-peer-review-fr
+  - id: on-w3-peer-review-fr
+    title: {en: "Peer-review worksheet pack (week 3)", fr: "Fiches d’évaluation par les pairs (semaine 3)"}
+    lang: fr
+    audience: student
+    category: workbook
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Peer_Review_Worksheets_FR.pdf
+    size: 46132
+    pair: on-w3-peer-review-en
+
+  # ── student references ──────────────────────────────────────────────
+  - id: on-w3-tool-reference-en
+    title: {en: "Student MCS and MPS reference (week 3)", fr: "Référence MCS et MPS pour les étudiants (semaine 3)"}
+    lang: en
+    audience: student
+    category: reference
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Student_Tool_Reference.pdf
+    size: 60129
+    pair: on-w3-tool-reference-fr
+  - id: on-w3-tool-reference-fr
+    title: {en: "Student MCS and MPS reference (week 3)", fr: "Référence MCS et MPS pour les étudiants (semaine 3)"}
+    lang: fr
+    audience: student
+    category: reference
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Student_Tool_Reference_FR.pdf
+    size: 67361
+    pair: on-w3-tool-reference-en
+  - id: on-w3-procedure-quickref-en
+    title: {en: "Procedure quick-reference (week 3)", fr: "Aide-mémoire des procédures (semaine 3)"}
+    lang: en
+    audience: student
+    category: reference
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Student_Procedure_Quickref.pdf
+    size: 63054
+    pair: on-w3-procedure-quickref-fr
+  - id: on-w3-procedure-quickref-fr
+    title: {en: "Procedure quick-reference (week 3)", fr: "Aide-mémoire des procédures (semaine 3)"}
+    lang: fr
+    audience: student
+    category: reference
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Student_Procedure_Quickref_FR.pdf
+    size: 67114
+    pair: on-w3-procedure-quickref-en
+
+  # ── student guides ──────────────────────────────────────────────────
+  - id: on-syllabus-en
+    title: {en: "ORBIT NORTH syllabus (summer 2026)", fr: "Plan de cours ORBIT NORTH (été 2026)"}
+    lang: en
+    audience: student
+    category: guide
+    source: design/docs/pdf/ORBIT_NORTH_Syllabus_EN.pdf
+    size: 73189
+    pair: on-syllabus-fr
+  - id: on-syllabus-fr
+    title: {en: "ORBIT NORTH syllabus (summer 2026)", fr: "Plan de cours ORBIT NORTH (été 2026)"}
+    lang: fr
+    audience: student
+    category: guide
+    source: design/docs/pdf/ORBIT_NORTH_Syllabus_FR.pdf
+    size: 79027
+    pair: on-syllabus-en
+  - id: on-w3-training-day1-en
+    title: {en: "Week 3 training day 1: operations concept", fr: "Semaine 3, journée de formation 1 : concept d’opérations"}
+    lang: en
+    audience: student
+    category: guide
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Training_Day1.pdf
+    size: 55627
+    pair: on-w3-training-day1-fr
+  - id: on-w3-training-day1-fr
+    title: {en: "Week 3 training day 1: operations concept", fr: "Semaine 3, journée de formation 1 : concept d’opérations"}
+    lang: fr
+    audience: student
+    category: guide
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Training_Day1_FR.pdf
+    size: 62586
+    pair: on-w3-training-day1-en
+  - id: on-w3-training-day2-en
+    title: {en: "Week 3 training day 2: mission operations", fr: "Semaine 3, journée de formation 2 : opérations de mission"}
+    lang: en
+    audience: student
+    category: guide
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Training_Day2.pdf
+    size: 46197
+    pair: on-w3-training-day2-fr
+  - id: on-w3-training-day2-fr
+    title: {en: "Week 3 training day 2: mission operations", fr: "Semaine 3, journée de formation 2 : opérations de mission"}
+    lang: fr
+    audience: student
+    category: guide
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Training_Day2_FR.pdf
+    size: 52235
+    pair: on-w3-training-day2-en
+  - id: smo-installation-guide-en
+    title: {en: "Simulator installation guide", fr: "Guide d’installation du simulateur"}
+    lang: en
+    audience: student
+    category: guide
+    source: sim/configs/eosat1/manual/installation_guide.pdf
+    size: 13118
+  - id: spacecdf-installation-guide-en
+    title: {en: "SpaceCDF installation guide", fr: "Guide d’installation de SpaceCDF"}
+    lang: en
+    audience: student
+    category: guide
+    source: design/docs/pdf/SpaceCDF_Installation_Guide.pdf
+    size: 79708
+
+  # ── instructor only ─────────────────────────────────────────────────
+  - id: spacecdf-instructor-book-en
+    title: {en: "SpaceCDF instructor book", fr: "Guide de l’enseignant SpaceCDF"}
+    lang: en
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/en/SpaceCDF_Instructor_Book.pdf
+    size: 166477
+    pair: spacecdf-instructor-book-fr
+  - id: spacecdf-instructor-book-fr
+    title: {en: "SpaceCDF instructor book", fr: "Guide de l’enseignant SpaceCDF"}
+    lang: fr
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/fr/SpaceCDF_Instructor_Book_FR.pdf
+    size: 182258
+    pair: spacecdf-instructor-book-en
+  - id: spacecdf-facilitator-book-en
+    title: {en: "SpaceCDF facilitator's book (May 2026 edition)", fr: "Livre de l’animateur SpaceCDF (édition de mai 2026)"}
+    lang: en
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/SpaceCDF_Facilitator_Book.pdf
+    size: 4885538
+  - id: on-w3-sim-leop-instructor-en
+    title: {en: "Wednesday LEOP simulation — instructor pack", fr: "Simulation LEOP du mercredi — dossier de l’enseignant"}
+    lang: en
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Sim_Leop_Instructor.pdf
+    size: 56834
+    pair: on-w3-sim-leop-instructor-fr
+  - id: on-w3-sim-leop-instructor-fr
+    title: {en: "Wednesday LEOP simulation — instructor pack", fr: "Simulation LEOP du mercredi — dossier de l’enseignant"}
+    lang: fr
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Sim_Leop_Instructor_FR.pdf
+    size: 62011
+    pair: on-w3-sim-leop-instructor-en
+  - id: on-w3-sim-commissioning-instructor-en
+    title: {en: "Thursday commissioning simulation — instructor pack", fr: "Simulation de recette en orbite du jeudi — dossier de l’enseignant"}
+    lang: en
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Sim_Commissioning_Instructor.pdf
+    size: 55617
+    pair: on-w3-sim-commissioning-instructor-fr
+  - id: on-w3-sim-commissioning-instructor-fr
+    title: {en: "Thursday commissioning simulation — instructor pack", fr: "Simulation de recette en orbite du jeudi — dossier de l’enseignant"}
+    lang: fr
+    audience: instructor
+    category: guide
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Sim_Commissioning_Instructor_FR.pdf
+    size: 59797
+    pair: on-w3-sim-commissioning-instructor-en
+  - id: on-w3-breakpoint-spec-en
+    title: {en: "Week 3 simulator breakpoint specification", fr: "Spécification des points de reprise du simulateur (semaine 3)"}
+    lang: en
+    audience: instructor
+    category: reference
+    source: design/docs/pdf/en/ORBIT_NORTH_W3_Breakpoint_Spec.pdf
+    size: 52081
+    pair: on-w3-breakpoint-spec-fr
+  - id: on-w3-breakpoint-spec-fr
+    title: {en: "Week 3 simulator breakpoint specification", fr: "Spécification des points de reprise du simulateur (semaine 3)"}
+    lang: fr
+    audience: instructor
+    category: reference
+    source: design/docs/pdf/fr/ORBIT_NORTH_W3_Breakpoint_Spec_FR.pdf
+    size: 55816
+    pair: on-w3-breakpoint-spec-en
+  - id: smo-failure-modes-catalog-en
+    title: {en: "EOSAT-1 failure modes catalogue", fr: "Catalogue des modes de défaillance EOSAT-1"}
+    lang: en
+    audience: instructor
+    category: reference
+    source: sim/docs/EOSAT1_Failure_Modes_Catalog.pdf
+    size: 563714
+  - id: smo-software-architecture-en
+    title: {en: "SMO software architecture document", fr: "Document d’architecture logicielle SMO"}
+    lang: en
+    audience: instructor
+    category: reference
+    source: sim/configs/eosat1/manual/software_architecture.pdf
+    size: 51220
+  - id: smo-code-design-en
+    title: {en: "SMO code design document", fr: "Document de conception du code SMO"}
+    lang: en
+    audience: instructor
+    category: reference
+    source: sim/docs/EOSAT1_SMO_Code_Design_Document.pdf
+    size: 113012
+
+# PDFs in the repository that are deliberately NOT offered anywhere.
+excluded:
+  - {source: design/docs/pdf/SpaceCDF_Facilitator_Book.pre-cleanup.pdf, reason: "stale pre-cleanup build"}
+  - {source: design/docs/pdf/SpaceCDF_Learner_Workbook.pre-cleanup.pdf, reason: "stale pre-cleanup build"}
+  - {source: design/docs/pdf/SpaceCDF_Learner_Workbook.pdf, reason: "May 2026 learner workbook, superseded by en/SpaceCDF_Workbook.pdf"}
+  - {source: design/docs/pdf/SpaceCDF_Textbook.pdf, reason: "May 2026 build, superseded by en/SpaceCDF_Textbook.pdf"}
+  - {source: design/docs/pdf/SpaceCDF_Workbook.pdf, reason: "May 2026 build, superseded by en/SpaceCDF_Workbook.pdf"}
+  - {source: design/docs/pdf/SpaceCDF_3Week_Syllabus.pdf, reason: "DRAFT planning export (May 2026)"}
+  - {source: design/docs/pdf/SpaceCDF_Course_Plan.pdf, reason: "DRAFT planning export (May 2026)"}
+  - {source: design/docs/pdf/SpaceCDF_User_Guide.pdf, reason: "DRAFT export of USER_GUIDE.md (May 2026)"}
+  - {source: design/docs/pdf/SpaceCDF_API_Documentation.pdf, reason: "DRAFT developer API export (May 2026)"}
+  - {source: design/docs/pdf/ORBIT_NORTH_Recruitment_EN.pdf, reason: "recruitment flyer, not course material"}
+  - {source: design/docs/pdf/ORBIT_NORTH_Recruitment_FR.pdf, reason: "recruitment flyer, not course material"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Breakpoints.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Breakpoint_Spec.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Peer_Review.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Peer_Review_Worksheets.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Procedures.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Student_Procedure_Quickref.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Sim_Commissioning.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Sim_Commissioning_Instructor.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Sim_LEOP.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Sim_Leop_Instructor.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Student_Tools.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Student_Tool_Reference.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Training_Day1.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Training_Day1.pdf"}
+  - {source: design/docs/pdf/ORBIT_NORTH_W3_Training_Day2.pdf, reason: "May 2026 build, superseded by en/ORBIT_NORTH_W3_Training_Day2.pdf"}
+  - {source: design/Capstone_Programme_Plan.pdf, reason: "internal programme plan"}
+  - {source: design/exports_demo/6U_EO_CubeSat_MRD.pdf, reason: "SpaceCDF export demo, not course material"}
+  - {source: design/exports_demo/6U_EO_CubeSat_SRR.pdf, reason: "SpaceCDF export demo, not course material"}
+  - {source: design/exports_demo/SpaceCDF_Installation_Guide.pdf, reason: "older copy kept with the export demo"}
+  - {source: "sim/packages/smo-simulator/src/smo_simulator/instructor/static/PD F instructions.pdf", reason: "GNG 1103 deliverable brief, unrelated to this course"}

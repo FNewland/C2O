@@ -33,4 +33,6 @@ packages = ["src/smo_common"]
 artifacts = ["src/smo_common/ui/*", "src/smo_common/ui/i18n/*.json",
              "src/smo_common/ui/i18n/tools/*.json",
              "src/smo_common/ui/fonts/*", "src/smo_common/ui/viz/*",
-             "src/smo_common/ui/viz/vendor/three/*"]
+             "src/smo_common/ui/viz/vendor/three/*",
+             # the course-PDF list (smo_common/downloads.py)
+             "src/smo_common/downloads.yaml"]

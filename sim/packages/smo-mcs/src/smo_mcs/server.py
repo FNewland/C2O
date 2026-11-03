@@ -1446,6 +1446,9 @@ class MCSServer:
         app.router.add_get("/api/procedures/{path:.+}", self._handle_procedure_file)
         app.router.add_get("/api/manual", self._handle_manual_list)
         app.router.add_get("/api/manual/{path:.+}", self._handle_manual_file)
+        # Course PDFs for the MAN page (student list; smo_common/downloads.yaml).
+        from smo_common.downloads import register_download_routes
+        register_download_routes(app, audience="student")
         app.router.add_get("/api/positions", self._handle_positions)
         app.router.add_get("/api/tc-catalog", self._handle_tc_catalog)
         app.router.add_get("/api/param-catalog", self._handle_param_catalog)
