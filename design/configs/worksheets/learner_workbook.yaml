@@ -1,0 +1,1514 @@
+# GENERATED FILE — DO NOT EDIT BY HAND.
+# Source: docs/course/learner_workbook_expanded.md (+ docs/course/fr/…) and
+# configs/worksheets/worksheet_map.yaml. Regenerate with:
+#     python3 scripts/gen_worksheets.py
+# tests/test_logbook/test_worksheets_generated.py fails when this file is stale.
+source: design/docs/course/learner_workbook_expanded.md
+source_fr: design/docs/course/fr/learner_workbook_expanded.md
+map: design/configs/worksheets/worksheet_map.yaml
+worksheets:
+- id: LW-1.1
+  number: '1.1'
+  title: {en: Introduction to Space Mission Design, fr: Introduction à la conception de missions spatiales}
+  phase: prep
+  applies:
+    tools: [design]
+    steps: ['wizard:home']
+    tabs: [blocks]
+    levels: [0]
+    gates: [mcr]
+  questions:
+  - id: A
+    text: {en: 'Part A: The 17 SE Processes – SpaceCDF Mapping', fr: 'Partie A : Les 17 processus d''ingénierie
+        système – correspondance avec SpaceCDF'}
+    kind: text
+    prompt: {en: 'For each NASA SE process (NPR 7123.1D), identify which SpaceCDF feature implements it.
+        Write the tab name, button, or panel. If the process requires human judgment that the tool cannot
+        automate, mark "Manual" in the last column.', fr: 'Pour chaque processus d''ingénierie système
+        de la NASA (NPR 7123.1D), identifiez la fonctionnalité de SpaceCDF qui le met en œuvre. Indiquez
+        le nom de l''onglet, du bouton ou du panneau. Si le processus exige un jugement humain que l''outil
+        ne peut pas automatiser, inscrivez « Manuel » dans la dernière colonne.'}
+    points:
+    - {en: 'Reflection: Which processes are well-supported by the tool? Which ones fundamentally require
+        human judgment and cannot be fully automated? Write your answer below:', fr: 'Réflexion : quels
+        processus l''outil prend-il bien en charge ? Lesquels exigent fondamentalement un jugement humain
+        et ne peuvent pas être entièrement automatisés ? Rédigez votre réponse ci-dessous :'}
+  - id: B
+    text: {en: 'Part B: Lifecycle Phase Identification', fr: 'Partie B : Identification des phases du
+        cycle de vie'}
+    kind: text
+    prompt: {en: 'For each activity below, identify which NASA lifecycle phase (Pre-A through F) it belongs
+        to and which review gate marks the end of that phase:', fr: 'Pour chacune des activités ci-dessous,
+        indiquez à quelle phase du cycle de vie NASA (de pré-A à F) elle appartient et quel jalon de revue
+        marque la fin de cette phase :'}
+  - id: C
+    text: {en: 'Part C: CDF Position Interaction Analysis', fr: 'Partie C : Analyse des interactions entre
+        postes du CDF'}
+    kind: text
+    prompt: {en: 'For each design conflict below, identify which engineering positions must interact to
+        resolve it. Then briefly describe how you would approach the resolution.', fr: 'Pour chacun des
+        conflits de conception ci-dessous, identifiez les postes d''ingénierie qui doivent interagir pour
+        le résoudre. Décrivez ensuite brièvement comment vous aborderiez sa résolution.'}
+    points:
+    - {en: 'Conflict 1: The payload requires 50 W but the solar array can only provide 30 W.', fr: 'Conflit
+        1 : la charge utile demande 50 W, mais le générateur solaire ne peut fournir que 30 W.'}
+    - {en: 'Conflict 2: The reaction wheel vibration exceeds the payload''s pointing stability requirement.',
+      fr: 'Conflit 2 : les vibrations des roues de réaction dépassent l''exigence de stabilité de pointage
+        de la charge utile.'}
+    - {en: 'Conflict 3: The selected orbit (700 km) requires a propulsive deorbit for debris compliance,
+        but there is no mass budget remaining for a propulsion system.', fr: 'Conflit 3 : l''orbite retenue
+        (700 km) impose une désorbitation propulsive pour respecter les règles relatives aux débris, mais
+        il ne reste aucune marge dans le bilan de masse pour un système propulsif.'}
+    - {en: 'Conflict 4: The X-band downlink antenna pattern interferes with the payload''s sensitive optical
+        receiver.', fr: 'Conflit 4 : le diagramme de rayonnement de l''antenne de liaison descendante
+        en bande X interfère avec le récepteur optique sensible de la charge utile.'}
+  - id: D
+    text: {en: 'Part D: SpaceCDF Tool Exploration', fr: 'Partie D : Exploration de l''outil SpaceCDF'}
+    kind: text
+    prompt: {en: 'Navigate through the SpaceCDF tool and answer each question:', fr: 'Parcourez l''outil
+        SpaceCDF et répondez à chaque question :'}
+    points:
+    - {en: 'How many KPI cards are shown on the Design Dashboard? List them by name:', fr: 'Combien de
+        cartes d''indicateurs clés (KPI) le tableau de bord de conception (Design Dashboard) affiche-t-il
+        ? Citez-les par leur nom :'}
+    - {en: 'In the Gate Review tab, what are the MCR exit criteria? Which are auto-evaluated?', fr: 'Dans
+        l''onglet Gate Review, quels sont les critères de sortie de la MCR ? Lesquels sont évalués automatiquement
+        ?'}
+    - {en: 'What engineering positions are available when starting a collaborative session?', fr: 'Quels
+        postes d''ingénierie sont proposés au lancement d''une séance collaborative ?'}
+    - {en: 'What workflow steps does SpaceCDF guide you through (from left to right)?', fr: 'Par quelles
+        étapes du flux de travail SpaceCDF vous guide-t-il (de gauche à droite) ?'}
+    - {en: 'In the Positions tab, find your assigned position. What key questions does it list?', fr: 'Dans
+        l''onglet Positions, trouvez le poste qui vous est attribué. Quelles questions clés y sont énumérées
+        ?'}
+  - id: E
+    text: {en: 'Part E: V-Model Sketch', fr: 'Partie E : Esquisse du cycle en V'}
+    kind: text
+    prompt: {en: 'In the space below, sketch the System-V model from memory. Label each level on both
+        the left side (decomposition) and right side (integration). Draw the horizontal traceability arrows
+        and label them.', fr: 'Dans l''espace ci-dessous, esquissez de mémoire le cycle en V. Nommez chaque
+        niveau sur la branche gauche (décomposition) et sur la branche droite (intégration). Tracez les
+        flèches de traçabilité horizontale et nommez-les.'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Record key points below, questions you want to follow up on, and connections to your
+        mission concept:', fr: 'Notez ci-dessous les points clés, les questions que vous souhaitez approfondir
+        et les liens avec votre concept de mission :'}
+- id: LW-1.2
+  number: '1.2'
+  title: {en: Canadian Space Ecosystem & Regulatory Environment, fr: Écosystème spatial canadien et environnement
+      réglementaire}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [requirements]
+    levels: [0]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Canadian Space Industry Mapping', fr: 'Partie A : Cartographie de l''industrie
+        spatiale canadienne'}
+    kind: text
+    prompt: {en: 'For your team''s mission concept, identify potential Canadian industry partners at each
+        tier. If no Canadian supplier exists for a capability, note what country you would source from
+        and why.', fr: 'Pour le concept de mission de votre équipe, identifiez des partenaires industriels
+        canadiens potentiels à chaque niveau. S''il n''existe aucun fournisseur canadien pour une capacité
+        donnée, indiquez de quel pays vous vous approvisionneriez et pourquoi.'}
+    points:
+    - {en: 'Question: What CSA funding program(s) might support your mission? Why?', fr: 'Question : quel(s)
+        programme(s) de financement de l''Agence spatiale canadienne (ASC) pourrai(en)t soutenir votre
+        mission ? Pourquoi ?'}
+  - id: B
+    text: {en: 'Part B: RSSSA Compliance Assessment', fr: 'Partie B : Évaluation de la conformité à la
+        LSTS'}
+    kind: text
+    prompt: {en: 'Answer the following questions for your team''s mission concept:', fr: 'Répondez aux
+        questions suivantes pour le concept de mission de votre équipe :'}
+    points:
+    - {en: 'Does your mission involve any remote sensing of Earth (imaging, SAR, radiometry, etc.)?',
+      fr: 'Votre mission comporte-t-elle une forme de télédétection de la Terre (imagerie, SAR, radiométrie,
+        etc.) ?'}
+    - {en: 'If yes, will the satellite be operated from Canada?', fr: 'Si oui, le satellite sera-t-il
+        exploité depuis le Canada ?'}
+    - {en: 'What RSSSA conditions might apply? (Check all that apply)', fr: 'Quelles conditions de la
+        Loi sur les systèmes de télédétection spatiale (LSTS ; RSSSA en anglais) pourraient s''appliquer
+        ? (Cochez toutes celles qui s''appliquent.)'}
+    - {en: 'If your mission does NOT involve remote sensing, what other regulatory requirements apply?
+        (e.g., spectrum licensing, export control)', fr: 'Si votre mission ne comporte PAS de télédétection,
+        quelles autres exigences réglementaires s''appliquent ? (p. ex. attribution de licences de spectre,
+        contrôle des exportations)'}
+  - id: C
+    text: {en: 'Part C: Spectrum Licensing Plan', fr: 'Partie C : Plan d''attribution des licences de
+        spectre'}
+    kind: text
+    prompt: {en: 'Identify the frequency bands your mission will use and the licensing path for each:',
+      fr: 'Identifiez les bandes de fréquences que votre mission utilisera et la démarche d''obtention
+        de licence pour chacune :'}
+    points:
+    - {en: 'Question: How early in your project should you begin the spectrum licensing process? Why?',
+      fr: 'Question : à quel stade de votre projet devez-vous engager la démarche de licence de spectre
+        ? Pourquoi ?'}
+  - id: D
+    text: {en: 'Part D: Export Control Classification', fr: 'Partie D : Classification au titre du contrôle
+        des exportations'}
+    kind: text
+    prompt: {en: 'List the 3 most critical components in your preliminary mission concept. For each, identify
+        the likely export control classification:', fr: 'Énumérez les 3 composants les plus critiques
+        de votre concept de mission préliminaire. Pour chacun, identifiez la classification probable au
+        titre du contrôle des exportations :'}
+    points:
+    - {en: 'Question: If your mission includes a US-origin star tracker and you plan to launch on an Indian
+        PSLV, what export control issues arise?', fr: 'Question : si votre mission comprend un senseur
+        stellaire d''origine américaine et que vous prévoyez un lancement sur un PSLV indien, quels problèmes
+        de contrôle des exportations se posent ?'}
+  - id: E
+    text: {en: 'Part E: Regulatory Timeline', fr: 'Partie E : Calendrier réglementaire'}
+    kind: text
+    prompt: {en: 'Based on your mission concept, estimate when each regulatory activity should begin and
+        how long it will take. Mark the activities on the timeline below:', fr: 'À partir de votre concept
+        de mission, estimez quand chaque activité réglementaire doit commencer et combien de temps elle
+        prendra. Reportez les activités sur le calendrier ci-dessous :'}
+    points:
+    - {en: 'Question: Which regulatory activity is most likely to be on the critical path for your mission?
+        Why?', fr: 'Question : quelle activité réglementaire a le plus de chances de se trouver sur le
+        chemin critique de votre mission ? Pourquoi ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Record key points below, regulatory questions you need to research further, and implications
+        for your mission design:', fr: 'Notez ci-dessous les points clés, les questions réglementaires
+        que vous devez approfondir et leurs conséquences sur la conception de votre mission :'}
+- id: LW-1.3
+  number: '1.3'
+  title: {en: International Standards for Space Systems, fr: Normes internationales pour les systèmes
+      spatiaux}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [requirements, vv]
+    levels: [0, 1, 4]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Standard Applicability Matrix', fr: 'Partie A : Matrice d''applicabilité des normes'}
+    kind: text
+    prompt: {en: 'For your team''s mission concept, determine which ECSS and NASA standards apply. For
+        each standard, decide whether it is fully applicable, partially applicable (with tailoring), or
+        not applicable. Justify your decision.', fr: 'Pour le concept de mission de votre équipe, déterminez
+        quelles normes ECSS et NASA s''appliquent. Pour chaque norme, décidez si elle est entièrement
+        applicable, partiellement applicable (avec adaptation) ou non applicable. Justifiez votre décision.'}
+    points:
+    - {en: 'Question: What is the minimum set of standards your mission MUST comply with regardless of
+        mission class?', fr: 'Question : quel est l''ensemble minimal de normes que votre mission DOIT
+        respecter, quelle que soit sa classe ?'}
+  - id: B
+    text: {en: 'Part B: CDS Rev 14 Compliance Checklist', fr: 'Partie B : Liste de vérification de conformité
+        à la CDS rév. 14'}
+    kind: text
+    prompt: {en: 'If your mission uses a CubeSat form factor, complete this compliance checklist. If not,
+        skip to Part C.', fr: 'Si votre mission utilise un format CubeSat, remplissez cette liste de vérification
+        de conformité. Sinon, passez à la partie C.'}
+  - id: C
+    text: {en: 'Part C: Debris Mitigation Compliance', fr: 'Partie C : Conformité en matière d''atténuation
+        des débris'}
+    kind: text
+    prompt: {en: 'Complete the following debris mitigation assessment for your mission orbit:', fr: 'Effectuez
+        l''évaluation suivante de l''atténuation des débris pour l''orbite de votre mission :'}
+    points:
+    - {en: 'Planned orbit altitude:', fr: 'Altitude d''orbite prévue :'}
+    - {en: 'Estimated natural orbital lifetime (without propulsion):', fr: 'Durée de vie orbitale naturelle
+        estimée (sans propulsion) :'}
+    - {en: 'Compliance assessment:', fr: 'Évaluation de la conformité :'}
+    - {en: 'If non-compliant with the 5-year FCC rule, what options exist?', fr: 'Si la mission n''est
+        pas conforme à la règle FCC des 5 ans, quelles options s''offrent à vous ?'}
+    - {en: 'Passivation plan (list all stored energy sources and how you will deplete them at end of life):',
+      fr: 'Plan de passivation (énumérez toutes les sources d''énergie stockée et la manière dont vous
+        les épuiserez en fin de vie) :'}
+  - id: D
+    text: {en: 'Part D: Structural Design Margins', fr: 'Partie D : Marges de dimensionnement structural'}
+    kind: text
+    prompt: {en: 'If your mission has preliminary structural design information, calculate the margin
+        of safety:', fr: 'Si vous disposez d''informations préliminaires sur la conception structurale
+        de votre mission, calculez la marge de sécurité :'}
+    points:
+    - {en: 'Worked example: For Al 7075-T6 ($\sigma_{yield}$ = 503 MPa), applied stress = 200 MPa, FoS
+        (yield) = 1.25:', fr: 'Exemple résolu : pour l''Al 7075-T6 ($\sigma_{yield}$ = 503 MPa), contrainte
+        appliquée = 200 MPa, FoS (limite d''élasticité) = 1,25 :'}
+    - {en: 'Your calculation:', fr: 'Votre calcul :'}
+  - id: E
+    text: {en: 'Part E: SpaceCDF Compliance Panel', fr: 'Partie E : Panneau Compliance de SpaceCDF'}
+    kind: text
+    prompt: {en: 'Navigate to the Compliance panel in SpaceCDF and answer:', fr: 'Ouvrez le panneau Compliance
+        de SpaceCDF et répondez :'}
+    points:
+    - {en: 'What is the debris mitigation compliance status for your mission?', fr: 'Quel est l''état
+        de conformité de votre mission en matière d''atténuation des débris ?'}
+    - {en: 'What orbital altitude would be needed to comply with the FCC 5-year rule WITHOUT propulsion?
+        (Use the tool''s orbital lifetime calculator)', fr: 'Quelle altitude orbitale faudrait-il pour
+        respecter la règle FCC des 5 ans SANS propulsion ? (Utilisez le calculateur de durée de vie orbitale
+        de l''outil.)'}
+    - {en: 'What standards has the tool automatically suggested for your mission type?', fr: 'Quelles
+        normes l''outil a-t-il suggérées automatiquement pour votre type de mission ?'}
+    - {en: 'Are there any compliance flags (warnings or errors) on your current design?', fr: 'Votre conception
+        actuelle présente-t-elle des signalements de conformité (avertissements ou erreurs) ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Record key points about standards applicability, compliance challenges, and design implications
+        for your mission:', fr: 'Notez les points clés concernant l''applicabilité des normes, les difficultés
+        de conformité et les conséquences sur la conception de votre mission :'}
+- id: LW-1.4
+  number: '1.4'
+  title: {en: 'Mission Needs, Trade Studies & Concept of Operations', fr: 'Besoins de mission, études
+      de compromis et concept d''opérations'}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: ['wizard:problem', 'wizard:stakeholders', 'wizard:alternatives']
+    tabs: [decide]
+    levels: [0]
+    gates: [mcr]
+  questions:
+  - id: A
+    text: {en: 'Part A: Stakeholder Analysis Matrix', fr: 'Partie A : Matrice d''analyse des parties prenantes'}
+    kind: text
+    prompt: {en: 'Identify at least 4 stakeholders for your team''s mission. For each, capture their needs,
+        constraints, priority, and influence level.', fr: 'Identifiez au moins 4 parties prenantes de
+        la mission de votre équipe. Pour chacune, relevez ses besoins, ses contraintes, sa priorité et
+        son niveau d''influence.'}
+    points:
+    - {en: 'Question: Which stakeholder has the most influence over your mission? Do any stakeholders
+        have conflicting needs? If so, how might you resolve the conflict?', fr: 'Question : quelle partie
+        prenante a le plus d''influence sur votre mission ? Certaines parties prenantes ont-elles des
+        besoins contradictoires ? Si oui, comment pourriez-vous résoudre ce conflit ?'}
+  - id: B
+    text: {en: 'Part B: Problem Statement', fr: 'Partie B : Énoncé du problème'}
+    kind: text
+    prompt: {en: 'Write your team''s mission problem statement. It must answer all four questions: What
+        is the problem? Who is affected? What is the impact? What constraints exist?', fr: 'Rédigez l''énoncé
+        du problème de la mission de votre équipe. Il doit répondre aux quatre questions suivantes : quel
+        est le problème ? Qui est concerné ? Quel est l''impact ? Quelles contraintes existent ?'}
+    points:
+    - {en: 'Problem Statement:', fr: 'Énoncé du problème :'}
+    - {en: 'Peer Review Checklist (exchange with another team):', fr: 'Liste de vérification pour l''évaluation
+        par les pairs (à échanger avec une autre équipe) :'}
+  - id: C
+    text: {en: 'Part C: Mission Objectives', fr: 'Partie C : Objectifs de mission'}
+    kind: text
+    prompt: {en: Write 2–3 mission objectives. Score each against the quality checklist., fr: Rédigez
+        2 à 3 objectifs de mission. Évaluez chacun d'eux au regard de la liste de critères de qualité.}
+    points:
+    - {en: 'Objective 1:', fr: 'Objectif 1 :'}
+    - {en: 'Objective 2:', fr: 'Objectif 2 :'}
+    - {en: 'Objective 3 (optional):', fr: 'Objectif 3 (facultatif) :'}
+  - id: D
+    text: {en: 'Part D: MoE / MoP / TPM Trace', fr: 'Partie D : Traçabilité MoE / MoP / TPM'}
+    kind: text
+    prompt: {en: 'For your primary objective, trace the measurement hierarchy:', fr: 'Pour votre objectif
+        primaire, retracez la hiérarchie des mesures :'}
+    points:
+    - {en: 'Objective:', fr: 'Objectif :'}
+    - {en: 'MoE (Measure of Effectiveness – operational effectiveness from user perspective):', fr: 'MoE
+        (mesure d''efficacité – efficacité opérationnelle du point de vue de l''utilisateur) :'}
+    - {en: 'MoP (Measure of Performance – technical performance of the system):', fr: 'MoP (mesure de
+        performance – performances techniques du système) :'}
+    - {en: 'TPM (Technical Performance Measure – design parameter tracked during development):', fr: 'TPM
+        (indicateur de performance technique – paramètre de conception suivi pendant le développement)
+        :'}
+  - id: E
+    text: {en: 'Part E: Trade Study – Space vs Non-Space', fr: 'Partie E : Étude de compromis – solution
+        spatiale ou non spatiale'}
+    kind: text
+    prompt: {en: Complete a trade study evaluating whether a dedicated satellite is the right solution
+        for your mission need., fr: Réalisez une étude de compromis pour déterminer si un satellite dédié
+        est la bonne solution au besoin de votre mission.}
+    points:
+    - {en: 'Decision statement:', fr: 'Énoncé de la décision :'}
+    - {en: 'Alternatives:', fr: 'Solutions envisagées :'}
+    - {en: 'Criteria and Weights (must sum to 1.0):', fr: 'Critères et pondérations (leur somme doit valoir
+        1,0) :'}
+    - {en: 'Scoring Matrix (normalised 0–1):', fr: 'Matrice de notation (normalisée de 0 à 1) :'}
+    - {en: 'Result: The highest-scoring alternative is:', fr: 'Résultat : la solution qui obtient le meilleur
+        score est :'}
+    - {en: 'Decision statement (1 paragraph – include top 2 alternatives and why one was selected over
+        the other):', fr: 'Énoncé de la décision (1 paragraphe – présentez les 2 meilleures solutions
+        et expliquez pourquoi l''une a été préférée à l''autre) :'}
+    - {en: 'Sensitivity check: If you increase the weight of your second-most-important criterion by 20%
+        (and re-normalise), does the ranking change?', fr: 'Contrôle de sensibilité : si vous augmentez
+        de 20 % la pondération de votre deuxième critère le plus important (puis renormalisez), le classement
+        change-t-il ?'}
+  - id: F
+    text: {en: 'Part F: Concept of Operations Outline', fr: 'Partie F : Plan du concept d''opérations'}
+    kind: text
+    prompt: {en: 'Document your preliminary ConOps following the NASA SEH Appendix S structure:', fr: 'Documentez
+        votre ConOps préliminaire en suivant la structure de l''annexe S du NASA SEH :'}
+    points:
+    - {en: '1. Mission Architecture:', fr: '1. Architecture de la mission :'}
+    - {en: '2. Orbit-Average Power Budget:', fr: '2. Bilan de puissance moyenne sur l''orbite :'}
+    - {en: '3. Data Budget:', fr: '3. Bilan de données :'}
+  - id: G
+    text: {en: 'Part G: SpaceCDF Tool Entry', fr: 'Partie G : Saisie dans l''outil SpaceCDF'}
+    kind: text
+    prompt: {en: 'In SpaceCDF, enter your mission need (Step 1) and concept (Step 2). Then answer:', fr: 'Dans
+        SpaceCDF, saisissez votre besoin de mission (étape 1) et votre concept (étape 2). Répondez ensuite
+        aux questions suivantes :'}
+    points:
+    - {en: 'In Step 1, did the tool auto-detect your mission type from the objective text? What type did
+        it suggest?', fr: 'À l''étape 1, l''outil a-t-il détecté automatiquement votre type de mission
+        à partir du texte de l''objectif ? Quel type a-t-il proposé ?'}
+    - {en: 'In Step 2, run the mission trade analysis. Does the tool''s recommendation match your manual
+        trade study result from Part E?', fr: 'À l''étape 2, lancez l''analyse de compromis de mission.
+        La recommandation de l''outil correspond-elle au résultat de l''étude de compromis manuelle de
+        la partie E ?'}
+    - {en: 'In the ConOps tab, build your architecture diagram. How many systems did you define?', fr: 'Dans
+        l''onglet ConOps, construisez votre schéma d''architecture. Combien de systèmes avez-vous définis
+        ?'}
+    - {en: 'In the Trade Studies tab, run an orbit selection trade with at least 3 orbit options. What
+        orbit did it recommend?', fr: 'Dans l''onglet Trade Studies, lancez une étude de compromis de
+        choix d''orbite comportant au moins 3 options d''orbite. Quelle orbite l''outil a-t-il recommandée
+        ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Record key decisions made today, open questions, and what you want to investigate further:',
+      fr: 'Notez les décisions clés prises aujourd''hui, les questions en suspens et ce que vous souhaitez
+        approfondir :'}
+- id: LW-2.1
+  number: '2.1'
+  title: {en: The System-V and Requirements Engineering, fr: Le cycle en V et l'ingénierie des exigences}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [requirements, trace]
+    levels: []
+    gates: [srr]
+  questions:
+  - id: A
+    text: {en: 'Part A: System-V Mapping', fr: 'Partie A : Correspondance avec le cycle en V'}
+    kind: text
+    prompt: {en: 'For your mission, identify one element at each level of the V-model:', fr: 'Pour votre
+        mission, identifiez un élément à chaque niveau du cycle en V :'}
+  - id: B
+    text: {en: 'Part B: Requirement Quality Assessment', fr: 'Partie B : Évaluation de la qualité des
+        exigences'}
+    kind: text
+    prompt: {en: Evaluate each requirement using the SMART checklist and NASA Appendix C criteria. Mark
+        Pass (P) or Fail (F). Rewrite any failures., fr: Évaluez chaque exigence à l'aide de la liste
+        SMART et des critères de l'annexe C de la NASA. Indiquez Conforme (C) ou Non conforme (N). Réécrivez
+        toute exigence non conforme.}
+  - id: C
+    text: {en: 'Part C: Requirement Hierarchy and Traceability', fr: 'Partie C : Hiérarchie et traçabilité
+        des exigences'}
+    kind: text
+    prompt: {en: 'For your mission, write one requirement at each level. Draw the traceability chain.',
+      fr: 'Pour votre mission, rédigez une exigence à chaque niveau. Tracez la chaîne de traçabilité.'}
+    points:
+    - {en: 'Stakeholder Objective (traces FROM):', fr: 'Objectif des parties prenantes (origine de la
+        traçabilité) :'}
+    - {en: Mission Requirement (MR-, fr: Exigence de mission (MR-}
+    - {en: System Requirement (SR-, fr: Exigence système (SR-}
+    - {en: Subsystem Requirement (SSR-, fr: Exigence sous-système (SSR-}
+    - {en: 'Traceability diagram (draw arrows showing parent-child relationships):', fr: 'Diagramme de
+        traçabilité (tracez des flèches montrant les relations mère-fille) :'}
+  - id: D
+    text: {en: 'Part D: Splitting Compound Requirements', fr: 'Partie D : Décomposition des exigences
+        composées'}
+    kind: text
+    prompt: {en: 'Split this compound requirement into individually testable statements: > "The system
+        shall provide 10 m GSD multispectral imagery with 5-day revisit, 24-hour data latency, and positive
+        power margin in all operational modes including eclipse."', fr: 'Décomposez cette exigence composée
+        en énoncés vérifiables individuellement : > « Le système doit fournir des images multispectrales
+        d''une GSD de 10 m avec une revisite de 5 jours, une latence des données de 24 heures et une marge
+        de puissance positive dans tous les modes opérationnels, y compris en éclipse. »'}
+  - id: E
+    text: {en: 'Part E: SpaceCDF Requirements Generation', fr: 'Partie E : Génération des exigences dans
+        SpaceCDF'}
+    kind: text
+    points:
+    - {en: 'In SpaceCDF, click "Generate from Objectives." How many requirements were generated?', fr: 'Dans
+        SpaceCDF, cliquez sur « Generate from Objectives ». Combien d''exigences ont été générées ?'}
+    - {en: 'Use the Level filter – count at each level:', fr: 'Utilisez le filtre Niveau (Level) – comptez
+        les exigences à chaque niveau :'}
+    - {en: 'Classify 5 requirements by type:', fr: 'Classez 5 exigences par type :'}
+    - {en: 'Find one requirement that says HOW (implementation) not WHAT. Write it and your correction:',
+      fr: 'Trouvez une exigence qui énonce le COMMENT (mise en œuvre) et non le QUOI. Recopiez-la avec
+        votre correction :'}
+    - {en: 'Accept at least 5 requirements and reject at least 1. Record your decisions:', fr: 'Acceptez
+        au moins 5 exigences et rejetez-en au moins 1. Consignez vos décisions :'}
+    - {en: 'For 5 key requirements, assign verification method and phase:', fr: 'Pour 5 exigences clés,
+        attribuez une méthode de vérification et une phase :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-2.2
+  number: '2.2'
+  title: {en: Functional Decomposition and Allocation, fr: Décomposition fonctionnelle et allocation}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [functions, trace]
+    levels: []
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Mission Function Tree', fr: 'Partie A : Arbre fonctionnel de la mission'}
+    kind: text
+    prompt: {en: Draw your mission's complete function tree. Use minimum 3 levels of decomposition. Include
+        both mission-specific and universal functions., fr: Tracez l'arbre fonctionnel complet de votre
+        mission. Utilisez au moins 3 niveaux de décomposition. Incluez à la fois les fonctions propres
+        à la mission et les fonctions universelles.}
+    points:
+    - {en: 'Mission-specific functions:', fr: 'Fonctions propres à la mission :'}
+    - {en: 'Universal functions:', fr: 'Fonctions universelles :'}
+  - id: B
+    text: {en: 'Part B: Function-to-Requirement Traceability', fr: 'Partie B : Traçabilité des fonctions
+        vers les exigences'}
+    kind: text
+    prompt: {en: 'For each leaf function, write one derived requirement with a measurable threshold:',
+      fr: 'Pour chaque fonction terminale, rédigez une exigence dérivée assortie d''un seuil mesurable
+        :'}
+  - id: C
+    text: {en: 'Part C: Multi-Allocation Analysis', fr: 'Partie C : Analyse des allocations multiples'}
+    kind: text
+    prompt: {en: 'Identify at least one function that is allocated to more than one subsystem:', fr: 'Identifiez
+        au moins une fonction allouée à plus d''un sous-système :'}
+    points:
+    - {en: 'Function:', fr: 'Fonction :'}
+    - {en: 'Subsystem A (primary):', fr: 'Sous-système A (principal) :'}
+    - {en: 'Subsystem B (contributor):', fr: 'Sous-système B (contributeur) :'}
+    - {en: 'Interface created between A and B:', fr: 'Interface créée entre A et B :'}
+    - {en: 'Who "owns" this function?', fr: 'Qui est « propriétaire » de cette fonction ?'}
+    - {en: 'What interface requirements are needed?', fr: 'Quelles exigences d''interface sont nécessaires
+        ?'}
+  - id: D
+    text: {en: 'Part D: Performance Criteria', fr: 'Partie D : Critères de performance'}
+    kind: text
+    prompt: {en: 'For 4 key functions, define quantitative performance criteria:', fr: 'Pour 4 fonctions
+        clés, définissez des critères de performance quantitatifs :'}
+  - id: E
+    text: {en: 'Part E: SpaceCDF Coverage Check', fr: 'Partie E : Vérification de la couverture dans SpaceCDF'}
+    kind: text
+    prompt: {en: 'After entering functions in SpaceCDF:', fr: 'Après avoir saisi les fonctions dans SpaceCDF
+        :'}
+    points:
+    - {en: 'How many total functions in your tree?', fr: 'Combien de fonctions votre arbre compte-t-il
+        au total ?'}
+    - {en: 'How many leaf functions?', fr: 'Combien de fonctions terminales ?'}
+    - {en: 'How many leaf functions have NO linked requirements (amber badge)?', fr: 'Combien de fonctions
+        terminales n''ont AUCUNE exigence associée (badge orange) ?'}
+    - {en: 'List the uncovered functions and derive requirements for them:', fr: 'Énumérez les fonctions
+        non couvertes et dérivez-en des exigences :'}
+    - {en: 'Are there any functions the tool generated that are NOT appropriate for your mission? List
+        and explain why you removed them:', fr: 'L''outil a-t-il généré des fonctions qui ne conviennent
+        PAS à votre mission ? Énumérez-les et expliquez pourquoi vous les avez supprimées :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-2.3
+  number: '2.3'
+  title: {en: Orbit Selection and Mission Architecture, fr: Choix de l'orbite et architecture de la mission}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: ['wizard:architecture']
+    tabs: [decide, analyses]
+    levels: [0, 1]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Orbital Mechanics Calculations', fr: 'Partie A : Calculs de mécanique spatiale'}
+    kind: text
+    points:
+    - {en: 'Your selected orbit: Altitude $h$ =', fr: 'Orbite retenue : altitude $h$ ='}
+    - {en: '1. Semi-major axis:', fr: '1. Demi-grand axe :'}
+    - {en: '2. Orbital period:', fr: '2. Période orbitale :'}
+    - {en: '3. Orbital velocity:', fr: '3. Vitesse orbitale :'}
+    - {en: '4. Eclipse fraction (maximum):', fr: '4. Fraction d''éclipse (maximale) :'}
+    - {en: '5. Sunlight and eclipse time per orbit:', fr: '5. Durées d''ensoleillement et d''éclipse par
+        orbite :'}
+    - {en: '6. Sun-synchronous inclination (if applicable):', fr: '6. Inclinaison héliosynchrone (le cas
+        échéant) :'}
+  - id: B
+    text: {en: 'Part B: Orbit Trade Matrix', fr: 'Partie B : Matrice de compromis d''orbite'}
+    kind: text
+    prompt: {en: 'From SpaceCDF''s Orbit Trade Advisor, record the top 3 candidates:', fr: 'Relevez dans
+        l''Orbit Trade Advisor de SpaceCDF les 3 meilleures orbites candidates :'}
+    points:
+    - {en: 'Selected orbit:', fr: 'Orbite retenue :'}
+  - id: C
+    text: {en: 'Part C: Debris Compliance', fr: 'Partie C : Conformité en matière de débris'}
+    kind: text
+    prompt: {en: 'For your selected orbit:', fr: 'Pour l''orbite retenue :'}
+    points:
+    - {en: 'Show $\Delta V$ calculation if propulsion needed:', fr: 'Détaillez le calcul du $\Delta V$
+        si une propulsion est nécessaire :'}
+  - id: D
+    text: {en: 'Part D: Downstream Cascade Analysis', fr: 'Partie D : Analyse des répercussions en aval'}
+    kind: text
+    prompt: {en: 'How does your orbit selection affect each subsystem? Fill in the impact:', fr: 'Comment
+        le choix de l''orbite influe-t-il sur chaque sous-système ? Complétez les répercussions :'}
+  - id: E
+    text: {en: 'Part E: Discussion', fr: 'Partie E : Discussion'}
+    kind: text
+    prompt: {en: 'What would happen to your mission if you moved the orbit 100 km higher?', fr: 'Qu''arriverait-il
+        à votre mission si vous releviez l''orbite de 100 km ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-2.4
+  number: '2.4'
+  title: {en: 'Mission Architecture – Segments, Interfaces, and Budgets', fr: 'Architecture de la mission
+      – segments, interfaces et bilans'}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [blocks, interfaces, icd, budget]
+    levels: [0, 1, 2]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Mass Budget', fr: 'Partie A : Bilan de masse'}
+    kind: text
+    prompt: {en: 'Complete from your SpaceCDF design (or estimate if pre-run):', fr: 'Complétez à partir
+        de votre conception SpaceCDF (ou par estimation si l''outil n''a pas encore été utilisé) :'}
+    points:
+    - {en: 'Show margin calculation:', fr: 'Détaillez le calcul de la marge :'}
+  - id: B
+    text: {en: 'Part B: Power Budget by Mode', fr: 'Partie B : Bilan de puissance par mode'}
+    kind: text
+    points:
+    - {en: 'Orbit-average power calculation (show working):', fr: 'Calcul de la puissance moyenne sur
+        l''orbite (détaillez) :'}
+    - {en: 'SA power required:', fr: 'Puissance requise du générateur solaire :'}
+  - id: C
+    text: {en: 'Part C: Interface Identification', fr: 'Partie C : Identification des interfaces'}
+    kind: text
+    prompt: {en: 'List the 5 most critical interfaces in your design:', fr: 'Énumérez les 5 interfaces
+        les plus critiques de votre conception :'}
+    points:
+    - {en: 'Write 2 formal interface requirements for your most critical pair:', fr: 'Rédigez 2 exigences
+        d''interface formelles pour votre paire la plus critique :'}
+    - {en: 'IR-001:', fr: 'IR-001 :'}
+    - {en: 'IR-002:', fr: 'IR-002 :'}
+  - id: D
+    text: {en: 'Part D: Conflict Resolution', fr: 'Partie D : Résolution de conflit'}
+    kind: text
+    prompt: {en: 'From the SpaceCDF Interface Matrix, identify one conflict (red border):', fr: 'Dans
+        la matrice d''interfaces (Interface Matrix) de SpaceCDF, identifiez un conflit (bordure rouge)
+        :'}
+    points:
+    - {en: 'Conflict description:', fr: 'Description du conflit :'}
+    - {en: 'Severity: Critical / Major / Minor', fr: 'Gravité : critique / majeure / mineure'}
+    - {en: 'Resolution options considered:', fr: 'Options de résolution envisagées :'}
+    - {en: 'Selected resolution:', fr: 'Résolution retenue :'}
+    - {en: 'Rationale:', fr: 'Justification :'}
+  - id: E
+    text: {en: 'Part E: Budget Health Check', fr: 'Partie E : Contrôle de l''état des bilans'}
+    kind: text
+    prompt: {en: 'From the SpaceCDF Dashboard, record all KPIs:', fr: 'Dans le Dashboard de SpaceCDF,
+        relevez tous les KPI :'}
+    points:
+    - {en: 'Which budget is tightest?', fr: 'Quel bilan est le plus tendu ?'}
+    - {en: 'What single design change would improve it?', fr: 'Quelle modification de conception unique
+        l''améliorerait ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-3.1
+  number: '3.1'
+  title: {en: Power System and Thermal Control Design, fr: Conception du sous-système d'alimentation électrique
+      et du contrôle thermique}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [budget, analyses, spacecraft]
+    levels: [2, 3]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Solar Array Sizing', fr: 'Partie A : Dimensionnement du générateur solaire'}
+    kind: text
+    prompt: {en: Show all calculations step by step., fr: Détaillez tous les calculs étape par étape.}
+    points:
+    - {en: '1. Peak sunlight power demand: $P_{\text{peak}} = $', fr: '1. Besoin en puissance crête en
+        ensoleillement : $P_{\text{peak}} = $'}
+    - {en: '2. Eclipse power demand: $P_{\text{ecl}} = $', fr: '2. Besoin en puissance en éclipse : $P_{\text{ecl}}
+        = $'}
+    - {en: '3. Eclipse and sunlight times (from Worksheet 2.3):', fr: '3. Durées d''éclipse et d''ensoleillement
+        (d''après la fiche 2.3) :'}
+    - {en: '4. Recharge power:', fr: '4. Puissance de recharge :'}
+    - {en: '5. SA EOL required:', fr: '5. Puissance du générateur solaire requise en fin de vie :'}
+    - {en: 6. EOL degradation factor (mission lifetime =, fr: 6. Facteur de dégradation en fin de vie
+        (durée de mission =}
+    - {en: '7. SA BOL required:', fr: '7. Puissance du générateur solaire requise en début de vie :'}
+    - {en: '8. SA area:', fr: '8. Surface du générateur solaire :'}
+    - {en: '9. SA type needed (compare to CubeSat reference values):', fr: '9. Type de générateur solaire
+        nécessaire (comparez aux valeurs de référence des CubeSat) :'}
+    - {en: '10. SA mass:', fr: '10. Masse du générateur solaire :'}
+  - id: B
+    text: {en: 'Part B: Battery Sizing', fr: 'Partie B : Dimensionnement de la batterie'}
+    kind: text
+    prompt: {en: 'Show all calculations:', fr: 'Détaillez tous les calculs :'}
+    points:
+    - {en: '1. Eclipse energy:', fr: '1. Énergie consommée en éclipse :'}
+    - {en: '2. Battery capacity required:', fr: '2. Capacité de batterie requise :'}
+    - {en: '3. With 20% margin: $C_{\text{spec}} = $', fr: '3. Avec une marge de 20 % : $C_{\text{spec}}
+        = $'}
+    - {en: '4. Battery mass:', fr: '4. Masse de la batterie :'}
+    - {en: '5. Cycle life check:', fr: '5. Vérification de la durée de vie en cycles :'}
+  - id: C
+    text: {en: 'Part C: Thermal Analysis', fr: 'Partie C : Analyse thermique'}
+    kind: text
+    points:
+    - {en: '1. Identify hot case and cold case for your orbit:', fr: '1. Identifiez le cas chaud et le
+        cas froid pour votre orbite :'}
+    - {en: '2. From SpaceCDF Dashboard, record thermal predictions:', fr: '2. Relevez les prédictions
+        thermiques dans le Dashboard de SpaceCDF :'}
+    - {en: '3. Margin check (need >= 5 degC):', fr: '3. Vérification des marges (>= 5 °C exigés) :'}
+    - {en: '4. If any margin fails, what thermal control action would you take?', fr: '4. Si une marge
+        n''est pas respectée, quelle mesure de contrôle thermique prendriez-vous ?'}
+  - id: D
+    text: {en: 'Part D: SpaceCDF Verification', fr: 'Partie D : Vérification avec SpaceCDF'}
+    kind: text
+    prompt: {en: 'Compare your hand calculations to SpaceCDF values:', fr: 'Comparez vos calculs manuels
+        aux valeurs de SpaceCDF :'}
+  - id: justification
+    text: {en: Decision Justification, fr: Justification des décisions}
+    kind: text
+    prompt: {en: Explain WHY you chose each element of your power and thermal design. Consider the alternatives
+        you rejected and the trade-offs involved., fr: Expliquez POURQUOI vous avez choisi chaque élément
+        de votre conception électrique et thermique. Tenez compte des solutions que vous avez écartées
+        et des compromis en jeu.}
+    points:
+    - {en: 'Solar array configuration choice and rationale:', fr: 'Choix de la configuration du générateur
+        solaire et justification :'}
+    - {en: 'Battery sizing rationale (why this DOD? why this capacity margin?):', fr: 'Justification du
+        dimensionnement de la batterie (pourquoi cette DOD ? pourquoi cette marge de capacité ?) :'}
+    - {en: 'Thermal control approach (passive only? heaters? coatings?):', fr: 'Approche de contrôle thermique
+        (passif uniquement ? réchauffeurs ? revêtements ?) :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-3.2
+  number: '3.2'
+  title: {en: Attitude and Orbit Control System (AOCS), fr: Système de contrôle d'attitude et d'orbite
+      (SCAO)}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [analyses, spacecraft]
+    levels: [2, 3]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: AOCS Architecture Selection', fr: 'Partie A : Choix de l''architecture du SCAO'}
+    kind: text
+    points:
+    - {en: 'Pointing requirement from your mission:', fr: 'Exigence de pointage de votre mission :'}
+    - {en: 'AOCS architecture selected (tick one):', fr: 'Architecture du SCAO retenue (cochez-en une)
+        :'}
+    - {en: 'Justification for selection:', fr: 'Justification du choix :'}
+    - {en: 'Estimated AOCS mass:', fr: 'Masse estimée du SCAO :'}
+  - id: B
+    text: {en: 'Part B: Disturbance Torque Calculations', fr: 'Partie B : Calcul des couples perturbateurs'}
+    kind: text
+    prompt: {en: Calculate at least 2 disturbance torques for your spacecraft and orbit. Show all working.,
+      fr: Calculez au moins 2 couples perturbateurs pour votre engin spatial et votre orbite. Détaillez
+        tous les calculs.}
+    points:
+    - {en: 'Spacecraft properties:', fr: 'Propriétés de l''engin spatial :'}
+    - {en: '1. Gravity gradient torque:', fr: '1. Couple de gradient de gravité :'}
+    - {en: 2. Aerodynamic torque ($\rho$ at, fr: 2. Couple aérodynamique ($\rho$ à}
+    - {en: '3. (Optional) Solar radiation pressure torque:', fr: '3. (Facultatif) Couple de pression de
+        radiation solaire :'}
+    - {en: 4. (Optional) Residual magnetic dipole torque ($M \approx$, fr: 4. (Facultatif) Couple dû au
+        dipôle magnétique résiduel ($M \approx$}
+    - {en: 'Summary:', fr: 'Synthèse :'}
+    - {en: 'Which disturbance dominates?', fr: 'Quelle perturbation domine ?'}
+  - id: C
+    text: {en: 'Part C: Reaction Wheel Sizing', fr: 'Partie C : Dimensionnement des roues de réaction'}
+    kind: text
+    points:
+    - {en: '1. Torque requirement ($\geq 2\times$ total disturbance):', fr: '1. Exigence de couple ($\geq
+        2\times$ la perturbation totale) :'}
+    - {en: 2. Momentum storage (desaturation interval = 1 orbit =, fr: 2. Stockage de moment cinétique
+        (intervalle de désaturation = 1 orbite =}
+    - {en: '3. Selected reaction wheel:', fr: '3. Roue de réaction retenue :'}
+  - id: D
+    text: {en: 'Part D: Pointing Error Budget', fr: 'Partie D : Bilan d''erreurs de pointage'}
+    kind: text
+    points:
+    - {en: 'Requirement:', fr: 'Exigence :'}
+    - {en: 'Margin:', fr: 'Marge :'}
+    - {en: 'Does the pointing budget close? Y / N', fr: 'Le bilan de pointage est-il bouclé ? O / N'}
+    - {en: 'Which error source dominates?', fr: 'Quelle source d''erreur domine ?'}
+    - {en: 'What action would most improve the budget?', fr: 'Quelle action améliorerait le plus le bilan
+        ?'}
+  - id: E
+    text: {en: 'Part E: SpaceCDF Verification', fr: 'Partie E : Vérification avec SpaceCDF'}
+    kind: text
+    prompt: {en: 'Compare your hand calculations to SpaceCDF''s Pointing Budget display:', fr: 'Comparez
+        vos calculs manuels à l''affichage Pointing Budget de SpaceCDF :'}
+  - id: justification
+    text: {en: Decision Justification, fr: Justification des décisions}
+    kind: text
+    prompt: {en: Explain WHY you chose your AOCS architecture. Consider the alternatives and what drove
+        your decision., fr: Expliquez POURQUOI vous avez choisi votre architecture de SCAO. Tenez compte
+        des solutions envisagées et de ce qui a déterminé votre décision.}
+    points:
+    - {en: 'Why this architecture and not a simpler one?', fr: 'Pourquoi cette architecture plutôt qu''une
+        plus simple ?'}
+    - {en: 'Why this architecture and not a more capable one?', fr: 'Pourquoi cette architecture plutôt
+        qu''une plus performante ?'}
+    - {en: 'What is the single biggest risk in your AOCS design?', fr: 'Quel est le principal risque de
+        votre conception du SCAO ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-3.3
+  number: '3.3'
+  title: {en: Communications and Link Budget Design, fr: Conception des télécommunications et bilan de
+      liaison}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [analyses]
+    levels: [1, 2, 3]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Frequency Band Selection', fr: 'Partie A : Choix de la bande de fréquences'}
+    kind: text
+    points:
+    - {en: 'Mission data rate requirement:', fr: 'Exigence de débit de la mission :'}
+    - {en: 'License type selected: Amateur / Experimental / Commercial', fr: 'Type de licence retenu :
+        amateur / expérimentale / commerciale'}
+    - {en: 'Band selected:', fr: 'Bande retenue :'}
+    - {en: 'Rationale for band selection:', fr: 'Justification du choix de la bande :'}
+    - {en: 'Licensing/filing required:', fr: 'Licences / notifications requises :'}
+    - {en: 'Estimated licensing cost:', fr: 'Coût estimé des licences :'}
+  - id: B
+    text: {en: 'Part B: Complete Link Budget', fr: 'Partie B : Bilan de liaison complet'}
+    kind: text
+    prompt: {en: 'Fill in ALL rows. Show computation for EIRP, FSPL, G/T, C/N$_0$, and margin.', fr: 'Remplissez
+        TOUTES les lignes. Détaillez le calcul de la PIRE, de l''affaiblissement en espace libre, du G/T,
+        du C/N$_0$ et de la marge.'}
+    points:
+    - {en: 'Show FSPL calculation:', fr: 'Détaillez le calcul de l''affaiblissement en espace libre :'}
+    - {en: 'Does the link close ($\geq$ 3 dB)? Y / N', fr: 'La liaison est-elle bouclée ($\geq$ 3 dB)
+        ? O / N'}
+    - {en: 'If margin is excessive, maximum achievable data rate at 3 dB margin:', fr: 'Si la marge est
+        excessive, débit maximal atteignable avec une marge de 3 dB :'}
+  - id: C
+    text: {en: 'Part C: Data Budget', fr: 'Partie C : Bilan de données'}
+    kind: text
+    points:
+    - {en: 'Daily data generation:', fr: 'Volume de données produit par jour :'}
+    - {en: 'Daily downlink capacity:', fr: 'Capacité quotidienne de liaison descendante :'}
+    - {en: 'Data budget closes? ($V_{\text{DL}} \geq V_{\text{gen}}$): Y / N', fr: 'Le bilan de données
+        est-il bouclé ? ($V_{\text{DL}} \geq V_{\text{gen}}$) : O / N'}
+  - id: D
+    text: {en: 'Part D: SpaceCDF Comparison', fr: 'Partie D : Comparaison avec SpaceCDF'}
+    kind: text
+    prompt: {en: 'Open the Link Budget tab, enter your parameters, and compare:', fr: 'Ouvrez l''onglet
+        Link Budget, saisissez vos paramètres et comparez :'}
+  - id: E
+    text: {en: 'Part E: Modulation and Coding Selection', fr: 'Partie E : Choix de la modulation et du
+        codage'}
+    kind: text
+    points:
+    - {en: 'Selected modulation:', fr: 'Modulation retenue :'}
+    - {en: 'Selected FEC code:', fr: 'Code FEC retenu :'}
+    - {en: 'Required $E_b/N_0$ at BER $10^{-6}$:', fr: '$E_b/N_0$ requis pour un TEB de $10^{-6}$ :'}
+    - {en: 'Spectral efficiency:', fr: 'Efficacité spectrale :'}
+    - {en: 'Rationale:', fr: 'Justification :'}
+  - id: justification
+    text: {en: Decision Justification, fr: Justification des décisions}
+    kind: text
+    prompt: {en: Explain WHY you chose your communications architecture. Address each decision explicitly.,
+      fr: Expliquez POURQUOI vous avez choisi votre architecture de télécommunications. Traitez chaque
+        décision explicitement.}
+    points:
+    - {en: 'Why this frequency band and not another?', fr: 'Pourquoi cette bande de fréquences plutôt
+        qu''une autre ?'}
+    - {en: 'Why this antenna type? What pointing does it require from AOCS?', fr: 'Pourquoi ce type d''antenne
+        ? Quel pointage exige-t-il du SCAO ?'}
+    - {en: 'Why this modulation/coding scheme? What trade-off did you make between data rate and link
+        robustness?', fr: 'Pourquoi ce schéma de modulation et de codage ? Quel compromis avez-vous fait
+        entre débit et robustesse de la liaison ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-3.4
+  number: '3.4'
+  title: {en: 'Structure, Propulsion, and Equipment Selection', fr: 'Structure, propulsion et choix des
+      équipements'}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [spacecraft, blocks, budget]
+    levels: [3]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: CDS Compliance Check', fr: 'Partie A : Vérification de la conformité à la CDS'}
+    kind: text
+    points:
+    - {en: 'Non-compliance items and corrective actions:', fr: 'Points de non-conformité et actions correctives
+        :'}
+  - id: B
+    text: {en: 'Part B: Structural Margin Calculation', fr: 'Partie B : Calcul de la marge structurale'}
+    kind: text
+    points:
+    - {en: 'Axial launch load:', fr: 'Charge de lancement axiale :'}
+    - {en: 'Load per rail (4 rails, equal sharing):', fr: 'Charge par rail (4 rails, répartition égale)
+        :'}
+    - {en: 'Stress in rail (cross-section 8.5 x 8.5 mm = $7.225 \times 10^{-5}$ m$^2$):', fr: 'Contrainte
+        dans le rail (section 8,5 x 8,5 mm = $7.225 \times 10^{-5}$ m$^2$) :'}
+    - {en: 'Margin of safety (yield, Al 7075-T6, $\sigma_y = 503$ MPa):', fr: 'Marge de sécurité (limite
+        d''élasticité, Al 7075-T6, $\sigma_y = 503$ MPa) :'}
+    - {en: 'Pass? Y / N', fr: 'Conforme ? O / N'}
+  - id: C
+    text: {en: 'Part C: Propulsion Decision', fr: 'Partie C : Décision relative à la propulsion'}
+    kind: text
+    points:
+    - {en: 'Does your mission need propulsion?', fr: 'Votre mission a-t-elle besoin de propulsion ?'}
+    - {en: 'Decision: &nbsp; Propulsion / No propulsion', fr: 'Décision : propulsion / pas de propulsion'}
+    - {en: 'If propulsion is selected, complete this section. Show all working.', fr: 'Si vous retenez
+        une propulsion, remplissez cette partie. Détaillez tous les calculs.'}
+    - {en: 'Total $\Delta V$ required:', fr: '$\Delta V$ total requis :'}
+    - {en: 'Propulsion type selected:', fr: 'Type de propulsion retenu :'}
+    - {en: 'Propellant mass (Tsiolkovsky):', fr: 'Masse d''ergols (Tsiolkovski) :'}
+    - {en: 'System dry mass (thruster + tank + feed):', fr: 'Masse sèche du système (propulseur + réservoir
+        + alimentation) :'}
+    - {en: 'Total propulsion system mass:', fr: 'Masse totale du système propulsif :'}
+    - {en: 'Fraction of total spacecraft mass:', fr: 'Fraction de la masse totale du satellite :'}
+  - id: D
+    text: {en: 'Part D: Equipment Selection Log', fr: 'Partie D : Journal de choix des équipements'}
+    kind: text
+    prompt: {en: 'Using SpaceCDF''s Equipment Browser, select components for each category:', fr: 'À l''aide
+        de l''Equipment Browser de SpaceCDF, choisissez les composants de chaque catégorie :'}
+    points:
+    - {en: 'Parametric estimate (from Session 2.4):', fr: 'Estimation paramétrique (séance 2.4) :'}
+    - {en: 'Equipment-based total:', fr: 'Total fondé sur les équipements :'}
+    - {en: 'Difference:', fr: 'Écart :'}
+    - {en: 'Any incompatibilities detected? (RF band mismatch, voltage mismatch, interface conflict)',
+      fr: 'Des incompatibilités ont-elles été détectées ? (bande RF, tension ou interface incompatibles)'}
+  - id: E
+    text: {en: 'Part E: Component Trade Study', fr: 'Partie E : Étude de compromis sur un composant'}
+    kind: text
+    points:
+    - {en: 'Subsystem traded:', fr: 'Sous-système étudié :'}
+    - {en: 'Winner:', fr: 'Option retenue :'}
+    - {en: 'Rationale (beyond the numbers):', fr: 'Justification (au-delà des chiffres) :'}
+  - id: F
+    text: {en: 'Part F: Final Budget Health Check', fr: 'Partie F : Contrôle final de l''état des bilans'}
+    kind: text
+    prompt: {en: 'After equipment selection, record final budget status:', fr: 'Après le choix des équipements,
+        consignez l''état final des bilans :'}
+    points:
+    - {en: 'Any budget that does not close?', fr: 'Un bilan n''est-il pas bouclé ?'}
+    - {en: 'Proposed fix:', fr: 'Correction proposée :'}
+  - id: justification
+    text: {en: Decision Justification, fr: Justification des décisions}
+    kind: text
+    prompt: {en: Explain WHY you made each key structural and propulsion decision., fr: Expliquez POURQUOI
+        vous avez pris chacune des décisions clés relatives à la structure et à la propulsion.}
+    points:
+    - {en: 'Form factor selection rationale (why this size and not larger/smaller?):', fr: 'Justification
+        du choix du format (pourquoi cette taille, et pas plus grande ou plus petite ?) :'}
+    - {en: 'Propulsion decision rationale (if no propulsion: why not? if propulsion: why this type?):',
+      fr: 'Justification de la décision relative à la propulsion (sans propulsion : pourquoi pas ? avec
+        propulsion : pourquoi ce type ?) :'}
+    - {en: 'Equipment selection rationale (which component trade-offs were hardest? what compromises did
+        you make?):', fr: 'Justification du choix des équipements (quels compromis entre composants ont
+        été les plus difficiles ? quelles concessions avez-vous faites ?) :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+- id: LW-4.1
+  number: '4.1'
+  title: {en: Equipment Selection & Bill of Materials, fr: Choix des équipements et nomenclature}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [blocks, budget, interfaces, icd]
+    levels: [3]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Make/Buy/Reuse Decisions', fr: 'Partie A : Décisions faire, acheter ou réutiliser'}
+    kind: text
+    prompt: {en: 'For each subsystem, document the procurement decision and rationale:', fr: 'Pour chaque
+        sous-système, documentez la décision d''approvisionnement et sa justification :'}
+  - id: B
+    text: {en: 'Part B: Bill of Materials (BOM)', fr: 'Partie B : Nomenclature (BOM)'}
+    kind: text
+    prompt: {en: 'Complete the BOM from the SpaceCDF Equipment Browser selections:', fr: 'Complétez la
+        nomenclature à partir des choix effectués dans l''Equipment Browser de SpaceCDF :'}
+  - id: C
+    text: {en: 'Part C: Budget Tracking', fr: 'Partie C : Suivi des bilans'}
+    kind: text
+    prompt: {en: 'After all selections, record the live budget values from the SpaceCDF Dashboard:', fr: 'Une
+        fois tous les choix effectués, relevez les valeurs des bilans en temps réel dans le Dashboard
+        de SpaceCDF :'}
+  - id: D
+    text: {en: 'Part D: Export Control Assessment', fr: 'Partie D : Évaluation au titre du contrôle des
+        exportations'}
+    kind: text
+    prompt: {en: 'List any components that may require export licences:', fr: 'Énumérez les composants
+        susceptibles d''exiger une licence d''exportation :'}
+  - id: E
+    text: {en: 'Part E: Interface Compatibility Check', fr: 'Partie E : Vérification de la compatibilité
+        des interfaces'}
+    kind: text
+    prompt: {en: 'For each selected component, verify interface compatibility:', fr: 'Pour chaque composant
+        retenu, vérifiez la compatibilité des interfaces :'}
+  - id: F
+    text: {en: 'Part F: Interface Incompatibility Resolution', fr: 'Partie F : Résolution d''une incompatibilité
+        d''interface'}
+    kind: text
+    prompt: {en: 'Describe one interface incompatibility found during selection and how you resolved it:',
+      fr: 'Décrivez une incompatibilité d''interface constatée lors du choix des équipements et la manière
+        dont vous l''avez résolue :'}
+    points:
+    - {en: 'Issue:', fr: 'Problème :'}
+    - {en: 'Components involved:', fr: 'Composants concernés :'}
+    - {en: 'Root cause:', fr: 'Cause première :'}
+    - {en: 'Resolution chosen:', fr: 'Résolution retenue :'}
+    - {en: 'Impact on budget:', fr: 'Incidence sur les bilans :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'What was the most difficult equipment selection decision? Why?', fr: 'Quelle a été la
+        décision de choix d''équipement la plus difficile ? Pourquoi ?'}
+- id: LW-4.2
+  number: '4.2'
+  title: {en: Verification & Validation Planning, fr: Planification de la vérification et de la validation}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [vv]
+    levels: []
+    gates: [pdr]
+  questions:
+  - id: A
+    text: {en: 'Part A: ATIR(D) Method Assignment', fr: 'Partie A : Attribution des méthodes ATIR(D)'}
+    kind: text
+    prompt: {en: 'For 10 key requirements from your SpaceCDF V&V Matrix, assign the verification method
+        and justify:', fr: 'Pour 10 exigences clés de votre Matrice V&V (V&V Matrix) dans SpaceCDF, attribuez
+        la méthode de vérification et justifiez-la :'}
+    points:
+    - {en: 'Summary count: Analysis:', fr: 'Décompte : analyse :'}
+  - id: B
+    text: {en: 'Part B: Dual-Method Requirements', fr: 'Partie B : Exigences à double méthode'}
+    kind: text
+    prompt: {en: 'Identify 3 requirements that need BOTH analysis (early confidence) AND test (final proof):',
+      fr: 'Identifiez 3 exigences qui nécessitent À LA FOIS une analyse (confiance précoce) ET un essai
+        (preuve finale) :'}
+  - id: C
+    text: {en: 'Part C: Environmental Test Sequence', fr: 'Partie C : Séquence d''essais d''environnement'}
+    kind: text
+    prompt: {en: 'For your selected launch vehicle, specify the complete proto-flight test sequence:',
+      fr: 'Pour le lanceur retenu, spécifiez la séquence complète d''essais protovol :'}
+    points:
+    - {en: 'Launch vehicle:', fr: 'Lanceur :'}
+    - {en: 'Total test campaign duration estimate:', fr: 'Durée totale estimée de la campagne d''essais
+        :'}
+  - id: D
+    text: {en: 'Part D: Vibration Test Profile', fr: 'Partie D : Profil de l''essai de vibrations'}
+    kind: text
+    prompt: {en: 'Record the random vibration PSD profile from your launch vehicle PUG:', fr: 'Relevez
+        le profil de DSP des vibrations aléatoires dans le manuel utilisateur (PUG) de votre lanceur :'}
+    points:
+    - {en: 'Overall gRMS (calculated):', fr: 'gRMS global (calculé) :'}
+    - {en: 'Show your calculation:', fr: 'Détaillez votre calcul :'}
+  - id: E
+    text: {en: 'Part E: TVAC Cycle Profile', fr: 'Partie E : Profil d''un cycle TVAC'}
+    kind: text
+    prompt: {en: 'Sketch or describe one TVAC cycle:', fr: 'Esquissez ou décrivez un cycle TVAC :'}
+    points:
+    - {en: 'Hot extreme: +', fr: 'Extrême chaud : +'}
+    - {en: 'Ramp rate:', fr: 'Vitesse de rampe :'}
+    - {en: 'Functional test at each extreme? Y / N Duration of functional test:', fr: 'Essai fonctionnel
+        à chaque extrême ? O / N Durée de l''essai fonctionnel :'}
+    - {en: 'Calculate time for one cycle:', fr: 'Calculez la durée d''un cycle :'}
+    - {en: 'Total TVAC campaign:', fr: 'Campagne TVAC totale :'}
+  - id: F
+    text: {en: 'Part F: Waiver Identification', fr: 'Partie F : Identification des dérogations'}
+    kind: text
+    prompt: {en: 'Are there any requirements that cannot be verified by the standard method? Document
+        potential waivers:', fr: 'Certaines exigences ne peuvent-elles pas être vérifiées par la méthode
+        standard ? Documentez les dérogations potentielles :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Which environmental test do you consider most critical for your mission? Why?', fr: 'Quel
+        essai d''environnement jugez-vous le plus critique pour votre mission ? Pourquoi ?'}
+- id: LW-4.3
+  number: '4.3'
+  title: {en: 'Risk, Interfaces & FMECA', fr: 'Risques, interfaces et AMDEC'}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [vv, interfaces, decide]
+    levels: [2, 3, 4]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Risk Register', fr: 'Partie A : Registre des risques'}
+    kind: text
+    prompt: {en: Identify at least 5 technical risks for your mission design. Score each on the 5x5 matrix.,
+      fr: Identifiez au moins 5 risques techniques pour la conception de votre mission. Attribuez à chacun
+        un score sur la matrice 5 x 5.}
+    points:
+    - {en: 'Scoring reminder: L x C = Score. Low (1-4), Medium (5-9), High (10-15), Critical (16-25).',
+      fr: 'Rappel du calcul : L x C = score (L = vraisemblance, likelihood ; C = conséquence). Faible
+        (1-4), moyen (5-9), élevé (10-15), critique (16-25).'}
+    - {en: 'How many risks are High or Critical (before mitigation)?', fr: 'Combien de risques sont élevés
+        ou critiques (avant réduction) ?'}
+    - {en: 'How many remain High or Critical after mitigation?', fr: 'Combien restent élevés ou critiques
+        après réduction ?'}
+  - id: B
+    text: {en: 'Part B: 5x5 Risk Matrix Plot', fr: 'Partie B : Report sur la matrice des risques 5 x 5'}
+    kind: text
+    prompt: {en: Plot your risks on the matrix below. Write the risk number in the appropriate cell.,
+      fr: Reportez vos risques sur la matrice ci-dessous. Inscrivez le numéro du risque dans la case appropriée.}
+  - id: C
+    text: {en: 'Part C: N-Squared (N^2) Interface Matrix', fr: 'Partie C : Matrice d''interfaces N-carré
+        (N^2)'}
+    kind: text
+    prompt: {en: 'Fill in the interface matrix for your mission''s subsystems. Use abbreviations: - P
+        = Power (electrical) - D = Data (I2C, SPI, UART, CAN, RS-422) - R = RF (coaxial) - M = Mechanical
+        (mounting, alignment) - T = Thermal (conductive/radiative)', fr: 'Remplissez la matrice d''interfaces
+        des sous-systèmes de votre mission. Utilisez les abréviations suivantes : - P = puissance (électrique)
+        - D = données (I2C, SPI, UART, CAN, RS-422) - R = RF (coaxial) - M = mécanique (fixation, alignement)
+        - T = thermique (conductif/radiatif)'}
+    points:
+    - {en: 'Total number of interfaces identified:', fr: 'Nombre total d''interfaces identifiées :'}
+    - {en: 'Interface conflicts detected: (describe at least 2)', fr: 'Conflits d''interface détectés
+        : (décrivez-en au moins 2)'}
+    - {en: 'Conflict:', fr: 'Conflit :'}
+  - id: D
+    text: {en: 'Part D: FMECA Table', fr: 'Partie D : Tableau d''AMDEC (FMECA)'}
+    kind: text
+    prompt: {en: 'Complete for 4 critical components:', fr: 'Remplissez le tableau pour 4 composants critiques
+        :'}
+  - id: E
+    text: {en: 'Part E: Single-Point Failure Analysis', fr: 'Partie E : Analyse des points de défaillance
+        unique'}
+    kind: text
+    prompt: {en: 'List all single-point failures in your design:', fr: 'Énumérez tous les points de défaillance
+        unique (SPF) de votre conception :'}
+    points:
+    - {en: 'Total SPFs identified:', fr: 'Nombre total de SPF identifiés :'}
+  - id: F
+    text: {en: 'Part F: Reliability Calculation', fr: 'Partie F : Calcul de fiabilité'}
+    kind: text
+    prompt: {en: 'Calculate the series reliability for your mission''s critical chain (components that
+        must all work for mission success):', fr: 'Calculez la fiabilité série de la chaîne critique de
+        votre mission (composants qui doivent tous fonctionner pour que la mission réussisse) :'}
+    points:
+    - {en: R_series = R_1 x R_2 x ... x R_n =, fr: R_series = R_1 x R_2 x ... x R_n =}
+    - {en: R_series =, fr: R_series =}
+    - {en: R_redundant = 1 - (1 - R)^2 = 1 - (1 -, fr: R_redundant = 1 - (1 - R)^2 = 1 - (1 -}
+    - {en: New R_series (with redundancy) =, fr: Nouvelle R_series (avec redondance) =}
+    - {en: 'Improvement: from', fr: 'Amélioration : de'}
+  - id: G
+    text: {en: 'Part G: Risk Discussion', fr: 'Partie G : Discussion sur les risques'}
+    kind: text
+    prompt: {en: 'What is the highest-risk item in your design? What would it take (cost, mass, schedule)
+        to bring the risk to an acceptable level?', fr: 'Quel est l''élément le plus risqué de votre conception
+        ? Que faudrait-il (coût, masse, délais) pour ramener ce risque à un niveau acceptable ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Which single-point failure concerns you the most? Would you accept it, or is mitigation
+        essential?', fr: 'Quel point de défaillance unique vous inquiète le plus ? L''accepteriez-vous,
+        ou sa réduction est-elle indispensable ?'}
+- id: LW-4.4
+  number: '4.4'
+  title: {en: Cost Estimation & Design Review, fr: Estimation des coûts et revue de conception}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [budget, vv]
+    levels: [0, 4]
+    gates: [pdr]
+  questions:
+  - id: A
+    text: {en: 'Part A: Mission Cost Estimate (WBS)', fr: 'Partie A : Estimation du coût de la mission
+        (WBS)'}
+    kind: text
+    prompt: {en: 'Complete using both parametric estimates (from SpaceCDF Cost tab) and bottom-up estimates
+        (from BOM vendor quotes):', fr: 'Complétez à la fois avec des estimations paramétriques (onglet
+        Coûts (Cost) de SpaceCDF) et des estimations ascendantes (devis fournisseurs de la nomenclature)
+        :'}
+  - id: B
+    text: {en: 'Part B: Confidence Levels', fr: 'Partie B : Niveaux de confiance'}
+    kind: text
+    points:
+    - {en: 'P50 estimate (your best estimate):', fr: 'Estimation P50 (votre meilleure estimation) :'}
+    - {en: 'P70 estimate (P50 x 1.2):', fr: 'Estimation P70 (P50 x 1,2) :'}
+    - {en: 'P80 estimate (P50 x 1.3):', fr: 'Estimation P80 (P50 x 1,3) :'}
+  - id: C
+    text: {en: 'Part C: Constellation Cost (if applicable)', fr: 'Partie C : Coût d''une constellation
+        (le cas échéant)'}
+    kind: text
+    points:
+    - {en: 'Number of satellites:', fr: 'Nombre de satellites :'}
+    - {en: b = ln(learning_rate) / ln(2) = ln(, fr: b = ln(learning_rate) / ln(2) = ln(}
+    - {en: 'Total constellation cost:', fr: 'Coût total de la constellation :'}
+    - {en: 'P80 constellation cost (x 1.3):', fr: 'Coût P80 de la constellation (x 1,3) :'}
+  - id: D
+    text: {en: 'Part D: Cost Drivers', fr: 'Partie D : Facteurs de coût'}
+    kind: text
+    points:
+    - {en: 'Top 3 cost drivers in your mission (from SpaceCDF Cost Breakdown):', fr: 'Les 3 principaux
+        facteurs de coût de votre mission (d''après le Cost Breakdown de SpaceCDF) :'}
+    - {en: 'What would you change to reduce total cost by 20%?', fr: 'Que modifieriez-vous pour réduire
+        le coût total de 20 % ?'}
+  - id: E
+    text: {en: 'Part E: Design Review Readiness', fr: 'Partie E : État de préparation à la revue de conception'}
+    kind: text
+    prompt: {en: 'From the SpaceCDF Gate Review tab, assess your readiness for SRR/PDR:', fr: 'Dans l''onglet
+        Gate Review de SpaceCDF, évaluez votre état de préparation à la SRR ou à la PDR :'}
+    points:
+    - {en: 'Must-pass criteria met:', fr: 'Critères obligatoires satisfaits :'}
+    - {en: 'Overall readiness: READY / NOT READY', fr: 'État de préparation global : PRÊT / NON PRÊT'}
+    - {en: 'Action items to achieve readiness:', fr: 'Actions à mener pour être prêt :'}
+  - id: F
+    text: {en: 'Part F: Presentation Preparation', fr: 'Partie F : Préparation de la présentation'}
+    kind: text
+    prompt: {en: 'Outline your 12-minute design review presentation:', fr: 'Établissez le plan de votre
+        présentation de revue de conception de 12 minutes :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'What is the most uncertain element in your cost estimate? How would you reduce the uncertainty?',
+      fr: 'Quel est l''élément le plus incertain de votre estimation des coûts ? Comment réduiriez-vous
+        cette incertitude ?'}
+- id: LW-5.1
+  number: '5.1'
+  title: {en: Ground Segment & Operations Architecture, fr: Segment sol et architecture des opérations}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [analyses]
+    levels: [1]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Ground Station Contact Analysis', fr: 'Partie A : Analyse des contacts avec la
+        station sol'}
+    kind: text
+    points:
+    - {en: Calculate contact time and data volume per pass for your mission., fr: Calculez la durée de
+        contact et le volume de données par passage pour votre mission.}
+    - {en: 'Maximum slant range:', fr: 'Distance oblique maximale :'}
+    - {en: 'Average pass duration (approximate):', fr: 'Durée moyenne d''un passage (approximative) :'}
+    - {en: 'Data volume per pass:', fr: 'Volume de données par passage :'}
+  - id: B
+    text: {en: 'Part B: Data Budget Closure', fr: 'Partie B : Bouclage du bilan de données'}
+    kind: text
+    points:
+    - {en: 'Does the data budget close? Y / N', fr: 'Le bilan de données est-il bouclé ? O / N'}
+  - id: C
+    text: {en: 'Part C: Ground Station Network Design', fr: 'Partie C : Conception du réseau de stations
+        sol'}
+    kind: text
+    points:
+    - {en: 'Total ground segment cost estimate:', fr: 'Estimation du coût total du segment sol :'}
+  - id: D
+    text: {en: 'Part D: LEOP Timeline', fr: 'Partie D : Chronologie de la LEOP'}
+    kind: text
+    prompt: {en: 'Construct the LEOP timeline for the first 72 hours after separation:', fr: 'Construisez
+        la chronologie de la LEOP pour les 72 premières heures après la séparation :'}
+  - id: E
+    text: {en: 'Part E: Mission Operations Timeline (Gantt Chart)', fr: 'Partie E : Chronologie des opérations
+        de la mission (diagramme de Gantt)'}
+    kind: text
+    prompt: {en: 'Sketch the operations timeline from launch to end of life:', fr: 'Esquissez la chronologie
+        des opérations, du lancement à la fin de vie :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'What is the most challenging aspect of your ground segment design? What would you do
+        differently with more budget?', fr: 'Quel est l''aspect le plus difficile de la conception de
+        votre segment sol ? Que feriez-vous différemment avec un budget plus important ?'}
+- id: LW-5.2
+  number: '5.2'
+  title: {en: Mission Operations Concepts, fr: Concepts d'opérations de mission}
+  phase: exercise
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [analyses, functions]
+    levels: [1]
+    gates: []
+  questions:
+  - id: A
+    text: {en: 'Part A: Operational Modes', fr: 'Partie A : Modes opérationnels'}
+    kind: text
+    prompt: {en: Define all operational modes for your spacecraft. Use the SpaceCDF ConOps Editor to enter
+        these., fr: Définissez tous les modes opérationnels de votre engin spatial. Saisissez-les dans
+        le ConOps Editor de SpaceCDF.}
+    points:
+    - {en: 'Verify: Does the power budget close in every mode?', fr: 'Vérifiez : le bilan de puissance
+        est-il bouclé dans chaque mode ?'}
+  - id: B
+    text: {en: 'Part B: FDIR Rules', fr: 'Partie B : Règles FDIR'}
+    kind: text
+    prompt: {en: 'Define at least 5 FDIR rules for your spacecraft:', fr: 'Définissez au moins 5 règles
+        FDIR pour votre engin spatial :'}
+    points:
+    - {en: 'Can Safe Mode sustain the spacecraft indefinitely (power + thermal)? Y / N', fr: 'Le mode
+        survie peut-il maintenir l''engin spatial indéfiniment (puissance + thermique) ? O / N'}
+    - {en: 'Can every autonomous FDIR action be overridden from ground? Y / N', fr: 'Chaque action FDIR
+        autonome peut-elle faire l''objet d''un forçage depuis le sol ? O / N'}
+  - id: C
+    text: {en: 'Part C: Nominal Procedure', fr: 'Partie C : Procédure nominale'}
+    kind: text
+    prompt: {en: 'Write one nominal procedure for your mission (science observation or data downlink):',
+      fr: 'Rédigez une procédure nominale pour votre mission (observation scientifique ou transmission
+        de données au sol) :'}
+    points:
+    - {en: 'Procedure ID:', fr: 'ID de la procédure :'}
+    - {en: 'Preconditions:', fr: 'Préconditions :'}
+    - {en: 'Post-conditions:', fr: 'Postconditions :'}
+  - id: D
+    text: {en: 'Part D: Contingency Procedure', fr: 'Partie D : Procédure de contingence'}
+    kind: text
+    prompt: {en: 'Write one contingency procedure (e.g., safe mode recovery, communication loss recovery):',
+      fr: 'Rédigez une procédure de contingence (p. ex. reprise après passage en mode survie, rétablissement
+        après perte de communication) :'}
+    points:
+    - {en: 'Procedure ID:', fr: 'ID de la procédure :'}
+    - {en: 'Trigger condition:', fr: 'Condition de déclenchement :'}
+    - {en: 'Severity level: Green / Yellow / Orange / Red', fr: 'Niveau de gravité : vert / jaune / orange
+        / rouge'}
+    - {en: 'Escalation: If this procedure fails, escalate to:', fr: 'Escalade : si cette procédure échoue,
+        faites remonter à :'}
+    - {en: 'Post-conditions:', fr: 'Postconditions :'}
+  - id: E
+    text: {en: 'Part E: Operations Staffing', fr: 'Partie E : Effectifs d''exploitation'}
+    kind: text
+    prompt: {en: 'Estimate the staffing requirements for each mission phase:', fr: 'Estimez les effectifs
+        nécessaires pour chaque phase de la mission :'}
+  - id: F
+    text: {en: 'Part F: Anomaly Scenario', fr: 'Partie F : Scénario d''anomalie'}
+    kind: text
+    prompt: {en: 'Hypothetical scenario: Your satellite enters Safe Mode during a weekend. The next ground
+        contact is Monday morning (40 hours away). Walk through your response:', fr: 'Scénario hypothétique
+        : votre satellite passe en mode survie pendant un week-end. Le prochain contact sol a lieu lundi
+        matin (dans 40 heures). Déroulez votre réponse :'}
+    points:
+    - {en: 'What is the spacecraft doing in Safe Mode?', fr: 'Que fait l''engin spatial en mode survie
+        ?'}
+    - {en: 'Will it survive 40 hours? (Check power and thermal)', fr: 'Survivra-t-il 40 heures ? (Vérifiez
+        la puissance et la thermique.)'}
+    - {en: 'What telemetry will you review first on Monday?', fr: 'Quelle télémesure examinerez-vous en
+        premier lundi ?'}
+    - {en: 'What is your recovery plan?', fr: 'Quel est votre plan de reprise ?'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'How much autonomy should your spacecraft have? Where is the line between onboard decision-making
+        and ground control?', fr: 'Quel degré d''autonomie votre engin spatial doit-il avoir ? Où se situe
+        la frontière entre la prise de décision à bord et le contrôle depuis le sol ?'}
+- id: LW-5.3
+  number: '5.3'
+  title: {en: Mission Simulation Day, fr: Journée de simulation de mission}
+  phase: during
+  applies:
+    tools: [design]
+    steps: []
+    tabs: []
+    levels: []
+    gates: []
+  questions:
+  - id: simulation-event-log
+    text: {en: Simulation Event Log, fr: Journal des événements de la simulation}
+    kind: text
+    prompt: {en: 'Record ALL events, decisions, and actions in real-time during the simulation:', fr: 'Consignez
+        TOUS les événements, décisions et actions en temps réel pendant la simulation :'}
+  - id: leop-checklist
+    text: {en: LEOP Checklist, fr: Liste de vérification de la LEOP}
+    kind: text
+    prompt: {en: 'Check off each LEOP milestone as it is achieved during the simulation:', fr: 'Cochez
+        chaque jalon de la LEOP dès qu''il est atteint pendant la simulation :'}
+  - id: anomaly-response-form-1
+    text: {en: Anomaly Response Form 1, fr: Fiche de traitement d'anomalie 1}
+    kind: text
+    prompt: {en: Complete this form for each injected anomaly during the simulation., fr: Remplissez cette
+        fiche pour chaque anomalie injectée pendant la simulation.}
+    points:
+    - {en: 'Observation (exact telemetry values and symptoms):', fr: 'Observation (valeurs de télémesure
+        exactes et symptômes) :'}
+    - {en: 'Initial Assessment (what do you think happened?):', fr: 'Évaluation initiale (que s''est-il
+        passé selon vous ?) :'}
+    - {en: 'Diagnosis (root cause after investigation):', fr: 'Diagnostic (cause première après investigation)
+        :'}
+    - {en: 'Action Taken (commands sent, procedures executed):', fr: 'Actions menées (télécommandes envoyées,
+        procédures exécutées) :'}
+    - {en: 'Final Result (system state after response):', fr: 'Résultat final (état du système après traitement)
+        :'}
+    - {en: 'Follow-up Required:', fr: 'Suivi nécessaire :'}
+    - {en: 'Procedure used:', fr: 'Procédure utilisée :'}
+  - id: anomaly-response-form-2
+    text: {en: Anomaly Response Form 2, fr: Fiche de traitement d'anomalie 2}
+    kind: text
+    points:
+    - {en: 'Observation (exact telemetry values and symptoms):', fr: 'Observation (valeurs de télémesure
+        exactes et symptômes) :'}
+    - {en: 'Initial Assessment (what do you think happened?):', fr: 'Évaluation initiale (que s''est-il
+        passé selon vous ?) :'}
+    - {en: 'Diagnosis (root cause after investigation):', fr: 'Diagnostic (cause première après investigation)
+        :'}
+    - {en: 'Action Taken (commands sent, procedures executed):', fr: 'Actions menées (télécommandes envoyées,
+        procédures exécutées) :'}
+    - {en: 'Final Result (system state after response):', fr: 'Résultat final (état du système après traitement)
+        :'}
+    - {en: 'Follow-up Required:', fr: 'Suivi nécessaire :'}
+    - {en: 'Procedure used:', fr: 'Procédure utilisée :'}
+  - id: anomaly-response-form-3
+    text: {en: Anomaly Response Form 3, fr: Fiche de traitement d'anomalie 3}
+    kind: text
+    points:
+    - {en: 'Observation (exact telemetry values and symptoms):', fr: 'Observation (valeurs de télémesure
+        exactes et symptômes) :'}
+    - {en: 'Initial Assessment:', fr: 'Évaluation initiale :'}
+    - {en: 'Diagnosis:', fr: 'Diagnostic :'}
+    - {en: 'Action Taken:', fr: 'Actions menées :'}
+    - {en: 'Final Result:', fr: 'Résultat final :'}
+    - {en: 'Procedure used:', fr: 'Procédure utilisée :'}
+  - id: commissioning-status
+    text: {en: Commissioning Status, fr: État de la recette en orbite}
+    kind: text
+    prompt: {en: 'After the commissioning phase of the simulation, record subsystem checkout status:',
+      fr: 'À l''issue de la phase de recette en orbite de la simulation, consignez l''état de vérification
+        de chaque sous-système :'}
+  - id: nominal-operations-summary
+    text: {en: Nominal Operations Summary, fr: Synthèse des opérations nominales}
+    kind: text
+    prompt: {en: 'After the nominal operations phase, record:', fr: 'À l''issue de la phase d''opérations
+        nominales, consignez :'}
+  - id: what-went-well
+    text: {en: 'What went well?', fr: 'Qu''est-ce qui a bien fonctionné ?'}
+    kind: text
+  - id: what-could-be-improved
+    text: {en: 'What could be improved?', fr: 'Qu''est-ce qui pourrait être amélioré ?'}
+    kind: text
+  - id: design-weaknesses-revealed-by-simulation
+    text: {en: Design weaknesses revealed by simulation, fr: Faiblesses de conception révélées par la
+        simulation}
+    kind: text
+  - id: procedure-changes-needed
+    text: {en: Procedure changes needed, fr: Modifications de procédures nécessaires}
+    kind: text
+  - id: fdir-gaps-identified
+    text: {en: FDIR gaps identified, fr: Lacunes FDIR identifiées}
+    kind: text
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'What was the most stressful moment during the simulation? What did it teach you about
+        operations?', fr: 'Quel a été le moment le plus stressant de la simulation ? Que vous a-t-il appris
+        sur les opérations ?'}
+- id: LW-5.4
+  number: '5.4'
+  title: {en: Final Review & Presentations, fr: Revue finale et présentations}
+  phase: debrief
+  applies:
+    tools: [design]
+    steps: []
+    tabs: [vv]
+    levels: []
+    gates: [pdr]
+  questions:
+  - id: A
+    text: {en: 'Part A: Final Design Summary', fr: 'Partie A : Synthèse de la conception finale'}
+    kind: text
+    prompt: {en: 'Record the final state of your design from the SpaceCDF Dashboard:', fr: 'Relevez l''état
+        final de votre conception dans le Dashboard de SpaceCDF :'}
+    points:
+    - {en: 'Do all budgets close? Y / N If not, which fail?', fr: 'Tous les bilans sont-ils bouclés ?
+        O / N Sinon, lesquels ne le sont pas ?'}
+    - {en: 'Number of unresolved conflicts:', fr: 'Nombre de conflits non résolus :'}
+  - id: B
+    text: {en: 'Part B: Documentation Checklist', fr: 'Partie B : Liste de vérification de la documentation'}
+    kind: text
+    prompt: {en: 'Tick each document generated from SpaceCDF Exports tab:', fr: 'Cochez chaque document
+        généré depuis l''onglet Exports de SpaceCDF :'}
+    points:
+    - {en: 'Total documents generated:', fr: 'Nombre total de documents générés :'}
+  - id: C
+    text: {en: 'Part C: Presentation Outline', fr: 'Partie C : Plan de la présentation'}
+    kind: text
+    prompt: {en: 'Prepare your 12-minute final design review presentation:', fr: 'Préparez votre présentation
+        de revue de conception finale de 12 minutes :'}
+    points:
+    - {en: 'Presenter(s):', fr: 'Présentateur(s) ou présentatrice(s) :'}
+    - {en: 'Backup slides prepared on:', fr: 'Diapositives de secours préparées sur :'}
+  - id: D
+    text: {en: 'Part D: Peer Review Evaluation', fr: 'Partie D : Évaluation par les pairs'}
+    kind: text
+    points:
+    - {en: 'Team being reviewed:', fr: 'Équipe évaluée :'}
+    - {en: 'Reviewers:', fr: 'Évaluateurs :'}
+    - {en: 'Presentation quality:', fr: 'Qualité de la présentation :'}
+    - {en: 'Board recommendation: GO / NO GO / GO WITH ACTIONS', fr: 'Recommandation du comité : GO /
+        NO GO / GO AVEC ACTIONS'}
+    - {en: 'Action items for the presenting team:', fr: 'Actions pour l''équipe qui présente :'}
+    - {en: 'Strongest aspect of this team''s design:', fr: 'Point fort principal de la conception de cette
+        équipe :'}
+    - {en: 'Biggest area for improvement:', fr: 'Principal axe d''amélioration :'}
+  - id: E
+    text: {en: 'Part E: Lessons Learned', fr: 'Partie E : Retour d''expérience'}
+    kind: text
+    points:
+    - {en: 'What was the most challenging design decision your team faced?', fr: 'Quelle a été la décision
+        de conception la plus difficile pour votre équipe ?'}
+    - {en: 'What would you do differently if starting the course over?', fr: 'Que feriez-vous différemment
+        si vous recommenciez le cours ?'}
+    - {en: 'What does the design need next (Phase B activities)?', fr: 'De quoi la conception a-t-elle
+        besoin maintenant (activités de phase B) ?'}
+    - {en: 'What was the most valuable SpaceCDF feature?', fr: 'Quelle fonctionnalité de SpaceCDF vous
+        a été la plus utile ?'}
+    - {en: 'What feature was missing that you needed?', fr: 'Quelle fonctionnalité vous a manqué ?'}
+    - {en: 'What concept from this course will you apply in your future work?', fr: 'Quelle notion de
+        ce cours appliquerez-vous dans votre travail futur ?'}
+  - id: F
+    text: {en: 'Part F: Self-Assessment Rubric', fr: 'Partie F : Grille d''autoévaluation'}
+    kind: text
+    prompt: {en: 'Rate your own learning across the three weeks of the course. Be honest – this is for
+        your own reflection, not grading.', fr: Évaluez vos propres apprentissages au cours des trois
+        semaines du cours. Soyez honnête – cette grille sert à votre propre réflexion et n'est pas notée.}
+    points:
+    - {en: 'Scale: 1 = No familiarity, 2 = Basic awareness, 3 = Can apply with guidance, 4 = Can apply
+        independently, 5 = Can teach others', fr: 'Échelle : 1 = aucune connaissance, 2 = notions de base,
+        3 = capable d''appliquer avec un accompagnement, 4 = capable d''appliquer en autonomie, 5 = capable
+        d''enseigner à d''autres'}
+    - {en: 'Overall self-assessment:', fr: 'Autoévaluation globale :'}
+    - {en: 'One thing I am most proud of from this course:', fr: 'Ce dont je suis le plus fier ou la plus
+        fière dans ce cours :'}
+  - id: notes
+    text: {en: Notes & Reflections, fr: Notes et réflexions}
+    kind: text
+    prompt: {en: 'Final thoughts on the course, the design process, and what comes next:', fr: 'Dernières
+        réflexions sur le cours, sur le processus de conception et sur la suite :'}

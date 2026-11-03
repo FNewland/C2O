@@ -15,6 +15,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { LogThis } from '../logbook'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { ArmButton, Button, Chevron, Disclosure, Field, Input, Note, Panel, Select, StatusBadge } from '../components/ui'
@@ -297,6 +298,7 @@ function SuggestedRow({ iface, nameOf, endpoints, busy, onAccept, onReject, onSa
           aria-label={t('Edit link {{from}} to {{to}}', pair)}>{t('Edit')}</Button>
         <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} size="sm" variant="default"
           aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
+        <LogThis subject={t('Link {{from}} to {{to}}', pair)} />
       </span>
       {editing && (
         <div className="c2o-links__edit">
@@ -327,6 +329,7 @@ function AcceptedRow({ iface, nameOf, endpoints, busy, onSave, onDelete, onRejec
           {summary ? <span className="mono t-12 c-2 ellipsis">{summary}</span> : <span className="t-12 c-3">{t('no properties')}</span>}
         </button>
         <span className="t-12 c-3 nowrap c2o-links__origin">{originText(iface, t)}</span>
+        <LogThis subject={t('Link {{from}} to {{to}}', pair)} />
         {fromRule
           ? <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
           : <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete interface {{from}} → {{to}}', pair)} onConfirm={onDelete} />}

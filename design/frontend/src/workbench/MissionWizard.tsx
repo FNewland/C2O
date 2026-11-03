@@ -9,7 +9,7 @@
  *
  * Only after completing all steps does the study get created.
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useUIStore } from '../stores/uiStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -20,6 +20,7 @@ import { ThemeToggle } from '../components/ui/ThemeToggle'
 import { LanguageToggle } from '../i18n/LanguageToggle'
 import { Dialog, askConfirm, showAlert } from '../components/ui/Dialog'
 import { HomeFrame } from '../components/ui/HomeFrame'
+import { LogbookBanner, LogbookButton, LogThis, useLogbookUI } from '../logbook'
 
 const API = '/api'
 
@@ -89,6 +90,11 @@ export function MissionWizard() {
   const qc = useQueryClient()
 
   const [step, setStep] = useState<WizardStep>('home')
+  // The logbook captures the wizard step as context and offers its worksheets.
+  useEffect(() => {
+    useLogbookUI.getState().setWizardStep(step)
+    return () => useLogbookUI.getState().setWizardStep(null)
+  }, [step])
   const [creating, setCreating] = useState(false)
 
   // Step 1: Problem
@@ -350,7 +356,7 @@ export function MissionWizard() {
   // ─── HOME SCREEN ───
   if (step === 'home') {
     return (
-      <HomeFrame title={t('Start a design study')} lead={t('Define a new mission from the problem up, join a study already in progress, or open a saved or example design.')}>
+      <HomeFrame logbook title={t('Start a design study')} lead={t('Define a new mission from the problem up, join a study already in progress, or open a saved or example design.')}>
         <div className="c2o-home">
           <div className="c2o-home__row">
             <button type="button" className="c2o-btn c2o-btn--primary c2o-btn--lg" onClick={() => setStep('problem')}>
@@ -522,6 +528,9 @@ export function MissionWizard() {
                   className="c2o-textarea" rows={3} />
               </Field>
             )}
+            {selectedAlt && (
+              <div className="row mb-3"><LogThis subject={t('Trade: {{name}} selected', { name: selectedAlt })} /></div>
+            )}
 
             {tradeResult.recommendation && (
               <Note tone="info" className="mt-2">
@@ -604,10 +613,12 @@ function WizardFrame({ step, title, children, onBack, onNext, canNext, nextLabel
           })}
         </ol>
         <span className="ml-auto row gap-2">
+          <LogbookButton />
           <LanguageToggle />
           <ThemeToggle />
         </span>
       </header>
+      <LogbookBanner />
 
       <main className="c2o-wizard__main">
         <h1 className="t-20 w-600 mb-4 c-1">
