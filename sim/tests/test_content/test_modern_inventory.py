@@ -202,12 +202,24 @@ def route_matches(ref: str, routes: list[str]) -> bool:
     return False
 
 
+# The participant logbook routes (LOGBOOK_SPEC.md) are mounted on the MCS and
+# the instructor app by smo_common.logbook.register_logbook_routes(), not by
+# an add_get() in the server file, so take them from that module.
+LOGBOOK_ROUTES = re.findall(
+    r"""r\.add_(?:get|post|patch|delete)\(\s*["']([^"']+)["']""",
+    (REPO / "packages/smo-common/src/smo_common/logbook/aiohttp_routes.py").read_text())
+
+
+def test_logbook_routes_found():
+    assert "/api/logbook/worksheets" in LOGBOOK_ROUTES and "/api/logbook" in LOGBOOK_ROUTES
+
+
 @pytest.mark.parametrize("js_dir,routes,foreign", [
-    (MCS_MODERN, MCS_ROUTES,
+    (MCS_MODERN, MCS_ROUTES + LOGBOOK_ROUTES,
      # documented cross-origin planner call through client-config planner_url
      {"/api/time-source"}),
     (PLANNER_MODERN, PLANNER_ROUTES, set()),
-    (INSTRUCTOR_MODERN, INSTRUCTOR_ROUTES, set()),
+    (INSTRUCTOR_MODERN, INSTRUCTOR_ROUTES + LOGBOOK_ROUTES, set()),
 ], ids=["mcs", "planner", "instructor"])
 def test_every_modern_js_api_path_has_a_route(js_dir, routes, foreign):
     unmatched = []
