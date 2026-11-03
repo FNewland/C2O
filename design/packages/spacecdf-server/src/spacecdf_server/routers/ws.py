@@ -57,14 +57,43 @@ class EditLock:
     study_id: str
     acquired_at: float
     last_heartbeat: float
+    held_by_id: str = ""  # identity of the holder (see _identity); "" = legacy name match
 
 
 # study_id → {element_id → EditLock}
 _edit_locks: dict[str, dict[str, EditLock]] = {}
 # study_id → [display_name] — all contributors who ever connected
 _study_contributors: dict[str, list[str]] = {}
-# study_id → {display_name → WebSocket}
+# study_id → {connection id → WebSocket}. Keyed by CONNECTION, not display name (WP0,
+# walkthrough §4: two people typing the same name collapsed into one entry, and when one
+# left the other vanished from everyone's list).
 _study_connections: dict[str, dict[str, Any]] = {}
+# study_id → {connection id → {"id": identity, "name": display name}}
+_study_members: dict[str, dict[str, dict[str, str]]] = {}
+
+
+def _identity(websocket: WebSocket, client_id: str, conn_id: str) -> str:
+    """Who is behind a connection: the IAP email when the proxy sends it, else the browser's
+    client id (localStorage), else the connection itself. Never the typed display name."""
+    raw = ""
+    try:
+        raw = websocket.headers.get("x-goog-authenticated-user-email", "") or ""
+    except Exception:  # noqa: BLE001
+        raw = ""
+    email = raw.split(":", 1)[-1].strip().lower() if raw else ""
+    if email:
+        return f"iap:{email}"
+    cid = "".join(ch for ch in (client_id or "") if ch.isalnum() or ch in "-_")[:64]
+    return f"client:{cid}" if cid else f"conn:{conn_id}"
+
+
+def _study_users(study_id: str) -> list[dict[str, Any]]:
+    """One entry per identity (several tabs of one person count once)."""
+    seen: dict[str, dict[str, Any]] = {}
+    for m in _study_members.get(study_id, {}).values():
+        u = seen.setdefault(m["id"], {"id": m["id"], "name": m["name"], "connections": 0})
+        u["connections"] += 1
+    return list(seen.values())
 
 # Background task handle
 _heartbeat_task: asyncio.Task | None = None
@@ -75,7 +104,7 @@ async def _broadcast_study(study_id: str, message: dict, exclude: str | None = N
     conns = _study_connections.get(study_id, {})
     logger.info("Broadcasting %s to study %s (%d connections, exclude=%s)",
                 message.get("type"), study_id, len(conns), exclude)
-    for name, ws in list(conns.items()):
+    for name, ws in list(conns.items()):   # name = connection id
         if name != exclude:
             try:
                 await ws.send_json(message)
@@ -97,6 +126,7 @@ async def _heartbeat_checker() -> None:
                         "type": "lock_expired",
                         "element_id": eid,
                         "was_held_by": lock.held_by,
+                        "was_held_by_id": lock.held_by_id,
                     })
 
 
@@ -411,10 +441,14 @@ async def study_websocket(
     websocket: WebSocket,
     study_id: str,
     name: str = Query("Anonymous"),
+    client_id: str = Query(""),
 ) -> None:
     """WebSocket for the Level Workbench — collaborative editing with element locking.
 
-    Connect: ws://host/ws/study/{study_id}?name=Alice
+    Connect: ws://host/ws/study/{study_id}?name=Alice&client_id=<per-browser id>
+
+    Presence and locks are keyed by identity (IAP email, else ``client_id``, else the
+    connection), never by the display name: two people may share a name.
 
     Client → Server:
       {"type": "lock_request", "element_id": "..."}
@@ -423,22 +457,27 @@ async def study_websocket(
       {"type": "element_created/updated/deleted", ...}
 
     Server → Client:
-      {"type": "users_update", "users": [...]}
-      {"type": "locks_state", "locks": {...}}
-      {"type": "element_locked", "element_id": "...", "held_by": "..."}
-      {"type": "lock_denied", "element_id": "...", "held_by": "..."}
-      {"type": "lock_released", "element_id": "...", "released_by": "..."}
-      {"type": "lock_expired", "element_id": "...", "was_held_by": "..."}
+      {"type": "welcome", "you": {"id": "...", "name": "..."}}
+      {"type": "users_update", "users": [{"id", "name", "connections"}]}
+      {"type": "locks_state", "locks": [{"element_id", "held_by", "held_by_id"}]}
+      {"type": "element_locked", "element_id": "...", "held_by": "...", "held_by_id": "..."}
+      {"type": "lock_denied", "element_id": "...", "held_by": "...", "held_by_id": "..."}
+      {"type": "lock_released", "element_id": "...", "released_by": "...", "released_by_id": "..."}
+      {"type": "lock_expired", "element_id": "...", "was_held_by": "...", "was_held_by_id": "..."}
     """
+    import uuid as _uuid
     await websocket.accept()
 
     # Ensure heartbeat checker is running
     start_heartbeat_checker()
 
+    conn_id = _uuid.uuid4().hex
+    me = _identity(websocket, client_id, conn_id)
+    name = (name or "Anonymous").strip()[:80] or "Anonymous"
+
     # Register connection
-    if study_id not in _study_connections:
-        _study_connections[study_id] = {}
-    _study_connections[study_id][name] = websocket
+    _study_connections.setdefault(study_id, {})[conn_id] = websocket
+    _study_members.setdefault(study_id, {})[conn_id] = {"id": me, "name": name}
 
     # Track contributor
     if study_id not in _study_contributors:
@@ -446,17 +485,21 @@ async def study_websocket(
     if name not in _study_contributors[study_id]:
         _study_contributors[study_id].append(name)
 
+    await _send(websocket, {"type": "welcome", "you": {"id": me, "name": name}})
     # Broadcast updated user list
-    users = [{"name": n} for n in _study_connections[study_id].keys()]
-    logger.info("Study %s: user %s connected. Active users: %s", study_id, name, [u["name"] for u in users])
+    users = _study_users(study_id)
+    logger.info("Study %s: %s (%s) connected. Active users: %s", study_id, name, me, [u["name"] for u in users])
     await _broadcast_study(study_id, {
         "type": "users_update",
         "users": users,
     })
 
+    def mine(lock: EditLock) -> bool:
+        return lock.held_by_id == me if lock.held_by_id else lock.held_by == name
+
     # Send current lock state to the new connection (as array for frontend)
     locks_list = [
-        {"element_id": lock.element_id, "held_by": lock.held_by}
+        {"element_id": lock.element_id, "held_by": lock.held_by, "held_by_id": lock.held_by_id}
         for lock in _edit_locks.get(study_id, {}).values()
     ]
     await _send(websocket, {"type": "locks_state", "locks": locks_list})
@@ -482,12 +525,13 @@ async def study_websocket(
                 study_locks = _edit_locks.setdefault(study_id, {})
                 existing = study_locks.get(eid)
 
-                if existing and existing.held_by != name:
+                if existing and not mine(existing):
                     # Locked by someone else
                     await _send(websocket, {
                         "type": "lock_denied",
                         "element_id": eid,
                         "held_by": existing.held_by,
+                        "held_by_id": existing.held_by_id,
                     })
                 else:
                     # Grant lock (or re-grant to same user)
@@ -498,11 +542,13 @@ async def study_websocket(
                         study_id=study_id,
                         acquired_at=now,
                         last_heartbeat=now,
+                        held_by_id=me,
                     )
                     await _broadcast_study(study_id, {
                         "type": "element_locked",
                         "element_id": eid,
                         "held_by": name,
+                        "held_by_id": me,
                     })
 
             elif msg_type == "lock_release":
@@ -511,23 +557,24 @@ async def study_websocket(
                     continue
                 study_locks = _edit_locks.get(study_id, {})
                 existing = study_locks.get(eid)
-                if existing and existing.held_by == name:
+                if existing and mine(existing):
                     del study_locks[eid]
                     await _broadcast_study(study_id, {
                         "type": "lock_released",
                         "element_id": eid,
                         "released_by": name,
+                        "released_by_id": me,
                     })
 
             elif msg_type == "heartbeat":
                 # Update last_heartbeat on all locks held by this user
                 for eid, lock in _edit_locks.get(study_id, {}).items():
-                    if lock.held_by == name:
+                    if mine(lock):
                         lock.last_heartbeat = time.time()
 
             elif msg_type in ("element_created", "element_updated", "element_deleted"):
                 # Relay to all OTHER connections in this study
-                await _broadcast_study(study_id, msg, exclude=name)
+                await _broadcast_study(study_id, msg, exclude=conn_id)
 
             else:
                 await _send(websocket, {"type": "error", "message": f"Unknown message type: {msg_type}"})
@@ -537,24 +584,27 @@ async def study_websocket(
     except Exception as e:
         logger.error("Study WebSocket error for %s in %s: %s", name, study_id, e)
     finally:
-        # Release all locks held by this user
-        study_locks = _edit_locks.get(study_id, {})
-        released_eids = [eid for eid, lock in study_locks.items() if lock.held_by == name]
-        for eid in released_eids:
-            del study_locks[eid]
-            await _broadcast_study(study_id, {
-                "type": "lock_released",
-                "element_id": eid,
-                "released_by": name,
-            })
-
         # Remove connection
-        conns = _study_connections.get(study_id, {})
-        conns.pop(name, None)
+        _study_connections.get(study_id, {}).pop(conn_id, None)
+        _study_members.get(study_id, {}).pop(conn_id, None)
+        still_here = any(m["id"] == me for m in _study_members.get(study_id, {}).values())
+
+        # Release the locks of this identity when its last connection closes
+        if not still_here:
+            study_locks = _edit_locks.get(study_id, {})
+            released_eids = [eid for eid, lock in study_locks.items() if mine(lock)]
+            for eid in released_eids:
+                del study_locks[eid]
+                await _broadcast_study(study_id, {
+                    "type": "lock_released",
+                    "element_id": eid,
+                    "released_by": name,
+                    "released_by_id": me,
+                })
 
         # Broadcast updated user list
-        users = [{"name": n} for n in _study_connections.get(study_id, {}).keys()]
-        logger.info("Study %s: user %s disconnected. Remaining: %s", study_id, name, [u["name"] for u in users])
+        users = _study_users(study_id)
+        logger.info("Study %s: %s disconnected. Remaining: %s", study_id, name, [u["name"] for u in users])
         await _broadcast_study(study_id, {
             "type": "users_update",
             "users": users,

@@ -5,7 +5,7 @@ reviews.  Page furniture matches the SpaceCDF Facilitator's Book:
 
     • uOttawa garnet cover banner + slab title
     • running header with crimson rule
-    • bilingual footer ("Page X of / de Y", uOttawa SEDTI)
+    • bilingual footer ("Page X of / de Y", C2O · SpaceCDF)
     • Word-native ToC, acronyms, applicable/reference docs
     • numbered DID body sections
     • embedded figures (orbit, ground-track, link waterfall, power profile,
@@ -74,7 +74,7 @@ def generate_docx(context: dict[str, Any], review_type: str, output_path: Path) 
         running_title=f"SpaceCDF — {review_type.upper()} — {mission}",
         document_code=document_code,
         footer_left=f"{document_code} · {study}",
-        footer_right="uOttawa SEDTI",
+        footer_right="C2O · SpaceCDF",
     )
 
     # ---- Document information & change record -------------------------
