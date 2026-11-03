@@ -2,7 +2,7 @@
 
 **Document ID:** EOSAT1-UM-REF-010  
 **Issue:** 2.0  
-**Source revision:** `tc_catalog.yaml@99b7c2c45fe1`  
+**Source revision:** `tc_catalog.yaml@12438df1edbb`  
 **Classification:** UNCLASSIFIED — Mission Operations
 
 > **GENERATED FILE — DO NOT EDIT BY HAND.**  
@@ -185,6 +185,7 @@
 | `AOCS_SET_DESAT_INHIBIT` | S8.1 | 96 (0x60) | 2 | inhibit | nominal |
 | `TTC_BEACON_TX_ON` | S8.1 | 97 (0x61) | 1 | — | normal |
 | `TTC_BEACON_TX_OFF` | S8.1 | 98 (0x62) | 1 | — | caution |
+| `TTC_SWITCH_OTHER` | S8.1 | 99 (0x63) | 1 | — | caution |
 | `EPS_SA_A_ON_LEGACY` | S8.1 | 100 (0x64) | 1 | — | nominal |
 | `EPS_SA_A_OFF_LEGACY` | S8.1 | 101 (0x65) | 1 | — | nominal |
 | `EPS_SA_B_ON_LEGACY` | S8.1 | 102 (0x66) | 1 | — | nominal |
@@ -1714,6 +1715,16 @@ Switch the UHF bootloader beacon transmitter off. CAUTION: this removes the miss
 *No arguments.*
 
 Example: `62`
+
+#### TTC_SWITCH_OTHER
+
+**S8.1** · func_id **99** (0x63) · 1 data byte(s) · CAUTION · readback ttc.mode (0 primary, 1 redundant) (0x0500)
+
+Select the S-band transponder that is NOT currently selected (primary to redundant, or redundant to primary). This is the action of the on-board command-loss autonomy (FDIR TTC-01, S19 ea 4003), which toggles units every 24 h without an accepted telecommand. It is blind: the units are cold-redundant, so it does not check that the newly selected unit works. From the ground, prefer TTC_SWITCH_PRIMARY / TTC_SWITCH_REDUNDANT, which name the unit.
+
+*No arguments.*
+
+Example: `63`
 
 #### PAYLOAD_SET_SHUTTER
 
@@ -3693,4 +3704,4 @@ The console's QUICK COMMANDS panel is generated from the same catalogue: each bu
 
 ---
 
-*Generated from `commands/tc_catalog.yaml` — 219 commands, 271 arguments.*
+*Generated from `commands/tc_catalog.yaml` — 220 commands, 271 arguments.*

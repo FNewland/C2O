@@ -1,7 +1,10 @@
 # CTG-003: TTC Link Loss Recovery
 **Subsystem:** TT&C
 **Phase:** CONTINGENCY
-**Revision:** 1.1 --- 2026-11-02 (Franz's ruling S4): with both transponders
+**Revision:** 1.2 --- 2026-11-02 (Franz's ruling): FDIR TTC-01 toggles to the
+OTHER transponder every 24 h without an accepted telecommand, so it also
+recovers a dead redundant unit by switching back to the primary.
+Rev 1.1 --- 2026-11-02 (Franz's ruling S4): with both transponders
 failed the link is really cut (no TC received, no TM, beacon included), so the
 card now says what the blind steps can and cannot reach, and Step 6 names the
 real on-board autonomy (FDIR TTC-01 command-loss timer, 24 h).
@@ -43,7 +46,8 @@ and link restoration before escalating to emergency autonomous operations.
 **Note:** The transponders are cold-redundant: the switch is received only by
 the SELECTED unit. If the primary is dead it hears nothing and this command is
 lost --- the switch then happens only on board, when the command-loss timer
-expires (Step 6). It is still worth sending: if the loss is on the transmit side
+expires (Step 6). The same holds the other way round: if the redundant unit is
+selected and dead, the timer switches back to the primary. It is still worth sending: if the loss is on the transmit side
 (PA off, `ttc_tx` line shed) the receiver is alive and acts on it.
 **Action:** Wait 45s for redundant transponder power-up and frequency lock
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 45s
@@ -78,13 +82,13 @@ expires (Step 6). It is still worth sending: if the loss is on the transmit side
 **Action:** Log the failed recovery attempt with timestamps of all blind commands sent
 **Action:** Notify Mission Director and Flight Dynamics of sustained link loss
 **Action:** Schedule next available ground station pass for re-acquisition attempt
-**Action:** Record the time of the last ACCEPTED telecommand (last S1.1). The on-board command-loss timer (FDIR TTC-01, `ttc.time_since_last_tc` 0x053D) switches the spacecraft to the redundant transponder 24 h after it (event CMD_LOSS_TIMEOUT 0x0514, S19 ea 4003): schedule the first passes after that time. Blind commands that are not received do not reset it
+**Action:** Record the time of the last ACCEPTED telecommand (last S1.1). The on-board command-loss timer (FDIR TTC-01, `ttc.time_since_last_tc` 0x053D) switches the spacecraft to the OTHER transponder 24 h after it (event CMD_LOSS_TIMEOUT 0x0514, S19 ea 4003, S8 func 99), and switches again every further 24 h until a telecommand is accepted: schedule the first passes after T+24 h and T+48 h, and send a telecommand as soon as the link returns so the timer does not switch away 24 h later. Blind commands that are not received do not reset it
 **GO/NO-GO:** If no link after two consecutive passes, escalate to EMG-004 (Loss of Communication)
 
 ## Off-Nominal Handling
 - If link restores but RSSI < -95 dBm or margin < 1.5 dB: Step the TM rate ladder down to LOW (16 kbps) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) to improve margin. LOW is the routine operations rung — the link keeps full housekeeping, it just cannot dump
 - If OBC is found in SAFE mode after link restoration: Execute CTG-010 (OBDH Watchdog Recovery) before resuming nominal operations
-- If redundant transponder also fails: no telecommand can be received and no telemetry is transmitted, beacon included; the TTC-01 switch is refused. Nothing from the ground can recover this: escalate to EMG-004 and keep listening for a transponder recovery (in the simulator, the instructor clearing a transponder failure)
+- If redundant transponder also fails: no telecommand can be received and no telemetry is transmitted, beacon included; the TTC-01 timer keeps toggling between the two dead units every 24 h, which changes nothing until one recovers. Nothing from the ground can recover this: escalate to EMG-004 and keep listening for a transponder recovery (in the simulator, the instructor clearing a transponder failure)
 - If link is intermittent (toggling): Suspect antenna deployment anomaly or attitude issue — request AOCS telemetry and check `aocs.att_error` (0x0217)
 
 ## Post-Conditions
