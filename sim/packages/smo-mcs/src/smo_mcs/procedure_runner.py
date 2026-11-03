@@ -81,6 +81,7 @@ class ProcedureRunner:
         self.procedure_name: str = ""
         self.procedure_ref: str = ""
         self.scheduled_start_time: str | None = None
+        self.loaded_at: float | None = None
         self.steps: list[dict] = []
         self.current_step: int = -1
         self.step_results: list[dict] = []
@@ -123,6 +124,9 @@ class ProcedureRunner:
         self.procedure_name = name
         self.procedure_ref = procedure_ref
         self.scheduled_start_time = start_time
+        # Identifies this load (sim epoch s): the logbook checklist files the
+        # steps of one run of a card together, and a reload starts a new run.
+        self.loaded_at = self._time_fn()
         # Normalise every accepted dialect into the ONE canonical step schema
         # (smo_common.procedures, defect #83) before execution, so the runner
         # has a single shape to reason about and the operator sees a single
@@ -231,6 +235,7 @@ class ProcedureRunner:
             "procedure_name": self.procedure_name,
             "procedure_ref": self.procedure_ref,
             "scheduled_start_time": self.scheduled_start_time,
+            "loaded_at": self.loaded_at,
             "total_steps": len(self.steps),
             "current_step": self.current_step,
             "step_by_step": self.step_by_step,
