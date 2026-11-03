@@ -49,6 +49,8 @@ stop_vm() {
 
 log "VMs"
 start_vm "$VM_GROUND"
+# Voice loops server (LiveKit), if setup.sh created it.
+if [ "$CREATE_VOICE_VM" = yes ] && [ "$(vm_status "$VM_VOICE")" != NONE ]; then start_vm "$VM_VOICE"; fi
 case "$sim" in
     cloud)  start_vm "$VM_SIM" ;;
     *)      [ "$(vm_status "$VM_SIM")" = NONE ] || stop_vm "$VM_SIM" ;;
@@ -76,6 +78,10 @@ cat <<EOF
     Instructor sim    https://$HOST_SIM       (instructors only)
     Link status       https://$HOST_SIM/link-status    (UP once a simulator is connected)
 EOF
+if [ "$CREATE_VOICE_VM" = yes ] && [ "$(vm_status "$VM_VOICE")" != NONE ]; then
+    printf '    %-17s https://%s/voice  (or the Voice button in the MCS header; server wss://%s)\n' \
+        "Voice loops" "$HOST_OPS" "$HOST_VOICE"
+fi
 while read -r key label _port where who title; do
     [ -n "$key" ] || continue
     [ "$where" = sim ] && [ "$sim" != cloud ] && continue

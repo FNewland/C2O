@@ -1,0 +1,21 @@
+livekit-client 2.23.0 (LiveKit JS client SDK), vendored for the voice loops
+panel (sim/packages/smo-mcs/src/smo_mcs/static/modern/voice.html), served at
+/static/vendor/js/livekit/livekit-client.umd.js. No CDN: the page loads only
+this file. It defines the global `LivekitClient`.
+
+Source        npm livekit-client@2.23.0, file dist/livekit-client.umd.js,
+              copied byte for byte (its sourceMappingURL points at a .map
+              that is not shipped; browsers only fetch it with dev tools open)
+Released      2026-10-16 (npm)
+npm tarball   sha256 993eafb83afb4c566bb388108ad6469bf499d76200014c96c35fe3b39fee859d
+This file     sha256 fb646f2260d84f91238d0a2dc10726c456631d6a26c7cafc43cfee5959b4d31d
+Licence       Apache License 2.0 (LICENSE, copied from the package),
+              Copyright LiveKit, Inc.
+Bundled       its runtime dependencies, each under its own permissive licence:
+              @livekit/protocol, @livekit/mutex (Apache-2.0), events, jose,
+              loglevel, sdp-transform, typed-emitter, machina, tslib (MIT /
+              0BSD), webrtc-adapter (BSD-3-Clause).
+
+To update: npm pack livekit-client@<version>, copy dist/livekit-client.umd.js
+and LICENSE here, update this file, then run the voice tests
+(sim/tests/test_mcs/test_voice_tokens.py checks the pinned version string).

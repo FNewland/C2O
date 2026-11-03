@@ -334,7 +334,8 @@ FORBIDDEN_BASH4 = [
 
 
 @pytest.mark.parametrize("script", ["c2o", "common.sh", "start.sh", "stop.sh", "setup.sh",
-                                    "teardown.sh", "rotate-link-secret.sh", "switch.sh"])
+                                    "teardown.sh", "rotate-link-secret.sh", "switch.sh",
+                                    "voice-bootstrap.sh"])
 def test_no_bash4_only_constructs(script):
     """macOS bash 3.2 (Franz's MacBook) runs c2o and the scripts it calls."""
     src = (GCP / script).read_text()

@@ -61,7 +61,7 @@ COPY packages/smo-gateway/   packages/smo-gateway/
 # services, then smo-link (smo-common + aiohttp).
 RUN pip install -e "packages/smo-common[reports]" \
  && pip install -e packages/smo-simulator \
-                -e packages/smo-mcs \
+                -e "packages/smo-mcs[voice]" \
                 -e packages/smo-planner \
                 -e packages/smo-rfsim \
  && pip install -e packages/smo-link \

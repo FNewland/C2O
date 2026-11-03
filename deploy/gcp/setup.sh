@@ -90,8 +90,8 @@ if [ "$CREATE_SIM_VM" = yes ]; then
     # The welcome page on the ground VM checks whether those two tools are up.
     fw "$FW_PORTAL_SIM" tcp:8096-8097 "$TAG_SIM" --source-tags="$TAG_GROUND"
 fi
-# IAP TCP forwarding -> SSH, both VMs (admin only; needs IAM on top).
-fw "$FW_IAP" tcp:22 "$TAG_GROUND,$TAG_SIM" --source-ranges=35.235.240.0/20
+# IAP TCP forwarding -> SSH, every VM (admin only; needs IAM on top).
+fw "$FW_IAP" tcp:22 "$TAG_GROUND,$TAG_SIM,$TAG_VOICE" --source-ranges=35.235.240.0/20
 # Cloud simulator VM -> ground link port, private network only.
 fw "$FW_SIM" tcp:9100 "$TAG_GROUND" --source-tags="$TAG_SIM"
 
@@ -127,6 +127,36 @@ fi
 retry gcloud secrets add-iam-policy-binding "$SECRET_AI" --member="serviceAccount:$SA_GROUND_EMAIL" \
     --role=roles/secretmanager.secretAccessor --condition=None >/dev/null
 
+# Voice loops, part 1 (before the VMs boot): the LiveKit API key pair. The
+# voice VM runs LiveKit with it; the ground VM's MCS signs tokens with it.
+# Generated here once, on this computer, and piped straight into Secret
+# Manager (never on a command line, never in a file). Rotate: add a new
+# version the same way, then refresh both VMs (README "Voice loops").
+if [ "$CREATE_VOICE_VM" = yes ]; then
+    log "Secret $SECRET_VOICE (LiveKit API key pair for the voice loops)"
+    if ! exists secrets describe "$SECRET_VOICE"; then
+        gcloud secrets create "$SECRET_VOICE" --replication-policy=user-managed --locations="$REGION" \
+            --labels=app=c2o
+    fi
+    if [ -z "$(gcloud secrets versions list "$SECRET_VOICE" --filter='state=ENABLED' --limit=1 \
+            --format='value(name)' 2>/dev/null || true)" ]; then
+        info "generating the key pair (first run)"
+        python3 -c 'import secrets
+print("LIVEKIT_API_KEY=API" + secrets.token_hex(6))
+print("LIVEKIT_API_SECRET=" + secrets.token_urlsafe(32))' \
+            | gcloud secrets versions add "$SECRET_VOICE" --data-file=- >/dev/null
+    fi
+    if ! exists iam service-accounts describe "$SA_VOICE_EMAIL"; then
+        gcloud iam service-accounts create "$SA_VOICE" --display-name="C2O voice VM"
+    fi
+    retry gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA_VOICE_EMAIL" \
+        --role=roles/logging.logWriter --condition=None --quiet >/dev/null
+    for m in "$SA_VOICE_EMAIL" "$SA_GROUND_EMAIL"; do
+        retry gcloud secrets add-iam-policy-binding "$SECRET_VOICE" --member="serviceAccount:$m" \
+            --role=roles/secretmanager.secretAccessor --condition=None >/dev/null
+    done
+fi
+
 log "Automatic start/stop (c2o schedule): Compute Engine service agent may start and stop VMs"
 # Instance schedules act as the Compute Engine Service Agent; Google's
 # documented role for it is Compute Instance Admin (v1) (it needs
@@ -151,6 +181,11 @@ fi
 vm() {
     local name="$1" role="$2" mtype="$3" ip="$4" tag="$5" sa="$6"
     local md="c2o-role=$role,c2o-repo=$REPO_URL,c2o-ref=$REPO_REF,c2o-domain=$DOMAIN,c2o-ground-ip=$GROUND_IP,c2o-secret=$SECRET,c2o-ai-secret=$SECRET_AI,c2o-rf-mode=$RF_MODE,enable-oslogin=TRUE"
+    # Voice loops: the ground VM's MCS signs LiveKit tokens (vm-bootstrap.sh
+    # writes sim/docker/voice.env from these).
+    if [ "$CREATE_VOICE_VM" = yes ]; then
+        md="$md,c2o-voice-secret=$SECRET_VOICE,c2o-voice-host=$HOST_VOICE,c2o-voice-instructors=$voice_instr"
+    fi
     if [ "$(vm_status "$name")" = "NONE" ]; then
         info "creating $name ($mtype, no external IP); first boot installs Docker and builds the image (10-15 min)"
         gcloud compute instances create "$name" --zone="$ZONE" --machine-type="$mtype" \
@@ -167,10 +202,51 @@ vm() {
             --metadata="$md" --metadata-from-file=startup-script="$GCP_DIR/vm-bootstrap.sh"
     fi
 }
+# VOICE_INSTRUCTORS -> one space-separated list of full addresses (gcloud
+# --metadata splits on commas; a bare name means name@DOMAIN).
+voice_instr=""
+for v in $(printf '%s' "$VOICE_INSTRUCTORS" | tr ',;' '  '); do
+    case "$v" in *@*) ;; *) v="$v@$DOMAIN" ;; esac
+    case "$v" in *[!A-Za-z0-9._%+@-]*) die "VOICE_INSTRUCTORS: '$v' is not an email address" ;; esac
+    voice_instr="${voice_instr:+$voice_instr }$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')"
+done
 log "VMs"
 vm "$VM_GROUND" ground "$GROUND_MACHINE_TYPE" "$GROUND_IP" "$TAG_GROUND" "$SA_GROUND_EMAIL"
 if [ "$CREATE_SIM_VM" = "yes" ]; then
     vm "$VM_SIM" sim "$SIM_MACHINE_TYPE" "$SIM_IP" "$TAG_SIM" "$SA_SIM_EMAIL"
+fi
+
+# ── 4b. Voice loops, part 2: the LiveKit VM ─────────────────────────────
+# Its own small VM with a STATIC PUBLIC IP: WebRTC audio cannot pass through
+# the HTTPS load balancer or IAP. Only LiveKit's ports are open; joining a
+# loop needs a token that only the MCS (behind IAP) mints. No repo checkout:
+# voice-bootstrap.sh writes the config and runs two pinned images.
+voice_ip=""
+if [ "$CREATE_VOICE_VM" = yes ]; then
+    log "Voice loops server $VM_VOICE ($VOICE_MACHINE_TYPE, static IP, LiveKit)"
+    if ! exists compute addresses describe "$ADDR_VOICE" --region="$REGION"; then
+        gcloud compute addresses create "$ADDR_VOICE" --region="$REGION" --network-tier=PREMIUM
+    fi
+    voice_ip="$(gcloud compute addresses describe "$ADDR_VOICE" --region="$REGION" --format='value(address)')"
+    # LiveKit's documented ports, from anywhere (students' home networks).
+    fw "$FW_VOICE" "$VOICE_PORTS" "$TAG_VOICE" --source-ranges=0.0.0.0/0
+    vmd="c2o-role=voice,c2o-voice-host=$HOST_VOICE,c2o-voice-turn-host=$HOST_VOICE_TURN,c2o-voice-secret=$SECRET_VOICE,c2o-acme-email=$VOICE_ACME_EMAIL,enable-oslogin=TRUE"
+    if [ "$(vm_status "$VM_VOICE")" = "NONE" ]; then
+        info "creating $VM_VOICE at $voice_ip; first boot installs Docker and starts LiveKit (3-5 min)"
+        gcloud compute instances create "$VM_VOICE" --zone="$ZONE" --machine-type="$VOICE_MACHINE_TYPE" \
+            --subnet="$SUBNET" --address="$voice_ip" --network-tier=PREMIUM --tags="$TAG_VOICE" \
+            --service-account="$SA_VOICE_EMAIL" --scopes=cloud-platform \
+            --image-family=debian-12 --image-project=debian-cloud \
+            --boot-disk-size="${VOICE_DISK_GB}GB" --boot-disk-type=pd-balanced \
+            --shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring \
+            --metadata="$vmd" --metadata-from-file=startup-script="$GCP_DIR/voice-bootstrap.sh" \
+            --labels=app=c2o,role=voice
+    else
+        info "$VM_VOICE exists: refreshing its startup script and settings (applied at next boot)"
+        gcloud compute instances add-metadata "$VM_VOICE" --zone="$ZONE" \
+            --metadata="$vmd" --metadata-from-file=startup-script="$GCP_DIR/voice-bootstrap.sh"
+    fi
+    [ -n "$voice_instr" ] || warn "VOICE_INSTRUCTORS is empty in c2o.env: nobody can join the Instructor / SIM loop."
 fi
 
 # ── 5. Load balancer back end ───────────────────────────────────────────
@@ -427,6 +503,11 @@ EOF
 for h in ops plan sim link; do printf '        %-13s A      %s\n' "$h" "$ip"; done
 tool_dns() { printf '        %-13s A      %s\n' "$2" "$ip"; }
 tools_each tool_dns
+if [ -n "$voice_ip" ]; then
+    printf '\n    Voice loops: two more A records, to the VOICE VM address (not the load\n'
+    printf '    balancer). Its Caddy obtains their certificates once they resolve:\n\n'
+    printf '        %-13s A      %s\n' "voice" "$voice_ip" "voice-turn" "$voice_ip"
+fi
 cat <<EOF
 
     Then watch the certificates (README step 7):

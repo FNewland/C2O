@@ -399,6 +399,7 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
       <button class="ds-btn abtn" id="alarms-btn" aria-haspopup="dialog"><span id="alarm-btn-g" aria-hidden="true"></span><span class="n" id="alarm-unack-n">0</span> <span data-i18n>alarms</span></button>
       <a class="ds-btn ghost opt" href="/dumps" target="_blank" rel="noopener" data-i18n>Delayed TM</a>
       <a class="ds-btn ghost opt" href="/reports" target="_blank" rel="noopener" data-i18n>Reports</a>
+      <button class="ds-btn ghost" id="voice-btn" aria-expanded="false">Voice</button>
       <button class="ds-btn ghost opt" id="grey-btn" aria-pressed="false" data-i18n data-i18n-title
         title="Greyscale check: the console must stay operable without colour (P6)">Greyscale</button>
       <div class="ds-seg opt" id="theme-seg" role="group" data-i18n-aria-label aria-label="Theme">
@@ -552,5 +553,6 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
 <div id="alert-live" role="alert" aria-live="assertive" class="ds-sr"></div>
 
 <script type="module" src="/static/modern/mcs.js?v=2"></script>
+<script type="module" src="/static/modern/voice-dock.js"></script>
 </body>
 </html>
