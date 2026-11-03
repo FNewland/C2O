@@ -225,7 +225,14 @@ def discover_docs(base: Path) -> dict[str, list[dict]]:
     Each entry carries ``fr_title`` when a French translation exists at
     ``i18n/fr/<path>``.
     """
+    from smo_common.doc_scope import is_student_doc
     categories: dict[str, list[dict]] = {}
+
+    def keep(f: Path) -> bool:
+        # SCREEN_REVIEW #7: training-system documents (Manual-Scope:
+        # system), the position design analyses and retired cards are not
+        # listed for students.
+        return is_student_doc(f, f.relative_to(base).as_posix())
 
     def entry(f: Path) -> dict:
         rel = f.relative_to(base).as_posix()
@@ -235,11 +242,11 @@ def discover_docs(base: Path) -> dict[str, list[dict]]:
 
     for subdir in sorted(base.iterdir()):
         if subdir.is_dir() and subdir.name not in HIDDEN_DIRS:
-            md_files = sorted(subdir.rglob('*.md'))
+            md_files = [f for f in sorted(subdir.rglob('*.md')) if keep(f)]
             if md_files:
                 categories[subdir.name] = [entry(f) for f in md_files]
     # Also include top-level .md files
-    top_level = sorted(base.glob('*.md'))
+    top_level = [f for f in sorted(base.glob('*.md')) if keep(f)]
     if top_level:
         categories['_root'] = [entry(f) for f in top_level]
     return categories
@@ -261,6 +268,9 @@ def resolve_doc(docs_root: Path, rel_path: str, lang: str) -> tuple[Path | None,
     except ValueError:
         return None, "en"
     if not en.is_file():
+        return None, "en"
+    from smo_common.doc_scope import HIDDEN_PREFIXES, is_system_doc
+    if is_system_doc(en) or any(rel.startswith(p) for p in HIDDEN_PREFIXES):
         return None, "en"
     if lang == "fr":
         fr = (root / "i18n" / "fr" / rel).resolve()

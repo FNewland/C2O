@@ -276,3 +276,41 @@ class TestEffectsWithoutCause:
             # … but the operator page never renders them (grep-gate above).
         finally:
             await client.close()
+
+
+# ══════════════ 5. Cloud: the student feed carries no simulator truth ═════
+
+class TestStudentFeedBehindIap:
+    """SCREEN_REVIEW #2/#3: behind IAP a student's /api/status carries no
+    channel model, ground penalty, spacecraft TX state, pass override or
+    simulator range; /classic, /sim, /api/config, /api/diagnostics and the
+    control POSTs are refused. An account in SMO_INSTRUCTORS keeps all."""
+
+    STUDENT = {"X-Goog-Authenticated-User-Email": "accounts.google.com:s@c2o.live"}
+    PROF = {"X-Goog-Authenticated-User-Email": "accounts.google.com:prof@c2o.live"}
+
+    async def test_student_gets_the_receiver_view_only(self, monkeypatch):
+        from smo_rfsim.radio.web_ui import TRUTH_FIELDS
+        monkeypatch.setenv("SMO_REQUIRE_IAP", "1")
+        monkeypatch.setenv("SMO_INSTRUCTORS", "prof@c2o.live")
+        fe = RadioFrontend()
+        fe.status.diagnostics = {"tx_packet_drops": 3, "rx_good_frames": 9,
+                                 "rx_mod_searches": 1}
+        fe.status.pass_override = True
+        fe.status.sc_tx_on = True
+        async with TestClient(TestServer(build_app(fe))) as client:
+            d = await (await client.get("/api/status", headers=self.STUDENT)).json()
+            assert not TRUTH_FIELDS & set(d)
+            assert d["diagnostics"] == {"rx_good_frames": 9}
+            assert "carrier_lock" in d
+            for path in ("/classic", "/sim", "/api/config", "/api/diagnostics"):
+                r = await client.get(path, headers=self.STUDENT)
+                assert r.status == 403, path
+            r = await client.post("/api/channel", json={"eb_n0_db": 1},
+                                  headers=self.STUDENT)
+            assert r.status == 403
+            r = await client.get("/?ui=classic", headers=self.STUDENT)
+            assert "/classic" not in (await r.text()) or r.status == 200
+            d = await (await client.get("/api/status", headers=self.PROF)).json()
+            assert d["pass_override"] is True and "tx_packet_drops" in d["diagnostics"]
+            assert (await client.get("/sim", headers=self.PROF)).status == 200

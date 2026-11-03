@@ -153,8 +153,8 @@ calculer l'erreur de cadence :
 dispersion d'une unité à l'autre. `obdh.uptime` (0x0308) s'incrémente à la même cadence et constitue une
 corroboration utile --- de la cadence uniquement, jamais de l'époque.
 **Note:** Au-delà de ~50 ppm, signaler l'oscillateur pour suivi de tendance et raccourcir l'intervalle
-de synchronisation. Environ 500 ppm (~43 s/jour) est la signature de l'injection de panne
-`clock_drift` de l'instructeur plutôt que d'un oscillateur vieillissant.
+de synchronisation. Environ 500 ppm (~43 s/jour) est très au-delà de la spécification
+de l'oscillateur : le traiter comme une panne d'oscillateur, pas comme un vieillissement.
 **Note:** Un contrôle de cadence n'a pas de sens tant que `obdh.time_ref` (0x0A13) = 2 (GPS) :
 l'horloge est recalée sur le temps vrai, et ce que l'on mesure est la boucle
 d'asservissement, et non l'oscillateur.

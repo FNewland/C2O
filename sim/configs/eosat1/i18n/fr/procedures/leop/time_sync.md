@@ -169,8 +169,8 @@ de 0,1 s relève de NOM-008 en opérations nominales.
 **Verify:** Erreur de dérive de l'horloge < 100 ppm (seuil LEOP ; NOM-008 applique un seuil
 plus strict en opérations nominales)
 **Note:** S'attendre à environ 12 ppm (~1 s/jour) sur une unité saine, avec une dispersion de quelques ppm
-d'une unité à l'autre. Une dérive proche de 500 ppm (~43 s/jour) est la signature d'une panne
-d'oscillateur injectée plutôt que d'un composant vieillissant.
+d'une unité à l'autre. Une dérive proche de 500 ppm (~43 s/jour) est très au-delà de la spécification
+de l'oscillateur : une panne d'oscillateur plutôt qu'un composant vieillissant.
 **Note:** Une dérive mesurée sur un intervalle court est dominée par la résolution
 d'échantillonnage : 12 ppm sur 60 s représentent 0,7 ms, bien en deçà de ce que deux échantillons du SID 4 peuvent
 résoudre. Utiliser l'intervalle le plus long que permet le passage, ou reporter l'estimation de la dérive au

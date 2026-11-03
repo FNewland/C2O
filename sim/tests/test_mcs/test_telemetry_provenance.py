@@ -34,7 +34,7 @@ TM_PATH_FUNCTIONS = {"_process_tm"}
 
 #: Methods that ingest the simulator's /api/state. None may touch the cache.
 SIM_INGEST_FUNCTIONS = {
-    "_ingest_sim_health", "_ingest_reported_hk_enabled",
+    "_ingest_sim_health",
     "_ingest_orbit_elset", "_ingest_sim_illumination", "_sim_state_poll_loop",
 }
 

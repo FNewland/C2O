@@ -294,10 +294,10 @@ positions:
             range: [0, 100]
             units: "%"
           - type: value_table
-            parameters: [aocs.total_pointing_err_3sig, aocs.geoloc_err_m, aocs.pointing_frame, aocs.fine_ready, aocs.fidelity_mode, aocs.est_source, aocs.est_innov_rej_count, aocs.settle_time_s]
+            parameters: [aocs.total_pointing_err_3sig, aocs.geoloc_err_m, aocs.pointing_frame, aocs.fine_ready, aocs.est_source, aocs.est_innov_rej_count, aocs.settle_time_s]
             label: "Pointing Status"
           - type: value_table
-            parameters: [aocs.h_body_x, aocs.h_body_y, aocs.h_body_z, aocs.tau_dist_x, aocs.tau_dist_y, aocs.tau_dist_z, aocs.power_w]
+            parameters: [aocs.h_body_x, aocs.h_body_y, aocs.h_body_z, aocs.power_w]
             label: "Momentum & Disturbances"
           - type: line_chart
             parameters: [aocs.control_err, aocs.total_pointing_err_3sig]
@@ -431,7 +431,7 @@ positions:
             range: [0, 20000]
             units: "MB"
           - type: value_table
-            parameters: [payload.mem_segments_bad, payload.last_scene_id, payload.last_scene_quality]
+            parameters: [payload.mem_segments_bad, payload.last_scene_id]
             label: "Image Catalog"
 
   fdir_systems:
@@ -688,10 +688,6 @@ positions:
             parameter: prop.isp_est
             label: "Isp"
             units: "s"
-          - type: gauge
-            parameter: prop.leak_rate
-            label: "Leak Rate"
-            units: "mg/s"
           - type: status_indicator
             parameter: prop.latch_a_state
             label: "Latch A"
@@ -756,8 +752,5 @@ positions:
             parameter: prop.sma_km
             label: "Semi-Major Axis"
             units: "km"
-          - type: gauge
-            parameter: prop.orbit_epoch_version
-            label: "Element-Set Version"
           - type: event_log
             label: "Propulsion Events (0x0800-0x0812)"

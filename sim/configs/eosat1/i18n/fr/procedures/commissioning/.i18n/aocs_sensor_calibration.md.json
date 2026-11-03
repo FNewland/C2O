@@ -74,8 +74,8 @@
   },
   {
    "id": "com-003-aocs-sensor-calibration/procedure-steps/step-10-post-calibration-determination-check",
-   "en_hash": "42d83329abb08bf2",
-   "fr_hash": "6b7c2f071c07ad1d"
+   "en_hash": "1ed84238a04c4e20",
+   "fr_hash": "5d9e6ed913d70e8d"
   },
   {
    "id": "com-003-aocs-sensor-calibration/off-nominal-handling",
@@ -93,5 +93,5 @@
    "fr_hash": "4eb65d38b44ba9f3"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "5f4fa5a"
 }

@@ -472,21 +472,31 @@ def _status_cell(svc: Service) -> str:
 
 
 def _row(svc: Service, url: str) -> str:
+    # No address line: the row is the link, and a port number or host name
+    # is developer information (SCREEN_REVIEW §1).
     e = html.escape
     return (f'<li><a class="pt-row" id="row-{svc.key}" href="{e(url)}">'
             f'<span class="pt-name" {_DYN_I18N}>{e(svc.name)}</span>'
             f'<span class="pt-purpose" {_DYN_I18N}>{e(svc.purpose)}</span>'
-            f'<span class="pt-addr" id="addr-{svc.key}">{e(display_address(url))}</span>'
             f'{_status_cell(svc)}</a></li>')
 
 
+def visible_services(instructor: bool) -> tuple[Service, ...]:
+    """The screens this viewer may see: instructor tools only for an
+    instructor (SCREEN_REVIEW #17); a student does not learn they exist."""
+    return tuple(s for s in SERVICES if instructor or not s.instructors_only)
+
+
 def build_page(cfg: Config, *, request_host: str | None, user: str | None,
-               lang: str = "en") -> str:
+               lang: str = "en", instructor: bool = True) -> str:
     import tool_frame
     e = html.escape
     sections = []
+    shown = visible_services(instructor)
     for key, title, sub in SECTIONS:
-        rows = "".join(_row(s, cfg.link(s, request_host)) for s in SERVICES if s.section == key)
+        rows = "".join(_row(s, cfg.link(s, request_host)) for s in shown if s.section == key)
+        if not rows:
+            continue
         sections.append(
             f'<section class="pt-sec" aria-labelledby="h-{key}">'
             f'<header><h2 id="h-{key}" {_DYN_I18N}>{e(title)}</h2>'
@@ -514,8 +524,7 @@ def build_page(cfg: Config, *, request_host: str | None, user: str | None,
         '</dl></section>')
     where = (f'<span data-i18n>Each screen has its own address under</span> '
              f'<b class="num">{e(cfg.domain)}</b><span data-i18n>; sign in once with your C2O account.</span>'
-             if cfg.domain else
-             '<span data-i18n>Running on this computer: each screen is a separate server started by start.sh.</span>')
+             if cfg.domain else '')
     boot = json.dumps({"domain": cfg.domain}).replace("</", "<\\/")
     return f"""<!DOCTYPE html>
 <html lang="{e(lang)}"><head><meta charset="UTF-8">
@@ -581,11 +590,11 @@ function modeCell(m) {
   const bad = m.mode === "SAFE" || m.mode === "EMERGENCY";
   if (m.stale) {
     const age = m.age_s === null || m.age_s === undefined ? "" : `<span class="ds-age">${esc(dur(m.age_s))}</span>`;
-    return `<span class="v is-stale">${esc(m.mode)}</span>${age}<span class="src">${esc(T("last TM obdh.mode"))}</span>`;
+    return `<span class="v is-stale">${esc(m.mode)}</span>${age}<span class="src">${esc(T("last telemetry"))}</span>`;
   }
   const g = bad ? `<span class="is-caution">${glyph("warn-up")}</span>` : "";
   const age = m.age_s === null || m.age_s === undefined ? "" : ", " + esc(dur(m.age_s));
-  return `${g}<span class="v${bad ? " is-caution" : ""}">${esc(m.mode)}</span><span class="src">${esc(T("TM obdh.mode"))}${age}</span>`;
+  return `${g}<span class="v${bad ? " is-caution" : ""}">${esc(m.mode)}</span><span class="src">${esc(T("telemetry"))}${age}</span>`;
 }
 function passCell(p) {
   if (!p) return `<span class="ds-chip is-nodata"><span>${esc(T("no data"))}</span></span><span class="src">${esc(T("mission control not running"))}</span>`;
@@ -606,10 +615,10 @@ function paint() {
     $("m-link").innerHTML = linkCell(d.link);
     $("m-mode").innerHTML = modeCell(d.mode);
     $("m-pass").innerHTML = passCell(d.pass);
-    const t = (d.checked_at || "").substr(11, 8);
+    // No wall-clock stamp beside sim-time readouts (SCREEN_REVIEW §1).
     $("foot").textContent = failed
-      ? T("This page lost contact with its server; the status shown is from {{t}} UTC.", { t })
-      : T("Status checked by the server at {{t}} UTC. Simulator times are simulation time.", { t });
+      ? T("This page lost contact with its server; the status shown may be out of date.")
+      : T("Status refreshed every few seconds.");
   }
   // A local SpaceCDF may answer on the dev port instead of 8000.
   const boot = JSON.parse(($("pt-boot") || {}).textContent || "{}");
@@ -617,7 +626,7 @@ function paint() {
     const a = $("row-design");
     if (a) {
       const u = new URL(a.href); u.port = String(sv.design.port);
-      a.href = u.toString(); $("addr-design").textContent = u.host;
+      a.href = u.toString();
     }
   }
 }
@@ -643,6 +652,25 @@ poll(); schedule();
 
 # ── App ───────────────────────────────────────────────────────────────
 
+def status_for(snap: dict, *, instructor: bool, local: bool) -> dict:
+    """The status feed as one viewer may see it. A student never receives
+    the instructor tools' entries (the feed, not only the page, SCREEN_REVIEW
+    #17), and nobody receives port numbers or the server's wall-clock stamp,
+    except the local SpaceCDF port the page needs to find a dev server."""
+    keep = {s.key for s in visible_services(instructor)}
+    services = {}
+    for k, v in (snap.get("services") or {}).items():
+        if k not in keep:
+            continue
+        v = {kk: vv for kk, vv in v.items() if kk != "port"}
+        if k == "design" and local and (snap["services"][k] or {}).get("port"):
+            v["port"] = snap["services"][k]["port"]
+        services[k] = v
+    out = {k: v for k, v in snap.items() if k not in ("services", "checked_at")}
+    out["services"] = services
+    return out
+
+
 def _request_host(request) -> str | None:
     return request.url.host or None
 
@@ -657,15 +685,22 @@ def create_app(cfg: Config | None = None, prober: Prober | None = None) -> web.A
     from smo_common.logbook import register_logbook_routes
     register_logbook_routes(app, tool="portal")
 
+    def _instructor(request) -> bool:
+        from smo_common.web.identity import is_instructor
+        return is_instructor(request.headers, behind_iap=bool(cfg.domain))
+
     async def index(request):
         lang = (request.query.get("lang") or "en").strip().lower()[:2]
         page = build_page(cfg, request_host=_request_host(request),
-                          user=iap_user(request.headers), lang="fr" if lang == "fr" else "en")
+                          user=iap_user(request.headers), lang="fr" if lang == "fr" else "en",
+                          instructor=_instructor(request))
         return tool_html_response(page, app)
 
     async def status(request):
-        snap = await prober.snapshot()
-        return web.json_response(snap, headers={"Cache-Control": "no-store"})
+        return web.json_response(status_for(await prober.snapshot(),
+                                             instructor=_instructor(request),
+                                             local=not cfg.domain),
+                                 headers={"Cache-Control": "no-store"})
 
     async def healthz(request):
         return web.json_response({"ok": True})

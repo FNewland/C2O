@@ -47,14 +47,49 @@ def register_config_routes(
     page_path: Optional[str] = "/config",
     owner: str = "",
     scenario_active: Optional[Callable[[], bool]] = None,
+    student_facing: Optional[bool] = None,
 ) -> Any:
     """Mount the config API (and optional browser page) on ``app``.
 
     ``scenario_active`` — optional callable; while it returns True, apply
     and revert are refused unless the request sets ``force`` (brief 06 §B
     safety rule 3).
+
+    ``student_facing`` (default: the same as ``readonly``) hides every
+    instructor-only file (``classification.INSTRUCTOR_ONLY_PATTERNS``:
+    scenarios, fault model, RF channel model, simulator tuning, …) from
+    every route — listing, file, history, revisions and diffs answer as if
+    the file did not exist — and strips instructor-visibility rows from
+    the files that remain. Closing the leak in the feed, not only on the
+    page (SCREEN_REVIEW #1).
     """
     from aiohttp import web
+    from .classification import is_instructor_only, redact_for_students
+
+    hide = readonly if student_facing is None else bool(student_facing)
+
+    def _hidden(path: Optional[str]) -> bool:
+        return bool(hide and path and is_instructor_only(path))
+
+    def _not_found(path: str):
+        return web.json_response(
+            {"error": f"no such config file: {path}", "issues": []},
+            status=404)
+
+    def _redact_diff(text: str) -> str:
+        if not hide or not text:
+            return text
+        # Drop whole per-file sections for hidden files, then the
+        # instructor-visibility rows of the files that remain.
+        out, skip = [], False
+        for line in text.split("\n"):
+            if line.startswith("diff --git "):
+                parts = line.split(" ")
+                rp = parts[-1][2:] if len(parts) >= 4 else ""
+                skip = is_instructor_only(rp)
+            if not skip:
+                out.append(line)
+        return redact_for_students("", "\n".join(out))
 
     if isinstance(editor_or_config_dir, ConfigEditor):
         editor = editor_or_config_dir
@@ -69,27 +104,44 @@ def register_config_routes(
 
     async def handle_files(_req):
         out = editor.list_files()
+        if hide:
+            out["files"] = [f for f in out["files"]
+                            if not is_instructor_only(f["path"])]
+            hidden_groups = {"scenario", "rf", "generated", "dead", "junk"}
+            out["groups"] = [g for g in out["groups"]
+                             if g["key"] not in hidden_groups]
+            # No server paths on student screens (SCREEN_REVIEW #10).
+            out.pop("config_dir", None)
         out["readonly"] = readonly
         out["owner"] = owner
         return web.json_response(out)
 
     async def handle_file(req):
+        path = req.query.get("path", "")
+        if _hidden(path):
+            return _not_found(path)
         try:
-            out = editor.get_file(req.query.get("path", ""))
+            out = editor.get_file(path)
         except ConfigEditError as e:
             return _err(e)
+        if hide:
+            out["text"] = redact_for_students(out["path"], out["text"])
         out["readonly"] = readonly or not out["editable"]
         return web.json_response(out)
 
     async def handle_schema(req):
         from .formgen import form_spec_for
         path = req.query.get("path", "")
+        if _hidden(path):
+            return _not_found(path)
         return web.json_response(
             {"path": path, "form_spec": form_spec_for(path)})
 
     async def handle_validate(req):
         try:
             body = await req.json()
+            if _hidden(body.get("path", "")):
+                return _not_found(body.get("path", ""))
             issues = editor.validate(body.get("path", ""),
                                      body.get("text", ""))
         except ConfigEditError as e:
@@ -104,6 +156,8 @@ def register_config_routes(
     async def handle_diff(req):
         try:
             body = await req.json()
+            if _hidden(body.get("path", "")):
+                return _not_found(body.get("path", ""))
             out = editor.diff(body.get("path", ""), body.get("text", ""))
         except ConfigEditError as e:
             return _err(e)
@@ -117,16 +171,30 @@ def register_config_routes(
             limit = min(int(req.query.get("limit", 50)), 500)
         except ValueError:
             limit = 50
+        path = req.query.get("path") or None
+        if _hidden(path):
+            return _not_found(path)
         try:
-            revs = editor.history(req.query.get("path") or None, limit)
+            revs = editor.history(path, limit)
         except ConfigEditError as e:
             return _err(e)
+        if hide:
+            kept = []
+            for r in revs:
+                files = [f for f in (r.get("files") or [])
+                         if not is_instructor_only(f)]
+                if r.get("files") and not files:
+                    continue
+                kept.append(dict(r, files=files))
+            revs = kept
         return web.json_response({"backend": editor.backend.kind,
                                   "revisions": revs})
 
     async def handle_revision(req):
         rev = req.match_info.get("rev", "")
         path = req.query.get("path", "")
+        if _hidden(path):
+            return _not_found(path)
         try:
             content = editor.file_at(rev, path)
         except ConfigEditError as e:
@@ -134,20 +202,29 @@ def register_config_routes(
         if content is None:
             return web.json_response(
                 {"error": f"{path} not present at {rev}"}, status=404)
+        if hide:
+            content = redact_for_students(path, content)
         return web.json_response({"rev": rev, "path": path, "text": content})
 
     async def handle_revdiff(req):
         rev_a = req.match_info.get("a", "")
         rev_b = req.match_info.get("b", "")
+        path = req.query.get("path") or None
+        if _hidden(path):
+            return _not_found(path)
         try:
-            text = editor.diff_revisions(rev_a, rev_b,
-                                         req.query.get("path") or None)
+            text = editor.diff_revisions(rev_a, rev_b, path)
         except ConfigEditError as e:
             return _err(e)
+        text = _redact_diff(text)
         return web.json_response({"a": rev_a, "b": rev_b, "diff": text})
 
     async def handle_crosschecks(_req):
-        return web.json_response({"issues": editor.crosschecks()})
+        issues = editor.crosschecks()
+        if hide:
+            issues = [i for i in issues
+                      if not is_instructor_only(str(i.get("path") or ""))]
+        return web.json_response({"issues": issues})
 
     async def handle_baselines(_req):
         return web.json_response({"baselines": editor.list_baselines(),
@@ -374,7 +451,7 @@ function esc(s){ const d=document.createElement('div');
 async function loadTree(){
   const d = await (await fetch(API + "/files")).json();
   FILES = d.files; GROUPS = d.groups;
-  $("owner").textContent = d.owner + " — " + d.config_dir +
+  $("owner").textContent = d.owner + (d.config_dir ? " — " + d.config_dir : "") +
       " · history: " + d.backend;
   $("backend").textContent = "(" + d.backend + ")";
   if (READONLY || d.readonly) $("ro-badge").style.display = "inline";

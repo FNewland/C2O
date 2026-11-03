@@ -169,8 +169,8 @@ CUC seconds only; finer accuracy comes from GPS discipline, and the tighter
 **Verify:** Clock rate error < 100 ppm (LEOP threshold; NOM-008 applies a
 tighter one in nominal operations)
 **Note:** Expect about 12 ppm (~1 s/day) on a healthy unit, with a few ppm of
-per-unit spread. A rate near 500 ppm (~43 s/day) is the signature of an injected
-oscillator fault rather than an ageing part.
+per-unit spread. A rate near 500 ppm (~43 s/day) is far outside the oscillator
+specification: an oscillator failure rather than an ageing part.
 **Note:** A rate measured over a short interval is dominated by the sampling
 resolution: 12 ppm over 60 s is 0.7 ms, far below what two SID 4 samples can
 resolve. Use the longest interval the pass allows, or defer the rate estimate to

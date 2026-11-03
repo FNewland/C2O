@@ -179,8 +179,8 @@ parameters:
   # mag_b_x..z, mag_select) are RETIRED (owner ruling, 2026-08c): EOSAT-1
   # carries ONE 3-axis magnetometer, like it carries one gyro set — there is
   # no spare and no prime/backup switch. The measured field is 0x020B-0x020D;
-  # magnetometer failure teaching is by instructor injection (mag_failure),
-  # not by a fabricated redundant unit. The ids are reserved (do not reuse).
+  # a magnetometer failure is a single-unit failure, not a switch-over to a
+  # fabricated redundant unit. The ids are reserved (do not reuse).
 
   # AOCS Wave 5-B: Individual CSS heads
   - { id: 0x027A, name: aocs.css_px, subsystem: aocs, description: CSS +X face illumination , on_demand: true }
@@ -205,9 +205,8 @@ parameters:
   - { id: 0x028B, name: aocs.css_head_health_my, subsystem: aocs, units: "%", description: CSS -Y head health, visibility: instructor }  # as 0x0288
   - { id: 0x028C, name: aocs.css_head_health_pz, subsystem: aocs, units: "%", description: CSS +Z head health, visibility: instructor }  # as 0x0288
   - { id: 0x028D, name: aocs.css_head_health_mz, subsystem: aocs, units: "%", description: CSS -Z head health, visibility: instructor }  # as 0x0288
-  # slew_state moved off 0x0285 (which is aocs.rw2_bearing_health, downlinked
-  # in HK SID 2 — the collision made the ground read the slew state as RW2
-  # bearing health; brief 02 root cause 10).
+  # slew_state moved off 0x0285 (an id collision in HK SID 2 made the ground
+  # read the slew state as another parameter; brief 02 root cause 10).
   - { id: 0x0292, name: aocs.slew_state, subsystem: aocs, description: "Slew state (0=IDLE, 1=SLEWING, 2=SETTLING, 3=COMPLETE)", on_demand: true }
 
   # ═════ Phase C: AOCS determination & control block 0x02A0-0x02C8 ═════
@@ -273,14 +272,14 @@ parameters:
   # why it refused or aborted.
   - { id: 0x02C9, name: aocs.gyro_cal_state, subsystem: aocs, description: "Gyro bias calibration state: 0=IDLE, 1=RUNNING, 2=COMPLETE, 3=ABORTED" }
   - { id: 0x02CA, name: aocs.gyro_cal_progress, subsystem: aocs, units: "%", description: "Gyro bias calibration progress through the averaging arc (0-100)" }
-  - { id: 0x02CB, name: aocs.gyro_cal_bias_x, subsystem: aocs, units: 'deg/s', description: "Bias estimated by the LAST completed gyro calibration, X body axis. Compare against aocs.gyro_bias_injected (0x0296) when an instructor has injected a gyro_bias fault" }
+  - { id: 0x02CB, name: aocs.gyro_cal_bias_x, subsystem: aocs, units: 'deg/s', description: "Bias estimated by the LAST completed gyro calibration, X body axis" }
   - { id: 0x02CC, name: aocs.gyro_cal_bias_y, subsystem: aocs, units: 'deg/s', description: "Bias estimated by the last completed gyro calibration, Y body axis" }
   - { id: 0x02CD, name: aocs.gyro_cal_bias_z, subsystem: aocs, units: 'deg/s', description: "Bias estimated by the last completed gyro calibration, Z body axis" }
   - { id: 0x02CE, name: aocs.gyro_cal_comp_mag, subsystem: aocs, units: 'deg/s', description: "Magnitude of the gyro bias compensation currently applied on board. Non-zero after a successful calibration; the HARDWARE bias (0x0296) is unchanged — calibration compensates the fault, it does not repair it" }
   - { id: 0x02CF, name: aocs.gyro_cal_result, subsystem: aocs, description: "Outcome of the last gyro calibration attempt: 0=never run, 1=SUCCESS, 2=FAILED/ABORTED" }
   - { id: 0x02D0, name: aocs.gyro_cal_reject, subsystem: aocs, description: "Failure code of the last gyro-calibration refusal or abort (0 = none). 0x0A01 unpowered, 0x0A02 a gyro unit off, 0x0A03 no star-tracker reference, 0x0A04 rate too high, 0x0A05 already running, 0x0A06 preconditions lost mid-run, 0x0A07 abort with nothing running" }
   - { id: 0x02D1, name: aocs.gyro_units_mask, subsystem: aocs, description: "Per-unit gyro power state as a bitmask: bit0 = X unit (S2 device 0x0206), bit1 = Y (0x0207), bit2 = Z (0x0208). 0x07 = all three on. Tells the operator WHICH unit is off, which the 0x0294 count cannot" }
-  - { id: 0x02D2, name: aocs.gyro_bias_resid, subsystem: aocs, units: 'deg/s', description: "Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the injected hardware fault persists" }
+  - { id: 0x02D2, name: aocs.gyro_bias_resid, subsystem: aocs, units: 'deg/s', description: "Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the hardware bias persists" }
 
   # ===== OBDH =====
   - { id: 0x0300, name: obdh.mode, subsystem: obdh }

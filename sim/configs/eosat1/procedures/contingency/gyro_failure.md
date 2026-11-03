@@ -25,7 +25,7 @@ and continue attitude determination on the remaining sensors.
 body axis, and **no redundant unit**: S2 devices `S2_AOCS_GYROSCOPE_0/1/2`
 (device ids 0x0206, 0x0207, 0x0208 = 518, 519, 520). There is no IMU power line
 and nothing to switch to.
-- An injected `gyro_bias` fault is a **persistent** hardware offset on one axis or
+- A gyro bias fault is a **persistent** hardware offset on one axis or
   on all three. It does not heal with time. The on-board calibration
   (`AOCS_GYRO_CALIBRATION`, func_id 13) compensates it in the measurement chain; it
   does not repair the unit.
@@ -165,8 +165,8 @@ measured on the residual; the hardware fault is still there.
   `aocs.gyro_temp` (0x0273); re-run the calibration after the thermal transient.
   A bias that returns at constant temperature is a degrading unit: raise an anomaly
   report.
-- **Calibration over-corrects after the fault is cleared.** If the instructor
-  removes an injected bias after a calibration, the stored compensation now
+- **Calibration over-corrects after the fault clears.** If the hardware bias
+  disappears after a calibration, the stored compensation now
   over-corrects with the opposite sign (0x02D2 and 0x02CE both non-zero). Re-run
   Step 4 to load a fresh compensation.
 

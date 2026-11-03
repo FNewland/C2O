@@ -293,12 +293,10 @@ class MCSServer:
         # Sim time of the last REAL-TIME packet (stored TM does not count).
         self._last_rt_rx_ts: Optional[float] = None
         self._storage_status: list[dict] = []
-        # Per-SID observation: epoch time each HK SID was last decoded, and any
-        # enable state the spacecraft has actually reported (as opposed to the
-        # UI's old assumption that everything is always on). `None` for a SID
-        # means "nobody told us" — the UI infers PERIODIC/SILENT from the age.
+        # Per-SID observation: epoch time each HK SID was last decoded. The
+        # enable bits shown beside it are the COMMANDED ones
+        # (TCManager.hk_commanded), never the simulator's own map.
         self._sid_last_seen: dict[int, float] = {}
-        self._sid_enabled_reported: dict[int, bool] = {}
         # Why the on-board HK enable set last changed on its own — a boot or a
         # bootloader entry rather than an operator TC(3,5)/TC(3,6). Without
         # this the HK Manager shows SIDs flipping to DISABLED with no
@@ -1599,8 +1597,12 @@ class MCSServer:
         from smo_common.dump_store import register_dump_routes
         # `config_dir` puts parameter NAMES on the decoded S12 tables the
         # summary now returns — `eps.bat_soc`, not a bare `0x0101`.
+        # The legacy EN-only /dumps page duplicated the delayed-TM viewer
+        # (:8092) and showed the server's store path (SCREEN_REVIEW §4.2):
+        # the API stays, the page redirects to the viewer.
         register_dump_routes(app, lambda: self._dump_dir, owner="MCS",
-                             config_dir=self.config_dir)
+                             config_dir=self.config_dir, page_path=None)
+        app.router.add_get("/dumps", self._handle_dumps_redirect)
 
         # Delayed-TM report generator (Phase F, brief 06 §A): template-driven
         # self-contained HTML reports over the dump archive. Same
@@ -2305,11 +2307,10 @@ class MCSServer:
                     self._ground_start_wall = _time_mod.time()
                     if speed is not None:
                         self._sim_speed = float(speed)
-                # If the simulator ever reports its real HK enable bits, prefer
-                # them over inference. Today it does not publish them; this is
-                # deliberately optional so the display improves for free when a
-                # sim-side `hk_enabled` map lands (defect #68 hand-off).
-                self._ingest_reported_hk_enabled(payload.get("hk_enabled"))
+                # The simulator's own `hk_enabled` map is NOT read: it is
+                # simulator truth, not downlinked (SCREEN_REVIEW #5). The
+                # HK Manager shows the commanded set (TC 3,5/3,6) and what
+                # arrives.
                 self._ingest_hk_enable_reset(payload.get("hk_enable_reset"))
                 self._ingest_sim_health(payload)
                 self._station_link.ingest_sim_state(payload)
@@ -2652,14 +2653,14 @@ class MCSServer:
         """
         if not isinstance(payload, dict):
             return
-        self._fdir_model.set_sc_mode(payload.get("sc_mode"), source="sim_state",
-                                     ts=self.sim_now_ts())
+        # sc_mode is simulator truth: the FDIR model takes the spacecraft
+        # mode from TM (sat.mode 0x0001) only, see _state_poll_loop
+        # (SCREEN_REVIEW #4). Nothing below reaches an operator feed.
         self._sim_health = {
             "engine_fault": payload.get("engine_fault"),
             "engine_fault_count": payload.get("engine_fault_count", 0),
             "tm_rate_bps": payload.get("tm_rate_bps"),
             "rt_tm_backlog": payload.get("rt_tm_backlog"),
-            "sc_mode": payload.get("sc_mode"),
             "source": "sim_state",
         }
         sched = payload.get("scheduler")
@@ -2685,28 +2686,6 @@ class MCSServer:
             }
             self._sim_health["tm_tier"] = ttc_block.get("tm_tier")
             self._sim_health["tm_tier_name"] = ttc_block.get("tm_tier_name")
-
-    def _ingest_reported_hk_enabled(self, reported: Any) -> None:
-        """Absorb an authoritative ``{sid: bool}`` HK enable map, if offered.
-
-        Accepts either a mapping or a list of ``{"sid":…, "enabled":…}`` dicts,
-        and tolerates string keys. Anything unparseable is ignored — a missing
-        or malformed map must never degrade the observed-state display.
-        """
-        if not reported:
-            return
-        pairs: list[tuple[Any, Any]] = []
-        if isinstance(reported, dict):
-            pairs = list(reported.items())
-        elif isinstance(reported, list):
-            for item in reported:
-                if isinstance(item, dict) and "sid" in item:
-                    pairs.append((item.get("sid"), item.get("enabled")))
-        for sid, enabled in pairs:
-            try:
-                self._sid_enabled_reported[int(sid)] = bool(enabled)
-            except (TypeError, ValueError):
-                continue
 
     def _ingest_hk_enable_reset(self, reported: Any) -> None:
         """Absorb the spacecraft's explanation of a wholesale HK enable reset.
@@ -2734,8 +2713,14 @@ class MCSServer:
                             if isinstance(s, (int, float, str))
                             and str(s).lstrip("-").isdigit()],
             "obc_time_s": reported.get("obc_time_s"),
-            "source": "sim_state",
+            "source": "S5 0x0056",
         }
+        # The event names the SIDs the reset switched off and on: the
+        # commanded set follows it.
+        for sid in self._hk_enable_reset["sids_disabled"]:
+            self._tc_manager.hk_commanded[sid] = False
+        for sid in self._hk_enable_reset["sids_enabled"]:
+            self._tc_manager.hk_commanded[sid] = True
 
     async def _state_poll_loop(self):
         """Periodically build state from param_cache and broadcast.
@@ -2874,13 +2859,14 @@ class MCSServer:
                 # SILENT from evidence instead of assuming everything is on.
                 async with self._param_cache_lock:
                     sid_seen = dict(self._sid_last_seen)
-                    sid_reported = dict(self._sid_enabled_reported)
+                sid_commanded = dict(self._tc_manager.hk_commanded)
                 data["hk_sid_age_s"] = {
                     str(sid): round(max(0.0, now - ts), 1)
                     for sid, ts in sid_seen.items()
                 }
-                if sid_reported:
-                    data["hk_enabled"] = {str(k): v for k, v in sid_reported.items()}
+                if sid_commanded:
+                    data["hk_enabled_commanded"] = {
+                        str(k): v for k, v in sid_commanded.items()}
                 if self._hk_enable_reset:
                     # "Why did my SIDs go quiet?" — the HK Manager renders
                     # this as a banner next to the enable column.
@@ -2891,13 +2877,14 @@ class MCSServer:
                     if self._storage_status:
                         data["storage_status"] = self._storage_status
 
-                # Simulator-reported health + spacecraft mode. Everything here
-                # comes from the sim state endpoint, not from telemetry, and
-                # carries `source: sim_state` so displays can say so.
-                if self._sim_health:
-                    data["sim_health"] = self._sim_health
-                    if self._sim_health.get("sc_mode") is not None:
-                        data["sc_mode"] = self._sim_health["sc_mode"]
+                # Spacecraft mode for the FDIR window: TM sat.mode (0x0001)
+                # only. The simulator's sc_mode and health block never reach
+                # this feed (SCREEN_REVIEW #4).
+                sat_mode = cache.get(0x0001)
+                if sat_mode is not None:
+                    self._fdir_model.set_sc_mode(sat_mode.get("value"),
+                                                 source="TM sat.mode 0x0001",
+                                                 ts=now)
                 # Sim-clock discontinuity (defect #79). Non-zero jump_count
                 # means the ground clock was re-anchored across a break in sim
                 # time and anything cached at the old epoch was dropped.
@@ -3647,7 +3634,10 @@ class MCSServer:
                         "id": pid, "hex": f"0x{pid:04X}",
                         "name": p.get("name", ""),
                         "subsystem": p.get("subsystem", ""),
-                        "units": p.get("units", ""),
+                        # "C" is degrees Celsius on every row; say so
+                        # on screen (review #20).
+                        "units": ("°C" if p.get("units") in ("C", "degC")
+                                  else p.get("units", "")),
                         "description": ("Station-measured (ground receiver "
                                         "monitoring data, not spacecraft TM). "
                                         + str(p.get("description", ""))).strip(),
@@ -3745,7 +3735,7 @@ class MCSServer:
         now = self.sim_now_ts()
         async with self._param_cache_lock:
             last_seen = dict(self._sid_last_seen)
-            reported = dict(self._sid_enabled_reported)
+        commanded = dict(self._tc_manager.hk_commanded)
         out = []
         for sid in sorted(self._hk_sid_meta):
             meta = dict(self._hk_sid_meta[sid])
@@ -3762,10 +3752,9 @@ class MCSServer:
                 observed = "silent"
             meta["last_seen_age_s"] = age
             meta["observed"] = observed
-            # Only report an enable flag if something actually told us one.
-            # `None` means "unknown — infer from `observed`", which is the
-            # truthful answer for this build.
-            meta["enabled"] = reported.get(sid)
+            # The enable bit as COMMANDED from the ground (TC 3,5/3,6);
+            # `None` = never commanded this session — infer from `observed`.
+            meta["commanded"] = commanded.get(sid)
             out.append(meta)
         return web.json_response({"structures": out,
                                   "age_time_base": "sim",
@@ -4518,12 +4507,25 @@ class MCSServer:
         entries = []
         if not base_dir.exists():
             return entries
+        from smo_common.doc_scope import doc_title, is_student_doc
+        cfg = self.config_dir
         for md_file in sorted(base_dir.rglob("*.md")):
             rel = md_file.relative_to(base_dir)
+            try:
+                cfg_rel = md_file.relative_to(cfg).as_posix()
+            except ValueError:
+                cfg_rel = rel.as_posix()
+            # SCREEN_REVIEW #7/#16: training-system documents and retired
+            # cards are not listed; titles are the documents' own headings
+            # ("02 Aocs" was the file stem).
+            if not is_student_doc(md_file, cfg_rel):
+                continue
             category = rel.parent.name if rel.parent != rel.parent.parent else "general"
+            fr = cfg / "i18n" / "fr" / cfg_rel
             entries.append({
                 "category": category or "general",
-                "name": md_file.stem.replace("_", " ").title(),
+                "name": doc_title(md_file),
+                "title_fr": doc_title(fr) if fr.is_file() else None,
                 "path": str(rel),
                 "filename": md_file.name,
             })
@@ -4605,7 +4607,9 @@ class MCSServer:
         target = (manual_dir / rel_path).resolve()
         if not str(target).startswith(str(manual_dir.resolve())):
             return web.json_response({"error": "Invalid path"}, status=403)
-        if not target.exists() or not target.is_file():
+        from smo_common.doc_scope import is_system_doc
+        if (not target.exists() or not target.is_file()
+                or is_system_doc(target)):
             return web.json_response({"error": "Not found"}, status=404)
         return self._md_doc_response(request, target, rel_path)
 
@@ -4860,9 +4864,9 @@ class MCSServer:
         data["state"]["tm_tier_name"] = link.get("tm_tier_name")
         data["state"]["tm_tier_label"] = link.get("tm_tier_label")
         data["state"]["tm_tier_demoted"] = link.get("tm_tier_demoted", False)
-        # On-board autonomy: faults detected, cascades pending and the recovery
-        # procedure in progress (WP-5).
-        data["autonomy"] = self._sim_autonomy
+        # The simulator's autonomy block (active faults, pending cascades,
+        # on-board procedure progress) is simulator truth and is not served
+        # here (SCREEN_REVIEW #4); the window tells the TM-derived story.
         return web.json_response(data)
 
     async def _handle_schedule_report(self, request):
@@ -5192,8 +5196,19 @@ class MCSServer:
         from smo_mcs.fault_graph import load_fault_graph
         names_to_ids = {m.get("name", ""): pid
                         for pid, m in self._param_meta.items()}
-        return web.json_response(
-            load_fault_graph(self.config_dir, names_to_ids))
+        g = load_fault_graph(self.config_dir, names_to_ids)
+        # Operators get the ancestry the alarm grouping needs, not the
+        # simulator's fault model (thresholds, delays, cascade actions,
+        # the file name): SCREEN_REVIEW §2.4.
+        return web.json_response({
+            "available": g.get("available", False),
+            "reason": "FDIR fault tree unavailable" if not g.get("available") else None,
+            "edge_semantics": "edges are inferred from the FDIR fault tree",
+            "nodes": [{k: n.get(k) for k in ("id", "param", "param_id", "subsystem")}
+                      for n in g.get("nodes", [])],
+            "edges": [{"parent": e["parent"], "child": e["child"]}
+                      for e in g.get("edges", [])],
+        })
 
     async def _handle_gonogo_matrix(self, request):
         """GET /api/gonogo-matrix — the GO/NO-GO call matrix (G7).
@@ -5473,6 +5488,27 @@ class MCSServer:
                 {"error": "planner unreachable", "detail": type(e).__name__},
                 status=502)
 
+    @staticmethod
+    def dtm_viewer_url(request) -> str:
+        """Where a browser reaches the delayed-TM viewer: ``SMO_DTM_URL``,
+        else ``https://tm.<SMO_PORTAL_DOMAIN>/`` in the cloud, else port 8092
+        on the host this page was opened on (start.sh)."""
+        import os as _os
+        explicit = _os.environ.get("SMO_DTM_URL", "").strip()
+        if explicit:
+            return explicit
+        dom = _os.environ.get("SMO_PORTAL_DOMAIN", "").strip().strip(".")
+        if dom and not dom.startswith("@"):
+            return f"https://tm.{dom}/"
+        host = (getattr(getattr(request, "url", None), "host", None)
+                or "localhost") if request is not None else "localhost"
+        if ":" in host and not host.startswith("["):
+            host = f"[{host}]"
+        return f"http://{host}:8092/"
+
+    async def _handle_dumps_redirect(self, request):
+        raise web.HTTPFound(self.dtm_viewer_url(request))
+
     async def _handle_client_config(self, request):
         """Return runtime config for the browser client.
 
@@ -5497,6 +5533,8 @@ class MCSServer:
             # Server DEFAULT UI language (i18n S0; additive). The browser's
             # own choice (?lang= / toggle) wins; API text stays English.
             "ui_lang": getattr(self, "_ui_lang", "en"),
+            # The delayed-TM viewer (header "Delayed TM"; review #18).
+            "dtm_url": self.dtm_viewer_url(request),
             "staleness": dict(self._staleness_policy),
             "param_cadence": {
                 f"0x{pid:04X}": [ent["interval_s"], *ent["sids"]]

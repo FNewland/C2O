@@ -53,7 +53,7 @@ events:
   - { id: 0x020A, name: GPS_LOCK_ACQUIRED, severity: INFO, subsystem: aocs, description: "GPS lock acquired (3D+ fix)" }
   - { id: 0x020B, name: GYRO_BIAS_HIGH, severity: LOW, subsystem: aocs, description: "Gyroscope bias drift exceeds threshold" }
   - { id: 0x020C, name: CSS_DEGRADED, severity: MEDIUM, subsystem: aocs, description: "Coarse Sun Sensor multiple head failures" }
-  - { id: 0x020D, name: AOCS_FAST_LOOP_BYPASSED, severity: LOW, subsystem: aocs, description: "AOCS attitude fast loop bypassed/restored (secular fidelity mode above 60x time acceleration; see aocs.fidelity_mode 0x02C6)" }
+  - { id: 0x020D, name: AOCS_FAST_LOOP_BYPASSED, severity: LOW, subsystem: aocs, description: "AOCS attitude fast loop bypassed/restored (secular fidelity mode above 60x time acceleration)" }
   - { id: 0x020E, name: AOCS_DESAT_INEFFECTIVE, severity: MEDIUM, subsystem: aocs, description: "Desaturation timed out without converging: the dump could not remove the stored body momentum within desaturation.timeout_s. AOCS returns to the pre-desat mode instead of parking in DESAT" }
   - { id: 0x020F, name: AOCS_MODE_RESTORED, severity: INFO, subsystem: aocs, description: "AOCS returned to the mode the ground commanded (aocs.commanded_mode 0x0297) after a transient or an automatic demotion" }
   # Gyro bias calibration (S8.1 func 13 AOCS_GYRO_CALIBRATION). The calibration

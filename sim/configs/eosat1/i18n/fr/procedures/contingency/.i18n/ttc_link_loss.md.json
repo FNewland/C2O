@@ -59,8 +59,8 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/off-nominal-handling",
-   "en_hash": "a08e1fbc09fef389",
-   "fr_hash": "3f924abf8ba045b6"
+   "en_hash": "c70e182c7314b75b",
+   "fr_hash": "ebc391248dace7aa"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/post-conditions",
@@ -68,5 +68,5 @@
    "fr_hash": "d1aaa876820b5a1b"
   }
  ],
- "en_commit": "094c1d3"
+ "en_commit": "5f4fa5a"
 }

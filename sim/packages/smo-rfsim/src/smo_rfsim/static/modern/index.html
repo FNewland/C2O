@@ -106,7 +106,6 @@ d.setAttribute("data-theme",t==="light"?"light":"dark");})();
   <span class="meta" id="rb-meta"><span data-i18n>Ground station receiver</span></span>
   <div class="ctl">
     <span id="feed-chip" role="status"></span>
-    <span class="upd" id="last-update"></span>
     <span id="lb-slot"></span>
     <div class="ds-seg" role="group" id="theme" aria-label="Theme" data-i18n-aria-label>
       <button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button>
@@ -122,7 +121,6 @@ d.setAttribute("data-theme",t==="light"?"light":"dark");})();
   <section class="ds-panel" aria-labelledby="lock-h">
     <div class="ds-panel-h"><span id="lock-h" data-i18n>Lock status</span><span class="r" data-i18n>acquisition runs left to right</span></div>
     <div class="chain">
-      <div class="st"><span class="k" data-i18n>SC transmitter</span><span id="sctx-chip"></span></div>
       <div class="st"><span class="k" data-i18n>Carrier</span><span id="carrier-chip"></span></div>
       <div class="st"><span class="k" data-i18n>Bit sync</span><span id="bitsync-chip"></span></div>
       <div class="st"><span class="k" data-i18n>Frame sync</span><span id="framesync-chip"></span></div>
@@ -165,8 +163,6 @@ d.setAttribute("data-theme",t==="light"?"light":"dark");})();
         <div class="row"><span class="k" data-i18n>Link margin</span><span id="margin"></span></div>
         <div class="row"><span class="k" data-i18n>RX SNR (EVM)</span><span id="pl-evm"></span></div>
         <div class="row"><span class="k" data-i18n>Doppler (measured)</span><span id="doppler"></span></div>
-        <div class="row"><span class="k" data-i18n>Range</span><span id="range"></span></div>
-        <div class="row"><span class="k" data-i18n>Prop delay</span><span id="delay"></span></div>
       </div>
     </section>
     <section class="ds-panel" id="gl-card" aria-labelledby="gl-h">
@@ -220,8 +216,7 @@ d.setAttribute("data-theme",t==="light"?"light":"dark");})();
   </div>
 </main>
 
-<footer><span data-i18n>SMO Ground Segment — radio receiver console</span> ·
-  <a href="/classic" data-i18n>classic page</a></footer>
+<footer><span data-i18n>SMO Ground Segment — radio receiver console</span></footer>
 
 <script type="module">
 import { renderChip, freshness, mountLangToggle, renderParam, renderEventRow, limitClass,
@@ -440,18 +435,11 @@ function render(d) {
   last = d;
   $("rb-meta").innerHTML = `${esc(tText("Ground station receiver"))} · ${esc(tText("mode"))} <span class="k">${esc(d.mode || "")}</span>` +
     (d.mode === "RF" ? ` · <span class="k">${esc(d.modulation_name || "")}</span> · <span class="k">${(d.frequency_hz / 1e6).toFixed(3)} MHz</span>` : "");
-  const radiating = d.sc_tx_on === true;
-  const sctx = $("sctx-chip");
-  const ovr = d.pass_override ? " · OVR" : "";
-  const ovrTitle = d.pass_override
-    ? tText("Instructor pass override ON — geometric visibility forced; TX state is still the spacecraft's own")
-    : tText("Spacecraft transmitter ({{field}} from the sim)", { field: "tx_active" });
-  sctx.innerHTML = d.sc_tx_on === true ? renderChip({ kind: "ok", glyph: "run", label: tText("Radiating") + ovr, title: ovrTitle })
-    : d.sc_tx_on === false ? renderChip({ kind: "off", label: (d.sc_pa_on === false ? tText("Off, PA off") : tText("Off")) + ovr, title: ovrTitle })
-    : renderNoData();
-  lockChip($("carrier-chip"), d.carrier_lock, radiating);
-  lockChip($("bitsync-chip"), d.bit_sync, radiating);
-  lockChip($("framesync-chip"), d.frame_sync, radiating);
+  // The ground cannot know the spacecraft transmitter state: an unlocked
+  // receiver is shown as such, never as an alarm about the spacecraft.
+  lockChip($("carrier-chip"), d.carrier_lock, false);
+  lockChip($("bitsync-chip"), d.bit_sync, d.carrier_lock === "LOCKED");
+  lockChip($("framesync-chip"), d.frame_sync, d.bit_sync === "LOCKED");
 
   const rf = d.mode === "RF" && d.carrier_lock === "LOCKED";
   const band = (d.ground_limits || {})["0x050C"]; berBand = band || berBand;
@@ -466,8 +454,6 @@ function render(d) {
   $("margin").innerHTML = rf ? v(d.link_margin_db, "dB", 1) : renderNoData({ label: tText("no lock") });
   $("pl-evm").innerHTML = rf && d.evm_snr_db != null ? v(d.evm_snr_db, "dB", 1) : renderNoData();
   $("doppler").innerHTML = rf ? renderValue(d.doppler_hz, { units: "Hz", eng: (d.doppler_hz >= 0 ? "+" : "") + Math.round(d.doppler_hz).toLocaleString("en-US").replace(/,/g, " ") }) : renderNoData({ label: tText("no lock") });
-  $("range").innerHTML = d.range_km > 0 ? v(d.range_km, "km", 1) : renderNoData();
-  $("delay").innerHTML = d.range_km > 0 ? v(d.range_km / 299.792, "ms", 2) : renderNoData();
   $("datarate").innerHTML = v(d.data_rate_kbps, "kbps", 1);
   $("pl-symrate").innerHTML = d.symbol_rate_bd ? v(d.symbol_rate_bd / 1000, "kBd", 2) : renderNoData();
   $("pl-thr").innerHTML = rf ? v((d.throughput_bps || 0) / 1000, "kbps", 2) : renderNoData({ label: tText("no lock") });
@@ -497,7 +483,6 @@ function render(d) {
   $("lb-coding").innerHTML = v(d.coding_gain_db || 0, "dB", 1);
   $("lb-freq").innerHTML = v((d.frequency_hz || 437e6) / 1e6, "MHz", 3);
   $("lb-bw").innerHTML = d.bandwidth_hz ? v(d.bandwidth_hz / 1e3, "kHz", 1) : renderNoData();
-  $("last-update").textContent = new Date(d.timestamp * 1000).toISOString().substr(11, 8) + " UTC";
   drawPlots();
   renderDiagnostics(d.diagnostics || {});
   renderGroundLimits(d);
@@ -505,7 +490,7 @@ function render(d) {
 /** Why a plot is empty, in operator terms (never a bare "no data"). */
 function emptyReason(d, rfOnly) {
   if (!d) return tText("Waiting for the receiver feed");
-  if (!d.sc_tx_on) return tText("No carrier: the spacecraft S-band transmitter is off");
+  if (d.mode === "RF" && d.carrier_lock !== "LOCKED" && d.carrier_lock !== "ACQUIRING") return tText("No carrier detected");
   if (rfOnly && d.mode !== "RF") return tText("Shown in RF mode only (current mode: {{mode}})", { mode: d.mode });
   if (d.mode === "RF" && d.carrier_lock !== "LOCKED") return tText("Receiver not locked yet");
   return tText("No data yet");
@@ -584,20 +569,31 @@ function renderGroundLimits(d) {
       })).join("");
 }
 
+/* Receiver counters only (the server sends no spacecraft-side counters to
+   this page). Named in operator words; the counter id is the tooltip. */
+const DIAG_LABELS = {
+  rx_good_frames: () => tText("Frames decoded"),
+  rx_bad_frames: () => tText("Frames rejected"),
+  rx_rs_failures: () => tText("Reed-Solomon failures"),
+  rx_fecf_failures: () => tText("Frame CRC failures"),
+  rx_packets_recovered: () => tText("Packets recovered"),
+  rx_flywheel_misses: () => tText("Frame sync flywheel misses"),
+  rx_pll_resets: () => tText("Carrier loop resets"),
+};
 function renderDiagnostics(diag) {
   const el = $("diag-body");
-  const keys = Object.keys(diag || {});
+  const keys = Object.keys(diag || {}).filter((k) => DIAG_LABELS[k]);
   if (keys.length === 0) { el.innerHTML = renderNoData(); return; }
   el.innerHTML = '<div class="diag-grid">' + keys.map((k) =>
-    `<span class="k">${esc(k.replace(/_/g, " "))}</span><span class="v">${esc(String(diag[k]))}</span>`).join("") + "</div>";
+    `<span class="k" title="${esc(k)}">${esc(DIAG_LABELS[k]())}</span><span class="v">${esc(String(diag[k]))}</span>`).join("") + "</div>";
 }
 
 function redrawAll() {
   paintFeed();
   if (last) render(last);
   else {
-    for (const id of ["sctx-chip", "carrier-chip", "bitsync-chip", "framesync-chip", "rssi", "ebn0", "ber", "margin", "pl-evm", "doppler",
-      "range", "delay", "datarate", "pl-symrate", "pl-thr", "cltu-rate", "good-frames", "bad-frames", "cltu-sent", "cltu-ack",
+    for (const id of ["carrier-chip", "bitsync-chip", "framesync-chip", "rssi", "ebn0", "ber", "margin", "pl-evm", "doppler",
+      "datarate", "pl-symrate", "pl-thr", "cltu-rate", "good-frames", "bad-frames", "cltu-sent", "cltu-ack",
       "lb-eirp", "lb-fspl", "lb-cn0", "lb-coding", "lb-freq", "lb-bw"]) $(id).innerHTML = renderNoData();
     $("levels").innerHTML = renderGauge(null, { lo: 0, hi: 20 }, { label: "Eb/N0", units: "dB" }) +
       renderGauge(null, { lo: -5, hi: 15 }, { label: tText("Link margin"), units: "dB" }) + renderGauge(null, { lo: -12, hi: 0 }, { label: "BER", units: "log10" });

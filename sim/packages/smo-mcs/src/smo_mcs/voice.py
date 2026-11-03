@@ -118,7 +118,7 @@ class VoiceLoops:
     recordings: bool
     positions: tuple                 # MCS positions (positions.yaml order)
     role_labels: dict                # instructor / sim -> {en, fr}
-    position_labels: dict = field(default_factory=dict)   # MCS id -> {en}
+    position_labels: dict = field(default_factory=dict)   # MCS id -> {en, fr}
 
     @property
     def all_positions(self) -> tuple:
@@ -128,6 +128,23 @@ class VoiceLoops:
         if position in self.role_labels:
             return dict(self.role_labels[position])
         return dict(self.position_labels.get(position) or {"en": position})
+
+
+def _fr_position_names(config_dir: Path) -> dict:
+    """{position id: French display name} from the translation overlay
+    (``pos:<id>:display_name``); {} when the overlay is absent."""
+    import yaml
+    p = Path(config_dir) / "i18n" / "fr" / "db.yaml"
+    try:
+        rows = yaml.safe_load(p.read_text(encoding="utf-8")) or []
+    except (OSError, yaml.YAMLError):
+        return {}
+    out = {}
+    for e in rows if isinstance(rows, list) else []:
+        key = str((e or {}).get("key", ""))
+        if key.startswith("pos:") and key.endswith(":display_name") and e.get("fr"):
+            out[key.split(":")[1]] = str(e["fr"])
+    return out
 
 
 def _mcs_positions(config_dir: Path) -> dict:
@@ -251,6 +268,7 @@ def load_voice_loops(config_dir: str | os.PathLike) -> VoiceLoops:
     except yaml.YAMLError as e:
         raise VoiceConfigError(f"{path} does not parse: {e}") from e
     mcs = _mcs_positions(config_dir)
+    fr = _fr_position_names(config_dir)
     errs = validate(data, list(mcs))
     if errs:
         raise VoiceConfigError(f"{path}:\n  " + "\n  ".join(errs))
@@ -263,7 +281,8 @@ def load_voice_loops(config_dir: str | os.PathLike) -> VoiceLoops:
              for r, v in data["role_positions"].items()}
     return VoiceLoops(loops=loops, recordings=bool(data["recordings"]),
                       positions=tuple(mcs), role_labels=roles,
-                      position_labels={k: {"en": v} for k, v in mcs.items()})
+                      position_labels={k: ({"en": v, "fr": fr[k]} if k in fr else {"en": v})
+                                       for k, v in mcs.items()})
 
 
 # ── Settings and identity ─────────────────────────────────────────────
@@ -292,7 +311,8 @@ class Settings:
         secret = env.get("LIVEKIT_API_SECRET", "").strip() or (DEV_API_SECRET if dev else "")
         url = env.get("LIVEKIT_URL", "").strip()
         instr = frozenset(x.strip().lower() for x in
-                          re.split(r"[\s,;]+", env.get("SMO_VOICE_INSTRUCTORS", "")) if "@" in x)
+                          re.split(r"[\s,;]+", env.get("SMO_VOICE_INSTRUCTORS", "")
+                                   or env.get("SMO_INSTRUCTORS", "")) if "@" in x)
         prefix = env.get("SMO_VOICE_ROOM_PREFIX", "").strip().lower() or "c2o"
         if not _PREFIX_RE.match(prefix):
             logger.warning("SMO_VOICE_ROOM_PREFIX %r is not [a-z0-9-]{1,32}: using c2o", prefix)

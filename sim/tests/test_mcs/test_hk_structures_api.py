@@ -134,9 +134,9 @@ class TestObservedEnableState:
         for entry in body["structures"]:
             assert entry["observed"] == "never_seen"
             assert entry["last_seen_age_s"] is None
-            # `None` means "the spacecraft never told us" — the old UI simply
-            # asserted True for every SID, forever.
-            assert entry["enabled"] is None
+            # `None` means "never commanded" — the old UI simply asserted
+            # True for every SID, forever.
+            assert entry["commanded"] is None
 
     async def test_recently_seen_sid_reports_periodic(self, mcs):
         import time as _t
@@ -155,39 +155,27 @@ class TestObservedEnableState:
         by_sid = {s["sid"]: s for s in body["structures"]}
         assert by_sid[3]["observed"] == "silent"
 
-    async def test_reported_enable_map_is_used_when_offered(self, mcs):
+    async def test_commanded_enable_set_is_served(self, mcs):
+        """Review #5: the enable column is what the GROUND commanded
+        (TC 3,5 / 3,6), never the simulator's own map."""
         server, client = mcs
-        server._ingest_reported_hk_enabled({"1": False, 2: True})
+        server._tc_manager.build_s3_hk_disable(1)
+        server._tc_manager.build_s3_hk_enable(2)
         body = await (await client.get("/api/hk-structures")).json()
         by_sid = {s["sid"]: s for s in body["structures"]}
-        assert by_sid[1]["enabled"] is False
-        assert by_sid[2]["enabled"] is True
-        assert by_sid[3]["enabled"] is None        # not reported
+        assert by_sid[1]["commanded"] is False
+        assert by_sid[2]["commanded"] is True
+        assert by_sid[3]["commanded"] is None        # never commanded
+        assert "enabled" not in by_sid[1]
 
 
-class TestIngestReportedHkEnabled:
-    """Optional sim-side feed — malformed input must never break the display."""
+class TestSimulatorEnableMapIsIgnored:
+    """The simulator's hk_enabled map is truth, not telemetry."""
 
-    def test_accepts_a_mapping(self):
+    def test_no_ingest_path(self):
         srv = _make_server()
-        srv._ingest_reported_hk_enabled({1: True, "2": 0})
-        assert srv._sid_enabled_reported == {1: True, 2: False}
-
-    def test_accepts_a_list_of_dicts(self):
-        srv = _make_server()
-        srv._ingest_reported_hk_enabled([{"sid": 4, "enabled": True}])
-        assert srv._sid_enabled_reported == {4: True}
-
-    @pytest.mark.parametrize("bad", [None, {}, [], "nonsense", 17])
-    def test_garbage_is_ignored(self, bad):
-        srv = _make_server()
-        srv._ingest_reported_hk_enabled(bad)
-        assert srv._sid_enabled_reported == {}
-
-    def test_unparseable_sid_is_skipped_without_dropping_the_rest(self):
-        srv = _make_server()
-        srv._ingest_reported_hk_enabled({"not-a-sid": True, 5: True})
-        assert srv._sid_enabled_reported == {5: True}
+        assert not hasattr(srv, "_ingest_reported_hk_enabled")
+        assert srv._tc_manager.hk_commanded == {}
 
 
 # ── /api/tc-catalog now carries derived lengths (defect #67) ────────

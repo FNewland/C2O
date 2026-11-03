@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+bb21390bb1f6" classification="Unclassified — Simulation"/>
+  <Header version="1.0+b63a32ebb825" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -2981,7 +2981,7 @@
           <LongDescription>Gyro bias calibration progress through the averaging arc (0-100)</LongDescription>
         </Parameter>
         <Parameter name="aocs_gyro_cal_bias_x" parameterTypeRef="aocs_gyro_cal_bias_x_Type">
-          <LongDescription>Bias estimated by the LAST completed gyro calibration, X body axis. Compare against aocs.gyro_bias_injected (0x0296) when an instructor has injected a gyro_bias fault</LongDescription>
+          <LongDescription>Bias estimated by the LAST completed gyro calibration, X body axis</LongDescription>
         </Parameter>
         <Parameter name="aocs_gyro_cal_bias_y" parameterTypeRef="aocs_gyro_cal_bias_y_Type">
           <LongDescription>Bias estimated by the last completed gyro calibration, Y body axis</LongDescription>
@@ -3002,7 +3002,7 @@
           <LongDescription>Per-unit gyro power state as a bitmask: bit0 = X unit (S2 device 0x0206), bit1 = Y (0x0207), bit2 = Z (0x0208). 0x07 = all three on. Tells the operator WHICH unit is off, which the 0x0294 count cannot</LongDescription>
         </Parameter>
         <Parameter name="aocs_gyro_bias_resid" parameterTypeRef="aocs_gyro_bias_resid_Type">
-          <LongDescription>Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the injected hardware fault persists</LongDescription>
+          <LongDescription>Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the hardware bias persists</LongDescription>
         </Parameter>
         <Parameter name="aocs_wheels_enabled" parameterTypeRef="aocs_wheels_enabled_Type">
           <LongDescription>Number of enabled reaction wheels</LongDescription>

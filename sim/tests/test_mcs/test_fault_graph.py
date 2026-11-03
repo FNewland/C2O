@@ -85,8 +85,11 @@ class TestEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["available"] is True
-            assert data["source"] == "fdir/fault_propagation.yaml"
-            assert data["nodes"] and data["edges"] and data["cascades"]
+            # The operator feed carries the ancestry only, not the fault
+            # model (no file name, cascades, thresholds or delays).
+            assert "source" not in data and "cascades" not in data
+            assert data["nodes"] and data["edges"]
+            assert not {"threshold", "description", "recovery"} & set(data["nodes"][0])
             # param ids resolved through the server's own catalogue.
             n = next(x for x in data["nodes"]
                      if x["id"] == "eps_undervoltage")

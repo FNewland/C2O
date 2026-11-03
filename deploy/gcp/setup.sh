@@ -181,6 +181,9 @@ fi
 vm() {
     local name="$1" role="$2" mtype="$3" ip="$4" tag="$5" sa="$6"
     local md="c2o-role=$role,c2o-repo=$REPO_URL,c2o-ref=$REPO_REF,c2o-domain=$DOMAIN,c2o-ground-ip=$GROUND_IP,c2o-secret=$SECRET,c2o-ai-secret=$SECRET_AI,c2o-rf-mode=$RF_MODE,enable-oslogin=TRUE"
+    # Instructor accounts (VOICE_INSTRUCTORS): the welcome page shows the
+    # instructor tools only to these (vm-bootstrap.sh writes SMO_INSTRUCTORS).
+    md="$md,c2o-instructors=$voice_instr"
     # Voice loops: the ground VM's MCS signs LiveKit tokens (vm-bootstrap.sh
     # writes sim/docker/voice.env from these).
     if [ "$CREATE_VOICE_VM" = yes ]; then

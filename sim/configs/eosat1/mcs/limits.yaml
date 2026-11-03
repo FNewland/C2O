@@ -123,10 +123,8 @@ limits:
   # shifted by that offset. The old -17.0/-20.0 pair predates the commandable
   # setpoint and turned a legal -20 C command into a red alarm.
   - { param_id: 0x0601, yellow_low: -22.5, yellow_high: 13.5, red_low: -26.0, red_high: 17.0, check_interval_s: 8 }
-  # Payload detector temp. (The 0x0616 payload.snr band was removed on
-  # 2026-11-01: snr is `visibility: instructor`, a simulator truth no
-  # operator can see. Image quality is judged on the ground, from the
-  # downlinked image.)
+  # Payload detector temp. (The 0x0616 band was removed on 2026-11-01:
+  # image quality is judged on the ground, from the downlinked image.)
   # Detector die = cold finger + die_offset_c (+0.5 K), i.e. the bracket node.
   # DERIVED from subsystems/tcs.yaml `fpa_envelope` (G3-d). The old
   # -18/+8, -20/+12 pair was the operations manual's table, and was the fifth

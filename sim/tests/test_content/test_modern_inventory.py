@@ -100,6 +100,9 @@ MCS_ROUTES = [
     "/api/geometry",  # 2026-11: shared 3D attitude view
     # Stored (VC1 playback) TM counter, 2026-11 alarm-lifecycle.
     "/api/tm-stored",
+    # The legacy /dumps page (mounted by the dump store) now redirects to the
+    # delayed-TM viewer (screen review §4.2); same URL, own handler.
+    "/dumps",
 ]
 
 PLANNER_ROUTES = [

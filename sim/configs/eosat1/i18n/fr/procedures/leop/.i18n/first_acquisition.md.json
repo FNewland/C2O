@@ -9,8 +9,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot",
-   "en_hash": "5fa4161d802e6970",
-   "fr_hash": "6d9996f1d1cc03e9"
+   "en_hash": "d2c97a37e5b536a3",
+   "fr_hash": "47def8f89f9a449a"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/purpose",
@@ -19,8 +19,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/prerequisites",
-   "en_hash": "23c86bb53b0dc559",
-   "fr_hash": "a20156f4877f37c6"
+   "en_hash": "482a89c774734634",
+   "fr_hash": "a9ab66e9243f1dd5"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps",
@@ -88,5 +88,5 @@
    "fr_hash": "255f3c828e6e48a7"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "5f4fa5a"
 }

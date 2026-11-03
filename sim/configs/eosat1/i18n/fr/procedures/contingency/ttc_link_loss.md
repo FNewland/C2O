@@ -89,7 +89,7 @@ Il vaut quand même la peine de l'envoyer : si la perte vient de la chaîne d'�
 ## Conduite à tenir hors nominal
 - Si la liaison se rétablit mais avec un RSSI < -95 dBm ou une marge < 1.5 dB : descendre l'échelle de débits TM jusqu'au échelon LOW (16 kbit/s) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) pour améliorer la marge. LOW est le échelon des opérations de routine — la liaison conserve toute la télémesure de servitude, elle ne peut simplement pas effectuer de vidage
 - Si l'OBC est en mode SAFE après le rétablissement de la liaison : exécuter CTG-010 (Reprise après chien de garde OBDH) avant de reprendre les opérations nominales
-- Si le transpondeur redondant est lui aussi défaillant : aucune télécommande ne peut être reçue et aucune télémesure n'est émise, balise comprise ; le temporisateur TTC-01 continue de basculer d'une unité en panne à l'autre toutes les 24 h, ce qui ne change rien tant qu'aucune ne se rétablit. Rien depuis le sol ne peut y remédier : passer à EMG-004 et rester à l'écoute du rétablissement d'un transpondeur (dans le simulateur, l'instructeur qui efface une panne de transpondeur)
+- Si le transpondeur redondant est lui aussi défaillant : aucune télécommande ne peut être reçue et aucune télémesure n'est émise, balise comprise ; le temporisateur TTC-01 continue de basculer d'une unité en panne à l'autre toutes les 24 h, ce qui ne change rien tant qu'aucune ne se rétablit. Rien depuis le sol ne peut y remédier : passer à EMG-004 et rester à l'écoute du rétablissement d'un transpondeur
 - Si la liaison est intermittente (bascule) : suspecter une anomalie de déploiement d'antenne ou un problème d'attitude — demander la télémesure AOCS et contrôler `aocs.att_error` (0x0217)
 
 ## Postconditions

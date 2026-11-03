@@ -112,7 +112,7 @@ la clôture de session de l'étape 6 s'applique alors, et le transfert pourra r
 **LABEL:** `STEP-5`
 **Action:** Calculer au sol le CRC-32 du produit réassemblé et le comparer à la
 valeur indiquée par la TM(13,2) à l'étape 3a.
-**Note:** C'est un vrai contrôle, pas une formalité. Un produit soumis à l'injection `image_corrupt`
+**Note:** C'est un vrai contrôle, pas une formalité. Un produit endommagé à bord après l'acquisition
 fournit des octets ENDOMMAGÉS face à la somme de contrôle SAINE calculée par l'instrument
 à l'acquisition ; une image corrompue échoue donc réellement à la vérification au lieu
 d'être identique octet pour octet à une image saine.

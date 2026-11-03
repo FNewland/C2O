@@ -218,8 +218,7 @@ si le biais augmente de nouveau, le matériel dérive.
 senseur stellaire n'est PAS disponible : avec un gyromètre compensé, l'estimation se poursuit sur le
 gyromètre pendant une indisponibilité du senseur de façon quasi plate, alors qu'un biais non compensé de 0,05°/s
 fait dériver l'estimation de plusieurs dizaines de degrés en dix minutes et déclenche la règle FDIR
-`aocs.att_error`. Ne pas provoquer une indisponibilité du senseur pour le prouver sur
-un satellite réel ; c'est démontré dans le scénario de formation.
+`aocs.att_error`. Ne pas provoquer une indisponibilité du senseur pour le prouver.
 **GO/NO-GO:** Détermination AOCS stable après l'étalonnage
 
 ## Conduite à tenir hors nominal
