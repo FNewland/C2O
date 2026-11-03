@@ -1,0 +1,162 @@
+# Voice loops (mission-control intercom) for EOSAT-1 — WP-4 prototype.
+#
+# Franz's rulings 2026-11-02 (docs/plan_2026-11/REDESIGN_DECISIONS.md V1-V4):
+# LiveKit; FD loop for all positions; Ops-coord; one loop per subsystem;
+# an Instructor/SIM loop hidden from students; recordings off by default;
+# more loops later, so everything here is data — add a loop by adding an
+# entry, nothing in code names a loop.
+#
+# Consumer: packages/smo-mcs/src/smo_mcs/voice.py (validated at load; the
+# MCS refuses to mint tokens from an invalid file) and the keyset panel at
+# /voice (static/modern/voice.js). Each loop is ONE LiveKit room; a token is
+# minted per loop the caller may hear, so a loop a position may not hear is
+# never sent to that browser at all (the instructor loop for students).
+#
+# Key states (openvocs semantics). Write "OFF" in quotes: YAML reads a bare
+# OFF as false.
+#   OFF  not connected to the loop
+#   MON  monitor: hear it, cannot talk (the token has canPublish=false)
+#   TALK monitor + push-to-talk (canPublish=true, microphone only)
+#
+# Per loop:
+#   id               English identifier: [a-z][a-z0-9_]*, also the room suffix
+#   label            {en, fr} shown on the key
+#   colour           identification swatch: a categorical token cat-1..cat-8
+#                    (theme-aware) or "neutral". Never a status colour.
+#   instructor_only  true = only the instructor role (positions instructor and
+#                    sim) may hear it; every student position must be OFF
+#   access           highest state per position, with "default" for the rest
+#   start            state of the key when the panel opens (clamped to
+#                    access); "default" for the rest; omitted = OFF
+#
+# Positions: the seven MCS positions (mcs/positions.yaml) plus two roles
+# that need the instructor role (an IAP identity in SMO_VOICE_INSTRUCTORS):
+#   instructor  the instructor at the instructor console
+#   sim         role players (ground station, manufacturer, "the customer")
+# Until seat binding exists (WP10), a student's position is the one selected
+# in the MCS header (localStorage "mcs.position", same origin as /voice). It
+# is browser-claimed, exactly like the MCS's own position today.
+
+recordings: false        # LiveKit egress recording: not in the prototype (stub)
+
+role_positions:
+  instructor:
+    label: {en: "Instructor", fr: "Instructeur"}
+  sim:
+    label: {en: "SIM role player", fr: "Joueur de rôle SIM"}
+
+loops:
+  - id: fd
+    label: {en: "FD loop", fr: "Boucle DV"}
+    colour: cat-1
+    instructor_only: false
+    access:
+      default: TALK
+    start:
+      default: MON
+      flight_director: TALK
+
+  - id: ops_coord
+    label: {en: "Ops coordination", fr: "Coordination ops"}
+    colour: cat-2
+    instructor_only: false
+    access:
+      default: TALK
+    start:
+      default: "OFF"
+      flight_director: MON
+
+  - id: eps_tcs
+    label: {en: "EPS / TCS", fr: "EPS / TCS"}
+    colour: cat-3
+    instructor_only: false
+    access:
+      default: MON
+      eps_tcs: TALK
+      flight_director: TALK
+      propulsion: TALK          # catbed heater is a TCS circuit
+      instructor: TALK
+      sim: TALK
+    start:
+      eps_tcs: TALK
+
+  - id: aocs_fd
+    label: {en: "AOCS / FD", fr: "SCAO / DV"}
+    colour: cat-4
+    instructor_only: false
+    access:
+      default: MON
+      aocs: TALK
+      flight_director: TALK
+      propulsion: TALK          # manoeuvre vector from Flight Dynamics
+      instructor: TALK
+      sim: TALK
+    start:
+      aocs: TALK
+      propulsion: MON
+
+  - id: ttc
+    label: {en: "TT&C", fr: "TT&C"}
+    colour: cat-5
+    instructor_only: false
+    access:
+      default: MON
+      ttc: TALK
+      flight_director: TALK
+      instructor: TALK
+      sim: TALK                 # the ground-station role player
+    start:
+      ttc: TALK
+      sim: MON
+
+  - id: payload
+    label: {en: "Payload", fr: "Charge utile"}
+    colour: cat-6
+    instructor_only: false
+    access:
+      default: MON
+      payload_ops: TALK
+      flight_director: TALK
+      instructor: TALK
+      sim: TALK
+    start:
+      payload_ops: TALK
+
+  - id: fdir_systems
+    label: {en: "FDIR / Systems", fr: "FDIR / Systèmes"}
+    colour: cat-7
+    instructor_only: false
+    access:
+      default: MON
+      fdir_systems: TALK
+      flight_director: TALK
+      instructor: TALK
+      sim: TALK
+    start:
+      fdir_systems: TALK
+
+  - id: propulsion
+    label: {en: "Propulsion", fr: "Propulsion"}
+    colour: cat-8
+    instructor_only: false
+    access:
+      default: MON
+      propulsion: TALK
+      aocs: TALK
+      flight_director: TALK
+      instructor: TALK
+      sim: TALK
+    start:
+      propulsion: TALK
+
+  - id: instructor_sim
+    label: {en: "Instructor / SIM", fr: "Instructeur / SIM"}
+    colour: neutral
+    instructor_only: true
+    access:
+      default: "OFF"
+      instructor: TALK
+      sim: TALK
+    start:
+      instructor: TALK
+      sim: TALK

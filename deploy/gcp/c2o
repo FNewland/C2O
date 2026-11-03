@@ -30,6 +30,9 @@ ARMOR_USD_MONTH=7            # Cloud Armor policy + 2 rules
 NAT_IP_USD_H=0.005           # Cloud NAT address
 NAT_VM_USD_H=0.0014          # Cloud NAT, per running VM
 SNAP_USD_GB_MONTH=0.05       # standard snapshot storage [verify]
+VOICE_VM_USD_H=0.0184        # e2-small, Toronto (voice loops VM)
+VOICE_IP_USD_H=0.005         # its static IPv4 while the VM runs
+VOICE_IP_IDLE_USD_H=0.01     # ... and while it is stopped (reserved, unused)
 
 ADMIN_API=https://admin.googleapis.com/admin/directory/v1
 ADMIN_SCOPES=https://www.googleapis.com/auth/admin.directory.user,https://www.googleapis.com/auth/admin.directory.group.member,https://www.googleapis.com/auth/cloud-platform
@@ -41,7 +44,7 @@ c2o: run the C2O deployment on Google Cloud.          c2o COMMAND --help for det
 
 Everyday
   c2o status                     what runs, what is up, what it costs per day now
-  c2o up [--sim=cloud|laptop]    class on: both VMs (or ground only + your laptop)
+  c2o up [--sim=cloud|laptop]    class on: the VMs (or ground only + your laptop)
   c2o down [--all]               class off: stop the VMs; --all also takes the site offline
   c2o schedule set "Mon-Fri 08:00-18:00"   start/stop the VMs automatically
   c2o schedule show | clear
@@ -71,9 +74,10 @@ help_status() {
     cat <<'EOF'
 c2o status [--quick]
 
-Shows the two VMs, the load balancer front end (forwarding rules), the health
-of every screen, both certificates, the simulator link (UP/DOWN), the automatic
-schedule, and a rough cost per day in CAD for the state things are in NOW.
+Shows the VMs, the load balancer front end (forwarding rules), the health
+of every screen, both certificates, the simulator link (UP/DOWN), the voice
+loops server, the automatic schedule, and a rough cost per day in CAD for the
+state things are in NOW.
 --quick skips the link check (it opens an SSH session to the ground VM).
 EOF
 }
@@ -83,7 +87,8 @@ help_up() {
 c2o up [--sim=cloud|laptop] [--no-wait]
 
 Class on. Runs start.sh: recreates the load balancer rules if `c2o down --all`
-removed them, starts the ground VM and (--sim=cloud) the simulator VM, and
+removed them, starts the ground VM, the voice loops VM and (--sim=cloud) the
+simulator VM, and
 waits until every screen is healthy (3-5 min). --sim=laptop stops the cloud
 simulator: only one simulator may be connected. Default: SIM_MODE in c2o.env.
 EOF
@@ -93,8 +98,9 @@ help_down() {
     cat <<'EOF'
 c2o down [--all] [--sim]
 
-Class off. Stops both VMs (stop.sh): you then pay only for their disks; data,
-address, certificate and sign-in settings all stay.
+Class off. Stops the VMs (stop.sh), the voice loops VM included: you then pay
+only for their disks and the voice VM's reserved IP; data, addresses,
+certificates and sign-in settings all stay.
   --sim   stop only the cloud simulator VM
   --all   ALSO delete the two load-balancer forwarding rules (saves about
           CAD 0.50/day). The site is unreachable until `c2o up`, which takes a
@@ -117,7 +123,8 @@ lists, or "weekdays" / "daily". Examples:
 One time window for all chosen days (Google allows one start and one stop
 time per schedule). Starts and stops may happen up to 15 minutes late, so
 start a little early. The simulator VM is included when SIM_MODE=cloud
-(--ground-only / --with-sim override). The load balancer is billed whether or
+(--ground-only / --with-sim override); the voice loops VM always follows the
+ground VM. The load balancer is billed whether or
 not the VMs run: between terms use `c2o down --all` as well.
 EOF
 }
@@ -225,16 +232,23 @@ cmd_status() {
     require_gcloud_login
 
     log "Virtual machines"
-    local g s vms_running=0 vms_exist=0 vm_cost=0 vm st mt rate
-    g="$(vm_status "$VM_GROUND")"; s="$(vm_status "$VM_SIM")"
-    for vm in "$VM_GROUND" "$VM_SIM"; do
-        if [ "$vm" = "$VM_GROUND" ]; then st="$g"; else st="$s"; fi
-        [ "$st" = NONE ] && { info "$(printf '%-16s %s' "$vm" 'not created')"; continue; }
+    local g s v vms_running=0 vms_exist=0 vm_cost=0 vm st mt rate disk_gb=0
+    g="$(vm_status "$VM_GROUND")"; s="$(vm_status "$VM_SIM")"; v="$(vm_status "$VM_VOICE")"
+    for vm in "$VM_GROUND" "$VM_SIM" "$VM_VOICE"; do
+        case "$vm" in "$VM_GROUND") st="$g" ;; "$VM_SIM") st="$s" ;; *) st="$v" ;; esac
+        if [ "$st" = NONE ]; then
+            [ "$vm" = "$VM_VOICE" ] && [ "$CREATE_VOICE_VM" != yes ] && continue
+            info "$(printf '%-16s %s' "$vm" 'not created')"; continue
+        fi
         vms_exist=$((vms_exist + 1))
+        if [ "$vm" = "$VM_VOICE" ]; then disk_gb=$((disk_gb + VOICE_DISK_GB)); else disk_gb=$((disk_gb + BOOT_DISK_GB)); fi
         info "$(printf '%-16s %s' "$vm" "$st")"
         case "$st" in
             RUNNING|PROVISIONING|STAGING|STOPPING)
                 vms_running=$((vms_running + 1))
+                if [ "$vm" = "$VM_VOICE" ]; then     # own public IP: no Cloud NAT
+                    vm_cost="$(calc "$vm_cost + $VOICE_VM_USD_H * 24")"; continue
+                fi
                 mt="$GROUND_MACHINE_TYPE"; [ "$vm" = "$VM_SIM" ] && mt="$SIM_MACHINE_TYPE"
                 rate="$(vm_usd_h "$mt")"
                 vm_cost="$(calc "$vm_cost + ($rate + $NAT_VM_USD_H) * 24")" ;;
@@ -294,24 +308,41 @@ cmd_status() {
         esac
     fi
 
+    if [ "$v" != NONE ]; then
+        log "Voice loops server (LiveKit, https://$HOST_VOICE)"
+        if [ "$v" != RUNNING ]; then
+            info "DOWN (the voice VM is $v; c2o up starts it)"
+        else
+            local vr
+            vr="$(curl -s -m 5 "https://$HOST_VOICE/" 2>/dev/null </dev/null || true)"
+            case "$vr" in
+                OK*) info "UP: LiveKit answers on https://$HOST_VOICE" ;;
+                *)   info "not answering on https://$HOST_VOICE yet (booting, or the voice/voice-turn A records or certificates are missing: README \"Voice loops\")" ;;
+            esac
+        fi
+    fi
+
     log "Automatic schedule"
     local sched
     sched="$(schedule_summary)"
     info "$sched"
 
     log "Cost right now (rough, CAD per day; README §12)"
-    local disks lbc armor nat snapgb snapc total
-    disks="$(calc "$vms_exist * $BOOT_DISK_GB * $DISK_USD_GB_MONTH / 30.4")"
+    local disks lbc armor nat snapgb snapc total vip=0
+    disks="$(calc "$disk_gb * $DISK_USD_GB_MONTH / 30.4")"
+    if [ "$v" = RUNNING ]; then vip="$(calc "$VOICE_IP_USD_H * 24")"
+    elif [ "$v" != NONE ]; then vip="$(calc "$VOICE_IP_IDLE_USD_H * 24")"; fi
     if [ "$lb" = on ]; then lbc="$(calc "$FR_USD_H * 24")"; else lbc="$(calc "$IP_IDLE_USD_H * 24")"; fi
     armor="$(calc "$ARMOR_USD_MONTH / 30.4")"
     nat="$(calc "$NAT_IP_USD_H * 24")"
     snapgb="$(gcloud compute snapshots list --filter="$(snap_filter)" \
         --format='value(storageBytes)' 2>/dev/null | awk '{t += $1} END {printf "%.1f", t / 1e9}' || true)"
     snapc="$(calc "${snapgb:-0} * $SNAP_USD_GB_MONTH / 30.4")"
-    total="$(calc "$vm_cost + $disks + $lbc + $armor + $nat + $snapc")"
+    total="$(calc "$vm_cost + $disks + $lbc + $armor + $nat + $snapc + $vip")"
     cad() { money "$1 * $USD_CAD"; }
     info "$(printf '%-44s CAD %6s' "VMs running: $vms_running" "$(cad "$vm_cost")")"
-    info "$(printf '%-44s CAD %6s' "Disks ($vms_exist x ${BOOT_DISK_GB} GB, billed even when stopped)" "$(cad "$disks")")"
+    info "$(printf '%-44s CAD %6s' "Disks ($vms_exist VMs, ${disk_gb} GB, billed even when stopped)" "$(cad "$disks")")"
+    [ "$v" != NONE ] && info "$(printf '%-44s CAD %6s' "Voice VM static IP ($([ "$v" = RUNNING ] && echo 'in use' || echo 'reserved, VM stopped'))" "$(cad "$vip")")"
     if [ "$lb" = on ]; then
         info "$(printf '%-44s CAD %6s' "Load balancer rules (on)" "$(cad "$lbc")")"
     else
@@ -434,7 +465,7 @@ schedule_summary() {  # one line for status / show
     d="$(gcloud compute resource-policies describe "$SCHED" --region="$REGION" \
         --format='value(description)' 2>/dev/null || true)"
     [ -n "$d" ] || { printf 'none (VMs start and stop only when you say so)'; return 0; }
-    for vm in "$VM_GROUND" "$VM_SIM"; do
+    for vm in "$VM_GROUND" "$VM_SIM" "$VM_VOICE"; do
         pol="$(gcloud compute instances describe "$vm" --zone="$ZONE" \
             --format='value(resourcePolicies)' 2>/dev/null || true)"
         case "$pol" in *"/$SCHED"*|"$SCHED") on="$on $vm" ;; esac
@@ -444,7 +475,7 @@ schedule_summary() {  # one line for status / show
 
 schedule_detach_all() {
     local vm pol
-    for vm in "$VM_GROUND" "$VM_SIM"; do
+    for vm in "$VM_GROUND" "$VM_SIM" "$VM_VOICE"; do
         pol="$(gcloud compute instances describe "$vm" --zone="$ZONE" \
             --format='value(resourcePolicies)' 2>/dev/null || true)"
         case "$pol" in
@@ -491,6 +522,8 @@ cmd_schedule() {
             fi
             require_gcloud_login
             targets="$VM_GROUND"
+            # The voice loops VM follows the ground VM (no voice without a console).
+            if [ "$CREATE_VOICE_VM" = yes ] && vm_exists "$VM_VOICE"; then targets="$targets $VM_VOICE"; fi
             if [ "$who" = both ]; then
                 if vm_exists "$VM_SIM"; then targets="$targets $VM_SIM"
                 else warn "$VM_SIM does not exist: scheduling the ground VM only"; fi

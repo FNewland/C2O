@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # After class: stop paying for the VMs.
 #
-#   bash deploy/gcp/stop.sh            # stop both VMs (disks and data are kept)
+#   bash deploy/gcp/stop.sh            # stop the VMs (disks and data are kept;
+#                                      # the voice VM too, its static IP is kept)
 #   bash deploy/gcp/stop.sh --sim      # stop only the cloud simulator VM
 #   bash deploy/gcp/stop.sh --lb       # ALSO delete the two LB forwarding rules
 #                                      # (net saving ~USD 0.015/h, about USD 11/month:
@@ -20,7 +21,7 @@ for a in "$@"; do
     case "$a" in
         --sim) only_sim=yes ;;
         --lb)  lb=yes ;;
-        -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
         *) die "unknown option $a (see --help)" ;;
     esac
 done
@@ -37,6 +38,7 @@ stop_vm() {
 log "Stopping VMs"
 stop_vm "$VM_SIM"
 [ "$only_sim" = yes ] || stop_vm "$VM_GROUND"
+[ "$only_sim" = yes ] || stop_vm "$VM_VOICE"      # voice loops (absent: NONE, nothing done)
 
 if [ "$lb" = yes ]; then
     log "Deleting the LB forwarding rules (the site is offline until start.sh)"
