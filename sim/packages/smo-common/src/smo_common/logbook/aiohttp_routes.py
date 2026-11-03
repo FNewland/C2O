@@ -59,6 +59,10 @@ def register_logbook_routes(app: web.Application, tool: str, store_dir=None, *,
         return reply(request, ident, {"error": str(e)}, e.status)
 
     async def body_of(request: web.Request) -> dict:
+        # JSON only: a cross-site form post (text/plain, no preflight) cannot
+        # write into someone's logbook.
+        if request.content_type != "application/json":
+            raise LogbookError("send the entry as application/json", 415)
         if request.content_length and request.content_length > _MAX_BODY:
             raise LogbookError("request body too large", 413)
         raw = await request.content.read(_MAX_BODY + 1)
@@ -178,6 +182,13 @@ def register_logbook_routes(app: web.Application, tool: str, store_dir=None, *,
             await asyncio.sleep(purge_interval_s)
 
     async def _start(app_: web.Application):
+        if store.dir_mode != 0o700:
+            # shared store: create it now, as this service's user and group,
+            # before another service (SpaceCDF) would create it as its own
+            try:
+                await asyncio.to_thread(store.ensure_dir)
+            except OSError as e:
+                logger.warning("logbook store %s: %s", store.dir, e)
         app_[_PURGE_TASK] = asyncio.create_task(_purge_loop())
 
     async def _stop(app_: web.Application):
