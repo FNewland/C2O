@@ -2,9 +2,11 @@
  * Logbook side panel (LOGBOOK_SPEC.md §5): docked, non-modal, on the right.
  *
  *   head      Logbook · who it belongs to · close
- *   tabs      Entries (n) | Worksheets (n for this step)
+ *   tabs      Entries (n) | Decisions (open n) | Worksheets (n for this step)
  *   entries   quick entry (kind chips, context chips, Ctrl/Cmd+Enter), list newest first
- *   sheets    worksheets that apply here, each question answerable inline
+ *   decisions the decision record editor, or the open decisions by gate (decisions.tsx)
+ *   sheets    worksheets that apply here, each question answerable inline, the part's
+ *             decisions under it; download one worksheet or copy it as Markdown
  *   foot      private · deletion time · Download (Markdown / printable HTML) · End session · Delete now
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -15,9 +17,11 @@ import { Disclosure } from '../components/ui/Disclosure'
 import { Tabs } from '../components/ui/Tabs'
 import { tabPanelProps } from '../components/ui/util'
 import {
-  download, LogbookHttpError, useLogbook, useLogbookMutations, useWorksheets,
-  type Context, type Entry, type EntryKind, type Question, type Worksheet,
+  download, downloadWorksheet, LogbookHttpError, useDecisions, useLogbook, useLogbookMutations, useWorksheets,
+  worksheetMarkdown, type Context, type Entry, type EntryKind, type Question, type Worksheet,
 } from './api'
+import { useUIStore } from '../stores/uiStore'
+import { DecisionsTab, PartDecisions, RecordSummary } from './decisions'
 import { chipLabel, chipValue, HIDDEN_KEYS, matchContext, useAutoContext } from './context'
 import { useLogbookUI, type PanelTab } from './store'
 import { BookGlyph } from './parts'
@@ -53,10 +57,19 @@ export function LogbookPanel() {
   const auto = useAutoContext()
   const sheetsQ = useWorksheets(matchContext(auto), false, open)
   const matched = sheetsQ.data?.worksheets.length ?? 0
+  const studyId = useUIStore(s => s.studyId)
+  const decQ = useDecisions(studyId, null, open)
+  const openDecisions = decQ.data?.decisions.filter(d => d.status === 'open').length
+
+  // The decision record needs room for its options table: the panel widens on that tab.
+  useEffect(() => {
+    document.body.classList.toggle('c2o-logbook-wide', open && tab === 'decisions')
+    return () => document.body.classList.remove('c2o-logbook-wide')
+  }, [open, tab])
 
   if (!open) return null
   return (
-    <aside id="c2o-logbook" className="c2o-logbook" aria-labelledby="c2o-logbook-title"
+    <aside id="c2o-logbook" className={`c2o-logbook${tab === 'decisions' ? ' is-wide' : ''}`} aria-labelledby="c2o-logbook-title"
       onKeyDown={e => { if (e.key === 'Escape' && !(e.target as HTMLElement).closest('textarea')) setOpen(false) }}>
       <header className="c2o-logbook__head">
         <BookGlyph size={16} />
@@ -69,11 +82,14 @@ export function LogbookPanel() {
       <Tabs<PanelTab> idBase="lb" label={t('Logbook')} value={tab} onChange={setTab} className="c2o-logbook__tabs"
         items={[
           { id: 'entries', label: t('Entries'), meta: <span className="mono">{data?.count ?? 0}</span> },
+          { id: 'decisions', label: t('Decisions'),
+            meta: <span className="mono" title={t('Decisions from the workbook not recorded yet')}>{openDecisions ?? '–'}</span> },
           { id: 'worksheets', label: t('Worksheets'), meta: <span className="mono">{matched}</span> },
         ]} />
       <div className="c2o-logbook__body" {...tabPanelProps('lb', tab)}>
         {isError && <p className="c2o-note c2o-note--alarm m-0 mb-2" role="alert">{t('The logbook service is unreachable. Nothing you type here is saved until it is back.')}</p>}
-        {tab === 'entries' ? <EntriesTab auto={auto} entries={data?.entries ?? []} /> : <WorksheetsTab auto={auto} />}
+        {tab === 'entries' ? <EntriesTab auto={auto} entries={data?.entries ?? []} />
+          : tab === 'decisions' ? <DecisionsTab /> : <WorksheetsTab auto={auto} />}
       </div>
       <LogbookFooter />
     </aside>
@@ -185,8 +201,10 @@ function EntryRow({ entry }: { entry: Entry }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.text)
   const [err, setErr] = useState<string | null>(null)
-  const ctx = Object.entries(entry.context || {}).filter(([k, v]) => !HIDDEN_KEYS.has(k) && v !== null && v !== '')
+  const ctx = Object.entries(entry.context || {}).filter(([k, v]) => !HIDDEN_KEYS.has(k) && k !== 'decision_id' && v !== null && v !== '')
   const own = entry.tool === 'design'
+  const record = useLogbookUI(s => s.recordDecision)
+  const isRecord = !!entry.record && entry.kind === 'decision'
 
   const save = async () => {
     if (!draft.trim()) return
@@ -203,14 +221,17 @@ function EntryRow({ entry }: { entry: Entry }) {
         <span className="grow" />
         {!editing && (
           <>
-            <Button size="sm" variant="quiet" onClick={() => { setDraft(entry.text); setEditing(true) }}
+            <Button size="sm" variant="quiet"
+              onClick={() => isRecord
+                ? record({ decision: entry.record!.decision_id, ...entry.record, entryId: entry.id })
+                : (setDraft(entry.text), setEditing(true))}
               aria-label={t('Edit entry from {{time}}', { time: fmtWhen(entry.ts) })}>{t('Edit')}</Button>
             <ArmButton label={t('Delete')} armedLabel={t('Confirm delete')} onConfirm={() => remove(entry.id)}
               aria-label={t('Delete entry from {{time}}', { time: fmtWhen(entry.ts) })} />
           </>
         )}
       </div>
-      {entry.worksheet && (
+      {entry.worksheet && !isRecord && (
         <p className="c2o-lb-entry__ws t-12 c-2">
           <span className="mono">{entry.worksheet.id}</span> · {entry.worksheet.q_text || entry.worksheet.q}
         </p>
@@ -230,7 +251,7 @@ function EntryRow({ entry }: { entry: Entry }) {
             <Button size="sm" variant="primary" className="c2o-reason-end" onClick={save} disabledReason={!draft.trim() ? t('Write something first') : undefined}>{t('Save')}</Button>
           </div>
         </div>
-      ) : <p className="c2o-lb-entry__text">{entry.text}</p>}
+      ) : isRecord ? <RecordSummary entry={entry} /> : <p className="c2o-lb-entry__text">{entry.text}</p>}
       {ctx.length > 0 && (
         <p className="c2o-lb-entry__ctx t-12 c-3">
           {ctx.map(([k, v]) => <span key={k}>{chipLabel(k, t)} <span className="c-2">{chipValue(k, v, t)}</span></span>)}
@@ -274,6 +295,7 @@ function WorksheetBlock({ ws, context, defaultOpen = false }: { ws: Worksheet; c
       <Disclosure defaultOpen={defaultOpen}
         summary={<span className="c2o-lb-ws__title"><span className="mono c-2">{ws.id}</span> {ws.title}</span>}
         meta={t('{{done}} of {{total}} answered', { done, total: ws.questions.length })}>
+        <WorksheetExport ws={ws} />
         <ol className="list-reset stack gap-3">
           {ws.questions.map(q => <QuestionBlock key={q.id} ws={ws} q={q} context={context} />)}
         </ol>
@@ -307,6 +329,7 @@ function QuestionBlock({ ws, q, context }: { ws: Worksheet; q: Question; context
       <label htmlFor={id} className="c2o-lb-q__text">{q.text}</label>
       {q.prompt && <p className="c2o-lb-q__prompt">{q.prompt}</p>}
       {q.points.length > 0 && <ul className="c2o-lb-q__points">{q.points.map((p, i) => <li key={i}>{p}</li>)}</ul>}
+      <PartDecisions worksheet={ws.id} q={q.id} />
       {answers.length > 0 && (
         <div className="c2o-lb-q__answers">
           {answers.map(a => (
@@ -330,20 +353,55 @@ function QuestionBlock({ ws, q, context }: { ws: Worksheet; q: Question; context
   )
 }
 
+/** "Download this worksheet" and "Copy as Markdown" (for a team document). Neither counts as a download. */
+function WorksheetExport({ ws }: { ws: Worksheet }) {
+  const { t } = useTranslation()
+  const studyId = useUIStore(s => s.studyId)
+  const [copied, setCopied] = useState<'ok' | 'fail' | null>(null)
+  const copy = async () => {
+    try {
+      const md = await worksheetMarkdown(ws.id, studyId)
+      try {
+        await navigator.clipboard.writeText(md)
+      } catch {
+        // No clipboard permission (http, old browser): the classic way.
+        const ta = document.createElement('textarea')
+        ta.value = md; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'
+        document.body.appendChild(ta); ta.select()
+        const ok = document.execCommand('copy'); ta.remove()
+        if (!ok) throw new Error('copy')
+      }
+      setCopied('ok')
+    } catch { setCopied('fail') }
+    window.setTimeout(() => setCopied(null), 2500)
+  }
+  return (
+    <div className="c2o-lb-wsx" role="group" aria-label={t('This worksheet')}>
+      <Button size="sm" onClick={() => downloadWorksheet(ws.id, studyId, 'md')}
+        title={t('This worksheet only, every part, with your decision records and answers')}>{t('Download this worksheet')}</Button>
+      <Button size="sm" variant="quiet" onClick={copy} title={t('Paste it into your team document')}>{t('Copy as Markdown')}</Button>
+      <span className="t-12 c-2" role="status" aria-live="polite">
+        {copied === 'ok' ? t('Copied') : copied === 'fail' ? t('Could not copy: use Download') : ''}
+      </span>
+    </div>
+  )
+}
+
 // ─── Footer ───
 
 export function DownloadButtons({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation()
   const { refresh } = useLogbookMutations()
   const { data } = useLogbook()
+  const studyId = useUIStore(s => s.studyId)
   const none = !data || data.count === 0
   const reason = none ? t('Nothing to download yet') : undefined
   return (
     <span className="c2o-lb-dl" role="group" aria-label={t('Download your logbook')}>
       {!compact && <span className="t-12 c-2">{t('Download')}</span>}
-      <Button size="sm" onClick={() => download('md', refresh)} disabledReason={reason}
-        title={t('Plain text with headings; opens in any editor')}>{t('Markdown')}</Button>
-      <Button size="sm" onClick={() => download('html', refresh)} disabledReason={reason}
+      <Button size="sm" onClick={() => download('md', refresh, studyId)} disabledReason={reason}
+        title={t('Laid out as your workbook: decision records and answers by worksheet, then the log')}>{t('Markdown')}</Button>
+      <Button size="sm" onClick={() => download('html', refresh, studyId)} disabledReason={reason}
         title={t('Open it and print, or Save as PDF')}>{t('Printable HTML')}</Button>
     </span>
   )

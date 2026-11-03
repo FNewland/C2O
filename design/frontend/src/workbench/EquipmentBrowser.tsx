@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { fs } from '../theme/tokens'
 import { subsystemStyle } from '../theme/tokens'
+import { RecordDecision } from '../logbook'
 
 const API = '/api'
 
@@ -212,6 +213,42 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
               >
                 {t('+ Add')}
               </button>
+              <RecordDecision decision="D-3.4-EQUIPMENT" capture="equipment:add" label={t('Record')}
+                context={{ element: focusElement?.name ?? null }}
+                prefill={() => {
+                  // The alternatives the browser showed in the same category, best fit first.
+                  const peers = filtered.filter(x => x.category === item.category)
+                    .sort((a, b) => (b.fit_score || 0) - (a.fit_score || 0)).slice(0, 8)
+                  if (!peers.includes(item)) peers.push(item)
+                  const vals = (x: any) => ({
+                    ...(x.mass_kg != null ? { kg: x.mass_kg } : {}),
+                    ...((x.power_w ?? x.power_avg_w) != null ? { W: x.power_w ?? x.power_avg_w } : {}),
+                    ...(x.cost_keur != null ? { kEUR: x.cost_keur } : {}),
+                    ...(x.trl != null ? { TRL: x.trl } : {}),
+                  })
+                  return {
+                    subject: `${t(DOMAIN_LABELS[domain] ?? domain)}: ${item.category.replace(/_/g, ' ')}`,
+                    options: peers.map(p => ({
+                      name: String(p.component?.name || p.component?.id),
+                      summary: p.component?.manufacturer || undefined,
+                      values: vals(p.component || {}),
+                      ...(p.fit_score > 0 ? { score: p.fit_score } : {}),
+                      chosen: p === item || undefined,
+                    })),
+                    criteria: [
+                      { name: t('Mass'), direction: 'lower' as const }, { name: t('Power'), direction: 'lower' as const },
+                      { name: t('Cost'), direction: 'lower' as const }, { name: 'TRL', direction: 'higher' as const },
+                    ],
+                    choice: String(c.name || c.id) + (c.manufacturer ? ` (${c.manufacturer})` : ''),
+                    evidence: [
+                      ...(c.mass_kg != null ? [{ label: t('Mass'), value: c.mass_kg, unit: 'kg' }] : []),
+                      ...((c.power_w ?? c.power_avg_w) != null ? [{ label: t('Power'), value: c.power_w ?? c.power_avg_w, unit: 'W' }] : []),
+                      ...(c.cost_keur != null ? [{ label: t('Cost'), value: c.cost_keur, unit: 'kEUR' }] : []),
+                      ...(c.trl != null ? [{ label: 'TRL', value: c.trl }] : []),
+                      ...(item.notes?.length ? [{ label: t('Fit notes'), value: item.notes.join('; ').slice(0, 200) }] : []),
+                    ],
+                  }
+                }} />
             </div>
           )
         })}
