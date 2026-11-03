@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 330" font-family="IBM Plex Sans, Helvetica, Arial, sans-serif" font-size="12">
+  <title>The one timeline: eight lanes on one sim-time axis</title>
+  <style>.l{fill:#4a4f56;font-size:11px}.lane{fill:#fff}.odd{fill:#eef0f3}.ax{fill:#8a9099;font-size:10px}
+  .inj{fill:#a79bf8;stroke:#7a6ce0}.al{fill:#d1453b}.wa{fill:#c48a00}.info{fill:#8a9099}.tc{fill:#0b5577}.ph{fill:#383c42}</style>
+  <rect width="960" height="330" fill="#f4f5f7"/>
+  <text x="10" y="18" font-weight="600">Live: situational awareness. After the run: the debrief replays the same picture with a cursor.</text>
+  <g>
+    <rect x="150" y="34" width="790" height="20" class="lane"/><rect x="150" y="54" width="790" height="20" class="odd"/>
+    <rect x="150" y="74" width="790" height="20" class="lane"/><rect x="150" y="94" width="790" height="20" class="odd"/>
+    <rect x="150" y="114" width="790" height="20" class="lane"/><rect x="150" y="134" width="790" height="20" class="odd"/>
+    <rect x="150" y="154" width="790" height="20" class="lane"/><rect x="150" y="174" width="790" height="20" class="odd"/>
+  </g>
+  <g class="l" text-anchor="end">
+    <text x="142" y="48">Phase &amp; modes</text><text x="142" y="68">Injects</text><text x="142" y="88">On-board alarms</text>
+    <text x="142" y="108">Telecommands</text><text x="142" y="128">Procedures</text><text x="142" y="148">Link &amp; sun</text>
+    <text x="142" y="168">Instructor</text><text x="142" y="188">Voice loops</text>
+  </g>
+  <!-- phase -->
+  <path d="M240 39l5 5-5 5-5-5z" class="ph"/><path d="M520 39l5 5-5 5-5-5z" class="al"/>
+  <!-- injects -->
+  <path d="M330 58l5 9h-10z" class="inj"/><circle cx="345" cy="64" r="3.5" class="inj"/>
+  <path d="M600 58l5 9h-10z" fill="none" stroke="#7a6ce0"/>
+  <path d="M860 58l5 9h-10z" fill="none" stroke="#7a6ce0" stroke-dasharray="2 1.5"/>
+  <!-- alarms -->
+  <path d="M410 78l5 9h-10z" class="wa"/><rect x="430" y="80" width="1.5" height="9" class="ph"/>
+  <path d="M470 78l5 9h-10z" class="al"/><rect x="520" y="80" width="1.5" height="9" class="ph"/>
+  <circle cx="700" cy="84" r="4.5" fill="none" stroke="#c48a00" stroke-width="1.75"/>
+  <!-- tcs -->
+  <rect x="200" y="98" width="2.5" height="12" class="tc"/><rect x="560" y="98" width="2.5" height="12" class="tc"/>
+  <rect x="566" y="98" width="2.5" height="12" class="tc"/><path d="M640 100l8 8m0-8l-8 8" stroke="#d1453b" stroke-width="2"/>
+  <!-- procs -->
+  <circle cx="530" cy="124" r="3" class="wa"/>
+  <!-- link -->
+  <rect x="150" y="136" width="210" height="6" fill="#7f8a98"/><rect x="620" y="136" width="180" height="6" fill="#7f8a98"/>
+  <rect x="440" y="145" width="160" height="6" fill="#fff" stroke="#4a4f56"/>
+  <!-- instructor -->
+  <rect x="326" y="160" width="7" height="7" class="inj"/><path d="M380 170v-12l7 3-7 3" class="inj"/>
+  <!-- voice -->
+  <rect x="152" y="176" width="786" height="16" fill="#e3e6ea"/><text x="160" y="188" class="l" font-style="italic">not available on the simulator side (ground-side voice server)</text>
+  <!-- now -->
+  <line x1="780" x2="780" y1="28" y2="200" stroke="#0b5577" stroke-width="1.5"/><text x="780" y="212" text-anchor="middle" class="ax">now</text>
+  <g class="ax" text-anchor="middle"><text x="200" y="30">12:00</text><text x="400" y="30">12:15</text><text x="600" y="30">12:30</text><text x="800" y="30">12:45</text></g>
+  <!-- legend -->
+  <g class="l">
+    <path d="M160 232l5 9h-10z" class="inj"/><text x="172" y="241">inject fired (lilac = the instructor's doing)</text>
+    <path d="M160 252l5 9h-10z" fill="none" stroke="#7a6ce0" stroke-dasharray="2 1.5"/><text x="172" y="261">pending inject ahead of now (scheduled or scenario); untimed gates counted at the right edge</text>
+    <path d="M160 272l5 9h-10z" class="al"/><text x="172" y="281">on-board ALARM; amber hollow = WARNING; grey dot = info</text>
+    <rect x="159" y="290" width="1.5" height="9" class="ph"/><text x="172" y="299">the S5 packet of that alarm reached the ground (gap = link delay)</text>
+    <circle cx="160" cy="315" r="4.5" fill="none" stroke="#c48a00" stroke-width="1.75"/><text x="172" y="319">missed cue: no TC 5 min after an ALARM reached the ground</text>
+    <rect x="530" y="232" width="2.5" height="12" class="tc"/><text x="542" y="241">TC received; red cross = rejected / failed / no uplink</text>
+    <rect x="530" y="252" width="40" height="6" fill="#7f8a98"/><text x="578" y="259">contact (AOS → LOS)</text>
+    <rect x="530" y="270" width="40" height="6" fill="#fff" stroke="#4a4f56"/><text x="578" y="277">eclipse</text>
+    <path d="M535 289l5 5-5 5-5-5z" class="ph"/><text x="548" y="298">phase / mode change (red = contingency)</text>
+    <rect x="531" y="310" width="7" height="7" class="inj"/><text x="548" y="318">instructor action, snapshot, bookmark, sim anomaly</text>
+  </g>
+</svg>
