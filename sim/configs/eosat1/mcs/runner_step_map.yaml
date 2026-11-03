@@ -1,0 +1,127 @@
+# runner_step_map.yaml — which procedure-card step each runner step belongs to,
+# for the cards the MCS runs from a planner activity type
+# (procedure_index.yaml `runnable: {kind: activity_type, ref: …}`).
+#
+# Why: the logbook Workbook tab ticks a card's checklist from the procedure
+# runner (pass / fail / GO / NO-GO per card step). For a markdown-runnable
+# card the runner's steps ARE the card's TC / Verify lines, so the map is
+# derived (smo_common.logbook.checklist.runner_map). An activity type is a
+# separate command sequence (planning/activity_types.yaml), so its steps are
+# mapped here by hand, one entry per `command_sequence` step, in order:
+#   - a card step key (s1, s2, s5a … as the checklist shows them), or
+#   - null: the runner step belongs to no card step (it ticks nothing).
+# A card step ticks when ALL the runner steps mapped to it are final; card
+# steps with no runner step (GO/NO-GO gates, prose checks) stay the
+# operator's to tick.
+#
+# `notes` (EN + FR) ride with the runner's tick where the activity does the
+# step differently from the card, so the hand-in does not pretend otherwise.
+#
+# tests/test_mcs/test_procedure_workbook.py checks this file against the real
+# activity types, the runner's loaded step list and the cards: one entry per
+# runner step, every key a step of the card, every activity-type card mapped.
+
+procedures:
+  NOM-002:
+    activity_type: imaging_pass
+    steps:
+      - s1      # 0  AOCS_SET_MODE_NOMINAL (base mode before fine pointing)
+      - s1      # 1  wait 10 s
+      - s1      # 2  wait aocs.mode == 4
+      - s2      # 3  PAYLOAD_SET_MODE_STANDBY (FPA cooler on)
+      - s2      # 4  wait 60 s
+      - s2      # 5  wait payload.fpa_ready == 1
+      - s1      # 6  wait aocs.fine_ready == 0 (AOCS_FINE_READY_CHECK)
+      - s1      # 7  AOCS_SET_MODE_FINE_POINT
+      - s1      # 8  wait 90 s
+      - s1      # 9  wait aocs.mode == 5
+      - s4      # 10 PAYLOAD_SET_MODE_IMAGING
+      - s4      # 11 wait 5 s
+      - s4      # 12 wait payload.mode == 2
+      - s5      # 13 PAYLOAD_SET_SHUTTER_OPEN
+      - s5      # 14 wait 2 s
+      - s5      # 15 PAYLOAD_CAPTURE_IMAGE
+      - s5      # 16 wait 30 s
+      - s6      # 17 PAYLOAD_SET_MODE_STANDBY
+      - s6      # 18 AOCS_SET_MODE_NOMINAL
+    notes:
+      s2:
+        en: "Runner: payload to STANDBY and waited for payload.fpa_ready; the FPA temperature and cooler checks are yours."
+        fr: "Exécuteur : charge utile en STANDBY et attente de payload.fpa_ready ; les vérifications de température du plan focal et du refroidisseur restent à faire."
+      s6:
+        en: "Runner: payload to STANDBY, then AOCS back to NOMINAL."
+        fr: "Exécuteur : charge utile en STANDBY, puis SCAO revenu en NOMINAL."
+
+  NOM-003:
+    activity_type: data_dump
+    steps:
+      - s3      # 0  TTC_SET_DOWNLINK_MODE_ON
+      - s3      # 1  wait 2 s
+      - s3      # 2  wait ttc.downlink_mode == 1
+      - s3      # 3  TTC_SET_TM_RATE_HIGH
+      - s3      # 4  wait 3 s
+      - s3      # 5  wait ttc.tm_data_rate == 128000
+      - s4      # 6  S15_DUMP_SCIENCE_STORE (store 3)
+      - s4      # 7  wait 165 s
+      - s4      # 8  S3_REQUEST_HK_TTC mid-dump link check
+      - s4      # 9  wait 165 s
+      - s6      # 10 TTC_SET_TM_RATE_LOW
+      - s6      # 11 wait 2 s
+      - s6      # 12 TTC_SET_DOWNLINK_MODE_OFF
+      - s6      # 13 wait ttc.tm_data_rate == 16000
+    notes:
+      s4:
+        en: "Runner: dumped the science store with S15 (store 3) and checked the link mid-dump; it does not walk S13 segments."
+        fr: "Exécuteur : vidage du stockage scientifique par S15 (stockage 3) et vérification de la liaison à mi-vidage ; il ne parcourt pas les segments S13."
+      s6:
+        en: "Runner: rate LOW and downlink OFF; no S13 transfer to end."
+        fr: "Exécuteur : débit BAS et liaison descendante coupée ; aucun transfert S13 à terminer."
+
+  NOM-004:
+    activity_type: orbit_manoeuvre
+    steps:
+      - s4      # 0  EPS_POWER_LINE_ON prop
+      - s4      # 1  wait 5 s
+      - s4      # 2  AOCS_SET_MODE_NOMINAL
+      - s4      # 3  wait 10 s
+      - s4      # 4  wait aocs.mode == 4
+      - s4      # 5  PROP_ISO_OPEN both
+      - s4      # 6  wait 5 s
+      - s4      # 7  HEATER_THRUSTER_ON (catbed preheat)
+      - s4      # 8  wait 290 s
+      - s4      # 9  PROP_GET_STATUS
+      - s4      # 10 wait 290 s
+      - s4      # 11 PROP_GET_STATUS
+      - s4      # 12 wait 290 s
+      - s4      # 13 PROP_GET_STATUS
+      - s4      # 14 wait 290 s
+      - s4      # 15 PROP_GET_STATUS
+      - s4      # 16 wait 40 s
+      - s4      # 17 wait prop.catbed_temp >= 180
+      - s4      # 18 AOCS_SET_MODE_NOMINAL (re-assert before ARM)
+      - s4      # 19 wait 10 s
+      - s4      # 20 wait aocs.mode == 4
+      - s4      # 21 PROP_SET_BURN
+      - s4      # 22 PROP_ARM
+      - s4      # 23 PROP_EXECUTE
+      - s5      # 24 wait 120 s
+      - s5      # 25 wait prop.burn_status >= 3
+      - s5      # 26 PROP_DISARM
+      - s5      # 27 PROP_ISO_CLOSE both
+      - s5      # 28 HEATER_THRUSTER_OFF
+    notes:
+      s4:
+        en: "Runner: preheat, PROP_SET_BURN, PROP_ARM and PROP_EXECUTE sent in this pass, not time-tagged with S11."
+        fr: "Exécuteur : préchauffage, PROP_SET_BURN, PROP_ARM et PROP_EXECUTE envoyés pendant ce passage, sans étiquette temporelle S11."
+      s5:
+        en: "Runner: waited for the burn to end, then disarmed, closed the isolation valves and switched the thruster heater off (NOM-013 territory)."
+        fr: "Exécuteur : attente de la fin de la poussée, puis désarmement, fermeture des vannes d'isolement et arrêt du réchauffeur du propulseur (relève de NOM-013)."
+
+  NOM-009:
+    activity_type: housekeeping_collection
+    steps:
+      - s1      # 0  S3_REQUEST_HK_ALL (S3.27 SID 1)
+    notes:
+      s1:
+        en: "Runner: one S3.27 request (SID 1); the card asks for SIDs 1 to 6."
+        fr: "Exécuteur : une seule demande S3.27 (SID 1) ; la fiche demande les SID 1 à 6."
