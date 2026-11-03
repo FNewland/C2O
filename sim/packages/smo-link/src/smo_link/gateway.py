@@ -375,6 +375,15 @@ class Gateway:
         local.router.add_get("/api/state", self._h_state)
         local.router.add_get("/healthz", self._h_health)
         local.router.add_get("/link-status", self._h_link_status)
+        # The instructor console reached through this proxy keeps its
+        # logbook on the ground: /api/logbook is served HERE, from the ground
+        # workspace, and is never on the link allowlist (LOGBOOK_SPEC §1).
+        try:
+            from smo_common.logbook import register_logbook_routes
+            register_logbook_routes(local, tool="instructor")
+            local.middlewares.append(self._logbook_host_guard)
+        except ImportError:                       # pragma: no cover
+            logger.warning("smo_common.logbook not importable: no logbook on the GSG")
         local.router.add_route("*", "/{tail:.*}", self._h_proxy)
         runner = web.AppRunner(local, access_log=None, handle_signals=False)
         await runner.setup()
@@ -635,6 +644,15 @@ class Gateway:
     # -- HTTP ---------------------------------------------------------------
     async def _h_health(self, request: web.Request) -> web.Response:
         return web.json_response({"ok": True, "state": self.link_state()})
+
+    @web.middleware
+    async def _logbook_host_guard(self, request: web.Request, handler):
+        """The locally served /api/logbook gets the proxy's Host check (L11)."""
+        if request.path.startswith("/api/logbook") and \
+                not host_allowed(request.headers.get("Host"), self._allowed_hosts):
+            return web.json_response({"error": "forbidden", "reason": "host not allowed"},
+                                     status=403)
+        return await handler(request)
 
     async def _h_link_status(self, request: web.Request) -> web.Response:
         if not host_allowed(request.headers.get("Host"), self._allowed_hosts):

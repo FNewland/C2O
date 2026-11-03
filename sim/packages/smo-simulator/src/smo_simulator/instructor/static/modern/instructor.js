@@ -31,7 +31,11 @@ import { fmtUTC, fmtHex } from "/static/shared/format.js";
 import { linkState } from "/static/shared/state.js";
 // UI language (EN|FR) — see docs/i18n/UI_I18N_GUIDE.md. Import i18n.js
 // WITHOUT a ?v= query (state is shared via globalThis either way).
-import { I18n, t, tText, tdb, onLangChange } from "/static/shared/i18n.js";
+import { I18n, t, tText, tdb, onLangChange, getLang } from "/static/shared/i18n.js";
+// Participant logbook (LOGBOOK_SPEC.md §6): the instructor keeps their own
+// private logbook here; the worksheets panes below only list questions and
+// never read anyone's answers.
+import { mountLogbook } from "/static/shared/logbook.js";
 
 /* ── constants ─────────────────────────────────────────────────────────── */
 
@@ -501,6 +505,62 @@ function selectScenario(idx) {
   $("scenario-briefing").textContent = scnBriefing(sc) || tText("No briefing available.");
   renderScenarios();
   updateScenarioButtons();
+  loadPrepWorksheets();
+}
+
+/* ── course-workbook worksheets (prep / debrief), from the logbook API ── */
+async function fetchWorksheets(ctx) {
+  try {
+    const r = await fetch(`/api/logbook/worksheets?tool=instructor&lang=${getLang()}` +
+      `&context=${encodeURIComponent(JSON.stringify(ctx))}`, { credentials: "same-origin" });
+    if (!r.ok) return [];
+    return (await r.json()).worksheets || [];
+  } catch (e) { return []; }
+}
+function worksheetListHtml(sheets, open) {
+  return sheets.map((w, i) => {
+    let sec = "";
+    const items = w.questions.map((q) => {
+      let h = "";
+      if (q.section && q.section !== sec) { sec = q.section; h += `<li class="sec">${esc(sec)}</li>`; }
+      return h + `<li>${esc(q.text)}</li>`;
+    }).join("");
+    return `<details class="ds-disclosure"${open && i === 0 ? " open" : ""}><summary>` +
+      `<span class="ti"><span class="id">${esc(w.id)}</span> ${esc(w.title)}</span>` +
+      `<span class="r">${t("{{n}} questions", { n: w.questions.length })}</span></summary><div class="bd"><ol>${items}</ol></div></details>`;
+  }).join("");
+}
+let prepSeq = 0, debriefWsKey = "";
+async function loadPrepWorksheets() {
+  const box = $("scenario-prep");
+  const sc = selectedScenario != null ? scenarios[selectedScenario] : null;
+  const seq = ++prepSeq;
+  if (!box || !sc || !sc.id) { if (box) box.innerHTML = ""; return; }
+  const sheets = await fetchWorksheets({ scenario: sc.id, phase: "prep" });
+  if (seq !== prepSeq) return;
+  box.innerHTML = sheets.length
+    ? `<div class="ws-h">${t("Prep worksheets")}</div>` +
+      `<div class="ws-note">${t("From the course workbook. Participants fill these in their logbook before the pass.")}</div>` +
+      worksheetListHtml(sheets, false)
+    : `<div class="ws-note">${t("No prep worksheet for this scenario in the course workbook.")}</div>`;
+}
+async function loadDebriefWorksheets() {
+  const box = $("debrief-ws");
+  if (!box) return;
+  const sc = scenarios.find((x) => x.name === (lastDebrief && lastDebrief.name)) ||
+    (selectedScenario != null ? scenarios[selectedScenario] : null);
+  const ctx = { phase: "debrief", ...(sc && sc.id ? { scenario: sc.id } : {}) };
+  const key = getLang() + JSON.stringify(ctx);
+  if (key === debriefWsKey) return;          // polled every 5 s: keep open disclosures
+  debriefWsKey = key;
+  const sheets = await fetchWorksheets(ctx);
+  // the reflection questions (WB-5.x-DB) lead the spoken debrief
+  sheets.sort((a, b) => Number(!/-DB$/.test(a.id)) - Number(!/-DB$/.test(b.id)));
+  box.innerHTML = sheets.length
+    ? `<div class="ws-h">${t("Debrief questions")}</div>` +
+      `<div class="ws-note">${t("Use them in the spoken debrief. Participants answer these in their logbook and download it; you never see their answers.")}</div>` +
+      worksheetListHtml(sheets, true)
+    : "";
 }
 
 async function startScenario() {
@@ -542,6 +602,7 @@ async function stopScenario() {
 let lastDebrief;              // undefined: static markup still shown
 function renderDebrief(d) {
   lastDebrief = d;
+  loadDebriefWorksheets();
   const body = $("debrief-body");
   if (!d) {
     body.innerHTML = `<div class="no-data">${t("No debrief yet. It appears when a scenario ends (stopped, or its duration elapsed).")}</div>`;
@@ -1357,6 +1418,14 @@ async function init() {
   await I18n.ready;            // English: immediate; else bounded catalog load
   mountLangToggle($("lang-toggle"));
   onLangChange(() => relabel(true));
+  mountLogbook({ tool: "instructor", buttonHost: $("lb-slot"),
+    getContext: () => {
+      const sc = selectedScenario != null ? scenarios[selectedScenario] : null;
+      return { ...(sc && sc.id ? { scenario: sc.id } : {}),
+        ...(activeScenarioName ? { sim_status: frozen ? "stopped" : "running" } : {}) };
+    } });
+  onLangChange(() => { loadPrepWorksheets(); debriefWsKey = ""; loadDebriefWorksheets(); });
+  loadDebriefWorksheets();
   // ?sub= subpage deep-dive mode (preserved exactly, composing with ?ui=
   // and ?lang=): hide the dashboard chrome, render only the requested
   // snapshot tab full-width with a back link.

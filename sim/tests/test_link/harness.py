@@ -40,6 +40,7 @@ class FakeSim:
         self.tc_received = bytearray()
         self.tc_connections = 0
         self.config_hits = 0
+        self.logbook_hits = 0
         self.last_headers: dict[str, str] = {}
         self.ws_inbound: list[str] = []
         self.state = {"tick": 1, "sim_time": "2026-08-20T12:00:00+00:00", "met_s": 1000.0,
@@ -64,6 +65,7 @@ class FakeSim:
         app.router.add_route("*", "/api/config/{tail:.*}", self._config)
         app.router.add_post("/api/reports/generate", self._config)
         app.router.add_get("/ws", self._ws)
+        app.router.add_route("*", "/api/logbook{tail:.*}", self._logbook)
         from smo_common.dump_store import register_dump_routes
         register_dump_routes(app, lambda: self.dump_dir, owner="fakesim")
         self._runner = web.AppRunner(app, access_log=None)
@@ -141,6 +143,10 @@ class FakeSim:
     async def _echo(self, r):
         body = await r.read()
         return web.Response(body=body, headers={"X-Len": str(len(body))})
+
+    async def _logbook(self, r):
+        self.logbook_hits += 1          # must stay 0: the GSG serves it locally
+        return web.json_response({"from": "space"})
 
     async def _headers(self, r):
         self.last_headers = dict(r.headers)

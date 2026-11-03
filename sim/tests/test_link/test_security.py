@@ -813,3 +813,46 @@ def test_n2_tc_age_survives_agent_wall_clock_step(monkeypatch):
     monkeypatch.setattr(A.time, "time", lambda: real_time() - 30.0)   # wall steps back 30 s
     after = A.Agent._gsg_now(ag, fake)
     assert abs(after - before) < 1.0
+
+
+# ================================================================== logbook
+
+@pytest.mark.parametrize("method,path", [
+    ("GET", "/api/logbook"), ("DELETE", "/api/logbook"), ("POST", "/api/logbook/entries"),
+    ("PATCH", "/api/logbook/entries/x"), ("DELETE", "/api/logbook/entries/x"),
+    ("GET", "/api/logbook/export?format=md"), ("GET", "/api/logbook/worksheets"),
+    ("GET", "/api/logbook/"), ("GET", "/static/../api/logbook"),
+])
+def test_logbook_is_never_on_the_link_allowlist(method, path):
+    """LOGBOOK_SPEC §1: the person id and the logbook text never cross the
+    space link. Neither the GSG nor the agent may forward /api/logbook."""
+    from smo_link.httpproxy import deny_reason
+    assert deny_reason(method, path) is not None
+
+
+async def test_gsg_serves_the_logbook_itself(stack, tmp_path, monkeypatch):
+    """The instructor console reached through the GSG keeps its logbook on the
+    ground: the GSG answers /api/logbook from its own store (the ground
+    workspace), with the Host check, and the simulator never sees it."""
+    monkeypatch.setenv("SMO_LOGBOOK_DIR", str(tmp_path / "lb"))
+    # the fixture's GSG was built before the env var: rebuild its store
+    from smo_common.logbook import LogbookStore
+    from smo_common.logbook.aiohttp_routes import STORE_KEY
+    store = stack.gw._runners[0].app[STORE_KEY]
+    store.dir = LogbookStore().dir
+    H = {"Host": "localhost:8080",
+         "X-Goog-Authenticated-User-Email": "accounts.google.com:fd@example.org"}
+    async with aiohttp.ClientSession() as http:
+        async with http.post(stack.http + "/api/logbook/entries", headers=H,
+                             json={"kind": "decision", "text": "inject EPS fault at T+5"}) as r:
+            assert r.status == 201, await r.text()
+            e = await r.json()
+            assert e["tool"] == "instructor"
+        async with http.get(stack.http + "/api/logbook", headers=H) as r:
+            j = await r.json()
+            assert j["count"] == 1 and j["person"]["id_label"] == "fd@example.org"
+        async with http.get(stack.http + "/api/logbook",
+                            headers={**H, "Host": "evil.example:8080"}) as r:
+            assert r.status == 403
+    assert stack.sim.logbook_hits == 0
+    assert (tmp_path / "lb").is_dir()
