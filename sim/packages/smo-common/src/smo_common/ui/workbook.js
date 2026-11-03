@@ -49,7 +49,7 @@ export function createWorkbook(host) {
   const W = {
     pane: null, proc: "", manualProc: "", cl: null, clKey: "", clErr: "", run: "", sheets: [],
     sheetsKey: "", open: new Set(), editing: {}, queue: new Map(), ids: new Map(),
-    runnerSeen: new Set(), runnerKey: "", liveTimer: null, mmOpen: false, prefillCtx: {},
+    runnerSeen: new Set(), runnerKey: "", lastRunner: null, liveTimer: null, mmOpen: false, prefillCtx: {},
   };
   const $ = (sel, root) => (root || W.pane).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || W.pane).querySelectorAll(sel));
@@ -88,6 +88,16 @@ export function createWorkbook(host) {
       W.cl = j;
       const runs = runIds(entries(), j.sheet_id);
       W.run = runs.length ? runs[runs.length - 1] : "1";
+      // A runner status that arrived during the fetch chose the run before
+      // this line reset it, and a short card can finish before the fetch
+      // returns (the console then stops polling): forget that choice and
+      // re-apply the runner's last status, or the view stays on the
+      // previous run while the ticks go to the new one.
+      W.runnerKey = ""; W.runnerSeen.clear();
+      const last = W.lastRunner;
+      if (last && String(last.procedure_id || last.procedure_ref || "") === proc) {
+        setTimeout(() => { if (W.cl === j) onRunner(last); }, 0);
+      }
     } catch (e) {
       W.cl = null;
       W.clErr = proc;
@@ -179,8 +189,11 @@ export function createWorkbook(host) {
       (refs ? `<div class="pr" title="${esc(refs)}"><span class="lbl">${t("Printed")}</span> ${esc(refs)}</div>` : "") +
       `<div class="act">${acts}${when}</div>` +
       `<div class="nt"><label class="ds-sr" for="wb-nt-${esc(s.key)}">${t("Note or deviation for {{step}}", { step: label })}</label>` +
-      `<input id="wb-nt-${esc(s.key)}" class="ds-input wb-note" maxlength="2000" value="${esc((c && c.note) || "")}" ` +
-      `placeholder="${esc(tText("Note or deviation (Enter saves)"))}"></div></li>`;
+      // a box that wraps: a runner note ("Runner: one S3.27 request…") or
+      // a long deviation note must be readable, not cut at the field edge
+      `<textarea id="wb-nt-${esc(s.key)}" class="ds-input wb-note" maxlength="2000" ` +
+      `rows="${Math.min(4, Math.max(1, Math.ceil(String((c && c.note) || "").length / 56)))}" ` +
+      `placeholder="${esc(tText("Note or deviation (Enter saves)"))}">${esc((c && c.note) || "")}</textarea></div></li>`;
   }
   function checklistHtml() {
     const proc = currentProc();
@@ -329,6 +342,7 @@ export function createWorkbook(host) {
     if (!st) return;
     const proc = String(st.procedure_id || st.procedure_ref || "");
     if (!proc) return;
+    W.lastRunner = st;
     if (!W.cl || W.cl.procedure !== proc) {
       // the panel may be closed: fetch the checklist, then apply this status
       if (currentProc() === proc && W.clKey !== `${proc}|${getLang()}`) {
@@ -698,7 +712,7 @@ export function createWorkbook(host) {
     });
     pane.addEventListener("keydown", (ev) => {
       const t = ev.target;
-      if (t.classList && t.classList.contains("wb-note") && ev.key === "Enter") {
+      if (t.classList && t.classList.contains("wb-note") && ev.key === "Enter" && !ev.shiftKey) {
         ev.preventDefault();
         const li = t.closest(".wb-st");
         tick(li.dataset.key, "note", { note: t.value.trim() });

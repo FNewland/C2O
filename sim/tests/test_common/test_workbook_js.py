@@ -142,3 +142,18 @@ def test_overlay_panel_stays_clear_of_header_and_scrollbar():
     assert "function placeOverlay()" in lb and 'window.addEventListener("scroll", placeOverlay' in lb
     css = (UI / "logbook.css").read_text(encoding="utf-8")
     assert "width:440px; max-width:100%;" in css and "max-width:100vw" not in css
+
+
+def test_checklist_follows_the_runner_to_its_new_run():
+    """Browser finding (NOM-009, one step): the runner finished before
+    Start's checklist fetch returned, the fetch then reset the view to the
+    previous run and the console had stopped polling, so the ticks went to
+    run 2 while run 1 was shown. The fetch now re-applies the runner's last
+    status."""
+    wb = (UI / "workbook.js").read_text(encoding="utf-8")
+    i = wb.index('W.run = runs.length ? runs[runs.length - 1] : "1";')
+    tail = wb[i:i + 900]
+    assert 'W.runnerKey = ""; W.runnerSeen.clear();' in tail and "onRunner(last)" in tail
+    assert "W.lastRunner = st;" in wb
+    # notes wrap (a runner note or a long deviation is readable)
+    assert '<textarea id="wb-nt-' in wb

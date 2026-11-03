@@ -190,7 +190,8 @@
   box-shadow:inset 0 -2px 0 var(--accent); }
 .wb-st .act .tm{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3); margin-left:auto; }
 .wb-st .nt{ padding-left:30px; }
-.wb-note{ width:100%; height:24px; font-size:var(--fs-label); }
+.wb-note{ display:block; width:100%; min-height:24px; height:auto; padding:3px var(--sp-2); resize:vertical;
+  font-size:var(--fs-label); line-height:var(--lh-text); overflow-wrap:anywhere; }
 .wb-extra{ padding:var(--sp-2) var(--sp-4); border-bottom:1px solid var(--line); }
 .wb-sheet-dl{ display:flex; flex-wrap:wrap; gap:var(--sp-1); padding:var(--sp-2) var(--sp-4); }
 .wb-sheet .wb-sheet-dl{ padding:var(--sp-2) 0 0; }
