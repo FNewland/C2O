@@ -1331,11 +1331,33 @@ const failuresPoll = poller(async () => {
   await fetchDebrief(false);
 }, 5000);
 
+/* VR headset link (smo-vr/1, docs/VR_INTERFACE_ICD.md). The return line is
+ * optional, so a connected headset that never replies is NO_REPLY (neutral),
+ * not a fault; DEGRADED / SILENT caution, ERROR alarm. */
+function renderVrBadge(link) {
+  const b = $("vr-badge");
+  if (!b) return;
+  if (!link || link.enabled === false) {
+    b.innerHTML = renderChip({ kind: "off", label: tText("VR off"),
+      title: tText("VR bridge not running (--no-vr, SMO_VR=0 or port in use)") });
+    return;
+  }
+  const n = link.n_clients || 0;
+  const overall = link.overall || "NO_CLIENTS";
+  const rows = (link.clients || []).map((c) => `${c.team || c.peer} [${c.transport}] ${c.health}` +
+    (c.status_word_hex ? ` ${c.status_word_hex}` : "") + (c.text ? ` — ${c.text}` : ""));
+  const title = tText("VR bridge TCP:{{tcp}} WS:{{ws}}", { tcp: link.tcp_port, ws: link.ws_port }) + "\n" +
+    (rows.length ? rows.join("\n") : tText("no headsets connected"));
+  const kind = overall === "ERROR" ? "alarm" : (overall === "DEGRADED" || overall === "SILENT") ? "warn" : "neutral";
+  b.innerHTML = renderChip({ kind, title, label: n ? `VR ${n} ${overall.replace("_", " ")}` : tText("VR: no headsets") });
+}
+
 function renderAppBar() {
   if (!state) { renderTimeControl(); return; }
   $("sim-time").textContent = state.sim_time ? fmtUTC(state.sim_time) : tText("no data");
   $("sim-date").textContent = state.sim_time ? String(state.sim_time).slice(0, 10) + " UTC" : "";
   renderTimeControl();
+  renderVrBadge(state.vr_link);
   const ob = $("btn-override");
   ob.textContent = state.override_passes ? tText("Pass override on") : tText("Override passes");
   ob.setAttribute("aria-pressed", String(!!state.override_passes));

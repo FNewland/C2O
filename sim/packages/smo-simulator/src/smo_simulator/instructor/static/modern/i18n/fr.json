@@ -644,5 +644,10 @@
   "no telecommand for the ground to compare": "aucune télécommande à comparer pour le sol",
   "no truth for this quantity": "pas de vérité pour cette grandeur",
   "never received on the ground": "jamais reçu au sol",
-  "the ground has an older value": "le sol a une valeur plus ancienne"
+  "the ground has an older value": "le sol a une valeur plus ancienne",
+  "VR off": "RV arrêtée",
+  "VR bridge not running (--no-vr, SMO_VR=0 or port in use)": "Passerelle VR arrêtée (--no-vr, SMO_VR=0 ou port occupé)",
+  "VR bridge TCP:{{tcp}} WS:{{ws}}": "Passerelle VR TCP:{{tcp}} WS:{{ws}}",
+  "no headsets connected": "aucun casque connecté",
+  "VR: no headsets": "RV : aucun casque"
 }
