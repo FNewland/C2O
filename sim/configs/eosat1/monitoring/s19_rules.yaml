@@ -36,8 +36,13 @@
 # the OBC in SAFE, not drive the battery heater), every rule whose function id
 # or missing argument bytes were unambiguous given its own description was
 # corrected: 3001, 3002, 3003, 4002, 5003, 5004, 6001, 6002. The rest
-# (1001-1003, 5001, 5002) stay pinned in KNOWN_MISROUTED for Flight Ops
+# (1002, 1003, 5001, 5002) stay pinned in KNOWN_MISROUTED for Flight Ops
 # (1004/1005 corrected 2026-11-03, then deleted the same day, below).
+# 2026-11-03 (Franz's ruling): ea 1001 fired on BATTERY_SOC_CRITICAL but
+# dispatched func 10 = AOCS_SLEW_TO, so the payload stayed on. It now
+# dispatches EPS_POWER_OFF(3), the payload line, like 3001 and 6001. Its
+# trigger id (0x0102, SoC critical rather than the "bus undervoltage" of its
+# name) is unchanged and stays in KNOWN_TRIGGER_DRIFT.
 #
 # 2026-11-03 (FDIR fixes, see docs/plan_2026-11/OBC_THERMAL_ANALYSIS.md §3.3):
 # every param rule whose description names ONE direction is now armed on that
@@ -58,7 +63,8 @@ s19_rules:
     trigger:
       kind: event          # 0x0102 = BATTERY_SOC_CRITICAL in event_catalog.yaml. NOTE: the rule name/description say "bus undervoltage", which is 0x0103/0x0104 — trigger drift, flagged for Flight Ops (defect #70), id deliberately unchanged
       id: 0x0102   # was: BUS_UNDERVOLTAGE
-    action_func_id: 10   # S8 func 10: payload mode OFF (load shedding)
+    action_func_id: 20   # S8 func 20: EPS_POWER_OFF
+    action_data: [3]     # line 3 = payload. Was func 10 (= AOCS_SLEW_TO, misrouted); corrected 2026-11-03 to switch the payload line off, as 3001/6001 do.
     description: "EPS Bus Undervoltage -> Payload Off (Load Shed)"
     enabled: true
 

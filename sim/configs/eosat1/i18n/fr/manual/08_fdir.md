@@ -70,6 +70,16 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 | EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Thermostat du réchauffeur de batterie (voir TCS-01) |
 | EPS-05  | Rendement de chaîne < 70 % en éclairement, 30 s | 0x014C / 0x014D (valide tant que le bit de 0x014E est positionné) | Signalement seulement : TM(12,9) + événement S5 0x914C / 0x914D. Le sol décide (CTG-009) |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Dériver l'excédent de puissance (shunt) |
+| EPS-07  | État de charge de la batterie critique (< 10 %) | Événement S5 0x0102 BATTERY_SOC_CRITICAL | Ligne de la charge utile coupée : la règle S19 ea 1001 envoie `EPS_POWER_OFF` (fonction S8 20, ligne 3) |
+
+**EPS-07 coupe la charge utile.** Jusqu'en novembre 2026, la règle S19 ea 1001
+se déclenchait sur l'événement d'état de charge critique mais envoyait la
+fonction S8 10, c'est-à-dire `AOCS_SLEW_TO` : la règle signalait son
+déclenchement et la charge utile restait alimentée. Elle envoie désormais
+`EPS_POWER_OFF` avec la ligne 3 (charge utile), la même action que les règles
+ea 3001 et ea 6001 : l'imageur et son détecteur perdent l'alimentation
+ensemble. La remise sous tension de la ligne de la charge utile, une fois la
+batterie rétablie, est une décision du sol (CTG-001).
 
 **EPS-05 n'est évaluée qu'en éclairement.** Jusqu'en novembre 2026, les règles
 des panneaux solaires (S19 ea 1004/1005) surveillaient les courants bruts des

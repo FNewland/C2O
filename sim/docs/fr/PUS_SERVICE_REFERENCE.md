@@ -994,14 +994,16 @@ chargeur d'amorçage, de sorte qu'aucune règle ne peut démarrer ou redémarrer
 
 **Règles : 26 configurées** (`configs/eosat1/monitoring/s19_rules.yaml`)
 
-> **Point ouvert connu :** 13 des 26 règles livrées appellent un `action_func_id`
-> qui ne correspond pas à leur `description` (p. ex. ea 1001 « payload off » appelle
-> la fonction 10, qui est `AOCS_SLEW_TO`). Le mécanisme est correct ; le *contenu* est
-> en cours de revue. Le tableau ci-dessous montre le comportement voulu, pas le câblage actuel.
+> **Point ouvert connu :** quatre règles livrées (1002, 1003, 5001, 5002) appellent
+> un `action_func_id` qui ne correspond pas à leur `description` ; elles sont
+> épinglées dans `tests/test_content/test_s19_rules_content.py` (`KNOWN_MISROUTED`)
+> en vue de leur revue. La règle ea 1001 appelait la fonction 10 (`AOCS_SLEW_TO`) ;
+> depuis le 2026-11-03, elle coupe la ligne de la charge utile (`EPS_POWER_OFF`,
+> ligne 3). Le tableau ci-dessous montre le comportement voulu.
 
 | ID de règle | Déclencheur | Action | Rôle |
 |---------|---------|--------|---------|
-| 1001 | Sous-tension du bus (0x0103) | Arrêt de la charge utile | Économie d'énergie |
+| 1001 | SoC batterie critique (événement 0x0102) | Coupure de la ligne de la charge utile (`EPS_POWER_OFF`, ligne 3) | Économie d'énergie |
 | 1002 | SoC batterie critique (0x0102) | Arrêt du refroidisseur du FPA | Économie d'énergie |
 | 2001 | Saturation du moment cinétique (0x0205) | Désaturer les roues | Contrôle SCAO |
 | 2002 | Senseur stellaire 1 aveuglé (0x0203) | Basculer sur ST2 | Contrôle d'attitude |
@@ -1034,9 +1036,10 @@ Le MCS alerte l'opérateur (information)
 ```yaml
 s19_rules:
   - ea_id: 1001
-    event_type: 0x0103  # Bus undervoltage
-    action_func_id: 26  # PAYLOAD_SET_MODE OFF
-    description: "Undervoltage -> Payload off"
+    trigger: {kind: event, id: 0x0102}  # BATTERY_SOC_CRITICAL
+    action_func_id: 20  # EPS_POWER_OFF
+    action_data: [3]    # line 3 = payload
+    description: "EPS Bus Undervoltage -> Payload Off (Load Shed)"
     enabled: true
 ```
 

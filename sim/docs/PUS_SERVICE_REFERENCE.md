@@ -994,14 +994,16 @@ bootloader, so no rule can boot or reboot the OBC behind the operator's back.
 
 **Rules: 26 configured** (`configs/eosat1/monitoring/s19_rules.yaml`)
 
-> **Known open item:** 13 of the 26 shipped rules dispatch an `action_func_id`
-> that does not match their `description` (e.g. ea 1001 "payload off" dispatches
-> func 10, which is `AOCS_SLEW_TO`). The mechanism is correct; the *content* is
-> under review. The table below shows intended behaviour, not current wiring.
+> **Known open item:** four shipped rules (1002, 1003, 5001, 5002) dispatch an
+> `action_func_id` that does not match their `description`; they are pinned in
+> `tests/test_content/test_s19_rules_content.py` (`KNOWN_MISROUTED`) for review.
+> ea 1001 used to dispatch func 10 (`AOCS_SLEW_TO`); since 2026-11-03 it switches
+> the payload line off (`EPS_POWER_OFF`, line 3). The table below shows intended
+> behaviour.
 
 | Rule ID | Trigger | Action | Purpose |
 |---------|---------|--------|---------|
-| 1001 | Bus undervoltage (0x0103) | Payload off | Power conservation |
+| 1001 | Battery SoC critical (event 0x0102) | Payload line off (`EPS_POWER_OFF`, line 3) | Power conservation |
 | 1002 | Battery SoC critical (0x0102) | FPA cooler off | Power conservation |
 | 2001 | Momentum saturation (0x0205) | Desaturate wheels | AOCS control |
 | 2002 | Star tracker 1 blind (0x0203) | Switch to ST2 | Attitude control |
@@ -1034,9 +1036,10 @@ MCS alerts operator (informational)
 ```yaml
 s19_rules:
   - ea_id: 1001
-    event_type: 0x0103  # Bus undervoltage
-    action_func_id: 26  # PAYLOAD_SET_MODE OFF
-    description: "Undervoltage -> Payload off"
+    trigger: {kind: event, id: 0x0102}  # BATTERY_SOC_CRITICAL
+    action_func_id: 20  # EPS_POWER_OFF
+    action_data: [3]    # line 3 = payload
+    description: "EPS Bus Undervoltage -> Payload Off (Load Shed)"
     enabled: true
 ```
 
