@@ -8,21 +8,88 @@
  * - Level 3: Equipment trade (weighted scoring from KB)
  * - Any: Generic trade study builder
  */
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { RecordDecision } from '../logbook'
 import { useTranslation } from 'react-i18next'
 import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
+import { pairKey, pairwiseWeights } from './pairwise'
 import { fs } from '../theme/tokens'
 import { showAlert } from '../components/ui/Dialog'
 import { Button, Disclosure } from '../components/ui'
 
 const API = '/api'
 
-// English text is the i18n key: default trade criteria, kept in English in state and
-// localStorage; displayed with t(c, { context: 'criterion' }) (user-added names fall through).
+// English text is the i18n key: default trade criteria, kept in English in the stored
+// trade record; displayed with t(c, { context: 'criterion' }) (user-added names fall through).
 const DEFAULT_CRITERIA = ['Mass', 'Power', 'Cost', 'TRL', 'Risk']
+
+/** The Pugh trade with its pairwise weighting: one record per study on the server (WP0). */
+interface PughState {
+  criteria: string[]
+  options: string[]
+  datum: number
+  scores: Record<string, Record<string, number>>
+  comparisons: Record<string, number>
+}
+
+const LEGACY_PUGH_KEY = 'spacecdf-pugh'
+
+/**
+ * Load / save the study's Pugh trade (GET/PUT /api/studies/{id}/trades/pugh). It used to
+ * live in localStorage under ONE global key, shared by every study on the machine and
+ * invisible to teammates; an old local copy is moved to the study once.
+ */
+function useTradeRecord(studyId: string | null, defaults: () => PughState) {
+  const qc = useQueryClient()
+  const { data } = useQuery<{ state: Partial<PughState> | null; version: number }>({
+    queryKey: ['trade', studyId, 'pugh'],
+    queryFn: () => fetch(`${API}/studies/${studyId}/trades/pugh`).then(r => (r.ok ? r.json() : { state: null, version: 0 })),
+    enabled: !!studyId,
+  })
+  const [local, setLocal] = useState<PughState | null>(null)
+  const version = useRef(0)
+  const dirty = useRef(false)
+  const timer = useRef<number | null>(null)
+
+  const put = useCallback(async (state: PughState) => {
+    if (!studyId) return
+    const res = await fetch(`${API}/studies/${studyId}/trades/pugh`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state, version: version.current }),
+    })
+    if (res.ok) { version.current = (await res.json()).version; dirty.current = false }
+    else if (res.status === 409) { dirty.current = false; void qc.invalidateQueries({ queryKey: ['trade', studyId, 'pugh'] }) }
+  }, [studyId, qc])
+
+  useEffect(() => {
+    if (!data || dirty.current) return
+    version.current = data.version || 0
+    if (data.state) { setLocal({ ...defaults(), ...data.state }); return }
+    let legacy: Partial<PughState> | null = null
+    try { const raw = localStorage.getItem(LEGACY_PUGH_KEY); legacy = raw ? JSON.parse(raw) : null } catch { legacy = null }
+    const init = { ...defaults(), ...(legacy || {}) }
+    setLocal(init)
+    if (legacy) {
+      void put(init).then(() => { try { localStorage.removeItem(LEGACY_PUGH_KEY) } catch { /* private mode */ } })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
+  const update = useCallback((patch: Partial<PughState>) => {
+    setLocal(prev => {
+      const next = { ...(prev ?? defaults()), ...patch }
+      dirty.current = true
+      if (timer.current) window.clearTimeout(timer.current)
+      timer.current = window.setTimeout(() => { void put(next) }, 400)
+      return next
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [put])
+
+  return { state: local ?? defaults(), update }
+}
 
 export function DecisionPanel() {
   const { t } = useTranslation()
@@ -36,8 +103,12 @@ export function DecisionPanel() {
     enabled: !!studyId, structuralSharing: false,
   })
 
-  const [pairwiseWeights, setPairwiseWeights] = useState<Record<string, number>>({})
-  const [sharedCriteria, setSharedCriteria] = useState<string[]>(DEFAULT_CRITERIA)
+  const trade = useTradeRecord(studyId, () => ({
+    criteria: DEFAULT_CRITERIA, options: [t('Option A'), t('Option B'), t('Option C')], datum: 0, scores: {}, comparisons: {},
+  }))
+  const sharedCriteria = trade.state.criteria
+  const setSharedCriteria = (c: string[]) => trade.update({ criteria: c })
+  const weights = pairwiseWeights(sharedCriteria, trade.state.comparisons)
 
   const focusElement = allElements.find((e: any) => e.id === focusElementId)
   const isSpaceSegment = focusElement?.segment === 'space'
@@ -66,8 +137,10 @@ export function DecisionPanel() {
       {currentLevel >= 1 && <ContactScheduleWidget studyId={studyId} />}
 
       {/* Any level: Decision tools — weighting first, then scoring */}
-      <PairwiseWeightingWidget onWeightsChanged={setPairwiseWeights} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria} />
-      <PughMatrixWidget weights={pairwiseWeights} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria} />
+      <PairwiseWeightingWidget weights={weights} comparisons={trade.state.comparisons}
+        onComparisonsChanged={c => trade.update({ comparisons: c })} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria} />
+      <PughMatrixWidget weights={weights} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria}
+        state={trade.state} onChange={trade.update} />
     </div>
   )
 }
@@ -570,24 +643,19 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 
 // ─── Pugh Matrix ───
 
-function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: Record<string, number>; criteria: string[]; onCriteriaChanged: (c: string[]) => void }) {
+function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChange }: {
+  weights?: Record<string, number>; criteria: string[]; onCriteriaChanged: (c: string[]) => void
+  state: PughState; onChange: (patch: Partial<PughState>) => void
+}) {
   const { t } = useTranslation()
-  const loadSaved = () => { try { const s = localStorage.getItem('spacecdf-pugh'); return s ? JSON.parse(s) : null } catch { return null } }
-  const saved = loadSaved()
-  const [options, setOptions] = useState<string[]>(saved?.options || [t('Option A'), t('Option B'), t('Option C')])
-  const [datum, setDatum] = useState(saved?.datum || 0)
-  const [scores, setScores] = useState<Record<string, Record<string, number>>>(saved?.scores || {})
+  const { options, datum, scores } = state
+  const setDatum = (i: number) => onChange({ datum: i })
+  const setOptions = (f: (p: string[]) => string[]) => onChange({ options: f(options) })
   const [newCriterion, setNewCriterion] = useState('')
   const [newOption, setNewOption] = useState('')
 
-  const saveState = useCallback(() => {
-    const state = { criteria, options, datum, scores }
-    localStorage.setItem('spacecdf-pugh', JSON.stringify(state))
-  }, [criteria, options, datum, scores])
-  useState(() => { saveState() })
-
   const setScore = (opt: string, crit: string, val: number) => {
-    setScores(prev => ({ ...prev, [opt]: { ...(prev[opt] || {}), [crit]: val } }))
+    onChange({ scores: { ...scores, [opt]: { ...(scores[opt] || {}), [crit]: val } } })
   }
   const getScore = (opt: string, crit: string) => scores[opt]?.[crit] ?? 0
   const hasWeights = weights && Object.keys(weights).length > 0
@@ -684,42 +752,23 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged }: { weights?: 
 
 // ─── Pairwise Comparison Weighting ───
 
-function PairwiseWeightingWidget({ onWeightsChanged, criteria, onCriteriaChanged }: {
-  onWeightsChanged?: (weights: Record<string, number>) => void
+function PairwiseWeightingWidget({ weights, comparisons, onComparisonsChanged, criteria, onCriteriaChanged }: {
+  weights: Record<string, number>
+  comparisons: Record<string, number>
+  onComparisonsChanged: (c: Record<string, number>) => void
   criteria: string[]
   onCriteriaChanged: (c: string[]) => void
 }) {
   const { t } = useTranslation()
-  const [comparisons, setComparisons] = useState<Record<string, number>>({})
   const [newCrit, setNewCrit] = useState('')
 
-  const pairKey = (a: string, b: string) => `${a}|${b}`
-
   const setComparison = (a: string, b: string, val: number) => {
-    setComparisons(prev => ({ ...prev, [pairKey(a, b)]: val }))
+    onComparisonsChanged({ ...comparisons, [pairKey(a, b)]: val })
   }
 
-  // Derive weights from pairwise comparisons
-  const weights = criteria.map(c => {
-    let score = 0
-    for (const other of criteria) {
-      if (other === c) continue
-      const val = comparisons[pairKey(c, other)]
-      if (val != null) score += val
-      else {
-        const rev = comparisons[pairKey(other, c)]
-        if (rev != null) score += (1 - rev)
-      }
-    }
-    return { criterion: c, rawScore: score }
-  })
-  const totalRaw = weights.reduce((s, w) => s + Math.max(w.rawScore, 0), 0) || 1
-  const normalizedWeights = weights.map(w => ({ ...w, weight: Math.max(w.rawScore, 0) / totalRaw }))
-
-  // Notify parent of weight changes
-  const weightMap = Object.fromEntries(normalizedWeights.map(w => [w.criterion, w.weight]))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useMemo(() => { onWeightsChanged?.(weightMap) }, [JSON.stringify(weightMap)])
+  // Weights are derived by the parent (pairwise.ts) — an untouched pair counts as equal,
+  // and nothing sets parent state during render (WP0: 0 % weights + React warning).
+  const normalizedWeights = criteria.map(c => ({ criterion: c, weight: weights[c] ?? 0 }))
 
   // Generate pairs
   const pairs: Array<[string, string]> = []

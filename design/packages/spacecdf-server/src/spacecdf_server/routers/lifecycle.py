@@ -92,6 +92,94 @@ async def get_example(mission_id: str) -> dict:
     return mission
 
 
+# Example equipment category → subsystem domain / name (the product tree an example loads).
+_EXAMPLE_CATEGORY_DOMAIN: dict[str, str] = {
+    "cubesat_structures": "structure", "structures": "structure",
+    "eps_boards": "power", "batteries": "power", "solar_panels": "power", "solar_arrays": "power",
+    "transponders": "ttc", "transceivers": "ttc", "antennas": "ttc", "radios": "ttc",
+    "obcs": "obc", "obc": "obc",
+    "reaction_wheels": "aocs", "magnetorquers": "aocs", "star_trackers": "aocs", "sun_sensors": "aocs",
+    "gyros": "aocs", "magnetometers": "aocs", "gnss": "aocs", "adcs_units": "aocs",
+    "thrusters": "propulsion", "propulsion": "propulsion",
+    "heaters": "thermal", "thermal": "thermal",
+    "cameras": "payload", "imagers": "payload", "payloads": "payload",
+}
+_DOMAIN_NAME = {"payload": "Payload", "power": "EPS", "aocs": "AOCS", "ttc": "Communications",
+                "obc": "On-Board Computer", "thermal": "Thermal", "structure": "Structure",
+                "propulsion": "Propulsion"}
+
+
+@router.post("/example-missions/{mission_id}/load")
+async def load_example(mission_id: str) -> dict:
+    """Create a study from an example WITH its element tree (WP0).
+
+    Before, the frontend POSTed only ``requirements`` and ``mission_need``, so the "worked
+    CubeSat mission" opened with no elements. Now: mission root → segments → Spacecraft →
+    subsystems by equipment category → the example's components (KB ids, mass, power,
+    cost, quantity), and the example's design result as the study's last design iteration.
+    """
+    from spacecdf_common.models.study import DesignIteration
+    from .elements import ElementCreate, create_element
+    from .studies import CreateStudyRequest, MissionRequirements, create_study
+
+    mission = get_example_mission(mission_id)
+    if not mission:
+        raise HTTPException(404, f"Example mission '{mission_id}' not found")
+    req = MissionRequirements(**(mission.get("requirements") or {"name": mission.get("name", mission_id)}))
+    created = await create_study(CreateStudyRequest(requirements=req, mission_need=mission.get("mission_need") or {}))
+    sid = created["id"]
+
+    async def add(**kw) -> dict:
+        return await create_element(ElementCreate(**kw), study_id=sid)
+
+    root = await add(name=req.name, element_type="mission", segment="space")
+    space = await add(name="Space Segment", element_type="segment", segment="space", parent_id=root["id"],
+                      diagram_x=80, diagram_y=40)
+    await add(name="Ground Segment", element_type="segment", segment="ground", parent_id=root["id"],
+              diagram_x=280, diagram_y=40)
+    await add(name="Launch Segment", element_type="segment", segment="launch", parent_id=root["id"],
+              diagram_x=480, diagram_y=40)
+    await add(name="Operations", element_type="segment", segment="operations", parent_id=root["id"],
+              diagram_x=680, diagram_y=40)
+    sc = await add(name="Spacecraft", element_type="system", segment="space", parent_id=space["id"],
+                   quantity=max(1, int(req.num_spacecraft or 1)))
+    subs: dict[str, str] = {}
+    n_comp = 0
+    for i, eq in enumerate(mission.get("selected_equipment") or []):
+        domain = _EXAMPLE_CATEGORY_DOMAIN.get(str(eq.get("category") or ""), "payload")
+        if domain not in subs:
+            sub = await add(name=_DOMAIN_NAME.get(domain, domain.title()), element_type="subsystem", segment="space",
+                            parent_id=sc["id"], subsystem_domain=domain,
+                            diagram_x=80 + (len(subs) % 4) * 200, diagram_y=40 + (len(subs) // 4) * 140)
+            subs[domain] = sub["id"]
+        await add(name=eq.get("name") or eq.get("componentId") or f"Unit {i + 1}", element_type="component",
+                  segment="space", parent_id=subs[domain], subsystem_domain=domain,
+                  kb_component_id=eq.get("componentId"), mass_kg=eq.get("mass_kg"),
+                  power_avg_w=eq.get("power_w"), cost_recurring_keur=eq.get("cost_keur"),
+                  quantity=max(1, int(eq.get("quantity") or 1)))
+        n_comp += 1
+    # Payload subsystem from the requirements when the example lists no payload equipment
+    if "payload" not in subs and req.payloads:
+        p0 = req.payloads[0]
+        await add(name=p0.name or "Payload", element_type="subsystem", segment="space", parent_id=sc["id"],
+                  subsystem_domain="payload", mass_kg=p0.mass_kg, power_avg_w=p0.power_w)
+
+    params = {pid: (p.get("value") if isinstance(p, dict) else p)
+              for pid, p in ((mission.get("design_result") or {}).get("parameters") or {}).items()}
+    snapshot = {k: float(v) for k, v in params.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    study = get_study_store().get(sid)
+    if study is not None and snapshot:
+        study.iterations = [DesignIteration(iteration=1, max_parameter_delta=0.0, converged=True,
+                                            parameter_snapshot=snapshot)]
+        try:
+            from ..db.study_repo import db_save_study
+            await db_save_study(study)
+        except Exception:  # noqa: BLE001
+            logger.warning("example %s: study %s not persisted", mission_id, sid, exc_info=True)
+    return {"id": sid, "name": req.name, "elements": 6 + len(subs) + n_comp, "components": n_comp,
+            "subsystems": len(subs), "parameters": len(snapshot)}
+
+
 # --- Harness Design ---
 
 class HarnessRequest(BaseModel):

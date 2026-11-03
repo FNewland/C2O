@@ -24,6 +24,8 @@ from datetime import datetime
 from typing import Any
 
 from docx import Document
+
+from .branding import BRANDING as _BRAND
 from docx.shared import Inches, Pt, Cm, RGBColor, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -70,7 +72,7 @@ def _add_footer(doc: Document, study_name: str, document_code: str = ""):
         running_title=f"SpaceCDF \u2014 {study_name}",
         document_code=document_code,
         footer_left=f"SpaceCDF \u00b7 {study_name}",
-        footer_right="uOttawa SEDTI",
+        footer_right=_BRAND.footer_brand,
     )
 
 
@@ -98,8 +100,7 @@ def _add_cover_page(
         date=date_str,
         classification=status if status != "DRAFT" else "Internal · DRAFT",
         cohort="SpaceCDF",
-        publisher=("Faculty of Engineering · School of Engineering Design "
-                   "and Teaching Innovation (SEDTI)"),
+        publisher=_BRAND.publisher,
     )
 
 
@@ -377,8 +378,7 @@ def generate_did_docx(did_json: dict[str, Any]) -> bytes:
         date=date_str,
         classification=classification,
         cohort="SpaceCDF",
-        publisher=("Faculty of Engineering · School of Engineering Design "
-                   "and Teaching Innovation (SEDTI)"),
+        publisher=_BRAND.publisher,
     )
 
     # Page furniture (header rule + bilingual footer with Page X of / de Y)
@@ -387,7 +387,7 @@ def generate_did_docx(did_json: dict[str, Any]) -> bytes:
         running_title=f"SpaceCDF — {title}",
         document_code=document_code,
         footer_left=f"{document_code} · {study_name}",
-        footer_right="uOttawa SEDTI",
+        footer_right=_BRAND.footer_brand,
     )
 
     # Document information & change record
@@ -1234,8 +1234,9 @@ def generate_semp_docx(study_name: str, data: dict[str, Any]) -> bytes:
 
     _add_section(doc, "5", "Reviews and Decision Gates")
     _add_table(doc, ["Review", "Phase Entry", "Key Deliverables"],
-               [["MCR", "Pre-A \u2192 A", "Mission Need Statement, ConOps outline"],
-                ["SRR", "A \u2192 B", "Requirements baseline, functional architecture"],
+               [["MDR", "0 \u2192 A", "Mission Need Statement, ConOps outline"],
+                ["PRR", "A \u2192 B", "Preliminary requirements, product and function trees, budgets with margins"],
+                ["SRR", "B", "Requirements baseline, functional architecture"],
                 ["PDR", "B \u2192 C", "Preliminary design, budgets with margin"],
                 ["CDR", "C \u2192 D", "Detailed design, manufacturing drawings, test plan"],
                 ["TRR", "D (test)", "Qualified hardware, test procedures"],

@@ -1,8 +1,9 @@
-"""Gate exit-criteria evaluator (author ruling Q23).
+"""Gate exit-criteria evaluator (author ruling Q23; MDR/PRR Nov 2026).
 
-The Gate Review tab picks MCR / SRR / PDR and shows the criteria evaluated
-by the backend from ``configs/gate_exit_criteria.yaml``. Should-pass items
-are advisory: they are reported but never block the gate.
+The canonical gates are MDR / PRR / SRR / PDR (ECSS; "MCR" is the old name of the
+MDR and still resolves to it). The criteria are evaluated by the backend from
+``configs/gate_exit_criteria.yaml``. Should-pass items are advisory: they are
+reported but never block the gate.
 """
 from __future__ import annotations
 
@@ -36,19 +37,40 @@ GOOD_NEED = {
 
 
 @pytest.mark.parametrize("key,phase", [
-    ("MCR", "pre_phase_a"), ("mcr", "pre_phase_a"), ("srr", "phase_a"),
-    ("PDR", "phase_b1"), ("phase_b1", "phase_b1"), ("cdr", None), ("", None),
+    ("MDR", "phase_0"), ("mdr", "phase_0"), ("MCR", "phase_0"), ("mcr", "phase_0"),
+    ("pre_phase_a", "phase_0"), ("prr", "phase_a"), ("srr", "phase_b1"),
+    ("PDR", "phase_b"), ("phase_b1", "phase_b1"), ("cdr", None), ("", None),
 ])
 def test_resolve_phase_accepts_gate_names(key, phase):
+    """MCR (the old name, ruling 3) and pre_phase_a still resolve to the MDR."""
     assert ge.resolve_phase(key) == phase
 
 
-def test_gate_options_list_mcr_srr_pdr():
+def test_gate_options_list_mdr_prr_srr_pdr():
     gates = [g["gate"] for g in ge.list_gate_options()]
-    assert gates[:3] == ["MCR", "SRR", "PDR"]
+    assert gates == ["MDR", "PRR", "SRR", "PDR"]
 
 
-@pytest.mark.parametrize("gate", ["MCR", "SRR", "PDR"])
+def test_legacy_criterion_ids_map_to_mdr():
+    assert ge.canonical_criterion_id("MCR-EC-04") == "MDR-EC-04"
+    assert ge.canonical_criterion_id("SRR-EC-04") == "SRR-EC-04"
+
+
+def test_every_criterion_names_an_owner_seat_and_a_step():
+    from spacecdf_server.logbook.decisions import catalogue
+    from spacecdf_server.services import gate_profiles as gp
+    seats = {s["id"] for s in catalogue().get("seats") or []}
+    steps = set(gp.load()["steps"])
+    panels = {"analyses", "budget", "blocks", "requirements", "functions", "interfaces", "decide", "vv:risks"}
+    data = yaml.safe_load(ge._criteria_file().read_text(encoding="utf-8"))
+    for g in data["phases"].values():
+        for c in g["exit_criteria"]:
+            assert c["owner_seat"] in seats, c["id"]
+            assert c["step"] in steps, c["id"]
+            assert c.get("fix") is None or c["fix"] in panels, c["id"]
+
+
+@pytest.mark.parametrize("gate", ["MDR", "PRR", "SRR", "PDR"])
 def test_every_yaml_criterion_is_returned_in_order(gate):
     res = ge.evaluate_gate(gate.lower())
     assert res["found"] and res["gate"] == gate
@@ -71,33 +93,34 @@ def test_unknown_gate_is_reported_not_raised():
     assert res["found"] is False and res["criteria"] == [] and res["ready"] is False
 
 
-def test_mcr_complete_mission_need_and_design_is_ready():
+def test_mdr_complete_mission_need_and_design_is_ready():
     params = {"systems.mass_margin_percent": 12, "systems.power_margin_percent": {"value": 8},
               "risk.total_risks": 4, "debris.compliance_score": 70, "cost.total_meur": 1.0}
-    res = ge.evaluate_gate("MCR", mission_need=GOOD_NEED, design_params=params)
+    res = ge.evaluate_gate("MDR", mission_need=GOOD_NEED, design_params=params)
     by = {c["id"]: c for c in res["criteria"]}
     assert all(c["status"] == "pass" for c in res["criteria"]), {k: c["evidence_found"] for k, c in by.items()}
     assert res["ready"] and res["ready_pending_manual"]
-    assert by["MCR-EC-04"]["evidence_found"] == "2 alternative(s), including a non-space option"
-    assert by["MCR-EC-07"]["evidence_params"] == {"mass": "12", "power": "8"}
+    assert by["MDR-EC-04"]["evidence_found"] == "2 alternative(s), including a non-space option"
+    assert by["MDR-EC-07"]["evidence_params"] == {"mass": "12", "power": "8"}
+    assert by["MDR-EC-01"]["owner_seat"] == "team_leader" and by["MDR-EC-01"]["step"] == "S1"
 
 
-def test_mcr_accepts_the_pydantic_model():
+def test_mdr_accepts_the_pydantic_model():
     mn = MissionNeed(problem_statement="x", stakeholders=[{"name": "ESA"}])
-    by = {c["id"]: c for c in ge.evaluate_gate("MCR", mission_need=mn)["criteria"]}
-    assert by["MCR-EC-01"]["status"] == "pass"
-    assert by["MCR-EC-02"]["status"] == "pass"
-    assert by["MCR-EC-03"]["status"] == "fail"
+    by = {c["id"]: c for c in ge.evaluate_gate("MCR", mission_need=mn)["criteria"]}   # old name still works
+    assert by["MDR-EC-01"]["status"] == "pass"
+    assert by["MDR-EC-02"]["status"] == "pass"
+    assert by["MDR-EC-03"]["status"] == "fail"
 
 
 def test_empty_study_fails_must_pass_and_skips_missing_parameters():
-    res = ge.evaluate_gate("MCR")
+    res = ge.evaluate_gate("MDR")
     by = {c["id"]: c for c in res["criteria"]}
-    assert by["MCR-EC-01"]["verdict"] == "fail"
+    assert by["MDR-EC-01"]["verdict"] == "fail"
     # No design run: parameters are not invented, the criterion is not evaluated
-    assert by["MCR-EC-07"]["status"] == "not_evaluated"
-    assert by["MCR-EC-07"]["evidence_key"] == ge.MSG_RUN_DESIGN
-    assert "systems.mass_margin_percent" in by["MCR-EC-07"]["evidence_found"]
+    assert by["MDR-EC-07"]["status"] == "not_evaluated"
+    assert by["MDR-EC-07"]["evidence_key"] == ge.MSG_RUN_DESIGN
+    assert "systems.mass_margin_percent" in by["MDR-EC-07"]["evidence_found"]
     assert res["ready"] is False
 
 
@@ -106,11 +129,14 @@ def test_pdr_should_pass_items_are_advisory_and_do_not_block():
     reqs = [{"id": "R1", "code": "SYS-001", "threshold_param_path": "systems.mass_margin_percent",
              "threshold_op": ">=", "threshold_value": "10", "verification_method": "A"}]
     params = {"systems.mass_margin_percent": 15, "systems.power_margin_percent": 20,
-              "reliability.mission_reliability": 0.95}
+              "reliability.mission_reliability": 0.95,
+              # PDR-EC-03 (margin ladder, PDR 20 %): 9 kg × 1.2 = 10.8 kg ≤ 12 kg; 20 W × 1.2 = 24 W ≤ 30 W
+              "mass.dry_mass_kg": 9.0, "power.total_sunlight_w": 20.0, "power.sa_power_eol_w": 30.0}
     # PDR-EC-04 (should_pass): a subsystem with no component → not met
     elements = [{"id": "sc", "element_type": "system"},
                 {"id": "eps", "element_type": "subsystem", "parent_id": "sc"}]
-    res = ge.evaluate_gate("PDR", design_params=params, requirements=reqs, elements=elements)
+    res = ge.evaluate_gate("PDR", design_params=params, requirements=reqs, elements=elements,
+                           target_mass_kg=12.0)
     by = {c["id"]: c for c in res["criteria"]}
 
     assert by["PDR-EC-04"]["priority"] == "should_pass"
@@ -134,10 +160,14 @@ def test_pdr_should_pass_items_are_advisory_and_do_not_block():
 def test_pdr_margin_and_requirement_failures_block():
     reqs = [{"id": "R1", "code": "SYS-PWR-003", "threshold_param_path": "eps.power_w",
              "threshold_op": "<=", "threshold_value": 10}]
-    params = {"systems.mass_margin_percent": 5, "systems.power_margin_percent": 20, "eps.power_w": 12}
-    by = {c["id"]: c for c in ge.evaluate_gate("PDR", design_params=params, requirements=reqs)["criteria"]}
+    # 10.5 kg × 1.2 (PDR ladder step) = 12.6 kg > 12 kg
+    params = {"mass.dry_mass_kg": 10.5, "power.total_sunlight_w": 10.0, "power.sa_power_eol_w": 30.0,
+              "eps.power_w": 12}
+    by = {c["id"]: c for c in ge.evaluate_gate("PDR", design_params=params, requirements=reqs,
+                                               target_mass_kg=12.0)["criteria"]}
     assert by["PDR-EC-03"]["verdict"] == "fail"
-    assert by["PDR-EC-03"]["evidence_params"]["min"] == 10
+    assert by["PDR-EC-03"]["evidence_params"]["margin"] == "20"
+    assert by["PDR-EC-03"]["evidence_params"]["total"] == "12.60"
     assert by["PDR-EC-01"]["verdict"] == "fail"
     assert "SYS-PWR-003" in by["PDR-EC-01"]["evidence_found"]
 

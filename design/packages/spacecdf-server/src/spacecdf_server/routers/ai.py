@@ -194,7 +194,7 @@ async def critique_need(
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     language: Literal["en", "fr"] | None = Query(default=None, description="UI language; 'fr' → French answer"),
 ) -> dict:
-    """Critique the mission need statement (prose). The MCR gate checks are the deterministic part."""
+    """Critique the mission need statement (prose). The MDR gate checks are the deterministic part."""
     cap = _gate("critique_need")
     return await _run(cap, context, "", request=request, api_key=x_api_key, session_id="default",
                       max_tokens=1500, language=language)

@@ -150,7 +150,7 @@ export function BudgetPanel() {
                 ...(activeBudget === 'data' && budget?.total_data_volume_gb_per_day != null ? [{ label: t('Volume per day'), value: budget.total_data_volume_gb_per_day, unit: 'GB' }] : []),
               ],
               margin_impact: marginPct != null
-                ? t('{{kind}} margin to allocation: {{pct}} % (C2O system margin policy: 25 % at MDR, 20 % at PRR and SRR, 10 % at PDR)', { kind: kindLabel, pct: marginPct })
+                ? t('{{kind}} margin to allocation: {{pct}} % (C2O default system margin: 25 % at MDR, 20 % at PRR, SRR and PDR, 10 % at CDR, added to the nominal value)', { kind: kindLabel, pct: marginPct })
                 : t('{{kind}}: no allocation set, so no margin to allocation yet', { kind: kindLabel }),
             }
           }} />

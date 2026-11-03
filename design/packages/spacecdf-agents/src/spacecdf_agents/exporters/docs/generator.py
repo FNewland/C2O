@@ -274,7 +274,7 @@ def build_context(
         "document_code": document_code or f"SCDF-{review_type.upper()}-001",
         "issue": issue,
         "classification": classification,
-        "publisher": "Faculty of Engineering · School of Engineering Design and Teaching Innovation (SEDTI)",
+        "publisher": "C2O — from Concept to Orbit · du Concept à l’Orbite",
         # ---- Mission descriptor ----
         "mission_type": _stringify_enum(requirements.mission_type).replace("_", " ").title(),
         "spacecraft_class": sc_class,

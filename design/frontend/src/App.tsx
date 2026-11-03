@@ -124,14 +124,16 @@ function StatusBar() {
     if (!studyId || analysisRunning) return
     setAnalysisRunning(true)
     try {
-      // First fetch current elements to build a requirements context
-      const elements = await fetch(`${API}/studies/${studyId}/elements`).then(r => r.json())
-
-      const res = await fetch(`${API}/design/quick-design`, {
+      // Run the design loop on THIS study (its requirements, ConOps and element tree;
+      // the run is recorded and the gates read it). Before Nov 2026 this posted
+      // {requirements: {}, mission_need: {}} to quick-design and sized a generic mission (WP0).
+      const res = await fetch(`${API}/design/${encodeURIComponent(studyId)}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requirements: {}, mission_need: {} }),
+        body: JSON.stringify({}),
       })
+      // The run writes agent values back to the model: read the elements afterwards.
+      const elements = await fetch(`${API}/studies/${studyId}/elements`).then(r => r.json())
       if (res.ok) {
         const result = await res.json()
         const params = result.parameters || {}
@@ -204,18 +206,28 @@ function StatusBar() {
           return true
         })
 
-        // Apply all patches
+        // Apply the patches: ONE request per element (two requests carrying the same
+        // version for one element made the second fail with 409)
+        const byElement = new Map<string, { version: number; fields: Record<string, number> }>()
         for (const p of uniquePatches) {
-          await fetch(`${API}/elements/${p.id}`, {
+          const e = byElement.get(p.id) ?? { version: p.version, fields: {} }
+          e.fields[p.field] = p.value
+          byElement.set(p.id, e)
+        }
+        for (const [id, e] of byElement) {
+          await fetch(`${API}/elements/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ [p.field]: p.value, version: p.version }),
+            body: JSON.stringify({ ...e.fields, version: e.version }),
           }).catch(() => {})
         }
 
         qc.invalidateQueries({ queryKey: ['elements'] })
         qc.invalidateQueries({ queryKey: ['budget'] })
         qc.invalidateQueries({ queryKey: ['escalation'] })
+        qc.invalidateQueries({ queryKey: ['gates'] })
+        qc.invalidateQueries({ queryKey: ['gate-review'] })
+        qc.invalidateQueries({ queryKey: ['analyses'] })
       }
     } finally {
       setAnalysisRunning(false)
@@ -277,9 +289,9 @@ function StatusBar() {
             ])
             const { breadcrumb, currentLevel, focusElementId } = useUIStore.getState()
             const uiState = { breadcrumb, currentLevel, focusElementId }
-            // Also save localStorage items (risk register, pugh matrix)
-            const riskRegister = JSON.parse(localStorage.getItem(`spacecdf-risks-${studyId}`) || '[]')
-            const pughMatrix = JSON.parse(localStorage.getItem('spacecdf-pugh') || '{}')
+            // Team records are on the server per study (WP0); the file carries them.
+            const riskRegister = study?.risk_register ?? []
+            const pughMatrix = study?.trade_records?.pugh?.state ?? {}
             const blob = new Blob([JSON.stringify({
               studyId, elements, interfaces, requirements, allocations,
               studyMetadata: study, uiState, riskRegister, pughMatrix,
@@ -519,6 +531,16 @@ function NamePrompt() {
 function AppShell() {
   const studyId = useUIStore(s => s.studyId)
   const userName = useUIStore(s => s.userName)
+
+  // The study id survives a reload (stores/studySession.ts); forget it if the study is gone.
+  useEffect(() => {
+    if (!studyId) return
+    let cancelled = false
+    fetch(`${API}/studies/${encodeURIComponent(studyId)}`).then(r => {
+      if (!cancelled && r.status === 404) useUIStore.getState().setStudyId(null)
+    }).catch(() => { /* offline: keep it */ })
+    return () => { cancelled = true }
+  }, [studyId])
 
   if (!userName) return <><NamePrompt /><DialogHost /></>
 
