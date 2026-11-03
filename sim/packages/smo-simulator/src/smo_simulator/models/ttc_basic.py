@@ -525,6 +525,67 @@ class TTCBasicModel(SubsystemModel):
             "margin_db": eb_n0 - required,
         }
 
+    def station_measurements(self) -> dict[str, Any]:
+        """What the ground station's receiver measures on the downlink NOW.
+
+        Walkthrough finding M1 (2026-11-02): RSSI 0x0502, margin 0x0503, BER
+        0x050C, Eb/N0 0x0519 and AGC 0x051A are ``ground_derived`` — the
+        station measures them, the spacecraft never downlinks them — and
+        nothing carried them to the MCS, so 25 GO/NO-GO checks on 13 cards
+        could not be judged. A real station delivers its receiver's monitoring
+        data to the control centre alongside the telemetry; this is that
+        monitoring data, computed from the same link budget that drives the
+        model (there is no separate radio unless the RF bridge runs, and the
+        MCS prefers the bridge's own figures when it does).
+
+        Only what a station can measure, and only while it has a signal:
+
+        * S-band downlink radiating to a station in view and locked
+          (``tx_active`` and frame sync) -> the S-band budget's figures;
+        * otherwise the UHF beacon, if it is radiating to a station
+          (bootloader / S-band dark) -> the beacon budget's figures;
+        * otherwise ``signal: False`` with a reason and NO numbers. A station
+          with nothing to receive has no RSSI to report — publishing the
+          model's -120 dBm floor would be inventing a measurement.
+
+        No channel-model truth is included: no injected impairment, no GS
+        penalty, no Eb/N0 setpoint — only the five receiver readings.
+        """
+        s = self._state
+        out: dict[str, Any] = {"source": "link_model", "signal": False,
+                               "band": None, "reason": None,
+                               "rssi_dbm": None, "link_margin_db": None,
+                               "ber_log10": None, "eb_n0_db": None,
+                               "agc_db": None}
+        if s.tx_active and s.frame_sync:
+            out.update(signal=True, band="S",
+                       rssi_dbm=round(s.rssi_dbm, 1),
+                       link_margin_db=round(s.link_margin_db, 1),
+                       ber_log10=round(s.ber, 2),
+                       eb_n0_db=round(s.eb_n0, 1),
+                       agc_db=round(s.agc_level_db, 1))
+            return out
+        if s.beacon_active and s.range_km > 0:
+            b = self.beacon_link_budget(s.range_km, s.elevation_deg)
+            rssi = (b["eirp_dbw"] + float(self._beacon_cfg["sc_gain_dbi"])
+                    - b["fspl_db"] + 30.0)
+            eb_n0_lin = 10.0 ** (b["eb_n0_db"] / 10.0)
+            ber = self._ber_for_modulation(0, eb_n0_lin)
+            out.update(signal=True, band="UHF",
+                       rssi_dbm=round(rssi, 1),
+                       link_margin_db=round(b["margin_db"], 1),
+                       ber_log10=round(max(-12.0, math.log10(max(ber, 1e-12))), 2),
+                       eb_n0_db=round(b["eb_n0_db"], 1),
+                       agc_db=round(rssi + 60.0, 1))
+            return out
+        if not s.link_active:
+            out["reason"] = "no signal: no station in view or no transponder"
+        elif not s.tx_active:
+            out["reason"] = "no signal: spacecraft S-band transmitter not radiating"
+        else:
+            out["reason"] = "no signal: station receiver acquiring"
+        return out
+
     def link_margin_for(self, tier_index: int, range_km: float,
                         elevation_deg: float,
                         gs_gt_db: float | None = None) -> dict[str, float]:

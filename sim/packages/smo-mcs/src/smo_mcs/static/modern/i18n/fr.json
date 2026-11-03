@@ -944,5 +944,11 @@
   "Microphone permission denied": "Accès au micro refusé",
   "No microphone available": "Aucun micro disponible",
   "Could not join: {{why}}": "Connexion impossible : {{why}}",
-  "The voice client library did not load": "La bibliothèque cliente vocale ne s’est pas chargée"
+  "The voice client library did not load": "La bibliothèque cliente vocale ne s’est pas chargée",
+  "Station-measured ({{ids}}): no station monitoring data": "Mesuré par la station ({{ids}}) : aucune donnée de surveillance de la station",
+  "station receiver (RF bridge)": "récepteur de la station (passerelle RF)",
+  "station receiver (simulated from the link budget; no RF bridge)": "récepteur de la station (simulé à partir du bilan de liaison; pas de passerelle RF)",
+  "Station-measured ({{ids}}) from {{src}}: no signal": "Mesuré par la station ({{ids}}), source : {{src}} : aucun signal",
+  "UHF beacon": "balise UHF",
+  "Station-measured ({{ids}}) from {{src}}, not spacecraft TM": "Mesuré par la station ({{ids}}), source : {{src}}; ce n’est pas de la TM du satellite"
 }

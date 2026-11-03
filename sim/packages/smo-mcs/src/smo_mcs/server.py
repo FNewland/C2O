@@ -249,6 +249,16 @@ class MCSServer:
         # Ladder state absorbed from the simulator's /api/state `ttc` block:
         # active tier, commanded tier, coding, symbol rate, DOWNLINK mode.
         self._link_tier_state: dict = {}
+        # Ground-station monitoring data (walkthrough finding M1): RSSI,
+        # margin, BER, Eb/N0 and AGC as the STATION measures them. Kept apart
+        # from the TM parameter cache on purpose — see smo_mcs.station_link.
+        # The RF bridge's receiver status is the preferred source when
+        # SMO_RADIO_STATUS_URL names one; otherwise the simulator's
+        # `ttc.station` block (link-budget figures) from the state feed.
+        from smo_mcs.station_link import StationLink
+        self._station_link = StationLink()
+        self._radio_status_url = (_os.environ.get("SMO_RADIO_STATUS_URL")
+                                  or "").strip() or None
 
         # Parameter cache: populated ONLY from TM TCP socket HK packets via
         # the TMProcessor decoder (which inverts the engine's HK packing using
@@ -1245,7 +1255,14 @@ class MCSServer:
         if pid is None:
             return None
         entry = self._param_cache.get(pid)
-        return None if entry is None else float(entry["value"])
+        if entry is None:
+            # Station-measured link figures (M1) are not TM, but procedure
+            # GO/NO-GO checks name them by their catalogue names.
+            from smo_mcs.station_link import STATION_PARAMS
+            if pid in STATION_PARAMS:
+                return self._station_link.value(pid)
+            return None
+        return float(entry["value"])
 
     def obc_cuc_now(self) -> Optional[float]:
         """The spacecraft's own clock, in full-precision CUC seconds.
@@ -1630,6 +1647,8 @@ class MCSServer:
         ]
         if self._time_source == "sim":
             loops.append(self._sim_state_poll_loop())
+        if self._radio_status_url:
+            loops.append(self._radio_status_poll_loop())
         try:
             await asyncio.gather(*loops)
         finally:
@@ -2143,11 +2162,33 @@ class MCSServer:
                 self._ingest_reported_hk_enabled(payload.get("hk_enabled"))
                 self._ingest_hk_enable_reset(payload.get("hk_enable_reset"))
                 self._ingest_sim_health(payload)
+                self._station_link.ingest_sim_state(payload)
                 self._ingest_orbit_elset(payload)
                 self._ingest_sim_illumination(payload)
             except Exception as e:
                 logger.debug("sim-state poll failed (keeping last anchor): %s", e)
             await asyncio.sleep(1.5)
+
+    async def _radio_status_poll_loop(self):
+        """Station receiver monitoring feed from the RF bridge (M1).
+
+        Polls the radio's ``/api/status`` (the same snapshot its operator page
+        draws) every second and keeps only the five receiver readings, and
+        only while the receiver is locked. Runs in SIM and REAL mode alike: a
+        station's monitoring data is a ground-segment feed, not a simulator
+        back-channel. An unreachable bridge simply leaves the simulator's
+        link-model figures in charge.
+        """
+        while self._running:
+            try:
+                timeout = aiohttp.ClientTimeout(total=2.0)
+                async with aiohttp.ClientSession(timeout=timeout) as sess:
+                    async with sess.get(self._radio_status_url) as resp:
+                        status = await resp.json(content_type=None)
+                self._station_link.ingest_radio_status(status)
+            except Exception as e:  # noqa: BLE001
+                logger.debug("radio status poll failed: %s", e)
+            await asyncio.sleep(1.0)
 
     def _ingest_sim_illumination(self, payload: dict) -> None:
         """Cache the simulator's PRESENT-TIME eclipse state (the authority).
@@ -2624,6 +2665,17 @@ class MCSServer:
                     str(pid): round(max(0.0, now - entry.get("last_update_ts", 0)), 1)
                     for pid, entry in cache.items()
                 }
+                # Station monitoring data (M1). Merged into the flat params so
+                # the TT&C key parameters, the parameter tables and GO/NO-GO
+                # checks can read 0x0502/0x0503/0x050C/0x0519/0x051A; the
+                # `station_link` block says where they came from (and why
+                # there are none), and the console labels them
+                # station-measured. Never written to the TM cache or archive.
+                st_view = self._station_link.view()
+                data["station_link"] = st_view
+                for hx, v in st_view["values"].items():
+                    params_flat[hx] = v
+                    data["params_age"][str(int(hx, 16))] = st_view["age_s"] or 0.0
                 # Ground limit state per parameter (WP-3). The displays colour
                 # from this; `param_limit_bands` gives them the numbers for the
                 # tooltip so the band does not have to be duplicated in JS.
@@ -3407,11 +3459,31 @@ class MCSServer:
                 # (`instructor`) is refused outright, and quantities the GROUND
                 # measures about the downlink (`ground_derived`) are refused
                 # too -- real, but not the spacecraft's to report.
-                if str(p.get("visibility", "real")) != "real":
-                    continue
+                vis = str(p.get("visibility", "real"))
                 try:
                     pid = int(p["id"]) if isinstance(p["id"], int) else int(str(p["id"]), 0)
                 except Exception:
+                    continue
+                # ...EXCEPT the station receiver's own readings (M1), which a
+                # real control centre does receive — from the station, not the
+                # spacecraft. They are listed with `origin: "station"` so no
+                # console offers a TC(20,3) fetch or HK cadence for them.
+                from smo_mcs.station_link import STATION_PARAMS
+                if vis == "ground_derived" and pid in STATION_PARAMS:
+                    out.append({
+                        "id": pid, "hex": f"0x{pid:04X}",
+                        "name": p.get("name", ""),
+                        "subsystem": p.get("subsystem", ""),
+                        "units": p.get("units", ""),
+                        "description": ("Station-measured (ground receiver "
+                                        "monitoring data, not spacecraft TM). "
+                                        + str(p.get("description", ""))).strip(),
+                        "in_hk": False, "on_demand": False, "stub": False,
+                        "origin": "station",
+                        "hk_sids": [], "hk_interval_s": None, "states": None,
+                    })
+                    continue
+                if vis != "real":
                     continue
                 cad = self._param_cadence.get(pid)
                 out.append({
