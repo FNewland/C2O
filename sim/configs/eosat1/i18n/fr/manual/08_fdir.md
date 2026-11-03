@@ -68,7 +68,7 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 | EPS-02  | bus_voltage < 26.5 V           | 0x0105 < 26.5  | Passage en mode survie      |
 | EPS-03  | bat_temp > 45 C                | 0x0102 > 45    | Inhiber la charge de la batterie |
 | EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Thermostat du réchauffeur de batterie (voir TCS-01) |
-| EPS-05  | Rendement de chaîne < 70 % en éclairement, 30 s | 0x014C / 0x014D (valide tant que le bit de 0x014E est positionné) | Ligne charge utile hors tension (S19 ea 1004 / 1005) |
+| EPS-05  | Rendement de chaîne < 70 % en éclairement, 30 s | 0x014C / 0x014D (valide tant que le bit de 0x014E est positionné) | Signalement seulement : TM(12,9) + événement S5 0x914C / 0x914D. Le sol décide (CTG-009) |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Dériver l'excédent de puissance (shunt) |
 
 **EPS-05 n'est évaluée qu'en éclairement.** Jusqu'en novembre 2026, les règles
@@ -86,10 +86,23 @@ fournirait au moins 0.2 A. En éclipse, en pénombre profonde ou lorsque la
 chaîne est dos au Soleil, la surveillance est *non contrôlée*, et non en
 violation. Un nombre de répétitions de 30 (30 s à 1 Hz) absorbe les
 manœuvres d'attitude et la frontière d'ombre. Une perte réelle en éclairement (chaîne défaillante ou panneau
-endommagé) déclenche toujours la règle en 30 s environ et met la ligne de
-la charge utile hors tension. Tant que la panne persiste, la surveillance la
-signale de nouveau après chaque sortie d'éclipse ; répéter l'action est sans
-conséquence. Diagnostic : CTG-009.
+endommagé) est signalée en 30 s environ ; tant que la panne persiste, la
+surveillance la signale de nouveau après chaque sortie d'éclipse.
+
+**EPS-05 n'entraîne aucune action à bord.** La gravité d'une chaîne dégradée
+dépend de la puissance perdue et de ce que fait le satellite : une chaîne à
+60 % avec la charge utile en STANDBY boucle encore le bilan de puissance, la
+même chaîne avec la charge utile en prise de vue peut ne plus le boucler.
+C'est une décision de l'équipe : les règles S19 qui mettaient la ligne de la
+charge utile hors tension (ea 1004 / 1005) ont été supprimées en novembre
+2026 ; une définition PUS S19 nomme toujours une action, elles ont donc été
+retirées plutôt que laissées sans action. L'équipe évalue le rendement et le
+bilan de puissance avec CTG-009 et, soit déleste la charge utile, soit
+poursuit avec une surveillance. Si la puissance vient réellement à manquer,
+la charge utile est toujours délestée automatiquement : le délestage EPS sur
+tension bus (bus sous 25.0 V, charge utile d'abord, puis refroidisseur FPA,
+émetteur, roues, propulsion ; voir CTG-001) ne dépend pas des
+règles du générateur solaire.
 
 ### 4.2 Règles AOCS {#42-aocs-rules}
 

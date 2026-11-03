@@ -12,6 +12,13 @@ ailes solaires déployables (+/-Y) qui fournissent ensemble environ 64 W sous u
 des générateurs impose une investigation et, le cas échéant, des ajustements opérationnels pour maintenir un
 bilan de puissance positif sur chaque orbite.
 
+Le satellite détecte une chaîne dégradée (surveillance S12 du rendement, TM(12,9) et événement S5
+0x914C / 0x914D) mais n'agit pas : mettre ou non la charge utile hors tension est une décision de
+l'équipe, prise à l'étape 4 selon la gravité de la perte (rendement des chaînes et bilan de
+puissance). Si la puissance vient réellement à manquer avant, le délestage bord sur tension bus
+(sous 25.0 V, charge utile d'abord) met la charge utile hors tension tout seul ; c'est le filet de
+sécurité, pas le plan.
+
 ## Prérequis
 - [ ] La télémesure EPS (SID 1) est reçue à >= 0.5 Hz
 - [ ] Les données d'éclairement de l'orbite courante sont disponibles — angle bêta, fraction éclairée, angles d'incidence
@@ -29,7 +36,7 @@ bilan de puissance positif sur chaque orbite.
 **TC:** `GET_PARAM(param_id=0x014C)` (Service 20, Subtype 3) — `eps.sa_a_yield_pct`
 **TC:** `GET_PARAM(param_id=0x014D)` (Service 20, Subtype 3) — `eps.sa_b_yield_pct`
 **TC:** `GET_PARAM(param_id=0x014E)` (Service 20, Subtype 3) — `eps.sa_string_lit`
-**Verify:** `eps.sa_a_yield_pct` (0x014C) et `eps.sa_b_yield_pct` (0x014D) — rendement bord de chaque chaîne par rapport à une chaîne saine dans la même géométrie solaire (valide seulement tant que le bit de la chaîne est positionné dans `eps.sa_string_lit` (0x014E)). Sous 70 % pendant 30 s en éclairement, S19 ea 1004 (A) / 1005 (B) a déjà mis la ligne de la charge utile hors tension — consulter le journal d'événements avant de la rétablir
+**Verify:** `eps.sa_a_yield_pct` (0x014C) et `eps.sa_b_yield_pct` (0x014D) — rendement bord de chaque chaîne par rapport à une chaîne saine dans la même géométrie solaire (valide seulement tant que le bit de la chaîne est positionné dans `eps.sa_string_lit` (0x014E)). Sous 70 % pendant 30 s en éclairement, le satellite le signale (TM(12,9) et événement S5 0x914C pour A, 0x914D pour B) et ne fait rien d'autre : la charge utile est toujours dans l'état où vous l'avez laissée. Vérifier `eps.pl_payload` (0x0113) : si elle est déjà hors tension, c'est le délestage sur tension bus qui l'a coupée (événement 0x0106) et la situation de puissance est déjà grave
 **Action:** Calculer le déficit en pourcentage : (prévu - réel) / prévu x 100 pour chaque générateur
 **GO/NO-GO:** Si le déficit dépasse 20 % sur l'un des générateurs pendant une phase éclairée confirmée, continuer. S'il est < 20 %, consigner pour le seul suivi de tendance. -> GO `STEP-2` | NO-GO `STEP-END`
 
@@ -48,14 +55,16 @@ bilan de puissance positif sur chaque orbite.
 **Action:** Si l'erreur d'attitude dépasse 5°, exécuter d'abord CTG-002, puis réévaluer les performances du générateur
 **GO/NO-GO:** Attitude confirmée nominale — la dégradation est intrinsèque au matériel du générateur ou à l'environnement
 
-### Étape 4 — Recalculer le bilan de puissance
+### Étape 4 — Décider : délester la charge utile ou poursuivre
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.power_gen` (0x0107) — production réelle
 **Verify:** `eps.power_cons` (0x0106) — consommation courante
 **Action:** Calculer la marge de puissance = production - consommation (doit être > 0 W en moyenne sur l'orbite)
 **Action:** Calculer le déficit énergétique d'éclipse dans le cas le plus défavorable avec les valeurs de production dégradées
 **Verify:** `eps.bat_soc` (0x0101) — extrapoler le SoC minimal en fin de prochaine éclipse
-**GO/NO-GO:** Si le SoC minimal extrapolé est > 25 %, poursuivre les opérations nominales sous surveillance. S'il est < 25 %, l'étape 5 s'applique. -> GO `STEP-7` | NO-GO `STEP-5`
+**Action:** Juger la gravité d'après le rendement (étape 1) et ce bilan de puissance. Une chaîne sous 70 % avec une marge positive en moyenne sur l'orbite est une tendance à suivre ; une chaîne proche de 0 %, deux chaînes basses, ou une marge négative avec la charge utile allumée, c'est grave. La charge utile est la charge qui tranche : poursuivre seulement si le bilan boucle avec la charge utile dans son mode prévu
+**Action:** Le directeur de vol annonce la décision sur la boucle (« PAYLOAD SHED » ou « CONTINUE, MONITORING ») et elle est consignée avec le rendement et le SoC extrapolé
+**GO/NO-GO:** Si le SoC minimal extrapolé est > 25 % et que la marge moyenne sur l'orbite est positive, poursuivre les opérations nominales sous surveillance. S'il est < 25 % ou si la marge est négative, délester la charge utile à l'étape 5. -> GO `STEP-7` | NO-GO `STEP-5`
 
 ### Étape 5 — Réduire les charges pour les adapter au bilan de puissance dégradé
 **LABEL:** `STEP-5`

@@ -68,7 +68,7 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 | EPS-02  | bus_voltage < 26.5 V           | 0x0105 < 26.5  | Safe mode entry             |
 | EPS-03  | bat_temp > 45 C                | 0x0102 > 45    | Inhibit battery charge      |
 | EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Battery heater thermostat (see TCS-01) |
-| EPS-05  | String yield < 70 % while lit, 30 s | 0x014C / 0x014D (valid while 0x014E bit set) | Payload line OFF (S19 ea 1004 / 1005) |
+| EPS-05  | String yield < 70 % while lit, 30 s | 0x014C / 0x014D (valid while 0x014E bit set) | Report only: TM(12,9) + S5 event 0x914C / 0x914D. The ground decides (CTG-009) |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Shunt excess power          |
 
 **EPS-05 is judged only in sunlight.** Until November 2026 the solar-array
@@ -83,9 +83,22 @@ bit is set when the spacecraft is sunlit, the string is enabled, and a healthy
 string would give at least 0.2 A. In eclipse, in deep penumbra, or with the
 string facing away from the sun, the monitor is *unchecked*, not violated. A
 repetition count of 30 (30 s at 1 Hz) rides through slews and the shadow
-boundary. A real loss in sunlight (a failed string or a damaged panel) still
-trips the rule within about 30 s and switches the payload line OFF. While the fault persists, the monitor reports again after
-each eclipse exit; repeating the action does no harm. Diagnosis: CTG-009.
+boundary. A real loss in sunlight (a failed string or a damaged panel) is
+reported within about 30 s; while the fault persists, the monitor reports
+again after each eclipse exit.
+
+**EPS-05 takes no action on board.** How serious a degraded string is depends
+on how much power is lost and on what the spacecraft is doing: a string at
+60 % with the payload in STANDBY still closes the power budget, the same
+string with the payload imaging may not. That is a decision for the team, so
+the S19 rules that used to switch the payload line OFF (ea 1004 / 1005) were
+deleted in November 2026; a PUS S19 definition always names an action, so
+they were removed rather than left without one. The team assesses the yield
+and the power balance with CTG-009 and either sheds the payload or continues
+with monitoring. If the power really runs out, the payload is still shed
+automatically: the EPS bus-voltage load shed (bus below 25.0 V, payload first,
+then FPA cooler, transmitter, wheels, propulsion; see CTG-001)
+does not depend on the array rules.
 
 ### 4.2 AOCS Rules {#42-aocs-rules}
 

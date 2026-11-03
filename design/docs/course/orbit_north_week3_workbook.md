@@ -1563,6 +1563,25 @@ command is `AOCS_EST_RESET` (S8.1 func **91**, `mode` 0 = cold,
 `ST_SELECT(unit=1)` would silently re-select the failed ST1: 0 is refused,
 1 is ST1, 2 is ST2.
 
+## CTG-009 Solar Array Degradation
+
+The spacecraft **reports** a degraded string (S12 yield monitor below 70 %
+in sunlight: TM(12,9) and S5 event 0x914C for A, 0x914D for B) but does
+not act on it. Whether the payload goes off is the team's decision, taken
+at step 4 from how serious the loss is. If nobody decides and the battery
+runs down, the bus-voltage load shed takes the payload off at 25.0 V: that
+is the safety net, not the plan.
+
+| # | Action | Verification | ☐ | Note |
+|---|--------|--------------|:-:|------|
+| 1 | Quantify the loss: `HK_REQUEST(sid=1)` (S3.27), `GET_PARAM(param_id=0x014C)`, `GET_PARAM(param_id=0x014D)`, `GET_PARAM(param_id=0x014E)` (S20.3) | record `eps.sa_a_current` (0x0103), `eps.sa_b_current` (0x0104), `eps.power_gen` (0x0107); `eps.sa_a_yield_pct` (0x014C) and `eps.sa_b_yield_pct` (0x014D) are valid while the string's bit is set in `eps.sa_string_lit` (0x014E); `eps.pl_payload` (0x0113) still as you left it (already 0 = the load shed took it) | ☐ | yield A __ % B __ % |
+| 2 | Compare the strings: `HK_REQUEST(sid=1)` three times, 30 s apart | `eps.sa_a_current` / `eps.sa_b_current` ratio (nominal 0.9–1.1): one string degraded or both | ☐ | ratio: ____ |
+| 3 | Rule out attitude: `HK_REQUEST(sid=2)` | `aocs.mode` (0x020F) = 4 or 3; `aocs.att_error` (0x0217) < 2.0°; above 5° → CTG-002 first | ☐ | |
+| 4 | **Decide: shed the payload or continue.** `HK_REQUEST(sid=1)`; judge the severity from the yield (row 1) and the power balance; FD announces "PAYLOAD SHED" or "CONTINUE, MONITORING" | `eps.power_gen` − `eps.power_cons` (0x0106) positive over the orbit **and** `eps.bat_soc` (0x0101) projected above 25 % at the end of the next eclipse → continue (row 7); otherwise shed (row 5) | ☐ | SHED ☐ CONTINUE ☐ SoC min __ % |
+| 5 | Shed: `PAYLOAD_SET_MODE(mode=1)` (S8.1 func **26**, STANDBY); still short: `PAYLOAD_SET_MODE(mode=0)` and, if no manoeuvre is planned, `HEATER_THRUSTER(on=0)` (func **42**) | `payload.mode` (0x0600) = 1 (or 0) within 10 s; `eps.power_cons` down by ≥ 12 W; margin ≥ 3 W | ☐ | |
+| 6 | Sun-optimal attitude: `AOCS_SET_MODE(mode=3)` (S8.1 func **0**, COARSE_SUN) | `aocs.mode` = 3 within 15 s; `eps.sa_a_current`, `eps.sa_b_current` and `eps.power_gen` higher than in NOMINAL | ☐ | |
+| 7 | Monitoring plan: `HK_REQUEST(sid=1)` as the new baseline; one wing lost: `GET_PARAM(param_id=0x0144)` | baseline of `eps.sa_a_current`, `eps.sa_b_current`, `eps.power_gen`, `eps.bat_soc` recorded; `eps.wing_status` (0x0144) read; daily trend for 7 days | ☐ | |
+
 ## CTG-010 OBDH Watchdog Recovery
 
 | # | Action | Verification | ☐ | Note |

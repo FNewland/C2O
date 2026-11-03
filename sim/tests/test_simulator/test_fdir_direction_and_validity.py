@@ -8,10 +8,12 @@
    thermostat for good. It now returns the heater to thermostat control, and
    the battery-overtemp response hands the heater back to the thermostat when
    it releases (`on_clear`).
-3. S19 ea 1004/1005 "solar array degraded" fired at every eclipse entry. They
-   now watch string-yield monitors that are only checked while the string is
-   lit (PUS-C validity) with a 30-check repetition; a genuine array failure in
-   sunlight still fires them.
+3. S19 ea 1004/1005 "solar array degraded" fired at every eclipse entry. The
+   detection now watches string-yield monitors that are only checked while the
+   string is lit (PUS-C validity) with a 30-check repetition. Later the same
+   day the rules themselves were deleted (Franz's ruling): a degraded array is
+   reported and the ground decides; the bus-voltage load shed still sheds the
+   payload if the power really runs out.
 """
 import os
 from pathlib import Path
@@ -166,16 +168,22 @@ def test_battery_overtemp_response_releases_to_thermostat(engine):
         "on_clear must return the heater to thermostat control"
 
 
-# ── 3. Solar-array-degraded rules: sunlit only ─────────────────────────
+# ── 3. Solar-array degradation: detected on board, decided on the ground ──
+#
+# Franz, 2026-11-03: "the team needs to decide if the payload goes off based
+# on the seriousness of the fault, and/or the load-shed will send it off
+# automatically." The yield monitors stay (lit-only validity, repetition 30)
+# and report TM(12,9) + S5 0x914C/0x914D; S19 ea 1004/1005 are deleted, so no
+# autonomous payload action; the EPS bus-voltage load shed still sheds the
+# payload when the power really runs out.
 
-def test_sa_rules_watch_lit_only_yield_monitors():
+def test_sa_yield_monitors_report_and_no_rule_acts_on_them():
     rules = load_s19_rules(CONFIG_DIR)
     defs = load_s12_definitions(CONFIG_DIR)
-    for ea_id, pid, bit in ((1004, 0x014C, 0x1), (1005, 0x014D, 0x2)):
-        r = rules[ea_id]
-        assert (r["trigger_kind"], r["event_type"], r["trigger_limit"]) == \
-            (TRIGGER_KIND_PARAM, pid, "low")
-        assert r["action_func_id"] == 20 and r["action_data"] == [3]
+    assert 1004 not in rules and 1005 not in rules
+    for pid, bit in ((0x014C, 0x1), (0x014D, 0x2)):
+        assert not [r for r in rules.values() if r["trigger_kind"] == TRIGGER_KIND_PARAM
+                    and r["event_type"] == pid], f"an S19 rule acts on {pid:#06x}"
         mons = [d for d in defs.values() if d["param_id"] == pid]
         assert len(mons) == 1
         m = mons[0]
@@ -186,38 +194,77 @@ def test_sa_rules_watch_lit_only_yield_monitors():
     assert not [d for d in defs.values() if d["param_id"] in (0x0103, 0x0104)]
 
 
-def _run_until(engine, pred, limit_s):
-    for _ in range(int(limit_s)):
-        engine._tick_once(1.0)
+def _run_until(engine, pred, limit_s, dt=1.0):
+    for _ in range(int(limit_s / dt)):
+        engine._tick_once(dt)
         if pred():
             return True
     return False
 
 
-def test_eclipse_does_not_fire_1004_1005(engine):
-    fired = _spy_s19(engine)
+def test_eclipse_does_not_report_array_degradation(engine):
+    entered = _spy_s12_entries(engine)
     # Sun -> eclipse -> sun: run through the first eclipse into sunlight.
     assert _run_until(engine, lambda: engine.params.get(0x0108) == 1, 6000)
     assert _run_until(engine, lambda: engine.params.get(0x0108) == 0, 3000)
     for _ in range(120):
         engine._tick_once(1.0)
-    assert not {1004, 1005} & set(fired), fired
+    assert not [e for e in entered if e[0] in (0x014C, 0x014D)], entered
     # The monitors really were checked in sunlight (validity bit set).
     assert int(engine.params.get(0x014E, 0)) != 0
 
 
-def test_injected_array_degradation_in_sun_fires_1004(engine):
+def test_mild_degradation_in_sun_is_reported_not_acted_on(engine):
+    """String A at 60 % yield in sunlight: TM(12,9) + S5 report, no S19
+    action, payload stays ON — the team decides (CTG-009)."""
     fired = _spy_s19(engine)
+    entered = _spy_s12_entries(engine)
+    events = []
+    orig = engine._emit_event
+
+    def spy_ev(ev):
+        events.append(ev.get("event_id"))
+        return orig(ev)
+    engine._emit_event = spy_ev
     eps = engine.subsystems["eps"]
     assert _run_until(engine, lambda: int(engine.params.get(0x014E, 0)) & 1
                       and engine.params.get(0x0108) == 0, 6000)
     eps._state.power_lines["payload"] = True
-    eps.inject_failure("solar_array_partial", 0.6, array="A")
-    assert _run_until(engine, lambda: 1004 in fired, 120), \
-        "string A at 40 % yield in sunlight must trip ea 1004"
-    assert 1005 not in fired
+    eps.inject_failure("solar_array_partial", 0.4, array="A")
+    assert _run_until(engine, lambda: (0x014C, "low") in entered, 120), \
+        "string A at 60 % yield in sunlight must be reported (S12 low limit)"
+    for _ in range(60):
+        engine._tick_once(1.0)
     assert engine.params[0x014C] < 70.0
-    assert eps._state.power_lines["payload"] is False, "load shed: payload line OFF"
+    assert 0x914C in events, "the S12 violation is also an S5 event to the ground"
+    assert not fired, f"no autonomous action on array degradation (fired {fired})"
+    assert eps._state.power_lines["payload"] is True, "the payload decision is the team's"
+    assert (0x014D, "low") not in entered
+
+
+@pytest.mark.slow
+def test_severe_degradation_still_sheds_the_payload_when_power_runs_out(engine):
+    """Both strings nearly dead with the payload imaging: no array rule acts,
+    but when the battery drops the EPS bus-voltage load shed (< 25.0 V,
+    payload first, simulation.yaml eps.load_shed) takes the payload off."""
+    fired = _spy_s19(engine)
+    eps = engine.subsystems["eps"]
+    eps._state.power_lines["payload"] = True
+    engine.subsystems["payload"].handle_command({"command": "set_mode", "mode": 2})
+    engine._handle_instructor_cmd({"type": "set_battery_soc", "soc_pct": 55.0})
+    eps.inject_failure("solar_array_partial", 1.0, array="A")
+    eps.inject_failure("solar_array_partial", 0.9, array="B")
+    shed = {}
+
+    def payload_off():
+        if not eps._state.power_lines["payload"]:
+            shed.update(bus=engine.params.get(0x0105), soc=engine.params.get(0x0101))
+            return True
+        return False
+    assert _run_until(engine, payload_off, 4 * 3600, dt=5.0), \
+        "the load shed must take the payload off once the bus voltage falls"
+    assert shed["bus"] < 25.5, shed
+    assert not {1004, 1005} & set(fired)
 
 
 def test_s12_validity_and_repetition_unit(engine):

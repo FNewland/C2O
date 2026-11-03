@@ -86,7 +86,7 @@ class TestFDIRModelReference:
     def test_s19_reference_resolves_trigger_and_action_labels(self):
         srv = _make_server()
         rules = {r["ea_id"]: r for r in srv._fdir_model.rule_rows()}
-        assert len(rules) == 32
+        assert len(rules) == 30     # 1004/1005 deleted 2026-11-03 (report only)
         r = rules[1001]
         assert r["name"] == "eps_bus_undervoltage_payload_off"
         assert r["trigger_kind_name"] in ("event", "param")

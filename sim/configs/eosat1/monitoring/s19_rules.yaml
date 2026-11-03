@@ -37,16 +37,17 @@
 # or missing argument bytes were unambiguous given its own description was
 # corrected: 3001, 3002, 3003, 4002, 5003, 5004, 6001, 6002. The rest
 # (1001-1003, 5001, 5002) stay pinned in KNOWN_MISROUTED for Flight Ops
-# (1004/1005 corrected 2026-11-03, below).
+# (1004/1005 corrected 2026-11-03, then deleted the same day, below).
 #
 # 2026-11-03 (FDIR fixes, see docs/plan_2026-11/OBC_THERMAL_ANALYSIS.md §3.3):
 # every param rule whose description names ONE direction is now armed on that
 # side only — 3001, 3002, 3003, 4002, 6002 are overtemp rules and used to
 # fire on the LOW limit as well (3003 put the OBC in SAFE on every cold soak;
-# 3002 switched the transmitter off on a cold battery). 1004/1005 now watch
-# the string yield monitors, which are only checked while the string is lit
-# (they used to fire at every eclipse entry), and their action is corrected
-# from func 10 (AOCS_SLEW_TO with no quaternion) to EPS_POWER_OFF(payload).
+# 3002 switched the transmitter off on a cold battery). The solar-array
+# degradation monitors now watch the string yields, checked only while the
+# string is lit (the old raw-current monitors fired at every eclipse entry);
+# their rules 1004/1005 were then removed: degradation is reported to the
+# ground, which decides (see "Solar Array Degradation" below).
 #
 # Loaded at engine startup and registered with the S19 framework.
 
@@ -306,38 +307,19 @@ s19_rules:
     description: "AOCS Wheel 4 Overspeed -> Disable Wheel 4"
     enabled: true
 
-  # ===== Solar Array Degradation =====
-  # 2026-11-03: the triggers were the S12 monitors on the RAW string currents
-  # 0x0103/0x0104 (low limit 0.1 A, no validity), which every eclipse entry
-  # violates — so both rules fired at every eclipse. They now trigger on the
-  # string-YIELD monitors (0x014C/0x014D, measured / healthy-string current),
-  # which are checked only while the string is lit (validity 0x014E) and need
-  # 30 consecutive low checks. An injected array failure
-  # (solar_array_partial / solar_panel_loss) in sunlight still fires them.
-  # The action was func 10 = AOCS_SLEW_TO with no quaternion (pinned as
-  # misrouted since defect #70); "load shedding" is now the payload line OFF,
-  # the same response 3001/6001 use.
-  - name: eps_solar_array_a_degraded_loadshed
-    ea_id: 1004
-    trigger:
-      kind: param          # S12 monitor on 0x014C EPS string-A yield (lit only)
-      id: 0x014C   # was: 0x0103 eps.sa_a_current (fired at every eclipse)
-      limit: low
-    action_func_id: 20   # S8 func 20: EPS_POWER_OFF. Was func 10 = AOCS_SLEW_TO (misrouted).
-    action_data: [3]     # line 3 = payload
-    description: "EPS Solar Array A Degraded -> Load Shedding"
-    enabled: true
-
-  - name: eps_solar_array_b_degraded_loadshed
-    ea_id: 1005
-    trigger:
-      kind: param          # S12 monitor on 0x014D EPS string-B yield (lit only)
-      id: 0x014D   # was: 0x0104 eps.sa_b_current (fired at every eclipse)
-      limit: low
-    action_func_id: 20   # S8 func 20: EPS_POWER_OFF. Was func 10 = AOCS_SLEW_TO (misrouted).
-    action_data: [3]     # line 3 = payload
-    description: "EPS Solar Array B Degraded -> Load Shedding"
-    enabled: true
+  # ===== Solar Array Degradation: reported, not acted on =====
+  # 2026-11-03 (Franz's ruling): "the team needs to decide if the payload goes
+  # off based on the seriousness of the fault, and/or the load-shed will send
+  # it off automatically." The degraded-string DETECTION stays on board — the
+  # S12 yield monitors 0x014C/0x014D (valid only while the string is lit,
+  # repetition 30) report TM(12,9) and the S5 event 0x914C/0x914D — but no
+  # S19 rule acts on it any more. A PUS S19 definition always names an action,
+  # so the former ea 1004/1005 (-> EPS_POWER_OFF payload) are deleted rather
+  # than left action-less. The ground decides with CTG-009 (yield + power
+  # balance -> shed the payload or continue). If the power really runs out,
+  # the existing chain still sheds automatically: the EPS bus-voltage ladder
+  # (< 25.0 V: payload first, simulation.yaml eps.load_shed) and ea 1001
+  # below. ea 1004/1005 are retired: do not reuse the ids.
 
   # ===== Propulsion (Phase D) — ea_id 8001+ =====
   # Autonomous burn protection. Funcs: 112 = PROP_ABORT, 114 = PROP_ISO_CLOSE,
