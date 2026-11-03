@@ -267,8 +267,9 @@ def flight(tmp_path_factory):
 
     Reached by command, not by reaching into model state: star trackers
     powered (the FINE_POINT precondition bitmask 0x02C5 needs a head holding
-    >= 5 stars and a converged MEKF), the payload in STANDBY so the FPA cooler
-    is running, and enough settled time for both.
+    >= 5 stars and a converged MEKF), the payload in STANDBY (cooler off since
+    2026-11-03: the imaging pass prepares the FPA itself), and enough settled
+    time.
     """
     import os
     os.environ.setdefault("SMO_DUMP_DIR",
@@ -312,7 +313,11 @@ def flight(tmp_path_factory):
     assert int(f.p("aocs.fine_ready")) == 0, (
         "entry state: FINE_POINT preconditions (0x02C5) not satisfied — "
         f"mask 0x{int(f.p('aocs.fine_ready')):02X}")
-    assert int(f.p("payload.fpa_ready")) == 1
+    # 2026-11-03 (Franz's ruling): STANDBY no longer runs the FPA cooler.
+    # The routine entry state has a warm detector, and imaging_pass itself
+    # does the preparation (FPA_COOLER on + 480 s cool-down).
+    assert int(f.p("tcs.cooler_fpa")) == 0
+    assert int(f.p("payload.fpa_ready")) == 0
     f.clear_refusals()
     return f
 

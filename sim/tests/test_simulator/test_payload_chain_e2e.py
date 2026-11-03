@@ -68,11 +68,14 @@ def _run(eng, seconds, dt=2.0):
 
 class TestEveryCoolerPathCools:
 
+    # 2026-11-03 (Franz's ruling): STANDBY no longer runs the cooler. The
+    # mode paths that request it are IMAGING (and CALIBRATION); STANDBY and
+    # OFF release it (test_standby_releases_the_cooler below).
     @pytest.mark.parametrize("label,func,arg", [
         ("EPS_FPA_COOLER (func 17)", 17, bytes([1])),
-        ("PAYLOAD_SET_MODE STANDBY (func 26)", 26, bytes([1])),
-        ("EPS_PAYLOAD_MODE (func 16)", 16, bytes([1])),
-        ("TCS FPA_COOLER (func 43) — COM-009's path", 43, bytes([1])),
+        ("PAYLOAD_SET_MODE IMAGING (func 26)", 26, bytes([2])),
+        ("EPS_PAYLOAD_MODE IMAGING (func 16)", 16, bytes([2])),
+        ("TCS FPA_COOLER (func 43) — COM-010's path", 43, bytes([1])),
     ])
     def test_path_energises_the_line_and_brings_the_fpa_ready(
             self, engine, label, func, arg):
@@ -95,15 +98,32 @@ class TestEveryCoolerPathCools:
         assert engine.params[0x040C] == 0
 
     def test_payload_mode_off_releases_the_cooler(self, engine):
-        _s8(engine, 26, bytes([1]))
+        _s8(engine, 26, bytes([2]))
         _run(engine, 300.0)
         assert engine.params[0x0114] == 1
         _s8(engine, 26, bytes([0]))
         _run(engine, 60.0)
         assert engine.params[0x0114] == 0
 
+    def test_standby_releases_the_cooler(self, engine):
+        """2026-11-03: STANDBY means cooler off; the explicit FPA_COOLER is
+        the imaging preparation."""
+        _s8(engine, 26, bytes([1]))
+        _run(engine, 120.0)
+        assert engine.params[0x040C] == 0 and engine.params[0x0114] == 0
+        _s8(engine, 43, bytes([1]))
+        _run(engine, 120.0)
+        assert engine.params[0x040C] == 1
+        _s8(engine, 26, bytes([2]))          # IMAGING keeps it
+        _run(engine, 10.0)
+        assert engine.params[0x040C] == 1
+        _s8(engine, 26, bytes([1]))          # back to STANDBY: released
+        _run(engine, 10.0)
+        assert engine.params[0x040C] == 0 and engine.params[0x0114] == 0
+
     def test_cooler_authority_is_published_and_positive(self, engine):
         _s8(engine, 26, bytes([1]))
+        _s8(engine, 43, bytes([1]))
         _run(engine, 1200.0)
         p = engine.params
         # TCS-side and the payload's mirror must agree.
@@ -139,7 +159,8 @@ class TestSetpointOnTheWire:
 class TestCalibrationOverTheWire:
 
     def _cooled_standby(self, engine):
-        _s8(engine, 26, bytes([1]))          # STANDBY (cooler follows)
+        _s8(engine, 26, bytes([1]))          # STANDBY (cooler off)
+        _s8(engine, 43, bytes([1]))          # COM-011 step 1: cooler on
         _run(engine, 1200.0)
         assert engine.params[0x0610] == 1, "FPA never came ready"
 
@@ -186,6 +207,7 @@ class TestImageChain:
 
     def _ready(self, engine):
         _s8(engine, 26, bytes([1]))
+        _s8(engine, 43, bytes([1]))          # imaging preparation
         _run(engine, 1200.0)
         assert engine.params[0x0610] == 1
         _s8(engine, 26, bytes([2]))          # IMAGING
