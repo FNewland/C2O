@@ -1,0 +1,18 @@
+flowchart LR
+  A[Pick element<br/>and failure] --> B[Typed parameters<br/>generated from the catalogue]
+  B --> C[Onset: step / gradual / intermittent<br/>ramp seconds]
+  C --> D{When}
+  D -- now --> R
+  D -- "delay · AOS · LOS<br/>eclipse in/out · on TC" --> R
+  B -. "Add to batch (max 8)" .-> BT[(Batch)]
+  BT --> R
+  R[Review box: target, severity,<br/>onset, when, snapshot] --> AR[Inject: arm 5 s<br/>then confirm]
+  AR -- "single + now" --> FI[POST failure_inject<br/>snapshot_before]
+  AR -- "batch or trigger" --> FS[POST failure_schedule<br/>injects + trigger]
+  FS --> P[Pending: rail list +<br/>dashed mark ahead of now]
+  P -- trigger fires on tick thread --> SN
+  FI --> SN[Auto snapshot in RAM<br/>newest 6, 'auto' chip]
+  SN --> INJ[FailureManager.inject<br/>each fault]
+  INJ --> TL[Timeline: inject item<br/>+ focus hint]
+  TL --> FP[Focus pane switches<br/>with its reason]
+  FS -. "validation error" .-> ER[400 with the reason<br/>shown above the button]

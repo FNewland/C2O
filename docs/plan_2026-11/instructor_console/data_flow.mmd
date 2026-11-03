@@ -1,0 +1,16 @@
+flowchart LR
+  subgraph SIM[Simulator VM: tick thread]
+    ENG[SimulationEngine] -- "_enqueue_tm: S1, S5 generated" --> REC[InstructorRecorder]
+    ENG -- "_put_tm / dump: TM that left the radio" --> GV[GroundView<br/>decodes S3.25]
+    GV --> REC
+    ENG -- "_dispatch_tc: TC received / refused" --> REC
+    ENG -- "on_tick: phase, modes, contact,<br/>eclipse, faults, FDIR, scenario" --> REC
+    REC -- "≤1 Hz: truth views +<br/>divergence + tiles" --> VB[(published views)]
+  end
+  VB --> API["/api/instructor/views"]
+  REC --> TLAPI["/api/instructor/timeline?since="]
+  REC --> DB["/api/instructor/debrief · history"]
+  ENG --> ST["/api/state (ground-safe; no truth)"]
+  API & TLAPI & DB --> GSG[GSG proxy<br/>read-only allowlist]
+  GSG -- "sim.c2o.live · IAP instructors" --> UI[Instructor console]
+  ST -. "also feeds MCS / planner / rfsim" .-> GROUND[Ground consoles]

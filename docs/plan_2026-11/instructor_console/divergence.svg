@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="IBM Plex Sans, Helvetica, Arial, sans-serif" font-size="12">
+  <title>Truth versus trainees: the paired-value table split by cause</title>
+  <style>.s{fill:#4a4f56;font-size:11px}.m{font-family:IBM Plex Mono,monospace}.h{font-weight:600}
+  .chip{fill:none;rx:2}</style>
+  <rect width="960" height="400" fill="#f4f5f7"/>
+  <g transform="translate(10 10)">
+    <rect width="600" height="380" fill="#fff" stroke="#8a9099"/>
+    <rect x="10" y="10" width="72" height="18" rx="2" fill="none" stroke="#7a6ce0"/><text x="16" y="23" fill="#7a6ce0" class="m s">injected 1</text>
+    <rect x="88" y="10" width="78" height="18" rx="2" fill="none" stroke="#c48a00"/><text x="94" y="23" fill="#8a6400" class="m s">estimate 1</text>
+    <rect x="172" y="10" width="64" height="18" rx="2" fill="none" stroke="#8a9099" stroke-dasharray="3 2"/><text x="178" y="23" class="m s" font-style="italic">delay 14</text>
+    <text x="244" y="23" class="s">Last housekeeping reached the ground 3 s ago.</text>
+    <text x="10" y="48" class="s">Truth = simulator state · Spacecraft = what it measures/estimates · Ground = last downlinked HK (what trainees can know)</text>
+    <text x="10" y="72" class="h">▾ Injected indication fault</text>
+    <g class="s"><text x="20" y="92">Quantity</text><text x="190" y="92">Truth</text><text x="270" y="92">Spacecraft</text><text x="360" y="92">Ground (age)</text><text x="470" y="92">Gap and cause</text></g>
+    <rect x="10" y="98" width="580" height="44" fill="#fbfaff"/><rect x="10" y="98" width="3" height="44" fill="#a79bf8"/>
+    <text x="20" y="114">OBC temperature</text><text x="20" y="130" class="s m">0x0406</text>
+    <text x="190" y="114" class="m h">15.4 °C</text><text x="270" y="114" class="m">23.4 °C</text><text x="360" y="114" class="m">23.3 °C</text><text x="360" y="130" class="s m">12 s</text>
+    <rect x="470" y="103" width="56" height="16" rx="2" fill="none" stroke="#7a6ce0"/><text x="476" y="115" fill="#7a6ce0" class="s m">injected</text>
+    <text x="470" y="134" class="s m">on board +8.0</text>
+    <text x="10" y="166" class="h">▾ Spacecraft estimate or clock off</text>
+    <rect x="10" y="174" width="580" height="44" fill="#fffdf6"/><rect x="10" y="174" width="3" height="44" fill="#c48a00"/>
+    <text x="20" y="190">Pointing error</text><text x="20" y="206" class="s m">0x02A8</text>
+    <text x="190" y="190" class="m h">0.412°</text><text x="270" y="190" class="m">0.118°</text><text x="360" y="190" class="m">0.118°</text>
+    <rect x="470" y="179" width="60" height="16" rx="2" fill="none" stroke="#c48a00"/><text x="476" y="191" fill="#8a6400" class="s m">estimate</text>
+    <text x="470" y="210" class="s m">on board −0.294</text>
+    <text x="10" y="242" class="h">▸ Ground does not have it yet (14)</text>
+    <rect x="10" y="250" width="580" height="44" fill="#fff" stroke="#e3e6ea"/>
+    <text x="20" y="266">Battery state of charge</text><text x="190" y="266" class="m h">71.2 %</text><text x="270" y="266" class="m">71.2 %</text>
+    <text x="360" y="266" class="m" fill="#8a9099" font-style="italic">78.9 %</text><text x="360" y="282" class="s m">14 min</text>
+    <rect x="470" y="255" width="44" height="16" rx="2" fill="none" stroke="#8a9099" stroke-dasharray="3 2"/><text x="476" y="267" class="s m">delay</text>
+    <text x="470" y="286" class="s">no downlink (out of contact or transmitter off)</text>
+    <text x="10" y="318" class="h">▸ In agreement (6)</text>
+    <text x="10" y="350" class="s">Mobile (390 px): each row becomes a 3-column card; the table never scrolls sideways.</text>
+  </g>
+  <g transform="translate(630 10)" class="s">
+    <text x="0" y="16" class="h" fill="#141619">Cause classification (precedence)</text>
+    <rect x="0" y="28" width="320" height="64" fill="#fff" stroke="#7a6ce0"/>
+    <text x="8" y="46" fill="#141619" class="h">1 injected</text><text x="8" y="62">|spacecraft − truth| &gt; threshold and an active</text><text x="8" y="76">indication fault targets this pair (or any lie</text><text x="8" y="90">above ¼ threshold during a gradual onset)</text>
+    <rect x="0" y="100" width="320" height="50" fill="#fff" stroke="#c48a00"/>
+    <text x="8" y="118" fill="#141619" class="h">2 estimator</text><text x="8" y="134">|spacecraft − truth| &gt; threshold, no inject:</text><text x="8" y="146">MEKF error, clock drift, sensor noise</text>
+    <rect x="0" y="158" width="320" height="64" fill="#fff" stroke="#8a9099" stroke-dasharray="3 2"/>
+    <text x="8" y="176" fill="#141619" class="h">3 delay</text><text x="8" y="192">|ground − spacecraft| &gt; threshold or never received.</text><text x="8" y="206">Reason: no downlink · SID disabled · line off ·</text><text x="8" y="218">bootloader · not in HK · next packet (every N s)</text>
+    <text x="0" y="246">Ground = decoded from the simulator's OWN downlinked</text>
+    <text x="0" y="260">S3.25 packets (real time or VC1 playback; playback never</text>
+    <text x="0" y="274">overwrites a newer real-time value). No console data used.</text>
+    <text x="0" y="298">Pairs not observable on the ground (knowledge error,</text>
+    <text x="0" y="312">clock offset) compare truth with spacecraft only.</text>
+  </g>
+</svg>
