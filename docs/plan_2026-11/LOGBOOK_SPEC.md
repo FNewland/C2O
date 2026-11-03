@@ -212,3 +212,32 @@ time UTC · sim, by, result, note; forms as field/entry tables) then **Log**
 lists every sheet of the tool in workbook order (`match` set where it
 applies here). Generated sheets carry `form`, `instances`, and per question
 `step` (a confirm-each-step row) and `prefill` (a console key).
+
+## 9. Ops UI fixes (2026-11-03)
+
+**One right dock.** The MCS alarm journal, the logbook and the voice loops
+stand side by side in `#c2o-dock` (`smo_common/ui/dock.js`) instead of each
+overlaying the right edge: open panels narrow the work area (which keeps
+≥ 480 px and stacks its page columns by container query); when one more
+panel would not fit, the one opened longest ago closes (voice only hides).
+Below 1000 px one full-height panel at a time. Tools without a dock keep
+the logbook as an overlay.
+
+**Activity-type cards tick their checklist.** NOM-002/003/004/009 run a
+planner activity's command sequence, not the card's TC lines.
+`configs/eosat1/mcs/runner_step_map.yaml` maps each runner step to its card
+step (checked by a test against the activity types, the runner's loaded
+steps and the cards); its EN/FR `notes` ride with the runner's tick where
+the activity does the step differently from the card.
+
+**Hand-worked cards are not an error.** `POST /api/procedure/load` for a
+card the console cannot run answers 200 `{runnable: false, manual: true,
+procedure_id, reason}` (was 409); runnable loads carry `runnable: true`.
+
+**Where the hand-in context comes from** (honest sources only):
+
+| Field | Source | Why this one |
+|---|---|---|
+| Last completed pass (handover `last_pass`), pass in progress (handover info) | The MCS pass log (`smo_mcs/pass_log.py`, `pass_log` in the MCS state): AOS/LOS from the MCS's own ground propagator (the contact-schedule geometry), first/last TM frame received inside the pass, max elevation. A pass already in progress at console start has no AOS of its own; a backwards time jump forgets passes that now lie in the future. | Ground knowledge a real control centre has; nothing is asked of the simulator. |
+| Scenario (export header), Session (handover/briefing/debrief info) | `session_label`, typed by the instructor in the instructor console ("Session label for the consoles") and sent as the `set_session_label` instructor command; the simulator publishes it in `/api/state`, which reaches the ground in the link's STATE feed. The MCS reads only that field, in sim mode only. Empty until the instructor publishes one. | The scenario's own name would brief the operators on the failure (e.g. "Reaction Wheel Stuck at Speed"), and instructor state must not cross the link. A label the instructor chooses to publish, on an existing allowed channel, carries neither. |
+

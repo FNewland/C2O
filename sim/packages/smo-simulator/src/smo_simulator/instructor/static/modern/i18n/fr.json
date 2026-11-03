@@ -228,5 +228,19 @@
   "Debrief questions": "Questions de débriefing",
   "Use them in the spoken debrief. Participants answer these in their logbook and download it; you never see their answers.": "À utiliser lors du débriefing oral. Les participants y répondent dans leur journal de bord et le téléchargent ; vous ne voyez jamais leurs réponses.",
   "Course PDFs": "PDF du cours",
-  "students see only theirs": "les étudiants ne voient que les leurs"
+  "students see only theirs": "les étudiants ne voient que les leurs",
+  "Session label for the consoles": "Libellé de séance pour les consoles",
+  "Label": "Libellé",
+  "e.g. Day 3, LEOP shift B": "p. ex. Jour 3, quart LEOP B",
+  "Publish": "Publier",
+  "Every console shows it in the logbook hand-in header. Do not name the failure: that would brief the operators.": "Chaque console l'affiche dans l'en-tête de remise du journal de bord. Ne nommez pas la panne : ce serait l'annoncer aux opérateurs.",
+  "Published label: no data from the simulator": "Libellé publié : aucune donnée du simulateur",
+  "Published: {{label}}": "Publié : {{label}}",
+  "Nothing published: the consoles leave it blank.": "Rien de publié : les consoles laissent le champ vide.",
+  "Already published": "Déjà publié",
+  "Type a label first": "Saisissez d'abord un libellé",
+  "Label not published: {{reason}}": "Libellé non publié : {{reason}}",
+  "Session label published: \"{{label}}\"": "Libellé de séance publié : « {{label}} »",
+  "Session label cleared": "Libellé de séance effacé",
+  "Published to the consoles": "Publié sur les consoles"
 }

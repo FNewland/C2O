@@ -93,7 +93,7 @@ Worked example: one 18-byte TM packet (with its 2-byte length prefix) on stream 
 | 0 | CONTROL | both | Handshake: `CHALLENGE`, `AUTH`, `AUTH_OK` (untagged). Then CTRL JSON: `HELLO`, `WELCOME`, `REJECT`, `NOTICE`, `STATUS`, `DUMP_META`, `DUMP_READY`, `DUMP_ACK` |
 | 1 | TC | G→A | One record per frame: an 8-byte **stamp** (u64 µs, GSG wall clock when the GSG accepted it) followed by one existing `framing.frame_packet` record, byte-identical. **At most once.** Never replayed and never queued across a link loss; anything queued at loss is discarded and reported in a NOTICE. Time-to-live §3.8 |
 | 2 | TM | A→G | Existing framed records, byte-identical, in simulator order. Coalescing: flush every ≤20 ms or 32 KiB |
-| 3 | STATE | A→G | JSON `{t_agent_wall, state: <exact /api/state body>}` at 1 Hz, and immediately after a speed or pause change is detected |
+| 3 | STATE | A→G | JSON `{t_agent_wall, state: <exact /api/state body>}` at 1 Hz, and immediately after a speed or pause change is detected. The body carries no instructor state and no identity; its one instructor-originated field is `session_label`, free text the instructor publishes for the consoles on purpose (`set_session_label`, ≤ 80 characters; never the scenario name; see LOGBOOK_SPEC §9) |
 | 4 | DUMP | A→G | Dump transfer (§3.6) |
 | ≥256 | PROXY | opened by G | One HTTP exchange or one nested WebSocket each (§3.7) |
 

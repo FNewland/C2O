@@ -970,5 +970,11 @@
   "Console": "Console",
   "From alarm": "D’après l’alarme",
   "Console time": "Heure de la console",
-  "Checklist": "Liste de vérification"
+  "Checklist": "Liste de vérification",
+  "before this console started": "avant le démarrage de cette console",
+  "TM {{a}}–{{b}}": "TM {{a}}–{{b}}",
+  "no TM received": "aucune TM reçue",
+  "Pass in progress": "Passage en cours",
+  "Session": "Séance",
+  "published by the instructor": "publiée par l'instructeur"
 }
