@@ -56,7 +56,7 @@ MAX_ENTRIES = 2000
 CONTEXT_KEYS = ("page", "procedure", "step", "alarm_id", "param", "study_id",
                 "position", "scenario", "sim_status", "report", "dump", "station",
                 "pass", "doc", "phase", "anomaly", "command", "gonogo", "gate",
-                "proposal")
+                "proposal", "run")
 _CTX_VALUE_MAX = 200
 #: Optional structured payloads on a worksheet entry (ops workbook, 2026-11):
 #: ``check`` — one procedure-checklist step ticked (see ``_clean_check``);
@@ -65,6 +65,9 @@ _CTX_VALUE_MAX = 200
 #: reader that ignores them (SpaceCDF's twin) still shows something true.
 CHECK_RESULTS = ("pass", "fail", "skip", "go", "nogo", "done", "open")
 CHECK_SOURCES = ("operator", "runner")
+#: ``check.part``: absent for a card step, ``"pre"`` for a Prerequisites item
+#: (ticked on the card or in the Workbook; exported before the steps).
+CHECK_PARTS = ("pre",)
 #: Rewrite the file as its folded state once it holds this many records
 #: more than its live entries (edit churn must not grow it without bound).
 COMPACT_SLACK = 2000
@@ -359,8 +362,9 @@ class LogbookStore:
     @classmethod
     def _clean_check(cls, c: Any) -> dict | None:
         """One checklist step: ``{procedure, step, key, title, run, result,
-        source, position, sim_ts, note, values: [{param, pid, expect, value,
-        units, ok, stale}]}``. Unknown keys are dropped, strings clipped."""
+        source, part, position, sim_ts, note, values: [{param, pid, expect,
+        value, units, ok, stale}]}``. Unknown keys are dropped, strings
+        clipped."""
         if not isinstance(c, dict):
             return None
         out: dict[str, Any] = {}
@@ -377,6 +381,8 @@ class LogbookStore:
             out["result"] = c["result"]
         if c.get("source") in CHECK_SOURCES:
             out["source"] = c["source"]
+        if c.get("part") in CHECK_PARTS:
+            out["part"] = c["part"]
         vals = []
         for v in (c.get("values") or [])[:24] if isinstance(c.get("values"), list) else []:
             if not isinstance(v, dict):
