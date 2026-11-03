@@ -42,6 +42,7 @@ DECLARATIVE_FILES = (
     "mcs/displays.yaml",
     "mcs/positions.yaml",
     "worksheets/ops_week3.yaml",      # generated course-workbook text
+    "mcs/runner_step_map.yaml",       # procedure id -> runner step map (data)
 )
 
 #: Dotted-path prefixes whose CHILD keys are consumed by iteration rather than
