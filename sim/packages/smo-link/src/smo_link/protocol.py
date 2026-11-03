@@ -219,6 +219,11 @@ def seq_diff(a: int, b: int) -> int:
 def split_records(buf: bytearray) -> list[bytes]:
     """Pop every complete ``[u16 len][packet]`` record from ``buf``.
 
+    A length word of 0xFFFF introduces a virtual-channel tagged record,
+    ``[0xFFFF][u8 vcid][u16 len][packet]`` (S15 playback on VC1 — see
+    ``smo_common.protocol.framing``); it is forwarded byte-identically so the
+    tag reaches the MCS.
+
     Raises :class:`ProtocolError` on a zero length (the existing readers treat
     that as end of connection, so it must never be forwarded).
     """
@@ -227,9 +232,15 @@ def split_records(buf: bytearray) -> list[bytes]:
     n = len(buf)
     while n - pos >= 2:
         length = (buf[pos] << 8) | buf[pos + 1]
+        hdr = 2
+        if length == 0xFFFF:
+            if n - pos < 5:
+                break
+            length = (buf[pos + 3] << 8) | buf[pos + 4]
+            hdr = 5
         if length == 0:
             raise ProtocolError("zero-length record")
-        end = pos + 2 + length
+        end = pos + hdr + length
         if end > n:
             break
         out.append(bytes(buf[pos:end]))

@@ -17,6 +17,8 @@ import time
 
 import numpy as np
 
+from smo_common.protocol.framing import vcid_of
+
 from ..ccsds.asm import attach_asm
 from ..ccsds.convolutional import encode as conv_encode
 from ..ccsds.reed_solomon import encode as rs_encode
@@ -171,7 +173,8 @@ class SpacecraftTX(threading.Thread):
             while True:
                 try:
                     pkt = self._packet_queue.get_nowait()
-                    self._vc_mux.add_packet(pkt, vcid=0)
+                    # S15 playback rides VC1, real-time TM VC0.
+                    self._vc_mux.add_packet(pkt, vcid=vcid_of(pkt))
                 except queue.Empty:
                     break
 

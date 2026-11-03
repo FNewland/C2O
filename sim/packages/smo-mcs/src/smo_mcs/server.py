@@ -30,7 +30,10 @@ def _unit3(v) -> list[float]:
 import aiohttp
 from aiohttp import web
 
-from smo_common.protocol.framing import frame_packet, read_framed_packet
+from smo_common.protocol.framing import (
+    frame_packet, is_playback, read_framed_packet,
+)
+from smo_mcs import alarm_state
 from smo_common.telemetry.eng_values import build_state_tables
 from smo_common.protocol.ecss_packet import (
     CUC_FINE_TICKS, cuc_seconds_to_datetime, datetime_to_cuc_seconds,
@@ -275,6 +278,20 @@ class MCSServer:
         # for archive correlation. None until the first packet arrives.
         self._last_obc_cuc: Optional[float] = None
         self.tm_packets_received: int = 0
+        # Played-back (S15 dump, VC1) packets. Counted, archived (S5 events at
+        # their on-board time) and otherwise left to the delayed-TM viewer:
+        # they never touch live values, alarms, FDIR or the packet log.
+        self.tm_stored_packets_received: int = 0
+        self._stored_tm_stats: dict = {"by_service": {}, "last_rx_ts": None,
+                                       "oldest_obc_cuc": None,
+                                       "newest_obc_cuc": None}
+        # Alarm reconcile window (alarm_state module docstring): armed on a
+        # TM (re)connect, at the first real-time packet of a pass and on a
+        # sim-clock discontinuity, when an on-board back-to-limits report may
+        # have been missed (or only exists in the on-board store).
+        self._alarm_reconcile: Optional[dict] = None
+        # Sim time of the last REAL-TIME packet (stored TM does not count).
+        self._last_rt_rx_ts: Optional[float] = None
         self._storage_status: list[dict] = []
         # Per-SID observation: epoch time each HK SID was last decoded, and any
         # enable state the spacecraft has actually reported (as opposed to the
@@ -1543,6 +1560,8 @@ class MCSServer:
         app.router.add_get("/api/contacts", self._handle_contacts_proxy)
         # Stored TM playback (Feature 3)
         app.router.add_post("/api/tm-dump", self._handle_tm_dump)
+        # Played-back (VC1) TM received: counted here, analysed offline.
+        app.router.add_get("/api/tm-stored", self._handle_tm_stored)
         app.router.add_get("/api/tm-dump-data", self._handle_tm_dump_data)
         # TM archive query endpoints (persistent SQLite)
         app.router.add_get("/api/archive/parameters", self._handle_archive_params)
@@ -1720,13 +1739,17 @@ class MCSServer:
                     self.connect_host, self.connect_port)
                 logger.info("Connected to TM source at %s:%d",
                             self.connect_host, self.connect_port)
+                # Anything that returned to normal on board while we were
+                # not listening has to be reconciled from fresh telemetry.
+                self._arm_alarm_reconcile("TM reconnect")
                 while self._running:
                     pkt = await read_framed_packet(reader)
                     if pkt is None:
                         break
                     parsed = decommutate_packet(pkt)
                     if parsed and parsed.secondary:
-                        await self._process_tm(parsed)
+                        # VC1 = S15 playback: history, never live state.
+                        await self._process_tm(parsed, stored=is_playback(pkt))
             except Exception as e:
                 logger.warning("TM connection error: %s, reconnecting...", e)
                 await asyncio.sleep(2)
@@ -1763,7 +1786,64 @@ class MCSServer:
             return acc
         return None
 
-    async def _process_tm(self, pkt) -> None:
+    async def _process_stored_tm(self, pkt) -> None:
+        """Played-back TM (S15 packet-store dump, virtual channel 1).
+
+        A dumped packet is byte-identical to the real-time packet it was
+        when it was stored — same service, same values, same old alarms. It
+        is the spacecraft's PAST, so it must not: overwrite a live parameter
+        value, run the ground limit check, raise or clear an alarm, feed the
+        FDIR journal/panel, GO/NO-GO, live plots, S1 verification state, or
+        the live packet log. Before VC1 was honoured, dumping the alarm store
+        re-raised every alarm in it (and reverted live values for one HK
+        cycle), which is how the alarm list came to disagree with the state.
+
+        What it does: proves the downlink is up (link liveness), is counted
+        (``/api/tm-stored``), and archives S5 events at the ON-BOARD time
+        they happened so the Trends event markers fill the coverage gap.
+        Everything else — HK series, anomalies, S12 transitions, events —
+        is analysed offline from the dump file (``workspace/dumps``) in the
+        delayed-TM viewer and the MCS ``/dumps`` page.
+        """
+        now = self.sim_now_ts()
+        self.tm_stored_packets_received += 1
+        svc, sub = pkt.secondary.service, pkt.secondary.subtype
+        st = self._stored_tm_stats
+        key = f"S{svc}.{sub}"
+        st["by_service"][key] = st["by_service"].get(key, 0) + 1
+        st["last_rx_ts"] = now
+        try:
+            cuc = float(pkt.secondary.cuc_seconds)
+        except Exception:
+            cuc = None
+        if cuc is not None:
+            if st["oldest_obc_cuc"] is None or cuc < st["oldest_obc_cuc"]:
+                st["oldest_obc_cuc"] = cuc
+            if st["newest_obc_cuc"] is None or cuc > st["newest_obc_cuc"]:
+                st["newest_obc_cuc"] = cuc
+        # A VC1 frame is still proof the downlink is up.
+        async with self._param_cache_lock:
+            self._last_tm_frame_ts = now
+        if svc == 5 and len(pkt.data_field) >= 3:
+            try:
+                event_id = struct.unpack('>H', pkt.data_field[:2])[0]
+                severity = pkt.data_field[2]
+                aux = ""
+                if len(pkt.data_field) > 7:
+                    n = pkt.data_field[7]
+                    aux = pkt.data_field[8:8 + n].decode('ascii', errors='ignore')
+                when = self._obc_cuc_to_epoch(cuc) if cuc is not None else None
+                self._archive.store_event(
+                    event_id, severity, self._event_id_to_subsystem(event_id),
+                    aux, utc_epoch=when if when is not None else now,
+                    obc_cuc=cuc)
+            except Exception as e:  # noqa: BLE001 — archive must not break RX
+                logger.debug("stored S5 archive failed: %s", e)
+
+    async def _process_tm(self, pkt, stored: bool = False) -> None:
+        if stored:
+            await self._process_stored_tm(pkt)
+            return
         self.tm_packets_received += 1
         # RECEIVE TIMESTAMP, in SIM TIME (spec Part D.2). Every age the
         # console shows — link liveness, per-parameter freshness, HK SID
@@ -1773,6 +1853,14 @@ class MCSServer:
         # the simulator made everything stale within a minute and running at
         # x60 made nothing ever stale.
         now = self.sim_now_ts()
+        # First real-time packet after a silence (a new pass / AOS): any
+        # TM(12,10) generated during LOS went into the on-board store, and
+        # stored TM never clears a live alarm, so reconcile S12 alarms
+        # against the fresh values instead.
+        prev_rx = self._last_rt_rx_ts
+        self._last_rt_rx_ts = now
+        if prev_rx is not None and now - prev_rx > self.ALARM_RECONCILE_GAP_S:
+            self._arm_alarm_reconcile("TM gap (new pass)")
         # The spacecraft's own timestamp for this packet, full precision
         # (coarse + fine/65536) on the J2000 mission epoch. Archived alongside
         # the sim-time stamp so a row can be correlated with the on-board
@@ -1790,6 +1878,8 @@ class MCSServer:
             "seq": pkt.primary.sequence_count,
             "data_len": len(pkt.data_field),
         }
+        # Parameters this packet refreshed (alarm reconcile, below).
+        fresh_params: dict[int, float] = {}
 
         # ── REAL HK DECODE ────────────────────────────────────────────
         # Hand the raw S3.25 payload to TMProcessor which inverts the
@@ -1820,6 +1910,8 @@ class MCSServer:
                     "sid": decoded.get("sid"),
                     "param_count": len(decoded["params"]),
                 }
+                fresh_params = {int(k): float(v) for k, v
+                                in decoded["params"].items()}
             else:
                 info["hk_decoded"] = {
                     "sid": decoded.get("sid") if decoded else None,
@@ -1840,6 +1932,7 @@ class MCSServer:
                         "sid": -1,  # not from a SID; on-demand S20 read
                     }
                 info["s20_param"] = {"id": pid, "value": value}
+                fresh_params = {int(pid): float(value)}
                 # On-demand reads are limit-checked too: four limited
                 # parameters (0x0539-0x053C) are S20-only, so this is the only
                 # path that will ever see them.
@@ -1965,6 +2058,13 @@ class MCSServer:
                 info["monitoring"] = mon
                 journal_entry = self._fdir_model.ingest_s12_transition(mon, ts=now)
                 info["fdir_journal"] = journal_entry
+                if sub == 10:
+                    # TM(12,10) back to limits: the S12 alarm's condition
+                    # is gone. It used to stay in the drawer for ever.
+                    await self._rtn_alarms(
+                        lambda a: self._s12_alarm_matches(a, mon),
+                        reason="S12 back to limits (TM 12,10)",
+                        value=mon.get("value"))
                 self._sync_legacy_fdir_panel()
 
         # S12.13 — full on-board monitoring definition table
@@ -1973,6 +2073,7 @@ class MCSServer:
                                            pus_reports.parse_s12_definitions)
             if defs is not None:
                 self._fdir_model.ingest_s12_definitions(defs, ts=now)
+                await self._rtn_s12_alarms_for_definitions(defs)
                 self._sync_legacy_fdir_panel()
                 info["monitor_defs"] = {"count": len(defs)}
 
@@ -2033,7 +2134,13 @@ class MCSServer:
             except Exception:
                 pass
 
-            if evt.get("severity", 0) >= 3:
+            # 0x9xxx / 0xAxxx are the S5 mirrors of an S12 transition. The
+            # TM(12,9) beside each one already raises (and TM(12,10) clears)
+            # the alarm for that monitor; raising the mirror as well filed a
+            # second, point-event alarm for the same condition that no
+            # back-to-limits report could ever clear.
+            mirror = (int(evt["event_id"]) & 0xF000) in (0x9000, 0xA000)
+            if evt.get("severity", 0) >= 3 and not mirror:
                 await self._raise_alarm({
                     "severity": evt["severity"],
                     "subsystem": self._event_id_to_subsystem(evt["event_id"]),
@@ -2053,6 +2160,13 @@ class MCSServer:
                 mon_id = mon.get("mon_id")
                 ref = (getattr(self, "_s12_ref", {}) or {}).get(mon_id, {}) \
                     if mon_id is not None else {}
+                # A repeat TM(12,9) for the same monitor (e.g. after a sim
+                # reset re-arms the on-board check) replaces the old alarm
+                # rather than stacking a second one for the same condition.
+                await self._rtn_alarms(
+                    lambda a: self._s12_alarm_matches(a, mon),
+                    reason="superseded by a new TM(12,9)",
+                    value=mon.get("value"))
                 lim = "OOL"
                 lo, hi = mon.get("low_limit", ref.get("low_limit")), \
                     mon.get("high_limit", ref.get("high_limit"))
@@ -2067,6 +2181,9 @@ class MCSServer:
                     "limit": lim,
                     "source": "S12",
                     "mon_id": mon_id,
+                    "low_limit": lo,
+                    "high_limit": hi,
+                    "check_type": mon.get("check_type", ref.get("check_type")),
                     "monitor_name": ref.get("name", ""),
                     "config_file": "monitoring/s12_definitions.yaml",
                 })
@@ -2087,6 +2204,14 @@ class MCSServer:
                 # Raised by TMProcessor._process_monitoring; the S12 branch
                 # above already journals those from the decoded packet.
                 continue
+            # A new band on the same parameter supersedes the old one
+            # (yellow -> red, red -> yellow): the old band is no longer the
+            # condition, so its alarm returns to normal.
+            await self._rtn_alarms(
+                lambda a, _t=f"0x{pid:04X}": (a.get("source") == "LIMIT"
+                                              and a.get("parameter") == _t),
+                reason=f"superseded by {status.upper()}",
+                value=ga.get("value"))
             band = ga.get("band") or {}
             red = status.startswith("red")
             edge = ("low" if status.endswith("low") else "high")
@@ -2108,6 +2233,13 @@ class MCSServer:
                 "limit_status": status,
                 "band": band,
             })
+
+        # Alarm/state consistency for the parameters this packet refreshed:
+        # an active LIMIT alarm whose ground limit state is nominal, and —
+        # inside a reconcile window — an active S12 alarm whose value is back
+        # inside its on-board band, return to normal.
+        if fresh_params:
+            await self._reconcile_alarms_with_values(fresh_params, now)
 
         # Parse S15.14 storage status reports and update cached store counts.
         # The record is VARIABLE length (12 + name_len); the previous
@@ -2349,6 +2481,10 @@ class MCSServer:
         self._storage_status = []
         self._memory_dumps.clear()
         self._memory_checks.clear()
+        # A reset / scenario restart / breakpoint load also resets the
+        # on-board monitors without any TM(12,10): reconcile S12 alarms
+        # against the next real-time values (alarm_state docstring).
+        self._arm_alarm_reconcile("sim clock discontinuity")
         # Re-propagate immediately at the new epoch rather than waiting for the
         # next state poll to notice.
         if self._orbit_prop is not None:
@@ -4611,6 +4747,18 @@ class MCSServer:
         except Exception:
             return None
 
+    def _obc_cuc_to_epoch(self, cuc: Optional[float]) -> Optional[float]:
+        """On-board CUC seconds -> SIM-time Unix epoch (see _obc_cuc_to_utc)."""
+        if cuc is None:
+            return None
+        iso = self._obc_cuc_to_utc(cuc)
+        if not iso:
+            return None
+        try:
+            return datetime.fromisoformat(iso).timestamp()
+        except Exception:
+            return None
+
     def _resolve_command_name(self, service: int, subtype: int,
                               data_hex: str = "") -> str:
         """Resolve service/subtype (+ S8 func id) to a catalogue mnemonic.
@@ -4764,7 +4912,8 @@ class MCSServer:
         ground limit check) funnels through here so they carry the same
         shape, the same id sequence and — importantly for acknowledgement
         persistence — the archive row id (``db_id``) that
-        ``TMArchive.acknowledge_alarm`` needs.
+        ``TMArchive.acknowledge_alarm`` needs. The alarm starts in
+        UNACK_ACTIVE; its lifecycle is :mod:`smo_mcs.alarm_state`.
         """
         self._alarm_id_counter += 1
         # RAISE TIME IS SIM TIME (spec Part D.3). An alarm describes a moment
@@ -4776,6 +4925,7 @@ class MCSServer:
         alarm.setdefault("acknowledged", False)
         alarm.setdefault("limit", "")
         alarm["id"] = self._alarm_id_counter
+        alarm_state.init(alarm, ts=float(alarm["timestamp"]))
         # "This alarm ⇒ run CTG-001". Resolved once, at raise time, so the
         # journal row, the WS broadcast and the archived copy all agree.
         proc = self.resolve_alarm_procedure(alarm)
@@ -4793,50 +4943,11 @@ class MCSServer:
                 alarm["db_id"] = row_id
         except Exception:
             pass
-        alarm_msg = json.dumps({"type": "alarm", "alarm": alarm})
-        async with self._ws_lock:
-            clients = list(self._ws_clients)
-        for ws, _pos in clients:
-            try:
-                await ws.send_str(alarm_msg)
-            except Exception:
-                pass
+        await self._ws_broadcast({"type": "alarm", "alarm": alarm})
         return alarm
 
-    async def _clear_ground_alarm(self, param_id: int, ga: dict) -> None:
-        """A limited parameter came back inside its band.
-
-        The journal entry stays (it is a log), but it is marked cleared and
-        auto-acknowledged so a transient does not leave the header counter
-        permanently lit; the WS message lets open consoles restyle the row.
-        """
-        tag = f"0x{param_id:04X}"
-        # CLEAR TIME IS SIM TIME, like the raise (spec Part D.3): the two are
-        # subtracted to give the duration of the excursion, so they must be on
-        # one clock.
-        cleared_ts = self.sim_now_ts()
-        cleared: list[int] = []
-        for a in self._alarm_journal:
-            if a.get("source") == "LIMIT" and a.get("parameter") == tag \
-                    and not a.get("cleared"):
-                a["cleared"] = True
-                a["cleared_ts"] = cleared_ts
-                a["acknowledged"] = True
-                cleared.append(a["id"])
-                db_id = a.get("db_id")
-                if db_id:
-                    try:
-                        self._archive.acknowledge_alarm(int(db_id))
-                    except Exception:
-                        pass
-        if not cleared:
-            return
-        msg = json.dumps({
-            "type": "alarm_cleared",
-            "parameter": tag,
-            "ids": cleared,
-            "value": ga.get("value"),
-        })
+    async def _ws_broadcast(self, payload: dict) -> None:
+        msg = json.dumps(payload)
         async with self._ws_lock:
             clients = list(self._ws_clients)
         for ws, _pos in clients:
@@ -4844,6 +4955,161 @@ class MCSServer:
                 await ws.send_str(msg)
             except Exception:
                 pass
+
+    def live_alarms(self) -> list[dict]:
+        """Alarms that belong on the live list (every state but ACK_RTN)."""
+        return [a for a in self._alarm_journal if alarm_state.is_live(a)]
+
+    def _alarm_state_changed(self, alarm: dict) -> None:
+        """Keep the legacy FDIR panel and the archive in step with *alarm*."""
+        try:
+            self._fdir_alarm_panel.set_alarm_state(
+                int(alarm["id"]), acknowledged=bool(alarm.get("acknowledged")),
+                active=alarm_state.is_active(alarm))
+        except Exception:
+            pass
+
+    async def _rtn_alarms(self, match, *, reason: str,
+                          value=None) -> list[dict]:
+        """Return every ACTIVE alarm satisfying *match* to normal.
+
+        Acknowledgement is not implied (ISA-18.2): an unacknowledged alarm
+        becomes UNACK_RTN and stays on the live list, marked "returned to
+        normal", until someone acknowledges it; an acknowledged one becomes
+        ACK_RTN and leaves the live list. One ``alarm_cleared`` WS message
+        carries the updated alarms so every console restyles or drops them.
+        """
+        # RTN TIME IS SIM TIME, like the raise (spec Part D.3): the two are
+        # subtracted to give the duration of the excursion.
+        ts = self.sim_now_ts()
+        changed: list[dict] = []
+        for a in self._alarm_journal:
+            if not alarm_state.is_active(a) or a.get("point_event"):
+                continue
+            try:
+                hit = match(a)
+            except Exception:
+                hit = False
+            if hit and alarm_state.return_to_normal(
+                    a, ts=ts, reason=reason, value=value):
+                self._alarm_state_changed(a)
+                changed.append(a)
+        if changed:
+            await self._ws_broadcast({
+                "type": "alarm_cleared",
+                "parameter": changed[0].get("parameter"),
+                "ids": [a["id"] for a in changed],
+                "value": value,
+                "reason": reason,
+                "alarms": changed,
+            })
+        return changed
+
+    async def _clear_ground_alarm(self, param_id: int, ga: dict) -> None:
+        """A limited parameter came back inside its band (with hysteresis).
+
+        The alarm returns to normal; it is NOT auto-acknowledged any more —
+        an excursion nobody saw stays on the list, marked "returned to
+        normal", until it is acknowledged (it used to be silently acked).
+        """
+        tag = f"0x{param_id:04X}"
+        await self._rtn_alarms(
+            lambda a: a.get("source") == "LIMIT" and a.get("parameter") == tag,
+            reason="ground limit back to nominal", value=ga.get("value"))
+
+    @staticmethod
+    def _s12_alarm_matches(alarm: dict, mon: dict) -> bool:
+        """Does S12 *alarm* belong to the monitor in transition report *mon*?"""
+        if alarm.get("source") != "S12":
+            return False
+        mid = mon.get("mon_id")
+        if mid is not None and alarm.get("mon_id") is not None:
+            return int(alarm["mon_id"]) == int(mid)
+        try:
+            return alarm.get("parameter") == f"0x{int(mon['param_id']):04X}"
+        except Exception:
+            return False
+
+    async def _rtn_s12_alarms_for_definitions(self, defs: list[dict]) -> None:
+        """TM(12,13): an S12 alarm whose monitor is now disabled or deleted
+        can never receive its TM(12,10), so its condition is over."""
+        enabled = {int(d["mon_id"]) for d in defs
+                   if d.get("mon_id") is not None and d.get("enabled", True)}
+        known = {int(d["mon_id"]) for d in defs if d.get("mon_id") is not None}
+
+        def gone(a: dict) -> bool:
+            if a.get("source") != "S12" or a.get("mon_id") is None:
+                return False
+            return int(a["mon_id"]) not in enabled
+
+        for a in list(self._alarm_journal):
+            if gone(a) and alarm_state.is_active(a):
+                why = ("monitor disabled (TM 12,13)"
+                       if int(a["mon_id"]) in known
+                       else "monitor deleted (TM 12,13)")
+                await self._rtn_alarms(
+                    lambda x, _id=a["id"]: x.get("id") == _id, reason=why)
+
+    #: Real-time TM silence (sim s) after which the next packet opens an
+    #: alarm reconcile window — i.e. every new pass.
+    ALARM_RECONCILE_GAP_S = 60.0
+
+    def _arm_alarm_reconcile(self, reason: str, window_s: float = 300.0) -> None:
+        """Open a reconcile window (TM reconnect, sim reset/scenario restart,
+        breakpoint load, time jump): until it closes, fresh real-time
+        telemetry may return S12 alarms to normal on value, because the
+        TM(12,10) that should have done it may never come."""
+        now = self.sim_now_ts()
+        self._alarm_reconcile = {"reason": reason, "armed_ts": now,
+                                 "until_ts": now + float(window_s)}
+
+    def _s12_band(self, alarm: dict) -> Optional[tuple[float, float]]:
+        mid = alarm.get("mon_id")
+        ref = (getattr(self, "_s12_ref", {}) or {}).get(mid, {}) \
+            if mid is not None else {}
+        lo = alarm.get("low_limit", ref.get("low_limit"))
+        hi = alarm.get("high_limit", ref.get("high_limit"))
+        ctype = alarm.get("check_type", ref.get("check_type", 0))
+        if lo is None or hi is None or int(ctype or 0) != 0:
+            return None          # delta checks cannot be judged from one value
+        return float(lo), float(hi)
+
+    async def _reconcile_alarms_with_values(self, fresh: dict[int, float],
+                                            now: float) -> None:
+        """Clear active alarms that fresh real-time values contradict."""
+        statuses = self._tm_processor.limit_statuses()
+        rec = self._alarm_reconcile
+        if rec is not None and now > rec["until_ts"]:
+            self._alarm_reconcile = rec = None
+        for a in list(self._alarm_journal):
+            if not alarm_state.is_active(a) or a.get("point_event"):
+                continue
+            par = a.get("parameter")
+            if not isinstance(par, str) or not par.startswith("0x"):
+                continue
+            try:
+                pid = int(par, 16)
+            except ValueError:
+                continue
+            if pid not in fresh:
+                continue
+            src = a.get("source")
+            if src == "LIMIT":
+                # Invariant: an active LIMIT alarm needs a non-nominal ground
+                # limit state. The state machine is the authority.
+                if statuses.get(pid, "nominal") == "nominal":
+                    await self._rtn_alarms(
+                        lambda x, _id=a["id"]: x.get("id") == _id,
+                        reason="ground limit state nominal",
+                        value=fresh[pid])
+            elif src == "S12" and rec is not None:
+                band = self._s12_band(a)
+                if band and band[0] <= fresh[pid] <= band[1]:
+                    await self._rtn_alarms(
+                        lambda x, _id=a["id"]: x.get("id") == _id,
+                        reason=(f"reconciled after {rec['reason']}: value "
+                                f"inside on-board limits"),
+                        value=fresh[pid])
 
     async def _handle_limits(self, request):
         """GET /api/limits — the ground limit bands, and the live state.
@@ -5050,13 +5316,49 @@ class MCSServer:
     def unacknowledged_alarm_count(self) -> int:
         return sum(1 for a in self._alarm_journal if not a.get("acknowledged"))
 
+    async def _acknowledge_alarm(self, alarm_id: int) -> Optional[dict]:
+        """Operator acknowledgement (both ack routes). UNACK_ACTIVE ->
+        ACK_ACTIVE (standing), UNACK_RTN -> ACK_RTN (leaves the live list);
+        an S5 point event closes on acknowledgement. Broadcast so every
+        console updates, not just the one that clicked."""
+        for alarm in self._alarm_journal:
+            if alarm.get("id") != alarm_id:
+                continue
+            was_acked = bool(alarm.get("acknowledged"))
+            alarm_state.acknowledge(alarm, ts=self.sim_now_ts())
+            self._persist_alarm_ack(alarm)
+            try:
+                self._fdir_alarm_panel.acknowledge_alarm(alarm_id)
+            except Exception:
+                pass
+            self._alarm_state_changed(alarm)
+            if not was_acked:
+                # Console/mission log (G8): alarm handling is part of
+                # the decision record.
+                self._console_log(
+                    "ack",
+                    f"Alarm {alarm_id} acknowledged"
+                    f" ({alarm.get('parameter') or alarm.get('subsystem', '')})",
+                    ref=f"alarm:{alarm_id}")
+            await self._ws_broadcast({"type": "alarm_update", "alarms": [alarm]})
+            return alarm
+        return None
+
     # ── Alarm journal API handlers ────────────────────────────────────
 
     async def _handle_alarms_get(self, request):
-        """Return alarm journal entries, optionally filtered."""
+        """Return the LIVE alarm list (every state but ACK_RTN), filtered.
+
+        ``?all=1`` returns the whole in-memory journal instead, including
+        acknowledged alarms that have returned to normal (history; the
+        archive behind ``/api/archive/alarms`` keeps them across restarts).
+        """
         subsystem = request.query.get("subsystem")
         severity = request.query.get("severity")
-        alarms = list(self._alarm_journal)
+        if str(request.query.get("all", "")).lower() in ("1", "true", "yes"):
+            alarms = list(self._alarm_journal)
+        else:
+            alarms = self.live_alarms()
         if subsystem:
             alarms = [a for a in alarms if a["subsystem"] == subsystem]
         if severity:
@@ -5076,25 +5378,14 @@ class MCSServer:
         """
         try:
             alarm_id = int(request.match_info["alarm_id"])
-            for alarm in self._alarm_journal:
-                if alarm["id"] == alarm_id:
-                    alarm["acknowledged"] = True
-                    self._persist_alarm_ack(alarm)
-                    try:
-                        self._fdir_alarm_panel.acknowledge_alarm(alarm_id)
-                    except Exception:
-                        pass
-                    # Console/mission log (G8): alarm handling is part of
-                    # the decision record.
-                    self._console_log(
-                        "ack",
-                        f"Alarm {alarm_id} acknowledged"
-                        f" ({alarm.get('parameter') or alarm.get('subsystem', '')})",
-                        ref=f"alarm:{alarm_id}")
-                    return web.json_response({
-                        "status": "acknowledged", "id": alarm_id,
-                        "unacknowledged": self.unacknowledged_alarm_count(),
-                    })
+            alarm = await self._acknowledge_alarm(alarm_id)
+            if alarm is not None:
+                return web.json_response({
+                    "status": "acknowledged", "id": alarm_id,
+                    "state": alarm.get("state"),
+                    "live": alarm.get("live"),
+                    "unacknowledged": self.unacknowledged_alarm_count(),
+                })
             return web.json_response(
                 {"error": f"Alarm {alarm_id} not found"}, status=404
             )
@@ -5396,6 +5687,24 @@ class MCSServer:
                 {"status": "error", "message": str(e)}, status=400
             )
 
+    async def _handle_tm_stored(self, request):
+        """GET /api/tm-stored — S15 playback (VC1) packets received.
+
+        Stored TM is kept out of every live display by design; this is the
+        one place the console can see that a dump is arriving. The content
+        is analysed in the delayed-TM viewer / ``/dumps`` page.
+        """
+        st = self._stored_tm_stats
+        return web.json_response({
+            "packets": self.tm_stored_packets_received,
+            "by_service": dict(st["by_service"]),
+            "last_rx_ts": st["last_rx_ts"],
+            "oldest_obc_cuc": st["oldest_obc_cuc"],
+            "newest_obc_cuc": st["newest_obc_cuc"],
+            "virtual_channel": 1,
+            "analyse_at": "/dumps",
+        })
+
     async def _handle_tm_dump_data(self, request):
         """Return stored TM dump data for playback.
 
@@ -5684,6 +5993,7 @@ class MCSServer:
             "stale": bool(self._latest_state.get("stale", True)),
             "last_frame_age_s": self._latest_state.get("last_frame_age_s"),
             "tm_packets_received": self.tm_packets_received,
+            "tm_stored_packets_received": self.tm_stored_packets_received,
         }
         data["unacknowledged_alarms"] = self.unacknowledged_alarm_count()
         return web.json_response(data)
@@ -5696,16 +6006,7 @@ class MCSServer:
             # Keep the journal and the archive in step — the display route
             # used to ack only the in-memory FDIR panel, so the same alarm
             # read back unacknowledged from /api/alarms and from the archive.
-            for alarm in self._alarm_journal:
-                if alarm.get("id") == alarm_id:
-                    alarm["acknowledged"] = True
-                    self._persist_alarm_ack(alarm)
-                    self._console_log(
-                        "ack",
-                        f"Alarm {alarm_id} acknowledged"
-                        f" ({alarm.get('parameter') or alarm.get('subsystem', '')})",
-                        ref=f"alarm:{alarm_id}")
-                    break
+            await self._acknowledge_alarm(alarm_id)
             return web.json_response({"status": "acknowledged", "alarm_id": alarm_id})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
