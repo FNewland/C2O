@@ -241,3 +241,35 @@ def test_dev_default_never_creates_a_dir_in_the_repo(monkeypatch):
     d = st.default_dir()
     ops = repo / "sim" / "workspace" / "logbook"
     assert d == ops if ops.is_dir() else repo not in d.parents
+
+
+def test_shared_group_modes(store, lbdir, monkeypatch):
+    """Ground VM: SMO (uid 10001) and SpaceCDF (10002, smo group) share the store."""
+    monkeypatch.setenv("SMO_LOGBOOK_SHARED_GROUP", "1")
+    _add(store)
+    assert stat.S_IMODE(os.stat(lbdir).st_mode) == 0o2770
+    assert stat.S_IMODE(os.stat(store.path_for(ALICE)).st_mode) == 0o660
+
+
+def test_edit_churn_is_compacted_like_smo_common(store, monkeypatch):
+    monkeypatch.setattr(st, "COMPACT_SLACK", 10)
+    e = _add(store, text="v0")
+    keep = _add(store, text="untouched")
+    store.mark_downloaded(ALICE, "md")
+    for i in range(12):
+        store.edit(ALICE, e["id"], f"v{i + 1}")
+    recs = _lines(store)
+    assert len(recs) < 10, recs
+    f = store.folded(ALICE)
+    assert f.entries[e["id"]]["text"] == "v12" and f.entries[e["id"]]["edited"]
+    assert f.entries[keep["id"]]["text"] == "untouched" and f.last_download is not None
+
+
+def test_text_is_normalised_and_lang_defaults_to_en(store):
+    e = store.add(ALICE, {"kind": "thought", "tool": "design", "text": "  a\r\nb  "})
+    assert e["text"] == "a\nb" and e["lang"] == "en"
+
+
+def test_context_strings_are_clipped(store):
+    e = _add(store, context={"element": "x" * 500})
+    assert len(e["context"]["element"]) == 200

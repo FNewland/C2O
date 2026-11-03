@@ -151,7 +151,7 @@ def _ws_texts(entry: dict, lookup: WorksheetLookup | None, lang: str) -> tuple[s
     order = 10_000
     if lookup:
         title, question, order = lookup(wid, q, lang)
-    return (title or ws.get("title") or wid, question or ws.get("question") or q, order)
+    return (title or ws.get("title") or wid, question or ws.get("q_text") or ws.get("question") or q, order)
 
 
 def _context_value(k: str, v: Any, lang: str) -> str:
@@ -204,6 +204,12 @@ def _split(items: list[dict], lookup: WorksheetLookup | None, lang: str):
     for sheet in sheets.values():
         sheet["questions"] = OrderedDict(sorted(sheet["questions"].items(), key=lambda kv: kv[1]["order"]))
     return plain, sheets
+
+
+def _check_mark(e: dict) -> str:
+    """A worksheet checkbox answer (smo-common's ``checked``) as [x] / [ ]."""
+    c = (e.get("worksheet") or {}).get("checked")
+    return "[x] " if c is True else "[ ] " if c is False else ""
 
 
 def _meta_bits(e: dict, lang: str, tz: tzinfo = timezone.utc) -> list[str]:
@@ -288,7 +294,7 @@ def render_markdown(*, entries: list[dict], person_label: str, exported_at: date
                         meta = _meta_bits(a, lang, tz)
                         stamp = fmt_utc(parse_ts(a.get("ts")), with_date=False, tz=tz)
                         L.append(f"_{stamp}{' · ' + '; '.join(meta) if meta else ''}_  ")
-                        L.append(_md_text(a.get("text", "")))
+                        L.append(_check_mark(a) + _md_text(a.get("text", "")))
                         L.append("")
     L.append("---")
     L.append("")
@@ -386,7 +392,7 @@ def render_html(*, entries: list[dict], person_label: str, exported_at: datetime
                         P.append('<div class="entry worksheet">'
                                  f'<span class="stamp">{_h(fmt_utc(parse_ts(a.get("ts")), with_date=False, tz=tz))}</span>'
                                  + (f'<span class="meta-bits">{_h("; ".join(meta))}</span>' if meta else "")
-                                 + f'<p class="text">{_h(a.get("text", ""))}</p></div>')
+                                 + f'<p class="text">{_h(_check_mark(a) + a.get("text", ""))}</p></div>')
                 P.append("</div>")
         P.append("</section>")
     footer = (s("footer", lang, t=fmt_utc(expires_at, tz=tz), h=f"{retention_h:g}") if expires_at
@@ -408,7 +414,7 @@ def render_json(*, entries: list[dict], person_label: str, exported_at: datetime
         e = dict(e)
         if e.get("kind") == "worksheet":
             title, question, _ = _ws_texts(e, lookup, lang)
-            e["worksheet"] = {**(e.get("worksheet") or {}), "title": title, "question": question}
+            e["worksheet"] = {**(e.get("worksheet") or {}), "title": title, "q_text": question}
         out.append(e)
     return json.dumps({
         "v": 1,

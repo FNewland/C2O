@@ -68,7 +68,7 @@ export function LogbookPanel() {
       </header>
       <Tabs<PanelTab> idBase="lb" label={t('Logbook')} value={tab} onChange={setTab} className="c2o-logbook__tabs"
         items={[
-          { id: 'entries', label: t('Entries'), meta: <span className="mono">{data?.total ?? 0}</span> },
+          { id: 'entries', label: t('Entries'), meta: <span className="mono">{data?.count ?? 0}</span> },
           { id: 'worksheets', label: t('Worksheets'), meta: <span className="mono">{matched}</span> },
         ]} />
       <div className="c2o-logbook__body" {...tabPanelProps('lb', tab)}>
@@ -212,7 +212,7 @@ function EntryRow({ entry }: { entry: Entry }) {
       </div>
       {entry.worksheet && (
         <p className="c2o-lb-entry__ws t-12 c-2">
-          <span className="mono">{entry.worksheet.id}</span> · {entry.worksheet.question || entry.worksheet.q}
+          <span className="mono">{entry.worksheet.id}</span> · {entry.worksheet.q_text || entry.worksheet.q}
         </p>
       )}
       {editing ? (
@@ -297,7 +297,7 @@ function QuestionBlock({ ws, q, context }: { ws: Worksheet; q: Question; context
     setBusy(true); setErr(null)
     try {
       await add({ kind: 'worksheet', text, context,
-        worksheet: { id: ws.id, q: q.id, title: ws.title, question: q.text } })
+        worksheet: { id: ws.id, q: q.id, title: ws.title, q_text: q.text } })
       setText('')
     } catch (e) { setErr(errText(e, t)) } finally { setBusy(false) }
   }
@@ -336,7 +336,7 @@ export function DownloadButtons({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation()
   const { refresh } = useLogbookMutations()
   const { data } = useLogbook()
-  const none = !data || data.total === 0
+  const none = !data || data.count === 0
   const reason = none ? t('Nothing to download yet') : undefined
   return (
     <span className="c2o-lb-dl" role="group" aria-label={t('Download your logbook')}>
@@ -366,7 +366,7 @@ function LogbookFooter() {
         <ArmButton label={t('Delete now')} armedLabel={t('Confirm: delete all entries')} variant="default"
           className="c2o-reason-up c2o-reason-end"
           title={t('Delete your whole logbook from the server now, in every C2O tool')}
-          disabledReason={!data || data.total === 0 ? t('Nothing to delete') : undefined}
+          disabledReason={!data || data.count === 0 ? t('Nothing to delete') : undefined}
           onConfirm={deleteAll} />
       </div>
     </footer>

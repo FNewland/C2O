@@ -6,14 +6,21 @@ container and ``spacecdf`` mount the same volume, so one person's logbook
 spans every tool. Keep this module byte-compatible with the spec:
 
 - directory ``$SMO_LOGBOOK_DIR`` (default ``/opt/smo/workspace/logbook`` in
-  containers), mode 0700;
-- file ``sha256(person_id)[:32].jsonl``, mode 0600;
+  containers), mode 0700; file ``sha256(person_id)[:32].jsonl``, mode 0600.
+  With ``SMO_LOGBOOK_SHARED_GROUP=1`` (ground VM: the SMO containers run as
+  uid 10001, SpaceCDF as 10002 with the smo group added) 0660 files in a
+  setgid 02770 directory, as smo-common does;
 - one JSON object per line; edits and deletes are new records with ``op``;
 - writers hold an exclusive ``fcntl.flock`` while appending, readers a
   shared one, and fold the records (last edit wins, deletes drop);
 - purge: the whole file goes when its mtime is older than the retention
   (48 h); a kept file is rewritten without entries older than the max age
   (7 days). Purge is idempotent and safe to run from several processes.
+
+Edit churn is bounded the same way as smo-common: once a file holds
+``COMPACT_SLACK`` more records than live entries it is rewritten in place as
+its folded state (an add per entry, an edit where it was edited, the newest
+download marker).
 
 The file's mtime is the time of the person's last *write*. Recording a
 download marker or rewriting the file during purge restores the previous
@@ -45,8 +52,9 @@ LANGS = ("en", "fr")
 
 TEXT_LIMIT = 8_000          # characters per entry
 ENTRY_LIMIT = 2_000         # live entries per person
-RECORD_LIMIT = 20_000       # raw lines per file (edits included)
+COMPACT_SLACK = 2_000       # records beyond the live entries before a compaction
 CONTEXT_LIMIT = 4_096       # bytes of JSON for the context object
+CONTEXT_VALUE_MAX = 200     # characters per context string (as smo-common)
 
 CONTAINER_DIR = Path("/opt/smo/workspace/logbook")
 
@@ -76,6 +84,15 @@ def retention_hours() -> float:
 
 def max_age_hours() -> float:
     return _env_float("SMO_LOGBOOK_MAX_AGE_H", 168.0)
+
+
+def shared_group() -> bool:
+    return os.environ.get("SMO_LOGBOOK_SHARED_GROUP", "").strip().lower() in ("1", "true", "yes")
+
+
+def modes() -> tuple[int, int]:
+    """(directory mode, file mode)."""
+    return (0o2770, 0o660) if shared_group() else (0o700, 0o600)
 
 
 def default_dir() -> Path:
@@ -222,6 +239,8 @@ def fold(records: list[dict]) -> Folded:
             if e is None or not isinstance(r.get("text"), str):
                 continue
             e["text"] = r["text"]
+            if isinstance(r.get("worksheet"), dict) and e.get("worksheet"):
+                e["worksheet"] = {**e["worksheet"], **r["worksheet"]}   # e.g. {"checked": true}
             e["updated_ts"] = r.get("ts")
             e["edited"] = True
             out.last_write = _later(out.last_write, ts)
@@ -236,6 +255,35 @@ def fold(records: list[dict]) -> Folded:
     return out
 
 
+def compacted(records: list[dict], keep=lambda e: True) -> list[dict]:
+    """The folded state as records: an add per live entry (an edit after it
+    when it was edited) and the newest download marker. Same shape as
+    smo-common's compaction."""
+    f = fold(records)
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    out: list[dict] = []
+    for e in sorted(f.entries.values(), key=lambda e: parse_ts(e.get("ts")) or epoch):
+        if not keep(e):
+            continue
+        r = {"v": SCHEMA_VERSION, "id": e["id"], "op": "add", "ts": e["ts"], "tool": e.get("tool"),
+             "kind": e.get("kind"), "text": e.get("text"), "context": e.get("context") or {},
+             "lang": e.get("lang") or "en"}
+        if e.get("sim_ts"):
+            r["sim_ts"] = e["sim_ts"]
+        if e.get("worksheet"):
+            r["worksheet"] = e["worksheet"]
+        out.append(r)
+        if e.get("edited"):
+            out.append({"v": SCHEMA_VERSION, "id": e["id"], "op": "edit", "ts": e.get("updated_ts"),
+                        "text": e.get("text")})
+    if f.last_download:
+        rec = {"v": SCHEMA_VERSION, "op": "downloaded", "ts": iso(f.last_download)}
+        if f.last_download_format:
+            rec["format"] = f.last_download_format
+        out.append(rec)
+    return out
+
+
 # ─── Validation ───────────────────────────────────────────────────────────
 
 def _clean_context(ctx: Any) -> dict:
@@ -247,7 +295,9 @@ def _clean_context(ctx: Any) -> dict:
     for k, v in ctx.items():
         if not isinstance(k, str) or len(k) > 64:
             raise LogbookError(400, "context keys must be short strings")
-        if v is None or isinstance(v, (str, int, float, bool)):
+        if isinstance(v, str):
+            clean[k] = v[:CONTEXT_VALUE_MAX]
+        elif v is None or isinstance(v, (int, float, bool)):
             clean[k] = v
         else:
             raise LogbookError(400, f"context.{k} must be a string, number, boolean or null")
@@ -262,19 +312,24 @@ def _clean_worksheet(ws: Any) -> dict | None:
     if not isinstance(ws, dict) or not isinstance(ws.get("id"), str) or not isinstance(ws.get("q"), str):
         raise LogbookError(400, "worksheet must be {id, q}")
     clean = {"id": ws["id"][:64], "q": ws["q"][:64]}
-    # Optional: the worksheet title and question text as the participant saw
-    # them, so any tool's export can print the question even when it does not
-    # carry that workbook's YAML.
-    for k in ("title", "question"):
+    # Optional, same names as smo-common: the worksheet title and question
+    # text as the participant saw them (q_text), so any tool's export prints
+    # the question without that workbook's YAML; section; a checkbox state.
+    if "q_text" not in ws and isinstance(ws.get("question"), str):
+        ws = {**ws, "q_text": ws["question"]}
+    for k in ("title", "q_text", "section"):
         if isinstance(ws.get(k), str) and ws[k].strip():
-            clean[k] = ws[k][:2_000]
+            clean[k] = ws[k][:1_000]
+    if isinstance(ws.get("checked"), bool):
+        clean["checked"] = ws["checked"]
     return clean
 
 
 def _check_text(text: Any) -> str:
     if not isinstance(text, str):
         raise LogbookError(400, "text must be a string")
-    if not text.strip():
+    text = text.replace("\r\n", "\n").strip()
+    if not text:
         raise LogbookError(400, "text is empty")
     if len(text) > TEXT_LIMIT:
         raise LogbookError(413, f"An entry holds at most {TEXT_LIMIT} characters.")
@@ -295,8 +350,8 @@ def validate_new(payload: Any) -> dict:
     worksheet = _clean_worksheet(payload.get("worksheet"))
     if kind == "worksheet" and worksheet is None:
         raise LogbookError(400, "a worksheet answer needs worksheet {id, q}")
-    lang = payload.get("lang") or None
-    if lang is not None and lang not in LANGS:
+    lang = payload.get("lang") or "en"
+    if lang not in LANGS:
         raise LogbookError(400, "lang must be en or fr")
     sim_ts = payload.get("sim_ts")
     if sim_ts is not None and (not isinstance(sim_ts, str) or parse_ts(sim_ts) is None):
@@ -367,9 +422,11 @@ class LogbookStore:
 
     def _ensure_dir(self) -> None:
         root = self.root
-        root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        dmode, _ = modes()
+        root.mkdir(parents=True, exist_ok=True, mode=dmode & 0o777)
         try:
-            os.chmod(root, 0o700)
+            if os.stat(root).st_mode & 0o7777 != dmode:
+                os.chmod(root, dmode)
         except OSError:
             pass
 
@@ -386,7 +443,7 @@ class LogbookStore:
                 self._ensure_dir()
                 flags |= os.O_CREAT
             try:
-                fd = os.open(path, flags, 0o600)
+                fd = os.open(path, flags, modes()[1])
             except FileNotFoundError:
                 if create:
                     raise
@@ -402,6 +459,11 @@ class LogbookStore:
                     same = False
                 if not same:
                     continue          # unlinked under us: reopen
+                if create and st.st_mode & 0o777 != modes()[1]:
+                    try:
+                        os.fchmod(fd, modes()[1])    # the umask may have stripped group bits
+                    except OSError:
+                        pass
                 yield fd
                 return
             finally:
@@ -447,29 +509,31 @@ class LogbookStore:
                     "context": fields["context"]})
         if fields["worksheet"]:
             rec["worksheet"] = fields["worksheet"]
-        if fields["lang"]:
-            rec["lang"] = fields["lang"]
+        rec["lang"] = fields["lang"]
         with self._locked(self.path_for(person_id), exclusive=True, create=True) as fd:
             records = _parse_lines(_read_fd(fd))
-            if len(fold(records).entries) >= ENTRY_LIMIT or len(records) >= RECORD_LIMIT:
+            if len(fold(records).entries) >= ENTRY_LIMIT:
                 raise LogbookError(413, (
                     f"Your logbook is full ({ENTRY_LIMIT} entries). Download it, "
                     "then use Delete now to start a fresh one."))
             self._write(fd, [rec])
+            self._maybe_compact(fd, records + [rec])
         return fold([rec]).entries[rec["id"]]
 
-    def edit(self, person_id: str, entry_id: str, text: Any, *, now: datetime | None = None) -> dict:
+    def edit(self, person_id: str, entry_id: str, text: Any, *, checked: bool | None = None,
+             now: datetime | None = None) -> dict:
         text = _check_text(text)
         rec = {"v": SCHEMA_VERSION, "id": entry_id, "op": "edit", "ts": iso(now or now_utc()), "text": text}
+        if isinstance(checked, bool):
+            rec["worksheet"] = {"checked": checked}
         with self._locked(self.path_for(person_id), exclusive=True, create=False) as fd:
             if fd is None:
                 raise LogbookError(404, "no such entry")
             records = _parse_lines(_read_fd(fd))
             if entry_id not in fold(records).entries:
                 raise LogbookError(404, "no such entry")
-            if len(records) >= RECORD_LIMIT:
-                raise LogbookError(413, "Your logbook is full. Download it, then use Delete now.")
             self._write(fd, [rec])
+            self._maybe_compact(fd, records + [rec])
             return fold(records + [rec]).entries[entry_id]
 
     def delete(self, person_id: str, entry_id: str, *, now: datetime | None = None) -> None:
@@ -497,6 +561,17 @@ class LogbookStore:
                 return False
             os.unlink(path)
             return True
+
+    def _rewrite(self, fd: int, records: list[dict]) -> None:
+        """Rewrite in place (same inode, so other processes' fds stay valid)."""
+        os.ftruncate(fd, 0)
+        self._write(fd, records)
+
+    def _maybe_compact(self, fd: int, records: list[dict]) -> None:
+        if len(records) - len(fold(records).entries) < COMPACT_SLACK:
+            return
+        self._rewrite(fd, compacted(records))
+        os.utime(fd)          # follows a write: the mtime says "now"
 
     # ── purge ──
 

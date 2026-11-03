@@ -58,7 +58,7 @@ async def test_iap_wins_over_cookie(client, lbdir):
 
 async def test_crud_round_trip(client):
     r = await client.post("/api/logbook/entries", json=_entry(), headers=IAP)
-    assert r.status_code == 200
+    assert r.status_code == 201
     e = r.json()
     assert e["tool"] == "design" and e["kind"] == "decision" and not e["edited"]
     r = await client.patch(f"/api/logbook/entries/{e['id']}", json={"text": "Reject it instead"}, headers=IAP)
@@ -76,9 +76,10 @@ async def test_filters(client):
     await client.post("/api/logbook/entries", json=_entry(), headers=IAP)
     await client.post("/api/logbook/entries", json=_entry(tool="mcs", text="from the MCS"), headers=IAP)
     body = (await client.get("/api/logbook?tool=mcs", headers=IAP)).json()
-    assert body["count"] == 1 and body["total"] == 2 and body["entries"][0]["tool"] == "mcs"
+    assert len(body["entries"]) == 1 and body["entries"][0]["tool"] == "mcs"
+    assert body["count"] == 2, "count is every live entry (as smo-common); filters narrow entries"
     body = (await client.get("/api/logbook?since=2099-01-01T00:00:00Z", headers=IAP)).json()
-    assert body["count"] == 0
+    assert body["entries"] == []
 
 
 async def test_errors_are_json(client):
@@ -117,7 +118,7 @@ async def test_export_html_and_json(client):
 
 async def test_delete_now(client):
     await client.post("/api/logbook/entries", json=_entry(), headers=IAP)
-    assert (await client.delete("/api/logbook", headers=IAP)).json() == {"ok": True}
+    assert (await client.delete("/api/logbook", headers=IAP)).json() == {"ok": True, "deleted": True}
     assert (await client.get("/api/logbook", headers=IAP)).json()["count"] == 0
 
 
@@ -163,3 +164,14 @@ def test_main_app_mounts_the_logbook():
     for p in ("/api/logbook", "/api/logbook/entries", "/api/logbook/entries/{entry_id}",
               "/api/logbook/export", "/api/logbook/worksheets"):
         assert p in paths, p
+
+
+async def test_worksheet_answer_carries_its_question_text(client, lbdir):
+    """Like smo-common: title and q_text are stored so any tool's export prints them."""
+    r = await client.post("/api/logbook/entries", headers=IAP, json={
+        "kind": "worksheet", "tool": "design", "text": "x", "lang": "fr",
+        "worksheet": {"id": "LW-2.3", "q": "B"}})
+    ws = r.json()["worksheet"]
+    assert ws["q_text"].startswith("Partie B") and ws["title"]
+    r = await client.patch(f"/api/logbook/entries/{r.json()['id']}", headers=IAP, json={"text": "y", "checked": True})
+    assert r.json()["worksheet"]["checked"] is True and r.json()["worksheet"]["q_text"].startswith("Partie B")
