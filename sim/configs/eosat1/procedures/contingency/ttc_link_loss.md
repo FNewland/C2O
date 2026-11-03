@@ -1,7 +1,10 @@
 # CTG-003: TTC Link Loss Recovery
 **Subsystem:** TT&C
 **Phase:** CONTINGENCY
-**Revision:** 1.0
+**Revision:** 1.1 --- 2026-11-02 (Franz's ruling S4): with both transponders
+failed the link is really cut (no TC received, no TM, beacon included), so the
+card now says what the blind steps can and cannot reach, and Step 6 names the
+real on-board autonomy (FDIR TTC-01 command-loss timer, 24 h).
 **Approved:** Flight Operations Director
 
 ## Purpose
@@ -37,6 +40,11 @@ and link restoration before escalating to emergency autonomous operations.
 ### Step 3 — Switch to Redundant Transponder
 **LABEL:** `STEP-3`
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1) — blind command
+**Note:** The transponders are cold-redundant: the switch is received only by
+the SELECTED unit. If the primary is dead it hears nothing and this command is
+lost --- the switch then happens only on board, when the command-loss timer
+expires (Step 6). It is still worth sending: if the loss is on the transmit side
+(PA off, `ttc_tx` line shed) the receiver is alive and acts on it.
 **Action:** Wait 45s for redundant transponder power-up and frequency lock
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) within 45s
 **Verify:** `ttc.mode` (0x0500) indicates redundant unit active
@@ -70,13 +78,13 @@ and link restoration before escalating to emergency autonomous operations.
 **Action:** Log the failed recovery attempt with timestamps of all blind commands sent
 **Action:** Notify Mission Director and Flight Dynamics of sustained link loss
 **Action:** Schedule next available ground station pass for re-acquisition attempt
-**Action:** If spacecraft has autonomous safe mode timer (24h no-contact), confirm onboard timer is running
+**Action:** Record the time of the last ACCEPTED telecommand (last S1.1). The on-board command-loss timer (FDIR TTC-01, `ttc.time_since_last_tc` 0x053D) switches the spacecraft to the redundant transponder 24 h after it (event CMD_LOSS_TIMEOUT 0x0514, S19 ea 4003): schedule the first passes after that time. Blind commands that are not received do not reset it
 **GO/NO-GO:** If no link after two consecutive passes, escalate to EMG-004 (Loss of Communication)
 
 ## Off-Nominal Handling
 - If link restores but RSSI < -95 dBm or margin < 1.5 dB: Step the TM rate ladder down to LOW (16 kbps) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) to improve margin. LOW is the routine operations rung — the link keeps full housekeeping, it just cannot dump
 - If OBC is found in SAFE mode after link restoration: Execute CTG-010 (OBDH Watchdog Recovery) before resuming nominal operations
-- If redundant transponder also fails: Spacecraft will rely on autonomous safe mode; coordinate multi-station recovery campaign via EMG-004
+- If redundant transponder also fails: no telecommand can be received and no telemetry is transmitted, beacon included; the TTC-01 switch is refused. Nothing from the ground can recover this: escalate to EMG-004 and keep listening for a transponder recovery (in the simulator, the instructor clearing a transponder failure)
 - If link is intermittent (toggling): Suspect antenna deployment anomaly or attitude issue — request AOCS telemetry and check `aocs.att_error` (0x0217)
 
 ## Post-Conditions

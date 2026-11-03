@@ -9,18 +9,23 @@
   },
   {
    "id": "emg-004-loss-of-communication",
-   "en_hash": "4bc320879c0a16d9",
-   "fr_hash": "6d85ca28dcc232bd"
+   "en_hash": "728265f7d5688d7c",
+   "fr_hash": "559b5ce7e54f1ee5"
   },
   {
    "id": "emg-004-loss-of-communication/purpose",
-   "en_hash": "3fad60465330edde",
-   "fr_hash": "a87c5a3e1346e995"
+   "en_hash": "eeedcb7a710cf6dc",
+   "fr_hash": "5ee721ea0098c33b"
   },
   {
    "id": "emg-004-loss-of-communication/prerequisites",
    "en_hash": "ea8ab07923afc1ef",
    "fr_hash": "c749b74456411360"
+  },
+  {
+   "id": "emg-004-loss-of-communication/what-the-spacecraft-can-and-cannot-do",
+   "en_hash": "6bbcd1deb221ebcf",
+   "fr_hash": "4d46404b3fcc6357"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps",
@@ -48,9 +53,9 @@
    "fr_hash": "90ee2a45f0854925"
   },
   {
-   "id": "emg-004-loss-of-communication/procedure-steps/step-5-wait-for-autonomous-recovery-timer",
-   "en_hash": "95d28838209d7e00",
-   "fr_hash": "55649de91f12931a"
+   "id": "emg-004-loss-of-communication/procedure-steps/step-5-wait-for-the-on-board-command-loss-timer-fdir-ttc-01",
+   "en_hash": "00e91f885cd2f29e",
+   "fr_hash": "1008e055729e9efd"
   },
   {
    "id": "emg-004-loss-of-communication/procedure-steps/step-6-polar-pass-focused-campaign-12h-threshold",
@@ -69,13 +74,13 @@
   },
   {
    "id": "emg-004-loss-of-communication/decision-tree-summary",
-   "en_hash": "c8975090e2e9d88e",
-   "fr_hash": "f87b074ca18bd2c5"
+   "en_hash": "9bcefd6285d83a64",
+   "fr_hash": "3cb9ef33dafec477"
   },
   {
    "id": "emg-004-loss-of-communication/off-nominal-handling",
-   "en_hash": "39880c590849f415",
-   "fr_hash": "3c70e08887261196"
+   "en_hash": "276a0afa3b92b70f",
+   "fr_hash": "a8eb6417ffea6f89"
   },
   {
    "id": "emg-004-loss-of-communication/post-conditions",
@@ -83,5 +88,5 @@
    "fr_hash": "bf561b76262141ea"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "ac86ac7"
 }
