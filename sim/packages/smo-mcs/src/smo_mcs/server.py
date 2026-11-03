@@ -1446,7 +1446,8 @@ class MCSServer:
         # per person, /api/logbook on this origin, hourly purge task.
         from smo_common.logbook import register_logbook_routes
         register_logbook_routes(app, tool="mcs",
-                                worksheets_dir=self.config_dir / "worksheets")
+                                worksheets_dir=self.config_dir / "worksheets",
+                                checklists=self._checklist_provider)
         app.router.add_get("/", self._handle_index)
         # Explicit generation routes: /classic and /modern always serve their
         # page regardless of the resolved mode, so the two consoles can be
@@ -3954,6 +3955,29 @@ class MCSServer:
                 }
         return None
 
+    def _checklist_provider(self, catalog):
+        """Live procedure checklists for the logbook (ops workbook): built
+        from the card the runner executes, with the printed workbook sheet
+        (from the logbook's worksheet ``catalog``) beside each step."""
+        from smo_common.logbook.checklist import ChecklistProvider
+        return ChecklistProvider(
+            lambda: self._procedure_index, self.config_dir / "procedures",
+            self.config_dir / "i18n" / "fr" / "procedures", catalog.sheets,
+            self._tc_mnemonic_catalog)
+    _checklist_provider.wants_catalog = True
+
+    def _tc_mnemonic_catalog(self) -> dict[str, dict]:
+        """Mnemonic (and alias) -> {service, subtype, func_id}: what the
+        markdown step extractor resolves a card's **TC:** lines against."""
+        catalog: dict[str, dict] = {}
+        for cmd in (self._tc_catalog or []):
+            cmd_entry = {"service": cmd.service, "subtype": cmd.subtype,
+                         "func_id": cmd.func_id}
+            catalog[cmd.name] = cmd_entry
+            for alias in (cmd.aliases or []):
+                catalog.setdefault(alias, cmd_entry)
+        return catalog
+
     def _indexed_procedure(self, procedure_id: str) -> dict | None:
         """Resolve a ``procedure_index.yaml`` id to a RUNNABLE definition.
 
@@ -3981,13 +4005,7 @@ class MCSServer:
         elif kind == "markdown":
             target = self._custom_procedure_path(entry.get("file", ""))
             if target is not None:
-                catalog: dict[str, dict] = {}
-                for cmd in (self._tc_catalog or []):
-                    cmd_entry = {"service": cmd.service, "subtype": cmd.subtype,
-                                 "func_id": cmd.func_id}
-                    catalog[cmd.name] = cmd_entry
-                    for alias in (cmd.aliases or []):
-                        catalog.setdefault(alias, cmd_entry)
+                catalog = self._tc_mnemonic_catalog()
                 resolved = {
                     "name": entry.get("name", procedure_id),
                     "description": "",
@@ -4023,6 +4041,24 @@ class MCSServer:
             step_by_step = body.get("step_by_step", False)
             start_time = body.get("start_time")
             document = ""
+
+            if steps is None and str(body.get("path") or "").endswith(".md"):
+                # An ops procedure card picked by its file (the console's
+                # "Ops procedure" source sends the path): run it through its
+                # index id. A card with no runnable link is worked by hand
+                # from its checklist (logbook Workbook tab), not run.
+                entry = next((e for e in self._procedure_index
+                              if e.get("file") == body["path"]), None)
+                if entry is None:
+                    return web.json_response(
+                        {"error": f"Procedure card '{body['path']}' not found"}, status=404)
+                body = {**body, "procedure_id": entry.get("id", "")}
+                body.pop("path", None)
+                if self._indexed_procedure(body["procedure_id"]) is None:
+                    return web.json_response(
+                        {"error": f"{body['procedure_id']} is not runnable from the console: "
+                                  "work it step by step from its checklist",
+                         "procedure_id": body["procedure_id"], "manual": True}, status=409)
 
             if steps is None and body.get("path"):
                 saved = self._load_saved_procedure(body["path"])

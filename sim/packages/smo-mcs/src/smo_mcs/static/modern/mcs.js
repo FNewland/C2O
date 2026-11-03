@@ -4129,6 +4129,8 @@ function buildProcPage() {
             <button class="ds-btn" data-proc="skip" id="proc-btn-skip" data-i18n="Skip">Skip</button>
             <!-- critical: shared two-step (armButton), wired at boot -->
             <button class="ds-btn critical" id="proc-btn-abort" data-i18n="Abort">Abort</button>
+            <!-- the card's live checklist in the logbook (ops workbook) -->
+            <button class="ds-btn" id="proc-btn-checklist" data-act="checklist" data-i18n="Checklist">Checklist</button>
             ${renderLogThis({}, { kind: "decision" })}
           </div>
           <div class="why-off" id="proc-why" aria-live="polite"></div>
@@ -4318,6 +4320,9 @@ function updateProcButtons() {
   }
   const why = $("proc-why");
   if (why) why.textContent = st === "IDLE" ? tText("No procedure loaded: choose one and press Load.") : "";
+  const hasCard = !!lbProcedureId();
+  setEnabled($("proc-btn-checklist"), hasCard,
+    hasCard ? "" : tText("Choose an ops procedure (Source: Ops procedure) to get its checklist"));
 }
 async function refreshProcStatus() {
   try { S.procStatus = await getJSON("/api/procedure/status"); } catch (e) { /* offline */ }
@@ -4336,14 +4341,29 @@ async function procAction(action) {
     if (source === "activity") body.activity_type = id;
     if (source === "ops") body.path = id;
     const r = await postJSON("/api/procedure/load", body);
+    if (!r.ok && r.json && r.json.manual) {
+      // A card the console cannot run: it is worked by hand, step by step,
+      // from its live checklist in the logbook.
+      setHTML("proc-exec-status", `<div class="logrow nom">${t("{{id}} is worked by hand: confirm each step in its checklist (Logbook › Workbook).",
+        { id: r.json.procedure_id })}</div>`);
+      if (LB) LB.openChecklist(r.json.procedure_id);
+      return;
+    }
     setHTML("proc-exec-status", r.ok ? t("loaded") :
       `<span style="color:var(--alarm)">${t("load failed ({{status}})", { status: r.status })}</span>`);
     startProcPolling();
+    refreshProcStatus();
     return;
   }
   const r = await postJSON(`/api/procedure/${action}`, {});
   if (!r.ok) setHTML("proc-exec-status", `<span style="color:var(--alarm)">${t("{{action}} failed ({{status}})", { action, status: r.status })}</span>`);
-  if (action === "start") startProcPolling();
+  if (action === "start") {
+    startProcPolling();
+    // the running card's checklist opens beside the console; the runner
+    // ticks its steps as they complete
+    const id = lbProcedureId();
+    if (r.ok && id && LB) LB.openChecklist(id);
+  }
   refreshProcStatus();
 }
 function startProcPolling() {
@@ -4352,21 +4372,32 @@ function startProcPolling() {
     const st = await getJSON("/api/procedure/status");
     S.procStatus = st;
     renderProcStatus();
-    if (!st || !st.loaded && !st.running) { procPoll.stop(); procPoll = null; }
+    // poll while the runner can still change; one last render after it ends
+    if (!st || !["LOADED", "RUNNING", "PAUSED"].includes(String(st.state || ""))) {
+      procPoll.stop(); procPoll = null;
+    }
   }, 2000);
   procPoll.start();
 }
 function renderProcStatus() {
   const st = S.procStatus || {};
-  const steps = st.steps || [];
+  // procedure_runner.status(): procedure_name, state, current_step,
+  // step_results [{index, description, result}] (the old reads of
+  // st.steps / st.name never matched it, so the stepper stayed empty)
+  const steps = st.step_results || st.steps || [];
   const idx = st.current_step ?? st.step_index ?? -1;
   setHTML("proc-exec-status",
-    `<div style="font-size:13px">${esc(st.name || st.procedure || tText("no procedure loaded"))} — ` +
+    `<div style="font-size:13px">${esc(st.procedure_name || st.name || st.procedure || tText("no procedure loaded"))} — ` +
     `<b>${esc(String(st.state || st.status || "idle").toUpperCase())}</b></div>` +
-    renderStepper(steps.map((s2) => (s2.name || s2.description || tText("step"))), Number(idx)));
+    renderStepper(steps.map((s2) => (s2.description || s2.name || tText("step"))), Number(idx)));
   updateProcButtons();   // (also called after loadProcSources)
+  if (LB && st.state && st.state !== "IDLE") LB.onRunner({ ...st, procedure_id: lbProcedureId() });
+  // runner log rows: {timestamp (sim epoch s), step, action, detail}
   setHTML("proc-exec-log", (st.log || []).slice(-50).reverse()
-    .map((l) => `<div class="logrow">${esc(typeof l === "string" ? l : (l.text || JSON.stringify(l)))}</div>`).join(""));
+    .map((l) => `<div class="logrow">${typeof l === "string" ? esc(l) : l.action
+      ? `<span class="mono">${esc(fmtUTC(l.timestamp))}</span> ${l.step >= 0 ? `<span class="mono">#${Number(l.step) + 1}</span> ` : ""}` +
+        `${esc(l.action)}${l.detail ? ` — ${esc(l.detail)}` : ""}`
+      : esc(l.text || JSON.stringify(l))}</div>`).join(""));
 }
 function pbFieldMarkup() {
   const kind = $("pb-step-type") ? $("pb-step-type").value : "command";
@@ -5094,6 +5125,9 @@ export function alarmRowHtml(g) {
           aria-label="${esc(tText("Acknowledge {{name}}", { name: label }))}">${t("ACK")}</button>`}
       <button class="ds-btn" data-chain="${esc(String(a.id))}" title="${t("causal chain (P9)")}"
         aria-label="${esc(tText("Causal chain for {{name}}", { name: label }))}">⛓</button>
+      <button class="ds-btn" data-act="ticket" data-id="${esc(String(a.id))}"
+        title="${esc(tText("File an anomaly ticket from this alarm (logbook)"))}"
+        aria-label="${esc(tText("Anomaly ticket for {{name}}", { name: label }))}">${t("Ticket")}</button>
       ${renderLogThis({ alarm_id: a.id, ...(hexId ? { param: hexId } : {}) }, { kind: "decision", iconOnly: true })}</span>
   </div>`;
 }
@@ -5473,6 +5507,12 @@ function initDelegatedEvents() {
     if (d.chain) return void openCausalChain(d.chain);
     if (d.act === "ack" && d.id !== undefined) return void ackAlarm(d.id, d.ids ? d.ids.split(",") : null);
     if (d.act === "procedure") { e.preventDefault(); return openProcedureFromAlarm(d.proc); }
+    if (d.act === "ticket") return void lbTicketFromAlarm(d.id);
+    if (d.act === "checklist") {
+      if (t.getAttribute("aria-disabled") === "true") return;
+      const id = lbProcedureId();
+      return void (id && LB && LB.openChecklist(id));
+    }
     if (d.proc) return void procAction(d.proc);
     if (d.s3) return void s3Command(d.s3, Number(d.sid));
     if (d.s11) return void s11Command(d.s11);
@@ -5913,10 +5953,160 @@ function lbWatchSimStatus() {
   if (running && lbStopTimer) { clearTimeout(lbStopTimer); lbStopTimer = null; }
   lbSimRunning = running;
 }
+/* ── Ops workbook hooks (logbook "Workbook" tab) ──────────────────────────
+ * readParam: a checklist step captures the observed value of each parameter
+ * its card checks (engineering value, units, freshness). prefill / info: the
+ * forms (worksheet_map.yaml `prefill:` keys) start from the console state —
+ * the alarm, the contact schedule, the runner, the GO/NO-GO poll. The
+ * operator edits or clears every prefilled field before saving. */
+let lbNameHex = null, lbNameHexN = -1;
+function lbHexOf(name, pid) {
+  if (pid) {
+    const h = "0x" + String(pid).slice(2).toUpperCase();
+    if (S.paramByHex[h] || paramVal(h) !== undefined) return h;
+  }
+  if (lbNameHexN !== S.paramCatalog.length) {
+    lbNameHex = {};
+    for (const p of S.paramCatalog) if (p.name) lbNameHex[p.name] = p.hex;
+    lbNameHexN = S.paramCatalog.length;
+  }
+  return (name && lbNameHex[name]) || (pid ? "0x" + String(pid).slice(2).toUpperCase() : null);
+}
+function lbReadParam(name, pid) {
+  const hex = lbHexOf(name, pid);
+  if (!hex) return null;
+  const raw = paramVal(hex);
+  if (raw === undefined || raw === null || raw === "") return { nodata: true };
+  const def = S.paramByHex[hex] || {};
+  const eng = engValue(hex, raw);
+  const n = Number(raw);
+  const text = eng !== null ? eng
+    : Number.isFinite(n) ? (Number.isInteger(n) ? String(n)
+      : num(n, Math.abs(n) >= 100 ? 1 : Math.abs(n) >= 1 ? 2 : 3)) : String(raw);
+  const fr = paramFreshness(hex);
+  return { raw, text, units: eng !== null ? "" : (def.units || ""), nodata: false,
+    stale: fr === "stale" || fr === "disabled" };
+}
+function lbParamLine(name, pid) {
+  const r = lbReadParam(name, pid);
+  const v = !r || r.nodata ? tText("no data") : `${r.text}${r.units ? " " + r.units : ""}${r.stale ? " (" + tText("stale") + ")" : ""}`;
+  return `${name} = ${v}`;
+}
+function lbPassText(p) {
+  if (!p) return "";
+  const hm = (x) => (x ? fmtUTC(x, { date: false }) : "—");
+  return `${p.ground_station || p.station || "?"} AOS ${hm(p.aos_time)} LOS ${hm(p.los_time)}` +
+    (Number.isFinite(Number(p.max_elevation)) ? ` · ${tText("max el")} ${num(p.max_elevation, 0)}°` : "");
+}
+function lbOpenAlarms() {
+  return alarmGroups(S.alarms.filter((a) => !a.rtn)).filter((g) => !g.acknowledged || g.pri <= 2);
+}
+function lbAlarmLine(a) {
+  const hexId = alarmParamHex(a);
+  const def = hexId ? S.paramByHex[hexId] : null;
+  const name = a.name || (def && def.name) || String(a.message || a.id);
+  const v = a.value !== undefined && a.value !== null ? ` = ${a.value}${(a.units || (def && def.units)) ? " " + (a.units || def.units) : ""}` : "";
+  return `${name}${hexId ? ` (${hexId})` : ""}${v}${a.limit ? ` · ${tText("limit")} ${a.limit}` : ""}` +
+    `${a.acknowledged ? "" : ` · ${tText("not acknowledged")}`}`;
+}
+function lbGoNoGoText(g) {
+  if (!g) return "";
+  const resp = Object.entries(g.responses || {}).map(([pos, r]) =>
+    `${POSITION_INFO[pos] ? tText(POSITION_INFO[pos].title) : pos} ${r}`).join(", ");
+  return `${g.label || "GO/NO-GO"}: ${g.active ? tText("open") : (g.result || tText("closed"))}` + (resp ? ` — ${resp}` : "");
+}
+function lbPrefill(key, ctx) {
+  const a = ctx.alarm || (ctx.alarm_id !== undefined ? S.alarms.find((x) => String(x.id) === String(ctx.alarm_id)) : null);
+  const st = S.procStatus || {};
+  const proc = lbProcedureId();
+  const next = (S.contactSchedule || [])[0];
+  const inContact = !!(S.state.sa && S.state.sa.in_contact);
+  switch (key) {
+    case "ticket_id": {
+      const d = simNow();
+      return `AT-${d.toISOString().slice(5, 10).replace("-", "")}-${a ? a.id : d.toISOString().slice(11, 16).replace(":", "")}`;
+    }
+    case "pass": return inContact ? `${(S.state.sa || {}).ground_station_name || ""} ${tText("in contact")}`.trim() : lbPassText(next);
+    case "alarm_time": {
+      const ts = a ? (a.first_ts || a.timestamp || a.last_ts) : null;
+      return ts ? fmtUTC(ts, { date: true, seconds: true }) + ` (${tText("sim")})` : "";
+    }
+    case "param_value": return a ? lbAlarmLine(a) : "";
+    case "fdir_rule": {
+      if (!a) return "";
+      const src = String(a.source || "").toUpperCase();
+      if (src === "S12") return `S12 ${tText("on-board monitor")} #${a.mon_id ?? "?"}${a.monitor_name ? " " + a.monitor_name : ""}`;
+      if (src === "S5") return `S5 ${tText("on-board event")} ${a.event_id ?? ""}`.trim();
+      if (src === "LIMIT") return `${tText("ground limit")} (${a.config_file || "mcs/limits.yaml"})`;
+      return "";
+    }
+    case "severity": return a && a.severity !== undefined ? String(a.severity) : "";
+    case "position": return POSITION_INFO[S.position] ? `${tText(POSITION_INFO[S.position].title)} (${S.position})` : S.position;
+    case "first_action": return tsShort() + ` (${tText("sim")})`;
+    case "procedure": return (a && a.procedure && (a.procedure.id || a.procedure.name)) || proc || "";
+    case "procedure_state":
+      return st.state && st.state !== "IDLE"
+        ? `${proc || st.procedure_name || ""} · ${tText("step {{n}}", { n: Number(st.current_step) + 1 })} · ${st.state}`
+        : proc ? `${proc} · ${tText("open, not running")}` : "";
+    case "params_top3": {
+      const al = lbOpenAlarms().slice(0, 3).map(lbAlarmLine);
+      if (al.length) return al.join("; ");
+      return [["eps.bat_soc", "0x0101"], ["eps.bus_voltage", "0x0105"], ["aocs.mode", "0x020F"]]
+        .map(([n, h]) => lbParamLine(n, h)).join("; ");
+    }
+    case "open_items": case "open_alarms": {
+      const al = lbOpenAlarms().map(lbAlarmLine);
+      const items = [...al];
+      if (key === "open_items" && st.state && ["RUNNING", "PAUSED", "LOADED"].includes(st.state)) {
+        items.push(`${proc || st.procedure_name} ${st.state}`);
+      }
+      return items.join("; ");
+    }
+    case "now": return tsShort() + ` (${tText("sim")})`;
+    case "fdir_active":
+      return lbOpenAlarms().filter((g) => ["S12", "S19", "S5"].includes(String(g.source || "").toUpperCase()))
+        .map(lbAlarmLine).join("; ");
+    case "phase_time": {
+      const ph = lbReadParam("eps.spacecraft_phase", "0x0129");
+      return `${tText("phase")} ${ph && !ph.nodata ? ph.text : "?"} · ${tsShort()} (${tText("sim")})`;
+    }
+    case "last_pass": return "";
+    case "next_pass": case "next_aos": return lbPassText(next);
+    case "gonogo_open": return S.goNoGo && S.goNoGo.active ? lbGoNoGoText(S.goNoGo) : "";
+    case "gonogo": return lbGoNoGoText(S.goNoGo);
+    default: return "";
+  }
+}
+function lbInfo(kind, ctx) {
+  const out = [];
+  if (kind === "briefing") {
+    for (const p of (S.contactSchedule || []).slice(0, 3)) {
+      out.push({ label: tText("Pass"), value: lbPassText(p) });
+    }
+    if (!out.length) out.push({ label: tText("Pass"), value: tText("no pass in the contact schedule") });
+    out.push({ label: tText("Console"), value: [["eps.bat_soc", "0x0101"], ["eps.spacecraft_phase", "0x0129"],
+      ["obdh.sw_image", "0x0311"]].map(([n, h]) => lbParamLine(n, h)).join("; ") });
+  } else if (kind === "scorecard" && S.goNoGo) {
+    out.push({ label: "GO/NO-GO", value: lbGoNoGoText(S.goNoGo) });
+  } else if (kind === "anomaly" && (ctx.alarm || ctx.alarm_id !== undefined)) {
+    out.push({ label: tText("From alarm"), value: lbPrefill("param_value", ctx) });
+  } else if (kind === "handover") {
+    out.push({ label: tText("Position"), value: lbPrefill("position", ctx) });
+    out.push({ label: tText("Console time"), value: tsShort() + ` (${tText("sim")})` });
+  }
+  return out;
+}
+function lbTicketFromAlarm(id) {
+  const a = S.alarms.find((x) => String(x.id) === String(id));
+  if (LB) LB.openForm("anomaly", { alarm: a || null, alarm_id: id });
+}
+
 function initLogbook() {
   const slot = $("lb-slot");
   LB = mountLogbook({ tool: "mcs", getContext: lbContext, buttonHost: slot,
-    bannerHost: $("top-bar"), buttonClass: "ds-btn ghost lb-btn" });
+    bannerHost: $("top-bar"), buttonClass: "ds-btn ghost lb-btn",
+    readParam: lbReadParam, prefill: lbPrefill, info: lbInfo,
+    handIn: () => ({ position: POSITION_INFO[S.position] ? `${tText(POSITION_INFO[S.position].title)} (${S.position})` : S.position }) });
   const gn = $("gonogo-logthis");
   if (gn) gn.innerHTML = renderLogThis({}, { kind: "decision" });
   lbLoadProcIndex();
