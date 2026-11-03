@@ -1,0 +1,42 @@
+# Where SpaceCDF offers each learner-workbook worksheet in the logbook (LOGBOOK_SPEC.md §4).
+# HAND-MAINTAINED. scripts/gen_worksheets.py merges it into learner_workbook.yaml (generated):
+# edit here, then regenerate.
+#
+# A worksheet is offered ("for this step") when the participant's current context matches:
+#   steps   mission wizard: wizard:home | wizard:problem | wizard:stakeholders |
+#           wizard:alternatives | wizard:architecture
+#   tabs    workbench activity tabs: blocks | spacecraft | budget | requirements | functions |
+#           interfaces | icd | trace | decide | analyses ;  vv = the V&V level
+#   levels  product-tree level 0 mission, 1 segment, 2 system, 3 subsystem, 4 V&V
+#           (with tabs: narrows the tab match to these levels; alone: matches the level)
+#   gates   V&V review gate being evaluated: mcr | srr | pdr
+# Every worksheet is also listed under "All worksheets" in the panel, matched or not.
+#
+# phase: prep | during | debrief | exercise (spec §4). The end-of-session dialog offers the
+# matched debrief worksheet first, else the matched worksheet's "Notes & Reflections".
+
+defaults:
+  tools: [design]
+  phase: exercise
+
+worksheets:
+  LW-1.1: {phase: prep, steps: [wizard:home], tabs: [blocks], levels: [0], gates: [mcr]}
+  LW-1.2: {tabs: [requirements], levels: [0]}
+  LW-1.3: {tabs: [requirements, vv], levels: [0, 1, 4]}
+  LW-1.4: {steps: [wizard:problem, wizard:stakeholders, wizard:alternatives], tabs: [decide], levels: [0], gates: [mcr]}
+  LW-2.1: {tabs: [requirements, trace], gates: [srr]}
+  LW-2.2: {tabs: [functions, trace]}
+  LW-2.3: {steps: [wizard:architecture], tabs: [decide, analyses], levels: [0, 1]}
+  LW-2.4: {tabs: [blocks, interfaces, icd, budget], levels: [0, 1, 2]}
+  LW-3.1: {tabs: [budget, analyses, spacecraft], levels: [2, 3]}
+  LW-3.2: {tabs: [analyses, spacecraft], levels: [2, 3]}
+  LW-3.3: {tabs: [analyses], levels: [1, 2, 3]}
+  LW-3.4: {tabs: [spacecraft, blocks, budget], levels: [3]}
+  LW-4.1: {tabs: [blocks, budget, interfaces, icd], levels: [3]}
+  LW-4.2: {tabs: [vv], gates: [pdr]}
+  LW-4.3: {tabs: [vv, interfaces, decide], levels: [2, 3, 4]}
+  LW-4.4: {tabs: [budget, vv], levels: [0, 4], gates: [pdr]}
+  LW-5.1: {tabs: [analyses], levels: [1]}
+  LW-5.2: {tabs: [analyses, functions], levels: [1]}
+  LW-5.3: {phase: during}
+  LW-5.4: {phase: debrief, tabs: [vv], gates: [pdr]}
