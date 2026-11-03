@@ -126,7 +126,7 @@ async def load_example(mission_id: str) -> dict:
     if not mission:
         raise HTTPException(404, f"Example mission '{mission_id}' not found")
     req = MissionRequirements(**(mission.get("requirements") or {"name": mission.get("name", mission_id)}))
-    created = await create_study(CreateStudyRequest(requirements=req, mission_need=mission.get("mission_need") or {}))
+    created = await create_study(CreateStudyRequest(requirements=req, mission_need=mission.get("mission_need") or {}), None)
     sid = created["id"]
 
     async def add(**kw) -> dict:

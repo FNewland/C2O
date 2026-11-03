@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from spacecdf_common.models.study import Study, MissionRequirements
@@ -41,6 +41,10 @@ class CreateStudyRequest(BaseModel):
     """Accepts full V-model input: requirements + optional mission need."""
     requirements: MissionRequirements
     mission_need: dict[str, Any] | None = None
+    # SpaceCDF seats (WP9): team size → seat preset ("4", "6", "9"; None/"solo" = no seats)
+    # and the optional seats (propulsion_engineer, cost_engineer).
+    team_size: str | int | None = None
+    optional_seats: list[str] = Field(default_factory=list)
 
 
 @router.get("/")
@@ -53,7 +57,7 @@ async def list_studies() -> list[dict]:
 
 
 @router.post("/")
-async def create_study(req: CreateStudyRequest) -> dict:
+async def create_study(req: CreateStudyRequest, request: Request) -> dict:
     """Create a new design study from mission requirements + optional mission need.
 
     When mission_need is provided, auto-generates:
@@ -104,8 +108,24 @@ async def create_study(req: CreateStudyRequest) -> dict:
     except Exception:
         logger.exception("Failed to persist study %s to DB", study.id)
 
+    team_preset = None
+    if req.team_size not in (None, "", "solo", 0, "0"):
+        from ..seats import service as seat_service, store as seat_store
+        from ..seats.identity import person as person_of
+        state = seat_store.default_state()
+        try:
+            seat_service.apply_preset(state, str(req.team_size), req.optional_seats)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        await seat_store.save_team(study.id, state)
+        await seat_store.log_event(study.id, "", person_of(request) if request is not None else None,
+                                   "preset", str(state["preset"]),
+                                   {"optional": state["optional"], "at_creation": True})
+        team_preset = state["preset"]
+
     return {
         "id": study.id,
+        "team_preset": team_preset,
         "name": study.name,
         "phase": study.phase.value,
         "mission_need_populated": bool(mission_need.problem_statement),
@@ -190,10 +210,15 @@ async def get_study(study_id: str) -> Study:
 
 
 @router.delete("/{study_id}")
-async def delete_study(study_id: str) -> dict:
-    """Delete a study."""
+async def delete_study(study_id: str, request: Request) -> dict:
+    """Delete a study. Only the instructor (WP9; open on a laptop until someone is instructor)."""
     if study_id not in _studies:
         raise HTTPException(status_code=404, detail=f"Study {study_id} not found")
+    from ..seats import service as seat_service, store as seat_store
+    from ..seats.identity import person as person_of
+    await seat_service.require_study_delete(request)
+    await seat_store.log_event(study_id, "instructor", person_of(request), "delete_study", _studies[study_id].name)
+    await seat_store.drop_team(study_id)
     # Remove from DB first, then cache
     try:
         await db_delete_study(study_id)

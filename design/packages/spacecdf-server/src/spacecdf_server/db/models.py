@@ -668,3 +668,63 @@ class GateBaselineRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
     snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+# ─── SpaceCDF seats (redesign WP9, Nov 2026) ───────────────────────────────────
+
+class StudyTeamRow(Base):
+    """A study's seats: preset, holdings, locks, freeze, timer, messages, sign-offs and
+    subscriptions as one JSON document (small; changes on claims, not on edits).
+    ``study_id = "__class__"`` holds the class-wide state (broadcasts, laptop instructor)."""
+
+    __tablename__ = "study_teams"
+
+    study_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    state_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class SeatEventRow(Base):
+    """Audit and assessment trail: every claim, handover, edit, proposal, review and
+    instructor intervention, with the person AND the seat (append-only)."""
+
+    __tablename__ = "seat_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, index=True)
+    study_id: Mapped[str] = mapped_column(String(32), index=True)
+    seat_id: Mapped[str] = mapped_column(String(40), default="")
+    person_id: Mapped[str] = mapped_column(String(255), default="")
+    person_name: Mapped[str] = mapped_column(String(255), default="")
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    action: Mapped[str] = mapped_column(String(40))
+    target: Mapped[str] = mapped_column(String(255), default="")
+    detail_json: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class PendingChangeRow(Base):
+    """An edit of a parameter owned by another seat, waiting for the owning seat
+    (REDESIGN_DECISIONS.md ruling 5). Until accepted the owner's value stands."""
+
+    __tablename__ = "pending_changes"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    study_id: Mapped[str] = mapped_column(String(32), index=True)
+    owner_seat: Mapped[str] = mapped_column(String(40), index=True)
+    kind: Mapped[str] = mapped_column(String(32))            # element_fields | element_param | element_param_delete
+    element_id: Mapped[str] = mapped_column(String(64), default="")
+    element_name: Mapped[str] = mapped_column(String(255), default="")
+    param_keys: Mapped[list] = mapped_column(JSON, default=list)
+    old_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    new_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    option_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    by_person: Mapped[str] = mapped_column(String(255), default="")
+    by_name: Mapped[str] = mapped_column(String(255), default="")
+    by_seat: Mapped[str] = mapped_column(String(40), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    status: Mapped[str] = mapped_column(String(16), default="pending")   # pending accepted rejected withdrawn
+    reviewed_by: Mapped[str] = mapped_column(String(255), default="")
+    reviewed_name: Mapped[str] = mapped_column(String(255), default="")
+    reviewed_seat: Mapped[str] = mapped_column(String(40), default="")
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    comment: Mapped[str] = mapped_column(Text, default="")

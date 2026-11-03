@@ -31,7 +31,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from spacecdf_common.models.parameters import WELL_KNOWN_PARAMETERS
@@ -125,8 +125,28 @@ async def get_element_parameters(element_id: str, option_id: str | None = Query(
 
 
 @router.put("/elements/{element_id}/parameters/{name}")
-async def put_element_parameter(element_id: str, name: str, body: ParameterUpsert,
-                                option_id: str | None = Query(None)) -> dict:
+async def put_element_parameter(element_id: str, name: str, body: ParameterUpsert, request: Request,
+                                option_id: str | None = Query(None)):
+    """Upsert one parameter. Seat studies (WP9): another seat's parameter goes to review
+    (409 warning, then 202 + ``pending_change`` with ``X-C2O-Confirm-Review: 1``)."""
+    el = await _element_or_404(element_id)
+    from ..seats import changes as seat_changes
+    from ..seats.service import element_edit_decision
+    decision = await element_edit_decision(request, el, [name])
+    if decision["mode"] == "pending":
+        current = await _evaluated_param(element_id, name, await _scoped_option(option_id))
+        pc = await seat_changes.propose(request, decision, el, "element_param",
+                                        {name: (current or {}).get("effective_value")},
+                                        {"_name": name, **body.model_dump(exclude_unset=True)}, option_id)
+        return seat_changes.pending_response(current or {"element_id": element_id, "name": name}, pc)
+    view = await put_param(element_id, name, body, option_id)
+    await seat_changes.log_direct_edit(request, decision, el, {}, {name: body.model_dump(exclude_unset=True)},
+                                       kind="element_param")
+    return view
+
+
+async def put_param(element_id: str, name: str, body: ParameterUpsert, option_id: str | None = None) -> dict:
+    """Upsert without a permission check (the route above, and accepted pending changes)."""
     el = await _element_or_404(element_id)
     study_id = el["study_id"]
     option_id = await _scoped_option(option_id)
@@ -192,8 +212,23 @@ async def put_element_parameter(element_id: str, name: str, body: ParameterUpser
 
 
 @router.delete("/elements/{element_id}/parameters/{name}")
-async def delete_element_parameter(element_id: str, name: str,
-                                   option_id: str | None = Query(None)) -> dict:
+async def delete_element_parameter(element_id: str, name: str, request: Request,
+                                   option_id: str | None = Query(None)):
+    el = await _element_or_404(element_id)
+    from ..seats import changes as seat_changes
+    from ..seats.service import element_edit_decision
+    decision = await element_edit_decision(request, el, [name])
+    if decision["mode"] == "pending":
+        current = await _evaluated_param(element_id, name, await _scoped_option(option_id))
+        pc = await seat_changes.propose(request, decision, el, "element_param_delete",
+                                        {name: (current or {}).get("effective_value")}, {"_name": name}, option_id)
+        return seat_changes.pending_response(current or {"element_id": element_id, "name": name}, pc)
+    out = await delete_param(element_id, name, option_id)
+    await seat_changes.log_direct_edit(request, decision, el, {}, {name: None}, kind="element_param_delete")
+    return out
+
+
+async def delete_param(element_id: str, name: str, option_id: str | None = None) -> dict:
     el = await _element_or_404(element_id)
     study_id = el["study_id"]
     option_id = await _scoped_option(option_id)
