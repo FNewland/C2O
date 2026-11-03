@@ -47,7 +47,8 @@ quoi que ce soit ; les événements 0x0106-0x0108 sont émis à chaque niveau)
 **Action:** Confirmer que les règles livrées sont présentes et ACTIVÉES --- en particulier
 la chaîne de gestion du moment cinétique (surveillance S12 sur `aocs.h_env_frac` 0x02BA déclenchant
 l'ea_id 2001, dont l'action est la S8 func 1, la fonction de désaturation) et la chaîne de mise
-en sécurité sur surchauffe TCS (ea 3003). Consigner la table dans le rapport de configuration
+en sécurité sur surchauffe TCS (ea 3003, armée sur la limite HAUTE S12 seulement : un OBC froid
+est signalé, pas mis en sécurité). Consigner la table dans le rapport de configuration
 de la FDIR.
 **GO/NO-GO:** Table événements-actions conforme à la base de données d'opérations
 

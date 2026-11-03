@@ -667,6 +667,14 @@ class FDIRRuleConfig(StrictModel):
     # is dropped and its persistence accumulator is reset, so falling back
     # below ``min_phase`` cannot leave a stale contingency behind.
     min_phase: int | None = None
+    # Action run once when the rule RELEASES (its condition clears, or it is
+    # disarmed by the phase gate while latched). Used to hand an overridden
+    # unit back to its normal controller — e.g. the battery-overtemp rule
+    # forces the heater OFF (manual) and `on_clear: heater_auto_battery`
+    # returns it to thermostat control once the battery is back below 42 C,
+    # instead of leaving the thermostat bypassed for the rest of the mission
+    # (2026-11-03). ``None`` = nothing to undo.
+    on_clear: str | None = None
 
 class FDIRConfig(StrictModel):
     enabled: bool = True

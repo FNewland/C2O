@@ -9,6 +9,13 @@
 #                      param -> a parameter id watched by monitoring/s12_definitions.yaml
 #                               (fires on the S12 limit violation for that parameter)
 #   trigger.id       the id itself (uint16)
+#   trigger.limit    kind `param` only: which S12 limit arms the rule —
+#                      high -> only an upper-limit crossing (overtemp, overload)
+#                      low  -> only a lower-limit crossing (low yield)
+#                      any  -> either (default; right for symmetric bands such
+#                              as wheel overspeed ±5000 rpm or tank pressure)
+#                    The other side is still reported to the ground (TM(12,9)
+#                    + S5 0x9xxx); it just does not drive this action.
 #   action_func_id   the S8 function dispatched when the rule fires
 #
 # The `kind` discriminator is mandatory in practice: event ids and parameter
@@ -29,7 +36,17 @@
 # the OBC in SAFE, not drive the battery heater), every rule whose function id
 # or missing argument bytes were unambiguous given its own description was
 # corrected: 3001, 3002, 3003, 4002, 5003, 5004, 6001, 6002. The rest
-# (1001-1005, 5001, 5002) stay pinned in KNOWN_MISROUTED for Flight Ops.
+# (1001-1003, 5001, 5002) stay pinned in KNOWN_MISROUTED for Flight Ops
+# (1004/1005 corrected 2026-11-03, below).
+#
+# 2026-11-03 (FDIR fixes, see docs/plan_2026-11/OBC_THERMAL_ANALYSIS.md §3.3):
+# every param rule whose description names ONE direction is now armed on that
+# side only — 3001, 3002, 3003, 4002, 6002 are overtemp rules and used to
+# fire on the LOW limit as well (3003 put the OBC in SAFE on every cold soak;
+# 3002 switched the transmitter off on a cold battery). 1004/1005 now watch
+# the string yield monitors, which are only checked while the string is lit
+# (they used to fire at every eclipse entry), and their action is corrected
+# from func 10 (AOCS_SLEW_TO with no quaternion) to EPS_POWER_OFF(payload).
 #
 # Loaded at engine startup and registered with the S19 framework.
 
@@ -116,6 +133,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0408 TCS FPA temperature
       id: 0x0408   # was: TCS FPA temperature (from S12)
+      limit: high          # overtemp only. The S12 band also has a LOW limit (overcooled FPA, -22 C): that is reported to ground, not a reason to cut payload power (2026-11-03)
     action_func_id: 20   # S8 func 20: EPS_POWER_OFF
     action_data: [3]     # line 3 = payload. Without the byte the handler refused every firing (missing `line_index`), 2026-10-30.
     description: "TCS FPA Overtemp -> Payload Off"
@@ -126,6 +144,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0407 TCS battery temperature
       id: 0x0407   # was: TCS Battery temperature (from S12)
+      limit: high          # overtemp only. The monitor's -10 C LOW limit used to switch the transmitter off on a COLD battery (2026-11-03); battery cold is the heater's job (fdir.yaml)
     action_func_id: 67   # S8 func 67: TTC_PA_OFF (transponder TX off). Was func 12 = AOCS_BEGIN_ACQUISITION, misrouted (fixed 2026-10-30).
     description: "TCS Battery Overtemp -> Transponder TX Off"
     enabled: true
@@ -135,6 +154,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0406 TCS OBC temperature
       id: 0x0406   # was: TCS OBC temperature (from S12)
+      limit: high          # OVERtemp only (2026-11-03). The monitor also has a LOW limit, and the rule used to fire on it: every OBC cold soak put the OBC in SAFE. A cold OBC is the OBC heater thermostat's job; the low crossing is still reported (TM(12,9) + S5 0x9406) for the ground (manual 08 §OBC under-temperature)
     action_func_id: 50   # S8 func 50: OBC_SET_MODE. Was func 40 = HEATER_BATTERY with no argument (author ruling 2026-10-30).
     action_data: [1]     # mode 1 = SAFE
     description: "TCS OBC Overtemp -> OBC Safe Mode"
@@ -162,6 +182,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x050F TTC PA temperature
       id: 0x050F   # was: TTC PA temperature (from S12)
+      limit: high          # overheat only; the -10 C LOW limit is reported, not acted on (2026-11-03)
     action_func_id: 67   # S8 func 67: TTC_PA_OFF. Was func 54 = OBC_SELECT_BUS with no argument (fixed 2026-10-30).
     description: "TTC PA Overheat -> PA Off"
     enabled: true
@@ -229,6 +250,7 @@ s19_rules:
     trigger:
       kind: param          # S12 monitor on 0x0601 payload FPA temperature
       id: 0x0601   # was: Payload FPA temperature (from S12)
+      limit: high          # overtemp only; an overcooled detector (-22.5 C) is reported, not a reason for STANDBY (2026-11-03)
     action_func_id: 26   # S8 func 26: PAYLOAD_SET_MODE. Was func 21 = EPS_RESET_OC_FLAG with no argument (fixed 2026-10-30).
     action_data: [1]     # mode 1 = STANDBY
     description: "Payload FPA Overtemp -> Payload Standby"
@@ -285,21 +307,35 @@ s19_rules:
     enabled: true
 
   # ===== Solar Array Degradation =====
+  # 2026-11-03: the triggers were the S12 monitors on the RAW string currents
+  # 0x0103/0x0104 (low limit 0.1 A, no validity), which every eclipse entry
+  # violates — so both rules fired at every eclipse. They now trigger on the
+  # string-YIELD monitors (0x014C/0x014D, measured / healthy-string current),
+  # which are checked only while the string is lit (validity 0x014E) and need
+  # 30 consecutive low checks. An injected array failure
+  # (solar_array_partial / solar_panel_loss) in sunlight still fires them.
+  # The action was func 10 = AOCS_SLEW_TO with no quaternion (pinned as
+  # misrouted since defect #70); "load shedding" is now the payload line OFF,
+  # the same response 3001/6001 use.
   - name: eps_solar_array_a_degraded_loadshed
     ea_id: 1004
     trigger:
-      kind: param          # S12 monitor on 0x0103 EPS SA-A current
-      id: 0x0103   # was: EPS SA_A_current low (from S12)
-    action_func_id: 10   # S8 func 10: set_payload_mode OFF
+      kind: param          # S12 monitor on 0x014C EPS string-A yield (lit only)
+      id: 0x014C   # was: 0x0103 eps.sa_a_current (fired at every eclipse)
+      limit: low
+    action_func_id: 20   # S8 func 20: EPS_POWER_OFF. Was func 10 = AOCS_SLEW_TO (misrouted).
+    action_data: [3]     # line 3 = payload
     description: "EPS Solar Array A Degraded -> Load Shedding"
     enabled: true
 
   - name: eps_solar_array_b_degraded_loadshed
     ea_id: 1005
     trigger:
-      kind: param          # S12 monitor on 0x0104 EPS SA-B current
-      id: 0x0104   # was: EPS SA_B_current low (from S12)
-    action_func_id: 10   # S8 func 10: set_payload_mode OFF
+      kind: param          # S12 monitor on 0x014D EPS string-B yield (lit only)
+      id: 0x014D   # was: 0x0104 eps.sa_b_current (fired at every eclipse)
+      limit: low
+    action_func_id: 20   # S8 func 20: EPS_POWER_OFF. Was func 10 = AOCS_SLEW_TO (misrouted).
+    action_data: [3]     # line 3 = payload
     description: "EPS Solar Array B Degraded -> Load Shedding"
     enabled: true
 

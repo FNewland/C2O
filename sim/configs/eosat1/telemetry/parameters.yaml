@@ -85,6 +85,12 @@ parameters:
   # line 8 at all.
   - { id: 0x014A, name: eps.pl_prop, subsystem: eps, description: "Power line Propulsion (catbed heater + valve drivers; LAST in the shed order)" }
   - { id: 0x014B, name: eps.line_current_8, subsystem: eps, units: A, description: "Power line 8 (Propulsion) current" }
+  # 2026-11-03: on-board solar-array string health, the input of the S12
+  # yield monitors behind S19 ea 1004/1005 (which used to watch the raw
+  # string current and so fired at every eclipse entry).
+  - { id: 0x014C, name: eps.sa_a_yield_pct, subsystem: eps, units: "%", type: float, description: "String A yield: measured current as % of what a healthy string A delivers at the present geometry (0 while not lit, see eps.sa_string_lit)", on_demand: true }
+  - { id: 0x014D, name: eps.sa_b_yield_pct, subsystem: eps, units: "%", type: float, description: "String B yield: measured current as % of what a healthy string B delivers at the present geometry (0 while not lit, see eps.sa_string_lit)", on_demand: true }
+  - { id: 0x014E, name: eps.sa_string_lit, subsystem: eps, description: "Solar-array strings lit enough to judge (bit0 = A, bit1 = B): sunlit, enabled and a healthy string would give at least 0.2 A. Validity parameter of the string-yield monitors", on_demand: true }
 
   # ===== AOCS =====
   - { id: 0x0200, name: aocs.att_q1, subsystem: aocs, description: Attitude quaternion q1 }

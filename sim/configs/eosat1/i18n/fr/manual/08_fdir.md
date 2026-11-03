@@ -67,9 +67,29 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 | EPS-01  | bat_soc < 15 %                  | 0x0101 < 15    | Passage en mode survie      |
 | EPS-02  | bus_voltage < 26.5 V           | 0x0105 < 26.5  | Passage en mode survie      |
 | EPS-03  | bat_temp > 45 C                | 0x0102 > 45    | Inhiber la charge de la batterie |
-| EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Activer le réchauffeur de batterie |
-| EPS-05  | sa_current = 0 (les deux ailes) | 0x0103, 0x0104 | Passage en mode survie     |
+| EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Thermostat du réchauffeur de batterie (voir TCS-01) |
+| EPS-05  | Rendement de chaîne < 70 % en éclairement, 30 s | 0x014C / 0x014D (valide tant que le bit de 0x014E est positionné) | Ligne charge utile hors tension (S19 ea 1004 / 1005) |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Dériver l'excédent de puissance (shunt) |
+
+**EPS-05 n'est évaluée qu'en éclairement.** Jusqu'en novembre 2026, les règles
+des panneaux solaires (S19 ea 1004/1005) surveillaient les courants bruts des
+chaînes 0x0103/0x0104 face à un plancher de 0.1 A. Chaque entrée en éclipse
+franchit ce plancher : les deux règles se déclenchaient donc à chaque éclipse.
+Les surveillances S12 portent désormais sur le **rendement** de chaque chaîne :
+le courant mesuré en pourcentage de ce que fournirait une chaîne saine dans la
+géométrie solaire du moment (0x014C `eps.sa_a_yield_pct`, 0x014D
+`eps.sa_b_yield_pct`). Elles portent aussi une condition de validité PUS-C :
+une surveillance n'est contrôlée que tant que le bit de sa chaîne est positionné dans
+0x014E `eps.sa_string_lit` (bit 0 = A, bit 1 = B). Ce bit est positionné lorsque le
+satellite est éclairé, que la chaîne est activée et qu'une chaîne saine
+fournirait au moins 0.2 A. En éclipse, en pénombre profonde ou lorsque la
+chaîne est dos au Soleil, la surveillance est *non contrôlée*, et non en
+violation. Un nombre de répétitions de 30 (30 s à 1 Hz) absorbe les
+manœuvres d'attitude et la frontière d'ombre. Une perte réelle en éclairement (chaîne défaillante ou panneau
+endommagé) déclenche toujours la règle en 30 s environ et met la ligne de
+la charge utile hors tension. Tant que la panne persiste, la surveillance la
+signale de nouveau après chaque sortie d'éclipse ; répéter l'action est sans
+conséquence. Diagnostic : CTG-009.
 
 ### 4.2 Règles AOCS {#42-aocs-rules}
 
@@ -94,16 +114,53 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TCS-01  | bat_temp < 0 C (rouge bas)     | 0x0407 < 0     | Forcer le réchauffeur de batterie en marche |
-| TCS-02  | obc_temp > 70 C (rouge haut)   | 0x0406 > 70    | Passage en mode survie      |
-| TCS-03  | obc_temp < 0 C (rouge bas)     | 0x0406 < 0     | Forcer le réchauffeur de l'OBC en marche |
-| TCS-04  | fpa_temp hors de -25.5..+17.5 C | Alarme S12 sur 0x0408 | Mettre la charge utile hors tension (S19 ea_id 3001) |
+| TCS-01  | bat_temp < 1 C                 | 0x0407 < 1     | Réchauffeur de batterie rendu au thermostat (`HEATER_AUTO_MODE`) |
+| TCS-02  | obc_temp > 70 C (rouge haut)   | 0x0406 > 70    | OBC en SAFE (S19 ea 3003, limite haute seulement) |
+| TCS-03  | obc_temp < 0 C (rouge bas)     | 0x0406 < 0     | Aucune action à bord : thermostat du réchauffeur de l'OBC ; rapport S12 au sol |
+| TCS-04  | fpa_temp au-dessus de +17.5 C  | Alarme S12 sur 0x0408 | Mettre la charge utile hors tension (S19 ea_id 3001) |
+| TCS-05  | bat_temp > 42 C                | 0x0407 > 42    | Réchauffeur de batterie arrêté ; rendu au thermostat à ≤ 42 C |
 
 TCS-04 se déclenche sur l'**alarme S12** de 0x0408, dont la bande est dérivée de
 `subsystems/tcs.yaml: fpa_envelope` (DECISIONS §3). Le seuil documenté
 était auparavant un simple `> 12 C`, qui se situe *à l'intérieur* de l'état de repos normal non refroidi
 (+11,5 °C mesurés, crête à +12,4 °C) : la règle aurait mis hors tension une
 charge utile déjà correctement éteinte, à chaque orbite.
+
+**Les règles de température n'agissent que d'un côté.** Une surveillance S12
+de température a une limite basse et une limite haute. Jusqu'en novembre 2026,
+toute règle S19 rattachée à une telle surveillance se déclenchait sur l'*un ou
+l'autre* franchissement. Ainsi, ea 3003 (surchauffe de l'OBC → OBC en SAFE)
+mettait l'OBC en SAFE à chaque refroidissement prolongé, et ea 3002 (surchauffe
+de la batterie → émetteur arrêté) coupait l'émetteur lorsque la batterie était
+froide. Les règles de surchauffe 3001, 3002, 3003, 4002 et 6002 ne sont
+désormais armées que sur la limite haute (`limit: high` dans
+`s19_rules.yaml`, section 7.1). Le franchissement bas reste signalé au sol par
+TM(12,9) et par un événement S5 (0x9406 pour l'OBC).
+
+**Sous-température de l'OBC (TCS-03).** La réaction à bord à un OBC froid est
+le thermostat du réchauffeur de l'OBC, actif tant que la ligne EPS 6
+(`htr_obc`) est alimentée. Le mode survie n'est pas utilisé : le SAFE ne
+réchauffe pas l'OBC, et le délestage qui l'accompagne retire de la chaleur
+interne. Le rapport S12 de limite basse et son événement S5 informent le sol.
+Le sol vérifie alors la ligne 6 et l'état du réchauffeur (manuel 03) et
+décide. Aucun changement de mode autonome n'a lieu pour un OBC froid.
+
+**Réchauffeur de batterie (TCS-01, TCS-05).** Le réchauffeur de batterie est
+piloté par thermostat. La FDIR n'intervient que lorsque le thermostat ne tient
+manifestement pas la bande, et elle ne laisse jamais le réchauffeur en mode
+manuel derrière elle :
+
+- Sous 1 C (TCS-01), la FDIR rend le réchauffeur au thermostat
+  (`HEATER_AUTO_MODE`). À cette température, le thermostat l'allume aussitôt.
+- Au-dessus de 42 C (TCS-05), la FDIR force l'arrêt du réchauffeur. Elle le
+  rend au thermostat dès que la batterie est de nouveau à 42 C ou moins
+  (`on_clear` dans `subsystems/fdir.yaml`).
+
+Jusqu'en novembre 2026, la réaction au froid était une mise en marche manuelle
+que rien n'annulait jamais. Après une excursion froide, la batterie restait
+alors à +15 à +18 C, au-dessus du point d'arrêt de
++10 C. La FDIR ne réalimente pas la ligne de réchauffeur 5 (`htr_bat`) si le
+délestage ou le sol l'a coupée. Cette décision reste au sol.
 
 ### 4.5 Règles TTC {#45-ttc-rules}
 
@@ -207,7 +264,15 @@ Chaque définition de surveillance précise :
 | Limite haute        | Seuil supérieur du contrôle de limites             |
 | ID d'événement      | Événement S5 généré en cas de violation            |
 | Nombre de répétitions | Nombre de violations consécutives avant déclenchement |
+| Condition de validité | `validity: {param_id, mask, value}` facultatif : contrôle seulement tant que `(param & mask) == value` |
 | Activé              | Indique si cette surveillance est actuellement active |
+
+Le nombre de répétitions (`repetition`, 1 par défaut) et la condition de
+validité suivent PUS-C. Tant que la condition de validité est fausse, la
+définition est *non contrôlée* : ni en violation, ni nominale. Les
+surveillances de rendement des panneaux solaires (EPS-05) utilisent ces deux
+champs. Aucun des deux ne figure dans l'enregistrement TM(12,13). Le rapport
+de transition indique quelle limite a été franchie, basse ou haute.
 
 Lorsqu'un contrôle de surveillance échoue, l'OBC génère un paquet d'événement PUS S5 portant
 l'ID d'événement correspondant. Cet événement est :
@@ -263,6 +328,15 @@ Lorsqu'un événement S5 est émis :
 2. Si elle existe et est activée, l'action associée (une télécommande stockée) est exécutée.
 3. L'exécution de l'action est consignée dans le tampon d'événements.
 4. L'action peut elle-même déclencher d'autres événements, ce qui permet des réactions en cascade.
+
+Une règle rattachée à une surveillance S12 (déclencheur de type `param`) peut
+être limitée à un seul côté de la bande. Avec `limit: high`, elle ne se
+déclenche que sur un franchissement de la limite haute ; avec `limit: low`,
+que sur un franchissement de la limite basse ; avec `any` (valeur par défaut),
+sur les deux. Les règles de surchauffe utilisent `high`, les règles de
+rendement des panneaux solaires `low`, et les bandes symétriques comme la
+survitesse des roues gardent `any`. Une règle ajoutée depuis le sol par
+TC(19,1) utilise toujours `any`.
 
 ### 7.2 Commandes événement-action {#72-event-action-commands}
 
