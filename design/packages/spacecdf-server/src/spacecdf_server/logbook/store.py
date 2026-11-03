@@ -195,8 +195,10 @@ class Folded:
         """Entries added or edited since the last download (all of them if never)."""
         if self.last_download is None:
             return len(self.entries)
+        # >= matches the ops store: a write in the same millisecond as the
+        # download still counts as unsaved (conservative).
         return sum(1 for e in self.entries.values()
-                   if (parse_ts(e.get("updated_ts")) or self.last_download) > self.last_download)
+                   if (t := parse_ts(e.get("updated_ts"))) is not None and t >= self.last_download)
 
 
 def _later(a: datetime | None, b: datetime | None) -> datetime | None:
