@@ -12,7 +12,7 @@ import { Fragment, useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
-import { LogThis, useLogbookUI } from '../logbook'
+import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
@@ -253,6 +253,9 @@ function RequirementTraceability({ requirements, elements }: { requirements: any
 
 // ─── Review Gates ───
 
+/** The go / no-go record for each review (decision_catalogue.yaml; MCR is the old MDR). */
+const GATE_DECISION: Record<string, string> = { mcr: 'D-GATE-MDR', mdr: 'D-GATE-MDR', prr: 'D-GATE-PRR', srr: 'D-GATE-SRR', pdr: 'D-GATE-PDR' }
+
 function ReviewGates({ studyId }: { studyId: string | null }) {
   const { t } = useTranslation()
   // Ruling Q23: MCR / SRR / PDR from configs/gate_exit_criteria.yaml, default PDR.
@@ -314,8 +317,27 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
                 </span>
               )}
               <span className="row gap-2 ml-auto">
-                <LogThis subject={t('{{gate}} review: {{verdict}}', { gate: activeGate.toUpperCase(), verdict: verdictText })}
-                  context={{ gate: activeGate }} />
+                <RecordDecision decision={GATE_DECISION[activeGate]} capture="gate:review" context={{ gate: activeGate }}
+                  label={t('Record go / no-go')}
+                  prefill={() => {
+                    const failed = gateResult.criteria.filter(c => c.verdict === 'fail')
+                    const manual = gateResult.criteria.filter(c => badgeKind(c) === 'manual' || badgeKind(c) === 'advisory')
+                    return {
+                      options: [
+                        { name: t('Go: hold the review now'), chosen: gateResult.ready || undefined },
+                        { name: t('Go with actions: hold it, with the open criteria as actions') },
+                        { name: t('No go: close the failed criteria first'), chosen: (!gateResult.ready && failCount > 0) || undefined },
+                      ],
+                      choice: verdictText,
+                      evidence: [
+                        { label: t('Criteria passed'), value: gateResult.summary?.pass ?? 0 },
+                        { label: t('Criteria failed'), value: failCount },
+                        { label: t('Advisory'), value: gateResult.summary?.advisory ?? 0 },
+                        { label: t('Manual sign-off'), value: gateResult.summary?.manual ?? 0 },
+                      ],
+                      open_issues: [...failed, ...manual].slice(0, 12).map(c => `${c.id}: ${t(c.question)}`).join('\n') || undefined,
+                    }
+                  }} />
                 <Button size="sm" onClick={() => requestEnd('gate', activeGate)}
                   title={t('Close this review and download your logbook')}>
                   {t('Finish {{gate}} review', { gate: activeGate.toUpperCase() })}
@@ -336,6 +358,8 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
                 )
               })}
             </ul>
+
+            <GateDecisions gate={activeGate} />
           </>
         )}
       </div>

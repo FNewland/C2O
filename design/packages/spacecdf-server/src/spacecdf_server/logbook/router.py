@@ -8,12 +8,15 @@ flock'd) file I/O in its thread pool.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from fastapi import APIRouter, Body, Query, Request, Response
 from fastapi.responses import JSONResponse
 
+from . import decisions as dec_mod
 from . import export as export_mod
+from . import prefill as prefill_mod
 from . import worksheets as ws_mod
 from .store import (
     COOKIE_MAX_AGE, COOKIE_NAME, ENTRY_LIMIT, IAP_HEADER, LANGS, TEXT_LIMIT, TOOLS, LogbookError,
@@ -127,6 +130,8 @@ def add_entry(request: Request, response: Response, body: Any = Body(...)):
                     ws.setdefault("title", title)
                 if q_text:
                     ws.setdefault("q_text", q_text)
+            if body.get("record") is not None:
+                _decision_body(body, _lang(body.get("lang")))
         entry = store.add(ident.person_id, body)
     except LogbookError as e:
         return _error(e, request, ident)
@@ -140,7 +145,12 @@ def edit_entry(entry_id: str, request: Request, response: Response, body: Any = 
     try:
         if not isinstance(body, dict):
             raise LogbookError(400, "body must be {text}")
-        entry = store.edit(ident.person_id, entry_id, body.get("text"), checked=body.get("checked"))
+        record = None
+        if body.get("record") is not None:
+            _decision_body(body, _lang(body.get("lang")))
+            record = body["record"]
+        entry = store.edit(ident.person_id, entry_id, body.get("text"), checked=body.get("checked"),
+                           record=record)
     except LogbookError as e:
         return _error(e, request, ident)
     _set_cookie(request, response, ident)
@@ -158,29 +168,98 @@ def delete_entry(entry_id: str, request: Request, response: Response):
     return {"ok": True}
 
 
+def _decision_body(body: dict, lang: str) -> None:
+    """A decision record: validate it, fill the catalogue facts, and make the
+    entry self-describing for every reader (text, worksheet, context)."""
+    record = dec_mod.clean_record(body.get("record"))
+    lookup = ws_mod.lookup()
+    record = dec_mod.complete(record, lang, lookup)
+    if not (record.get("choice") or record.get("rationale")):
+        raise LogbookError(400, "Write at least the choice or the rationale.")
+    body["record"] = record
+    body["kind"] = "decision"
+    body["text"] = dec_mod.render_text(record, lang)
+    ref = dec_mod.worksheet_ref(record, lang, lookup)
+    if ref:
+        body["worksheet"] = ref
+    ctx = body.get("context") if isinstance(body.get("context"), dict) else {}
+    body["context"] = {**ctx, "decision_id": record["decision_id"]}
+
+
+_WS_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+
+
 @router.get("/export")
 def export_logbook(request: Request, format: str = Query("md"), lang: str | None = Query(None),
-                   tz: str | None = Query(None)):
+                   tz: str | None = Query(None), worksheet: str | None = Query(None),
+                   study_id: str | None = Query(None), inline: int = Query(0)):
     ident = identify(request)
     fmt = format if format in export_mod.RENDERERS else None
     if fmt is None:
         return _error(LogbookError(400, "format must be md, html or json"), request, ident)
+    if worksheet is not None and not _WS_ID.match(worksheet):
+        return _error(LogbookError(400, "worksheet must be a worksheet id"), request, ident)
     lg = _lang(lang)
     now = now_utc()
     f = store.folded(ident.person_id)
+    entries = list(f.entries.values())
+    lookup = ws_mod.lookup()
+    decisions = dec_mod.localised(lg, entries, study_id, lookup)
     render, media = export_mod.RENDERERS[fmt]
-    text = render(entries=list(f.entries.values()), person_label=ident.label(lg), exported_at=now,
+    text = render(entries=entries, person_label=ident.label(lg), exported_at=now,
                   expires_at=store.expires_at(f), retention_h=store.retention_h, lang=lg,
-                  lookup=ws_mod.lookup(), tz=export_mod.zone(tz))
-    if f.entries:
+                  lookup=lookup, tz=export_mod.zone(tz), decisions=decisions, worksheet=worksheet,
+                  parts_of=ws_mod.parts())
+    # Only the whole logbook counts as "downloaded": one worksheet (or a copy
+    # to the clipboard) leaves the rest of it unsaved.
+    if f.entries and not worksheet:
         store.mark_downloaded(ident.person_id, fmt, now=now)
-    name = f"c2o-logbook-{now.strftime('%Y%m%d-%H%M')}.{fmt}"
+    stem = f"c2o-{worksheet}" if worksheet else "c2o-logbook"
+    name = f"{stem}-{now.strftime('%Y%m%d-%H%M')}.{fmt}"
     resp = Response(content=text.encode("utf-8"), media_type=media, headers={
-        "Content-Disposition": f'attachment; filename="{name}"',
+        "Content-Disposition": f'{"inline" if inline else "attachment"}; filename="{name}"',
         "Cache-Control": "no-store",
     })
     _set_cookie(request, resp, ident)
     return resp
+
+
+@router.get("/decisions")
+def get_decisions(request: Request, response: Response, study_id: str | None = Query(None),
+                  lang: str | None = Query(None), gate: str | None = Query(None)):
+    """The decision catalogue in ``lang``, with this person's status for ``study_id``.
+
+    ``gate`` (a UI gate id, ``mcr`` = MDR): adds ``due`` — the decisions that
+    must be recorded by that review (cumulative), for the gate review panel.
+    """
+    ident = identify(request)
+    _set_cookie(request, response, ident)
+    lg = _lang(lang)
+    entries = list(store.folded(ident.person_id).entries.values())
+    out = dec_mod.localised(lg, entries, study_id, ws_mod.lookup())
+    g = dec_mod.gate_of_ui(gate)
+    if g:
+        due = dec_mod.due_by(g)
+        items = [d for d in out["decisions"] if d["gate"] in due]
+        out["due"] = {"gate": g, "total": len(items),
+                      "open": [d["id"] for d in items if d["status"] == "open"],
+                      "recorded": [d["id"] for d in items if d["status"] == "recorded"]}
+    return out
+
+
+@router.get("/decisions/{decision_id}/prefill")
+async def get_decision_prefill(decision_id: str, request: Request, response: Response,
+                               study_id: str | None = Query(None), lang: str | None = Query(None)):
+    """What SpaceCDF can fill in for this decision from the study's current state."""
+    ident = identify(request)
+    _set_cookie(request, response, ident)
+    d = dec_mod.by_id().get(decision_id)
+    if d is None:
+        resp = JSONResponse({"detail": "no such decision"}, status_code=404)
+        _set_cookie(request, resp, ident)
+        return resp
+    return {"decision_id": decision_id, "study_id": study_id,
+            **await prefill_mod.prefill(d, study_id, _lang(lang))}
 
 
 @router.get("/worksheets")

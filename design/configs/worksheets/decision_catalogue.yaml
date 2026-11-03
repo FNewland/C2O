@@ -1,0 +1,611 @@
+# Decision catalogue — the design decisions the learner workbook asks each team to make.
+# HAND-MAINTAINED (no generator: the decisions are an editorial reading of the workbook, not
+# text copied from it). tests/test_logbook/test_decision_catalogue.py ties every entry to a real
+# workbook part in learner_workbook.yaml (generated from the workbook), checks EN and FR, the
+# gate/seat/field/source vocabularies, and that every capture point named here exists in the
+# SpaceCDF frontend.
+#
+# A decision record in the participant's logbook (LOGBOOK_SPEC.md §2, kind "decision") carries
+# the optional `record` object; see logbook/decisions.py for its shape. Records stay private to
+# the person (Franz's ruling L1): "open decisions" are computed from that person's own logbook.
+#
+#   id        D-<worksheet>-<SLUG>; stable, used in records and in the frontend
+#   part      <worksheet id>/<question id> in learner_workbook.yaml (the workbook part it belongs to)
+#   question  what the team must decide (EN / FR)
+#   seat      owning seat (see seats:)
+#   gate      the review it must be recorded by, full ECSS profile MDR → PRR → SRR → PDR
+#             (REDESIGN_DECISIONS.md ruling 1)
+#   fields    the parts of the record the student fills in (choice and rationale always)
+#   prefill   SpaceCDF state the record is prefilled from (see sources:)
+#   capture   where the tool offers "Record decision" at the point of decision (frontend
+#             RecordDecision capture="…"); empty = recorded from the logbook's open-decision list
+#   hint      optional: what a good record contains (EN / FR)
+
+version: 1
+
+gates:
+  # order = review order; ui_gates = the gate ids the V&V review panel uses today (MCR is the
+  # old name of MDR, ruling 3)
+  - id: mdr
+    label: {en: "MDR — Mission Definition Review", fr: "MDR — revue de définition de la mission"}
+    ui_gates: [mcr, mdr]
+  - id: prr
+    label: {en: "PRR — Preliminary Requirements Review", fr: "PRR — revue des exigences préliminaires"}
+    ui_gates: [prr]
+  - id: srr
+    label: {en: "SRR — System Requirements Review", fr: "SRR — revue des exigences système"}
+    ui_gates: [srr]
+  - id: pdr
+    label: {en: "PDR — Preliminary Design Review", fr: "PDR — revue de conception préliminaire"}
+    ui_gates: [pdr]
+
+seats:
+  - {id: team_leader, label: {en: Team leader, fr: Chef d’équipe}}
+  - {id: systems_engineer, label: {en: Systems, fr: Ingénierie système}}
+  - {id: mission_analyst, label: {en: Mission analysis & ops, fr: Analyse de mission et opérations}}
+  - {id: payload_lead, label: {en: Payload, fr: Charge utile}}
+  - {id: power_engineer, label: {en: Power, fr: Puissance}}
+  - {id: aocs_engineer, label: {en: AOCS, fr: SCAO}}
+  - {id: comms_engineer, label: {en: Comms & OBDH, fr: Communications et OBDH}}
+  - {id: thermal_engineer, label: {en: Thermal, fr: Thermique}}
+  - {id: structures_engineer, label: {en: Structures, fr: Structures}}
+  - {id: propulsion_engineer, label: {en: Propulsion, fr: Propulsion}}
+
+fields:
+  options: {en: Options considered, fr: Options envisagées}
+  criteria: {en: Criteria and weights, fr: Critères et pondérations}
+  choice: {en: Choice, fr: Choix retenu}
+  rationale: {en: Rationale, fr: Justification}
+  evidence: {en: Evidence, fr: Éléments probants}
+  consequences: {en: Consequences and risks, fr: Conséquences et risques}
+  margin_impact: {en: Margin impact, fr: Incidence sur les marges}
+  open_issues: {en: Open issues, fr: Points ouverts}
+
+sources:
+  # where SpaceCDF keeps the state a record is prefilled from; server = the logbook's
+  # /decisions/{id}/prefill can read it from the study; ui = only at the capture point
+  mission_need: {label: {en: Mission need (problem, stakeholders, objectives), fr: "Besoin de mission (problème, parties prenantes, objectifs)"}, api: "GET /api/studies/{id} → mission_need", server: true}
+  mission_trade: {label: {en: Space vs alternatives trade, fr: "Compromis espace / solutions de rechange"}, api: "POST /api/lifecycle/mission-trade (wizard step 3, Decide › Mission trade)", server: true}
+  study_requirements: {label: {en: Study requirements (mission type, orbit, lifetime, targets), fr: "Exigences de l’étude (type de mission, orbite, durée de vie, cibles)"}, api: "GET /api/studies/{id} → requirements", server: true}
+  architecture: {label: {en: Product tree (segments, systems, subsystems), fr: "Arborescence produit (segments, systèmes, sous-systèmes)"}, api: "GET /api/studies/{id}/elements", server: true}
+  orbit_trade: {label: {en: Orbit trade results, fr: Résultats du compromis d’orbite}, api: "GET /api/lifecycle/orbit-trade/{study}", server: false}
+  selected_orbit: {label: {en: Orbit applied to the spacecraft, fr: Orbite appliquée au véhicule spatial}, api: "element.performance.orbit_* (Decide › Orbit trade › Apply)", server: true}
+  constellation: {label: {en: Constellation sizing and the applied pattern, fr: Dimensionnement de la constellation et configuration appliquée}, api: "POST /api/lifecycle/constellation/design; element.quantity + performance.walker_notation", server: true}
+  ground_trade: {label: {en: Ground segment trade, fr: Compromis du segment sol}, api: "GET /api/lifecycle/ground/trade/{study}", server: false}
+  arch_trade: {label: {en: Architecture trade templates, fr: Modèles de compromis d’architecture}, api: "Decide › Architecture trades (driving requirement → options)", server: false}
+  pugh: {label: {en: Pugh matrix and pairwise weights, fr: Matrice de Pugh et pondérations par paires}, api: "Decide › Pairwise weighting + Pugh matrix", server: false}
+  selected_equipment: {label: {en: Selected equipment (mass, power, cost, TRL), fr: "Équipements retenus (masse, puissance, coût, TRL)"}, api: "elements with element_type component (Equipment browser › Add)", server: true}
+  interfaces: {label: {en: Interfaces (suggested, accepted, rejected), fr: "Interfaces (proposées, acceptées, rejetées)"}, api: "GET /api/studies/{id}/interfaces", server: true}
+  budget_mass: {label: {en: Mass budget and margins, fr: Bilan de masse et marges}, api: "GET /api/elements/{id}/budget/mass", server: true}
+  budget_power: {label: {en: Power budget and margins, fr: Bilan de puissance et marges}, api: "GET /api/elements/{id}/budget/power", server: true}
+  budget_data: {label: {en: Data budget, fr: Bilan de données}, api: "GET /api/elements/{id}/budget/data", server: true}
+  budget_cost: {label: {en: Cost budget, fr: Bilan de coût}, api: "GET /api/elements/{id}/budget/cost", server: true}
+  requirements: {label: {en: Requirements tree (levels, verification methods), fr: "Arborescence des exigences (niveaux, méthodes de vérification)"}, api: "GET /api/requirements/tree?study_id=", server: true}
+  requirement_quality: {label: {en: Requirement quality check (SMART), fr: Contrôle de qualité des exigences (SMART)}, api: "GET /api/requirements/verify?study_id=", server: false}
+  gate_review: {label: {en: Review gate checklist results, fr: Résultats de la liste de contrôle du jalon}, api: "V&V › Review gates (gate evaluator)", server: false}
+  conops: {label: {en: Concept of operations (modes), fr: "Concept d’opérations (modes)"}, api: "GET /api/studies/{id} → conops", server: true}
+
+decisions:
+  # ── Worksheet 1.2: Canadian space ecosystem & regulation ──
+  - id: D-1.2-SUPPLIERS
+    part: LW-1.2/A
+    question: {en: "Which suppliers (Canadian or international) will provide each critical capability?", fr: "Quels fournisseurs (canadiens ou étrangers) fourniront chaque capacité critique ?"}
+    seat: team_leader
+    gate: prr
+    fields: [options, criteria, choice, rationale, consequences, open_issues]
+    prefill: [selected_equipment]
+    capture: []
+  - id: D-1.2-RSSSA
+    part: LW-1.2/B
+    question: {en: "Does the Remote Sensing Space Systems Act apply, and which licence conditions will you plan for?", fr: "La Loi sur les systèmes de télédétection spatiale s’applique-t-elle, et quelles conditions de licence prévoyez-vous ?"}
+    seat: team_leader
+    gate: prr
+    fields: [choice, rationale, evidence, consequences, open_issues]
+    prefill: [study_requirements]
+    capture: []
+  - id: D-1.2-SPECTRUM
+    part: LW-1.2/C
+    question: {en: "Which licensing path (amateur, experimental, commercial) and filing schedule for each radio link?", fr: "Quelle voie de licence (amateur, expérimentale, commerciale) et quel calendrier de dépôt pour chaque liaison radio ?"}
+    seat: comms_engineer
+    gate: prr
+    fields: [options, choice, rationale, consequences, open_issues]
+    prefill: [study_requirements]
+    capture: []
+
+  # ── Worksheet 1.3: standards ──
+  - id: D-1.3-STANDARDS
+    part: LW-1.3/A
+    question: {en: "Which standards apply to the mission, and how are they tailored?", fr: "Quelles normes s’appliquent à la mission, et comment sont-elles adaptées ?"}
+    seat: systems_engineer
+    gate: prr
+    fields: [options, choice, rationale, consequences, open_issues]
+    prefill: [study_requirements]
+    capture: []
+  - id: D-1.3-FOS
+    part: LW-1.3/D
+    question: {en: "Which factors of safety and structural margin policy will the design use?", fr: "Quels facteurs de sécurité et quelle politique de marges structurales la conception retient-elle ?"}
+    seat: structures_engineer
+    gate: srr
+    fields: [choice, rationale, evidence, margin_impact, open_issues]
+    prefill: [budget_mass]
+    capture: []
+
+  # ── Worksheet 1.4: mission need, trade, ConOps ──
+  - id: D-1.4-STAKEHOLDERS
+    part: LW-1.4/A
+    question: {en: "Which stakeholders are primary, and how will you resolve their conflicting needs?", fr: "Quelles parties prenantes sont prioritaires, et comment résoudrez-vous leurs besoins contradictoires ?"}
+    seat: team_leader
+    gate: mdr
+    fields: [options, choice, rationale, consequences, open_issues]
+    prefill: [mission_need]
+    capture: [wizard:stakeholders]
+  - id: D-1.4-PROBLEM
+    part: LW-1.4/B
+    question: {en: "Which problem statement does the team commit to (what, who, impact, constraints)?", fr: "Sur quel énoncé du problème l’équipe s’engage-t-elle (quoi, qui, impact, contraintes) ?"}
+    seat: team_leader
+    gate: mdr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [mission_need]
+    capture: [wizard:problem]
+    hint: {en: "Quote the statement as the choice; say what you left out of scope and why.", fr: "Citez l’énoncé comme choix retenu\u202f; dites ce que vous avez exclu du périmètre et pourquoi."}
+  - id: D-1.4-OBJECTIVES
+    part: LW-1.4/C
+    question: {en: "Which mission objectives are primary, with which measurable criteria?", fr: "Quels objectifs de mission sont primaires, avec quels critères mesurables ?"}
+    seat: team_leader
+    gate: mdr
+    fields: [options, choice, rationale, evidence, open_issues]
+    prefill: [mission_need]
+    capture: [wizard:stakeholders]
+  - id: D-1.4-TPM
+    part: LW-1.4/D
+    question: {en: "Which technical performance measures will you track for the primary objective (MoE → MoP → TPM)?", fr: "Quelles mesures de performance technique suivrez-vous pour l’objectif primaire (MoE → MoP → TPM) ?"}
+    seat: systems_engineer
+    gate: mdr
+    fields: [choice, rationale, evidence, margin_impact, open_issues]
+    prefill: [mission_need, budget_mass]
+    capture: []
+  - id: D-1.4-PAYLOAD
+    part: LW-1.4/D
+    question: {en: "Which payload type and key performance does the primary objective demand?", fr: "Quel type de charge utile et quelles performances clés l’objectif primaire exige-t-il ?"}
+    seat: payload_lead
+    gate: mdr
+    fields: [options, criteria, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [study_requirements, mission_need]
+    capture: []
+  - id: D-1.4-SPACE
+    part: LW-1.4/E
+    question: {en: "Is a dedicated space mission the right answer, or does another alternative meet the need?", fr: "Une mission spatiale dédiée est-elle la bonne réponse, ou une autre solution répond-elle au besoin ?"}
+    seat: team_leader
+    gate: mdr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [mission_trade, mission_need]
+    capture: [wizard:alternatives, decide:mission-trade]
+    hint: {en: "Name the top two alternatives and why one beat the other; say whether a 20 % change in your second criterion's weight changes the ranking.", fr: "Nommez les deux meilleures solutions et pourquoi l’une l’emporte\u202f; dites si une variation de 20 % du poids de votre deuxième critère change le classement."}
+  - id: D-1.4-ARCHITECTURE
+    part: LW-1.4/F
+    question: {en: "Which mission architecture (segments, number of spacecraft) is the starting baseline?", fr: "Quelle architecture de mission (segments, nombre de véhicules spatiaux) sert de référence de départ ?"}
+    seat: systems_engineer
+    gate: mdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [architecture, study_requirements]
+    capture: [wizard:architecture]
+  - id: D-1.4-CONOPS
+    part: LW-1.4/F
+    question: {en: "Which concept of operations (modes, contacts, data flow to users) is the baseline?", fr: "Quel concept d’opérations (modes, contacts, flux de données vers les utilisateurs) sert de référence ?"}
+    seat: mission_analyst
+    gate: mdr
+    fields: [choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [conops, budget_power, budget_data]
+    capture: []
+
+  # ── Worksheet 2.1: requirements ──
+  - id: D-2.1-BASELINE
+    part: LW-2.1/E
+    question: {en: "Which mission requirements form the baseline, and which stay TBD?", fr: "Quelles exigences de mission forment le référentiel d’exigences, et lesquelles restent à définir ?"}
+    seat: systems_engineer
+    gate: prr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [requirements]
+    capture: []
+  - id: D-2.1-QUALITY
+    part: LW-2.1/B
+    question: {en: "Which requirements are rewritten, split or deleted after the quality review?", fr: "Quelles exigences sont réécrites, scindées ou supprimées après la revue de qualité ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [requirement_quality, requirements]
+    capture: [requirements:verify]
+  - id: D-2.1-FLOWDOWN
+    part: LW-2.1/C
+    question: {en: "How do mission requirements flow down to system and subsystem requirements?", fr: "Comment les exigences de mission se déclinent-elles en exigences système et sous-système ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [choice, rationale, evidence, consequences, open_issues]
+    prefill: [requirements]
+    capture: [requirements:flowdown]
+
+  # ── Worksheet 2.2: functions ──
+  - id: D-2.2-FUNCTIONS
+    part: LW-2.2/A
+    question: {en: "How is the mission function tree decomposed (three levels)?", fr: "Comment l’arbre fonctionnel de la mission est-il décomposé (trois niveaux) ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [choice, rationale, open_issues]
+    prefill: [architecture]
+    capture: []
+  - id: D-2.2-ALLOCATION
+    part: LW-2.2/C
+    question: {en: "Which subsystem is primary for each shared function, and what interface does that create?", fr: "Quel sous-système est principal pour chaque fonction partagée, et quelle interface cela crée-t-il ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [options, choice, rationale, consequences, open_issues]
+    prefill: [architecture, interfaces]
+    capture: []
+
+  # ── Worksheet 2.3: orbit ──
+  - id: D-2.3-ORBIT
+    part: LW-2.3/B
+    question: {en: "Which orbit family, altitude and inclination?", fr: "Quelle famille d’orbite, quelle altitude et quelle inclinaison ?"}
+    seat: mission_analyst
+    gate: prr
+    fields: [options, criteria, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [orbit_trade, selected_orbit, study_requirements]
+    capture: [decide:orbit-trade]
+    hint: {en: "Record the top three candidates with GSD, revisit and lifetime; say what moving 100 km up or down would cost.", fr: "Notez les trois meilleures candidates avec GSD, revisite et durée de vie\u202f; dites ce que coûterait un déplacement de 100 km vers le haut ou le bas."}
+  - id: D-2.3-CONSTELLATION
+    part: LW-2.3/B
+    question: {en: "One spacecraft or a constellation, and which pattern (planes × spacecraft)?", fr: "Un seul véhicule spatial ou une constellation, et quelle configuration (plans × véhicules) ?"}
+    seat: mission_analyst
+    gate: prr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [constellation, study_requirements]
+    capture: [decide:constellation]
+  - id: D-2.3-DEBRIS
+    part: LW-2.3/C
+    question: {en: "How will the mission meet the debris-mitigation rules: natural decay or propulsive deorbit?", fr: "Comment la mission respectera-t-elle les règles de réduction des débris\u00a0: décroissance naturelle ou désorbitation propulsive ?"}
+    seat: mission_analyst
+    gate: prr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [selected_orbit, study_requirements]
+    capture: []
+  - id: D-2.3-PAYLOAD
+    part: LW-2.3/D
+    question: {en: "Which payload performance (GSD or resolution, swath, data rate, duty cycle) follows from the orbit?", fr: "Quelles performances de charge utile (GSD ou résolution, fauchée, débit, rapport cyclique) découlent de l’orbite ?"}
+    seat: payload_lead
+    gate: prr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [study_requirements, selected_orbit]
+    capture: []
+
+  # ── Worksheet 2.4: architecture, interfaces, budgets ──
+  - id: D-2.4-MASS
+    part: LW-2.4/A
+    question: {en: "How is the mass budget allocated, and which maturity and system margins apply?", fr: "Comment le bilan de masse est-il réparti, et quelles marges de maturité et système s’appliquent ?"}
+    seat: systems_engineer
+    gate: prr
+    fields: [choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [budget_mass]
+    capture: [budget:mass]
+  - id: D-2.4-POWER
+    part: LW-2.4/B
+    question: {en: "Which operating modes and duty cycles size the power budget?", fr: "Quels modes de fonctionnement et rapports cycliques dimensionnent le bilan de puissance ?"}
+    seat: power_engineer
+    gate: prr
+    fields: [choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [budget_power, conops]
+    capture: [budget:power]
+  - id: D-2.4-INTERFACES
+    part: LW-2.4/C
+    question: {en: "Which interfaces between subsystems are accepted, edited or rejected?", fr: "Quelles interfaces entre sous-systèmes sont acceptées, modifiées ou rejetées ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [interfaces]
+    capture: [interfaces:link, blocks:link]
+  - id: D-2.4-CONFLICT
+    part: LW-2.4/D
+    question: {en: "How is the interface or budget conflict resolved?", fr: "Comment le conflit d’interface ou de bilan est-il résolu ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [options, criteria, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [interfaces, budget_mass, budget_power]
+    capture: []
+  - id: D-2.4-TIGHTEST
+    part: LW-2.4/E
+    question: {en: "Which single design change relieves the tightest budget?", fr: "Quelle modification de conception soulage le bilan le plus tendu ?"}
+    seat: systems_engineer
+    gate: prr
+    fields: [options, choice, rationale, evidence, margin_impact, open_issues]
+    prefill: [budget_mass, budget_power, budget_data, budget_cost]
+    capture: []
+
+  # ── Worksheet 3.1: power and thermal ──
+  - id: D-3.1-EPS
+    part: LW-3.1/justification
+    question: {en: "Which EPS architecture (array configuration, battery, power regulation)?", fr: "Quelle architecture du sous-système de puissance (générateur solaire, batterie, régulation) ?"}
+    seat: power_engineer
+    gate: srr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [arch_trade, budget_power]
+    capture: [decide:arch-trade]
+  - id: D-3.1-ARRAY
+    part: LW-3.1/A
+    question: {en: "Which solar-array area and BOL power do you size for?", fr: "Pour quelle surface de générateur solaire et quelle puissance en début de vie dimensionnez-vous ?"}
+    seat: power_engineer
+    gate: pdr
+    fields: [choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [budget_power, selected_orbit]
+    capture: []
+  - id: D-3.1-BATTERY
+    part: LW-3.1/B
+    question: {en: "Which battery capacity and depth of discharge?", fr: "Quelle capacité de batterie et quelle profondeur de décharge ?"}
+    seat: power_engineer
+    gate: pdr
+    fields: [choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [budget_power, selected_orbit]
+    capture: []
+  - id: D-3.1-THERMAL
+    part: LW-3.1/C
+    question: {en: "Which thermal control approach (passive, heaters, coatings), sized for which hot and cold cases?", fr: "Quelle approche de contrôle thermique (passive, réchauffeurs, revêtements), dimensionnée pour quels cas chaud et froid ?"}
+    seat: thermal_engineer
+    gate: srr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [arch_trade, budget_power]
+    capture: [decide:arch-trade]
+
+  # ── Worksheet 3.2: AOCS ──
+  - id: D-3.2-AOCS
+    part: LW-3.2/A
+    question: {en: "Which AOCS architecture meets the pointing requirement, and why not a simpler or a more capable one?", fr: "Quelle architecture SCAO satisfait l’exigence de pointage, et pourquoi pas une plus simple ou une plus performante ?"}
+    seat: aocs_engineer
+    gate: srr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [arch_trade, study_requirements]
+    capture: [decide:arch-trade]
+  - id: D-3.2-WHEELS
+    part: LW-3.2/C
+    question: {en: "Which reaction wheels (torque, momentum) and which desaturation strategy?", fr: "Quelles roues de réaction (couple, moment cinétique) et quelle stratégie de désaturation ?"}
+    seat: aocs_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [selected_equipment]
+    capture: []
+  - id: D-3.2-POINTING
+    part: LW-3.2/D
+    question: {en: "How is the pointing error budget allocated between sensors, actuators and knowledge?", fr: "Comment le bilan d’erreur de pointage est-il réparti entre capteurs, actionneurs et restitution ?"}
+    seat: aocs_engineer
+    gate: pdr
+    fields: [choice, rationale, evidence, margin_impact, open_issues]
+    prefill: [study_requirements]
+    capture: []
+
+  # ── Worksheet 3.3: communications ──
+  - id: D-3.3-BAND
+    part: LW-3.3/A
+    question: {en: "Which frequency band and licence type for TT&C and for payload data?", fr: "Quelle bande de fréquences et quel type de licence pour la TT&C et pour les données de charge utile ?"}
+    seat: comms_engineer
+    gate: srr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [arch_trade, study_requirements]
+    capture: [decide:arch-trade]
+  - id: D-3.3-LINK
+    part: LW-3.3/B
+    question: {en: "Which link margin do you accept, and with which antenna, transmit power and ground station?", fr: "Quelle marge de liaison acceptez-vous, avec quelle antenne, quelle puissance d’émission et quelle station sol ?"}
+    seat: comms_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [selected_equipment, budget_power]
+    capture: []
+  - id: D-3.3-DATA
+    part: LW-3.3/C
+    question: {en: "How does the data budget close (rate, compression, passes, onboard storage)?", fr: "Comment le bilan de données est-il bouclé (débit, compression, passages, stockage à bord) ?"}
+    seat: comms_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [budget_data]
+    capture: [budget:data]
+  - id: D-3.3-MODCOD
+    part: LW-3.3/E
+    question: {en: "Which modulation and coding, trading data rate against link robustness?", fr: "Quels modulation et codage, en arbitrant entre débit et robustesse de la liaison ?"}
+    seat: comms_engineer
+    gate: pdr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: []
+    capture: []
+
+  # ── Worksheet 3.4: structure, propulsion, equipment ──
+  - id: D-3.4-FORMFACTOR
+    part: LW-3.4/A
+    question: {en: "Which form factor and structure, and why not larger or smaller?", fr: "Quel format et quelle structure, et pourquoi pas plus grand ou plus petit ?"}
+    seat: structures_engineer
+    gate: srr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [study_requirements, budget_mass]
+    capture: []
+  - id: D-3.4-PROPULSION
+    part: LW-3.4/C
+    question: {en: "Does the mission need propulsion, and if so which type?", fr: "La mission a-t-elle besoin de propulsion, et si oui de quel type ?"}
+    seat: propulsion_engineer
+    gate: srr
+    fields: [options, criteria, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [arch_trade, selected_orbit, budget_mass]
+    capture: [decide:arch-trade]
+  - id: D-3.4-EQUIPMENT
+    part: LW-3.4/D
+    question: {en: "Which equipment is selected for each subsystem?", fr: "Quels équipements sont retenus pour chaque sous-système ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [options, criteria, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [selected_equipment, budget_mass, budget_power]
+    capture: [equipment:add]
+    hint: {en: "Each seat records its own subsystem's selection; say which trade-off was hardest.", fr: "Chaque poste consigne la sélection de son sous-système\u202f; dites quel compromis a été le plus difficile."}
+  - id: D-3.4-TRADE
+    part: LW-3.4/E
+    question: {en: "Which option wins the component trade on mass, power, cost and TRL?", fr: "Quelle option l’emporte dans le compromis de composants sur la masse, la puissance, le coût et le TRL ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [pugh]
+    capture: [decide:pugh]
+  - id: D-3.4-BUDGETFIX
+    part: LW-3.4/F
+    question: {en: "Which fix closes a budget that does not close after equipment selection?", fr: "Quelle correction boucle un bilan qui ne se ferme pas après la sélection des équipements ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, margin_impact, open_issues]
+    prefill: [budget_mass, budget_power, budget_data, budget_cost]
+    capture: []
+
+  # ── Worksheet 4.1: equipment and BOM ──
+  - id: D-4.1-MAKEBUY
+    part: LW-4.1/A
+    question: {en: "Make, buy or reuse for each subsystem?", fr: "Faire, acheter ou réutiliser pour chaque sous-système ?"}
+    seat: team_leader
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [selected_equipment]
+    capture: []
+  - id: D-4.1-EXPORT
+    part: LW-4.1/D
+    question: {en: "Which components need an export licence, and what will you do about it?", fr: "Quels composants nécessitent une licence d’exportation, et que ferez-vous à ce sujet ?"}
+    seat: team_leader
+    gate: pdr
+    fields: [choice, rationale, evidence, consequences, open_issues]
+    prefill: [selected_equipment]
+    capture: []
+  - id: D-4.1-INCOMPAT
+    part: LW-4.1/F
+    question: {en: "How is an interface incompatibility between selected components resolved?", fr: "Comment une incompatibilité d’interface entre composants retenus est-elle résolue ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [interfaces, selected_equipment]
+    capture: []
+
+  # ── Worksheet 4.2: V&V ──
+  - id: D-4.2-METHODS
+    part: LW-4.2/A
+    question: {en: "Which verification method (A, T, I, R, D) for each key requirement?", fr: "Quelle méthode de vérification (A, T, I, R, D) pour chaque exigence clé ?"}
+    seat: systems_engineer
+    gate: srr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [requirements]
+    capture: []
+  - id: D-4.2-TESTS
+    part: LW-4.2/C
+    question: {en: "Which launch vehicle environment and test approach (proto-flight or qualification + acceptance)?", fr: "Quel environnement de lanceur et quelle approche d’essais (protovol ou qualification + recette) ?"}
+    seat: structures_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [study_requirements]
+    capture: []
+  - id: D-4.2-WAIVERS
+    part: LW-4.2/F
+    question: {en: "Which requirements need a waiver or an alternative verification method?", fr: "Quelles exigences nécessitent une dérogation ou une autre méthode de vérification ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [choice, rationale, consequences, open_issues]
+    prefill: [requirements]
+    capture: []
+
+  # ── Worksheet 4.3: risk and FMECA ──
+  - id: D-4.3-RISKS
+    part: LW-4.3/A
+    question: {en: "Which top risks are mitigated, accepted or transferred, and which seat owns each?", fr: "Quels risques majeurs sont réduits, acceptés ou transférés, et quel poste porte chacun ?"}
+    seat: team_leader
+    gate: srr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: []
+    capture: []
+  - id: D-4.3-SPF
+    part: LW-4.3/E
+    question: {en: "Which single-point failures do you accept, and which do you remove with redundancy?", fr: "Quels points de défaillance unique acceptez-vous, et lesquels supprimez-vous par redondance ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [selected_equipment, budget_mass]
+    capture: []
+
+  # ── Worksheet 4.4: cost and reviews ──
+  - id: D-4.4-COST
+    part: LW-4.4/B
+    question: {en: "Which cost estimate and confidence level (P50, P70, P80) does the team budget for?", fr: "Quelle estimation de coût et quel niveau de confiance (P50, P70, P80) l’équipe retient-elle ?"}
+    seat: team_leader
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, margin_impact, open_issues]
+    prefill: [budget_cost]
+    capture: [budget:cost]
+  - id: D-GATE-MDR
+    part: LW-4.4/E
+    question: {en: "Is the team ready to hold the MDR, and what closes the open criteria?", fr: "L’équipe est-elle prête à tenir la MDR, et qu’est-ce qui clôt les critères ouverts ?"}
+    seat: team_leader
+    gate: mdr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [gate_review]
+    capture: [gate:review]
+  - id: D-GATE-PRR
+    part: LW-4.4/E
+    question: {en: "Is the team ready to hold the PRR, and what closes the open criteria?", fr: "L’équipe est-elle prête à tenir la PRR, et qu’est-ce qui clôt les critères ouverts ?"}
+    seat: team_leader
+    gate: prr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [gate_review]
+    capture: []
+  - id: D-GATE-SRR
+    part: LW-4.4/E
+    question: {en: "Is the team ready to hold the SRR, and what closes the open criteria?", fr: "L’équipe est-elle prête à tenir la SRR, et qu’est-ce qui clôt les critères ouverts ?"}
+    seat: team_leader
+    gate: srr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [gate_review]
+    capture: [gate:review]
+  - id: D-GATE-PDR
+    part: LW-4.4/E
+    question: {en: "Is the team ready to hold the PDR, and what closes the open criteria?", fr: "L’équipe est-elle prête à tenir la PDR, et qu’est-ce qui clôt les critères ouverts ?"}
+    seat: team_leader
+    gate: pdr
+    fields: [choice, rationale, evidence, open_issues]
+    prefill: [gate_review]
+    capture: [gate:review]
+
+  # ── Worksheets 5.1, 5.2: ground segment and operations ──
+  - id: D-5.1-GROUND
+    part: LW-5.1/C
+    question: {en: "Which ground-station network (locations, antennas, roles)?", fr: "Quel réseau de stations sol (emplacements, antennes, rôles) ?"}
+    seat: mission_analyst
+    gate: srr
+    fields: [options, criteria, choice, rationale, evidence, consequences, open_issues]
+    prefill: [ground_trade, architecture]
+    capture: [decide:ground-trade]
+  - id: D-5.1-LEOP
+    part: LW-5.1/D
+    question: {en: "Which LEOP sequence (deployment timers, first contact, detumbling) is the baseline?", fr: "Quelle séquence LEOP (minuteries de déploiement, premier contact, réduction des vitesses angulaires) sert de référence ?"}
+    seat: mission_analyst
+    gate: pdr
+    fields: [choice, rationale, evidence, consequences, open_issues]
+    prefill: [conops]
+    capture: []
+  - id: D-5.2-MODES
+    part: LW-5.2/A
+    question: {en: "Which operational modes, with which entry and exit conditions?", fr: "Quels modes opérationnels, avec quelles conditions d’entrée et de sortie ?"}
+    seat: mission_analyst
+    gate: srr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [conops, budget_power]
+    capture: []
+  - id: D-5.2-FDIR
+    part: LW-5.2/B
+    question: {en: "Which faults are handled on board (FDIR level) and which by the ground?", fr: "Quelles anomalies sont traitées à bord (niveau FDIR) et lesquelles par le sol ?"}
+    seat: systems_engineer
+    gate: pdr
+    fields: [options, choice, rationale, consequences, open_issues]
+    prefill: [conops]
+    capture: []
+  - id: D-5.2-STAFFING
+    part: LW-5.2/E
+    question: {en: "How much autonomy does the spacecraft get, and how is operations staffing planned?", fr: "Quelle autonomie accorder au véhicule spatial, et comment l’effectif des opérations est-il prévu ?"}
+    seat: mission_analyst
+    gate: pdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [conops, budget_cost]
+    capture: []

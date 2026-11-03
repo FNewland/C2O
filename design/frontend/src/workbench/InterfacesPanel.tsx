@@ -15,7 +15,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { LogThis } from '../logbook'
+import { RecordDecision } from '../logbook'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { ArmButton, Button, Chevron, Disclosure, Field, Input, Note, Panel, Select, StatusBadge } from '../components/ui'
@@ -29,7 +29,7 @@ import {
   createInterface, deleteInterface, patchInterface, proposeLinks, useInterfaces, useInvalidateLinks,
   useProposalCheck, type InterfacePatch, type ProposeResult,
 } from './interfaceApi'
-import { LinkEditor, LinkStatusChip, TypeLabel, originText, propsSummary, type EndpointOption } from './linkParts'
+import { LinkEditor, LinkStatusChip, TypeLabel, linkDecision, originText, propsSummary, type EndpointOption } from './linkParts'
 
 const API = '/api'
 
@@ -249,6 +249,8 @@ export function InterfacesPanel() {
                   <span className="c2o-links__acts">
                     <Button size="sm" onClick={() => setStatus(i, 'suggested')} busy={busy === i.id}
                       aria-label={t('Restore link {{from}} to {{to}}', { from: nameOf(i.from_element_id), to: nameOf(i.to_element_id) })}>{t('Restore')}</Button>
+                    <RecordDecision decision="D-2.4-INTERFACES" capture="interfaces:link" label={t('Record')}
+                      prefill={() => linkDecision(i, nameOf, t, lang, 'reject')} />
                   </span>
                 </li>
               ))}
@@ -298,7 +300,8 @@ function SuggestedRow({ iface, nameOf, endpoints, busy, onAccept, onReject, onSa
           aria-label={t('Edit link {{from}} to {{to}}', pair)}>{t('Edit')}</Button>
         <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} size="sm" variant="default"
           aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
-        <LogThis subject={t('Link {{from}} to {{to}}', pair)} />
+        <RecordDecision decision="D-2.4-INTERFACES" capture="interfaces:link" label={t('Record')}
+          prefill={() => linkDecision(iface, nameOf, t, i18n.language)} />
       </span>
       {editing && (
         <div className="c2o-links__edit">
@@ -314,7 +317,7 @@ function AcceptedRow({ iface, nameOf, endpoints, busy, onSave, onDelete, onRejec
   iface: DesignInterface; nameOf: (id: string) => string; endpoints: EndpointOption[]; busy: boolean
   onSave: (p: InterfacePatch) => void; onDelete: () => void; onReject: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const summary = propsSummary(iface, t)
   const fromRule = iface.origin.startsWith('rule:')
@@ -329,7 +332,8 @@ function AcceptedRow({ iface, nameOf, endpoints, busy, onSave, onDelete, onRejec
           {summary ? <span className="mono t-12 c-2 ellipsis">{summary}</span> : <span className="t-12 c-3">{t('no properties')}</span>}
         </button>
         <span className="t-12 c-3 nowrap c2o-links__origin">{originText(iface, t)}</span>
-        <LogThis subject={t('Link {{from}} to {{to}}', pair)} />
+        <RecordDecision decision="D-2.4-INTERFACES" capture="interfaces:link" label={t('Record')}
+          prefill={() => linkDecision(iface, nameOf, t, i18n.language, 'accept')} />
         {fromRule
           ? <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
           : <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete interface {{from}} → {{to}}', pair)} onConfirm={onDelete} />}

@@ -50,22 +50,27 @@ def test_header_and_footer():
     assert "Deleted from the C2O server on 2026-11-05 08:00 UTC (48 h after the last entry)" in md
 
 
-def test_grouped_by_day_then_tool_then_time():
+def test_log_grouped_by_day_then_tool_then_time():
     md = _md()
-    d1, d2 = md.index("## 2026-11-02"), md.index("## 2026-11-03")
-    assert d1 < md.index("### Mission control (MCS)") < md.index("### SpaceCDF (design)") < d2
-    assert md.index("Battery at 71 %") < md.index("Body-mounted arrays")
+    log = md[md.index("## Log"):]
+    d1, d2 = log.index("### 2026-11-02"), log.find("### 2026-11-03")
+    assert d1 < log.index("#### Mission control (MCS)") < log.index("#### SpaceCDF (design)")
+    assert d2 == -1, "the 3 Nov entries are all worksheet answers: they are in the workbook part"
+    assert log.index("Battery at 71 %") < log.index("Body-mounted arrays")
     assert "sim time 2026-03-10 04:18 UTC" in md
     assert "study AuroraSat" in md and "s1" not in md.split("Body-mounted arrays")[1].split("##")[0]
 
 
-def test_worksheet_answers_under_their_question_in_order():
+def test_workbook_comes_first_in_workbook_order():
     md = _md()
-    assert "#### Worksheets — LW-2.3 Orbit Selection" in md
-    a, b = md.index("**Part A: Orbital Mechanics**"), md.index("**Part B: Orbit Trade Matrix**")
-    assert a < md.index("Pegasus first") and b < md.index("SSO 550 km") and a < b
-    # an ops worksheet this tool has no YAML for still prints its stored question text
-    assert "Day 3 Post-Shift Debrief" in md and "**What surprised you?**" in md
+    wb, log = md.index("## Workbook"), md.index("## Log")
+    assert wb < log
+    sheet = md.index("### Worksheet 2.3 · Orbit Selection")
+    a, b = md.index("#### Part A: Orbital Mechanics"), md.index("#### Part B: Orbit Trade Matrix")
+    assert wb < sheet < a < md.index("Pegasus first") < b < md.index("SSO 550 km") < log
+    # an ops worksheet this tool has no YAML for still prints its stored question text, after the LW ones
+    ops = md.index("### WB-5.5-DB · Day 3 Post-Shift Debrief")
+    assert b < ops < md.index("#### What surprised you?") < log
 
 
 def test_french():

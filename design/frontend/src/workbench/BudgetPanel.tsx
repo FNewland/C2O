@@ -15,12 +15,21 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
 import { displayElementName } from './BlocksPanel'
+import { RecordDecision } from '../logbook'
 import { Button, DataTable, Disclosure, MarginBar, MarginBarKey, Note, NoData, Panel, Tabs, fmtNum, tabPanelProps, type Column } from '../components/ui'
 
 const API = '/api'
 
 /** System line: caution below the ECSS 20 % system margin. Element lines: caution when within 5 % of their allocation. */
 const ELEMENT_CAUTION_PCT = 5
+
+/** Budget → the workbook decision it backs (decision_catalogue.yaml). */
+const BUDGET_DECISION: Record<BudgetKind, string> = {
+  mass: 'D-2.4-MASS', power: 'D-2.4-POWER', data: 'D-3.3-DATA', cost: 'D-4.4-COST',
+}
+const BUDGET_CAPTURE: Record<BudgetKind, string> = {
+  mass: 'budget:mass', power: 'budget:power', data: 'budget:data', cost: 'budget:cost',
+}
 
 type BudgetKind = 'mass' | 'power' | 'data' | 'cost'
 
@@ -116,6 +125,35 @@ export function BudgetPanel() {
           <span className="t-12 c-2">{t('Per spacecraft, ×{{qty}} in the constellation', { qty: constellationQty })}</span>
         )}
         <span className="grow" />
+        <RecordDecision decision={BUDGET_DECISION[activeBudget]} capture={BUDGET_CAPTURE[activeBudget]}
+          context={{ element: parentName }}
+          prefill={() => {
+            const u = bt.unit
+            const marginPct = parentAlloc && budget?.sum_with_margin != null
+              ? Math.round(((parentAlloc - budget.sum_with_margin) / parentAlloc) * 1000) / 10 : null
+            return {
+              options: lines.map(l => ({
+                name: displayElementName(l.name, t) + (l.quantity > 1 ? ` ×${l.quantity}` : ''),
+                values: {
+                  [t('nominal')]: l.nominal,
+                  [t('with margin')]: l.with_margin,
+                  ...(l.allocation != null ? { [t('allocation')]: l.allocation } : {}),
+                  [t('maturity margin %')]: l.margin_pct,
+                },
+              })),
+              evidence: [
+                { label: t('{{name}}: nominal', { name: parentName }), value: budget?.sum_nominal ?? 0, unit: u },
+                { label: t('{{name}}: with maturity margin', { name: parentName }), value: budget?.sum_with_margin ?? 0, unit: u },
+                ...(parentAlloc != null ? [{ label: t('{{name}}: allocation', { name: parentName }), value: parentAlloc, unit: u }] : []),
+                ...(marginPct != null ? [{ label: t('Margin to allocation'), value: marginPct, unit: '%' }] : []),
+                ...(activeBudget === 'power' && budget?.total_avg_power != null ? [{ label: t('Orbit average'), value: budget.total_avg_power, unit: 'W' }, { label: t('Peak'), value: budget.total_peak_power, unit: 'W' }] : []),
+                ...(activeBudget === 'data' && budget?.total_data_volume_gb_per_day != null ? [{ label: t('Volume per day'), value: budget.total_data_volume_gb_per_day, unit: 'GB' }] : []),
+              ],
+              margin_impact: marginPct != null
+                ? t('{{kind}} margin to allocation: {{pct}} % (C2O system margin policy: 25 % at MDR, 20 % at PRR and SRR, 10 % at PDR)', { kind: kindLabel, pct: marginPct })
+                : t('{{kind}}: no allocation set, so no margin to allocation yet', { kind: kindLabel }),
+            }
+          }} />
         {unallocatedLines.length > 0 && (
           <Button size="sm" onClick={autoAllocate} busy={autoBusy}
             title={t('Sets each missing allocation to its nominal with margin, plus 10 %')}>
