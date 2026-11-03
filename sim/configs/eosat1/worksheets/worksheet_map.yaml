@@ -20,6 +20,22 @@
 #                anomaly or report row)
 # A worksheet with no procedures, pages or scenarios is offered everywhere
 # in its tools.
+#
+# How the logbook presents it (logbook.js "Workbook" tab):
+#   form         anomaly | scorecard | handover | briefing | debrief — a form
+#                filled and saved as one logbook record. Sheets without a
+#                form are offered question by question; a confirm-each-step
+#                sheet becomes the live checklist of its procedure card.
+#   instances    true: several filled copies (one per anomaly, per position)
+#   prefill      {English question text: key} — the tool fills these from
+#                its console state when the form opens (the operator edits
+#                or clears them). Keys the MCS knows: ticket_id, pass,
+#                alarm_time, param_value, fdir_rule, severity, position,
+#                first_action, procedure, procedure_state, params_top3,
+#                open_items, now, fdir_active, phase_time, last_pass,
+#                open_alarms, next_pass, gonogo_open, gonogo, next_aos.
+#                A label that no longer matches a question stops the
+#                generator: edit the map when the workbook changes.
 
 source: design/docs/course/orbit_north_week3_workbook.md
 source_fr: design/docs/course/fr/orbit_north_week3_workbook.md
@@ -31,7 +47,18 @@ worksheets:
   # ── Day 2: nominal pass, link loss, handover, flight dynamics ───────────
   WB-5.4-N001: {phase: during, tools: [mcs], procedures: [NOM-001]}
   WB-5.4-C003: {phase: during, tools: [mcs, radio], procedures: [CTG-003]}
-  WB-5.4-N012: {phase: during, tools: [mcs], procedures: [NOM-012]}
+  WB-5.4-N012:
+    phase: during
+    tools: [mcs]
+    procedures: [NOM-012]
+    form: handover
+    prefill:
+      Phase and time: phase_time
+      Last completed pass: last_pass
+      Open anomalies: open_alarms
+      Open work items: procedure_state
+      Next pass: next_pass
+      GO authorisations outstanding: gonogo_open
   WB-5.4-FD: {phase: exercise, tools: [orbit]}
 
   # ── Day 3: LEOP ─────────────────────────────────────────────────────────
@@ -39,6 +66,7 @@ worksheets:
     phase: prep
     tools: [mcs, instructor]
     scenarios: [first_contact, separation, separation_sequence]
+    form: briefing
   WB-5.5-L001: {phase: during, tools: [mcs, radio], procedures: [LEOP-001]}
   WB-5.5-L006: {phase: during, tools: [mcs], procedures: [LEOP-006]}
   WB-5.5-L002: {phase: during, tools: [mcs], procedures: [LEOP-002]}
@@ -49,17 +77,45 @@ worksheets:
     phase: during
     tools: [mcs, delayed_tm, radio]
     context_keys: [alarm_id, anomaly]
-  WB-5.5-GO: {phase: debrief, tools: [mcs, instructor]}
-  WB-5.5-HO: {phase: during, tools: [mcs]}
+    form: anomaly
+    instances: true
+    prefill:
+      Ticket ID (auto-assigned): ticket_id
+      Pass / shift: pass
+      Date / UTC time of first indicator: alarm_time
+      Triggering parameter and value: param_value
+      FDIR rule that fired (if any): fdir_rule
+      Severity (0–4): severity
+      First operator to call it (position): position
+      First-action time: first_action
+      Procedure invoked (ID): procedure
+  WB-5.5-GO:
+    phase: debrief
+    tools: [mcs, instructor]
+    form: scorecard
+    prefill:
+      Notes for debrief: gonogo
+  WB-5.5-HO:
+    phase: during
+    tools: [mcs]
+    form: handover
+    instances: true
+    prefill:
+      Current parameter values (top 3 mnemonics): params_top3
+      Current procedure state (file ID + step): procedure_state
+      Open question for next shift: open_items
+      Time: now
   WB-5.5-DB:
     phase: debrief
     tools: [mcs, instructor, delayed_tm, orbit, radio, portal]
+    form: debrief
 
   # ── Day 4: commissioning ────────────────────────────────────────────────
   WB-5.6-PB:
     phase: prep
     tools: [mcs, instructor]
     scenarios: [sequential_checkout]
+    form: briefing
   WB-5.6-C001: {phase: during, tools: [mcs], procedures: [COM-001]}
   WB-5.6-C002: {phase: during, tools: [mcs], procedures: [COM-002]}
   WB-5.6-C005: {phase: during, tools: [mcs], procedures: [COM-005]}
@@ -75,10 +131,29 @@ worksheets:
     phase: during
     tools: [mcs, delayed_tm]
     context_keys: [alarm_id, anomaly]
+    form: anomaly
   WB-5.6-GO:
     phase: debrief
     tools: [mcs, instructor]
     scenarios: [sequential_checkout]
+    form: scorecard
+  WB-5.6-HO:
+    phase: during
+    tools: [mcs]
+    scenarios: [sequential_checkout]
+    form: handover
+    instances: true
+    prefill:
+      Current parameter values (top 3): params_top3
+      Current procedure state (file ID + step): procedure_state
+      FDIR rules currently active (acknowledged): fdir_active
+      Open question for next shift: open_items
+      Time: now
+  WB-5.6-DB:
+    phase: debrief
+    tools: [mcs, instructor]
+    scenarios: [sequential_checkout]
+    form: debrief
 
   # ── Appendix A: contingency confirm-each-step pages ─────────────────────
   WB-A-CTG-001: {phase: during, tools: [mcs], procedures: [CTG-001]}
