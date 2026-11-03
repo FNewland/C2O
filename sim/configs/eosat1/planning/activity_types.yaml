@@ -197,7 +197,10 @@ activity_types:
       - software_upload
       - momentum_desaturation
     pre_conditions:
-      - "payload.fpa_temp < -3.0"
+      # 2026-11-03: `payload.fpa_temp < -3.0` removed — the FPA is warm in
+      # STANDBY now and THIS activity cools it (FPA_COOLER on, 480 s, then
+      # wait_for payload.fpa_ready). As a pre-condition it would flag every
+      # planned pass against live telemetry.
       - "eps.bus_voltage > 24.0"
       # 2026-08b PL-a: was `aocs.mode == 1`, i.e. SAFE_BOOT — a mode in which
       # the spacecraft is not pointing at anything and the payload's capture
@@ -425,7 +428,10 @@ activity_types:
       # `requires_attitude: nominal`, so the mode it needs is 4 = NOMINAL — not
       # 5 (this is not an imaging activity and does not need fine pointing).
       - "aocs.mode == 4"
-      - "payload.fpa_temp < -3.0"
+      # 2026-11-03: `payload.fpa_temp < -3.0` removed. This activity sends
+      # only AOCS_GYRO_CALIBRATION; the FPA condition held only because
+      # STANDBY used to run the cooler, which it no longer does (Franz's
+      # ruling), so it would now block a gyro calibration for no reason.
       # 2026-08d PLAN-4: the refusal the planner could not see. AOCS gyro
       # calibration is gated on a live STAR-TRACKER attitude reference
       # (aocs_basic._gyro_cal_blocker -> CAL_ERR_NO_REFERENCE 0x0A03): the
