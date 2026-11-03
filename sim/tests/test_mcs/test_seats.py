@@ -222,14 +222,16 @@ def test_jwt_valid_and_email_from_the_claim():
 @pytest.mark.parametrize("kw,code", [
     ({"aud": "/projects/1/global/backendServices/9"}, "aud"),
     ({"iss": "https://evil.example"}, "iss"),
-    ({"iat": time.time() - 4000, "exp": time.time() - 3000}, "expired"),
-    ({"iat": time.time() + 600}, "iat"),
-    ({"iat": time.time() - 10, "exp": time.time() + 7200}, "lifetime"),
+    ({"iat": -4000, "exp": -3000}, "expired"),        # iat/exp: seconds from now
+    ({"iat": 600}, "iat"),
+    ({"iat": -10, "exp": 7200}, "lifetime"),
     ({"kid": "other"}, "kid"),
     ({"alg": "HS256"}, "alg"),
 ])
 def test_jwt_refusals(kw, code):
     iap = FakeIap()
+    now = time.time()                                  # at run time, not collection
+    kw = {k: (now + v if k in ("iat", "exp") else v) for k, v in kw.items()}
     with pytest.raises(IapJwtError) as e:
         _verify(iap, iap.token(ALICE, **kw))
     assert e.value.code == code
