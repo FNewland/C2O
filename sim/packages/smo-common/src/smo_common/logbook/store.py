@@ -238,7 +238,9 @@ class LogbookStore:
                     continue
                 e = {k: r.get(k) for k in ("id", "ts", "sim_ts", "tool", "kind", "text",
                                             "context", "worksheet", "lang")}
-                for k in ("check", "form"):
+                # check/form: ops workbook; record: SpaceCDF decision record
+                # (written by the twin store, kept so compaction never drops it).
+                for k in ("check", "form", "record"):
                     if isinstance(r.get(k), dict):
                         e[k] = r[k]
                 e["updated_ts"] = r.get("ts")
@@ -254,6 +256,8 @@ class LogbookStore:
                     entries[eid]["check"] = {**(entries[eid].get("check") or {}), **r["check"]}
                 if isinstance(r.get("form"), dict):
                     entries[eid]["form"] = r["form"]      # a form is saved whole
+                if isinstance(r.get("record"), dict):
+                    entries[eid]["record"] = r["record"]  # SpaceCDF: replaced whole
                 entries[eid]["updated_ts"] = r.get("ts")
                 entries[eid]["edited"] = True
             elif op == "delete":
@@ -532,7 +536,7 @@ class LogbookStore:
                 r["sim_ts"] = e["sim_ts"]
             if e.get("worksheet"):
                 r["worksheet"] = e["worksheet"]
-            for k in ("check", "form"):
+            for k in ("check", "form", "record"):
                 if e.get(k):
                     r[k] = e[k]
             out.append(r)
