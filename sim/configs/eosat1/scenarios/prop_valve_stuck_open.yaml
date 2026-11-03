@@ -20,7 +20,24 @@ events:
       magnitude: 1.0
       branch: 0
       rate_mg_s: 20.0
+
 expected_responses:
-  - { category: detect, description: "Detect the 0x0B01 pressure-rate (delta) alarm and PROP_VALVE_FAULT / PROP_LEAK_DETECTED events" }
-  - { category: isolate, description: "PROP_ISO_CLOSE both branches (CTG-028 step 2); recognise branch A state 2 = stuck, isolation partial" }
-  - { category: recover, description: "Bound remaining usable delta-V (0x0B0C corrected for the stuck branch), latch the ground inhibit, ticket" }
+  - category: detect
+    description: "Detect the 0x0B01 pressure-rate (delta) alarm and PROP_VALVE_FAULT / PROP_LEAK_DETECTED events"
+  - category: isolate
+    id: iso_close
+    description: "PROP_ISO_CLOSE both branches (CTG-028 step 2); recognise branch A state 2 = stuck, isolation partial"
+    tc: "PROP_ISO_CLOSE(branch=2)"
+    within_s: 300
+  - category: recover
+    description: "Bound remaining usable delta-V (0x0B0C corrected for the stuck branch), latch the ground inhibit, ticket"
+    tc: "PROP_INHIBIT_SET(on=1)"
+    within_s: 1200
+    after: "iso_close"
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "PROP_ISO_OPEN"
+    reason: "Re-opens a latch valve on a leaking system"
+    penalty: 10

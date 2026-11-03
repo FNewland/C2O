@@ -126,48 +126,27 @@ events:
       onset: step
 
 expected_responses:
-
   - category: detect
-    description: >
-      At T+02:00 — identify the attitude disturbance at impact (body-rate/gyro
-      signature). Note whether att_error crosses the 5 deg FDIR limit (safe_mode_aocs)
-      given the disturbance. Log the impact event and timestamp.
-
+    description: "At T+02:00 — identify the attitude disturbance at impact (body-rate/gyro signature). Note whether att_error crosses the 5 deg FDIR limit (safe_mode_aocs) given the disturbance. Log the impact event and timestamp."
   - category: detect
-    description: >
-      During the dwell — monitor aocs.att_error and note the reaction wheels show
-      no mechanical anomaly (the torque-gain corruption is latent while control is
-      inhibited in SAFE).
-
+    description: "During the dwell — monitor aocs.att_error and note the reaction wheels show no mechanical anomaly (the torque-gain corruption is latent while control is inhibited in SAFE)."
   - category: detect
-    description: >
-      On recovery (control re-enabled) — recognise that Y-axis pointing control is
-      anomalously over-aggressive: the axis overshoots and oscillates about the
-      target (pointing jitter in att_error and body-rate telemetry) instead of
-      settling cleanly. This points to a control-law (gain) fault, not a sensor or
-      wheel hardware failure.
-
+    description: "On recovery (control re-enabled) — recognise that Y-axis pointing control is anomalously over-aggressive: the axis overshoots and oscillates about the target (pointing jitter in att_error and body-rate telemetry) instead of settling cleanly. This points to a control-law (gain) fault, not a sensor or wheel hardware failure."
   - category: isolate
-    description: >
-      Dump the control-torque gain registers with AOCS_DUMP_TORQUE_GAINS (or S6
-      MEM_DUMP at base 0x20100000; X/Y/Z at +0/+4/+8). The Y-axis gain reads
-      ~10x nominal while X and Z read unity — isolating the fault to the Y-axis
-      gain register (corrupted driver electronics), not a mechanical wheel fault.
-
+    id: dump_gains
+    description: "Dump the control-torque gain registers with AOCS_DUMP_TORQUE_GAINS (or S6 MEM_DUMP at base 0x20100000; X/Y/Z at +0/+4/+8). The Y-axis gain reads ~10x nominal while X and Z read unity — isolating the fault to the Y-axis gain register (corrupted driver electronics), not a mechanical wheel fault."
+    tc: ["AOCS_DUMP_TORQUE_GAINS", "MEM_DUMP"]
+    within_s: 600
   - category: recover
-    description: >
-      Patch the corrupted gain: command AOCS_SET_TORQUE_GAIN_Y (PUS S6 MEM_LOAD)
-      to restore Y to 1.0, then re-dump (AOCS_DUMP_TORQUE_GAINS) to confirm all
-      three axes read unity before re-commanding control.
-
+    id: patch_gain
+    description: "Patch the corrupted gain: command AOCS_SET_TORQUE_GAIN_Y (PUS S6 MEM_LOAD) to restore Y to 1.0, then re-dump (AOCS_DUMP_TORQUE_GAINS) to confirm all three axes read unity before re-commanding control."
+    tc: ["AOCS_SET_TORQUE_GAIN_Y(gain=1.0)", "AOCS_SET_TORQUE_GAINS_ALL(gain_y=1.0)"]
+    within_s: 720
+    after: "dump_gains"
   - category: recover
-    description: >
-      Re-establish uplink if degraded — wait for the next AOS pass with adequate
-      link margin (or switch to the redundant RF chain) before uplinking the gain
-      patch.
-
+    description: "Re-establish uplink if degraded — wait for the next AOS pass with adequate link margin (or switch to the redundant RF chain) before uplinking the gain patch."
   - category: recover
-    description: >
-      Full recovery: with the Y-axis gain verified nominal and attitude error
-      converging, command the return to NOMINAL and confirm stable pointing on the
-      first control step.
+    description: "Full recovery: with the Y-axis gain verified nominal and attitude error converging, command the return to NOMINAL and confirm stable pointing on the first control step."
+    tc: "AOCS_SET_MODE(mode=4)"
+    within_s: 750
+    after: "patch_gain"

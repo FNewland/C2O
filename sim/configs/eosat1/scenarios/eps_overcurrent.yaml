@@ -22,7 +22,14 @@ events:
       magnitude: 8.0        # x nominal line draw
       onset: step
       line_index: 2         # ttc_tx — TTC transmitter (1.0 A LCL threshold)
+
 expected_responses:
-  - { category: detect, description: "Detect overcurrent trip flag and TX power line OFF" }
-  - { category: isolate, description: "Identify the ttc_tx line as the tripped circuit" }
-  - { category: recover, description: "Investigate cause, then reset OC flag and re-enable if safe" }
+  - category: detect
+    description: "Detect overcurrent trip flag and TX power line OFF"
+  - category: isolate
+    description: "Identify the ttc_tx line as the tripped circuit"
+  - category: recover
+    description: "Investigate cause, then reset OC flag and re-enable if safe"
+    tc: "EPS_RESET_OC_FLAG(line_index=2)"
+    state: "eps.pl_ttc_tx == 1"
+    within_s: 900

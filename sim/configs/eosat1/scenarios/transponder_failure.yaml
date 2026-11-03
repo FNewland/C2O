@@ -12,7 +12,13 @@ events:
       subsystem: ttc
       failure: primary_failure
       magnitude: 1.0
+
 expected_responses:
-  - { category: detect, description: "Detect loss of signal on primary" }
-  - { category: isolate, description: "Identify primary transponder failure" }
-  - { category: recover, description: "Switch to redundant transponder" }
+  - category: detect
+    description: "Detect loss of signal on primary"
+  - category: isolate
+    description: "Identify primary transponder failure"
+  - category: recover
+    description: "Switch to redundant transponder"
+    tc: ["TTC_SWITCH_REDUNDANT", "TTC_SWITCH_OTHER"]
+    within_s: 900

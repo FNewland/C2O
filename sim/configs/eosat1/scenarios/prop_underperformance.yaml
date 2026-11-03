@@ -23,7 +23,13 @@ events:
     action: message
     params:
       text: "Plan of day: 0.85 m/s prograde drag make-up burn this pass (NOM-004 approved). Execute per NOM-013."
+
 expected_responses:
-  - { category: detect, description: "Detect thrust estimate (0x0B09) / burn duration (0x0B11 vs 0x0B10) inconsistent with tank pressure; PROP_UNDERPERFORMANCE event" }
-  - { category: isolate, description: "Post-burn OD: achieved vs commanded dV and observed AOS shift confirm real underperformance, not sensor error" }
-  - { category: recover, description: "Re-plan a trim burn under NOM-004 with the measured performance factor; ticket catbed degradation" }
+  - category: detect
+    description: "Detect thrust estimate (0x0B09) / burn duration (0x0B11 vs 0x0B10) inconsistent with tank pressure; PROP_UNDERPERFORMANCE event"
+  - category: isolate
+    description: "Post-burn OD: achieved vs commanded dV and observed AOS shift confirm real underperformance, not sensor error"
+  - category: recover
+    description: "Re-plan a trim burn under NOM-004 with the measured performance factor; ticket catbed degradation"
+    tc: "PROP_SET_BURN"
+    within_s: 3000

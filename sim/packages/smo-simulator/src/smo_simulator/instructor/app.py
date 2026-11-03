@@ -438,17 +438,10 @@ async def handle_scenario_debrief(request):
     if se is None:
         return web.json_response({"active": False, "debrief": None})
     debrief = se.last_debrief()
-    payload = None
-    if debrief is not None:
-        payload = {
-            "name": debrief.name,
-            "duration_s": debrief.duration_s,
-            "score_pct": debrief.score_pct,
-            "mttd_s": debrief.mttd_s,
-            "mtti_s": debrief.mtti_s,
-            "mttr_s": debrief.mttr_s,
-            "responses": debrief.responses,
-        }
+    # The whole debrief: score, every expected response with its status and
+    # evidence (command, time) or none, harmful commands, mean times with
+    # their source, the commands sent (scenario_scoring.py).
+    payload = debrief.to_dict() if debrief is not None else None
     return web.json_response({
         "active": se.is_active(),
         "current": se.current_name(),
@@ -611,10 +604,7 @@ async def handle_instructor_debrief(request):
     return _no_store({
         "segment": seg,
         "now": tl["now"],
-        "scenario": None if d is None else {
-            "name": d.name, "duration_s": d.duration_s, "score_pct": d.score_pct,
-            "mttd_s": d.mttd_s, "mtti_s": d.mtti_s, "mttr_s": d.mttr_s,
-            "responses": d.responses},
+        "scenario": None if d is None else d.to_dict(),
         "faults": [f for f in tl["faults"] if f.get("seg") == seg],
         "items": [i for i in tl["items"] if i.get("seg") == seg],
     })

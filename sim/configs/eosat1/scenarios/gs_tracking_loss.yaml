@@ -38,9 +38,26 @@ events:
     note: "PA heating with no ground reception to trigger duty cycling"
 
 expected_responses:
-  - { category: detect, description: "Detect total frame sync loss and Eb/N0 collapse on Radio" }
-  - { category: isolate, description: "Verify spacecraft TM was flowing before loss (not a spacecraft issue)" }
-  - { category: isolate, description: "Check Radio ground failure panel for tracking_loss" }
-  - { category: recover, description: "Clear tracking failure via Radio API or mechanical reset" }
-  - { category: recover, description: "After tracking restored, check PA temp and reduce TX if overheating" }
-  - { category: plan, description: "If tracking unrecoverable, schedule recovery for next ground station pass" }
+  - category: detect
+    description: "Detect total frame sync loss and Eb/N0 collapse on Radio"
+  - category: isolate
+    description: "Verify spacecraft TM was flowing before loss (not a spacecraft issue)"
+  - category: isolate
+    description: "Check Radio ground failure panel for tracking_loss"
+  - category: recover
+    description: "Clear tracking failure via Radio API or mechanical reset"
+  - category: recover
+    description: "After tracking restored, check PA temp and reduce TX if overheating"
+    tc: ["TTC_SET_TX_POWER(level=0)", "TTC_PA_OFF"]
+    within_s: 600
+    ref: "event:1"
+  - category: plan
+    description: "If tracking unrecoverable, schedule recovery for next ground station pass"
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "TTC_SET_TX_POWER(level=2)"
+    reason: "Raises the PA to HIGH while it is overheating"
+    penalty: 10
+    ref: "event:1"

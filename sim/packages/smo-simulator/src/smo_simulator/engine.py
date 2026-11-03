@@ -2737,6 +2737,15 @@ class SimulationEngine:
                                     pkt.primary.sequence_count, link_refused=True)
                             except Exception:  # noqa: BLE001
                                 pass
+                        se = self.__dict__.get("_scenario_engine")
+                        if se is not None and pkt.secondary is not None:
+                            try:
+                                se.observe_tc(
+                                    pkt.secondary.service, pkt.secondary.subtype,
+                                    pkt.data_field or b'', pkt.primary.apid,
+                                    pkt.primary.sequence_count, link_refused=True)
+                            except Exception:  # noqa: BLE001
+                                pass
                         rej = self.tm_builder.build_verification_failure(
                             pkt.primary.apid, pkt.primary.sequence_count,
                             0x0005,
@@ -2944,6 +2953,14 @@ class SimulationEngine:
                                    pkt.primary.apid, pkt.primary.sequence_count)
             except Exception:  # noqa: BLE001
                 logger.debug("instructor TC tap failed", exc_info=True)
+        # Scenario scoring evidence: which command, when (scenario_scoring.py).
+        se = self.__dict__.get("_scenario_engine")
+        if se is not None:
+            try:
+                se.observe_tc(svc, sub, pkt.data_field or b'',
+                              pkt.primary.apid, pkt.primary.sequence_count)
+            except Exception:  # noqa: BLE001
+                logger.debug("scenario TC tap failed", exc_info=True)
 
         # Bootloader command restriction.
         #
@@ -3863,6 +3880,12 @@ class SimulationEngine:
                 rec.on_tm_generated(pkt)
             except Exception:  # noqa: BLE001 — never block TM generation
                 logger.debug("instructor TM generation tap failed", exc_info=True)
+        se = getattr(self, "__dict__", {}).get("_scenario_engine")
+        if se is not None and se.is_active():
+            try:
+                se.observe_tm(pkt)        # S1 reports settle each TC's fate
+            except Exception:  # noqa: BLE001
+                logger.debug("scenario TM tap failed", exc_info=True)
         # Only downlink TM when RF link is active (orbit contact + transponder OK)
         if not self.downlink_active:
             # TM silently dropped — log for S1 verification packets so the

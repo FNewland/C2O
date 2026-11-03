@@ -64,6 +64,59 @@ _INJECT_META_KEYS = ("type", "subsystem", "failure", "magnitude", "onset",
                      "onset_duration_s", "timing_type", "time_offset_s",
                      "condition", "label", "params")
 
+# Command names for the scoring evidence fields (expected responses and
+# harmful commands are written in procedure notation: NAME(arg=value)).
+def _command_names() -> list[str]:
+    try:
+        from smo_common.commanding.catalog import load_catalog
+        return sorted(c["name"] for c in load_catalog(_REPO_ROOT / "configs" / "eosat1").commands)
+    except Exception:  # noqa: BLE001 — the datalist is a convenience
+        return []
+
+
+COMMANDS = _command_names()
+
+
+def _q(text) -> str:
+    """A YAML double-quoted scalar (JSON strings are valid YAML)."""
+    return json.dumps(str(text), ensure_ascii=False)
+
+
+def _items(value) -> list[str]:
+    """'A; B' or ['A', 'B'] -> ['A', 'B'] (the form joins alternatives with ';')."""
+    if isinstance(value, (list, tuple)):
+        parts = [str(v) for v in value]
+    else:
+        parts = str(value or "").split(";")
+    return [p.strip() for p in parts if p.strip()]
+
+
+def _yaml_list_or_scalar(items: list[str]) -> str:
+    return _q(items[0]) if len(items) == 1 else "[" + ", ".join(_q(i) for i in items) + "]"
+
+
+def check_scoring(data: dict) -> list[str]:
+    """The simulator's own load-time check of expected_responses /
+    harmful_commands (unknown command, argument or parameter)."""
+    try:
+        from smo_simulator import scenario_scoring as sc
+        cfg = _REPO_ROOT / "configs" / "eosat1"
+        exp = [{"category": r.get("category", "recover"), "description": r.get("description", ""),
+                "tc": _items(r.get("tc")), "state": _items(r.get("state")),
+                "within_s": r.get("within_s") or None}
+               for r in data.get("expected_responses") or []]
+        harm = [{"tc": _items(h.get("tc")), "reason": h.get("reason", ""),
+                 "penalty": h.get("penalty") if h.get("penalty") not in ("", None) else None}
+                for h in data.get("harmful_commands") or [] if _items(h.get("tc"))]
+        _r, _h, errors = sc.compile_rules(exp, harm, catalog=sc._tc_catalog(cfg),
+                                          param_ids=sc._param_ids(cfg),
+                                          targets=dict(sc.DEFAULT_TARGETS_S),
+                                          n_events=len(data.get("events") or []))
+        return errors
+    except Exception as e:  # noqa: BLE001
+        return [f"scoring check unavailable: {e}"]
+
+
 # Key telemetry parameters available for set_parameter events
 PARAMS = [
     {"id": "0x0101", "name": "eps.bat_soc",       "desc": "Battery SoC (%)",           "unit": "%"},
@@ -337,18 +390,46 @@ def generate_yaml(data: dict) -> tuple[str, str]:
             lines.append(f"      value: {value}")
             lines.append("")
 
-    # expected_responses
+    # expected_responses — with the evidence the simulator scores them on
+    # (smo_simulator/scenario_scoring.py): tc / state / within_s. A response
+    # without tc or state is listed in the debrief but not scored.
     responses = data.get("expected_responses", [])
     if responses:
         lines.append("expected_responses:")
         for r in responses:
             cat = r.get("category", "recover")
             desc = r.get("description", "").strip()
-            if desc:
-                lines.append(f"  - category: {cat}")
-                lines.append(f"    description: >")
-                for dl in textwrap.wrap(desc, 70):
-                    lines.append(f"      {dl}")
+            if not desc:
+                continue
+            lines.append(f"  - category: {cat}")
+            lines.append(f"    description: {_q(desc)}")
+            tcs, states = _items(r.get("tc")), _items(r.get("state"))
+            if tcs:
+                lines.append(f"    tc: {_yaml_list_or_scalar(tcs)}")
+            if states:
+                lines.append(f"    state: {_yaml_list_or_scalar(states)}")
+            try:
+                within = float(r.get("within_s") or 0)
+            except (TypeError, ValueError):
+                within = 0.0
+            if within > 0 and (tcs or states):
+                lines.append(f"    within_s: {within:g}")
+        lines.append("")
+
+    harmful = [h for h in data.get("harmful_commands", []) or [] if _items(h.get("tc"))]
+    if harmful:
+        lines.append("# Commands that make things worse: each entry costs its penalty once")
+        lines.append("# (percentage points) if sent after the fault (scenario_scoring.py).")
+        lines.append("harmful_commands:")
+        for h in harmful:
+            lines.append(f"  - tc: {_yaml_list_or_scalar(_items(h.get('tc')))}")
+            if str(h.get("reason", "")).strip():
+                lines.append(f"    reason: {_q(str(h['reason']).strip())}")
+            try:
+                pen = float(h.get("penalty"))
+                lines.append(f"    penalty: {pen:g}")
+            except (TypeError, ValueError):
+                pass
         lines.append("")
 
     yaml_text = "\n".join(lines)
@@ -389,6 +470,10 @@ textarea.ds-input{ min-height:72px; padding:var(--sp-2); font-family:var(--sans)
 .sg-add{ display:flex; gap:var(--sp-2); padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
 .sg-resp{ display:grid; grid-template-columns:150px minmax(0,1fr) auto; gap:var(--sp-2) var(--sp-3); align-items:start;
   padding:var(--sp-2) var(--sp-4); border-top:1px solid var(--line); }
+.sg-resp .sg-ev-grid{ grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,2fr) minmax(0,2fr) 120px; gap:var(--sp-2) var(--sp-3); }
+.sg-harm{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,2fr) 110px auto; gap:var(--sp-2) var(--sp-3); align-items:end;
+  padding:var(--sp-2) var(--sp-4); border-top:1px solid var(--line); }
+.sg-help{ margin:0; padding:var(--sp-2) var(--sp-4) 0; font-size:var(--fs-label); color:var(--tx3); }
 .sg-tl{ padding:var(--sp-2) var(--sp-4) var(--sp-3); }
 .sg-tl .ln{ stroke:var(--line); }
 .sg-tl .inj{ fill:var(--val); }
@@ -412,6 +497,7 @@ textarea.ds-input{ min-height:72px; padding:var(--sp-2); font-family:var(--sans)
   .sg-meta{ grid-template-columns:1fr 1fr; } .sg-meta .grow{ grid-column:1 / -1; }
   .sg-grid{ grid-template-columns:1fr 1fr; } .sg-grid .w2{ grid-column:1 / -1; }
   .sg-resp{ grid-template-columns:1fr auto; } .sg-resp textarea{ grid-column:1 / -1; }
+  .sg-resp .sg-ev-grid, .sg-harm{ grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -453,9 +539,17 @@ __FRAME_BAR__
 
   <section class="ds-panel" aria-labelledby="resp-h">
     <div class="ds-panel-h"><span id="resp-h" data-i18n>Expected operator responses</span><span class="r" data-i18n>optional, used for scoring</span></div>
+    <p class="sg-help" data-i18n>A response is scored from the commands the team sends: give the command(s) that show it was done (procedure notation, e.g. AOCS_DISABLE_WHEEL(wheel_idx=0); alternatives separated by ;) and, if useful, the state that must follow (e.g. payload.mode &lt;= 1). Without either it is listed in the debrief for you to judge, not scored.</p>
     <div id="resp-list"></div>
     <div class="sg-add"><button type="button" class="ds-btn" id="add-resp" data-i18n>Add response</button></div>
   </section>
+
+  <section class="ds-panel" aria-labelledby="harm-h">
+    <div class="ds-panel-h"><span id="harm-h" data-i18n>Harmful commands</span><span class="r" data-i18n>optional, each costs its penalty once</span></div>
+    <div id="harm-list"></div>
+    <div class="sg-add"><button type="button" class="ds-btn" id="add-harm" data-i18n>Add harmful command</button></div>
+  </section>
+  <datalist id="tc-names"></datalist>
 </div>
 
 <aside class="sg-side">
@@ -483,6 +577,7 @@ const T = (s, v) => I18n.tText(s, v);
 const $ = (id) => document.getElementById(id);
 const SUBSYSTEMS = """ + json.dumps(SUBSYSTEMS) + r""";
 const PARAMS = """ + json.dumps(PARAMS) + r""";
+const COMMANDS = """ + json.dumps(COMMANDS) + r""";
 const CASCADE = __CASCADE_JSON__;
 
 let evId = 0, saved = null, lastYaml = "", lastErr = {}, exists = false, previewTimer = null;
@@ -536,10 +631,26 @@ function addResponse() {
   const id = ++evId;
   const div = document.createElement("div");
   div.className = "sg-resp"; div.id = `resp-${id}`;
-  div.innerHTML = `<select class="ds-select" aria-label="${esc(T("Response category"))}">${["detect", "isolate", "recover", "verify"].map((c) => opt(c, c)).join("")}</select>` +
+  div.innerHTML = `<select class="ds-select" aria-label="${esc(T("Response category"))}">${["detect", "isolate", "recover", "verify", "command"].map((c) => opt(c, c)).join("")}</select>` +
     `<textarea class="ds-input" aria-label="${esc(T("Expected response"))}" placeholder="${esc(T("Describe what the operator should do…"))}"></textarea>` +
-    renderButton({ label: T("Remove"), kind: "ghost", size: "sm", attrs: `data-remove="resp-${id}" aria-label="${esc(T("Remove response"))}"` });
+    renderButton({ label: T("Remove"), kind: "ghost", size: "sm", attrs: `data-remove="resp-${id}" aria-label="${esc(T("Remove response"))}"` }) +
+    `<div class="sg-ev-grid">
+      ${field(`resp-${id}-tc`, T("Evidence: command(s)"), `<input class="ds-input text" id="resp-${id}-tc" data-k="tc" list="tc-names" placeholder="${esc(T("e.g. PAYLOAD_SET_MODE(mode=0|1)"))}">`)}
+      ${field(`resp-${id}-state`, T("Evidence: resulting state"), `<input class="ds-input text" id="resp-${id}-state" data-k="state" placeholder="${esc(T("e.g. payload.mode <= 1"))}">`)}
+      ${field(`resp-${id}-within`, T("Target (s after the fault)"), num(`resp-${id}-within`, "", "s", ' data-k="within_s"'))}
+    </div>`;
   $("resp-list").appendChild(div);
+  changed();
+}
+function addHarmful() {
+  const id = ++evId;
+  const div = document.createElement("div");
+  div.className = "sg-harm"; div.id = `harm-${id}`;
+  div.innerHTML = field(`harm-${id}-tc`, T("Command(s)"), `<input class="ds-input text" id="harm-${id}-tc" data-k="tc" list="tc-names" placeholder="${esc(T("e.g. AOCS_ENABLE_WHEEL(wheel_idx=0)"))}">`) +
+    field(`harm-${id}-reason`, T("Why it is harmful"), `<input class="ds-input text" id="harm-${id}-reason" data-k="reason">`) +
+    field(`harm-${id}-pen`, T("Penalty (points)"), num(`harm-${id}-pen`, "10", "", ' data-k="penalty"')) +
+    renderButton({ label: T("Remove"), kind: "ghost", size: "sm", attrs: `data-remove="harm-${id}" aria-label="${esc(T("Remove harmful command"))}"` });
+  $("harm-list").appendChild(div);
   changed();
 }
 
@@ -610,12 +721,18 @@ function collectData() {
     }
   });
   const expected_responses = [];
+  const kv = (row, k) => { const el = row.querySelector(`[data-k="${k}"]`); return el ? el.value.trim() : ""; };
   document.querySelectorAll("#resp-list .sg-resp").forEach((row) => {
     const d = row.querySelector("textarea").value.trim();
-    if (d) expected_responses.push({ category: row.querySelector("select").value, description: d });
+    if (d) expected_responses.push({ category: row.querySelector("select").value, description: d,
+      tc: kv(row, "tc"), state: kv(row, "state"), within_s: kv(row, "within_s") });
+  });
+  const harmful_commands = [];
+  document.querySelectorAll("#harm-list .sg-harm").forEach((row) => {
+    if (kv(row, "tc")) harmful_commands.push({ tc: kv(row, "tc"), reason: kv(row, "reason"), penalty: kv(row, "penalty") });
   });
   return { name: $("sc-name").value.trim() || "Custom Scenario", difficulty: $("sc-diff").value,
-    duration_s: parseInt($("sc-dur").value) || 1800, briefing: $("sc-brief").value.trim(), events, expected_responses };
+    duration_s: parseInt($("sc-dur").value) || 1800, briefing: $("sc-brief").value.trim(), events, expected_responses, harmful_commands };
 }
 
 /* ── validation: errors block saving; cautions are shown, never block ── */
@@ -706,7 +823,12 @@ async function preview() {
     const r = await fetch("generate", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...collectData(), save: false }) });
     const j = await r.json();
-    if (j.ok) { lastYaml = j.yaml; $("yaml-out").textContent = j.yaml; $("y-file").textContent = j.filename; exists = !!j.exists; }
+    if (j.ok) {
+      lastYaml = j.yaml; $("yaml-out").textContent = j.yaml; $("y-file").textContent = j.filename; exists = !!j.exists;
+      // The simulator's own check of the scoring evidence (never blocks saving).
+      $("banner").innerHTML = (j.scoring_errors || []).length
+        ? renderBanner("caution", T("Scoring evidence the simulator cannot check: {{e}}", { e: j.scoring_errors.join("; ") })) : "";
+    }
     else $("banner").innerHTML = renderBanner("alarm", j.error || T("Unknown error"));
   } catch (e) { $("banner").innerHTML = renderBanner("alarm", String(e)); }
   paintSaveState();
@@ -785,6 +907,8 @@ function drawTimeline() {
 $("add-inject").addEventListener("click", addInject);
 $("add-set").addEventListener("click", addSetParam);
 $("add-resp").addEventListener("click", addResponse);
+$("add-harm").addEventListener("click", addHarmful);
+$("tc-names").innerHTML = COMMANDS.map((c) => `<option value="${esc(c)}"></option>`).join("");
 $("save-btn").addEventListener("click", save);
 $("copy-btn").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(lastYaml); $("save-note").textContent = T("YAML copied."); } catch (e) { /* no clipboard */ }
@@ -868,7 +992,8 @@ async def handle_generate(request):
             return web.json_response({"ok": False, "error": f"Could not write file: {msg}"})
 
     return web.json_response({"ok": True, "yaml": yaml_text, "path": saved_path,
-                              "filename": filename, "exists": exists})
+                              "filename": filename, "exists": exists,
+                              "scoring_errors": check_scoring(data)})
 
 
 def main():

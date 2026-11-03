@@ -29,7 +29,11 @@ class ScenarioDefinition:
     duration_s: float = 1800.0
     briefing: str = ""
     events: list[ScenarioEvent] = field(default_factory=list)
-    expected_responses: list[dict[str, str]] = field(default_factory=list)
+    expected_responses: list[dict[str, Any]] = field(default_factory=list)
+    # Commands the scenario marks as harmful (penalised in the score).
+    harmful_commands: list[dict[str, Any]] = field(default_factory=list)
+    # Compiled scoring rules (scenario_scoring.compile_rules), built at load.
+    scoring: Optional[tuple] = None
     # Applied to the simulator when the scenario starts (phase, speed, SoC,
     # pass override, power lines, params, pre-injected failures).
     initial_conditions: dict[str, Any] = field(default_factory=dict)
@@ -49,13 +53,34 @@ EVENT_SCENARIO_CONFIG_INVALID = 0x0F20
 
 @dataclass
 class ScenarioDebrief:
+    """Result of one scenario run (scenario_scoring.py has the model).
+
+    ``score_pct`` is None when the scenario declares nothing the simulator can
+    check (every expected response is observational) — "not scored", not 0 %.
+    ``responses`` lists EVERY expected response with its status and the
+    evidence (command, time) that satisfied it, or none.
+    """
     name: str = ""
+    id: str = ""
     duration_s: float = 0.0
-    score_pct: float = 0.0
+    score_pct: float | None = None
     mttd_s: float | None = None
     mtti_s: float | None = None
     mttr_s: float | None = None
     responses: list[dict] = field(default_factory=list)
+    harmful: list[dict] = field(default_factory=list)
+    metrics: dict = field(default_factory=dict)
+    commands: list[dict] = field(default_factory=list)
+    marks: list[dict] = field(default_factory=list)
+    earned: float = 0.0
+    possible: float = 0.0
+    penalty: float = 0.0
+    ref_s: float = 0.0
+    model: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        from dataclasses import asdict
+        return asdict(self)
 
 
 class ScenarioEngine:
@@ -71,6 +96,7 @@ class ScenarioEngine:
             "default_difficulty": "BASIC",
             "eq_tolerance": 0.01,
             "valid_difficulties": ["BASIC", "BEGINNER", "INTERMEDIATE", "ADVANCED"],
+            "response_targets_s": {},
         }
         if defaults is not None:
             for key in list(self._defaults):
@@ -90,13 +116,17 @@ class ScenarioEngine:
         # accelerated one must advance it at speed. There used to be a
         # `_start_time = time.monotonic()` beside this that nothing read.
         self._elapsed: float = 0.0
-        self._responses: list[dict] = []
-        self._response_times: dict[str, float] = {}
+        # Evidence log + scorer of the active run (scenario_scoring.py).
+        self._scorer = None
         self._last_debrief: Optional[ScenarioDebrief] = None
         # Failure ids injected by the currently-active scenario, so they can be
         # cleared when the scenario stops (auto-end or manual) and don't leak
         # into the next scenario / free run.
         self._injected_fids: list[str] = []
+        # Hooks the engine sets: called just before a scenario inject fires
+        # (auto snapshot) and when a scenario starts (new run).
+        self.on_before_inject = None
+        self.on_start = None
 
     # ------------------------------------------------------------------
     # Loading + schema validation
@@ -209,10 +239,16 @@ class ScenarioEngine:
                     duration_s=data.get("duration_s", defaults["default_duration_s"]),
                     briefing=data.get("briefing", ""),
                     events=events,
-                    expected_responses=data.get("expected_responses", []),
+                    expected_responses=data.get("expected_responses", []) or [],
+                    harmful_commands=data.get("harmful_commands", []) or [],
                     initial_conditions=data.get("initial_conditions", {}) or {},
                     file_id=path.stem,
                 )
+                # Scoring declarations are checked at load like events are: a
+                # misspelt command or parameter would otherwise score "missed"
+                # for a team that did the right thing.
+                for err in self._compile_scoring(defn):
+                    self._record_issue(path.name, name, -1, err)
                 if defn.name in self._scenarios:
                     self._record_issue(path.name, defn.name, -1,
                                        "duplicate scenario name — previous definition replaced")
@@ -221,6 +257,39 @@ class ScenarioEngine:
             except Exception as e:
                 logger.warning("Failed to load scenario %s: %s", path.name, e)
                 self._record_issue(path.name, path.stem, -1, f"parse error: {e}")
+
+    def _config_dir(self):
+        return getattr(self._engine, "config_dir", None) if self._engine is not None else None
+
+    def _compile_scoring(self, defn: ScenarioDefinition) -> list[str]:
+        """Compile expected_responses / harmful_commands; return the errors."""
+        from smo_simulator import scenario_scoring as sc
+        try:
+            catalog = sc._tc_catalog(self._config_dir())
+            params = sc._param_ids(self._config_dir())
+        except Exception as e:  # noqa: BLE001 — no catalogue: nothing is checkable
+            defn.scoring = None
+            return [f"scoring disabled: {e}"]
+        targets = dict(sc.DEFAULT_TARGETS_S)
+        targets.update({str(k): float(v) for k, v in
+                        (self._defaults.get("response_targets_s") or {}).items()})
+        responses, harmful, errors = sc.compile_rules(
+            defn.expected_responses, defn.harmful_commands, catalog=catalog,
+            param_ids=params, targets=targets, n_events=len(defn.events))
+        defn.scoring = (responses, harmful, catalog)
+        return errors
+
+    def _new_scorer(self, defn: ScenarioDefinition):
+        from smo_simulator.scenario_scoring import ScenarioScorer
+        if defn.scoring is None:
+            self._compile_scoring(defn)
+        if defn.scoring is None:
+            return None
+        responses, harmful, catalog = defn.scoring
+        return ScenarioScorer(
+            responses, harmful, catalog=catalog,
+            has_inject_events=any(ev.action == "inject" for ev in defn.events),
+            has_initial_failures=bool((defn.initial_conditions or {}).get("failures")))
 
     def _record_issue(self, file_name: str, scenario: str, index: int,
                       message: str) -> None:
@@ -269,9 +338,13 @@ class ScenarioEngine:
             ev.fired = False
         self._active = defn
         self._elapsed = 0.0
-        self._responses = []
-        self._response_times = {}
         self._injected_fids = []
+        self._scorer = self._new_scorer(defn)
+        if callable(self.on_start):
+            try:
+                self.on_start(defn)
+            except Exception as e:  # noqa: BLE001 — never block a scenario start
+                logger.warning("Scenario start hook failed: %s", e)
         self._apply_initial_conditions(defn)
         logger.info("Scenario started: %s", name)
         return True
@@ -407,9 +480,10 @@ class ScenarioEngine:
         # Reset fired-event state so the definition can be re-run cleanly.
         for ev in self._active.events:
             ev.fired = False
-        logger.info("Scenario '%s' %s after %.1fs (score %.0f%%)",
+        logger.info("Scenario '%s' %s after %.1fs (score %s)",
                     self._active.name, reason, debrief.duration_s,
-                    debrief.score_pct)
+                    "not scored" if debrief.score_pct is None
+                    else f"{debrief.score_pct:.0f} %")
         self._active = None
         return debrief
 
@@ -426,8 +500,7 @@ class ScenarioEngine:
             state.update({
                 "active": self._active.name,
                 "elapsed": self._elapsed,
-                "responses": [dict(r) for r in self._responses],
-                "response_times": dict(self._response_times),
+                "scoring": self._scorer.get_state() if self._scorer is not None else None,
                 "injected_fids": list(self._injected_fids),
                 "fired": [i for i, ev in enumerate(self._active.events)
                           if ev.fired],
@@ -458,8 +531,15 @@ class ScenarioEngine:
             return
         self._active = defn
         self._elapsed = float(state.get("elapsed", 0.0))
-        self._responses = [dict(r) for r in state.get("responses", [])]
-        self._response_times = dict(state.get("response_times", {}))
+        self._scorer = self._new_scorer(defn)
+        if self._scorer is not None:
+            if state.get("scoring"):
+                self._scorer.set_state(state["scoring"])
+            else:
+                # A pre-scoring snapshot: keep its instructor-recorded responses.
+                for r in state.get("responses", []) or []:
+                    self._scorer.mark(float(r.get("time_s", 0.0)),
+                                      str(r.get("category", "")), str(r.get("description", "")))
         self._injected_fids = list(state.get("injected_fids", []))
         fired = set(int(i) for i in state.get("fired", []))
         for i, ev in enumerate(defn.events):
@@ -481,14 +561,20 @@ class ScenarioEngine:
         self._elapsed += dt_sim
 
         # Check timed events
-        for ev in self._active.events:
+        for idx, ev in enumerate(self._active.events):
             if ev.fired:
                 continue
             if ev.time_offset_s is not None and self._elapsed >= ev.time_offset_s:
-                self._fire_event(ev)
+                self._fire_event(ev, idx)
             elif ev.condition is not None:
                 if self._eval_condition(ev.condition, shared_params):
-                    self._fire_event(ev)
+                    self._fire_event(ev, idx)
+            if self._active is None:     # a hook may have stopped the scenario
+                return
+
+        # Resulting-state evidence for the score (cheap: only declared checks).
+        if self._scorer is not None and shared_params:
+            self._scorer.observe_params(self._elapsed, shared_params)
 
         # Auto-end on duration: deactivate the scenario so the engine's main
         # loop stops ticking it. Previously this only logged "duration expired"
@@ -496,10 +582,19 @@ class ScenarioEngine:
         if self._elapsed >= self._active.duration_s:
             self._finish(reason="duration expired")
 
-    def _fire_event(self, ev: ScenarioEvent) -> None:
-        ev.fired = True
+    def _fire_event(self, ev: ScenarioEvent, index: int = -1) -> None:
         action = ev.action
         params = ev.params
+        if action == "inject" and callable(self.on_before_inject):
+            # Auto snapshot BEFORE the event is marked fired: restoring it
+            # puts the team just before the fault, which then fires again.
+            try:
+                self.on_before_inject(params, index)
+            except Exception as e:  # noqa: BLE001 — never block the inject
+                logger.warning("Scenario pre-inject hook failed: %s", e)
+        ev.fired = True
+        if self._scorer is not None:
+            self._scorer.observe_event(index, action, self._elapsed)
 
         if action == "inject" and self._fm:
             fid = self._fm.inject(
@@ -590,26 +685,71 @@ class ScenarioEngine:
             pass
         return False
 
-    def record_response(self, category: str, description: str = "") -> None:
-        if self._active is None:
+    # ── evidence feeds (called by the engine) ────────────────────────
+    def observe_tc(self, svc: int, sub: int, data: bytes, apid: int, seq: int,
+                   *, link_refused: bool = False) -> None:
+        """A telecommand reached the spacecraft (or was refused at the link)."""
+        if self._active is None or self._scorer is None:
             return
-        self._responses.append({
-            "category": category, "description": description,
-            "time_s": self._elapsed,
-        })
-        if category not in self._response_times:
-            self._response_times[category] = self._elapsed
+        self._scorer.observe_tc(self._elapsed, svc, sub, data or b"", apid, seq,
+                                link_refused=link_refused)
+
+    def observe_tm(self, pkt: bytes) -> None:
+        """A generated TM packet: S1 reports settle each command's fate."""
+        if self._active is None or self._scorer is None or len(pkt) < 9:
+            return
+        try:
+            from smo_common.protocol.ecss_packet import decommutate_packet
+            from smo_common.protocol.pus_services import VerificationData
+            p = decommutate_packet(bytes(pkt))
+            if p is None or p.secondary is None or p.secondary.service != 1:
+                return
+            sub = p.secondary.subtype
+            v = VerificationData.parse(p.data_field or b"", sub)
+        except Exception:  # noqa: BLE001
+            return
+        self._scorer.observe_verification(sub, v.tc_apid, v.tc_seq,
+                                          v.error_code, v.reason)
+
+    def record_response(self, category: str, description: str = "") -> None:
+        """An instructor-recorded response (a mark, not command evidence).
+
+        Listed in the debrief and used for a mean time only where no command
+        evidence exists; it never changes the score.
+        """
+        if self._active is None or self._scorer is None:
+            return
+        self._scorer.mark(self._elapsed, category, description)
+
+    def live_score(self) -> Optional[dict]:
+        """Provisional evaluation of the running scenario (None if idle)."""
+        if self._active is None or self._scorer is None:
+            return None
+        return self._scorer.evaluate(self._elapsed)
 
     def _build_debrief(self) -> ScenarioDebrief:
-        expected = len(self._active.expected_responses)
-        completed = len(self._responses)
-        score = (completed / max(expected, 1)) * 100.0
-        return ScenarioDebrief(
-            name=self._active.name,
-            duration_s=self._elapsed,
-            score_pct=min(100.0, score),
-            mttd_s=self._response_times.get("detect"),
-            mtti_s=self._response_times.get("isolate"),
-            mttr_s=self._response_times.get("recover"),
-            responses=list(self._responses),
-        )
+        defn = self._active
+        base = ScenarioDebrief(name=defn.name, id=defn.file_id or defn.name,
+                               duration_s=self._elapsed)
+        if self._scorer is None:
+            base.responses = [{"i": i, "id": f"r{i}", "category": r.get("category", ""),
+                               "description": r.get("description", ""), "status": "observed",
+                               "scored": False, "evidence": [], "credit": None,
+                               "note": "scoring unavailable"}
+                              for i, r in enumerate(defn.expected_responses or [])]
+            return base
+        ev = self._scorer.evaluate(self._elapsed)
+        m = ev["metrics"]
+        base.score_pct = ev["score_pct"]
+        base.mttd_s = (m.get("mttd") or {}).get("s")
+        base.mtti_s = (m.get("mtti") or {}).get("s")
+        base.mttr_s = (m.get("mttr") or {}).get("s")
+        base.responses = ev["responses"]
+        base.harmful = ev["harmful"]
+        base.metrics = m
+        base.commands = ev["commands"]
+        base.marks = ev["marks"]
+        base.earned, base.possible, base.penalty = ev["earned"], ev["possible"], ev["penalty"]
+        base.ref_s = ev["ref_s"]
+        base.model = ev["model"]
+        return base

@@ -17,7 +17,14 @@ events:
     params:
       subsystem: obdh
       failure: watchdog_reset
+
 expected_responses:
-  - { category: detect, description: "Detect CPU spike and reboot" }
-  - { category: isolate, description: "Confirm watchdog-triggered reboot" }
-  - { category: recover, description: "Transition back to nominal mode" }
+  - category: detect
+    description: "Detect CPU spike and reboot"
+  - category: isolate
+    description: "Confirm watchdog-triggered reboot"
+  - category: recover
+    description: "Transition back to nominal mode"
+    tc: ["OBC_BOOT_APP", "OBC_SET_MODE(mode=0)"]
+    state: ["obdh.sw_image == 1", "obdh.mode == 0"]
+    within_s: 900

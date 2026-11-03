@@ -30,7 +30,13 @@ events:
         to the next imaging block — the power budget may no longer close.
 
 expected_responses:
-  - { category: detect, description: "Detect flat drive angle (0x0133) and the wing-current ripple" }
-  - { category: isolate, description: "Distinguish a seized drive from array degradation" }
-  - { category: recover, description: "Attempt a SADA re-command / tracking re-enable" }
-  - { category: plan, description: "Reduce the load plan to fit the reduced orbit-average generation" }
+  - category: detect
+    description: "Detect flat drive angle (0x0133) and the wing-current ripple"
+  - category: isolate
+    description: "Distinguish a seized drive from array degradation"
+  - category: recover
+    description: "Attempt a SADA re-command / tracking re-enable"
+    tc: "EPS_SOLAR_ARRAY_DRIVE"
+    within_s: 900
+  - category: plan
+    description: "Reduce the load plan to fit the reduced orbit-average generation"

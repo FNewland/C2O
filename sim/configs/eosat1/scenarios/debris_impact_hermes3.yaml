@@ -121,27 +121,24 @@ events:
 
 expected_responses:
   - category: detect
-    description: >
-      Identify EPS as root cause within 90 s — confirm bus < 24 V and power_gen < 900 W.
-      Issue load-shed tier-1 to stop SoC decline.
+    description: "Identify EPS as root cause within 90 s — confirm bus < 24 V and power_gen < 900 W. Issue load-shed tier-1 to stop SoC decline."
+    tc: ["PAYLOAD_SET_MODE(mode=0)", "EPS_PAYLOAD_MODE(mode=0)", "EPS_POWER_OFF(line_index=3)", "EPS_EMERGENCY_LOAD_SHED(stage=1|2|3)", "EPS_SET_MODE(mode=1|2)"]
+    within_s: 180
   - category: isolate
-    description: >
-      Isolate SA-2B degraded panel. Command EPS safe mode (S8 func 83, mode 1).
-      If SoC < 80%, limit battery discharge current.
+    description: "Isolate SA-2B degraded panel. Command EPS safe mode (S8 func 83, mode 1). If SoC < 80%, limit battery discharge current."
+    tc: "EPS_SET_MODE(mode=1)"
+    within_s: 600
   - category: recover
-    description: >
-      AOCS: monitor RW-2 speed; switch to SUN_SAFE attitude if > 5000 RPM.
-      Desaturate RW-2 before saturation limit.
+    description: "AOCS: monitor RW-2 speed; switch to SUN_SAFE attitude if > 5000 RPM. Desaturate RW-2 before saturation limit."
   - category: recover
-    description: >
-      TCS: monitor battery temperature. Restore heaters once bus ≥ 23 V sustained.
+    description: "TCS: monitor battery temperature. Restore heaters once bus ≥ 23 V sustained."
   - category: recover
-    description: >
-      OBDH: switch active CAN bus (S8 func 54) to restore subsystem telemetry.
+    description: "OBDH: switch active CAN bus (S8 func 54) to restore subsystem telemetry."
+    tc: "OBC_SELECT_BUS(bus=1)"
+    state: "obdh.active_bus == 1"
+    within_s: 600
+    ref: "event:5"
   - category: recover
-    description: >
-      TTC: restore TX power once bus ≥ 24 V. Verify uplink margin before further commands.
+    description: "TTC: restore TX power once bus ≥ 24 V. Verify uplink margin before further commands."
   - category: recover
-    description: >
-      Full recovery: bus ≥ 25 V sustained, SoC ≥ 80%, return OBC to NOMINAL mode,
-      restore payload power in stepped intervals, clear all fault flags.
+    description: "Full recovery: bus ≥ 25 V sustained, SoC ≥ 80%, return OBC to NOMINAL mode, restore payload power in stepped intervals, clear all fault flags."

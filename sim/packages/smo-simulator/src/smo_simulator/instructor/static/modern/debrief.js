@@ -15,6 +15,7 @@ import { esc } from "/static/shared/components.js";
 import { t, tText } from "/static/shared/i18n.js";
 import { mountTimeline } from "/static/modern/timeline.js";
 import { fmtAge, fmtClockSec, renderChain, STAGES } from "/static/modern/views.js";
+import { scoreMarkdown } from "/static/modern/score.js";
 
 export const PHASES = [
   { id: "reactions", label: "Reactions", hint: "How did that feel?" },
@@ -198,6 +199,7 @@ export function createDebrief(host, { onToast } = {}) {
     const L = [];
     L.push(`# ${tText("Debrief")} — ${(data && data.scenario && data.scenario.name) || tText("free run")}`, "");
     L.push(`${tText("Exported")}: ${data ? data.now : ""}`, "");
+    if (data && data.scenario) L.push(...scoreMarkdown(data.scenario));
     L.push(`## ${tText("Faults and gaps")}`, "");
     L.push(`| ${tText("Fault")} | ${tText("to symptom")} | ${tText("to ground")} | ${tText("to first TC")} | ${tText("to clear")} |`, "|---|---|---|---|---|");
     for (const f of (data && data.faults) || []) {

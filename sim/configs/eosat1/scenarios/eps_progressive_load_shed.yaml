@@ -41,9 +41,22 @@ events:
       soc_pct: 10.0
       onset: gradual
       onset_duration_s: 300
+
 expected_responses:
-  - { category: detect, description: "Detect battery SoC dropping below 50% and bus voltage declining" }
-  - { category: isolate, description: "Correlate depletion with extended eclipse and negative power balance" }
-  - { category: recover, description: "Shed payload at SoC < 50%, FPA cooler at SoC < 35%, TX at SoC < 25%" }
-  - { category: recover, description: "Shed AOCS wheels at SoC < 15% — EMERGENCY level" }
-  - { category: recover, description: "Monitor recovery after eclipse exit and restore loads in reverse order" }
+  - category: detect
+    description: "Detect battery SoC dropping below 50% and bus voltage declining"
+  - category: isolate
+    description: "Correlate depletion with extended eclipse and negative power balance"
+  - category: recover
+    id: shed_payload
+    description: "Shed payload at SoC < 50%, FPA cooler at SoC < 35%, TX at SoC < 25%"
+    tc: ["PAYLOAD_SET_MODE(mode=0)", "EPS_PAYLOAD_MODE(mode=0)", "EPS_POWER_OFF(line_index=3)", "EPS_EMERGENCY_LOAD_SHED(stage=1|2|3)"]
+    state: "eps.pl_payload == 0"
+    within_s: 600
+  - category: recover
+    description: "Shed AOCS wheels at SoC < 15% — EMERGENCY level"
+    tc: ["EPS_POWER_OFF(line_index=7)", "EPS_EMERGENCY_LOAD_SHED(stage=3)"]
+    within_s: 1500
+    after: "shed_payload"
+  - category: recover
+    description: "Monitor recovery after eclipse exit and restore loads in reverse order"

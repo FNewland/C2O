@@ -1022,6 +1022,23 @@ class SimScenarioDefaultsConfig(StrictModel):
     eq_tolerance: float = 0.01
     valid_difficulties: list[str] = Field(default_factory=lambda: [
         "BASIC", "BEGINNER", "INTERMEDIATE", "ADVANCED"])
+    # Scoring: target time (s after the scenario's first fault) per response
+    # category, unless a response sets `within_s` (scenario_scoring.py).
+    response_targets_s: dict[str, float] = Field(default_factory=dict)
+
+
+class SimAutoSnapshotConfig(StrictModel):
+    """Automatic snapshots taken just before every injected fault, kept on
+    disk so an instructor can roll back after a restart or a crash
+    (INSTRUCTOR_CONSOLE_DESIGN.md §13 item 6; auto_snapshots.py)."""
+    # Directory (relative to the simulator's working dir unless absolute);
+    # SMO_AUTO_SNAPSHOT_DIR overrides it. In the container: /opt/smo/workspace/...
+    dir: str = "workspace/snapshots/auto"
+    keep_per_run: int = 10          # newest N per run (scenario run or free run)
+    max_age_h: float = 48.0         # older files are deleted
+    max_snapshot_mb: float = 25.0   # a bigger snapshot stays in memory only
+    max_total_mb: float = 250.0     # the whole folder, oldest dropped first
+    min_free_mb: float = 200.0      # never fill the disk below this
 
 
 class SimTickConfig(StrictModel):
@@ -1073,13 +1090,40 @@ class ScenarioEventConfig(StrictModel):
     #: input — but it has to be declared to be allowed to exist.
     note: str = ""
 
+class ExpectedResponseConfig(StrictModel):
+    """One expected team response; see smo_simulator/scenario_scoring.py.
+
+    Without `tc` or `state` the response is observational: listed in the
+    debrief for the instructor, not scored (the simulator cannot see it)."""
+    category: str = "recover"
+    description: str = ""
+    id: str | None = None
+    #: TC evidence, procedure notation: NAME or NAME(arg=value, ...); a list
+    #: means any of them.
+    tc: str | list[str] | None = None
+    #: Resulting state: "<parameter> <op> <value>"; a list means all of them.
+    state: str | list[str] | None = None
+    within_s: float | None = None
+    after: str | list[str] | None = None
+    ref: str | None = None
+    weight: float | None = None
+
+
+class HarmfulCommandConfig(StrictModel):
+    tc: str | list[str]
+    reason: str = ""
+    penalty: float | None = None
+    ref: str | None = None
+
+
 class ScenarioConfig(StrictModel):
     name: str
     difficulty: str = "BASIC"
     duration_s: float = 1800.0
     briefing: str = ""
     events: list[ScenarioEventConfig] = Field(default_factory=list)
-    expected_responses: list[dict[str, str]] = Field(default_factory=list)
+    expected_responses: list[ExpectedResponseConfig] = Field(default_factory=list)
+    harmful_commands: list[HarmfulCommandConfig] = Field(default_factory=list)
     #: Spacecraft state the scenario starts from (phase, SoC, mode, ...).
     #: Applied by `ScenarioEngine.activate`; the shape is scenario-specific.
     initial_conditions: dict[str, Any] = Field(default_factory=dict)

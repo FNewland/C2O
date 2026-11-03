@@ -14,7 +14,13 @@ events:
       magnitude: 1.0
       onset: step
       count: 3
+
 expected_responses:
-  - { category: detect, description: "Detect rising checksum error count and image quality drop" }
-  - { category: isolate, description: "Correlate with FPA temperature or memory status" }
-  - { category: recover, description: "Abort imaging if persistent, attempt re-capture if transient" }
+  - category: detect
+    description: "Detect rising checksum error count and image quality drop"
+  - category: isolate
+    description: "Correlate with FPA temperature or memory status"
+  - category: recover
+    description: "Abort imaging if persistent, attempt re-capture if transient"
+    tc: ["PAYLOAD_SET_MODE(mode=0|1)", "PAYLOAD_CAPTURE"]
+    within_s: 900

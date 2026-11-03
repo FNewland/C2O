@@ -85,3 +85,45 @@ def test_generator_carries_the_typed_parameter_specs(subsystem):
         spec = get_spec(subsystem, name)
         assert [p["name"] for p in entry["params"]] == [p.name for p in spec.params], (
             f"{subsystem}.{name}: generator parameter list differs from the spec")
+
+
+def test_generator_writes_the_scoring_fields_the_simulator_reads(tmp_path):
+    """Expected responses keep their evidence (tc / state / within_s) and
+    harmful commands; the file loads into the scenario engine without issue
+    (scenario_scoring.py) and the schema accepts it."""
+    import sys
+    import yaml
+
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    import scenario_generator  # noqa: PLC0415
+    from smo_common.config.schemas import ScenarioConfig
+    from smo_simulator.scenario_engine import ScenarioEngine
+
+    data = {
+        "name": "Gen scoring", "duration_s": 900,
+        "events": [{"type": "inject", "subsystem": "aocs", "failure": "rw_bearing",
+                    "time_offset_s": 60, "wheel": 1}],
+        "expected_responses": [
+            {"category": "recover", "description": "Disable RW2",
+             "tc": "AOCS_DISABLE_WHEEL(wheel_idx=1); AOCS_DESATURATE",
+             "state": "aocs.rw2_enabled == 0", "within_s": "600"},
+            {"category": "detect", "description": "Notice the temperature", "tc": "", "state": ""}],
+        "harmful_commands": [{"tc": "AOCS_ENABLE_WHEEL(wheel_idx=1)", "reason": "Re-enables it",
+                              "penalty": "10"}],
+    }
+    text, filename = scenario_generator.generate_yaml(data)
+    doc = yaml.safe_load(text)
+    ScenarioConfig.model_validate(doc)
+    r0 = doc["expected_responses"][0]
+    assert r0["tc"] == ["AOCS_DISABLE_WHEEL(wheel_idx=1)", "AOCS_DESATURATE"]
+    assert r0["state"] == "aocs.rw2_enabled == 0" and r0["within_s"] == 600
+    assert "tc" not in doc["expected_responses"][1]
+    assert doc["harmful_commands"][0]["penalty"] == 10
+    (tmp_path / filename).write_text(text)
+    se = ScenarioEngine()
+    se.load_scenarios_from_dir(tmp_path)
+    assert se.load_issues() == []
+    assert scenario_generator.check_scoring(data) == []
+    bad = dict(data, expected_responses=[{"category": "recover", "description": "x",
+                                          "tc": "AOCS_DISABLE_WHEEL(wheel=1)"}])
+    assert any("no argument" in e for e in scenario_generator.check_scoring(bad))

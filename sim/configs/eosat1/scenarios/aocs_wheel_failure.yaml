@@ -15,7 +15,20 @@ events:
       onset: gradual
       onset_duration_s: 60
       wheel: 2
+
 expected_responses:
-  - { category: detect, description: "Detect RW3 speed anomaly and temperature rise" }
-  - { category: isolate, description: "Confirm bearing failure via speed/temp correlation" }
-  - { category: recover, description: "Disable RW3, switch to 3-wheel mode, verify pointing" }
+  - category: detect
+    description: "Detect RW3 speed anomaly and temperature rise"
+  - category: isolate
+    description: "Confirm bearing failure via speed/temp correlation"
+  - category: recover
+    description: "Disable RW3, switch to 3-wheel mode, verify pointing"
+    tc: "AOCS_DISABLE_WHEEL(wheel_idx=2)"
+    within_s: 600
+
+# Commands that make things worse: each entry costs its penalty once
+# (percentage points) if sent after the fault (scenario_scoring.py).
+harmful_commands:
+  - tc: "AOCS_ENABLE_WHEEL(wheel_idx=2)"
+    reason: "Re-enables the failed wheel RW3"
+    penalty: 10
