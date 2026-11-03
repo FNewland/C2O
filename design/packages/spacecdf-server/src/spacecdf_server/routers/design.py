@@ -153,8 +153,21 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
 
     loop_result = await orchestrator.run(study.requirements, initial_state=initial_state, conops=study.conops)
 
-    # Update study with results
+    # Update study with results — and persist them: the review gates read the last
+    # iteration on the server (walkthrough: "Run the design loop first" after it ran).
     study.iterations = loop_result.iterations
+    # The per-iteration snapshots are taken before the Tier 2 agents (systems margins,
+    # cost, risk, debris) run on convergence: add the final state to the last one, which
+    # is what the review gates read.
+    if loop_result.final_state and study.iterations:
+        final = {pid: float(p.value) for pid, p in loop_result.final_state.parameters.items()
+                 if isinstance(p.value, (int, float)) and not isinstance(p.value, bool)}
+        study.iterations[-1].parameter_snapshot = {**study.iterations[-1].parameter_snapshot, **final}
+    try:
+        from ..db.study_repo import db_save_study
+        await db_save_study(study)
+    except Exception:  # noqa: BLE001 — never fail the run on persistence
+        logger.warning("design loop: study %s not persisted", study_id, exc_info=True)
 
     # Serialise parameters
     params = {}

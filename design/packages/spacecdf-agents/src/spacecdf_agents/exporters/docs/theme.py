@@ -1,6 +1,6 @@
 """SpaceCDF — Course-style DOCX theme.
 
-Applies the uOttawa SEDTI / SpaceCDF Facilitator's Book visual identity to
+Applies the C2O / SpaceCDF Facilitator's Book visual identity to
 python-docx documents.  Importable from both the agents-package design-review
 generator and the server-side DID renderer.
 
@@ -202,7 +202,7 @@ def add_cover_page(
     date: str = "",
     classification: str = "Internal",
     cohort: str = "SpaceCDF",
-    publisher: str = "Faculty of Engineering · School of Engineering Design and Teaching Innovation (SEDTI)",
+    publisher: str = "C2O — from Concept to Orbit · du Concept à l’Orbite",
 ) -> None:
     """Render a cover page in the Facilitator's Book style.
 
@@ -481,7 +481,7 @@ def add_page_furniture(
     running_title: str = "SpaceCDF",
     document_code: str = "",
     footer_left: str = "SpaceCDF",
-    footer_right: str = "uOttawa SEDTI",
+    footer_right: str = "C2O · SpaceCDF",
 ) -> None:
     """Add running header (left: title, right: doc code) with crimson rule,
     plus three-column bilingual footer: footer_left | Page X of / de Y | footer_right.
