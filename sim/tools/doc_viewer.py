@@ -446,7 +446,7 @@ if (heads.length && "IntersectionObserver" in window) {
 def _page(title: str, lang: str, sidebar: str, content: str, toc: str = "",
           meta: str = "") -> str:
     import tool_frame
-    bar = tool_frame.bar('<span data-i18n>Documentation</span>', meta_html=meta)
+    bar = tool_frame.bar('<span data-i18n>Documentation</span>', meta_html=meta, logbook="docs")
     return f"""<!DOCTYPE html>
 <html lang="{lang}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -538,6 +538,8 @@ def create_app(docs_root: Path) -> web.Application:
     from smo_common.web.http import setup_tool_app, tool_html_response
     categories = discover_docs(docs_root)
     app = setup_tool_app(web.Application())
+    from smo_common.logbook import register_logbook_routes   # participant logbook
+    register_logbook_routes(app, tool="docs")
 
     async def index(request):
         return tool_html_response(build_index_html(categories, request_lang(request)), app)
