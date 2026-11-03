@@ -594,7 +594,7 @@ def generate_semp(
                 {"number": "3.1", "title": "Concurrent Design Team", "content": "Systems Engineer, Power, AOCS, Thermal, Comms, Propulsion, Structures, Payload, Cost, Mission Analyst."},
             ]},
             {"number": "4", "title": "Reviews & Milestones", "subsections": [
-                {"number": "4.1", "title": "Review Schedule", "content": "MCR → SRR → PDR → CDR → TRR → FRR per ECSS-M-ST-10C / NASA life cycle."},
+                {"number": "4.1", "title": "Review Schedule", "content": "MDR → PRR → SRR → PDR → CDR → QR → AR per ECSS-M-ST-10C Rev.1 (NASA: MCR → SRR → MDR/SDR → PDR → CDR)."},
                 {"number": "4.2", "title": "Exit Criteria", "content": "Per SpaceCDF gate review framework."},
             ]},
             {"number": "5", "title": "Risk Management", "subsections": [

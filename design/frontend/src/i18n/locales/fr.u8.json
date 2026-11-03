@@ -125,7 +125,6 @@
   "with margin": "avec marge",
   "yr": "ans",
   "{{gate}}: {{n}} of {{total}} decisions recorded": "{{gate}} : {{n}} décisions consignées sur {{total}}",
-  "{{kind}} margin to allocation: {{pct}} % (C2O system margin policy: 25 % at MDR, 20 % at PRR and SRR, 10 % at PDR)": "Marge {{kind}} par rapport à l’allocation : {{pct}} % (politique de marge système C2O : 25 % à la MDR, 20 % à la PRR et à la SRR, 10 % à la PDR)",
   "{{kind}}: no allocation set, so no margin to allocation yet": "{{kind}} : aucune allocation définie, donc pas encore de marge par rapport à l’allocation",
   "{{label}}: these decisions have no record in your logbook yet. Each owner seat records its own; the logbook is private to each person.": "{{label}} : ces décisions n’ont pas encore de fiche dans votre journal de bord. Chaque poste responsable consigne les siennes ; le journal de bord est propre à chaque personne.",
   "{{name}}: allocation": "{{name}} : allocation",

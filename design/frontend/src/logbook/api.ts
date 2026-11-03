@@ -87,13 +87,14 @@ export interface CatalogueDecision {
 export interface Catalogue {
   lang: string
   study_id: string | null
-  gates: { id: string; label: string; ui_gates: string[] }[]
+  /** The study's gate profile (WP6): ids and labels of ITS gates (cr in the ESA IOD profile, MCR in the NASA skin…) */
+  gates: { id: string; short?: string; label: string; ui_gates: string[]; covers?: string[] }[]
   seats: { id: string; label: string }[]
   fields: Record<RecordField, string>
   sources: Record<string, { label: string; server: boolean }>
   decisions: CatalogueDecision[]
   counts: Record<string, { total: number; open: number }>
-  due?: { gate: string; total: number; open: string[]; recorded: string[] }
+  due?: { gate: string; short?: string; total: number; open: string[]; recorded: string[] }
 }
 export interface Prefill extends Partial<DecisionRecord> { sources?: string[] }
 

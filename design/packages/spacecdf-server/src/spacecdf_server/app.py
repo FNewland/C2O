@@ -202,6 +202,9 @@ app.include_router(analyses_vv_router.router, prefix="/api", tags=["Analyses: V&
 app.include_router(analyses_physics_router.router, prefix="/api", tags=["Analyses: Physics"])
 # Deterministic design rules replacing AI (docs/RULES_AND_AI.md)
 app.include_router(rules_router.router, prefix="/api", tags=["Design rules"])
+# Review gates per study profile + team records (WP0/WP6, Nov 2026)
+from .routers import gates as gates_router  # noqa: E402
+app.include_router(gates_router.router, prefix="/api", tags=["Review gates"])
 # Participant logbook + worksheets (same API as the ops tools)
 app.include_router(logbook.router, prefix="/api/logbook", tags=["Logbook"])
 app.include_router(ws.router, tags=["WebSocket"])

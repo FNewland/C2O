@@ -1,99 +1,269 @@
 # Gate Review Exit Criteria
 #
-# Each gate has structured exit criteria with specific questions, required
-# evidence, and auto-evaluation rules. Aligned with NASA SEH §3.3-3.5
-# and ECSS-M-ST-10C Rev.1.
+# Each canonical gate (ECSS-M-ST-10C Rev.1 project reviews up to PDR) has structured exit
+# criteria with specific questions, required evidence, and auto-evaluation rules. Aligned
+# with NASA SEH §3.3-3.5 and ECSS-M-ST-10C Rev.1. Which gates a study actually holds, and
+# what they are called, is set by its gate profile (configs/gate_profiles.yaml): full ECSS
+# (default), ESA IOD CubeSat, C2O three-gate, or the NASA vocabulary skin.
+#
+# Nov 2026 (REDESIGN_DECISIONS.md ruling 3): the Phase 0 gate is the MDR (Mission Definition
+# Review). It was called "MCR" (NASA vocabulary; in ECSS, MCR is the Phase F close-out
+# review). Criterion ids MCR-EC-nn became MDR-EC-nn; `aliases` keeps the old ids and gate
+# name working for stored data and old links.
 #
 # Status modes:
 #   auto   — SpaceCDF can evaluate from the data model
 #   manual — Requires human assessment / sign-off
 #   hybrid — Auto-evaluated with human override
+#
+# Per criterion (Nov 2026, WP6):
+#   owner_seat  the seat that closes it (seat ids of configs/worksheets/decision_catalogue.yaml)
+#   step        the workflow step that produces the evidence (gate_profiles.yaml `steps`)
+#   fix         where the "Fix" link opens in today's workbench: a panel id
+#               (blocks, budget, requirements, functions, interfaces, decide, analyses)
+#               or vv:<section> (vv:risks); omitted when no screen can change it yet
+
+aliases:
+  gates: {MCR: MDR}
+  phases: {pre_phase_a: phase_0}
+  criteria_prefix: {MCR-EC-: MDR-EC-}
 
 phases:
-  pre_phase_a:
-    gate: MCR
-    gate_name: "Mission Concept Review"
+  phase_0:
+    gate: MDR
+    gate_name: "Mission Definition Review"
     purpose: >
-      Evaluate the feasibility and desirability of the proposed mission concept.
-      Confirm that the mission need is justified and that a viable concept exists.
-    authority: "Mission Directorate / Programme Manager"
+      Validate the mission need, the stakeholders and objectives, and that a feasible
+      mission concept has been selected against its alternatives (end of Phase 0).
+    authority: "Customer / Programme Manager"
     exit_criteria:
       # --- Mission Need ---
-      - id: MCR-EC-01
+      - id: MDR-EC-01
         question: "Is the mission need clearly defined and justified?"
         category: mission_need
         evidence: "mission_need.problem_statement is not empty"
         status: auto
         priority: must_pass
+        owner_seat: team_leader
+        step: S1
 
-      - id: MCR-EC-02
+      - id: MDR-EC-02
         question: "Are the key stakeholders identified with their needs and constraints?"
         category: mission_need
         evidence: "mission_need.stakeholders has >= 1 entry"
         status: auto
         priority: must_pass
+        owner_seat: team_leader
+        step: S2
 
-      - id: MCR-EC-03
+      - id: MDR-EC-03
         question: "Are mission objectives defined with measurable success criteria?"
         category: mission_need
         evidence: "mission_need.objectives has >= 1 primary objective with measurable_criterion"
         status: auto
         priority: must_pass
+        owner_seat: team_leader
+        step: S3
 
       # --- Alternatives ---
-      - id: MCR-EC-04
+      - id: MDR-EC-04
         question: "Have alternative solutions been considered, including non-space options?"
         category: alternatives
         evidence: "mission_need.alternatives_considered has >= 2 entries including at least one non-space type"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: S4
 
-      - id: MCR-EC-05
+      - id: MDR-EC-05
         question: "Is the selected concept justified against the alternatives?"
         category: alternatives
         evidence: "mission_need.selected_alternative_id is set and selection_rationale is not empty"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: S4
 
       # --- ConOps ---
-      - id: MCR-EC-06
+      - id: MDR-EC-06
         question: "Is a preliminary Concept of Operations documented?"
         category: conops
         evidence: "mission_need.conops_summary is not empty"
         status: auto
         priority: should_pass
+        owner_seat: mission_analyst
+        step: S5
 
       # --- Feasibility ---
-      - id: MCR-EC-07
+      - id: MDR-EC-07
         question: "Has a feasible system concept been identified?"
         category: feasibility
         evidence: "Design converges with positive mass and power margins"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: S4
+        fix: analyses
 
-      - id: MCR-EC-08
+      - id: MDR-EC-08
         question: "Are preliminary cost and schedule estimates within constraints?"
         category: feasibility
         evidence: "cost.total_meur <= target_cost_meur (if target set)"
         status: auto
         priority: should_pass
+        owner_seat: team_leader
+        step: S6
+        fix: analyses
 
       # --- Risk ---
-      - id: MCR-EC-09
+      - id: MDR-EC-09
         question: "Have initial technical risks been identified?"
         category: risk
         evidence: "risk.total_risks >= 0 (risk agent has executed)"
         status: auto
         priority: should_pass
+        owner_seat: team_leader
+        step: S6
+        fix: analyses
 
-      - id: MCR-EC-10
+      - id: MDR-EC-10
         question: "Is the mission concept compatible with debris mitigation requirements?"
         category: sustainability
         evidence: "debris.compliance_score >= 50"
         status: auto
         priority: should_pass
+        owner_seat: mission_analyst
+        step: S1
+        fix: analyses
 
   phase_a:
+    gate: PRR
+    gate_name: "Preliminary Requirements Review"
+    purpose: >
+      Confirm one mission concept, its preliminary technical requirements, the product and
+      function trees, budgets that close with the Phase A margins, and the ground segment
+      (end of Phase A).
+    authority: "Customer / Project Manager"
+    exit_criteria:
+      - id: PRR-EC-01
+        question: "Is one system concept selected and justified against at least two alternatives?"
+        category: alternatives
+        evidence: "selected_alternative_id and selection_rationale set; >= 2 alternatives_considered"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: S4
+
+      - id: PRR-EC-02
+        question: "Is the mission analysis baselined (orbit, lifetime)?"
+        category: mission_analysis
+        evidence: "study.requirements.orbit has an orbit type, an altitude > 0 and a mission duration"
+        status: auto
+        priority: must_pass
+        owner_seat: mission_analyst
+        step: A1
+        fix: decide
+
+      - id: PRR-EC-03
+        question: "Is the function tree defined?"
+        category: functions
+        evidence: ">= 1 function in the study's function tree"
+        status: auto
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: B2
+        fix: functions
+
+      - id: PRR-EC-04
+        question: "Is the product tree defined down to subsystems?"
+        category: product_tree
+        evidence: "the space segment has >= 1 system and >= 1 subsystem"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: A3
+        fix: blocks
+
+      - id: PRR-EC-05
+        question: "Do the mass and power budgets close with the Phase A system margin?"
+        category: budgets
+        evidence: "dry mass × (1 + PRR system margin) <= mass target AND power demand × (1 + PRR system margin) <= EOL array power (margin_policy.yaml system_margin_ladder)"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: A6
+        fix: budget
+
+      - id: PRR-EC-06
+        question: "Are the preliminary technical requirements written, with a verification method each?"
+        category: requirements
+        evidence: ">= 1 mission and >= 1 system requirement; every requirement has a verification method"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: B1
+        fix: requirements
+
+      - id: PRR-EC-07
+        question: "Is the technology readiness of the selected equipment listed?"
+        category: technology
+        evidence: "every selected component has a TRL"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: C1
+        fix: blocks
+
+      - id: PRR-EC-08
+        question: "Is the model philosophy and verification approach defined?"
+        category: verification
+        evidence: "Manual: model philosophy (protoflight by default for IOD CubeSats) and AIV approach drafted"
+        status: manual
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: PRR-EC-09
+        question: "Is the ground segment identified?"
+        category: ground_segment
+        evidence: ">= 1 ground station in the study or a ground segment element"
+        status: auto
+        priority: should_pass
+        owner_seat: mission_analyst
+        step: A5
+        fix: blocks
+
+      - id: PRR-EC-10
+        question: "Is the risk register updated for the selected concept?"
+        category: risk
+        evidence: ">= 1 risk in the study's risk register"
+        status: auto
+        priority: should_pass
+        owner_seat: team_leader
+        step: S6
+        fix: vv:risks
+
+      - id: PRR-EC-11
+        question: "Is the cost estimate within the target?"
+        category: cost
+        evidence: "cost.total_meur <= target_cost_meur (if target set)"
+        status: auto
+        priority: should_pass
+        owner_seat: team_leader
+        step: A6
+        fix: analyses
+
+      - id: PRR-EC-12
+        question: "Does the orbit meet the debris-mitigation lifetime rules?"
+        category: sustainability
+        evidence: "debris.compliance_score >= 50"
+        status: auto
+        priority: should_pass
+        owner_seat: mission_analyst
+        step: A1
+        fix: analyses
+
+  phase_b1:
     gate: SRR
     gate_name: "System Requirements Review"
     purpose: >
@@ -108,6 +278,9 @@ phases:
         evidence: "Every objective has at least one traced_to_requirement"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: B1
+        fix: requirements
 
       - id: SRR-EC-02
         question: "Are system requirements complete, verifiable, and non-conflicting?"
@@ -115,6 +288,9 @@ phases:
         evidence: "All requirements have verification_method and threshold"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: B1
+        fix: requirements
 
       - id: SRR-EC-03
         question: "Is the requirements compliance matrix populated?"
@@ -122,6 +298,9 @@ phases:
         evidence: "Compliance matrix has >= 80% verified or marginal"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: B1
+        fix: requirements
 
       - id: SRR-EC-04
         question: "Have all engineering positions answered their key questions?"
@@ -129,6 +308,8 @@ phases:
         evidence: "All must_answer questions have position answers"
         status: auto
         priority: should_pass
+        owner_seat: team_leader
+        step: B1
 
       - id: SRR-EC-05
         question: "Are cross-position conflicts identified and resolved or accepted?"
@@ -136,13 +317,19 @@ phases:
         evidence: "No critical conflicts unresolved"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: A4
+        fix: analyses
 
       - id: SRR-EC-06
         question: "Does the design close within mass, power, and cost budgets?"
         category: budgets
-        evidence: "systems.mass_margin_percent >= 0 AND systems.power_margin_percent >= 0"
+        evidence: "dry mass × (1 + SRR system margin) <= mass target AND power demand × (1 + SRR system margin) <= EOL array power (margin_policy.yaml system_margin_ladder)"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: A6
+        fix: budget
 
       - id: SRR-EC-07
         question: "Is the Verification and Validation approach defined?"
@@ -150,6 +337,8 @@ phases:
         evidence: "VP document can be generated (compliance pipeline operational)"
         status: auto
         priority: should_pass
+        owner_seat: systems_engineer
+        step: C3
 
       - id: SRR-EC-08
         question: "Are technology readiness levels acceptable for the target phase?"
@@ -157,6 +346,9 @@ phases:
         evidence: "No subsystem below TRL 4 for Phase B entry"
         status: hybrid
         priority: should_pass
+        owner_seat: systems_engineer
+        step: C1
+        fix: blocks
 
       - id: SRR-EC-09
         question: "Has the Systems Engineering Management Plan been baselined?"
@@ -164,6 +356,8 @@ phases:
         evidence: "Manual: SEMP exists and is approved"
         status: manual
         priority: should_pass
+        owner_seat: team_leader
+        step: S0.1
 
       - id: SRR-EC-10
         question: "Is the mission sustainable (debris, EOL, casualty risk)?"
@@ -171,8 +365,11 @@ phases:
         evidence: "sustainability.score >= 55 AND debris.casualty_compliant == 1"
         status: auto
         priority: must_pass
+        owner_seat: mission_analyst
+        step: A1
+        fix: analyses
 
-  phase_b1:
+  phase_b:
     gate: PDR
     gate_name: "Preliminary Design Review"
     purpose: >
@@ -186,6 +383,9 @@ phases:
         evidence: "All requirements compliant or marginal with plan to close"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: C2
+        fix: requirements
 
       - id: PDR-EC-02
         question: "Are interface requirements defined between all subsystems?"
@@ -193,13 +393,19 @@ phases:
         evidence: "Every subsystem has its expected power, data, mechanical and thermal links (configs/interface_rules.yaml coverage) and no suggested link is left unreviewed; the IRD/ICD for external interfaces is still checked by the board"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: B3
+        fix: interfaces
 
       - id: PDR-EC-03
         question: "Are all subsystem mass, power, and data margins positive?"
         category: budgets
-        evidence: "systems.mass_margin_percent >= 10 AND systems.power_margin_percent >= 10"
+        evidence: "dry mass × (1 + PDR system margin) <= mass target AND power demand × (1 + PDR system margin) <= EOL array power (margin_policy.yaml system_margin_ladder)"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: A6
+        fix: budget
 
       - id: PDR-EC-04
         question: "Has equipment been selected for all critical subsystems?"
@@ -207,6 +413,9 @@ phases:
         evidence: "At least one KB component selected in each subsystem"
         status: hybrid
         priority: should_pass
+        owner_seat: systems_engineer
+        step: C1
+        fix: blocks
 
       - id: PDR-EC-05
         question: "Is the reliability analysis acceptable?"
@@ -214,3 +423,6 @@ phases:
         evidence: "reliability.mission_reliability >= reliability_target"
         status: auto
         priority: must_pass
+        owner_seat: systems_engineer
+        step: C2
+        fix: analyses

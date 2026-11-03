@@ -419,12 +419,28 @@ def recorded(entries: Iterable[dict], study_id: str | None) -> dict[str, list[di
 
 
 def localised(lang: str, entries: Iterable[dict], study_id: str | None, lookup=None,
-              directory: Path | None = None) -> dict:
-    """The catalogue in ``lang`` with this person's status, for GET /api/logbook/decisions."""
+              directory: Path | None = None, profile: dict | None = None) -> dict:
+    """The catalogue in ``lang`` with this person's status, for GET /api/logbook/decisions.
+
+    ``profile`` (a gate profile of configs/gate_profiles.yaml, WP6): the decisions are
+    grouped under the profile's gates — each decision's ``gate`` becomes the profile gate
+    that covers its catalogue gate (kept as ``ecss_gate``), so PRR decisions show at the
+    PRR in the full ECSS profile and at the concept review in the ESA IOD profile.
+    """
     cat = catalogue(directory)
     rec = recorded(entries, study_id)
-    gates = [{"id": g["id"], "label": _tr(g.get("label"), lang), "ui_gates": g.get("ui_gates") or []}
+    gates = [{"id": g["id"], "short": g["id"].upper(), "label": _tr(g.get("label"), lang),
+              "ui_gates": g.get("ui_gates") or [], "covers": [g["id"]]}
              for g in cat.get("gates") or []]
+    regate: dict[str, str] = {}
+    if profile and profile.get("gates"):
+        gates = []
+        for pg in profile["gates"]:
+            short = pg.get("short") or pg["id"].upper()
+            gates.append({"id": pg["id"], "short": short, "label": f"{short} — {_tr(pg.get('name'), lang)}",
+                          "ui_gates": [pg["id"]], "covers": list(pg.get("covers") or [])})
+            for c in pg.get("covers") or []:
+                regate[c] = pg["id"]
     seats = [{"id": s["id"], "label": _tr(s.get("label"), lang)} for s in cat.get("seats") or []]
     fields = {k: _tr(v, lang) for k, v in (cat.get("fields") or {}).items()}
     sources = {k: {"label": _tr(v.get("label"), lang), "server": bool(v.get("server"))}
@@ -451,7 +467,8 @@ def localised(lang: str, entries: Iterable[dict], study_id: str | None, lookup=N
             "hint": _tr(d.get("hint"), lang) or None,
             "seat": d["seat"],
             "seat_label": seat_label(d["seat"], lang, directory),
-            "gate": d["gate"],
+            "gate": regate.get(d["gate"], d["gate"]),
+            "ecss_gate": d["gate"],
             "fields": d.get("fields") or [],
             "prefill": d.get("prefill") or [],
             "capture": d.get("capture") or [],

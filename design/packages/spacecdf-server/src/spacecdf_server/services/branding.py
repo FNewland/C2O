@@ -1,4 +1,4 @@
-"""SpaceCDF — Document branding for University of Ottawa / SEDTI.
+"""SpaceCDF — Document branding: C2O (from Concept to Orbit · du Concept à l’Orbite).
 
 Provides shared branding configuration and DOCX helper functions
 for consistent headers, footers, and colour schemes across all exports.
@@ -14,7 +14,11 @@ from typing import Any
 class BrandingConfig:
     """Branding configuration applied to all exported documents."""
     university: str = "University of Ottawa"
-    department: str = "SEDTI — Space Exploration & Design Technology Initiative"
+    # Nov 2026 (WP0): exports said "SEDTI — Space Exploration & Design Technology Initiative",
+    # a wrong expansion; the documents now carry the project brand, C2O.
+    department: str = "C2O — from Concept to Orbit · du Concept à l’Orbite"
+    publisher: str = "C2O — from Concept to Orbit · du Concept à l’Orbite"
+    footer_brand: str = "C2O · SpaceCDF"
     tool_name: str = "SpaceCDF"
     tool_version: str = "2.0"
 
@@ -26,7 +30,7 @@ class BrandingConfig:
     header_text: str = "#FFFFFF"
 
     # Footer text
-    footer_left: str = "University of Ottawa — SEDTI"
+    footer_left: str = "C2O — from Concept to Orbit"
     footer_right: str = "SpaceCDF v2.0 — Concurrent Design Facility"
 
     # Classification
@@ -58,7 +62,7 @@ def apply_docx_branding(doc: Any) -> None:
         running_title=f"{BRANDING.university} · {BRANDING.tool_name}",
         document_code="",
         footer_left=BRANDING.footer_left,
-        footer_right="uOttawa SEDTI",
+        footer_right=BRANDING.footer_brand,
     )
 
 
@@ -86,7 +90,7 @@ def create_branded_docx(title: str, subtitle: str = "") -> Any:
         doc,
         running_title=f"{BRANDING.tool_name} — {title}",
         footer_left=BRANDING.footer_left,
-        footer_right="uOttawa SEDTI",
+        footer_right=BRANDING.footer_brand,
     )
     # AIG (Peters 2023) acknowledgement on every branded document
     _theme.add_aig_acknowledgement(doc)
@@ -94,7 +98,7 @@ def create_branded_docx(title: str, subtitle: str = "") -> Any:
 
 
 def create_branded_xlsx(title: str) -> Any:
-    """Create a new XLSX workbook with UOttawa/SEDTI branding.
+    """Create a new XLSX workbook with C2O branding.
 
     Returns an openpyxl Workbook with a branded title sheet.
     """

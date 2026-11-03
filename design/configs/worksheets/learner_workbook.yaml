@@ -16,7 +16,7 @@ worksheets:
     steps: ['wizard:home']
     tabs: [blocks]
     levels: [0]
-    gates: [mcr]
+    gates: [mdr]
   questions:
   - id: A
     text: {en: 'Part A: The 17 SE Processes – SpaceCDF Mapping', fr: 'Partie A : Les 17 processus d''ingénierie
@@ -270,7 +270,7 @@ worksheets:
     steps: ['wizard:problem', 'wizard:stakeholders', 'wizard:alternatives']
     tabs: [decide]
     levels: [0]
-    gates: [mcr]
+    gates: [mdr]
   questions:
   - id: A
     text: {en: 'Part A: Stakeholder Analysis Matrix', fr: 'Partie A : Matrice d''analyse des parties prenantes'}

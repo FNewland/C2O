@@ -10,6 +10,13 @@
  */
 import { create } from 'zustand'
 import i18n, { getLang, normalizeLang, setLang as setI18nLang, type Lang } from '../i18n'
+import { loadBreadcrumb, loadStudyId, saveBreadcrumb, saveStudyId, type KV } from './studySession'
+
+function storage(): KV | null {
+  try { return window.localStorage } catch { return null }
+}
+const initialStudy = loadStudyId(storage(), typeof window !== 'undefined' ? window.location.search : '')
+const initialCrumbs = loadBreadcrumb(storage(), initialStudy)
 
 export type Level = 0 | 1 | 2 | 3 | 4
 export type ActivityPanel = 'blocks' | 'spacecraft' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses'
@@ -59,12 +66,19 @@ function levelFromBreadcrumb(bc: Array<{ id: string; name: string }>): Level {
 }
 
 export const useUIStore = create<UIStore>((set, get) => ({
-  studyId: null,
-  setStudyId: (id) => set({ studyId: id }),
+  // Persisted across reloads (WP0): stores/studySession.ts
+  studyId: initialStudy,
+  setStudyId: (id) => {
+    saveStudyId(storage(), id)
+    if (id !== get().studyId) {
+      saveBreadcrumb(storage(), id, [])
+      set({ studyId: id, focusElementId: null, breadcrumb: [], currentLevel: 0 })
+    } else set({ studyId: id })
+  },
 
-  focusElementId: null,
-  breadcrumb: [],
-  currentLevel: 0,
+  focusElementId: initialCrumbs.length ? initialCrumbs[initialCrumbs.length - 1].id : null,
+  breadcrumb: initialCrumbs,
+  currentLevel: levelFromBreadcrumb(initialCrumbs),
 
   drillInto: (elementId, elementName) => {
     const { breadcrumb } = get()
@@ -131,4 +145,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
 i18n.on('languageChanged', (lng) => {
   const lang = normalizeLang(lng) ?? 'en'
   if (useUIStore.getState().lang !== lang) useUIStore.setState({ lang })
+})
+
+// Keep the drill-down with its study across reloads (WP0).
+useUIStore.subscribe((st, prev) => {
+  if (st.breadcrumb !== prev.breadcrumb || st.studyId !== prev.studyId) saveBreadcrumb(storage(), st.studyId, st.breadcrumb)
 })

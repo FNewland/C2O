@@ -317,29 +317,9 @@ async def list_positions() -> list[dict]:
     ]
 
 
-@router.get("/{position_id}")
-async def get_position(position_id: str) -> Position:
-    """Get full details of a single engineering position."""
-    return _get_position(position_id)
-
-
-@router.get("/{position_id}/guidance")
-async def get_position_guidance(position_id: str) -> PositionGuidance:
-    """Compute guidance for a position based on the current design state.
-
-    For each key question, checks related parameters:
-    - answered: all params present, confidence > 0.5, not assumed
-    - warning: params present but low confidence or assumed
-    - open: one or more params missing
-
-    Returns completion_percent based on must_answer questions answered.
-    """
-    position = _get_position(position_id)
-    params = _get_current_design_state()
-    return _compute_guidance(position, params)
-
-
-# In-memory answer store (in production, persist to DB)
+# In-memory answer store (in production, persist to DB).
+# The /answers routes are declared BEFORE /{position_id}: FastAPI matches in order, and
+# GET /api/positions/answers used to be taken by /{position_id} and return 404 (WP0).
 _answers: dict[str, dict] = {}
 
 
@@ -361,3 +341,25 @@ async def save_answer(body: dict) -> dict:
 async def get_answers() -> dict:
     """Get all saved position answers."""
     return {"answers": list(_answers.values()), "count": len(_answers)}
+
+
+@router.get("/{position_id}")
+async def get_position(position_id: str) -> Position:
+    """Get full details of a single engineering position."""
+    return _get_position(position_id)
+
+
+@router.get("/{position_id}/guidance")
+async def get_position_guidance(position_id: str) -> PositionGuidance:
+    """Compute guidance for a position based on the current design state.
+
+    For each key question, checks related parameters:
+    - answered: all params present, confidence > 0.5, not assumed
+    - warning: params present but low confidence or assumed
+    - open: one or more params missing
+
+    Returns completion_percent based on must_answer questions answered.
+    """
+    position = _get_position(position_id)
+    params = _get_current_design_state()
+    return _compute_guidance(position, params)

@@ -178,7 +178,10 @@ export function MissionWizard() {
               id: o.id, text: o.text, priority: o.priority, type: 'performance',
               measurable_criterion: o.measurable_criterion, status: 'draft',
             })),
-            alternatives: tradeResult?.alternatives?.slice(0, 5).map((a: any) => ({
+            // The model field is alternatives_considered (an `alternatives` key was dropped
+            // silently), and every ranked option is kept: the chosen one may be below #5 (WP0).
+            // `type` is the trade category; the server maps it to an AlternativeType.
+            alternatives_considered: tradeResult?.alternatives?.map((a: any) => ({
               id: a.name, name: a.name, type: a.category, description: a.description,
               pros: a.pros || [], cons: a.cons || [], feasibility_score: a.total_score || 0.5,
               decision: a.name === selectedAlt ? 'selected' : 'rejected',
@@ -306,12 +309,18 @@ export function MissionWizard() {
             }
           }
         }
-        // Restore risk register and pugh matrix to localStorage
+        // Restore the team records to the new study on the server (WP0: they were localStorage)
         if (data.riskRegister?.length > 0) {
-          localStorage.setItem(`spacecdf-risks-${newStudy.id}`, JSON.stringify(data.riskRegister))
+          await fetch(`${API}/studies/${newStudy.id}/risks/import`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ risks: data.riskRegister, only_if_empty: false }),
+          })
         }
         if (data.pughMatrix && Object.keys(data.pughMatrix).length > 0) {
-          localStorage.setItem('spacecdf-pugh', JSON.stringify(data.pughMatrix))
+          await fetch(`${API}/studies/${newStudy.id}/trades/pugh`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: data.pughMatrix }),
+          })
         }
         // Restore UI state
         setStudyId(newStudy.id)
@@ -342,11 +351,9 @@ export function MissionWizard() {
   const loadExample = async (m: { id: string; name: string }) => {
     setLoadingExample(m.id)
     try {
-      const full = await fetch(`${API}/lifecycle/example-missions/${m.id}`).then(r => r.json())
-      const studyRes = await fetch(`${API}/studies/`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requirements: full.requirements || { name: m.name }, mission_need: full.mission_need || {} }),
-      })
+      // The server builds the study WITH the example's element tree and design result
+      // (WP0: posting only requirements + mission need opened the example with no elements).
+      const studyRes = await fetch(`${API}/lifecycle/example-missions/${encodeURIComponent(m.id)}/load`, { method: 'POST' })
       if (studyRes.ok) { setExamples(null); setStudyId((await studyRes.json()).id); qc.invalidateQueries() }
       else void showAlert(i18n.t('Failed to load example'))
     } catch { void showAlert(i18n.t('Failed to load example')) }

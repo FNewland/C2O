@@ -143,7 +143,6 @@
   "Equipment Level — Select or Define Components": "Niveau équipements — choisir ou définir les composants",
   "Equipment Selection Worksheet": "Fiche de choix des équipements",
   "Error: {{message}}": "Erreur : {{message}}",
-  "Evaluate review gate readiness (MCR, SRR, PDR, CDR)": "Évaluer la préparation aux jalons de revue (MCR, SRR, PDR, CDR)",
   "Export Documents & Data": "Exporter documents et données",
   "Export the study's Arcadia spine (elements, functions, interfaces, exchange items, requirements, parameters) to standard formats, or import from them.": "Exportez l'ossature Arcadia de l'étude (éléments, fonctions, interfaces, éléments d'échange, exigences, paramètres) vers des formats standard, ou importez-la depuis ces formats.",
   "External": "Externe",
@@ -290,7 +289,6 @@
   "ReqIF from DOORS / Polarion / Jama. Requirements and their parent/child relations are created or updated.": "ReqIF issu de DOORS / Polarion / Jama. Les exigences et leurs relations parent/enfant sont créées ou mises à jour.",
   "Requirements Interchange Format (OMG). Import into IBM DOORS / DOORS Next, Polarion, Jama, Codebeamer.": "Requirements Interchange Format (OMG). Importable dans IBM DOORS / DOORS Next, Polarion, Jama, Codebeamer.",
   "Requirements verification matrix": "Matrice de vérification des exigences",
-  "Review Gates tab evaluates real MCR/SRR/PDR/CDR criteria": "L'onglet Jalons de revue évalue les critères réels MCR/SRR/PDR/CDR",
   "Review budget rollups across all levels — do the numbers add up?": "Examiner les bilans consolidés à tous les niveaux — les bilans sont-ils bouclés ?",
   "Run \"SMART Check\" on all requirements before proceeding to V&V": "Lancez le contrôle SMART sur toutes les exigences avant de passer à la V&V",
   "Run FMECA for failure mode analysis": "Mener l'AMDEC (FMECA) pour l'analyse des modes de défaillance",
@@ -364,7 +362,6 @@
   "Transponder": "Transpondeur",
   "Transponder, Antenna, Diplexer": "Transpondeur, antenne, diplexeur",
   "Unfreeze": "Défiger",
-  "University of Ottawa": "Université d'Ottawa",
   "Use \"Decide\" tab for constellation sizing and ground station trade": "Utilisez l'onglet « Décider » pour le dimensionnement de constellation et le compromis de stations sol",
   "Use \"Define Custom Equipment\" if nothing in the catalog fits": "Utilisez « Définir un équipement personnalisé » si rien ne convient dans le catalogue",
   "Use \"Standard Spacecraft Bus\" preset to quickly populate subsystems": "Utiliser le préréglage « Plateforme standard » pour créer rapidement les sous-systèmes",
@@ -416,6 +413,5 @@
   "{{label}} exported": "Export terminé : {{label}}",
   "{{label}}: {{message}}": "{{label}} : {{message}}",
   "{{mass}} kg ea ({{total}} total)": "{{mass}} kg chacun ({{total}} au total)",
-  "| SEDTI — All documents branded": "| ECIPG — Tous les documents à la charte graphique",
   "⇧ Push to COMET": "⇧ Envoyer vers COMET"
 }

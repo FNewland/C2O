@@ -94,7 +94,16 @@ export function SpacecraftView() {
   const subs = useMemo(() => (sc ? subsystemsOf(live, sc.id) : []), [live, sc])
   const scIds = useMemo(() => new Set(sc ? [sc.id, ...descendants(live, sc.id).map(e => e.id)] : []), [live, sc])
   const totalMass = useMemo(() => (subs.length ? subs.reduce((a, s) => a + (rollup(s, 'mass_kg') ?? 0), 0) : null), [subs])
-  const ff = useMemo(() => formFactor(sc, totalMass), [sc, totalMass])
+  // The phase-appropriate system margin (margin ladder step of the gate the study prepares for)
+  const { data: ladder } = useQuery<{ gate: string | null; mass_percent: number }>({
+    queryKey: ['margin-ladder', studyId],
+    queryFn: () => fetch(`/api/studies/${studyId}/rules/margin-ladder`).then(r => (r.ok ? r.json() : null)),
+    enabled: !!studyId, staleTime: 30_000,
+  })
+  const sysMargin = ladder?.mass_percent != null ? ladder.mass_percent / 100 : SYSTEM_MARGIN
+  const marginPct = Math.round(sysMargin * 100)
+  const marginGate = (ladder?.gate ?? '').toUpperCase()
+  const ff = useMemo(() => formFactor(sc, totalMass, sysMargin), [sc, totalMass, sysMargin])
   const geometry = useMemo(() => designGeometry(live, sc, ff, study), [live, sc, ff, study])
   const power = useMemo(() => designPower(live, sc, study, pc), [live, sc, study, pc])
 
@@ -164,12 +173,12 @@ export function SpacecraftView() {
   }
 
   const a = power.assumptions
-  const withMargin = totalMass === null ? null : totalMass * (1 + SYSTEM_MARGIN)
+  const withMargin = totalMass === null ? null : totalMass * (1 + sysMargin)
   const avgW = power.model.cons.v as number
   const dodOver = a.dodPct !== null && a.dodPct > DOD_LIMIT_PCT
   const net = power.model.balance.netWh.v as number | null
   const ffText = ff.how === 'mass'
-    ? t('{{u}}, the smallest CubeSat size whose typical maximum mass ({{max}} kg, CDS 14.1 Table 1) holds the design mass plus the 20 % system margin', { u: ff.label, max: ff.maxKg })
+    ? t('{{u}}, the smallest CubeSat size whose typical maximum mass ({{max}} kg, CDS 14.1 Table 1) holds the design mass plus the {{pct}} % system margin', { u: ff.label, max: ff.maxKg, pct: marginPct })
     : ff.how === 'design' ? t('{{u}}, from the spacecraft element', { u: ff.label }) : t('{{u}} assumed: no mass in the design yet', { u: ff.label })
 
   return (
@@ -201,7 +210,7 @@ export function SpacecraftView() {
         <aside className="c2o-scv__side" aria-label={t('Spacecraft budget')}>
           <MarginBar lead label={t('Mass')} nominal={totalMass} withMargin={withMargin}
             allocation={ff.maxKg ?? undefined} unit="kg" digits={2} />
-          <p className="t-12 c-3 m-0 mt-1 measure">{t('Bar: design mass, hatched: + 20 % system margin, tick: CDS limit.')} {ffText}.</p>
+          <p className="t-12 c-3 m-0 mt-1 measure">{t('Bar: design mass, hatched: + {{pct}} % system margin (C2O default at {{gate}}), tick: CDS limit.', { pct: marginPct, gate: marginGate || '—' })} {ffText}.</p>
           {!ff.fits && <Note tone="caution" className="mt-2">{t('Over the largest standard CubeSat mass: check the deployer limit.')}</Note>}
           <MarginBar label={t('Power')}
             nominal={avgW} allocation={a.arrayW ?? undefined} unit="W" digits={1} cautionBelowPct={10} />
@@ -267,7 +276,7 @@ export function SpacecraftView() {
           <caption className="sr-only">{t('Assumptions and sources')}</caption>
           <thead><tr><th scope="col">{t('Quantity')}</th><th scope="col" className="ta-r">{t('Value')}</th><th scope="col">{t('Source')}</th></tr></thead>
           <tbody>
-            <tr><th scope="row">{t('Form factor')}</th><td className="mono ta-r">{ff.label}</td><td>{ff.how === 'mass' ? t('CubeSat Design Specification rev 14.1, 2.2.10 Table 1, with the 20 % system margin of the ESA margin philosophy') : t('Spacecraft element')}</td></tr>
+            <tr><th scope="row">{t('Form factor')}</th><td className="mono ta-r">{ff.label}</td><td>{ff.how === 'mass' ? t('CubeSat Design Specification rev 14.1, 2.2.10 Table 1, with the {{pct}} % system margin of the C2O default margin ladder', { pct: marginPct }) : t('Spacecraft element')}</td></tr>
             <tr><th scope="row">{t('Orbit altitude')}</th><td className="mono ta-r">{fmt(a.altKm, 0)} km</td><td>{t('Mission requirements')}</td></tr>
             <tr><th scope="row">{t('Eclipse duration')}</th><td className="mono ta-r">{fmt(a.eclipseS / 60, 1)} min</td><td>{t('Cylindrical shadow at β = 0°, the longest eclipse')}</td></tr>
             <tr><th scope="row">{t('Array power')}</th><td className="mono ta-r">{fmt(a.arrayW, 1) ?? '0'} W</td><td>{a.arrayHow ? t('End-of-life power of {{parts}}, arrays facing the Sun', { parts: a.arrayHow }) : t('No solar array in the equipment list')}</td></tr>

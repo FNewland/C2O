@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +100,18 @@ class AlternativeDecision(str, Enum):
     DEFERRED = "deferred"
 
 
+# Mission-trade categories (services/mission_trade.py) → AlternativeType. The wizard sends
+# the trade's own category; unknown values fall back to OTHER instead of rejecting the
+# whole Mission Need (walkthrough finding: alternatives were lost on save).
+_TRADE_CATEGORY_TYPES = {
+    "existing_satellite": "space_existing", "commercial_tasking": "space_existing",
+    "aerial": "aerial_aircraft", "drone": "aerial_drone", "uav": "aerial_drone",
+    "ground": "ground_network", "ground_sensor": "ground_sensor", "ground_network": "ground_network",
+    "new_satellite": "space_dedicated", "constellation": "space_constellation",
+    "hosted": "space_hosted", "hybrid": "hybrid",
+}
+
+
 class Alternative(BaseModel):
     """A candidate solution to the mission need — may or may not involve space."""
     id: str = ""
@@ -114,6 +126,25 @@ class Alternative(BaseModel):
     objectives_met: list[str] = Field(default_factory=list, description="Which objective IDs this can satisfy")
     decision: AlternativeDecision = AlternativeDecision.UNDER_REVIEW
     decision_rationale: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_trade_category(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        d = dict(data)
+        raw = d.get("type") or d.get("category")
+        d.pop("category", None)
+        if raw is not None:
+            v = str(getattr(raw, "value", raw)).strip().lower()
+            valid = {t.value for t in AlternativeType}
+            d["type"] = v if v in valid else _TRADE_CATEGORY_TYPES.get(v, "other")
+        dec = d.get("decision")
+        if dec is not None and str(getattr(dec, "value", dec)) not in {x.value for x in AlternativeDecision}:
+            d["decision"] = "under_review"
+        if not d.get("id") and d.get("name"):
+            d["id"] = str(d["name"])
+        return d
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +184,20 @@ class MissionNeed(BaseModel):
     # Metadata
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     phase: str = Field(default="pre_phase_a", description="Current study phase")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_alternatives_alias(cls, data: Any) -> Any:
+        """The frontend store calls the list ``alternatives``; the model ``alternatives_considered``.
+
+        Before Nov 2026 the wizard sent ``alternatives`` and pydantic dropped it silently
+        (walkthrough top problem 3). Both spellings are now accepted.
+        """
+        if isinstance(data, dict) and data.get("alternatives") and not data.get("alternatives_considered"):
+            data = {**data, "alternatives_considered": data["alternatives"]}
+        if isinstance(data, dict) and "alternatives" in data:
+            data = {k: v for k, v in data.items() if k != "alternatives"}
+        return data
 
     @property
     def has_non_space_alternative(self) -> bool:

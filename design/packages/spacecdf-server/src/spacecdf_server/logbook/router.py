@@ -236,15 +236,30 @@ def get_decisions(request: Request, response: Response, study_id: str | None = Q
     _set_cookie(request, response, ident)
     lg = _lang(lang)
     entries = list(store.folded(ident.person_id).entries.values())
-    out = dec_mod.localised(lg, entries, study_id, ws_mod.lookup())
-    g = dec_mod.gate_of_ui(gate)
-    if g:
-        due = dec_mod.due_by(g)
-        items = [d for d in out["decisions"] if d["gate"] in due]
-        out["due"] = {"gate": g, "total": len(items),
+    profile = _study_gate_profile(study_id)
+    out = dec_mod.localised(lg, entries, study_id, ws_mod.lookup(), profile=profile)
+    from ..services import gate_profiles as gp
+    pg = gp.gate_of(profile, gate) if gate else None
+    if pg:
+        due = set(gp.due_canonical(pg))
+        items = [d for d in out["decisions"] if d["ecss_gate"] in due]
+        out["due"] = {"gate": pg["id"], "short": pg.get("short") or pg["id"].upper(), "total": len(items),
                       "open": [d["id"] for d in items if d["status"] == "open"],
                       "recorded": [d["id"] for d in items if d["status"] == "recorded"]}
     return out
+
+
+def _study_gate_profile(study_id: str | None) -> dict:
+    """The study's gate profile (WP6); the default profile without a study."""
+    from ..services import gate_profiles as gp
+    study = None
+    if study_id:
+        try:
+            from ..routers.studies import get_study_store
+            study = get_study_store().get(study_id)
+        except Exception:  # noqa: BLE001
+            study = None
+    return gp.get_profile(getattr(study, "gate_profile", "") or None)
 
 
 @router.get("/decisions/{decision_id}/prefill")
