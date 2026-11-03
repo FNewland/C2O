@@ -806,10 +806,11 @@ async function refreshDumps() {
 }
 function renderFiles() {
   const root = $("dumpsList");
-  $("files-meta").textContent = T("{{n}} in {{store}}", { n: available.length, store: store || T("the store") });
-  document.getElementById("tf-meta").innerHTML = store ? `${esc(T("Store"))} <code>${esc(store)}</code>` : "";
+  // No server paths on a student screen (review §4.1): it is the dump archive.
+  $("files-meta").textContent = T("Dumps: {{n}}", { n: available.length });
+  document.getElementById("tf-meta").textContent = T("Dump archive");
   if (!available.length) {
-    root.innerHTML = `<p class="tf-empty">${esc(T("No dumps in {{store}}. Run a pass with an S15 dump in the simulator.", { store: store || T("the store") }))}</p>`;
+    root.innerHTML = `<p class="tf-empty">${esc(T("No dumps yet. Request an S15 dump from mission control during a pass."))}</p>`;
   } else {
     root.innerHTML = [...available].reverse().map((d) => {
       const on = selected.has(d.filename);
@@ -991,7 +992,10 @@ function drawTimeline() {
   s += `<line class="ax" x1="${L}" y1="${H - 22}" x2="${W - R}" y2="${H - 22}"/></svg>`;
   host.innerHTML = s;
   const more = limitParams().length - lp.length;
-  $("tl-meta").textContent = `${ymd(t0)} · ${T("on-board time, UTC")}` + (more > 0 ? ` · ${T("+{{n}} more limit lanes in Housekeeping", { n: more })}` : "");
+  // An OBC clock that was never synchronised reads J2000 (2000-01-01).
+  const unsynced = typeof t0 === "number" && utc(t0).getUTCFullYear() <= 2000;
+  $("tl-meta").textContent = `${ymd(t0)} · ${T("on-board time, UTC")}` +
+    (unsynced ? ` · ${T("OBC clock not synchronised")}` : "") + (more > 0 ? ` · ${T("+{{n}} more limit lanes in Housekeeping", { n: more })}` : "");
   const sw = (svg) => `<svg viewBox="0 0 16 10" aria-hidden="true">${svg}</svg>`;
   $("tlLegend").innerHTML = [
     [sw(`<rect class="cov" x="0" y="2" width="16" height="6"/>`), T("Samples received")],

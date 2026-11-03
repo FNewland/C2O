@@ -315,6 +315,8 @@ services:
         condition: service_started
     command: ["python", "tools/orbit_tools.py", "--serve", "--port", "8093"]
     environment:
+      # Default epoch = sim time, the clock the MCS and planner show.
+      SMO_SIM_STATE_URL: http://127.0.0.1:8080/api/state
       <<: *logbook-env
     volumes:
       - ground-workspace:/opt/smo/workspace      # logbook only

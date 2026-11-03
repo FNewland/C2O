@@ -229,7 +229,7 @@ function renderOrbitFacts() {
   $("bbRevDay").innerHTML = p ? esc((1440 / p).toFixed(2)) : notServed();
   const incl = inclinationEstimateDeg();
   $("bbIncl").innerHTML = incl === null ? renderNoData() : "~" + esc(incl.toFixed(1)) + "°";
-  $("bbEcc").innerHTML = notServed();
+  $("bbEcc").innerHTML = renderNoData();
 }
 
 const MIN_SOC = () => (plannerConfig && plannerConfig.budget
@@ -243,7 +243,7 @@ function socHint() {
   if (typeof soc === "number") {
     socEl.placeholder = tText("default {{soc}}", { soc });
     $("socHint").textContent = tText(
-      "Blank uses the planner's configured default ({{soc}} % from planner.yaml).", { soc });
+      "Blank uses the planner's default assumption ({{soc}} %).", { soc });
   } else {
     socEl.placeholder = tText("server default");
     $("socHint").textContent = tText("Blank uses the planner's configured default.");
@@ -1273,7 +1273,14 @@ function renderPowerBudget(b) {
     notes.push(vrow("caution", tText("SoC saturated against a battery rail ({{lo}} at 0 %, {{hi}} at 100 %) — the final figure is a limit, not a prediction.",
       { lo: b.soc_floor_hits || 0, hi: b.soc_ceiling_hits || 0 })));
   }
-  for (const w of warnings.slice(0, 3)) notes.push(vrow("caution", String(w)));
+  // The rail warnings are the saturation note above, once and translated,
+  // never the server's raw code (review §3: "SOC_CEILING_REACHED:").
+  if (warnings.some((w) => String(w).startsWith("SOC_FLOOR_REACHED"))) {
+    notes.unshift(vrow("alarm", tText("The plan is infeasible: the battery model reaches 0 %, and every SoC after that is the floor, not a prediction.")));
+  }
+  for (const w of warnings.filter((x) => !/^SOC_(CEILING|FLOOR)_REACHED/.test(String(x))).slice(0, 3)) {
+    notes.push(vrow("caution", String(w)));
+  }
   if (notes.length) html += "<div class=\"notes\">" + notes.join("") + "</div>";
   panel.innerHTML = html;
 
@@ -1456,8 +1463,7 @@ async function loadPassRollups() {
   const base = services && services.rfsim_url;
   if (!base) {
     elOut.innerHTML = "<span class=\"muted\">"
-      + t("No rfsim URL configured ({{where}}) — achieved pass rollups are not shown.",
-        { where: "planning/planner.yaml services.rfsim_url" }) + "</span>";
+      + t("Achieved pass figures are not available on this installation.") + "</span>";
     return;
   }
   try {

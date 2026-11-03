@@ -1028,16 +1028,23 @@ function drawPasses() {
   $("pass-meta").textContent = T("next {{h}} h · mask {{m}}°", { h: last.horizon_h, m: mask });
   if (!ps.length) { host.innerHTML = `<p class="tf-empty">${esc(T("No pass above the elevation mask in the next {{h}} h.", { h: last.horizon_h }))}</p>`; return; }
   const ep = new Date(last.epoch);
+  // The next five; the rest behind "more" (review §5: a 47-row list).
+  const shown = allPasses ? ps : ps.slice(0, 5);
   host.innerHTML = `<table class="ds-table"><thead><tr><th>${esc(T("Station"))}</th><th>${esc(T("AOS (UTC)"))}</th>` +
     `<th class="n">${esc(T("Duration"))}</th><th>${esc(T("Max elevation"))}</th></tr></thead><tbody>` +
-    ps.map((p, i) => {
+    shown.map((p, i) => {
       const a = new Date(ep.getTime() + p.aos_s * 1000);
       const day = a.getUTCDate() !== ep.getUTCDate() ? ` <small>+1 d</small>` : "";
       return `<tr class="${i === 0 ? "next" : ""}"><td>${esc(p.station)}</td>` +
         `<td class="num">${hhmm(a)}${day}</td><td class="n">${mmss(p.los_s - p.aos_s)}</td>` +
         `<td class="num"><span class="elbar" aria-hidden="true"><i style="width:${(p.max_el / 90 * 100).toFixed(0)}%"></i></span>${fmtNum(p.max_el, 1)}°</td></tr>`;
-    }).join("") + `</tbody></table>`;
+    }).join("") + `</tbody></table>` +
+    (ps.length > shown.length
+      ? `<p><button type="button" class="ds-btn ghost sm" id="passes-more">${esc(T("Show all {{n}} passes", { n: ps.length }))}</button></p>` : "");
+  const more = $("passes-more");
+  if (more) more.addEventListener("click", () => { allPasses = true; drawPasses(); });
 }
+let allPasses = false;
 function drawTimeline() {
   const host = $("timeline");
   const stations = (last && last.stations) || BOOT.stations || [];
@@ -1139,7 +1146,16 @@ document.addEventListener("click", async (ev) => {
   const text = b.dataset.copy || Object.values(last.commands || {}).join("\n");
   try { await navigator.clipboard.writeText(text); b.textContent = T("Copied"); setTimeout(() => drawElements(), 1200); } catch (e) { /* no clipboard */ }
 });
-const now = new Date(); now.setUTCSeconds(0, 0);
+// The default epoch is the MISSION clock (sim time in training), the one
+// mission control and the planner show, not this browser's wall clock.
+async function missionNow() {
+  try {
+    const r = await fetch("/api/now", { cache: "no-store" });
+    if (r.ok) { const j = await r.json(); if (j.utc) return new Date(j.utc); }
+  } catch (e) { /* server too old or offline */ }
+  return new Date();
+}
+const now = await missionNow(); now.setUTCSeconds(0, 0);
 const iso = now.toISOString().slice(0, 16) + ":00";
 $("tle_epoch").value = iso; $("sv_epoch").value = iso;
 $("tle1").value = BOOT.tle1; $("tle2").value = BOOT.tle2;
@@ -1161,6 +1177,39 @@ if (BOOT.tle1) run("tle");
 </body>
 </html>
 """
+
+    async def handle_now(request):
+        """GET /api/now — the mission clock this page should start from.
+
+        Mission control and the planner run on SIMULATION time in training
+        (SMO_TIME_SOURCE=sim, the start.sh and compose default); this tool
+        used the browser's wall clock, so its epoch, passes and "Next AOS"
+        disagreed with theirs (SCREEN_REVIEW §5). Sim time comes from the
+        same state endpoint the MCS polls (SMO_SIM_STATE_URL); wall clock
+        when the source is "real" or the simulator cannot be reached."""
+        import os
+        import urllib.request
+        source = (os.environ.get("SMO_TIME_SOURCE") or "sim").strip().lower()
+        url = (os.environ.get("SMO_SIM_STATE_URL") or "").strip()
+        if source == "sim" and url:
+            def _fetch():
+                with urllib.request.urlopen(url, timeout=1.5) as r:
+                    return json.loads(r.read().decode())
+            try:
+                st = await asyncio.get_running_loop().run_in_executor(None, _fetch)
+                t = str(st.get("sim_time") or "")
+                if t:
+                    when = datetime.fromisoformat(t.replace("Z", "+00:00"))
+                    if when.tzinfo is None:
+                        when = when.replace(tzinfo=timezone.utc)
+                    return web.json_response({
+                        "utc": when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "source": "sim"})
+            except Exception:  # noqa: BLE001 — fall back to the wall clock
+                pass
+        return web.json_response({
+            "utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "source": "sim-unreachable" if source == "sim" and url else "wall"})
 
     async def handle_index(request):
         """Serve the web interface."""
@@ -1293,6 +1342,7 @@ if (BOOT.tle1) run("tle");
         register_logbook_routes(app, tool="orbit", worksheets_dir=(
             Path(__file__).resolve().parents[1] / "configs" / "eosat1" / "worksheets"))
         app.router.add_get('/', handle_index)
+        app.router.add_get('/api/now', handle_now)
         app.router.add_post('/api/tle', handle_tle_api)
         app.router.add_post('/api/sv', handle_sv_api)
         app.router.add_get('/static/orbit/wide-basemap.js', handle_basemap)
