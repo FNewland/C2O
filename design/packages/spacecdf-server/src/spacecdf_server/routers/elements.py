@@ -14,7 +14,7 @@ import logging
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from ..db.element_repo import (
@@ -213,8 +213,15 @@ async def get_element(element_id: str) -> dict:
 
 
 @router.patch("/elements/{element_id}")
-async def update_element(element_id: str, body: ElementUpdate) -> dict:
-    """Update element with optimistic locking."""
+async def update_element(element_id: str, body: ElementUpdate, request: Request):
+    """Update element with optimistic locking.
+
+    In a study with seats (WP9) a change to an element owned by another seat is refused
+    with 409 ``owned_by_other_seat`` (the warning); sent again with ``X-C2O-Confirm-Review: 1``
+    it is stored as a pending change for the owning seat and the response is 202 with the
+    unchanged element plus ``pending_change`` (REDESIGN_DECISIONS.md ruling 5). Layout fields
+    (diagram position) are applied at once.
+    """
     el = _elements.get(element_id)
     if not el or el.get("deleted_at"):
         raise HTTPException(404, f"Element {element_id} not found")
@@ -228,8 +235,28 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
             "current_state": el,
         })
 
-    # Apply updates
-    updates = body.model_dump(exclude_unset=True, exclude={"version"})
+    updates = {k: v for k, v in body.model_dump(exclude_unset=True, exclude={"version"}).items() if v is not None}
+    from ..seats import changes as seat_changes
+    from ..seats import config as seat_cfg
+    from ..seats.service import element_edit_decision
+    decision = await element_edit_decision(request, el, list(updates))
+    if decision["mode"] == "pending":
+        layout = {k: v for k, v in updates.items() if k in seat_cfg.layout_fields()}
+        owned = {k: v for k, v in updates.items() if k not in layout}
+        pc = await seat_changes.propose(request, decision, el, "element_fields",
+                                        {k: el.get(k) for k in owned}, owned)
+        if layout:
+            el = await apply_element_update(el, layout)
+        return seat_changes.pending_response(el, pc)
+    old = {k: el.get(k) for k in updates}
+    el = await apply_element_update(el, updates)
+    await seat_changes.log_direct_edit(request, decision, el, old, updates)
+    return el
+
+
+async def apply_element_update(el: dict, updates: dict[str, Any]) -> dict:
+    """Apply field updates to a cached element: version, DB, formulas, broadcast, link proposer."""
+    element_id = el["id"]
     for k, v in updates.items():
         if v is not None:
             el[k] = v
@@ -255,8 +282,26 @@ async def update_element(element_id: str, body: ElementUpdate) -> dict:
 
 
 @router.delete("/elements/{element_id}")
+async def delete_element_route(element_id: str, request: Request) -> dict:
+    """Delete a design element and its children. In a study with seats only the owning
+    seat, the Team leader, Systems or the instructor may (WP9)."""
+    el = _elements.get(element_id)
+    if not el:
+        raise HTTPException(404, f"Element {element_id} not found")
+    from ..seats.service import element_delete_allowed
+    ctx = await element_delete_allowed(request, el)
+    result = await delete_element(element_id)
+    if ctx.enabled:
+        from ..seats import store as seat_store
+        await seat_store.log_event(el["study_id"], ctx.active or ("instructor" if ctx.instructor else ""), ctx.person,
+                                   "delete_element", el.get("name") or element_id,
+                                   {"element_id": element_id, "children": result.get("children_deleted", 0)})
+        request.state.seat_logged = True
+    return result
+
+
 async def delete_element(element_id: str) -> dict:
-    """Delete a design element and cascade to all children."""
+    """Delete a design element and cascade to all children (no permission check)."""
     el = _elements.get(element_id)
     if not el:
         raise HTTPException(404, f"Element {element_id} not found")

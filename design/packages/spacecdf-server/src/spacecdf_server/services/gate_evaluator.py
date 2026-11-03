@@ -386,6 +386,7 @@ def _evaluate_criterion(ec: dict, ctx: dict) -> dict[str, Any]:
         "question": ec.get("question", ""),
         "category": ec.get("category", ""),
         "owner_seat": ec.get("owner_seat"),
+        "mode": status_mode,               # auto | hybrid | manual (sign-off: WP9 class board)
         "step": ec.get("step"),
         "fix": ec.get("fix"),
         "priority": priority,

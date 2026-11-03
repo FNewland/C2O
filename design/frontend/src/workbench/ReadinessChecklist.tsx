@@ -32,7 +32,7 @@ interface Check {
   detail: string
 }
 
-export function ReadinessChecklist() {
+export function ReadinessChecklist({ hideNext = false }: { hideNext?: boolean } = {}) {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const studyId = useUIStore(s => s.studyId)
@@ -155,11 +155,11 @@ export function ReadinessChecklist() {
   const shown: Check[] = served
     ? server.data!.items.map(it => ({ id: it.id, label: pickLang(it.label, i18n.language), passed: it.ok, detail: pickLang(it.detail, i18n.language) }))
     : checks
-  return <ReadinessView checks={shown} open={open} setOpen={setOpen} level={currentLevel} source={served ? 'server' : 'local'} />
+  return <ReadinessView checks={shown} open={open} setOpen={setOpen} level={currentLevel} source={served ? 'server' : 'local'} hideNext={hideNext} />
 }
 
-function ReadinessView({ checks, open, setOpen, level, source }: {
-  checks: Check[]; open: boolean; setOpen: (f: (o: boolean) => boolean) => void; level: number; source: 'server' | 'local'
+function ReadinessView({ checks, open, setOpen, level, source, hideNext }: {
+  checks: Check[]; open: boolean; setOpen: (f: (o: boolean) => boolean) => void; level: number; source: 'server' | 'local'; hideNext?: boolean
 }) {
   const { t } = useTranslation()
   const currentLevel = level
@@ -179,7 +179,8 @@ function ReadinessView({ checks, open, setOpen, level, source }: {
             ? t('V&V readiness {{passed}}/{{total}}', { passed: passedCount, total: checks.length })
             : t('Level {{level}} readiness {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
         </StatusBadge>
-        {firstOpen && !open && <span className="c2o-readiness__next c-2 ellipsis">{t('Next: {{label}}', { label: firstOpen.label })}</span>}
+        {/* With seats the active seat's Next card (seats/SeatLayer.tsx) replaces this label. */}
+        {firstOpen && !open && !hideNext && <span className="c2o-readiness__next c-2 ellipsis">{t('Next: {{label}}', { label: firstOpen.label })}</span>}
         <Chevron />
       </button>
       {open && (

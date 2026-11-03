@@ -20,6 +20,7 @@ import { ThemeToggle } from '../components/ui/ThemeToggle'
 import { LanguageToggle } from '../i18n/LanguageToggle'
 import { Dialog, askConfirm, showAlert } from '../components/ui/Dialog'
 import { HomeFrame } from '../components/ui/HomeFrame'
+import { useSeatStore } from '../seats/api'
 import { LogbookBanner, LogbookButton, RecordDecision, useLogbookUI } from '../logbook'
 
 const API = '/api'
@@ -85,6 +86,7 @@ const ARCH_PRESET_NAMES: Record<string, string> = {
 }
 
 export function MissionWizard() {
+  const seatCatalogue = useSeatStore(st => st.catalogue)
   const { t } = useTranslation()
   const setStudyId = useUIStore(s => s.setStudyId)
   const qc = useQueryClient()
@@ -121,6 +123,9 @@ export function MissionWizard() {
   const [selectedArch, setSelectedArch] = useState('single-leo')
   const [lifetime, setLifetime] = useState('3')
   const [massTarget, setMassTarget] = useState('6')
+  // Seats (WP9): team size chosen at creation; "solo" = no seats (everyone edits everything).
+  const [teamSize, setTeamSize] = useState<string>('9')
+  const [optionalSeats, setOptionalSeats] = useState<string[]>([])
 
   // Run alternatives analysis
   const runTradeAnalysis = async () => {
@@ -238,6 +243,15 @@ export function MissionWizard() {
             verification_method: 'A', status: 'draft',
           }),
         })
+      }
+
+      // Seats last: the tree above is built while the study is still open to everyone.
+      if (teamSize !== 'solo') {
+        await fetch(`${API}/studies/${encodeURIComponent(studyId)}/team/preset`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ team_size: teamSize, optional: optionalSeats }),
+        })
+        useSeatStore.getState().setDrawer('seats')
       }
 
       setStudyId(studyId)
@@ -646,6 +660,21 @@ export function MissionWizard() {
             <input type="number" value={massTarget} onChange={e => setMassTarget(e.target.value)} className="c2o-input c2o-input--num c2o-w-num" />
           </Field>
         </div>
+        <div className="flex wrap ai-e gap-2 mt-2">
+          <Field label={t('Team size (seats)')} hint={t('Each person takes a seat that owns its parameters. Changing another seat\u2019s value sends it to them for review.')}>
+            <select className="c2o-select" value={teamSize} onChange={e => setTeamSize(e.target.value)} data-testid="wizard-team-size">
+              <option value="solo">{t('Solo (no seats)')}</option>
+              {(seatCatalogue?.presets ?? []).map(p => <option key={p.id} value={p.id}>{i18n.language.startsWith('fr') ? p.label.fr : p.label.en}</option>)}
+            </select>
+          </Field>
+          {teamSize !== 'solo' && (seatCatalogue?.seats ?? []).filter(s => s.optional).map(s => (
+            <label key={s.id} className="c2o-check t-12">
+              <input type="checkbox" checked={optionalSeats.includes(s.id)}
+                onChange={e => setOptionalSeats(o => e.target.checked ? [...o, s.id] : o.filter(x => x !== s.id))} />
+              {i18n.language.startsWith('fr') ? s.label.fr : s.label.en}
+            </label>
+          ))}
+        </div>
       </WizardFrame>
     )
   }
@@ -730,6 +759,9 @@ function Field({ label, hint, children, group }: { label: string; hint?: string;
 
 // ─── Active Studies List ───
 function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
+  // Only the instructor deletes studies (WP9; open on a laptop until someone is instructor).
+  const seatMe = useSeatStore(st => st.me)
+  const canDelete = !seatMe || seatMe.instructor || (seatMe.instructor_mode === 'laptop' && !seatMe.laptop_instructor)
   const { t } = useTranslation()
   const directJoin = useCallback((id: string) => {
     useUIStore.getState().setStudyId(id)
@@ -799,18 +831,18 @@ function ActiveStudies({ onJoin }: { onJoin: (studyId: string) => void }) {
                     {fmtDate(s.created, {})}
                   </span>
                 )}
-                <button onClick={async (e) => {
+                {canDelete && <button onClick={async (e) => {
                   e.stopPropagation()
                   if (!(await askConfirm(t('Delete study "{{name}}"? This cannot be undone.', { name: s.name || s.id }), { danger: true, confirmLabel: t('Delete') }))) return
                   await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' })
                   refresh()
                 }} type="button" className="c2o-btn c2o-btn--icon" title={t('Delete study')} aria-label={t('Delete study "{{name}}"', { name: s.name || s.id })}>
                   ×
-                </button>
+                </button>}
               </li>
             ))}
           </ul>
-          {studies.length > 5 && (
+          {canDelete && studies.length > 5 && (
             <button onClick={async () => {
               if (!(await askConfirm(t('Delete all {{count}} studies? This cannot be undone.', { count: studies.length }), { danger: true, confirmLabel: t('Delete') }))) return
               for (const s of studies) { await fetch(`${API}/studies/${s.id}`, { method: 'DELETE' }) }

@@ -93,6 +93,42 @@ Validated against 5 real missions (Spire LEMUR-2 Δ12%, Astrocast Δ6%, CAPSTONE
 
 34 ECSS standards referenced, 12 fully implemented. See `docs/ULTRAPLAN2.md` for complete cross-reference.
 
+## Seats, ownership and the instructor (WP9)
+
+A study can be **solo** (no seats: everyone edits everything, as before) or have a team of
+4, 6 or 7–9 people, chosen when the study is created (wizard step 4) or later by the Team
+leader or the instructor (Seats panel). Seats, presets and ownership are data:
+`configs/seats.yaml`. The server code is `packages/spacecdf-server/src/spacecdf_server/seats/`.
+
+- **Seats.** Team leader, Systems, Mission analysis & ops, Payload, Power, AOCS, Comms & OBDH,
+  Thermal, Structures & config (+ optional Propulsion, Cost & risk); Customer and Observer are
+  shared. A person may hold several seats and picks the active one in the app bar.
+  Free → Held → Idle (no heartbeat for 3 min) → reclaimable after 5 more minutes; "Request seat"
+  gives the holder 60 s to answer; the instructor reassigns and locks seats. Every claim, handover,
+  edit and review is logged with person and seat.
+- **Ownership (decision 5).** Editing a value owned by another seat warns first ("owned by Power —
+  your change goes to them for review"); if you continue it becomes a pending change the owning
+  seat accepts or rejects. Until it is accepted the owner's value stands everywhere. The Team leader
+  and the instructor follow the same rule unless they hold the owning seat.
+- **Roles on the server.** Observer: read-only. Customer: reads the model, writes mission
+  requirements. Gate review actions and the gate profile: Team leader or instructor. Deleting an
+  element: its owning seat, the Team leader, Systems or the instructor. Deleting a study:
+  instructor only. A frozen study refuses all writes except the instructor's.
+
+**Who is the instructor.** Behind Google IAP the server reads `X-Goog-Authenticated-User-Email`.
+Set `SPACECDF_INSTRUCTORS` (and/or `SMO_INSTRUCTORS`, the variable the ops tools use) to a
+comma- or space-separated list of instructor e-mails; both lists are merged. Only a *verified*
+(IAP) listed e-mail is an instructor. **Laptop mode** (no IAP): people type a name, shown as
+"unverified"; if no instructor list is set, the first person who presses *Become instructor*
+(Seats panel) is the instructor for that server. Until someone does, deleting studies stays open
+so a single laptop user is not locked out. A hosted deployment must set the list.
+
+The instructor's **class board** (start screen or app bar) shows every study × seat with the
+holder, presence, raised hands and the current gate; it filters on "needs attention" (failed
+must-pass item, idle seat, raised hand) and offers shadow (read-only), messages, timers, freeze,
+customer requirement injects, sign-off of manual/hybrid gate items and the post-session
+timeline export (CSV / Markdown, per person × seat).
+
 ## Current Status & Known Issues
 
 See `docs/REDESIGN.md` for the architecture redesign plan addressing:

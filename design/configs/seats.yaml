@@ -1,0 +1,219 @@
+# SpaceCDF seats (redesign WP9, Nov 2026) — who may do what in one study.
+#
+# COMET's three layers: Person (IAP email or a typed laptop name) → Participant role
+# (a seat in one study) → Domain of expertise (the parameters the seat owns).
+# Decisions: REDESIGN_DECISIONS.md 4 (self-claim + instructor override, with a lock) and
+# 5 (editing a parameter owned by another seat warns first, then becomes a pending change
+# the owning seat accepts or rejects; until then the owner's value stands).
+#
+# Seat fields
+#   id            stable id; the domain seats reuse the KB position ids (positions.yaml) and the
+#                 seat ids of decision_catalogue.yaml / gate_exit_criteria.yaml (owner_seat)
+#   label         EN / FR
+#   kind          lead | systems | domain | customer | observer | instructor
+#   exclusive     one holder at a time (Customer and Observer: unlimited)
+#   optional      added by the study (Propulsion if ΔV > 0, Cost & risk)
+#   fallback      who owns this seat's parameters when the study does not use the seat
+#   owns          parameter key prefixes (``power.*``) and element subsystem_domain values
+#                 (``element_domains``) the seat owns
+#   sees_first    where the seat opens: {view: top (mission level) | spacecraft (its subsystems) | vv
+#                 (V&V: gate checklist), panel: an activity tab, focus: what it shows first}
+#   tabs          activity tabs shown for the seat; the others are behind "Show all", read-only
+#
+# Element ownership: an element's subsystem_domain (walking up the parents when unset) maps to
+# the seat whose element_domains lists it; a mission root belongs to the Team leader, a segment
+# or system without a domain to Systems. A parameter key is ``<owner prefix>.<field>``.
+
+version: 1
+
+seats:
+  - id: team_leader
+    label: {en: Team leader, fr: Chef d’équipe}
+    kind: lead
+    exclusive: true
+    kb_position: systems_engineer
+    owns:
+      prefixes: [mission]
+      element_types: [mission]
+      element_domains: [mission]
+    sees_first: {view: vv, panel: blocks, focus: {en: "Gate checklist, next action per seat, open proposals", fr: "Liste de contrôle du jalon, prochaine action par poste, propositions ouvertes"}}
+    tabs: [blocks, budget, requirements, decide, trace]
+
+  - id: systems_engineer
+    label: {en: Systems, fr: Ingénierie système}
+    kind: systems
+    exclusive: true
+    kb_position: systems_engineer
+    owns:
+      prefixes: [systems]
+      element_types: [segment, system]
+      element_domains: [system, systems, integration, harness, avionics]
+    sees_first: {view: top, panel: budget, focus: {en: "Budgets with margins, requirement tree, link review", fr: "Bilans avec marges, arborescence des exigences, revue des liaisons"}}
+    tabs: [blocks, spacecraft, budget, requirements, functions, interfaces, icd, trace, decide, analyses]
+
+  - id: mission_analyst
+    label: {en: Mission analysis & ops, fr: Analyse de mission et opérations}
+    kind: domain
+    exclusive: true
+    kb_position: mission_analyst
+    owns:
+      prefixes: [orbit, ground, ops]
+      element_domains: [orbit, mission_analysis, ground, ground_rf, ground_ops, operations, ops, launch]
+    sees_first: {view: top, panel: decide, focus: {en: "Orbit trade, eclipse and visibility, ConOps, debris", fr: "Compromis d’orbite, éclipses et visibilité, ConOps, débris"}}
+    tabs: [blocks, decide, analyses, requirements]
+
+  - id: payload_lead
+    label: {en: Payload, fr: Charge utile}
+    kind: domain
+    exclusive: true
+    kb_position: payload_lead
+    owns:
+      prefixes: [payload]
+      element_domains: [payload, instrument, instruments, imager]
+    sees_first: {view: spacecraft, panel: analyses, focus: {en: "Payload sizing, imager catalogue, data rate", fr: "Dimensionnement de la charge utile, catalogue d’imageurs, débit de données"}}
+    tabs: [blocks, spacecraft, analyses, requirements, decide]
+
+  - id: power_engineer
+    label: {en: Power, fr: Puissance}
+    kind: domain
+    exclusive: true
+    kb_position: power_engineer
+    owns:
+      prefixes: [power, eps]
+      element_domains: [power, eps, electrical]
+    sees_first: {view: spacecraft, panel: budget, focus: {en: "Power by mode, EPS equipment, eclipse energy", fr: "Puissance par mode, équipements EPS, énergie en éclipse"}}
+    tabs: [blocks, spacecraft, budget, analyses, decide]
+
+  - id: aocs_engineer
+    label: {en: AOCS, fr: SCAO}
+    kind: domain
+    exclusive: true
+    kb_position: aocs_engineer
+    owns:
+      prefixes: [aocs, adcs]
+      element_domains: [aocs, adcs, gnc, attitude]
+    sees_first: {view: spacecraft, panel: analyses, focus: {en: "Pointing budget, actuator sizing, disturbance torques", fr: "Bilan de pointage, dimensionnement des actionneurs, couples perturbateurs"}}
+    tabs: [blocks, spacecraft, budget, analyses, decide]
+
+  - id: comms_engineer
+    label: {en: Comms & OBDH, fr: Communications et OBDH}
+    kind: domain
+    exclusive: true
+    kb_position: comms_engineer
+    owns:
+      prefixes: [link, data, ttc, obdh]
+      element_domains: [ttc, comms, communications, rf, obc, obdh, cdh, data, dhs, software]
+    sees_first: {view: spacecraft, panel: analyses, focus: {en: "Link budget, data budget, RF band, licensing", fr: "Bilan de liaison, bilan de données, bande RF, licences"}}
+    tabs: [blocks, spacecraft, budget, interfaces, icd, analyses, decide]
+
+  - id: thermal_engineer
+    label: {en: Thermal, fr: Thermique}
+    kind: domain
+    exclusive: true
+    kb_position: thermal_engineer
+    owns:
+      prefixes: [thermal]
+      element_domains: [thermal, tcs]
+    sees_first: {view: spacecraft, panel: analyses, focus: {en: "Hot and cold cases, radiator proposal", fr: "Cas chaud et cas froid, proposition de radiateur"}}
+    tabs: [blocks, spacecraft, analyses, decide]
+
+  - id: structures_engineer
+    label: {en: Structures & config, fr: Structures et configuration}
+    kind: domain
+    exclusive: true
+    kb_position: structures_engineer
+    owns:
+      prefixes: [mass, structure]
+      element_domains: [structure, structures, mechanisms, configuration]
+    sees_first: {view: spacecraft, panel: spacecraft, focus: {en: "CDS envelope, centre of gravity, mass properties", fr: "Enveloppe CDS, centre de gravité, propriétés de masse"}}
+    tabs: [blocks, spacecraft, budget, analyses, decide]
+
+  - id: propulsion_engineer
+    label: {en: Propulsion, fr: Propulsion}
+    kind: domain
+    exclusive: true
+    optional: true
+    fallback: systems_engineer
+    kb_position: propulsion_engineer
+    owns:
+      prefixes: [propulsion]
+      element_domains: [propulsion, prop]
+    sees_first: {view: spacecraft, panel: analyses, focus: {en: "ΔV budget, propellant", fr: "Bilan de ΔV, ergols"}}
+    tabs: [blocks, spacecraft, budget, analyses, decide]
+
+  - id: cost_engineer
+    label: {en: Cost & risk, fr: Coûts et risques}
+    kind: domain
+    exclusive: true
+    optional: true
+    fallback: team_leader
+    kb_position: cost_engineer
+    owns:
+      prefixes: [cost]
+      element_domains: [cost, risk]
+    sees_first: {view: top, panel: budget, focus: {en: "Cost model, FMECA", fr: "Modèle de coûts, AMDEC"}}
+    tabs: [blocks, budget, analyses, decide]
+
+  - id: customer
+    label: {en: Customer, fr: Client}
+    kind: customer
+    exclusive: false
+    sees_first: {view: top, panel: requirements, focus: {en: "Objectives and requirement status", fr: "Objectifs et état des exigences"}}
+    tabs: [requirements, trace, blocks]
+
+  - id: observer
+    label: {en: Observer, fr: Observateur}
+    kind: observer
+    exclusive: false
+    sees_first: {view: top, panel: blocks, focus: {en: "Any view, read-only", fr: "Toutes les vues, en lecture seule"}}
+    tabs: [blocks, spacecraft, budget, requirements, functions, interfaces, icd, trace, decide, analyses]
+
+  - id: instructor
+    label: {en: Instructor, fr: Enseignant}
+    kind: instructor
+    exclusive: false
+    sees_first: {view: top, panel: blocks, focus: {en: "Class board", fr: "Tableau de la classe"}}
+    tabs: [blocks, spacecraft, budget, requirements, functions, interfaces, icd, trace, decide, analyses]
+
+# Team-size presets (C2O default). Each group is held by one person: claiming a group's card
+# claims every seat in it. The seats stay distinct (ownership, review inbox, audit).
+presets:
+  - id: "4"
+    label: {en: "4 people", fr: "4 personnes"}
+    groups:
+      - [team_leader, systems_engineer]
+      - [mission_analyst, payload_lead]
+      - [power_engineer, thermal_engineer]
+      - [aocs_engineer, comms_engineer, structures_engineer]
+  - id: "6"
+    label: {en: "6 people", fr: "6 personnes"}
+    groups:
+      - [team_leader, systems_engineer]
+      - [mission_analyst]
+      - [payload_lead]
+      - [power_engineer, thermal_engineer]
+      - [aocs_engineer, structures_engineer]
+      - [comms_engineer]
+  - id: "9"
+    label: {en: "7–9 people (one seat each)", fr: "7 à 9 personnes (un poste chacun)"}
+    groups:
+      - [team_leader]
+      - [systems_engineer]
+      - [mission_analyst]
+      - [payload_lead]
+      - [power_engineer]
+      - [aocs_engineer]
+      - [comms_engineer]
+      - [thermal_engineer]
+      - [structures_engineer]
+
+# Optional seats join the group of their fallback in the 4- and 6-person presets, and get a
+# group of their own in the one-seat-each preset.
+
+timing:
+  idle_after_s: 180          # no heartbeat for 3 min → Idle
+  reclaimable_after_s: 300   # Idle for 5 min → another person may claim it
+  handover_timeout_s: 60     # "Request seat" waits this long for the holder
+
+# Element fields that are layout, not design data: any editing seat may change them.
+layout_fields: [diagram_x, diagram_y, diagram_collapsed]
