@@ -1425,6 +1425,11 @@ class MCSServer:
         apply_http_policy(app, revalidate_prefixes=("/static/",),
                           max_age_prefixes={"/static/vendor/": 86400})
         self._http_app = app
+        # Participant logbook (docs/plan_2026-11/LOGBOOK_SPEC.md): private
+        # per person, /api/logbook on this origin, hourly purge task.
+        from smo_common.logbook import register_logbook_routes
+        register_logbook_routes(app, tool="mcs",
+                                worksheets_dir=self.config_dir / "worksheets")
         app.router.add_get("/", self._handle_index)
         # Explicit generation routes: /classic and /modern always serve their
         # page regardless of the resolved mode, so the two consoles can be

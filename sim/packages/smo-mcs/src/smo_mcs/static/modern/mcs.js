@@ -50,6 +50,8 @@ import { fmtUTC, fmtMET, fmtCUC, fmtAge, fmtHex } from "/static/shared/format.js
 import { I18n, t, tText, tdb, getLang, onLangChange } from "/static/shared/i18n.js";
 // One derivation of contact, mode and value age for every panel (R3 #10).
 import { linkState as _linkState, modeState, linkLimited, FDIR_LEVELS } from "/static/shared/state.js";
+// Participant logbook (LOGBOOK_SPEC.md): docked panel + "Log this" buttons.
+import { mountLogbook, renderLogThis } from "/static/shared/logbook.js";
 
 /* ═══ 1. TIME — the single time primitive ═════════════════════════════════ */
 /* simNow() = server-anchored mission clock, advancing at the published rate.
@@ -513,6 +515,7 @@ function handleState(data) {
   updateRailHealth();
   updateContingency();
   updateTrainingChip();
+  lbWatchSimStatus();
   renderCurrentPage(false);
   // The drawer used to be driven ONLY by handleTMPacket, so on a quiet link --
   // or in bootloader mode, where only SID 11 flows -- CMD HISTORY and the
@@ -2666,6 +2669,7 @@ function buildCmdPage() {
                    within 8 s (armButton). -->
               <button class="ds-btn primary" id="cmd-send" data-i18n="Send">Send</button>
               <button class="ds-btn critical hide" id="cmd-send-crit" data-i18n="Send critical command">Send critical command</button>
+              ${renderLogThis({}, { kind: "decision" })}
             </div>
             <div class="why-off" id="cmd-send-why" aria-live="polite" style="text-align:right"></div>
             <div id="cmd-verif-stepper" style="margin-top:10px"></div>
@@ -4102,6 +4106,7 @@ function buildProcPage() {
             <button class="ds-btn" data-proc="skip" id="proc-btn-skip" data-i18n="Skip">Skip</button>
             <!-- critical: shared two-step (armButton), wired at boot -->
             <button class="ds-btn critical" id="proc-btn-abort" data-i18n="Abort">Abort</button>
+            ${renderLogThis({}, { kind: "decision" })}
           </div>
           <div class="why-off" id="proc-why" aria-live="polite"></div>
           <div id="proc-exec-status" style="margin-top:10px"></div>
@@ -5056,7 +5061,8 @@ export function alarmRowHtml(g) {
       : `<button class="ds-btn" data-act="ack" data-id="${esc(String(a.id))}" data-ids="${esc(ids)}"
           aria-label="${esc(tText("Acknowledge {{name}}", { name: label }))}">${t("ACK")}</button>`}
       <button class="ds-btn" data-chain="${esc(String(a.id))}" title="${t("causal chain (P9)")}"
-        aria-label="${esc(tText("Causal chain for {{name}}", { name: label }))}">⛓</button></span>
+        aria-label="${esc(tText("Causal chain for {{name}}", { name: label }))}">⛓</button>
+      ${renderLogThis({ alarm_id: a.id, ...(hexId ? { param: hexId } : {}) }, { kind: "decision", iconOnly: true })}</span>
   </div>`;
 }
 export function renderAlarmDrawer() {
@@ -5807,6 +5813,82 @@ async function loadPictorial() {
   }
 }
 
+/* ═══ LOGBOOK ═══════════════════════════════════════════════════════════════
+ * The participant's private logbook (smo_common/ui/logbook.js): a header
+ * button opens a docked panel; "Log this" buttons sit beside command send,
+ * the procedure controls, the GO/NO-GO answers and every alarm ACK and never
+ * block them. Context = page, open procedure (+ step), selected command,
+ * GO/NO-GO poll, position, sim time. When the simulator goes from running
+ * to stopped (speed 0 for 5 s) the end-of-session dialog offers the debrief
+ * worksheet and the download, at most once every 15 minutes. */
+let LB = null;
+let lbProcIndex = null;               // procedure file -> id
+let lbSimRunning = null, lbStopTimer = null, lbLastPrompt = -Infinity;
+const PROC_ID_RE = /^(NOM|LEOP|COM|CTG|EMG)-\d{3}$/;
+async function lbLoadProcIndex() {
+  try {
+    const d = await getJSON("/api/procedure/index");
+    lbProcIndex = {};
+    for (const p of d.procedures || []) if (p.id && p.file) lbProcIndex[p.file] = p.id;
+  } catch (e) { lbProcIndex = {}; }
+}
+function lbProcedureId() {
+  const st = S.procStatus || {};
+  const ref = String(st.procedure_ref || "");
+  if (st.state && st.state !== "IDLE" && ref) {
+    if (PROC_ID_RE.test(ref)) return ref;
+    if (lbProcIndex && lbProcIndex[ref]) return lbProcIndex[ref];
+  }
+  if (S.page === "proc" && $("proc-source") && $("proc-source").value === "ops") {
+    const v = $("proc-type") ? $("proc-type").value : "";
+    if (v && lbProcIndex && lbProcIndex[v]) return lbProcIndex[v];
+  }
+  if (S.procCardOpen && PROC_ID_RE.test(S.procCardOpen)) return S.procCardOpen;
+  return "";
+}
+function lbContext() {
+  const c = { page: S.page, position: S.position };
+  const proc = lbProcedureId();
+  if (proc) c.procedure = proc;
+  const st = S.procStatus || {};
+  if (proc && st.state && st.state !== "IDLE" && Number.isFinite(Number(st.current_step))) {
+    c.step = Number(st.current_step) + 1;
+  }
+  if (S.page === "cmd") {
+    const cmd = currentCatalogCmd();
+    if (cmd && cmd.name) c.command = cmd.name;
+  }
+  if (bdOpen && bdTab === "gonogo" && S.goNoGo && S.goNoGo.label) c.gonogo = S.goNoGo.label;
+  if (S.timeMode === "sim") c.sim_ts = simNow().toISOString().replace(/\.\d+Z$/, "Z");
+  if (lbSimRunning !== null) c.sim_status = lbSimRunning ? "running" : "stopped";
+  return c;
+}
+function lbWatchSimStatus() {
+  if (!LB || S.timeMode !== "sim") return;
+  const speed = Number(S.state.speed);
+  if (!Number.isFinite(speed)) return;
+  const running = speed > 0;
+  if (lbSimRunning === true && !running && !lbStopTimer) {
+    lbStopTimer = setTimeout(() => {
+      lbStopTimer = null;
+      if (Number(S.state.speed) === 0 && performance.now() - lbLastPrompt > 15 * 60e3) {
+        lbLastPrompt = performance.now();
+        LB.endSession({ reason: "stopped" });
+      }
+    }, 5000);
+  }
+  if (running && lbStopTimer) { clearTimeout(lbStopTimer); lbStopTimer = null; }
+  lbSimRunning = running;
+}
+function initLogbook() {
+  const slot = $("lb-slot");
+  LB = mountLogbook({ tool: "mcs", getContext: lbContext, buttonHost: slot,
+    bannerHost: $("top-bar"), buttonClass: "ds-btn ghost lb-btn" });
+  const gn = $("gonogo-logthis");
+  if (gn) gn.innerHTML = renderLogThis({}, { kind: "decision" });
+  lbLoadProcIndex();
+}
+
 async function boot() {
   // Catalogs first (English: resolves at once, no fetch; otherwise bounded
   // by i18n.js's load timeout) so the first render is already translated.
@@ -5820,6 +5902,7 @@ async function boot() {
   initKeyboard();
   initSchematicNav();
   initFocusTrap();
+  initLogbook();
   setHTML("pb-step-fields", pbFieldMarkup());
   // restore persisted prefs
   try {
