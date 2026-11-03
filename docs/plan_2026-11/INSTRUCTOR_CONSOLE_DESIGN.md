@@ -245,7 +245,7 @@ All existing routes and payloads still work (`/api/instructor/snapshot`, `/api/f
 | Truth dashboard cards EPS/AOCS/TCS/OBDH/TT&C/Payload | Overview tiles + Power / Attitude / Thermal / OBC & FDIR / Orbit & link / Storage views |
 | Onboard clock truth card (all fields) | OBC & FDIR view (same IDs; offset leads with days) |
 | Orbit bar lat/lon/alt/eclipse | Orbit & link view; eclipse in the overview ribbon |
-| VR badge | Removed from the main view (see removals) |
+| VR headset badge | App bar, beside the logbook (same chip and tooltip) |
 | Subsystem deep-dive launcher (`?sub=`, propagates `?ui=`/`?lang=`) | Raw state view (same links) |
 | Parameter search, completeness counter, raw JSON | Raw state view |
 | Full snapshot browser (generic, every parameter) | Raw state view; raw banks named and placed after their subsystem |
@@ -262,7 +262,6 @@ All existing routes and payloads still work (`/api/instructor/snapshot`, `/api/f
 | Removed | Reason |
 |---|---|
 | Visible "Instructor console" title in the app bar | Duplicated the band and forced a second app-bar row in French; kept as a visually hidden `<h1>` |
-| VR headset badge in the orbit bar | Not a simulation-state view; the bridge status stays at `GET /api/vr` |
 | Truth card "Range 500.0 km / Elevation 45.0°" while out of view | Placeholder values (review §8); now "no geometry" and the link explanation |
 | Raw-bank tab labels "0x00xx", "0x09xx", "0x0Axx" | Developer buckets; now SYS·raw, PROC·raw, OBDH·raw |
 | "students see only theirs" note beside the PDFs | It described the portal, not this console |
