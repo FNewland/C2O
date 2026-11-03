@@ -215,6 +215,9 @@ write_design_env() {
         [ -z "$key" ] && say "no version in secret $AI_SECRET (HTTP $code): SpaceCDF runs without the AI advisor"
         : > "$tmp"
     fi
+    # SpaceCDF seats: only these IAP-verified accounts are instructors (the
+    # same list as the SMO screens). Empty = nobody, never "first come".
+    echo "SPACECDF_INSTRUCTORS=$(printf '%s' "$(attr c2o-instructors)" | tr -cd 'A-Za-z0-9._%+@ -')" >> "$tmp"
     mv -f "$tmp" "$file"
 }
 
