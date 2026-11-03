@@ -208,6 +208,7 @@ export function ModelBlockDiagram({ studyId, segment, level }: Props) {
   return (
     <div style={{ height: '100%', minHeight: 400 }}>
       <ReactFlow
+        proOptions={{ hideAttribution: true }}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}

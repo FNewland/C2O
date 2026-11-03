@@ -508,6 +508,7 @@ export function BlockDiagram() {
         if (r) lastPointer.current = { x: Math.min(Math.max(8, e.clientX - r.left + 8), Math.max(8, r.width - 448)), y: Math.min(e.clientY - r.top + 8, Math.max(8, r.height - 260)) }
       }}>
       <ReactFlow
+        proOptions={{ hideAttribution: true }}
         key={diagramKey}
         defaultNodes={initialNodes}
         edges={edges}

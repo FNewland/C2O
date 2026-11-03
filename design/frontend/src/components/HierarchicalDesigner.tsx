@@ -624,6 +624,7 @@ export function HierarchicalDesigner({ studyId, initialElementId }: Props) {
             </div>
           ) : (
             <ReactFlow
+              proOptions={{ hideAttribution: true }}
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}

@@ -174,7 +174,10 @@ function ReadinessView({ checks, open, setOpen, level, source }: {
       <button type="button" className="c2o-readiness__btn" aria-expanded={open} aria-controls="c2o-readiness-list"
         onClick={() => setOpen(o => !o)}>
         <StatusBadge status={allPassed ? 'ok' : 'caution'}>
-          {t('Level {{level}} readiness {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
+          {/* Level 4 is the V&V view, not a design level (screen review §11). */}
+          {currentLevel === 4
+            ? t('V&V readiness {{passed}}/{{total}}', { passed: passedCount, total: checks.length })
+            : t('Level {{level}} readiness {{passed}}/{{total}}', { level: currentLevel, passed: passedCount, total: checks.length })}
         </StatusBadge>
         {firstOpen && !open && <span className="c2o-readiness__next c-2 ellipsis">{t('Next: {{label}}', { label: firstOpen.label })}</span>}
         <Chevron />

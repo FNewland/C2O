@@ -468,6 +468,7 @@ export function SystemBlockDiagram() {
       {/* Block diagram */}
       <div style={{ flex: 1, minHeight: 300 }} key={segment}>
         <ReactFlow
+          proOptions={{ hideAttribution: true }}
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}

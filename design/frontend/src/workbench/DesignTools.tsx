@@ -88,7 +88,6 @@ export function DesignTools() {
       {/* Show what element we're configuring */}
       <div className="t-12 c-2 mb-1">
         {t('Configuring:')} <b className="c-1">{focusElement.name}</b>
-        <span className="ml-1">({focusElement.element_type}, {focusElement.segment})</span>
       </div>
       {(isConstellation || isSpacecraft) && (
         <OrbitTools elementId={focusElement.id} element={focusElement} version={focusElement.version} />
