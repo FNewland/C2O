@@ -52,6 +52,7 @@ import { I18n, t, tText, tdb, getLang, onLangChange } from "/static/shared/i18n.
 import { linkState as _linkState, modeState, linkLimited, FDIR_LEVELS } from "/static/shared/state.js";
 // Participant logbook (LOGBOOK_SPEC.md): docked panel + "Log this" buttons.
 import { mountLogbook, renderLogThis } from "/static/shared/logbook.js";
+import { dockPanel } from "/static/shared/dock.js";
 
 /* ═══ 1. TIME — the single time primitive ═════════════════════════════════ */
 /* simNow() = server-anchored mission clock, advancing at the published rate.
@@ -5157,11 +5158,21 @@ export function renderAlarmDrawer() {
     `<div class="logrow nom" style="padding:14px">${t("no alarms match the filters")}</div>`);
   updateRailHealth();
 }
-export function toggleAlarmDrawer(open) {
+// The alarm journal stands in the right dock (shared dock.js) beside the
+// logbook and the voice loops instead of on top of them.
+let alarmDock = null;
+export function toggleAlarmDrawer(open, opts = {}) {
   const d = $("alarm-drawer");
   if (!d) return;
+  if (!alarmDock) {
+    alarmDock = dockPanel(d, { width: 540, min: 360, order: 1,
+      close: ({ evicted }) => toggleAlarmDrawer(false, { evicted }) });
+  }
   const on = open === undefined ? !d.classList.contains("open") : open;
   d.classList.toggle("open", on);
+  const btn = $("alarms-btn");
+  if (btn) btn.setAttribute("aria-expanded", String(on));
+  if (on) alarmDock.opened(); else if (!opts.evicted) alarmDock.closed();
   if (on) {
     renderAlarmDrawer();
     // focus trap entry: focus the first control
@@ -5644,7 +5655,7 @@ function initDelegatedEvents() {
       el = el.parentElement;
     }
   });
-  on("alarms-btn", () => toggleAlarmDrawer(true));
+  on("alarms-btn", () => toggleAlarmDrawer());
   on("alarm-close", () => toggleAlarmDrawer(false));
   on("alarm-ack-all", () => ackAllAlarms());
   on("alarm-sound", () => setAlarmSound(!(alarmSoundOn() && !playAlarmBeep._muted)));

@@ -1,7 +1,8 @@
 /* ============================================================================
    C2O DESIGN SYSTEM — logbook.css  (served at /static/shared/logbook.css)
    The participant logbook panel (logbook.js). Tokens only, no hex values.
-   Docked, non-modal, on the right like the MCS alarm drawer; the page stays
+   Docked, non-modal, on the right; in a page with #c2o-dock (dock.js) it stands
+   beside the alarm journal and voice loops instead of over them. The page stays
    usable behind it.
    ============================================================================ */
 

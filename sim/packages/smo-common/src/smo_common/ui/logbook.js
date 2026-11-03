@@ -43,6 +43,7 @@
 import { t, tText, getLang, onLangChange } from "/static/shared/i18n.js";
 import { esc, armButton } from "/static/shared/components.js";
 import { createWorkbook } from "/static/shared/workbook.js";
+import { dockPanel } from "/static/shared/dock.js";
 
 const API = "/api/logbook";
 const KINDS = ["decision", "thought", "observation", "reflection"];
@@ -82,7 +83,7 @@ const S = {
   tool: null, getContext: () => ({}), mounted: false, open: false, tab: "write",
   data: null, kind: "decision", override: {}, removed: new Set(),
   btn: null, panel: null, banner: null, dlg: null, lastFocus: null, ctxSig: "",
-  timers: [], busy: false, wb: null, hooks: {}, refreshTimer: null, team: "",
+  timers: [], busy: false, wb: null, hooks: {}, refreshTimer: null, team: "", dock: null,
 };
 
 /* ── small utilities ─────────────────────────────────────────────────── */
@@ -520,6 +521,7 @@ function open(opts = {}) {
   S.open = true;
   S.panel.classList.add("open");
   S.panel.removeAttribute("inert");
+  S.dock.opened();                // beside, never over, another docked panel
   if (opts.tab) selectTab(opts.tab, false);
   renderButton();
   renderCtx();
@@ -528,12 +530,15 @@ function open(opts = {}) {
   const ta = $("#lb-text", S.panel);
   if (opts.focus !== false) setTimeout(() => (S.tab === "write" ? ta : $("#lb-tab-ws", S.panel)).focus(), 20);
 }
-function close() {
+function close(opts = {}) {
   if (!S.panel || !S.open) return;
   S.open = false;
   S.panel.classList.remove("open");
   S.panel.setAttribute("inert", "");
+  if (!opts.evicted) S.dock.closed();
   renderButton();
+  // closed by the dock for another panel: that panel takes the focus
+  if (opts.evicted) return;
   const back = S.lastFocus && document.contains(S.lastFocus) ? S.lastFocus : S.btn;
   if (back && back.focus) back.focus();
 }
@@ -784,7 +789,10 @@ export function mountLogbook(o = {}) {
   S.panel.id = "c2o-logbook";
   S.panel.setAttribute("aria-labelledby", "lb-h");
   S.panel.setAttribute("inert", "");
-  document.body.appendChild(S.panel);
+  // The page's right dock (#c2o-dock, dock.js) when it has one: the panel
+  // stands beside the alarm journal / voice loops; else a docked overlay.
+  S.dock = dockPanel(S.panel, { width: 440, min: 360, order: 2, close: (o) => close(o) });
+  if (!S.dock.docked) document.body.appendChild(S.panel);
   S.dlg = document.createElement("div");
   S.dlg.className = "lb-ov";
   S.dlg.hidden = true;
@@ -794,7 +802,7 @@ export function mountLogbook(o = {}) {
   renderButton();
   refresh();
   S.apiObj = {
-    open, close, toggle: () => (S.open ? close() : open()), refresh, endSession, logThis,
+    open, close: () => close(), toggle: () => (S.open ? close() : open()), refresh, endSession, logThis,
     openChecklist, openForm, onRunner,
     get isOpen() { return S.open; },
     get state() { return S.data; },
