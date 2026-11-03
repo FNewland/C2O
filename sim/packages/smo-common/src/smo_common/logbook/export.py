@@ -26,7 +26,7 @@ LABELS = {
         "tools": "Tools", "entries": "Entries", "deleted": "Deleted from the C2O server on {when}",
         "not_scheduled": "Nothing is stored on the C2O server for this logbook.",
         "private": "Private to you. Hand this file in if it is to be graded.",
-        "sim": "sim", "edited": "edited", "worksheets": "Worksheets",
+        "sim": "sim time", "edited": "edited", "worksheets": "Worksheets",
         "this_browser": "this browser", "empty": "No entries.", "context": "Context",
         "kind": {"decision": "Decision", "thought": "Thought", "reflection": "Reflection",
                  "observation": "Observation", "worksheet": "Worksheet answer"},
@@ -35,7 +35,7 @@ LABELS = {
                  "design": "SpaceCDF", "portal": "Welcome page"},
         "ctx": {"page": "page", "procedure": "procedure", "step": "step", "alarm_id": "alarm",
                 "param": "parameter", "study_id": "study", "position": "position",
-                "scenario": "scenario", "sim_status": "sim", "report": "report", "dump": "dump",
+                "scenario": "scenario", "sim_status": "sim state", "report": "report", "dump": "dump",
                 "station": "station", "pass": "pass", "doc": "document", "phase": "phase",
                 "anomaly": "anomaly", "command": "command", "gonogo": "GO/NO-GO",
                 "gate": "gate", "proposal": "proposal"},
@@ -47,7 +47,7 @@ LABELS = {
         "deleted": "Supprimé du serveur C2O le {when}",
         "not_scheduled": "Rien n’est conservé sur le serveur C2O pour ce journal.",
         "private": "Privé. Remettez ce fichier s’il doit être évalué.",
-        "sim": "sim", "edited": "modifiée", "worksheets": "Fiches",
+        "sim": "heure sim", "edited": "modifiée", "worksheets": "Fiches",
         "this_browser": "ce navigateur", "empty": "Aucune entrée.", "context": "Contexte",
         "kind": {"decision": "Décision", "thought": "Pensée",
                  "reflection": "Réflexion", "observation": "Observation",
@@ -57,7 +57,7 @@ LABELS = {
                  "instructor": "Instructeur", "design": "SpaceCDF", "portal": "Page d’accueil"},
         "ctx": {"page": "page", "procedure": "procédure", "step": "étape", "alarm_id": "alarme",
                 "param": "paramètre", "study_id": "étude", "position": "poste",
-                "scenario": "scénario", "sim_status": "sim", "report": "rapport", "dump": "vidage",
+                "scenario": "scénario", "sim_status": "état de la sim", "report": "rapport", "dump": "vidage",
                 "station": "station", "pass": "passage", "doc": "document", "phase": "phase",
                 "anomaly": "anomalie", "command": "commande", "gonogo": "GO/NO-GO",
                 "gate": "jalon", "proposal": "proposition"},
@@ -155,11 +155,12 @@ def to_markdown(summary: dict, person_label: str, *, lang: str = "en",
     L = LABELS[lang]
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     h = _header(summary, person_label, lang, now)
+    c = "\u00a0: " if lang == "fr" else ": "      # French typography: space before ':'
     out = [f"# {L['title']}", "",
-           f"- {L['person']}: {h['person']}",
-           f"- {L['exported']}: {h['exported']}",
-           f"- {L['tools']}: {h['tools']}",
-           f"- {L['entries']}: {h['count']}", "",
+           f"- {L['person']}{c}{h['person']}",
+           f"- {L['exported']}{c}{h['exported']}",
+           f"- {L['tools']}{c}{h['tools']}",
+           f"- {L['entries']}{c}{h['count']}", "",
            f"_{L['private']}_", ""]
     if not summary["entries"]:
         out += [L["empty"], ""]

@@ -532,8 +532,8 @@ worksheets:
   - id: q5
     kind: text
     text:
-      en: Predicted SoC at exit (using SoC_{exit} = SoC_{entry} - P_{avg} \cdot t / E_{battery})
-      fr: SoC prédit en sortie (avec SoC_{exit} = SoC_{entry} - P_{avg} \cdot t / E_{battery})
+      en: Predicted SoC at exit (using SoC_exit = SoC_entry - P_avg · t / E_battery)
+      fr: SoC prédit en sortie (avec SoC_exit = SoC_entry - P_avg · t / E_battery)
     section:
       en: Exercise 3 — Eclipse arithmetic
       fr: Exercice 3 — Calculs d'éclipse

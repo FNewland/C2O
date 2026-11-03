@@ -74,6 +74,9 @@ def _clean(s: str) -> str:
     s = _BLANKS.sub(" ", s)
     s = re.sub(r"\*\*(.+?)\*\*", r"\1", s)
     s = re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])", r"\1", s)
+    # inline maths ($SoC_{exit} = ... \cdot t$) as plain text
+    s = re.sub(r"\$([^$]+)\$", lambda m: re.sub(r"_\{([^}]*)\}", r"_\1", m.group(1))
+               .replace("\\cdot", "·").replace("\\times", "×"), s)
     s = s.replace("`", "").replace("$", "")
     s = re.sub(r"\s+", " ", s).strip()
     return s.strip(" :").strip()

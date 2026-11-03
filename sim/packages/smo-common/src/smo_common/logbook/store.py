@@ -12,6 +12,13 @@ PLACE under the exclusive lock, so the inode never changes under another
 process's open descriptor. A writer that finds its file unlinked after
 taking the lock (purge or "Delete now" won the race) reopens and retries.
 
+Modes: 0600 files in a 0700 directory. Where two service users share the
+store (the ground VM: the SMO containers run as uid 10001, SpaceCDF as
+10002 with the smo group added), ``SMO_LOGBOOK_SHARED_GROUP=1`` makes them
+0660 in a setgid 02770 directory instead, so both can write and the files
+keep the smo group. Either way only the service users can read them, and
+the HTTP API only ever returns the caller's own logbook.
+
 Retention: the file's mtime is the person's last write (add, edit, delete).
 Records that are not writes (the ``downloaded`` marker) and purge rewrites
 restore the previous mtime, so ``expires_at = mtime + retention`` is exact.
@@ -117,15 +124,22 @@ class LogbookStore:
             _env_hours("SMO_LOGBOOK_MAX_AGE_H", DEFAULT_MAX_AGE_H)
         self.max_text = max_text
         self.max_entries = max_entries
+        shared = os.environ.get("SMO_LOGBOOK_SHARED_GROUP", "").strip() in ("1", "true", "yes")
+        self.dir_mode = 0o2770 if shared else 0o700
+        self.file_mode = 0o660 if shared else 0o600
 
     # ── files ──────────────────────────────────────────────────────────
     def path_for(self, person_id: str) -> Path:
         return self.dir / file_name(person_id)
 
-    def _ensure_dir(self) -> None:
-        self.dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    def ensure_dir(self) -> None:
+        """Create the store directory with its mode (start-up, first write)."""
+        self.dir.mkdir(parents=True, exist_ok=True, mode=self.dir_mode & 0o777)
         with contextlib.suppress(OSError):
-            os.chmod(self.dir, 0o700)
+            if os.stat(self.dir).st_mode & 0o7777 != self.dir_mode:
+                os.chmod(self.dir, self.dir_mode)
+
+    _ensure_dir = ensure_dir
 
     @contextlib.contextmanager
     def _locked(self, path: Path, *, create: bool, exclusive: bool) -> Iterator[Any]:
@@ -137,7 +151,7 @@ class LogbookStore:
                 self._ensure_dir()
                 flags |= os.O_CREAT
             try:
-                fd = os.open(path, flags, 0o600)
+                fd = os.open(path, flags, self.file_mode)
             except FileNotFoundError:
                 yield None
                 return
@@ -148,7 +162,8 @@ class LogbookStore:
                     continue            # purged / deleted under us: reopen
                 if create:
                     with contextlib.suppress(OSError):
-                        os.fchmod(f.fileno(), 0o600)
+                        if os.fstat(f.fileno()).st_mode & 0o777 != self.file_mode:
+                            os.fchmod(f.fileno(), self.file_mode)
                 yield f
                 return
             finally:

@@ -266,7 +266,7 @@ def test_markdown_export(store):
     assert f"- Person: {P}" in md and "- Entries: 3" in md
     assert "Mission control, Delayed TM" in md
     assert "### Mission control" in md and "### Delayed TM" in md
-    assert "procedure CTG-001" in md and "sim 2026-03-10T04:18:22Z" in md
+    assert "procedure CTG-001" in md and "sim time 2026-03-10T04:18:22Z" in md
     assert "#### WB-5.5-DB — Day 3 Post-Shift Debrief Reflection" in md
     assert "What is one decision you took during the shift" in md
     assert "[x] I would not have shed" in md
@@ -276,7 +276,7 @@ def test_markdown_export(store):
 def test_markdown_export_in_french_for_this_browser(store):
     s = _summary(store)
     md = to_markdown(s, "this browser", lang="fr", lookup=WorksheetCatalog().question, now=NOW)
-    assert "# Journal de bord C2O" in md and "Personne: ce navigateur" in md
+    assert "# Journal de bord C2O" in md and "Personne\u00a0: ce navigateur" in md
     assert "Contrôle de mission" in md and "Supprimé du serveur C2O le" in md
     assert "Quelle décision avez-vous prise" in md
 
@@ -434,6 +434,9 @@ async def test_routes_reject_bad_bodies(tmp_path):
         r = await c.post("/api/logbook/entries", data=b"{" + b" " * 70000 + b"}",
                          headers={"Content-Type": "application/json"})
         assert r.status == 413
+        r = await c.post("/api/logbook/entries", data='{"kind":"thought","text":"csrf"}',
+                         headers={"Content-Type": "text/plain"})
+        assert r.status == 415                   # no cross-site form posts
         r = await c.get("/api/logbook/worksheets?context=%7Bbad")
         assert r.status == 200
     finally:
@@ -460,3 +463,62 @@ async def test_purge_task_runs_at_startup(tmp_path):
         assert not s.path_for(P).exists()
     finally:
         await c.close()
+
+
+def test_shared_group_mode(tmp_path, monkeypatch):
+    """Ground VM: SMO (uid 10001) and SpaceCDF (uid 10002 + smo group) share
+    the store, so SMO_LOGBOOK_SHARED_GROUP=1 gives 0660 files in 02770."""
+    monkeypatch.setenv("SMO_LOGBOOK_SHARED_GROUP", "1")
+    s = LogbookStore(tmp_path / "lb")
+    s.add(P, {"kind": "thought", "text": "x", "tool": "mcs"})
+    assert stat.S_IMODE(s.path_for(P).stat().st_mode) == 0o660
+    assert stat.S_IMODE(s.dir.stat().st_mode) == 0o2770
+
+
+# ── the shared panel and where it is mounted ───────────────────────────
+
+from pathlib import Path as _P  # noqa: E402
+
+_SIM = _P(__file__).resolve().parents[2]
+_UI = _SIM / "packages" / "smo-common" / "src" / "smo_common" / "ui"
+
+
+def test_panel_module_contract():
+    js = (_UI / "logbook.js").read_text(encoding="utf-8")
+    for name in ("export function mountLogbook", "export function logThis",
+                 "export function renderLogThis", "export async function endSession"):
+        assert name in js
+    assert "localStorage" not in js          # the text lives on the server only
+    assert "sessionStorage" in js            # an unsent draft may stay in the tab
+    assert '"/api/logbook"' in js
+    assert "beforeunload" in js
+    css = (_UI / "logbook.css").read_text(encoding="utf-8")
+    import re
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", css), "tokens only, no hex colours"
+
+
+@pytest.mark.parametrize("path,needle", [
+    ("packages/smo-mcs/src/smo_mcs/static/modern/mcs.js", 'mountLogbook({ tool: "mcs"'),
+    ("packages/smo-mcs/src/smo_mcs/server.py", 'register_logbook_routes(app, tool="mcs"'),
+    ("tools/delayed_tm_viewer.py", 'logbook="delayed_tm"'),
+    ("tools/delayed_tm_viewer.py", 'register_logbook_routes(app, tool="delayed_tm"'),
+    ("tools/orbit_tools.py", 'logbook="orbit"'),
+    ("tools/doc_viewer.py", 'logbook="docs"'),
+    ("tools/portal.py", 'logbook="portal"'),
+    ("packages/smo-rfsim/src/smo_rfsim/static/modern/index.html", 'tool: "radio"'),
+    ("packages/smo-rfsim/src/smo_rfsim/radio/web_ui.py", 'tool="radio"'),
+    ("packages/smo-simulator/src/smo_simulator/instructor/static/modern/instructor.js",
+     'mountLogbook({ tool: "instructor"'),
+    ("packages/smo-simulator/src/smo_simulator/instructor/app.py", 'tool="instructor"'),
+    ("packages/smo-link/src/smo_link/gateway.py", 'tool="instructor"'),
+])
+def test_every_tool_mounts_the_logbook(path, needle):
+    assert needle in (_SIM / path).read_text(encoding="utf-8"), path
+
+
+def test_mcs_log_this_beside_decisions():
+    js = (_SIM / "packages/smo-mcs/src/smo_mcs/static/modern/mcs.js").read_text(encoding="utf-8")
+    html = (_SIM / "packages/smo-mcs/src/smo_mcs/static/modern/index.html").read_text(encoding="utf-8")
+    assert js.count("renderLogThis(") >= 4     # send, procedure controls, alarm row, GO/NO-GO
+    assert 'id="gonogo-logthis"' in html and 'id="lb-slot"' in html
+    assert "LB.endSession({ reason: \"stopped\" })" in js
