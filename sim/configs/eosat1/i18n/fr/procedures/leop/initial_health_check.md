@@ -51,7 +51,7 @@ LEOP-007 et de COM-004 respectivement.
 
 ### Étape 3 --- Demander les données de servitude thermiques
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
-**Verify:** `tcs.temp_obc` (0x0406) dans la plage [-5C, +45C] sous 10s
+**Verify:** `tcs.temp_obc` (0x0406) dans la plage [-10C, +50C] sous 10s
 **Verify:** `tcs.temp_battery` (0x0407) dans la plage [0C, +35C] sous 10s
 **Verify:** `tcs.temp_fpa` (0x0408) rapportée (charge utile non alimentée, valeur ambiante attendue) sous 10s
 **Note:** Toutes les LIGNES de réchauffeurs sont coupées. Si `tcs.temp_battery` tend vers

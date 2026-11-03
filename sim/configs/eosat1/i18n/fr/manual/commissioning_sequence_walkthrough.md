@@ -204,7 +204,7 @@ Toutes les lignes sur OFF sont attendues — elles n'ont pas encore été mises 
 
 | Paramètre | ID hexa | Attendu (ambiante) | Plage acceptable |
 |-----------|--------|---------------------|-----------------|
-| `temp_obc` | 0x0406 | ~20 °C | [-5, +45] °C |
+| `temp_obc` | 0x0406 | ~20 °C | [-10, +50] °C |
 | `temp_battery` | 0x0407 | ~15 °C | [0, +35] °C |
 | `temp_fpa` | 0x0408 | ~+11.5 °C (ambiante interne, non refroidi) | [-22.0, +14.0] °C (bande jaune) |
 | Températures des panneaux | 0x0400–0x0405 | plage 8–20 °C | [-40, +60] °C |

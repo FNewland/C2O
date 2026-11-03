@@ -10,39 +10,47 @@
 ## 1. Overview {#1-overview}
 
 The Thermal Control Subsystem (TCS) maintains all spacecraft components within their
-allowable temperature ranges throughout the mission. EOSAT-1 uses primarily passive thermal
-control (MLI, radiators, surface coatings) combined with battery heaters as the only active
-thermal control element. The OBC and other components rely on passive thermal management
-through spacecraft orientation and internal heat dissipation. The focal plane array (FPA)
-cooler is managed as part of the payload subsystem.
+allowable temperature ranges throughout the mission. EOSAT-1 uses passive thermal control
+(surface coatings, the body-mounted cells, an isolated nadir radiator for the imager, and
+where each unit is mounted) with three thermostat-controlled heaters: battery (8 W), OBC
+(4 W) and thruster catalyst bed (12 W). Every unit's temperature follows the power it
+dissipates, so the spacecraft cools in safe mode and in a load shed. The focal plane array
+(FPA) cooler is managed as part of the payload subsystem.
 
 ## 2. Passive Thermal Control {#2-passive-thermal-control}
 
-### 2.1 Multi-Layer Insulation (MLI) {#21-multi-layer-insulation-mli}
+### 2.1 Insulation (no external MLI) {#21-multi-layer-insulation-mli}
 
-MLI blankets cover the majority of the spacecraft external surfaces, providing thermal
-isolation from the space environment. Key blanketed areas include:
+EOSAT-1 flies no MLI blankets on its external faces: the body-mounted cells cover most of
+the outside, and a 6U is too small for a blanketed bus to reject ~25–40 W. Insulation is
+used internally instead:
 
-- Spacecraft side panels (+/-X, +/-Y faces)
-- Battery compartment
-- OBC module enclosure
-- Payload electronics bay
+- The imager and its nadir (-Z) radiator form a thermal island on low-conductance
+  (titanium / G10) mounts, so the bus electronics and the FPA cooler's 15 W do not raise
+  the cooler's heat sink.
+- The battery stands off the frame on the cold +Y wall (see §2.2).
 
 ### 2.2 Radiators {#22-radiators}
 
-Dedicated radiator panels are mounted on the -Y and +Y faces to reject waste heat.
-The radiator sizing is optimised for the nominal power dissipation of ~29 W (orbit-average, see 01_eps.md).
+The bus has no separate radiator panels: it rejects its heat through all six faces
+(0.28 m2, emittance ~0.87 — cell coverglass and white paint). Two faces have a dedicated
+thermal job:
 
-| Radiator        | Location | Area     | Reject Capacity |
-|-----------------|----------|----------|-----------------|
-| Primary (-Y)    | -Y face  | 0.25 m2  | ~50 W           |
-| Secondary (+Y)  | +Y face  | 0.15 m2  | ~30 W           |
+| Face        | Area      | Role                                                                 |
+|-------------|-----------|----------------------------------------------------------------------|
+| -Z (nadir)  | 0.023 m2  | Imager radiator: white Z-93 paint, isolated from the bus with the imager |
+| +Y          | 0.037 m2  | Battery wall: EOSAT-1's beta angle is -21 to -31 deg all year, so the Sun is always on the -Y side and +Y is never sunlit |
 
 ### 2.3 Surface Coatings {#23-surface-coatings}
 
-External surfaces use a combination of white paint (high emissivity) on radiators and
-black Kapton on internal structure surfaces to promote radiative heat transfer within
-the spacecraft cavity.
+| Surface                           | Solar absorptance | IR emittance |
+|-----------------------------------|-------------------|--------------|
+| Triple-junction cells, coverglass | 0.91              | 0.85         |
+| White paint (Z-93), non-cell areas and -Z radiator | 0.17 | 0.92  |
+| Imager aperture / baffle (black)  | 0.90              | 0.88         |
+
+While the arrays are delivering power, about a fifth of the sunlight on the cells leaves as
+electricity instead of heat.
 
 ## 3. Active Thermal Control {#3-active-thermal-control}
 
@@ -62,9 +70,10 @@ logic and will activate the heater if battery temperature falls below 5 deg C, o
 ground commands if temperatures approach red limits.
 
 **Note:** EOSAT-1 also carries an OBC heater and a thruster heater. The OBC heater
-(`HEATER_OBC`, S8 func 41; status `htr_obc` 0x040B; 4 W on PDM line 6; thermostat ON +5 C /
-OFF +10 C) is a cold-case backstop: internal dissipation, MLI and radiator sizing normally keep
-the OBC in its qualified range. The thruster catalyst-bed heater (`HEATER_THRUSTER`, S8 func 42;
+(`HEATER_OBC`, S8 func 41; status `htr_obc` 0x040B; 4 W on PDM line 6; thermostat ON -10 C /
+OFF -5 C) is a survival heater: the OBC's own dissipation keeps it well above -10 C in
+nominal and safe operations, and the heater works in a long load shed or cold-season
+survival. It has about 7 K of authority (4 W across the stack's 0.6 W/K mount). The thruster catalyst-bed heater (`HEATER_THRUSTER`, S8 func 42;
 status 0x041B; 12 W from the `prop` line) preheats the thruster before a manoeuvre.
 
 ### 3.2 Orientation for Passive Thermal Control {#32-orientation-for-passive-thermal-control}
@@ -115,11 +124,21 @@ CALIBRATION mode and deactivated when the payload is set to OFF.
 
 | Zone           | Nominal Range    | Yellow Limits    | Red Limits       |
 |----------------|------------------|------------------|------------------|
-| Battery        | 5–35 deg C       | 2–40 deg C       | 0–45 deg C       |
-| OBC            | 15–50 deg C      | 5–60 deg C       | 0–70 deg C       |
+| Battery        | 5–25 deg C       | 2–40 deg C       | 0–45 deg C       |
+| OBC            | 10–35 deg C      | -10–60 deg C     | -20–70 deg C     |
 | FPA Detector   | -18 to -12 deg C | -22 to 14 deg C  | -25.5 to 17.5 deg C |
-| Solar Panels   | -80 to 80 deg C  | —                | —                |
-| Structure      | -20 to 50 deg C  | —                | —                |
+| Body panels    | -20 to 40 deg C  | —                | —                |
+| Deployed wings | -55 to 65 deg C  | —                | —                |
+| Structure      | -20 to 35 deg C  | —                | —                |
+
+Typical orbit ranges (beta -30 deg; the bus tracks the power it dissipates):
+
+| Case                                   | Structure      | OBC            | Battery        |
+|----------------------------------------|----------------|----------------|----------------|
+| Nominal, payload STANDBY (cooler running) | +15 to +29 deg C | +22 to +33 deg C | +16 to +22 deg C |
+| Nominal, cooler off                    | +2 to +16 deg C  | +8 to +20 deg C  | +5 to +10 deg C (heater cycling) |
+| Safe mode (sun-pointing)               | -7 to +7 deg C   | -1 to +10 deg C  | +5 to +10 deg C (heater cycling) |
+| Long load shed, heater lines OFF       | -15 to -2 deg C  | -9 to +2 deg C   | -11 to -3 deg C  |
 
 ## 5. Telemetry Parameters {#5-telemetry-parameters}
 
@@ -143,11 +162,15 @@ CALIBRATION mode and deactivated when the payload is set to OFF.
 
 | Parameter       | Yellow Low | Yellow High | Red Low | Red High |
 |-----------------|------------|-------------|---------|----------|
-| temp_obc (C)    | 5          | 60          | 0       | 70       |
+| temp_obc (C)    | -10        | 60          | -20     | 70       |
 | temp_battery (C)| 2          | 40          | 0       | 45       |
 | temp_fpa (C)    | -22.0      | 14.0        | -25.5   | 17.5     |
 
-These bands are **derived**, not chosen: `subsystems/tcs.yaml: fpa_envelope`
+The OBC cold limits follow the hardware: CubeSat OBCs are rated down to -25 to -40 C, so
+red -20 C keeps 5 K of margin on the -25 C class and yellow -10 C is also the OBC heater's
+ON point.
+
+The FPA bands are **derived**, not chosen: `subsystems/tcs.yaml: fpa_envelope`
 is the single source, and the ground software computes the rest from it. The FPA node has two legitimate resting states — regulated
 anywhere in the commandable **-20…0 deg C** setpoint envelope
 (`PAYLOAD_COOLER_SETPOINT`, S8 func 36), and uncooled at about **+11.5 deg C**
@@ -180,10 +203,10 @@ illumination:
 
 | Condition            | Panel Response                                       |
 |----------------------|------------------------------------------------------|
-| Sunlit (direct)      | Panel temp rises towards +80 deg C (steady state)    |
-| Sunlit (oblique)     | Reduced heating; temp proportional to cos(sun angle) |
-| Eclipse (shadowed)   | Rapid cooling towards -80 deg C at ~5 deg C/min      |
-| Earth albedo only    | Mild heating on nadir face (-Z)                      |
+| Sunlit (direct)      | Body panel rises to +30…+35 deg C; a wing to about +55…+65 deg C |
+| Sunlit (oblique)     | Reduced heating; absorbed sunlight proportional to cos(sun angle) |
+| Eclipse (shadowed)   | Wings cool to about -50 deg C at up to ~2 deg C/min; body panels follow the structure |
+| Earth albedo / IR    | Steady heating of the nadir face (-Z) and the sides that see the Earth |
 
 The thermal coupling mechanism works in both directions:
 
@@ -199,8 +222,8 @@ manoeuvres to anticipate thermal transients.
 
 ## 9. Operational Notes {#9-operational-notes}
 
-1. Eclipse entry causes a rapid temperature drop on exposed panels. The thermal gradient
-   can reach 5 deg C/min on directly exposed surfaces.
+1. Eclipse entry causes a rapid temperature drop on exposed panels. The light deployable
+   wings cool fastest, up to ~2 deg C/min.
 2. Battery heater activation during eclipse is critical to maintain cell temperature above
    the minimum qualification limit of 0 deg C.
 3. The FPA cooler should not be activated until the payload electronics have completed
@@ -208,9 +231,11 @@ manoeuvres to anticipate thermal transients.
 4. Panel temperatures (0x0400–0x0405) are informational and not subject to FDIR action.
    They are useful for thermal model correlation during commissioning and for predicting
    internal component temperatures based on the solar illumination pattern.
-5. In SAFE mode, only the battery heater remains active. The FPA cooler is powered off
-   to conserve energy. The OBC relies on passive thermal control (self-heating from
-   internal power dissipation).
+5. In SAFE mode the FPA cooler is powered off and the AOCS points +X at the Sun. Both
+   heaters stay under thermostat; the OBC keeps itself warm with its own 3 W. In a long
+   load shed (only the OBC and receiver powered, ~7.5 W) the whole spacecraft cools by
+   15–25 K and, in the cold season, the OBC heads for its -10 C heater ON point: keep
+   heater lines 5 and 6 powered under thermostat whenever the power budget allows.
 6. Spacecraft orientation directly affects the thermal environment. During contingency
    operations, the Flight Director should coordinate with Power/Thermal and AOCS operators
    to select an attitude that balances power generation and thermal constraints.

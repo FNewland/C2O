@@ -62,7 +62,7 @@ owner flew into --- COM-002 later found a heater being power-cycled that had
 never legitimately been on.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) --- htr_bat, ONLY if `tcs.temp_battery` < +5C
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 within 5s --- only if commanded
-**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- htr_obc, ONLY if `tcs.temp_obc` < 0C
+**TC:** `EPS_POWER_ON(line_index=6)` (Service 8, Subtype 1, func_id 19) --- htr_obc, ONLY if `tcs.temp_obc` < -10C (the OBC heater ON point)
 **Verify:** `eps.pl_htr_obc` (0x0116) = 1 within 5s --- only if commanded
 **Action:** Record in the LEOP log WHICH heater lines this card energised (the
 COM-002 heater checkout reads this record as its entry state).

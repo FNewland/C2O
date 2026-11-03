@@ -96,7 +96,7 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 |---------|--------------------------------|----------------|-----------------------------|
 | TCS-01  | bat_temp < 0 C (rouge bas)     | 0x0407 < 0     | Forcer le réchauffeur de batterie en marche |
 | TCS-02  | obc_temp > 70 C (rouge haut)   | 0x0406 > 70    | Passage en mode survie      |
-| TCS-03  | obc_temp < 0 C (rouge bas)     | 0x0406 < 0     | Forcer le réchauffeur de l'OBC en marche |
+| TCS-03  | obc_temp < -20 C (rouge bas)   | 0x0406 < -20   | Forcer le réchauffeur de l'OBC en marche |
 | TCS-04  | fpa_temp hors de -25.5..+17.5 C | Alarme S12 sur 0x0408 | Mettre la charge utile hors tension (S19 ea_id 3001) |
 
 TCS-04 se déclenche sur l'**alarme S12** de 0x0408, dont la bande est dérivée de

@@ -74,8 +74,8 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-1-restore-thermal-control-soc-30-required",
-   "en_hash": "70cd4f8aec7d4488",
-   "fr_hash": "c12f68599f93670f"
+   "en_hash": "b49d124dd08f4d1f",
+   "fr_hash": "ea81fc2b04d6cfc7"
   },
   {
    "id": "emg-001-emergency-safe-mode/orbit-by-orbit-recovery-timeline/recovery-orbit-r-2-restore-full-aocs-soc-40-required",
@@ -118,5 +118,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "9bdac94"
+ "en_commit": "21af365"
 }

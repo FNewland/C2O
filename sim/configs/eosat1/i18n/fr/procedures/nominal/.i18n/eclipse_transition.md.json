@@ -24,8 +24,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/required-telemetry",
-   "en_hash": "691d60116c6e5494",
-   "fr_hash": "85dc0424ec8f4737"
+   "en_hash": "c355e3e4bd1691d0",
+   "fr_hash": "6b26269fe63ed690"
   },
   {
    "id": "nom-010-eclipse-transition/required-commands",
@@ -44,8 +44,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-2-verify-and-adjust-heater-setpoints-for-eclipse",
-   "en_hash": "8410d173ea9b14e1",
-   "fr_hash": "44de053ca64e891f"
+   "en_hash": "5703ad93eb00357e",
+   "fr_hash": "910dc3dca63a31de"
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-3-disable-fpa-cooler-to-conserve-power",
@@ -64,8 +64,8 @@
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-6-monitor-thermal-conditions-during-eclipse",
-   "en_hash": "5073cfb9cfa1ab38",
-   "fr_hash": "af4f7be0af5d4b53"
+   "en_hash": "6f80ae72a1da232a",
+   "fr_hash": "eb3217f89aca3328"
   },
   {
    "id": "nom-010-eclipse-transition/procedure-steps/step-7-verify-power-generation-resumes-after-eclipse-exit",
@@ -88,5 +88,5 @@
    "fr_hash": "913d780de571cd04"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "21af365"
 }

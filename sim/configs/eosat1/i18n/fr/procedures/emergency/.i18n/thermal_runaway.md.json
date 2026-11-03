@@ -39,8 +39,8 @@
   },
   {
    "id": "emg-006-thermal-runaway/procedure-steps/step-1-detect-temperature-rise-and-identify-affected-zone",
-   "en_hash": "47c52919ce75c118",
-   "fr_hash": "bbe972ca1c9dc191"
+   "en_hash": "b604d08f21ae268c",
+   "fr_hash": "d10c37aef051d8ce"
   },
   {
    "id": "emg-006-thermal-runaway/procedure-steps/step-2-command-heater-off-via-normal-command",
@@ -78,5 +78,5 @@
    "fr_hash": "3a9d28ce27aa9125"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "21af365"
 }

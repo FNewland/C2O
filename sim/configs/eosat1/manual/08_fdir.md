@@ -96,7 +96,7 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 |---------|--------------------------------|----------------|-----------------------------|
 | TCS-01  | bat_temp < 0 C (red low)      | 0x0407 < 0     | Force battery heater on     |
 | TCS-02  | obc_temp > 70 C (red high)    | 0x0406 > 70    | Safe mode entry             |
-| TCS-03  | obc_temp < 0 C (red low)      | 0x0406 < 0     | Force OBC heater on         |
+| TCS-03  | obc_temp < -20 C (red low)    | 0x0406 < -20   | Force OBC heater on         |
 | TCS-04  | fpa_temp outside -25.5..+17.5 C | 0x0408 S12 alarm | Power off payload (S19 ea_id 3001) |
 
 TCS-04 fires off the **S12 alarm** on 0x0408, whose band is derived from

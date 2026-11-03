@@ -220,13 +220,16 @@ s12_definitions:
     description: "Battery temperature exceeds 45°C"
 
   # OBC temperature monitoring
+  # 2026-11 (thermal network): low limit 0 -> -20 C, the hardware-based
+  # red (mcs/limits.yaml 0x0406). At 0 C every long load shed and every
+  # instructor cold soak tripped this ALARM monitor.
   - param_id: 0x0406  # tcs.temp_obc
     name: "TCS OBC Overtemp"
     check_type: 0  # absolute
-    low_limit: 0.0
+    low_limit: -20.0
     high_limit: 60.0
     severity: ALARM
-    description: "OBC temperature exceeds 60°C"
+    description: "OBC temperature outside -20..+60°C"
 
   # Heater power monitoring (all heaters combined). Phase B set 12.5 W for
   # battery 8 + OBC 4 (no thruster heater then); Phase D adds the real 12 W
