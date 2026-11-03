@@ -304,9 +304,10 @@ function renderMission() {
 
   // LAST PASS achieved rollup (link block, G14).
   const lp = $("wLastPass");
+  const lpConfigured = !!(services && services.rfsim_url);
+  lp.hidden = !lpConfigured; $("wLastPassK").hidden = !lpConfigured;
   if (!lastRollup) {
-    lp.textContent = (services && services.rfsim_url)
-      ? NODATA() : tText("not configured");
+    lp.textContent = NODATA();
   } else {
     const r = lastRollup;
     const lock = r.locked
@@ -1261,6 +1262,10 @@ function renderLink() {
   const silent = lastAnyOk === 0 || Date.now() - lastAnyOk > 30000;
   dot.className = "api-dot " + (silent ? "error" : (apiOk ? "connected" : "error"));
   txt.textContent = silent ? tText("unavailable") : (apiOk ? tText("connected") : tText("degraded"));
+  // Calm when nominal: the feed line appears only when it is not healthy
+  // (review §3: "API connected" on the wall display).
+  const healthy = !silent && apiOk;
+  $("wApiK").hidden = healthy; $("wApiRow").hidden = healthy;
 }
 
 /* ── Timers (the ONLY drivers on this page) ───────────────────────────── */

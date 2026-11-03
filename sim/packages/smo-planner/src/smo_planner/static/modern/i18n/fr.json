@@ -3,8 +3,6 @@
   "Skip to activity schedule": "Aller au planning des activités",
   "Mission planner": "Planificateur de mission",
   "Planner time": "Heure du planificateur",
-  "Browse mission configuration (read-only)": "Consulter la configuration de mission (lecture seule)",
-  "Configuration": "Configuration",
   "Next 24 hours": "Prochaines 24 heures",
   "Timeline, scrolls sideways on narrow screens": "Chronologie, défilement horizontal sur écran étroit",
   "Now": "Maintenant",
@@ -96,7 +94,6 @@
   "Sim clock anchor is stale ({{age}} s old)": "Référence d'horloge SIM périmée (âge {{age}} s)",
   "Planner API unreachable — page is on browser wall clock": "API du planificateur injoignable — la page suit l'horloge du navigateur",
   "default {{soc}}": "défaut {{soc}}",
-  "Blank uses the planner's configured default ({{soc}} % from planner.yaml).": "Vide : valeur par défaut du planificateur ({{soc}} % dans planner.yaml).",
   "server default": "défaut serveur",
   "In eclipse": "En éclipse",
   "Sunlit": "Éclairé",
@@ -240,7 +237,6 @@
   "Capacity": "Capacité",
   "Planned dump": "Vidage prévu",
   "no dump": "sans vidage",
-  "No rfsim URL configured ({{where}}) — achieved pass rollups are not shown.": "Aucune URL rfsim configurée ({{where}}) — bilans de passage réalisés non affichés.",
   "No completed passes recorded yet.": "Aucun passage terminé enregistré.",
   "locked": "verrouillé",
   "no lock": "non verrouillé",
@@ -288,7 +284,6 @@
   "SoC: MCS derived": "SoC : dérivé MCS",
   "SoC invalid: {{reason}}": "SoC invalide : {{reason}}",
   "no MCS URL configured": "aucune URL MCS configurée",
-  "not configured": "non défini",
   "lock +{{s}} s": "verr. +{{s}} s",
   "node crossings": "passages aux nœuds",
   "Kepler from mean altitude": "Kepler, altitude moyenne",
@@ -338,5 +333,9 @@
   "Solar beta angle (/api/spacecraft-state)": "Angle bêta solaire (/api/spacecraft-state)",
   "Next pass": "Prochain passage",
   "sky plot unavailable": "diagramme du ciel indisponible",
-  "planner /api/spacecraft-state": "planificateur /api/spacecraft-state"
+  "planner /api/spacecraft-state": "planificateur /api/spacecraft-state",
+  "Blank uses the planner's default assumption ({{soc}} %).": "Laissé vide, le planificateur prend son hypothèse par défaut ({{soc}} %).",
+  "The plan is infeasible: the battery model reaches 0 %, and every SoC after that is the floor, not a prediction.": "Le plan est irréalisable : le modèle de batterie atteint 0 %, et chaque SoC ensuite est le plancher, pas une prévision.",
+  "Achieved pass figures are not available on this installation.": "Les valeurs réalisées des passages ne sont pas disponibles sur cette installation.",
+  "Feed": "Flux"
 }

@@ -221,7 +221,7 @@ def test_pass_rollup_panel_present_and_config_gated():
     # Read from the CONFIGURED services.rfsim_url only; unset is a DESIGNED
     # absent state, and no host is ever guessed client-side.
     assert "services.rfsim_url" in js
-    assert "No rfsim URL configured" in js
+    assert "Achieved pass figures are not available" in js
     assert "localhost" not in js, (
         "planner.js must not hard-code a service host — the rfsim base "
         "comes from planning/planner.yaml services.rfsim_url")

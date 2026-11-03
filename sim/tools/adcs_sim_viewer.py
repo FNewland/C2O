@@ -803,12 +803,12 @@ g("dl-btn").addEventListener("click", downloadCSV);
 window.addEventListener("c2o:themechange", (e) => {
   if (LAST && LAST.theme !== e.detail.theme) g("run-meta").textContent = T("Plots were drawn in the other theme: run again to redraw them.");
 });
-const rerender = () => { document.getElementById("tf-meta").innerHTML = `${esc(T("Physics:"))} <code>ADCS_failure_sim/cubesat_adcs_sim.py</code>`; validate(); drawPlotTabs(); showPlot(); paintDownload(); if (LAST) showResults(); if (!running) g("run-btn").textContent = T("Run simulation"); };
+const rerender = () => { document.getElementById("tf-meta").textContent = T("Generic CubeSat attitude model"); validate(); drawPlotTabs(); showPlot(); paintDownload(); if (LAST) showResults(); if (!running) g("run-btn").textContent = T("Run simulation"); };
 window.addEventListener("smo:i18nready", rerender);
 window.addEventListener("smo:langchange", rerender);
 new ResizeObserver(drawPhases).observe(g("phases"));
 applyDefaults(); drawPlotTabs(); showPlot(); paintDownload();
-document.getElementById("tf-meta").innerHTML = `${esc(T("Physics:"))} <code>ADCS_failure_sim/cubesat_adcs_sim.py</code>`;
+document.getElementById("tf-meta").textContent = T("Generic CubeSat attitude model");
 if (!BOOT.have_matplotlib) g("run-banner").innerHTML = renderBanner("alarm", T("matplotlib is not installed, so plots cannot be rendered."));
 </script>
 </body>

@@ -436,7 +436,7 @@ __FRAME_BAR__
         <span class="ds-input-wrap"><input class="ds-input" id="sc-dur" inputmode="numeric" value="1800"><span class="u">s</span></span>
       </div>
       <div class="ds-field full">
-        <label for="sc-brief" data-i18n>Briefing (shown to operators before start)</label>
+        <label for="sc-brief" data-i18n>Instructor briefing (not shown to operators)</label>
         <textarea class="ds-input" id="sc-brief" data-i18n-placeholder placeholder="Describe the scenario narrative and what operators must achieve…"></textarea>
       </div>
     </div>
@@ -816,7 +816,7 @@ window.addEventListener("beforeunload", (ev) => {
   if ((saved && saved.data !== JSON.stringify(collectData())) || (!saved && document.querySelector("#events-list .sg-ev"))) { ev.preventDefault(); ev.returnValue = ""; }
 });
 new ResizeObserver(drawTimeline).observe($("timeline"));
-const rerender = () => { changed(); document.getElementById("tf-meta").innerHTML = `${esc(T("Writes the scenario YAML to"))} <code>configs/eosat1/scenarios/</code>`; };
+const rerender = () => { changed(); document.getElementById("tf-meta").textContent = T("Saves to the scenario library"); };
 window.addEventListener("smo:i18nready", rerender);
 window.addEventListener("smo:langchange", rerender);
 rerender();
