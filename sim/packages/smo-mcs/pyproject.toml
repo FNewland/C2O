@@ -16,6 +16,9 @@ dependencies = [
 # Voice loops (smo_mcs/voice.py): LiveKit access tokens. Pinned; without it
 # /voice says "token library not installed" and the console is unaffected.
 voice = ["livekit-api==1.2.2"]
+# Console seats (smo_mcs/seats_http.py, smo_common/web/iap_jwt.py): ES256
+# verification of IAP's signed header. Required when SMO_SEATS=iap.
+iap = ["cryptography>=41"]
 
 [project.scripts]
 smo-mcs = "smo_mcs.server:main"
