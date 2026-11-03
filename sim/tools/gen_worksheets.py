@@ -27,6 +27,11 @@ same shape, or the script stops and says where):
 Identity and signature boxes (name, date, operator, signatures) are not
 questions: the logbook already knows who and when.
 
+For the ops workbook (logbook "Workbook" tab) a confirm-each-step row
+carries ``step`` (its printed number), so the live checklist can line it up
+with the procedure card; the map's ``form`` / ``instances`` / ``prefill``
+(see worksheet_map.yaml) are copied onto the sheet and its questions.
+
 Usage::
 
     python3 tools/gen_worksheets.py            # write ops_week3.yaml
@@ -175,9 +180,11 @@ def parse_workbook(text: str) -> dict[str, dict]:
         fields = _fields_in(content)
         if fields:
             i += 1
-            if len(fields) == 1 and not _clean(fields[0][1]):
+            if len(fields) == 1 and not fields[0][1].strip():
                 # "**Label:**" alone: a prompt when write-in lines follow,
                 # otherwise a heading over a list (nothing to answer).
+                # ("**Label:** ____" with its blank on the same line is a
+                # field, handled below.)
                 j = i
                 while j < len(lines) and not lines[j].strip():
                     j += 1
@@ -269,7 +276,7 @@ def build_questions(wid: str, en: dict, fr: dict) -> list[dict]:
     section = None
     skip_section = False
 
-    def add(kind, en_text, fr_text, hint=None, hint_fr=None):
+    def add(kind, en_text, fr_text, hint=None, hint_fr=None, step=None):
         en_text, fr_text = _clean(en_text), _clean(fr_text)
         if not en_text:
             return
@@ -278,14 +285,21 @@ def build_questions(wid: str, en: dict, fr: dict) -> list[dict]:
             q["hint"] = {"en": _clean(hint), "fr": _clean(hint_fr or hint) or _clean(hint)}
         if section:
             q["section"] = dict(section)
+        if step:
+            # A confirm-each-step row: the logbook's live checklist lines the
+            # printed row up with the procedure card's step (checklist.py).
+            q["step"] = step
         qs.append(q)
 
     for a, b in _pair(en["items"], fr["items"], wid):
         kind = a[0]
         if kind == "section":
-            # Repeated printed copies ("Ticket — copy 2") are the same form.
+            # Repeated printed copies ("Ticket — copy 2") are the same form;
+            # the logbook files each one as its own instance, so the first
+            # copy's "— copy 1" heading is not a section either.
             skip_section = bool(re.search(r"(?i)copy [2-9]", a[1]))
-            section = None if skip_section else {"en": a[1], "fr": b[1]}
+            first_copy = bool(re.search(r"(?i)copy 1\b", a[1]))
+            section = None if skip_section or first_copy else {"en": a[1], "fr": b[1]}
             continue
         if skip_section:
             continue
@@ -344,9 +358,12 @@ def _table_questions(wid, a, b, add):
                 parts_fr.insert(0, _clean(rf[owner]) + " :")
             prefix = f"{n}. " if n else ""
             kind = "check" if box_cols else "text"
+            # Only a confirm-each-step table (an "Expected verification" or
+            # "Verification" column) is a procedure step list.
+            step = n if (expect is not None and n and first == "#") else None
             add(kind, prefix + " ".join(parts_en), prefix + " ".join(parts_fr),
                 re_[expect] if expect is not None else None,
-                rf[expect] if expect is not None else None)
+                rf[expect] if expect is not None else None, step=step)
         return
     # label | value tables
     kind = "check" if any(k > 0 for k in box_cols) else "text"
@@ -366,6 +383,22 @@ def _table_questions(wid, a, b, add):
 
 APPLY_KEYS = ("tools", "procedures", "pages", "scenarios", "context_keys")
 PHASES = ("prep", "during", "debrief", "exercise")
+#: How the logbook presents a sheet (logbook.js): a form filled and saved as
+#: one record, several instances allowed for tickets and handovers.
+FORMS = ("anomaly", "scorecard", "handover", "briefing", "debrief")
+
+
+def _apply_prefill(wid: str, qs: list[dict], prefill: dict) -> None:
+    """``prefill: {English question text: key}`` -> ``prefill: key`` on the
+    question. A label that matches no question stops the script: the
+    workbook was edited and the map must follow."""
+    for label, key in (prefill or {}).items():
+        hits = [q for q in qs if q["text"]["en"] == label
+                or re.sub(r"^\d+[a-z]?\.\s+", "", q["text"]["en"]).startswith(label)]
+        if not hits:
+            raise SystemExit(f"{wid}: prefill label {label!r} matches no question")
+        for q in hits:
+            q["prefill"] = str(key)
 TOOLS = ("mcs", "delayed_tm", "orbit", "radio", "docs", "instructor", "portal", "design")
 
 
@@ -390,13 +423,22 @@ def generate(map_file: Path = MAP_FILE) -> str:
         if not qs:
             raise SystemExit(f"{wid}: no questions found")
         applies = {k: list(spec.get(k) or []) for k in APPLY_KEYS}
-        out.append({
+        form = spec.get("form")
+        if form is not None and form not in FORMS:
+            raise SystemExit(f"{wid}: form must be one of {FORMS}, not {form!r}")
+        _apply_prefill(wid, qs, spec.get("prefill"))
+        sheet = {
             "id": wid,
             "title": {"en": en[wid]["title"], "fr": fr[wid]["title"]},
             "phase": phase,
             "applies": applies,
-            "questions": qs,
-        })
+        }
+        if form:
+            sheet["form"] = form
+            if spec.get("instances"):
+                sheet["instances"] = True
+        sheet["questions"] = qs
+        out.append(sheet)
     doc = {"source": src, "source_fr": src_fr, "worksheets": out}
     return HEADER + yaml.safe_dump(doc, sort_keys=False, allow_unicode=True,
                                    width=100, default_flow_style=False)
