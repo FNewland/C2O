@@ -426,9 +426,12 @@ function renderSheets(fresh) {
     box.innerHTML = `<p class="lb-empty">${t("No worksheet applies here. Open a procedure, or use the entries tab for free notes.")}</p>`;
     return;
   }
+  // Keep what the person opened; a worksheet that newly applies (the
+  // procedure just opened) opens itself if it is the first specific one.
   const openIds = new Set($$("details.lb-ws[open]", box).map((d) => d.dataset.w));
+  const shown = new Set($$("details.lb-ws", box).map((d) => d.dataset.w));
   let html = "";
-  specific.forEach((w, i) => { html += sheetHtml(w, openIds.has(w.id) || (!openIds.size && i === 0)); });
+  specific.forEach((w, i) => { html += sheetHtml(w, openIds.has(w.id) || (i === 0 && (!shown.has(w.id) || !openIds.size))); });
   const general = S.sheets.filter((w) => !w.match || w.match === "general");
   if (general.length) {
     if (specific.length) html += `<div class="lb-sep">${t("Also for this tool")}</div>`;
