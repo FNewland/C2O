@@ -269,6 +269,7 @@ async def run_web_ui(frontend: RadioFrontend, host: str = "0.0.0.0",
     _add_page_routes(app, ui_mode)
     app.router.add_get("/ws", ws_handler)
     _add_api_routes(app, frontend, control)
+    _add_logbook_routes(app)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -289,4 +290,15 @@ def build_app(frontend: RadioFrontend, control=None,
     app = web.Application()
     _add_page_routes(app, ui_mode)
     _add_api_routes(app, frontend, control)
+    _add_logbook_routes(app)
     return app
+
+
+def _add_logbook_routes(app: web.Application) -> None:
+    """The participant logbook (LOGBOOK_SPEC.md) on this origin: the radio
+    page's header button reads and writes the person's private logbook."""
+    try:
+        from smo_common.logbook import register_logbook_routes
+        register_logbook_routes(app, tool="radio")
+    except ImportError:                              # pragma: no cover
+        logger.warning("smo_common.logbook not importable: no logbook on the radio page")

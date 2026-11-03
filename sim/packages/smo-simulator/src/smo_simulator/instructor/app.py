@@ -53,6 +53,16 @@ def create_instructor_app(engine, ui_mode: str | None = None) -> web.Application
     app["ui_lang"] = server_default_lang(mission_lang=mission_ui_lang(
         getattr(engine, "config_dir", None) or "configs/eosat1"))
 
+    # Participant logbook (LOGBOOK_SPEC.md §6): the instructor's own private
+    # logbook and the worksheet lists. Behind smo-link the GSG serves these
+    # routes itself (they are not on the link allowlist).
+    try:
+        from smo_common.logbook import register_logbook_routes
+        _cfg = Path(getattr(engine, "config_dir", None) or "configs/eosat1")
+        register_logbook_routes(app, tool="instructor", worksheets_dir=_cfg / "worksheets")
+    except Exception as e:  # noqa: BLE001 — never block the sim UI
+        logger.warning("Logbook not mounted: %s", e)
+
     app.router.add_get("/", handle_index)
     # Explicit generation routes (plan §1.2): live A/B comparison in two tabs.
     app.router.add_get("/classic", handle_index_classic)

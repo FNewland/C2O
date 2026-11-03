@@ -104,6 +104,7 @@ d.setAttribute("data-theme",t==="light"?"light":"dark");})();
   <div class="ctl">
     <span id="feed-chip" role="status"></span>
     <span class="upd" id="last-update"></span>
+    <span id="lb-slot"></span>
     <div class="ds-seg" role="group" id="theme" aria-label="Theme" data-i18n-aria-label>
       <button type="button" data-theme-set="dark" aria-pressed="true" data-i18n>Dark</button>
       <button type="button" data-theme-set="light" aria-pressed="false" data-i18n>Light</button>
@@ -226,8 +227,13 @@ import { fmtAge } from "/static/shared/format.js";
 // UI language (EN|FR) — docs/i18n/UI_I18N_GUIDE.md. The WS feed below
 // starts at once; only the toggle waits for the catalogs.
 import { I18n, t, tText, onLangChange } from "/static/shared/i18n.js";
+// Participant logbook (LOGBOOK_SPEC.md): header button + docked panel;
+// context = the receiver mode and link state on screen.
+import { mountLogbook } from "/static/shared/logbook.js";
 I18n.ready.then(() => {
   mountLangToggle(document.getElementById("lang-toggle"));
+  mountLogbook({ tool: "radio", buttonHost: document.getElementById("lb-slot"),
+    getContext: () => ({ page: last && last.mode ? `radio ${last.mode}` : "radio" }) });
   redrawAll();
 });
 onLangChange(redrawAll);

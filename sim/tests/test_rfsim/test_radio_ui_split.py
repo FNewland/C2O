@@ -200,6 +200,11 @@ EXPECTED_ROUTES = {
     ("POST", "/api/link"),
     ("GET", "/static"),          # package static dir
     ("GET", "/static/shared"),   # shared design system (smo-common)
+    # participant logbook (LOGBOOK_SPEC.md, 2026-11-02, additive)
+    ("GET", "/api/logbook"),
+    ("POST", "/api/logbook/entries"),
+    ("GET", "/api/logbook/export"),
+    ("GET", "/api/logbook/worksheets"),
 }
 
 
