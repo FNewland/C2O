@@ -4,22 +4,22 @@
  * Five sections:
  * 1. Budget Rollup: mass/power/cost hierarchy
  * 2. Requirement Traceability: derivation chains, orphans, SMART status
- * 3. Review Gate Checklist: MCR/SRR/PDR gate evaluation (from gate_evaluator; default PDR, ruling Q23)
+ * 3. Review Gate Checklist: the gates of the study's profile (MDR/PRR/SRR/PDR by default),
+ *    evaluated on the server; states Not ready → Ready → Under review → Passed → Reopened
  * 4. FMECA Summary: failure mode analysis results
  * 5. Budget Traceability: trace budget exceedance to stakeholder impact
  */
 import { Fragment, useEffect, useRef, useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useUIStore } from '../stores/uiStore'
+import { useUIStore, type ActivityPanel, type Level } from '../stores/uiStore'
 import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
-import { useDesignStore } from '../stores/designStore'
-import { useActiveParameters } from '../hooks/useActiveParameters'
-import { useGateReview, type GateId } from '../components/useGateReview'
-import { STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
+import { GateActionError, gateAction, pick, setGateProfile, useGateProfiles, useGateReview, useStudyGates, type GateState } from '../components/useGateReview'
+import { FIX_LABEL, STATE_LABEL, STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
+import { getLang } from '../i18n'
 import { subsystemStyle } from '../theme/tokens'
 import { ArmButton, Button, DataTable, Disclosure, Field, Input, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, tabPanelProps, type Status } from '../components/ui'
 
@@ -84,7 +84,7 @@ export function VVPanel() {
       <div {...tabPanelProps('vv', activeSection)} className="c2o-wb__panel c2o-pane">
         {activeSection === 'budget' && <BudgetRollup elements={allElements} />}
         {activeSection === 'reqs' && <RequirementTraceability requirements={allRequirements} elements={allElements} studyId={studyId} />}
-        {activeSection === 'gates' && <ReviewGates studyId={studyId} />}
+        {activeSection === 'gates' && <ReviewGates studyId={studyId} onOpenSection={sec => setActiveSection(sec as Section)} />}
         {activeSection === 'fmeca' && <FMECASummary studyId={studyId} />}
         {activeSection === 'trace' && (<>
           <div className="mb-4"><TraceabilityTree studyId={studyId} /></div>
@@ -253,24 +253,35 @@ function RequirementTraceability({ requirements, elements }: { requirements: any
 
 // ─── Review Gates ───
 
-/** The go / no-go record for each review (decision_catalogue.yaml; MCR is the old MDR). */
-const GATE_DECISION: Record<string, string> = { mcr: 'D-GATE-MDR', mdr: 'D-GATE-MDR', prr: 'D-GATE-PRR', srr: 'D-GATE-SRR', pdr: 'D-GATE-PDR' }
+/** Go / no-go record of a gate (decision_catalogue.yaml D-GATE-<canonical gate>): a merged
+ *  profile gate records the decision of the last canonical gate it covers. */
+const GATE_DECISION: Record<string, string> = { mdr: 'D-GATE-MDR', prr: 'D-GATE-PRR', srr: 'D-GATE-SRR', pdr: 'D-GATE-PDR' }
+function gateDecisionId(covers: string[] | undefined, id: string): string {
+  const last = covers && covers.length ? covers[covers.length - 1] : id === 'mcr' ? 'mdr' : id
+  return GATE_DECISION[last] ?? GATE_DECISION.mdr
+}
 
-function ReviewGates({ studyId }: { studyId: string | null }) {
+const STATE_STATUS: Record<GateState, Status> = {
+  not_ready: 'alarm', ready: 'ok', under_review: 'info', passed: 'ok', reopened: 'caution',
+}
+
+function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpenSection: (s: string) => void }) {
   const { t } = useTranslation()
-  // Ruling Q23: MCR / SRR / PDR from configs/gate_exit_criteria.yaml, default PDR.
-  const gates: GateId[] = ['mcr', 'srr', 'pdr']
-  const [activeGate, setActiveGate] = useState<GateId>('pdr')
-  const missionNeed = useDesignStore(s => s.missionNeed)
-  const params = useActiveParameters()
+  const lang = useUIStore(s => s.lang)
+  const userName = useUIStore(s => s.userName)
+  const qc = useQueryClient()
+  const { data: overview } = useStudyGates(studyId)
+  const { data: profiles } = useGateProfiles()
+  const gates = overview?.profile.gates ?? []
+  const [picked, setPicked] = useState<string | null>(null)
+  // Default tab: the gate the study is preparing for (first not passed).
+  const activeGate = picked && gates.some(g => g.id === picked) ? picked : (overview?.current_gate ?? gates[0]?.id ?? null)
+  const { data: gateResult, isLoading, isError } = useGateReview(studyId, activeGate)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
-  const { data: gateResult, isLoading, isError } = useGateReview(studyId, activeGate, missionNeed, params)
-  const pending = !!gateResult && !gateResult.ready && gateResult.ready_pending_manual
-  // Verdict (R3 problem 14): green only for READY, red only when a check failed,
-  // otherwise amber "NOT READY (n manual/advisory)".
   const failCount = gateResult ? gateResult.criteria.filter(c => c.verdict === 'fail').length : 0
-  const openCount = gateResult?.summary ? (gateResult.summary.manual || 0) + (gateResult.summary.advisory || 0) : 0
-  const verdict: Status = gateResult?.ready ? 'ok' : failCount > 0 ? 'alarm' : 'caution'
+  const short = gateResult?.gate.short ?? activeGate?.toUpperCase() ?? ''
 
   // Logbook: the gate under review is context for entries and worksheets.
   // Passing a gate (NOT READY → READY while watching) prompts the logbook
@@ -282,42 +293,106 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
   }, [activeGate])
   const wasReady = useRef<Record<string, boolean>>({})
   useEffect(() => {
-    if (!gateResult) return
+    if (!gateResult || !activeGate) return
     const before = wasReady.current[activeGate]
     wasReady.current[activeGate] = gateResult.ready
     if (before === false && gateResult.ready) requestEnd('gate', activeGate)
   }, [gateResult, activeGate, requestEnd])
+
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: ['gates', studyId] })
+    void qc.invalidateQueries({ queryKey: ['gate-review', studyId] })
+    void qc.invalidateQueries({ queryKey: ['logbook-decisions'] })
+    void qc.invalidateQueries({ queryKey: ['margin-ladder', studyId] })
+  }
+  const act = async (action: 'start' | 'cancel' | 'pass' | 'reopen') => {
+    if (!studyId || !activeGate) return
+    setBusy(action); setActionError(null)
+    setPicked(activeGate)   // stay on this gate (passing it moves the "current" gate on)
+    try {
+      await gateAction(studyId, activeGate, action, userName)
+      refresh()
+    } catch (e) {
+      const code = e instanceof GateActionError ? e.code : ''
+      setActionError(code === 'not_ready' ? t('Not every must-pass item passes yet.') : t('The gate could not change state ({{code}}).', { code: code || String(e) }))
+    } finally { setBusy(null) }
+  }
+  const changeProfile = async (pid: string) => {
+    if (!studyId) return
+    try { await setGateProfile(studyId, pid); setPicked(null); refresh() } catch { setActionError(t('The gate profile could not be changed.')) }
+  }
+  const openFix = (fix: string) => {
+    if (fix.startsWith('vv:')) { onOpenSection(fix.slice(3)); return }
+    const ui = useUIStore.getState()
+    ui.goToLevel(Math.min(ui.breadcrumb.length, 3) as Level)
+    ui.setActivePanel(fix as ActivityPanel)
+  }
+
+  const state = gateResult?.state
   const verdictText = gateResult
-    ? (gateResult.ready ? t('READY')
-      : failCount > 0 ? t('NOT READY ({{n}} failed)', { n: failCount })
-      : t('NOT READY ({{n}} manual/advisory)', { n: openCount }))
+    ? (state === 'not_ready'
+      ? t('NOT READY ({{n}} failed)', { n: failCount || (gateResult.summary.must_pass - gateResult.summary.must_pass_met) })
+      : t(STATE_LABEL[state ?? 'not_ready']))
     : ''
 
   return (
     <Panel level={2} title={t('Review Gate Evaluation')}
-      actions={<Tabs idBase="gate" variant="segmented" label={t('Review gate')} value={activeGate} onChange={setActiveGate}
-        items={gates.map(g => ({ id: g, label: <span className="mono">{g.toUpperCase()}</span> }))} />}>
-      <div {...tabPanelProps('gate', activeGate)}>
+      meta={overview ? pick(overview.profile.label, lang) : undefined}
+      actions={<>
+        {profiles && overview && (
+          <Select dense aria-label={t('Gate profile')} value={overview.profile.id} onChange={e => void changeProfile(e.target.value)}>
+            {profiles.profiles.map(p => <option key={p.id} value={p.id}>{pick(p.label, lang)}</option>)}
+          </Select>
+        )}
+        {gates.length > 0 && activeGate && (
+          <Tabs idBase="gate" variant="segmented" label={t('Review gate')} value={activeGate} onChange={setPicked}
+            items={gates.map(g => {
+              const st = overview?.gates.find(x => x.id === g.id)?.state
+              return { id: g.id, label: <span className="mono" title={`${pick(g.name, lang)}${st ? ` · ${t(STATE_LABEL[st])}` : ''}`}>{g.short}{st === 'passed' ? ' ✓' : ''}</span> }
+            })} />
+        )}
+      </>}>
+      <div {...(activeGate ? tabPanelProps('gate', activeGate) : {})}>
         {isLoading && <p className="c-2 m-0">{t('Evaluating...')}</p>}
         {isError && !gateResult && <Note tone="caution">{t('Gate review service unreachable.')}</Note>}
 
         {gateResult && (
           <>
+            <p className="t-12 c-2 m-0 mb-2">
+              <span className="w-600 c-1">{gateResult.gate.short} — {pick(gateResult.gate.name, lang)}</span>
+              {gateResult.gate.covers.length > 1 && <> · {t('covers {{gates}}', { gates: gateResult.gate.covers.map(c => c.toUpperCase()).join(' + ') })}</>}
+              {' · '}{t('Budgets use a {{pct}} % system margin (C2O default, added to the nominal value).', { pct: gateResult.system_margin.mass_percent })}
+            </p>
             <div role="status" className="c2o-verdict">
-              <StatusBadge status={verdict} boxed className="t-15">
+              <StatusBadge status={state === 'not_ready' && failCount === 0 ? 'caution' : STATE_STATUS[state ?? 'not_ready']} boxed className="t-15">
                 {verdictText}
               </StatusBadge>
-              {pending && <span className="c-2">{t('Ready for {{gate}}, pending manual sign-off', { gate: activeGate.toUpperCase() })}</span>}
               {gateResult.summary && (
                 <span className="c2o-verdict__counts">
+                  <span>{t('Must-pass: {{met}} of {{n}}', { met: gateResult.summary.must_pass_met, n: gateResult.summary.must_pass })}</span>
                   <span>{t('Pass: {{n}}', { n: gateResult.summary.pass })}</span>
                   <span className={failCount > 0 ? 'c-alarm w-600' : undefined}>{t('Fail: {{n}}', { n: failCount })}</span>
                   <span>{t('Advisory: {{n}}', { n: gateResult.summary.advisory })}</span>
                   <span>{t('Manual: {{n}}', { n: gateResult.summary.manual })}</span>
                 </span>
               )}
-              <span className="row gap-2 ml-auto">
-                <RecordDecision decision={GATE_DECISION[activeGate]} capture="gate:review" context={{ gate: activeGate }}
+              <span className="row gap-2 ml-auto wrap">
+                {(state === 'ready' || (state === 'reopened' && gateResult.ready)) && (
+                  <Button size="sm" variant="primary" busy={busy === 'start'} onClick={() => void act('start')}>{t('Start {{gate}} review', { gate: short })}</Button>
+                )}
+                {state === 'reopened' && !gateResult.ready && (
+                  <Button size="sm" disabledReason={t('Every must-pass item must pass first')}>{t('Start {{gate}} review', { gate: short })}</Button>
+                )}
+                {state === 'under_review' && (<>
+                  <Button size="sm" variant="primary" busy={busy === 'pass'} onClick={() => void act('pass')}
+                    disabledReason={!gateResult.ready ? t('A must-pass item failed during the review') : undefined}
+                    title={t('Pass the gate and save a baseline snapshot')}>{t('Pass {{gate}}', { gate: short })}</Button>
+                  <Button size="sm" busy={busy === 'cancel'} onClick={() => void act('cancel')}>{t('Cancel review')}</Button>
+                </>)}
+                {state === 'passed' && (
+                  <Button size="sm" busy={busy === 'reopen'} onClick={() => void act('reopen')}>{t('Reopen {{gate}}', { gate: short })}</Button>
+                )}
+                <RecordDecision decision={gateDecisionId(gateResult.gate.covers, gateResult.gate.id)} capture="gate:review" context={{ gate: gateResult.gate.id }}
                   label={t('Record go / no-go')}
                   prefill={() => {
                     const failed = gateResult.criteria.filter(c => c.verdict === 'fail')
@@ -340,31 +415,79 @@ function ReviewGates({ studyId }: { studyId: string | null }) {
                   }} />
                 <Button size="sm" onClick={() => requestEnd('gate', activeGate)}
                   title={t('Close this review and download your logbook')}>
-                  {t('Finish {{gate}} review', { gate: activeGate.toUpperCase() })}
+                  {t('Finish {{gate}} review', { gate: short })}
                 </Button>
               </span>
             </div>
+            {actionError && <Note tone="caution" className="mb-2">{actionError}</Note>}
 
             <ul className="list-reset c2o-criteria">
               {gateResult.criteria.map(c => {
                 const kind = badgeKind(c)
+                const seat = pick(c.owner_seat_label, lang) || c.owner_seat
+                const step = c.step ? `${c.step} ${pick(c.step_label, lang)}`.trim() : ''
                 return (
                   <li key={c.id} className="c2o-criteria__row">
                     <StatusBadge status={KIND_STATUS[kind] ?? 'nodata'}>{t(STATUS_LABEL[kind] || 'N/A')}</StatusBadge>
                     <span className="c2o-criteria__q">{t(c.question)}</span>
                     <span className="t-12 c-2">{evidenceText(c, t)}</span>
-                    <span className="t-12 c-3 mono">{c.id}</span>
+                    <span className="t-12 c-3 row gap-2 wrap ai-c">
+                      <span className="mono">{c.id}</span>
+                      {seat && <Tag>{t('Owner: {{seat}}', { seat })}</Tag>}
+                      {step && <span title={t('Workflow step that closes it')}>{t('Step {{step}}', { step })}</span>}
+                      {c.fix && kind !== 'pass' && (
+                        <Button size="sm" variant="quiet" onClick={() => openFix(c.fix!)}>{t(FIX_LABEL[c.fix] ?? 'Fix')}</Button>
+                      )}
+                    </span>
                   </li>
                 )
               })}
             </ul>
 
-            <GateDecisions gate={activeGate} />
+            {gateResult.checks.length > 0 && (
+              <Disclosure ruled summary={t('Rule checks')} meta={t('{{n}} checks', { n: gateResult.checks.length })}>
+                <ul className="list-reset c2o-criteria">
+                  {gateResult.checks.map(ch => (
+                    <li key={ch.id} className="c2o-criteria__row">
+                      <StatusBadge status={CHECK_STATUS[ch.status] ?? 'nodata'}>{t(CHECK_LABEL[ch.status] ?? 'N/A')}</StatusBadge>
+                      <span className="c2o-criteria__q">{pick(ch.label, lang)}</span>
+                      <span className="t-12 c-2">{pick(ch.detail, lang)}</span>
+                      <span className="t-12 c-3 mono">{ch.id}{ch.c2o_default ? ` · ${t('C2O default')}` : ''}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Disclosure>
+            )}
+
+            {gateResult.baselines.length > 0 && (
+              <div className="mt-3">
+                <h4 className="c2o-reqs__group">{t('Baselines')}</h4>
+                <ul className="list-reset stack gap-1 t-12">
+                  {gateResult.baselines.map((b, i) => (
+                    <li key={b.id ?? i}>
+                      {t('{{gate}} passed {{date}} by {{who}}: baseline saved, {{n}} products baselined', {
+                        gate: short, date: fmtDate(b.at), who: b.by || t('unknown'), n: b.products.length })}
+                      {b.error && <span className="c-caution"> · {t('the snapshot could not be stored')}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <GateDecisions gate={gateResult.gate.id} />
           </>
         )}
       </div>
     </Panel>
   )
+}
+
+const CHECK_STATUS: Record<string, Status> = { pass: 'ok', warn: 'caution', fail: 'alarm', not_evaluated: 'nodata' }
+// English text is the i18n key
+const CHECK_LABEL: Record<string, string> = { pass: 'PASS', warn: 'CAUTION', fail: 'FAIL', not_evaluated: 'N/A' }
+
+function fmtDate(iso: string): string {
+  try { return new Date(iso).toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) } catch { return iso }
 }
 
 // ─── FMECA Summary ───
@@ -489,7 +612,7 @@ interface Risk {
   mitigation: string; owner: string; status: string
 }
 
-// Categories are stored with each risk in localStorage: keep the English value, translate when shown.
+// Categories are stored with each risk: keep the English value, translate when shown.
 // English text is the i18n key
 const RISK_CATEGORIES = ['Technical', 'Schedule', 'Cost', 'Programmatic', 'Safety', 'Regulatory']
 // English text is the i18n key
@@ -497,11 +620,35 @@ const L_LABELS = ['', 'Rare', 'Unlikely', 'Possible', 'Likely', 'Almost Certain'
 // English text is the i18n key
 const C_LABELS = ['', 'Negligible', 'Minor', 'Moderate', 'Major', 'Catastrophic']
 
+/**
+ * The team risk register, stored on the server per study (WP0, Nov 2026; it lived in
+ * each browser's localStorage, invisible to teammates and to the gates). A register
+ * left in this browser by the old version is moved to the study once.
+ */
 function RiskRegister({ studyId }: { studyId: string | null }) {
   const { t } = useTranslation()
-  const storageKey = `spacecdf-risks-${studyId}`
-  const loadRisks = (): Risk[] => { try { return JSON.parse(localStorage.getItem(storageKey) || '[]') } catch { return [] } }
-  const [risks, setRisks] = useState<Risk[]>(loadRisks)
+  const qc = useQueryClient()
+  const key = ['risks', studyId]
+  const { data: risks = [] } = useQuery<Risk[]>({
+    queryKey: key,
+    queryFn: () => fetch(`${API}/studies/${studyId}/risks`).then(r => (r.ok ? r.json() : [])),
+    enabled: !!studyId,
+  })
+  // One-time migration of the old browser-local register.
+  useEffect(() => {
+    if (!studyId) return
+    const legacyKey = `spacecdf-risks-${studyId}`
+    let legacy: Risk[] = []
+    try { legacy = JSON.parse(localStorage.getItem(legacyKey) || '[]') } catch { legacy = [] }
+    if (!Array.isArray(legacy) || legacy.length === 0) return
+    void fetch(`${API}/studies/${studyId}/risks/import`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ risks: legacy, only_if_empty: false }),
+    }).then(r => {
+      if (r.ok) { try { localStorage.removeItem(legacyKey) } catch { /* private mode */ } void qc.invalidateQueries({ queryKey: key }) }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyId])
   const [showAdd, setShowAdd] = useState(false)
   const [newDesc, setNewDesc] = useState('')
   const [newCat, setNewCat] = useState('Technical')
@@ -510,27 +657,28 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
   const [newMit, setNewMit] = useState('')
   const [newOwner, setNewOwner] = useState('')
 
-  const save = (r: Risk[]) => { setRisks(r); localStorage.setItem(storageKey, JSON.stringify(r)) }
+  const send = async (url: string, method: string, body?: unknown) => {
+    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+    void qc.invalidateQueries({ queryKey: key })
+    void qc.invalidateQueries({ queryKey: ['gate-review', studyId] })
+  }
 
   const addRisk = () => {
-    if (!newDesc) return
-    const r: Risk = {
-      id: `RSK-${String(risks.length + 1).padStart(3, '0')}`,
-      description: newDesc, category: newCat,
-      likelihood: newL, consequence: newC, rpn: newL * newC,
+    if (!newDesc || !studyId) return
+    void send(`${API}/studies/${studyId}/risks`, 'POST', {
+      description: newDesc, category: newCat, likelihood: newL, consequence: newC,
       mitigation: newMit, owner: newOwner, status: 'open',
-    }
-    save([...risks, r])
+    })
     setNewDesc(''); setNewMit(''); setNewOwner(''); setShowAdd(false)
   }
 
-  const updateRisk = (idx: number, field: string, value: any) => {
-    const updated = [...risks]
-    ;(updated[idx] as any)[field] = value
-    if (field === 'likelihood' || field === 'consequence') {
-      updated[idx].rpn = updated[idx].likelihood * updated[idx].consequence
-    }
-    save(updated)
+  const updateRisk = (r: Risk, field: string, value: string | number) => {
+    if (!studyId) return
+    void send(`${API}/studies/${studyId}/risks/${encodeURIComponent(r.id)}`, 'PATCH', { [field]: value })
+  }
+  const deleteRisk = (r: Risk) => {
+    if (!studyId) return
+    void send(`${API}/studies/${studyId}/risks/${encodeURIComponent(r.id)}`, 'DELETE')
   }
 
   const riskStatus = (rpn: number): Status => rpn >= 15 ? 'alarm' : rpn >= 8 ? 'caution' : 'neutral'
@@ -585,25 +733,25 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
               { key: 'cat', header: t('Cat'), render: r => <Tag>{t(r.category)}</Tag>, sort: r => r.category },
               { key: 'l', header: t('L'), num: true, sort: r => r.likelihood, render: r => (
                 <Select dense className="c2o-num-select" aria-label={t('Likelihood of {{id}}', { id: r.id })} value={r.likelihood}
-                  onChange={e => updateRisk(risks.indexOf(r), 'likelihood', parseInt(e.target.value))}>
+                  onChange={e => updateRisk(r, 'likelihood', parseInt(e.target.value))}>
                   {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
                 </Select>) },
               { key: 'c', header: t('C'), num: true, sort: r => r.consequence, render: r => (
                 <Select dense className="c2o-num-select" aria-label={t('Consequence of {{id}}', { id: r.id })} value={r.consequence}
-                  onChange={e => updateRisk(risks.indexOf(r), 'consequence', parseInt(e.target.value))}>
+                  onChange={e => updateRisk(r, 'consequence', parseInt(e.target.value))}>
                   {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
                 </Select>) },
               { key: 'rpn', header: 'RPN', num: true, sort: r => r.rpn, render: r => riskStatus(r.rpn) === 'neutral' ? <span className="w-600">{r.rpn}</span> : <StatusBadge status={riskStatus(r.rpn)}>{String(r.rpn)}</StatusBadge> },
               { key: 'mit', header: t('Mitigation'), render: r => r.mitigation || <NoData label={t('none')} /> },
               { key: 'own', header: t('Owner'), render: r => r.owner || <NoData label={t('none')} /> },
               { key: 'st', header: t('Status'), sort: r => r.status, render: r => (
-                <Select dense aria-label={t('Status of {{id}}', { id: r.id })} value={r.status} onChange={e => updateRisk(risks.indexOf(r), 'status', e.target.value)}>
+                <Select dense aria-label={t('Status of {{id}}', { id: r.id })} value={r.status} onChange={e => updateRisk(r, 'status', e.target.value)}>
                   <option value="open">{t('Open', { context: 'risk' })}</option><option value="mitigating">{t('Mitigating', { context: 'risk' })}</option>
                   <option value="accepted">{t('Accepted', { context: 'risk' })}</option><option value="closed">{t('Closed', { context: 'risk' })}</option>
                 </Select>) },
               { key: 'x', header: <span className="sr-only">{t('Delete')}</span>, render: r => (
                 <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete {{code}}', { code: r.id })}
-                  onConfirm={() => save(risks.filter(x => x.id !== r.id))} />) },
+                  onConfirm={() => deleteRisk(r)} />) },
             ]} />
         </Disclosure>
       )}

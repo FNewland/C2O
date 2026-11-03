@@ -1,6 +1,7 @@
 /**
- * Gate Review (ruling Q23) — English texts the backend sends, listed here so
- * the i18n tool extracts them and the panel can render them with t().
+ * Gate Review (ruling Q23; profiles and states WP6, Nov 2026) — English texts
+ * the backend sends, listed here so the i18n tool extracts them and the panel
+ * can render them with t().
  *
  * GATE_QUESTIONS must match the `question:` strings in
  * configs/gate_exit_criteria.yaml, and EVIDENCE_KEYS the EVIDENCE_KEYS tuple
@@ -38,6 +39,23 @@ export const GATE_QUESTIONS = [
   'Are all subsystem mass, power, and data margins positive?',
   'Has equipment been selected for all critical subsystems?',
   'Is the reliability analysis acceptable?',
+]
+
+// English text is the i18n key — PRR (Nov 2026). Kept as a separate table: the i18n
+// extractor reads at most 2000 characters of one table literal.
+export const GATE_QUESTIONS_PRR = [
+  'Is one system concept selected and justified against at least two alternatives?',
+  'Is the mission analysis baselined (orbit, lifetime)?',
+  'Is the function tree defined?',
+  'Is the product tree defined down to subsystems?',
+  'Do the mass and power budgets close with the Phase A system margin?',
+  'Are the preliminary technical requirements written, with a verification method each?',
+  'Is the technology readiness of the selected equipment listed?',
+  'Is the model philosophy and verification approach defined?',
+  'Is the ground segment identified?',
+  'Is the risk register updated for the selected concept?',
+  'Is the cost estimate within the target?',
+  'Does the orbit meet the debris-mitigation lifetime rules?',
 ]
 
 // English text is the i18n key
@@ -80,57 +98,40 @@ export const EVIDENCE_KEYS = [
   'Interface rules are invalid',
 ]
 
-/** Where "Go fix" goes, and what it says, for a criterion. */
-export interface FixTarget { tab: string; action: string }
+// English text is the i18n key — PRR and margin-ladder evidence (Nov 2026; separate table,
+// see GATE_QUESTIONS_PRR)
+export const EVIDENCE_KEYS_PRR = [
+  'Concept selected with rationale; {{n}} alternative(s) considered',
+  'Orbit baseline: {{orbit}} {{alt}} km, {{inc}}°, {{life}} year(s)',
+  'No orbit baseline',
+  '{{n}} function(s) in the function tree',
+  '{{systems}} system(s), {{subsystems}} subsystem(s) in the product tree',
+  'Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; power {{power}} W + {{margin}}% = {{ptotal}} W vs {{avail}} W',
+  'No mass target or form factor to check the mass budget against',
+  '{{mission}} mission and {{system}} system requirement(s); {{nomethod}} without a verification method',
+  '{{rated}}/{{total}} components have a TRL',
+  'No components selected yet',
+  '{{n}} ground station(s) identified',
+  '{{n}} risk(s) in the risk register',
+]
 
-// Navigation tab per criterion id / category (values are tab ids, not text).
-const TAB_BY_ID: Record<string, string> = {
-  'MCR-EC-01': 'need', 'MCR-EC-02': 'need', 'MCR-EC-03': 'need',
-  'MCR-EC-04': 'concept', 'MCR-EC-05': 'concept', 'MCR-EC-06': 'conops', 'MCR-EC-07': 'design',
-}
-const TAB_BY_CATEGORY: Record<string, string> = {
-  mission_need: 'need', alternatives: 'concept', conops: 'conops',
-  feasibility: 'design', budgets: 'design', risk: 'design', sustainability: 'design',
-  reliability: 'design', equipment: 'design',
-  traceability: 'requirements', requirements: 'requirements', verification: 'requirements', design: 'requirements',
-  interfaces: 'interfaces',
-}
-
-// English text is the i18n key
-const ACTION_BY_ID: Record<string, string> = {
-  'MCR-EC-01': 'Define the problem statement in the Mission Need step',
-  'MCR-EC-02': 'Add stakeholders in the Mission Need step',
-  'MCR-EC-03': 'Add measurable criteria to primary objectives',
-  'MCR-EC-04': 'Run the Mission Trade analysis in the Concept step',
-  'MCR-EC-05': 'Select a preferred alternative in the Concept step',
-  'MCR-EC-06': 'Document the ConOps in the ConOps tab',
-  'MCR-EC-07': 'Run the design loop to check feasibility, then adjust requirements if margin is negative',
-}
-
-// English text is the i18n key
-const ACTION_BY_CATEGORY: Record<string, string> = {
-  mission_need: 'Complete the Mission Need step',
-  alternatives: 'Compare the alternatives in the Concept step',
-  conops: 'Document the ConOps in the ConOps tab',
-  feasibility: 'Run the design loop and check the budgets',
-  budgets: 'Run the design loop and check the budgets',
-  risk: 'Run the design loop to update the risk analysis',
-  sustainability: 'Run the design loop to evaluate sustainability, check orbit altitude and deorbit plan',
-  reliability: 'Run the design loop to update the reliability analysis',
-  equipment: 'Select equipment for each subsystem',
-  traceability: 'Trace each objective to at least one requirement in the Requirements tab',
-  requirements: 'Give each requirement a verification method and a threshold in the Requirements tab',
-  verification: 'Review requirement compliance in the Requirements tab',
-  design: 'Review requirement compliance in the Requirements tab',
-  interfaces: 'Review the Interface Matrix tab and resolve open conflicts',
+// English text is the i18n key — what the Fix link opens (criterion `fix` in
+// configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
+export const FIX_LABEL: Record<string, string> = {
+  analyses: 'Open Analyses',
+  budget: 'Open Budget',
+  blocks: 'Open Blocks',
+  requirements: 'Open Requirements',
+  functions: 'Open Functions',
+  interfaces: 'Open Interfaces',
+  decide: 'Open Decide',
+  'vv:risks': 'Open the risk register',
 }
 
-/** Fix target (English action = i18n key) for a criterion, or null when it
- *  maps to no tab: the criterion is then shown without a "Go fix" link. */
-export function fixTargetFor(id: string, category: string): FixTarget | null {
-  const tab = TAB_BY_ID[id] ?? TAB_BY_CATEGORY[category]
-  if (!tab) return null
-  return { tab, action: ACTION_BY_ID[id] ?? ACTION_BY_CATEGORY[category] }
+// English text is the i18n key — gate states (services/gate_reviews.py)
+export const STATE_LABEL: Record<string, string> = {
+  not_ready: 'Not ready', ready: 'Ready for review', under_review: 'Under review',
+  passed: 'Passed', reopened: 'Reopened',
 }
 
 // English text is the i18n key
