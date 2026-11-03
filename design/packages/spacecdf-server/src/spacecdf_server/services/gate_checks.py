@@ -39,7 +39,9 @@ QUALITY_PASS_SHARE = {"SRR": 0.8, "PDR": 1.0}
 SRR_MIN_TRL = 4
 
 GATE_CHECKS: dict[str, tuple[str, ...]] = {
-    "MCR": ("GC-PRODUCT-TREE",),
+    # Phase 0 has no product tree yet (gate_profiles.yaml products: first draft at PRR).
+    "MDR": (),
+    "PRR": ("GC-PRODUCT-TREE", "GC-MARGINS"),
     "SRR": ("GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-MARGINS"),
     "PDR": ("GC-PRODUCT-TREE", "GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-VER-RISK",
             "GC-MARGINS", "GC-CDS", "GC-FMECA"),
@@ -134,13 +136,15 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
                               "fr": f"{n} exigence(s) vérifiée(s) uniquement par analyse ou revue de conception exigent une évaluation des risques."},
                              _ref("ecss_10_02", "5.2.2.1"), count=n)
     if cid == "GC-MARGINS":
-        m = cache.setdefault("margins", evaluate_margins(els, ctx["params"], mass_limit_kg=ctx.get("mass_limit_kg")))
+        m = cache.setdefault("margins", evaluate_margins(els, ctx["params"], mass_limit_kg=ctx.get("mass_limit_kg"),
+                                                         gate=ctx.get("margin_gate") or gate.lower()))
         s = m["summary"]
         status = "fail" if s["fail"] else ("not_evaluated" if s["pass"] == 0 else ("warn" if s["warn"] else "pass"))
         return rc.check_item(cid, {"en": "Budgets close with the margin policy", "fr": "Bilans bouclés avec la politique de marges"},
                              status, {"en": f"{s['pass']} pass, {s['warn']} caution, {s['fail']} fail, {s['not_evaluated']} not evaluated.",
                                       "fr": f"{s['pass']} conformes, {s['warn']} à surveiller, {s['fail']} non conformes, {s['not_evaluated']} non évalués."},
-                             rc.ref_of(rc.load("margin_policy"), {"source": "esa_margin_1_3"}), counts=s)
+                             rc.ref_of(rc.load("margin_policy"), {"source": "esa_margin_1_3"}), counts=s,
+                             system_margin=m.get("system_margin"))
     if cid == "GC-CDS":
         c = cache.setdefault("cds", evaluate_cds(els, ctx["interfaces"], ctx["params"], ctx.get("form_factor")))
         if not c["applicable"]:
@@ -164,8 +168,10 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
 
 
 def evaluate_gate_checks(gate: str, ctx: dict[str, Any], criteria: list[dict] | None = None) -> dict[str, Any]:
-    """``ctx``: elements, interfaces, requirements, params, form_factor, mass_limit_kg."""
+    """``ctx``: elements, interfaces, requirements, params, form_factor, mass_limit_kg
+    (optional margin_gate: the margin-ladder step; default the gate itself)."""
     g = gate.upper()
+    g = {"MCR": "MDR"}.get(g, g)   # MCR = the old name of MDR (ruling 3)
     cache: dict[str, Any] = {}
     checks = [_check(cid, g, ctx, cache) for cid in GATE_CHECKS.get(g, ())]
     computed = []

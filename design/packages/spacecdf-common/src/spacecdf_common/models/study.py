@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .mission_need import MissionNeed
 from .conops import ConceptOfOperations
@@ -157,3 +157,28 @@ class Study(BaseModel):
     iterations: list[DesignIteration] = Field(default_factory=list)
     team: list[str] = Field(default_factory=list)
     notes: str = ""
+    # Nov 2026 (WP6): review gates. ``gate_profile`` is an id of configs/gate_profiles.yaml
+    # (full_ecss, esa_iod, c2o_3gate, nasa); "" = the configured default. ``gate_states``:
+    # profile gate id → {state, history[], baselines[]} (services/gate_reviews.py).
+    gate_profile: str = ""
+    gate_states: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    # Nov 2026 (WP0): team records that lived in each browser's localStorage, now per study.
+    risk_register: list[dict[str, Any]] = Field(default_factory=list)
+    trade_records: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_gate_names(cls, data: Any) -> Any:
+        """Studies saved before Nov 2026 call the Phase 0 gate "MCR" (now MDR, ruling 3)."""
+        if isinstance(data, dict) and isinstance(data.get("gate_states"), dict):
+            states = dict(data["gate_states"])
+            if "mcr" in states or "MCR" in states:
+                old = states.pop("mcr", None) or states.pop("MCR", None)
+                states.setdefault("mdr", old)
+            for st in states.values():
+                if isinstance(st, dict):
+                    for h in st.get("history") or []:
+                        if isinstance(h, dict) and str(h.get("gate", "")).lower() == "mcr":
+                            h["gate"] = "mdr"
+            data = {**data, "gate_states": states}
+        return data

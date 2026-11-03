@@ -181,6 +181,12 @@ def validate(name: str, data: dict[str, Any]) -> list[str]:
             s = _req(data, sect, dict, sect, errs) or {}
             for k in keys:
                 _num_value(s.get(k), f"{sect}.{k}", errs)
+        lad = _req(data, "system_margin_ladder", dict, "system_margin_ladder", errs) or {}
+        _bilingual(lad.get("label"), "system_margin_ladder.label", errs)
+        _bilingual((lad.get("convention") or {}).get("text"), "system_margin_ladder.convention.text", errs)
+        by_gate = lad.get("by_gate") or {}
+        for g in ("mdr", "prr", "srr", "pdr", "cdr"):
+            _num_value(by_gate.get(g), f"system_margin_ladder.by_gate.{g}", errs)
 
     elif name == "cds_rules":
         for k in ("max_mass_kg", "cog_limits_cm", "envelope_mm"):

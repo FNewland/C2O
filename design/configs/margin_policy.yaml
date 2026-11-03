@@ -26,6 +26,16 @@ sources:
     kind: c2o_default
     title: "C2O default (established practice / teaching choice; not a standard citation)"
     verified: false
+  gsfc_std_1000:
+    kind: standard
+    short: "GSFC-STD-1000G"
+    title: "NASA GSFC-STD-1000G, Rules for the Design, Development, Verification and Operation of Flight Systems, Rule 1.06 Resource margins"
+    verified: false
+  esa_iod_margins:
+    kind: guideline
+    short: "ESA IOD CubeSat margin policy"
+    title: "ESA In-Orbit Demonstration CubeSat projects, margin policy (TEC-SY/128/2013 family), §2.2 system margins"
+    verified: false
 
 # Equipment maturity margins (applied to each unit's current best estimate).
 # Category letters follow the ESA document (A/B off-the-shelf, C minor modification,
@@ -49,6 +59,31 @@ category_from_trl:
     - {min_trl: 6, requires_heritage: false, category: C}
     - {min_trl: 0, requires_heritage: false, category: D}
   no_kb_component: D   # an element without a KB part is treated as a new design
+
+# System margin ladder by review gate ("C2O default", REDESIGN_DECISIONS.md ruling 2).
+# The system mass and power margin depends on the design's maturity: the gate the study is
+# preparing for. Values take the stricter source at each gate: GSFC-STD-1000G Rule 1.06 asks
+# >25 / >20 / >15 / >10 % at end of Pre-A / A / B / C; the ESA IOD CubeSat margin policy asks
+# 20 % at PDR only. 20 % at PRR and SRR is an inference (ESA states a value only at PDR).
+# `mass.system_margin_percent` / `power.system_margin_percent` below stay the value used when no
+# gate is known (the ESA 20 % of the margin philosophy).
+system_margin_ladder:
+  label: {en: "C2O default", fr: "Valeur par défaut C2O"}
+  source: c2o_default
+  clause: "stricter of GSFC-STD-1000G Rule 1.06 and ESA IOD margin policy §2.2"
+  applies_to: [mass, power]
+  # The margin convention SpaceCDF applies (stated in the UI and in every check message).
+  convention:
+    id: percent_of_nominal
+    text:
+      en: "System margin is a percentage added to the nominal value (current best estimate plus maturity and harness margins): total = nominal × (1 + margin). This is the ESA convention. GSFC states margin as a share of the available resource, (available − estimate) / available."
+      fr: "La marge système est un pourcentage ajouté à la valeur nominale (meilleure estimation actuelle plus marges de maturité et de harnais) : total = nominal × (1 + marge). C’est la convention de l’ESA. Le GSFC exprime la marge en part de la ressource disponible, (disponible − estimation) / disponible."
+  by_gate:
+    mdr: {value: 25, source: gsfc_std_1000, clause: "Rule 1.06, end of Pre-Phase A (>25 %)"}
+    prr: {value: 20, source: gsfc_std_1000, clause: "Rule 1.06, end of Phase A (>20 %)"}
+    srr: {value: 20, source: c2o_default, clause: "inferred: SRR falls between the GSFC end-of-A (20 %) and the ESA IOD PDR (20 %) values"}
+    pdr: {value: 20, source: esa_iod_margins, clause: "§2.2 (20 % at PDR; stricter than GSFC >15 %)"}
+    cdr: {value: 10, source: gsfc_std_1000, clause: "Rule 1.06, end of Phase C (>10 %)"}
 
 mass:
   system_margin_percent: {value: 20, source: esa_margin_1_3, clause: "2.1.1 R-M1-1 / 2.1.2"}

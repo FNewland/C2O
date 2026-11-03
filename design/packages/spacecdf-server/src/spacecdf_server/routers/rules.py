@@ -11,7 +11,8 @@ All routes are mounted under ``/api``:
 * ``GET  /studies/{sid}/rules/verification-defaults``— ECSS-E-ST-10-02C method per requirement
 * ``POST /studies/{sid}/rules/verification-defaults/apply`` — fill EMPTY methods only
 * ``GET  /studies/{sid}/rules/fmeca-skeleton``       — FMECA rows from the failure-mode library
-* ``GET  /studies/{sid}/rules/gates/{gate}``         — computed gate checks (+ the YAML criteria)
+* ``GET  /studies/{sid}/rules/gates/{gate}``         — the gate checklist of the study's profile
+                                                       (YAML criteria + rule checks; routers/gates.py)
 * ``GET  /studies/{sid}/rules/summary``              — one call for a dashboard tile per engine
 
 Every check item has ``{id, label{en,fr}, status, severity, detail{en,fr},
@@ -120,12 +121,17 @@ async def requirement_quality_adhoc(body: QualityBody) -> dict:
 # ---------------------------------------------------------------------- per study
 
 @router.get("/studies/{study_id}/rules/margins")
-async def study_margins(study_id: str, form_factor: str | None = Query(None)) -> dict:
+async def study_margins(study_id: str, form_factor: str | None = Query(None),
+                        gate: str | None = Query(None)) -> dict:
+    """Margin policy on the element tree. The system margin is the ladder step of ``gate``
+    (mdr/prr/srr/pdr/cdr), by default that of the gate the study is preparing for."""
     from ..services.margin_policy import evaluate_margins
+    from .gates import study_margin_gate
     _guard()
     ctx = await _context(study_id, form_factor)
+    mg = gate or study_margin_gate(ctx["study"])
     res = _wrap(lambda: evaluate_margins(ctx["elements"], ctx["params"], mass_limit_kg=ctx["mass_limit_kg"],
-                                         mass_limit_ref=ctx["mass_limit_ref"]))
+                                         mass_limit_ref=ctx["mass_limit_ref"], gate=mg))
     return {"study_id": study_id, "form_factor": ctx["form_factor"], **res}
 
 
@@ -182,25 +188,17 @@ async def study_fmeca_skeleton(study_id: str) -> dict:
 
 @router.get("/studies/{study_id}/rules/gates/{gate}")
 async def study_gate_checks(study_id: str, gate: str, form_factor: str | None = Query(None)) -> dict:
-    """Computed checks for a review gate (MCR/SRR/PDR) plus computed evidence for manual criteria."""
-    from ..services.gate_checks import GATE_CHECKS, evaluate_gate_checks
-    from ..services.gate_evaluator import evaluate_gate, resolve_phase
+    """The review-gate checklist of the study's gate profile, evaluated on the server only.
+
+    ``gate`` is a gate of the study's profile (mdr, prr, srr, pdr; cr in the ESA IOD profile;
+    the old ``mcr`` still means MDR). The criteria of every canonical gate it covers
+    (configs/gate_exit_criteria.yaml, services/gate_evaluator.py) are merged with the rule
+    checks (services/gate_checks.py); each criterion carries its status, evidence, owning
+    seat and the step / Fix target that closes it. No client state is read.
+    """
+    from .gates import evaluate_study_gate
     _guard()
-    pid = resolve_phase(gate)
-    g = gate.upper()
-    if pid is None and g not in GATE_CHECKS:
-        raise HTTPException(status_code=404, detail=f"Unknown review gate: {gate}")
-    ctx = await _context(study_id, form_factor)
-    criteria: list[dict] = []
-    if pid is not None:
-        study = ctx["study"]
-        gate_res = evaluate_gate(pid, mission_need=getattr(study, "mission_need", None) if study else None,
-                                 design_params={**ctx["params"], "_elements": ctx["elements"]},
-                                 requirements=ctx["requirements"], elements=ctx["elements"])
-        criteria = gate_res.get("criteria", [])
-        g = gate_res.get("gate") or g
-    res = _wrap(lambda: evaluate_gate_checks(g, ctx, criteria))
-    return {"study_id": study_id, "criteria": criteria, **res}
+    return await evaluate_study_gate(study_id, gate, form_factor)
 
 
 @router.get("/studies/{study_id}/rules/summary")
@@ -211,13 +209,15 @@ async def study_rules_summary(study_id: str, form_factor: str | None = Query(Non
     from ..services.margin_policy import evaluate_margins
     from ..services.requirement_quality import check_requirements
     from ..services.verification_defaults import suggest_all
+    from .gates import study_margin_gate
     _guard()
     ctx = await _context(study_id, form_factor)
 
     def run() -> dict:
         cds = evaluate_cds(ctx["elements"], ctx["interfaces"], ctx["params"], ctx["form_factor"])
         return {
-            "margins": evaluate_margins(ctx["elements"], ctx["params"], mass_limit_kg=ctx["mass_limit_kg"])["summary"],
+            "margins": evaluate_margins(ctx["elements"], ctx["params"], mass_limit_kg=ctx["mass_limit_kg"],
+                                        gate=study_margin_gate(ctx["study"]))["summary"],
             "cds": {"applicable": cds["applicable"], **cds["summary"]},
             "requirements_quality": check_requirements(ctx["requirements"])["summary"],
             "verification": suggest_all(ctx["requirements"])["summary"],

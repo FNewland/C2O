@@ -9,7 +9,8 @@
 #           interfaces | icd | trace | decide | analyses ;  vv = the V&V level
 #   levels  product-tree level 0 mission, 1 segment, 2 system, 3 subsystem, 4 V&V
 #           (with tabs: narrows the tab match to these levels; alone: matches the level)
-#   gates   V&V review gate being evaluated: mcr | srr | pdr
+#   gates   V&V review gate being evaluated: mdr | prr | srr | pdr (canonical ECSS gates; a merged
+#           profile gate such as the ESA IOD concept review matches the gates it covers; mcr = mdr)
 # Every worksheet is also listed under "All worksheets" in the panel, matched or not.
 #
 # phase: prep | during | debrief | exercise (spec §4). The end-of-session dialog offers the
@@ -20,10 +21,10 @@ defaults:
   phase: exercise
 
 worksheets:
-  LW-1.1: {phase: prep, steps: [wizard:home], tabs: [blocks], levels: [0], gates: [mcr]}
+  LW-1.1: {phase: prep, steps: [wizard:home], tabs: [blocks], levels: [0], gates: [mdr]}
   LW-1.2: {tabs: [requirements], levels: [0]}
   LW-1.3: {tabs: [requirements, vv], levels: [0, 1, 4]}
-  LW-1.4: {steps: [wizard:problem, wizard:stakeholders, wizard:alternatives], tabs: [decide], levels: [0], gates: [mcr]}
+  LW-1.4: {steps: [wizard:problem, wizard:stakeholders, wizard:alternatives], tabs: [decide], levels: [0], gates: [mdr]}
   LW-2.1: {tabs: [requirements, trace], gates: [srr]}
   LW-2.2: {tabs: [functions, trace]}
   LW-2.3: {steps: [wizard:architecture], tabs: [decide, analyses], levels: [0, 1]}
