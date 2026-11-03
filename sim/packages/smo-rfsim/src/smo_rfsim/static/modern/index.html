@@ -85,6 +85,9 @@ d.setAttribute("data-theme",t==="light"?"light":"dark");})();
     .rb{ flex-wrap:wrap; padding:var(--sp-2) var(--sp-4); }
     .rb .meta{ order:9; flex:1 0 100%; }
     .rb .upd{ display:none; }
+    /* the controls (feed, logbook, theme, language) wrap rather than push
+       the language toggle off a phone screen (French labels are longer) */
+    .rb .ctl{ flex:1 1 auto; flex-wrap:wrap; gap:var(--sp-2); margin-left:0; }
     main{ padding:var(--sp-3) var(--sp-4); }
     .grid{ grid-template-columns:minmax(0,1fr); } .span2{ grid-column:auto; }
     .chain{ grid-template-columns:repeat(2,minmax(0,1fr)); }

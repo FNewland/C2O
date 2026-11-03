@@ -377,7 +377,9 @@ export function createWorkbook(host) {
     }
     const fid = (q) => `wbf-${w.id}-${q.id}${opts.extra ? "-x" : ""}`.replace(/[^\w-]/g, "_");
     let sec = "";
-    const body = (w.questions || []).filter((q) => opts.extra || !q.step).map((q) => {
+    // step rows belong to the live checklist in the MCS; elsewhere the
+    // printed sheet is worked row by row, so they stay in the form
+    const body = (w.questions || []).filter((q) => opts.extra || !q.step || host.tool !== "mcs").map((q) => {
       const f = fieldOf(q.id);
       const pre = !entry ? prefillFor(w, q) : "";
       const val = f ? (f.value || "") : pre;
@@ -426,7 +428,8 @@ export function createWorkbook(host) {
     return a ? tText("{{count}} answer", { count: a, plural: "{{count}} answers" }) : tText("not started");
   }
   function sheetBlockHtml(w) {
-    const isList = (w.questions || []).some((q) => q.step) && (w.applies.procedures || []).length;
+    // only the MCS has live checklists (see the "ix" handler)
+    const isList = host.tool === "mcs" && (w.questions || []).some((q) => q.step) && (w.applies.procedures || []).length;
     const filed = formEntries(w.id);
     const ed = W.editing[w.id];
     let inner;
@@ -526,7 +529,9 @@ export function createWorkbook(host) {
       quickHtml() +
       (here.length ? `<div class="wb-here"><div class="lb-sep">${t("Sheets for this context")}</div>${here.map(sheetBlockHtml).join("")}</div>` : "") +
       (!currentProc() && !here.length
-        ? `<p class="lb-empty">${t("Open or start a procedure to get its checklist here, or pick a sheet below. Everything you fill in is saved to your logbook.")}</p>` : "") +
+        ? `<p class="lb-empty">${host.tool === "mcs"
+          ? t("Open or start a procedure to get its checklist here, or pick a sheet below. Everything you fill in is saved to your logbook.")
+          : t("Pick a sheet below. Everything you fill in is saved to your logbook.")}</p>` : "") +
       indexHtml();
     restoreInputs(snap);
     host.onCount(here.length + (W.cl ? 1 : 0));
@@ -662,7 +667,10 @@ export function createWorkbook(host) {
       else if (a === "open-cl") openChecklist(el.dataset.proc);
       else if (a === "quick" || a === "ix") {
         const w = sheet(el.dataset.w);
-        if (w && (w.questions || []).some((q) => q.step) && (w.applies.procedures || []).length) {
+        // a confirm-each-step sheet is the live checklist where the tool runs
+        // procedures (the MCS serves /api/logbook/checklist); elsewhere (radio,
+        // orbit tools) it opens as the printed sheet, row by row
+        if (host.tool === "mcs" && w && (w.questions || []).some((q) => q.step) && (w.applies.procedures || []).length) {
           openChecklist(w.applies.procedures[0]);
         } else if (a === "quick") openForm(el.dataset.w);
         else { W.open.add(el.dataset.w); render(); const d = pane.querySelector(`details.wb-sheet[data-w="${CSS.escape(el.dataset.w)}"] summary`); if (d) { d.scrollIntoView({ block: "start" }); d.focus(); } }

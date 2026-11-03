@@ -407,6 +407,13 @@ label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;min-he
   .ds-card>h2 .r{display:none}
   #alarm-drawer{width:100vw}
 }
+/* phone: the position picker takes its own row, so the header buttons
+   (alarms, voice, language, logbook, help, link) fit and the picker stays
+   readable instead of shrinking to its arrow */
+@media(max-width:520px){
+  .tools{flex-wrap:wrap}
+  .pos-wrap{flex:1 1 100%}
+}
 </style>
 </head>
 <body>
