@@ -682,6 +682,11 @@ export function connectWS() {
     go_nogo_poll: (m) => handleGoNoGo(m),
     go_nogo_status: (m) => handleGoNoGo(m),
     go_nogo_result: (m) => handleGoNoGo(m),
+    // Console seats: the server refused a position this person does not hold.
+    seat_refused: (m) => {
+      announce(tText("Refused: you do not hold the {{position}} desk", { position: m.position || "" }));
+      document.dispatchEvent(new CustomEvent("c2o:seats-refresh"));
+    },
     // (Re)connect: refetch the live alarm list — anything that cleared or
     // was acknowledged elsewhere while we were away must not linger here.
     _open() { S.wsConnected = true; wsDot(true); loadAlarms(); },
@@ -997,8 +1002,57 @@ function retitleRail() {
 }
 function visiblePages() {
   return RAIL.filter(([id]) => id !== "|").map(([id]) => id)
-    .filter((id) => railVisibleForPosition(id, S.positions[S.position], S.position === "flight_director"));
+    .filter((id) => railVisibleForPosition(id, viewPos(), viewSeesAll()));
 }
+
+/* ── Console seats (WP10): what this screen shows ──────────────────────────
+ * seats.js (loaded first) sends "c2o:seats" with the desks the person holds
+ * and this screen's view. The SERVER decides the position of every command;
+ * here the selector only offers the held desks, and the screen view widens
+ * what is displayed: a TILE of several held desks (rail, overview and
+ * alarms cover all of them; commands still go from the active desk) or the
+ * WALL (the whole spacecraft, read-only pages only). */
+S.seats = null;
+S.tile = null;
+S.wall = false;
+function viewPos() {
+  const base = S.positions[S.position];
+  if (!S.tile || S.tile.length < 2) return base;
+  const cfgs = S.tile.map((p) => S.positions[p]).filter(Boolean);
+  const union = (k) => [...new Set(cfgs.flatMap((c) => c[k] || []))];
+  return Object.assign({}, base || {}, { visible_tabs: union("visible_tabs"),
+    subsystems: union("subsystems"), overview_subsystems: union("overview_subsystems") });
+}
+function viewSeesAll() {
+  return S.wall || S.position === "flight_director" || (S.tile || []).includes("flight_director");
+}
+function seatDesks() {
+  const me = S.seats && S.seats.enforced ? S.seats.me : null;
+  return me ? (me.view_positions || []) : null;
+}
+function onSeats(detail) {
+  S.seats = detail || null;
+  const desks = seatDesks();
+  renderPosSelect();
+  if (!desks) return;
+  const v = (S.seats && S.seats.view) || {};
+  const wantWall = v.kind === "wall";
+  const wantTile = v.kind === "tile" ? (v.positions || []).filter((p) => desks.includes(p)) : null;
+  let target = S.position;
+  if (v.kind === "position" && (v.positions || [])[0] && desks.includes(v.positions[0])) target = v.positions[0];
+  if (!desks.includes(target)) target = desks[0] || target;
+  const changed = target !== S.position || wantWall !== S.wall ||
+    JSON.stringify(wantTile) !== JSON.stringify(S.tile);
+  S.wall = wantWall; S.tile = wantTile;
+  document.body.classList.toggle("seat-wall", S.wall);
+  document.body.classList.toggle("seat-tile", !!(S.tile && S.tile.length > 1));
+  if (target !== S.position && desks.includes(target)) setPosition(target);
+  else if (changed) { applyPositionFilter(); renderCurrentPage(true); }
+  const sel = $("pos-select");
+  if (sel && sel.value !== S.position) sel.value = S.position;
+}
+document.addEventListener("c2o:seats", (e) => onSeats(e.detail));
+if (typeof window !== "undefined" && window.__c2oSeats) onSeats(window.__c2oSeats);
 function navRelative(dir) {
   const vis = visiblePages();
   const i = vis.indexOf(S.page);
@@ -1020,8 +1074,8 @@ export function railVisibleForPosition(pageId, pos, seeAll) {
 }
 
 export function applyPositionFilter() {
-  const pos = S.positions[S.position];
-  const seeAll = S.position === "flight_director";
+  const pos = viewPos();
+  const seeAll = viewSeesAll();
   for (const [id] of RAIL) {
     if (id === "|") continue;
     const b = $(`rail-${id}`);
@@ -1044,8 +1098,8 @@ export function applyPositionFilter() {
  * collapsed to one line of alarm counts. Runs again once the schematic is
  * mounted (it is mounted lazily, after the first position filter). */
 function applyOverviewFilter() {
-  const pos = S.positions[S.position];
-  const seeAll = S.position === "flight_director" || !pos;
+  const pos = viewPos();
+  const seeAll = viewSeesAll() || !pos;
   const overview = pos ? (pos.overview_subsystems || pos.subsystems || []) : [];
   for (const [pageId, sub] of Object.entries(PAGE_SUBSYSTEM)) {
     const node = $(`ovr-node-${pageId === "pld" ? "pld" : pageId}`);
@@ -4422,7 +4476,7 @@ async function procAction(action) {
   // press (shared armButton, wired at boot), so no extra arming step here.
   if (action === "load") {
     const source = $("proc-source").value, id = $("proc-type").value;
-    const body = { source, id, step_by_step: $("proc-stepwise").checked };
+    const body = { source, id, step_by_step: $("proc-stepwise").checked, position: S.position };
     if (source === "activity") body.activity_type = id;
     if (source === "ops") body.path = id;
     const r = await postJSON("/api/procedure/load", body);
@@ -4440,7 +4494,7 @@ async function procAction(action) {
     refreshProcStatus();
     return;
   }
-  const r = await postJSON(`/api/procedure/${action}`, {});
+  const r = await postJSON(`/api/procedure/${action}`, { position: S.position });
   if (!r.ok) setHTML("proc-exec-status", `<span style="color:var(--alarm)">${t("{{action}} failed ({{status}})", { action, status: r.status })}</span>`);
   if (action === "start") {
     startProcPolling();
@@ -4535,7 +4589,7 @@ async function pbSave() {
 async function pbRun() {
   const r = await postJSON("/api/procedure/load",
     { source: "inline", name: $("pb-name").value || "builder steps",
-      steps: pb.steps, step_by_step: true });
+      steps: pb.steps, step_by_step: true, position: S.position });
   setText("pb-result", r.ok ? tText("loaded — use runner controls") : tText("run failed ({{status}})", { status: r.status }));
   startProcPolling();
 }
@@ -5074,7 +5128,8 @@ function persistAlarmFilters() {
  * every subsystem (the Flight Director, or no position model loaded). */
 export function mySubsystems(pos = S.position) {
   if (pos === "flight_director") return null;
-  const p = S.positions[pos];
+  if (pos === S.position && (S.wall || (S.tile || []).includes("flight_director"))) return null;
+  const p = pos === S.position ? viewPos() : S.positions[pos];
   const subs = p && Array.isArray(p.subsystems) ? p.subsystems.map((x) => String(x).toLowerCase()) : null;
   return subs && subs.length ? subs : null;
 }
@@ -5439,7 +5494,7 @@ function setTheme(light) {
 /* S15 dump playback shared by the CMD panel and all seven L2 containers. */
 const dumpState = {};   // sub -> {rows, chart}
 async function requestTmDump(sub, storeId) {
-  const r = await postJSON("/api/tm-dump", { subsystem: sub, store_id: storeId || undefined });
+  const r = await postJSON("/api/tm-dump", { subsystem: sub, store_id: storeId || undefined, position: S.position });
   if (!r.ok) { announce(tText("dump request failed ({{status}})", { status: r.status })); return; }
   setTimeout(() => loadDumpData(sub), 1200);
 }
@@ -5967,8 +6022,16 @@ async function loadPositions() {
 function renderPosSelect() {
   const sel = $("pos-select");
   if (!sel) return;
-  sel.innerHTML = Object.entries(S.positions).map(([id, p]) =>
-    `<option value="${esc(id)}">${esc(p.label ? tdb(`pos:${id}:label`, p.label) : id)}</option>`).join("");
+  const desks = seatDesks();
+  const holderOf = {};
+  for (const c of ((S.seats && S.seats.board) || {}).positions || []) holderOf[c.position] = c.holder;
+  sel.innerHTML = Object.entries(S.positions).map(([id, p]) => {
+    const label = p.label ? tdb(`pos:${id}:label`, p.label) : id;
+    if (!desks || desks.includes(id)) return `<option value="${esc(id)}">${esc(label)}</option>`;
+    const h = holderOf[id];
+    const why = h ? tText("held by {{name}}", { name: h.name }) : tText("vacant: claim it under Desk");
+    return `<option value="${esc(id)}" disabled>${esc(label)} — ${esc(why)}</option>`;
+  }).join("");
   sel.value = S.position;
 }
 async function loadParamCatalog() {

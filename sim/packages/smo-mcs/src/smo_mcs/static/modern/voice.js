@@ -419,6 +419,16 @@ async function setTx(on) {
   if (!want) S.latched = S.latched && !!L && !!L.mic;
   try { if (L && L.mic) { if (want) await L.mic.unmute(); else await L.mic.mute(); } } catch (e) { /* */ }
   paintPtt(); paintConn();
+  if (L) reportTalk(L.id, want);
+}
+/* Talk edges for the instructor timeline (redesign WP10): position and loop
+ * only, never a name. The MCS checks the position against the seat. */
+function reportTalk(loop, on) {
+  try {
+    fetch("/api/seats/talk", { method: "POST", keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ loop, on: !!on, position: S.position }) }).catch(() => {});
+  } catch (e) { /* never block push-to-talk */ }
 }
 function pttDown(src) {
   if ($("ptt").getAttribute("aria-disabled") === "true") return;
