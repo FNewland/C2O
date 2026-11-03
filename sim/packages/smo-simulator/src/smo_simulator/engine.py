@@ -75,6 +75,15 @@ def _put_tm(engine, pkt: bytes) -> None:
     try:
         engine.tm_queue.put_nowait(pkt)
         engine.tm_packets_enqueued += 1
+        # Instructor console: the ground's picture is what actually left the
+        # radio (instructor/recorder.py). Instance attribute only, so the
+        # MagicMock(spec=SimulationEngine) doubles skip it.
+        rec = getattr(engine, "__dict__", {}).get("instructor_rec")
+        if rec is not None:
+            try:
+                rec.on_tm_downlinked(pkt)
+            except Exception:  # noqa: BLE001 — never block the downlink
+                logger.debug("instructor TM tap failed", exc_info=True)
     except queue.Full:
         engine.tm_queue_drops += 1
         logger.warning("TM queue full (%d) — packet dropped",
@@ -557,6 +566,13 @@ class SimulationEngine:
         self.register_stateful("load_shedding", self._load_shedding)
         self.register_stateful("fault_propagator", self._fault_propagator)
         self.register_stateful("procedure_executor", self._procedure_executor)
+
+        # Instructor console recorder (INSTRUCTOR_CONSOLE_DESIGN.md): the one
+        # timeline, the ground's view of HK, scheduled injects and the truth
+        # views. Not world state: deliberately NOT registered as stateful (a
+        # breakpoint load starts a new timeline segment instead).
+        from smo_simulator.instructor.recorder import InstructorRecorder
+        self.instructor_rec = InstructorRecorder(self)
 
     def _resolve_default_hk_sids(self) -> set[int]:
         """SIDs that are enabled without a ground command (defect #75)."""
@@ -2250,6 +2266,14 @@ class SimulationEngine:
 
         self._tick_count += 1
 
+        rec = self.__dict__.get("instructor_rec")
+        if rec is not None:
+            try:
+                rec.on_tick()
+                rec.maybe_build_views()
+            except Exception:  # noqa: BLE001 — instructor views never kill the tick
+                logger.warning("Instructor recorder tick failed", exc_info=True)
+
         # Publish the immutable per-tick snapshot readers consume (N-2).
         self._publish_snapshot()
 
@@ -2705,6 +2729,15 @@ class SimulationEngine:
                         # carries the reason (defect #87) but no
                         # COMMAND_REJECTED event is raised — the OBSW never
                         # saw the telecommand.
+                        rec = self.__dict__.get("instructor_rec")
+                        if rec is not None and pkt.secondary is not None:
+                            try:
+                                rec.on_tc_received(
+                                    pkt.secondary.service, pkt.secondary.subtype,
+                                    pkt.data_field or b'', pkt.primary.apid,
+                                    pkt.primary.sequence_count, link_refused=True)
+                            except Exception:  # noqa: BLE001
+                                pass
                         rej = self.tm_builder.build_verification_failure(
                             pkt.primary.apid, pkt.primary.sequence_count,
                             0x0005,
@@ -2905,6 +2938,13 @@ class SimulationEngine:
 
         svc = pkt.secondary.service
         sub = pkt.secondary.subtype
+        rec = self.__dict__.get("instructor_rec")
+        if rec is not None:
+            try:
+                rec.on_tc_received(svc, sub, pkt.data_field or b'',
+                                   pkt.primary.apid, pkt.primary.sequence_count)
+            except Exception:  # noqa: BLE001
+                logger.debug("instructor TC tap failed", exc_info=True)
 
         # Bootloader command restriction.
         #
@@ -3606,8 +3646,13 @@ class SimulationEngine:
                 # stored alarm and overwrite live values with old ones).
                 try:
                     self.tm_queue.put_nowait(tag_vc(pkt, VC_PLAYBACK))
+                    rec = self.__dict__.get("instructor_rec")
+                    if rec is not None:
+                        rec.on_tm_downlinked(pkt, playback=True)
                 except queue.Full:
                     pass
+                except Exception:  # noqa: BLE001 — the tap must not stop a dump
+                    logger.debug("instructor playback tap failed", exc_info=True)
             # else: lost — RF off, radio transmitted into the void
 
         # If we exhausted the budget mid-packet, cap it to avoid unbounded growth
@@ -3813,6 +3858,12 @@ class SimulationEngine:
                                        self._current_tm_rate_bps() / 8.0)
 
     def _enqueue_tm(self, pkt: bytes) -> None:
+        rec = getattr(self, "__dict__", {}).get("instructor_rec")
+        if rec is not None:
+            try:
+                rec.on_tm_generated(pkt)
+            except Exception:  # noqa: BLE001 — never block TM generation
+                logger.debug("instructor TM generation tap failed", exc_info=True)
         # Only downlink TM when RF link is active (orbit contact + transponder OK)
         if not self.downlink_active:
             # TM silently dropped — log for S1 verification packets so the
@@ -3891,6 +3942,10 @@ class SimulationEngine:
         # chooses, never the scenario's name (that would brief the
         # operators on the failure); it crosses the link in the STATE feed.
         'set_session_label',
+        # 2026-11-03 instructor console redesign (INSTRUCTOR_CONSOLE_DESIGN.md):
+        # scheduled / batched injects with a trigger, cancelling one, and a
+        # timeline mark (bookmark or declared sim anomaly).
+        'failure_schedule', 'schedule_cancel', 'timeline_mark',
     })
 
     #: longest session label accepted (it rides in every state summary)
@@ -4014,6 +4069,26 @@ class SimulationEngine:
             logger.warning("Dropping malformed instructor command: %r", cmd)
             return
         t = cmd.get('type')
+        rec = self.__dict__.get("instructor_rec")
+        if rec is not None:
+            try:
+                rec.on_instructor_cmd(cmd)
+            except Exception:  # noqa: BLE001
+                logger.debug("instructor command tap failed", exc_info=True)
+        if t in ('failure_schedule', 'schedule_cancel', 'timeline_mark'):
+            if rec is None:
+                ok, reason = False, "instructor recorder not available"
+            elif t == 'failure_schedule':
+                ok, reason = rec.schedule(cmd)
+            elif t == 'schedule_cancel':
+                ok, reason = rec.cancel(str(cmd.get('schedule_id') or ''))
+            else:
+                ok, reason = rec.mark(cmd)
+            if not ok:
+                logger.warning("%s refused: %s", t, reason)
+            if isinstance(cmd.get('_outcome'), dict):
+                cmd['_outcome'].update({'ok': ok, 'reason': reason})
+            return
         if t == 'set_speed':
             # Clamped to simulation.yaml speed.max (default 1000x) so a stray
             # UI/scenario value cannot stall the loop with an absurd dt_sim.
@@ -4043,6 +4118,12 @@ class SimulationEngine:
             self._handle_failure_clear(cmd)
         elif t == 'failure_inject':
             from smo_simulator.failure_manager import ONSET_STEP
+            # Auto snapshot before the inject (the "return to interrupted
+            # scenario" slot, INSTRUCTOR_CONSOLE_DESIGN.md §7.3).
+            cmd = {k: v for k, v in cmd.items() if k not in ('_done', '_outcome')}
+            if cmd.pop('snapshot_before', False) and rec is not None:
+                rec.auto_snapshot(f"before {cmd.get('failure') or cmd.get('mode', '')}")
+            cmd.pop('label', None)
             # Support both 'failure' (backend) and 'mode' (UI) parameter names
             failure_mode = cmd.get('failure') or cmd.get('mode', '')
             self._failure_manager.inject(

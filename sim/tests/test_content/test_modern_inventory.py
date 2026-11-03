@@ -125,6 +125,11 @@ INSTRUCTOR_ROUTES = [
     "/api/breakpoint/load",
     # 2026-09-27 VR bridge (smo-vr/1): headset link status + latest frame.
     "/api/vr",
+    # 2026-11-03 instructor console redesign (INSTRUCTOR_CONSOLE_DESIGN.md):
+    # truth views, the timeline, the fault menu, history and the debrief.
+    "/api/instructor/views", "/api/instructor/timeline",
+    "/api/instructor/fault-menu", "/api/instructor/history",
+    "/api/instructor/debrief",
 ]
 
 # Shared one-implementation-many-hosts registrars (mounted under /dumps,
