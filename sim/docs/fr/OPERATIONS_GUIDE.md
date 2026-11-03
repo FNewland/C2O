@@ -189,6 +189,27 @@ S12 — courant du bus, courants par ligne, température du gyromètre, PDOP GPS
 qu'avant le câblage des limites sol, ils ne donnaient aucun repère visuel, ni d'un côté ni de l'autre.
 `docs/PARAMETER_MAP.md` indique quel paramètre relève de quel mécanisme.
 
+### Postes de console
+
+Chaque poste de console a un seul titulaire, et c'est le MCS qui décide qui il est. Le sélecteur de poste de l'en-tête ne fait que passer d'un poste à l'autre parmi ceux que vous occupez.
+
+- **Qui vous êtes.** Sur Google Cloud, vous êtes votre compte C2O, vérifié par IAP. Dans une classe sur portable (`SMO_SEATS=local`), vous saisissez votre nom, affiché comme *non vérifié*. Avec `SMO_SEATS=off`, le réglage par défaut sur portable, les postes ne sont pas gérés : le sélecteur fonctionne comme avant et chaque commande est journalisée comme *non vérifiée*.
+- **Prendre un poste.** Ouvrez **Poste** à côté du sélecteur de poste. *Prenez* un poste vacant. Un poste occupé propose *Demande* : son titulaire voit la demande et a 60 s pour *Céder* ou *Le garder*. Un poste dont le titulaire n'a envoyé aucun signal depuis 3 min est *inactif*. Après 5 min, il est *récupérable* et n'importe qui peut le prendre. *Libérer* rend un poste.
+- **Plusieurs postes.** Une même personne peut occuper plusieurs postes, comme dans une petite équipe. Le sélecteur change alors le poste *actif* parmi eux. Les postes que vous n'occupez pas sont grisés, avec le nom de leur titulaire.
+- **Commander.** Chaque télécommande, exécution de procédure, envoi S11, demande de vidage, réponse GO/NO-GO et jeton de boucle vocale part *au nom d'un poste que vous occupez*. Un poste que vous n'occupez pas, ou un poste inconnu, est refusé (« Vous n'occupez pas le poste … »). Une procédure s'exécute au nom du poste qui l'a chargée. Chacune de ses commandes exige l'autorité de ce poste, et seul ce poste ou la Direction de vol peut la démarrer, la suspendre, la faire avancer ou l'interrompre.
+- **Le journal vous nomme.** L'historique des commandes et la main courante enregistrent le poste, la personne et l'écran.
+- **Cet écran.** Chaque onglet du navigateur est un écran (« screen 1 », renommé sous *Cet écran*). *Affiche* choisit ce qu'il montre : votre poste actif ; une mosaïque de tous vos postes (une seule barre de navigation et une seule vue d'ensemble les couvrent, et les commandes partent toujours du poste actif) ; ou l'écran mural (tout le satellite, sans les pages de commande). L'instructeur peut aussi le régler.
+- **Instructeur.** Le tableau des postes (*Ouvrir le tableau des postes*, `/seats`, et la vue *Équipe* de la console instructeur) a une colonne par poste, plus *Banc* (connectés, sans poste) et *Écran mural*. Un poste vacant affiche un point rouge et le mot *vacant*. L'instructeur peut :
+  - glisser une personne sur un poste pour le lui affecter (depuis le banc, cela ajoute un poste ; depuis un autre poste, la personne est déplacée) ;
+  - glisser une pastille d'écran sur un poste ou sur l'écran mural ;
+  - *Libérer* une personne (un « membre malade ») ;
+  - lancer une *Rotation des rôles* (chacun passe au poste suivant) ;
+  - *Verrouiller le tableau* (plus de libre-service), ou verrouiller un seul poste ;
+  - autoriser un *binôme* à un poste : un observateur en lecture seule ou un second opérateur aux commandes.
+
+  Chaque mouvement est journalisé. *Exporter le journal des postes* le télécharge, avec les noms ; il reste au sol.
+- **Ce que voit le simulateur.** Rien sur les personnes. La chronologie de la console instructeur reçoit du sol un résumé anonyme, par poste uniquement : postes occupés, alarmes acquittées, étapes de procédure, réponses GO/NO-GO, et qui a parlé sur quelle boucle.
+
 ---
 
 ## Surveillance de la télémesure

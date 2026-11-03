@@ -180,7 +180,15 @@ write_env() {
         # c2o-instructors group): the welcome page and the voice loops read
         # SMO_INSTRUCTORS; empty = nobody (closed by default behind IAP).
         echo "SMO_INSTRUCTORS=$(printf '%s' "$(attr c2o-instructors)" | tr -cd 'A-Za-z0-9._%+@ -')"
+        # Console seats (WP10): the IAP audiences the MCS accepts when it
+        # verifies X-Goog-IAP-JWT-Assertion (setup.sh writes the metadata).
+        # Empty = every command is refused until setup.sh has been rerun.
+        echo "SMO_IAP_AUDIENCES=$(printf '%s' "$(attr c2o-iap-audiences)" | tr -cd 'A-Za-z0-9/ _-')"
     } > "$tmp"
+    if [ "$ROLE" = ground ] && [ -z "$(attr c2o-iap-audiences)" ]; then
+        say "WARNING: no c2o-iap-audiences metadata: rerun deploy/gcp/setup.sh, then 'vm-bootstrap.sh refresh'."
+        say "         Until then the MCS refuses every command (it cannot verify the IAP sign-in)."
+    fi
     mv -f "$tmp" "$ENV_FILE"
     say "wrote $ENV_FILE (session $(sed -n 's/^SMO_LINK_SESSION=//p' "$ENV_FILE"))"
 }
