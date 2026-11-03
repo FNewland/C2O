@@ -26,6 +26,10 @@ power budget throughout each orbit.
 **Verify:** `eps.sa_a_current` (0x0103) — record value and compare to predicted (expected > 1.0A at optimal)
 **Verify:** `eps.sa_b_current` (0x0104) — record value and compare to predicted (expected > 1.0A at optimal)
 **Verify:** `eps.power_gen` (0x0107) — record total generation
+**TC:** `GET_PARAM(param_id=0x014C)` (Service 20, Subtype 3) — `eps.sa_a_yield_pct`
+**TC:** `GET_PARAM(param_id=0x014D)` (Service 20, Subtype 3) — `eps.sa_b_yield_pct`
+**TC:** `GET_PARAM(param_id=0x014E)` (Service 20, Subtype 3) — `eps.sa_string_lit`
+**Verify:** `eps.sa_a_yield_pct` (0x014C) and `eps.sa_b_yield_pct` (0x014D) — the on-board yield of each string against a healthy string at the same sun geometry (valid only while `eps.sa_string_lit` (0x014E) has the string's bit set). Below 70 % for 30 s in sunlight, S19 ea 1004 (A) / 1005 (B) has already switched the payload line OFF — check the event log before restoring it
 **Action:** Calculate percentage shortfall: (predicted - actual) / predicted x 100 for each array
 **GO/NO-GO:** If shortfall > 20% on either array during confirmed sunlit phase, proceed. If < 20%, log for trend monitoring only. -> GO `STEP-2` | NO-GO `STEP-END`
 

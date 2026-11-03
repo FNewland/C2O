@@ -139,7 +139,18 @@ def load_s12_definitions(config_path: Path) -> dict[int, dict]:
                 'last_value': None,
                 'name': rule_name,
                 'description': rule.get('description', ''),
+                # PUS-C repetition number (consecutive out-of-limit checks
+                # before the monitor reports) and validity condition
+                # (check only while validity_param & mask == value).
+                'repetition': max(1, int(rule.get('repetition', 1) or 1)),
             }
+            validity = rule.get('validity')
+            if isinstance(validity, dict) and validity.get('param_id') is not None:
+                definitions[mon_id].update({
+                    'validity_param': _as_int(validity['param_id']),
+                    'validity_mask': _as_int(validity.get('mask'), 0xFFFFFFFF),
+                    'validity_value': _as_int(validity.get('value'), 1),
+                })
 
         logger.info("Loaded %d S12 monitoring definitions from %s", len(definitions), s12_file)
         return definitions
@@ -229,11 +240,28 @@ def load_s19_rules(config_path: Path) -> dict[int, dict]:
                 action_data = [action_data]
             action_bytes = [_as_int(b) & 0xFF for b in action_data]
 
+            # One-sided param trigger (2026-11-03). `limit: high` arms the
+            # rule only on the S12 HIGH-limit crossing, `limit: low` only on
+            # the LOW one; omitted / `any` = either (the historical
+            # behaviour, right for symmetric bands such as wheel speed).
+            trigger_limit = 'any'
+            if isinstance(trigger, dict) and trigger.get('limit') is not None:
+                trigger_limit = str(trigger['limit']).strip().lower()
+                if trigger_limit not in ('any', 'high', 'low'):
+                    logger.warning("S19 rule %s: unknown trigger limit %r",
+                                   ea_id, trigger['limit'])
+                    continue
+                if trigger_kind != TRIGGER_KIND_PARAM and trigger_limit != 'any':
+                    logger.warning("S19 rule %s: trigger limit only applies "
+                                   "to kind 'param'", ea_id)
+                    continue
+
             rules[ea_id] = {
                 # `event_type` is retained as the trigger id for wire/back
                 # compatibility; `trigger_kind` says which namespace it is in.
                 'event_type': trigger_id,
                 'trigger_kind': trigger_kind,
+                'trigger_limit': trigger_limit,
                 'action_func_id': int(action_func_id),
                 'action_data': action_bytes,
                 'description': rule.get('description', ''),
@@ -273,7 +301,15 @@ def register_s12_definitions(dispatcher, definitions: dict[int, dict]) -> None:
             'severity': defn.get('severity', 'WARNING'),
             'name': defn.get('name', ''),
             'description': defn.get('description', ''),
+            'repetition': int(defn.get('repetition', 1) or 1),
+            'rep_count': 0,
         }
+        if defn.get('validity_param') is not None:
+            dispatcher._s12_definitions[mon_id].update({
+                'validity_param': defn['validity_param'],
+                'validity_mask': defn.get('validity_mask', 0xFFFFFFFF),
+                'validity_value': defn.get('validity_value', 1),
+            })
 
     logger.info("Registered %d S12 definitions with dispatcher", len(definitions))
 
@@ -289,6 +325,7 @@ def register_s19_rules(dispatcher, rules: dict[int, dict]) -> None:
         dispatcher._s19_definitions[ea_id] = {
             'event_type': rule['event_type'],
             'trigger_kind': rule.get('trigger_kind', TRIGGER_KIND_EVENT),
+            'trigger_limit': rule.get('trigger_limit', 'any'),
             'action_func_id': rule['action_func_id'],
             'action_data': list(rule.get('action_data', [])),
             'description': rule.get('description', ''),

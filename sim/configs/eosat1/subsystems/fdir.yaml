@@ -36,16 +36,33 @@ rules:
     threshold: 24.5
     level: 2
     action: safe_mode_eps
+  # Battery heater protection (2026-11-03). The heater is thermostat-
+  # controlled (ON +5 / OFF +10 C, tcs.yaml); FDIR only steps in when the
+  # thermostat evidently is not holding the band, and never leaves the
+  # heater in a manual state behind it.
+  #  * HOT  (> 42 C): force the heater OFF (manual override — a runaway
+  #    thermostat must not keep heating), and hand it back to the thermostat
+  #    (`on_clear`) as soon as the battery is back at or below 42 C.
+  #  * COLD (< 1 C, 4 K under the ON point): return the heater to THERMOSTAT
+  #    control (HEATER_AUTO_MODE). Below +5 C the thermostat switches it on at
+  #    once; when the battery warms past +10 C it switches it off again.
+  #    This used to be `heater_on_battery` (manual ON), which bypassed the
+  #    thermostat and was never undone: after a cold excursion the battery
+  #    ran at +15..+18 C for the rest of the run. FDIR does NOT re-power a
+  #    heater line (5, htr_bat) that was switched off — by load shedding or
+  #    by the ground; the S5 FDIR event and the S12 battery-temperature
+  #    report tell the ground, who decides (CTG card, manual 08).
   - parameter: tcs.temp_battery
     condition: "> 42"
     threshold: 42.0
     level: 1
     action: heater_off_battery
+    on_clear: heater_auto_battery
   - parameter: tcs.temp_battery
     condition: "< 1"
     threshold: 1.0
     level: 1
-    action: heater_on_battery
+    action: heater_auto_battery
   - parameter: aocs.att_error
     condition: "> 5"
     threshold: 5.0

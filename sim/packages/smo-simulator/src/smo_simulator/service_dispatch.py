@@ -2452,6 +2452,18 @@ class ServiceDispatcher:
                     # Drop the delta baseline too: the next powered sample must
                     # not be differenced against a value from before power-off.
                     defn['last_value'] = None
+                    defn['rep_count'] = 0
+                    continue
+                # PUS-C validity check (ECSS-E-ST-70-41C §6.12.3.6): a
+                # definition may name a validity parameter, a mask and an
+                # expected value. While (validity & mask) != expected the
+                # parameter is UNCHECKED — not in violation, not nominal.
+                # This is how "solar-array current low" is only judged while
+                # the string is meant to be lit (2026-11-03: rules 1004/1005
+                # used to fire at every eclipse entry).
+                if not self._s12_validity_ok(defn):
+                    defn['last_value'] = None
+                    defn['rep_count'] = 0
                     continue
 
                 low = defn['low_limit']
@@ -2474,6 +2486,15 @@ class ServiceDispatcher:
                     checked = value
 
                 if checked < low or checked > high:
+                    # PUS-C repetition number: the out-of-limit state must be
+                    # seen on `repetition` CONSECUTIVE checks before the
+                    # monitor reports it (default 1 = immediate). Filters
+                    # transients such as penumbra and attitude slews.
+                    rep_needed = max(1, int(defn.get('repetition', 1) or 1))
+                    rep = int(defn.get('rep_count', 0) or 0) + 1
+                    defn['rep_count'] = rep
+                    if rep < rep_needed:
+                        continue
                     # Map severity string to numeric level for events
                     severity_map = {'INFO': 1, 'WARNING': 2, 'ALARM': 3, 'HIGH': 4}
                     severity_level = severity_map.get(severity, 2)
@@ -2485,6 +2506,10 @@ class ServiceDispatcher:
                         'raw_value': value,
                         'low_limit': low,
                         'high_limit': high,
+                        # Which limit was crossed. S19 rules may be armed on
+                        # one side only (an "overtemp" rule must not act on a
+                        # cold sensor — ea 3003, 2026-11-03).
+                        'limit': 'low' if checked < low else 'high',
                         'check_type': check_type,
                         'type': 'delta_out_of_limits' if check_type ==
                                 self.S12_CHECK_DELTA else 'out_of_limits',
@@ -2492,8 +2517,32 @@ class ServiceDispatcher:
                         'name': name,
                         'description': description,
                     })
+                else:
+                    defn['rep_count'] = 0
 
             return violations
+
+    def _s12_validity_ok(self, defn: dict) -> bool:
+        """PUS-C validity condition of an S12 definition.
+
+        ``validity_param`` / ``validity_mask`` / ``validity_value``: the
+        definition is checked only while ``int(param) & mask == value``. No
+        validity parameter (the default, and every ground-added definition)
+        means always valid. A validity parameter the spacecraft does not
+        produce yet makes the definition unchecked, never violated.
+        """
+        vpid = defn.get('validity_param')
+        if vpid is None:
+            return True
+        raw = self._engine.params.get(int(vpid))
+        if raw is None:
+            return False
+        try:
+            v = int(round(float(raw)))
+        except (TypeError, ValueError):
+            return False
+        mask = int(defn.get('validity_mask', 0xFFFFFFFF))
+        return (v & mask) == (int(defn.get('validity_value', 1)) & mask)
 
     # ─── S13 Large Data Transfer ─────────────────────────────────────
 
@@ -3021,7 +3070,8 @@ class ServiceDispatcher:
              self._request_id) = outer
 
     def trigger_event_action(self, trigger_id: int,
-                             kind: int = TRIGGER_KIND_EVENT) -> None:
+                             kind: int = TRIGGER_KIND_EVENT,
+                             limit: str | None = None) -> None:
         """Called when an event (or an S12 limit violation) occurs.
 
         Event ids and monitored parameter ids both occupy 0x0000-0x0FFF, so the
@@ -3034,6 +3084,12 @@ class ServiceDispatcher:
             trigger_id: event id (kind=TRIGGER_KIND_EVENT) or parameter id
                         (kind=TRIGGER_KIND_PARAM).
             kind: namespace of ``trigger_id``.
+            limit: for a param trigger, which S12 limit was crossed
+                   ('low' / 'high'); None when unknown. A rule armed on one
+                   side (``trigger_limit`` 'high' or 'low') ignores the other
+                   side — an OVERtemp rule must not safe the OBC on a cold
+                   soak (ea 3003, 2026-11-03). The ground still receives the
+                   TM(12,9) and the S5 event for the other side.
         """
         with self._lock:
             for ea_id, defn in self._s19_definitions.items():
@@ -3042,6 +3098,10 @@ class ServiceDispatcher:
                 if int(defn.get('trigger_kind', TRIGGER_KIND_EVENT)) != kind:
                     continue
                 if int(defn['event_type']) != trigger_id:
+                    continue
+                side = defn.get('trigger_limit', 'any') or 'any'
+                if (kind == TRIGGER_KIND_PARAM and side != 'any'
+                        and limit is not None and limit != side):
                     continue
 
                 func_id = defn['action_func_id']

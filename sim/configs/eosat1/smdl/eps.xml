@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="EPS" Creator="EOSAT-1 SMDL Generator" Version="1.0+57d9b01ba55c">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="EPS" Creator="EOSAT-1 SMDL Generator" Version="1.0+836035f564b2">
   <Description>SMP2 model catalogue for EPS subsystem</Description>
   <Type Name="UInt8" Uuid="1b57882a-4b2d-53f8-a27f-be0563caa586" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="5fcf9bfd-72b9-5f0c-b036-3cad6f5a8506" xsi:type="Integer" Size="2" Signed="false"/>
@@ -206,6 +206,15 @@
     <Field Name="eps_line_current_8" Uuid="94e3625c-57bd-52fa-9f6d-3e61d6368dd4" Type="UInt16" Kind="Output" View="true">
       <Description>Power line 8 (Propulsion) current [A]</Description>
     </Field>
+    <Field Name="eps_sa_a_yield_pct" Uuid="e558d8f4-f0cc-5475-b7e4-9db1c6513d82" Type="Float32" Kind="Output" View="true">
+      <Description>String A yield: measured current as % of what a healthy string A delivers at the present geometry (0 while not lit, see eps.sa_string_lit) [%]</Description>
+    </Field>
+    <Field Name="eps_sa_b_yield_pct" Uuid="fc8446a8-2a5b-5f75-9bc6-daefce598d66" Type="Float32" Kind="Output" View="true">
+      <Description>String B yield: measured current as % of what a healthy string B delivers at the present geometry (0 while not lit, see eps.sa_string_lit) [%]</Description>
+    </Field>
+    <Field Name="eps_sa_string_lit" Uuid="99ec6779-9e86-5544-940c-b320ad85a176" Type="Float32" Kind="Output" View="true">
+      <Description>Solar-array strings lit enough to judge (bit0 = A, bit1 = B): sunlit, enabled and a healthy string would give at least 0.2 A. Validity parameter of the string-yield monitors</Description>
+    </Field>
     <Field Name="eps_eclipse_active" Uuid="67f3e8b4-3f75-57a3-a175-f15ee8de8070" Type="UInt8" Kind="Output" View="true">
       <Description>Eclipse active flag (0=sun, 1=eclipse)</Description>
     </Field>
@@ -305,11 +314,11 @@
     <EventSource Name="EPS Battery Undertemp_WARNING" Uuid="50c22633-f45c-50f5-bbd2-68f2af809a76">
       <Description>WARNING alarm for EPS Battery Undertemp</Description>
     </EventSource>
-    <EventSource Name="EPS Solar Array A Low Current_WARNING" Uuid="47af3296-be87-57e5-b704-b80686154b23">
-      <Description>WARNING alarm for EPS Solar Array A Low Current</Description>
+    <EventSource Name="EPS Solar Array A Low Yield_WARNING" Uuid="049eb5bf-7ac9-511e-ab2e-e556aa43ca55">
+      <Description>WARNING alarm for EPS Solar Array A Low Yield</Description>
     </EventSource>
-    <EventSource Name="EPS Solar Array B Low Current_WARNING" Uuid="d123b7dd-ff6a-56dd-a0f5-ad07936ff466">
-      <Description>WARNING alarm for EPS Solar Array B Low Current</Description>
+    <EventSource Name="EPS Solar Array B Low Yield_WARNING" Uuid="5d03dd20-6c9b-5130-8633-dc073e603bf9">
+      <Description>WARNING alarm for EPS Solar Array B Low Yield</Description>
     </EventSource>
   </Model>
 </Catalogue>

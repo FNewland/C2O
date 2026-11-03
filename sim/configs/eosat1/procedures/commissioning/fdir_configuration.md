@@ -47,7 +47,8 @@ anything; events 0x0106-0x0108 fire per stage).
 **Action:** Confirm the shipped rules are present and ENABLED --- in particular
 the momentum-management chain (S12 monitor on `aocs.h_env_frac` 0x02BA firing
 ea_id 2001, whose action is S8 func 1, the desaturation function) and the TCS
-overtemp safing chain (ea 3003). Record the table in the FDIR Configuration
+overtemp safing chain (ea 3003, armed on the S12 HIGH limit only: a cold OBC
+is reported, not safed). Record the table in the FDIR Configuration
 Report.
 **GO/NO-GO:** Event-action table matches the operations database
 

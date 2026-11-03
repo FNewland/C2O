@@ -67,9 +67,25 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 | EPS-01  | bat_soc < 15%                  | 0x0101 < 15    | Safe mode entry             |
 | EPS-02  | bus_voltage < 26.5 V           | 0x0105 < 26.5  | Safe mode entry             |
 | EPS-03  | bat_temp > 45 C                | 0x0102 > 45    | Inhibit battery charge      |
-| EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Activate battery heater     |
-| EPS-05  | sa_current = 0 (both wings)    | 0x0103, 0x0104 | Safe mode entry             |
+| EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Battery heater thermostat (see TCS-01) |
+| EPS-05  | String yield < 70 % while lit, 30 s | 0x014C / 0x014D (valid while 0x014E bit set) | Payload line OFF (S19 ea 1004 / 1005) |
 | EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Shunt excess power          |
+
+**EPS-05 is judged only in sunlight.** Until November 2026 the solar-array
+rules (S19 ea 1004/1005) watched the raw string currents 0x0103/0x0104 against
+a 0.1 A floor. Every eclipse entry crosses that floor, so both rules fired at
+every eclipse. The S12 monitors now watch the string **yield**: the measured
+current as a percentage of what a healthy string would deliver at the present
+sun geometry (0x014C `eps.sa_a_yield_pct`, 0x014D `eps.sa_b_yield_pct`). They
+also carry a PUS-C validity condition: a monitor is checked only while its
+string's bit is set in 0x014E `eps.sa_string_lit` (bit 0 = A, bit 1 = B). The
+bit is set when the spacecraft is sunlit, the string is enabled, and a healthy
+string would give at least 0.2 A. In eclipse, in deep penumbra, or with the
+string facing away from the sun, the monitor is *unchecked*, not violated. A
+repetition count of 30 (30 s at 1 Hz) rides through slews and the shadow
+boundary. A real loss in sunlight (a failed string or a damaged panel) still
+trips the rule within about 30 s and switches the payload line OFF. While the fault persists, the monitor reports again after
+each eclipse exit; repeating the action does no harm. Diagnosis: CTG-009.
 
 ### 4.2 AOCS Rules {#42-aocs-rules}
 
@@ -94,16 +110,51 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
-| TCS-01  | bat_temp < 0 C (red low)      | 0x0407 < 0     | Force battery heater on     |
-| TCS-02  | obc_temp > 70 C (red high)    | 0x0406 > 70    | Safe mode entry             |
-| TCS-03  | obc_temp < 0 C (red low)      | 0x0406 < 0     | Force OBC heater on         |
-| TCS-04  | fpa_temp outside -25.5..+17.5 C | 0x0408 S12 alarm | Power off payload (S19 ea_id 3001) |
+| TCS-01  | bat_temp < 1 C                | 0x0407 < 1     | Battery heater back to thermostat control (`HEATER_AUTO_MODE`) |
+| TCS-02  | obc_temp > 70 C (red high)    | 0x0406 > 70    | OBC SAFE (S19 ea 3003, high limit only) |
+| TCS-03  | obc_temp < 0 C (red low)      | 0x0406 < 0     | No on-board action: OBC heater thermostat; S12 report to ground |
+| TCS-04  | fpa_temp above +17.5 C        | 0x0408 S12 alarm | Power off payload (S19 ea_id 3001) |
+| TCS-05  | bat_temp > 42 C               | 0x0407 > 42    | Battery heater OFF; back to thermostat when ≤ 42 C |
 
 TCS-04 fires off the **S12 alarm** on 0x0408, whose band is derived from
 `subsystems/tcs.yaml: fpa_envelope` (DECISIONS §3). The documented threshold
 used to be a bare `> 12 C`, which is *inside* the normal uncooled resting
 state (+11.5 C measured, +12.4 C peak): the rule would have powered off a
 payload that was correctly switched off already, on every orbit.
+
+**Temperature rules act on one side only.** An S12 temperature monitor has a
+low limit and a high limit. Until November 2026, every S19 rule attached to
+such a monitor fired on *either* crossing. As a result, ea 3003 (OBC overtemp
+→ OBC SAFE) put the OBC in SAFE on every cold soak, and ea 3002 (battery
+overtemp → transmitter OFF) switched the transmitter off when the battery was
+cold. The overtemperature rules 3001, 3002, 3003, 4002 and 6002 are now armed
+on the high limit only (`limit: high` in `s19_rules.yaml`, section 7.1). The
+low crossing is still reported to the ground as TM(12,9) and as an S5 event
+(0x9406 for the OBC).
+
+**OBC under-temperature (TCS-03).** The on-board response to a cold OBC is the
+OBC heater thermostat, which runs while EPS line 6 (`htr_obc`) is powered. Safe
+mode is not used: SAFE does not warm the OBC, and the load shedding that comes
+with it removes internal heat. The S12 low-limit report and its S5 event tell
+the ground. The ground then checks line 6 and the heater state (manual 03) and
+decides. No autonomous mode change is made for a cold OBC.
+
+**Battery heater (TCS-01, TCS-05).** The battery heater is thermostat-
+controlled. FDIR acts only when the thermostat is clearly not holding the
+band, and it never leaves the heater in a manual state afterwards:
+
+- Below 1 C (TCS-01), FDIR returns the heater to thermostat control
+  (`HEATER_AUTO_MODE`). At that temperature the thermostat switches the heater
+  on at once.
+- Above 42 C (TCS-05), FDIR forces the heater OFF. It hands the heater back to
+  the thermostat when the battery is at or below 42 C again (`on_clear` in
+  `subsystems/fdir.yaml`).
+
+Until November 2026 the cold response was a manual HEATER ON that nothing ever
+undid. After a cold excursion the battery then stayed at +15 to +18 C,
+above the +10 C OFF point. FDIR does not re-power heater line
+5 (`htr_bat`) if load shedding or the ground has switched it off. That
+decision stays with the ground.
 
 ### 4.5 TTC Rules {#45-ttc-rules}
 
@@ -207,7 +258,14 @@ Each monitoring definition specifies:
 | High Limit          | Upper threshold for limit check                    |
 | Event ID            | S5 event generated on violation                    |
 | Repetition Count    | Number of consecutive violations before triggering |
+| Validity condition  | Optional `validity: {param_id, mask, value}`: check only while `(param & mask) == value` |
 | Enabled             | Whether this monitor is currently active           |
+
+Both the repetition count (`repetition`, default 1) and the validity
+condition follow PUS-C. While the validity condition is false, the definition
+is *unchecked*: it is neither violated nor nominal. The solar-array yield
+monitors (EPS-05) use both fields. Neither field is carried in the TM(12,13)
+record. The transition report states which limit was crossed, low or high.
 
 When a monitoring check fails, the OBC generates a PUS S5 event packet with the
 corresponding Event ID. This event is:
@@ -263,6 +321,13 @@ When an S5 event is raised:
 2. If found and enabled, the associated action (a stored telecommand) is executed.
 3. The action execution is logged in the event buffer.
 4. The action can itself trigger further events, allowing cascaded responses.
+
+A rule attached to an S12 monitor (trigger kind `param`) can be limited to one
+side of the band. With `limit: high` it fires only on an upper-limit crossing,
+with `limit: low` only on a lower-limit crossing, and with `any` (the default)
+on both. The overtemperature rules use `high`, the solar-array yield rules use
+`low`, and symmetric bands such as wheel overspeed keep `any`. A rule added
+from the ground with TC(19,1) always uses `any`.
 
 ### 7.2 Event-Action Commands {#72-event-action-commands}
 
