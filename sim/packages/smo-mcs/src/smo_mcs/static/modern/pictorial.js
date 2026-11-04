@@ -74,6 +74,13 @@ function model() {
 
 const U = (q, units) => ({ ...q, units });
 
+/** The power-flow "This orbit" ground estimate ({periodS, inWh, outWh,
+ *  netWh}), for the EPS projections card (mcs.js); null before init. */
+export function powerBalance() {
+  if (!D) return null;
+  try { return model().power.balance; } catch (e) { return null; }
+}
+
 /* ── worst state per subsystem: alarms, then limit states, then freshness ── */
 function subState(sub, s) {
   const summ = C.alarmSummary();

@@ -848,6 +848,9 @@ class MCSServer:
                     "enabled": bool(rule.get("enabled", True)),
                     "name": str(rule.get("name", f"rule_{idx}")),
                     "severity": str(rule.get("severity", "WARNING")),
+                    # persistence: consecutive 1 Hz checks out of limits
+                    # before the monitor reports (PUS-C repetition, default 1)
+                    "repetition": max(1, _as_int(rule.get("repetition"), 1)),
                     "description": str(rule.get("description", "")),
                 }
         except Exception as e:
@@ -1254,6 +1257,39 @@ class MCSServer:
                 "time_to_eclipse_entry_s": ecl["time_to_eclipse_entry_s"],
                 "time_to_eclipse_exit_s": ecl["time_to_eclipse_exit_s"],
             }
+            # Worksheet audit 2026-11-04: the duration of the next (or the
+            # current) eclipse and the slant range / one-way light time to the
+            # best-placed station. Both are ground orbit knowledge from the
+            # MCS's own TLE propagation — never the simulator's truth.
+            try:
+                win = self._orbit_prop.eclipse_window()
+                if win.get("entry_s") is not None or win.get("exit_s") is not None:
+                    def _at(off):
+                        return None if off is None else (
+                            sim_utc + timedelta(seconds=float(off))).isoformat()
+                    out["eclipse_window"] = {
+                        "in_eclipse": win.get("in_eclipse"),
+                        "entry_utc": _at(win.get("entry_s")),
+                        "exit_utc": _at(win.get("exit_s")),
+                        "duration_s": win.get("duration_s"),
+                        "source": "ground_propagator",
+                    }
+            except Exception as e:  # noqa: BLE001 — a display aid, never fatal
+                logger.debug("eclipse window: %s", e)
+            rng = float(getattr(o, "gs_range_km", 0.0) or 0.0)
+            if rng > 0.0:
+                els = getattr(o, "gs_elevations_deg", None) or {}
+                best = getattr(o, "active_gs", None) or (
+                    max(els, key=els.get) if els else "")
+                out["gs_geometry"] = {
+                    "station": best,
+                    "in_view": bool(o.in_contact),
+                    "elevation_deg": round(float(o.gs_elevation_deg), 1),
+                    "range_km": round(rng, 1),
+                    # one-way light time, ms: range / c
+                    "owlt_ms": round(rng / 299792.458 * 1000.0, 3),
+                    "source": "ground_propagator",
+                }
             # Ground-propagated orbit state (SGP4 from the mission TLE; TEME,
             # treated as inertial for display). It lets the 3D view build the
             # LVLH frame whatever the spacecraft points at. Ground knowledge,
@@ -1428,7 +1464,23 @@ class MCSServer:
         else:
             offset_state = "nominal"
 
+        # LEOP-006 / NOM-008: a time report left the spacecraft one light
+        # time ago, so the delta the card computes is T_obc − (T_ground −
+        # OWLT). OWLT from the MCS's own ground geometry (slant range to the
+        # station in view), never from the simulator.
+        owlt_ms = None
+        try:
+            st = getattr(self._orbit_prop, "state", None) if self._orbit_prop else None
+            if st is not None and bool(st.in_contact) and float(st.gs_range_km) > 0:
+                owlt_ms = round(float(st.gs_range_km) / 299792.458 * 1000.0, 3)
+        except (AttributeError, TypeError, ValueError):
+            owlt_ms = None
+        offset_lt_s = (None if offset_s is None or owlt_ms is None
+                       else offset_s + owlt_ms / 1000.0)
+
         correlation = {
+            "owlt_ms": owlt_ms,
+            "offset_lt_s": offset_lt_s,
             "sim_utc": sim_utc.isoformat(),
             "ground_utc": sim_utc.isoformat(),
             "sc_utc": sc_time_iso,
@@ -5103,6 +5155,24 @@ class MCSServer:
             load_shed_stage=self._load_shed_stage(),
             now=self.sim_now_ts(),
         )
+        # The contingency card an out-of-limit report of this monitor's
+        # parameter opens (alarm_procedures.yaml by_parameter): the same
+        # link the alarm journal offers, shown before anything fires
+        # (worksheet audit 2026-11-04, WB-5.1.6).
+        for m in data.get("monitors") or []:
+            try:
+                pid = int(m.get("param_id")) if m.get("param_id") is not None else None
+            except (TypeError, ValueError):
+                pid = None
+            if pid is None:
+                continue
+            # the same resolution an S12 alarm of this parameter gets
+            # (by parameter, then by its subsystem)
+            proc = self.resolve_alarm_procedure({
+                "source": "S12", "parameter": f"0x{pid:04X}",
+                "subsystem": (self._param_meta.get(pid) or {}).get("subsystem", "")})
+            if proc:
+                m["procedure"] = proc
         data["active_alarms"] = active
         data["alarm_count_by_severity"] = {
             sev: len([a for a in active if a["severity"] == sev])

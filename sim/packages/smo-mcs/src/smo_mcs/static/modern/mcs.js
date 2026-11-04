@@ -1158,6 +1158,56 @@ export function showPage(id) {
   renderCurrentPage(true);
 }
 
+/* Deep links (worksheet "where" links, 2026-11-04). The logbook's workbook
+ * tab points a question at the place on the console that answers it:
+ *   #page=<rail id>[&param=0xHHHH][&focus=<element id>][&tab=<PUS tab>][&bd=<drawer tab>]
+ * page opens the page; param marks that row of the page's Parameters table;
+ * focus marks an element (a card, a table); tab picks the PUS-services tab;
+ * bd opens the bottom drawer on that tab. The mark is a style rule, not a
+ * class, so it survives the tables' 1 Hz re-render, and it fades after 15 s.
+ * Every value is checked against a strict pattern before it reaches a
+ * selector. tests/test_content/test_worksheet_where.py holds the targets the
+ * workbook uses to pages, rows and ids that exist. */
+const NAV_PARAM = /^0x[0-9A-Fa-f]{4}$/;
+const NAV_ID = /^[A-Za-z][\w-]{0,63}$/;
+const BD_TABS = ["events", "tm", "cmdhist", "conlog", "handover", "gonogo"];
+let navMarkTimer = null;
+export function applyNavHash() {
+  const raw = String(location.hash || "").replace(/^#/, "");
+  if (!raw.includes("=")) return false;
+  const q = new URLSearchParams(raw);
+  const page = q.get("page");
+  if (!page || !RAIL.some(([id]) => id === page && id !== "|")) return false;
+  showPage(page);
+  const tab = q.get("tab");
+  if (page === "diag" && tab && NAV_ID.test(tab)) selectDiagTab(tab);
+  const bd = q.get("bd");
+  if (bd && BD_TABS.includes(bd)) selectBdTab(bd, true);
+  const param = q.get("param");
+  const focus = q.get("focus");
+  const sels = [];
+  if (param && NAV_PARAM.test(param)) {
+    const hex = "0x" + param.slice(2).toUpperCase();
+    sels.push(`#page-${page} tr[data-param="${hex}"]`);
+  }
+  if (focus && NAV_ID.test(focus)) sels.push(`#${focus}`);
+  let st = document.getElementById("c2o-navmark");
+  if (!st) { st = document.createElement("style"); st.id = "c2o-navmark"; document.head.appendChild(st); }
+  st.textContent = sels.length ? sels.map((x) => `${x}`).join(", ") +
+    " { outline: 2px solid var(--acc, #4cc2ff); outline-offset: 2px; background: var(--sel-bg, rgba(76,194,255,.12)); }" : "";
+  clearTimeout(navMarkTimer);
+  navMarkTimer = setTimeout(() => { st.textContent = ""; }, 15000);
+  // the tables fill on the next render: look for the target a few times
+  let tries = 0;
+  const seek = () => {
+    const el = sels.map((x) => document.querySelector(x)).find(Boolean);
+    if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
+    if (++tries < 12) setTimeout(seek, 400);
+  };
+  if (sels.length) setTimeout(seek, 150);
+  return true;
+}
+
 function initKeyboard() {
   const REGIONS = ["top-bar", "nav-rail", "main", "bottom-drawer"];
   document.addEventListener("keydown", (e) => {
@@ -1679,15 +1729,23 @@ function renderGsNetwork() {
   }
   const ls = linkState();
   const activeGs = ls.contact ? ls.gs : null;
-  const el = paramVal("0x050A"), rng = paramVal("0x0509"); // ttc.contact_elevation / ttc.range_km
+  // Elevation, slant range and one-way light time from the MCS's own ground
+  // propagation (state.gs_geometry). ttc.contact_elevation / ttc.range_km
+  // (0x050A / 0x0509) are ground products the operator dictionary does not
+  // carry, so reading them here showed nothing (worksheet audit 2026-11-04).
+  const geo = S.state.gs_geometry || null;
   host.innerHTML = `<table class="plain"><tbody>` + S.groundStations.map((g) => {
     const nm = g.name || g.id || "GS";
     const live = activeGs && nm === activeGs;
+    const here = geo && geo.station === nm && geo.in_view ? geo : null;
     return `<tr${live ? ' class="is-active"' : ""}><td>${live ? renderChip({ kind: "ok", glyph: "lock", label: nm })
         : esc(nm)}</td>
       <td class="mono">${num(g.lat_deg ?? g.lat, 1)}° / ${num(g.lon_deg ?? g.lon, 1)}°</td>
-      <td class="mono">${live ? `EL ${num(el, 0)}° · ${num(rng, 0)} km` : `<span class="ds-meta">${t("not in view")}</span>`}</td></tr>`;
-  }).join("") + `</tbody></table>`;
+      <td class="mono">${here ? t("EL {{el}}° · {{rng}} km · OWLT {{owlt}} ms", { el: num(here.elevation_deg, 0),
+          rng: num(here.range_km, 0), owlt: num(here.owlt_ms, 2) })
+        : `<span class="ds-meta">${t("not in view")}</span>`}</td></tr>`;
+  }).join("") + `</tbody></table>` +
+    `<p class="ds-meta">${t("Elevation, slant range and one-way light time (OWLT = range ÷ c): ground propagation of the mission TLE.")}</p>`;
 }
 
 function updateSubsystemPage(pageId, full) {
@@ -1802,7 +1860,24 @@ function renderGpsNav() {
     readoutRows([[tText("Latitude"), "0x0210", "°", 3], [tText("Longitude"), "0x0211", "°", 3],
       [tText("Altitude"), "0x0212", "km", 1],
       ["ECEF X", "0x0231", "m", 0], ["ECEF Y", "0x0232", "m", 0], ["ECEF Z", "0x0233", "m", 0],
-      ["Vel X", "0x0234", "m/s", 1], ["Vel Y", "0x0235", "m/s", 1], ["Vel Z", "0x0236", "m/s", 1]]);
+      ["Vel X", "0x0234", "m/s", 1], ["Vel Y", "0x0235", "m/s", 1], ["Vel Z", "0x0236", "m/s", 1]]) +
+    gpsMagnitudes(ok);
+}
+/* |r| and |v| of the downlinked ECEF state (worksheet audit 2026-11-04,
+ * LEOP-003 step 3): a ground computation on the six components above, shown
+ * only when all six are fresh and the receiver holds a 3D fix. */
+function gpsMagnitudes(ok) {
+  const ids = ["0x0231", "0x0232", "0x0233", "0x0234", "0x0235", "0x0236"];
+  const v = ids.map((h) => Number(paramVal(h)));
+  const fresh = ok && ids.every((h) => !paramIsStale(h)) && v.every(Number.isFinite);
+  const r = fresh ? Math.hypot(v[0], v[1], v[2]) / 1000 : null;
+  const sp = fresh ? Math.hypot(v[3], v[4], v[5]) : null;
+  const cell = (x, u, d) => x === null ? renderNoData() : `${num(x, d)} ${u}`;
+  return `<table class="plain" id="aocs-gps-mag"><tbody>` +
+    `<tr><td>${t("Position magnitude |r|")} <span class="ds-meta">${t("ground, from 0x0231–0x0233")}</span></td>` +
+    `<td class="mono">${cell(r, "km", 1)}</td></tr>` +
+    `<tr><td>${t("Velocity magnitude |v|")} <span class="ds-meta">${t("ground, from 0x0234–0x0236")}</span></td>` +
+    `<td class="mono">${cell(sp, "m/s", 0)}</td></tr></tbody></table>`;
 }
 
 /* — 2026-08c item 7: OBDH software state (bootloader vs application) — */
@@ -1917,6 +1992,51 @@ export function renderDerivedRow(name) {
     <span class="mono" style="font-size:14px;font-weight:600">${fmtDerivedValue(ent)}
       ${GND_MARK(ent.id)}</span></div>`;
 }
+/* Ground projections the course workbook asks for (worksheet audit
+ * 2026-11-04): the eclipse with its duration (ground propagation), the
+ * orbit-average power margin (the power-flow "This orbit" estimate ÷ the
+ * orbit period) and the time to dump the on-board backlog at each TM rung
+ * (payload.mem_used_mb 0x060B, downlinked, ÷ the rate ladder). Each row says
+ * it is a ground computation; none reads simulator truth. */
+function projRow(id, label, value, note) {
+  return `<div class="row derived-row" id="${id}" style="justify-content:space-between;gap:6px">
+    <span style="font-size:12px;color:var(--tx3)">${esc(label)}</span>
+    <span class="mono" style="font-size:14px;font-weight:600">${value} ${GND_MARK(note || "")}</span></div>`;
+}
+function extraProjections(pageId) {
+  if (pageId === "eps") {
+    const w = S.state.eclipse_window;
+    let ecl;
+    if (!w || (!w.entry_utc && !w.exit_utc)) ecl = `<span class="ds-meta">${t("no orbit propagation")}</span>`;
+    else {
+      const hm = (iso) => iso ? fmtUTC(new Date(iso)).slice(0, 5) : "—";
+      ecl = t("{{a}}–{{b}} UTC · {{d}} min", { a: hm(w.entry_utc), b: hm(w.exit_utc),
+        d: w.duration_s === null || w.duration_s === undefined ? "—" : num(w.duration_s / 60, 1) });
+    }
+    const lab = w && w.in_eclipse ? tText("This eclipse") : tText("Next eclipse");
+    let marg = `<span class="ds-meta">${t("not enough data for an orbit estimate")}</span>`;
+    const b = PIC && PIC.powerBalance ? PIC.powerBalance() : null;
+    if (b && b.netWh && b.netWh.v !== null && b.netWh.v !== undefined && b.periodS) {
+      const m = b.netWh.v / (b.periodS / 3600);
+      marg = `${m > 0 ? "+" : ""}${num(m, 1)} W`;
+    }
+    return projRow("eps-eclipse", lab, ecl, "ground propagation") +
+      projRow("eps-orbit-margin", tText("Orbit-average margin (in − out)"), marg, "ground estimate");
+  }
+  if (pageId === "ttc") {
+    // payload.product_mb (0x0647): the image products waiting for a dump.
+    // Not mem_used_mb (0x060B), which carries the store's pre-existing fill.
+    const mb = Number(paramVal("0x0647"));
+    const ladder = S.state.tm_rate_ladder || [];
+    const ok = Number.isFinite(mb) && !paramIsStale("0x0647") && ladder.length;
+    const rung = (name) => ladder.find((r) => r.name === name);
+    const dur = (r) => !ok || !r ? "—" : mb <= 0 ? "0 s" : fmtAge(mb * 8e6 / r.bps);
+    const val = ok ? t("{{mb}} MB · LOW {{low}} · HIGH {{high}}", { mb: num(mb, 1),
+      low: dur(rung("LOW")), high: dur(rung("HIGH")) }) : `<span class="ds-meta">${t("payload.product_mb not in current TM")}</span>`;
+    return projRow("ttc-dump-time", tText("Time to dump the stored image products"), val, "0x0647 ÷ rate");
+  }
+  return "";
+}
 /* — G3: the "will it fit" verdict line — */
 export function fitVerdictLine() {
   const ent = derivedEntry("ttc.pass_fit_ratio");
@@ -1942,7 +2062,7 @@ function renderDerivedCard(pageId) {
   if (!host) return;
   const rows = (DERIVED_BY_PAGE[pageId] || []).map(renderDerivedRow).join("");
   const fit = FIT_PAGES.includes(pageId) ? fitVerdictLine() : "";
-  host.innerHTML = rows + fit ||
+  host.innerHTML = rows + extraProjections(pageId) + fit ||
     `<div class="logrow nom">${t("no projections for this subsystem")}</div>`;
 }
 
@@ -3922,6 +4042,10 @@ function renderS9Panel() {
         <tr><td>${t("OBC CUC raw")}</td><td class="mono">${esc(cuc.raw)}</td></tr>
         <tr><td>${t("Offset (sc − ground)")}</td><td class="mono">${tc.offset_s === null || tc.offset_s === undefined ? "—" : num(tc.offset_s, 3) + " s"}
           ${renderChip({ kind: stateCls, label: tc.offset_state && tc.offset_state !== "unknown" ? String(tc.offset_state).toUpperCase() : tText("UNKNOWN") })}</td></tr>
+        <tr id="s9-owlt"><td>${t("One-way light time (ground geometry)")}</td><td class="mono">${tc.owlt_ms === null || tc.owlt_ms === undefined
+          ? `<span class="ds-meta">${t("no station in view")}</span>` : num(tc.owlt_ms, 2) + " ms"}</td></tr>
+        <tr id="s9-dt"><td>${t("Δt = T_obc − (T_ground − OWLT)")}</td><td class="mono">${tc.offset_lt_s === null || tc.offset_lt_s === undefined
+          ? "—" : num(tc.offset_lt_s, 3) + " s"}</td></tr>
         <tr><td>${t("Time reference")}</td><td class="mono">${esc(tc.time_ref_name || "—")}</td></tr>
         <tr><td>${t("Since last sync")}</td><td class="mono">${tc.never_synced ? t("NEVER SYNCED") : fmtAge(tc.time_since_sync_s)}</td></tr>
       </tbody></table>
@@ -4045,6 +4169,12 @@ export function renderS12Block(mount) {
     <td class="mono">${num(m.high_limit ?? m.high, 2)}</td>
     <td class="mono">${m.current_value === null || m.current_value === undefined
       ? "—" : num(m.current_value, 2)}</td>
+    <td>${esc(String(m.severity || ""))}</td>
+    <td class="mono" title="${esc(tText("consecutive 1 Hz checks out of limits before the monitor reports"))}">${
+      m.repetition ? esc(tText("{{n}} s", { n: m.repetition })) : "—"}</td>
+    <td>${m.procedure && m.procedure.id
+      ? `<a href="#" class="proc" data-act="procedure" data-proc="${esc(m.procedure.file || m.procedure.id)}"
+          title="${esc(m.procedure.name || "")}">${esc(m.procedure.id)}</a>` : "—"}</td>
     <td>${m.enabled ? "EN" : "dis"}</td>
     <td>${isOol(m) ? renderChip({ kind: "alarm", label: "OOL" })
       : esc(String(m.status || ""))}</td>
@@ -4074,8 +4204,10 @@ export function renderS12Block(mount) {
         <button class="ds-btn" data-s12add="${mount}">${t("ADD (12,6)")}</button>
       </div>` : ""}
       <table class="plain"><thead><tr><th>${t("Mon")}</th><th>${t("Param")}</th><th>${t("Name")}</th><th>${t("Check")}</th>
-        <th>${t("Low")}</th><th>${t("High")}</th><th>${t("Value")}</th><th>En</th><th>${t("State")}</th>${edit ? "<th></th>" : ""}</tr></thead>
-        <tbody>${rows || `<tr><td colspan="10">${t("no monitor table — REFRESH (12,12)")}</td></tr>`}</tbody></table>
+        <th>${t("Low")}</th><th>${t("High")}</th><th>${t("Value")}</th><th>${t("Severity")}</th>
+        <th title="${esc(tText("consecutive 1 Hz checks out of limits before the monitor reports"))}">${t("Persistence")}</th>
+        <th>${t("Procedure")}</th><th>En</th><th>${t("State")}</th>${edit ? "<th></th>" : ""}</tr></thead>
+        <tbody>${rows || `<tr><td colspan="13">${t("no monitor table — REFRESH (12,12)")}</td></tr>`}</tbody></table>
       </div></div>`;
 }
 export function renderS19Block(mount) {
@@ -6431,6 +6563,8 @@ async function boot() {
   applyPositionFilter();
   showPage("ovr");
   selectBdTab("events", false);   // collapsed 24 px strip on boot
+  applyNavHash();                 // a deep link (#page=…) opened the console
+  window.addEventListener("hashchange", applyNavHash);
   // polling cadences preserved from the classic console
   poller(loadContactSchedule, 30000).start();       // 30 s pass schedule
   poller(loadContacts, 60000).start();              // 60 s contact windows

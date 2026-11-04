@@ -121,3 +121,31 @@ def test_present_time_state_prefers_the_spacecraft():
     out = MCSServer._compute_orbital_state(srv)
     assert out["in_eclipse"] is False
     assert out["eclipse_source"] == "ground_propagator"
+
+
+def test_orbital_state_carries_the_eclipse_window_and_ground_geometry():
+    """Worksheet audit 2026-11-04: the EPS page shows the next eclipse with
+    its duration, the TT&C page and the S9 tab the slant range and one-way
+    light time — all from the MCS's own propagation of the mission TLE."""
+    import yaml
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from smo_common.orbit.propagator import OrbitPropagator, GroundStation
+
+    orbit = yaml.safe_load((Path(__file__).resolve().parents[2] / "configs" / "eosat1"
+                            / "orbit.yaml").read_text())
+    stations = [GroundStation(name=g["name"], lat_deg=g["lat_deg"], lon_deg=g["lon_deg"],
+                              min_elevation_deg=g.get("min_elevation_deg", 5.0))
+                for g in orbit["ground_stations"]]
+    srv = _fake_mcs()
+    srv._orbit_prop = OrbitPropagator(orbit["tle_line1"], orbit["tle_line2"], stations)
+    t = datetime(2026, 8, 20, 12, 4, tzinfo=timezone.utc)
+    srv.sim_now = lambda: t
+    out = MCSServer._compute_orbital_state(srv)
+    w = out["eclipse_window"]
+    assert w["source"] == "ground_propagator" and w["in_eclipse"] is False
+    assert 33 * 60 <= w["duration_s"] <= 35.5 * 60
+    assert w["entry_utc"] < w["exit_utc"]
+    g = out["gs_geometry"]
+    assert g["source"] == "ground_propagator" and g["station"]
+    assert g["owlt_ms"] == pytest.approx(g["range_km"] / 299792.458 * 1000.0, abs=1e-3)
