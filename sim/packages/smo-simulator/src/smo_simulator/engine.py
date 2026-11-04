@@ -3500,9 +3500,10 @@ class SimulationEngine:
             if self._hk_timers[sid] >= interval:
                 self._hk_timers[sid] = 0.0
                 hk_struct = self._hk_structures.get(sid)
+                apid = self._hk_apid(sid, sw_image)
+                kw = {"apid": apid} if apid is not None else {}
                 pkt = self.tm_builder.build_hk_packet(
-                    sid, self.params, hk_structure=hk_struct,
-                    apid=self._hk_apid(sid, sw_image))
+                    sid, self.params, hk_structure=hk_struct, **kw)
                 if pkt:
                     self._enqueue_tm(pkt)
                     obdh = self.subsystems.get("obdh")
