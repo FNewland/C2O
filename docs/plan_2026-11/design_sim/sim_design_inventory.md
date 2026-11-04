@@ -30,6 +30,10 @@ SpaceCDF reference points used below (all under `design/`):
 
 ## 1. Existing design-to-simulator exports in SpaceCDF (status)
 
+> **2026-11-03:** the SMO config exporter below is replaced by the design-to-simulator export
+> (`SIM_EXPORT.md`): a loadable configuration directory with per-value provenance and a
+> readiness checklist. The row is kept as the record of what it replaced.
+
 | Export | Code | Target | Status vs current sim schema |
 |---|---|---|---|
 | SMO config exporter (~20 YAML files) | `packages/spacecdf-agents/src/spacecdf_agents/exporters/smo/exporter.py` (+ `param_id_allocator.py`, `orbit_gen.py`); API `POST /exports/smo/{study_id}` and `GET /exports/smo/{id}/validate` in `packages/spacecdf-server/.../routers/exports.py:641`; UI ExportPanel "Simulator Model Inputs" (`frontend/src/workbench/ExportPanel.tsx:147`) | `sim/configs/<mission>/` | **Stale, would not load.** Writes keys the strict sim schemas (`sim/packages/smo-common/src/smo_common/config/schemas.py`, `extra="forbid"`) reject: `mission.yaml: ground_segment` (removed, defect X-11), `eps.yaml: platform_idle_power_w`. Uses the retired legacy `arrays:` block (two half-areas) and no `solar_panels`/wings/`array_losses`/SADA → zero or wrong generation. TTC `dl_freq_mhz: 8200` (X-band; sim DL allocation 2200–2290 MHz, `ttc_basic.DL_BAND_MHZ`), `eirp_dbw: 0`, `gs_g_t_db: 32`, no rate ladder/beacon. TCS = 9 legacy zones, no 16-node network. AOCS: no inertia, wheels geometry, MTQ, sensors, gains. OBDH: model name + param_ids only. FDIR/S12/S19/events/TC catalogue are **hard-coded placeholders** (5 rules, 5 S12, 3 S19, 10 events, 11 S8 functions) unrelated to the design. HK = 6 SIDs, every param uint16 ×100. Ground stations: unknown names silently get Svalbard coordinates. Param IDs are allocated from *design* quantities (e.g. `power.sa_area_m2`), not from telemetry points. No `prop.yaml`, `geometry.yaml`, `rfsim.yaml`, `simulation.yaml`, procedures, planner, limits written. |
