@@ -234,6 +234,9 @@ app.include_router(stack_router.router, prefix="/api", tags=["Stack builder"])
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)
 from .routers import gates as gates_router  # noqa: E402
 app.include_router(gates_router.router, prefix="/api", tags=["Review gates"])
+# SEMP / ECSS diagram models, SVG/PNG and the diagram document (design rules §3)
+from .routers import diagrams as diagrams_router  # noqa: E402
+app.include_router(diagrams_router.router, prefix="/api", tags=["Diagrams"])
 # SpaceCDF seats (WP9): seat API, instructor class board, server-side write guard
 from . import seats as seats_pkg  # noqa: E402
 app.include_router(seats_pkg.router, prefix="/api", tags=["Seats"])
