@@ -15,6 +15,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { useUIStore } from '../stores/uiStore'
+import { useWhereSection } from '../where/where'
 import { displayElementName } from './BlocksPanel'
 import { RecordDecision } from '../logbook'
 import { Button, DataTable, Disclosure, MarginBar, MarginBarKey, Note, NoData, Panel, Tabs, fmtNum, tabPanelProps, type Column } from '../components/ui'
@@ -55,6 +56,7 @@ export function BudgetPanel() {
   const studyId = useUIStore(s => s.studyId)
   const focusElementId = useUIStore(s => s.focusElementId)
   const [activeBudget, setActiveBudget] = useState<BudgetKind>('mass')
+  useWhereSection('budget', sec => { if (sec === 'mass' || sec === 'power' || sec === 'data' || sec === 'cost') setActiveBudget(sec as BudgetKind) })
   const [autoBusy, setAutoBusy] = useState(false)
   const qc = useQueryClient()
 

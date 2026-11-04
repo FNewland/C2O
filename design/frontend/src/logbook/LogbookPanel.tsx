@@ -26,6 +26,7 @@ import { chipLabel, chipValue, HIDDEN_KEYS, matchContext, useAutoContext } from 
 import { useLogbookUI, type PanelTab } from './store'
 import { BookGlyph } from './parts'
 import { deletionText, fmtWhen, KIND_LABEL } from './format'
+import { WhereLinks } from '../where/WhereLinks'
 
 const QUICK_KINDS: EntryKind[] = ['decision', 'thought', 'observation', 'reflection']
 // English text is the i18n key: other tools that share the logbook.
@@ -329,6 +330,7 @@ function QuestionBlock({ ws, q, context }: { ws: Worksheet; q: Question; context
       <label htmlFor={id} className="c2o-lb-q__text">{q.text}</label>
       {q.prompt && <p className="c2o-lb-q__prompt">{q.prompt}</p>}
       {q.points.length > 0 && <ul className="c2o-lb-q__points">{q.points.map((p, i) => <li key={i}>{p}</li>)}</ul>}
+      <WhereLinks where={q.where} book={q.book} links={q.links} />
       <PartDecisions worksheet={ws.id} q={q.id} />
       {answers.length > 0 && (
         <div className="c2o-lb-q__answers">

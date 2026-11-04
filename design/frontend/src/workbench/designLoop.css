@@ -1,0 +1,9 @@
+/* Analyses › Design loop: key results (DesignLoopResults.tsx) */
+.c2o-dlr__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--sp-3) var(--sp-4); }
+.c2o-dlr__group { min-width: 0; }
+.c2o-dlr__h { margin: 0 0 var(--sp-1); font-size: var(--fs-label); font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.c2o-dlr__table { width: 100%; table-layout: fixed; }
+.c2o-dlr__table .c2o-dlr__label { font-weight: 400; text-align: left; vertical-align: top; white-space: normal; overflow-wrap: anywhere; }
+.c2o-dlr__table .c2o-dlr__how { display: block; white-space: normal; font-size: 11px; color: var(--text-3); line-height: 1.35; }
+.c2o-dlr__table .c2o-dlr__val { width: 9.5rem; white-space: nowrap; text-align: right; vertical-align: top; color: var(--text-value); }
+.c2o-dlr__unit { color: var(--text-3); }

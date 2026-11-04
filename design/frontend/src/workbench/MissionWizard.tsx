@@ -22,6 +22,7 @@ import { LanguageToggle } from '../i18n/LanguageToggle'
 import { Dialog, askConfirm, showAlert } from '../components/ui/Dialog'
 import { HomeFrame } from '../components/ui/HomeFrame'
 import { useSeatStore } from '../seats/api'
+import { useWhereStore } from '../where/where'
 import { LogbookBanner, LogbookButton, RecordDecision, useLogbookUI } from '../logbook'
 
 const API = '/api'
@@ -116,6 +117,9 @@ export function MissionWizard() {
     return () => useLogbookUI.getState().setWizardStep(null)
   }, [step])
   const [creating, setCreating] = useState(false)
+  // "Where in SpaceCDF" links from the logbook open a step (where/where.ts checks it is reachable)
+  const whereStep = useWhereStore(s => s.wizard)
+  useEffect(() => { if (whereStep) setStep(whereStep.step as WizardStep) }, [whereStep?.n])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Step 1: Problem
   const [problemStatement, setProblemStatement] = useState('')

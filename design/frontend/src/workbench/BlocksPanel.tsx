@@ -371,15 +371,17 @@ export function BlocksPanel() {
       <ElementProperties studyId={studyId} focusElementId={focusElementId} allElements={allElements} />
 
       {/* Parameters & equations (SCDF-160) for the focused element */}
-      <ParameterSection studyId={studyId} elementId={focusElementId}
-        elementName={focusName && displayElementName(focusName, t)} />
+      <div data-where="params">
+        <ParameterSection studyId={studyId} elementId={focusElementId}
+          elementName={focusName && displayElementName(focusName, t)} />
+      </div>
 
       {/* Design Tools (constellation orbit, ground station config) */}
       <DesignTools />
 
       {/* Equipment Browser at Level 3 */}
       {blockLevel === 3 && (
-        <div className="mt-2 bt pt-2">
+        <div className="mt-2 bt pt-2" data-where="equipment-catalog">
           <EquipmentBrowser />
         </div>
       )}

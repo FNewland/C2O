@@ -1,0 +1,30 @@
+/* "Where in SpaceCDF" links under worksheet questions and decisions (where/WhereLinks.tsx). */
+.c2o-where { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-1) var(--sp-2); border-left: 2px solid var(--interactive); background: var(--interactive-wash); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: var(--fs-label); line-height: var(--lh-text); }
+.c2o-where--compact { padding: 2px var(--sp-2); }
+.c2o-where__row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px var(--sp-2); }
+.c2o-where__h { flex: none; font-weight: 600; color: var(--text-2); }
+.c2o-where__list { display: inline-flex; flex-wrap: wrap; gap: 2px var(--sp-2); }
+.c2o-where__go { padding: 0; border: 0; background: none; color: var(--interactive); font: inherit; text-align: left; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.c2o-where__go:hover { text-decoration-thickness: 2px; }
+.c2o-where__go:focus-visible, .c2o-where__ext:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }
+.c2o-where__ext { color: var(--interactive); text-underline-offset: 2px; overflow-wrap: anywhere; }
+.c2o-where__book { color: var(--text-2); }
+.c2o-where__msg { color: var(--status-caution); }
+
+/* The place a where-link opened: a short highlight that fades out. */
+@keyframes c2o-where-flash {
+  0% { box-shadow: 0 0 0 3px var(--interactive); }
+  70% { box-shadow: 0 0 0 3px var(--interactive); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.c2o-where-flash { animation: c2o-where-flash 2.4s var(--ease) 1; border-radius: var(--radius-sm); }
+@media (prefers-reduced-motion: reduce) {
+  .c2o-where-flash { animation: none; outline: 3px solid var(--interactive); outline-offset: 2px; }
+}
+
+/* Traceability › Mission need (components/MissionNeedCard.tsx) */
+.c2o-need__dl { display: grid; grid-template-columns: minmax(120px, max-content) 1fr; gap: var(--sp-1) var(--sp-3); margin: 0; font-size: var(--fs-body); }
+.c2o-need__dl dt { font-weight: 600; color: var(--text-2); }
+.c2o-need__dl dd { margin: 0; overflow-wrap: anywhere; }
+.c2o-need__list { display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 560px) { .c2o-need__dl { grid-template-columns: 1fr; } }

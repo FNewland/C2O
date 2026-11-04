@@ -8,6 +8,7 @@
  * MCS limits derived from the monitors.
  */
 import { Fragment, useState } from 'react'
+import { useWhereSection } from '../where/where'
 import { useTranslation } from 'react-i18next'
 import { DataTable, NoData, StatusBadge, Tabs, Tag, tabPanelProps, type Column } from '../components/ui'
 import { pickLang } from '../types/interfaces'
@@ -24,6 +25,7 @@ export function FdirPanel() {
   const { t } = useTranslation()
   const ctx = useCdrPanel()
   const [sub, setSub] = useState<Sub>('monitors')
+  useWhereSection('fdir', sec => { if (['monitors', 'actions', 'fmeca', 'shed', 'levels'].includes(sec)) setSub(sec as Sub) })
   return (
     <CdrFrame ctx={ctx} group="fdir" testId="fdir-panel" title={t('FDIR design')}
       owners={t('Monitors and limits belong to the seat of their subsystem, event-actions and safe mode to Systems, the load-shed table to Power.')}>
