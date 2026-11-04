@@ -33,7 +33,7 @@ const MOUNT_KEY: Record<string, string> = {
   deployable: 'deployable', bracket: 'bracket', structure: 'structure', distributed: 'distributed',
 }
 
-export function StackBuilder() {
+export function StackBuilder({ viewing }: { viewing?: { id: string; name: string } } = {}) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language?.startsWith('fr') ? 'fr' : 'en'
   const studyId = useUIStore(s => s.studyId)
@@ -121,8 +121,16 @@ export function StackBuilder() {
   const fmtDate = (s?: string) => (s ? s.replace('T', ' ').slice(0, 16) : '')
   const originLabel = (o?: string) => (o === 'rule:STACK-AUTO' ? t('auto-placement (rule:STACK-AUTO)') : o === 'user' ? t('edited by hand') : o ?? '')
 
+  // One CubeSat per layout: with several spacecraft the stack is the first one's (server side).
+  const other = viewing && data.spacecraft && data.spacecraft.id !== viewing.id ? data.spacecraft : null
+
   return (
     <div className="c2o-stk">
+      {other && (
+        <Note tone="caution" className="mb-2">
+          {t('The stack builder lays out one CubeSat: {{name}}, the first spacecraft of the space segment. {{viewing}} is not placed yet.', { name: other.name, viewing: viewing!.name })}
+        </Note>
+      )}
       <div className="c2o-stk__bar">
         <div className="row gap-2 wrap ai-c">
           <Button variant="primary" busy={busy === 'auto'} onClick={() => run('auto', async () => { await act.autoPlace(); setWhich('proposal') })}

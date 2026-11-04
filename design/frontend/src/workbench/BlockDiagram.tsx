@@ -433,7 +433,7 @@ export function BlockDiagram() {
     const childCount = (node.data as any).childCount || 0
     const containerTypes = ['mission', 'segment', 'system', 'subsystem']
     if (childCount > 0 || containerTypes.includes((node.data as any).elementType)) {
-      drillInto(node.id, (node.data as any).label)
+      drillInto(node.id, (node.data as any).label, (node.data as any).elementType)
     }
   }, [drillInto])
 

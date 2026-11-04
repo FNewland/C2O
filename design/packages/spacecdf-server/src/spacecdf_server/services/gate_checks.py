@@ -88,12 +88,19 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
         subs = [e for e in hw if e.get("element_type") == "subsystem"]
         with_comp = [s for s in subs if any(c.get("element_type") == "component" for c in kids.get(s["id"], []))]
         need_comp = gate == "PDR"
-        ok = bool(systems) and bool(subs) and (len(with_comp) == len(subs) if need_comp else True)
+        # levels (services/product_tree.py): no subsystem or unit directly under a segment
+        from .product_tree import misplaced
+        hw_ids = {e["id"] for e in hw}
+        wrong = [e for e in misplaced(els) if e["id"] in hw_ids]
+        ok = bool(systems) and bool(subs) and not wrong and (len(with_comp) == len(subs) if need_comp else True)
+        wtxt_en = f" {len(wrong)} at the wrong level (e.g. {wrong[0].get('name')}: a subsystem needs a spacecraft above it)." if wrong else ""
+        wtxt_fr = f" {len(wrong)} au mauvais niveau (p. ex. {wrong[0].get('name')} : un sous-système a besoin d’un satellite au-dessus)." if wrong else ""
         return rc.check_item(cid, {"en": "Product tree", "fr": "Arbre produit"}, "pass" if ok else "fail",
-                             {"en": f"{len(systems)} system(s), {len(subs)} subsystem(s), {len(with_comp)} with components.",
-                              "fr": f"{len(systems)} système(s), {len(subs)} sous-système(s), dont {len(with_comp)} avec composants."},
+                             {"en": f"{len(systems)} system(s), {len(subs)} subsystem(s), {len(with_comp)} with components.{wtxt_en}",
+                              "fr": f"{len(systems)} système(s), {len(subs)} sous-système(s), dont {len(with_comp)} avec composants.{wtxt_fr}"},
                              _ref("ecss_m_10", "4.4.3.4.4" if gate == "PDR" else None),
-                             counts={"systems": len(systems), "subsystems": len(subs), "with_components": len(with_comp)})
+                             counts={"systems": len(systems), "subsystems": len(subs), "with_components": len(with_comp),
+                                     "misplaced": len(wrong)})
     if cid == "GC-SPEC-TREE":
         levels = {r.get("level") for r in reqs}
         below = [r for r in reqs if r.get("level") in ("subsystem",)]

@@ -102,6 +102,50 @@ def test_wp0_6_quick_start_shows_on_a_segment_at_any_depth():
     assert out == [True, False, False, False]
 
 
+def test_tree_levels_follow_the_focus_type_not_the_depth():
+    """Nov 2026 product-tree fix: with a mission root the depth is one more than the ECSS
+    level; inside a subsystem (depth 4) the workbench showed V&V instead of its equipment."""
+    out = _node("workbench/blockLevels.ts", """(() => {
+      const c = [{id:'m', name:'M', type:'mission'}, {id:'s', name:'S', type:'segment'},
+                 {id:'sc', name:'SC', type:'system'}, {id:'eps', name:'EPS', type:'subsystem'}]
+      return { levels: [0,1,2,3,4].map(n => m.workbenchLevel(c.slice(0, n))),
+               legacy: [1,2,3].map(n => m.workbenchLevel([{id:'a',name:'a'},{id:'b',name:'b'},{id:'c',name:'c'}].slice(0, n))),
+               back: [0,1,2,3].map(l => m.crumbIndexForLevel(c, l)),
+               tree: ['mission','segment','system','subsystem','component'].map(m.treeLevel) }
+    })()""")
+    assert out["levels"] == [0, 0, 1, 2, 3]         # top, mission, segment, spacecraft, subsystem
+    assert out["legacy"] == [1, 2, 3]               # crumbs saved without a type: the old depth rule
+    assert out["back"] == [0, 1, 2, 3]
+    assert out["tree"] == [0, 1, 2, 3, 4]
+
+
+def test_spacecraft_is_offered_under_the_space_segment_only():
+    out = _node("workbench/blockLevels.ts", f"""(() => {{
+      const els = [{{id:'m', element_type:'mission', parent_id:null}},
+                   {{id:'s', element_type:'segment', parent_id:'m', segment:'space', name:'Space Segment'}},
+                   {{id:'g', element_type:'segment', parent_id:'m', segment:'ground', name:'Ground Segment'}},
+                   {{id:'sc', element_type:'system', parent_id:'s'}}]
+      const withSubs = [...els, {{id:'eps', element_type:'subsystem', parent_id:'sc'}}]
+      return {{ add: ['m','s','g','sc'].map(id => m.canAddSpacecraft(els, id)),
+               seg: [m.segmentOf(els, 's'), m.segmentOf(els, 'g'), m.segmentOf(els, 'sc')],
+               qs: [m.showQuickStart(els, 'sc'), m.showQuickStart(withSubs, 'sc'), m.showQuickStart(els, 'g')],
+               child: m.placement(els, 's') }}
+    }})()""")
+    assert out["add"] == [False, True, False, False]
+    assert out["seg"] == ["space", "ground", "space"]
+    assert out["qs"] == [True, False, True]          # spacecraft without subsystems; ground segment without station
+    assert out["child"] == {"parentId": "s", "childType": "system"}
+
+
+def test_store_and_tabs_use_the_type_levels():
+    src = (SRC / "stores" / "uiStore.ts").read_text(encoding="utf-8")
+    assert "workbenchLevel(bc)" in src and "Math.min(bc.length, 4)" not in src
+    app = (SRC / "App.tsx").read_text(encoding="utf-8")
+    assert "workbenchLevel(breadcrumb)" in app and "level <= breadcrumb.length ||" not in app
+    wiz = (SRC / "workbench" / "MissionWizard.tsx").read_text(encoding="utf-8")
+    assert "/product-tree/default" in wiz
+
+
 def test_wp0_6_blocks_panel_uses_the_helper():
     src = (SRC / "workbench" / "BlocksPanel.tsx").read_text(encoding="utf-8")
     assert "placement(allElements, focusElementId)" in src

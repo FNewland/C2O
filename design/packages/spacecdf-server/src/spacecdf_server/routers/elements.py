@@ -176,7 +176,21 @@ async def _auto_propose(study_id: str | None) -> None:
 
 @router.post("/elements/")
 async def create_element(body: ElementCreate, study_id: str = Query(...)) -> dict:
-    """Create a new design element."""
+    """Create a new design element.
+
+    The product tree is checked (services/product_tree.py, ECSS-M-ST-10C): a segment holds
+    systems (spacecraft, ground stations), never subsystems or equipment directly; 422
+    ``product_tree_level`` says what may go there instead."""
+    from ..services.product_tree import placement_error
+    parent = _elements.get(body.parent_id) if body.parent_id else None
+    if parent is not None and not parent.get("deleted_at"):
+        err = placement_error(body.element_type, parent)
+        if err:
+            raise HTTPException(422, err)
+    elif body.parent_id is None:
+        err = placement_error(body.element_type, None)
+        if err:
+            raise HTTPException(422, err)
     el_id = uuid4().hex
     element = {
         "id": el_id,
@@ -242,6 +256,14 @@ async def update_element(element_id: str, body: ElementUpdate, request: Request)
         })
 
     updates = {k: v for k, v in body.model_dump(exclude_unset=True, exclude={"version"}).items() if v is not None}
+    if updates.get("parent_id") and updates["parent_id"] != el.get("parent_id"):
+        # moving a block keeps the product tree valid (services/product_tree.py)
+        from ..services.product_tree import placement_error
+        new_parent = _elements.get(updates["parent_id"])
+        if new_parent is not None:
+            err = placement_error(el.get("element_type"), new_parent)
+            if err:
+                raise HTTPException(422, err)
     from ..seats import changes as seat_changes
     from ..seats import config as seat_cfg
     from ..seats.service import element_edit_decision
@@ -1175,6 +1197,9 @@ class PopulateRequest(BaseModel):
     """Request to auto-populate a segment with subsystems and initial equipment."""
     spacecraft_class: str = "nano"  # nano|micro|small|medium|large
     include_equipment: bool = True  # Also add recommended components from KB
+    # Add another spacecraft (system) under the segment even when it already has one
+    new_system: bool = False
+    system_name: str | None = None
 
 
 # Standard subsystems per spacecraft class
@@ -1273,15 +1298,18 @@ async def _roll_up_subsystems(subsystem_ids: dict[str, str], spacecraft_class: s
 @router.post("/studies/{study_id}/populate-subsystems")
 async def populate_subsystems(
     study_id: str,
-    parent_element_id: str = Query(..., description="ID of the segment to populate"),
+    parent_element_id: str = Query(..., description="ID of the segment (or of a spacecraft/system) to populate"),
     body: PopulateRequest = PopulateRequest(),
 ) -> dict:
-    """Auto-populate a segment element with standard subsystems and initial equipment.
+    """Auto-populate a segment (or one of its systems) with standard subsystems and equipment.
 
-    Creates:
-    1. A system element (e.g. "Spacecraft") under the segment
+    Product tree (ECSS-M-ST-10C; services/product_tree.py): segment → system (a spacecraft,
+    a ground station) → subsystems → equipment. Given a segment, creates:
+    1. A system element (e.g. "Spacecraft") under the segment — reuses the first one, unless
+       ``new_system`` asks for another spacecraft
     2. Standard subsystem elements under the system
     3. Optionally, recommended equipment from the KB under each subsystem
+    Given a system (a spacecraft), steps 2 and 3 run on it.
 
     This bridges the gap between "I have a mission concept" and "I have
     equipment in the tree that drives budgets".
@@ -1298,7 +1326,14 @@ async def populate_subsystems(
     if parent["study_id"] != study_id:
         raise HTTPException(400, "Element does not belong to this study")
 
-    segment = parent.get("segment", "space")
+    if parent.get("element_type") not in ("segment", "system"):
+        raise HTTPException(422, {"error": "product_tree_level", "message": {
+            "en": "Populate a segment (it gets a spacecraft) or a spacecraft (it gets its subsystems).",
+            "fr": "Peupler un segment (il reçoit un satellite) ou un satellite (il reçoit ses sous-systèmes)."}})
+    from ..services.rule_inputs import effective_segment
+    segment = effective_segment(parent, {e["id"]: e for e in _elements.values() if e.get("study_id") == study_id})
+    if segment not in _SUBSYSTEM_TEMPLATES:
+        segment = "space" if segment not in ("ground", "operations", "user") else "ground"
     subsystem_defs = _SUBSYSTEM_TEMPLATES.get(segment, _SUBSYSTEM_TEMPLATES["space"])
 
     created_elements: list[dict] = []
@@ -1310,10 +1345,18 @@ async def populate_subsystems(
         and not e.get("deleted_at")
     ]
 
-    # Create system element if none exists
+    # Create system element if none exists (or another one on request)
     system_id = None
-    if not any(c.get("element_type") == "system" for c in existing_children):
-        system_name = "Spacecraft" if segment == "space" else f"{segment.title()} System"
+    if parent.get("element_type") == "system":
+        system_id = parent_element_id
+        sys_el = parent
+        if segment == "space" and not (sys_el.get("performance") or {}).get("spacecraft_class"):
+            sys_el["performance"] = {**(sys_el.get("performance") or {}), "spacecraft_class": body.spacecraft_class}
+            await db_update_element(system_id, sys_el)
+    elif body.new_system or not any(c.get("element_type") == "system" for c in existing_children):
+        n_sys = sum(1 for c in existing_children if c.get("element_type") == "system")
+        default_name = "Spacecraft" if segment == "space" else "Ground Station"
+        system_name = body.system_name or (default_name if n_sys == 0 else f"{default_name} {n_sys + 1}")
         system_el = {
             "id": uuid4().hex,
             "study_id": study_id,
@@ -1333,7 +1376,13 @@ async def populate_subsystems(
         created_elements.append(system_el)
         system_id = system_el["id"]
     else:
-        system_id = next(c["id"] for c in existing_children if c.get("element_type") == "system")
+        from ..services.product_tree import is_misplaced_subsystem
+        kids_of: dict[str, list[dict]] = {}
+        for e in _elements.values():
+            if e.get("parent_id") and not e.get("deleted_at"):
+                kids_of.setdefault(e["parent_id"], []).append(e)
+        systems = [c for c in existing_children if c.get("element_type") == "system"]
+        system_id = next((c["id"] for c in systems if not is_misplaced_subsystem(c, kids_of)), systems[0]["id"])
         sys_el = _elements[system_id]
         if segment == "space" and not (sys_el.get("performance") or {}).get("spacecraft_class"):
             sys_el["performance"] = {**(sys_el.get("performance") or {}), "spacecraft_class": body.spacecraft_class}

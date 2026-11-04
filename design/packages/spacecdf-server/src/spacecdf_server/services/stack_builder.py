@@ -166,11 +166,16 @@ def _role(kb: dict | None, domain: str | None, name: str, mech: dict) -> str:
     return role or "other"
 
 
-def collect_units(elements: list[dict], interfaces: list[dict] | None = None) -> list[dict]:
+def collect_units(elements: list[dict], interfaces: list[dict] | None = None,
+                  spacecraft_id: str | None = None) -> list[dict]:
     """The units the stack builder places: live space hardware components (by KB part or
     domain), and subsystems/systems that carry mass with no massive descendant (the same
-    leaves CDS-COG needs a position for). Deployers and bare cells are left out."""
-    els = live(elements)
+    leaves CDS-COG needs a position for). Deployers and bare cells are left out.
+
+    One CubeSat per layout: when the space segment holds several spacecraft, only the
+    primary one (``spacecraft_id``, else the first; services/product_tree.py) is placed."""
+    from .product_tree import scope_to_spacecraft
+    els = scope_to_spacecraft(live(elements), spacecraft_id)
     idx = by_id(els)
     hw = space_hardware(els)
     leaf_ids = {e["id"] for e in leaves_with(els, "mass_kg")}

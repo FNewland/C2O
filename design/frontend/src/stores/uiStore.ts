@@ -1,16 +1,18 @@
 /**
  * uiStore — UI-only state for the Level Workbench.
  *
- * Level is DERIVED from breadcrumb depth:
- *   breadcrumb empty     → Level 0 (Mission: viewing segments)
- *   1 crumb (segment)    → Level 1 (Systems: viewing systems under a segment)
- *   2 crumbs (system)    → Level 2 (Subsystems: viewing subsystems under a system)
- *   3 crumbs (subsystem) → Level 3 (Equipment: viewing components under a subsystem)
- *   4+ crumbs            → Level 4 (V&V)
+ * Level is DERIVED from the element in focus (its product-tree type, workbench/blockLevels.ts),
+ * not from the breadcrumb depth — a wizard study has a mission root above the segments:
+ *   top / mission        → Level 0 (Mission: viewing segments)
+ *   segment              → Level 1 (viewing the segment's systems: spacecraft, stations)
+ *   system (spacecraft)  → Level 2 (viewing its subsystems)
+ *   subsystem            → Level 3 (viewing its equipment)
+ *   Level 4 is the V&V view (goToLevel(4)); drilling never lands there.
  */
 import { create } from 'zustand'
 import i18n, { getLang, normalizeLang, setLang as setI18nLang, type Lang } from '../i18n'
 import { loadBreadcrumb, loadStudyId, saveBreadcrumb, saveStudyId, type KV } from './studySession'
+import { crumbIndexForLevel, workbenchLevel, type Crumb } from '../workbench/blockLevels'
 
 function storage(): KV | null {
   try { return window.localStorage } catch { return null }
@@ -27,12 +29,14 @@ interface UIStore {
 
   // Drill-down state — level is derived from breadcrumb length
   focusElementId: string | null
-  breadcrumb: Array<{ id: string; name: string }>
+  breadcrumb: Crumb[]
 
-  // Derived: currentLevel = min(breadcrumb.length, 4)
+  // Derived: product-tree level of the focus (0-3), or 4 while the V&V view is open
   currentLevel: Level
 
-  drillInto: (elementId: string, elementName: string) => void
+  drillInto: (elementId: string, elementName: string, elementType?: string | null) => void
+  /** Give crumbs saved without an element type their type (reload of an older session). */
+  annotateCrumbs: (types: Record<string, string>) => void
   drillUp: (toIndex: number) => void  // -1 = root, 0 = first crumb, etc.
   goToLevel: (level: Level) => void   // Navigate to a level by trimming breadcrumb
 
@@ -61,8 +65,8 @@ interface UIStore {
   setShowGuide: (show: boolean) => void
 }
 
-function levelFromBreadcrumb(bc: Array<{ id: string; name: string }>): Level {
-  return Math.min(bc.length, 4) as Level
+function levelFromBreadcrumb(bc: Crumb[]): Level {
+  return workbenchLevel(bc)
 }
 
 export const useUIStore = create<UIStore>((set, get) => ({
@@ -80,14 +84,21 @@ export const useUIStore = create<UIStore>((set, get) => ({
   breadcrumb: initialCrumbs,
   currentLevel: levelFromBreadcrumb(initialCrumbs),
 
-  drillInto: (elementId, elementName) => {
+  drillInto: (elementId, elementName, elementType) => {
     const { breadcrumb } = get()
-    const newBc = [...breadcrumb, { id: elementId, name: elementName }]
+    const newBc = [...breadcrumb, elementType ? { id: elementId, name: elementName, type: elementType } : { id: elementId, name: elementName }]
     set({
       focusElementId: elementId,
       breadcrumb: newBc,
       currentLevel: levelFromBreadcrumb(newBc),
     })
+  },
+
+  annotateCrumbs: (types) => {
+    const { breadcrumb, currentLevel } = get()
+    if (!breadcrumb.some(c => !c.type && types[c.id])) return
+    const newBc = breadcrumb.map(c => (!c.type && types[c.id] ? { ...c, type: types[c.id] } : c))
+    set({ breadcrumb: newBc, currentLevel: currentLevel === 4 ? 4 : levelFromBreadcrumb(newBc) })
   },
 
   drillUp: (toIndex) => {
@@ -110,15 +121,15 @@ export const useUIStore = create<UIStore>((set, get) => ({
     if (level === 4) {
       // V&V is a special view — keep breadcrumb but switch to level 4
       set({ currentLevel: 4 })
-    } else if (level === 0) {
-      set({ focusElementId: null, breadcrumb: [], currentLevel: 0 })
-    } else if (level <= breadcrumb.length) {
-      const newBc = breadcrumb.slice(0, level)
-      set({
-        focusElementId: newBc[newBc.length - 1].id,
-        breadcrumb: newBc,
-        currentLevel: levelFromBreadcrumb(newBc),
-      })
+    } else {
+      // back to the deepest crumb at or above that product-tree level (a mission root is level 0)
+      const idx = crumbIndexForLevel(breadcrumb, level)
+      if (idx < 0) {
+        set({ focusElementId: null, breadcrumb: [], currentLevel: 0 })
+      } else {
+        const newBc = breadcrumb.slice(0, idx + 1)
+        set({ focusElementId: newBc[newBc.length - 1].id, breadcrumb: newBc, currentLevel: levelFromBreadcrumb(newBc) })
+      }
     }
   },
 

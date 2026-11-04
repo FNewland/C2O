@@ -65,7 +65,7 @@ async def test_station_picker_run_get_and_stale(client, study_obj, study):
     ground = [e for e in tree if e.get("segment") == "ground"]
     seg = [e for e in ground if e["element_type"] == "segment"]
     assert len(seg) == 1 and seg[0]["parent_id"] == els["mission"]["id"]
-    stations = [e for e in ground if e["element_type"] == "component"]
+    stations = [e for e in ground if e["element_type"] == "system"]   # level 2: a ground station (ECSS product tree)
     assert {e["kb_component_id"] for e in stations} == {"svalbard", "kiruna"}
     assert all(e["parent_id"] == seg[0]["id"] and e["subsystem_domain"] == "ground" for e in stations)
     sel = (await client.get(GS)).json()

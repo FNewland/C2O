@@ -114,6 +114,15 @@ async def _context(study_id: str, form_factor: str | None) -> dict[str, Any]:
     ctx = await rules_router._context(study_id, form_factor)
     lay = await _load(study_id)
     ff = ctx["form_factor"] or lay.get("form_factor") or None
+    # one CubeSat per layout: the primary spacecraft when the space segment holds several
+    from ..services.product_tree import primary_spacecraft, scope_to_spacecraft, spacecraft_systems
+    from ..services.rule_inputs import form_factor as find_form_factor
+    scs = spacecraft_systems(ctx["elements"])
+    sc = primary_spacecraft(ctx["elements"])
+    ctx["spacecraft"] = ({"id": sc["id"], "name": sc.get("name"), "count": len(scs)} if sc else None)
+    if len(scs) > 1:
+        ctx["elements"] = scope_to_spacecraft(ctx["elements"])
+        ff = find_form_factor(ctx["elements"], ctx["params"], form_factor) or lay.get("form_factor") or None
     ctx["layout"] = lay
     ctx["ff"] = ff
     alt = param(ctx["params"], "orbit.altitude_km")
@@ -183,7 +192,8 @@ async def _payload(study_id: str, request: Request | None, form_factor: str | No
     from ..seats import config as seat_cfg
     owner_label = seat_cfg.label(owner or STRUCTURES_SEAT)
     base = {"study_id": study_id, "form_factor": ff, "version": lay.get("version", 0), "can_approve": may,
-            "owner_seat": owner or STRUCTURES_SEAT, "owner_label": owner_label, "frame": dict(sb.FRAME_NOTE)}
+            "owner_seat": owner or STRUCTURES_SEAT, "owner_label": owner_label, "frame": dict(sb.FRAME_NOTE),
+            "spacecraft": ctx.get("spacecraft")}
     if not _applicable(ff):
         return {**base, "applicable": False, "approved": None, "proposal": None, "units": [],
                 "reason": {"en": "Not a CubeSat form factor: pick a CubeSat structure from the KB (or set structure.form_factor_u).",

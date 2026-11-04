@@ -1,0 +1,17 @@
+{
+  "+ Add Spacecraft": "+ Ajouter un satellite",
+  "+ Add another Spacecraft": "+ Ajouter un autre satellite",
+  "A spacecraft is a system (level 2) of the space segment; it gets the standard subsystems": "Un satellite est un système (niveau 2) du segment spatial ; il reçoit les sous-systèmes standard",
+  "Create a Ground Station in this segment with its standard subsystems and recommended equipment from the component catalogue.": "Créer une station sol dans ce segment avec ses sous-systèmes standard et l’équipement recommandé du catalogue de composants.",
+  "Create a Spacecraft in this segment with the standard subsystems (Payload, EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) and recommended CubeSat equipment from the component catalogue.": "Créer un satellite dans ce segment avec les sous-systèmes standard (charge utile, EPS, AOCS, télécommunications, OBC, thermique, structure, propulsion) et l’équipement CubeSat recommandé du catalogue de composants.",
+  "DSN Ground Station": "Station sol DSN",
+  "Give this spacecraft the standard subsystems (Payload, EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.": "Donner à ce satellite les sous-systèmes standard (charge utile, EPS, AOCS, télécommunications, OBC, thermique, structure, propulsion) avec l’équipement CubeSat recommandé du catalogue de composants.",
+  "Ground station / facility (system)": "Station sol / installation (système)",
+  "No spacecraft in this design yet. Open the space segment and use \"+ Add Spacecraft\": a spacecraft is the level below the segment and comes with the standard subsystems.": "Pas encore de satellite dans cette conception. Ouvrir le segment spatial et utiliser « + Ajouter un satellite » : un satellite est le niveau sous le segment et arrive avec les sous-systèmes standard.",
+  "On-Board Computer": "Ordinateur de bord",
+  "Spacecraft (system)": "Satellite (système)",
+  "Spacecraft shown": "Satellite affiché",
+  "The stack builder lays out one CubeSat: {{name}}, the first spacecraft of the space segment. {{viewing}} is not placed yet.": "Le constructeur d’empilement dispose un seul CubeSat : {{name}}, le premier satellite du segment spatial. {{viewing}} n’est pas encore placé.",
+  "{{count}} spacecraft in the space segment_one": "{{count}} satellite dans le segment spatial",
+  "{{count}} spacecraft in the space segment_other": "{{count}} satellites dans le segment spatial"
+}
