@@ -78,7 +78,7 @@ for mission operations.
 ### Step 7 — Bus Voltage Regulation Under Load Transient
 **Action:** Test bus regulation by commanding a known load change. Do NOT use
 the payload for this: its line is OFF until COM-009, and a mode command on a
-dark line silently reverts. The battery-heater line (~6 W) is the transient
+dark line silently reverts. The battery-heater line (8 W, `tcs.yaml` heaters) is the transient
 source, and it is restored to its entry state afterwards.
 **Action:** Record the entry state of `eps.pl_htr_bat` (0x0115) first.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — htr_bat (brief test)

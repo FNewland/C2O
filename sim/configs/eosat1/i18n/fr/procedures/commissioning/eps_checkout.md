@@ -78,7 +78,7 @@ pour l'exploitation de la mission.
 ### Étape 7 — Régulation de la tension du bus sous transitoire de charge
 **Action:** Éprouver la régulation du bus en commandant une variation de charge connue. NE PAS utiliser
 la charge utile pour cela : sa ligne reste sur OFF jusqu'à COM-009, et une commande de mode sur une
-ligne non alimentée revient silencieusement en arrière. La ligne du réchauffeur batterie (~6 W) sert de
+ligne non alimentée revient silencieusement en arrière. La ligne du réchauffeur batterie (8 W, réchauffeurs de `tcs.yaml`) sert de
 source de transitoire et est ensuite rétablie dans son état d'entrée.
 **Action:** Consigner d'abord l'état d'entrée de `eps.pl_htr_bat` (0x0115).
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — htr_bat (essai bref)

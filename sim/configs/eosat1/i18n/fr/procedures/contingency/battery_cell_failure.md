@@ -113,7 +113,7 @@ délesté des lignes de lui-même. Une ligne qu'il a ouverte ne peut pas être d
 commande est refusée S1.8 « power line … is OFF ») et le paramètre de mode de son unité reste figé à sa
 dernière valeur ; sauter donc toute charge dont la ligne indique déjà 0.
 **Verify:** `eps.load_shed_stage` (0x0134), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112) — consigner chacune : 0 = déjà délestée à bord
-1. Charge utile sur OFF (gain de ~8-45 W) — seulement si `eps.pl_payload` (0x0113) = 1 :
+1. Charge utile sur OFF (gain de ~2,4-5,5 W) — seulement si `eps.pl_payload` (0x0113) = 1 :
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Charge utile sur OFF
    **Verify:** `payload.mode` (0x0600) = 0 en moins de 10 s
 2. Refroidisseur du FPA sur OFF (gain de ~15 W) — seulement si `eps.pl_fpa_cooler` (0x0114) = 1 : `FPA_COOLER(on=0)` (func_id 43)

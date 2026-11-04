@@ -88,7 +88,7 @@ value because SID 5 stopped): nothing to send, go on to the next level.
 **LABEL:** `STEP-2-SHED`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Command payload to OFF
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10 s
-**Verify:** `eps.power_cons` (0x0106) decreases (expected -45 W if imaging, -8 W if standby)
+**Verify:** `eps.power_cons` (0x0106) decreases (expected -5.5 W if imaging, -2.4 W if standby (`eps.yaml` payload powers))
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
 **Verify:** `eps.bat_soc` (0x0101) — record new value

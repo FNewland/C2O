@@ -88,7 +88,7 @@ valeur parce que le SID 5 s'est arrêté) : rien à envoyer, passer au niveau s
 **LABEL:** `STEP-2-SHED`
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Mettre la charge utile sur OFF
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) en 10 s
-**Verify:** `eps.power_cons` (0x0106) diminue (-45 W attendus en prise de vue, -8 W en STANDBY)
+**Verify:** `eps.power_cons` (0x0106) diminue (-5,5 W attendus en prise de vue, -2,4 W en STANDBY (puissances de la charge utile dans `eps.yaml`))
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Télémesure de servitude charge utile
 **Verify:** `eps.bat_soc` (0x0101) — consigner la nouvelle valeur

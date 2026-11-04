@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-2-soc-50-shed-load-priority-1-payload-off",
-   "en_hash": "fafdb9ad94b8fb00",
-   "fr_hash": "c25dadf805f4b789"
+   "en_hash": "689dce06bcc9a26e",
+   "fr_hash": "4d5a1a76ac98ce9a"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-3-soc-35-shed-load-priority-2-fpa-cooler-off",
@@ -93,5 +93,5 @@
    "fr_hash": "2a26fa93111780b1"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "08e21e1"
 }

@@ -334,10 +334,16 @@ state.
 
 | Parameter     | Yellow Low | Yellow High | Red Low | Red High |
 |---------------|------------|-------------|---------|----------|
-| bat_soc (%)   | 25         | 95          | 15      | 100      |
-| bat_voltage (V)| 23        | 29          | 22      | 29.5     |
+| bat_soc (%)   | 25         | 100         | 15      | 100      |
+| bat_voltage (V)| 25.9      | 33.8        | 24.6    | 34.3     |
 | bat_temp (C)  | 2          | 40          | 0       | 45       |
-| bus_voltage (V)| 27        | 29          | 26.5    | 29.5     |
+| bus_voltage (V)| 28.4      | 34.0        | 27.7    | 34.6     |
+
+Values from the MCS limit table. The bus-voltage low limits are the named bus-protection
+levels: yellow = the under-voltage level, 28.4 V (under-voltage flag, on-board load
+shed), red = the EPS safe level, 27.7 V (FDIR EPS safe mode). The high
+limits sit above the 33.4 V bus cap so noise at full charge cannot alarm; the SoC
+high limits are 100 % because a full battery is normal.
 
 ### 5.1 Limit Response {#51-limit-response}
 

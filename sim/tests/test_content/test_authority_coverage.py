@@ -97,3 +97,19 @@ def test_g10_dispositions_are_in_config():
     # can send it; TT&C keeps it too.
     assert 9 in positions["fdir_systems"]["allowed_services"]
     assert 9 in positions["ttc"]["allowed_services"]
+
+
+def test_tc_catalogue_positions_are_mcs_position_ids():
+    """A telecommand's ``position`` names an MCS position id (mcs/positions.yaml).
+
+    Thirteen entries said ``payload`` / ``eps`` while the positions are
+    ``payload_ops`` / ``eps_tcs`` (2026-11-03), so catalog-driven grouping put
+    them under positions that do not exist.
+    """
+    positions = set(_load_positions())
+    data = yaml.safe_load(
+        (CONFIG / "commands" / "tc_catalog.yaml").read_text())
+    bad = [(c.get("name"), c.get("position"))
+           for c in data.get("commands", data)
+           if c.get("position") is not None and c["position"] not in positions]
+    assert not bad, f"unknown positions in tc_catalog.yaml: {bad}"
