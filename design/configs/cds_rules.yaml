@@ -35,18 +35,32 @@ cog_limits_cm:
     "6U":   [4.5, 2.0, 7.0]
     "12U":  [4.5, 4.5, 7.0]
 
-# Outer envelope used as the geometric reference, mm (X, Y, Z). CDS drawings; Z is the
-# rail (insertion) axis. Used only to find the geometric centre for the CoG check.
+# Outer envelope used as the geometric reference, mm (X, Y, Z) in the CDS frame of the
+# Appendix B drawings; Z is the rail (insertion) axis. Used to find the geometric centre for
+# the CoG check. 6U and 12U are 366.0 mm long (CDS rev 14.1 Appendix B, "6U CubeSat" and
+# "12U CubeSat" drawings, rev 14, p. 33-34: 226.3 x 100.0 x 366.0 and 226.3 x 226.3 x 366.0 mm;
+# checked 2026-11-03). Fixed Nov 2026 (F1): the tool had 340.5 mm, the 3U length.
 envelope_mm:
   source: cds_14_1
-  clause: "Appendix B drawings (nominal envelope)"
+  clause: "Appendix B drawings (nominal envelope; 6U/12U p. 33-34)"
   values:
     "1U":   [100.0, 100.0, 113.5]
     "1.5U": [100.0, 100.0, 170.2]
     "2U":   [100.0, 100.0, 227.0]
     "3U":   [100.0, 100.0, 340.5]
-    "6U":   [226.3, 100.0, 340.5]
-    "12U":  [226.3, 226.3, 340.5]
+    "6U":   [226.3, 100.0, 366.0]
+    "12U":  [226.3, 226.3, 366.0]
+
+# SpaceCDF / simulator body frame vs the CDS frame (D15). The simulator's geometry.yaml and
+# the Spacecraft view put a 6U's long cross-section side on Y (bus.size_m [0.100, 0.226,
+# 0.366], wings on +/-Y), the CDS drawing puts it on X. ``order`` gives, for each body axis,
+# the CDS axis it is: 6U body (X, Y, Z) = CDS (Y, X, Z). cds_checks applies it to the
+# envelope and the Table 2 CoG limits before comparing with element positions (body frame).
+body_frame:
+  source: c2o_default
+  clause: "SpaceCDF body frame = simulator geometry.yaml frame (c2o.geometry/1)"
+  order:
+    "6U": [1, 0, 2]
 
 mechanical:
   max_protrusion_mm:   {value: 6.5,  source: cds_14_1, clause: "2.2.3"}

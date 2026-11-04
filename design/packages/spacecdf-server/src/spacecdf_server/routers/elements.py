@@ -78,7 +78,9 @@ class ElementCreate(BaseModel):
     quantity: int = 1
     redundancy_type: str | None = None
     performance: dict[str, Any] | None = None
-    margin_percent: float = 20.0
+    # F3: the maturity margin comes from margin_policy (category A–D); a value sent here
+    # is ignored and replaced by the derived one (kept for old clients).
+    margin_percent: float | None = None
     owner_position: str | None = None
     in_scope: bool = True
     frozen: bool = False
@@ -180,13 +182,13 @@ async def create_element(body: ElementCreate, study_id: str = Query(...)) -> dic
         "deleted_at": None,
     }
 
-    # Auto-populate from KB if kb_component_id is set
+    # Auto-populate from KB if kb_component_id is set (F4: one copy helper, services/kb_copy)
     if body.kb_component_id:
-        kb_data = _lookup_kb_component(body.kb_component_id)
-        if kb_data:
-            for k, v in kb_data.items():
-                if element.get(k) is None and v is not None:
-                    element[k] = v
+        from ..services.kb_copy import apply_to_element, find_kb_part
+        part = find_kb_part(body.kb_component_id)
+        if part:
+            apply_to_element(element, part)
+    _sync_maturity(element)
 
     # Write to DB first, then cache
     await db_create_element(element)
@@ -254,12 +256,31 @@ async def update_element(element_id: str, body: ElementUpdate, request: Request)
     return el
 
 
+def _sync_maturity(el: dict) -> None:
+    """F3: keep the stored ``margin_percent`` equal to the margin policy's maturity margin."""
+    from ..services.margin_policy import maturity_percent
+    el["margin_percent"] = maturity_percent(el)
+
+
+#: Fields whose change can change the maturity category (TRL, KB part, heritage, override).
+_MATURITY_FIELDS = {"trl", "kb_component_id", "performance", "heritage_json"}
+
+
 async def apply_element_update(el: dict, updates: dict[str, Any]) -> dict:
     """Apply field updates to a cached element: version, DB, formulas, broadcast, link proposer."""
     element_id = el["id"]
+    if updates.get("kb_component_id") and updates["kb_component_id"] != el.get("kb_component_id"):
+        # F4: a new KB part re-copies its facts (explicit values in this update still win)
+        from ..services.kb_copy import apply_to_element, find_kb_part
+        part = find_kb_part(updates["kb_component_id"])
+        if part:
+            apply_to_element(el, part, overwrite=True)
+    updates.pop("margin_percent", None)   # F3: derived, never set by hand
     for k, v in updates.items():
         if v is not None:
             el[k] = v
+    if set(updates) & _MATURITY_FIELDS or el.get("margin_percent") is None:
+        _sync_maturity(el)
     el["version"] += 1
 
     # Persist to DB
@@ -423,6 +444,23 @@ async def list_elements(
 
 # ─── Budget Computation ───
 
+def _system_margin_info(study_id: str | None, budget_type: str) -> dict | None:
+    """The gate-appropriate system margin (C2O ladder) and the margin convention for a budget."""
+    if budget_type not in ("mass", "power", "power_peak"):
+        return None
+    try:
+        from ..services.margin_policy import convention, system_margin_percent
+        from .gates import study_margin_gate
+        from .studies import get_study_store
+        study = get_study_store().get(study_id) if study_id else None
+        gate = study_margin_gate(study)
+        res = "mass" if budget_type == "mass" else "power"
+        return {"gate": gate, "percent": system_margin_percent(gate, res), **convention()}
+    except Exception:  # noqa: BLE001 — informative only
+        logger.debug("system margin info unavailable", exc_info=True)
+        return None
+
+
 @router.get("/elements/{element_id}/budget/{budget_type}")
 async def compute_budget(element_id: str, budget_type: str) -> dict:
     """Compute budget by summing child elements recursively."""
@@ -501,6 +539,38 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
             if leaf:
                 total = (leaf.get(prop) or 0) * leaf.get("quantity", 1)
         return total
+
+    # ── F3: maturity margin (margin_policy) of an element, weighted over its leaves ──
+    from ..services.margin_policy import maturity as _maturity
+
+    def _maturity_of(x: dict) -> dict:
+        try:
+            return _maturity(x)
+        except Exception:  # noqa: BLE001 — unreadable policy: category D
+            return {"category": "D", "percent": 20.0}
+
+    def _maturity_pct_below(eid: str, field: str) -> float:
+        leaves: list[dict] = []
+
+        def walk(xid: str, depth: int = 0) -> None:
+            kids = [c for c in _elements.values() if c.get("parent_id") == xid and not c.get("deleted_at")]
+            if not kids or depth > 30:
+                x = _elements.get(xid)
+                if x:
+                    leaves.append(x)
+                return
+            for c in kids:
+                walk(c["id"], depth + 1)
+        walk(eid)
+        num = den = 0.0
+        for x in leaves:
+            v = float(x.get(field) or 0) * float(x.get("quantity") or 1)
+            pct = _maturity_of(x)["percent"]
+            num += v * pct
+            den += v
+        if den > 0:
+            return num / den
+        return _maturity_of(_elements.get(eid) or {})["percent"]
 
     # ── Power-specific rollup: returns (avg_total, peak_total) tuples ──
     def _rollup_power(eid: str) -> tuple[float, float]:
@@ -616,7 +686,10 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
                     per_unit = _rollup(e["id"]) / qty if qty > 0 else 0
                 val_total = per_unit * qty
 
-            margin = e.get("margin_percent", 20) / 100
+            # F3: maturity margin from the margin policy (category A–D), weighted over the
+            # leaves below a subsystem — never the stored/default margin_percent column.
+            mat_pct = _maturity_pct_below(e["id"], prop if prop != "_data" else "mass_kg")
+            margin = mat_pct / 100
             val_with_margin = val_total * (1 + margin)
             total_nominal += val_total
             child_alloc = child_allocations.get(e["id"])
@@ -628,7 +701,8 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
                 "name": e["name"],
                 "per_unit": round(per_unit, 3),
                 "nominal": round(val_total, 3),
-                "margin_pct": e.get("margin_percent", 20),
+                "margin_pct": round(mat_pct, 1),
+                "maturity_category": _maturity_of(e)["category"] if e.get("element_type") == "component" else None,
                 "with_margin": round(val_with_margin, 3),
                 "quantity": qty,
                 "allocation": child_alloc,
@@ -685,6 +759,7 @@ async def compute_budget(element_id: str, budget_type: str) -> dict:
         "margin_pct": round(margin_pct, 1) if margin_pct is not None else None,
         "status": status,
         "lines": lines,
+        "system_margin": _system_margin_info(el.get("study_id"), budget_type),
     }
 
     # Add power-specific summary fields
@@ -1053,33 +1128,10 @@ async def get_mode_profile(mode_id: str) -> dict:
 # ─── KB Lookup Helper ───
 
 def _lookup_kb_component(kb_id: str) -> dict | None:
-    """Look up a component from the KB YAML files and return its properties."""
-    import yaml
-    from pathlib import Path
-    kb_dir = Path(__file__).resolve().parents[4] / "spacecdf-kb" / "src" / "spacecdf_kb" / "data" / "components"
-    if not kb_dir.exists():
-        return None
-    for f in kb_dir.glob("*.yaml"):
-        try:
-            with open(f) as fp:
-                data = yaml.safe_load(fp) or {}
-            components = data.get("components", [])
-            for c in components:
-                if isinstance(c, dict) and (c.get("id") == kb_id or c.get("name") == kb_id):
-                    return {
-                        "name": c.get("name"),
-                        "mass_kg": c.get("mass_kg"),
-                        "power_avg_w": c.get("power_w") or c.get("power_avg_w"),
-                        "cost_recurring_keur": c.get("cost_keur"),
-                        "trl": c.get("trl"),
-                        "manufacturer": c.get("manufacturer"),
-                        "part_number": c.get("part_number", c.get("id")),
-                        "performance": c.get("performance"),
-                        "category": c.get("category"),
-                    }
-        except Exception:
-            continue
-    return None
+    """The element fields a KB part provides (F4: services/kb_copy.kb_element_fields)."""
+    from ..services.kb_copy import find_kb_part, kb_element_fields
+    part = find_kb_part(kb_id)
+    return kb_element_fields(part) if part else None
 
 
 # ─── Seed from design result ───
@@ -1254,7 +1306,7 @@ async def populate_subsystems(
             "segment": segment,
             "version": 1,
             "deleted_at": None,
-            "margin_percent": 20.0,
+            "margin_percent": 20.0,   # F3: no KB part, no TRL -> category D (margin_policy)
             "quantity": parent.get("quantity", 1),
             # remembered so later proposer runs use the same class defaults (rails, bus, band)
             "performance": {"spacecraft_class": body.spacecraft_class} if segment == "space" else None,
@@ -1297,7 +1349,7 @@ async def populate_subsystems(
             "subsystem_domain": sub_def["domain"],
             "version": 1,
             "deleted_at": None,
-            "margin_percent": 20.0,
+            "margin_percent": 20.0,   # F3: no KB part, no TRL -> category D (margin_policy)
             "diagram_x": 80 + (i % 4) * 200,
             "diagram_y": 40 + (i // 4) * 140,
         }
@@ -1348,11 +1400,17 @@ async def populate_subsystems(
                     "trl": kb_data.get("trl"),
                     "manufacturer": kb_data.get("manufacturer"),
                     "performance": kb_data.get("performance"),
+                    # F4: the rest of the part's facts (dims, form factor, interfaces, temps)
+                    "part_number": kb_data.get("part_number"),
+                    "power_peak_w": kb_data.get("power_peak_w"),
+                    "dimensions_mm": kb_data.get("dimensions_mm"),
+                    "heritage_json": kb_data.get("heritage_json"),
+                    "kb_spec": kb_data.get("kb_spec"),
                     "quantity": 1,
                     "version": 1,
                     "deleted_at": None,
-                    "margin_percent": 20.0,
                 }
+                _sync_maturity(comp_el)
                 await db_create_element(comp_el)
                 _elements[comp_el["id"]] = comp_el
                 created_elements.append(comp_el)

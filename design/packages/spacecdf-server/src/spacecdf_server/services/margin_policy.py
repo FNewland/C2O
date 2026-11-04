@@ -83,6 +83,35 @@ def _category(e: dict, cfg: dict) -> tuple[str, str]:
     return "D", "trl"
 
 
+def maturity(e: dict, cfg: dict | None = None) -> dict[str, Any]:
+    """The element's maturity category and margin: the ONE source (F3, rule EB-01).
+
+    ``{category, percent, category_from: element|trl|no_kb, label{en,fr}, standard_ref}``.
+    ``e`` may be an element dict or a KB part wrapped as ``{"trl", "kb_component_id",
+    "heritage_json"}``. Element ``margin_percent`` columns are kept equal to ``percent``.
+    """
+    cfg = cfg or rc.load(CONFIG)
+    cat, how = _category(e, cfg)
+    node = cfg["maturity_margins"]["categories"][cat]
+    return {"category": cat, "percent": float(node["percent"]), "category_from": how,
+            "label": node.get("label"), "standard_ref": rc.ref_of(cfg, cfg["maturity_margins"])["standard_ref"]}
+
+
+def maturity_percent(e: dict) -> float:
+    """Shorthand for ``maturity(e)["percent"]`` (never raises: 20 % if the policy is unreadable)."""
+    try:
+        return maturity(e)["percent"]
+    except Exception:  # noqa: BLE001 — a broken policy file must not break element writes
+        return 20.0
+
+
+def convention(cfg: dict | None = None) -> dict[str, Any]:
+    """The margin convention and ladder label shown next to every budget."""
+    cfg = cfg or rc.load(CONFIG)
+    lad = cfg["system_margin_ladder"]
+    return {"label": lad["label"], "convention": lad["convention"], "standard_ref": rc.ref_of(cfg, lad)["standard_ref"]}
+
+
 def _units(elements: list[dict], field: str, cfg: dict) -> list[dict]:
     cats = cfg["maturity_margins"]["categories"]
     rows = []

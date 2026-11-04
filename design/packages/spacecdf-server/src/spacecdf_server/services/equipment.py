@@ -188,6 +188,16 @@ def apply_equipment_selection(
     # Map category to parameter prefix
     param_prefix = f"{domain}"
 
+    # F3: the maturity margin comes from the margin policy (category A–D from TRL and
+    # heritage), the same number the element and every budget use.
+    from .margin_policy import maturity
+    try:
+        mat = maturity({"trl": trl, "kb_component_id": comp_id,
+                        "heritage_json": component.get("heritage_missions") or None})
+    except Exception:  # noqa: BLE001 — unreadable policy: new design
+        mat = {"category": "D", "percent": 20.0}
+    margin_pct = float(mat["percent"])
+
     # Set mass parameter
     mass_param_id = f"{param_prefix}.{category}_mass_kg"
     state._parameters[mass_param_id] = ParameterValue(
@@ -198,16 +208,29 @@ def apply_equipment_selection(
         domain=domain,
         source=ParameterSource.KB_COMPONENT,
         confidence=0.95,
-        margin_percent=5.0,  # Known component, lower margin
+        margin_percent=margin_pct,
         trl=trl,
         heritage=", ".join(component.get("heritage_missions", [])[:2]),
         equipment_id=comp_id,
         equipment_name=comp_name,
         override_by=position_id,
         updated_by=f"position:{position_id}",
-        rationale=f"Selected {comp_name} from {component.get('manufacturer', 'unknown')}",
+        rationale=f"Selected {comp_name} from {component.get('manufacturer', 'unknown')} "
+                  f"(maturity category {mat['category']}, {margin_pct:g} %)",
     )
     changed.add(mass_param_id)
+
+    # Power parameter (computed before Nov 2026 but never written, F3)
+    if power:
+        power_param_id = f"{param_prefix}.{category}_power_w"
+        state._parameters[power_param_id] = ParameterValue(
+            id=power_param_id, name=f"{comp_name} Power", value=power, unit="W", domain=domain,
+            source=ParameterSource.KB_COMPONENT, confidence=0.95, margin_percent=margin_pct, trl=trl,
+            equipment_id=comp_id, equipment_name=comp_name, override_by=position_id,
+            updated_by=f"position:{position_id}",
+            rationale=f"Selected {comp_name} (maturity category {mat['category']}, {margin_pct:g} %)",
+        )
+        changed.add(power_param_id)
 
     # Also update the domain-level mass if this is the primary mass driver
     domain_mass_id = f"{domain}.mass_kg" if domain != "power" else "power.eps_mass_kg"
