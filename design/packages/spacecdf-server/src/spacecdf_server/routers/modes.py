@@ -591,6 +591,12 @@ async def run_design_rules(study_id: str, thermal: bool = Query(True)) -> dict:
         raise HTTPException(404, f"Study {study_id} not found")
     existing = await mode_repo.list_proposals(study_id)
     monitored = monitored_element_ids(existing)
+    try:  # accepted monitors of the CDR FDIR model earn the detection credit too (phase 2)
+        from ..db import cdr_repo
+        from .cdr import credited_elements
+        monitored |= credited_elements(await cdr_repo.list_rows(study_id, "monitors"), existing)
+    except Exception:  # noqa: BLE001
+        logger.debug("CDR monitors unavailable for %s", study_id, exc_info=True)
     fmeca = _wrap(lambda: build_skeleton(els, active_interfaces(study_id), monitored=monitored))
     safe = next((m["id"] for m in _modes(els) if (m.get("performance") or {}).get("mode_kind") == "safe"), None)
     try:

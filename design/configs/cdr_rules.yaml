@@ -1,0 +1,452 @@
+# SpaceCDF CDR design model rules (Nov 2026, phase 2): TM/TC database, FDIR, AOCS modes and
+# gains, TT&C rate ladder, power-line states per mode, operations organisation.
+# ===========================================================================================
+# Read by services/cdr_model.py (vocabulary, ownership), services/cdr_propose.py (the default
+# database proposed from the design), services/cdr_checks.py (consistency checks) and
+# services/cdr_sim.py (EOSAT-1 import and the simulator field mapping).
+#
+# Every number names its source (margin_policy.yaml convention): a cited document, or a
+# C2O default (kind c2o_default = a SpaceCDF teaching choice / established practice, NOT a
+# standard citation). Values marked "EOSAT-1" are the simulator reference design
+# (sim/configs/eosat1), quoted so students meet the same numbers in both tools.
+# ECSS clause numbers are reconstructed: "to verify" against the primary texts.
+
+sources:
+  c2o_default:
+    kind: c2o_default
+    title: "C2O default (established practice / teaching choice; not a standard citation)"
+    verified: false
+  ecss_e_70_41:
+    kind: standard
+    short: "ECSS-E-ST-70-41C"
+    title: "ECSS-E-ST-70-41C Telemetry and telecommand packet utilization (PUS-C)"
+    verified: false
+  ecss_e_70_31:
+    kind: standard
+    short: "ECSS-E-ST-70-31C"
+    title: "ECSS-E-ST-70-31C Ground systems and operations – monitoring and control data definition"
+    verified: false
+  ecss_e_70_11:
+    kind: standard
+    short: "ECSS-E-ST-70-11C"
+    title: "ECSS-E-ST-70-11C Space segment operability (FDIR, safe mode, on-board autonomy)"
+    verified: false
+  ecss_e_60_30:
+    kind: standard
+    short: "ECSS-E-ST-60-30C"
+    title: "ECSS-E-ST-60-30C Satellite attitude and orbit control system (AOCS) requirements"
+    verified: false
+  ecss_e_70:
+    kind: standard
+    short: "ECSS-E-ST-70C"
+    title: "ECSS-E-ST-70C Ground systems and operations (mission operations, flight operations plan)"
+    verified: false
+  ccsds_133:
+    kind: standard
+    short: "CCSDS 133.0-B"
+    title: "CCSDS 133.0-B Space Packet Protocol (11-bit APID, 0x7FF idle)"
+    verified: true
+  ccsds_131:
+    kind: standard
+    short: "CCSDS 131.0-B"
+    title: "CCSDS 131.0-B TM Synchronization and Channel Coding (convolutional, Reed-Solomon)"
+    verified: true
+  eosat1:
+    kind: guideline
+    short: "EOSAT-1 reference design"
+    title: "SpaceMissionSimulation EOSAT-1 configuration (sim/configs/eosat1)"
+    verified: true
+
+# ------------------------------------------------------------------ subsystems (blocks)
+# One TM/TC subsystem per design domain. Blocks follow the EOSAT-1 numbering so a design and
+# the simulator read alike: parameter / event ids 0xNN00–0xNNFF, S8 function ids from
+# func_start. hk_period_s = the housekeeping period proposed for the subsystem's SID.
+subsystems:
+  source: eosat1
+  clause: "telemetry/parameters.yaml id blocks, commands/tc_catalog.yaml function blocks, hk_structures.yaml periods"
+  list:
+    - {key: sys,     label: {en: "System", fr: "Système"},              domains: [system, systems, mission, integration], param_block: 0x0000, event_block: 0x0000, func_start: 120, apid: 0x010, hk_period_s: 8,  seat: systems_engineer, position: fdir_systems}
+    - {key: eps,     label: {en: "Power", fr: "Puissance"},             domains: [power, eps, electrical],                param_block: 0x0100, event_block: 0x0100, func_start: 16,  apid: 0x011, hk_period_s: 8,  seat: power_engineer,   position: eps_tcs}
+    - {key: aocs,    label: {en: "AOCS", fr: "SCAO"},                   domains: [aocs, adcs, gnc, attitude],             param_block: 0x0200, event_block: 0x0200, func_start: 0,   apid: 0x012, hk_period_s: 4,  seat: aocs_engineer,    position: aocs}
+    - {key: obdh,    label: {en: "OBDH", fr: "OBDH"},                   domains: [obc, obdh, cdh, data, dhs, software, avionics], param_block: 0x0300, event_block: 0x0300, func_start: 50, apid: 0x013, hk_period_s: 8, seat: comms_engineer, position: fdir_systems}
+    - {key: tcs,     label: {en: "Thermal", fr: "Thermique"},           domains: [thermal, tcs],                          param_block: 0x0400, event_block: 0x0400, func_start: 40,  apid: 0x014, hk_period_s: 60, seat: thermal_engineer, position: eps_tcs}
+    - {key: ttc,     label: {en: "TT&C", fr: "TT&C"},                   domains: [ttc, comms, communications, rf],        param_block: 0x0500, event_block: 0x0500, func_start: 63,  apid: 0x015, hk_period_s: 8,  seat: comms_engineer,   position: ttc}
+    - {key: payload, label: {en: "Payload", fr: "Charge utile"},        domains: [payload, instrument, instruments, imager], param_block: 0x0600, event_block: 0x0600, func_start: 26, apid: 0x016, hk_period_s: 8, seat: payload_lead,  position: payload_ops}
+    - {key: fdir,    label: {en: "FDIR", fr: "FDIR"},                   domains: [fdir],                                  param_block: 0x0700, event_block: 0x0700, func_start: 100, apid: 0x017, hk_period_s: 8,  seat: systems_engineer, position: fdir_systems}
+    - {key: prop,    label: {en: "Propulsion", fr: "Propulsion"},       domains: [propulsion, prop],                      param_block: 0x0B00, event_block: 0x0B00, func_start: 108, apid: 0x01B, hk_period_s: 8,  seat: propulsion_engineer, position: propulsion}
+    - {key: str,     label: {en: "Structure", fr: "Structure"},         domains: [structure, structures, mechanisms, configuration], param_block: 0x0800, event_block: 0x0800, func_start: 100, apid: 0x018, hk_period_s: 60, seat: structures_engineer, position: fdir_systems}
+
+# ------------------------------------------------------------------ PUS-C services
+# ECSS-E-ST-70-41C service types (ST[07], ST[10] and ST[16] are not defined in PUS-C).
+# `default` = proposed as used for a CubeSat of EOSAT-1 class.
+pus_services:
+  source: ecss_e_70_41
+  clause: "§6 service type list (to verify)"
+  list:
+    - {service: 1,  name: {en: "Request verification", fr: "Vérification des demandes"}, default: true}
+    - {service: 2,  name: {en: "Device access", fr: "Accès aux équipements"}, default: true}
+    - {service: 3,  name: {en: "Housekeeping", fr: "Télémesure de servitude"}, default: true}
+    - {service: 4,  name: {en: "Parameter statistics reporting", fr: "Statistiques de paramètres"}, default: false}
+    - {service: 5,  name: {en: "Event reporting", fr: "Rapports d’événements"}, default: true}
+    - {service: 6,  name: {en: "Memory management", fr: "Gestion de la mémoire"}, default: true}
+    - {service: 8,  name: {en: "Function management", fr: "Gestion des fonctions"}, default: true}
+    - {service: 9,  name: {en: "Time management", fr: "Gestion du temps"}, default: true}
+    - {service: 11, name: {en: "Time-based scheduling", fr: "Programmation horaire"}, default: true}
+    - {service: 12, name: {en: "On-board monitoring", fr: "Surveillance à bord"}, default: true}
+    - {service: 13, name: {en: "Large packet transfer", fr: "Transfert de gros paquets"}, default: true}
+    - {service: 14, name: {en: "Real-time forwarding control", fr: "Contrôle du relais en temps réel"}, default: false}
+    - {service: 15, name: {en: "On-board storage and retrieval", fr: "Stockage et restitution à bord"}, default: true}
+    - {service: 17, name: {en: "Test", fr: "Test"}, default: true}
+    - {service: 18, name: {en: "On-board operations procedure", fr: "Procédures d’exploitation à bord"}, default: true}
+    - {service: 19, name: {en: "Event-action", fr: "Événement-action"}, default: true}
+    - {service: 20, name: {en: "On-board parameter management", fr: "Gestion des paramètres à bord"}, default: true}
+    - {service: 21, name: {en: "Request sequencing", fr: "Séquencement des demandes"}, default: false}
+    - {service: 22, name: {en: "Position-based scheduling", fr: "Programmation sur position"}, default: false}
+    - {service: 23, name: {en: "File management", fr: "Gestion de fichiers"}, default: false}
+
+# ------------------------------------------------------------------ database settings
+database:
+  source: eosat1
+  clause: "mission.yaml spacecraft_apid / bootloader_apid / pus_version; rfsim.yaml ccsds.scid"
+  spacecraft_id: 1
+  pus_version: 2
+  time_code: "CUC 4+2 (coarse + fine), epoch J2000"
+  application_apid: 1
+  bootloader_apid: 2
+  apid_max: 2046            # 0x7FF is the idle packet APID (CCSDS 133.0-B)
+
+# ------------------------------------------------------------------ parameter types
+types:
+  source: c2o_default
+  clause: "packed sizes of the housekeeping pack formats (EOSAT-1 B/H/h/I/f)"
+  bytes: {uint8: 1, int8: 1, uint16: 2, int16: 2, uint32: 4, int32: 4, float32: 4, float64: 8}
+  pack_format: {uint8: B, int8: b, uint16: H, int16: h, uint32: I, int32: i, float32: f, float64: d}
+
+# ------------------------------------------------------------------ TM parameter templates
+# Proposed per subsystem present in the design, per unit class (mode_rules.yaml classes), per
+# power line, per data bus segment and per heater. {unit} = the unit's slug, {n} = index.
+# type, unit, range [lo, hi], calibration (none | linear scale | enum ref), on_demand.
+parameters:
+  source: c2o_default
+  clause: "EOSAT-1-class TM point list per subsystem and unit class (cf. telemetry/parameters.yaml)"
+  subsystem:
+    sys:
+      - {name: sc_mode, type: uint8, unit: "", calibration: {type: enum, ref: sc_modes}, description: {en: "Spacecraft mode", fr: "Mode du satellite"}}
+      - {name: mission_phase, type: uint8, unit: "", calibration: {type: enum, ref: phases}, description: {en: "Mission phase", fr: "Phase de mission"}}
+    eps:
+      - {name: bat_voltage, type: uint16, unit: V, range: [0, 40], calibration: {type: linear, scale: 100}, description: {en: "Battery voltage", fr: "Tension de la batterie"}}
+      - {name: bat_soc, type: uint16, unit: "%", range: [0, 100], calibration: {type: linear, scale: 100}, description: {en: "Battery state of charge", fr: "État de charge de la batterie"}}
+      - {name: bat_current, type: int16, unit: A, range: [-20, 20], calibration: {type: linear, scale: 100}, description: {en: "Battery current", fr: "Courant de la batterie"}}
+      - {name: bus_voltage, type: uint16, unit: V, range: [0, 40], calibration: {type: linear, scale: 100}, description: {en: "Bus voltage", fr: "Tension du bus"}}
+      - {name: power_gen, type: uint16, unit: W, range: [0, 300], calibration: {type: linear, scale: 10}, description: {en: "Power generation", fr: "Puissance produite"}}
+      - {name: power_cons, type: uint16, unit: W, range: [0, 300], calibration: {type: linear, scale: 10}, description: {en: "Power consumption", fr: "Puissance consommée"}}
+      - {name: eclipse_flag, type: uint8, unit: "", range: [0, 1], description: {en: "Eclipse flag", fr: "Indicateur d’éclipse"}}
+      - {name: uv_flag, type: uint8, unit: "", range: [0, 1], description: {en: "Bus under-voltage flag", fr: "Indicateur de sous-tension du bus"}}
+      - {name: load_shed_stage, type: uint8, unit: "", range: [0, 3], description: {en: "Load-shed stage", fr: "Étage de délestage"}}
+    aocs:
+      - {name: mode, type: uint8, unit: "", calibration: {type: enum, ref: aocs_modes}, description: {en: "AOCS mode", fr: "Mode SCAO"}}
+      - {name: att_q1, type: float32, unit: "", range: [-1, 1], description: {en: "Attitude quaternion x", fr: "Quaternion d’attitude x"}}
+      - {name: att_q2, type: float32, unit: "", range: [-1, 1], description: {en: "Attitude quaternion y", fr: "Quaternion d’attitude y"}}
+      - {name: att_q3, type: float32, unit: "", range: [-1, 1], description: {en: "Attitude quaternion z", fr: "Quaternion d’attitude z"}}
+      - {name: att_q4, type: float32, unit: "", range: [-1, 1], description: {en: "Attitude quaternion w (scalar)", fr: "Quaternion d’attitude w (scalaire)"}}
+      - {name: rate_x, type: int16, unit: deg/s, range: [-20, 20], calibration: {type: linear, scale: 1000}, description: {en: "Body rate X", fr: "Vitesse angulaire X"}}
+      - {name: rate_y, type: int16, unit: deg/s, range: [-20, 20], calibration: {type: linear, scale: 1000}, description: {en: "Body rate Y", fr: "Vitesse angulaire Y"}}
+      - {name: rate_z, type: int16, unit: deg/s, range: [-20, 20], calibration: {type: linear, scale: 1000}, description: {en: "Body rate Z", fr: "Vitesse angulaire Z"}}
+      - {name: att_error, type: uint16, unit: deg, range: [0, 180], calibration: {type: linear, scale: 100}, description: {en: "Attitude error", fr: "Erreur d’attitude"}}
+      - {name: momentum_pct, type: uint8, unit: "%", range: [0, 100], description: {en: "Stored momentum (share of the envelope)", fr: "Moment cinétique stocké (part de l’enveloppe)"}}
+    obdh:
+      - {name: mode, type: uint8, unit: "", calibration: {type: enum, ref: obc_modes}, description: {en: "OBC mode", fr: "Mode de l’OBC"}}
+      - {name: temp, type: int16, unit: C, range: [-40, 85], calibration: {type: linear, scale: 100}, description: {en: "OBC temperature", fr: "Température de l’OBC"}}
+      - {name: cpu_load, type: uint8, unit: "%", range: [0, 100], description: {en: "CPU load", fr: "Charge du processeur"}}
+      - {name: reboot_count, type: uint8, unit: "", range: [0, 255], description: {en: "Reboot count", fr: "Nombre de redémarrages"}}
+      - {name: obt_coarse, type: uint32, unit: s, range: [0, 4294967295], description: {en: "On-board time (coarse)", fr: "Temps de bord (grossier)"}}
+      - {name: hk_store_fill, type: uint8, unit: "%", range: [0, 100], description: {en: "HK store fill", fr: "Remplissage de la mémoire HK"}}
+      - {name: active_obc, type: uint8, unit: "", range: [0, 1], description: {en: "Active OBC (0 = A, 1 = B)", fr: "OBC actif (0 = A, 1 = B)"}, needs: obc_redundant}
+    tcs:
+      - {name: structure_temp, type: int16, unit: C, range: [-60, 90], calibration: {type: linear, scale: 100}, description: {en: "Structure temperature", fr: "Température de la structure"}}
+    ttc:
+      - {name: mode, type: uint8, unit: "", range: [0, 3], description: {en: "Transponder mode", fr: "Mode du transpondeur"}}
+      - {name: rssi, type: int16, unit: dBm, range: [-150, 0], calibration: {type: linear, scale: 10}, description: {en: "Received signal strength", fr: "Puissance du signal reçu"}}
+      - {name: link_margin, type: int16, unit: dB, range: [-20, 40], calibration: {type: linear, scale: 10}, description: {en: "Downlink margin", fr: "Marge de la liaison descendante"}}
+      - {name: tm_rate, type: uint8, unit: "", calibration: {type: enum, ref: rate_tiers}, description: {en: "TM rate tier", fr: "Palier de débit TM"}}
+      - {name: tx_on, type: uint8, unit: "", range: [0, 1], description: {en: "Transmitter on", fr: "Émetteur allumé"}}
+      - {name: cmd_loss_timer, type: uint32, unit: s, range: [0, 604800], description: {en: "Time since the last accepted TC", fr: "Temps depuis le dernier TC accepté"}}
+      - {name: active_xpdr, type: uint8, unit: "", range: [0, 1], description: {en: "Active transponder", fr: "Transpondeur actif"}, needs: ttc_redundant}
+    payload:
+      - {name: mode, type: uint8, unit: "", calibration: {type: enum, ref: payload_modes}, description: {en: "Payload mode", fr: "Mode de la charge utile"}}
+      - {name: storage_used, type: uint8, unit: "%", range: [0, 100], description: {en: "Mass memory used", fr: "Mémoire de masse utilisée"}}
+      - {name: images_count, type: uint16, unit: "", range: [0, 65535], description: {en: "Images stored", fr: "Images stockées"}}
+    fdir:
+      - {name: fdir_level, type: uint8, unit: "", range: [0, 3], description: {en: "Highest FDIR level active", fr: "Niveau FDIR actif le plus élevé"}}
+      - {name: safe_mode_flag, type: uint8, unit: "", range: [0, 1], description: {en: "Safe mode active", fr: "Mode survie actif"}}
+      - {name: last_ea_id, type: uint16, unit: "", range: [0, 65535], description: {en: "Last event-action fired", fr: "Dernier événement-action déclenché"}}
+    prop:
+      - {name: state, type: uint8, unit: "", range: [0, 5], description: {en: "Propulsion state", fr: "État de la propulsion"}}
+      - {name: tank_pressure, type: uint16, unit: bar, range: [0, 40], calibration: {type: linear, scale: 100}, description: {en: "Tank pressure", fr: "Pression du réservoir"}}
+      - {name: propellant_kg, type: uint16, unit: kg, range: [0, 10], calibration: {type: linear, scale: 1000}, description: {en: "Propellant remaining", fr: "Ergol restant"}}
+  # per unit class: the FD-01 monitor parameter of mode_rules.yaml fdir.by_type plus extras
+  unit_class:
+    battery:      [{name: "{unit}_temp", type: int16, unit: C, calibration: {type: linear, scale: 100}, range_from: op_range, monitor_param: temperature_c, description: {en: "{name} temperature", fr: "Température de {name}"}}]
+    obc:          []
+    eps:          []
+    solar_array:  [{name: "{unit}_current", type: uint16, unit: A, range: [0, 10], calibration: {type: linear, scale: 1000}, monitor_param: array_current_a, description: {en: "{name} current", fr: "Courant de {name}"}}]
+    transmitter:  [{name: "{unit}_pa_temp", type: int16, unit: C, calibration: {type: linear, scale: 100}, range_from: op_range, monitor_param: pa_temperature_c, description: {en: "{name} PA temperature", fr: "Température de l’amplificateur de {name}"}}]
+    receiver:     [{name: "{unit}_lock", type: uint8, unit: "", range: [0, 1], description: {en: "{name} carrier lock", fr: "Verrouillage porteuse de {name}"}}]
+    antenna:      [{name: "{unit}_deployed", type: uint8, unit: "", range: [0, 1], monitor_param: deployed_flag, description: {en: "{name} deployed", fr: "{name} déployée"}}]
+    wheel:
+      - {name: "{unit}_speed", type: int16, unit: rpm, range: [-8000, 8000], monitor_param: wheel_speed_rpm, per_quantity: true, description: {en: "{name} speed", fr: "Vitesse de {name}"}}
+      - {name: "{unit}_temp", type: int16, unit: C, range: [-40, 85], calibration: {type: linear, scale: 100}, per_quantity: true, description: {en: "{name} temperature", fr: "Température de {name}"}}
+      - {name: "{unit}_enabled", type: uint8, unit: "", range: [0, 1], per_quantity: true, description: {en: "{name} enabled", fr: "{name} activée"}}
+    star_tracker: [{name: "{unit}_valid", type: uint8, unit: "", range: [0, 1], monitor_param: valid_attitude_flag, per_quantity: true, description: {en: "{name} valid attitude", fr: "Attitude valide de {name}"}}]
+    magnetorquer: [{name: "{unit}_current", type: int16, unit: A, range: [-1, 1], calibration: {type: linear, scale: 1000}, monitor_param: coil_current_a, per_quantity: true, description: {en: "{name} coil current", fr: "Courant de bobine de {name}"}}]
+    adcs_sensor:  [{name: "{unit}_valid", type: uint8, unit: "", range: [0, 1], monitor_param: sun_vector_valid, description: {en: "{name} measurement valid", fr: "Mesure valide de {name}"}}]
+    gnss:
+      - {name: "{unit}_fix", type: uint8, unit: "", range: [0, 1], monitor_param: fix_valid_flag, description: {en: "{name} fix valid", fr: "Solution valide de {name}"}}
+      - {name: "{unit}_lat", type: float32, unit: deg, range: [-90, 90], on_demand: true, description: {en: "{name} latitude", fr: "Latitude de {name}"}}
+      - {name: "{unit}_lon", type: float32, unit: deg, range: [-180, 180], on_demand: true, description: {en: "{name} longitude", fr: "Longitude de {name}"}}
+    propulsion:   [{name: "{unit}_tank_pressure", type: uint16, unit: bar, range: [0, 40], calibration: {type: linear, scale: 100}, monitor_param: tank_pressure_bar, description: {en: "{name} tank pressure", fr: "Pression du réservoir de {name}"}}]
+    payload:      [{name: "{unit}_temp", type: int16, unit: C, calibration: {type: linear, scale: 100}, range_from: op_range, monitor_param: temperature_c, description: {en: "{name} temperature", fr: "Température de {name}"}}]
+    heater:       []
+    structure:    []
+    generic:      [{name: "{unit}_temp", type: int16, unit: C, calibration: {type: linear, scale: 100}, range_from: op_range, monitor_param: temperature_c, description: {en: "{name} temperature", fr: "Température de {name}"}}]
+  power_line:
+    - {name: "pl_{line}", type: uint8, unit: "", range: [0, 1], description: {en: "Power line {line} state", fr: "État de la ligne d’alimentation {line}"}}
+    - {name: "line_current_{n}", type: uint16, unit: A, range: [0, 10], calibration: {type: linear, scale: 1000}, description: {en: "Power line {line} current", fr: "Courant de la ligne d’alimentation {line}"}}
+  bus:
+    - {name: "bus_{segment}_status", type: uint8, unit: "", range: [0, 1], description: {en: "Data bus {name} status", fr: "État du bus de données {name}"}}
+  heater:
+    - {name: "htr_{unit}", type: uint8, unit: "", range: [0, 2], description: {en: "Heater {name} state (0 off, 1 on, 2 thermostat)", fr: "État du réchauffeur {name} (0 arrêt, 1 marche, 2 thermostat)"}}
+  op_range_default: [-20, 50]
+
+# ------------------------------------------------------------------ housekeeping
+housekeeping:
+  source: c2o_default
+  clause: "one SID per subsystem at the subsystem period; EPS, OBDH and the beacon enabled at boot (EOSAT-1: SIDs 1 and 11)"
+  enabled_at_boot: [eps, obdh, sys]
+  beacon:
+    sid: 11
+    period_s: 30
+    params: [eps.bat_soc, eps.bus_voltage, sys.sc_mode, obdh.mode, obdh.reboot_count, ttc.rssi, obdh.temp]
+  sid_order: [eps, aocs, tcs, obdh, payload, ttc, sys, fdir, prop, str]
+
+# Downlink budget for HK (rule TMTC-HK-BW): bits per second of each SID = packet bytes × 8 / period.
+downlink_budget:
+  source: c2o_default
+  clause: "HK share of the TM rate per regime"
+  packet_overhead_bytes: 20     # 6 primary header + 11 PUS-C TM secondary header (7-byte CUC) + 1 SID + 2 CRC
+  hk_share_percent: 50
+  frame_efficiency: 0.85        # CCSDS TM frame + RS(255,223) check symbols + idle (C2O default)
+  # mode kind (mode_rules.yaml) -> regime -> rate tier role
+  regime_of_mode_kind: {leop: safe, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: downlink, safe: safe, survival: safe, custom: nominal}
+
+# ------------------------------------------------------------------ TC functions (S8)
+# needs: unit classes / facts that must exist for the function to be proposed.
+# role: what checks look for (power_on/power_off must cover every switchable line, safe_enter …).
+functions:
+  source: c2o_default
+  clause: "EOSAT-1-class function set (commands/tc_catalog.yaml), S8,1 perform function"
+  list:
+    - {name: SYS_SET_MODE, subsystem: sys, role: set_mode, criticality: caution, args: [{name: mode, type: uint8, enum_from: sc_modes}], description: {en: "Set the spacecraft mode", fr: "Choisir le mode du satellite"}}
+    - {name: SYS_ENTER_SAFE, subsystem: sys, role: safe_enter, criticality: caution, args: [], description: {en: "Enter safe mode", fr: "Passer en mode survie"}}
+    - {name: SYS_EXIT_SAFE, subsystem: sys, role: safe_exit, criticality: critical, arm_execute: true, args: [], description: {en: "Leave safe mode (ground only)", fr: "Quitter le mode survie (sol uniquement)"}}
+    - {name: SYS_SET_MISSION_PHASE, subsystem: sys, role: set_phase, criticality: critical, arm_execute: true, args: [{name: phase, type: uint8, enum_from: phases}], description: {en: "Declare the mission phase", fr: "Déclarer la phase de mission"}}
+    - {name: EPS_POWER_ON, subsystem: eps, role: power_on, criticality: caution, args: [{name: line_index, type: uint8, range_from: lines}], description: {en: "Switch a power line on", fr: "Allumer une ligne d’alimentation"}}
+    - {name: EPS_POWER_OFF, subsystem: eps, role: power_off, criticality: caution, args: [{name: line_index, type: uint8, range_from: switchable_lines}], description: {en: "Switch a power line off", fr: "Couper une ligne d’alimentation"}}
+    - {name: EPS_LOAD_SHED, subsystem: eps, role: load_shed, criticality: caution, args: [{name: stage, type: uint8, range: [0, 3]}], description: {en: "Set the load-shed stage", fr: "Choisir l’étage de délestage"}}
+    - {name: OBC_REBOOT, subsystem: obdh, role: reboot, criticality: critical, arm_execute: true, args: [], description: {en: "Reboot the OBC", fr: "Redémarrer l’OBC"}}
+    - {name: OBC_SWITCH_UNIT, subsystem: obdh, role: switch_obc, needs: [obc_redundant], criticality: critical, arm_execute: true, args: [{name: unit, type: uint8, range: [0, 1]}], description: {en: "Switch to the other OBC", fr: "Basculer sur l’autre OBC"}}
+    - {name: OBC_SELECT_BUS, subsystem: obdh, role: switch_bus, needs: [bus_redundant], criticality: critical, arm_execute: true, args: [{name: bus, type: uint8, range: [0, 1]}], description: {en: "Select the data bus segment", fr: "Choisir le segment du bus de données"}}
+    - {name: TTC_SET_RATE, subsystem: ttc, role: set_rate, criticality: caution, args: [{name: tier, type: uint8, enum_from: rate_tiers}], description: {en: "Select the TM rate tier", fr: "Choisir le palier de débit TM"}}
+    - {name: TTC_TX_ON, subsystem: ttc, role: tx_on, criticality: normal, args: [], description: {en: "Transmitter on", fr: "Allumer l’émetteur"}}
+    - {name: TTC_TX_OFF, subsystem: ttc, role: tx_off, criticality: caution, args: [], description: {en: "Transmitter off", fr: "Éteindre l’émetteur"}}
+    - {name: TTC_SWITCH_TRANSPONDER, subsystem: ttc, role: switch_ttc, needs: [ttc_redundant], criticality: critical, arm_execute: true, args: [{name: unit, type: uint8, range: [0, 1]}], description: {en: "Switch to the other transponder", fr: "Basculer sur l’autre transpondeur"}}
+    - {name: TTC_BEACON_ON, subsystem: ttc, role: beacon_on, criticality: normal, args: [], description: {en: "Beacon on", fr: "Allumer la balise"}}
+    - {name: TTC_BEACON_OFF, subsystem: ttc, role: beacon_off, criticality: caution, args: [], description: {en: "Beacon off", fr: "Éteindre la balise"}}
+    - {name: AOCS_SET_MODE, subsystem: aocs, role: aocs_mode, criticality: caution, args: [{name: mode, type: uint8, enum_from: aocs_modes}], description: {en: "Set the AOCS mode", fr: "Choisir le mode SCAO"}}
+    - {name: AOCS_SET_GAINS, subsystem: aocs, role: aocs_gains, criticality: critical, arm_execute: true, args: [{name: omega_n, type: float32, unit: rad/s, range: [0.0, 0.2]}, {name: zeta, type: float32, range: [0.0, 2.0]}], description: {en: "Set the control gains", fr: "Régler les gains de commande"}}
+    - {name: AOCS_ENABLE_WHEEL, subsystem: aocs, role: wheel_enable, needs: [wheel], criticality: caution, args: [{name: wheel, type: uint8, range_from: wheels}], description: {en: "Enable a reaction wheel", fr: "Activer une roue à réaction"}}
+    - {name: AOCS_DISABLE_WHEEL, subsystem: aocs, role: wheel_disable, needs: [wheel], criticality: caution, args: [{name: wheel, type: uint8, range_from: wheels}], description: {en: "Disable a reaction wheel", fr: "Désactiver une roue à réaction"}}
+    - {name: AOCS_DESATURATE, subsystem: aocs, role: desat, needs: [wheel, magnetorquer], criticality: caution, args: [], description: {en: "Start a momentum desaturation", fr: "Lancer une désaturation"}}
+    - {name: AOCS_SWITCH_STAR_TRACKER, subsystem: aocs, role: switch_st, needs: [star_tracker_redundant], criticality: caution, args: [{name: unit, type: uint8, range: [0, 1]}], description: {en: "Select the star tracker", fr: "Choisir le viseur d’étoiles"}}
+    - {name: TCS_HEATER_SET, subsystem: tcs, role: heater_set, needs: [heater], criticality: caution, args: [{name: heater, type: uint8, range_from: heaters}, {name: state, type: uint8, enum: ["OFF", "ON", "AUTO"]}], description: {en: "Heater off / on / thermostat", fr: "Réchauffeur arrêt / marche / thermostat"}}
+    - {name: TCS_HEATER_SETPOINTS, subsystem: tcs, role: heater_setpoints, needs: [heater], criticality: caution, args: [{name: heater, type: uint8, range_from: heaters}, {name: on_c, type: float32, unit: C, range: [-40, 60]}, {name: off_c, type: float32, unit: C, range: [-40, 60]}], description: {en: "Set the thermostat set-points", fr: "Régler les consignes du thermostat"}}
+    - {name: PAYLOAD_SET_MODE, subsystem: payload, role: payload_mode, needs: [payload], criticality: caution, args: [{name: mode, type: uint8, enum: ["OFF", "STANDBY", "IMAGING"]}], description: {en: "Set the payload mode", fr: "Choisir le mode de la charge utile"}}
+    - {name: PAYLOAD_CAPTURE, subsystem: payload, role: capture, needs: [payload], criticality: normal, args: [{name: duration_s, type: uint16, unit: s, range: [1, 900]}], description: {en: "Acquire an image strip", fr: "Acquérir une bande d’image"}}
+    - {name: PROP_ARM, subsystem: prop, role: prop_arm, needs: [propulsion], criticality: critical, arm_execute: true, args: [{name: arm_code, type: uint16}], description: {en: "Arm the propulsion system", fr: "Armer la propulsion"}}
+    - {name: PROP_FIRE, subsystem: prop, role: prop_fire, needs: [propulsion], criticality: critical, arm_execute: true, args: [{name: duration_s, type: uint16, unit: s, range: [1, 300]}], description: {en: "Fire the thruster", fr: "Allumer le propulseur"}}
+    - {name: PROP_ABORT, subsystem: prop, role: prop_abort, needs: [propulsion], criticality: caution, args: [], description: {en: "Abort the burn (close the valves)", fr: "Interrompre la poussée (fermer les vannes)"}}
+
+# ------------------------------------------------------------------ events (S5)
+events:
+  source: c2o_default
+  clause: "EOSAT-1-class S5 event set; severity INFO | LOW | MEDIUM | HIGH (event_catalog.yaml)"
+  severities: [INFO, LOW, MEDIUM, HIGH]
+  monitor_severity: {WARNING: MEDIUM, ALARM: HIGH}
+  list:
+    - {name: SAFE_MODE_ENTERED, subsystem: sys, severity: HIGH, role: safe_entered, description: {en: "Safe mode entered", fr: "Entrée en mode survie"}}
+    - {name: SAFE_MODE_EXITED, subsystem: sys, severity: MEDIUM, role: safe_exited, description: {en: "Safe mode left", fr: "Sortie du mode survie"}}
+    - {name: SC_MODE_CHANGE, subsystem: sys, severity: INFO, description: {en: "Spacecraft mode changed", fr: "Changement de mode du satellite"}}
+    - {name: BUS_UNDERVOLTAGE_WARNING, subsystem: eps, severity: MEDIUM, role: bus_uv, level_ref: uv_v, description: {en: "Bus below the under-voltage level (load shed begins)", fr: "Bus sous le seuil de sous-tension (début du délestage)"}}
+    - {name: BUS_UNDERVOLTAGE_CRITICAL, subsystem: eps, severity: HIGH, role: bus_uv_critical, level_ref: eps_safe_v, description: {en: "Bus below the EPS safe level", fr: "Bus sous le seuil de survie EPS"}}
+    - {name: LOAD_SHED_STAGE_CHANGE, subsystem: eps, severity: HIGH, role: load_shed, description: {en: "Load-shed stage changed", fr: "Changement d’étage de délestage"}}
+    - {name: LCL_TRIP, subsystem: eps, severity: HIGH, role: lcl_trip, description: {en: "A power line's current limiter tripped", fr: "Le limiteur de courant d’une ligne a déclenché"}}
+    - {name: AOCS_MODE_CHANGE, subsystem: aocs, severity: INFO, description: {en: "AOCS mode changed", fr: "Changement de mode SCAO"}}
+    - {name: OBC_REBOOT, subsystem: obdh, severity: HIGH, role: reboot, description: {en: "OBC rebooted", fr: "Redémarrage de l’OBC"}}
+    - {name: WATCHDOG_RESET, subsystem: obdh, severity: HIGH, description: {en: "Watchdog reset", fr: "Réinitialisation par le chien de garde"}}
+    - {name: AOS, subsystem: ttc, severity: INFO, description: {en: "Acquisition of signal", fr: "Acquisition du signal"}}
+    - {name: LOS, subsystem: ttc, severity: INFO, description: {en: "Loss of signal", fr: "Perte du signal"}}
+    - {name: CMD_LOSS_SWITCH, subsystem: ttc, severity: HIGH, role: cmd_loss, description: {en: "Command-loss timer expired: transponder switched", fr: "Minuterie de perte de commande échue : transpondeur basculé"}}
+    - {name: PAYLOAD_MODE_CHANGE, subsystem: payload, severity: INFO, needs: [payload], description: {en: "Payload mode changed", fr: "Changement de mode de la charge utile"}}
+    - {name: BURN_ABORTED, subsystem: prop, severity: HIGH, needs: [propulsion], description: {en: "Burn aborted", fr: "Poussée interrompue"}}
+
+# ------------------------------------------------------------------ FDIR
+fdir:
+  source: ecss_e_70_11
+  clause: "FDIR hierarchy, safe mode and on-board autonomy (to verify); values C2O defaults / EOSAT-1"
+  # monitor check types (S12): limit (low/high), delta, expected_value
+  check_types: [limit, delta, expected_value]
+  monitor_severities: [WARNING, ALARM]
+  default_repetition: 3
+  # FD-02 placeholder actions (mode_rules.yaml fdir.function_catalogue) -> TC function role
+  action_role:
+    POWER_CYCLE_LINE: {role: power_off, on_clear_role: power_on, arg: line, role_by_class: {transmitter: tx_off}}
+    POWER_OFF_UNIT: {role: power_off, arg: line, role_by_class: {transmitter: tx_off}}
+    SWITCH_TO_REDUNDANT: {role_by_class: {obc: switch_obc, transmitter: switch_ttc, receiver: switch_ttc, star_tracker: switch_st}, fallback_role: switch_bus}
+    LOAD_SHED: {role: load_shed, data: [1]}
+    ENTER_SAFE_MODE: {role: safe_enter}
+    ABORT_MANOEUVRE: {role: prop_abort}
+    EVENT_ONLY: {role: null}
+  # a line action on a line that must stay powered (non-switchable, or feeding the OBC, EPS,
+  # battery or receiver) falls back to this role (FD-02 self-off conflict)
+  line_action_fallback_role: safe_enter
+  # FD-01 monitor parameters that are subsystem-level TM points rather than unit points
+  monitor_param_alias: {bus_voltage_v: eps.bus_voltage, reboot_count: obdh.reboot_count}
+  # never switched off by an event-action or the safe mode (FD-02, EOSAT-1 non-switchable lines)
+  never_off_classes: [obc, eps, battery, receiver]
+  severity_needing_recovery: 4     # FMECA S >= this: detection AND recovery required (C2O default)
+  levels:
+    - {level: 1, name: {en: "Unit", fr: "Unité"}, scope: {en: "Equipment-level response: power-cycle, switch unit, disable", fr: "Réponse au niveau équipement : recyclage, bascule d’unité, désactivation"}, persistence_samples: 3, max_attempts: 3, recovery_delays_s: [30, 60, 120], escalate_to: 2}
+    - {level: 2, name: {en: "Subsystem", fr: "Sous-système"}, scope: {en: "Subsystem safe configuration: AOCS sun-safe, EPS load shed", fr: "Configuration sûre du sous-système : SCAO pointage solaire, délestage EPS"}, persistence_samples: 3, max_attempts: 2, recovery_delays_s: [60, 120], escalate_to: 3}
+    - {level: 3, name: {en: "System", fr: "Système"}, scope: {en: "Spacecraft safe mode or OBC reboot / switch-over", fr: "Mode survie du satellite ou redémarrage / bascule de l’OBC"}, persistence_samples: 1, max_attempts: 1, recovery_delays_s: [], escalate_to: null}
+  # Named bus-protection levels as fractions of the battery bus range (linear open-circuit
+  # approximation; EOSAT-1 BPX 8S: 24.0–33.6 V → uv 28.4, eps_safe 27.7, aocs_safe 26.1, ov 34.0)
+  bus_protection:
+    uv_v: {soc_fraction: 0.458, label: {en: "Under-voltage: shed begins", fr: "Sous-tension : début du délestage"}}
+    eps_safe_v: {soc_fraction: 0.385, label: {en: "EPS safe mode", fr: "Mode survie EPS"}}
+    aocs_safe_v: {soc_fraction: 0.219, label: {en: "AOCS safe mode", fr: "Mode survie SCAO"}}
+    ov_v: {above_max_v: 0.4, label: {en: "Over-voltage flag", fr: "Indicateur de surtension"}}
+  # load-shed priority per unit class (lower sheds first); classes absent are never shed
+  shed_priority: {payload: 1, transmitter: 2, wheel: 3, propulsion: 4}
+  soc_stage_thresholds_pct: [30.0, 20.0, 10.0]
+  restore_hysteresis_v: 0.5
+  safe_mode:
+    aocs_mode: COARSE_SUN
+    rate_role: safe
+    shed_classes: [payload, propulsion]
+    heaters: thermostat
+  default_monitors:
+    - {param: eps.bat_soc, name: {en: "Battery SoC warning", fr: "Alerte d’état de charge"}, check: limit, low: 20, high: 100, severity: WARNING}
+    - {param: eps.bat_soc, name: {en: "Battery SoC critical", fr: "État de charge critique"}, check: limit, low: 10, high: 100, severity: ALARM}
+    - {param: eps.bus_voltage, name: {en: "Bus voltage low", fr: "Tension du bus basse"}, check: limit, low_ref: uv_v, high_ref: ov_v, severity: WARNING}
+    - {param: eps.bus_voltage, name: {en: "Bus voltage critical", fr: "Tension du bus critique"}, check: limit, low_ref: eps_safe_v, high_ref: ov_v, severity: ALARM}
+    - {param: obdh.temp, name: {en: "OBC temperature", fr: "Température de l’OBC"}, check: limit, low: -20, high: 60, severity: ALARM}
+    - {param: obdh.reboot_count, name: {en: "OBC reboots", fr: "Redémarrages de l’OBC"}, check: limit, low: 0, high: 4, severity: ALARM}
+    - {param: obdh.cpu_load, name: {en: "CPU load", fr: "Charge du processeur"}, check: limit, low: 0, high: 90, severity: WARNING}
+    - {param: aocs.att_error, name: {en: "Attitude error", fr: "Erreur d’attitude"}, check: limit, low: 0, high: 5, severity: WARNING, repetition: 420}
+    - {param: aocs.momentum_pct, name: {en: "Momentum high", fr: "Moment cinétique élevé"}, check: limit, low: 0, high: 70, severity: WARNING}
+  default_actions:
+    - {name: bus_uv_critical_safe, trigger_event_role: bus_uv_critical, role: safe_enter, level: 3}
+    - {name: soc_critical_load_shed, trigger_monitor: "eps.bat_soc|ALARM", limit: low, role: load_shed, data: [2], level: 2}
+    - {name: momentum_desaturate, trigger_monitor: "aocs.momentum_pct|WARNING", limit: high, role: desat, level: 1}
+    - {name: reboots_switch_obc, trigger_monitor: "obdh.reboot_count|ALARM", limit: high, role: switch_obc, level: 3}
+
+# ------------------------------------------------------------------ AOCS mode machine and control
+aocs:
+  source: ecss_e_60_30
+  clause: "AOCS modes, transitions and control-law parameters (to verify); values EOSAT-1 / C2O defaults"
+  modes:
+    - {code: 0, name: "OFF", sensors: [], actuators: [], description: {en: "No attitude control", fr: "Pas de contrôle d’attitude"}}
+    - {code: 1, name: DETUMBLE, needs: [magnetorquer], sensors: [adcs_sensor, gyro], actuators: [magnetorquer], min_dwell_s: 10, power_w: 2.5, description: {en: "B-dot rate damping", fr: "Amortissement des vitesses (B-dot)"}}
+    - {code: 2, name: COARSE_SUN, sensors: [adcs_sensor], actuators: [magnetorquer, wheel], gains: {omega_n: 0.020, zeta: 0.70}, min_dwell_s: 20, power_w: 4, pointing_sigma_deg: 5.0, description: {en: "Sun-safe pointing on coarse sun sensors", fr: "Pointage solaire de survie sur capteurs solaires grossiers"}}
+    - {code: 3, name: NOMINAL, needs: [wheel], sensors: [star_tracker, adcs_sensor, gnss], actuators: [wheel], gains: {omega_n: 0.040, zeta: 0.70}, min_dwell_s: 10, power_w: 9, pointing_sigma_deg: 0.020, description: {en: "Nadir pointing on wheels and star tracker", fr: "Pointage nadir sur roues et viseur d’étoiles"}}
+    - {code: 4, name: FINE_POINT, needs: [wheel, star_tracker], sensors: [star_tracker], actuators: [wheel], gains: {omega_n: 0.080, zeta: 0.75}, deadband_deg: 0.005, min_dwell_s: 10, power_w: 15, pointing_sigma_deg: 0.007, description: {en: "Fine pointing for imaging", fr: "Pointage fin pour l’imagerie"}}
+    - {code: 5, name: SLEW, needs: [wheel], sensors: [star_tracker], actuators: [wheel], gains: {omega_n: 0.060, zeta: 0.90}, min_dwell_s: 5, power_w: 12, description: {en: "Quaternion slew between attitudes", fr: "Basculement entre deux attitudes"}}
+    - {code: 6, name: DESAT, needs: [wheel, magnetorquer], sensors: [adcs_sensor], actuators: [wheel, magnetorquer], gains: {omega_n: 0.020, zeta: 0.70}, min_dwell_s: 20, power_w: 7, description: {en: "Momentum desaturation with the magnetorquers", fr: "Désaturation par les magnétocoupleurs"}}
+  transitions:
+    - {from: "OFF", to: DETUMBLE, trigger: autonomous, guard: {en: "Boot: OBC application running", fr: "Démarrage : logiciel applicatif de l’OBC actif"}}
+    - {from: DETUMBLE, to: COARSE_SUN, trigger: autonomous, guard: {en: "Body rate < 0.5 °/s", fr: "Vitesse angulaire < 0,5 °/s"}, param: aocs.rate_x}
+    - {from: COARSE_SUN, to: NOMINAL, trigger: ground_tc, guard: {en: "Ground command after sun acquisition", fr: "Commande sol après acquisition du Soleil"}}
+    - {from: NOMINAL, to: FINE_POINT, trigger: ground_tc, guard: {en: "Star tracker valid", fr: "Viseur d’étoiles valide"}}
+    - {from: FINE_POINT, to: NOMINAL, trigger: ground_tc, guard: {en: "End of imaging", fr: "Fin de l’imagerie"}}
+    - {from: NOMINAL, to: SLEW, trigger: ground_tc, guard: {en: "Slew commanded", fr: "Basculement commandé"}}
+    - {from: SLEW, to: NOMINAL, trigger: autonomous, guard: {en: "Slew complete (error < 1°)", fr: "Basculement terminé (erreur < 1°)"}, param: aocs.att_error}
+    - {from: NOMINAL, to: DESAT, trigger: autonomous, guard: {en: "Stored momentum > 70 %", fr: "Moment cinétique stocké > 70 %"}, param: aocs.momentum_pct}
+    - {from: DESAT, to: NOMINAL, trigger: autonomous, guard: {en: "Momentum below the deadband", fr: "Moment cinétique sous la bande morte"}, param: aocs.momentum_pct}
+    - {from: NOMINAL, to: COARSE_SUN, trigger: autonomous, guard: {en: "FDIR: attitude error or safe mode", fr: "FDIR : erreur d’attitude ou mode survie"}, param: aocs.att_error}
+    - {from: FINE_POINT, to: COARSE_SUN, trigger: autonomous, guard: {en: "FDIR: safe mode", fr: "FDIR : mode survie"}, param: fdir.safe_mode_flag}
+  initial_mode: DETUMBLE
+  control:
+    bdot:
+      b_ref_t: 3.0e-5           # mean field magnitude at ~500 km (C2O default)
+      rate_ref_dps: 5.0         # tip-off rate the gain must saturate the rods at (C2O default)
+      exit_rate_dps: 0.5        # EOSAT-1 DETUMBLE exit
+    desaturation: {gain_per_s: 0.002, deadband_nms: 5.0e-4, timeout_s: 3600, entry_pct: 70}
+    wheel_bias_fraction: 0.22   # bias speed as a share of max speed (EOSAT-1: 1200 / 5500 rpm)
+    torque_check_error_deg: 5.0 # step error the PD torque I·ωn²·θ must stay under the wheel torque for
+    zeta_range: [0.3, 1.5]
+
+# ------------------------------------------------------------------ TT&C rate ladder
+ttc:
+  source: ccsds_131
+  clause: "modulation / coding per tier (coding gains EOSAT-1 ttc.yaml)"
+  tiers:
+    - {name: SAFE, role: beacon, bps: 1000, modulation: BPSK, coding: CONV_RS, coding_gain_db: 7.5, bootloader_only: true, requires_antenna: false, requires_downlink_mode: false, min_elevation_deg: 5}
+    - {name: LOW, role: default, bps: 16000, modulation: BPSK, coding: CONV_RS, coding_gain_db: 7.5, bootloader_only: false, requires_antenna: false, requires_downlink_mode: false, min_elevation_deg: 5}
+    - {name: HIGH, role: downlink, bps: 128000, modulation: QPSK, coding: RS, coding_gain_db: 6.0, bootloader_only: false, requires_antenna: true, requires_downlink_mode: true, min_elevation_deg: 10}
+  roles: {default: LOW, beacon: SAFE, safe: LOW, downlink: HIGH}
+  modulations: [BPSK, QPSK, 8PSK, OQPSK, GMSK, FSK]
+  codings: [NONE, CONV, RS, CONV_RS, LDPC, TURBO]
+  tc_uplink_rate_bps: 4000
+  cmd_loss_switch_timeout_s: 86400
+  cmd_loss_rssi_threshold_dbm: -105.0
+  min_cmd_loss_timeout_s: 21600   # longer than the longest planned no-contact gap (C2O default)
+  beacon: {enabled: true, bps: 1000, rf_power_w: 1.0, period_s: 30}
+
+# ------------------------------------------------------------------ operations organisation
+ops:
+  source: ecss_e_70
+  clause: "mission operations organisation, GO/NO-GO and flight rules (to verify); EOSAT-1 mcs/positions.yaml, mcs/gonogo_matrix.yaml"
+  base_services: [1, 3, 5, 17, 20]
+  positions:
+    - {id: flight_director, label: {en: "Flight Director", fr: "Directeur de vol"}, subsystems: all, extra_services: [2, 6, 8, 9, 11, 12, 13, 15, 18, 19], design_seat: team_leader}
+    - {id: eps_tcs, label: {en: "Power & Thermal", fr: "Puissance et thermique"}, subsystems: [eps, tcs], extra_services: [8], design_seat: power_engineer}
+    - {id: aocs, label: {en: "Flight Dynamics", fr: "Dynamique du vol"}, subsystems: [aocs], extra_services: [2, 8, 11], design_seat: aocs_engineer}
+    - {id: ttc, label: {en: "TT&C", fr: "TT&C"}, subsystems: [ttc], extra_services: [8, 9, 11, 15], design_seat: comms_engineer}
+    - {id: payload_ops, label: {en: "Payload Operations", fr: "Opérations charge utile"}, subsystems: [payload], extra_services: [2, 8, 11, 13, 15], design_seat: payload_lead}
+    - {id: fdir_systems, label: {en: "FDIR / Systems", fr: "FDIR et systèmes"}, subsystems: [obdh, sys, fdir, str], extra_services: [6, 8, 9, 12, 19], design_seat: systems_engineer}
+    - {id: propulsion, label: {en: "Propulsion", fr: "Propulsion"}, subsystems: [prop], extra_services: [8, 11], design_seat: propulsion_engineer}
+  gonogo:
+    - {situation: {en: "Load-shed level increase", fr: "Passage à un étage de délestage supérieur"}, who_calls: eps_tcs, who_responds: [affected], decision: {en: "FD authorises each level", fr: "Le DV autorise chaque étage"}, critical: false}
+    - {situation: {en: "Subsystem mode change", fr: "Changement de mode d’un sous-système"}, who_calls: lead_desk, who_responds: [flight_director], decision: {en: "FD authorises", fr: "Le DV autorise"}, critical: false}
+    - {situation: {en: "OBC switch-over", fr: "Bascule de l’OBC"}, who_calls: fdir_systems, who_responds: [all], decision: {en: "FD authorises (critical)", fr: "Le DV autorise (critique)"}, critical: true, functions: [OBC_SWITCH_UNIT], needs: [obc_redundant]}
+    - {situation: {en: "OBC reboot", fr: "Redémarrage de l’OBC"}, who_calls: fdir_systems, who_responds: [all], decision: {en: "FD authorises (critical: TM and timeline lost until boot)", fr: "Le DV autorise (critique : TM et programmation perdues jusqu’au redémarrage)"}, critical: true, functions: [OBC_REBOOT]}
+    - {situation: {en: "Data bus switch-over", fr: "Bascule du bus de données"}, who_calls: fdir_systems, who_responds: [all], decision: {en: "FD authorises (critical)", fr: "Le DV autorise (critique)"}, critical: true, functions: [OBC_SELECT_BUS], needs: [bus_redundant]}
+    - {situation: {en: "Transponder switch", fr: "Bascule du transpondeur"}, who_calls: ttc, who_responds: [flight_director], decision: {en: "FD authorises (TM interruption)", fr: "Le DV autorise (interruption de la TM)"}, critical: true, functions: [TTC_SWITCH_TRANSPONDER], needs: [ttc_redundant]}
+    - {situation: {en: "Safe mode exit", fr: "Sortie du mode survie"}, who_calls: fdir_systems, who_responds: [all], decision: {en: "FD authorises after the root cause is known", fr: "Le DV autorise une fois la cause connue"}, critical: true, functions: [SYS_EXIT_SAFE]}
+    - {situation: {en: "Mission phase declaration", fr: "Déclaration de phase de mission"}, who_calls: flight_director, who_responds: [all], decision: {en: "FD declares after the poll", fr: "Le DV déclare après le tour de table"}, critical: true, functions: [SYS_SET_MISSION_PHASE]}
+    - {situation: {en: "Control gain change", fr: "Changement des gains de commande"}, who_calls: aocs, who_responds: [flight_director], decision: {en: "FD authorises", fr: "Le DV autorise"}, critical: true, functions: [AOCS_SET_GAINS]}
+    - {situation: {en: "Propulsion arm and burn", fr: "Armement et poussée"}, who_calls: propulsion, who_responds: [aocs, eps_tcs, flight_director], decision: {en: "FD authorises arm, then fire", fr: "Le DV autorise l’armement, puis la poussée"}, critical: true, functions: [PROP_ARM, PROP_FIRE], needs: [propulsion]}
+    - {situation: {en: "FDIR threshold change", fr: "Changement d’un seuil FDIR"}, who_calls: fdir_systems, who_responds: [all], decision: {en: "FD authorises", fr: "Le DV autorise"}, critical: false}
+  flight_rules:
+    - {rule_id: FR-01, text: {en: "No RF transmission before the separation RF-inhibit timer has expired.", fr: "Aucune émission RF avant l’expiration de la minuterie d’inhibition RF après la séparation."}, ref: "CDS rev 14.1 RF inhibit"}
+    - {rule_id: FR-02, text: {en: "A critical telecommand is sent only after a GO from the Flight Director, armed then executed.", fr: "Un télécommande critique n’est envoyé qu’après le GO du directeur de vol, armé puis exécuté."}, ref: "GO/NO-GO matrix"}
+    - {rule_id: FR-03, text: {en: "Safe mode is left only after the root cause is identified and the power and thermal state is nominal.", fr: "Le mode survie n’est quitté qu’une fois la cause identifiée et l’état de puissance et thermique nominal."}, ref: "SYS_EXIT_SAFE"}
+    - {rule_id: FR-04, text: {en: "Load-shed stages are restored one stage per contact, in reverse shed order.", fr: "Les étages de délestage sont rétablis un par contact, dans l’ordre inverse du délestage."}, ref: "load-shed table"}
+    - {rule_id: FR-05, text: {en: "Imaging only in sunlight, with the AOCS in NOMINAL or FINE_POINT.", fr: "Imagerie uniquement au soleil, avec le SCAO en NOMINAL ou FINE_POINT."}, ref: "PAYLOAD_SET_MODE", needs: [payload]}
+    - {rule_id: FR-06, text: {en: "No thruster firing in eclipse or below 45 % state of charge.", fr: "Aucune poussée en éclipse ni sous 45 % d’état de charge."}, ref: "PROP_FIRE", needs: [propulsion]}
+
+# ------------------------------------------------------------------ CDR gate thresholds
+cdr_gate:
+  source: c2o_default
+  clause: "evidence thresholds of the CDR exit criteria (gate_exit_criteria.yaml phase_c)"
+  min_parameters_per_subsystem: 3
