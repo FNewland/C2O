@@ -203,11 +203,48 @@ def _inline(text: str) -> str:
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
     # Italic
     text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
-    # Images
-    text = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', r'<img src="\2" alt="\1">', text)
-    # Links
-    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
+    # Images: relative or https only
+    def _img(m):
+        kind, url = link_target(m.group(2))
+        if kind is None:
+            return html.escape(m.group(1))
+        return f'<img src="{html.escape(url, quote=True)}" alt="{html.escape(m.group(1), quote=True)}">'
+    text = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', _img, text)
+    # Links: relative links stay in this window; https opens a new one
+    # (noopener noreferrer); any other scheme (javascript:, data:, http:,
+    # file:, …) is not a link at all — its text is kept, the URL dropped.
+    def _link(m):
+        kind, url = link_target(m.group(2))
+        label = m.group(1)
+        if kind is None:
+            return label
+        href = html.escape(url, quote=True)
+        if kind == "ext":
+            return (f'<a href="{href}" target="_blank" rel="noopener noreferrer" class="ext">{label}'
+                    '<span class="ext-mark" aria-hidden="true"> \u2197</span></a>')
+        return f'<a href="{href}">{label}</a>'
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', _link, text)
     return text
+
+
+_SCHEME = re.compile(r'^[A-Za-z][A-Za-z0-9+.\-]*:')
+
+
+def link_target(raw: str) -> tuple[str | None, str]:
+    """Classify a Markdown link target: ``("int", url)`` for a link inside
+    the documentation (relative path or ``#anchor``), ``("ext", url)`` for an
+    https URL, ``(None, url)`` for anything else — the allow-list is https
+    plus relative. Control characters and whitespace inside a scheme (the
+    ``java\tscript:`` trick) are stripped before the check."""
+    url = html.unescape(str(raw)).strip()
+    if ' "' in url:                      # [t](url "title")
+        url = url.split(' "', 1)[0].strip()
+    probe = re.sub(r'[\x00-\x20\x7f]+', '', url)
+    if probe.startswith('//') or probe.startswith('\\'):
+        return None, url
+    if _SCHEME.match(probe):
+        return ("ext", url) if probe.lower().startswith('https://') else (None, url)
+    return "int", url
 
 
 # ── File discovery ────────────────────────────────────────────────────

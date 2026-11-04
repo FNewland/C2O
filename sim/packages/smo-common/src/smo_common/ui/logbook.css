@@ -282,3 +282,11 @@
 .pc-pre-li .pc-pre{ position:absolute; left:2px; top:.2em; width:15px; height:15px; margin:0; accent-color:var(--accent); }
 .pc-pre-li[data-state="done"]{ color:var(--tx3); }
 .pc-prelive{ white-space:nowrap; }
+
+/* "Where to find this" (worksheet screen audit, 2026-11-04): the places on
+   the screens, in the manual or in an open reference that answer a question */
+.wb-where{ font-size:var(--fs-label); color:var(--tx3); margin-top:2px; line-height:1.5; overflow-wrap:anywhere; }
+.wb-where .lbl{ color:var(--tx3); margin-right:4px; }
+.wb-where a{ color:var(--accent); }
+.wb-where a:focus-visible{ outline:none; box-shadow:var(--focus); }
+.wb-where .sep{ color:var(--tx3); }

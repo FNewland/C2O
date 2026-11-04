@@ -24,7 +24,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["WorksheetCatalog", "default_worksheets_dir"]
+__all__ = ["WorksheetCatalog", "default_worksheets_dir", "localise_where"]
 
 _RANK = {"procedure": 0, "page": 1, "scenario": 2, "context": 3, "general": 4}
 _MAP_FILE = "worksheet_map.yaml"
@@ -45,6 +45,45 @@ def _loc(v: Any, lang: str) -> str:
     if isinstance(v, dict):
         return str(v.get(lang) or v.get("en") or "")
     return "" if v is None else str(v)
+
+
+#: Tools a "where to find this" link may open (worksheet_where.yaml).
+WHERE_TOOLS = ("mcs", "planner", "orbit", "radio", "delayed_tm", "docs", "ext")
+_WHERE_KEYS = ("page", "param", "focus", "tab", "bd", "path", "anchor")
+
+
+def _safe_url(u: Any) -> bool:
+    """https only, and nothing that could break out of an attribute."""
+    u = "" if u is None else str(u)
+    return u.lower().startswith("https://") and not any(c in u for c in "\"'<>\\ \t\r\n")
+
+
+def localise_where(items: Any, lang: str) -> list[dict]:
+    """The question's ``where`` places in *lang*: ``{tool, label, ...}``.
+
+    An open reference (``tool: ext``) keeps only an https URL (the French
+    one when the sheet has it); anything else is dropped, so a bad YAML
+    edit cannot put a ``javascript:`` or ``http:`` link in front of a
+    participant. Other places keep only the keys a tool understands."""
+    out: list[dict] = []
+    for it in items if isinstance(items, list) else []:
+        if not isinstance(it, dict) or it.get("tool") not in WHERE_TOOLS:
+            continue
+        item = {"tool": it["tool"], "label": _loc(it.get("label"), lang)}
+        if not item["label"]:
+            continue
+        if it["tool"] == "ext":
+            cands = ([it.get("url_fr")] if lang == "fr" else []) + [it.get("url")]
+            url = next((str(u) for u in cands if _safe_url(u)), "")
+            if not url:
+                continue
+            item["url"] = url
+        else:
+            for k in _WHERE_KEYS:
+                if it.get(k) not in (None, ""):
+                    item[k] = str(it[k])
+        out.append(item)
+    return out
 
 
 class WorksheetCatalog:
@@ -151,6 +190,9 @@ class WorksheetCatalog:
             for k in ("step", "prefill"):
                 if q.get(k):
                     item[k] = str(q[k])
+            where = localise_where(q.get("where"), lang)
+            if where:
+                item["where"] = where
             qs.append(item)
         out = {"id": w.get("id"), "title": _loc(w.get("title"), lang),
                "phase": w.get("phase"), "applies": w.get("applies") or {},
