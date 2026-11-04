@@ -455,5 +455,18 @@
   "Starting up, try again in a minute": "Démarrage en cours, réessayez dans une minute",
   "Not available right now": "Indisponible pour le moment",
   "Where do you want to go? Design the mission, fly it, then review what happened.": "Où voulez-vous aller ? Concevez la mission, pilotez-la, puis analysez ce qui s'est passé.",
-  "For the instructor running the session. Ask them if you need something changed in the simulation.": "Pour l'instructeur qui anime la séance. Adressez-vous à lui si quelque chose doit changer dans la simulation."
+  "For the instructor running the session. Ask them if you need something changed in the simulation.": "Pour l'instructeur qui anime la séance. Adressez-vous à lui si quelque chose doit changer dans la simulation.",
+  "TCA (UTC)": "TCA (UTC)",
+  "LOS (UTC)": "LOS (UTC)",
+  "Eclipses": "Éclipses",
+  "Convert an orbit to list its eclipses.": "Convertissez une orbite pour en lister les éclipses.",
+  "next {{h}} h · umbra · edges to ±{{s}} s · longest marked": "{{h}} h à venir · ombre · bords à ±{{s}} s · la plus longue est signalée",
+  "No eclipse in the next {{h}} h.": "Aucune éclipse dans les {{h}} h à venir.",
+  "Longest eclipse in the next {{h}} h: {{d}} min, entry {{t}} UTC": "Éclipse la plus longue dans les {{h}} h à venir : {{d}} min, entrée à {{t}} UTC",
+  "Entry (UTC)": "Entrée (UTC)",
+  "Exit (UTC)": "Sortie (UTC)",
+  "longest": "la plus longue",
+  "cut by the horizon": "coupée par l'horizon de calcul",
+  "Show all {{n}} eclipses": "Afficher les {{n}} éclipses",
+  "LTAN (local time of the ascending node)": "LTAN (heure locale du nœud ascendant)"
 }
