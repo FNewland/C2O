@@ -1,0 +1,739 @@
+# Where each learner-workbook question and each catalogue decision is answered (Nov 2026 audit,
+# docs/plan_2026-11/WORKSHEET_SCREEN_AUDIT_DESIGN.md). HAND-MAINTAINED.
+#
+#   targets    the SpaceCDF places a "where" link can open (a view, tab, level, section or anchor),
+#              with the label the logbook shows. Labels use the screen's own words (EN and FR UI
+#              strings); tests/test_logbook/test_where_map.py checks every tab, section, anchor and
+#              label against the frontend.
+#   links      external open-access references (https only; hosts on the allow-list in
+#              frontend/src/where/links.ts). Each was opened and checked on `checked`.
+#              docs/plan_2026-11/EXTERNAL_LINKS_DESIGN.md is generated from this list.
+#   parts      one entry per worksheet question (learner_workbook.yaml id "LW-x.y/q"):
+#                before   audit status before the Nov 2026 fixes
+#                status   audit status now
+#                where    target ids (shown as "Where in SpaceCDF" links, in this order)
+#                book     sections of the open textbook "Concurrent Spacecraft Design" (docs/oer)
+#                links    external link ids
+#                gap/fix  what was missing and what was done; reason: why an item stays deferred
+#   decisions  per catalogue decision: where (defaults to its workbook part's where), links.
+#   reverse    screens that ask for input no worksheet prepares the student for.
+#
+# Status vocabulary:
+#   screen        answerable from SpaceCDF screens          (needs where)
+#   screen+book   screens plus the textbook / hand work     (needs where and book)
+#   book          textbook and hand calculation only        (needs book)
+#   team          team or personal work, no tool needed (sketch, presentation, review, reflection)
+#   ops           answered in the ORBIT NORTH ops simulator, not in SpaceCDF
+#   partial       (before only) part answerable, part not
+#   gap           (before only) the question names a screen or value SpaceCDF does not have
+#   deferred      still not answerable from the tool; `reason` says why
+#
+# scripts/gen_worksheets.py copies where/book/links into learner_workbook.yaml (generated);
+# scripts/gen_ws_audit.py writes the two docs/plan_2026-11 tables from this file.
+
+version: 1
+
+targets:
+  # ── Mission Definition (the wizard; only before the study exists) ──
+  wizard.problem: {wizard: problem, label: {en: "Mission Definition › Problem", fr: "Définition de la mission › Problème"}}
+  wizard.stakeholders: {wizard: stakeholders, label: {en: "Mission Definition › Stakeholders", fr: "Définition de la mission › Parties prenantes"}}
+  wizard.alternatives: {wizard: alternatives, label: {en: "Mission Definition › Alternatives", fr: "Définition de la mission › Solutions de rechange"}}
+  wizard.architecture: {wizard: architecture, label: {en: "Mission Definition › Architecture", fr: "Définition de la mission › Architecture"}}
+  # ── toolbar and status bar ──
+  readiness: {anchor: readiness, label: {en: "Readiness checklist (status bar)", fr: "Liste de maturité (barre d’état)"}}
+  guide: {dialog: guide, label: {en: "Guide (toolbar)", fr: "Guide (barre d’outils)"}}
+  export: {dialog: export, label: {en: "Export (toolbar)", fr: "Exporter (barre d’outils)"}}
+  # ── activity tabs ──
+  blocks.l0: {tab: blocks, level: 0, label: {en: "Blocks (level 0 Mission)", fr: "Blocs (niveau 0 Mission)"}}
+  blocks.l1: {tab: blocks, level: 1, label: {en: "Blocks (level 1 Segment)", fr: "Blocs (niveau 1 Segment)"}}
+  blocks.params: {tab: blocks, level: 2, anchor: params, label: {en: "Blocks › Parameters & equations (level 2)", fr: "Blocs › Paramètres et équations (niveau 2)"}}
+  equipment: {tab: blocks, level: 3, domain: power, anchor: equipment-catalog, label: {en: "Blocks › Equipment Catalog (level 3 Subsystem)", fr: "Blocs › Catalogue des équipements (niveau 3 Sous-système)"}}
+  equipment.aocs: {tab: blocks, level: 3, domain: aocs, anchor: equipment-catalog, label: {en: "Blocks › Equipment Catalog (level 3, AOCS)", fr: "Blocs › Catalogue des équipements (niveau 3, SCAO)"}}
+  equipment.ttc: {tab: blocks, level: 3, domain: ttc, anchor: equipment-catalog, label: {en: "Blocks › Equipment Catalog (level 3, Communications)", fr: "Blocs › Catalogue des équipements (niveau 3, Communications)"}}
+  equipment.structure: {tab: blocks, level: 3, domain: structure, anchor: equipment-catalog, label: {en: "Blocks › Equipment Catalog (level 3, Structure)", fr: "Blocs › Catalogue des équipements (niveau 3, Structure)"}}
+  equipment.propulsion: {tab: blocks, level: 3, domain: propulsion, anchor: equipment-catalog, label: {en: "Blocks › Equipment Catalog (level 3, Propulsion)", fr: "Blocs › Catalogue des équipements (niveau 3, Propulsion)"}}
+  spacecraft: {tab: spacecraft, level: 2, label: {en: "Spacecraft (level 2)", fr: "Satellite (niveau 2)"}}
+  modes.machine: {tab: modes, section: machine, label: {en: "Modes › Mode machine", fr: "Modes › Machine de modes"}}
+  modes.power: {tab: modes, section: matrix, label: {en: "Modes › Power by mode", fr: "Modes › Puissance par mode"}}
+  modes.energy: {tab: modes, section: energy, label: {en: "Modes › Energy per orbit", fr: "Modes › Énergie par orbite"}}
+  modes.data: {tab: modes, section: data, label: {en: "Modes › Data chain", fr: "Modes › Chaîne de données"}}
+  budget.mass: {tab: budget, level: 2, section: mass, label: {en: "Budget › Mass (level 2)", fr: "Bilans › Masse (niveau 2)"}}
+  budget.power: {tab: budget, level: 2, section: power, label: {en: "Budget › Power (level 2)", fr: "Bilans › Puissance (niveau 2)"}}
+  budget.data: {tab: budget, level: 2, section: data, label: {en: "Budget › Data (level 2)", fr: "Bilans › Données (niveau 2)"}}
+  budget.cost: {tab: budget, level: 2, section: cost, label: {en: "Budget › Cost (level 2)", fr: "Bilans › Coût (niveau 2)"}}
+  requirements.l0: {tab: requirements, level: 0, label: {en: "Requirements (level 0 Mission)", fr: "Exigences (niveau 0 Mission)"}}
+  requirements.l2: {tab: requirements, level: 2, label: {en: "Requirements (level 2)", fr: "Exigences (niveau 2)"}}
+  functions: {tab: functions, label: {en: "Functions", fr: "Fonctions"}}
+  interfaces: {tab: interfaces, level: 2, label: {en: "Interfaces (level 2)", fr: "Interfaces (niveau 2)"}}
+  electrical: {tab: electrical, level: 2, label: {en: "Electrical (level 2)", fr: "Électrique (niveau 2)"}}
+  databus: {tab: data, level: 2, label: {en: "Data (buses, level 2)", fr: "Données (bus, niveau 2)"}}
+  icd: {tab: icd, level: 2, label: {en: "ICD (level 2)", fr: "ICD (niveau 2)"}}
+  tmtc.db: {tab: tmtc, section: db, label: {en: "TM/TC › Database", fr: "TM/TC › Base de données"}}
+  tmtc.ladder: {tab: tmtc, section: ladder, label: {en: "TM/TC › Rate ladder", fr: "TM/TC › Échelle de débits"}}
+  fdir.monitors: {tab: fdir, section: monitors, label: {en: "FDIR › Monitors", fr: "FDIR › Surveillances"}}
+  fdir.actions: {tab: fdir, section: actions, label: {en: "FDIR › Event-actions", fr: "FDIR › Événements-actions"}}
+  fdir.fmeca: {tab: fdir, section: fmeca, label: {en: "FDIR › FMECA coverage", fr: "FDIR › Couverture AMDEC"}}
+  fdir.shed: {tab: fdir, section: shed, label: {en: "FDIR › Load shed and safe mode", fr: "FDIR › Délestage et mode survie"}}
+  fdir.levels: {tab: fdir, section: levels, label: {en: "FDIR › Levels and limits", fr: "FDIR › Niveaux et limites"}}
+  aocs: {tab: aocs, label: {en: "AOCS modes", fr: "Modes SCAO"}}
+  ops: {tab: ops, label: {en: "Operations", fr: "Opérations"}}
+  trace: {tab: trace, label: {en: "Traceability", fr: "Traçabilité"}}
+  trace.need: {tab: trace, anchor: mission-need, label: {en: "Traceability › Mission need", fr: "Traçabilité › Besoin de mission"}}
+  decide.categorize: {tab: decide, section: categorize, label: {en: "Decide › Decision Categorization", fr: "Décider › Classement des décisions"}}
+  decide.mission_trade: {tab: decide, level: 0, section: mission-trade, label: {en: "Decide › Mission Trade: Space vs Alternatives (level 0)", fr: "Décider › Compromis mission : espace ou solutions de rechange (niveau 0)"}}
+  decide.orbit_trade: {tab: decide, level: 0, section: orbit-trade, label: {en: "Decide › Orbit Trade Study (level 0)", fr: "Décider › Étude de compromis d'orbite (niveau 0)"}}
+  decide.constellation: {tab: decide, level: 1, section: constellation, label: {en: "Decide › Constellation Sizing (level 1)", fr: "Décider › Dimensionnement de la constellation (niveau 1)"}}
+  decide.learning: {tab: decide, level: 1, section: learning-curve, label: {en: "Decide › Constellation Cost Learning Curve (level 1)", fr: "Décider › Courbe d'apprentissage du coût de la constellation (niveau 1)"}}
+  decide.ground_trade: {tab: decide, level: 1, section: ground-trade, label: {en: "Decide › Ground Segment Trade (level 1)", fr: "Décider › Compromis segment sol (niveau 1)"}}
+  decide.contacts: {tab: decide, level: 1, section: contacts, label: {en: "Decide › Ground Contact Schedule (level 1)", fr: "Décider › Planning des contacts sol (niveau 1)"}}
+  decide.arch: {tab: decide, level: 2, section: arch-trades, label: {en: "Decide › Architecture Trades (level 2)", fr: "Décider › Compromis d'architecture (niveau 2)"}}
+  decide.pairwise: {tab: decide, section: pairwise, label: {en: "Decide › Pairwise Comparison Weighting", fr: "Décider › Pondération par comparaison par paires"}}
+  decide.pugh: {tab: decide, section: pugh, label: {en: "Decide › Pugh Matrix", fr: "Décider › Matrice de Pugh"}}
+  analyses.design_loop: {tab: analyses, section: design_loop, label: {en: "Analyses › Design loop", fr: "Analyses › Boucle de conception"}}
+  analyses.dl_orbit: {tab: analyses, section: design_loop, anchor: dl-orbit, label: {en: "Analyses › Design loop › Orbit", fr: "Analyses › Boucle de conception › Orbite"}}
+  analyses.dl_power: {tab: analyses, section: design_loop, anchor: dl-power, label: {en: "Analyses › Design loop › Power sizing", fr: "Analyses › Boucle de conception › Dimensionnement électrique"}}
+  analyses.dl_link: {tab: analyses, section: design_loop, anchor: dl-link, label: {en: "Analyses › Design loop › Link and data", fr: "Analyses › Boucle de conception › Liaison et données"}}
+  analyses.dl_dv: {tab: analyses, section: design_loop, anchor: dl-dv, label: {en: "Analyses › Design loop › Delta-v and propulsion", fr: "Analyses › Boucle de conception › Delta-v et propulsion"}}
+  analyses.dl_cost: {tab: analyses, section: design_loop, anchor: dl-cost, label: {en: "Analyses › Design loop › Cost by element", fr: "Analyses › Boucle de conception › Coût par poste"}}
+  analyses.mission_sim: {tab: analyses, section: mission_simulation, label: {en: "Analyses › Mission simulation", fr: "Analyses › Simulation de mission"}}
+  analyses.ground: {tab: analyses, section: ground_segment, label: {en: "Analyses › Ground segment", fr: "Analyses › Segment sol"}}
+  analyses.physics: {tab: analyses, section: physics, label: {en: "Analyses › Physics (mass / AOCS / thermal)", fr: "Analyses › Physique (masse / AOCS / thermique)"}}
+  analyses.physics_aocs: {tab: analyses, section: physics, anchor: physics-aocs, label: {en: "Analyses › Physics (mass / AOCS / thermal) › AOCS", fr: "Analyses › Physique (masse / AOCS / thermique) › SCAO"}}
+  analyses.physics_thermal: {tab: analyses, section: physics, anchor: physics-thermal, label: {en: "Analyses › Physics (mass / AOCS / thermal) › Thermal network", fr: "Analyses › Physique (masse / AOCS / thermique) › Réseau thermique"}}
+  analyses.vv: {tab: analyses, section: vv, label: {en: "Analyses › V&V", fr: "Analyses › V&V"}}
+  analyses.fmeca: {tab: analyses, section: fmeca, label: {en: "Analyses › FMECA", fr: "Analyses › FMECA"}}
+  analyses.conflicts: {tab: analyses, anchor: analyses-conflicts, label: {en: "Analyses › Conflicts", fr: "Analyses › Conflits"}}
+  diagrams: {tab: diagrams, label: {en: "Diagrams", fr: "Schémas"}}
+  # ── level 4: V&V ──
+  vv.budget: {vv: budget, label: {en: "V&V › Budget Rollup", fr: "V&V › Bilans consolidés"}}
+  vv.reqs: {vv: reqs, label: {en: "V&V › Requirements", fr: "V&V › Exigences"}}
+  vv.gates: {vv: gates, label: {en: "V&V › Review Gates", fr: "V&V › Jalons de revue"}}
+  vv.fmeca: {vv: fmeca, label: {en: "V&V › FMECA", fr: "V&V › FMECA"}}
+  vv.trace: {vv: trace, label: {en: "V&V › Traceability", fr: "V&V › Traçabilité"}}
+  vv.risks: {vv: risks, label: {en: "V&V › Risk Register", fr: "V&V › Registre des risques"}}
+  vv.bom: {vv: bom, label: {en: "V&V › BOM", fr: "V&V › Nomenclature"}}
+  vv.maturity: {vv: maturity, label: {en: "V&V › Maturity", fr: "V&V › Maturité"}}
+
+links:
+  nasa-seh:
+    url: https://ntrs.nasa.gov/citations/20170001761
+    title: {en: "NASA Systems Engineering Handbook (NASA/SP-2016-6105 Rev 2)", fr: "NASA Systems Engineering Handbook (NASA/SP-2016-6105 rév. 2, en anglais)"}
+    why: SE processes, lifecycle phases and review gates, ConOps (Appendix S), TPMs; public PDF on the NASA Technical Reports Server
+    checked: 2026-11-04
+  esa-cdf:
+    url: https://www.esa.int/Enabling_Support/Space_Engineering_Technology/CDF/What_is_the_CDF
+    title: {en: "ESA — What is the Concurrent Design Facility?", fr: "ESA — Qu’est-ce que la Concurrent Design Facility ? (en anglais)"}
+    why: what a CDF is and how its positions work together (the model SpaceCDF follows)
+    checked: 2026-11-04
+  cds:
+    url: https://cubesat.org/cubesatinfo
+    title: {en: "Cal Poly — CubeSat Design Specification Rev 14.1 (1U–12U)", fr: "Cal Poly — CubeSat Design Specification rév. 14.1 (1U–12U, en anglais)"}
+    why: the CDS the Spacecraft tab quotes (Table 1 masses, rails, deployment switches, RBF)
+    checked: 2026-11-04
+  nasa-soa:
+    url: https://www.nasa.gov/smallsat-institute/sst-soa
+    title: {en: "NASA — State-of-the-Art of Small Spacecraft Technology", fr: "NASA — State-of-the-Art of Small Spacecraft Technology (en anglais)"}
+    why: open survey of CubeSat power, GNC, propulsion, structures, thermal, avionics, comms, ground and deorbit hardware
+    checked: 2026-11-04
+  ecss:
+    url: https://ecss.nl/standards/active-standards/
+    title: {en: "ECSS — Active standards (M, E, Q, U branches)", fr: "ECSS — Normes en vigueur (branches M, E, Q, U, en anglais)"}
+    why: the list of ECSS standards SpaceCDF cites; free download after registration
+    checked: 2026-11-04
+  celestrak:
+    url: https://celestrak.org/
+    title: {en: "CelesTrak — orbital data and satellite catalogue", fr: "CelesTrak — données orbitales et catalogue des satellites (en anglais)"}
+    why: real orbital elements to compare an orbit choice with flying missions
+    checked: 2026-11-04
+  esa-orbits:
+    url: https://www.esa.int/content/view/full/416891
+    title: {en: "ESA — Spacecraft orbits (LEO, sun-synchronous, polar, GEO)", fr: "ESA — Orbites des engins spatiaux (en anglais)"}
+    why: plain-language orbit families for the orbit trade
+    checked: 2026-11-04
+  csa-funding:
+    url: https://asc-csa.gc.ca/eng/funding-opportunities.asp
+    title: {en: "Canadian Space Agency — Funding opportunities", fr: "Agence spatiale canadienne — Possibilités de financement (page en anglais)"}
+    why: CSA programmes a Canadian mission could apply to (Worksheet 1.2 Part A)
+    checked: 2026-11-04
+  csa-industry:
+    url: https://www.asc-csa.gc.ca/eng/publications/industry-snapshot-canada-space-sector-2025.asp
+    url_fr: https://www.asc-csa.gc.ca/fra/publications/vue-ensemble-secteur-spatial-canadien-2025.asp
+    title: {en: "CSA — Canada's Space Sector Industry Snapshot 2025", fr: "ASC — Vue d’ensemble du secteur spatial canadien 2025"}
+    why: the Canadian sector by activity and region, for the industry map
+    checked: 2026-11-04
+  rsssa-act:
+    url: https://laws-lois.justice.gc.ca/eng/acts/r-5.4/FullText.html
+    url_fr: https://laws-lois.justice.gc.ca/fra/lois/r-5.4/TexteComplet.html
+    title: {en: "Remote Sensing Space Systems Act (S.C. 2005, c. 45)", fr: "Loi sur les systèmes de télédétection spatiale (L.C. 2005, ch. 45)"}
+    why: the Act itself (Worksheet 1.2 Part B, decision D-1.2-RSSSA)
+    checked: 2026-11-04
+  rsssa-guide:
+    url: https://international.gc.ca/world-monde/issues_development-enjeux_developpement/peace_security-paix_securite/RSSSA-guide-LSTS.aspx?lang=eng
+    url_fr: https://international.gc.ca/world-monde/issues_development-enjeux_developpement/peace_security-paix_securite/RSSSA-guide-LSTS.aspx?lang=fra
+    title: {en: "Global Affairs Canada — RSSSA operating licence application guide", fr: "Affaires mondiales Canada — Guide de demande de licence d’exploitation (LSTS)"}
+    why: what a licence application contains (system, data and disposal plans)
+    checked: 2026-11-04
+  ised-space:
+    url: https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/node/2229
+    url_fr: https://ised-isde.canada.ca/site/gestion-spectre-telecommunications/fr/licences-certificats/autorisations-radio/delivrance-licences-spectre-pour-services-satellite/licences-spectre-pour-stations-spatiales
+    title: {en: "ISED — Space station spectrum licences (CPC-2-6-02)", fr: "ISDE — Licences de spectre pour les stations spatiales (CPC-2-6-02)"}
+    why: the Canadian licensing path for a satellite's radio links
+    checked: 2026-11-04
+  itu-smallsat:
+    url: https://www.itu.int/hub/?p=28241
+    title: {en: "ITU — Handbook on Small Satellites (2023)", fr: "UIT — Manuel sur les petits satellites (2023, formulaire de téléchargement)"}
+    why: ITU filing steps for small satellites (free download after a form)
+    checked: 2026-11-04
+  ecl-guide:
+    url: https://www.international.gc.ca/trade-commerce/controls-controles/ecl-lec/export_control_list-guide-liste_exportation_controlee_2026.aspx?lang=eng
+    url_fr: https://www.international.gc.ca/trade-commerce/controls-controles/ecl-lec/export_control_list-guide-liste_exportation_controlee_2026.aspx?lang=fra
+    title: {en: "A Guide to Canada's Export Control List (2026)", fr: "Guide de la Liste des marchandises et technologies d’exportation contrôlée du Canada (2026)"}
+    why: Canadian export classification of spacecraft parts (Worksheets 1.2 Part D, 4.1 Part D)
+    checked: 2026-11-04
+  fcc-5yr:
+    url: https://www.fcc.gov/node/253965
+    title: {en: "FCC — New '5-Year Rule' for deorbiting satellites (2022)", fr: "FCC — Nouvelle « règle des 5 ans » pour la désorbitation (2022, en anglais)"}
+    why: the 5-year post-mission disposal rule the orbit trade checks
+    checked: 2026-11-04
+  copuos-debris:
+    url: https://www.unoosa.org/documents/pdf/spacelaw/sd/COPUOS-GuidelinesE.pdf
+    title: {en: "UN COPUOS — Space Debris Mitigation Guidelines", fr: "COPUOS (ONU) — Lignes directrices relatives à la réduction des débris spatiaux (version anglaise)"}
+    why: the international debris-mitigation baseline (passivation, 25-year guideline)
+    checked: 2026-11-04
+  esa-debris:
+    url: https://www.esa.int/Space_Safety/Space_Debris/ESA_Space_Environment_Report_2025
+    title: {en: "ESA — Space Environment Report 2025", fr: "ESA — Rapport sur l’environnement spatial 2025 (en anglais)"}
+    why: why the rules exist; compliance statistics by orbit
+    checked: 2026-11-04
+  gevs:
+    url: https://standards.nasa.gov/node/791
+    title: {en: "NASA GSFC-STD-7000B — General Environmental Verification Standard (GEVS)", fr: "NASA GSFC-STD-7000B — GEVS (en anglais)"}
+    why: test sequences, protoflight levels, random vibration and TVAC cycles (Worksheet 4.2)
+    checked: 2026-11-04
+  rideshare-pug:
+    url: https://storage.googleapis.com/rideshare-static/Rideshare_Payload_Users_Guide.pdf
+    title: {en: "SpaceX — Rideshare Payload User's Guide", fr: "SpaceX — Rideshare Payload User's Guide (en anglais)"}
+    why: a real launcher PUG with a random-vibration MPE table (Worksheet 4.2 Part D)
+    checked: 2026-11-04
+  nasa-ceh:
+    url: https://www.nasa.gov/ocfo/ppc-corner/nasa-cost-estimating-handbook-ceh/
+    title: {en: "NASA Cost Estimating Handbook (CEH 4.0)", fr: "NASA Cost Estimating Handbook (CEH 4.0, en anglais)"}
+    why: parametric and bottom-up estimating, cost risk and confidence levels (Worksheet 4.4)
+    checked: 2026-11-04
+  nasa-trl:
+    url: https://www.nasa.gov/technology/technology-readiness-levels/
+    title: {en: "NASA — Technology Readiness Levels", fr: "NASA — Niveaux de maturité technologique (TRL, en anglais)"}
+    why: TRL 1–9 definitions behind the TRL shown in the Equipment Catalog and BOM
+    checked: 2026-11-04
+  nasa-risk:
+    url: https://www.nasa.gov/wp-content/uploads/2023/08/nasa-risk-mgmt-handbook.pdf
+    title: {en: "NASA Risk Management Handbook (NASA/SP-2011-3422)", fr: "NASA Risk Management Handbook (NASA/SP-2011-3422, en anglais)"}
+    why: likelihood × consequence scoring and risk-informed decisions (Worksheet 4.3)
+    checked: 2026-11-04
+  esa-estrack:
+    url: https://www.esa.int/Enabling_Support/Operations/ESA_Ground_Stations/Estrack_ground_stations
+    title: {en: "ESA — Estrack ground stations", fr: "ESA — Stations sol Estrack (en anglais)"}
+    why: what a ground-station network looks like (several stations in the Analyses › Ground segment catalogue)
+    checked: 2026-11-04
+  ccsds:
+    url: https://ccsds.org/Publications/BlueBooks.aspx
+    title: {en: "CCSDS — Blue Books (recommended standards)", fr: "CCSDS — Livres bleus (normes recommandées, en anglais)"}
+    why: TM/TC framing, channel coding (131.0-B) and space packets behind the TM/TC tab
+    checked: 2026-11-04
+
+parts:
+  # ── 1.1 Introduction ─────────────────────────────────────────────────────────
+  LW-1.1/A:
+    before: partial
+    status: screen+book
+    where: [guide, requirements.l0, functions, interfaces, decide.pugh, analyses.design_loop, vv.gates, vv.risks]
+    book: ["1.3", "1.6"]
+    links: [nasa-seh]
+    gap: Nothing maps the 17 processes to SpaceCDF; students had to explore blind.
+    fix: Where-links to the screens that carry most processes; textbook §1.6 walks the lifecycle in the tool.
+  LW-1.1/B:
+    before: book
+    status: screen+book
+    where: [vv.gates]
+    book: ["1.4"]
+    links: [nasa-seh]
+    fix: V&V › Review Gates shows the gate sequence of the study's profile (MDR → PRR → SRR → PDR → CDR, NASA names selectable).
+  LW-1.1/C:
+    before: book
+    status: book
+    book: ["1.5", "21"]
+    links: [esa-cdf]
+    fix: Textbook §1.5 and the position reference (chapter 21); ESA CDF page for the real facility.
+  LW-1.1/D:
+    before: gap
+    status: screen
+    where: [readiness, vv.gates, wizard.architecture, guide]
+    gap: Asked for a "Design Dashboard" with KPI cards, a "Gate Review tab" with MCR criteria, a "Positions tab"; none exist under those names.
+    fix: Reworded (EN+FR) to the readiness checklist, V&V › Review Gates (MDR), Team size (seats) and the Guide.
+  LW-1.1/E: {before: team, status: team, book: ["1.2"]}
+  LW-1.1/notes: {before: team, status: team}
+  # ── 1.2 Canadian ecosystem & regulation ──────────────────────────────────────
+  LW-1.2/A:
+    before: book
+    status: screen+book
+    where: [equipment]
+    book: ["2.1", "2.2"]
+    links: [csa-industry, csa-funding]
+    fix: The Equipment Catalog names each part's manufacturer; CSA pages for the sector map and funding.
+  LW-1.2/B:
+    before: book
+    status: screen+book
+    where: [export]
+    book: ["2.6"]
+    links: [rsssa-act, rsssa-guide]
+    fix: Export › RSSSA Licence Application (DOCX) drafts the filing from the study; Act and guide linked.
+  LW-1.2/C:
+    before: book
+    status: screen+book
+    where: [decide.arch, analyses.ground]
+    book: ["2.7", "11.5"]
+    links: [ised-space, itu-smallsat]
+    fix: Decide › Architecture Trades (TTC) lists the bands by data rate; Analyses › Ground segment shows the band each station supports.
+  LW-1.2/D:
+    before: book
+    status: screen+book
+    where: [vv.bom, equipment]
+    book: ["2.8", "13.1"]
+    links: [ecl-guide]
+    fix: V&V › BOM lists manufacturer per component (country of origin is a lookup); export-control guide linked.
+  LW-1.2/E: {before: book, status: book, book: ["2.5"], links: [ised-space]}
+  LW-1.2/notes: {before: team, status: team}
+  # ── 1.3 Standards ────────────────────────────────────────────────────────────
+  LW-1.3/A:
+    before: book
+    status: screen+book
+    where: [export, interfaces, diagrams]
+    book: ["3.2", "3.3", "3.4"]
+    links: [ecss]
+    fix: Export › ECSS Compliance Matrix; each screen cites the ECSS standard it follows (Interfaces, Diagrams).
+  LW-1.3/B:
+    before: partial
+    status: screen+book
+    where: [spacecraft]
+    book: ["3.5", "12.1"]
+    links: [cds]
+    gap: Form factor and CDS mass limit are on the Spacecraft tab; rails, RBF and dimensions are not.
+    fix: CDS 14.1 linked; textbook §3.5 for the items the tool does not check.
+  LW-1.3/C:
+    before: partial
+    status: screen+book
+    where: [decide.orbit_trade, analyses.dl_dv, export]
+    book: ["3.6", "7.5"]
+    links: [fcc-5yr, copuos-debris, esa-debris]
+    gap: The orbit trade showed the 25-year check only; the FCC 5-year rule (returned by the server) was not displayed.
+    fix: Orbit trade table now shows natural lifetime, a 25-yr column and an FCC 5-yr column; Design loop shows the deorbit delta-v.
+  LW-1.3/D: {before: book, status: book, book: ["12.1"], fix: "Hand calculation (worked example in the workbook); the tool has no stress analysis."}
+  LW-1.3/E:
+    before: gap
+    status: screen
+    where: [decide.orbit_trade, export, analyses.conflicts]
+    gap: Named a "Compliance panel" with an orbital lifetime calculator; no such panel exists. The MDR debris criterion (MDR-EC-10) stays "not available" after a design loop because the debris agent never runs (see Deferred).
+    fix: Reworded (EN+FR) to the Orbit Trade Study lifetimes and rule columns, Export › Deorbit & Debris Compliance and ECSS Compliance Matrix, and Analyses › Conflicts.
+  LW-1.3/notes: {before: team, status: team}
+  # ── 1.4 Mission needs, trades, ConOps ────────────────────────────────────────
+  LW-1.4/A:
+    before: partial
+    status: screen+book
+    where: [wizard.stakeholders, trace.need]
+    book: ["4.2"]
+    gap: Stakeholders entered in the wizard could not be seen again once the study existed.
+    fix: New read-only Mission need card on the Traceability tab (problem, stakeholders, objectives, chosen alternative).
+  LW-1.4/B:
+    before: partial
+    status: screen+book
+    where: [wizard.problem, trace.need, vv.gates]
+    book: ["4.1"]
+    fix: Mission need card shows the committed problem statement; MDR criterion MDR-EC-01 checks it.
+  LW-1.4/C:
+    before: screen
+    status: screen+book
+    where: [wizard.stakeholders, trace, trace.need]
+    book: ["4.3"]
+  LW-1.4/D: {before: book, status: book, book: ["4.3"], links: [nasa-seh]}
+  LW-1.4/E:
+    before: screen
+    status: screen+book
+    where: [wizard.alternatives, decide.mission_trade, decide.pairwise, decide.pugh, trace.need]
+    book: ["4.5", "4.6", "4.7"]
+  LW-1.4/F:
+    before: partial
+    status: screen+book
+    where: [modes.machine, modes.energy, modes.data, diagrams]
+    book: ["4.8"]
+    links: [nasa-seh]
+    gap: The worksheet's "ConOps" sits on the Modes tab (mode machine, power and data per mode) under another name.
+    fix: Where-links to Modes › Mode machine, Energy per orbit and Data chain; the mission phase timeline is under Diagrams.
+  LW-1.4/G:
+    before: gap
+    status: screen
+    where: [wizard.problem, wizard.alternatives, blocks.l1, decide.orbit_trade]
+    gap: Asked for mission-type auto-detection, a "ConOps tab" and a "Trade Studies tab"; the wizard step numbers were wrong.
+    fix: Reworded (EN+FR) to Mission Definition steps 1 and 3, the Blocks tab and Decide › Orbit Trade Study.
+  LW-1.4/notes: {before: team, status: team}
+  # ── 2.1 System-V and requirements ────────────────────────────────────────────
+  LW-2.1/A: {before: screen, status: screen+book, where: [blocks.l0, blocks.l1, spacecraft, vv.reqs], book: ["1.2", "5.1"]}
+  LW-2.1/B: {before: screen, status: screen+book, where: [requirements.l0], book: ["5.3"], fix: "Requirements › SMART Check scores each requirement."}
+  LW-2.1/C: {before: screen, status: screen+book, where: [requirements.l0, trace, vv.reqs], book: ["5.4"]}
+  LW-2.1/D: {before: book, status: book, book: ["5.6"]}
+  LW-2.1/E:
+    before: gap
+    status: screen
+    where: [requirements.l0, vv.reqs, requirements.l2]
+    gap: Named a "Generate from Objectives" button and a "Level filter"; the tool creates the mission requirements from the objectives at study creation and shows counts per level under V&V › Requirements.
+    fix: Reworded (EN+FR) to the Requirements tab (suggested templates, status, verification method) and V&V › Requirements counts.
+  LW-2.1/notes: {before: team, status: team}
+  # ── 2.2 Functions ────────────────────────────────────────────────────────────
+  LW-2.2/A: {before: screen, status: screen+book, where: [functions], book: ["6.1", "6.2", "6.5"]}
+  LW-2.2/B: {before: partial, status: screen+book, where: [functions, requirements.l2, trace], book: ["6.3"], gap: "Functions show their allocation, not the requirements derived from them.", fix: "Where-links to Functions, Requirements and Traceability (element and function per requirement)."}
+  LW-2.2/C: {before: screen, status: screen+book, where: [functions, interfaces], book: ["6.3"]}
+  LW-2.2/D: {before: book, status: book, book: ["6.4"]}
+  LW-2.2/E:
+    before: gap
+    status: screen
+    where: [functions, trace]
+    gap: Asked for an "amber badge" on leaf functions without requirements; the Functions tab flags unallocated functions instead.
+    fix: Reworded (EN+FR) to the "unallocated" tag and the Traceability tab.
+  LW-2.2/notes: {before: team, status: team}
+  # ── 2.3 Orbit ────────────────────────────────────────────────────────────────
+  LW-2.3/A:
+    before: partial
+    status: screen+book
+    where: [analyses.dl_orbit, spacecraft, modes.energy]
+    book: ["7.1", "7.2"]
+    links: [esa-orbits, celestrak]
+    gap: Only period and eclipse length were on screen; semi-major axis, velocity, eclipse fraction and the sun-synchronous inclination were not.
+    fix: New Design loop › Orbit table (semi-major axis, period, velocity, eclipse and sunlight minutes, eclipse fraction, SSO inclination for the altitude) to check the hand calculation.
+  LW-2.3/B:
+    before: partial
+    status: screen
+    where: [decide.orbit_trade]
+    gap: 'The worksheet says "Orbit Trade Advisor"; the screen is "Orbit Trade Study", and its table had no rank and no FCC 5-yr column.'
+    fix: Orbit trade table now has Rank, Period, Eclipse, Lifetime, 25-yr and FCC 5-yr columns. Reworded (EN+FR) to the screen name.
+  LW-2.3/C:
+    before: partial
+    status: screen+book
+    where: [decide.orbit_trade, analyses.dl_dv]
+    book: ["3.6", "7.5"]
+    links: [fcc-5yr]
+    fix: Deorbit delta-v now shown under Analyses › Design loop › Delta-v and propulsion.
+  LW-2.3/D: {before: book, status: screen+book, where: [analyses.design_loop, modes.energy, analyses.ground], book: ["7.3"], fix: "Apply the orbit, re-run the analyses and compare."}
+  LW-2.3/E: {before: team, status: screen+book, where: [decide.orbit_trade], book: ["7.3"]}
+  LW-2.3/notes: {before: team, status: team}
+  # ── 2.4 Architecture, interfaces, budgets ────────────────────────────────────
+  LW-2.4/A:
+    before: screen
+    status: screen+book
+    where: [budget.mass, vv.budget]
+    book: ["8.4"]
+    fix: Reworded (EN+FR) prompt names the tool's margins (maturity margin per unit, 25 % system margin) next to the worksheet's 20 % equipment margin.
+  LW-2.4/B:
+    before: partial
+    status: screen+book
+    where: [modes.power, modes.energy, budget.power]
+    book: ["8.4", "9.1"]
+    gap: The worksheet's mode columns (Safe, Idle, Imaging, Downlink, Eclipse) differ from the tool's modes.
+    fix: Reworded (EN+FR) prompt maps the worksheet's columns to the tool's modes (Nominal for Idle; eclipse is a case, not a mode).
+  LW-2.4/C: {before: screen, status: screen+book, where: [interfaces, icd, diagrams, requirements.l2], book: ["8.3"]}
+  LW-2.4/D:
+    before: gap
+    status: screen
+    where: [analyses.conflicts, spacecraft, electrical]
+    gap: Named an "Interface Matrix" with red borders; conflicts are listed under Analyses › Conflicts and show as amber blocks on the Spacecraft tab.
+    fix: Reworded (EN+FR).
+  LW-2.4/E:
+    before: gap
+    status: screen
+    where: [budget.mass, budget.power, budget.data, budget.cost, vv.budget]
+    gap: Named a "Dashboard" with KPIs.
+    fix: Reworded (EN+FR) to the Budget tab and V&V › Budget Rollup.
+  LW-2.4/notes: {before: team, status: team}
+  # ── 3.1 Power and thermal ────────────────────────────────────────────────────
+  LW-3.1/A:
+    before: gap
+    status: screen+book
+    where: [analyses.dl_power, modes.energy, spacecraft]
+    book: ["9.2"]
+    links: [nasa-soa]
+    gap: Array area and BOL/EOL power were computed by the design loop but not shown anywhere.
+    fix: New Design loop › Power sizing table (sunlit and eclipse loads, array area, BOL and EOL power, battery capacity and depth of discharge).
+  LW-3.1/B:
+    before: partial
+    status: screen+book
+    where: [analyses.dl_power, modes.energy, analyses.mission_sim]
+    book: ["9.3"]
+    fix: Battery capacity and depth of discharge in Design loop › Power sizing; minimum state of charge in Mission simulation.
+  LW-3.1/C:
+    before: gap
+    status: screen+book
+    where: [analyses.physics_thermal, decide.arch]
+    book: ["9.4"]
+    gap: '"From SpaceCDF Dashboard, record thermal predictions": the predictions are under Analyses › Physics (thermal network).'
+    fix: Reworded (EN+FR); where-link to the thermal network table (hot/cold temperature and margin per node).
+  LW-3.1/D:
+    before: gap
+    status: screen
+    where: [analyses.dl_power, analyses.physics_thermal]
+    gap: The values to compare with were not displayed.
+    fix: Design loop › Power sizing and Physics › Thermal network give the SpaceCDF column.
+  LW-3.1/justification: {before: team, status: screen+book, where: [decide.arch], book: ["9.1", "9.4"]}
+  LW-3.1/notes: {before: team, status: team}
+  # ── 3.2 AOCS ─────────────────────────────────────────────────────────────────
+  LW-3.2/A: {before: screen, status: screen+book, where: [decide.arch, analyses.physics_aocs, budget.mass], book: ["10.1"], links: [nasa-soa]}
+  LW-3.2/B: {before: screen, status: screen+book, where: [analyses.physics_aocs], book: ["10.2"]}
+  LW-3.2/C: {before: screen, status: screen+book, where: [analyses.physics_aocs, equipment.aocs], book: ["10.3", "10.5"]}
+  LW-3.2/D: {before: screen, status: screen+book, where: [analyses.physics_aocs], book: ["10.4"]}
+  LW-3.2/E:
+    before: gap
+    status: screen
+    where: [analyses.physics_aocs]
+    gap: Named a "Pointing Budget display".
+    fix: Reworded (EN+FR) to Analyses › Physics (mass / AOCS / thermal), AOCS section.
+  LW-3.2/justification: {before: team, status: screen+book, where: [decide.arch], book: ["10.1"]}
+  LW-3.2/notes: {before: team, status: team}
+  # ── 3.3 Communications ───────────────────────────────────────────────────────
+  LW-3.3/A: {before: partial, status: screen+book, where: [decide.arch, analyses.ground], book: ["11.5", "2.7"], links: [ised-space, itu-smallsat], gap: "Bands are on screen; licence type, filing and cost are not.", fix: "Licensing from textbook §2.7 and the ISED and ITU pages."}
+  LW-3.3/B:
+    before: partial
+    status: screen+book
+    where: [analyses.dl_link, analyses.ground]
+    book: ["11.2", "11.4", "11.8"]
+    gap: Only per-station G/T and margin were visible; downlink, TT&C and uplink margins from the design loop were hidden.
+    fix: Design loop › Link and data shows the three margins and the downlink rate; the line-by-line budget stays the student's calculation (the worksheet is that calculation).
+  LW-3.3/C: {before: screen, status: screen+book, where: [modes.data, analyses.ground, analyses.dl_link, budget.data], book: ["11.9"]}
+  LW-3.3/D:
+    before: gap
+    status: screen
+    where: [analyses.dl_link, analyses.ground]
+    gap: Named a "Link Budget tab".
+    fix: Reworded (EN+FR) to Analyses › Design loop (link and data) and Analyses › Ground segment.
+  LW-3.3/E: {before: book, status: screen+book, where: [tmtc.ladder], book: ["11.6"], links: [ccsds], fix: "TM/TC › Rate ladder lists modulation and coding per tier once the database is proposed."}
+  LW-3.3/justification: {before: team, status: screen+book, where: [decide.arch, tmtc.ladder], book: ["11.3", "11.6"]}
+  LW-3.3/notes: {before: team, status: team}
+  # ── 3.4 Structure, propulsion, equipment ─────────────────────────────────────
+  LW-3.4/A: {before: partial, status: screen+book, where: [spacecraft], book: ["12.1", "3.5"], links: [cds], gap: "Mass and form factor are checked on screen; dimensions, rails and inhibits are not.", fix: "CDS 14.1 linked for the items the tool does not check."}
+  LW-3.4/B: {before: book, status: book, book: ["12.1"]}
+  LW-3.4/C: {before: partial, status: screen+book, where: [decide.arch, analyses.dl_dv, decide.orbit_trade, equipment.propulsion], book: ["12.2", "7.5"], gap: "The delta-v the design loop computed was not shown.", fix: "Design loop › Delta-v and propulsion shows deorbit and maintenance delta-v, Isp and propellant."}
+  LW-3.4/D:
+    before: gap
+    status: screen
+    where: [equipment, budget.mass, electrical, databus]
+    gap: Named an "Equipment Browser"; it is the Equipment Catalog on the Blocks tab inside a subsystem (level 3).
+    fix: Reworded (EN+FR); incompatibilities show as Electrical and Data findings.
+  LW-3.4/E: {before: screen, status: screen+book, where: [decide.pairwise, decide.pugh, equipment], book: ["4.5", "12.4"]}
+  LW-3.4/F: {before: screen, status: screen, where: [budget.mass, budget.power, vv.budget, analyses.conflicts]}
+  LW-3.4/justification: {before: team, status: screen+book, where: [spacecraft, decide.arch], book: ["12.1", "12.2"]}
+  LW-3.4/notes: {before: team, status: team}
+  # ── 4.1 Equipment and BOM ────────────────────────────────────────────────────
+  LW-4.1/A: {before: book, status: screen+book, where: [equipment, vv.maturity], book: ["13.1", "13.2"], links: [nasa-trl]}
+  LW-4.1/B:
+    before: gap
+    status: screen+book
+    where: [vv.bom]
+    book: ["13.3"]
+    gap: '"From the SpaceCDF Equipment Browser selections": the BOM is under V&V › BOM; part number and ECCN are not in the tool.'
+    fix: Reworded (EN+FR); ECCN from the export-control guide (Part D).
+  LW-4.1/C:
+    before: gap
+    status: screen
+    where: [budget.mass, budget.power, vv.bom]
+    gap: Named a "SpaceCDF Dashboard".
+    fix: Reworded (EN+FR) to the Budget tab and the V&V › BOM totals.
+  LW-4.1/D: {before: book, status: screen+book, where: [vv.bom], book: ["2.8", "13.4"], links: [ecl-guide]}
+  LW-4.1/E: {before: partial, status: screen+book, where: [electrical, databus, interfaces, analyses.ground], book: ["13.5"], fix: "Voltage and protocol checks are Electrical and Data findings; connectors stay a datasheet check."}
+  LW-4.1/F: {before: screen, status: screen, where: [electrical, databus, analyses.conflicts]}
+  LW-4.1/notes: {before: team, status: team}
+  # ── 4.2 V&V planning ─────────────────────────────────────────────────────────
+  LW-4.2/A: {before: screen, status: screen+book, where: [vv.reqs, requirements.l0, analyses.vv, export], book: ["5.5", "14.2", "14.4"]}
+  LW-4.2/B: {before: book, status: book, book: ["14.2"]}
+  LW-4.2/C:
+    before: book
+    status: deferred
+    book: ["14.3"]
+    links: [gevs]
+    reason: The server can draft a test campaign (lifecycle/test/environmental) but no screen shows it yet; the worksheet relies on the textbook and GEVS. Candidate for a later V&V screen.
+  LW-4.2/D:
+    before: book
+    status: book
+    book: ["14.3"]
+    links: [rideshare-pug, gevs]
+    fix: Launcher PUG linked; vibration levels come from the PUG, not from SpaceCDF.
+  LW-4.2/E: {before: book, status: book, book: ["14.3"], links: [gevs]}
+  LW-4.2/F: {before: book, status: screen+book, where: [analyses.vv, vv.reqs], book: ["14.4"]}
+  LW-4.2/notes: {before: team, status: team}
+  # ── 4.3 Risk, interfaces, FMECA ──────────────────────────────────────────────
+  LW-4.3/A: {before: screen, status: screen+book, where: [vv.risks], book: ["15.1", "15.2"], links: [nasa-risk]}
+  LW-4.3/B: {before: screen, status: screen, where: [vv.risks, diagrams]}
+  LW-4.3/C: {before: screen, status: screen+book, where: [diagrams, interfaces, icd, analyses.conflicts], book: ["8.3", "15.3"]}
+  LW-4.3/D: {before: screen, status: screen+book, where: [analyses.fmeca, vv.fmeca, fdir.fmeca], book: ["15.4"]}
+  LW-4.3/E: {before: screen, status: screen, where: [analyses.fmeca, analyses.conflicts]}
+  LW-4.3/F: {before: book, status: book, book: ["15.4"]}
+  LW-4.3/G: {before: team, status: screen+book, where: [vv.risks], book: ["15.1", "15.5"]}
+  LW-4.3/notes: {before: team, status: team}
+  # ── 4.4 Cost and reviews ─────────────────────────────────────────────────────
+  LW-4.4/A:
+    before: gap
+    status: screen+book
+    where: [budget.cost, analyses.dl_cost]
+    book: ["16.1", "16.2"]
+    links: [nasa-ceh]
+    gap: Named a "Cost tab"; the parametric split (hardware, launch, development, operations) was computed but not shown.
+    fix: Reworded (EN+FR); new Design loop › Cost by element table.
+  LW-4.4/B: {before: book, status: book, book: ["16.4"], links: [nasa-ceh]}
+  LW-4.4/C: {before: screen, status: screen+book, where: [decide.learning, decide.constellation], book: ["16.3"]}
+  LW-4.4/D:
+    before: gap
+    status: screen
+    where: [budget.cost, analyses.dl_cost]
+    gap: Named a "Cost Breakdown".
+    fix: Reworded (EN+FR) to Budget › Cost and the Design loop cost table.
+  LW-4.4/E:
+    before: gap
+    status: screen
+    where: [vv.gates]
+    gap: Named a "Gate Review tab".
+    fix: Reworded (EN+FR) to V&V › Review Gates.
+  LW-4.4/F: {before: team, status: team, where: [export], book: ["16.5", "16.6"]}
+  LW-4.4/notes: {before: team, status: team}
+  # ── 5.1 Ground segment ───────────────────────────────────────────────────────
+  LW-5.1/A: {before: screen, status: screen+book, where: [analyses.ground, decide.contacts], book: ["11.7", "17.2"], links: [esa-estrack]}
+  LW-5.1/B: {before: screen, status: screen, where: [analyses.ground, modes.data]}
+  LW-5.1/C: {before: screen, status: screen+book, where: [analyses.ground, decide.ground_trade], book: ["17.1", "17.5"], links: [esa-estrack]}
+  LW-5.1/D: {before: book, status: screen+book, where: [modes.machine, diagrams, ops], book: ["17.4", "18.1"]}
+  LW-5.1/E: {before: team, status: screen+book, where: [diagrams], book: ["17.4"]}
+  LW-5.1/notes: {before: team, status: team}
+  # ── 5.2 Operations concepts ──────────────────────────────────────────────────
+  LW-5.2/A:
+    before: gap
+    status: screen
+    where: [modes.machine, modes.power, modes.energy]
+    gap: Named a "ConOps Editor"; modes, their entry and exit transitions and per-mode power are on the Modes tab.
+    fix: Reworded (EN+FR).
+  LW-5.2/B: {before: partial, status: screen+book, where: [fdir.monitors, fdir.actions, fdir.levels, fdir.shed, modes.energy], book: ["18.3"], gap: "FDIR rules sit on the FDIR tab (after Propose from design), which the worksheet did not name.", fix: "Where-links to the FDIR sub-tabs and to Modes › Energy per orbit (is safe mode sustainable?)."}
+  LW-5.2/C: {before: book, status: book, book: ["18.4"], fix: "Procedures are written by hand here and flown in the ops simulator in week 3."}
+  LW-5.2/D: {before: book, status: screen+book, where: [fdir.levels, ops], book: ["18.4", "18.5"]}
+  LW-5.2/E: {before: book, status: screen+book, where: [ops], book: ["17.5", "18.1"]}
+  LW-5.2/F: {before: partial, status: screen+book, where: [modes.energy, analyses.mission_sim, analyses.physics_thermal, fdir.shed], book: ["18.5"], gap: "Survival over 40 h needs the safe-mode energy balance and the cold case, on two screens.", fix: "Where-links to both, plus the mission simulation."}
+  LW-5.2/notes: {before: team, status: team}
+  # ── 5.3 Simulation day (ops simulator) ───────────────────────────────────────
+  LW-5.3/simulation-event-log: {before: ops, status: ops, book: ["19.2"]}
+  LW-5.3/leop-checklist: {before: ops, status: ops}
+  LW-5.3/anomaly-response-form-1: {before: ops, status: ops, book: ["18.5"]}
+  LW-5.3/anomaly-response-form-2: {before: ops, status: ops}
+  LW-5.3/anomaly-response-form-3: {before: ops, status: ops}
+  LW-5.3/commissioning-status: {before: ops, status: ops}
+  LW-5.3/nominal-operations-summary: {before: ops, status: ops}
+  LW-5.3/what-went-well: {before: team, status: team}
+  LW-5.3/what-could-be-improved: {before: team, status: team}
+  LW-5.3/design-weaknesses-revealed-by-simulation: {before: team, status: screen, where: [analyses.conflicts, modes.energy, fdir.fmeca]}
+  LW-5.3/procedure-changes-needed: {before: team, status: team}
+  LW-5.3/fdir-gaps-identified: {before: team, status: screen, where: [fdir.fmeca, fdir.monitors]}
+  LW-5.3/notes: {before: team, status: team}
+  # ── 5.4 Final review ─────────────────────────────────────────────────────────
+  LW-5.4/A:
+    before: gap
+    status: screen
+    where: [vv.budget, budget.mass, analyses.conflicts]
+    gap: Named a "SpaceCDF Dashboard".
+    fix: Reworded (EN+FR) to V&V › Budget Rollup, the Budget tab and Analyses › Conflicts.
+  LW-5.4/B:
+    before: gap
+    status: screen
+    where: [export]
+    gap: Named an "Exports tab"; documents come from Export on the toolbar.
+    fix: Reworded (EN+FR).
+  LW-5.4/C: {before: team, status: team}
+  LW-5.4/D: {before: team, status: team}
+  LW-5.4/E: {before: team, status: team}
+  LW-5.4/F: {before: team, status: team}
+  LW-5.4/notes: {before: team, status: team}
+
+decisions:
+  # Only where a decision is taken somewhere other than its workbook part's screens.
+  D-1.2-SUPPLIERS: {where: [equipment, vv.bom]}
+  D-1.3-FOS: {where: [spacecraft], links: [gevs]}
+  D-1.4-STAKEHOLDERS: {where: [wizard.stakeholders, trace.need]}
+  D-1.4-PROBLEM: {where: [wizard.problem, trace.need]}
+  D-1.4-OBJECTIVES: {where: [wizard.stakeholders, trace]}
+  D-1.4-TPM: {where: [trace, budget.mass]}
+  D-1.4-PAYLOAD: {where: [blocks.params, decide.orbit_trade]}
+  D-1.4-SPACE: {where: [wizard.alternatives, decide.mission_trade]}
+  D-1.4-ARCHITECTURE: {where: [wizard.architecture, blocks.l0]}
+  D-1.4-CONOPS: {where: [modes.machine, modes.energy, modes.data]}
+  D-2.1-BASELINE: {where: [requirements.l0, vv.reqs]}
+  D-2.1-QUALITY: {where: [requirements.l0]}
+  D-2.1-FLOWDOWN: {where: [requirements.l0, trace]}
+  D-2.2-FUNCTIONS: {where: [functions]}
+  D-2.2-ALLOCATION: {where: [functions, interfaces]}
+  D-2.3-ORBIT: {where: [decide.orbit_trade, analyses.dl_orbit]}
+  D-2.3-CONSTELLATION: {where: [decide.constellation]}
+  D-2.3-DEBRIS: {where: [decide.orbit_trade, analyses.dl_dv]}
+  D-2.3-PAYLOAD: {where: [decide.orbit_trade, blocks.params]}
+  D-2.4-MASS: {where: [budget.mass]}
+  D-2.4-POWER: {where: [budget.power, modes.power]}
+  D-2.4-INTERFACES: {where: [interfaces]}
+  D-2.4-CONFLICT: {where: [analyses.conflicts]}
+  D-2.4-TIGHTEST: {where: [budget.mass, vv.budget]}
+  D-3.1-EPS: {where: [decide.arch, analyses.dl_power]}
+  D-3.1-ARRAY: {where: [analyses.dl_power, equipment]}
+  D-3.1-BATTERY: {where: [analyses.dl_power, modes.energy]}
+  D-3.1-THERMAL: {where: [decide.arch, analyses.physics_thermal]}
+  D-3.2-AOCS: {where: [decide.arch, analyses.physics_aocs]}
+  D-3.2-WHEELS: {where: [analyses.physics_aocs, equipment.aocs]}
+  D-3.2-POINTING: {where: [analyses.physics_aocs]}
+  D-3.3-BAND: {where: [decide.arch, analyses.ground]}
+  D-3.3-LINK: {where: [analyses.dl_link, analyses.ground]}
+  D-3.3-DATA: {where: [budget.data, modes.data]}
+  D-3.3-MODCOD: {where: [tmtc.ladder], links: [ccsds]}
+  D-3.3-LADDER: {where: [tmtc.ladder]}
+  D-3.4-FORMFACTOR: {where: [spacecraft, equipment.structure]}
+  D-3.4-PROPULSION: {where: [decide.arch, analyses.dl_dv]}
+  D-3.4-EQUIPMENT: {where: [equipment]}
+  D-3.4-TRADE: {where: [decide.pugh]}
+  D-3.4-BUDGETFIX: {where: [budget.mass, analyses.conflicts]}
+  D-4.1-MAKEBUY: {where: [equipment, vv.bom]}
+  D-4.1-EXPORT: {where: [vv.bom]}
+  D-4.1-INCOMPAT: {where: [electrical, databus]}
+  D-4.2-METHODS: {where: [requirements.l0, vv.reqs]}
+  D-4.2-TESTS: {where: [analyses.vv], links: [gevs, rideshare-pug]}
+  D-4.2-WAIVERS: {where: [analyses.vv]}
+  D-4.3-RISKS: {where: [vv.risks]}
+  D-4.3-SPF: {where: [analyses.fmeca]}
+  D-4.4-COST: {where: [budget.cost, analyses.dl_cost]}
+  D-GATE-MDR: {where: [vv.gates]}
+  D-GATE-PRR: {where: [vv.gates]}
+  D-GATE-SRR: {where: [vv.gates]}
+  D-GATE-PDR: {where: [vv.gates]}
+  D-5.1-GROUND: {where: [decide.ground_trade, analyses.ground]}
+  D-5.1-LEOP: {where: [modes.machine, ops]}
+  D-5.2-MODES: {where: [modes.machine]}
+  D-5.2-FDIR: {where: [fdir.monitors, fdir.actions]}
+  D-5.2-STAFFING: {where: [ops]}
+  D-5.2-SAFEMODE: {where: [fdir.shed, modes.energy]}
+  D-5.2-FLIGHTRULES: {where: [ops]}
+  D-CDR-TMTCDB: {where: [tmtc.db], links: [ccsds]}
+  D-CDR-LOADSHED: {where: [fdir.shed, electrical]}
+  D-CDR-AOCSMODES: {where: [aocs]}
+
+reverse:
+  # Screens that ask for input no learner-workbook worksheet prepares the student for.
+  - {screen: "Electrical (rails, power lines, LCL trip, on at separation / boot, inhibits)", target: electrical, prepared_by: "Worksheet 4.1 Part E touches bus voltage only", status: deferred, reason: "CDR-level electrical design; decision D-CDR-LOADSHED records it. A worksheet part belongs in a CDR extension of the workbook."}
+  - {screen: "Data (buses, protocol, addresses, bit rate, redundancy)", target: databus, prepared_by: "Worksheet 4.1 Part E (protocol) only", status: deferred, reason: "CDR-level data-handling design; the textbook covers OBDH in §12.3."}
+  - {screen: "TM/TC (APIDs, PUS services, housekeeping, telecommands, events, rate ladder)", target: tmtc.db, prepared_by: "Worksheet 3.3 Part E (modulation and coding) only", status: deferred, reason: "CDR model; decisions D-CDR-TMTCDB and D-3.3-LADDER record it. The ORBIT NORTH week-3 ops workbook uses the resulting database."}
+  - {screen: "FDIR (monitors, event-actions, levels, ground limits)", target: fdir.monitors, prepared_by: "Worksheet 5.2 Part B (FDIR rules)", status: covered}
+  - {screen: "AOCS modes (sensors, actuators, ωn, ζ, deadband, transitions)", target: aocs, prepared_by: "none", status: deferred, reason: "CDR-level AOCS design (D-CDR-AOCSMODES); textbook §10.3–10.5 gives the background."}
+  - {screen: "Operations (console positions, GO/NO-GO matrix, flight rules)", target: ops, prepared_by: "Worksheet 5.2 Parts D–E", status: covered}
+  - {screen: "Functions › Arcadia layers (OA/SA/LA/PA), ports and functional exchanges", target: functions, prepared_by: "Worksheet 2.2 covers the tree and allocation, not the layers or exchanges", status: deferred, reason: "MBSE extension beyond the three-week course; the textbook does not teach Arcadia layers."}
+  - {screen: "Interfaces › Accept / Edit / Reject proposed links (ECSS-E-ST-10-24C natures)", target: interfaces, prepared_by: "Worksheet 2.4 Part C and decision D-2.4-INTERFACES", status: covered}
+  - {screen: "ICD › exchange items (+ item)", target: icd, prepared_by: "none", status: deferred, reason: "Detail of the interface definition; Worksheet 2.4 Part C asks for interface requirements, which the ICD feeds."}
+  - {screen: "Option (Baseline / branch) and Analyses › Compare options", target: analyses.design_loop, prepared_by: "Worksheet 2.3 Part E could use it", status: covered, note: "Worksheet 2.3 Part E now links the orbit trade; an option branch is the tool's way to try +100 km."}
+  - {screen: "V&V › Review Gates › gate profile (Full ECSS, ESA IOD, C2O, NASA) and Start / Record go-no-go / Finish review", target: vv.gates, prepared_by: "Worksheet 4.4 Part E and decisions D-GATE-*", status: covered}
+  - {screen: "Modes › share of orbit, pointing, daylight only, initial mode, transition guards", target: modes.machine, prepared_by: "Worksheet 5.2 Part A", status: covered}
+  - {screen: "Blocks › In scope / Frozen / quantity / margin %", target: blocks.l0, prepared_by: "Worksheet 2.4 Part A (margins); freezing is a readiness check", status: covered}
+  - {screen: "Decide › Decision Categorization (obvious / trade / design space)", target: decide.categorize, prepared_by: "none (read-only guidance)", status: covered, note: "Read-only; no input asked."}
+  - {screen: "Analyses › Physics placement (positions, CoM, CP–CG offset)", target: analyses.physics, prepared_by: "none", status: deferred, reason: "Configuration and mass-properties work is PDR detail; textbook §12.1 covers CDS centre-of-mass limits."}
+  - {screen: "Export › model exchange (Capella, ECSS-E-TM-10-25, ReqIF, SysML v2) and simulator configuration", target: export, prepared_by: "Worksheet 5.4 Part B lists documents only", status: deferred, reason: "Tool interoperability is outside the learner workbook; the simulator configuration is used in ORBIT NORTH week 3."}

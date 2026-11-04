@@ -79,7 +79,7 @@ documents:
     audience: student
     category: workbook
     source: design/docs/pdf/fr/SpaceCDF_Workbook_FR.pdf
-    size: 1587823
+    size: 1595982
     pair: spacecdf-workbook-en
   - id: on-w3-peer-review-en
     title: {en: "Peer-review worksheet pack (week 3)", fr: "Fiches d’évaluation par les pairs (semaine 3)"}

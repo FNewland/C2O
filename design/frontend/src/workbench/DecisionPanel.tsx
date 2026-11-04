@@ -18,6 +18,7 @@ import { pairKey, pairwiseWeights } from './pairwise'
 import { fs } from '../theme/tokens'
 import { showAlert } from '../components/ui/Dialog'
 import { Button, Disclosure } from '../components/ui'
+import { useWhereSection } from '../where/where'
 
 const API = '/api'
 
@@ -177,7 +178,7 @@ function MissionTradeWidget(_props: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Mission Trade: Space vs Alternatives')} color="var(--interactive)">
+    <ToolSection whereId="mission-trade" title={t('Mission Trade: Space vs Alternatives')} color="var(--interactive)">
       <div className="flex gap-1 mb-1 wrap">
         <label className="c2o-inline-field">{t('GSD (m):')} <input type="number" value={gsd} onChange={e => setGsd(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
         <label className="c2o-inline-field">{t('Revisit (days):')} <input type="number" value={revisit} onChange={e => setRevisit(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
@@ -273,6 +274,18 @@ function orbitOptions(candidates: any[], picked: any) {
 
 // ─── Orbit Trade ───
 
+/** ✓ / ✗ with the words for screen readers; — when the server did not say. */
+function Compliance({ ok }: { ok: boolean | null | undefined }) {
+  const { t } = useTranslation()
+  if (ok == null) return <>—</>
+  return (
+    <span style={{ color: ok ? 'var(--success)' : 'var(--danger)' }}>
+      <span aria-hidden="true">{ok ? '✓' : '✗'}</span>
+      <span className="sr-only">{ok ? t('meets the rule') : t('does not meet the rule')}</span>
+    </span>
+  )
+}
+
 function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
   const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
@@ -289,43 +302,45 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Orbit Trade Study')} color="var(--cat-2)">
+    <ToolSection whereId="orbit-trade" title={t('Orbit Trade Study')} color="var(--cat-2)">
       <Button onClick={runTrade} busy={loading} variant="primary" size="sm">
         {loading ? t('Computing...') : t('Evaluate Orbit Options')}
       </Button>
       {result?.candidates && (
-        <div className="mt-2">
+        <div className="mt-2" style={{ overflowX: 'auto' }}>
           <table className="c2o-table c2o-table--dense">
             <thead>
               <tr className="bb">
+                <th className="num">{t('Rank')}</th>
                 <th>{t('Orbit')}</th>
                 <th className="num">{t('Alt', { context: 'column' })}</th>
                 <th className="num">{t('Inc', { context: 'column' })}</th>
+                <th className="num" title={t('Orbital period (min)')}>{t('Period')}</th>
+                <th className="num" title={t('Longest eclipse as a share of the orbit')}>{t('Eclipse')}</th>
                 <th className="num">GSD</th>
                 <th className="num">{t('Revisit')}</th>
-                <th className="num">{t('Lifetime')}</th>
+                <th className="num" title={t('Natural orbital lifetime without propulsion (mean solar activity)')}>{t('Lifetime')}</th>
+                <th className="ctr" title={t('Re-entry within 25 years (IADC / COPUOS guideline)')}>{t('25-yr')}</th>
+                <th className="ctr" title={t('Re-entry within 5 years of the end of the mission (FCC rule, 2022)')}>{t('FCC 5-yr')}</th>
                 <th className="num">{t('Score')}</th>
-                <th className="ctr">{t('Deorbit')}</th>
                 <th className="ctr"></th>
               </tr>
             </thead>
             <tbody>
               {result.candidates.map((c: any, i: number) => (
                 <tr key={i} className="bb">
+                  <td className="p-1 ta-r mono">{c.rank ?? i + 1}</td>
                   <td className="p-1 w-500">{c.name || c.orbit_type}</td>
                   <td className="p-1 ta-r mono">{c.altitude_km}</td>
                   <td className="p-1 ta-r mono">{c.inclination_deg?.toFixed(1)}</td>
+                  <td className="p-1 ta-r mono">{c.period_min != null ? `${Number(c.period_min).toFixed(1)} min` : '—'}</td>
+                  <td className="p-1 ta-r mono">{c.eclipse_fraction != null ? `${(Number(c.eclipse_fraction) * 100).toFixed(0)} %` : '—'}</td>
                   <td style={{ padding: '0.2rem 0.3rem', textAlign: 'right', fontFamily: 'monospace', color: c.meets_gsd ? 'var(--success)' : 'var(--text-secondary)' }}>{c.achievable_gsd_m?.toFixed(1)}m</td>
                   <td className="p-1 ta-r mono">{c.revisit_days?.toFixed(0)}d</td>
-                  <td className="p-1 ta-r mono t-12">{c.natural_lifetime_years?.toFixed(0)}yr</td>
+                  <td className="p-1 ta-r mono t-12">{c.natural_lifetime_years != null ? `${Number(c.natural_lifetime_years).toFixed(1)} yr` : '—'}</td>
+                  <td className="p-1 ta-c"><Compliance ok={c.compliant_25yr} /></td>
+                  <td className="p-1 ta-c"><Compliance ok={c.compliant_5yr} /></td>
                   <td className="p-1 ta-r mono c-ok">{((c.total_score || c.weighted_score || c.score || 0) * 100).toFixed(0)}%</td>
-                  <td className="p-1 ta-c">
-                    {c.compliant_25yr != null ? (
-                      <span style={{ color: c.compliant_25yr ? 'var(--success)' : 'var(--danger)' }}>
-                        {c.compliant_25yr ? '✓' : '✗'} {c.natural_lifetime_years != null ? `(${c.natural_lifetime_years}yr)` : ''}
-                      </span>
-                    ) : '—'}
-                  </td>
                   <td className="p-1 ta-c">
                     <button onClick={async () => {
                       // Apply this orbit to the focused spacecraft element
@@ -372,6 +387,9 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
               ))}
             </tbody>
           </table>
+          <p className="t-12 c-3 m-0 mt-1 measure">
+            {t('Lifetime: natural decay without propulsion at mean solar activity. 25-yr: re-entry within 25 years (IADC / COPUOS guideline). FCC 5-yr: re-entry within 5 years after the mission ends (FCC rule, 2022). Apply puts the orbit on the spacecraft in focus; re-run Analyses to see what it changes.')}
+          </p>
         </div>
       )}
     </ToolSection>
@@ -406,7 +424,7 @@ function ConstellationWidget(_props: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Constellation Sizing')} color="var(--interactive)">
+    <ToolSection whereId="constellation" title={t('Constellation Sizing')} color="var(--interactive)">
       <div className="flex gap-1 mb-1 wrap">
         <label className="c2o-inline-field">{t('Alt (km):')} <input type="number" value={altitude} onChange={e => setAltitude(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
         <label className="c2o-inline-field">{t('Inc (°):')} <input type="number" value={inclination} onChange={e => setInclination(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
@@ -504,7 +522,7 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Ground Segment Trade')} color="var(--status-ok)">
+    <ToolSection whereId="ground-trade" title={t('Ground Segment Trade')} color="var(--status-ok)">
       <Button onClick={runTrade} busy={loading} variant="primary" size="sm">
         {loading ? t('Analysing...') : t('Evaluate Ground Architectures')}
       </Button>
@@ -603,7 +621,7 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
   }
 
   return (
-    <ToolSection title={t('Ground Contact Schedule')} color="var(--interactive)">
+    <ToolSection whereId="contacts" title={t('Ground Contact Schedule')} color="var(--interactive)">
       <div className="t-12 c-2 mb-1">
         {t("Uses your design's orbit parameters and ground stations from the element tree.")}
       </div>
@@ -676,7 +694,7 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChang
   const best = totals.reduce((bi, t, i) => (i !== datum && t.weighted > (totals[bi]?.weighted ?? -999) ? i : bi), datum === 0 ? 1 : 0)
 
   return (
-    <ToolSection title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="var(--cat-6)">
+    <ToolSection whereId="pugh" title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="var(--cat-6)">
       <div className="t-12 c-2 mb-1">
         {t('Score each option vs datum: +2 much better, +1 better, 0 same, −1 worse, −2 much worse.')}
         {' '}{hasWeights ? t('Weights from pairwise comparison applied.') : t('Define weights above for weighted scoring.')}
@@ -779,7 +797,7 @@ function PairwiseWeightingWidget({ weights, comparisons, onComparisonsChanged, c
   }
 
   return (
-    <ToolSection title={t('Pairwise Comparison Weighting')} color="var(--cat-2)">
+    <ToolSection whereId="pairwise" title={t('Pairwise Comparison Weighting')} color="var(--cat-2)">
       <div className="t-12 c-2 mb-1">
         {t('For each pair: which criterion is more important? 1 = left wins, 0.5 = equal, 0 = right wins')}
       </div>
@@ -841,7 +859,7 @@ function CostLearningCurveWidget() {
   const avgCost = n > 0 ? Math.round(cumulative / n) : 0
 
   return (
-    <ToolSection title={t('Constellation Cost Learning Curve')} color="var(--status-caution)">
+    <ToolSection whereId="learning-curve" title={t('Constellation Cost Learning Curve')} color="var(--status-caution)">
       <div className="flex gap-1 mb-1 wrap">
         <label className="c2o-inline-field">{t('First unit (kEUR):')} <input type="number" value={unitCost} onChange={e => setUnitCost(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
         <label className="c2o-inline-field">{t('Quantity:')} <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className="c2o-input c2o-input--sm c2o-input--num c2o-w-num" /></label>
@@ -930,7 +948,7 @@ function DecisionCategorizer({ currentLevel }: { currentLevel: number; focusElem
   const bins = { obvious: items.filter(i => i.category === 'obvious'), trade: items.filter(i => i.category === 'trade'), explore: items.filter(i => i.category === 'explore') }
 
   return (
-    <ToolSection title={t('Decision Categorization')} color="var(--interactive)">
+    <ToolSection whereId="categorize" title={t('Decision Categorization')} color="var(--interactive)">
       <div className="t-12 c-2 mb-1">
         {t("Categorize decisions at this level: what's obvious, what needs a trade, what needs exploration.")}
       </div>
@@ -1038,7 +1056,7 @@ function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel:
   if (trades.length === 0) return null
 
   return (
-    <ToolSection title={t('Architecture Trades')} color="var(--cat-6)">
+    <ToolSection whereId="arch-trades" title={t('Architecture Trades')} color="var(--cat-6)">
       <div className="t-12 c-2 mb-1">
         {t('Which architecture is right? The driving requirement determines the answer.')}
       </div>
@@ -1070,7 +1088,14 @@ function ArchitectureTradeWidget({ currentLevel, focusElement }: { currentLevel:
 
 // ─── Shared components ───
 
-function ToolSection({ title, children }: { title: string; color?: string; children: React.ReactNode }) {
-  return <Disclosure ruled summary={title}>{children}</Disclosure>
+/** A Decide tool; a "Where in SpaceCDF" link (decide:<whereId>) opens it and scrolls to it. */
+function ToolSection({ title, whereId, children }: { title: string; whereId: string; color?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  useWhereSection('decide', sec => { if (sec === whereId) setOpen(true) })
+  return (
+    <div data-where={`decide:${whereId}`}>
+      <Disclosure ruled summary={title} open={open} onToggle={setOpen}>{children}</Disclosure>
+    </div>
+  )
 }
 

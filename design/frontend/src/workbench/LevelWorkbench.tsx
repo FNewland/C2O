@@ -19,6 +19,7 @@ import { VVPanel } from './VVPanel'
 import { FunctionTree } from '../components/FunctionTree'
 import { ICDTable } from '../components/ICDTable'
 import { TraceabilityTree } from '../components/TraceabilityTree'
+import { MissionNeedCard } from '../components/MissionNeedCard'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
 import { SpacecraftView } from '../spacecraft/SpacecraftView'
@@ -71,6 +72,7 @@ export function LevelWorkbench() {
   const activePanel = useUIStore(s => s.activePanel)
   const setActivePanel = useUIStore(s => s.setActivePanel)
   const currentLevel = useUIStore(s => s.currentLevel)
+  const studyId = useUIStore(s => s.studyId)
   const userName = useUIStore(s => s.userName)
   const [panelHeight, setPanelHeight] = useState(() => readHeight(userName))
   const [showDiagram, setShowDiagram] = useState<Partial<Record<ActivityPanel, boolean>>>({})
@@ -233,7 +235,7 @@ export function LevelWorkbench() {
           {activePanel === 'aocs' && <ErrorBoundary phaseName="AOCS modes"><AocsModesPanel /></ErrorBoundary>}
           {activePanel === 'ops' && <ErrorBoundary phaseName="Operations"><OpsPanel /></ErrorBoundary>}
           {activePanel === 'icd' && <ErrorBoundary phaseName="ICD"><ICDTable /></ErrorBoundary>}
-          {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><TraceabilityTree /></div></ErrorBoundary>}
+          {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><MissionNeedCard studyId={studyId} /><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
           {activePanel === 'analyses' && <ErrorBoundary phaseName="Analyses"><AnalysesPanel /></ErrorBoundary>}
           {activePanel === 'diagrams' && <ErrorBoundary phaseName="Diagrams"><DiagramsView /></ErrorBoundary>}

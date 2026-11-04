@@ -20,6 +20,7 @@ import { Button } from '../components/ui/Button'
 import { Disclosure } from '../components/ui/Disclosure'
 import { Glyph } from '../components/ui/StatusBadge'
 import { useUIStore } from '../stores/uiStore'
+import { WhereLinks } from '../where/WhereLinks'
 import { fmtProse } from '../i18n'
 import {
   fetchPrefill, LogbookHttpError, useDecisions, useLogbook, useLogbookMutations,
@@ -200,6 +201,7 @@ function DecisionRow({ d, compact = false }: { d: CatalogueDecision; compact?: b
           <span>{d.worksheet ? <>{t('Worksheet {{n}}', { n: d.worksheet.replace('LW-', '') })}{d.part_title ? ` · ${d.part_title.replace(/^(Part|Partie) ([A-G])\s*:.*/, (_m, p, l) => `${p} ${l}`)}` : ''}</> : t('No workbook part yet')}</span>
           {latest?.record?.choice && <span className="c-2 ellipsis">→ {latest.record.choice}</span>}
         </span>
+        {!compact && <WhereLinks compact where={d.where} links={d.links} />}
       </span>
       <span className="c2o-lb-drow__act">
         {done && latest ? (
@@ -306,6 +308,7 @@ function DecisionEditor({ draft }: { draft: DecisionDraft }) {
         <h3 className="c2o-lb-dr__q">{d?.question ?? decisionId}</h3>
         {d && <p className="t-12 c-3 m-0">{d.worksheet ? <>{t('Worksheet {{n}}', { n: d.worksheet.replace('LW-', '') })}{d.worksheet_title ? ` · ${d.worksheet_title}` : ''}{d.part_title ? ` — ${d.part_title}` : ''}</> : t('No workbook part yet')}</p>}
         {d?.hint && <p className="t-12 c-2 m-0 lh-text">{d.hint}</p>}
+        {d && <WhereLinks where={d.where} book={d.book} links={d.links} />}
         {cat && (
           <Disclosure summary={<span className="t-12">{t('Not this decision?')}</span>}>
             <select className="c2o-select c2o-select--sm" value={decisionId} aria-label={t('Which decision this record is for')}
