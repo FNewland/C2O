@@ -13,13 +13,18 @@
 # deterministic-per-seed but the design is parametric. Tighten once a
 # formally-replicated CDF study (e.g. an ESA GSP study report) is wired in.
 #
+# Orbit (Nov 2026): the template now flies the EOSAT-1 reference orbit (sim/configs/eosat1/orbit.yaml:
+# 513 km mean altitude, i = 97.39 deg, LTAN 10:00); the 450 km / LTAN 10:30 figures were retired.
+# Frame: SpaceCDF positions are in the design frame (+Z nadir), the simulator in its body frame
+# (+Z zenith); services/stack_builder.py converts (to_design_m, design_to_stack_tensor).
+#
 # Cited texts (shorthand):
 #   SMAD4      Wertz, Everett & Puschell, Space Mission Engineering: The New SMAD, 4th ed.
 #   Fortescue  Fortescue, Stark & Swinerd, Spacecraft Systems Engineering, 4th ed.
 #   SMO-EOSAT  SpaceMissionSimulation EOSAT-1 reference configuration
 
 template_id: 6u_eo_cubesat
-description: "6U EO CubeSat @ 450 km SSO, multispectral imager, 3-year mission"
+description: "6U EO CubeSat @ 513 km SSO (i 97.39 deg, LTAN 10:00, the EOSAT-1 orbit), multispectral imager, 3-year mission"
 
 parameters:
   mass.dry_mass_kg:
