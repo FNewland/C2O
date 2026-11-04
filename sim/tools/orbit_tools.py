@@ -105,17 +105,22 @@ class OrbitAnalyzer:
         # Inclination
         i = math.acos(np.clip(h[2] / h_mag, -1.0, 1.0))
 
-        # RAAN (Omega)
+        # RAAN (Omega): the node vector n = k x h points at the ascending
+        # node, so Omega = atan2(n_y, n_x). (Was atan2(n_x, -n_y), which is
+        # Omega + 90 deg: the page showed RAAN 210 deg for the mission TLE's
+        # 120 deg — worksheet audit 2026-11-04, LEOP-003 step 4.)
         n_vec = np.array([-h[1], h[0], 0.0])
         n_mag = np.linalg.norm(n_vec)
         if n_mag > 1e-9:
-            raan = math.atan2(n_vec[0], -n_vec[1])
+            raan = math.atan2(n_vec[1], n_vec[0])
         else:
             raan = 0.0
 
-        # Argument of perigee (omega)
-        if n_mag > 1e-9:
-            aop = math.atan2(ecc_vec[2], np.dot(n_vec, ecc_vec)) - math.pi/2
+        # Argument of perigee (omega): angle from the node to the
+        # eccentricity vector, measured in the orbit plane (sense of h).
+        if n_mag > 1e-9 and e > 1e-9:
+            aop = math.atan2(np.dot(np.cross(n_vec, ecc_vec), h) / h_mag,
+                             np.dot(n_vec, ecc_vec))
         else:
             aop = 0.0
 
@@ -436,7 +441,17 @@ def _passes(epoch_utc: datetime, t_s: np.ndarray, r_ecef: np.ndarray,
             aos = cross(i - 1, i) if i > 0 else t_s[0]
             los = cross(j, j + 1) if j + 1 < n else t_s[-1]
             k = i + int(np.argmax(el[i:j + 1]))
+            # TCA: the vertex of a parabola through the samples around the
+            # elevation peak (closer than the 30 s sampling step)
+            tca = float(t_s[k])
+            if 0 < k < n - 1:
+                y0, y1, y2 = el[k - 1], el[k], el[k + 1]
+                den = y0 - 2 * y1 + y2
+                if den < 0:
+                    tca = float(t_s[k] + 0.5 * (t_s[k + 1] - t_s[k]) * (y0 - y2) / den)
             out.append({"station": st["name"],
+                        "tca": (epoch_utc + timedelta(seconds=tca)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "tca_s": round(tca, 1),
                         "aos": (epoch_utc + timedelta(seconds=float(aos))).strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "los": (epoch_utc + timedelta(seconds=float(los))).strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "aos_s": round(float(aos), 1), "los_s": round(float(los), 1),
@@ -485,6 +500,59 @@ def _eclipse_flags(epoch_utc: datetime, t_s: np.ndarray, r_eci: np.ndarray) -> L
     return out
 
 
+def _eclipses(epoch_utc: datetime, t_s: np.ndarray, r_eci: np.ndarray) -> List[Dict]:
+    """Umbra windows over the pass horizon: entry, exit and duration, the
+    edges interpolated between samples (half a step at worst). Windows cut
+    by the horizon are flagged ``truncated``; the longest whole one carries
+    ``longest``. Same shadow model and sun as the track flags."""
+    flags = _eclipse_flags(epoch_utc, t_s, r_eci)
+    out: List[Dict] = []
+    start = None
+    for k, f in enumerate(flags):
+        if f and start is None:
+            start = k
+        if (not f or k == len(flags) - 1) and start is not None:
+            end = k if not f else k + 1
+            a = 0.0 if start == 0 else 0.5 * (t_s[start - 1] + t_s[start])
+            b = float(t_s[-1]) if end >= len(t_s) else 0.5 * (t_s[end - 1] + t_s[end])
+            out.append({"entry": (epoch_utc + timedelta(seconds=float(a))).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "exit": (epoch_utc + timedelta(seconds=float(b))).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "entry_s": round(float(a), 1), "exit_s": round(float(b), 1),
+                        "duration_s": round(float(b - a), 1),
+                        "truncated": bool(start == 0 or end >= len(t_s))})
+            start = None
+    whole = [e for e in out if not e["truncated"]]
+    if whole:
+        max(whole, key=lambda e: e["duration_s"])["longest"] = True
+    return out
+
+
+def ecef_state_to_eci(r_ecef_km: np.ndarray, v_ecef_km_s: np.ndarray,
+                      epoch_utc: datetime) -> Tuple[np.ndarray, np.ndarray]:
+    """An Earth-fixed state (a GPS fix: position, and velocity relative to the
+    rotating Earth) to the inertial frame the elements need: rotate by GMST
+    and add back the Earth's rotation, v_i = R(v_e) + w x r_i. Treating the
+    ECEF state as inertial (as the page did) puts the inclination of a polar
+    orbit several degrees off (worksheet audit 2026-11-04, LEOP-003)."""
+    g0 = _gmst_at(epoch_utc, np.array([0.0]))[0]
+    r_eci = EciEcefConverter.ecef_to_eci(np.asarray(r_ecef_km, float), g0)
+    v_eci = (EciEcefConverter.ecef_to_eci(np.asarray(v_ecef_km_s, float), g0)
+             + np.cross([0.0, 0.0, _OMEGA_EARTH], r_eci))
+    return r_eci, v_eci
+
+
+def ltan_hours(epoch_utc: datetime, raan_deg: float) -> float:
+    """Local time of the ascending node, hours (mean solar time): 12 h plus
+    the RAAN's angle from the Sun's right ascension. RAAN in the TEME/ECI
+    frame of the elements; the sun from the suite's ephemeris."""
+    from smo_common.orbit.propagator import _sun_eci
+    jd, fr = jday(epoch_utc.year, epoch_utc.month, epoch_utc.day, epoch_utc.hour,
+                  epoch_utc.minute, epoch_utc.second + epoch_utc.microsecond * 1e-6)
+    sun = _sun_eci(jd + fr)
+    ra_sun = math.degrees(math.atan2(sun[1], sun[0]))
+    return (12.0 + (raan_deg - ra_sun) / 15.0) % 24.0
+
+
 def orbit_geometry(epoch_utc: datetime, *, tle: Tuple[str, str] | None = None,
                    sv_ecef_km: Tuple[np.ndarray, np.ndarray] | None = None,
                    period_s: float = 5670.0, stations: List[Dict] | None = None) -> Dict:
@@ -528,6 +596,7 @@ def orbit_geometry(epoch_utc: datetime, *, tle: Tuple[str, str] | None = None,
         "orbits": TRACK_ORBITS, "track": track,
         "stations": stations,
         "passes": _passes(epoch_utc, t_s[ok], r_ecef[ok], stations) if ok.any() else [],
+        "eclipses": _eclipses(epoch_utc, t_s[ok], r_eci[ok]) if ok.any() else [],
         "epoch": epoch_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
@@ -627,8 +696,7 @@ def cli_sv_mode(args) -> None:
     commands = TelecommandEncoder.state_to_commands(pos_ecef_m, vel_ecef_ms)
 
     # Compute orbital elements for summary
-    pos_eci_km = pos_ecef_m / 1000.0
-    vel_eci_km_s = vel_ecef_ms / 1000.0
+    pos_eci_km, vel_eci_km_s = ecef_state_to_eci(pos_ecef_m / 1000.0, vel_ecef_ms / 1000.0, epoch_utc)
     elements = OrbitAnalyzer.compute_orbital_elements(pos_eci_km, vel_eci_km_s)
     summary = OrbitSummary.format_summary(elements, epoch_utc)
 
@@ -668,7 +736,7 @@ __FRAME_HEAD__
 .ot-in .act{ display:flex; flex-direction:column; gap:var(--sp-2); padding-top:20px; }
 .ot-sv{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-3) var(--sp-3); }
 .ot-tabs{ padding:0 var(--sp-4); }
-.ot-grid{ display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:var(--sp-4); margin-top:var(--sp-4); }
+.ot-grid{ display:grid; grid-template-columns:minmax(0,1fr) 500px; gap:var(--sp-4); margin-top:var(--sp-4); }
 .ot-map{ position:relative; padding:var(--sp-2) var(--sp-3) var(--sp-3); }
 .ot-map svg{ display:block; width:100%; }
 .ot-legend{ display:flex; flex-wrap:wrap; gap:var(--sp-1) var(--sp-4); padding:0 var(--sp-4) var(--sp-3);
@@ -686,7 +754,7 @@ __FRAME_HEAD__
 .ep{ fill:var(--val); stroke:var(--bg); stroke-width:2; }
 .ep-l{ fill:var(--val) !important; }
 .ot-passes td{ white-space:nowrap; }
-.ot-passes .elbar{ display:inline-block; vertical-align:middle; width:48px; height:6px; background:var(--s3);
+.ot-passes .elbar{ display:inline-block; vertical-align:middle; width:32px; height:6px; background:var(--s3);
   position:relative; margin-right:6px; border-radius:1px; }
 .ot-passes .elbar i{ position:absolute; left:0; top:0; bottom:0; background:var(--fill); border-radius:1px; }
 .ot-passes tr.next td{ color:var(--val); }
@@ -706,6 +774,10 @@ __FRAME_HEAD__
 .ot-msg{ margin:0 var(--sp-4) var(--sp-3); }
 .ot-note{ font-size:var(--fs-label); color:var(--tx3); }
 .ot-sec{ margin-top:var(--sp-4); }
+.ot-longest{ margin:0 0 var(--sp-2); color:var(--val); }
+#eclipses td{ white-space:nowrap; }
+#eclipses tr.next td{ color:var(--val); }
+#eclipses tr.next td:first-child{ box-shadow:inset 2px 0 0 var(--accent); }
 @media (max-width:1100px){ .ot-grid{ grid-template-columns:minmax(0,1fr); } }
 @media (max-width:720px){
   .ot-in{ grid-template-columns:minmax(0,1fr); }
@@ -780,6 +852,11 @@ __FRAME_BAR__
     <div class="ds-panel-b" id="passes" tabindex="0" aria-labelledby="pass-h"></div>
   </section>
 </div>
+
+<section class="ds-panel ot-sec" aria-labelledby="ecl-h">
+  <div class="ds-panel-h"><span id="ecl-h" data-i18n>Eclipses</span><span class="r" id="ecl-meta"></span></div>
+  <div class="ds-panel-b" id="eclipses" tabindex="0" aria-labelledby="ecl-h"></div>
+</section>
 
 <section class="ds-panel ot-sec" aria-labelledby="tl-h">
   <div class="ds-panel-h"><span id="tl-h" data-i18n>Contact timeline</span><span class="r" id="tl-meta"></span></div>
@@ -1030,13 +1107,19 @@ function drawPasses() {
   const ep = new Date(last.epoch);
   // The next five; the rest behind "more" (review §5: a 47-row list).
   const shown = allPasses ? ps : ps.slice(0, 5);
+  // AOS, TCA (time of maximum elevation) and LOS to the second: the
+  // flight-dynamics worksheet compares them with the planner's schedule.
+  const hms = (d) => d.toISOString().slice(11, 19);
   host.innerHTML = `<table class="ds-table"><thead><tr><th>${esc(T("Station"))}</th><th>${esc(T("AOS (UTC)"))}</th>` +
+    `<th>${esc(T("TCA (UTC)"))}</th><th>${esc(T("LOS (UTC)"))}</th>` +
     `<th class="n">${esc(T("Duration"))}</th><th>${esc(T("Max elevation"))}</th></tr></thead><tbody>` +
     shown.map((p, i) => {
       const a = new Date(ep.getTime() + p.aos_s * 1000);
       const day = a.getUTCDate() !== ep.getUTCDate() ? ` <small>+1 d</small>` : "";
+      const tca = new Date(ep.getTime() + (p.tca_s ?? p.aos_s) * 1000), los = new Date(ep.getTime() + p.los_s * 1000);
       return `<tr class="${i === 0 ? "next" : ""}"><td>${esc(p.station)}</td>` +
-        `<td class="num">${hhmm(a)}${day}</td><td class="n">${mmss(p.los_s - p.aos_s)}</td>` +
+        `<td class="num">${hms(a)}${day}</td><td class="num">${p.tca_s === undefined ? "—" : hms(tca)}</td>` +
+        `<td class="num">${hms(los)}</td><td class="n">${mmss(p.los_s - p.aos_s)}</td>` +
         `<td class="num"><span class="elbar" aria-hidden="true"><i style="width:${(p.max_el / 90 * 100).toFixed(0)}%"></i></span>${fmtNum(p.max_el, 1)}°</td></tr>`;
     }).join("") + `</tbody></table>` +
     (ps.length > shown.length
@@ -1045,6 +1128,34 @@ function drawPasses() {
   if (more) more.addEventListener("click", () => { allPasses = true; drawPasses(); });
 }
 let allPasses = false;
+/* ── eclipses over the pass horizon (umbra; ground propagation) ── */
+function drawEclipses() {
+  const host = $("eclipses");
+  if (!last) { host.innerHTML = `<p class="tf-empty">${esc(T("Convert an orbit to list its eclipses."))}</p>`; $("ecl-meta").textContent = ""; return; }
+  const es = last.eclipses || [];
+  $("ecl-meta").textContent = T("next {{h}} h · umbra · edges to ±{{s}} s · longest marked", { h: last.horizon_h, s: Math.round((last.step_s || 30) / 2) });
+  if (!es.length) { host.innerHTML = `<p class="tf-empty">${esc(T("No eclipse in the next {{h}} h.", { h: last.horizon_h }))}</p>`; return; }
+  const ep = new Date(last.epoch);
+  const hms = (d) => d.toISOString().slice(11, 19);
+  const shown = allEclipses ? es : es.slice(0, 5);
+  const longest = es.find((e) => e.longest);
+  host.innerHTML = (longest ? `<p class="ot-longest" id="eclipse-longest">${esc(T("Longest eclipse in the next {{h}} h: {{d}} min, entry {{t}} UTC",
+      { h: last.horizon_h, d: fmtNum(longest.duration_s / 60, 1), t: hms(new Date(ep.getTime() + longest.entry_s * 1000)) }))}</p>` : "") +
+    `<table class="ds-table"><thead><tr><th>${esc(T("Entry (UTC)"))}</th><th>${esc(T("Exit (UTC)"))}</th>` +
+    `<th class="n">${esc(T("Duration"))}</th><th></th></tr></thead><tbody>` +
+    shown.map((e) => {
+      const a = new Date(ep.getTime() + e.entry_s * 1000), b = new Date(ep.getTime() + e.exit_s * 1000);
+      const day = a.getUTCDate() !== ep.getUTCDate() ? ` <small>+1 d</small>` : "";
+      const note = e.longest ? T("longest") : e.truncated ? T("cut by the horizon") : "";
+      return `<tr class="${e.longest ? "next" : ""}"><td class="num">${hms(a)}${day}</td><td class="num">${hms(b)}</td>` +
+        `<td class="n">${mmss(e.duration_s)}</td><td>${esc(note)}</td></tr>`;
+    }).join("") + `</tbody></table>` +
+    (es.length > shown.length
+      ? `<p><button type="button" class="ds-btn ghost sm" id="eclipses-more">${esc(T("Show all {{n}} eclipses", { n: es.length }))}</button></p>` : "");
+  const more = $("eclipses-more");
+  if (more) more.addEventListener("click", () => { allEclipses = true; drawEclipses(); });
+}
+let allEclipses = false;
 function drawTimeline() {
   const host = $("timeline");
   const stations = (last && last.stations) || BOOT.stations || [];
@@ -1092,7 +1203,9 @@ function drawElements() {
     cell(T("Argument of perigee"), e.aop_deg, "°", 2), cell(T("True anomaly"), e.ta_deg, "°", 2),
     cell(T("Period"), e.period_min, "min", 2), cell(T("Altitude"), e.altitude_km, "km", 1),
     cell(T("Perigee altitude"), e.a_km * (1 - e.e) - Re, "km", 1), cell(T("Apogee altitude"), e.a_km * (1 + e.e) - Re, "km", 1),
-  ].join("");
+  ].join("") + (e.ltan_h === undefined || e.ltan_h === null ? "" :
+    `<div id="el-ltan"><span class="k">${esc(T("LTAN (local time of the ascending node)"))}</span>` +
+    renderValue(e.ltan_h, { eng: `${String(Math.floor(e.ltan_h)).padStart(2, "0")}:${String(Math.floor((e.ltan_h % 1) * 60)).padStart(2, "0")}` }) + `</div>`);
   $("el-meta").textContent = `${last.epoch} · ${lastSrc === "tle" ? "SGP4" : T("two-body")}`;
   const st = last.state_ecef || {};
   const rows = Object.entries(last.commands || {}).map(([k, hex]) => {
@@ -1124,7 +1237,7 @@ function drawMeta() {
     ? `${T("Epoch")} ${last.epoch}` : T("EOSAT-1 · TLE or state vector to TC(20,1)");
 }
 
-function renderAll() { drawMeta(); drawMap(); legend(); drawPasses(); drawTimeline(); drawElements(); }
+function renderAll() { drawMeta(); drawMap(); legend(); drawPasses(); drawEclipses(); drawTimeline(); drawElements(); }
 
 /* ── wiring ── */
 function drawTabs() {
@@ -1271,6 +1384,7 @@ if (BOOT.tle1) run("tle");
 
             # Compute orbital elements
             elements = OrbitAnalyzer.compute_orbital_elements(pos_eci_km, vel_eci_km_s)
+            elements['ltan_h'] = ltan_hours(epoch_utc, elements['raan_deg'])
             summary = OrbitSummary.format_summary(elements, epoch_utc)
 
             return web.json_response({
@@ -1312,9 +1426,10 @@ if (BOOT.tle1) run("tle");
             commands = TelecommandEncoder.state_to_commands(pos_ecef_m, vel_ecef_ms)
 
             # Compute orbital elements
-            pos_eci_km = pos_ecef_m / 1000.0
-            vel_eci_km_s = vel_ecef_ms / 1000.0
+            pos_eci_km, vel_eci_km_s = ecef_state_to_eci(pos_ecef_m / 1000.0, vel_ecef_ms / 1000.0,
+                                                         epoch_utc)
             elements = OrbitAnalyzer.compute_orbital_elements(pos_eci_km, vel_eci_km_s)
+            elements['ltan_h'] = ltan_hours(epoch_utc, elements['raan_deg'])
             summary = OrbitSummary.format_summary(elements, epoch_utc)
 
             if not np.isfinite(elements.get('period_s', float('nan'))) or elements['a_km'] <= 0:

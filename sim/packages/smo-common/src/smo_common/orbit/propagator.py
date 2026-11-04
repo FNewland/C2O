@@ -448,6 +448,67 @@ class OrbitPropagator:
             "time_to_eclipse_exit_s": exit_s,
         }
 
+    def _umbra_at(self, t: datetime) -> Optional[bool]:
+        """Umbra flag at ``t`` (same sun and shadow model as ``state``);
+        ``None`` when SGP4 fails at that epoch. Mutates nothing."""
+        jd, fr = jday(t.year, t.month, t.day, t.hour, t.minute,
+                      t.second + t.microsecond * 1e-6)
+        e, r, _ = self._sat.sgp4(jd, fr)
+        if e != 0:
+            return None
+        return bool(shadow_state(np.array(r), _sun_eci(jd + fr), self._earth_r).in_eclipse)
+
+    def eclipse_window(self, horizon_s: float = 7200.0, step_s: float = 30.0,
+                       tol_s: float = 1.0) -> dict:
+        """The eclipse the operator asks about, with its duration.
+
+        Sunlit: the NEXT eclipse (entry and exit after now). In eclipse: the
+        CURRENT one (entry in the past, so ``entry_s`` is negative). Times are
+        seconds from the propagator's current epoch, each edge refined by
+        bisection to ``tol_s``. Ground orbit knowledge (the TLE and the
+        suite's one shadow model): legitimate on a real ground segment.
+        Mutates nothing. Missing edges come back ``None``.
+        """
+        t0 = self._current_utc
+        now = self._umbra_at(t0)
+        if now is None:
+            return {"in_eclipse": None, "entry_s": None, "exit_s": None, "duration_s": None}
+
+        def edge(lo: float, hi: float, lo_state: bool) -> float:
+            # lo has lo_state, hi has the other: shrink to tol_s.
+            while hi - lo > tol_s:
+                mid = 0.5 * (lo + hi)
+                st = self._umbra_at(t0 + timedelta(seconds=mid))
+                if st is None or st == lo_state:
+                    lo = mid
+                else:
+                    hi = mid
+            return 0.5 * (lo + hi)
+
+        def scan(start: float, want: bool, direction: int) -> Optional[float]:
+            # first offset (going `direction`) whose state is `want`
+            prev_off, k = start, 1
+            while k * step_s <= horizon_s:
+                off = start + direction * k * step_s
+                st = self._umbra_at(t0 + timedelta(seconds=off))
+                if st is not None and st == want:
+                    a, b = (prev_off, off) if direction > 0 else (off, prev_off)
+                    # a has the earlier state; refine between them
+                    return edge(a, b, (not want) if direction > 0 else want)
+                prev_off, k = off, k + 1
+            return None
+
+        if now:
+            entry = scan(0.0, False, -1)     # last sunlit instant before now
+            exit_ = scan(0.0, False, +1)
+        else:
+            entry = scan(0.0, True, +1)
+            exit_ = scan(entry, False, +1) if entry is not None else None
+        dur = (exit_ - entry) if entry is not None and exit_ is not None else None
+        r = lambda v: None if v is None else round(float(v), 1)  # noqa: E731
+        return {"in_eclipse": bool(now), "entry_s": r(entry), "exit_s": r(exit_),
+                "duration_s": r(dur)}
+
     def station_geometry_at(self, utc: datetime,
                             station_name: str) -> Optional[dict]:
         """Elevation / azimuth / slant range to one named station at ``utc``.
