@@ -75,7 +75,7 @@ jobs:
         run: >
           python -m pytest -n auto -m "not live_server" --durations=15 -q -p no:cacheprovider
           --deselect tests/test_level_workbench.py --deselect tests/test_level_workbench_unit.py
-      - name: pytest (stepwise workbench files, serial: their steps share one study in order)
+      - name: "pytest (stepwise workbench files, serial: their steps share one study in order)"
         run: python -m pytest -m "not live_server" -q -p no:cacheprovider tests/test_level_workbench.py tests/test_level_workbench_unit.py
 
   frontend:
