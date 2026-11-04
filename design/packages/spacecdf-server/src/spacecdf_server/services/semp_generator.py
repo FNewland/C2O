@@ -178,7 +178,8 @@ def generate_semp(
         _section_6_trade_studies(arch_selections),
         _section_7_risk_management(risk_matrix_size, risk_tolerance, arch_selections, parameters),
         _section_8_configuration_management(baseline_dates, ccb_membership),
-        _section_9_interface_management(arch_selections, gen_reqs),
+        _section_9_interface_management(arch_selections, gen_reqs, study_data.get("model_interfaces"),
+                                        study_data.get("interface_requirements")),
         _section_10_vv_approach(gen_reqs),
         _section_11_architecture_conops(mission_need, operational_modes, study_name),
         _section_12_schedule(review_dates, mission_phases),
@@ -795,15 +796,23 @@ def _section_8_configuration_management(
 def _section_9_interface_management(
     arch_selections: dict[str, Any],
     gen_reqs: list[dict[str, Any]],
+    model_interfaces: list[dict[str, Any]] | None = None,
+    interface_requirements: list[dict[str, Any]] | None = None,
 ) -> SempSection:
     num_subsystems = len(arch_selections)
-    # Estimate interface count: each pair of subsystems may have interfaces
-    estimated_interfaces = num_subsystems * (num_subsystems - 1) // 2 if num_subsystems > 1 else 0
+    if model_interfaces is not None:
+        # F6: the accepted links of the model, not an n(n-1)/2 estimate
+        estimated_interfaces = len(model_interfaces)
+    else:
+        estimated_interfaces = num_subsystems * (num_subsystems - 1) // 2 if num_subsystems > 1 else 0
 
-    # Count interface-related requirements
-    iface_reqs = [r for r in gen_reqs if "interface" in r.get("text", "").lower()
-                  or r.get("domain", "").lower() == "interfaces"]
-    num_iface_reqs = len(iface_reqs)
+    if interface_requirements is not None:
+        # F6: requirements of level "interface" (design rules IF-01), not a keyword count
+        num_iface_reqs = len(interface_requirements)
+    else:
+        iface_reqs = [r for r in gen_reqs if "interface" in r.get("text", "").lower()
+                      or r.get("domain", "").lower() == "interfaces"]
+        num_iface_reqs = len(iface_reqs)
 
     return _make_section(
         number="9",
@@ -813,10 +822,14 @@ def _section_9_interface_management(
             f"informational interfaces between subsystems, the spacecraft and its "
             f"environment, and the space and ground segments are identified, "
             f"documented, and controlled.\n\n"
-            f"The current architecture has {num_subsystems} subsystem domains with "
-            f"an estimated {estimated_interfaces} potential bilateral interfaces.  "
-            f"There are {num_iface_reqs} interface-related requirements in the "
-            f"requirements database."
+            + (f"The design model has {estimated_interfaces} accepted interfaces between its "
+               f"elements and {num_iface_reqs} interface requirements (IRD content, "
+               f"ECSS-E-ST-10-24C) allocated to them."
+               if model_interfaces is not None else
+               f"The current architecture has {num_subsystems} subsystem domains with "
+               f"an estimated {estimated_interfaces} potential bilateral interfaces.  "
+               f"There are {num_iface_reqs} interface-related requirements in the "
+               f"requirements database.")
         ),
         subsections=[
             _sub("9.1", "ICD Development Approach",

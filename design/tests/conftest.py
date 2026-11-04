@@ -12,3 +12,6 @@ from __future__ import annotations
 import os
 
 os.environ.setdefault("SPACECDF_AUTO_PROPOSE", "0")
+# Interface requirements generated from accepted links (services/interface_requirements.py):
+# off by default for the same reason; tests/test_api/test_electrical_api.py switches it on.
+os.environ.setdefault("SPACECDF_AUTO_IRD", "0")

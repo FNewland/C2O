@@ -146,6 +146,9 @@ class RequirementRow(Base):
     # SCDF-160 §1.4: identity in external tools (Capella Requirements VP / ReqIF)
     external_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     external_ids_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Interface requirement (level "interface", design rules IF-01..IF-05):
+    # {origin, template_id, interface_id, inputs_hash, review, edited, proposed_text, values, endpoints}
+    ir_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
 
@@ -311,6 +314,9 @@ class ElementInterfaceRow(Base):
     status: Mapped[str] = mapped_column(String(32), default="accepted")
     criticality: Mapped[str] = mapped_column(String(16), default="standard")
     diagram_label: Mapped[str] = mapped_column(String(128), default="")
+    # Bilateral agreement (design rules IF-05): {provider_seat, consumer_seat,
+    # provider: {by, seat, at} | None, consumer: {...} | None, inputs_hash}
+    agreement_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     version: Mapped[int] = mapped_column(Integer, default=1)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -728,3 +734,8 @@ class PendingChangeRow(Base):
     reviewed_seat: Mapped[str] = mapped_column(String(40), default="")
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     comment: Mapped[str] = mapped_column(Text, default="")
+
+
+# Electrical and data-handling tables (power rails, lines, buses, nodes, ports) live in their
+# own module; importing it registers them on Base.metadata for create_all.
+from . import electrical_models as _electrical_models  # noqa: E402,F401
