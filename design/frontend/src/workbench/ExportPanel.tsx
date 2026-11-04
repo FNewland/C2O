@@ -8,6 +8,7 @@ import { useUIStore } from '../stores/uiStore'
 import { ExchangePanel } from '../components/ExchangePanel'
 import { getLang } from '../i18n'
 import { Button, Dialog, Note } from '../components/ui'
+import { SimConfigExportDialog } from './SimConfigExportDialog'
 
 const API = '/api'
 
@@ -40,7 +41,7 @@ async function dlCsv(headers: string[], rows: string[][], filename: string) {
 }
 
 // Labels and descriptions are display-only (translated); file names and CSV content stay English.
-function buildExports(sid: string, t: TFunction): DocCategory[] {
+function buildExports(sid: string, t: TFunction, openSimConfig: () => void): DocCategory[] {
   // ECSS review packs: French Markdown templates (templates/fr/) when the UI is in French.
   const docLang = getLang() === 'fr' ? '&lang=fr' : ''
   return [
@@ -150,8 +151,8 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
       { id: 'mbse', label: t('MBSE Model Export'), description: t('Functional, logical, physical architecture + traceability'), formats: [
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/mbse/${sid}`, `MBSE_${sid}.json`) },
       ]},
-      { id: 'smo', label: t('Simulator Model Inputs'), description: t('Orbit, attitude, power, thermal simulation setup'), formats: [
-        { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/smo/${sid}`, `Simulator_${sid}.json`) },
+      { id: 'smo', label: t('Simulator configuration'), description: t('Configuration directory for the EOSAT-1-class simulator, with a readiness checklist'), formats: [
+        { fmt: 'ZIP', label: 'ZIP', action: async () => openSimConfig() },
       ]},
     ]},
     { name: t('Operations & Test'), color: 'var(--interactive)', docs: [
@@ -188,7 +189,8 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
   const [success, setSuccess] = useState<string | null>(null)
 
   const { t } = useTranslation()
-  const categories = studyId ? buildExports(studyId, t) : []
+  const [simConfig, setSimConfig] = useState(false)
+  const categories = studyId ? buildExports(studyId, t, () => setSimConfig(true)) : []
 
   const run = async (docId: string, label: string, action: (sid: string) => Promise<void>) => {
     if (!studyId) return
@@ -198,6 +200,7 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
     finally { setRunning(null) }
   }
 
+  if (simConfig && studyId) return <SimConfigExportDialog studyId={studyId} onClose={() => setSimConfig(false)} />
   return (
     <Dialog open title={t('Export Documents & Data')} onClose={onClose} width={680}
       actions={<button type="button" className="c2o-btn" onClick={onClose}>{t('Close')}</button>}>
