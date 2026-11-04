@@ -34,8 +34,20 @@ tools_each() {
 require_gcloud_login
 log "Project $PROJECT, region $REGION, zone $ZONE, domain $DOMAIN"
 
-billing="$(gcloud billing projects describe "$PROJECT" --format='value(billingEnabled)' 2>/dev/null || true)"
-[ "$billing" = "True" ] || die "Billing is not enabled on $PROJECT. Link it first (README step 4)."
+# The Cloud Billing API may not be enabled in the project itself, so this
+# one check bills its quota the legacy way (gcloud's shared client project)
+# if the project-billed call fails. Show gcloud's own error otherwise.
+billing_err=""
+billing="$(gcloud billing projects describe "$PROJECT" --format='value(billingEnabled)' 2>/dev/null)" \
+    || billing="$(CLOUDSDK_BILLING_QUOTA_PROJECT=LEGACY gcloud billing projects describe "$PROJECT" \
+                  --format='value(billingEnabled)' 2>"${TMPDIR:-/tmp}/c2o-billing.err")" \
+    || billing_err="$(cat "${TMPDIR:-/tmp}/c2o-billing.err" 2>/dev/null)"
+rm -f "${TMPDIR:-/tmp}/c2o-billing.err"
+if [ "$billing" != "True" ]; then
+    [ -n "$billing_err" ] && die "Could not read the billing status of $PROJECT. gcloud said:
+$billing_err"
+    die "Billing is not enabled on $PROJECT. Link it first (README step 4)."
+fi
 
 parent="$(gcloud projects describe "$PROJECT" --format='value(parent.type)')"
 [ "$parent" = "organization" ] || warn "$PROJECT is not directly under an organisation (parent type '$parent'). The Google-managed IAP client admits only users of the project's organisation: move the project into the $DOMAIN organisation (README step 4)."
@@ -46,7 +58,8 @@ parent="$(gcloud projects describe "$PROJECT" --format='value(parent.type)')"
 log "Enabling APIs (first time: about a minute)"
 gcloud services enable compute.googleapis.com iap.googleapis.com secretmanager.googleapis.com \
     oslogin.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com \
-    logging.googleapis.com admin.googleapis.com
+    logging.googleapis.com admin.googleapis.com cloudbilling.googleapis.com serviceusage.googleapis.com
+# cloudbilling/serviceusage: so calls billed to this project (quota project) work.
 # admin.googleapis.com: the Admin SDK, for `c2o users` (accounts and groups).
 
 # ── 2. Network, NAT, firewall ───────────────────────────────────────────
