@@ -43,6 +43,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY configs/ configs/
 COPY --from=frontend /src/dist/ frontend/dist/
+# FR catalogs: the diagram exports translate their labels server-side (services/diagrams/render.py)
+COPY frontend/src/i18n/locales/ frontend/src/i18n/locales/
 
 USER spacecdf
 VOLUME ["/data"]
