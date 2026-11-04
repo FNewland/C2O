@@ -37,6 +37,8 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
+from .worksheets import localise_where
+
 __all__ = ["parse_card", "parse_check", "parse_prereqs", "runner_map", "build_checklist",
            "compare_sheet", "ChecklistProvider", "sheet_for_procedure"]
 
@@ -360,6 +362,9 @@ def compare_sheet(card: dict, sheet: dict | None, lang: str = "en") -> dict:
             best_score = top
         ref = {"q": q.get("id"), "n": q.get("step"), "text": txt(q.get("text")),
                "hint": txt(q.get("hint"))}
+        where = localise_where(q.get("where"), lang)
+        if where:
+            ref["where"] = where
         if best is None:
             # prose on both sides: the step that shares the most content words
             words = _words((q.get("text") or {}).get("en", ""))
@@ -480,6 +485,9 @@ def build_checklist(proc_id: str, card_md: str, *, card_md_fr: str | None = None
             item = {"id": q.get("id"), "kind": q.get("kind") or "text", "text": _loc(q.get("text"), lang)}
             if q.get("hint"):
                 item["hint"] = _loc(q["hint"], lang)
+            where = localise_where(q.get("where"), lang)
+            if where:
+                item["where"] = where
             extra.append(item)
     out = {
         "procedure": proc_id,

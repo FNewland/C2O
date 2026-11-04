@@ -36,6 +36,7 @@ import { t, tText, getLang } from "/static/shared/i18n.js";
 import { esc } from "/static/shared/components.js";
 import { evalCheck, parseInlineCheck, runnerResults, runIds, nextRunId, ticksFor, progress,
   isDeviation } from "/static/shared/checklist.js";
+import { whereHtml, bindWhere } from "/static/shared/where.js";
 
 const LIVE_MS = 2500;
 const FORM_ORDER = ["anomaly", "handover", "scorecard", "briefing", "debrief"];
@@ -202,6 +203,11 @@ export function createWorkbook(host) {
     const tcs = (s.tcs || []).length
       ? `<div class="tc"><span class="lbl">TC</span> ${s.tcs.map((x) => `<code>${esc(x)}</code>`).join(" ")}</div>` : "";
     const refs = (s.ref || []).map((r) => r.text).join(" · ");
+    // the printed rows' "where to find this", one link per place
+    const seenW = new Set();
+    const wh = whereHtml((s.ref || []).flatMap((r) => r.where || []).filter((w) => {
+      const k = JSON.stringify(w); if (seenW.has(k)) return false; seenW.add(k); return true;
+    }), host.tool);
     const when = tick && st !== "open"
       ? `<span class="tm">${esc(host.fmtTime(tick.updated_ts || tick.ts, true))}` +
         `${c.sim_ts ? ` · ${t("sim")} ${esc(String(c.sim_ts).replace(/^.*T/, "").replace(/Z$/, ""))}` : ""}` +
@@ -214,7 +220,7 @@ export function createWorkbook(host) {
       tcs + (checks ? `<ul class="ck">${checks}</ul>` : "") +
       (s.gonogo ? `<div class="go"><span class="lbl">GO/NO-GO</span> ${esc(s.gonogo)}</div>` : "") +
       (!checks && !s.gonogo && (s.actions || []).length ? `<div class="go">${esc(s.actions[0])}</div>` : "") +
-      (refs ? `<div class="pr" title="${esc(refs)}"><span class="lbl">${t("Printed")}</span> ${esc(refs)}</div>` : "") +
+      (refs ? `<div class="pr" title="${esc(refs)}"><span class="lbl">${t("Printed")}</span> ${esc(refs)}</div>` : "") + wh +
       `<div class="act">${acts}${when}</div>` +
       `<div class="nt"><label class="ds-sr" for="wb-nt-${esc(s.key)}">${t("Note or deviation for {{step}}", { step: label })}</label>` +
       // a box that wraps: a runner note ("Runner: one S3.27 request…") or
@@ -490,7 +496,7 @@ export function createWorkbook(host) {
         const live = ic ? `<div class="qh">${t("Console")}: ${readingHtml(ic, r)}</div>` : "";
         return h + `<div class="lb-q wb-q" data-q="${esc(q.id)}" data-kind="check">` +
           `<label class="ds-check wb-chk"><input type="checkbox" id="${fid(q)}-c"${f && f.checked ? " checked" : ""}> <span>${esc(q.text)}</span></label>` +
-          (q.hint ? `<div class="qh">${t("Expected:")} ${esc(q.hint)}</div>` : "") + live + prev +
+          (q.hint ? `<div class="qh">${t("Expected:")} ${esc(q.hint)}</div>` : "") + whereHtml(q.where, host.tool) + live + prev +
           `<label class="ds-sr" for="${fid(q)}">${t("Note")}</label>` +
           `<input id="${fid(q)}" class="ds-input wb-in" maxlength="4000" value="${esc(val)}" placeholder="${esc(tText("Note or actual value (optional)"))}">${preChip}</div>`;
       }
@@ -503,7 +509,7 @@ export function createWorkbook(host) {
         : `<input id="${fid(q)}" class="ds-input wb-in" maxlength="4000" value="${esc(val)}">`;
       return h + `<div class="lb-q wb-q" data-q="${esc(q.id)}" data-kind="text">` +
         `<label class="qt" for="${fid(q)}">${esc(q.text)}</label>` +
-        (q.hint ? `<div class="qh">${esc(q.hint)}</div>` : "") + prev + input + preChip + `</div>`;
+        (q.hint ? `<div class="qh">${esc(q.hint)}</div>` : "") + whereHtml(q.where, host.tool) + prev + input + preChip + `</div>`;
     }).join("");
     const infoHtml = info.length ? `<ul class="wb-info">${info.map((i) =>
       `<li><span class="k">${esc(i.label)}</span> <span class="v">${esc(i.value)}</span></li>`).join("")}</ul>` : "";
@@ -574,6 +580,15 @@ export function createWorkbook(host) {
       `<span class="id">${esc(w.id)}</span> <span class="ti">${esc(w.title)}</span></button></li>`).join("");
     return `<details class="wb-index"><summary>${t("All workbook sheets ({{n}})", { n: W.sheets.length })}</summary>` +
       `<ol>${rows}</ol></details>`;
+  }
+
+  /* Bring a sheet to the top of the logbook's own scroller. scrollIntoView
+   * also scrolled every scrollable ancestor, the console page included, so
+   * opening a sheet from the index pushed the MCS header off the screen. */
+  function scrollPaneTo(el) {
+    const sc = W.pane && W.pane.closest(".lb-body");
+    if (!sc) return;
+    sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
   }
 
   /* ── render ───────────────────────────────────────────────────────── */
@@ -774,7 +789,7 @@ export function createWorkbook(host) {
         if (host.tool === "mcs" && w && (w.questions || []).some((q) => q.step) && (w.applies.procedures || []).length) {
           openChecklist(w.applies.procedures[0]);
         } else if (a === "quick") openForm(el.dataset.w);
-        else { W.open.add(el.dataset.w); render(); const d = pane.querySelector(`details.wb-sheet[data-w="${CSS.escape(el.dataset.w)}"] summary`); if (d) { d.scrollIntoView({ block: "start" }); d.focus(); } }
+        else { W.open.add(el.dataset.w); render(); const d = pane.querySelector(`details.wb-sheet[data-w="${CSS.escape(el.dataset.w)}"] summary`); if (d) { scrollPaneTo(d); d.focus({ preventScroll: true }); } }
       } else if (a === "form-new") {
         const d = el.closest("details.wb-sheet"); W.editing[d.dataset.w] = "new"; W.open.add(d.dataset.w); render();
         const f = pane.querySelector(`details.wb-sheet[data-w="${CSS.escape(d.dataset.w)}"] .wb-in`); if (f) f.focus();
@@ -851,7 +866,7 @@ export function createWorkbook(host) {
 
   return {
     mount(pane) {
-      W.pane = pane; wire(pane);
+      W.pane = pane; wire(pane); bindWhere(pane);
       W.liveTimer = setInterval(liveTick, LIVE_MS);
     },
     sync, render, onData, onRunner, openForm, openChecklist, tick, newRun, setRun, useCard, cardState,
