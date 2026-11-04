@@ -23,6 +23,7 @@ applicable_ecss:
   - ECSS-E-ST-10-04C Rev.1
   - ECSS-E-ST-10-24C Rev.1     # Interface management (IRD/ICD/IDD)
   - ECSS-E-ST-50C Rev.2        # Communications
+  - ECSS-E-ST-70-41C           # TM/TC packet utilisation (PUS-C): the CDR TM/TC database
   - ECSS-E-ST-60-30C           # AOCS
   - ECSS-E-AS-11C
   - ECSS-M-ST-10C Rev.1
@@ -34,12 +35,18 @@ requirements:
   name: "EOSAT-1 Multispectral Imager"
   mission_type: earth_observation
   spacecraft_class: nano
+  # Orbit = the EOSAT-1 reference orbit (sim/configs/eosat1/orbit.yaml, owner rulings 2026-08 and
+  # 2026-10-30): mean geodetic altitude 513 km (TLE mean motion 15.24 rev/day, 503-530 km over an
+  # orbit), inclination 97.39 deg (exact sun-synchronous value for that mean motion), LTAN 10:00
+  # (RAAN 120 deg at the 2026-08-20T12:00Z epoch), e = 0.00012. The old 450 km / LTAN 10:30
+  # figures disagreed with the TLE and were retired in the simulator.
   orbit:
     orbit_type: sso
-    altitude_km: 450.0
-    inclination_deg: 97.4
-    eccentricity: 0.0
-    ltan: "10:30"
+    altitude_km: 513.0
+    inclination_deg: 97.39
+    eccentricity: 0.00012
+    raan_deg: 120.0
+    ltan: "10:00"
     mission_duration_years: 3.0
     deorbit_required: true
   payloads:
@@ -72,3 +79,15 @@ equipment_hints:
     rationale: "Single star tracker + MEMS gyro hybrid"
   - category: solar_cells
     rationale: "Deployable 2-wing solar array, ~60 W EOL"
+
+# Frame convention (recorded Nov 2026, phase 2). The design frame of SpaceCDF element positions
+# (position_json, services/mass_properties.py, physics_closure, CDS-COG) has its origin at the
+# envelope corner and +Z = NADIR along the rails; the simulator body frame (geometry.yaml,
+# aocs.yaml, ruling Q4) has its origin at the centre, +X ~ velocity, +Y = orbit normal and
+# +Z = ZENITH. services/stack_builder.py converts between them (to_design_m for points,
+# design_to_stack_tensor for the inertia tensor): a proper rotation of 180 deg about X (or the
+# X/Y swap + Z flip when the CDS order lists the long side first) plus the corner offset.
+notes: >
+  Orbit mirrors the EOSAT-1 simulator reference (513 km mean, i = 97.39 deg, LTAN 10:00).
+  Positions in this tool use the design frame (+Z nadir, corner origin); the simulator uses
+  +Z zenith, centre origin; the stack builder converts (to_design_m, design_to_stack_tensor).

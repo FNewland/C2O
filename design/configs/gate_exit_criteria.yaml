@@ -426,3 +426,129 @@ phases:
         owner_seat: systems_engineer
         step: C2
         fix: analyses
+
+  # Nov 2026 (phase 2): the Critical Design Review, the last gate of the full ECSS profile.
+  # Expectations after ECSS-E-ST-10C Annex A / ECSS-M-ST-10C Rev.1 §4.4.3.4.5 (clause numbers
+  # to verify): the detailed design is justified and meets the requirements, the ICDs are
+  # baselined, the TM/TC database, FDIR design and AOCS design are complete and consistent, the
+  # operations products exist in draft, the AIV programme is ready and the budgets close with the
+  # CDR system margin (10 %, C2O ladder). The CDR products live in the CDR model (routers/cdr.py);
+  # the evidence thresholds are C2O defaults (configs/cdr_rules.yaml cdr_gate).
+  phase_c:
+    gate: CDR
+    gate_name: "Critical Design Review"
+    purpose: >
+      Confirm that the detailed design is complete, justified and meets the requirements, that
+      the interfaces and the TM/TC database are baselined, that failures are detected and
+      recovered, and that the operations and AIV products are ready for manufacturing and test.
+    authority: "Project Manager / Standing Review Board"
+    exit_criteria:
+      - id: CDR-EC-01
+        question: "Does the detailed design meet every requirement, with its justification?"
+        category: design
+        evidence: "All checkable requirement thresholds met (design justification file; ECSS-E-ST-10C Annex A, to verify)"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C2
+        fix: requirements
+
+      - id: CDR-EC-02
+        question: "Are the interface control documents baselined?"
+        category: interfaces
+        evidence: "Every accepted link has approved interface requirements agreed by both parties and no suggested link is left (ECSS-E-ST-10-24C ICD, to verify)"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: B3
+        fix: interfaces
+
+      - id: CDR-EC-03
+        question: "Is the TM/TC database complete and consistent?"
+        category: tmtc
+        evidence: "CDR model: parameters for every subsystem, HK structures, telecommands and events present, every row reviewed (no suggestion left) and no TM/TC alarm finding (ECSS-E-ST-70-41C / 70-31C, to verify)"
+        status: auto
+        priority: must_pass
+        owner_seat: comms_engineer
+        step: D1
+        fix: tmtc
+
+      - id: CDR-EC-04
+        question: "Does the housekeeping fit the downlink in every mode?"
+        category: tmtc
+        evidence: "HK bit rate ≤ HK share of the rate tier in the bootloader, safe, nominal and downlink regimes (cdr_rules.yaml downlink_budget, C2O default)"
+        status: auto
+        priority: must_pass
+        owner_seat: comms_engineer
+        step: D1
+        fix: tmtc
+
+      - id: CDR-EC-05
+        question: "Is every critical failure mode detected and recovered on board?"
+        category: fdir
+        evidence: "Each FMECA failure mode with severity ≥ 4 has an accepted monitor and an event-action; no FDIR alarm finding (ECSS-E-ST-70-11C, ECSS-Q-ST-30-02C, to verify)"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: D2
+        fix: fdir
+
+      - id: CDR-EC-06
+        question: "Are the safe mode and the load-shed table defined?"
+        category: fdir
+        evidence: "Safe mode with entry triggers, AOCS mode, rate tier and exit; load-shed stages on named bus-protection levels; line states per mode consistent"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: D2
+        fix: fdir
+
+      - id: CDR-EC-07
+        question: "Are the AOCS mode machine and control parameters defined?"
+        category: aocs
+        evidence: "Every AOCS mode reachable, gains on every wheel mode, no AOCS alarm finding (ECSS-E-ST-60-30C, to verify)"
+        status: auto
+        priority: must_pass
+        owner_seat: aocs_engineer
+        step: D3
+        fix: aocs
+
+      - id: CDR-EC-08
+        question: "Are the TT&C rate ladder, beacon and command-loss recovery defined?"
+        category: ttc
+        evidence: "Default, beacon and safe tiers exist in the ladder; command-loss timer and action set; no TT&C alarm finding"
+        status: auto
+        priority: must_pass
+        owner_seat: comms_engineer
+        step: D1
+        fix: tmtc
+
+      - id: CDR-EC-09
+        question: "Are the operations products drafted (organisation, GO/NO-GO, flight rules)?"
+        category: operations
+        evidence: "Console positions, a GO/NO-GO matrix covering the critical telecommands and flight rules exist (ECSS-E-ST-70C, to verify); the flight operations plan is checked by the board"
+        status: hybrid
+        priority: should_pass
+        owner_seat: mission_analyst
+        step: D4
+        fix: ops
+
+      - id: CDR-EC-10
+        question: "Do the budgets close with the CDR system margin?"
+        category: budgets
+        evidence: "dry mass × (1 + CDR system margin) <= mass target AND power demand × (1 + CDR system margin) <= EOL array power (margin_policy.yaml system_margin_ladder: 10 %)"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: A6
+        fix: budget
+
+      - id: CDR-EC-11
+        question: "Is the AIV programme ready (test specifications, facilities, model philosophy)?"
+        category: verification
+        evidence: "Manual: AIV plan and test specifications baselined; every requirement has a verification method"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: C3
+        fix: vv:risks

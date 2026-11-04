@@ -5,6 +5,12 @@ Foundation for AOCS disturbance-torque validation (gravity gradient
 torque depends on principal axis offset from orbit frame).
 
 Per ECSS-E-ST-31C (Mass Properties).
+
+Frame: the SpaceCDF *design* frame (x forward, y starboard, **z nadir**, origin at the envelope
+corner for ``position_json``). The simulator body frame is +Z **zenith** (sim geometry.yaml,
+ruling Q4); ``stack_builder.to_design_m`` converts points and
+``stack_builder.design_to_stack_tensor`` converts the inertia tensor (products of inertia change
+sign) before anything is handed to the simulator.
 """
 from __future__ import annotations
 

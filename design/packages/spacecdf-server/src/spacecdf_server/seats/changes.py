@@ -19,7 +19,7 @@ from .service import param_keys
 
 def change_fields(new: dict[str, Any]) -> list[str]:
     """The parameter names a change touches (a parameter change carries its name in ``_name``;
-    an electrical change its collection and row in ``_entity`` / ``_id``)."""
+    an electrical or CDR change its collection and row in ``_entity`` / ``_id``)."""
     if "_name" in (new or {}):
         return [new["_name"]]
     return [k for k in (new or {}) if k not in ("_entity", "_id")]
@@ -89,6 +89,12 @@ async def apply_pending(pc: dict[str, Any]) -> dict[str, Any]:
         new = dict(pc.get("new") or {})
         kind, row_id = new.pop("_entity"), new.pop("_id")
         return await apply_change(pc["study_id"], kind, row_id, new)
+    if pc["kind"] == "cdr":
+        # TM/TC database, FDIR, AOCS, TT&C, line-state and operations rows (routers/cdr.py)
+        from ..routers.cdr import apply_change as cdr_apply
+        new = dict(pc.get("new") or {})
+        new.pop("_entity", None)
+        return await cdr_apply(pc["study_id"], new.pop("_id"), new)
     el = el_router._elements.get(pc["element_id"])
     if el is None or el.get("deleted_at"):
         raise HTTPException(409, {"code": "element_gone", "message": "The element no longer exists"})

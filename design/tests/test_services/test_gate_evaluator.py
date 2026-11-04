@@ -39,16 +39,16 @@ GOOD_NEED = {
 @pytest.mark.parametrize("key,phase", [
     ("MDR", "phase_0"), ("mdr", "phase_0"), ("MCR", "phase_0"), ("mcr", "phase_0"),
     ("pre_phase_a", "phase_0"), ("prr", "phase_a"), ("srr", "phase_b1"),
-    ("PDR", "phase_b"), ("phase_b1", "phase_b1"), ("cdr", None), ("", None),
+    ("PDR", "phase_b"), ("phase_b1", "phase_b1"), ("cdr", "phase_c"), ("CDR", "phase_c"), ("qr", None), ("", None),
 ])
 def test_resolve_phase_accepts_gate_names(key, phase):
     """MCR (the old name, ruling 3) and pre_phase_a still resolve to the MDR."""
     assert ge.resolve_phase(key) == phase
 
 
-def test_gate_options_list_mdr_prr_srr_pdr():
+def test_gate_options_list_mdr_prr_srr_pdr_cdr():
     gates = [g["gate"] for g in ge.list_gate_options()]
-    assert gates == ["MDR", "PRR", "SRR", "PDR"]
+    assert gates == ["MDR", "PRR", "SRR", "PDR", "CDR"]
 
 
 def test_legacy_criterion_ids_map_to_mdr():
@@ -61,7 +61,8 @@ def test_every_criterion_names_an_owner_seat_and_a_step():
     from spacecdf_server.services import gate_profiles as gp
     seats = {s["id"] for s in catalogue().get("seats") or []}
     steps = set(gp.load()["steps"])
-    panels = {"analyses", "budget", "blocks", "requirements", "functions", "interfaces", "decide", "vv:risks"}
+    panels = {"analyses", "budget", "blocks", "requirements", "functions", "interfaces", "decide", "vv:risks",
+              "tmtc", "fdir", "aocs", "ops"}
     data = yaml.safe_load(ge._criteria_file().read_text(encoding="utf-8"))
     for g in data["phases"].values():
         for c in g["exit_criteria"]:
@@ -70,7 +71,7 @@ def test_every_criterion_names_an_owner_seat_and_a_step():
             assert c.get("fix") is None or c["fix"] in panels, c["id"]
 
 
-@pytest.mark.parametrize("gate", ["MDR", "PRR", "SRR", "PDR"])
+@pytest.mark.parametrize("gate", ["MDR", "PRR", "SRR", "PDR", "CDR"])
 def test_every_yaml_criterion_is_returned_in_order(gate):
     res = ge.evaluate_gate(gate.lower())
     assert res["found"] and res["gate"] == gate
@@ -89,7 +90,7 @@ def test_every_yaml_criterion_is_returned_in_order(gate):
 
 
 def test_unknown_gate_is_reported_not_raised():
-    res = ge.evaluate_gate("cdr")
+    res = ge.evaluate_gate("qr")
     assert res["found"] is False and res["criteria"] == [] and res["ready"] is False
 
 

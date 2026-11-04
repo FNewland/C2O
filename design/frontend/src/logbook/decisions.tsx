@@ -197,7 +197,7 @@ function DecisionRow({ d, compact = false }: { d: CatalogueDecision; compact?: b
         <span className="c2o-lb-drow__meta t-12 c-3">
           <span className="c2o-tag">{d.seat_label}</span>
           {!compact && <span className="mono">{d.id}</span>}
-          <span>{t('Worksheet {{n}}', { n: d.worksheet.replace('LW-', '') })}{d.part_title ? ` · ${d.part_title.replace(/^(Part|Partie) ([A-G])\s*:.*/, (_m, p, l) => `${p} ${l}`)}` : ''}</span>
+          <span>{d.worksheet ? <>{t('Worksheet {{n}}', { n: d.worksheet.replace('LW-', '') })}{d.part_title ? ` · ${d.part_title.replace(/^(Part|Partie) ([A-G])\s*:.*/, (_m, p, l) => `${p} ${l}`)}` : ''}</> : t('No workbook part yet')}</span>
           {latest?.record?.choice && <span className="c-2 ellipsis">→ {latest.record.choice}</span>}
         </span>
       </span>
@@ -304,7 +304,7 @@ function DecisionEditor({ draft }: { draft: DecisionDraft }) {
           {d && <span className="c2o-tag">{d.seat_label}</span>}
         </p>
         <h3 className="c2o-lb-dr__q">{d?.question ?? decisionId}</h3>
-        {d && <p className="t-12 c-3 m-0">{t('Worksheet {{n}}', { n: d.worksheet.replace('LW-', '') })}{d.worksheet_title ? ` · ${d.worksheet_title}` : ''}{d.part_title ? ` — ${d.part_title}` : ''}</p>}
+        {d && <p className="t-12 c-3 m-0">{d.worksheet ? <>{t('Worksheet {{n}}', { n: d.worksheet.replace('LW-', '') })}{d.worksheet_title ? ` · ${d.worksheet_title}` : ''}{d.part_title ? ` — ${d.part_title}` : ''}</> : t('No workbook part yet')}</p>}
         {d?.hint && <p className="t-12 c-2 m-0 lh-text">{d.hint}</p>}
         {cat && (
           <Disclosure summary={<span className="t-12">{t('Not this decision?')}</span>}>
