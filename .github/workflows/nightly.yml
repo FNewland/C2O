@@ -38,7 +38,7 @@ jobs:
         run: |
           python -m pip install --upgrade "pip>=25.1"
           pip install -e packages/smo-common
-          pip install -e packages/smo-simulator -e packages/smo-mcs \
+          pip install -e packages/smo-simulator -e "packages/smo-mcs[voice,iap]" \
                       -e packages/smo-planner -e packages/smo-rfsim \
                       -e packages/smo-link -e packages/smo-gateway
           pip install --group dev
@@ -71,7 +71,7 @@ jobs:
         run: |
           python -m pip install --upgrade "pip>=25.1"
           pip install -e packages/smo-common
-          pip install -e packages/smo-simulator -e packages/smo-mcs \
+          pip install -e packages/smo-simulator -e "packages/smo-mcs[voice,iap]" \
                       -e packages/smo-planner -e packages/smo-rfsim \
                       -e packages/smo-link -e packages/smo-gateway
           pip install --group dev
