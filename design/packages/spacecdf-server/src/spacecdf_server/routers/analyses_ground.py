@@ -63,7 +63,7 @@ def _study_elements(study_id: str) -> list[dict]:
 
 def _station_elements(study_id: str) -> list[dict]:
     return [e for e in _study_elements(study_id)
-            if e.get("segment") == "ground" and e.get("kb_component_id") and e.get("element_type") == "component"]
+            if e.get("segment") == "ground" and e.get("kb_component_id") and e.get("element_type") in ("system", "component")]
 
 
 def _serialise(el: dict, catalogue: dict[str, dict]) -> dict:
@@ -89,6 +89,17 @@ async def _ensure_ground_segment(study_id: str) -> dict:
     return await elements_router.create_element(body, study_id=study_id)
 
 
+def _placeholder_station(study_id: str, segment_id: str) -> dict | None:
+    """The default tree's "Ground Station" system: no KB station, nothing under it."""
+    els = _study_elements(study_id)
+    has_kids = {e.get("parent_id") for e in els}
+    for e in els:
+        if (e.get("parent_id") == segment_id and e.get("element_type") == "system" and not e.get("kb_component_id")
+                and e["id"] not in has_kids and str(e.get("name") or "") in ("Ground Station", "DSN Ground Station")):
+            return e
+    return None
+
+
 @router.get("/studies/{study_id}/ground-stations")
 async def list_ground_stations(study_id: str) -> dict:
     catalogue = _kb_stations()
@@ -111,8 +122,22 @@ async def add_ground_station(study_id: str, body: StationAdd) -> dict:
     perf = {k: kb.get(k) for k in STATION_PROPS if kb.get(k) is not None}
     if body.min_elevation_deg is not None:
         perf["min_elevation_deg"] = body.min_elevation_deg
+    # A ground station is a level-2 element of the ground segment (ECSS product tree,
+    # services/product_tree.py); the default tree's empty "Ground Station" placeholder is
+    # taken over by the first station picked.
+    placeholder = _placeholder_station(study_id, segment["id"])
+    if placeholder is not None:
+        upd = {"name": str(kb.get("name") or kb.get("id")), "kb_component_id": str(kb.get("id")),
+               "subsystem_domain": "ground", "manufacturer": kb.get("operator"),
+               "description": str(kb.get("notes") or ""),
+               "performance": {**(placeholder.get("performance") or {}), **perf}}
+        placeholder["subsystem_domain"] = "ground"
+        el = await elements_router.apply_element_update(placeholder, {k: v for k, v in upd.items() if v is not None})
+        await broadcast_mutation(study_id, "ground_station_added", "element", el["id"],
+                                 {"kb_station_id": kb.get("id"), "analysis": ANALYSIS})
+        return _serialise(el, {kb.get("id"): kb})
     create = elements_router.ElementCreate(
-        name=str(kb.get("name") or kb.get("id")), element_type="component", parent_id=segment["id"],
+        name=str(kb.get("name") or kb.get("id")), element_type="system", parent_id=segment["id"],
         subsystem_domain="ground", segment="ground", kb_component_id=str(kb.get("id")),
         manufacturer=kb.get("operator"), description=str(kb.get("notes") or ""), performance=perf,
     )

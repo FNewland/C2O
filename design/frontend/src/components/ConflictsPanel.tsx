@@ -44,7 +44,7 @@ async function jsonOrThrow(res: Response) {
   return res.json()
 }
 
-interface ElementLite { id: string; name: string; parent_id: string | null }
+interface ElementLite { id: string; name: string; parent_id: string | null; element_type?: string | null }
 
 /** Drill the workbench to an element so it is focused in Blocks (capped below the V&V level). */
 function focusElementInBlocks(el: ElementLite, all: ElementLite[]) {
@@ -54,7 +54,12 @@ function focusElementInBlocks(el: ElementLite, all: ElementLite[]) {
   let cur: ElementLite | undefined = el
   while (cur && cur.parent_id) { chain.unshift(cur); cur = byId.get(cur.parent_id) }
   ui.drillUp(-1)
-  for (const c of chain.slice(0, 3)) ui.drillInto(c.id, c.name)
+  // down to the subsystem holding the element (its equipment is listed there): the
+  // drill-down levels follow the element types (workbench/blockLevels.ts)
+  for (const c of chain) {
+    if (c.element_type === 'component') break
+    ui.drillInto(c.id, c.name, c.element_type)
+  }
   ui.setActivePanel('blocks')
 }
 

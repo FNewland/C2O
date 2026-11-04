@@ -7,7 +7,7 @@
  *   (drill-down) is stored with the study it belongs to and dropped for any other study.
  */
 export interface KV { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void }
-export interface Crumb { id: string; name: string }
+export interface Crumb { id: string; name: string; type?: string | null }
 
 export const STUDY_KEY = 'scdf.study'
 export const CRUMBS_KEY = 'scdf.breadcrumb'

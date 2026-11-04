@@ -299,14 +299,17 @@ class TestElementTree:
 
         # Find space segment
         space_seg = next(e for e in elements if e["name"] == "Space Segment")
-        # Its children should be systems (Platform, Payload)
+        # Its children are spacecraft (level 2), never subsystems (ECSS product tree)
         children = [
             e for e in elements
             if e.get("parent_id") == space_seg["id"] and not e.get("deleted_at")
         ]
-        assert len(children) >= 2
-        child_types = {c["element_type"] for c in children}
-        assert "system" in child_types
+        assert len(children) >= 1
+        assert {c["element_type"] for c in children} == {"system"}
+        sc = children[0]
+        subs = [e for e in elements if e.get("parent_id") == sc["id"]]
+        assert {"payload", "power"} <= {e.get("subsystem_domain") for e in subs}
+        assert {e["element_type"] for e in subs} == {"subsystem"}
 
     def test_budget_computation(self, element_dict_store):
         """computeBudget sums children correctly."""

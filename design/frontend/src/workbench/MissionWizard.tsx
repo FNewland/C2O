@@ -13,6 +13,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useUIStore } from '../stores/uiStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import i18n, { fmtDate } from '../i18n'
 import { Note } from '../components/ui/Panel'
 import { Tag } from '../components/ui/StatusBadge'
@@ -66,15 +67,32 @@ const STAKEHOLDER_ROLES: Record<string, string> = {
   partner: 'Partner Organisation',
 }
 
-// English text is the i18n key for the segments at display time; the segment
-// names themselves are POSTed as element names (stored data) and stay English.
-const ARCH_PRESETS = [
-  { id: 'single-leo', segments: ['Space Segment', 'Ground Segment', 'Launch Segment', 'Operations'] },
-  { id: 'constellation', segments: ['Space Segment', 'Ground Segment', 'Launch Segment', 'User Segment', 'Operations'] },
-  { id: 'lunar', segments: ['Space Segment', 'Ground Segment (DSN)', 'Launch Segment', 'Operations'] },
-  { id: 'hybrid', segments: ['Space Segment', 'Ground Sensors', 'Ground Station', 'Data Centre', 'Operations'] },
+// English text is the i18n key for the tree at display time. The tree itself is built by
+// the server (POST /studies/{id}/product-tree/default, services/product_tree.py ARCHITECTURES):
+// Mission → segments → systems (a Spacecraft gets the standard subsystems) — the ECSS levels.
+// Element names are stored data and stay English.
+const ARCH_PRESETS: Array<{ id: string; segments: Array<{ name: string; systems: string[]; qty?: number }> }> = [
+  { id: 'single-leo', segments: [
+    { name: 'Space Segment', systems: ['Spacecraft'] }, { name: 'Ground Segment', systems: ['Ground Station'] },
+    { name: 'Launch Segment', systems: [] }, { name: 'Operations', systems: [] }] },
+  { id: 'constellation', segments: [
+    { name: 'Space Segment', systems: ['Spacecraft'], qty: 4 }, { name: 'Ground Segment', systems: ['Ground Station'] },
+    { name: 'Launch Segment', systems: [] }, { name: 'User Segment', systems: [] }, { name: 'Operations', systems: [] }] },
+  { id: 'lunar', segments: [
+    { name: 'Space Segment', systems: ['Spacecraft'] }, { name: 'Ground Segment (DSN)', systems: ['DSN Ground Station'] },
+    { name: 'Launch Segment', systems: [] }, { name: 'Operations', systems: [] }] },
+  { id: 'hybrid', segments: [
+    { name: 'Space Segment', systems: ['Spacecraft'] },
+    { name: 'Ground Segment', systems: ['Ground Station', 'Ground Sensors', 'Data Centre'] },
+    { name: 'Operations', systems: [] }] },
   { id: 'blank', segments: [] },
 ]
+
+/** "Space Segment (Spacecraft) → Ground Segment (Ground Station) → …", translated. */
+function archSummary(arch: (typeof ARCH_PRESETS)[number], t: TFunction): string {
+  return arch.segments.map(sg => (sg.systems.length
+    ? `${t(sg.name)} (${sg.systems.map(x => t(x)).join(', ')}${sg.qty ? ` ×${sg.qty}` : ''})` : t(sg.name))).join(' → ')
+}
 
 // English text is the i18n key: architecture preset names (id → name), display only.
 const ARCH_PRESET_NAMES: Record<string, string> = {
@@ -202,34 +220,14 @@ export function MissionWizard() {
       const study = await studyRes.json()
       const studyId = study.id
 
-      // Create mission root element
-      const missionEl = await fetch(`${API}/elements/?study_id=${studyId}`, {
+      // The starting product tree (ECSS levels): Mission → segments → Spacecraft → standard
+      // subsystems, Ground Segment → ground station. Built by the server in one call.
+      const tree = await fetch(`${API}/studies/${studyId}/product-tree/default`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, element_type: 'mission', segment: 'space' }),
-      }).then(r => r.json())
-
-      // Create segments from selected architecture
-      const arch = ARCH_PRESETS.find(a => a.id === selectedArch)
-      if (arch) {
-        for (let i = 0; i < arch.segments.length; i++) {
-          const seg = arch.segments[i]
-          const segment = seg.toLowerCase().includes('ground') ? 'ground'
-            : seg.toLowerCase().includes('launch') ? 'launch'
-            : seg.toLowerCase().includes('operations') || seg.toLowerCase().includes('ops') ? 'operations'
-            : seg.toLowerCase().includes('user') ? 'user'
-            : 'space'
-          await fetch(`${API}/elements/?study_id=${studyId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: seg, element_type: 'segment', segment,
-              parent_id: missionEl.id,
-              diagram_x: 80 + (i % 4) * 200, diagram_y: 40 + Math.floor(i / 4) * 140,
-            }),
-          })
-        }
-      }
+        body: JSON.stringify({ architecture: selectedArch, mission_name: name, spacecraft_class: 'nano' }),
+      }).then(r => (r.ok ? r.json() : null))
+      const missionEl = { id: tree?.mission_id as string | undefined }
 
       // Create initial mission-level requirements from objectives
       for (const obj of objectives.filter(o => o.text)) {
@@ -340,9 +338,9 @@ export function MissionWizard() {
         setStudyId(newStudy.id)
         if (data.uiState?.breadcrumb) {
           const mapped = data.uiState.breadcrumb
-            .map((c: any) => ({ id: oldToNew.get(c.id) || c.id, name: c.name }))
+            .map((c: any) => ({ id: oldToNew.get(c.id) || c.id, name: c.name, type: c.type }))
             .filter((c: any) => c.id)
-          for (const crumb of mapped) { useUIStore.getState().drillInto(crumb.id, crumb.name) }
+          for (const crumb of mapped) { useUIStore.getState().drillInto(crumb.id, crumb.name, crumb.type) }
         }
         qc.invalidateQueries()
       } catch { void showAlert(i18n.t('Load failed')) }
@@ -631,7 +629,7 @@ export function MissionWizard() {
               <span className="w-600">{t(ARCH_PRESET_NAMES[arch.id])}</span>
               {arch.segments.length > 0 && (
                 <div className="t-12 c-2 mt-1">
-                  {t('Segments: {{list}}', { list: arch.segments.map(sg => t(sg)).join(' → ') })}
+                  {t('Segments: {{list}}', { list: archSummary(arch, t) })}
                 </div>
               )}
             </button>
@@ -642,7 +640,7 @@ export function MissionWizard() {
           <RecordDecision decision="D-1.4-ARCHITECTURE" capture="wizard:architecture" prefill={() => ({
             options: ARCH_PRESETS.map(a => ({
               name: t(ARCH_PRESET_NAMES[a.id]),
-              summary: a.segments.map(sg => t(sg)).join(' → '),
+              summary: archSummary(a, t),
               chosen: a.id === selectedArch || undefined,
             })),
             choice: t(ARCH_PRESET_NAMES[selectedArch]),

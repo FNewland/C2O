@@ -70,11 +70,11 @@ export function useSeesFirst() {
       const byId = new Map(els.map(e => [e.id, e]))
       const sys = els.find(e => e.element_type === 'system' && (e.segment || 'space') === 'space')
       if (!sys) return
-      const chain: { id: string; name: string }[] = []
+      const chain: { id: string; name: string; type?: string }[] = []
       let cur: any = sys
-      while (cur) { chain.unshift({ id: cur.id, name: cur.name }); cur = cur.parent_id ? byId.get(cur.parent_id) : null }
+      while (cur) { chain.unshift({ id: cur.id, name: cur.name, type: cur.element_type }); cur = cur.parent_id ? byId.get(cur.parent_id) : null }
       ui.drillUp(-1)
-      for (const c of chain) useUIStore.getState().drillInto(c.id, c.name)
+      for (const c of chain) useUIStore.getState().drillInto(c.id, c.name, c.type)
     }).catch(() => { /* stay where we are */ })
   }, [key, active, studyId])
 }

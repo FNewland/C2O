@@ -14,7 +14,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { irText } from './electricalApi'
-import { useUIStore, type ActivityPanel, type Level } from '../stores/uiStore'
+import { useUIStore, type ActivityPanel } from '../stores/uiStore'
 import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
@@ -343,7 +343,7 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
   const openFix = (fix: string) => {
     if (fix.startsWith('vv:')) { onOpenSection(fix.slice(3)); return }
     const ui = useUIStore.getState()
-    ui.goToLevel(Math.min(ui.breadcrumb.length, 3) as Level)
+    ui.drillUp(ui.breadcrumb.length - 1)   // leave V&V for the element in focus (its level)
     ui.setActivePanel(fix as ActivityPanel)
   }
 

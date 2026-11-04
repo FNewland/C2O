@@ -57,6 +57,8 @@ export interface Unit { id: string; name: string; role: string; subsystem: strin
 export interface StackPayload {
   study_id: string; applicable: boolean; form_factor: string | null; version: number; can_approve: boolean
   owner_seat: string; owner_label: Bi; frame: { stack: string; design: string }; reason?: Bi
+  /** The spacecraft this layout is for (one CubeSat per layout: the first spacecraft of the space segment). */
+  spacecraft?: { id: string; name: string; count: number } | null
   envelope?: Envelope; units: Unit[]; approved: Evaluated | null; proposal: Evaluated | null
 }
 

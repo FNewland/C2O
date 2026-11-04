@@ -16,6 +16,7 @@ import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
 import { Button, Disclosure, MarginBar, Note, StatusBadge } from '../components/ui'
 import { displayElementName } from '../workbench/BlocksPanel'
+import { isSpaceSegment, segmentOf } from '../workbench/blockLevels'
 import { useInterfaces, useProposalCheck } from '../workbench/interfaceApi'
 import * as OV from '../viz/overview.js'
 import * as PF from '../viz/powerflow.js'
@@ -80,17 +81,33 @@ export function SpacecraftView() {
   })
   const { interfaces } = useInterfaces(studyId)
 
-  // Which spacecraft: the system the user is in, else the first system in a space segment.
+  // Which spacecraft: the one the user is in, else one under the segment in focus, else the
+  // first spacecraft of the space segment. Spacecraft are the level-2 systems of a space
+  // segment (ECSS product tree, workbench/blockLevels.ts); ground stations are not.
   const live = useMemo(() => elements.filter(e => !e.deleted_at), [elements])
-  const systems = useMemo(() => live.filter(e => e.element_type === 'system'), [live])
+  const systems = useMemo(() => {
+    const all = live.filter(e => e.element_type === 'system')
+    const scs = all.filter(s => isSpaceSegment(live as any, s.parent_id))
+    // legacy trees (no space segment above the system): any system of the space segment kind
+    return scs.length ? scs : all.filter(s => segmentOf(live as any, s.id) === 'space')
+  }, [live])
   const sc = useMemo<El | null>(() => {
     const byId = new Map(live.map(e => [e.id, e]))
+    const ids = new Set(systems.map(s => s.id))
     let cur = focusElementId ? byId.get(focusElementId) : undefined
-    while (cur) { if (cur.element_type === 'system') return cur; cur = cur.parent_id ? byId.get(cur.parent_id) : undefined }
+    while (cur) { if (ids.has(cur.id)) return cur; cur = cur.parent_id ? byId.get(cur.parent_id) : undefined }
     const under = focusElementId ? systems.find(s => s.parent_id === focusElementId) : undefined
-    const space = systems.find(s => { const p = s.parent_id ? byId.get(s.parent_id) : undefined; return p && ((p as any).segment === 'space' || /space/i.test(p.name)) })
-    return under ?? space ?? systems[0] ?? null
+    return under ?? systems[0] ?? null
   }, [live, systems, focusElementId])
+  /** Open another spacecraft (its path in the breadcrumb), so every tab shows it. */
+  const openSpacecraft = (id: string) => {
+    const byId = new Map(live.map(e => [e.id, e]))
+    const chain: El[] = []
+    let cur = byId.get(id)
+    while (cur) { chain.unshift(cur); cur = cur.parent_id ? byId.get(cur.parent_id) : undefined }
+    drillUp(-1)
+    for (const c of chain) drillInto(c.id, displayElementName(c.name, t), c.element_type)
+  }
 
   const subs = useMemo(() => (sc ? subsystemsOf(live, sc.id) : []), [live, sc])
   const scIds = useMemo(() => new Set(sc ? [sc.id, ...descendants(live, sc.id).map(e => e.id)] : []), [live, sc])
@@ -144,8 +161,8 @@ export function SpacecraftView() {
     if (!el || !sc) return
     const at = breadcrumb.findIndex(b => b.id === sc.id)
     if (at >= 0) drillUp(at)
-    else if (focusElementId !== sc.id) drillInto(sc.id, sc.name)
-    drillInto(el.id, displayElementName(el.name, t))
+    else if (focusElementId !== sc.id) drillInto(sc.id, sc.name, sc.element_type)
+    drillInto(el.id, displayElementName(el.name, t), el.element_type)
     setActivePanel('blocks')
   }
   const navRef = useRef(navigate)
@@ -168,7 +185,7 @@ export function SpacecraftView() {
   if (!sc) {
     return (
       <div className="c2o-pane">
-        <p className="t-13 c-2 m-0 measure">{t('No spacecraft in this design yet. Add a system under the space segment, or use Quick Start on the space segment to create one with its subsystems.')}</p>
+        <p className="t-13 c-2 m-0 measure">{t('No spacecraft in this design yet. Open the space segment and use "+ Add Spacecraft": a spacecraft is the level below the segment and comes with the standard subsystems.')}</p>
       </div>
     )
   }
@@ -200,7 +217,15 @@ export function SpacecraftView() {
         </dl>
         <span className="c2o-scv__src t-12 c-3">{t('Design values, not telemetry')}</span>
       </header>
-      {systems.length > 1 && <p className="t-12 c-3 m-0 mb-2">{t('Showing {{name}}. Open another spacecraft in the breadcrumb to draw it instead.', { name: displayElementName(sc.name, t) })}</p>}
+      {systems.length > 1 && (
+        <label className="row gap-2 ai-c t-12 c-2 mb-2">
+          <span>{t('Spacecraft shown')}</span>
+          <select className="c2o-select w-auto" value={sc.id} onChange={e => openSpacecraft(e.target.value)}>
+            {systems.map(s => <option key={s.id} value={s.id}>{displayElementName(s.name, t)}</option>)}
+          </select>
+          <span className="c-3">{t('{{count}} spacecraft in the space segment', { count: systems.length })}</span>
+        </label>
+      )}
 
       {/* 1. Synoptic + budget beside it */}
       <section className="c2o-scv__row" aria-labelledby="scv-ov">
@@ -276,7 +301,7 @@ export function SpacecraftView() {
       <section className="c2o-scv__row c2o-scv__row--one" aria-labelledby="scv-stack">
         <div className="c2o-scv__pic">
           <h4 id="scv-stack" className="c2o-scv__h">{t('Stack and configuration')}</h4>
-          <StackBuilder />
+          <StackBuilder viewing={{ id: sc.id, name: displayElementName(sc.name, t) }} />
         </div>
       </section>
 

@@ -18,17 +18,20 @@ import { subsystemStyle } from '../theme/tokens'
 import { askText } from '../components/ui/Dialog'
 import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge } from '../components/ui'
 
-import { placement, showQuickStart, structuralLevel } from './blockLevels'
+import { canAddSpacecraft, placement, segmentOf, showQuickStart, structuralLevel } from './blockLevels'
 
 const API = '/api'
 
 // Option values are stored enums; only the labels are translated (display time).
-const elementTypesByLevel = (t: TFunction): Record<Level, Array<{ value: string; label: string }>> => ({
+// One type per level: the next level of the ECSS product tree (blockLevels.ts). Under a
+// space segment a system is a spacecraft; under a ground segment a station or centre.
+const elementTypesByLevel = (t: TFunction, segment?: string | null): Record<Level, Array<{ value: string; label: string }>> => ({
   0: [
     { value: 'segment', label: t('Segment') },
   ],
   1: [
-    { value: 'system', label: t('System') },
+    { value: 'system', label: segment === 'space' ? t('Spacecraft (system)')
+      : segment === 'ground' ? t('Ground station / facility (system)') : t('System / element') },
   ],
   2: [
     { value: 'subsystem', label: t('Subsystem') },
@@ -70,7 +73,7 @@ export const SEED_ELEMENT_NAMES = [
   'Mission', 'Space Segment', 'Ground Segment', 'Launch Segment', 'User Segment', 'Operations',
   'Air Segment', 'Ground Control', 'Communications', 'Balloon Platform', 'Ground Station', 'Launch & Recovery',
   'Sensor Network', 'Data Centre', 'Ground Sensors', 'Data Fusion Centre',
-  'Spacecraft', 'Primary GS', 'Backup GS', 'Arctic GS', 'Mid-Lat GS', 'Equatorial GS',
+  'Spacecraft', 'DSN Ground Station', 'Ground Segment (DSN)', 'Communications', 'On-Board Computer', 'Primary GS', 'Backup GS', 'Arctic GS', 'Mid-Lat GS', 'Equatorial GS',
   'Mission Control Centre', 'Payload Data Centre', 'Flight Dynamics',
   'Payload', 'Thermal', 'Structure', 'Propulsion',
   'Solar Array', 'Battery Pack', 'Power Distribution', 'Power Regulation',
@@ -236,7 +239,8 @@ export function BlocksPanel() {
     qc.invalidateQueries({ queryKey: ['elements', studyId] })
   }, [studyId, qc, allElements])
 
-  const typeOptions = elementTypesByLevel(t)[blockLevel] || []
+  const focusSegment = segmentOf(allElements, focusElementId)
+  const typeOptions = elementTypesByLevel(t, focusSegment)[blockLevel] || []
   const focusName = allElements.find((e: any) => e.id === focusElementId)?.name
 
   const setQuantity = async (el: any) => {
@@ -348,10 +352,16 @@ export function BlocksPanel() {
           </span>
         </form>
       ) : (
-        <Button variant="primary" size="sm" className="mt-2"
-          onClick={() => { setNewType(typeOptions[0]?.value || 'segment'); setShowAdd(true) }}>
-          {t('+ Add Element')}
-        </Button>
+        <span className="row gap-2 wrap mt-2">
+          {canAddSpacecraft(allElements, focusElementId) && (
+            <AddSpacecraftButton studyId={studyId} segmentId={focusElementId!}
+              count={children.filter((c: any) => c.element_type === 'system' && !c.deleted_at).length} />
+          )}
+          <Button variant={canAddSpacecraft(allElements, focusElementId) ? 'default' : 'primary'} size="sm"
+            onClick={() => { setNewType(typeOptions[0]?.value || 'segment'); setShowAdd(true) }}>
+            {t('+ Add Element')}
+          </Button>
+        </span>
       )}
 
       {/* Auto-populate subsystem tree from KB */}
@@ -375,7 +385,7 @@ export function BlocksPanel() {
       )}
 
       {/* Design Assist */}
-      <DesignAssist studyId={studyId} parentId={place.parentId} blockLevel={blockLevel} />
+      <DesignAssist studyId={studyId} parentId={place.parentId} blockLevel={blockLevel} segment={focusSegment} />
     </div>
   )
 }
@@ -383,8 +393,11 @@ export function BlocksPanel() {
 // ─── Design Assist: presets + suggested requirements ───
 
 interface PresetChild { name: string; type: string; domain?: string; segment?: string; quantity?: number; performance?: Record<string, any> }
+/** Level-1 presets name the segment kind they fill (spacecraft under a space segment, stations
+ *  under a ground segment): the right child types at each level (blockLevels.ts). */
+interface Preset { id: string; name: string; description: string; children: PresetChild[]; segments?: string[] }
 // Preset name/description are display-only (translated); children names are stored as element names (English).
-const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: string; description: string; children: PresetChild[] }>> => ({
+const presetsByLevel = (t: TFunction): Record<number, Preset[]> => ({
   0: [
     {
       id: 'cubesat-mission', name: t('CubeSat LEO Mission'),
@@ -451,28 +464,28 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
   ],
   1: [
     {
-      id: 'single-spacecraft', name: t('Single Spacecraft'),
+      id: 'single-spacecraft', name: t('Single Spacecraft'), segments: ['space'],
       description: t('1 spacecraft for the space segment'),
       children: [
-        { name: 'Spacecraft', type: 'system', domain: 'payload', quantity: 1 },
+        { name: 'Spacecraft', type: 'system', quantity: 1 },
       ],
     },
     {
-      id: 'constellation-4', name: t('Constellation (4 spacecraft)'),
+      id: 'constellation-4', name: t('Constellation (4 spacecraft)'), segments: ['space'],
       description: t('4 identical spacecraft in one orbital plane'),
       children: [
-        { name: 'Spacecraft', type: 'system', domain: 'payload', quantity: 4, performance: { constellation: true, orbital_planes: 1, sats_per_plane: 4 } },
+        { name: 'Spacecraft', type: 'system', quantity: 4, performance: { constellation: true, orbital_planes: 1, sats_per_plane: 4 } },
       ],
     },
     {
-      id: 'constellation-12', name: t('Constellation (3×4 = 12 spacecraft)'),
+      id: 'constellation-12', name: t('Constellation (3×4 = 12 spacecraft)'), segments: ['space'],
       description: t('12 spacecraft across 3 orbital planes'),
       children: [
-        { name: 'Spacecraft', type: 'system', domain: 'payload', quantity: 12, performance: { constellation: true, orbital_planes: 3, sats_per_plane: 4 } },
+        { name: 'Spacecraft', type: 'system', quantity: 12, performance: { constellation: true, orbital_planes: 3, sats_per_plane: 4 } },
       ],
     },
     {
-      id: 'ground-network-2', name: t('2 Ground Stations'),
+      id: 'ground-network-2', name: t('2 Ground Stations'), segments: ['ground', 'operations', 'user'],
       description: t('Primary + backup ground stations'),
       children: [
         { name: 'Primary GS', type: 'system', domain: 'ground', quantity: 1, performance: { latitude: 78.2, longitude: 15.4, location: 'Svalbard' } },
@@ -480,7 +493,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
       ],
     },
     {
-      id: 'ground-network-3', name: t('3 Ground Stations'),
+      id: 'ground-network-3', name: t('3 Ground Stations'), segments: ['ground', 'operations', 'user'],
       description: t('Arctic + mid-lat + equatorial coverage'),
       children: [
         { name: 'Arctic GS', type: 'system', domain: 'ground', quantity: 1, performance: { latitude: 78.2, longitude: 15.4, location: 'Svalbard' } },
@@ -489,7 +502,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
       ],
     },
     {
-      id: 'ops-centre', name: t('Operations Centre'),
+      id: 'ops-centre', name: t('Operations Centre'), segments: ['ground', 'operations', 'user'],
       description: t('Mission control + payload processing'),
       children: [
         { name: 'Mission Control Centre', type: 'system', domain: 'ground', quantity: 1 },
@@ -500,7 +513,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
   ],
   2: [
     {
-      id: 'standard-spacecraft-bus', name: t('Standard Spacecraft Bus'),
+      id: 'standard-spacecraft-bus', name: t('Standard Spacecraft Bus'), segments: ['space'],
       description: t('All subsystems for a spacecraft: Payload, EPS, AOCS, TTC, OBC, Thermal, Structure, Propulsion'),
       children: [
         { name: 'Payload', type: 'subsystem', domain: 'payload' },
@@ -514,7 +527,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
       ],
     },
     {
-      id: 'eps-subsystems', name: t('EPS Subsystems'),
+      id: 'eps-subsystems', name: t('EPS Subsystems'), segments: ['space'],
       description: t('Solar Array, Battery, Power Distribution, Regulation'),
       children: [
         { name: 'Solar Array', type: 'subsystem', domain: 'power' },
@@ -524,7 +537,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
       ],
     },
     {
-      id: 'aocs-subsystems', name: t('AOCS Subsystems'),
+      id: 'aocs-subsystems', name: t('AOCS Subsystems'), segments: ['space'],
       description: t('Sensors, Actuators, ADCS Computer'),
       children: [
         { name: 'Attitude Sensors', type: 'subsystem', domain: 'aocs' },
@@ -534,7 +547,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
       ],
     },
     {
-      id: 'ttc-subsystems', name: t('TTC Subsystems'),
+      id: 'ttc-subsystems', name: t('TTC Subsystems'), segments: ['space'],
       description: t('Transponder, Antenna, Diplexer'),
       children: [
         { name: 'Transponder', type: 'subsystem', domain: 'ttc' },
@@ -543,7 +556,7 @@ const presetsByLevel = (t: TFunction): Record<number, Array<{ id: string; name: 
       ],
     },
     {
-      id: 'ground-station-subsystems', name: t('Ground Station Subsystems'),
+      id: 'ground-station-subsystems', name: t('Ground Station Subsystems'), segments: ['ground', 'operations', 'user'],
       description: t('Antenna, RF chain, Modem, Network'),
       children: [
         { name: 'GS Antenna', type: 'subsystem', domain: 'ground' },
@@ -676,13 +689,15 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
 
 // Suggested requirements moved to RequirementsPanel (suggestedReqs.ts)
 
-function DesignAssist({ studyId, parentId: placeParent, blockLevel }: { studyId: string | null; parentId: string | null; blockLevel: Level }) {
+function DesignAssist({ studyId, parentId: placeParent, blockLevel, segment }: {
+  studyId: string | null; parentId: string | null; blockLevel: Level; segment?: string | null
+}) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [applying, setApplying] = useState(false)
   const qc = useQueryClient()
 
-  const presets = presetsByLevel(t)[blockLevel] || []
+  const presets = (presetsByLevel(t)[blockLevel] || []).filter(p => !p.segments || !segment || p.segments.includes(segment))
 
   if (presets.length === 0) return null
 
@@ -717,7 +732,7 @@ function DesignAssist({ studyId, parentId: placeParent, blockLevel }: { studyId:
             name: child.name,
             element_type: child.type,
             parent_id: parentId,
-            segment: child.segment || 'space',
+            segment: child.segment || segment || 'space',
             subsystem_domain: child.domain || undefined,
             quantity: child.quantity || 1,
             performance: child.performance || undefined,
@@ -753,6 +768,47 @@ function DesignAssist({ studyId, parentId: placeParent, blockLevel }: { studyId:
 }
 
 
+// ─── Add Spacecraft: another level-2 element under the space segment ───
+
+function AddSpacecraftButton({ studyId, segmentId, count }: { studyId: string | null; segmentId: string; count: number }) {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const add = async () => {
+    if (!studyId) return
+    setBusy(true)
+    setError(null)
+    try {
+      let spacecraftClass: string | undefined
+      try {
+        const st = await fetch(`${API}/studies/${studyId}`).then(r => (r.ok ? r.json() : null))
+        spacecraftClass = st?.requirements?.spacecraft_class ?? undefined
+      } catch { /* server default */ }
+      const res = await fetch(`${API}/studies/${studyId}/spacecraft`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ segment_id: segmentId, populate: true, ...(spacecraftClass ? { spacecraft_class: spacecraftClass } : {}) }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      qc.invalidateQueries({ queryKey: ['elements', studyId] })
+      qc.invalidateQueries({ queryKey: ['interfaces', studyId] })
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <>
+      <Button variant="primary" size="sm" onClick={add} busy={busy}
+        title={t('A spacecraft is a system (level 2) of the space segment; it gets the standard subsystems')}>
+        {count === 0 ? t('+ Add Spacecraft') : t('+ Add another Spacecraft')}
+      </Button>
+      {error && <StatusBadge status="alarm">{t('Error: {{message}}', { message: error })}</StatusBadge>}
+    </>
+  )
+}
+
 // ─── Populate Button: auto-create subsystems + equipment from KB ───
 
 function PopulateButton({ studyId, focusElementId, show }: {
@@ -763,7 +819,12 @@ function PopulateButton({ studyId, focusElementId, show }: {
   const [result, setResult] = useState<string | null>(null)
   const qc = useQueryClient()
 
-  // Shown on a segment with no system yet, whatever the breadcrumb depth (blockLevels.ts)
+  // Shown on a segment with no system yet (creates its spacecraft or station) and on a
+  // system with no subsystem yet (gives it the standard subsystems) — blockLevels.ts
+  const all: any[] = qc.getQueryData(['elements', studyId]) || []
+  const focus = all.find((e: any) => e.id === focusElementId)
+  const onSystem = focus?.element_type === 'system'
+  const seg = segmentOf(all, focusElementId)
   if (!show) return null
 
   const populate = async () => {
@@ -796,7 +857,11 @@ function PopulateButton({ studyId, focusElementId, show }: {
   return (
     <Panel boxed className="mt-3" title={t('Quick Start')}>
       <p className="t-13 c-2 m-0 mb-2 measure">
-        {t('Auto-create standard subsystems (EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.')}
+        {onSystem
+          ? t('Give this spacecraft the standard subsystems (Payload, EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) with recommended CubeSat equipment from the component catalogue.')
+          : seg === 'space'
+            ? t('Create a Spacecraft in this segment with the standard subsystems (Payload, EPS, AOCS, Comms, OBC, Thermal, Structure, Propulsion) and recommended CubeSat equipment from the component catalogue.')
+            : t('Create a Ground Station in this segment with its standard subsystems and recommended equipment from the component catalogue.')}
       </p>
       <Button variant="primary" size="sm" onClick={populate} busy={loading} active={loading}>
         {loading ? t('Populating...') : t('Populate Subsystems + Equipment')}

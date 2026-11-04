@@ -293,9 +293,10 @@ def seed_elements_from_design_result(
     ground_id = _el("Ground Segment", "segment", mission_id, segment="ground")
     ops_id = _el("Operations", "segment", mission_id, segment="operations")
 
-    # Space segment systems
-    platform_id = _el("Platform", "system", space_id)
-    payload_id = _el("Payload", "system", space_id, domain="payload")
+    # Space segment → the spacecraft (level 2); platform subsystems and the payload are
+    # level-3 subsystems of it (ECSS product tree, services/product_tree.py)
+    platform_id = _el("Spacecraft", "system", space_id)
+    payload_id = _el("Payload", "subsystem", platform_id, domain="payload")
 
     # Subsystems under platform
     get = lambda k: result_params.get(k, {}).get("value") if isinstance(result_params.get(k), dict) else result_params.get(k)

@@ -78,6 +78,16 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Element cache init failed (continuing with empty cache): %s", e)
 
+    # Product tree (ECSS levels): insert a Spacecraft above subsystems that hang directly off
+    # a space segment (routers/product_tree.py; idempotent, runs every start-up)
+    try:
+        from .routers.product_tree import migrate_all
+        res = await migrate_all()
+        if res["moved"]:
+            logger.info("Product tree migration: %s", res)
+    except Exception as e:
+        logger.warning("Product tree migration failed (continuing): %s", e)
+
     # Load persisted requirements into the write-through cache (SCDF-160 N0)
     try:
         from .routers.requirements import init_requirement_cache
@@ -216,6 +226,9 @@ app.include_router(rules_router.router, prefix="/api", tags=["Design rules"])
 # Mode model, budgets per mode and the proposal rules (Nov 2026, design rules phase 1)
 from .routers import modes as modes_router  # noqa: E402
 app.include_router(modes_router.router, prefix="/api", tags=["Modes & budgets"])
+# Product tree levels, default trees, spacecraft, migration (ECSS-M-ST-10C)
+from .routers import product_tree as product_tree_router  # noqa: E402
+app.include_router(product_tree_router.router, prefix="/api", tags=["Product tree"])
 # CubeSat stack builder (design rules §4, D9)
 app.include_router(stack_router.router, prefix="/api", tags=["Stack builder"])
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)

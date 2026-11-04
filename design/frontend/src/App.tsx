@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tan
 import { useUIStore, type Level } from './stores/uiStore'
 import { LevelWorkbench } from './workbench/LevelWorkbench'
 import { MissionWizard } from './workbench/MissionWizard'
+import { crumbIndexForLevel, workbenchLevel } from './workbench/blockLevels'
 import { ReadinessChecklist } from './workbench/ReadinessChecklist'
 import { EscalationBanner } from './workbench/EscalationBanner'
 import { ExportPanel } from './workbench/ExportPanel'
@@ -39,14 +40,15 @@ const queryClient = new QueryClient({
 
 const API = '/api'
 
-// ECSS product-tree names (ECSS-M-ST-10C): Mission → Segment → System/Element →
-// Subsystem → Equipment. A tab is named after what it shows: the element type
-// of the blocks at that level, falling back to the next name down the tree.
+// ECSS product-tree names (ECSS-M-ST-10C; workbench/blockLevels.ts): Mission → Segment →
+// System/Element → Subsystem → Equipment. A level tab is named after the element type the
+// workbench is IN at that level (the level of the focus, not the breadcrumb depth: a wizard
+// study has a mission root above the segments).
 // English text is the i18n key; translate at render time with t().
 const PRODUCT_TREE = ['Mission', 'Segment', 'System / element', 'Subsystem', 'Equipment'] as const
-const TYPE_TO_TREE: Record<string, number> = { mission: 0, segment: 1, system: 2, subsystem: 3, component: 4, equipment: 4 }
 
-function useLevelNames(): string[] {
+/** Keeps crumbs saved by an older session in step with the element types (level tabs). */
+function useCrumbTypes(): void {
   const studyId = useUIStore(s => s.studyId)
   const breadcrumb = useUIStore(s => s.breadcrumb)
   const { data: elements = [] } = useQuery<any[]>({
@@ -54,25 +56,12 @@ function useLevelNames(): string[] {
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
     enabled: !!studyId,
   })
-  const names: string[] = []
-  let prev = -1
-  for (let level = 0; level < 4; level++) {
-    let idx = -1
-    if (level <= breadcrumb.length) {
-      const parent = level === 0 ? null : breadcrumb[level - 1].id
-      const shown = Array.isArray(elements) ? elements.filter((el: any) => (parent ? el.parent_id === parent : !el.parent_id)) : []
-      const counts = new Map<number, number>()
-      for (const el of shown) {
-        const k = TYPE_TO_TREE[el.element_type]
-        if (k != null) counts.set(k, (counts.get(k) || 0) + 1)
-      }
-      if (counts.size) idx = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0]
-    }
-    if (idx < 0) idx = Math.min(Math.max(prev + 1, level), PRODUCT_TREE.length - 1)
-    names.push(PRODUCT_TREE[idx])
-    prev = idx
-  }
-  return names
+  useEffect(() => {
+    if (!Array.isArray(elements) || !breadcrumb.some(c => !c.type)) return
+    const types: Record<string, string> = {}
+    for (const el of elements) if (el?.id && el.element_type) types[el.id] = el.element_type
+    useUIStore.getState().annotateCrumbs(types)
+  }, [elements, breadcrumb])
 }
 
 // ─── Level Bar ───
@@ -82,15 +71,17 @@ function LevelBar() {
   const currentLevel = useUIStore(s => s.currentLevel)
   const breadcrumb = useUIStore(s => s.breadcrumb)
   const goToLevel = useUIStore(s => s.goToLevel)
-  const names = useLevelNames()
+  useCrumbTypes()
+  const focusLevel = workbenchLevel(breadcrumb)
 
   return (
     <div role="tablist" aria-label={t('Product tree level')} className="c2o-tabs c2o-appbar__levels">
       {([0, 1, 2, 3, 4] as Level[]).map(level => {
         const active = currentLevel === level
-        const reachable = level <= breadcrumb.length || level === 4  // V&V always accessible
-        const label = level === 4 ? t('V&V') : t(names[level])
-        const context = level > 0 && level < 4 && level <= breadcrumb.length ? breadcrumb[level - 1].name : ''
+        const reachable = level <= focusLevel || level === 4  // V&V always accessible
+        const label = level === 4 ? t('V&V') : t(PRODUCT_TREE[level])
+        const at = level > 0 && level < 4 && level <= focusLevel ? breadcrumb[crumbIndexForLevel(breadcrumb, level)] : undefined
+        const context = at && (workbenchLevel([at]) === level) ? at.name : ''
         const reason = reachable ? undefined
           : t('Double-click a block at level {{n}} to open this level', { n: level - 1 })
         return (
@@ -441,16 +432,16 @@ function StatusBar() {
               // Restore UI state if present
               if (data.uiState && data.uiState.breadcrumb) {
                 const mappedBreadcrumb = data.uiState.breadcrumb
-                  .map((crumb: { id: string; name: string }) => {
+                  .map((crumb: { id: string; name: string; type?: string | null }) => {
                     const newId = oldToNew.get(crumb.id)
-                    return newId ? { id: newId, name: crumb.name } : null
+                    return newId ? { id: newId, name: crumb.name, type: crumb.type } : null
                   })
-                  .filter(Boolean) as Array<{ id: string; name: string }>
+                  .filter(Boolean) as Array<{ id: string; name: string; type?: string | null }>
 
                 if (mappedBreadcrumb.length > 0) {
                   // Replay drill-down from root to restore breadcrumb
                   for (const crumb of mappedBreadcrumb) {
-                    useUIStore.getState().drillInto(crumb.id, crumb.name)
+                    useUIStore.getState().drillInto(crumb.id, crumb.name, crumb.type)
                   }
                 }
               }
