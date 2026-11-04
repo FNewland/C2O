@@ -413,8 +413,12 @@ def generate_ird(
     interfaces: list[dict[str, Any]],
     phase_id: str = "phase_b",
     elements: list[dict[str, Any]] | None = None,
+    interface_requirements: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Interface Requirements Document — ECSS-E-ST-10-24C.
+
+    ``interface_requirements``: the study's requirements of level ``interface`` (design rules
+    IF-01); each interface section lists the requirements allocated to it.
 
     Accepts actual interface data from the element tree. The ``interfaces``
     list should contain dicts with keys matching the ElementInterface model:
@@ -444,6 +448,12 @@ def generate_ird(
 
     # ---- Interface statistics by type ----
     type_counts: dict[str, int] = {}
+
+    irs_by_if: dict[str, list[dict]] = {}
+    for r in interface_requirements or []:
+        iid = (r.get("ir_json") or {}).get("interface_id")
+        if iid and r.get("status") != "retired":
+            irs_by_if.setdefault(iid, []).append(r)
 
     for i, ifc in enumerate(interfaces[:40]):
         # Resolve element IDs — support multiple key naming conventions
@@ -493,6 +503,8 @@ def generate_ird(
             content_parts.append(f"**From element type**: {from_elem['element_type']} ({from_domain})")
         if to_elem.get("element_type"):
             content_parts.append(f"**To element type**: {to_elem['element_type']} ({to_domain})")
+        for r in sorted(irs_by_if.get(ifc.get("id", ""), []), key=lambda x: x.get("code") or ""):
+            content_parts.append(f"**{r.get('code')}** ({r.get('status')}, {r.get('verification_method') or 'TBD'}): {r.get('text')}")
 
         ifc_subsections.append({
             "number": f"2.{i + 1}",
@@ -558,6 +570,7 @@ def generate_ird(
             },
         ],
         "total_interfaces": len(interfaces),
+        "total_interface_requirements": sum(len(v) for v in irs_by_if.values()),
         "unique_subsystem_pairs": len(subsystem_pairs),
         "interfaces_by_type": type_counts,
         "total_elements": len(elem_list),

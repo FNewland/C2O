@@ -1,0 +1,33 @@
+/* Electrical and Data tabs, interface ↔ requirement links. Tokens only. */
+
+.c2o-el__sec { padding-bottom: var(--sp-3); }
+.c2o-el__sec + .c2o-el__sec { border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+.c2o-el .c2o-links__h { flex-wrap: wrap; }
+
+.c2o-el__acts { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1); }
+.c2o-el__stale { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1); }
+.c2o-el__in { text-align: right; }
+.c2o-el__in.is-invalid { border-color: var(--status-alarm); box-shadow: inset 0 0 0 1px var(--status-alarm); }
+
+.c2o-el .c2o-table tr.is-suggested td { background: var(--surface-1); }
+.c2o-el .c2o-table tr.is-rejected td { color: var(--text-3); }
+.c2o-el .c2o-table tr.is-rejected .w-500 { text-decoration: line-through; text-decoration-color: var(--line-strong); }
+.c2o-el .c2o-table tr.is-alarm td:first-child { box-shadow: inset 3px 0 0 var(--status-alarm); }
+.c2o-el .c2o-table select { min-width: 84px; max-width: 150px; }
+.c2o-el .c2o-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* Interface ↔ requirement links */
+.c2o-irlinks {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2);
+  padding: var(--sp-1) var(--sp-2) var(--sp-2) 28px;
+}
+.c2o-irlinks--inline { display: inline-flex; padding: 0 0 0 var(--sp-2); vertical-align: middle; }
+.c2o-irchip {
+  display: inline-flex; align-items: center; padding: 0 4px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface-0); color: inherit; font: inherit; cursor: pointer; line-height: 20px;
+}
+.c2o-irchip:hover { border-color: var(--line-strong); background: var(--surface-1); }
+.c2o-irchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.c2o-irlinks__ag { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin-left: auto; }
+.c2o-irlinks__side { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
+.c2o-irlinks__side input { accent-color: var(--accent); }

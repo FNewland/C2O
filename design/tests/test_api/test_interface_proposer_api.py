@@ -355,26 +355,36 @@ async def test_readiness_interfaces_and_suggestions(client, study_obj, study):
     assert items["suggested_reviewed"]["ok"] is True
 
 
-async def test_pdr_gate_and_consistency_use_interfaces(client, study_obj, study):
+async def test_pdr_gate_and_consistency_use_interfaces(client, study_obj, study, monkeypatch):
     from spacecdf_server.routers.elements import _elements, _interfaces
+    from spacecdf_server.routers.requirements import _requirements
     from spacecdf_server.services.consistency_engine import run_consistency_check
     from spacecdf_server.services.gate_evaluator import evaluate_gate
     from spacecdf_server.services.readiness import build_context, interface_coverage
 
+    monkeypatch.setenv("SPACECDF_AUTO_IRD", "1")   # accepted links get interface requirements
     _, _, body = await _populated(client, study, include_equipment=False)
     els = [e for e in _elements.values() if e["study_id"] == study]
 
     def gate():
         ifs = [i for i in _interfaces.values() if i["study_id"] == study and not i.get("deleted_at")]
-        res = evaluate_gate("PDR", elements=els, interfaces=ifs)
+        reqs = [r for r in _requirements.values() if r["study_id"] == study]
+        res = evaluate_gate("PDR", elements=els, interfaces=ifs, requirements=reqs)
         return next(c for c in res["criteria"] if c["id"] == "PDR-EC-02")
 
     c = gate()
     assert c["status"] == "fail" and c["evidence_params"]["suggested"] > 0
     for i in await _ifaces(client, study, status="suggested"):
         await client.patch(f"/api/interfaces/{i['id']}", json={"status": "accepted"})
+    # F5: links alone no longer pass; the criterion asks for approved, agreed interface requirements
     c = gate()
-    assert c["status"] == "pass" and c["evidence_key"].startswith("All {{required}}")
+    assert c["status"] == "fail" and c["evidence_key"].startswith("{{complete}}/{{total}}")
+    for r in (await client.get(f"/api/studies/{study}/interface-requirements")).json()["requirements"]:
+        await client.patch(f"/api/requirements/{r['id']}", json={"status": "approved"})
+    for i in await _ifaces(client, study, status="accepted"):
+        await client.post(f"/api/studies/{study}/interfaces/{i['id']}/agreement", json={"side": "both"})
+    c = gate()
+    assert c["status"] == "pass" and c["evidence_key"].startswith("All {{total}}")
 
     obc = body["subsystem_ids"]["obc"]
     for i in list(_interfaces.values()):

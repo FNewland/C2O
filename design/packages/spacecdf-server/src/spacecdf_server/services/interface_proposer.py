@@ -586,19 +586,39 @@ def _bi(en: str, fr: str) -> dict[str, str]:
     return {"en": en, "fr": fr}
 
 
+def kb_profile(ctx: Context) -> dict:
+    """Defaults the selected KB parts imply (``services/electrical_kb.kb_design_profile``):
+    an 8S battery gives a 28 V unregulated bus, CAN parts give CAN, an S-band
+    transceiver gives S-band — before the spacecraft-class tables are used."""
+    prof = getattr(ctx, "_kb_profile", None)
+    if prof is None:
+        from .electrical_kb import kb_design_profile
+        prof = kb_design_profile(list(ctx.units.values()))
+        ctx._kb_profile = prof  # type: ignore[attr-defined]
+    return prof
+
+
 def _class_default(ctx: Context, table: str) -> Any:
+    prof = kb_profile(ctx)
+    if table in prof:
+        return prof[table]
     tbl = ctx.defaults[table]
     return tbl.get(ctx.spacecraft_class, next(iter(tbl.values())))
 
 
+def _with_unregulated_bus(ctx: Context, rails: list[float]) -> list[float]:
+    hv = kb_profile(ctx).get("unregulated_bus_v")
+    return rails + [hv] if hv and hv not in rails else rails
+
+
 def _eps_rails(ctx: Context, provider: Unit) -> list[float]:
     if provider.facts.get("rails") and provider.role == "eps":
-        return list(provider.facts["rails"])
+        return _with_unregulated_bus(ctx, list(provider.facts["rails"]))
     # a subsystem provider: look for an EPS unit inside it
     for u in ctx.units.values():
         if u.role == "eps" and provider.id in {a["id"] for a in ctx.ancestors(u.id)} and u.facts.get("rails"):
-            return list(u.facts["rails"])
-    return [float(v) for v in _class_default(ctx, "rails_by_class")]
+            return _with_unregulated_bus(ctx, list(u.facts["rails"]))
+    return _with_unregulated_bus(ctx, [float(v) for v in _class_default(ctx, "rails_by_class")])
 
 
 def _protocols_of(ctx: Context, u: Unit) -> list[str]:
@@ -615,11 +635,12 @@ def _protocols_of(ctx: Context, u: Unit) -> list[str]:
 
 def _band_of(ctx: Context, u: Unit) -> str | None:
     from .equipment_logic import _get_band
+    from .electrical_kb import kb_band
     if u.level == "component":
-        return _get_band(u.merged())
+        return kb_band(u.kb) or _get_band(u.merged())
     for c in ctx.units.values():
         if c.role == "transceiver" and u.id in {a["id"] for a in ctx.ancestors(c.id)}:
-            b = _get_band(c.merged())
+            b = kb_band(c.kb) or _get_band(c.merged())
             if b:
                 return b
     return None
@@ -633,6 +654,9 @@ def _refine(ctx: Context, rule: dict, f: Unit, t: Unit) -> dict:
             rails = _eps_rails(ctx, f)
             key = t.role if t.level == "component" else f"domain:{t.el.get('subsystem_domain')}"
             prefs = ctx.defaults["rail_preference"].get(key) or ctx.defaults["rail_preference"]["default"]
+            hv = kb_profile(ctx).get("unregulated_bus_v")
+            if hv:   # high-voltage battery bus distributed through the PCDU switches (EOSAT-1 style)
+                prefs = [hv] + [p for p in prefs if p != hv]
             need = [r for r in (t.facts.get("rails") or []) if t.role not in ("eps", "battery")]
             pool = [r for r in rails if not need or r in need]
             choice = next((p for p in prefs if p in pool), pool[0] if pool else (rails[0] if rails else None))
