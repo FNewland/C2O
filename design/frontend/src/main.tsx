@@ -8,6 +8,7 @@ import './index.css'
 import './components/ui/primitives.css'  // after index.css: variants override the base
 import './styles/shell.css'
 import './logbook/logbook.css'
+import './where/where.css'
 import './seats/seats.css'
 import './styles/utilities.css'          // last: utilities win over component defaults
 

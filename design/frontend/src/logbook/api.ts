@@ -6,6 +6,8 @@
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getLang } from '../i18n'
+import type { WhereTarget } from '../where/where'
+import type { ExternalLink } from '../where/links'
 
 export const TOOL = 'design'
 const BASE = '/api/logbook'
@@ -81,6 +83,10 @@ export interface CatalogueDecision {
   fields: RecordField[]
   prefill: string[]
   capture: string[]
+  /** Where in SpaceCDF it is decided, textbook sections, external reading (where_map.yaml). */
+  where?: WhereTarget[]
+  book?: string[]
+  links?: ExternalLink[]
   entries: string[]
   status: 'open' | 'recorded'
 }
@@ -111,7 +117,11 @@ export interface Summary {
   unsaved: number
 }
 
-export interface Question { id: string; kind: string; text: string; prompt: string | null; points: string[] }
+export interface Question {
+  id: string; kind: string; text: string; prompt: string | null; points: string[]
+  /** Where in SpaceCDF it is answered, textbook sections, external reading (where_map.yaml). */
+  where?: WhereTarget[]; book?: string[]; links?: ExternalLink[]
+}
 export interface Worksheet {
   id: string
   number: string

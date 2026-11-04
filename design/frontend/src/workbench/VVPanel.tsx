@@ -22,6 +22,7 @@ import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
 import { useSeatStore } from '../seats/api'
+import { useWhereSection } from '../where/where'
 import { GateActionError, gateAction, pick, setGateProfile, useGateProfiles, useGateReview, useStudyGates, type GateState } from '../components/useGateReview'
 import { FIX_LABEL, STATE_LABEL, STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
 import { getLang } from '../i18n'
@@ -59,6 +60,8 @@ export function VVPanel() {
     () => (useSeatStore.getState().vvSection as 'gates' | null) ?? 'budget')
   // Seats (WP9): the Team leader opens on the gate checklist; the Next card opens it too.
   const wantSection = useSeatStore(st => st.vvSection)
+  // "Where in SpaceCDF" links open a V&V section (where/where.ts)
+  useWhereSection('vv', sec => { if (['budget', 'reqs', 'gates', 'fmeca', 'trace', 'risks', 'bom', 'maturity'].includes(sec)) setActiveSection(sec as 'budget') })
   useEffect(() => {
     if (wantSection === 'gates') { setActiveSection('gates'); useSeatStore.getState().openVV(null) }
   }, [wantSection])

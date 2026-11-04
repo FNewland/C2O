@@ -90,6 +90,16 @@ def _tr(value: Any, lang: str) -> str:
     return "" if value is None else str(value)
 
 
+def _where(d: dict, lang: str) -> dict:
+    """Where in SpaceCDF the decision is taken, with textbook sections and links (where.py)."""
+    from .where import for_decision
+    try:
+        return for_decision(d["id"], d.get("part"), lang)
+    except Exception:  # noqa: BLE001 - a broken map must not hide the catalogue
+        logger.exception("where map: decision %s", d.get("id"))
+        return {"where": [], "links": [], "book": []}
+
+
 def by_id(directory: Path | None = None) -> dict[str, dict]:
     return {d["id"]: d for d in catalogue(directory).get("decisions") or []}
 
@@ -473,6 +483,7 @@ def localised(lang: str, entries: Iterable[dict], study_id: str | None, lookup=N
             "fields": d.get("fields") or [],
             "prefill": d.get("prefill") or [],
             "capture": d.get("capture") or [],
+            **_where(d, lang),
             "entries": [e["id"] for e in mine],
             "status": "recorded" if mine else "open",
             "_wnum": _wnum(wid), "_q": q_order, "_i": order[d["id"]],
