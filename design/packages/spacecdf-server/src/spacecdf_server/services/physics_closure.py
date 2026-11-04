@@ -330,6 +330,17 @@ def _envelope(ctx: AnalysisContext) -> tuple[tuple[float, float, float], str, st
         d = _dims_m(s)
         if d:
             return d, f"system element {s.get('name')}", s["id"]
+    # A CubeSat structure (or any structure-domain unit with dimensions) fixes the envelope:
+    # the class fallback alone took a 6U for a 1 m "small" spacecraft (Nov 2026: the study's
+    # spacecraft_class defaults to "small"), 24 x the radiating area of the real bus.
+    for e in _space_elements(ctx):
+        if e.get("element_type") != "component":
+            continue
+        kb = _kb_component(e.get("kb_component_id")) or {}
+        if e.get("subsystem_domain") == "structure" or "structure" in str(kb.get("category") or ""):
+            d = _dims_m(e)
+            if d:
+                return d, f"structure element {e.get('name')}", systems[0]["id"] if systems else None
     cls = _sc_class(ctx)
     return CLASS_ENVELOPE_M.get(cls, CLASS_ENVELOPE_M["nano"]), f"class default ({cls})", systems[0]["id"] if systems else None
 
@@ -718,6 +729,8 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
         if hot_case:
             return (_eff_col(ctx, k, "power_peak_w") or _eff_col(ctx, k, "power_avg_w")) * q
         return _eff_col(ctx, k, "power_avg_w") * q * safe_frac
+    structure_sub = next((s for s in subsystems if s.get("subsystem_domain") == "structure"), None)
+    m_structure_sub = 0.0
     for s in subsystems:
         comps = [k for k in kids.get(s["id"], []) if k.get("element_type") == "component" and k.get("in_scope", True) is not False]
         qty = lambda k: max(int(k.get("quantity") or 1), 1)   # noqa: E731
@@ -741,7 +754,12 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
             rest = [k for k in comps if k not in hot_comps] if comps else [s]
             md_hot = sum(_diss(k, True) for k in rest)
             md_cold = sum(_diss(k, False) for k in rest)
-        if not shell:
+        if s is structure_sub:
+            # The structure subsystem IS the bus structure node (below): its mass is the
+            # chassis' thermal capacity. As a separate node it left the chassis at 0.05 kg
+            # carrying all the absorbed sunlight.
+            m_structure_sub = max(m_sub - m_hot, 0.0)
+        elif not shell:
             nodes.append(ThermalNodeOut(s["id"], str(s.get("name")), s.get("subsystem_domain"), "subsystem",
                                         max(m_sub - m_hot, 0.02), _cp(s, ctx), 0.0,
                                         max(md_hot, 0.0), max(md_cold, 0.0), lo, hi, src))
@@ -751,17 +769,16 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
             nodes.append(ThermalNodeOut(k["id"], str(k.get("name")), k.get("subsystem_domain") or s.get("subsystem_domain"), "component",
                                         max(_eff_col(ctx, k, "mass_kg") * qty(k), 0.02), _cp(k, ctx), 0.0,
                                         _diss(k, True), _diss(k, False), lo, hi, src))
-            comp_nodes.append((k, s if not shell else None))   # an empty shell subsystem: mount on the chassis
+            comp_nodes.append((k, s if not (shell or s is structure_sub) else None))   # empty shell / structure: mount on the chassis
     if not nodes:
         warnings.append("no space subsystem in the model — thermal network empty")
         return ThermalOut([], [], None, {}, {"envelope_m": env}, warnings=warnings)
 
     # bus structure backbone (the system element; carries 10 % of the mass when there is no structure subsystem)
-    structure_sub = next((s for s in subsystems if s.get("subsystem_domain") == "structure"), None)
     sys_el = systems[0] if systems else None
     chassis_id = "chassis"
     chassis_name = f"{sys_el.get('name')} (bus structure)" if sys_el else "Bus structure"
-    m_struct = 0.0 if structure_sub else max(0.1 * total_sub_mass, 0.05)
+    m_struct = m_structure_sub if structure_sub else max(0.1 * total_sub_mass, 0.05)
     nodes.insert(0, ThermalNodeOut(sys_el["id"] if sys_el else chassis_id, chassis_name, "structure", "structure",
                                    max(m_struct, 0.05), DEFAULT_CP_J_PER_KG_K, 0.0, 0.0, 0.0, *DOMAIN_OP_RANGE_C["structure"], "class default"))
 
@@ -813,8 +830,9 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
             if str(itf.get("interface_type") or "").lower() != "thermal":
                 continue
             a, b = itf.get("from_element_id"), itf.get("to_element_id")
-            a = chassis_id if sys_el and a == sys_el["id"] else a
-            b = chassis_id if sys_el and b == sys_el["id"] else b
+            on_chassis = {x["id"] for x in (sys_el, structure_sub) if x}
+            a = chassis_id if a in on_chassis else a
+            b = chassis_id if b in on_chassis else b
             if a in node_ids and b in node_ids:
                 props = itf.get("properties") or itf.get("properties_json") or {}
                 g = _num(props.get("conductance_w_per_k")) or _num(props.get("conductance_w_k")) or INTERFACE_CONDUCTANCE_W_K
