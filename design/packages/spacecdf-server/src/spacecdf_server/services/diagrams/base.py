@@ -53,10 +53,18 @@ _ADV = 0.56
 _ADV_BOLD = 0.6
 
 
-def text_w(v: Any, size: float = 12.0, bold: bool = False) -> float:
-    s = plain(v)
+def _w(s: str, size: float, bold: bool) -> float:
     wide = sum(1 for c in s if c in "MWmw@%") * 0.3
     return (len(s) + wide) * size * (_ADV_BOLD if bold else _ADV)
+
+
+def text_w(v: Any, size: float = 12.0, bold: bool = False) -> float:
+    """Width of a model string: the wider of English and French, so one layout fits both."""
+    w = _w(plain(v), size, bold)
+    if isinstance(v, dict) and "t" in v:
+        from .render import tx
+        w = max(w, _w(tx(v, "fr"), size, bold))
+    return w
 
 
 def clip(s: Any, n: int) -> str:
