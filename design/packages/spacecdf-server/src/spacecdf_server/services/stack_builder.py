@@ -37,6 +37,7 @@ Public API:
     run_checks(real, units, env, orbit_alt_km=None) -> list[check_item]
     evaluate(spec, units, env, ...) -> {"placements", "columns", "cog", "checks", "summary", "score", ...}
     design_positions(real, units, env) -> {element_id: [x, y, z] m, design frame}
+    design_to_stack_tensor(I_design, env) -> inertia tensor in the stack / simulator frame
     to_geometry(real, units, env, spacecraft="") -> c2o.geometry/1 dict (+ optional internal, frame, mass_properties)
 """
 from __future__ import annotations
@@ -282,6 +283,27 @@ def to_design_m(p_mm: list[float], env: dict) -> list[float]:
     else:
         out = [x + Ex / 2, Ey / 2 - y, Ez / 2 - z]
     return [round(v / 1000.0, 5) for v in out]
+
+
+def _design_to_stack_matrix(env: dict) -> list[list[float]]:
+    """Rotation R with v_stack = R · v_design (the inverse of the axis map in ``to_design_m``)."""
+    if env.get("design_swap", env["swap"]):
+        # design (x, y, z) = (stack y, stack x, -stack z) → stack = (design y, design x, -design z)
+        return [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, -1.0]]
+    # design (x, y, z) = (stack x, -stack y, -stack z): 180 deg about X
+    return [[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]]
+
+
+def design_to_stack_tensor(inertia_design: list[list[float]], env: dict) -> list[list[float]]:
+    """An inertia tensor about the CoM from the design frame (+Z nadir, ``mass_properties.py``)
+    to the stack / simulator body frame (+Z zenith, ``aocs.yaml mass_properties.inertia_kgm2``):
+    I_stack = R · I_design · Rᵀ. Moments are unchanged (or swapped X/Y), the products of
+    inertia change sign with the flipped axes. This is the frame reconciliation of
+    sim_design_inventory.md gap 14 for the AOCS export."""
+    R = _design_to_stack_matrix(env)
+    I = [[float(inertia_design[i][j]) for j in range(3)] for i in range(3)]
+    RI = [[sum(R[i][k] * I[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+    return [[round(sum(RI[i][k] * R[j][k] for k in range(3)), 9) + 0.0 for j in range(3)] for i in range(3)]
 
 
 def offset_to_design_axes(v_sim: list[float], env: dict) -> list[float]:
