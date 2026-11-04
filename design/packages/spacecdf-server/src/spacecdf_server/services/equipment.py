@@ -26,7 +26,7 @@ DOMAIN_TO_CATEGORIES = {
     "obc": ["obcs"],  # alias — UI uses obc
     "thermal": ["thermal_hardware"],
     "integration": ["harnesses"],
-    "payload": ["antennas"],  # payload-specific sensors/optics would go here
+    "payload": ["payload_imagers", "antennas"],  # imagers: KB schema v2 category (stack builder)
     # Ground segment equipment
     "ground": ["ground_antennas", "ground_rf", "ground_baseband", "ground_software", "ground_timing"],
     "ground_rf": ["ground_antennas", "ground_rf", "ground_baseband"],

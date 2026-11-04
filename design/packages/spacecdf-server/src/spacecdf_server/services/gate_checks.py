@@ -44,7 +44,7 @@ GATE_CHECKS: dict[str, tuple[str, ...]] = {
     "PRR": ("GC-PRODUCT-TREE", "GC-MARGINS"),
     "SRR": ("GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-MARGINS"),
     "PDR": ("GC-PRODUCT-TREE", "GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-VER-RISK",
-            "GC-MARGINS", "GC-CDS", "GC-FMECA"),
+            "GC-MARGINS", "GC-CDS", "GC-STACK", "GC-FMECA"),
 }
 
 
@@ -156,6 +156,9 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
                              {"en": f"{s['pass']} pass, {s['warn']} not declared, {s['fail']} fail.",
                               "fr": f"{s['pass']} conformes, {s['warn']} non déclarés, {s['fail']} non conformes."},
                              rc.ref_of(rc.load("cds_rules"), {"source": "cds_14_1"}), counts=s)
+    if cid == "GC-STACK":
+        from .stack_builder import stack_gate_check
+        return stack_gate_check(els, ctx.get("form_factor"))
     if cid == "GC-FMECA":
         f = cache.setdefault("fmeca", build_skeleton(els, ctx["interfaces"]))
         sp = f["summary"]["single_points"]
