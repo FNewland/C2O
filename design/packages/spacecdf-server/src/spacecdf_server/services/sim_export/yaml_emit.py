@@ -54,6 +54,10 @@ def _scalar(v: Any, key: Any = None, parent: Any = None) -> str:
 def _key(k: Any) -> str:
     if isinstance(k, (int, float)) and not isinstance(k, bool):
         return str(k)
+    # A key may land inside a flow mapping, where ", [ ] { }" end a plain
+    # scalar ("If FAIL, which contingency" split into two keys): quote those.
+    if isinstance(k, str) and re.search(r"[,\[\]{}]", k):
+        return json.dumps(k, ensure_ascii=False)
     return _scalar(k)
 
 
