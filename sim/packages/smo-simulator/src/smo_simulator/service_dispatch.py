@@ -470,10 +470,12 @@ class ServiceDispatcher:
         elif subtype == 27 and len(data) >= 2:
             sid = struct.unpack('>H', data[:2])[0]
             hk_struct = self._engine._hk_structures.get(sid)
+            # mission.yaml hk_apids: the SID's own APID (absent = the current APID)
             hk_apid = getattr(self._engine, "_hk_apid", None)
+            apid = hk_apid(sid) if callable(hk_apid) else None
+            kw = {"apid": apid} if isinstance(apid, int) else {}
             pkt = self._engine.tm_builder.build_hk_packet(
-                sid, self._engine.params, hk_structure=hk_struct,
-                apid=hk_apid(sid) if callable(hk_apid) else None)
+                sid, self._engine.params, hk_structure=hk_struct, **kw)
             if pkt:
                 return [pkt]
         elif subtype in (3, 5) and len(data) >= 2:
