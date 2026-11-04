@@ -35,6 +35,12 @@ TOP_KEYS = {
     "star_tracker_sun_exclusion_deg", "star_tracker_earth_exclusion_deg",
     "antennas", "thrusters",
 }
+#: Optional keys added to c2o.geometry/1 by the SpaceCDF stack builder (Nov 2026,
+#: additive: a file without them is unchanged and still valid). ``frame`` states the
+#: convention as text; ``internal`` lists one box per placed unit (stowed), box_m =
+#: [cx, cy, cz, dx, dy, dz] in this body frame; ``mass_properties`` gives the mass and
+#: CoG of the layout. See design/docs/STACK_BUILDER.md.
+OPTIONAL_KEYS = {"frame", "internal", "mass_properties"}
 _UNIT_TOL = 1e-3
 _AREA_TOL = 1e-6
 
@@ -92,7 +98,7 @@ def validate_geometry(geo: Any, config_dir: str | Path | None = None) -> list[st
     out: list[str] = []
     if not isinstance(geo, dict):
         return ["geometry: expected a mapping at the top level"]
-    for k in sorted(set(geo) - TOP_KEYS):
+    for k in sorted(set(geo) - TOP_KEYS - OPTIONAL_KEYS):
         out.append(f"unknown key {k!r}")
     if geo.get("schema") != SCHEMA:
         out.append(f"schema: expected {SCHEMA!r}, got {geo.get('schema')!r}")
@@ -174,6 +180,23 @@ def validate_geometry(geo: Any, config_dir: str | Path | None = None) -> list[st
     _check_items(geo, "thrusters", {
         "id": lambda s: isinstance(s, str) and bool(s),
         "position_m": _vec, "thrust_axis": _unit}, out)
+
+    if "frame" in geo and not isinstance(geo["frame"], dict):
+        out.append("frame: expected a mapping")
+    if "internal" in geo:
+        boxes = _check_items(geo, "internal", {
+            "id": lambda s: isinstance(s, str) and bool(s),
+            "box_m": lambda v: _vec(v, 6) and all(x >= 0 for x in v[3:])}, out)
+        for b in boxes:
+            if "mass_kg" in b and not (isinstance(b["mass_kg"], (int, float)) and b["mass_kg"] >= 0):
+                out.append(f"internal.{b.get('id')}.mass_kg: expected a mass >= 0")
+            if b.get("face") is not None and b.get("face") not in FACES:
+                out.append(f"internal.{b.get('id')}.face: expected one of {', '.join(FACES)}")
+    if "mass_properties" in geo:
+        mp = geo["mass_properties"]
+        if not isinstance(mp, dict) or not _vec(mp.get("cog_m")) \
+                or not (isinstance(mp.get("mass_kg"), (int, float)) and mp["mass_kg"] >= 0):
+            out.append("mass_properties: expected {mass_kg: >= 0, cog_m: [x, y, z]}")
 
     if config_dir is not None and not out:
         out.extend(_cross_check(geo, Path(config_dir)))

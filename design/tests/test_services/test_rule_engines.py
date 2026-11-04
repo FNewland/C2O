@@ -270,7 +270,7 @@ def test_gate_checks_pdr(cubesat):
     r = evaluate_gate_checks("PDR", ctx, [{"id": "SRR-EC-08", "status": "manual"}])
     ids = {c["id"]: c for c in r["checks"]}
     assert set(ids) == {"GC-PRODUCT-TREE", "GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-VER-RISK",
-                        "GC-MARGINS", "GC-CDS", "GC-FMECA"}
+                        "GC-MARGINS", "GC-CDS", "GC-STACK", "GC-FMECA"}
     assert ids["GC-REQ-QUALITY"]["status"] == "fail"           # "efficient" is vague, PDR needs 100 %
     assert ids["GC-VER-METHODS"]["status"] == "fail"
     assert ids["GC-SPEC-TREE"]["status"] == "pass"

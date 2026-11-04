@@ -22,6 +22,7 @@ from .routers import analyses_common as analyses_common_router
 from .routers import functions as functions_router, exchange_items as exchange_items_router, relations as relations_router, parameters as parameters_router, exchange as exchange_router
 from .routers import interfaces as interfaces_router
 from .routers import rules as rules_router
+from .routers import stack as stack_router
 from . import logbook
 from .db.engine import DATABASE_URL, dispose_engine, get_engine
 from .db.write_queue import start_worker, stop_worker
@@ -90,6 +91,13 @@ async def lifespan(app: FastAPI):
         await init_study_cache()
     except Exception as e:
         logger.warning("Study cache init failed (continuing with empty cache): %s", e)
+
+    # Load the CubeSat stack layouts (routers/stack.py) so the CDS and gate hooks see them
+    try:
+        from .routers.stack import init_stack_cache
+        await init_stack_cache()
+    except Exception as e:
+        logger.warning("Stack layout cache init failed (continuing with empty cache): %s", e)
 
     # Validate the expected-interface rules (configs/interface_rules.yaml) once at start-up
     try:
@@ -202,6 +210,7 @@ app.include_router(analyses_vv_router.router, prefix="/api", tags=["Analyses: V&
 app.include_router(analyses_physics_router.router, prefix="/api", tags=["Analyses: Physics"])
 # Deterministic design rules replacing AI (docs/RULES_AND_AI.md)
 app.include_router(rules_router.router, prefix="/api", tags=["Design rules"])
+app.include_router(stack_router.router, prefix="/api", tags=["Stack builder"])
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)
 from .routers import gates as gates_router  # noqa: E402
 app.include_router(gates_router.router, prefix="/api", tags=["Review gates"])

@@ -1,0 +1,85 @@
+# Payload imager Knowledge Base (KB schema v2: carries the `mechanical:` block)
+# Earth-observation imagers for CubeSats, as REPRESENTATIVE CLASSES, not catalogue
+# parts: the KB had no payload category (design rules F11), and the stack builder needs
+# an aperture, a length in U and a mass to place one. Numbers are C2O teaching values
+# of the class named in `notes`, to verify against a real datasheet before PDR.
+# The 2U entry is the EOSAT-1 reference imager of the simulator
+# (sim/configs/eosat1/subsystems/payload.yaml, geometry.yaml payload).
+
+components:
+  - id: pl-imager-05u-rgb
+    name: Compact RGB imager (0.5U class)
+    manufacturer: Generic
+    category: payload_imager
+    mass_kg: 0.45
+    dimensions_mm: [98, 98, 55]
+    cost_keur: 60
+    trl: 7
+    power_w: 2.5
+    interfaces: [LVDS, I2C]
+    operating_temp_c: [-10, 40]
+    performance:
+      sensor: frame RGB
+      gsd_m_at_500km: 22
+      swath_km: 40
+      fov_deg: 4.6
+      data_rate_mbps: 20
+    mechanical:
+      mount_class: u_module
+      u_size: 0.5
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 4.6
+    notes: Representative 0.5U frame imager class; values to verify (C2O default)
+
+  - id: pl-imager-1u-ms
+    name: Multispectral pushbroom imager (1U class)
+    manufacturer: Generic
+    category: payload_imager
+    mass_kg: 1.0
+    dimensions_mm: [98, 98, 110]
+    cost_keur: 150
+    trl: 7
+    power_w: 6.0
+    interfaces: [LVDS, CAN]
+    operating_temp_c: [-10, 40]
+    performance:
+      sensor: pushbroom multispectral
+      gsd_m_at_500km: 5
+      swath_km: 20
+      fov_deg: 2.3
+      data_rate_mbps: 60
+    mechanical:
+      mount_class: u_module
+      u_size: 1
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 2.3
+    notes: Representative 1U multispectral pushbroom class; values to verify (C2O default)
+
+  - id: pl-imager-2u-eosat
+    name: EOSAT-1 pushbroom imager (2U)
+    manufacturer: C2O reference
+    category: payload_imager
+    mass_kg: 1.1
+    dimensions_mm: [98, 98, 200]
+    cost_keur: 250
+    trl: 6
+    power_w: 10.0
+    interfaces: [LVDS, CAN]
+    operating_temp_c: [-10, 40]
+    performance:
+      sensor: pushbroom 8192 px x 5.5 um
+      focal_length_mm: 84.5
+      fov_deg: 29.856
+      data_rate_mbps: 96
+    mechanical:
+      mount_class: u_module
+      u_size: 2
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 29.856
+    notes: The simulator's EOSAT-1 imager (geometry.yaml payload, payload.yaml; thermal node 1.1 kg); power is a C2O estimate

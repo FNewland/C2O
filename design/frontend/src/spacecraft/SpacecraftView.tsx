@@ -25,6 +25,7 @@ import {
   DOD_LIMIT_PCT, SYSTEM_MARGIN, type El, type PowerCase, type SubsystemFlags,
 } from './designAdapter'
 import './spacecraft.css'
+import { StackBuilder } from './stack/StackBuilder'
 
 const API = '/api'
 
@@ -268,6 +269,14 @@ export function SpacecraftView() {
           {webglOff && <Note>{t('3D view unavailable: {{reason}}.', { reason: t(webglOff) })}</Note>}
           <div ref={a3.ref} className="c2o-scv__a3" />
           <p className="t-12 c-3 m-0 mt-1 measure">{t('Built from the design: {{ff}} bus, solar cells, star trackers, antennas and the payload boresight from the equipment list. The attitude is the nominal one, not a simulation.', { ff: ff.label })}</p>
+        </div>
+      </section>
+
+      {/* 4. The CubeSat stack from the component selections (design rules §4) */}
+      <section className="c2o-scv__row c2o-scv__row--one" aria-labelledby="scv-stack">
+        <div className="c2o-scv__pic">
+          <h4 id="scv-stack" className="c2o-scv__h">{t('Stack and configuration')}</h4>
+          <StackBuilder />
         </div>
       </section>
 
