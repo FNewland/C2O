@@ -3447,6 +3447,17 @@ class SimulationEngine:
             return getattr(st, "bus_a_status", 0) == BUS_FAILED
         return getattr(st, "bus_b_status", 0) == BUS_FAILED
 
+    def _hk_apid(self, sid: int, sw_image: int | None = None) -> int | None:
+        """Source APID of a HK SID (mission.yaml ``hk_apids``), application
+        image only; None = the builder's current APID (the default plan)."""
+        if sw_image is None:
+            sw_image = int(self.params.get(0x0311, 1))
+        if sw_image == 0:
+            return None
+        apids = getattr(self._mission_cfg, "hk_apids", None) or {}
+        a = apids.get(int(sid))
+        return None if a is None else int(a)
+
     def _emit_hk_packets(self, dt_sim: float) -> None:
         # Bootloader HK gating: only emit minimal SIDs when in bootloader
         sw_image = int(self.params.get(0x0311, 1))
@@ -3489,7 +3500,9 @@ class SimulationEngine:
             if self._hk_timers[sid] >= interval:
                 self._hk_timers[sid] = 0.0
                 hk_struct = self._hk_structures.get(sid)
-                pkt = self.tm_builder.build_hk_packet(sid, self.params, hk_structure=hk_struct)
+                pkt = self.tm_builder.build_hk_packet(
+                    sid, self.params, hk_structure=hk_struct,
+                    apid=self._hk_apid(sid, sw_image))
                 if pkt:
                     self._enqueue_tm(pkt)
                     obdh = self.subsystems.get("obdh")

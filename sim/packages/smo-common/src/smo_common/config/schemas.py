@@ -36,6 +36,12 @@ class MissionConfig(StrictModel):
     spacecraft_apid: int = Field(default=0x01, description="Application-software APID for TM packets (OBC app running)")
     bootloader_apid: int = Field(default=0x02, description="Bootloader APID — distinct from application APID; used for beacon/bootloader TM while OBC is in bootloader")
     start_in_bootloader: bool = Field(default=True, description="If True, engine powers up in bootloader/beacon mode (phase 3) with only SID 11 active and bootloader APID")
+    # Per-subsystem APID plan (2026-11, design export): HK SID -> source APID
+    # of its periodic / requested S3.25 packets while the application image
+    # runs. Empty (default) = every packet from spacecraft_apid, as before.
+    # The bootloader keeps bootloader_apid for everything it sends; S1, S5 and
+    # the other service reports stay on spacecraft_apid.
+    hk_apids: dict[int, int] = Field(default_factory=dict, description="HK SID -> source APID in the application image (per-subsystem APID plan); empty = spacecraft_apid for all")
     pus_version: int = 2
     # LIVE config: the single definition of the CUC epoch on the wire.
     # ``loader.load_mission_config`` pushes it into
@@ -91,6 +97,15 @@ class MissionConfig(StrictModel):
         default_factory=lambda: MissionPayloadSummary(),
         description="Human-readable payload summary; the model's band table "
                     "is in subsystems/payload.yaml")
+
+
+    @field_validator("hk_apids")
+    @classmethod
+    def _apid_range(cls, v: dict[int, int]) -> dict[int, int]:
+        bad = {k: a for k, a in v.items() if not (0 <= int(a) < 0x7FF)}
+        if bad:
+            raise ValueError(f"hk_apids: APIDs must be 0..2046 (0x7FF is the idle APID): {bad}")
+        return v
 
 
 class MissionOrbitSummary(StrictModel):
@@ -215,6 +230,58 @@ class ReactionWheelConfig(StrictModel):
     coulomb_friction_nm: float = 2.0e-6
     viscous_friction_nm_per_rads: float = 1.0e-8
 
+class AOCSModeControlConfig(StrictModel):
+    """Per-mode control-design values (aocs.yaml ``control.modes.<NAME>``).
+
+    Every key is optional: an absent key keeps the aocs_basic code default
+    (``_MODE_CTRL``, ``_MIN_DWELL``, ``_MODE_POWER_W``, ``_MODE_ERR_SIGMA_DEG``).
+    """
+    #: PD closed-loop bandwidth (K_p = 2 I omega_n^2, K_d = 2 zeta I omega_n).
+    omega_n_rad_s: float | None = None
+    zeta: float | None = None
+    #: Minimum time in the mode before an automatic transition may leave it.
+    min_dwell_s: float | None = None
+    #: AOCS suite electrical power in this mode (published 0x02C8, billed by EPS).
+    power_w: float | None = None
+    #: Closed-loop total pointing error 1-sigma used by the secular fast path.
+    pointing_sigma_deg: float | None = None
+
+
+class AOCSTransitionGuardsConfig(StrictModel):
+    """Automatic-transition guards (aocs.yaml ``control.transitions``)."""
+    safe_boot_init_s: float | None = None
+    detumble_exit_rate_dps: float | None = None
+    detumble_exit_hold_s: float | None = None
+    coarse_sun_error_deg: float | None = None
+    coarse_sun_hold_s: float | None = None
+    eclipse_entry_debounce_s: float | None = None
+    desat_exit_hold_s: float | None = None
+
+
+_AOCS_MODE_NAMES = {"OFF", "SAFE_BOOT", "DETUMBLE", "COARSE_SUN", "NOMINAL",
+                    "FINE_POINT", "SLEW", "DESAT", "ECLIPSE", "INERTIAL"}
+
+
+class AOCSControlConfig(StrictModel):
+    """Control design per mode + transition guards (2026-11, design export).
+
+    Lived only in aocs_basic.py code before; a design tool can now hand the
+    simulator its gains, dwells, per-mode powers and guards. Mode names are
+    the aocs/aocs_mode_codes.yaml names.
+    """
+    modes: dict[str, AOCSModeControlConfig] = Field(default_factory=dict)
+    transitions: AOCSTransitionGuardsConfig = Field(
+        default_factory=AOCSTransitionGuardsConfig)
+
+    @field_validator("modes")
+    @classmethod
+    def _known_modes(cls, v: dict) -> dict:
+        bad = sorted(k for k in v if str(k).upper() not in _AOCS_MODE_NAMES)
+        if bad:
+            raise ValueError(f"unknown AOCS mode(s) {bad}; one of {sorted(_AOCS_MODE_NAMES)}")
+        return v
+
+
 class AOCSConfig(StrictModel):
     model: str = "aocs_basic"
     modes: list[str] = Field(default_factory=lambda: ["nominal", "detumble", "safe", "wheel_desat", "slew"])
@@ -240,6 +307,10 @@ class AOCSConfig(StrictModel):
         description="RK4 step h_s, max_substeps, secular_above_speed")
     sensors: dict[str, Any] = Field(
         default_factory=dict, description="star_tracker + gyro noise models")
+    control: AOCSControlConfig = Field(
+        default_factory=AOCSControlConfig,
+        description="per-mode gains / min dwell / power / pointing sigma and "
+                    "the automatic-transition guards (absent keys = code defaults)")
 
 class HeaterCircuitConfig(StrictModel):
     name: str
@@ -864,6 +935,11 @@ class TCCommandDef(StrictModel):
     position: str | None = None
     aliases: list[str] = Field(default_factory=list)
     criticality: str | None = None
+    #: Two-step arm -> execute at the console (2026-11, design export: a
+    #: per-TC decision of the TC database). None in the YAML = inferred as
+    #: before: ``criticality: critical`` arms, anything else sends directly.
+    #: Always a bool after loading, so the MCS reads one field.
+    arm_execute: bool | None = None
     # ── Phase E argument schema (brief 04 WP-0) ──
     arg_schema_version: int | None = None
     #: TM parameter that verifies the command (rendered by the builder as
@@ -872,6 +948,12 @@ class TCCommandDef(StrictModel):
     #: Deliberate legacy alternative wire forms (S8 func 65's 4-byte raw-bps
     #: form). Documentation-only: consumers encode the primary form.
     deprecated_aliases: list[dict[str, Any]] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _infer_arm_execute(self) -> "TCCommandDef":
+        if self.arm_execute is None:
+            self.arm_execute = str(self.criticality or "").lower() == "critical"
+        return self
 
 class EventDefinition(StrictModel):
     """Event catalog entry."""

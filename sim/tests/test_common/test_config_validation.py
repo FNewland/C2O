@@ -457,3 +457,13 @@ def test_tc_catalog_loads_through_loader():
     from smo_common.config.loader import load_tc_catalog
     cmds = load_tc_catalog(CONFIG_ROOT)
     assert len(cmds) > 100
+
+
+def test_arm_execute_is_inferred_from_criticality_when_absent():
+    """2026-11: per-TC arm->execute flag; absent = as before (critical arms)."""
+    from smo_common.config.schemas import TCCommandDef
+    crit = TCCommandDef(name="X", service=8, subtype=1, criticality="critical")
+    caut = TCCommandDef(name="Y", service=8, subtype=1, criticality="caution")
+    opt_in = TCCommandDef(name="Z", service=8, subtype=1, arm_execute=True)
+    opt_out = TCCommandDef(name="W", service=8, subtype=1, criticality="critical", arm_execute=False)
+    assert (crit.arm_execute, caut.arm_execute, opt_in.arm_execute, opt_out.arm_execute) == (True, False, True, False)

@@ -474,6 +474,21 @@ class TestCommandBuilderEncoding:
         assert out == {"phase": True, "cooler": False, "aocs": False,
                        "legacyBool": True}
 
+    def test_per_tc_arm_execute_flag_overrides_criticality(self, tmp_path):
+        """2026-11: the catalogue's per-TC ``arm_execute`` (always a bool from
+        the server, inferred from criticality when the YAML has none) decides
+        the two-step; a catalogue without it falls back to criticality."""
+        out = run_js(self._snippet("""
+            return {
+              inferred: T.needsArm(CAT.SYS_SET_MISSION_PHASE),
+              optOut: T.needsArm(Object.assign({}, CAT.SYS_SET_MISSION_PHASE, { arm_execute: false })),
+              optIn: T.needsArm(Object.assign({}, CAT.AOCS_SET_MODE, { arm_execute: true })),
+              none: T.needsArm(CAT.AOCS_SET_MODE),
+            };
+        """), tmp_path)
+        assert out == {"inferred": True, "optOut": False, "optIn": True,
+                       "none": False}
+
     def test_provenance_uses_served_keys(self, tmp_path):
         out = run_js(self._snippet("""
             const cmd = Object.assign({}, CAT.PAYLOAD_COOLER_SETPOINT,

@@ -433,6 +433,11 @@ class AOCSBasicModel(SubsystemModel):
 
     def __init__(self):
         self._state = AOCSState()
+        # Per-mode control tables and transition guards. The module-level
+        # tables are the defaults; aocs.yaml `control:` overrides them per
+        # mode / per guard (2026-11, design-to-ops export: a design hands the
+        # simulator its own gains, dwells and guards without a code change).
+        self._apply_control_config({})
         # Deferred-completion reports drained by the engine (2026-08 ruling).
         self._completions: list[dict] = []
         # Per-model RNG (plan A-2). Standalone construction gets a fixed
@@ -639,7 +644,56 @@ class AOCSBasicModel(SubsystemModel):
     def name(self) -> str:
         return "aocs"
 
+    #: aocs.yaml control.transitions keys and their code defaults.
+    TRANSITION_DEFAULTS: dict[str, float] = {
+        "safe_boot_init_s": 30.0,          # SAFE_BOOT -> DETUMBLE after hardware init
+        "detumble_exit_rate_dps": 0.5,     # DETUMBLE exit: |omega| below this ...
+        "detumble_exit_hold_s": 30.0,      # ... for this long -> COARSE_SUN
+        "coarse_sun_error_deg": 15.0,      # COARSE_SUN exit: sun error below this ...
+        "coarse_sun_hold_s": 60.0,         # ... with CSS valid for this long (+ ST valid)
+        "eclipse_entry_debounce_s": 5.0,   # NOMINAL/FINE -> ECLIPSE debounce
+        "desat_exit_hold_s": 10.0,         # DESAT completion held this long
+    }
+
+    def _apply_control_config(self, control: dict[str, Any]) -> None:
+        """Build the per-mode tables from the defaults + ``control:``.
+
+        ``control.modes.<NAME>`` may set ``omega_n_rad_s``, ``zeta``,
+        ``min_dwell_s``, ``power_w`` and ``pointing_sigma_deg``; absent keys
+        keep the code default, so a config without ``control:`` behaves
+        exactly as before. Mode names are the aocs_mode_codes.yaml names.
+        """
+        by_name = {v: k for k, v in _MODE_NAMES.items()}
+        self._min_dwell = dict(_MIN_DWELL)
+        self._mode_ctrl = dict(_MODE_CTRL)
+        self._mode_power_w = dict(_MODE_POWER_W)
+        self._mode_err_sigma = dict(_MODE_ERR_SIGMA_DEG)
+        for name, mc in ((control or {}).get("modes") or {}).items():
+            code = by_name.get(str(name).upper())
+            if code is None:
+                raise ValueError(f"aocs.yaml control.modes: unknown AOCS mode {name!r}")
+            mc = mc or {}
+            if mc.get("min_dwell_s") is not None:
+                self._min_dwell[code] = float(mc["min_dwell_s"])
+            if mc.get("omega_n_rad_s") is not None or mc.get("zeta") is not None:
+                wn0, z0 = self._mode_ctrl.get(code, (0.030, 0.70))
+                self._mode_ctrl[code] = (
+                    float(mc["omega_n_rad_s"]) if mc.get("omega_n_rad_s") is not None else wn0,
+                    float(mc["zeta"]) if mc.get("zeta") is not None else z0)
+            if mc.get("power_w") is not None:
+                self._mode_power_w[code] = float(mc["power_w"])
+            if mc.get("pointing_sigma_deg") is not None:
+                self._mode_err_sigma[code] = float(mc["pointing_sigma_deg"])
+        tr = dict(self.TRANSITION_DEFAULTS)
+        for k, v in ((control or {}).get("transitions") or {}).items():
+            if k not in tr:
+                raise ValueError(f"aocs.yaml control.transitions: unknown guard {k!r}")
+            if v is not None:
+                tr[k] = float(v)
+        self._guards = tr
+
     def configure(self, config: dict[str, Any]) -> None:
+        self._apply_control_config(config.get("control") or {})
         mp = config.get("mass_properties", {})
         self._mass_kg = float(mp.get("mass_kg", self._mass_kg))
         inertia = mp.get("inertia_kgm2")
@@ -866,13 +920,13 @@ class AOCSBasicModel(SubsystemModel):
     def _check_auto_transitions(self, s: AOCSState, dt: float,
                                 orbit_state: Any) -> None:
         """Check guard conditions for automatic mode transitions."""
-        dwell = _MIN_DWELL.get(s.mode, 0)
+        dwell = self._min_dwell.get(s.mode, 0)
         if s.time_in_mode < dwell:
             return
 
         if s.mode == MODE_SAFE_BOOT:
             # After 30s hardware init, transition to DETUMBLE
-            if s.time_in_mode >= 30.0:
+            if s.time_in_mode >= self._guards["safe_boot_init_s"]:
                 self._set_mode(MODE_DETUMBLE,
                                reason="SAFE_BOOT hardware init complete")
 
@@ -881,14 +935,16 @@ class AOCSBasicModel(SubsystemModel):
             rate_mag = math.sqrt(
                 s.rate_roll ** 2 + s.rate_pitch ** 2 + s.rate_yaw ** 2
             )
-            if rate_mag < 0.5:
+            g = self._guards
+            if rate_mag < g["detumble_exit_rate_dps"]:
                 s._guard_timer += dt
             else:
                 s._guard_timer = 0.0
-            if s._guard_timer >= 30.0:
+            if s._guard_timer >= g["detumble_exit_hold_s"]:
                 self._set_mode(
                     MODE_COARSE_SUN,
-                    reason=(f"rates damped below 0.5 deg/s for 30 s; next "
+                    reason=(f"rates damped below {g['detumble_exit_rate_dps']:g} deg/s "
+                            f"for {g['detumble_exit_hold_s']:g} s; next "
                             f"COARSE_SUN -> "
                             f"{_MODE_NAMES.get(s.commanded_mode, 'NOMINAL')}"))
 
@@ -906,11 +962,11 @@ class AOCSBasicModel(SubsystemModel):
             # mode the ground actually asked for. Before this, a COARSE_SUN
             # demotion could only ever return to NOMINAL — so a FINE or
             # INERTIAL commanded mode was lost for the rest of the pass.
-            if s.css_valid and s.att_error < 15.0:
+            if s.css_valid and s.att_error < self._guards["coarse_sun_error_deg"]:
                 s._guard_timer += dt
             else:
                 s._guard_timer = 0.0
-            if s._guard_timer >= 60.0 and s.st_valid:
+            if s._guard_timer >= self._guards["coarse_sun_hold_s"] and s.st_valid:
                 # commanded_mode 0 (never commanded, e.g. LEOP acquisition)
                 # keeps the historical NOMINAL destination.
                 tgt = self._resume_target(s, fallback=MODE_NOMINAL)
@@ -932,7 +988,7 @@ class AOCSBasicModel(SubsystemModel):
             if orbit_state.in_eclipse:
                 s._guard_timer += dt
                 # Debounce 5s before entering eclipse (hysteresis to avoid thrashing)
-                if s._guard_timer >= 5.0:
+                if s._guard_timer >= self._guards["eclipse_entry_debounce_s"]:
                     self._set_mode(
                         MODE_ECLIPSE,
                         reason=("entered eclipse; will resume "
@@ -984,7 +1040,7 @@ class AOCSBasicModel(SubsystemModel):
             s._guard_timer += dt
         else:
             s._guard_timer = 0.0
-        if s._guard_timer >= 10.0:
+        if s._guard_timer >= self._guards["desat_exit_hold_s"]:
             tgt = s.return_mode if s.return_mode in self._OPERATIONAL_MODES \
                 else self._resume_target(s)
             if tgt == MODE_FINE_POINT:
@@ -1484,7 +1540,7 @@ class AOCSBasicModel(SubsystemModel):
         s.q_true = [float(x) for x in q]
 
     def _mode_gains(self, mode: int) -> tuple[float, float]:
-        wn, z = _MODE_CTRL.get(mode, (0.030, 0.70))
+        wn, z = self._mode_ctrl.get(mode, (0.030, 0.70))
         s = self._state
         if s.ctrl_omega_n > 0.0:
             wn = s.ctrl_omega_n
@@ -2329,7 +2385,7 @@ class AOCSBasicModel(SubsystemModel):
             q_ref, _ = self._compute_reference(s, mode, dt)
         s.q_ref = [float(x) for x in q_ref]
         # Deterministic error draw from the mode's closed-loop distribution
-        sigma = _MODE_ERR_SIGMA_DEG.get(mode, 0.05)
+        sigma = self._mode_err_sigma.get(mode, 0.05)
         ev = np.array([self.rng.gauss(0.0, sigma) for _ in range(3)]) * _DEG
         ang = float(np.linalg.norm(ev))
         if ang > 1e-12:
@@ -3506,7 +3562,7 @@ class AOCSBasicModel(SubsystemModel):
         # AOCS suite power draw — EPS bills the aocs_wheels line from this
         # (COARSE 4 / NOMINAL 9 / FINE 15 W, brief 02 table; Phase B billing
         # convention: actuator state, not line-switch position).
-        shared_params[0x02C8] = _MODE_POWER_W.get(s.mode, 9.0)
+        shared_params[0x02C8] = self._mode_power_w.get(s.mode, 9.0)
 
         # CSS head health
         css_faces = ['px', 'mx', 'py', 'my', 'pz', 'mz']

@@ -186,6 +186,37 @@ sensors:
       # to respond; the first `settle_s` of the arc are discarded.
       settle_s: 30.0
 
+# ── Control design per mode + transition guards (2026-11) ──────────────────
+# Was code only (aocs_basic _MODE_CTRL / _MIN_DWELL / _MODE_POWER_W /
+# _MODE_ERR_SIGMA_DEG and literal guards); now configuration so a design
+# (SpaceCDF CDR "AOCS modes / control") can hand them to the simulator. These
+# are the code defaults verbatim: EOSAT-1 behaviour is unchanged. An absent
+# key keeps the code default.
+#   omega_n_rad_s / zeta  PD bandwidth and damping (Kp = 2 I wn^2, Kd = 2 zeta I wn)
+#   min_dwell_s           time in mode before an automatic transition may leave it
+#   power_w               AOCS suite power in the mode (0x02C8, billed by EPS)
+#   pointing_sigma_deg    closed-loop pointing error 1-sigma (secular fast path)
+control:
+  modes:
+    "OFF":      {min_dwell_s: 0.0,  power_w: 1.0}
+    SAFE_BOOT:  {min_dwell_s: 5.0,  power_w: 2.5}
+    DETUMBLE:   {min_dwell_s: 10.0, power_w: 4.0}
+    COARSE_SUN: {min_dwell_s: 20.0, power_w: 4.0,  pointing_sigma_deg: 1.5}
+    NOMINAL:    {omega_n_rad_s: 0.040, zeta: 0.70, min_dwell_s: 10.0, power_w: 9.0,  pointing_sigma_deg: 0.020}
+    FINE_POINT: {omega_n_rad_s: 0.080, zeta: 0.75, min_dwell_s: 10.0, power_w: 15.0, pointing_sigma_deg: 0.007}
+    SLEW:       {omega_n_rad_s: 0.060, zeta: 0.90, min_dwell_s: 0.0,  power_w: 12.0, pointing_sigma_deg: 0.10}
+    DESAT:      {omega_n_rad_s: 0.020, zeta: 0.70, min_dwell_s: 10.0, power_w: 6.0,  pointing_sigma_deg: 0.05}
+    ECLIPSE:    {omega_n_rad_s: 0.040, zeta: 0.70, min_dwell_s: 5.0,  power_w: 7.0,  pointing_sigma_deg: 0.05}
+    INERTIAL:   {omega_n_rad_s: 0.040, zeta: 0.70, min_dwell_s: 10.0, power_w: 9.0,  pointing_sigma_deg: 0.020}
+  transitions:
+    safe_boot_init_s: 30.0          # SAFE_BOOT -> DETUMBLE after hardware init
+    detumble_exit_rate_dps: 0.5     # DETUMBLE -> COARSE_SUN: |omega| below ...
+    detumble_exit_hold_s: 30.0      # ... for this long
+    coarse_sun_error_deg: 15.0      # COARSE_SUN -> commanded mode: sun error below ...
+    coarse_sun_hold_s: 60.0         # ... with CSS valid for this long (and ST valid)
+    eclipse_entry_debounce_s: 5.0   # NOMINAL / FINE_POINT -> ECLIPSE debounce
+    desat_exit_hold_s: 10.0         # DESAT completion held this long
+
 num_wheels: 4
 attitude_error_deadband_deg: 0.005   # FINE control deadband (real, WP-6)
 

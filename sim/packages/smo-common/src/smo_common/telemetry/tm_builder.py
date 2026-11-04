@@ -112,13 +112,17 @@ class TMBuilder:
             self._seq_count = 0
 
     def build_hk_packet(self, sid: int, params: dict,
-                        hk_structure: list[tuple] | None = None) -> Optional[bytes]:
+                        hk_structure: list[tuple] | None = None,
+                        apid: int | None = None) -> Optional[bytes]:
         """Build a Service 3 Housekeeping TM packet.
 
         Args:
             sid: Structure ID.
             params: Shared parameter store {param_id: value}.
             hk_structure: List of (param_id, pack_format, scale) tuples.
+            apid: source APID for this one packet (mission.yaml ``hk_apids``,
+                a per-subsystem APID plan); None = the builder's current APID.
+                Each APID keeps its own source sequence count (CCSDS 133.0-B).
         """
         if hk_structure is None:
             return None
@@ -131,7 +135,22 @@ class TMBuilder:
                 data += struct.pack('>' + fmt, packed_val)
             except (struct.error, OverflowError, TypeError):
                 data += struct.pack('>' + fmt, 0)
+        if apid is not None and (int(apid) & 0x7FF) != self._apid:
+            return self._pack_tm_as(int(apid) & 0x7FF, 3, 25, data, cuc)
         return self._pack_tm(service=3, subtype=25, data=data, cuc=cuc)
+
+    def _pack_tm_as(self, apid: int, service: int, subtype: int, data: bytes,
+                    cuc: TimeSourceResult | None) -> bytes:
+        """``_pack_tm`` from another source APID, with that APID's own
+        sequence counter (the builder's own APID and counter are untouched)."""
+        counters = self.__dict__.setdefault("_apid_seq", {})
+        own_apid, own_seq = self._apid, self._seq_count
+        self._apid, self._seq_count = apid, counters.get(apid, 0)
+        try:
+            return self._pack_tm(service=service, subtype=subtype, data=data, cuc=cuc)
+        finally:
+            counters[apid] = self._seq_count
+            self._apid, self._seq_count = own_apid, own_seq
 
     def build_event_packet(self, event_id: int, severity: int,
                            aux_text: str, params: dict) -> Optional[bytes]:
