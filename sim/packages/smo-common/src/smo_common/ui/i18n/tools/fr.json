@@ -371,7 +371,6 @@
   "EOSAT-1 mission operations training": "Formation aux opérations de la mission EOSAT-1",
   "Mission status": "État de la mission",
   "Simulator link": "Liaison simulateur",
-  "Choose the screen for what you are about to do. The status beside each one is checked on the server every few seconds.": "Choisir l'écran selon ce que vous allez faire. L'état affiché à côté de chacun est vérifié par le serveur toutes les quelques secondes.",
   "Each screen has its own address under": "Chaque écran a sa propre adresse sous",
   "; sign in once with your C2O account.": " ; une seule connexion avec votre compte C2O suffit.",
   "Operate": "Opérer",
@@ -401,10 +400,6 @@
   "Explore attitude-failure cases before running them in class.": "Étudier des cas de panne d'attitude avant de les jouer en cours.",
   "Checking…": "Vérification…",
   "Available": "Disponible",
-  "Not running": "Arrêté",
-  "Starting": "Démarrage",
-  "Waiting": "En attente",
-  "Not answering yet": "Ne répond pas encore",
   "No simulator connected": "Aucun simulateur connecté",
   "Connected": "Connecté",
   "Degraded": "Dégradée",
@@ -416,7 +411,6 @@
   "in contact, LOS in {{t}}": "en contact, LOS dans {{t}}",
   "No pass scheduled": "Aucun passage prévu",
   "AOS in {{t}}": "AOS dans {{t}}",
-  "Status not checked yet.": "État pas encore vérifié.",
   "Signed in as": "Connecté en tant que",
   "Sign out": "Se déconnecter",
   "{{n}} s": "{{n}} s",
@@ -457,5 +451,9 @@
   "A response is scored from the commands the team sends: give the command(s) that show it was done (procedure notation, e.g. AOCS_DISABLE_WHEEL(wheel_idx=0); alternatives separated by ;) and, if useful, the state that must follow (e.g. payload.mode <= 1). Without either it is listed in the debrief for you to judge, not scored.": "Une réponse est notée d'après les commandes envoyées par l'équipe : indiquez la ou les commandes qui montrent qu'elle a été faite (notation des procédures, p. ex. AOCS_DISABLE_WHEEL(wheel_idx=0) ; alternatives séparées par ;) et, si utile, l'état qui doit suivre (p. ex. payload.mode <= 1). Sans l'un ni l'autre, elle est listée au débriefing pour que vous l'évaluiez, sans être notée.",
   "Harmful commands": "Commandes nuisibles",
   "optional, each costs its penalty once": "facultatif, chacune coûte sa pénalité une fois",
-  "Add harmful command": "Ajouter une commande nuisible"
+  "Add harmful command": "Ajouter une commande nuisible",
+  "Starting up, try again in a minute": "Démarrage en cours, réessayez dans une minute",
+  "Not available right now": "Indisponible pour le moment",
+  "Where do you want to go? Design the mission, fly it, then review what happened.": "Où voulez-vous aller ? Concevez la mission, pilotez-la, puis analysez ce qui s'est passé.",
+  "For the instructor running the session. Ask them if you need something changed in the simulation.": "Pour l'instructeur qui anime la séance. Adressez-vous à lui si quelque chose doit changer dans la simulation."
 }

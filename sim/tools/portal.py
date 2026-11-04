@@ -391,33 +391,55 @@ PAGE_CSS = """
 .pt-cell .quiet{ color:var(--tx2); }
 .pt-cell svg{ width:11px; height:11px; align-self:center; flex:0 0 auto; }
 
-/* The launcher: section label on the left, its screens on the right. */
-.pt-sec{ display:grid; grid-template-columns:11rem minmax(0,1fr); column-gap:var(--sp-5);
-  border-top:1px solid var(--line-2); padding-top:var(--sp-3); margin-bottom:var(--sp-5); }
-.pt-sec>header{ padding-top:var(--sp-2); }
-.pt-sec h2{ font-size:var(--fs-body); font-weight:600; color:var(--tx); }
-.pt-sec header p{ font-size:var(--fs-label); color:var(--tx3); margin-top:2px; }
-.pt-list{ list-style:none; }
-.pt-row{ display:grid; grid-template-columns:12rem minmax(0,1fr) 10rem;
-  column-gap:var(--sp-4); align-items:center; min-height:48px; padding:var(--sp-2) var(--sp-3);
-  border-bottom:1px solid var(--line); color:inherit; text-decoration:none;
-  border-radius:var(--radius-sm); transition:background-color var(--motion,140ms); }
-.pt-list li:last-child .pt-row{ border-bottom:0; }
-.pt-row:hover{ background:var(--s2); }
-.pt-row:focus-visible{ outline-offset:-2px; }
-.pt-name{ font-size:var(--fs-value); font-weight:600; color:var(--val); }
-.pt-row:hover .pt-name{ text-decoration:underline; text-decoration-thickness:1px;
-  text-underline-offset:3px; }
-.pt-purpose{ color:var(--tx2); }
-.pt-addr{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pt-state{ justify-self:end; text-align:right; }
+/* The launcher: one card per stage, in course order, each with clear
+   buttons. Students see where to go; status only shows when a screen
+   cannot be used right now (the button greys out and says why). */
+.pt-cards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-4);
+  align-items:start;
+  margin-bottom:var(--sp-5); }
+.pt-card{ display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-4);
+  background:var(--s1); border:1px solid var(--line); border-radius:var(--radius); min-width:0; }
+.pt-card>header{ display:flex; align-items:baseline; gap:var(--sp-3); }
+.pt-step{ font-family:var(--mono); font-size:var(--fs-label); color:var(--tx3);
+  border:1px solid var(--line-2); border-radius:999px; min-width:1.7em; height:1.7em;
+  display:inline-grid; place-items:center; flex:0 0 auto; }
+.pt-card h2{ font-size:var(--fs-h2, 1.15rem); font-weight:600; color:var(--tx); }
+.pt-card header p{ font-size:var(--fs-label); color:var(--tx3); }
+.pt-list{ list-style:none; display:flex; flex-direction:column; gap:var(--sp-2); }
+.pt-btn{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
+  column-gap:var(--sp-3); row-gap:2px; padding:var(--sp-3); min-height:56px;
+  border:1px solid var(--line-2); border-radius:var(--radius-sm); background:var(--s2);
+  color:inherit; text-decoration:none;
+  transition:background-color var(--motion,140ms), border-color var(--motion,140ms); }
+.pt-btn.is-primary{ background:var(--accent); border-color:var(--accent); }
+.pt-btn.is-primary .pt-name, .pt-btn.is-primary .pt-purpose,
+.pt-btn.is-primary .pt-go, .pt-btn.is-primary .pt-up,
+.pt-btn.is-primary .pt-up .g{ color:var(--on-accent, #fff); }
+.pt-btn:hover{ border-color:var(--accent); }
+.pt-btn.is-primary:hover{ filter:brightness(1.08); }
+.pt-btn:focus-visible{ outline:2px solid var(--focus, var(--accent)); outline-offset:2px; }
+.pt-name{ font-size:var(--fs-value); font-weight:600; color:var(--val); grid-column:1; }
+.pt-purpose{ font-size:var(--fs-label); color:var(--tx2); grid-column:1; }
+.pt-go{ grid-column:2; grid-row:1 / span 2; color:var(--tx2); font-size:1.1rem; }
+.pt-state{ grid-column:1 / -1; font-size:var(--fs-label); color:var(--tx3); }
+.pt-state:empty{ display:none; }
 .pt-up{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-label); color:var(--tx2); }
 .pt-up .g{ color:var(--ok); display:inline-flex; }
 .pt-up svg{ width:10px; height:10px; }
-.pt-state .why{ display:block; font-size:var(--fs-label); color:var(--tx3); margin-top:2px; }
-.pt-row.is-down .pt-name{ color:var(--tx2); font-weight:500; }
-.pt-row.is-down .pt-purpose{ color:var(--tx3); }
+.pt-state .why{ margin-left:var(--sp-2); }
+/* Not usable right now (or not for this viewer): greyed, not clickable. */
+.pt-btn.is-down, .pt-btn[aria-disabled="true"]{ background:transparent; border-style:dashed;
+  cursor:not-allowed; pointer-events:none; }
+.pt-btn.is-down .pt-name, .pt-btn[aria-disabled="true"] .pt-name{ color:var(--tx3); font-weight:500; }
+.pt-btn.is-down .pt-purpose, .pt-btn[aria-disabled="true"] .pt-purpose,
+.pt-btn.is-down .pt-go{ color:var(--tx3); }
+.pt-cards.has-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+.pt-card.is-locked{ grid-column:1 / -1; background:transparent; border-style:dashed;
+  flex-direction:row; align-items:baseline; gap:var(--sp-4); padding:var(--sp-3) var(--sp-4); }
+.pt-card.is-locked h2{ color:var(--tx3); }
+.pt-lock{ font-size:var(--fs-label); color:var(--tx3); }
+.pt-more{ margin-top:var(--sp-5); }
+.pt-more>summary{ cursor:pointer; color:var(--tx2); font-size:var(--fs-label); }
 
 .pt-foot{ font-size:var(--fs-label); color:var(--tx3); max-width:80ch; }
 .pt-foot .num{ color:var(--tx2); }
@@ -426,28 +448,17 @@ PAGE_CSS = """
 .pt-user a{ margin-left:var(--sp-3); }
 
 @media (max-width:1100px){
-  .pt-row{ grid-template-columns:11rem minmax(0,1fr) 9.5rem; }
+  .pt-cards, .pt-cards.has-4{ grid-template-columns:1fr 1fr; }
 }
 @media (max-width:720px){
   .pt-main{ padding:var(--sp-4) var(--sp-4) var(--sp-5); }
+  .pt-cards, .pt-cards.has-4{ grid-template-columns:1fr; }
   .pt-strip{ grid-template-columns:1fr; }
   .pt-cell{ border-right:0; border-bottom:1px solid var(--line); padding:var(--sp-2) var(--sp-4);
     display:flex; justify-content:space-between; gap:var(--sp-3); align-items:baseline; }
   .pt-cell:last-child{ border-bottom:0; }
   .pt-cell dt{ margin:0; flex:0 0 auto; }
   .pt-cell dd{ justify-content:flex-end; text-align:right; }
-  .pt-sec{ grid-template-columns:1fr; }
-  .pt-sec>header{ display:flex; align-items:baseline; gap:var(--sp-3); padding:0 0 var(--sp-1); }
-  .pt-sec header p{ margin:0; }
-  .pt-row{ grid-template-columns:minmax(0,1fr) auto; row-gap:2px; padding:var(--sp-2) 0; }
-  .pt-name{ grid-column:1; grid-row:1; }
-  .pt-state{ grid-column:2; grid-row:1; }
-  .pt-purpose{ grid-column:1 / -1; grid-row:2; }
-  .pt-addr{ grid-column:1 / -1; grid-row:3; }
-  .pt-up{ display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-label); color:var(--tx2); }
-.pt-up .g{ color:var(--ok); display:inline-flex; }
-.pt-up svg{ width:10px; height:10px; }
-.pt-state .why{ display:none; }
   .pt-user{ white-space:normal; }
 }
 """
@@ -465,17 +476,19 @@ _DYN_I18N = "data-i18n"
 
 
 def _status_cell(svc: Service) -> str:
-    return (f'<span class="pt-state" id="st-{svc.key}" data-key="{svc.key}">'
-            '<span class="ds-chip is-nodata"><span data-i18n>Checking…</span></span></span>')
+    # Empty until the first probe: a student sees nothing unless the screen
+    # can't be used right now; an instructor also sees "available".
+    return f'<span class="pt-state" id="st-{svc.key}" data-key="{svc.key}"></span>'
 
 
-def _row(svc: Service, url: str) -> str:
-    # No address line: the row is the link, and a port number or host name
-    # is developer information (SCREEN_REVIEW §1).
+def _row(svc: Service, url: str, *, primary: bool = False) -> str:
+    # The button is the link; no address or port (SCREEN_REVIEW §1).
     e = html.escape
-    return (f'<li><a class="pt-row" id="row-{svc.key}" href="{e(url)}">'
+    cls = "pt-btn is-primary" if primary else "pt-btn"
+    return (f'<li><a class="{cls}" id="row-{svc.key}" href="{e(url)}">'
             f'<span class="pt-name" {_DYN_I18N}>{e(svc.name)}</span>'
             f'<span class="pt-purpose" {_DYN_I18N}>{e(svc.purpose)}</span>'
+            f'<span class="pt-go" aria-hidden="true">→</span>'
             f'{_status_cell(svc)}</a></li>')
 
 
@@ -491,13 +504,27 @@ def build_page(cfg: Config, *, request_host: str | None, user: str | None,
     e = html.escape
     sections = []
     shown = visible_services(instructor)
+    step = 0
     for key, title, sub in SECTIONS:
-        rows = "".join(_row(s, cfg.link(s, request_host)) for s in shown if s.section == key)
-        if not rows:
+        svcs = [s for s in shown if s.section == key]
+        if not svcs:
+            if key == "instructor":
+                # Greyed for a student: they see where instructor tools sit,
+                # not what they are or where they live.
+                sections.append(
+                    f'<section class="pt-card is-locked" aria-labelledby="h-{key}">'
+                    f'<header><span class="pt-step" aria-hidden="true">·</span>'
+                    f'<h2 id="h-{key}" {_DYN_I18N}>{e(title)}</h2></header>'
+                    '<p class="pt-lock" data-i18n>For the instructor running the session. Ask them if you need something changed in the simulation.</p></section>')
             continue
+        step += 1
+        rows = "".join(_row(s, cfg.link(s, request_host), primary=(n == 0))
+                       for n, s in enumerate(svcs))
+        mark = str(step) if key != "instructor" else "·"
         sections.append(
-            f'<section class="pt-sec" aria-labelledby="h-{key}">'
-            f'<header><h2 id="h-{key}" {_DYN_I18N}>{e(title)}</h2>'
+            f'<section class="pt-card" aria-labelledby="h-{key}">'
+            f'<header><span class="pt-step" aria-hidden="true">{mark}</span>'
+            f'<h2 id="h-{key}" {_DYN_I18N}>{e(title)}</h2>'
             f'<p {_DYN_I18N}>{e(sub)}</p></header>'
             f'<ul class="pt-list">{rows}</ul></section>')
     if user:
@@ -523,7 +550,7 @@ def build_page(cfg: Config, *, request_host: str | None, user: str | None,
     where = (f'<span data-i18n>Each screen has its own address under</span> '
              f'<b class="num">{e(cfg.domain)}</b><span data-i18n>; sign in once with your C2O account.</span>'
              if cfg.domain else '')
-    boot = json.dumps({"domain": cfg.domain}).replace("</", "<\\/")
+    boot = json.dumps({"domain": cfg.domain, "instructor": bool(instructor)}).replace("</", "<\\/")
     return f"""<!DOCTYPE html>
 <html lang="{e(lang)}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -533,11 +560,11 @@ def build_page(cfg: Config, *, request_host: str | None, user: str | None,
 </head><body>
 <a class="ds-skip" href="#content" data-i18n>Skip to content</a>
 {bar}
-{strip}
+{strip if instructor else ""}
 <main id="content" class="pt-main">
-<p class="pt-intro"><span data-i18n>Choose the screen for what you are about to do. The status beside each one is checked on the server every few seconds.</span> {where}</p>
-{"".join(sections)}
-<p class="pt-foot" id="foot"><span data-i18n>Status not checked yet.</span></p>
+<p class="pt-intro"><span data-i18n>Where do you want to go? Design the mission, fly it, then review what happened.</span> {where}</p>
+<div class="pt-cards{" has-4" if instructor else ""}">{"".join(sections)}</div>
+<p class="pt-foot" id="foot"></p>
 </main>
 <script id="pt-boot" type="application/json">{boot}</script>
 {tool_frame.SCRIPT}
@@ -563,16 +590,18 @@ function dur(s) {
 function chip(kind, label, g) {
   return `<span class="ds-chip ${kind}">${g ? glyph(g) : ""}<span>${esc(label)}</span></span>`;
 }
+const BOOT = JSON.parse((document.getElementById("pt-boot") || {}).textContent || "{}");
 function serviceCell(key, r) {
-  if (!r) return chip("is-nodata", T("Checking…"));
-  // Calm when nominal: "available" is quiet text; only exceptions get a chip.
-  if (r.state === "up") return `<span class="pt-up"><span class="g">${glyph("ack")}</span>${esc(T("Available"))}</span>`;
-  if (r.state === "starting") {
-    const why = r.reason === "no-simulator" ? T("No simulator connected") : T("Not answering yet");
-    return chip("is-stale", r.reason === "no-simulator" ? T("Waiting") : T("Starting"), "stale") +
-      `<span class="why">${esc(why)}</span>`;
+  if (!r) return "";
+  if (r.state === "up") {
+    // Calm when nominal: students see nothing, instructors a quiet tick.
+    return BOOT.instructor ? `<span class="pt-up"><span class="g">${glyph("ack")}</span>${esc(T("Available"))}</span>` : "";
   }
-  return chip("off", T("Not running"), "off");
+  if (r.state === "starting") {
+    const why = r.reason === "no-simulator" ? T("No simulator connected") : T("Starting up, try again in a minute");
+    return `<span class="pt-up">${glyph("stale")}<span>${esc(why)}</span></span>`;
+  }
+  return `<span class="pt-up">${glyph("off")}<span>${esc(T("Not available right now"))}</span></span>`;
 }
 function linkCell(l) {
   const s = (l || {}).state;
@@ -606,21 +635,27 @@ function paint() {
   document.querySelectorAll(".pt-state[data-key]").forEach((el) => {
     const r = sv[el.dataset.key];
     el.innerHTML = last ? serviceCell(el.dataset.key, r) : serviceCell(el.dataset.key, null);
-    const row = el.closest(".pt-row");
-    if (row) row.classList.toggle("is-down", !!r && r.state === "down");
+    const row = el.closest(".pt-btn");
+    if (row) {
+      const down = !!r && r.state === "down";
+      row.classList.toggle("is-down", down);
+      if (down) { row.setAttribute("aria-disabled", "true"); row.setAttribute("tabindex", "-1"); }
+      else { row.removeAttribute("aria-disabled"); row.removeAttribute("tabindex"); }
+    }
   });
-  if (last) {
+  if (last && $("m-link")) {
     $("m-link").innerHTML = linkCell(d.link);
     $("m-mode").innerHTML = modeCell(d.mode);
     $("m-pass").innerHTML = passCell(d.pass);
+  }
+  if (last) {
     // No wall-clock stamp beside sim-time readouts (SCREEN_REVIEW §1).
     $("foot").textContent = failed
       ? T("This page lost contact with its server; the status shown may be out of date.")
-      : T("Status refreshed every few seconds.");
+      : (BOOT.instructor ? T("Status refreshed every few seconds.") : "");
   }
   // A local SpaceCDF may answer on the dev port instead of 8000.
-  const boot = JSON.parse(($("pt-boot") || {}).textContent || "{}");
-  if (!boot.domain && sv.design && sv.design.port) {
+  if (!BOOT.domain && sv.design && sv.design.port) {
     const a = $("row-design");
     if (a) {
       const u = new URL(a.href); u.port = String(sv.design.port);
