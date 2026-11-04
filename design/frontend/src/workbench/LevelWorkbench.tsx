@@ -23,13 +23,17 @@ import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
 import { SpacecraftView } from '../spacecraft/SpacecraftView'
 import { ModesPanel } from '../modes/ModesPanel'
+import { TmtcPanel } from '../cdr/TmtcPanel'
+import { FdirPanel } from '../cdr/FdirPanel'
+import { AocsModesPanel } from '../cdr/AocsModesPanel'
+import { OpsPanel } from '../cdr/OpsPanel'
 import { useSeatView } from '../seats/view'
 import { useSeatStore } from '../seats/api'
 
-const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'trace', 'decide', 'analyses']
+const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses']
 
 /** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
-const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'trace', 'decide', 'analyses'])
+const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses'])
 
 const MIN_PANEL = 160
 
@@ -51,6 +55,10 @@ const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
   electrical: 'Electrical',
   data: 'Data',
   icd: 'ICD',
+  tmtc: 'TM/TC',
+  fdir: 'FDIR',
+  aocs: 'AOCS modes',
+  ops: 'Operations',
   trace: 'Traceability',
   decide: 'Decide',
   analyses: 'Analyses',
@@ -218,6 +226,10 @@ export function LevelWorkbench() {
           {activePanel === 'interfaces' && <InterfacesPanel />}
           {activePanel === 'electrical' && <ErrorBoundary phaseName="Electrical"><ElectricalPanel /></ErrorBoundary>}
           {activePanel === 'data' && <ErrorBoundary phaseName="Data"><DataBusPanel /></ErrorBoundary>}
+          {activePanel === 'tmtc' && <ErrorBoundary phaseName="TM/TC"><TmtcPanel /></ErrorBoundary>}
+          {activePanel === 'fdir' && <ErrorBoundary phaseName="FDIR"><FdirPanel /></ErrorBoundary>}
+          {activePanel === 'aocs' && <ErrorBoundary phaseName="AOCS modes"><AocsModesPanel /></ErrorBoundary>}
+          {activePanel === 'ops' && <ErrorBoundary phaseName="Operations"><OpsPanel /></ErrorBoundary>}
           {activePanel === 'icd' && <ErrorBoundary phaseName="ICD"><ICDTable /></ErrorBoundary>}
           {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}

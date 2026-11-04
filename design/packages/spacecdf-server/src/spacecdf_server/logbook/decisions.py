@@ -48,7 +48,7 @@ from .worksheets import worksheets_dir
 logger = logging.getLogger(__name__)
 
 CATALOGUE_FILE = "decision_catalogue.yaml"
-GATE_ORDER = ("mdr", "prr", "srr", "pdr")
+GATE_ORDER = ("mdr", "prr", "srr", "pdr", "cdr")
 FIELDS = ("options", "criteria", "choice", "rationale", "evidence", "consequences", "margin_impact", "open_issues")
 TEXT_FIELDS = {"choice": 1_000, "rationale": 4_000, "consequences": 4_000, "margin_impact": 1_000,
                "open_issues": 2_000, "subject": 200, "question": 500, "part_title": 300}
@@ -450,7 +450,7 @@ def localised(lang: str, entries: Iterable[dict], study_id: str | None, lookup=N
         order[d["id"]] = i
     items = []
     for d in cat.get("decisions") or []:
-        wid, qid = (d["part"].split("/", 1) + [""])[:2]
+        wid, qid = ((d.get("part") or "").split("/", 1) + [""])[:2]
         ws_title = q_text = None
         q_order = 10_000
         if lookup:
@@ -458,7 +458,8 @@ def localised(lang: str, entries: Iterable[dict], study_id: str | None, lookup=N
         mine = rec.get(d["id"], [])
         items.append({
             "id": d["id"],
-            "part": d["part"],
+            "part": d.get("part"),
+            "no_workbook_part": bool(d.get("no_workbook_part")),
             "worksheet": wid,
             "q": qid,
             "worksheet_title": ws_title,

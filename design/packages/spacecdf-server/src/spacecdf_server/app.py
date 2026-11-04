@@ -229,6 +229,10 @@ app.include_router(modes_router.router, prefix="/api", tags=["Modes & budgets"])
 # Product tree levels, default trees, spacecraft, migration (ECSS-M-ST-10C)
 from .routers import product_tree as product_tree_router  # noqa: E402
 app.include_router(product_tree_router.router, prefix="/api", tags=["Product tree"])
+# CDR design model: TM/TC database, FDIR, AOCS modes, TT&C ladder, line states, operations
+from .routers import cdr as cdr_router  # noqa: E402
+app.include_router(cdr_router.router, prefix="/api", tags=["CDR design model"])
+
 # CubeSat stack builder (design rules §4, D9)
 app.include_router(stack_router.router, prefix="/api", tags=["Stack builder"])
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)

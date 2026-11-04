@@ -44,6 +44,10 @@ def test_hand_maintained_header():
 def test_every_decision_names_a_real_workbook_part():
     parts = _parts()
     for d in _cat()["decisions"]:
+        if d["part"] is None:
+            # a CDR decision no workbook part asks for yet says so explicitly (phase 2)
+            assert d.get("no_workbook_part") is True and d["id"].startswith("D-CDR-"), d["id"]
+            continue
         wid, qid = d["part"].split("/")
         assert wid in parts, (d["id"], wid)
         assert qid in parts[wid], (d["id"], d["part"], sorted(parts[wid]))
@@ -54,8 +58,8 @@ def test_ids_unique_and_well_formed():
     ids = [d["id"] for d in _cat()["decisions"]]
     assert len(ids) == len(set(ids))
     for d in _cat()["decisions"]:
-        assert re.fullmatch(r"D-(\d\.\d|GATE)-[A-Z]+", d["id"]), d["id"]
-        if d["id"].startswith("D-GATE"):
+        assert re.fullmatch(r"D-(\d\.\d|GATE|CDR)-[A-Z]+", d["id"]), d["id"]
+        if d["id"].startswith(("D-GATE", "D-CDR")):
             continue
         assert d["part"].startswith(f"LW-{d['id'].split('-')[1]}/"), f"{d['id']} id says its worksheet: {d['part']}"
 
@@ -81,9 +85,10 @@ def test_bilingual_and_french_typography():
 
 
 def test_full_ecss_gate_profile():
-    """Ruling 1 (REDESIGN_DECISIONS.md): MDR → PRR → SRR → PDR; MCR is the old MDR name (ruling 3)."""
+    """Ruling 1 (REDESIGN_DECISIONS.md): MDR → PRR → SRR → PDR (→ CDR, phase 2); MCR is the old MDR name (ruling 3)."""
     gates = _cat()["gates"]
-    assert [g["id"] for g in gates] == list(dec.GATE_ORDER) == ["mdr", "prr", "srr", "pdr"]
+    assert [g["id"] for g in gates] == list(dec.GATE_ORDER) == ["mdr", "prr", "srr", "pdr", "cdr"]
+    assert dec.due_by("cdr") == {"mdr", "prr", "srr", "pdr", "cdr"}
     assert "mcr" in gates[0]["ui_gates"]
     assert dec.gate_of_ui("mcr") == "mdr" and dec.gate_of_ui("SRR") == "srr" and dec.gate_of_ui("x") is None
     assert dec.due_by("srr") == {"mdr", "prr", "srr"}
@@ -129,7 +134,7 @@ def test_capture_points_exist_in_the_frontend_and_back():
 
 def test_every_decision_worksheet_is_covered():
     """Each design worksheet that asks for decisions (1.2 … 5.2) has at least one in the catalogue."""
-    covered = {d["part"].split("/")[0] for d in _cat()["decisions"]}
+    covered = {d["part"].split("/")[0] for d in _cat()["decisions"] if d["part"]}
     expected = {"LW-1.2", "LW-1.3", "LW-1.4", "LW-2.1", "LW-2.2", "LW-2.3", "LW-2.4", "LW-3.1", "LW-3.2",
                 "LW-3.3", "LW-3.4", "LW-4.1", "LW-4.2", "LW-4.3", "LW-4.4", "LW-5.1", "LW-5.2"}
     assert expected <= covered, expected - covered
@@ -137,7 +142,10 @@ def test_every_decision_worksheet_is_covered():
 
 def test_localised_order_follows_the_workbook():
     out = dec.localised("fr", [], None, lookup=None)
-    nums = [tuple(int(x) for x in d["worksheet"].split("-")[1].split(".")) for d in out["decisions"]]
+    nums = [tuple(int(x) for x in d["worksheet"].split("-")[1].split(".")) for d in out["decisions"] if d["worksheet"]]
     assert nums == sorted(nums)
+    # decisions with no workbook part come last
+    tail = [d["id"] for d in out["decisions"] if not d["worksheet"]]
+    assert tail and [d["id"] for d in out["decisions"]][-len(tail):] == tail
     assert out["gates"][0]["label"].startswith("MDR") and all(d["status"] == "open" for d in out["decisions"])
     assert sum(c["total"] for c in out["counts"].values()) == len(out["decisions"])

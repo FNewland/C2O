@@ -34,7 +34,7 @@ _CFG = {"sources": {
 }}
 
 #: Requirement-quality pass threshold for SRR/PDR (share of requirements with no error). C2O default.
-QUALITY_PASS_SHARE = {"SRR": 0.8, "PDR": 1.0}
+QUALITY_PASS_SHARE = {"SRR": 0.8, "PDR": 1.0, "CDR": 1.0}
 #: Minimum TRL of selected parts at SRR (gate_exit_criteria SRR-EC-08 evidence text).
 SRR_MIN_TRL = 4
 
@@ -44,6 +44,10 @@ GATE_CHECKS: dict[str, tuple[str, ...]] = {
     "PRR": ("GC-PRODUCT-TREE", "GC-MARGINS"),
     "SRR": ("GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-MARGINS"),
     "PDR": ("GC-PRODUCT-TREE", "GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-VER-RISK",
+            "GC-MARGINS", "GC-CDS", "GC-STACK", "GC-FMECA"),
+    # CDR: the PDR artefacts again (now at the CDR margin step); the CDR products themselves
+    # (TM/TC database, FDIR, AOCS modes, operations) are exit criteria CDR-EC-03 … 09.
+    "CDR": ("GC-PRODUCT-TREE", "GC-SPEC-TREE", "GC-REQ-QUALITY", "GC-VER-METHODS", "GC-VER-RISK",
             "GC-MARGINS", "GC-CDS", "GC-STACK", "GC-FMECA"),
 }
 
@@ -87,7 +91,7 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
         systems = [e for e in hw if e.get("element_type") == "system"]
         subs = [e for e in hw if e.get("element_type") == "subsystem"]
         with_comp = [s for s in subs if any(c.get("element_type") == "component" for c in kids.get(s["id"], []))]
-        need_comp = gate == "PDR"
+        need_comp = gate in ("PDR", "CDR")
         # levels (services/product_tree.py): no subsystem or unit directly under a segment
         from .product_tree import misplaced
         hw_ids = {e["id"] for e in hw}
@@ -98,7 +102,7 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
         return rc.check_item(cid, {"en": "Product tree", "fr": "Arbre produit"}, "pass" if ok else "fail",
                              {"en": f"{len(systems)} system(s), {len(subs)} subsystem(s), {len(with_comp)} with components.{wtxt_en}",
                               "fr": f"{len(systems)} système(s), {len(subs)} sous-système(s), dont {len(with_comp)} avec composants.{wtxt_fr}"},
-                             _ref("ecss_m_10", "4.4.3.4.4" if gate == "PDR" else None),
+                             _ref("ecss_m_10", "4.4.3.4.4" if gate == "PDR" else ("4.4.3.4.5 (to verify)" if gate == "CDR" else None)),
                              counts={"systems": len(systems), "subsystems": len(subs), "with_components": len(with_comp),
                                      "misplaced": len(wrong)})
     if cid == "GC-SPEC-TREE":
@@ -106,7 +110,7 @@ def _check(cid: str, gate: str, ctx: dict[str, Any], cache: dict[str, Any]) -> d
         below = [r for r in reqs if r.get("level") in ("subsystem",)]
         orphans = [r for r in below if not (r.get("parent_id") or r.get("derived_from_requirement_id"))]
         has_sys = "system" in levels
-        need_sub = gate == "PDR"
+        need_sub = gate in ("PDR", "CDR")
         ok = has_sys and (bool(below) if need_sub else True) and not orphans
         return rc.check_item(cid, {"en": "Specification tree", "fr": "Arbre de spécifications"}, "pass" if ok else "fail",
                              {"en": f"Levels {sorted(x for x in levels if x)}; {len(orphans)} subsystem requirement(s) without a parent.",

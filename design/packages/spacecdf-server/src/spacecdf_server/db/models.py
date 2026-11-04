@@ -772,3 +772,7 @@ from . import models_modes  # noqa: E402,F401
 # Electrical and data-handling tables (power rails, lines, buses, nodes, ports) live in their
 # own module; importing it registers them on Base.metadata for create_all.
 from . import electrical_models as _electrical_models  # noqa: E402,F401
+
+# CDR design model (TM/TC database, FDIR, AOCS modes, TT&C ladder, line states, operations):
+# one generic table, registered on Base.metadata for create_all.
+from . import cdr_models as _cdr_models  # noqa: E402,F401

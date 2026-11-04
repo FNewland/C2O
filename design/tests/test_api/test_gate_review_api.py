@@ -1,6 +1,6 @@
 """Gate review API (author ruling Q23): /api/ecss/gate-evaluate/{study}/{gate}.
 
-Nov 2026 (WP0): canonical gates MDR/PRR/SRR/PDR ("mcr" still means MDR), and the
+Nov 2026 (WP0): canonical gates MDR/PRR/SRR/PDR (CDR added in phase 2) ("mcr" still means MDR), and the
 evaluation reads the stored study only — a POST body is ignored.
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ from tests.test_api.conftest import make_element, make_requirement
 async def test_gates_listing(client):
     r = await client.get("/api/ecss/gates")
     assert r.status_code == 200
-    assert [g["gate"] for g in r.json()] == ["MDR", "PRR", "SRR", "PDR"]
+    assert [g["gate"] for g in r.json()] == ["MDR", "PRR", "SRR", "PDR", "CDR"]
 
 
 async def test_get_accepts_gate_names(client, study_obj, study):

@@ -1,8 +1,9 @@
 """SpaceCDF — gate profiles (configs/gate_profiles.yaml).
 
-A study holds the review gates of its *profile*: full ECSS (MDR → PRR → SRR → PDR, the
-default, ruling 1), ESA IOD CubeSat (concept review → PDR), C2O three gates
-(MDR → PRR+SRR → PDR) or the NASA vocabulary skin (MCR → SRR → MDR/SDR → PDR).
+A study holds the review gates of its *profile*: full ECSS (MDR → PRR → SRR → PDR → CDR, the
+default, ruling 1 carried on to CDR in Nov 2026), ESA IOD CubeSat (concept review → PDR → CDR),
+C2O three gates (MDR → PRR+SRR → PDR) or the NASA vocabulary skin (MCR → SRR → MDR/SDR → PDR → CDR).
+A profile covers the canonical gates in order from MDR to at least PDR; CDR is optional.
 
 Each profile gate ``covers`` canonical gates (the phases of gate_exit_criteria.yaml):
 its checklist is the union of their criteria, the decisions due by it are those of every
@@ -22,7 +23,9 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-CANONICAL = ("mdr", "prr", "srr", "pdr")
+CANONICAL = ("mdr", "prr", "srr", "pdr", "cdr")
+#: the canonical gates every profile must cover (CDR is optional: the C2O spine stops at PDR)
+REQUIRED = ("mdr", "prr", "srr", "pdr")
 
 
 def _file() -> Path:
@@ -49,7 +52,8 @@ def load() -> dict[str, Any]:
 
 
 def validate(data: dict[str, Any] | None = None) -> list[str]:
-    """Structural checks: every profile covers each canonical gate once, in order."""
+    """Structural checks: every profile covers the canonical gates once, in order, from MDR to
+    at least PDR (CDR optional)."""
     data = data if data is not None else load()
     errs: list[str] = []
     profiles = data.get("profiles") or {}
@@ -76,8 +80,8 @@ def validate(data: dict[str, Any] | None = None) -> list[str]:
             mg = g.get("margin_gate")
             if mg is not None and mg not in (*CANONICAL, "cdr"):
                 errs.append(f"profiles.{pid}.{g.get('id')}: bad margin_gate {mg}")
-        if covered != list(CANONICAL):
-            errs.append(f"profiles.{pid}: gates must cover {list(CANONICAL)} once, in order (got {covered})")
+        if covered != list(CANONICAL[: len(covered)]) or len(covered) < len(REQUIRED):
+            errs.append(f"profiles.{pid}: gates must cover {list(REQUIRED)} (then optionally cdr) once, in order (got {covered})")
     for step, label in steps.items():
         if not (isinstance(label, dict) and label.get("en") and label.get("fr")):
             errs.append(f"steps.{step}: needs en and fr")
