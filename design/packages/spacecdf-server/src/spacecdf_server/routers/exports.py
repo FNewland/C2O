@@ -6,14 +6,11 @@ documents, and flight software architecture from a design study.
 from __future__ import annotations
 
 import io
-import math
 import re
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from spacecdf_common.agents.base import DesignState
-from spacecdf_common.models.study import MissionRequirements
 from spacecdf_agents import DesignLoopOrchestrator
 
 from .studies import get_study_store
@@ -115,7 +112,7 @@ def _derive_state_machine(study) -> dict:
         if name != safe_name:
             transitions.append({
                 "from": name, "to": safe_name,
-                "trigger": f"fault_detected OR cmd_go_safe",
+                "trigger": "fault_detected OR cmd_go_safe",
                 "priority": "critical",
             })
             transitions.append({
@@ -455,241 +452,34 @@ def _derive_traceability(study, requirements: list[dict], elements: list[dict]) 
     return chains
 
 
-# ─── Helpers: SMO enrichment ───
-
-def _derive_mission_profile(study) -> list[dict]:
-    """Derive mission event timeline from ConOps phases."""
-    conops = getattr(study, "conops", None)
-    phases = getattr(conops, "phases", []) if conops else []
-
-    # Standard event timeline
-    events = [
-        {"event": "separation", "time_offset": "T+0s",
-         "description": "Spacecraft separation from launch vehicle"},
-    ]
-
-    cumulative_s = 0
-    for p in phases:
-        phase_name = p.name if hasattr(p, "name") else str(p)
-        duration_days = getattr(p, "duration_days", 0) or 0
-        phase_type = p.phase_type.value if hasattr(p, "phase_type") and hasattr(p.phase_type, "value") else ""
-
-        # Map ConOps phases to simulation events
-        if "leop" in phase_type.lower() or "leop" in phase_name.lower():
-            events.append({"event": "detumble", "time_offset": "T+30min",
-                           "description": "Detumble and initial stabilisation"})
-            events.append({"event": "sun_acquisition", "time_offset": "T+1h",
-                           "description": "Sun acquisition and solar array deployment"})
-            events.append({"event": "antenna_deploy", "time_offset": "T+1.5h",
-                           "description": "Antenna deployment and first beacon"})
-            cumulative_s += duration_days * 86400
-        elif "commissioning" in phase_type.lower() or "commissioning" in phase_name.lower():
-            events.append({"event": "commissioning_start",
-                           "time_offset": f"T+{cumulative_s/3600:.0f}h",
-                           "description": "Begin commissioning — subsystem checkout"})
-            cumulative_s += duration_days * 86400
-        elif "nominal" in phase_type.lower() or "nominal" in phase_name.lower():
-            events.append({"event": "nominal_ops",
-                           "time_offset": f"T+{cumulative_s/3600:.0f}h",
-                           "description": "Transition to nominal science operations"})
-            cumulative_s += duration_days * 86400
-        elif "disposal" in phase_type.lower() or "disposal" in phase_name.lower():
-            events.append({"event": "end_of_life",
-                           "time_offset": f"T+{cumulative_s/3600:.0f}h",
-                           "description": "Begin disposal / passivation sequence"})
-
-    # Estimate first ground pass from orbit
-    events.append({"event": "first_ground_pass",
-                   "time_offset": "T+~90min",
-                   "description": "Estimated first ground station contact (orbit-dependent)"})
-
-    return events
-
-
-def _derive_perturbations(orbit_params: dict) -> dict:
-    """Set perturbation model flags from orbit type."""
-    orbit_type = orbit_params.get("orbit_type", "SSO").upper()
-    altitude_km = orbit_params.get("altitude_km", 500.0)
-
-    is_leo = orbit_type in ("LEO", "SSO") or altitude_km < 2000
-    is_geo = orbit_type == "GEO" or (altitude_km > 35000 and altitude_km < 36000)
-    is_deep = orbit_type in ("LUNAR", "INTERPLANETARY", "LAGRANGE")
-
-    return {
-        "J2": True,
-        "atmospheric_drag": is_leo,
-        "solar_radiation_pressure": True,
-        "third_body_moon": is_geo or is_deep,
-        "third_body_sun": is_geo or is_deep,
-        "solid_earth_tides": False,
-        "general_relativity": is_deep,
-        "notes": (
-            "LEO config: J2 + drag + SRP dominant"
-            if is_leo else
-            "GEO/deep-space config: third-body perturbations enabled"
-            if is_geo or is_deep else
-            "MEO config: J2 + SRP, drag negligible"
-        ),
-    }
-
-
-def _derive_simulation_config(orbit_params: dict) -> dict:
-    """Set simulation time step and duration from orbit."""
-    altitude_km = orbit_params.get("altitude_km", 500.0)
-    # Estimate orbital period
-    mu = 3.986004418e5  # km^3/s^2
-    r_earth = 6371.0
-    a = r_earth + altitude_km
-    period_s = 2 * math.pi * math.sqrt(a ** 3 / mu)
-
-    return {
-        "quick_sim": {
-            "duration_s": round(period_s, 1),
-            "duration_label": "1 orbit",
-            "time_step_s": 10,
-        },
-        "full_sim": {
-            "duration_s": 86400,
-            "duration_label": "24 hours",
-            "time_step_s": 10,
-        },
-        "long_sim": {
-            "duration_s": 86400 * 7,
-            "duration_label": "7 days",
-            "time_step_s": 60,
-        },
-        "orbital_period_s": round(period_s, 1),
-        "integrator": "RK45",
-        "reference_frame": "J2000",
-        "epoch": "2026-01-01T00:00:00Z",
-    }
-
-
-def _derive_output_config() -> dict:
-    """Define simulation output variables."""
-    return {
-        "state_vector": {
-            "position_eci_km": True,
-            "velocity_eci_km_s": True,
-            "position_ecef_km": True,
-            "lat_lon_alt": True,
-        },
-        "attitude": {
-            "quaternion": True,
-            "euler_angles_deg": True,
-            "angular_velocity_deg_s": True,
-            "nadir_angle_deg": True,
-        },
-        "power": {
-            "solar_flux_w_m2": True,
-            "eclipse_flag": True,
-            "battery_soc_percent": True,
-            "power_generated_w": True,
-            "power_consumed_w": True,
-        },
-        "thermal": {
-            "solar_input_w": True,
-            "albedo_input_w": True,
-            "earth_ir_input_w": True,
-            "spacecraft_temp_c": True,
-        },
-        "ground_contact": {
-            "station_name": True,
-            "elevation_deg": True,
-            "in_contact": True,
-        },
-        "output_rate_hz": 0.1,
-    }
-
-
-def _derive_orbit_initial_conditions(orbit_params: dict) -> dict:
-    """Compute initial Keplerian elements and Cartesian state from orbit params."""
-    mu = 3.986004418e5  # km^3/s^2
-    r_earth = 6371.0
-    alt = orbit_params.get("altitude_km", 500.0)
-    inc = orbit_params.get("inclination_deg", 97.4)
-    ecc = orbit_params.get("eccentricity", 0.0)
-    a = r_earth + alt
-    period_s = 2 * math.pi * math.sqrt(a ** 3 / mu)
-    v_circular = math.sqrt(mu / a)
-
-    return {
-        "keplerian": {
-            "semi_major_axis_km": round(a, 3),
-            "eccentricity": ecc,
-            "inclination_deg": inc,
-            "raan_deg": 0.0,
-            "argument_of_perigee_deg": 0.0,
-            "true_anomaly_deg": 0.0,
-        },
-        "cartesian_eci": {
-            "x_km": round(a, 3),
-            "y_km": 0.0,
-            "z_km": 0.0,
-            "vx_km_s": 0.0,
-            "vy_km_s": round(v_circular * math.cos(math.radians(inc)), 4),
-            "vz_km_s": round(v_circular * math.sin(math.radians(inc)), 4),
-        },
-        "derived": {
-            "orbital_period_s": round(period_s, 1),
-            "circular_velocity_km_s": round(v_circular, 4),
-            "altitude_km": alt,
-        },
-    }
-
+# ─── Simulator configuration (design-to-simulator export) ───
 
 @router.post("/smo/{study_id}")
 async def export_smo_config(study_id: str) -> JSONResponse:
-    """Generate SMO simulator configuration files from a design study."""
-    studies = get_study_store()
-    study = studies.get(study_id)
-    state, requirements, _ = await _run_design_for_study(study_id)
-
-    from spacecdf_agents.exporters.smo.exporter import SMOExporter
-    exporter = SMOExporter()
-    export = exporter.export(state, requirements)
-
-    # ── Enrichments: mission profile, perturbations, sim config ──
-    orbit_params = _read_orbit_params(study) if study else {
-        "altitude_km": 500.0, "inclination_deg": 97.4, "orbit_type": "SSO",
-        "eccentricity": 0.0, "design_lifetime_years": 3.0,
-    }
-
-    mission_profile = _derive_mission_profile(study) if study else []
-    perturbations = _derive_perturbations(orbit_params)
-    simulation_config = _derive_simulation_config(orbit_params)
-    output_config = _derive_output_config()
-    orbit_initial_conditions = _derive_orbit_initial_conditions(orbit_params)
-
+    """Simulator configuration files from the design (Nov 2026: the design-to-simulator export,
+    routers/sim_export.py; the hard-coded placeholder exporter is gone). ``files`` maps each
+    path of the configuration directory to its YAML text."""
+    from .sim_export import build_export
+    ex, report = await build_export(study_id)
+    v = report.get("validation") or {}
     return JSONResponse(content={
-        "files": {k: v for k, v in export.files.items()},
-        "is_valid": export.is_valid,
-        "validation_errors": export.validation_errors,
-        "validation_warnings": export.validation_warnings,
-        "param_count": len(export.param_id_map),
-        "file_count": len(export.files),
-        "mission_profile": mission_profile,
-        "perturbations": perturbations,
-        "simulation_config": simulation_config,
-        "output_config": output_config,
-        "orbit_initial_conditions": orbit_initial_conditions,
+        "files": ex.render(),
+        "readiness": report,
+        "is_valid": bool(v.get("available")) and not v.get("errors"),
+        "validation_errors": v.get("errors") or [],
+        "validation_available": bool(v.get("available")),
+        "file_count": len(report.get("files") or []),
     })
 
 
 @router.get("/smo/{study_id}/validate")
 async def validate_smo_export(study_id: str) -> dict:
-    """Run SMO export validation only (no file generation)."""
-    state, requirements, _ = await _run_design_for_study(study_id)
-
-    from spacecdf_agents.exporters.smo.exporter import SMOExporter
-    exporter = SMOExporter()
-    export = exporter.export(state, requirements)
-
-    return {
-        "is_valid": export.is_valid,
-        "errors": export.validation_errors,
-        "warnings": export.validation_warnings,
-    }
+    """Validate the exported simulator configuration with the simulator's strict loaders."""
+    from .sim_export import build_export
+    _, report = await build_export(study_id)
+    v = report.get("validation") or {}
+    return {"is_valid": bool(v.get("available")) and not v.get("errors"), "errors": v.get("errors") or [],
+            "warnings": [] if v.get("available") else ["simulator packages not available: not validated"]}
 
 
 @router.post("/docs/{study_id}")
@@ -1474,7 +1264,7 @@ async def export_rsssa(
         doc.add_heading("1. Applicant Information", level=1)
         doc.add_paragraph(f"Name: {b.university}")
         doc.add_paragraph(f"Department: {b.department}")
-        doc.add_paragraph(f"Country: Canada")
+        doc.add_paragraph("Country: Canada")
 
         doc.add_heading("2. Orbital Parameters", level=1)
         doc.add_paragraph(f"Altitude: {orbit_params['altitude_km']} km")

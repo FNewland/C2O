@@ -232,6 +232,8 @@ app.include_router(product_tree_router.router, prefix="/api", tags=["Product tre
 # CDR design model: TM/TC database, FDIR, AOCS modes, TT&C ladder, line states, operations
 from .routers import cdr as cdr_router  # noqa: E402
 app.include_router(cdr_router.router, prefix="/api", tags=["CDR design model"])
+from .routers import sim_export as sim_export_router  # noqa: E402
+app.include_router(sim_export_router.router, prefix="/api", tags=["Simulator configuration export"])
 
 # CubeSat stack builder (design rules §4, D9)
 app.include_router(stack_router.router, prefix="/api", tags=["Stack builder"])

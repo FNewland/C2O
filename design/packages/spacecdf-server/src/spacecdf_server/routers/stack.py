@@ -361,25 +361,36 @@ async def reject(study_id: str, request: Request) -> dict:
     return await _payload(study_id, request, None)
 
 
-@router.get("/studies/{study_id}/stack/geometry")
-async def geometry(study_id: str, which: str = Query("approved", pattern="^(approved|proposal|current)$"),
-                   format: str = Query("json", pattern="^(json|yaml)$")):
+async def study_geometry(study_id: str, which: str = "approved") -> dict | None:
+    """The c2o.geometry/1 document of the study's stack layout, or None (not a CubeSat, or
+    no layout of that kind). Shared by the route below and the simulator export."""
     ctx = await _context(study_id, None)
     if not _applicable(ctx["ff"]):
-        raise HTTPException(409, {"code": "not_a_cubesat", "message": "Not a CubeSat form factor"})
+        return None
     lay = ctx["layout"]
     entry = lay.get("proposal") if which == "proposal" else lay.get("approved")
     if which == "current":
         entry = lay.get("proposal") or lay.get("approved")
     if not entry:
-        raise HTTPException(404, f"No {which} stack layout")
+        return None
     env = sb.envelope(entry.get("form_factor") or ctx["ff"])
     units = sb.collect_units(ctx["elements"])
     real = _evaluate(entry, units, env, ctx)
     name = ""
     if ctx.get("study") is not None:
         name = getattr(ctx["study"], "name", "") or ""
-    geo = sb.to_geometry(real, units, env, name)
+    return sb.to_geometry(real, units, env, name)
+
+
+@router.get("/studies/{study_id}/stack/geometry")
+async def geometry(study_id: str, which: str = Query("approved", pattern="^(approved|proposal|current)$"),
+                   format: str = Query("json", pattern="^(json|yaml)$")):
+    ctx = await _context(study_id, None)
+    if not _applicable(ctx["ff"]):
+        raise HTTPException(409, {"code": "not_a_cubesat", "message": "Not a CubeSat form factor"})
+    geo = await study_geometry(study_id, which)
+    if geo is None:
+        raise HTTPException(404, f"No {which} stack layout")
     if format == "yaml":
         import yaml
         head = ("# c2o.geometry/1 written by the SpaceCDF stack builder (design/docs/STACK_BUILDER.md).\n"
