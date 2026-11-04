@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 _ELEMENT_JSON_FIELDS = {
     "performance": "performance_json",
     "dimensions_mm": "dimensions_json",
+    "kb_spec": "kb_spec_json",
 }
 
 _INTERFACE_JSON_FIELDS = {
@@ -57,6 +58,7 @@ def _element_row_to_dict(row: DesignElementRow) -> dict:
     # Re-map JSON columns to the API-level keys
     d["performance"] = d.pop("performance_json", None)
     d["dimensions_mm"] = d.pop("dimensions_json", None)
+    d["kb_spec"] = d.pop("kb_spec_json", None)
     # deleted_at: keep as ISO string or None for consistency with router
     if d.get("deleted_at") and isinstance(d["deleted_at"], datetime):
         d["deleted_at"] = d["deleted_at"].isoformat()

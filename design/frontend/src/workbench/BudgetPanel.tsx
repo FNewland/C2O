@@ -13,6 +13,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { useUIStore } from '../stores/uiStore'
 import { displayElementName } from './BlocksPanel'
 import { RecordDecision } from '../logbook'
@@ -43,6 +44,7 @@ const BUDGET_TYPES: Array<{ id: BudgetKind; label: string; unit: string; digits:
 
 interface BudgetLine {
   element_id: string; name: string; nominal: number; with_margin: number; margin_pct: number
+  maturity_category?: string | null
   quantity: number; per_unit: number; allocation: number | null; allocation_per_unit: number | null
   power_avg_w?: number; power_peak_w?: number; duty_cycle?: number | null
   data_rate_mbps?: number; volume_per_orbit_mb?: number; data_volume_gb_per_day?: number
@@ -180,6 +182,15 @@ export function BudgetPanel() {
               <span>{t('Volume per day')} <span className="mono c-v t-13">{fmtNum(budget.total_data_volume_gb_per_day, 3)}</span> GB</span>
             )}
           </div>
+          {budget?.system_margin && (
+            <p className="t-12 c-3 m-0 measure" data-testid="budget-system-margin">
+              {t('System margin at {{gate}}: {{pct}} % ({{label}}), on top of the maturity margins; total with system margin {{total}} {{unit}}.', {
+                gate: String(budget.system_margin.gate ?? '').toUpperCase() || '—', pct: budget.system_margin.percent,
+                label: budget.system_margin.label?.[i18n.language === 'fr' ? 'fr' : 'en'] ?? '',
+                total: fmtNum((budget.sum_with_margin ?? 0) * (1 + (budget.system_margin.percent ?? 0) / 100), bt.digits), unit: bt.unit })}{' '}
+              {budget.system_margin.convention?.text?.[i18n.language === 'fr' ? 'fr' : 'en']}
+            </p>
+          )}
           {unallocated != null && Math.abs(unallocated) > 1e-9 && (
             unallocated < 0
               ? <Note tone="caution">{t('Child allocations total {{sum}} {{unit}}, {{over}} {{unit}} more than the {{alloc}} {{unit}} allocated to {{name}}.', { sum: fmtNum(totalChildAlloc, bt.digits), over: fmtNum(-unallocated, bt.digits), alloc: fmtNum(parentAlloc!, bt.digits), unit: bt.unit, name: parentName })}</Note>
@@ -228,7 +239,10 @@ function BudgetTable({ kind, unit, digits, lines, budget, totalChildAlloc, onSet
     render: l => <AllocationInput currentValue={l.allocation} onSet={v => onSet(l.element_id, v)} unit={unit} label={t('Allocation for {{name}}', { name: displayElementName(l.name, t) })} />,
     foot: totalChildAlloc > 0 ? fmtNum(totalChildAlloc, digits) : '',
   }
-  const mgn: Column<BudgetLine> = { key: 'mgn', header: t('Maturity margin'), num: true, render: l => `${l.margin_pct} %`, sort: l => l.margin_pct }
+  const mgn: Column<BudgetLine> = {
+    key: 'mgn', header: t('Maturity margin'), num: true, sort: l => l.margin_pct,
+    render: l => <span title={t('Margin policy category A–D (ESA margin philosophy 1.3)')}>{l.maturity_category ? `${l.maturity_category} · ` : ''}{l.margin_pct} %</span>,
+  }
 
   let columns: Column<BudgetLine>[]
   if (kind === 'power') {

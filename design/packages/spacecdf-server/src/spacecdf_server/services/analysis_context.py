@@ -103,6 +103,11 @@ class ModeSpec:
     pointing: str = "nadir"
     guards: list[dict] = field(default_factory=list)   # [{condition, target_mode, priority}]
     source: str = "element"                             # element | conops | default
+    # Nov 2026 mode model (services/mode_model.py): per-member rows and the ConOps attributes
+    members: list[dict] = field(default_factory=list)   # [{element_id, power_w, duty, data_rate_bps, dissipation_w, state}]
+    kind: str = ""                                      # leop|commissioning|nominal|imaging|downlink|safe|survival|custom
+    orbit_fraction: float | None = None
+    sunlit_only: bool = False
 
 
 @dataclass
@@ -323,10 +328,14 @@ async def _load_mode_members(study_id: str, mode_ids: set[str]) -> dict[str, lis
             for row in res.scalars():
                 if not row.is_active or (row.mode_id, row.element_id) in seen:
                     continue
+                if getattr(row, "status", "accepted") == "rejected":
+                    continue   # a rejected mode-power proposal is not a member
                 members[row.mode_id].append({
                     "mode_id": row.mode_id, "element_id": row.element_id, "is_active": True,
                     "power_w_in_mode": row.power_w_in_mode, "duty_cycle_percent": row.duty_cycle_percent,
-                    "notes": row.notes,
+                    "notes": row.notes, "power_state": getattr(row, "power_state", None),
+                    "data_rate_bps": getattr(row, "data_rate_bps", None),
+                    "dissipation_w": getattr(row, "dissipation_w", None),
                 })
     except Exception:
         logger.debug("mode_elements table unavailable", exc_info=True)
@@ -342,7 +351,9 @@ async def _build_modes(study_id: str, eff_elements: list[dict], study: Any) -> l
         for m in mode_els:
             total = 0.0
             active: list[str] = []
+            rows: list[dict] = []
             payload_active = False
+            data_bps = 0.0
             for mem in members.get(m["id"], []):
                 el = by_id.get(mem["element_id"])
                 if el is None:
@@ -352,10 +363,18 @@ async def _build_modes(study_id: str, eff_elements: list[dict], study: Any) -> l
                     pw = el.get("power_avg_w") or 0.0
                 duty = (mem.get("duty_cycle_percent") if mem.get("duty_cycle_percent") is not None else 100.0) / 100.0
                 total += float(pw) * duty
+                rate = float(mem.get("data_rate_bps") or 0.0) * duty
+                data_bps += rate
+                rows.append({"element_id": el["id"], "power_w": float(pw), "duty": duty, "data_rate_bps": rate,
+                             "dissipation_w": mem.get("dissipation_w"), "state": mem.get("power_state")})
+                if mem.get("power_state") == "off" or float(pw) <= 0:
+                    continue
                 active.append(el["id"])
                 if el.get("subsystem_domain") == "payload":
                     payload_active = True
             perf = m.get("performance_json") or m.get("performance") or {}
+            if data_bps <= 0:
+                data_bps = float(perf.get("data_rate_bps") or 0.0)
             if not active and isinstance(perf.get("power_w"), (int, float)):
                 total = float(perf["power_w"])
             if not active and isinstance(m.get("power_avg_w"), (int, float)):
@@ -363,9 +382,12 @@ async def _build_modes(study_id: str, eff_elements: list[dict], study: Any) -> l
             specs.append(ModeSpec(
                 id=m["id"], name=m["name"], power_w=round(total, 3), active_element_ids=active,
                 payload_active=payload_active or bool(perf.get("payload_active")),
-                data_rate_bps=float(perf.get("data_rate_bps") or 0.0),
+                data_rate_bps=data_bps,
                 pointing=str(perf.get("pointing") or "nadir"),
                 guards=_parse_guards(m.get("description")), source="element",
+                members=rows, kind=str(perf.get("mode_kind") or ""),
+                orbit_fraction=perf.get("orbit_fraction") if isinstance(perf.get("orbit_fraction"), (int, float)) else None,
+                sunlit_only=bool(perf.get("sunlit_only")),
             ))
         return specs
     conops = getattr(study, "conops", None)

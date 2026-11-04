@@ -231,6 +231,9 @@ class DesignElementRow(Base):
     volume_cm3: Mapped[float | None] = mapped_column(nullable=True)
     dimensions_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
     position_json: Mapped[list | None] = mapped_column(JSON, nullable=True)  # [x,y,z] m, body frame (SCDF-176)
+    # Nov 2026 (F4): the KB facts copied on selection (services/kb_copy.kb_element_fields):
+    # category, form_factor, interfaces, operating_temp_c, dimensions_mm, kb_hash, stale flag.
+    kb_spec_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Financial
     cost_nre_keur: Mapped[float | None] = mapped_column(nullable=True)
@@ -330,6 +333,14 @@ class ModeElementRow(Base):
     power_w_in_mode: Mapped[float | None] = mapped_column(nullable=True)
     duty_cycle_percent: Mapped[float] = mapped_column(default=100.0)
     notes: Mapped[str] = mapped_column(Text, default="")
+    # Nov 2026 mode model (D7, rules MO-01 / EB-02 / EB-03 / EB-05; services/mode_model.py)
+    power_state: Mapped[str | None] = mapped_column(String(16), nullable=True)    # off|standby|nominal|peak
+    data_rate_bps: Mapped[float | None] = mapped_column(nullable=True)            # data produced in the mode
+    dissipation_w: Mapped[float | None] = mapped_column(nullable=True)            # override; None = derived
+    origin: Mapped[str] = mapped_column(String(48), default="user")               # user | rule:MO-01
+    status: Mapped[str] = mapped_column(String(16), default="accepted")           # suggested|accepted|edited|rejected|stale
+    source_ref: Mapped[str] = mapped_column(String(255), default="")              # KB power_modes_w | C2O default ...
+    inputs_hash: Mapped[str] = mapped_column(String(32), default="")
 
 
 class BudgetAllocationRow(Base):
@@ -728,3 +739,8 @@ class PendingChangeRow(Base):
     reviewed_seat: Mapped[str] = mapped_column(String(40), default="")
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     comment: Mapped[str] = mapped_column(Text, default="")
+
+
+# Nov 2026 mode model tables (mode transitions, rule proposals, heaters) live in their own
+# module; importing it here registers them on ``Base.metadata`` for create_all.
+from . import models_modes  # noqa: E402,F401

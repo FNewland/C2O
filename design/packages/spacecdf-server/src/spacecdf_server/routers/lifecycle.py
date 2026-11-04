@@ -804,6 +804,7 @@ async def run_consistency_check_endpoint(study_id: str) -> dict:
         interfaces=ifaces,
         interface_coverage=coverage,
         phase_id=phase_id,
+        margin_gate=_margin_gate(study),
     )
 
     return {
@@ -1156,3 +1157,12 @@ async def estimate_duty_cycles_endpoint(body: dict[str, Any]) -> dict:
         "notes": "SA power accounts for duty cycling — not all modes run simultaneously. "
                  "This is typically 30-50% lower than summing all subsystem peak powers.",
     }
+
+
+def _margin_gate(study) -> str | None:
+    """F2: the ladder step of the gate the study prepares for (routers/gates.study_margin_gate)."""
+    try:
+        from .gates import study_margin_gate
+        return study_margin_gate(study)
+    except Exception:  # noqa: BLE001 — no gate profile: the phase picks the step
+        return None

@@ -677,6 +677,17 @@ def _safe_fraction(ctx: AnalysisContext) -> float:
     return SAFE_POWER_FRACTION
 
 
+def _mode_dissipation(ctx: AnalysisContext) -> dict[str, dict]:
+    """``{element_id: {hot_w, cold_w}}`` from the mode members (services/mode_model); {} if none."""
+    if not any(getattr(m, "members", None) for m in ctx.modes):
+        return {}
+    try:
+        from .mode_model import dissipation_cases
+        return dissipation_cases(ctx.elements, ctx.modes)
+    except Exception:  # noqa: BLE001 — a broken mode config must not stop the thermal analysis
+        return {}
+
+
 def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
     warnings: list[str] = []
     kids = _children(ctx)
@@ -696,6 +707,17 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
     nodes: list[ThermalNodeOut] = []
     total_sub_mass = 0.0
     comp_nodes: list[tuple[dict, dict]] = []   # (component, subsystem)
+    mode_diss = _mode_dissipation(ctx)
+
+    def _diss(k: dict, hot_case: bool) -> float:
+        """Heat of unit ``k`` in the hot / cold case: per-mode value, else peak / avg × safe fraction."""
+        q = max(int(k.get("quantity") or 1), 1)
+        row = mode_diss.get(k["id"])
+        if row is not None:
+            return float(row["hot_w"] if hot_case else row["cold_w"])
+        if hot_case:
+            return (_eff_col(ctx, k, "power_peak_w") or _eff_col(ctx, k, "power_avg_w")) * q
+        return _eff_col(ctx, k, "power_avg_w") * q * safe_frac
     for s in subsystems:
         comps = [k for k in kids.get(s["id"], []) if k.get("element_type") == "component" and k.get("in_scope", True) is not False]
         qty = lambda k: max(int(k.get("quantity") or 1), 1)   # noqa: E731
@@ -712,17 +734,23 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
         pk_hot = sum((_eff_col(ctx, k, "power_peak_w") or _eff_col(ctx, k, "power_avg_w")) * qty(k) for k in hot_comps)
         lo, hi, src = _op_range(s, ctx)
         shell = hot_comps and m_sub - m_hot <= 1e-3 and p_sub - p_hot <= 1e-6
+        # Nov 2026 (EB-05): dissipation per mode from the mode × element matrix when the units
+        # have it — hot = largest over the operational modes, cold = smallest over safe/survival.
+        md_hot, md_cold = pk_sub - pk_hot, (p_sub - p_hot) * safe_frac
+        if any(x["id"] in mode_diss for x in [s, *comps]):
+            rest = [k for k in comps if k not in hot_comps] if comps else [s]
+            md_hot = sum(_diss(k, True) for k in rest)
+            md_cold = sum(_diss(k, False) for k in rest)
         if not shell:
             nodes.append(ThermalNodeOut(s["id"], str(s.get("name")), s.get("subsystem_domain"), "subsystem",
                                         max(m_sub - m_hot, 0.02), _cp(s, ctx), 0.0,
-                                        max(pk_sub - pk_hot, 0.0), max(p_sub - p_hot, 0.0) * safe_frac, lo, hi, src))
+                                        max(md_hot, 0.0), max(md_cold, 0.0), lo, hi, src))
         total_sub_mass += m_sub
         for k in hot_comps:
             lo, hi, src = _op_range(k, ctx)
             nodes.append(ThermalNodeOut(k["id"], str(k.get("name")), k.get("subsystem_domain") or s.get("subsystem_domain"), "component",
                                         max(_eff_col(ctx, k, "mass_kg") * qty(k), 0.02), _cp(k, ctx), 0.0,
-                                        (_eff_col(ctx, k, "power_peak_w") or _eff_col(ctx, k, "power_avg_w")) * qty(k),
-                                        _eff_col(ctx, k, "power_avg_w") * qty(k) * safe_frac, lo, hi, src))
+                                        _diss(k, True), _diss(k, False), lo, hi, src))
             comp_nodes.append((k, s if not shell else None))   # an empty shell subsystem: mount on the chassis
     if not nodes:
         warnings.append("no space subsystem in the model — thermal network empty")
@@ -844,7 +872,9 @@ def run_thermal_closure(ctx: AnalysisContext) -> ThermalOut:
     out = ThermalOut(nodes, [{"a": l.node_a_id, "b": l.node_b_id, "w_per_k": l.conductance_w_k} for l in links], worst, transient,
                      inputs={"envelope_m": env, "envelope_source": env_src, "external_area_m2": round(a_ext, 4),
                              "emissivity": eps_, "absorptivity": alpha, "eclipse_fraction": ecl, "period_s": period,
-                             "safe_power_fraction": safe_frac, "solar_absorbed_hot_w": round(solar_total, 2),
+                             "safe_power_fraction": safe_frac,
+                             "dissipation_source": "mode matrix (hot: max over modes, cold: safe/survival)" if mode_diss else "unit power columns",
+                             "solar_absorbed_hot_w": round(solar_total, 2),
                              "solar_absorbed_cold_w": round(solar_cold, 2),
                              "earth_ir_hot_w": round(sum(q_earth(n.area_m2, True) for n in nodes), 2),
                              "cold_orbit_avg_c": {nid(n): avg.node_temps.get(nid(n)) for n in nodes},
