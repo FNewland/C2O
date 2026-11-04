@@ -1,0 +1,141 @@
+# electrical_rules.yaml — power distribution and data-bus rules (design rules §1.5 EB-08,
+# §1.6 EI-01/EI-02, §2.1, §2.4; docs/plan_2026-11/design_sim/spacecdf_design_rules.md).
+#
+# Read by services/electrical_rules.py. Every value here is a "C2O default" unless it cites a
+# source: good CubeSat/smallsat practice and the EOSAT-1 simulator design, not a standard.
+# Students accept, edit or reject each proposal; the rules never overwrite an edited row.
+#
+# Sections
+#   power:     LCL sizing and checks, line policy by role, line order
+#   protocols: per bus protocol: default bit rate, device limit, address range, topology
+#   addresses: default address block per role / subsystem domain (first free address wins)
+#   buses:     bus-load margin and the two-segment CAN split (EOSAT-1 bus A / bus B)
+
+schema_version: 1
+
+power:
+  # LCL trip current = factor × peak line current, rounded up to 0.1 A (EOSAT-1 sim uses
+  # ~150 %: simulation.yaml eps.overcurrent). C2O default.
+  lcl_factor: 1.5
+  lcl_min_a: 0.1
+  # Caution when the trip is closer than this to the peak line current. C2O default.
+  lcl_caution_factor: 1.2
+  # Converter rating assumed per regulated rail when the EPS KB entry has none: unknown (null)
+  # = the rail-capacity check is "not evaluated" until the Power seat enters it.
+  default_rail_max_current_a: null
+  standard_ref: "ECSS-E-ST-20C (power distribution and protection); EOSAT-1 PCDU (sim eps_basic POWER_LINE_DEFS); C2O default"
+  # Line policy by role (first match wins; `default` otherwise).
+  #   switchable: false = always-on line; default_on_separation / default_on_boot: line state;
+  #   inhibits: inhibit ids that open the line (CDS rev 14.1 §2.3: deployment switches and RBF
+  #   disconnect the battery; the RF transmitter is held off by a timer)
+  line_policy:
+    obc:
+      switchable: false
+      default_on_separation: false
+      default_on_boot: true
+      inhibits: [deployment_switch, rbf]
+    transceiver:
+      switchable: false
+      default_on_separation: false
+      default_on_boot: true
+      inhibits: [deployment_switch, rbf, rf_tx_timer]
+    default:
+      switchable: true
+      default_on_separation: false
+      default_on_boot: false
+      inhibits: [deployment_switch, rbf]
+  # Line numbering order (EOSAT-1: obc, ttc_rx, ttc_tx, payload, fpa_cooler, htr_bat, htr_obc,
+  # aocs_wheels, prop). Roles not listed come after, by name.
+  line_order: [obc, transceiver, mass_memory, payload, heater, adcs_computer, reaction_wheel,
+               star_tracker, magnetorquer, magnetometer, sun_sensor, gnss, thruster]
+
+protocols:
+  CAN:
+    bit_rate_bps: 1000000
+    max_devices: 32
+    address_min: 1
+    address_max: 127
+    topology: multidrop
+  I2C:
+    bit_rate_bps: 400000
+    max_devices: 112
+    address_min: 0x08          # 0x00–0x07 and 0x78–0x7F are reserved (I2C-bus specification UM10204)
+    address_max: 0x77
+    topology: multidrop
+  RS485:
+    bit_rate_bps: 115200
+    max_devices: 32            # unit loads, TIA/EIA-485
+    address_min: 1
+    address_max: 247
+    topology: multidrop
+  SPI:
+    bit_rate_bps: 10000000
+    max_devices: 8             # chip selects on the master (C2O default)
+    address_min: 0             # address = chip-select index
+    address_max: 7
+    topology: star
+  UART:
+    bit_rate_bps: 115200
+    max_devices: 2
+    topology: point_to_point
+  RS422:
+    bit_rate_bps: 10000000
+    max_devices: 2
+    topology: point_to_point
+  SpaceWire:
+    bit_rate_bps: 200000000
+    max_devices: 2
+    address_min: 32            # logical addresses 32–254 (ECSS-E-ST-50-12C / RMAP)
+    address_max: 254
+    topology: point_to_point
+  LVDS:
+    bit_rate_bps: 100000000
+    max_devices: 2
+    topology: point_to_point
+  MIL-STD-1553:
+    bit_rate_bps: 1000000
+    max_devices: 32
+    address_min: 0
+    address_max: 30
+    topology: multidrop
+
+# Default address block per role (then per subsystem domain); the first free address from
+# the block start is proposed. Masters take address_start of `master`. C2O default (the
+# block layout follows the OBC interface sketch: EPS 0x10, AOCS 0x20, GNSS 0x42 …).
+addresses:
+  master: 0x01
+  roles:
+    eps: 0x10
+    battery: 0x14
+    heater: 0x18
+    adcs_computer: 0x20
+    reaction_wheel: 0x24
+    star_tracker: 0x2C
+    magnetometer: 0x30
+    magnetorquer: 0x32
+    sun_sensor: 0x34
+    transceiver: 0x38
+    gnss: 0x42
+    mass_memory: 0x48
+    payload: 0x50
+    thruster: 0x58
+  domains:
+    power: 0x10
+    thermal: 0x18
+    aocs: 0x20
+    ttc: 0x38
+    payload: 0x50
+    propulsion: 0x58
+  other: 0x60
+
+buses:
+  # Bus load = Σ node data rates; caution above this fraction of the bit rate (50 % margin,
+  # C2O default, as margin_policy.yaml data_handling).
+  max_load_fraction: 0.5
+  # Two CAN segments when a CAN bus would have at least this many nodes (EOSAT-1: bus A = EPS,
+  # TCS, AOCS; bus B = TT&C, payload — sim obdh_basic bus_a/b_subsystems). C2O default.
+  can_split_min_nodes: 4
+  can_split:
+    A: [power, thermal, aocs, propulsion, structure]
+    B: [ttc, payload, obc, other]
+  standard_ref: "ECSS-E-ST-50-15C (CAN bus); EOSAT-1 OBDH (sim obdh_basic bus A/B); C2O default"

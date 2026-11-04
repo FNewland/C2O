@@ -116,6 +116,16 @@ async def get_available_dids() -> list[dict]:
     return list_available_dids()
 
 
+async def _interface_requirements(study_id: str | None) -> list[dict]:
+    """Requirements of level ``interface`` (design rules IF-01), not retired."""
+    if not study_id:
+        return []
+    from .requirements import _requirements, ensure_requirements_loaded
+    await ensure_requirements_loaded()
+    return [r for r in _requirements.values() if r.get("study_id") == study_id
+            and r.get("level") == "interface" and r.get("status") != "retired"]
+
+
 @router.post("/dids/{did_type}/generate")
 async def generate_did(did_type: str, study_id: str | None = None) -> dict:
     """Generate an ECSS DID document from the current study state."""
@@ -157,7 +167,8 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
                  "category": getattr(r, "category", ""), "verification_method": r.verification_method.value,
                  "threshold": getattr(r, "threshold", None), "operator": getattr(r, "operator", ""),
                  "unit": getattr(r, "unit", ""), "objective_id": getattr(r, "objective_id", "")}
-                for r in getattr(study, "requirements", [])
+                # Study.requirements is a RequirementsDefinition (not a list) on a fresh study
+                for r in (study.requirements if isinstance(getattr(study, "requirements", None), list) else [])
             ]
 
         # Load element tree and interfaces for this study
@@ -177,7 +188,8 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
         return gen_fn(**common, requirements=requirements, design_params=design_params,
                        mission_phases=mission_phases, interfaces=interfaces)
     elif did_type == "ird":
-        return gen_fn(**common, interfaces=interfaces, elements=elements)
+        return gen_fn(**common, interfaces=interfaces, elements=elements,
+                      interface_requirements=await _interface_requirements(study_id))
     elif did_type == "semp":
         # Use the enriched SEMP generator if available
         try:
@@ -188,6 +200,9 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
                 "mission_need": mission_need,
                 "generated_requirements": requirements,
                 "parameters": design_params,
+                # F6: the model's interfaces and interface requirements, not estimates
+                "model_interfaces": [i for i in interfaces if i.get("status") == "accepted"],
+                "interface_requirements": await _interface_requirements(study_id),
             }
             return gen_semp_full(study_data=study_data, semp_answers={})
         except Exception:

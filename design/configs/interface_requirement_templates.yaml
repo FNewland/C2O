@@ -1,0 +1,201 @@
+# interface_requirement_templates.yaml — interface requirements (IRD content) generated from
+# accepted interfaces (design rules IF-01; spacecdf_design_rules.md §1.2).
+#
+# ECSS-E-ST-10-24C separates the interface requirements document (IRD: what each side shall
+# do) from the interface control document (ICD: the agreed definition). In SpaceCDF the
+# accepted link + its properties + exchange items are the ICD content; the requirements made
+# from these templates are the IRD content (requirement level "interface", relation
+# "allocates" requirement → interface). EARS style, EN + FR.
+#
+# Template fields
+#   id         unique; also the requirement's template_id
+#   type       canonical interface type; subtypes: list (null = no subtype), omitted = any
+#   subject    from | to: the element the requirement is placed on (and whose seat owns it)
+#   method     verification method (ECSS-E-ST-10-02C: A, T, I, R; IF-08)
+#   phase      verification phase
+#   text       {en, fr} with {placeholders}; a missing value renders "TBD" and the
+#              requirement stays draft (C2O-TBD check in requirement_rules.yaml)
+#   values     placeholders the generator must resolve (beyond {from} {to})
+#
+# Placeholders the generator resolves (services/interface_requirements.py `_values`):
+#   from, to, rail_voltage, line, lcl_limit_a, current_peak_a, v_min, v_max, p_eol, protocol,
+#   bus, address, rate, band, frequency_mhz, connector, mount_type, envelope_mm, t_min, t_max,
+#   conductance_w_k, heater_power_w, accuracy_us, fov_deg, inhibit_count, delay_min, signal,
+#   fitting
+
+schema_version: 1
+standard_ref: "ECSS-E-ST-10-24C (interface management: IRD/ICD); EARS; C2O default templates"
+
+templates:
+  # ── power ────────────────────────────────────────────────────────────────
+  - id: IRT-PWR-SUPPLY
+    type: power
+    subtypes: [regulated, switched, null]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall supply the {to} with {rail_voltage} V on power line {line}, protected at {lcl_limit_a} A."
+      fr: "L'élément {from} doit alimenter l'élément {to} en {rail_voltage} V sur la ligne d'alimentation {line}, protégée à {lcl_limit_a} A."
+    values: [rail_voltage, line, lcl_limit_a]
+  - id: IRT-PWR-DRAW
+    type: power
+    subtypes: [regulated, switched, null]
+    subject: to
+    method: T
+    phase: CDR
+    text:
+      en: "The {to} shall draw no more than {current_peak_a} A from the {rail_voltage} V line."
+      fr: "L'élément {to} ne doit pas consommer plus de {current_peak_a} A sur la ligne de {rail_voltage} V."
+    values: [current_peak_a, rail_voltage]
+  - id: IRT-PWR-BATTERY
+    type: power
+    subtypes: [battery_bus]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall supply the {to} with {v_min}–{v_max} V over the full state-of-charge range."
+      fr: "L'élément {from} doit alimenter l'élément {to} entre {v_min} et {v_max} V sur toute la plage d'état de charge."
+    values: [v_min, v_max]
+  - id: IRT-PWR-ARRAY
+    type: power
+    subtypes: [array_input]
+    subject: from
+    method: A
+    phase: PDR
+    text:
+      en: "The {from} shall deliver at least {p_eol} W at end of life to the {to} power-point tracker inputs."
+      fr: "L'élément {from} doit fournir au moins {p_eol} W en fin de vie aux entrées des suiveurs de point de puissance de l'élément {to}."
+    values: [p_eol]
+
+  # ── data ─────────────────────────────────────────────────────────────────
+  - id: IRT-DATA-BUS
+    type: data
+    subtypes: [tm_tc, bus, null]
+    subject: to
+    method: T
+    phase: CDR
+    text:
+      en: "The {to} shall respond to telemetry and telecommand on {protocol} bus {bus} at address {address} at {rate} bit/s."
+      fr: "L'élément {to} doit répondre aux demandes de télémesure et aux télécommandes sur le bus {protocol} {bus} à l'adresse {address}, à {rate} bit/s."
+    values: [protocol, bus, address, rate]
+  - id: IRT-DATA-PAYLOAD
+    type: data
+    subtypes: [payload_data]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall transfer payload data to the {to} over {protocol} at no less than {rate} bit/s."
+      fr: "L'élément {from} doit transférer les données de charge utile à l'élément {to} par {protocol} à au moins {rate} bit/s."
+    values: [protocol, rate]
+
+  # ── RF ───────────────────────────────────────────────────────────────────
+  - id: IRT-RF-LINK
+    type: rf
+    subtypes: [space_ground]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "When in contact, the {from} shall exchange telemetry and telecommand with the {to} in {band}-band at {rate} bit/s with at least 3 dB link margin."
+      fr: "Pendant un contact, l'élément {from} doit échanger télémesure et télécommande avec l'élément {to} en bande {band} à {rate} bit/s avec une marge de liaison d'au moins 3 dB."
+    values: [band, rate]
+  - id: IRT-RF-COAX
+    type: rf
+    subtypes: [coax, null]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} RF port shall connect to the {to} in {band}-band through a {connector} connector."
+      fr: "Le port RF de l'élément {from} doit être relié à l'élément {to} en bande {band} par un connecteur {connector}."
+    values: [band, connector]
+
+  # ── mechanical ───────────────────────────────────────────────────────────
+  - id: IRT-MECH-MOUNT
+    type: mechanical
+    subject: to
+    method: I
+    phase: CDR
+    text:
+      en: "The {to} shall mount to the {from} by {mount_type}."
+      fr: "L'élément {to} doit être fixé à l'élément {from} par {mount_type}."
+    values: [mount_type]
+
+  # ── thermal ──────────────────────────────────────────────────────────────
+  - id: IRT-THERM-COND
+    type: thermal
+    subtypes: [conductive, null]
+    subject: to
+    method: A
+    phase: PDR
+    text:
+      en: "The {to} interface with the {from} shall stay within {t_min} to {t_max} °C."
+      fr: "L'interface de l'élément {to} avec l'élément {from} doit rester entre {t_min} et {t_max} °C."
+    values: [t_min, t_max]
+  - id: IRT-THERM-RAD
+    type: thermal
+    subtypes: [radiative]
+    subject: to
+    method: A
+    phase: PDR
+    text:
+      en: "The {to} shall reject the heat conducted from the {from} to space through its radiating surface."
+      fr: "L'élément {to} doit évacuer vers l'espace, par sa surface rayonnante, la chaleur conduite depuis l'élément {from}."
+    values: []
+  - id: IRT-THERM-HEATER
+    type: thermal
+    subtypes: [heater]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "When the {to} is below its minimum operating temperature, the {from} shall deliver {heater_power_w} W to it."
+      fr: "Lorsque l'élément {to} est sous sa température minimale de fonctionnement, l'élément {from} doit lui fournir {heater_power_w} W."
+    values: [heater_power_w]
+
+  # ── timing ───────────────────────────────────────────────────────────────
+  - id: IRT-TIME-PPS
+    type: timing
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall deliver a time reference to the {to} with an error of no more than {accuracy_us} µs."
+      fr: "L'élément {from} doit fournir une référence de temps à l'élément {to} avec une erreur d'au plus {accuracy_us} µs."
+    values: [accuracy_us]
+
+  # ── optical ──────────────────────────────────────────────────────────────
+  - id: IRT-OPT-FOV
+    type: optical
+    subject: to
+    method: I
+    phase: CDR
+    text:
+      en: "The {to} {fov_deg}° field of view shall be free of obstruction by the {from}."
+      fr: "Le champ de vue de {fov_deg}° de l'élément {to} ne doit pas être obstrué par l'élément {from}."
+    values: [fov_deg]
+
+  # ── electrical signals (CubeSat Design Specification rev 14.1 §2.3) ────────
+  - id: IRT-SIG-INHIBIT
+    type: electrical_signal
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall provide the {to} with {signal} through at least {inhibit_count} independent inhibits."
+      fr: "L'élément {from} doit fournir à l'élément {to} le signal {signal} par au moins {inhibit_count} inhibitions indépendantes."
+    values: [signal, inhibit_count]
+
+  # ── fluid ────────────────────────────────────────────────────────────────
+  - id: IRT-FLUID-FEED
+    type: fluid
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall feed the {to} through a {fitting} fitting."
+      fr: "L'élément {from} doit alimenter l'élément {to} par un raccord {fitting}."
+    values: [fitting]

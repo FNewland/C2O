@@ -150,6 +150,10 @@ _LINK_RELEVANT_FIELDS = {"name", "parent_id", "kb_component_id", "subsystem_doma
                          "power_peak_w", "performance", "in_scope", "description"}
 
 
+# Element fields interface requirement texts depend on (names, powers → line current)
+_IRD_RELEVANT_FIELDS = {"name", "power_avg_w", "power_peak_w", "quantity", "kb_component_id"}
+
+
 async def _auto_propose(study_id: str | None) -> None:
     """Re-run the rule-based link proposer after the tree changed (never raises).
 
@@ -278,6 +282,10 @@ async def apply_element_update(el: dict, updates: dict[str, Any]) -> dict:
 
     if set(updates) & _LINK_RELEVANT_FIELDS:
         await _auto_propose(el["study_id"])
+    if set(updates) & _IRD_RELEVANT_FIELDS:
+        # interface requirements quote element names and powers (design rules IF-03)
+        from ..services.interface_requirements import after_study_change
+        await after_study_change(el["study_id"])
     return el
 
 
@@ -783,15 +791,23 @@ async def store_interface(iface: dict, *, broadcast: bool = True) -> dict:
     normalise_interface(iface)
     await db_create_interface(iface)
     _interfaces[iface["id"]] = iface
+    await _after_interface_change(iface)
     if broadcast:
         await _broadcast_interface(iface.get("study_id"), {"type": "interface_changed", "interface": iface})
     return iface
+
+
+async def _after_interface_change(iface: dict) -> None:
+    """Interface ↔ interface requirement rules (IF-01/03/04/05); never raises."""
+    from ..services.interface_requirements import after_interface_change
+    await after_interface_change(iface)
 
 
 async def save_interface(iface: dict, *, broadcast: bool = True) -> dict:
     """Write an EXISTING interface through to the DB (version bump) and announce it."""
     iface["version"] = int(iface.get("version") or 1) + 1
     await db_update_interface(iface["id"], iface)
+    await _after_interface_change(iface)
     if broadcast:
         await _broadcast_interface(iface.get("study_id"), {"type": "interface_changed", "interface": iface})
     return iface
@@ -802,6 +818,7 @@ async def remove_interface(iface: dict, *, broadcast: bool = True) -> None:
     deleted_at = datetime.now(timezone.utc).isoformat()
     iface["deleted_at"] = deleted_at
     await db_soft_delete_interface(iface["id"], deleted_at)
+    await _after_interface_change(iface)
     if broadcast:
         await _broadcast_interface(iface.get("study_id"), {"type": "interface_deleted", "id": iface["id"]})
 

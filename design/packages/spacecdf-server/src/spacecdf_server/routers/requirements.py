@@ -161,9 +161,15 @@ async def create_requirement(body: dict[str, Any]) -> dict:
         "objective_id": body.get("objective_id"),
         # Identity in external tools (ReqIF / Capella) — persisted in RequirementRow.external_id
         "external_id": body.get("external_id"),
+        # Interface requirement data (level "interface"): endpoints/type for IF-02, template info
+        "ir_json": body.get("ir_json"),
     }
     _requirements[req_id] = req
     await db_create_requirement(req)
+    if level == "interface":
+        # IF-02: an interface requirement without an interface proposes it
+        from ..services.interface_requirements import on_requirement_created
+        await on_requirement_created(req)
     return req
 
 
@@ -196,6 +202,9 @@ async def update_requirement(req_id: str, body: dict[str, Any]) -> dict:
     if not req:
         raise HTTPException(404, f"Requirement {req_id} not found")
 
+    if req.get("level") == "interface":
+        from ..services.interface_requirements import on_requirement_patched
+        on_requirement_patched(req, body)
     for key in ("text", "rationale", "threshold_param_path", "threshold_op",
                 "threshold_value", "verification_method", "verification_phase",
                 "responsible_position", "status", "code", "element_id",

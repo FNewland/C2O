@@ -75,6 +75,9 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "Reliability {{rel}} vs target {{target}}",
     # PDR-EC-02 (Nov 2026): expected-interface coverage from configs/interface_rules.yaml
     "All {{required}} expected subsystem links present and reviewed",
+    "All {{total}} accepted links have approved interface requirements agreed by both parties",
+    "{{complete}}/{{total}} accepted links have approved interface requirements agreed by both parties; {{approved}} approved, {{agreed}} agreed",
+    "{{n}} interface requirement(s) name no accepted interface",
     "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
     "Interface rules are invalid",
     # PRR (Nov 2026, WP6) and the margin ladder (margin_policy.yaml system_margin_ladder)
@@ -509,13 +512,21 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                  "{{traced}}/{{total}} objectives traced to requirements", traced=traced, total=len(objectives))
 
     elif cid == "SRR-EC-02":
-        if not reqs:
+        # Interface requirements (level "interface") are checked by test or inspection of the
+        # interface, not against a design threshold: they are counted for completeness only.
+        sys_reqs = [r for r in reqs if r.get("level") != "interface"]
+        from .interface_requirements import ird_status
+        orphans = ird_status(ctx["interfaces"], reqs)["without_interface"]
+        if not sys_reqs:
             _set(result, "fail", "No requirements defined")
         else:
-            ok = sum(1 for r in reqs if r.get("verification_method") and _has_threshold(r))
-            _set(result, "pass" if ok == len(reqs) else "fail",
-                 "{{ok}}/{{total}} requirements have a verification method and a threshold",
-                 ok=ok, total=len(reqs))
+            ok = sum(1 for r in sys_reqs if r.get("verification_method") and _has_threshold(r))
+            if ok == len(sys_reqs) and orphans:
+                _set(result, "fail", "{{n}} interface requirement(s) name no accepted interface", n=len(orphans))
+            else:
+                _set(result, "pass" if ok == len(sys_reqs) else "fail",
+                     "{{ok}}/{{total}} requirements have a verification method and a threshold",
+                     ok=ok, total=len(sys_reqs))
 
     elif cid == "SRR-EC-03":
         res = [s for _, s in _threshold_results(reqs, dp) if s != "untestable"]
@@ -572,13 +583,28 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                 sub_ids = {e["id"] for e in subs}
                 suggested = sum(1 for i in ifaces if i.get("status") == "suggested"
                                 and (i.get("from_element_id") in sub_ids or i.get("to_element_id") in sub_ids))
-                if not cov["missing"] and not suggested:
-                    _set(result, "pass", "All {{required}} expected subsystem links present and reviewed",
-                         required=cov["required"])
-                else:
+                if cov["missing"] or suggested:
                     _set(result, "fail",
                          "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
                          met=cov["met"], required=cov["required"], suggested=suggested)
+                else:
+                    # F5 (design rules IF-01/IF-05): the criterion asks for interface REQUIREMENTS,
+                    # so every accepted link needs an approved, current interface requirement and
+                    # the agreement of both seats.
+                    from .interface_requirements import ird_status
+                    ird = ird_status(ifaces, reqs)
+                    orphans = len(ird["without_interface"])
+                    if ird["accepted"] and ird["complete"] == ird["accepted"] and not orphans:
+                        _set(result, "pass",
+                             "All {{total}} accepted links have approved interface requirements agreed by both parties",
+                             total=ird["accepted"], required=cov["required"])
+                    elif ird["accepted"] and ird["complete"] == ird["accepted"]:
+                        _set(result, "fail", "{{n}} interface requirement(s) name no accepted interface", n=orphans)
+                    else:
+                        _set(result, "fail",
+                             "{{complete}}/{{total}} accepted links have approved interface requirements agreed by both parties; {{approved}} approved, {{agreed}} agreed",
+                             complete=ird["complete"], total=ird["accepted"], approved=ird["approved"],
+                             agreed=ird["agreed"])
 
 
     elif cid == "PDR-EC-04":
