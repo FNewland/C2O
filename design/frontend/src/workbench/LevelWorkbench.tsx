@@ -27,13 +27,14 @@ import { TmtcPanel } from '../cdr/TmtcPanel'
 import { FdirPanel } from '../cdr/FdirPanel'
 import { AocsModesPanel } from '../cdr/AocsModesPanel'
 import { OpsPanel } from '../cdr/OpsPanel'
+import { DiagramsView } from '../diagrams/DiagramsView'
 import { useSeatView } from '../seats/view'
 import { useSeatStore } from '../seats/api'
 
-const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses']
+const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses', 'diagrams']
 
 /** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
-const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses'])
+const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses', 'diagrams'])
 
 const MIN_PANEL = 160
 
@@ -62,6 +63,7 @@ const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
   trace: 'Traceability',
   decide: 'Decide',
   analyses: 'Analyses',
+  diagrams: 'Diagrams',
 }
 
 export function LevelWorkbench() {
@@ -234,6 +236,7 @@ export function LevelWorkbench() {
           {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
           {activePanel === 'analyses' && <ErrorBoundary phaseName="Analyses"><AnalysesPanel /></ErrorBoundary>}
+          {activePanel === 'diagrams' && <ErrorBoundary phaseName="Diagrams"><DiagramsView /></ErrorBoundary>}
           </fieldset>
         </div>
       </div>

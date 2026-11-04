@@ -1188,9 +1188,24 @@ def generate_ird_docx(study_name: str, data: dict[str, Any]) -> bytes:
     _add_section(doc, "4", "Physical Interface Definitions")
     doc.add_paragraph("Connector definitions, pinouts, and harness routing to be defined during Phase C.")
 
+    _add_diagrams(doc, "5", "Interface Diagrams", data,
+                  "Drawn from the design model (the same figures as the SpaceCDF Diagrams view); "
+                  "each figure lists what the model still lacks for it.")
+
     buffer = io.BytesIO()
     doc.save(buffer)
     return buffer.getvalue()
+
+
+def _add_diagrams(doc: Document, number: str, title: str, data: dict[str, Any], intro: str) -> None:
+    """Embed the study's diagram models (``data["diagrams"]``, built by the export route)."""
+    models = data.get("diagrams") or []
+    if not models:
+        return
+    from .diagrams.render import add_diagram
+    _add_section(doc, number, title, intro)
+    for k, m in enumerate(models, 1):
+        add_diagram(doc, m, heading_level=None, gaps=True, table=False)
 
 
 def generate_semp_docx(study_name: str, data: dict[str, Any]) -> bytes:
@@ -1241,6 +1256,11 @@ def generate_semp_docx(study_name: str, data: dict[str, Any]) -> bytes:
                 ["CDR", "C \u2192 D", "Detailed design, manufacturing drawings, test plan"],
                 ["TRR", "D (test)", "Qualified hardware, test procedures"],
                 ["FRR", "D (launch)", "Flight-ready spacecraft, ops procedures"]])
+
+    _add_diagrams(doc, "6", "System Diagrams", data,
+                  "Operations concept, architecture, interfaces, requirements and risk figures drawn from the design "
+                  "model (the same figures as the SpaceCDF Diagrams view). The gate and maturity each figure is "
+                  "expected at follow its caption (D draft, B baselined, U updated).")
 
     buffer = io.BytesIO()
     doc.save(buffer)
