@@ -39,7 +39,7 @@ avant d'envisager un rechargement mémoire ou un basculement d'OBC.
 | obdh.boot_count_b | 0x0318 | Nombre total d'amorçages de l'OBC-B |
 | obdh.bus_a_status | 0x030F | 0 (OK) ou 1 (ERROR) |
 | obdh.bus_b_status | 0x0310 | 0 (OK) ou 1 (ERROR) |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | ttc.link_status | 0x0501 | 2 (LOCKED) |
 
 ## Télécommandes requises
@@ -73,8 +73,8 @@ revient pas, demander plutôt le SID 11.
 **Verify:** `obdh.temp` (0x0301) — dans les limites (< 50 °C)
 **Verify:** `obdh.cpu_load` (0x0302) — consigner (devrait être faible en chargeur d'amorçage)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander la télémesure de servitude EPS
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — confirmer que l'alimentation est stable
-**Note:** Si la tension du bus est limite (< 27.5 V), une baisse de tension a pu provoquer le plantage.
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — confirmer que l'alimentation est stable
+**Note:** Si la tension du bus est limite (< 31.5 V), une baisse de tension a pu provoquer le plantage.
 Traiter l'EPS avant de tenter l'amorçage applicatif.
 **GO/NO-GO:** État du chargeur d'amorçage confirmé, diagnostics consignés — passer à l'évaluation.
 
@@ -221,7 +221,7 @@ Si aucune des deux options n'aboutit, passer à EMG-003.
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Charge utile
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Télémesure de servitude plateforme/OBDH
 **Verify:** Les cinq réponses HK sont reçues en 30 s.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V
 **Verify:** `aocs.mode` (0x020F) — consigner et rétablir si nécessaire
 **Verify:** `payload.mode` (0x0600) — consigner et rétablir si nécessaire
 **Verify:** `obdh.mode` (0x0300) — si SAFE, envisager le retour en NOMINAL :

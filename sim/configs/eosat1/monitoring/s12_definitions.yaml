@@ -30,22 +30,24 @@ s12_definitions:
     severity: ALARM
     description: "Battery state of charge below 10%"
 
-  # Bus voltage monitoring
+  # Bus voltage monitoring. The low limits ARE the named levels of
+  # simulation.yaml eps.bus_protection (warning = uv_v, alarm = eps_safe_v);
+  # tests/test_content/test_sim_consistency.py holds them equal.
   - param_id: 0x0105  # eps.bus_voltage
     name: "EPS Bus Voltage Low"
     check_type: 0  # absolute
-    low_limit: 27.0
+    low_limit: 28.4
     high_limit: 35.0
     severity: WARNING
-    description: "Bus voltage below 27V (safe threshold)"
+    description: "Bus voltage below 28.4V (bus under-voltage, load shed begins)"
 
   - param_id: 0x0105  # eps.bus_voltage (different rule)
     name: "EPS Bus Voltage Critical"
     check_type: 0  # absolute
-    low_limit: 25.0
+    low_limit: 27.7
     high_limit: 35.0
     severity: ALARM
-    description: "Bus voltage below 25V (critical)"
+    description: "Bus voltage below 27.7V (critical, EPS safe mode)"
 
   # Battery current monitoring
   - param_id: 0x0109  # eps.bat_current

@@ -29,7 +29,7 @@ of operating on a single-string bus.
 | obdh.mode | 0x0300 | Current OBC mode |
 | obdh.cpu_load | 0x0302 | Monitor for anomalous increase |
 | obdh.temp | 0x0301 | OBC temperature within limits |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | eps.bat_soc | 0x0101 | Record current value |
 | aocs.mode | 0x020F | Verify after switchover |
 | payload.mode | 0x0600 | Verify after switchover |
@@ -129,7 +129,7 @@ the switchover. Subsystem HK will be unavailable for 5-10 seconds. This is norma
 **Verify:** Telemetry values are consistent and sensible:
 - No stuck values or unexpected zeros
 - Values are consistent with pre-failure readings
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — power stable
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — power stable
 **Verify:** `eps.bat_soc` (0x0101) — unchanged from pre-switchover
 **Verify:** `aocs.mode` (0x020F) — AOCS mode unchanged from pre-failure state
 **Verify:** `payload.mode` (0x0600) — payload mode unchanged
@@ -165,7 +165,7 @@ back to without engineering team approval and analysis.
 - [ ] No subsystem mode changes occurred during switchover
 - [ ] All telemetry values are consistent with pre-failure values
 - [ ] `obdh.cpu_load` (0x0302) < 80%
-- [ ] `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 30.9 V
 - [ ] Anomaly report filed with bus failure details
 - [ ] Flight Director informed of reduced bus redundancy
 

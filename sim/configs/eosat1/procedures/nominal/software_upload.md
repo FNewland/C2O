@@ -38,7 +38,7 @@ selection: the previous image is not retained on board, and reverting means re-u
 **Verify:** `obdh.heap_usage` (0x031D) < 60 % (sufficient heap for upload task)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- request EPS housekeeping
 **Verify:** `eps.bat_soc` (0x0101) > 60 %
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **GO/NO-GO:** Flight Director confirms GO for upload. If any parameter marginal, HOLD.
 
 ### Step 2 --- Halt Non-Critical Onboard Tasks

@@ -14,8 +14,8 @@
   },
   {
    "id": "ctg-005-eps-safe-mode/purpose",
-   "en_hash": "3368c609a96930b6",
-   "fr_hash": "979dd98055dcbf8d"
+   "en_hash": "4b34105b203cbea4",
+   "fr_hash": "cf625d8082238537"
   },
   {
    "id": "ctg-005-eps-safe-mode/prerequisites",
@@ -29,8 +29,8 @@
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-1-verify-safe-mode-entry-and-eps-state",
-   "en_hash": "8ff5e495d84fec02",
-   "fr_hash": "bd4e54b2ebc4c445"
+   "en_hash": "28e31624ff72e547",
+   "fr_hash": "76cb3ac4856085c8"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-2-shed-non-essential-loads-payload-off",
@@ -49,8 +49,8 @@
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-5-monitor-battery-recovery-during-sunlit-phase",
-   "en_hash": "edd2d93fbb733379",
-   "fr_hash": "0f830245ccee0ef9"
+   "en_hash": "a3fa206e285e2582",
+   "fr_hash": "407de4b83e5b2dc3"
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-6-re-enable-loads-payload-to-standby",
@@ -64,18 +64,18 @@
   },
   {
    "id": "ctg-005-eps-safe-mode/procedure-steps/step-8-restore-obc-to-nominal-mode",
-   "en_hash": "16d95c60bb5e9db8",
-   "fr_hash": "a9fda38a9b0ae503"
+   "en_hash": "5235cae940937614",
+   "fr_hash": "96a3133239f2f55a"
   },
   {
    "id": "ctg-005-eps-safe-mode/off-nominal-handling",
-   "en_hash": "fe83c32b601cd681",
-   "fr_hash": "a497f50a2e0ce811"
+   "en_hash": "2d22bebabcabe120",
+   "fr_hash": "0d399e3dc64597b9"
   },
   {
    "id": "ctg-005-eps-safe-mode/post-conditions",
-   "en_hash": "98272796fcb9cb35",
-   "fr_hash": "ef2dd78dacbd65e7"
+   "en_hash": "e8aac10bd4cbae41",
+   "fr_hash": "80ed867d95e764bf"
   },
   {
    "id": "ctg-005-eps-safe-mode/recovery-path-re-powering-shed-loads",
@@ -83,5 +83,5 @@
    "fr_hash": "9154a20412ea27ef"
   }
  ],
- "en_commit": "9bdac94"
+ "en_commit": "f614a01"
 }

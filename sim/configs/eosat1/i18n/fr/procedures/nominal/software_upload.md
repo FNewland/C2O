@@ -38,7 +38,7 @@ de banc d'amorçage : l'image précédente n'est pas conservée à bord, et rev
 **Verify:** `obdh.heap_usage` (0x031D) < 60 % (tas suffisant pour la tâche de chargement)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- demander les données de servitude EPS
 **Verify:** `eps.bat_soc` (0x0101) > 60 %
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **GO/NO-GO:** Le directeur de vol confirme le GO pour le chargement. Si un paramètre est limite, se mettre en attente (HOLD).
 
 ### Étape 2 --- Suspendre les tâches de bord non critiques

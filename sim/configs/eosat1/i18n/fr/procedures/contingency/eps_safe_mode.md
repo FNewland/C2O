@@ -9,7 +9,7 @@ au lieu d'exiger SAFE.
 
 ## Objet
 Rétablir le sous-système d'alimentation électrique après un état de faible énergie déclenché par la chute de
-l'état de charge de la batterie sous 20 % ou de la tension du bus principal sous 26.5 V. Cette procédure
+l'état de charge de la batterie sous 20 % ou de la tension du bus principal sous 27.7 V. Cette procédure
 déleste les charges non essentielles pour enrayer l'épuisement de l'énergie, surveille les performances du générateur solaire pendant
 la phase éclairée de l'orbite et réactive progressivement les charges une fois la batterie remontée
 au-dessus de 40 % de SoC.
@@ -33,7 +33,7 @@ délestée une seconde fois (la commande est refusée S1.8 « power line … i
 servitude de son unité s'arrêtent, si bien que son paramètre de mode reste figé à sa dernière valeur.
 Ne délester depuis le sol que ce qui est encore alimenté.
 **Verify:** `eps.bat_soc` (0x0101) — consigner la valeur courante (attendue < 20 %)
-**Verify:** `eps.bus_voltage` (0x0105) — consigner la valeur courante (attendue < 26.5 V)
+**Verify:** `eps.bus_voltage` (0x0105) — consigner la valeur courante (attendue < 27.7 V)
 **Verify:** `eps.bat_voltage` (0x0100) — consigner la valeur courante
 **GO/NO-GO:** La télémesure confirme l'état de faible énergie — engager le délestage
 
@@ -76,7 +76,7 @@ pas commander le SCAO maintenant ; l'étape 7 le réalimente une fois la batte
 ### Étape 5 — Surveiller la recharge de la batterie pendant la phase éclairée
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — répéter toutes les 60 s
 **Verify:** `eps.bat_soc` (0x0101) en hausse (au minimum +1 % par 10 minutes au Soleil)
-**Verify:** `eps.bus_voltage` (0x0105) remontant au-dessus de 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) remontant au-dessus de 30.9 V
 **Verify:** `eps.bat_temp` (0x0102) reste entre 0 et 40 °C pendant la charge
 **GO/NO-GO:** SoC en hausse et température batterie nominale — poursuivre la surveillance jusqu'à un SoC > 40 %
 
@@ -107,18 +107,18 @@ d'abord DETUMBLE. NO-GO — il fonctionne déjà : passer en NOMINAL.
 **TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50)
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) en moins de 10 s
 **Verify:** `eps.bat_soc` (0x0101) > 40 %
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **GO/NO-GO:** Tous les sous-systèmes nominaux et bilan énergétique positif — reprise terminée
 
 ## Conduite à tenir hors nominal
 - Si le SoC descend sous 10 % à n'importe quelle étape : commander `OBC_SET_MODE(mode=2)` (EMERGENCY), appliquer EMG-002
 - Si la température de la batterie dépasse 45 °C pendant la charge : commander `HEATER_BATTERY(on=0)` et réduire le courant de charge par `SET_PARAM(param_id=eps.charge_limit, value=0.5)`
 - Si la production du générateur solaire reste < 0.2 A pendant toute une phase éclairée : appliquer CTG-009 (Dégradation du générateur solaire)
-- Si la tension du bus descend sous 25.0 V : appliquer immédiatement EMG-002
+- Si la tension du bus descend sous 28.4 V : appliquer immédiatement EMG-002
 
 ## Postconditions
 - [ ] `eps.bat_soc` (0x0101) > 40 %
-- [ ] `eps.bus_voltage` (0x0105) > 28.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
 - [ ] `obdh.mode` (0x0300) = 0 (NOMINAL)
 - [ ] `payload.mode` (0x0600) >= 1 (STANDBY ou supérieur)
 - [ ] Bilan de puissance positif avec une marge > 5 W, confirmé par la dynamique du vol

@@ -7,10 +7,13 @@ fault_cascades:
   - fault_id: "eps_undervoltage"
     description: "EPS bus voltage drops below safe operating level"
     primary_param: "eps.bus_voltage"
-    # Phase B (brief 01 WP-6): 26.0 -> 23.0 V (~19 % SoC). The old value sat at
-    # ~58 % SoC, ahead of every gentler protection in the ladder.
+    # Phase B (brief 01 WP-6): ~19.5 % SoC, the bottom voltage rung. The old
+    # 26.0 V sat at ~58 % SoC, ahead of every gentler protection. NAMED level
+    # simulation.yaml eps.bus_protection.cascade_v (2026-11 single source):
+    # 25.9 V on the BPX 8S-1P curve (was 23.0 V on the retired curve).
     condition: "<"
-    threshold: 23.0
+    threshold: 25.9
+    threshold_ref: eps.bus_protection.cascade_v
     persist_s: 3.0
     recovery: eps_recovery
     cascades:
@@ -213,6 +216,16 @@ fault_cascades:
 
 # Load Shedding Stages - triggered by SoC thresholds
 load_shedding_stages:
+  # SoC-driven FDIR stages (thresholds owned by simulation.yaml
+  # eps.load_shed.soc_stage_thresholds_pct). 2026-11 consistency pass:
+  # `power_lines` now names REAL PCDU lines (eps_basic.POWER_LINE_DEFS) and
+  # is EXECUTED (EPS power_line_off) — it used to list lines the PCDU does not
+  # have (payload_aux, payload_main, aocs_primary/secondary, ttc_secondary,
+  # non_essential_heaters, all_non_essential) and nothing read it. Heater duty
+  # stays a subsystem command (tcs heater_duty). The AOCS safe hold is
+  # COARSE_SUN (mode 3, aocs/aocs_mode_codes.yaml), not 2 (DETUMBLE).
+  # aocs_wheels is never opened here: the magnetorquers and every AOCS sensor
+  # hang off that line, and the in-model bus-voltage shed already owns it.
 
   stage_0:
     name: "Normal Operations"
@@ -224,12 +237,9 @@ load_shedding_stages:
   stage_1:
     name: "Power Conservation"
     soc_threshold: 30.0
-    description: "Non-essential loads reduced"
+    description: "Payload to standby, FPA cooler off, heater duty halved"
     power_lines:
-      - line: "non_essential_heaters"
-        action: "reduce_duty_cycle"
-        parameter: 0.5
-      - line: "payload_aux"
+      - line: "fpa_cooler"
         action: "power_off"
     subsystem_commands:
       - subsystem: "payload"
@@ -242,13 +252,11 @@ load_shedding_stages:
   stage_2:
     name: "Payload Offline"
     soc_threshold: 20.0
-    description: "Payload and AOCS reduced, non-essential heaters off"
+    description: "Payload line off, AOCS to the COARSE_SUN safe hold, heaters off"
     power_lines:
-      - line: "payload_main"
+      - line: "payload"
         action: "power_off"
-      - line: "non_essential_heaters"
-        action: "power_off"
-      - line: "aocs_secondary"
+      - line: "fpa_cooler"
         action: "power_off"
     subsystem_commands:
       - subsystem: "payload"
@@ -256,7 +264,7 @@ load_shedding_stages:
         value: 0  # off
       - subsystem: "aocs"
         command: "mode"
-        value: 2  # safe mode
+        value: 3  # COARSE_SUN safe hold
       - subsystem: "tcs"
         command: "heater_duty"
         value: 0.0
@@ -264,15 +272,13 @@ load_shedding_stages:
   stage_3:
     name: "Survival Mode"
     soc_threshold: 10.0
-    description: "Only essential subsystems: OBC, TTC, battery heater, AOCS safe"
+    description: "Only essential subsystems: OBC, TTC receive, battery heater, AOCS safe"
     power_lines:
-      - line: "payload_main"
+      - line: "payload"
         action: "power_off"
-      - line: "aocs_primary"
+      - line: "fpa_cooler"
         action: "power_off"
-      - line: "ttc_secondary"
-        action: "power_off"
-      - line: "all_non_essential"
+      - line: "prop"
         action: "power_off"
     subsystem_commands:
       - subsystem: "payload"
@@ -280,7 +286,7 @@ load_shedding_stages:
         value: 0  # off
       - subsystem: "aocs"
         command: "mode"
-        value: 2  # safe mode
+        value: 3  # COARSE_SUN safe hold
       - subsystem: "ttc"
         command: "power_level"
         value: 1  # minimal

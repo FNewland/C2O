@@ -157,9 +157,11 @@ class SolarArrayConfig(StrictModel):
 class BatteryConfig(StrictModel):
     type: str = "li_ion"
     capacity_wh: float = 120.0
-    voltage_nom: float = 26.4
-    soc_100_v: float = 29.2
-    soc_0_v: float = 21.5
+    # GomSpace NanoPower BPX 8S-1P datasheet (DS 1076870): 24.0-33.6 V,
+    # 28.8 V nominal = the midpoint of the linear OCV model below.
+    voltage_nom: float = 28.8
+    soc_100_v: float = 33.6
+    soc_0_v: float = 24.0
     internal_r_ohm: float = 0.05
     # Coulombic (charge-acceptance) efficiency — Li-ion 0.92-0.96 (brief 01 F19).
     charge_efficiency: float = 1.0
@@ -465,8 +467,21 @@ class BeaconConfig(StrictModel):
     hk_sid: int = 11                        # the ONE structure it carries
 
 
+class SBandAntennaConfig(StrictModel):
+    """One S-band patch of the prime chain (geometry.yaml draws a copy)."""
+    id: str
+    face: str                      # px / mx / py / my / pz / mz
+    boresight: list[float]         # body-frame unit vector
+    gain_dbi: float = 3.0
+
+
 class TTCConfig(StrictModel):
     model: str = "ttc_basic"
+    #: S-band patch accommodation (2026-11 consistency pass): which faces the
+    #: prime chain's patches sit on. The link budget uses the single
+    #: attitude-independent ``sc_gain_dbi`` because the zenith + nadir pair is
+    #: treated as quasi-omnidirectional.
+    sband_antennas: list[SBandAntennaConfig] = Field(default_factory=list)
     ul_freq_mhz: float = 2025.5
     dl_freq_mhz: float = 2200.5
 
@@ -646,6 +661,11 @@ class FDIRRuleConfig(StrictModel):
     description: str = ""
     condition: str
     threshold: float | None = None
+    #: Named source of ``threshold`` — a dotted path into simulation.yaml,
+    #: e.g. ``eps.bus_protection.eps_safe_v``. When set, the engine uses the
+    #: NAMED value (the literal ``threshold`` is a readable copy, checked
+    #: against it at load and by tests/test_content/test_sim_consistency.py).
+    threshold_ref: str | None = None
     level: int = 1
     action: str
     # Phase C: seconds the condition must persist before the rule fires.
@@ -933,7 +953,9 @@ class SimEPSLoadShedConfig(StrictModel):
     """In-model bus-voltage load shed + FDIR SoC shed ladder."""
     order: list[str] = Field(
         default_factory=lambda: ["payload", "fpa_cooler", "ttc_tx", "aocs_wheels"])
-    bus_voltage_v: float = 26.5
+    # None (the default) = the named ``eps.bus_protection.uv_v``. Set only to
+    # override the shed trigger in a test or scenario harness.
+    bus_voltage_v: float | None = None
     restore_hysteresis_v: float = 0.5
     # Automatic restore of shed lines once the bus recovers above
     # bus_voltage_v + restore_hysteresis_v — one line per tick, reverse shed
@@ -956,11 +978,42 @@ class SimEPSEventThresholds(StrictModel):
     soc_low_pct: float = 20.0
     soc_critical_pct: float = 10.0
     soc_charge_complete_pct: float = 99.0
-    bus_warning_v: float = 27.0
-    bus_critical_v: float = 25.0
+    # None (the default) = the named ``eps.bus_protection`` levels:
+    # warning = uv_v, critical = eps_safe_v.
+    bus_warning_v: float | None = None
+    bus_critical_v: float | None = None
     bat_overtemp_c: float = 45.0
     bat_undertemp_c: float = -5.0
     sa_degraded_fraction: float = 0.7
+
+
+class SimEPSBusProtection(StrictModel):
+    """The bus-voltage protection ladder — ONE named value per decision.
+
+    Single source of truth for every bus-voltage threshold in the mission
+    (SIM_CONSISTENCY_FIXES.md, 2026-11). The EPS model reads these directly;
+    the copies that other files must carry as literals (subsystems/fdir.yaml,
+    fdir/fault_propagation.yaml, monitoring/s12_definitions.yaml,
+    mcs/limits.yaml) are cross-checked against them at engine start, by the
+    config editor (``eps.bus_ladder``) and by
+    tests/test_content/test_sim_consistency.py.
+
+    Each level is the BPX 8S-1P linear OCV (24.0 V empty, 33.6 V full) at the
+    SoC rung the protection ladder was designed around (brief 01 WP-6):
+    """
+    #: Bus under-voltage: eps.uv_flag (0x010E), in-model load-shed trigger,
+    #: S5 0x0103 BUS_UNDERVOLTAGE_WARNING, S12 warning, MCS yellow. 45.8 % SoC.
+    uv_v: float = 28.4
+    #: FDIR safe_mode_eps, S5 0x0104 BUS_UNDERVOLTAGE_CRITICAL, S12 alarm,
+    #: MCS red. 38.5 % SoC.
+    eps_safe_v: float = 27.7
+    #: FDIR safe_mode_aocs. 21.9 % SoC (between SoC shed stages 1 and 2).
+    aocs_safe_v: float = 26.1
+    #: fault_propagation.yaml eps_undervoltage cascade. 19.8 % SoC.
+    cascade_v: float = 25.9
+    #: Bus over-voltage flag (0x010F). The bus is capped at 33.4 V
+    #: (eps_basic.BUS_CAP_V), so this sits above the cap.
+    ov_v: float = 34.0
 
 
 class SimEPSConfig(StrictModel):
@@ -973,8 +1026,11 @@ class SimEPSConfig(StrictModel):
     # TCS (0x040A/0x040B) instead of 100 % duty whenever the power line is ON
     # (brief 01 F10 / WP-5, brief 05 WP-5). False = legacy behaviour.
     heater_duty_from_tcs: bool = False
-    uv_threshold_v: float = 26.5
-    ov_threshold_v: float = 29.5
+    bus_protection: SimEPSBusProtection = Field(default_factory=SimEPSBusProtection)
+    # None (the default) = bus_protection.uv_v / .ov_v. Explicit values are
+    # an override for test harnesses only — the mission config sets neither.
+    uv_threshold_v: float | None = None
+    ov_threshold_v: float | None = None
     load_shed: SimEPSLoadShedConfig = Field(default_factory=SimEPSLoadShedConfig)
     overcurrent: SimEPSOvercurrentConfig = Field(default_factory=SimEPSOvercurrentConfig)
     event_thresholds: SimEPSEventThresholds = Field(default_factory=SimEPSEventThresholds)
@@ -1213,10 +1269,21 @@ class MemoryMapConfig(StrictModel):
 
 
 class PUSStoreConfig(StrictModel):
-    """S15 onboard storage store definition."""
+    """S15 onboard packet store definition (OBC flash partition).
+
+    ``capacity_packets`` is the LIVE limit the simulator enforces
+    (smo_simulator.tm_storage); ``capacity_bytes`` is the flash partition
+    that holds it (subsystems/memory_map.yaml), sized for the store's
+    largest packet. The payload's own 20 GB image mass memory
+    (subsystems/payload.yaml total_storage_mb) is a different memory: the
+    Science Store holds the 20-octet product records, not the pixels.
+    """
     id: int
     name: str
     capacity_bytes: int
+    capacity_packets: int | None = None
+    #: Circular (overwrite-oldest) rather than stop-when-full.
+    circular: bool = False
 
 
 class PUSServiceConfig(StrictModel):

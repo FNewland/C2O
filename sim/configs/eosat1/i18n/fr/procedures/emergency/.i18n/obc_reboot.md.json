@@ -64,8 +64,8 @@
   },
   {
    "id": "emg-003-obc-reboot/procedure-steps/step-7-re-enable-hk-reporting-and-verify-subsystem-communication",
-   "en_hash": "e3c6eaf1244f3c97",
-   "fr_hash": "1a66fc76929dce3e"
+   "en_hash": "edc03bf051f35a5e",
+   "fr_hash": "7155e10e1f3e6c7d"
   },
   {
    "id": "emg-003-obc-reboot/procedure-steps/step-8-restore-operational-mode-and-log-results",
@@ -98,5 +98,5 @@
    "fr_hash": "01018e2c2027bcb3"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "f614a01"
 }

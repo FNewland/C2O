@@ -347,7 +347,7 @@ des procédures de contingence :
 
 | Contingence d'origine | Déclencheur d'escalade | Procédure d'urgence |
 |------------------|--------------------|---------------------|
-| CTG-023 (délestage) | SoC < 10 % ou bus < 25 V | EMG-002 Perte totale d'alimentation |
+| CTG-023 (délestage) | SoC < 10 % ou bus < 28.4 V | EMG-002 Perte totale d'alimentation |
 | CTG-003 (perte de liaison) | 2 passages consécutifs en échec | EMG-004 Perte de communication |
 | CTG-002 (anomalie AOCS) | défaillance de 3 roues ou plus, ou vitesse angulaire > 5°/s | EMG-005 Perte d'attitude |
 | CTG-004 (thermique) | Dépassement d'une limite rouge (toute zone) | EMG-006 Emballement thermique |

@@ -49,8 +49,8 @@
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-5-verify-link-quality-and-subsystem-health",
-   "en_hash": "48920f36a28ad0c8",
-   "fr_hash": "57a2ecdc78f9b5c6"
+   "en_hash": "bb60ec934ce78d38",
+   "fr_hash": "a89c2850301ffbc0"
   },
   {
    "id": "ctg-003-ttc-link-loss-recovery/procedure-steps/step-6-escalation-no-link-recovery",
@@ -68,5 +68,5 @@
    "fr_hash": "d1aaa876820b5a1b"
   }
  ],
- "en_commit": "5f4fa5a"
+ "en_commit": "f614a01"
 }

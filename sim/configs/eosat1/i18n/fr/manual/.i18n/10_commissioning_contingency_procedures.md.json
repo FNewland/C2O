@@ -94,8 +94,8 @@
   },
   {
    "id": "commissioning-contingency-procedures/phase-4--health-check/failure-battery-voltage-below-minimum-threshold",
-   "en_hash": "7839ccec44378647",
-   "fr_hash": "450bdf87395216e0"
+   "en_hash": "a67c3d6b47544c72",
+   "fr_hash": "ad5f505e2d537994"
   },
   {
    "id": "commissioning-contingency-procedures/phase-4--health-check/failure-battery-cell-failure-or-imbalance-detected",
@@ -104,8 +104,8 @@
   },
   {
    "id": "commissioning-contingency-procedures/phase-4--health-check/failure-bus-voltage-out-of-range",
-   "en_hash": "b69a388afec4deff",
-   "fr_hash": "a15c3eb50051da98"
+   "en_hash": "d3d4755f0616d8ba",
+   "fr_hash": "d9ef31a2095f022a"
   },
   {
    "id": "commissioning-contingency-procedures/phase-4--health-check/failure-temperature-out-of-range-subsystem",
@@ -363,5 +363,5 @@
    "fr_hash": "8e3f4056189a3e94"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

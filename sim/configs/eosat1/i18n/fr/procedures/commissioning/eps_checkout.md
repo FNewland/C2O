@@ -31,16 +31,16 @@ pour l'exploitation de la mission.
 
 ### Étape 1 — Mesure de référence de la tension du bus
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.0V, 29.0V] sous 10s (la bande jaune de la console ; le bus suit la batterie, donc une batterie pleine se situe vers 29 V)
-**Action:** Consigner la tension du bus. Le point de régulation nominal est 28.0V +/- 0.5V.
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [28.4V, 34.0V] sous 10s (la bande jaune de la console ; le bus suit la batterie, donc une batterie pleine se situe vers 33.4 V)
+**Action:** Consigner la tension du bus. Le bus n'est pas régulé : il suit la batterie jusqu'au plafond de 33.4V.
 **GO/NO-GO:** Tension du bus régulée conformément à la spécification
 
 ### Étape 2 — Tension et état de charge de la batterie
 **TC:** `GET_PARAM(param_id=0x0100)` (Service 20, Subtype 3) — tension de la batterie
 **TC:** `GET_PARAM(param_id=0x0101)` (Service 20, Subtype 3) — SOC de la batterie
-**Verify:** `eps.bat_voltage` (0x0100) dans la plage [21.5V, 29.2V] sous 10s
+**Verify:** `eps.bat_voltage` (0x0100) dans la plage [24.0V, 33.6V] sous 10s
 **Verify:** `eps.bat_soc` (0x0101) > 70 % sous 10s
-**Action:** Consigner les valeurs. La plage de tension de la batterie Li-ion 8S (100 Wh, 3 Ah) va de 21,5 V (vide) à 29,2 V (pleine), tension nominale 26,4 V.
+**Action:** Consigner les valeurs. La plage de tension de la batterie Li-ion 8S (GomSpace BPX 8S-1P, 100 Wh, 3,5 Ah) va de 24,0 V (vide) à 33,6 V (pleine), tension nominale 28,8 V.
 **GO/NO-GO:** Tension et SOC de la batterie dans la plage nominale
 
 ### Étape 3 — Performances du générateur solaire au Soleil
@@ -56,7 +56,7 @@ pour l'exploitation de la mission.
 **Verify:** `eps.power_gen` (0x0107) = ~0W sous 30s après l'entrée en éclipse
 **Verify:** `eps.bat_soc` (0x0101) en baisse à < 1.5 % par minute sous 60s
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — à mi-éclipse
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (la batterie soutient le bus) sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (la batterie soutient le bus) sous 10s
 **GO/NO-GO:** Rythme de décharge de la batterie nominal, tension du bus maintenue
 
 ### Étape 5 — Reprise de charge en sortie d'éclipse
@@ -82,21 +82,21 @@ ligne non alimentée revient silencieusement en arrière. La ligne du réchauffe
 source de transitoire et est ensuite rétablie dans son état d'entrée.
 **Action:** Consigner d'abord l'état d'entrée de `eps.pl_htr_bat` (0x0115).
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — htr_bat (essai bref)
-**Verify:** `eps.bus_voltage` (0x0105) reste dans la plage [26.5V, 29.5V] sous 5s
+**Verify:** `eps.bus_voltage` (0x0105) reste dans la plage [30.2V, 34.0V] sous 5s
 **TC:** `EPS_POWER_OFF(line_index=5)` (Service 8, Subtype 1, func_id 20) — rétablir, UNIQUEMENT si la ligne était coupée à l'entrée
 **Verify:** `eps.pl_htr_bat` (0x0115) revenu à sa valeur d'entrée sous 5s
-**Verify:** `eps.bus_voltage` (0x0105) revient dans [27.0V, 29.0V] sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) revient dans [30.9V, 34.0V] sous 10s
 **GO/NO-GO:** Régulation du bus stable sous charge transitoire, état de la ligne rétabli
 
 ## Conduite à tenir hors nominal
-- Si la tension du bus < 27.0V : contrôler le SOC de la batterie. Si le SOC < 30 %, réduire immédiatement les charges. Désactiver les réchauffeurs non essentiels. Vérifier l'attitude de pointage solaire. Si la tension du bus < 26.0V, exécuter CTG-001 (délestage) et, avec l'accord du FD, `OBC_SET_MODE(mode=1)` — 1 correspond à SAFE (0 à NOMINAL ; l'ancien texte inversait le codage).
+- Si la tension du bus < 30.9V : contrôler le SOC de la batterie. Si le SOC < 30 %, réduire immédiatement les charges. Désactiver les réchauffeurs non essentiels. Vérifier l'attitude de pointage solaire. Si la tension du bus < 29.6V, exécuter CTG-001 (délestage) et, avec l'accord du FD, `OBC_SET_MODE(mode=1)` — 1 correspond à SAFE (0 à NOMINAL ; l'ancien texte inversait le codage).
 - Si la production électrique < 35W au Soleil avec un bon pointage solaire : contrôler les courants de chaque aile via `GET_PARAM(param_id=0x0146)` (aile +Y) et `GET_PARAM(param_id=0x0147)` (aile −Y). Si un panneau est sous-performant, consigner une anomalie. Évaluer la viabilité du bilan de puissance avec un seul panneau.
 - Si le SOC de la batterie < 50 % en fin d'éclipse : réduire la charge opérationnelle. Reporter les activités de recette en orbite exigeant beaucoup de puissance. Réévaluer le bilan de puissance.
 - Si le rythme de reprise de charge est inférieur à la prédiction : rechercher une dégradation du générateur solaire. Vérifier le régulateur de charge de la batterie via `GET_PARAM(param_id=0x0109)`. En cas de panne suspectée du régulateur de charge, examiner la voie redondante.
 - Si une oscillation de la tension du bus est détectée : contrôler le mode de régulation via `GET_PARAM(param_id=0x010A)`. Consigner une anomalie pour examen par l'ingénieur EPS. En cas d'instabilité, commander `OBC_SET_MODE(mode=1)` (SAFE) avec l'accord du FD ; rétablir avec mode=0 (NOMINAL) après investigation.
 
 ## Postconditions
-- [ ] Tension du bus confirmée régulée à 28.0V +/- 0.5V
+- [ ] Tension du bus confirmée suivant la batterie (au plus le plafond de 33.4V)
 - [ ] Tension et SOC de la batterie nominaux (> 70 % après charge complète)
 - [ ] Générateur solaire produisant 40-90W au Soleil (panneaux déployés, pointage solaire)
 - [ ] Rythme de décharge en éclipse conforme à la prédiction

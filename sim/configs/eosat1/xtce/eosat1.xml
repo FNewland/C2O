@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+e64ce48fb013" classification="Unclassified — Simulation"/>
+  <Header version="1.0+1f73df485a74" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -202,8 +202,8 @@
           </UnitSet>
           <DefaultAlarm>
             <StaticAlarmRanges>
-              <WarningRange minInclusive="27.0" maxInclusive="35.0"/>
-              <CriticalRange minInclusive="25.0" maxInclusive="35.0"/>
+              <WarningRange minInclusive="28.4" maxInclusive="35.0"/>
+              <CriticalRange minInclusive="27.7" maxInclusive="35.0"/>
             </StaticAlarmRanges>
           </DefaultAlarm>
         </IntegerParameterType>

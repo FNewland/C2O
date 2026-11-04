@@ -19,8 +19,8 @@
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/prerequisites",
-   "en_hash": "108185f7bdfe6e69",
-   "fr_hash": "95f07aa0551e8cd2"
+   "en_hash": "d718e9abe0edb1b1",
+   "fr_hash": "ec11bd06412f7a12"
   },
   {
    "id": "ctg-025-aocs-sensor-loss-recovery/required-telemetry",
@@ -78,5 +78,5 @@
    "fr_hash": "348f588ef107c0f6"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

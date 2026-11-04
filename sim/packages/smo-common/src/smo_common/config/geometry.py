@@ -210,6 +210,19 @@ def _cross_check(geo: dict, config_dir: Path) -> list[str]:
             if got != want:
                 out.append(f"array_drive.axis {geo['array_drive']['axis']} "
                            f"but eps.yaml solar_panels.sada_axis = {axis}")
+    ttc = _read(config_dir / "subsystems" / "ttc.yaml").get("sband_antennas") or []
+    if ttc:
+        want = {a["id"]: [float(x) for x in a["boresight"]] for a in ttc}
+        got = {a["id"]: [float(x) for x in a["boresight"]]
+               for a in geo.get("antennas") or [] if a.get("kind") == "patch"}
+        for aid in sorted(set(want) | set(got)):
+            if aid not in got:
+                out.append(f"antennas: ttc.yaml sband_antennas.{aid} is not drawn")
+            elif aid not in want:
+                out.append(f"antennas.{aid}: patch not declared in ttc.yaml sband_antennas")
+            elif any(abs(a - b) > 1e-6 for a, b in zip(got[aid], want[aid])):
+                out.append(f"antennas.{aid}.boresight {got[aid]} but ttc.yaml "
+                           f"sband_antennas.{aid}.boresight {want[aid]}")
     imaging = (_read(config_dir / "planning" / "planner.yaml").get("imaging") or {})
     fov = imaging.get("fov_deg")
     if fov is not None and abs(float(fov) - float(geo["payload"]["fov_deg"])) > 1e-3:

@@ -84,7 +84,7 @@ fix: set the clock from the ground.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Action:** Review `obdh.cpu_load` (0x0302) trend — was CPU at 100% before reset?
 **Action:** Review EPS data — was there a bus voltage dip that could cause brownout?
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (stable)
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (stable)
 **Action:** Check radiation environment data if available from payload housekeeping
 **GO/NO-GO:** Root cause classified. If it appears transient (SEU, brief voltage dip): log it. If systemic (repeated high CPU, memory error): raise it to the ground software team. Either way, the OBC mode decides what follows.
 **BRANCH:** `obdh.mode == 1` -> GO `STEP-6` | NO-GO `STEP-END` (timeout 10 s)

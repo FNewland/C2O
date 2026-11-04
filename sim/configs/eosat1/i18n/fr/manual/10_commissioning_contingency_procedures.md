@@ -163,14 +163,14 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 ### Défaillance : tension de la batterie sous le seuil minimal {#failure-battery-voltage-below-minimum-threshold}
 
 **Symptômes :**
-- Télémesure de tension de la batterie < 26.0 V (ou minimum défini)
+- Télémesure de tension de la batterie < 29.6 V (ou minimum défini)
 - Tension en baisse d'une balise à l'autre
 - Le délestage EPS est peut-être actif
 - Température de la batterie nominale
 
 **Procédure :** [CTG-001](../procedures/contingency/undervoltage_loadshed.md) (undervoltage_loadshed.md) ou [CTG-023](../procedures/contingency/progressive_load_shed.md) (progressive_load_shed.md)
 
-**Reprise :** envoyer une commande de délestage pour désactiver les sous-systèmes non essentiels. L'EPS appliquera l'ordre de priorité : OBDH > TTC > TCS > charge utile. Recharger la batterie en orientant le générateur solaire vers le Soleil. Ne reprendre la recette en orbite qu'une fois la tension remontée au-dessus de 27.5 V pendant au moins 30 minutes. Si la tension ne remonte pas, soupçonner une dégradation de la batterie — se reporter à CTG-013.
+**Reprise :** envoyer une commande de délestage pour désactiver les sous-systèmes non essentiels. L'EPS appliquera l'ordre de priorité : OBDH > TTC > TCS > charge utile. Recharger la batterie en orientant le générateur solaire vers le Soleil. Ne reprendre la recette en orbite qu'une fois la tension remontée au-dessus de 31.5 V pendant au moins 30 minutes. Si la tension ne remonte pas, soupçonner une dégradation de la batterie — se reporter à CTG-013.
 
 ---
 
@@ -191,7 +191,7 @@ Pendant la recette en orbite, consulter ce document dès qu'un comportement inat
 ### Défaillance : tension du bus hors plage {#failure-bus-voltage-out-of-range}
 
 **Symptômes :**
-- Tension du bus principal hors de la fenêtre 28 V ± 4 V
+- Tension du bus principal hors de la fenêtre 24,0–33,4 V (batterie BPX 8S-1P, plafond du bus 33,4 V)
 - Tension du bus secondaire également affectée s'il est alimenté
 - Pics transitoires ou écart durable observés
 - Corrélation avec les événements de commutation de charges

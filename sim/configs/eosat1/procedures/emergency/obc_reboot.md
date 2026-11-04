@@ -133,7 +133,7 @@ unit. Escalate to OBDH engineer for investigation.
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) --- enable TTC periodic reporting
 **Verify:** Periodic HK packets from all enabled SIDs arriving within 30 s
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- request EPS housekeeping
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V --- power bus nominal
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V --- power bus nominal
 **Verify:** `eps.bat_soc` (0x0101) > 25 % --- sufficient charge
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- request AOCS housekeeping
 **Verify:** `aocs.mode` (0x020F) --- record current AOCS mode (may have defaulted to COARSE_SUN or DETUMBLE)

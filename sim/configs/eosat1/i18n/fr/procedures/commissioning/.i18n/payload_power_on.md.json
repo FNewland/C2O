@@ -29,8 +29,8 @@
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-1-pre-power-on-eps-baseline",
-   "en_hash": "f131a40f6fcb2394",
-   "fr_hash": "427d933d90b14e13"
+   "en_hash": "3d6862b13c680f66",
+   "fr_hash": "8bc6ad2d957a5ca6"
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-2-verify-payload-currently-off",
@@ -44,8 +44,8 @@
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-4-verify-payload-power-draw",
-   "en_hash": "ae7aa3f544aac5e1",
-   "fr_hash": "15534fe572250b8b"
+   "en_hash": "c1919deed2bf1274",
+   "fr_hash": "8de92edce85402bc"
   },
   {
    "id": "com-009-payload-power-on/procedure-steps/step-5-verify-payload-electronics-health",
@@ -74,8 +74,8 @@
   },
   {
    "id": "com-009-payload-power-on/off-nominal-handling",
-   "en_hash": "d835fd0a0f8a2cb9",
-   "fr_hash": "e474cf824ab4cdc0"
+   "en_hash": "227a7c5ab82bc3d3",
+   "fr_hash": "b3f52f3f6af70ccc"
   },
   {
    "id": "com-009-payload-power-on/post-conditions",
@@ -88,5 +88,5 @@
    "fr_hash": "88218906d72b5eaa"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

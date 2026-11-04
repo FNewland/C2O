@@ -39,7 +39,7 @@ before considering a memory reload or OBC unit switchover.
 | obdh.boot_count_b | 0x0318 | OBC-B total boot count |
 | obdh.bus_a_status | 0x030F | 0 (OK) or 1 (ERROR) |
 | obdh.bus_b_status | 0x0310 | 0 (OK) or 1 (ERROR) |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | ttc.link_status | 0x0501 | 2 (LOCKED) |
 
 ## Required Commands
@@ -73,8 +73,8 @@ return, request SID 11 instead.
 **Verify:** `obdh.temp` (0x0301) — within limits (< 50 C)
 **Verify:** `obdh.cpu_load` (0x0302) — record (should be low in bootloader)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — confirm power is stable
-**Note:** If bus voltage is marginal (< 27.5 V), a brown-out may have caused the crash.
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — confirm power is stable
+**Note:** If bus voltage is marginal (< 31.5 V), a brown-out may have caused the crash.
 Address EPS before attempting application boot.
 **GO/NO-GO:** Bootloader state confirmed, diagnostics recorded — proceed to assessment.
 
@@ -221,7 +221,7 @@ If neither option succeeds, escalate to EMG-003.
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Platform/OBDH housekeeping
 **Verify:** All five HK responses received within 30 s.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V
 **Verify:** `aocs.mode` (0x020F) — record and restore if needed
 **Verify:** `payload.mode` (0x0600) — record and restore if needed
 **Verify:** `obdh.mode` (0x0300) — if SAFE, consider restoring to NOMINAL:

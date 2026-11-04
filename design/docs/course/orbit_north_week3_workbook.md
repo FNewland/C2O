@@ -283,7 +283,7 @@ other plays the named subsystem. Record what was said.
 | # | Owner | Action | Expected verification | ☐ done | Note / actual value |
 |---|-------|--------|----------------------|:------:|---------------------|
 | 1 | SPACON | Verify OBC status: `HK_REQUEST(sid=4)` (S3.27) | `obdh.mode` (0x0300) = 0 (NOMINAL) and `obdh.cpu_load` (0x0302) < 80 % within 10 s; `obdh.uptime` (0x0308) consistent with the last known value. `obdh.mode` ≠ 0: abort the pass, run CTG-010 | ☐ | |
-| 2 | EPS | Verify EPS health: `HK_REQUEST(sid=1)` | `eps.bat_soc` (0x0101) > 50 %; `eps.bus_voltage` (0x0105) > 27.0 V; `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106). Either limit missed: CTG-005, no payload operations | ☐ | |
+| 2 | EPS | Verify EPS health: `HK_REQUEST(sid=1)` | `eps.bat_soc` (0x0101) > 50 %; `eps.bus_voltage` (0x0105) > 30.9 V; `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106). Either limit missed: CTG-005, no payload operations | ☐ | |
 | 3 | AOCS | Verify AOCS pointing: `HK_REQUEST(sid=2)` | `aocs.mode` (0x020F) in {4, 8} (NOMINAL, or ECLIPSE on the shadow side); `aocs.att_error` (0x0217) < 1.0° (allow 400 s to re-converge after a disturbance); `aocs.rate_roll` (0x0204) and `aocs.rate_yaw` (0x0206) within ±0.05°/s; `aocs.rate_pitch` (0x0205) in [0.043, 0.083]°/s — nadir tracking carries the orbit rate, +0.063°/s | ☐ | |
 | 4 | TT&C | Establish the link: `TTC_SWITCH_PRIMARY` (S8.1) | `ttc.link_status` (0x0501) = **2** (LOCKED) within 15 s; TT&C page (ground): `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB. No link in 15 s: `TTC_SWITCH_REDUNDANT` and verify again; both fail → TT&C anomaly | ☐ | |
 | 5 | SPACON | Full housekeeping collection: `HK_REQUEST` (S3.27) of SIDs 1 EPS, 2 AOCS, 3 TCS, 4 OBDH, 5 Payload, 6 TT&C | all six packets within 30 s; no out-of-limit parameter flagged by the MCS limit checker | ☐ | |
@@ -487,7 +487,7 @@ instructor control, and no card asks an operator to force contact.
 | 5 | SPACON | Boot the application: `OBC_BOOT_APP` (S8.1 func 55); after its S1.7, `HK_ENABLE(sid=3)`, `HK_ENABLE(sid=4)`, `HK_ENABLE(sid=6)` (**S3.5**) | S1.1 + S1.3 < 5 s; S1.7 < 15 s (event 0x0310 BOOT_COMPLETE; a CRC failure gives S1.8 and 0x0305 BOOT_FAILURE); `obdh.sw_image` = 1 < 15 s; `obdh.boot_state` (0x0A15) = 2; only SIDs 1 and 11 stream after the boot, then SIDs 3 (60 s), 4 (8 s), 6 (8 s) appear | ☐ | |
 | 5a | TT&C | Clear beacon mode, then select LOW: `TTC_SET_BEACON_MODE(on=0)` (S8.1 func 70), `TTC_SET_DATA_RATE(rate=0)` (func 65). Re-configure the ground demodulator to 16 kBd first | S1.1 + S1.7, not S1.8, < 5 s each; `ttc.beacon_mode` (0x0521) = 0; `ttc.link_status` (0x0501) = **2** (LOCKED) < 15 s; `ttc.tm_data_rate` (0x0506) = 16000 bps, `ttc.tm_tier` (0x0539) = 1, `ttc.tm_symbol_rate` (0x053B) = 16000 Bd | ☐ | |
 | 6 | SPACON | Note the unset clock — **do not sync here**: time is LEOP-006's job | `obdh.time_ref` (0x0A13) = 0 (NONE); timestamps read year-2000 CUC — correct behaviour, not a fault | ☐ | |
-| 7 | SPACON | Power sanity check: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 26.0–30.0 V; `eps.bat_soc` (0x0101) > 50 %; `eps.pl_ttc_tx` (0x0112) = 1 (auto-TX hold-down); `eps.power_gen` (0x0107) reported, small while tumbling | ☐ | |
+| 7 | SPACON | Power sanity check: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 29.6–34.6 V; `eps.bat_soc` (0x0101) > 50 %; `eps.pl_ttc_tx` (0x0112) = 1 (auto-TX hold-down); `eps.power_gen` (0x0107) reported, small while tumbling | ☐ | |
 | 8 | TT&C | Log and report: AOS, first accepted TC, application boot, HK values; confirm the pass is long enough for LEOP-002 or book the next one | First Acquisition Report distributed; clear to LEOP-002 | ☐ | |
 
 **Recorded values:**
@@ -540,7 +540,7 @@ instructor control, and no card asks an operator to force contact.
 
 | # | Owner | Action | Expected verification | ☐ done | Note |
 |---|-------|--------|----------------------|:------:|------|
-| 1 | EPS | Full EPS housekeeping: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 26.0–30.0 V; `eps.bat_voltage` (0x0100) reported; `eps.bat_soc` (0x0101) > 50 %; `eps.power_gen` (0x0107) > 0 W in sunlight — 0 W is expected with `eps.eclipse_flag` (0x0108) = 1: re-check after eclipse exit | ☐ | ☐ OK ☐ NOT-OK |
+| 1 | EPS | Full EPS housekeeping: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 29.6–34.6 V; `eps.bat_voltage` (0x0100) reported; `eps.bat_soc` (0x0101) > 50 %; `eps.power_gen` (0x0107) > 0 W in sunlight — 0 W is expected with `eps.eclipse_flag` (0x0108) = 1: re-check after eclipse exit | ☐ | ☐ OK ☐ NOT-OK |
 | 2 | EPS | Confirm the unpowered subsystems are dark (same SID 1 report) | `eps.pl_aocs_wheels` (0x0117) = 0 (until LEOP-007); `eps.pl_payload` (0x0113) = 0 (until COM-009); `eps.pl_fpa_cooler` (0x0114) = 0 (until COM-010); `eps.pl_prop` (0x014A) = 0 | ☐ | ☐ dark ☐ powered early |
 | 3 | Thermal | Thermal housekeeping: `HK_REQUEST(sid=3)` | `tcs.temp_obc` (0x0406) inside the OBC limits on the TCS page; `tcs.temp_battery` (0x0407) 0 to +35 °C; `tcs.temp_fpa` (0x0408) reported (payload unpowered: ambient) | ☐ | ☐ OK ☐ NOT-OK |
 | 4 | SPACON | OBDH housekeeping: `HK_REQUEST(sid=4)` | `obdh.mode` (0x0300) = 0 (NOMINAL) or 1 (SAFE); `obdh.cpu_load` (0x0302) < 70 % | ☐ | ☐ OK ☐ NOT-OK |
@@ -575,7 +575,7 @@ the three gyros are S2 devices `S2_AOCS_GYROSCOPE_0/1/2`.
 
 | # | Owner | Action | Verification | ☐ done | Note |
 |---|-------|--------|--------------|:------:|------|
-| 1 | EPS | Verify the EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 26.0–30.0 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 20 W | ☐ | |
+| 1 | EPS | Verify the EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 29.6–34.6 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 20 W | ☐ | |
 | 2 | EPS | Heater lines **only as needed**: read `tcs.temp_battery` (0x0407) and `tcs.temp_obc` (0x0406) from SID 3; `EPS_POWER_ON(line_index=5)` (S8.1 func **19**) only if the battery is below +5 °C; `EPS_POWER_ON(line_index=6)` only if the OBC zone is below 0 °C | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 within 5 s for each line commanded; the others still off. Log which lines this card energised: COM-002 reads it as its entry state | ☐ | lines energised: ____ |
 | 3 | EPS / AOCS | Energise the AOCS suite line and enable its HK: `EPS_POWER_ON(line_index=7)` (func 19), then `HK_ENABLE(sid=2)` (**S3.5**) | `eps.pl_aocs_wheels` (0x0117) = 1 within 5 s; SID 2 periodic within one 4 s interval; the wheels stay disabled until COM-004 | ☐ | |
 | 4 | AOCS | Both DETUMBLE legs first, and the GPS receiver: `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`, `MTQ_ENABLE(enable=1)` (S8.1 func_id **9**), `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | `aocs.mtq_enabled` (0x025E) = 1 within 10 s | ☐ | |
@@ -843,13 +843,13 @@ Print 9 copies (one per console position).
 
 | # | Action | Expected | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Baseline bus voltage — `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [27.0, 29.0] V (nominal regulation point 28.0 ± 0.5 V; a full battery sits near 29 V) | ☐ | V: ____ |
-| 2 | Battery V & SoC — `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | `eps.bat_voltage` (0x0100) ∈ [21.5, 29.2] V (8S pack, 100 Wh: 21.5 V empty, 26.4 V nominal, 29.2 V full); `eps.bat_soc` (0x0101) > 70 % | ☐ | V: ____ SoC: ____ |
+| 1 | Baseline bus voltage — `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [28.4, 34.0] V (the console's yellow band; the bus is not regulated — it follows the battery up to the 33.4 V cap) | ☐ | V: ____ |
+| 2 | Battery V & SoC — `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | `eps.bat_voltage` (0x0100) ∈ [24.0, 33.6] V (GomSpace BPX 8S-1P, 100 Wh: 24.0 V empty, 28.8 V nominal, 33.6 V full); `eps.bat_soc` (0x0101) > 70 % | ☐ | V: ____ SoC: ____ |
 | 3 | Solar array sunlit performance — `HK_REQUEST(sid=1)`, sunlit and sun-pointed | `eps.power_gen` (0x0107) ∈ [40, 90] W (88.6 W is the whole-spacecraft peak; about 80 W is normal when sun-pointed) | ☐ | ____ W |
-| 4 | Eclipse discharge — `HK_REQUEST(sid=1)` at entry and at mid-eclipse | `eps.power_gen` ~0 W within 30 s of entry; `eps.bat_soc` falling < 1.5 %/min; `eps.bus_voltage` > 27.0 V | ☐ | |
+| 4 | Eclipse discharge — `HK_REQUEST(sid=1)` at entry and at mid-eclipse | `eps.power_gen` ~0 W within 30 s of entry; `eps.bat_soc` falling < 1.5 %/min; `eps.bus_voltage` > 30.9 V | ☐ | |
 | 5 | Eclipse-exit charge recovery — `HK_REQUEST(sid=1)` at exit + 5 min | `eps.power_gen` > 35 W within 60 s of exit; `eps.bat_soc` rising within 120 s | ☐ | |
 | 6 | Power budget — `GET_PARAM(param_id=0x0108)`; orbit-average generation against consumption | orbit-average generation > consumption; end-of-eclipse SoC > 50 % under nominal load | ☐ | margin: ____ W |
-| 7 | Bus regulation under a load transient — record `eps.pl_htr_bat` (0x0115) first, then `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**), and `EPS_POWER_OFF(line_index=5)` (func **20**) only if the line was off at entry. Not the payload: its line is OFF until COM-009 | `eps.bus_voltage` stays in [26.5, 29.5] V within 5 s and returns to [27.0, 29.0] V within 10 s; `eps.pl_htr_bat` back to its entry value | ☐ | min V: ____ |
+| 7 | Bus regulation under a load transient — record `eps.pl_htr_bat` (0x0115) first, then `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**), and `EPS_POWER_OFF(line_index=5)` (func **20**) only if the line was off at entry. Not the payload: its line is OFF until COM-009 | `eps.bus_voltage` stays in [30.2, 34.0] V within 5 s and returns to [30.9, 34.0] V within 10 s; `eps.pl_htr_bat` back to its entry value | ☐ | min V: ____ |
 
 Budget reference for step 6: the nominal orbit-average load is about **28.8 W**
 against about 45.1 W of generation at the worst-generation beta, β = −31.2°
@@ -991,10 +991,10 @@ from memory: limits are configuration, and they change.
 
 | # | Action | Expected | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Pre-power-on EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [27.0, 29.0] V; `eps.bat_soc` (0x0101) > 75 %; `eps.power_gen` (0x0107) > 40 W — all three recorded | ☐ | |
+| 1 | Pre-power-on EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [28.4, 34.0] V; `eps.bat_soc` (0x0101) > 75 %; `eps.power_gen` (0x0107) > 40 W — all three recorded | ☐ | |
 | 2 | Verify the payload is OFF: `HK_REQUEST(sid=5)` | `payload.mode` (0x0600) = 0 (OFF) | ☐ | |
 | 3 | Energise the line, then STANDBY: `EPS_POWER_ON(line_index=3)` (S8.1 func_id **19**), `HK_REQUEST(sid=1)`, `PAYLOAD_SET_MODE(mode=1)` (func **26**), `HK_ENABLE(sid=5)` (**S3.5**), `HK_REQUEST(sid=5)` | `eps.pl_payload` (0x0113) = 1 within 10 s; `payload.mode` = 1 (STANDBY) within 60 s, and **still 1** on a SID 5 re-request 60 s later — a mode that reverts to 0 means the line is dark | ☐ | |
-| 4 | Payload power draw: `HK_REQUEST(sid=1)`, `GET_PARAM(param_id=0x0106)` (S20.3) | `eps.bus_voltage` > 27.0 V; `eps.power_cons` (0x0106) up **2–3 W** on the baseline (STANDBY about 2.4 W; the 15 W cooler is not on until COM-010) | ☐ | ____ W |
+| 4 | Payload power draw: `HK_REQUEST(sid=1)`, `GET_PARAM(param_id=0x0106)` (S20.3) | `eps.bus_voltage` > 30.9 V; `eps.power_cons` (0x0106) up **2–3 W** on the baseline (STANDBY about 2.4 W; the 15 W cooler is not on until COM-010) | ☐ | ____ W |
 | 5 | Electronics health: `HK_REQUEST(sid=5)`, `GET_PARAM(param_id=0x0611)`, `GET_PARAM(param_id=0x0603)` | `payload.imager_status` (0x0611) without fault bits; `payload.imager_temp` (0x0603) in its operating band | ☐ | |
 | 6 | FPA temperature before the cooler: `GET_PARAM(param_id=0x0601)` | `payload.fpa_temp` (0x0601) ∈ [+5, +30] °C — recorded for COM-010 | ☐ | ____ °C |
 | 7 | Data interface: `GET_PARAM(param_id=0x0604)`, `GET_PARAM(param_id=0x0648)`, `GET_PARAM(param_id=0x0647)` | `payload.store_used` (0x0604) about 20 % (pre-existing fill: the empty baseline, not a fault); `payload.product_count` (0x0648) = 0 and `payload.product_mb` (0x0647) = 0 | ☐ | |
@@ -1023,7 +1023,7 @@ about 10 minutes and never overshoots the setpoint.
 |---|--------|----------|:-:|------|
 | 1 | Record the pre-activation state, cooler OFF (cool-down T = 0): `HK_REQUEST(sid=3)`, `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=5)` (S3.27) | `payload.fpa_temp` (0x0601) ∈ [+8, +14] °C; `tcs.temp_fpa` (0x0408) consistent with it; `payload.mode` (0x0600) = 1 | ☐ | T_fpa: ____ °C |
 | 2 | Enable the cooler: `FPA_COOLER(on=1)` (S8.1 func_id **43**), then `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` | `tcs.cooler_fpa` (0x040C) = 1 **and** `eps.pl_fpa_cooler` (0x0114) = 1 — both, or the cooler is not actually running | ☐ | |
-| 3 | Cooler power draw: `HK_REQUEST(sid=1)`, `GET_PARAM(param_id=0x0106)` (S20.3) | `eps.power_cons` (0x0106) up **14–16 W** on the pre-cooler baseline within 30 s; `eps.bus_voltage` (0x0105) > 27.0 V | ☐ | ____ W |
+| 3 | Cooler power draw: `HK_REQUEST(sid=1)`, `GET_PARAM(param_id=0x0106)` (S20.3) | `eps.power_cons` (0x0106) up **14–16 W** on the pre-cooler baseline within 30 s; `eps.bus_voltage` (0x0105) > 30.9 V | ☐ | ____ W |
 | 4 | First 5 minutes: `GET_PARAM(param_id=0x0601)` at T+2 and T+5 min (every minute on WB-5.6-FPA) | `payload.fpa_temp` < +4 °C at T+2 and < −8 °C at T+5. The ramp is exponential: slower at T+5 than at T+2 is expected | ☐ | T+5: __ °C |
 | 5 | Settling: `GET_PARAM(param_id=0x0601)` at T+10 and T+15 min | T+10 ∈ [−16.0, −14.0] °C; T+15 ∈ [−16.0, −15.0] °C. A reading below −16.5 °C is a **control fault**, not an over-performing cooler | ☐ | T+15: __ °C |
 | 6 | Operational temperature: `GET_PARAM(param_id=0x0601)`, `GET_PARAM(param_id=0x0610)`, `GET_PARAM(param_id=0x0631)`, `GET_PARAM(param_id=0x064A)`, `GET_PARAM(param_id=0x064B)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C; `payload.fpa_ready` (0x0610) = 1 within 60 s (hysteresis); `payload.fpa_setpoint` (0x0631) = −15.0; `payload.cooler_margin_k` (0x064B) > 0 (about +5 K); floor at `payload.cooler_floor_c` (0x064A) | ☐ | margin: ____ K |
@@ -1491,14 +1491,14 @@ that worked: hold at that level and go straight to step 6.
 
 | # | Owner | Action | Verification | ☐ | Note |
 |---|-------|--------|--------------|:-:|------|
-| 1 | EPS | Detect and confirm, and read what FDIR has already shed: `HK_REQUEST(sid=1)` (S3.27). FD authorises; announce "UNDERVOLTAGE — completing load shed from the ground" | `eps.uv_flag` (0x010E) = 1; record `eps.bus_voltage` (0x0105, expect < 27.0 V), `eps.bat_soc` (0x0101), `eps.bat_voltage` (0x0100), `eps.power_cons` (0x0106), `eps.power_gen` (0x0107), `eps.eclipse_flag` (0x0108), `eps.load_shed_stage` (0x0134), and `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112), `eps.pl_aocs_wheels` (0x0117): 1 = still ON, 0 = already shed | ☐ | stage: __ V: __ |
+| 1 | EPS | Detect and confirm, and read what FDIR has already shed: `HK_REQUEST(sid=1)` (S3.27). FD authorises; announce "UNDERVOLTAGE — completing load shed from the ground" | `eps.uv_flag` (0x010E) = 1; record `eps.bus_voltage` (0x0105, expect < 28.4 V), `eps.bat_soc` (0x0101), `eps.bat_voltage` (0x0100), `eps.power_cons` (0x0106), `eps.power_gen` (0x0107), `eps.eclipse_flag` (0x0108), `eps.load_shed_stage` (0x0134), and `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112), `eps.pl_aocs_wheels` (0x0117): 1 = still ON, 0 = already shed | ☐ | stage: __ V: __ |
 | 2 | EPS | Priority 1, payload OFF (payload line still ON): `PAYLOAD_SET_MODE(mode=0)` (S8.1 func **26**), `HK_REQUEST(sid=5)`, `HK_REQUEST(sid=1)` 30 s later | `payload.mode` (0x0600) = 0 within 10 s; `eps.power_cons` down; `eps.bus_voltage` recorded | ☐ | V: ____ |
 | 3 | EPS | Priority 2, FPA cooler OFF (cooler line still ON): `FPA_COOLER(on=0)` (func **43**), `GET_PARAM(param_id=0x040C)`, `HK_REQUEST(sid=3)`, `HK_REQUEST(sid=1)` 30 s later | `tcs.cooler_fpa` (0x040C) = 0 within 5 s; `eps.power_cons` down about 15 W; `eps.bus_voltage` recorded | ☐ | V: ____ |
 | 4 | EPS | Priority 3, transmitter OFF (`ttc_tx` line still ON): `TTC_PA_OFF` (func **67**), `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)` 30 s later | `ttc.pa_on` (0x0516) = 0 within 5 s; `eps.power_cons` down about 20 W; `eps.bus_voltage` recorded. The S-band downlink is now gone; uplink stays | ☐ | V: ____ |
 | 5 | EPS | Priority 4, wheels line OFF (still ON): `EPS_POWER_OFF(line_index=7)` (func **20**), `HK_REQUEST(sid=1)` 30 s later | `eps.pl_aocs_wheels` (0x0117) = 0 within 5 s; `eps.bus_voltage` recorded. Active attitude control is lost | ☐ | V: ____ |
 | 5B | EPS | Last resort only, every level taken and the bus still falling — OBC EMERGENCY: `OBC_SET_MODE(mode=2)` (func **50**), `HK_REQUEST(sid=4)` | `obdh.mode` (0x0300) = 2 within 15 s | ☐ | not needed ☐ |
-| 6 | EPS | Monitor recovery: `HK_REQUEST(sid=1)` every 60 s | `eps.bus_voltage` and `eps.bat_soc` trending up; `eps.power_gen` > 0 W in sunlight; `eps.bat_current` (0x0109) positive (charging). Restore when bus > 28.0 V **and** SoC > 40 % | ☐ | time: ____ |
-| 7 | EPS | Restore in reverse priority, bus stable 5 min between loads, each line powered before its unit: `EPS_POWER_ON(line_index=7)` (+ `AOCS_SET_MODE(mode=2)` only if `aocs.mode` (0x020F) = 0); `EPS_POWER_ON(line_index=2)` if `eps.pl_ttc_tx` = 0, then `TTC_PA_ON`; `EPS_POWER_ON(line_index=4)` if `eps.pl_fpa_cooler` = 0, the cooler itself left OFF (it runs only for imaging preparation; the STANDBY command below would switch it off); `EPS_POWER_ON(line_index=3)` if `eps.pl_payload` = 0, then `PAYLOAD_SET_MODE(mode=1)` | `eps.pl_aocs_wheels` = 1 within 5 s; after each load `eps.bus_voltage` > 27.5 V and `eps.bat_soc` > 35 %; all loads back, power budget positive | ☐ | |
+| 6 | EPS | Monitor recovery: `HK_REQUEST(sid=1)` every 60 s | `eps.bus_voltage` and `eps.bat_soc` trending up; `eps.power_gen` > 0 W in sunlight; `eps.bat_current` (0x0109) positive (charging). Restore when bus > 32.1 V **and** SoC > 40 % | ☐ | time: ____ |
+| 7 | EPS | Restore in reverse priority, bus stable 5 min between loads, each line powered before its unit: `EPS_POWER_ON(line_index=7)` (+ `AOCS_SET_MODE(mode=2)` only if `aocs.mode` (0x020F) = 0); `EPS_POWER_ON(line_index=2)` if `eps.pl_ttc_tx` = 0, then `TTC_PA_ON`; `EPS_POWER_ON(line_index=4)` if `eps.pl_fpa_cooler` = 0, the cooler itself left OFF (it runs only for imaging preparation; the STANDBY command below would switch it off); `EPS_POWER_ON(line_index=3)` if `eps.pl_payload` = 0, then `PAYLOAD_SET_MODE(mode=1)` | `eps.pl_aocs_wheels` = 1 within 5 s; after each load `eps.bus_voltage` > 31.5 V and `eps.bat_soc` > 35 %; all loads back, power budget positive | ☐ | |
 
 With the S-band PA off, the **UHF beacon survives**: it is a separate radio, so
 HK SID 11 keeps arriving (`ttc.beacon_active`, 0x0527). Nothing that FDIR or
@@ -1569,7 +1569,7 @@ The spacecraft **reports** a degraded string (S12 yield monitor below 70 %
 in sunlight: TM(12,9) and S5 event 0x914C for A, 0x914D for B) but does
 not act on it. Whether the payload goes off is the team's decision, taken
 at step 4 from how serious the loss is. If nobody decides and the battery
-runs down, the bus-voltage load shed takes the payload off at 25.0 V: that
+runs down, the bus-voltage load shed takes the payload off at 28.4 V: that
 is the safety net, not the plan.
 
 | # | Action | Verification | ☐ | Note |
@@ -1591,7 +1591,7 @@ is the safety net, not the plan.
 | 2 | Post-reboot state: `HK_REQUEST(sid=4)` | `obdh.mode` (0x0300) = 0 (NOMINAL; 1 SAFE means re-initialisation found an issue — go on with caution); `obdh.cpu_load` (0x0302) < 70 % | ☐ | |
 | 3 | All housekeeping: `HK_REQUEST` (S3.27) of SIDs 1, 2, 3, 4, 5, 6 | all six frames within 30 s; no subsystem in an unexpected mode or out of limits (any → its CTG card) | ☐ | |
 | 4 | Time and data integrity: `HK_REQUEST(sid=2)` for `aocs.gps_fix`, `SET_TIME(cuc_seconds=T_corrected)` (S9.1), `OBC_GPS_TIME_SYNC` (S8.1 func **80**), `HK_REQUEST(sid=4)`, `REQUEST_TIME` (S9.2) | `obdh.time_ref` (0x0A13) ≠ 0 (1 GROUND or 2 GPS) within 15 s; T_obc within ±1 s of ground time; stored command queue and mass-memory partitions intact | ☐ | residual: ____ s |
-| 5 | Root-cause indicators: `HK_REQUEST(sid=1)`; review the `obdh.cpu_load` (0x0302) trend and the EPS data before the reset | `eps.bus_voltage` (0x0105) > 27.0 V; transient (SEU, brief dip) → log it; systemic (repeated high CPU, memory errors) → ground software team | ☐ | cause: ____ |
+| 5 | Root-cause indicators: `HK_REQUEST(sid=1)`; review the `obdh.cpu_load` (0x0302) trend and the EPS data before the reset | `eps.bus_voltage` (0x0105) > 30.9 V; transient (SEU, brief dip) → log it; systemic (repeated high CPU, memory errors) → ground software team | ☐ | cause: ____ |
 | 6 | Restore NOMINAL if the OBC is in SAFE: `OBC_SET_MODE(mode=0)` (S8.1 func **50**) | `obdh.mode` (0x0300) = 0 within 10 s; `obdh.cpu_load` < 70 %; `aocs.mode` (0x020F) undisturbed | ☐ | not needed ☐ |
 
 A reset that passes through the bootloader re-applies
@@ -1607,11 +1607,11 @@ Line indices run **0–8**: 0 `obc`, 1 `ttc_rx`, 2 `ttc_tx`,
 | # | Action | Verification | ☐ | Note |
 |---|--------|--------------|:-:|------|
 | 1 | Identify the tripped line(s): `HK_REQUEST(sid=1)` (S3.27) | `eps.oc_trip_flags` (0x010D) decoded: bit N = line N (bits 0–1 are the non-switchable `obc` and `ttc_rx`) | ☐ | line: ____ |
-| 2 | Per-line current: `HK_REQUEST(sid=1)` | the tripped line's current (0x0118–0x011F) near 0 A — the LCL opened it; still elevated = persistent fault: do NOT re-enable, escalate. Line status (0x0110–0x0117) OFF; `eps.bus_voltage` (0x0105) > 27.0 V | ☐ | I: ____ A |
+| 2 | Per-line current: `HK_REQUEST(sid=1)` | the tripped line's current (0x0118–0x011F) near 0 A — the LCL opened it; still elevated = persistent fault: do NOT re-enable, escalate. Line status (0x0110–0x0117) OFF; `eps.bus_voltage` (0x0105) > 30.9 V | ☐ | I: ____ A |
 | 3 | Isolate the fault — coordinate with the affected subsystem's position (TT&C, Payload, EPS/TCS, AOCS): known state before the trip? inrush during a mode change or power-on? | likely transient → step 4; hardware damage suspected → HOLD and escalate | ☐ | |
 | 4 | Reset the overcurrent flag: `EPS_RESET_OC_FLAG(line_index=N)` (S8.1 func **21**) | the line's bit of `eps.oc_trip_flags` (0x010D) clear, and still clear 5 s later | ☐ | |
 | 5 | Re-enable the line: `EPS_POWER_ON(line_index=N)` (S8.1 func **19**) | line status (0x0110 + N) = 1 within 5 s; line current (0x0118 + N) back to nominal; `eps.oc_trip_flags` still clear after 30 s | ☐ | |
-| 6 | Downstream recovery: `HK_REQUEST` of the owner's SID (2 AOCS, 5 Payload, 6 TT&C, 3 heaters) and `HK_REQUEST(sid=1)` | the subsystem works again; `eps.power_cons` (0x0106) shows the load; `eps.bus_voltage` > 27.0 V | ☐ | |
+| 6 | Downstream recovery: `HK_REQUEST` of the owner's SID (2 AOCS, 5 Payload, 6 TT&C, 3 heaters) and `HK_REQUEST(sid=1)` | the subsystem works again; `eps.power_cons` (0x0106) shows the load; `eps.bus_voltage` > 30.9 V | ☐ | |
 
 The LCL has normally opened the line before anyone sees the trip: this card
 never needs to switch a tripped line off, only to decide whether it may come

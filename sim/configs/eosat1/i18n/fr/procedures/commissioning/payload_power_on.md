@@ -31,7 +31,7 @@ l'état de référence de la charge utile requis pour l'activation ultérieure d
 
 ### Étape 1 — Référence EPS avant mise sous tension
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [27.0V, 29.0V] sous 10s (la bande jaune de la console)
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [28.4V, 34.0V] sous 10s (la bande jaune de la console)
 **Verify:** `eps.bat_soc` (0x0101) > 75 % sous 10s
 **Verify:** `eps.power_gen` (0x0107) > 40W sous 10s
 **Action:** Consigner comme référence la tension du bus, le SOC de la batterie et la production électrique avant mise sous tension.
@@ -65,7 +65,7 @@ ligne charge utile non alimentée.
 ### Étape 4 — Vérifier la consommation de la charge utile
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Action:** Comparer la tension du bus et la consommation électrique à la référence avant mise sous tension.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V sous 10s (bus maintenu sous la nouvelle charge)
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V sous 10s (bus maintenu sous la nouvelle charge)
 **TC:** `GET_PARAM(param_id=0x0106)` (Service 20, Subtype 3) — `eps.power_cons`, charge totale
 **Verify:** Augmentation de la charge totale par rapport à la référence de **2-3 W** sous 10 s.
 (Cette ligne lisait 0x0108, c'est-à-dire `eps.eclipse_flag` — un booléen 0/1, et non une puissance.
@@ -128,7 +128,7 @@ du remplissage de référence de la mémoire.
   (0x0610 est `payload.fpa_ready`, et non un indicateur de bus d'alimentation.) Si `eps.pl_payload` (0x0113) vaut 0, la ligne charge utile n'est pas alimentée — c'est
   le `EPS_POWER_ON(line_index=3)` de l'étape 3, et une commande de mode sans lui revient en arrière au
   cycle suivant. Si l'alimentation est présente mais que la charge utile ne répond pas, l'éteindre via `PAYLOAD_SET_MODE(mode=0)` et faire remonter.
-- Si la tension du bus descend sous 27.0V lors de la mise sous tension de la charge utile : éteindre immédiatement la charge utile via `PAYLOAD_SET_MODE(mode=0)`. Contrôler le SOC de la batterie. Si le SOC < 60 %, attendre un état de charge plus élevé. En cas de problème de régulation du bus, examiner l'EPS avant de réessayer.
+- Si la tension du bus descend sous 30.9V lors de la mise sous tension de la charge utile : éteindre immédiatement la charge utile via `PAYLOAD_SET_MODE(mode=0)`. Contrôler le SOC de la batterie. Si le SOC < 60 %, attendre un état de charge plus élevé. En cas de problème de régulation du bus, examiner l'EPS avant de réessayer.
 - Si le mot d'état de l'imageur indique une panne : le consigner via `GET_PARAM(param_id=0x0611)`. Éteindre la charge utile via `PAYLOAD_SET_MODE(mode=0)`. Ne pas engager l'activation du refroidisseur. Faire remonter à l'ingénieur charge utile avec le mot d'état de l'imageur.
 - Si la consommation de la charge utile dépasse 5 W en STANDBY (pour un bilan de ~2,4 W) : une consommation inattendue peut indiquer une panne de l'électronique. Surveiller pendant 5 minutes. Si elle augmente, éteindre la charge utile. Si elle se stabilise à un niveau supérieur à l'attendu, consulter les spécifications du fabricant de la charge utile.
 - Si la lecture de température du FPA est anormale : la recouper avec le nœud TCS

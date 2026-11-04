@@ -83,6 +83,16 @@ num_memory_segments: 8
 # resolution — not the pixel count — is what gives: GSD in the tens of metres
 # (29 m, between Landsat's 30 m and Sentinel-2's 10-60 m) is the physically
 # sensible compromise and is exactly right for chlorophyll/current mapping.
+# REFERENCE-PART NOTE (2026-11 consistency pass). eps.yaml and tcs.yaml
+# name the Simera Sense TriScape100 for the imager's power (5.5 / 2.4 W),
+# mass (1.1 kg) and envelope. Its OPTICS are deliberately NOT used: the
+# TriScape100 is a 580 mm / 95 mm-aperture RGB frame camera (4096 x 3072 px
+# at 5.5 um -> 4.75 m GSD, 19.4 km swath at 500 km; Simera Sense datasheet
+# via satnow.com). EOSAT-1's instrument is the owner-ruled wide-field ocean
+# pushbroom below (8192 px, 84.5 mm -> 33.4 m GSD, 273 km swath at 513 km),
+# which the manual, planner, telemetry descriptions and course workbook all
+# quote. tests/test_content/test_sim_consistency.py derives GSD and swath
+# from these four numbers and the orbit and checks every quoted copy.
 pixels_across_track: 8192        # across-track pixels per band
 pixel_pitch_um: 5.5              # detector pitch
 focal_length_mm: 84.5            # telescope effective focal length

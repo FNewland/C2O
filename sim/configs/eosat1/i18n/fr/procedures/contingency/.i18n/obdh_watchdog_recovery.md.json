@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-5-assess-root-cause-indicators",
-   "en_hash": "9ecd435e75ee9f25",
-   "fr_hash": "7a3a059224ddd410"
+   "en_hash": "54b9e7bb833cee46",
+   "fr_hash": "ef424125db32c0b8"
   },
   {
    "id": "ctg-010-obdh-watchdog-recovery/procedure-steps/step-6-restore-nominal-mode-if-obc-in-safe",
@@ -73,5 +73,5 @@
    "fr_hash": "ece3a39741367ed6"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

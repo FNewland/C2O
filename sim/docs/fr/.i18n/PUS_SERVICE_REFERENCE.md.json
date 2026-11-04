@@ -59,8 +59,8 @@
   },
   {
    "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-3-housekeeping/s3-subtype-31--change-hk-interval",
-   "en_hash": "fa03a6d5329a1362",
-   "fr_hash": "7a5186a308bcd047"
+   "en_hash": "c1ecb892fb1c7a25",
+   "fr_hash": "1a53459ede14f564"
   },
   {
    "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-5-event-reporting",
@@ -124,8 +124,8 @@
   },
   {
    "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-12-on-board-monitoring",
-   "en_hash": "d6834e416a09d376",
-   "fr_hash": "72710f13b3d22239"
+   "en_hash": "dcebad91d5f8b83d",
+   "fr_hash": "c94e676663569dc4"
   },
   {
    "id": "pus-service-reference--eosat-1-spacecraft-simulator/service-13-large-data-transfer",
@@ -273,5 +273,5 @@
    "fr_hash": "f9b410c9af7972da"
   }
  ],
- "en_commit": "30d5743"
+ "en_commit": "f614a01"
 }

@@ -34,7 +34,7 @@ the affected power line, and verifies nominal operation of the downstream subsys
 | eps.pl_payload | 0x0113 | Power line Payload status |
 | eps.pl_fpa_cooler | 0x0114 | Power line FPA cooler status |
 | eps.pl_aocs_wheels | 0x0117 | Power line AOCS wheels status |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | eps.bat_soc | 0x0101 | Record current value |
 
 ## Required Commands
@@ -69,7 +69,7 @@ the affected power line, and verifies nominal operation of the downstream subsys
   investigate.
 **Verify:** Check power line status registers (0x0110 through 0x0117) to confirm line
 is OFF after the trip.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — bus is stable without the tripped load.
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — bus is stable without the tripped load.
 **Action:** Record all line currents for anomaly report.
 **GO/NO-GO:** If persistent overcurrent detected on the line, do NOT proceed to reset.
 Escalate to engineering team. If current is nominal (near 0), proceed.
@@ -117,7 +117,7 @@ non-switchable and cannot trip this way.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — EPS housekeeping
 **Verify:** Downstream subsystem is functioning nominally.
 **Verify:** `eps.power_cons` (0x0106) reflects the re-added load.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V with load restored.
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V with load restored.
 **GO/NO-GO:** Subsystem nominal and power budget stable — procedure complete.
 
 ## Verification Criteria
@@ -125,7 +125,7 @@ non-switchable and cannot trip this way.
 - [ ] Affected power line status = ON
 - [ ] Per-line current within expected nominal range
 - [ ] Downstream subsystem operating nominally
-- [ ] Bus voltage stable > 27.0 V
+- [ ] Bus voltage stable > 30.9 V
 - [ ] No re-trip within 5 minutes of re-enable
 
 ## Contingency

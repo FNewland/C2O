@@ -23,7 +23,7 @@ operational awareness is fully transferred to the incoming shift team.
 |---|---|---|
 | obdh.mode | 0x0300 | 0 (NOMINAL) or current mode |
 | eps.bat_soc | 0x0101 | Current value (record) |
-| eps.bus_voltage | 0x0105 | > 28.0 V nominal |
+| eps.bus_voltage | 0x0105 | > 32.1 V nominal |
 | eps.power_gen | 0x0107 | Current value |
 | eps.power_cons | 0x0106 | Current value |
 | eps.eclipse_flag | 0x0108 | Current sun/eclipse state |

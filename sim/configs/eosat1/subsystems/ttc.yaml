@@ -205,6 +205,19 @@ eirp_dbw: 10.0
 pa_ref_power_w: 2.0   # RF watts at which eirp_dbw above is quoted (= NOMINAL)
 gs_g_t_db: 20.0       # Iqaluit 9 m S-band dish (planning/ground_stations.yaml)
 sc_gain_dbi: 3.0
+# S-band patch accommodation (2026-11 consistency pass; geometry.yaml used
+# to note "ttc.yaml does not fix the mounting face" and assume one nadir
+# patch). Decision, from the flight manual (05_ttc.md §2.3): TWO hemispherical
+# 3 dBi patches, zenith (+Z) and nadir (-Z) in the ruling-Q4 body frame
+# (+Z = zenith). Together they are quasi-omnidirectional, which is why the
+# link budget uses the single attitude-independent sc_gain_dbi above rather
+# than a pattern, and why a tumbling spacecraft keeps its S-band link.
+# Their release is the burn-wire TTC_DEPLOY_ANTENNA step (antenna_deployed,
+# 0x0520) that gates the HIGH rung. geometry.yaml carries copies, checked by
+# smo_common.config.geometry.
+sband_antennas:
+  - { id: sband_patch_zenith, face: pz, boresight: [0, 0, 1], gain_dbi: 3.0 }
+  - { id: sband_patch_nadir, face: mz, boresight: [0, 0, -1], gain_dbi: 3.0 }
 
 # ── S-band SSPA operating points (TTC_SET_TX_POWER, S8 func 68) ─────────
 # RF output watts, not DC. The DC draw of the ttc_tx line is EPS's number

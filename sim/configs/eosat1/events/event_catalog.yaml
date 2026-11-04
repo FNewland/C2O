@@ -21,8 +21,8 @@ events:
   - { id: 0x0100, name: EPS_MODE_CHANGE, severity: MEDIUM, subsystem: eps, description: "EPS mode transition" }
   - { id: 0x0101, name: BATTERY_SOC_WARNING, severity: MEDIUM, subsystem: eps, description: "Battery SoC below 20%" }
   - { id: 0x0102, name: BATTERY_SOC_CRITICAL, severity: HIGH, subsystem: eps, description: "Battery SoC below 10%" }
-  - { id: 0x0103, name: BUS_UNDERVOLTAGE_WARNING, severity: MEDIUM, subsystem: eps, description: "Bus voltage below 27V" }
-  - { id: 0x0104, name: BUS_UNDERVOLTAGE_CRITICAL, severity: HIGH, subsystem: eps, description: "Bus voltage below 25V" }
+  - { id: 0x0103, name: BUS_UNDERVOLTAGE_WARNING, severity: MEDIUM, subsystem: eps, description: "Bus voltage below 28.4V (bus under-voltage; load shed begins)" }
+  - { id: 0x0104, name: BUS_UNDERVOLTAGE_CRITICAL, severity: HIGH, subsystem: eps, description: "Bus voltage below 27.7V (EPS safe-mode level)" }
   - { id: 0x0105, name: BUS_OVERCURRENT, severity: HIGH, subsystem: eps, description: "Bus current exceeds rated limit" }
   - { id: 0x0106, name: LOAD_SHED_STAGE_1, severity: MEDIUM, subsystem: eps, description: "Load shedding stage 1 activated" }
   - { id: 0x0107, name: LOAD_SHED_STAGE_2, severity: MEDIUM, subsystem: eps, description: "Load shedding stage 2 activated" }

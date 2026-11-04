@@ -59,8 +59,8 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-5-soc-15-shed-load-priority-4-aocs-wheels-off-emergency",
-   "en_hash": "7e0d42378b79ef93",
-   "fr_hash": "c7d993e78dfc10c9"
+   "en_hash": "7d459c9fd64265e5",
+   "fr_hash": "b7e0f6c1479cd5bb"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-6-monitor-for-eclipse-exit-and-battery-recovery",
@@ -69,23 +69,23 @@
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "3a127c1b150e3b0b",
-   "fr_hash": "d9db9fd416547099"
+   "en_hash": "e3f94f4716b21bfa",
+   "fr_hash": "86318e789c39f83c"
   },
   {
    "id": "ctg-023-progressive-load-shed/procedure-steps/step-8-post-recovery-verification",
-   "en_hash": "3b5d224e48a91f83",
-   "fr_hash": "5113a4ee11e3ad87"
+   "en_hash": "710b4fa9b4639904",
+   "fr_hash": "57c5f01c2cfabe63"
   },
   {
    "id": "ctg-023-progressive-load-shed/verification-criteria",
-   "en_hash": "6073767793e2302a",
-   "fr_hash": "5ffed28c7682a8e3"
+   "en_hash": "0159dd7aae89bfb9",
+   "fr_hash": "ba852b55a1b3e0b6"
   },
   {
    "id": "ctg-023-progressive-load-shed/off-nominal-handling",
-   "en_hash": "379dd5e2c23c5232",
-   "fr_hash": "8fd4c9635f79d16c"
+   "en_hash": "ef80f08c0ce83e98",
+   "fr_hash": "f62e2e26dcf57bbc"
   },
   {
    "id": "ctg-023-progressive-load-shed/recovery-path-re-powering-shed-loads",
@@ -93,5 +93,5 @@
    "fr_hash": "2a26fa93111780b1"
   }
  ],
- "en_commit": "b41c0a9"
+ "en_commit": "f614a01"
 }

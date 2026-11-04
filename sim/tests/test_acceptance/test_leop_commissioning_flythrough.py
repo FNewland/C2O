@@ -219,7 +219,7 @@ class TestLeopCommissioningFlyThrough:
     def test_leop_002_initial_health_check(self, fly):
         for sid in (1, 3, 4, 6):
             fly.hk_request(sid)
-        fly.verify(0x0105, lambda v: 26.0 <= v <= 30.0, "bus voltage")
+        fly.verify(0x0105, lambda v: 29.6 <= v <= 34.6, "bus voltage")
         fly.verify(0x0101, lambda v: v > 50.0, "battery SoC")
         fly.verify(0x0300, lambda v: int(v) in (0, 1), "OBC mode NOM/SAFE")
         fly.verify(0x0501, lambda v: int(v) == 2, "TTC link LOCKED")
@@ -378,7 +378,7 @@ class TestLeopCommissioningFlyThrough:
         fly.hk_request(1)
         fly.send(20, 3, struct.pack(">H", 0x0100), label="GET_PARAM bat_v")
         fly.send(20, 3, struct.pack(">H", 0x0101), label="GET_PARAM soc")
-        fly.verify(0x0105, lambda v: 26.5 <= v <= 29.5, "bus voltage")
+        fly.verify(0x0105, lambda v: 30.2 <= v <= 34.0, "bus voltage")
         fly.verify(0x0101, lambda v: v > 60.0, "battery SoC")
         fly.verify(0x0107, lambda v: v > 30.0, "generation, wings + sun")
 

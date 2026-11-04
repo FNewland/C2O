@@ -109,8 +109,8 @@
   },
   {
    "id": "emg-001-emergency-safe-mode/post-conditions",
-   "en_hash": "e4709038c6539d36",
-   "fr_hash": "69e48ec8aea6574d"
+   "en_hash": "cf5feb961d8f904f",
+   "fr_hash": "f353095de2d92c0a"
   },
   {
    "id": "emg-001-emergency-safe-mode/recovery-path-re-powering-shed-loads",
@@ -118,5 +118,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "f614a01"
 }

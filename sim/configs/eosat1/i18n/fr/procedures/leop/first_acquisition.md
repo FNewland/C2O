@@ -111,7 +111,7 @@ la logique « amorcer puis synchroniser » n'est écrite qu'une fois. Cette 
 
 ### Étape 7 — Demander les données de servitude EPS (contrôle de cohérence de l'alimentation)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [26.0V, 30.0V] sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [29.6V, 34.6V] sous 10s
 **Verify:** `eps.bat_soc` (0x0101) > 50 % sous 10s
 **Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — le maintien auto-TX de l'étape 2 (SID 1)
 **Verify:** `eps.power_gen` (0x0107) rapportée (valeur faible tant que le satellite est en rotation libre et pas encore pointé vers le Soleil)

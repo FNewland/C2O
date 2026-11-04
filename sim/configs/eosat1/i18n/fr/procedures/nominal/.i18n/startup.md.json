@@ -34,8 +34,8 @@
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-2-verify-eps-health",
-   "en_hash": "1104103969534e99",
-   "fr_hash": "8eb5410ff375eee2"
+   "en_hash": "2a5ac9744ca53fc1",
+   "fr_hash": "ce0159d21175200a"
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-3-verify-aocs-pointing",
@@ -59,8 +59,8 @@
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-7-pass-readiness-declaration",
-   "en_hash": "f8cfcb5cc40b5e0e",
-   "fr_hash": "286c0df54c05d683"
+   "en_hash": "6dec943014af3f48",
+   "fr_hash": "a041ffd7c26fc1c8"
   },
   {
    "id": "nom-001-pass-startup/off-nominal-handling",
@@ -73,5 +73,5 @@
    "fr_hash": "4d6271f1c5d7d847"
   }
  ],
- "en_commit": "b41c0a9"
+ "en_commit": "f614a01"
 }

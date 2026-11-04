@@ -28,9 +28,9 @@ chaque contact sol programmé.
 ### Étape 2 --- Vérifier la santé de l'EPS
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- demander les données de servitude EPS
 **Verify:** `eps.bat_soc` (0x0101) > 50 % sous 10 s
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V sous 10 s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V sous 10 s
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) (marge de puissance positive)
-**GO/NO-GO:** Si SoC < 50 % ou tension du bus < 27 V, exécuter la procédure CTG-005 Mode survie
+**GO/NO-GO:** Si SoC < 50 % ou tension du bus < 30.9 V, exécuter la procédure CTG-005 Mode survie
 EPS. NE PAS poursuivre les opérations de charge utile.
 
 ### Étape 3 --- Vérifier le pointage AOCS
@@ -73,7 +73,7 @@ est mis en marche lors de la préparation de la prise de vue, étape 2 de NOM-00
 
 ### Étape 7 --- Déclaration de disponibilité pour le passage
 **Jalon GO/NO-GO --- Tour de table du directeur de vol :**
-- EPS : SoC > 50 %, tension du bus > 27 V, marge de puissance positive --- GO / NO-GO
+- EPS : SoC > 50 %, tension du bus > 30.9 V, marge de puissance positive --- GO / NO-GO
 - AOCS : NOMINAL, att_error < 1 deg, vitesses < 0.05 deg/s --- GO / NO-GO
 - TTC : liaison UP, RSSI > -100 dBm, marge > 3 dB --- GO / NO-GO
 - TCS : toutes les températures dans les limites nominales --- GO / NO-GO

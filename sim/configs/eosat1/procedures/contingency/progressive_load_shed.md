@@ -161,7 +161,7 @@ magnetorquer-only rate damper — mode 1 is SAFE_BOOT, which actuates nothing.
 **TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — DETUMBLE, magnetorquer-only
 stabilisation before the wheels power down
 **GO/NO-GO:** All non-essential loads shed. Monitor bus voltage for stabilisation.
-If bus voltage drops below 25.0 V despite all loads shed, command
+If bus voltage drops below 28.4 V despite all loads shed, command
 `OBC_SET_MODE(mode=2)` for EMERGENCY mode as last resort.
 
 ### Step 6: Monitor for Eclipse Exit and Battery Recovery
@@ -196,7 +196,7 @@ threshold + 10% margin.
 **Verify:** `aocs.mode` (0x020F) = 3 (COARSE_SUN) within 15 s
 **Verify:** Body rates `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205),
 `aocs.rate_yaw` (0x0206) — decreasing toward zero
-**Verify:** `eps.bus_voltage` (0x0105) remains > 26.0 V after wheel spin-up
+**Verify:** `eps.bus_voltage` (0x0105) remains > 29.6 V after wheel spin-up
 **Action:** Wait 5 minutes and confirm SoC still trending upward.
 **GO/NO-GO:** AOCS wheels restored and attitude recovering — proceed.
 
@@ -204,7 +204,7 @@ threshold + 10% margin.
 **TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — the `ttc_tx` line first, if `eps.pl_ttc_tx` (0x0112) = 0 (on-board FDIR opens it in a deep shed; `TTC_PA_ON` is then refused S1.8 "power line 'ttc_tx' is OFF")
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66)
 **Verify:** `ttc.pa_on` (0x0516) = 1 within 5 s
-**Verify:** `eps.bus_voltage` (0x0105) remains > 26.5 V
+**Verify:** `eps.bus_voltage` (0x0105) remains > 30.2 V
 **Action:** Wait 5 minutes and confirm SoC still trending upward.
 **GO/NO-GO:** TX restored and telemetry flowing — proceed.
 
@@ -216,7 +216,7 @@ threshold + 10% margin.
 if an imaging preparation is due, and after Step 7d, whose STANDBY command would switch it off.
 The FPA cool-down from the uncooled state to FPA READY takes about 6.5 minutes.
 Payload imaging should not resume until FPA reaches operating temperature.
-**Verify:** `eps.bus_voltage` (0x0105) remains > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) remains > 30.9 V
 **Action:** Wait 5 minutes and confirm SoC still trending upward.
 **GO/NO-GO:** FPA cooler restored — proceed.
 
@@ -224,7 +224,7 @@ Payload imaging should not resume until FPA reaches operating temperature.
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0 (the mode command is otherwise refused S1.8 "power line 'payload' is OFF")
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) within 10 s
-**Verify:** `eps.bus_voltage` (0x0105) remains > 27.5 V
+**Verify:** `eps.bus_voltage` (0x0105) remains > 31.5 V
 **Verify:** `eps.bat_soc` (0x0101) remains > 55%
 **GO/NO-GO:** All loads restored. Power budget is positive — procedure complete.
 
@@ -233,7 +233,7 @@ Payload imaging should not resume until FPA reaches operating temperature.
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — AOCS housekeeping
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — TCS housekeeping
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **Verify:** `eps.bat_soc` (0x0101) > 55% and trending upward
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) — positive margin
 **Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) if restored, or 3 (COARSE_SUN) if still holding
@@ -244,14 +244,14 @@ Payload imaging should not resume until FPA reaches operating temperature.
 ## Verification Criteria
 - [ ] All shed/restore decisions documented with SoC and bus voltage at each step
 - [ ] `eps.uv_flag` (0x010E) = 0 (cleared)
-- [ ] `eps.bus_voltage` (0x0105) > 28.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
 - [ ] `eps.bat_soc` (0x0101) > 55% and trending upward
 - [ ] All subsystems restored to nominal operating modes
 - [ ] Power budget is positive (generation > consumption) with at least 5 W margin
 - [ ] No repeat undervoltage events for at least 2 orbits after restoration
 
 ## Off-Nominal Handling
-- If bus voltage drops below 25.0 V after all loads are shed: Command
+- If bus voltage drops below 28.4 V after all loads are shed: Command
   `OBC_SET_MODE(mode=2)` for EMERGENCY mode. The spacecraft will enter minimum
   power configuration autonomously.
 - If SoC drops below 10%: Risk of battery deep discharge and permanent cell damage.

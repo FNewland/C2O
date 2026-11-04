@@ -19,8 +19,8 @@
   },
   {
    "id": "leop-007-sequential-power-on/prerequisites",
-   "en_hash": "6cbd5872aef7c70e",
-   "fr_hash": "9d204f2d2c5f631f"
+   "en_hash": "0753816a2e02e009",
+   "fr_hash": "c0a8d23e649bf6ca"
   },
   {
    "id": "leop-007-sequential-power-on/what-this-card-does-not-power-and-who-does",
@@ -34,8 +34,8 @@
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-1-verify-eps-baseline",
-   "en_hash": "5170ccc6dfcbb356",
-   "fr_hash": "f1df59a161478f1e"
+   "en_hash": "d5dd9c4e69062fa7",
+   "fr_hash": "63790270fb2080f1"
   },
   {
    "id": "leop-007-sequential-power-on/procedure-steps/step-2-energise-heater-lines-as-needed-conditional",
@@ -64,8 +64,8 @@
   },
   {
    "id": "leop-007-sequential-power-on/off-nominal-handling",
-   "en_hash": "e5dff4b0e530ffce",
-   "fr_hash": "ae3761529f92fb8f"
+   "en_hash": "deb866f590f32f0c",
+   "fr_hash": "b4c17ba0faa9c247"
   },
   {
    "id": "leop-007-sequential-power-on/exit-state",
@@ -78,5 +78,5 @@
    "fr_hash": "011d52389cc5f80f"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "f614a01"
 }

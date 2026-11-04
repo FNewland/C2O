@@ -147,7 +147,7 @@ The beacon packet (SID 11) contains minimal but critical health information:
 | Parameter       | Expected Value         | Concern If                        |
 |-----------------|------------------------|-----------------------------------|
 | sw_image        | 0 (bootloader)         | Any other value                   |
-| bat_voltage     | 27-29 V                | < 26 V (low battery)             |
+| bat_voltage     | 30.9-33.4 V                | < 29.6 V (low battery)             |
 | bat_soc         | > 60%                  | < 40% (unexpected power drain)    |
 | obc_temp        | 10-40 deg C            | Outside range (thermal issue)     |
 | uptime          | ~1800+ s (30 min+)     | < 1800 s (recent reset)          |
@@ -213,7 +213,7 @@ Once application software is running, verify:
 | CPU load                       | cpu_load (0x0302)| < 50% (post-boot settling)  |
 | HK generation                  | tm_pkt_count     | Incrementing at 1 Hz        |
 | Battery health                 | bat_soc (0x0101) | > 50%                       |
-| Bus voltage                    | bus_voltage      | 27-29 V                     |
+| Bus voltage                    | bus_voltage      | 30.9-33.4 V                     |
 | TC processing                  | tc_exec_count    | Incrementing normally       |
 
 ### 6.3 Recovery from Failed Boot {#63-recovery-from-failed-boot}

@@ -256,10 +256,10 @@ Valid range: 1 — 3600 seconds
 
 **EPS Structure (SID=1):**
 ```
-eps.bat_voltage        [V]      Battery voltage (nominal 28.5V)
+eps.bat_voltage        [V]      Battery voltage (BPX 8S-1P: 24.0-33.6V, nominal 28.8V)
 eps.bat_soc            [%]      Battery state of charge (0-100%)
 eps.bat_temp           [C]      Battery temperature (-5 to +50°C)
-eps.bus_voltage        [V]      Main bus voltage (27-35V nominal)
+eps.bus_voltage        [V]      Main bus voltage (follows the battery, capped at 33.4V)
 eps.power_gen          [W]      Total solar power generation
 eps.power_cons         [W]      Total power consumption
 eps.load_shed_stage    [0-3]    Current load shedding stage
@@ -703,8 +703,8 @@ Both are implemented; **all 38 shipped definitions use check_type 0**.
 |-----------|------|-----------|-------|-----------|
 | `eps.bat_soc` | Low | < 20% | 0x0101 | Reduce loads |
 | `eps.bat_soc` | Critical | < 10% | 0x0102 | Emergency shed |
-| `eps.bus_voltage` | Low | < 27V | 0x0103 | Payload off |
-| `eps.bus_voltage` | Critical | < 25V | 0x0104 | All non-essential off |
+| `eps.bus_voltage` | Low | < 28.4V | 0x0103 | Payload off |
+| `eps.bus_voltage` | Critical | < 27.7V | 0x0104 | All non-essential off |
 | `aocs.rw1_speed` | Overspeed | > ±5000 RPM | 0x0201 | Disable wheel 1 |
 | `aocs.total_momentum` | Saturation | > 90 Nms | 0x0205 | Trigger desaturation |
 | `aocs.att_error` | High | > 1 deg | 0x0206 | Safe mode |
