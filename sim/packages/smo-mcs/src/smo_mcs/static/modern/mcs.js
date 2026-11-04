@@ -2612,6 +2612,14 @@ export function isCritical(cmd) {
   return cmd.critical === true ||
     String(cmd.criticality || "").toLowerCase() === "critical";
 }
+/* Two-step arm→execute. The catalogue's per-TC `arm_execute` decides (the
+ * server always sends a boolean, inferred from criticality when the YAML has
+ * none); a catalogue without the field falls back to isCritical. */
+export function needsArm(cmd) {
+  if (!cmd) return false;
+  if (typeof cmd.arm_execute === "boolean") return cmd.arm_execute;
+  return isCritical(cmd);
+}
 export function catPackRaw(f, raw) {
   const t = String(f.type || "uint8").toLowerCase();
   const w = catFieldWidth(t);
@@ -2958,7 +2966,7 @@ function updateCmdBuilder() {
     if (authEl) { authEl.textContent = auth.text; authEl.style.color = auth.allowed ? "" : "var(--alarm)"; }
     // structured field editor (engineering units, enum names, validation)
     setHTML("cmd-fields", (cmd.fields || []).map((f) => cmdFieldWidget(f, cmd.name)).join(""));
-    const critical = isCritical(cmd);
+    const critical = needsArm(cmd);
     if (sendBtn) sendBtn.classList.toggle("hide", critical);
     if (critBtn) critBtn.classList.toggle("hide", !critical);
     const live = critical ? critBtn : sendBtn;
@@ -3147,7 +3155,7 @@ async function sendCommand(opts = {}) {
     if (!auth.allowed) { setHTML("cmd-result", `<span style="color:var(--alarm)">${esc(auth.text)}</span>`); return; }
     // Critical: only the armed button's second press (armButton onExecute)
     // reaches here with confirmed set.
-    if (isCritical(cmd) && !opts.confirmed && !S.armed[cmd.name]) {
+    if (needsArm(cmd) && !opts.confirmed && !S.armed[cmd.name]) {
       setHTML("cmd-result", `<span class="v-warn">${t("Critical command: press it once to arm, then again within 8 s to send.")}</span>`);
       return;
     }
@@ -3174,7 +3182,7 @@ async function sendCommand(opts = {}) {
   setHTML("cmd-result", ok
     ? t("sent {{tc}}", { tc: `TC(${service},${subtype})` }) + (name ? " — " + esc(name) : "")
     : `<span style="color:var(--alarm)">${t("rejected — {{reason}}", { reason })}</span>`);
-  if (cmd && isCritical(cmd)) { S.armed[cmd.name] = false; updateCmdBuilder(); }
+  if (cmd && needsArm(cmd)) { S.armed[cmd.name] = false; updateCmdBuilder(); }
   renderBottomDrawer();
 }
 
@@ -3260,7 +3268,7 @@ function renderQuickCommands() {
   const btn = (q) => {
     const cmd = S.tcCatalog.find((c) => c.name === q.command);
     const auth = commandAuthority(q.command);
-    const critical = isCritical(cmd);
+    const critical = needsArm(cmd);
     const caution = !critical && String((cmd || {}).criticality || "").toLowerCase() === "caution";
     const lbl = quickLabel(q);
     if (!auth.allowed) {
@@ -3381,7 +3389,7 @@ async function sendQuick(key, opts = {}) {
     }
     S.armed[gk] = false;
   }
-  if (isCritical(cmd) && !opts.confirmed) {
+  if (needsArm(cmd) && !opts.confirmed) {
     // arm→execute in place: first press arms, second within 8 s executes
     if (!S.armed[key]) {
       S.armed[key] = true;
@@ -6500,7 +6508,7 @@ export const __test = {
   handleAlarmMsg, renderBottomDrawer, renderS12Block,
   renderS19Block, renderMarkdown, scrollToManualAnchor, provenanceText, updateTrainingChip,
   loadSchematics, updateRailHealth,
-  catFieldError, catLengthError, catFormatEng, isCritical, cmdFieldWidget,
+  catFieldError, catLengthError, catFormatEng, isCritical, needsArm, cmdFieldWidget,
   sendCommand, groundHighRateWarning, hkEnabledBit, hkEnableSummaryHtml,
   renderMagMtq, renderGpsNav, renderObdSwState, loadDisplayConfig,
   renderS3Panel, renderS11Table, renderS15Panel, renderS6Panel, renderS9Panel,

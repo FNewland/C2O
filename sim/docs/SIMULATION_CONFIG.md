@@ -23,6 +23,17 @@ Loader: `load_simulation_config()` in `.../config/loader.py`.
 | `orbit.yaml` | TLE, T-0 epoch, canonical ground stations |
 | `fdir/`, `monitoring/` | FDIR rules, fault cascades, limit checks, autonomy rules |
 
+Three design-owned blocks were added for the SpaceCDF design-to-simulator export
+(2026-11, `docs/plan_2026-11/design_sim/SIM_EXPORT.md`); each is optional and its
+absence reproduces the earlier behaviour exactly:
+
+| Key | Meaning | Absent |
+|---|---|---|
+| `subsystems/aocs.yaml control.modes.<MODE>` | per-mode `omega_n_rad_s`, `zeta`, `min_dwell_s`, `power_w`, `pointing_sigma_deg` | the aocs_basic code tables (EOSAT-1 ships them verbatim) |
+| `subsystems/aocs.yaml control.transitions` | automatic-transition guards (`safe_boot_init_s`, `detumble_exit_rate_dps`, `detumble_exit_hold_s`, `coarse_sun_error_deg`, `coarse_sun_hold_s`, `eclipse_entry_debounce_s`, `desat_exit_hold_s`) | 30 s, 0.5 deg/s, 30 s, 15 deg, 60 s, 5 s, 10 s |
+| `mission.yaml hk_apids` | HK SID -> source APID in the application image (per-subsystem APID plan, own sequence counter per APID) | every application packet on `spacecraft_apid` |
+| `commands/tc_catalog.yaml commands[].arm_execute` | the MCS two-step arm -> execute for this TC | inferred: `criticality: critical` arms |
+
 No key is defined in two files. Where two files necessarily describe the same
 ladder (`simulation.yaml eps.load_shed.soc_stage_thresholds_pct` vs
 `fdir/fault_propagation.yaml` stage `soc_threshold`), `simulation.yaml` wins and
