@@ -27,12 +27,13 @@ export function useSeatView() {
     /** null = no filtering */
     ownTabs,
     readOnly(tab: ActivityTab): boolean {
+      if (tab === 'diagrams') return false   // a read-only view for every seat (downloads stay enabled)
       if (readOnlyAll) return true
       if (def?.kind === 'customer') return tab !== 'requirements'
       return !!ownTabs && !ownTabs.includes(tab)
     },
     visible(tab: ActivityTab): boolean {
-      return !ownTabs || showAll || ownTabs.includes(tab)
+      return !ownTabs || showAll || tab === 'diagrams' || ownTabs.includes(tab)
     },
   }
 }

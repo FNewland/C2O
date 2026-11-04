@@ -60,6 +60,12 @@ function buildExports(sid: string, t: TFunction): DocCategory[] {
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/semp?study_id=${sid}`, `SEMP_${sid}.docx`) },
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/ecss/dids/semp/generate?study_id=${sid}`, `SEMP_${sid}.json`) },
       ]},
+      { id: 'diagrams', label: t('SEMP / ECSS diagram set'), description: t('Every diagram with its gaps and data table (same as the Diagrams tab)'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/diagrams-document.docx?set=all${docLang}`, `Diagrams_${sid}.docx`, 'GET') },
+      ]},
+      { id: 'ird', label: t('Interface Requirements Document'), description: t('Interfaces with the block, N², power, data-bus and RF diagrams'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/ird?study_id=${sid}`, `IRD_${sid}.docx`) },
+      ]},
       { id: 'mrd', label: t('Mission Requirements Document'), description: t('Mission needs, stakeholders, objectives, requirements'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/mrd?study_id=${sid}`, `MRD_${sid}.docx`) },
       ]},

@@ -17,6 +17,7 @@ import {
   createRow, deleteRow, hex, parseAddress, patchRow, proposeElectrical, useElectrical, useInvalidateElectrical,
   type BusNode, type DataBus, type ElementLite, type Kind,
 } from './electricalApi'
+import { DiagramFigure } from '../diagrams/DiagramFigure'
 import { CommitInput, FindingMark, FindingsList, ProfileNote, ProposalCell } from './electricalParts'
 
 const API = '/api'
@@ -166,6 +167,9 @@ export function DataBusPanel() {
               empty={t('No node on this bus.')} />
           </section>
         ))}
+        <section className="c2o-dgm-embed" aria-label={t('Diagrams')}>
+          <DiagramFigure studyId={studyId} kind="data_bus" compact />
+        </section>
       </Panel>
     </div>
   )
