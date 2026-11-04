@@ -364,7 +364,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
 
       {/* ── 2. AOCS ────────────────────────────────────────────────────── */}
       {aocs && (
-        <section>
+        <section data-where="physics-aocs">
           <div className="t-12 w-600 mb-1">{t('2 · AOCS — disturbances, momentum, pointing')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.5rem' }}>
             <div className="c2o-card">
@@ -399,7 +399,7 @@ export function PhysicsClosurePanel({ studyId, optionId }: { studyId: string | n
 
       {/* ── 3. thermal ─────────────────────────────────────────────────── */}
       {thermal && (
-        <section>
+        <section data-where="physics-thermal">
           <div className="t-12 w-600 mb-1">
             {t('3 · Thermal network — {{nodes}} nodes, {{conductances}} conductances', { nodes: thermal.nodes.length, conductances: thermal.conductances.length })}
             <span style={{ color: marginTone(thermal.worst_margin_c), marginLeft: 8 }}>{t('worst margin {{value}} K', { value: fmt(thermal.worst_margin_c, 1) })}</span>

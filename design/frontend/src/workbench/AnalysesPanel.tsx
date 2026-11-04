@@ -31,6 +31,8 @@ import { ConflictsPanel } from '../components/ConflictsPanel'
 import { BudgetPanel } from './BudgetPanel'
 import type { AnalysisRun, AnalysisConflict } from '../types/analyses'
 import { Button, Chevron, Note, Panel, StatusBadge } from '../components/ui'
+import { useWhereSection } from '../where/where'
+import { DesignLoopResults } from './DesignLoopResults'
 
 const API = '/api'
 
@@ -211,7 +213,7 @@ function AnalysisCard({ def, run, openConflicts, active, onOpen, studyId, option
     : <span className="mono c-v t-15">{m.value}</span>
 
   return (
-    <li className={active ? 'c2o-an__row is-open' : 'c2o-an__row'}>
+    <li className={active ? 'c2o-an__row is-open' : 'c2o-an__row'} data-where={`analyses:${def.id}`}>
       <button type="button" className="c2o-an__name" aria-expanded={active} onClick={onOpen}>
         <Chevron />
         <span>{t(def.label)}</span>
@@ -258,6 +260,8 @@ export function AnalysesPanel() {
   const [open, setOpen] = useState<AnalysisId | null>(null)
   const [showCompare, setShowCompare] = useState(false)
   const opt = optionQuery(optionId)
+  // "Where in SpaceCDF" links open an analysis card (where/where.ts)
+  useWhereSection('analyses', sec => { if (ANALYSIS_CARDS.some(c => c.id === sec)) setOpen(sec as AnalysisId) })
 
   const { data: runs = [], error: runsError } = useAnalysisRuns(studyId, optionId)
   const { data: conflicts } = useQuery<{ design: AnalysisConflict[]; analysis: AnalysisConflict[] }>({
@@ -312,7 +316,8 @@ export function AnalysesPanel() {
           <ErrorBoundary phaseName={openDef.label}>
             {open === 'design_loop' && (
               <div>
-                <div className="t-12 c-2 mb-1">
+                <DesignLoopResults studyId={studyId} optionId={optionId} run={byAnalysis.get('design_loop')} />
+                <div className="t-12 c-2 mb-1 mt-3">
                   {t('Budgets after the last design loop (mission root or the focused element). Cross-domain conflicts from the loop are listed under Conflicts below.')}
                 </div>
                 <BudgetPanel />
@@ -328,9 +333,11 @@ export function AnalysesPanel() {
         </Section>
       )}
 
-      <Section title={t('Conflicts')} color="var(--text-2)">
-        <ErrorBoundary phaseName="Conflicts"><ConflictsPanel studyId={studyId} optionId={optionId} /></ErrorBoundary>
-      </Section>
+      <div data-where="analyses-conflicts">
+        <Section title={t('Conflicts')} color="var(--text-2)">
+          <ErrorBoundary phaseName="Conflicts"><ConflictsPanel studyId={studyId} optionId={optionId} /></ErrorBoundary>
+        </Section>
+      </div>
     </div>
   )
 }

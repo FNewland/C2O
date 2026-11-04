@@ -7,6 +7,7 @@
  * ladder with beacon and command-loss timer.
  */
 import { useMemo, useState } from 'react'
+import { useWhereSection } from '../where/where'
 import { useTranslation } from 'react-i18next'
 import { DataTable, MarginBar, NoData, StatusBadge, Tabs, Tag, tabPanelProps, type Column } from '../components/ui'
 import { hex4, live, type CdrRow, type CdrView } from './cdrApi'
@@ -26,6 +27,7 @@ export function TmtcPanel() {
   const { t } = useTranslation()
   const ctx = useCdrPanel()
   const [sub, setSub] = useState<Sub>('params')
+  useWhereSection('tmtc', sec => { if (['db', 'params', 'hk', 'tc', 'events', 'ladder'].includes(sec)) setSub(sec as Sub) })
   return (
     <CdrFrame ctx={ctx} group="tmtc" testId="tmtc-panel" title={t('TM/TC database')}
       owners={t('Owned by Comms & OBDH; each parameter by the seat of its subsystem.')}>

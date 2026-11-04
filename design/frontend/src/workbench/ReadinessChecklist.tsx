@@ -170,7 +170,7 @@ function ReadinessView({ checks, open, setOpen, level, source, hideNext }: {
   // Compact summary in the context bar; the full checklist is one click deeper.
   // Unmet readiness is "not yet", not an alarm: caution glyph + text; check for met (P6).
   return (
-    <div className="c2o-readiness">
+    <div className="c2o-readiness" data-where="readiness">
       <button type="button" className="c2o-readiness__btn" aria-expanded={open} aria-controls="c2o-readiness-list"
         onClick={() => setOpen(o => !o)}>
         <StatusBadge status={allPassed ? 'ok' : 'caution'}>

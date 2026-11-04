@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { useUIStore } from '../stores/uiStore'
+import { useWhereSection } from '../where/where'
 import { Button, DataTable, Disclosure, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, askConfirm, fmtNum, showAlert,
   tabPanelProps, type Column, type Status } from '../components/ui'
 import { ModeDiagram } from './ModeDiagram'
@@ -43,6 +44,7 @@ export function ModesPanel() {
   const { t } = useTranslation()
   const sid = useUIStore(s => s.studyId)
   const [view, setView] = useState<View>('machine')
+  useWhereSection('modes', sec => { if (['machine', 'matrix', 'energy', 'data', 'equipment', 'rules'].includes(sec)) setView(sec as View) })
   const { data, error, isLoading } = useModes(sid)
   const invalidate = useInvalidateModes(sid)
   const [busy, setBusy] = useState(false)
