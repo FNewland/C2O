@@ -4739,15 +4739,17 @@ systèmes nominaux en marche, SCAO *compris*, évaluée en pointage nadir plutô
 
 | Profil | Production (W) | Charge (W) | Marge (W) | Rapport |
 |---------|--------:|---------:|-----------:|------:|
-| repos | 45,1 | 25,6 | +19,5 | 1,76 |
-| **nominal** | **45,1** | **28,8** | **+16,3** | **1,57** |
-| nominal avec prise de vue | 45,1 | 32,8 | +12,3 | 1,38 |
-| manœuvre | 45,1 | 32,1 | +12,9 | 1,40 |
-| le plus défavorable (cas abusif) | 45,1 | 46,8 | $-1.7$ | 0,96 |
+| repos | 45,1 | 19,7 | +25,4 | 2,29 |
+| **nominal** (charge utile en STANDBY, refroidisseur arrêté) | **45,1** | **22,7** | **+22,4** | **1,98** |
+| nominal avec prise de vue | 45,1 | 26,4 | +18,7 | 1,71 |
+| manœuvre | 45,1 | 25,8 | +19,4 | 1,75 |
+| le plus défavorable (cas abusif) | 45,1 | 46,6 | $-1.4$ | 0,97 |
 
-Le tableau est établi en EOL à 3 ans, pour l'angle bêta de production la plus défavorable ($-31.2$°).
-Pour l'angle bêta d'éclipse la plus longue ($-20.8$°), la production est de 47,0 W et le profil
-nominal boucle à 1,63 ×.
+Le tableau est établi en EOL à 3 ans, pour l'angle bêta de production la plus défavorable ($-31.2$°),
+avec `tools/power_budget.py` relancé le 2026-11-03 avec le réseau thermique et le refroidisseur du FPA
+arrêté en STANDBY (il ne tourne plus que pour préparer la prise de vue et pendant celle-ci).
+Pour l'angle bêta d'éclipse la plus longue ($-20.8$°), la production est de 47,0 W et le profil
+nominal boucle à 2,05 ×.
 
 La ligne « le plus défavorable » est délibérément négative : elle maintient le pointage FINE pendant une orbite
 entière, fait fonctionner le refroidisseur en continu, prend des images pendant l'éclipse et vide la mémoire au
@@ -4757,17 +4759,19 @@ par intermittence** -- trois acquisitions d'environ 90 s par orbite, avec envir
 autour de chacune --, ce que modélise la ligne « nominal avec prise de vue ». C'est la
 leçon que l'exercice a pour objet d'enseigner.
 
-Recoupez les +16,3 W avec le matériel de vol : la plateforme 6U M6P de NanoAvionics
-annonce 12,5--17,5 W de puissance disponible pour la charge utile en suivi solaire, et la marge
-d'EOSAT-1 se situe dans cette plage. Une conception
+Recoupez la marge avec le matériel de vol : la plateforme 6U M6P de NanoAvionics
+annonce 12,5--17,5 W de puissance disponible pour la charge utile en suivi solaire, et la marge
+d'EOSAT-1 avec la prise de vue intégrée au cycle, +18,7 W, se situe juste au-dessus du haut de
+cette plage (le chiffre nominal de +22,4 W laisse le refroidisseur arrêté). Une conception
 6U affichant +40 W de réserve pour la charge utile n'est pas bien conçue ; elle est
 mal spécifiée.
 
 > **Exemple résolu -- Énergie d'éclipse et dimensionnement de la batterie d'EOSAT-1**
 >
 > **Données :** SSO à 513 km (altitude moyenne), inclinaison de 97,39°, LTAN 10:00, 15,24 révolutions par jour, donc $T = 86400/15.24 = 5669$ s
-> $= 1.575$ h. Batterie : classe GomSpace NanoPower BPX, 8S-1P, **100 Wh**, 3 Ah,
-> 26,4 V nominaux dans le modèle de bus (29,2 V à 100 % de SoC, 21,5 V à 0 %), rendement de
+> $= 1.575$ h. Batterie : classe GomSpace NanoPower BPX, 8S-1P, **100 Wh**, 3,5 Ah,
+> 28,8 V nominaux dans le modèle de bus (33,6 V à 100 % de SoC, 24,0 V à 0 %, les valeurs de la
+> fiche technique), rendement de
 > charge 0,94, décroissance à tension constante à partir de 90 % de SoC.
 >
 > **Étape 1 -- durée de l'éclipse** (cas enveloppe, $\beta = 0$. Une orbite à LTAN 10:00 ne l'atteint jamais : le $\beta$ d'EOSAT-1 reste entre $-20.8$ et $-31.2$°, et le simulateur donne 33,2--35,2 min d'éclipse à chaque orbite, si bien que les 35,6 min ci-dessous sont prudentes d'environ 0,4 min) :
@@ -4792,9 +4796,10 @@ mal spécifiée.
 > La production n'est recueillie qu'en phase éclairée ; la production moyenne en phase éclairée,
 > en retenant la production la plus défavorable de 45,1 W avec l'éclipse enveloppe, est donc de
 > $45.1 \times 1.575 / 0.982 = 72.3$ W. La charge en phase éclairée est de
-> $(28.8 \times 1.575 - 13.9)/0.982 = (45.4 - 13.9)/0.982 = 32.1$ W, ce qui laisse
-> $72.3 - 32.1 = 40.2$ W de puissance de charge pour 15,1 W requis.
-> **Marge de recharge de 2,7 ×. Bilan bouclé.**
+> $(22.7 \times 1.575 - 13.9)/0.982 = (35.8 - 13.9)/0.982 = 22.3$ W (22,7 W est la
+> charge nominale moyenne sur l'orbite, charge utile en STANDBY et refroidisseur arrêté), ce qui
+> laisse $72.3 - 22.3 = 50.0$ W de puissance de charge pour 15,1 W requis.
+> **Marge de recharge de 3,3 ×. Bilan bouclé.**
 >
 > **Étape 5 -- durée de vie en cycles.** Une mission de 3 ans à 15,24 orbites/jour représente
 > $3 \times 365 \times 15.24 = 16{,}688$ éclipses. Avec une DoD de 13,9 %, les éléments Li-ion se situent
@@ -4804,10 +4809,12 @@ mal spécifiée.
 > par un pack de 30 Wh à 46 % de DoD. Le pack de 100 Wh est dimensionné par le cas de
 > *contingence* -- survivre à une période éclairée perdue, encaisser un échec de déploiement et maintenir
 > le bus au-dessus de la tension de délestage pendant l'action de la FDIR --, et non par l'éclipse
-> nominale. Les niveaux de protection en découlent : dans le modèle, le délestage se déclenche à 25.0 V et
-> coupe `payload`, `fpa_cooler`, `ttc_tx`, `aocs_wheels`, `prop` dans cet ordre,
-> avec une hystérésis de rétablissement de 0.5 V ; l'indicateur de sous-tension est à 26.5 V et
-> l'échelle de SoC de la FDIR à 30 / 20 / 10 %.
+> nominale. Les niveaux de protection en découlent, tous issus d'une même table (`simulation.yaml`
+> `eps.bus_protection`) : l'indicateur de sous-tension et le délestage dans le modèle se déclenchent
+> à 28.4 V (environ 46 % de SoC sur la courbe batterie $24.0 + 9.6 \times SoC$) et coupent
+> `payload`, `fpa_cooler`, `ttc_tx`, `aocs_wheels`, `prop` dans cet ordre, avec une hystérésis de
+> rétablissement de 0.5 V ; le mode survie EPS de la FDIR est à 27.7 V (environ 39 %), et
+> l'échelle de SoC de la FDIR à 30 / 20 / 10 %.
 
 **Thermique : ce qui est réellement actif.** EOSAT-1 est passif, à l'exception de trois
 circuits de réchauffage et d'un refroidisseur :
@@ -4815,7 +4822,7 @@ circuits de réchauffage et d'un refroidisseur :
 | Circuit | Puissance | Commande | Télémesure |
 |---------|------:|---------|-----------|
 | Réchauffeur de batterie | 8,0 W | Thermostat : marche à +5 °C / arrêt à +10 °C | `tcs.htr_battery` 0x040A |
-| Réchauffeur de l'OBC | 4,0 W | Thermostat : marche à +5 °C / arrêt à +10 °C | `tcs.htr_obc` 0x040B |
+| Réchauffeur de l'OBC | 4,0 W | Thermostat : marche à $-10$ °C / arrêt à $-5$ °C (réchauffeur de survie : inactif en exploitation nominale) | `tcs.htr_obc` 0x040B |
 | Réchauffeur du lit catalytique du propulseur | 12,0 W | MANUAL par défaut ; AUTO maintient 190/230 °C | `tcs.htr_thruster` 0x041B |
 | Refroidisseur du FPA | 15,0 W | Consigne commandée, $-20$ à $0$ °C | `tcs.cooler_fpa` 0x040C |
 
@@ -4981,7 +4988,7 @@ Tableau 3.1.13 — Synthèse de la séance : points clés de la conception de l
 | Marges thermiques | ECSS : ±5 °C en fonctionnement, ±10 °C en recette, ±15 °C en qualification |
 | Effets transitoires | L'inertie thermique ($mc_p$) empêche d'atteindre le régime permanent pendant les éclipses courtes ; un 1U à 400 km se refroidit de ~20--25 °C pendant une éclipse de 36 min |
 | Constante dans le plan du générateur | Condenser la chaîne de pertes en un seul nombre : $K = 291.2$ W/m$^2$ en BOL, **267,9 W/m$^2$ en EOL à 3 ans** pour le GaAs triple jonction ; recoupe une fiche technique de fournisseur à 0,1 W/m$^2$ près |
-| Confrontation à la réalité en 6U | 0,438 m$^2$ de cellules $\to$ 88,6 W en crête, 45,1 W en moyenne sur l'orbite en EOL, pour l'angle bêta le plus défavorable, pour une charge nominale de 28,8 W (+16,3 W, 1,57 ×) ; +40 W de réserve pour la charge utile sur un 6U signifient que le bilan est faux |
+| Confrontation à la réalité en 6U | 0,438 m$^2$ de cellules $\to$ 88,6 W en crête, 45,1 W en moyenne sur l'orbite en EOL, pour l'angle bêta le plus défavorable, pour une charge nominale de 22,7 W (+22,4 W, 1,98 ×) ; +40 W de réserve pour la charge utile sur un 6U signifient que le bilan est faux |
 | Lignes d'alimentation | Neuf lignes, d'indices 0--8 (`obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`) ; seules les deux premières sont non commutables et **toutes les lignes commutables démarrent à l'état OFF** |
 | Refroidissement du FPA | Une élévation de 27 K avec un $COP = 1.5$ dépasse les capacités de tout Peltier à un étage ($COP_{\max} = 0.88$) ; elle exige un **cryoréfrigérateur miniature de type Stirling** à ~23 % du rendement de Carnot, dont l'autorité *diminue* à mesure que l'élévation augmente |
 
@@ -7871,7 +7878,7 @@ paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discut�
 > | Cellules solaires (structure) | GaAs TJ fixées sur la structure, 0,198 m$^2$ réparties sur cinq faces (la face -Z porte l'ouverture et le radiateur) | 0,35 | -- | 6 | 1 jeu | Directement vers l'EPS |
 > | Ailes solaires | Double panneau déployable 6U de classe Endurosat, 0,120 m$^2$ de cellules par aile, SADA à un axe | 1,07 | -- | 10 | 2 | Directement vers l'EPS |
 > | Carte EPS | EPS/PDU 6U (MPPT, neuf lignes commutables ou non commutables, indices 0--8) | 0,25 | 3,0 (part servitude de l'EPS sur la ligne obc de 6 W) | 8 | 1 | I$^2$C |
-> | Batterie | GomSpace NanoPower BPX, 8S-1P, 100 Wh, 3 Ah, 28,8 V nominal, Li-ion 18650 | 0,50 | -- | 5 | 1 | I$^2$C (télémesure) |
+> | Batterie | GomSpace NanoPower BPX, 8S-1P, 100 Wh, 3,5 Ah, 28,8 V nominal (24,0--33,6 V), Li-ion 18650 | 0,50 | -- | 5 | 1 | I$^2$C (télémesure) |
 > | OBC | Calculateur de vol 6U, mémoire charge utile de 20 Go | 0,10 | 3,0 (part OBDH de la ligne obc) | 12 | 1 | I$^2$C, SPI, UART |
 > | Roue de réaction | Classe Sinclair RW-0.03, 0,030 N m s à 5500 tr/min, couple de crête de 2 mN m ; configuration pyramidale, quatre roues sur quatre | 0,185 | 0,3 (moyenne, par roue) | 5 | 4 | SPI |
 > | Magnétocoupleur | Barreau de classe NewSpace NCTR-M016, dipôle de 1,6 A m$^2$ | 0,05 | 0,1 | 2 | 3 | I$^2$C |
@@ -7880,7 +7887,7 @@ paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discut�
 > | Senseur solaire | Ensemble de senseurs solaires grossiers (acquisition d'attitude et mode survie) | 0,06 | 0,01 | 4 | 1 jeu | Analogique/I$^2$C |
 > | Magnétomètre | Magnétomètre trois axes (MAG A / MAG B, paire redondante ; référence de l'amortissement B-dot) | 0,03 | 0,05 | 1 | 2 | I$^2$C |
 > | GNSS | Récepteur GPS + antenne patch (restitution d'orbite, référence de temps) | 0,12 | 1,0 | 8 | 1 | UART |
-> | Charge utile | Imageur à barrette (*pushbroom*) à grand champ de classe Simera Sense TriScape100 : 8192 px × 5,5 µm, f = 84,5 mm, champ total de 29,856° -> fauchée de 273 km, GSD de 33,4 m à 513 km ; fréquence ligne de 244 Hz, lecture brute à 96 Mbit/s (dimensionnées pour l'ancienne valeur de 450 km) | 1,45 | 5,5 (prise de vue) / 2,4 (veille) | 60 | 1 | LVDS/SPI |
+> | Charge utile | Imageur à barrette (*pushbroom*) à grand champ (puissance, masse et encombrement repris du Simera Sense TriScape100 ; son optique de 580 mm n'est pas celle d'EOSAT-1) : 8192 px × 5,5 µm, f = 84,5 mm, champ total de 29,856° -> fauchée de 273 km, GSD de 33,4 m à 513 km ; fréquence ligne de 244 Hz, lecture brute à 96 Mbit/s (dimensionnées pour l'ancienne valeur de 450 km) | 1,45 | 5,5 (prise de vue) / 2,4 (veille) | 60 | 1 | LVDS/SPI |
 > | Refroidisseur du FPA | Cryoréfrigérateur miniature de type Stirling sur le support du plan focal (consigne à -15 °C, ~23 % du rendement de Carnot) | 0,50 | 15,0 | 15 | 1 | Ligne EPS propre (`fpa_cooler`) |
 > | Émetteur | Émetteur-récepteur en bande S de classe Endurosat (chaîne principale) : 2 W RF max., 5 W DC au palier LOW, 11 W DC au palier HIGH, 1,2 W en réception au repos | 0,25 | 5,0 (LOW) / 11,0 (HIGH) | 15 | 1 | SPI |
 > | Antenne | Antenne patch en bande S (fixe sur la structure, RHCP) | 0,06 | -- | 3 | 1 | Coaxial RF |
@@ -7896,8 +7903,8 @@ paramétrique provisoire ; c'est ce qui rend les totaux dignes d'être discut�
 > n'alimente jamais toutes les lignes simultanément. Les neuf lignes de l'EPS (0 `obc`, 1 `ttc_rx`, 2 `ttc_tx`,
 > 3 `payload`, 4 `fpa_cooler`, 5 `htr_bat`, 6 `htr_obc`, 7 `aocs_wheels`,
 > 8 `prop`) sont commutées en fonction du bilan moyen sur l'orbite : en fin de vie et
-> pour l'angle bêta le plus défavorable, le générateur fournit ~45 W en moyenne sur l'orbite face à une charge nominale
-> de ~29 W, soit une marge d'environ +16 W. Ajoutez une prise de vue continue, un refroidisseur
+> pour l'angle bêta le plus défavorable, le générateur fournit ~45 W en moyenne sur l'orbite face à une charge nominale
+> de ~23 W (charge utile en STANDBY, refroidisseur arrêté), soit une marge d'environ +22 W. Ajoutez une prise de vue continue, un refroidisseur
 > fonctionnant en permanence et des vidages au palier HIGH à chaque passage, et le bilan devient négatif --
 > c'est pourquoi la prise de vue fonctionne par intermittence (trois acquisitions de ~90 s par orbite, le
 > refroidisseur étant stabilisé autour d'elles) au lieu de fonctionner en continu.
@@ -10422,10 +10429,11 @@ premier à remarquer qu'un sous-système consomme plus qu'il ne devrait.
 
 **Surveille et détient.** Le SoC de la batterie (jaune sous 25 % ; les
 étages de délestage FDIR s'enclenchent à 30 / 20 / 10 % de SoC, et le
-délestage modélisé du bus à 25.0 V coupe la charge utile, le
+délestage modélisé du bus à 28.4 V coupe la charge utile, le
 refroidisseur, l'émetteur (TX), les roues et — en tout dernier — la
-propulsion), la tension de la batterie et du bus (la règle FDIR de
-sous-tension se déclenche à 24.5 V), les courants de chaque aile du
+propulsion), la tension de la batterie et du bus (le mode survie EPS
+de la FDIR se déclenche à 27.7 V ; les deux niveaux viennent de
+`simulation.yaml` `eps.bus_protection`), les courants de chaque aile du
 générateur, le courant de charge total et par ligne, et la température
 de la batterie. Autorité de commande sur les ensembles de fonctions
 EPS et TCS avec le GO du FD ; demande le délestage, que le FD autorise.

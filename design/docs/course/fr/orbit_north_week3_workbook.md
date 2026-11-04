@@ -125,7 +125,7 @@ de salle, et non des consoles ; les vérifications du segment sol figurent sur
   (33,2 à 35,2 min sur l'année)
 - **SoC prédit en sortie :** ____ %   **(Méthode :** P_avg × t / E_batt,
   avec E_batt = **100 Wh** et une charge nominale moyenne sur l'orbite
-  P_avg ≈ **28,8 W** **)**
+  P_avg ≈ **22,7 W** **)**
 - **Comparaison avec le modèle d'éclipse :** ☐ concorde  ☐ écart de ____ %
 - **Réchauffeur au rapport cyclique le plus élevé :** _______________   **Rapport cyclique :** ____ %
 - **Rapport cyclique prédit à la prochaine éclipse :** ____ %   **Saturera-t-il ?** ☐ oui ☐ non
@@ -290,7 +290,7 @@ l'autre le sous-système désigné. Consignez ce qui a été dit.
 | 4 | TT&C | Établir la liaison : `TTC_SWITCH_PRIMARY` (S8.1) | `ttc.link_status` (0x0501) = **2** (LOCKED) en 15 s ; page TT&C (sol) : `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB. Pas de liaison en 15 s : `TTC_SWITCH_REDUNDANT` et vérifier de nouveau ; échec des deux → anomalie TT&C | ☐ | |
 | 5 | SPACON | Collecte complète des données de servitude : `HK_REQUEST` (S3.27) des SID 1 EPS, 2 AOCS, 3 TCS, 4 OBDH, 5 charge utile, 6 TT&C | les six paquets en 30 s ; aucun paramètre hors limites signalé par le contrôle de limites du MCS | ☐ | |
 | 6 | Charge utile | Préparation de la charge utile, seulement si une prise de vue ou un vidage est prévu : `PAYLOAD_SET_MODE(mode=1)` STANDBY (S8.1 func 26) | `payload.mode` (0x0600) = 1 en 20 s ; `tcs.cooler_fpa` (0x040C) = 0 (le mode STANDBY ne fait pas fonctionner le refroidisseur ; il est mis en marche lors de la préparation de la prise de vue, étape 2 de NOM-002) ; `payload.store_used` (0x0604) < 90 % | ☐ | non prévu ☐ |
-| 7 | FD | Déclaration de disponibilité pour le passage : tour de table GO / NO-GO | EPS : SoC > 50 %, bus > 27 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses < 0.05°/s · TT&C : liaison établie, RSSI > −100 dBm, marge > 3 dB · TCS : chaque zone dans les limites de la page TCS · OBDH : NOMINAL, CPU < 80 % · Charge utile : STANDBY si nécessaire, mémoire < 90 %. Tout NO-GO : d'abord sa procédure hors nominal | ☐ | |
+| 7 | FD | Déclaration de disponibilité pour le passage : tour de table GO / NO-GO | EPS : SoC > 50 %, bus > 30.9 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses < 0.05°/s · TT&C : liaison établie, RSSI > −100 dBm, marge > 3 dB · TCS : chaque zone dans les limites de la page TCS · OBDH : NOMINAL, CPU < 80 % · Charge utile : STANDBY si nécessaire, mémoire < 90 %. Tout NO-GO : d'abord sa procédure hors nominal | ☐ | |
 
 Les lectures à la demande se font par `HK_REQUEST` (S3.27) ; l'émission
 périodique s'active par `HK_ENABLE` (S3.5). Seuls les SID 1 (EPS) et 11
@@ -324,7 +324,7 @@ n'est attendue avant le retour de la liaison.
 | 2 | TT&C | Réacquérir sur le transpondeur principal : `HK_REQUEST(sid=6)` (S3.27) en aveugle, attendre 30 s | `ttc.link_status` (0x0501) = **2** (LOCKED) en 30 s ; page TT&C (sol) : `ttc.rssi` (0x0502) > −126 dBm. Liaison revenue → étape 5 ; aucune réponse → étape 3 | ☐ | |
 | 3 | TT&C | Basculer sur le transpondeur redondant : `TTC_SWITCH_REDUNDANT` (S8.1 func 64) en aveugle, attendre 45 s | `ttc.link_status` = 2 en 45 s ; `ttc.mode` (0x0500) indique l'équipement redondant. Liaison revenue → étape 5 ; rien → étape 4 | ☐ | |
 | 4 | TT&C | Deuxième tentative sur le principal : `TTC_SWITCH_PRIMARY` (S8.1 func 63) en aveugle, attendre 45 s | `ttc.link_status` = 2 en 45 s. Liaison revenue → étape 5 ; toujours rien après les deux équipements → étape 6 | ☐ | |
-| 5 | TT&C | Vérifier la qualité de la liaison et la santé des sous-systèmes : `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` = 2 ; page TT&C (sol) : `ttc.rssi` > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB ; équipement actif `ttc.mode` (0x0500) consigné ; `eps.bus_voltage` (0x0105) > 27.0 V ; `obdh.mode` (0x0300) ni SAFE ni EMERGENCY. Marge > 3 dB et tout nominal → rétabli | ☐ | équipement : ____ |
+| 5 | TT&C | Vérifier la qualité de la liaison et la santé des sous-systèmes : `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` = 2 ; page TT&C (sol) : `ttc.rssi` > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB ; équipement actif `ttc.mode` (0x0500) consigné ; `eps.bus_voltage` (0x0105) > 30.9 V ; `obdh.mode` (0x0300) ni SAFE ni EMERGENCY. Marge > 3 dB et tout nominal → rétabli | ☐ | équipement : ____ |
 | 6 | TT&C | Escalade, pas de liaison : consigner chaque commande en aveugle avec son heure ; prévenir le directeur de mission et la dynamique du vol ; réserver le passage suivant ; noter l'heure de la dernière télécommande **acceptée** (dernier S1.1) | premiers passages prévus après T+24 h et T+48 h : la minuterie de perte de commande `ttc.time_since_last_tc` (0x053D, FDIR TTC-01) bascule sur l'AUTRE transpondeur 24 h après la dernière TC acceptée (événement CMD_LOSS_TIMEOUT 0x0514), puis toutes les 24 h suivantes. Sans liaison après deux passages consécutifs → **EMG-004** | ☐ | dernier S1.1 : ____ |
 
 Les commandes en aveugle qui ne sont pas reçues ne relancent pas la minuterie
@@ -582,7 +582,7 @@ les trois gyroscopes sont les équipements S2 `S2_AOCS_GYROSCOPE_0/1/2`.
 | N° | Responsable | Action | Vérification | ☐ fait | Note |
 |---|-------|--------|--------------|:------:|------|
 | 1 | EPS | Vérifier l'état de référence de l'EPS : `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) de 29.6 à 34.6 V ; `eps.bat_soc` (0x0101) > 60 % ; `eps.power_gen` (0x0107) > 20 W | ☐ | |
-| 2 | EPS | Lignes de réchauffeurs **seulement si nécessaire** : lire `tcs.temp_battery` (0x0407) et `tcs.temp_obc` (0x0406) dans le SID 3 ; `EPS_POWER_ON(line_index=5)` (S8.1 func **19**) seulement si la batterie est sous +5 °C ; `EPS_POWER_ON(line_index=6)` seulement si la zone OBC est sous 0 °C | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 en 5 s pour chaque ligne commandée ; les autres toujours éteintes. Consigner les lignes alimentées par cette fiche : COM-002 s'en sert comme état d'entrée | ☐ | lignes alimentées : ____ |
+| 2 | EPS | Lignes de réchauffeurs **seulement si nécessaire** : lire `tcs.temp_battery` (0x0407) et `tcs.temp_obc` (0x0406) dans le SID 3 ; `EPS_POWER_ON(line_index=5)` (S8.1 func **19**) seulement si la batterie est sous +5 °C ; `EPS_POWER_ON(line_index=6)` seulement si la zone OBC est sous −10 °C (seuil de mise en marche de son réchauffeur) | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 en 5 s pour chaque ligne commandée ; les autres toujours éteintes. Consigner les lignes alimentées par cette fiche : COM-002 s'en sert comme état d'entrée | ☐ | lignes alimentées : ____ |
 | 3 | EPS / AOCS | Alimenter la ligne de la suite AOCS et activer sa HK : `EPS_POWER_ON(line_index=7)` (func 19), puis `HK_ENABLE(sid=2)` (**S3.5**) | `eps.pl_aocs_wheels` (0x0117) = 1 en 5 s ; SID 2 périodique en un intervalle de 4 s ; les roues restent désactivées jusqu'à COM-004 | ☐ | |
 | 4 | AOCS | Les deux éléments de DETUMBLE d'abord, et le récepteur GPS : `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`, `MTQ_ENABLE(enable=1)` (S8.1 func_id **9**), `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | `aocs.mtq_enabled` (0x025E) = 1 en 10 s | ☐ | |
 | 5 | AOCS | Commander DETUMBLE : `AOCS_SET_MODE(mode=2)` (S8.1 func_id **0**) — mode **2 = DETUMBLE** | S1.1 + S1.7 < 5 s ; `aocs.mode` (0x020F) = 2 ; `aocs.mag_enabled` (0x025C) = 1 ; `aocs.mag_field_total` (0x0277) de 5000 à 70000 nT ; `aocs.rate_roll`, `aocs.rate_pitch`, `aocs.rate_yaw` (0x0204–0x0206) en baisse en 60 s | ☐ | |
@@ -859,9 +859,10 @@ Imprimez 9 exemplaires (un par poste de console).
 | 7 | Régulation du bus lors d'un transitoire de charge — consigner d'abord `eps.pl_htr_bat` (0x0115), puis `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**), et `EPS_POWER_OFF(line_index=5)` (func **20**) seulement si la ligne était éteinte à l'entrée. Pas la charge utile : sa ligne est OFF jusqu'à COM-009 | `eps.bus_voltage` reste dans [30.2, 34.0] V en 5 s et revient dans [30.9, 34.0] V en 10 s ; `eps.pl_htr_bat` revenu à sa valeur d'entrée | ☐ | V min : ____ |
 
 Référence de bilan pour l'étape 6 : la charge nominale moyenne sur l'orbite est
-d'environ **28.8 W** pour une production d'environ 45.1 W à l'angle bêta le
-moins productif, β = −31.2° (marge +16.3 W, rapport 1.57 ; 1.38 pendant la
-prise de vue), sur la batterie de **100 Wh**.
+d'environ **22.7 W** (charge utile en STANDBY, refroidisseur du FPA arrêté) pour
+une production d'environ 45.1 W à l'angle bêta le moins productif, β = −31.2°
+(marge +22.4 W, rapport 1.98 ; 1.71 avec les prises de vue intégrées au cycle),
+sur la batterie de **100 Wh**.
 
 **Sortie ?** ☐ oui ☐ non   **GO COM-002 :** ☐
 
@@ -1010,7 +1011,7 @@ de mémoire : les limites sont de la configuration, et elles changent.
 | 9 | Consigner le rapport de mise sous tension de la charge utile : chronologie, consommation, mot d'état de l'imageur, températures de l'imageur et du FPA, référence de la mémoire | prêt pour COM-010 | ☐ | |
 
 Modes de la charge utile : 0 OFF, 1 STANDBY, 2 IMAGING, **3 CALIBRATION**.
-STANDBY consomme environ 0.09 A sous 28 V sur la ligne 3.
+STANDBY consomme environ 0.08 A sous 32 V sur la ligne 3.
 
 **Sortie ?** ☐ oui ☐ non   **GO COM-010 :** ☐
 
@@ -1036,7 +1037,7 @@ environ 10 minutes et ne dépasse jamais la consigne.
 | 5 | Stabilisation : `GET_PARAM(param_id=0x0601)` à T+10 et T+15 min | T+10 ∈ [−16.0, −14.0] °C ; T+15 ∈ [−16.0, −15.0] °C. Une lecture sous −16.5 °C est un **défaut de régulation**, pas un refroidisseur plus performant que prévu | ☐ | T+15 : __ °C |
 | 6 | Température opérationnelle : `GET_PARAM(param_id=0x0601)`, `GET_PARAM(param_id=0x0610)`, `GET_PARAM(param_id=0x0631)`, `GET_PARAM(param_id=0x064A)`, `GET_PARAM(param_id=0x064B)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C ; `payload.fpa_ready` (0x0610) = 1 en 60 s (hystérésis) ; `payload.fpa_setpoint` (0x0631) = −15.0 ; `payload.cooler_margin_k` (0x064B) > 0 (environ +5 K) ; plancher indiqué par `payload.cooler_floor_c` (0x064A) | ☐ | marge : ____ K |
 | 7 | Stabilité : `GET_PARAM(param_id=0x0601)` à T+35, T+40 et T+45 min | `payload.fpa_temp` ∈ [−16.5, −14.5] °C à chaque échantillon ; crête à crête < 1.0 °C sur 10 min (sous 0.5 °C, c'est la régulation normale) | ☐ | c-c : ____ °C |
-| 8 | Pendant l'éclipse, si le passage en comporte une : `GET_PARAM(param_id=0x0601)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C ; `eps.bus_voltage` (0x0105) > 27.0 V avec la charge du refroidisseur | ☐ | |
+| 8 | Pendant l'éclipse, si le passage en comporte une : `GET_PARAM(param_id=0x0601)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C ; `eps.bus_voltage` (0x0105) > 30.9 V avec la charge du refroidisseur | ☐ | |
 | 9 | Établir le rapport d'activation du refroidisseur : courbe de mise en froid, puissance du refroidisseur, données de stabilité et d'éclipse | prêt pour COM-011 | ☐ | |
 
 **Si `cooler_margin_k` ≤ 0 :** le refroidisseur ne peut physiquement pas atteindre la
@@ -1491,7 +1492,7 @@ d'une page déjà imprimée à suivre en console.
 
 ## CTG-001 Délestage sur sous-tension
 
-La FDIR de bord déleste d'elle-même sous 25.0 V (charge utile → refroidisseur
+La FDIR de bord déleste d'elle-même sous 28.4 V (charge utile → refroidisseur
 du FPA → `ttc_tx` → roues AOCS → propulsion, une ligne par seconde, événements
 0x0106–0x0108). **Vérifier d'abord le satellite** : chaque palier ci-dessous
 n'est un GO que si sa ligne est encore sur ON ; si la FDIR l'a déjà ouverte,
@@ -1672,7 +1673,7 @@ l'ingénierie n'a pas requalifié le bus en panne.
 | 3 | Basculement de transpondeur, en aveugle : `TTC_SWITCH_REDUNDANT` (func **64**), attendre 45 s ; puis `TTC_SWITCH_PRIMARY` (func **63**) | porteuse sur la fréquence de l'équipement redondant → étape 6 ; aucun des deux → étape 4 | ☐ | |
 | 4 | PA en marche, en aveugle : `TTC_PA_ON` (func **66**), attendre 15 s ; toujours rien : `TTC_PA_OFF` (func **67**), 10 s, `TTC_PA_ON`, 15 s | porteuse descendante après le PA ON → étape 6 ; toujours rien → étape 5 | ☐ | |
 | 5 | Antenne, seulement si son déploiement est incertain ou si elle est connue repliée : `TTC_DEPLOY_ANTENNA` (func **69**) — fil thermofusible irréversible ; attendre 30 s | avec de la TM : `ttc.antenna_deployed` (0x0520) = 1 et `ttc.antenna_deployment_sensor` (0x0536) = 2 ; signal plus fort de 15–25 dB (`ttc.antenna_deployment_ready` (0x0535) = 0 auparavant signale un défaut de continuité pyrotechnique : la commande ne se déclenchera pas). Signal → étape 6 ; rien → étape 7 | ☐ | |
-| 6 | Vérifier la qualité de la liaison et la santé des sous-systèmes : `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` (0x0501) = 2 ; page TT&C (sol) : `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB ; `ttc.pa_on` (0x0516) = 1 ; `ttc.pa_temp` (0x050F) < 55 °C ; `ttc.antenna_deployed` = 1 ; `ttc.carrier_lock` (0x0510) = 1 ; `ttc.bit_sync` (0x0511) = 1 ; page radio : `ttc.eb_n0` (0x0519) > 10 dB ; `eps.bus_voltage` (0x0105) > 27.0 V ; `eps.pl_ttc_tx` (0x0112) = 1 ; `obdh.mode` (0x0300) ni SAFE ni EMERGENCY | ☐ | rétablie à l'étape : ____ |
+| 6 | Vérifier la qualité de la liaison et la santé des sous-systèmes : `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` (0x0501) = 2 ; page TT&C (sol) : `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB ; `ttc.pa_on` (0x0516) = 1 ; `ttc.pa_temp` (0x050F) < 55 °C ; `ttc.antenna_deployed` = 1 ; `ttc.carrier_lock` (0x0510) = 1 ; `ttc.bit_sync` (0x0511) = 1 ; page radio : `ttc.eb_n0` (0x0519) > 10 dB ; `eps.bus_voltage` (0x0105) > 30.9 V ; `eps.pl_ttc_tx` (0x0112) = 1 ; `obdh.mode` (0x0300) ni SAFE ni EMERGENCY | ☐ | rétablie à l'étape : ____ |
 | 7 | Escalade, pas de liaison : `TTC_SET_TX_POWER(level=2)` (S8.1 func **68**) pour la tentative suivante ; consigner chaque commande en aveugle avec son heure ; prévenir le FD et le directeur de mission ; réserver le passage suivant | sans liaison après deux passages consécutifs → **EMG-004** (Perte de communication) | ☐ | |
 
 La balise UHF est une **radio distincte** : si le SID 11 de HK arrive toujours

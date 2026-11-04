@@ -308,10 +308,10 @@ Teams should verify:
 
 | Parameter | Mnemonic (id) | Value | Expected Range | Status |
 |-----------|---------------|-------|---------------|--------|
-| Bus voltage | `eps.bus_voltage` (0x0105) | 27.9 V | 26 - 30 V | Nominal |
+| Bus voltage | `eps.bus_voltage` (0x0105) | 32.4 V | 29.6 - 34.6 V | Nominal |
 | Battery SoC | `eps.bat_soc` (0x0101) | 88 % | > 50 % | Nominal |
 | Power generation | `eps.power_gen` (0x0107) | 12 W | low while tumbling | Nominal |
-| OBC temperature | `tcs.temp_obc` (0x0406) | 22 C | -5 to +45 C | Nominal |
+| OBC temperature | `tcs.temp_obc` (0x0406) | 22 C | -10 to +50 C | Nominal |
 | Battery temperature | `tcs.temp_battery` (0x0407) | 19 C | +5 to +35 C | Nominal |
 | AOCS mode | `aocs.mode` (0x020F) | 2 (DETUMBLE) | Expected | Nominal |
 | Body rates | `aocs.rate_roll/pitch/yaw` (0x0204-06) | 1.4 deg/s | Decreasing | Nominal |
@@ -321,10 +321,13 @@ Teams should verify:
 | Link status | `ttc.link_status` (0x0501) | 2 (LOCKED) | 2 = LOCKED | Nominal |
 | Uplink status | -- | Not yet attempted | -- | -- |
 
-Note the bus: EOSAT-1 runs an **8S, 100 Wh** pack — 21.5 V empty,
-26.4 V nominal, 29.2 V full, with a ~28 V bus. A 7-8 V reading is
-a 2S CubeSat, not this spacecraft. FDIR undervoltage fires at
-**24.5 V**.
+Note the bus: EOSAT-1 runs an **8S, 100 Wh** pack (GomSpace BPX) —
+24.0 V empty, 28.8 V nominal, 33.6 V full — on an unregulated bus that
+follows the battery up to a 33.4 V cap, so 88 % SoC reads
+24.0 + 9.6 × 0.88 ≈ 32.4 V. A 7-8 V reading is a 2S CubeSat, not this
+spacecraft. The under-voltage flag and the in-model load shed fire at
+**28.4 V** and FDIR EPS safe mode at **27.7 V** (`simulation.yaml`
+`eps.bus_protection`).
 
 *"All parameters nominal. Proceed with LEOP sequence."*
 
@@ -365,7 +368,7 @@ The facilitator selects 2-3 anomalies from the list below, appropriate to the mi
 
 #### Anomaly A: Battery Under-Voltage
 
-*"During eclipse, you receive an alert: bus voltage has dropped to 24.2 V, below the 24.5 V FDIR undervoltage threshold (the caution band starts at 27.0 V and the in-model load shed at 25.0 V). Battery temperature is 5 C. SoC is estimated at 18%."*
+*"During eclipse, you receive an alert: bus voltage has dropped to 27.4 V, below the 27.7 V FDIR EPS safe-mode threshold (the caution band, the under-voltage flag and the in-model load shed all start at 28.4 V). Battery temperature is 5 C. SoC is estimated at 18%."*
 
 Expected response:
 1. Verify FDIR has triggered load shedding (payload off, non-essential heaters off)
@@ -445,7 +448,7 @@ Teams report:
 - Total data downlinked in 30 days vs plan
 - Number of science observations completed vs plan
 - Any anomalies encountered (from injection exercise)
-- Current budget status: power margin (nominal orbit-average load ≈ 28.8 W against ≈ 45.1 W generation at the worst-generation beta, β = −31.2°), data margin, propellant remaining out of the 66.9 m/s total
+- Current budget status: power margin (nominal orbit-average load ≈ 22.7 W against ≈ 45.1 W generation at the worst-generation beta, β = −31.2°), data margin, propellant remaining out of the 66.9 m/s total
 - Orbit status: any conjunction alerts? Debris compliance on track?
 
 ### Debrief
@@ -910,10 +913,11 @@ upload.
 - **First indicator.** EPS sees `eps.bus_voltage` (0x0105)
   trending down unexpectedly and the SoC dropping at roughly
   twice the predicted rate. The ladder the team will walk down:
-  bus warning event at 27.0 V, in-model shed at **25.0 V**
-  (order payload → fpa_cooler → ttc_tx → aocs_wheels → prop),
-  bus critical at 25.0 V, FDIR undervoltage safe-mode at
-  **24.5 V**. SoC-driven shed stages sit at 30 / 20 / 10 %
+  under-voltage flag, bus warning event (0x0103) and in-model
+  shed at **28.4 V** (order payload → fpa_cooler → ttc_tx →
+  aocs_wheels → prop), bus alarm event (0x0104) and FDIR EPS
+  safe mode at **27.7 V** — all from `simulation.yaml`
+  `eps.bus_protection`. SoC-driven shed stages sit at 30 / 20 / 10 %
   (`eps.load_shed_stage`, 0x0134).
 - **Recovery procedure.** CTG-001 Under-Voltage Load Shed
   (CTG-023 Progressive Load Shed for the staged version).
@@ -924,7 +928,7 @@ upload.
   recovery between each, rather than dumping everything at once;
   keeps the OBC and receive chain (lines 0 and 1, both
   non-switchable) alive; recognises that the auto-restore walks
-  the lines back one per tick once the bus clears 25.5 V; files
+  the lines back one per tick once the bus clears 28.9 V; files
   ticket; informs Mission Manager.
 - **Debrief Qs.**
   1. Did EPS catch the unexpected SoC trend before FDIR fired,

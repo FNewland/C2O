@@ -98,7 +98,7 @@ The trigger is the card's entry condition. Top steps and the exit criterion are 
 
 | ID · Title | Owner positions | Trigger | File |
 |---|---|---|---|
-| CTG-001 · Under-Voltage Load Shed | Flight Director · Power & Thermal | `eps.uv_flag` (0x010E) = 1, rule ea 1001 fires, or bus below 27.0 V | `procedures/contingency/undervoltage_loadshed.md` |
+| CTG-001 · Under-Voltage Load Shed | Flight Director · Power & Thermal | `eps.uv_flag` (0x010E) = 1, rule ea 1001 fires, or bus below 28.4 V | `procedures/contingency/undervoltage_loadshed.md` |
 | CTG-002 · AOCS Anomaly Recovery | Flight Director · Flight Dynamics | `aocs.att_error` (0x0217) > 5°, a wheel above 60 °C, or a star tracker BLIND | `procedures/contingency/aocs_anomaly.md` |
 | CTG-003 · TTC Link Loss Recovery | Flight Director · TT&C | `ttc.link_status` (0x0501) = 0 for > 30 s after AOS, or the link lost mid-pass | `procedures/contingency/ttc_link_loss.md` |
 | CTG-007 · Reaction Wheel Anomaly | Flight Director · Flight Dynamics | Speed jitter > ±500 rpm over 10 s, speed > 6500 rpm, or bearing above 60 °C | `procedures/contingency/reaction_wheel_anomaly.md` |

@@ -307,10 +307,10 @@ Les équipes doivent vérifier :
 
 | Paramètre | Mnémonique (id) | Valeur | Plage attendue | État |
 |-----------|---------------|-------|---------------|--------|
-| Tension du bus | `eps.bus_voltage` (0x0105) | 27.9 V | 26 - 30 V | Nominal |
+| Tension du bus | `eps.bus_voltage` (0x0105) | 32.4 V | 29.6 - 34.6 V | Nominal |
 | SoC de la batterie | `eps.bat_soc` (0x0101) | 88 % | > 50 % | Nominal |
 | Production de puissance | `eps.power_gen` (0x0107) | 12 W | faible en culbutage | Nominal |
-| Température de l'OBC | `tcs.temp_obc` (0x0406) | 22 °C | -5 à +45 °C | Nominal |
+| Température de l'OBC | `tcs.temp_obc` (0x0406) | 22 °C | -10 à +50 °C | Nominal |
 | Température de la batterie | `tcs.temp_battery` (0x0407) | 19 °C | +5 à +35 °C | Nominal |
 | Mode SCAO | `aocs.mode` (0x020F) | 2 (DETUMBLE) | Attendu | Nominal |
 | Vitesses angulaires | `aocs.rate_roll/pitch/yaw` (0x0204-06) | 1.4 deg/s | En baisse | Nominal |
@@ -320,10 +320,13 @@ Les équipes doivent vérifier :
 | État de la liaison | `ttc.link_status` (0x0501) | 2 (LOCKED) | 2 = LOCKED | Nominal |
 | État de la liaison montante | -- | Pas encore tentée | -- | -- |
 
-Remarque sur le bus : EOSAT-1 utilise une batterie **8S de 100 Wh** — 21,5 V à vide,
-26,4 V en nominal, 29,2 V à pleine charge, avec un bus d'environ 28 V. Une lecture de 7-8 V
-correspond à un CubeSat 2S, pas à ce satellite. La FDIR de sous-tension se déclenche à
-**24,5 V**.
+Remarque sur le bus : EOSAT-1 utilise une batterie **8S de 100 Wh** (GomSpace BPX) —
+24,0 V à vide, 28,8 V en nominal, 33,6 V à pleine charge — sur un bus non régulé qui suit
+la batterie jusqu'à un plafond de 33,4 V : à 88 % de SoC, on lit donc
+24,0 + 9,6 × 0,88 ≈ 32,4 V. Une lecture de 7-8 V correspond à un CubeSat 2S, pas à ce
+satellite. L'indicateur de sous-tension et le délestage modélisé se déclenchent à
+**28,4 V**, et le mode survie EPS de la FDIR à **27,7 V** (`simulation.yaml`
+`eps.bus_protection`).
 
 *« Tous les paramètres sont nominaux. Poursuivez la séquence LEOP. »*
 
@@ -364,7 +367,7 @@ L'animateur choisit 2-3 anomalies dans la liste ci-dessous, adaptées à la conc
 
 #### Anomalie A : sous-tension batterie
 
-*« Pendant l'éclipse, vous recevez une alerte : la tension du bus est tombée à 24,2 V, sous le seuil de sous-tension FDIR de 24,5 V (la plage d'attention commence à 27,0 V et le délestage modélisé à 25,0 V). La température de la batterie est de 5 °C. Le SoC est estimé à 18 %. »*
+*« Pendant l'éclipse, vous recevez une alerte : la tension du bus est tombée à 27,4 V, sous le seuil de mode survie EPS de la FDIR de 27,7 V (la plage d'attention, l'indicateur de sous-tension et le délestage modélisé commencent tous à 28,4 V). La température de la batterie est de 5 °C. Le SoC est estimé à 18 %. »*
 
 Réponse attendue :
 1. Vérifier que la FDIR a déclenché le délestage (charge utile éteinte, réchauffeurs non essentiels éteints)
@@ -444,7 +447,7 @@ Les équipes présentent :
 - le volume total de données transmises au sol en 30 jours par rapport au plan ;
 - le nombre d'observations scientifiques réalisées par rapport au plan ;
 - les anomalies rencontrées (lors de l'exercice d'injection) ;
-- l'état actuel des bilans : marge de puissance (charge nominale moyenne sur l'orbite ≈ 28,8 W pour une production ≈ 45,1 W à l'angle bêta le moins productif, β = −31,2°), marge de données, ergol restant sur les 66,9 m/s au total ;
+- l'état actuel des bilans : marge de puissance (charge nominale moyenne sur l'orbite ≈ 22,7 W pour une production ≈ 45,1 W à l'angle bêta le moins productif, β = −31,2°), marge de données, ergol restant sur les 66,9 m/s au total ;
 - l'état de l'orbite : des alertes de conjonction ? La conformité aux règles sur les débris est-elle respectée ?
 
 ### Débriefing
@@ -909,10 +912,11 @@ calculé au sol.
 - **Premier indice.** L'EPS voit `eps.bus_voltage` (0x0105)
   baisser de façon inattendue et le SoC chuter environ
   deux fois plus vite que prévu. L'échelle que l'équipe va descendre :
-  événement d'avertissement bus à 27,0 V, délestage modélisé à **25,0 V**
-  (ordre payload → fpa_cooler → ttc_tx → aocs_wheels → prop),
-  bus critique à 25,0 V, mode survie FDIR sur sous-tension à
-  **24,5 V**. Les étages de délestage pilotés par le SoC se situent à 30 / 20 / 10 %
+  indicateur de sous-tension, événement d'avertissement bus (0x0103) et
+  délestage modélisé à **28,4 V** (ordre payload → fpa_cooler → ttc_tx →
+  aocs_wheels → prop), événement d'alarme bus (0x0104) et mode survie EPS de
+  la FDIR à **27,7 V** — tous issus de `simulation.yaml`
+  `eps.bus_protection`. Les étages de délestage pilotés par le SoC se situent à 30 / 20 / 10 %
   (`eps.load_shed_stage`, 0x0134).
 - **Procédure de reprise.** CTG-001 Délestage sur sous-tension
   (CTG-023 Délestage progressif pour la version par étages).
@@ -923,7 +927,7 @@ calculé au sol.
   rétablissement entre chaque étape, plutôt que de tout couper d'un coup ;
   maintient l'OBC et la chaîne de réception (lignes 0 et 1, toutes deux
   non commutables) ; comprend que la remise en service automatique rétablit
-  les lignes une par une à chaque pas de simulation dès que le bus repasse au-dessus de 25,5 V ; remplit une
+  les lignes une par une à chaque pas de simulation dès que le bus repasse au-dessus de 28,9 V ; remplit une
   fiche ; informe le responsable de mission.
 - **Questions de débriefing.**
   1. L'EPS a-t-il repéré la tendance inattendue du SoC avant le déclenchement de la FDIR,

@@ -123,7 +123,7 @@ roles, not consoles; the ground-segment checks sit on the TT&C card.
   whether it will saturate next eclipse.
 - **SoC at eclipse entry:** ____ %   **Eclipse duration:** ____ min  (33.2–35.2 min over the year)
 - **Predicted SoC at exit:** ____ %   **(Method:** P_avg × t / E_batt,
-  with E_batt = **100 Wh** and the nominal orbit-average load  P_avg ≈ **28.8 W** **)**
+  with E_batt = **100 Wh** and the nominal orbit-average load  P_avg ≈ **22.7 W** **)**
 - **Cross-check vs eclipse model:** ☐ matches  ☐ off by ____ %
 - **Heater with highest duty:** _______________   **Duty:** ____ %
 - **Predicted next-eclipse duty:** ____ %   **Will saturate?** ☐ yes ☐ no
@@ -288,7 +288,7 @@ other plays the named subsystem. Record what was said.
 | 4 | TT&C | Establish the link: `TTC_SWITCH_PRIMARY` (S8.1) | `ttc.link_status` (0x0501) = **2** (LOCKED) within 15 s; TT&C page (ground): `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB. No link in 15 s: `TTC_SWITCH_REDUNDANT` and verify again; both fail → TT&C anomaly | ☐ | |
 | 5 | SPACON | Full housekeeping collection: `HK_REQUEST` (S3.27) of SIDs 1 EPS, 2 AOCS, 3 TCS, 4 OBDH, 5 Payload, 6 TT&C | all six packets within 30 s; no out-of-limit parameter flagged by the MCS limit checker | ☐ | |
 | 6 | Payload | Payload preparation, only if imaging or a downlink is planned: `PAYLOAD_SET_MODE(mode=1)` STANDBY (S8.1 func 26) | `payload.mode` (0x0600) = 1 within 20 s; `tcs.cooler_fpa` (0x040C) = 0 (STANDBY does not run the cooler; it is switched on as the imaging preparation, NOM-002 step 2); `payload.store_used` (0x0604) < 90 % | ☐ | not planned ☐ |
-| 7 | FD | Pass readiness declaration: poll each position GO / NO-GO | EPS: SoC > 50 %, bus > 27 V, margin positive · AOCS: NOMINAL, error < 1°, rates < 0.05°/s · TT&C: link up, RSSI > −100 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal procedure first | ☐ | |
+| 7 | FD | Pass readiness declaration: poll each position GO / NO-GO | EPS: SoC > 50 %, bus > 30.9 V, margin positive · AOCS: NOMINAL, error < 1°, rates < 0.05°/s · TT&C: link up, RSSI > −100 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal procedure first | ☐ | |
 
 On-demand reads are `HK_REQUEST` (S3.27); periodic reporting is switched on with
 `HK_ENABLE` (S3.5). Only SIDs 1 (EPS) and 11 (beacon) are enabled at boot; the
@@ -320,7 +320,7 @@ step 1 is sent **blind**: no telemetry is expected until the link returns.
 | 2 | TT&C | Re-acquire on the primary transponder: blind `HK_REQUEST(sid=6)` (S3.27), wait 30 s | `ttc.link_status` (0x0501) = **2** (LOCKED) within 30 s; TT&C page (ground): `ttc.rssi` (0x0502) > −126 dBm. Link back → step 5; no response → step 3 | ☐ | |
 | 3 | TT&C | Switch to the redundant transponder: blind `TTC_SWITCH_REDUNDANT` (S8.1 func 64), wait 45 s | `ttc.link_status` = 2 within 45 s; `ttc.mode` (0x0500) shows the redundant unit. Link back → step 5; none → step 4 | ☐ | |
 | 4 | TT&C | Second attempt on the primary: blind `TTC_SWITCH_PRIMARY` (S8.1 func 63), wait 45 s | `ttc.link_status` = 2 within 45 s. Link back → step 5; still none after both units → step 6 | ☐ | |
-| 5 | TT&C | Verify link quality and subsystem health: `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` = 2; TT&C page (ground): `ttc.rssi` > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB; active unit `ttc.mode` (0x0500) recorded; `eps.bus_voltage` (0x0105) > 27.0 V; `obdh.mode` (0x0300) not SAFE or EMERGENCY. Margin > 3 dB and all nominal → recovered | ☐ | unit: ____ |
+| 5 | TT&C | Verify link quality and subsystem health: `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` = 2; TT&C page (ground): `ttc.rssi` > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB; active unit `ttc.mode` (0x0500) recorded; `eps.bus_voltage` (0x0105) > 30.9 V; `obdh.mode` (0x0300) not SAFE or EMERGENCY. Margin > 3 dB and all nominal → recovered | ☐ | unit: ____ |
 | 6 | TT&C | Escalation, no link: log every blind command with its time; notify the Mission Director and Flight Dynamics; book the next pass; record the time of the last **accepted** telecommand (last S1.1) | first passes planned after T+24 h and T+48 h: the command-loss timer `ttc.time_since_last_tc` (0x053D, FDIR TTC-01) switches to the OTHER transponder 24 h after the last accepted TC (event CMD_LOSS_TIMEOUT 0x0514) and again every further 24 h. No link after two consecutive passes → **EMG-004** | ☐ | last S1.1: ____ |
 
 Blind commands that are not received do not restart the command-loss timer.
@@ -576,7 +576,7 @@ the three gyros are S2 devices `S2_AOCS_GYROSCOPE_0/1/2`.
 | # | Owner | Action | Verification | ☐ done | Note |
 |---|-------|--------|--------------|:------:|------|
 | 1 | EPS | Verify the EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) 29.6–34.6 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 20 W | ☐ | |
-| 2 | EPS | Heater lines **only as needed**: read `tcs.temp_battery` (0x0407) and `tcs.temp_obc` (0x0406) from SID 3; `EPS_POWER_ON(line_index=5)` (S8.1 func **19**) only if the battery is below +5 °C; `EPS_POWER_ON(line_index=6)` only if the OBC zone is below 0 °C | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 within 5 s for each line commanded; the others still off. Log which lines this card energised: COM-002 reads it as its entry state | ☐ | lines energised: ____ |
+| 2 | EPS | Heater lines **only as needed**: read `tcs.temp_battery` (0x0407) and `tcs.temp_obc` (0x0406) from SID 3; `EPS_POWER_ON(line_index=5)` (S8.1 func **19**) only if the battery is below +5 °C; `EPS_POWER_ON(line_index=6)` only if the OBC zone is below −10 °C (its heater ON point) | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 within 5 s for each line commanded; the others still off. Log which lines this card energised: COM-002 reads it as its entry state | ☐ | lines energised: ____ |
 | 3 | EPS / AOCS | Energise the AOCS suite line and enable its HK: `EPS_POWER_ON(line_index=7)` (func 19), then `HK_ENABLE(sid=2)` (**S3.5**) | `eps.pl_aocs_wheels` (0x0117) = 1 within 5 s; SID 2 periodic within one 4 s interval; the wheels stay disabled until COM-004 | ☐ | |
 | 4 | AOCS | Both DETUMBLE legs first, and the GPS receiver: `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`, `MTQ_ENABLE(enable=1)` (S8.1 func_id **9**), `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | `aocs.mtq_enabled` (0x025E) = 1 within 10 s | ☐ | |
 | 5 | AOCS | Command DETUMBLE: `AOCS_SET_MODE(mode=2)` (S8.1 func_id **0**) — mode **2 = DETUMBLE** | S1.1 + S1.7 < 5 s; `aocs.mode` (0x020F) = 2; `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) 5000–70000 nT; `aocs.rate_roll`, `aocs.rate_pitch`, `aocs.rate_yaw` (0x0204–0x0206) trending down within 60 s | ☐ | |
@@ -851,9 +851,10 @@ Print 9 copies (one per console position).
 | 6 | Power budget — `GET_PARAM(param_id=0x0108)`; orbit-average generation against consumption | orbit-average generation > consumption; end-of-eclipse SoC > 50 % under nominal load | ☐ | margin: ____ W |
 | 7 | Bus regulation under a load transient — record `eps.pl_htr_bat` (0x0115) first, then `EPS_POWER_ON(line_index=5)` (S8.1 func_id **19**), and `EPS_POWER_OFF(line_index=5)` (func **20**) only if the line was off at entry. Not the payload: its line is OFF until COM-009 | `eps.bus_voltage` stays in [30.2, 34.0] V within 5 s and returns to [30.9, 34.0] V within 10 s; `eps.pl_htr_bat` back to its entry value | ☐ | min V: ____ |
 
-Budget reference for step 6: the nominal orbit-average load is about **28.8 W**
-against about 45.1 W of generation at the worst-generation beta, β = −31.2°
-(margin +16.3 W, ratio 1.57; 1.38 while imaging), on the **100 Wh** pack.
+Budget reference for step 6: the nominal orbit-average load is about **22.7 W**
+(payload STANDBY, FPA cooler off) against about 45.1 W of generation at the
+worst-generation beta, β = −31.2° (margin +22.4 W, ratio 1.98; 1.71 with imaging
+duty-cycled in), on the **100 Wh** pack.
 
 **Exit?** ☐ yes ☐ no   **GO COM-002:** ☐
 
@@ -1002,7 +1003,7 @@ from memory: limits are configuration, and they change.
 | 9 | Log the Payload Power-On Report: timing, power draw, imager status word, imager and FPA temperatures, store baseline | ready for COM-010 | ☐ | |
 
 Payload modes: 0 OFF, 1 STANDBY, 2 IMAGING, **3 CALIBRATION**. STANDBY draws
-about 0.09 A at 28 V on line 3.
+about 0.08 A at 32 V on line 3.
 
 **Exit?** ☐ yes ☐ no   **GO COM-010:** ☐
 
@@ -1028,7 +1029,7 @@ about 10 minutes and never overshoots the setpoint.
 | 5 | Settling: `GET_PARAM(param_id=0x0601)` at T+10 and T+15 min | T+10 ∈ [−16.0, −14.0] °C; T+15 ∈ [−16.0, −15.0] °C. A reading below −16.5 °C is a **control fault**, not an over-performing cooler | ☐ | T+15: __ °C |
 | 6 | Operational temperature: `GET_PARAM(param_id=0x0601)`, `GET_PARAM(param_id=0x0610)`, `GET_PARAM(param_id=0x0631)`, `GET_PARAM(param_id=0x064A)`, `GET_PARAM(param_id=0x064B)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C; `payload.fpa_ready` (0x0610) = 1 within 60 s (hysteresis); `payload.fpa_setpoint` (0x0631) = −15.0; `payload.cooler_margin_k` (0x064B) > 0 (about +5 K); floor at `payload.cooler_floor_c` (0x064A) | ☐ | margin: ____ K |
 | 7 | Stability: `GET_PARAM(param_id=0x0601)` at T+35, T+40 and T+45 min | `payload.fpa_temp` ∈ [−16.5, −14.5] °C at every sample; peak-to-peak < 1.0 °C over 10 min (below 0.5 °C is normal control) | ☐ | p-p: ____ °C |
-| 8 | Through eclipse, if the pass spans one: `GET_PARAM(param_id=0x0601)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C; `eps.bus_voltage` (0x0105) > 27.0 V with the cooler load | ☐ | |
+| 8 | Through eclipse, if the pass spans one: `GET_PARAM(param_id=0x0601)` | `payload.fpa_temp` ∈ [−16.5, −14.5] °C; `eps.bus_voltage` (0x0105) > 30.9 V with the cooler load | ☐ | |
 | 9 | Generate the Cooler Activation Report: cool-down curve, cooler power, stability and eclipse data | ready for COM-011 | ☐ | |
 
 **If `cooler_margin_k` ≤ 0:** the cooler physically cannot reach the
@@ -1483,7 +1484,7 @@ team has a ready-printed page to follow on the console.
 
 ## CTG-001 Under-Voltage Load Shed
 
-On-board FDIR sheds by itself below 25.0 V (payload → FPA cooler → `ttc_tx` →
+On-board FDIR sheds by itself below 28.4 V (payload → FPA cooler → `ttc_tx` →
 AOCS wheels → prop, one line per second, events 0x0106–0x0108). **Check the
 spacecraft first**: each level below is a GO only while its line is still ON;
 if FDIR has already opened it, send nothing and go to the voltage check. A shed
@@ -1659,7 +1660,7 @@ the failed bus.
 | 3 | Transponder switch, blind: `TTC_SWITCH_REDUNDANT` (func **64**), wait 45 s; then `TTC_SWITCH_PRIMARY` (func **63**) | carrier on the redundant unit's frequency → step 6; neither unit → step 4 | ☐ | |
 | 4 | PA on, blind: `TTC_PA_ON` (func **66**), wait 15 s; still nothing: `TTC_PA_OFF` (func **67**), 10 s, `TTC_PA_ON`, 15 s | downlink carrier after PA ON → step 6; still none → step 5 | ☐ | |
 | 5 | Antenna, only if its deployment is uncertain or known stowed: `TTC_DEPLOY_ANTENNA` (func **69**) — irreversible burn-wire; wait 30 s | with any TM: `ttc.antenna_deployed` (0x0520) = 1 and `ttc.antenna_deployment_sensor` (0x0536) = 2; signal 15–25 dB stronger (`ttc.antenna_deployment_ready` (0x0535) = 0 beforehand means a pyro continuity fault: it will not fire). Signal → step 6; none → step 7 | ☐ | |
-| 6 | Verify link quality and subsystem health: `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` (0x0501) = 2; TT&C page (ground): `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB; `ttc.pa_on` (0x0516) = 1; `ttc.pa_temp` (0x050F) < 55 °C; `ttc.antenna_deployed` = 1; `ttc.carrier_lock` (0x0510) = 1; `ttc.bit_sync` (0x0511) = 1; radio page: `ttc.eb_n0` (0x0519) > 10 dB; `eps.bus_voltage` (0x0105) > 27.0 V; `eps.pl_ttc_tx` (0x0112) = 1; `obdh.mode` (0x0300) not SAFE or EMERGENCY | ☐ | restored at step: ____ |
+| 6 | Verify link quality and subsystem health: `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` | `ttc.link_status` (0x0501) = 2; TT&C page (ground): `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB; `ttc.pa_on` (0x0516) = 1; `ttc.pa_temp` (0x050F) < 55 °C; `ttc.antenna_deployed` = 1; `ttc.carrier_lock` (0x0510) = 1; `ttc.bit_sync` (0x0511) = 1; radio page: `ttc.eb_n0` (0x0519) > 10 dB; `eps.bus_voltage` (0x0105) > 30.9 V; `eps.pl_ttc_tx` (0x0112) = 1; `obdh.mode` (0x0300) not SAFE or EMERGENCY | ☐ | restored at step: ____ |
 | 7 | Escalation, no link: `TTC_SET_TX_POWER(level=2)` (S8.1 func **68**) for the next attempt; log every blind command with its time; notify the FD and the Mission Director; book the next pass | no link after two consecutive passes → **EMG-004** (Loss of Communication) | ☐ | |
 
 The UHF beacon is a **separate radio**: if HK SID 11 still arrives while the

@@ -42,7 +42,8 @@ the *nominal-shift* example used for procedure familiarisation.
   spun up.
 - EPS: battery 90% SoC, solar arrays nominal, all main power lines ON.
 - TCS: heaters cycling on thermostat, all zones in green band.
-- Payload: imager in STANDBY, FPA cooler at temperature.
+- Payload: imager in STANDBY, FPA cooler OFF (STANDBY does not run it;
+  NOM-002 switches it on about 10 min before an imaging window).
 - OBDH: application image running (`obdh.sw_image` = 1), FDIR enabled.
 
 **Pass geometry.** The default in `nominal_ops.yaml` lets the orbit

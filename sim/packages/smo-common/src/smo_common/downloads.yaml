@@ -53,7 +53,7 @@ documents:
     audience: student
     category: textbook
     source: design/docs/pdf/en/SpaceCDF_Textbook.pdf
-    size: 9194084
+    size: 9219297
     pair: spacecdf-textbook-fr
   - id: spacecdf-textbook-fr
     title: {en: "SpaceCDF course textbook", fr: "Manuel du cours SpaceCDF"}
@@ -61,7 +61,7 @@ documents:
     audience: student
     category: textbook
     source: design/docs/pdf/fr/SpaceCDF_Textbook_FR.pdf
-    size: 10144257
+    size: 10175013
     pair: spacecdf-textbook-en
 
   # ── workbooks ───────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ documents:
     audience: student
     category: workbook
     source: design/docs/pdf/en/SpaceCDF_Workbook.pdf
-    size: 1522631
+    size: 1531758
     pair: spacecdf-workbook-fr
   - id: spacecdf-workbook-fr
     title: {en: "SpaceCDF course workbook", fr: "Cahier d’exercices du cours SpaceCDF"}
@@ -79,7 +79,7 @@ documents:
     audience: student
     category: workbook
     source: design/docs/pdf/fr/SpaceCDF_Workbook_FR.pdf
-    size: 1575160
+    size: 1588112
     pair: spacecdf-workbook-en
   - id: on-w3-peer-review-en
     title: {en: "Peer-review worksheet pack (week 3)", fr: "Fiches d’évaluation par les pairs (semaine 3)"}
@@ -121,7 +121,7 @@ documents:
     audience: student
     category: reference
     source: design/docs/pdf/en/ORBIT_NORTH_W3_Student_Procedure_Quickref.pdf
-    size: 63054
+    size: 63056
     pair: on-w3-procedure-quickref-fr
   - id: on-w3-procedure-quickref-fr
     title: {en: "Procedure quick-reference (week 3)", fr: "Aide-mémoire des procédures (semaine 3)"}
@@ -129,7 +129,7 @@ documents:
     audience: student
     category: reference
     source: design/docs/pdf/fr/ORBIT_NORTH_W3_Student_Procedure_Quickref_FR.pdf
-    size: 67114
+    size: 67118
     pair: on-w3-procedure-quickref-en
 
   # ── student guides ──────────────────────────────────────────────────
@@ -203,7 +203,7 @@ documents:
     audience: instructor
     category: guide
     source: design/docs/pdf/en/SpaceCDF_Instructor_Book.pdf
-    size: 166477
+    size: 167406
     pair: spacecdf-instructor-book-fr
   - id: spacecdf-instructor-book-fr
     title: {en: "SpaceCDF instructor book", fr: "Guide de l’enseignant SpaceCDF"}
@@ -211,7 +211,7 @@ documents:
     audience: instructor
     category: guide
     source: design/docs/pdf/fr/SpaceCDF_Instructor_Book_FR.pdf
-    size: 182258
+    size: 183292
     pair: spacecdf-instructor-book-en
   - id: spacecdf-facilitator-book-en
     title: {en: "SpaceCDF facilitator's book (May 2026 edition)", fr: "Livre de l’animateur SpaceCDF (édition de mai 2026)"}
@@ -258,7 +258,7 @@ documents:
     audience: instructor
     category: reference
     source: design/docs/pdf/en/ORBIT_NORTH_W3_Breakpoint_Spec.pdf
-    size: 52081
+    size: 52171
     pair: on-w3-breakpoint-spec-fr
   - id: on-w3-breakpoint-spec-fr
     title: {en: "Week 3 simulator breakpoint specification", fr: "Spécification des points de reprise du simulateur (semaine 3)"}
@@ -266,7 +266,7 @@ documents:
     audience: instructor
     category: reference
     source: design/docs/pdf/fr/ORBIT_NORTH_W3_Breakpoint_Spec_FR.pdf
-    size: 55816
+    size: 55722
     pair: on-w3-breakpoint-spec-en
   - id: smo-failure-modes-catalog-en
     title: {en: "EOSAT-1 failure modes catalogue", fr: "Catalogue des modes de défaillance EOSAT-1"}

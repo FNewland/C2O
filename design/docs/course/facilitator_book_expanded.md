@@ -4728,15 +4728,17 @@ systems on *including* AOCS, judged at nadir pointing rather than sun pointing:
 
 | Profile | Gen (W) | Load (W) | Margin (W) | Ratio |
 |---------|--------:|---------:|-----------:|------:|
-| quiescent | 45.1 | 25.6 | +19.5 | 1.76 |
-| **nominal** | **45.1** | **28.8** | **+16.3** | **1.57** |
-| nominal imaging | 45.1 | 32.8 | +12.3 | 1.38 |
-| manoeuvre | 45.1 | 32.1 | +12.9 | 1.40 |
-| worst (abuse case) | 45.1 | 46.8 | $-1.7$ | 0.96 |
+| quiescent | 45.1 | 19.7 | +25.4 | 2.29 |
+| **nominal** (payload STANDBY, cooler off) | **45.1** | **22.7** | **+22.4** | **1.98** |
+| nominal imaging | 45.1 | 26.4 | +18.7 | 1.71 |
+| manoeuvre | 45.1 | 25.8 | +19.4 | 1.75 |
+| worst (abuse case) | 45.1 | 46.6 | $-1.4$ | 0.97 |
 
-The table is at 3-year EOL and the worst-generation beta ($-31.2$ deg). At the
-longest-eclipse beta ($-20.8$ deg) generation is 47.0 W and the nominal profile
-closes at 1.63x.
+The table is at 3-year EOL and the worst-generation beta ($-31.2$ deg), from
+`tools/power_budget.py` re-run on 2026-11-03 with the thermal network and the
+FPA cooler off in STANDBY (it now runs only to prepare for and during imaging).
+At the longest-eclipse beta ($-20.8$ deg) generation is 47.0 W and the nominal
+profile closes at 2.05x.
 
 The "worst" row is deliberately negative: it holds FINE pointing for a whole
 orbit, runs the cooler continuously, images through eclipse and dumps at the
@@ -4746,18 +4748,19 @@ imaging chain** -- three ~90 s captures per orbit with roughly 20 min of cooler
 around each -- which is what the "nominal imaging" row models. That is the
 lesson the exercise exists to teach.
 
-Cross-check the +16.3 W against flight hardware: the NanoAvionics M6P 6U bus
+Cross-check the margin against flight hardware: the NanoAvionics M6P 6U bus
 publishes 12.5--17.5 W of payload power available while sun-tracking, and the
-EOSAT-1 margin sits inside that range. A 6U
+EOSAT-1 margin with imaging duty-cycled in, +18.7 W, sits just above the top of
+that range (the +22.4 W nominal figure leaves the cooler off). A 6U
 design showing +40 W of payload headroom is not well designed; it is
 mis-specified.
 
 > **Worked Example -- EOSAT-1 Eclipse Energy and Battery Sizing**
 >
 > **Given:** 513 km SSO (mean altitude), 97.39 deg inclination, LTAN 10:00, 15.24 rev/day so $T = 86400/15.24 = 5669$ s
-> $= 1.575$ h. Battery: GomSpace NanoPower BPX class, 8S-1P, **100 Wh**, 3 Ah,
-> 26.4 V nominal on the bus model (29.2 V at 100 % SoC, 21.5 V at 0 %), charge
-> efficiency 0.94, CV taper from 90 % SoC.
+> $= 1.575$ h. Battery: GomSpace NanoPower BPX class, 8S-1P, **100 Wh**, 3.5 Ah,
+> 28.8 V nominal on the bus model (33.6 V at 100 % SoC, 24.0 V at 0 %, the
+> datasheet values), charge efficiency 0.94, CV taper from 90 % SoC.
 >
 > **Step 1 -- eclipse duration** (bounding case, $\beta = 0$. A 10:00 LTAN orbit never reaches it: EOSAT-1's $\beta$ stays between $-20.8$ and $-31.2$ deg, and the simulator gives 33.2--35.2 min of eclipse on every orbit, so the 35.6 min below is conservative by about 0.4 min):
 > $$f_{\text{ecl}} = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{h(2R_E + h)}}{(R_E + h)\cos\beta}\right) = \frac{1}{\pi}\arccos\!\left(\frac{\sqrt{513 \times 13255}}{6884}\right)$$
@@ -4781,9 +4784,10 @@ mis-specified.
 > Generation is collected only in sunlight, so the sunlit-average generation,
 > taking the worst-generation 45.1 W together with the bounding eclipse, is
 > $45.1 \times 1.575 / 0.982 = 72.3$ W. The sunlit load is
-> $(28.8 \times 1.575 - 13.9)/0.982 = (45.4 - 13.9)/0.982 = 32.1$ W, leaving
-> $72.3 - 32.1 = 40.2$ W of charge power against the 15.1 W required.
-> **Recharge margin 2.7x. Closes.**
+> $(22.7 \times 1.575 - 13.9)/0.982 = (35.8 - 13.9)/0.982 = 22.3$ W (22.7 W is
+> the nominal orbit-average load, payload in STANDBY with the cooler off), leaving
+> $72.3 - 22.3 = 50.0$ W of charge power against the 15.1 W required.
+> **Recharge margin 3.3x. Closes.**
 >
 > **Step 5 -- cycle life.** A 3-year mission at 15.24 orbits/day is
 > $3 \times 365 \times 15.24 = 16{,}688$ eclipses. At 13.9 % DoD, Li-ion cells are
@@ -4793,10 +4797,12 @@ mis-specified.
 > by a 30 Wh pack at 46 % DoD. The 100 Wh pack is sized by the *contingency*
 > case -- survive a lost sunlit period, ride out a failed deployment, and keep
 > the bus above the load-shed voltage while FDIR works -- not by the nominal
-> eclipse. Protection levels follow: the in-model load shed fires at 25.0 V and
-> strips `payload`, `fpa_cooler`, `ttc_tx`, `aocs_wheels`, `prop` in that order,
-> with a 0.5 V restore hysteresis; the undervoltage flag is at 26.5 V and the
-> FDIR SoC ladder at 30 / 20 / 10 %.
+> eclipse. Protection levels follow, all from one table (`simulation.yaml`
+> `eps.bus_protection`): the undervoltage flag and the in-model load shed fire
+> at 28.4 V (about 46 % SoC on the $24.0 + 9.6 \times SoC$ battery curve) and
+> strip `payload`, `fpa_cooler`, `ttc_tx`, `aocs_wheels`, `prop` in that order,
+> with a 0.5 V restore hysteresis; FDIR EPS safe mode is at 27.7 V (about
+> 39 %), and the FDIR SoC ladder at 30 / 20 / 10 %.
 
 **Thermal: what is actually active.** EOSAT-1 is passive apart from three
 heater circuits and one cooler:
@@ -4804,7 +4810,7 @@ heater circuits and one cooler:
 | Circuit | Power | Control | Telemetry |
 |---------|------:|---------|-----------|
 | Battery heater | 8.0 W | Thermostat ON +5 degC / OFF +10 degC | `tcs.htr_battery` 0x040A |
-| OBC heater | 4.0 W | Thermostat ON +5 degC / OFF +10 degC | `tcs.htr_obc` 0x040B |
+| OBC heater | 4.0 W | Thermostat ON $-10$ degC / OFF $-5$ degC (survival heater: idle in nominal operations) | `tcs.htr_obc` 0x040B |
 | Thruster catalyst-bed heater | 12.0 W | MANUAL by default; AUTO holds 190/230 degC | `tcs.htr_thruster` 0x041B |
 | FPA cooler | 15.0 W | Setpoint-commanded, $-20$ to $0$ degC | `tcs.cooler_fpa` 0x040C |
 
@@ -4970,7 +4976,7 @@ Table 3.1.13 — Session summary: key takeaways for power and thermal control de
 | Thermal margins | ECSS: +/-5 degC operating, +/-10 degC acceptance, +/-15 degC qualification |
 | Transient effects | Thermal mass ($mc_p$) prevents reaching steady state during short eclipses; 1U at 400 km cools ~20--25 degC in 36 min eclipse |
 | Plane-of-array constant | Collapse the loss stack into one number: $K = 291.2$ W/m$^2$ BOL, **267.9 W/m$^2$ at 3-yr EOL** for TJ GaAs; cross-checks a vendor datasheet to 0.1 W/m$^2$ |
-| 6U reality check | 0.438 m$^2$ of cells $\to$ 88.6 W peak, 45.1 W orbit-average EOL at the worst beta against a 28.8 W nominal load (+16.3 W, 1.57x); +40 W of payload headroom on a 6U means the budget is wrong |
+| 6U reality check | 0.438 m$^2$ of cells $\to$ 88.6 W peak, 45.1 W orbit-average EOL at the worst beta against a 22.7 W nominal load (+22.4 W, 1.98x); +40 W of payload headroom on a 6U means the budget is wrong |
 | Power lines | Nine lines, indices 0--8 (`obc`, `ttc_rx`, `ttc_tx`, `payload`, `fpa_cooler`, `htr_bat`, `htr_obc`, `aocs_wheels`, `prop`); only the first two are non-switchable and **every switchable line boots OFF** |
 | FPA cooling | A 27 K lift at $COP = 1.5$ is beyond any single-stage Peltier ($COP_{\max} = 0.88$); it needs a **miniature Stirling-class cryocooler** at ~23 % of Carnot, whose authority *falls* as the lift grows |
 
@@ -7860,7 +7866,7 @@ worth arguing about.
 > | Solar cells (body) | Body-mounted TJ GaAs, 0.198 m$^2$ over five faces (-Z carries the aperture and radiator) | 0.35 | -- | 6 | 1 set | Direct to EPS |
 > | Solar wings | Endurosat-class 6U double-deployable, 0.120 m$^2$ of cells per wing, single-axis SADA | 1.07 | -- | 10 | 2 | Direct to EPS |
 > | EPS Board | 6U EPS/PDU (MPPT, nine switchable/non-switchable lines, indices 0--8) | 0.25 | 3.0 (EPS housekeeping share of the 6 W obc line) | 8 | 1 | I$^2$C |
-> | Battery | GomSpace NanoPower BPX, 8S-1P, 100 Wh, 3 Ah, 28.8 V nominal, Li-ion 18650 | 0.50 | -- | 5 | 1 | I$^2$C (telemetry) |
+> | Battery | GomSpace NanoPower BPX, 8S-1P, 100 Wh, 3.5 Ah, 28.8 V nominal (24.0--33.6 V), Li-ion 18650 | 0.50 | -- | 5 | 1 | I$^2$C (telemetry) |
 > | OBC | 6U flight computer, 20 GB payload store | 0.10 | 3.0 (OBDH share of the obc line) | 12 | 1 | I$^2$C, SPI, UART |
 > | Reaction Wheel | Sinclair RW-0.03 class, 0.030 N m s at 5500 rpm, 2 mN m peak torque; pyramid, four-of-four | 0.185 | 0.3 (avg, per wheel) | 5 | 4 | SPI |
 > | Magnetorquer | NewSpace NCTR-M016 class rod, 1.6 A m$^2$ dipole | 0.05 | 0.1 | 2 | 3 | I$^2$C |
@@ -7869,7 +7875,7 @@ worth arguing about.
 > | Sun Sensor | Coarse sun-sensor array (attitude acquisition and safe mode) | 0.06 | 0.01 | 4 | 1 set | Analog/I$^2$C |
 > | Magnetometer | Three-axis magnetometer (MAG A / MAG B, redundant pair; B-dot detumble reference) | 0.03 | 0.05 | 1 | 2 | I$^2$C |
 > | GNSS | GPS receiver + patch antenna (orbit determination, time reference) | 0.12 | 1.0 | 8 | 1 | UART |
-> | Payload | Simera Sense TriScape100 class wide-field pushbroom: 8192 px x 5.5 um, f = 84.5 mm, 29.856 deg full FOV -> 273 km swath, 33.4 m GSD at 513 km; 244 Hz line rate, 96 Mbps raw readout (sized at the earlier 450 km figure) | 1.45 | 5.5 (imaging) / 2.4 (idle) | 60 | 1 | LVDS/SPI |
+> | Payload | Wide-field pushbroom (power, mass and envelope from the Simera Sense TriScape100; its 580 mm optics are not EOSAT-1's): 8192 px x 5.5 um, f = 84.5 mm, 29.856 deg full FOV -> 273 km swath, 33.4 m GSD at 513 km; 244 Hz line rate, 96 Mbps raw readout (sized at the earlier 450 km figure) | 1.45 | 5.5 (imaging) / 2.4 (idle) | 60 | 1 | LVDS/SPI |
 > | FPA cooler | Miniature Stirling-class cryocooler on the focal-plane bracket (-15 C setpoint, ~23 % of Carnot) | 0.50 | 15.0 | 15 | 1 | Own EPS line (`fpa_cooler`) |
 > | Transmitter | Endurosat-class S-band transceiver (prime chain): 2 W RF max, 5 W DC at the LOW tier, 11 W DC at the HIGH tier, 1.2 W idle Rx | 0.25 | 5.0 (LOW) / 11.0 (HIGH) | 15 | 1 | SPI |
 > | Antenna | S-band patch (body-fixed, RHCP) | 0.06 | -- | 3 | 1 | RF coax |
@@ -7885,8 +7891,9 @@ worth arguing about.
 > every line at once. The nine EPS lines (0 `obc`, 1 `ttc_rx`, 2 `ttc_tx`,
 > 3 `payload`, 4 `fpa_cooler`, 5 `htr_bat`, 6 `htr_obc`, 7 `aocs_wheels`,
 > 8 `prop`) are switched against the orbit-average budget: at end of life and
-> worst beta the array delivers ~45 W orbit-average against a ~29 W nominal
-> load, a margin of about +16 W. Add continuous imaging, a continuously running
+> worst beta the array delivers ~45 W orbit-average against a ~23 W nominal
+> load (payload in STANDBY, cooler off), a margin of about +22 W. Add continuous
+> imaging, a continuously running
 > cooler and HIGH-tier dumps on every pass and the budget goes negative --
 > which is why imaging is duty-cycled (three ~90 s captures per orbit with the
 > cooler stabilised around them) rather than run continuously.
@@ -10334,9 +10341,9 @@ subsystem drawing more than it should.
 
 **Watches and owns.** Battery SoC (yellow below 25 %; the FDIR
 load-shed stages enter at 30 / 20 / 10 % SoC, and the in-model bus
-shed at 25.0 V drops payload, cooler, TX, wheels and — last of all
-— propulsion), battery and bus voltage (the FDIR undervoltage rule
-fires at 24.5 V), per-wing array currents, total and per-line load
+shed at 28.4 V drops payload, cooler, TX, wheels and — last of all
+— propulsion), battery and bus voltage (FDIR EPS safe mode fires at
+27.7 V; both levels come from `simulation.yaml` `eps.bus_protection`), per-wing array currents, total and per-line load
 current, and battery temperature. Commanding authority for the EPS
 and TCS function sets with FD GO; calls for load shed, which the FD
 authorises.

@@ -317,11 +317,11 @@ worksheets:
       en: '7. FD: Pass readiness declaration: poll each position GO / NO-GO'
       fr: '7. FD : Déclaration de disponibilité pour le passage : tour de table GO / NO-GO'
     hint:
-      en: 'EPS: SoC > 50 %, bus > 27 V, margin positive · AOCS: NOMINAL, error < 1°, rates < 0.05°/s ·
-        TT&C: link up, RSSI > −100 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS page
-        · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal
+      en: 'EPS: SoC > 50 %, bus > 30.9 V, margin positive · AOCS: NOMINAL, error < 1°, rates < 0.05°/s
+        · TT&C: link up, RSSI > −100 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS
+        page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal
         procedure first'
-      fr: 'EPS : SoC > 50 %, bus > 27 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses < 0.05°/s
+      fr: 'EPS : SoC > 50 %, bus > 30.9 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses < 0.05°/s
         · TT&C : liaison établie, RSSI > −100 dBm, marge > 3 dB · TCS : chaque zone dans les limites de
         la page TCS · OBDH : NOMINAL, CPU < 80 % · Charge utile : STANDBY si nécessaire, mémoire < 90
         %. Tout NO-GO : d''abord sa procédure hors nominal'
@@ -402,10 +402,10 @@ worksheets:
         HK_REQUEST(sid=1), HK_REQUEST(sid=4)'
     hint:
       en: 'ttc.link_status = 2; TT&C page (ground): ttc.rssi > −126 dBm, ttc.link_margin (0x0503) > 3.0
-        dB; active unit ttc.mode (0x0500) recorded; eps.bus_voltage (0x0105) > 27.0 V; obdh.mode (0x0300)
+        dB; active unit ttc.mode (0x0500) recorded; eps.bus_voltage (0x0105) > 30.9 V; obdh.mode (0x0300)
         not SAFE or EMERGENCY. Margin > 3 dB and all nominal → recovered'
       fr: 'ttc.link_status = 2 ; page TT&C (sol) : ttc.rssi > −126 dBm, ttc.link_margin (0x0503) > 3.0
-        dB ; équipement actif ttc.mode (0x0500) consigné ; eps.bus_voltage (0x0105) > 27.0 V ; obdh.mode
+        dB ; équipement actif ttc.mode (0x0500) consigné ; eps.bus_voltage (0x0105) > 30.9 V ; obdh.mode
         (0x0300) ni SAFE ni EMERGENCY. Marge > 3 dB et tout nominal → rétabli'
     step: '5'
   - id: q6
@@ -1071,10 +1071,11 @@ worksheets:
     text:
       en: '2. EPS: Heater lines only as needed: read tcs.temp_battery (0x0407) and tcs.temp_obc (0x0406)
         from SID 3; EPS_POWER_ON(line_index=5) (S8.1 func 19) only if the battery is below +5 °C; EPS_POWER_ON(line_index=6)
-        only if the OBC zone is below 0 °C'
+        only if the OBC zone is below −10 °C (its heater ON point)'
       fr: '2. EPS : Lignes de réchauffeurs seulement si nécessaire : lire tcs.temp_battery (0x0407) et
         tcs.temp_obc (0x0406) dans le SID 3 ; EPS_POWER_ON(line_index=5) (S8.1 func 19) seulement si la
-        batterie est sous +5 °C ; EPS_POWER_ON(line_index=6) seulement si la zone OBC est sous 0 °C'
+        batterie est sous +5 °C ; EPS_POWER_ON(line_index=6) seulement si la zone OBC est sous −10 °C
+        (seuil de mise en marche de son réchauffeur)'
     hint:
       en: 'eps.pl_htr_bat (0x0115) / eps.pl_htr_obc (0x0116) = 1 within 5 s for each line commanded; the
         others still off. Log which lines this card energised: COM-002 reads it as its entry state'
@@ -2572,8 +2573,8 @@ worksheets:
       en: '8. Through eclipse, if the pass spans one: GET_PARAM(param_id=0x0601)'
       fr: '8. Pendant l''éclipse, si le passage en comporte une : GET_PARAM(param_id=0x0601)'
     hint:
-      en: payload.fpa_temp ∈ [−16.5, −14.5] °C; eps.bus_voltage (0x0105) > 27.0 V with the cooler load
-      fr: payload.fpa_temp ∈ [−16.5, −14.5] °C ; eps.bus_voltage (0x0105) > 27.0 V avec la charge du refroidisseur
+      en: payload.fpa_temp ∈ [−16.5, −14.5] °C; eps.bus_voltage (0x0105) > 30.9 V with the cooler load
+      fr: payload.fpa_temp ∈ [−16.5, −14.5] °C ; eps.bus_voltage (0x0105) > 30.9 V avec la charge du refroidisseur
     step: '8'
   - id: q9
     kind: check
@@ -4113,12 +4114,12 @@ worksheets:
       en: 'ttc.link_status (0x0501) = 2; TT&C page (ground): ttc.rssi (0x0502) > −126 dBm, ttc.link_margin
         (0x0503) > 3.0 dB; ttc.pa_on (0x0516) = 1; ttc.pa_temp (0x050F) < 55 °C; ttc.antenna_deployed
         = 1; ttc.carrier_lock (0x0510) = 1; ttc.bit_sync (0x0511) = 1; radio page: ttc.eb_n0 (0x0519)
-        > 10 dB; eps.bus_voltage (0x0105) > 27.0 V; eps.pl_ttc_tx (0x0112) = 1; obdh.mode (0x0300) not
+        > 10 dB; eps.bus_voltage (0x0105) > 30.9 V; eps.pl_ttc_tx (0x0112) = 1; obdh.mode (0x0300) not
         SAFE or EMERGENCY'
       fr: 'ttc.link_status (0x0501) = 2 ; page TT&C (sol) : ttc.rssi (0x0502) > −126 dBm, ttc.link_margin
         (0x0503) > 3.0 dB ; ttc.pa_on (0x0516) = 1 ; ttc.pa_temp (0x050F) < 55 °C ; ttc.antenna_deployed
         = 1 ; ttc.carrier_lock (0x0510) = 1 ; ttc.bit_sync (0x0511) = 1 ; page radio : ttc.eb_n0 (0x0519)
-        > 10 dB ; eps.bus_voltage (0x0105) > 27.0 V ; eps.pl_ttc_tx (0x0112) = 1 ; obdh.mode (0x0300)
+        > 10 dB ; eps.bus_voltage (0x0105) > 30.9 V ; eps.pl_ttc_tx (0x0112) = 1 ; obdh.mode (0x0300)
         ni SAFE ni EMERGENCY'
     step: '6'
   - id: q7

@@ -79,8 +79,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/2-leop-simulation/facilitator-script-leop",
-   "en_hash": "de25cfac12433051",
-   "fr_hash": "e60665a068516c8f"
+   "en_hash": "ec4b8871121efb5a",
+   "fr_hash": "83812137432abec4"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/3-commissioning-simulation",
@@ -104,8 +104,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-a-battery-under-voltage",
-   "en_hash": "4134a2e8d2e2a620",
-   "fr_hash": "f55b5329145c0bde"
+   "en_hash": "bc97f860c67c7626",
+   "fr_hash": "ceceb19376827f79"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/4-anomaly-injection-scenarios/anomaly-menu-facilitator-selects-2-3/anomaly-b-communication-loss",
@@ -139,8 +139,8 @@
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief/nominal-operations",
-   "en_hash": "9ff4c909d1bb069f",
-   "fr_hash": "b582e38270309ffd"
+   "en_hash": "94cfcabd53248533",
+   "fr_hash": "09fff8f387e165f7"
   },
   {
    "id": "chapter-2-mission-simulation-day-instructor-walkthrough/5-nominal-operations-debrief/debrief",
@@ -264,8 +264,8 @@
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-11-progressive-battery-load-shed-hard",
-   "en_hash": "d0e4bbcce26cbd5b",
-   "fr_hash": "9148a53731440108"
+   "en_hash": "178e63c5752b7aed",
+   "fr_hash": "210652cfc0de4074"
   },
   {
    "id": "chapter-18-anomaly-cue-cards/18-12-aocswheelfailure-yaml-transponderfailure-yaml-very-hard-day-4",
@@ -273,5 +273,5 @@
    "fr_hash": "8f5c6c08b2ba5111"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8e9f66e"
 }

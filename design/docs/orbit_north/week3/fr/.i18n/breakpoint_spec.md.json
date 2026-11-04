@@ -14,8 +14,8 @@
   },
   {
    "id": "week-3-simulator-breakpoint-specification/bp-1-nominal-post-commissioning-existing",
-   "en_hash": "fce1c3ab90270343",
-   "fr_hash": "a2e15cdd6fec025d"
+   "en_hash": "1c89beea61a212ce",
+   "fr_hash": "e2fb5623501b0c5d"
   },
   {
    "id": "week-3-simulator-breakpoint-specification/bp-2-leop-day-start-existing",
@@ -38,5 +38,5 @@
    "fr_hash": "4e882ee43627e3fc"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "8e9f66e"
 }
