@@ -20,6 +20,7 @@ import {
   createRow, deleteRow, patchRow, proposeElectrical, useElectrical, useInvalidateElectrical,
   type ElementLite, type Kind, type PowerLine, type Rail,
 } from './electricalApi'
+import { DiagramFigure } from '../diagrams/DiagramFigure'
 import { CommitInput, FindingMark, FindingsList, ProfileNote, ProposalCell } from './electricalParts'
 
 const API = '/api'
@@ -214,6 +215,11 @@ export function ElectricalPanel() {
             defaultSort={{ key: 'no', dir: 'asc' }}
             rowClassName={l => (l.status === 'rejected' ? 'is-rejected' : l.status === 'suggested' ? 'is-suggested' : undefined)}
             empty={t('No power line yet.')} />
+        </section>
+
+        <section className="c2o-dgm-embed" aria-label={t('Diagrams')}>
+          <DiagramFigure studyId={studyId} kind="power" compact />
+          <div className="mt-4"><DiagramFigure studyId={studyId} kind="switch_matrix" compact /></div>
         </section>
       </Panel>
     </div>

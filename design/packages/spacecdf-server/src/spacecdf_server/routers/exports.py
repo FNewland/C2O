@@ -1090,6 +1090,16 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
         "interfaces": interfaces,
     }
 
+    # SEMP / IRD: the same diagram models the Diagrams view draws (services/diagrams)
+    if study_id and doc_type in ("semp", "ird"):
+        try:
+            from ..services import diagrams as dg
+            ddata = await dg.load(study_id)
+            data["diagrams"] = [dg.build(k, ddata) for k in dg.DOCUMENT_SETS[doc_type]]
+        except Exception:  # noqa: BLE001 — the document still renders without figures
+            import logging
+            logging.getLogger(__name__).warning("diagrams for %s export failed", doc_type, exc_info=True)
+
     # Generate the document
     kwargs: dict = {"study_name": study_name}
     if doc_type in ("mrd",):
