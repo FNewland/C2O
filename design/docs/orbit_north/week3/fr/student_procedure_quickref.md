@@ -98,7 +98,7 @@ Le déclencheur est la condition d'entrée de la fiche. Les étapes principales 
 
 | ID · titre | Postes responsables | Déclencheur | Fichier |
 |---|---|---|---|
-| CTG-001 · Délestage sur sous-tension | Directeur de vol · Puissance et thermique | `eps.uv_flag` (0x010E) = 1, déclenchement de la règle ea 1001, ou bus sous 27.0 V | `procedures/contingency/undervoltage_loadshed.md` |
+| CTG-001 · Délestage sur sous-tension | Directeur de vol · Puissance et thermique | `eps.uv_flag` (0x010E) = 1, déclenchement de la règle ea 1001, ou bus sous 28.4 V | `procedures/contingency/undervoltage_loadshed.md` |
 | CTG-002 · Reprise après anomalie SCAO | Directeur de vol · Dynamique du vol | `aocs.att_error` (0x0217) > 5°, une roue au-dessus de 60 °C, ou un senseur stellaire BLIND | `procedures/contingency/aocs_anomaly.md` |
 | CTG-003 · Rétablissement après perte de liaison TTC | Directeur de vol · TT&C | `ttc.link_status` (0x0501) = 0 pendant > 30 s après l'AOS, ou liaison perdue en cours de passage | `procedures/contingency/ttc_link_loss.md` |
 | CTG-007 · Anomalie de roue de réaction | Directeur de vol · Dynamique du vol | Gigue de vitesse > ±500 tr/min sur 10 s, vitesse > 6500 tr/min, ou roulement au-dessus de 60 °C | `procedures/contingency/reaction_wheel_anomaly.md` |

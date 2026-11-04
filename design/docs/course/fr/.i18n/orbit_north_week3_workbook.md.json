@@ -44,8 +44,8 @@
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-2-power-thermal",
-   "en_hash": "eab517ddab1f5b08",
-   "fr_hash": "67dff9ca2e168b2e"
+   "en_hash": "73ad5f78e3ad1e79",
+   "fr_hash": "953fa61bf89cad5c"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-3-flight-dynamics",
@@ -94,8 +94,8 @@
   },
   {
    "id": "worksheet-wb-5-4-c003-ctg-003-ttc-link-loss-recovery-confirm-each-step",
-   "en_hash": "27fae5c455469b33",
-   "fr_hash": "d91e882b2dd09fa4"
+   "en_hash": "c7db01da597b0831",
+   "fr_hash": "c8af243c5fa4fa18"
   },
   {
    "id": "worksheet-wb-5-4-n012-nom-012-shift-handover-template",
@@ -474,8 +474,8 @@
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-019-no-telemetry-at-pass-start",
-   "en_hash": "b0ed00e5dcd772fe",
-   "fr_hash": "8ebd9e2e734c4226"
+   "en_hash": "314fe929fa62fe23",
+   "fr_hash": "cbc590635740f74c"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-020-ground-station-antenna-failure",
@@ -493,5 +493,5 @@
    "fr_hash": "4a357d00633e9454"
   }
  ],
- "en_commit": "b41c0a9"
+ "en_commit": "8e9f66e"
 }

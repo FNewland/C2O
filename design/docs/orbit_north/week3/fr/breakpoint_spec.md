@@ -44,7 +44,8 @@ familiariser avec les procédures.
   lancées.
 - EPS : batterie à 90 % de SoC, générateurs solaires nominaux, toutes les lignes d'alimentation principales sur ON.
 - TCS : réchauffeurs pilotés par thermostat, toutes les zones dans la plage verte.
-- Charge utile : imageur en STANDBY, refroidisseur du FPA à température.
+- Charge utile : imageur en STANDBY, refroidisseur du FPA arrêté (le STANDBY ne le
+  fait pas tourner ; NOM-002 le met en marche environ 10 min avant une fenêtre de prise de vue).
 - OBDH : image applicative en cours d'exécution (`obdh.sw_image` = 1), FDIR activée.
 
 **Géométrie de passage.** La valeur par défaut de `nominal_ops.yaml` laisse le

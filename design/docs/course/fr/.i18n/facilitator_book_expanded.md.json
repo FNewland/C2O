@@ -1424,8 +1424,8 @@
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/4-thermal-control-system/6u-reference-design-eosat-1-power-and-thermal-as-flown",
-   "en_hash": "63429900cd4b3638",
-   "fr_hash": "e9e524ab149ba6e4"
+   "en_hash": "6be26b65a5355f16",
+   "fr_hash": "d40c5be2b95776d2"
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/5-real-mission-examples",
@@ -1459,8 +1459,8 @@
   },
   {
    "id": "chapter-3-1-power-system-and-thermal-control-design/session-summary",
-   "en_hash": "111092d381725850",
-   "fr_hash": "dc36377e91773dd1"
+   "en_hash": "db780623b46dc970",
+   "fr_hash": "08fe87c76f1c8d74"
   },
   {
    "id": "chapter-3-2-attitude-orbit-control-aocs-and-propulsion",
@@ -2109,8 +2109,8 @@
   },
   {
    "id": "chapter-4-1-equipment-selection-bill-of-materials/worked-example-complete-6u-eo-cubesat-equipment-list-eosat-1",
-   "en_hash": "ba2fe1b58076e62c",
-   "fr_hash": "ab430f5b6d4136e1"
+   "en_hash": "ee15c42b1e3d5480",
+   "fr_hash": "82cf6c18b0fc172a"
   },
   {
    "id": "chapter-4-1-equipment-selection-bill-of-materials/cited-references",
@@ -3044,8 +3044,8 @@
   },
   {
    "id": "appendix-b-operations-position-reference/eps-engineer",
-   "en_hash": "62747af0f990c077",
-   "fr_hash": "821eb0a2042a4b10"
+   "en_hash": "fcacd9a11e061c51",
+   "fr_hash": "8593bb2c6cedf285"
   },
   {
    "id": "appendix-b-operations-position-reference/thermal-engineer",
@@ -3353,5 +3353,5 @@
   "chapter-1-4-mission-needs-stakeholder-analysis-trade-studies/part-3-concept-of-operations/1u-worked-example-unisat-1: numbers: missing in FR ['3', '3', '3']  extra in FR []",
   "chapter-2-1-the-system-v-and-requirements-engineering/3-the-smart-framework/common-anti-patterns: numbers: missing in FR ['2']  extra in FR []"
  ],
- "en_commit": "8067e5b"
+ "en_commit": "8e9f66e"
 }

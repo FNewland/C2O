@@ -296,18 +296,19 @@ carbon and surface chlorophyll).
 
 The spacecraft is **12.0 kg dry** (12.40 kg wet, with 400 g of
 propellant). The orbit-average load with all nominal systems on is
-**≈ 28.8 W**; the peak instantaneous load during a payload pass is
+**≈ 22.7 W**; the peak instantaneous load during a payload pass is
 higher still once the imager, FPA cooler, and transmitter come on.
 The two deployable wings carry 0.120 m² of cells each and are
 rated **70.1 W BOL at β = 0**; whole-spacecraft peak generation,
 including the body panels, is **88.6 W**, and orbit-average
 generation at end of life is 45.1 W at the worst-generation beta
-angle of the year (β = −31.2°) — a nominal margin of +16.3 W, or
-1.57×. Over the year β stays between −20.8° and −31.2°; because the
+angle of the year (β = −31.2°) — a nominal margin of +22.4 W, or
+1.98×. Over the year β stays between −20.8° and −31.2°; because the
 array drive follows the Sun only to within cos β, the largest |β|
 gives the least generation, even though its eclipse is the shortest. Storage is a **100 Wh
 Li-ion pack** (GomSpace NanoPower BPX class, 8S-1P; `eps.yaml`
-`voltage_nom` 26.4 V, 29.2 V at 100 % SoC, 21.5 V at 0 %). *(These
+`voltage_nom` 28.8 V, 33.6 V at 100 % SoC, 24.0 V at 0 %, the BPX
+datasheet values). *(These
 are flight-part-derived numbers: 12–18 W of orbit-average payload
 headroom is what a real 6U with deployables delivers. Do not
 expect the +40 W of slack a mis-sized budget would show.)*
@@ -1112,25 +1113,31 @@ the *TCS* tab.
 
 Table 6.2 — EPS telemetry parameters with SIDs and nominal, yellow, and red limit bands.
 
-*(The pack is 8S — nominally 26.4 V, 29.2 V at 100 % SoC and
-21.5 V at 0 %. That is high for a 6U, where 2S buses are common;
+*(The pack is 8S — nominally 28.8 V, 33.6 V at 100 % SoC and
+24.0 V at 0 % (GomSpace BPX datasheet). The bus is not regulated: it
+follows the battery up to a 33.4 V cap. That is high for a 6U, where 2S buses are common;
 it is what `eps.yaml` models, so treat the voltage values below as
 simulator-specific. Bands are as shipped in `mcs/limits.yaml`.)*
 
 | Mnemonic | Hex id | SID | Nominal | Yellow | Red |
 |---|---|---|---|---|---|
 | `eps.bat_soc` | 0x0101 | 1 | 70–95 % | < 25 % | < 15 % |
-| `eps.bat_voltage` | 0x0100 | 1 | 26–29 V | < 23.0 | < 22.0 |
-| `eps.bus_voltage` | 0x0105 | 1 | 27–29 V | < 27.0 | < 26.5 |
+| `eps.bat_voltage` | 0x0100 | 1 | 29.6–33.6 V | < 25.9 | < 24.6 |
+| `eps.bus_voltage` | 0x0105 | 1 | 30.9–33.4 V | < 28.4 | < 27.7 |
 | `eps.sa_a_current` / `sa_b_current` | 0x0103 / 0x0104 | 1 | lit-side nominal | low (lit) | ≈ 0 (lit) |
 | `eps.bus_load_current` | 0x0148 | 1 | sum of the nine lines | rising trend | per-line trip |
 | Per-line current (9 lines, 0–8) | 0x0118–0x011F, 0x014B | 1 | per-line nominal | per-line yellow | per-line red |
 | `eps.bat_temp` | 0x0102 | 1 | 5–25 °C | < 2 or > 40 | < 0 or > 45 |
 | `eps.wing_status` | 0x0144 | 1 | bits 0+1 set (both deployed) | bit 4/5 (in progress) | neither bit set post-LEOP |
 
-The **FDIR undervoltage ladder trips at 24.5 V**, above the
-yellow band on `eps.bat_voltage` — so the spacecraft can start
-shedding before the battery-voltage limit alarms. Watch the bus.
+Every bus-protection level comes from one named table,
+`simulation.yaml` `eps.bus_protection`: under-voltage flag and
+in-model load shed at **28.4 V** (≈ 46 % SoC), FDIR EPS safe mode at
+**27.7 V** (≈ 39 %), AOCS safe at 26.1 V, the fault cascade at
+25.9 V, over-voltage at 34.0 V. The bus yellow and red limits are
+the first two, and all of them sit above the yellow band on
+`eps.bat_voltage` (25.9 V) — so the spacecraft starts shedding
+before the battery-voltage limit alarms. Watch the bus.
 
 **Commands typically issued.**
 
@@ -1189,7 +1196,7 @@ Table 6.3 — Thermal-control telemetry parameters with SIDs and nominal, yellow
 | Mnemonic | Hex id | SID | Nominal | Yellow | Red |
 |---|---|---|---|---|---|
 | `tcs.temp_battery` | 0x0407 | 3 | 5–25 °C | < 2 or > 40 | < 0 or > 45 |
-| `tcs.temp_obc` | 0x0406 | 3 | 10–30 °C | < 5 or > 60 | < 0 or > 70 |
+| `tcs.temp_obc` | 0x0406 | 3 | 10–35 °C | < −10 or > 60 | < −20 or > 70 |
 | `tcs.temp_fpa` | 0x0408 | 3 | −15 (at setpoint) | < −22 or > 14 | < −25.5 or > 17.5 |
 | `tcs.cooler_fpa` | 0x040C | 3 | ON / OFF (commanded) | (n/a) | UNEXPECTED OFF |
 | `tcs.htr_duty_battery` / `htr_duty_obc` | 0x040E / 0x040F | 3 | 10–60 % | > 80 % | 100 % saturated |
@@ -1631,7 +1638,7 @@ The MCS has five regions:
     <rect x="410" y="200" width="115" height="50"/>
   </g>
   <g font-size="8" fill="#14532d" text-anchor="middle">
-    <text x="227" y="172">bus_voltage</text><text x="227" y="184">28.1 V</text>
+    <text x="227" y="172">bus_voltage</text><text x="227" y="184">32.1 V</text>
     <text x="347" y="172">battery_soc</text><text x="347" y="184">84%</text>
     <text x="467" y="172">aocs.mode</text><text x="467" y="184">NOMINAL</text>
     <text x="227" y="227">fpa_temp</text><text x="227" y="239">−15.0 °C</text>
@@ -3305,7 +3312,7 @@ Table 9.2 — NOM-001 Pass Startup challenge-response checklist with verificatio
 | 4 | SPACON | "SPACON, link test." | "FD, SPACON — S17.1 sent, response within 4 s." | Commanding panel: S17 sub-1; first-key; FD GO; uplink | CTG-019 (no TM) | ☐ | __________ |
 | 5 | SPACON | "SPACON, full HK?" | "FD, SPACON — SIDs 1, 2, 3, 4, 5, 6 streaming." | FDIR panel + telemetry mosaic visual scan; a missing SID means the line is powered but the SID was never `HK_ENABLE`d (S3.5) | CTG-019 | ☐ | __________ |
 | 6 | AOCS | "AOCS, mode and rates?" | "FD, AOCS — mode 4 NOMINAL, roll and yaw rates < 0.05 °/s, pitch -0.063 °/s." | AOCS tab `aocs.mode` (0x020F), `aocs.rate_roll/pitch/yaw` (0x0204–0x0206) | CTG-002 | ☐ | __________ |
-| 7 | EPS | "EPS, bus and SoC?" | "FD, EPS — SoC 78 %, bus 28.1 V." | EPS tab | CTG-001 (load shed) | ☐ | __________ |
+| 7 | EPS | "EPS, bus and SoC?" | "FD, EPS — SoC 78 %, bus 31.5 V." | EPS tab | CTG-001 (load shed) | ☐ | __________ |
 | 8 | Thermal | "Thermal, zones?" | "FD, Thermal — all zones green." | TCS tab | CTG-004 | ☐ | __________ |
 | 9 | Payload | "Payload, state vs plan?" | "FD, Payload — mode per plan." | Payload tab | (per pass plan) | ☐ | __________ |
 | 10 | SPACON | "SPACON, log pass start." | "FD, SPACON — entry logged at AOS+0:34." | Shift log | (none) | ☐ | __________ |
@@ -3450,7 +3457,7 @@ Table 9.3 — CTG-003 TTC Link Loss recovery read-and-do checklist with verifica
 | 4 | TT&C | Switch to redundant transponder (FD GO) | `TTC_SWITCH_REDUNDANT` (S8.1) — blind command, wait 45 s | `link_status` = 2 within 45 s; `ttc.mode` (0x0500) shows redundant active | (none) | ☐ | mode: ____ |
 | 5 | TT&C | Retry the primary | `TTC_SWITCH_PRIMARY` (S8.1) — blind command, wait 45 s | `link_status` = 2 within 45 s | EMG-004 | ☐ | status: ____ |
 | 6 | TT&C | Verify link quality | Read `link_status`, `rssi`, `link_margin`, `ttc.mode` | `link_status` = 2, RSSI > -90 dBm, margin > 3.0 dB | (none) | ☐ | margin ____ dB |
-| 7 | SPACON | Rule out a spacecraft-side cause | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (all S3.27) | `eps.bus_voltage` (0x0105) > 27.0 V; `obdh.mode` (0x0300) not safe/emergency | (per finding) | ☐ | bus ____ V |
+| 7 | SPACON | Rule out a spacecraft-side cause | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (all S3.27) | `eps.bus_voltage` (0x0105) > 30.9 V; `obdh.mode` (0x0300) not safe/emergency | (per finding) | ☐ | bus ____ V |
 | 8 | SPACON | Log recovery | Shift-log entry with every blind command and its timestamp | Log complete | (none) | ☐ | log ID: ________ |
 | 9 | TT&C | File anomaly ticket | (ticket form) | Ticket logged with cause hypothesis | (none) | ☐ | ticket #: _______ |
 
@@ -3553,12 +3560,13 @@ $$ SoC_{exit} = SoC_{entry} - \frac{P_{avg} \cdot t_{eclipse}}{E_{battery}} \cdo
 where $P_{avg}$ is the average eclipse-phase load, $t_{eclipse}$ is in
 hours, and $E_{battery}$ is the battery energy. EOSAT-1 flies a GomSpace
 NanoPower BPX 8S-1P, so $E_{battery} = 100$ Wh, and the orbit-average
-load at the *nominal* profile is 28.8 W (`docs/plan_2026-08b/POWER_SIZING.md`
-§6; 25.6 W quiescent, 32.8 W with imaging duty-cycled in). Use ~29 W unless
-the pass plan says otherwise.
+load at the *nominal* profile is 22.7 W (`tools/power_budget.py`, sim manual
+01_eps §3.2: payload STANDBY with the FPA cooler off; 19.7 W quiescent,
+26.4 W with imaging duty-cycled in). Use ~23 W unless the pass plan says
+otherwise.
 
 Worked, for a ~35 min eclipse:
-$SoC_{exit} = 85\% - \frac{29 \cdot 0.58}{100} \cdot 100\% = 85\% - 16.8\% = 68.2\%$.
+$SoC_{exit} = 85\% - \frac{23 \cdot 0.58}{100} \cdot 100\% = 85\% - 13.3\% = 71.7\%$.
 
 Cross-check the answer against `tools/power_budget.py`, which is the same
 model the closure criterion is judged on.
@@ -3680,7 +3688,7 @@ T+24:21  SPACON: "FD, SPACON — event 0x010F PDU overcurrent trip,
                   payload line, severity HIGH. Line opened
                   on board, OC flag latched."
 T+24:22  EPS: "FD, EPS — confirming, payload line current 0 A,
-              bus stable at 28.0 V. Line is OFF."
+              bus stable at 32.1 V. Line is OFF."
 T+24:23  FD: "Copy all. SPACON, recovery procedure?"
 T+24:24  SPACON: "FD, SPACON — recovery is CTG-012 Overcurrent
                   Response, six steps. The on-board trip did the
@@ -3991,7 +3999,8 @@ happened: at cold boot both wings are stowed (`eps.wing_status` 0x0144
 - Critical: LEOP-007 step 2 is conditional. `htr_bat`
   (`EPS_POWER_ON(line_index=5)`, S8.1 **func 19**) goes on only if
   `tcs.temp_battery` is below +5 °C, and `htr_obc` (`line_index=6`)
-  only if `tcs.temp_obc` is below 0 °C; log which lines were energised,
+  only if `tcs.temp_obc` is below −10 °C (the OBC heater ON point); log
+  which lines were energised,
   because COM-002 reads that record. Step 6 confirms that the payload,
   cooler and prop lines are still OFF and that the margin is positive.
 - Pitfalls: not catching an unexpected current spike when a
@@ -4273,7 +4282,7 @@ Table 10.8 — LEOP-001 step 5 detail: dual-keyed OBC application boot with FD s
 |---------|--------|
 | FD prompt | "ALL POSITIONS, FD — going for OBC application boot. SPACON, ready?" |
 | | "FD, SPACON — ready." |
-| | "EPS, ready?" → "FD, EPS — ready, bus 28.4 V, SoC 89%." |
+| | "EPS, ready?" → "FD, EPS — ready, bus 32.5 V, SoC 89%." |
 | | "AOCS, ready?" → "FD, AOCS — ready, no commands pending." |
 | | "TT&C, ready?" → "FD, TT&C — ready, link nominal." |
 | | "GO for OBC application boot." |
@@ -4321,9 +4330,9 @@ Table 10.10 — LEOP-001 step 7 detail: EPS housekeeping request and power sanit
 |---------|--------|
 | FD prompt | "SPACON, FD — go for EPS HK." → "EPS, prepare to read." |
 | Owner | SPACON requests; EPS reads |
-| Owner expected callout | SPACON: "FD, SPACON — HK SID 1 received." → EPS: "FD, EPS — bus 28.2 V, SoC 89%, all switchable lines off, draws nominal." |
+| Owner expected callout | SPACON: "FD, SPACON — HK SID 1 received." → EPS: "FD, EPS — bus 32.5 V, SoC 89%, all switchable lines off, draws nominal." |
 | Action | `HK_REQUEST(sid=1)` — S3.27. |
-| Verification | `eps.bus_voltage` (0x0105) ∈ [26.0, 30.0] V; `eps.bat_soc` (0x0101) > 50 %; `eps.power_gen` (0x0107) reported — it will be small, because the spacecraft is tumbling, not sun-pointed, and the wings are still stowed. |
+| Verification | `eps.bus_voltage` (0x0105) ∈ [29.6, 34.6] V; `eps.bat_soc` (0x0101) > 50 %; `eps.power_gen` (0x0107) reported — it will be small, because the spacecraft is tumbling, not sun-pointed, and the wings are still stowed. |
 | Why this step | The EPS state determines whether we can proceed with LEOP-007 sequential power-on. If SoC is too low (< 50%), we're in a power-survival state — load shed first, defer commissioning, recover SoC over the next several orbits. |
 
 **Step 8 — Log and Report**
@@ -4422,7 +4431,7 @@ has:
 - App SW running (`obdh.sw_image` 0x0311 = 1), beacon mode cleared,
   downlink on the LOW rung, HK SIDs 1, 3, 4, 6 and 11 streaming.
 - Both wings deployed and generating (`eps.wing_status` 0x0144 = 0x03).
-- EPS SoC > 60 % and bus 26–30 V (step 1 verifies both). The
+- EPS SoC > 60 % and bus 29.6–34.6 V (step 1 verifies both). The
   additions are modest: +~6 W for `htr_bat` and +~3 W for `htr_obc` if
   their zones need heat, and +~12 W for the AOCS suite.
 - The clock still unset: time synchronisation is LEOP-006, after this
@@ -4449,8 +4458,8 @@ Table 10.13 — LEOP-007 six-step sequential power-on with owners, preconditions
 
 | # | Owner | Action | Pre-condition | Expected behaviour | Watch for |
 |---|-------|--------|---------------|---------------------|-----------|
-| 1 | EPS | Verify EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | app SW running, wings deployed | `eps.bus_voltage` (0x0105) 26–30 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 0 W | SoC below 60 % — hold, do not start the sequence |
-| 2 | EPS + Thermal | Heater lines **as needed**: `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) only if `tcs.temp_battery` (0x0407) < +5 °C; `EPS_POWER_ON(line_index=6)` only if `tcs.temp_obc` (0x0406) < 0 °C | bus stable, SoC > 60 % | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 within 5 s for each line energised; +~6 W / +~3 W | energising a heater the zone does not need; sustained high current (heater short) |
+| 1 | EPS | Verify EPS baseline: `HK_REQUEST(sid=1)` (S3.27) | app SW running, wings deployed | `eps.bus_voltage` (0x0105) 29.6–34.6 V; `eps.bat_soc` (0x0101) > 60 %; `eps.power_gen` (0x0107) > 0 W | SoC below 60 % — hold, do not start the sequence |
+| 2 | EPS + Thermal | Heater lines **as needed**: `EPS_POWER_ON(line_index=5)` (S8.1, **func 19**) only if `tcs.temp_battery` (0x0407) < +5 °C; `EPS_POWER_ON(line_index=6)` only if `tcs.temp_obc` (0x0406) < −10 °C (the OBC heater ON point) | bus stable, SoC > 60 % | `eps.pl_htr_bat` (0x0115) / `eps.pl_htr_obc` (0x0116) = 1 within 5 s for each line energised; +~6 W / +~3 W | energising a heater the zone does not need; sustained high current (heater short) |
 | 3 | EPS → AOCS | Energise the AOCS suite line and enable its HK: `EPS_POWER_ON(line_index=7)`, then `HK_ENABLE(sid=2)` (**S3.5**) | step 2 done | `eps.pl_aocs_wheels` (0x0117) = 1; SID 2 emitting within one interval; +~12 W | expecting the wheels to come up — the line powers the suite, and `aocs.wheels_enabled` (0x0260) stays 0 until COM-004; SID 2 silent — powering the line does **not** enable the SID |
 | 4 | AOCS | Enable the DETUMBLE legs and the GPS receiver: `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; `MTQ_ENABLE(enable=1)` (S8.1, **func 9**); `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | SID 2 emitting | `aocs.mtq_enabled` (0x025E) = 1 within 10 s; the GPS time to first fix starts | commanding DETUMBLE first — it is refused with `0x0A20` (no magnetometer) or `0x0A21` (no magnetorquers) |
 | 5 | AOCS | Command DETUMBLE: `AOCS_SET_MODE(mode=2)` (S8.1, **func 0**) | both legs enabled | `aocs.mode` (0x020F) = 2 within 10 s; `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) 5–70 µT; rates (0x0204–0x0206) trending down within 60 s | refused with `0x0004` — the line write did not take; a zeroed field — the magnetometer is off and B-dot is blind |
@@ -4905,26 +4914,33 @@ and accounted for correctly.
 **Step 1 — Baseline Bus Voltage Measurement**
 
 - FD GO not required (read-only).
-- EPS: "FD, EPS — bus 28.1 V, nominal 28.0 ± 0.5 V band."
-- Verification: `eps.bus_voltage` ∈ [27.5, 28.5] V.
+- EPS: "FD, EPS — bus 32.1 V, following the battery at SoC 84
+  percent."
+- Verification: `eps.bus_voltage` ∈ [28.4, 34.0] V — the console's
+  yellow band. The bus is not regulated: it follows the battery up
+  to the 33.4 V cap, so a full battery reads near 33.4 V.
 - Why: this is the **reference** every subsequent reading
-  compares to. If bus is at 27.6 V at start of commissioning,
-  the team knows that's our normal, and 27.6 V mid-imaging
+  compares to. If bus is at 31.6 V at start of commissioning,
+  the team knows that's our normal, and 31.6 V mid-imaging
   isn't a concern.
 
 **Step 2 — Battery Voltage & SoC**
 
-- EPS: "FD, EPS — battery 28.4 V, SoC 84 percent."
-- Verification: `eps.bat_voltage` (0x0100) inside the pack's
-  modelled range; `eps.bat_soc` (0x0101) > 70%.
+- EPS: "FD, EPS — battery 32.1 V, SoC 84 percent."
+- Verification: `eps.bat_voltage` (0x0100) in [24.0, 33.6] V, the
+  pack's modelled range; `eps.bat_soc` (0x0101) > 70%.
 - Why: the pack is a GomSpace NanoPower BPX 8S-1P — **100 Wh,
-  3 Ah, 28.8 V nominal**, one 0.33 U box of 18650 cells. In the
-  EOSAT-1 its terminal voltage runs from `soc_0_v` = 21.5 V
-  empty to `soc_100_v` = 29.2 V full, nominal 26.4 V. It is an
-  eight-cell series string, not a 4S pack, and it is what makes
-  the ~28 V regulated bus possible. Do not confuse `eps.bat_voltage`
-  (0x0100, the pack) with `eps.bus_voltage` (0x0105, the regulated
-  bus) — they are different parameters with different ranges.
+  3.5 Ah, 28.8 V nominal**, one 0.33 U box of 18650 cells. In the
+  EOSAT-1 its terminal voltage runs from `soc_0_v` = 24.0 V
+  empty to `soc_100_v` = 33.6 V full, 28.8 V nominal — the
+  datasheet values, linear in between, so
+  $V \approx 24.0 + 9.6 \times SoC$: at 84 % that is
+  $24.0 + 9.6 \times 0.84 = 32.1$ V. It is an eight-cell series
+  string, not a 4S pack, and it is what makes the ~29–33 V
+  unregulated battery bus. Do not confuse `eps.bat_voltage`
+  (0x0100, the pack) with `eps.bus_voltage` (0x0105, the bus,
+  capped at 33.4 V) — they are different parameters with
+  different ranges.
 
 **Step 3 — Solar Array Sunlit Performance**
 
@@ -4950,21 +4966,22 @@ eclipse)
 
 - EPS: "FD, EPS — eclipse entry T-zero. Power gen dropped to
   0.1 W in 18 s, nominal."
-- Mid-eclipse: "FD, EPS — at +15 min, bus 27.8 V, SoC 78 percent,
-  drop rate 0.5 percent per minute."
-- Eclipse exit: "FD, EPS — at exit, bus 27.6 V, SoC 69 percent,
+- Mid-eclipse: "FD, EPS — at +15 min, bus 31.6 V, SoC 79 percent,
+  drop rate 0.4 percent per minute."
+- Eclipse exit: "FD, EPS — at exit, bus 31.0 V, SoC 73 percent,
   reservoir margin healthy."
 - Verification: `eps.power_gen` ~0 W within 30 s of eclipse entry;
-  SoC drop < 1.5%/min; `eps.bus_voltage` > 27.0 V mid-eclipse.
+  SoC drop < 1.5%/min; `eps.bus_voltage` > 30.9 V mid-eclipse.
 - Why: this is the *survival* test. The orbit is 5669 s (94.5 min)
   and the eclipse fraction over the year runs 0.351–0.372, so
   an eclipse is **33.2 to 35.2 minutes**. Against a 100 Wh battery
-  and a ~28.8 W nominal orbit-average load, a 34-minute eclipse costs
-  about 16.3 % of SoC, i.e. ~0.5 %/min. The 1.5 %/min verification
+  and a ~22.7 W nominal orbit-average load, a 34-minute eclipse costs
+  $22.7 \times 0.567 = 12.9$ Wh, about 12.9 % of SoC, i.e. ~0.4 %/min. The 1.5 %/min verification
   is a ceiling, not an expectation: a reading near it means a load
   you did not command. The protection ladder below is monotonic —
-  in-model shed at 25.0 V (~45 % SoC), FDIR `safe_mode_eps` at
-  **24.5 V** (~39 %), then the SoC stages at 30 / 20 / 10 %.
+  in-model shed at **28.4 V** (~46 % SoC), FDIR `safe_mode_eps` at
+  **27.7 V** (~39 %), both from `simulation.yaml`
+  `eps.bus_protection`, then the SoC stages at 30 / 20 / 10 %.
 
 **Step 5 — Eclipse Exit Charge Recovery**
 
@@ -4984,9 +5001,9 @@ eclipse)
 
 - EPS computes: average gen over the orbit, average consumption,
   end-of-eclipse SoC, margin.
-- "FD, EPS — orbit-average generation 45.1 watts, load 28.8 watts,
-  margin plus 16.3 watts, ratio 1.57. End-of-eclipse SoC predicted
-  69 percent under nominal load. Healthy."
+- "FD, EPS — orbit-average generation 45.1 watts, load 22.7 watts,
+  margin plus 22.4 watts, ratio 1.98. End-of-eclipse SoC predicted
+  73 percent under nominal load. Healthy."
 - Verification: positive margin; end-of-eclipse SoC > 50%.
 - Why: even one positive orbit isn't proof — we want to predict
   steady-state. Over the year β runs from −20.8° to −31.2°. The
@@ -4997,15 +5014,18 @@ eclipse)
 
   | Profile | Gen (W) | Load (W) | Margin (W) | Ratio |
   |---|---|---|---|---|
-  | quiescent | 45.1 | 25.6 | +19.5 | 1.76 |
-  | **nominal** | **45.1** | **28.8** | **+16.3** | **1.57** |
-  | nominal_imaging | 45.1 | 32.8 | +12.3 | 1.38 |
-  | manoeuvre | 45.1 | 32.1 | +12.9 | 1.40 |
-  | worst (abuse case) | 45.1 | 46.8 | −1.7 | 0.96 |
+  | quiescent | 45.1 | 19.7 | +25.4 | 2.29 |
+  | **nominal** (payload STANDBY, cooler off) | **45.1** | **22.7** | **+22.4** | **1.98** |
+  | nominal_imaging | 45.1 | 26.4 | +18.7 | 1.71 |
+  | manoeuvre | 45.1 | 25.8 | +19.4 | 1.75 |
+  | worst (abuse case) | 45.1 | 46.6 | −1.4 | 0.97 |
+
+  (`tools/power_budget.py`, re-run 2026-11-03 with the thermal network
+  and the FPA cooler off in STANDBY, sim manual 01_eps §3.2.)
 
   At β = −20.8°, the deepest discharge (the longest eclipse),
-  generation is 47.0 W and the nominal case closes at 1.63×. At
-  beginning of life the two figures are 49.1 W and 51.2 W. The `worst` profile is
+  generation is 47.0 W and the nominal case closes at 2.05×. At
+  beginning of life the two figures are about 49 W and 51 W. The `worst` profile is
   deliberately negative — it holds FINE for a whole orbit, runs the
   cooler continuously, images through eclipse and dumps at HIGH on
   every pass. **A 6U that could sustain that would need an array no
@@ -5016,26 +5036,30 @@ eclipse)
 
 **Step 7 — Bus Voltage Regulation Under Load Transient**
 
-- EPS coordinates with Payload: "FD, EPS, Payload — going for
-  load-transient test."
-- Payload: "FD, Payload — first-key `PAYLOAD_SET_MODE(mode=1)`." (FD
+- EPS: "FD, EPS — `eps.pl_htr_bat` (0x0115) reads 0 at entry.
+  Going for load-transient test on the battery-heater line."
+- EPS: "FD, EPS — first-key `EPS_POWER_ON(line_index=5)`." (FD
   second-keys.)
-- (1 s later): "FD, Payload — payload at STANDBY, total load up
-  2.4 watts, about 0.09 amps at 28 volts. Bus held 28.0 V,
+- (1 s later): "FD, EPS — heater line on, total load up about
+  8 watts, about 0.25 amps at 32 volts. Bus held 32.1 V,
   transient dip 0.15 V for 80 ms."
-- (5 s later): "FD, Payload — first-key `PAYLOAD_SET_MODE(mode=0)`."
-  Payload returns to OFF.
-- Verification: bus stays in [27.0, 29.0] V during the
-  transient.
+- (5 s later): "FD, EPS — first-key `EPS_POWER_OFF(line_index=5)`,
+  restoring the entry state." The line goes back OFF — only because
+  it was OFF at entry.
+- Verification: bus stays in [30.2, 34.0] V during the transient
+  and returns to [30.9, 34.0] V; `eps.pl_htr_bat` back to its entry
+  value.
 - Why: this is the only commissioning step that *intentionally*
-  perturbs the bus. The imager itself is a small load — the
-  reference part (Simera Sense TriScape100) draws **2.4 W idle and
-  5.5 W imaging**, and the fact that imaging costs *more* than
-  idling is a physical constraint that the older documentation got
-  backwards. The genuinely large step comes one card later, when
-  the 15 W cooler starts. If the dip exceeds 1 V here, the
-  regulator is at its limit and future payload-on commands should
-  be sequenced more carefully.
+  perturbs the bus. It does **not** use the payload: the payload
+  line stays OFF until COM-009, and a mode command on a dark line is
+  refused, so it would be no transient at all. The imager itself is
+  a small load anyway — the reference part (Simera Sense
+  TriScape100, cited for power, mass and size only) draws **2.4 W
+  idle and 5.5 W imaging**. The genuinely large step comes later,
+  when the 15 W cooler starts in COM-010. The bus is not regulated —
+  it is the battery, capped at 33.4 V — so a dip of more than 1 V
+  here points at a weak battery or a high-resistance path, and
+  future load steps should be sequenced more carefully.
 
 #### Decision points
 
@@ -5071,7 +5095,7 @@ eclipse)
 
 - Thermal: "FD, Thermal — `HK_REQUEST(sid=3)`. temp_obc 22 C,
   temp_battery 14 C, FPA at plus 11 C, all nominal."
-- Verification: `tcs.temp_obc` (0x0406) ∈ [−5, +45];
+- Verification: `tcs.temp_obc` (0x0406) ∈ [−10, +50] °C;
   `tcs.temp_battery` reported and in band; `payload.fpa_temp`
   (0x0601) reported.
 - Why: baseline thermal state before exercising heaters. Note the
@@ -5083,8 +5107,13 @@ eclipse)
 - There are **two** heater circuits on the PDM, not four:
   `htr_bat` (line 5, 8 W) and `htr_obc` (line 6, 4 W).
 - For each: Thermal: "FD, Thermal — go for exercise [heater]."
-  FD GO. Thermal enables the heater, watches duty cycle and zone
-  trend, then restores automatic control.
+  FD GO. Thermal energises the line, enables the heater, watches
+  duty cycle and zone trend, then restores automatic control with
+  `HEATER_AUTO_MODE`. The line **stays ON** afterwards: since
+  2026-11-02 both heater lines are left powered under thermostat
+  control for the rest of the mission (battery ON +5 / OFF +10 °C,
+  OBC ON −10 / OFF −5 °C), so every later heater command finds its
+  line already powered.
 - After the exercise: "FD, Thermal — [heater] duty cycle averaged
   35 percent, zone rose 3 C, response nominal."
 - Verification: duty cycle stays < 80%; zone reaches setpoint
@@ -5563,7 +5592,8 @@ reads one as the other will consistently mis-brief the FD.
 - SPACON reads back the master enable and the active rule count,
   then walks the critical thresholds and confirms they match the
   configured ladder — under-voltage `safe_mode_eps` at
-  **24.5 V**, battery SoC actions at 20 % (payload power-off) and
+  **27.7 V** (`simulation.yaml` `eps.bus_protection.eps_safe_v`; the
+  UV flag and in-model shed are at 28.4 V), battery SoC actions at 20 % (payload power-off) and
   15 % (EPS safe mode), sustained attitude error > 5° for 420 s,
   OBDH temperature > 65 °C, reboot count > 4.
 - (15 s wait, watching the FDIR panel) "FD, SPACON — nothing fired
@@ -5625,8 +5655,8 @@ reads one as the other will consistently mis-brief the FD.
   the payload line." FD second-keys (high-crit).
 - (2 s) "FD, Payload — accepted. `eps.pl_payload` (0x0113) reads 1."
 - Payload: "first-key `PAYLOAD_SET_MODE(mode=1)`, STANDBY."
-- (5 s) "FD, Payload — total load up 2.4 watts, about 0.09 amps at
-  28 volts. Overcurrent trip on this line is 2.5 amps, so we are
+- (5 s) "FD, Payload — total load up 2.4 watts, about 0.08 amps at
+  32 volts. Overcurrent trip on this line is 2.5 amps, so we are
   nowhere near it."
 - **The order matters and the card enforces it.** A
   `PAYLOAD_SET_MODE` without the EPS line energised reverts on the
@@ -5652,7 +5682,7 @@ reads one as the other will consistently mis-brief the FD.
 
 #### Decision points
 
-- **Line current well above the 2.4 W / 0.09 A expectation but
+- **Line current well above the 2.4 W / 0.08 A expectation but
   below the 2.5 A trip.** Two reads: cold-start inrush settles in
   30 s (wait); or genuinely a stuck-high draw (CTG-012 Overcurrent
   Response). Wait 30 s first.
@@ -5701,7 +5731,7 @@ settles it in about ten minutes.
   paths now energise the line, so if 0x040C and 0x0114 ever
   disagree again, that is the defect returning.
 - (30 s) "FD, Thermal — `eps.power_cons` (0x0106) up 15 watts
-  against baseline, bus holding 27.9 V."
+  against baseline, bus holding 32.0 V."
 
 **Step 3 — Monitor the ramp (first 5 minutes)**
 
@@ -6140,9 +6170,12 @@ ladder — passive link test, data-rate reduction to LOW, FD-authorised
 tx-power increase — escalating to **EMG-004 Loss of Communication**
 only if none of the rungs restores the link. The spacecraft's own
 24-hour command-loss timer is the ultimate backstop: if no valid
-telecommand arrives for 24 h, it switches to the other transponder
-(FDIR rule TTC-01; `cmd_loss_switch_timeout_s` in `ttc.yaml`). The
-simulator does not yet model the switch.
+telecommand arrives for 24 h, it switches to the other transponder,
+and again every 24 h until a telecommand is accepted (FDIR rule
+TTC-01, S19 ea 4003; `cmd_loss_switch_timeout_s` in `ttc.yaml`). The
+switch is blind — the spare is cold — and with both transponders
+failed the link stays cut: the timer keeps toggling, harmlessly, and
+finds a unit that recovers.
 
 **Power and EPS anomalies.** Bus over-current, bus under-voltage, or an
 uncommanded load. The preservation move is to protect the battery:
@@ -6387,47 +6420,52 @@ with $P_{avg}$ in W, $t_{eclipse}$ in hours, and $E_{battery}$ in Whr.
 **The three numbers you put into it.**
 
 - $E_{battery} = 100$ **Whr**. The pack is a GomSpace NanoPower BPX
-  8S-1P: 100 Wh, 3 Ah, 28.8 V nominal, ~500 g. One box, one real
+  8S-1P: 100 Wh, 3.5 Ah, 28.8 V nominal, ~500 g. One box, one real
   flight part.
 - $t_{eclipse}$. The orbit is 5669 s and the eclipse fraction swept
   over the year of the LTAN 10:00 orbit runs **0.351 to
   0.372**, so the eclipse is **33.2 to 35.2 min**. Take 34 min =
   0.567 h as the working figure.
-- $P_{avg} = 28.8$ **W**, the orbit-average load in the nominal
-  profile. This is a **6U CubeSat**: 6 W of OBC and PDU, 1.5 W of
-  always-on receive chain, 5 W of transmitter at the LOW tier
-  (11 W at HIGH), 9 W of AOCS in NOMINAL, 2.4 W of payload in
-  standby, 15 W of cooler when it runs. Nothing on this spacecraft
-  draws 70 W.
+- $P_{avg} = 22.7$ **W**, the orbit-average load in the nominal
+  profile (`tools/power_budget.py`, sim manual 01_eps §3.2). This is
+  a **6U CubeSat**: 6 W of OBC and PDU, 1.5 W of always-on receive
+  chain, 5 W of transmitter at the LOW tier (11 W at HIGH) while it
+  transmits, 9 W of AOCS in NOMINAL, 2.4 W of payload in standby,
+  and 15 W of cooler only while preparing for and during imaging —
+  the cooler is off in STANDBY. Nothing on this spacecraft draws
+  70 W.
 
-**Worked example.** Eclipse entry SoC = 85 %; $P_{avg} = 28.8$ W;
+**Worked example.** Eclipse entry SoC = 85 %; $P_{avg} = 22.7$ W;
 $t_{eclipse} = 34$ min $= 0.567$ h; $E_{battery} = 100$ Whr:
 
-$$ SoC_{exit} = 85\% - \frac{28.8 \times 0.567}{100}\times 100\%
-  = 85\% - 16.3\% = 68.7\% $$
+$$ SoC_{exit} = 85\% - \frac{22.7 \times 0.567}{100}\times 100\%
+  = 85\% - 12.9\% = 72.1\% $$
 
-That is **16.3 Wh out of a 100 Wh pack**, a discharge rate of
-about **0.48 %/min**. Sanity-check it the other way: 28.8 W for
-0.567 h is 16.3 Wh, and 16.3 / 100 = 16.3 %. If your answer is not a
-mid-teens percentage for a nominal orbit, you have used the wrong
-load or the wrong battery.
+That is **12.9 Wh out of a 100 Wh pack**, a discharge rate of
+about **0.38 %/min** (12.9 / 34). Sanity-check it the other way:
+22.7 W for 0.567 h is 12.9 Wh, and 12.9 / 100 = 12.9 %. If your
+answer is not a low-teens percentage for a nominal orbit, you have
+used the wrong load or the wrong battery. On the battery curve
+($V \approx 24.0 + 9.6 \times SoC$) that is 32.2 V at entry and
+$24.0 + 9.6 \times 0.721 = 30.9$ V at exit.
 
 **The same arithmetic at the deep end.** Take the `worst` profile
 — FINE held all orbit, cooler running continuously, imaging through
-eclipse, HIGH-tier dumps every pass — at 46.8 W over a 35.2 min
-(0.587 h) eclipse: $46.8 \times 0.587 = 27.5$ Wh, so SoC falls
-27.5 points, 85 % → 57.5 %. Still survivable for one orbit, but
+eclipse, HIGH-tier dumps every pass — at 46.6 W over a 35.2 min
+(0.587 h) eclipse: $46.6 \times 0.587 = 27.4$ Wh, so SoC falls
+27.4 points, 85 % → 57.6 %. Still survivable for one orbit, but
 that profile is generation-negative over the orbit as a whole
-(45.1 W generated against 46.8 W consumed), so it does not recover
+(45.1 W generated against 46.6 W consumed), so it does not recover
 and each orbit starts lower than the last. That is the shape of a
 power budget that does not close.
 
-**Typical range.** Eclipse-exit SoC should land in **65–80 %**
+**Typical range.** Eclipse-exit SoC should land in **70–85 %**
 during nominal operations. Below 55 % means the eclipse load
 profile was wrong or there is a parasitic load — file a ticket.
 The protection ladder below that is monotonic and worth memorising
-in order: in-model load shed at **25.0 V** bus (~45 % SoC), FDIR
-`safe_mode_eps` at **24.5 V** (~39 %), then the SoC-triggered shed
+in order: in-model load shed at **28.4 V** bus (~46 % SoC), FDIR
+`safe_mode_eps` at **27.7 V** (~39 %) — both from the one table
+`simulation.yaml` `eps.bus_protection` — then the SoC-triggered shed
 stages at **30 / 20 / 10 %**, with a payload power-off at 20 % and
 EPS safe mode at 15 %. The operator's job is to pre-empt the first
 of those, not to watch them fire.
@@ -6525,6 +6563,10 @@ is missing for > 15 s, check:
    `STORE_STATUS` (S15.13) to see what is there first. Service 15
    is telemetry storage; Service 13 is the large-data transfer used
    for *image products* and is a different mechanism entirely.
+   The dump comes down on virtual channel 1 and never reaches the
+   live displays: played-back packets do not raise or clear alarms
+   or change live values, so analyse them in the delayed-TM viewer
+   or on the MCS `/dumps` page.
    Book the playback on a pass that clears 10° so it runs at the
    HIGH tier: a whole orbit of stored housekeeping is ~1.1 MB,
    which is 70 s at 128 kbps but 9 minutes — more than a pass — at
@@ -6996,8 +7038,8 @@ references for at-console reading.
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: read battery V, SoC, bus V, line currents | `HK_REQUEST(sid=1)` (S3.27) | □ | SoC (0x0101) > 60 %, bus (0x0105) 27.0–29.5 V |
-| 2 | Thermal: read all zone temperatures | `HK_REQUEST(sid=3)` (S3.27) | □ | `tcs.temp_obc` (0x0406) −5…+45 °C; `tcs.temp_battery` (0x0407) 0…+35 °C |
+| 1 | EPS: read battery V, SoC, bus V, line currents | `HK_REQUEST(sid=1)` (S3.27) | □ | SoC (0x0101) > 60 %, bus (0x0105) 29.6–34.6 V |
+| 2 | Thermal: read all zone temperatures | `HK_REQUEST(sid=3)` (S3.27) | □ | `tcs.temp_obc` (0x0406) −10…+50 °C; `tcs.temp_battery` (0x0407) 0…+35 °C |
 | 3 | TT&C: confirm link parameters | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2; RSSI > −105 dBm; margin > 3.0 dB |
 | 4 | OBDH: confirm OBC running, no FDIR events | `HK_REQUEST(sid=4)` (S3.27) | □ | `obdh.mode` (0x0300) = 0 or 1; `obdh.cpu_load` (0x0302) < 70 % |
 | 5 | EPS: confirm the unpowered subsystems are dark | `eps.pl_aocs_wheels` (0x0117), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_prop` (0x014A) = 0 (SID 1) | □ | Do not request SIDs 2 or 5: they are not enabled yet and their units are unpowered, so the line flags are the health check. There is no AOCS mode and no wheel telemetry to read until LEOP-007 and COM-004 |
@@ -7142,13 +7184,13 @@ references for at-console reading.
 - Refused with `0x0A20` (no magnetometer) → re-issue `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; there is no redundant magnetometer
 - Refused with `0x0A21` (no magnetorquers) → re-issue `MTQ_ENABLE(enable=1)`
 - Rates increase in DETUMBLE → `AOCS_SET_MODE(mode=0)` and investigate the magnetometer and magnetorquer polarity
-- SoC below 40 % → stop, switch off the last line powered, wait for SoC > 60 %, resume; bus below 26 V → CTG-001
+- SoC below 40 % → stop, switch off the last line powered, wait for SoC > 60 %, resume; bus below 29.6 V → CTG-001
 - Per-line overcurrent within 30 s of enable → CTG-012 Overcurrent Response; the line stays off
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: verify the EPS baseline | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus 26–30 V, SoC > 60 %, `eps.power_gen` > 0 W |
-| 2 | EPS: energise the heater lines only if their zones need heat | `EPS_POWER_ON(line_index=5)` / `(line_index=6)` (S8 func_id 19) | □ | `htr_bat` only if `tcs.temp_battery` < +5 °C; `htr_obc` only if `tcs.temp_obc` < 0 °C. Log which lines were energised: COM-002 reads that record |
+| 1 | EPS: verify the EPS baseline | `HK_REQUEST(sid=1)` (S3.27) | □ | Bus 29.6–34.6 V, SoC > 60 %, `eps.power_gen` > 0 W |
+| 2 | EPS: energise the heater lines only if their zones need heat | `EPS_POWER_ON(line_index=5)` / `(line_index=6)` (S8 func_id 19) | □ | `htr_bat` only if `tcs.temp_battery` < +5 °C; `htr_obc` only if `tcs.temp_obc` < −10 °C (its heater ON point). Log which lines were energised: COM-002 reads that record |
 | 3 | EPS: energise the AOCS suite line and enable its housekeeping | `EPS_POWER_ON(line_index=7)` (S8 func_id 19); `HK_ENABLE(sid=2)` (S3.5) | □ | `eps.pl_aocs_wheels` (0x0117) = 1. The line supplies the whole AOCS suite; it does **not** enable the wheels: `aocs.wheels_enabled` (0x0260) stays 0 until COM-004 |
 | 4 | AOCS: enable the DETUMBLE sensor and actuators, and the GPS receiver | `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; `MTQ_ENABLE(enable=1)` (S8 func_id 9); `S2_AOCS_GPS_RECEIVER(device_id=527, state=1)` | □ | `aocs.mtq_enabled` (0x025E) = 1. The GPS time to first fix starts now: LEOP-006 and LEOP-003 need it |
 | 5 | AOCS: command DETUMBLE | `AOCS_SET_MODE(mode=2)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 2 within 10 s; `aocs.mag_enabled` (0x025C) = 1; `aocs.mag_field_total` (0x0277) 5–70 µT; rates (0x0204–0x0206) trending down within 60 s |
@@ -7179,18 +7221,18 @@ references for at-console reading.
 
 **Possible negative outcomes / deviations:**
 
-- Bus voltage below 27.0 V → check SoC; below 26.0 V → CTG-001 Under-Voltage Load Shed and, with FD approval, `OBC_SET_MODE(mode=1)` (1 is SAFE)
+- Bus voltage below 30.9 V → check SoC; below 29.6 V → CTG-001 Under-Voltage Load Shed and, with FD approval, `OBC_SET_MODE(mode=1)` (1 is SAFE)
 - Generation below 35 W in sunlight with good sun-pointing → read the per-wing currents (0x0146, 0x0147); log the anomaly and assess a single-wing budget
 - SoC below 50 % at the end of eclipse → reduce load and defer high-power commissioning
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: baseline bus, battery and SoC | `HK_REQUEST(sid=1)` (S3.27); `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | □ | Bus (0x0105) 27.5–28.5 V; `eps.bat_voltage` (0x0100) **26.9–29.2 V** at SoC > 70 % — the pack is 8S-1P, 100 Wh, 26.4 V nominal, with an OCV running 21.5 V at 0 % to 29.2 V at 100 %. Any 14.4–16.8 V band is a 4S figure and does not belong to this spacecraft |
+| 1 | EPS: baseline bus, battery and SoC | `HK_REQUEST(sid=1)` (S3.27); `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | □ | Bus (0x0105) 28.4–34.0 V — it follows the battery up to the 33.4 V cap; `eps.bat_voltage` (0x0100) **30.7–33.6 V** at SoC > 70 % — the pack is 8S-1P, 100 Wh, 28.8 V nominal, with an OCV running 24.0 V at 0 % to 33.6 V at 100 %. Any 14.4–16.8 V band is a 4S figure and does not belong to this spacecraft |
 | 2 | EPS: measure sunlit array performance | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.power_gen` (0x0107) 40–65 W sun-pointed with wings deployed |
-| 3 | EPS: monitor a full eclipse discharge | `HK_REQUEST(sid=1)` at entry / mid-eclipse | □ | Generation ≈ 0 W; SoC falling < 1.5 %/min; bus > 27.0 V |
+| 3 | EPS: monitor a full eclipse discharge | `HK_REQUEST(sid=1)` at entry / mid-eclipse | □ | Generation ≈ 0 W; SoC falling < 1.5 %/min; bus > 30.9 V |
 | 4 | EPS: monitor charge recovery after eclipse exit | `HK_REQUEST(sid=1)` at exit + 5 min | □ | `eps.power_gen` (0x0107) > 35 W within 60 s of exit; `eps.bat_soc` (0x0101) rising |
 | 5 | EPS: verify the orbit-average energy balance | `GET_PARAM(param_id=0x0108)` (S20.3) | □ | Orbit-average generation > orbit-average consumption; end-of-eclipse SoC > 50 % |
-| 6 | EPS: bus regulation under a commanded load transient — the battery-heater line, not the payload | `EPS_POWER_ON(line_index=5)` (S8 func_id 19); then `EPS_POWER_OFF(line_index=5)` (func_id 20) only if the line was off at entry | □ | Record `eps.pl_htr_bat` (0x0115) first. Bus stays 26.5–29.5 V, returns to 27.0–29.0 V; line back to its entry state. The payload line is OFF until COM-009, so a payload mode command is no transient |
+| 6 | EPS: bus regulation under a commanded load transient — the battery-heater line, not the payload | `EPS_POWER_ON(line_index=5)` (S8 func_id 19); then `EPS_POWER_OFF(line_index=5)` (func_id 20) only if the line was off at entry | □ | Record `eps.pl_htr_bat` (0x0115) first. Bus stays 30.2–34.0 V, returns to 30.9–34.0 V; line back to its entry state. The payload line is OFF until COM-009, so a payload mode command is no transient |
 | 7 | SPACON: record baselines for nominal-ops reference | (mission log) | □ | "COM-001 complete" |
 
 </div>
@@ -7201,7 +7243,7 @@ references for at-console reading.
 
 <div class="procedure-card-header" markdown="1">[SE] COM-002 — TCS Verification</div>
 
-**Entry point:** After COM-001 complete and GO; COARSE_SUN hold, phase 5. Record `eps.pl_htr_bat` (0x0115) and `eps.pl_htr_obc` (0x0116) first — LEOP-007 step 2 may have energised one — as the entry state to restore.
+**Entry point:** After COM-001 complete and GO; COARSE_SUN hold, phase 5. Record `eps.pl_htr_bat` (0x0115) and `eps.pl_htr_obc` (0x0116) first — LEOP-007 step 2 may have energised one. Whatever the entry state, this card leaves both heater lines ON with the circuits in AUTO (thermostat): the nominal configuration from now on.
 
 **Goal:** Verify every thermal zone against its predicted range over a full orbit, exercise each heater circuit with its line powered, read the autonomous battery thermostat thresholds and check the FPA cooler interface before payload commissioning.
 
@@ -7213,9 +7255,9 @@ references for at-console reading.
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Thermal: read all zones baseline, then through sunlit phase and eclipse | `HK_REQUEST(sid=3)` (S3.27) | □ | OBC (0x0406) −5…+45 °C; battery (0x0407) +5…+35 °C; FPA (0x0408) +8…+14 °C uncooled |
-| 2 | Thermal: exercise the battery heater with its line powered | `EPS_POWER_ON(line_index=5)` (S8 func_id 19); `HEATER_BATTERY(on=1)` / `(on=0)` (S8 func_id 40); `EPS_POWER_OFF(line_index=5)` only if OFF at entry | □ | `eps.pl_htr_bat` (0x0115) = 1; battery temp rising or stable within 180 s; line restored |
-| 3 | Thermal: exercise the OBC heater with its line powered | `EPS_POWER_ON(line_index=6)`; `HEATER_OBC(on=1)` / `(on=0)` (S8 func_id 41); `EPS_POWER_OFF(line_index=6)` only if OFF at entry | □ | `eps.pl_htr_obc` (0x0116) = 1; `tcs.temp_obc` stable or rising within 120 s; line restored. Func 42 is the thruster catbed heater and stays untouched outside manoeuvre preparation |
+| 1 | Thermal: read all zones baseline, then through sunlit phase and eclipse | `HK_REQUEST(sid=3)` (S3.27) | □ | OBC (0x0406) −10…+50 °C; battery (0x0407) +5…+35 °C; FPA (0x0408) +8…+14 °C uncooled |
+| 2 | Thermal: exercise the battery heater with its line powered | `EPS_POWER_ON(line_index=5)` (S8 func_id 19); `HEATER_BATTERY(on=1)` / `(on=0)` (S8 func_id 40); `HEATER_AUTO_MODE(circuit=0)` (func_id 45) | □ | `eps.pl_htr_bat` (0x0115) = 1; battery temp rising or stable within 180 s; line stays ON, circuit on its thermostat (ON +5 / OFF +10 °C) |
+| 3 | Thermal: exercise the OBC heater with its line powered | `EPS_POWER_ON(line_index=6)`; `HEATER_OBC(on=1)` / `(on=0)` (S8 func_id 41); `HEATER_AUTO_MODE(circuit=1)` (func_id 45) | □ | `eps.pl_htr_obc` (0x0116) = 1; `tcs.temp_obc` stable or rising within 120 s; line stays ON, circuit on its thermostat (ON −10 / OFF −5 °C). Func 42 is the thruster catbed heater and stays untouched outside manoeuvre preparation |
 | 4 | Thermal: read the autonomous battery thermostat thresholds | `GET_PARAM(param_id=0x0410)`, `GET_PARAM(param_id=0x0411)` (S20.3) | □ | ON at +5 °C, OFF at +10 °C; between them the previous state holds |
 | 5 | Thermal: FPA cooler interface check (pre-activation) | `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` (S20.3) | □ | `tcs.cooler_fpa` = 0; `eps.pl_fpa_cooler` = 0; record the uncooled FPA baseline for COM-010 |
 | 6 | SPACON: compile the thermal baseline report | (mission log) | □ | Record the zone profiles and heater responses |
@@ -7436,7 +7478,7 @@ references for at-console reading.
 | 2 | Payload: confirm the payload is OFF | `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.mode` (0x0600) = 0 |
 | 3 | EPS: energise the payload line | `EPS_POWER_ON(line_index=3)` (S8 func_id 19) | □ | `eps.pl_payload` (0x0113) = 1 |
 | 4 | Payload: command STANDBY | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | `payload.mode` = 1 within 60 s, and STILL 1 after a further 60 s |
-| 5 | EPS: verify the load increase | `GET_PARAM(param_id=0x0106)` (S20.3) — `eps.power_cons` | □ | +2–3 W; bus (0x0105) > 27.0 V |
+| 5 | EPS: verify the load increase | `GET_PARAM(param_id=0x0106)` (S20.3) — `eps.power_cons` | □ | +2–3 W; bus (0x0105) > 30.9 V |
 | 6 | Payload: verify imager health and storage | `payload.imager_status` (0x0611); `payload.store_used` (0x0604); `payload.product_count` (0x0648) | □ | No fault bits; store ~20 % used (ships with archive fixtures); product count 0 |
 | 7 | SPACON: hold ≥ 30 s for transient settle; log; GO COM-010 | (mission log) | □ | "COM-009 complete" |
 
@@ -7475,7 +7517,7 @@ would push far colder, and this card adopts the flight envelope.)*
 |:----:|:-------|:----------|:--------|:------|
 | 1 | Thermal: record the pre-activation state | `HK_REQUEST(sid=3)`, `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.fpa_temp` (0x0601) +8…+14 °C; `payload.mode` = 1 |
 | 2 | Thermal: enable the FPA cooler | `FPA_COOLER(on=1)` (S8 func_id 43) | □ | `tcs.cooler_fpa` (0x040C) = 1 AND `eps.pl_fpa_cooler` (0x0114) = 1 — func 43 also guarantees the line |
-| 3 | EPS: verify the cooler power draw | `GET_PARAM(param_id=0x0106)` (S20.3) | □ | +14–16 W; bus > 27.0 V |
+| 3 | EPS: verify the cooler power draw | `GET_PARAM(param_id=0x0106)` (S20.3) | □ | +14–16 W; bus > 30.9 V |
 | 4 | Thermal: monitor the cool-down | `GET_PARAM(param_id=0x0601)` (S20.3) at T+2 / T+5 min | □ | < +4 °C at T+2 (≈ 4 °C/min initially); < −8 °C at T+5 |
 | 5 | Thermal: confirm the setpoint is reached | `GET_PARAM(param_id=0x0601)` at T+10 / T+15 min | □ | −16.0…−14.0 °C; `payload.fpa_setpoint` (0x0631) = −15.0 |
 | 6 | Thermal: confirm readiness and margin | `payload.fpa_ready` (0x0610) = 1; `payload.cooler_margin_k` (0x064B) > 0 | □ | Readiness follows the ACTIVE setpoint, not a fixed number |
@@ -7492,7 +7534,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[PE] COM-011 — Payload Calibration</div>
 
-**Entry point:** Commissioning pass 4, FPA regulating in the −16.5…−14.5 °C band with `payload.fpa_ready` = 1, payload in STANDBY.
+**Entry point:** After COM-012, commissioning pass 4: imaging chain verified, payload in STANDBY with the FPA cooler OFF (STANDBY releases it since 2026-11-03); step 1 switches it back on.
 
 **Goal:** Acquire a dark-frame set and a flat-field set with the internal lamp, then capture a calibration-site image set in FINE_POINT.
 
@@ -7504,14 +7546,14 @@ would push far colder, and this card adopts the flight envelope.)*
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | Payload: verify the pre-calibration state | `HK_REQUEST(sid=5)` (S3.27) | □ | Mode 1; `payload.fpa_ready` (0x0610) = 1; free store > 1000 MB (0x060A − 0x060B) |
+| 1 | Payload: cooler ON first, then verify the pre-calibration state | `FPA_COOLER(on=1)` (S8 func_id 43); `HK_REQUEST(sid=3)`, `HK_REQUEST(sid=5)` (S3.27) | □ | `tcs.cooler_fpa` (0x040C) = 1; mode 1; `payload.fpa_ready` (0x0610) = 1 before step 3; free store > 1000 MB (0x060A − 0x060B) |
 | 2 | Payload: close the shutter, lamp off | `PAYLOAD_SET_SHUTTER(position=0)` (func_id 119); `PAYLOAD_CAL_LAMP(on=0)` (func_id 95) | □ | `payload.shutter_pos` (0x063C) = 0 |
 | 3 | Payload: run the DARK phase | `PAYLOAD_START_CALIBRATION(mode=0)` (S8 func_id 37) | □ | `payload.mode` (0x0600) = 3 (CALIBRATION); `payload.calibration_active` (0x062A) 1 → 0; `cal_abort_reason` (0x0645) = 0 |
 | 4 | Payload: open the shutter, lamp on, run the FLAT phase | `PAYLOAD_SET_SHUTTER(position=1)`; `PAYLOAD_CAL_LAMP(on=1)`; `PAYLOAD_START_CALIBRATION(mode=1)` | □ | `payload.cal_valid_mask` (0x0646) = 15 — all four bands |
-| 5 | Payload: return to STANDBY, lamp off | `PAYLOAD_CAL_LAMP(on=0)`; `PAYLOAD_SET_MODE(mode=1)` (func_id 26) | □ | Shutter OPEN, mode 1 |
+| 5 | Payload: lamp off, shutter open — no mode command: the sequencer is already back in STANDBY with the cooler running, and a STANDBY command would switch the cooler off | `PAYLOAD_CAL_LAMP(on=0)`; `PAYLOAD_SET_SHUTTER(position=1)` (func_id 119) | □ | Shutter OPEN, mode 1 |
 | 6 | AOCS: transition to FINE_POINT for the site overpass | `AOCS_FINE_READY_CHECK` (func_id 89); `AOCS_SET_MODE(mode=5)` (func_id 0) | □ | `aocs.fine_ready` (0x02C5) = 0; error < 0.1° |
 | 7 | Payload: capture the calibration-site set | `PAYLOAD_SET_MODE(mode=2)`; `PAYLOAD_CAPTURE(scene_id=0, lines=2048)` (func_id 28) | □ | `payload.last_scene_id` (0x060C) increments; vary integration time with `PAYLOAD_SET_INTEGRATION_TIME` (func_id 34) — SNR moves ~3 dB per doubling |
-| 8 | Payload / AOCS: restore standard configuration | `PAYLOAD_SET_MODE(mode=1)`; `AOCS_SET_MODE(mode=4)` | □ | Mode 1; `aocs.mode` = 4 |
+| 8 | Payload / AOCS: restore standard configuration | `PAYLOAD_SET_MODE(mode=1)`; `AOCS_SET_MODE(mode=4)` | □ | Mode 1; `tcs.cooler_fpa` = 0 (STANDBY releases the cooler); `aocs.mode` = 4 |
 | 9 | SPACON: log; FD GO COM-012 | (mission log) | □ | "COM-011 complete" |
 
 </div>
@@ -7571,7 +7613,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
 | 1 | AOCS: consolidated AOCS end-state readback | `HK_REQUEST(sid=2)` (S3.27) | □ | `aocs.mode` (0x020F) in {4, 5, 8}; `aocs.commanded_mode` (0x0297) = 4, `aocs.mode_demoted` (0x0298) = 0; `aocs.wheels_enabled` (0x0260) = 4; `aocs.gyro_units_mask` (0x02D1) = 7; `aocs.st1_status` (0x0240) = 2 with ≥ 5 stars; `aocs.mag_enabled` (0x025C) = 1; error < 1.0° on the sunlit side |
-| 2 | SPACON: consolidated platform end-state readback | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (S3.27) | □ | `obdh.mode` (0x0300) = 0; LOW tier; `eps.load_shed_stage` (0x0134) = 0; bus 26.5–29.5 V; `obdh.time_ref` (0x0A13) ≠ 0 |
+| 2 | SPACON: consolidated platform end-state readback | `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (S3.27) | □ | `obdh.mode` (0x0300) = 0; LOW tier; `eps.load_shed_stage` (0x0134) = 0; bus 30.2–34.0 V; `obdh.time_ref` (0x0A13) ≠ 0 |
 | 3 | Payload: consolidated payload end-state readback | `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.mode` (0x0600) = 1 (STANDBY); `payload.fpa_ready` (0x0610) = 1; `payload.transfer_active` (0x062D) = 0 |
 | 4 | FD: poll all positions, then declare NOMINAL operations | `SYS_SET_MISSION_PHASE(phase=6, flags=0)` (S8 func_id 120) | □ | COM-013 is the last commissioning card. `eps.spacecraft_phase` (0x0129) = 6 within 5 s; `sat.mode` (0x0001) = 1 within 10 s; event `MISSION_PHASE_CHANGED` (0x0055) carries 5 → 6 |
 | 5 | FD: hold NOMINAL through an orbit; hand over; log | (mission log) | □ | "COM-013 complete": commissioning closed. If the now-armed `aocs.att_error` FDIR rule demotes the AOCS, investigate the excursion before re-declaring anything |
@@ -7639,7 +7681,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 3 | SPACON: link test | `CONNECTION_TEST` (S17.1) — first-key / FD GO / uplink | □ | S17.2 response < 4 s |
 | 4 | SPACON: full HK sweep | `HK_REQUEST(sid=1…6)` (S3.27) | □ | 1 EPS, 2 AOCS, 3 TCS, 4 Platform/OBDH, 5 Payload, 6 TT&C — all six within 30 s |
 | 5 | AOCS: mode and rates | `aocs.mode` (0x020F) = 4 (NOMINAL, nadir) | □ | Roll/yaw < 0.05 °/s; pitch −0.063 ± 0.02 °/s — nadir tracking is a real body rate, not an error |
-| 6 | EPS: bus and SoC | `HK_REQUEST(sid=1)` (S3.27) | □ | SoC > 50 %, bus > 27.0 V, generation > consumption |
+| 6 | EPS: bus and SoC | `HK_REQUEST(sid=1)` (S3.27) | □ | SoC > 50 %, bus > 30.9 V, generation > consumption |
 | 7 | Thermal: zones | `HK_REQUEST(sid=3)` (S3.27) | □ | All zones green |
 | 8 | FD: GO planned activities | (mission log) | □ | Reference §9.3 for full callout text |
 
@@ -7665,12 +7707,12 @@ would push far colder, and this card adopts the flight envelope.)*
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
 | 1 | AOCS: enter and verify FINE_POINT | `AOCS_FINE_READY_CHECK` (func_id 89); `AOCS_SET_MODE(mode=5)` (func_id 0) | □ | `aocs.fine_ready` = 0; `aocs.mode` = 5; `aocs.mode_demoted` (0x0298) = 0; error < 0.1° |
-| 2 | Thermal: verify the focal plane | `HK_REQUEST(sid=3)` (S3.27) | □ | `tcs.temp_fpa` (0x0408) < −10.0 °C; `tcs.cooler_fpa` (0x040C) = 1 |
+| 2 | Thermal: prepare the focal plane — cooler ON at least 10 min before the window (STANDBY does not run it) | `FPA_COOLER(on=1)` (S8 func_id 43), skip if 0x040C already reads 1; `HK_REQUEST(sid=3)`, `HK_REQUEST(sid=5)` (S3.27) | □ | `tcs.cooler_fpa` (0x040C) = 1; `payload.fpa_ready` (0x0610) = 1 within 600 s (about 6.5 min from the uncooled ≈ +10 °C); `tcs.temp_fpa` (0x0408) < −10.0 °C |
 | 3 | Payload: verify storage | `HK_REQUEST(sid=5)` (S3.27) | □ | `payload.store_used` (0x0604) < 90 % |
 | 4 | Payload: command IMAGING | `PAYLOAD_SET_MODE(mode=2)` (S8 func_id 26) | □ | `payload.mode` (0x0600) = 2 within 15 s |
 | 5 | Payload: trigger each acquisition | `PAYLOAD_CAPTURE(scene_id=N, lines=2048)` (S8 func_id 28) | □ | Time-tag with `SCHEDULE_TC` (S11.4) at each overpass; `payload.last_scene_id` (0x060C) = commanded id |
 | 6 | Payload: monitor the session | `HK_REQUEST(sid=5)` / `(sid=2)` / `(sid=3)` every 30 s | □ | `payload.image_count` (0x0605) incrementing; error < 0.1°; store < 95 % |
-| 7 | Payload: terminate the session | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | Mode 1; consumption falls |
+| 7 | Payload: terminate the session | `PAYLOAD_SET_MODE(mode=1)` (S8 func_id 26) | □ | Mode 1; `tcs.cooler_fpa` = 0 — STANDBY releases the cooler; consumption falls (imaging load and the 15 W cooler) |
 | 8 | SPACON: log; queue for NOM-003 downlink | (mission log) | □ | "NOM-002 complete" |
 
 </div>
@@ -7739,7 +7781,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[OB] NOM-006 — Software Upload / Parameter Update</div>
 
-**Entry point:** Scheduled patch or parameter slot, approved offline by the software/FDIR boards; SoC > 60 %, bus > 28.0 V, CPU load < 50 %.
+**Entry point:** Scheduled patch or parameter slot, approved offline by the software/FDIR boards; SoC > 60 %, bus > 32.1 V, CPU load < 50 %.
 
 **Goal:** Upload the image or parameter set over S6, verify by checksum, and activate under a controlled reboot.
 
@@ -7813,7 +7855,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
 | 1 | SPACON: request all six structures | `HK_REQUEST(sid=1…6)` (S3.27) | □ | All six within 30 s. `HK_REQUEST` is S3 **subtype 27**; `HK_ENABLE` is S3.5 |
-| 2 | EPS: SoC, bus, margin | SID 1 | □ | SoC (0x0101) > 40 %; bus (0x0105) 27.0–29.5 V; margin > −50 W |
+| 2 | EPS: SoC, bus, margin | SID 1 | □ | SoC (0x0101) > 40 %; bus (0x0105) 30.9–34.0 V; margin > −50 W |
 | 3 | AOCS: mode, error, rates, wheels | SID 2 | □ | `aocs.mode` (0x020F) = 4 (NOMINAL); error < 1.0°; wheel speeds < 5000 RPM |
 | 4 | Thermal: zone temperatures and heater states | SID 3 | □ | OBC (0x0406) −10…+50 °C; battery (0x0407) +5…+35 °C; `tcs.cooler_fpa` (0x040C) as expected |
 | 5 | OBDH: mode, load, uptime, **clock reference** | SID 4 | □ | `obdh.mode` (0x0300) = 0; load < 80 %; no unexpected reboot. `obdh.time_ref` (0x0A13) = 1 (GROUND) or 2 (GPS) — 0 (NONE) means the OBC rebooted and the clock is back at J2000; 3 is HOLDOVER. `obdh.time_since_sync_s` (0x0A14) yellow at 12 h, red at 24 h; at the nominal ~12 ppm the clock gains ≈ 1 s/day, so a sync once a shift is the routine |
@@ -7841,12 +7883,12 @@ would push far colder, and this card adopts the flight envelope.)*
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
-| 1 | EPS: log the pre-eclipse baseline | `HK_REQUEST(sid=1)` (S3.27) | □ | SoC (0x0101) > 60 %; bus (0x0105) > 28.0 V; battery current (0x0109) recorded |
-| 2 | Thermal: set the eclipse heater setpoints | `HEATER_SET_SETPOINT(circuit=0, on_temp=3.0, off_temp=8.0)` / `(circuit=1, on_temp=8.0, off_temp=13.0)` (S8 func_id 44) | □ | Battery > 5 °C, OBC > 10 °C at entry |
-| 3 | Thermal: release the FPA cooler if no imaging is planned | `FPA_COOLER(on=0)` (S8 func_id 43) | □ | `tcs.cooler_fpa` (0x040C) = 0; consumption drops ~15 W |
+| 1 | EPS: log the pre-eclipse baseline | `HK_REQUEST(sid=1)` (S3.27) | □ | SoC (0x0101) > 60 %; bus (0x0105) > 32.1 V; battery current (0x0109) recorded |
+| 2 | Thermal: power both heater lines, then set the eclipse setpoints if margins are tight | `EPS_POWER_ON(line_index=5)` / `(line_index=6)` only if 0x0115 / 0x0116 = 0; `HEATER_SET_SETPOINT(circuit=0, on_temp=3.0, off_temp=8.0)` / `(circuit=1, on_temp=-5.0, off_temp=0.0)` (S8 func_id 44) | □ | `eps.pl_htr_bat` = `eps.pl_htr_obc` = 1; battery > 5 °C, OBC > 0 °C at entry |
+| 3 | Thermal: release the FPA cooler if it is still on and no imaging is planned | `FPA_COOLER(on=0)` (S8 func_id 43) — skip if 0x040C already reads 0 (STANDBY does not run it) | □ | `tcs.cooler_fpa` (0x040C) = 0; consumption drops ~15 W |
 | 4 | AOCS: command the eclipse hold | `AOCS_SET_MODE(mode=8)` (S8 func_id 0) | □ | `aocs.mode` (0x020F) = 8 (ECLIPSE) within 15 s; gyro-only propagation |
-| 5 | EPS: monitor through the eclipse | `HK_REQUEST(sid=1)` every 30 s | □ | `eps.eclipse_flag` (0x0108) = 1; generation ≈ 0 W; bus > 27.0 V; battery current negative |
-| 6 | Thermal: monitor the zones | `HK_REQUEST(sid=3)` every 60 s | □ | Battery > 0 °C, OBC > 5 °C; heaters cycling |
+| 5 | EPS: monitor through the eclipse | `HK_REQUEST(sid=1)` every 30 s | □ | `eps.eclipse_flag` (0x0108) = 1; generation ≈ 0 W; bus > 30.9 V; battery current negative |
+| 6 | Thermal: monitor the zones | `HK_REQUEST(sid=3)` every 60 s | □ | Battery > 0 °C, OBC > −10 °C; heaters cycling |
 | 7 | EPS: confirm recovery after exit | `HK_REQUEST(sid=1)` (S3.27) | □ | `eps.eclipse_flag` = 0; generation > 25 W within 60 s |
 | 8 | SPACON: file the eclipse pass note | (mission log) | □ | "NOM-010 complete" |
 
@@ -8011,11 +8053,11 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[FE] CTG-001 — Under-Voltage Load Shed</div>
 
-**Entry point:** FDIR rule `eps_bus_undervoltage_payload_off` (ea_id 1001) fires, or `eps.uv_flag` (0x010E) = 1, or `eps.bus_voltage` (0x0105) observed below 27.0 V.
+**Entry point:** FDIR rule `eps_bus_undervoltage_payload_off` (ea_id 1001) fires, or `eps.uv_flag` (0x010E) = 1, or `eps.bus_voltage` (0x0105) observed below 28.4 V.
 
 **Goal:** Restore the battery from undervoltage by shedding least-critical loads first and waiting for sunlit charging.
 
-*(A ~28 V bus is unusual on a 6U CubeSat — 2S (8 V) is the more common architecture. EOSAT-1 flies an **8S-1P** 100 Wh pack (26.4 V nominal, 29.2 V at 100 % SoC, 21.5 V at 0 %) on a 28 V bus; treat the voltage values as simulator-specific.)*
+*(A ~29–33 V bus is unusual on a 6U CubeSat — 2S (8 V) is the more common architecture. EOSAT-1 flies an **8S-1P** 100 Wh pack (GomSpace BPX: 28.8 V nominal, 33.6 V at 100 % SoC, 24.0 V at 0 %) on an unregulated battery bus capped at 33.4 V; treat the voltage values as simulator-specific. The on-board shed starts at the UV level, 28.4 V, `simulation.yaml` `eps.bus_protection.uv_v`.)*
 
 *(This is one of the eight machine-runnable cards. Its shipped form is a four-rung branch ladder on a single parameter, `eps.bus_voltage` (0x0105) — run flat it would shed the payload, the cooler, the transmitter **and** the wheels on a spacecraft the first shed had already saved.)*
 
@@ -8028,21 +8070,22 @@ would push far colder, and this card adopts the flight envelope.)*
 
 **Decision tree (the shipped ladder — each rung is a real branch step):**
 
-- Shed payload. IF V > 26.5 V → HOLD at this rung and monitor
-- ELSE shed the FPA cooler. IF V > 26.0 V → HOLD and monitor
-- ELSE shed the S-band PA. IF V > 25.5 V → HOLD and monitor
-- ELSE shed the reaction-wheel line (`line_index=7`). IF V > 25.0 V → HOLD and monitor
+- Check the line states first: shed from the ground only what on-board FDIR has not already opened
+- Shed payload. IF V > 28.4 V → HOLD at this rung and monitor
+- ELSE shed the FPA cooler. IF V > 27.8 V → HOLD and monitor
+- ELSE shed the S-band PA. IF V > 27.2 V → HOLD and monitor
+- ELSE shed the reaction-wheel line (`line_index=7`). IF V > 26.5 V → HOLD and monitor
 - ELSE last resort → `OBC_SET_MODE(mode=2)` EMERGENCY; brief FD on EMG-002 readiness
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
 | 1 | FD: GO for load shed | (FD call) | □ | Dual-keyed |
-| 2 | EPS: shed priority 1 — payload OFF | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | `payload.mode` (0x0600) = 0; branch on V > 26.5 V |
-| 3 | EPS: shed priority 2 — FPA cooler OFF | `FPA_COOLER(on=0)` (S8 func_id 43) | □ | `tcs.cooler_fpa` (0x040C) = 0; branch on V > 26.0 V |
+| 2 | EPS: shed priority 1 — payload OFF | `PAYLOAD_SET_MODE(mode=0)` (S8 func_id 26) | □ | `payload.mode` (0x0600) = 0; branch on V > 28.4 V |
+| 3 | EPS: shed priority 2 — FPA cooler OFF | `FPA_COOLER(on=0)` (S8 func_id 43) | □ | `tcs.cooler_fpa` (0x040C) = 0; branch on V > 27.8 V |
 | 4 | EPS: shed priority 3 — S-band PA OFF | `TTC_PA_OFF` (S8 func_id 67) | □ | S-band TM stops; the UHF beacon (SID 11) keeps transmitting |
 | 5 | EPS: shed priority 4 — reaction-wheel line OFF | `EPS_POWER_OFF(line_index=7)` (S8 func_id 20) | □ | `eps.pl_aocs_wheels` (0x0117) = 0; loses active attitude control |
-| 6 | EPS: hold the shed level and monitor recovery | (read SID 1) | □ | Exit gate: V > 28.0 V **and** SoC > 40 % |
-| 7 | EPS: restore in reverse priority, 5 min apart | wheels line → `TTC_PA_ON` → `FPA_COOLER(on=1)` → `PAYLOAD_SET_MODE(mode=1)` | □ | Re-power in the LEOP-007 order |
+| 6 | EPS: hold the shed level and monitor recovery | (read SID 1) | □ | Exit gate: V > 32.1 V **and** SoC > 40 % |
+| 7 | EPS: restore in reverse priority, 5 min apart | wheels line → `ttc_tx` line + `TTC_PA_ON` → `fpa_cooler` line (cooler left OFF) → `payload` line + `PAYLOAD_SET_MODE(mode=1)` | □ | Re-power each line before its unit; bus > 31.5 V and SoC > 35 % after each |
 | 8 | SPACON: file ticket; brief Mission Manager | (ticket) | □ | "CTG-001 closed" |
 
 </div>
@@ -8068,7 +8111,7 @@ would push far colder, and this card adopts the flight envelope.)*
 - IF star tracker faulted → CTG-008
 - IF one wheel anomalous → CTG-007; IF two or more → DETUMBLE (mode 2) and EMG-005
 - IF `aocs.att_error` exceeds 15° at any step → DETUMBLE (mode 2) immediately
-- IF `eps.bus_voltage` (0x0105) < 26.5 V during recovery → CTG-001 first
+- IF `eps.bus_voltage` (0x0105) < 27.7 V during recovery → CTG-005 EPS Safe Mode first
 - IF transient cleared but root cause unidentified → hold COARSE_SUN one orbit; review
 
 | Step | Action | TC / Code | Confirm | Notes |
@@ -8114,7 +8157,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 2 | TT&C: blind HK request on the primary transponder | `HK_REQUEST(sid=6)` (S3.27) | □ | `ttc.link_status` (0x0501) = 2 within 30 s → step 5 |
 | 3 | TT&C: switch to the redundant transponder (blind) | `TTC_SWITCH_REDUNDANT` (S8 func_id 64) | □ | Wait 45 s for power-up and lock → step 5 if locked |
 | 4 | TT&C: if still nothing, retry the primary (blind) | `TTC_SWITCH_PRIMARY` (S8 func_id 63) | □ | Wait 45 s → step 5 if locked, step 6 if not |
-| 5 | TT&C + all: verify link quality and subsystem health | `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | □ | RSSI (0x0502) > −90 dBm; margin (0x0503) > 3.0 dB; record the active unit (`ttc.mode` 0x0500); bus > 27.0 V; `obdh.mode` not safe or emergency |
+| 5 | TT&C + all: verify link quality and subsystem health | `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=1)`, `HK_REQUEST(sid=4)` (S3.27) | □ | RSSI (0x0502) > −90 dBm; margin (0x0503) > 3.0 dB; record the active unit (`ttc.mode` 0x0500); bus > 30.9 V; `obdh.mode` not safe or emergency |
 | 6 | SPACON: if not recovered, log every blind command and escalate | (mission log) | □ | Notify the Mission Director and FDS; book the next pass; confirm the 24 h no-contact timer is running; two missed passes → EMG-004 |
 
 </div>
@@ -8125,7 +8168,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[SE] CTG-004 — Thermal Exceedance</div>
 
-**Entry point:** A monitored zone crosses a yellow limit — `tcs.temp_obc` (0x0406) outside −5 / +55 °C, `tcs.temp_battery` (0x0407) outside +2 / +42 °C, `tcs.temp_fpa` (0x0408) outside −45 / −15 °C.
+**Entry point:** A monitored zone crosses a yellow limit — `tcs.temp_obc` (0x0406) outside −10 / +55 °C, `tcs.temp_battery` (0x0407) outside +2 / +42 °C, `tcs.temp_fpa` (0x0408) outside −45 / −15 °C.
 
 **Goal:** Restore zone temperatures to within band by reconfiguring heater thermostats or shedding heat-producing loads.
 
@@ -8377,7 +8420,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 - Voltage drops further during characterisation → CTG-001 load shed
 - `eps.bat_temp` (0x0102) above +40 °C → possible internal short; disable the battery heater and shed load; above +50 °C command EMERGENCY and follow EMG-002
-- `eps.bat_voltage` below 22.0 V → deep-discharge risk; shed everything but OBC and TT&C RX
+- `eps.bat_voltage` below 24.6 V → deep-discharge risk; shed everything but OBC and TT&C RX
 - Capacity loss exceeds mission margin → brief Mission Manager; FDS re-plans duty cycle
 
 **Note:** there is no cell-balance telecommand in `tc_catalog.yaml`, and no cell-level telemetry. The observable set is bus/battery voltage, SoC, temperature, current and `eps.bat_capacity_wh` (0x010A); the operator infers cell state from the voltage-versus-SoC deviation.
@@ -8676,7 +8719,7 @@ would push far colder, and this card adopts the flight envelope.)*
 - IF SoC < 35 % → rung 2, FPA cooler OFF
 - IF SoC < 25 % → rung 3, S-band PA OFF (downlink lost; uplink and the UHF beacon survive)
 - IF SoC < 15 % → rung 4, reaction-wheel line OFF (active attitude control lost)
-- IF bus voltage still below 25.0 V with everything shed → `OBC_SET_MODE(mode=2)`, then EMG-002
+- IF bus voltage still below 28.4 V with everything shed → `OBC_SET_MODE(mode=2)`, then EMG-002
 
 | Step | Action | TC / Code | Confirm | Notes |
 |:----:|:-------|:----------|:--------|:------|
@@ -8977,7 +9020,7 @@ would push far colder, and this card adopts the flight envelope.)*
 
 <div class="procedure-card-header" markdown="1">[FE] EMG-002 — Total Power Failure</div>
 
-**Entry point:** `eps.bat_soc` (0x0101) < 10 % **or** `eps.bus_voltage` (0x0105) < 26.0 V. The undervoltage chain in the tree is: FDIR undervoltage threshold **26.5 V** (`simulation.yaml` `eps.uv_threshold_v`), in-model automatic load shed at **25.0 V** (`eps.load_shed.bus_voltage_v`, restoring at 25.5 V, shedding payload → fpa_cooler → ttc_tx → aocs_wheels → prop), the `bus_critical_v` event at the same **25.0 V**, and the fault-propagation cascade at **23.0 V** — by then the spacecraft is safing itself. There is no 24.5 V rung; the FDIR SoC ladder is separate and runs at 30 / 20 / 10 %.
+**Entry point:** `eps.bat_soc` (0x0101) < 10 % **or** `eps.bus_voltage` (0x0105) < 29.6 V. The undervoltage chain comes from one named table, `simulation.yaml` `eps.bus_protection`: UV flag, in-model automatic load shed and the 0x0103 warning event at **28.4 V** (`uv_v`; restoring above 28.9 V, shedding payload → fpa_cooler → ttc_tx → aocs_wheels → prop), FDIR EPS safe mode and the 0x0104 alarm event at **27.7 V** (`eps_safe_v`), AOCS safe at **26.1 V** (`aocs_safe_v`), and the fault-propagation cascade at **25.9 V** (`cascade_v`) — by then the spacecraft is safing itself. The FDIR SoC ladder is separate and runs at 30 / 20 / 10 %.
 
 **Goal:** Reach the minimum survival configuration, get the arrays sun-pointing, and wait for charging. **No load may be re-enabled until SoC exceeds 30 %**, confirmed on three consecutive samples.
 
@@ -8995,7 +9038,7 @@ would push far colder, and this card adopts the flight envelope.)*
 | 3 | Thermal: leave the battery heater on thermostat, line energised | `EPS_POWER_ON(line_index=5)` (19); `HEATER_BATTERY(on=1)` (40) | □ | `eps.pl_htr_bat` (0x0115) = 1 — the thermostat needs the line |
 | 4 | OBDH: command OBC EMERGENCY | `OBC_SET_MODE(mode=2)` (S8 func_id 50) | □ | `obdh.mode` (0x0300) = 2; HK generation drops to 1/60 s |
 | 5 | AOCS: sun acquisition for maximum generation | `AOCS_SET_MODE(mode=3)` (S8 func_id 0) | □ | COARSE_SUN; arrays > 0.3 A each |
-| 6 | EPS: monitor recovery through the sunlit phase and the next eclipse | (read SID 1) | □ | Bus must stay > 25.0 V through eclipse; recovery is slow |
+| 6 | EPS: monitor recovery through the sunlit phase and the next eclipse | (read SID 1) | □ | Bus must stay > 28.4 V through eclipse; recovery is slow |
 | 7 | EPS: hold the restore gate until SoC > 30 % | (read SID 1) | □ | Three consecutive samples; then OBC heater first |
 | 8 | FD: brief Mission Manager; multi-orbit recovery posture | (briefing) | □ | "EMG-002 active"; target ≥ 3 % net SoC gain per orbit |
 
@@ -9321,7 +9364,7 @@ Table 15.3 — Count of S12 monitoring rules per subsystem with representative e
 
 | Subsystem | Rules | Examples |
 |---|---|---|
-| EPS | 9 | `eps.bat_soc` 0x0101 < 20 % (WARNING) and < 10 % (ALARM); `eps.bus_voltage` 0x0105 < 27 V (WARNING) and < 25 V (ALARM); battery over/under-temp; battery overcurrent; solar array A/B low current |
+| EPS | 9 | `eps.bat_soc` 0x0101 < 20 % (WARNING) and < 10 % (ALARM); `eps.bus_voltage` 0x0105 < 28.4 V (WARNING) and < 27.7 V (ALARM); battery over/under-temp; battery overcurrent; solar array A/B low current |
 | AOCS | 11 | four wheel-overspeed rules on 0x0207–0x020A at ±5000 rpm; `aocs.h_env_frac` 0x02BA momentum envelope > 70 %; `aocs.att_error` 0x0217 > 1 °; star tracker 1 / 2 blind (0x0240 / 0x0243, ALARM); three gyro-bias rules on 0x0270–0x0272 |
 | TCS | 5 | `tcs.temp_fpa` 0x0408 out of −22…+14 °C (WARNING) and −25.5…+17.5 °C (ALARM); OBC overtemp; battery overtemp; `tcs.htr_total_power` 0x0411 > 12.5 W |
 | TT&C | 5 | `ttc.link_margin` 0x0503 < 3 dB (ALARM); RSSI low; Eb/N0 low; PA overtemp; `ttc.ber` 0x050C high (log10 scale, so > −5 = worse than 1e-5) |
@@ -9727,9 +9770,9 @@ A strong EPS engineer does this:
 
 1. **Measures.** Reads every one of the nine line currents
    (0x0118–0x011F and 0x014B; the bus total is 0x0148), totals them.
-   They sum to 29.3 W. Predicted orbit-average nominal is
-   28.8 W. Difference: 0.5 W steady-state extra draw — small
-   against the +16.3 W nominal margin, but unexplained, and that
+   They sum to 23.2 W. Predicted orbit-average nominal is
+   22.7 W. Difference: 0.5 W steady-state extra draw — small
+   against the +22.4 W nominal margin, but unexplained, and that
    is worth chasing.
 2. **Hunts the line.** Compares each line current to nominal:
    most are within 5%, but the `htr_bat` duty cycle is at
@@ -9753,26 +9796,28 @@ question to ask.
 
 ## 16.5 Thermal case study — the cooler that won't cool
 
-COM-010 starts well. FPA at +5 C, cooler enabled, drawing its
-rated 15 W. First 20 minutes: FPA at −2 C, on profile.
-Then it stalls. By 35 minutes the FPA is only at −3 C; the
-profile predicted −5 C.
+COM-010 starts well. FPA at +11 C, its uncooled equilibrium,
+cooler enabled, drawing its rated 15 W. At T+2 min the FPA is at
++4 C, on profile. Then the ramp flattens. At T+5 it is only at
+−1 C; the profile predicted −8 C. At T+10, when it should be
+regulating at −15 C, it reads −3 C.
 
 A weak Thermal engineer waits, hoping the cooler will catch
-up. By 60 minutes the FPA is at −4 C; predicted −9 C. They
+up. By T+20 the FPA is at −4 C and still not ready. They
 escalate to the FD too late; First Light is at risk.
 
 A strong Thermal engineer does this:
 
-1. **Catches the deviation early.** At 30 minutes, when the
-   profile says −4 C and reality is −2 C, calls it. "FD,
-   Thermal — FPA cool-down running 2 C behind profile at the
-   30-minute checkpoint. Watching."
+1. **Catches the deviation early.** At T+5, when the profile
+   says −8 C and reality is −1 C, calls it. "FD, Thermal — FPA
+   cool-down running 7 C behind profile at the T+5 checkpoint.
+   Watching."
 2. **Diagnoses with the right parameter.** "FD, Thermal —
    checking. Cooler power draw still 15 W per spec, so the
    machine is running. Requesting the on-demand pair:
    `tcs.fpa_cooler_floor_c` 0x0424 reads −6.5 C and
-   `tcs.fpa_cooler_margin_k` 0x0425 reads −3.5. Margin is
+   `tcs.fpa_cooler_margin_k` 0x0425 reads −8.5 (setpoint −15
+   minus floor −6.5). Margin is
    negative. The setpoint is out of reach at the present sink
    temperature and detector load — this is not a failed
    cooler, it is a cooler out of authority."
@@ -9783,8 +9828,8 @@ A strong Thermal engineer does this:
    — could you verify the radiator is in shadow? If we can
    drop the sink a few kelvin the floor comes down with it."
 4. **Predicts and recommends.** "FD, Thermal — at the present
-   floor we will not reach −10 C at all, and the cool-down is
-   running at 0.05 C/min against a predicted 0.15. Recommend
+   floor we will not reach −10 C at all, and the cool-down has
+   flattened out a few kelvin above that floor. Recommend
    either relaxing the setpoint toward the achievable floor —
    `PAYLOAD_COOLER_SETPOINT` is a hard envelope of −20 to 0 C
    and it will be *rejected*, not clamped, outside that — or

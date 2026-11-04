@@ -4,7 +4,7 @@
 **Owner:** Dr Franz Newland · uOttawa SEDTI
 **Status:** v1 — planning & skeleton drafts
 **Last updated:** 2026-05-05
-**Reference spacecraft:** EOSAT-1 (6U CubeSat, 450 km SSO, ocean-current monitoring,
+**Reference spacecraft:** EOSAT-1 (6U CubeSat, ~513 km SSO, LTAN ~10:00, ocean-current monitoring,
 multispectral imager 443/560/665/865 nm, S-band downlink to Iqaluit and Troll
 ground stations) — config in `~/SpaceMissionSimulation/configs/eosat1/`
 
