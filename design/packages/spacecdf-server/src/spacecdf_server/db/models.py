@@ -747,6 +747,24 @@ class PendingChangeRow(Base):
     comment: Mapped[str] = mapped_column(Text, default="")
 
 
+class StackLayoutRow(Base):
+    """The CubeSat stack layout of a study (design rules §4, D9; routers/stack.py).
+
+    ``approved_json`` is the layout the Structures seat approved (its positions are in
+    every element's ``position_json``); ``proposal_json`` an open proposal (auto-placement
+    ``rule:STACK-AUTO`` or a user edit) waiting for Structures (ruling 5). Each holds a
+    layout spec (columns, layers, faces, locks) plus who/when; placements are derived."""
+
+    __tablename__ = "stack_layouts"
+
+    study_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    form_factor: Mapped[str] = mapped_column(String(16), default="")
+    approved_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    proposal_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
 # Nov 2026 mode model tables (mode transitions, rule proposals, heaters) live in their own
 # module; importing it here registers them on ``Base.metadata`` for create_all.
 from . import models_modes  # noqa: E402,F401

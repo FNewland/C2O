@@ -117,6 +117,26 @@ def test_validator_reports_each_problem(geo, mutate, fragment):
     assert any(fragment in p for p in probs), probs
 
 
+def test_stack_builder_extension_is_optional_and_checked(geo):
+    """SpaceCDF's stack builder adds frame / internal / mass_properties (additive)."""
+    assert validate_geometry(geo, CONFIG_DIR) == []          # the file without them stays valid
+    g = copy.deepcopy(geo)
+    g["frame"] = {"origin": "envelope centre", "axes": "+Z zenith"}
+    g["internal"] = [{"id": "obc", "name": "OBC", "mount": "pc104_board", "column": 0, "slot": 2,
+                      "face": None, "box_m": [0.0, -0.056, 0.01, 0.096, 0.09, 0.015], "mass_kg": 0.06},
+                     {"id": "patch", "face": "mz", "box_m": [0.0, 0.05, -0.18, 0.098, 0.098, 0.005]}]
+    g["mass_properties"] = {"mass_kg": 11.2, "cog_m": [0.001, -0.004, 0.006]}
+    assert validate_geometry(g) == []
+    bad = copy.deepcopy(g)
+    bad["internal"][0]["box_m"] = [0, 0, 0, -0.1, 0.1, 0.1]
+    bad["internal"][1]["face"] = "top"
+    bad["mass_properties"] = {"mass_kg": 3}
+    probs = validate_geometry(bad)
+    assert any("internal[0].box_m" in p for p in probs), probs
+    assert any("internal.patch.face" in p for p in probs), probs
+    assert any("mass_properties" in p for p in probs), probs
+
+
 def test_cross_check_catches_a_drifted_copy(geo, tmp_path):
     cfg = tmp_path / "cfg"
     (cfg / "subsystems").mkdir(parents=True)

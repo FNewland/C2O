@@ -325,6 +325,11 @@ def evaluate_cds(
                            "fr": "Dégazage : matières condensables volatiles recueillies"},
               "cvcm_percent", cfg["materials"]["max_cvcm_percent"], "%")
 
+    # the approved stack layout (services/stack_builder.py): column height, envelope, protrusion,
+    # collisions, keep-out, star tracker, PC/104 pinout — CoG stays CDS-COG above
+    from .stack_builder import cds_stack_checks
+    checks.extend(cds_stack_checks(elements, form_factor))
+
     return {"applicable": True, "form_factor": form_factor, "checks": checks, "summary": rc.summarise(checks),
             "evidence": {"transmitters": [e["id"] for e in transmitters], "deployables": [e["id"] for e in deployables],
                          "propulsion": [e["id"] for e in propulsion], "declared": declared}}

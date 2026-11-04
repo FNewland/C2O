@@ -26,6 +26,7 @@ runs it.
 | `overview.js` | Spacecraft synoptic: subsystem blocks on the spacecraft outline, worst state, mode ladder; a stacked list below 640 px | host-built (see file header) |
 | `attitude2d.js` | Pointing-error dial, boresight sky (sun, nadir), roll/pitch/yaw and rate tapes, wheel bars, momentum | `deriveAttitude()` |
 | `attitude3d.js`, `groundtrack.js`, `skyplot.js` | 3D attitude, ground track, pass sky plot (see their headers) | `deriveAttitude()` etc. |
+| `stack3d.js` | CubeSat stack in 3D: envelope, one box per placed unit by subsystem, stowed / deployed / exploded, keep-out cones, CoG with the CDS box, body axes and frame caption | `c2o.geometry/1` with the stack-builder keys `internal`, `mass_properties`, `frame` (SpaceCDF `GET /api/studies/{id}/stack/geometry`; design/docs/STACK_BUILDER.md) |
 
 Every view: `mount(el, { t, ... }) -> { update(model), destroy() }`. Views
 never read raw telemetry; they draw the plain objects `derive.js` returns, so

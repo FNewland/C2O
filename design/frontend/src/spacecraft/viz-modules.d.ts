@@ -19,3 +19,10 @@ declare module '*/viz/attitude3d.js' {
   export function mount(el: HTMLElement, opts: { t?: VizT; geometry?: unknown; frame?: 'lvlh' | 'inertial'; height?: number; onFallback?: (reason: string) => void; preserveDrawingBuffer?: boolean }):
     VizView & { setGeometry(g: unknown): void; setFrame(f: 'lvlh' | 'inertial'): void; fallback?: boolean }
 }
+declare module '*/viz/stack3d.js' {
+  export function mount(el: HTMLElement, opts: {
+    t?: VizT; geometry?: unknown; mode?: 'stowed' | 'deployed'; exploded?: number; cogBox_m?: [number, number, number]
+    height?: number; onSelect?: (id: string | null) => void; onFallback?: (reason: string) => void; preserveDrawingBuffer?: boolean
+  }): VizView & { setMode(m: 'stowed' | 'deployed'): void; setExploded(f: number): void; select(id: string | null): void; fallback?: boolean }
+  export const DYNAMIC_KEYS: string[]
+}

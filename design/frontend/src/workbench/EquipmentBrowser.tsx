@@ -17,11 +17,12 @@ const API = '/api'
 
 // English text is the i18n key
 const DOMAIN_LABELS: Record<string, string> = {
-  power: 'Power (EPS)', aocs: 'AOCS', ttc: 'Comms (TTC)', thermal: 'Thermal',
+  payload: 'Payload', power: 'Power (EPS)', aocs: 'AOCS', ttc: 'Comms (TTC)', thermal: 'Thermal',
   structure: 'Structure', propulsion: 'Propulsion', obc: 'OBC / C&DH', ground: 'Ground',
 }
 
 const DOMAINS = [
+  { id: 'payload', label: DOMAIN_LABELS.payload, color: subsystemStyle('payload').color },
   { id: 'power', label: DOMAIN_LABELS.power, color: subsystemStyle('power').color },
   { id: 'aocs', label: DOMAIN_LABELS.aocs, color: subsystemStyle('aocs').color },
   { id: 'ttc', label: DOMAIN_LABELS.ttc, color: subsystemStyle('ttc').color },
