@@ -58,7 +58,7 @@ without saying so.
 
 For each NASA SE process (NPR 7123.1D), identify which SpaceCDF feature implements it. Write the tab name, button, or panel. If the process requires human judgment that the tool cannot automate, mark "Manual" in the last column.
 
-*Hint: Navigate through SpaceCDF's workflow steps (Step 1 Mission Need · Step 2 Concept · Step 3 Requirements · Step 4 Design) and explore each tab. Many processes map to more than one feature.*
+*Hint: Start with the Guide on the toolbar: level by level, it lists what to do and which tab does it. Then walk the level tabs (0 Mission, 1 Segment, 2 System / element, 3 Subsystem, V&V) and the activity tabs (Blocks, Requirements, Functions, Interfaces, Decide, Analyses…). Many processes map to more than one feature; the "Where in SpaceCDF" links under this part in the logbook open the main ones.*
 
 | # | SE Process | SpaceCDF Feature(s) | Manual? |
 |---|-----------|---------------------|---------|
@@ -153,7 +153,7 @@ _______________________________________________
 
 Navigate through the SpaceCDF tool and answer each question:
 
-1. How many KPI cards are shown on the Design Dashboard? List them by name:
+1. Open the readiness checklist in the status bar ("Level 0 readiness n/m"). Which checks does it list for your level, and which are not met yet?
 
    _______________________________________________
 
@@ -161,7 +161,7 @@ Navigate through the SpaceCDF tool and answer each question:
 
    _______________________________________________
 
-2. In the Gate Review tab, what are the MCR exit criteria? Which are auto-evaluated?
+2. In V&V › Review Gates, what are the MDR exit criteria? Which are must-pass, and which does the tool evaluate automatically rather than leave to you (manual)?
 
    _______________________________________________
 
@@ -169,17 +169,17 @@ Navigate through the SpaceCDF tool and answer each question:
 
    _______________________________________________
 
-3. What engineering positions are available when starting a collaborative session?
+3. Which seats (engineering positions) can a team choose under Team size (seats), in the last Mission Definition step?
 
    _______________________________________________
 
    _______________________________________________
 
-4. What workflow steps does SpaceCDF guide you through (from left to right)?
+4. What steps does SpaceCDF guide you through, from left to right (the Mission Definition steps, then the level tabs)?
 
    _______________________________________________
 
-5. In the Positions tab, find your assigned position. What key questions does it list?
+5. Open the Guide (toolbar) at your level: which learning objectives and tips does it list? In V&V › Review Gates, which criteria does your seat own?
 
    _______________________________________________
 
@@ -450,7 +450,7 @@ If your mission uses a CubeSat form factor, complete this compliance checklist. 
 | Deployment switches on all deployables | __________ | __________ | __________ |
 | Propulsion inhibits (3 independent, if applicable) | __________ | __________ | __________ |
 
-*Hint: Use SpaceCDF's Compliance panel to check CDS compliance. The tool will flag non-compliant parameters automatically based on your mass and dimensions entries.*
+*Hint: The Spacecraft tab (level 2) shows the form factor SpaceCDF infers and the CDS 14.1 Table 1 mass limit against your design mass plus margin. Check rails, dimensions, the RBF pin and the deployment switches against the CDS itself (linked in the logbook).*
 
 ---
 
@@ -524,25 +524,25 @@ _______________________________________________
 
 ---
 
-## Part E: SpaceCDF Compliance Panel
+## Part E: SpaceCDF Compliance Checks
 
-Navigate to the Compliance panel in SpaceCDF and answer:
+SpaceCDF has no single compliance panel: each check sits where that part of the design is done. Find them and answer:
 
-1. What is the debris mitigation compliance status for your mission?
-
-   _______________________________________________
-
-2. What orbital altitude would be needed to comply with the FCC 5-year rule WITHOUT propulsion? (Use the tool's orbital lifetime calculator)
+1. What is the debris mitigation status of your mission? (Decide › Orbit Trade Study, columns Lifetime, 25-yr and FCC 5-yr; Export › Deorbit & Debris Compliance)
 
    _______________________________________________
 
-3. What standards has the tool automatically suggested for your mission type?
+2. What orbital altitude would be needed to comply with the FCC 5-year rule WITHOUT propulsion? (Compare the natural lifetimes of the candidates in Decide › Orbit Trade Study)
+
+   _______________________________________________
+
+3. Which standards does SpaceCDF cite for your design? (Export › ECSS Compliance Matrix; screens such as Interfaces and Diagrams name the standard they follow)
 
    _______________________________________________
 
    _______________________________________________
 
-4. Are there any compliance flags (warnings or errors) on your current design?
+4. Are there any compliance flags (warnings or errors) on your current design? (Analyses › Conflicts)
 
    _______________________________________________
 
@@ -826,23 +826,23 @@ Balance (downlink $\geq$ generation)? __________
 
 ## Part G: SpaceCDF Tool Entry
 
-In SpaceCDF, enter your mission need (Step 1) and concept (Step 2). Then answer:
+In SpaceCDF, enter your mission need in Mission Definition (steps 1 Problem, 2 Stakeholders, 3 Alternatives, 4 Architecture). Then answer:
 
-1. In Step 1, did the tool auto-detect your mission type from the objective text? What type did it suggest?
-
-   _______________________________________________
-
-2. In Step 2, run the mission trade analysis. Does the tool's recommendation match your manual trade study result from Part E?
+1. In step 1 (Problem), which mission type did you choose, and how does it change the alternatives that step 3 offers?
 
    _______________________________________________
 
-   _______________________________________________
-
-3. In the ConOps tab, build your architecture diagram. How many systems did you define?
+2. In step 3 (Alternatives), SpaceCDF analyses the alternatives. Does its ranking match your manual trade study result from Part E?
 
    _______________________________________________
 
-4. In the Trade Studies tab, run an orbit selection trade with at least 3 orbit options. What orbit did it recommend?
+   _______________________________________________
+
+3. On the Blocks tab at levels 0 and 1, how many segments and systems does your architecture have?
+
+   _______________________________________________
+
+4. In Decide › Orbit Trade Study (level 0), evaluate the orbit options (at least 3 candidates). Which orbit ranks first, and why?
 
    _______________________________________________
 
@@ -998,9 +998,9 @@ _____________________________________________________________________
 
 ## Part E: SpaceCDF Requirements Generation
 
-1. In SpaceCDF, click **"Generate from Objectives."** How many requirements were generated? ____
+1. When the study was created, SpaceCDF wrote one mission requirement per objective (Requirements tab, level 0). How many are there, and how many Suggested templates does the tab offer? ____
 
-2. Use the Level filter -- count at each level:
+2. Count the requirements at each level (V&V › Requirements gives the totals):
    - Mission: ____ &nbsp;&nbsp;&nbsp; System: ____ &nbsp;&nbsp;&nbsp; Subsystem: ____
 
 3. Classify 5 requirements by type:
@@ -1018,7 +1018,7 @@ _____________________________________________________________________
    - **Original:** _______________________________________________
    - **Corrected:** _______________________________________________
 
-5. Accept at least 5 requirements and reject at least 1. Record your decisions:
+5. Set at least 5 requirements to Approved and reject at least 1 (delete or rewrite it). Record your decisions:
 
 | Req ID | Action (Accept/Edit/Reject) | Rationale |
 |--------|----------------------------|-----------|
@@ -1029,7 +1029,7 @@ _____________________________________________________________________
 | | | |
 | | | |
 
-6. For 5 key requirements, assign verification method and phase:
+6. For 5 key requirements, set the verification method on the Requirements tab and choose the phase:
 
 | Req ID | Verification Method (A/T/I/D) | Phase (B/C/D/E) | Rationale for Method |
 |--------|-------------------------------|-----------------|---------------------|
@@ -1199,7 +1199,7 @@ After entering functions in SpaceCDF:
 
 2. How many leaf functions? ____
 
-3. How many leaf functions have NO linked requirements (amber badge)? ____
+3. How many functions are still unallocated (the "unallocated" tag), and which leaf functions have no requirement tracing to them (Traceability tab)? ____
 
 4. List the uncovered functions and derive requirements for them:
 
@@ -1248,7 +1248,7 @@ _____________________________________________________________________
 | **Team / Mission:** | _______________________________________ |
 | **Role / Position:** | _______________________________________ |
 
-**SpaceCDF Tabs:** Mission Architecture, Orbit Trade Advisor
+**SpaceCDF Tabs:** Blocks (levels 0–1), Decide › Orbit Trade Study, Analyses › Design loop
 
 ---
 
@@ -1320,7 +1320,7 @@ _____________________________________________________________________
 
 ## Part B: Orbit Trade Matrix
 
-From SpaceCDF's Orbit Trade Advisor, record the top 3 candidates:
+From Decide › Orbit Trade Study (level 0), record the top 3 candidates:
 
 | Rank | Orbit Type | Alt (km) | Inc (deg) | GSD (m) | Revisit (d) | Natural Lifetime (yr) | FCC 5-yr? | Score |
 |------|-----------|---------|---------|---------|-------------|----------------------|-----------|-------|
@@ -1424,7 +1424,7 @@ _____________________________________________________________________
 | **Team / Mission:** | _______________________________________ |
 | **Role / Position:** | _______________________________________ |
 
-**SpaceCDF Tabs:** System Architecture, Interfaces, Dashboard, Budget Breakdown
+**SpaceCDF Tabs:** Blocks, Interfaces, Budget, Modes, V&V › Budget Rollup
 
 ---
 
@@ -1445,7 +1445,7 @@ _____________________________________________________________________
 
 ## Part A: Mass Budget
 
-Complete from your SpaceCDF design (or estimate if pre-run):
+Complete from your SpaceCDF design (or estimate if pre-run). Budget › Mass shows each element's nominal value (current best estimate) and maturity margin, and the 25 % system margin on top; compare them with the 20 % equipment margin used here:
 
 | Subsystem | CBE Mass (kg) | % of Dry | Equip. Margin (20%) | MEV (kg) |
 |-----------|--------------|----------|---------------------|---------|
@@ -1476,6 +1476,8 @@ _____________________________________________________________________
 ---
 
 ## Part B: Power Budget by Mode
+
+Modes › Power by mode lists each unit's power in the tool's modes (LEOP, Commissioning, Nominal, Imaging, Downlink, Safe, Survival); use Nominal for Idle. Eclipse is a case, not a mode: Modes › Energy per orbit shows how each mode fares through the eclipse.
 
 | Subsystem | Safe (W) | Idle (W) | Imaging (W) | Downlink (W) | Eclipse (W) |
 |-----------|---------|---------|-------------|-------------|-------------|
@@ -1535,7 +1537,7 @@ Verification method for IR-001: _____ &nbsp; IR-002: _____
 
 ## Part D: Conflict Resolution
 
-From the SpaceCDF Interface Matrix, identify one conflict (red border):
+From Analyses › Conflicts (or an amber block on the Spacecraft tab), identify one conflict:
 
 **Conflict description:** _______________________________________________
 
@@ -1559,7 +1561,7 @@ _____________________________________________________________________
 
 ## Part E: Budget Health Check
 
-From the SpaceCDF Dashboard, record all KPIs:
+From the Budget tab (Mass, Power, Data, Cost) and V&V › Budget Rollup, record each budget:
 
 | Budget | Value | Margin | Status (G/A/R) |
 |--------|-------|--------|----------------|
@@ -1606,7 +1608,7 @@ _____________________________________________________________________
 | **Team / Mission:** | _______________________________________ |
 | **Role / Position:** | _______________________________________ |
 
-**SpaceCDF Tabs:** Dashboard (Power KPI), Engineering Budgets, Timing Budget, Parametric
+**SpaceCDF Tabs:** Analyses › Design loop (power sizing), Modes › Energy per orbit, Analyses › Physics (thermal network), Budget › Power
 
 ---
 
@@ -1826,7 +1828,7 @@ _____________________________________________________________________
 | Coating condition | BOL / EOL | BOL / EOL |
 | Key concern | | |
 
-**2. From SpaceCDF Dashboard, record thermal predictions:**
+**2. From Analyses › Physics (mass / AOCS / thermal), thermal network, record the thermal predictions:**
 
 | Component | Min Predicted (degC) | Max Predicted (degC) | Operating Min (degC) | Operating Max (degC) |
 |-----------|---------------------|---------------------|---------------------|---------------------|
@@ -1936,7 +1938,7 @@ _____________________________________________________________________
 | **Team / Mission:** | _______________________________________ |
 | **Role / Position:** | _______________________________________ |
 
-**SpaceCDF Tabs:** Dashboard (AOCS KPI), Pointing Budget, Architecture (AOCS)
+**SpaceCDF Tabs:** Analyses › Physics (AOCS section), Decide › Architecture Trades (AOCS), Budget › Mass
 
 ---
 
@@ -2187,7 +2189,7 @@ _____________________________________________________________________
 
 ## Part E: SpaceCDF Verification
 
-Compare your hand calculations to SpaceCDF's Pointing Budget display:
+Compare your hand calculations to the AOCS section of Analyses › Physics (mass / AOCS / thermal):
 
 | Parameter | Hand Calculation | SpaceCDF | Match? |
 |-----------|-----------------|----------|--------|
@@ -2264,7 +2266,7 @@ _____________________________________________________________________
 | **Team / Mission:** | _______________________________________ |
 | **Role / Position:** | _______________________________________ |
 
-**SpaceCDF Tabs:** Link Budget, Spectrum Selector, Equipment Browser (Comms)
+**SpaceCDF Tabs:** Analyses › Design loop (link and data), Analyses › Ground segment, Decide › Architecture Trades (TTC), Equipment Catalog (Communications), TM/TC › Rate ladder
 
 ---
 
@@ -2522,7 +2524,7 @@ _____________________________________________________________________
 
 ## Part D: SpaceCDF Comparison
 
-Open the Link Budget tab, enter your parameters, and compare:
+Open Analyses › Design loop (link and data) and Analyses › Ground segment, and compare:
 
 | Parameter | Hand Calculation | SpaceCDF | Difference |
 |-----------|-----------------|----------|------------|
@@ -2620,7 +2622,7 @@ _____________________________________________________________________
 | **Team / Mission:** | _______________________________________ |
 | **Role / Position:** | _______________________________________ |
 
-**SpaceCDF Tabs:** Equipment Browser, Dashboard, Trade Studies, Budget Breakdown
+**SpaceCDF Tabs:** Equipment Catalog (Blocks, level 3), Spacecraft, Budget, Decide › Pugh Matrix
 
 ---
 
@@ -2875,7 +2877,7 @@ _____________________________________________________________________
 
 ## Part D: Equipment Selection Log
 
-Using SpaceCDF's Equipment Browser, select components for each category:
+Using the Equipment Catalog (Blocks tab inside a subsystem, level 3), select components for each category:
 
 | Category | Component Selected | Manufacturer | Mass (kg) | Power (W) | Cost (kEUR) | Qty | Total Mass |
 |----------|-------------------|-------------|-----------|-----------|-------------|-----|-----------|
@@ -3041,7 +3043,7 @@ For each subsystem, document the procurement decision and rationale:
 
 ## Part B: Bill of Materials (BOM)
 
-Complete the BOM from the SpaceCDF Equipment Browser selections:
+Complete the BOM from V&V › BOM (your Equipment Catalog selections; part number and ECCN are not in SpaceCDF):
 
 | Item ID | Component | Manufacturer | Part Number | Qty | Mass (g) | Power (W) | Cost (kEUR) | TRL | ECCN |
 |---------|-----------|-------------|-------------|-----|----------|-----------|-------------|-----|------|
@@ -3065,7 +3067,7 @@ Complete the BOM from the SpaceCDF Equipment Browser selections:
 
 ## Part C: Budget Tracking
 
-After all selections, record the live budget values from the SpaceCDF Dashboard:
+After all selections, record the live budget values from the Budget tab and the V&V › BOM totals:
 
 | Budget | BOM Total | Parametric Estimate | Allocation | Margin | Margin % |
 |--------|-----------|--------------------|-----------:|-------:|---------:|
@@ -3480,7 +3482,7 @@ _______________________________________________
 
 ## Part A: Mission Cost Estimate (WBS)
 
-Complete using both parametric estimates (from SpaceCDF Cost tab) and bottom-up estimates (from BOM vendor quotes):
+Complete using both parametric estimates (Budget › Cost and Analyses › Design loop, cost by element) and bottom-up estimates (from BOM vendor quotes):
 
 | WBS # | Element | Parametric (kEUR) | Bottom-Up (kEUR) | Difference | Notes |
 |:-----:|---------|------------------:|------------------:|:----------:|-------|
@@ -3560,7 +3562,7 @@ PM/SE/MA: _____ kEUR
 
 ## Part D: Cost Drivers
 
-**Top 3 cost drivers in your mission (from SpaceCDF Cost Breakdown):**
+**Top 3 cost drivers in your mission (from Budget › Cost and the Design loop cost table):**
 
 | Rank | Cost Element | Cost (kEUR) | % of Total | Why is it Expensive? |
 |:----:|-------------|------------:|-----------:|---------------------|
@@ -3582,7 +3584,7 @@ _______________________________________________
 
 ## Part E: Design Review Readiness
 
-From the SpaceCDF Gate Review tab, assess your readiness for SRR/PDR:
+From V&V › Review Gates, assess your readiness for SRR/PDR:
 
 | # | Gate Criterion | Status (Pass/Fail/Manual) | Evidence Location | If Fail: Action Needed |
 |:-:|---------------|:------------------------:|:-:|:-:|
@@ -3819,7 +3821,7 @@ _______________________________________________
 
 ## Part A: Operational Modes
 
-Define all operational modes for your spacecraft. Use the SpaceCDF ConOps Editor to enter these.
+Define all operational modes for your spacecraft. Enter them on the Modes tab (Mode machine; per-mode power under Power by mode).
 
 | Mode | Description | Power (W) | Data Rate | Entry Condition | Exit Condition |
 |------|------------|:---------:|:---------:|----------------|---------------|
@@ -4325,7 +4327,7 @@ _______________________________________________
 
 ## Part A: Final Design Summary
 
-Record the final state of your design from the SpaceCDF Dashboard:
+Record the final state of your design from V&V › Budget Rollup, the Budget tab and Analyses › Conflicts:
 
 | Parameter | Value | Unit | Margin | Margin % | Status (G/A/R) |
 |-----------|------:|------|-------:|---------:|:-:|
@@ -4349,7 +4351,7 @@ Record the final state of your design from the SpaceCDF Dashboard:
 
 ## Part B: Documentation Checklist
 
-Tick each document generated from SpaceCDF Exports tab:
+Tick each document generated from Export (toolbar):
 
 | Document | Generated? | Complete? | Notes |
 |----------|:----------:|:---------:|-------|
@@ -4587,15 +4589,15 @@ Before presenting, each team must verify that their design documentation is comp
 
 | Document | Source in SpaceCDF | Status Check |
 |----------|-------------------|-------------|
-| Mission Requirements Document (MRD) | Exports -> ECSS Documents | All requirements baselined? |
-| Technical Specification (TS) | Exports -> ECSS Documents | All budgets captured? |
-| Concept of Operations (ConOps) | Exports -> ECSS Documents | All phases defined? |
+| Mission Requirements Document (MRD) | Export -> Systems Engineering | All requirements baselined? |
+| Technical Specification (TS) | Export -> Design Reviews (SRR / PDR pack) | All budgets captured? |
+| Concept of Operations (ConOps) | Export -> Systems Engineering | All phases defined? |
 | Verification Plan (VP) | V&V Matrix tab | All requirements have methods? |
-| Bill of Materials (BOM) | Exports -> Design Data | All equipment listed with TRL? |
+| Bill of Materials (BOM) | Export -> Systems Engineering; V&V › BOM | All equipment listed with TRL? |
 | Risk Register | Worksheet 4.3 | All risks scored and mitigated? |
 | Interface Matrix (N^2) | Worksheet 4.3 | Interfaces identified? Conflicts resolved? |
 | Cost Estimate | Worksheet 4.4 | WBS complete? P80 computed? |
-| Operations Concept | ConOps Editor | Modes, FDIR, procedures defined? |
+| Operations Concept | Modes and FDIR tabs | Modes, FDIR, procedures defined? |
 | Sustainability Assessment | Sustainability Card | Debris compliance score? |
 
 ### Internal Consistency Checks
@@ -4604,18 +4606,18 @@ Before presenting, verify:
 
 | Check | How to Verify | Common Error |
 |-------|-------------|-------------|
-| Mass budget closes | Dashboard mass KPI: margin > 0% | Equipment added without updating budget |
-| Power budget closes | Dashboard power KPI: SA > loads in all modes | Eclipse mode power not checked |
-| Link budget closes | Link Budget tool: margin >= 3 dB | Rain attenuation not included |
-| Data budget closes | Data Budget: daily downlink >= daily generation | Assumed too many passes per day |
-| Cost is within ceiling | Cost tab: total <= allocated budget | Forgot launch cost or operations |
+| Mass budget closes | Budget › Mass: margin > 0% | Equipment added without updating budget |
+| Power budget closes | Modes › Energy per orbit: every mode sustainable | Eclipse mode power not checked |
+| Link budget closes | Analyses › Ground segment: margin >= 3 dB | Rain attenuation not included |
+| Data budget closes | Modes › Data chain: daily downlink >= daily generation | Assumed too many passes per day |
+| Cost is within ceiling | Budget › Cost: total <= allocated budget | Forgot launch cost or operations |
 | Requirements traceable | Every requirement maps to an objective | Orphan requirements (no parent objective) |
 | V&V complete | Every requirement has a method assigned | "TBD" entries remaining |
-| No unresolved conflicts | Dashboard: conflict count = 0 | Interface mismatches not addressed |
+| No unresolved conflicts | Analyses › Conflicts: none open | Interface mismatches not addressed |
 
 ### SpaceCDF Document Generation
 
-Navigate to **Exports** tab and generate all documents:
+Open **Export** on the toolbar and generate all documents:
 1. ECSS Documents: MRD, TS, VP, ConOps, SEMP, IRD
 2. Design Data: BOM, Parametric Model Data
 3. Regulatory Filings: ITU API, RSSSA, Export Assessment, COPUOS, EOL Report
@@ -4633,7 +4635,7 @@ Each team presents a 12-minute design review followed by 5 minutes of Q&A from t
 |---------|----------|---------|----------|
 | **1. Mission Need** | 2 min | Problem statement; stakeholders; objectives with MoPs | Mission Need step |
 | **2. Why Space?** | 2 min | Trade study results; why space beats alternatives | Mission Trade results |
-| **3. System Design** | 3 min | Architecture; orbit; key parameters; budget status | Dashboard, budgets |
+| **3. System Design** | 3 min | Architecture; orbit; key parameters; budget status | Budget tab, V&V › Budget Rollup |
 | **4. Equipment & Verification** | 2 min | Key equipment; BOM summary; V&V approach; test plan | BOM, V&V Matrix |
 | **5. Risk & Cost** | 2 min | Top 5 risks; cost estimate (P50/P80); schedule | Risk register, cost tab |
 | **6. Operations & Lessons** | 1 min | ConOps summary; FDIR; what would you change | ConOps, simulation debrief |
@@ -4715,7 +4717,7 @@ For 4 teams: allocate 17 min x 4 = 68 min. Adjust timing based on actual number 
 
 **For the presenting team:**
 1. Present the 6-section outline above
-2. Use SpaceCDF live for demonstrations where helpful (show Dashboard, budgets)
+2. Use SpaceCDF live for demonstrations where helpful (show the Budget tab and V&V › Budget Rollup)
 3. Respond to board questions with evidence
 
 **For the review board:**
