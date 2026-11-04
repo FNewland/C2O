@@ -115,6 +115,14 @@ export const EVIDENCE_KEYS_PRR = [
   '{{n}} risk(s) in the risk register',
 ]
 
+// English text is the i18n key — PDR-EC-02 / SRR-EC-02 interface requirement evidence (design
+// rules IF-01, IF-05; separate table, the i18n scanner reads 2000 characters per table)
+export const EVIDENCE_KEYS_IRD = [
+  'All {{total}} accepted links have approved interface requirements agreed by both parties',
+  '{{complete}}/{{total}} accepted links have approved interface requirements agreed by both parties; {{approved}} approved, {{agreed}} agreed',
+  '{{n}} interface requirement(s) name no accepted interface',
+]
+
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
 export const FIX_LABEL: Record<string, string> = {

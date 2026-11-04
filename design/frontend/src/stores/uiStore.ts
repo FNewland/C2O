@@ -19,7 +19,7 @@ const initialStudy = loadStudyId(storage(), typeof window !== 'undefined' ? wind
 const initialCrumbs = loadBreadcrumb(storage(), initialStudy)
 
 export type Level = 0 | 1 | 2 | 3 | 4
-export type ActivityPanel = 'blocks' | 'spacecraft' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses' | 'modes'
+export type ActivityPanel = 'blocks' | 'spacecraft' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses' | 'modes' | 'electrical' | 'data'
 
 interface UIStore {
   studyId: string | null

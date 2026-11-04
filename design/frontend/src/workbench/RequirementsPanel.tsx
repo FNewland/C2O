@@ -14,6 +14,7 @@ import { SUGGESTED_REQS } from './suggestedReqs'
 import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge, Tag, type Status } from '../components/ui'
 import { askText, showAlert } from '../components/ui/Dialog'
 import { RecordDecision } from '../logbook'
+import { RequirementIrInfo } from './irParts'
 
 const API = '/api'
 
@@ -226,16 +227,16 @@ export function RequirementsPanel() {
               <span className="c2o-panel__meta">{reqs.length}</span>
             </h4>
             {reqs.map((req: any) => {
-              const reqType = REQ_TYPES.find(rt => rt.value === req.rationale) || REQ_TYPES[0]
+              const reqType = REQ_TYPES.find(rt => rt.value === (req.level === 'interface' ? 'interface' : req.rationale)) || REQ_TYPES[0]
               const parentCode = req.derived_from_requirement_id
                 ? allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || t('traced')
                 : null
-              const orphan = !parentCode && req.level !== 'mission'
+              const orphan = !parentCode && req.level !== 'mission' && req.level !== 'interface'
               return (
                 <div key={req.id} className="c2o-reqs__row">
                   <span className="c2o-reqs__code mono">{req.code}</span>
                   <Tag title={t(reqType.label)}>{t(reqType.label)[0]}</Tag>
-                  <span className="c2o-reqs__text">{req.text}</span>
+                  {req.level === 'interface' ? <RequirementIrInfo req={req} /> : <span className="c2o-reqs__text">{req.text}</span>}
                   <span className="c2o-reqs__meta">
                     {req.verification_method && (
                       <Tag title={t('Verification method')}>{VERIFICATION_METHODS[req.verification_method] ? t(VERIFICATION_METHODS[req.verification_method]) : req.verification_method}</Tag>

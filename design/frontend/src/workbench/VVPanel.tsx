@@ -12,6 +12,8 @@
 import { Fragment, useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
+import { irText } from './electricalApi'
 import { useUIStore, type ActivityPanel, type Level } from '../stores/uiStore'
 import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 
@@ -216,7 +218,8 @@ function RequirementTraceability({ requirements, elements }: { requirements: any
     for (const r of requirements) {
       byStatus[r.status] = (byStatus[r.status] || 0) + 1
       byLevel[r.level] = (byLevel[r.level] || 0) + 1
-      if (r.level !== 'mission' && !r.derived_from_requirement_id && !r.parent_id) orphans++
+      // an interface requirement traces to its interface (design rules IF-01), not to a parent
+      if (r.level === 'interface' ? !r.ir_json?.interface_id : (r.level !== 'mission' && !r.derived_from_requirement_id && !r.parent_id)) orphans++
       if (r.element_id) withElement++
     }
     return { total, byStatus, byLevel, orphans, withElement, coverage: total > 0 ? (withElement / total * 100) : 0 }
@@ -242,13 +245,14 @@ function RequirementTraceability({ requirements, elements }: { requirements: any
           { key: 'code', header: t('Code'), render: (r: any) => <span className="mono c-v">{r.code}</span>, sort: (r: any) => r.code },
           { key: 'level', header: t('Level'), render: (r: any) => <Tag>{t(REQ_LEVEL_LABEL[r.level] ?? r.level)}</Tag>, sort: (r: any) => r.level },
           { key: 'el', header: t('Element'), render: (r: any) => r.element_id ? nameOf(r.element_id) : <NoData label={t('none')} />, sort: (r: any) => nameOf(r.element_id) },
-          { key: 'text', header: t('Text'), render: (r: any) => r.text, width: '38%' },
+          { key: 'text', header: t('Text'), render: (r: any) => (r.level === 'interface' ? irText(r, i18n.language) : r.text), width: '38%' },
           { key: 'vv', header: 'V&V', render: (r: any) => r.verification_method ? <Tag>{r.verification_method}</Tag> : <NoData label={t('none')} /> },
           { key: 'st', header: t('Status'), render: (r: any) => <StatusBadge status={REQ_STATUS[r.status] ?? 'neutral'}>{t(REQ_STATUS_LABEL[r.status] ?? r.status)}</StatusBadge>, sort: (r: any) => r.status },
           {
             key: 'der', header: t('Derived'), render: (r: any) => {
-              const isOrphan = r.level !== 'mission' && !r.derived_from_requirement_id && !r.parent_id
-              return r.derived_from_requirement_id ? <StatusBadge status="ok">{t('traced')}</StatusBadge>
+              const isOrphan = r.level === 'interface' ? !r.ir_json?.interface_id
+                : r.level !== 'mission' && !r.derived_from_requirement_id && !r.parent_id
+              return r.derived_from_requirement_id || (r.level === 'interface' && !isOrphan) ? <StatusBadge status="ok">{t('traced')}</StatusBadge>
                 : isOrphan ? <span title={t('Not derived from parent requirement')}><StatusBadge status="caution">{t('orphan')}</StatusBadge></span>
                 : <span className="c2o-nodata">{t('top level')}</span>
             },

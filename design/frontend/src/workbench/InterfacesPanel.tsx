@@ -30,6 +30,7 @@ import {
   useProposalCheck, type InterfacePatch, type ProposeResult,
 } from './interfaceApi'
 import { LinkEditor, LinkStatusChip, TypeLabel, linkDecision, originText, propsSummary, type EndpointOption } from './linkParts'
+import { InterfaceIrLinks } from './irParts'
 
 const API = '/api'
 
@@ -338,6 +339,7 @@ function AcceptedRow({ iface, nameOf, endpoints, busy, onSave, onDelete, onRejec
           ? <ArmButton label={t('Reject')} armedLabel={t('Confirm reject')} aria-label={t('Reject link {{from}} to {{to}}', pair)} onConfirm={onReject} />
           : <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete interface {{from}} → {{to}}', pair)} onConfirm={onDelete} />}
       </div>
+      <InterfaceIrLinks interfaceId={iface.id} />
       {open && (
         <div className="c2o-ifaces__props">
           <LinkEditor iface={iface} endpoints={endpoints} saving={busy}
