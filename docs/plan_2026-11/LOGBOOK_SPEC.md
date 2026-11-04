@@ -284,3 +284,38 @@ no live TM: no capture there, the tick records the expectation only.
 steps; decisions recorded from the card (`context.procedure` + `context.run`)
 are printed under the run ("Decisions recorded on this card") instead of in
 the log.
+
+## 11. Where to find this (2026-11-04)
+
+Franz: "work through the worksheets with the screens … then add the
+additional info where needed." Audit and decisions:
+[WORKSHEET_SCREEN_AUDIT_OPS.md](WORKSHEET_SCREEN_AUDIT_OPS.md).
+
+- **Map.** `configs/eosat1/worksheets/worksheet_where.yaml` (hand-maintained)
+  gives, per question, its `status` (screen / manual / none / na) and the
+  places that answer it: named `targets` (MCS page + panel id / PUS tab /
+  drawer tab / parameter row; planner, orbit tools, radio, delayed-TM element
+  ids; manual file + heading anchor; procedure card) and open-reference
+  `links` (https only, listed in [EXTERNAL_LINKS.md](EXTERNAL_LINKS.md)). A
+  question naming a parameter of the operator dictionary gets that row
+  without an entry. `tools/gen_worksheets.py` copies the places onto the
+  questions as `where: [{tool, page?, param?, focus?, tab?, bd?, path?,
+  anchor?, url?, label {en, fr}}]` and writes the audit table (`--audit`;
+  `--check` fails when either is stale).
+- **Serving.** `smo_common/logbook/worksheets.py localise_where` localises the
+  label, keeps only the keys a tool understands, and drops any open
+  reference that is not a plain https URL (French URL first, English as the
+  fallback). The live checklist carries the printed row's `where` on each
+  step (`ref[].where`).
+- **Rendering.** `smo_common/ui/where.js` (Workbook tab, forms and checklist
+  steps): "Where to find this:" + links. MCS places become
+  `#page=…&param=…&focus=…&tab=…&bd=…`, applied in place inside the MCS
+  (`mcs.js applyNavHash`: opens the page, marks the row or panel for 15 s) and
+  opened in the MCS window (`target="c2o-mcs"`) from any other tool; tool
+  addresses follow `tools/portal.py` (cloud `https://<key>.<domain>/`, local
+  `http://<host>:<port>/`). Open references: `target="_blank"
+  rel="noopener noreferrer"`, marked ↗.
+- **Tests.** `tests/test_content/test_worksheet_where.py` (every place exists,
+  every parameter row is on its page, the audit is complete and current,
+  links https and listed), `tests/test_common/test_where_links.py`
+  (where.js under node, doc_viewer link schemes, MCS deep-link validation).
