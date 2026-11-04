@@ -72,6 +72,14 @@ gcloud() {
             sleep "$((n * 10))"
             continue
         fi
+        # Google API rate limit (HTTP 429 / RESOURCE_EXHAUSTED): wait it out.
+        if [ "$rc" -ne 0 ] && [ "$n" -lt 4 ] && grep -qE \
+            "'status': 429|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|Quota exceeded for quota metric" "$errf"; then
+            n=$((n + 1))
+            printf '    (Google API rate limit; retrying in %s s, attempt %s of 4)\n' "$((n * 20))" "$n" >&2
+            sleep "$((n * 20))"
+            continue
+        fi
         cat "$errf" >&2; rm -f "$errf"
         return "$rc"
     done
@@ -181,8 +189,29 @@ require_gcloud_login() {
         *@"$DOMAIN") ;;
         *) warn "gcloud is signed in as $acct, not an @$DOMAIN account. The project lives in the $DOMAIN organisation; if a step fails with PERMISSION_DENIED, open Cloud Shell from the console while signed in as your @$DOMAIN admin." ;;
     esac
-    gcloud projects describe "$PROJECT" --format='value(projectId)' >/dev/null 2>&1 \
-        || die "Project $PROJECT not found (or no access). Create it first: README step 4."
+    # Bill API quota to our own project. Without a quota project, gcloud
+    # counts calls against Google's shared gcloud client project
+    # (32555940559), whose per-minute limit is shared with everyone and
+    # answers HTTP 429 at busy times. A brand-new project may not have the
+    # APIs enabled yet, so fall back to the default if that fails.
+    local err
+    if CLOUDSDK_BILLING_QUOTA_PROJECT="$PROJECT" gcloud projects describe "$PROJECT" \
+            --format='value(projectId)' >/dev/null 2>&1; then
+        export CLOUDSDK_BILLING_QUOTA_PROJECT="$PROJECT"
+        return 0
+    fi
+    if ! err="$(gcloud projects describe "$PROJECT" --format='value(projectId)' 2>&1 >/dev/null)"; then
+        case "$err" in
+            *Reauthentication*|*invalid_grant*|*"auth login"*|*"refresh"*token*)
+                die "your gcloud sign-in has expired. Run: gcloud auth login $acct  (then try again)" ;;
+            *PERMISSION_DENIED*|*"does not have permission"*|*403*)
+                die "gcloud ($acct) has no access to $PROJECT. Switch profile: bash deploy/gcp/switch.sh c2o" ;;
+            *NOT_FOUND*|*404*|*"not found"*)
+                die "Project $PROJECT not found. Create it first: README step 4." ;;
+            *) die "could not reach project $PROJECT. gcloud said:
+$err" ;;
+        esac
+    fi
 }
 
 # The two LB forwarding rules (the only LB parts billed by the hour that
