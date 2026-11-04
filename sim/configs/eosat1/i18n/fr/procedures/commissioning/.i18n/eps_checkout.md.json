@@ -29,13 +29,13 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-1-baseline-bus-voltage-measurement",
-   "en_hash": "f12a3cbbd29f9f5c",
-   "fr_hash": "38b8b054c91d8669"
+   "en_hash": "33f0ea040f592f38",
+   "fr_hash": "e2683f49bc868ec9"
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-2-battery-voltage-and-state-of-charge",
-   "en_hash": "a22fc60a79dfd8f1",
-   "fr_hash": "46a2191056648271"
+   "en_hash": "c698a88530f6d0b7",
+   "fr_hash": "82639bf25b4f5494"
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-3-solar-array-sunlit-performance",
@@ -44,8 +44,8 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-4-eclipse-discharge-monitoring",
-   "en_hash": "1cebee684b1834b9",
-   "fr_hash": "a96ed988c8e24c45"
+   "en_hash": "193c86e3df16a60c",
+   "fr_hash": "19f3576fb2a535d1"
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-5-eclipse-exit-charge-recovery",
@@ -59,18 +59,18 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-7-bus-voltage-regulation-under-load-transient",
-   "en_hash": "ae6e41c110d52e87",
-   "fr_hash": "e5a8a458dc8a05ba"
+   "en_hash": "0166a8cfff4a08d7",
+   "fr_hash": "6676ea3423be035f"
   },
   {
    "id": "com-001-eps-power-system-checkout/off-nominal-handling",
-   "en_hash": "d2033ad2fe3e6d98",
-   "fr_hash": "3ae820918235a0b5"
+   "en_hash": "24d5462e38fa85d2",
+   "fr_hash": "da484badc093bfbe"
   },
   {
    "id": "com-001-eps-power-system-checkout/post-conditions",
-   "en_hash": "ceb9ffe3067ffa7a",
-   "fr_hash": "15ed2cb33280b4b1"
+   "en_hash": "b3d7727c8571f2a1",
+   "fr_hash": "d85c058a559c7f46"
   },
   {
    "id": "com-001-eps-power-system-checkout/exit-state",
@@ -78,5 +78,5 @@
    "fr_hash": "17e43cc1a8dd3741"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

@@ -347,7 +347,7 @@ procedure execution:
 
 | From Contingency | Escalation Trigger | Emergency Procedure |
 |------------------|--------------------|---------------------|
-| CTG-023 (Load Shed) | SoC < 10% or bus < 25V | EMG-002 Total Power Failure |
+| CTG-023 (Load Shed) | SoC < 10% or bus < 28.4V | EMG-002 Total Power Failure |
 | CTG-003 (Link Loss) | 2 consecutive failed passes | EMG-004 Loss of Communication |
 | CTG-002 (AOCS Anomaly) | 3+ wheel failure or rate > 5 deg/s | EMG-005 Loss of Attitude |
 | CTG-004 (Thermal) | Red limit breach (any zone) | EMG-006 Thermal Runaway |

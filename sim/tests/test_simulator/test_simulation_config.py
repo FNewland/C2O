@@ -32,7 +32,10 @@ class TestSimulationConfigFile:
         assert cfg.phases.separation_timer_s == 1800.0
         assert cfg.ttc.auto_tx_hold_s == 300.0
         assert cfg.eps.initial.soc_pct == 90.0
-        assert cfg.eps.load_shed.bus_voltage_v == 25.0
+        # 2026-11: the shed trigger is the named bus_protection.uv_v (one
+        # value, one place); load_shed.bus_voltage_v is a harness override.
+        assert cfg.eps.load_shed.bus_voltage_v is None
+        assert cfg.eps.bus_protection.uv_v == 28.4
         assert cfg.eps.load_shed.soc_stage_thresholds_pct == [30.0, 20.0, 10.0]
 
     def test_missing_file_falls_back_to_defaults(self, tmp_path):
@@ -43,7 +46,8 @@ class TestSimulationConfigFile:
         assert cfg.phases.separation_timer_s == 1800.0
         assert cfg.ttc.auto_tx_hold_s == 900.0
         assert cfg.eps.initial.soc_pct == 75.0
-        assert cfg.eps.load_shed.bus_voltage_v == 26.5
+        assert cfg.eps.load_shed.bus_voltage_v is None
+        assert cfg.eps.bus_protection.uv_v == 28.4
         assert cfg.failures.default_onset_duration_s == 90.0
 
     def test_engine_uses_config_values(self, engine):
@@ -54,7 +58,8 @@ class TestSimulationConfigFile:
 
     def test_eps_model_uses_config_values(self, engine):
         eps = engine.subsystems["eps"]
-        assert eps._shed_voltage == 25.0
+        assert eps._shed_voltage == 28.4
+        assert eps._uv_threshold == 28.4   # one named value drives both
         assert eps._shed_order == ["payload", "fpa_cooler", "ttc_tx", "aocs_wheels", "prop"]
         assert eps._state.bat_soc_pct == 90.0
         # 2026-08b R1: the TX ratings are a real CubeSat radio's DC draw now

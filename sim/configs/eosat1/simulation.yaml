@@ -124,24 +124,47 @@ eps:
   # thermostat, not the line switch, is the load (brief 01 F10 / WP-5).
   heater_duty_from_tcs: true
 
-  uv_threshold_v: 26.5
-  ov_threshold_v: 29.5
+  # ── Bus-voltage protection ladder: ONE named value per decision ──────
+  # (2026-11 consistency pass, docs/plan_2026-11/design_sim/
+  # SIM_CONSISTENCY_FIXES.md). This block is the single source: the EPS model
+  # reads it for the UV/OV flags, the in-model load shed and the S5 bus
+  # events, and the literal copies the other files have to carry
+  # (subsystems/fdir.yaml, fdir/fault_propagation.yaml,
+  # monitoring/s12_definitions.yaml, mcs/limits.yaml 0x0105) are checked
+  # against it at engine start, in the config editor and by
+  # tests/test_content/test_sim_consistency.py. Do not add a bus-voltage
+  # threshold anywhere without naming it here.
+  #
+  # Each level = BPX 8S-1P linear OCV, V = 24.0 + 0.096 x SoC%, at the SoC
+  # rung the ladder was designed around (brief 01 WP-6). Before this pass the
+  # same decision was spread over six literals (26.5 UV, 27/25 events,
+  # 25.0 shed, 24.5/23.2 FDIR, 23.0 cascade) on the old 21.5-29.2 V curve,
+  # with the UV flag and the warning event INSIDE the nominal eclipse band.
+  # Every other bus/battery voltage (cap, OV, ground limits, procedure
+  # checks) was carried to the new curve at the SAME SoC:
+  #   V_new = 24.0 + (V_old - 21.5) x 9.6 / 7.7
+  # so what students practised is unchanged in state-of-charge terms.
+  bus_protection:
+    uv_v: 28.4          # 45.8 % — uv_flag, in-model shed, S5 0x0103, S12 warning, MCS yellow
+    eps_safe_v: 27.7    # 38.5 % — FDIR safe_mode_eps, S5 0x0104, S12 alarm, MCS red
+    aocs_safe_v: 26.1   # 21.9 % — FDIR safe_mode_aocs
+    cascade_v: 25.9     # 19.8 % — fault_propagation eps_undervoltage cascade
+    ov_v: 34.0          # bus over-voltage flag; the bus is capped at 33.4 V (eps_basic.BUS_CAP_V)
 
   load_shed:
     # In-model bus-voltage shed (first entry sheds first). prop is LAST
     # (Phase D): shedding propulsion is the last resort, and dropping the
     # line mid-burn triggers the on-board burn abort (0x0B14 reason 4).
     order: [payload, fpa_cooler, ttc_tx, aocs_wheels, prop]
-    # Item 9: 26.5 -> 25.0 V. 26.5 V is the battery OCV at ~65 % SoC, i.e. INSIDE
-    # the normal eclipse band — every session stripped payload/cooler/TX/wheels
-    # in the first eclipse with no auto-restore. 25.0 V ~ 45 % SoC leaves the
-    # ladder reachable under failures (bus_short, array loss) but not in nominal
-    # operations.
-    bus_voltage_v: 25.0
+    # Trigger = bus_protection.uv_v (no key here: one value, one place).
+    # Item 9 history: 26.5 V sat at ~65 % SoC, INSIDE the normal eclipse band
+    # — every session stripped payload/cooler/TX/wheels in the first eclipse.
+    # ~45 % SoC leaves the ladder reachable under failures (bus_short, array
+    # loss) but not in nominal operations.
     restore_hysteresis_v: 0.5
     # Phase B (brief 01 F15 / WP-7): the documented hysteresis restore now
     # exists — shed lines are restored one per tick, in reverse shed order,
-    # once the bus recovers above bus_voltage_v + restore_hysteresis_v.
+    # once the bus recovers above bus_protection.uv_v + restore_hysteresis_v.
     auto_restore: true
     # FDIR load-shed stage 1/2/3 entry thresholds (battery SoC %), highest
     # first. CANONICAL source for LoadSheddingManager; fdir/fault_propagation.yaml
@@ -166,8 +189,7 @@ eps:
     soc_low_pct: 20.0
     soc_critical_pct: 10.0
     soc_charge_complete_pct: 99.0
-    bus_warning_v: 27.0
-    bus_critical_v: 25.0
+    # Bus events 0x0103 / 0x0104 fire at bus_protection.uv_v / .eps_safe_v.
     bat_overtemp_c: 45.0
     bat_undertemp_c: -5.0
     sa_degraded_fraction: 0.7  # actual < fraction x expected => array degraded

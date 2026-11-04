@@ -256,10 +256,10 @@ Plage valide : 1 — 3600 secondes
 
 **Structure EPS (SID=1) :**
 ```
-eps.bat_voltage        [V]      Battery voltage (nominal 28.5V)
+eps.bat_voltage        [V]      Battery voltage (BPX 8S-1P: 24.0-33.6V, nominal 28.8V)
 eps.bat_soc            [%]      Battery state of charge (0-100%)
 eps.bat_temp           [C]      Battery temperature (-5 to +50°C)
-eps.bus_voltage        [V]      Main bus voltage (27-35V nominal)
+eps.bus_voltage        [V]      Main bus voltage (follows the battery, capped at 33.4V)
 eps.power_gen          [W]      Total solar power generation
 eps.power_cons         [W]      Total power consumption
 eps.load_shed_stage    [0-3]    Current load shedding stage
@@ -703,8 +703,8 @@ Les deux sont mis en œuvre ; **les 38 définitions livrées utilisent toutes 
 |-----------|------|-----------|-------|-----------|
 | `eps.bat_soc` | Bas | < 20 % | 0x0101 | Réduire les charges |
 | `eps.bat_soc` | Critique | < 10 % | 0x0102 | Délestage d'urgence |
-| `eps.bus_voltage` | Bas | < 27 V | 0x0103 | Arrêt de la charge utile |
-| `eps.bus_voltage` | Critique | < 25 V | 0x0104 | Arrêt de tout le non-essentiel |
+| `eps.bus_voltage` | Bas | < 28,4 V | 0x0103 | Arrêt de la charge utile |
+| `eps.bus_voltage` | Critique | < 27,7 V | 0x0104 | Arrêt de tout le non-essentiel |
 | `aocs.rw1_speed` | Survitesse | > ±5000 tr/min | 0x0201 | Désactiver la roue 1 |
 | `aocs.total_momentum` | Saturation | > 90 Nms | 0x0205 | Déclencher la désaturation |
 | `aocs.att_error` | Élevée | > 1° | 0x0206 | Mode survie |

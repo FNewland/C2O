@@ -156,7 +156,7 @@ automatiquement. L'envoyer à la main une fois la décision prise.
 **Note:** Si le réchauffeur a nécessité le délestage d'une ligne d'alimentation, NE PAS réactiver la ligne
 sans évaluation par l'ingénierie. Le relais ou l'interrupteur est soupçonné d'être bloqué.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — contrôle final de la puissance
-**Verify:** `eps.bus_voltage > 28.0` (0x0105, timeout 10 s) — le bilan de puissance est stable
+**Verify:** `eps.bus_voltage > 32.1` (0x0105, timeout 10 s) — le bilan de puissance est stable
 **Note:** Consigner l'événement d'emballement thermique : zone concernée, température maximale
 atteinte, intervention nécessaire (commande d'arrêt / forçage des consignes /
 délestage), durée de l'emballement et configuration thermique actuelle.

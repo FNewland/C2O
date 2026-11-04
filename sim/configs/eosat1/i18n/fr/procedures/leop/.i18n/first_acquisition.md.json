@@ -64,8 +64,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-7-request-eps-housekeeping-power-sanity-check",
-   "en_hash": "ad8ecb746f219979",
-   "fr_hash": "fa03d99b64bb6854"
+   "en_hash": "8cf366a9aa647d3c",
+   "fr_hash": "615251c96fbd2f6f"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-8-log-and-report",
@@ -88,5 +88,5 @@
    "fr_hash": "255f3c828e6e48a7"
   }
  ],
- "en_commit": "5f4fa5a"
+ "en_commit": "f614a01"
 }

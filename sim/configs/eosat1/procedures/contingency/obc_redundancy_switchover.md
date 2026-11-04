@@ -31,7 +31,7 @@ loads correctly, and verifies all subsystems return to nominal operation.
 | obdh.sw_version | 0x030B | Correct application version after boot |
 | obdh.cpu_load | 0x0302 | < 80% after stabilization |
 | obdh.temp | 0x0301 | Within limits |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | aocs.mode | 0x020F | Verify post-switchover |
 | payload.mode | 0x0600 | Verify post-switchover |
 | ttc.link_status | 0x0501 | 2 (LOCKED) |
@@ -108,7 +108,7 @@ If `obdh.reboot_count` > 4, FDIR may have already triggered safe mode.
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Platform/OBDH housekeeping
 **Verify:** All HK responses received within 15 s.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V
 **Verify:** `eps.bat_soc` (0x0101) — record value
 **Verify:** `aocs.mode` (0x020F) — record mode. AOCS may have reverted to COARSE_SUN
 during the switchover. If so, restore to nominal mode after confirming stability.

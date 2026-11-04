@@ -64,7 +64,7 @@ The spacecraft is in bootloader (`sw_image = 0`). Only OBC + TTC RX are powered.
 
 | Parameter | Hex ID | Expected | Where on MCS |
 |-----------|--------|----------|--------------|
-| `bat_voltage` | 0x0100 | ~26.4 V | **eps** tab → Battery panel |
+| `bat_voltage` | 0x0100 | ~32.6 V | **eps** tab → Battery panel |
 | `bat_soc` | 0x0101 | ~75% | **eps** tab → Battery panel |
 | `obc_mode` | 0x0300 | 0 (not a boot indicator — read `sw_image`) | **obdh** tab → Mode field |
 | `reboot_count` | 0x030A | 0 | **obdh** tab → Reboot Count |
@@ -145,8 +145,8 @@ Now in application mode. All SIDs available. Check everything before powering on
 
 | Parameter | Hex ID | Expected Cold-Boot Value | Check |
 |-----------|--------|--------------------------|-------|
-| `bus_voltage` | 0x0105 | 28.2 V (regulated) | ∈ [27.0, 29.5] V |
-| `bat_voltage` | 0x0100 | ~26.4 V | ∈ [24.0, 28.0] V |
+| `bus_voltage` | 0x0105 | ~32.6 V (follows battery) | ∈ [30.9, 34.0] V |
+| `bat_voltage` | 0x0100 | ~32.6 V | ∈ [24.0, 33.6] V |
 | `bat_soc` | 0x0101 | ~75% | > 50% |
 | `bat_temp` | 0x0102 | ~15°C | ∈ [0, 35]°C |
 | `power_gen` | 0x0107 | depends on sun | > 0 W if sunlit |
@@ -351,7 +351,7 @@ To disable a specific wheel: `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, func_id 2,
 | Parameter | Expected After Step 7.3 |
 |-----------|------------------------|
 | `power_cons` | ~40 W (OBC ~6W + RX ~1.5W + TX ~11W + heaters ~9W + wheels ~12W) |
-| `bus_voltage` | > 27.0 V |
+| `bus_voltage` | > 30.9 V |
 | `bat_soc` | still > 60% |
 | `power_gen` - `power_cons` | positive margin if sunlit |
 

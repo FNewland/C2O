@@ -250,9 +250,9 @@ worksheets:
       en: '2. EPS: Verify EPS health: HK_REQUEST(sid=1)'
       fr: '2. EPS : Vérifier la santé de l''EPS : HK_REQUEST(sid=1)'
     hint:
-      en: 'eps.bat_soc (0x0101) > 50 %; eps.bus_voltage (0x0105) > 27.0 V; eps.power_gen (0x0107) > eps.power_cons
+      en: 'eps.bat_soc (0x0101) > 50 %; eps.bus_voltage (0x0105) > 30.9 V; eps.power_gen (0x0107) > eps.power_cons
         (0x0106). Either limit missed: CTG-005, no payload operations'
-      fr: 'eps.bat_soc (0x0101) > 50 % ; eps.bus_voltage (0x0105) > 27.0 V ; eps.power_gen (0x0107) >
+      fr: 'eps.bat_soc (0x0101) > 50 % ; eps.bus_voltage (0x0105) > 30.9 V ; eps.power_gen (0x0107) >
         eps.power_cons (0x0106). Une des deux limites non tenue : CTG-005, aucune opération de charge
         utile'
     step: '2'
@@ -790,9 +790,9 @@ worksheets:
       en: '7. SPACON: Power sanity check: HK_REQUEST(sid=1) (S3.27)'
       fr: '7. SPACON : Contrôle de cohérence de l''alimentation : HK_REQUEST(sid=1) (S3.27)'
     hint:
-      en: eps.bus_voltage (0x0105) 26.0–30.0 V; eps.bat_soc (0x0101) > 50 %; eps.pl_ttc_tx (0x0112) =
+      en: eps.bus_voltage (0x0105) 29.6–34.6 V; eps.bat_soc (0x0101) > 50 %; eps.pl_ttc_tx (0x0112) =
         1 (auto-TX hold-down); eps.power_gen (0x0107) reported, small while tumbling
-      fr: eps.bus_voltage (0x0105) de 26.0 à 30.0 V ; eps.bat_soc (0x0101) > 50 % ; eps.pl_ttc_tx (0x0112)
+      fr: eps.bus_voltage (0x0105) de 29.6 à 34.6 V ; eps.bat_soc (0x0101) > 50 % ; eps.pl_ttc_tx (0x0112)
         = 1 (maintien automatique de l'émetteur) ; eps.power_gen (0x0107) remontée, faible pendant le
         culbutage
     step: '7'
@@ -968,10 +968,10 @@ worksheets:
       en: '1. EPS: Full EPS housekeeping: HK_REQUEST(sid=1) (S3.27)'
       fr: '1. EPS : Données de servitude EPS complètes : HK_REQUEST(sid=1) (S3.27)'
     hint:
-      en: 'eps.bus_voltage (0x0105) 26.0–30.0 V; eps.bat_voltage (0x0100) reported; eps.bat_soc (0x0101)
+      en: 'eps.bus_voltage (0x0105) 29.6–34.6 V; eps.bat_voltage (0x0100) reported; eps.bat_soc (0x0101)
         > 50 %; eps.power_gen (0x0107) > 0 W in sunlight — 0 W is expected with eps.eclipse_flag (0x0108)
         = 1: re-check after eclipse exit'
-      fr: 'eps.bus_voltage (0x0105) de 26.0 à 30.0 V ; eps.bat_voltage (0x0100) remontée ; eps.bat_soc
+      fr: 'eps.bus_voltage (0x0105) de 29.6 à 34.6 V ; eps.bat_voltage (0x0100) remontée ; eps.bat_soc
         (0x0101) > 50 % ; eps.power_gen (0x0107) > 0 W au Soleil — 0 W est attendu avec eps.eclipse_flag
         (0x0108) = 1 : contrôler de nouveau après la sortie d''éclipse'
     step: '1'
@@ -1061,9 +1061,9 @@ worksheets:
       en: '1. EPS: Verify the EPS baseline: HK_REQUEST(sid=1) (S3.27)'
       fr: '1. EPS : Vérifier l''état de référence de l''EPS : HK_REQUEST(sid=1) (S3.27)'
     hint:
-      en: eps.bus_voltage (0x0105) 26.0–30.0 V; eps.bat_soc (0x0101) > 60 %; eps.power_gen (0x0107) >
+      en: eps.bus_voltage (0x0105) 29.6–34.6 V; eps.bat_soc (0x0101) > 60 %; eps.power_gen (0x0107) >
         20 W
-      fr: eps.bus_voltage (0x0105) de 26.0 à 30.0 V ; eps.bat_soc (0x0101) > 60 % ; eps.power_gen (0x0107)
+      fr: eps.bus_voltage (0x0105) de 29.6 à 34.6 V ; eps.bat_soc (0x0101) > 60 % ; eps.power_gen (0x0107)
         > 20 W
     step: '1'
   - id: q2
@@ -1706,10 +1706,10 @@ worksheets:
       en: 1. Baseline bus voltage — HK_REQUEST(sid=1) (S3.27)
       fr: 1. Tension de bus de référence — HK_REQUEST(sid=1) (S3.27)
     hint:
-      en: eps.bus_voltage (0x0105) ∈ [27.0, 29.0] V (nominal regulation point 28.0 ± 0.5 V; a full battery
-        sits near 29 V)
-      fr: eps.bus_voltage (0x0105) ∈ [27.0, 29.0] V (point de régulation nominal 28.0 ± 0.5 V ; une batterie
-        pleine se tient près de 29 V)
+      en: eps.bus_voltage (0x0105) ∈ [28.4, 34.0] V (the console's yellow band; the bus is not regulated
+        — it follows the battery up to the 33.4 V cap)
+      fr: eps.bus_voltage (0x0105) ∈ [28.4, 34.0] V (la bande jaune de la console ; le bus n'est pas régulé
+        — il suit la batterie jusqu'au plafond de 33.4 V)
     step: '1'
   - id: q2
     kind: check
@@ -1717,10 +1717,10 @@ worksheets:
       en: 2. Battery V & SoC — GET_PARAM(param_id=0x0100), GET_PARAM(param_id=0x0101) (S20.3)
       fr: 2. Tension et SoC de la batterie — GET_PARAM(param_id=0x0100), GET_PARAM(param_id=0x0101) (S20.3)
     hint:
-      en: 'eps.bat_voltage (0x0100) ∈ [21.5, 29.2] V (8S pack, 100 Wh: 21.5 V empty, 26.4 V nominal, 29.2
-        V full); eps.bat_soc (0x0101) > 70 %'
-      fr: 'eps.bat_voltage (0x0100) ∈ [21.5, 29.2] V (batterie 8S de 100 Wh : 21.5 V vide, 26.4 V nominal,
-        29.2 V pleine) ; eps.bat_soc (0x0101) > 70 %'
+      en: 'eps.bat_voltage (0x0100) ∈ [24.0, 33.6] V (GomSpace BPX 8S-1P, 100 Wh: 24.0 V empty, 28.8 V
+        nominal, 33.6 V full); eps.bat_soc (0x0101) > 70 %'
+      fr: 'eps.bat_voltage (0x0100) ∈ [24.0, 33.6] V (GomSpace BPX 8S-1P de 100 Wh : 24.0 V vide, 28.8
+        V nominal, 33.6 V pleine) ; eps.bat_soc (0x0101) > 70 %'
     step: '2'
   - id: q3
     kind: check
@@ -1741,9 +1741,9 @@ worksheets:
       fr: 4. Décharge en éclipse — HK_REQUEST(sid=1) à l'entrée et à mi-éclipse
     hint:
       en: eps.power_gen ~0 W within 30 s of entry; eps.bat_soc falling < 1.5 %/min; eps.bus_voltage >
-        27.0 V
+        30.9 V
       fr: eps.power_gen ~0 W dans les 30 s après l'entrée ; eps.bat_soc en baisse de moins de 1.5 %/min
-        ; eps.bus_voltage > 27.0 V
+        ; eps.bus_voltage > 30.9 V
     step: '4'
   - id: q5
     kind: check
@@ -1774,9 +1774,9 @@ worksheets:
         puis EPS_POWER_ON(line_index=5) (S8.1 func_id 19), et EPS_POWER_OFF(line_index=5) (func 20) seulement
         si la ligne était éteinte à l''entrée. Pas la charge utile : sa ligne est OFF jusqu''à COM-009'
     hint:
-      en: eps.bus_voltage stays in [26.5, 29.5] V within 5 s and returns to [27.0, 29.0] V within 10 s;
+      en: eps.bus_voltage stays in [30.2, 34.0] V within 5 s and returns to [30.9, 34.0] V within 10 s;
         eps.pl_htr_bat back to its entry value
-      fr: eps.bus_voltage reste dans [26.5, 29.5] V en 5 s et revient dans [27.0, 29.0] V en 10 s ; eps.pl_htr_bat
+      fr: eps.bus_voltage reste dans [30.2, 34.0] V en 5 s et revient dans [30.9, 34.0] V en 10 s ; eps.pl_htr_bat
         revenu à sa valeur d'entrée
     step: '7'
   - id: q8
@@ -2372,9 +2372,9 @@ worksheets:
       en: '1. Pre-power-on EPS baseline: HK_REQUEST(sid=1) (S3.27)'
       fr: '1. Référence EPS avant mise sous tension : HK_REQUEST(sid=1) (S3.27)'
     hint:
-      en: eps.bus_voltage (0x0105) ∈ [27.0, 29.0] V; eps.bat_soc (0x0101) > 75 %; eps.power_gen (0x0107)
+      en: eps.bus_voltage (0x0105) ∈ [28.4, 34.0] V; eps.bat_soc (0x0101) > 75 %; eps.power_gen (0x0107)
         > 40 W — all three recorded
-      fr: eps.bus_voltage (0x0105) ∈ [27.0, 29.0] V ; eps.bat_soc (0x0101) > 75 % ; eps.power_gen (0x0107)
+      fr: eps.bus_voltage (0x0105) ∈ [28.4, 34.0] V ; eps.bat_soc (0x0101) > 75 % ; eps.power_gen (0x0107)
         > 40 W — les trois consignés
     step: '1'
   - id: q2
@@ -2405,9 +2405,9 @@ worksheets:
       en: '4. Payload power draw: HK_REQUEST(sid=1), GET_PARAM(param_id=0x0106) (S20.3)'
       fr: '4. Consommation de la charge utile : HK_REQUEST(sid=1), GET_PARAM(param_id=0x0106) (S20.3)'
     hint:
-      en: eps.bus_voltage > 27.0 V; eps.power_cons (0x0106) up 2–3 W on the baseline (STANDBY about 2.4
+      en: eps.bus_voltage > 30.9 V; eps.power_cons (0x0106) up 2–3 W on the baseline (STANDBY about 2.4
         W; the 15 W cooler is not on until COM-010)
-      fr: eps.bus_voltage > 27.0 V ; eps.power_cons (0x0106) en hausse de 2–3 W sur la référence (STANDBY
+      fr: eps.bus_voltage > 30.9 V ; eps.power_cons (0x0106) en hausse de 2–3 W sur la référence (STANDBY
         environ 2.4 W ; le refroidisseur de 15 W n'est pas en marche avant COM-010)
     step: '4'
   - id: q5
@@ -2514,9 +2514,9 @@ worksheets:
       fr: '3. Consommation du refroidisseur : HK_REQUEST(sid=1), GET_PARAM(param_id=0x0106) (S20.3)'
     hint:
       en: eps.power_cons (0x0106) up 14–16 W on the pre-cooler baseline within 30 s; eps.bus_voltage (0x0105)
-        > 27.0 V
+        > 30.9 V
       fr: eps.power_cons (0x0106) en hausse de 14–16 W sur la référence d'avant refroidissement en 30
-        s ; eps.bus_voltage (0x0105) > 27.0 V
+        s ; eps.bus_voltage (0x0105) > 30.9 V
     step: '3'
   - id: q4
     kind: check
@@ -3224,11 +3224,11 @@ worksheets:
       fr: '1. EPS : Détecter et confirmer, et lire ce que la FDIR a déjà délesté : HK_REQUEST(sid=1) (S3.27).
         Le FD autorise ; annoncer « UNDERVOLTAGE — completing load shed from the ground »'
     hint:
-      en: 'eps.uv_flag (0x010E) = 1; record eps.bus_voltage (0x0105, expect < 27.0 V), eps.bat_soc (0x0101),
+      en: 'eps.uv_flag (0x010E) = 1; record eps.bus_voltage (0x0105, expect < 28.4 V), eps.bat_soc (0x0101),
         eps.bat_voltage (0x0100), eps.power_cons (0x0106), eps.power_gen (0x0107), eps.eclipse_flag (0x0108),
         eps.load_shed_stage (0x0134), and eps.pl_payload (0x0113), eps.pl_fpa_cooler (0x0114), eps.pl_ttc_tx
         (0x0112), eps.pl_aocs_wheels (0x0117): 1 = still ON, 0 = already shed'
-      fr: 'eps.uv_flag (0x010E) = 1 ; consigner eps.bus_voltage (0x0105, attendu < 27.0 V), eps.bat_soc
+      fr: 'eps.uv_flag (0x010E) = 1 ; consigner eps.bus_voltage (0x0105, attendu < 28.4 V), eps.bat_soc
         (0x0101), eps.bat_voltage (0x0100), eps.power_cons (0x0106), eps.power_gen (0x0107), eps.eclipse_flag
         (0x0108), eps.load_shed_stage (0x0134), et eps.pl_payload (0x0113), eps.pl_fpa_cooler (0x0114),
         eps.pl_ttc_tx (0x0112), eps.pl_aocs_wheels (0x0117) : 1 = encore sur ON, 0 = déjà délestée'
@@ -3301,9 +3301,9 @@ worksheets:
       fr: '6. EPS : Surveiller le rétablissement : HK_REQUEST(sid=1) toutes les 60 s'
     hint:
       en: eps.bus_voltage and eps.bat_soc trending up; eps.power_gen > 0 W in sunlight; eps.bat_current
-        (0x0109) positive (charging). Restore when bus > 28.0 V and SoC > 40 %
+        (0x0109) positive (charging). Restore when bus > 32.1 V and SoC > 40 %
       fr: eps.bus_voltage et eps.bat_soc en hausse ; eps.power_gen > 0 W au Soleil ; eps.bat_current (0x0109)
-        positif (en charge). Rétablir quand le bus > 28.0 V et le SoC > 40 %
+        positif (en charge). Rétablir quand le bus > 32.1 V et le SoC > 40 %
     step: '6'
   - id: q8
     kind: check
@@ -3320,9 +3320,9 @@ worksheets:
         (il ne fonctionne que pour préparer une prise de vue ; la commande STANDBY ci-dessous l''arrêterait)
         ; EPS_POWER_ON(line_index=3) si eps.pl_payload = 0, puis PAYLOAD_SET_MODE(mode=1)'
     hint:
-      en: eps.pl_aocs_wheels = 1 within 5 s; after each load eps.bus_voltage > 27.5 V and eps.bat_soc
+      en: eps.pl_aocs_wheels = 1 within 5 s; after each load eps.bus_voltage > 31.5 V and eps.bat_soc
         > 35 %; all loads back, power budget positive
-      fr: eps.pl_aocs_wheels = 1 en 5 s ; après chaque charge, eps.bus_voltage > 27.5 V et eps.bat_soc
+      fr: eps.pl_aocs_wheels = 1 en 5 s ; après chaque charge, eps.bus_voltage > 31.5 V et eps.bat_soc
         > 35 % ; toutes les charges rétablies, bilan de puissance positif
     step: '7'
 - id: WB-A-CTG-002
@@ -3762,9 +3762,9 @@ worksheets:
       fr: '5. Indices de cause première : HK_REQUEST(sid=1) ; examiner la tendance de obdh.cpu_load (0x0302)
         et les données EPS d''avant la réinitialisation'
     hint:
-      en: eps.bus_voltage (0x0105) > 27.0 V; transient (SEU, brief dip) → log it; systemic (repeated high
+      en: eps.bus_voltage (0x0105) > 30.9 V; transient (SEU, brief dip) → log it; systemic (repeated high
         CPU, memory errors) → ground software team
-      fr: eps.bus_voltage (0x0105) > 27.0 V ; transitoire (SEU, creux bref) → le consigner ; systémique
+      fr: eps.bus_voltage (0x0105) > 30.9 V ; transitoire (SEU, creux bref) → le consigner ; systémique
         (CPU élevée répétée, erreurs mémoire) → équipe logiciel sol
     step: '5'
   - id: q7
@@ -3809,10 +3809,10 @@ worksheets:
     hint:
       en: 'the tripped line''s current (0x0118–0x011F) near 0 A — the LCL opened it; still elevated =
         persistent fault: do NOT re-enable, escalate. Line status (0x0110–0x0117) OFF; eps.bus_voltage
-        (0x0105) > 27.0 V'
+        (0x0105) > 30.9 V'
       fr: 'courant de la ligne déclenchée (0x0118–0x011F) proche de 0 A — le LCL l''a ouverte ; toujours
         élevé = défaut persistant : ne PAS réactiver, escalader. État de ligne (0x0110–0x0117) sur OFF
-        ; eps.bus_voltage (0x0105) > 27.0 V'
+        ; eps.bus_voltage (0x0105) > 30.9 V'
     step: '2'
   - id: q3
     kind: check
@@ -3855,9 +3855,9 @@ worksheets:
       fr: '6. Reprise en aval : HK_REQUEST du SID du propriétaire (2 AOCS, 5 charge utile, 6 TT&C, 3 réchauffeurs)
         et HK_REQUEST(sid=1)'
     hint:
-      en: the subsystem works again; eps.power_cons (0x0106) shows the load; eps.bus_voltage > 27.0 V
+      en: the subsystem works again; eps.power_cons (0x0106) shows the load; eps.bus_voltage > 30.9 V
       fr: le sous-système fonctionne de nouveau ; eps.power_cons (0x0106) reflète la charge ; eps.bus_voltage
-        > 27.0 V
+        > 30.9 V
     step: '6'
 - id: WB-A-CTG-015
   title:

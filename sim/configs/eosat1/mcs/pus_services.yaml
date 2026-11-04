@@ -48,19 +48,35 @@ services:
   s15:
     label: "Onboard Storage"
     enabled: true
+    # Single source for the S15 packet stores (2026-11 consistency pass).
+    # capacity_packets is the live limit the simulator enforces (engine ->
+    # smo_simulator.tm_storage); capacity_bytes is the OBC flash partition
+    # in subsystems/memory_map.yaml, sized to hold capacity_packets of the
+    # store's largest packet (HK: SID 2 AOCS, 152 octets -> 2.7 MB -> 4 MiB;
+    # it was 1 MiB, too small for the 18 000 packets the store really keeps).
+    # The Science Store (3) holds the 20-octet image PRODUCT RECORDS that
+    # PAYLOAD_CAPTURE writes; the image pixels live in the payload's own
+    # 20 GB mass memory (subsystems/payload.yaml total_storage_mb) and are
+    # streamed by S13. The 8 MiB here and the 20 GB there are two different
+    # memories, not one store quoted twice.
     stores:
       - id: 1
         name: "HK Store"
-        capacity_bytes: 1048576
+        capacity_bytes: 4194304
+        capacity_packets: 18000
+        circular: true
       - id: 2
         name: "Event Store"
         capacity_bytes: 524288
+        capacity_packets: 2000
       - id: 3
         name: "Science Store"
         capacity_bytes: 8388608
+        capacity_packets: 10000
       - id: 4
         name: "Alarm Store"
         capacity_bytes: 262144
+        capacity_packets: 500
     description: "Packet storage and retrieval for downlink scheduling"
   s17:
     label: "Connection Test"

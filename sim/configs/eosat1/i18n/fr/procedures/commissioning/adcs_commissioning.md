@@ -62,7 +62,7 @@ satellite sur le point de déclarer NOMINAL ne doit pas porter un OBC en SAFE)
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 et `eps.pl_htr_obc` (0x0116) = 1 --- lignes de
 réchauffeurs laissées sur ON sous contrôle thermostatique (état de sortie de COM-002) ; un satellite
 en NOMINAL dont la ligne du réchauffeur batterie est hors tension dérive jusqu'au rouge en éclipse
-**Verify:** `eps.bus_voltage` (0x0105) dans [26.5, 29.5] V ; `eps.bat_soc`
+**Verify:** `eps.bus_voltage` (0x0105) dans [30.2, 34.0] V ; `eps.bat_soc`
 (0x0101) > 60 %
 **Verify:** `obdh.time_ref` (0x0A13) != 0 --- horloge référencée (LEOP-006)
 **GO/NO-GO:** État final de la plateforme propre --- rien de laissé armé, délesté ou levé

@@ -161,7 +161,7 @@ par magnétocoupleurs seuls — le mode 1 est SAFE_BOOT, qui n'actionne rien.
 **TC:** `AOCS_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 0) — DETUMBLE, stabilisation par magnétocoupleurs
 seuls avant la mise hors tension des roues
 **GO/NO-GO:** Toutes les charges non essentielles délestées. Surveiller la stabilisation de la tension du bus.
-Si la tension du bus descend sous 25.0 V malgré le délestage de toutes les charges, commander
+Si la tension du bus descend sous 28.4 V malgré le délestage de toutes les charges, commander
 `OBC_SET_MODE(mode=2)` pour passer en mode EMERGENCY en dernier recours.
 
 ### Étape 6 : Surveiller la sortie d'éclipse et la recharge de la batterie
@@ -196,7 +196,7 @@ de délestage + 10 % de marge.
 **Verify:** `aocs.mode` (0x020F) = 3 (COARSE_SUN) en 15 s
 **Verify:** Vitesses angulaires `aocs.rate_roll` (0x0204), `aocs.rate_pitch` (0x0205),
 `aocs.rate_yaw` (0x0206) — en baisse vers zéro
-**Verify:** `eps.bus_voltage` (0x0105) reste > 26.0 V après la montée en vitesse des roues
+**Verify:** `eps.bus_voltage` (0x0105) reste > 29.6 V après la montée en vitesse des roues
 **Action:** Attendre 5 minutes et confirmer que le SoC poursuit sa hausse.
 **GO/NO-GO:** Roues AOCS rétablies et attitude en cours de reprise — continuer.
 
@@ -204,7 +204,7 @@ de délestage + 10 % de marge.
 **TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `ttc_tx`, si `eps.pl_ttc_tx` (0x0112) = 0 (la FDIR de bord l'ouvre lors d'un délestage profond ; `TTC_PA_ON` est alors refusé par un S1.8 « power line 'ttc_tx' is OFF »)
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66)
 **Verify:** `ttc.pa_on` (0x0516) = 1 en 5 s
-**Verify:** `eps.bus_voltage` (0x0105) reste > 26.5 V
+**Verify:** `eps.bus_voltage` (0x0105) reste > 30.2 V
 **Action:** Attendre 5 minutes et confirmer que le SoC poursuit sa hausse.
 **GO/NO-GO:** TX rétabli et télémesure reçue — continuer.
 
@@ -216,7 +216,7 @@ de délestage + 10 % de marge.
 que si une préparation de prise de vue est prévue, et après l'étape 7d, dont la commande STANDBY l'arrêterait.
 La mise en froid du FPA, de l'état non refroidi à FPA READY, prend environ 6.5 minutes.
 Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa température de fonctionnement.
-**Verify:** `eps.bus_voltage` (0x0105) reste > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) reste > 30.9 V
 **Action:** Attendre 5 minutes et confirmer que le SoC poursuit sa hausse.
 **GO/NO-GO:** Refroidisseur du FPA rétabli — continuer.
 
@@ -224,7 +224,7 @@ Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa temp�
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 (sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »)
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26)
 **Verify:** `payload.mode` (0x0600) = 1 (STANDBY) en 10 s
-**Verify:** `eps.bus_voltage` (0x0105) reste > 27.5 V
+**Verify:** `eps.bus_voltage` (0x0105) reste > 31.5 V
 **Verify:** `eps.bat_soc` (0x0101) reste > 55 %
 **GO/NO-GO:** Toutes les charges rétablies. Bilan de puissance positif — procédure terminée.
 
@@ -233,7 +233,7 @@ Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa temp�
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) — Télémesure de servitude AOCS
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Télémesure de servitude TCS
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Télémesure de servitude charge utile
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **Verify:** `eps.bat_soc` (0x0101) > 55 % et en hausse
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) — marge positive
 **Verify:** `aocs.mode` (0x020F) = 4 (NOMINAL) s'il est rétabli, ou 3 (COARSE_SUN) s'il est encore en attente
@@ -244,14 +244,14 @@ Les prises de vue ne doivent pas reprendre avant que le FPA ait atteint sa temp�
 ## Critères de vérification
 - [ ] Toutes les décisions de délestage/rétablissement documentées, avec le SoC et la tension du bus à chaque étape
 - [ ] `eps.uv_flag` (0x010E) = 0 (retombé)
-- [ ] `eps.bus_voltage` (0x0105) > 28.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
 - [ ] `eps.bat_soc` (0x0101) > 55 % et en hausse
 - [ ] Tous les sous-systèmes revenus dans leurs modes de fonctionnement nominaux
 - [ ] Bilan de puissance positif (production > consommation) avec une marge d'au moins 5 W
 - [ ] Aucune nouvelle sous-tension pendant au moins 2 orbites après le rétablissement
 
 ## Conduite à tenir hors nominal
-- Si la tension du bus descend sous 25.0 V après le délestage de toutes les charges : commander
+- Si la tension du bus descend sous 28.4 V après le délestage de toutes les charges : commander
   `OBC_SET_MODE(mode=2)` pour passer en mode EMERGENCY. Le satellite passera de lui-même en configuration
   de puissance minimale.
 - Si le SoC descend sous 10 % : risque de décharge profonde de la batterie et d'endommagement permanent des éléments.

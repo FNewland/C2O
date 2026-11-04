@@ -30,7 +30,7 @@ associated harness.
 | Peak Power (BOL)     | ~89 W instantaneous, wings sun-tracking at beta = 0, fully deployed (wings alone 70 W, matching the MMA eHaWK 6U class rating) |
 | Orbit-average (BOL, nadir) | ~51 W at beta = −21 deg (longest eclipse), ~49 W at beta = −31 deg (incl. eclipse) |
 | EOL performance      | K = 267.2 W/m2 of projected area (full loss stack, 3-year EOL, sa_age_factor 0.9175) |
-| Operating Voltage    | 28 V (regulated bus)       |
+| Operating Voltage    | 28.8 V nominal — unregulated battery bus, 24.0–33.4 V |
 | Wing deploy time     | ~30 s per wing (burn wire release) |
 
 Five spacecraft faces carry body-mounted solar panels (the -Z face carries the
@@ -119,9 +119,9 @@ burn wire restraint mechanism. Deployment is commanded via S8 function managemen
 | Parameter            | Value                      |
 |----------------------|----------------------------|
 | Chemistry            | Lithium-Ion (Li-Ion)       |
-| Nominal Voltage      | 26.4 V model (28.8 V datasheet); range 21.5–29.2 V |
-| Capacity             | 100 Wh (3 Ah, 8S1P)        |
-| Reference part       | GomSpace NanoPower BPX, 8S-1P: 100 Wh, 3 Ah, 28.8 V nominal, ~500 g, 18650 cells |
+| Nominal Voltage      | 28.8 V (BPX datasheet = midpoint of the model OCV); range 24.0–33.6 V |
+| Capacity             | 100 Wh (3.5 Ah, 8S1P)      |
+| Reference part       | GomSpace NanoPower BPX, 8S-1P: 100 Wh, 3.5 Ah, 28.8 V nominal, 24.0–33.6 V, ~500 g, 18650 cells |
 | Coulombic efficiency | 0.94 (charge acceptance)   |
 | Depth of Discharge   | Max 35% (nominal ops)      |
 | Charge Method        | CC/CV taper above 90 % SoC, thermal cutoff |
@@ -387,7 +387,7 @@ if `bat_temp` falls below 5 deg C.
 | Solar panel degradation  | Reduced panel current vs. model| Operator warning; adjust power budget |
 | Multiple panel loss      | Total power_gen < power_cons   | Progressive load shed, safe mode |
 | Battery over-temperature | bat_temp > 45 C                | Inhibit charge, alert            |
-| Bus under-voltage        | bus_voltage < 26.5 V           | Emergency mode transition        |
+| Bus under-voltage        | bus_voltage < 28.4 V           | Load shed (payload first); < 27.7 V EPS safe mode |
 | PDM outlet trip          | Individual current monitoring  | Auto-retry once, then isolate    |
 | PDM-A failure            | Multiple outlet trips          | Ground commands switch to PDM-B  |
 

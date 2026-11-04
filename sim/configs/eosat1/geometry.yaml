@@ -88,12 +88,14 @@ star_trackers:
 star_tracker_sun_exclusion_deg: 15.0
 star_tracker_earth_exclusion_deg: 25.0
 
-# Antennas (subsystems/ttc.yaml): the S-band prime chain's body-fixed patch
-# on the nadir face, and the UHF beacon's deployable tape-spring dipole.
-# ttc.yaml does not fix the mounting face; nadir for the patch is the only
-# face that sees the ground in NOMINAL and is assumed here for the picture.
+# Antennas (subsystems/ttc.yaml sband_antennas): the S-band prime chain's two
+# hemispherical patches, zenith (+Z) and nadir (-Z) — a quasi-omni pair, the
+# reason the link budget's sc_gain_dbi is attitude-independent — and the UHF
+# beacon's deployable tape-spring dipole. The patch ids and boresights are
+# copies of ttc.yaml, checked by smo_common.config.geometry._cross_check.
 antennas:
-  - { id: sband_patch, kind: patch, position_m: [0.0, 0.07, -0.183], boresight: [0, 0, -1] }
+  - { id: sband_patch_nadir, kind: patch, position_m: [0.0, 0.07, -0.183], boresight: [0, 0, -1] }
+  - { id: sband_patch_zenith, kind: patch, position_m: [-0.025, 0.0, 0.183], boresight: [0, 0, 1] }
   - { id: uhf_dipole, kind: dipole, position_m: [-0.05, 0.0, 0.15], boresight: [-1, 0, 0], length_m: 0.17 }
 
 # Propulsion (subsystems/prop.yaml): one thruster on the -X face thrusting

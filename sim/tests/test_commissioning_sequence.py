@@ -346,7 +346,10 @@ class TestPhase4:
         eng = self._make_booted_engine()
         _run_ticks(eng, 5)
         bus_v = eng.params.get(0x0105, 0)
-        assert 27.0 <= bus_v <= 30.0, f"bus_voltage should be ~28V, got {bus_v}"
+        # BPX 8S-1P bus (24.0-33.6 V battery, 33.4 V bus cap): ~32.6 V at the
+        # 90 % initial SoC. The band is the old 27-30 V carried to the new
+        # curve at the same SoC (2026-11 consistency pass).
+        assert 30.9 <= bus_v <= 34.6, f"bus_voltage should be ~32.6V, got {bus_v}"
 
     def test_power_lines_initial_state(self):
         """Phase 4.3: obc/ttc_rx ON, payload/aocs/heaters OFF."""

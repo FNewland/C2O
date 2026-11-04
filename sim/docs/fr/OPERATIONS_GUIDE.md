@@ -239,7 +239,7 @@ Effect: EPS HK packets sent every 4 seconds
 | Paramètre | Plage | Seuil d'alerte | Sous-système |
 |-----------|-------|-----------------|-----------|
 | `eps.bat_soc` | 0-100 % | < 10 % (CRITICAL) | EPS |
-| `eps.bus_voltage` | 25-35 V | < 25 V (CRITICAL) | EPS |
+| `eps.bus_voltage` | 24-34 V | < 27,7 V (CRITICAL, mode survie EPS) | EPS |
 | `aocs.att_error` | 0-180° | > 1° (WARNING) | AOCS |
 | `aocs.total_momentum` | 0-0.06 Nms | enveloppe > 70 % (`aocs.h_env_frac` 0x02BA, WARNING) | AOCS |
 | `tcs.fpa_temp` | -20 à 0 °C | > -3 °C bloque la prise de vue ; > +14 °C (WARNING) | TCS |
@@ -308,7 +308,7 @@ Check:
   - aocs.mode = 4 (NOMINAL)
   - aocs.att_error < 0.5° (attitude good)
   - aocs.total_momentum < 50 Nms (wheels not saturated)
-  - Power: eps.bus_voltage > 27V (sufficient power)
+  - Power: eps.bus_voltage > 30.9V (sufficient power)
 Status: OK, proceed
 ```
 
@@ -743,10 +743,10 @@ When recovered (SoC > 20%):
 
 #### Sous-tension du bus
 
-**Événement :** S5.0104 BUS_UNDERVOLTAGE_CRITICAL (tension du bus < 25 V)
+**Événement :** S5.0104 BUS_UNDERVOLTAGE_CRITICAL (tension du bus < 27,7 V)
 
 **Réponse autonome :**
-- La surveillance S12 détecte une tension du bus < 25 V
+- La surveillance S12 détecte une tension du bus < 27,7 V
 - La règle S19 se déclenche : « sous-tension → charge utile éteinte »
 - La commande S8 EPS_PAYLOAD_MODE est exécutée (mode=0, éteint)
 
@@ -755,8 +755,8 @@ When recovered (SoC > 20%):
 ```
 MCS: Investigate cause
   S3 request HK_EPS (SID=1)
-  eps.bus_voltage = 24.5V (critically low)
-  eps.bat_voltage = 28V (good)
+  eps.bus_voltage = 27.5V (critically low)
+  eps.bat_voltage = 27.5V (the bus follows the battery)
   eps.eclipse_flag = 1 (in eclipse)
 
 Scenario: Heavy power consumption in eclipse
@@ -777,12 +777,12 @@ MCS Command: Reduce power consumption
      Response: S1 reports
 
   4. S3 request HK_EPS
-     eps.bus_voltage = 26.5V (recovering)
+     eps.bus_voltage = 28.4V (recovering)
 
 MCS Monitoring:
   Wait for eclipse exit (AOS to illuminated region)
   eps.power_gen → 1200W (solar arrays reilluminated)
-  eps.bus_voltage → 29V (nominal)
+  eps.bus_voltage → ~32V (nominal)
   eps.bat_soc recovering
 ```
 
@@ -1514,10 +1514,10 @@ La chronologie suivante suppose un lancement depuis Chennai/Sriharikota sur une 
 | 6 | S8.1 OBC_WATCHDOG_ENABLE | 59 | S1.7 terminé |
 | 7 | S3.5 activer le SID HK 1 (EPS) | — | Flux de télémesure EPS actif |
 | 8 | S3.5 activer le SID HK 4 (OBDH) | — | Flux de télémesure OBDH actif |
-| 9 | S3.27 demande du SID 1 (EPS) | — | bat_soc > 70 %, bus_voltage > 27 V |
+| 9 | S3.27 demande du SID 1 (EPS) | — | bat_soc > 70 %, bus_voltage > 30,9 V |
 | 10 | S3.27 demande du SID 4 (OBDH) | — | Mode OBC=0 (nominal), reboot_cnt=0 |
 
-**GO/NO-GO :** OBC en mode applicatif, EPS sain (SoC > 60 %, bus > 27 V).
+**GO/NO-GO :** OBC en mode applicatif, EPS sain (SoC > 60 %, bus > 30,9 V).
 **Contingence :** si l'amorçage de l'OBC échoue — S8.1 func_id=56 (BOOT_INHIBIT, inhibit=0), puis nouvelle tentative avec func_id=55. En cas d'échecs répétés, rester en chargeur d'amorçage et faire remonter l'anomalie.
 
 #### Passage 3 — recette de l'EPS et déploiement de l'antenne (Troll, T+03:25)

@@ -163,14 +163,14 @@ During commissioning, consult this document immediately when encountering unexpe
 ### Failure: Battery Voltage Below Minimum Threshold {#failure-battery-voltage-below-minimum-threshold}
 
 **Symptoms:**
-- Battery voltage telemetry < 26.0 V (or defined minimum)
+- Battery voltage telemetry < 29.6 V (or defined minimum)
 - Voltage trending downward across consecutive beacons
 - EPS load shedding may be active
 - Battery temperature nominal
 
 **Procedure:** [CTG-001](../procedures/contingency/undervoltage_loadshed.md) (undervoltage_loadshed.md) or [CTG-023](../procedures/contingency/progressive_load_shed.md) (progressive_load_shed.md)
 
-**Recovery:** Issue load-shed command to disable non-essential subsystems. EPS will prioritize: OBDH > TTC > TCS > Payload. Recharge battery by pointing solar arrays to sun. Resume commissioning only after voltage recovers above 27.5 V for at least 30 minutes. If voltage does not recover, suspect battery degradation—reference CTG-013.
+**Recovery:** Issue load-shed command to disable non-essential subsystems. EPS will prioritize: OBDH > TTC > TCS > Payload. Recharge battery by pointing solar arrays to sun. Resume commissioning only after voltage recovers above 31.5 V for at least 30 minutes. If voltage does not recover, suspect battery degradation—reference CTG-013.
 
 ---
 
@@ -191,7 +191,7 @@ During commissioning, consult this document immediately when encountering unexpe
 ### Failure: Bus Voltage Out of Range {#failure-bus-voltage-out-of-range}
 
 **Symptoms:**
-- Primary bus voltage outside 28 V ± 4 V window
+- Primary bus voltage outside the 24.0–33.4 V window (BPX 8S-1P pack, 33.4 V bus cap)
 - Secondary bus voltage also affected if powered
 - Transient spikes or sustained deviation observed
 - Correlates with load switching events

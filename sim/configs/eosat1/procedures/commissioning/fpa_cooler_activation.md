@@ -80,7 +80,7 @@ transient modelled and no vibration signature.
 **TC:** `GET_PARAM(param_id=0x0106)` (Service 20, Subtype 3) — `eps.power_cons`, total load
 **Verify:** Total power increase is 14-16 W relative to the pre-cooler baseline
 within 30 s. (This read 0x0108, `eps.eclipse_flag` — a boolean, not a wattage.)
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (bus stable under additional load) within 10s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (bus stable under additional load) within 10s
 **GO/NO-GO:** Cooler power draw within specification, bus stable
 
 ### Step 4 — Monitor Cooldown (First 5 Minutes)
@@ -146,7 +146,7 @@ and above 1.0C indicates a degraded loop.
 **Action:** If pass spans an eclipse, verify cooler maintains FPA temperature.
 **TC:** `GET_PARAM(param_id=0x0601)` (Service 20, Subtype 3) — during eclipse
 **Verify:** `payload.fpa_temp` remains in range [-16.5C, -14.5C] within 10s
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (bus holds with cooler load) within 10s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (bus holds with cooler load) within 10s
 **GO/NO-GO:** Cooler maintains setpoint through eclipse with adequate power
 
 ### Step 9 — Generate Cooler Activation Report
@@ -165,7 +165,7 @@ and above 1.0C indicates a degraded loop.
   re-command the setpoint with `PAYLOAD_COOLER_SETPOINT` rather than waiting
   indefinitely. The commandable envelope is -20 C to 0 C
   (`subsystems/tcs.yaml` `setpoint_min_c` / `setpoint_max_c`).
-- If bus voltage drops below 27.0V with cooler running: Disable cooler via `FPA_COOLER(on=0)` (func_id 43, wire `2B 00`). Check battery SOC. Wait for higher charge state or better illumination. Retry during next sunlit pass with full battery.
+- If bus voltage drops below 30.9V with cooler running: Disable cooler via `FPA_COOLER(on=0)` (func_id 43, wire `2B 00`). Check battery SOC. Wait for higher charge state or better illumination. Retry during next sunlit pass with full battery.
 - If FPA temperature oscillating > 1C peak-to-peak at setpoint: Cooler control loop may need tuning. Check the setpoint via `GET_PARAM(param_id=0x0631)`. If the oscillation persists, re-command the setpoint with `PAYLOAD_COOLER_SETPOINT(setpoint=-15.00 degC)` (func_id 36, wire `24 64 D7`) — there is no commandable cooler-gain parameter.
 - If cooler introduces excessive vibration (detected via accelerometer jitter): Compare AOCS attitude jitter with cooler ON vs OFF. If jitter exceeds pointing requirement, schedule cooler operation for non-imaging periods. Consult AOCS engineer for filter tuning.
 

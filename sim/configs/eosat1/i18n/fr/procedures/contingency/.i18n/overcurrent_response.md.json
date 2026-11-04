@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-012-overcurrent-response/required-telemetry",
-   "en_hash": "24453d334a464739",
-   "fr_hash": "dae52218a5298f5d"
+   "en_hash": "5e18ba619c337c2a",
+   "fr_hash": "797e6c71caf509b5"
   },
   {
    "id": "ctg-012-overcurrent-response/required-commands",
@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-012-overcurrent-response/procedure-steps/step-2-check-per-line-current-for-fault-assessment",
-   "en_hash": "2ebcea674887b4db",
-   "fr_hash": "96e9f5e10e8bcc25"
+   "en_hash": "f1a865c25e46aac6",
+   "fr_hash": "36ab4ef834bd8b81"
   },
   {
    "id": "ctg-012-overcurrent-response/procedure-steps/step-3-isolate-fault-coordinate-with-affected-subsystem",
@@ -64,13 +64,13 @@
   },
   {
    "id": "ctg-012-overcurrent-response/procedure-steps/step-6-verify-downstream-subsystem-recovery",
-   "en_hash": "917e1d715881066e",
-   "fr_hash": "b0bf5287b7adba37"
+   "en_hash": "5beaea07cfe2ac9c",
+   "fr_hash": "4803d86152cdb49f"
   },
   {
    "id": "ctg-012-overcurrent-response/verification-criteria",
-   "en_hash": "53bd44f9c6b990fe",
-   "fr_hash": "b2a1bc936d33bd2a"
+   "en_hash": "a4b5b8f7d1bf6035",
+   "fr_hash": "3f2ee5af05bf7a87"
   },
   {
    "id": "ctg-012-overcurrent-response/contingency",
@@ -83,5 +83,5 @@
    "fr_hash": "2a26fa93111780b1"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

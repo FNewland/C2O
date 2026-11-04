@@ -177,7 +177,7 @@ complete.
 - [ ] Operations plan adjusted to fit within available power envelope
 - [ ] Daily trend monitoring initiated
 - [ ] `eps.bat_soc` (0x0101) > 25% and stable or rising
-- [ ] `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 30.9 V
 
 ## Off-Nominal Handling
 - If all panels on sun-facing side are lost: Switch to COARSE_SUN immediately.

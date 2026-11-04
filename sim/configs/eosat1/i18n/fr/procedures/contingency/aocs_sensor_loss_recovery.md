@@ -22,7 +22,7 @@ doit être évalué après chaque action de reprise.
 - [ ] La télémesure SCAO (SID 2) est reçue à >= 1 Hz
 - [ ] Liaison TT&C active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Directeur de vol informé de l'anomalie de capteur d'attitude
-- [ ] Alimentation de la plateforme nominale — `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] Alimentation de la plateforme nominale — `eps.bus_voltage` (0x0105) > 30.9 V
 - [ ] La procédure CTG-002 (Reprise après anomalie SCAO) a été relue pour les voies d'escalade
 - [ ] La procédure CTG-008 (Panne du senseur stellaire) a été relue pour les étapes propres aux ST
 

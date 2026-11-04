@@ -40,7 +40,7 @@ par rapport aux prédictions pour l'angle solaire et la position orbitale actuel
 
 ### Étape 1 — Demander la télémesure EPS détaillée
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [26.0V, 30.0V] sous 10s --- bus = min(29.0 V, tension batterie) : la plage suit donc la batterie, et non un rail régulé
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [29.6V, 34.6V] sous 10s --- bus = min(33.4 V, tension batterie) : la plage suit donc la batterie, et non un rail régulé
 **Verify:** `eps.bat_soc` (0x0101) rapporté sous 10s
 **GO/NO-GO:** Télémesure EPS reçue normalement
 

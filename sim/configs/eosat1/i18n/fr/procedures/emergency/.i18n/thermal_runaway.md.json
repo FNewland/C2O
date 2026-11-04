@@ -64,8 +64,8 @@
   },
   {
    "id": "emg-006-thermal-runaway/procedure-steps/step-6-post-event-assessment",
-   "en_hash": "f3fac87093d59f35",
-   "fr_hash": "017b651893358317"
+   "en_hash": "122f911526d806c4",
+   "fr_hash": "409ba88a95a59213"
   },
   {
    "id": "emg-006-thermal-runaway/verification-criteria",
@@ -78,5 +78,5 @@
    "fr_hash": "3a9d28ce27aa9125"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "f614a01"
 }

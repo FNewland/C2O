@@ -9,12 +9,12 @@ thermostat with `HEATER_AUTO_MODE`, not to manual ON.
 
 ## Purpose
 Emergency procedure for EOSAT-1 when battery state of charge falls below 10% or bus voltage
-drops below 26V. This procedure defines immediate load shedding to reach minimum survival
+drops below 29.6V. This procedure defines immediate load shedding to reach minimum survival
 configuration (~20W), ensures solar array sun-pointing for maximum power generation, and
 provides a staged recovery plan. No loads may be re-enabled until SoC exceeds 30%.
 
 ## Prerequisites
-- [ ] `eps.bat_soc` (0x0101) < 10% OR `eps.bus_voltage` (0x0105) < 26.0V confirmed
+- [ ] `eps.bat_soc` (0x0101) < 10% OR `eps.bus_voltage` (0x0105) < 29.6V confirmed
 - [ ] Communication link active --- `ttc.link_status` (0x0501) = 2 (LOCKED) (if not, procedure is executed blind)
 - [ ] EPS telemetry stream active or last known values < 60s old
 - [ ] Power Systems Engineer on console
@@ -43,7 +43,7 @@ Orbit-average power generation at sun-pointing: ~35W. Margin over survival: ~15W
 
 ### Step 1 --- Immediate Load Shed (CRITICAL --- Execute Within 60s)
 **Check:** At this bus voltage the on-board shedder has usually acted already
-(below 25.0 V it opens payload, fpa_cooler, ttc_tx, aocs_wheels, prop in that
+(below 28.4 V it opens payload, fpa_cooler, ttc_tx, aocs_wheels, prop in that
 order, one line per second). Read `eps.load_shed_stage` (0x0134) and the line
 states before commanding: a line FDIR has opened cannot be shed again --- the
 command is refused S1.8 and the unit's mode parameter freezes at its last value.
@@ -106,7 +106,7 @@ survival budget above includes the AOCS for exactly this reason.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- EPS HK every 60s.
 **Monitor:** `eps.bat_soc` (0x0101) --- must be trending upward.
 **Monitor:** `eps.bus_voltage` (0x0105) --- must be stable or increasing.
-**Monitor:** `eps.bat_voltage` (0x0100) --- verify battery accepting charge (voltage > 27V).
+**Monitor:** `eps.bat_voltage` (0x0100) --- verify battery accepting charge (voltage > 30.9V).
 **Monitor:** `eps.power_gen` (0x0107) vs `eps.power_cons` (0x0106) --- confirm power-positive.
 **Expected:** At ~20W survival load (~25W in a pass) and ~64W peak generation (~35W orbit-average), the orbit-average margin is ~15W. Track the measured SoC trend: that, not this estimate, decides the recovery.
 **GO/NO-GO:** Power-positive state confirmed (generation > consumption).
@@ -114,11 +114,11 @@ survival budget above includes the AOCS for exactly this reason.
 ### Step 6 --- Eclipse Monitoring (CRITICAL)
 **Pre-eclipse check:** Record `eps.bat_soc` (0x0101) value at eclipse entry.
 **Critical threshold:** If SoC < 8% at eclipse entry, spacecraft may enter under-voltage lockout.
-**Monitor:** `eps.bus_voltage` (0x0105) throughout eclipse --- must remain > 25.0V.
+**Monitor:** `eps.bus_voltage` (0x0105) throughout eclipse --- must remain > 28.4V.
 **Monitor:** `tcs.temp_battery` (0x0407) --- verify battery heater thermostat activates if needed.
 **Duration:** Eclipse lasts ~34–36 minutes at the ~513 km SSO.
 **Expected drain:** ~20W x 35 min = ~12 Wh consumed. Battery capacity 100 Wh, so ~12% SoC consumed.
-**GO/NO-GO:** Bus voltage remains > 25.0V throughout eclipse. If voltage drops below 25.0V,
+**GO/NO-GO:** Bus voltage remains > 28.4V throughout eclipse. If voltage drops below 28.4V,
 under-voltage protection will disconnect non-essential buses automatically.
 
 ### Step 7 --- Sustained Recovery Monitoring (Orbits 2--5)
@@ -152,7 +152,7 @@ under-voltage protection will disconnect non-essential buses automatically.
 | > 60% | Restore payload standby, resume nominal ops | T+20 to T+30 hours |
 
 ## Off-Nominal Handling
-- If bus voltage drops below 25.0V: under-voltage protection activates autonomously. Expect loss of TT&C until next sunlit phase. Monitor via ground station for beacon re-acquisition.
+- If bus voltage drops below 28.4V: under-voltage protection activates autonomously. Expect loss of TT&C until next sunlit phase. Monitor via ground station for beacon re-acquisition.
 - If SoC does not increase in sunlit phase: possible solar array failure. Compare `eps.sa_a_current` (0x0103) vs `eps.sa_b_current` (0x0104). If one wing at zero, single-wing survival is possible but with reduced margin (~42W peak generation).
 - If battery temperature drops below -10 degC: battery heater thermostat may have failed. Confirm `eps.pl_htr_bat` (0x0115) = 1 (`EPS_POWER_ON(line_index=5)` if not), then command `HEATER_BATTERY(on=1)` manually. Accept increased power consumption to prevent battery damage.
 - If `obdh.reboot_count` (0x030A) incrementing: OBC may be experiencing brown-out resets. Disable all remaining optional loads and accept reduced telemetry.
@@ -160,7 +160,7 @@ under-voltage protection will disconnect non-essential buses automatically.
 
 ## Post-Conditions
 - [ ] `eps.bat_soc` (0x0101) > 30% and trending upward
-- [ ] `eps.bus_voltage` (0x0105) > 27.0V stable
+- [ ] `eps.bus_voltage` (0x0105) > 30.9V stable
 - [ ] `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) confirmed over 3+ orbits
 - [ ] Battery temperature within nominal range: `tcs.temp_battery` (0x0407) between -5 degC and +35 degC
 - [ ] Root cause of power emergency identified or investigation ongoing

@@ -21,7 +21,7 @@ de réaction, afin d'enrayer la baisse de la tension du bus et de protéger les 
 est surveillé jusqu'au retour de l'état de charge de la batterie et de la tension du bus à des niveaux sûrs.
 
 ## Prérequis
-- [ ] Indicateur de sous-tension détecté — `eps.uv_flag` (0x010E) = 1 ou tension du bus observée < 27.0 V
+- [ ] Indicateur de sous-tension détecté — `eps.uv_flag` (0x010E) = 1 ou tension du bus observée < 28.4 V
 - [ ] Liaison TT&C active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Directeur de vol informé, autorisant le délestage manuel
 - [ ] Prévision d'orbite à jour disponible (heures d'entrée et de sortie d'éclipse)
@@ -30,7 +30,7 @@ est surveillé jusqu'au retour de l'état de charge de la batterie et de la tens
 | Paramètre | ID | Valeur attendue |
 |---|---|---|
 | eps.uv_flag | 0x010E | 1 (sous-tension détectée) |
-| eps.bus_voltage | 0x0105 | Surveillance — < 27.0 V attendu à la détection |
+| eps.bus_voltage | 0x0105 | Surveillance — < 28.4 V attendu à la détection |
 | eps.bat_soc | 0x0101 | Surveillance — consigner la tendance |
 | eps.bat_voltage | 0x0100 | Surveillance — consigner la valeur |
 | eps.bat_current | 0x0109 | Négatif (décharge) |
@@ -66,7 +66,7 @@ est surveillé jusqu'au retour de l'état de charge de la batterie et de la tens
 **LABEL:** `STEP-1`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander la télémesure de servitude EPS
 **Verify:** `eps.uv_flag == 1` (0x010E, timeout 10 s)
-**Verify:** `eps.bus_voltage` (0x0105) — consigner la valeur courante (< 27.0 V attendu)
+**Verify:** `eps.bus_voltage` (0x0105) — consigner la valeur courante (< 28.4 V attendu)
 **Verify:** `eps.bat_soc` (0x0101) — consigner la valeur courante
 **Verify:** `eps.bat_voltage` (0x0100) — consigner la valeur courante
 **Verify:** `eps.power_cons` (0x0106) — consigner la consommation totale
@@ -97,7 +97,7 @@ FDIR de bord l'a déjà ouverte : ne rien envoyer et passer au contrôle de ten
 **LABEL:** `STEP-2-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
-**BRANCH:** `eps.bus_voltage > 26.5` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 28.4` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
 **Note:** GO — le délestage a suffi ; MAINTENIR (HOLD) ce niveau, la suite est directement la surveillance.
 NO-GO — la tension baisse encore ; le niveau de délestage suivant s'applique. La temporisation de 60 s
 de la branche correspond à ce que la prose appelait « attendre 30 s et contrôler de nouveau » : elle laisse au bus deux
@@ -118,7 +118,7 @@ de la branche correspond à ce que la prose appelait « attendre 30 s et cont
 **LABEL:** `STEP-3-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
-**BRANCH:** `eps.bus_voltage > 26.0` -> GO `STEP-6` | NO-GO `STEP-4` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 27.8` -> GO `STEP-6` | NO-GO `STEP-4` (timeout 60 s)
 
 ### Étape 4 : Délester la charge de priorité 3 — émetteur TX sur OFF
 **LABEL:** `STEP-4`
@@ -137,7 +137,7 @@ Le satellite peut encore recevoir des commandes mais ne peut plus émettre de t�
 **LABEL:** `STEP-4-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
-**BRANCH:** `eps.bus_voltage > 25.5` -> GO `STEP-6` | NO-GO `STEP-5` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 27.2` -> GO `STEP-6` | NO-GO `STEP-5` (timeout 60 s)
 **Note:** Après cette étape, la liaison descendante en bande S est INHIBÉE — `ttc.tx_active`
 (0x0525) passe à 0 et la télémesure s'arrête. La balise UHF est une radio distincte, sur la
 ligne non commutable `ttc_rx`, et continue d'émettre la HK SID 11 : le sol peut donc encore
@@ -160,12 +160,12 @@ n'assureront qu'une stabilisation passive.
 **LABEL:** `STEP-5-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
-**BRANCH:** `eps.bus_voltage > 25.0` -> GO `STEP-6` | NO-GO `STEP-5B` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 26.5` -> GO `STEP-6` | NO-GO `STEP-5B` (timeout 60 s)
 
 ### Étape 5B : Dernier recours — mode EMERGENCY de l'OBC
 **LABEL:** `STEP-5B`
 **Note:** Atteinte uniquement lorsque tous les niveaux de délestage ont été appliqués et que le bus reste
-sous 25.0 V.
+sous 26.5 V.
 **TC:** `OBC_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 50) — EMERGENCY
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Télémesure de servitude plateforme/OBDH
 **Verify:** `obdh.mode == 2` (0x0300, timeout 15 s) — EMERGENCY
@@ -181,11 +181,11 @@ où le délestage de la seule charge utile suffisait à rétablir le bus.
 **Verify:** `eps.power_gen` (0x0107) > 0 W au Soleil
 **Verify:** `eps.bat_current` (0x0109) — positif (charge) au Soleil
 **Action:** Poursuivre la surveillance jusqu'à ce que :
-- `eps.bus_voltage` > 28.0 V ;
+- `eps.bus_voltage` > 32.1 V ;
 - `eps.bat_soc` > 40 %.
 **Note:** Le rétablissement peut prendre plusieurs orbites selon la profondeur de décharge et
 la puissance disponible du générateur solaire.
-**GO/NO-GO:** Tension du bus > 28.0 V et SoC > 40 % — passer au rétablissement des charges.
+**GO/NO-GO:** Tension du bus > 32.1 V et SoC > 40 % — passer au rétablissement des charges.
 
 ### Étape 7 : Rétablir les charges dans l'ordre de priorité inverse
 **Note:** Réactiver les charges une par une, en attendant 5 min entre chacune pour vérifier la stabilité.
@@ -204,20 +204,20 @@ commande de mode de l'unité : ligne ouverte, toute commande de mode est refus�
 **GO/NO-GO:** Bus stable pendant 5 min avec la ligne du refroidisseur du FPA rétablie — rétablir la charge suivante
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 : sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Charge utile en STANDBY : vérifier `payload.mode` = 1
-**Verify:** Après chaque ajout de charge, confirmer que `eps.bus_voltage` (0x0105) reste > 27.5 V
+**Verify:** Après chaque ajout de charge, confirmer que `eps.bus_voltage` (0x0105) reste > 31.5 V
 et que `eps.bat_soc` (0x0101) reste > 35 %.
 **GO/NO-GO:** Toutes les charges rétablies et bilan de puissance positif — procédure terminée.
 
 ## Critères de vérification
 - [ ] `eps.uv_flag` (0x010E) = 0 (retombé)
-- [ ] `eps.bus_voltage` (0x0105) > 28.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
 - [ ] `eps.bat_soc` (0x0101) > 40 %
 - [ ] Tous les sous-systèmes revenus dans leurs modes de fonctionnement nominaux
 - [ ] Bilan de puissance positif (production > consommation) avec marge
 - [ ] Aucune nouvelle sous-tension pendant au moins 2 orbites
 
 ## Cas de contingence
-- Si la tension du bus descend sous 25.0 V après le délestage de toutes les charges : commander
+- Si la tension du bus descend sous 26.5 V après le délestage de toutes les charges : commander
   `OBC_SET_MODE(mode=2)` pour passer en mode EMERGENCY. Le satellite devrait passer de lui-même en configuration
   de puissance minimale.
 - Si la tension du bus ne remonte pas après la sortie d'éclipse : suspecter une défaillance du générateur solaire.

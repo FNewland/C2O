@@ -160,8 +160,8 @@ class TestEPSEnhanced:
     def test_undervoltage_flag(self):
         """Lower the UV threshold so normal bus voltage triggers the flag."""
         model = self._make_model()
-        # Set UV threshold above normal bus voltage (~28.2V) so it always triggers
-        model._uv_threshold = 30.0
+        # Set UV threshold above the 33.4 V bus cap so it always triggers
+        model._uv_threshold = 34.5
 
         params = {}
         model.tick(1.0, make_orbit_state(), params)
@@ -179,7 +179,7 @@ class TestEPSEnhanced:
     def test_overvoltage_flag(self):
         """Lower the OV threshold so normal bus voltage triggers the flag."""
         model = self._make_model()
-        # Set OV threshold below normal bus voltage (~28.2V) so it always triggers
+        # Set OV threshold below normal bus voltage (~31 V on the BPX curve) so it always triggers
         model._ov_threshold = 25.0
 
         params = {}

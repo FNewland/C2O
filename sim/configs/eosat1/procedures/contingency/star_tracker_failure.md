@@ -15,7 +15,7 @@ attitude determination capability and minimizes impact on mission operations.
 - [ ] Star tracker 1 failure detected — `aocs.st1_status` (0x0240) = 4 (FAILED)
 - [ ] TT&C link active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Flight Director notified of attitude sensor anomaly
-- [ ] Spacecraft bus power is nominal — `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] Spacecraft bus power is nominal — `eps.bus_voltage` (0x0105) > 30.9 V
 
 ## Required Telemetry
 | Parameter | ID | Expected Value |
@@ -32,7 +32,7 @@ attitude determination capability and minimizes impact on mission operations.
 | aocs.css_sun_x | 0x0245 | CSS sun vector X |
 | aocs.css_sun_y | 0x0246 | CSS sun vector Y |
 | aocs.css_sun_z | 0x0247 | CSS sun vector Z |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 
 ## Required Commands
 | Command | Service | Subtype | Func ID | Description |

@@ -157,7 +157,7 @@ it automatically. Send it by hand once the decision is taken.
 **Note:** If the heater required a power line shed, do NOT re-enable the line
 without engineering assessment. The relay or switch is suspected stuck.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — final power check
-**Verify:** `eps.bus_voltage > 28.0` (0x0105, timeout 10 s) — power budget is stable
+**Verify:** `eps.bus_voltage > 32.1` (0x0105, timeout 10 s) — power budget is stable
 **Note:** Log the thermal runaway event: affected zone, peak temperature
 reached, which intervention was required (command OFF / setpoint override /
 power shed), duration of the runaway, and the current thermal configuration.

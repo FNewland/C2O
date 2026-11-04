@@ -39,8 +39,8 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps/step-3-verify-cooler-power-draw",
-   "en_hash": "c03208acac1eff71",
-   "fr_hash": "91da583039bac397"
+   "en_hash": "37cb24431d7c80ec",
+   "fr_hash": "ce233bce04aca92d"
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps/step-4-monitor-cooldown-first-5-minutes",
@@ -64,8 +64,8 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps/step-8-monitor-through-eclipse-if-applicable",
-   "en_hash": "a0a9941881697eb3",
-   "fr_hash": "da56c4c3371645bb"
+   "en_hash": "d1edd7324b11059c",
+   "fr_hash": "d3d10988aaa892f8"
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps/step-9-generate-cooler-activation-report",
@@ -74,8 +74,8 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/off-nominal-handling",
-   "en_hash": "491d4592a0a3db68",
-   "fr_hash": "8eda72825388ea1c"
+   "en_hash": "29e3798917af6afa",
+   "fr_hash": "6252bed2cbb9cf34"
   },
   {
    "id": "com-010-fpa-cooler-activation/post-conditions",
@@ -88,5 +88,5 @@
    "fr_hash": "a9973e4843e5b74f"
   }
  ],
- "en_commit": "b41c0a9"
+ "en_commit": "f614a01"
 }

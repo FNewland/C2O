@@ -30,7 +30,7 @@ le harnais associé.
 | Puissance crête (BOL) | ~89 W instantanés, ailes en poursuite solaire à bêta = 0, entièrement déployées (ailes seules 70 W, conforme à la classe de puissance MMA eHaWK 6U) |
 | Moyenne sur l'orbite (BOL, nadir) | ~51 W à bêta = −21° (éclipse la plus longue), ~49 W à bêta = −31° (éclipse comprise) |
 | Performances EOL     | K = 267,2 W/m² de surface projetée (chaîne complète de pertes, EOL à 3 ans, sa_age_factor 0,9175) |
-| Tension de fonctionnement | 28 V (bus régulé)     |
+| Tension de fonctionnement | 28,8 V nominal — bus batterie non régulé, 24,0–33,4 V |
 | Durée de déploiement d'une aile | ~30 s par aile (libération par fil thermofusible) |
 
 Cinq faces du satellite portent des panneaux solaires fixés sur la structure (la face -Z porte
@@ -119,9 +119,9 @@ mécanisme de retenue à fil thermofusible. Le déploiement est commandé par la
 | Paramètre            | Valeur                     |
 |----------------------|----------------------------|
 | Technologie          | Lithium-ion (Li-ion)       |
-| Tension nominale     | 26,4 V (modèle) ; 28,8 V (fiche technique) ; plage 21,5–29,2 V |
-| Capacité             | 100 Wh (3 Ah, 8S1P)       |
-| Pièce de référence   | GomSpace NanoPower BPX, 8S-1P : 100 Wh, 3 Ah, 28,8 V nominal, ~500 g, éléments 18650 |
+| Tension nominale     | 28,8 V (fiche technique BPX = milieu de la courbe OCV du modèle) ; plage 24,0–33,6 V |
+| Capacité             | 100 Wh (3,5 Ah, 8S1P)     |
+| Pièce de référence   | GomSpace NanoPower BPX, 8S-1P : 100 Wh, 3,5 Ah, 28,8 V nominal, 24,0–33,6 V, ~500 g, éléments 18650 |
 | Rendement coulombien | 0,94 (acceptation de charge) |
 | Profondeur de décharge | 35 % max. (opérations nominales) |
 | Méthode de charge    | CC/CV avec réduction progressive au-dessus de 90 % de SoC, coupure thermique |
@@ -386,7 +386,7 @@ si `bat_temp` descend sous 5 °C.
 | Dégradation d'un panneau solaire | Courant du panneau réduit par rapport au modèle | Avertissement à l'opérateur ; ajuster le bilan de puissance |
 | Perte de plusieurs panneaux | power_gen total < power_cons | Délestage progressif, mode survie |
 | Surchauffe de la batterie | bat_temp > 45 C               | Inhiber la charge, alerter       |
-| Sous-tension du bus      | bus_voltage < 26.5 V           | Passage en mode urgence          |
+| Sous-tension du bus      | bus_voltage < 28.4 V           | Délestage (charge utile d'abord) ; < 27,7 V mode survie EPS |
 | Disjonction d'une sortie PDM | Surveillance individuelle du courant | Une nouvelle tentative automatique, puis isolation |
 | Défaillance de PDM-A     | Disjonctions de plusieurs sorties | Le sol commande le basculement sur PDM-B |
 

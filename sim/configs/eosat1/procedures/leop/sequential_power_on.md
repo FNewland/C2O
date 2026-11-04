@@ -28,7 +28,7 @@ the commissioning card that uses it.
       wings deployed)
 - [ ] Scheduled ground station pass in progress (or next pass booked ---
       Steps 1-6 fit a single 8-minute contact)
-- [ ] Battery SoC > 60% and bus voltage 26-30V (Step 1 verifies)
+- [ ] Battery SoC > 60% and bus voltage 29.6-34.6V (Step 1 verifies)
 
 ## What this card does NOT power (and who does)
 | Load | Stays | Powered by |
@@ -49,7 +49,7 @@ hand attitude authority back to the control loop).
 
 ### Step 1 --- Verify EPS Baseline
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [26.0V, 30.0V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) in range [29.6V, 34.6V] within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 60% within 10s
 **Verify:** `eps.power_gen` (0x0107) > 20W (wings deployed, partial illumination)
 **GO/NO-GO:** EPS baseline nominal
@@ -125,7 +125,7 @@ implied by `eps.power_cons` (0x0106), or SoC stable/increasing
 - **Refused with 0x0A20 (no magnetometer):** the S2 device command in Step 4 did not take or the unit has failed. Re-issue `S2_AOCS_MAGNETOMETER(device_id=521, state=1)`; if it still refuses, this is a hardware anomaly --- there is no redundant magnetometer.
 - **Refused with 0x0A21 (no magnetorquers):** re-issue `MTQ_ENABLE(enable=1)` and check per-rod device states (0x020B-0x020D devices).
 - **Body rates do not decrease in DETUMBLE:** verify 0x025C = 1 and 0x0277 plausible (a zeroed field means the magnetometer is off/failed). If rates increase, command `AOCS_SET_MODE(mode=0)` (OFF) and investigate.
-- **Bus voltage < 26V:** immediate load shed per CTG-001; power off the most recently enabled line first.
+- **Bus voltage < 29.6V:** immediate load shed per CTG-001; power off the most recently enabled line first.
 
 ## Exit state
 - Heater lines: as recorded in Step 2 (each ON only if its zone needed heat)

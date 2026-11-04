@@ -282,6 +282,17 @@ class LoadSheddingManager:
 
         logger.info("Executing load shedding stage %d: %s", stage, config.get("name", ""))
 
+        # Power lines the stage opens (real PCDU line names; 2026-11 the
+        # table named lines that did not exist and nothing executed it).
+        line_off = self._callbacks.get("eps_power_line_off")
+        for entry in config.get("power_lines", []) or []:
+            if entry.get("action") != "power_off" or line_off is None:
+                continue
+            try:
+                line_off(entry.get("line"))
+            except Exception as e:
+                logger.warning("Load shed power line error (%s): %s", entry.get("line"), e)
+
         # Execute subsystem commands
         for cmd in config.get("subsystem_commands", []):
             action_key = f"{cmd['subsystem']}_{cmd['command']}"

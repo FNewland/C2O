@@ -22,7 +22,7 @@ must be evaluated after each recovery action.
 - [ ] AOCS telemetry (SID 2) is being received at >= 1 Hz
 - [ ] TT&C link active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Flight Director notified of attitude sensor anomaly
-- [ ] Spacecraft bus power is nominal — `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] Spacecraft bus power is nominal — `eps.bus_voltage` (0x0105) > 30.9 V
 - [ ] Procedure CTG-002 (AOCS Anomaly Recovery) has been reviewed for escalation paths
 - [ ] Procedure CTG-008 (Star Tracker Failure) has been reviewed for ST-specific steps
 
