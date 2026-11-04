@@ -394,6 +394,7 @@ class FDIRDisplayModel:
                 "high_limit": high,
                 "enabled": bool(defn.get("enabled", True)),
                 "severity": defn.get("severity", ""),
+                "repetition": defn.get("repetition", 1),
                 "current_value": current,
                 "status": status,
                 "violation_count": live.get("violation_count", 0),

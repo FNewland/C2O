@@ -404,6 +404,26 @@ class TestFDIRApi:
                     "current_value", "violation_count"):
             assert key in rows[0], key
 
+    async def test_monitor_rows_carry_severity_persistence_and_procedure(self, mcs):
+        """Worksheet audit 2026-11-04 (WB-5.1.6): the S12 table answers
+        "threshold, persistence, severity and the procedure it points to"."""
+        _srv, cli = mcs
+        rows = (await (await cli.get("/api/fdir")).json())["monitors"]
+        by_pid = {}
+        for r in rows:
+            by_pid.setdefault(r["param_id"], r)
+            assert r["severity"] in ("WARNING", "ALARM", "CRITICAL", "INFO"), r
+            assert isinstance(r["repetition"], int) and r["repetition"] >= 1, r
+        soc = by_pid[0x0101]
+        assert soc["procedure"]["id"] == "CTG-001" and soc["procedure"]["file"]
+        # the yield monitors persist 30 checks (s12_definitions.yaml)
+        assert by_pid[0x014C]["repetition"] > 1
+        # a monitor whose parameter has no own card gets its subsystem's,
+        # exactly as an S12 alarm of it would
+        rw2 = by_pid[0x0208]
+        assert rw2.get("procedure") == _srv.resolve_alarm_procedure(
+            {"source": "S12", "parameter": "0x0208", "subsystem": "aocs"})
+
     async def test_rule_rows_are_display_ready(self, mcs):
         _srv, cli = mcs
         rows = (await (await cli.get("/api/fdir")).json())["rules"]
