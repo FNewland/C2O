@@ -123,6 +123,43 @@ export const EVIDENCE_KEYS_IRD = [
   '{{n}} interface requirement(s) name no accepted interface',
 ]
 
+// English text is the i18n key — CDR (Nov 2026, phase 2): questions of gate_exit_criteria.yaml
+// phase_c (separate table: the i18n extractor reads at most 2000 characters of one literal)
+export const GATE_QUESTIONS_CDR = [
+  'Does the detailed design meet every requirement, with its justification?',
+  'Are the interface control documents baselined?',
+  'Is the TM/TC database complete and consistent?',
+  'Does the housekeeping fit the downlink in every mode?',
+  'Is every critical failure mode detected and recovered on board?',
+  'Are the safe mode and the load-shed table defined?',
+  'Are the AOCS mode machine and control parameters defined?',
+  'Are the TT&C rate ladder, beacon and command-loss recovery defined?',
+  'Are the operations products drafted (organisation, GO/NO-GO, flight rules)?',
+  'Do the budgets close with the CDR system margin?',
+  'Is the AIV programme ready (test specifications, facilities, model philosophy)?',
+]
+
+// English text is the i18n key — CDR evidence (gate_evaluator.py EVIDENCE_KEYS, CDR block)
+export const EVIDENCE_KEYS_CDR = [
+  'The CDR model is not available',
+  'No TM/TC database yet: propose it from the design (CDR model)',
+  '{{params}} parameters, {{hk}} HK structures, {{tc}} telecommands, {{events}} events; {{suggested}} suggestion(s) to review, {{alarms}} alarm finding(s)',
+  'No rate tier or HK structure to check the downlink budget',
+  'Housekeeping fits the downlink in {{ok}}/{{total}} regimes',
+  '{{recovered}}/{{critical}} critical failure modes detected and recovered; {{alarms}} FDIR alarm finding(s)',
+  'Safe mode and load-shed table defined; {{alarms}} alarm finding(s)',
+  'Safe mode or load-shed table missing',
+  'No AOCS mode table yet',
+]
+// English text is the i18n key — CDR evidence, continued (2000-character table limit)
+export const EVIDENCE_KEYS_CDR2 = [
+  '{{modes}} AOCS mode(s), {{transitions}} transition(s); {{alarms}} alarm and {{cautions}} caution finding(s)',
+  'No rate ladder yet',
+  '{{tiers}} rate tier(s), command-loss timer {{hours}} h; {{alarms}} alarm finding(s)',
+  '{{positions}} position(s), {{gonogo}} GO/NO-GO situation(s), {{rules}} flight rule(s); {{uncovered}} critical telecommand(s) without a GO/NO-GO entry',
+  '{{ok}}/{{total}} requirements have a verification method',
+]
+
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
 export const FIX_LABEL: Record<string, string> = {
@@ -133,6 +170,10 @@ export const FIX_LABEL: Record<string, string> = {
   functions: 'Open Functions',
   interfaces: 'Open Interfaces',
   decide: 'Open Decide',
+  tmtc: 'Open TM/TC',
+  fdir: 'Open FDIR',
+  aocs: 'Open AOCS modes',
+  ops: 'Open Operations',
   'vv:risks': 'Open the risk register',
 }
 

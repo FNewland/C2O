@@ -1,0 +1,27 @@
+/* CDR model tabs (TM/TC, FDIR, AOCS modes, Operations). Semantic tokens only (C2O design system);
+   status meaning = colour + glyph. The row states reuse the Electrical tab classes (.c2o-el). */
+
+.c2o-cdr__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding-bottom: var(--sp-2); }
+.c2o-cdr__filter { width: 220px; max-width: 100%; }
+.c2o-cdr__kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--sp-3); margin: 0 0 var(--sp-2); font-size: var(--fs-body); }
+.c2o-cdr__kv dt { color: var(--text-3); }
+.c2o-cdr__kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+.c2o-cdr__chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.c2o-cdr__budget { display: grid; gap: var(--sp-1); max-width: 720px; padding-bottom: var(--sp-2); }
+
+/* line states: modes × lines matrix */
+.c2o-cdr__matrix { border-collapse: collapse; font-size: var(--fs-body); }
+.c2o-cdr__matrix th, .c2o-cdr__matrix td { border-bottom: 1px solid var(--line); padding: 2px var(--sp-2); text-align: center; }
+.c2o-cdr__matrix th[scope='row'] { text-align: left; white-space: nowrap; font-weight: 500; }
+.c2o-cdr__matrix thead th { color: var(--text-3); font-weight: 500; white-space: nowrap; }
+.c2o-cdr__state { min-width: 44px; padding: 0 6px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface-0); color: var(--text-3); font: inherit; line-height: 20px; cursor: pointer; }
+.c2o-cdr__state[aria-pressed='true'] { background: var(--surface-2); color: var(--text-value); border-color: var(--line-strong); font-weight: 600; }
+.c2o-cdr__state:focus-visible { outline: 2px solid var(--interactive); outline-offset: 1px; }
+.c2o-cdr__state:disabled { cursor: default; }
+
+/* FMECA coverage chain: failure mode → monitor → action */
+.c2o-cdr__chain { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.c2o-cdr__chain .arrow { color: var(--text-3); }
+.c2o-cdr .c2o-table td { vertical-align: top; }
+.c2o-cdr .c2o-seg__item .c2o-tab__ctx { margin-left: 6px; color: var(--text-3); font-variant-numeric: tabular-nums; font-size: var(--fs-label); }

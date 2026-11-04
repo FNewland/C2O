@@ -37,7 +37,7 @@ seats:
       element_types: [mission]
       element_domains: [mission]
     sees_first: {view: vv, panel: blocks, focus: {en: "Gate checklist, next action per seat, open proposals", fr: "Liste de contrôle du jalon, prochaine action par poste, propositions ouvertes"}}
-    tabs: [blocks, modes, budget, requirements, decide, trace]
+    tabs: [blocks, modes, budget, requirements, decide, trace, tmtc, fdir, ops]
 
   - id: systems_engineer
     label: {en: Systems, fr: Ingénierie système}
@@ -49,7 +49,7 @@ seats:
       element_types: [segment, system]
       element_domains: [system, systems, integration, harness, avionics]
     sees_first: {view: top, panel: budget, focus: {en: "Budgets with margins, requirement tree, link review", fr: "Bilans avec marges, arborescence des exigences, revue des liaisons"}}
-    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, trace, decide, analyses]
+    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses]
 
   - id: mission_analyst
     label: {en: Mission analysis & ops, fr: Analyse de mission et opérations}
@@ -60,7 +60,7 @@ seats:
       prefixes: [orbit, ground, ops]
       element_domains: [orbit, mission_analysis, ground, ground_rf, ground_ops, operations, ops, launch]
     sees_first: {view: top, panel: decide, focus: {en: "Orbit trade, eclipse and visibility, ConOps, debris", fr: "Compromis d’orbite, éclipses et visibilité, ConOps, débris"}}
-    tabs: [blocks, modes, decide, analyses, requirements]
+    tabs: [blocks, modes, decide, analyses, requirements, ops]
 
   - id: payload_lead
     label: {en: Payload, fr: Charge utile}
@@ -71,7 +71,7 @@ seats:
       prefixes: [payload]
       element_domains: [payload, instrument, instruments, imager]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "Payload sizing, imager catalogue, data rate", fr: "Dimensionnement de la charge utile, catalogue d’imageurs, débit de données"}}
-    tabs: [blocks, spacecraft, analyses, requirements, decide]
+    tabs: [blocks, spacecraft, tmtc, fdir, analyses, requirements, decide]
 
   - id: power_engineer
     label: {en: Power, fr: Puissance}
@@ -82,7 +82,7 @@ seats:
       prefixes: [power, eps]
       element_domains: [power, eps, electrical]
     sees_first: {view: spacecraft, panel: budget, focus: {en: "Power by mode, EPS equipment, eclipse energy", fr: "Puissance par mode, équipements EPS, énergie en éclipse"}}
-    tabs: [blocks, spacecraft, modes, budget, electrical, interfaces, analyses, decide]
+    tabs: [blocks, spacecraft, modes, budget, electrical, interfaces, fdir, aocs, analyses, decide]
 
   - id: aocs_engineer
     label: {en: AOCS, fr: SCAO}
@@ -93,7 +93,7 @@ seats:
       prefixes: [aocs, adcs]
       element_domains: [aocs, adcs, gnc, attitude]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "Pointing budget, actuator sizing, disturbance torques", fr: "Bilan de pointage, dimensionnement des actionneurs, couples perturbateurs"}}
-    tabs: [blocks, spacecraft, budget, analyses, decide]
+    tabs: [blocks, spacecraft, budget, aocs, fdir, analyses, decide]
 
   - id: comms_engineer
     label: {en: Comms & OBDH, fr: Communications et OBDH}
@@ -104,7 +104,7 @@ seats:
       prefixes: [link, data, ttc, obdh]
       element_domains: [ttc, comms, communications, rf, obc, obdh, cdh, data, dhs, software]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "Link budget, data budget, RF band, licensing", fr: "Bilan de liaison, bilan de données, bande RF, licences"}}
-    tabs: [blocks, spacecraft, modes, budget, interfaces, data, icd, analyses, decide]
+    tabs: [blocks, spacecraft, modes, budget, interfaces, data, icd, tmtc, analyses, decide]
 
   - id: thermal_engineer
     label: {en: Thermal, fr: Thermique}
@@ -115,7 +115,7 @@ seats:
       prefixes: [thermal]
       element_domains: [thermal, tcs]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "Hot and cold cases, radiator proposal", fr: "Cas chaud et cas froid, proposition de radiateur"}}
-    tabs: [blocks, spacecraft, modes, analyses, decide]
+    tabs: [blocks, spacecraft, modes, fdir, analyses, decide]
 
   - id: structures_engineer
     label: {en: Structures & config, fr: Structures et configuration}
@@ -166,14 +166,14 @@ seats:
     kind: observer
     exclusive: false
     sees_first: {view: top, panel: blocks, focus: {en: "Any view, read-only", fr: "Toutes les vues, en lecture seule"}}
-    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, trace, decide, analyses]
+    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses]
 
   - id: instructor
     label: {en: Instructor, fr: Enseignant}
     kind: instructor
     exclusive: false
     sees_first: {view: top, panel: blocks, focus: {en: "Class board", fr: "Tableau de la classe"}}
-    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, trace, decide, analyses]
+    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses]
 
 # Team-size presets (C2O default). Each group is held by one person: claiming a group's card
 # claims every seat in it. The seats stay distinct (ownership, review inbox, audit).
