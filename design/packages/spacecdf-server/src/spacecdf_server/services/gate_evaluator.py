@@ -93,6 +93,21 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "No components selected yet",
     "{{n}} ground station(s) identified",
     "{{n}} risk(s) in the risk register",
+    # CDR (Nov 2026, phase 2): the CDR model (routers/cdr.py)
+    "The CDR model is not available",
+    "No TM/TC database yet: propose it from the design (CDR model)",
+    "{{params}} parameters, {{hk}} HK structures, {{tc}} telecommands, {{events}} events; {{suggested}} suggestion(s) to review, {{alarms}} alarm finding(s)",
+    "No rate tier or HK structure to check the downlink budget",
+    "Housekeeping fits the downlink in {{ok}}/{{total}} regimes",
+    "{{recovered}}/{{critical}} critical failure modes detected and recovered; {{alarms}} FDIR alarm finding(s)",
+    "Safe mode and load-shed table defined; {{alarms}} alarm finding(s)",
+    "Safe mode or load-shed table missing",
+    "No AOCS mode table yet",
+    "{{modes}} AOCS mode(s), {{transitions}} transition(s); {{alarms}} alarm and {{cautions}} caution finding(s)",
+    "No rate ladder yet",
+    "{{tiers}} rate tier(s), command-loss timer {{hours}} h; {{alarms}} alarm finding(s)",
+    "{{positions}} position(s), {{gonogo}} GO/NO-GO situation(s), {{rules}} flight rule(s); {{uncovered}} critical telecommand(s) without a GO/NO-GO entry",
+    "{{ok}}/{{total}} requirements have a verification method",
 )
 
 
@@ -247,13 +262,15 @@ def evaluate_gate(
     function_count: int | None = None,
     risks: list[dict] | None = None,
     margin_gate: str | None = None,
+    cdr: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
     ``phase_id`` is a phase id from the YAML or a gate name (MDR/PRR/SRR/PDR; MCR = MDR).
     ``mission``: the study's MissionRequirements (orbit, ground stations); ``function_count``:
     functions in the study's function tree; ``risks``: the study's risk register;
-    ``margin_gate``: the margin-ladder step for budget criteria (default: this gate).
+    ``margin_gate``: the margin-ladder step for budget criteria (default: this gate);
+    ``cdr``: the CDR model summary (routers/cdr.cdr_gate_summary) the CDR criteria read.
 
     Returns::
 
@@ -292,6 +309,7 @@ def evaluate_gate(
         "function_count": function_count,
         "risks": list(risks or []),
         "margin_gate": (margin_gate or str(gate.get("gate", ""))).lower(),
+        "cdr": cdr,
     }
 
     results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])]
@@ -539,7 +557,7 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                  "{{met}}/{{total}} checkable requirements met ({{pct}}%)",
                  met=met, total=len(res), pct=_fmt(pct))
 
-    elif cid in ("SRR-EC-06", "PDR-EC-03", "PRR-EC-05"):
+    elif cid in ("SRR-EC-06", "PDR-EC-03", "PRR-EC-05", "CDR-EC-10"):
         _ladder_budget(result, ctx)
 
     elif cid == "SRR-EC-10":
@@ -552,7 +570,7 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             _set(result, "pass" if ok else "fail", key, score=_fmt(score))
 
     # ---------------------------------------------------------------- PDR
-    elif cid == "PDR-EC-01":
+    elif cid in ("PDR-EC-01", "CDR-EC-01"):
         res = [(r, s) for r, s in _threshold_results(reqs, dp) if s != "untestable"]
         if not res:
             _set(result, "not_evaluated", "No requirement threshold can be checked against the design yet")
@@ -564,7 +582,7 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             else:
                 _set(result, "pass", "All {{n}} checkable requirements met", n=len(res))
 
-    elif cid == "PDR-EC-02":
+    elif cid in ("PDR-EC-02", "CDR-EC-02"):
         # Every subsystem has its expected power/data/mechanical/thermal links
         # (coverage rules of interface_rules.yaml) and no suggestion is left unreviewed.
         subs = [e for e in elements if e.get("element_type") == "subsystem" and e.get("in_scope") is not False]
@@ -713,6 +731,101 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             _set(result, "pass" if v[0] >= 50 else "fail",
                  "Debris compliance score {{score}}/100", score=_fmt(v[0]))
 
+    # ---------------------------------------------------------------- CDR (Nov 2026)
+    elif cid.startswith("CDR-EC-"):
+        _cdr_criterion(cid, result, ctx)
+
+    else:
+        _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
+
+
+def _cdr_criterion(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one branch per criterion
+    """CDR-EC-03 … 09 and 11 from the CDR model (routers/cdr.cdr_gate_summary)."""
+    if cid == "CDR-EC-11":
+        reqs = ctx["reqs"]
+        if not reqs:
+            _set(result, "not_evaluated", "No requirements defined")
+            return
+        ok = sum(1 for r in reqs if (r.get("verification_method") or "").strip())
+        _set(result, "pass" if ok == len(reqs) else "fail", "{{ok}}/{{total}} requirements have a verification method",
+             ok=ok, total=len(reqs))
+        return
+    cdr = ctx.get("cdr")
+    if not cdr:
+        _set(result, "not_evaluated", "The CDR model is not available")
+        return
+    rows = [r for r in cdr.get("rows") or [] if not r.get("deleted_at") and r.get("status") != "rejected"]
+    checks = cdr.get("checks") or []
+
+    def n(kind: str) -> int:
+        return sum(1 for r in rows if r.get("kind") == kind)
+
+    def count(prefixes: tuple[str, ...], severity: str = "alarm") -> int:
+        return sum(1 for c in checks if c.get("severity") == severity and str(c.get("rule", "")).startswith(prefixes))
+
+    if cid == "CDR-EC-03":
+        if not (n("parameters") and n("hk") and n("commands")):
+            _set(result, "fail", "No TM/TC database yet: propose it from the design (CDR model)")
+            return
+        tm_kinds = {"settings", "apids", "services", "parameters", "hk", "commands", "events"}
+        sug = sum(1 for r in rows if r.get("kind") in tm_kinds and r.get("status") == "suggested")
+        al = count(("TMTC",))
+        ok = n("events") > 0 and sug == 0 and al == 0
+        _set(result, "pass" if ok else "fail",
+             "{{params}} parameters, {{hk}} HK structures, {{tc}} telecommands, {{events}} events; {{suggested}} suggestion(s) to review, {{alarms}} alarm finding(s)",
+             params=n("parameters"), hk=n("hk"), tc=n("commands"), events=n("events"), suggested=sug, alarms=al)
+    elif cid == "CDR-EC-04":
+        regs = [r for r in (cdr.get("budget") or {}).get("regimes") or [] if r.get("ok") is not None]
+        if not regs:
+            _set(result, "not_evaluated", "No rate tier or HK structure to check the downlink budget")
+            return
+        ok = sum(1 for r in regs if r["ok"])
+        _set(result, "pass" if ok == len(regs) else "fail", "Housekeeping fits the downlink in {{ok}}/{{total}} regimes",
+             ok=ok, total=len(regs))
+    elif cid == "CDR-EC-05":
+        f = cdr.get("fmeca") or {}
+        crit, rec = int(f.get("critical") or 0), int(f.get("critical_recovered") or 0)
+        al = sum(1 for c in checks if c.get("severity") == "alarm" and str(c.get("rule", "")).startswith("FDIR")
+                 and c.get("rule") != "FDIR-FMECA")
+        if not n("monitors"):
+            _set(result, "fail", "{{recovered}}/{{critical}} critical failure modes detected and recovered; {{alarms}} FDIR alarm finding(s)",
+                 recovered=rec, critical=crit, alarms=al)
+            return
+        _set(result, "pass" if rec == crit and al == 0 else "fail",
+             "{{recovered}}/{{critical}} critical failure modes detected and recovered; {{alarms}} FDIR alarm finding(s)",
+             recovered=rec, critical=crit, alarms=al)
+    elif cid == "CDR-EC-06":
+        if not (n("safe_mode") and n("load_shed")):
+            _set(result, "fail", "Safe mode or load-shed table missing")
+            return
+        al = sum(1 for c in checks if c.get("severity") == "alarm"
+                 and str(c.get("rule", "")).startswith(("FDIR-SAFE", "FDIR-SHED", "EL-STATE")))
+        _set(result, "pass" if al == 0 else "fail", "Safe mode and load-shed table defined; {{alarms}} alarm finding(s)", alarms=al)
+    elif cid == "CDR-EC-07":
+        if not n("aocs_modes"):
+            _set(result, "fail", "No AOCS mode table yet")
+            return
+        al = count(("AOCS",))
+        ca = count(("AOCS",), "caution")
+        _set(result, "pass" if al == 0 and ca == 0 else "fail",
+             "{{modes}} AOCS mode(s), {{transitions}} transition(s); {{alarms}} alarm and {{cautions}} caution finding(s)",
+             modes=n("aocs_modes"), transitions=n("aocs_transitions"), alarms=al, cautions=ca)
+    elif cid == "CDR-EC-08":
+        if not n("rate_tiers"):
+            _set(result, "fail", "No rate ladder yet")
+            return
+        ttc = next((r.get("data") or {} for r in rows if r.get("kind") == "ttc"), {})
+        to = ttc.get("cmd_loss_switch_timeout_s")
+        al = count(("TTC",))
+        ok = al == 0 and bool(ttc) and isinstance(to, (int, float)) and to > 0
+        _set(result, "pass" if ok else "fail", "{{tiers}} rate tier(s), command-loss timer {{hours}} h; {{alarms}} alarm finding(s)",
+             tiers=n("rate_tiers"), hours=_fmt(float(to) / 3600.0, 1) if isinstance(to, (int, float)) else "–", alarms=al)
+    elif cid == "CDR-EC-09":
+        unc = sum(1 for c in checks if c.get("rule") == "OPS-GNG")
+        ok = n("positions") > 0 and n("gonogo") > 0 and n("flight_rules") > 0 and unc == 0
+        _set(result, "pass" if ok else "fail",
+             "{{positions}} position(s), {{gonogo}} GO/NO-GO situation(s), {{rules}} flight rule(s); {{uncovered}} critical telecommand(s) without a GO/NO-GO entry",
+             positions=n("positions"), gonogo=n("gonogo"), rules=n("flight_rules"), uncovered=unc)
     else:
         _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
 

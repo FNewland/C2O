@@ -79,6 +79,16 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
         ctx["params"] = await design_params(study_id, study)
     ctx["function_count"] = await _function_count(study_id, study)
     ctx["risks"] = list(getattr(study, "risk_register", None) or []) if study else []
+    try:  # the CDR model (TM/TC database, FDIR, AOCS, TT&C, operations) for the CDR criteria
+        gates = (study_profile(study).get("gates") or []) if study else []
+        if any("cdr" in (g.get("covers") or []) for g in gates):
+            from .cdr import cdr_gate_summary
+            ctx["cdr"] = await cdr_gate_summary(study_id)
+        else:
+            ctx["cdr"] = None
+    except Exception:  # noqa: BLE001
+        logger.exception("CDR model unavailable for %s", study_id)
+        ctx["cdr"] = None
     try:  # instructor sign-offs of manual / hybrid items (WP9)
         from ..seats import store as seat_store
         ctx["signoffs"] = dict((await seat_store.get_team(study_id)).get("signoffs") or {})
@@ -123,7 +133,7 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
             reliability_target=getattr(req_model, "reliability_target", None) if req_model else None,
             requirements=ctx["requirements"], elements=ctx["elements"], interfaces=ctx["interfaces"],
             mission=req_model, function_count=ctx.get("function_count"), risks=ctx.get("risks"),
-            margin_gate=mg,
+            margin_gate=mg, cdr=ctx.get("cdr"),
         )
         for c in res.get("criteria", []):
             c["canonical_gate"] = canon

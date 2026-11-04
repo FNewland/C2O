@@ -10,11 +10,13 @@
 # the person (Franz's ruling L1): "open decisions" are computed from that person's own logbook.
 #
 #   id        D-<worksheet>-<SLUG>; stable, used in records and in the frontend
-#   part      <worksheet id>/<question id> in learner_workbook.yaml (the workbook part it belongs to)
+#   part      <worksheet id>/<question id> in learner_workbook.yaml (the workbook part it belongs to);
+#             null only for a D-CDR-* decision no workbook part asks for yet, which then says
+#             `no_workbook_part: true` (Nov 2026, phase 2: the CDR decisions)
 #   question  what the team must decide (EN / FR)
 #   seat      owning seat (see seats:)
-#   gate      the review it must be recorded by, full ECSS profile MDR → PRR → SRR → PDR
-#             (REDESIGN_DECISIONS.md ruling 1)
+#   gate      the review it must be recorded by, full ECSS profile MDR → PRR → SRR → PDR → CDR
+#             (REDESIGN_DECISIONS.md ruling 1, CDR added in phase 2)
 #   fields    the parts of the record the student fills in (choice and rationale always)
 #   prefill   SpaceCDF state the record is prefilled from (see sources:)
 #   capture   where the tool offers "Record decision" at the point of decision (frontend
@@ -38,6 +40,9 @@ gates:
   - id: pdr
     label: {en: "PDR — Preliminary Design Review", fr: "PDR — revue de conception préliminaire"}
     ui_gates: [pdr]
+  - id: cdr
+    label: {en: "CDR — Critical Design Review", fr: "CDR — revue critique de conception"}
+    ui_gates: [cdr]
 
 seats:
   - {id: team_leader, label: {en: Team leader, fr: Chef d’équipe}}
@@ -84,6 +89,7 @@ sources:
   requirement_quality: {label: {en: Requirement quality check (SMART), fr: Contrôle de qualité des exigences (SMART)}, api: "GET /api/requirements/verify?study_id=", server: false}
   gate_review: {label: {en: Review gate checklist results, fr: Résultats de la liste de contrôle du jalon}, api: "V&V › Review gates (gate evaluator)", server: false}
   conops: {label: {en: Concept of operations (modes), fr: "Concept d’opérations (modes)"}, api: "GET /api/studies/{id} → conops", server: true}
+  cdr_model: {label: {en: "CDR model (TM/TC database, FDIR, AOCS modes, operations)", fr: "Modèle CDR (base TM/TC, FDIR, modes SCAO, exploitation)"}, api: "GET /api/studies/{id}/cdr", server: false}
 
 decisions:
   # ── Worksheet 1.2: Canadian space ecosystem & regulation ──
@@ -608,4 +614,57 @@ decisions:
     gate: pdr
     fields: [options, choice, rationale, evidence, consequences, open_issues]
     prefill: [conops, budget_cost]
+    capture: []
+
+  # ── CDR (Nov 2026, phase 2): the CDR model products (TM/TC, FDIR, AOCS, TT&C, operations) ──
+  - id: D-3.3-LADDER
+    part: LW-3.3/E
+    question: {en: "Which TM rate tiers, beacon and command-loss recovery does the spacecraft fly?", fr: "Quels paliers de débit TM, quelle balise et quelle reprise sur perte de commande le satellite emploie-t-il ?"}
+    seat: comms_engineer
+    gate: cdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [cdr_model]
+    capture: []
+  - id: D-5.2-SAFEMODE
+    part: LW-5.2/B
+    question: {en: "What does safe mode switch, what enters it and how is it left?", fr: "Que commute le mode survie, qu’est-ce qui y fait entrer et comment en sort-on ?"}
+    seat: systems_engineer
+    gate: cdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [cdr_model, conops]
+    capture: []
+  - id: D-5.2-FLIGHTRULES
+    part: LW-5.2/D
+    question: {en: "Which flight rules and GO/NO-GO calls govern the critical telecommands?", fr: "Quelles règles de vol et quels arbitrages GO/NO-GO encadrent les télécommandes critiques ?"}
+    seat: mission_analyst
+    gate: cdr
+    fields: [options, choice, rationale, consequences, open_issues]
+    prefill: [cdr_model]
+    capture: []
+  - id: D-CDR-TMTCDB
+    part: null
+    no_workbook_part: true
+    question: {en: "Which TM/TC database is baselined: APIDs, PUS services, housekeeping packets and rates, telecommands and events?", fr: "Quelle base de données TM/TC est figée : APID, services PUS, paquets de servitude et cadences, télécommandes et événements ?"}
+    seat: comms_engineer
+    gate: cdr
+    fields: [options, choice, rationale, evidence, margin_impact, open_issues]
+    prefill: [cdr_model, budget_data]
+    capture: []
+  - id: D-CDR-LOADSHED
+    part: null
+    no_workbook_part: true
+    question: {en: "Which load-shed order and bus-protection levels protect the battery?", fr: "Quel ordre de délestage et quels seuils de protection du bus protègent la batterie ?"}
+    seat: power_engineer
+    gate: cdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [cdr_model, budget_power]
+    capture: []
+  - id: D-CDR-AOCSMODES
+    part: null
+    no_workbook_part: true
+    question: {en: "Which AOCS modes, transitions and control gains are baselined?", fr: "Quels modes SCAO, quelles transitions et quels gains de commande sont figés ?"}
+    seat: aocs_engineer
+    gate: cdr
+    fields: [options, choice, rationale, evidence, consequences, open_issues]
+    prefill: [cdr_model]
     capture: []

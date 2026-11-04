@@ -1,11 +1,15 @@
 # Gate profiles — which review gates a study holds, what they are called, and what each one
 # checks. Profiles are DATA: an instructor can tailor them without code (WP6, Nov 2026).
 #
-# The exit criteria live per canonical gate in gate_exit_criteria.yaml (MDR, PRR, SRR, PDR =
-# the ECSS-M-ST-10C Rev.1 project reviews up to PDR). A profile gate `covers` one or more
+# The exit criteria live per canonical gate in gate_exit_criteria.yaml (MDR, PRR, SRR, PDR, CDR
+# = the ECSS-M-ST-10C Rev.1 project reviews up to CDR). A profile gate `covers` one or more
 # canonical gates: its checklist is the union of their criteria, and passing it baselines the
 # products those gates baseline. Every study picks a profile (Study.gate_profile); the default
-# is full ECSS (REDESIGN_DECISIONS.md ruling 1).
+# is full ECSS (REDESIGN_DECISIONS.md ruling 1), now carried on to the CDR (Nov 2026, phase 2:
+# the TM/TC database, FDIR, AOCS mode and operations products the simulator needs).
+#
+# A profile covers the canonical gates in order, from MDR up to PDR at least; it may stop at
+# PDR (the C2O teaching spine) or go on to CDR. QR and AR are not modelled yet.
 #
 #   id        stable id used in URLs, stored gate states and logbook context
 #   short     the label shown on the gate tab (e.g. "MDR", or "MCR" in the NASA skin)
@@ -19,17 +23,17 @@
 # primary texts before release.
 
 version: 1
-canonical_gates: [mdr, prr, srr, pdr]
+canonical_gates: [mdr, prr, srr, pdr, cdr]
 default_profile: full_ecss
 # Gate ids written before Nov 2026 (MCR was the old name of MDR, ruling 3)
 legacy_gate_ids: {mcr: mdr}
 
 profiles:
   full_ecss:
-    label: {en: "Full ECSS (MDR → PRR → SRR → PDR)", fr: "ECSS complet (MDR → PRR → SRR → PDR)"}
+    label: {en: "Full ECSS (MDR → PRR → SRR → PDR → CDR)", fr: "ECSS complet (MDR → PRR → SRR → PDR → CDR)"}
     description:
-      en: "Four separate reviews as in ECSS-M-ST-10C Rev.1: Mission Definition, Preliminary Requirements, System Requirements and Preliminary Design."
-      fr: "Quatre revues distinctes, comme dans l’ECSS-M-ST-10C Rev.1 : définition de la mission, exigences préliminaires, exigences système et conception préliminaire."
+      en: "Five separate reviews as in ECSS-M-ST-10C Rev.1: Mission Definition, Preliminary Requirements, System Requirements, Preliminary Design and Critical Design."
+      fr: "Cinq revues distinctes, comme dans l’ECSS-M-ST-10C Rev.1 : définition de la mission, exigences préliminaires, exigences système, conception préliminaire et conception détaillée."
     source: "ECSS-M-ST-10C Rev.1 §4.4 (to verify)"
     gates:
       - id: mdr
@@ -48,12 +52,16 @@ profiles:
         short: PDR
         name: {en: "Preliminary Design Review", fr: "revue de conception préliminaire"}
         covers: [pdr]
+      - id: cdr
+        short: CDR
+        name: {en: "Critical Design Review", fr: "revue critique de conception"}
+        covers: [cdr]
 
   esa_iod:
-    label: {en: "ESA IOD CubeSat (concept review → PDR)", fr: "CubeSat IOD de l’ESA (revue de concept → PDR)"}
+    label: {en: "ESA IOD CubeSat (concept review → PDR → CDR)", fr: "CubeSat IOD de l’ESA (revue de concept → PDR → CDR)"}
     description:
-      en: "Two reviews as in ESA In-Orbit Demonstration CubeSat projects: a concept review that merges MDR and PRR, then a PDR that also holds the system requirements review."
-      fr: "Deux revues, comme dans les projets CubeSat de démonstration en orbite de l’ESA : une revue de concept qui réunit MDR et PRR, puis une PDR qui inclut la revue des exigences système."
+      en: "Three reviews as in ESA In-Orbit Demonstration CubeSat projects: a concept review that merges MDR and PRR, a PDR that also holds the system requirements review, then the CDR."
+      fr: "Trois revues, comme dans les projets CubeSat de démonstration en orbite de l’ESA : une revue de concept qui réunit MDR et PRR, une PDR qui inclut la revue des exigences système, puis la CDR."
     source: "ESA TEC-SY/128/2013 (IOD CubeSat); the MDR+PRR merge is a C2O reading (to verify)"
     gates:
       - id: cr
@@ -64,6 +72,10 @@ profiles:
         short: PDR
         name: {en: "Preliminary Design Review", fr: "revue de conception préliminaire"}
         covers: [srr, pdr]
+      - id: cdr
+        short: CDR
+        name: {en: "Critical Design Review", fr: "revue critique de conception"}
+        covers: [cdr]
 
   c2o_3gate:
     label: {en: "C2O three gates (MDR → PRR+SRR → PDR)", fr: "C2O en trois jalons (MDR → PRR+SRR → PDR)"}
@@ -86,7 +98,7 @@ profiles:
         covers: [pdr]
 
   nasa:
-    label: {en: "NASA vocabulary (MCR → SRR → MDR/SDR → PDR)", fr: "Vocabulaire NASA (MCR → SRR → MDR/SDR → PDR)"}
+    label: {en: "NASA vocabulary (MCR → SRR → MDR/SDR → PDR → CDR)", fr: "Vocabulaire NASA (MCR → SRR → MDR/SDR → PDR → CDR)"}
     description:
       en: "The full ECSS gates under NASA NPR 7123.1 names: MCR ≈ ECSS MDR, SRR ≈ PRR, MDR/SDR ≈ ECSS SRR. Criteria are the same as full ECSS."
       fr: "Les jalons ECSS complets sous les noms de la NASA NPR 7123.1 : MCR ≈ MDR ECSS, SRR ≈ PRR, MDR/SDR ≈ SRR ECSS. Les critères sont ceux de l’ECSS complet."
@@ -109,6 +121,10 @@ profiles:
         short: PDR
         name: {en: "Preliminary Design Review", fr: "revue de conception préliminaire"}
         covers: [pdr]
+      - id: cdr
+        short: CDR
+        name: {en: "Critical Design Review", fr: "revue critique de conception"}
+        covers: [cdr]
 
 # Workflow steps (redesign §4). A criterion's `step` names the step that closes it.
 steps:
@@ -132,28 +148,39 @@ steps:
   C1: {en: "Equipment", fr: "Équipements"}
   C2: {en: "Analyses", fr: "Analyses"}
   C3: {en: "AIV and compliance", fr: "AIV et conformité"}
+  D1: {en: "TM/TC database", fr: "Base de données TM/TC"}
+  D2: {en: "FDIR design", fr: "Conception FDIR"}
+  D3: {en: "AOCS modes and control", fr: "Modes et commande SCAO"}
+  D4: {en: "Operations products", fr: "Produits d’exploitation"}
 
 # Products and their expected maturity at each canonical gate (D draft, B baselined,
-# U updated). Passing a gate records the products it baselines in the baseline snapshot.
+# U updated). CDR (Nov 2026): the detailed design, its justification and the ICDs are
+# baselined; the TM/TC database, FDIR specification and AOCS design are baselined; the
+# operations products (organisation, GO/NO-GO, flight rules, FOP) are drafts (baselined at the
+# ORR, not modelled). Passing a gate records the products it baselines in the baseline snapshot.
 # Cells reconstructed from ECSS-E-ST-10C Annex A (to verify).
 products:
   - {id: mission_statement, owner_seat: team_leader, label: {en: "Mission statement (MDD)", fr: "Énoncé de mission (MDD)"}, maturity: {mdr: B, prr: U}}
-  - {id: objectives, owner_seat: team_leader, label: {en: "Objectives, measures of effectiveness, success criteria", fr: "Objectifs, mesures d’efficacité, critères de succès"}, maturity: {mdr: B, prr: U, srr: U, pdr: U}}
+  - {id: objectives, owner_seat: team_leader, label: {en: "Objectives, measures of effectiveness, success criteria", fr: "Objectifs, mesures d’efficacité, critères de succès"}, maturity: {mdr: B, prr: U, srr: U, pdr: U, cdr: U}}
   - {id: concept_report, owner_seat: systems_engineer, label: {en: "System concept report with alternatives", fr: "Rapport de concept système avec solutions de rechange"}, maturity: {mdr: D, prr: B}}
-  - {id: trade_reports, owner_seat: systems_engineer, label: {en: "Trade-off reports", fr: "Rapports de compromis"}, maturity: {mdr: D, prr: B, srr: U, pdr: U}}
-  - {id: conops, owner_seat: mission_analyst, label: {en: "Concept of operations", fr: "Concept d’opérations"}, maturity: {mdr: D, prr: U, srr: U, pdr: U}}
-  - {id: mission_analysis, owner_seat: mission_analyst, label: {en: "Mission analysis (orbit, lifetime)", fr: "Analyse de mission (orbite, durée de vie)"}, maturity: {mdr: D, prr: B, srr: U, pdr: U}}
-  - {id: trs, owner_seat: systems_engineer, label: {en: "Technical requirements specification", fr: "Spécification technique des besoins"}, maturity: {mdr: D, prr: B, srr: U, pdr: U}}
+  - {id: trade_reports, owner_seat: systems_engineer, label: {en: "Trade-off reports", fr: "Rapports de compromis"}, maturity: {mdr: D, prr: B, srr: U, pdr: U, cdr: U}}
+  - {id: conops, owner_seat: mission_analyst, label: {en: "Concept of operations", fr: "Concept d’opérations"}, maturity: {mdr: D, prr: U, srr: U, pdr: U, cdr: U}}
+  - {id: mission_analysis, owner_seat: mission_analyst, label: {en: "Mission analysis (orbit, lifetime)", fr: "Analyse de mission (orbite, durée de vie)"}, maturity: {mdr: D, prr: B, srr: U, pdr: U, cdr: U}}
+  - {id: trs, owner_seat: systems_engineer, label: {en: "Technical requirements specification", fr: "Spécification technique des besoins"}, maturity: {mdr: D, prr: B, srr: U, pdr: U, cdr: U}}
   - {id: function_tree, owner_seat: systems_engineer, label: {en: "Function tree", fr: "Arbre fonctionnel"}, maturity: {prr: D, srr: U}}
-  - {id: product_tree, owner_seat: systems_engineer, label: {en: "Product tree", fr: "Arbre produit"}, maturity: {prr: D, srr: U, pdr: B}}
-  - {id: budgets, owner_seat: systems_engineer, label: {en: "Technical budgets with margins", fr: "Bilans techniques avec marges"}, maturity: {mdr: D, prr: U, srr: U, pdr: B}}
-  - {id: design_files, owner_seat: systems_engineer, label: {en: "Design definition and justification files", fr: "Dossiers de définition et de justification"}, maturity: {prr: D, srr: U, pdr: B}}
-  - {id: interfaces, owner_seat: systems_engineer, label: {en: "Interface requirements and ICDs", fr: "Exigences d’interface et ICD"}, maturity: {prr: D, srr: U, pdr: B}}
-  - {id: aiv_plan, owner_seat: systems_engineer, label: {en: "Verification and AIV plan with model philosophy", fr: "Plan de vérification et d’AIV avec philosophie des modèles"}, maturity: {prr: D, srr: U, pdr: B}}
-  - {id: vcd, owner_seat: systems_engineer, label: {en: "Verification control document", fr: "Document de contrôle de la vérification"}, maturity: {srr: D, pdr: U}}
-  - {id: trl_matrix, owner_seat: systems_engineer, label: {en: "Technology readiness and qualification status", fr: "Maturité technologique et état de qualification"}, maturity: {prr: D, srr: U, pdr: B}}
-  - {id: risk_register, owner_seat: team_leader, label: {en: "Risk register", fr: "Registre des risques"}, maturity: {mdr: D, prr: U, srr: U, pdr: U}}
-  - {id: cost_schedule, owner_seat: team_leader, label: {en: "Cost and schedule", fr: "Coût et calendrier"}, maturity: {mdr: D, prr: U, srr: U, pdr: B}}
-  - {id: debris, owner_seat: mission_analyst, label: {en: "Debris mitigation", fr: "Atténuation des débris"}, maturity: {mdr: D, prr: D, srr: U, pdr: U}}
-  - {id: spectrum, owner_seat: comms_engineer, label: {en: "RF spectrum and licensing", fr: "Spectre RF et licences"}, maturity: {mdr: D, prr: U, srr: U, pdr: B}}
-  - {id: cds_matrix, owner_seat: structures_engineer, label: {en: "CubeSat Design Specification compliance", fr: "Conformité à la spécification CubeSat (CDS)"}, maturity: {prr: D, srr: U, pdr: B}}
+  - {id: product_tree, owner_seat: systems_engineer, label: {en: "Product tree", fr: "Arbre produit"}, maturity: {prr: D, srr: U, pdr: B, cdr: U}}
+  - {id: budgets, owner_seat: systems_engineer, label: {en: "Technical budgets with margins", fr: "Bilans techniques avec marges"}, maturity: {mdr: D, prr: U, srr: U, pdr: B, cdr: U}}
+  - {id: design_files, owner_seat: systems_engineer, label: {en: "Design definition and justification files", fr: "Dossiers de définition et de justification"}, maturity: {prr: D, srr: U, pdr: B, cdr: B}}
+  - {id: interfaces, owner_seat: systems_engineer, label: {en: "Interface requirements and ICDs", fr: "Exigences d’interface et ICD"}, maturity: {prr: D, srr: U, pdr: B, cdr: B}}
+  - {id: aiv_plan, owner_seat: systems_engineer, label: {en: "Verification and AIV plan with model philosophy", fr: "Plan de vérification et d’AIV avec philosophie des modèles"}, maturity: {prr: D, srr: U, pdr: B, cdr: U}}
+  - {id: vcd, owner_seat: systems_engineer, label: {en: "Verification control document", fr: "Document de contrôle de la vérification"}, maturity: {srr: D, pdr: U, cdr: U}}
+  - {id: trl_matrix, owner_seat: systems_engineer, label: {en: "Technology readiness and qualification status", fr: "Maturité technologique et état de qualification"}, maturity: {prr: D, srr: U, pdr: B, cdr: U}}
+  - {id: risk_register, owner_seat: team_leader, label: {en: "Risk register", fr: "Registre des risques"}, maturity: {mdr: D, prr: U, srr: U, pdr: U, cdr: U}}
+  - {id: cost_schedule, owner_seat: team_leader, label: {en: "Cost and schedule", fr: "Coût et calendrier"}, maturity: {mdr: D, prr: U, srr: U, pdr: B, cdr: U}}
+  - {id: debris, owner_seat: mission_analyst, label: {en: "Debris mitigation", fr: "Atténuation des débris"}, maturity: {mdr: D, prr: D, srr: U, pdr: U, cdr: U}}
+  - {id: spectrum, owner_seat: comms_engineer, label: {en: "RF spectrum and licensing", fr: "Spectre RF et licences"}, maturity: {mdr: D, prr: U, srr: U, pdr: B, cdr: U}}
+  - {id: cds_matrix, owner_seat: structures_engineer, label: {en: "CubeSat Design Specification compliance", fr: "Conformité à la spécification CubeSat (CDS)"}, maturity: {prr: D, srr: U, pdr: B, cdr: U}}
+  - {id: tmtc_db, owner_seat: comms_engineer, label: {en: "TM/TC database (parameters, HK, telecommands, events)", fr: "Base de données TM/TC (paramètres, HK, télécommandes, événements)"}, maturity: {pdr: D, cdr: B}}
+  - {id: fdir_spec, owner_seat: systems_engineer, label: {en: "FDIR specification (monitors, event-actions, safe mode)", fr: "Spécification FDIR (surveillances, événements-actions, mode survie)"}, maturity: {pdr: D, cdr: B}}
+  - {id: aocs_design, owner_seat: aocs_engineer, label: {en: "AOCS mode machine and control design", fr: "Automate de modes et conception de la commande SCAO"}, maturity: {pdr: D, cdr: B}}
+  - {id: ops_products, owner_seat: mission_analyst, label: {en: "Operations organisation, GO/NO-GO matrix and flight rules", fr: "Organisation des opérations, matrice GO/NO-GO et règles de vol"}, maturity: {pdr: D, cdr: D}}
