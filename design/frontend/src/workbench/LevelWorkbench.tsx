@@ -12,6 +12,8 @@ import { BlocksPanel } from './BlocksPanel'
 import { BudgetPanel } from './BudgetPanel'
 import { RequirementsPanel } from './RequirementsPanel'
 import { InterfacesPanel } from './InterfacesPanel'
+import { ElectricalPanel } from './ElectricalPanel'
+import { DataBusPanel } from './DataBusPanel'
 import { DecisionPanel } from './DecisionPanel'
 import { VVPanel } from './VVPanel'
 import { FunctionTree } from '../components/FunctionTree'
@@ -23,10 +25,10 @@ import { SpacecraftView } from '../spacecraft/SpacecraftView'
 import { useSeatView } from '../seats/view'
 import { useSeatStore } from '../seats/api'
 
-const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
+const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'trace', 'decide', 'analyses']
 
 /** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
-const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
+const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'trace', 'decide', 'analyses'])
 
 const MIN_PANEL = 160
 
@@ -44,6 +46,8 @@ const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
   requirements: 'Requirements',
   functions: 'Functions',
   interfaces: 'Interfaces',
+  electrical: 'Electrical',
+  data: 'Data',
   icd: 'ICD',
   trace: 'Traceability',
   decide: 'Decide',
@@ -209,6 +213,8 @@ export function LevelWorkbench() {
           {activePanel === 'requirements' && <RequirementsPanel />}
           {activePanel === 'functions' && <ErrorBoundary phaseName="Functions"><FunctionTree /></ErrorBoundary>}
           {activePanel === 'interfaces' && <InterfacesPanel />}
+          {activePanel === 'electrical' && <ErrorBoundary phaseName="Electrical"><ElectricalPanel /></ErrorBoundary>}
+          {activePanel === 'data' && <ErrorBoundary phaseName="Data"><DataBusPanel /></ErrorBoundary>}
           {activePanel === 'icd' && <ErrorBoundary phaseName="ICD"><ICDTable /></ErrorBoundary>}
           {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
