@@ -127,10 +127,21 @@ def localise(ws: dict, lang: str) -> dict:
             {"id": q.get("id"), "kind": q.get("kind") or "text",
              "text": _tr(q.get("text"), lang),
              "prompt": _tr(q.get("prompt"), lang) or None,
-             "points": [_tr(p, lang) for p in (q.get("points") or [])]}
+             "points": [_tr(p, lang) for p in (q.get("points") or [])],
+             **_where(q, lang)}
             for q in ws.get("questions") or []
         ],
     }
+
+
+def _where(q: dict, lang: str) -> dict:
+    """Where in SpaceCDF, textbook sections and external links (where.py, Nov 2026 audit)."""
+    from .where import for_question
+    try:
+        return for_question(q, lang)
+    except Exception:  # noqa: BLE001 - a broken map must not hide the worksheet
+        logger.exception("where map: question %s", q.get("id"))
+        return {"where": [], "links": [], "book": []}
 
 
 def for_context(tool: str, ctx: dict, lang: str, include_all: bool = False,

@@ -59,7 +59,7 @@ c'est de l'utiliser sans le dire.
 
 Pour chaque processus d'ingénierie système de la NASA (NPR 7123.1D), identifiez la fonctionnalité de SpaceCDF qui le met en œuvre. Indiquez le nom de l'onglet, du bouton ou du panneau. Si le processus exige un jugement humain que l'outil ne peut pas automatiser, inscrivez « Manuel » dans la dernière colonne.
 
-*Indice : parcourez les étapes du flux de travail de SpaceCDF (Étape 1 Besoin de mission · Étape 2 Concept · Étape 3 Exigences · Étape 4 Conception) et explorez chaque onglet. De nombreux processus correspondent à plus d'une fonctionnalité.*
+*Indice : commencez par le Guide de la barre d'outils : niveau par niveau, il indique quoi faire et dans quel onglet. Parcourez ensuite les onglets de niveau (0 Mission, 1 Segment, 2 Système / élément, 3 Sous-système, V&V) et les onglets d'activité (Blocs, Exigences, Fonctions, Interfaces, Décider, Analyses…). De nombreux processus correspondent à plus d'une fonctionnalité ; les liens « Où dans SpaceCDF » sous cette partie, dans le journal de bord, ouvrent les principaux.*
 
 | # | Processus d'ingénierie système | Fonctionnalité(s) de SpaceCDF | Manuel ? |
 |---|-----------|---------------------|---------|
@@ -154,7 +154,7 @@ _______________________________________________
 
 Parcourez l'outil SpaceCDF et répondez à chaque question :
 
-1. Combien de cartes d'indicateurs clés (KPI) le tableau de bord de conception (Design Dashboard) affiche-t-il ? Citez-les par leur nom :
+1. Ouvrez la liste de maturité de la barre d'état (« Maturité du niveau 0 : n/m »). Quelles vérifications énumère-t-elle pour votre niveau, et lesquelles ne sont pas encore satisfaites ?
 
    _______________________________________________
 
@@ -162,7 +162,7 @@ Parcourez l'outil SpaceCDF et répondez à chaque question :
 
    _______________________________________________
 
-2. Dans l'onglet Gate Review, quels sont les critères de sortie de la MCR ? Lesquels sont évalués automatiquement ?
+2. Dans V&V › Jalons de revue, quels sont les critères de sortie de la MDR ? Lesquels sont obligatoires, et lesquels l'outil évalue-t-il automatiquement plutôt que de vous les laisser (manuels) ?
 
    _______________________________________________
 
@@ -170,17 +170,17 @@ Parcourez l'outil SpaceCDF et répondez à chaque question :
 
    _______________________________________________
 
-3. Quels postes d'ingénierie sont proposés au lancement d'une séance collaborative ?
+3. Quels postes d'ingénierie une équipe peut-elle choisir sous Taille de l’équipe (postes), à la dernière étape de Définition de la mission ?
 
    _______________________________________________
 
    _______________________________________________
 
-4. Par quelles étapes du flux de travail SpaceCDF vous guide-t-il (de gauche à droite) ?
+4. Par quelles étapes SpaceCDF vous guide-t-il, de gauche à droite (les étapes de Définition de la mission, puis les onglets de niveau) ?
 
    _______________________________________________
 
-5. Dans l'onglet Positions, trouvez le poste qui vous est attribué. Quelles questions clés y sont énumérées ?
+5. Ouvrez le Guide (barre d'outils) à votre niveau : quels objectifs d'apprentissage et conseils énumère-t-il ? Dans V&V › Jalons de revue, quels critères relèvent de votre poste ?
 
    _______________________________________________
 
@@ -451,7 +451,7 @@ Si votre mission utilise un format CubeSat, remplissez cette liste de vérificat
 | Interrupteurs de déploiement sur tous les éléments déployables | __________ | __________ | __________ |
 | Inhibitions de la propulsion (3 indépendantes, le cas échéant) | __________ | __________ | __________ |
 
-*Indice : utilisez le panneau Compliance de SpaceCDF pour vérifier la conformité à la CDS. L'outil signale automatiquement les paramètres non conformes à partir de vos saisies de masse et de dimensions.*
+*Indice : l'onglet Satellite (niveau 2) affiche le format que SpaceCDF déduit et la limite de masse du tableau 1 de la CDS 14.1, comparée à la masse de conception plus la marge. Vérifiez les rails, les dimensions, la goupille RBF et les interrupteurs de déploiement dans la CDS elle-même (lien dans le journal de bord).*
 
 ---
 
@@ -525,25 +525,25 @@ _______________________________________________
 
 ---
 
-## Partie E : Panneau Compliance de SpaceCDF
+## Partie E : Vérifications de conformité dans SpaceCDF
 
-Ouvrez le panneau Compliance de SpaceCDF et répondez :
+SpaceCDF n'a pas de panneau de conformité unique : chaque vérification se trouve là où se fait cette partie de la conception. Trouvez-les et répondez :
 
-1. Quel est l'état de conformité de votre mission en matière d'atténuation des débris ?
-
-   _______________________________________________
-
-2. Quelle altitude orbitale faudrait-il pour respecter la règle FCC des 5 ans SANS propulsion ? (Utilisez le calculateur de durée de vie orbitale de l'outil.)
+1. Quel est l'état de votre mission en matière d'atténuation des débris ? (Décider › Étude de compromis d'orbite, colonnes Durée de vie, 25 ans et FCC 5 ans ; Exporter › Conformité désorbitation et débris)
 
    _______________________________________________
 
-3. Quelles normes l'outil a-t-il suggérées automatiquement pour votre type de mission ?
+2. Quelle altitude orbitale faudrait-il pour respecter la règle FCC des 5 ans SANS propulsion ? (Comparez la durée de vie naturelle des candidates dans Décider › Étude de compromis d'orbite.)
+
+   _______________________________________________
+
+3. Quelles normes SpaceCDF cite-t-il pour votre conception ? (Exporter › Matrice de conformité ECSS ; des écrans comme Interfaces et Schémas nomment la norme qu'ils suivent)
 
    _______________________________________________
 
    _______________________________________________
 
-4. Votre conception actuelle présente-t-elle des signalements de conformité (avertissements ou erreurs) ?
+4. Votre conception actuelle présente-t-elle des signalements de conformité (avertissements ou erreurs) ? (Analyses › Conflits)
 
    _______________________________________________
 
@@ -827,23 +827,23 @@ Capacité quotidienne de liaison descendante : __________ Go/jour
 
 ## Partie G : Saisie dans l'outil SpaceCDF
 
-Dans SpaceCDF, saisissez votre besoin de mission (étape 1) et votre concept (étape 2). Répondez ensuite aux questions suivantes :
+Dans SpaceCDF, saisissez votre besoin de mission dans Définition de la mission (étapes 1 Problème, 2 Parties prenantes, 3 Solutions de rechange, 4 Architecture). Répondez ensuite aux questions suivantes :
 
-1. À l'étape 1, l'outil a-t-il détecté automatiquement votre type de mission à partir du texte de l'objectif ? Quel type a-t-il proposé ?
-
-   _______________________________________________
-
-2. À l'étape 2, lancez l'analyse de compromis de mission. La recommandation de l'outil correspond-elle au résultat de l'étude de compromis manuelle de la partie E ?
+1. À l'étape 1 (Problème), quel type de mission avez-vous choisi, et comment modifie-t-il les solutions de rechange proposées à l'étape 3 ?
 
    _______________________________________________
 
-   _______________________________________________
-
-3. Dans l'onglet ConOps, construisez votre schéma d'architecture. Combien de systèmes avez-vous définis ?
+2. À l'étape 3 (Solutions de rechange), SpaceCDF analyse les solutions de rechange. Son classement correspond-il au résultat de l'étude de compromis manuelle de la partie E ?
 
    _______________________________________________
 
-4. Dans l'onglet Trade Studies, lancez une étude de compromis de choix d'orbite comportant au moins 3 options d'orbite. Quelle orbite l'outil a-t-il recommandée ?
+   _______________________________________________
+
+3. Dans l'onglet Blocs, aux niveaux 0 et 1, combien de segments et de systèmes votre architecture comporte-t-elle ?
+
+   _______________________________________________
+
+4. Dans Décider › Étude de compromis d'orbite (niveau 0), évaluez les options d'orbite (au moins 3 candidates). Quelle orbite arrive en tête, et pourquoi ?
 
    _______________________________________________
 
@@ -999,9 +999,9 @@ _____________________________________________________________________
 
 ## Partie E : Génération des exigences dans SpaceCDF
 
-1. Dans SpaceCDF, cliquez sur **« Generate from Objectives »**. Combien d'exigences ont été générées ? ____
+1. À la création de l'étude, SpaceCDF a rédigé une exigence de mission par objectif (onglet Exigences, niveau 0). Combien y en a-t-il, et combien de Modèles suggérés l'onglet propose-t-il ? ____
 
-2. Utilisez le filtre Niveau (Level) -- comptez les exigences à chaque niveau :
+2. Comptez les exigences à chaque niveau (V&V › Exigences donne les totaux) :
    - Mission : ____     Système : ____     Sous-système : ____
 
 3. Classez 5 exigences par type :
@@ -1019,7 +1019,7 @@ _____________________________________________________________________
    - **Originale :** _______________________________________________
    - **Corrigée :** _______________________________________________
 
-5. Acceptez au moins 5 exigences et rejetez-en au moins 1. Consignez vos décisions :
+5. Passez au moins 5 exigences à l'état Approuvée et rejetez-en au moins 1 (supprimez-la ou réécrivez-la). Consignez vos décisions :
 
 | ID exig. | Action (accepter/modifier/rejeter) | Justification |
 |--------|----------------------------|-----------|
@@ -1030,7 +1030,7 @@ _____________________________________________________________________
 | | | |
 | | | |
 
-6. Pour 5 exigences clés, attribuez une méthode de vérification et une phase :
+6. Pour 5 exigences clés, choisissez la méthode de vérification dans l'onglet Exigences et indiquez la phase :
 
 | ID exig. | Méthode de vérification (A/T/I/D) | Phase (B/C/D/E) | Justification de la méthode |
 |--------|-------------------------------|-----------------|---------------------|
@@ -1200,7 +1200,7 @@ Après avoir saisi les fonctions dans SpaceCDF :
 
 2. Combien de fonctions terminales ? ____
 
-3. Combien de fonctions terminales n'ont AUCUNE exigence associée (badge orange) ? ____
+3. Combien de fonctions sont encore non allouées (étiquette « non allouée »), et quelles fonctions terminales ne sont reliées à aucune exigence (onglet Traçabilité) ? ____
 
 4. Énumérez les fonctions non couvertes et dérivez-en des exigences :
 
@@ -1249,7 +1249,7 @@ _____________________________________________________________________
 | **Équipe / mission :** | _______________________________________ |
 | **Rôle / poste :** | _______________________________________ |
 
-**Onglets SpaceCDF :** Mission Architecture, Orbit Trade Advisor
+**Onglets SpaceCDF :** Blocs (niveaux 0–1), Décider › Étude de compromis d'orbite, Analyses › Boucle de conception
 
 ---
 
@@ -1321,7 +1321,7 @@ _____________________________________________________________________
 
 ## Partie B : Matrice de compromis d'orbite
 
-Relevez dans l'Orbit Trade Advisor de SpaceCDF les 3 meilleures orbites candidates :
+Relevez dans Décider › Étude de compromis d'orbite (niveau 0) les 3 meilleures orbites candidates :
 
 | Rang | Type d'orbite | Alt. (km) | Inc. (°) | GSD (m) | Revisite (j) | Durée de vie naturelle (ans) | FCC 5 ans ? | Score |
 |------|-----------|---------|---------|---------|-------------|----------------------|-----------|-------|
@@ -1425,7 +1425,7 @@ _____________________________________________________________________
 | **Équipe / mission :** | _______________________________________ |
 | **Rôle / poste :** | _______________________________________ |
 
-**Onglets SpaceCDF :** System Architecture, Interfaces, Dashboard, Budget Breakdown
+**Onglets SpaceCDF :** Blocs, Interfaces, Bilans, Modes, V&V › Bilans consolidés
 
 ---
 
@@ -1446,7 +1446,7 @@ _____________________________________________________________________
 
 ## Partie A : Bilan de masse
 
-Complétez à partir de votre conception SpaceCDF (ou par estimation si l'outil n'a pas encore été utilisé) :
+Complétez à partir de votre conception SpaceCDF (ou par estimation si l'outil n'a pas encore été utilisé). Bilans › Masse affiche la valeur nominale (meilleure estimation actuelle) et la marge de maturité de chaque élément, puis la marge système de 25 % ; comparez-les à la marge d'équipement de 20 % utilisée ici :
 
 | Sous-système | Masse CBE (kg) | % de la masse sèche | Marge équip. (20 %) | MEV (kg) |
 |-----------|--------------|----------|---------------------|---------|
@@ -1477,6 +1477,8 @@ _____________________________________________________________________
 ---
 
 ## Partie B : Bilan de puissance par mode
+
+Modes › Puissance par mode donne la puissance de chaque unité dans les modes de l'outil (LEOP, mise en service, nominal, prise de vue, liaison descendante, survie, survie extrême) ; utilisez le mode nominal pour la veille. L'éclipse est un cas, pas un mode : Modes › Énergie par orbite montre comment chaque mode traverse l'éclipse.
 
 | Sous-système | Survie (W) | Veille (W) | Prise de vue (W) | Liaison desc. (W) | Éclipse (W) |
 |-----------|---------|---------|-------------|-------------|-------------|
@@ -1536,7 +1538,7 @@ Méthode de vérification pour IR-001 : _____   IR-002 : _____
 
 ## Partie D : Résolution de conflit
 
-Dans la matrice d'interfaces (Interface Matrix) de SpaceCDF, identifiez un conflit (bordure rouge) :
+Dans Analyses › Conflits (ou d'après un bloc orange de l'onglet Satellite), identifiez un conflit :
 
 **Description du conflit :** _______________________________________________
 
@@ -1560,7 +1562,7 @@ _____________________________________________________________________
 
 ## Partie E : Contrôle de l'état des bilans
 
-Dans le Dashboard de SpaceCDF, relevez tous les KPI :
+Dans l'onglet Bilans (Masse, Puissance, Données, Coût) et dans V&V › Bilans consolidés, relevez chaque bilan :
 
 | Bilan | Valeur | Marge | État (V/O/R) |
 |--------|-------|--------|----------------|
@@ -1607,7 +1609,7 @@ _____________________________________________________________________
 | **Équipe / mission :** | _______________________________________ |
 | **Rôle / poste :** | _______________________________________ |
 
-**Onglets SpaceCDF :** Dashboard (KPI de puissance), Engineering Budgets, Timing Budget, Paramétrique (Parametric)
+**Onglets SpaceCDF :** Analyses › Boucle de conception (dimensionnement électrique), Modes › Énergie par orbite, Analyses › Physique (réseau thermique), Bilans › Puissance
 
 ---
 
@@ -1827,7 +1829,7 @@ _____________________________________________________________________
 | État du revêtement | BOL / EOL | BOL / EOL |
 | Préoccupation principale | | |
 
-**2. Relevez les prédictions thermiques dans le Dashboard de SpaceCDF :**
+**2. Relevez les prédictions thermiques dans Analyses › Physique (masse / AOCS / thermique), réseau thermique :**
 
 | Composant | Min. prévu (°C) | Max. prévu (°C) | Min. de fonctionnement (°C) | Max. de fonctionnement (°C) |
 |-----------|---------------------|---------------------|---------------------|---------------------|
@@ -1937,7 +1939,7 @@ _____________________________________________________________________
 | **Équipe / mission :** | _______________________________________ |
 | **Rôle / poste :** | _______________________________________ |
 
-**Onglets SpaceCDF :** Dashboard (KPI AOCS), Pointing Budget, Architecture (AOCS)
+**Onglets SpaceCDF :** Analyses › Physique (section SCAO), Décider › Compromis d'architecture (AOCS), Bilans › Masse
 
 ---
 
@@ -2188,7 +2190,7 @@ _____________________________________________________________________
 
 ## Partie E : Vérification avec SpaceCDF
 
-Comparez vos calculs manuels à l'affichage Pointing Budget de SpaceCDF :
+Comparez vos calculs manuels à la section SCAO d'Analyses › Physique (masse / AOCS / thermique) :
 
 | Paramètre | Calcul manuel | SpaceCDF | Concordance ? |
 |-----------|-----------------|----------|--------|
@@ -2265,7 +2267,7 @@ _____________________________________________________________________
 | **Équipe / mission :** | _______________________________________ |
 | **Rôle / poste :** | _______________________________________ |
 
-**Onglets SpaceCDF :** Link Budget, Spectrum Selector, Equipment Browser (télécommunications)
+**Onglets SpaceCDF :** Analyses › Boucle de conception (liaison et données), Analyses › Segment sol, Décider › Compromis d'architecture (TTC), Catalogue des équipements (Communications), TM/TC › Échelle de débits
 
 ---
 
@@ -2523,7 +2525,7 @@ _____________________________________________________________________
 
 ## Partie D : Comparaison avec SpaceCDF
 
-Ouvrez l'onglet Link Budget, saisissez vos paramètres et comparez :
+Ouvrez Analyses › Boucle de conception (liaison et données) et Analyses › Segment sol, puis comparez :
 
 | Paramètre | Calcul manuel | SpaceCDF | Écart |
 |-----------|-----------------|----------|------------|
@@ -2621,7 +2623,7 @@ _____________________________________________________________________
 | **Équipe / mission :** | _______________________________________ |
 | **Rôle / poste :** | _______________________________________ |
 
-**Onglets SpaceCDF :** Equipment Browser, Dashboard, Trade Studies, Budget Breakdown
+**Onglets SpaceCDF :** Catalogue des équipements (Blocs, niveau 3), Satellite, Bilans, Décider › Matrice de Pugh
 
 ---
 
@@ -2876,7 +2878,7 @@ _____________________________________________________________________
 
 ## Partie D : Journal de choix des équipements
 
-À l'aide de l'Equipment Browser de SpaceCDF, choisissez les composants de chaque catégorie :
+À l'aide du Catalogue des équipements (onglet Blocs dans un sous-système, niveau 3), choisissez les composants de chaque catégorie :
 
 | Catégorie | Composant retenu | Fabricant | Masse (kg) | Puissance (W) | Coût (k€) | Qté | Masse totale |
 |----------|-------------------|-------------|-----------|-----------|-------------|-----|-----------|
@@ -3042,7 +3044,7 @@ Pour chaque sous-système, documentez la décision d'approvisionnement et sa jus
 
 ## Partie B : Nomenclature (BOM)
 
-Complétez la nomenclature à partir des choix effectués dans l'Equipment Browser de SpaceCDF :
+Complétez la nomenclature à partir de V&V › Nomenclature (vos choix dans le Catalogue des équipements ; la référence et l'ECCN ne figurent pas dans SpaceCDF) :
 
 | ID de l'article | Composant | Fabricant | Référence | Qté | Masse (g) | Puissance (W) | Coût (k€) | TRL | ECCN |
 |---------|-----------|-------------|-------------|-----|----------|-----------|-------------|-----|------|
@@ -3066,7 +3068,7 @@ Complétez la nomenclature à partir des choix effectués dans l'Equipment Brows
 
 ## Partie C : Suivi des bilans
 
-Une fois tous les choix effectués, relevez les valeurs des bilans en temps réel dans le Dashboard de SpaceCDF :
+Une fois tous les choix effectués, relevez les valeurs des bilans en temps réel dans l'onglet Bilans et les totaux de V&V › Nomenclature :
 
 | Bilan | Total de la nomenclature | Estimation paramétrique | Allocation | Marge | Marge (%) |
 |--------|-----------|--------------------|-----------:|-------:|---------:|
@@ -3481,7 +3483,7 @@ _______________________________________________
 
 ## Partie A : Estimation du coût de la mission (WBS)
 
-Complétez à la fois avec des estimations paramétriques (onglet Coûts (Cost) de SpaceCDF) et des estimations ascendantes (devis fournisseurs de la nomenclature) :
+Complétez à la fois avec des estimations paramétriques (Bilans › Coût et Analyses › Boucle de conception, coût par poste) et des estimations ascendantes (devis fournisseurs de la nomenclature) :
 
 | N° WBS | Élément | Paramétrique (k€) | Ascendante (k€) | Écart | Notes |
 |:-----:|---------|------------------:|------------------:|:----------:|-------|
@@ -3561,7 +3563,7 @@ PM/SE/MA (gestion de projet, ingénierie système, assurance de mission) : ____
 
 ## Partie D : Facteurs de coût
 
-**Les 3 principaux facteurs de coût de votre mission (d'après le Cost Breakdown de SpaceCDF) :**
+**Les 3 principaux facteurs de coût de votre mission (d'après Bilans › Coût et le tableau des coûts de la boucle de conception) :**
 
 | Rang | Élément de coût | Coût (k€) | % du total | Pourquoi est-il coûteux ? |
 |:----:|-------------|------------:|-----------:|---------------------|
@@ -3583,7 +3585,7 @@ _______________________________________________
 
 ## Partie E : État de préparation à la revue de conception
 
-Dans l'onglet Gate Review de SpaceCDF, évaluez votre état de préparation à la SRR ou à la PDR :
+Dans V&V › Jalons de revue, évaluez votre état de préparation à la SRR ou à la PDR :
 
 | # | Critère de jalon | État (réussi/échoué/manuel) | Emplacement des preuves | En cas d'échec : action nécessaire |
 |:-:|---------------|:------------------------:|:-:|:-:|
@@ -3820,7 +3822,7 @@ _______________________________________________
 
 ## Partie A : Modes opérationnels
 
-Définissez tous les modes opérationnels de votre engin spatial. Saisissez-les dans le ConOps Editor de SpaceCDF.
+Définissez tous les modes opérationnels de votre engin spatial. Saisissez-les dans l'onglet Modes (Machine de modes ; puissance par mode sous Puissance par mode).
 
 | Mode | Description | Puissance (W) | Débit | Condition d'entrée | Condition de sortie |
 |------|------------|:---------:|:---------:|----------------|---------------|
@@ -4326,7 +4328,7 @@ _______________________________________________
 
 ## Partie A : Synthèse de la conception finale
 
-Relevez l'état final de votre conception dans le Dashboard de SpaceCDF :
+Relevez l'état final de votre conception dans V&V › Bilans consolidés, l'onglet Bilans et Analyses › Conflits :
 
 | Paramètre | Valeur | Unité | Marge | Marge (%) | État (V/O/R) |
 |-----------|------:|------|-------:|---------:|:-:|
@@ -4350,7 +4352,7 @@ Relevez l'état final de votre conception dans le Dashboard de SpaceCDF :
 
 ## Partie B : Liste de vérification de la documentation
 
-Cochez chaque document généré depuis l'onglet Exports de SpaceCDF :
+Cochez chaque document généré depuis Exporter (barre d'outils) :
 
 | Document | Généré ? | Complet ? | Notes |
 |----------|:----------:|:---------:|-------|
@@ -4588,15 +4590,15 @@ Avant de présenter, chaque équipe doit vérifier que sa documentation de conce
 
 | Document | Source dans SpaceCDF | Point de contrôle |
 |----------|-------------------|-------------|
-| Document des exigences de mission (MRD) | Exports -> Documents ECSS | Toutes les exigences sont-elles intégrées au référentiel ? |
-| Spécification technique (TS) | Exports -> Documents ECSS | Tous les bilans sont-ils repris ? |
-| Concept d'opérations (ConOps) | Exports -> Documents ECSS | Toutes les phases sont-elles définies ? |
+| Document des exigences de mission (MRD) | Exporter -> Ingénierie système | Toutes les exigences sont-elles intégrées au référentiel ? |
+| Spécification technique (TS) | Exporter -> Revues de conception (dossier SRR / PDR) | Tous les bilans sont-ils repris ? |
+| Concept d'opérations (ConOps) | Exporter -> Ingénierie système | Toutes les phases sont-elles définies ? |
 | Plan de vérification (VP) | Onglet Matrice V&V | Toutes les exigences ont-elles une méthode ? |
-| Nomenclature (BOM) | Exports -> Données de conception | Tous les équipements sont-ils listés avec leur TRL ? |
+| Nomenclature (BOM) | Exporter -> Ingénierie système ; V&V › Nomenclature | Tous les équipements sont-ils listés avec leur TRL ? |
 | Registre des risques | Fiche 4.3 | Tous les risques sont-ils notés et réduits ? |
 | Matrice d'interfaces (N^2) | Fiche 4.3 | Interfaces identifiées ? Conflits résolus ? |
 | Estimation des coûts | Fiche 4.4 | WBS complet ? P80 calculé ? |
-| Concept d'opérations | Éditeur de ConOps (ConOps Editor) | Modes, FDIR et procédures définis ? |
+| Concept d'opérations | Onglets Modes et FDIR | Modes, FDIR et procédures définis ? |
 | Évaluation de la durabilité | Carte Durabilité (Sustainability Card) | Score de conformité en matière de débris ? |
 
 ### Contrôles de cohérence interne
@@ -4605,18 +4607,18 @@ Avant de présenter, vérifiez :
 
 | Contrôle | Comment vérifier | Erreur fréquente |
 |-------|-------------|-------------|
-| Le bilan de masse est bouclé | KPI de masse du tableau de bord : marge > 0 % | Équipements ajoutés sans mise à jour du bilan |
-| Le bilan de puissance est bouclé | KPI de puissance du tableau de bord : générateur solaire > charges dans tous les modes | Puissance en mode éclipse non vérifiée |
-| Le bilan de liaison est bouclé | Outil de bilan de liaison : marge >= 3 dB | Affaiblissement dû à la pluie non pris en compte |
-| Le bilan de données est bouclé | Bilan de données : liaison descendante quotidienne >= production quotidienne | Nombre de passages par jour surestimé |
-| Le coût respecte le plafond | Onglet Coûts : total <= budget alloué | Coût de lancement ou d'exploitation oublié |
+| Le bilan de masse est bouclé | Bilans › Masse : marge > 0 % | Équipements ajoutés sans mise à jour du bilan |
+| Le bilan de puissance est bouclé | Modes › Énergie par orbite : chaque mode est tenable | Puissance en mode éclipse non vérifiée |
+| Le bilan de liaison est bouclé | Analyses › Segment sol : marge >= 3 dB | Affaiblissement dû à la pluie non pris en compte |
+| Le bilan de données est bouclé | Modes › Chaîne de données : liaison descendante quotidienne >= production quotidienne | Nombre de passages par jour surestimé |
+| Le coût respecte le plafond | Bilans › Coût : total <= budget alloué | Coût de lancement ou d'exploitation oublié |
 | Les exigences sont traçables | Chaque exigence est rattachée à un objectif | Exigences orphelines (sans objectif parent) |
 | La V&V est complète | Chaque exigence a une méthode attribuée | Entrées « TBD » (à déterminer) restantes |
-| Aucun conflit non résolu | Tableau de bord : nombre de conflits = 0 | Incompatibilités d'interface non traitées |
+| Aucun conflit non résolu | Analyses › Conflits : aucun ouvert | Incompatibilités d'interface non traitées |
 
 ### Génération des documents dans SpaceCDF
 
-Ouvrez l'onglet **Exports** et générez tous les documents :
+Ouvrez **Exporter** dans la barre d'outils et générez tous les documents :
 1. Documents ECSS : MRD, TS, VP, ConOps, SEMP, IRD
 2. Données de conception : BOM, données du modèle paramétrique
 3. Dossiers réglementaires : API UIT, LSTS (RSSSA), évaluation au titre du contrôle des exportations, CUPEEA (COPUOS), rapport de fin de vie (EOL)
@@ -4634,7 +4636,7 @@ Chaque équipe présente une revue de conception de 12 minutes, suivie de 5 minu
 |---------|----------|---------|----------|
 | **1. Besoin de mission** | 2 min | Énoncé du problème ; parties prenantes ; objectifs avec MoP | Étape Besoin de mission |
 | **2. Pourquoi l'espace ?** | 2 min | Résultats de l'étude de compromis ; pourquoi la solution spatiale l'emporte sur les autres | Résultats du compromis de mission |
-| **3. Conception du système** | 3 min | Architecture ; orbite ; paramètres clés ; état des bilans | Tableau de bord, bilans |
+| **3. Conception du système** | 3 min | Architecture ; orbite ; paramètres clés ; état des bilans | Onglet Bilans, V&V › Bilans consolidés |
 | **4. Équipements et vérification** | 2 min | Équipements clés ; synthèse de la nomenclature ; démarche de V&V ; plan d'essais | Nomenclature, matrice V&V |
 | **5. Risques et coûts** | 2 min | 5 principaux risques ; estimation des coûts (P50/P80) ; calendrier | Registre des risques, onglet Coûts |
 | **6. Exploitation et retour d'expérience** | 1 min | Synthèse du ConOps ; FDIR ; ce que vous changeriez | ConOps, débriefing de la simulation |
@@ -4716,7 +4718,7 @@ Pour 4 équipes, prévoyez 17 min x 4 = 68 min. Adaptez le minutage au nombre 
 
 **Pour l'équipe qui présente :**
 1. Présentez le plan en 6 sections ci-dessus.
-2. Utilisez SpaceCDF en direct pour des démonstrations lorsque c'est utile (montrez le tableau de bord, les bilans).
+2. Utilisez SpaceCDF en direct pour des démonstrations lorsque c'est utile (montrez l'onglet Bilans et V&V › Bilans consolidés).
 3. Répondez aux questions du comité preuves à l'appui.
 
 **Pour le comité de revue :**

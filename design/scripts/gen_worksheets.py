@@ -11,6 +11,9 @@ the printed workbook):
     docs/course/fr/learner_workbook_expanded.md    its French twin (same heading structure)
     configs/worksheets/worksheet_map.yaml          hand-maintained: phase and where SpaceCDF
                                                    offers each worksheet (steps, tabs, levels, gates)
+    configs/worksheets/where_map.yaml              hand-maintained: per question, where in SpaceCDF it
+                                                   is answered (target ids), textbook sections and
+                                                   external links (Nov 2026 worksheet/screen audit)
 
 Parsing rules:
     "# Worksheet N.M: Title"          one worksheet, id LW-N.M (LW = learner workbook; the
@@ -38,12 +41,13 @@ ROOT = Path(__file__).resolve().parent.parent          # design/
 SRC_EN = ROOT / "docs" / "course" / "learner_workbook_expanded.md"
 SRC_FR = ROOT / "docs" / "course" / "fr" / "learner_workbook_expanded.md"
 MAP = ROOT / "configs" / "worksheets" / "worksheet_map.yaml"
+WHERE = ROOT / "configs" / "worksheets" / "where_map.yaml"
 OUT = ROOT / "configs" / "worksheets" / "learner_workbook.yaml"
 
 HEADER = """\
 # GENERATED FILE — DO NOT EDIT BY HAND.
 # Source: docs/course/learner_workbook_expanded.md (+ docs/course/fr/…) and
-# configs/worksheets/worksheet_map.yaml. Regenerate with:
+# configs/worksheets/worksheet_map.yaml and where_map.yaml. Regenerate with:
 #     python3 scripts/gen_worksheets.py
 # tests/test_logbook/test_worksheets_generated.py fails when this file is stale.
 """
@@ -222,6 +226,10 @@ def build() -> dict:
     wmap = yaml.safe_load(MAP.read_text(encoding="utf-8")) or {}
     defaults = wmap.get("defaults") or {}
     per = wmap.get("worksheets") or {}
+    where = yaml.safe_load(WHERE.read_text(encoding="utf-8")) if WHERE.exists() else {}
+    where_parts = (where or {}).get("parts") or {}
+    targets = set((where or {}).get("targets") or {})
+    link_ids = set((where or {}).get("links") or {})
     problems: list[str] = []
 
     sheets_out = []
@@ -265,6 +273,19 @@ def build() -> dict:
             elif a["points"]:
                 q["points"] = [_bi(x, x) for x in a["points"]]
                 problems.append(f"{wid}/{qid}: {len(a['points'])} EN points but {len(b['points'])} FR; FR shows English")
+            wp = where_parts.get(f"{wid}/{qid}")
+            if wp is None:
+                problems.append(f"{wid}/{qid}: not in where_map.yaml (audit)")
+            else:
+                for key, known in (("where", targets), ("links", link_ids)):
+                    ids = list(wp.get(key) or [])
+                    bad = [x for x in ids if x not in known]
+                    if bad:
+                        problems.append(f"{wid}/{qid}: unknown {key} id(s) {bad}")
+                    if ids:
+                        q[key] = ids
+                if wp.get("book"):
+                    q["book"] = [str(x) for x in wp["book"]]
             qs.append(q)
         sheets_out.append({
             "id": wid,
@@ -274,6 +295,10 @@ def build() -> dict:
             "applies": applies,
             "questions": qs,
         })
+    known_parts = {f"{w['id']}/{q['id']}" for w in sheets_out for q in w["questions"]}
+    stale = sorted(set(where_parts) - known_parts)
+    if stale:
+        problems.append(f"where_map.yaml names questions that do not exist: {', '.join(stale)}")
     unknown = sorted(set(per) - {w["id"] for w in sheets_out})
     if unknown:
         problems.append(f"worksheet_map.yaml names worksheets that do not exist: {', '.join(unknown)}")
@@ -281,6 +306,7 @@ def build() -> dict:
         "source": "design/docs/course/learner_workbook_expanded.md",
         "source_fr": "design/docs/course/fr/learner_workbook_expanded.md",
         "map": "design/configs/worksheets/worksheet_map.yaml",
+        "where_map": "design/configs/worksheets/where_map.yaml",
         "worksheets": sheets_out,
         "_problems": problems,
     }
