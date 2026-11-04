@@ -111,7 +111,7 @@ boot-then-sync logic is written exactly once. This card sends no time command.
 
 ### Step 7 — Request EPS Housekeeping (Power Sanity Check)
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [26.0V, 30.0V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) in range [29.6V, 34.6V] within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 50% within 10s
 **Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — the auto-TX hold-down from Step 2 (SID 1)
 **Verify:** `eps.power_gen` (0x0107) reported (value will be small while spacecraft is tumbling and not yet sun-pointed)

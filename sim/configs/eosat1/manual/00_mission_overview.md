@@ -53,7 +53,7 @@ EOSAT-1 is a 6U cubesat with three-axis stabilised platform and the following pr
 
 | Subsystem                          | Abbreviation | Description                                      |
 |------------------------------------|--------------|--------------------------------------------------|
-| Electrical Power Subsystem         | EPS          | 28V regulated bus, 5 body-mounted GaAs panels + 2 deployable wings, Li-Ion battery, cold-redundant PDM |
+| Electrical Power Subsystem         | EPS          | Unregulated battery bus, 28.8 V nominal (24.0–33.4 V), 5 body-mounted GaAs panels + 2 deployable wings, Li-Ion battery, cold-redundant PDM |
 | Attitude and Orbit Control System  | AOCS         | 4 reaction wheels, 1 magnetometer (single string), 2 star cameras, 6 CSS heads, gyros |
 | On-Board Data Handling             | OBDH         | Cold-redundant OBC (A/B), dual CAN bus, mass memory, TC/TM processing |
 | Thermal Control Subsystem          | TCS          | Passive MLI/radiators, battery heaters (active), orientation-based passive thermal |
@@ -81,7 +81,7 @@ them (all but -Z, which carries the imager aperture and the radiator) carry a bo
 | Dry Mass         | ~12 kg (6U)   |
 | Peak Power Gen.  | ~89 W (sunlit, wings deployed and sun-tracking, BOL) |
 | Avg. Power Cons. | ~29 W (NOMINAL, orbit-average) |
-| Battery Capacity | 100 Wh, 3 Ah (8S1P), 21.5–29.2 V |
+| Battery Capacity | 100 Wh, 3.5 Ah (GomSpace BPX 8S1P), 24.0–33.6 V, 28.8 V nominal |
 | OBC Power        | 6 W            |
 
 ### 4.3 Redundancy Architecture {#43-redundancy-architecture}

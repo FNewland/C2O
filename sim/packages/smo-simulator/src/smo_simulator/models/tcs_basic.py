@@ -158,8 +158,12 @@ class TCSState:
 
 
 class TCSBasicModel(SubsystemModel):
-    _HEATER_POWER = {"battery": 6.0, "obc": 4.0, "thruster": 12.0}
-    _THERMOSTAT = {"battery": (5.0, 1.0), "obc": (-5.0, -10.0),
+    # Fallbacks only (configure() loads tcs.yaml `heaters:`); they now EQUAL
+    # tcs.yaml (2026-11 consistency pass — battery used to fall back to 6 W
+    # and ON 1 / OFF 5 C while every config said 8 W, ON 5 / OFF 10 C).
+    # Thermostat tuples are (off_temp_c, on_temp_c).
+    _HEATER_POWER = {"battery": 8.0, "obc": 4.0, "thruster": 12.0}
+    _THERMOSTAT = {"battery": (10.0, 5.0), "obc": (-5.0, -10.0),
                    "thruster": (230.0, 190.0)}
     # Phase D retires the last leg of defect #31: the thruster circuit now
     # drives the REAL green-monoprop catalyst-bed heater (12 W, EPS `prop`

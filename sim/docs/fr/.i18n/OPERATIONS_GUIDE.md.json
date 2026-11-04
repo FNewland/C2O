@@ -89,8 +89,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring/key-parameters-to-monitor",
-   "en_hash": "e802656780982fae",
-   "fr_hash": "e7d336b19d92b2c3"
+   "en_hash": "d77c9bc19cc7cbda",
+   "fr_hash": "6fbcf531992ec724"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/telemetry-monitoring/telemetry-plots",
@@ -109,8 +109,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/example-1-simple-mode-change",
-   "en_hash": "a707807609e86724",
-   "fr_hash": "ddae7673fbfc852d"
+   "en_hash": "c2816e3f172121f6",
+   "fr_hash": "b7168a9cab6afd8c"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/commanding-the-spacecraft/example-2-complex-command-imaging-pass",
@@ -179,8 +179,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/eps-anomalies/bus-undervoltage",
-   "en_hash": "1ebc235c80c1485c",
-   "fr_hash": "d8e9a0af92e589a9"
+   "en_hash": "4feee4039828e8dd",
+   "fr_hash": "9028fae64d5ae2c8"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/anomaly-response-procedures/tcs-anomalies",
@@ -359,8 +359,8 @@
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-2-obc-boot-initial-power-troll-t-01-53",
-   "en_hash": "68510897f3a86f57",
-   "fr_hash": "349fa1ace2d8ba0c"
+   "en_hash": "2b4eac9ffa7e4e8b",
+   "fr_hash": "77a0508a4ce02b14"
   },
   {
    "id": "operations-guide-eosat-1-spacecraft-simulator/leop-commissioning-sequence/nominal-commissioning-sequence-73-steps/pass-3-eps-commissioning-antenna-deploy-troll-t-03-25",
@@ -473,5 +473,5 @@
    "fr_hash": "be0fc2c2cfac45ae"
   }
  ],
- "en_commit": "30d5743"
+ "en_commit": "f614a01"
 }

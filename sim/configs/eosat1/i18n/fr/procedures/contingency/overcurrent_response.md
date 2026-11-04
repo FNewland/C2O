@@ -34,7 +34,7 @@ la ligne d'alimentation concernée et vérifie le fonctionnement nominal du sous
 | eps.pl_payload | 0x0113 | État de la ligne d'alimentation charge utile |
 | eps.pl_fpa_cooler | 0x0114 | État de la ligne d'alimentation refroidisseur du FPA |
 | eps.pl_aocs_wheels | 0x0117 | État de la ligne d'alimentation roues AOCS |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | eps.bat_soc | 0x0101 | Consigner la valeur courante |
 
 ## Télécommandes requises
@@ -69,7 +69,7 @@ la ligne d'alimentation concernée et vérifie le fonctionnement nominal du sous
   analyser la cause.
 **Verify:** Contrôler les registres d'état des lignes d'alimentation (0x0110 à 0x0117) pour confirmer que la ligne
 est sur OFF après le déclenchement.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — le bus est stable sans la charge déclenchée.
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — le bus est stable sans la charge déclenchée.
 **Action:** Consigner tous les courants de ligne pour le rapport d'anomalie.
 **GO/NO-GO:** En cas de surintensité persistante détectée sur la ligne, NE PAS procéder à la réinitialisation.
 Faire remonter à l'équipe d'ingénierie. Si le courant est nominal (proche de 0), continuer.
@@ -117,7 +117,7 @@ pas commutables et ne peuvent pas déclencher de cette façon.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Télémesure de servitude EPS
 **Verify:** Le sous-système aval fonctionne nominalement.
 **Verify:** `eps.power_cons` (0x0106) reflète la charge réintroduite.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V avec la charge rétablie.
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V avec la charge rétablie.
 **GO/NO-GO:** Sous-système nominal et bilan de puissance stable — procédure terminée.
 
 ## Critères de vérification
@@ -125,7 +125,7 @@ pas commutables et ne peuvent pas déclencher de cette façon.
 - [ ] État de la ligne d'alimentation concernée = ON
 - [ ] Courant de la ligne dans la plage nominale attendue
 - [ ] Sous-système aval en fonctionnement nominal
-- [ ] Tension du bus stable > 27.0 V
+- [ ] Tension du bus stable > 30.9 V
 - [ ] Aucun nouveau déclenchement dans les 5 minutes suivant la réactivation
 
 ## Cas de contingence

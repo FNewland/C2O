@@ -68,7 +68,7 @@ safety margins.
 ## Off-Nominal Handling
 - If attitude error exceeds 15 deg at any step: Immediately command `AOCS_SET_MODE(mode=2)` for DETUMBLE
 - If two or more reaction wheels are flagged: Execute Step 7 directly and notify Flight Dynamics
-- If EPS bus voltage drops below 26.5V during recovery: Execute CTG-005 (EPS Safe Mode Recovery)
+- If EPS bus voltage drops below 27.7V during recovery: Execute CTG-005 (EPS Safe Mode Recovery)
 - If star tracker remains blinded after DETUMBLE: Execute CTG-007 for wheel assessment, plan ground intervention
 
 ## Post-Conditions

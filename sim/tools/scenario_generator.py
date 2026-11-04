@@ -168,7 +168,7 @@ CASCADE_MAP = {
         {"to": "aocs",    "effect": "Safe mode if SoC drops below threshold",          "delay_s": 300, "severity": "critical"},
     ],
     ("eps", "undervoltage"): [
-        {"to": "aocs",    "effect": "AOCS enters safe mode (< 22 V threshold)",        "delay_s": 5,   "severity": "critical"},
+        {"to": "aocs",    "effect": "AOCS enters safe mode (bus < 26.1 V, aocs_safe_v)","delay_s": 5,   "severity": "critical"},
         {"to": "payload", "effect": "Payload powered off",                             "delay_s": 2,   "severity": "critical"},
         {"to": "tcs",     "effect": "Non-essential heaters disabled",                  "delay_s": 1,   "severity": "warning"},
         {"to": "ttc",     "effect": "TX power reduced",                                "delay_s": 3,   "severity": "warning"},

@@ -15,7 +15,7 @@ de la capacité de détermination d'attitude et réduit au minimum l'impact sur 
 - [ ] Panne du senseur stellaire 1 détectée — `aocs.st1_status` (0x0240) = 4 (FAILED)
 - [ ] Liaison TT&C active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Directeur de vol informé de l'anomalie du capteur d'attitude
-- [ ] Alimentation du bus du satellite nominale — `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] Alimentation du bus du satellite nominale — `eps.bus_voltage` (0x0105) > 30.9 V
 
 ## Télémesure requise
 | Paramètre | ID | Valeur attendue |
@@ -32,7 +32,7 @@ de la capacité de détermination d'attitude et réduit au minimum l'impact sur 
 | aocs.css_sun_x | 0x0245 | Vecteur Soleil CSS, X |
 | aocs.css_sun_y | 0x0246 | Vecteur Soleil CSS, Y |
 | aocs.css_sun_z | 0x0247 | Vecteur Soleil CSS, Z |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 
 ## Télécommandes requises
 | Commande | Service | Sous-type | Func ID | Description |

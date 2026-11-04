@@ -39,6 +39,11 @@ def engine(tmp_path):
 
 
 def _shed(engine):
+    # BPX 8S-1P curve (2026-11): one dead cell (-3.7 V) takes the bus below
+    # the 28.4 V shed level only below ~88 % SoC, so start from 80 % (bus
+    # 31.7 -> 28.0 V, under the shed level but above EPS-safe 27.7 V — the
+    # same place in the ladder the old 90 % / 25.0 V setup landed).
+    engine.subsystems["eps"]._state.bat_soc_pct = 80.0
     engine.subsystems["eps"].inject_failure("bat_cell", 1.0)   # -3.7 V
     for _ in range(10):
         engine._tick_once(1.0)
@@ -47,7 +52,7 @@ def _shed(engine):
 def test_onboard_shedder_opens_the_lines_and_says_so(engine):
     assert int(engine.params[0x0113]) == 1
     _shed(engine)
-    assert engine.params[0x0105] < 25.0
+    assert engine.params[0x0105] < engine._sim_cfg.eps.bus_protection.uv_v
     for pid in (0x0113, 0x0114, 0x0112, 0x0117):      # payload..aocs_wheels
         assert int(engine.params[pid]) == 0, f"0x{pid:04X} not shed"
     assert int(engine.params[0x0134]) >= 3

@@ -20,7 +20,7 @@ events:
 
 expected_responses:
   - category: detect
-    description: "Detect bus voltage declining below 27V"
+    description: "Detect bus voltage declining below 28.4V (bus under-voltage)"
   - category: isolate
     description: "Correlate with eclipse phase and power balance"
   - category: recover

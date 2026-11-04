@@ -14,6 +14,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
+from smo_common.config.schemas import SimEPSBusProtection
 from smo_common.models.subsystem import SubsystemModel
 from smo_simulator.failure_spec import (
     FailureSpec, ParamSpec, T_FLOAT, T_BOOL, enum, number,
@@ -83,13 +84,20 @@ OC_TRIP_TIME_S = 0.05  # 50ms trip time (simulated as immediate at 1Hz tick)
 # prop is LAST (Phase D): shedding propulsion is the last resort, and losing
 # the line mid-burn triggers the on-board burn abort (reason 4).
 LOAD_SHED_ORDER = ["payload", "fpa_cooler", "ttc_tx", "aocs_wheels", "prop"]
-LOAD_SHED_VOLTAGE = 26.5  # Bus voltage below which load shedding begins
+# Bus-voltage protection ladder: ONE named value per decision, owned by
+# simulation.yaml eps.bus_protection (schema defaults = the mission values).
+# Module fallbacks only — configure() reads the config.
+BUS_PROTECTION_DEFAULTS = SimEPSBusProtection()
+LOAD_SHED_VOLTAGE = BUS_PROTECTION_DEFAULTS.uv_v  # bus under-voltage: shed begins
+# Bus cap: the bus follows the loaded battery up to this level (the old
+# 29.0 V cap carried to the BPX curve at the same ~98 % SoC).
+BUS_CAP_V = 33.4
 
 
 @dataclass
 class EPSState:
     bat_soc_pct: float = 75.0
-    bat_voltage: float = 26.4
+    bat_voltage: float = 31.2     # BPX 8S-1P OCV at the 75 % default SoC
     bat_current: float = 0.0
     bat_temp: float = 15.0
     sa_a_current: float = 4.5
@@ -98,7 +106,7 @@ class EPSState:
     sa_b_voltage: float = 28.2
     sa_a_enabled: bool = True
     sa_b_enabled: bool = True
-    bus_voltage: float = 28.2
+    bus_voltage: float = 31.2
     power_gen_w: float = 252.0
     power_cons_w: float = 120.0
     in_eclipse: bool = False
@@ -160,7 +168,7 @@ class EPSState:
     # ── Event tracking (previous state for edge detection) ──
     _prev_mode: int = 0              # Previous spacecraft mode
     _prev_soc: float = 75.0          # Previous SoC
-    _prev_bus_voltage: float = 28.2  # Previous bus voltage
+    _prev_bus_voltage: float = 31.2  # Previous bus voltage
     _prev_in_eclipse: bool = False   # Previous eclipse state
     _prev_oc_trip_flags: int = 0     # Previous OC trip flags
     _prev_power_line_mask: int = -1  # Previous switchable power-line ON bitmask (-1 = uninitialised)
@@ -214,7 +222,13 @@ class EPSBasicModel(SubsystemModel):
     # tail make the ratio meaningless — the string is "not lit".
     _SA_CHECK_MIN_A = 0.2
 
-    #: Sunlit fraction of a ~450 km SSO orbit, used ONLY to convert
+    #: Fallback wattages for lines whose rating lives in simulation.yaml
+    #: eps.line_power_w (2026-11 consistency pass: these used to say
+    #: htr_bat 6 W / aocs_wheels 6 W while every config said 8 / 12 W).
+    LINE_POWER_DEFAULTS_W = {"htr_bat": 8.0, "htr_obc": 4.0, "aocs_wheels": 12.0}
+
+    #: Sunlit fraction of the 513 km / LTAN 10:00 SSO (eclipse fraction
+    #: 0.351-0.372 over the year, tools/power_budget.py), used ONLY to convert
     #: `array_losses.annual_degradation` (per calendar year) into the per
     #: SUNLIT-hour rate the live `sa_age_factor` integrates (2026-08b).
     SUNLIT_FRACTION = 0.65
@@ -248,8 +262,10 @@ class EPSBasicModel(SubsystemModel):
         self._transponder_rx_w = 5.0
         self._sa_degradation_per_hour = (
             self.ANNUAL_DEGRADATION_DEFAULT / (8760.0 * self.SUNLIT_FRACTION))
-        self._soc_100_v = 29.2
-        self._soc_0_v = 21.5
+        # GomSpace NanoPower BPX 8S-1P (eps.yaml battery block).
+        self._voltage_nom = 28.8
+        self._soc_100_v = 33.6
+        self._soc_0_v = 24.0
         self._internal_r = 0.05
         self._charge_eff = 1.0
         self._discharge_eff = 1.0
@@ -272,14 +288,15 @@ class EPSBasicModel(SubsystemModel):
         self._bat_temp_tau = 600.0
         self._bat_temp_env = 15.0
         # UV/OV thresholds
-        self._uv_threshold = 26.5
-        self._ov_threshold = 29.5
+        self._bus_protection = BUS_PROTECTION_DEFAULTS.model_dump()
+        self._uv_threshold = BUS_PROTECTION_DEFAULTS.uv_v
+        self._ov_threshold = BUS_PROTECTION_DEFAULTS.ov_v
         # Pre-injection OV threshold, so clearing an `overvoltage` injection
         # restores the CONFIGURED value rather than the module default.
         self._ov_threshold_nominal: float | None = None
         # Protection / event tuning — module-level defaults, overridden by the
         # simulation.yaml `eps:` block in configure() (defect #51).
-        self._line_power_w = {"htr_bat": 6.0, "htr_obc": 4.0, "aocs_wheels": 6.0}
+        self._line_power_w = dict(self.LINE_POWER_DEFAULTS_W)
         self._shed_order = list(LOAD_SHED_ORDER)
         self._shed_voltage = LOAD_SHED_VOLTAGE
         self._shed_hysteresis_v = 0.5
@@ -288,7 +305,8 @@ class EPSBasicModel(SubsystemModel):
         self._evt = {
             "soc_low_pct": 20.0, "soc_critical_pct": 10.0,
             "soc_charge_complete_pct": 99.0,
-            "bus_warning_v": 27.0, "bus_critical_v": 25.0,
+            "bus_warning_v": BUS_PROTECTION_DEFAULTS.uv_v,
+            "bus_critical_v": BUS_PROTECTION_DEFAULTS.eps_safe_v,
             "bat_overtemp_c": 45.0, "bat_undertemp_c": -5.0,
             "sa_degraded_fraction": 0.7,
         }
@@ -303,8 +321,9 @@ class EPSBasicModel(SubsystemModel):
         self._cfg = config
         bat = config.get("battery", {})
         self._battery_capacity_wh = bat.get("capacity_wh", 120.0)
-        self._soc_100_v = bat.get("soc_100_v", 29.2)
-        self._soc_0_v = bat.get("soc_0_v", 21.5)
+        self._voltage_nom = float(bat.get("voltage_nom", 28.8))
+        self._soc_100_v = bat.get("soc_100_v", 33.6)
+        self._soc_0_v = bat.get("soc_0_v", 24.0)
         self._internal_r = bat.get("internal_r_ohm", 0.05)
         self._charge_eff = float(bat.get("charge_efficiency", 1.0))
         self._discharge_eff = float(bat.get("discharge_efficiency", 1.0))
@@ -396,19 +415,37 @@ class EPSBasicModel(SubsystemModel):
         if temp0 is not None:
             self._state.bat_temp = float(temp0)
             self._bat_temp_env = float(temp0)
+        # Seed the voltages from the configured curve at the initial SoC, so
+        # the first tick's line currents (P / previous bus V) are not computed
+        # against a voltage from some other battery.
+        ocv0 = self._soc_0_v + (self._soc_100_v - self._soc_0_v) * (
+            self._state.bat_soc_pct / 100.0)
+        self._state.bat_voltage = ocv0
+        self._state.bus_voltage = self._state._prev_bus_voltage = min(BUS_CAP_V, ocv0)
 
         # Per-line wattages billed directly by tick() (lines whose rating has no
         # home in eps.yaml). Others come from eps.yaml hardware ratings.
-        self._line_power_w = {"htr_bat": 6.0, "htr_obc": 4.0, "aocs_wheels": 6.0}
+        self._line_power_w = dict(self.LINE_POWER_DEFAULTS_W)
         self._line_power_w.update(
             {k: float(v) for k, v in (sim.get("line_power_w", {}) or {}).items()})
 
-        self._uv_threshold = float(sim.get("uv_threshold_v", self._uv_threshold))
-        self._ov_threshold = float(sim.get("ov_threshold_v", self._ov_threshold))
+        # Bus-voltage ladder: the named eps.bus_protection levels are the
+        # single source; the legacy per-consumer keys are honoured only when
+        # a harness sets them explicitly (they default to None).
+        bp = dict(BUS_PROTECTION_DEFAULTS.model_dump())
+        bp.update({k: float(v) for k, v in
+                   (sim.get("bus_protection", {}) or {}).items() if v is not None})
+        self._bus_protection = bp
+
+        def _pick(value, fallback):
+            return float(fallback) if value is None else float(value)
+
+        self._uv_threshold = _pick(sim.get("uv_threshold_v"), bp["uv_v"])
+        self._ov_threshold = _pick(sim.get("ov_threshold_v"), bp["ov_v"])
 
         shed = sim.get("load_shed", {}) or {}
         self._shed_order = list(shed.get("order") or LOAD_SHED_ORDER)
-        self._shed_voltage = float(shed.get("bus_voltage_v", LOAD_SHED_VOLTAGE))
+        self._shed_voltage = _pick(shed.get("bus_voltage_v"), bp["uv_v"])
         self._shed_hysteresis_v = float(shed.get("restore_hysteresis_v", 0.5))
         self._shed_auto_restore = bool(shed.get("auto_restore", False))
 
@@ -424,7 +461,7 @@ class EPSBasicModel(SubsystemModel):
         self._evt = {
             "soc_low_pct": 20.0, "soc_critical_pct": 10.0,
             "soc_charge_complete_pct": 99.0,
-            "bus_warning_v": 27.0, "bus_critical_v": 25.0,
+            "bus_warning_v": bp["uv_v"], "bus_critical_v": bp["eps_safe_v"],
             "bat_overtemp_c": 45.0, "bat_undertemp_c": -5.0,
             "sa_degraded_fraction": 0.7,
         }
@@ -922,7 +959,7 @@ class EPSBasicModel(SubsystemModel):
             if 0x040B in shared_params:
                 htr_obc_on = bool(shared_params[0x040B])
         line_powers["htr_bat"] = (
-            self._line_power_w.get("htr_bat", 6.0)
+            self._line_power_w.get("htr_bat", self.LINE_POWER_DEFAULTS_W["htr_bat"])
             if (lines.get("htr_bat", True) and htr_bat_on) else 0.0)
         line_powers["htr_obc"] = (
             self._line_power_w.get("htr_obc", 4.0)
@@ -934,7 +971,7 @@ class EPSBasicModel(SubsystemModel):
         # bill actuator state, not line-switch position.
         aocs_draw = shared_params.get(0x02C8)
         if aocs_draw is None:
-            aocs_draw = self._line_power_w.get("aocs_wheels", 6.0)
+            aocs_draw = self._line_power_w.get("aocs_wheels", self.LINE_POWER_DEFAULTS_W["aocs_wheels"])
         line_powers["aocs_wheels"] = (
             float(aocs_draw) if lines.get("aocs_wheels", True) else 0.0)
 
@@ -998,7 +1035,7 @@ class EPSBasicModel(SubsystemModel):
         # (Defect #4 fix: enforce set_charge_rate command in model)
         if net_power_w > 0 and s.charge_rate_override_a > 0:
             # Charging case: limit charge power to charge_rate_override_a * nominal bus voltage
-            max_charge_power_w = s.charge_rate_override_a * 28.0  # 28V nominal bus
+            max_charge_power_w = s.charge_rate_override_a * self._voltage_nom  # A x pack nominal V
             net_power_w = min(net_power_w, max_charge_power_w)
 
         # CV taper (brief 01 WP-4): above cv_taper_start_soc_pct the battery
@@ -1049,7 +1086,10 @@ class EPSBasicModel(SubsystemModel):
         # transfer architecture). Previously this was a SoC-only polynomial
         # which ignored load current and internal resistance, hiding bus
         # sag during high-power phases (payload imaging, slew, eclipse).
-        s.bus_voltage = min(29.0, max(0.0, s.bat_voltage)) + self.rng.gauss(0, 0.01)
+        # The bus is capped at BUS_CAP_V (33.4 V, ~98 % SoC on the BPX
+        # 8S-1P pack): it bites only at the top of charge, as the old 29.0 V
+        # cap did on the retired 21.5-29.2 V curve.
+        s.bus_voltage = min(BUS_CAP_V, max(0.0, s.bat_voltage)) + self.rng.gauss(0, 0.01)
 
         # Undervoltage / overvoltage detection
         s.uv_flag = s.bus_voltage < self._uv_threshold
@@ -1738,10 +1778,11 @@ class EPSBasicModel(SubsystemModel):
         elif failure == "overvoltage":
             # Will be detected by ov_flag threshold check. Remember the
             # CONFIGURED threshold so clear_failure restores simulation.yaml's
-            # `eps.ov_threshold_v` instead of a hard-coded 29.5 V.
+            # `eps.bus_protection.ov_v` instead of a hard-coded value.
             if self._ov_threshold_nominal is None:
                 self._ov_threshold_nominal = self._ov_threshold
-            self._ov_threshold = max(25.0, self._ov_threshold - magnitude)
+            self._ov_threshold = max(self._bus_protection["uv_v"],
+                                     self._ov_threshold - magnitude)
         elif failure == "solar_panel_loss":
             face = kwargs.get("face", "px")
             if face in self._state.sa_panel_degradation:

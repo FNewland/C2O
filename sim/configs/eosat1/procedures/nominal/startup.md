@@ -28,9 +28,9 @@ every scheduled ground contact.
 ### Step 2 --- Verify EPS Health
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- request EPS housekeeping
 **Verify:** `eps.bat_soc` (0x0101) > 50 % within 10 s
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V within 10 s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V within 10 s
 **Verify:** `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) (positive power margin)
-**GO/NO-GO:** If SoC < 50 % or bus voltage < 27 V, execute CTG-005 EPS Safe Mode
+**GO/NO-GO:** If SoC < 50 % or bus voltage < 30.9 V, execute CTG-005 EPS Safe Mode
 procedure. Do NOT proceed with payload operations.
 
 ### Step 3 --- Verify AOCS Pointing
@@ -73,7 +73,7 @@ switched on as the imaging preparation, NOM-002 Step 2, at least 10 min before t
 
 ### Step 7 --- Pass Readiness Declaration
 **GO/NO-GO Gate --- Flight Director Poll:**
-- EPS: SoC > 50 %, bus voltage > 27 V, positive power margin --- GO / NO-GO
+- EPS: SoC > 50 %, bus voltage > 30.9 V, positive power margin --- GO / NO-GO
 - AOCS: NOMINAL, att_error < 1 deg, rates < 0.05 deg/s --- GO / NO-GO
 - TTC: Link UP, RSSI > -100 dBm, margin > 3 dB --- GO / NO-GO
 - TCS: All temps within nominal limits --- GO / NO-GO

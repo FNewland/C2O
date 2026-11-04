@@ -31,16 +31,16 @@ for mission operations.
 
 ### Step 1 — Baseline Bus Voltage Measurement
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [27.0V, 29.0V] within 10s (the console's yellow band; the bus follows the battery, so a full battery sits near 29 V)
-**Action:** Record bus voltage. Nominal regulation point is 28.0V +/- 0.5V.
+**Verify:** `eps.bus_voltage` (0x0105) in range [28.4V, 34.0V] within 10s (the console's yellow band; the bus follows the battery, so a full battery sits near 33.4 V)
+**Action:** Record bus voltage. The bus is not regulated: it follows the battery up to the 33.4V cap.
 **GO/NO-GO:** Bus voltage regulated within specification
 
 ### Step 2 — Battery Voltage and State of Charge
 **TC:** `GET_PARAM(param_id=0x0100)` (Service 20, Subtype 3) — battery voltage
 **TC:** `GET_PARAM(param_id=0x0101)` (Service 20, Subtype 3) — battery SOC
-**Verify:** `eps.bat_voltage` (0x0100) in range [21.5V, 29.2V] within 10s
+**Verify:** `eps.bat_voltage` (0x0100) in range [24.0V, 33.6V] within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 70% within 10s
-**Action:** Record values. Li-Ion 8S battery (100 Wh, 3 Ah) voltage range is 21.5V (empty) to 29.2V (full), nominal 26.4V.
+**Action:** Record values. Li-Ion 8S battery (GomSpace BPX 8S-1P, 100 Wh, 3.5 Ah) voltage range is 24.0V (empty) to 33.6V (full), nominal 28.8V.
 **GO/NO-GO:** Battery voltage and SOC within nominal range
 
 ### Step 3 — Solar Array Sunlit Performance
@@ -56,7 +56,7 @@ for mission operations.
 **Verify:** `eps.power_gen` (0x0107) = ~0W within 30s of eclipse entry
 **Verify:** `eps.bat_soc` (0x0101) decreasing at < 1.5% per minute within 60s
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — at mid-eclipse
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (battery sustaining bus) within 10s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (battery sustaining bus) within 10s
 **GO/NO-GO:** Battery discharge rate nominal, bus voltage maintained
 
 ### Step 5 — Eclipse Exit Charge Recovery
@@ -82,21 +82,21 @@ dark line silently reverts. The battery-heater line (~6 W) is the transient
 source, and it is restored to its entry state afterwards.
 **Action:** Record the entry state of `eps.pl_htr_bat` (0x0115) first.
 **TC:** `EPS_POWER_ON(line_index=5)` (Service 8, Subtype 1, func_id 19) — htr_bat (brief test)
-**Verify:** `eps.bus_voltage` (0x0105) remains in range [26.5V, 29.5V] within 5s
+**Verify:** `eps.bus_voltage` (0x0105) remains in range [30.2V, 34.0V] within 5s
 **TC:** `EPS_POWER_OFF(line_index=5)` (Service 8, Subtype 1, func_id 20) — restore, ONLY if the line was off at entry
 **Verify:** `eps.pl_htr_bat` (0x0115) back to its entry value within 5s
-**Verify:** `eps.bus_voltage` (0x0105) returns to [27.0V, 29.0V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) returns to [30.9V, 34.0V] within 10s
 **GO/NO-GO:** Bus regulation stable under transient load, line state restored
 
 ## Off-Nominal Handling
-- If bus voltage < 27.0V: Check battery SOC. If SOC < 30%, reduce loads immediately. Disable non-essential heaters. Verify sun-pointing attitude. If bus voltage < 26.0V, execute CTG-001 (load shed) and, with FD approval, `OBC_SET_MODE(mode=1)` — 1 is SAFE (0 is NOMINAL; the old text had the encoding backwards).
+- If bus voltage < 30.9V: Check battery SOC. If SOC < 30%, reduce loads immediately. Disable non-essential heaters. Verify sun-pointing attitude. If bus voltage < 29.6V, execute CTG-001 (load shed) and, with FD approval, `OBC_SET_MODE(mode=1)` — 1 is SAFE (0 is NOMINAL; the old text had the encoding backwards).
 - If power generation < 35W in sunlight with good sun-pointing: Check the per-wing currents via `GET_PARAM(param_id=0x0146)` (+Y wing) and `GET_PARAM(param_id=0x0147)` (−Y wing). If one wing underperforming, log anomaly. Assess single-wing power budget viability.
 - If battery SOC < 50% at end of eclipse: Reduce operational load. Defer commissioning activities requiring high power. Re-assess power budget.
 - If charge recovery rate below prediction: Check solar array degradation. Verify battery charge controller via `GET_PARAM(param_id=0x0109)`. If charge controller fault suspected, investigate redundant path.
 - If bus voltage oscillation detected: Check regulation mode via `GET_PARAM(param_id=0x010A)`. Log anomaly for EPS engineer review. If unstable, command `OBC_SET_MODE(mode=1)` (SAFE) with FD approval; restore with mode=0 (NOMINAL) after investigation.
 
 ## Post-Conditions
-- [ ] Bus voltage confirmed regulated at 28.0V +/- 0.5V
+- [ ] Bus voltage confirmed following the battery (at or below the 33.4V cap)
 - [ ] Battery voltage and SOC nominal (> 70% after full charge)
 - [ ] Solar array generating 40-90W in sunlight (wings deployed, sun-pointed)
 - [ ] Eclipse discharge rate within prediction

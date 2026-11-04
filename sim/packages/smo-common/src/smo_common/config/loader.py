@@ -108,6 +108,27 @@ def load_fdir_config(config_dir: Path) -> FDIRConfig:
     return FDIRConfig()
 
 
+def resolve_threshold_ref(sim_cfg: Any, ref: str) -> float:
+    """Resolve a named threshold (``threshold_ref``) against simulation.yaml.
+
+    ``ref`` is a dotted path into the simulation config, e.g.
+    ``eps.bus_protection.uv_v``. Works on a ``SimulationConfig`` or on the
+    plain dict ``yaml.safe_load`` returns. Raises ``KeyError`` for an unknown
+    name, so a typo cannot silently fall back to a stale literal.
+    """
+    node: Any = sim_cfg
+    for part in ref.split("."):
+        if isinstance(node, dict):
+            if part not in node:
+                raise KeyError(f"threshold_ref {ref!r}: no {part!r}")
+            node = node[part]
+        else:
+            if not hasattr(node, part):
+                raise KeyError(f"threshold_ref {ref!r}: no {part!r}")
+            node = getattr(node, part)
+    return float(node)
+
+
 def load_simulation_config(config_dir: Path) -> SimulationConfig:
     """Load simulation.yaml — the simulation/scenario tuning layer.
 

@@ -23,7 +23,7 @@ eclipse exit.
 | Parameter | ID | Expected Value |
 |---|---|---|
 | eps.bat_soc | 0x0101 | > 60% prior to eclipse entry |
-| eps.bus_voltage | 0x0105 | > 28.0 V |
+| eps.bus_voltage | 0x0105 | > 32.1 V |
 | eps.eclipse_flag | 0x0108 | 0 (sunlit) before entry, 1 during eclipse |
 | eps.power_gen | 0x0107 | > 0 W in sunlight, ~0 W during eclipse |
 | eps.bat_current | 0x0109 | Negative (discharging) during eclipse |
@@ -48,7 +48,7 @@ eclipse exit.
 ### Step 1: Verify Battery State of Charge
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
 **Verify:** `eps.bat_soc` (0x0101) > 60%
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **Verify:** `eps.bat_temp` (0x0102) within 0 to 40 C
 **Verify:** `eps.bat_current` (0x0109) — record baseline value
 **GO/NO-GO:** If SoC <= 60%, HOLD. Consider deferring non-essential loads or waiting
@@ -95,12 +95,12 @@ tracker updates (star tracker may lose tracking in Earth shadow).
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Monitor EPS telemetry at 30 s intervals
 **Verify:** `eps.eclipse_flag` (0x0108) = 1 (eclipse confirmed)
 **Verify:** `eps.power_gen` (0x0107) drops to ~0 W (solar arrays in shadow)
-**Verify:** `eps.bus_voltage` (0x0105) remains > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) remains > 30.9 V
 **Verify:** `eps.bat_soc` (0x0101) — monitor discharge rate, record SoC every 5 min
 **Verify:** `eps.bat_current` (0x0109) is negative (battery discharging)
-**Action:** If bus voltage drops below 27.0 V, proceed to load shedding per
+**Action:** If bus voltage drops below 30.9 V, proceed to load shedding per
 CTG-001 (Undervoltage Load Shedding).
-**GO/NO-GO:** Bus voltage stable above 27.0 V — continue monitoring.
+**GO/NO-GO:** Bus voltage stable above 30.9 V — continue monitoring.
 
 ### Step 6: Monitor Thermal Conditions During Eclipse
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — Monitor TCS telemetry at 60 s intervals
@@ -119,7 +119,7 @@ diagnostics.
 **Verify:** `eps.power_gen` (0x0107) > 25 W within 60 s of eclipse exit
 **Verify:** `eps.sa_a_current` (0x0103) > 0.3 A
 **Verify:** `eps.sa_b_current` (0x0104) > 0.3 A
-**Verify:** `eps.bus_voltage` (0x0105) recovering above 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) recovering above 32.1 V
 **Verify:** `eps.bat_soc` (0x0101) — record post-eclipse SoC and confirm charging trend
 **GO/NO-GO:** Power generation confirmed and battery charging — proceed to restoration.
 
@@ -143,14 +143,14 @@ it used not to, which is why the FPA never reached its setpoint.
 
 ## Verification Criteria
 - [ ] Battery SoC remained above 40% throughout eclipse (record minimum SoC)
-- [ ] Bus voltage remained above 27.0 V throughout eclipse
+- [ ] Bus voltage remained above 30.9 V throughout eclipse
 - [ ] All temperatures remained within operational limits
 - [ ] AOCS maintained attitude within 1.0 deg during eclipse propagation
 - [ ] Power generation resumed within 60 s of eclipse exit
 - [ ] All subsystems returned to nominal configuration post-eclipse
 
 ## Contingency
-- If bus voltage drops below 27.0 V during eclipse: Execute CTG-001
+- If bus voltage drops below 30.9 V during eclipse: Execute CTG-001
   (Undervoltage Load Shedding) — shed loads in priority order.
 - If battery SoC drops below 30% during eclipse: Shed payload and cooler loads
   immediately. If SoC drops below 20%, execute CTG-001.

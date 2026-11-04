@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/required-telemetry",
-   "en_hash": "3ae71779033064ae",
-   "fr_hash": "1880a213fa05fa73"
+   "en_hash": "b383610a807c624d",
+   "fr_hash": "193a7f2cd8ab27a2"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/required-commands",
@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-6-verify-link-quality-and-subsystem-health",
-   "en_hash": "78e1038bff4df000",
-   "fr_hash": "3a9f1a7d09e3fd5c"
+   "en_hash": "7e1cd41757fe2df1",
+   "fr_hash": "22948679ef8df8cd"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-7-escalation-no-link-recovery",
@@ -83,5 +83,5 @@
    "fr_hash": "2e10ab8643774508"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "f614a01"
 }

@@ -147,7 +147,7 @@ Le paquet balise (SID 11) contient des informations de santé minimales mais ess
 | Paramètre       | Valeur attendue        | Préoccupant si                    |
 |-----------------|------------------------|-----------------------------------|
 | sw_image        | 0 (chargeur d'amorçage) | Toute autre valeur                |
-| bat_voltage     | 27-29 V                | < 26 V (batterie faible)          |
+| bat_voltage     | 30.9-33.4 V                | < 29.6 V (batterie faible)          |
 | bat_soc         | > 60 %                 | < 40 % (consommation inattendue)  |
 | obc_temp        | 10-40 °C               | Hors plage (problème thermique)   |
 | uptime          | ~1800 s et plus (30 min et plus) | < 1800 s (réinitialisation récente) |
@@ -213,7 +213,7 @@ Une fois le logiciel applicatif en marche, vérifier :
 | Charge CPU                     | cpu_load (0x0302)| < 50 % (stabilisation après amorçage) |
 | Génération des HK              | tm_pkt_count     | S'incrémente à 1 Hz         |
 | Santé de la batterie           | bat_soc (0x0101) | > 50 %                      |
-| Tension du bus                 | bus_voltage      | 27-29 V                     |
+| Tension du bus                 | bus_voltage      | 30.9-33.4 V                     |
 | Traitement des TC              | tc_exec_count    | S'incrémente normalement    |
 
 ### 6.3 Reprise après un amorçage échoué {#63-recovery-from-failed-boot}

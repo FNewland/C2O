@@ -21,7 +21,7 @@ wheels to arrest bus voltage decline and protect critical spacecraft functions. 
 is monitored until battery state-of-charge and bus voltage return to safe levels.
 
 ## Prerequisites
-- [ ] Undervoltage flag detected — `eps.uv_flag` (0x010E) = 1 or bus voltage observed < 27.0 V
+- [ ] Undervoltage flag detected — `eps.uv_flag` (0x010E) = 1 or bus voltage observed < 28.4 V
 - [ ] TT&C link active — `ttc.link_status` (0x0501) = 2 (LOCKED)
 - [ ] Flight Director notified and authorizes manual load shedding
 - [ ] Current orbit prediction available (eclipse entry/exit times)
@@ -30,7 +30,7 @@ is monitored until battery state-of-charge and bus voltage return to safe levels
 | Parameter | ID | Expected Value |
 |---|---|---|
 | eps.uv_flag | 0x010E | 1 (undervoltage detected) |
-| eps.bus_voltage | 0x0105 | Monitoring — expected < 27.0 V at detection |
+| eps.bus_voltage | 0x0105 | Monitoring — expected < 28.4 V at detection |
 | eps.bat_soc | 0x0101 | Monitoring — record trend |
 | eps.bat_voltage | 0x0100 | Monitoring — record value |
 | eps.bat_current | 0x0109 | Negative (discharging) |
@@ -66,7 +66,7 @@ is monitored until battery state-of-charge and bus voltage return to safe levels
 **LABEL:** `STEP-1`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
 **Verify:** `eps.uv_flag == 1` (0x010E, timeout 10 s)
-**Verify:** `eps.bus_voltage` (0x0105) — record current value (expected < 27.0 V)
+**Verify:** `eps.bus_voltage` (0x0105) — record current value (expected < 28.4 V)
 **Verify:** `eps.bat_soc` (0x0101) — record current value
 **Verify:** `eps.bat_voltage` (0x0100) — record current value
 **Verify:** `eps.power_cons` (0x0106) — record total power consumption
@@ -97,7 +97,7 @@ on-board FDIR has already opened it: send nothing and go to the voltage check.
 **LABEL:** `STEP-2-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check bus voltage
 **Verify:** `eps.bus_voltage` (0x0105) — record new value
-**BRANCH:** `eps.bus_voltage > 26.5` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 28.4` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
 **Note:** GO — the shed worked; HOLD at this level and go straight to monitoring.
 NO-GO — still declining; fall through to the next shed level. The 60 s branch
 timeout is what the prose called "wait 30 s and re-check": it gives the bus two
@@ -118,7 +118,7 @@ timeout is what the prose called "wait 30 s and re-check": it gives the bus two
 **LABEL:** `STEP-3-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check bus voltage
 **Verify:** `eps.bus_voltage` (0x0105) — record new value
-**BRANCH:** `eps.bus_voltage > 26.0` -> GO `STEP-6` | NO-GO `STEP-4` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 27.8` -> GO `STEP-6` | NO-GO `STEP-4` (timeout 60 s)
 
 ### Step 4: Shed Load Priority 3 — TX Transmitter OFF
 **LABEL:** `STEP-4`
@@ -138,7 +138,7 @@ The spacecraft can still receive commands but cannot send telemetry.
 **LABEL:** `STEP-4-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check bus voltage
 **Verify:** `eps.bus_voltage` (0x0105) — record new value
-**BRANCH:** `eps.bus_voltage > 25.5` -> GO `STEP-6` | NO-GO `STEP-5` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 27.2` -> GO `STEP-6` | NO-GO `STEP-5` (timeout 60 s)
 **Note:** After this step the S-band downlink is INHIBITED — `ttc.tx_active`
 (0x0525) goes to 0 and telemetry stops. The UHF beacon is a separate radio on the
 non-switchable `ttc_rx` line and keeps sending HK SID 11, so the ground can still
@@ -161,12 +161,12 @@ provide passive stabilization only.
 **LABEL:** `STEP-5-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check
 **Verify:** `eps.bus_voltage` (0x0105) — record new value
-**BRANCH:** `eps.bus_voltage > 25.0` -> GO `STEP-6` | NO-GO `STEP-5B` (timeout 60 s)
+**BRANCH:** `eps.bus_voltage > 26.5` -> GO `STEP-6` | NO-GO `STEP-5B` (timeout 60 s)
 
 ### Step 5B: Last Resort — OBC EMERGENCY Mode
 **LABEL:** `STEP-5B`
 **Note:** Reached only when every shed level has been taken and the bus is still
-below 25.0 V.
+below 26.5 V.
 **TC:** `OBC_SET_MODE(mode=2)` (Service 8, Subtype 1, func_id 50) — EMERGENCY
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Platform/OBDH housekeeping
 **Verify:** `obdh.mode == 2` (0x0300, timeout 15 s) — EMERGENCY
@@ -182,11 +182,11 @@ where shedding the payload alone recovered the bus.
 **Verify:** `eps.power_gen` (0x0107) > 0 W when in sunlight
 **Verify:** `eps.bat_current` (0x0109) — positive (charging) in sunlight
 **Action:** Continue monitoring until:
-- `eps.bus_voltage` > 28.0 V
+- `eps.bus_voltage` > 32.1 V
 - `eps.bat_soc` > 40%
 **Note:** Recovery may take multiple orbits depending on depth of discharge and
 available solar array power.
-**GO/NO-GO:** Bus voltage > 28.0 V and SoC > 40% — proceed to restore loads.
+**GO/NO-GO:** Bus voltage > 32.1 V and SoC > 40% — proceed to restore loads.
 
 ### Step 7: Restore Loads in Reverse Priority Order
 **Note:** Re-enable loads one at a time, waiting 5 min between each to verify stability.
@@ -205,20 +205,20 @@ before the unit's mode command: with the line open every mode command is refused
 **GO/NO-GO:** Bus stable for 5 min with the FPA cooler line restored — restore the next load
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0: the mode command is otherwise refused S1.8 "power line 'payload' is OFF"
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Payload to STANDBY: verify `payload.mode` = 1
-**Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 27.5 V
+**Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 31.5 V
 and `eps.bat_soc` (0x0101) remains > 35%.
 **GO/NO-GO:** All loads restored and power budget positive — procedure complete.
 
 ## Verification Criteria
 - [ ] `eps.uv_flag` (0x010E) = 0 (cleared)
-- [ ] `eps.bus_voltage` (0x0105) > 28.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
 - [ ] `eps.bat_soc` (0x0101) > 40%
 - [ ] All subsystems restored to nominal operating modes
 - [ ] Power budget is positive (generation > consumption) with margin
 - [ ] No repeat undervoltage events for at least 2 orbits
 
 ## Contingency
-- If bus voltage drops below 25.0 V after all loads are shed: Command
+- If bus voltage drops below 26.5 V after all loads are shed: Command
   `OBC_SET_MODE(mode=2)` for EMERGENCY mode. Spacecraft should enter minimum power
   configuration autonomously.
 - If bus voltage does not recover after eclipse exit: Suspect solar array failure.

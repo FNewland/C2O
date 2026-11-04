@@ -111,7 +111,7 @@ class TestS12Definitions:
 
     @pytest.mark.parametrize("param_id,expected_lows", [
         (0x0101, [10.0, 20.0]),      # SoC 20 % warning / 10 % alarm
-        (0x0105, [25.0, 27.0]),      # bus 27 V warning / 25 V alarm
+        (0x0105, [27.7, 28.4]),      # bus_protection: uv_v 28.4 warning / eps_safe_v 27.7 alarm
     ])
     def test_named_lost_tiers_are_back(self, engine, param_id, expected_lows):
         defs = [d for d in engine._dispatcher._s12_definitions.values()

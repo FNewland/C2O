@@ -68,7 +68,7 @@ marges de sécurité du matériel.
 ## Conduite à tenir hors nominal
 - Si l'erreur d'attitude dépasse 15° à n'importe quelle étape : commander immédiatement `AOCS_SET_MODE(mode=2)` (DETUMBLE)
 - Si deux roues de réaction ou plus sont signalées : exécuter directement l'étape 7 et informer la dynamique du vol
-- Si la tension du bus EPS descend sous 26.5 V pendant la reprise : appliquer CTG-005 (Reprise après mode survie EPS)
+- Si la tension du bus EPS descend sous 27.7 V pendant la reprise : appliquer CTG-005 (Reprise après mode survie EPS)
 - Si le senseur stellaire reste ébloui après DETUMBLE : appliquer CTG-007 pour évaluer les roues et prévoir une intervention du sol
 
 ## Postconditions

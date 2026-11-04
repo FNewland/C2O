@@ -245,8 +245,9 @@ def test_mild_degradation_in_sun_is_reported_not_acted_on(engine):
 @pytest.mark.slow
 def test_severe_degradation_still_sheds_the_payload_when_power_runs_out(engine):
     """Both strings nearly dead with the payload imaging: no array rule acts,
-    but when the battery drops the EPS bus-voltage load shed (< 25.0 V,
-    payload first, simulation.yaml eps.load_shed) takes the payload off."""
+    but when the battery drops the EPS bus-voltage load shed (below
+    simulation.yaml eps.bus_protection.uv_v, 28.4 V, payload first) takes the
+    payload off."""
     fired = _spy_s19(engine)
     eps = engine.subsystems["eps"]
     eps._state.power_lines["payload"] = True
@@ -263,7 +264,7 @@ def test_severe_degradation_still_sheds_the_payload_when_power_runs_out(engine):
         return False
     assert _run_until(engine, payload_off, 4 * 3600, dt=5.0), \
         "the load shed must take the payload off once the bus voltage falls"
-    assert shed["bus"] < 25.5, shed
+    assert shed["bus"] < engine._sim_cfg.eps.bus_protection.uv_v + 0.5, shed
     assert not {1004, 1005} & set(fired)
 
 

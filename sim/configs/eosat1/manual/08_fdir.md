@@ -65,11 +65,11 @@ the spacecraft can sustain itself indefinitely until ground intervention.
 | Rule ID | Condition                      | Detection       | Response                    |
 |---------|--------------------------------|----------------|-----------------------------|
 | EPS-01  | bat_soc < 15%                  | 0x0101 < 15    | Safe mode entry             |
-| EPS-02  | bus_voltage < 26.5 V           | 0x0105 < 26.5  | Safe mode entry             |
+| EPS-02  | bus_voltage < 27.7 V           | 0x0105 < 27.7  | Safe mode entry             |
 | EPS-03  | bat_temp > 45 C                | 0x0102 > 45    | Inhibit battery charge      |
 | EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Battery heater thermostat (see TCS-01) |
 | EPS-05  | String yield < 70 % while lit, 30 s | 0x014C / 0x014D (valid while 0x014E bit set) | Report only: TM(12,9) + S5 event 0x914C / 0x914D. The ground decides (CTG-009) |
-| EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Shunt excess power          |
+| EPS-06  | bus_voltage > 34.0 V           | 0x0105 > 34.0  | Shunt excess power          |
 | EPS-07  | Battery SoC critical (< 10 %)  | S5 event 0x0102 BATTERY_SOC_CRITICAL | Payload line OFF: S19 ea 1001 dispatches `EPS_POWER_OFF` (S8 func 20, line 3) |
 
 **EPS-07 takes the payload off.** Until November 2026, S19 ea 1001 fired on the
@@ -104,7 +104,7 @@ deleted in November 2026; a PUS S19 definition always names an action, so
 they were removed rather than left without one. The team assesses the yield
 and the power balance with CTG-009 and either sheds the payload or continues
 with monitoring. If the power really runs out, the payload is still shed
-automatically: the EPS bus-voltage load shed (bus below 25.0 V, payload first,
+automatically: the EPS bus-voltage load shed (bus below 28.4 V, payload first,
 then FPA cooler, transmitter, wheels, propulsion; see CTG-001)
 does not depend on the array rules.
 
@@ -416,7 +416,7 @@ FDIR rules requires explicit ground authorisation and should be time-limited.
 | Configuration Parameter      | Default | Modifiable |
 |------------------------------|---------|------------|
 | Safe mode SoC threshold      | 15%     | Yes        |
-| Safe mode voltage threshold  | 26.5 V  | Yes        |
+| Safe mode voltage threshold  | 27.7 V  | Yes        |
 | Attitude error red limit     | 2 deg   | Yes        |
 | Body rate red limit          | 2 deg/s | Yes        |
 | Watchdog timeout             | 10 s    | No         |

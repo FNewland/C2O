@@ -62,7 +62,7 @@ spacecraft about to declare NOMINAL must not be carrying a SAFE OBC)
 **Verify:** `eps.pl_htr_bat` (0x0115) = 1 and `eps.pl_htr_obc` (0x0116) = 1 --- heater
 lines left ON under thermostat control (COM-002 exit state); a NOMINAL spacecraft
 with a dark battery-heater line drifts into the red in eclipse
-**Verify:** `eps.bus_voltage` (0x0105) in [26.5, 29.5] V; `eps.bat_soc`
+**Verify:** `eps.bus_voltage` (0x0105) in [30.2, 34.0] V; `eps.bat_soc`
 (0x0101) > 60%
 **Verify:** `obdh.time_ref` (0x0A13) != 0 --- clock referenced (LEOP-006)
 **GO/NO-GO:** Platform end state clean --- nothing left armed, shed or raised

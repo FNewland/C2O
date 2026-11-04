@@ -111,7 +111,7 @@ Default values (configurable in code):
 
 - **Peak Output**: 280W @ beta=0°
 - **Variation**: cos(beta) scaling with solar angle
-- **Duty Cycle**: ~65% sunlit (35% eclipse for 450km SSO)
+- **Duty Cycle**: ~64% sunlit (eclipse fraction 0.351-0.372 over the year for the 513 km / LTAN 10:00 SSO)
 
 ### Energy Balance
 
@@ -155,7 +155,7 @@ Auto-insertion of desaturation activities when momentum threshold exceeded.
 ### Payload Duty Cycle
 
 - **Max Per Orbit**: 30 minutes (configurable)
-- **Orbit Period**: 91 minutes (450km SSO)
+- **Orbit Period**: 94.5 minutes (TLE mean motion 15.24 rev/day, 513 km mean altitude)
 - **Calculation**: Sum imaging duration per orbital period
 
 ### FPA Cooling

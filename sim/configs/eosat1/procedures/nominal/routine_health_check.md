@@ -31,7 +31,7 @@ and serves as the primary tool for early anomaly detection and trend analysis.
 
 ### Step 2 --- EPS Health Assessment
 **Verify:** `eps.bat_soc` (0x0101) > 40 % --- NOMINAL range 40-100 %
-**Verify:** `eps.bus_voltage` (0x0105) in range 27.0 - 32.0 V
+**Verify:** `eps.bus_voltage` (0x0105) in range 30.9 - 34.0 V
 **Verify:** `eps.power_gen` (0x0107) > 0 W (if in sunlight; 0 W acceptable in eclipse)
 **Verify:** `eps.power_cons` (0x0106) < 350 W (nominal bus budget)
 **Verify:** Power margin: `eps.power_gen` - `eps.power_cons` > -50 W

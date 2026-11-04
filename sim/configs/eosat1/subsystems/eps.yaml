@@ -14,10 +14,19 @@ battery:
   # 28.8 V nominal, 93x86x41 mm, ~500 g, 18650 Li-ion cells. That is the
   # single-pack configuration a 6U flies; nothing here needed to change.
   # (docs/plan_2026-08b/POWER_SIZING.md, row "battery".)
+  #
+  # 2026-11 consistency pass: the VOLTAGES now come from the same datasheet
+  # (GomSpace "NanoPower BPX 100 Wh", DS 1076870 rev 1.1.0, 8S-1P column):
+  # 8 x 18650 Li-ion, 24.0-33.6 V range, 28.8 V nominal, 3.5 Ah, 100 Wh.
+  # The old 21.5-29.2 V / 26.4 V curve was 8 x 2.69-3.65 V — an 8S LiFePO4
+  # window, not the 18650 pack quoted above. The linear OCV below spans the
+  # datasheet range, so its midpoint IS the 28.8 V nominal and
+  # 3.47 Ah x 28.8 V = 100 Wh. Every bus-voltage protection level was
+  # re-derived at its unchanged SoC rung (simulation.yaml eps.bus_protection).
   capacity_wh: 100.0
-  voltage_nom: 26.4
-  soc_100_v: 29.2
-  soc_0_v: 21.5
+  voltage_nom: 28.8
+  soc_100_v: 33.6
+  soc_0_v: 24.0
   internal_r_ohm: 0.05
   # Li-ion coulombic efficiency (brief 01 F19 / WP-4).
   charge_efficiency: 0.94
@@ -111,8 +120,13 @@ solar_panels:
   sada_tracking: true      # false => wings frozen at solar_array_drive_angle
   sada_max_rate_deg_s: 1.0
 # ── Payload (2026-08b R1) ──────────────────────────────────────────────
-# Reference part: Simera Sense TriScape100 (a real 6U-class EO imager,
-# 98x98x176 mm, 1.1 kg, 4.75 m GSD at 500 km). Datasheet, 5.0 V rail:
+# POWER reference part: Simera Sense TriScape100 (a real 6U-class EO
+# imager, 98x98x176 mm, 1.1 kg). It is the analogue for the imager's power,
+# mass and envelope ONLY. Its optics (580 mm focal length, 95 mm aperture,
+# 4096-px frame sensor -> 4.75 m GSD / 19.4 km swath at 500 km) are NOT
+# EOSAT-1's: EOSAT-1 flies the owner-ruled wide-field 8192-px pushbroom of
+# subsystems/payload.yaml (84.5 mm -> 33.4 m GSD, 273 km swath at 513 km).
+# Datasheet, 5.0 V rail:
 #   imaging   1100 mA = 5.50 W
 #   idle      470 mA  = 2.35 W   (readout mode is also 470 mA)
 # The old pair was physically impossible — standby (6.0 W) drew MORE than

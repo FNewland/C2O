@@ -65,11 +65,11 @@ que le satellite peut se maintenir indéfiniment jusqu'à l'intervention du sol.
 | ID de règle | Condition                  | Détection       | Réaction                    |
 |---------|--------------------------------|----------------|-----------------------------|
 | EPS-01  | bat_soc < 15 %                  | 0x0101 < 15    | Passage en mode survie      |
-| EPS-02  | bus_voltage < 26.5 V           | 0x0105 < 26.5  | Passage en mode survie      |
+| EPS-02  | bus_voltage < 27.7 V           | 0x0105 < 27.7  | Passage en mode survie      |
 | EPS-03  | bat_temp > 45 C                | 0x0102 > 45    | Inhiber la charge de la batterie |
 | EPS-04  | bat_temp < 0 C                 | 0x0102 < 0     | Thermostat du réchauffeur de batterie (voir TCS-01) |
 | EPS-05  | Rendement de chaîne < 70 % en éclairement, 30 s | 0x014C / 0x014D (valide tant que le bit de 0x014E est positionné) | Signalement seulement : TM(12,9) + événement S5 0x914C / 0x914D. Le sol décide (CTG-009) |
-| EPS-06  | bus_voltage > 29.5 V           | 0x0105 > 29.5  | Dériver l'excédent de puissance (shunt) |
+| EPS-06  | bus_voltage > 34.0 V           | 0x0105 > 34.0  | Dériver l'excédent de puissance (shunt) |
 | EPS-07  | État de charge de la batterie critique (< 10 %) | Événement S5 0x0102 BATTERY_SOC_CRITICAL | Ligne de la charge utile coupée : la règle S19 ea 1001 envoie `EPS_POWER_OFF` (fonction S8 20, ligne 3) |
 
 **EPS-07 coupe la charge utile.** Jusqu'en novembre 2026, la règle S19 ea 1001
@@ -110,7 +110,7 @@ retirées plutôt que laissées sans action. L'équipe évalue le rendement et l
 bilan de puissance avec CTG-009 et, soit déleste la charge utile, soit
 poursuit avec une surveillance. Si la puissance vient réellement à manquer,
 la charge utile est toujours délestée automatiquement : le délestage EPS sur
-tension bus (bus sous 25.0 V, charge utile d'abord, puis refroidisseur FPA,
+tension bus (bus sous 28.4 V, charge utile d'abord, puis refroidisseur FPA,
 émetteur, roues, propulsion ; voir CTG-001) ne dépend pas des
 règles du générateur solaire.
 
@@ -427,7 +427,7 @@ de règles FDIR exige une autorisation explicite du sol et devrait être limité
 | Paramètre de configuration   | Défaut  | Modifiable |
 |------------------------------|---------|------------|
 | Seuil de SoC du mode survie  | 15 %     | Oui        |
-| Seuil de tension du mode survie | 26.5 V | Oui      |
+| Seuil de tension du mode survie | 27.7 V | Oui      |
 | Limite rouge d'erreur d'attitude | 2 deg | Oui      |
 | Limite rouge de vitesse angulaire | 2 deg/s | Oui   |
 | Délai du chien de garde      | 10 s    | Non        |

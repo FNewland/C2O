@@ -29,8 +29,8 @@
   },
   {
    "id": "eosat-1-mission-overview/4-spacecraft-bus-overview",
-   "en_hash": "6629a5498dd0d52f",
-   "fr_hash": "f8ee3da598fd20d6"
+   "en_hash": "2cb493d1d270bb02",
+   "fr_hash": "fa53ae9eaf4a36a0"
   },
   {
    "id": "eosat-1-mission-overview/4-spacecraft-bus-overview/41-spacecraft-coordinate-frame",
@@ -39,8 +39,8 @@
   },
   {
    "id": "eosat-1-mission-overview/4-spacecraft-bus-overview/42-mass-and-power-budget",
-   "en_hash": "88e56f62f69636d6",
-   "fr_hash": "9984b713693914bb"
+   "en_hash": "cb8dbe753347481a",
+   "fr_hash": "18bd45984e9e6e1b"
   },
   {
    "id": "eosat-1-mission-overview/4-spacecraft-bus-overview/43-redundancy-architecture",
@@ -98,5 +98,5 @@
    "fr_hash": "691acc88ac99724c"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

@@ -16,6 +16,7 @@ from typing import Any, Optional
 from smo_common.config.loader import (
     load_mission_config, load_orbit_config, load_all_subsystem_configs,
     load_fdir_config, load_hk_structures, load_simulation_config,
+    resolve_threshold_ref,
 )
 from smo_common.state import DEFAULT_SEED, derive_rng
 from smo_common.protocol.framing import tag_vc, VC_PLAYBACK
@@ -342,7 +343,9 @@ class SimulationEngine:
         self._fdir_safe_active = False       # an FDIR L>=2 (safe) rule is latched
         self._fdir_emergency_active = False  # an FDIR L>=3 (emergency) rule is latched
         self._fdir_enabled = self._fdir_cfg.enabled
-        self._fdir_rules = self._fdir_cfg.rules
+        self._fdir_rules = [self._resolve_named_threshold(r, "fdir.yaml")
+                            for r in self._fdir_cfg.rules]
+        self._check_bus_protection_copies()
         self._fdir_triggered: dict[str, bool] = {}
 
         # Advanced FDIR: Fault Propagation, Load Shedding, Recovery, Procedures
@@ -414,7 +417,9 @@ class SimulationEngine:
         # inside it (spec Part C.5). Every call site that omits an explicit
         # timestamp — including service_dispatch's science-record path — picks
         # this up.
-        self._tm_storage = OnboardTMStorage(time_source=self._get_cuc_time)
+        self._tm_storage = OnboardTMStorage(
+            store_defs=self._s15_store_defs(),
+            time_source=self._get_cuc_time)
         # S15 dump pacing: pending packets released according to TTC data rate.
         # Each item: (pkt_bytes, store_id)
         self._dump_pending: list[tuple[bytes, int]] = []
@@ -999,11 +1004,21 @@ class SimulationEngine:
 
             # Register fault cascade rules
             for cascade_cfg in config.get("fault_cascades", []):
+                threshold = cascade_cfg.get("threshold")
+                ref = cascade_cfg.get("threshold_ref")
+                if ref:
+                    named = resolve_threshold_ref(self._sim_cfg, ref)
+                    if threshold is not None and abs(float(threshold) - named) > 1e-6:
+                        logger.warning(
+                            "fault_propagation.yaml %s threshold %.2f diverges "
+                            "from %s = %.2f — the named value wins",
+                            cascade_cfg.get("fault_id"), float(threshold), ref, named)
+                    threshold = named
                 rule = FaultPropagationRule(
                     fault_id=cascade_cfg.get("fault_id", ""),
                     description=cascade_cfg.get("description", ""),
                     primary_param=cascade_cfg.get("primary_param", ""),
-                    threshold=cascade_cfg.get("threshold"),
+                    threshold=threshold,
                     cascades=cascade_cfg.get("cascades", []),
                     condition=cascade_cfg.get("condition", "<"),
                     flags=[int(f) for f in cascade_cfg.get("flags", []) or []],
@@ -1052,12 +1067,108 @@ class SimulationEngine:
         except Exception as e:
             logger.warning("Failed to load fault propagation config: %s", e)
 
+    def _s15_store_defs(self) -> dict | None:
+        """S15 store capacities from mcs/pus_services.yaml (single source).
+
+        The table there carries the live packet limit (capacity_packets) and
+        circular flag; names stay the on-board ones of tm_storage. Absent or
+        incomplete config -> tm_storage.DEFAULT_STORES (minimal test dirs).
+        """
+        from smo_common.config.loader import load_pus_service_config
+        from smo_simulator.tm_storage import DEFAULT_STORES
+        try:
+            svc = load_pus_service_config(self.config_dir).services.get("s15")
+        except Exception as e:  # malformed file: keep the built-in table
+            logger.warning("pus_services.yaml unreadable (%s) — default S15 stores", e)
+            return None
+        stores = getattr(svc, "stores", None) or [] if svc is not None else []
+        if not stores:
+            return None
+        defs = {k: dict(v) for k, v in DEFAULT_STORES.items()}
+        for st in stores:
+            if st.capacity_packets is None:
+                continue
+            entry = defs.setdefault(st.id, {"name": st.name.replace(" ", "_")})
+            entry["capacity"] = int(st.capacity_packets)
+            entry["circular"] = bool(st.circular)
+        return defs
+
+    #: Which named bus-protection level each literal copy must equal.
+    #: (file, how to find the copy) -> eps.bus_protection field.
+    _BUS_LADDER_COPIES = (
+        ("monitoring/s12_definitions.yaml", "EPS Bus Voltage Low", "uv_v"),
+        ("monitoring/s12_definitions.yaml", "EPS Bus Voltage Critical", "eps_safe_v"),
+        ("mcs/limits.yaml", "yellow_low", "uv_v"),
+        ("mcs/limits.yaml", "red_low", "eps_safe_v"),
+        ("mcs/limits.yaml", "yellow_high", "ov_v"),
+    )
+
+    def _check_bus_protection_copies(self) -> None:
+        """Warn when a literal bus-voltage copy drifts from its named level.
+
+        simulation.yaml eps.bus_protection is the single source; the S12
+        table and the MCS limits must carry literals (they are on-board /
+        ground tables in their own right), so they are checked here at
+        start-up as well as by tests/test_content/test_sim_consistency.py.
+        The FDIR and fault-propagation rules resolve ``threshold_ref`` and
+        need no copy check (aocs_safe_v, cascade_v).
+        """
+        import yaml as _yaml
+        bp = self._sim_cfg.eps.bus_protection
+        for rel, key, name in self._BUS_LADDER_COPIES:
+            path = self.config_dir / rel
+            if not path.exists():
+                continue
+            try:
+                data = _yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            except Exception:
+                continue
+            named = float(getattr(bp, name))
+            found = None
+            if rel.endswith("s12_definitions.yaml"):
+                for d in data.get("s12_definitions", []) or []:
+                    if d.get("param_id") == 0x0105 and d.get("name") == key:
+                        found = d.get("low_limit")
+            else:
+                for d in data.get("limits", []) or []:
+                    if d.get("param_id") == 0x0105:
+                        found = d.get(key)
+            if found is not None and abs(float(found) - named) > 1e-6:
+                logger.warning("%s %s = %.2f V diverges from simulation.yaml "
+                               "eps.bus_protection.%s = %.2f V", rel, key,
+                               float(found), name, named)
+
+    def _resolve_named_threshold(self, rule, source: str):
+        """Return *rule* with its ``threshold_ref`` resolved (if it has one).
+
+        The named value in simulation.yaml wins; a literal copy that has
+        drifted from it is logged, never silently used.
+        """
+        ref = getattr(rule, "threshold_ref", None)
+        if not ref:
+            return rule
+        named = resolve_threshold_ref(self._sim_cfg, ref)
+        if rule.threshold is not None and abs(float(rule.threshold) - named) > 1e-6:
+            logger.warning("%s rule %s %s: threshold %.2f diverges from %s = %.2f "
+                           "— the named value wins", source, rule.parameter,
+                           rule.action, float(rule.threshold), ref, named)
+        return rule.model_copy(update={"threshold": named})
+
     def _wire_load_shedding(self) -> None:
         """Register load shedding callbacks to subsystems."""
         payload = self.subsystems.get("payload")
         aocs = self.subsystems.get("aocs")
         tcs = self.subsystems.get("tcs")
         ttc = self.subsystems.get("ttc")
+
+        eps = self.subsystems.get("eps")
+        if eps:
+            # fault_propagation.yaml load_shedding_stages.*.power_lines
+            self._load_shedding.register_callback(
+                "eps_power_line_off",
+                lambda line: eps.handle_command(
+                    {"command": "power_line_off", "line_name": str(line)})
+            )
 
         if payload:
             self._load_shedding.register_callback(
@@ -3774,16 +3885,13 @@ class SimulationEngine:
         elif soc >= 32:
             self._event_flags['low_soc_30'] = False
 
-        bus_v = p.get(0x0105, 28.0)
-        if bus_v < 24.0 and not self._event_flags.get('undervoltage'):
-            self._event_flags['undervoltage'] = True
-            self._emit_event({
-                'event_id': 0x0102,
-                'severity': 4,
-                'description': f"Bus undervoltage: {bus_v:.1f}V",
-            })
-        elif bus_v >= 25.0:
-            self._event_flags['undervoltage'] = False
+        # (2026-11 consistency pass) The engine-level "bus < 24.0 V" check that
+        # lived here is gone: it was a seventh copy of the bus under-voltage
+        # decision, emitted it under 0x0102 (BATTERY_SOC_CRITICAL, which the
+        # EPS model already raises at its catalogue meaning, SoC < 10 %), and
+        # on the BPX curve 24.0 V is 0 % SoC, so it could no longer fire. Bus
+        # under-voltage events are the EPS model's 0x0103/0x0104 at
+        # simulation.yaml eps.bus_protection uv_v / eps_safe_v.
 
         # Payload storage warning
         store_pct = p.get(0x0604, 0)

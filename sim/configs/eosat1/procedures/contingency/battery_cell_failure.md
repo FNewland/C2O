@@ -57,8 +57,8 @@ can safely complete an eclipse with the degraded battery.
 **Verify:** `eps.bat_capacity_wh` (0x010A) — record value (nominal = 120 Wh)
 **Verify:** `eps.bat_current` (0x0109) — record current (positive = charging, negative = discharging)
 **Action:** Calculate expected voltage for current SoC:
-- SoC 100% corresponds to ~29.2 V, SoC 0% corresponds to ~21.5 V (from battery model)
-- Expected voltage = 21.5 + (SoC/100) * (29.2 - 21.5) = 21.5 + SoC * 0.077
+- SoC 100% corresponds to ~33.6 V, SoC 0% corresponds to ~24.0 V (from battery model)
+- Expected voltage = 24.0 + (SoC/100) * (33.6 - 24.0) = 24.0 + SoC * 0.096
 **Action:** Compare measured voltage with expected voltage:
 - If measured voltage is > 1.0 V below expected: Possible cell failure.
 - If measured voltage is within 0.5 V of expected: May be normal variation.
@@ -134,11 +134,11 @@ but still protects against dangerously low temperatures.
 **LABEL:** `STEP-5`
 **Note:** If an eclipse is approaching or in progress, monitor battery at 60 s intervals:
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bat_voltage` (0x0100) — does NOT drop below 24.0 V
+**Verify:** `eps.bat_voltage` (0x0100) — does NOT drop below 27.1 V
 **Verify:** `eps.bat_soc` (0x0101) — does NOT drop below 20%
 **Verify:** `eps.bat_temp` (0x0102) — remains within 0 to 40 C
-**Verify:** `eps.bus_voltage` (0x0105) — remains > 26.5 V
-**Action:** If `eps.bus_voltage` drops below 26.5 V during eclipse: Execute additional
+**Verify:** `eps.bus_voltage` (0x0105) — remains > 30.2 V
+**Action:** If `eps.bus_voltage` drops below 30.2 V during eclipse: Execute additional
 load shedding per CTG-001 (Undervoltage Load Shedding).
 **Action:** After eclipse exit, verify:
 - `eps.power_gen` (0x0107) > 25 W (charging resumes)
@@ -149,7 +149,7 @@ load shedding per CTG-001 (Undervoltage Load Shedding).
 ### Step 6: Long-Term Capacity Verification
 **Action:** Over the next 2-3 orbits, monitor battery charge/discharge behavior:
 **Verify:** `eps.bat_soc` (0x0101) — does SoC fully recover to > 90% during sunlit phase?
-**Verify:** `eps.bat_voltage` (0x0100) — does voltage reach > 28.5 V at full charge?
+**Verify:** `eps.bat_voltage` (0x0100) — does voltage reach > 32.7 V at full charge?
 **TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (on-demand: no HK SID carries it)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — has the reported capacity changed?
 **Action:** Assess long-term impact:
@@ -177,7 +177,7 @@ load shedding per CTG-001 (Undervoltage Load Shedding).
 - If battery temperature exceeds 45 C at any point: Risk of thermal runaway. Disable
   battery heater immediately. Shed all non-essential loads. If temperature exceeds
   50 C, command `OBC_SET_MODE(mode=2)` for EMERGENCY. Follow EMG-006.
-- If battery voltage drops below 22.0 V: Risk of deep discharge and permanent damage.
+- If battery voltage drops below 24.6 V: Risk of deep discharge and permanent damage.
   Immediately shed all loads except OBC and TTC RX. Command EMERGENCY mode.
 - If battery SoC cannot be maintained above 20% through a full orbit: The battery
   degradation is too severe for current operations. Must operate in a severely

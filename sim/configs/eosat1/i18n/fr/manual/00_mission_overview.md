@@ -53,7 +53,7 @@ EOSAT-1 est un CubeSat 6U à plateforme stabilisée trois axes, doté des princi
 
 | Sous-système                       | Abréviation  | Description                                      |
 |------------------------------------|--------------|--------------------------------------------------|
-| Sous-système d'alimentation électrique | EPS      | Bus régulé 28 V, 5 panneaux GaAs fixés sur la structure + 2 ailes déployables, batterie Li-ion, PDM en redondance froide |
+| Sous-système d'alimentation électrique | EPS      | Bus batterie non régulé, 28,8 V nominal (24,0–33,4 V), 5 panneaux GaAs fixés sur la structure + 2 ailes déployables, batterie Li-ion, PDM en redondance froide |
 | Système de contrôle d'attitude et d'orbite (SCAO) | AOCS | 4 roues de réaction, 1 magnétomètre (sans redondance), 2 senseurs stellaires, 6 têtes CSS, gyromètres |
 | Gestion bord des données           | OBDH         | OBC en redondance froide (A/B), double bus CAN, mémoire de masse, traitement TC/TM |
 | Sous-système de contrôle thermique | TCS          | Passif (MLI/radiateurs), réchauffeurs de batterie (actifs), contrôle thermique passif par l'orientation |
@@ -81,7 +81,7 @@ d'entre elles (toutes sauf -Z, qui porte l'ouverture de l'imageur et le radiateu
 | Masse sèche      | ~12 kg (6U)   |
 | Puissance produite max. | ~89 W (phase éclairée, ailes déployées et orientées vers le Soleil, début de vie) |
 | Puissance consommée moy. | ~29 W (NOMINAL, moyenne sur l'orbite) |
-| Capacité de la batterie | 100 Wh, 3 Ah (8S1P), 21,5–29,2 V |
+| Capacité de la batterie | 100 Wh, 3,5 Ah (GomSpace BPX 8S1P), 24,0–33,6 V, 28,8 V nominal |
 | Puissance de l'OBC | 6 W          |
 
 ### 4.3 Architecture de redondance {#43-redundancy-architecture}

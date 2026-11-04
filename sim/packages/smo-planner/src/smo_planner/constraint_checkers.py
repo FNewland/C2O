@@ -284,7 +284,7 @@ class PowerConstraintChecker:
     ) -> float:
         """Estimate fraction of time in eclipse."""
         if not ground_track:
-            return 0.35  # Default for 450km SSO
+            return 0.36  # Default: 513 km / LTAN 10:00 SSO, 0.351-0.372 over the year
 
         eclipse_count = 0
         total_count = 0
