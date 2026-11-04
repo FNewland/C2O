@@ -1,0 +1,100 @@
+# KB component schema v2 — mechanical block: defaults per category (stack builder)
+# ==================================================================================
+# Read by spacecdf_kb.mechanical.mechanical_of(). An entry's own `mechanical:` block
+# (schema v2, optional) wins field by field; then the entry's v1 fields
+# (`dimensions_mm`, `form_factor`, `interfaces`, `performance.deployment`); then the
+# category default below; then the domain default (elements with no KB part).
+#
+# Schema v2 `mechanical:` block on a component (every field optional):
+#   mount_class:      pc104_board | pc104_module | u_module | face_panel | deployable
+#                     | bracket | structure | distributed | none
+#   envelope_mm:      [a, b, h]  footprint a x b, h along the mounting normal / stack axis
+#   stack_height_mm:  height the unit takes in a column, standoffs included
+#   u_size:           U fraction a u_module takes (0.5, 1, 2 ...), used when no envelope
+#   face:             preferred face in the SIMULATOR body frame (px mx py my pz mz;
+#                     pz = zenith, mz = nadir) for face items, apertures and nozzles
+#   anchor:           nadir | zenith  — column end the unit must sit at (aperture, baffle)
+#   boresight:        [x, y, z] unit vector, simulator body frame
+#   fov_deg:          full field of view of an optical boresight (keep-out cone)
+#   spread:           one_per_face | tile  — how several units of one face item are laid out
+#   deployable:       {kind: wing | antenna | boom, panels, length_mm, hinge: edge | centre}
+#   connector:        stack-through connector family (PC/104 H1/H2) for the pinout check
+#
+# Every number below is a C2O DEFAULT, not a datasheet value (source: c2o_default):
+# it is what the stack builder assumes when the KB entry says nothing. Each one is
+# listed as an assumption next to the placement that used it. To calibrate per vendor.
+
+schema: c2o.kb.mechanical/2
+
+sources:
+  pc104:  "PC/104 board outline 96 x 90 mm, 4 x M3 (spacecdf_common PC104_STANDARD)"
+  c2o_default: "C2O default (teaching choice; to verify per vendor datasheet)"
+
+pc104:
+  board_mm: [96, 90]
+  pcb_mm: 1.6
+  # Common stack-through H1/H2 headers give a 15.24 mm (0.6 in) board pitch. C2O default,
+  # to verify per vendor: taller boards declare their own stack height.
+  pitch_mm: 15.24
+  clearance_mm: 2.0          # above the tallest component when the board is taller than the pitch
+
+structure:
+  end_allowance_mm: 6.0      # each end of a column: end plate + rail foot recess (to calibrate per structure)
+  wall_allowance_mm: 1.0     # each side of a column cell: side wall / rail inset
+  column_pitch_mm: 100.0     # one column per 100 mm of width (1U pitch)
+  u_length_mm: 100.0         # length of 1U of module (u_size -> length)
+
+# Category defaults (KB `category` values).
+categories:
+  obc:               {mount_class: pc104_board, envelope_mm: [96, 90, 10]}
+  eps_board:         {mount_class: pc104_board, envelope_mm: [96, 90, 12]}
+  transponder:       {mount_class: pc104_board, envelope_mm: [96, 90, 12]}
+  battery:           {mount_class: pc104_module, envelope_mm: [96, 90, 25]}
+  # A wheel module the size of a board is a stack module; a single small wheel sits on a bracket.
+  reaction_wheel:    {mount_class: bracket, envelope_mm: [50, 50, 40], module_if_board_size: true}
+  magnetorquer:      {mount_class: bracket, envelope_mm: [70, 15, 15], pc104_if_form_factor: true}
+  star_tracker:      {mount_class: u_module, envelope_mm: [55, 55, 75], anchor: zenith, face: pz,
+                      boresight: [0, 0, 1], fov_deg: 12.0}
+  sun_sensor:        {mount_class: face_panel, envelope_mm: [33, 11, 6], spread: one_per_face, fov_deg: 120.0}
+  gps_receiver:      {mount_class: bracket, envelope_mm: [70, 46, 11]}
+  # antennas: deployment decides (body_mounted -> face_panel, else deployable); band decides the face
+  antenna:           {mount_class: face_panel, envelope_mm: [98, 98, 6], by_deployment: true}
+  solar_panel:       {mount_class: face_panel, envelope_mm: [98, 82, 2], by_deployment: true, spread: tile}
+  solar_cell:        {mount_class: none, note: "cells come with their panels"}
+  thruster:          {mount_class: u_module, envelope_mm: [96, 90, 90], face: mx, boresight: [-1, 0, 0]}
+  cubesat_structure: {mount_class: structure}
+  deployer:          {mount_class: none, note: "the dispenser is not part of the spacecraft"}
+  thermal_hardware:  {mount_class: distributed, radiator_face: mz}
+  mechanical_hardware: {mount_class: distributed}
+  harnesses:         {mount_class: distributed}
+  payload_imager:    {mount_class: u_module, envelope_mm: [98, 98, 100], anchor: nadir, face: mz,
+                      boresight: [0, 0, -1], fov_deg: 10.0}
+
+# Elements with no KB part: by subsystem domain.
+domains:
+  payload:    {mount_class: u_module, envelope_mm: [98, 98, 100], anchor: nadir, face: mz, boresight: [0, 0, -1], fov_deg: 10.0}
+  power:      {mount_class: pc104_board, envelope_mm: [96, 90, 12]}
+  eps:        {mount_class: pc104_board, envelope_mm: [96, 90, 12]}
+  aocs:       {mount_class: pc104_module, envelope_mm: [96, 90, 30]}
+  adcs:       {mount_class: pc104_module, envelope_mm: [96, 90, 30]}
+  ttc:        {mount_class: pc104_board, envelope_mm: [96, 90, 12]}
+  comms:      {mount_class: pc104_board, envelope_mm: [96, 90, 12]}
+  obc:        {mount_class: pc104_board, envelope_mm: [96, 90, 10]}
+  obdh:       {mount_class: pc104_board, envelope_mm: [96, 90, 10]}
+  data:       {mount_class: pc104_board, envelope_mm: [96, 90, 10]}
+  propulsion: {mount_class: u_module, envelope_mm: [96, 90, 90], face: mx, boresight: [-1, 0, 0]}
+  thermal:    {mount_class: distributed}
+  structure:  {mount_class: structure}
+  structures: {mount_class: structure}
+  harness:    {mount_class: distributed}
+  default:    {mount_class: bracket, envelope_mm: [90, 90, 20]}
+
+# Antenna face by band (body frame of the simulator: -Z nadir, +Z zenith).
+antenna_faces:
+  gnss: pz          # L-band GNSS patch looks at zenith
+  uhf: pz           # deployable UHF/VHF from the zenith end
+  vhf: pz
+  s: mz             # S/X-band patch on the face that looks at the station: nadir by default
+  x: mz
+  ka: mz
+  default: mz

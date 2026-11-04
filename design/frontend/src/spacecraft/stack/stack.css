@@ -1,0 +1,72 @@
+/* Stack builder: elevation, face map, 3D and the checks beside them. Tokens only. */
+.c2o-stk { display: flex; flex-direction: column; gap: var(--sp-2); }
+.c2o-stk__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.c2o-stk__status { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); color: var(--text-2); }
+.c2o-stk .c2o-seg__item[aria-pressed='true'] { color: var(--interactive); background: var(--interactive-wash); font-weight: 600; box-shadow: inset 0 -2px 0 var(--interactive); }
+
+.c2o-stk__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: var(--sp-3) var(--sp-5); align-items: start; }
+@media (max-width: 1199px) { .c2o-stk__grid { grid-template-columns: minmax(0, 1fr); } }
+.c2o-stk__main { min-width: 0; }
+.c2o-stk__side { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.c2o-stk__h { margin: 0; font-size: var(--fs-label); font-weight: 600; color: var(--text-3); text-transform: none; }
+
+/* checks */
+.c2o-stk__checks { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.c2o-stk__checks li { display: flex; flex-direction: column; gap: 2px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.c2o-stk__check { display: flex; align-items: center; gap: var(--sp-2); font: inherit; text-align: left; color: var(--text);
+  background: none; border: 0; padding: 0; cursor: pointer; }
+.c2o-stk__check:focus-visible { outline: 2px solid var(--interactive); outline-offset: 2px; }
+.c2o-stk__cl { font-weight: 500; }
+.c2o-stk__facts { margin: 0; border-top: 1px solid var(--line); }
+.c2o-stk__facts > div { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 5px 0; border-bottom: 1px solid var(--line); }
+.c2o-stk__facts dt { font-size: var(--fs-label); color: var(--text-3); }
+.c2o-stk__facts dd { margin: 0; color: var(--text-value); text-align: right; }
+.c2o-stk__sel { display: flex; flex-direction: column; gap: var(--sp-1); }
+.c2o-stk__selrow { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.c2o-stk__selrow select { font: inherit; font-size: var(--fs-label); background: var(--surface-1); color: var(--text); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); }
+.c2o-stk__sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; }
+.c2o-stk__asm { margin: 0; padding-left: 18px; }
+
+/* elevation */
+.c2o-stk__elev svg, .c2o-stk__faces svg { display: block; touch-action: none; user-select: none; }
+.c2o-stk__ruler line { stroke: var(--line-strong); }
+.c2o-stk__ruler text, .c2o-stk__axis, .c2o-stk__hbar text { font-size: 11px; fill: var(--text-3); font-family: var(--font-mono); }
+.c2o-stk__env { fill: var(--surface-1); stroke: var(--line-strong); stroke-width: 1.5; }
+.c2o-stk__endzone { fill: var(--surface-2); stroke: none; }
+.c2o-stk__col { fill: none; stroke: var(--line); stroke-dasharray: 3 3; }
+.c2o-stk__unit { cursor: grab; outline: none; }
+.c2o-stk__unit.is-drag { opacity: 0.6; cursor: grabbing; }
+.c2o-stk__slot { stroke: var(--line-strong); stroke-width: 1; }
+.c2o-stk__body { stroke: var(--line-strong); stroke-width: 1; }
+.c2o-stk__unit:hover .c2o-stk__slot, .c2o-stk__unit:focus-visible .c2o-stk__slot { stroke: var(--interactive); stroke-width: 2; }
+.c2o-stk__unit.is-sel .c2o-stk__slot, .c2o-stk__unit.is-sel .c2o-stk__body { stroke: var(--interactive); stroke-width: 2.5; }
+.c2o-stk__unit.is-bad .c2o-stk__slot { stroke: var(--status-alarm); stroke-width: 2; }
+.c2o-stk__lbl { font-size: 11px; fill: var(--text-value); pointer-events: none; }
+.c2o-stk__lock { fill: none; stroke: var(--text-value); stroke-width: 1.3; pointer-events: none; }
+.c2o-stk__insert { stroke: var(--interactive); stroke-width: 3; }
+.c2o-stk__face { stroke: var(--line-strong); cursor: pointer; }
+.c2o-stk__face.is-sel { stroke: var(--interactive); stroke-width: 2; }
+.c2o-stk__cogbox { fill: none; stroke: var(--text-3); stroke-dasharray: 5 3; }
+.c2o-stk__cogbox.is-bad { stroke: var(--status-alarm); }
+.c2o-stk__cog circle, .c2o-stk__cog line { fill: none; stroke: var(--text-value); stroke-width: 1.5; }
+.c2o-stk__cog text { font-size: 11px; fill: var(--text-value); font-weight: 600; }
+.c2o-stk__htrack { fill: var(--surface-2); stroke: var(--line); }
+.c2o-stk__hfill { fill: var(--text-3); }
+.c2o-stk__hbar.is-bad .c2o-stk__hfill { fill: var(--status-alarm); }
+
+/* face map */
+.c2o-stk__fc { fill: var(--surface-1); stroke: var(--line-strong); }
+.c2o-stk__fc.is-over { fill: var(--interactive-wash); stroke: var(--interactive); stroke-width: 2; }
+.c2o-stk__fcname { font-size: 11px; fill: var(--text-value); font-family: var(--font-mono); pointer-events: none;
+  paint-order: stroke; stroke: var(--surface-1); stroke-width: 3px; stroke-linejoin: round; }
+.c2o-stk__port { stroke: var(--text-3); stroke-width: 1; }
+.c2o-stk__item { cursor: grab; outline: none; }
+.c2o-stk__item rect { stroke: var(--line-strong); stroke-width: 1; }
+.c2o-stk__item.is-dep rect { stroke-dasharray: 4 2; }
+.c2o-stk__item:hover rect, .c2o-stk__item:focus-visible rect { stroke: var(--interactive); stroke-width: 2; }
+.c2o-stk__item.is-sel rect { stroke: var(--interactive); stroke-width: 2.5; }
+.c2o-stk__item.is-bad rect { stroke: var(--status-alarm); stroke-width: 2; }
+.c2o-stk__dragdot { fill: var(--interactive); opacity: 0.7; pointer-events: none; }
+
+/* 3D */
+.c2o-stk__3d { min-height: 460px; }

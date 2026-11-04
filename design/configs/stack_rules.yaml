@@ -1,0 +1,144 @@
+# CubeSat stack builder rules (deterministic; read by services/stack_builder.py)
+# ===========================================================================
+# Design rules docs/plan_2026-11/design_sim/spacecdf_design_rules.md §4. The envelope,
+# CoG box and protrusion limit are NOT repeated here: they are read from cds_rules.yaml
+# (envelope_mm, cog_limits_cm, mechanical.max_protrusion_mm) so one fix there (F1)
+# fixes the stack builder too. Unit mechanics (mount class, heights, faces) come from
+# the KB, schema v2 (packages/spacecdf-kb/.../data/mechanical_defaults.yaml).
+# Proposals carry origin `rule:STACK-AUTO`; the Structures seat approves them
+# (REDESIGN_DECISIONS.md ruling 5: the owner reviews, until then its layout stands).
+
+sources:
+  c2o_default:
+    kind: c2o_default
+    title: "C2O default (teaching choice; not a standard citation)"
+    verified: false
+  cds_14_1:
+    kind: standard
+    short: "CDS rev 14.1"
+    title: "Cal Poly CubeSat Design Specification rev 14.1 (2022-02-09)"
+    verified: true
+  design_rules:
+    kind: guideline
+    short: "C2O design rules"
+    title: "SpaceCDF design rules, §4 CubeSat stack builder (docs/plan_2026-11)"
+    verified: false
+
+# Roles the ordering and harness rules talk about: KB category first, then domain,
+# then name keywords.
+roles:
+  source: c2o_default
+  by_category:
+    payload_imager: payload
+    battery: battery
+    eps_board: eps
+    obc: obc
+    transponder: radio
+    reaction_wheel: adcs
+    magnetorquer: adcs
+    star_tracker: star_tracker
+    sun_sensor: adcs
+    gps_receiver: gnss
+    thruster: propulsion
+    antenna: antenna
+    solar_panel: solar
+  by_domain:
+    payload: payload
+    power: eps
+    eps: eps
+    aocs: adcs
+    adcs: adcs
+    ttc: radio
+    comms: radio
+    obc: obc
+    obdh: obc
+    data: obc
+    propulsion: propulsion
+  name_keywords:
+    battery: [batter, accu]
+    eps: [eps, power distribution, pcdu]
+    radio: [transceiver, transponder, radio, modem]
+    gnss: [gnss, gps]
+
+# Initial order along a column, from the nadir end (rank 0) to the zenith end
+# (design rules §4.3 step 3: payload at the aperture end, battery and EPS adjacent,
+# ADCS near the CoG, OBC between EPS and radio, radio next to its antenna's face).
+order:
+  source: design_rules
+  clause: "§4.3 step 3"
+  rank:
+    payload: 0
+    propulsion: 1
+    radio_nadir: 2
+    battery: 3
+    eps: 4
+    adcs: 5
+    obc: 6
+    radio_zenith: 7
+    gnss: 8
+    other: 9
+
+# Harness proxy: pairs of roles and their weight (high current and RF coax weigh most).
+harness:
+  source: c2o_default
+  pairs:
+    - [battery, eps, 3.0]
+    - [eps, obc, 1.0]
+    - [eps, radio, 1.0]
+    - [eps, adcs, 1.0]
+    - [eps, payload, 1.0]
+    - [eps, propulsion, 1.0]
+    - [obc, radio, 1.0]
+    - [obc, adcs, 1.0]
+    - [obc, payload, 1.5]
+    - [obc, gnss, 0.5]
+    - [obc, star_tracker, 0.5]
+    - [radio, antenna_rf, 2.0]
+    - [gnss, antenna_gnss, 2.0]
+  interface_weights: {power: 1.0, data: 0.5, rf: 2.0}
+
+# Swap search (§4.3 step 4): score = w_cog * CoG term + w_harness * harness + w_thermal * thermal.
+optimise:
+  source: design_rules
+  clause: "§4.3 step 4"
+  w_cog: 1.0
+  w_harness: 0.25
+  w_thermal: 0.25
+  max_passes: 25
+  hot_unit_w: 1.0            # a unit dissipating more counts in the hot-spot term
+  hot_spot_distance_mm: 40   # d0 in P_i P_j d0 / (d_ij + d0)
+
+# Thermal adjacency: the radiator face (nadir by default, §4.3 step 2)
+thermal:
+  source: design_rules
+  radiator_face: mz
+
+# Face rules (§4.3 step 2), simulator body frame (pz zenith, mz nadir).
+faces:
+  source: design_rules
+  clause: "§4.3 step 2"
+  body_solar_order: [px, mx, py, my, pz]   # largest faces first; mz carries aperture and radiator
+  wing_faces: [py, my]                     # simulator geometry.yaml wings
+  sun_sensor_order: [px, mx, py, my, pz, mz]
+  side_inset_mm: 8.5                       # rail width (CDS 2.2.5) kept clear on the side faces
+  end_inset_mm: 1.0                        # end faces: only the wall allowance (1U-wide patches fit)
+
+# Star tracker accommodation: Earth-limb exclusion in the nominal nadir attitude
+# (simulator geometry.yaml star_tracker_earth_exclusion_deg / sun 15 deg).
+star_tracker:
+  source: design_rules
+  earth_exclusion_deg: 25.0
+  sun_exclusion_deg: 15.0
+  default_altitude_km: 500.0
+
+# Keep-out cones of optical boresights vs deployed geometry.
+keep_out:
+  source: design_rules
+  clause: "§4.4 keep-out (EI-07)"
+  margin_deg: 2.0
+  cone_length_mm: 1500
+
+# PC/104 stack-through pinout: boards from more than one vendor on one stack.
+pc104:
+  source: design_rules
+  clause: "§4.1 bus connector compatibility"
