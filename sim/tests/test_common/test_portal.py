@@ -152,7 +152,8 @@ async def test_page_renders_en_and_fr_with_local_links():
         r = await c.get("/?lang=fr")
         assert '<html lang="fr">' in await r.text()
         # the page never waits for probes: status cells start as "Checking"
-        assert t.count("Checking…") >= len(pt.SERVICES)
+        # status slots start empty: nothing to read until the first probe
+        assert t.count('class="pt-state"') >= len(pt.SERVICES)
     finally:
         await c.close()
 
@@ -189,7 +190,9 @@ async def test_instructor_section_only_for_instructors(monkeypatch):
     try:
         t = await (await c.get("/", headers=stu)).text()
         assert 'id="row-sim"' not in t and 'id="row-adcs"' not in t
-        assert "Instructors only" not in t and 'id="row-ops"' in t
+        # a student sees a greyed Instructor card, but no instructor tool names
+        assert 'id="row-ops"' in t and "is-locked" in t
+        assert all(s.name not in t for s in pt.SERVICES if s.instructors_only)
         d = await (await c.get("/api/status", headers=stu)).json()
         assert not {"sim", "scenarios", "adcs"} & set(d["services"])
         assert all("port" not in v for v in d["services"].values())
