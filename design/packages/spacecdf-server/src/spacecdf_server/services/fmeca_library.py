@@ -6,7 +6,10 @@ then subsystem domain) and receives that type's modes, adjusted per element:
 
 * redundancy (``redundancy_type`` set or ``quantity`` > 1) → severity − 1;
 * TRL < 6 (element or KB part)                          → occurrence + 1;
-* the element has a ``data`` interface (telemetry)      → detection − 1.
+* detection − 1 when the failure is *monitored*: with ``monitored`` given (Nov 2026, F10) that
+  means an accepted FDIR monitor exists on the element (services/mode_rules.py, rule FD-01);
+  without it (legacy callers) the old heuristic "the element has a ``data`` interface" applies
+  and the row says so (``detection_basis``).
 
 The method follows ECSS-Q-ST-30-02C; the library, the 1–5 scales and the thresholds
 are C2O defaults (see the file header). The rows have the same fields as the existing
@@ -58,8 +61,13 @@ def _clamp(v: int) -> int:
     return max(1, min(5, v))
 
 
-def build_skeleton(elements: list[dict], interfaces: list[dict] | None = None) -> dict[str, Any]:
-    """FMECA rows for every leaf hardware element (and childless subsystems)."""
+def build_skeleton(elements: list[dict], interfaces: list[dict] | None = None,
+                   monitored: set[str] | None = None) -> dict[str, Any]:
+    """FMECA rows for every leaf hardware element (and childless subsystems).
+
+    ``monitored``: element ids with an accepted FDIR monitor (F10). When given, the detection
+    credit comes from the monitor only, not from a data interface.
+    """
     cfg = rc.load(CONFIG)
     hw = space_hardware(elements)
     kids = children_map(hw)
@@ -91,7 +99,8 @@ def build_skeleton(elements: list[dict], interfaces: list[dict] | None = None) -
         for m in modes:
             s = _clamp(m["s"] - (1 if red else 0))
             o = _clamp(m["o"] + (1 if trl is not None and int(trl) < 6 else 0))
-            d = _clamp(m["d"] - (1 if e["id"] in data_linked else 0))
+            credited = (e["id"] in monitored) if monitored is not None else (e["id"] in data_linked)
+            d = _clamp(m["d"] - (1 if credited else 0))
             rpn = s * o * d
             rows.append({
                 "id": f"{m['id']}:{e['id']}", "library_id": m["id"], "library_type": tid or "generic",
@@ -102,7 +111,9 @@ def build_skeleton(elements: list[dict], interfaces: list[dict] | None = None) -
                 "severity_label": cfg["severity_categories"].get(s) or cfg["severity_categories"].get(str(s)),
                 "single_point": s >= sp_sev and not red, "critical": rpn >= crit_rpn,
                 "adjustments": {"redundant": red, "low_trl": trl is not None and int(trl) < 6,
-                                "telemetry": e["id"] in data_linked},
+                                "telemetry": e["id"] in data_linked,
+                                "monitored": bool(monitored is not None and e["id"] in monitored)},
+                "detection_basis": "monitor" if monitored is not None else "data_link_heuristic",
             })
     rows.sort(key=lambda r: -r["rpn"])
     return {

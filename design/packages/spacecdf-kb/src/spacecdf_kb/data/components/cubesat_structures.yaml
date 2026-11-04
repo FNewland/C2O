@@ -63,7 +63,7 @@ components:
     manufacturer: ISISPACE
     category: cubesat_structure
     mass_kg: 0.700
-    dimensions_mm: [226.3, 100, 340.5]
+    dimensions_mm: [226.3, 100, 366.0]   # CDS rev 14.1 App. B 6U envelope (F1)
     form_factor: 6U
     cost_keur: 10
     trl: 9
@@ -114,7 +114,7 @@ components:
     manufacturer: Endurosat
     category: cubesat_structure
     mass_kg: 0.650
-    dimensions_mm: [226.3, 100, 340.5]
+    dimensions_mm: [226.3, 100, 366.0]   # CDS rev 14.1 App. B 6U envelope (F1)
     form_factor: 6U
     cost_keur: 8
     trl: 9
@@ -131,7 +131,7 @@ components:
     manufacturer: Pumpkin
     category: cubesat_structure
     mass_kg: 0.900
-    dimensions_mm: [226.3, 100, 340.5]
+    dimensions_mm: [226.3, 100, 366.0]   # CDS rev 14.1 App. B 6U envelope (F1)
     form_factor: 6U
     cost_keur: 12
     trl: 9

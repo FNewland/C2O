@@ -1,0 +1,69 @@
+/* Modes tab (Nov 2026): state diagram, mode × unit matrix, energy chart, data chain.
+   Semantic tokens only (C2O design system); status meaning = colour + glyph/line style. */
+
+.mdl-pane { min-width: 0; }
+.mdl-diagram { max-width: 100%; }
+.mdl-findings { flex: 1 1 260px; min-width: 240px; max-width: 520px; }
+.mdl-num { width: 72px; }
+.mdl-guard { min-width: 220px; width: 100%; }
+
+/* state diagram */
+.mdl-svg { display: block; font-family: var(--font-sans); overflow: visible; }
+.mdl-box { fill: var(--surface-1); stroke: var(--line-strong); stroke-width: 1; }
+.mdl-node { cursor: pointer; }
+.mdl-node:focus { outline: none; }
+.mdl-node:focus-visible .mdl-box, .mdl-node--sel .mdl-box { stroke: var(--interactive); stroke-width: 2; }
+.mdl-node--safe .mdl-box, .mdl-node--survival .mdl-box { fill: var(--surface-2); }
+.mdl-node--flag .mdl-box, .mdl-legend-flag { stroke: var(--status-caution); stroke-width: 2; stroke-dasharray: 4 2; }
+.mdl-name { font-size: var(--fs-body); font-weight: 600; fill: var(--text-value); }
+.mdl-sub { font-size: var(--fs-label); fill: var(--text-3); }
+.mdl-edge { fill: none; stroke: var(--text-3); stroke-width: 1.4; }
+.mdl-edge--ground_tc { stroke: var(--interactive); }
+.mdl-edge--timer { stroke-dasharray: 5 3; }
+.mdl-edge--autonomous, .mdl-edge--event { stroke: var(--text-value); stroke-width: 2.4; }
+.mdl-edge--bad { stroke: var(--status-alarm); }
+.mdl-arrowhead { fill: var(--text-2); }
+.mdl-arrowhead--alarm { fill: var(--status-alarm); }
+
+/* mode × unit matrix */
+.mdl-matrix th[scope='row'] { text-align: left; white-space: nowrap; }
+.mdl-matrix td { vertical-align: top; min-width: 84px; }
+.mdl-cell-btn { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0; padding: 2px 4px;
+  border: 1px solid transparent; border-radius: var(--radius-sm); min-width: 64px; }
+.mdl-cell-btn:hover { border-color: var(--line-strong); }
+.mdl-cell-btn:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+.mdl-cell--suggested .mdl-cell-btn { font-style: italic; border: 1px dashed var(--line-strong); }
+.mdl-cell--stale .mdl-cell-btn { border: 1px solid var(--status-stale); }
+.mdl-cell--rejected .mdl-cell-btn { color: var(--text-disabled); text-decoration: line-through; }
+.mdl-cell--edited .mdl-cell-btn .mono { font-weight: 600; }
+.mdl-cell-edit { width: 150px; align-items: stretch; }
+.mdl-cell-edit .c2o-input, .mdl-cell-edit select { width: 100%; min-width: 0; }
+.mdl-state { line-height: 1.1; }
+
+/* energy chart */
+.mdl-chart { display: block; max-width: 720px; font-family: var(--font-sans); }
+.mdl-axis { font-size: var(--fs-label); fill: var(--text-3); }
+.mdl-label { font-size: var(--fs-label); fill: var(--text-2); }
+.mdl-val { font-size: var(--fs-label); fill: var(--text-value); font-family: var(--font-mono); }
+.mdl-bar { fill: var(--graphic-fill); }
+.mdl-gen { stroke: var(--interactive); stroke-width: 2.5; }
+.mdl-zero { stroke: var(--line-strong); stroke-width: 1; }
+.mdl-bal--pos { fill: var(--status-ok); }
+.mdl-bal--neg { fill: var(--status-alarm); }
+
+/* data chain */
+.mdl-flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--sp-3); }
+.mdl-flow__box { display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-3); border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--surface-1); min-width: 200px; flex: 1 1 200px; }
+.mdl-flow__arrow { align-self: center; font-size: var(--fs-title); color: var(--text-3); }
+
+/* proposals */
+.mdl-prop { padding: var(--sp-2) 0 var(--sp-2) var(--sp-3); border-left: 2px solid var(--line); }
+.mdl-prop--suggested { border-left-color: var(--interactive); }
+.mdl-prop--accepted { border-left-color: var(--status-ok); }
+.mdl-prop--stale { border-left-color: var(--status-stale); }
+.mdl-prop--rejected { opacity: 0.7; }
+.mdl-prop__detail { overflow-wrap: anywhere; }
+
+.mdl-findings .c2o-status { white-space: normal; align-items: flex-start; }
+.mdl-findings .c2o-status__glyph { margin-top: 3px; flex-shrink: 0; }

@@ -74,18 +74,20 @@ CDS_SPECS: dict[str, dict[str, Any]] = {
         "rail_contact_length_mm": 340.5,
     },
     "6U": {
-        "dimensions_mm": [226.3, 100, 340.5],
+        # CDS rev 14.1 Appendix B 6U drawing: 226.3 x 100.0 x 366.0 mm (F1, Nov 2026)
+        "dimensions_mm": [226.3, 100, 366.0],
         "max_mass_kg": 12.0,
         "volume_cm3": 6000,
         "rail_width_mm": 8.5,
-        "rail_contact_length_mm": 340.5,
+        "rail_contact_length_mm": 366.0,
     },
     "12U": {
-        "dimensions_mm": [226.3, 226.3, 340.5],
+        # CDS rev 14.1 Appendix B 12U drawing: 226.3 x 226.3 x 366.0 mm (F1, Nov 2026)
+        "dimensions_mm": [226.3, 226.3, 366.0],
         "max_mass_kg": 24.0,
         "volume_cm3": 12000,
         "rail_width_mm": 8.5,
-        "rail_contact_length_mm": 340.5,
+        "rail_contact_length_mm": 366.0,
     },
 }
 

@@ -1,0 +1,248 @@
+# SpaceCDF mode rules (deterministic; read by services/mode_model.py and services/mode_rules.py)
+# ===========================================================================================
+# The ConOps mode machine, the per-mode power/data/heat proposals for each unit, the
+# energy-balance and data-chain assumptions, the heater proposal from a failed cold case,
+# and the FMECA -> monitor -> action stubs.
+#
+# Every number names its source (same convention as margin_policy.yaml): a cited document
+# or a C2O default (kind: c2o_default = a SpaceCDF teaching choice / established practice,
+# NOT a standard citation). The UI says "C2O default" for those.
+#
+# Instructors may edit any value; services/mode_model.validate_config() checks the file.
+
+sources:
+  c2o_default:
+    kind: c2o_default
+    title: "C2O default (established practice / teaching choice; not a standard citation)"
+    verified: false
+  ecss_e_70:
+    kind: standard
+    short: "ECSS-E-ST-70C"
+    title: "ECSS-E-ST-70C Ground systems and operations (mission phases, operations concept)"
+    verified: false
+  ecss_e_70_41:
+    kind: standard
+    short: "ECSS-E-ST-70-41C"
+    title: "ECSS-E-ST-70-41C Telemetry and telecommand packet utilization (PUS-C): ST[12] on-board monitoring, ST[19] event-action"
+    verified: false
+  ecss_q_30_02:
+    kind: standard
+    short: "ECSS-Q-ST-30-02C (method)"
+    title: "ECSS-Q-ST-30-02C Failure modes, effects (and criticality) analysis"
+    verified: true
+  ecss_e_10_02:
+    kind: standard
+    short: "ECSS-E-ST-10-02C"
+    title: "ECSS-E-ST-10-02C Verification (5.2.2.1: analysis or review alone needs a risk assessment)"
+    verified: false
+  cds_14_1:
+    kind: standard
+    short: "CDS rev 14.1"
+    title: "Cal Poly CubeSat Design Specification rev 14.1 (2022-02-09)"
+    url: "https://www.nasa.gov/wp-content/uploads/2018/01/cubesatdesignspecificationrev14_12022-02-09.pdf"
+    verified: true
+
+# ------------------------------------------------------------------ ConOps mode template
+# The seven ConOps states (LEOP -> commissioning -> nominal operations, plus the two
+# fallback modes). orbit_fraction is the share of an operational orbit spent in the mode
+# (the nominal-phase mix sums to 1). pointing drives the array generation factor below.
+template:
+  source: c2o_default
+  clause: "ConOps state set for a LEO Earth-observation CubeSat (EOSAT-1 class); phase names after ECSS-E-ST-70C"
+  modes:
+    - {key: leop, kind: leop, phase: leop, pointing: tumbling, sunlit_only: false, orbit_fraction: 1.0, initial: true,
+       name: {en: "LEOP", fr: "LEOP"},
+       description: {en: "Separation, inhibit timers, detumbling, first contact; only the OBC and receiver are on.",
+                     fr: "Séparation, minuteries d’inhibition, réduction des vitesses, premier contact ; seuls l’OBC et le récepteur sont alimentés."}}
+    - {key: commissioning, kind: commissioning, phase: commissioning, pointing: sun, sunlit_only: false, orbit_fraction: 1.0,
+       name: {en: "Commissioning", fr: "Recette en orbite"},
+       description: {en: "Units switched on and checked one by one; sun-pointing.",
+                     fr: "Unités allumées et vérifiées une par une ; pointage solaire."}}
+    - {key: nominal, kind: nominal, phase: nominal, pointing: nadir, sunlit_only: false, orbit_fraction: 0.75, background: true,
+       name: {en: "Nominal", fr: "Nominal"},
+       description: {en: "Platform on, payload in standby, nadir-pointing; the background mode of an operational orbit.",
+                     fr: "Plateforme allumée, charge utile en veille, pointage nadir ; mode de fond d’une orbite opérationnelle."}}
+    - {key: imaging, kind: imaging, phase: nominal, pointing: target, sunlit_only: true, orbit_fraction: 0.15,
+       name: {en: "Imaging", fr: "Imagerie"},
+       description: {en: "Payload acquiring over a target in daylight, fine pointing.",
+                     fr: "Acquisition de la charge utile au-dessus d’une cible de jour, pointage fin."}}
+    - {key: downlink, kind: downlink, phase: nominal, pointing: station, sunlit_only: false, orbit_fraction: 0.10,
+       name: {en: "Downlink", fr: "Transmission au sol"},
+       description: {en: "Transmitter on at the high rate during a ground-station contact.",
+                     fr: "Émetteur allumé au débit haut pendant un contact avec une station sol."}}
+    - {key: safe, kind: safe, phase: any, pointing: sun, sunlit_only: false, orbit_fraction: 1.0,
+       name: {en: "Safe", fr: "Survie"},
+       description: {en: "Payload off, sun-pointing, low-rate telemetry; entered autonomously on a fault.",
+                     fr: "Charge utile éteinte, pointage solaire, télémesure à bas débit ; entrée autonome sur anomalie."}}
+    - {key: survival, kind: survival, phase: any, pointing: tumbling, sunlit_only: false, orbit_fraction: 1.0,
+       name: {en: "Survival", fr: "Survie minimale"},
+       description: {en: "Minimum load: OBC, receiver and heaters only; entered on a low battery.",
+                     fr: "Charge minimale : OBC, récepteur et réchauffeurs seulement ; entrée sur batterie faible."}}
+  # Transitions: trigger = ground_tc | autonomous | timer | event. Autonomous and event
+  # transitions name the monitored quantity in their guard (a proposed ST[12] monitor).
+  transitions:
+    - {from: leop, to: commissioning, trigger: ground_tc, guard: {text: "first contact made, rates < 0.5 °/s"}}
+    - {from: commissioning, to: nominal, trigger: ground_tc, guard: {text: "all units checked out"}}
+    - {from: nominal, to: imaging, trigger: timer, guard: {text: "planned acquisition start (time-tagged)"}}
+    - {from: imaging, to: nominal, trigger: timer, guard: {text: "acquisition end"}}
+    - {from: nominal, to: downlink, trigger: timer, guard: {text: "planned contact start (AOS)"}}
+    - {from: downlink, to: nominal, trigger: timer, guard: {text: "contact end (LOS)"}}
+    - {from: nominal, to: safe, trigger: autonomous, guard: {param: battery.soc_percent, op: "<", value: 20, unit: "%"}}
+    - {from: imaging, to: safe, trigger: autonomous, guard: {param: aocs.attitude_error_deg, op: ">", value: 5, unit: "deg"}}
+    - {from: downlink, to: safe, trigger: autonomous, guard: {param: battery.soc_percent, op: "<", value: 20, unit: "%"}}
+    - {from: commissioning, to: safe, trigger: autonomous, guard: {param: battery.soc_percent, op: "<", value: 20, unit: "%"}}
+    - {from: safe, to: survival, trigger: autonomous, guard: {param: battery.soc_percent, op: "<", value: 10, unit: "%"}}
+    - {from: safe, to: nominal, trigger: ground_tc, guard: {text: "anomaly understood, recovery approved"}}
+    - {from: survival, to: safe, trigger: ground_tc, guard: {text: "battery recharged above 40 %"}}
+  guard_source: c2o_default   # thresholds after the EOSAT-1 simulator FDIR table (SoC 20 % / 10 %)
+
+trigger_kinds: [ground_tc, autonomous, timer, event]
+mode_kinds: [leop, commissioning, nominal, imaging, downlink, safe, survival, custom]
+pointing_kinds: [tumbling, sun, nadir, target, station, inertial]
+
+# ------------------------------------------------------------------ energy balance
+energy:
+  # Fraction of the array's sun-pointed EOL power produced in each attitude (orbit-average
+  # over the sunlit arc). C2O default: body-mounted / fixed wings, cosine losses.
+  array_pointing_factor:
+    source: c2o_default
+    clause: "cosine-loss allowance by attitude (fixed array)"
+    values: {sun: 1.0, nadir: 0.65, target: 0.6, station: 0.6, inertial: 0.7, tumbling: 0.35}
+  battery_round_trip_efficiency: {value: 0.90, source: c2o_default, clause: "Li-ion charge/discharge path"}
+  max_dod_percent: {value: 30, source: c2o_default, clause: "LEO cycle life (≈ 5 000 cycles/yr)"}
+  # Mode kinds held for a full orbit are checked as "sustainable"; short modes (imaging,
+  # downlink) are checked through the operational-orbit mix and the sustainable duty.
+  full_orbit_kinds: [leop, commissioning, nominal, safe, survival]
+
+# ------------------------------------------------------------------ data chain
+data:
+  housekeeping_bps: {value: 2000, source: c2o_default, clause: "OBC housekeeping + event telemetry, all modes"}
+  protocol_efficiency: {value: 0.85, source: c2o_default, clause: "CCSDS framing, coding and pass set-up overhead"}
+  buffer_days: {value: 1.0, source: c2o_default, clause: "storage must hold one day of data before margin"}
+  min_link_margin_db: {value: 3.0, source: c2o_default, clause: "GSFC-STD-1000G Rule 1.06 RF margin (to verify)"}
+
+# ------------------------------------------------------------------ thermal
+thermal:
+  # Share of a transmitter's DC power radiated as RF (the rest is heat).
+  rf_out_fraction_default: {value: 0.15, source: c2o_default, clause: "class-E/F PA at ~25 % efficiency incl. driver"}
+  heater:
+    source: c2o_default
+    clause: "heater sized to lift the cold case to the minimum operating temperature, rounded up"
+    design_margin_percent: 25
+    round_to_w: 0.5
+    on_above_min_c: 5      # thermostat on at T_min + 5 °C (EOSAT-1 battery heater: on 5 / off 10 for T_min 0)
+    off_above_min_c: 10
+    # A unit that is OFF in the cold case only has to stay above its survival (non-operating)
+    # minimum: the part's survival_temp_c, else the operating minimum minus this many kelvin.
+    survival_below_op_c: 15
+    line_voltage_v: 7.4    # used only to propose the line current when no rail is known
+    lcl_factor: 1.5        # LCL trip = 1.5 × heater current (C2O default, same as EI-01)
+
+# ------------------------------------------------------------------ per-mode unit states
+# Power state of each unit class in each mode kind: off | standby | nominal | peak.
+# Power = KB performance.power_modes_w[state] when the part has it; otherwise
+# off 0, standby = standby_factor × average power, nominal = average, peak = peak power
+# (or average × peak_factor). Data = data_rate_bps of the part when "produces" is set
+# and the state is nominal/peak.
+states:
+  source: c2o_default
+  clause: "unit state per ConOps mode (EOSAT-1 power-line table)"
+  standby_factor: 0.25
+  peak_factor: 1.6
+  classes:
+    obc:          {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
+    eps:          {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
+    battery:      {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
+    receiver:     {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
+    transmitter:  {leop: standby, commissioning: standby, nominal: standby, imaging: standby, downlink: peak, safe: standby, survival: "off"}
+    antenna:      {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
+    adcs_sensor:  {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: "off"}
+    star_tracker: {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
+    wheel:        {leop: "off", commissioning: nominal, nominal: nominal, imaging: peak, downlink: nominal, safe: standby, survival: "off"}
+    magnetorquer: {leop: peak, commissioning: nominal, nominal: standby, imaging: standby, downlink: standby, safe: nominal, survival: standby}
+    gnss:         {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
+    payload:      {leop: "off", commissioning: standby, nominal: standby, imaging: peak, downlink: standby, safe: "off", survival: "off"}
+    propulsion:   {leop: "off", commissioning: standby, nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
+    heater:       {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
+    structure:    {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
+    solar_array:  {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
+    generic:      {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: standby, survival: "off"}
+  # Which units produce data (data_rate_bps from the part, else the default here).
+  produces:
+    payload: {default_bps: 10000000}
+  # How an element maps to a class: KB category first, then name keyword, then domain.
+  match:
+    - {class: heater, kb: [thermal_hardware], keywords: [heater]}
+    - {class: obc, kb: [obc], keywords: [obc, on-board computer, flight computer], domains: [obc, data]}
+    - {class: eps, kb: [eps_board], keywords: [eps, pcdu, power distribution]}
+    - {class: battery, kb: [battery], keywords: [batter]}
+    - {class: solar_array, kb: [solar_panel, solar_cell], keywords: [solar, array, wing]}
+    - {class: transmitter, kb: [transponder], keywords: [transmitter, transceiver, transponder, radio, s-band tx, x-band tx]}
+    - {class: receiver, keywords: [receiver, rx]}
+    - {class: antenna, kb: [antenna], keywords: [antenna, patch]}
+    - {class: star_tracker, kb: [star_tracker], keywords: [star tracker, star camera]}
+    - {class: wheel, kb: [reaction_wheel], keywords: [wheel]}
+    - {class: magnetorquer, kb: [magnetorquer], keywords: [magnetorquer, torquer, mtq]}
+    - {class: adcs_sensor, kb: [sun_sensor], keywords: [sun sensor, magnetometer, gyro, imu, adcs, aocs]}
+    - {class: gnss, kb: [gps_receiver], keywords: [gps, gnss]}
+    - {class: propulsion, kb: [thruster], keywords: [thruster, propulsion, tank]}
+    - {class: structure, kb: [cubesat_structure, deployer, mechanical_hardware, harness], keywords: [structure, frame, chassis, harness]}
+    - {class: payload, keywords: [camera, imager, payload, instrument, spectrometer], domains: [payload]}
+    - {class: generic, domains: [power, aocs, ttc, thermal, propulsion, structure]}
+
+# ------------------------------------------------------------------ FDIR stubs (rule 8)
+# FMECA failure mode (S >= min_severity) -> proposed ST[12]-like monitor on a parameter of
+# the unit, and an ST[19]-like event-action stub calling a function of the catalogue below.
+# Data only: the TM/TC and FDIR design model comes in phase 2.
+fdir:
+  source: ecss_e_70_41
+  clause: "ST[12] parameter monitoring, ST[19] event-action (structure only; values are C2O defaults)"
+  min_severity: 3
+  # Per FMECA library type: what is watched and what the stub does. limit "op_range" =
+  # the unit's operating temperature range (KB), else the numbers given.
+  by_type:
+    battery:        {param: temperature_c, check: limit, limit: op_range, action: LOAD_SHED, level: 2}
+    eps:            {param: bus_voltage_v, check: limit, low: 6.6, high: 8.6, action: LOAD_SHED, level: 2}
+    solar_array:    {param: array_current_a, check: expected_value, low: 0.05, action: ENTER_SAFE_MODE, level: 2}
+    obc:            {param: reboot_count, check: limit, high: 4, action: SWITCH_TO_REDUNDANT, level: 3}
+    transceiver:    {param: pa_temperature_c, check: limit, limit: op_range, action: POWER_CYCLE_LINE, level: 1}
+    antenna:        {param: deployed_flag, check: expected_value, expected: 1, action: EVENT_ONLY, level: 1}
+    reaction_wheel: {param: wheel_speed_rpm, check: limit, low: -5000, high: 5000, action: POWER_CYCLE_LINE, level: 1}
+    star_tracker:   {param: valid_attitude_flag, check: expected_value, expected: 1, action: SWITCH_TO_REDUNDANT, level: 1}
+    magnetorquer:   {param: coil_current_a, check: limit, high: 0.5, action: POWER_CYCLE_LINE, level: 1}
+    sun_sensor:     {param: sun_vector_valid, check: expected_value, expected: 1, action: EVENT_ONLY, level: 1}
+    gnss:           {param: fix_valid_flag, check: expected_value, expected: 1, action: POWER_CYCLE_LINE, level: 1}
+    thruster:       {param: tank_pressure_bar, check: limit, low: 6, high: 24, action: ABORT_MANOEUVRE, level: 2}
+    thermal:        {param: temperature_c, check: limit, limit: op_range, action: EVENT_ONLY, level: 1}
+    payload:        {param: temperature_c, check: limit, limit: op_range, action: POWER_OFF_UNIT, level: 1}
+    structure:      {param: none, check: none, action: EVENT_ONLY, level: 1}
+    generic:        {param: temperature_c, check: limit, limit: op_range, action: ENTER_SAFE_MODE, level: 2}
+  persistence: 3          # consecutive samples out of limits before the event (C2O default)
+  period_s: 4             # monitoring period (C2O default)
+  # Placeholder function catalogue (ST[8]-like ids are assigned in phase 2). needs: what the
+  # action must be able to reference for the stub to be valid.
+  function_catalogue:
+    - {id: EVENT_ONLY,          name: {en: "Raise an event only", fr: "Événement seul"}, needs: []}
+    - {id: POWER_CYCLE_LINE,    name: {en: "Power-cycle the unit's switched line", fr: "Recycler la ligne commutée de l’unité"}, needs: [switchable_line]}
+    - {id: POWER_OFF_UNIT,      name: {en: "Switch the unit's line off", fr: "Couper la ligne de l’unité"}, needs: [switchable_line]}
+    - {id: SWITCH_TO_REDUNDANT, name: {en: "Switch to the redundant unit or bus", fr: "Basculer sur l’unité ou le bus redondant"}, needs: [redundancy]}
+    - {id: LOAD_SHED,           name: {en: "Shed non-essential loads", fr: "Délester les charges non essentielles"}, needs: []}
+    - {id: ENTER_SAFE_MODE,     name: {en: "Enter Safe mode", fr: "Passer en mode survie"}, needs: [safe_mode]}
+    - {id: ABORT_MANOEUVRE,     name: {en: "Abort the manoeuvre (close valves)", fr: "Interrompre la manœuvre (fermer les vannes)"}, needs: []}
+  # Units that must never be switched off by their own monitor (FD-02 conflict).
+  never_off_classes: [obc, eps, battery, receiver]
+
+# ------------------------------------------------------------------ risk entries (rule 9)
+risks:
+  single_point:
+    source: ecss_q_30_02
+    clause: "single-point failures are retained in the critical-items list"
+    category: Technical
+    likelihood_from_occurrence: true
+    consequence_from_severity: true
+  analysis_only:
+    source: ecss_e_10_02
+    clause: "5.2.2.1: verification by analysis or review alone needs a risk assessment"
+    category: Technical
+    likelihood: 2
+    consequence: 3

@@ -20,13 +20,14 @@ import { TraceabilityTree } from '../components/TraceabilityTree'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { AnalysesPanel } from './AnalysesPanel'
 import { SpacecraftView } from '../spacecraft/SpacecraftView'
+import { ModesPanel } from '../modes/ModesPanel'
 import { useSeatView } from '../seats/view'
 import { useSeatStore } from '../seats/api'
 
-const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
+const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'icd', 'trace', 'decide', 'analyses']
 
 /** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
-const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
+const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'icd', 'trace', 'decide', 'analyses'])
 
 const MIN_PANEL = 160
 
@@ -40,6 +41,7 @@ function readHeight(user: string): number {
 const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
   blocks: 'Blocks',
   spacecraft: 'Spacecraft',
+  modes: 'Modes',
   budget: 'Budget',
   requirements: 'Requirements',
   functions: 'Functions',
@@ -205,6 +207,7 @@ export function LevelWorkbench() {
           <fieldset disabled={readOnly} className="c2o-roset">
           {activePanel === 'blocks' && <BlocksPanel />}
           {activePanel === 'spacecraft' && <ErrorBoundary phaseName="Spacecraft"><SpacecraftView /></ErrorBoundary>}
+          {activePanel === 'modes' && <ErrorBoundary phaseName="Modes"><ModesPanel /></ErrorBoundary>}
           {activePanel === 'budget' && <BudgetPanel />}
           {activePanel === 'requirements' && <RequirementsPanel />}
           {activePanel === 'functions' && <ErrorBoundary phaseName="Functions"><FunctionTree /></ErrorBoundary>}
