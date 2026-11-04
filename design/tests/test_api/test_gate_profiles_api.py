@@ -18,14 +18,14 @@ IAP = {"x-goog-authenticated-user-email": "accounts.google.com:bob@example.org"}
 def test_profiles_validate_and_full_ecss_is_the_default():
     assert gp.validate() == []
     assert gp.default_profile_id() == "full_ecss"
-    assert [g["id"] for g in gp.get_profile(None)["gates"]] == ["mdr", "prr", "srr", "pdr"]
+    assert [g["id"] for g in gp.get_profile(None)["gates"]] == ["mdr", "prr", "srr", "pdr", "cdr"]
 
 
 @pytest.mark.parametrize("profile,gates,covers", [
-    ("full_ecss", ["MDR", "PRR", "SRR", "PDR"], [["mdr"], ["prr"], ["srr"], ["pdr"]]),
-    ("esa_iod", ["CR", "PDR"], [["mdr", "prr"], ["srr", "pdr"]]),
+    ("full_ecss", ["MDR", "PRR", "SRR", "PDR", "CDR"], [["mdr"], ["prr"], ["srr"], ["pdr"], ["cdr"]]),
+    ("esa_iod", ["CR", "PDR", "CDR"], [["mdr", "prr"], ["srr", "pdr"], ["cdr"]]),
     ("c2o_3gate", ["MDR", "PRR+SRR", "PDR"], [["mdr"], ["prr", "srr"], ["pdr"]]),
-    ("nasa", ["MCR", "SRR", "MDR/SDR", "PDR"], [["mdr"], ["prr"], ["srr"], ["pdr"]]),
+    ("nasa", ["MCR", "SRR", "MDR/SDR", "PDR", "CDR"], [["mdr"], ["prr"], ["srr"], ["pdr"], ["cdr"]]),
 ])
 def test_profile_gates(profile, gates, covers):
     p = gp.get_profile(profile)
@@ -85,7 +85,7 @@ async def test_merged_gate_holds_the_criteria_of_both(client, study_obj):
 async def test_nasa_skin_only_relabels(client, study_obj):
     await client.put(f"/api/studies/{study_obj.id}/gate-profile", json={"profile": "nasa"})
     ov = (await client.get(f"/api/studies/{study_obj.id}/gates")).json()
-    assert [g["short"] for g in ov["gates"]] == ["MCR", "SRR", "MDR/SDR", "PDR"]
+    assert [g["short"] for g in ov["gates"]] == ["MCR", "SRR", "MDR/SDR", "PDR", "CDR"]
     g = (await client.get(f"/api/studies/{study_obj.id}/rules/gates/mdr")).json()
     assert g["gate"]["short"] == "MCR" and g["criteria"][0]["id"] == "MDR-EC-01"
 
@@ -175,14 +175,14 @@ async def test_logbook_decisions_due_follow_the_profile(client, study_obj):
     prr_ids = {d["id"] for d in full["decisions"] if d["ecss_gate"] == "prr"}
     assert prr_ids and prr_ids <= set(full["due"]["open"]), "PRR decisions are due at the PRR"
     assert not any(d["ecss_gate"] == "srr" and d["id"] in full["due"]["open"] for d in full["decisions"])
-    assert [g["short"] for g in full["gates"]] == ["MDR", "PRR", "SRR", "PDR"]
+    assert [g["short"] for g in full["gates"]] == ["MDR", "PRR", "SRR", "PDR", "CDR"]
 
     await client.put(f"/api/studies/{sid}/gate-profile", json={"profile": "esa_iod"})
     iod = (await client.get(f"/api/logbook/decisions?study_id={sid}&gate=cr&lang=fr")).json()
-    assert [g["id"] for g in iod["gates"]] == ["cr", "pdr"]
+    assert [g["id"] for g in iod["gates"]] == ["cr", "pdr", "cdr"]
     assert iod["gates"][0]["label"].startswith("CR — revue de concept")
     assert iod["due"]["gate"] == "cr" and iod["due"]["short"] == "CR"
-    assert {d["gate"] for d in iod["decisions"]} == {"cr", "pdr"}
+    assert {d["gate"] for d in iod["decisions"]} == {"cr", "pdr", "cdr"}
     assert prr_ids <= set(iod["due"]["open"]), "the concept review holds the PRR decisions"
 
     await client.put(f"/api/studies/{sid}/gate-profile", json={"profile": "c2o_3gate"})
