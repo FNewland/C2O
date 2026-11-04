@@ -197,7 +197,11 @@ class SimConfigExport:
             com = dict(self.comments.get(rel) or {})
             if rel in self.leaf_files:
                 _default_leaves(data, com)
-            out[rel] = yaml_emit.dump(data, com, self.headers.get(rel) or _header(rel, self))
+            head = self.headers.get(rel) or _header(rel, self)
+            if any(SIM_ONLY_FILES_NOTE in h for h in head) and any(str(c).startswith("design:") for c in com.values()):
+                head = [head[0], "C2O default: the EOSAT-1 reference file (the simulator model interface); the entries",
+                        "marked `# design: ...` come from the design.", ""]
+            out[rel] = yaml_emit.dump(data, com, head)
         out.update(self.texts)
         return out
 
