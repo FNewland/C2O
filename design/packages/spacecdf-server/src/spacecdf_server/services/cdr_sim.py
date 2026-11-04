@@ -30,7 +30,7 @@ EXPORT_MAP: list[dict[str, str]] = [
     {"kind": "settings", "field": "spacecraft_id", "file": "rfsim.yaml", "key": "ccsds.scid"},
     {"kind": "settings", "field": "application_apid / bootloader_apid", "file": "mission.yaml", "key": "spacecraft_apid / bootloader_apid"},
     {"kind": "settings", "field": "pus_version", "file": "mission.yaml", "key": "pus_version"},
-    {"kind": "apids", "field": "apid (role subsystem)", "file": "—", "key": "the simulator sources every packet from spacecraft_apid; per-subsystem APIDs need a packet router"},
+    {"kind": "apids", "field": "apid (role subsystem) via hk.apid", "file": "mission.yaml", "key": "hk_apids{sid: apid} (application image; S1/S5 and service reports stay on spacecraft_apid)"},
     {"kind": "services", "field": "service, used, capacities", "file": "mcs/pus_services.yaml", "key": "s<N>.enabled, max_sids, max_definitions …"},
     {"kind": "parameters", "field": "param_id, name, subsystem, unit, description, on_demand", "file": "telemetry/parameters.yaml", "key": "parameters[].id, name, subsystem, units, description, on_demand"},
     {"kind": "parameters", "field": "type, calibration.scale", "file": "telemetry/hk_structures.yaml", "key": "structures[].parameters[].pack_format, scale"},
@@ -38,7 +38,7 @@ EXPORT_MAP: list[dict[str, str]] = [
     {"kind": "hk", "field": "enabled_at_boot", "file": "simulation.yaml", "key": "housekeeping.default_enabled_sids"},
     {"kind": "hk", "field": "beacon", "file": "subsystems/ttc.yaml", "key": "beacon.hk_sid"},
     {"kind": "commands", "field": "name, service, subtype, func_id, args, position, criticality", "file": "commands/tc_catalog.yaml", "key": "commands[].name, service, subtype, func_id, fields[]{name,type,unit,range,enum}, position, criticality"},
-    {"kind": "commands", "field": "arm_execute", "file": "—", "key": "no key: the simulator treats criticality: critical as two-step (PROP_ARM pattern)"},
+    {"kind": "commands", "field": "arm_execute", "file": "commands/tc_catalog.yaml", "key": "commands[].arm_execute (absent = inferred from criticality: critical)"},
     {"kind": "events", "field": "event_id, name, severity, subsystem, description", "file": "events/event_catalog.yaml", "key": "events[].id, name, severity, subsystem, description"},
     {"kind": "monitors", "field": "param_id, check, low, high, severity, repetition, validity", "file": "monitoring/s12_definitions.yaml", "key": "s12_definitions[].param_id, check_type (0 limit / 1 delta), low_limit, high_limit, severity, repetition, validity{param_id,mask,value}"},
     {"kind": "event_actions", "field": "ea_id, trigger{kind,id,limit}, action_func_id, action_data", "file": "monitoring/s19_rules.yaml", "key": "s19_rules[].ea_id, trigger.kind/id/limit, action_func_id, action_data"},
@@ -48,15 +48,15 @@ EXPORT_MAP: list[dict[str, str]] = [
     {"kind": "safe_mode", "field": "aocs_mode, rate_tier, lines_off, exit", "file": "fdir/procedures/safe_mode_entry.yaml + subsystems/ttc.yaml", "key": "steps[] (S8 func + data); ttc.yaml safe_tier"},
     {"kind": "fdir_levels", "field": "level, persistence, attempts", "file": "subsystems/fdir.yaml, fdir/fault_propagation.yaml", "key": "rules[].level; recovery escalation"},
     {"kind": "aocs_modes", "field": "code, name, description", "file": "aocs/aocs_mode_codes.yaml", "key": "modes.<code>.name, description"},
-    {"kind": "aocs_modes", "field": "gains, min_dwell_s, power_w, pointing_sigma_deg", "file": "— (aocs_basic.py code)", "key": "_MODE_CTRL, _MIN_DWELL, _MODE_POWER_W, _MODE_ERR_SIGMA_DEG: need an aocs.yaml modes[] block"},
-    {"kind": "aocs_transitions", "field": "from, to, trigger, guard", "file": "— (aocs_basic.py code)", "key": "transition logic in code: needs an aocs.yaml transitions[] block"},
+    {"kind": "aocs_modes", "field": "gains, min_dwell_s, power_w, pointing_sigma_deg", "file": "subsystems/aocs.yaml", "key": "control.modes.<NAME>.omega_n_rad_s, zeta, min_dwell_s, power_w, pointing_sigma_deg"},
+    {"kind": "aocs_transitions", "field": "guards (detumble exit rate …)", "file": "subsystems/aocs.yaml", "key": "control.transitions.* (the transition logic itself is the simulator's)"},
     {"kind": "aocs_control", "field": "bdot_gain, desaturation.*, wheel_*, inertia, deadband", "file": "subsystems/aocs.yaml", "key": "magnetorquers.bdot_gain_am2_per_tps, magnetorquers.desaturation.*, reaction_wheels.*, mass_properties.inertia_kgm2, attitude_error_deadband_deg"},
     {"kind": "rate_tiers", "field": "name, bps, modulation, coding, coding_gain_db, gating", "file": "subsystems/ttc.yaml", "key": "tm_rate_tiers[].name, bps, modulation, coding, coding_gain_db, bootloader_only, requires_antenna, requires_downlink_mode, min_elevation_deg"},
     {"kind": "ttc", "field": "default/beacon/safe tier, uplink, command loss, beacon", "file": "subsystems/ttc.yaml", "key": "default_tier, beacon_tier, safe_tier, tc_uplink_rate_bps, cmd_loss_switch_timeout_s, cmd_loss_rssi_threshold_dbm, beacon.*"},
     {"kind": "line_states", "field": "states per mode", "file": "subsystems/eps.yaml (+ planner activities)", "key": "power_lines{name: default_on} for the boot row; per-mode states → planning/activity_types.yaml line steps"},
     {"kind": "positions", "field": "id, label, subsystems, allowed_services, allowed_func_ids", "file": "mcs/positions.yaml", "key": "positions.<id>.display_name, subsystems, allowed_services, allowed_func_ids"},
     {"kind": "gonogo", "field": "situation, who_calls, who_responds, decision, critical", "file": "mcs/gonogo_matrix.yaml", "key": "gonogo_matrix[].situation, who_calls, who_responds, fd_decision, critical"},
-    {"kind": "flight_rules", "field": "rule_id, text", "file": "—", "key": "no simulator file yet (manual / procedures)"},
+    {"kind": "flight_rules", "field": "rule_id, text", "file": "ops/flight_rules.yaml", "key": "flight_rules[].id, text, text_fr, ref (exported as a document; read by nothing yet)"},
     {"kind": "limits", "field": "yellow/red low/high, check_interval_s, valid_when", "file": "mcs/limits.yaml", "key": "limits[].param_id, yellow_low, yellow_high, red_low, red_high, check_interval_s, valid_when"},
 ]
 
@@ -193,7 +193,8 @@ def import_eosat1(study_id: str, root: Path | None = None) -> list[dict]:  # noq
             args.append(a)
         d = {"name": t["name"], "service": t.get("service"), "subtype": t.get("subtype"), "func_id": t.get("func_id"),
              "subsystem": None, "role": None, "args": args, "position": t.get("position"),
-             "criticality": t.get("criticality") or "normal", "arm_execute": t.get("criticality") == "critical",
+             "criticality": t.get("criticality") or "normal",
+             "arm_execute": bool(t["arm_execute"]) if t.get("arm_execute") is not None else t.get("criticality") == "critical",
              "description": _bi(t.get("description")), "fields": t.get("fields") or []}
         for extra in ("aliases", "readback", "arg_schema_version", "deprecated_aliases"):
             if t.get(extra) is not None:
@@ -263,19 +264,28 @@ def import_eosat1(study_id: str, root: Path | None = None) -> list[dict]:  # noq
             add("fdir_levels", {**x, "rules": sum(1 for r in fdir.get("rules") or [] if r.get("level") == x["level"])})
 
     codes = (_y(root, "aocs/aocs_mode_codes.yaml") or {}).get("modes") or {}
+    aocs = _y(root, "subsystems/aocs.yaml") or {}
+    # aocs.yaml control.modes (2026-11) is the source; the aocs_basic.py tables are the fallback
+    ctl_modes = ((aocs.get("control") or {}).get("modes") or {})
     tables = _code_tables(root)
     for code, m in sorted(codes.items()):
         n = m.get("name")
+        cm_ = ctl_modes.get(n) or {}
         g = (tables.get("_MODE_CTRL") or {}).get(n)
+        if cm_.get("omega_n_rad_s") is not None:
+            g = [cm_.get("omega_n_rad_s"), cm_.get("zeta") if cm_.get("zeta") is not None else (g or [0, 0.7])[1]]
+        dwell = cm_.get("min_dwell_s", (tables.get("_MIN_DWELL") or {}).get(n))
+        pw = cm_.get("power_w", (tables.get("_MODE_POWER_W") or {}).get(n))
         add("aocs_modes", {"code": int(code), "name": n, "description": _bi(m.get("description")), "sensors": [], "actuators": [],
                            "gains": {"omega_n": g[0], "zeta": g[1]} if g else None, "deadband_deg": None,
-                           "min_dwell_s": (tables.get("_MIN_DWELL") or {}).get(n), "power_w": (tables.get("_MODE_POWER_W") or {}).get(n),
-                           "pointing_sigma_deg": None, "gains_source": "aocs_basic.py _MODE_CTRL" if g else None})
-    aocs = _y(root, "subsystems/aocs.yaml") or {}
+                           "min_dwell_s": dwell, "power_w": pw, "pointing_sigma_deg": cm_.get("pointing_sigma_deg"),
+                           "gains_source": ("aocs.yaml control.modes" if cm_ else "aocs_basic.py _MODE_CTRL") if g else None})
     mtq = aocs.get("magnetorquers") or {}
     rw = aocs.get("reaction_wheels") or {}
     add("aocs_control", {"bdot_gain_am2_per_tps": mtq.get("bdot_gain_am2_per_tps"), "mtq_max_dipole_am2": mtq.get("max_dipole_am2"),
-                         "mtq_count": mtq.get("count"), "detumble_exit_rate_dps": 0.5, "desaturation": dict(mtq.get("desaturation") or {}),
+                         "mtq_count": mtq.get("count"),
+                         "detumble_exit_rate_dps": ((aocs.get("control") or {}).get("transitions") or {}).get("detumble_exit_rate_dps", 0.5),
+                         "desaturation": dict(mtq.get("desaturation") or {}),
                          "wheel_count": rw.get("count"), "wheel_max_speed_rpm": rw.get("max_speed_rpm"),
                          "wheel_max_torque_nm": rw.get("max_torque_nm"), "wheel_momentum_nms": None,
                          "wheel_bias_rpm": rw.get("nominal_speed_rpm"), "wheel_geometry": rw.get("geometry"),
@@ -351,8 +361,12 @@ def export_sim(rows: list[dict]) -> dict[str, Any]:
                                                          "range": {"min": a["range"][0], "max": a["range"][1]} if a.get("range") else None,
                                                          "enum": [{"value": i, "label": lab} for i, lab in enumerate(a["enum"])] if a.get("enum") else None}.items()
                                       if v is not None} for a in t.get("args") or []]
+        arm = t.get("arm_execute")
+        inferred = t.get("criticality") == "critical"
         d = {"name": t["name"], "service": t.get("service"), "subtype": t.get("subtype"), "func_id": t.get("func_id"),
              "position": t.get("position"), "criticality": t.get("criticality") if t.get("criticality") != "normal" else None,
+             # written only when it differs from the simulator's inference (criticality: critical arms)
+             "arm_execute": bool(arm) if arm is not None and bool(arm) != inferred else None,
              "description": desc(t.get("description")), "fields": fields}
         return {k: v for k, v in d.items() if v is not None}
     out["commands/tc_catalog.yaml"] = {"commands": [cmd(t) for t in D("commands")]}
