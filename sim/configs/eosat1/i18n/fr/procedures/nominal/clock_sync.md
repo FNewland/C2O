@@ -37,7 +37,7 @@ de bord sur l'AOCS sont traités par CTG-027.
 ### Étape 1 --- Lire l'horloge de bord et sa référence de temps
 **LABEL:** `STEP-1`
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- données de servitude plateforme/OBDH : l'horloge, sa référence et le temps écoulé depuis la synchronisation
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- données de servitude TT&C, pour la distance oblique
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- données de servitude TT&C, pour l'état de la liaison
 **TC:** `REQUEST_TIME` (Service 9, Subtype 2) --- rapport de temps TM(9,2) explicite
 **Verify:** `obdh.mode == 0` (0x0300, timeout 10 s) --- NOMINAL
 **Note:** Consigner le temps bord T_obc = `obdh.obc_time` (0x0309) +
@@ -57,8 +57,9 @@ secondes depuis l'AMORÇAGE, et non depuis l'époque de référence : un écart
 à l'âge du satellite, et aurait déclaré anormale toute horloge
 saine. L'uptime reste utile comme indicateur de redémarrage et comme corroboration
 de la cadence --- jamais comme époque de référence.
-**Note:** Calculer le temps de propagation aller à partir de `ttc.range_km` (0x0509) dans le
-rapport SID 6 : OWLT_ms = range_km / 299792.458 * 1000, soit **3–22 ms** sur
+**Note:** Lire le temps de propagation aller sur la page PUS, onglet S9 TIME (géométrie
+sol : range_km / 299792.458 * 1000 ; le satellite ne transmet pas la distance oblique,
+0x0509 ne figure dans aucun SID HK), soit **3–22 ms** sur
 cette orbite, négligeable devant le seuil de 1 s.
 **Note:** Recouper le rapport TM(9,2) avec 0x0309. Ils arrivent par des
 voies différentes --- une réponse du service de temps et un échantillon de servitude ---, de sorte qu'un

@@ -34,8 +34,8 @@
   },
   {
    "id": "leop-006-time-synchronisation/procedure-steps/step-2-read-the-clock-its-reference-and-the-slant-range",
-   "en_hash": "99f71f2236cfda1e",
-   "fr_hash": "1a5021fb6cfb76d7"
+   "en_hash": "34a9626d55f9288a",
+   "fr_hash": "21df953164bd3ce9"
   },
   {
    "id": "leop-006-time-synchronisation/procedure-steps/step-3-calculate-the-time-delta",
@@ -79,9 +79,9 @@
   },
   {
    "id": "leop-006-time-synchronisation/post-conditions",
-   "en_hash": "ba1c7d741addece2",
-   "fr_hash": "1926580074b69d8a"
+   "en_hash": "65628a92daa32b7c",
+   "fr_hash": "6938943f8fdc31cb"
   }
  ],
- "en_commit": "5f4fa5a"
+ "en_commit": "d55eff7"
 }

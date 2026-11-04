@@ -39,38 +39,38 @@
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-1-flight-director",
-   "en_hash": "9cd7ede3f5c38732",
-   "fr_hash": "77c116b6fc21d57a"
+   "en_hash": "1b88657477f1ceba",
+   "fr_hash": "be7245a51a5be3be"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-2-power-thermal",
-   "en_hash": "73ad5f78e3ad1e79",
-   "fr_hash": "953fa61bf89cad5c"
+   "en_hash": "166bc814c4c80a0c",
+   "fr_hash": "7f31e11bb181b0da"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-3-flight-dynamics",
-   "en_hash": "f21573ca0b46390c",
-   "fr_hash": "1fa4db9ad77a308c"
+   "en_hash": "db0b75e6692c0994",
+   "fr_hash": "03c2909bbf4d6ca7"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-4-tt-c",
-   "en_hash": "b01a64bebc340f07",
-   "fr_hash": "bad006c76ab20355"
+   "en_hash": "dcbb70d9bc15b785",
+   "fr_hash": "72915e7f1a347d1f"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-5-payload-operations",
-   "en_hash": "05de99a4e6cb5dfd",
-   "fr_hash": "4f42176afb5d84a7"
+   "en_hash": "1386a8393bfb6576",
+   "fr_hash": "08056e448a80eefb"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-6-fdir-systems",
-   "en_hash": "c9d6dc179df3a587",
-   "fr_hash": "b90ca5227bedce02"
+   "en_hash": "8a7a4b1d7e4238db",
+   "fr_hash": "0564308a5397efe2"
   },
   {
    "id": "worksheet-wb-5-1-position-score-cards-round-robin/5-1-7-propulsion",
-   "en_hash": "806e53d0d0703876",
-   "fr_hash": "0324e45e6c4717ca"
+   "en_hash": "33dc4e817b171713",
+   "fr_hash": "06a3f0a595be869f"
   },
   {
    "id": "worksheet-wb-5-3-pp-day-1-pass-plan-team-exercise",
@@ -99,8 +99,8 @@
   },
   {
    "id": "worksheet-wb-5-4-n012-nom-012-shift-handover-template",
-   "en_hash": "887f4732eda9469c",
-   "fr_hash": "39349ede303c4424"
+   "en_hash": "2d39e104547bec17",
+   "fr_hash": "0cb3ff3504702d01"
   },
   {
    "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop",
@@ -109,13 +109,13 @@
   },
   {
    "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-1-predict-next-three-aos-times",
-   "en_hash": "4bbd475dab754d9a",
-   "fr_hash": "ae59765d63887aed"
+   "en_hash": "f2ac4d78a852b624",
+   "fr_hash": "cb1e69f270356ee0"
   },
   {
    "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-2-pass-duration-vs-max-elevation",
-   "en_hash": "2458e8f8f224a4f1",
-   "fr_hash": "80c454b0d2b89e01"
+   "en_hash": "ff19976c2afd2d76",
+   "fr_hash": "889801939b592959"
   },
   {
    "id": "worksheet-wb-5-4-fd-day-2-flight-dynamics-workshop/exercise-3-eclipse-arithmetic",
@@ -159,8 +159,8 @@
   },
   {
    "id": "worksheet-wb-5-5-pb-day-3-leop-pre-pass-briefing-checklist",
-   "en_hash": "8cfa54f6281f2e6f",
-   "fr_hash": "fff3caa62f29eb07"
+   "en_hash": "f2eda699a013b40f",
+   "fr_hash": "2b2ce2c55a15e6bd"
   },
   {
    "id": "worksheet-wb-5-5-l001-leop-001-first-acquisition-of-signal-obc-boot-confirm-each-step",
@@ -169,8 +169,8 @@
   },
   {
    "id": "worksheet-wb-5-5-l006-leop-006-time-synchronisation-confirm-each-step",
-   "en_hash": "8eb14624632792af",
-   "fr_hash": "493420778f944f2d"
+   "en_hash": "c233394b0267bf97",
+   "fr_hash": "2fadca7ef21dbf03"
   },
   {
    "id": "worksheet-wb-5-5-l002-leop-002-initial-health-check-confirm-each-step",
@@ -239,8 +239,8 @@
   },
   {
    "id": "worksheet-wb-5-5-ho-day-3-inter-pass-handover-turnover-form/handover-position",
-   "en_hash": "342cc7acaaa7d395",
-   "fr_hash": "46a9aa606d07a144"
+   "en_hash": "91f856ad4a51bc89",
+   "fr_hash": "cf3ae21eb3e6948b"
   },
   {
    "id": "worksheet-wb-5-5-db-day-3-post-shift-debrief-reflection",
@@ -344,8 +344,8 @@
   },
   {
    "id": "worksheet-wb-5-6-ho-day-4-inter-pass-handover-turnover-form/handover-position",
-   "en_hash": "f39c1ad68cac52c7",
-   "fr_hash": "2e621d7cca2ef1b6"
+   "en_hash": "948a24104e7b9f41",
+   "fr_hash": "c4abf61f57727d3c"
   },
   {
    "id": "worksheet-wb-5-6-db-day-4-post-shift-debrief-reflection",
@@ -474,18 +474,18 @@
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-019-no-telemetry-at-pass-start",
-   "en_hash": "314fe929fa62fe23",
-   "fr_hash": "cbc590635740f74c"
+   "en_hash": "c46b7bd3d7b4fe35",
+   "fr_hash": "8ce42d7ad7f8d2b4"
   },
   {
    "id": "appendix-wb-a-contingency-confirm-each-step-week-3-likely/ctg-020-ground-station-antenna-failure",
-   "en_hash": "8dec1b836b999459",
-   "fr_hash": "3ce2fa52927cdb4d"
+   "en_hash": "b8f00cf65d6aafee",
+   "fr_hash": "3fea8a31d7a1e2e3"
   },
   {
    "id": "appendix-wb-b-end-of-week-shift-log-cohort-copy",
-   "en_hash": "3acae31c046c6f7a",
-   "fr_hash": "a83379b02c33e9db"
+   "en_hash": "a3b0953449cdfa55",
+   "fr_hash": "57ac1b2552041af6"
   },
   {
    "id": "appendix-wb-c-workbook-self-check",
@@ -493,5 +493,5 @@
    "fr_hash": "4a357d00633e9454"
   }
  ],
- "en_commit": "8e9f66e"
+ "en_commit": "d55eff7"
 }

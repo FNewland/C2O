@@ -104,9 +104,10 @@ roles, not consoles; the ground-segment checks sit on the TT&C card.
 
 ## 5.1.1 Flight Director
 
-- **Task:** Run a GO/NO-GO round on the live dashboard. Poll three
-  positions for *go for* `CONNECTION_TEST` (S17.1) — there is no
-  NOOP or heartbeat command on this spacecraft; record the responses.
+- **Task:** Run a GO/NO-GO round from the MCS **GO/NO-GO** tab (bottom
+  drawer). Poll three positions for *go for* `CONNECTION_TEST` (S17.1) —
+  there is no NOOP or heartbeat command on this spacecraft; record the
+  responses.
 - **Polled positions:** _____________ , _____________ , _____________
 - **Responses recorded (verbatim):**
   - _____________________________________________
@@ -120,13 +121,15 @@ roles, not consoles; the ground-segment checks sit on the TT&C card.
 
 - **Task:** Predict battery SoC at exit of the next eclipse, then
   identify which heater is at the highest duty cycle and predict
-  whether it will saturate next eclipse.
-- **SoC at eclipse entry:** ____ %   **Eclipse duration:** ____ min  (33.2–35.2 min over the year)
-- **Predicted SoC at exit:** ____ %   **(Method:** P_avg × t / E_batt,
-  with E_batt = **100 Wh** and the nominal orbit-average load  P_avg ≈ **22.7 W** **)**
-- **Cross-check vs eclipse model:** ☐ matches  ☐ off by ____ %
+  whether it will saturate next eclipse. Read the eclipse times and
+  duration on the EPS page, **Projections → Next eclipse**; the heater
+  duties on the TCS page, **Equipment → DUTY BAT / DUTY OBC**.
+- **SoC at eclipse entry:** ____ %   **Next eclipse duration:** ____ min
+- **Predicted SoC at exit:** ____ %
+- **Method:** SoC_exit = SoC_entry − P × t / E_batt, with E_batt = 100 Wh, t the eclipse duration and P the consumption on the EPS page (about 22.7 W with the payload in STANDBY)
+- **Cross-check vs the console's prediction (EPS power flow, "at eclipse exit"):** ☐ matches  ☐ off by ____ %
 - **Heater with highest duty:** _______________   **Duty:** ____ %
-- **Predicted next-eclipse duty:** ____ %   **Will saturate?** ☐ yes ☐ no
+- **Predicted next-eclipse duty:** ____ %   **Will it saturate:** ☐ yes ☐ no
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
@@ -134,18 +137,17 @@ roles, not consoles; the ground-segment checks sit on the TT&C card.
 
 - **Task:** Read `aocs.att_error` (0x0217) and verify it is inside
   the NOMINAL (mode 4, nadir-tracking) budget of < 1.0°. In
-  FINE_POINT (mode 5) the budget is < 0.1°. Then compute AOS, TCA
-  and LOS for the next Iqaluit pass and compare with the MPS
-  contact schedule.
-- **Reading:** ______ °   **In band?** ☐ yes  ☐ no
+  FINE_POINT (mode 5) the budget is < 0.1°. Then read AOS, TCA
+  and LOS for the next Iqaluit pass in the Orbit tools pass list
+  and compare with the planner's **Next contacts** table.
+- **Reading:** ______ °   **In band:** ☐ yes  ☐ no
 - **AOCS mode (`aocs.mode` 0x020F):** ____ (0 OFF, 1 SAFE_BOOT,
   2 DETUMBLE, 3 COARSE_SUN, 4 NOMINAL, 5 FINE_POINT, 6 SLEW,
   7 DESAT, 8 ECLIPSE, 9 INERTIAL)
-- **Star tracker status** (`aocs.st1_status` 0x0240 / `aocs.st2_status`
-  0x0243; 0=off, 1=boot, 2=tracking, 3=blind, 4=failed):
-  ST1 ____  ST2 ____   **Selected** (`aocs.st_selected` 0x0244): ____
+- **Star tracker status** — 0=off, 1=boot, 2=tracking, 3=blind, 4=failed:
+- **ST1 (`aocs.st1_status` 0x0240):** ____   **ST2 (`aocs.st2_status` 0x0243):** ____   **Selected (`aocs.st_selected` 0x0244):** ____
 - **Next Iqaluit pass:** AOS ______ TCA ______ LOS ______ max el ____ °
-- **MPS agreement:** ☐ exact  ☐ off by < 5 s  ☐ off by > 5 s
+- **Agreement with the planner:** ☐ exact  ☐ off by < 5 s  ☐ off by > 5 s
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
@@ -165,32 +167,29 @@ roles, not consoles; the ground-segment checks sit on the TT&C card.
   **Dump HIGH rate (kbps):** ______
 - **Link margin post-transition (dB):** ______ (`ttc.link_margin` 0x0503)
 - **BER reading (`ttc.ber` 0x050C, log10):** ____________________
-- **Active station (`ttc.active_gs` 0x0523):** ______  ☐ Iqaluit
-  ☐ Troll ☐ Svalbard ☐ Inuvik ☐ O'Higgins
-- **Baseband config (rate, encoding):** ______________________
+- **Station in contact (TT&C page, Ground station network):** ☐ Iqaluit ☐ Troll ☐ Svalbard ☐ Inuvik ☐ O'Higgins
+- **Baseband config (rate, symbol rate, coding — Radio view, Data link and Link budget):** ______________________
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
 ## 5.1.5 Payload Operations
 
-- **Task:** Schedule a single imaging session via MPS. Confirm FPA
-  temperature is at setpoint before commanding.
+- **Task:** Schedule a single imaging session in the planner
+  (**Imaging opportunities → Schedule**). Confirm FPA temperature is at
+  setpoint before commanding.
 - **Imaging target chosen:** _______________________________
 - **FPA temperature reading (`payload.fpa_temp` 0x0601, °C):** ______
-  **At setpoint?** ☐ yes ☐ no — the gate is `payload.fpa_ready`
-  (0x0610) = 1, not a remembered temperature. Default setpoint
-  **−15 °C** (`payload.fpa_setpoint` 0x0631; commandable envelope
-  −20 °C to 0 °C).
+- **At setpoint (`payload.fpa_ready` 0x0610 = 1):** ☐ yes ☐ no — the gate is the readiness flag, not a remembered temperature. Default setpoint −15 °C (`payload.fpa_setpoint` 0x0631; commandable envelope −20 °C to 0 °C).
 - **Storage usage (`payload.mem_used_mb` 0x060B):** ______ / 20000 MB
 - **Insight:** _________________________________________________
 - **Question to ask:** _________________________________________
 
 ## 5.1.6 FDIR / Systems
 
-- **Task:** Walk through one FDIR rule on the FDIR panel; explain
-  its trigger, threshold, severity, and the contingency procedure
-  it points to.
-- **Rule name selected:** _____________________________
+- **Task:** Walk through one on-board monitor in the FDIR page's
+  **On-board monitoring (S12)** table; explain its trigger, threshold,
+  persistence, severity, and the contingency procedure it points to.
+- **Monitor selected (Name column):** _____________________________
 - **Trigger parameter:** _____________________________
 - **Threshold:** ___________________   **Persistence:** _________
 - **Severity:** ____   **Recommended procedure:** ________________
@@ -200,10 +199,9 @@ roles, not consoles; the ground-segment checks sit on the TT&C card.
 ## 5.1.7 Propulsion
 
 - **Task:** Without commanding anything, read the propulsion state
-  and name the interlock that is currently blocking an arm. Role
-  brief: `configs/eosat1/mcs/role_analysis/propulsion_role.md`.
-- **State (`prop.state` 0x0B00; 0 SAFED, 1 ARMED, 2 FIRING,
-  3 INHIBIT):** ____
+  and name the interlock that is currently blocking an arm (PRP page,
+  **Arm interlocks**). Background: manual 07 *Orbit Operations*, §6.
+- **State (`prop.state` 0x0B00; 0 SAFED, 1 ARMED, 2 FIRING, 3 INHIBIT):** ____
 - **Tank pressure (`prop.tank_pressure` 0x0B01, bar):** ______
   **Propellant (`prop.propellant_mass` 0x0B02, g):** ______ / 400
 - **Arm interlock mask (`prop.arm_inhibit_mask` 0x0B15):** ______
@@ -353,7 +351,7 @@ FD reads back items 3 and 7. Target: under 6 minutes.
 | 3 | **Open anomalies** (rule name, status, recovery procedure step) | | ☐ |
 | 4 | Open work items (procedures in progress) | | |
 | 5 | Next pass (station, AOS, planned procedures, operator-of-record) | | |
-| 6 | Customer commitments active | | |
+| 6 | Customer commitments active (imaging and downlinks booked in the planner) | | |
 | 7 | **GO authorisations outstanding** | | ☐ |
 | 8 | Voice-loop tone (team rested / tense / etc.) | | |
 
@@ -371,11 +369,11 @@ Outgoing: ____________________  Incoming: ____________________
 
 ### Exercise 1 — Predict next three AOS times
 
-Tool: the Orbit Tools page (`python3 tools/orbit_tools.py --serve`, port 8093):
-load the current TLE and read the pass list and 24 h contact timeline. Compare
-to MPS contact schedule.
+Tool: Orbit tools (**Use EOSAT-1 elements**, then **Convert TLE**): read the
+pass list (AOS, TCA, LOS) and the 24 h contact timeline. Compare with the
+planner's **Next contacts** table.
 
-| Pass | Station | AOS (your prediction, UTC) | AOS (MPS, UTC) | Δ (s) |
+| Pass | Station | AOS (your prediction, UTC) | AOS (planner, UTC) | Δ (s) |
 |------|---------|---------------------------|----------------|-------|
 | 1 | | | | |
 | 2 | | | | |
@@ -383,7 +381,7 @@ to MPS contact schedule.
 
 ### Exercise 2 — Pass duration vs max elevation
 
-| Pass | Max el (°) | Predicted duration (min) | Actual duration from MPS (min) |
+| Pass | Max el (°) | Predicted duration (min) | Duration in the planner (min) |
 |------|------------|---------------------------|-------------------------------|
 | 1 | | | |
 | 2 | | | |
@@ -458,7 +456,7 @@ Pass mark: 11 of 15. Solutions on the back of the instructor pack.
 | SPACON has reviewed the FDIR rule set on the FDIR panel (there is **no** FDIR table-load telecommand — the rule set is `subsystems/fdir.yaml` + `monitoring/`) | ☐ |
 | AOCS has reviewed residual tumble rates (~1–2 °/s per axis from the separation impulse) | ☐ |
 | EPS confirms SoC ~90 % (`eps.bat_soc` 0x0101); only the non-switchable `obc` (line 0) and `ttc_rx` (line 1) are ON — every switchable line defaults OFF | ☐ |
-| TT&C has confirmed UHF beacon reception (`ttc.beacon_active` 0x0527 = 1); note the beacon is a separate radio from the S-band prime | ☐ |
+| TT&C has confirmed UHF beacon reception: beacon SID 11 arriving (PUS page, S3 HK, Observed column); note the beacon is a separate radio from the S-band prime | ☐ |
 | Ground Seg has confirmed Iqaluit antenna on-target, demodulator on the **SAFE** rung (1 000 bps, BPSK, conv(7,1/2)+RS, 1 kBd) | ☐ |
 | FDS has produced 24-h pass schedule and handed to FD/TT&C/Ground Seg | ☐ |
 | Anomaly ticket forms blank-printed and available at each console | ☐ |
@@ -522,7 +520,7 @@ instructor control, and no card asks an operator to force contact.
 | # | Action | Expected verification | ☐ done | Note |
 |---|--------|----------------------|:------:|------|
 | 1 | Verify OBC status and the link: `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (S3.27) | `obdh.mode` (0x0300) ≤ 1 (NOMINAL or SAFE); `obdh.cpu_load` (0x0302) < 80 %; TT&C page (ground): `ttc.link_margin` (0x0503) > 3.0 dB | ☐ | |
-| 2 | Read the clock, its reference and the slant range: `REQUEST_TIME` (**S9.2**), `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=4)` | TM(9,2) < 10 s. T_obc = `obdh.obc_time` (0x0309) + `obdh.obc_time_fine` (0x0A12) / 65536, CUC seconds since J2000; `obdh.time_ref` (0x0A13), expect 0 (NONE); `obdh.time_since_sync_s` (0x0A14), expect 4294967295 (never synced); T_ground; OWLT = `ttc.range_km` (0x0509) / 299792.458 × 1000 ms, expect **3–22 ms** | ☐ | OWLT: ____ ms |
+| 2 | Read the clock, its reference and the slant range: `REQUEST_TIME` (**S9.2**), `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=4)` | TM(9,2) < 10 s. T_obc = `obdh.obc_time` (0x0309) + `obdh.obc_time_fine` (0x0A12) / 65536, CUC seconds since J2000; `obdh.time_ref` (0x0A13), expect 0 (NONE); `obdh.time_since_sync_s` (0x0A14), expect 4294967295 (never synced); T_ground; OWLT = slant range / c, read on the PUS page, S9 TIME (one-way light time, from the ground's orbit prediction), expect **3–22 ms** | ☐ | OWLT: ____ ms |
 | 3 | Calculate the time delta: Δt = T_obc − (T_ground − OWLT) | a negative Δt of roughly the mission age is the expected LEOP signature; the FD approves the correction | ☐ | Δt: ____ s |
 | 4 | Send the time update: `SET_TIME(cuc_seconds=T_corrected)` (**S9.1**), with T_corrected = T_ground at send + OWLT + about 50 ms, on the J2000 epoch — a Unix time is about 9.5e8 s too large, and the argument goes *inside* the backticks: a bare `SET_TIME` sends cuc_seconds = 0 | S1.1 < 5 s; no S1.2 rejection | ☐ | T_corrected: ____ |
 | 5 | Verify the time accuracy: `REQUEST_TIME` (S9.2), `HK_REQUEST(sid=4)` | `obdh.time_ref` = 1 (GROUND) < 15 s; `obdh.mode` = 0 < 10 s; residual = T_obc_new − (T_ground − OWLT) within ±1.0 s (LEOP threshold; NOM-008 tightens it) | ☐ | residual: ____ s |
@@ -782,7 +780,7 @@ Print 9 copies (one per console position).
 | Incoming operator | |
 | Current parameter values (top 3 mnemonics) | |
 | Current procedure state (file ID + step) | |
-| Any pinned widget? | |
+| Console page left open for the next operator (page, panel) | |
 | Open question for next shift | |
 | Outgoing signature | |
 | Incoming signature | |
@@ -1243,7 +1241,7 @@ position.)
 | Incoming operator | |
 | Current parameter values (top 3) | |
 | Current procedure state (file ID + step) | |
-| Any pinned widget? | |
+| Console page left open for the next operator (page, panel) | |
 | FDIR rules currently active (acknowledged) | |
 | Open question for next shift | |
 | Outgoing signature | |
@@ -1502,7 +1500,7 @@ that worked: hold at that level and go straight to step 6.
 | 7 | EPS | Restore in reverse priority, bus stable 5 min between loads, each line powered before its unit: `EPS_POWER_ON(line_index=7)` (+ `AOCS_SET_MODE(mode=2)` only if `aocs.mode` (0x020F) = 0); `EPS_POWER_ON(line_index=2)` if `eps.pl_ttc_tx` = 0, then `TTC_PA_ON`; `EPS_POWER_ON(line_index=4)` if `eps.pl_fpa_cooler` = 0, the cooler itself left OFF (it runs only for imaging preparation; the STANDBY command below would switch it off); `EPS_POWER_ON(line_index=3)` if `eps.pl_payload` = 0, then `PAYLOAD_SET_MODE(mode=1)` | `eps.pl_aocs_wheels` = 1 within 5 s; after each load `eps.bus_voltage` > 31.5 V and `eps.bat_soc` > 35 %; all loads back, power budget positive | ☐ | |
 
 With the S-band PA off, the **UHF beacon survives**: it is a separate radio, so
-HK SID 11 keeps arriving (`ttc.beacon_active`, 0x0527). Nothing that FDIR or
+HK SID 11 keeps arriving (PUS page, S3 HK, Observed column). Nothing that FDIR or
 this card opened comes back by itself: step 7 re-powers each line explicitly.
 
 ## CTG-002 AOCS Anomaly Recovery
@@ -1664,7 +1662,7 @@ the failed bus.
 | 7 | Escalation, no link: `TTC_SET_TX_POWER(level=2)` (S8.1 func **68**) for the next attempt; log every blind command with its time; notify the FD and the Mission Director; book the next pass | no link after two consecutive passes → **EMG-004** (Loss of Communication) | ☐ | |
 
 The UHF beacon is a **separate radio**: if HK SID 11 still arrives while the
-S-band is silent (`ttc.beacon_active`, 0x0527), the fault is in the S-band
+S-band is silent (PUS page, S3 HK, Observed column), the fault is in the S-band
 chain, not the OBC. The only on-board autonomy for a silent link is the
 command-loss timer: it switches to the other transponder 24 h after the last
 accepted telecommand, and again every further 24 h (CTG-003 step 6).
@@ -1685,8 +1683,9 @@ spacecraft for it.
 | 4 | Coordinate an alternate ground station (FD authorises): next windows at the other stations of the network, priority booking, orbit elements and frequency plan, matching uplink and downlink configuration | alternate station coordinated — or none available and the spacecraft safe on its own | ☐ | station: ______ |
 | 5 | Replan the contact schedule: drop the failed station until it is repaired, add alternate passes, assess the 24–48 h contact time and the on-board imaging, battery and storage plans; notify engineering; log the incident | schedule replanned, incident logged | ☐ | |
 
-The ground side's health is in `ttc.gs_equipment_status` (0x0524, a set bit =
-healthy); a healthy spacecraft keeps radiating throughout.
+The ground side's health is the station's own monitoring (the radio view and
+the station operator), not spacecraft telemetry; a healthy spacecraft keeps
+radiating throughout.
 
 ---
 
@@ -1705,7 +1704,7 @@ shift. Goes into cohort archive.
 | Anomalies (count + ticket IDs) | |
 | FDIR rules triggered | |
 | GO/NO-GO outcome | |
-| Customer commitments met / deferred | |
+| Customer commitments (planner bookings) met / deferred | |
 | One-line summary for cohort archive | |
 | FD signature | |
 

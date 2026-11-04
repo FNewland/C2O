@@ -104,9 +104,9 @@ de salle, et non des consoles ; les vérifications du segment sol figurent sur
 
 ## 5.1.1 Directeur de vol
 
-- **Tâche :** conduire un tour de table GO/NO-GO sur le tableau de bord en direct. Interroger trois
-  postes pour un *go for* `CONNECTION_TEST` (S17.1) — ce satellite n'a ni commande NOOP
-  ni commande de battement de cœur ; consigner les réponses.
+- **Tâche :** conduire un tour de table GO/NO-GO depuis l'onglet **GO/NO-GO** du MCS (tiroir
+  du bas). Interroger trois postes pour un *go for* `CONNECTION_TEST` (S17.1) — ce satellite
+  n'a ni commande NOOP ni commande de battement de cœur ; consigner les réponses.
 - **Postes interrogés :** _____________ , _____________ , _____________
 - **Réponses consignées (mot pour mot) :**
   - _____________________________________________
@@ -120,15 +120,15 @@ de salle, et non des consoles ; les vérifications du segment sol figurent sur
 
 - **Tâche :** prédire le SoC de la batterie à la sortie de la prochaine éclipse, puis
   identifier le réchauffeur dont le rapport cyclique est actuellement le plus élevé et
-  prédire s'il saturera à la prochaine éclipse.
-- **SoC à l'entrée en éclipse :** ____ %   **Durée de l'éclipse :** ____ min
-  (33,2 à 35,2 min sur l'année)
-- **SoC prédit en sortie :** ____ %   **(Méthode :** P_avg × t / E_batt,
-  avec E_batt = **100 Wh** et une charge nominale moyenne sur l'orbite
-  P_avg ≈ **22,7 W** **)**
-- **Comparaison avec le modèle d'éclipse :** ☐ concorde  ☐ écart de ____ %
+  prédire s'il saturera à la prochaine éclipse. Lire les heures et la durée de l'éclipse
+  sur la page EPS, **Prévisions → Prochaine éclipse** ; les rapports cycliques des
+  réchauffeurs sur la page TCS, **Équipements → DUTY BAT / DUTY OBC**.
+- **SoC à l'entrée en éclipse :** ____ %   **Durée de la prochaine éclipse :** ____ min
+- **SoC prédit en sortie :** ____ %
+- **Méthode :** SoC_sortie = SoC_entrée − P × t / E_batt, avec E_batt = 100 Wh, t la durée de l'éclipse et P la consommation lue sur la page EPS (environ 22,7 W, charge utile en STANDBY)
+- **Comparaison avec la prédiction de la console (flux de puissance EPS, « en sortie d'éclipse ») :** ☐ concorde  ☐ écart de ____ %
 - **Réchauffeur au rapport cyclique le plus élevé :** _______________   **Rapport cyclique :** ____ %
-- **Rapport cyclique prédit à la prochaine éclipse :** ____ %   **Saturera-t-il ?** ☐ oui ☐ non
+- **Rapport cyclique prédit à la prochaine éclipse :** ____ %   **Saturera-t-il :** ☐ oui ☐ non
 - **Enseignement :** _________________________________________________
 - **Question à poser :** _________________________________________
 
@@ -136,18 +136,17 @@ de salle, et non des consoles ; les vérifications du segment sol figurent sur
 
 - **Tâche :** lire `aocs.att_error` (0x0217) et vérifier qu'elle respecte
   le bilan du mode NOMINAL (mode 4, suivi du nadir), soit < 1.0°. En
-  FINE_POINT (mode 5), le bilan est < 0.1°. Calculer ensuite l'AOS, le TCA
-  et le LOS du prochain passage d'Iqaluit et les comparer avec le planning
-  des contacts du MPS.
-- **Lecture :** ______ °   **Dans la plage ?** ☐ oui  ☐ non
+  FINE_POINT (mode 5), le bilan est < 0.1°. Lire ensuite l'AOS, le TCA
+  et le LOS du prochain passage d'Iqaluit dans la liste des passages des
+  outils d'orbite et les comparer avec le tableau **Prochains contacts** du planificateur.
+- **Lecture :** ______ °   **Dans la plage :** ☐ oui  ☐ non
 - **Mode SCAO (`aocs.mode` 0x020F) :** ____ (0 OFF, 1 SAFE_BOOT,
   2 DETUMBLE, 3 COARSE_SUN, 4 NOMINAL, 5 FINE_POINT, 6 SLEW,
   7 DESAT, 8 ECLIPSE, 9 INERTIAL)
-- **État des senseurs stellaires** (`aocs.st1_status` 0x0240 / `aocs.st2_status`
-  0x0243 ; 0=éteint, 1=amorçage, 2=poursuite, 3=aveuglé, 4=en panne) :
-  ST1 ____  ST2 ____   **Sélectionné** (`aocs.st_selected` 0x0244) : ____
+- **État des senseurs stellaires** — 0=éteint, 1=amorçage, 2=poursuite, 3=aveuglé, 4=en panne :
+- **ST1 (`aocs.st1_status` 0x0240) :** ____   **ST2 (`aocs.st2_status` 0x0243) :** ____   **Sélectionné (`aocs.st_selected` 0x0244) :** ____
 - **Prochain passage d'Iqaluit :** AOS ______ TCA ______ LOS ______ él. max ____ °
-- **Concordance avec le MPS :** ☐ exacte  ☐ écart < 5 s  ☐ écart > 5 s
+- **Concordance avec le planificateur :** ☐ exacte  ☐ écart < 5 s  ☐ écart > 5 s
 - **Enseignement :** _________________________________________________
 - **Question à poser :** _________________________________________
 
@@ -167,32 +166,29 @@ de salle, et non des consoles ; les vérifications du segment sol figurent sur
   **Débit HIGH de vidage (kbit/s) :** ______
 - **Marge de liaison après la transition (dB) :** ______ (`ttc.link_margin` 0x0503)
 - **Lecture du TEB (`ttc.ber` 0x050C, log10) :** ____________________
-- **Station active (`ttc.active_gs` 0x0523) :** ______  ☐ Iqaluit
-  ☐ Troll ☐ Svalbard ☐ Inuvik ☐ O'Higgins
-- **Configuration de la bande de base (débit, codage) :** ______________________
+- **Station en contact (page TT&C, Réseau de stations sol) :** ☐ Iqaluit ☐ Troll ☐ Svalbard ☐ Inuvik ☐ O'Higgins
+- **Configuration de la bande de base (débit, débit symbole, codage — vue Radio, Liaison de données et Bilan de liaison) :** ______________________
 - **Enseignement :** _________________________________________________
 - **Question à poser :** _________________________________________
 
 ## 5.1.5 Opérations charge utile
 
-- **Tâche :** programmer une séance de prise de vue via le MPS. Confirmer que la température
+- **Tâche :** programmer une séance de prise de vue dans le planificateur
+  (**Opportunités de prise de vue → Planifier**). Confirmer que la température
   du FPA est à la consigne avant d'envoyer la commande.
 - **Cible de prise de vue choisie :** _______________________________
 - **Lecture de la température du FPA (`payload.fpa_temp` 0x0601, °C) :** ______
-  **À la consigne ?** ☐ oui ☐ non — la condition est `payload.fpa_ready`
-  (0x0610) = 1, et non une température retenue de mémoire. Consigne par défaut
-  **−15 °C** (`payload.fpa_setpoint` 0x0631 ; enveloppe commandable
-  de −20 °C à 0 °C).
+- **À la consigne (`payload.fpa_ready` 0x0610 = 1) :** ☐ oui ☐ non — la condition est l'indicateur de disponibilité, et non une température retenue de mémoire. Consigne par défaut −15 °C (`payload.fpa_setpoint` 0x0631 ; enveloppe commandable de −20 °C à 0 °C).
 - **Occupation du stockage (`payload.mem_used_mb` 0x060B) :** ______ / 20 000 Mo
 - **Enseignement :** _________________________________________________
 - **Question à poser :** _________________________________________
 
 ## 5.1.6 FDIR / systèmes
 
-- **Tâche :** présenter une règle FDIR dans le panneau FDIR ; expliquer
-  son déclencheur, son seuil, sa gravité et la procédure de contingence
-  à laquelle elle renvoie.
-- **Nom de la règle choisie :** _____________________________
+- **Tâche :** présenter une surveillance de bord dans le tableau **Surveillance bord (S12)**
+  de la page FDIR ; expliquer son déclencheur, son seuil, sa persistance, sa gravité
+  et la procédure de contingence à laquelle elle renvoie.
+- **Surveillance choisie (colonne Nom) :** _____________________________
 - **Paramètre déclencheur :** _____________________________
 - **Seuil :** ___________________   **Persistance :** _________
 - **Gravité :** ____   **Procédure recommandée :** ________________
@@ -202,10 +198,9 @@ de salle, et non des consoles ; les vérifications du segment sol figurent sur
 ## 5.1.7 Propulsion
 
 - **Tâche :** sans envoyer aucune commande, lire l'état de la propulsion et
-  nommer le verrouillage qui empêche actuellement l'armement. Fiche de rôle :
-  `configs/eosat1/mcs/role_analysis/propulsion_role.md`.
-- **État (`prop.state` 0x0B00 ; 0 SAFED, 1 ARMED, 2 FIRING,
-  3 INHIBIT) :** ____
+  nommer le verrouillage qui empêche actuellement l'armement (page PRP,
+  **Verrouillages d'armement**). Contexte : manuel 07 *Opérations orbitales*, §6.
+- **État (`prop.state` 0x0B00 ; 0 SAFED, 1 ARMED, 2 FIRING, 3 INHIBIT) :** ____
 - **Pression du réservoir (`prop.tank_pressure` 0x0B01, bar) :** ______
   **Ergol (`prop.propellant_mass` 0x0B02, g) :** ______ / 400
 - **Masque des verrouillages d'armement (`prop.arm_inhibit_mask` 0x0B15) :** ______
@@ -357,7 +352,7 @@ entrant collationne les points 3 et 7. Objectif : moins de 6 minutes.
 | 3 | **Anomalies ouvertes** (nom de la règle, état, étape de la procédure de reprise) | | ☐ |
 | 4 | Travaux en cours (procédures en cours d'exécution) | | |
 | 5 | Prochain passage (station, AOS, procédures prévues, opérateur désigné) | | |
-| 6 | Engagements client en cours | | |
+| 6 | Engagements client en cours (prises de vue et vidages réservés dans le planificateur) | | |
 | 7 | **Autorisations GO en suspens** | | ☐ |
 | 8 | Ambiance sur la boucle vocale (équipe reposée / tendue / etc.) | | |
 
@@ -375,11 +370,11 @@ Sortant : ____________________  Entrant : ____________________
 
 ### Exercice 1 — Prédire les trois prochaines heures d'AOS
 
-Outil : la page Orbit Tools (`python3 tools/orbit_tools.py --serve`, port 8093) :
-charger le TLE courant et lire la liste des passages et la chronologie des contacts sur 24 h. Comparer
-avec le planning des contacts du MPS.
+Outil : les outils d'orbite (**Utiliser les éléments d'EOSAT-1**, puis **Convertir le TLE**) :
+lire la liste des passages (AOS, TCA, LOS) et la chronologie des contacts sur 24 h. Comparer
+avec le tableau **Prochains contacts** du planificateur.
 
-| Passage | Station | AOS (votre prédiction, UTC) | AOS (MPS, UTC) | Δ (s) |
+| Passage | Station | AOS (votre prédiction, UTC) | AOS (planificateur, UTC) | Δ (s) |
 |------|---------|---------------------------|----------------|-------|
 | 1 | | | | |
 | 2 | | | | |
@@ -387,7 +382,7 @@ avec le planning des contacts du MPS.
 
 ### Exercice 2 — Durée du passage en fonction de l'élévation maximale
 
-| Passage | Él. max (°) | Durée prédite (min) | Durée réelle d'après le MPS (min) |
+| Passage | Él. max (°) | Durée prédite (min) | Durée dans le planificateur (min) |
 |------|------------|---------------------------|-------------------------------|
 | 1 | | | |
 | 2 | | | |
@@ -462,7 +457,7 @@ Seuil de réussite : 11 sur 15. Corrigés au verso du dossier de l'enseignant.
 | SPACON a passé en revue le jeu de règles FDIR dans le panneau FDIR (il n'existe **aucune** télécommande de chargement de table FDIR — le jeu de règles est `subsystems/fdir.yaml` + `monitoring/`) | ☐ |
 | L'AOCS a passé en revue les vitesses de culbutage résiduelles (environ 1–2 °/s par axe dues à l'impulsion de séparation) | ☐ |
 | L'EPS confirme un SoC d'environ 90 % (`eps.bat_soc` 0x0101) ; seules les lignes non commutables `obc` (ligne 0) et `ttc_rx` (ligne 1) sont sur ON — toutes les lignes commutables sont sur OFF par défaut | ☐ |
-| Le TT&C a confirmé la réception de la balise UHF (`ttc.beacon_active` 0x0527 = 1) ; noter que la balise est une radio distincte de la chaîne principale bande S | ☐ |
+| Le TT&C a confirmé la réception de la balise UHF : le SID 11 de la balise arrive (page PUS, S3 HK, colonne Observé) ; noter que la balise est une radio distincte de la chaîne principale bande S | ☐ |
 | Le segment sol a confirmé que l'antenne d'Iqaluit est sur la cible, démodulateur sur l'échelon **SAFE** (1 000 bit/s, BPSK, conv(7,1/2)+RS, 1 kBd) | ☐ |
 | La FDS a produit le planning des passages sur 24 h et l'a remis au FD, au TT&C et au segment sol | ☐ |
 | Formulaires de fiche d'anomalie imprimés vierges et disponibles à chaque console | ☐ |
@@ -527,7 +522,7 @@ l'enseignant, et aucune fiche ne demande à un opérateur de forcer le contact.
 | N° | Action | Vérification attendue | ☐ fait | Note |
 |---|--------|----------------------|:------:|------|
 | 1 | Vérifier l'état de l'OBC et la liaison : `HK_REQUEST(sid=4)`, `HK_REQUEST(sid=6)` (S3.27) | `obdh.mode` (0x0300) ≤ 1 (NOMINAL ou SAFE) ; `obdh.cpu_load` (0x0302) < 80 % ; page TT&C (sol) : `ttc.link_margin` (0x0503) > 3.0 dB | ☐ | |
-| 2 | Lire l'horloge, sa référence et la distance oblique : `REQUEST_TIME` (**S9.2**), `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=4)` | TM(9,2) < 10 s. T_obc = `obdh.obc_time` (0x0309) + `obdh.obc_time_fine` (0x0A12) / 65536, en secondes CUC depuis J2000 ; `obdh.time_ref` (0x0A13), attendu 0 (NONE) ; `obdh.time_since_sync_s` (0x0A14), attendu 4294967295 (jamais synchronisée) ; T_sol ; OWLT = `ttc.range_km` (0x0509) / 299792.458 × 1000 ms, attendu **3–22 ms** | ☐ | OWLT : ____ ms |
+| 2 | Lire l'horloge, sa référence et la distance oblique : `REQUEST_TIME` (**S9.2**), `HK_REQUEST(sid=6)`, `HK_REQUEST(sid=4)` | TM(9,2) < 10 s. T_obc = `obdh.obc_time` (0x0309) + `obdh.obc_time_fine` (0x0A12) / 65536, en secondes CUC depuis J2000 ; `obdh.time_ref` (0x0A13), attendu 0 (NONE) ; `obdh.time_since_sync_s` (0x0A14), attendu 4294967295 (jamais synchronisée) ; T_sol ; OWLT = distance oblique / c, lu sur la page PUS, S9 TIME (temps de propagation aller, d'après la prédiction d'orbite du sol), attendu **3–22 ms** | ☐ | OWLT : ____ ms |
 | 3 | Calculer l'écart de temps : Δt = T_obc − (T_sol − OWLT) | un Δt négatif d'environ l'âge de la mission est la signature attendue en LEOP ; le FD approuve la correction | ☐ | Δt : ____ s |
 | 4 | Envoyer la mise à l'heure : `SET_TIME(cuc_seconds=T_corrected)` (**S9.1**), avec T_corrected = T_sol à l'envoi + OWLT + environ 50 ms, sur l'époque J2000 — un temps Unix est trop grand d'environ 9.5e8 s, et l'argument se place *à l'intérieur* des backticks : un `SET_TIME` nu envoie cuc_seconds = 0 | S1.1 < 5 s ; aucun rejet S1.2 | ☐ | T_corrected : ____ |
 | 5 | Vérifier l'exactitude du temps : `REQUEST_TIME` (S9.2), `HK_REQUEST(sid=4)` | `obdh.time_ref` = 1 (GROUND) < 15 s ; `obdh.mode` = 0 < 10 s ; résidu = T_obc_nouveau − (T_sol − OWLT) à ±1.0 s (seuil LEOP ; NOM-008 le resserre) | ☐ | résidu : ____ s |
@@ -790,7 +785,7 @@ Imprimez 9 exemplaires (un par poste de console).
 | Opérateur entrant | |
 | Valeurs actuelles des paramètres (3 mnémoniques principaux) | |
 | État actuel de la procédure (ID du fichier + étape) | |
-| Widget épinglé ? | |
+| Page de console laissée ouverte pour l'opérateur suivant (page, panneau) | |
 | Question ouverte pour le quart suivant | |
 | Signature du sortant | |
 | Signature de l'entrant | |
@@ -850,8 +845,8 @@ Imprimez 9 exemplaires (un par poste de console).
 
 | N° | Action | Attendu | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Tension de bus de référence — `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [28.4, 34.0] V (la bande jaune de la console ; le bus n'est pas régulé — il suit la batterie jusqu'au plafond de 33.4 V) | ☐ | V : ____ |
-| 2 | Tension et SoC de la batterie — `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | `eps.bat_voltage` (0x0100) ∈ [24.0, 33.6] V (GomSpace BPX 8S-1P de 100 Wh : 24.0 V vide, 28.8 V nominal, 33.6 V pleine) ; `eps.bat_soc` (0x0101) > 70 % | ☐ | V : ____ SoC : ____ |
+| 1 | Tension de bus de référence — `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [28.4, 34.0] V (la bande jaune de la console ; le bus n'est pas régulé — il suit la batterie jusqu'au plafond de 33.4 V) | ☐ | V : ____ |
+| 2 | Tension et SoC de la batterie — `GET_PARAM(param_id=0x0100)`, `GET_PARAM(param_id=0x0101)` (S20.3) | `eps.bat_voltage` (0x0100) ∈ [24.0, 33.6] V (GomSpace BPX 8S-1P de 100 Wh : 24.0 V vide, 28.8 V nominal, 33.6 V pleine) ; `eps.bat_soc` (0x0101) > 70 % | ☐ | V : ____ SoC : ____ |
 | 3 | Performances du générateur solaire au Soleil — `HK_REQUEST(sid=1)`, éclairé et pointé vers le Soleil | `eps.power_gen` (0x0107) ∈ [40, 90] W (88.6 W est la crête de l'ensemble du satellite ; environ 80 W est normal en pointage solaire) | ☐ | ____ W |
 | 4 | Décharge en éclipse — `HK_REQUEST(sid=1)` à l'entrée et à mi-éclipse | `eps.power_gen` ~0 W dans les 30 s après l'entrée ; `eps.bat_soc` en baisse de moins de 1.5 %/min ; `eps.bus_voltage` > 30.9 V | ☐ | |
 | 5 | Reprise de charge en sortie d'éclipse — `HK_REQUEST(sid=1)` à la sortie + 5 min | `eps.power_gen` > 35 W dans les 60 s après la sortie ; `eps.bat_soc` en hausse dans les 120 s | ☐ | |
@@ -1000,7 +995,7 @@ de mémoire : les limites sont de la configuration, et elles changent.
 
 | N° | Action | Attendu | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Référence EPS avant mise sous tension : `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [28.4, 34.0] V ; `eps.bat_soc` (0x0101) > 75 % ; `eps.power_gen` (0x0107) > 40 W — les trois consignés | ☐ | |
+| 1 | Référence EPS avant mise sous tension : `HK_REQUEST(sid=1)` (S3.27) | `eps.bus_voltage` (0x0105) ∈ [28.4, 34.0] V ; `eps.bat_soc` (0x0101) > 75 % ; `eps.power_gen` (0x0107) > 40 W — les trois consignés | ☐ | |
 | 2 | Vérifier que la charge utile est sur OFF : `HK_REQUEST(sid=5)` | `payload.mode` (0x0600) = 0 (OFF) | ☐ | |
 | 3 | Alimenter la ligne, puis STANDBY : `EPS_POWER_ON(line_index=3)` (S8.1 func_id **19**), `HK_REQUEST(sid=1)`, `PAYLOAD_SET_MODE(mode=1)` (func **26**), `HK_ENABLE(sid=5)` (**S3.5**), `HK_REQUEST(sid=5)` | `eps.pl_payload` (0x0113) = 1 en 10 s ; `payload.mode` = 1 (STANDBY) en 60 s, et **toujours 1** à une nouvelle demande du SID 5 60 s plus tard — un mode qui revient à 0 signifie que la ligne est coupée | ☐ | |
 | 4 | Consommation de la charge utile : `HK_REQUEST(sid=1)`, `GET_PARAM(param_id=0x0106)` (S20.3) | `eps.bus_voltage` > 30.9 V ; `eps.power_cons` (0x0106) en hausse de **2–3 W** sur la référence (STANDBY environ 2.4 W ; le refroidisseur de 15 W n'est pas en marche avant COM-010) | ☐ | ____ W |
@@ -1252,7 +1247,7 @@ console.)
 | Opérateur entrant | |
 | Valeurs actuelles des paramètres (3 principaux) | |
 | État actuel de la procédure (ID du fichier + étape) | |
-| Widget épinglé ? | |
+| Page de console laissée ouverte pour l'opérateur suivant (page, panneau) | |
 | Règles FDIR actuellement actives (acquittées) | |
 | Question ouverte pour le quart suivant | |
 | Signature du sortant | |
@@ -1511,7 +1506,7 @@ rester à ce palier et passer directement à l'étape 6.
 | 7 | EPS | Rétablir dans l'ordre de priorité inverse, bus stable 5 min entre deux charges, chaque ligne alimentée avant son équipement : `EPS_POWER_ON(line_index=7)` (+ `AOCS_SET_MODE(mode=2)` seulement si `aocs.mode` (0x020F) = 0) ; `EPS_POWER_ON(line_index=2)` si `eps.pl_ttc_tx` = 0, puis `TTC_PA_ON` ; `EPS_POWER_ON(line_index=4)` si `eps.pl_fpa_cooler` = 0, le refroidisseur lui-même restant ARRÊTÉ (il ne fonctionne que pour préparer une prise de vue ; la commande STANDBY ci-dessous l'arrêterait) ; `EPS_POWER_ON(line_index=3)` si `eps.pl_payload` = 0, puis `PAYLOAD_SET_MODE(mode=1)` | `eps.pl_aocs_wheels` = 1 en 5 s ; après chaque charge, `eps.bus_voltage` > 31.5 V et `eps.bat_soc` > 35 % ; toutes les charges rétablies, bilan de puissance positif | ☐ | |
 
 Avec le PA bande S coupé, **la balise UHF subsiste** : c'est une radio
-distincte, et le SID 11 de HK continue d'arriver (`ttc.beacon_active`, 0x0527).
+distincte, et le SID 11 de HK continue d'arriver (page PUS, S3 HK, colonne Observé).
 Rien de ce que la FDIR ou cette fiche a coupé ne revient de soi-même : l'étape 7
 réalimente chaque ligne explicitement.
 
@@ -1677,7 +1672,7 @@ l'ingénierie n'a pas requalifié le bus en panne.
 | 7 | Escalade, pas de liaison : `TTC_SET_TX_POWER(level=2)` (S8.1 func **68**) pour la tentative suivante ; consigner chaque commande en aveugle avec son heure ; prévenir le FD et le directeur de mission ; réserver le passage suivant | sans liaison après deux passages consécutifs → **EMG-004** (Perte de communication) | ☐ | |
 
 La balise UHF est une **radio distincte** : si le SID 11 de HK arrive toujours
-alors que la bande S est muette (`ttc.beacon_active`, 0x0527), la panne se situe
+alors que la bande S est muette (page PUS, S3 HK, colonne Observé), la panne se situe
 dans la chaîne bande S, pas dans l'OBC. La seule autonomie de bord face à une
 liaison muette est la minuterie de perte de commande : elle bascule sur l'autre
 transpondeur 24 h après la dernière télécommande acceptée, puis toutes les 24 h
@@ -1699,8 +1694,9 @@ satellite pour la traiter.
 | 4 | Coordonner une station sol de secours (le FD autorise) : prochaines fenêtres aux autres stations du réseau, réservation prioritaire, éléments orbitaux et plan de fréquences, configuration montante et descendante conforme | station de secours coordonnée — ou aucune disponible et le satellite en sécurité de lui-même | ☐ | station : ______ |
 | 5 | Replanifier le programme des contacts : retirer la station en panne jusqu'à sa réparation, ajouter des passages de secours, évaluer le temps de contact sur 24–48 h et les plans de bord de prise de vue, de batterie et de stockage ; prévenir l'ingénierie ; consigner l'incident | programme replanifié, incident consigné | ☐ | |
 
-L'état du côté sol se lit dans `ttc.gs_equipment_status` (0x0524, bit positionné =
-sain) ; un satellite sain continue d'émettre tout du long.
+L'état du côté sol se lit dans la surveillance propre de la station (la vue radio et
+l'opérateur de la station), pas dans la télémesure du satellite ; un satellite sain
+continue d'émettre tout du long.
 
 ---
 
@@ -1719,7 +1715,7 @@ quart. Versée aux archives de la promotion.
 | Anomalies (nombre + ID des fiches) | |
 | Règles FDIR déclenchées | |
 | Issue du GO/NO-GO | |
-| Engagements client tenus / reportés | |
+| Engagements client (réservations du planificateur) tenus / reportés | |
 | Synthèse en une ligne pour les archives de la promotion | |
 | Signature du FD | |
 

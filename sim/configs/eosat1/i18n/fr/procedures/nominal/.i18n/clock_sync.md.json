@@ -29,8 +29,8 @@
   },
   {
    "id": "nom-008-clock-synchronisation/procedure-steps/step-1-read-the-onboard-clock-and-its-time-reference",
-   "en_hash": "2537097c9908ab54",
-   "fr_hash": "e3e1fe6932677994"
+   "en_hash": "33e36d3e6291581b",
+   "fr_hash": "db91ef35adf4673c"
   },
   {
    "id": "nom-008-clock-synchronisation/procedure-steps/step-2-assess-the-offset-against-expected-drift",
@@ -73,5 +73,5 @@
    "fr_hash": "e8413e4bfd043404"
   }
  ],
- "en_commit": "5f4fa5a"
+ "en_commit": "d55eff7"
 }

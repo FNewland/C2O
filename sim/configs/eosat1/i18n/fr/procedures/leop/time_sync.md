@@ -61,7 +61,7 @@ faut.
 
 ### Étape 2 --- Lire l'horloge, sa référence et la distance oblique
 **TC:** `REQUEST_TIME` (Service 9, Subtype 2) --- demander l'heure courante de l'OBC ; la réponse est une TM(9,2)
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- données de servitude TT&C, pour la distance oblique
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- données de servitude TT&C, pour l'état de la liaison
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- données de servitude plateforme, pour le contrôle croisé de l'horloge
 **Verify:** Rapport de temps TM(9,2) reçu sous 10 s
 **Action:** Consigner le temps bord T_obc = `obdh.obc_time` (0x0309) +
@@ -77,17 +77,19 @@ HOLDOVER (était en GPS, point perdu).
 réglée au cours de cette mission --- établir par qui avant de continuer.
 **Action:** Consigner l'heure UTC sol au moment de la réception du rapport de temps sous le nom
 T_ground, exprimée dans les mêmes secondes CUC depuis J2000.
-**Action:** Calculer le temps de propagation aller à partir de la distance oblique du rapport
-SID 6 : OWLT_ms = `ttc.range_km` (0x0509) / 299792.458 * 1000. S'attendre à 3-22 ms ;
+**Action:** Lire le temps de propagation aller sur la page PUS, onglet S9 TIME
+(« Temps de propagation aller (géométrie sol) ») : la distance oblique jusqu'à la station
+en visibilité divisée par c, OWLT_ms = range_km / 299792.458 * 1000. S'attendre à 3-22 ms ;
 le consigner, et noter qu'il est inférieur de deux ordres de grandeur au seuil d'acceptation de 1,0 s
 de cette fiche.
 **Note:** `REQUEST_TIME` est le mnémonique du catalogue (`tc_catalog.yaml`).
 `TIME_REPORT_REQUEST` est un alias --- il est résolu à l'émission, mais un opérateur
 qui le cherche dans le panneau de commande ne le trouvera pas.
-**Note:** `ttc.range_km` (0x0509) se trouve dans le **SID HK 6**, c'est pourquoi cette étape
-demande le SID 6 et pas seulement le SID 4. C'est la distance oblique GÉOMÉTRIQUE ; elle est
-publiée qu'une station soit en visibilité ou non : environ 6530 km hors contact et
-1000-2000 km pendant un passage.
+**Note:** La distance oblique est un produit SOL : le MCS propage le TLE de la mission
+jusqu'à la station en visibilité. Le satellite ne la transmet pas ---
+`ttc.range_km` (0x0509) ne figure dans aucun SID HK --- elle se lit donc au sol : le réseau
+de stations sol de la page TT&C affiche la distance et l'OWLT de la station en contact
+(1000-2000 km pendant un passage).
 **Note:** L'horloge de l'OBC est AUSSI transmise en continu sous la forme `obdh.obc_time`
 (0x0309) dans le SID HK 4, demandé ci-dessus. Recouper la valeur TM(9,2) avec
 celle-ci : les deux doivent concorder à la période de collecte du SID 4 près (8 s). Elles arrivent
@@ -96,7 +98,7 @@ de servitude --- un désaccord signifie donc que le service de temps et l'échan
 divergent sur l'horloge, ce qui est une panne différente d'une horloge
 fausse.
 **GO/NO-GO:** Rapport de temps TM(9,2) valide reçu, `obdh.time_ref` (0x0A13) lu,
-distance oblique consignée et 0x0309 concordant.
+OWLT consigné et 0x0309 concordant.
 
 ### Étape 3 --- Calculer l'écart de temps
 **Action:** Calculer le décalage d'horloge :
@@ -276,7 +278,7 @@ lors de leur production. Noter l'heure de synchronisation dans le registre LEOP 
 - [ ] Entrée du journal de synchronisation temporelle complétée pour le registre LEOP
 - [ ] Les paquets de télémesure de servitude portent des horodatages CUC à la date de la mission
 - [ ] Mode de l'OBC inchangé et aucun redémarrage pendant la synchronisation
-- [ ] Distance oblique et OWLT consignés à partir du SID HK 6
+- [ ] OWLT consigné (page PUS, S9 TIME)
 - [ ] `obdh.obc_time` (0x0309) concorde avec le rapport TM(9,2)
 
 **PROCÉDURE SUIVANTE :** LEOP-003 (Restitution d'orbite initiale --- clôt la LEOP par la déclaration

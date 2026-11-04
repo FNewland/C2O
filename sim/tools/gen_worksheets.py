@@ -32,15 +32,28 @@ carries ``step`` (its printed number), so the live checklist can line it up
 with the procedure card; the map's ``form`` / ``instances`` / ``prefill``
 (see worksheet_map.yaml) are copied onto the sheet and its questions.
 
+Where to find the answer (worksheet audit 2026-11-04): every question can
+carry ``where`` — the screen (tool, page, panel, parameter row), the manual
+section or the open reference that answers it, rendered by the logbook as a
+link. It comes from the hand-maintained ``worksheet_where.yaml``; a question
+that names a parameter (``0xHHHH``) the operator dictionary carries gets a
+link to that parameter's row on its MCS page without an entry. The same map
+records, per question, whether the screens answer it (``status``) — the
+audit table in docs/plan_2026-11/WORKSHEET_SCREEN_AUDIT_OPS.md is written
+from it with ``--audit``. A question without a status, a key that matches no
+question, or a target that does not resolve stops the script.
+
 Usage::
 
     python3 tools/gen_worksheets.py            # write ops_week3.yaml
+    python3 tools/gen_worksheets.py --audit    # rewrite the audit table
     python3 tools/gen_worksheets.py --check    # CI gate: exit 1 if stale
     python3 tools/gen_worksheets.py --output /tmp/x.yaml
 """
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -51,7 +64,11 @@ SIM = Path(__file__).resolve().parent.parent
 C2O = SIM.parent
 WS_DIR = SIM / "configs" / "eosat1" / "worksheets"
 MAP_FILE = WS_DIR / "worksheet_map.yaml"
+WHERE_FILE = WS_DIR / "worksheet_where.yaml"
 OUT_FILE = WS_DIR / "ops_week3.yaml"
+PARAMS_FILE = SIM / "configs" / "eosat1" / "telemetry" / "parameters.yaml"
+PROC_INDEX = SIM / "configs" / "eosat1" / "procedures" / "procedure_index.yaml"
+AUDIT_FILE = C2O / "docs" / "plan_2026-11" / "WORKSHEET_SCREEN_AUDIT_OPS.md"
 
 HEADER = """\
 # GENERATED FILE — DO NOT EDIT BY HAND.
@@ -379,6 +396,225 @@ def _table_questions(wid, a, b, add):
         add(kind, re_[0], rf[0], hint_en, hint_fr)
 
 
+# ── where to find the answer ────────────────────────────────────────
+
+#: The MCS rail (modern console, mcs.js RAIL): page id -> rail label.
+MCS_PAGES = {"ovr": "OVR", "eps": "EPS", "tcs": "TCS", "aocs": "AOC", "ttc": "TTC",
+             "pld": "PLD", "prp": "PRP", "obd": "OBD", "cmd": "CMD", "fdir": "FDR",
+             "proc": "PRC", "trnd": "TRD", "diag": "PUS", "man": "MAN"}
+#: Parameter subsystem -> the MCS page whose Parameters table lists it
+#: (mcs.js PAGE_SUBSYSTEM; FDIR summary on the FDIR page; anything else is
+#: in the PUS page's global parameter catalogue).
+SUB_PAGE = {"eps": "eps", "tcs": "tcs", "aocs": "aocs", "ttc": "ttc", "payload": "pld",
+            "prop": "prp", "obdh": "obd", "fdir": "fdir"}
+#: The station receiver's readings the operator dictionary carries although
+#: they are ground_derived (smo_mcs.station_link.STATION_PARAMS).
+STATION_PARAMS = {0x0502, 0x0503, 0x050C, 0x0519, 0x051A}
+WHERE_TOOLS = ("mcs", "planner", "orbit", "radio", "delayed_tm", "docs", "ext")
+WHERE_KEYS = ("tool", "page", "param", "focus", "tab", "bd", "path", "anchor", "proc", "url", "url_fr")
+STATUSES = ("screen", "manual", "none", "na")
+_PID = re.compile(r"\b0x([0-9A-Fa-f]{4})\b")
+_PNAME = re.compile(r"\b(?:eps|aocs|tcs|ttc|payload|prop|obdh|fdir)\.[a-z0-9_]+\b")
+_MAX_AUTO = 4
+_MAX_WHERE = 6
+#: Expectations read on the MCS bottom drawer rather than a page: the
+#: verification reports of a telecommand, and S5 events.
+_DRAWER = ((re.compile(r"\bS1\.[1378]\b|\bTM\(1,"), "mcs.cmdhist"),
+           (re.compile(r"\bevent\b", re.I), "mcs.events"))
+
+
+def _dictionary() -> dict[int, dict]:
+    """Every parameter: {id: {name, subsystem, operator (bool)}}. The
+    operator dictionary is what the MCS serves (/api/param-catalog):
+    visibility ``real`` plus the station receiver's readings."""
+    data = yaml.safe_load(PARAMS_FILE.read_text(encoding="utf-8")) or {}
+    out = {}
+    for p in data.get("parameters") or []:
+        try:
+            pid = int(p["id"]) if isinstance(p["id"], int) else int(str(p["id"]), 0)
+        except (KeyError, ValueError):
+            continue
+        vis = str(p.get("visibility", "real"))
+        out[pid] = {"name": p.get("name", ""), "subsystem": p.get("subsystem", ""),
+                    "operator": vis == "real" or (vis == "ground_derived" and pid in STATION_PARAMS)}
+    return out
+
+
+def _procedures() -> dict[str, str]:
+    idx = yaml.safe_load(PROC_INDEX.read_text(encoding="utf-8")) or {}
+    return {p["id"]: p.get("file", "") for p in idx.get("procedures") or [] if p.get("id")}
+
+
+def _param_target(pid: int, params: dict) -> dict:
+    meta = params[pid]
+    page = SUB_PAGE.get(meta["subsystem"], "diag")
+    t = {"tool": "mcs", "page": page, "param": f"0x{pid:04X}"}
+    if page == "diag":
+        t["tab"] = "params"
+    lab = f"MCS › {MCS_PAGES[page]} › {meta['name']} (0x{pid:04X})"
+    t["label"] = {"en": lab, "fr": lab}
+    return t
+
+
+class WhereError(ValueError):
+    pass
+
+
+class WhereMap:
+    """worksheet_where.yaml, resolved: ``targets`` (named places), ``links``
+    (open references), ``sheets`` (per-question status and places)."""
+
+    def __init__(self, path: Path = WHERE_FILE):
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else {}
+        doc = doc or {}
+        self.targets = doc.get("targets") or {}
+        self.links = doc.get("links") or {}
+        self.sheets = doc.get("sheets") or {}
+        self.params = _dictionary()
+        self.by_name = {m["name"]: pid for pid, m in self.params.items() if m["name"]}
+        self.procs = _procedures()
+        for k, t in self.targets.items():
+            self._check(dict(t), f"targets.{k}")
+        for k, ln in self.links.items():
+            if not str(ln.get("url", "")).startswith("https://"):
+                raise WhereError(f"links.{k}: url must be https://")
+            if ln.get("url_fr") and not str(ln["url_fr"]).startswith("https://"):
+                raise WhereError(f"links.{k}: url_fr must be https://")
+            if not (ln.get("label") or {}).get("en") or not (ln.get("label") or {}).get("fr"):
+                raise WhereError(f"links.{k}: label needs en and fr")
+
+    def _check(self, t: dict, ctx: str) -> dict:
+        tool = t.get("tool")
+        if tool not in WHERE_TOOLS:
+            raise WhereError(f"{ctx}: tool must be one of {WHERE_TOOLS}, not {tool!r}")
+        bad = [k for k in t if k not in WHERE_KEYS and k != "label"]
+        if bad:
+            raise WhereError(f"{ctx}: unknown keys {bad}")
+        if tool == "mcs":
+            if t.get("page") is not None and t["page"] not in MCS_PAGES:
+                raise WhereError(f"{ctx}: unknown MCS page {t['page']!r}")
+            if not t.get("page") and not t.get("bd"):
+                raise WhereError(f"{ctx}: an MCS place needs a page or a drawer tab")
+        if tool == "docs" and t.get("proc") and t["proc"] not in self.procs:
+            raise WhereError(f"{ctx}: unknown procedure {t['proc']!r}")
+        if tool == "docs" and not (t.get("path") or t.get("proc")):
+            raise WhereError(f"{ctx}: a docs place needs a path or a proc")
+        if tool == "ext":
+            raise WhereError(f"{ctx}: open references go under links:, not targets:")
+        lab = t.get("label") or {}
+        if not lab.get("en") or not lab.get("fr"):
+            raise WhereError(f"{ctx}: label needs en and fr")
+        return t
+
+    def resolve(self, ref, ctx: str) -> dict:
+        """One ``where`` item: a target key, a link key, ``param:0xHHHH`` or
+        an inline place."""
+        if isinstance(ref, str):
+            if ref.startswith("param:"):
+                pid = int(ref.split(":", 1)[1], 16)
+                if pid not in self.params or not self.params[pid]["operator"]:
+                    raise WhereError(f"{ctx}: {ref} is not in the operator dictionary")
+                return _param_target(pid, self.params)
+            if ref in self.targets:
+                t = dict(self.targets[ref])
+            elif ref in self.links:
+                ln = self.links[ref]
+                t = {"tool": "ext", "url": ln["url"], "label": dict(ln["label"])}
+                if ln.get("url_fr"):
+                    t["url_fr"] = ln["url_fr"]
+                return t
+            else:
+                raise WhereError(f"{ctx}: unknown where target {ref!r}")
+        elif isinstance(ref, dict):
+            t = self._check(dict(ref), ctx)
+        else:
+            raise WhereError(f"{ctx}: bad where item {ref!r}")
+        if t.get("proc"):
+            t["path"] = "procedures/" + self.procs[t.pop("proc")]
+        if t.get("param"):
+            pid = int(str(t["param"]), 16)
+            if pid not in self.params or not self.params[pid]["operator"]:
+                raise WhereError(f"{ctx}: param {t['param']} is not in the operator dictionary")
+            t["param"] = f"0x{pid:04X}"
+        return t
+
+    def apply(self, wid: str, qs: list[dict]) -> list[dict]:
+        """Set ``where`` on the questions of sheet *wid*; return one audit row
+        per question: {q, status, before, where (labels), gap, fix, deferred}."""
+        spec = self.sheets.get(wid) or {}
+        items = spec.get("items") or {}
+        default = spec.get("default") or {}
+        used = set()
+        rows = []
+        for q in qs:
+            text = q["text"]["en"]
+            bare = re.sub(r"^\d+[a-z]?\.\s+", "", text)
+            entry = None
+            for key, e in items.items():
+                if (key.startswith("step ") and q.get("step") == key[5:]) or \
+                        (not key.startswith("step ") and bare.startswith(key)):
+                    entry, _ = dict(e or {}), used.add(key)
+                    break
+            ctx = f"{wid} {q['id']} ({bare[:40]!r})"
+            merged = dict(default)
+            if entry is not None:
+                merged.update(entry)
+            refs = list(merged.get("where") or [])
+            # parameters the question names: their row on the console
+            hint = (q.get("hint") or {}).get("en", "")
+            pids = []
+            for m in _PID.finditer(text + " " + hint):
+                pid = int(m.group(1), 16)
+                if pid in self.params and pid not in pids:
+                    pids.append(pid)
+            for m in _PNAME.finditer(text + " " + hint):
+                pid = self.by_name.get(m.group(0))
+                if pid is not None and pid not in pids:
+                    pids.append(pid)
+            off = [p for p in pids if not self.params[p]["operator"]]
+            allowed_off = {int(str(x), 16) for x in merged.get("off_screen") or []}
+            if set(off) - allowed_off:
+                raise WhereError(f"{ctx}: names {', '.join(f'0x{p:04X}' for p in sorted(set(off) - allowed_off))}, "
+                                 "which the operator dictionary does not carry: reword the question, "
+                                 "or list the id under off_screen with a status and a gap")
+            if merged.get("auto", True):
+                for pid in [p for p in pids if self.params[p]["operator"]][:_MAX_AUTO]:
+                    ref = f"param:0x{pid:04X}"
+                    if ref not in refs:
+                        refs.append(ref)
+                if q.get("step"):
+                    for rx, ref in _DRAWER:
+                        if rx.search(text + " " + hint) and ref in self.targets and ref not in refs:
+                            refs.append(ref)
+            refs = refs[:_MAX_WHERE]
+            where = []
+            seen = set()
+            for i, ref in enumerate(refs):
+                t = self.resolve(ref, f"{ctx} where[{i}]")
+                key = json.dumps({k: v for k, v in t.items() if k != "label"}, sort_keys=True)
+                if key not in seen:
+                    seen.add(key)
+                    where.append(t)
+            status = merged.get("status") or ("screen" if pids and not off else None)
+            if status not in STATUSES:
+                raise WhereError(f"{ctx}: no status (one of {STATUSES}) in worksheet_where.yaml")
+            if status in ("screen", "manual") and not where:
+                raise WhereError(f"{ctx}: status {status} needs a where")
+            if status == "none" and not (merged.get("fix") or merged.get("deferred")):
+                raise WhereError(f"{ctx}: status none needs a fix or a deferred reason")
+            if where:
+                q["where"] = where
+            rows.append({"q": q["id"], "step": q.get("step"), "text": bare,
+                         "status": status, "before": merged.get("before") or status,
+                         "where": [w["label"]["en"] for w in where],
+                         "gap": merged.get("gap", ""), "fix": merged.get("fix", ""),
+                         "deferred": merged.get("deferred", "")})
+        unused = [k for k in items if k not in used]
+        if unused:
+            raise WhereError(f"{wid}: worksheet_where.yaml keys match no question: {unused}")
+        return rows
+
+
 # ── output ──────────────────────────────────────────────────────────────
 
 APPLY_KEYS = ("tools", "procedures", "pages", "scenarios", "context_keys")
@@ -402,8 +638,12 @@ def _apply_prefill(wid: str, qs: list[dict], prefill: dict) -> None:
 TOOLS = ("mcs", "delayed_tm", "orbit", "radio", "docs", "instructor", "portal", "design")
 
 
-def generate(map_file: Path = MAP_FILE) -> str:
+def generate(map_file: Path = MAP_FILE, audit: list | None = None) -> str:
     mp = yaml.safe_load(map_file.read_text(encoding="utf-8"))
+    where = WhereMap()
+    unknown = [w for w in where.sheets if w not in mp["worksheets"]]
+    if unknown:
+        raise SystemExit(f"worksheet_where.yaml names sheets the map does not generate: {unknown}")
     src, src_fr = mp["source"], mp["source_fr"]
     en = parse_workbook((C2O / src).read_text(encoding="utf-8"))
     fr = parse_workbook((C2O / src_fr).read_text(encoding="utf-8"))
@@ -427,6 +667,12 @@ def generate(map_file: Path = MAP_FILE) -> str:
         if form is not None and form not in FORMS:
             raise SystemExit(f"{wid}: form must be one of {FORMS}, not {form!r}")
         _apply_prefill(wid, qs, spec.get("prefill"))
+        try:
+            rows = where.apply(wid, qs)
+        except WhereError as e:
+            raise SystemExit(str(e))
+        if audit is not None:
+            audit.append({"id": wid, "title": en[wid]["title"], "rows": rows})
         sheet = {
             "id": wid,
             "title": {"en": en[wid]["title"], "fr": fr[wid]["title"]},
@@ -444,13 +690,77 @@ def generate(map_file: Path = MAP_FILE) -> str:
                                    width=100, default_flow_style=False)
 
 
+AUDIT_BEGIN = "<!-- AUDIT TABLE: generated by tools/gen_worksheets.py --audit; edit worksheet_where.yaml -->"
+AUDIT_END = "<!-- END AUDIT TABLE -->"
+STATUS_LABEL = {"screen": "screen", "manual": "manual only", "none": "not at all", "na": "n/a"}
+
+
+def _cell(s: str) -> str:
+    return str(s or "").replace("|", "\\|").replace("\n", " ").strip()
+
+
+def audit_text(audit: list) -> str:
+    """The generated part of the audit document: counts, then one table row
+    per question (sheet, question, answerable?, where, gap, fix)."""
+    from collections import Counter
+    rows = [r for sh in audit for r in sh["rows"]]
+    before, after = Counter(r["before"] for r in rows), Counter(r["status"] for r in rows)
+    out = [AUDIT_BEGIN, "",
+           f"{len(rows)} questions on {len(audit)} generated sheets.", "",
+           "| Answerable | before | after |", "|---|---:|---:|"]
+    for k in STATUSES:
+        out.append(f"| {STATUS_LABEL[k]} | {before.get(k, 0)} | {after.get(k, 0)} |")
+    deferred = [r for r in rows if r["deferred"]]
+    out += ["", f"Deferred: {len(deferred)} (reason in the Fix column).", ""]
+    for sh in audit:
+        out += [f"### {sh['id']} — {_cell(sh['title'])}", "",
+                "| # | Question | Answerable? | Where | Gap | Fix |", "|---|---|---|---|---|---|"]
+        for r in sh["rows"]:
+            ans = STATUS_LABEL[r["status"]]
+            if r["before"] != r["status"]:
+                ans = f"{ans} (was {STATUS_LABEL[r['before']]})"
+            fix = r["fix"] + (f" **Deferred:** {r['deferred']}" if r["deferred"] else "")
+            num = f"step {r['step']}" if r["step"] else r["q"]
+            text = r["text"] if len(r["text"]) <= 110 else r["text"][:107] + "…"
+            out.append(f"| {num} | {_cell(text)} | {ans} | {_cell('; '.join(r['where']))} | "
+                       f"{_cell(r['gap'])} | {_cell(fix)} |")
+        out.append("")
+    out.append(AUDIT_END)
+    return "\n".join(out)
+
+
+def write_audit(audit: list) -> None:
+    body = audit_text(audit)
+    cur = AUDIT_FILE.read_text(encoding="utf-8") if AUDIT_FILE.exists() else ""
+    if AUDIT_BEGIN in cur and AUDIT_END in cur:
+        head, rest = cur.split(AUDIT_BEGIN, 1)
+        tail = rest.split(AUDIT_END, 1)[1]
+        new = head + body + tail
+    else:
+        new = (cur.rstrip() + "\n\n" if cur else "") + body + "\n"
+    AUDIT_FILE.write_text(new, encoding="utf-8")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--check", action="store_true",
                     help="exit 1 if the committed ops_week3.yaml is stale")
     ap.add_argument("--output", type=Path, default=OUT_FILE)
+    ap.add_argument("--audit", action="store_true",
+                    help="also rewrite the generated table in " + str(AUDIT_FILE.relative_to(C2O)))
     args = ap.parse_args(argv)
-    text = generate()
+    audit: list = []
+    text = generate(audit=audit)
+    if args.audit:
+        write_audit(audit)
+        print(f"wrote {AUDIT_FILE}")
+        return 0
+    if args.check:
+        stale = audit_text(audit)
+        cur = AUDIT_FILE.read_text(encoding="utf-8") if AUDIT_FILE.exists() else ""
+        if stale is not None and AUDIT_FILE.exists() and stale not in cur:
+            print(f"{AUDIT_FILE.relative_to(C2O)} is stale: re-run tools/gen_worksheets.py --audit")
+            return 1
     if args.check:
         current = OUT_FILE.read_text(encoding="utf-8") if OUT_FILE.exists() else ""
         if current != text:
