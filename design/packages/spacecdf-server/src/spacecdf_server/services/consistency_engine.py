@@ -58,6 +58,11 @@ class ConsistencyReport:
         return (self.pass_count / self.total_checks) * 100
 
 
+#: The margin-ladder step for a lifecycle phase: the gate that closes the phase.
+PHASE_TO_MARGIN_GATE = {"phase_0": "mdr", "pre_phase_a": "mdr", "phase_a": "prr", "phase_b": "pdr",
+                        "phase_c": "cdr", "phase_d": "cdr"}
+
+
 def run_consistency_check(
     *,
     mission_need: dict[str, Any] | None = None,
@@ -69,6 +74,7 @@ def run_consistency_check(
     design_params: dict[str, Any] | None = None,
     equipment: list[dict[str, Any]] | None = None,
     phase_id: str = "phase_a",
+    margin_gate: str | None = None,
 ) -> ConsistencyReport:
     """Run all consistency checks and return a consolidated report."""
     from datetime import datetime, timezone
@@ -199,10 +205,13 @@ def run_consistency_check(
         ("systems.mass_margin_percent", "Mass margin", 20, 10),
         ("systems.power_margin_percent", "Power margin", 20, 5),
     ]
-    phase_min_margins = {
-        "phase_0": 30, "phase_a": 20, "phase_b": 15, "phase_c": 10, "phase_d": 5,
-    }
-    min_margin = phase_min_margins.get(phase_id, 20)
+    # F2 (Nov 2026): ONE margin ladder. The minimum is the system margin of the gate the
+    # study prepares for, read from configs/margin_policy.yaml (C2O default ladder), the
+    # same number GC-MARGINS and the budgets use. ``phase_id`` only picks the gate when
+    # the caller does not pass ``margin_gate``.
+    from .margin_policy import system_margin_percent
+    gate = margin_gate or PHASE_TO_MARGIN_GATE.get(phase_id)
+    min_margin = system_margin_percent(gate, "mass")
 
     for param_id, label, _warn, _crit in margin_checks:
         checks += 1
@@ -215,8 +224,9 @@ def run_consistency_check(
                 issues.append(ConsistencyIssue(
                     id=f"CON-BDG-{param_id.split('.')[-1][:4].upper()}",
                     severity="major", category="budgets",
-                    title=f"{label} below policy ({margin:.0f}% < {min_margin}%)",
-                    description=f"For {phase_id}, margin policy requires >= {min_margin}%.",
+                    title=f"{label} below policy ({margin:.0f}% < {min_margin:g}%)",
+                    description=f"At {(gate or phase_id).upper()}, the margin policy (C2O default ladder, "
+                                f"configs/margin_policy.yaml) requires >= {min_margin:g}%.",
                     affected_items=[param_id],
                     suggested_fix=f"Reduce allocations or increase total {label.split()[0].lower()} capacity.",
                 ))

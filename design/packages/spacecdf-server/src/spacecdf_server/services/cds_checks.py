@@ -86,6 +86,29 @@ def _has(elements: list[dict], keywords: list[str], domains: list[str], *, deplo
     return hits
 
 
+def _body_order(form_factor: str, cfg: dict) -> list[int]:
+    order = ((cfg.get("body_frame") or {}).get("order") or {}).get(form_factor)
+    return list(order) if isinstance(order, list) and sorted(order) == [0, 1, 2] else [0, 1, 2]
+
+
+def body_frame_envelope_mm(form_factor: str | None, cfg: dict | None = None) -> list[float] | None:
+    """CDS envelope (mm) in the SpaceCDF/simulator body frame (D15; CDS rev 14.1 Appendix B)."""
+    cfg = cfg or rc.load(CONFIG)
+    v = cfg["envelope_mm"]["values"].get(form_factor or "")
+    if not v:
+        return None
+    return [float(v[i]) for i in _body_order(str(form_factor), cfg)]
+
+
+def body_frame_cog_limits_cm(form_factor: str | None, cfg: dict | None = None) -> list[float] | None:
+    """CDS Table 2 CoG limits (cm) in the body frame (D15)."""
+    cfg = cfg or rc.load(CONFIG)
+    v = cfg["cog_limits_cm"]["values"].get(form_factor or "")
+    if not v:
+        return None
+    return [float(v[i]) for i in _body_order(str(form_factor), cfg)]
+
+
 def evaluate_cds(
     elements: list[dict],
     interfaces: list[dict] | None = None,
@@ -125,9 +148,9 @@ def evaluate_cds(
             mref, value=round(cbe, 3), value_with_margins=round(with_m, 3), limit=limit, unit="kg"))
 
     # ------------------------------------------------------------------ CoG (Table 2)
-    cnode, enode = cfg["cog_limits_cm"], cfg["envelope_mm"]
-    lim_cm = cnode["values"].get(form_factor)
-    env_m = [x / 1000 for x in enode["values"].get(form_factor, [0, 0, 0])]
+    cnode = cfg["cog_limits_cm"]
+    lim_cm = body_frame_cog_limits_cm(form_factor, cfg)
+    env_m = [x / 1000 for x in (body_frame_envelope_mm(form_factor, cfg) or [0, 0, 0])]
     massive = leaves_with(elements, "mass_kg")
     placed = [e for e in massive if isinstance(e.get("position_json"), list) and len(e["position_json"]) == 3]
     cref = rc.ref_of(cfg, cnode)
