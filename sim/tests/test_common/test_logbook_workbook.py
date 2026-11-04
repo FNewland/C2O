@@ -522,7 +522,12 @@ async def test_export_header_sheet_and_copy(tmp_path):
         r = await c.get("/api/logbook/worksheets?all=1&context=" + json.dumps({"procedure": "NOM-001"}),
                         headers=H)
         ws = (await r.json())["worksheets"]
-        assert ws[0]["id"] == "WB-5.4-N001" and any(w["id"] == "WB-A-CTG-020" for w in ws)
+        # every MCS sheet in printed-workbook order (WB-5.1, the Day 1 score
+        # cards, comes first since 2026-11-04); NOM-001's sheet matches here
+        ids = [w["id"] for w in ws]
+        assert ids[0] == "WB-5.1" and ids.index("WB-5.1") < ids.index("WB-5.4-N001")
+        assert next(w for w in ws if w["id"] == "WB-5.4-N001")["match"] == "procedure"
+        assert any(w["id"] == "WB-A-CTG-020" for w in ws)
         assert next(w for w in ws if w["id"] == "WB-5.5-AT")["form"] == "anomaly"
     finally:
         await c.close()

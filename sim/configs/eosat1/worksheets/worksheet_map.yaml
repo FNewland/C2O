@@ -36,6 +36,10 @@
 #                open_alarms, next_pass, gonogo_open, gonogo, next_aos.
 #                A label that no longer matches a question stops the
 #                generator: edit the map when the workbook changes.
+#
+# Where each question is answered (the logbook's "Where to find this" links)
+# and whether the screens answer it at all is the other input,
+# worksheet_where.yaml next to this file (worksheet screen audit, 2026-11-04).
 
 source: design/docs/course/orbit_north_week3_workbook.md
 source_fr: design/docs/course/fr/orbit_north_week3_workbook.md
@@ -43,6 +47,12 @@ source_fr: design/docs/course/fr/orbit_north_week3_workbook.md
 worksheets:
   # ── orientation ─────────────────────────────────────────────────────────
   WB-5.0: {phase: prep, tools: [portal, docs]}
+
+  # ── Day 1: position round-robin, pass-plan exercise ─────────────────────
+  # (added 2026-11-04 with the worksheet screen audit: these sheets are
+  # worked on the screens, so they carry "where to find this" links)
+  WB-5.1: {phase: exercise, tools: [mcs, orbit, radio, docs]}
+  WB-5.3-PP: {phase: exercise, tools: [mcs, orbit]}
 
   # ── Day 2: nominal pass, link loss, handover, flight dynamics ───────────
   WB-5.4-N001: {phase: during, tools: [mcs], procedures: [NOM-001]}
@@ -95,6 +105,7 @@ worksheets:
     form: scorecard
     prefill:
       Notes for debrief: gonogo
+  WB-5.5-OBS: {phase: during, tools: [mcs, instructor]}
   WB-5.5-HO:
     phase: during
     tools: [mcs]
@@ -124,6 +135,7 @@ worksheets:
   WB-5.6-C008: {phase: during, tools: [mcs], procedures: [COM-008]}
   WB-5.6-C009: {phase: during, tools: [mcs], procedures: [COM-009]}
   WB-5.6-C010: {phase: during, tools: [mcs], procedures: [COM-010]}
+  WB-5.6-FPA: {phase: during, tools: [mcs], procedures: [COM-010]}
   WB-5.6-C011: {phase: during, tools: [mcs], procedures: [COM-011]}
   WB-5.6-C012: {phase: during, tools: [mcs], procedures: [COM-012]}
   WB-5.6-FL: {phase: during, tools: [mcs, delayed_tm], procedures: [COM-012]}
@@ -137,6 +149,7 @@ worksheets:
     tools: [mcs, instructor]
     scenarios: [sequential_checkout]
     form: scorecard
+  WB-5.6-OBS: {phase: during, tools: [mcs, instructor]}
   WB-5.6-HO:
     phase: during
     tools: [mcs]

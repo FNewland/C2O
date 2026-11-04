@@ -61,7 +61,7 @@ needed.
 
 ### Step 2 --- Read the Clock, Its Reference and the Slant Range
 **TC:** `REQUEST_TIME` (Service 9, Subtype 2) --- request the current OBC time; the reply is TM(9,2)
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- TT&C housekeeping, for the slant range
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- TT&C housekeeping, for the link state
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- Platform housekeeping, for the clock cross-check
 **Verify:** TM(9,2) time report received within 10 s
 **Action:** Record the onboard time as T_obc = `obdh.obc_time` (0x0309) +
@@ -77,17 +77,19 @@ HOLDOVER (was GPS, fix lost).
 set this mission --- establish by whom before continuing.
 **Action:** Record ground UTC at the moment the time report is received as
 T_ground, expressed in the same CUC seconds since J2000.
-**Action:** Compute the one-way light time from the slant range in the SID 6
-report: OWLT_ms = `ttc.range_km` (0x0509) / 299792.458 * 1000. Expect 3-22 ms;
+**Action:** Read the one-way light time on the PUS page, S9 TIME tab
+("One-way light time (ground geometry)"): the slant range to the station in
+view divided by c, OWLT_ms = range_km / 299792.458 * 1000. Expect 3-22 ms;
 record it, and note that it is two orders of magnitude below this card's 1.0 s
 acceptance threshold.
 **Note:** `REQUEST_TIME` is the catalogue mnemonic (`tc_catalog.yaml`).
 `TIME_REPORT_REQUEST` is an alias --- it resolves on the wire, but an operator
 searching the command panel for it will not find it.
-**Note:** `ttc.range_km` (0x0509) lives in **HK SID 6**, which is why this step
-requests SID 6 and not only SID 4. It is the GEOMETRIC slant range and is
-published whether or not a station is in view: about 6530 km out of contact and
-1000-2000 km during a pass.
+**Note:** The slant range is a GROUND product: the MCS propagates the mission
+TLE to the station in view. The spacecraft does not downlink it ---
+`ttc.range_km` (0x0509) is in no HK SID --- so it is read on the ground: the TT&C
+page's Ground station network shows the range and the OWLT of the station in
+contact (1000-2000 km during a pass).
 **Note:** The OBC clock is ALSO downlinked continuously as `obdh.obc_time`
 (0x0309) in HK SID 4, requested above. Cross-check the TM(9,2) value against
 it: the two must agree to within the SID 4 collection interval (8 s). They come
@@ -96,7 +98,7 @@ sample --- so a disagreement means the time service and the housekeeping
 sampler disagree about the clock, which is a different fault from the clock
 being wrong.
 **GO/NO-GO:** Valid TM(9,2) time report received, `obdh.time_ref` (0x0A13) read,
-the slant range recorded, and 0x0309 in agreement.
+the OWLT recorded, and 0x0309 in agreement.
 
 ### Step 3 --- Calculate the Time Delta
 **Action:** Compute the clock offset:
@@ -276,7 +278,7 @@ be interpreted.
 - [ ] Time synchronisation log entry completed for the LEOP record
 - [ ] Housekeeping telemetry packets carry mission-date CUC timestamps
 - [ ] OBC mode unchanged and no reboot during the sync
-- [ ] Slant range and OWLT recorded from HK SID 6
+- [ ] OWLT recorded (PUS page, S9 TIME)
 - [ ] `obdh.obc_time` (0x0309) agrees with the TM(9,2) report
 
 **NEXT:** LEOP-003 (Initial Orbit Determination --- ends LEOP with the phase-5

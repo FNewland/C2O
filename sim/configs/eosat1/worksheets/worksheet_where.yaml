@@ -1,0 +1,629 @@
+# worksheet_where.yaml — where each workbook question is answered.
+#
+# Hand-maintained (worksheet screen audit, 2026-11-04). tools/gen_worksheets.py
+# reads it, sets `where` on the questions of ops_week3.yaml (the logbook shows
+# them as "Where to find this" links) and, with --audit, writes the audit
+# table of docs/plan_2026-11/WORKSHEET_SCREEN_AUDIT_OPS.md. Edit here, then:
+#
+#     python3 tools/gen_worksheets.py && python3 tools/gen_worksheets.py --audit
+#
+# targets   named places on the screens (tool + page/panel), or in the
+#           documentation viewer (path + heading anchor, or a procedure id)
+#             tool: mcs        page (rail id), param 0xHHHH (row of the page's
+#                              Parameters table), focus (element id), tab (PUS
+#                              tab), bd (bottom-drawer tab)
+#             tool: planner | orbit | radio | delayed_tm   focus (element id),
+#                              path (a page of the tool, e.g. reports)
+#             tool: docs       path under configs/eosat1 + anchor, or proc: ID
+#           tests/test_content/test_worksheet_where.py checks that every one
+#           exists (page, element id, heading anchor, procedure).
+# links     open references outside the tools (https only; they open in a new
+#           window). Mirrored, with the reason and the check date, in
+#           docs/plan_2026-11/EXTERNAL_LINKS.md.
+# sheets    per worksheet, per question:
+#             key      "step N" (a confirm-each-step row) or the start of the
+#                      English question text (without its "N. " number);
+#                      a key that matches nothing stops the generator
+#             status   screen  — a tool screen shows it (where says which)
+#                      manual  — only the manual / a procedure card says it
+#                      none    — nothing in the system answers it (fix or
+#                                deferred says what happens)
+#                      na      — not a lookup: an observation, a decision,
+#                                a reflection, a signature, room logistics
+#             before   the status before the 2026-11-04 audit, when it changed
+#             where    target keys, link keys, param:0xHHHH, or inline places
+#             gap, fix, deferred   audit notes (the audit table's columns)
+#             auto     false: do not add the parameter rows the question names
+#             off_screen  ids the question may name although the operator
+#                      dictionary does not carry them (needs a gap)
+#           default    applies to every question of the sheet without a key.
+# A question that names a parameter (0xHHHH or its name) the operator
+# dictionary carries is linked to that parameter's row with no entry; any
+# other question needs a status here.
+
+targets:
+  # ── MCS (modern console) ───────────────────────────────────────────────
+  mcs.ovr: {tool: mcs, page: ovr, label: {en: "MCS › OVR (overview)", fr: "MCS › OVR (vue d'ensemble)"}}
+  mcs.next: {tool: mcs, page: ovr, focus: sa-next, label: {en: "MCS › header › What's next", fr: "MCS › bandeau › Et ensuite ?"}}
+  mcs.see: {tool: mcs, page: ovr, focus: sa-see, label: {en: "MCS › header › Can I see it?", fr: "MCS › bandeau › Je le vois ?"}}
+  mcs.eps: {tool: mcs, page: eps, label: {en: "MCS › EPS page", fr: "MCS › page EPS"}}
+  mcs.eps.flow: {tool: mcs, page: eps, focus: eps-flow, label: {en: "MCS › EPS › Power flow", fr: "MCS › EPS › Flux de puissance"}}
+  mcs.eps.eclipse: {tool: mcs, page: eps, focus: eps-eclipse, label: {en: "MCS › EPS › Projections › Next eclipse", fr: "MCS › EPS › Prévisions › Prochaine éclipse"}}
+  mcs.eps.margin: {tool: mcs, page: eps, focus: eps-orbit-margin, label: {en: "MCS › EPS › Projections › Orbit-average margin", fr: "MCS › EPS › Prévisions › Marge moyenne sur l'orbite"}}
+  mcs.eps.and: {tool: mcs, page: eps, focus: eps-and, label: {en: "MCS › EPS › Parameters", fr: "MCS › EPS › Paramètres"}}
+  mcs.tcs: {tool: mcs, page: tcs, label: {en: "MCS › TCS page", fr: "MCS › page TCS"}}
+  mcs.tcs.equip: {tool: mcs, page: tcs, focus: tcs-equip, label: {en: "MCS › TCS › Equipment (DUTY BAT / DUTY OBC)", fr: "MCS › TCS › Équipements (DUTY BAT / DUTY OBC)"}}
+  mcs.aocs: {tool: mcs, page: aocs, label: {en: "MCS › AOC page", fr: "MCS › page AOC"}}
+  mcs.aocs.mode: {tool: mcs, page: aocs, focus: aocs-stepper, label: {en: "MCS › AOC › AOCS mode chain", fr: "MCS › AOC › Chaîne des modes SCAO"}}
+  mcs.aocs.gps: {tool: mcs, page: aocs, focus: aocs-gpsnav, label: {en: "MCS › AOC › GPS navigation (PVT)", fr: "MCS › AOC › Navigation GPS (PVT)"}}
+  mcs.aocs.gpsmag: {tool: mcs, page: aocs, focus: aocs-gps-mag, label: {en: "MCS › AOC › GPS navigation › |r| and |v|", fr: "MCS › AOC › Navigation GPS › |r| et |v|"}}
+  mcs.aocs.fine: {tool: mcs, page: aocs, focus: aocs-fineready, label: {en: "MCS › AOC › FINE-entry readiness", fr: "MCS › AOC › Aptitude à l'entrée en FINE"}}
+  mcs.ttc: {tool: mcs, page: ttc, label: {en: "MCS › TTC page", fr: "MCS › page TTC"}}
+  mcs.ttc.gs: {tool: mcs, page: ttc, focus: ttc-gs-panel, label: {en: "MCS › TTC › Ground station network", fr: "MCS › TTC › Réseau de stations sol"}}
+  mcs.ttc.link: {tool: mcs, page: ttc, focus: ttc-linkpred-now, label: {en: "MCS › TTC › Predicted vs measured link", fr: "MCS › TTC › Liaison prédite vs mesurée"}}
+  mcs.ttc.dump: {tool: mcs, page: ttc, focus: ttc-dump-time, label: {en: "MCS › TTC › Projections › Time to dump the stored image products", fr: "MCS › TTC › Prévisions › Durée de vidage des produits image stockés"}}
+  mcs.ttc.lock: {tool: mcs, page: ttc, focus: ttc-stepper, label: {en: "MCS › TTC › Link lock chain", fr: "MCS › TTC › Chaîne de verrouillage de la liaison"}}
+  mcs.ttc.blind: {tool: mcs, page: ttc, focus: ttc-blind-btn, label: {en: "MCS › TTC › Blind commanding", fr: "MCS › TTC › Commande à l'aveugle"}}
+  mcs.pld: {tool: mcs, page: pld, label: {en: "MCS › PLD page", fr: "MCS › page PLD"}}
+  mcs.pld.capture: {tool: mcs, page: pld, focus: pld-capture, label: {en: "MCS › PLD › Capture readiness", fr: "MCS › PLD › Aptitude à la prise de vue"}}
+  mcs.prp: {tool: mcs, page: prp, label: {en: "MCS › PRP page", fr: "MCS › page PRP"}}
+  mcs.prp.inhibit: {tool: mcs, page: prp, focus: prp-inhibit, label: {en: "MCS › PRP › Arm interlocks", fr: "MCS › PRP › Verrouillages d'armement"}}
+  mcs.obd: {tool: mcs, page: obd, label: {en: "MCS › OBD page", fr: "MCS › page OBD"}}
+  mcs.obd.sw: {tool: mcs, page: obd, focus: obd-swstate, label: {en: "MCS › OBD › Software state", fr: "MCS › OBD › État logiciel"}}
+  mcs.cmd: {tool: mcs, page: cmd, label: {en: "MCS › CMD (command builder)", fr: "MCS › CMD (préparation des commandes)"}}
+  mcs.cmd.verif: {tool: mcs, page: cmd, focus: cmd-verif-stepper, label: {en: "MCS › CMD › verification stages", fr: "MCS › CMD › étapes de vérification"}}
+  mcs.fdir: {tool: mcs, page: fdir, label: {en: "MCS › FDR (FDIR page)", fr: "MCS › FDR (page FDIR)"}}
+  mcs.fdir.state: {tool: mcs, page: fdir, focus: fdir-strip, label: {en: "MCS › FDR › FDIR state", fr: "MCS › FDR › État FDIR"}}
+  mcs.fdir.s12: {tool: mcs, page: fdir, focus: fdir-s12, label: {en: "MCS › FDR › On-board monitoring (S12)", fr: "MCS › FDR › Surveillance bord (S12)"}}
+  mcs.fdir.s19: {tool: mcs, page: fdir, focus: fdir-s19, label: {en: "MCS › FDR › Event-action rules (S19)", fr: "MCS › FDR › Règles événement-action (S19)"}}
+  mcs.fdir.journal: {tool: mcs, page: fdir, focus: fdir-journal, label: {en: "MCS › FDR › Alarm / anomaly journal", fr: "MCS › FDR › Journal des alarmes et anomalies"}}
+  mcs.proc: {tool: mcs, page: proc, label: {en: "MCS › PRC (procedures)", fr: "MCS › PRC (procédures)"}}
+  mcs.trnd: {tool: mcs, page: trnd, label: {en: "MCS › TRD (trends)", fr: "MCS › TRD (tendances)"}}
+  mcs.pus.s3: {tool: mcs, page: diag, tab: s3, label: {en: "MCS › PUS › S3 HK (Observed column)", fr: "MCS › PUS › S3 HK (colonne Observé)"}}
+  mcs.pus.s9: {tool: mcs, page: diag, tab: s9, focus: s9-dt, label: {en: "MCS › PUS › S9 TIME (time correlation)", fr: "MCS › PUS › S9 TIME (corrélation temporelle)"}}
+  mcs.pus.owlt: {tool: mcs, page: diag, tab: s9, focus: s9-owlt, label: {en: "MCS › PUS › S9 TIME › One-way light time", fr: "MCS › PUS › S9 TIME › Temps de propagation aller"}}
+  mcs.pus.s12: {tool: mcs, page: diag, tab: s12, label: {en: "MCS › PUS › S12 MONITOR", fr: "MCS › PUS › S12 MONITOR"}}
+  mcs.pus.s19: {tool: mcs, page: diag, tab: s19, label: {en: "MCS › PUS › S19 EVT-ACT", fr: "MCS › PUS › S19 EVT-ACT"}}
+  mcs.pus.s15: {tool: mcs, page: diag, tab: s15, label: {en: "MCS › PUS › S15 STORES", fr: "MCS › PUS › S15 STORES"}}
+  mcs.man: {tool: mcs, page: man, label: {en: "MCS › MAN (operations manual)", fr: "MCS › MAN (manuel d'exploitation)"}}
+  mcs.events: {tool: mcs, bd: events, label: {en: "MCS › bottom drawer › Events", fr: "MCS › tiroir du bas › Événements"}}
+  mcs.cmdhist: {tool: mcs, bd: cmdhist, label: {en: "MCS › bottom drawer › Command history", fr: "MCS › tiroir du bas › Historique des commandes"}}
+  mcs.gonogo: {tool: mcs, bd: gonogo, label: {en: "MCS › bottom drawer › GO/NO-GO", fr: "MCS › tiroir du bas › GO/NO-GO"}}
+  mcs.handover: {tool: mcs, bd: handover, label: {en: "MCS › bottom drawer › Handover", fr: "MCS › tiroir du bas › Passation"}}
+  mcs.log: {tool: mcs, bd: conlog, label: {en: "MCS › bottom drawer › Log", fr: "MCS › tiroir du bas › Journal"}}
+  # ── planner ────────────────────────────────────────────────────────────
+  planner.contacts: {tool: planner, focus: panel-contacts, label: {en: "Planner › Next contacts", fr: "Planificateur › Prochains contacts"}}
+  planner.nextpass: {tool: planner, focus: panel-sky, label: {en: "Planner › Next pass (max elevation and its time)", fr: "Planificateur › Prochain passage (élévation max. et son heure)"}}
+  planner.eclipse: {tool: planner, focus: factEclipse, label: {en: "Planner › Next eclipse", fr: "Planificateur › Prochaine éclipse"}}
+  planner.timeline: {tool: planner, focus: timeline, label: {en: "Planner › Next 24 hours (timeline)", fr: "Planificateur › 24 prochaines heures (chronogramme)"}}
+  planner.power: {tool: planner, focus: panel-power, label: {en: "Planner › Power budget", fr: "Planificateur › Bilan de puissance"}}
+  planner.data: {tool: planner, focus: panel-data, label: {en: "Planner › Data budget", fr: "Planificateur › Bilan de données"}}
+  planner.imaging: {tool: planner, focus: panel-imaging, label: {en: "Planner › Imaging opportunities", fr: "Planificateur › Opportunités de prise de vue"}}
+  planner.sched: {tool: planner, focus: panel-sched, label: {en: "Planner › Activity schedule", fr: "Planificateur › Programme d'activités"}}
+  planner.orbit: {tool: planner, focus: panel-map, label: {en: "Planner › Ground track (period, inclination, beta)", fr: "Planificateur › Trace au sol (période, inclinaison, bêta)"}}
+  # ── orbit tools ────────────────────────────────────────────────────────
+  orbit.passes: {tool: orbit, focus: passes, label: {en: "Orbit tools › Passes (AOS, TCA, LOS)", fr: "Outils d'orbite › Passages (AOS, TCA, LOS)"}}
+  orbit.eclipses: {tool: orbit, focus: eclipses, label: {en: "Orbit tools › Eclipses", fr: "Outils d'orbite › Éclipses"}}
+  orbit.elements: {tool: orbit, focus: elements, label: {en: "Orbit tools › Orbit at epoch (elements, LTAN)", fr: "Outils d'orbite › Orbite à l'époque (éléments, LTAN)"}}
+  orbit.timeline: {tool: orbit, focus: timeline, label: {en: "Orbit tools › Contact timeline", fr: "Outils d'orbite › Chronogramme des contacts"}}
+  orbit.sv: {tool: orbit, focus: mode-tabs, label: {en: "Orbit tools › State vector (convert the GPS fix)", fr: "Outils d'orbite › Vecteur d'état (convertir le point GPS)"}}
+  # ── radio view ─────────────────────────────────────────────────────────
+  radio.lock: {tool: radio, focus: lock-h, label: {en: "Radio › Lock status", fr: "Radio › État des verrouillages"}}
+  radio.datalink: {tool: radio, focus: datarate, label: {en: "Radio › Data link (rate, symbol rate)", fr: "Radio › Liaison de données (débit, débit symbole)"}}
+  radio.rf: {tool: radio, focus: rssi, label: {en: "Radio › RF measurements", fr: "Radio › Mesures RF"}}
+  radio.budget: {tool: radio, focus: lb-h, label: {en: "Radio › Link budget (coding)", fr: "Radio › Bilan de liaison (codage)"}}
+  # ── delayed TM ─────────────────────────────────────────────────────────
+  dtm.summary: {tool: delayed_tm, focus: summary, label: {en: "Delayed TM › Summary", fr: "TM différée › Synthèse"}}
+  dtm.timeline: {tool: delayed_tm, focus: timeline, label: {en: "Delayed TM › Dump timeline", fr: "TM différée › Chronologie des vidages"}}
+  # ── documentation viewer ───────────────────────────────────────────────
+  doc.overview.orbit: {tool: docs, path: manual/00_mission_overview.md, anchor: 3-orbit-parameters, label: {en: "Manual 00 › §3 Orbit parameters", fr: "Manuel 00 › §3 Paramètres d'orbite"}}
+  doc.overview.objectives: {tool: docs, path: manual/00_mission_overview.md, anchor: 2-mission-objectives, label: {en: "Manual 00 › §2 Mission objectives", fr: "Manuel 00 › §2 Objectifs de la mission"}}
+  doc.overview.bus: {tool: docs, path: manual/00_mission_overview.md, anchor: 4-spacecraft-bus-overview, label: {en: "Manual 00 › §4 Spacecraft bus", fr: "Manuel 00 › §4 Plateforme"}}
+  doc.overview.gs: {tool: docs, path: manual/00_mission_overview.md, anchor: 51-ground-stations, label: {en: "Manual 00 › §5.1 Ground stations", fr: "Manuel 00 › §5.1 Stations sol"}}
+  doc.overview.positions: {tool: docs, path: manual/00_mission_overview.md, anchor: 53-operator-positions, label: {en: "Manual 00 › §5.3 Operator positions", fr: "Manuel 00 › §5.3 Postes d'opérateur"}}
+  doc.desk: {tool: docs, path: manual/10_desk_procedures.md, anchor: operator-positions, label: {en: "Manual 10 › Desk-based procedure assignments", fr: "Manuel 10 › Répartition des procédures par poste"}}
+  doc.desk.gonogo: {tool: docs, path: manual/10_desk_procedures.md, anchor: gono-go-call-matrix, label: {en: "Manual 10 › GO/NO-GO call matrix", fr: "Manuel 10 › Matrice des appels GO/NO-GO"}}
+  doc.eps.battery: {tool: docs, path: manual/01_eps.md, anchor: 22-battery, label: {en: "Manual 01 EPS › §2.2 Battery", fr: "Manuel 01 EPS › §2.2 Batterie"}}
+  doc.eps.lines: {tool: docs, path: manual/01_eps.md, anchor: switchable-lines, label: {en: "Manual 01 EPS › Switchable lines", fr: "Manuel 01 EPS › Lignes commutables"}}
+  doc.eps.budget: {tool: docs, path: manual/01_eps.md, anchor: 32-orbit-average-budget-worst-beta-eol, label: {en: "Manual 01 EPS › §3.2 Orbit-average budget", fr: "Manuel 01 EPS › §3.2 Bilan moyen sur l'orbite"}}
+  doc.aocs.modes: {tool: docs, path: manual/02_aocs.md, anchor: 3-aocs-modes, label: {en: "Manual 02 AOCS › §3 AOCS modes", fr: "Manuel 02 SCAO › §3 Modes SCAO"}}
+  doc.tcs.heater: {tool: docs, path: manual/03_tcs.md, anchor: 31-battery-heater-circuit, label: {en: "Manual 03 TCS › §3.1 Battery heater circuit", fr: "Manuel 03 TCS › §3.1 Circuit de réchauffage batterie"}}
+  doc.tcs.zones: {tool: docs, path: manual/03_tcs.md, anchor: 4-temperature-zones, label: {en: "Manual 03 TCS › §4 Temperature zones", fr: "Manuel 03 TCS › §4 Zones de température"}}
+  doc.obdh.counters: {tool: docs, path: manual/04_obdh.md, anchor: 41-tc-counters, label: {en: "Manual 04 OBDH › §4.1 TC counters", fr: "Manuel 04 OBDH › §4.1 Compteurs de TC"}}
+  doc.ttc.ladder: {tool: docs, path: manual/05_ttc.md, anchor: 24-the-tm-data-rate-ladder, label: {en: "Manual 05 TTC › §2.4 TM data-rate ladder", fr: "Manuel 05 TTC › §2.4 Échelle des débits TM"}}
+  doc.ttc.budget: {tool: docs, path: manual/05_ttc.md, anchor: 3-link-budget-summary, label: {en: "Manual 05 TTC › §3 Link budget", fr: "Manuel 05 TTC › §3 Bilan de liaison"}}
+  doc.ttc.stations: {tool: docs, path: manual/05_ttc.md, anchor: 53-per-station-link-budget, label: {en: "Manual 05 TTC › §5.3 Per-station link budget", fr: "Manuel 05 TTC › §5.3 Bilan de liaison par station"}}
+  doc.payload.chars: {tool: docs, path: manual/06_payload.md, anchor: 2-instrument-characteristics, label: {en: "Manual 06 Payload › §2 Instrument characteristics", fr: "Manuel 06 Charge utile › §2 Caractéristiques de l'instrument"}}
+  doc.payload.storage: {tool: docs, path: manual/06_payload.md, anchor: 4-data-storage-and-management, label: {en: "Manual 06 Payload › §4 Data storage", fr: "Manuel 06 Charge utile › §4 Stockage des données"}}
+  doc.orbit.sso: {tool: docs, path: manual/07_orbit_ops.md, anchor: 21-sun-synchronous-properties, label: {en: "Manual 07 Orbit › §2.1 Sun-synchronous properties", fr: "Manuel 07 Orbite › §2.1 Propriétés héliosynchrones"}}
+  doc.orbit.eclipse: {tool: docs, path: manual/07_orbit_ops.md, anchor: 3-eclipse-cycle, label: {en: "Manual 07 Orbit › §3 Eclipse cycle", fr: "Manuel 07 Orbite › §3 Cycle des éclipses"}}
+  doc.orbit.passdur: {tool: docs, path: manual/07_orbit_ops.md, anchor: 43-contact-duration-vs-maximum-elevation, label: {en: "Manual 07 Orbit › §4.3 Contact duration vs maximum elevation", fr: "Manuel 07 Orbite › §4.3 Durée de contact et élévation maximale"}}
+  doc.orbit.od: {tool: docs, path: manual/07_orbit_ops.md, anchor: 5-orbit-determination, label: {en: "Manual 07 Orbit › §5 Orbit determination", fr: "Manuel 07 Orbite › §5 Détermination d'orbite"}}
+  doc.orbit.prop: {tool: docs, path: manual/07_orbit_ops.md, anchor: 6-orbit-maintenance, label: {en: "Manual 07 Orbit › §6 Orbit maintenance (propulsion)", fr: "Manuel 07 Orbite › §6 Maintien d'orbite (propulsion)"}}
+  doc.orbit.targets: {tool: docs, path: manual/07_orbit_ops.md, anchor: 7-imaging-target-planning-for-ocean-currents, label: {en: "Manual 07 Orbit › §7 Imaging target planning", fr: "Manuel 07 Orbite › §7 Planification des cibles"}}
+  doc.orbit.sched: {tool: docs, path: manual/07_orbit_ops.md, anchor: 8-pass-based-scheduling, label: {en: "Manual 07 Orbit › §8 Pass-based scheduling", fr: "Manuel 07 Orbite › §8 Programmation par passage"}}
+  doc.fdir.rules: {tool: docs, path: manual/08_fdir.md, anchor: 4-fdir-rules-and-triggers, label: {en: "Manual 08 FDIR › §4 FDIR rules and triggers", fr: "Manuel 08 FDIR › §4 Règles et déclencheurs FDIR"}}
+  doc.fdir.s12: {tool: docs, path: manual/08_fdir.md, anchor: 6-pus-service-12--onboard-monitoring, label: {en: "Manual 08 FDIR › §6 PUS service 12", fr: "Manuel 08 FDIR › §6 Service PUS 12"}}
+  doc.fdir.matrix: {tool: docs, path: manual/08_fdir.md, anchor: 9-contingency-response-matrix, label: {en: "Manual 08 FDIR › §9 Contingency response matrix", fr: "Manuel 08 FDIR › §9 Matrice de réponse aux contingences"}}
+  doc.fdir.alarms: {tool: docs, path: manual/08_fdir.md, anchor: 12-mcs-alarm-lifecycle, label: {en: "Manual 08 FDIR › §12 MCS alarm lifecycle", fr: "Manuel 08 FDIR › §12 Cycle de vie des alarmes MCS"}}
+  doc.leop.first: {tool: docs, path: manual/09_leop.md, anchor: 4-first-contact--rf-acquisition, label: {en: "Manual 09 LEOP › §4 First contact", fr: "Manuel 09 LEOP › §4 Premier contact"}}
+  doc.leop.boot: {tool: docs, path: manual/09_leop.md, anchor: 6-application-boot-and-verification, label: {en: "Manual 09 LEOP › §6 Application boot", fr: "Manuel 09 LEOP › §6 Démarrage de l'application"}}
+  doc.time.correlation: {tool: docs, path: manual/12_time_and_clocks.md, anchor: 9-reading-the-correlation-on-the-console, label: {en: "Manual 12 Time › §9 Reading the correlation on the console", fr: "Manuel 12 Temps › §9 Lire la corrélation sur la console"}}
+  doc.time.drift: {tool: docs, path: manual/12_time_and_clocks.md, anchor: 5-the-drift-model, label: {en: "Manual 12 Time › §5 Drift model", fr: "Manuel 12 Temps › §5 Modèle de dérive"}}
+
+links:
+  ecss-pus:
+    url: https://ecss.nl/wp-content/uploads/2016/06/ECSS-E-ST-70-41C15April2016.pdf
+    label: {en: "ECSS-E-ST-70-41C — Packet Utilization Standard (PDF)", fr: "ECSS-E-ST-70-41C — norme d'utilisation des paquets (PDF, en anglais)"}
+  ecss-ops:
+    url: https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+    label: {en: "ECSS-E-ST-70-11C — Space segment operability", fr: "ECSS-E-ST-70-11C — opérabilité du segment spatial (en anglais)"}
+  celestrak-tle:
+    url: https://celestrak.org/columns/v04n03/
+    label: {en: "CelesTrak — the two-line element set format", fr: "CelesTrak — le format des éléments à deux lignes (en anglais)"}
+  esa-orbits:
+    url: https://www.esa.int/ESA_Multimedia/Images/2024/12/Where_and_why_we_whizz_around_Earth
+    label: {en: "ESA — where and why we orbit Earth (orbit types)", fr: "ESA — types d'orbites autour de la Terre (en anglais)"}
+  wiki-sso:
+    url: https://en.wikipedia.org/wiki/Sun-synchronous_orbit
+    label: {en: "Sun-synchronous orbit (Wikipedia)", fr: "Orbite héliosynchrone (Wikipédia, en anglais)"}
+  wiki-elements:
+    url: https://en.wikipedia.org/wiki/Orbital_elements
+    label: {en: "Orbital elements (Wikipedia)", fr: "Éléments orbitaux (Wikipédia, en anglais)"}
+  wiki-ebn0:
+    url: https://en.wikipedia.org/wiki/Eb/N0
+    label: {en: "Eb/N0 and bit error rate (Wikipedia)", fr: "Eb/N0 et taux d'erreur binaire (Wikipédia, en anglais)"}
+  wiki-linkbudget:
+    url: https://en.wikipedia.org/wiki/Link_budget
+    label: {en: "Link budget (Wikipedia)", fr: "Bilan de liaison (Wikipédia, en anglais)"}
+  wiki-dop:
+    url: https://en.wikipedia.org/wiki/Dilution_of_precision
+    label: {en: "Dilution of precision, PDOP (Wikipedia)", fr: "Dilution de la précision, PDOP (Wikipédia, en anglais)"}
+  nasa-soa:
+    url: https://www.nasa.gov/smallsat-institute/sst-soa
+    label: {en: "NASA — State of the Art of Small Spacecraft Technology", fr: "NASA — état de l'art des technologies des petits satellites (en anglais)"}
+
+sheets:
+  # ── WB-5.0 Orientation check (before Monday: the manual) ────────────────
+  WB-5.0:
+    default: {status: na}
+    items:
+      "EOSAT-1 platform": {status: manual, where: [doc.overview.bus, nasa-soa]}
+      "Orbit altitude": {status: screen, where: [orbit.elements, doc.overview.orbit, esa-orbits]}
+      "Orbit inclination": {status: screen, where: [orbit.elements, planner.orbit, doc.overview.orbit]}
+      "Local time of ascending node":
+        status: screen
+        before: manual
+        where: [orbit.elements, doc.overview.orbit, wiki-sso]
+        gap: "Only the manual gave the LTAN; Orbit tools showed a RAAN 90° off (atan2 arguments swapped), so the LTAN could not be checked from a screen."
+        fix: "Orbit tools: RAAN fixed, LTAN shown under Orbit at epoch."
+      "Mission band": {status: manual, where: [doc.overview.objectives, doc.payload.chars]}
+      "Number of imager bands": {status: manual, where: [doc.payload.chars]}
+      "Ground stations": {status: screen, where: [mcs.ttc.gs, doc.overview.gs]}
+      "Battery capacity": {status: manual, where: [doc.eps.battery]}
+      "Battery chemistry": {status: manual, where: [doc.eps.battery]}
+      "Instrument swath": {status: screen, where: [param:0x0619, param:0x0628, doc.payload.chars]}
+      "Pointing requirement in NOMINAL": {status: manual, where: [doc.aocs.modes]}
+      "Pointing requirement in FINE_POINT": {status: manual, where: [doc.aocs.modes]}
+      "Propulsion": {status: manual, where: [doc.orbit.prop]}
+      "Flight Director": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "SPACON": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "AOCS Engineer": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "EPS Engineer": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "Thermal Engineer": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "TT&C Engineer": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "Payload Operations": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "FDS / Orbit Analyst": {status: manual, where: [doc.overview.positions, doc.desk]}
+      "Ground Segment Engineer": {status: manual, where: [doc.overview.positions]}
+      "Mission Manager": {status: manual, where: [doc.overview.positions]}
+
+  # ── WB-5.1 Position score cards ─────────────────────────────────────────
+  WB-5.1:
+    default: {status: na}
+    items:
+      "Polled positions": {status: screen, where: [mcs.gonogo, doc.desk.gonogo]}
+      "Responses recorded": {status: screen, where: [mcs.gonogo]}
+      "SoC at eclipse entry": {status: screen, where: [param:0x0101, mcs.eps.eclipse]}
+      "Next eclipse duration":
+        status: screen
+        where: [mcs.eps.eclipse, planner.eclipse, orbit.eclipses]
+        gap: "The MCS said only \"eclipse in N min\"; the duration was on the planner. The printed range (33.2–35.2 min) did not say where to read it."
+        fix: "MCS EPS page, Projections: Next eclipse (entry–exit, duration), ground propagation. Printed row reworded."
+      "Predicted SoC at exit": {status: screen, where: [mcs.eps, param:0x0106, doc.eps.budget]}
+      "Cross-check vs the console": {status: screen, where: [mcs.eps.flow], gap: "Was \"vs eclipse model\": the console calls it the power-flow prediction \"at eclipse exit\".", fix: "Reworded to name the screen."}
+      "Heater with highest duty": {status: screen, where: [mcs.tcs.equip, param:0x040E, param:0x040F]}
+      "Duty": {status: screen, where: [mcs.tcs.equip]}
+      "Predicted next-eclipse duty": {status: manual, where: [mcs.trnd, doc.tcs.heater]}
+      "Will it saturate": {status: na}
+      "Reading": {status: screen, where: [param:0x0217]}
+      "In band": {status: screen, where: [param:0x0217, doc.aocs.modes]}
+      "Next Iqaluit pass":
+        status: screen
+        where: [orbit.passes, planner.contacts, planner.nextpass]
+        gap: "Orbit tools listed AOS, duration and max elevation only; TCA was only in the planner's next-pass card, LOS only in the planner table."
+        fix: "Orbit tools pass list: AOS, TCA and LOS to the second. Printed task now says read, not compute, and names both screens."
+      "Agreement with the planner": {status: screen, where: [orbit.passes, planner.contacts], gap: "Named \"MPS\"; the screen is the Mission planner.", fix: "Reworded."}
+      "SAFE rate": {status: screen, where: [doc.ttc.ladder, mcs.cmd]}
+      "Routine LOW rate": {status: screen, where: [param:0x0506, param:0x0539, doc.ttc.ladder]}
+      "Dump HIGH rate": {status: screen, where: [doc.ttc.ladder]}
+      "Link margin post-transition": {status: screen, where: [param:0x0503, mcs.ttc.link]}
+      "BER reading": {status: screen, where: [param:0x050C, radio.rf, wiki-ebn0]}
+      "Station in contact":
+        status: screen
+        where: [mcs.ttc.gs]
+        gap: "Asked for ttc.active_gs (0x0523), which the operator dictionary does not carry (ground scheduling knowledge)."
+        fix: "Reworded to the TT&C page's Ground station network, which marks the station in contact."
+      "Baseband config": {status: screen, where: [radio.datalink, radio.budget, param:0x053B, doc.ttc.ladder], gap: "\"Baseband config\" named no screen.", fix: "Reworded to the radio view's Data link and Link budget."}
+      "Imaging target chosen": {status: screen, where: [planner.imaging]}
+      "At setpoint": {status: screen, where: [param:0x0610, mcs.pld.capture]}
+      "Monitor selected": {status: screen, where: [mcs.fdir.s12]}
+      "Trigger parameter": {status: screen, where: [mcs.fdir.s12]}
+      "Threshold": {status: screen, where: [mcs.fdir.s12]}
+      "Persistence":
+        status: screen
+        before: none
+        where: [mcs.fdir.s12, doc.fdir.s12]
+        gap: "The S12 table had no persistence (repetition) column."
+        fix: "FDIR page S12 table: Persistence column (consecutive 1 Hz checks)."
+      "Severity":
+        status: screen
+        before: none
+        where: [mcs.fdir.s12]
+        gap: "The S12 table had no severity column."
+        fix: "FDIR page S12 table: Severity column."
+      "Recommended procedure":
+        status: screen
+        before: none
+        where: [mcs.fdir.s12, doc.fdir.matrix]
+        gap: "The monitor-to-procedure link existed only on a raised alarm."
+        fix: "FDIR page S12 table: Procedure column (alarm_procedures.yaml), a link that opens the card."
+      "Bits set": {status: screen, where: [mcs.prp.inhibit]}
+      "Gate blocking the arm": {status: screen, where: [mcs.prp.inhibit, doc.orbit.prop]}
+
+  # ── WB-5.3-PP Pass-plan team exercise (planner work) ────────────────────
+  WB-5.3-PP:
+    default: {status: na}
+    items:
+      "Target pass": {status: screen, where: [planner.contacts, orbit.passes]}
+      "TCA time": {status: screen, where: [orbit.passes, planner.nextpass]}
+      "LOS time": {status: screen, where: [orbit.passes, planner.contacts]}
+      "Pass duration": {status: screen, where: [planner.contacts, orbit.passes]}
+      "Procedures to run": {status: manual, where: [mcs.proc, doc.orbit.sched]}
+      "Imaging target ID": {status: screen, where: [planner.imaging, doc.orbit.targets]}
+      "Imaging window inside pass": {status: screen, where: [planner.imaging, planner.timeline]}
+      "Bands selected": {status: manual, where: [doc.payload.chars]}
+      "Predicted ground swath": {status: screen, where: [param:0x0619, doc.payload.chars]}
+      "Downlink rate planned": {status: screen, where: [planner.data, doc.ttc.ladder]}
+      "Expected downlink duration":
+        status: screen
+        before: none
+        where: [mcs.ttc.dump, planner.data]
+        gap: "No screen turned a data volume into a dump time; it was arithmetic on the planner's figures."
+        fix: "MCS TTC page, Projections: time to dump the stored image products at LOW and HIGH (payload.product_mb ÷ the rate ladder)."
+      "Plausible failure 1": {status: manual, where: [doc.fdir.matrix]}
+      "Recovery procedure for failure 1": {status: manual, where: [doc.fdir.matrix]}
+      "Plausible failure 2": {status: manual, where: [doc.fdir.matrix]}
+      "Recovery procedure for failure 2": {status: manual, where: [doc.fdir.matrix]}
+
+  # ── Day 2 ───────────────────────────────────────────────────────────────
+  WB-5.4-N001:
+    items:
+      "step 5": {status: screen, where: [mcs.pus.s3, mcs.fdir.journal]}
+      "step 7": {status: screen, where: [mcs.gonogo, doc.desk.gonogo]}
+      "Off-nominal items observed": {status: na}
+  WB-5.4-C003:
+    items:
+      "step 1": {status: na, where: [radio.lock, radio.rf]}
+      "step 4": {status: screen, where: [param:0x0501, mcs.ttc.lock]}
+      "step 6": {status: screen, where: [mcs.cmdhist, mcs.log]}
+      "Step at which link was recovered": {status: na}
+      "Anomaly ticket number": {status: na}
+  WB-5.4-N012:
+    items:
+      "Phase and time": {status: screen, where: [param:0x0129, mcs.ovr]}
+      "Last completed pass": {status: screen, where: [mcs.next, planner.contacts]}
+      "Open anomalies": {status: screen, where: [mcs.fdir.journal, mcs.fdir.s12]}
+      "Open work items": {status: screen, where: [mcs.proc]}
+      "Next pass": {status: screen, where: [mcs.next, planner.contacts]}
+      "Customer commitments active":
+        status: screen
+        before: none
+        where: [planner.sched, planner.imaging]
+        gap: "\"Customer commitments\" is a concept no tool has."
+        fix: "Reworded: the imaging and downlinks booked in the planner's activity schedule."
+      "GO authorisations outstanding": {status: screen, where: [mcs.gonogo]}
+      "Voice-loop tone": {status: na, where: [ecss-ops]}
+  WB-5.4-FD:
+    items:
+      "Station · AOS":
+        status: screen
+        where: [orbit.passes, planner.contacts, celestrak-tle]
+        gap: "Asked to compare with the \"MPS\" (the planner) and named a command line, not the page."
+        fix: "Reworded to Orbit tools and the planner's Next contacts."
+      "Max el":
+        status: screen
+        where: [orbit.passes, planner.contacts, doc.orbit.passdur]
+        fix: "\"from MPS\" reworded to the planner."
+      "Formula used": {status: manual, where: [doc.orbit.passdur, wiki-elements]}
+      "Longest eclipse in next 24 h":
+        status: screen
+        before: none
+        where: [orbit.eclipses, planner.timeline, doc.orbit.eclipse]
+        gap: "No screen listed eclipse durations beyond the next one; the longest of 24 h had to be guessed from the planner's timeline."
+        fix: "Orbit tools: Eclipses panel (entry, exit, duration over 24 h, longest marked)."
+      "Predicted SoC at exit": {status: screen, where: [mcs.eps.flow, param:0x0101, param:0x0106]}
+      "Actual SoC at exit": {status: screen, where: [param:0x0101, mcs.trnd]}
+      "Δ": {status: na}
+      "Concern?": {status: na}
+
+  # ── Day 3: LEOP ─────────────────────────────────────────────────────────
+  WB-5.5-PB:
+    default: {status: na}
+    items:
+      "BP-2": {status: screen, where: [param:0x0129, param:0x0311]}
+      "A real Iqaluit pass": {status: screen, where: [planner.contacts, mcs.next]}
+      "FD has loaded LEOP procedure pack": {status: screen, where: [mcs.proc]}
+      "SPACON has reviewed the FDIR rule set": {status: screen, where: [mcs.fdir.s12, mcs.fdir.s19, doc.fdir.rules]}
+      "AOCS has reviewed residual tumble rates": {status: manual, where: [doc.leop.first], gap: "Before first contact there is no AOCS telemetry: the rates are the LEOP guide's prediction.", fix: "Linked to the LEOP guide."}
+      "EPS confirms SoC": {status: screen, where: [mcs.eps.flow]}
+      "TT&C has confirmed UHF beacon reception":
+        status: screen
+        before: none
+        where: [mcs.pus.s3, mcs.see]
+        gap: "Asked for ttc.beacon_active (0x0527 = 1), which the operator dictionary does not carry."
+        fix: "Reworded to what the console shows: beacon SID 11 arriving (PUS page, S3 HK, Observed)."
+      "Ground Seg has confirmed Iqaluit antenna": {status: screen, where: [radio.datalink, radio.lock, doc.leop.first]}
+      "FDS has produced 24-h pass schedule": {status: screen, where: [planner.contacts, orbit.passes]}
+  WB-5.5-L001:
+    items:
+      "step 1": {status: screen, where: [radio.lock, radio.datalink, planner.nextpass]}
+      "step 2": {status: screen, where: [mcs.cmdhist, mcs.pus.s3]}
+      "step 8": {status: screen, where: [mcs.cmdhist, mcs.events, planner.contacts]}
+      "AOS time": {status: screen, where: [mcs.next, planner.contacts]}
+      "First accepted TC": {status: screen, where: [mcs.cmdhist]}
+      "App boot complete": {status: screen, where: [mcs.events, mcs.obd.sw]}
+  WB-5.5-L006:
+    items:
+      "step 2":
+        status: screen
+        before: none
+        where: [mcs.pus.s9, mcs.pus.owlt, mcs.ttc.gs]
+        gap: "The row computed OWLT from ttc.range_km (0x0509), which no HK SID carries and the console does not show."
+        fix: "PUS page, S9 TIME: one-way light time from the ground's own geometry; TT&C page, Ground station network: range and OWLT. Printed row and LEOP-006 card reworded."
+      "step 3":
+        status: screen
+        before: none
+        where: [mcs.pus.s9, doc.time.correlation]
+        gap: "The delta needed OWLT, which no screen gave."
+        fix: "PUS page, S9 TIME: Δt = T_obc − (T_ground − OWLT)."
+      "step 4": {status: screen, where: [mcs.pus.s9, mcs.cmdhist]}
+      "step 5": {status: screen, where: [mcs.pus.s9, param:0x0A13]}
+      "step 6": {status: screen, where: [mcs.pus.s9, doc.time.drift]}
+  WB-5.5-L002:
+    items:
+      "step 6": {status: na}
+      "Consolidated PASS / FAIL": {status: na}
+      "If FAIL, which contingency": {status: manual, where: [doc.fdir.matrix]}
+  WB-5.5-L007:
+    items:
+      "step 4": {status: screen, where: [param:0x025E, mcs.cmdhist]}
+      "SoC": {status: screen, where: [param:0x0101, param:0x0407]}
+  WB-5.5-L005:
+    items:
+      "step 6": {status: screen, where: [mcs.aocs, mcs.eps.flow]}
+  WB-5.5-L003:
+    items:
+      "step 1": {status: screen, where: [mcs.aocs.gps, wiki-dop]}
+      "step 3":
+        status: screen
+        where: [mcs.aocs.gpsmag, mcs.aocs.gps]
+        gap: "The six components were on screen; the magnitudes the row checks were arithmetic."
+        fix: "AOC page, GPS navigation: |r| (km) and |v| (m/s) computed from the downlinked components."
+      "step 4":
+        status: screen
+        before: none
+        where: [orbit.sv, orbit.elements, celestrak-tle, wiki-elements]
+        gap: "Orbit tools treated the GPS ECEF state as inertial (inclination ~3.5° and period ~3 min off for EOSAT-1) and showed RAAN 90° off, with no LTAN: every check of this row failed or could not be made."
+        fix: "Orbit tools: ECEF→ECI with Earth rotation, RAAN/AOP formulas fixed, LTAN shown."
+      "step 6": {status: na, where: [orbit.passes]}
+      "step 7": {status: screen, where: [mcs.gonogo, param:0x0129, mcs.events]}
+  WB-5.5-AT:
+    default: {status: na}
+    items:
+      "Ticket ID": {status: screen, where: [mcs.fdir.journal]}
+      "Pass / shift": {status: screen, where: [mcs.next]}
+      "Date / UTC time": {status: screen, where: [mcs.fdir.journal]}
+      "Triggering parameter": {status: screen, where: [mcs.fdir.journal]}
+      "FDIR rule that fired": {status: screen, where: [mcs.fdir.journal, mcs.fdir.s19]}
+      "Severity (0–4)": {status: screen, where: [mcs.fdir.state, doc.fdir.alarms]}
+      "First-action time": {status: screen, where: [mcs.cmdhist]}
+      "Procedure invoked": {status: screen, where: [mcs.proc, mcs.fdir.journal]}
+      "Recovery actions taken": {status: screen, where: [mcs.cmdhist, mcs.log]}
+      "Open items for next shift": {status: na}
+  WB-5.5-GO:
+    default: {status: na}
+    items:
+      "Onboard time set": {status: screen, where: [mcs.pus.s9]}
+      "Heater lines energised": {status: screen, where: [param:0x0115, param:0x0116]}
+      "AOCS wheels line ON": {status: screen, where: [param:0x0117, mcs.aocs.mode]}
+      "Body rates": {status: screen, where: [param:0x0204, param:0x0205, param:0x0206]}
+      "Anomaly ticket filed": {status: na}
+      "Phase advanced to COMMISSIONING": {status: screen, where: [param:0x0129, mcs.cmdhist]}
+  WB-5.5-OBS:
+    default: {status: na}
+    items:
+      "MCS chat": {status: screen, where: [mcs.log]}
+      "GO/NO-GO protocol followed": {status: screen, where: [mcs.gonogo]}
+      "Anomaly detection time": {status: screen, where: [mcs.fdir.journal, mcs.cmdhist]}
+      "Command discipline": {status: screen, where: [mcs.cmdhist]}
+      "Procedure adherence": {status: na, where: [ecss-ops]}
+  WB-5.5-HO:
+    default: {status: na}
+    items:
+      "Current parameter values": {status: screen, where: [mcs.ovr]}
+      "Current procedure state": {status: screen, where: [mcs.proc]}
+      "Console page left open":
+        status: screen
+        before: none
+        where: [mcs.ovr]
+        gap: "Asked for a \"pinned widget\": neither console has pinned widgets."
+        fix: "Reworded: the console page and panel left open for the next operator."
+      "Time": {status: screen, where: [mcs.ovr]}
+  WB-5.5-DB:
+    default: {status: na}
+
+  # ── Day 4: commissioning ────────────────────────────────────────────────
+  WB-5.6-PB:
+    default: {status: na}
+    items:
+      "All 13 commissioning procedures": {status: screen, where: [mcs.proc]}
+      "Payload Ops has reviewed": {status: manual, where: [{tool: docs, proc: COM-009, label: {en: "Procedure COM-009", fr: "Procédure COM-009"}}, {tool: docs, proc: COM-012, label: {en: "Procedure COM-012", fr: "Procédure COM-012"}}]}
+      "First Light target candidate": {status: screen, where: [planner.imaging]}
+  WB-5.6-C001:
+    items:
+      "step 4": {status: screen, where: [param:0x0107, param:0x0101, param:0x0105, mcs.eps.eclipse]}
+      "step 5": {status: screen, where: [param:0x0107, param:0x0101, mcs.eps.eclipse]}
+      "step 6":
+        status: screen
+        where: [mcs.eps.margin, mcs.eps.flow, doc.eps.budget]
+        gap: "The orbit balance was in Wh (power flow, This orbit); the row asks for a margin in W."
+        fix: "EPS page, Projections: orbit-average margin (W)."
+      "GO COM-002": {status: na}
+  WB-5.6-C002:
+    items:
+      "step 2": {status: screen, where: [mcs.trnd, param:0x0406, param:0x0407]}
+      "step 3": {status: screen, where: [mcs.trnd, mcs.eps.eclipse]}
+      "step 8":
+        status: screen
+        where: [mcs.trnd, doc.tcs.zones]
+        gap: "Trends plots each zone over a chosen window; minimum, maximum and mean are read off the plot or the CSV export."
+        fix: "Linked to Trends (24 h window, EXPORT CSV)."
+      "GO COM-005": {status: na}
+  WB-5.6-C005:
+    items:
+      "step 4": {status: screen, where: [param:0x020F, mcs.aocs.mode]}
+      "step 8": {status: na, where: [mcs.cmdhist, mcs.trnd]}
+  WB-5.6-C006:
+    items:
+      "step 2b": {status: screen, where: [mcs.cmd, mcs.ttc.gs]}
+      "step 3": {status: screen, where: [param:0x0501, param:0x0502, param:0x0500]}
+      "step 5": {status: screen, where: [param:0x0501, param:0x0502, param:0x0500]}
+      "step 7": {status: screen, where: [mcs.ttc.gs, param:0x0503, planner.contacts]}
+      "step 8": {status: screen, where: [mcs.ttc.link, doc.ttc.stations, wiki-linkbudget]}
+  WB-5.6-C007:
+    items:
+      "step 8": {status: screen, where: [param:0x0300, mcs.obd.sw]}
+      "step 9": {status: na, where: [mcs.obd]}
+  WB-5.6-C008:
+    items:
+      "step 1": {status: screen, where: [mcs.fdir.s12, mcs.pus.s12, ecss-pus]}
+  WB-5.6-C009:
+    items:
+      "step 9": {status: na, where: [mcs.pld]}
+      "GO COM-010": {status: na}
+  WB-5.6-C010:
+    items:
+      "step 9": {status: screen, where: [mcs.trnd]}
+      "GO COM-011": {status: na}
+  WB-5.6-FPA:
+    items:
+      "T_fpa": {status: screen, where: [param:0x0601, param:0x0602, mcs.trnd]}
+  WB-5.6-C011:
+    items:
+      "step 8": {status: none, where: [doc.payload.storage], gap: "The mean DN of a frame is an image-processing result: no tool reads the downlinked frames.", deferred: "Needs an image quick-look on the ground (a delayed-TM or payload tool); out of this audit's scope."}
+      "GO COM-012": {status: na}
+  WB-5.6-C012:
+    items:
+      "step 4": {status: screen, where: [param:0x0600]}
+      "If deferred, justification": {status: na}
+  WB-5.6-FL:
+    default: {status: na}
+    items:
+      "Image ID": {status: screen, where: [param:0x060C, param:0x0605]}
+      "Target name": {status: screen, where: [planner.imaging]}
+      "Acquisition UTC": {status: screen, where: [mcs.events]}
+      "AOCS mode at acquisition": {status: screen, where: [param:0x020F, mcs.trnd]}
+      "FPA temperature at acquisition": {status: screen, where: [param:0x0601, mcs.trnd]}
+      "Integration time per band": {status: manual, where: [mcs.cmdhist, doc.payload.chars], gap: "The integration times are what was commanded (command history); no parameter reports them."}
+      "Image size": {status: screen, where: [param:0x060B, param:0x0647]}
+      "Mean DN per band": {status: none, gap: "Image-processing result; no tool reads the frames.", deferred: "Needs an image quick-look tool."}
+      "Cloud cover": {status: none, gap: "Image-processing result; no tool reads the frames.", deferred: "Needs an image quick-look tool."}
+  WB-5.6-MA:
+    default: {status: na}
+    items:
+      "First indicator time": {status: screen, where: [mcs.fdir.journal, mcs.cmdhist]}
+  WB-5.6-GO:
+    default: {status: na}
+    items:
+      "Phase advanced to COMMISSIONING": {status: screen, where: [param:0x0129, mcs.cmdhist]}
+      "EPS checkout complete": {status: na, where: [mcs.eps]}
+      "AOCS NOMINAL": {status: screen, where: [param:0x020F, param:0x0217]}
+      "FDIR rule set verified": {status: screen, where: [mcs.fdir.s12, mcs.fdir.s19]}
+      "First Light image acquired": {status: screen, where: [param:0x0605]}
+  WB-5.6-OBS:
+    default: {status: na}
+  WB-5.6-HO:
+    default: {status: na}
+    items:
+      "Current parameter values": {status: screen, where: [mcs.ovr]}
+      "Current procedure state": {status: screen, where: [mcs.proc]}
+      "Console page left open":
+        status: screen
+        before: none
+        where: [mcs.ovr]
+        gap: "Asked for a \"pinned widget\": neither console has pinned widgets."
+        fix: "Reworded, as on WB-5.5-HO."
+      "FDIR rules currently active": {status: screen, where: [mcs.fdir.journal, mcs.fdir.s19]}
+      "Time": {status: screen, where: [mcs.ovr]}
+  WB-5.6-DB:
+    default: {status: na}
+
+  # ── Appendix A: contingency cards ───────────────────────────────────────
+  WB-A-CTG-002:
+    items:
+      "step 3": {status: screen, where: [param:0x0207, param:0x0217]}
+      "step 6": {status: screen, where: [param:0x020F, param:0x0217]}
+      "step 7": {status: screen, where: [param:0x020F, param:0x0204]}
+  WB-A-CTG-007:
+    items:
+      "step 3": {status: screen, where: [param:0x0217, mcs.aocs]}
+      "step 4": {status: screen, where: [param:0x0207, param:0x0208, param:0x0209, param:0x020A]}
+      "step 7": {status: screen, where: [mcs.aocs]}
+  WB-A-CTG-008:
+    items:
+      "step 3": {status: screen, where: [param:0x0243, param:0x0217, param:0x020F]}
+      "step 6": {status: screen, where: [mcs.aocs]}
+  WB-A-CTG-009:
+    items:
+      "step 2": {status: screen, where: [param:0x0103, param:0x0104]}
+      "step 4":
+        status: screen
+        where: [mcs.eps.flow, mcs.eps.margin, param:0x0101]
+        fix: "The projected SoC at the end of the next eclipse is the EPS power flow's \"at eclipse exit\"; the margin is in Projections."
+      "step 6": {status: screen, where: [param:0x020F, param:0x0103, param:0x0104, param:0x0107]}
+  WB-A-CTG-010:
+    items:
+      "step 3": {status: screen, where: [mcs.pus.s3]}
+  WB-A-CTG-012:
+    items:
+      "step 3": {status: na, where: [mcs.cmdhist, mcs.trnd]}
+  WB-A-CTG-015:
+    items:
+      "step 6": {status: screen, where: [param:0x0609, param:0x0604]}
+  WB-A-CTG-017:
+    items:
+      "step 1": {status: screen, where: [mcs.pus.s3, mcs.see]}
+      "step 5": {status: na, where: [mcs.log]}
+  WB-A-CTG-019:
+    items:
+      "step 1": {status: na, where: [radio.lock, radio.rf]}
+      "step 2": {status: screen, where: [radio.lock, mcs.ttc.lock]}
+      "step 3": {status: screen, where: [radio.lock, param:0x0500]}
+      "step 4": {status: screen, where: [radio.lock, param:0x0516]}
+      "step 7": {status: na, where: [mcs.cmdhist]}
+  WB-A-CTG-020:
+    items:
+      "step 2": {status: na}
+      "step 3": {status: na, where: [planner.contacts]}
+      "step 4": {status: screen, where: [planner.contacts, orbit.passes]}
+      "step 5": {status: screen, where: [planner.sched, planner.contacts]}

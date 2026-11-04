@@ -57,6 +57,9 @@ DYNAMICALLY_KEYED = (
     "vars.",                                        # report template variables
     "positions.",                                   # operator position table
     "worksheets.",                                  # worksheet_map.yaml: id -> where offered
+    "targets.",                                     # worksheet_where.yaml: named places
+    "links.",                                       # worksheet_where.yaml: open references
+    "sheets.",                                      # worksheet_where.yaml: sheet -> question -> place
 )
 
 #: Leaf keys with no consumer, kept deliberately. Each needs a reason.

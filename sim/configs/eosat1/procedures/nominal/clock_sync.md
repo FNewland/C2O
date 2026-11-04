@@ -37,7 +37,7 @@ side effects are covered by CTG-027.
 ### Step 1 --- Read the Onboard Clock and Its Time Reference
 **LABEL:** `STEP-1`
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) --- Platform/OBDH housekeeping: the clock, its reference and the time since sync
-**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- TT&C housekeeping, for the slant range
+**TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) --- TT&C housekeeping, for the link state
 **TC:** `REQUEST_TIME` (Service 9, Subtype 2) --- explicit TM(9,2) time report
 **Verify:** `obdh.mode == 0` (0x0300, timeout 10 s) --- NOMINAL
 **Note:** Record the onboard time as T_obc = `obdh.obc_time` (0x0309) +
@@ -57,8 +57,9 @@ seconds since BOOT, not since epoch: a delta computed from it is the
 spacecraft's age minus a UTC timestamp, and would have called every healthy
 clock anomalous. Uptime is still useful as a reboot indicator and as a rate
 corroboration --- never as an epoch.
-**Note:** Compute the one-way light time from `ttc.range_km` (0x0509) in the
-SID 6 report: OWLT_ms = range_km / 299792.458 * 1000, which is **3-22 ms** on
+**Note:** Read the one-way light time on the PUS page, S9 TIME tab (ground
+geometry: range_km / 299792.458 * 1000; the spacecraft does not downlink the
+slant range, 0x0509 is in no HK SID), which is **3-22 ms** on
 this orbit and negligible against the 1 s threshold.
 **Note:** Cross-check the TM(9,2) report against 0x0309. They arrive by
 different routes --- a time-service reply and a housekeeping sample --- so a
