@@ -144,7 +144,8 @@ def test_analyse_dumps_decodes_hk_and_events(populated_dump_dir: Path):
 # ── G11: ground limits on played-back dumps ─────────────────────────────
 #
 # mcs/limits.yaml bands used below (see configs/eosat1/mcs/limits.yaml):
-#   0x0100 bat_voltage  yellow 23..29,  red 22..29.5
+#   0x0100 bat_voltage  yellow 25.9..33.8,  red 24.6..34.3  (BPX 8S-1P, 2026-11)
+#   0x0105 bus_voltage  yellow 28.4..34.0,  red 27.7..34.6  (eps.bus_protection)
 #   0x0101 bat_soc      yellow 25..95,  red 15..100
 #   0x0102 bat_temp     yellow  2..40,  red  0..45
 #
@@ -152,7 +153,7 @@ def test_analyse_dumps_decodes_hk_and_events(populated_dump_dir: Path):
 # per-dump summary counts exactly the two planted exceedances.
 
 _IN_BAND_SID1 = {
-    0x0100: 25.0, 0x0101: 83.5, 0x0102: 20.0, 0x0105: 28.0,
+    0x0100: 30.0, 0x0101: 83.5, 0x0102: 20.0, 0x0105: 30.0,
     0x0118: 0.1, 0x0119: 0.1, 0x011A: 0.1, 0x011B: 0.1,
     0x011C: 0.1, 0x011D: 0.1, 0x011E: 0.1, 0x011F: 0.1, 0x0120: 10.0,
 }
@@ -165,7 +166,7 @@ def limits_dump_dir(tmp_path: Path) -> Path:
     dump_dir = tmp_path / "dumps"
     dump_dir.mkdir()
     values = dict(_IN_BAND_SID1)
-    values[0x0100] = 20.0      # below red_low 22 -> RED
+    values[0x0100] = 23.0      # below red_low 24.6 -> RED
     values[0x0102] = 42.0      # above yellow_high 40, below red_high 45 -> YELLOW
     _write_dump(dump_dir, 1, when, [
         _build_eps_hk_packet(values, t=1000.0),
@@ -194,7 +195,7 @@ class TestLimitsOnPlayedBackDumps:
         # 2 samples 8 s apart: first owns 8 s, last owns the mean spacing (8 s)
         assert red["time_in_red_s"] == pytest.approx(16.0, abs=0.5)
         assert red["time_in_yellow_s"] == 0.0
-        assert red["band"]["red_low"] == pytest.approx(22.0)
+        assert red["band"]["red_low"] == pytest.approx(24.6)
 
         yellow = by_pid[0x0102]["limit"]
         assert yellow is not None and yellow["state"] == "yellow"

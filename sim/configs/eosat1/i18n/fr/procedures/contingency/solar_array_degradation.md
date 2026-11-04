@@ -16,7 +16,7 @@ Le satellite détecte une chaîne dégradée (surveillance S12 du rendement, TM(
 0x914C / 0x914D) mais n'agit pas : mettre ou non la charge utile hors tension est une décision de
 l'équipe, prise à l'étape 4 selon la gravité de la perte (rendement des chaînes et bilan de
 puissance). Si la puissance vient réellement à manquer avant, le délestage bord sur tension bus
-(sous 25.0 V, charge utile d'abord) met la charge utile hors tension tout seul ; c'est le filet de
+(sous 28.4 V, charge utile d'abord) met la charge utile hors tension tout seul ; c'est le filet de
 sécurité, pas le plan.
 
 ## Prérequis

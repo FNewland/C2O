@@ -14,8 +14,8 @@
   },
   {
    "id": "ctg-009-solar-array-degradation/purpose",
-   "en_hash": "2059352f8fa7c013",
-   "fr_hash": "6fd67074a802f90c"
+   "en_hash": "851642df66c5306d",
+   "fr_hash": "41760025572f9178"
   },
   {
    "id": "ctg-009-solar-array-degradation/prerequisites",
@@ -73,5 +73,5 @@
    "fr_hash": "dc82d78bc70ba839"
   }
  ],
- "en_commit": "b78d710"
+ "en_commit": "f614a01"
 }

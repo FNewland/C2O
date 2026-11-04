@@ -73,7 +73,7 @@ selected and dead, the timer switches back to the primary. It is still worth sen
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Platform/OBDH housekeeping
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V — confirm no EPS anomaly caused the link loss
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V — confirm no EPS anomaly caused the link loss
 **Verify:** `obdh.mode` (0x0300) — confirm OBC did not enter safe/emergency mode
 **GO/NO-GO:** Link margin > 3 dB and all subsystems nominal — recovery complete -> GO `STEP-END` | NO-GO `STEP-6`
 

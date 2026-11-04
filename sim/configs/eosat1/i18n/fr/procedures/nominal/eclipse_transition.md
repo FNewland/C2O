@@ -23,7 +23,7 @@ la sortie d'éclipse.
 | Paramètre | ID | Valeur attendue |
 |---|---|---|
 | eps.bat_soc | 0x0101 | > 60 % avant l'entrée en éclipse |
-| eps.bus_voltage | 0x0105 | > 28.0 V |
+| eps.bus_voltage | 0x0105 | > 32.1 V |
 | eps.eclipse_flag | 0x0108 | 0 (éclairé) avant l'entrée, 1 pendant l'éclipse |
 | eps.power_gen | 0x0107 | > 0 W au Soleil, ~0 W pendant l'éclipse |
 | eps.bat_current | 0x0109 | Négatif (décharge) pendant l'éclipse |
@@ -48,7 +48,7 @@ la sortie d'éclipse.
 ### Étape 1 : Vérifier l'état de charge de la batterie
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — demander les données de servitude EPS
 **Verify:** `eps.bat_soc` (0x0101) > 60 %
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V
 **Verify:** `eps.bat_temp` (0x0102) entre 0 et 40 °C
 **Verify:** `eps.bat_current` (0x0109) — consigner la valeur de référence
 **GO/NO-GO:** Si SoC <= 60 %, se mettre en attente (HOLD). Envisager de différer les charges non essentielles ou d'attendre
@@ -95,12 +95,12 @@ par le senseur stellaire (celui-ci peut perdre la poursuite dans l'ombre de la T
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — surveiller la télémesure EPS toutes les 30 s
 **Verify:** `eps.eclipse_flag` (0x0108) = 1 (éclipse confirmée)
 **Verify:** `eps.power_gen` (0x0107) tombe à ~0 W (générateurs solaires dans l'ombre)
-**Verify:** `eps.bus_voltage` (0x0105) reste > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) reste > 30.9 V
 **Verify:** `eps.bat_soc` (0x0101) — surveiller la vitesse de décharge, consigner le SoC toutes les 5 min
 **Verify:** `eps.bat_current` (0x0109) est négatif (batterie en décharge)
-**Action:** Si la tension du bus descend sous 27.0 V, procéder au délestage selon
+**Action:** Si la tension du bus descend sous 30.9 V, procéder au délestage selon
 CTG-001 (délestage sur sous-tension).
-**GO/NO-GO:** Tension du bus stable au-dessus de 27.0 V — poursuivre la surveillance.
+**GO/NO-GO:** Tension du bus stable au-dessus de 30.9 V — poursuivre la surveillance.
 
 ### Étape 6 : Surveiller les conditions thermiques pendant l'éclipse
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27) — surveiller la télémesure TCS toutes les 60 s
@@ -119,7 +119,7 @@ réchauffeurs.
 **Verify:** `eps.power_gen` (0x0107) > 25 W dans les 60 s qui suivent la sortie d'éclipse
 **Verify:** `eps.sa_a_current` (0x0103) > 0.3 A
 **Verify:** `eps.sa_b_current` (0x0104) > 0.3 A
-**Verify:** `eps.bus_voltage` (0x0105) remontant au-dessus de 28.0 V
+**Verify:** `eps.bus_voltage` (0x0105) remontant au-dessus de 32.1 V
 **Verify:** `eps.bat_soc` (0x0101) — consigner le SoC après éclipse et confirmer la tendance à la charge
 **GO/NO-GO:** Production de puissance confirmée et batterie en charge — passer au rétablissement.
 
@@ -143,14 +143,14 @@ ce n'était pas le cas auparavant, d'où le fait que le FPA n'atteignait jamais 
 
 ## Critères de vérification
 - [ ] SoC de la batterie resté au-dessus de 40 % pendant toute l'éclipse (consigner le SoC minimal)
-- [ ] Tension du bus restée au-dessus de 27.0 V pendant toute l'éclipse
+- [ ] Tension du bus restée au-dessus de 30.9 V pendant toute l'éclipse
 - [ ] Toutes les températures restées dans les limites opérationnelles
 - [ ] AOCS ayant maintenu l'attitude à 1.0 deg près pendant la propagation d'éclipse
 - [ ] Production de puissance reprise dans les 60 s qui suivent la sortie d'éclipse
 - [ ] Tous les sous-systèmes revenus en configuration nominale après l'éclipse
 
 ## Contingence
-- Si la tension du bus descend sous 27.0 V pendant l'éclipse : exécuter CTG-001
+- Si la tension du bus descend sous 30.9 V pendant l'éclipse : exécuter CTG-001
   (délestage sur sous-tension) — délester les charges par ordre de priorité.
 - Si le SoC de la batterie descend sous 30 % pendant l'éclipse : délester immédiatement les charges de la charge utile et du
   refroidisseur. Si le SoC descend sous 20 %, exécuter CTG-001.

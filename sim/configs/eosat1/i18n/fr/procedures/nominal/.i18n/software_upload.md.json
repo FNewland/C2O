@@ -29,8 +29,8 @@
   },
   {
    "id": "nom-006-software-upload/procedure-steps/step-1-pre-upload-health-assessment",
-   "en_hash": "1113ed723aeb35c1",
-   "fr_hash": "7122075d705585b1"
+   "en_hash": "5c36590afde82601",
+   "fr_hash": "d0a1ba0d71de4fbd"
   },
   {
    "id": "nom-006-software-upload/procedure-steps/step-2-halt-non-critical-onboard-tasks",
@@ -98,5 +98,5 @@
    "fr_hash": "0ec595143ec96d73"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

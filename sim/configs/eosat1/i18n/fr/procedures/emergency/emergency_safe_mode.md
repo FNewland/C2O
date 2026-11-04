@@ -218,7 +218,7 @@ orbite ne fait que vérifier l'état thermique.
 - [ ] `obdh.mode` (0x0300) = NOMINAL (0)
 - [ ] `aocs.mode` (0x020F) = NOMINAL (4) avec `aocs.att_error` (0x0217) < 1.0 deg
 - [ ] `eps.bat_soc` (0x0101) > 60 % et stable
-- [ ] `eps.bus_voltage` (0x0105) > 28.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
 - [ ] Tous les réchauffeurs opérationnels, températures dans les plages nominales
 - [ ] `payload.mode` (0x0600) = STANDBY (1) ou supérieur
 - [ ] `ttc.link_status` (0x0501) = 2 (LOCKED) lors des passages programmés

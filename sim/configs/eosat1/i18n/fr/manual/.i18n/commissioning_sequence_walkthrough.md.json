@@ -39,8 +39,8 @@
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-1--first-signal-bootloader-telemetry-reception/12-verify-beacon-telemetry-sid-11",
-   "en_hash": "b48150d57a9dc865",
-   "fr_hash": "a7fb651d1199bc1a"
+   "en_hash": "680c0c7a77b0f49c",
+   "fr_hash": "0d2d58d41a6a69fd"
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-2--antenna-deployment",
@@ -74,8 +74,8 @@
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/42-verify-eps-power-status",
-   "en_hash": "40cee7cb0c291d74",
-   "fr_hash": "feb69bf093219386"
+   "en_hash": "be3f0426158faebd",
+   "fr_hash": "1ec6fd61178fbd6c"
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-4--initial-platform-health-check/43-verify-power-line-switch-states",
@@ -159,8 +159,8 @@
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-7--sequential-power-on-heaters-first-then-aocs/75-verify-power-budget-after-aocs-power-on",
-   "en_hash": "39cebd2ceb69e696",
-   "fr_hash": "0a953d95a729a11c"
+   "en_hash": "84b97ac5908b2a60",
+   "fr_hash": "230a28e79d97790a"
   },
   {
    "id": "eosat-1-full-commissioning-sequence-spacecraft-off--payload-operations/phase-8--upload-tle-for-orbit-determination",
@@ -363,5 +363,5 @@
    "fr_hash": "2a99c955a0ad5e99"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "f614a01"
 }

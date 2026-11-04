@@ -35,7 +35,7 @@ verification, PA commanding, antenna deployment checks, and transponder switchov
 | ttc.eb_n0 | 0x0519 | > 10 dB when link is active |
 | ttc.ber | 0x050C | < -5 when link is active |
 | eps.pl_ttc_tx | 0x0112 | 1 (TX power line energised) |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 
 ## Required Commands
 | Command | Service | Subtype | Func ID | Description |
@@ -151,7 +151,7 @@ produce a dramatic improvement in signal level (15-25 dB gain increase).
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Verify:** radio page (ground): `ttc.eb_n0` (0x0519) > 10 dB
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Request EPS housekeeping
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — confirm no EPS anomaly
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — confirm no EPS anomaly
 **Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — TX power line confirmed ON
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
 **Verify:** `obdh.mode` (0x0300) — confirm OBC did not enter safe/emergency mode

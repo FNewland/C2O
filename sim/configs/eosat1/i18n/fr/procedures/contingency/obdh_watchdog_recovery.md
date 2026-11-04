@@ -84,7 +84,7 @@ point : régler l'horloge depuis le sol.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Action:** Examiner la tendance de `obdh.cpu_load` (0x0302) — le processeur était-il à 100 % avant la réinitialisation ?
 **Action:** Examiner les données EPS — une chute de la tension du bus a-t-elle pu provoquer une baisse de tension ?
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V (stable)
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V (stable)
 **Action:** Consulter les données d'environnement radiatif si la télémesure de servitude de la charge utile en fournit
 **GO/NO-GO:** Cause première classée. Si elle semble transitoire (SEU, brève chute de tension) : la consigner. Si elle est systémique (charge processeur élevée répétée, erreur mémoire) : la faire remonter à l'équipe logiciel sol. Dans les deux cas, c'est le mode de l'OBC qui détermine la suite.
 **BRANCH:** `obdh.mode == 1` -> GO `STEP-6` | NO-GO `STEP-END` (timeout 10 s)

@@ -57,8 +57,8 @@ peut traverser une éclipse en sécurité avec la batterie dégradée.
 **Verify:** `eps.bat_capacity_wh` (0x010A) — consigner la valeur (nominale = 120 Wh)
 **Verify:** `eps.bat_current` (0x0109) — consigner le courant (positif = charge, négatif = décharge)
 **Action:** Calculer la tension attendue pour le SoC courant :
-- un SoC de 100 % correspond à ~29.2 V, un SoC de 0 % à ~21.5 V (d'après le modèle de batterie) ;
-- tension attendue = 21.5 + (SoC/100) * (29.2 - 21.5) = 21.5 + SoC * 0.077.
+- un SoC de 100 % correspond à ~33.6 V, un SoC de 0 % à ~24.0 V (d'après le modèle de batterie) ;
+- tension attendue = 24.0 + (SoC/100) * (33.6 - 24.0) = 24.0 + SoC * 0.096.
 **Action:** Comparer la tension mesurée à la tension attendue :
 - si la tension mesurée est inférieure de plus de 1.0 V à la valeur attendue : défaillance d'élément possible ;
 - si la tension mesurée est à moins de 0.5 V de la valeur attendue : il peut s'agir d'une variation normale.
@@ -134,11 +134,11 @@ tout en restant protégée contre des températures dangereusement basses.
 **LABEL:** `STEP-5`
 **Note:** Si une éclipse approche ou est en cours, surveiller la batterie toutes les 60 s :
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bat_voltage` (0x0100) — ne descend PAS sous 24.0 V
+**Verify:** `eps.bat_voltage` (0x0100) — ne descend PAS sous 27.1 V
 **Verify:** `eps.bat_soc` (0x0101) — ne descend PAS sous 20 %
 **Verify:** `eps.bat_temp` (0x0102) — reste entre 0 et 40 °C
-**Verify:** `eps.bus_voltage` (0x0105) — reste > 26.5 V
-**Action:** Si `eps.bus_voltage` descend sous 26.5 V pendant l'éclipse : effectuer un
+**Verify:** `eps.bus_voltage` (0x0105) — reste > 30.2 V
+**Action:** Si `eps.bus_voltage` descend sous 30.2 V pendant l'éclipse : effectuer un
 délestage supplémentaire selon CTG-001 (Délestage sur sous-tension).
 **Action:** Après la sortie d'éclipse, vérifier :
 - `eps.power_gen` (0x0107) > 25 W (reprise de la charge) ;
@@ -149,7 +149,7 @@ délestage supplémentaire selon CTG-001 (Délestage sur sous-tension).
 ### Étape 6 : Vérification de la capacité à long terme
 **Action:** Au cours des 2-3 orbites suivantes, surveiller le comportement en charge/décharge de la batterie :
 **Verify:** `eps.bat_soc` (0x0101) — le SoC remonte-t-il entièrement à > 90 % pendant la phase éclairée ?
-**Verify:** `eps.bat_voltage` (0x0100) — la tension atteint-elle > 28.5 V en pleine charge ?
+**Verify:** `eps.bat_voltage` (0x0100) — la tension atteint-elle > 32.7 V en pleine charge ?
 **TC:** `GET_PARAM(param_id=0x010A)` (Service 20, Subtype 3) — `eps.bat_capacity_wh` (à la demande : aucun SID HK ne le transporte)
 **Verify:** `eps.bat_capacity_wh` (0x010A) — la capacité rapportée a-t-elle changé ?
 **Action:** Évaluer l'impact à long terme :
@@ -177,7 +177,7 @@ délestage supplémentaire selon CTG-001 (Délestage sur sous-tension).
 - Si la température de la batterie dépasse 45 °C à un moment quelconque : risque d'emballement thermique. Arrêter
   immédiatement le réchauffeur de batterie. Délester toutes les charges non essentielles. Si la température dépasse
   50 °C, commander `OBC_SET_MODE(mode=2)` (EMERGENCY). Appliquer EMG-006.
-- Si la tension de la batterie descend sous 22.0 V : risque de décharge profonde et de dommage permanent.
+- Si la tension de la batterie descend sous 24.6 V : risque de décharge profonde et de dommage permanent.
   Délester immédiatement toutes les charges sauf l'OBC et le récepteur TTC. Commander le mode EMERGENCY.
 - Si le SoC de la batterie ne peut être maintenu au-dessus de 20 % sur une orbite complète : la
   dégradation de la batterie est trop importante pour les opérations actuelles. Exploiter le satellite dans un mode fortement

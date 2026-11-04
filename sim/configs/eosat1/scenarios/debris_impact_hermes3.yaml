@@ -31,7 +31,7 @@ briefing: |
   autonomous FDIR safes the spacecraft at T+22 min.
 
   Operators must: triage EPS root cause within 90 s, isolate SA-2B, desaturate
-  RW-2 before 6000 RPM, restore heaters once bus ≥ 23 V, and return to nominal
+  RW-2 before 6000 RPM, restore heaters once bus ≥ 25.9 V, and return to nominal
   mode before battery SoC falls below 60%.
 
 events:
@@ -83,7 +83,7 @@ events:
   # tick — the value survived under a second. The battery heater circuit is
   # failed instead, so the zone genuinely cools and the low-temperature limit
   # trips, which is what the briefing asks the operator to recover ("restore
-  # heaters once bus >= 23 V").
+  # heaters once bus >= 25.9 V").
   - time_offset_s: 280
     action: inject
     params:
@@ -121,7 +121,7 @@ events:
 
 expected_responses:
   - category: detect
-    description: "Identify EPS as root cause within 90 s — confirm bus < 24 V and power_gen < 900 W. Issue load-shed tier-1 to stop SoC decline."
+    description: "Identify EPS as root cause within 90 s — confirm bus < 27.1 V and power_gen < 900 W. Issue load-shed tier-1 to stop SoC decline."
     tc: ["PAYLOAD_SET_MODE(mode=0)", "EPS_PAYLOAD_MODE(mode=0)", "EPS_POWER_OFF(line_index=3)", "EPS_EMERGENCY_LOAD_SHED(stage=1|2|3)", "EPS_SET_MODE(mode=1|2)"]
     within_s: 180
   - category: isolate
@@ -131,7 +131,7 @@ expected_responses:
   - category: recover
     description: "AOCS: monitor RW-2 speed; switch to SUN_SAFE attitude if > 5000 RPM. Desaturate RW-2 before saturation limit."
   - category: recover
-    description: "TCS: monitor battery temperature. Restore heaters once bus ≥ 23 V sustained."
+    description: "TCS: monitor battery temperature. Restore heaters once bus ≥ 25.9 V sustained."
   - category: recover
     description: "OBDH: switch active CAN bus (S8 func 54) to restore subsystem telemetry."
     tc: "OBC_SELECT_BUS(bus=1)"
@@ -139,6 +139,6 @@ expected_responses:
     within_s: 600
     ref: "event:5"
   - category: recover
-    description: "TTC: restore TX power once bus ≥ 24 V. Verify uplink margin before further commands."
+    description: "TTC: restore TX power once bus ≥ 27.1 V. Verify uplink margin before further commands."
   - category: recover
-    description: "Full recovery: bus ≥ 25 V sustained, SoC ≥ 80%, return OBC to NOMINAL mode, restore payload power in stepped intervals, clear all fault flags."
+    description: "Full recovery: bus ≥ 28.4 V sustained, SoC ≥ 80%, return OBC to NOMINAL mode, restore payload power in stepped intervals, clear all fault flags."

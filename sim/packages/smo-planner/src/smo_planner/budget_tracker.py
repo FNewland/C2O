@@ -413,7 +413,8 @@ def budget_params_from_config(
             params["orbit_altitude_km"] = float(orbit["altitude_km"])
             params["sources"]["orbit_altitude_km"] = "orbit.yaml altitude_km"
     except Exception as e:                           # pragma: no cover - defensive
-        logger.warning("orbit.yaml unreadable (%s) — 450 km assumed", e)
+        logger.warning("orbit.yaml unreadable (%s) — %.0f km assumed", e,
+                       ORBIT_ALTITUDE_KM)
 
     params["hk_stream_bps"] = hk_stream_bps_from_config(config_dir)
     if params["hk_stream_bps"] > 0:

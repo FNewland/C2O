@@ -80,7 +80,7 @@ n'est modélisé, ni aucune signature vibratoire.
 **TC:** `GET_PARAM(param_id=0x0106)` (Service 20, Subtype 3) — `eps.power_cons`, charge totale
 **Verify:** Hausse de la puissance totale de 14-16 W par rapport à la référence avant refroidissement
 sous 30 s. (Cette ligne lisait 0x0108, `eps.eclipse_flag` — un booléen, et non une puissance.)
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (bus stable sous la charge supplémentaire) sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (bus stable sous la charge supplémentaire) sous 10s
 **GO/NO-GO:** Consommation du refroidisseur conforme à la spécification, bus stable
 
 ### Étape 4 — Surveiller la mise en froid (5 premières minutes)
@@ -146,7 +146,7 @@ et au-delà de 1,0 °C elle indique une boucle dégradée.
 **Action:** Si le passage couvre une éclipse, vérifier que le refroidisseur maintient la température du FPA.
 **TC:** `GET_PARAM(param_id=0x0601)` (Service 20, Subtype 3) — pendant l'éclipse
 **Verify:** `payload.fpa_temp` reste dans la plage [-16.5C, -14.5C] sous 10s
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V (le bus tient avec la charge du refroidisseur) sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V (le bus tient avec la charge du refroidisseur) sous 10s
 **GO/NO-GO:** Le refroidisseur maintient la consigne pendant l'éclipse avec une alimentation suffisante
 
 ### Étape 9 — Établir le rapport d'activation du refroidisseur
@@ -165,7 +165,7 @@ et au-delà de 1,0 °C elle indique une boucle dégradée.
   commander de nouveau la consigne avec `PAYLOAD_COOLER_SETPOINT` plutôt que d'attendre
   indéfiniment. L'enveloppe commandable va de -20 C à 0 C
   (`subsystems/tcs.yaml` `setpoint_min_c` / `setpoint_max_c`).
-- Si la tension du bus descend sous 27.0V avec le refroidisseur en marche : désactiver le refroidisseur via `FPA_COOLER(on=0)` (func_id 43, octets `2B 00`). Contrôler le SOC de la batterie. Attendre un meilleur état de charge ou un meilleur éclairement. Réessayer lors du prochain passage éclairé avec une batterie pleine.
+- Si la tension du bus descend sous 30.9V avec le refroidisseur en marche : désactiver le refroidisseur via `FPA_COOLER(on=0)` (func_id 43, octets `2B 00`). Contrôler le SOC de la batterie. Attendre un meilleur état de charge ou un meilleur éclairement. Réessayer lors du prochain passage éclairé avec une batterie pleine.
 - Si la température du FPA oscille de plus de 1C crête à crête à la consigne : la boucle de régulation du refroidisseur doit peut-être être réglée. Contrôler la consigne via `GET_PARAM(param_id=0x0631)`. Si l'oscillation persiste, commander de nouveau la consigne avec `PAYLOAD_COOLER_SETPOINT(setpoint=-15.00 degC)` (func_id 36, octets `24 64 D7`) — il n'existe aucun paramètre de gain du refroidisseur commandable.
 - Si le refroidisseur introduit des vibrations excessives (détectées par la gigue de l'accéléromètre) : comparer la gigue d'attitude de l'AOCS refroidisseur en marche et à l'arrêt. Si la gigue dépasse l'exigence de pointage, programmer le fonctionnement du refroidisseur en dehors des périodes de prise de vue. Consulter l'ingénieur AOCS pour le réglage des filtres.
 

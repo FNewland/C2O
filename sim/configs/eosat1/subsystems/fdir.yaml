@@ -27,13 +27,15 @@ rules:
     threshold: 15.0
     level: 2
     action: safe_mode_eps
-  # Phase B (brief 01 F9 / WP-6): 26.0 -> 24.5 V. 26.0 V is ~58 % SoC on the
-  # configured OCV curve — INSIDE the nominal eclipse band — so the harshest
-  # protection fired first, during correct operations. 24.5 V is ~39 % SoC:
-  # below the 25.0 V in-model shed (45.5 %), above the SoC stages (30/20/10 %).
+  # Phase B (brief 01 F9 / WP-6): EPS safing at ~39 % SoC — below the
+  # in-model shed (~46 %), above the SoC stages (30/20/10 %). The level is
+  # NAMED in simulation.yaml eps.bus_protection (single source, 2026-11);
+  # `threshold` is a readable copy the engine checks against it. On the BPX
+  # 8S-1P curve that is 27.7 V (was 24.5 V on the retired 21.5-29.2 V curve).
   - parameter: eps.bus_voltage
-    condition: "< 24.5"
-    threshold: 24.5
+    condition: "<"
+    threshold: 27.7
+    threshold_ref: eps.bus_protection.eps_safe_v
     level: 2
     action: safe_mode_eps
   # Battery heater protection (2026-11-03). The heater is thermostat-
@@ -116,13 +118,15 @@ rules:
 
   # Additional cascading fault rules
 
-  # Phase B (brief 01 F9 / WP-6): 24.0 -> 23.2 V (~22 % SoC), so AOCS safing
-  # sits between SoC stage 1 (30 %) and stage 2 (20 %) — a strictly monotonic
-  # protection ladder: shed 45.5 % > EPS-safe 39 % > stage-1 30 % >
-  # AOCS-safe 22 % > stage-2 20 % > stage-3 10 %.
+  # Phase B (brief 01 F9 / WP-6): AOCS safing at ~22 % SoC, between SoC
+  # stage 1 (30 %) and stage 2 (20 %) — a strictly monotonic protection
+  # ladder: shed 46 % > EPS-safe 38.5 % > stage-1 30 % > AOCS-safe 22 % >
+  # stage-2 20 % > stage-3 10 %. Named level (simulation.yaml
+  # eps.bus_protection.aocs_safe_v): 26.1 V on the BPX curve (was 23.2 V).
   - parameter: eps.bus_voltage
-    condition: "< 23.2"
-    threshold: 23.2
+    condition: "<"
+    threshold: 26.1
+    threshold_ref: eps.bus_protection.aocs_safe_v
     level: 2
     action: safe_mode_aocs
     description: "Critical undervoltage triggers AOCS safe mode"

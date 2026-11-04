@@ -24,8 +24,8 @@
   },
   {
    "id": "nom-012-shift-handover/required-telemetry",
-   "en_hash": "388191cce8c23007",
-   "fr_hash": "f320e50fade99c67"
+   "en_hash": "561b2c556fb0b24a",
+   "fr_hash": "0c855e0c503c6ae5"
   },
   {
    "id": "nom-012-shift-handover/required-commands",
@@ -73,5 +73,5 @@
    "fr_hash": "29c977d0032ceba0"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

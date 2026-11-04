@@ -156,10 +156,10 @@ The TTC position has S15 (Onboard Storage) access, making it responsible for man
 
 | Store | ID | Capacity | Coordination |
 |---|---|---|---|
-| HK Store | 1 | 1 MB | Periodic dump during pass; coordinate with fdir_systems for HK config |
-| Event Store | 2 | 512 KB | Dump as needed; high priority after anomalies |
-| Science Store | 3 | 8 MB | Primary downlink target; coordinate with payload_ops for prioritization |
-| Alarm Store | 4 | 256 KB | Highest priority dump; always download first |
+| HK Store | 1 | 18 000 packets (4 MiB, circular) | Periodic dump during pass; coordinate with fdir_systems for HK config |
+| Event Store | 2 | 2 000 packets (512 KiB) | Dump as needed; high priority after anomalies |
+| Science Store | 3 | 10 000 packets (8 MiB) — image product records; the pixels stay in the payload's 20 GB mass memory and come down by S13 | Primary downlink target; coordinate with payload_ops for prioritization |
+| Alarm Store | 4 | 500 packets (256 KiB) | Highest priority dump; always download first |
 
 ## 4. GO/NO-GO Responsibilities
 

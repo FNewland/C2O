@@ -10,8 +10,12 @@ curve, merged with the SoC-based stages, and the resulting ladder must be
 strictly monotonically decreasing in SoC with severity increasing as SoC
 falls:
 
-    shed 45.5 % > EPS-safe 39 % > stage-1 30 % > AOCS-safe 22 %
-    > stage-2 20 % > cascade 19.5 % > stage-3 10 %
+    shed 45.8 % > EPS-safe 38.5 % > stage-1 30 % > AOCS-safe 21.9 %
+    > stage-2 20 % > cascade 19.8 % > stage-3 10 %
+
+2026-11: the voltages are the NAMED levels of simulation.yaml
+eps.bus_protection on the GomSpace BPX 8S-1P curve (24.0-33.6 V); rules in
+fdir.yaml / fault_propagation.yaml carry a `threshold_ref` to them.
 """
 from pathlib import Path
 
@@ -39,7 +43,7 @@ def _ladder():
     rungs = []
 
     # in-model bus-voltage shed (mildest: sheds one line per tick, restores)
-    shed_v = sim["eps"]["load_shed"]["bus_voltage_v"]
+    shed_v = sim["eps"]["bus_protection"]["uv_v"]
     rungs.append((_ocv_to_soc(shed_v, bat), 1, f"in-model shed {shed_v} V"))
 
     # fdir.yaml bus-voltage rules
@@ -104,7 +108,9 @@ def test_expected_ladder_shape():
     fdir = _load("subsystems/fdir.yaml")
     bus_rules = {r["action"]: float(r["threshold"]) for r in fdir["rules"]
                  if r["parameter"] == "eps.bus_voltage"}
-    assert bus_rules["safe_mode_eps"] == 24.5
-    assert bus_rules["safe_mode_aocs"] == 23.2
-    assert abs(_ocv_to_soc(24.5, bat) - 39.0) < 1.0
-    assert abs(_ocv_to_soc(23.2, bat) - 22.1) < 1.0
+    assert bus_rules["safe_mode_eps"] == 27.7
+    assert bus_rules["safe_mode_aocs"] == 26.1
+    # The SoC rungs brief 01 WP-6 designed are kept across the 2026-11
+    # battery change (BPX datasheet voltages) — only the volts moved.
+    assert abs(_ocv_to_soc(27.7, bat) - 39.0) < 1.0
+    assert abs(_ocv_to_soc(26.1, bat) - 22.1) < 1.0

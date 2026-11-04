@@ -14,13 +14,13 @@
   },
   {
    "id": "emg-002-total-power-failure/purpose",
-   "en_hash": "040a7ea4189c1837",
-   "fr_hash": "e38e740981baecc6"
+   "en_hash": "5179c4a764cdf0db",
+   "fr_hash": "d887ddbe916f527c"
   },
   {
    "id": "emg-002-total-power-failure/prerequisites",
-   "en_hash": "4a2bc2c89aa32922",
-   "fr_hash": "51a4d2a1bf19730c"
+   "en_hash": "f9af12d98814e3d4",
+   "fr_hash": "9f80ad9e2df4b232"
   },
   {
    "id": "emg-002-total-power-failure/power-budget-minimum-survival-configuration",
@@ -34,8 +34,8 @@
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-1-immediate-load-shed-critical-execute-within-60s",
-   "en_hash": "6bbe8fd9d9bb9fa5",
-   "fr_hash": "80e298da3caf39be"
+   "en_hash": "f7cd94c00f93c7fd",
+   "fr_hash": "c6f3e7637740776d"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-2-set-battery-heater-to-thermostat-only-mode",
@@ -54,13 +54,13 @@
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-5-monitor-power-recovery-first-sunlit-phase",
-   "en_hash": "bf764f717545ffcf",
-   "fr_hash": "ab2303b5aebdbfdd"
+   "en_hash": "f2232170773203b1",
+   "fr_hash": "f1dfac89e3503fee"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-6-eclipse-monitoring-critical",
-   "en_hash": "e239deca04580ba5",
-   "fr_hash": "de307e9e4ea97d31"
+   "en_hash": "ee3a567089c2e135",
+   "fr_hash": "fdb08966302788fe"
   },
   {
    "id": "emg-002-total-power-failure/procedure-steps/step-7-sustained-recovery-monitoring-orbits-2-5",
@@ -79,13 +79,13 @@
   },
   {
    "id": "emg-002-total-power-failure/off-nominal-handling",
-   "en_hash": "8341fc85d32a97cf",
-   "fr_hash": "6029afb734fbee0a"
+   "en_hash": "69536475f3b66384",
+   "fr_hash": "98bfb7fce4e4554b"
   },
   {
    "id": "emg-002-total-power-failure/post-conditions",
-   "en_hash": "f60bab6900580890",
-   "fr_hash": "ce7e2d90ae650e38"
+   "en_hash": "2b8e2ea51367e377",
+   "fr_hash": "d9caa0b8f616aa7e"
   },
   {
    "id": "emg-002-total-power-failure/recovery-path-re-powering-shed-loads",
@@ -93,5 +93,5 @@
    "fr_hash": "3fcce16901d10e1e"
   }
  ],
- "en_commit": "9bdac94"
+ "en_commit": "f614a01"
 }

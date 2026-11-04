@@ -41,9 +41,10 @@ the engine logs a warning if the two diverge.
 | `eps.initial.bat_temp_c` | Battery temperature at start (also the thermal environment) | 15.0 | Battery thermal transient |
 | `eps.line_power_w.<line>` | Wattage billed for lines with no rating in `eps.yaml` (`htr_bat`, `htr_obc`, `aocs_wheels`) | 6/4/6 W (**EOSAT-1: 8/4/12**) | Platform load; `aocs_wheels` covers the whole AOCS suite (Phase B, sized for Phase C's 4/9/15 W modes) |
 | `eps.heater_duty_from_tcs` | Bill heater lines from the ACTUAL TCS heater state (0x040A/0x040B) instead of 100 % duty while the line is ON | false (**EOSAT-1: true**) | Phase B (brief 01 WP-5): removes the ~8 W phantom heater bill |
-| `eps.uv_threshold_v` / `ov_threshold_v` | Under/over-voltage flags | 26.5 / 29.5 | `uv_flag`/`ov_flag` telemetry and FDIR inputs |
+| `eps.bus_protection.{uv_v, eps_safe_v, aocs_safe_v, cascade_v, ov_v}` | The bus-voltage protection ladder — ONE named value per decision (2026-11) | 28.4 / 27.7 / 26.1 / 25.9 / 34.0 | uv_v drives `uv_flag`, the in-model shed and S5 0x0103; eps_safe_v S5 0x0104; ov_v `ov_flag`. fdir.yaml / fault_propagation.yaml rules name their level with `threshold_ref`; S12 and MCS limits are held equal by tests/test_content/test_sim_consistency.py. BPX 8S-1P curve: 45.8 / 38.5 / 21.9 / 19.8 % SoC |
+| `eps.uv_threshold_v` / `ov_threshold_v` | Harness override of the UV/OV flags | `null` (= bus_protection) | not set by the mission config |
 | `eps.load_shed.order` | Bus-voltage shed priority (first = shed first) | payload, fpa_cooler, ttc_tx, aocs_wheels | Which load dies first in a brown-out |
-| `eps.load_shed.bus_voltage_v` | Bus voltage at which the model sheds loads | 26.5 (**EOSAT-1: 25.0**) | 26.5 V ≈ 65 % SoC (inside the normal eclipse band → shed every orbit); 25.0 V ≈ 45 % SoC |
+| `eps.load_shed.bus_voltage_v` | Harness override of the shed trigger | `null` (= `bus_protection.uv_v`, 28.4 V ≈ 46 % SoC) | the retired 26.5 V sat at ≈ 65 % SoC, inside the normal eclipse band → shed every orbit |
 | `eps.load_shed.restore_hysteresis_v` | Restore margin above the shed voltage | 0.5 | Anti-chatter band |
 | `eps.load_shed.auto_restore` | Restore shed lines (one per tick, reverse shed order) once the bus recovers above threshold + hysteresis | false (**EOSAT-1: true**) | Phase B (brief 01 WP-7): the documented restore now exists |
 | `eps.load_shed.soc_stage_thresholds_pct` | FDIR shed stage 1/2/3 SoC entry levels | [30, 20, 10] | Canonical source for `LoadSheddingManager`; cross-checked against `fault_propagation.yaml` |
@@ -51,7 +52,7 @@ the engine logs a warning if the two diverge.
 | `eps.overcurrent.trip_time_s` | Trip delay (immediate at 1 Hz) | 0.05 | Reserved for sub-second ticks |
 | `eps.event_thresholds.soc_low_pct` / `soc_critical_pct` | S5 low/critical SoC events | 20 / 10 | Operator warning points |
 | `eps.event_thresholds.soc_charge_complete_pct` | Charge-complete event | 99.0 | — |
-| `eps.event_thresholds.bus_warning_v` / `bus_critical_v` | Bus undervoltage events | 27.0 / 25.0 | — |
+| `eps.event_thresholds.bus_warning_v` / `bus_critical_v` | Harness override of the bus undervoltage events | `null` (= `bus_protection.uv_v` / `eps_safe_v`) | — |
 | `eps.event_thresholds.bat_overtemp_c` / `bat_undertemp_c` | Battery temperature events | 45 / −5 | — |
 | `eps.event_thresholds.sa_degraded_fraction` | Array-degraded event trigger (actual < fraction × expected) | 0.7 | Sensitivity of array-degradation detection |
 | `tcs.environment.solar_flux_w_m2` / `scale_solar_with_distance` | Solar flux at 1 AU; scaled by (1 AU / r)² from the propagator's Sun vector (2026-11 thermal network) | 1361 / true | Absorbed sunlight on every external surface (≈1322 W/m² July, 1414 January) |

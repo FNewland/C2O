@@ -74,7 +74,7 @@ Il vaut quand même la peine de l'envoyer : si la perte vient de la chaîne d'�
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Télémesure de servitude plateforme/OBDH
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Télémesure de servitude TT&C
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — confirmer qu'aucune anomalie EPS n'a causé la perte de liaison
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — confirmer qu'aucune anomalie EPS n'a causé la perte de liaison
 **Verify:** `obdh.mode` (0x0300) — confirmer que l'OBC n'est pas passé en mode safe/emergency
 **GO/NO-GO:** Marge de liaison > 3 dB et tous les sous-systèmes nominaux — rétablissement terminé -> GO `STEP-END` | NO-GO `STEP-6`
 

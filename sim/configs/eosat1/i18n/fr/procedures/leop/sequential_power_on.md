@@ -28,7 +28,7 @@ la fiche de recette en orbite qui l'utilise.
       panneaux déployés)
 - [ ] Passage station sol programmé en cours (ou passage suivant réservé ---
       les étapes 1-6 tiennent dans un seul contact de 8 minutes)
-- [ ] SoC de la batterie > 60 % et tension du bus 26-30V (vérifiés à l'étape 1)
+- [ ] SoC de la batterie > 60 % et tension du bus 29.6-34.6V (vérifiés à l'étape 1)
 
 ## Ce que cette fiche n'alimente PAS (et qui s'en charge)
 | Charge | Reste | Alimentée par |
@@ -49,7 +49,7 @@ rendre silencieusement l'autorité d'attitude à la boucle de contrôle).
 
 ### Étape 1 --- Vérifier l'état de référence de l'EPS
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage [26.0V, 30.0V] sous 10s
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage [29.6V, 34.6V] sous 10s
 **Verify:** `eps.bat_soc` (0x0101) > 60 % sous 10s
 **Verify:** `eps.power_gen` (0x0107) > 20W (panneaux déployés, éclairement partiel)
 **GO/NO-GO:** État de référence de l'EPS nominal
@@ -125,7 +125,7 @@ indiquée par `eps.power_cons` (0x0106), ou SoC stable/en hausse
 - **Refus avec 0x0A20 (pas de magnétomètre) :** la commande d'équipement S2 de l'étape 4 n'a pas pris ou l'unité est défaillante. Renvoyer `S2_AOCS_MAGNETOMETER(device_id=521, state=1)` ; si le refus persiste, il s'agit d'une anomalie matérielle --- il n'y a pas de magnétomètre redondant.
 - **Refus avec 0x0A21 (pas de magnétocoupleurs) :** renvoyer `MTQ_ENABLE(enable=1)` et contrôler l'état de chaque barreau (équipements 0x020B-0x020D).
 - **Les vitesses angulaires ne diminuent pas en DETUMBLE :** vérifier 0x025C = 1 et la plausibilité de 0x0277 (un champ à zéro signifie que le magnétomètre est coupé ou défaillant). Si les vitesses augmentent, commander `AOCS_SET_MODE(mode=0)` (OFF) et analyser la cause.
-- **Tension du bus < 26V :** délestage immédiat selon CTG-001 ; couper d'abord la ligne activée le plus récemment.
+- **Tension du bus < 29.6V :** délestage immédiat selon CTG-001 ; couper d'abord la ligne activée le plus récemment.
 
 ## État de sortie
 - Lignes de réchauffeurs : telles que consignées à l'étape 2 (chacune sur ON seulement si sa zone avait besoin de chaleur)

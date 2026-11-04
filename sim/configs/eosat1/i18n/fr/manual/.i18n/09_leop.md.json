@@ -64,8 +64,8 @@
   },
   {
    "id": "eosat-1-leop-operations-guide/4-first-contact--rf-acquisition/42-beacon-tm-interpretation",
-   "en_hash": "fb59d687f1b87c04",
-   "fr_hash": "ad6a8f5dfbc82f9f"
+   "en_hash": "fa25aecb3c627f79",
+   "fr_hash": "cfbf5c20e62a5872"
   },
   {
    "id": "eosat-1-leop-operations-guide/4-first-contact--rf-acquisition/43-first-contact-procedure",
@@ -99,8 +99,8 @@
   },
   {
    "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/62-post-boot-verification",
-   "en_hash": "cd8d21c505e41c4d",
-   "fr_hash": "afff82e05c8bb838"
+   "en_hash": "d270caa1fbc54ce0",
+   "fr_hash": "84b7caa417741d0a"
   },
   {
    "id": "eosat-1-leop-operations-guide/6-application-boot-and-verification/63-recovery-from-failed-boot",
@@ -268,5 +268,5 @@
    "fr_hash": "9dda5fbfec2ee26e"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "f614a01"
 }

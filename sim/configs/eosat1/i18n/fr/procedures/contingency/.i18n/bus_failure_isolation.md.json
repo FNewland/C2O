@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/required-telemetry",
-   "en_hash": "e7ea9a20fc092bdc",
-   "fr_hash": "d9f3dffce551ed5b"
+   "en_hash": "c43733fa0de413c5",
+   "fr_hash": "5112b8d4e2416835"
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/required-commands",
@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-4-verify-all-housekeeping-resumes-on-new-bus",
-   "en_hash": "01f68f93057afabd",
-   "fr_hash": "c6f4e2b995776939"
+   "en_hash": "af22d74f889e2252",
+   "fr_hash": "430dbc4e00a46d5c"
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/procedure-steps/step-5-post-switchover-assessment-and-documentation",
@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/verification-criteria",
-   "en_hash": "caa512a8301c77aa",
-   "fr_hash": "ac6dfde83164cda2"
+   "en_hash": "a27f375f42573612",
+   "fr_hash": "d62fd60d5cb218d5"
   },
   {
    "id": "ctg-022-can-bus-failure-isolation/contingency",
@@ -73,5 +73,5 @@
    "fr_hash": "1a018baaec88ff72"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

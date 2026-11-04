@@ -23,7 +23,7 @@ la connaissance de la situation opérationnelle est entièrement transmise à l'
 |---|---|---|
 | obdh.mode | 0x0300 | 0 (NOMINAL) ou mode actuel |
 | eps.bat_soc | 0x0101 | Valeur actuelle (à consigner) |
-| eps.bus_voltage | 0x0105 | > 28.0 V en nominal |
+| eps.bus_voltage | 0x0105 | > 32.1 V en nominal |
 | eps.power_gen | 0x0107 | Valeur actuelle |
 | eps.power_cons | 0x0106 | Valeur actuelle |
 | eps.eclipse_flag | 0x0108 | État soleil/éclipse actuel |

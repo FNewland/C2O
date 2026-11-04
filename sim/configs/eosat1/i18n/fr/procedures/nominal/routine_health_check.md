@@ -31,7 +31,7 @@ et constitue le principal outil de détection précoce des anomalies et d'analys
 
 ### Étape 2 --- Évaluation de la santé de l'EPS
 **Verify:** `eps.bat_soc` (0x0101) > 40 % --- plage NOMINAL 40-100 %
-**Verify:** `eps.bus_voltage` (0x0105) dans la plage 27.0 - 32.0 V
+**Verify:** `eps.bus_voltage` (0x0105) dans la plage 30.9 - 34.0 V
 **Verify:** `eps.power_gen` (0x0107) > 0 W (au Soleil ; 0 W acceptable en éclipse)
 **Verify:** `eps.power_cons` (0x0106) < 350 W (bilan nominal du bus)
 **Verify:** Marge de puissance : `eps.power_gen` - `eps.power_cons` > -50 W

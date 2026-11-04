@@ -9,7 +9,7 @@ records the OBC mode instead of requiring SAFE.
 
 ## Purpose
 Recover the Electrical Power Subsystem from a low-energy state triggered by battery
-state-of-charge falling below 20% or main bus voltage dropping below 26.5V. This procedure
+state-of-charge falling below 20% or main bus voltage dropping below 27.7V. This procedure
 sheds non-essential loads to arrest energy depletion, monitors solar array performance during
 the sunlit orbital phase, and progressively re-enables loads once the battery has recovered
 above 40% SoC.
@@ -33,7 +33,7 @@ shed again (the command is refused S1.8 "power line … is OFF"), and its unit's
 housekeeping stops, so its mode parameter freezes at its last value. Shed from
 the ground only what is still powered.
 **Verify:** `eps.bat_soc` (0x0101) — record current value (expected < 20%)
-**Verify:** `eps.bus_voltage` (0x0105) — record current value (expected < 26.5V)
+**Verify:** `eps.bus_voltage` (0x0105) — record current value (expected < 27.7V)
 **Verify:** `eps.bat_voltage` (0x0100) — record current value
 **GO/NO-GO:** Telemetry confirms low-energy state — proceed with load shedding
 
@@ -77,7 +77,7 @@ re-powers it once the battery has recovered.
 ### Step 5 — Monitor Battery Recovery During Sunlit Phase
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — repeat every 60s
 **Verify:** `eps.bat_soc` (0x0101) trending upward (minimum +1% per 10 minutes in sunlight)
-**Verify:** `eps.bus_voltage` (0x0105) recovering above 27.0V
+**Verify:** `eps.bus_voltage` (0x0105) recovering above 30.9V
 **Verify:** `eps.bat_temp` (0x0102) remains within 0 to 40 deg-C during charge
 **GO/NO-GO:** SoC increasing and battery temp nominal — continue monitoring until SoC > 40%
 
@@ -108,18 +108,18 @@ restart by itself: DETUMBLE first. NO-GO — it is already running: go to NOMINA
 **TC:** `OBC_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 50)
 **Verify:** `obdh.mode` (0x0300) = 0 (NOMINAL) within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 40%
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0V
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1V
 **GO/NO-GO:** All subsystems nominal and energy budget positive — recovery complete
 
 ## Off-Nominal Handling
 - If SoC drops below 10% at any step: Command `OBC_SET_MODE(mode=2)` for EMERGENCY, execute EMG-002
 - If battery temperature exceeds 45 deg-C during charge: Command `HEATER_BATTERY(on=0)` and reduce charge rate via `SET_PARAM(param_id=eps.charge_limit, value=0.5)`
 - If solar array output remains < 0.2A for full sunlit pass: Execute CTG-009 (Solar Array Degradation)
-- If bus voltage drops below 25.0V: Execute EMG-002 immediately
+- If bus voltage drops below 28.4V: Execute EMG-002 immediately
 
 ## Post-Conditions
 - [ ] `eps.bat_soc` (0x0101) > 40%
-- [ ] `eps.bus_voltage` (0x0105) > 28.0V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1V
 - [ ] `obdh.mode` (0x0300) = 0 (NOMINAL)
 - [ ] `payload.mode` (0x0600) >= 1 (STANDBY or higher)
 - [ ] Power budget is positive with margin > 5W confirmed by Flight Dynamics

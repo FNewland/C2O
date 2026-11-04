@@ -16,7 +16,7 @@ The spacecraft detects a degraded string (S12 yield monitor, TM(12,9) and S5 eve
 0x914C / 0x914D) but takes no action on it: whether the payload goes off is the
 team's decision, made at Step 4 from how serious the loss is (string yield and power
 balance). If the power really runs out first, the on-board bus-voltage load shed
-(below 25.0 V, payload first) takes the payload off by itself; that is the safety net,
+(below 28.4 V, payload first) takes the payload off by itself; that is the safety net,
 not the plan.
 
 ## Prerequisites

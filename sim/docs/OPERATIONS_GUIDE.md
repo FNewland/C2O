@@ -239,7 +239,7 @@ Effect: EPS HK packets sent every 4 seconds
 | Parameter | Range | Alert Threshold | Subsystem |
 |-----------|-------|-----------------|-----------|
 | `eps.bat_soc` | 0-100% | < 10% (CRITICAL) | EPS |
-| `eps.bus_voltage` | 25-35 V | < 25V (CRITICAL) | EPS |
+| `eps.bus_voltage` | 24-34 V | < 27.7V (CRITICAL, EPS safe mode) | EPS |
 | `aocs.att_error` | 0-180° | > 1° (WARNING) | AOCS |
 | `aocs.total_momentum` | 0-0.06 Nms | envelope > 70% (`aocs.h_env_frac` 0x02BA, WARNING) | AOCS |
 | `tcs.fpa_temp` | -20 to 0°C | > -3°C blocks imaging; > +14°C (WARNING) | TCS |
@@ -308,7 +308,7 @@ Check:
   - aocs.mode = 4 (NOMINAL)
   - aocs.att_error < 0.5° (attitude good)
   - aocs.total_momentum < 50 Nms (wheels not saturated)
-  - Power: eps.bus_voltage > 27V (sufficient power)
+  - Power: eps.bus_voltage > 30.9V (sufficient power)
 Status: OK, proceed
 ```
 
@@ -743,10 +743,10 @@ When recovered (SoC > 20%):
 
 #### Bus Undervoltage
 
-**Event:** S5.0104 BUS_UNDERVOLTAGE_CRITICAL (bus voltage < 25V)
+**Event:** S5.0104 BUS_UNDERVOLTAGE_CRITICAL (bus voltage < 27.7V)
 
 **Autonomous Response:**
-- S12 monitoring detects bus voltage < 25V
+- S12 monitoring detects bus voltage < 27.7V
 - S19 rule triggers: "Undervoltage → Payload off"
 - S8 EPS_PAYLOAD_MODE executed (mode=0, off)
 
@@ -755,8 +755,8 @@ When recovered (SoC > 20%):
 ```
 MCS: Investigate cause
   S3 request HK_EPS (SID=1)
-  eps.bus_voltage = 24.5V (critically low)
-  eps.bat_voltage = 28V (good)
+  eps.bus_voltage = 27.5V (critically low)
+  eps.bat_voltage = 27.5V (the bus follows the battery)
   eps.eclipse_flag = 1 (in eclipse)
 
 Scenario: Heavy power consumption in eclipse
@@ -777,12 +777,12 @@ MCS Command: Reduce power consumption
      Response: S1 reports
 
   4. S3 request HK_EPS
-     eps.bus_voltage = 26.5V (recovering)
+     eps.bus_voltage = 28.4V (recovering)
 
 MCS Monitoring:
   Wait for eclipse exit (AOS to illuminated region)
   eps.power_gen → 1200W (solar arrays reilluminated)
-  eps.bus_voltage → 29V (nominal)
+  eps.bus_voltage → ~32V (nominal)
   eps.bat_soc recovering
 ```
 
@@ -1514,10 +1514,10 @@ The following timeline assumes a Chennai/Sriharikota launch into a southward-des
 | 6 | S8.1 OBC_WATCHDOG_ENABLE | 59 | S1.7 complete |
 | 7 | S3.5 Enable HK SID 1 (EPS) | — | EPS telemetry streaming |
 | 8 | S3.5 Enable HK SID 4 (OBDH) | — | OBDH telemetry streaming |
-| 9 | S3.27 request SID 1 (EPS) | — | bat_soc > 70%, bus_voltage > 27V |
+| 9 | S3.27 request SID 1 (EPS) | — | bat_soc > 70%, bus_voltage > 30.9V |
 | 10 | S3.27 request SID 4 (OBDH) | — | OBC mode=0 (nominal), reboot_cnt=0 |
 
-**GO/NO-GO:** OBC in application mode, EPS healthy (SoC > 60%, bus > 27V).
+**GO/NO-GO:** OBC in application mode, EPS healthy (SoC > 60%, bus > 30.9V).
 **Contingency:** If OBC boot fails — S8.1 func_id=56 (BOOT_INHIBIT, inhibit=0), retry func_id=55. If repeated failure, stay in bootloader and escalate.
 
 #### Pass 3 — EPS Commissioning & Antenna Deploy (Troll, T+03:25)

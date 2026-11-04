@@ -29,7 +29,7 @@ d'un fonctionnement sur un bus sans redondance.
 | obdh.mode | 0x0300 | Mode OBC courant |
 | obdh.cpu_load | 0x0302 | Surveiller toute hausse anormale |
 | obdh.temp | 0x0301 | Température de l'OBC dans les limites |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | eps.bat_soc | 0x0101 | Consigner la valeur courante |
 | aocs.mode | 0x020F | Vérifier après le basculement |
 | payload.mode | 0x0600 | Vérifier après le basculement |
@@ -129,7 +129,7 @@ le basculement. Les données HK des sous-systèmes seront indisponibles pendant 
 **Verify:** Les valeurs de télémesure sont cohérentes et plausibles :
 - aucune valeur figée ni aucun zéro inattendu ;
 - valeurs cohérentes avec les mesures d'avant la panne.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — alimentation stable
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — alimentation stable
 **Verify:** `eps.bat_soc` (0x0101) — inchangé par rapport à l'avant-basculement
 **Verify:** `aocs.mode` (0x020F) — mode SCAO inchangé par rapport à l'état d'avant la panne
 **Verify:** `payload.mode` (0x0600) — mode de la charge utile inchangé
@@ -165,7 +165,7 @@ sans analyse et accord de l'équipe d'ingénierie.
 - [ ] Aucun changement de mode d'un sous-système pendant le basculement
 - [ ] Toutes les valeurs de télémesure cohérentes avec les valeurs d'avant la panne
 - [ ] `obdh.cpu_load` (0x0302) < 80 %
-- [ ] `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 30.9 V
 - [ ] Rapport d'anomalie déposé avec le détail de la panne de bus
 - [ ] Directeur de vol informé de la redondance réduite des bus
 

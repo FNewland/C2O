@@ -31,7 +31,7 @@ the baseline payload state required for subsequent cooler activation and imaging
 
 ### Step 1 — Pre-Power-On EPS Baseline
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [27.0V, 29.0V] within 10s (the console's yellow band)
+**Verify:** `eps.bus_voltage` (0x0105) in range [28.4V, 34.0V] within 10s (the console's yellow band)
 **Verify:** `eps.bat_soc` (0x0101) > 75% within 10s
 **Verify:** `eps.power_gen` (0x0107) > 40W within 10s
 **Action:** Record pre-power-on bus voltage, battery SOC, and power generation as baseline.
@@ -65,7 +65,7 @@ un-energised payload line.
 ### Step 4 — Verify Payload Power Draw
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Action:** Compare bus voltage and power consumption with pre-power-on baseline.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0V within 10s (bus maintained under new load)
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9V within 10s (bus maintained under new load)
 **TC:** `GET_PARAM(param_id=0x0106)` (Service 20, Subtype 3) — `eps.power_cons`, total load
 **Verify:** Total load increase relative to baseline is **2-3 W** within 10 s.
 (This read 0x0108, which is `eps.eclipse_flag` — a 0/1 boolean, not a wattage.
@@ -128,7 +128,7 @@ imagery from the store's baseline fill.
   (0x0610 is `payload.fpa_ready`, not a power-bus flag.) If `eps.pl_payload` (0x0113) is 0, the payload line is not energised — that is
   Step 3's `EPS_POWER_ON(line_index=3)`, and a mode command without it reverts on
   the next tick. If power ON but payload unresponsive, power off via `PAYLOAD_SET_MODE(mode=0)` and escalate.
-- If bus voltage drops below 27.0V on payload power-on: Immediately power off payload via `PAYLOAD_SET_MODE(mode=0)`. Check battery SOC. If SOC < 60%, wait for higher charge state. If bus regulation issue, investigate EPS before retry.
+- If bus voltage drops below 30.9V on payload power-on: Immediately power off payload via `PAYLOAD_SET_MODE(mode=0)`. Check battery SOC. If SOC < 60%, wait for higher charge state. If bus regulation issue, investigate EPS before retry.
 - If the imager status word shows a fault: record it via `GET_PARAM(param_id=0x0611)`. Power off payload via `PAYLOAD_SET_MODE(mode=0)`. Do not proceed to cooler activation. Escalate to payload engineer with the imager status word.
 - If payload power draw > 5 W in STANDBY (against a ~2.4 W budget): Unexpected current draw may indicate electronics fault. Monitor for 5 minutes. If trending upward, power off payload. If stable at higher-than-expected level, consult payload manufacturer specifications.
 - If the FPA temperature reading is anomalous: cross-check against the TCS node

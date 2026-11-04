@@ -26,7 +26,7 @@ not power anything on and does not command any mode: it observes.
 
 ### Step 1 --- Request Full EPS Housekeeping
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
-**Verify:** `eps.bus_voltage` (0x0105) in range [26.0V, 30.0V] within 10s
+**Verify:** `eps.bus_voltage` (0x0105) in range [29.6V, 34.6V] within 10s
 **Verify:** `eps.bat_voltage` (0x0100) reported within 10s
 **Verify:** `eps.bat_soc` (0x0101) > 50% within 10s
 **Verify:** `eps.power_gen` (0x0107) > 0W (confirms at least partial illumination) within 10s — only in sunlight: with `eps.eclipse_flag` (0x0108) = 1, 0 W is expected (the default separation lands this card in the first eclipse); record it and re-check after eclipse exit

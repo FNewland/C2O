@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/required-telemetry",
-   "en_hash": "a62ba3eddbf564a6",
-   "fr_hash": "0f14fe87acdf8f70"
+   "en_hash": "8700d10257abca49",
+   "fr_hash": "7ea9c57f5a1e6484"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/required-commands",
@@ -39,8 +39,8 @@
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-1-confirm-bootloader-state-and-record-diagnostics",
-   "en_hash": "1f5fa042f57b5d1f",
-   "fr_hash": "51410125c7ad5965"
+   "en_hash": "4e37ddbfbf855596",
+   "fr_hash": "d999c760d06e6aa3"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-2-assess-reboot-cause-and-determine-recovery-path",
@@ -74,8 +74,8 @@
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-7-verify-all-subsystems-nominal",
-   "en_hash": "b973b31ecf1cc8ac",
-   "fr_hash": "4f74c39b1927d6af"
+   "en_hash": "1a31f37f4fb2afe5",
+   "fr_hash": "173283b13f752f28"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/verification-criteria",
@@ -88,5 +88,5 @@
    "fr_hash": "c1ecf00778e8d91c"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

@@ -218,7 +218,7 @@ nothing to restore and this orbit verifies thermal state only.
 - [ ] `obdh.mode` (0x0300) = NOMINAL (0)
 - [ ] `aocs.mode` (0x020F) = NOMINAL (4) with `aocs.att_error` (0x0217) < 1.0 deg
 - [ ] `eps.bat_soc` (0x0101) > 60% and stable
-- [ ] `eps.bus_voltage` (0x0105) > 28.0V
+- [ ] `eps.bus_voltage` (0x0105) > 32.1V
 - [ ] All heaters operational, temperatures within nominal ranges
 - [ ] `payload.mode` (0x0600) = STANDBY (1) or higher
 - [ ] `ttc.link_status` (0x0501) = 2 (LOCKED) on scheduled passes

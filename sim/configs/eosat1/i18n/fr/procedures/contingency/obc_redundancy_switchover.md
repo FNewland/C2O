@@ -31,7 +31,7 @@ applicatif et vérifie le retour de tous les sous-systèmes en fonctionnement no
 | obdh.sw_version | 0x030B | Version applicative correcte après l'amorçage |
 | obdh.cpu_load | 0x0302 | < 80 % après stabilisation |
 | obdh.temp | 0x0301 | Dans les limites |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 | aocs.mode | 0x020F | Vérifier après le basculement |
 | payload.mode | 0x0600 | Vérifier après le basculement |
 | ttc.link_status | 0x0501 | 2 (LOCKED) |
@@ -108,7 +108,7 @@ Si `obdh.reboot_count` > 4, la FDIR a peut-être déjà déclenché le mode surv
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Charge utile
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Télémesure de servitude plateforme/OBDH
 **Verify:** Toutes les réponses HK sont reçues en 15 s.
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V
 **Verify:** `eps.bat_soc` (0x0101) — consigner la valeur
 **Verify:** `aocs.mode` (0x020F) — consigner le mode. Le SCAO est peut-être revenu en COARSE_SUN
 pendant le basculement. Si c'est le cas, rétablir le mode nominal après avoir confirmé la stabilité.

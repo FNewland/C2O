@@ -19,13 +19,13 @@
   },
   {
    "id": "ctg-008-star-tracker-failure/prerequisites",
-   "en_hash": "718781be2dc5a83d",
-   "fr_hash": "0fdf0a60cd503218"
+   "en_hash": "4481a694b2098a1b",
+   "fr_hash": "c8b7c6cdb58db9c7"
   },
   {
    "id": "ctg-008-star-tracker-failure/required-telemetry",
-   "en_hash": "0cb62340d9244905",
-   "fr_hash": "6f7d38369055018e"
+   "en_hash": "6a286f8e8d1e7067",
+   "fr_hash": "7ffaaa5245fedda8"
   },
   {
    "id": "ctg-008-star-tracker-failure/required-commands",
@@ -78,5 +78,5 @@
    "fr_hash": "e284194cb01d1f0c"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

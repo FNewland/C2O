@@ -64,7 +64,7 @@ Le satellite est en mode chargeur d'amorçage (`sw_image = 0`). Seuls l'OBC et l
 
 | Paramètre | ID hexa | Attendu | Emplacement sur le MCS |
 |-----------|--------|----------|--------------|
-| `bat_voltage` | 0x0100 | ~26.4 V | onglet **eps** → panneau Battery |
+| `bat_voltage` | 0x0100 | ~32.6 V | onglet **eps** → panneau Battery |
 | `bat_soc` | 0x0101 | ~75 % | onglet **eps** → panneau Battery |
 | `obc_mode` | 0x0300 | 0 (pas un indicateur d'amorçage — lire `sw_image`) | onglet **obdh** → champ Mode |
 | `reboot_count` | 0x030A | 0 | onglet **obdh** → Reboot Count |
@@ -145,8 +145,8 @@ Le satellite est désormais en mode applicatif. Tous les SID sont disponibles. T
 
 | Paramètre | ID hexa | Valeur attendue au démarrage à froid | Contrôle |
 |-----------|--------|--------------------------|-------|
-| `bus_voltage` | 0x0105 | 28.2 V (régulée) | ∈ [27.0, 29.5] V |
-| `bat_voltage` | 0x0100 | ~26.4 V | ∈ [24.0, 28.0] V |
+| `bus_voltage` | 0x0105 | ~32.6 V (suit la batterie) | ∈ [30.9, 34.0] V |
+| `bat_voltage` | 0x0100 | ~32.6 V | ∈ [24.0, 33.6] V |
 | `bat_soc` | 0x0101 | ~75 % | > 50 % |
 | `bat_temp` | 0x0102 | ~15 °C | ∈ [0, 35] °C |
 | `power_gen` | 0x0107 | dépend du Soleil | > 0 W si éclairé |
@@ -351,7 +351,7 @@ Pour désactiver une roue donnée : `AOCS_DISABLE_WHEEL(wheel_idx=N)` (S8.1, fu
 | Paramètre | Attendu après l'étape 7.3 |
 |-----------|------------------------|
 | `power_cons` | ~40 W (OBC ~6 W + RX ~1,5 W + TX ~11 W + réchauffeurs ~9 W + roues ~12 W) |
-| `bus_voltage` | > 27.0 V |
+| `bus_voltage` | > 30.9 V |
 | `bat_soc` | toujours > 60 % |
 | `power_gen` - `power_cons` | marge positive si éclairé |
 

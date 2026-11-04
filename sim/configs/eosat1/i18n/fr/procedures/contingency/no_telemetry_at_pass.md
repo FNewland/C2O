@@ -35,7 +35,7 @@ d'alimentation EPS, la commande du PA, les contrôles du déploiement d'antenne 
 | ttc.eb_n0 | 0x0519 | > 10 dB lorsque la liaison est active |
 | ttc.ber | 0x050C | < -5 lorsque la liaison est active |
 | eps.pl_ttc_tx | 0x0112 | 1 (ligne d'alimentation TX sous tension) |
-| eps.bus_voltage | 0x0105 | > 27.0 V |
+| eps.bus_voltage | 0x0105 | > 30.9 V |
 
 ## Télécommandes requises
 | Télécommande | Service | Sous-type | Func ID | Description |
@@ -151,7 +151,7 @@ améliorer considérablement le niveau du signal (gain supplémentaire de 15-25�
 **Verify:** `ttc.bit_sync` (0x0511) = 1
 **Verify:** page radio (sol) : `ttc.eb_n0` (0x0519) > 10 dB
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Demander les données de servitude EPS
-**Verify:** `eps.bus_voltage` (0x0105) > 27.0 V — confirmer l'absence d'anomalie EPS
+**Verify:** `eps.bus_voltage` (0x0105) > 30.9 V — confirmer l'absence d'anomalie EPS
 **Verify:** `eps.pl_ttc_tx` (0x0112) = 1 — ligne d'alimentation TX confirmée sur ON
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Demander les données de servitude OBDH
 **Verify:** `obdh.mode` (0x0300) — confirmer que l'OBC n'est pas passé en mode survie ou EMERGENCY

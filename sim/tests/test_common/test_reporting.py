@@ -4,7 +4,7 @@ A synthetic dump with KNOWN content drives every numeric assertion:
 
 * SID 1 HK at 1 Hz for 120 s with a 40-sample hole (i = 40…79), so the
   completeness analysis must find exactly one gap of 41 s;
-* ``eps.bus_voltage`` (0x0105) held at 29.8 V — above the 29.5 V red_high
+* ``eps.bus_voltage`` (0x0105) held at 34.3 V — above the 34.0 V caution limit (BPX bus, 2026-11)
   band in mcs/limits.yaml — for the first 30 samples, so ``ool_red_s`` must
   be exactly 30 s;
 * one severity-3 event with aux text "SAFE MODE ENTRY" (the historical
@@ -53,7 +53,7 @@ T0_CUC = datetime_to_cuc_seconds(T0)
 DUMP_NAME = "dump_sid01_19990101T000000Z.bin"
 
 PID_BUS_V = 0x0105
-RED_HIGH_BUS_V = 29.5  # mcs/limits.yaml band for 0x0105
+RED_HIGH_BUS_V = 34.0  # mcs/limits.yaml yellow_high for 0x0105 (= bus_protection.ov_v)
 
 
 def _sid1_structure() -> list[tuple[int, str, float]]:
@@ -80,8 +80,8 @@ def _build_dump(dump_dir: Path) -> Path:
             continue  # the 40-sample hole
         cur["t"] = T0_CUC + i
         params = {
-            0x0100: 27.0, 0x0101: 80.0, 0x0102: 15.0,
-            PID_BUS_V: 29.8 if i < 30 else 27.5,   # 30 s above red_high
+            0x0100: 30.9, 0x0101: 80.0, 0x0102: 15.0,
+            PID_BUS_V: 34.3 if i < 30 else 31.5,   # 30 s above red_high
             0x0108: 1.0 if i >= 100 else 0.0,       # eclipse at the end
         }
         pkts.append(b.build_hk_packet(1, params, sid1))
@@ -174,8 +174,8 @@ def test_event_decodes_with_exact_aux_text(dataset):
 def test_hk_series_decoded_with_scaling(dataset):
     pts = dataset.series_for(PID_BUS_V)
     assert len(pts) == 80  # 120 - 40 missing
-    assert pts[0][1] == pytest.approx(29.8, abs=0.02)
-    assert pts[-1][1] == pytest.approx(27.5, abs=0.02)
+    assert pts[0][1] == pytest.approx(34.3, abs=0.02)
+    assert pts[-1][1] == pytest.approx(31.5, abs=0.02)
 
 
 # ── on-board timestamps ──────────────────────────────────────────────────
@@ -209,16 +209,16 @@ def test_sub_second_cuc_survives_the_dump(dump_dir, catalogs, tmp_path):
 def test_stats_numeric_and_ool_red_time(dataset, catalogs):
     st = param_stats(dataset, PID_BUS_V, _abs_period(0, 120), catalogs)
     assert st["count"] == 80
-    assert st["min"] == pytest.approx(27.5, abs=0.02)
-    assert st["max"] == pytest.approx(29.8, abs=0.02)
-    expected_mean = (30 * 29.8 + 50 * 27.5) / 80
+    assert st["min"] == pytest.approx(31.5, abs=0.02)
+    assert st["max"] == pytest.approx(34.3, abs=0.02)
+    expected_mean = (30 * 34.3 + 50 * 31.5) / 80
     assert st["mean"] == pytest.approx(expected_mean, abs=0.05)
-    # 30 samples at 29.8 V at 1.0 s cadence: above the caution limit
-    # (29.5 V) but below the alarm limit (30.0 V) since the 2026-11 limit fix
+    # 30 samples at 34.3 V at 1.0 s cadence: above the caution limit
+    # (34.0 V = eps.bus_protection.ov_v) but below the alarm limit (34.6 V)
     assert st["ool_red_s"] == pytest.approx(0.0)
     assert st["ool_yellow_s"] == pytest.approx(30.0)
-    assert st["first"] == pytest.approx(29.8, abs=0.02)
-    assert st["last"] == pytest.approx(27.5, abs=0.02)
+    assert st["first"] == pytest.approx(34.3, abs=0.02)
+    assert st["last"] == pytest.approx(31.5, abs=0.02)
 
 
 # ── completeness / gaps ──────────────────────────────────────────────────

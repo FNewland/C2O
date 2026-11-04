@@ -9,12 +9,12 @@ de réchauffeur ou de mode qui lui est destinée ; le réchauffeur batterie pa
 
 ## Objet
 Procédure d'urgence d'EOSAT-1 lorsque l'état de charge de la batterie tombe sous 10 % ou que la tension du bus
-descend sous 26 V. Cette procédure définit le délestage immédiat permettant d'atteindre la configuration minimale
+descend sous 29.6 V. Cette procédure définit le délestage immédiat permettant d'atteindre la configuration minimale
 de survie (~20 W), assure le pointage solaire des générateurs pour une production de puissance maximale et
 fournit un plan de rétablissement par étapes. Aucune charge ne peut être réactivée tant que le SoC n'a pas dépassé 30 %.
 
 ## Prérequis
-- [ ] `eps.bat_soc` (0x0101) < 10 % OU `eps.bus_voltage` (0x0105) < 26.0 V confirmé
+- [ ] `eps.bat_soc` (0x0101) < 10 % OU `eps.bus_voltage` (0x0105) < 29.6 V confirmé
 - [ ] Liaison de communication active --- `ttc.link_status` (0x0501) = 2 (LOCKED) (sinon, la procédure est exécutée en aveugle)
 - [ ] Flux de télémesure EPS actif ou dernières valeurs connues datant de < 60 s
 - [ ] Ingénieur systèmes de puissance à la console
@@ -42,7 +42,7 @@ Puissance produite moyenne sur l'orbite en pointage solaire : ~35 W. Marge par
 ## Déroulement
 
 ### Étape 1 --- Délestage immédiat (CRITIQUE --- à exécuter sous 60 s)
-**Contrôler :** À cette tension de bus, le délesteur de bord a généralement déjà agi (sous 25,0 V,
+**Contrôler :** À cette tension de bus, le délesteur de bord a généralement déjà agi (sous 28,4 V,
 il ouvre payload, fpa_cooler, ttc_tx, aocs_wheels, prop dans cet ordre, une ligne par seconde). Lire
 `eps.load_shed_stage` (0x0134) et l'état des lignes avant de commander : une ligne que la FDIR a
 ouverte ne peut pas être délestée une seconde fois --- la commande est refusée S1.8 et le paramètre de
@@ -106,7 +106,7 @@ ci-dessus inclut l'AOCS précisément pour cette raison.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- HK EPS toutes les 60 s.
 **Surveiller :** `eps.bat_soc` (0x0101) --- doit être en tendance à la hausse.
 **Surveiller :** `eps.bus_voltage` (0x0105) --- doit être stable ou en hausse.
-**Surveiller :** `eps.bat_voltage` (0x0100) --- vérifier que la batterie accepte la charge (tension > 27 V).
+**Surveiller :** `eps.bat_voltage` (0x0100) --- vérifier que la batterie accepte la charge (tension > 30.9 V).
 **Surveiller :** `eps.power_gen` (0x0107) par rapport à `eps.power_cons` (0x0106) --- confirmer le bilan de puissance positif.
 **Attendu :** Avec ~20 W de charge de survie (~25 W en passage) et ~64 W de production de crête (~35 W en moyenne sur l'orbite), la marge moyenne sur l'orbite est d'environ 15 W. Suivre la tendance mesurée du SoC : c'est elle, et non cette estimation, qui décide du rétablissement.
 **GO/NO-GO:** Bilan de puissance positif confirmé (production > consommation).
@@ -114,11 +114,11 @@ ci-dessus inclut l'AOCS précisément pour cette raison.
 ### Étape 6 --- Surveillance de l'éclipse (CRITIQUE)
 **Contrôle avant éclipse :** Consigner la valeur de `eps.bat_soc` (0x0101) à l'entrée en éclipse.
 **Seuil critique :** Si SoC < 8 % à l'entrée en éclipse, le satellite peut entrer en coupure sur sous-tension.
-**Surveiller :** `eps.bus_voltage` (0x0105) pendant toute l'éclipse --- doit rester > 25.0 V.
+**Surveiller :** `eps.bus_voltage` (0x0105) pendant toute l'éclipse --- doit rester > 28.4 V.
 **Surveiller :** `tcs.temp_battery` (0x0407) --- vérifier que le thermostat du réchauffeur batterie s'enclenche si nécessaire.
 **Durée :** L'éclipse dure ~34–36 minutes sur la SSO à ~513 km.
 **Décharge attendue :** ~20 W x 35 min = ~12 Wh consommés. Capacité de la batterie 100 Wh, soit ~12 % de SoC consommés.
-**GO/NO-GO:** Tension du bus maintenue > 25.0 V pendant toute l'éclipse. Si la tension descend sous 25.0 V,
+**GO/NO-GO:** Tension du bus maintenue > 28.4 V pendant toute l'éclipse. Si la tension descend sous 28.4 V,
 la protection contre les sous-tensions déconnecte automatiquement les bus non essentiels.
 
 ### Étape 7 --- Surveillance prolongée du rétablissement (orbites 2--5)
@@ -152,7 +152,7 @@ la protection contre les sous-tensions déconnecte automatiquement les bus non e
 | > 60 % | Rétablir la charge utile en attente, reprendre les opérations nominales | T+20 à T+30 heures |
 
 ## Conduite à tenir hors nominal
-- Si la tension du bus descend sous 25.0 V : la protection contre les sous-tensions s'active de façon autonome. S'attendre à une perte du TT&C jusqu'à la phase éclairée suivante. Surveiller depuis la station sol la réacquisition de la balise.
+- Si la tension du bus descend sous 28.4 V : la protection contre les sous-tensions s'active de façon autonome. S'attendre à une perte du TT&C jusqu'à la phase éclairée suivante. Surveiller depuis la station sol la réacquisition de la balise.
 - Si le SoC n'augmente pas en phase éclairée : panne possible d'un générateur solaire. Comparer `eps.sa_a_current` (0x0103) et `eps.sa_b_current` (0x0104). Si une aile est à zéro, la survie sur une seule aile est possible, mais avec une marge réduite (~42 W de production de crête).
 - Si la température de la batterie descend sous -10 °C : le thermostat du réchauffeur batterie est peut-être défaillant. Confirmer `eps.pl_htr_bat` (0x0115) = 1 (`EPS_POWER_ON(line_index=5)` sinon), puis commander `HEATER_BATTERY(on=1)` manuellement. Accepter une consommation accrue pour éviter d'endommager la batterie.
 - Si `obdh.reboot_count` (0x030A) s'incrémente : l'OBC subit peut-être des réinitialisations par baisse de tension. Couper toutes les charges optionnelles restantes et accepter une télémesure réduite.
@@ -160,7 +160,7 @@ la protection contre les sous-tensions déconnecte automatiquement les bus non e
 
 ## Postconditions
 - [ ] `eps.bat_soc` (0x0101) > 30 % et en tendance à la hausse
-- [ ] `eps.bus_voltage` (0x0105) > 27.0 V stable
+- [ ] `eps.bus_voltage` (0x0105) > 30.9 V stable
 - [ ] `eps.power_gen` (0x0107) > `eps.power_cons` (0x0106) confirmé sur 3 orbites ou plus
 - [ ] Température de la batterie dans la plage nominale : `tcs.temp_battery` (0x0407) entre -5 °C et +35 °C
 - [ ] Cause racine de l'urgence puissance identifiée ou analyse en cours

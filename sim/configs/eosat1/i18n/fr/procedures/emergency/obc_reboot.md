@@ -133,7 +133,7 @@ principale. Faire remonter à l'ingénieur OBDH pour analyse.
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) --- activer le compte rendu périodique TTC
 **Verify:** paquets HK périodiques de tous les SID activés reçus sous 30 s
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) --- demander les données de servitude EPS
-**Verify:** `eps.bus_voltage` (0x0105) > 28.0 V --- bus d'alimentation nominal
+**Verify:** `eps.bus_voltage` (0x0105) > 32.1 V --- bus d'alimentation nominal
 **Verify:** `eps.bat_soc` (0x0101) > 25 % --- charge suffisante
 **TC:** `HK_REQUEST(sid=2)` (Service 3, Subtype 27) --- demander les données de servitude AOCS
 **Verify:** `aocs.mode` (0x020F) --- consigner le mode AOCS actuel (peut être revenu par défaut à COARSE_SUN ou DETUMBLE)

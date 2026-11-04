@@ -24,8 +24,8 @@
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/21-solar-panels--body-mounted-panels-and-deployable-wings",
-   "en_hash": "fbdcfc13661ad2d2",
-   "fr_hash": "bf57e7020ee01fc5"
+   "en_hash": "2a2dab6517bf0a10",
+   "fr_hash": "424ec95173cc9464"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/211-deployable-solar-wings",
@@ -34,8 +34,8 @@
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/22-battery",
-   "en_hash": "b468dcfa48d5c292",
-   "fr_hash": "1f8165e1975589b9"
+   "en_hash": "97b9ad33cb378048",
+   "fr_hash": "964372366af4b737"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/2-architecture/23-power-distribution-module-pdm",
@@ -119,8 +119,8 @@
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes",
-   "en_hash": "9dfc8e65d3195cac",
-   "fr_hash": "472692d7023cdd41"
+   "en_hash": "2593e3f326126517",
+   "fr_hash": "11e1e0f4ff3ed9c1"
   },
   {
    "id": "eosat-1-electrical-power-subsystem-eps/8-failure-modes/81-per-panel-degradation-and-loss",
@@ -133,5 +133,5 @@
    "fr_hash": "6cef7a38a10a69c9"
   }
  ],
- "en_commit": "b41c0a9"
+ "en_commit": "f614a01"
 }

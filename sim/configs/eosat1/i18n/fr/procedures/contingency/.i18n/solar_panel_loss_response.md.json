@@ -74,8 +74,8 @@
   },
   {
    "id": "ctg-024-solar-panel-loss-response/verification-criteria",
-   "en_hash": "9cf484cfce2fb8e7",
-   "fr_hash": "cefcba372a4032ca"
+   "en_hash": "caca60cf71b38688",
+   "fr_hash": "d174228b108a0ee2"
   },
   {
    "id": "ctg-024-solar-panel-loss-response/off-nominal-handling",
@@ -83,5 +83,5 @@
    "fr_hash": "9be991bbd0966a4b"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "f614a01"
 }

@@ -177,7 +177,7 @@ terminée.
 - [ ] Plan d'opérations adapté à l'enveloppe de puissance disponible
 - [ ] Suivi de tendance quotidien lancé
 - [ ] `eps.bat_soc` (0x0101) > 25 % et stable ou en hausse
-- [ ] `eps.bus_voltage` (0x0105) > 27.0 V
+- [ ] `eps.bus_voltage` (0x0105) > 30.9 V
 
 ## Conduite à tenir hors nominal
 - Si tous les panneaux du côté exposé au Soleil sont perdus : passer immédiatement en COARSE_SUN.
