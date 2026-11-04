@@ -1424,7 +1424,7 @@ commands:
     subtype: 1
     func_id: 92
     arg_schema_version: 1
-    position: payload
+    position: payload_ops
     description: "Rotate the filter wheel to a position (2 s per 90 deg step)"
     readback: { param_id: 0x063D, description: "payload.filter_pos" }
     fields:
@@ -1445,7 +1445,7 @@ commands:
     subtype: 1
     func_id: 93
     arg_schema_version: 1
-    position: payload
+    position: payload_ops
     description: >-
       Run a shutter mechanism EXERCISE. This is a mechanism health test, not a
       way to reach a position — use PAYLOAD_SET_SHUTTER (func 119) for that.
@@ -1472,7 +1472,7 @@ commands:
     subtype: 1
     func_id: 119
     arg_schema_version: 1
-    position: payload
+    position: payload_ops
     criticality: caution
     description: >-
       Drive the shutter to an ABSOLUTE position.
@@ -1503,7 +1503,7 @@ commands:
     subtype: 1
     func_id: 94
     arg_schema_version: 1
-    position: payload
+    position: payload_ops
     description: >-
       Start the on-board image transfer engine for a stored scene — the
       bridge to the S13_CREATE_TRANSFER ground workflow (textbook section 6.7).
@@ -1531,7 +1531,7 @@ commands:
     subtype: 1
     func_id: 95
     arg_schema_version: 1
-    position: payload
+    position: payload_ops
     description: "Calibration lamp on/off (also reachable as S2 device 0x0602)"
     readback: { param_id: 0x0615, description: "payload.cal_lamp_on" }
     fields:
@@ -2290,56 +2290,56 @@ commands:
     func_id: 100
     description: "Solar array A ON (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: EPS_SA_A_OFF_LEGACY
     service: 8
     subtype: 1
     func_id: 101
     description: "Solar array A OFF (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: EPS_SA_B_ON_LEGACY
     service: 8
     subtype: 1
     func_id: 102
     description: "Solar array B ON (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: EPS_SA_B_OFF_LEGACY
     service: 8
     subtype: 1
     func_id: 103
     description: "Solar array B OFF (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: TCS_HEATER_BAT_ON_LEGACY
     service: 8
     subtype: 1
     func_id: 104
     description: "Battery heater ON (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: TCS_HEATER_BAT_OFF_LEGACY
     service: 8
     subtype: 1
     func_id: 105
     description: "Battery heater OFF (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: TCS_HEATER_OBC_ON_LEGACY
     service: 8
     subtype: 1
     func_id: 106
     description: "OBC heater ON (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
   - name: TCS_HEATER_OBC_OFF_LEGACY
     service: 8
     subtype: 1
     func_id: 107
     description: "OBC heater OFF (legacy quick-action)"
     fields: []
-    position: eps
+    position: eps_tcs
 
   # ===== S8 Function Management — System / mission level (func_id 120-127) =====
   # A fresh block. 99 and 119-127 were the free ids; 119 went to

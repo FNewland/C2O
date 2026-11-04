@@ -12,7 +12,8 @@ not already switched off; restoration re-powers each line before its mode comman
 ## Objective
 Respond to an undervoltage condition on the main power bus by completing, from the
 ground, the load shedding the spacecraft has not already done, in a controlled
-priority order. The EPS sheds on its own below 25.0 V (payload → FPA cooler →
+priority order. The EPS sheds on its own below the named shed level, 28.4 V
+(`eps.bus_protection.uv_v`; payload → FPA cooler →
 `ttc_tx` → AOCS wheels → prop, one line per second, events LOAD_SHED_STAGE_1..3
 0x0106-0x0108), and EPS safe/emergency modes and the S19 SoC rules open lines too:
 by the time this card is flown some lines may already be off. Loads are shed starting with the lowest
@@ -92,7 +93,7 @@ on-board FDIR has already opened it: send nothing and go to the voltage check.
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Command payload to OFF
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27) — Payload housekeeping
 **Verify:** `payload.mode` (0x0600) = 0 (OFF) within 10 s
-**Verify:** `eps.power_cons` (0x0106) decreases (expected -45 W if imaging, -8 W if standby)
+**Verify:** `eps.power_cons` (0x0106) decreases (expected -5.5 W if imaging, -2.4 W if standby (`eps.yaml` payload powers))
 
 **LABEL:** `STEP-2-CHECK`
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check bus voltage

@@ -113,7 +113,7 @@ already have shed lines on its own. A line it has opened cannot be shed again
 (the command is refused S1.8 "power line … is OFF") and its unit's mode
 parameter freezes at its last value, so skip any load whose line already reads 0.
 **Verify:** `eps.load_shed_stage` (0x0134), `eps.pl_payload` (0x0113), `eps.pl_fpa_cooler` (0x0114), `eps.pl_ttc_tx` (0x0112) — record each: 0 = already shed on board
-1. Payload OFF (saves ~8-45 W) — only if `eps.pl_payload` (0x0113) = 1:
+1. Payload OFF (saves ~2.4-5.5 W) — only if `eps.pl_payload` (0x0113) = 1:
 **TC:** `PAYLOAD_SET_MODE(mode=0)` (Service 8, Subtype 1, func_id 26) — Payload OFF
    **Verify:** `payload.mode` (0x0600) = 0 within 10 s
 2. FPA cooler OFF (saves ~15 W) — only if `eps.pl_fpa_cooler` (0x0114) = 1: `FPA_COOLER(on=0)` (func_id 43)

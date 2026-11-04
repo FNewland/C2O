@@ -14,8 +14,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/objective",
-   "en_hash": "20463dae9ebfc99c",
-   "fr_hash": "02b7a61833e741ee"
+   "en_hash": "d810d78d79e7aa95",
+   "fr_hash": "ab25f115edc1b4c1"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/prerequisites",
@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-2-shed-load-priority-1-payload-off",
-   "en_hash": "631a2fe4296f4b8f",
-   "fr_hash": "eef0bbf10c35b9ed"
+   "en_hash": "f025657d44de8c06",
+   "fr_hash": "030db91979ac97b4"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-3-shed-load-priority-2-fpa-cooler-off",
@@ -93,5 +93,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "08e21e1"
 }

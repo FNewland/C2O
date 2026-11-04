@@ -2,7 +2,7 @@
 
 **Document ID:** EOSAT1-UM-REF-010  
 **Issue:** 2.0  
-**Source revision:** `tc_catalog.yaml@dad10d3c795d`  
+**Source revision:** `tc_catalog.yaml@54eeb829db00`  
 **Classification:** UNCLASSIFIED — Mission Operations
 
 > **GENERATED FILE — DO NOT EDIT BY HAND.**  
@@ -1046,7 +1046,7 @@ Example: `27 03 00`  (algorithm=3, ratio=0.0)
 
 #### PAYLOAD_SELECT_FILTER
 
-**S8.1** · func_id **92** (0x5C) · 2 data byte(s) · position `payload` · readback payload.filter_pos (0x063D)
+**S8.1** · func_id **92** (0x5C) · 2 data byte(s) · position `payload_ops` · readback payload.filter_pos (0x063D)
 
 Rotate the filter wheel to a position (2 s per 90 deg step)
 
@@ -1069,7 +1069,7 @@ Example: `5C 00`  (position=0)
 
 #### PAYLOAD_CYCLE_SHUTTER
 
-**S8.1** · func_id **93** (0x5D) · 2 data byte(s) · position `payload` · readback payload.shutter_pos (0x063C)
+**S8.1** · func_id **93** (0x5D) · 2 data byte(s) · position `payload_ops` · readback payload.shutter_pos (0x063C)
 
 Run a shutter mechanism EXERCISE. This is a mechanism health test, not a way to reach a position — use PAYLOAD_SET_SHUTTER (func 119) for that. 2026-08b PL-d: `cycles` counts TRANSITIONS of the blade, one per model tick, and the mechanism is driven entirely by the model. Previously the command handler toggled once AND the tick toggled once per remaining count, so cycles=1 moved the blade twice, the shutter always ended where it started, and the shutter could never be commanded closed at all.
 
@@ -1083,7 +1083,7 @@ Example: `5D 01`  (cycles=1)
 
 #### PAYLOAD_INITIATE_TRANSFER
 
-**S8.1** · func_id **94** (0x5E) · 3 data byte(s) · position `payload` · readback payload.transfer_active (0x062D)
+**S8.1** · func_id **94** (0x5E) · 3 data byte(s) · position `payload_ops` · readback payload.transfer_active (0x062D)
 
 Start the on-board image transfer engine for a stored scene — the bridge to the S13_CREATE_TRANSFER ground workflow (textbook section 6.7). 2026-08b PL-c: raises event 0x0610 TRANSFER_START (promised by a source comment and previously emitted by nothing) and answers with a TM(8,2) report of scene_id(2) + bytes_total(4) + blocks(4) + crc32(4) — the three numbers the ground needs to plan and verify a dump, all of which used to be computed on board and then dropped. The transfer drains at the ACTIVE TM information rate (0x0506) and only while the downlink is up (0x0501), not at the old hard-coded 10 Mbps: it stalls at loss of signal and resumes on the next pass.
 
@@ -1097,7 +1097,7 @@ Example: `5E 00 01`  (scene_id=1)
 
 #### PAYLOAD_CAL_LAMP
 
-**S8.1** · func_id **95** (0x5F) · 2 data byte(s) · position `payload` · readback payload.cal_lamp_on (0x0615)
+**S8.1** · func_id **95** (0x5F) · 2 data byte(s) · position `payload_ops` · readback payload.cal_lamp_on (0x0615)
 
 Calibration lamp on/off (also reachable as S2 device 0x0602)
 
@@ -1728,7 +1728,7 @@ Example: `63`
 
 #### PAYLOAD_SET_SHUTTER
 
-**S8.1** · func_id **119** (0x77) · 2 data byte(s) · CAUTION · position `payload` · readback payload.shutter_pos (0x063C)
+**S8.1** · func_id **119** (0x77) · 2 data byte(s) · CAUTION · position `payload_ops` · readback payload.shutter_pos (0x063C)
 
 Drive the shutter to an ABSOLUTE position. 2026-08b PL-d: there was no absolute shutter command anywhere in this catalogue — PAYLOAD_CYCLE_SHUTTER was the only shutter TC, and a relative toggle cannot reach a KNOWN state. That is what COM-011 step 2 ("cycle to CLOSED, verify 0x063C == 0 within 10 s") needs, what a dark frame needs, and what PAYLOAD_CAPTURE now checks before acquiring. Idempotent: commanding CLOSED twice leaves it CLOSED. Refused (0x0007) when the shutter mechanism device 0x0603 is unpowered, and (0x0005) while a PAYLOAD_CYCLE_SHUTTER exercise is running.
 
@@ -1776,7 +1776,7 @@ Example: `78 06 00`  (phase=6, flags=0)
 
 #### EPS_SA_A_ON_LEGACY
 
-**S8.1** · func_id **100** (0x64) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **100** (0x64) · 1 data byte(s) · position `eps_tcs`
 
 Solar array A ON (legacy quick-action)
 
@@ -1786,7 +1786,7 @@ Example: `64`
 
 #### EPS_SA_A_OFF_LEGACY
 
-**S8.1** · func_id **101** (0x65) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **101** (0x65) · 1 data byte(s) · position `eps_tcs`
 
 Solar array A OFF (legacy quick-action)
 
@@ -1796,7 +1796,7 @@ Example: `65`
 
 #### EPS_SA_B_ON_LEGACY
 
-**S8.1** · func_id **102** (0x66) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **102** (0x66) · 1 data byte(s) · position `eps_tcs`
 
 Solar array B ON (legacy quick-action)
 
@@ -1806,7 +1806,7 @@ Example: `66`
 
 #### EPS_SA_B_OFF_LEGACY
 
-**S8.1** · func_id **103** (0x67) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **103** (0x67) · 1 data byte(s) · position `eps_tcs`
 
 Solar array B OFF (legacy quick-action)
 
@@ -1816,7 +1816,7 @@ Example: `67`
 
 #### TCS_HEATER_BAT_ON_LEGACY
 
-**S8.1** · func_id **104** (0x68) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **104** (0x68) · 1 data byte(s) · position `eps_tcs`
 
 Battery heater ON (legacy quick-action)
 
@@ -1826,7 +1826,7 @@ Example: `68`
 
 #### TCS_HEATER_BAT_OFF_LEGACY
 
-**S8.1** · func_id **105** (0x69) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **105** (0x69) · 1 data byte(s) · position `eps_tcs`
 
 Battery heater OFF (legacy quick-action)
 
@@ -1836,7 +1836,7 @@ Example: `69`
 
 #### TCS_HEATER_OBC_ON_LEGACY
 
-**S8.1** · func_id **106** (0x6A) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **106** (0x6A) · 1 data byte(s) · position `eps_tcs`
 
 OBC heater ON (legacy quick-action)
 
@@ -1846,7 +1846,7 @@ Example: `6A`
 
 #### TCS_HEATER_OBC_OFF_LEGACY
 
-**S8.1** · func_id **107** (0x6B) · 1 data byte(s) · position `eps`
+**S8.1** · func_id **107** (0x6B) · 1 data byte(s) · position `eps_tcs`
 
 OBC heater OFF (legacy quick-action)
 

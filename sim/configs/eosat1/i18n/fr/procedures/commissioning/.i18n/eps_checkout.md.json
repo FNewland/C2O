@@ -59,8 +59,8 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-7-bus-voltage-regulation-under-load-transient",
-   "en_hash": "0166a8cfff4a08d7",
-   "fr_hash": "6676ea3423be035f"
+   "en_hash": "cf692c5c9c8e2336",
+   "fr_hash": "4d486ea934793c6c"
   },
   {
    "id": "com-001-eps-power-system-checkout/off-nominal-handling",
@@ -78,5 +78,5 @@
    "fr_hash": "17e43cc1a8dd3741"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "08e21e1"
 }

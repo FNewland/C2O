@@ -333,10 +333,17 @@ d'éclairement courant.
 
 | Paramètre     | Jaune bas  | Jaune haut  | Rouge bas | Rouge haut |
 |---------------|------------|-------------|---------|----------|
-| bat_soc (%)   | 25         | 95          | 15      | 100      |
-| bat_voltage (V)| 23        | 29          | 22      | 29.5     |
+| bat_soc (%)   | 25         | 100         | 15      | 100      |
+| bat_voltage (V)| 25,9      | 33,8        | 24,6    | 34,3     |
 | bat_temp (°C) | 2          | 40          | 0       | 45       |
-| bus_voltage (V)| 27        | 29          | 26.5    | 29.5     |
+| bus_voltage (V)| 28,4      | 34,0        | 27,7    | 34,6     |
+
+Valeurs tirées de la table des limites du MCS. Les limites basses de la tension du bus sont les
+seuils nommés de protection du bus : jaune = le seuil de sous-tension, 28,4 V (indicateur de
+sous-tension, délestage à bord), rouge = le seuil de survie EPS, 27,7 V (mode survie EPS de la FDIR). Les
+limites hautes sont au-dessus du plafond de 33,4 V du bus, pour que le bruit en pleine charge ne
+déclenche pas d'alarme ; les limites hautes de l'état de charge sont à 100 %, car une batterie
+pleine est normale.
 
 ### 5.1 Réaction aux dépassements de limites {#51-limit-response}
 

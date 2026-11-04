@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-4-reduce-loads-if-needed",
-   "en_hash": "a98382f8480da5e3",
-   "fr_hash": "e18f6f2e84af8d1c"
+   "en_hash": "f490de2d3863cc9b",
+   "fr_hash": "0765bdb10ff80705"
   },
   {
    "id": "ctg-013-battery-cell-failure/procedure-steps/step-5-monitor-battery-through-eclipse-if-applicable",
@@ -78,5 +78,5 @@
    "fr_hash": "6432a9899482e8f3"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "08e21e1"
 }
