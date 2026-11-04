@@ -381,6 +381,22 @@ def solve_transient(
     global_max_c = -1e9
     global_min_c = 1e9
 
+    # Stable explicit step: half the smallest node time constant, with radiation
+    # linearised at a hot 450 K (conservative).
+    g_node = [0.0] * n
+    for link in conductances:
+        g_node[node_map[link.node_a_id]] += link.conductance_w_k
+        g_node[node_map[link.node_b_id]] += link.conductance_w_k
+    tau_min = float("inf")
+    for i, nd in enumerate(nodes):
+        g = g_node[i]
+        if nd.is_radiator and nd.emissivity > 0 and nd.area_m2 > 0:
+            g += 4.0 * nd.emissivity * STEFAN_BOLTZMANN * nd.area_m2 * 450.0 ** 3
+        if g > 0 and capacitances[i] > 0:
+            tau_min = min(tau_min, capacitances[i] / g)
+    n_sub = max(1, math.ceil(dt_s / (0.5 * tau_min))) if math.isfinite(tau_min) else 1
+    h = dt_s / n_sub
+
     for step in range(n_steps):
         t = step * dt_s
         time_series.append(t)
@@ -407,49 +423,36 @@ def solve_transient(
                 )
         rad_series.append(round(step_rad_w, 3))
 
-        # Determine if in eclipse
-        orbit_time = t % orbit_period_s
-        in_eclipse = orbit_time >= eclipse_start
-
-        # Compute temperature derivatives and update (Forward Euler)
-        dt_arr = [0.0] * n
-        for i, nd in enumerate(nodes):
-            # Conductive heat flow
-            q_cond = 0.0
-            for link in conductances:
-                if link.node_a_id == nd.id:
-                    j = node_map[link.node_b_id]
-                    q_cond += link.conductance_w_k * (temps_k[j] - temps_k[i])
-                elif link.node_b_id == nd.id:
-                    j = node_map[link.node_a_id]
-                    q_cond += link.conductance_w_k * (temps_k[j] - temps_k[i])
-
-            # Internal heat
-            q_internal = nd.power_dissipation_w
-
-            # Solar absorbed (only chassis, only in sunlit)
-            q_solar = 0.0
-            if nd.id == "chassis" and not in_eclipse:
-                q_solar = solar_absorbed_w
-
-            # Radiative loss
-            q_rad = 0.0
-            if nd.is_radiator and nd.emissivity > 0 and nd.area_m2 > 0:
-                t_sink = EARTH_FACING_SINK_K if nd.earth_facing else SPACE_SINK_TEMP_K
-                q_rad = (
-                    nd.emissivity
-                    * STEFAN_BOLTZMANN
-                    * nd.area_m2
-                    * (temps_k[i] ** 4 - t_sink**4)
-                )
-
-            # dT/dt
-            if capacitances[i] > 0:
-                dt_arr[i] = (q_cond + q_internal + q_solar - q_rad) / capacitances[i]
-
-        # Update temperatures
-        for i in range(n):
-            temps_k[i] += dt_arr[i] * dt_s
+        # Forward Euler, sub-stepped for stability: an explicit step longer than
+        # the smallest node time constant C_i / G_i (conduction + linearised
+        # radiation) oscillates and diverges (a light chassis node used to swing
+        # between -345 and +200 degC). The output cadence stays dt_s.
+        if step == n_steps - 1:
+            break
+        for k in range(n_sub):
+            t_k = t + k * h
+            in_eclipse = (t_k % orbit_period_s) >= eclipse_start
+            dt_arr = [0.0] * n
+            for i, nd in enumerate(nodes):
+                q_cond = 0.0
+                for link in conductances:
+                    if link.node_a_id == nd.id:
+                        j = node_map[link.node_b_id]
+                        q_cond += link.conductance_w_k * (temps_k[j] - temps_k[i])
+                    elif link.node_b_id == nd.id:
+                        j = node_map[link.node_a_id]
+                        q_cond += link.conductance_w_k * (temps_k[j] - temps_k[i])
+                q_internal = nd.power_dissipation_w
+                # Solar absorbed (only chassis, only in sunlit)
+                q_solar = solar_absorbed_w if (nd.id == "chassis" and not in_eclipse) else 0.0
+                q_rad = 0.0
+                if nd.is_radiator and nd.emissivity > 0 and nd.area_m2 > 0:
+                    t_sink = EARTH_FACING_SINK_K if nd.earth_facing else SPACE_SINK_TEMP_K
+                    q_rad = nd.emissivity * STEFAN_BOLTZMANN * nd.area_m2 * (temps_k[i] ** 4 - t_sink**4)
+                if capacitances[i] > 0:
+                    dt_arr[i] = (q_cond + q_internal + q_solar - q_rad) / capacitances[i]
+            for i in range(n):
+                temps_k[i] += dt_arr[i] * h
 
     # Warnings
     for nd_id, t_list in temp_series.items():
