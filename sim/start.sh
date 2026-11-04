@@ -8,6 +8,9 @@
 #   ./start.sh --rf       # with RF bridge in FRAME mode (CCSDS framing + BER)
 #   ./start.sh --rf=RF    # with RF bridge in RF mode (BPSK mod/demod)
 #   ./start.sh --rf=FRAME # same as --rf
+#   ./start.sh --config=DIR  # fly another mission configuration directory
+#                            # (e.g. one exported from SpaceCDF); default
+#                            # configs/eosat1, also SMO_CONFIG_DIR=DIR
 #
 # Launch profiles (docs/web_2026-10/LINK_DESIGN.md §5) — SMO_PROFILE or --profile=:
 #   SMO_PROFILE=all     (default) everything on this host, exactly as before
@@ -24,6 +27,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CALLER_DIR="$PWD"   # a relative --config=DIR is relative to where you ran the script
 cd "$SCRIPT_DIR"
 
 # ── Parse arguments ──
@@ -44,9 +48,21 @@ for arg in "$@"; do
         --host=*)   SMO_BIND="${arg#--host=}" ;;
         --profile=*) PROFILE_ARG="${arg#--profile=}" ;;
         --same-host) SAME_HOST=1 ;;
-        *)          echo "Unknown option: $arg"; echo "Usage: $0 [--rf | --rf=FRAME | --rf=RF] [--public] [--real] [--classic | --modern] [--host=ADDR] [--profile=all|space|ground] [--same-host]"; exit 1 ;;
+        --config=*) SMO_CONFIG_DIR="${arg#--config=}" ;;
+        *)          echo "Unknown option: $arg"; echo "Usage: $0 [--rf | --rf=FRAME | --rf=RF] [--public] [--real] [--classic | --modern] [--host=ADDR] [--profile=all|space|ground] [--same-host] [--config=DIR]"; exit 1 ;;
     esac
 done
+
+# ── Mission configuration directory ──
+# --config=DIR > SMO_CONFIG_DIR > configs/eosat1. Every service reads the same
+# directory (simulator, MCS, planner, RF bridge, doc viewer).
+SMO_CONFIG_DIR="${SMO_CONFIG_DIR:-$SCRIPT_DIR/configs/eosat1}"
+case "$SMO_CONFIG_DIR" in /*) ;; *) SMO_CONFIG_DIR="$CALLER_DIR/$SMO_CONFIG_DIR" ;; esac
+SMO_CONFIG_DIR="${SMO_CONFIG_DIR%/}"
+if [ ! -f "$SMO_CONFIG_DIR/mission.yaml" ]; then
+    echo "ERROR: $SMO_CONFIG_DIR has no mission.yaml (use --config=DIR or SMO_CONFIG_DIR)."; exit 1
+fi
+export SMO_CONFIG_DIR
 
 # ── Launch profile (LINK_DESIGN §5) ──
 # Not exported: it only selects which blocks below run. `all` takes exactly
@@ -268,7 +284,7 @@ if [ "$SMO_PROFILE" = "ground" ]; then
     export SMO_GSG_HTTP_PORT="${SMO_GSG_HTTP_PORT:-$((8080 + GSG_PORT_BASE))}"
     export SMO_GSG_LINK_BIND="${SMO_GSG_LINK_BIND:-0.0.0.0}"
     export SMO_GSG_LINK_PORT="${SMO_GSG_LINK_PORT:-9100}"
-    export SMO_CONFIG_DIR="${SMO_CONFIG_DIR:-$SCRIPT_DIR/configs/eosat1}"
+    export SMO_CONFIG_DIR
     GSG_PROBE="$SMO_GSG_BIND"
     [ "$GSG_PROBE" = "0.0.0.0" ] && GSG_PROBE="127.0.0.1"
     UP_HOST="$GSG_PROBE"
@@ -416,7 +432,7 @@ if [ "$SMO_PROFILE" != "ground" ]; then
 # byte-identical to the single-host script)
 # Start Simulator (TC:8001, TM:8002, HTTP/WS:$SMO_SIM_HTTP_PORT)
 echo "==> Starting Simulator on $SMO_BIND:$SMO_SIM_HTTP_PORT..."
-smo-simulator --config configs/eosat1/ --host "$SMO_BIND" --port "$SMO_SIM_HTTP_PORT" --ui "$SMO_UI" &
+smo-simulator --config "$SMO_CONFIG_DIR/" --host "$SMO_BIND" --port "$SMO_SIM_HTTP_PORT" --ui "$SMO_UI" &
 SIM_PID=$!
 SUPERVISE+=("Simulator:$SIM_PID")
 # The simulator is the root dependency: MCS and Planner showing an empty but
@@ -435,7 +451,7 @@ if [ "$SMO_PROFILE" = "space" ]; then
     export SMO_SIM_HOST="${SMO_SIM_HOST:-$PROBE_HOST}"
     export SMO_SIM_TM_PORT="${SMO_SIM_TM_PORT:-8002}"
     export SMO_SIM_TC_PORT="${SMO_SIM_TC_PORT:-8001}"
-    export SMO_CONFIG_DIR="${SMO_CONFIG_DIR:-$SCRIPT_DIR/configs/eosat1}"
+    export SMO_CONFIG_DIR
     export SMO_LINK_STATE_DIR="${SMO_LINK_STATE_DIR:-$SCRIPT_DIR/workspace/link}"
     mkdir -p "$SMO_LINK_STATE_DIR"
     echo "==> Starting space-link agent → $SMO_LINK_URL (session $SMO_LINK_SESSION)..."
@@ -492,7 +508,7 @@ if [ -n "$RF_MODE" ]; then
         # Invoke via the interpreter directly (not the console script) so we never
         # depend on the console script's baked-in shebang path.
         "$RFSIM_PY" -c "import sys; from smo_rfsim.bridge import main; sys.exit(main())" \
-            --config "$SCRIPT_DIR/configs/eosat1/rfsim.yaml" \
+            --config "$SMO_CONFIG_DIR/rfsim.yaml" \
             --mode "$RF_MODE" --radio-web "${RFSIM_UPSTREAM_ARGS[@]}" &
     else
         if [ -d "$RFSIM_VENV" ]; then
@@ -500,7 +516,7 @@ if [ -n "$RF_MODE" ]; then
             echo "         (e.g. copied from another machine) — falling back to main venv."
         fi
         echo "==> Starting RF Bridge in $RF_MODE mode (main venv)..."
-        smo-rfsim --config "$SCRIPT_DIR/configs/eosat1/rfsim.yaml" \
+        smo-rfsim --config "$SMO_CONFIG_DIR/rfsim.yaml" \
                   --mode "$RF_MODE" --radio-web "${RFSIM_UPSTREAM_ARGS[@]}" &
     fi
     RFSIM_PID=$!
@@ -519,13 +535,13 @@ if [ -n "$RF_MODE" ]; then
     # The station receiver's monitoring data (RSSI, margin, BER, Eb/N0, AGC)
     # comes from the RF bridge's radio status when it runs (finding M1).
     SMO_RADIO_STATUS_URL="${SMO_RADIO_STATUS_URL:-http://$PROBE_HOST:8094/api/status}" \
-    smo-mcs --config configs/eosat1/ --port 9090 --host "$SMO_BIND" --connect "$PROBE_HOST:8012" --tc-port 8011 --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
+    smo-mcs --config "$SMO_CONFIG_DIR/" --port 9090 --host "$SMO_BIND" --connect "$PROBE_HOST:8012" --tc-port 8011 --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
 elif [ "$SMO_PROFILE" = "ground" ]; then
     echo "==> Starting MCS on $SMO_BIND:9090 (via GSG: TM:$UP_TM_PORT, TC:$SMO_GSG_TC_PORT)..."
-    smo-mcs --config configs/eosat1/ --port 9090 --host "$SMO_BIND" --connect "$UP_HOST:$UP_TM_PORT" "${MCS_TC_ARGS[@]}" --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
+    smo-mcs --config "$SMO_CONFIG_DIR/" --port 9090 --host "$SMO_BIND" --connect "$UP_HOST:$UP_TM_PORT" "${MCS_TC_ARGS[@]}" --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
 else
     echo "==> Starting MCS on $SMO_BIND:9090 (direct: TM:8002, TC:8001)..."
-    smo-mcs --config configs/eosat1/ --port 9090 --host "$SMO_BIND" --connect "$PROBE_HOST:8002" --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
+    smo-mcs --config "$SMO_CONFIG_DIR/" --port 9090 --host "$SMO_BIND" --connect "$PROBE_HOST:8002" --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
 fi
 MCS_PID=$!
 SUPERVISE+=("MCS:$MCS_PID")
@@ -535,7 +551,7 @@ wait_for_http "MCS" "http://$PROBE_HOST:9090/api/state" "$MCS_PID" 40 \
 # Start Planner (HTTP:9091). Its sim state comes from $SMO_SIM_STATE_URL
 # (the GSG's /api/state in the ground profile).
 echo "==> Starting Planner on $SMO_BIND:9091..."
-smo-planner --config configs/eosat1/ --port 9091 --host "$SMO_BIND" --connect-host "$UP_HOST" --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
+smo-planner --config "$SMO_CONFIG_DIR/" --port 9091 --host "$SMO_BIND" --connect-host "$UP_HOST" --time-source "$SMO_TIME_SOURCE" --ui "$SMO_UI" &
 PLANNER_PID=$!
 SUPERVISE+=("Planner:$PLANNER_PID")
 wait_for_http "Planner" "http://$PROBE_HOST:9091/api/schedule" "$PLANNER_PID" 40 \
@@ -575,7 +591,7 @@ fi
 
 # Start Documentation Viewer (HTTP:8095)
 echo "==> Starting Documentation viewer on port 8095..."
-python "$SCRIPT_DIR/tools/doc_viewer.py" --port 8095 --docs "$SCRIPT_DIR/configs/eosat1" &
+python "$SCRIPT_DIR/tools/doc_viewer.py" --port 8095 --docs "$SMO_CONFIG_DIR" &
 DOC_PID=$!
 
 # Start the welcome page (HTTP:8090): every screen with its live status. Its
