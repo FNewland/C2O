@@ -9,6 +9,8 @@
  * 4. FMECA Summary: failure mode analysis results
  * 5. Budget Traceability: trace budget exceedance to stakeholder impact
  */
+import { GateDiagrams } from '../diagrams/GateDiagrams'
+import { DiagramFigure } from '../diagrams/DiagramFigure'
 import { Fragment, useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -98,6 +100,7 @@ export function VVPanel() {
         {activeSection === 'trace' && (<>
           <div className="mb-4"><TraceabilityTree studyId={studyId} /></div>
           <div className="mb-4"><VVPlanPanel studyId={studyId} /></div>
+          <div className="mb-4"><DiagramFigure studyId={studyId} kind="vcd" compact /></div>
           <BudgetTraceability studyId={studyId} />
         </>)}
         {activeSection === 'risks' && <RiskRegister studyId={studyId} />}
@@ -493,6 +496,8 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
                 </ul>
               </div>
             )}
+
+            <GateDiagrams studyId={studyId} gate={gateResult.gate.id} />
 
             <GateDecisions gate={gateResult.gate.id} />
           </>
