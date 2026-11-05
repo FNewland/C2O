@@ -563,6 +563,7 @@ def build_page(cfg: Config, *, request_host: str | None, user: str | None,
 {strip if instructor else ""}
 <main id="content" class="pt-main">
 <p class="pt-intro"><span data-i18n>Where do you want to go? Design the mission, fly it, then review what happened.</span> {where}</p>
+<p class="pt-intro"><a href="/videos" data-i18n>Course videos</a> <span data-i18n>— short walkthroughs of each tool, with questions for your workbook.</span></p>
 <div class="pt-cards{" has-4" if instructor else ""}">{"".join(sections)}</div>
 <p class="pt-foot" id="foot"></p>
 </main>
@@ -740,6 +741,9 @@ def create_app(cfg: Config | None = None, prober: Prober | None = None) -> web.A
 
     async def _close(_app):
         await prober.close()
+
+    import video_library
+    video_library.register(app, is_instructor=_instructor, user_of=lambda r: iap_user(r.headers))
 
     app.router.add_get("/", index)
     app.router.add_get("/api/status", status)

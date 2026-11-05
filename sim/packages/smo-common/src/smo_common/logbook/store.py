@@ -56,7 +56,7 @@ MAX_ENTRIES = 2000
 CONTEXT_KEYS = ("page", "procedure", "step", "alarm_id", "param", "study_id",
                 "position", "scenario", "sim_status", "report", "dump", "station",
                 "pass", "doc", "phase", "anomaly", "command", "gonogo", "gate",
-                "proposal", "run")
+                "proposal", "run", "video")
 _CTX_VALUE_MAX = 200
 #: Optional structured payloads on a worksheet entry (ops workbook, 2026-11):
 #: ``check`` — one procedure-checklist step ticked (see ``_clean_check``);

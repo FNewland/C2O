@@ -1,0 +1,23 @@
+# Narration voices, one per language. Change here, re-render; the audio cache
+# is keyed on the voice, so nothing stale is reused.
+#
+# Licences (checked 2026-11-05): Kokoro-82M weights Apache-2.0 (hexgrad),
+# kokoro-onnx runtime MIT, espeak-ng (phonemiser, French) GPL-3.0 as a tool
+# only. None of them restricts the audio, so videos can be released CC0.
+# Do NOT switch to XTTS-v2 (CPML: non-commercial, outputs included) or to
+# edge-tts (Microsoft's service terms) for published material.
+en:
+  backend: kokoro
+  voice: af_heart        # grade A in the Kokoro voice list; bf_emma for a British voice
+  lang: en-us
+  speed: 1.0
+fr:
+  backend: kokoro
+  voice: ff_siwis        # European French (SIWIS); the only Kokoro French voice
+  lang: fr-fr
+  speed: 1.0
+# Alternative European French voice (Piper, `pip install piper-tts`):
+#   fr:
+#     backend: piper
+#     model: fr_FR-tom-medium.onnx     # check the model card licence first
+#     sample_rate: 22050

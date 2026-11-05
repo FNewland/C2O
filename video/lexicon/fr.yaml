@@ -1,0 +1,46 @@
+# Prononciation pour la narratrice française (les sous-titres gardent la forme écrite).
+# Les identifiants restent en anglais à l'écran (règle bilingue) ; on les lit
+# comme un opérateur francophone les lirait.
+terms:
+  SpaceCDF: "Space C.D.F."
+  EOSAT-1: "É.O. Sat un"
+  EOSAT: "É.O. Sat"
+  C2O: "C deux O"
+  c2o.live: "C deux O point live"
+  LEOP: "Léop"
+  NO-GO: "no go"
+  GO: "go"
+  CubeSat: "cube-sat"
+  6U: "six U"
+  3U: "trois U"
+  12U: "douze U"
+  ORBIT NORTH: "Orbite Nord"
+  "p. ex.": "par exemple"
+  "c.-à-d.": "c'est-à-dire"
+  H5P: "H cinq P"
+  workbook: "cahier de travail"
+  Markdown: "Mark-daoune"
+words: [ORBIT, NORTH, NASA, ESA, OK]
+spell: [MCS, AOCS, ADCS, SCAO, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
+        MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, ASC, CSA, FPA, PCDU,
+        BCR, LCL, CAN, GPS, RF, UHF, VHF, ICD, IRD, TRL, FDIR, LEO, GSG, VC, OBT, UTC, CPU, RAM,
+        MCR, API, PDF, CSV, HTML, URL, SEMP, IOD, CTG, EMG, PC, FD]
+rules:
+  - ['\b(eps|aocs|ttc|obdh|tcs|fdir|obc)\.(?=[a-z])', '{spell:\1} ']
+  - ['\b(payload|prop|sim|mcs)\.(?=[a-z])', '\1 ']
+  - ['\b(LEOP)-(\d{3})\b', 'Léop {digits:\2}']
+  - ['\b(NOM|COM|CTG|EMG)-(\d{3})\b', '{spell:\1} {digits:\2}']
+  - ['\bLW-(\d)\.(\d)\b', 'fiche \1 point \2']
+  - ['\bS(\d{1,2})\b', 'S \1']
+  - ['\b0x([0-9A-F]{4})\b', 'hexa {spell:\1}']
+  - ['(\d+)\.(\d+)', '\1 virgule \2']
+  - ['(\d+(?:,\d+)?)\s?kg\b', '\1 kilogrammes']
+  - ['(\d+(?:,\d+)?)\s?km\b', '\1 kilomètres']
+  - ['(\d+(?:,\d+)?)\s?Wh\b', '\1 wattheures']
+  - ['(\d+(?:,\d+)?)\s?W\b', '\1 watts']
+  - ['(\d+(?:,\d+)?)\s?V\b', '\1 volts']
+  - ['(\d+(?:,\d+)?)\s?dB\b', '\1 décibels']
+  - ['(\d+(?:,\d+)?)\s?°C\b', '\1 degrés Celsius']
+  - ['(\d+(?:,\d+)?)\s?%', '\1 pour cent']
+  - ['(\d+(?:,\d+)?)\s?min\b', '\1 minutes']
+  - ['(\d+(?:,\d+)?)\s?s\b', '\1 secondes']
