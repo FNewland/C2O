@@ -48,7 +48,8 @@ def review_dir() -> Path:
 
 
 def reviewers() -> set[str]:
-    return {x.strip().lower() for x in os.environ.get("SMO_VIDEO_REVIEWERS", "").split(",") if x.strip()}
+    # comma or space separated (vm-bootstrap.sh writes the space form)
+    return {x.lower() for x in re.split(r"[,;\s]+", os.environ.get("SMO_VIDEO_REVIEWERS", "")) if x}
 
 
 def catalog() -> dict:

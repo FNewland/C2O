@@ -197,6 +197,9 @@ vm() {
     # Instructor accounts (VOICE_INSTRUCTORS): the welcome page shows the
     # instructor tools only to these (vm-bootstrap.sh writes SMO_INSTRUCTORS).
     md="$md,c2o-instructors=$voice_instr"
+    # Course-video narration reviewers who are not instructors (VIDEO_REVIEWERS):
+    # vm-bootstrap.sh writes SMO_VIDEO_REVIEWERS for the welcome page.
+    md="$md,c2o-video-reviewers=$video_rev"
     # Voice loops: the ground VM's MCS signs LiveKit tokens (vm-bootstrap.sh
     # writes sim/docker/voice.env from these).
     if [ "$CREATE_VOICE_VM" = yes ]; then
@@ -225,6 +228,13 @@ for v in $(printf '%s' "$VOICE_INSTRUCTORS" | tr ',;' '  '); do
     case "$v" in *@*) ;; *) v="$v@$DOMAIN" ;; esac
     case "$v" in *[!A-Za-z0-9._%+@-]*) die "VOICE_INSTRUCTORS: '$v' is not an email address" ;; esac
     voice_instr="${voice_instr:+$voice_instr }$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')"
+done
+# VIDEO_REVIEWERS -> the same normalised, space-separated form.
+video_rev=""
+for v in $(printf '%s' "$VIDEO_REVIEWERS" | tr ',;' '  '); do
+    case "$v" in *@*) ;; *) v="$v@$DOMAIN" ;; esac
+    case "$v" in *[!A-Za-z0-9._%+@-]*) die "VIDEO_REVIEWERS: '$v' is not an email address" ;; esac
+    video_rev="${video_rev:+$video_rev }$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')"
 done
 log "VMs"
 vm "$VM_GROUND" ground "$GROUND_MACHINE_TYPE" "$GROUND_IP" "$TAG_GROUND" "$SA_GROUND_EMAIL"
