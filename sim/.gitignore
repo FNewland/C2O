@@ -68,3 +68,5 @@ _xfer/
 
 # auto snapshots before injected faults (auto_snapshots.py)
 workspace/snapshots/
+workspace/videos/
+workspace/video-review/

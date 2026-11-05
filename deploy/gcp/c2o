@@ -61,6 +61,9 @@ Data (recordings on the VMs; scenarios, breakpoints and designs are kept)
   c2o data clean --telemetry --dumps --reports | --all   [--logbooks] [--snapshot]
   c2o data snapshot | snapshots | prune --keep 3
 
+Course videos (made with video/: python -m c2ovideo build ID --publish)
+  c2o videos push [DIR]          copy the published videos to the welcome page (/videos)
+
 Setup (README steps 4-8)
   bash deploy/gcp/setup.sh       create or repair everything (rerun after updates)
   c2o users login                sign in for user management (once per laptop)
@@ -755,6 +758,31 @@ EOF
     log "Done. Sizes now: c2o data list"
 }
 
+# ── videos ────────────────────────────────────────────────────────────────
+# Rendering needs the tools and a voice model, so it runs on a laptop; this
+# only ships the result: the whole published folder replaces the VM's copy.
+cmd_videos() {
+    local sub="${1:-}" dir
+    [ "$#" -gt 0 ] && shift
+    case "$sub" in
+        push) ;;
+        *) die "usage: c2o videos push [DIR]   (DIR defaults to sim/workspace/videos)" ;;
+    esac
+    dir="${1:-$C2O_DIR/../../sim/workspace/videos}"
+    [ -f "$dir/catalog.json" ] || die "no catalog.json in $dir: publish first (cd video && python -m c2ovideo build ID --publish)"
+    require_gcloud_login
+    [ "$(vm_status "$VM_GROUND")" = RUNNING ] || die "$VM_GROUND is not running: c2o up first"
+    new_tmp
+    log "Packing $dir"
+    tar -C "$dir" -czf "$C2O_TMP/videos.tgz" .
+    info "$(du -h "$C2O_TMP/videos.tgz" | cut -f1) to send"
+    log "Copying to $VM_GROUND"
+    gcloud compute scp "$C2O_TMP/videos.tgz" "$VM_GROUND:/tmp/c2o-videos.tgz" \
+        --zone="$ZONE" --tunnel-through-iap --quiet
+    run_bootstrap "$VM_GROUND" videos /tmp/c2o-videos.tgz
+    log "Done: https://$DOMAIN/videos"
+}
+
 # ── users (Admin SDK Directory API) ───────────────────────────────────────
 full_email() {  # full_email NAME|EMAIL -> name@DOMAIN (lower case)
     local e
@@ -1236,7 +1264,7 @@ main() {
         return 0
     fi
     case "$cmd" in
-        status|up|down|schedule|data|users) ;;
+        status|up|down|schedule|data|users|videos) ;;
         *) printf 'c2o: unknown command "%s"\n\n' "$cmd" >&2; help_main >&2; return 2 ;;
     esac
     # up/down hand over to start.sh / stop.sh, which load the settings themselves.
@@ -1252,6 +1280,7 @@ main() {
         schedule) cmd_schedule ${args[@]+"${args[@]}"} ;;
         data)     cmd_data ${args[@]+"${args[@]}"} ;;
         users)    cmd_users ${args[@]+"${args[@]}"} ;;
+        videos)   cmd_videos ${args[@]+"${args[@]}"} ;;
     esac
 }
 

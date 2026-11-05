@@ -1,0 +1,45 @@
+# Pronunciation for the English narrator (captions keep the written form).
+terms:
+  SpaceCDF: "Space C D F"
+  EOSAT-1: "E O Sat one"
+  EOSAT: "E O Sat"
+  C2O: "C two O"
+  c2o.live: "C two O dot live"
+  LEOP: "lee-op"
+  NO-GO: "no-go"
+  GO: "go"
+  CubeSat: "cube-sat"
+  6U: "six U"
+  3U: "three U"
+  12U: "twelve U"
+  SoC: "state of charge"
+  DoD: "depth of discharge"
+  "e.g.": "for example"
+  "i.e.": "that is"
+  NASA: "NASA"
+  ESA: "ESA"
+  H5P: "H five P"
+  ConOps: "con-ops"
+words: [ORBIT, NORTH, NASA, ESA, OK]
+spell: [MCS, AOCS, ADCS, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
+        MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, CSA, FPA, PCDU, BCR,
+        LCL, CAN, GPS, RF, UHF, VHF, ICD, IRD, TRL, FDIR, LEO, GSG, VC, OBT, UTC, CPU, RAM, MCR,
+        API, PDF, CSV, HTML, URL, SEMP, IOD, CTG, EMG, PC, FD]
+rules:
+  - ['\b(eps|aocs|ttc|obdh|tcs|fdir|obc)\.(?=[a-z])', '{spell:\1} ']
+  - ['\b(payload|prop|sim|mcs)\.(?=[a-z])', '\1 ']
+  - ['\b(LEOP)-(\d{3})\b', 'lee-op {digits:\2}']
+  - ['\b(NOM|COM|CTG|EMG)-(\d{3})\b', '{spell:\1} {digits:\2}']
+  - ['\bLW-(\d)\.(\d)\b', 'learner worksheet \1 point \2']
+  - ['\bS(\d{1,2})\b', 'S \1']
+  - ['\b0x([0-9A-F]{4})\b', 'hex {spell:\1}']
+  - ['(\d+(?:\.\d+)?)\s?kg\b', '\1 kilograms']
+  - ['(\d+(?:\.\d+)?)\s?km\b', '\1 kilometres']
+  - ['(\d+(?:\.\d+)?)\s?Wh\b', '\1 watt-hours']
+  - ['(\d+(?:\.\d+)?)\s?W\b', '\1 watts']
+  - ['(\d+(?:\.\d+)?)\s?V\b', '\1 volts']
+  - ['(\d+(?:\.\d+)?)\s?dB\b', '\1 dee-bee']
+  - ['(\d+(?:\.\d+)?)\s?°C\b', '\1 degrees Celsius']
+  - ['(\d+(?:\.\d+)?)\s?%', '\1 percent']
+  - ['(\d+(?:\.\d+)?)\s?min\b', '\1 minutes']
+  - ['(\d+(?:\.\d+)?)\s?s\b', '\1 seconds']

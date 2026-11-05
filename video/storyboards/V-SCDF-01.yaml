@@ -1,0 +1,205 @@
+# Week 2 — from mission need to the first decision records (SpaceCDF wizard).
+# Prepares LW-1.4 parts A–E and the decision records D-1.4-PROBLEM / -OBJECTIVES / -SPACE.
+id: V-SCDF-01
+week: 2
+audience: all
+title:
+  en: "Mission need to decision record"
+  fr: "Du besoin de mission à la fiche de décision"
+summary:
+  en: "Start a study in SpaceCDF: write the problem, name the stakeholders and objectives, test the alternatives, and record why in your logbook."
+  fr: "Démarrer une étude dans SpaceCDF : rédiger le problème, nommer les parties prenantes et les objectifs, examiner les solutions de rechange et consigner le pourquoi dans votre journal de bord."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-1.4/A, LW-1.4/B, LW-1.4/C, LW-1.4/E]
+  decisions: [D-1.4-PROBLEM, D-1.4-SPACE]
+sources:
+  - design/docs/oer/chapters (§4.1 mission need, §4.2 stakeholders and objectives)
+  - design/configs/worksheets/learner_workbook.yaml (LW-1.4)
+
+setup:
+  - goto: {app: spacecdf, path: "/?lang={lang}"}
+  - fill: {target: "input", text: {en: "Ava (Team leader)", fr: "Ava (cheffe d’équipe)"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait_for: {role: button, name: Create New Mission}
+
+steps:
+  - id: home
+    title: {en: "SpaceCDF and your logbook", fr: "SpaceCDF et votre journal de bord"}
+    say:
+      en: >-
+        This is SpaceCDF, the concurrent design facility you will use all term. Every design
+        study starts here. Create New Mission walks your team through four steps: the problem,
+        the stakeholders, the alternatives and a first architecture. Keep one idea in mind as
+        you go: the tool records what you chose, and your logbook records why.
+      fr: >-
+        Voici SpaceCDF, l’installation de conception concourante que vous utiliserez toute la
+        session. Chaque étude commence ici. Créer une mission guide votre équipe en quatre
+        étapes : le problème, les parties prenantes, les solutions de rechange et une première
+        architecture. Gardez une idée en tête : l’outil enregistre ce que vous avez choisi, et
+        votre journal de bord enregistre pourquoi.
+    do:
+      - highlight: {target: {role: button, name: Create New Mission}, seconds: 3}
+      - highlight: {target: {role: button, name: Logbook}, seconds: 2.5}
+
+  - id: problem
+    title: {en: "Step 1: the problem statement", fr: "Étape 1 : l’énoncé du problème"}
+    say:
+      en: >-
+        Step one asks what problem the mission solves. A good problem statement names the gap,
+        who suffers from it, and what happens if nobody acts. It does not name a satellite yet.
+        Our example team is worried that wildfires in the boreal forest are found too late.
+        The operational context says when and how the mission's products will be used.
+      fr: >-
+        La première étape demande quel problème la mission résout. Un bon énoncé nomme le manque,
+        qui en souffre, et ce qui arrive si personne n’agit. Il ne nomme pas encore de satellite.
+        Notre équipe d’exemple s’inquiète que les feux de la forêt boréale soient détectés trop tard.
+        Le contexte opérationnel indique quand et comment les produits de la mission seront utilisés.
+    do:
+      - click: {role: button, name: Create New Mission}
+      - type: {target: {label: Mission Name}, text: BorealWatch-1}
+      - type:
+          target: {css: "textarea >> nth=0"}
+          delay_ms: 14
+          text:
+            en: "Wildfires in Canada's boreal forest are detected hours after ignition, when they already cover more than 10 ha. Current satellites pass at the wrong time and their pixels miss small fires."
+            fr: "Les feux de la forêt boréale canadienne sont détectés des heures après leur départ, lorsqu’ils couvrent déjà plus de 10 ha. Les satellites actuels passent au mauvais moment et leurs pixels ne voient pas les petits feux."
+      - type:
+          target: {css: "textarea >> nth=1"}
+          delay_ms: 14
+          text:
+            en: "Fire agencies receive hotspot alerts within 30 minutes of acquisition, May to September, 48 to 62° N."
+            fr: "Les agences de lutte contre les feux reçoivent les alertes dans les 30 minutes suivant l’acquisition, de mai à septembre, entre 48 et 62° N."
+    question:
+      type: multichoice
+      worksheet: LW-1.4/B
+      text:
+        en: "Which of these is a problem statement, not a solution?"
+        fr: "Lequel de ces énoncés est un énoncé de problème, et non une solution ?"
+      options:
+        - text: {en: "Small boreal wildfires are found hours late, so they grow before crews arrive.", fr: "Les petits feux boréaux sont repérés avec des heures de retard et grandissent avant l’arrivée des équipes."}
+          correct: true
+          why: {en: "It names the gap, who is affected and the impact, and no hardware.", fr: "Il nomme le manque, qui est touché et l’impact, sans matériel."}
+        - text: {en: "Build a 6U CubeSat with a thermal infrared camera.", fr: "Construire un CubeSat 6U avec une caméra infrarouge thermique."}
+          why: {en: "That is already a solution: it skips the alternatives.", fr: "C’est déjà une solution : elle saute les solutions de rechange."}
+        - text: {en: "Launch on the next rideshare to sun-synchronous orbit.", fr: "Lancer au prochain vol partagé vers une orbite héliosynchrone."}
+          why: {en: "A launch choice, not a need.", fr: "Un choix de lancement, pas un besoin."}
+
+  - id: record
+    title: {en: "Record the decision", fr: "Consigner la décision"}
+    say:
+      en: >-
+        Beside the form is Record decision. It opens your logbook on decision D one point four
+        Problem, with the statement you typed already filled in as the choice. The record tells
+        you which part of your workbook it answers, and where in SpaceCDF to look. What only
+        you can write is the rationale: why this statement, and what you left out of scope.
+      fr: >-
+        À côté du formulaire se trouve Consigner la décision. Le bouton ouvre votre journal de
+        bord sur la décision D un point quatre Problème, avec l’énoncé que vous avez saisi déjà
+        repris comme choix. La fiche indique à quelle partie de votre cahier de travail elle
+        répond, et où regarder dans SpaceCDF. Ce que vous seuls pouvez écrire, c’est la
+        justification : pourquoi cet énoncé, et ce que vous avez laissé hors du périmètre.
+    do:
+      - click: {css: "[data-decision='D-1.4-PROBLEM']"}
+      - wait_for: {css: "#c2o-logbook"}
+      - highlight: {target: {css: "#c2o-logbook .c2o-lb-dec-ws, #c2o-logbook :text-matches('Worksheet 1.4|Fiche 1.4')"}, seconds: 3}
+      - type:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          delay_ms: 12
+          text:
+            en: "Late detection is the shared pain of all three agencies we interviewed. We left smoke forecasting out of scope: it needs a different sensor."
+            fr: "La détection tardive est le problème commun aux trois agences interrogées. Nous laissons la prévision de la fumée hors du périmètre : elle demande un autre capteur."
+
+  - id: save
+    title: {en: "Your logbook is your workbook", fr: "Votre journal de bord est votre cahier de travail"}
+    say:
+      en: >-
+        Save the record. It stays private to you, in this browser, and the server deletes it
+        forty-eight hours after your last entry. So at the end of every session, download your
+        logbook as Markdown or printable HTML and keep it with your workbook. The Worksheets tab
+        lists the worksheet parts that match the step you are on.
+      fr: >-
+        Enregistrez la fiche. Elle reste privée, dans ce navigateur, et le serveur la supprime
+        quarante-huit heures après votre dernière saisie. À la fin de chaque séance, téléchargez
+        donc votre journal de bord en Markdown ou en HTML imprimable, et gardez-le avec votre
+        cahier de travail. L’onglet des fiches liste les parties de fiches qui correspondent à
+        l’étape où vous êtes.
+    do:
+      - click: {role: button, name: Save decision record}
+      - wait: 0.8
+      - highlight: {target: {css: "#c2o-logbook .c2o-logbook__foot"}, seconds: 3}
+      - click: {target: {within: "#c2o-logbook", role: tab, name: Worksheets}}
+      - wait: 1.5
+      - click: {role: button, name: Close the logbook}
+
+  - id: stakeholders
+    title: {en: "Step 2: stakeholders and objectives", fr: "Étape 2 : parties prenantes et objectifs"}
+    say:
+      en: >-
+        Step two asks who cares and what they need. Name each stakeholder by role: who funds,
+        who uses, who operates and who regulates. Then write at least two objectives. Each one
+        gets a priority and, most importantly, a way to measure it. An objective you cannot
+        measure is one you cannot verify at the review.
+      fr: >-
+        La deuxième étape demande qui est concerné et ce dont chacun a besoin. Nommez chaque
+        partie prenante par son rôle : qui finance, qui utilise, qui exploite et qui réglemente.
+        Rédigez ensuite au moins deux objectifs. Chacun reçoit une priorité et, surtout, une
+        façon de le mesurer. Un objectif que l’on ne peut pas mesurer ne peut pas être vérifié
+        à la revue.
+    do:
+      - click: {role: button, name: "Next →"}
+      - fill: {target: {label: "Stakeholder 1: name / organisation"}, text: {en: "Canadian Space Agency", fr: "Agence spatiale canadienne"}}
+      - select: {target: {label: "Stakeholder 1: role"}, value: sponsor}
+      - fill: {target: {label: "Stakeholder 1: key need"}, text: {en: "Low-cost demonstration of wildfire monitoring", fr: "Démonstration à faible coût de la surveillance des feux"}}
+      - click: {role: button, name: "+ Add stakeholder"}
+      - fill: {target: {label: "Stakeholder 2: name / organisation"}, text: {en: "Provincial wildfire agencies", fr: "Agences provinciales de lutte contre les feux"}}
+      - select: {target: {label: "Stakeholder 2: role"}, value: user}
+      - fill: {target: {label: "Stakeholder 2: key need"}, text: {en: "Alerts within 30 minutes, May to September", fr: "Alertes en moins de 30 minutes, de mai à septembre"}}
+      - type: {target: {label: "Objective 1", exact: true}, delay_ms: 12, text: {en: "Detect active fires of 0.1 ha or larger in the boreal zone", fr: "Détecter les feux actifs de 0,1 ha ou plus dans la zone boréale"}}
+      - fill: {target: {label: "Objective 1: how to measure"}, text: {en: "Detection probability ≥ 90 % for a 0.1 ha fire; pixel ≤ 60 m", fr: "Probabilité de détection ≥ 90 % pour un feu de 0,1 ha ; pixel ≤ 60 m"}}
+      - click: {role: button, name: "+ Add objective"}
+      - select: {target: {label: "Objective 2: priority"}, value: primary}
+      - fill: {target: {label: "Objective 2", exact: true}, text: {en: "Deliver alerts within 30 minutes of acquisition", fr: "Livrer les alertes dans les 30 minutes suivant l’acquisition"}}
+      - fill: {target: {label: "Objective 2: how to measure"}, text: {en: "Median latency ≤ 30 min", fr: "Latence médiane ≤ 30 min"}}
+      - highlight: {target: {css: "[data-decision='D-1.4-OBJECTIVES']"}, seconds: 2.5}
+    question:
+      type: truefalse
+      worksheet: LW-1.4/C
+      answer: false
+      text:
+        en: "An objective without a way to measure it can still be verified at the PDR."
+        fr: "Un objectif sans méthode de mesure peut tout de même être vérifié à la PDR."
+
+  - id: alternatives
+    title: {en: "Step 3: is space the answer?", fr: "Étape 3 : l’espace est-il la réponse ?"}
+    say:
+      en: >-
+        Step three is the honest question: does this need a new space mission at all? Compare
+        the alternatives: buying existing data, aircraft, ground sensors, or a dedicated
+        spacecraft. Choose one, and say in the justification why the others fall short. Then
+        record decision D one point four Space. Next time, the architecture step.
+      fr: >-
+        La troisième étape pose la question honnête : ce besoin exige-t-il vraiment une nouvelle
+        mission spatiale ? Comparez les solutions de rechange : acheter des données existantes,
+        des avions, des capteurs au sol, ou un engin spatial dédié. Choisissez-en une, et dites
+        dans la justification pourquoi les autres ne suffisent pas. Consignez ensuite la
+        décision D un point quatre Espace. La prochaine fois : l’étape de l’architecture.
+    do:
+      - click: {role: button, name: "Next →"}
+      - wait: 1.0
+      - highlight: {target: {css: "main :text-matches('#3|#4')"}, seconds: 2.4, point: false}
+      - click: {css: "button:has-text('new_satellite'), [role=button]:has-text('new_satellite')"}
+      - type:
+          target: {css: "textarea >> nth=0"}
+          delay_ms: 12
+          text:
+            en: "No existing source has a thermal band at 60 m or better with an afternoon pass over 48–62° N; aircraft cannot cover the whole boreal zone every day."
+            fr: "Aucune source existante n’offre une bande thermique de 60 m ou mieux avec un passage l’après-midi entre 48 et 62° N ; les avions ne couvrent pas toute la zone boréale chaque jour."
+      - highlight: {target: {css: "[data-decision='D-1.4-SPACE']"}, seconds: 3}
+    question:
+      type: reflect
+      worksheet: LW-1.4/E
+      text:
+        en: "Which non-space alternative came closest for your own mission, and why did it lose? Write one or two sentences, then copy them into Part E of your workbook."
+        fr: "Pour votre propre mission, quelle solution non spatiale s’est approchée le plus, et pourquoi a-t-elle perdu ? Écrivez une ou deux phrases, puis reportez-les dans la partie E de votre cahier."
