@@ -4432,6 +4432,11 @@ async function loadProcSources() {
   const src = $("proc-source") ? $("proc-source").value : "activity";
   const sel = $("proc-type");
   if (!sel) return;
+  // Keep the operator's choice: this list is rebuilt whenever the PRC page
+  // is shown, and rebuilding it used to fall back to the first card, so a
+  // round trip to CMD mid-card swapped LEOP-001 for COM-013 under you.
+  const prev = sel.value;
+  const prevSrc = sel.dataset.src || "";
   try {
     let opts = [];
     if (src === "activity") {
@@ -4455,8 +4460,11 @@ async function loadProcSources() {
         opts.map(([v, l]) => `<option value="${esc(String(v))}">${esc(String(l))}</option>`).join("");
     }
     sel.innerHTML = opts.map(([v, l]) => `<option value="${esc(String(v))}">${esc(String(l))}</option>`).join("");
+    if (prevSrc === src && prev && opts.some(([v]) => String(v) === prev)) sel.value = prev;
+    sel.dataset.src = src;
   } catch (e) { sel.innerHTML = `<option value="">${t("unavailable")}</option>`; }
-  loadProcDoc();
+  // the same card stays mounted (working copy, scroll position) when nothing changed
+  if (!(procCard && sel.value === prev && prevSrc === src)) loadProcDoc();
   updateProcButtons();
 }
 let procCard = null;          // procard.js on the open card

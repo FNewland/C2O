@@ -11,6 +11,8 @@ summary:
   fr: "Ouvrir NOM-001 Ouverture de passage dans le centre de contrôle, comparer valeurs attendues et valeurs en direct, consigner GO, NO-GO et écarts, et retrouver chaque coche dans votre cahier de travail."
 apps:
   mcs: default
+# restart simulator + MCS before each take (python -m c2ovideo stack)
+fresh_stack: sim
 ties:
   worksheets: [WB-5.4-N001, WB-5.4-N001/q1, WB-5.4-N001/q2, WB-5.4-N001/q8]
   cards: [NOM-001]

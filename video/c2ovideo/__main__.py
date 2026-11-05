@@ -96,6 +96,24 @@ def validate(sb) -> list[str]:
     return sorted(set(problems))
 
 
+def _need_running(sb, overrides: dict) -> None:
+    """Stop early, with the fix, when a tool the storyboard films is not running."""
+    import urllib.request
+    from . import capture
+    urls = dict(capture.DEFAULT_URLS, **overrides)
+    which = {"spacecdf": "spacecdf"}
+    for app in sb.apps:
+        url = urls.get(app)
+        if not url:
+            continue
+        try:
+            urllib.request.urlopen(url, timeout=5)
+        except Exception:
+            stack_name = which.get(app, "sim")
+            raise SystemExit(f"{app} is not running at {url}.\n"
+                             f"Start it first:  python -m c2ovideo stack up {stack_name}")
+
+
 def cmd_build(a) -> int:
     from . import capture
     sb = storyboard.load(a.id)
@@ -115,6 +133,15 @@ def cmd_build(a) -> int:
         print(f"[{lang}] narration {sum(secs.values()):.1f} s in {time.time() - t:.0f} s")
         take = media / f"take-{lang}"
         if not a.reuse_capture or not (take / "cues.json").exists():
+            fresh = sb.raw.get("fresh_stack")
+            if fresh:
+                # every take starts from a just-started stack: same alarms,
+                # same command history, same sim clock, in both languages
+                from . import stack
+                stack.run("down", fresh)
+                if stack.run("up", fresh) != 0:
+                    raise SystemExit(f"the {fresh} stack did not come up (see out/_stack/*.log)")
+            _need_running(sb, _urls(a.url))
             t = time.time()
             res = capture.capture(sb, lang, secs, take, _urls(a.url), headful=a.headful)
             print(f"[{lang}] capture {res['cues'][-1]['end']:.1f} s, {len(res['frames'])} frames in {time.time() - t:.0f} s")
