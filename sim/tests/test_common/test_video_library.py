@@ -71,7 +71,7 @@ def videos(tmp_path, monkeypatch):
     monkeypatch.setenv("SMO_VIDEO_DIR", str(d))
     monkeypatch.setenv("SMO_VIDEO_REVIEW_DIR", str(tmp_path / "review"))
     monkeypatch.setenv("SMO_INSTRUCTORS", "prof@c2o.live")
-    monkeypatch.setenv("SMO_VIDEO_REVIEWERS", "relectrice@c2o.live")
+    monkeypatch.setenv("SMO_VIDEO_REVIEWERS", "autre@c2o.live Relectrice@c2o.live")   # vm-bootstrap form
     return d
 
 

@@ -18,7 +18,8 @@
 #   c2o-ai-secret  Secret Manager secret holding the Anthropic API key for
 #                  SpaceCDF's AI advisor (ground VM; optional: no version =
 #                  SpaceCDF runs in manual mode)
-#   c2o-voice-secret, c2o-voice-host, c2o-voice-instructors, c2o-instructors
+#   c2o-voice-secret, c2o-voice-host, c2o-voice-instructors, c2o-instructors,
+#   c2o-video-reviewers
 #                  voice loops (ground VM; optional): the LiveKit key pair the
 #                  MCS signs tokens with, the voice server's name, and the
 #                  accounts with the instructor role -> sim/docker/voice.env
@@ -180,6 +181,9 @@ write_env() {
         # c2o-instructors group): the welcome page and the voice loops read
         # SMO_INSTRUCTORS; empty = nobody (closed by default behind IAP).
         echo "SMO_INSTRUCTORS=$(printf '%s' "$(attr c2o-instructors)" | tr -cd 'A-Za-z0-9._%+@ -')"
+        # Course-video narration reviewers (c2o.env VIDEO_REVIEWERS): the
+        # review pages under /videos/<id>/review, besides the instructors.
+        echo "SMO_VIDEO_REVIEWERS=$(printf '%s' "$(attr c2o-video-reviewers)" | tr -cd 'A-Za-z0-9._%+@ -')"
         # Console seats (WP10): the IAP audiences the MCS accepts when it
         # verifies X-Goog-IAP-JWT-Assertion (setup.sh writes the metadata).
         # Empty = every command is refused until setup.sh has been rerun.

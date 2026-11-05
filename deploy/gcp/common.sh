@@ -44,6 +44,7 @@ CREATE_VOICE_VM="${CREATE_VOICE_VM:-yes}"
 VOICE_MACHINE_TYPE="${VOICE_MACHINE_TYPE:-e2-small}"
 VOICE_DISK_GB="${VOICE_DISK_GB:-10}"
 VOICE_INSTRUCTORS="${VOICE_INSTRUCTORS:-}"   # emails with the instructor role on the loops
+VIDEO_REVIEWERS="${VIDEO_REVIEWERS:-}"       # emails who may review course-video narration
 VOICE_ACME_EMAIL="${VOICE_ACME_EMAIL:-}"     # Let's Encrypt contact (optional)
 
 # Every gcloud call goes to this project, whatever the Cloud Shell default is.

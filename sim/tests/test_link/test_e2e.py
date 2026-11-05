@@ -148,13 +148,14 @@ class TmTap:
                     self.eof = True
                     return
                 buf += d
-                while len(buf) >= 2:
-                    n = struct.unpack(">H", buf[:2])[0]
-                    if len(buf) < 2 + n:
-                        break
-                    self.pkts.append(bytes(buf[2:2 + n]))
+                # [u16 len][pkt], or [0xFFFF][u8 vcid][u16 len][pkt] for S15
+                # playback on VC1 (smo_common.protocol.framing): a tap that
+                # only knew the first form read 65535 bytes after a dump and
+                # stopped counting, so every later test saw "no TM".
+                for rec in P.split_records(buf):
+                    hdr = 5 if rec[:2] == b"\xff\xff" else 2
+                    self.pkts.append(rec[hdr:])
                     self.times.append(time.monotonic())
-                    del buf[:2 + n]
         except asyncio.CancelledError:
             raise
         except BaseException as e:  # noqa: BLE001
@@ -322,10 +323,10 @@ class E2E:
             m._dump_dir = self.gsg_dumps         # MCS and GSG share SMO_DUMP_DIR
             orig = m._process_tm
 
-            async def rec(parsed, _orig=orig):
+            async def rec(parsed, *a, _orig=orig, **kw):
                 s = parsed.secondary
                 self.mcs_seen.append((s.service, s.subtype, bytes(parsed.data_field[:4])))
-                await _orig(parsed)
+                await _orig(parsed, *a, **kw)
             m._process_tm = rec
             return m
         self.mcs = await self.mcs_t.run(make_mcs())
