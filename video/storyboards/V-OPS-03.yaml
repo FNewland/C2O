@@ -49,7 +49,8 @@ steps:
     do:
       - wait: 1.0
       - highlight: {target: {css: "#alarms-btn"}, seconds: 3}
-      # the instructor's fault: star tracker 1 fails (not a scored-run fault)
+      - wait: 8
+      # the instructor's fault, near the end of this step's narration: star tracker 1 fails (not a scored-run fault)
       - api: {app: instructor, method: POST, path: /api/command, json: {type: failure_inject, subsystem: aocs, failure: st_failure, onset: step, magnitude: 1.0}}
 
   - id: read
