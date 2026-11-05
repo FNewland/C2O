@@ -56,8 +56,7 @@ def _sim_venv() -> Path:
     if not (v / "bin" / "smo-simulator").exists():
         raise SystemExit(
             f"No simulator install in {v}.\n"
-            "Run sim/start.sh once (it creates sim/.venv and installs the SMO packages), "
-            "then sim/stop.sh, and build again.\n"
+            "Create it once with:  python -m c2ovideo stack setup sim\n"
             "If your simulator lives in another environment, point C2O_SIM_VENV at it.")
     return v
 
@@ -80,7 +79,10 @@ def up_spacecdf() -> dict:
     dist = DESIGN / "frontend" / "dist"
     if not (dist / "index.html").exists():
         raise SystemExit("build the SpaceCDF frontend first: (cd design/frontend && npm ci && npm run build)")
-    pkgs = ["spacecdf-server", "spacecdf-common", "spacecdf-kb", "spacecdf-agents", "spacecdf-ai"]
+    if not (DESIGN / ".venv" / "bin" / "uvicorn").exists():
+        raise SystemExit(f"No SpaceCDF install in {DESIGN / '.venv'}.\n"
+                         "Create it once with:  python -m c2ovideo stack setup spacecdf")
+    pkgs = DESIGN_PACKAGES
     env = dict(os.environ,
                PYTHONPATH=os.pathsep.join([str(DESIGN / "packages" / p / "src") for p in pkgs] + [str(DESIGN)]),
                DATABASE_URL=f"sqlite+aiosqlite:///{d / 'video.db'}", SPACECDF_STATIC_DIR=str(dist),
@@ -132,7 +134,48 @@ def up_sim() -> dict:
     return out
 
 
+SIM_PACKAGES = ["smo-common", "smo-simulator", "smo-mcs", "smo-planner", "smo-rfsim", "smo-link", "smo-gateway"]
+DESIGN_PACKAGES = ["spacecdf-common", "spacecdf-kb", "spacecdf-agents", "spacecdf-ai", "spacecdf-server"]
+
+
+def _newest_python() -> str:
+    """A Python >= 3.11 on PATH (the simulator needs 3.11; laptops often default to older)."""
+    import shutil
+    for name in ("python3.13", "python3.12", "python3.11", "python3"):
+        exe = shutil.which(name)
+        if not exe:
+            continue
+        v = subprocess.run([exe, "-c", "import sys; print(sys.version_info[:2] >= (3, 11))"],
+                           capture_output=True, text=True).stdout.strip()
+        if v == "True":
+            return exe
+    raise SystemExit("Need Python 3.11 or newer for the tools (brew install python@3.12), then run this again.")
+
+
+def setup(which: str) -> int:
+    """Create sim/.venv or design/.venv and install the packages (editable), as CI does."""
+    root, pkgs = (SIM, SIM_PACKAGES) if which == "sim" else (DESIGN, DESIGN_PACKAGES)
+    venv = root / ".venv"
+    if not (venv / "bin" / "python").exists():
+        py = _newest_python()
+        print(f"creating {venv} with {py}", flush=True)
+        subprocess.run([py, "-m", "venv", str(venv)], check=True)
+    pip = [str(venv / "bin" / "python"), "-m", "pip", "install", "-q"]
+    subprocess.run(pip + ["--upgrade", "pip"], check=True)
+    args = []
+    for p in pkgs:
+        d = root / "packages" / p
+        if d.exists():
+            args += ["-e", str(d) + ("[voice,iap]" if p == "smo-mcs" else "")]
+    print(f"installing {len(args) // 2} packages into {venv} …", flush=True)
+    subprocess.run(pip + args, check=True)
+    print("ready")
+    return 0
+
+
 def run(action: str, which: str) -> int:
+    if action == "setup":
+        return setup(which)
     f = STATE / f"{which}.json"
     if action == "up":
         info = up_spacecdf() if which == "spacecdf" else up_sim()
