@@ -240,8 +240,11 @@ class TestMcsBrowser:
         page.fill("#cmd-subtype", "1")
         page.fill("#cmd-data", "")
         page.click("#cmd-send")
+        # The ground verification log lives in the bottom drawer's Command
+        # history tab since the screen review (0848e99): one history only.
+        page.click('[data-bd="cmdhist"]')
         page.wait_for_function(
-            "() => document.getElementById('cmd-verif-log')"
+            "() => (document.getElementById('bdp-cmdhist') || {textContent: ''})"
             ".textContent.includes('TC(17,1)')", timeout=20000)
 
     def test_position_switch_filters_rail(self, page):
@@ -342,13 +345,12 @@ class TestInstructorBrowser:
 
     def test_inject_typed_failure_and_clear(self, page):
         self._open(page)
+        # The subsystem picker is a filter now ("All subsystems" by default);
+        # the failure list under it is what has to be filled.
         page.wait_for_function(
-            "() => document.querySelectorAll('#fail-subsystem option').length > 0"
-            " && document.getElementById('fail-subsystem').value !== ''",
+            "() => document.querySelectorAll('#fail-type option').length > 0"
+            " && document.getElementById('fail-type').value !== ''",
             timeout=15000)
-        page.wait_for_function(
-            "() => document.querySelectorAll('#fail-type option').length > 0",
-            timeout=10000)
         # Inject is a two-step (arm, then execute within 5 s).
         page.click("#btn-inject")
         page.wait_for_selector("#btn-inject.is-armed", timeout=3000)
@@ -363,6 +365,8 @@ class TestInstructorBrowser:
 
     def test_scenario_start_stop_and_debrief(self, page):
         self._open(page)
+        # Scenarios are chosen in the Prep view; the debrief is its own view.
+        page.click('#focus-tabs [data-tab="prep"]')
         page.wait_for_function(
             "() => document.querySelectorAll('#scenario-list .scenario-item,"
             " #scenario-list [data-scenario], #scenario-list li,"
@@ -374,12 +378,15 @@ class TestInstructorBrowser:
             "() => document.getElementById('scenario-chip')"
             ".textContent.trim().length > 0", timeout=15000)
         time.sleep(2)
+        # Starting a scenario moves the console to the run views; Stop is in Prep.
+        page.click('#focus-tabs [data-tab="prep"]')
         # Stop disrupts the class: a two-step (arm, then execute).
         page.click("#btn-stop-scenario")
         page.wait_for_selector("#btn-stop-scenario.is-armed", timeout=3000)
         page.click("#btn-stop-scenario")
         # debrief: fetch and expect the placeholder to be replaced
-        page.wait_for_selector("#btn-fetch-debrief", timeout=5000)
+        page.click('#focus-tabs [data-tab="debrief"]')
+        page.wait_for_selector("#btn-fetch-debrief", state="visible", timeout=5000)
         page.wait_for_function(
             "() => { const el = document.getElementById('btn-fetch-debrief');"
             " el.click();"

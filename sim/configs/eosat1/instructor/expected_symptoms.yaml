@@ -88,7 +88,12 @@ expected_symptoms:
 
   # ── EPS ───────────────────────────────────────────────────────────────
   eps.bat_cell:
+    # BPX 8S-1P (24.0-33.6 V): losing a cell takes ~3.7 V off the pack. At
+    # the high SoC of a sunlit NOMINAL start that leaves the bus above the
+    # 28.4 V under-voltage line, so the first thing that shows is the step in
+    # battery voltage; the bus alarms follow once SoC falls below ~84 %.
     symptoms:
+      - {param: 0x0100, change: 3.0}         # eps.bat_voltage steps down
       - {s12: 0x0105}
       - {event: 0x0104}                      # BUS_UNDERVOLTAGE_CRITICAL
       - {event: 0x0106}                      # LOAD_SHED_STAGE_1
@@ -127,7 +132,11 @@ expected_symptoms:
     symptoms:
       - {s12: 0x014C}
   eps.undervoltage:
+    # The default removes 20 SoC points. The bus reaches the 28.4 V
+    # under-voltage line only below ~46 % SoC (BPX curve), so from a full
+    # battery the first symptom is the SoC step itself.
     symptoms:
+      - {param: 0x0101, change: 15.0}        # eps.bat_soc_pct drops
       - {s12: 0x0105}
       - {event: 0x0103}
 
