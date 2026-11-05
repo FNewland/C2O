@@ -25,21 +25,30 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | Id | Week | Tool | Ties | Status |
 |---|---|---|---|---|
 | V-SCDF-01 | 2 | SpaceCDF wizard → decision records | LW-1.4 A/B/C/E, D-1.4-PROBLEM, D-1.4-SPACE | rendered EN+FR, published locally; French narration check mean 0.88 (EN 0.96) |
-| V-OPS-01 | 2 | MCS NOM-001 card as workbook | WB-5.4-N001 q1/q2/q8 | storyboard done; renders from a fast-forward to a real pass, with the battery set below the Step 2 check |
+| V-OPS-01 | 2 | MCS NOM-001 card as workbook | WB-5.4-N001 q1/q2/q8 | rendered EN+FR (fast-forward to a real pass, battery set below the Step 2 check) |
+| V-OPS-02 | 4 | LEOP-001 by hand: blind uplink, bootloader, boot, HK on | WB-5.5-L001 q2/q5/q9 | rendered EN+FR from breakpoint `card-LEOP-001` |
+| V-OPS-03 | 5 | Alarm → ACK → anomaly ticket → the call | WB-5.5-AT q4/q10/q12 | rendered EN+FR from `card-END`; star-tracker failure (not a scored-run fault), no recovery shown |
+
+Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
+sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
+(loaded by the simulator at start-up; `python -m c2ovideo stack up sim` makes them when missing).
+Ops storyboards set `fresh_stack: sim`: the simulator and MCS restart before each take.
+
+Fixed while filming: the MCS PRC page lost the chosen card when its list was rebuilt; alarm ›
+Ticket opened an empty Workbook tab when the logbook had never been opened; the procedure-card
+parser read `simulation.yaml` as a parameter.
 
 ## Backlog (from the research shortlist)
 
-1. LEOP-001 first AOS and OBC boot (needs breakpoints at card boundaries: `save_breakpoint` from the fly-through test).
-2. Alarms → anomaly ticket → GO/NO-GO (WB-5.5-AT).
-3. Ground track, eclipse and beta angle (planner + `groundtrack.js`).
-4. Energy balance through an orbit (`powerflow.js` with simulator telemetry).
-5. Planner pass plan (WB-5.3-PP).
-6. Link budget term by term (`link_budget_ladder.py`).
-7. CTG-001 under-voltage load shed (instructor inject).
-8. Instructor console for TAs (`audience: instructors`).
+1. LEOP-001 Step 5a and LEOP-002 (same breakpoint pattern).
+2. Ground track, eclipse and beta angle (planner + `groundtrack.js`).
+3. Energy balance through an orbit (`powerflow.js` with simulator telemetry).
+4. Planner pass plan (WB-5.3-PP).
+5. Link budget term by term (`link_budget_ladder.py`).
+6. CTG-001 under-voltage load shed (instructor inject).
+7. Instructor console for TAs (`audience: instructors`).
 
 Enablers still to build:
 
-* breakpoint library at card boundaries;
 * an instructor `step` command (advance N sim-seconds while frozen) for frame-exact repeat takes;
 * the five ops sheets missing from the worksheet YAML (WB-5.4-VL, WB-5.7-WI, WB-5.7-FR, WB-B, WB-C).
