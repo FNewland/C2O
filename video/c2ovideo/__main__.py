@@ -61,6 +61,8 @@ def _ui_strings(obj, app: str, found: list):
             if isinstance(v, str) and ("role" in obj or key != "text" or "target" not in obj):
                 found.append((a, v))
         for k, v in obj.items():
+            if k in ("api", "python", "js", "storage"):
+                continue                      # data for the server, not on-screen text
             if k == "goto" and isinstance(v, dict):
                 a = v.get("app", a)
             _ui_strings(v, a, found)
