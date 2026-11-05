@@ -1,0 +1,178 @@
+# Week 2–3 — NOM-001 Pass Startup in the MCS, with the procedure card as the workbook.
+# Prepares WB-5.4-N001 (confirm each step) before the first scored pass.
+id: V-OPS-01
+week: 2
+audience: all
+title:
+  en: "NOM-001: the procedure card is your workbook"
+  fr: "NOM-001 : la fiche de procédure est votre cahier de travail"
+summary:
+  en: "Open NOM-001 Pass Startup in mission control, compare expected and live values, record GO, NO-GO and deviations, and find every tick in your workbook."
+  fr: "Ouvrir NOM-001 Ouverture de passage dans le centre de contrôle, comparer valeurs attendues et valeurs en direct, consigner GO, NO-GO et écarts, et retrouver chaque coche dans votre cahier de travail."
+apps:
+  mcs: default
+ties:
+  worksheets: [WB-5.4-N001, WB-5.4-N001/q1, WB-5.4-N001/q2, WB-5.4-N001/q8]
+  cards: [NOM-001]
+sources:
+  - sim/configs/eosat1/procedures/nominal/startup.md (NOM-001)
+  - sim/configs/eosat1/worksheets/ops_week3.yaml (WB-5.4-N001)
+
+setup:
+  # the class starts at the next pass: run the simulator fast to AOS, then real time;
+  # the battery is set to 48 % so Step 2 really fails on screen
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: true}, allow_error: true}
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 480, after_aos: 20}}
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: set_battery_soc, soc_pct: 48.8}}
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: console
+    title: {en: "The Flight Director's console", fr: "Le poste du directeur de vol"}
+    say:
+      en: >-
+        This is mission control for EOSAT-1, seen from the Flight Director's position. The strip
+        across the top answers four questions at a glance: can I see the spacecraft, can I talk
+        to it, is it well, and what comes next. Every pass starts the same way, with procedure
+        NOM-001, Pass Startup.
+      fr: >-
+        Voici le centre de contrôle d’EOSAT-1, vu du poste du directeur de vol. Le bandeau du
+        haut répond d’un coup d’œil à quatre questions : est-ce que je vois le satellite, est-ce
+        que je peux lui parler, va-t-il bien, et quelle est la suite. Chaque passage commence de
+        la même façon, avec la procédure NOM-001, Ouverture de passage.
+    do:
+      - wait: 1.5
+      - highlight: {target: {css: "header, .mcs-strip, #strip"}, seconds: 3.5, point: false}
+
+  - id: open
+    title: {en: "Open the card", fr: "Ouvrir la fiche"}
+    say:
+      en: >-
+        Procedures live on the PRC page. Choose Ops procedure, then NOM-001. Below the runner is
+        the procedure card. It is not a copy of the manual: it is your working copy, and every
+        box you tick on it is saved to your logbook as you go.
+      fr: >-
+        Les procédures se trouvent sur la page PRC. Choisissez Procédure d’exploitation, puis
+        NOM-001. Sous l’exécuteur se trouve la fiche de procédure. Ce n’est pas une copie du
+        manuel : c’est votre copie de travail, et chaque case que vous cochez est enregistrée
+        dans votre journal de bord au fur et à mesure.
+    do:
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 1.0
+      - select: {target: {css: "#proc-type"}, value: nominal/startup.md}
+      - wait: 2.5
+      - scroll: {css: "#proc-doc"}
+      - highlight: {target: {css: "#proc-doc"}, seconds: 3, point: false}
+
+  - id: prereq
+    title: {en: "Prerequisites first", fr: "D’abord les prérequis"}
+    say:
+      en: >-
+        Start with the prerequisites. They are part of the procedure, not a formality: the
+        antenna is tracking, the pass plan is loaded, flight dynamics is current, and the
+        Flight Director is on the loop. Tick each one only when you have checked it.
+      fr: >-
+        Commencez par les prérequis. Ils font partie de la procédure, ce n’est pas une
+        formalité : l’antenne suit le satellite, le plan de passage est chargé, la dynamique du
+        vol est à jour et le directeur de vol est sur la boucle. Ne cochez chacun qu’après
+        l’avoir vérifié.
+    do:
+      - check: {css: "#proc-doc li[data-key='p1'] input.pc-pre"}
+      - check: {css: "#proc-doc li[data-key='p2'] input.pc-pre"}
+      - check: {css: "#proc-doc li[data-key='p3'] input.pc-pre"}
+      - check: {css: "#proc-doc li[data-key='p4'] input.pc-pre"}
+
+  - id: step1
+    title: {en: "Step 1: expected, live, captured", fr: "Étape 1 : attendu, en direct, relevé"}
+    say:
+      en: >-
+        Step one verifies the on-board computer. The table puts three columns side by side: what
+        the card expects, what telemetry shows live, and what you captured. A green tick means
+        the live value meets the check. Capture values freezes them into your record, so you
+        can show later what you saw when you said GO.
+      fr: >-
+        La première étape vérifie l’ordinateur de bord. Le tableau met trois colonnes côte à
+        côte : ce que la fiche attend, ce que la télémesure montre en direct, et ce que vous
+        avez relevé. Une coche verte signifie que la valeur en direct satisfait la vérification.
+        Relever les valeurs les fige dans votre fiche : vous pourrez montrer plus tard ce que
+        vous voyiez quand vous avez dit GO.
+    do:
+      - scroll: {css: "#proc-doc section[data-pc-step='s1']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s1'] table.pc-vals"}, seconds: 3.5}
+      - click: {css: "#proc-doc section[data-pc-step='s1'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s1'] [data-pc='tick'][data-r='go']"}
+    question:
+      type: multichoice
+      worksheet: WB-5.4-N001/q1
+      text:
+        en: "At Step 1, obdh.mode reads 1 instead of 0. What does the card tell the Flight Director to do?"
+        fr: "À l’étape 1, obdh.mode vaut 1 au lieu de 0. Que la fiche demande-t-elle au directeur de vol ?"
+      options:
+        - text: {en: "Abort the pass and run CTG-010 OBC Recovery.", fr: "Interrompre le passage et exécuter CTG-010 Récupération de l’OBC."}
+          correct: true
+          why: {en: "That is the GO/NO-GO line of Step 1.", fr: "C’est la ligne GO/NO-GO de l’étape 1."}
+        - text: {en: "Carry on to Step 2 and note it in the handover.", fr: "Passer à l’étape 2 et le noter dans la relève."}
+          why: {en: "A NO-GO is not a note to carry forward.", fr: "Un NO-GO n’est pas une simple note à reporter."}
+        - text: {en: "Send HK_REQUEST(sid=4) again until it reads 0.", fr: "Renvoyer HK_REQUEST(sid=4) jusqu’à lire 0."}
+          why: {en: "Repeating the request does not change the mode.", fr: "Répéter la requête ne change pas le mode."}
+
+  - id: nogo
+    title: {en: "A NO-GO with a reason", fr: "Un NO-GO motivé"}
+    say:
+      en: >-
+        Now Step 2 fails: the battery reads just under fifty percent, below the check. Write the deviation in the note, then press NO-GO. A NO-GO with a reason is far
+        more useful to the next shift than a blank step. If the call needed judgement, Record
+        decision opens a decision record from this step.
+      fr: >-
+        Ici, l’étape 2 échoue : la batterie affiche un peu moins de cinquante pour cent,
+        sous le seuil. Écrivez l’écart dans la note, puis appuyez sur NO-GO. Un
+        NO-GO motivé est bien plus utile à l’équipe suivante qu’une étape laissée vide. Si la
+        décision demandait du jugement, Consigner la décision ouvre une fiche de décision depuis
+        cette étape.
+    do:
+      - scroll: {css: "#proc-doc section[data-pc-step='s2']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s2'] table.pc-vals"}, seconds: 2.5, point: false}
+      - type:
+          target: {css: "#proc-doc section[data-pc-step='s2'] .pc-note"}
+          delay_ms: 16
+          text:
+            en: "SoC 49 % at AOS, below the 50 % check. FD informed; imaging cancelled for this pass."
+            fr: "SoC 49 % à l’AOS, sous le seuil de 50 %. DV informé ; imagerie annulée pour ce passage."
+      - click: {css: "#proc-doc section[data-pc-step='s2'] [data-pc='tick'][data-r='nogo']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s2'] [data-pc='decision']"}, seconds: 2.5}
+    question:
+      type: truefalse
+      worksheet: WB-5.4-N001/q2
+      answer: false
+      text:
+        en: "If a check fails but the pass must go on, it is better to leave the step blank than to record a NO-GO."
+        fr: "Si une vérification échoue mais que le passage doit continuer, il vaut mieux laisser l’étape vide que consigner un NO-GO."
+
+  - id: workbook
+    title: {en: "The same ticks in your workbook", fr: "Les mêmes coches dans votre cahier"}
+    say:
+      en: >-
+        Open the logbook and its Workbook tab. Worksheet N001 shows the same steps, with the same
+        GO, NO-GO and notes, because the card and the worksheet are one record. At the end of the
+        session, download the logbook as Markdown or printable HTML: it is deleted from the
+        server forty-eight hours after your last entry.
+      fr: >-
+        Ouvrez le journal de bord et son onglet Cahier de travail. La fiche N001 montre les mêmes
+        étapes, avec les mêmes GO, NO-GO et notes, car la fiche de procédure et la fiche du cahier
+        ne forment qu’un seul enregistrement. En fin de séance, téléchargez le journal en Markdown
+        ou en HTML imprimable : il est supprimé du serveur quarante-huit heures après votre
+        dernière saisie.
+    do:
+      - click: {css: "#proc-doc [data-pc='workbook']"}
+      - wait: 2.0
+      - highlight: {target: {css: "#c2o-logbook"}, seconds: 3, point: false}
+      - highlight: {target: {css: "#c2o-logbook [data-lb='dl-md']"}, seconds: 2.5}
+    question:
+      type: reflect
+      worksheet: WB-5.4-N001/q8
+      text:
+        en: "In your own words: what would the next shift need from your Step 2 note to carry on safely? Keep it to two lines, then copy it under “Off-nominal items observed”."
+        fr: "Avec vos mots : de quoi l’équipe suivante aurait-elle besoin dans votre note de l’étape 2 pour continuer en sécurité ? Deux lignes au plus, puis reportez-les sous « Anomalies observées »."

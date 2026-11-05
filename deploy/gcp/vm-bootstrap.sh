@@ -303,6 +303,28 @@ recording_spec() {
     esac
 }
 
+# videos TARBALL: replace workspace/videos in the ground workspace volume (the
+# welcome page serves it at /videos) with the tarball made by `c2o videos push`.
+# The swap is a rename, so viewers never see a half-copied folder; review notes
+# (workspace/video-review) are left alone.
+videos() {
+    local tgz="${1:-}" mp
+    [ "$ROLE" = ground ] || die "videos: run this on the ground VM"
+    [ -s "$tgz" ] || die "videos: no tarball at '$tgz'"
+    mp="$(docker volume inspect -f '{{.Mountpoint}}' "${VOL_PREFIX}ground-workspace" 2>/dev/null)" \
+        || die "videos: the ground-workspace volume does not exist yet (start the ground services once)"
+    rm -rf "$mp/videos.new" "$mp/videos.old"
+    mkdir -p "$mp/videos.new"
+    tar -xzf "$tgz" -C "$mp/videos.new" --no-same-owner
+    [ -f "$mp/videos.new/catalog.json" ] || { rm -rf "$mp/videos.new"; die "videos: the tarball has no catalog.json"; }
+    chown -R 10001:10001 "$mp/videos.new"
+    chmod -R u+rwX,g+rX,o-rwx "$mp/videos.new"
+    [ -d "$mp/videos" ] && mv "$mp/videos" "$mp/videos.old"
+    mv "$mp/videos.new" "$mp/videos"
+    rm -rf "$mp/videos.old" "$tgz"
+    say "videos: $(find "$mp/videos" -maxdepth 1 -mindepth 1 -type d ! -name h5p-libraries | wc -l | tr -d ' ') published, $(du -sh "$mp/videos" | cut -f1)"
+}
+
 vol_kb() {  # vol_kb VOLUME -> size in KiB, or nothing if the volume does not exist
     local mp
     mp="$(docker volume inspect -f '{{.Mountpoint}}' "$VOL_PREFIX$1" 2>/dev/null)" || return 0
@@ -411,7 +433,9 @@ case "$ACTION" in
         sizes; exit 0 ;;
     clean)
         shift; clean "$@" ;;
+    videos)
+        shift; videos "$@" ;;
     *)
-        die "usage: vm-bootstrap.sh [boot|refresh|rotate|update|down|sizes|clean WHAT...]" ;;
+        die "usage: vm-bootstrap.sh [boot|refresh|rotate|update|down|sizes|clean WHAT...|videos TARBALL]" ;;
 esac
 say "done ($ACTION, role $ROLE, $MY_IP)"
