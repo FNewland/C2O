@@ -53,7 +53,8 @@ _TAG = re.compile(
 _ANY_BOLD_TAG = re.compile(r"^\s*\*\*[^*]+:\*\*")
 _ANCHOR = re.compile(r"\s*\{#[A-Za-z0-9_][\w.:-]*(?:\s[^}]*)?\}\s*$")
 
-_PARAM = r"[a-z][a-z0-9_]+(?:\.[a-z0-9_]+)+"
+# a dotted parameter name, never a file name (`simulation.yaml`, `engine.py`)
+_PARAM = r"(?![a-z0-9_]+\.(?:ya?ml|py|md|json|js|csv|txt|html)\b)[a-z][a-z0-9_]+(?:\.[a-z0-9_]+)+"
 #: `param` [(0xHHHH)] OP VALUE  — the card's verification grammar.
 _CHECK = re.compile(
     r"\|?`(?P<param>" + _PARAM + r")`\|?\s*(?:\((?P<pid>0x[0-9A-Fa-f]{4})\))?\s*"

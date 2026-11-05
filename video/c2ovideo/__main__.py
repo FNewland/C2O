@@ -12,6 +12,7 @@
     publish ID [--dir DIR]     copy a built video into SMO_VIDEO_DIR
     check ID [--lang ..]       speech-recognition check of the narration (optional)
     reviews                    print reviewers' notes saved on the welcome page
+    stack setup sim|spacecdf   create sim/.venv or design/.venv (once, needs Python 3.11+)
     stack up|down spacecdf|sim run the tools on capture ports
 """
 
@@ -179,7 +180,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("publish"); p.add_argument("id"); p.add_argument("--dir")
     c = sub.add_parser("check"); c.add_argument("id"); c.add_argument("--lang"); c.add_argument("--model", default="small")
     sub.add_parser("reviews")
-    s = sub.add_parser("stack"); s.add_argument("action", choices=["up", "down", "status"]); s.add_argument("which", nargs="?", default="spacecdf")
+    s = sub.add_parser("stack"); s.add_argument("action", choices=["setup", "up", "down", "status"]); s.add_argument("which", nargs="?", default="spacecdf")
     a = ap.parse_args(argv)
 
     if a.cmd == "fetch-models":

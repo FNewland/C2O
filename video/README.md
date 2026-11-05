@@ -44,6 +44,9 @@ cd video
 pip install -r requirements.txt            # once; Playwright's Chromium too (python -m playwright install chromium)
 python -m c2ovideo fetch-models            # Kokoro voice model, ~120 MB, once
 python -m c2ovideo fetch-h5p               # H5P runtime libraries, ~4 MB, once
+python -m c2ovideo stack setup sim         # sim/.venv with the simulator (needs Python 3.11+), once
+python -m c2ovideo stack setup spacecdf    # design/.venv with SpaceCDF, once
+(cd ../design/frontend && npm ci && npm run build)   # the SpaceCDF UI the videos film
 python -m c2ovideo validate                # every storyboard: ties, French UI strings
 
 python -m c2ovideo stack up spacecdf       # SpaceCDF on :18800 with a throw-away database
