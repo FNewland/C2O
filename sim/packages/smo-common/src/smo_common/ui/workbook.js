@@ -76,15 +76,22 @@ export function createWorkbook(host) {
     }
     delete wctx.phase;
     const key = JSON.stringify([getLang(), wctx]);
-    if (!force && key === W.sheetsKey) return false;
+    // Same key while a load is still in flight: wait for THAT load. Returning
+    // at once left callers such as openForm("anomaly") looking at an empty
+    // sheet list (alarm › Ticket on a logbook that had never been opened).
+    if (!force && key === W.sheetsKey) { if (W.sheetsP) await W.sheetsP; return false; }
     W.sheetsKey = key;
-    try {
-      const j = await host.api("GET", `/worksheets?all=1&tool=${encodeURIComponent(host.tool)}` +
-        `&lang=${getLang()}&context=${encodeURIComponent(JSON.stringify(wctx))}`);
-      if (W.sheetsKey !== key) return false;
-      W.sheets = j.worksheets || [];
-    } catch (e) { W.sheets = []; }
-    return true;
+    const p = (async () => {
+      try {
+        const j = await host.api("GET", `/worksheets?all=1&tool=${encodeURIComponent(host.tool)}` +
+          `&lang=${getLang()}&context=${encodeURIComponent(JSON.stringify(wctx))}`);
+        if (W.sheetsKey !== key) return false;
+        W.sheets = j.worksheets || [];
+      } catch (e) { W.sheets = []; }
+      return true;
+    })();
+    W.sheetsP = p;
+    try { return await p; } finally { if (W.sheetsP === p) W.sheetsP = null; }
   }
   function currentProc() { return W.manualProc || String(ctx().procedure || ""); }
   async function loadChecklist(force) {

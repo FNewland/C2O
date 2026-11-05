@@ -1,0 +1,197 @@
+# Week 4 — LEOP-001 walkthrough before the standalone LEOP run.
+# Starts from the card's real entry state (breakpoint card-LEOP-001, made by
+# sim/tools/card_breakpoints.py from the acceptance fly-through) and flies the
+# first command path by hand: blind uplink, bootloader check, application boot.
+# Prepares WB-5.5-L001 q2, q4, q5 and the log line q9.
+id: V-OPS-02
+week: 4
+audience: all
+title:
+  en: "LEOP-001: first contact and OBC boot"
+  fr: "LEOP-001 : premier contact et démarrage de l’OBC"
+summary:
+  en: "From a silent spacecraft in its bootloader to an application running and housekeeping on: the blind first uplink, the bootloader check and the boot, card in hand."
+  fr: "D’un satellite muet dans son chargeur d’amorçage à une application qui tourne et des données de servitude activées : la première montée en aveugle, la vérification du chargeur et le démarrage, fiche en main."
+apps:
+  mcs: default
+# restart simulator + MCS before each take (python -m c2ovideo stack)
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.5-L001, WB-5.5-L001/q2, WB-5.5-L001/q5, WB-5.5-L001/q9]
+  cards: [LEOP-001]
+sources:
+  - sim/configs/eosat1/procedures/leop/first_acquisition.md (LEOP-001)
+  - sim/tests/test_acceptance/test_leop_commissioning_flythrough.py (entry state)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-001}}
+  - wait: 2
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 300, min_elevation: 10, after_aos: 10}}
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: silent
+    title: {en: "A silent spacecraft", fr: "Un satellite muet"}
+    say:
+      en: >-
+        EOSAT-1 has just separated from the launcher. Only the receiver and the on-board
+        computer are powered. The computer is still in its bootloader, the transmitter is off
+        and the clock is unset. So the ground hears nothing. LEOP-001 turns this one-way
+        listener into a spacecraft we can talk to. The card is worked by hand: you send the
+        commands from the Commanding page and record each check on the card.
+      fr: >-
+        EOSAT-1 vient de se séparer du lanceur. Seuls le récepteur et l’ordinateur de bord sont
+        alimentés. L’ordinateur est encore dans son chargeur d’amorçage, l’émetteur est éteint
+        et l’horloge n’est pas réglée. Le sol n’entend donc rien. LEOP-001 transforme cet
+        auditeur à sens unique en un satellite avec qui l’on peut parler. La fiche se travaille
+        à la main : vous envoyez les commandes depuis la page Commande et vous consignez chaque
+        vérification sur la fiche.
+    do:
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 0.8
+      - select: {target: {css: "#proc-type"}, value: leop/first_acquisition.md}
+      - wait: 2.0
+      - scroll: {css: "#proc-doc"}
+      - highlight: {target: {css: "#proc-doc"}, seconds: 3, point: false}
+
+  - id: uplink
+    title: {en: "Step 2: the blind first uplink", fr: "Étape 2 : la première montée en aveugle"}
+    say:
+      en: >-
+        With no downlink, the first command goes up blind, inside the scheduled pass. The
+        connection test is on the bootloader's short list of accepted commands. Once the
+        spacecraft accepts it, the auto-transmit hold-down switches the transmitter on for
+        fifteen minutes. Watch the verification steps: accepted, then executed. And the strip
+        at the top: we can now see the spacecraft.
+      fr: >-
+        Sans liaison descendante, la première commande monte en aveugle, pendant le passage
+        prévu. Le test de connexion fait partie de la courte liste des commandes acceptées par
+        le chargeur d’amorçage. Dès que le satellite l’accepte, le maintien automatique de
+        l’émission allume l’émetteur pour quinze minutes. Suivez les étapes de vérification :
+        acceptée, puis exécutée. Et le bandeau du haut : nous voyons maintenant le satellite.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: CONNECTION_TEST}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
+      - wait: 2.0
+      - highlight: {target: {css: "header"}, seconds: 3, point: false}
+    question:
+      type: multichoice
+      worksheet: WB-5.5-L001/q2
+      text:
+        en: "Why can the first uplink be sent while the ground still hears nothing?"
+        fr: "Pourquoi peut-on envoyer la première montée alors que le sol n’entend encore rien ?"
+      options:
+        - text: {en: "Any accepted command powers the transmitter (auto-TX hold-down), so the answer follows the command.", fr: "Toute commande acceptée allume l’émetteur (maintien automatique de l’émission) : la réponse suit la commande."}
+          correct: true
+          why: {en: "That is why the card sends it blind, inside the scheduled pass.", fr: "C’est pourquoi la fiche l’envoie en aveugle, pendant le passage prévu."}
+        - text: {en: "The transmitter is already on after separation.", fr: "L’émetteur est déjà allumé après la séparation."}
+          why: {en: "At cold boot only the receiver and the OBC are powered.", fr: "Au démarrage à froid, seuls le récepteur et l’OBC sont alimentés."}
+        - text: {en: "The ground station locks on the UHF beacon first.", fr: "La station sol s’accroche d’abord à la balise UHF."}
+          why: {en: "The card does not rely on the beacon to open the S-band link.", fr: "La fiche ne compte pas sur la balise pour ouvrir la liaison en bande S."}
+
+  - id: bootloader
+    title: {en: "Step 4: confirm the bootloader", fr: "Étape 4 : confirmer le chargeur d’amorçage"}
+    say:
+      en: >-
+        Before booting, confirm where we start. Request the beacon housekeeping, SID eleven:
+        it is the only report the bootloader sends, and it carries the software image. Zero
+        means bootloader.
+      fr: >-
+        Avant de démarrer, confirmez le point de départ. Demandez les données de servitude de
+        la balise, SID onze : c’est le seul rapport qu’envoie le chargeur d’amorçage, et il
+        contient l’image logicielle. Zéro signifie chargeur d’amorçage.
+    do:
+      - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "11"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.5
+
+  - id: boot
+    title: {en: "Step 5: boot the application", fr: "Étape 5 : démarrer l’application"}
+    say:
+      en: >-
+        Now boot the application image. The computer checks the image over a ten-second
+        window. Acceptance arrives at once, but the boot is only done when execution completes,
+        at the end of that window. Until then the computer is still the bootloader and refuses
+        anything else, so wait for it before you send the next command.
+      fr: >-
+        Démarrez maintenant l’image applicative. L’ordinateur vérifie l’image pendant une
+        fenêtre de dix secondes. L’acceptation arrive aussitôt, mais le démarrage n’est fait
+        qu’à la fin de l’exécution, à la fin de cette fenêtre. D’ici là, l’ordinateur reste le
+        chargeur d’amorçage et refuse tout le reste : attendez avant d’envoyer la commande
+        suivante.
+    do:
+      - select: {target: {css: "#cmd-catalog"}, value: OBC_BOOT_APP}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 1.5
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 4}
+      - wait: 9.0
+    question:
+      type: truefalse
+      worksheet: WB-5.5-L001/q5
+      answer: false
+      text:
+        en: "As soon as OBC_BOOT_APP is accepted (S1.1), you can send the next command."
+        fr: "Dès qu’OBC_BOOT_APP est acceptée (S1.1), on peut envoyer la commande suivante."
+
+  - id: hk
+    title: {en: "Turn the housekeeping on", fr: "Activer les données de servitude"}
+    say:
+      en: >-
+        The application starts with only two reports enabled: power and beacon. Everything
+        else must be switched on. Enable SID three for thermal, four for the computer and six
+        for the radio. Powering a subsystem never enables its report: that is always a command.
+      fr: >-
+        L’application démarre avec seulement deux rapports activés : l’énergie et la balise.
+        Tout le reste doit être activé. Activez le SID trois pour le thermique, quatre pour
+        l’ordinateur et six pour la radio. Alimenter un sous-système n’active jamais son
+        rapport : c’est toujours une commande.
+    do:
+      - select: {target: {css: "#cmd-catalog"}, value: HK_ENABLE}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "3"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "4"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "6"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.0
+
+  - id: card
+    title: {en: "Record it on the card", fr: "Le consigner sur la fiche"}
+    say:
+      en: >-
+        Back on the card, record each step: capture the values and mark GO. Step 5a, clearing
+        beacon mode and moving to the LOW rate, comes next and has its own short video. Finally,
+        Step 8 asks for the log line: the time of first contact, the first accepted command and
+        the boot time. It goes in your workbook and in the handover.
+      fr: >-
+        De retour sur la fiche, consignez chaque étape : relevez les valeurs et marquez GO.
+        L’étape 5a, qui lève le mode balise et passe au débit LOW, vient ensuite et a sa propre
+        courte vidéo. Enfin, l’étape 8 demande la ligne de journal : l’heure du premier contact,
+        la première commande acceptée et l’heure du démarrage. Elle va dans votre cahier de
+        travail et dans la relève.
+    do:
+      - click: {css: "#rail-proc"}
+      - wait: 1.0
+      - scroll: {css: "#proc-doc section[data-pc-step='s2']"}
+      - click: {css: "#proc-doc section[data-pc-step='s2'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s2'] [data-pc='tick'][data-r='go']"}
+      - scroll: {css: "#proc-doc section[data-pc-step='s5']"}
+      - click: {css: "#proc-doc section[data-pc-step='s5'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s5'] [data-pc='tick'][data-r='go']"}
+      - scroll: {css: "#proc-doc section[data-pc-step='s8']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s8']"}, seconds: 3, point: false}
+    question:
+      type: reflect
+      worksheet: WB-5.5-L001/q9
+      text:
+        en: "Write the Step 8 log line for this pass as you would say it on the loop: AOS time, first accepted command, application boot time."
+        fr: "Rédigez la ligne de journal de l’étape 8 pour ce passage, comme vous la diriez sur la boucle : heure d’AOS, première commande acceptée, heure de démarrage de l’application."

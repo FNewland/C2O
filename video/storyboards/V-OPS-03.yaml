@@ -1,0 +1,163 @@
+# Week 5 — from an alarm to an anomaly ticket (WB-5.5-AT), during a nominal pass.
+# The fault (star tracker 1 failure) is NOT one of the scored runs' faults, and
+# the video stops at the call: no recovery steps are shown.
+id: V-OPS-03
+week: 5
+audience: all
+title:
+  en: "Alarm to anomaly ticket"
+  fr: "De l’alarme à la fiche d’anomalie"
+summary:
+  en: "An alarm in the middle of a pass: read it, acknowledge it, file the anomaly ticket from it, and make the call without guessing beyond the evidence."
+  fr: "Une alarme au milieu d’un passage : la lire, l’acquitter, en tirer la fiche d’anomalie et prendre la décision sans aller au-delà des faits."
+apps:
+  mcs: default
+# restart simulator + MCS before each take (python -m c2ovideo stack)
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.5-AT, WB-5.5-AT/q4, WB-5.5-AT/q10, WB-5.5-AT/q12]
+sources:
+  - sim/configs/eosat1/worksheets/ops_week3.yaml (WB-5.5-AT)
+  - sim/configs/eosat1/monitoring/s12_definitions.yaml (0x0240)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-END}}
+  - wait: 2
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: false}, allow_error: true}
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 420, min_elevation: 15, after_aos: 20}}
+  # NOM-001 opens every pass with an HK request: the accepted TC powers the
+  # transmitter (auto-TX hold-down), so housekeeping flows during the video
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0001", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 5
+
+steps:
+  - id: calm
+    title: {en: "A quiet pass", fr: "Un passage calme"}
+    say:
+      en: >-
+        Commissioning is finished and EOSAT-1 is in nominal operations. We are in a pass, the
+        housekeeping is flowing and the strip says nominal. This is when alarms matter most:
+        when nobody expects one. Keep an eye on the alarm count at the top.
+      fr: >-
+        La mise en service est terminée et EOSAT-1 est en exploitation nominale. Nous sommes en
+        passage, les données de servitude arrivent et le bandeau indique nominal. C’est là que
+        les alarmes comptent le plus : quand personne n’en attend. Surveillez le compteur
+        d’alarmes en haut.
+    do:
+      - wait: 1.0
+      - highlight: {target: {css: "#alarms-btn"}, seconds: 3}
+      # the instructor's fault: star tracker 1 fails (not a scored-run fault)
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: failure_inject, subsystem: aocs, failure: st_failure, onset: step, magnitude: 1.0}}
+
+  - id: read
+    title: {en: "Read the alarm", fr: "Lire l’alarme"}
+    say:
+      en: >-
+        There it is. Open the alarm list. Each row gives the priority, the parameter and its
+        value against the limit, when it started, and the procedure that covers it. Star
+        tracker one reports a status above two: it has lost lock. Read the whole row before
+        you do anything.
+      fr: >-
+        La voilà. Ouvrez la liste des alarmes. Chaque ligne donne la priorité, le paramètre et
+        sa valeur par rapport à la limite, l’heure de début et la procédure qui la couvre. Le
+        viseur d’étoiles un indique un état supérieur à deux : il a perdu l’accrochage. Lisez
+        toute la ligne avant de faire quoi que ce soit.
+    do:
+      - wait_for: {target: {css: "#alarms-btn"}, timeout: 30}
+      - wait: 6
+      - click: {css: "#alarms-btn"}
+      - wait_for: {target: {css: "#alarm-drawer.open [data-act='ticket']"}, timeout: 40}
+      - highlight: {target: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status')"}, seconds: 4, point: false}
+    question:
+      type: multichoice
+      worksheet: WB-5.5-AT/q4
+      text:
+        en: "What goes in the ticket's “Triggering parameter and value”?"
+        fr: "Que faut-il inscrire dans « Paramètre déclencheur et valeur » de la fiche ?"
+      options:
+        - text: {en: "aocs.st1_status and the value it read (above the limit of 2.5).", fr: "aocs.st1_status et la valeur lue (au-dessus de la limite de 2,5)."}
+          correct: true
+          why: {en: "The parameter, the value, and against which limit.", fr: "Le paramètre, la valeur, et par rapport à quelle limite."}
+        - text: {en: "AOCS, because that subsystem is in alarm.", fr: "SCAO, puisque ce sous-système est en alarme."}
+          why: {en: "A subsystem is not a parameter: the next shift cannot check it.", fr: "Un sous-système n’est pas un paramètre : l’équipe suivante ne peut pas le vérifier."}
+        - text: {en: "The time you acknowledged the alarm.", fr: "L’heure à laquelle vous avez acquitté l’alarme."}
+          why: {en: "That is the first-action time, a different field.", fr: "C’est l’heure de la première action, un autre champ."}
+
+  - id: ack
+    title: {en: "Acknowledge is not fix", fr: "Acquitter n’est pas réparer"}
+    say:
+      en: >-
+        Acknowledge it. That says one thing: I have seen this and I own it. The condition is
+        still active, and the row stays until the value returns to normal. Say it on the loop
+        too, so the Flight Director knows who has it.
+      fr: >-
+        Acquittez-la. Cela ne dit qu’une chose : j’ai vu cette alarme et je m’en occupe. La
+        condition est toujours active, et la ligne reste tant que la valeur n’est pas revenue
+        à la normale. Annoncez-le aussi sur la boucle, pour que le directeur de vol sache qui
+        s’en charge.
+    do:
+      - click: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status') [data-act='ack']"}
+      - wait: 2.0
+
+  - id: ticket
+    title: {en: "File the ticket from the alarm", fr: "Ouvrir la fiche depuis l’alarme"}
+    say:
+      en: >-
+        Ticket opens the anomaly ticket in your logbook, already filled from the alarm: the
+        time, the parameter, the value and the rule. You add what only the team knows: the
+        actions taken, word for word from the loop, the outcome so far, and a hypothesis. Keep
+        the hypothesis to what the evidence supports.
+      fr: >-
+        Fiche ouvre la fiche d’anomalie dans votre journal de bord, déjà remplie à partir de
+        l’alarme : l’heure, le paramètre, la valeur et la règle. Vous ajoutez ce que seule
+        l’équipe sait : les actions menées, mot pour mot depuis la boucle, le résultat à ce
+        stade, et une hypothèse. Limitez l’hypothèse à ce que les faits permettent.
+    do:
+      - click: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status') [data-act='ticket']"}
+      - wait_for: {target: {css: "details.wb-sheet[data-w='WB-5.5-AT'] .wb-form"}, timeout: 15}
+      - wait: 1.0
+      - highlight: {target: {css: "details.wb-sheet[data-w='WB-5.5-AT'] .wb-form"}, seconds: 3, point: false}
+      - type:
+          target: {css: "details.wb-sheet[data-w='WB-5.5-AT'] .wb-q[data-q='q10'] .wb-in"}
+          delay_ms: 14
+          text:
+            en: "AOCS called ST1 lost lock at the alarm; FD acknowledged; ST2 and gyro rates checked on the AOC page."
+            fr: "Le SCAO annonce la perte d’accrochage de ST1 ; le DV acquitte ; ST2 et les vitesses gyro vérifiés sur la page AOC."
+      - fill:
+          target: {css: "details.wb-sheet[data-w='WB-5.5-AT'] .wb-q[data-q='q11'] .wb-in"}
+          text: {en: "deferred", fr: "reporté"}
+      - type:
+          target: {css: "details.wb-sheet[data-w='WB-5.5-AT'] .wb-q[data-q='q12'] .wb-in"}
+          delay_ms: 14
+          text:
+            en: "ST1 unit fault or blinding; not yet distinguished."
+            fr: "Panne de ST1 ou éblouissement ; pas encore départagé."
+      - click: {css: "details.wb-sheet[data-w='WB-5.5-AT'] [data-wb='form-save']"}
+      - wait: 1.5
+    question:
+      type: reflect
+      worksheet: WB-5.5-AT/q12
+      text:
+        en: "Which telemetry would tell a blinded star tracker from a failed one? Name the parameters you would watch, not the fix."
+        fr: "Quelle télémesure permettrait de distinguer un viseur d’étoiles ébloui d’un viseur en panne ? Nommez les paramètres à surveiller, pas la réparation."
+
+  - id: call
+    title: {en: "Make the call", fr: "Prendre la décision"}
+    say:
+      en: >-
+        The row also names the contingency procedure. Whether to run it in this pass is the
+        Flight Director's call, made on the loop as GO or NO-GO, with the ticket as the record.
+        The next shift reads the ticket, not your memory.
+      fr: >-
+        La ligne d’alarme nomme aussi la procédure de contingence. L’exécuter ou non dans ce
+        passage, c’est la décision du directeur de vol, prise sur la boucle en GO ou NO-GO, avec
+        la fiche comme trace. L’équipe suivante lit la fiche, pas votre mémoire.
+    do:
+      - click: {css: "#c2o-logbook [data-lb='close']"}
+      - move: {css: "#alarms-btn"}
+      - js: "(() => { const d = document.getElementById('alarm-drawer'); if (!d.classList.contains('open')) document.getElementById('alarms-btn').click(); })()"
+      - wait: 1.0
+      - highlight: {target: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status') .proc, #alarm-drawer.open div[data-id]:has-text('st1_status')"}, seconds: 3}

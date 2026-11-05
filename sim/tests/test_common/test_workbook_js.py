@@ -157,3 +157,12 @@ def test_checklist_follows_the_runner_to_its_new_run():
     assert "W.lastRunner = st;" in wb
     # notes wrap (a runner note or a long deviation is readable)
     assert '<textarea id="wb-nt-' in wb
+
+
+def test_open_form_waits_for_the_sheet_load_in_flight():
+    """alarm › Ticket on a logbook never opened before: opening the panel starts
+    the sheet load, and openForm("anomaly") must wait for that load instead of
+    finding an empty sheet list (2026-11-05, found filming V-OPS-03)."""
+    src = (UI / "workbook.js").read_text(encoding="utf-8")
+    body = src[src.index("async function loadSheets"):src.index("function currentProc")]
+    assert "W.sheetsP" in body and "await W.sheetsP" in body
