@@ -43,8 +43,23 @@ def _wait(url: str, secs: float = 60) -> bool:
 
 
 def _py(venv: Path) -> str:
-    p = venv / ".venv" / "bin" / "python"
-    return str(p) if p.exists() else sys.executable
+    for name in ("python", "python3"):
+        p = venv / ".venv" / "bin" / name
+        if p.exists():
+            return str(p)
+    return sys.executable
+
+
+def _sim_venv() -> Path:
+    """sim/.venv, the environment sim/start.sh creates (C2O_SIM_VENV overrides)."""
+    v = Path(os.environ.get("C2O_SIM_VENV", SIM / ".venv"))
+    if not (v / "bin" / "smo-simulator").exists():
+        raise SystemExit(
+            f"No simulator install in {v}.\n"
+            "Run sim/start.sh once (it creates sim/.venv and installs the SMO packages), "
+            "then sim/stop.sh, and build again.\n"
+            "If your simulator lives in another environment, point C2O_SIM_VENV at it.")
+    return v
 
 
 def _spawn(name: str, cmd: list[str], env: dict, cwd: Path) -> int:
@@ -78,21 +93,27 @@ def up_spacecdf() -> dict:
 
 def up_sim() -> dict:
     cfg = SIM / "configs" / "eosat1"
-    bin_ = SIM / ".venv" / "bin"
+    venv = _sim_venv()
+    bin_ = venv / "bin"
+    py = str(bin_ / "python") if (bin_ / "python").exists() else str(bin_ / "python3")
     # card-start breakpoints (card-LEOP-001 … card-END): the simulator reads
     # workspace/breakpoints at start-up, so make them first if they are missing
     if not (SIM / "workspace" / "breakpoints" / "card-END.json").exists():
         print("flying LEOP + commissioning once to make the card breakpoints (~30 s) …", flush=True)
-        subprocess.run([_py(SIM), str(SIM / "tools" / "card_breakpoints.py")], cwd=str(SIM), check=True,
-                       stdout=subprocess.DEVNULL)
+        r = subprocess.run([py, str(SIM / "tools" / "card_breakpoints.py")], cwd=str(SIM),
+                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        if r.returncode:
+            # only the LEOP/commissioning videos need them: carry on without
+            print("  ! card breakpoints not made (videos that load card-… will fail):\n    "
+                  + (r.stderr.strip().splitlines() or ["?"])[-1], flush=True)
     env = dict(os.environ, PYTHONUNBUFFERED="1", SMO_UI="modern", SMO_LOGBOOK_DIR=str(STATE / "sim-logbook"))
     out = {}
     plan = [
         ("sim", [str(bin_ / "smo-simulator"), "--config", str(cfg)], 8080, "/"),
         ("mcs", [str(bin_ / "smo-mcs"), "--config", str(cfg), "--port", "9090", "--connect", "localhost:8002"], 9090, "/"),
         ("planner", [str(bin_ / "smo-planner"), "--config", str(cfg), "--port", "9091"], 9091, "/"),
-        ("tools", [_py(SIM), str(SIM / "tools" / "orbit_tools.py"), "--serve", "--port", "8093"], 8093, "/"),
-        ("docs", [_py(SIM), str(SIM / "tools" / "doc_viewer.py"), "--port", "8094"], 8094, "/"),
+        ("tools", [py, str(SIM / "tools" / "orbit_tools.py"), "--serve", "--port", "8093"], 8093, "/"),
+        ("docs", [py, str(SIM / "tools" / "doc_viewer.py"), "--port", "8094"], 8094, "/"),
     ]
     for name, cmd, port, path in plan:
         if not _free(port):

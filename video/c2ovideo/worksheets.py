@@ -76,5 +76,13 @@ def label(tie: str, lang: str) -> str:
 def end_card_ties(sb, lang: str) -> list[tuple[str, str]]:
     ties = []
     for t in (sb.ties.get("worksheets") or []) + (sb.ties.get("decisions") or []):
-        ties.append((t, label(t, lang)))
+        r = resolve(t)
+        if r["question"]:
+            # the sheet is listed once; a question line shows the question only
+            txt = tr(r["question"].get("text") or {}, lang) or ""
+        else:
+            txt = label(t, lang)
+        if len(txt) > 78:
+            txt = txt[:75].rsplit(" ", 1)[0] + " …"
+        ties.append((t, txt))
     return ties[:6]
