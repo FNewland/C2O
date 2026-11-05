@@ -44,7 +44,34 @@ def _card_id(method_name: str) -> str:
     return f"{parts[1].upper()}-{parts[2]}"
 
 
+def _pytest_stub() -> None:
+    """The fly-through module imports pytest for its decorators only; a laptop
+    venv without the test tools still has to be able to fly it."""
+    try:
+        import pytest  # noqa: F401
+        return
+    except ImportError:
+        pass
+    import types
+
+    def _passthrough(*a, **kw):
+        if len(a) == 1 and callable(a[0]) and not kw:
+            return a[0]
+        return lambda f: f
+
+    class _Mark:
+        def __getattr__(self, _name):
+            return _passthrough
+
+    stub = types.ModuleType("pytest")
+    stub.fixture = _passthrough
+    stub.mark = _Mark()
+    stub.skip = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError(a[0] if a else "skip"))
+    sys.modules["pytest"] = stub
+
+
 def _flythrough():
+    _pytest_stub()
     spec = importlib.util.spec_from_file_location("_card_flythrough", FLY)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
