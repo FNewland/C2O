@@ -79,6 +79,12 @@ def up_spacecdf() -> dict:
 def up_sim() -> dict:
     cfg = SIM / "configs" / "eosat1"
     bin_ = SIM / ".venv" / "bin"
+    # card-start breakpoints (card-LEOP-001 … card-END): the simulator reads
+    # workspace/breakpoints at start-up, so make them first if they are missing
+    if not (SIM / "workspace" / "breakpoints" / "card-END.json").exists():
+        print("flying LEOP + commissioning once to make the card breakpoints (~30 s) …", flush=True)
+        subprocess.run([_py(SIM), str(SIM / "tools" / "card_breakpoints.py")], cwd=str(SIM), check=True,
+                       stdout=subprocess.DEVNULL)
     env = dict(os.environ, PYTHONUNBUFFERED="1", SMO_UI="modern", SMO_LOGBOOK_DIR=str(STATE / "sim-logbook"))
     out = {}
     plan = [
@@ -118,13 +124,19 @@ def run(action: str, which: str) -> int:
         if not f.exists():
             print("nothing to stop")
             return 0
-        for k, v in json.loads(f.read_text()).items():
+        info = json.loads(f.read_text())
+        for k, v in info.items():
             try:
                 os.killpg(v["pid"], signal.SIGTERM)
                 print("stopped", k)
             except ProcessLookupError:
                 pass
         f.unlink()
+        # wait until the ports are free again, so an immediate `up` works
+        ports = [int(v["url"].rsplit(":", 1)[1]) for v in info.values()]
+        t = time.time()
+        while time.time() - t < 20 and not all(_free(p) for p in ports):
+            time.sleep(0.3)
         return 0
     print(f.read_text() if f.exists() else "not running")
     return 0
