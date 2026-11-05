@@ -109,7 +109,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.10"          # the oldest Python the README allows (laptops)
       - run: python -m pip install PyYAML numpy pytest
       - name: Storyboards, lexicon, captions, ties, H5P content
         run: python -m pytest -q -p no:cacheprovider tests

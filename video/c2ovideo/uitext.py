@@ -76,7 +76,8 @@ def _patterns(app: str) -> list:
     for k, v in catalog(app).items():
         if "{{" in k and isinstance(v, str):
             parts = re.split(r"(\{\{\s*\w+\s*\}\})", k)
-            rx = "".join(f"(?P<{re.sub(r'[^\w]', '', p)}>.+?)" if p.startswith("{{") else re.escape(p) for p in parts)
+            rx = "".join("(?P<" + re.sub(r"[^\w]", "", p) + ">.+?)" if p.startswith("{{") else re.escape(p)
+                         for p in parts)          # no backslash inside an f-string: Python 3.10
             literal = len(re.sub(r"\{\{\s*\w+\s*\}\}", "", k).strip(" :·—-()"))
             if literal < 4:             # "{{name}}" alone would match any string
                 continue
