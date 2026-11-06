@@ -23,12 +23,13 @@ terms:
   H5P: "H five P"
   ConOps: "con-ops"
   PDOP: "P-dop"
+  EDAC: "ee-dack"
   J2000: "J two thousand"
 words: [ORBIT, NORTH, NASA, ESA, OK]
 spell: [MCS, AOCS, ADCS, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
         MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, CSA, FPA, PCDU, BCR,
         LCL, CAN, GPS, RF, UHF, VHF, ICD, IRD, TRL, FDIR, LEO, GSG, VC, OBT, UTC, CPU, RAM, MCR,
-        API, PDF, CSV, HTML, URL, SEMP, IOD, CTG, EMG, PC, FD, CBE, FPA, PVT, ECEF, AOC, CRC]
+        API, PDF, CSV, HTML, URL, SEMP, IOD, CTG, EMG, PC, FD, CBE, FPA, PVT, ECEF, AOC, CRC, IMU, MEKF, ECI, LVLH, DCM, RSSI, FSPL, SNR, QPSK, BPSK, SEU, BOL, EOL, MLI]
 rules:
   - ['\b(eps|aocs|ttc|obdh|tcs|fdir|obc)\.(?=[a-z])', '{spell:\1} ']
   - ['\b(payload|prop|sim|mcs)\.(?=[a-z])', '\1 ']

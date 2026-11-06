@@ -127,3 +127,32 @@ EOSAT:    {expand: false, note: "spacecraft name"}
 C2O:      {expand: false, note: "product name"}
 NASA:     {expand: false}
 ESA:      {expand: false}
+
+# --- added from the upcoming-scripts plan (E_upcoming.md) ------------------
+IMU: {en: "inertial measurement unit", fr: "centrale inertielle", short: {en: I-M-U, fr: I-M-U}, kind: letters, expand: true}
+MEKF: {en: "multiplicative extended Kalman filter", fr: "filtre de Kalman étendu multiplicatif", short: {en: M-E-K-F, fr: M-E-K-F}, kind: letters, expand: true}
+ECI: {en: "Earth-centred inertial frame", fr: "repère inertiel géocentrique", short: {en: E-C-I, fr: E-C-I}, kind: letters, expand: true}
+LVLH: {en: "local vertical, local horizontal frame", fr: "repère orbital local", short: {en: L-V-L-H, fr: L-V-L-H}, kind: letters, expand: true}
+DCM: {en: "direction-cosine matrix", fr: "matrice des cosinus directeurs", short: {en: D-C-M, fr: D-C-M}, kind: letters, expand: true}
+PA: {en: "power amplifier", fr: "amplificateur de puissance", short: {en: P-A, fr: P-A}, kind: letters, expand: true}
+TX: {en: "transmitter", fr: "émetteur", short: {en: T-X, fr: T-X}, kind: letters, expand: true}
+RSSI: {en: "received signal strength indicator", fr: "indicateur de puissance du signal reçu", short: {en: R-S-S-I, fr: R-S-S-I}, kind: letters, expand: true}
+FSPL: {en: "free-space path loss", fr: "affaiblissement en espace libre", short: {en: F-S-P-L, fr: F-S-P-L}, kind: letters, expand: true}
+SNR: {en: "signal-to-noise ratio", fr: "rapport signal sur bruit", short: {en: S-N-R, fr: R-S-B}, kind: letters, expand: true}
+QPSK: {en: "quadrature phase-shift keying", fr: "modulation par déplacement de phase à quatre états", short: {en: Q-P-S-K, fr: Q-P-S-K}, kind: letters, expand: true}
+BPSK: {en: "binary phase-shift keying", fr: "modulation par déplacement de phase à deux états", short: {en: B-P-S-K, fr: B-P-S-K}, kind: letters, expand: true}
+SEU: {en: "single-event upset", fr: "aléa logique", short: {en: S-E-U, fr: S-E-U}, kind: letters, expand: true}
+EDAC: {en: "error detection and correction", fr: "détection et correction d’erreurs", short: {en: ee-dack, fr: E-D-A-C}, kind: letters, expand: true}
+VC: {en: "virtual channel", fr: "canal virtuel", short: {en: V-C, fr: V-C}, kind: letters, expand: true}
+ECSS: {en: "European Cooperation for Space Standardization", fr: "Coopération européenne pour la normalisation spatiale", short: {en: E-C-S-S, fr: E-C-S-S}, kind: letters, expand: true}
+DN: {en: "digital number", fr: "valeur numérique", short: {en: D-N, fr: D-N}, kind: letters, expand: true}
+BOL: {en: "beginning of life", fr: "début de vie", short: {en: B-O-L, fr: B-O-L}, kind: letters, expand: true}
+EOL: {en: "end of life", fr: "fin de vie", short: {en: E-O-L, fr: E-O-L}, kind: letters, expand: true}
+MLI: {en: "multi-layer insulation", fr: "isolation multicouche", short: {en: M-L-I, fr: M-L-I}, kind: letters, expand: true}
+MAG:   {expand: false, note: "say 'the magnetometer, MAG' at first use"}
+ACK:   {expand: false, note: "say 'acknowledge' / « acquitter » in full"}
+"G/T": {expand: false, note: "say 'G over T, the receiver figure of merit'"}
+"Eb/N0": {expand: false, note: "say 'energy per bit over noise density, E-b over N-zero'"}
+# Say in full, never as letters: under-voltage (UV), flight software (FSW), event-action (EA), kilobits per second (kbps), Reed–Solomon (RS), megabytes (MB).
+# Mode names (expand false, gloss once): NOMINAL, FINE_POINT, INERTIAL, ECLIPSE, DESAT, SLEW, SAFE_BOOT, STANDBY, IMAGING, CALIBRATION, EMERGENCY, OFF.
+# MCS rail labels (expand false: "the overview page, OVR"): OVR, AOC, TTC, PLD, PRP, OBD, CMD, FDR, TRD, PUS, MAN.
