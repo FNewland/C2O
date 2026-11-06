@@ -588,9 +588,10 @@ function handleTMPacket(pkt) {
   if (pkt.verification) {
     const v = pkt.verification;
     const okSub = v.subtype === 1 || v.subtype === 7;
+    const tc = v.tc_service != null ? `TC(${v.tc_service},${v.tc_subtype})` : `TC seq ${v.tc_seq}`;
     pushEvent({ ts, sev: okSub ? "nom" : "alarm", label: `S1.${v.subtype}`,
-      msg: `TC(${v.tc_service},${v.tc_subtype}) ${okSub ? "OK" : tText("FAILED")}` +
-           (v.code !== undefined ? ` code ${hex4(v.code)}` : "") });
+      msg: `${tc}${v.name ? " " + v.name : ""} ${okSub ? "OK" : tText("FAILED")}` +
+           (v.error_code ? ` code ${hex4(v.error_code)}` : "") });
     noteVerification(v);
   }
   renderBottomDrawer();
@@ -3319,8 +3320,9 @@ function noteVerification(v) {
   }
   S.verifLog.unshift({ ts: tsShort(),
     verdict: `S1.${v.subtype} ${okSub ? "OK" : "FAIL"}`,
-    text: `TC(${v.tc_service},${v.tc_subtype})` +
-          (v.code !== undefined ? ` code ${hex4(v.code)}` : "") });
+    text: (v.tc_service != null ? `TC(${v.tc_service},${v.tc_subtype})` : `TC seq ${v.tc_seq}`) +
+          (v.name ? ` ${v.name}` : "") +
+          (v.error_code ? ` code ${hex4(v.error_code)}` : "") });
   if (S.verifLog.length > 80) S.verifLog.length = 80;
   const stepIdx = v.subtype === 1 ? 2 : v.subtype === 7 ? 3 : 2;
   const fail = !okSub;
