@@ -34,18 +34,20 @@ steps:
     title: {en: "What this card powers, and what it does not", fr: "Ce que la fiche alimente, et ce qu’elle n’alimente pas"}
     say:
       en: >-
-        The wings are out, but the spacecraft is still tumbling. LEOP-007 brings the attitude
-        control suite to life, one line at a time, with a check after each. Just as important
-        is what it leaves off: the wheels, the payload, the cooler and propulsion each belong
-        to a later card. Step 1 checks the power baseline; Step 2 switches on a heater only if
-        a temperature calls for it.
+        The wings are out, but the spacecraft is still tumbling. This launch and early orbit
+        phase card, LEOP-007, brings the attitude and orbit control system, the AOCS, to life,
+        one step at a time, with a check after each. Just as important is what it leaves off:
+        the wheels, the payload, the camera's cooler and propulsion each belong to a later
+        card. Step 1 checks the power baseline; Step 2 switches on a heater only if a
+        temperature calls for it.
       fr: >-
-        Les ailes sont déployées, mais le satellite tourne encore sur lui-même. LEOP-007 met en
-        route la chaîne de contrôle d’attitude, une ligne à la fois, avec une vérification après
-        chacune. Ce qu’elle laisse éteint compte tout autant : les roues, la charge utile, le
-        refroidisseur et la propulsion appartiennent chacun à une fiche ultérieure. L’étape 1
-        vérifie la référence énergie ; l’étape 2 n’allume un réchauffeur que si une température
-        l’exige.
+        Les ailes sont déployées, mais le satellite tourne encore sur lui-même. Cette fiche de
+        la phase de lancement et de début d’orbite, LEOP-007, met en route le système de
+        contrôle d’attitude et d’orbite, le SCAO, AOCS sur la console, une étape à la fois, avec
+        une vérification après chacune. Ce qu’elle laisse éteint compte tout autant : les roues,
+        la charge utile, le refroidisseur de la caméra et la propulsion appartiennent chacun à
+        une fiche ultérieure. L’étape 1 vérifie la référence énergie ; l’étape 2 n’allume un
+        réchauffeur que si une température l’exige.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -59,13 +61,14 @@ steps:
     title: {en: "Step 3: the AOCS line and its housekeeping", fr: "Étape 3 : la ligne SCAO et ses données"}
     say:
       en: >-
-        Step 3 powers the AOCS suite supply, line seven. Then enable its housekeeping, SID two.
-        Powering a unit never turns its report on; without this second command you would fly
-        the next steps blind.
+        Step 3 powers the AOCS suite supply, power line seven. Then enable its housekeeping
+        report, structure identifier two, SID two. Powering a unit never turns its report on;
+        without this second command you would fly the next steps blind.
       fr: >-
-        L’étape 3 alimente la chaîne SCAO, la ligne sept. Activez ensuite ses données de
-        servitude, SID deux. Alimenter une unité n’active jamais son rapport ; sans cette
-        seconde commande, vous piloteriez les étapes suivantes à l’aveugle.
+        L’étape 3 alimente la chaîne SCAO, la ligne d’alimentation sept. Activez ensuite ses
+        données de servitude, identifiant de structure deux, SID deux. Alimenter une unité
+        n’active jamais son rapport ; sans cette seconde commande, vous piloteriez les étapes
+        suivantes à l’aveugle.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: EPS_POWER_ON}
@@ -84,15 +87,16 @@ steps:
     title: {en: "Step 4: sensor and actuator first", fr: "Étape 4 : capteur et actionneur d’abord"}
     say:
       en: >-
-        DETUMBLE is the B-dot law: the magnetometer measures how the Earth's field turns in
-        the body, and the magnetorquers push against that turning. So both must be on before
-        the mode is commanded. Switch on the magnetometer, device five two one. Enable the
+        DETUMBLE, the mode that slows the tumble, runs the B-dot law, B for the magnetic field,
+        dot for its rate of change: the magnetometer measures how the Earth's field turns in
+        the body, and the magnetorquers, electromagnet rods, push against that turning. So both must be on first. Switch on the magnetometer, device five two one. Enable the
         magnetorquers. And start the GPS receiver now: the time and orbit cards need its first
         fix later.
       fr: >-
-        DETUMBLE est la loi B-point : le magnétomètre mesure comment le champ terrestre tourne
-        dans le repère du satellite, et les magnéto-coupleurs s’opposent à cette rotation. Les
-        deux doivent donc être allumés avant de commander le mode. Allumez le magnétomètre,
+        DETUMBLE, le mode qui amortit le culbutage, applique la loi B-point, B pour le champ
+        magnétique, point pour sa dérivée : le magnétomètre mesure comment le champ terrestre
+        tourne dans le repère du satellite, et les magnéto-coupleurs, des barreaux
+        électromagnétiques, s’opposent à cette rotation. Les deux doivent donc être allumés d’abord. Allumez le magnétomètre,
         l’équipement cinq deux un. Activez les magnéto-coupleurs. Et démarrez le récepteur GPS
         dès maintenant : les fiches de temps et d’orbite auront besoin de son premier point plus
         tard.
@@ -136,14 +140,15 @@ steps:
         Now command DETUMBLE, mode two. Accepted, executed. Open the attitude page. The mode
         reads DETUMBLE, but the real check is the magnetic field: the total must sit between
         five thousand and seventy thousand nanotesla. A zero there means the magnetometer is
-        not feeding the law, whatever the mode says. Note the body rates: the next card
-        watches them fall.
+        not feeding the law, whatever the mode says. Note the body rates, how fast it spins
+        about each axis: the next card watches them fall.
       fr: >-
         Commandez maintenant DETUMBLE, le mode deux. Acceptée, exécutée. Ouvrez la page
         attitude. Le mode indique DETUMBLE, mais la vraie vérification, c’est le champ
         magnétique : sa norme doit se situer entre cinq mille et soixante-dix mille nanoteslas.
         Un zéro signifie que le magnétomètre n’alimente pas la loi, quoi qu’en dise le mode.
-        Notez les vitesses angulaires : la fiche suivante les regarde baisser.
+        Notez les vitesses angulaires, la rotation autour de chaque axe : la fiche suivante les
+        regarde baisser.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: AOCS_SET_MODE}
       - wait: 0.5

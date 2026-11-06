@@ -40,17 +40,19 @@ steps:
     title: {en: "Step 1: record the starting rates", fr: "Étape 1 : relever les vitesses de départ"}
     say:
       en: >-
-        DETUMBLE is running from the previous card, and this card commands nothing: it
-        observes. Open the attitude page and record the starting point: the mode, and the three
-        body rates, roll, pitch and yaw. In this run the separation left EOSAT-1 turning very
-        slowly. A real separation often leaves a few degrees per second, and then B-dot needs
-        tens of minutes, roughly halving the rates every ten to fifteen.
+        DETUMBLE is running from the previous card. This launch and early orbit phase card,
+        LEOP-005, commands nothing: it observes. Open the attitude page and record the starting
+        point: the mode, and the three body rates, roll, pitch and yaw. In this run the
+        separation left EOSAT-1 turning very slowly. A real separation often leaves a few
+        degrees per second, and then B-dot, the magnetic braking law, needs tens of minutes,
+        roughly halving the rates every ten to fifteen.
       fr: >-
-        DETUMBLE tourne depuis la fiche précédente, et cette fiche ne commande rien : elle
-        observe. Ouvrez la page attitude et relevez le point de départ : le mode, et les trois
-        vitesses angulaires, roulis, tangage et lacet. Dans ce déroulé, la séparation a laissé
-        EOSAT-1 tourner très lentement. Une vraie séparation laisse souvent quelques degrés par
-        seconde, et B-point a alors besoin de dizaines de minutes, en divisant à peu près les
+        DETUMBLE tourne depuis la fiche précédente. Cette fiche de la phase de lancement et de
+        début d’orbite, LEOP-005, ne commande rien : elle observe. Ouvrez la page attitude et
+        relevez le point de départ : le mode, et les trois vitesses angulaires, roulis, tangage
+        et lacet. Dans ce déroulé, la séparation a laissé EOSAT-1 tourner très lentement. Une
+        vraie séparation laisse souvent quelques degrés par seconde, et B-point, la loi de
+        freinage magnétique, a alors besoin de dizaines de minutes, en divisant à peu près les
         vitesses par deux toutes les dix à quinze.
     do:
       - click: {css: "#rail-aocs"}
@@ -78,12 +80,14 @@ steps:
     say:
       en: >-
         When all three rates have stayed below half a degree per second for thirty seconds,
-        the AOCS switches itself from DETUMBLE to COARSE_SUN. Watch the mode. Do not command
+        the attitude and orbit control system, the AOCS, switches itself from DETUMBLE to
+        COARSE_SUN, coarse sun pointing. Watch the mode. Do not command
         it: you would be asking for something the spacecraft does on its own. Your job is to
         see it happen and log the time.
       fr: >-
         Quand les trois vitesses sont restées sous un demi-degré par seconde pendant trente
-        secondes, le SCAO passe de lui-même de DETUMBLE à COARSE_SUN. Surveillez le mode. Ne le
+        secondes, le système de contrôle d’attitude et d’orbite, le SCAO, passe de lui-même de
+        DETUMBLE à COARSE_SUN, le pointage solaire grossier. Surveillez le mode. Ne le
         commandez pas : vous demanderiez ce que le satellite fait tout seul. Votre rôle est de
         le voir se produire et d’en noter l’heure.
     do:
@@ -103,12 +107,14 @@ steps:
     title: {en: "Step 4: the sun hold", fr: "Étape 4 : la tenue au Soleil"}
     say:
       en: >-
-        In COARSE_SUN the attitude error converges towards the Sun. With no wheels yet, only
+        In COARSE_SUN the attitude error, the angle between the pointing and the Sun, shrinks.
+        With no wheels yet, only
         magnetorquers, it is slow and rough: the card allows ten minutes to get within fifteen
         degrees. Ask for the coarse sun sensors' confidence by parameter number: above one half,
         they see the Sun.
       fr: >-
-        En COARSE_SUN, l’erreur d’attitude converge vers le Soleil. Sans roues, avec les seuls
+        En COARSE_SUN, l’erreur d’attitude, l’angle entre le pointage et le Soleil, diminue.
+        Sans roues, avec les seuls
         magnéto-coupleurs, c’est lent et approximatif : la fiche accorde dix minutes pour
         descendre sous quinze degrés. Demandez la confiance des capteurs solaires grossiers par
         son numéro de paramètre : au-dessus d’un demi, ils voient le Soleil.
@@ -134,11 +140,13 @@ steps:
     say:
       en: >-
         The reason for all of this is on the power page. As the wings turn to the Sun,
-        generation climbs and the orbit-average margin moves up with it. In eclipse there is
+        generation climbs and the orbit-average margin, energy in minus energy out over an
+        orbit, moves up with it. In eclipse there is
         nothing to see: the card says to wait for eclipse exit and check again.
       fr: >-
         La raison de tout cela se trouve sur la page énergie. À mesure que les ailes se tournent
-        vers le Soleil, la production monte et la marge moyenne sur l’orbite avec elle. En
+        vers le Soleil, la production monte, et avec elle la marge moyenne sur l’orbite,
+        l’énergie qui entre moins celle qui sort sur une orbite. En
         éclipse, il n’y a rien à voir : la fiche dit d’attendre la sortie d’éclipse et de
         vérifier à nouveau.
     do:
