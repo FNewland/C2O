@@ -1,0 +1,154 @@
+# Week 5 — LEOP-003: check the GPS fix, read the position and altitude against
+# the check band, and declare the end of LEOP. From card-LEOP-003. Nominal card.
+# Prepares WB-5.5-L003 steps 1, 2 and 7.
+id: V-OPS-09
+week: 5
+audience: all
+title:
+  en: "LEOP-003: where are we? Then end LEOP"
+  fr: "LEOP-003 : où sommes-nous ? Puis fin de la LEOP"
+summary:
+  en: "Check that the GPS solution is good enough, read the position and altitude against the check band, compare the orbit with the launcher's prediction, and declare commissioning by telecommand."
+  fr: "Vérifier que la solution GPS est suffisante, lire la position et l’altitude par rapport à la bande de contrôle, comparer l’orbite à la prévision du lanceur, et déclarer la mise en service par télécommande."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.5-L003, WB-5.5-L003/q1, WB-5.5-L003/q2, WB-5.5-L003/q7]
+  cards: [LEOP-003]
+sources:
+  - sim/configs/eosat1/procedures/leop/initial_orbit_determination.md (LEOP-003)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-003}}
+  - wait: 2
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 420, min_elevation: 15, after_aos: 10}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0004", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: fix
+    title: {en: "Step 1: is the fix good enough?", fr: "Étape 1 : le point est-il suffisant ?"}
+    say:
+      en: >-
+        The GPS receiver was switched on in LEOP-007 and has had time to find satellites.
+        Request its navigation report, SID twelve, and read three numbers on the attitude page:
+        the fix type must be at least two, a three-dimensional fix; at least four satellites;
+        and record the dilution of precision. A fix that fails here makes everything after it
+        meaningless.
+      fr: >-
+        Le récepteur GPS a été allumé dans LEOP-007 et a eu le temps de trouver des
+        satellites. Demandez son rapport de navigation, SID douze, et lisez trois valeurs sur la
+        page attitude : le type de point doit valoir au moins deux, un point en trois
+        dimensions ; au moins quatre satellites ; et notez la dilution de précision. Un point
+        qui échoue ici rend tout le reste sans valeur.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "12"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - click: {css: "#rail-aocs"}
+      - wait: 2.0
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0274']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0276']"}, seconds: 2}
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0275']"}, seconds: 2}
+
+  - id: position
+    title: {en: "Step 2: position and the check band", fr: "Étape 2 : position et bande de contrôle"}
+    say:
+      en: >-
+        Latitude, longitude and altitude are not in the routine report, so ask for each one
+        by parameter number. The altitude must fall inside the check band, four hundred and
+        ninety-five to five hundred and forty kilometres. Outside it, either the fix or the
+        insertion is wrong, and Flight Dynamics needs to know before anything else.
+      fr: >-
+        Latitude, longitude et altitude ne sont pas dans le rapport courant : demandez chacune
+        par son numéro de paramètre. L’altitude doit se trouver dans la bande de contrôle, de
+        quatre cent quatre-vingt-quinze à cinq cent quarante kilomètres. En dehors, c’est le
+        point ou l’injection qui est faux, et la dynamique du vol doit le savoir avant toute
+        autre chose.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: GET_PARAM}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='param_id']"}, text: "528"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.2
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='param_id']"}, text: "529"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.2
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='param_id']"}, text: "530"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.5
+      - click: {css: "#rail-aocs"}
+      - wait: 1.5
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0212']"}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: WB-5.5-L003/q2
+      text:
+        en: "The GPS altitude reads 552 km. What do you do?"
+        fr: "L’altitude GPS affiche 552 km. Que faites-vous ?"
+      options:
+        - text: {en: "NO-GO on Step 2: it is outside the 495–540 km check band. Tell Flight Dynamics and re-check the fix.", fr: "NO-GO à l’étape 2 : elle est hors de la bande de contrôle de 495 à 540 km. Prévenez la dynamique du vol et revérifiez le point."}
+          correct: true
+          why: {en: "The band is there to catch a bad fix or a bad insertion before elements are computed.", fr: "La bande sert à détecter un mauvais point ou une mauvaise injection avant le calcul des éléments."}
+        - text: {en: "GO: 552 km is a normal low Earth orbit.", fr: "GO : 552 km, c’est une orbite basse normale."}
+          why: {en: "Normal for LEO, but not for this mission's insertion.", fr: "Normal en orbite basse, mais pas pour l’injection de cette mission."}
+        - text: {en: "Command a manoeuvre to lower the orbit.", fr: "Commander une manœuvre pour abaisser l’orbite."}
+          why: {en: "Nothing is uploaded on this card; the propulsion line is off.", fr: "Rien n’est envoyé au satellite dans cette fiche ; la ligne propulsion est éteinte."}
+
+  - id: compare
+    title: {en: "Steps 3 to 6: state vector and comparison", fr: "Étapes 3 à 6 : vecteur d’état et comparaison"}
+    say:
+      en: >-
+        Step 3 reads the full position and velocity the same way, six parameters. Their sizes
+        must make sense for a near-circular low orbit: about six thousand nine hundred
+        kilometres from the Earth's centre, about seven and a half kilometres per second.
+        Flight Dynamics turns them into orbital elements and compares them with the launcher's
+        prediction: the inclination, the eccentricity and the local time of the ascending node.
+        A second fix ten minutes later checks that the solution is repeatable.
+      fr: >-
+        L’étape 3 lit de la même façon la position et la vitesse complètes, six paramètres.
+        Leurs normes doivent être cohérentes avec une orbite basse presque circulaire : environ
+        six mille neuf cents kilomètres du centre de la Terre, environ sept kilomètres et demi
+        par seconde. La dynamique du vol en tire les éléments orbitaux et les compare à la
+        prévision du lanceur : l’inclinaison, l’excentricité et l’heure locale du nœud
+        ascendant. Un second point, dix minutes plus tard, vérifie que la solution est
+        reproductible.
+    do:
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 0.8
+      - select: {target: {css: "#proc-type"}, value: leop/initial_orbit_determination.md}
+      - wait: 2.0
+      - scroll: {css: "#proc-doc section[data-pc-step='s3']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s3']"}, seconds: 3, point: false}
+      - scroll: {css: "#proc-doc section[data-pc-step='s4']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s4']"}, seconds: 3, point: false}
+
+  - id: end
+    title: {en: "Step 7: the end of LEOP", fr: "Étape 7 : la fin de la LEOP"}
+    say:
+      en: >-
+        The last step belongs to the Flight Director: a GO or NO-GO poll of every position,
+        then the end of LEOP, declared by telecommand. Mission phase five, commissioning.
+        From here, the commissioning cards take over, starting with the power subsystem
+        checkout.
+      fr: >-
+        La dernière étape revient au directeur de vol : un tour de GO ou NO-GO de chaque
+        poste, puis la fin de la LEOP, déclarée par télécommande. Phase de mission cinq, mise
+        en service. Désormais, les fiches de mise en service prennent le relais, à commencer par
+        la recette du sous-système énergie.
+    do:
+      - scroll: {css: "#proc-doc section[data-pc-step='s7']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s7']"}, seconds: 3.5, point: false}
+    question:
+      type: reflect
+      worksheet: WB-5.5-L003/q7
+      text:
+        en: "Before you poll for the end of LEOP, which position would you ask first, and what would make you say NO-GO?"
+        fr: "Avant le tour de GO pour la fin de la LEOP, quel poste interrogeriez-vous en premier, et qu’est-ce qui vous ferait dire NO-GO ?"

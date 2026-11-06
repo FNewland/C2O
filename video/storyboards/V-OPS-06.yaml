@@ -1,0 +1,191 @@
+# Week 5 — LEOP-007: power the AOCS suite in order and command DETUMBLE.
+# From card-LEOP-007 (the card's real entry state) in a pass. Nominal card.
+# Prepares WB-5.5-L007 (steps 3, 4, 5).
+id: V-OPS-06
+week: 5
+audience: all
+title:
+  en: "LEOP-007: power the AOCS, then DETUMBLE"
+  fr: "LEOP-007 : alimenter le SCAO, puis DETUMBLE"
+summary:
+  en: "Energise the AOCS suite, enable its housekeeping, switch on the magnetometer and the magnetorquers before commanding DETUMBLE, and check the mode against a live magnetic-field reading."
+  fr: "Alimenter la chaîne SCAO, activer ses données de servitude, allumer le magnétomètre et les magnéto-coupleurs avant de commander DETUMBLE, et vérifier le mode sur une mesure réelle du champ magnétique."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.5-L007, WB-5.5-L007/q3, WB-5.5-L007/q4, WB-5.5-L007/q5]
+  cards: [LEOP-007]
+sources:
+  - sim/configs/eosat1/procedures/leop/sequential_power_on.md (LEOP-007)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-007}}
+  - wait: 2
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 480, min_elevation: 15, after_aos: 10}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0001", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: card
+    title: {en: "What this card powers, and what it does not", fr: "Ce que la fiche alimente, et ce qu’elle n’alimente pas"}
+    say:
+      en: >-
+        The wings are out, but the spacecraft is still tumbling. LEOP-007 brings the attitude
+        control suite to life, one line at a time, with a check after each. Just as important
+        is what it leaves off: the wheels, the payload, the cooler and propulsion each belong
+        to a later card. Step 1 checks the power baseline; Step 2 switches on a heater only if
+        a temperature calls for it.
+      fr: >-
+        Les ailes sont déployées, mais le satellite tourne encore sur lui-même. LEOP-007 met en
+        route la chaîne de contrôle d’attitude, une ligne à la fois, avec une vérification après
+        chacune. Ce qu’elle laisse éteint compte tout autant : les roues, la charge utile, le
+        refroidisseur et la propulsion appartiennent chacun à une fiche ultérieure. L’étape 1
+        vérifie la référence énergie ; l’étape 2 n’allume un réchauffeur que si une température
+        l’exige.
+    do:
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 0.8
+      - select: {target: {css: "#proc-type"}, value: leop/sequential_power_on.md}
+      - wait: 2.0
+      - scroll: {css: "#proc-doc"}
+      - highlight: {target: {css: "#proc-doc"}, seconds: 3.5, point: false}
+
+  - id: line
+    title: {en: "Step 3: the AOCS line and its housekeeping", fr: "Étape 3 : la ligne SCAO et ses données"}
+    say:
+      en: >-
+        Step 3 powers the AOCS suite supply, line seven. Then enable its housekeeping, SID two.
+        Powering a unit never turns its report on; without this second command you would fly
+        the next steps blind.
+      fr: >-
+        L’étape 3 alimente la chaîne SCAO, la ligne sept. Activez ensuite ses données de
+        servitude, SID deux. Alimenter une unité n’active jamais son rapport ; sans cette
+        seconde commande, vous piloteriez les étapes suivantes à l’aveugle.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: EPS_POWER_ON}
+      - wait: 0.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='line_index']"}, text: "7"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - select: {target: {css: "#cmd-catalog"}, value: HK_ENABLE}
+      - wait: 0.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "2"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 2.5}
+
+  - id: legs
+    title: {en: "Step 4: sensor and actuator first", fr: "Étape 4 : capteur et actionneur d’abord"}
+    say:
+      en: >-
+        DETUMBLE is the B-dot law: the magnetometer measures how the Earth's field turns in
+        the body, and the magnetorquers push against that turning. So both must be on before
+        the mode is commanded. Switch on the magnetometer, device five two one. Enable the
+        magnetorquers. And start the GPS receiver now: the time and orbit cards need its first
+        fix later.
+      fr: >-
+        DETUMBLE est la loi B-point : le magnétomètre mesure comment le champ terrestre tourne
+        dans le repère du satellite, et les magnéto-coupleurs s’opposent à cette rotation. Les
+        deux doivent donc être allumés avant de commander le mode. Allumez le magnétomètre,
+        l’équipement cinq deux un. Activez les magnéto-coupleurs. Et démarrez le récepteur GPS
+        dès maintenant : les fiches de temps et d’orbite auront besoin de son premier point plus
+        tard.
+    do:
+      - select: {target: {css: "#cmd-catalog"}, value: S2_AOCS_MAGNETOMETER}
+      - wait: 0.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='device_id']"}, text: "521"}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='state']"}, text: "1"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - select: {target: {css: "#cmd-catalog"}, value: MTQ_ENABLE}
+      - wait: 0.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='enable']"}, text: "1"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - select: {target: {css: "#cmd-catalog"}, value: S2_AOCS_GPS_RECEIVER}
+      - wait: 0.5
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='device_id']"}, text: "527"}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='state']"}, text: "1"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+    question:
+      type: multichoice
+      worksheet: WB-5.5-L007/q4
+      text:
+        en: "What happens if you command DETUMBLE before the magnetometer is on?"
+        fr: "Que se passe-t-il si vous commandez DETUMBLE avant d’allumer le magnétomètre ?"
+      options:
+        - text: {en: "The mode is entered but B-dot has no field to work from: the rates do not come down.", fr: "Le mode est pris mais B-point n’a pas de champ sur lequel travailler : les vitesses ne baissent pas."}
+          correct: true
+          why: {en: "That is why the card checks the mode against a live field reading, not just the mode number.", fr: "C’est pourquoi la fiche vérifie le mode sur une mesure réelle du champ, pas seulement sur le numéro du mode."}
+        - text: {en: "Nothing: the AOCS switches the magnetometer on by itself.", fr: "Rien : le SCAO allume lui-même le magnétomètre."}
+          why: {en: "Units are switched on by command, never by a mode change here.", fr: "Les unités s’allument par commande, jamais par un changement de mode ici."}
+        - text: {en: "The reaction wheels take over.", fr: "Les roues de réaction prennent le relais."}
+          why: {en: "The wheels stay disabled until COM-004.", fr: "Les roues restent désactivées jusqu’à COM-004."}
+
+  - id: detumble
+    title: {en: "Step 5: DETUMBLE, checked on the field", fr: "Étape 5 : DETUMBLE, vérifié sur le champ"}
+    say:
+      en: >-
+        Now command DETUMBLE, mode two. Accepted, executed. Open the attitude page. The mode
+        reads DETUMBLE, but the real check is the magnetic field: the total must sit between
+        five thousand and seventy thousand nanotesla. A zero there means the magnetometer is
+        not feeding the law, whatever the mode says. Note the body rates: the next card
+        watches them fall.
+      fr: >-
+        Commandez maintenant DETUMBLE, le mode deux. Acceptée, exécutée. Ouvrez la page
+        attitude. Le mode indique DETUMBLE, mais la vraie vérification, c’est le champ
+        magnétique : sa norme doit se situer entre cinq mille et soixante-dix mille nanoteslas.
+        Un zéro signifie que le magnétomètre n’alimente pas la loi, quoi qu’en dise le mode.
+        Notez les vitesses angulaires : la fiche suivante les regarde baisser.
+    do:
+      - select: {target: {css: "#cmd-catalog"}, value: AOCS_SET_MODE}
+      - wait: 0.5
+      - select: {target: {css: "#cmd-fields [data-cmd-field='mode']"}, value: "2"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 2.0
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 2.5}
+      - click: {css: "#rail-aocs"}
+      - wait: 4.0
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x020F']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0277']"}, seconds: 3}
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0204']"}, seconds: 2.5}
+    question:
+      type: truefalse
+      worksheet: WB-5.5-L007/q5
+      answer: false
+      text:
+        en: "aocs.mode reads 2 (DETUMBLE), so Step 5 is GO."
+        fr: "aocs.mode affiche 2 (DETUMBLE) : l’étape 5 est donc GO."
+
+  - id: record
+    title: {en: "Record it, and what comes next", fr: "Le consigner, et la suite"}
+    say:
+      en: >-
+        On the card, capture the values and mark Steps 3 to 5 GO. Step 6 confirms the exit
+        power state: payload, cooler and propulsion lines still off, wheels still disabled.
+        From here nothing is commanded for a while: LEOP-005 only watches B-dot slow the
+        spacecraft down, and the AOCS hands itself to sun pointing.
+      fr: >-
+        Sur la fiche, relevez les valeurs et marquez les étapes 3 à 5 GO. L’étape 6 confirme
+        l’état d’alimentation en sortie : lignes charge utile, refroidisseur et propulsion
+        toujours éteintes, roues toujours désactivées. Ensuite, on ne commande plus rien
+        pendant un moment : LEOP-005 regarde simplement B-point ralentir le satellite, et le
+        SCAO passe de lui-même au pointage solaire.
+    do:
+      - click: {css: "#rail-proc"}
+      - wait: 1.0
+      - scroll: {css: "#proc-doc section[data-pc-step='s3']"}
+      - click: {css: "#proc-doc section[data-pc-step='s3'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s3'] [data-pc='tick'][data-r='go']"}
+      - scroll: {css: "#proc-doc section[data-pc-step='s5']"}
+      - click: {css: "#proc-doc section[data-pc-step='s5'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s5'] [data-pc='tick'][data-r='go']"}
+      - scroll: {css: "#proc-doc section[data-pc-step='s6']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s6']"}, seconds: 3, point: false}
