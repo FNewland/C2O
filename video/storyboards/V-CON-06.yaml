@@ -1,0 +1,177 @@
+# Concept explainer — the life of a telecommand and its service 1 reports:
+# accepted, started, completed, or refused, and why a completion is still not
+# the card's check. Animated page video/explainers/tc-life.html (served by
+# `stack up viz`). Team audience: every seat sends commands and reads S1.
+# Avoids the WB-5.4-Q categories (no limits/SID or pass-timing questions).
+id: V-CON-06
+week: 4
+audience: all
+title:
+  en: "A telecommand's life: accepted is not done"
+  fr: "La vie d’une télécommande : acceptée n’est pas terminée"
+summary:
+  en: "What happens between pressing Send and your card's check: the acceptance checks on board, the service one reports (accepted, started, completed, or refused with a failure notice), commands that take time, and why a completed command still has to be verified in telemetry."
+  fr: "Ce qui se passe entre le clic sur Envoyer et la vérification de votre fiche : les contrôles d’acceptation à bord, les rapports du service un (acceptée, démarrée, terminée, ou refusée avec un motif), les commandes qui prennent du temps, et pourquoi une commande terminée doit encore être vérifiée en télémesure."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - sim/docs/PUS_SERVICE_REFERENCE.md (Service 1; failure reports and the failure notice)
+  - sim/packages/smo-simulator/src/smo_simulator/engine.py (_dispatch_tc, deferred completion)
+  - design/docs/oer/chapters/17_ground_segment.md (§ 17.3)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/tc-life.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: send
+    title: {en: "Send is only the start", fr: "Envoyer n’est que le début"}
+    say:
+      en: >-
+        You press Send on the command page. Your telecommand, a TC, leaves as one packet on
+        the uplink. Here it is a request to change the telemetry rate: service eight, function
+        sixty-five. From now on the spacecraft talks back through service one, request
+        verification, of the packet utilisation standard, PUS. Watch the row at the bottom:
+        it is the verification row you will read on the console for every command you send.
+      fr: >-
+        Vous cliquez sur Envoyer dans la page de commande. Votre télécommande, une TC, part en
+        un seul paquet sur la liaison montante. Ici, c’est une demande de changement du débit de
+        télémesure : service huit, fonction soixante-cinq. Désormais, le satellite répond par
+        le service un, vérification des requêtes, de la norme d’utilisation des paquets, PUS.
+        Regardez la ligne du bas : c’est la ligne de vérification que vous lirez sur la console
+        pour chaque commande envoyée.
+    do:
+      - js: "EX.play('send', ${say})"
+
+  - id: accept
+    title: {en: "Acceptance: four checks", fr: "Acceptation : quatre contrôles"}
+    say:
+      en: >-
+        Before anything runs, the on-board computer checks the packet. Is this command allowed
+        in the software that is running, the bootloader or the application? Can the data bus
+        reach the unit? Are the service, subtype and length valid? Is the target unit powered?
+        All four pass, so the spacecraft sends telemetry, TM, one comma one: accepted. Accepted
+        only means the command was allowed in. Nothing has happened yet.
+      fr: >-
+        Avant toute exécution, l’ordinateur de bord contrôle le paquet. La commande est-elle
+        permise dans le logiciel qui tourne, le chargeur d’amorçage ou l’application ? Le bus de
+        données peut-il joindre l’unité ? Le service, le sous-type et la longueur sont-ils
+        valides ? L’unité cible est-elle alimentée ? Les quatre passent : le satellite envoie la
+        télémesure, TM, un virgule un : acceptée. Acceptée veut seulement dire que la commande
+        est entrée. Il ne s’est encore rien passé.
+    do:
+      - js: "EX.play('accept', ${say})"
+
+  - id: reject
+    title: {en: "Refused at the door: 1,2", fr: "Refusée à l’entrée : 1,2"}
+    say:
+      en: >-
+        If a check fails, the answer is one comma two, acceptance failure, with a failure code.
+        Here the target unit is not powered: code four. Nothing ran, so no start and no
+        completion will follow. Do not wait for them. Fix the cause, here by powering the line,
+        and send again.
+      fr: >-
+        Si un contrôle échoue, la réponse est un virgule deux, échec d’acceptation, avec un code
+        d’échec. Ici, l’unité cible n’est pas alimentée : code quatre. Rien n’a été exécuté :
+        ni démarrage ni fin ne suivront. Ne les attendez pas. Corrigez la cause, ici en
+        alimentant la ligne, puis renvoyez.
+    do:
+      - js: "EX.play('reject', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Your command comes back TM(1,2) with code 0x0004. What do you expect next?"
+        fr: "Votre commande revient en TM(1,2) avec le code 0x0004. À quoi vous attendez-vous ensuite ?"
+      options:
+        - text: {en: "Nothing more for this command: it never ran. Find out why the unit is unpowered before sending again.", fr: "Plus rien pour cette commande : elle ne s’est jamais exécutée. Trouvez pourquoi l’unité n’est pas alimentée avant de renvoyer."}
+          correct: true
+          why: {en: "A refusal at acceptance ends the command: no 1,3 and no 1,7.", fr: "Un refus à l’acceptation clôt la commande : ni 1,3 ni 1,7."}
+        - text: {en: "A TM(1,7) once the unit warms up.", fr: "Un TM(1,7) une fois l’unité en température."}
+          why: {en: "Nothing is queued: the spacecraft dropped the command.", fr: "Rien n’est mis en attente : le satellite a abandonné la commande."}
+        - text: {en: "A TM(1,3) when the next pass starts.", fr: "Un TM(1,3) au début du prochain passage."}
+          why: {en: "Refused commands are not stored for later.", fr: "Les commandes refusées ne sont pas gardées pour plus tard."}
+
+  - id: execute
+    title: {en: "Started, then completed: 1,3 and 1,7", fr: "Démarrée, puis terminée : 1,3 et 1,7"}
+    say:
+      en: >-
+        An accepted command starts at once, and one comma three, execution started, comes
+        down. A rate change is quick, so one comma seven, execution completed, follows straight
+        away. Three green steps. But look at the last box: verified in telemetry. No report
+        fills that one. It is your card's check, read on a parameter, and it is still yours to
+        do.
+      fr: >-
+        Une commande acceptée démarre aussitôt, et un virgule trois, exécution démarrée,
+        descend. Un changement de débit est rapide : un virgule sept, exécution terminée, suit
+        tout de suite. Trois étapes vertes. Mais regardez la dernière case : vérifiée en
+        télémesure. Aucun rapport ne la remplit. C’est la vérification de votre fiche, lue sur
+        un paramètre, et c’est toujours à vous de la faire.
+    do:
+      - js: "EX.play('execute', ${say})"
+
+  - id: fail
+    title: {en: "Failed in execution: read the notice", fr: "Échec à l’exécution : lisez le motif"}
+    say:
+      en: >-
+        Now ask for the HIGH rate while the transmitter is not in downlink mode. The command is
+        accepted and started, then fails: one comma eight, with code seven. Several different
+        gates share code seven, so the number alone cannot tell you which one fired. EOSAT-1
+        adds a failure notice, the on-board software's own sentence: HIGH requires downlink
+        mode. Read the notice, not the number.
+      fr: >-
+        Demandez maintenant le débit HIGH alors que l’émetteur n’est pas en mode descente. La
+        commande est acceptée et démarrée, puis échoue : un virgule huit, code sept. Plusieurs
+        contrôles différents partagent le code sept : le numéro seul ne dit pas lequel a
+        refusé. EOSAT-1 ajoute un motif, la phrase même du logiciel de bord : HIGH exige le mode
+        descente. Lisez le motif, pas le numéro.
+    do:
+      - js: "EX.play('fail', ${say})"
+
+  - id: deferred
+    title: {en: "Commands that take time", fr: "Les commandes qui prennent du temps"}
+    say:
+      en: >-
+        Some commands start an effect that takes time. Booting the application software checks
+        the image for ten seconds. Deploying the solar arrays takes about thirty. A gyro
+        calibration arc takes five minutes. For these, one comma three comes at once, but one
+        comma seven is held until the effect is real. An amber, unfinished row is not a fault:
+        wait for it, and do not send the next command into the middle of a boot.
+      fr: >-
+        Certaines commandes lancent un effet qui prend du temps. Le démarrage du logiciel
+        d’application contrôle l’image pendant dix secondes. Le déploiement des panneaux solaires
+        prend environ trente secondes. Un arc d’étalonnage des gyros dure cinq minutes. Pour
+        elles, un virgule trois arrive aussitôt, mais un virgule sept est retenu jusqu’à ce que
+        l’effet soit réel. Une ligne orange inachevée n’est pas une panne : attendez-la, et
+        n’envoyez pas la commande suivante en plein démarrage.
+    do:
+      - js: "EX.play('deferred', ${say})"
+    question:
+      type: truefalse
+      answer: false
+      text:
+        en: "OBC_BOOT_APP shows 1,1 and 1,3 but no 1,7 after five seconds, so the boot has failed and you should send it again."
+        fr: "OBC_BOOT_APP affiche 1,1 et 1,3 mais pas de 1,7 au bout de cinq secondes : le démarrage a échoué et il faut le renvoyer."
+
+  - id: verify
+    title: {en: "Completed is not verified", fr: "Terminée n’est pas vérifiée"}
+    say:
+      en: >-
+        Last, the trap. You command DETUMBLE. One comma seven arrives, and the mode reads
+        DETUMBLE. The command did what it was asked. But if the magnetometer is off, the
+        measured field is zero and the control law does nothing. That is why the card checks
+        the field, not the report. Accepted means allowed in. Completed means the command ran.
+        Only telemetry tells you the spacecraft is doing what you wanted.
+      fr: >-
+        Dernier point, le piège. Vous commandez DETUMBLE. Un virgule sept arrive, et le mode
+        indique DETUMBLE. La commande a fait ce qu’on lui demandait. Mais si le magnétomètre est
+        éteint, le champ mesuré vaut zéro et la loi de commande ne fait rien. C’est pourquoi la
+        fiche vérifie le champ, pas le rapport. Acceptée veut dire entrée. Terminée veut dire
+        exécutée. Seule la télémesure vous dit que le satellite fait ce que vous vouliez.
+    do:
+      - js: "EX.play('verify', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Pick one step on your next card. Which report tells you the command ran, and which telemetry value tells you it worked?"
+        fr: "Choisissez une étape de votre prochaine fiche. Quel rapport vous dit que la commande s’est exécutée, et quelle valeur de télémesure vous dit qu’elle a marché ?"

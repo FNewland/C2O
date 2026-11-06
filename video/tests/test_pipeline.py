@@ -161,3 +161,30 @@ def test_acronym_lint_wants_the_full_form_once():
         "Open nominal procedure one, NOM-001. Power the attitude and orbit control system, the AOCS. Then the AOCS again.",
         "Ouvrez la procédure nominale un, NOM-001. Alimentez le système de contrôle d’attitude et d’orbite, le SCAO."))
     assert good == []
+
+
+# ------------------------------------------------------------- explainers
+def test_explainer_scenes_exist():
+    """Every EX.play('scene') a storyboard calls is defined in the page it opens."""
+    for sb in storyboard.all_storyboards():
+        pages = [a["goto"]["path"].split("?")[0] for a in sb.setup
+                 if isinstance(a, dict) and isinstance(a.get("goto"), dict) and a["goto"].get("app") == "viz"]
+        if not pages:
+            continue
+        html = (storyboard.REPO / pages[0].lstrip("/")).read_text(encoding="utf-8")
+        defined = set(re.findall(r"EX\.scene\(\"([a-z0-9_]+)\"", html))
+        for st in sb.steps:
+            for act in st.do:
+                m = re.search(r"EX\.play\('([a-z0-9_]+)'", act.get("js", "")) if isinstance(act, dict) else None
+                if m:
+                    assert m.group(1) in defined, f"{sb.id} {st.id}: scene {m.group(1)} not in {pages[0]}"
+
+
+def test_explainer_labels_in_both_languages():
+    import glob
+    for f in glob.glob(str(storyboard.ROOT / "explainers" / "*.html")):
+        html = open(f, encoding="utf-8").read()
+        m = re.search(r"EX\.labels\(\{\s*en: \{(.*?)\n  \},\s*fr: \{(.*?)\n  \},", html, re.S)
+        assert m, f
+        keys = lambda block: set(re.findall(r"(\w+):\s*\"", block))
+        assert keys(m.group(1)) == keys(m.group(2)), (f, keys(m.group(1)) ^ keys(m.group(2)))

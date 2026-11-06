@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>From monitor to action</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .lvl rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: fill .4s, stroke .4s; }
+  .lvl.on rect { fill: #1f3442; stroke: var(--accent); stroke-width: 2.5; }
+  .node rect { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; transition: stroke .3s; }
+  .node.on rect { stroke: var(--accent); stroke-width: 3; }
+  .node.hot rect { stroke: var(--warn); stroke-width: 3; }
+  .node.ok rect { stroke: var(--ok); stroke-width: 3; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">FDIR hierarchy and the S12, S5, S19, S8 chain</title>
+
+  <!-- 1. hierarchy -->
+  <g id="pyr" class="ex-hidden"></g>
+
+  <!-- 2. the monitored parameter -->
+  <g id="plot" class="ex-hidden">
+    <rect class="box" x="40" y="30" width="700" height="300" rx="10"/>
+    <text x="60" y="62" data-t="param"></text>
+    <text x="60" y="86" class="small mono muted">aocs.h_env_frac · 0x02BA · %</text>
+    <line x1="80" y1="300" x2="720" y2="300" class="wire"/>
+    <line x1="80" y1="110" x2="80" y2="300" class="wire"/>
+    <line id="limit" x1="80" y1="167" x2="720" y2="167" stroke="var(--warn)" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="600" y="158" class="small" style="fill:var(--warn)" data-t="limit"></text>
+    <text x="64" y="304" class="small muted" text-anchor="end">0</text>
+    <text x="64" y="171" class="small muted" text-anchor="end">70</text>
+    <text x="64" y="114" class="small muted" text-anchor="end">100</text>
+    <polyline id="trace" fill="none" stroke="var(--accent)" stroke-width="3" points=""/>
+    <circle id="trace-dot" r="6" class="acc" cx="80" cy="260"/>
+  </g>
+
+  <!-- 3. the chain -->
+  <g id="chain" class="ex-hidden">
+    <g class="node" id="n12"><rect x="780" y="30" width="460" height="64" rx="8"/><text x="798" y="58" class="mono">S12 · TM(12,9)</text><text x="798" y="80" class="small muted" data-t="n12"></text></g>
+    <g class="node" id="n5"><rect x="780" y="110" width="460" height="64" rx="8"/><text x="798" y="138" class="mono">S5 · event 0x92BA</text><text x="798" y="160" class="small muted" data-t="n5"></text></g>
+    <g class="node" id="n19"><rect x="780" y="190" width="460" height="64" rx="8"/><text x="798" y="218" class="mono" id="rule-t">S19 · rule 2001</text><text x="798" y="240" class="small muted" data-t="n19"></text></g>
+    <g class="node" id="n8"><rect x="780" y="270" width="460" height="64" rx="8"/><text x="798" y="298" class="mono">S8 · func 1</text><text x="798" y="320" class="small muted" data-t="n8"></text></g>
+    <g class="node" id="n1"><rect x="780" y="350" width="460" height="64" rx="8"/><text x="798" y="378" class="mono">S1 · TM(1,7) · aocs.mode → DESAT</text><text x="798" y="400" class="small muted" data-t="n1"></text></g>
+    <g class="node" id="n10"><rect x="780" y="430" width="460" height="64" rx="8"/><text x="798" y="458" class="mono">S12 · TM(12,10)</text><text x="798" y="480" class="small muted" data-t="n10"></text></g>
+  </g>
+  <g id="pk" class="ex-hidden"><circle r="9" class="warn"/></g>
+
+  <!-- 4/5. notes -->
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "From monitor to action: on-board FDIR",
+    l0: "0 · hardware", l0b: "watchdog resets a processor", l0c: "milliseconds",
+    l1: "1 · unit", l1b: "an over-current trip", l1c: "seconds",
+    l2: "2 · subsystem", l2b: "switch to the backup star tracker", l2c: "seconds to minutes",
+    l3: "3 · system", l3b: "mode change, enter SAFE", l3c: "minutes",
+    l4: "4 · ground: you", l4b: "diagnose, recover, decide", l4c: "hours to days",
+    param: "Wheel momentum, as a share of what the wheels can store", limit: "monitor limit 70 %",
+    n12: "monitor: limit crossed — reported once, on the edge", n5: "event: the crossing becomes an event",
+    n19: "event-action rule: this event → one function", n8: "desaturate the wheels with the magnetorquers",
+    n1: "verified like any command, and the mode changes", n10: "back inside the limit — reported once",
+    one_a: "One rule = one S8 function, with no arguments.", one_b: "Anything longer is an on-board control procedure (S18). The ground can enable or disable each rule: TC(19,4) / TC(19,5).",
+    gnd_a: "What you see: the alarm, the events, the mode, the S1 reports.", gnd_b: "Read what the spacecraft has already done before you command anything. Every autonomous action is visible and reversible.",
+    foot: "EOSAT-1 · S12 monitoring, S5 events, S19 event-action, S8 functions · textbook ch. 18 § 18.3 · CC BY 4.0",
+  },
+  fr: {
+    kicker: "Notion", title: "Du moniteur à l’action : la FDIR de bord",
+    l0: "0 · matériel", l0b: "un chien de garde réinitialise un processeur", l0c: "millisecondes",
+    l1: "1 · unité", l1b: "un déclenchement sur surintensité", l1c: "secondes",
+    l2: "2 · sous-système", l2b: "bascule sur le senseur stellaire de secours", l2c: "secondes à minutes",
+    l3: "3 · système", l3b: "changement de mode, passage en SAFE", l3c: "minutes",
+    l4: "4 · sol : vous", l4b: "diagnostiquer, rétablir, décider", l4c: "heures à jours",
+    param: "Moment cinétique des roues, en part de ce qu’elles peuvent stocker", limit: "limite du moniteur 70 %",
+    n12: "moniteur : limite franchie, signalée une seule fois", n5: "événement : le franchissement devient un événement",
+    n19: "règle événement-action : cet événement → une fonction", n8: "désaturer les roues avec les magnétocoupleurs",
+    n1: "vérifiée comme toute commande, et le mode change", n10: "de retour dans la limite — signalé une fois",
+    one_a: "Une règle = une fonction S8, sans argument.", one_b: "Plus long, c’est une procédure de contrôle de bord (S18). Le sol peut activer ou désactiver chaque règle : TC(19,4) / TC(19,5).",
+    gnd_a: "Ce que vous voyez : l’alarme, les événements, le mode, les rapports S1.", gnd_b: "Lisez ce que le satellite a déjà fait avant de commander quoi que ce soit. Toute action autonome est visible et réversible.",
+    foot: "EOSAT-1 · surveillance S12, événements S5, événement-action S19, fonctions S8 · manuel ch. 18 § 18.3 · CC BY 4.0",
+  },
+});
+
+if (EX.lang === "fr") EX.raw("rule-t", "S19 · règle 2001");
+// pyramid, ground at the top
+const LV = [["l4", 4], ["l3", 3], ["l2", 2], ["l1", 1], ["l0", 0]];
+LV.forEach(([k, n], i) => {
+  const w = 520 + i * 170, x = 640 - w / 2, y = 40 + i * 98;
+  const g = EX.el("g", { id: "lv" + n, class: "lvl" }, "pyr");
+  EX.el("rect", { x, y, width: w, height: 84, rx: 8 }, g);
+  EX.el("text", { x: 640, y: y + 34, class: "big", "text-anchor": "middle", label: k }, g);
+  EX.el("text", { x: 640, y: y + 62, class: "small muted", "text-anchor": "middle", text: EX.t(k + "b") + "  ·  " + EX.t(k + "c") }, g);
+});
+
+// momentum trace: value 0..100 % -> y 300..110
+const Y = (v) => 300 - v * 1.9, X = (i, n) => 80 + (640 * i) / n;
+const SERIES = [];
+for (let i = 0; i <= 60; i++) SERIES.push(i < 40 ? 22 + i * 1.35 : 76 - (i - 40) * 2.9);
+function drawTrace(upto) {
+  const pts = SERIES.slice(0, upto + 1).map((v, i) => `${X(i, 60)},${Y(v)}`);
+  EX.$("trace").setAttribute("points", pts.join(" "));
+  const last = SERIES[upto];
+  EX.$("trace-dot").setAttribute("cx", X(upto, 60)); EX.$("trace-dot").setAttribute("cy", Y(last));
+}
+let tick = null;
+function runTrace(from, to, ms) {
+  clearInterval(tick);
+  let i = from; const step = ms / Math.max(1, to - from);
+  drawTrace(i);
+  tick = setInterval(() => { i++; drawTrace(Math.min(i, to)); if (i >= to) clearInterval(tick); }, step);
+}
+function nodes(cls, ids) { ["n12", "n5", "n19", "n8", "n1", "n10"].forEach((n) => ["on", "hot", "ok"].forEach((c) => EX.mark(n, c, false))); (ids || []).forEach((n) => EX.mark(n, cls)); }
+function only(...ids) { ["pyr", "plot", "chain", "note", "pk"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+const CY = { n12: 62, n5: 142, n19: 222, n8: 302, n1: 382, n10: 462 };
+
+EX.scene("hierarchy", (beat) => {
+  only("pyr");
+  LV.forEach(([, n]) => { EX.$("lv" + n).style.opacity = 0; EX.mark("lv" + n, "on", false); });
+  [0, 1, 2, 3, 4].forEach((n, i) => beat(0.06 + i * 0.12, () => EX.show("lv" + n)));
+  beat(0.75, () => EX.mark("lv4", "on"));
+});
+
+EX.scene("monitor", (beat, secs) => {
+  only("plot", "chain"); nodes(); drawTrace(0);
+  ["n5", "n19", "n8", "n1", "n10"].forEach((n) => EX.dim(n)); EX.dim("n12", false);
+  beat(0.05, () => runTrace(0, 36, secs * 450));
+  beat(0.55, () => { nodes("hot", ["n12"]); EX.pulse("n12", 2); });
+});
+
+EX.scene("chain", (beat, secs) => {
+  only("plot", "chain", "pk"); drawTrace(36);
+  ["n12", "n5", "n19", "n8", "n1", "n10"].forEach((n) => EX.dim(n, false)); nodes("hot", ["n12"]);
+  const order = ["n12", "n5", "n19", "n8", "n1"];
+  order.forEach((n, i) => beat(0.08 + i * 0.14, () => {
+    nodes("on", order.slice(0, i + 1));
+    EX.move("pk", 760, CY[n], 500);
+  }));
+  beat(0.82, () => runTrace(36, 48, secs * 120));
+});
+
+EX.scene("clear", (beat, secs) => {
+  only("plot", "chain"); drawTrace(48); nodes("on", ["n12", "n5", "n19", "n8", "n1"]);
+  beat(0.05, () => runTrace(48, 60, secs * 400));
+  beat(0.5, () => { nodes("ok", ["n10"]); EX.pulse("n10", 2); });
+});
+
+EX.scene("onerule", (beat) => {
+  only("chain"); nodes("on", ["n19", "n8"]);
+  ["n12", "n5", "n1", "n10"].forEach((n) => EX.dim(n));
+  beat(0.1, () => note("one_a", "one_b"));
+});
+
+EX.scene("ground", (beat) => {
+  only("pyr"); LV.forEach(([, n]) => { EX.show("lv" + n, 0); EX.mark("lv" + n, "on", false); EX.dim("lv" + n, n !== 4); });
+  beat(0.05, () => EX.mark("lv4", "on"));
+  beat(0.15, () => note("gnd_a", "gnd_b"));
+});
+</script>
+</body>
+</html>

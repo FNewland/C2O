@@ -93,6 +93,21 @@ def up_spacecdf() -> dict:
     return {"spacecdf": {"pid": pid, "url": f"http://127.0.0.1:{port}", "ok": ok}}
 
 
+def up_viz() -> dict:
+    """Static server for the explainer pages (video/explainers/) and shared/ui-viz.
+
+    Serves the repository root read-only on :18801, so a page can import
+    /shared/ui-viz/*.js and the explainer pages share one origin.
+    """
+    port = int(os.environ.get("C2O_VIDEO_VIZ_PORT", 18801))
+    if not _free(port):
+        raise SystemExit(f"port {port} is busy (stack already up?)")
+    pid = _spawn("viz", [sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1",
+                         "--directory", str(REPO)], dict(os.environ), REPO)
+    ok = _wait(f"http://127.0.0.1:{port}/video/explainers/", 20)
+    return {"viz": {"pid": pid, "url": f"http://127.0.0.1:{port}", "ok": ok}}
+
+
 def up_sim() -> dict:
     cfg = SIM / "configs" / "eosat1"
     venv = _sim_venv()
@@ -178,7 +193,7 @@ def run(action: str, which: str) -> int:
         return setup(which)
     f = STATE / f"{which}.json"
     if action == "up":
-        info = up_spacecdf() if which == "spacecdf" else up_sim()
+        info = {"spacecdf": up_spacecdf, "viz": up_viz}.get(which, up_sim)()
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(info, indent=1))
         for k, v in info.items():

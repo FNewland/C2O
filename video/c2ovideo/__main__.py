@@ -13,7 +13,7 @@
     check ID [--lang ..]       speech-recognition check of the narration (optional)
     reviews                    print reviewers' notes saved on the welcome page
     stack setup sim|spacecdf   create sim/.venv or design/.venv (once, needs Python 3.11+)
-    stack up|down spacecdf|sim run the tools on capture ports
+    stack up|down spacecdf|sim|viz  run the tools on capture ports
 """
 
 from __future__ import annotations
@@ -102,7 +102,7 @@ def _need_running(sb, overrides: dict) -> None:
     import urllib.request
     from . import capture
     urls = dict(capture.DEFAULT_URLS, **overrides)
-    which = {"spacecdf": "spacecdf"}
+    which = {"spacecdf": "spacecdf", "viz": "viz"}
     for app in sb.apps:
         url = urls.get(app)
         if not url:

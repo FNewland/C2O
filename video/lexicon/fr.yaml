@@ -29,6 +29,8 @@ terms:
   Markdown: "Mark-daoune"
   prérequis: "pré-requis"
   J2000: "J deux mille"
+  APID: "A-pide"
+  DESAT: "dé-satte"
 words: [ORBIT, NORTH, NASA, ESA, OK]
 spell: [MCS, AOCS, ADCS, SCAO, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
         MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, ASC, CSA, FPA, PCDU,

@@ -389,6 +389,7 @@ async def _capture(sb: Storyboard, lang: str, narration: dict, out: Path, urls: 
             t_start = time.time()
             say_s = float(narration.get(st.id, 0.0))
             say_at = None if st.say_after else t_start
+            c.vars["say"] = f"{say_s:.2f}"       # explainer pages pace a scene to its narration
             try:
                 for act in st.do:
                     await run_action(page, act, c)

@@ -36,6 +36,10 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-07 | 5 | LEOP-005: starting rates, the automatic COARSE_SUN handover live, sun hold, power | WB-5.5-L005 q1/q3/q4 | dry-run only: held until COARSE_SUN holds the Sun ([AOCS_COARSE_SUN_MTQ_ONLY.md](AOCS_COARSE_SUN_MTQ_ONLY.md)) |
 | V-OPS-08 | 5 | LEOP-006: unset clock, offset with light time, set from the ground, residual | WB-5.5-L006 q2/q3/q5 | rendered EN+FR from `card-LEOP-006` |
 | V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | dry-run only: held for the same reason (0x0217 ~60° HH alarm on screen) |
+| V-CON-06 | 4 | Concept: a telecommand's life — acceptance checks, S1 1,1/1,2/1,3/1,7/1,8, failure notice, deferred completion, completed ≠ verified | — (team) | rendered EN+FR (animated page `video/explainers/tc-life.html`); check EN 0.92, FR 0.85 |
+| V-CON-05 | 4 | Concept: CCSDS packet, primary and PUS headers, APID 0x002 → 0x001, services, HK SIDs, requested vs enabled, powered ≠ reporting | — (team) | rendered EN+FR (`packets.html`) |
+| V-CON-04 | 7 | Concept: FDIR hierarchy, then S12 → S5 → S19 rule 2001 → S8 desaturation → S1 → TM(12,10) | — (team, deeper for fdir_systems) | rendered EN+FR (`fdir.html`); nominal momentum chain, no scored recovery |
+| V-CON-02 | 6 | Concept: energy balance through one orbit — eclipse, generation, load, SoC, orbit-average margin, the eclipse trap | card LEOP-004 (team) | rendered EN+FR (`energy.html`, one orbit from the production EPS model: `explainers/data/gen_energy_orbit.py`) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
@@ -51,6 +55,20 @@ report (it now names the command); the SpaceCDF French allocate button said "les
 éléments"; the MCS PRC page lost the chosen card when its list was rebuilt; alarm ›
 Ticket opened an empty Workbook tab when the logbook had never been opened; the procedure-card
 parser read `simulation.yaml` as a parameter.
+
+Concept explainers (2026-11-06): `video/explainers/` holds small bilingual SVG pages
+(`explainer.js`, `explainer.css`); `python -m c2ovideo stack up viz` serves them on :18801 and
+a storyboard step runs `js: "EX.play('scene', ${say})"`, where `${say}` is that step's
+narration length, so each scene is paced to its own narration. Same pipeline, captions, H5P.
+
+**COM card videos are held (2026-11-06).** At `card-COM-002` (COARSE_SUN) the attitude
+error hunts with a red alarm on screen, as in LEOP-005. At `card-COM-007` (wheels, NOMINAL)
+the error starts at ~25° after the breakpoint loads and then oscillates between 0.3° and
+2.5°: `aocs.att_error` red alarms (> 2°) come and go, so every COM video would show an
+unexplained AOCS alarm. Also found on COM-002: Step 6 reads 0x0410 / 0x0411 as "battery
+heater ON / OFF thresholds", but those ids are `tcs.htr_duty_thruster` and
+`tcs.htr_total_power`; and at the breakpoint `tcs.temp_fpa` reads 6.5 °C against the
+Step 1 expectation of +8 to +14 °C.
 
 ## Backlog (from the research shortlist)
 

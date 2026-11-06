@@ -24,6 +24,8 @@ terms:
   ConOps: "con-ops"
   PDOP: "P-dop"
   EDAC: "ee-dack"
+  APID: "ay-pid"
+  DESAT: "dee-sat"
   J2000: "J two thousand"
 words: [ORBIT, NORTH, NASA, ESA, OK]
 spell: [MCS, AOCS, ADCS, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
