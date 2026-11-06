@@ -31,6 +31,11 @@ sources:
     short: "GSFC-STD-1000G"
     title: "NASA GSFC-STD-1000G, Rules for the Design, Development, Verification and Operation of Flight Systems, Rule 1.06 Resource margins"
     verified: false
+  ecss_hb_10_02:
+    kind: standard
+    short: "ECSS-E-HB-10-02A (course textbook Table 8.3)"
+    title: "ECSS-E-HB-10-02A §5.2 and ECSS-E-ST-10-02C margin philosophy, as stated in Concurrent Spacecraft Design (CC BY 4.0), §8.4.2 Table 8.3"
+    verified: true
   esa_iod_margins:
     kind: guideline
     short: "ESA IOD CubeSat margin policy"
@@ -60,17 +65,19 @@ category_from_trl:
     - {min_trl: 0, requires_heritage: false, category: D}
   no_kb_component: D   # an element without a KB part is treated as a new design
 
-# System margin ladder by review gate ("C2O default", REDESIGN_DECISIONS.md ruling 2).
-# The system mass and power margin depends on the design's maturity: the gate the study is
-# preparing for. Values take the stricter source at each gate: GSFC-STD-1000G Rule 1.06 asks
-# >25 / >20 / >15 / >10 % at end of Pre-A / A / B / C; the ESA IOD CubeSat margin policy asks
-# 20 % at PDR only. 20 % at PRR and SRR is an inference (ESA states a value only at PDR).
-# `mass.system_margin_percent` / `power.system_margin_percent` below stay the value used when no
-# gate is known (the ESA 20 % of the margin philosophy).
+# System margin ladder by review gate (Franz's ruling 2026-11-06: follow the course
+# textbook). The system mass and power margin depends on the design's maturity, i.e. the
+# lifecycle phase the gate closes or opens. Values are Table 8.3 of the textbook
+# (ECSS-E-HB-10-02A §5.2): Phase 0/A 20 %, Phase B 15 %, Phase C 10 %, Phase D 5 %.
+# MDR and PRR close Phases 0 and A (20 %); SRR and PDR sit in Phase B (15 %); CDR closes
+# Phase C (10 %). Was the C2O default 25/20/20/20/10 % (the stricter of GSFC-STD-1000G
+# Rule 1.06 and the ESA IOD policy), which the textbook did not state.
+# `mass.system_margin_percent` / `power.system_margin_percent` below stay the value used when
+# no gate is known (Phase A, 20 %).
 system_margin_ladder:
-  label: {en: "C2O default", fr: "Valeur par défaut C2O"}
-  source: c2o_default
-  clause: "stricter of GSFC-STD-1000G Rule 1.06 and ESA IOD margin policy §2.2"
+  label: {en: "ECSS by phase (course textbook)", fr: "ECSS par phase (manuel du cours)"}
+  source: ecss_hb_10_02
+  clause: "Table 8.3: system level by phase"
   applies_to: [mass, power]
   # The margin convention SpaceCDF applies (stated in the UI and in every check message).
   convention:
@@ -79,11 +86,11 @@ system_margin_ladder:
       en: "System margin is a percentage added to the nominal value (current best estimate plus maturity and harness margins): total = nominal × (1 + margin). This is the ESA convention. GSFC states margin as a share of the available resource, (available − estimate) / available."
       fr: "La marge système est un pourcentage ajouté à la valeur nominale (meilleure estimation actuelle plus marges de maturité et de harnais) : total = nominal × (1 + marge). C’est la convention de l’ESA. Le GSFC exprime la marge en part de la ressource disponible, (disponible − estimation) / disponible."
   by_gate:
-    mdr: {value: 25, source: gsfc_std_1000, clause: "Rule 1.06, end of Pre-Phase A (>25 %)"}
-    prr: {value: 20, source: gsfc_std_1000, clause: "Rule 1.06, end of Phase A (>20 %)"}
-    srr: {value: 20, source: c2o_default, clause: "inferred: SRR falls between the GSFC end-of-A (20 %) and the ESA IOD PDR (20 %) values"}
-    pdr: {value: 20, source: esa_iod_margins, clause: "§2.2 (20 % at PDR; stricter than GSFC >15 %)"}
-    cdr: {value: 10, source: gsfc_std_1000, clause: "Rule 1.06, end of Phase C (>10 %)"}
+    mdr: {value: 20, source: ecss_hb_10_02, clause: "Table 8.3, Phase 0 / A"}
+    prr: {value: 20, source: ecss_hb_10_02, clause: "Table 8.3, Phase 0 / A"}
+    srr: {value: 15, source: ecss_hb_10_02, clause: "Table 8.3, Phase B"}
+    pdr: {value: 15, source: ecss_hb_10_02, clause: "Table 8.3, Phase B"}
+    cdr: {value: 10, source: ecss_hb_10_02, clause: "Table 8.3, Phase C"}
 
 mass:
   system_margin_percent: {value: 20, source: esa_margin_1_3, clause: "2.1.1 R-M1-1 / 2.1.2"}

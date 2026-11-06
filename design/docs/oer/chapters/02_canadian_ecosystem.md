@@ -64,7 +64,7 @@ The CSA is headquartered in Saint-Hubert, Quebec, and organises its activities a
 
 ### 2.2.1 Industry structure
 
-The Canadian space industry generated approximately $2.7B in revenue (2022) and employs ~12,000 people. It is structured in tiers, and a representative map of the organisations a Canadian mission interacts with is shown in Figure 2.1.
+The Canadian space sector generated about $5B in revenue in 2024 and supported more than 28,000 jobs (CSA, *State of the Canadian Space Sector Report 2025*). It is structured in tiers, and a representative map of the organisations a Canadian mission interacts with is shown in Figure 2.1.
 
 ![Representative stakeholder map for Canadian space missions: agency, primes, subsystem suppliers, SMEs, academia and regulators.](../assets/figures/fig_canadian_sector.png)
 
@@ -165,11 +165,11 @@ Space activities in Canada are governed by multiple federal bodies. There is no 
 |----------------|---------|-------------------|---------------------------|
 | **CSA** | Canadian Space Agency Act | Space programme coordination, policy | Mission approval, funding |
 | **ISED** | Radiocommunication Act | Radio spectrum allocation, licensing | Frequency licensing for all RF transmissions |
-| **ISED** | Remote Sensing Space Systems Act (RSSSA) | Operation of remote sensing satellites | Licensing for any satellite that images Earth |
+| **GAC** | Remote Sensing Space Systems Act (RSSSA) | Operation of remote sensing satellites | Licensing for any satellite that images Earth |
 | **GAC** | Export and Import Permits Act (EIPA) | Export control of strategic goods | Export permits for satellite technology |
-| **GAC** | Controlled Goods Program | Access to controlled (ITAR/CG) goods | Personnel security clearances |
+| **PSPC** | Controlled Goods Program (Defence Production Act) | Access to controlled (ITAR/CG) goods | Personnel security clearances |
 | **DND/DRDC** | National Defence Act | Dual-use technology, military space | Classification, security requirements |
-| **Transport Canada** | (No current statute) | Launch operations (future) | Canada has no domestic launch regulation yet |
+| **Transport Canada** | Canadian Space Launch Act (Bill C-28, introduced April 2026; at second reading in October 2026) | Launch and re-entry from Canadian territory | Until it passes, Canada has no domestic launch licensing |
 
 ---
 

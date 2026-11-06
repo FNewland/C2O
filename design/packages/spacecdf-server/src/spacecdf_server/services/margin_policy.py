@@ -212,27 +212,43 @@ def evaluate_margins(
     p_sys = p_mat * _val(sys_power_node) / 100
     p_total = p_mat + p_sys
     available = param(params, "power.sa_power_eol_w")
+    # The array is sized on the WORST SUNLIT MODE, not the orbit average (course textbook
+    # §8.4.4 and ch. 21 rule of thumb; Franz's ruling 2026-11-06): in sunlight it must carry
+    # the loads and recharge the battery. The design loop's sunlit demand is that case; the
+    # maturity factor of the units and the system margin are applied to it. Without it the
+    # orbit-average sum of the units is the fallback, said so in the message.
+    sunlit = param(params, "power.total_sunlight_w")
+    mat_factor = (p_mat / p_cbe) if p_cbe > 0 else 1.0
+    basis = "sunlit" if sunlit else "orbit_average"
+    p_demand = (sunlit * mat_factor) if sunlit else p_mat
+    p_sys_d = p_demand * _val(sys_power_node) / 100
+    p_check = p_demand + p_sys_d
     power = {"units": punits, "cbe_w": round(p_cbe, 3), "with_maturity_w": round(p_mat, 3),
              "system_margin_w": round(p_sys, 3), "total_w": round(p_total, 3), "available_eol_w": available,
-             "system_margin_percent": _val(sys_power_node)}
+             "system_margin_percent": _val(sys_power_node),
+             "sizing_basis": basis, "sizing_demand_w": round(p_check, 3)}
     pref = rc.ref_of(cfg, sys_power_node)
-    if punits and available:
-        ok = p_total <= available
+    title = {"en": "Worst sunlit-mode power with margins within EOL generation",
+             "fr": "Puissance du mode ensoleillé le plus exigeant, avec marges, sous la production en fin de vie"}
+    if (punits or sunlit) and available:
+        ok = p_check <= available
+        what_en = "worst sunlit-mode demand" if sunlit else "orbit-average demand (no sunlit mode yet)"
+        what_fr = "demande du mode ensoleillé le plus exigeant" if sunlit else "demande moyenne orbitale (pas encore de mode ensoleillé)"
         checks.append(rc.check_item(
-            "MP-PWR-01", {"en": "Power with margins within EOL generation", "fr": "Puissance avec marges sous la production en fin de vie"},
+            "MP-PWR-01", title,
             "pass" if ok else "fail",
-            {"en": f"{rc.fmt(p_total)} W orbit-average demand with maturity and system ({_val(sys_power_node):g} %) "
+            {"en": f"{rc.fmt(p_check)} W {what_en} with maturity and system ({_val(sys_power_node):g} %) "
                    f"margins vs {rc.fmt(available)} W EOL array power.",
-             "fr": f"Demande moyenne de {rc.fmt_fr(p_total)} W avec les marges de maturité et système "
+             "fr": f"{rc.fmt_fr(p_check)} W de {what_fr} avec les marges de maturité et système "
                    f"({_val(sys_power_node):g} %) pour {rc.fmt_fr(available)} W produits en fin de vie."},
-            pref, value=round(p_total, 2), limit=available, unit="W"))
+            pref, value=round(p_check, 2), limit=available, unit="W"))
     else:
         checks.append(rc.check_item(
-            "MP-PWR-01", {"en": "Power with margins within EOL generation", "fr": "Puissance avec marges sous la production en fin de vie"},
+            "MP-PWR-01", title,
             "not_evaluated",
-            {"en": "Needs unit power values and the EOL array power from the design loop.",
-             "fr": "Il faut les puissances des unités et la puissance du générateur en fin de vie (boucle de conception)."},
-            pref, value=round(p_total, 2) if punits else None, unit="W"))
+            {"en": "Needs the sunlit power demand (or unit power values) and the EOL array power from the design loop.",
+             "fr": "Il faut la demande de puissance au soleil (ou les puissances des unités) et la puissance du générateur en fin de vie (boucle de conception)."},
+            pref, value=round(p_check, 2) if (punits or sunlit) else None, unit="W"))
 
     # ------------------------------------------------------------------ ΔV
     dv = cfg["delta_v"]
