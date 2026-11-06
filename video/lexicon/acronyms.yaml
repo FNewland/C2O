@@ -78,6 +78,13 @@ IOD:   {en: "initial orbit determination", fr: "restitution d’orbite initiale"
 TLE:   {en: "two-line element set", fr: "jeu d’éléments à deux lignes", short: {en: T-L-E, fr: T-L-E}, kind: letters, expand: true}
 GSD:   {en: "ground sample distance", fr: "distance d’échantillonnage au sol", short: {en: G-S-D, fr: G-S-D}, kind: letters, expand: true}
 
+FPA:   {en: "focal plane array", fr: "matrice de plan focal", short: {en: F-P-A, fr: F-P-A}, kind: letters, expand: true}
+PDOP:  {en: "position dilution of precision", fr: "dilution de précision de position", short: {en: P-DOP, fr: P-D-O-P}, kind: letters, expand: true}
+PVT:   {en: "position, velocity and time", fr: "position, vitesse et temps", short: {en: P-V-T, fr: P-V-T}, kind: letters, expand: true}
+ECEF:  {en: "Earth-centred, Earth-fixed", fr: "géocentrique fixe par rapport à la Terre", short: {en: E-C-E-F, fr: E-C-E-F}, kind: letters, expand: true}
+J2000: {en: "the J2000 epoch, noon on 1 January 2000", fr: "l’époque J2000, midi le 1er janvier 2000", short: {en: J two thousand, fr: J deux mille}, kind: word, expand: true}
+AOC:   {expand: false, note: "MCS rail label for the attitude page"}
+
 # --- power -------------------------------------------------------------------
 SoC:   {en: "state of charge", fr: "état de charge", short: {en: state of charge, fr: état de charge}, kind: word, expand: false,
         note: "Already said in full by the lexicon."}

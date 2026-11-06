@@ -18,7 +18,7 @@ ties:
   cards: [LEOP-006]
 sources:
   - sim/configs/eosat1/procedures/leop/time_sync.md (LEOP-006)
-  - sim/docs/TIME_ARCHITECTURE.md
+  - sim/docs/plan_2026-08c/TIME_ARCHITECTURE.md
 
 setup:
   - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-006}}
@@ -35,18 +35,20 @@ steps:
     title: {en: "Step 2: a clock that was never set", fr: "Étape 2 : une horloge jamais réglée"}
     say:
       en: >-
-        Every packet the spacecraft sends carries its own time, so before commissioning starts
-        that time has to be right. Open the PUS page, S9 TIME, and request a time report. The
-        on-board clock has been counting since boot from its epoch, years away from the ground
-        clock. The time reference reads NONE, and the time since the last sync says never
-        synced. That is expected: no one has set it yet.
+        Every packet the spacecraft sends carries its own time, so that time must be right
+        before commissioning. Open the page for the packet utilisation standard, PUS, at service
+        nine, time management, S9 TIME on the console, and request a time report. Since boot,
+        the on-board clock has counted from its epoch, the mission's zero: noon on the first of
+        January two thousand, years behind the ground clock. The time reference reads NONE, and
+        the time since the last sync says never synced. That is expected: no one has set it yet.
       fr: >-
-        Chaque paquet émis par le satellite porte sa propre date : avant la mise en service,
-        cette heure doit être juste. Ouvrez la page PUS, S9 TIME, et demandez un rapport de
-        temps. L’horloge de bord compte depuis le démarrage à partir de son époque, à des années
-        de l’horloge sol. La référence de temps indique NONE, et le temps depuis la dernière
-        synchronisation indique jamais synchronisée. C’est normal : personne ne l’a encore
-        réglée.
+        Chaque paquet émis par le satellite porte sa propre date : cette heure doit être juste
+        avant la mise en service. Ouvrez la page de la norme d’utilisation des paquets, PUS, au
+        service neuf, gestion du temps, S9 TIME sur la console, et demandez un rapport de temps.
+        Depuis le démarrage, l’horloge de bord compte à partir de son époque, le zéro de la
+        mission : le premier janvier deux mille à midi, des années en retard sur l’horloge sol.
+        La référence de temps indique NONE, et le temps depuis la dernière synchronisation
+        indique jamais synchronisée. C’est normal : personne ne l’a encore réglée.
     do:
       - click: {css: "#rail-diag"}
       - wait: 0.8
@@ -93,16 +95,17 @@ steps:
     title: {en: "Step 4: set the clock", fr: "Étape 4 : régler l’horloge"}
     say:
       en: >-
-        Now send the time update, service nine subtype one. Sync time to ground computes the
+        Now send the time update: S9, subtype one, set time. Sync time to ground computes the
         on-board time code from the ground clock at the moment of sending: a time typed in
         earlier would already be stale. Read the code it sent: it counts from the mission
-        epoch, and a Unix timestamp here would put the spacecraft decades out.
+        epoch, and a Unix timestamp, which counts from nineteen seventy, would put the
+        spacecraft decades out.
       fr: >-
-        Envoyez maintenant la mise à l’heure, service neuf sous-type un. Le bouton Synchro sur le
-        sol calcule le code temporel de bord à partir de l’horloge sol au moment de l’envoi :
-        une heure saisie plus tôt serait déjà périmée. Lisez le code envoyé : il compte depuis
-        l’époque de la mission, et un horodatage Unix placerait le satellite à des décennies de
-        là.
+        Envoyez maintenant la mise à l’heure : S9, sous-type un, réglage de l’heure. Le bouton
+        Synchro sur le sol calcule le code temporel de bord à partir de l’horloge sol au moment
+        de l’envoi : une heure saisie plus tôt serait déjà périmée. Lisez le code envoyé : il
+        compte depuis l’époque de la mission, et un horodatage Unix, qui compte depuis mille
+        neuf cent soixante-dix, placerait le satellite à des décennies de là.
     do:
       - highlight: {target: {css: "#s9-sync"}, seconds: 2}
       - click: {css: "#s9-sync"}
@@ -116,13 +119,15 @@ steps:
         Request a second time report. The reference now reads GROUND, the time since sync starts
         from zero, and the offset is down to a fraction of a second, inside the one-second
         threshold. Record the residual. Later, once the GPS receiver has a fix, the clock can be
-        disciplined to GPS time; and the next card, initial orbit determination, closes LEOP.
+        disciplined, steered continuously, to GPS time; and the next card, initial orbit
+        determination, closes the launch and early orbit phase, LEOP.
       fr: >-
         Demandez un second rapport de temps. La référence indique maintenant GROUND, le temps
         depuis la synchronisation repart de zéro, et l’écart est tombé à une fraction de
         seconde, sous le seuil d’une seconde. Notez le résidu. Plus tard, une fois que le
-        récepteur GPS aura un point, l’horloge pourra être asservie au temps GPS ; et la fiche
-        suivante, la restitution d’orbite initiale, clôt la LEOP.
+        récepteur GPS aura un point, l’horloge pourra être asservie, recalée en continu, au
+        temps GPS ; et la fiche suivante, la restitution d’orbite initiale, clôt la phase de
+        lancement et de début d’orbite, la LEOP.
     do:
       - click: {css: "#s9-report"}
       - wait: 3.0
