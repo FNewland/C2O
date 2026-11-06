@@ -764,6 +764,7 @@ class InstructorRecorder:
     _INSTR_TEXT = {
         "set_speed": lambda c: f"Speed ×{c.get('value')}",
         "freeze": lambda c: "Simulation frozen",
+        "step": lambda c: f"Stepped {c.get('seconds')} s while frozen",
         "resume": lambda c: "Simulation resumed",
         "override_passes": lambda c: "Pass override " + (
             "ON" if c.get("enabled", c.get("on", c.get("value"))) else "OFF/toggle"),

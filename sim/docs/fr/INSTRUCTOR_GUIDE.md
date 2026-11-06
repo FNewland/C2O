@@ -437,6 +437,10 @@ une valeur de pointage issue d'une exécution au-delà de ×60.**
 - **FIGER/REPRENDRE** : mettre complètement la simulation en pause ; tous les paramètres sont figés
   - Utile pour examiner en détail un état particulier
   - REPRENDRE pour continuer à partir de ce point
+- **+10 s** (visible seulement quand la simulation est figée) : avancer de 10 s de temps de
+  simulation, puis rester figé. L'API accepte toute durée jusqu'à une heure :
+  `{"type": "step", "seconds": 60}`. Utile pour montrer l'instant suivant d'un état figé, ou pour
+  des prises reproductibles
 
 ### Forçage de la liaison
 

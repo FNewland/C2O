@@ -742,5 +742,6 @@
   "reclaimable": "récupérable",
   "ground activity not available: {{why}}": "activité au sol indisponible : {{why}}",
   "talking": "parle",
-  "Consoles": "Consoles"
+  "Consoles": "Consoles",
+  "Advance 10 s of simulation time, then stay frozen": "Avancer de 10 s de temps de simulation, puis rester gelé"
 }
