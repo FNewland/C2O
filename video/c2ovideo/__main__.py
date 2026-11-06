@@ -168,6 +168,32 @@ def cmd_build(a) -> int:
     return 0
 
 
+def preflight() -> list[str]:
+    """What a build needs from this Python environment, checked before anything runs."""
+    import importlib.util
+    import sys
+    problems = []
+    venv = ROOT / ".venv"
+    if venv.exists() and not str(sys.prefix).startswith(str(venv.resolve())):
+        problems.append(f"this is not the video environment ({sys.prefix}); run:\n"
+                        f"    conda deactivate   # if a conda env is active\n"
+                        f"    source {venv}/bin/activate")
+    backends = {tts.engine_for(l)["backend"] for l in LANGS}
+    if "kokoro" in backends and importlib.util.find_spec("kokoro_onnx") is None:
+        problems.append("kokoro_onnx is not installed here (pip install -r requirements.txt in the video environment)")
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as pw:
+            exe = pw.chromium.executable_path
+        if not Path(exe).exists():
+            problems.append(f"Playwright's browser is missing ({exe}); run:  python -m playwright install chromium")
+    except ImportError:
+        problems.append("playwright is not installed here (pip install -r requirements.txt)")
+    except Exception as e:                 # a broken install still deserves one clear line
+        problems.append(f"Playwright cannot start: {e}")
+    return problems
+
+
 def cmd_build_all(a) -> int:
     """Rebuild every storyboard whose inputs changed since its last build here."""
     import shutil
@@ -191,6 +217,12 @@ def cmd_build_all(a) -> int:
     if a.dry_run or not todo:
         print(f"{len(todo)} to build" + (" (dry run)" if a.dry_run else ""))
         return 0
+    probs = preflight()
+    if probs:
+        print("\ncannot build here:")
+        for p in probs:
+            print("  ✗ " + p)
+        return 2
     failed = []
     for i, sb in enumerate(todo, 1):
         print(f"\n=== [{i}/{len(todo)}] {sb.id}")

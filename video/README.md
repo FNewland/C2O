@@ -115,6 +115,7 @@ Every script follows these rules (from the 2026-11-06 script review,
 ## Rebuild everything that changed
 
 ```bash
+source .venv/bin/activate                  # the video environment, not conda (base)
 python -m c2ovideo build-all --dry-run     # what would be built, and why
 python -m c2ovideo build-all --publish     # build them, one after another
 python -m c2ovideo build-all V-OPS-05      # just these (a held video named here is built)
