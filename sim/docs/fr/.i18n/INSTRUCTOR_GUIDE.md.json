@@ -174,8 +174,8 @@
   },
   {
    "id": "smo-simulator-instructor-operator-guide/simulation-controls/time-controls",
-   "en_hash": "bcc8841ee5b968d8",
-   "fr_hash": "7abfe7a4c4f7fb07"
+   "en_hash": "3e7d623115f09531",
+   "fr_hash": "2536c2fa6a84d647"
   },
   {
    "id": "smo-simulator-instructor-operator-guide/simulation-controls/link-override",
@@ -258,5 +258,5 @@
    "fr_hash": "e8f19b113b5a44d4"
   }
  ],
- "en_commit": "b78d710"
+ "en_commit": "5eae30a"
 }

@@ -104,6 +104,7 @@ class SimulationEngine:
         # An explicit argument always wins, so existing callers are unchanged.
         self._speed_arg = speed
         self.speed = 1.0 if speed is None else speed
+        self._step_remaining_s = 0.0
         self.running = False
         self._tick_count = 0
 
@@ -2258,6 +2259,11 @@ class SimulationEngine:
 
         while self.running:
             dt_sim = dt_real * self.speed
+            # `step` while frozen: run the remaining sim seconds in chunks of
+            # STEP_CHUNK_TICKS ticks, then stay frozen (speed is never touched)
+            if self.speed == 0 and self._step_remaining_s > 0:
+                dt_sim = min(self._step_remaining_s, dt_real * self.STEP_CHUNK_TICKS)
+                self._step_remaining_s -= dt_sim
             # Roadmap N-1 / DI-01: a single exception out of _tick_once used to
             # kill this daemon thread while `running` stayed True and every
             # server kept serving the last frozen state — the sim looked like
@@ -4109,7 +4115,15 @@ class SimulationEngine:
         # scheduled / batched injects with a trigger, cancelling one, and a
         # timeline mark (bookmark or declared sim anomaly).
         'failure_schedule', 'schedule_cancel', 'timeline_mark',
+        # 2026-11-05: advance N sim-seconds while frozen, then stay frozen
+        # (repeatable video takes; "show me the next minute" in a debrief)
+        'step',
     })
+
+    #: longest single `step` (sim seconds)
+    STEP_MAX_S = 3600.0
+    #: sim seconds advanced per loop iteration while stepping (same dt as 10x)
+    STEP_CHUNK_TICKS = 10
 
     #: longest session label accepted (it rides in every state summary)
     SESSION_LABEL_MAX = 80
@@ -4121,6 +4135,7 @@ class SimulationEngine:
         'set_speed': [('value', 0.0, None)],
         'set_phase': [('phase', 0, 6)],
         'set_battery_soc': [('soc_pct', 0.0, 100.0)],
+        'step': [('seconds', 0.0, STEP_MAX_S)],
         'failure_inject': [('magnitude', None, None),
                            ('duration_s', 0.0, None),
                            ('onset_duration_s', 0.0, None)],
@@ -4273,7 +4288,17 @@ class SimulationEngine:
                 self._tick_prop_speed_clamp(prop)
         elif t == 'freeze':
             self.speed = 0.0
+        elif t == 'step':
+            # Only meaningful when frozen; while running it is refused so the
+            # timeline never shows a step that did not happen.
+            secs = float(cmd.get('seconds', 1.0) or 0.0)
+            if self.speed != 0:
+                logger.warning("step %.1f s ignored: the simulation is not frozen", secs)
+                self.instr_cmd_rejects += 1
+                return
+            self._step_remaining_s = min(self.STEP_MAX_S, self._step_remaining_s + max(0.0, secs))
         elif t == 'resume':
+            self._step_remaining_s = 0.0
             self.speed = max(1.0, self.speed) if self.speed == 0 else self.speed
         elif t == 'inject':
             self._handle_failure_inject(cmd)
@@ -5063,6 +5088,7 @@ class SimulationEngine:
                 'timestamp': self._sim_time.isoformat(),
                 'tick': self._tick_count,
                 'speed': self.speed,
+                'step_remaining_s': round(self._step_remaining_s, 1),
                 'spacecraft_phase': self._spacecraft_phase,
             },
             'orbit': {

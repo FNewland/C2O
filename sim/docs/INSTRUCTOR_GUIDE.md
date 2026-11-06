@@ -432,6 +432,9 @@ pointing number from a run above ×60.**
 - **Freeze/Resume**: Pause the simulation completely; all parameters freeze
   - Useful for detailed inspection of a particular state
   - Resume to continue from that point
+- **+10 s** (shown only while frozen): advance 10 s of simulation time, then stay
+  frozen. The API takes any length up to an hour: `{"type": "step", "seconds": 60}`.
+  Use it to show the next moment of a frozen state, or to make repeatable takes
 
 ### Link Override
 

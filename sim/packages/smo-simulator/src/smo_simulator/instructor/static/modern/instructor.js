@@ -992,6 +992,14 @@ function renderTimeControl() {
   btn.textContent = frozen ? tText("Resume") : tText("Freeze");
   btn.classList.toggle("primary", frozen);
   btn.title = frozen ? tText("Resume the simulation at ×1") : tText("Stop simulation time for everyone");
+  // step only exists while frozen (the engine refuses it otherwise)
+  const step = $("step-btn");
+  if (step) step.hidden = !frozen;
+}
+async function stepFrozen() {
+  const res = await sendCommand({ type: "step", seconds: 10 });
+  if (res && res.status !== "ok") { showToast(tText("Refused: {{reason}}", { reason: res.message || tText("unknown") }), "error"); return; }
+  statePoll.kick();
 }
 
 /* ── session label (published to the ground in the state feed) ────────── */
@@ -1595,6 +1603,7 @@ async function init() {
   // header
   $$("#speed-group button[data-speed]").forEach((btn) => btn.addEventListener("click", () => setSpeed(parseFloat(btn.dataset.speed))));
   $("freeze-btn").addEventListener("click", toggleFreeze);
+  $("step-btn").addEventListener("click", stepFrozen);
   $("btn-quick-snap").addEventListener("click", () => saveBreakpoint(tText("snapshot {{t}}", { t: simClock() })));
 
   // focus pane
