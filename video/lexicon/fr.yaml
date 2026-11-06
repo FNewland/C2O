@@ -28,11 +28,12 @@ terms:
   workbook: "cahier de travail"
   Markdown: "Mark-daoune"
   prérequis: "pré-requis"
+  J2000: "J deux mille"
 words: [ORBIT, NORTH, NASA, ESA, OK]
 spell: [MCS, AOCS, ADCS, SCAO, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
         MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, ASC, CSA, FPA, PCDU,
         BCR, LCL, CAN, GPS, RF, UHF, VHF, ICD, IRD, TRL, FDIR, LEO, GSG, VC, OBT, UTC, CPU, RAM,
-        MCR, API, PDF, CSV, HTML, URL, SEMP, IOD, CTG, EMG, PC, FD, CBE, FPA, PVT, ECEF, AOC, CRC]
+        MCR, API, PDF, CSV, HTML, URL, SEMP, IOD, CTG, EMG, PC, FD, CBE, FPA, PVT, ECEF, AOC, CRC, PDOP]
 rules:
   - ['\b(eps|aocs|ttc|obdh|tcs|fdir|obc)\.(?=[a-z])', '{spell:\1} ']
   - ['\b(payload|prop|sim|mcs)\.(?=[a-z])', '\1 ']

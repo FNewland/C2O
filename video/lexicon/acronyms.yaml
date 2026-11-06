@@ -40,7 +40,7 @@ PCDU:  {en: "power conditioning and distribution unit", fr: "unité de condition
 BCR:   {en: "battery charge regulator", fr: "régulateur de charge batterie", short: {en: B-C-R, fr: B-C-R}, kind: letters, expand: true}
 LCL:   {en: "latching current limiter", fr: "limiteur de courant à verrouillage", short: {en: L-C-L, fr: L-C-L}, kind: letters, expand: true}
 MPPT:  {en: "maximum power point tracking", fr: "suivi du point de puissance maximale", short: {en: M-P-P-T, fr: M-P-P-T}, kind: letters, expand: true}
-MTQ:   {en: "magnetorquer", fr: "magnéto-coupleur", short: {en: M-T-Q, fr: M-T-Q}, kind: letters, expand: true}
+MTQ:   {en: "magnetorquer", fr: "magnétocoupleur", short: {en: M-T-Q, fr: M-T-Q}, kind: letters, expand: true}
 CSS:   {en: "coarse sun sensor", fr: "capteur solaire grossier", short: {en: C-S-S, fr: C-S-S}, kind: letters, expand: true}
 ST:    {en: "star tracker", fr: "senseur stellaire", short: {en: S-T, fr: S-T}, kind: letters, expand: true, note: "ST1/ST2 = star tracker one/two"}
 RW:    {en: "reaction wheel", fr: "roue de réaction", short: {en: R-W, fr: R-W}, kind: letters, expand: true}

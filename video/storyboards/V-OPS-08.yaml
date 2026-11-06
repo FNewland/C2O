@@ -118,16 +118,18 @@ steps:
       en: >-
         Request a second time report. The reference now reads GROUND, the time since sync starts
         from zero, and the offset is down to a fraction of a second, inside the one-second
-        threshold. Record the residual. Later, once the GPS receiver has a fix, the clock can be
-        disciplined, steered continuously, to GPS time; and the next card, initial orbit
-        determination, closes the launch and early orbit phase, LEOP.
+        threshold. Record the residual. Step 6a must not be skipped: enable the GPS navigation
+        report, structure identifier twelve, SID twelve, or the next card runs blind. Once the receiver has a fix, the clock
+        can be disciplined, steered continuously, to GPS time; and initial orbit determination
+        closes the launch and early orbit phase, LEOP.
       fr: >-
         Demandez un second rapport de temps. La référence indique maintenant GROUND, le temps
         depuis la synchronisation repart de zéro, et l’écart est tombé à une fraction de
-        seconde, sous le seuil d’une seconde. Notez le résidu. Plus tard, une fois que le
-        récepteur GPS aura un point, l’horloge pourra être asservie, recalée en continu, au
-        temps GPS ; et la fiche suivante, la restitution d’orbite initiale, clôt la phase de
-        lancement et de début d’orbite, la LEOP.
+        seconde, sous le seuil d’une seconde. Notez le résidu. Ne sautez pas l’étape 6a :
+        activez le rapport de navigation GPS, identifiant de structure douze, SID douze, sinon la fiche suivante travaille à
+        l’aveugle. Une fois que le récepteur aura un point, l’horloge pourra être asservie,
+        recalée en continu, au temps GPS ; et la restitution d’orbite initiale clôt la phase
+        de lancement et de début d’orbite, la LEOP.
     do:
       - click: {css: "#s9-report"}
       - wait: 3.0

@@ -9,7 +9,7 @@ title:
   fr: "LEOP-007 : alimenter le SCAO, puis DETUMBLE"
 summary:
   en: "Energise the AOCS suite, enable its housekeeping, switch on the magnetometer and the magnetorquers before commanding DETUMBLE, and check the mode against a live magnetic-field reading."
-  fr: "Alimenter la chaîne SCAO, activer ses données de servitude, allumer le magnétomètre et les magnéto-coupleurs avant de commander DETUMBLE, et vérifier le mode sur une mesure réelle du champ magnétique."
+  fr: "Alimenter la chaîne SCAO, activer ses données de servitude, allumer le magnétomètre et les magnétocoupleurs avant de commander DETUMBLE, et vérifier le mode sur une mesure réelle du champ magnétique."
 apps:
   mcs: default
 fresh_stack: sim
@@ -93,11 +93,11 @@ steps:
         magnetorquers. And start the GPS receiver now: the time and orbit cards need its first
         fix later.
       fr: >-
-        DETUMBLE, le mode qui amortit le culbutage, applique la loi B-point, B pour le champ
+        DETUMBLE, le mode qui amortit le culbutage, applique la loi B-dot, B pour le champ
         magnétique, point pour sa dérivée : le magnétomètre mesure comment le champ terrestre
-        tourne dans le repère du satellite, et les magnéto-coupleurs, des barreaux
+        tourne dans le repère du satellite, et les magnétocoupleurs, des barreaux
         électromagnétiques, s’opposent à cette rotation. Les deux doivent donc être allumés d’abord. Allumez le magnétomètre,
-        l’équipement cinq deux un. Activez les magnéto-coupleurs. Et démarrez le récepteur GPS
+        l’équipement cinq deux un. Activez les magnétocoupleurs. Et démarrez le récepteur GPS
         dès maintenant : les fiches de temps et d’orbite auront besoin de son premier point plus
         tard.
     do:
@@ -125,7 +125,7 @@ steps:
         en: "What happens if you command DETUMBLE before the magnetometer is on?"
         fr: "Que se passe-t-il si vous commandez DETUMBLE avant d’allumer le magnétomètre ?"
       options:
-        - text: {en: "The mode is entered but B-dot has no field to work from: the rates do not come down.", fr: "Le mode est pris mais B-point n’a pas de champ sur lequel travailler : les vitesses ne baissent pas."}
+        - text: {en: "The mode is entered but B-dot has no field to work from: the rates do not come down.", fr: "Le mode est pris mais B-dot n’a pas de champ sur lequel travailler : les vitesses ne baissent pas."}
           correct: true
           why: {en: "That is why the card checks the mode against a live field reading, not just the mode number.", fr: "C’est pourquoi la fiche vérifie le mode sur une mesure réelle du champ, pas seulement sur le numéro du mode."}
         - text: {en: "Nothing: the AOCS switches the magnetometer on by itself.", fr: "Rien : le SCAO allume lui-même le magnétomètre."}
@@ -181,7 +181,7 @@ steps:
         Sur la fiche, relevez les valeurs et marquez les étapes 3 à 5 GO. L’étape 6 confirme
         l’état d’alimentation en sortie : lignes charge utile, refroidisseur et propulsion
         toujours éteintes, roues toujours désactivées. Ensuite, on ne commande plus rien
-        pendant un moment : LEOP-005 regarde simplement B-point ralentir le satellite, et le
+        pendant un moment : LEOP-005 regarde simplement B-dot ralentir le satellite, et le
         SCAO passe de lui-même au pointage solaire.
     do:
       - click: {css: "#rail-proc"}

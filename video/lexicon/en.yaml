@@ -22,6 +22,8 @@ terms:
   ESA: "ESA"
   H5P: "H five P"
   ConOps: "con-ops"
+  PDOP: "P-dop"
+  J2000: "J two thousand"
 words: [ORBIT, NORTH, NASA, ESA, OK]
 spell: [MCS, AOCS, ADCS, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
         MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, CSA, FPA, PCDU, BCR,

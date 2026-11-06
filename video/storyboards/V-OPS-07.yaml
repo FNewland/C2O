@@ -11,7 +11,7 @@ title:
   fr: "LEOP-005 : acquisition du Soleil, sans toucher"
 summary:
   en: "Record the body rates, watch the magnetorquers slow the spacecraft down, see the AOCS switch itself to sun pointing, and check the sun hold and the power it brings."
-  fr: "Relever les vitesses angulaires, regarder les magnéto-coupleurs ralentir le satellite, voir le SCAO passer de lui-même au pointage solaire, et vérifier la tenue au Soleil et la puissance qu’elle apporte."
+  fr: "Relever les vitesses angulaires, regarder les magnétocoupleurs ralentir le satellite, voir le SCAO passer de lui-même au pointage solaire, et vérifier la tenue au Soleil et la puissance qu’elle apporte."
 apps:
   mcs: default
 fresh_stack: sim
@@ -51,7 +51,7 @@ steps:
         début d’orbite, LEOP-005, ne commande rien : elle observe. Ouvrez la page attitude et
         relevez le point de départ : le mode, et les trois vitesses angulaires, roulis, tangage
         et lacet. Dans ce déroulé, la séparation a laissé EOSAT-1 tourner très lentement. Une
-        vraie séparation laisse souvent quelques degrés par seconde, et B-point, la loi de
+        vraie séparation laisse souvent quelques degrés par seconde, et B-dot, la loi de
         freinage magnétique, a alors besoin de dizaines de minutes, en divisant à peu près les
         vitesses par deux toutes les dix à quinze.
     do:
@@ -67,9 +67,9 @@ steps:
         en: "The rates are not falling after fifteen minutes of DETUMBLE. What do you look at first?"
         fr: "Les vitesses ne baissent pas après quinze minutes de DETUMBLE. Que regardez-vous d’abord ?"
       options:
-        - text: {en: "The measured magnetic field and the magnetometer and magnetorquer enable flags.", fr: "Le champ magnétique mesuré et les indicateurs d’activation du magnétomètre et des magnéto-coupleurs."}
+        - text: {en: "The measured magnetic field and the magnetometer and magnetorquer enable flags.", fr: "Le champ magnétique mesuré et les indicateurs d’activation du magnétomètre et des magnétocoupleurs."}
           correct: true
-          why: {en: "B-dot needs both legs. A zeroed field means it is blind.", fr: "B-point a besoin des deux. Un champ à zéro signifie qu’il est aveugle."}
+          why: {en: "B-dot needs both legs. A zeroed field means it is blind.", fr: "B-dot a besoin des deux. Un champ à zéro signifie qu’il est aveugle."}
         - text: {en: "Command COARSE_SUN to force the spacecraft out of DETUMBLE.", fr: "Commander COARSE_SUN pour forcer la sortie de DETUMBLE."}
           why: {en: "Sun pointing at high rates cannot hold; the card forbids commanding it.", fr: "Le pointage solaire à vitesse élevée ne tient pas ; la fiche interdit de le commander."}
         - text: {en: "The reaction wheel speeds.", fr: "Les vitesses des roues de réaction."}
@@ -115,7 +115,7 @@ steps:
       fr: >-
         En COARSE_SUN, l’erreur d’attitude, l’angle entre le pointage et le Soleil, diminue.
         Sans roues, avec les seuls
-        magnéto-coupleurs, c’est lent et approximatif : la fiche accorde dix minutes pour
+        magnétocoupleurs, c’est lent et approximatif : la fiche accorde dix minutes pour
         descendre sous quinze degrés. Demandez la confiance des capteurs solaires grossiers par
         son numéro de paramètre : au-dessus d’un demi, ils voient le Soleil.
     do:
