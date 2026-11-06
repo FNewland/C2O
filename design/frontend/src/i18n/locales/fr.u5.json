@@ -35,7 +35,7 @@
   "Per spacecraft, ×{{qty}} in the constellation": "Par engin spatial, ×{{qty}} dans la constellation",
   "Sets each missing allocation to its nominal with margin, plus 10 %": "Fixe chaque allocation manquante à sa valeur nominale avec marge, plus 10 %",
   "Allocating...": "Allocation en cours…",
-  "Allocate the {{n}} unallocated (+10 %)": "Allouer les {{n}} éléments sans allocation (+10 %)",
+  "Allocate the {{n}} unallocated (+10 %)": "Allouer les éléments sans allocation ({{n}}, +10 %)",
   "{{name}}: {{kind}} budget": "{{name}} : bilan {{kind}}",
   "Allocation for {{name}}": "Allocation de {{name}}",
   "Orbit average": "Moyenne orbitale",
