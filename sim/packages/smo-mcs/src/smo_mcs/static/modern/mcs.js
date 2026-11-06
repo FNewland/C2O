@@ -2858,7 +2858,7 @@ function buildCmdPage() {
                   <span data-i18n>show other positions' commands (read-only)</span></label></div>
               <div class="fld"><label for="cmd-service" data-i18n>Service</label>
                 <select id="cmd-service" class="in">
-                  ${[3, 5, 6, 8, 9, 11, 12, 15, 17, 19, 20].map((s2) => `<option>${s2}</option>`).join("")}
+                  ${knownServices().map((s2) => `<option>${s2}</option>`).join("")}
                 </select></div>
               <div class="fld"><label for="cmd-subtype" data-i18n>Subtype</label>
                 <input id="cmd-subtype" class="in" type="number" min="1" max="255" value="1" style="width:70px"></div>
@@ -2955,8 +2955,17 @@ export function rawCommandingAllowed(pos = S.position) {
 }
 /* The services this position may command (positions.yaml
  * allowed_services; "all" or absent = every service). */
+// Every PUS service the console can send: the base set plus whatever the TC
+// catalogue uses. The list was fixed and lacked S2 (device access), so every
+// S2_* catalogue command went out as TC(0,1) and was rejected.
+const BASE_SERVICES = [2, 3, 5, 6, 8, 9, 11, 12, 13, 15, 17, 18, 19, 20];
+export function knownServices() {
+  const set = new Set(BASE_SERVICES);
+  for (const c of S.tcCatalog || []) if (Number.isInteger(Number(c.service)) && Number(c.service) > 0) set.add(Number(c.service));
+  return [...set].sort((a, b) => a - b);
+}
 export function positionServices(pos = S.position) {
-  const all = [3, 5, 6, 8, 9, 11, 12, 15, 17, 19, 20];
+  const all = knownServices();
   const p = S.positions[pos] || {};
   const al = p.allowed_services;
   if (!Array.isArray(al) || !al.length) return all;

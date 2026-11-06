@@ -1,0 +1,137 @@
+# Week 5 — LEOP-006: read the unset on-board clock, compute the offset, set it
+# from the ground and check the result. From card-LEOP-006. Nominal card.
+# Prepares WB-5.5-L006 steps 2–5.
+id: V-OPS-08
+week: 5
+audience: all
+title:
+  en: "LEOP-006: set the on-board clock"
+  fr: "LEOP-006 : régler l’horloge de bord"
+summary:
+  en: "Request a time report, read the clock's reference and the offset from ground time, set the clock from the ground, and confirm the new reference and the residual."
+  fr: "Demander un rapport de temps, lire la référence de l’horloge et son écart avec le temps sol, régler l’horloge depuis le sol, puis confirmer la nouvelle référence et le résidu."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.5-L006, WB-5.5-L006/q2, WB-5.5-L006/q3, WB-5.5-L006/q5]
+  cards: [LEOP-006]
+sources:
+  - sim/configs/eosat1/procedures/leop/time_sync.md (LEOP-006)
+  - sim/docs/TIME_ARCHITECTURE.md
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-006}}
+  - wait: 2
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 420, min_elevation: 15, after_aos: 10}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0004", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: unset
+    title: {en: "Step 2: a clock that was never set", fr: "Étape 2 : une horloge jamais réglée"}
+    say:
+      en: >-
+        Every packet the spacecraft sends carries its own time, so before commissioning starts
+        that time has to be right. Open the PUS page, S9 TIME, and request a time report. The
+        on-board clock has been counting since boot from its epoch, years away from the ground
+        clock. The time reference reads NONE, and the time since the last sync says never
+        synced. That is expected: no one has set it yet.
+      fr: >-
+        Chaque paquet émis par le satellite porte sa propre date : avant la mise en service,
+        cette heure doit être juste. Ouvrez la page PUS, S9 TIME, et demandez un rapport de
+        temps. L’horloge de bord compte depuis le démarrage à partir de son époque, à des années
+        de l’horloge sol. La référence de temps indique NONE, et le temps depuis la dernière
+        synchronisation indique jamais synchronisée. C’est normal : personne ne l’a encore
+        réglée.
+    do:
+      - click: {css: "#rail-diag"}
+      - wait: 0.8
+      - click: {css: "[data-diag='s9']"}
+      - wait: 1.0
+      - click: {css: "#s9-report"}
+      - wait: 2.5
+      - highlight: {target: {css: "#diag-s9 table"}, seconds: 4, point: false}
+    question:
+      type: multichoice
+      worksheet: WB-5.5-L006/q2
+      text:
+        en: "The time reference reads NONE and the offset is years. What does that tell you?"
+        fr: "La référence de temps indique NONE et l’écart se compte en années. Qu’est-ce que cela vous apprend ?"
+      options:
+        - text: {en: "The clock has never been set: it counts from its epoch since boot. Expected at this point.", fr: "L’horloge n’a jamais été réglée : elle compte depuis son époque depuis le démarrage. Normal à ce stade."}
+          correct: true
+          why: {en: "NONE means never set; GROUND or HOLDOVER would mean drift since a set.", fr: "NONE signifie jamais réglée ; GROUND ou HOLDOVER indiqueraient une dérive depuis un réglage."}
+        - text: {en: "The clock has drifted badly: the oscillator has failed.", fr: "L’horloge a fortement dérivé : l’oscillateur est en panne."}
+          why: {en: "Drift is measured from a set; there has never been one.", fr: "Une dérive se mesure depuis un réglage ; il n’y en a jamais eu."}
+        - text: {en: "The ground clock is wrong.", fr: "L’horloge sol est fausse."}
+          why: {en: "The ground clock is the reference the card trusts.", fr: "L’horloge sol est la référence à laquelle la fiche se fie."}
+
+  - id: delta
+    title: {en: "Step 3: the offset, light time included", fr: "Étape 3 : l’écart, temps de propagation compris"}
+    say:
+      en: >-
+        Step 3 computes the offset: on-board time minus ground time, corrected by the one-way
+        light time, the time the report took to travel down. The console shows both. In low
+        Earth orbit the light time is a few milliseconds, far below the one-second accuracy this
+        card needs, but the method is the one used for any mission. The Flight Director approves
+        the correction before it is sent.
+      fr: >-
+        L’étape 3 calcule l’écart : temps de bord moins temps sol, corrigé du temps de
+        propagation, le temps qu’a mis le rapport pour descendre. La console affiche les deux.
+        En orbite basse, ce temps de propagation n’est que de quelques millisecondes, bien en
+        dessous de la précision d’une seconde demandée ici, mais la méthode est celle de toute
+        mission. Le directeur de vol approuve la correction avant l’envoi.
+    do:
+      - highlight: {target: {css: "#s9-owlt"}, seconds: 3}
+      - highlight: {target: {css: "#s9-dt"}, seconds: 3}
+
+  - id: set
+    title: {en: "Step 4: set the clock", fr: "Étape 4 : régler l’horloge"}
+    say:
+      en: >-
+        Now send the time update, service nine subtype one. The console computes the on-board
+        time code from the ground clock at the moment of sending. Read the time code before you
+        send it: it counts from the mission epoch, and a Unix timestamp here would put the
+        spacecraft decades out.
+      fr: >-
+        Envoyez maintenant la mise à l’heure, service neuf sous-type un. La console calcule le
+        code temporel de bord à partir de l’horloge sol au moment de l’envoi. Lisez ce code avant
+        de l’envoyer : il compte depuis l’époque de la mission, et un horodatage Unix placerait
+        le satellite à des décennies de là.
+    do:
+      - click: {css: "#s9-set-now"}
+      - wait: 1.0
+      - highlight: {target: {css: "#s9-preview"}, seconds: 3}
+      - click: {css: "#s9-set-send"}
+      - wait: 2.5
+      - highlight: {target: {css: "#s9-preview"}, seconds: 2.5}
+
+  - id: verify
+    title: {en: "Step 5: check the result", fr: "Étape 5 : vérifier le résultat"}
+    say:
+      en: >-
+        Request a second time report. The reference now reads GROUND, the time since sync starts
+        from zero, and the offset is down to a fraction of a second, inside the one-second
+        threshold. Record the residual. Later, once the GPS receiver has a fix, the clock can be
+        disciplined to GPS time; and the next card, initial orbit determination, closes LEOP.
+      fr: >-
+        Demandez un second rapport de temps. La référence indique maintenant GROUND, le temps
+        depuis la synchronisation repart de zéro, et l’écart est tombé à une fraction de
+        seconde, sous le seuil d’une seconde. Notez le résidu. Plus tard, une fois que le
+        récepteur GPS aura un point, l’horloge pourra être asservie au temps GPS ; et la fiche
+        suivante, la restitution d’orbite initiale, clôt la LEOP.
+    do:
+      - click: {css: "#s9-report"}
+      - wait: 3.0
+      - highlight: {target: {css: "#diag-s9 table"}, seconds: 4, point: false}
+    question:
+      type: truefalse
+      worksheet: WB-5.5-L006/q5
+      answer: true
+      text:
+        en: "After the set, the time reference should read GROUND and the residual offset be below 1 s."
+        fr: "Après le réglage, la référence de temps doit indiquer GROUND et l’écart résiduel être inférieur à 1 s."
