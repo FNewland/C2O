@@ -45,14 +45,16 @@ steps:
     say:
       en: >-
         The application is running, but the downlink is still on the SAFE rate, one kilobit
-        per second. Try to select LOW straight away and the spacecraft refuses. Read the
-        failure notice in the event list: it names the gate. Beacon mode is still latched, and
-        booting the application does not clear it. That is deliberate: the SAFE rate is the
+        per second, the slowest and most robust. Try to select LOW straight away and the
+        spacecraft refuses. Read the failure notice in the event list: it names the gate, the
+        condition that is not met. Beacon mode is still latched, and booting the application
+        does not clear it. That is deliberate: the SAFE rate is the
         lifeline, and the spacecraft never leaves it by accident.
       fr: >-
         L’application tourne, mais la liaison descendante est encore au débit SAFE, un kilobit
-        par seconde. Essayez de choisir LOW tout de suite : le satellite refuse. Lisez l’avis
-        d’échec dans la liste des événements : il nomme la condition. Le mode balise est
+        par seconde, le plus lent et le plus robuste. Essayez de choisir LOW tout de suite : le
+        satellite refuse. Lisez l’avis d’échec dans la liste des événements : il nomme la
+        condition qui n’est pas remplie. Le mode balise est
         toujours verrouillé, et le démarrage de l’application ne le lève pas. C’est voulu : le
         débit SAFE est la ligne de vie, et le satellite ne le quitte jamais par accident.
     do:
@@ -70,8 +72,8 @@ steps:
     question:
       type: multichoice
       text:
-        en: "TTC_SET_DATA_RATE comes back with an S1.8 failure. What do you do first?"
-        fr: "TTC_SET_DATA_RATE revient avec un échec S1.8. Que faites-vous d’abord ?"
+        en: "TTC_SET_DATA_RATE comes back with an S1.8 failure (service 1, request verification: execution failed). What do you do first?"
+        fr: "TTC_SET_DATA_RATE revient avec un échec S1.8 (service 1, vérification des requêtes : échec d’exécution). Que faites-vous d’abord ?"
       options:
         - text: {en: "Read the failure notice: it names the gate that is not met.", fr: "Lire l’avis d’échec : il nomme la condition non remplie."}
           correct: true
@@ -85,12 +87,14 @@ steps:
     title: {en: "Step 5a: clear beacon mode, select LOW", fr: "Étape 5a : lever le mode balise, choisir LOW"}
     say:
       en: >-
-        Step 5a does it in order. First, clear beacon mode. Wait for execution complete. Then
+        Step 5a of LEOP-001, the first card of the launch and early orbit phase, LEOP, does it
+        in order. First, clear beacon mode. Wait for execution complete. Then
         select the LOW rate: sixteen kilobits per second, enough for all the routine
         housekeeping. This time it is accepted and executed. The faster HIGH rate is kept for
         data dumps, much later, once the antenna is deployed.
       fr: >-
-        L’étape 5a le fait dans l’ordre. D’abord, levez le mode balise. Attendez la fin
+        L’étape 5a de LEOP-001, la première fiche de la phase de lancement et de début
+        d’orbite, la LEOP, le fait dans l’ordre. D’abord, levez le mode balise. Attendez la fin
         d’exécution. Puis choisissez le débit LOW : seize kilobits par seconde, assez pour
         toutes les données de servitude courantes. Cette fois, la commande est acceptée et
         exécutée. Le débit HIGH, plus rapide, est réservé aux vidages de données, bien plus
@@ -115,12 +119,13 @@ steps:
         Now LEOP-002, the initial health check. It powers nothing and changes no mode: it only
         looks. It checks the subsystems that are powered at this point, power, thermal, the
         computer and the radio, and it confirms that everything else is still dark. The values
-        you read now become the mission's baseline.
+        you read now become the mission's baseline, the reference for every later reading.
       fr: >-
         Voici LEOP-002, le bilan de santé initial. Elle n’alimente rien et ne change aucun
         mode : elle se contente de regarder. Elle vérifie les sous-systèmes alimentés à ce
         stade, l’énergie, le thermique, l’ordinateur et la radio, et confirme que tout le reste
-        est encore éteint. Les valeurs relevées maintenant deviennent la référence de la mission.
+        est encore éteint. Les valeurs relevées maintenant deviennent la référence de la mission,
+        à laquelle on comparera chaque relevé ultérieur.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -134,15 +139,17 @@ steps:
     title: {en: "Step 1: power housekeeping", fr: "Étape 1 : servitude énergie"}
     say:
       en: >-
-        Step 1 asks for the power report, SID one. Then read it on the power page: the bus
-        voltage between twenty-nine point six and thirty-four point six volts, the battery
-        charge above fifty percent. Power generation may well read zero: if the eclipse flag
-        is set, that is expected. Record it, and check again after eclipse exit.
+        Step 1 asks for the power housekeeping report, structure identifier one, SID one. Then
+        read it on the power page: the bus voltage between twenty-nine point six and
+        thirty-four point six volts, the battery charge above fifty percent. Power generation
+        may well read zero: if the eclipse flag is set, the spacecraft is in Earth's shadow and
+        that is expected. Record it, and check again after eclipse exit.
       fr: >-
-        L’étape 1 demande le rapport énergie, SID un. Lisez-le ensuite sur la page énergie : la
-        tension du bus entre vingt-neuf virgule six et trente-quatre virgule six volts, la
-        charge de la batterie au-dessus de cinquante pour cent. La puissance générée peut fort
-        bien afficher zéro : si l’indicateur d’éclipse est levé, c’est attendu. Notez-le, et
+        L’étape 1 demande le rapport de servitude énergie, identifiant de structure un, SID un.
+        Lisez-le ensuite sur la page énergie : la tension du bus entre vingt-neuf virgule six et
+        trente-quatre virgule six volts, la charge de la batterie au-dessus de cinquante pour
+        cent. La puissance générée peut fort bien afficher zéro : si l’indicateur d’éclipse est
+        levé, le satellite est dans l’ombre de la Terre, et c’est attendu. Notez-le, et
         vérifiez de nouveau après la sortie d’éclipse.
     do:
       - click: {css: "#rail-cmd"}
@@ -167,15 +174,16 @@ steps:
     title: {en: "Step 2: what must be dark", fr: "Étape 2 : ce qui doit être éteint"}
     say:
       en: >-
-        The same report carries every power line flag. Step 2 is the honest health check for a
-        unit that is not powered yet: the wheels, the payload, the cooler and propulsion must
-        all read zero. Do not ask for the attitude or payload reports here: those reports are
+        The same report carries the on-off flag of every power line. Step 2 is the honest health
+        check for a unit that is not powered yet: the reaction wheels, the payload and its
+        cooler, and propulsion must all read zero. Do not ask for the attitude or payload reports here: those reports are
         not enabled, and their units are off. A line that reads one was switched on out of
         sequence, and that is an anomaly to log.
       fr: >-
-        Le même rapport contient l’état de chaque ligne d’alimentation. L’étape 2 est le vrai
-        bilan de santé d’une unité pas encore alimentée : les roues, la charge utile, le
-        refroidisseur et la propulsion doivent tous afficher zéro. Ne demandez pas ici les
+        Le même rapport contient l’indicateur marche-arrêt de chaque ligne d’alimentation.
+        L’étape 2 est le vrai bilan de santé d’une unité pas encore alimentée : les roues de
+        réaction, la charge utile et son refroidisseur, et la propulsion doivent tous afficher
+        zéro. Ne demandez pas ici les
         rapports d’attitude ou de charge utile : ils ne sont pas activés, et leurs unités sont
         éteintes. Une ligne à un a été allumée hors séquence : c’est une anomalie à consigner.
     do:

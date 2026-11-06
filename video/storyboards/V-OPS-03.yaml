@@ -57,14 +57,15 @@ steps:
     title: {en: "Read the alarm", fr: "Lire l’alarme"}
     say:
       en: >-
-        There it is. Open the alarm list. Each row gives the priority, the parameter and its
-        value against the limit, when it started, and the procedure that covers it. Star
-        tracker one reports a status above two: it has lost lock. Read the whole row before
-        you do anything.
+        Open the alarm list. Each row gives the priority, the parameter and its value against
+        the limit, when it started, and the procedure that covers it. Star tracker one, the
+        star camera of the attitude and orbit control system, the AOCS, reports a status above
+        two: it has lost lock on the stars. Read the whole row before you do anything.
       fr: >-
-        La voilà. Ouvrez la liste des alarmes. Chaque ligne donne la priorité, le paramètre et
-        sa valeur par rapport à la limite, l’heure de début et la procédure qui la couvre. Le
-        viseur d’étoiles un indique un état supérieur à deux : il a perdu l’accrochage. Lisez
+        Ouvrez la liste des alarmes. Chaque ligne donne la priorité, le paramètre et sa valeur
+        par rapport à la limite, l’heure de début et la procédure qui la couvre. Le senseur
+        stellaire un, la caméra stellaire du système de contrôle d’attitude et d’orbite, le
+        SCAO, indique un état supérieur à deux : il a perdu l’accrochage sur les étoiles. Lisez
         toute la ligne avant de faire quoi que ce soit.
     do:
       - wait_for: {target: {css: "#alarms-btn"}, timeout: 30}
@@ -92,12 +93,12 @@ steps:
     say:
       en: >-
         Acknowledge it. That says one thing: I have seen this and I own it. The condition is
-        still active, and the row stays until the value returns to normal. Say it on the loop
-        too, so the Flight Director knows who has it.
+        still active, and the row stays until the value returns to normal. Say it on the voice
+        loop too, so the Flight Director knows who has it.
       fr: >-
         Acquittez-la. Cela ne dit qu’une chose : j’ai vu cette alarme et je m’en occupe. La
         condition est toujours active, et la ligne reste tant que la valeur n’est pas revenue
-        à la normale. Annoncez-le aussi sur la boucle, pour que le directeur de vol sache qui
+        à la normale. Annoncez-le aussi sur la boucle vocale, pour que le directeur de vol sache qui
         s’en charge.
     do:
       - click: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status') [data-act='ack']"}

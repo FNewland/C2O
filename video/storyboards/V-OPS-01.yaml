@@ -37,13 +37,14 @@ steps:
       en: >-
         This is mission control for EOSAT-1, seen from the Flight Director's position. The strip
         across the top answers four questions at a glance: can I see the spacecraft, can I talk
-        to it, is it well, and what comes next. Every pass starts the same way, with procedure
-        NOM-001, Pass Startup.
+        to it, is it well, and what comes next. Every pass starts the same way, with the nominal
+        procedure NOM-001, Pass Startup — nom for short.
       fr: >-
         Voici le centre de contrôle d’EOSAT-1, vu du poste du directeur de vol. Le bandeau du
         haut répond d’un coup d’œil à quatre questions : est-ce que je vois le satellite, est-ce
         que je peux lui parler, va-t-il bien, et quelle est la suite. Chaque passage commence de
-        la même façon, avec la procédure NOM-001, Ouverture de passage.
+        la même façon, avec la procédure nominale NOM-001, Ouverture de passage — nom, en
+        abrégé.
     do:
       - wait: 1.5
       - highlight: {target: {css: "header, .mcs-strip, #strip"}, seconds: 3.5, point: false}
@@ -52,12 +53,13 @@ steps:
     title: {en: "Open the card", fr: "Ouvrir la fiche"}
     say:
       en: >-
-        Procedures live on the PRC page. Choose Ops procedure, then NOM-001. Below the runner is
-        the procedure card. It is not a copy of the manual: it is your working copy, and every
+        Procedures live on the procedures page, PRC. Choose Ops procedure, then NOM-001. Below
+        the runner, which steps through the procedure, is the procedure card. It is not a copy of the manual: it is your working copy, and every
         box you tick on it is saved to your logbook as you go.
       fr: >-
-        Les procédures se trouvent sur la page PRC. Choisissez Procédure d’exploitation, puis
-        NOM-001. Sous l’exécuteur se trouve la fiche de procédure. Ce n’est pas une copie du
+        Les procédures se trouvent sur la page des procédures, PRC. Choisissez Procédure
+        d’exploitation, puis NOM-001. Sous l’exécuteur, qui déroule la procédure, se trouve la
+        fiche de procédure. Ce n’est pas une copie du
         manuel : c’est votre copie de travail, et chaque case que vous cochez est enregistrée
         dans votre journal de bord au fur et à mesure.
     do:
@@ -74,13 +76,14 @@ steps:
     say:
       en: >-
         Start with the prerequisites. They are part of the procedure, not a formality: the
-        antenna is tracking, the pass plan is loaded, flight dynamics is current, and the
-        Flight Director is on the loop. Tick each one only when you have checked it.
+        antenna is tracking, the pass plan is loaded, flight dynamics, the orbit prediction, is
+        current, and the Flight Director is on the voice loop. Tick each one only when you have
+        checked it.
       fr: >-
         Commencez par les prérequis. Ils font partie de la procédure, ce n’est pas une
         formalité : l’antenne suit le satellite, le plan de passage est chargé, la dynamique du
-        vol est à jour et le directeur de vol est sur la boucle. Ne cochez chacun qu’après
-        l’avoir vérifié.
+        vol, la prévision d’orbite, est à jour et le directeur de vol est sur la boucle vocale.
+        Ne cochez chacun qu’après l’avoir vérifié.
     do:
       - check: {css: "#proc-doc li[data-key='p1'] input.pc-pre"}
       - check: {css: "#proc-doc li[data-key='p2'] input.pc-pre"}
@@ -91,12 +94,12 @@ steps:
     title: {en: "Step 1: expected, live, captured", fr: "Étape 1 : attendu, en direct, relevé"}
     say:
       en: >-
-        Step one verifies the on-board computer. The table puts three columns side by side: what
+        Step one verifies the on-board computer, the OBC. The table puts three columns side by side: what
         the card expects, what telemetry shows live, and what you captured. A green tick means
         the live value meets the check. Capture values freezes them into your record, so you
         can show later what you saw when you said GO.
       fr: >-
-        La première étape vérifie l’ordinateur de bord. Le tableau met trois colonnes côte à
+        La première étape vérifie l’ordinateur de bord, l’OBC. Le tableau met trois colonnes côte à
         côte : ce que la fiche attend, ce que la télémesure montre en direct, et ce que vous
         avez relevé. Une coche verte signifie que la valeur en direct satisfait la vérification.
         Relever les valeurs les fige dans votre fiche : vous pourrez montrer plus tard ce que
@@ -113,7 +116,7 @@ steps:
         en: "At Step 1, obdh.mode reads 1 instead of 0. What does the card tell the Flight Director to do?"
         fr: "À l’étape 1, obdh.mode vaut 1 au lieu de 0. Que la fiche demande-t-elle au directeur de vol ?"
       options:
-        - text: {en: "Abort the pass and run CTG-010 OBC Recovery.", fr: "Interrompre le passage et exécuter CTG-010 Récupération de l’OBC."}
+        - text: {en: "Abort the pass and run contingency procedure CTG-010, OBC Recovery.", fr: "Interrompre le passage et exécuter la procédure de contingence CTG-010, Récupération de l’OBC."}
           correct: true
           why: {en: "That is the GO/NO-GO line of Step 1.", fr: "C’est la ligne GO/NO-GO de l’étape 1."}
         - text: {en: "Carry on to Step 2 and note it in the handover.", fr: "Passer à l’étape 2 et le noter dans la relève."}
