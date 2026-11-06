@@ -1,0 +1,138 @@
+# Design concept — cost and design reviews (textbook ch. 16): estimate
+# accuracy by method and phase, the EOSat-3U parametric cost breakdown
+# (490 k€, launch 200), confidence levels and reserve, SRR gate criteria and
+# outcomes, the review board and how to present. Ties to SpaceCDF reviews.
+# Animated page video/explainers/reviews.html. Whole design team.
+id: V-DES-13
+week: 6
+audience: all
+title:
+  en: "Cost and design reviews"
+  fr: "Coûts et revues de conception"
+summary:
+  en: "How much will it cost, and how sure are you? Estimating methods and their accuracy, where a CubeSat's money goes, confidence levels and reserve, and how a review gate and an independent board decide go, no go, or go with actions."
+  fr: "Combien cela coûtera-t-il, et avec quelle certitude ? Les méthodes d’estimation et leur précision, où va l’argent d’un CubeSat, les niveaux de confiance et la réserve, et comment une revue et un comité indépendant décident : go, no go, ou go avec actions."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/16_cost_and_reviews.md (§ 16.1, 16.4, 16.5, 16.6)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/reviews.html?lang={lang}", settle: 1.5}
+  - cursor: hide
+
+steps:
+  - id: methods
+    title: {en: "Estimating cost", fr: "Estimer le coût"}
+    say:
+      en: >-
+        A cost estimate narrows as the design matures, just like the mass. Early on, a parametric
+        estimate, fitted to past missions, is good to thirty to fifty percent. With a similar
+        mission to compare against, an analogy gets to twenty to forty. Once you have quotes and
+        labour estimates, a bottom-up sum gets to ten to twenty percent. The three methods follow
+        one another; they are not alternatives.
+      fr: >-
+        Une estimation de coût se resserre à mesure que la conception mûrit, comme la masse. Au
+        début, une estimation paramétrique, ajustée sur des missions passées, est juste à trente
+        ou cinquante pour cent près. Avec une mission semblable pour comparer, une analogie
+        descend à vingt ou quarante. Une fois les devis et la main-d’œuvre connus, une somme
+        ascendante atteint dix à vingt pour cent. Les trois méthodes se succèdent ; ce ne sont pas
+        des options.
+    do:
+      - js: "EX.play('methods', ${say})"
+
+  - id: breakdown
+    title: {en: "Where the money goes", fr: "Où va l’argent"}
+    say:
+      en: >-
+        Here is a parametric estimate for a 3U Earth observation CubeSat: about four hundred and
+        ninety thousand euros. The launch alone is two hundred thousand, the biggest single line.
+        The payload and attitude control come next, then three years of operations. All the flight
+        hardware together is only about a third. The bottom-up estimate came out seven percent
+        lower: parametric models carry their own contingency.
+      fr: >-
+        Voici une estimation paramétrique pour un CubeSat 3U d’observation de la Terre : environ
+        quatre cent quatre-vingt-dix mille euros. Le lancement seul en coûte deux cent mille, la
+        plus grosse ligne. Viennent ensuite la charge utile et le contrôle d’attitude, puis trois
+        ans d’exploitation. Tout le matériel de vol réuni ne fait qu’environ un tiers.
+        L’estimation ascendante est sortie sept pour cent plus bas : les modèles paramétriques
+        portent leur propre contingence.
+    do:
+      - js: "EX.play('breakdown', ${say})"
+
+  - id: confidence
+    title: {en: "Confidence and reserve", fr: "Confiance et réserve"}
+    say:
+      en: >-
+        A single number hides the uncertainty, so commit at a confidence level. The fifty percent
+        point is the cost you beat half the time: the baseline. NASA commits at seventy percent,
+        about one point two times that; proposals often use eighty, about one point three times.
+        The difference is the reserve. It belongs to the project manager, and it is released when
+        a risk in the register actually happens.
+      fr: >-
+        Un seul nombre cache l’incertitude : on s’engage donc à un niveau de confiance. Le point à
+        cinquante pour cent est le coût qu’on bat une fois sur deux : la référence. La NASA
+        s’engage à soixante-dix pour cent, environ un virgule deux fois plus ; les propositions
+        prennent souvent quatre-vingts, environ un virgule trois fois. La différence est la
+        réserve. Elle appartient au chef de projet, et se libère quand un risque du registre se
+        produit vraiment.
+    do:
+      - js: "EX.play('confidence', ${say})"
+
+  - id: gates
+    title: {en: "A review gate", fr: "Une revue"}
+    say:
+      en: >-
+        A review gate is a checklist with evidence. At the system requirements review, between
+        Phases A and B, the requirements must be baselined, the ConOps cover every phase, the
+        architecture trades be done, every budget close with margin, the risk register exist, and
+        cost and schedule be estimated. Some criteria must pass, others should. The board
+        decides: go, go with actions, or no go, and every action gets an owner and a date.
+      fr: >-
+        Une revue est une liste de critères avec preuves. À la revue des exigences système, entre
+        les phases A et B, les exigences doivent être figées, le ConOps couvrir chaque phase, les
+        compromis d’architecture être faits, chaque bilan se fermer avec marge, le registre des
+        risques exister, et le coût et le calendrier être estimés. Certains critères sont
+        obligatoires, d’autres souhaitables. Le comité décide : go, go avec actions, ou no go, et
+        chaque action reçoit un responsable et une date.
+    do:
+      - js: "EX.play('gates', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "At the system requirements review your power budget closes, but the risk register has not been started. What is the likely outcome?"
+        fr: "À la revue des exigences système, votre bilan de puissance se ferme, mais le registre des risques n’existe pas. Quelle issue est probable ?"
+      options:
+        - text: {en: "No go, or go with actions: a must-pass criterion has failed.", fr: "No go, ou go avec actions : un critère obligatoire a échoué."}
+          correct: true
+          why: {en: "A risk register with mitigations is a must-pass criterion at this gate.", fr: "Un registre des risques avec atténuations est obligatoire à cette revue."}
+        - text: {en: "Go: the budgets are what matter at this gate.", fr: "Go : ce sont les bilans qui comptent à cette revue."}
+          why: {en: "Every must-pass criterion counts, not just the budgets.", fr: "Chaque critère obligatoire compte, pas seulement les bilans."}
+        - text: {en: "Go, with the register due at the critical design review.", fr: "Go, avec le registre attendu à la revue critique."}
+          why: {en: "That would leave a must-pass gap for two phases.", fr: "Cela laisserait un manque obligatoire pendant deux phases."}
+
+  - id: board
+    title: {en: "The review board", fr: "Le comité de revue"}
+    say:
+      en: >-
+        The board is independent: people who did not do the design, because they can see what
+        the team no longer can. A chair covers every criterion; reviewers probe the systems view,
+        the technical choices, the risks and the operations. When you present, lead with the
+        conclusion, show the evidence, state your assumptions, and when you do not know, say so
+        and take an action. Your SpaceCDF reviews work the same way.
+      fr: >-
+        Le comité est indépendant : des personnes qui n’ont pas fait la conception, parce qu’elles
+        voient ce que l’équipe ne voit plus. Un président couvre chaque critère ; des examinateurs
+        sondent la vue système, les choix techniques, les risques et les opérations. Quand vous
+        présentez, commencez par la conclusion, montrez les preuves, énoncez vos hypothèses, et
+        quand vous ne savez pas, dites-le et prenez une action. Vos revues dans SpaceCDF
+        fonctionnent de la même façon.
+    do:
+      - js: "EX.play('board', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Which reviewer question from this video would your team find hardest to answer today, and what evidence would you need to answer it?"
+        fr: "Quelle question d’examinateur de cette vidéo votre équipe aurait-elle le plus de mal à traiter aujourd’hui, et quelle preuve lui faudrait-il ?"
