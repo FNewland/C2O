@@ -1,0 +1,216 @@
+# Week 5 — LEOP-001 Step 5a (clear beacon mode, LOW rung) and LEOP-002 (initial
+# health check): the card that only observes. Starts from card-LEOP-001 with the
+# first part of LEOP-001 (contact, boot, HK enables) already flown through the
+# MCS API, so the video picks up where V-OPS-02 stops. Prepares WB-5.5-L002.
+id: V-OPS-04
+week: 5
+audience: all
+title:
+  en: "Beacon mode off, then the first health check"
+  fr: "Mode balise coupé, puis le premier bilan de santé"
+summary:
+  en: "Finish LEOP-001 by clearing beacon mode and moving to the LOW rate, then run LEOP-002: request each housekeeping report, read it against the card, and confirm that what should be dark is dark."
+  fr: "Terminer LEOP-001 en levant le mode balise et en passant au débit LOW, puis dérouler LEOP-002 : demander chaque rapport de servitude, le lire par rapport à la fiche, et confirmer que ce qui doit être éteint l’est."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.5-L002, WB-5.5-L002/q1, WB-5.5-L002/q2]
+  cards: [LEOP-001, LEOP-002]
+sources:
+  - sim/configs/eosat1/procedures/leop/first_acquisition.md (LEOP-001 Step 5a)
+  - sim/configs/eosat1/procedures/leop/initial_health_check.md (LEOP-002)
+  - sim/tests/test_acceptance/test_leop_commissioning_flythrough.py (the same command path)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-001}}
+  - wait: 2
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 420, min_elevation: 15, after_aos: 10}}
+  # LEOP-001 Steps 2–5, as in V-OPS-02: connection test, boot, HK SIDs 3/4/6
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 17, subtype: 1, data_hex: "", name: CONNECTION_TEST, position: flight_director}}
+  - wait: 3
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 8, subtype: 1, data_hex: "37", name: OBC_BOOT_APP, position: flight_director}}
+  - wait: 13
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0003", name: HK_ENABLE, position: flight_director}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0004", name: HK_ENABLE, position: flight_director}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0006", name: HK_ENABLE, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: refused
+    title: {en: "Why LOW is refused", fr: "Pourquoi LOW est refusé"}
+    say:
+      en: >-
+        The application is running, but the downlink is still on the SAFE rate, one kilobit
+        per second. Try to select LOW straight away and the spacecraft refuses. Read the
+        failure notice in the event list: it names the gate. Beacon mode is still latched, and
+        booting the application does not clear it. That is deliberate: the SAFE rate is the
+        lifeline, and the spacecraft never leaves it by accident.
+      fr: >-
+        L’application tourne, mais la liaison descendante est encore au débit SAFE, un kilobit
+        par seconde. Essayez de choisir LOW tout de suite : le satellite refuse. Lisez l’avis
+        d’échec dans la liste des événements : il nomme la condition. Le mode balise est
+        toujours verrouillé, et le démarrage de l’application ne le lève pas. C’est voulu : le
+        débit SAFE est la ligne de vie, et le satellite ne le quitte jamais par accident.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: TTC_SET_DATA_RATE}
+      - wait: 0.6
+      - select: {target: {css: "#cmd-fields [data-cmd-field='rate']"}, value: "0"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 2.5
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
+      # the S1.8 notice is also an S5 event: open the event list on it
+      - click: {css: "[data-bd='events']"}
+      - wait_for: {target: {css: "#bdp-events :text-matches('beacon', 'i')"}, timeout: 15}
+      - highlight: {target: {css: "#bdp-events :text-matches('beacon', 'i')"}, seconds: 4}
+    question:
+      type: multichoice
+      text:
+        en: "TTC_SET_DATA_RATE comes back with an S1.8 failure. What do you do first?"
+        fr: "TTC_SET_DATA_RATE revient avec un échec S1.8. Que faites-vous d’abord ?"
+      options:
+        - text: {en: "Read the failure notice: it names the gate that is not met.", fr: "Lire l’avis d’échec : il nomme la condition non remplie."}
+          correct: true
+          why: {en: "Every ladder gate reports the same code, 0x0007. Only the notice tells them apart.", fr: "Toutes les conditions de l’échelle renvoient le même code, 0x0007. Seul l’avis les distingue."}
+        - text: {en: "Send it again until it is accepted.", fr: "La renvoyer jusqu’à ce qu’elle soit acceptée."}
+          why: {en: "The gate is still there: it will be refused every time.", fr: "La condition est toujours là : elle sera refusée à chaque fois."}
+        - text: {en: "Reboot the on-board computer.", fr: "Redémarrer l’ordinateur de bord."}
+          why: {en: "Nothing is wrong with the computer; a step was skipped.", fr: "L’ordinateur n’a rien ; une étape a été sautée."}
+
+  - id: beacon
+    title: {en: "Step 5a: clear beacon mode, select LOW", fr: "Étape 5a : lever le mode balise, choisir LOW"}
+    say:
+      en: >-
+        Step 5a does it in order. First, clear beacon mode. Wait for execution complete. Then
+        select the LOW rate: sixteen kilobits per second, enough for all the routine
+        housekeeping. This time it is accepted and executed. The faster HIGH rate is kept for
+        data dumps, much later, once the antenna is deployed.
+      fr: >-
+        L’étape 5a le fait dans l’ordre. D’abord, levez le mode balise. Attendez la fin
+        d’exécution. Puis choisissez le débit LOW : seize kilobits par seconde, assez pour
+        toutes les données de servitude courantes. Cette fois, la commande est acceptée et
+        exécutée. Le débit HIGH, plus rapide, est réservé aux vidages de données, bien plus
+        tard, une fois l’antenne déployée.
+    do:
+      - select: {target: {css: "#cmd-catalog"}, value: TTC_SET_BEACON_MODE}
+      - wait: 0.6
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='on']"}, text: "0"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 3.0
+      - select: {target: {css: "#cmd-catalog"}, value: TTC_SET_DATA_RATE}
+      - wait: 0.6
+      - select: {target: {css: "#cmd-fields [data-cmd-field='rate']"}, value: "0"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 2.0
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
+
+  - id: card2
+    title: {en: "LEOP-002: a card that only observes", fr: "LEOP-002 : une fiche qui ne fait qu’observer"}
+    say:
+      en: >-
+        Now LEOP-002, the initial health check. It powers nothing and changes no mode: it only
+        looks. It checks the subsystems that are powered at this point, power, thermal, the
+        computer and the radio, and it confirms that everything else is still dark. The values
+        you read now become the mission's baseline.
+      fr: >-
+        Voici LEOP-002, le bilan de santé initial. Elle n’alimente rien et ne change aucun
+        mode : elle se contente de regarder. Elle vérifie les sous-systèmes alimentés à ce
+        stade, l’énergie, le thermique, l’ordinateur et la radio, et confirme que tout le reste
+        est encore éteint. Les valeurs relevées maintenant deviennent la référence de la mission.
+    do:
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 0.8
+      - select: {target: {css: "#proc-type"}, value: leop/initial_health_check.md}
+      - wait: 2.0
+      - scroll: {css: "#proc-doc"}
+      - highlight: {target: {css: "#proc-doc"}, seconds: 3, point: false}
+
+  - id: eps
+    title: {en: "Step 1: power housekeeping", fr: "Étape 1 : servitude énergie"}
+    say:
+      en: >-
+        Step 1 asks for the power report, SID one. Then read it on the power page: the bus
+        voltage between twenty-nine point six and thirty-four point six volts, the battery
+        charge above fifty percent. Power generation may well read zero: if the eclipse flag
+        is set, that is expected. Record it, and check again after eclipse exit.
+      fr: >-
+        L’étape 1 demande le rapport énergie, SID un. Lisez-le ensuite sur la page énergie : la
+        tension du bus entre vingt-neuf virgule six et trente-quatre virgule six volts, la
+        charge de la batterie au-dessus de cinquante pour cent. La puissance générée peut fort
+        bien afficher zéro : si l’indicateur d’éclipse est levé, c’est attendu. Notez-le, et
+        vérifiez de nouveau après la sortie d’éclipse.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "1"}
+      - click: {css: "#cmd-send"}
+      - wait: 2.0
+      - click: {css: "#rail-eps"}
+      - wait: 1.5
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0105']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0101']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0107']"}, seconds: 2.5}
+    question:
+      type: truefalse
+      worksheet: WB-5.5-L002/q1
+      answer: false
+      text:
+        en: "eps.power_gen reads 0 W during Step 1. The solar arrays have failed: call NO-GO."
+        fr: "eps.power_gen affiche 0 W pendant l’étape 1. Les panneaux solaires sont en panne : NO-GO."
+
+  - id: dark
+    title: {en: "Step 2: what must be dark", fr: "Étape 2 : ce qui doit être éteint"}
+    say:
+      en: >-
+        The same report carries every power line flag. Step 2 is the honest health check for a
+        unit that is not powered yet: the wheels, the payload, the cooler and propulsion must
+        all read zero. Do not ask for the attitude or payload reports here: those reports are
+        not enabled, and their units are off. A line that reads one was switched on out of
+        sequence, and that is an anomaly to log.
+      fr: >-
+        Le même rapport contient l’état de chaque ligne d’alimentation. L’étape 2 est le vrai
+        bilan de santé d’une unité pas encore alimentée : les roues, la charge utile, le
+        refroidisseur et la propulsion doivent tous afficher zéro. Ne demandez pas ici les
+        rapports d’attitude ou de charge utile : ils ne sont pas activés, et leurs unités sont
+        éteintes. Une ligne à un a été allumée hors séquence : c’est une anomalie à consigner.
+    do:
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0117']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0113']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-eps tr[data-param='0x014A']"}, seconds: 2.5}
+
+  - id: record
+    title: {en: "Record each step", fr: "Consigner chaque étape"}
+    say:
+      en: >-
+        Back on the card, capture the values and mark each step GO. Steps 3 to 5 do the same
+        for thermal, the computer and the radio. Step 6 is the health assessment for the
+        Flight Director: every powered subsystem nominal, everything else dark. Only then is
+        the team clear to deploy the solar wings, in LEOP-004.
+      fr: >-
+        De retour sur la fiche, relevez les valeurs et marquez chaque étape GO. Les étapes 3 à 5
+        font de même pour le thermique, l’ordinateur et la radio. L’étape 6 est le bilan de
+        santé pour le directeur de vol : chaque sous-système alimenté nominal, tout le reste
+        éteint. C’est seulement alors que l’équipe peut déployer les ailes solaires, dans
+        LEOP-004.
+    do:
+      - click: {css: "#rail-proc"}
+      - wait: 1.0
+      - scroll: {css: "#proc-doc section[data-pc-step='s1']"}
+      - click: {css: "#proc-doc section[data-pc-step='s1'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s1'] [data-pc='tick'][data-r='go']"}
+      - scroll: {css: "#proc-doc section[data-pc-step='s2']"}
+      - click: {css: "#proc-doc section[data-pc-step='s2'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s2'] [data-pc='tick'][data-r='go']"}
+      - scroll: {css: "#proc-doc section[data-pc-step='s6']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s6']"}, seconds: 3, point: false}
+    question:
+      type: reflect
+      worksheet: WB-5.5-L002/q2
+      text:
+        en: "One of the Step 2 line flags reads 1. What do you write in the log, and who do you tell first?"
+        fr: "L’un des indicateurs de ligne de l’étape 2 affiche 1. Qu’écrivez-vous dans le journal, et qui prévenez-vous d’abord ?"

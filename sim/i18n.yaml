@@ -64,6 +64,9 @@ catalogs:
   - name: mcs
     fr: packages/smo-mcs/src/smo_mcs/static/modern/i18n/fr.json
     fallback: [smo-common]
+    # derived_params.py reasons reach the console as data (tText(ent.reason))
+    keep:
+      - '^not trending toward threshold \(value not (falling|rising)\)$'
     sources:
       - packages/smo-mcs/src/smo_mcs/static/modern/*.{js,html,svg}
   - name: planner

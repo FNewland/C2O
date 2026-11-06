@@ -51,6 +51,8 @@
   "GND": "SOL",
   "INVALID — {{reason}}": "INVALIDE — {{reason}}",
   "no reason given": "aucune raison donnée",
+  "not trending toward threshold (value not falling)": "pas de tendance vers le seuil (la valeur ne baisse pas)",
+  "not trending toward threshold (value not rising)": "pas de tendance vers le seuil (la valeur ne monte pas)",
   "PASS FIT — no derived block": "ADÉQ. PASSAGE — pas de bloc dérivé",
   "PASS FIT — INVALID: {{reason}}": "ADÉQ. PASSAGE — INVALIDE : {{reason}}",
   "will NOT fit": "NE PASSERA PAS",
