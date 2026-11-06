@@ -51,3 +51,22 @@ def ff_to_pass(client, planner: str = "http://127.0.0.1:9091", min_duration: flo
     finally:
         speed(1)
     return c["gs_name"]
+
+
+async def seed_spacecdf_eosat(client, name: str = "EOSAT-1") -> str:
+    """A new SpaceCDF study seeded with the EOSAT-1-like design used in the API tests
+    (design/tests/test_api/diagram_seed.py): product tree, modes, power lines,
+    interfaces, requirements. Returns the study id."""
+    import importlib.util
+    from pathlib import Path
+    REPO = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location("c2o_diagram_seed", REPO / "design/tests/test_api/diagram_seed.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    req = {"name": name, "mission_type": "earth_observation", "spacecraft_class": "nano",
+           "orbit": {"orbit_type": "sso", "altitude_km": 510, "inclination_deg": 97.4}, "payloads": []}
+    r = await client.post("/api/studies/", json={"requirements": req,
+                                                 "mission_need": {"problem_statement": "Ocean-colour imaging of Canadian waters"}})
+    sid = r.json()["id"]
+    await mod.seed_eosat(client, sid)
+    return sid

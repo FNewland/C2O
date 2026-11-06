@@ -1,0 +1,142 @@
+# Week 3 — the mission planner: passes, eclipses, ground track, an imaging
+# activity and the constraint check. Prepares WB-5.3-PP (Day 1 pass plan).
+id: V-PLN-01
+week: 3
+audience: all
+title:
+  en: "Plan a pass in the mission planner"
+  fr: "Planifier un passage dans le planificateur de mission"
+summary:
+  en: "Read the next 24 hours: passes, eclipses and predicted battery charge; follow the ground track; schedule an imaging activity and check it against the constraints."
+  fr: "Lire les 24 prochaines heures : passages, éclipses et charge prévue de la batterie ; suivre la trace au sol ; programmer une activité d’imagerie et la vérifier par rapport aux contraintes."
+apps:
+  planner: default
+# the planner's 24 h starts at the simulator's epoch: same passes in both takes
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.3-PP, WB-5.3-PP/q1, WB-5.3-PP/q3, WB-5.3-PP/q7]
+sources:
+  - sim/configs/eosat1/worksheets/ops_week3.yaml (WB-5.3-PP)
+  - sim/configs/eosat1/planning/ (activity types, imaging_pass)
+
+setup:
+  - goto: {app: planner, path: "/?lang={lang}", settle: 5}
+
+steps:
+  - id: horizon
+    title: {en: "The next 24 hours", fr: "Les 24 prochaines heures"}
+    say:
+      en: >-
+        The planner shows the next twenty-four hours on one time axis. The top row is eclipse:
+        about thirty-four minutes in every ninety-five-minute orbit. Below it, one row per
+        ground station, with every pass. At the bottom is the predicted battery charge, with
+        the planned activities applied. Everything you plan is judged against that curve.
+      fr: >-
+        Le planificateur montre les vingt-quatre prochaines heures sur un même axe du temps. La
+        première ligne est l’éclipse : environ trente-quatre minutes sur chaque orbite de
+        quatre-vingt-quinze minutes. En dessous, une ligne par station sol, avec chaque passage.
+        En bas, la charge prévue de la batterie, activités planifiées comprises. Tout ce que
+        vous planifiez est jugé par rapport à cette courbe.
+    do:
+      - wait: 1.0
+      - highlight: {target: {css: "#panel-overview svg"}, seconds: 4, point: false}
+
+  - id: contact
+    title: {en: "The next contact", fr: "Le prochain contact"}
+    say:
+      en: >-
+        On the right, the next contact: the station, the time of acquisition of signal, how
+        long the pass lasts and its maximum elevation. A short, low pass leaves little time
+        for commanding, so check the duration before you put a procedure in it. The contacts
+        table further down lists every pass with its loss of signal.
+      fr: >-
+        À droite, le prochain contact : la station, l’heure d’acquisition du signal, la durée du
+        passage et son élévation maximale. Un passage court et bas laisse peu de temps pour
+        commander : vérifiez la durée avant d’y placer une procédure. Le tableau des contacts,
+        plus bas, liste chaque passage avec sa perte du signal.
+    do:
+      - highlight: {target: {css: "#factAos"}, seconds: 3.5}
+      - scroll: {css: "#panel-contacts"}
+      - highlight: {target: {css: "#contactsBody tr >> nth=0"}, seconds: 3}
+    question:
+      type: blanks
+      worksheet: WB-5.3-PP/q3
+      intro:
+        en: "The next pass over Iqaluit starts at about 12:14 UTC and lasts 8 minutes."
+        fr: "Le prochain passage au-dessus d’Iqaluit commence vers 12:14 UTC et dure 8 minutes."
+      text:
+        en: "Its loss of signal is at about *12:22* UTC (hh:mm)."
+        fr: "Sa perte du signal a lieu vers *12:22* UTC (hh:mm)."
+
+  - id: track
+    title: {en: "Ground track and eclipse", fr: "Trace au sol et éclipse"}
+    say:
+      en: >-
+        The ground track shows where the spacecraft was over the last ninety minutes and where
+        it will be over the next ninety. The shaded part of the track is in eclipse. The
+        numbers beside it give the orbit: period, inclination and the beta angle, the angle
+        between the orbit plane and the Sun. Beta sets how long the eclipses are, and so how
+        much energy each orbit gives you.
+      fr: >-
+        La trace au sol montre où se trouvait le satellite pendant les quatre-vingt-dix dernières
+        minutes et où il sera pendant les quatre-vingt-dix prochaines. La partie ombrée de la
+        trace est en éclipse. Les chiffres à côté donnent l’orbite : période, inclinaison et
+        angle bêta, l’angle entre le plan de l’orbite et le Soleil. Bêta fixe la durée des
+        éclipses, et donc l’énergie que vous donne chaque orbite.
+    do:
+      - scroll: {css: "#panel-map"}
+      - highlight: {target: {css: "#groundTrackMap"}, seconds: 4, point: false}
+      - highlight: {target: {css: "#bbBeta"}, seconds: 2.5}
+
+  - id: imaging
+    title: {en: "Schedule an imaging activity", fr: "Programmer une activité d’imagerie"}
+    say:
+      en: >-
+        Imaging opportunities lists the targets the spacecraft will fly over, with the capture
+        time, the access time, the off-nadir angle and the Sun elevation. Schedule one. The
+        activity starts before the capture time, because the detector cooler needs about eight
+        minutes to cool down first.
+      fr: >-
+        Les opportunités d’imagerie listent les cibles que le satellite survolera, avec l’heure
+        de prise de vue, la durée d’accès, l’angle de dépointage et l’élévation du Soleil.
+        Programmez-en une. L’activité commence avant l’heure de prise de vue, car le
+        refroidisseur du détecteur a besoin d’environ huit minutes pour refroidir d’abord.
+    do:
+      - scroll: {css: "#panel-imaging"}
+      - highlight: {target: {css: "#imagingOpportunitiesPanel tr:visible:has-text('Gulf Stream')"}, seconds: 3, point: false}
+      - click: {css: "#imagingOpportunitiesPanel tr:visible:has-text('Gulf Stream') button"}
+      - wait: 1.5
+    question:
+      type: multichoice
+      worksheet: WB-5.3-PP/q7
+      text:
+        en: "Why does the imaging activity start several minutes before the capture time?"
+        fr: "Pourquoi l’activité d’imagerie commence-t-elle plusieurs minutes avant l’heure de prise de vue ?"
+      options:
+        - text: {en: "The FPA cooler has to cool the detector before it can image.", fr: "Le refroidisseur du plan focal doit refroidir le détecteur avant la prise de vue."}
+          correct: true
+          why: {en: "The cooler is off in STANDBY; imaging preparation switches it on.", fr: "Le refroidisseur est arrêté en STANDBY ; la préparation de l’imagerie l’allume."}
+        - text: {en: "The spacecraft must wait for the next eclipse.", fr: "Le satellite doit attendre la prochaine éclipse."}
+          why: {en: "Imaging needs the target sunlit, not an eclipse.", fr: "L’imagerie demande une cible éclairée, pas une éclipse."}
+        - text: {en: "The ground station needs time to acquire the signal.", fr: "La station sol a besoin de temps pour acquérir le signal."}
+          why: {en: "Imaging does not need a station in view.", fr: "L’imagerie ne demande pas de station en visibilité."}
+
+  - id: check
+    title: {en: "Check the constraints", fr: "Vérifier les contraintes"}
+    say:
+      en: >-
+        Before anything is uploaded, run the constraint check. It replays the plan against
+        power, attitude, thermal and data volume, and flags any conflict between activities.
+        A plan is only ready when the schedule is valid and the constraints are met. That is
+        your Day 1 pass plan, ready for the other team to challenge.
+      fr: >-
+        Avant tout envoi, lancez la vérification des contraintes. Elle rejoue le plan face à
+        l’énergie, à l’attitude, au thermique et au volume de données, et signale tout conflit
+        entre activités. Un plan n’est prêt que si le programme est valide et les contraintes
+        respectées. Voilà votre plan de passage du jour 1, prêt à être contesté par l’autre
+        équipe.
+    do:
+      - scroll: {css: "#btnValidateConstraints"}
+      - click: {css: "#btnValidateConstraints"}
+      - wait: 2.5
+      - highlight: {target: {css: "#constraintsResult"}, seconds: 3.5, point: false}

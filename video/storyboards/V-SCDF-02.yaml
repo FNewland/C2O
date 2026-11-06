@@ -1,0 +1,149 @@
+# Week 5 — mass and power budgets with margins, power by mode and energy per orbit,
+# on an EOSAT-1-like study seeded through the API. Prepares LW-2.4 A, B, E and
+# the decision records D-2.4-MASS / D-2.4-POWER.
+id: V-SCDF-02
+week: 5
+audience: all
+title:
+  en: "Budgets, margins and energy per orbit"
+  fr: "Bilans, marges et énergie par orbite"
+summary:
+  en: "Read the mass and power budgets with their maturity and system margins, set allocations, then check power by mode and the energy balance over one orbit."
+  fr: "Lire les bilans de masse et de puissance avec leurs marges de maturité et de système, fixer les allocations, puis vérifier la puissance par mode et le bilan d’énergie sur une orbite."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-2.4/A, LW-2.4/B, LW-2.4/E]
+  decisions: [D-2.4-MASS, D-2.4-POWER]
+sources:
+  - design/tests/test_api/diagram_seed.py (the EOSAT-1-like study)
+  - design/configs/margin_policy.yaml (C2O default ladder 25 / 20 / 20 / 10 %)
+
+setup:
+  - python: {call: "video/c2ovideo/helpers.py:seed_spacecdf_eosat", app: spacecdf, save: study}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "Ava (Systems)", fr: "Ava (Systèmes)"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2
+
+steps:
+  - id: mass
+    title: {en: "The mass budget and its margins", fr: "Le bilan de masse et ses marges"}
+    say:
+      en: >-
+        Open the Budget tab. The bar is the current best estimate of the mass. The hatched part
+        is the maturity margin: each component carries one that depends on how well it is known,
+        from a catalogue item already flown to a new design. On top of that comes the system
+        margin: twenty-five percent at this first review, by the C2O default.
+      fr: >-
+        Ouvrez l’onglet Bilans. La barre est la meilleure estimation actuelle de la masse. La
+        partie hachurée est la marge de maturité : chaque composant en porte une qui dépend de
+        sa connaissance, d’un article de catalogue déjà en vol à une conception nouvelle. Par
+        dessus s’ajoute la marge système : vingt-cinq pour cent à cette première revue, selon la
+        valeur par défaut de C2O.
+    do:
+      - click: {role: tab, name: Budget}
+      - wait: 1.0
+      - highlight: {target: {css: "main [class*='bar'] >> nth=0"}, seconds: 3, point: false}
+      - highlight: {target: {css: "main :text-matches('System margin at|Marge système à')"}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: LW-2.4/A
+      text:
+        en: "The system margin is 25 % at MDR. What happens to it at later reviews?"
+        fr: "La marge système est de 25 % à la MDR. Que devient-elle aux revues suivantes ?"
+      options:
+        - text: {en: "It shrinks as the estimates mature: 20 % at PDR, 10 % at CDR.", fr: "Elle diminue à mesure que les estimations mûrissent : 20 % à la PDR, 10 % à la CDR."}
+          correct: true
+          why: {en: "The C2O ladder is 25 / 20 / 20 / 10 % (MDR, PRR–SRR, PDR, CDR).", fr: "L’échelle C2O est 25 / 20 / 20 / 10 % (MDR, PRR–SRR, PDR, CDR)."}
+        - text: {en: "It stays at 25 % until launch.", fr: "Elle reste à 25 % jusqu’au lancement."}
+          why: {en: "Margins are released as uncertainty falls.", fr: "Les marges sont libérées à mesure que l’incertitude baisse."}
+        - text: {en: "It grows, because more equipment is added later.", fr: "Elle augmente, car on ajoute de l’équipement plus tard."}
+          why: {en: "Added equipment raises the estimate, not the margin.", fr: "L’équipement ajouté augmente l’estimation, pas la marge."}
+
+  - id: allocate
+    title: {en: "Allocations", fr: "Les allocations"}
+    say:
+      en: >-
+        An estimate says what the design weighs now. An allocation says what each element is
+        allowed to weigh. Allocate here gives every unallocated element its estimate plus ten
+        percent, a starting point the team then negotiates. When an estimate grows past its
+        allocation, the bar shows it at once.
+      fr: >-
+        Une estimation dit ce que pèse la conception aujourd’hui. Une allocation dit ce que
+        chaque élément a le droit de peser. Allouer ici donne à chaque élément non alloué son
+        estimation plus dix pour cent, un point de départ que l’équipe négocie ensuite. Quand
+        une estimation dépasse son allocation, la barre le montre aussitôt.
+    do:
+      - click: {css: "main button:has-text('+10 %')"}
+      - wait: 1.5
+      - highlight: {target: {css: "main :text-matches('By element|Par élément')"}, seconds: 3}
+
+  - id: power
+    title: {en: "Power: orbit average and peak", fr: "Puissance : moyenne orbitale et crête"}
+    say:
+      en: >-
+        The Power view adds two numbers that matter: the orbit average, which sizes the solar
+        array and the energy balance, and the peak, which sizes the power distribution. Both
+        come from the operating modes. Record why you chose those modes and that margin: that
+        is decision D two point four, Power.
+      fr: >-
+        La vue Puissance ajoute deux chiffres essentiels : la moyenne orbitale, qui dimensionne
+        le générateur solaire et le bilan d’énergie, et la crête, qui dimensionne la
+        distribution de puissance. Les deux viennent des modes de fonctionnement. Consignez
+        pourquoi vous avez choisi ces modes et cette marge : c’est la décision D deux point
+        quatre, Puissance.
+    do:
+      - click: {role: tab, name: Power, exact: true}
+      - wait: 1.2
+      - highlight: {target: {css: "main :text-matches('Orbit average|Moyenne orbitale')"}, seconds: 3}
+      - highlight: {target: {css: "[data-decision='D-2.4-POWER']"}, seconds: 2.5}
+
+  - id: modes
+    title: {en: "Power by mode", fr: "Puissance par mode"}
+    say:
+      en: >-
+        The Modes tab shows where those numbers come from. Power by mode lists every unit in
+        every mode, with its power and its state: off, standby, on or peak. The imager draws
+        sixteen watts only in imaging; the transceiver peaks at nineteen watts in downlink.
+        This table is where the power budget comes from.
+      fr: >-
+        L’onglet Modes montre d’où viennent ces chiffres. Puissance par mode liste chaque unité
+        dans chaque mode, avec sa puissance et son état : éteinte, en veille, allumée ou en
+        crête. L’imageur ne consomme seize watts qu’en imagerie ; l’émetteur-récepteur monte à
+        dix-neuf watts en liaison descendante. C’est de ce tableau que vient le bilan de
+        puissance.
+    do:
+      - click: {role: tab, name: Modes, exact: true}
+      - wait: 1.0
+      - click: {role: tab, name: Power by mode}
+      - wait: 1.5
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 3.5, point: false}
+
+  - id: energy
+    title: {en: "Energy per orbit", fr: "Énergie par orbite"}
+    say:
+      en: >-
+        Energy per orbit closes the loop. For each mode, it compares the load, with margins,
+        to what the array generates in that mode's attitude, and asks one question: could the
+        spacecraft stay in this mode for a whole orbit? Nominal can. Imaging and downlink
+        cannot: they drain the battery. That is fine for a few minutes, not for an orbit. This
+        check is Part E of your worksheet: the budget health check.
+      fr: >-
+        L’énergie par orbite boucle la boucle. Pour chaque mode, elle compare la charge, marges
+        comprises, à ce que produit le générateur dans l’attitude de ce mode, et pose une
+        question : le satellite pourrait-il rester dans ce mode pendant toute une orbite ? En
+        nominal, oui. En imagerie et en liaison descendante, non : la batterie se vide. C’est
+        acceptable quelques minutes, pas pendant une orbite. Cette vérification est la partie E
+        de votre fiche : le bilan de santé des budgets.
+    do:
+      - click: {role: tab, name: Energy per orbit}
+      - wait: 1.5
+      - wait: 1.0
+      - highlight: {target: {css: "main table >> nth=0"}, seconds: 4, point: false}
+    question:
+      type: reflect
+      worksheet: LW-2.4/E
+      text:
+        en: "In your own design, which budget has the least margin today, and what is the first change you would try?"
+        fr: "Dans votre propre conception, quel bilan a le moins de marge aujourd’hui, et quelle est la première modification que vous essaieriez ?"
