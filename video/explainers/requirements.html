@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Writing requirements</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .part { font-size: 30px; font-weight: 600; }
+  .chip rect { fill: var(--panel-2); stroke: var(--accent); stroke-width: 1.5; }
+  .chip text { font-family: var(--mono); font-size: 15px; fill: var(--accent); }
+  .arrow { stroke: var(--accent); stroke-width: 2; fill: none; marker-end: url(#ah); }
+  .tree { stroke: var(--line); stroke-width: 2; fill: none; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Anatomy of a requirement, types, quality checks, traceability and verification methods</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5fb4dc"/></marker></defs>
+  <g id="anat" class="ex-hidden"></g>
+  <g id="types" class="ex-hidden"></g>
+  <g id="smart" class="ex-hidden"></g>
+  <g id="split" class="ex-hidden"></g>
+  <g id="trace" class="ex-hidden"></g>
+  <g id="verify" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Writing requirements",
+    p1: "The payload", p2: "shall", p3: "achieve a GSD ≤ 10 m", p4: "at nadir, from the operational orbit.",
+    l1: "who", l2: "binding verb", l3: "measurable threshold", l4: "condition",
+    kw_shall: "shall", kw_shall_s: "mandatory: binding", kw_should: "should", kw_should_s: "a goal: advisory", kw_will: "will", kw_will_s: "a statement of fact: not a requirement",
+    t_fun: "Functional", e_fun: "The system shall acquire multispectral imagery of the target area.",
+    t_perf: "Performance", e_perf: "The system shall achieve GSD ≤ 10 m at nadir.",
+    t_if: "Interface", e_if: "The EPS shall provide a 5.0 V ± 0.25 V regulated bus to all subsystems.",
+    t_con: "Constraint", e_con: "The system total mass shall not exceed 6.0 kg.",
+    t_env: "Environmental", e_env: "The system shall survive launch loads of 9 g axial and 4 g lateral.",
+    s_S: "Specific", s_M: "Measurable", s_A: "Achievable", s_R: "Relevant", s_T: "Traceable",
+    bad1: "The spacecraft shall use triple-junction GaAs solar cells.",
+    bad1_s: "names the technology: a design choice, not a need",
+    good1: "The EPS shall generate ≥ 15 W at end of life from ≤ 0.5 m² of array.",
+    good1_s: "states the need and leaves the cell choice to the trade study",
+    comp: "The system shall provide 10 m GSD with 5-day revisit and 24 h latency.",
+    comp_s: "three concerns in one: if one fails, which one?",
+    r1: "MR-001  The system shall provide GSD ≤ 10 m.",
+    r2: "MR-002  The system shall revisit the target region within 5 days.",
+    r3: "MR-003  The system shall deliver data within 24 h of acquisition.",
+    tr_need: "Need: timely crop monitoring for food security",
+    tr_mr: "MR-001  multispectral imagery of the target region, GSD ≤ 10 m",
+    tr_pay: "Payload: GSD ≤ 10 m at nadir", tr_aocs: "AOCS: pointing ≤ 0.1° (3σ)", tr_com: "Comms: downlink ≥ 5 GB per day",
+    tr_ap: "Telescope aperture ≥ 80 mm", tr_st: "Star tracker knowledge ≤ 5″ (3σ)", tr_tx: "X-band transmitter ≥ 2 W RF",
+    up: "up: why does it exist?", down: "down: how is it decomposed?", across: "across: how will it be verified?",
+    cov: "Coverage", cov_s: "requirements with a parent and a verification method",
+    vA: "Analysis", vT: "Test", vI: "Inspection", vR: "Review of design", vD: "Demonstration",
+    q_mass: "mass ≤ 6 kg", q_point: "pointing ≤ 0.1°", q_link: "link margin ≥ 3 dB", q_load: "launch loads",
+    q_lat: "latency ≤ 24 h", q_red: "redundant power path",
+    ph: "B: analysis · C: qualification · D: acceptance tests · E: in-orbit checkout",
+    n1a: "One requirement: who, shall, a number with a unit, and the conditions.",
+    n1b: "“Should” is a goal and “will” is a fact; only “shall” binds (textbook § 5.2).",
+    n2a: "Requirements constrain the solution without choosing it.",
+    n2b: "Interface requirements are the exception: a bus voltage is a negotiated agreement.",
+    n3a: "Ask what the technology was for, and require that instead.",
+    n3b: "SMART is the quick screen; NASA’s checklist adds one per statement, no TBDs, no implementation.",
+    n4a: "Split compound requirements so each can pass or fail on its own.",
+    n4b: "If revisit fails but GSD passes, the team knows exactly what to fix.",
+    n5a: "Every requirement traces up, down and across: the traceability matrix.",
+    n5b: "Target: 100 % coverage, every requirement with a parent and a verification method.",
+    n6a: "Every requirement names its method: analysis, test, inspection, review, demonstration.",
+    n6b: "ECSS counts demonstration as a kind of test; NASA lists it separately (§ 5.5).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 5 · NASA SE Handbook App. C · ECSS-E-ST-10-02C",
+  },
+  fr: {
+    kicker: "Notion", title: "Rédiger des exigences",
+    p1: "La charge utile", p2: "doit", p3: "atteindre une GSD ≤ 10 m", p4: "au nadir, depuis l’orbite opérationnelle.",
+    l1: "qui", l2: "verbe contraignant", l3: "seuil mesurable", l4: "condition",
+    kw_shall: "doit", kw_shall_s: "obligatoire : contraignant", kw_should: "devrait", kw_should_s: "un objectif : indicatif", kw_will: "va", kw_will_s: "un constat : pas une exigence",
+    t_fun: "Fonctionnelle", e_fun: "Le système doit acquérir une imagerie multispectrale de la zone cible.",
+    t_perf: "Performance", e_perf: "Le système doit atteindre une GSD ≤ 10 m au nadir.",
+    t_if: "Interface", e_if: "L’EPS doit fournir un bus régulé de 5,0 V ± 0,25 V à tous les sous-systèmes.",
+    t_con: "Contrainte", e_con: "La masse totale du système ne doit pas dépasser 6,0 kg.",
+    t_env: "Environnement", e_env: "Le système doit résister à 9 g axiaux et 4 g latéraux au lancement.",
+    s_S: "Spécifique", s_M: "Mesurable", s_A: "Atteignable", s_R: "Pertinente", s_T: "Traçable",
+    bad1: "Le satellite doit utiliser des cellules GaAs à triple jonction.",
+    bad1_s: "nomme la technologie : un choix de conception, pas un besoin",
+    good1: "L’EPS doit produire ≥ 15 W en fin de vie avec ≤ 0,5 m² de panneaux.",
+    good1_s: "énonce le besoin et laisse le choix des cellules à l’étude de compromis",
+    comp: "Le système doit fournir une GSD de 10 m, une revisite de 5 jours et une latence de 24 h.",
+    comp_s: "trois sujets en un : si l’un échoue, lequel ?",
+    r1: "MR-001  Le système doit fournir une GSD ≤ 10 m.",
+    r2: "MR-002  Le système doit revisiter la région cible en 5 jours au plus.",
+    r3: "MR-003  Le système doit livrer les données dans les 24 h suivant l’acquisition.",
+    tr_need: "Besoin : suivi des cultures à temps pour la sécurité alimentaire",
+    tr_mr: "MR-001  imagerie multispectrale de la région cible, GSD ≤ 10 m",
+    tr_pay: "Charge utile : GSD ≤ 10 m au nadir", tr_aocs: "SCAO : pointage ≤ 0,1° (3σ)", tr_com: "Télécom : ≥ 5 Go par jour au sol",
+    tr_ap: "Ouverture du télescope ≥ 80 mm", tr_st: "Senseur stellaire ≤ 5″ (3σ)", tr_tx: "Émetteur bande X ≥ 2 W RF",
+    up: "vers le haut : pourquoi existe-t-elle ?", down: "vers le bas : comment se décompose-t-elle ?", across: "de côté : comment sera-t-elle vérifiée ?",
+    cov: "Couverture", cov_s: "exigences avec un parent et une méthode de vérification",
+    vA: "Analyse", vT: "Essai", vI: "Inspection", vR: "Revue de conception", vD: "Démonstration",
+    q_mass: "masse ≤ 6 kg", q_point: "pointage ≤ 0,1°", q_link: "marge de liaison ≥ 3 dB", q_load: "charges au lancement",
+    q_lat: "latence ≤ 24 h", q_red: "alimentation redondante",
+    ph: "B : analyse · C : qualification · D : essais de recette · E : recette en orbite",
+    n1a: "Une exigence : qui, « doit », un nombre avec une unité, et les conditions.",
+    n1b: "« Devrait » est un objectif et « va » un constat ; seul « doit » engage (manuel § 5.2).",
+    n2a: "Les exigences contraignent la solution sans la choisir.",
+    n2b: "Les exigences d’interface font exception : une tension de bus est un accord négocié.",
+    n3a: "Demandez à quoi servait la technologie, et exigez cela à la place.",
+    n3b: "SMART est le premier filtre ; la liste de la NASA ajoute : une par énoncé, aucun TBD, aucune mise en œuvre.",
+    n4a: "Scindez les exigences composées pour que chacune réussisse ou échoue seule.",
+    n4b: "Si la revisite échoue mais que la GSD passe, l’équipe sait exactement quoi corriger.",
+    n5a: "Chaque exigence se trace vers le haut, vers le bas et de côté : la matrice de traçabilité.",
+    n5b: "Cible : 100 % de couverture, chaque exigence avec un parent et une méthode de vérification.",
+    n6a: "Chaque exigence nomme sa méthode : analyse, essai, inspection, revue, démonstration.",
+    n6b: "L’ECSS compte la démonstration comme un type d’essai ; la NASA la sépare (§ 5.5).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 5 · NASA SE Handbook ann. C · ECSS-E-ST-10-02C",
+  },
+});
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+function box(parent, id, x, y, w, h, key, cls, tcls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  if (key) EX.el("text", { x: x + 14, y: y + h / 2 + 6, class: tcls || "", label: key }, g);
+  return g;
+}
+function chip(parent, id, x, y, txt) {
+  const g = EX.el("g", { id, class: "chip ex-hidden" }, parent);
+  const w = 14 + txt.length * 9.5;
+  EX.el("rect", { x, y, width: w, height: 26, rx: 5 }, g);
+  EX.el("text", { x: x + 7, y: y + 18, text: txt }, g);
+  return g;
+}
+
+// 1. anatomy: parts laid out after the page fonts settle
+const PC = ["var(--text)", "var(--warn)", "var(--ok)", "var(--accent)"];
+[1, 2, 3, 4].forEach((i) => {
+  EX.el("text", { id: "pt" + i, x: 60, y: 150, class: "part ex-hidden", style: `fill:${PC[i - 1]}`, label: "p" + i }, "anat");
+  EX.el("line", { id: "pu" + i, x1: 60, y1: 166, x2: 100, y2: 166, stroke: PC[i - 1], "stroke-width": 3, class: "ex-hidden" }, "anat");
+  EX.el("text", { id: "pl" + i, x: 60, y: 194, class: "small ex-hidden", style: `fill:${PC[i - 1]}`, label: "l" + i }, "anat");
+});
+function layoutParts() {
+  let x = 60, y = 150;
+  [1, 2, 3, 4].forEach((i) => {
+    const t = EX.$("pt" + i), l = EX.$("pl" + i), w = t.getComputedTextLength(), wl = l.getComputedTextLength();
+    if (x + Math.max(w, wl) > 1230) { x = 60; y += 110; }
+    t.setAttribute("x", x); t.setAttribute("y", y);
+    const u = EX.$("pu" + i); u.setAttribute("x1", x); u.setAttribute("x2", x + w); u.setAttribute("y1", y + 16); u.setAttribute("y2", y + 16);
+    l.setAttribute("x", x); l.setAttribute("y", y + 44);
+    x += Math.max(w, wl) + 22;
+  });
+}
+[["shall", "var(--ok)"], ["should", "var(--warn)"], ["will", "var(--muted)"]].forEach(([k, c], i) => {
+  const g = EX.el("g", { id: "kw-" + k, class: "ex-hidden" }, "anat");
+  const x = 60 + i * 400;
+  EX.el("text", { x, y: 400, class: "huge", style: `fill:${c}`, label: "kw_" + k }, g);
+  EX.el("text", { x, y: 432, class: "small muted", label: "kw_" + k + "_s" }, g);
+});
+
+// 2. types
+["fun", "perf", "if", "con", "env"].forEach((k, i) => {
+  const y = 40 + i * 92;
+  const g = box("types", "ty-" + k, 40, y, 1200, 70, null);
+  EX.el("text", { x: 58, y: y + 42, class: "big", style: "fill:var(--accent)", label: "t_" + k }, g);
+  EX.el("text", { x: 300, y: y + 42, label: "e_" + k }, g);
+});
+
+// 3. SMART screen and a rewrite
+["S", "M", "A", "R", "T"].forEach((k, i) => {
+  const g = EX.el("g", { id: "sm-" + k, class: "blk ex-hidden" }, "smart");
+  EX.el("rect", { x: 40 + i * 242, y: 30, width: 226, height: 72, rx: 8 }, g);
+  EX.el("text", { x: 58 + i * 242, y: 78, class: "huge", style: "fill:var(--accent)", text: k }, g);
+  EX.el("text", { x: 92 + i * 242, y: 74, class: "small", label: "s_" + k }, g);
+});
+const b1 = box("smart", "bad1", 40, 150, 1200, 96, null);
+EX.el("text", { x: 60, y: 192, class: "big", label: "bad1" }, b1);
+EX.el("text", { x: 60, y: 226, class: "small muted", label: "bad1_s" }, b1);
+const g1 = box("smart", "good1", 40, 290, 1200, 96, null, "ok");
+EX.el("text", { x: 60, y: 332, class: "big", label: "good1" }, g1);
+EX.el("text", { x: 60, y: 366, class: "small muted", label: "good1_s" }, g1);
+
+// 4. split a compound requirement
+const cp = box("split", "comp", 40, 40, 1200, 96, null);
+EX.el("text", { x: 60, y: 82, class: "big", label: "comp" }, cp);
+EX.el("text", { x: 60, y: 116, class: "small muted", label: "comp_s" }, cp);
+[1, 2, 3].forEach((i) => {
+  EX.el("path", { id: "sp-a" + i, class: "arrow ex-hidden", d: `M 80 140 L 80 ${199 + (i - 1) * 100} L 134 ${199 + (i - 1) * 100}` }, "split");
+  box("split", "sp" + i, 140, 166 + (i - 1) * 100, 1100, 66, "r" + i, "ok", "mono");
+});
+
+// 5. traceability tree
+const TC = [40, 450, 860], TW = 380;
+const tr = (id, x, y, w, key, v) => {
+  const g = box("trace", id, x, y, w, 56, key, "", "small");
+  if (v) { const c = chip("trace", id + "-v", x + w - 14 - (14 + v.length * 9.5), y + 15, v); g.appendChild(c); c.classList.remove("ex-hidden"); }
+  return g;
+};
+EX.el("path", { id: "tl-1", class: "tree ex-hidden", d: "M 640 86 L 640 120" }, "trace");
+EX.el("path", { id: "tl-2", class: "tree ex-hidden", d: "M 640 176 L 640 196 M 230 196 L 1050 196 M 230 196 L 230 216 M 640 196 L 640 216 M 1050 196 L 1050 216" }, "trace");
+EX.el("path", { id: "tl-3", class: "tree ex-hidden", d: "M 230 272 L 230 330 M 640 272 L 640 330 M 1050 272 L 1050 330" }, "trace");
+tr("tr-need", 250, 30, 780, "tr_need");
+tr("tr-mr", 250, 120, 780, "tr_mr", "A");
+[["tr_pay", "A·T"], ["tr_aocs", "A·T"], ["tr_com", "A"]].forEach(([k, v], i) => tr("tr-s" + i, TC[i], 216, TW, k, v));
+[["tr_ap", "I"], ["tr_st", "T"], ["tr_tx", "T"]].forEach(([k, v], i) => tr("tr-c" + i, TC[i], 330, TW, k, v));
+const cv = EX.el("g", { id: "cov", class: "ex-hidden" }, "trace");
+EX.el("text", { x: 40, y: 438, class: "small muted", label: "up" }, cv);
+EX.el("text", { x: 420, y: 438, class: "small muted", label: "down" }, cv);
+EX.el("text", { x: 820, y: 438, class: "small muted", label: "across" }, cv);
+EX.el("text", { x: 40, y: 488, class: "big", label: "cov" }, cv);
+EX.el("text", { id: "cov-n", x: 230, y: 488, class: "big mono", style: "fill:var(--ok)", text: "0 / 7" }, cv);
+EX.el("text", { x: 560, y: 488, class: "small muted", label: "cov_s" }, cv);
+
+// 6. verification methods
+const VM = ["A", "T", "I", "R", "D"];
+VM.forEach((k, i) => {
+  const g = box("verify", "vm-" + k, 40 + i * 242, 30, 226, 80, null);
+  EX.el("text", { x: 58 + i * 242, y: 80, class: "huge", style: "fill:var(--accent)", text: k }, g);
+  EX.el("text", { x: 92 + i * 242, y: 76, class: "small", label: "v" + k }, g);
+});
+const VQ = [["q_mass", ["I"]], ["q_point", ["A", "T"]], ["q_link", ["A"]], ["q_load", ["T"]], ["q_lat", ["D"]], ["q_red", ["R"]]];
+const slot = { A: 0, T: 0, I: 0, R: 0, D: 0 };
+VQ.forEach(([k, ms], i) => ms.forEach((m) => {
+  const col = VM.indexOf(m), y = 130 + slot[m]++ * 56;
+  const g = box("verify", `vq-${i}-${m}`, 40 + col * 242, y, 226, 44, k, "on", "small");
+}));
+EX.el("text", { id: "ph", x: 40, y: 486, class: "small ex-hidden", label: "ph" }, "verify");
+
+function only(...ids) { ["anat", "types", "smart", "split", "trace", "verify", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("shall", (beat) => {
+  only("anat"); layoutParts();
+  [1, 2, 3, 4].forEach((i) => beat(0.04 + i * 0.08, () => { EX.show("pt" + i); EX.draw("pu" + i, 400); EX.show("pl" + i); }));
+  ["shall", "should", "will"].forEach((k, i) => beat(0.5 + i * 0.08, () => EX.show("kw-" + k)));
+  beat(0.76, () => note("n1a", "n1b"));
+});
+EX.scene("types", (beat) => {
+  only("types");
+  ["fun", "perf", "if", "con", "env"].forEach((k, i) => beat(0.04 + i * 0.12, () => EX.show("ty-" + k)));
+  beat(0.55, () => EX.mark("ty-if", "on"));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("smart", (beat) => {
+  only("smart");
+  ["S", "M", "A", "R", "T"].forEach((k, i) => beat(0.03 + i * 0.05, () => EX.show("sm-" + k)));
+  beat(0.32, () => { EX.show("bad1"); EX.mark("bad1", "bad"); });
+  beat(0.42, () => EX.mark("sm-S", "bad"));
+  beat(0.55, () => { EX.mark("sm-S", "bad", false); EX.show("good1"); ["S", "M", "R"].forEach((k) => EX.mark("sm-" + k, "ok")); });
+  beat(0.74, () => note("n3a", "n3b"));
+});
+EX.scene("split", (beat) => {
+  only("split");
+  beat(0.03, () => { EX.show("comp"); EX.mark("comp", "bad"); });
+  [1, 2, 3].forEach((i) => beat(0.3 + i * 0.1, () => { EX.draw("sp-a" + i, 400); EX.show("sp" + i); }));
+  beat(0.72, () => note("n4a", "n4b"));
+});
+EX.scene("trace", (beat) => {
+  only("trace");
+  beat(0.03, () => EX.show("tr-need"));
+  beat(0.1, () => { EX.draw("tl-1", 300); EX.show("tr-mr"); });
+  beat(0.2, () => { EX.draw("tl-2", 500); [0, 1, 2].forEach((i) => EX.show("tr-s" + i)); });
+  beat(0.32, () => { EX.draw("tl-3", 400); [0, 1, 2].forEach((i) => EX.show("tr-c" + i)); });
+  beat(0.45, () => { EX.show("cov"); EX.count("cov-n", 0, 7, 1200, (v) => (v >= 7 ? "7 / 7 · 100 %" : `${Math.round(v)} / 7`)); });
+  beat(0.7, () => note("n5a", "n5b"));
+});
+EX.scene("verify", (beat) => {
+  only("verify");
+  VM.forEach((k, i) => beat(0.03 + i * 0.05, () => EX.show("vm-" + k)));
+  VQ.forEach(([, ms], i) => beat(0.32 + i * 0.06, () => ms.forEach((m) => EX.show(`vq-${i}-${m}`))));
+  beat(0.7, () => EX.show("ph"));
+  beat(0.76, () => note("n6a", "n6b"));
+});
+</script>
+</body>
+</html>
