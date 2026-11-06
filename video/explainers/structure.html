@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Structure, propulsion and data handling</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Launch loads, margin of safety and stiffness, propellant for a deorbit burn, on-board computer and storage</title>
+  <g id="ld" class="ex-hidden"></g>
+  <g id="ms" class="ex-hidden"></g>
+  <g id="pr" class="ex-hidden"></g>
+  <g id="ob" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Structure, propulsion and data handling",
+    l1: "Quasi-static", l1_s: "thrust and air loads", l1_v: "6–12 g axial",
+    l2: "Sine vibration", l2_s: "the launcher’s low modes", l2_v: "0.5–3 g, 5–100 Hz",
+    l3: "Random vibration", l3_s: "acoustics, turbulence", l3_v: "5–15 g rms",
+    l4: "Shock", l4_s: "separation events, < 10 ms", l4_v: "500–2000 g",
+    f_cap: "What breaks on the shaker", f_list: "solder joints of tall parts · hold-downs and hinges · lenses · chafed harness",
+    m_eq: "MoS = allowable ÷ (design stress × factor of safety) − 1 ≥ 0",
+    m_ex: "3U rail, 9 g axial: 110 N per rail → 1.5 MPa in Al 7075 (503 MPa yield)",
+    m_fos: "Factors of safety, yield / ultimate: metal 1.25 / 1.5 · composite and bonds 1.5 / 2.0 · one-shot mechanisms 2.0",
+    m_f: "Stiffness: first mode above 40 Hz (some deployers 90 Hz)",
+    m_f2: "the 3U box alone: about 330 Hz; a heavy unit on a bracket usually sets the real first mode",
+    p_cap: "Deorbit from 600 km: Δv 112 m/s, 5 kg dry (Tsiolkovsky)",
+    p_eq: "propellant = dry mass × (e^(Δv ÷ (Isp · g0)) − 1)",
+    p1: "Cold gas, Isp 60 s", p2: "Green monopropellant, Isp 235 s", p3: "Electrospray, Isp 1200 s",
+    p_prop: "propellant", p_dry: "system dry mass", p_t3: "lightest, but the burn takes months",
+    p_none: "EOSat-3U at 500 km needs none: drag brings it down in about 5 years",
+    o1: "Computer", o1_s: "a real-time OS: deterministic, small, task isolation",
+    o2: "Radiation", o2_s: "bit flips and latch-ups: EDAC memory, watchdog, current limits",
+    o3: "Storage", o3_s: "720 MB/day × 3 days between full downlinks × 2 safety",
+    o3_v: "4.3 GB → specify 8 GB of NAND flash",
+    n1a: "The launch is the harshest few minutes in the spacecraft’s life.",
+    n1b: "The deployer or launcher user’s guide sets the binding levels (textbook § 12.1.5).",
+    n2a: "Strength: a positive margin of safety under every load case. Stiffness: stay above the launcher’s modes.",
+    n2b: "A CubeSat structure is rarely the weak point; brackets, joints and mechanisms are.",
+    n3a: "The rocket equation: propellant grows exponentially with Δv ÷ exhaust speed.",
+    n3b: "Compare whole systems, tanks and valves included, not propellant alone (§ 12.2).",
+    n4a: "Size storage for the missed passes, not for a normal day.",
+    n4b: "The flight software, its modes and its FDIR are what the operators fly (§ 12.3).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 12 · ECSS-E-ST-32C · GSFC-STD-7000B · products in the textbook are examples",
+  },
+  fr: {
+    kicker: "Notion", title: "Structure, propulsion et gestion de bord",
+    l1: "Quasi-statique", l1_s: "poussée et charges aérodynamiques", l1_v: "6–12 g axiaux",
+    l2: "Vibration sinus", l2_s: "les modes bas du lanceur", l2_v: "0,5–3 g, 5–100 Hz",
+    l3: "Vibration aléatoire", l3_s: "acoustique, turbulence", l3_v: "5–15 g eff.",
+    l4: "Choc", l4_s: "séparations, < 10 ms", l4_v: "500–2000 g",
+    f_cap: "Ce qui casse sur le pot vibrant", f_list: "soudures des composants hauts · gerbages et charnières · lentilles · câblage frotté",
+    m_eq: "MS = admissible ÷ (contrainte de calcul × coefficient de sécurité) − 1 ≥ 0",
+    m_ex: "rail 3U, 9 g axiaux : 110 N par rail → 1,5 MPa dans l’Al 7075 (limite 503 MPa)",
+    m_fos: "Coefficients de sécurité, élastique / rupture : métal 1,25 / 1,5 · composites et collages 1,5 / 2,0 · mécanismes à usage unique 2,0",
+    m_f: "Raideur : premier mode au-dessus de 40 Hz (certains déployeurs 90 Hz)",
+    m_f2: "la boîte 3U seule : environ 330 Hz ; un équipement lourd sur une ferrure fixe en général le vrai premier mode",
+    p_cap: "Désorbitation depuis 600 km : Δv 112 m/s, 5 kg à sec (Tsiolkovski)",
+    p_eq: "ergols = masse sèche × (e^(Δv ÷ (Isp · g0)) − 1)",
+    p1: "Gaz froid, Isp 60 s", p2: "Monergol vert, Isp 235 s", p3: "Électronébulisation, Isp 1200 s",
+    p_prop: "ergols", p_dry: "masse sèche du système", p_t3: "le plus léger, mais la poussée dure des mois",
+    p_none: "EOSat-3U à 500 km n’en a pas besoin : la traînée le fait rentrer en 5 ans environ",
+    o1: "Ordinateur", o1_s: "un système temps réel : déterministe, léger, tâches isolées",
+    o2: "Rayonnement", o2_s: "inversions de bits et verrouillages : mémoire EDAC, chien de garde, limiteurs",
+    o3: "Stockage", o3_s: "720 Mo/jour × 3 jours entre vidages complets × 2 de sécurité",
+    o3_v: "4,3 Go → spécifier 8 Go de flash NAND",
+    n1a: "Le lancement, ce sont les minutes les plus dures de la vie du satellite.",
+    n1b: "Le guide du déployeur ou du lanceur fixe les niveaux contraignants (manuel § 12.1.5).",
+    n2a: "Résistance : une marge de sécurité positive pour chaque cas de charge. Raideur : rester au-dessus des modes du lanceur.",
+    n2b: "La structure d’un CubeSat est rarement le point faible ; ferrures, liaisons et mécanismes le sont.",
+    n3a: "L’équation de la fusée : les ergols croissent exponentiellement avec Δv ÷ vitesse d’éjection.",
+    n3b: "Comparez des systèmes entiers, réservoirs et vannes compris, pas les ergols seuls (§ 12.2).",
+    n4a: "Dimensionnez le stockage pour les passages manqués, pas pour une journée normale.",
+    n4b: "Le logiciel de vol, ses modes et sa FDIR sont ce que pilotent les opérateurs (§ 12.3).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 12 · ECSS-E-ST-32C · GSFC-STD-7000B · les produits du manuel sont des exemples",
+  },
+});
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+const fmt = (v, d) => { const s = v.toFixed(d); return EX.lang === "fr" ? s.replace(".", ",") : s; };
+
+// 1. loads
+[1, 2, 3, 4].forEach((i) => {
+  const x = 40 + (i - 1) * 302, g = box("ld", "ld-" + i, x, 40, 282, 220, i === 3 ? "warn" : i === 4 ? "bad" : "");
+  EX.el("text", { x: x + 18, y: 82, class: "big", label: "l" + i }, g);
+  EX.el("text", { x: x + 18, y: 118, class: "small muted", label: "l" + i + "_s" }, g);
+  EX.el("text", { x: x + 18, y: 200, class: "big mono", label: "l" + i + "_v" }, g);
+});
+const fl = EX.el("g", { id: "ld-f", class: "ex-hidden" }, "ld");
+EX.el("text", { x: 40, y: 320, class: "big", label: "f_cap" }, fl);
+EX.el("text", { x: 40, y: 360, style: "fill:var(--warn)", label: "f_list" }, fl);
+
+// 2. margin of safety and stiffness
+EX.el("text", { id: "ms-eq", x: 40, y: 70, class: "big mono ex-hidden", label: "m_eq" }, "ms");
+EX.el("text", { id: "ms-ex", x: 40, y: 120, class: "ex-hidden", label: "m_ex" }, "ms");
+EX.el("text", { id: "ms-v", x: 40, y: 176, class: "huge mono ex-hidden", style: "fill:var(--ok)", text: "MoS ≈ 503 ÷ (1,5 × 1,25) − 1 ≈ 260".replace(/,/g, EX.lang === "fr" ? "," : ".").replace("MoS", EX.lang === "fr" ? "MS" : "MoS") }, "ms");
+EX.el("text", { id: "ms-fos", x: 40, y: 230, class: "small muted ex-hidden", label: "m_fos" }, "ms");
+EX.el("text", { id: "ms-f", x: 40, y: 320, class: "big ex-hidden", label: "m_f" }, "ms");
+EX.el("text", { id: "ms-f2", x: 40, y: 358, class: "small ex-hidden", style: "fill:var(--warn)", label: "m_f2" }, "ms");
+
+// 3. propellant against system mass
+EX.el("text", { x: 40, y: 44, class: "small muted", label: "p_cap" }, "pr");
+EX.el("text", { id: "pr-eq", x: 40, y: 84, class: "mono ex-hidden", label: "p_eq" }, "pr");
+const PK = 220; // px per kg
+[["p1", 1.05, 0.3], ["p2", 0.25, 3.0], ["p3", 0.05, 0.9]].forEach(([k, p, d], i) => {
+  const y = 120 + i * 100, g = EX.el("g", { id: "pr-" + i, class: "ex-hidden" }, "pr");
+  EX.el("text", { x: 40, y: y + 34, label: k }, g);
+  EX.el("rect", { x: 400, y: y + 8, width: p * PK, height: 40, class: "warn", opacity: 0.85 }, g);
+  EX.el("rect", { x: 400 + p * PK, y: y + 8, width: d * PK, height: 40, fill: "var(--muted)", opacity: 0.6 }, g);
+  EX.el("text", { x: 410 + (p + d) * PK, y: y + 36, class: "big mono", text: fmt(p + d, 2) + " kg" }, g);
+  if (i === 2) EX.el("text", { x: 400, y: y + 72, class: "small", style: "fill:var(--ok)", label: "p_t3" }, g);
+});
+EX.el("rect", { x: 40, y: 430, width: 20, height: 14, class: "warn", opacity: 0.85 }, "pr");
+EX.el("text", { x: 68, y: 443, class: "small muted", label: "p_prop" }, "pr");
+EX.el("rect", { x: 220, y: 430, width: 20, height: 14, fill: "var(--muted)", opacity: 0.6 }, "pr");
+EX.el("text", { x: 248, y: 443, class: "small muted", label: "p_dry" }, "pr");
+EX.el("text", { id: "pr-none", x: 40, y: 490, class: "small ex-hidden", style: "fill:var(--accent)", label: "p_none" }, "pr");
+
+// 4. computer, radiation, storage
+[["o1", ""], ["o2", "warn"], ["o3", "on"]].forEach(([k, cls], i) => {
+  const y = 30 + i * 150, g = box("ob", "ob-" + i, 40, y, 1200, 130, cls);
+  EX.el("text", { x: 60, y: y + 46, class: "big", label: k }, g);
+  EX.el("text", { x: 60, y: y + 84, label: k + "_s" }, g);
+  if (k === "o3") EX.el("text", { x: 60, y: y + 116, class: "mono", style: "fill:var(--ok)", label: "o3_v" }, g);
+});
+
+function only(...ids) { ["ld", "ms", "pr", "ob", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("loads", (beat) => {
+  only("ld");
+  [1, 2, 3, 4].forEach((i) => beat(0.04 + i * 0.1, () => EX.show("ld-" + i)));
+  beat(0.55, () => EX.show("ld-f"));
+  beat(0.72, () => note("n1a", "n1b"));
+});
+EX.scene("margin", (beat) => {
+  only("ms");
+  ["ms-eq", "ms-ex", "ms-v", "ms-fos"].forEach((id, i) => beat(0.04 + i * 0.1, () => EX.show(id)));
+  beat(0.5, () => EX.show("ms-f"));
+  beat(0.58, () => EX.show("ms-f2"));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("propulsion", (beat) => {
+  only("pr");
+  beat(0.04, () => EX.show("pr-eq"));
+  [0, 1, 2].forEach((i) => beat(0.15 + i * 0.13, () => EX.show("pr-" + i)));
+  beat(0.6, () => EX.show("pr-none"));
+  beat(0.72, () => note("n3a", "n3b"));
+});
+EX.scene("obdh", (beat) => {
+  only("ob");
+  [0, 1, 2].forEach((i) => beat(0.05 + i * 0.16, () => EX.show("ob-" + i)));
+  beat(0.72, () => note("n4a", "n4b"));
+});
+</script>
+</body>
+</html>
