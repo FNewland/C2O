@@ -386,6 +386,20 @@ def test_correlation_block_carries_all_five_operator_facts():
     assert tc["offset_state"] == "warning"          # >= 5 s, < 30 s
 
 
+
+def test_offset_is_measured_at_the_sample_reception_not_now():
+    """LEOP-006: a clock set exactly right must read ~0 s however old the last
+    OBDH sample is. Comparing with the current ground time made the offset
+    grow with the sample's age (a sawtooth of one SID 4 period)."""
+    srv = _make_server()
+    sim = srv.sim_now()
+    rx = sim.timestamp() - 6.0                          # received 6 s ago
+    coarse = int(datetime_to_cuc_seconds(sim)) - 6      # exact at reception
+    srv._param_cache[0x0309] = {"value": coarse, "last_update_ts": rx, "sid": 4}
+    tc = srv._compute_time_state()["time_correlation"]
+    assert tc["offset_s"] == pytest.approx(0.0, abs=1.0)
+    assert tc["offset_state"] == "nominal"
+
 def test_never_synced_is_reported_from_the_saturated_value():
     srv = _make_server()
     pid = srv._param_id_by_name("obdh.time_since_sync_s")
