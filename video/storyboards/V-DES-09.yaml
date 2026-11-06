@@ -1,0 +1,138 @@
+# Design concept — attitude determination and control (textbook ch. 10): the
+# closed loop, architecture by pointing requirement, disturbance torques on a
+# 3U at 500 km (residual dipole dominates), wheel momentum and desaturation,
+# and why a magnetorquer has no torque along B.
+# Animated page video/explainers/aocs.html. Whole design team; AOCS position.
+# EOSAT-1 hardware from sim/configs/eosat1/subsystems/aocs.yaml.
+id: V-DES-09
+week: 4
+audience: all
+title:
+  en: "Attitude determination and control"
+  fr: "Détermination et contrôle d’attitude"
+summary:
+  en: "How a spacecraft knows where it points and turns itself: the control loop, choosing an architecture from the pointing requirement, the disturbance torques it fights, how wheels fill with momentum, and why magnetorquers can dump momentum but not point."
+  fr: "Comment un satellite sait où il pointe et se tourne : la boucle de contrôle, le choix d’une architecture selon l’exigence de pointage, les couples perturbateurs, comment les roues se chargent en moment cinétique, et pourquoi les magnéto-coupleurs peuvent le vider mais pas pointer."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/10_aocs.md (§ 10.1–10.3, 10.5)
+  - sim/configs/eosat1/subsystems/aocs.yaml
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/aocs.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: loop
+    title: {en: "The control loop", fr: "La boucle de contrôle"}
+    say:
+      en: >-
+        The attitude and orbit control system, AOCS, does two jobs. Determination: where am I
+        pointing? Control: turn me to where I should point. They form a loop. A controller turns
+        the difference between the commanded and the estimated attitude into a torque demand;
+        actuators apply it; the spacecraft turns, while disturbance torques push back. Sensors
+        measure, with noise, and an estimator, usually a Kalman filter, blends them into an
+        attitude and a rate.
+      fr: >-
+        Le système de contrôle d’attitude et d’orbite, le SCAO, a deux tâches. La détermination :
+        où est-ce que je pointe ? Le contrôle : tourne-moi vers où je dois pointer. Elles forment
+        une boucle. Un contrôleur transforme l’écart entre l’attitude commandée et l’attitude
+        estimée en une demande de couple ; les actionneurs l’appliquent ; le satellite tourne,
+        pendant que les couples perturbateurs s’y opposent. Les capteurs mesurent, avec du bruit,
+        et un estimateur, souvent un filtre de Kalman, les combine en une attitude et une vitesse.
+    do:
+      - js: "EX.play('loop', ${say})"
+
+  - id: architecture
+    title: {en: "Pointing need sets the architecture", fr: "Le besoin de pointage fixe l’architecture"}
+    say:
+      en: >-
+        How precisely you must point decides the hardware. Coarser than five degrees: a passive
+        magnet. Two to five degrees: magnetorquers with a magnetometer and Sun sensors. Down to a
+        tenth of a degree: reaction wheels. Finer than that: wheels and a star tracker, close to a
+        kilogram and several watts. EOSAT-1 flies four wheels, a star tracker and magnetorquers,
+        because its camera must point at a target.
+      fr: >-
+        La précision de pointage exigée décide du matériel. Au-delà de cinq degrés : un aimant
+        passif. Entre deux et cinq degrés : des magnéto-coupleurs, avec un magnétomètre et des
+        capteurs solaires. Jusqu’à un dixième de degré : des roues de réaction. Plus fin encore :
+        des roues et un senseur stellaire, près d’un kilogramme et plusieurs watts. EOSAT-1
+        emporte quatre roues, un senseur stellaire et des magnéto-coupleurs, car sa caméra doit
+        viser une cible.
+    do:
+      - js: "EX.play('architecture', ${say})"
+
+  - id: disturbances
+    title: {en: "Disturbance torques", fr: "Les couples perturbateurs"}
+    say:
+      en: >-
+        Four torques push on a satellite in low orbit: solar radiation pressure, drag, gravity
+        gradient, and the residual magnetic dipole of its own wiring and motors reacting with the
+        Earth's field. On a CubeSat built from commercial parts, the magnetic one wins by more
+        than ten times. Twisted pairs, careful routing and demagnetised parts can cut it by five.
+      fr: >-
+        Quatre couples poussent sur un satellite en orbite basse : la pression de radiation
+        solaire, la traînée, le gradient de gravité, et le dipôle magnétique résiduel de ses
+        propres câbles et moteurs, qui réagit avec le champ terrestre. Sur un CubeSat fait de
+        pièces du commerce, le magnétique l’emporte de plus de dix fois. Paires torsadées, câblage
+        soigné et pièces démagnétisées peuvent le diviser par cinq.
+    do:
+      - js: "EX.play('disturbances', ${say})"
+
+  - id: momentum
+    title: {en: "Wheels fill up", fr: "Les roues se remplissent"}
+    say:
+      en: >-
+        A reaction wheel turns the spacecraft by spinning up the other way. But fighting a steady
+        disturbance, it keeps storing momentum, until it reaches top speed and can do no more:
+        saturation. A small ten milli-newton-metre-second wheel fills in about one orbit. So when
+        it reaches about eighty percent, the magnetorquers dump the momentum: desaturation. Keep
+        imaging out of those minutes, because the dump disturbs the pointing.
+      fr: >-
+        Une roue de réaction fait tourner le satellite en accélérant dans l’autre sens. Mais face
+        à une perturbation constante, elle accumule du moment cinétique, jusqu’à sa vitesse
+        maximale : c’est la saturation. Une petite roue de dix millinewtons-mètres-secondes se
+        remplit en une orbite environ. Vers quatre-vingts pour cent, les magnéto-coupleurs vident
+        donc ce moment : c’est la désaturation. Évitez de prendre des images pendant ces minutes,
+        car elle perturbe le pointage.
+    do:
+      - js: "EX.play('momentum', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Halving the residual magnetic dipole of this 3U would do what to the time between desaturations?"
+        fr: "Diviser par deux le dipôle magnétique résiduel de ce 3U ferait quoi au temps entre deux désaturations ?"
+      options:
+        - text: {en: "Roughly double it, since that dipole is almost all the disturbance.", fr: "Le doubler à peu près, puisque ce dipôle fait presque toute la perturbation."}
+          correct: true
+          why: {en: "Time to saturate = wheel capacity ÷ disturbance torque.", fr: "Temps de saturation = capacité de la roue ÷ couple perturbateur."}
+        - text: {en: "Nothing: desaturation is scheduled once per orbit regardless.", fr: "Rien : la désaturation est prévue une fois par orbite quoi qu’il arrive."}
+          why: {en: "It is triggered by wheel speed, which fills at the disturbance rate.", fr: "Elle est déclenchée par la vitesse des roues, qui se remplissent au rythme de la perturbation."}
+        - text: {en: "Halve it, because the magnetorquers would be weaker.", fr: "Le diviser par deux, car les magnéto-coupleurs seraient plus faibles."}
+          why: {en: "The residual dipole is unwanted; the magnetorquer dipole is commanded separately.", fr: "Le dipôle résiduel est indésirable ; celui des magnéto-coupleurs est commandé à part."}
+
+  - id: magnetorquer
+    title: {en: "Why magnetorquers cannot point", fr: "Pourquoi les magnéto-coupleurs ne pointent pas"}
+    say:
+      en: >-
+        A magnetorquer is a coil. Current makes a magnetic dipole, and the Earth's field turns it:
+        the torque is the cross product of the two. So the torque always lies in the plane at
+        right angles to the field, and at any instant there is no torque at all about the field
+        direction. As the satellite orbits, the field turns, and every axis gets its turn. That
+        is enough to stop a tumble or empty the wheels over an orbit, but not to point precisely.
+      fr: >-
+        Un magnéto-coupleur est une bobine. Le courant crée un dipôle magnétique, et le champ
+        terrestre le fait tourner : le couple est le produit vectoriel des deux. Le couple est
+        donc toujours dans le plan perpendiculaire au champ, et à tout instant, il n’y a aucun
+        couple autour de la direction du champ. Au fil de l’orbite, le champ tourne, et chaque axe
+        a son tour. Cela suffit pour arrêter une rotation ou vider les roues sur une orbite, mais
+        pas pour pointer finement.
+    do:
+      - js: "EX.play('magnetorquer', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "What is your mission's pointing requirement, which architecture does it call for, and what does that cost in mass and power?"
+        fr: "Quelle est l’exigence de pointage de votre mission, quelle architecture appelle-t-elle, et qu’est-ce que cela coûte en masse et en puissance ?"
