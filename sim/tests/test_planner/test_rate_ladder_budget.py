@@ -205,7 +205,9 @@ class TestPerActivityRateSplit:
         # receiver's), and must not downlink simulator truth such as
         # aocs.fidelity_mode. -112 bps: 1699.5 -> 1587.7. Still ~9.9 % of
         # the 16 kbps LOW rung, so the rate-ladder argument is unchanged.
-        assert hk_bps == pytest.approx(1587.7, abs=2.0)
+        # 2026-11-06: SID 2 carries 0x02D3 aocs.pointing_limits_valid (1 byte
+        # every 4 s, +3.6 bps of channel): 1587.7 -> 1591.4.
+        assert hk_bps == pytest.approx(1591.4, abs=2.0)
         assert hk_bps / 16000.0 == pytest.approx(0.099, abs=0.002)
         contacts = _contacts([("Svalbard", 20 + 45 * i, 445, 25.0)
                               for i in range(24)])
