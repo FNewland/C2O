@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A telecommand's life</title>
+<link rel="stylesheet" href="explainer.css">
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">S1 request verification</title>
+  <!-- ground -->
+  <g id="ground">
+    <rect class="box" x="40" y="40" width="300" height="250" rx="10"/>
+    <text x="60" y="72" class="big" data-t="ground"></text>
+    <text x="60" y="98" class="small muted" data-t="ground_sub"></text>
+    <rect class="box2" x="60" y="118" width="260" height="56" rx="6"/>
+    <text x="74" y="142" class="mono" id="tc-name" style="font-size:16px">TTC_SET_DATA_RATE</text>
+    <text x="74" y="162" class="mono small muted" id="tc-sub">TC(8,1) func 65 · seq 1234</text>
+    <rect class="box2" x="60" y="190" width="120" height="36" rx="18" id="send-btn"/>
+    <text x="96" y="214" data-t="send"></text>
+  </g>
+  <!-- link -->
+  <path id="uplink" class="wire" d="M 340 120 C 540 40, 700 40, 890 120" stroke-dasharray="6 8"/>
+  <path id="downlink" class="wire" d="M 890 250 C 700 330, 540 330, 340 250" stroke-dasharray="6 8"/>
+  <text x="600" y="58" class="small muted" data-t="uplink"></text>
+  <text x="600" y="330" class="small muted" data-t="downlink"></text>
+  <!-- spacecraft -->
+  <g id="sc">
+    <rect class="box" x="890" y="40" width="360" height="360" rx="10"/>
+    <text x="910" y="72" class="big">EOSAT-1</text>
+    <text x="910" y="98" class="small muted" data-t="obc"></text>
+    <g id="gates">
+      <text x="910" y="132" class="small muted" data-t="gates"></text>
+      <g id="g1"><circle cx="922" cy="156" r="8" class="box2" id="g1d"/><text x="940" y="161" class="small" data-t="g1"></text></g>
+      <g id="g2"><circle cx="922" cy="186" r="8" class="box2" id="g2d"/><text x="940" y="191" class="small" data-t="g2"></text></g>
+      <g id="g3"><circle cx="922" cy="216" r="8" class="box2" id="g3d"/><text x="940" y="221" class="small" data-t="g3"></text></g>
+      <g id="g4"><circle cx="922" cy="246" r="8" class="box2" id="g4d"/><text x="940" y="251" class="small" data-t="g4"></text></g>
+    </g>
+    <g id="exec" class="ex-hidden">
+      <text x="910" y="290" class="small muted" data-t="exec"></text>
+      <rect class="box2" x="910" y="302" width="320" height="14" rx="7"/>
+      <rect id="exec-bar" x="910" y="302" width="0" height="14" rx="7" class="acc"/>
+      <text x="910" y="340" class="small" id="exec-what"></text>
+      <text x="910" y="362" class="small muted" id="exec-sub"></text>
+    </g>
+  </g>
+  <!-- packets -->
+  <g id="pk-tc" class="ex-hidden"><rect x="-46" y="-14" width="92" height="28" rx="6" class="acc"/><text x="0" y="5" text-anchor="middle" class="mono small" style="fill:#0d1216">TC(8,1)</text></g>
+  <g id="pk-r1" class="ex-hidden"><rect x="-40" y="-14" width="80" height="28" rx="6" class="ok"/><text x="0" y="5" text-anchor="middle" class="mono small" style="fill:#0d1216">TM(1,1)</text></g>
+  <g id="pk-r2" class="ex-hidden"><rect x="-40" y="-14" width="80" height="28" rx="6" class="bad"/><text x="0" y="5" text-anchor="middle" class="mono small" style="fill:#0d1216">TM(1,2)</text></g>
+  <g id="pk-r3" class="ex-hidden"><rect x="-40" y="-14" width="80" height="28" rx="6" class="ok"/><text x="0" y="5" text-anchor="middle" class="mono small" style="fill:#0d1216">TM(1,3)</text></g>
+  <g id="pk-r7" class="ex-hidden"><rect x="-40" y="-14" width="80" height="28" rx="6" class="ok"/><text x="0" y="5" text-anchor="middle" class="mono small" style="fill:#0d1216">TM(1,7)</text></g>
+  <g id="pk-r8" class="ex-hidden"><rect x="-40" y="-14" width="80" height="28" rx="6" class="bad"/><text x="0" y="5" text-anchor="middle" class="mono small" style="fill:#0d1216">TM(1,8)</text></g>
+
+  <!-- the verification row, as on the command page -->
+  <g id="row">
+    <text x="40" y="452" class="small muted" data-t="row"></text>
+    <g id="st-sent"><rect class="box2" x="40" y="466" width="200" height="54" rx="8" id="st-sent-r"/><text x="56" y="490" data-t="sent"></text><text x="56" y="510" class="mono small muted">TC(8,1)</text></g>
+    <g id="st-acc"><rect class="box2" x="260" y="466" width="200" height="54" rx="8" id="st-acc-r"/><text x="276" y="490" data-t="accepted"></text><text x="276" y="510" class="mono small muted" id="st-acc-c">1,1</text></g>
+    <g id="st-start"><rect class="box2" x="480" y="466" width="200" height="54" rx="8" id="st-start-r"/><text x="496" y="490" data-t="started"></text><text x="496" y="510" class="mono small muted">1,3</text></g>
+    <g id="st-done"><rect class="box2" x="700" y="466" width="200" height="54" rx="8" id="st-done-r"/><text x="716" y="490" data-t="completed" id="st-done-t"></text><text x="716" y="510" class="mono small muted" id="st-done-c">1,7</text></g>
+    <g id="st-tm"><rect class="box2" x="920" y="466" width="320" height="54" rx="8" id="st-tm-r"/><text x="936" y="490" data-t="verified"></text><text x="936" y="510" class="small muted" data-t="verified_sub"></text></g>
+  </g>
+  <!-- the failure notice -->
+  <g id="notice" class="ex-hidden">
+    <rect x="40" y="540" width="1200" height="60" rx="8" fill="#2c1c1e" stroke="#e06262"/>
+    <text x="58" y="566" class="mono small" id="notice-code"></text>
+    <text x="58" y="588" class="small" id="notice-why"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "A telecommand's life: accepted is not done",
+    ground: "Mission control", ground_sub: "the command page", send: "Send",
+    uplink: "uplink", downlink: "downlink", obc: "on-board computer",
+    gates: "acceptance checks", g1: "allowed in this software", g2: "data bus reachable",
+    g3: "service, subtype and length valid", g4: "target unit powered",
+    exec: "execution", row: "Verification, service 1 (S1)", sent: "Sent", accepted: "Accepted",
+    started: "Started", completed: "Completed", verified: "Verified in telemetry",
+    verified_sub: "your card's check, not a report",
+    foot: "EOSAT-1 · packet utilisation standard (PUS, ECSS-E-ST-70-41) · CC BY 4.0",
+    rate: "TM rate → LOW", rate_sub: "done at once: TM(1,7) follows",
+    boot: "OBC_BOOT_APP: 10 s image check", wings: "SA deploy: about 30 s", gyro: "gyro calibration arc: 300 s",
+    held: "TM(1,7) held until the effect is real", done: "effect real: TM(1,7) released",
+    gate: "TX in downlink mode? no → refused",
+    rejected: "Rejected", failed: "Failed",
+  },
+  fr: {
+    kicker: "Notion", title: "La vie d’une télécommande : acceptée n’est pas terminée",
+    ground: "Contrôle de mission", ground_sub: "la page de commande", send: "Envoyer",
+    uplink: "liaison montante", downlink: "liaison descendante", obc: "ordinateur de bord",
+    gates: "contrôles d’acceptation", g1: "permise dans ce logiciel", g2: "bus de données joignable",
+    g3: "service, sous-type et longueur valides", g4: "unité cible alimentée",
+    exec: "exécution", row: "Vérification, service 1 (S1)", sent: "Envoyée", accepted: "Acceptée",
+    started: "Démarrée", completed: "Terminée", verified: "Vérifiée en télémesure",
+    verified_sub: "votre fiche, pas un rapport",
+    foot: "EOSAT-1 · norme d’utilisation des paquets (PUS, ECSS-E-ST-70-41) · CC BY 4.0",
+    rate: "Débit TM → LOW", rate_sub: "fait aussitôt : TM(1,7) suit",
+    boot: "OBC_BOOT_APP : contrôle d’image, 10 s", wings: "déploiement SA : environ 30 s", gyro: "arc d’étalonnage gyro : 300 s",
+    held: "TM(1,7) retenu jusqu’à ce que l’effet soit réel", done: "effet réel : TM(1,7) libéré",
+    gate: "émetteur en mode descente ? non → refusée",
+    rejected: "Refusée", failed: "Échouée",
+  },
+});
+
+const UP = [[340, 120], [540, 62], [700, 62], [890, 120]];
+const DOWN = [[890, 250], [700, 300], [540, 300], [340, 250]];
+const ROW = { acc: "st-acc-r", start: "st-start-r", done: "st-done-r", tm: "st-tm-r", sent: "st-sent-r" };
+function lit(k, cls) { const r = EX.$(ROW[k]); r.setAttribute("class", "box2"); r.style.stroke = `var(--${cls})`; r.style.strokeWidth = 3; }
+function gate(i, ok) { EX.$("g" + i + "d").setAttribute("class", ok ? "ok" : "bad"); }
+function reset() {
+  for (const id of ["pk-tc", "pk-r1", "pk-r2", "pk-r3", "pk-r7", "pk-r8"]) {
+    const n = EX.$(id); n.getAnimations().forEach((a) => a.cancel()); n.style.opacity = 0;
+  }
+  EX.raw("tc-name", "TTC_SET_DATA_RATE"); EX.raw("tc-sub", "TC(8,1) func 65 · seq 1234");
+  EX.$("st-done-r").style.strokeDasharray = "";
+  for (const k of Object.keys(ROW)) { const r = EX.$(ROW[k]); r.style.stroke = ""; r.style.strokeWidth = ""; }
+  for (let i = 1; i <= 4; i++) EX.$("g" + i + "d").setAttribute("class", "box2");
+  EX.hide("notice", 0); EX.hide("exec", 0); EX.$("exec-bar").setAttribute("width", 0);
+  EX.text("st-done-t", "completed"); EX.raw("st-done-c", "1,7"); EX.raw("st-acc-c", "1,1");
+}
+function bar(ms) {
+  const b = EX.$("exec-bar");
+  b.style.transition = "none"; b.setAttribute("width", 0); b.getBoundingClientRect();
+  b.style.transition = `width ${ms}ms linear`; b.setAttribute("width", 320);
+}
+
+EX.scene("send", (beat) => {
+  reset();
+  beat(0.15, () => EX.pulse("send-btn", 1));
+  beat(0.2, () => lit("sent", "accent"));
+  beat(0.25, () => EX.fly("pk-tc", UP, 2600));
+});
+
+EX.scene("accept", (beat) => {
+  reset(); lit("sent", "accent");
+  [1, 2, 3, 4].forEach((i) => beat(0.08 + i * 0.1, () => gate(i, true)));
+  beat(0.55, () => EX.fly("pk-r1", DOWN, 2400));
+  beat(0.68, () => lit("acc", "ok"));
+});
+
+EX.scene("reject", (beat) => {
+  reset(); lit("sent", "accent");
+  beat(0.08, () => gate(1, true)); beat(0.16, () => gate(2, true)); beat(0.24, () => gate(3, true));
+  beat(0.34, () => { gate(4, false); EX.pulse("g4", 2); });
+  beat(0.45, () => EX.fly("pk-r2", DOWN, 2400));
+  beat(0.58, () => { lit("acc", "bad"); EX.raw("st-acc-c", "1,2 · 0x0004"); });
+  beat(0.62, () => {
+    EX.raw("notice-code", "TM(1,2) · 0x0004");
+    EX.raw("notice-why", EX.lang === "fr" ? "unité cible non alimentée : rien n’a été exécuté, ni TM(1,3) ni TM(1,7)" : "target unit unpowered: nothing ran, so no TM(1,3) and no TM(1,7) follow");
+    EX.show("notice");
+  });
+});
+
+EX.scene("execute", (beat, secs) => {
+  reset(); lit("sent", "accent"); [1, 2, 3, 4].forEach((i) => gate(i, true)); lit("acc", "ok");
+  beat(0.06, () => EX.fly("pk-r3", DOWN, 2000));
+  beat(0.16, () => lit("start", "ok"));
+  beat(0.2, () => { EX.text("exec-what", "rate"); EX.text("exec-sub", "rate_sub"); EX.show("exec"); bar(1500); });
+  beat(0.42, () => EX.fly("pk-r7", DOWN, 2000));
+  beat(0.54, () => lit("done", "ok"));
+  beat(0.72, () => { lit("tm", "accent"); EX.pulse("st-tm", 2); });
+});
+
+EX.scene("fail", (beat) => {
+  reset(); lit("sent", "accent"); [1, 2, 3, 4].forEach((i) => gate(i, true)); lit("acc", "ok");
+  beat(0.05, () => { lit("start", "ok"); EX.raw("tc-name", "TTC_SET_DATA_RATE → HIGH"); });
+  beat(0.12, () => { EX.raw("exec-what", "TTC_SET_DATA_RATE(HIGH)"); EX.text("exec-sub", "gate"); EX.show("exec"); bar(900); });
+  beat(0.25, () => EX.fly("pk-r8", DOWN, 2200));
+  beat(0.36, () => { lit("done", "bad"); EX.text("st-done-t", "failed"); EX.raw("st-done-c", "1,8 · 0x0007"); });
+  beat(0.42, () => {
+    EX.raw("notice-code", EX.lang === "fr" ? "TM(1,8) · 0x0007 · motif :" : "TM(1,8) · 0x0007 · failure notice:");
+    EX.raw("notice-why", "HIGH (128000 bps) requires DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE)");
+    EX.show("notice");
+  });
+  beat(0.62, () => EX.pulse("notice", 2));
+});
+
+EX.scene("deferred", (beat, secs) => {
+  reset(); lit("sent", "accent"); [1, 2, 3, 4].forEach((i) => gate(i, true)); lit("acc", "ok"); lit("start", "ok");
+  EX.raw("tc-name", "OBC_BOOT_APP"); EX.raw("tc-sub", "TC(8,1) func 55");
+  const items = ["boot", "wings", "gyro"];
+  items.forEach((k, i) => beat(0.04 + i * 0.16, () => { EX.text("exec-what", k); EX.text("exec-sub", "held"); EX.show("exec"); bar(secs * 160); }));
+  beat(0.04, () => { const r = EX.$("st-done-r"); r.style.stroke = "var(--warn)"; r.style.strokeWidth = 3; r.style.strokeDasharray = "8 6"; });
+  beat(0.66, () => { EX.text("exec-what", "boot"); EX.text("exec-sub", "done"); bar(1200); });
+  beat(0.76, () => EX.fly("pk-r7", DOWN, 2000));
+  beat(0.86, () => { EX.$("st-done-r").style.strokeDasharray = ""; lit("done", "ok"); });
+});
+
+EX.scene("verify", (beat) => {
+  reset(); EX.raw("tc-name", "AOCS_SET_MODE(2)"); EX.raw("tc-sub", "TC(8,1) func 0");
+  ["sent", "acc", "start", "done"].forEach((k, i) => beat(0.04 + i * 0.05, () => lit(k, k === "sent" ? "accent" : "ok")));
+  [1, 2, 3, 4].forEach((i) => gate(i, true));
+  beat(0.3, () => { lit("tm", "warn"); EX.pulse("st-tm", 3); });
+  beat(0.45, () => {
+    EX.raw("notice-code", EX.lang === "fr" ? "TM(1,7) reçu · aocs.mode = 2 (DETUMBLE)" : "TM(1,7) received · aocs.mode = 2 (DETUMBLE)");
+    EX.raw("notice-why", EX.lang === "fr" ? "… mais le champ magnétique mesuré vaut 0 nT : le magnétomètre est éteint, la loi ne fait rien. La fiche vérifie le champ." : "… but the measured field reads 0 nT: the magnetometer is off and the law does nothing. The card checks the field.");
+    const n = EX.$("notice").querySelector("rect"); n.setAttribute("fill", "#2d2618"); n.setAttribute("stroke", "#e0a640");
+    EX.show("notice");
+  });
+});
+</script>
+</body>
+</html>

@@ -112,6 +112,31 @@ Every script follows these rules (from the 2026-11-06 script review,
    textbook (`design/docs/oer/chapters/`), animated by replaying a
    `shared/ui-viz` module or with Manim / Motion Canvas.
 
+## Concept explainers
+
+`explainers/` holds the animated concept pages: one self-contained, bilingual SVG page per
+explainer, built on `explainer.js` (a tiny scene engine) and `explainer.css` (the console
+look: grey at rest, colour for meaning). Labels sit in an `EX.labels({en, fr})` table;
+identifiers stay English. A storyboard opens the page on the `viz` app and drives it:
+
+```yaml
+apps: {viz: default}
+fresh_stack: viz                 # python -m c2ovideo stack up viz  (static server, :18801)
+setup:
+  - goto: {app: viz, path: "/video/explainers/tc-life.html?lang={lang}"}
+steps:
+  - id: accept
+    say: {en: ..., fr: ...}
+    do:
+      - js: "EX.play('accept', ${say})"   # ${say} = this step's narration in seconds
+```
+
+A scene schedules its beats as fractions of the narration (`beat(0.5, fn)` fires half-way),
+so the picture and the voice stay together in both languages. Data for a page goes in
+`explainers/data/`, made by a script from the simulator's own models (see
+`gen_energy_orbit.py`), never typed in. The tests check that every scene a storyboard plays
+exists and that both label tables have the same keys.
+
 ## French review
 
 1. `python -m c2ovideo check <id>` runs speech recognition on every sentence and

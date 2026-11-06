@@ -1,0 +1,146 @@
+# Concept explainer — on-board fault detection, isolation and recovery: the
+# FDIR hierarchy, then one nominal chain end to end (S12 monitor on the wheel
+# momentum envelope → S5 event → S19 rule 2001 → S8 desaturation → S1, then
+# the monitor clears). Animated page video/explainers/fdir.html.
+# Team audience, deeper for fdir_systems. Uses the momentum-management chain
+# (a nominal function) on purpose: no scored fault scenario's recovery is shown.
+id: V-CON-04
+week: 7
+audience: all
+title:
+  en: "From monitor to action: on-board FDIR"
+  fr: "Du moniteur à l’action : la FDIR de bord"
+summary:
+  en: "How the spacecraft protects itself: the layers of fault detection, isolation and recovery, and one chain followed end to end, from a parameter crossing its monitor limit to the event, the event-action rule, the function it runs, and the report that it cleared."
+  fr: "Comment le satellite se protège : les niveaux de détection, isolation et reprise des pannes, puis une chaîne suivie de bout en bout, du paramètre qui franchit la limite de son moniteur à l’événement, à la règle événement-action, à la fonction qu’elle lance et au rapport de retour à la normale."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/18_operations_and_fdir.md (§ 18.3.2 FDIR hierarchy)
+  - sim/docs/PUS_SERVICE_REFERENCE.md (Service 12; Service 19)
+  - sim/configs/eosat1/monitoring/s12_definitions.yaml (0x02BA, 70 %)
+  - sim/configs/eosat1/monitoring/s19_rules.yaml (ea_id 2001 → func 1)
+  - sim/configs/eosat1/procedures/commissioning/fdir_configuration.md (COM-008)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/fdir.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: hierarchy
+    title: {en: "Layers of protection", fr: "Des niveaux de protection"}
+    say:
+      en: >-
+        A spacecraft cannot wait for the next pass to protect itself. So fault detection,
+        isolation and recovery, FDIR, is built in layers. At the bottom, hardware: a watchdog
+        resets a processor in milliseconds. Then the unit, the subsystem and the whole system,
+        each slower and wider. At the top is the ground: you. A fault that one layer cannot
+        clear goes up to the next.
+      fr: >-
+        Un satellite ne peut pas attendre le prochain passage pour se protéger. La détection,
+        l’isolation et la reprise des pannes, la FDIR, est donc construite en niveaux. En bas, le
+        matériel : un chien de garde réinitialise un processeur en quelques millisecondes. Puis
+        l’unité, le sous-système et le système entier, chacun plus lent et plus large. Tout en
+        haut, le sol : vous. Une panne qu’un niveau ne sait pas traiter monte au suivant.
+    do:
+      - js: "EX.play('hierarchy', ${say})"
+
+  - id: monitor
+    title: {en: "A monitor crosses its limit", fr: "Un moniteur franchit sa limite"}
+    say:
+      en: >-
+        Here is one chain, followed end to end. The reaction wheels store momentum as they hold
+        the attitude, and it builds up. Service twelve, on-board monitoring, watches that
+        momentum as a share of what the wheels can hold, with a limit at seventy percent. When
+        the value crosses it, the monitor sends one report, twelve comma nine, on the crossing.
+        It does not repeat it while the value stays high.
+      fr: >-
+        Voici une chaîne, suivie de bout en bout. Les roues de réaction stockent du moment
+        cinétique en tenant l’attitude, et il s’accumule. Le service douze, la surveillance de
+        bord, suit ce moment cinétique en part de ce que les roues peuvent stocker, avec une
+        limite à soixante-dix pour cent. Quand la valeur la franchit, le moniteur envoie un seul
+        rapport, douze virgule neuf, au franchissement. Il ne le répète pas tant que la valeur
+        reste haute.
+    do:
+      - js: "EX.play('monitor', ${say})"
+
+  - id: chain
+    title: {en: "Event, rule, function", fr: "Événement, règle, fonction"}
+    say:
+      en: >-
+        The crossing becomes a service five event. Service nineteen, event-action, holds rules
+        that match events. Rule two thousand and one matches this one, and runs a single
+        service eight function: desaturate the wheels, using the magnetorquers to dump the
+        stored momentum. The function is verified by service one like any command you send, and
+        the attitude mode changes to DESAT. No one on the ground pressed anything.
+      fr: >-
+        Le franchissement devient un événement du service cinq. Le service dix-neuf,
+        événement-action, contient des règles qui reconnaissent des événements. La règle deux
+        mille un reconnaît celui-ci et lance une seule fonction du service huit : désaturer les
+        roues, en utilisant les magnétocoupleurs pour évacuer le moment stocké. La fonction est
+        vérifiée par le service un comme toute commande que vous envoyez, et le mode d’attitude
+        passe en DESAT. Personne au sol n’a rien appuyé.
+    do:
+      - js: "EX.play('chain', ${say})"
+
+  - id: clear
+    title: {en: "Back inside the limit", fr: "De retour dans la limite"}
+    say:
+      en: >-
+        As the momentum falls back below the limit, the monitor sends its second and last
+        report, twelve comma ten: returned to nominal. Two reports for the whole episode, one
+        at each edge. So if you were out of contact, the stored telemetry and the event log
+        still tell the full story at the next pass.
+      fr: >-
+        Quand le moment cinétique repasse sous la limite, le moniteur envoie son second et
+        dernier rapport, douze virgule dix : retour à la normale. Deux rapports pour tout
+        l’épisode, un à chaque franchissement. Si vous étiez hors contact, la télémesure stockée
+        et le journal d’événements racontent quand même toute l’histoire au passage suivant.
+    do:
+      - js: "EX.play('clear', ${say})"
+
+  - id: onerule
+    title: {en: "One rule, one function", fr: "Une règle, une fonction"}
+    say:
+      en: >-
+        Each rule runs exactly one function, with no arguments. Anything that needs several
+        steps is an on-board control procedure, service eighteen. The ground can switch each
+        rule on or off, and the commissioning card for FDIR does exactly that, rule by rule,
+        once each subsystem it protects has been checked out.
+      fr: >-
+        Chaque règle lance exactement une fonction, sans argument. Tout ce qui demande plusieurs
+        étapes est une procédure de contrôle de bord, le service dix-huit. Le sol peut activer
+        ou désactiver chaque règle, et la fiche de mise en service de la FDIR fait exactement
+        cela, règle par règle, une fois vérifié chaque sous-système qu’elle protège.
+    do:
+      - js: "EX.play('onerule', ${say})"
+    question:
+      type: truefalse
+      answer: false
+      text:
+        en: "An S19 event-action rule can run a short sequence of commands, such as power a line and then switch a mode."
+        fr: "Une règle événement-action S19 peut lancer une courte séquence de commandes, par exemple alimenter une ligne puis changer de mode."
+
+  - id: ground
+    title: {en: "Where you come in", fr: "Là où vous intervenez"}
+    say:
+      en: >-
+        At the console you see the result: an alarm, the events, a new mode, the service one
+        reports. Before you command anything, read what the spacecraft has already done, and
+        why. Every autonomous action is visible in telemetry and can be undone by command.
+        Fighting the automation without understanding it is how a small event becomes an
+        anomaly.
+      fr: >-
+        À la console, vous voyez le résultat : une alarme, les événements, un nouveau mode, les
+        rapports du service un. Avant de commander quoi que ce soit, lisez ce que le satellite a
+        déjà fait, et pourquoi. Toute action autonome est visible en télémesure et peut être
+        annulée par commande. Combattre l’automatisme sans le comprendre, c’est ainsi qu’un petit
+        événement devient une anomalie.
+    do:
+      - js: "EX.play('ground', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "You arrive at AOS and the attitude mode reads DESAT, which nobody commanded. What do you read, and in what order, before you say anything on the loop?"
+        fr: "Au début du passage, le mode d’attitude indique DESAT, que personne n’a commandé. Que lisez-vous, et dans quel ordre, avant de parler sur la boucle ?"

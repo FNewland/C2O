@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Packets, services and housekeeping</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .field rect { stroke: var(--bg); stroke-width: 2; }
+  .f-pri { fill: #2f5d78; } .f-sec { fill: #4b3f78; } .f-data { fill: #2f5a40; } .f-crc { fill: #6b4a2a; }
+  .svc rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: fill .4s, stroke .4s; }
+  .svc.on rect { fill: #1f3442; stroke: var(--accent); stroke-width: 2.5; }
+  .sid rect.lane { fill: var(--panel); stroke: var(--line); }
+  .dot { fill: var(--accent); }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">CCSDS space packet, PUS services and housekeeping</title>
+
+  <!-- 1. the packet bar -->
+  <g id="pkt" class="ex-hidden">
+    <text x="40" y="40" class="small muted" data-t="one_packet"></text>
+    <g class="field" id="f-pri"><rect x="40" y="56" width="260" height="70" rx="6" class="f-pri"/><text x="56" y="88" data-t="pri"></text><text x="56" y="112" class="small mono muted">6 octets</text></g>
+    <g class="field" id="f-sec"><rect x="300" y="56" width="300" height="70" rx="6" class="f-sec"/><text x="316" y="88" data-t="sec"></text><text x="316" y="112" class="small mono muted">TM: 9 · TC: 3 octets</text></g>
+    <g class="field" id="f-data"><rect x="600" y="56" width="500" height="70" rx="6" class="f-data"/><text x="616" y="88" data-t="data"></text><text x="616" y="112" class="small muted" data-t="data_sub"></text></g>
+    <g class="field" id="f-crc"><rect x="1100" y="56" width="140" height="70" rx="6" class="f-crc"/><text x="1116" y="88">CRC</text><text x="1116" y="112" class="small mono muted">2 octets</text></g>
+  </g>
+
+  <!-- 2. primary header fields -->
+  <g id="pri" class="ex-hidden">
+    <path class="wire-acc" d="M 40 130 L 40 170 M 300 130 L 1240 170" />
+    <g id="p-type"><rect class="box2" x="40" y="176" width="220" height="92" rx="8"/><text x="56" y="204" data-t="p_type"></text><text x="56" y="232" class="mono">TM / TC</text><text x="56" y="256" class="small muted" data-t="p_type_sub"></text></g>
+    <g id="p-apid"><rect class="box2" x="276" y="176" width="420" height="92" rx="8" id="p-apid-r"/><text x="292" y="204" data-t="p_apid"></text><text x="292" y="232" class="mono" id="apid-val">APID 0x002</text><text x="292" y="256" class="small muted" id="apid-sub"></text></g>
+    <g id="p-seq"><rect class="box2" x="712" y="176" width="260" height="92" rx="8"/><text x="728" y="204" data-t="p_seq"></text><text x="728" y="232" class="mono" id="seq-val">seq 0</text><text x="728" y="256" class="small muted" data-t="p_seq_sub"></text></g>
+    <g id="p-len"><rect class="box2" x="988" y="176" width="252" height="92" rx="8"/><text x="1004" y="204" data-t="p_len"></text><text x="1004" y="232" class="mono">length</text><text x="1004" y="256" class="small muted" data-t="p_len_sub"></text></g>
+  </g>
+
+  <!-- 3. secondary header fields -->
+  <g id="sec" class="ex-hidden">
+    <g id="s-svc"><rect class="box2" x="300" y="176" width="300" height="92" rx="8"/><text x="316" y="204" data-t="s_svc"></text><text x="316" y="232" class="mono">TM(3,25)</text><text x="316" y="256" class="small muted" data-t="s_svc_sub"></text></g>
+    <g id="s-time"><rect class="box2" x="616" y="176" width="624" height="92" rx="8"/><text x="632" y="204" data-t="s_time"></text><text x="632" y="232" class="mono" id="cuc">CUC 0x3280F5D0 · 0x8000</text><text x="632" y="256" class="small muted" data-t="s_time_sub"></text></g>
+    <path class="wire-acc" d="M 300 130 L 300 170 M 600 130 L 1240 170" />
+  </g>
+
+  <!-- 4. the services -->
+  <g id="svcs" class="ex-hidden">
+    <text x="40" y="186" class="small muted" data-t="svcs"></text>
+  </g>
+
+  <!-- 5. housekeeping lanes -->
+  <g id="hk" class="ex-hidden">
+    <text x="40" y="186" class="small muted" data-t="hk"></text>
+  </g>
+  <g id="hk-note" class="ex-hidden">
+    <rect x="40" y="540" width="1200" height="60" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="566" class="mono small" id="hk-note-a"></text>
+    <text x="58" y="588" class="small" id="hk-note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Packets, services and housekeeping",
+    one_packet: "One CCSDS space packet, as it travels on the link",
+    pri: "Primary header", sec: "PUS secondary header", data: "Data field", data_sub: "parameters, arguments, reports",
+    p_type: "Type", p_type_sub: "down or up", p_apid: "Application process ID (APID)", p_seq: "Sequence count",
+    p_seq_sub: "+1 each packet: gaps show loss", p_len: "Length", p_len_sub: "of what follows",
+    apid_boot: "0x002: the bootloader is talking", apid_app: "0x001: the application has booted",
+    s_svc: "Service, subtype", s_svc_sub: "what kind of packet this is",
+    s_time: "On-board time (TM only)", s_time_sub: "CUC: seconds and 1/65536 s since J2000, from the spacecraft clock",
+    svcs: "PUS services EOSAT-1 flies (the ones your cards use are lit)",
+    hk: "Housekeeping, service 3: one report structure per subsystem, each with a structure identifier (SID)",
+    s1: "request verification", s2: "device access", s3: "housekeeping", s5: "event reporting", s6: "memory",
+    s8: "function management", s9: "time management", s11: "scheduling", s12: "on-board monitoring",
+    s13: "large data transfer", s15: "TM storage", s17: "connection test", s18: "on-board procedures",
+    s19: "event-action", s20: "parameters",
+    eps: "power", aocs: "attitude", tcs: "thermal", obdh: "data handling", pld: "payload", ttc: "radio",
+    beacon: "beacon (bootloader)", gps: "GPS navigation",
+    req_a: "TC(3,27) SID 2 → one TM(3,25): a single snapshot, now",
+    req_b: "Requested reports answer once. Nothing more arrives until you ask again.",
+    en_a: "TC(3,5) SID 2 → TM(3,25) every 4 s until TC(3,6)",
+    en_b: "Enabled reports keep coming on their own, pass after pass.",
+    pw_a: "EPS_POWER_ON line 7 → the AOCS units are powered … and SID 2 stays silent",
+    pw_b: "Powering a unit never switches its report on. That takes its own command: HK_ENABLE.",
+    foot: "EOSAT-1 · CCSDS space packet + PUS-C (ECSS-E-ST-70-41) · CC BY 4.0",
+  },
+  fr: {
+    kicker: "Notion", title: "Paquets, services et données de servitude",
+    one_packet: "Un paquet spatial CCSDS, tel qu’il voyage sur la liaison",
+    pri: "En-tête primaire", sec: "En-tête secondaire PUS", data: "Champ de données", data_sub: "paramètres, arguments, rapports",
+    p_type: "Type", p_type_sub: "descendant ou montant", p_apid: "Id. de processus applicatif (APID)", p_seq: "Compteur de séquence",
+    p_seq_sub: "+1 à chaque paquet : un trou = une perte", p_len: "Longueur", p_len_sub: "de ce qui suit",
+    apid_boot: "0x002 : c’est le chargeur d’amorçage qui parle", apid_app: "0x001 : l’application a démarré",
+    s_svc: "Service, sous-type", s_svc_sub: "la nature du paquet",
+    s_time: "Temps de bord (TM seulement)", s_time_sub: "CUC : secondes et 1/65536 s depuis J2000, lues sur l’horloge du satellite",
+    svcs: "Les services PUS d’EOSAT-1 (ceux que vos fiches utilisent sont allumés)",
+    hk: "Données de servitude, service 3 : une structure de rapport par sous-système, chacune avec son identifiant de structure (SID)",
+    s1: "vérification des requêtes", s2: "accès aux équipements", s3: "données de servitude", s5: "événements", s6: "mémoire",
+    s8: "gestion des fonctions", s9: "gestion du temps", s11: "programmation", s12: "surveillance de bord",
+    s13: "transfert de gros volumes", s15: "stockage TM", s17: "test de connexion", s18: "procédures de bord",
+    s19: "événement-action", s20: "paramètres",
+    eps: "énergie", aocs: "attitude", tcs: "thermique", obdh: "gestion de bord", pld: "charge utile", ttc: "radio",
+    beacon: "balise (chargeur)", gps: "navigation GPS",
+    req_a: "TC(3,27) SID 2 → un seul TM(3,25) : un instantané, maintenant",
+    req_b: "Un rapport demandé répond une fois. Plus rien n’arrive tant que vous ne redemandez pas.",
+    en_a: "TC(3,5) SID 2 → TM(3,25) toutes les 4 s jusqu’à TC(3,6)",
+    en_b: "Un rapport activé arrive tout seul, passage après passage.",
+    pw_a: "EPS_POWER_ON ligne 7 → les unités SCAO sont alimentées … et le SID 2 reste muet",
+    pw_b: "Alimenter une unité n’active jamais son rapport. Il faut sa propre commande : HK_ENABLE.",
+    foot: "EOSAT-1 · paquet spatial CCSDS + PUS-C (ECSS-E-ST-70-41) · CC BY 4.0",
+  },
+});
+
+// services grid
+const SVCS = [[1, "s1", 1], [2, "s2", 1], [3, "s3", 1], [5, "s5", 1], [6, "s6", 0], [8, "s8", 1], [9, "s9", 1], [11, "s11", 0],
+              [12, "s12", 1], [13, "s13", 1], [15, "s15", 1], [17, "s17", 0], [18, "s18", 0], [19, "s19", 1], [20, "s20", 1]];
+SVCS.forEach(([n, key], i) => {
+  const x = 40 + (i % 5) * 242, y = 204 + Math.floor(i / 5) * 92;
+  const g = EX.el("g", { id: "svc" + n, class: "svc" }, "svcs");
+  EX.el("rect", { x, y, width: 228, height: 78, rx: 8 }, g);
+  EX.el("text", { x: x + 16, y: y + 32, class: "big mono", text: "S" + n }, g);
+  EX.el("text", { x: x + 16, y: y + 60, class: "small", label: key }, g);
+});
+// housekeeping lanes: [sid, label, interval s]
+const SIDS = [[1, "eps", 1], [2, "aocs", 4], [3, "tcs", 60], [4, "obdh", 8], [5, "pld", 8], [6, "ttc", 8], [11, "beacon", 30], [12, "gps", 8]];
+SIDS.forEach(([sid, key, iv], i) => {
+  const y = 204 + i * 40;
+  const g = EX.el("g", { id: "sid" + sid, class: "sid" }, "hk");
+  EX.el("rect", { x: 40, y, width: 1200, height: 32, rx: 6, class: "lane" }, g);
+  EX.el("text", { x: 56, y: y + 22, class: "mono small", text: "SID " + sid }, g);
+  EX.el("text", { x: 140, y: y + 22, class: "small", label: key }, g);
+  EX.el("text", { x: 330, y: y + 22, class: "small mono muted", text: "every " + iv + " s" }, g).textContent = (EX.lang === "fr" ? "toutes les " : "every ") + iv + " s";
+});
+let flows = [];
+function stopFlows() { flows.forEach(clearInterval); flows = []; document.querySelectorAll(".dot").forEach((d) => d.remove()); }
+// a dot running along a lane; one simulated second = `k` ms
+function emit(sid) {
+  const i = SIDS.findIndex((s) => s[0] === sid), y = 204 + i * 40 + 16;
+  const d = EX.el("circle", { cx: 450, cy: y, r: 7, class: "dot" }, "hk");
+  d.animate([{ transform: "translateX(0)" }, { transform: "translateX(770px)", opacity: 0.2 }], { duration: 3600, easing: "linear", fill: "forwards" })
+    .finished.then(() => d.remove());
+}
+function flow(sid, iv, k) { emit(sid); flows.push(setInterval(() => emit(sid), iv * k)); }
+function laneDim(except) { SIDS.forEach(([sid]) => EX.dim("sid" + sid, !except.includes(sid))); }
+function note(a, b) { EX.text("hk-note-a", a); EX.text("hk-note-b", b); EX.show("hk-note"); }
+
+function only(...ids) { ["pkt", "pri", "sec", "svcs", "hk", "hk-note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+
+EX.scene("packet", (beat) => {
+  stopFlows(); only("pkt");
+  ["f-pri", "f-sec", "f-data", "f-crc"].forEach((f) => EX.$(f).style.opacity = 0);
+  ["f-pri", "f-sec", "f-data", "f-crc"].forEach((f, i) => beat(0.12 + i * 0.16, () => EX.show(f, 600)));
+});
+EX.scene("primary", (beat) => {
+  stopFlows(); only("pkt", "pri");
+  EX.dim("f-sec"); EX.dim("f-data"); EX.dim("f-crc"); EX.dim("f-pri", false);
+  ["p-type", "p-apid", "p-seq", "p-len"].forEach((f) => EX.$(f).style.opacity = 0);
+  ["p-type", "p-apid", "p-seq", "p-len"].forEach((f, i) => beat(0.06 + i * 0.08, () => EX.show(f)));
+  beat(0.45, () => { EX.raw("apid-val", "APID 0x002"); EX.text("apid-sub", "apid_boot"); EX.mark("p-apid-r", "ex-glow"); });
+  beat(0.68, () => { EX.raw("apid-val", "APID 0x001"); EX.text("apid-sub", "apid_app"); EX.pulse("p-apid", 2); });
+  beat(0.3, () => EX.count("seq-val", 1200, 1240, 4000, (v) => "seq " + v.toFixed(0)));
+});
+EX.scene("secondary", (beat) => {
+  stopFlows(); only("pkt", "sec");
+  EX.dim("f-pri"); EX.dim("f-data"); EX.dim("f-crc"); EX.dim("f-sec", false);
+  EX.$("s-svc").style.opacity = 0; EX.$("s-time").style.opacity = 0;
+  beat(0.1, () => EX.show("s-svc")); beat(0.45, () => EX.show("s-time"));
+});
+EX.scene("services", (beat) => {
+  stopFlows(); only("pkt", "svcs"); EX.dim("f-sec", false); EX.dim("f-pri"); EX.dim("f-data"); EX.dim("f-crc");
+  SVCS.forEach(([n]) => EX.mark("svc" + n, "on", false));
+  SVCS.filter((s) => s[2]).forEach(([n], i) => beat(0.12 + i * 0.05, () => EX.mark("svc" + n, "on")));
+});
+EX.scene("hk", (beat, secs) => {
+  stopFlows(); only("pkt", "hk"); EX.dim("f-data", false); EX.dim("f-pri"); EX.dim("f-sec"); EX.dim("f-crc");
+  laneDim([]);
+  // one simulated second = 450 ms: SID 1 every ~0.5 s, SID 2 every ~2 s
+  SIDS.forEach(([sid, , iv], i) => beat(0.05 + i * 0.03, () => { if (iv <= 8) flow(sid, iv, 450); else emit(sid); }));
+});
+EX.scene("request", (beat) => {
+  stopFlows(); only("pkt", "hk"); laneDim([2]);
+  beat(0.15, () => { emit(2); note("req_a", "req_b"); });
+  beat(0.55, () => { flow(2, 4, 450); note("en_a", "en_b"); });
+});
+EX.scene("power", (beat) => {
+  stopFlows(); only("pkt", "hk"); laneDim([2]);
+  beat(0.08, () => note("pw_a", "pw_b"));
+  beat(0.75, () => { flow(2, 4, 450); EX.raw("hk-note-a", EX.lang === "fr" ? "HK_ENABLE SID 2 → TC(3,5) : le rapport arrive" : "HK_ENABLE SID 2 → TC(3,5): the report arrives"); });
+});
+</script>
+</body>
+</html>

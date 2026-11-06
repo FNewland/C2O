@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Energy balance through an orbit</title>
+<link rel="stylesheet" href="explainer.css">
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">EOSAT-1 energy balance through one orbit</title>
+  <defs>
+    <linearGradient id="sunlight" x1="0" x2="1"><stop offset="0" stop-color="#e0a640" stop-opacity=".0"/><stop offset="1" stop-color="#e0a640" stop-opacity=".18"/></linearGradient>
+  </defs>
+  <!-- orbit view -->
+  <g id="orbit">
+    <rect x="40" y="20" width="420" height="420" rx="10" class="box"/>
+    <rect x="40" y="20" width="420" height="420" rx="10" fill="url(#sunlight)"/>
+    <text x="60" y="52" class="small muted" data-t="sun"></text>
+    <text x="440" y="52" class="small" style="fill:var(--warn)" text-anchor="end">☀ →</text>
+    <!-- shadow cylinder, behind the Earth, away from the Sun (Sun on the right) -->
+    <path id="shadow" d="M 250 160 L 44 160 L 44 300 L 250 300 Z" fill="#000" opacity=".45"/>
+    <circle cx="250" cy="230" r="70" fill="#1d3a4f" stroke="#2f5d78" stroke-width="2"/>
+    <path d="M 250 160 A 70 70 0 0 1 250 300 Z" fill="#2c5570"/>
+    <circle cx="250" cy="230" r="150" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 6"/>
+    <circle id="sc" r="9" class="acc" cx="400" cy="230"/>
+    <text x="250" y="420" class="small muted" text-anchor="middle" id="orbit-cap"></text>
+    <text x="70" y="236" class="small muted" data-t="eclipse"></text>
+  </g>
+
+  <!-- power plot -->
+  <g id="plot">
+    <rect x="490" y="20" width="750" height="260" rx="10" class="box"/>
+    <text x="510" y="48" data-t="power"></text>
+    <line x1="550" y1="250" x2="1220" y2="250" class="wire"/>
+    <text x="540" y="254" class="small muted" text-anchor="end">0</text>
+    <text x="540" y="164" class="small muted" text-anchor="end">40</text>
+    <text x="540" y="84" class="small muted" text-anchor="end">80 W</text>
+    <line x1="550" y1="160" x2="1220" y2="160" stroke="var(--line)" stroke-dasharray="2 6"/>
+    <line x1="550" y1="80" x2="1220" y2="80" stroke="var(--line)" stroke-dasharray="2 6"/>
+    <g id="ecl-bands"></g>
+    <polyline id="gen" fill="none" stroke="var(--warn)" stroke-width="3" points=""/>
+    <polyline id="load" fill="none" stroke="var(--violet)" stroke-width="3" points=""/>
+    <g id="leg-gen" class="ex-hidden"><rect x="1000" y="34" width="18" height="6" class="warn"/><text x="1026" y="42" class="small" data-t="gen"></text></g>
+    <g id="leg-load" class="ex-hidden"><rect x="1000" y="54" width="18" height="6" style="fill:var(--violet)"/><text x="1026" y="62" class="small" data-t="load"></text></g>
+    <line id="cursor" x1="550" y1="60" x2="550" y2="250" stroke="var(--muted)" stroke-width="1"/>
+  </g>
+
+  <!-- state of charge -->
+  <g id="socg" class="ex-hidden">
+    <rect x="490" y="296" width="750" height="144" rx="10" class="box"/>
+    <text x="510" y="324" data-t="soc"></text>
+    <text x="540" y="350" class="small muted" text-anchor="end">100</text>
+    <text x="540" y="426" class="small muted" text-anchor="end">80 %</text>
+    <polyline id="soc" fill="none" stroke="var(--ok)" stroke-width="3" points=""/>
+    <text x="1220" y="324" class="small mono" text-anchor="end" id="soc-val"></text>
+  </g>
+
+  <!-- orbit-average bars -->
+  <g id="bars" class="ex-hidden">
+    <rect x="40" y="456" width="1200" height="150" rx="10" class="box"/>
+    <text x="60" y="484" data-t="per_orbit"></text>
+    <rect id="bar-gen" x="250" y="500" width="0" height="26" class="warn"/>
+    <text x="236" y="519" class="small" text-anchor="end" data-t="gen_e"></text>
+    <text id="bar-gen-v" x="260" y="519" class="small mono"></text>
+    <rect id="bar-load" x="250" y="540" width="0" height="26" style="fill:var(--violet)"/>
+    <text x="236" y="559" class="small" text-anchor="end" data-t="load_e"></text>
+    <text id="bar-load-v" x="260" y="559" class="small mono"></text>
+    <rect id="bar-margin" x="250" y="574" width="0" height="0"/>
+    <text id="margin-t" x="760" y="590" class="big" style="fill:var(--ok)"></text>
+  </g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="456" width="1200" height="150" rx="10" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="60" y="496" class="big" id="note-a"></text>
+    <text x="60" y="532" id="note-b"></text>
+    <text x="60" y="566" id="note-c"></text>
+    <text x="60" y="592" class="small muted" id="note-d"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" id="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Energy balance through an orbit",
+    sun: "Seen from above the orbit", eclipse: "Earth's shadow", power: "Power, watts",
+    gen: "generated by the arrays", load: "used by the spacecraft", soc: "Battery state of charge",
+    per_orbit: "Energy over one whole orbit", gen_e: "generated", load_e: "used",
+    margin: "orbit-average margin", orbit_cap: "{p} min orbit · {e} min in eclipse · beta {b}°",
+    n1a: "Instantaneous power lies in eclipse.", n1b: "In the shadow, generation is zero and the balance reads about −{l} W.",
+    n1c: "That is normal. The orbit, not the moment, decides whether you are gaining energy.",
+    n2a: "What moves the margin", n2b: "More load: imaging, the FPA cooler, a longer transmitter duty, heaters.",
+    n2c: "Less generation: wings stowed, a worse beta angle, aged cells, pointing away from the Sun.",
+    n2d: "Every position's request is paid from this one budget. Power and thermal (EPS/TCS) keeps the books.",
+    foot: "EOSAT-1 · nominal operations, end-of-life arrays, mission epoch · production EPS model via sim/tools/power_budget.py · CC BY 4.0",
+  },
+  fr: {
+    kicker: "Notion", title: "Le bilan énergétique sur une orbite",
+    sun: "Vue de dessus de l’orbite", eclipse: "ombre de la Terre", power: "Puissance, watts",
+    gen: "produite par les panneaux", load: "consommée par le satellite", soc: "État de charge de la batterie",
+    per_orbit: "Énergie sur une orbite entière", gen_e: "produite", load_e: "consommée",
+    margin: "marge moyenne sur l’orbite", orbit_cap: "orbite de {p} min · {e} min en éclipse · bêta {b}°",
+    n1a: "La puissance instantanée trompe en éclipse.", n1b: "Dans l’ombre, la production est nulle et le bilan affiche environ −{l} W.",
+    n1c: "C’est normal. C’est l’orbite, pas l’instant, qui dit si vous gagnez de l’énergie.",
+    n2a: "Ce qui fait bouger la marge", n2b: "Plus de charge : imagerie, refroidisseur FPA, émetteur allumé plus longtemps, réchauffeurs.",
+    n2c: "Moins de production : ailes repliées, angle bêta défavorable, cellules vieillies, pointage loin du Soleil.",
+    n2d: "Chaque demande de chaque poste se paie sur ce seul budget. L’énergie et la thermique (EPS/TCS) tiennent les comptes.",
+    foot: "EOSAT-1 · opérations nominales, panneaux en fin de vie, époque de la mission · modèle EPS de production via sim/tools/power_budget.py · CC BY 4.0",
+  },
+});
+EX.text("foot", "foot");
+
+let D = null;
+const PX = (t) => 550 + (670 * t) / D.period_s, PY = (w) => 250 - w * 2, SY = (s) => 430 - (s - 80) * 4;
+const fmt = (k, o) => Object.entries(o).reduce((s, [a, b]) => s.replace("{" + a + "}", b), EX.t(k));
+let head = 0, raf = null;
+
+function render(upto, which) {
+  const S = D.samples.filter((s) => s.t <= upto);
+  if (which.gen) EX.$("gen").setAttribute("points", S.map((s) => `${PX(s.t)},${PY(s.gen)}`).join(" "));
+  if (which.load) EX.$("load").setAttribute("points", S.map((s) => `${PX(s.t)},${PY(s.load)}`).join(" "));
+  if (which.soc) {
+    EX.$("soc").setAttribute("points", S.map((s) => `${PX(s.t)},${SY(s.soc)}`).join(" "));
+    if (S.length) EX.raw("soc-val", S[S.length - 1].soc.toFixed(1) + " %");
+  }
+  EX.$("cursor").setAttribute("x1", PX(upto)); EX.$("cursor").setAttribute("x2", PX(upto));
+  // the spacecraft on its orbit: t=0 at the start of the record; eclipse sits on the far side
+  const firstEcl = D.samples.find((s) => s.ecl).t, lastEcl = [...D.samples].reverse().find((s) => s.ecl).t;
+  const mid = (firstEcl + lastEcl) / 2;
+  const ang = Math.PI + ((upto - mid) / D.period_s) * 2 * Math.PI; // eclipse centre at the left (away from the Sun)
+  EX.$("sc").setAttribute("cx", 250 + 150 * Math.cos(ang)); EX.$("sc").setAttribute("cy", 230 - 150 * Math.sin(ang));
+  const cur = S[S.length - 1];
+  EX.$("sc").setAttribute("class", cur && cur.ecl ? "" : "acc"); EX.$("sc").style.fill = cur && cur.ecl ? "#556" : "";
+}
+function sweep(which, ms, from) {
+  cancelAnimationFrame(raf);
+  const t0 = performance.now(), a = from || 0;
+  function f(now) {
+    const k = Math.min(1, (now - t0) / ms);
+    head = a + (D.period_s - a) * k;
+    render(head, which);
+    if (k < 1) raf = requestAnimationFrame(f);
+  }
+  raf = requestAnimationFrame(f);
+}
+function only(...ids) { ["socg", "bars", "note"].forEach((g) => ids.includes(g) ? EX.show(g) : EX.hide(g, 200)); }
+
+fetch("data/energy_orbit.json").then((r) => r.json()).then((d) => {
+  D = d;
+  EX.raw("orbit-cap", fmt("orbit_cap", { p: (d.period_s / 60).toFixed(1), e: Math.round(d.eclipse_s / 60), b: d.beta_deg }));
+  // eclipse bands on the plot
+  let start = null;
+  d.samples.forEach((s, i) => {
+    if (s.ecl && start === null) start = s.t;
+    if ((!s.ecl || i === d.samples.length - 1) && start !== null) {
+      EX.el("rect", { x: PX(start), y: 60, width: PX(s.t) - PX(start), height: 190, fill: "#000", opacity: 0.35 }, "ecl-bands");
+      start = null;
+    }
+  });
+  render(0, {});
+  document.body.dataset.ready = "1";
+});
+
+EX.scene("orbit", (beat, secs) => {
+  only(); EX.hide("leg-gen", 0); EX.hide("leg-load", 0);
+  EX.$("gen").setAttribute("points", ""); EX.$("load").setAttribute("points", "");
+  beat(0.1, () => sweep({}, secs * 800));
+});
+EX.scene("generation", (beat, secs) => {
+  only(); EX.show("leg-gen");
+  beat(0.05, () => sweep({ gen: 1 }, secs * 820));
+});
+EX.scene("load", (beat, secs) => {
+  only(); EX.show("leg-gen"); EX.show("leg-load"); render(D.period_s, { gen: 1 });
+  beat(0.05, () => sweep({ gen: 1, load: 1 }, secs * 820));
+});
+EX.scene("battery", (beat, secs) => {
+  only("socg"); EX.show("leg-gen"); EX.show("leg-load"); EX.$("soc").setAttribute("points", "");
+  beat(0.05, () => sweep({ gen: 1, load: 1, soc: 1 }, secs * 820));
+});
+EX.scene("average", (beat, secs) => {
+  only("socg", "bars"); render(D.period_s, { gen: 1, load: 1, soc: 1 });
+  const eg = D.gen_avg_w * D.period_s / 3600, el = D.load_avg_w * D.period_s / 3600, k = 6;
+  ["bar-gen", "bar-load"].forEach((b) => { const n = EX.$(b); n.style.transition = "none"; n.setAttribute("width", 0); });
+  EX.raw("bar-gen-v", ""); EX.raw("bar-load-v", ""); EX.raw("margin-t", "");
+  beat(0.1, () => { const n = EX.$("bar-gen"); n.getBoundingClientRect(); n.style.transition = "width 1.4s ease"; n.setAttribute("width", eg * k); });
+  beat(0.2, () => EX.raw("bar-gen-v", ""));
+  beat(0.25, () => { EX.$("bar-gen-v").setAttribute("x", 260 + eg * k); EX.raw("bar-gen-v", eg.toFixed(0) + " Wh"); });
+  beat(0.35, () => { const n = EX.$("bar-load"); n.getBoundingClientRect(); n.style.transition = "width 1.4s ease"; n.setAttribute("width", el * k); });
+  beat(0.5, () => { EX.$("bar-load-v").setAttribute("x", 260 + el * k); EX.raw("bar-load-v", el.toFixed(0) + " Wh"); });
+  beat(0.62, () => EX.raw("margin-t", "+" + D.margin_wh_per_orbit.toFixed(0) + " Wh · " + EX.t("margin")));
+});
+EX.scene("instant", (beat) => {
+  only("socg", "note"); render(D.period_s, { gen: 1, load: 1, soc: 1 });
+  const ecl = D.samples.filter((s) => s.ecl), l = ecl.reduce((a, s) => a + s.load, 0) / ecl.length;
+  EX.text("note-a", "n1a"); EX.raw("note-b", fmt("n1b", { l: Math.round(l) })); EX.text("note-c", "n1c"); EX.raw("note-d", "");
+  const mid = ecl[Math.floor(ecl.length / 2)].t;
+  beat(0.05, () => sweep({ gen: 1, load: 1, soc: 1 }, 1, mid));
+  beat(0.1, () => { render(mid, { gen: 1, load: 1, soc: 1 }); EX.pulse("cursor", 3); });
+});
+EX.scene("levers", (beat) => {
+  only("socg", "note"); render(D.period_s, { gen: 1, load: 1, soc: 1 });
+  EX.text("note-a", "n2a"); EX.raw("note-b", ""); EX.raw("note-c", ""); EX.raw("note-d", "");
+  beat(0.15, () => EX.text("note-b", "n2b"));
+  beat(0.45, () => EX.text("note-c", "n2c"));
+  beat(0.72, () => EX.text("note-d", "n2d"));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+# Concept explainer — EOSAT-1's energy balance through one orbit: sunlight and
+# eclipse, generation, load, the battery as the buffer, and the orbit-average
+# margin, with real numbers from the production EPS model
+# (video/explainers/data/energy_orbit.json, made by gen_energy_orbit.py from
+# sim/tools/power_budget.py). Animated page video/explainers/energy.html.
+# Team audience: the numbers are eps_tcs's, but every seat's request is paid
+# from this budget. Prepares LEOP-004 (V-OPS-05), the SpaceCDF power budget
+# (V-SCDF-02) and every load-related card.
+id: V-CON-02
+week: 6
+audience: all
+title:
+  en: "Energy balance through an orbit"
+  fr: "Le bilan énergétique sur une orbite"
+summary:
+  en: "One orbit of EOSAT-1, drawn from the simulator's own power model: when the arrays generate, what the spacecraft uses, how the battery carries the eclipse, and why the orbit-average margin, not the instantaneous power, tells you whether you are gaining energy."
+  fr: "Une orbite d’EOSAT-1, tirée du modèle d’énergie du simulateur : quand les panneaux produisent, ce que le satellite consomme, comment la batterie passe l’éclipse, et pourquoi c’est la marge moyenne sur l’orbite, et non la puissance instantanée, qui dit si vous gagnez de l’énergie."
+apps:
+  viz: default
+fresh_stack: viz
+ties:
+  cards: [LEOP-004]
+sources:
+  - video/explainers/data/energy_orbit.json (sim/tools/power_budget.py, nominal profile, EOL)
+  - design/docs/oer/chapters/09_power_and_thermal.md (§ 9.1, § 9.3)
+  - design/docs/oer/chapters/07_orbit_and_environment.md (§ 7.1.2 eclipse and beta angle)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/energy.html?lang={lang}", settle: 1.0}
+  - wait_for: {target: {css: "body[data-ready='1']"}, timeout: 15}
+
+steps:
+  - id: orbit
+    title: {en: "Sun, then shadow", fr: "Le Soleil, puis l’ombre"}
+    say:
+      en: >-
+        This is one orbit of EOSAT-1, seen from above. The Sun is to the right. Each orbit
+        lasts about ninety-four and a half minutes, and on this date about thirty-four of them
+        are spent in the Earth's shadow, in eclipse. How long the eclipse lasts depends on the
+        beta angle, the angle between the Sun and the plane of the orbit. Here it is about
+        thirty degrees.
+      fr: >-
+        Voici une orbite d’EOSAT-1, vue de dessus. Le Soleil est à droite. Chaque orbite dure
+        environ quatre-vingt-quatorze minutes et demie, et à cette date, environ trente-quatre
+        d’entre elles se passent dans l’ombre de la Terre, en éclipse. La durée de l’éclipse
+        dépend de l’angle bêta, l’angle entre le Soleil et le plan de l’orbite. Ici, il est
+        d’environ trente degrés.
+    do:
+      - js: "EX.play('orbit', ${say})"
+
+  - id: generation
+    title: {en: "Generation", fr: "La production"}
+    say:
+      en: >-
+        In sunlight, the solar arrays generate power: here between about sixty and seventy-four
+        watts, for arrays at the end of their design life. The moment the spacecraft enters
+        the shadow, generation drops to zero, and stays there until eclipse exit. There is no
+        dimmer: it is on, or it is off.
+      fr: >-
+        Au soleil, les panneaux solaires produisent de la puissance : ici entre soixante et
+        soixante-quatorze watts environ, pour des panneaux en fin de vie. Dès que le satellite
+        entre dans l’ombre, la production tombe à zéro, et y reste jusqu’à la sortie d’éclipse.
+        Il n’y a pas de variateur : c’est allumé, ou éteint.
+    do:
+      - js: "EX.play('generation', ${say})"
+
+  - id: load
+    title: {en: "Load", fr: "La consommation"}
+    say:
+      en: >-
+        The spacecraft uses power all the time: the computer, the attitude control, the heaters,
+        the radio. In nominal operations that is about twenty to thirty watts. The bumps are the
+        transmitter switching on for passes over the ground stations. Imaging, the cooler for
+        the camera's focal plane and propulsion would add to this line.
+      fr: >-
+        Le satellite consomme en permanence : l’ordinateur, le contrôle d’attitude, les
+        réchauffeurs, la radio. En opérations nominales, cela fait vingt à trente watts environ.
+        Les bosses sont l’émetteur qui s’allume pour les passages au-dessus des stations sol.
+        L’imagerie, le refroidisseur du plan focal de la caméra et la propulsion s’ajouteraient
+        à cette courbe.
+    do:
+      - js: "EX.play('load', ${say})"
+
+  - id: battery
+    title: {en: "The battery carries the eclipse", fr: "La batterie passe l’éclipse"}
+    say:
+      en: >-
+        The difference goes into the battery, or comes out of it. In sunlight the battery charges
+        and its state of charge climbs towards full. In eclipse it is the only source, and the
+        state of charge falls, here by about ten percent. The deepest point, the depth of
+        discharge, comes right at eclipse exit.
+      fr: >-
+        La différence entre dans la batterie, ou en sort. Au soleil, la batterie se charge et son
+        état de charge remonte vers le plein. En éclipse, c’est la seule source, et l’état de
+        charge baisse, ici d’environ dix pour cent. Le point le plus bas, la profondeur de
+        décharge, tombe juste à la sortie d’éclipse.
+    do:
+      - js: "EX.play('battery', ${say})"
+
+  - id: average
+    title: {en: "The orbit-average margin", fr: "La marge moyenne sur l’orbite"}
+    say:
+      en: >-
+        Now add it all up over one whole orbit. The arrays generate about seventy-one watt-hours.
+        The spacecraft uses about thirty-six. The difference, about thirty-five watt-hours, is
+        the orbit-average margin. Positive means the battery ends each orbit as full as it
+        started, or fuller. This is the number the power cards check.
+      fr: >-
+        Faites maintenant le total sur une orbite entière. Les panneaux produisent environ
+        soixante et onze wattheures. Le satellite en consomme environ trente-six. La différence,
+        environ trente-cinq wattheures, est la marge moyenne sur l’orbite. Positive, elle veut
+        dire que la batterie finit chaque orbite aussi pleine qu’au départ, ou plus. C’est le
+        nombre que vérifient les fiches énergie.
+    do:
+      - js: "EX.play('average', ${say})"
+
+  - id: instant
+    title: {en: "The eclipse trap", fr: "Le piège de l’éclipse"}
+    say:
+      en: >-
+        Here is the trap. In the middle of an eclipse, the power page shows zero generation and
+        the battery discharging at about twenty watts. That looks alarming, and it is normal.
+        The orbit, not the moment, tells you whether you are gaining energy. Judge the state of
+        charge at eclipse exit, and the orbit-average margin.
+      fr: >-
+        Voici le piège. En plein milieu d’une éclipse, la page énergie affiche une production
+        nulle et une batterie qui se décharge à environ vingt watts. Cela a l’air alarmant, et
+        c’est normal. C’est l’orbite, pas l’instant, qui dit si vous gagnez de l’énergie. Jugez
+        l’état de charge à la sortie d’éclipse, et la marge moyenne sur l’orbite.
+    do:
+      - js: "EX.play('instant', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Mid-eclipse, the power page shows 0 W generated and the battery discharging at 20 W. What do you conclude?"
+        fr: "En pleine éclipse, la page énergie affiche 0 W produits et une batterie qui se décharge à 20 W. Que concluez-vous ?"
+      options:
+        - text: {en: "Nothing yet: that is normal in eclipse. Judge the state of charge at eclipse exit and the orbit-average margin.", fr: "Rien pour l’instant : c’est normal en éclipse. Jugez l’état de charge à la sortie d’éclipse et la marge moyenne sur l’orbite."}
+          correct: true
+          why: {en: "In the shadow the battery is the only source; the balance is judged over the orbit.", fr: "Dans l’ombre, la batterie est la seule source ; le bilan se juge sur l’orbite."}
+        - text: {en: "The arrays have failed: call the Flight Director.", fr: "Les panneaux sont en panne : appelez le directeur de vol."}
+          why: {en: "Zero generation in eclipse is expected; an array fault shows in sunlight.", fr: "Une production nulle en éclipse est attendue ; une panne de panneau se voit au soleil."}
+        - text: {en: "Shed loads now to stop the discharge.", fr: "Délestez tout de suite pour arrêter la décharge."}
+          why: {en: "Shedding is for a negative orbit balance or a low state of charge, not for a normal eclipse.", fr: "Le délestage sert quand le bilan sur l’orbite est négatif ou l’état de charge bas, pas pour une éclipse normale."}
+
+  - id: levers
+    title: {en: "What moves the margin", fr: "Ce qui fait bouger la marge"}
+    say:
+      en: >-
+        The margin moves with two things. More load: imaging, the focal plane cooler, a radio
+        that stays on longer, heaters on a cold day. Less generation: wings still stowed, a worse
+        beta angle, aged cells, or pointing away from the Sun. Every position's request is paid
+        from this one budget, and the electrical power and thermal control position, EPS and
+        TCS, keeps the books.
+      fr: >-
+        La marge bouge avec deux choses. Plus de charge : l’imagerie, le refroidisseur du plan
+        focal, une radio allumée plus longtemps, les réchauffeurs par temps froid. Moins de
+        production : ailes encore repliées, angle bêta défavorable, cellules vieillies, ou un
+        pointage loin du Soleil. Chaque demande de chaque poste se paie sur ce seul budget, et
+        le poste du sous-système énergie et du contrôle thermique, EPS et TCS, tient les comptes.
+    do:
+      - js: "EX.play('levers', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Your position wants to add something to the next pass. What does it cost in watts, for how long, and does it happen in sunlight or in eclipse?"
+        fr: "Votre poste veut ajouter quelque chose au prochain passage. Combien cela coûte-t-il en watts, pendant combien de temps, et est-ce au soleil ou en éclipse ?"

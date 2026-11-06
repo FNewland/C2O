@@ -1,0 +1,173 @@
+# Concept explainer — what a packet is, what the PUS services are, and how
+# housekeeping reports work (requested vs enabled; powering a unit does not
+# switch its report on). Animated page video/explainers/packets.html.
+# Team audience. No embedded question asks which SID carries a parameter
+# (WB-5.4-Q has a "limits and SIDs" category).
+id: V-CON-05
+week: 4
+audience: all
+title:
+  en: "Packets, services and housekeeping"
+  fr: "Paquets, services et données de servitude"
+summary:
+  en: "Everything on the link is a packet: its headers, the application ID that tells bootloader from application, the service and subtype that say what a packet is, its on-board time stamp, and the housekeeping reports, requested once or enabled to repeat."
+  fr: "Tout ce qui passe sur la liaison est un paquet : ses en-têtes, l’identifiant d’application qui distingue le chargeur d’amorçage de l’application, le service et le sous-type qui disent ce qu’est un paquet, sa date de bord, et les rapports de servitude, demandés une fois ou activés pour se répéter."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - sim/docs/PUS_SERVICE_REFERENCE.md (Service Overview; Service 3)
+  - sim/packages/smo-common/src/smo_common/protocol/ecss_packet.py (header sizes, CUC, epoch)
+  - design/docs/oer/chapters/17_ground_segment.md (§ 17.3)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/packets.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: packet
+    title: {en: "One packet", fr: "Un paquet"}
+    say:
+      en: >-
+        Every telecommand you send and every report that comes down is a packet: a CCSDS space
+        packet, from the Consultative Committee for Space Data Systems, the standard almost
+        every mission uses. It has four parts. A primary header. A secondary header. The data
+        itself. And at the end, a cyclic redundancy check, a CRC, two octets that let the
+        receiver reject a packet damaged on the way.
+      fr: >-
+        Chaque télécommande envoyée et chaque rapport reçu est un paquet : un paquet spatial
+        CCSDS, du Comité consultatif pour les systèmes de données spatiales, la norme qu’utilisent
+        presque toutes les missions. Il a quatre parties. Un en-tête primaire. Un en-tête
+        secondaire. Les données elles-mêmes. Et à la fin, un contrôle de redondance cyclique, un
+        CRC, deux octets qui permettent au récepteur de rejeter un paquet abîmé en route.
+    do:
+      - js: "EX.play('packet', ${say})"
+
+  - id: primary
+    title: {en: "The primary header", fr: "L’en-tête primaire"}
+    say:
+      en: >-
+        The primary header is six octets. It says whether this is telemetry, TM, coming down,
+        or a telecommand, TC, going up. It carries the application process identifier, the APID: who on board
+        sent it. On EOSAT-1, zero zero two is the bootloader and zero zero one is the
+        application, so when the traffic switches from two to one, the computer has booted.
+        A sequence count goes up by one with every packet: a gap means a packet was lost.
+      fr: >-
+        L’en-tête primaire fait six octets. Il dit s’il s’agit de télémesure, TM, qui descend,
+        ou d’une télécommande, TC, qui monte. Il porte l’identifiant de processus applicatif, l’APID : qui,
+        à bord, l’a envoyé. Sur EOSAT-1, zéro zéro deux est le chargeur d’amorçage et zéro zéro
+        un l’application : quand le trafic passe de deux à un, l’ordinateur a démarré. Un
+        compteur de séquence augmente d’un à chaque paquet : un trou signifie un paquet perdu.
+    do:
+      - js: "EX.play('primary', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "During first contact the packets switch from APID 0x002 to APID 0x001. What does that tell you?"
+        fr: "Au premier contact, les paquets passent de l’APID 0x002 à l’APID 0x001. Qu’est-ce que cela vous apprend ?"
+      options:
+        - text: {en: "The on-board computer has left the bootloader and the application software is running.", fr: "L’ordinateur de bord a quitté le chargeur d’amorçage et le logiciel d’application tourne."}
+          correct: true
+          why: {en: "0x002 is the bootloader's APID, 0x001 the application's.", fr: "0x002 est l’APID du chargeur, 0x001 celui de l’application."}
+        - text: {en: "A second ground station has taken over the pass.", fr: "Une seconde station sol a pris le relais du passage."}
+          why: {en: "The APID names the sender on board, not the station.", fr: "L’APID désigne l’émetteur à bord, pas la station."}
+        - text: {en: "Packets were lost.", fr: "Des paquets ont été perdus."}
+          why: {en: "Loss shows as a gap in the sequence count.", fr: "Une perte se voit comme un trou dans le compteur de séquence."}
+
+  - id: secondary
+    title: {en: "The secondary header: what, and when", fr: "L’en-tête secondaire : quoi, et quand"}
+    say:
+      en: >-
+        The secondary header comes from the packet utilisation standard, PUS, written by the
+        European Cooperation for Space Standardization, ECSS. Its key fields are the service and
+        the subtype: two numbers that say what kind of packet this is. Three comma twenty-five
+        is a housekeeping report. Telemetry also carries a time stamp: on-board time, counted
+        in seconds and fractions since the mission epoch, from the spacecraft's own clock.
+        That is why the clock card matters.
+      fr: >-
+        L’en-tête secondaire vient de la norme d’utilisation des paquets, PUS, rédigée par la
+        Coopération européenne pour la normalisation spatiale, l’ECSS. Ses champs clés sont le
+        service et le sous-type : deux nombres qui disent quel genre de paquet c’est. Trois
+        virgule vingt-cinq est un rapport de servitude. La télémesure porte aussi une date : le
+        temps de bord, compté en secondes et fractions depuis l’époque de la mission, sur
+        l’horloge du satellite. C’est pourquoi la fiche de l’horloge compte.
+    do:
+      - js: "EX.play('secondary', ${say})"
+
+  - id: services
+    title: {en: "The services", fr: "Les services"}
+    say:
+      en: >-
+        A service is a family of related packets. Your cards use about a dozen. Service one
+        verifies every command. Service three is housekeeping. Service eight runs functions:
+        most of what you command. Service nine sets the time. Twelve watches parameters on
+        board, and nineteen acts on events. When a card writes three comma twenty-seven, you
+        now know how to read it: service three, subtype twenty-seven.
+      fr: >-
+        Un service est une famille de paquets apparentés. Vos fiches en utilisent une douzaine.
+        Le service un vérifie chaque commande. Le service trois, ce sont les données de
+        servitude. Le service huit exécute des fonctions : l’essentiel de ce que vous commandez.
+        Le service neuf règle l’heure. Le douze surveille des paramètres à bord, et le
+        dix-neuf réagit aux événements. Quand une fiche écrit trois virgule vingt-sept, vous
+        savez maintenant le lire : service trois, sous-type vingt-sept.
+    do:
+      - js: "EX.play('services', ${say})"
+
+  - id: hk
+    title: {en: "Housekeeping: one structure per subsystem", fr: "Servitude : une structure par sous-système"}
+    say:
+      en: >-
+        Housekeeping, HK, is the spacecraft's routine health data. Each subsystem has its own
+        report structure, named by a structure identifier, a SID, and each repeats at its own
+        rate: power every second, attitude every four, thermal once a minute. The beacon is the
+        only one the bootloader sends. The data field of each report is the list of parameters
+        you read on the console pages.
+      fr: >-
+        Les données de servitude, HK, sont les données de santé courantes du satellite. Chaque
+        sous-système a sa structure de rapport, désignée par un identifiant de structure, un
+        SID, et chacune se répète à son rythme : l’énergie chaque seconde, l’attitude toutes les
+        quatre, la thermique une fois par minute. La balise est la seule qu’envoie le chargeur
+        d’amorçage. Le champ de données de chaque rapport est la liste des paramètres que vous
+        lisez sur les pages de la console.
+    do:
+      - js: "EX.play('hk', ${say})"
+
+  - id: request
+    title: {en: "Requested once, or enabled", fr: "Demandé une fois, ou activé"}
+    say:
+      en: >-
+        There are two ways to get a report. Request it, three comma twenty-seven, and one
+        snapshot comes down, now, and nothing more. Enable it, three comma five, and it keeps
+        coming on its own at its rate until you disable it. Cards request a report when they
+        need one fresh reading, and enable one when the next steps depend on it.
+      fr: >-
+        Il y a deux façons d’obtenir un rapport. Le demander, trois virgule vingt-sept : un seul
+        instantané descend, maintenant, et rien de plus. L’activer, trois virgule cinq : il
+        arrive alors tout seul à son rythme jusqu’à ce que vous le désactiviez. Les fiches
+        demandent un rapport quand il leur faut une lecture fraîche, et l’activent quand les
+        étapes suivantes en dépendent.
+    do:
+      - js: "EX.play('request', ${say})"
+
+  - id: power
+    title: {en: "Powered is not reporting", fr: "Alimentée n’est pas en train de rapporter"}
+    say:
+      en: >-
+        One trap catches every new team. Powering a unit never switches its report on. After
+        the attitude units are powered, structure two stays silent, and the attitude page goes
+        on showing old or missing values. It takes its own command, housekeeping enable, SID
+        two. Then the reports arrive, and the next steps can be checked.
+      fr: >-
+        Un piège attrape toutes les nouvelles équipes. Alimenter une unité n’active jamais son
+        rapport. Une fois les unités d’attitude alimentées, la structure deux reste muette, et la
+        page attitude continue d’afficher des valeurs anciennes ou absentes. Il faut sa propre
+        commande, l’activation de servitude, SID deux. Alors les rapports arrivent, et les étapes
+        suivantes peuvent être vérifiées.
+    do:
+      - js: "EX.play('power', ${say})"
+    question:
+      type: truefalse
+      answer: false
+      text:
+        en: "Once EPS_POWER_ON has powered a unit's line, that unit's housekeeping report starts on its own."
+        fr: "Une fois la ligne d’une unité alimentée par EPS_POWER_ON, le rapport de servitude de cette unité démarre tout seul."
