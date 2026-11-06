@@ -28,25 +28,28 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-01 | 2 | MCS NOM-001 card as workbook | WB-5.4-N001 q1/q2/q8 | rendered EN+FR (fast-forward to a real pass, battery set below the Step 2 check) |
 | V-OPS-02 | 4 | LEOP-001 by hand: blind uplink, bootloader, boot, HK on | WB-5.5-L001 q2/q5/q9 | rendered EN+FR from breakpoint `card-LEOP-001` |
 | V-OPS-03 | 5 | Alarm → ACK → anomaly ticket → the call | WB-5.5-AT q4/q10/q12 | rendered EN+FR from `card-END`; star-tracker failure (not a scored-run fault), no recovery shown |
+| V-PLN-01 | 3 | Planner: 24 h view, next contact, ground track and beta, imaging activity, constraint check | WB-5.3-PP q1/q3/q7 | rendered EN+FR (fresh simulator: same passes in both takes) |
+| V-SCDF-02 | 5 | SpaceCDF mass and power budgets, margins, allocations, power by mode, energy per orbit | LW-2.4 A/B/E, D-2.4-MASS, D-2.4-POWER | rendered EN+FR on an EOSAT-1-like study seeded through the API |
+| V-OPS-04 | 5 | LEOP-001 Step 5a (LOW refused, beacon mode off, LOW) and LEOP-002 health check | WB-5.5-L002 q1/q2 | rendered EN+FR from `card-LEOP-001`, Steps 2–5 sent through the MCS API in setup |
+| V-INS-01 | 4 | Instructor console for TAs: time, snapshots, fault inject with a trigger, situation view, timeline marks | none (`audience: instructors`, hidden from students) | rendered EN+FR from `card-END`; star-tracker fault on a 20 s delay |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
 (loaded by the simulator at start-up; `python -m c2ovideo stack up sim` makes them when missing).
 Ops storyboards set `fresh_stack: sim`: the simulator and MCS restart before each take.
 
-Fixed while filming: the MCS PRC page lost the chosen card when its list was rebuilt; alarm ›
+Fixed while filming: the MCS event list printed `TC(undefined,undefined)` for every S1
+report (it now names the command); the SpaceCDF French allocate button said "les 1
+éléments"; the MCS PRC page lost the chosen card when its list was rebuilt; alarm ›
 Ticket opened an empty Workbook tab when the logbook had never been opened; the procedure-card
 parser read `simulation.yaml` as a parameter.
 
 ## Backlog (from the research shortlist)
 
-1. LEOP-001 Step 5a and LEOP-002 (same breakpoint pattern).
-2. Ground track, eclipse and beta angle (planner + `groundtrack.js`).
-3. Energy balance through an orbit (`powerflow.js` with simulator telemetry).
-4. Planner pass plan (WB-5.3-PP).
-5. Link budget term by term (`link_budget_ladder.py`).
-6. CTG-001 under-voltage load shed (instructor inject).
-7. Instructor console for TAs (`audience: instructors`).
+1. Energy balance through an orbit in the simulator (`powerflow.js` with live telemetry).
+2. Link budget term by term (`link_budget_ladder.py`).
+3. CTG-001 under-voltage load shed (instructor inject).
+4. LEOP-004 to LEOP-007 and the COM cards (same breakpoint pattern).
 
 Enablers still to build:
 

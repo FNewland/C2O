@@ -1,0 +1,162 @@
+# For TAs — the instructor console: time control, snapshots, a fault inject,
+# the situation view and the timeline. Not shown to students (audience:
+# instructors). The fault shown (star tracker 1) is not a scored-run fault.
+id: V-INS-01
+week: 4
+audience: instructors
+title:
+  en: "Running a session from the instructor console"
+  fr: "Animer une séance depuis la console instructeur"
+summary:
+  en: "For teaching assistants: control simulation time, take a snapshot before you intervene, inject a fault with a trigger, follow it in the situation view, and mark the timeline for the debrief."
+  fr: "Pour les assistants d’enseignement : piloter le temps de simulation, prendre un instantané avant d’intervenir, injecter une panne avec un déclencheur, la suivre dans la vue situation, et annoter la chronologie pour le débriefing."
+apps:
+  instructor: default
+fresh_stack: sim
+ties: {}
+sources:
+  - sim/packages/smo-simulator/src/smo_simulator/instructor/static/modern/index.html
+  - docs/ (instructor guide)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-END}}
+  - wait: 2
+  - goto: {app: instructor, path: "/?lang={lang}", settle: 4}
+
+steps:
+  - id: layout
+    title: {en: "One screen, every student", fr: "Un écran, tous les étudiants"}
+    say:
+      en: >-
+        This is the instructor console. Across the top, simulation time and its controls.
+        Below, one tile per subsystem: grey when all is well, coloured when something needs
+        you. The large view follows whatever needs your attention. On the right, every
+        intervention you can make. And keep this in mind: everything on the right affects
+        every student at once.
+      fr: >-
+        Voici la console instructeur. En haut, le temps de simulation et ses commandes. En
+        dessous, une tuile par sous-système : grise quand tout va bien, colorée quand quelque
+        chose demande votre attention. La grande vue suit ce qui vous concerne. À droite, toutes
+        les interventions possibles. Et gardez ceci à l’esprit : tout ce qui est à droite
+        touche tous les étudiants à la fois.
+    do:
+      - wait: 1.0
+      - highlight: {target: {css: "header .timectl"}, seconds: 2.5}
+      - highlight: {target: {css: "#overview"}, seconds: 2.5, point: false}
+      - highlight: {target: {css: "#focus"}, seconds: 2.5, point: false}
+      - highlight: {target: {css: "#rail .rail-h"}, seconds: 3}
+
+  - id: time
+    title: {en: "Time and snapshots", fr: "Le temps et les instantanés"}
+    say:
+      en: >-
+        Freeze stops the simulation for everyone; the speed buttons run it faster, to reach
+        the next pass. Before any intervention, take a snapshot. If the session goes somewhere
+        you did not intend, loading the snapshot rewinds the whole simulation and starts a new
+        segment on the timeline. Give it a name the next TA will understand.
+      fr: >-
+        Geler arrête la simulation pour tout le monde ; les boutons de vitesse l’accélèrent,
+        pour atteindre le prochain passage. Avant toute intervention, prenez un instantané. Si
+        la séance part dans une direction imprévue, charger l’instantané rembobine toute la
+        simulation et ouvre un nouveau segment sur la chronologie. Donnez-lui un nom que le
+        prochain assistant comprendra.
+    do:
+      - highlight: {target: {css: "#freeze-btn"}, seconds: 2}
+      - highlight: {target: {css: "#speed-group"}, seconds: 2}
+      - scroll: {css: "#bp-h"}
+      - type: {target: {css: "#breakpoint-name"}, delay_ms: 30, text: {en: "before ST1 fault", fr: "avant panne ST1"}}
+      - click: {css: "#btn-save-bp"}
+      - wait: 1.5
+      - highlight: {target: {css: "#breakpoints-list"}, seconds: 2.5, point: false}
+
+  - id: inject
+    title: {en: "Inject a fault", fr: "Injecter une panne"}
+    say:
+      en: >-
+        Faults are grouped by where they sit in the control loop: the sensors that observe,
+        the controller, the actuators, the process itself. Pick the subsystem and the failure, and the form tells you what it
+        will do. Choose the onset, and when it fires: now, after a delay, at the next pass, at
+        eclipse, or when the team sends a given command. Read the review before you press
+        Inject, then press it again within five seconds to confirm.
+      fr: >-
+        Les pannes sont classées selon leur place dans la boucle de commande : les capteurs qui
+        observent, le contrôleur, les actionneurs, le procédé lui-même. Choisissez le sous-système et la panne : le formulaire
+        indique ce qu’elle va faire. Choisissez l’apparition, et le moment du déclenchement :
+        maintenant, après un délai, au prochain passage, à l’éclipse, ou quand l’équipe envoie
+        une commande donnée. Lisez le récapitulatif avant d’appuyer sur Injecter, puis
+        appuyez de nouveau dans les cinq secondes pour confirmer.
+    do:
+      - scroll: {css: "#fi-h"}
+      - click: {css: "#elements [data-el='observer']"}
+      - wait: 0.8
+      - highlight: {target: {css: "#elements"}, seconds: 2.5, point: false}
+      - select: {target: {css: "#fail-subsystem"}, value: aocs}
+      - wait: 0.8
+      - select: {target: {css: "#fail-type"}, value: "aocs|st_failure"}
+      - wait: 1.0
+      - highlight: {target: {css: "#fail-effect"}, seconds: 3}
+      - select: {target: {css: "#fail-trigger"}, value: delay}
+      - fill: {target: {css: "#fail-delay"}, text: "20"}
+      - wait: 0.8
+      - highlight: {target: {css: "#inject-review"}, seconds: 3}
+      # armed button: the first press arms it for five seconds, the second sends
+      - click: {css: "#btn-inject"}
+      - wait: 1.2
+      - click: {css: "#btn-inject"}
+      - wait: 1.5
+      - highlight: {target: {css: "#schedule-list"}, seconds: 2.5, point: false}
+    question:
+      type: multichoice
+      text:
+        en: "A team is about to start a pass you want to make harder. Which trigger keeps the fault inside their pass?"
+        fr: "Une équipe va commencer un passage que vous voulez rendre plus difficile. Quel déclencheur garde la panne dans leur passage ?"
+      options:
+        - text: {en: "At the next AOS, or when they send a given telecommand.", fr: "Au prochain AOS, ou quand elle envoie une télécommande donnée."}
+          correct: true
+          why: {en: "Both tie the fault to the team’s own timeline, not yours.", fr: "Les deux lient la panne à la chronologie de l’équipe, pas à la vôtre."}
+        - text: {en: "Now, while they are still preparing.", fr: "Maintenant, pendant qu’elle se prépare encore."}
+          why: {en: "Outside a pass nobody sees it; it is history by AOS.", fr: "Hors passage, personne ne la voit ; à l’AOS, c’est déjà de l’histoire."}
+        - text: {en: "At the next LOS.", fr: "Au prochain LOS."}
+          why: {en: "That fires as they lose the spacecraft.", fr: "Elle se déclenche au moment où ils perdent le satellite."}
+
+  - id: follow
+    title: {en: "Follow it", fr: "La suivre"}
+    say:
+      en: >-
+        When it fires, it moves to Active failures, the attitude tile is marked as injected,
+        and the large view jumps to attitude by itself: that is auto-follow. Truth versus
+        trainees then puts three things side by side: what the simulator knows, what the
+        spacecraft measures, and what has actually reached the ground. The gap between them is
+        what you are watching for.
+      fr: >-
+        Au déclenchement, elle passe dans Pannes actives, la tuile d’attitude est marquée comme
+        injectée, et la grande vue bascule d’elle-même sur l’attitude : c’est le suivi
+        automatique. La vue Vérité-stagiaires met ensuite trois choses côte à côte : ce que sait le
+        simulateur, ce que mesure le satellite, et ce qui est vraiment arrivé au sol. C’est
+        l’écart entre les trois que vous surveillez.
+    do:
+      - wait_for: {target: {css: "#failures-list [data-id]"}, timeout: 40}
+      - highlight: {target: {css: "#failures-list"}, seconds: 2.5, point: false}
+      - highlight: {target: {css: "#overview"}, seconds: 2.5, point: false}
+      - wait: 1.0
+      - click: {css: "#focus-tabs [data-tab='divergence']"}
+      - wait: 1.5
+      - highlight: {target: {css: "#view-divergence"}, seconds: 3.5, point: false}
+
+  - id: mark
+    title: {en: "Mark the timeline", fr: "Annoter la chronologie"}
+    say:
+      en: >-
+        When something worth discussing happens, mark it: a short note, at that moment, on the
+        timeline. A missed alarm, a good call on the loop. The debrief opens when the scenario
+        ends, and these bookmarks are where it starts.
+      fr: >-
+        Quand il se passe quelque chose qui mérite d’être discuté, notez-le : une courte note, à
+        cet instant, sur la chronologie. Une alarme manquée, une bonne décision sur la boucle.
+        Le débriefing s’ouvre à la fin du scénario, et ces repères en sont le point de départ.
+    do:
+      - scroll: {css: "#mk-h"}
+      - type: {target: {css: "#mark-text"}, delay_ms: 25, text: {en: "Team called ST1 lost lock within a minute", fr: "L’équipe annonce la perte de ST1 en moins d’une minute"}}
+      - click: {css: "#btn-bookmark"}
+      - wait: 1.5
+      - highlight: {target: {css: "#timeline-panel"}, seconds: 3.5, point: false}
