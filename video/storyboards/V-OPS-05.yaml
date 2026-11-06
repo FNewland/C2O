@@ -35,19 +35,20 @@ steps:
     title: {en: "Body panels only", fr: "Les panneaux de structure seuls"}
     say:
       en: >-
-        The wings are still stowed. Open the power page. The power flow draws every watt from
-        the arrays, through the bus, to the loads and the battery, with the line width
-        proportional to the power. Only the body panels are lit, and they give a few watts.
+        This is LEOP-004, a launch and early orbit phase card, and the wings are still stowed.
+        Open the power page. The power flow draws every watt from the arrays, through the bus,
+        the shared supply line, to the loads and the battery, with the line width proportional
+        to the power. Only the panels fixed to the body are lit, and they give a few watts.
         Now look at the projection on the right: the orbit-average margin, energy in minus
-        energy out over a whole orbit, is negative. Stay like this and the battery runs down,
-        orbit after orbit.
+        energy out over a whole orbit, is negative: stay like this and the battery runs down.
       fr: >-
-        Les ailes sont encore repliées. Ouvrez la page énergie. Le flux de puissance dessine
-        chaque watt, des générateurs au bus, puis aux charges et à la batterie, avec une largeur
-        de trait proportionnelle à la puissance. Seuls les panneaux de structure sont éclairés,
+        Voici LEOP-004, une fiche de la phase de lancement et de début d’orbite, et les ailes
+        sont encore repliées. Ouvrez la page énergie. Le flux de puissance dessine chaque watt,
+        des générateurs au bus d’alimentation commun, puis aux charges et à la batterie, avec une
+        largeur de trait proportionnelle à la puissance. Seuls les panneaux fixés sur la structure sont éclairés,
         et ils ne donnent que quelques watts. Regardez maintenant la projection à droite : la marge moyenne sur
         l’orbite, l’énergie qui entre moins celle qui sort sur une orbite entière, est négative.
-        Si rien ne change, la batterie se vide, orbite après orbite.
+        Si rien ne change, la batterie se vide.
     do:
       - click: {css: "#rail-eps"}
       - wait: 1.5
@@ -71,15 +72,16 @@ steps:
     title: {en: "Step 0: deploy both wings", fr: "Étape 0 : déployer les deux ailes"}
     say:
       en: >-
-        Step 0 deploys both wings in one command: wing code two. It is a critical command, so
-        the console asks you to confirm it. The release takes up to forty-five seconds: the
-        wing status first shows deploying, then deployed. Watch the array regulator while it
-        happens.
+        Step 0 deploys both wings in one command: wing code two. It is a critical command, one
+        you cannot undo, so the console asks you to confirm it. The release takes up to
+        forty-five seconds: the wing status first shows deploying, then deployed. Watch the
+        array regulator, the box that shows total generation, while it happens.
       fr: >-
         L’étape 0 déploie les deux ailes en une seule commande : code d’aile deux. C’est une
-        commande critique, la console vous demande donc de la confirmer. Le déploiement prend
-        jusqu’à quarante-cinq secondes : l’état des ailes indique d’abord en cours, puis
-        déployé. Surveillez le régulateur des générateurs pendant ce temps.
+        commande critique, irréversible, la console vous demande donc de la confirmer. Le
+        déploiement prend jusqu’à quarante-cinq secondes : l’état des ailes indique d’abord en
+        cours, puis déployé. Surveillez le régulateur des générateurs, la case qui affiche la
+        production totale, pendant ce temps.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: EPS_DEPLOY_WING}
@@ -96,18 +98,20 @@ steps:
     title: {en: "Steps 1 to 3: confirm each wing", fr: "Étapes 1 à 3 : confirmer chaque aile"}
     say:
       en: >-
-        A rising number is not a confirmation. Request the power report, then read the wing
-        status: three means both wings deployed. The wing currents are not in the routine
-        report, so the card asks for each one by name: parameter one four six for the plus Y
-        wing, one four seven for the minus Y wing. In sunlight, each must carry current. Until
-        you ask, the wings on the power flow read no data.
+        A rising number is not a confirmation. Request the power housekeeping report, structure
+        identifier one, SID one, then read the wing status: three means both wings deployed.
+        The wing currents are not in the routine report, so the card asks for each one by name:
+        parameter hex one four six for the plus Y wing, hex one four seven for the minus Y
+        wing. In sunlight, each must carry current. Until you ask, the wings on the power flow
+        read no data.
       fr: >-
-        Un chiffre qui monte n’est pas une confirmation. Demandez le rapport énergie, puis
-        lisez l’état des ailes : trois signifie les deux ailes déployées. Les courants des ailes
-        ne sont pas dans le rapport courant : la fiche les demande donc un par un, le paramètre
-        un quatre six pour l’aile plus Y, un quatre sept pour l’aile moins Y. Au soleil, chacune
-        doit débiter du courant. Tant que vous ne les demandez pas, les ailes du flux de
-        puissance affichent pas de données.
+        Un chiffre qui monte n’est pas une confirmation. Demandez les données de servitude
+        énergie, identifiant de structure un, SID un, puis lisez l’état des ailes : trois
+        signifie les deux ailes déployées. Les courants des ailes ne sont pas dans le rapport
+        courant : la fiche les demande donc un par un, le paramètre hexadécimal un quatre six
+        pour l’aile plus Y, un quatre sept pour l’aile moins Y. Au soleil, chacune doit débiter
+        du courant. Tant que vous ne les demandez pas, les ailes du flux de puissance affichent
+        pas de données.
     do:
       - wait: 18
       - click: {css: "#rail-cmd"}
