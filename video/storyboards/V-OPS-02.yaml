@@ -37,17 +37,19 @@ steps:
     say:
       en: >-
         EOSAT-1 has just separated from the launcher. Only the receiver and the on-board
-        computer are powered. The computer is still in its bootloader, the transmitter is off
-        and the clock is unset. So the ground hears nothing. LEOP-001 turns this one-way
-        listener into a spacecraft we can talk to. The card is worked by hand: you send the
-        commands from the Commanding page and record each check on the card.
+        computer, the OBC, are powered. The OBC is still in its bootloader, the small start-up
+        program that runs first. The transmitter is off and the clock is
+        unset, so the ground hears nothing. LEOP-001, the first card of the launch and early
+        orbit phase, LEOP, turns this one-way listener into a spacecraft we can talk to. You
+        work it by hand: commands from the Commanding page, each check recorded on the card.
       fr: >-
-        EOSAT-1 vient de se séparer du lanceur. Seuls le récepteur et l’ordinateur de bord sont
-        alimentés. L’ordinateur est encore dans son chargeur d’amorçage, l’émetteur est éteint
-        et l’horloge n’est pas réglée. Le sol n’entend donc rien. LEOP-001 transforme cet
-        auditeur à sens unique en un satellite avec qui l’on peut parler. La fiche se travaille
-        à la main : vous envoyez les commandes depuis la page Commande et vous consignez chaque
-        vérification sur la fiche.
+        EOSAT-1 vient de se séparer du lanceur. Seuls le récepteur et l’ordinateur de bord,
+        l’OBC, sont alimentés. L’OBC est encore dans son chargeur d’amorçage, le petit
+        programme qui démarre en premier. L’émetteur est éteint et
+        l’horloge n’est pas réglée : le sol n’entend donc rien. LEOP-001, la première fiche de
+        la phase de lancement et de début d’orbite, la LEOP, transforme cet auditeur à sens
+        unique en un satellite avec qui l’on peut parler. La fiche se travaille à la main : les
+        commandes depuis la page Commande, chaque vérification consignée sur la fiche.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -64,14 +66,16 @@ steps:
         With no downlink, the first command goes up blind, inside the scheduled pass. The
         connection test is on the bootloader's short list of accepted commands. Once the
         spacecraft accepts it, the auto-transmit hold-down switches the transmitter on for
-        fifteen minutes. Watch the verification steps: accepted, then executed. And the strip
-        at the top: we can now see the spacecraft.
+        fifteen minutes. Watch the reports from service one, request verification, S1 on the
+        console: accepted, then executed. And the strip at the top: we can now see the
+        spacecraft.
       fr: >-
         Sans liaison descendante, la première commande monte en aveugle, pendant le passage
         prévu. Le test de connexion fait partie de la courte liste des commandes acceptées par
         le chargeur d’amorçage. Dès que le satellite l’accepte, le maintien automatique de
-        l’émission allume l’émetteur pour quinze minutes. Suivez les étapes de vérification :
-        acceptée, puis exécutée. Et le bandeau du haut : nous voyons maintenant le satellite.
+        l’émetteur l’allume pour quinze minutes. Suivez les rapports du service un, vérification
+        des requêtes, S1 sur la console : acceptée, puis exécutée. Et le bandeau du haut : nous
+        voyons maintenant le satellite.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: CONNECTION_TEST}
@@ -99,13 +103,15 @@ steps:
     title: {en: "Step 4: confirm the bootloader", fr: "Étape 4 : confirmer le chargeur d’amorçage"}
     say:
       en: >-
-        Before booting, confirm where we start. Request the beacon housekeeping, SID eleven:
-        it is the only report the bootloader sends, and it carries the software image. Zero
+        Before booting, confirm where we start. Request the beacon housekeeping report, the
+        routine health data, structure identifier eleven, SID eleven: it is the only report the
+        bootloader sends, and it carries the software image, which program is running. Zero
         means bootloader.
       fr: >-
-        Avant de démarrer, confirmez le point de départ. Demandez les données de servitude de
-        la balise, SID onze : c’est le seul rapport qu’envoie le chargeur d’amorçage, et il
-        contient l’image logicielle. Zéro signifie chargeur d’amorçage.
+        Avant de démarrer, confirmez le point de départ. Demandez le rapport de servitude de la
+        balise, les données de santé courantes, identifiant de structure onze, SID onze : c’est
+        le seul rapport qu’envoie le chargeur d’amorçage, et il contient l’image logicielle,
+        c’est-à-dire le programme qui tourne. Zéro signifie chargeur d’amorçage.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
       - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "11"}
@@ -116,13 +122,13 @@ steps:
     title: {en: "Step 5: boot the application", fr: "Étape 5 : démarrer l’application"}
     say:
       en: >-
-        Now boot the application image. The computer checks the image over a ten-second
-        window. Acceptance arrives at once, but the boot is only done when execution completes,
+        Now boot the application image. The computer checks that the image is intact over a
+        ten-second window. Acceptance arrives at once, but the boot is only done when execution completes,
         at the end of that window. Until then the computer is still the bootloader and refuses
         anything else, so wait for it before you send the next command.
       fr: >-
-        Démarrez maintenant l’image applicative. L’ordinateur vérifie l’image pendant une
-        fenêtre de dix secondes. L’acceptation arrive aussitôt, mais le démarrage n’est fait
+        Démarrez maintenant l’image applicative. L’ordinateur vérifie l’intégrité de l’image
+        pendant une fenêtre de dix secondes. L’acceptation arrive aussitôt, mais le démarrage n’est fait
         qu’à la fin de l’exécution, à la fin de cette fenêtre. D’ici là, l’ordinateur reste le
         chargeur d’amorçage et refuse tout le reste : attendez avant d’envoyer la commande
         suivante.
