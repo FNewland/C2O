@@ -2133,6 +2133,11 @@ class MCSServer:
 
             for entry in self._verification_log:
                 if entry.get("seq") == tc_seq:
+                    # The console's event list names the command the report
+                    # is about (it printed "TC(undefined,undefined)").
+                    verif["tc_service"] = entry.get("service")
+                    verif["tc_subtype"] = entry.get("subtype")
+                    verif["name"] = entry.get("name") or ""
                     if new_state:
                         entry["state"] = new_state
                     if pkt.secondary.subtype in (2, 4, 8):
