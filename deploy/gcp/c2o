@@ -61,6 +61,9 @@ Data (recordings on the VMs; scenarios, breakpoints and designs are kept)
   c2o data clean --telemetry --dumps --reports | --all   [--logbooks] [--snapshot]
   c2o data snapshot | snapshots | prune --keep 3
 
+Code updates
+  c2o update [ground|sim|both]   pull the latest code on the VMs, rebuild, restart (default both)
+
 Course videos (made with video/: python -m c2ovideo build ID --publish)
   c2o videos push [DIR]          copy the published videos to the welcome page (/videos)
 
@@ -758,6 +761,30 @@ EOF
     log "Done. Sizes now: c2o data list"
 }
 
+# ── update ────────────────────────────────────────────────────────────────
+# The VM-side `vm-bootstrap.sh update` (git pull of c2o-ref, then refresh with
+# the NEW script: env files, build, restart), run over IAP SSH on each VM.
+cmd_update() {
+    local which="${1:-both}" vms=()
+    case "$which" in
+        ground) vms=("$VM_GROUND") ;;
+        sim)    vms=("$VM_SIM") ;;
+        both)   vms=("$VM_GROUND" "$VM_SIM") ;;
+        *) die "usage: c2o update [ground|sim|both]" ;;
+    esac
+    require_gcloud_login
+    local vm
+    for vm in "${vms[@]}"; do
+        if [ "$(vm_status "$vm")" != RUNNING ]; then
+            warn "$vm is not running: skipped (c2o up first, then c2o update)"
+            continue
+        fi
+        log "Updating $vm (pull, rebuild, restart; a few minutes)"
+        run_bootstrap "$vm" update
+    done
+    log "Done. Check with: c2o status"
+}
+
 # ── videos ────────────────────────────────────────────────────────────────
 # Rendering needs the tools and a voice model, so it runs on a laptop; this
 # only ships the result: the whole published folder replaces the VM's copy.
@@ -1264,7 +1291,7 @@ main() {
         return 0
     fi
     case "$cmd" in
-        status|up|down|schedule|data|users|videos) ;;
+        status|up|down|schedule|data|users|videos|update) ;;
         *) printf 'c2o: unknown command "%s"\n\n' "$cmd" >&2; help_main >&2; return 2 ;;
     esac
     # up/down hand over to start.sh / stop.sh, which load the settings themselves.
@@ -1281,6 +1308,7 @@ main() {
         data)     cmd_data ${args[@]+"${args[@]}"} ;;
         users)    cmd_users ${args[@]+"${args[@]}"} ;;
         videos)   cmd_videos ${args[@]+"${args[@]}"} ;;
+        update)   cmd_update ${args[@]+"${args[@]}"} ;;
     esac
 }
 

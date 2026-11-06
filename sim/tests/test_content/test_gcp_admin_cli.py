@@ -956,3 +956,37 @@ def test_bootstrap_sizes(tmp_path):
     assert [ln.split()[1] for ln in lines if ln.startswith("vol ")] == \
         ["ground-archive", "ground-dumps", "space-workspace"]
     assert any(ln.startswith("disk ") for ln in lines)
+
+
+# ── c2o update (both VMs: pull, rebuild, restart) ──────────────────────────
+def _ssh_updates(env):
+    out = []
+    for e in env.log("gcloud.log"):
+        a = e["argv"]
+        cmd = next((x for x in a if x.startswith("--command=")), "")
+        if a[:2] == ["compute", "ssh"] and 'sudo bash "$t" update' in cmd:
+            out.append((a[2], (env.dir / e["stdin_file"]).read_text()))
+    return out
+
+
+def test_update_runs_bootstrap_update_on_both_vms(env):
+    r = env.run("update")
+    assert r.returncode == 0, _out(r)
+    calls = _ssh_updates(env)
+    assert [vm for vm, _ in calls] == ["c2o-ground-vm", "c2o-sim-vm"]
+    assert all(stdin == BOOTSTRAP.read_text() for _, stdin in calls)
+    r = env.run("update", "ground")
+    assert r.returncode == 0, _out(r)
+    assert [vm for vm, _ in _ssh_updates(env)][-1] == "c2o-ground-vm"
+    assert env.run("update", "nonsense").returncode != 0
+
+
+def test_bootstrap_on_a_laptop_says_what_to_run(tmp_path):
+    # not root / not Linux and no C2O_APP_DIR: stop before any bash-4-only line
+    stub = tmp_path / "uname"
+    stub.write_text("#!/bin/sh\necho Darwin\n")
+    stub.chmod(0o755)
+    env = {k: v for k, v in os.environ.items() if k != "C2O_APP_DIR"}
+    env["PATH"] = f"{tmp_path}:{env['PATH']}"
+    r = subprocess.run(["bash", str(BOOTSTRAP), "update"], capture_output=True, text=True, env=env, timeout=30)
+    assert r.returncode == 2 and "c2o update" in r.stderr

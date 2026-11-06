@@ -80,7 +80,8 @@ re-assembles without re-recording. `--lang fr` renders one language only.
 * `/videos/<id>/review`: narration review, EN and FR side by side, with a note per
   step. It is for instructors and the accounts in `SMO_VIDEO_REVIEWERS`.
 
-On GCP, `deploy/gcp/c2o videos push` copies the published folder to the ground VM.
+On GCP: `deploy/gcp/c2o update` once (so the server has the `/videos` pages), then
+`deploy/gcp/c2o videos push` copies the published folder to the ground VM.
 
 ## French review
 
