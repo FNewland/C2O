@@ -4,6 +4,8 @@
 # Jamais de « É » isolé : la voix lit « É accent aigu » (EOSAT-1 était lu ainsi).
 # Pas de points après les lettres épelées : « E. P. S. » perd son E.
 terms:
+  DETUMBLE: "di-tombeul"
+  COARSE SUN: "côrse sonne"
   SpaceCDF: "Spèïsse C D F"
   EOSAT-1: "Euh-o-satte un"
   EOSAT: "Euh-o-satte"

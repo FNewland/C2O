@@ -93,22 +93,21 @@ steps:
     title: {en: "Step 4: set the clock", fr: "Étape 4 : régler l’horloge"}
     say:
       en: >-
-        Now send the time update, service nine subtype one. The console computes the on-board
-        time code from the ground clock at the moment of sending. Read the time code before you
-        send it: it counts from the mission epoch, and a Unix timestamp here would put the
-        spacecraft decades out.
+        Now send the time update, service nine subtype one. Sync time to ground computes the
+        on-board time code from the ground clock at the moment of sending: a time typed in
+        earlier would already be stale. Read the code it sent: it counts from the mission
+        epoch, and a Unix timestamp here would put the spacecraft decades out.
       fr: >-
-        Envoyez maintenant la mise à l’heure, service neuf sous-type un. La console calcule le
-        code temporel de bord à partir de l’horloge sol au moment de l’envoi. Lisez ce code avant
-        de l’envoyer : il compte depuis l’époque de la mission, et un horodatage Unix placerait
-        le satellite à des décennies de là.
+        Envoyez maintenant la mise à l’heure, service neuf sous-type un. Le bouton Synchro sur le
+        sol calcule le code temporel de bord à partir de l’horloge sol au moment de l’envoi :
+        une heure saisie plus tôt serait déjà périmée. Lisez le code envoyé : il compte depuis
+        l’époque de la mission, et un horodatage Unix placerait le satellite à des décennies de
+        là.
     do:
-      - click: {css: "#s9-set-now"}
-      - wait: 1.0
-      - highlight: {target: {css: "#s9-preview"}, seconds: 3}
-      - click: {css: "#s9-set-send"}
-      - wait: 2.5
-      - highlight: {target: {css: "#s9-preview"}, seconds: 2.5}
+      - highlight: {target: {css: "#s9-sync"}, seconds: 2}
+      - click: {css: "#s9-sync"}
+      - wait: 1.5
+      - highlight: {target: {css: "#s9-preview"}, seconds: 3.5}
 
   - id: verify
     title: {en: "Step 5: check the result", fr: "Étape 5 : vérifier le résultat"}
