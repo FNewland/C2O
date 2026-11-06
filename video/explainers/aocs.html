@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Attitude determination and control</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .flow { stroke: var(--accent); stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+  .dist { stroke: var(--bad); stroke-width: 2.5; fill: none; marker-end: url(#ahr); }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+  .hcurve { fill: none; stroke: var(--accent); stroke-width: 3; }
+  .vec { stroke-width: 5; marker-end: url(#tip); }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">The control loop, architectures by pointing need, disturbance torques, wheel momentum and desaturation, magnetorquer torque</title>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5fb4dc"/></marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#e06262"/></marker>
+    <marker id="tip" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
+  </defs>
+  <g id="loop" class="ex-hidden"></g>
+  <g id="arch" class="ex-hidden"></g>
+  <g id="dist" class="ex-hidden"></g>
+  <g id="mom" class="ex-hidden"></g>
+  <g id="mtq" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Attitude determination and control",
+    l_ref: "Commanded attitude", l_ctl: "Controller", l_ctl_s: "error → torque demand", l_act: "Actuators", l_act_s: "wheels, magnetorquers",
+    l_sc: "Spacecraft", l_sc_s: "Euler’s equation", l_sen: "Sensors", l_sen_s: "star tracker, Sun, magnetometer, gyro",
+    l_est: "Estimator", l_est_s: "Kalman filter: attitude and rate", l_dist: "disturbance torques",
+    det: "determination", ctl: "control",
+    a_cap: "Pointing need → architecture (textbook Table, § 10.1.2)",
+    a1: "> 5°", a1_s: "passive magnet and hysteresis rods · 0 W", a2: "2–5°", a2_s: "magnetorquers, magnetometer, Sun sensors · 0.2 W",
+    a3: "0.1–2°", a3_s: "reaction wheels, fine Sun sensors · 2–4 W", a4: "< 0.1°", a4_s: "wheels and a star tracker · 3–5 W",
+    a_mass: "mass", a5: "< 0.01°", a5_s: "two star trackers, gyro · 4–6 W", eos: "EOSAT-1: four wheels, star tracker, magnetorquers",
+    d_cap: "Disturbance torques on a 3U at 500 km (N·m, log scale)",
+    d_mag: "residual magnetic dipole", d_gg: "gravity gradient", d_aero: "drag (×8 at solar maximum)", d_srp: "solar radiation pressure",
+    m_cap: "Momentum stored in a 10 mN·m·s wheel", m_sat: "saturation", m_thr: "desaturate at 80 %",
+    m_orb: "orbits", m_note: "1.5 µN·m fills it in about 1.2 orbits",
+    q_B: "Earth’s field B", q_m: "coil dipole m", q_t: "torque m × B: only in this plane",
+    q_none: "no torque along B", q_turn: "as the satellite orbits, B turns: every axis gets its turn",
+    n1a: "Determination: where am I pointing? Control: turn me to where I should point.",
+    n1b: "Sensors, estimator, controller, actuators, and the disturbances pushing back (§ 10.1).",
+    n2a: "The pointing requirement chooses the architecture, and with it mass, power and cost.",
+    n2b: "From passive magnets at a few grams to star trackers and wheels near a kilogram.",
+    n3a: "On a CubeSat the residual magnetic dipole dominates, by more than ten times.",
+    n3b: "Magnetic cleanliness: twisted pairs, careful routing, demagnetised parts (§ 10.2.4).",
+    n4a: "Wheels store momentum until they saturate; magnetorquers dump it.",
+    n4b: "Inhibit imaging during desaturation: the dump disturbs the pointing (§ 10.5).",
+    n5a: "A magnetorquer cannot push about the field direction, at any instant.",
+    n5b: "So it detumbles and desaturates over an orbit, but cannot point precisely on its own.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 10 · EOSat-3U disturbance example (§ 10.2) · EOSAT-1 from sim/configs/eosat1",
+  },
+  fr: {
+    kicker: "Notion", title: "Détermination et contrôle d’attitude",
+    l_ref: "Attitude commandée", l_ctl: "Contrôleur", l_ctl_s: "erreur → couple demandé", l_act: "Actionneurs", l_act_s: "roues, magnéto-coupleurs",
+    l_sc: "Satellite", l_sc_s: "équation d’Euler", l_sen: "Capteurs", l_sen_s: "senseur stellaire, Soleil, magnétomètre, gyro",
+    l_est: "Estimateur", l_est_s: "filtre de Kalman : attitude et vitesse", l_dist: "couples perturbateurs",
+    det: "détermination", ctl: "contrôle",
+    a_cap: "Besoin de pointage → architecture (manuel, § 10.1.2)",
+    a1: "> 5°", a1_s: "aimant passif et barreaux d’hystérésis · 0 W", a2: "2–5°", a2_s: "magnéto-coupleurs, magnétomètre, capteurs solaires · 0,2 W",
+    a3: "0,1–2°", a3_s: "roues de réaction, capteurs solaires fins · 2–4 W", a4: "< 0,1°", a4_s: "roues et senseur stellaire · 3–5 W",
+    a_mass: "masse", a5: "< 0,01°", a5_s: "deux senseurs stellaires, gyro · 4–6 W", eos: "EOSAT-1 : quatre roues, senseur stellaire, magnéto-coupleurs",
+    d_cap: "Couples perturbateurs sur un 3U à 500 km (N·m, échelle log)",
+    d_mag: "dipôle magnétique résiduel", d_gg: "gradient de gravité", d_aero: "traînée (×8 au maximum solaire)", d_srp: "pression de radiation solaire",
+    m_cap: "Moment cinétique stocké dans une roue de 10 mN·m·s", m_sat: "saturation", m_thr: "désaturer à 80 %",
+    m_orb: "orbites", m_note: "1,5 µN·m la remplit en environ 1,2 orbite",
+    q_B: "champ terrestre B", q_m: "dipôle de la bobine m", q_t: "couple m × B : seulement dans ce plan",
+    q_none: "aucun couple selon B", q_turn: "au fil de l’orbite, B tourne : chaque axe a son tour",
+    n1a: "Détermination : où est-ce que je pointe ? Contrôle : tourne-moi vers où je dois pointer.",
+    n1b: "Capteurs, estimateur, contrôleur, actionneurs, et les perturbations qui s’y opposent (§ 10.1).",
+    n2a: "L’exigence de pointage choisit l’architecture, et avec elle masse, puissance et coût.",
+    n2b: "D’aimants passifs de quelques grammes à des senseurs stellaires et roues proches du kilogramme.",
+    n3a: "Sur un CubeSat, le dipôle magnétique résiduel domine, de plus de dix fois.",
+    n3b: "Propreté magnétique : paires torsadées, câblage soigné, pièces démagnétisées (§ 10.2.4).",
+    n4a: "Les roues stockent le moment cinétique jusqu’à saturer ; les magnéto-coupleurs le vident.",
+    n4b: "Interdisez la prise de vue pendant la désaturation : elle perturbe le pointage (§ 10.5).",
+    n5a: "Un magnéto-coupleur ne peut pas pousser autour de la direction du champ, à aucun instant.",
+    n5b: "Il amortit et désature sur une orbite, mais ne peut pas pointer finement seul.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 10 · exemple de perturbations EOSat-3U (§ 10.2) · EOSAT-1 d’après sim/configs/eosat1",
+  },
+});
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+function lbox(parent, id, x, y, w, h, k, ks, cls) {
+  const g = box(parent, id, x, y, w, h, cls);
+  EX.el("text", { x: x + 14, y: y + (ks ? 30 : h / 2 + 6), label: k }, g);
+  if (ks) EX.el("text", { x: x + 14, y: y + 54, class: "small muted", label: ks }, g);
+  return g;
+}
+
+// 1. control loop
+lbox("loop", "lp-ref", 40, 90, 200, 70, "l_ref");
+lbox("loop", "lp-ctl", 300, 80, 260, 80, "l_ctl", "l_ctl_s");
+lbox("loop", "lp-act", 620, 80, 260, 80, "l_act", "l_act_s");
+lbox("loop", "lp-sc", 940, 80, 280, 80, "l_sc", "l_sc_s");
+lbox("loop", "lp-sen", 900, 300, 350, 80, "l_sen", "l_sen_s");
+lbox("loop", "lp-est", 440, 300, 380, 80, "l_est", "l_est_s");
+const F = [["f1", "M 240 125 L 298 125"], ["f2", "M 560 120 L 618 120"], ["f3", "M 880 120 L 938 120"], ["f4", "M 1080 160 L 1080 298"],
+           ["f5", "M 900 340 L 822 340"], ["f6", "M 440 340 L 380 340 L 380 162"]];
+F.forEach(([id, d]) => EX.el("path", { id: "lp-" + id, class: "flow ex-hidden", d }, "loop"));
+EX.el("path", { id: "lp-dist", class: "dist ex-hidden", d: "M 1080 30 L 1080 78" }, "loop");
+EX.el("text", { id: "lp-distt", x: 1094, y: 44, class: "small ex-hidden", style: "fill:var(--bad)", label: "l_dist" }, "loop");
+EX.el("text", { id: "lp-det", x: 440, y: 420, class: "small ex-hidden", style: "fill:var(--accent)", label: "det" }, "loop");
+EX.el("text", { id: "lp-ctlt", x: 300, y: 60, class: "small ex-hidden", style: "fill:var(--accent)", label: "ctl" }, "loop");
+const dot = EX.el("circle", { id: "lp-dot", r: 9, fill: "var(--warn)", class: "ex-hidden" }, "loop");
+
+// 2. architectures
+EX.el("text", { x: 40, y: 44, class: "small muted", label: "a_cap" }, "arch");
+[1, 2, 3, 4, 5].forEach((i) => {
+  const y = 60 + (i - 1) * 76, g = box("arch", "ar-" + i, 40, y, 1200, 62, i === 4 ? "on" : "");
+  EX.el("text", { x: 60, y: y + 40, class: "big mono", label: "a" + i }, g);
+  EX.el("text", { x: 260, y: y + 38, label: "a" + i + "_s" }, g);
+  EX.el("rect", { x: 1060, y: y + 16, width: [5, 10, 50, 80, 120][i - 1] * 1.4, height: 30, rx: 4, style: "fill:var(--warn);stroke:none;opacity:.6" }, g);
+});
+EX.el("text", { x: 1060, y: 52, class: "small muted", label: "a_mass" }, "arch");
+EX.el("text", { id: "ar-eos", x: 40, y: 462, class: "small ex-hidden", style: "fill:var(--accent)", label: "eos" }, "arch");
+
+// 3. disturbance torques, log scale 1e-9 .. 1e-5
+const DX = 420, DW = 760, dx = (t) => DX + (Math.log10(t) + 9) / 4 * DW;
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "d_cap" }, "dist");
+[-9, -8, -7, -6, -5].forEach((e) => {
+  EX.el("line", { x1: dx(10 ** e), y1: 70, x2: dx(10 ** e), y2: 420, class: "grid" }, "dist");
+  EX.el("text", { x: dx(10 ** e), y: 446, class: "small mono muted", "text-anchor": "middle", text: "10" + ["⁻⁹", "⁻⁸", "⁻⁷", "⁻⁶", "⁻⁵"][e + 9] }, "dist");
+});
+[["d_mag", 1.5e-6, "bad"], ["d_gg", 5.1e-8, "acc"], ["d_aero", 2.6e-8, "acc"], ["d_srp", 4.6e-9, "acc"]].forEach(([k, t, cls], i) => {
+  const y = 86 + i * 82, g = EX.el("g", { id: "ds-" + i, class: "ex-hidden" }, "dist");
+  EX.el("text", { x: 40, y: y + 32, label: k }, g);
+  EX.el("rect", { x: DX, y: y + 6, width: dx(t) - DX, height: 40, rx: 4, class: cls, opacity: 0.75 }, g);
+  EX.el("text", { x: dx(t) + 10, y: y + 32, class: "small mono", text: t.toExponential(1).replace(".", EX.lang === "fr" ? "," : ".").replace("e-", " × 10⁻").replace(/⁻(\d)/, (m, d) => "⁻" + "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]) }, g);
+});
+
+// 4. momentum accumulation and desaturation (sawtooth)
+const MX0 = 120, MW = 1000, MB = 430, MH = 330, mxo = (o) => MX0 + o / 4 * MW, myh = (h) => MB - h / 10 * MH;
+EX.el("text", { x: 40, y: 40, class: "small muted", label: "m_cap" }, "mom");
+EX.el("line", { x1: MX0, y1: MB, x2: MX0 + MW, y2: MB, class: "wire" }, "mom");
+[0, 1, 2, 3, 4].forEach((o) => EX.el("text", { x: mxo(o), y: MB + 26, class: "small mono muted", "text-anchor": "middle", text: o }, "mom"));
+EX.el("text", { x: MX0 + MW, y: MB + 50, class: "small muted", "text-anchor": "end", label: "m_orb" }, "mom");
+EX.el("line", { x1: MX0, y1: myh(10), x2: MX0 + MW, y2: myh(10), stroke: "var(--bad)", "stroke-width": 2 }, "mom");
+EX.el("text", { x: MX0 + 6, y: myh(10) - 8, class: "small", style: "fill:var(--bad)", label: "m_sat" }, "mom");
+EX.el("line", { x1: MX0, y1: myh(8), x2: MX0 + MW, y2: myh(8), stroke: "var(--warn)", "stroke-width": 2, "stroke-dasharray": "8 6" }, "mom");
+EX.el("text", { x: MX0 + 6, y: myh(8) - 8, class: "small", style: "fill:var(--warn)", label: "m_thr" }, "mom");
+// 1.5 uNm * 5677 s per orbit = 8.5 mNms per orbit
+const RATE = 1.5e-6 * 5677 * 1000;
+EX.el("path", { id: "m-free", class: "hcurve ex-hidden", d: `M ${mxo(0)} ${myh(0)} L ${mxo(10 / RATE)} ${myh(10)} L ${mxo(1.6)} ${myh(10)}`, style: "stroke:var(--bad);stroke-dasharray:6 6" }, "mom");
+let saw = `M ${mxo(0)} ${myh(0)}`, o = 0;
+while (o < 4) { const up = 8 / RATE; o += up; saw += ` L ${mxo(Math.min(o, 4))} ${myh(8)}`; if (o >= 4) break; o += 0.1; saw += ` L ${mxo(o)} ${myh(1)}`; o += 0; }
+EX.el("path", { id: "m-saw", class: "hcurve ex-hidden", d: saw }, "mom");
+EX.el("text", { id: "m-note", x: MX0, y: 72, class: "small ex-hidden", label: "m_note" }, "mom");
+
+// 5. magnetorquer: torque only perpendicular to B
+const QC = [460, 260];
+const qg = EX.el("g", { id: "q-rot" }, "mtq");
+EX.el("ellipse", { cx: QC[0], cy: QC[1], rx: 80, ry: 190, fill: "var(--ok)", "fill-opacity": 0.15, stroke: "var(--ok)", "stroke-width": 2, id: "q-plane", class: "ex-hidden" }, qg);
+EX.el("line", { x1: QC[0] - 300, y1: QC[1], x2: QC[0] + 300, y2: QC[1], class: "vec", stroke: "var(--accent)" }, qg);
+EX.el("text", { x: QC[0] + 210, y: QC[1] - 16, class: "small", style: "fill:var(--accent)", label: "q_B" }, qg);
+EX.el("line", { id: "q-m", x1: QC[0], y1: QC[1], x2: QC[0] + 150, y2: QC[1] - 120, class: "vec ex-hidden", stroke: "var(--warn)" }, qg);
+EX.el("text", { id: "q-mt", x: QC[0] + 150, y: QC[1] - 132, class: "small ex-hidden", style: "fill:var(--warn)", label: "q_m" }, qg);
+EX.el("line", { id: "q-t", x1: QC[0], y1: QC[1], x2: QC[0], y2: QC[1] - 170, class: "vec ex-hidden", stroke: "var(--ok)" }, qg);
+const qx = EX.el("g", { id: "q-none", class: "ex-hidden" }, qg);
+EX.el("text", { x: QC[0] - 290, y: QC[1] + 40, class: "small", style: "fill:var(--bad)", label: "q_none" }, qx);
+EX.el("text", { id: "q-tt", x: 860, y: 140, class: "small ex-hidden", style: "fill:var(--ok)", label: "q_t" }, "mtq");
+EX.el("text", { id: "q-turn", x: 860, y: 200, class: "small ex-hidden", label: "q_turn" }, "mtq");
+let qAnim = null;
+function spinB(ms) {
+  const t0 = performance.now();
+  (function tick(now) { const a = Math.sin((now - t0) / ms * 2 * Math.PI) * 35; qg.setAttribute("transform", `rotate(${a} ${QC[0]} ${QC[1]})`); qAnim = requestAnimationFrame(tick); })(t0);
+}
+
+function only(...ids) { ["loop", "arch", "dist", "mom", "mtq", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+const PATH = [[140, 125], [430, 120], [750, 120], [1080, 120], [1080, 340], [630, 340], [380, 340], [380, 160], [430, 120]];
+
+EX.scene("loop", (beat, s) => {
+  only("loop");
+  ["ref", "ctl", "act", "sc"].forEach((k, i) => beat(0.03 + i * 0.05, () => EX.show("lp-" + k)));
+  ["f1", "f2", "f3"].forEach((k, i) => beat(0.08 + i * 0.05, () => EX.draw("lp-" + k, 400)));
+  beat(0.25, () => { EX.show("lp-sen"); EX.draw("lp-f4", 400); });
+  beat(0.32, () => { EX.show("lp-est"); EX.draw("lp-f5", 400); EX.draw("lp-f6", 500); });
+  beat(0.4, () => { EX.draw("lp-dist", 400); EX.show("lp-distt"); EX.show("lp-det"); EX.show("lp-ctlt"); });
+  beat(0.45, () => EX.fly("lp-dot", PATH, s * 0.25 * 1000).then(() => EX.hide("lp-dot")));
+  beat(0.74, () => note("n1a", "n1b"));
+});
+EX.scene("architecture", (beat) => {
+  only("arch");
+  [1, 2, 3, 4, 5].forEach((i) => beat(0.04 + i * 0.09, () => EX.show("ar-" + i)));
+  beat(0.6, () => EX.show("ar-eos"));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("disturbances", (beat) => {
+  only("dist");
+  [3, 2, 1, 0].forEach((i, j) => beat(0.06 + j * 0.12, () => EX.show("ds-" + i)));
+  beat(0.6, () => EX.pulse("ds-0", 2));
+  beat(0.72, () => note("n3a", "n3b"));
+});
+EX.scene("momentum", (beat) => {
+  only("mom");
+  beat(0.05, () => { EX.draw("m-free", 1500); EX.show("m-note"); });
+  beat(0.38, () => { EX.dim("m-free"); EX.draw("m-saw", 2500); });
+  beat(0.74, () => note("n4a", "n4b"));
+});
+EX.scene("magnetorquer", (beat, s) => {
+  only("mtq");
+  beat(0.05, () => { EX.show("q-m"); EX.show("q-mt"); });
+  beat(0.2, () => { EX.show("q-t"); EX.show("q-plane"); EX.show("q-tt"); });
+  beat(0.38, () => EX.show("q-none"));
+  beat(0.5, () => { EX.show("q-turn"); spinB(s * 0.3 * 1000); });
+  beat(0.74, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>

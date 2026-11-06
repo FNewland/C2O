@@ -48,6 +48,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-DES-06 | 3 | Design concept: architecture, interfaces and budgets — block diagram, N² matrix and an I²C/RS-422 conflict, Phase A mass budget with both margin levels (5.30 of 6.00 kg, 11.7 %), compounding margins, power by mode (4.63 W) | — (whole design team) | written 2026-11-06 (`budgets.html`) |
 | V-DES-07 | 3 | Design concept: sizing the array and the battery — worst sunlit mode plus eclipse recharge (13.8 W EOL), degradation and temperature (16 W BOL, 0.053 m²), battery 8.8/10.6 Wh at 25 % DoD, cycle life, failure modes | — (whole design team) | written 2026-11-06 (`power.html`) |
 | V-DES-08 | 3 | Design concept: thermal control in a vacuum — heat in/out, α/ε and coatings, hot and cold single-node cases, temperature margins and the battery heater, the toolbox | — (whole design team) | written 2026-11-06 (`thermal.html`) |
+| V-DES-09 | 4 | Design concept: attitude determination and control — the loop, architecture by pointing need (EOSAT-1: wheels, star tracker, MTQ), disturbance torques (residual dipole dominates), wheel momentum and desaturation, no MTQ torque along B | — (whole design team) | written 2026-11-06 (`aocs.html`) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
