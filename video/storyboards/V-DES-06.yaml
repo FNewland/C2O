@@ -1,0 +1,136 @@
+# Design concept — architecture, interfaces and budgets: the block diagram,
+# the N² matrix and an interface conflict (I²C against RS-422), the Phase A
+# mass budget with both margin levels (Table 8.3), how the margins compound,
+# and the power budget by mode with its orbit average (Table 8.4).
+# Animated page video/explainers/budgets.html. Whole design team.
+id: V-DES-06
+week: 3
+audience: all
+title:
+  en: "Architecture, interfaces and budgets"
+  fr: "Architecture, interfaces et bilans"
+summary:
+  en: "Will the design close? Draw the block diagram, list every interface in an N-squared matrix and catch the conflicts, then build the mass budget with its two levels of margin and the power budget mode by mode."
+  fr: "La conception se ferme-t-elle ? Dessiner le schéma fonctionnel, lister chaque interface dans une matrice N carré et repérer les conflits, puis établir le bilan de masse avec ses deux niveaux de marge et le bilan de puissance mode par mode."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/08_architecture_interfaces_budgets.md (§ 8.2–8.4, Tables 8.1, 8.3, 8.4)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/budgets.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: blocks
+    title: {en: "The block diagram", fr: "Le schéma fonctionnel"}
+    say:
+      en: >-
+        Before sizing anything, draw the spacecraft as blocks: the payload, power, the on-board
+        computer, attitude control, the radio, thermal control and the structure. Then draw the
+        lines between them. Power flows out from the power subsystem; data flows through the
+        computer; the radio links the spacecraft to the ground. Every line is an interface, and
+        every interface is a place where two teams must agree.
+      fr: >-
+        Avant de dimensionner quoi que ce soit, dessinez le satellite en blocs : la charge utile,
+        l’énergie, l’ordinateur de bord, le contrôle d’attitude, la radio, le contrôle thermique
+        et la structure. Puis tracez les liens entre eux. L’énergie part du sous-système
+        d’énergie ; les données passent par l’ordinateur ; la radio relie le satellite au sol.
+        Chaque lien est une interface, et chaque interface est un endroit où deux équipes doivent
+        s’entendre.
+    do:
+      - js: "EX.play('blocks', ${say})"
+
+  - id: n2
+    title: {en: "The N-squared matrix", fr: "La matrice N carré"}
+    say:
+      en: >-
+        The N-squared matrix lists them all. The subsystems sit on the diagonal; each other cell
+        holds what the row delivers to the column. Then compare both sides of every cell. Here the
+        computer sends wheel commands over I two C, but the wheel the attitude team chose speaks
+        RS four twenty-two. That is an interface conflict. Choose another wheel, add a bridge, or
+        change the computer, and record the decision.
+      fr: >-
+        La matrice N carré les liste toutes. Les sous-systèmes sont sur la diagonale ; chaque
+        autre case contient ce que la ligne fournit à la colonne. Comparez ensuite les deux côtés
+        de chaque case. Ici, l’ordinateur envoie les commandes des roues en I deux C, mais la roue
+        choisie par l’équipe d’attitude parle RS quatre cent vingt-deux. C’est un conflit
+        d’interface. Choisissez une autre roue, ajoutez un pont, ou changez d’ordinateur, et
+        consignez la décision.
+    do:
+      - js: "EX.play('n2', ${say})"
+
+  - id: mass
+    title: {en: "The mass budget", fr: "Le bilan de masse"}
+    say:
+      en: >-
+        Budgets answer one question: will the design close? Start from the current best estimate
+        of each subsystem's mass: three point six eight kilograms. Add a maturity margin to each
+        item, twenty percent for new equipment, then a system margin for the phase, twenty
+        percent in Phase A. That gives five point three kilograms, against a six-kilogram launcher
+        allocation: zero point seven kilograms to spare, eleven point seven percent. Amber.
+      fr: >-
+        Les bilans répondent à une question : la conception se ferme-t-elle ? Partez de la
+        meilleure estimation actuelle de la masse de chaque sous-système : trois virgule six huit
+        kilogrammes. Ajoutez une marge de maturité à chaque équipement, vingt pour cent pour du
+        neuf, puis une marge système liée à la phase, vingt pour cent en phase A. On obtient cinq
+        virgule trois kilogrammes, face à une allocation du lanceur de six kilogrammes : zéro
+        virgule sept kilogramme de reste, onze virgule sept pour cent. Orange.
+    do:
+      - js: "EX.play('mass', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "In Phase B, the system margin drops from 20 % to 15 %, but nothing else changes. What happens to this budget's margin against the allocation?"
+        fr: "En phase B, la marge système passe de 20 % à 15 %, sans autre changement. Qu’arrive-t-il à la marge de ce bilan face à l’allocation ?"
+      options:
+        - text: {en: "It grows: 4.42 × 1.15 = 5.08 kg, leaving 0.92 kg, about 15 %.", fr: "Elle augmente : 4,42 × 1,15 = 5,08 kg, il reste 0,92 kg, environ 15 %."}
+          correct: true
+          why: {en: "Released system margin becomes margin against the allocation, if the estimates did not grow.", fr: "La marge système libérée devient de la marge face à l’allocation, si les estimations n’ont pas augmenté."}
+        - text: {en: "It shrinks, because the system margin is smaller.", fr: "Elle diminue, puisque la marge système est plus petite."}
+          why: {en: "A smaller held margin means less mass is booked above the estimate.", fr: "Une marge réservée plus petite signifie moins de masse comptée au-dessus de l’estimation."}
+        - text: {en: "Nothing: the system margin only applies in Phase A.", fr: "Rien : la marge système ne s’applique qu’en phase A."}
+          why: {en: "It applies in every phase, at a smaller value each time (Table 8.3).", fr: "Elle s’applique à chaque phase, avec une valeur plus petite à chaque fois (tableau 8.3)."}
+
+  - id: compound
+    title: {en: "Margins compound", fr: "Les marges se cumulent"}
+    say:
+      en: >-
+        The two margins multiply. In Phase A, with new equipment, one point two times one point
+        two is about forty-four percent above the best estimate. By Phase C, with mostly flown
+        equipment, it is about sixteen percent; in Phase D, with measured masses, about five. You
+        release margin only as estimates become measurements, never because a budget will not
+        otherwise close.
+      fr: >-
+        Les deux marges se multiplient. En phase A, avec des équipements neufs, un virgule deux
+        fois un virgule deux donne environ quarante-quatre pour cent au-dessus de la meilleure
+        estimation. En phase C, avec des équipements surtout déjà volés, environ seize pour cent ;
+        en phase D, avec des masses mesurées, environ cinq. On ne libère de la marge qu’à mesure
+        que les estimations deviennent des mesures, jamais parce qu’un bilan ne se fermerait pas
+        autrement.
+    do:
+      - js: "EX.play('compound', ${say})"
+
+  - id: power
+    title: {en: "The power budget", fr: "Le bilan de puissance"}
+    say:
+      en: >-
+        Power is budgeted mode by mode, because not everything is on at once: two watts in safe
+        mode, four nominal, eight when imaging, ten during a downlink, and three and a half in
+        eclipse. Weight each mode by its share of the orbit, and the orbit average is four point
+        six three watts. The array must supply that on average; the battery must carry the eclipse
+        load.
+      fr: >-
+        La puissance se budgète mode par mode, car tout n’est pas allumé en même temps : deux
+        watts en mode sûr, quatre en nominal, huit en prise de vue, dix pendant une transmission,
+        et trois et demi en éclipse. Pondérez chaque mode par sa part de l’orbite : la moyenne
+        orbitale est de quatre virgule six trois watts. Le générateur doit fournir cela en
+        moyenne ; la batterie doit porter la charge d’éclipse.
+    do:
+      - js: "EX.play('power', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Find one cell of your team's N-squared matrix where the two sides could disagree. What would you compare, and who owns the decision?"
+        fr: "Trouvez une case de la matrice N carré de votre équipe où les deux côtés pourraient être en désaccord. Que compareriez-vous, et à qui revient la décision ?"

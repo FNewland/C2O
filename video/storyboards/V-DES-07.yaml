@@ -1,0 +1,138 @@
+# Design concept — sizing the solar array and the battery (textbook § 9.2,
+# 9.3, EOSat-3U worked example): end-of-life array power from the worst
+# sunlit mode plus the eclipse recharge, degradation and temperature to
+# beginning of life, area; battery energy from eclipse load and depth of
+# discharge, cycle life, and the battery failure modes operators guard against.
+# Animated page video/explainers/power.html. Whole design team; power position.
+id: V-DES-07
+week: 3
+audience: all
+title:
+  en: "Sizing the array and the battery"
+  fr: "Dimensionner panneaux et batterie"
+summary:
+  en: "How big must the solar array and the battery be? The array carries the worst sunlit mode and refills the battery in the same sunlit arc; ageing and heat raise the starting power; depth of discharge sets the battery size and its life."
+  fr: "Quelle taille pour les panneaux et la batterie ? Les panneaux portent le pire mode éclairé et rechargent la batterie dans le même arc éclairé ; vieillissement et chaleur augmentent la puissance de départ ; la profondeur de décharge fixe la taille de la batterie et sa durée de vie."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/09_power_and_thermal.md (§ 9.2, 9.3)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/power.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: eol
+    title: {en: "What the array must deliver", fr: "Ce que les panneaux doivent fournir"}
+    say:
+      en: >-
+        The array only works in sunlight, about fifty-nine minutes of each orbit. In that time it
+        must carry the worst sunlit mode, here a ten-watt downlink, not the average. And in the
+        same sunlit arc it must put back into the battery what the eclipse took: three and a half
+        watts for thirty-six minutes, through a charge and discharge path that loses about a
+        fifth. Eleven point one plus two point seven: about thirteen point eight watts, at end of
+        life.
+      fr: >-
+        Les panneaux ne travaillent qu’au soleil, environ cinquante-neuf minutes par orbite.
+        Pendant ce temps, ils doivent porter le pire mode éclairé, ici une transmission de dix
+        watts, pas la moyenne. Et dans le même arc éclairé, ils doivent remettre dans la batterie
+        ce que l’éclipse a pris : trois watts et demi pendant trente-six minutes, par un chemin de
+        charge et de décharge qui perd environ un cinquième. Onze virgule un plus deux virgule
+        sept : environ treize virgule huit watts, en fin de vie.
+    do:
+      - js: "EX.play('eol', ${say})"
+
+  - id: area
+    title: {en: "From power to area", fr: "De la puissance à la surface"}
+    say:
+      en: >-
+        That is the end-of-life figure. Radiation wears the cells down by about two and a half
+        percent a year, and hot cells give less, so at the start the array must make about sixteen
+        watts. Each square metre of cells, at twenty-nine and a half percent efficiency, at an
+        angle, with gaps and cover glass, gives about three hundred watts. So about five hundredths
+        of a square metre: one deployable panel, twenty-three centimetres square.
+      fr: >-
+        C’est la valeur de fin de vie. Le rayonnement use les cellules d’environ deux et demi
+        pour cent par an, et des cellules chaudes produisent moins : au départ, les panneaux
+        doivent donc fournir environ seize watts. Chaque mètre carré de cellules, à vingt-neuf et
+        demi pour cent de rendement, de biais, avec les espaces et le verre de protection, donne
+        environ trois cents watts. Il faut donc environ cinq centièmes de mètre carré : un
+        panneau déployable de vingt-trois centimètres de côté.
+    do:
+      - js: "EX.play('area', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "The mission is extended from three years to six. What happens to the array size, all else equal?"
+        fr: "La mission passe de trois à six ans. Que devient la taille des panneaux, toutes choses égales par ailleurs ?"
+      options:
+        - text: {en: "It grows: six years of degradation (0.975⁶ ≈ 0.86) means more power at the start.", fr: "Elle augmente : six ans de dégradation (0,975⁶ ≈ 0,86) exigent plus de puissance au départ."}
+          correct: true
+          why: {en: "The end-of-life need is the same, so the beginning-of-life power rises by about 7 %.", fr: "Le besoin en fin de vie est le même ; la puissance en début de vie augmente d’environ 7 %."}
+        - text: {en: "It stays the same: degradation only matters for the battery.", fr: "Elle ne change pas : la dégradation ne concerne que la batterie."}
+          why: {en: "Cells lose output with radiation dose every year.", fr: "Les cellules perdent du rendement avec la dose de rayonnement chaque année."}
+        - text: {en: "It shrinks, because the cells warm up less over time.", fr: "Elle diminue, car les cellules chauffent moins avec le temps."}
+          why: {en: "Cell temperature depends on the orbit and attitude, not on mission length.", fr: "La température des cellules dépend de l’orbite et de l’attitude, pas de la durée de mission."}
+
+  - id: battery
+    title: {en: "Sizing the battery", fr: "Dimensionner la batterie"}
+    say:
+      en: >-
+        The battery carries the eclipse: three and a half watts for about six tenths of an hour,
+        just over two watt-hours. But you only let each eclipse use a quarter of it, the depth of
+        discharge. Divide by that, and by the discharge efficiency, and you need eight point eight
+        watt-hours; with the Phase A margin, ten point six. Specify at least eleven, and twenty
+        gives the operators room.
+      fr: >-
+        La batterie porte l’éclipse : trois watts et demi pendant environ six dixièmes d’heure,
+        un peu plus de deux wattheures. Mais chaque éclipse ne doit en utiliser qu’un quart : c’est
+        la profondeur de décharge. Divisez par elle, et par le rendement de décharge : il faut
+        huit virgule huit wattheures ; avec la marge de phase A, dix virgule six. Spécifiez-en au
+        moins onze, et vingt laissent de la marge aux opérateurs.
+    do:
+      - js: "EX.play('battery', ${say})"
+
+  - id: dod
+    title: {en: "Depth of discharge and life", fr: "Profondeur de décharge et durée de vie"}
+    say:
+      en: >-
+        Why a quarter? Every eclipse is a charge cycle, about sixteen and a half thousand in three
+        years. A lithium-ion cell discharged to eighty percent lasts a few hundred cycles; at
+        twenty-five percent, about twenty thousand. So the battery passes. For a multi-year
+        mission start at twenty to thirty percent; a six-month demonstration can go deeper and
+        carry a smaller battery.
+      fr: >-
+        Pourquoi un quart ? Chaque éclipse est un cycle de charge : environ seize mille cinq cents
+        en trois ans. Une cellule lithium-ion déchargée à quatre-vingts pour cent dure quelques
+        centaines de cycles ; à vingt-cinq pour cent, environ vingt mille. La batterie passe donc.
+        Pour une mission de plusieurs années, partez de vingt à trente pour cent ; une
+        démonstration de six mois peut aller plus loin et emporter une batterie plus petite.
+    do:
+      - js: "EX.play('dod', ${say})"
+
+  - id: failure
+    title: {en: "How batteries fail", fr: "Comment les batteries tombent en panne"}
+    say:
+      en: >-
+        Three failures shape both the design and the operations. Thermal runaway: an overcharge or
+        a short heats a cell faster than it can cool, so add fuses, cell voltage monitoring and
+        thermal cut-offs. Lithium plating: charging below zero degrees damages a cell for good, so
+        add a heater, a thermostat and a software lockout. And imbalance: in series, the weakest
+        cell limits the pack. Operators meet all three as limits and automatic responses.
+      fr: >-
+        Trois pannes façonnent à la fois la conception et l’exploitation. L’emballement
+        thermique : une surcharge ou un court-circuit chauffe une cellule plus vite qu’elle ne
+        refroidit ; il faut des fusibles, une surveillance de la tension par cellule et des
+        coupures thermiques. Le dépôt de lithium : charger sous zéro degré abîme une cellule
+        définitivement ; il faut un réchauffeur, un thermostat et un blocage logiciel. Et le
+        déséquilibre : en série, la cellule la plus faible limite le pack. Les opérateurs
+        retrouvent les trois sous forme de limites et de réponses automatiques.
+    do:
+      - js: "EX.play('failure', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Run the array and battery sizing for your own mission's worst sunlit mode, eclipse load and lifetime. Which input moves the answer most?"
+        fr: "Refaites le dimensionnement des panneaux et de la batterie avec le pire mode éclairé, la charge d’éclipse et la durée de vie de votre mission. Quelle donnée change le plus le résultat ?"

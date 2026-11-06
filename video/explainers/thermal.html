@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thermal control in a vacuum</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .ray { stroke-width: 5; fill: none; marker-end: url(#tip); }
+  .earth { fill: #1e3a52; stroke: #5fb4dc; stroke-width: 2; }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+  .lim { stroke-width: 3; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Heat in and out of a spacecraft, coatings, hot and cold cases, temperature margins, the thermal toolbox</title>
+  <defs><marker id="tip" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker></defs>
+  <g id="env" class="ex-hidden"></g>
+  <g id="coat" class="ex-hidden"></g>
+  <g id="cases" class="ex-hidden"></g>
+  <g id="marg" class="ex-hidden"></g>
+  <g id="tools" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Thermal control in a vacuum",
+    sun: "Sun · 1361 W/m²", alb: "albedo · about 30 % of the Sun", ir: "Earth infrared · about 240 W/m²",
+    int: "electronics: nearly all power ends as heat", out: "radiated to deep space · 2.7 K",
+    noconv: "No air, no fan: heat leaves only by radiation", earth: "Earth",
+    c_axis: "α / ε: sunlight absorbed ÷ infrared emitted", cool: "runs cool", warm: "runs warm",
+    k_white: "white paint · 0.2", k_anod: "anodised aluminium · 0.5", k_black: "black paint · 1.1", k_cell: "solar cells · 1.0", k_gold: "gold tape · 6",
+    h_cap: "Hot case: sunlit, peak mode, worn coatings", h1: "Sun through the cells", h2: "albedo", h3: "Earth infrared", h4: "electronics, downlink",
+    h_res: "single node: +91 °C", h_res_s: "a screening alarm: a multi-node model gives +40 to +55 °C",
+    k_cap: "Cold case: eclipse, safe mode, new coatings", k1: "Earth infrared", k2: "electronics, safe mode",
+    k_res: "steady state: −53 °C", k_res_s: "but the eclipse lasts 36 min: from +20 °C it cools to about +12 °C",
+    m_pred: "predicted", m_op: "operating · ±5 °C", m_acc: "acceptance · ±10 °C", m_qual: "qualification · ±15 °C",
+    m_bat: "Battery: predicted −8 °C, limit −10 °C", m_bat_s: "margin 2 °C < 5 °C: fails",
+    m_fix: "Fix: a 0.5 W heater with a thermostat at −5 °C, or MLI around the pack",
+    t1: "Coatings", t1_s: "choose α and ε face by face: white radiators, insulating gold",
+    t2: "Multi-layer insulation", t2_s: "10–20 reflective layers; real blankets 5–10× worse than ideal",
+    t3: "Heaters", t3_s: "Kapton foil, 0.5–5 W, on a thermostat or under software control",
+    t4: "Heat pipes and straps", t4_s: "carry heat from a hot unit to a radiator",
+    n1a: "Heat in: Sun, albedo, Earth infrared, electronics. Heat out: radiation only.",
+    n1b: "Every watt the spacecraft uses becomes heat that a surface must radiate (textbook § 9.4.1).",
+    n2a: "Low α/ε stays cool; high α/ε stays warm. Coatings are the passive toolbox.",
+    n2b: "UV darkens white paint: use new coatings for the cold case, worn ones for the hot case.",
+    n3a: "Design for both extremes: the hot case and the cold case.",
+    n3b: "A single-node result above 60 °C means: build a multi-node model, not: give up.",
+    n4a: "Keep a margin between prediction and limit, and test beyond the prediction.",
+    n4b: "Margins here are the textbook’s teaching convention; ECSS leaves the values to the project.",
+    n5a: "Most LEO CubeSats need only coatings and a battery heater.",
+    n5b: "Heaters draw from the eclipse budget: thermal and power are sized together.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 9 · EOSat-3U single-node example (§ 9.4) · ECSS-E-ST-31C",
+  },
+  fr: {
+    kicker: "Notion", title: "Le contrôle thermique dans le vide",
+    sun: "Soleil · 1361 W/m²", alb: "albédo · environ 30 % du Soleil", ir: "infrarouge terrestre · environ 240 W/m²",
+    int: "électronique : presque toute l’énergie finit en chaleur", out: "rayonné vers l’espace · 2,7 K",
+    noconv: "Ni air ni ventilateur : la chaleur ne part que par rayonnement", earth: "Terre",
+    c_axis: "α / ε : lumière solaire absorbée ÷ infrarouge émis", cool: "reste froid", warm: "reste chaud",
+    k_white: "peinture blanche · 0,2", k_anod: "aluminium anodisé · 0,5", k_black: "peinture noire · 1,1", k_cell: "cellules solaires · 1,0", k_gold: "ruban doré · 6",
+    h_cap: "Cas chaud : au soleil, mode de pointe, revêtements vieillis", h1: "Soleil à travers les cellules", h2: "albédo", h3: "infrarouge terrestre", h4: "électronique, transmission",
+    h_res: "un seul nœud : +91 °C", h_res_s: "une alerte de tri : un modèle à plusieurs nœuds donne +40 à +55 °C",
+    k_cap: "Cas froid : éclipse, mode sûr, revêtements neufs", k1: "infrarouge terrestre", k2: "électronique, mode sûr",
+    k_res: "équilibre : −53 °C", k_res_s: "mais l’éclipse dure 36 min : partant de +20 °C, il descend à environ +12 °C",
+    m_pred: "prévu", m_op: "fonctionnement · ±5 °C", m_acc: "recette · ±10 °C", m_qual: "qualification · ±15 °C",
+    m_bat: "Batterie : −8 °C prévus, limite −10 °C", m_bat_s: "marge 2 °C < 5 °C : échec",
+    m_fix: "Correction : un réchauffeur de 0,5 W sur thermostat à −5 °C, ou du MLI autour du pack",
+    t1: "Revêtements", t1_s: "choisir α et ε face par face : radiateurs blancs, or isolant",
+    t2: "Isolation multicouche", t2_s: "10 à 20 couches réfléchissantes ; en vrai, 5 à 10 fois moins bien que l’idéal",
+    t3: "Réchauffeurs", t3_s: "films Kapton, 0,5 à 5 W, sur thermostat ou commandés par logiciel",
+    t4: "Caloducs et tresses", t4_s: "portent la chaleur d’un équipement chaud vers un radiateur",
+    n1a: "Chaleur entrante : Soleil, albédo, infrarouge terrestre, électronique. Sortante : rayonnement seul.",
+    n1b: "Chaque watt consommé devient de la chaleur qu’une surface doit rayonner (manuel § 9.4.1).",
+    n2a: "Un α/ε faible reste froid ; un α/ε élevé reste chaud. Les revêtements sont la boîte à outils passive.",
+    n2b: "Les UV foncent la peinture blanche : revêtements neufs pour le cas froid, vieillis pour le cas chaud.",
+    n3a: "Concevez pour les deux extrêmes : le cas chaud et le cas froid.",
+    n3b: "Un résultat à un nœud au-dessus de 60 °C veut dire : faites un modèle à plusieurs nœuds, pas : abandonnez.",
+    n4a: "Gardez une marge entre prévision et limite, et testez au-delà de la prévision.",
+    n4b: "Ces marges sont la convention du manuel ; l’ECSS laisse les valeurs au projet.",
+    n5a: "La plupart des CubeSats en LEO n’ont besoin que de revêtements et d’un réchauffeur de batterie.",
+    n5b: "Les réchauffeurs puisent dans le bilan d’éclipse : thermique et énergie se dimensionnent ensemble.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 9 · exemple EOSat-3U à un nœud (§ 9.4) · ECSS-E-ST-31C",
+  },
+});
+const fmt = (v, d) => { const s = v.toFixed(d); return EX.lang === "fr" ? s.replace(".", ",") : s; };
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+const arrow = (parent, id, d, col) => EX.el("path", { id, class: "ray ex-hidden", d, stroke: col }, parent);
+
+// 1. environment
+EX.el("path", { d: "M 0 520 A 900 260 0 0 1 1280 520 L 1280 520 Z", class: "earth" }, "env");
+EX.el("text", { x: 640, y: 500, class: "small", "text-anchor": "middle", label: "earth" }, "env");
+const sc = EX.el("g", { id: "sc" }, "env");
+EX.el("rect", { x: 560, y: 160, width: 160, height: 110, rx: 6, fill: "var(--panel-2)", stroke: "var(--muted)", "stroke-width": 2 }, sc);
+EX.el("rect", { x: 560, y: 150, width: 160, height: 12, fill: "#2f4f8a", stroke: "#e0c25a" }, sc);
+arrow("env", "r-sun", "M 160 70 L 545 170", "#e0c25a");
+EX.el("text", { id: "r-sunt", x: 60, y: 104, class: "small ex-hidden", style: "fill:#e0c25a", label: "sun" }, "env");
+arrow("env", "r-alb", "M 420 400 L 590 285", "#cbd5e1");
+EX.el("text", { id: "r-albt", x: 230, y: 420, class: "small ex-hidden", label: "alb" }, "env");
+arrow("env", "r-ir", "M 860 400 L 690 285", "var(--bad)");
+EX.el("text", { id: "r-irt", x: 820, y: 420, class: "small ex-hidden", style: "fill:var(--bad)", label: "ir" }, "env");
+const ig = EX.el("g", { id: "r-int", class: "ex-hidden" }, "env");
+EX.el("circle", { cx: 640, cy: 215, r: 22, fill: "var(--warn)", opacity: 0.8 }, ig);
+EX.el("text", { x: 745, y: 282, class: "small", style: "fill:var(--warn)", label: "int" }, ig);
+["M 735 190 L 900 110", "M 735 230 L 960 210", "M 640 145 L 680 50"].forEach((d, i) => arrow("env", "r-out" + i, d, "var(--accent)"));
+EX.el("text", { id: "r-outt", x: 910, y: 100, class: "small ex-hidden", style: "fill:var(--accent)", label: "out" }, "env");
+EX.el("text", { id: "r-nc", x: 40, y: 32, class: "big ex-hidden", label: "noconv" }, "env");
+
+// 2. coatings on an alpha/epsilon axis (log scale)
+const CX = 120, CW = 1040, cx = (r) => CX + (Math.log10(r) + 1) / 2 * CW; // 0.1 .. 10
+EX.el("defs", {}, "coat").innerHTML = '<linearGradient id="cw" x1="0" x2="1"><stop offset="0" stop-color="#5fb4dc"/><stop offset="1" stop-color="#e06262"/></linearGradient>';
+EX.el("rect", { x: CX, y: 250, width: CW, height: 18, rx: 9, fill: "url(#cw)" }, "coat");
+[0.1, 0.2, 0.5, 1, 2, 5, 10].forEach((r) => EX.el("text", { x: cx(r), y: 296, class: "small mono muted", "text-anchor": "middle", text: fmt(r, r < 1 ? 1 : 0) }, "coat"));
+EX.el("text", { x: CX, y: 330, class: "small", label: "c_axis" }, "coat");
+EX.el("text", { x: CX, y: 236, class: "small", style: "fill:var(--accent)", label: "cool" }, "coat");
+EX.el("text", { x: CX + CW, y: 236, class: "small", "text-anchor": "end", style: "fill:var(--bad)", label: "warn" === "x" ? "" : "warm" }, "coat");
+[["white", 0.18, 80], ["anod", 0.5, 130], ["cell", 1.0, 80], ["black", 1.07, 180], ["gold", 6, 130]].forEach(([k, r, y], i) => {
+  const g = EX.el("g", { id: "ck-" + k, class: "ex-hidden" }, "coat");
+  EX.el("line", { x1: cx(r), y1: y + 10, x2: cx(r), y2: 248, stroke: "var(--muted)", "stroke-width": 1.5 }, g);
+  EX.el("circle", { cx: cx(r), cy: 259, r: 9, fill: "var(--text)" }, g);
+  EX.el("text", { x: cx(r), y, class: "small", "text-anchor": "middle", label: "k_" + k }, g);
+});
+
+// 3. hot and cold cases
+function stack(parent, id, x, cap, items, total, res, ress, cls) {
+  const g = box(parent, id, x, 30, 580, 470, cls);
+  EX.el("text", { x: x + 20, y: 64, class: "small", label: cap }, g);
+  let y = 90;
+  items.forEach(([k, w]) => {
+    EX.el("rect", { x: x + 20, y, width: w * 8, height: 34, rx: 4, style: `fill:var(--${cls === "bad" ? "warn" : "accent"});stroke:none;opacity:.7` }, g);
+    EX.el("text", { x: x + 28 + w * 8, y: y + 23, class: "small", text: `${fmt(w, 1)} W · ${EX.t(k)}` }, g);
+    y += 46;
+  });
+  EX.el("text", { x: x + 20, y: y + 30, class: "big mono", text: `Σ ${fmt(total, 1)} W` }, g);
+  EX.el("text", { x: x + 20, y: y + 90, class: "huge", style: `fill:var(--${cls === "bad" ? "bad" : "accent"})`, label: res }, g);
+  EX.el("text", { x: x + 20, y: y + 122, class: "small muted", label: ress }, g);
+  return g;
+}
+stack("cases", "hot", 40, "h_cap", [["h1", 28.8], ["h2", 7.6], ["h3", 7.5], ["h4", 10.0]], 53.9, "h_res", "h_res_s", "bad");
+stack("cases", "cold", 660, "k_cap", [["k1", 5.58], ["k2", 2.0]], 7.58, "k_res", "k_res_s", "on");
+
+// 4. margins ladder
+const TY = (t) => 280 - t * 5; // °C to y
+const ML = [["m_qual", 15, "var(--bad)"], ["m_acc", 10, "var(--warn)"], ["m_op", 5, "var(--ok)"]];
+EX.el("line", { x1: 60, y1: TY(0), x2: 440, y2: TY(0), class: "lim", stroke: "var(--text)" }, "marg");
+EX.el("text", { x: 450, y: TY(0) + 6, class: "small", label: "m_pred" }, "marg");
+ML.forEach(([k, d, col], i) => {
+  const g = EX.el("g", { id: "ml-" + i, class: "ex-hidden" }, "marg");
+  [d, -d].forEach((s) => EX.el("line", { x1: 60, y1: TY(s), x2: 440, y2: TY(s), class: "lim", stroke: col, "stroke-dasharray": "8 6" }, g));
+  EX.el("text", { x: 450, y: TY(d) + 6, class: "small", style: `fill:${col}`, label: k }, g);
+});
+const bt = box("marg", "m-bat", 760, 60, 480, 230, "bad");
+EX.el("text", { x: 780, y: 100, class: "small", label: "m_bat" }, bt);
+// mini scale: limit -10, predicted -8
+EX.el("line", { x1: 800, y1: 160, x2: 1200, y2: 160, stroke: "var(--line)", "stroke-width": 2 }, bt);
+[[-10, "−10", "var(--bad)"], [-8, "−8", "var(--text)"], [-5, "−5", "var(--ok)"]].forEach(([t, s, col]) => {
+  const x = 800 + (t + 12) * 50;
+  EX.el("line", { x1: x, y1: 140, x2: x, y2: 180, stroke: col, "stroke-width": 3 }, bt);
+  EX.el("text", { x, y: 206, class: "small mono", "text-anchor": "middle", style: `fill:${col}`, text: s + " °C" }, bt);
+});
+EX.el("text", { x: 780, y: 256, class: "big", style: "fill:var(--bad)", label: "m_bat_s" }, bt);
+EX.el("text", { id: "m-fix", x: 60, y: 440, class: "small ex-hidden", style: "fill:var(--ok)", label: "m_fix" }, "marg");
+
+// 5. toolbox
+[["t1", "ok"], ["t2", ""], ["t3", "on"], ["t4", ""]].forEach(([k, cls], i) => {
+  const x = 40 + (i % 2) * 610, y = 40 + Math.floor(i / 2) * 230;
+  const g = box("tools", "tb-" + i, x, y, 590, 200, cls);
+  EX.el("text", { x: x + 20, y: y + 50, class: "big", label: k }, g);
+  EX.el("text", { x: x + 20, y: y + 90, class: "small muted", label: k + "_s" }, g);
+});
+
+function only(...ids) { ["env", "coat", "cases", "marg", "tools", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("environment", (beat) => {
+  only("env");
+  beat(0.04, () => { EX.draw("r-sun", 700); EX.show("r-sunt"); });
+  beat(0.16, () => { EX.draw("r-alb", 600); EX.show("r-albt"); });
+  beat(0.26, () => { EX.draw("r-ir", 600); EX.show("r-irt"); });
+  beat(0.38, () => { EX.show("r-int"); EX.pulse("r-int", 2); });
+  beat(0.5, () => { [0, 1, 2].forEach((i) => EX.draw("r-out" + i, 600)); EX.show("r-outt"); });
+  beat(0.6, () => EX.show("r-nc"));
+  beat(0.74, () => note("n1a", "n1b"));
+});
+EX.scene("coatings", (beat) => {
+  only("coat");
+  ["white", "anod", "cell", "black", "gold"].forEach((k, i) => beat(0.08 + i * 0.1, () => EX.show("ck-" + k)));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("cases", (beat) => {
+  only("cases");
+  beat(0.04, () => EX.show("hot"));
+  beat(0.45, () => EX.show("cold"));
+  beat(0.76, () => note("n3a", "n3b"));
+});
+EX.scene("margins", (beat) => {
+  only("marg");
+  ML.slice().reverse().forEach((_, i) => beat(0.05 + i * 0.1, () => EX.show("ml-" + (2 - i))));
+  beat(0.4, () => EX.show("m-bat"));
+  beat(0.6, () => EX.show("m-fix"));
+  beat(0.74, () => note("n4a", "n4b"));
+});
+EX.scene("toolbox", (beat) => {
+  only("tools");
+  [0, 1, 2, 3].forEach((i) => beat(0.05 + i * 0.12, () => EX.show("tb-" + i)));
+  beat(0.7, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sizing the array and the battery</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .gen { fill: #e0c25a; fill-opacity: .25; stroke: #e0c25a; stroke-width: 2.5; }
+  .load { fill: var(--accent); fill-opacity: .35; stroke: var(--accent); stroke-width: 2; }
+  .rech { fill: var(--ok); fill-opacity: .4; stroke: var(--ok); stroke-width: 2; }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+  .need { stroke: var(--warn); stroke-width: 3; stroke-dasharray: 8 6; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Array power through the orbit, array area chain, battery energy, cycle life against depth of discharge, battery failure modes</title>
+  <g id="eol" class="ex-hidden"></g>
+  <g id="area" class="ex-hidden"></g>
+  <g id="bat" class="ex-hidden"></g>
+  <g id="dod" class="ex-hidden"></g>
+  <g id="fail" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Sizing the array and the battery",
+    sun: "sunlight · 58.8 min", ecl: "eclipse · 35.8 min",
+    g_gen: "array output", g_load: "worst sunlit mode: 10 W", g_ecl: "eclipse load: 3.5 W, from the battery",
+    g_rech: "recharge what the eclipse took",
+    e1: "10.0 W ÷ 0.90 (regulator)", e2: "3.5 W × 35.8 ÷ (0.79 × 58.8)", e3: "array at end of life",
+    a_eol: "End of life", a_deg: "÷ degradation", a_deg_s: "3 years at 2.5 %/yr", a_tmp: "÷ temperature", a_tmp_s: "cells at 65 °C",
+    a_bol: "Beginning of life", a_flux: "÷ watts per m²", a_flux_s: "29.5 % × 1361 × cos 23° × 0.85 × 0.97",
+    a_res: "0.053 m², about 23 × 23 cm: one deployable panel",
+    a_3u: "3U side, 10 × 34 cm", a_pan: "panel",
+    b1: "Eclipse energy", b1_s: "3.5 W × 0.597 h", b2: "÷ depth of discharge", b2_s: "use only 25 % per eclipse",
+    b3: "÷ discharge efficiency", b3_s: "0.95", b4: "× Phase A margin", b4_s: "20 % (Table 8.3)",
+    b_spec: "Specify at least 11 Wh; 20 Wh gives room to operate", gauge: "one eclipse",
+    d_cap: "Cycles before end of life against depth of discharge (Li-ion, log scale)",
+    d_need: "3 years: about 16 650 eclipses", d_pt: "25 %: about 20 000 cycles, so it passes",
+    f1: "Thermal runaway", f1_s: "overcharge or a short heats the cell faster than it cools", f1_m: "cell fuses · per-cell voltage · thermal cut-offs",
+    f2: "Lithium plating", f2_s: "charging below 0 °C damages the cell for good", f2_m: "battery heater · thermostat · software lockout",
+    f3: "Cell imbalance", f3_s: "the weakest cell in series limits the whole pack", f3_m: "balancing circuits · matched cells",
+    n1a: "The array must carry the worst sunlit mode and refill the battery in the same sunlit arc.",
+    n1b: "11.11 W + 2.71 W = 13.8 W at end of life (textbook § 9.2).",
+    n2a: "Ageing and heat cut the output: size for 16 W at the start to have 13.8 W at the end.",
+    n2b: "Body-mounted cells alone give a 3U about 7 W; one deployable wing about 15 W.",
+    n3a: "8.8 Wh of usable capacity, 10.6 Wh with margin: the battery is small if the depth is shallow.",
+    n3b: "Depth of discharge, not the eclipse alone, sets the size (§ 9.3.2).",
+    n4a: "The shallower each discharge, the more cycles the battery lasts.",
+    n4b: "Multi-year LEO: start at 20–30 %. A six-month demonstration can accept 40–50 %.",
+    n5a: "Operators see these as limits and FDIR rules: cell voltage, temperature, charge lockout.",
+    n5b: "A battery heater is not a comfort: it prevents permanent damage.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 9 · EOSat-3U worked example (§ 9.2, 9.3)",
+  },
+  fr: {
+    kicker: "Notion", title: "Dimensionner panneaux et batterie",
+    sun: "jour · 58,8 min", ecl: "éclipse · 35,8 min",
+    g_gen: "production des panneaux", g_load: "pire mode éclairé : 10 W", g_ecl: "charge d’éclipse : 3,5 W, sur batterie",
+    g_rech: "recharger ce que l’éclipse a pris",
+    e1: "10,0 W ÷ 0,90 (régulateur)", e2: "3,5 W × 35,8 ÷ (0,79 × 58,8)", e3: "panneaux en fin de vie",
+    a_eol: "Fin de vie", a_deg: "÷ dégradation", a_deg_s: "3 ans à 2,5 %/an", a_tmp: "÷ température", a_tmp_s: "cellules à 65 °C",
+    a_bol: "Début de vie", a_flux: "÷ watts par m²", a_flux_s: "29,5 % × 1361 × cos 23° × 0,85 × 0,97",
+    a_res: "0,053 m², environ 23 × 23 cm : un panneau déployable",
+    a_3u: "face 3U, 10 × 34 cm", a_pan: "panneau",
+    b1: "Énergie d’éclipse", b1_s: "3,5 W × 0,597 h", b2: "÷ profondeur de décharge", b2_s: "n’utiliser que 25 % par éclipse",
+    b3: "÷ rendement de décharge", b3_s: "0,95", b4: "× marge phase A", b4_s: "20 % (tableau 8.3)",
+    b_spec: "Spécifiez au moins 11 Wh ; 20 Wh laissent de la marge d’exploitation", gauge: "une éclipse",
+    d_cap: "Cycles avant fin de vie selon la profondeur de décharge (Li-ion, échelle log)",
+    d_need: "3 ans : environ 16 650 éclipses", d_pt: "25 % : environ 20 000 cycles, cela passe",
+    f1: "Emballement thermique", f1_s: "une surcharge ou un court-circuit chauffe la cellule plus vite qu’elle ne refroidit", f1_m: "fusibles · tension par cellule · coupures thermiques",
+    f2: "Dépôt de lithium", f2_s: "charger sous 0 °C abîme la cellule définitivement", f2_m: "réchauffeur · thermostat · blocage logiciel",
+    f3: "Déséquilibre des cellules", f3_s: "en série, la cellule la plus faible limite tout le pack", f3_m: "circuits d’équilibrage · cellules appariées",
+    n1a: "Les panneaux portent le pire mode éclairé et rechargent la batterie dans le même arc éclairé.",
+    n1b: "11,11 W + 2,71 W = 13,8 W en fin de vie (manuel § 9.2).",
+    n2a: "Vieillissement et chaleur réduisent la production : visez 16 W au départ pour avoir 13,8 W à la fin.",
+    n2b: "Des cellules sur le corps seules donnent environ 7 W à un 3U ; une aile déployable, environ 15 W.",
+    n3a: "8,8 Wh utiles, 10,6 Wh avec la marge : la batterie est petite si la décharge est peu profonde.",
+    n3b: "C’est la profondeur de décharge, pas l’éclipse seule, qui fixe la taille (§ 9.3.2).",
+    n4a: "Plus chaque décharge est faible, plus la batterie dure de cycles.",
+    n4b: "LEO sur plusieurs années : partez de 20–30 %. Une démonstration de six mois accepte 40–50 %.",
+    n5a: "Les opérateurs les voient comme des limites et des règles FDIR : tension, température, blocage de charge.",
+    n5b: "Un réchauffeur de batterie n’est pas un confort : il évite des dégâts permanents.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 9 · exemple résolu EOSat-3U (§ 9.2, 9.3)",
+  },
+});
+const fmt = (v, d) => { const s = v.toFixed(d); return EX.lang === "fr" ? s.replace(".", ",") : s; };
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+
+// 1. orbit profile: generation, load, recharge
+const X0 = 110, PX = 760 / 94.6, BASE = 420, PW = 20;
+const xm = (m) => X0 + m * PX, yw = (w) => BASE - w * PW;
+EX.el("rect", { x: xm(0), y: 40, width: 58.8 * PX, height: 24, fill: "#e0c25a" }, "eol");
+EX.el("rect", { x: xm(58.8), y: 40, width: 35.8 * PX, height: 24, fill: "#2b3442" }, "eol");
+EX.el("text", { x: xm(2), y: 58, class: "small", style: "fill:#15191e", label: "sun" }, "eol");
+EX.el("text", { x: xm(60), y: 58, class: "small", label: "ecl" }, "eol");
+[0, 5, 10, 15].forEach((w) => {
+  EX.el("line", { x1: X0, y1: yw(w), x2: xm(94.6), y2: yw(w), class: "grid" }, "eol");
+  EX.el("text", { x: X0 - 10, y: yw(w) + 6, class: "small mono muted", "text-anchor": "end", text: w + " W" }, "eol");
+});
+EX.el("rect", { id: "g-gen", x: xm(0), y: yw(13.82), width: 58.8 * PX, height: 13.82 * PW, class: "gen ex-hidden" }, "eol");
+EX.el("rect", { id: "g-load", x: xm(0), y: yw(10), width: 58.8 * PX, height: 10 * PW, class: "load ex-hidden" }, "eol");
+EX.el("rect", { id: "g-rech", x: xm(0), y: yw(13.82), width: 58.8 * PX, height: 3.82 * PW, class: "rech ex-hidden" }, "eol");
+EX.el("rect", { id: "g-ecl", x: xm(58.8), y: yw(3.5), width: 35.8 * PX, height: 3.5 * PW, class: "load ex-hidden", style: "fill:var(--warn);stroke:var(--warn)" }, "eol");
+EX.el("text", { id: "g-gent", x: xm(2), y: yw(13.82) - 10, class: "small ex-hidden", style: "fill:#e0c25a", label: "g_gen" }, "eol");
+EX.el("text", { id: "g-loadt", x: xm(4), y: yw(5), class: "small ex-hidden", label: "g_load" }, "eol");
+EX.el("text", { id: "g-recht", x: xm(4), y: yw(11.4), class: "small ex-hidden", style: "fill:#15191e;font-weight:600", label: "g_rech" }, "eol");
+EX.el("text", { id: "g-eclt", x: xm(60), y: yw(3.5) - 12, class: "small ex-hidden", style: "fill:var(--warn)", label: "g_ecl" }, "eol");
+const eq = EX.el("g", { id: "g-eq", class: "ex-hidden" }, "eol");
+EX.el("text", { x: 900, y: 150, class: "small muted", label: "e1" }, eq);
+EX.el("text", { x: 900, y: 186, class: "big mono", text: fmt(11.11, 2) + " W" }, eq);
+EX.el("text", { x: 900, y: 236, class: "small muted", label: "e2" }, eq);
+EX.el("text", { x: 900, y: 272, class: "big mono", style: "fill:var(--ok)", text: "+ " + fmt(2.71, 2) + " W" }, eq);
+EX.el("line", { x1: 900, y1: 292, x2: 1230, y2: 292, stroke: "var(--line)", "stroke-width": 2 }, eq);
+EX.el("text", { x: 900, y: 334, class: "huge mono", style: "fill:#e0c25a", text: fmt(13.82, 1) + " W" }, eq);
+EX.el("text", { x: 900, y: 362, class: "small muted", label: "e3" }, eq);
+
+// 2. area chain
+const AC = [["a_eol", null, fmt(13.8, 1) + " W"], ["a_deg", "a_deg_s", "÷ " + fmt(0.927, 3)], ["a_tmp", "a_tmp_s", "÷ " + fmt(0.930, 3)], ["a_bol", null, fmt(16.0, 1) + " W"]];
+AC.forEach(([k, s, v], i) => {
+  const x = 40 + i * 302, g = box("area", "ac-" + i, x, 40, 282, 120, i === 3 ? "on" : "");
+  EX.el("text", { x: x + 16, y: 76, class: "small", label: k }, g);
+  if (s) EX.el("text", { x: x + 16, y: 100, class: "small muted", label: s }, g);
+  EX.el("text", { x: x + 16, y: 144, class: "big mono", text: v }, g);
+});
+const fl = box("area", "ac-flux", 40, 186, 1188, 84, "");
+EX.el("text", { x: 56, y: 218, class: "small", label: "a_flux" }, fl);
+EX.el("text", { x: 56, y: 252, class: "small mono muted", label: "a_flux_s" }, fl);
+EX.el("text", { x: 1212, y: 244, class: "big mono", "text-anchor": "end", text: "≈ 305 W/m²" }, fl);
+EX.el("text", { id: "ac-res", x: 40, y: 320, class: "big ex-hidden", style: "fill:var(--ok)", label: "a_res" }, "area");
+const SC = 5; // px per cm
+const sk = EX.el("g", { id: "ac-sketch", class: "ex-hidden" }, "area");
+EX.el("rect", { x: 40, y: 360, width: 34 * SC, height: 10 * SC, fill: "var(--panel)", stroke: "var(--muted)", "stroke-width": 2 }, sk);
+EX.el("text", { x: 40, y: 360 + 10 * SC + 26, class: "small muted", label: "a_3u" }, sk);
+EX.el("rect", { x: 40 + 34 * SC + 40, y: 360 - 5 * SC, width: 23 * SC, height: 23 * SC, fill: "#1e3a52", stroke: "#e0c25a", "stroke-width": 2 }, sk);
+EX.el("text", { x: 40 + 34 * SC + 52, y: 360 - 5 * SC + 30, class: "small", style: "fill:#e0c25a", label: "a_pan" }, sk);
+
+// 3. battery chain
+const BC = [["b1", "b1_s", fmt(2.09, 2) + " Wh"], ["b2", "b2_s", "÷ " + fmt(0.25, 2)], ["b3", "b3_s", "= " + fmt(8.8, 1) + " Wh"], ["b4", "b4_s", "= " + fmt(10.6, 1) + " Wh"]];
+BC.forEach(([k, s, v], i) => {
+  const x = 40 + i * 302, g = box("bat", "bc-" + i, x, 40, 282, 120, i === 3 ? "on" : "");
+  EX.el("text", { x: x + 16, y: 76, class: "small", label: k }, g);
+  EX.el("text", { x: x + 16, y: 100, class: "small muted", label: s }, g);
+  EX.el("text", { x: x + 16, y: 144, class: "big mono", text: v }, g);
+});
+const gg = EX.el("g", { id: "bc-gauge", class: "ex-hidden" }, "bat");
+EX.el("rect", { x: 40, y: 220, width: 600, height: 80, rx: 10, fill: "var(--panel)", stroke: "var(--muted)", "stroke-width": 2 }, gg);
+EX.el("rect", { x: 640, y: 245, width: 14, height: 30, rx: 3, fill: "var(--muted)" }, gg);
+EX.el("rect", { x: 46, y: 226, width: 588, height: 68, rx: 7, fill: "var(--ok)", opacity: 0.55 }, gg);
+EX.el("rect", { id: "bc-use", x: 487, y: 226, width: 147, height: 68, rx: 7, fill: "var(--warn)", opacity: 0 }, gg);
+EX.el("text", { x: 500, y: 330, class: "small", style: "fill:var(--warn)", label: "gauge" }, gg);
+EX.el("text", { id: "bc-spec", x: 40, y: 400, class: "big ex-hidden", style: "fill:var(--ok)", label: "b_spec" }, "bat");
+
+// 4. cycle life against depth of discharge (log scale)
+const LX = 330, LW = 700, lx = (n) => LX + (Math.log10(n) - 2) / 3.2 * LW;
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "d_cap" }, "dod");
+[100, 1000, 10000, 100000].forEach((n) => {
+  EX.el("line", { x1: lx(n), y1: 70, x2: lx(n), y2: 420, class: "grid" }, "dod");
+  EX.el("text", { x: lx(n), y: 446, class: "small mono muted", "text-anchor": "middle", text: n.toLocaleString(EX.lang === "fr" ? "fr-CA" : "en-CA") }, "dod");
+});
+[[80, 500], [50, 2000], [30, 10000], [20, 30000], [10, 100000]].forEach(([d, n], i) => {
+  const y = 80 + i * 66, g = EX.el("g", { id: "dd-" + i, class: "ex-hidden" }, "dod");
+  EX.el("text", { x: 260, y: y + 32, class: "big mono", "text-anchor": "end", text: d + " %" }, g);
+  EX.el("rect", { x: LX, y: y + 6, width: lx(n) - LX, height: 38, rx: 4, class: n >= 16650 ? "ok" : "bad", opacity: 0.7 }, g);
+});
+EX.el("line", { id: "dd-need", x1: lx(16650), y1: 66, x2: lx(16650), y2: 426, class: "need ex-hidden" }, "dod");
+EX.el("text", { id: "dd-needt", x: lx(16650) + 10, y: 72, class: "small ex-hidden", style: "fill:var(--warn)", label: "d_need" }, "dod");
+const dp = EX.el("g", { id: "dd-pt", class: "ex-hidden" }, "dod");
+EX.el("circle", { cx: lx(20000), cy: 80 + 3.5 * 66 + 25, r: 10, fill: "var(--accent)" }, dp);
+EX.el("text", { x: lx(20000) + 18, y: 80 + 3.5 * 66 + 31, class: "small", style: "fill:var(--accent)", label: "d_pt" }, dp);
+
+// 5. failure modes
+[["f1", "bad"], ["f2", "warn"], ["f3", "warn"]].forEach(([k, cls], i) => {
+  const y = 40 + i * 150, g = box("fail", "ff-" + i, 40, y, 1200, 130, cls);
+  EX.el("text", { x: 60, y: y + 40, class: "big", label: k }, g);
+  EX.el("text", { x: 60, y: y + 74, label: k + "_s" }, g);
+  EX.el("text", { x: 60, y: y + 108, class: "small", style: "fill:var(--ok)", label: k + "_m" }, g);
+});
+
+function only(...ids) { ["eol", "area", "bat", "dod", "fail", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("eol", (beat) => {
+  only("eol");
+  beat(0.04, () => { EX.show("g-load"); EX.show("g-loadt"); });
+  beat(0.18, () => { EX.show("g-ecl"); EX.show("g-eclt"); });
+  beat(0.32, () => { EX.show("g-gen"); EX.show("g-gent"); });
+  beat(0.45, () => { EX.show("g-rech"); EX.show("g-recht"); });
+  beat(0.55, () => EX.show("g-eq"));
+  beat(0.74, () => note("n1a", "n1b"));
+});
+EX.scene("area", (beat) => {
+  only("area");
+  AC.forEach((_, i) => beat(0.04 + i * 0.1, () => EX.show("ac-" + i)));
+  beat(0.45, () => EX.show("ac-flux"));
+  beat(0.58, () => { EX.show("ac-res"); EX.show("ac-sketch"); });
+  beat(0.74, () => note("n2a", "n2b"));
+});
+EX.scene("battery", (beat) => {
+  only("bat");
+  BC.forEach((_, i) => beat(0.04 + i * 0.12, () => EX.show("bc-" + i)));
+  beat(0.25, () => EX.show("bc-gauge"));
+  beat(0.32, () => { const n = EX.$("bc-use"); n.style.transition = "opacity .6s"; n.setAttribute("opacity", 0.9); });
+  beat(0.6, () => EX.show("bc-spec"));
+  beat(0.74, () => note("n3a", "n3b"));
+});
+EX.scene("dod", (beat) => {
+  only("dod");
+  [0, 1, 2, 3, 4].forEach((i) => beat(0.04 + i * 0.07, () => EX.show("dd-" + i)));
+  beat(0.45, () => { EX.show("dd-need"); EX.show("dd-needt"); });
+  beat(0.58, () => EX.show("dd-pt"));
+  beat(0.72, () => note("n4a", "n4b"));
+});
+EX.scene("failure", (beat) => {
+  only("fail");
+  [0, 1, 2].forEach((i) => beat(0.05 + i * 0.18, () => EX.show("ff-" + i)));
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>
