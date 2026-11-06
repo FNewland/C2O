@@ -333,6 +333,8 @@ sheets:
         fix: "Reworded: the imaging and downlinks booked in the planner's activity schedule."
       "GO authorisations outstanding": {status: screen, where: [mcs.gonogo]}
       "Voice-loop tone": {status: na, where: [ecss-ops]}
+  WB-5.4-VL:
+    default: {status: na}
   WB-5.4-FD:
     items:
       "Station · AOS":
@@ -627,3 +629,28 @@ sheets:
       "step 3": {status: na, where: [planner.contacts]}
       "step 4": {status: screen, where: [planner.contacts, orbit.passes]}
       "step 5": {status: screen, where: [planner.sched, planner.contacts]}
+
+  # ── Day 5 review and appendices ─────────────────────────────────────────
+  WB-5.7-WI:
+    default: {status: na}
+  WB-5.7-FR:
+    default: {status: na}
+    items:
+      "Three most-watched parameters": {status: screen, where: [mcs.trnd]}
+      "Wed —": {status: screen, where: [mcs.fdir.journal]}
+      "Thu —": {status: screen, where: [mcs.fdir.journal]}
+      "5.1 Operability": {status: na, where: [ecss-ops]}
+      "5.2 Operations preparation": {status: na, where: [ecss-ops]}
+      "5.3 Procedure design": {status: na, where: [ecss-ops]}
+      "5.4 Anomaly management": {status: na, where: [ecss-ops]}
+      "5.5 Reporting": {status: na, where: [ecss-ops]}
+  WB-B:
+    default: {status: na}
+    items:
+      "Procedures executed": {status: screen, where: [mcs.proc]}
+      "Anomalies (count": {status: screen, where: [mcs.fdir.journal]}
+      "FDIR rules triggered": {status: screen, where: [mcs.fdir]}
+      "GO/NO-GO outcome": {status: screen, where: [mcs.gonogo]}
+      "Customer commitments": {status: screen, where: [planner.sched]}
+  WB-C:
+    default: {status: na}

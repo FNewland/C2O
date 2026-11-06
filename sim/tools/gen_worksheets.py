@@ -80,7 +80,7 @@ HEADER = """\
 # ── markdown model ──────────────────────────────────────────────────────
 
 _WS_HEAD = re.compile(r"^# (?:Worksheet|Fiche) (WB-[0-9A-Za-z.\-]+) — (.+?)\s*$")
-_APPX_HEAD = re.compile(r"^# (?:Appendix|Annexe) (WB-[A-Z])\b")
+_APPX_HEAD = re.compile(r"^# (?:Appendix|Annexe) (WB-[A-Z])\b(?:\s+—\s+(.+?))?\s*$")
 _APPX_SUB = re.compile(r"^## (CTG-\d{3}|NOM-\d{3}|LEOP-\d{3}|COM-\d{3}|EMG-\d{3}) (.+?)\s*$")
 _ANY_H1 = re.compile(r"^# ")
 _SECTION = re.compile(r"^#{2,4} (.+?)\s*$")
@@ -154,7 +154,10 @@ def parse_workbook(text: str) -> dict[str, dict]:
             continue
         m = _APPX_HEAD.match(line)
         if m:
-            appendix, cur = m.group(1), None
+            # An appendix is itself a sheet (WB-B shift log, WB-C self-check)
+            # until a card sub-heading opens one of its pages (WB-A-CTG-001 …).
+            appendix = m.group(1)
+            cur = sheets.setdefault(appendix, {"title": _clean(m.group(2) or appendix), "items": []})
             i += 1
             continue
         if _ANY_H1.match(line):
@@ -211,6 +214,11 @@ def parse_workbook(text: str) -> dict[str, dict]:
             for label, value in fields:
                 items.append(("field", label, value))
             continue
+        if bullet and content.startswith(_BOX):
+            # "- ☐ item": a checklist line (WB-C self-check)
+            items.append(("checkitem", content[len(_BOX):].strip()))
+            i += 1
+            continue
         if bullet:
             # "- Label: ____" (non-bold field inside a list), or a bullet
             # ending in ":" with its write-in line below.
@@ -231,8 +239,12 @@ def parse_workbook(text: str) -> dict[str, dict]:
                 parts.append(lines[i].strip())
                 i += 1
             q = " ".join(parts)
-            if _clean(q):
+            if _clean(q) and not _only_blanks(q):
                 items.append(("prompt", q))
+            elif not items or items[-1][0] != "blanklist":
+                # "1. ____ 2. ____": write-in lines; the question is whatever
+                # introduced them (a prompt, or else the section heading)
+                items.append(("blanklist",))
             continue
         if _only_blanks(stripped):
             i += 1
@@ -322,6 +334,13 @@ def build_questions(wid: str, en: dict, fr: dict) -> list[dict]:
             continue
         if kind == "para":
             continue
+        if kind == "checkitem":
+            add("check", a[1], b[1])
+            continue
+        if kind == "blanklist":
+            if section and not any(q.get("section") == section for q in qs):
+                add("text", section["en"], section["fr"])
+            continue
         if kind == "prompt":
             if not _SKIP_FIELD.search(_clean(a[1])):
                 add("text", a[1], b[1])
@@ -384,9 +403,17 @@ def _table_questions(wid, a, b, add):
         return
     # label | value tables
     kind = "check" if any(k > 0 for k in box_cols) else "text"
+    # A log grid (Date | Anomaly | Procedure | Outcome …) with empty cells: a
+    # bare row label ("Wed") says nothing, so the columns come with it.
+    grid = (kind == "text" and len(a[1]) >= 3
+            and all(not _clean(c) for r in rows_en for c in r[1:]))
     for re_, rf in zip(rows_en, rows_fr):
         label = _clean(re_[0])
         if not label or _SKIP_ROW.search(label):
+            continue
+        if grid:
+            add("text", label + " — " + " · ".join(_clean(c) for c in a[1][1:]),
+                _clean(rf[0]) + " — " + " · ".join(_clean(c) for c in b[1][1:]))
             continue
         hint_en = hint_fr = None
         if kind == "text" and len(re_) > 1:
