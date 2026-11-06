@@ -3,7 +3,7 @@
 * :func:`import_eosat1` reads the simulator's EOSAT-1 configuration (read-only:
   ``sim/configs/eosat1``, or ``$SPACECDF_SIM_CONFIG_DIR``) into CDR rows with
   ``origin = "import:eosat1"``, so a study can hold a complete reference database for
-  students to study (457 parameters, 11 HK structures, 220 commands, 155 events, the S12 /
+  students to study (458 parameters, 11 HK structures, 220 commands, 155 events, the S12 /
   S19 / rule tables, load shed, AOCS modes and control, rate ladder, positions, GO/NO-GO,
   MCS limits).
 * :func:`export_sim` writes CDR rows back in the simulator's shapes (``telemetry/

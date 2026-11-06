@@ -62,7 +62,7 @@ def test_eosat1_import_counts(eosat_rows):
     by = {}
     for r in eosat_rows:
         by[r["kind"]] = by.get(r["kind"], 0) + 1
-    assert by["parameters"] == 457 and by["hk"] == 11 and by["commands"] == 220 and by["events"] == 155
+    assert by["parameters"] == 458 and by["hk"] == 11 and by["commands"] == 220 and by["events"] == 155
     assert by["monitors"] == 41 and by["event_actions"] == 47 and by["limits"] == 49
     assert by["positions"] == 7 and by["gonogo"] == 11 and by["aocs_modes"] == 10 and by["rate_tiers"] == 3
     assert all(r["origin"] == cm.IMPORT_ORIGIN and r["status"] == "accepted" for r in eosat_rows)
@@ -88,7 +88,7 @@ def test_export_round_trips_the_simulator_files(eosat_rows):
     out = cdr_sim.export_sim(eosat_rows)
     src_p = yaml.safe_load((root / "telemetry/parameters.yaml").read_text(encoding="utf-8"))["parameters"]
     got = out["telemetry/parameters.yaml"]["parameters"]
-    assert len(got) == 457
+    assert len(got) == 458
     assert {(p["id"], p["name"], p["subsystem"]) for p in got} == {(p["id"], p["name"], p["subsystem"]) for p in src_p}
     src_e = yaml.safe_load((root / "events/event_catalog.yaml").read_text(encoding="utf-8"))["events"]
     assert [(e["id"], e["name"], e["severity"]) for e in out["events/event_catalog.yaml"]["events"]] == \
