@@ -1,0 +1,138 @@
+# Design concept — risk, failure modes and redundancy (textbook ch. 15): the
+# risk loop and register, the 5×5 matrix with CubeSat risks and a mitigation,
+# one FMECA line (antenna deployment), typical single-point failures, and
+# 3-of-4 wheel redundancy (0.941 → 0.998). Links design to ops: the detection
+# column becomes telemetry, limits and FDIR.
+# Animated page video/explainers/risk.html. Whole design team.
+id: V-DES-11
+week: 5
+audience: all
+title:
+  en: "Risk, failure modes and redundancy"
+  fr: "Risques, modes de défaillance et redondance"
+summary:
+  en: "How a team manages what could go wrong: the risk loop and register, scoring on the five-by-five matrix, a failure modes, effects and criticality analysis, single-point failures, and what one spare unit buys in reliability."
+  fr: "Comment une équipe gère ce qui pourrait mal tourner : la boucle et le registre des risques, la notation sur la matrice cinq sur cinq, une analyse des modes de défaillance, de leurs effets et de leur criticité, les points de défaillance unique, et ce qu’un équipement de rechange apporte en fiabilité."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/15_risk_interfaces_fmeca.md (§ 15.1, 15.2, 15.4)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/risk.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: process
+    title: {en: "The risk loop", fr: "La boucle des risques"}
+    say:
+      en: >-
+        Risk management is a loop that runs for the whole project. Identify what can go wrong.
+        Assess how likely it is and how bad it would be. Mitigate, by reducing one or the other.
+        Then monitor: is the risk rising, falling, or has its trigger fired? The risk register
+        holds one line per risk, each with an owner and a trend.
+      fr: >-
+        La gestion des risques est une boucle qui tourne pendant tout le projet. Identifier ce
+        qui peut mal tourner. Évaluer sa probabilité et sa gravité. Atténuer, en réduisant l’une
+        ou l’autre. Puis surveiller : le risque monte-t-il, baisse-t-il, son déclencheur s’est-il
+        produit ? Le registre des risques tient une ligne par risque, chacune avec un responsable
+        et une tendance.
+    do:
+      - js: "EX.play('process', ${say})"
+
+  - id: matrix
+    title: {en: "Scoring a risk", fr: "Noter un risque"}
+    say:
+      en: >-
+        Score each risk from one to five for likelihood and for consequence, and multiply. Up to
+        four is low: accept it and watch. Five to nine, mitigate if it is worth it. Ten to fifteen,
+        mitigate. Sixteen and above means redesign. An antenna that might not deploy scores three
+        times four, twelve: high. A second, independent release mechanism, tested a hundred times
+        on the ground, drops the likelihood to one, and the score to four.
+      fr: >-
+        Notez chaque risque de un à cinq en probabilité et en conséquence, et multipliez. Jusqu’à
+        quatre, c’est faible : on accepte et on surveille. De cinq à neuf, on atténue si cela en
+        vaut la peine. De dix à quinze, on atténue. Seize et plus, il faut reconcevoir. Une
+        antenne qui pourrait ne pas se déployer obtient trois fois quatre, douze : élevé. Un
+        second mécanisme de libération indépendant, testé cent fois au sol, ramène la probabilité
+        à un, et le score à quatre.
+    do:
+      - js: "EX.play('matrix', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "A risk scores likelihood 4, consequence 2: software trips safe mode spuriously. Which mitigation lowers the score?"
+        fr: "Un risque obtient probabilité 4, conséquence 2 : le logiciel déclenche le mode sûr à tort. Quelle mesure abaisse le score ?"
+      options:
+        - text: {en: "More software testing and a staged upload, which lower the likelihood.", fr: "Plus d’essais du logiciel et un chargement par étapes, qui abaissent la probabilité."}
+          correct: true
+          why: {en: "Mitigation moves a risk down (likelihood) or left (consequence).", fr: "L’atténuation déplace un risque vers le bas (probabilité) ou vers la gauche (conséquence)."}
+        - text: {en: "Writing the risk into the register.", fr: "Inscrire le risque au registre."}
+          why: {en: "Recording a risk tracks it; it does not change it.", fr: "Inscrire un risque permet de le suivre ; cela ne le change pas."}
+        - text: {en: "Raising the consequence scale so 2 counts as 1.", fr: "Changer l’échelle des conséquences pour que 2 compte comme 1."}
+          why: {en: "That hides the risk instead of reducing it.", fr: "Cela cache le risque au lieu de le réduire."}
+
+  - id: fmeca
+    title: {en: "One line of an FMECA", fr: "Une ligne d’AMDEC"}
+    say:
+      en: >-
+        A failure modes, effects and criticality analysis takes each item in turn. The antenna's
+        function is to radiate the link. Its failure mode: it does not deploy, because the
+        mechanism jams. The effect: no commanding and no telemetry. Severity five. How would we
+        know? No beacon is heard. What saves us? A second release, burn wire and spring. Without
+        it, this is criticality one, a single-point failure. And that detection column becomes
+        the operators' telemetry, limits and automatic responses.
+      fr: >-
+        Une analyse des modes de défaillance, de leurs effets et de leur criticité, l’AMDEC,
+        reprend chaque élément tour à tour. La fonction de l’antenne : rayonner la liaison. Son
+        mode de défaillance : elle ne se déploie pas, car le mécanisme se coince. L’effet : ni
+        commande ni télémesure. Gravité cinq. Comment le saurait-on ? Aucune balise n’est reçue.
+        Qu’est-ce qui nous sauve ? Une seconde libération, fil à brûler et ressort. Sans elle,
+        c’est une criticité un, un point de défaillance unique. Et cette colonne de détection
+        devient la télémesure, les limites et les réponses automatiques des opérateurs.
+    do:
+      - js: "EX.play('fmeca', ${say})"
+
+  - id: spf
+    title: {en: "Single-point failures", fr: "Points de défaillance unique"}
+    say:
+      en: >-
+        Every CubeSat has single points of failure: the on-board computer, the battery, the
+        antenna and array deployments, the power board. The job is to know them and protect them:
+        a watchdog and an autonomous safe mode for the computer, cell monitoring and shallow
+        discharge for the battery, two release mechanisms for each deployment. Some, like the
+        power board, are accepted, with the justification written down.
+      fr: >-
+        Tout CubeSat a des points de défaillance unique : l’ordinateur de bord, la batterie, les
+        déploiements d’antenne et de panneaux, la carte d’énergie. Le travail est de les
+        connaître et de les protéger : un chien de garde et un mode sûr autonome pour
+        l’ordinateur, la surveillance des cellules et une décharge peu profonde pour la batterie,
+        deux mécanismes de libération pour chaque déploiement. Certains, comme la carte
+        d’énergie, sont acceptés, avec la justification consignée par écrit.
+    do:
+      - js: "EX.play('spf', ${say})"
+
+  - id: redundancy
+    title: {en: "What a spare buys", fr: "Ce qu’apporte une rechange"}
+    say:
+      en: >-
+        Redundancy is where reliability numbers pay off. Take wheels that each have a
+        ninety-eight percent chance of lasting two years. With three wheels, all must work:
+        ninety-four percent. Add a fourth, in a pyramid where any three can control all three
+        axes, and the chance rises to ninety-nine point eight percent. EOSAT-1 flies four wheels
+        and can fine-point on three.
+      fr: >-
+        C’est avec la redondance que les chiffres de fiabilité paient. Prenez des roues qui ont
+        chacune quatre-vingt-dix-huit pour cent de chances de durer deux ans. Avec trois roues,
+        toutes doivent marcher : quatre-vingt-quatorze pour cent. Ajoutez-en une quatrième, en
+        pyramide, où trois roues quelconques contrôlent les trois axes, et la probabilité monte à
+        quatre-vingt-dix-neuf virgule huit pour cent. EOSAT-1 emporte quatre roues et peut
+        pointer finement sur trois.
+    do:
+      - js: "EX.play('redundancy', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Name your spacecraft's worst single-point failure. Will you protect it, or accept it, and how will the operators detect it if it happens?"
+        fr: "Nommez le pire point de défaillance unique de votre satellite. Le protégerez-vous ou l’accepterez-vous, et comment les opérateurs le détecteront-ils s’il survient ?"

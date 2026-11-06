@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Risk, failure modes and redundancy</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .flow { stroke: var(--accent); stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+  .wire2 { stroke: var(--muted); stroke-width: 2.5; fill: none; }
+  .rk { transition: transform 1.2s cubic-bezier(.45,.05,.35,1); }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Risk process, the five by five matrix, an FMECA line, single-point failures, wheel redundancy</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5fb4dc"/></marker></defs>
+  <g id="proc" class="ex-hidden"></g>
+  <g id="mx" class="ex-hidden"></g>
+  <g id="fm" class="ex-hidden"></g>
+  <g id="spf" class="ex-hidden"></g>
+  <g id="rel" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Risk, failure modes and redundancy",
+    p1: "Identify", p1_s: "what can go wrong?", p2: "Assess", p2_s: "how likely, how bad?", p3: "Mitigate", p3_s: "reduce one or the other", p4: "Monitor", p4_s: "rising, falling, triggered?",
+    p_reg: "The risk register: one line per risk, an owner, a trend",
+    x_l: "likelihood", x_c: "consequence",
+    r1: "antenna deployment", r2: "no contact after separation", r3: "pointing short of spec", r4: "eclipse power negative",
+    r5: "software trips safe mode", r6: "licence late",
+    band: "1–4 low: accept · 5–9 medium · 10–15 high: mitigate · 16–25 critical: redesign",
+    mit: "redundant burn wire and spring, 100 ground cycles: likelihood 3 → 1",
+    f_item: "Item", f_fun: "Function", f_mode: "Failure mode", f_cause: "Cause", f_eff: "System effect", f_sev: "Severity",
+    f_det: "Detection", f_comp: "Compensating provision", f_crit: "Criticality",
+    v_item: "UHF antenna", v_fun: "radiate the RF link", v_mode: "does not deploy", v_cause: "mechanism jams", v_eff: "no commanding, no telemetry",
+    v_sev: "5", v_det: "no beacon heard", v_comp: "burn wire + spring", v_crit: "1: single-point failure",
+    f_ops: "The detection column becomes the operators’ telemetry, limits and FDIR rules.",
+    s_cap: "Typical CubeSat single-point failures", s1: "On-board computer", s1_s: "watchdog, autonomous safe mode, EDAC memory",
+    s2: "Battery", s2_s: "cell monitoring, shallow discharge", s3: "Antenna deployment", s3_s: "two independent release mechanisms",
+    s4: "Array deployment", s4_s: "redundant release, hinge spring", s5: "Power board", s5_s: "usually accepted as a single point",
+    q_a: "Three wheels: all must work", q_b: "Four wheels: any three will do", w: "wheel R = 0.98",
+    q_ra: "0.98³ = 0.941", q_rb: "3 of 4: 0.998", q_eos: "EOSAT-1 flies four wheels and can fine-point on three",
+    n1a: "Risk management is a loop, not a form filled in once.",
+    n1b: "Identify, assess, mitigate, monitor, for the whole life of the project (textbook § 15.1).",
+    n2a: "Score = likelihood × consequence. Mitigation moves a risk down or left.",
+    n2b: "Here a second release mechanism takes the antenna risk from 12, high, to 4, low.",
+    n3a: "FMECA: for each item, how it fails, what that does, how you would know, what saves you.",
+    n3b: "Criticality 1 means one failure loses the mission: a single-point failure (§ 15.4).",
+    n4a: "Every CubeSat has single points; the job is to know them and protect them.",
+    n4b: "Some are accepted with a justification, and written down.",
+    n5a: "One spare wheel lifts reliability from 0.941 to 0.998 over two years.",
+    n5b: "k-of-n redundancy: a little mass buys a lot of reliability where it matters.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 15 · ECSS-M-ST-80C · ECSS-Q-ST-30-02C",
+  },
+  fr: {
+    kicker: "Notion", title: "Risques, modes de défaillance et redondance",
+    p1: "Identifier", p1_s: "qu’est-ce qui peut mal tourner ?", p2: "Évaluer", p2_s: "probabilité, gravité ?", p3: "Atténuer", p3_s: "réduire l’une ou l’autre", p4: "Surveiller", p4_s: "en hausse, en baisse, déclenché ?",
+    p_reg: "Le registre des risques : une ligne par risque, un responsable, une tendance",
+    x_l: "probabilité", x_c: "conséquence",
+    r1: "déploiement d’antenne", r2: "pas de contact après séparation", r3: "pointage hors spécification", r4: "énergie négative en éclipse",
+    r5: "logiciel déclenche le mode sûr", r6: "licence en retard",
+    band: "1–4 faible : accepter · 5–9 moyen · 10–15 élevé : atténuer · 16–25 critique : reconcevoir",
+    mit: "fil à brûler et ressort redondants, 100 cycles au sol : probabilité 3 → 1",
+    f_item: "Élément", f_fun: "Fonction", f_mode: "Mode de défaillance", f_cause: "Cause", f_eff: "Effet système", f_sev: "Gravité",
+    f_det: "Détection", f_comp: "Disposition compensatoire", f_crit: "Criticité",
+    v_item: "antenne UHF", v_fun: "rayonner la liaison RF", v_mode: "ne se déploie pas", v_cause: "mécanisme coincé", v_eff: "ni commande, ni télémesure",
+    v_sev: "5", v_det: "aucune balise reçue", v_comp: "fil à brûler + ressort", v_crit: "1 : point de défaillance unique",
+    f_ops: "La colonne détection devient la télémesure, les limites et les règles FDIR des opérateurs.",
+    s_cap: "Points de défaillance unique typiques d’un CubeSat", s1: "Ordinateur de bord", s1_s: "chien de garde, mode sûr autonome, mémoire EDAC",
+    s2: "Batterie", s2_s: "surveillance des cellules, décharge peu profonde", s3: "Déploiement d’antenne", s3_s: "deux mécanismes de libération indépendants",
+    s4: "Déploiement des panneaux", s4_s: "libération redondante, ressort de charnière", s5: "Carte d’énergie", s5_s: "souvent acceptée comme point unique",
+    q_a: "Trois roues : toutes doivent marcher", q_b: "Quatre roues : trois suffisent", w: "roue R = 0,98",
+    q_ra: "0,98³ = 0,941", q_rb: "3 sur 4 : 0,998", q_eos: "EOSAT-1 emporte quatre roues et pointe finement sur trois",
+    n1a: "La gestion des risques est une boucle, pas un formulaire rempli une fois.",
+    n1b: "Identifier, évaluer, atténuer, surveiller, pendant toute la vie du projet (manuel § 15.1).",
+    n2a: "Score = probabilité × conséquence. L’atténuation déplace un risque vers le bas ou la gauche.",
+    n2b: "Ici, un second mécanisme de libération fait passer le risque d’antenne de 12, élevé, à 4, faible.",
+    n3a: "AMDEC : pour chaque élément, comment il tombe en panne, l’effet, comment le savoir, ce qui sauve.",
+    n3b: "Criticité 1 : une seule panne perd la mission, un point de défaillance unique (§ 15.4).",
+    n4a: "Tout CubeSat a des points uniques ; le travail est de les connaître et de les protéger.",
+    n4b: "Certains sont acceptés avec une justification, consignée par écrit.",
+    n5a: "Une roue de rechange fait passer la fiabilité de 0,941 à 0,998 sur deux ans.",
+    n5b: "Redondance k parmi n : un peu de masse achète beaucoup de fiabilité là où elle compte.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 15 · ECSS-M-ST-80C · ECSS-Q-ST-30-02C",
+  },
+});
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+
+// 1. process loop
+const PP = [[200, 60], [760, 60], [760, 280], [200, 280]];
+PP.forEach(([x, y], i) => {
+  const g = box("proc", "pp-" + i, x, y, 320, 110, i === 2 ? "on" : "");
+  EX.el("text", { x: x + 20, y: y + 46, class: "big", label: "p" + (i + 1) }, g);
+  EX.el("text", { x: x + 20, y: y + 80, class: "small muted", label: "p" + (i + 1) + "_s" }, g);
+});
+[["M 520 115 L 756 115"], ["M 920 170 L 920 276"], ["M 760 335 L 524 335"], ["M 360 280 L 360 174"]].forEach(([d], i) => EX.el("path", { id: "pf-" + i, class: "flow ex-hidden", d }, "proc"));
+EX.el("text", { id: "p-reg", x: 200, y: 460, class: "small ex-hidden", style: "fill:var(--accent)", label: "p_reg" }, "proc");
+
+// 2. 5x5 matrix
+const MX0 = 160, MY0 = 40, MC = 82;
+const band = (s) => (s >= 16 ? "#5a2326" : s >= 10 ? "#5a3a1c" : s >= 5 ? "#4a4520" : "#1e3a26");
+for (let L = 5; L >= 1; L--) for (let C = 1; C <= 5; C++) {
+  const x = MX0 + (C - 1) * MC, y = MY0 + (5 - L) * MC;
+  EX.el("rect", { x, y, width: MC - 4, height: MC - 4, rx: 6, fill: band(L * C) }, "mx");
+  EX.el("text", { x: x + 8, y: y + 22, class: "small mono faint", text: L * C }, "mx");
+}
+[1, 2, 3, 4, 5].forEach((v) => {
+  EX.el("text", { x: MX0 - 16, y: MY0 + (5 - v) * MC + 46, class: "small mono muted", "text-anchor": "end", text: v }, "mx");
+  EX.el("text", { x: MX0 + (v - 1) * MC + 38, y: MY0 + 5 * MC + 22, class: "small mono muted", "text-anchor": "middle", text: v }, "mx");
+});
+EX.el("text", { x: MX0 - 60, y: MY0 + 2.5 * MC, class: "small muted", transform: `rotate(-90 ${MX0 - 60} ${MY0 + 2.5 * MC})`, "text-anchor": "middle", label: "x_l" }, "mx");
+EX.el("text", { x: MX0 + 2.5 * MC, y: MY0 + 5 * MC + 48, class: "small muted", "text-anchor": "middle", label: "x_c" }, "mx");
+const RK = [["r1", 3, 4], ["r2", 2, 5], ["r3", 3, 3], ["r4", 2, 4], ["r5", 4, 2], ["r6", 3, 2]];
+const pos = (L, C, k) => [MX0 + (C - 1) * MC + 38 + (k % 2 ? 14 : -14), MY0 + (5 - L) * MC + 46];
+RK.forEach(([k, L, C], i) => {
+  const g = EX.el("g", { id: "rk-" + i, class: "rk ex-hidden" }, "mx");
+  const [x, y] = pos(L, C, i === 3 ? 1 : 0);
+  EX.el("circle", { cx: x, cy: y, r: 13, fill: i === 0 ? "var(--accent)" : "var(--text)" }, g);
+  EX.el("text", { x, y: y + 5, class: "small mono", "text-anchor": "middle", style: "fill:#15191e;font-weight:700", text: i + 1 }, g);
+  EX.el("text", { id: "rkl-" + i, x: 620, y: 70 + i * 44, class: "small ex-hidden", text: `${i + 1}  ${EX.t(k)} · ${L} × ${C} = ${L * C}` }, "mx");
+});
+EX.el("text", { id: "mx-band", x: 620, y: 410, class: "small muted ex-hidden", label: "band" }, "mx");
+EX.el("text", { id: "mx-mit", x: 620, y: 360, class: "small ex-hidden", style: "fill:var(--ok)", label: "mit" }, "mx");
+
+// 3. FMECA line as a cascade
+const FC = ["item", "fun", "mode", "cause", "eff", "sev", "det", "comp", "crit"];
+FC.forEach((k, i) => {
+  const x = 40 + (i % 3) * 410, y = 30 + Math.floor(i / 3) * 140;
+  const cls = k === "crit" || k === "sev" ? "bad" : k === "det" ? "on" : k === "comp" ? "ok" : "";
+  const g = box("fm", "fc-" + k, x, y, 390, 116, cls);
+  EX.el("text", { x: x + 18, y: y + 36, class: "small muted", label: "f_" + k }, g);
+  EX.el("text", { x: x + 18, y: y + 78, class: "big", label: "v_" + k }, g);
+});
+EX.el("text", { id: "fm-ops", x: 40, y: 480, class: "small ex-hidden", style: "fill:var(--accent)", label: "f_ops" }, "fm");
+
+// 4. single points
+EX.el("text", { x: 40, y: 44, class: "small muted", label: "s_cap" }, "spf");
+[1, 2, 3, 4, 5].forEach((i) => {
+  const y = 60 + (i - 1) * 86, g = box("spf", "sp-" + i, 40, y, 1200, 70, i === 5 ? "warn" : "");
+  EX.el("text", { x: 60, y: y + 44, class: "big", label: "s" + i }, g);
+  EX.el("text", { x: 480, y: y + 42, style: "fill:var(--ok)", label: "s" + i + "_s" }, g);
+});
+
+// 5. reliability block diagrams
+const wheel = (parent, x, y, n) => { const g = EX.el("g", {}, parent); EX.el("rect", { x, y, width: 90, height: 56, rx: 8, fill: "var(--panel)", stroke: "var(--accent)", "stroke-width": 2 }, g); EX.el("text", { x: x + 45, y: y + 35, class: "mono", "text-anchor": "middle", text: "RW" + n }, g); return g; };
+const A = EX.el("g", { id: "rb-a", class: "ex-hidden" }, "rel");
+EX.el("text", { x: 40, y: 60, class: "big", label: "q_a" }, A);
+EX.el("path", { d: "M 40 140 L 600 140", class: "wire2" }, A);
+[0, 1, 2].forEach((i) => wheel(A, 90 + i * 170, 112, i + 1));
+EX.el("text", { x: 40, y: 220, class: "huge mono", style: "fill:var(--warn)", label: "q_ra" }, A);
+const B = EX.el("g", { id: "rb-b", class: "ex-hidden" }, "rel");
+EX.el("text", { x: 680, y: 60, class: "big", label: "q_b" }, B);
+EX.el("path", { d: "M 680 250 L 720 250 M 720 110 L 720 390 M 840 110 L 840 390 M 840 250 L 900 250", class: "wire2" }, B);
+[0, 1, 2, 3].forEach((i) => { EX.el("path", { d: `M 720 ${110 + i * 93} L 735 ${110 + i * 93} M 825 ${110 + i * 93} L 840 ${110 + i * 93}`, class: "wire2" }, B); wheel(B, 735, 82 + i * 93, i + 1); });
+const vt = EX.el("g", {}, B);
+EX.el("rect", { x: 900, y: 214, width: 120, height: 72, rx: 8, fill: "#1d2f22", stroke: "var(--ok)", "stroke-width": 2 }, vt);
+EX.el("text", { x: 960, y: 258, class: "mono", "text-anchor": "middle", text: "3 / 4" }, vt);
+EX.el("path", { d: "M 1020 250 L 1060 250", class: "wire2" }, B);
+EX.el("text", { x: 1240, y: 350, class: "huge mono", "text-anchor": "end", style: "fill:var(--ok)", label: "q_rb" }, B);
+EX.el("text", { id: "rb-w", x: 40, y: 280, class: "small muted ex-hidden", label: "w" }, "rel");
+EX.el("text", { id: "rb-eos", x: 40, y: 470, class: "small ex-hidden", style: "fill:var(--accent)", label: "q_eos" }, "rel");
+
+function only(...ids) { ["proc", "mx", "fm", "spf", "rel", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("process", (beat) => {
+  only("proc");
+  [0, 1, 2, 3].forEach((i) => beat(0.04 + i * 0.12, () => { EX.show("pp-" + i); EX.draw("pf-" + i, 400); }));
+  beat(0.58, () => EX.show("p-reg"));
+  beat(0.72, () => note("n1a", "n1b"));
+});
+EX.scene("matrix", (beat) => {
+  only("mx"); EX.$("rk-0").style.transform = "";
+  RK.forEach((_, i) => beat(0.04 + i * 0.07, () => { EX.show("rk-" + i); EX.show("rkl-" + i); }));
+  beat(0.48, () => EX.show("mx-band"));
+  beat(0.56, () => { EX.show("mx-mit"); EX.$("rk-0").style.transform = `translate(0px, ${2 * MC}px)`; EX.raw("rkl-0", `1  ${EX.t("r1")} · 1 × 4 = 4`); });
+  beat(0.74, () => note("n2a", "n2b"));
+});
+EX.scene("fmeca", (beat) => {
+  only("fm");
+  FC.forEach((k, i) => beat(0.03 + i * 0.065, () => EX.show("fc-" + k)));
+  beat(0.66, () => EX.show("fm-ops"));
+  beat(0.76, () => note("n3a", "n3b"));
+});
+EX.scene("spf", (beat) => {
+  only("spf");
+  [1, 2, 3, 4, 5].forEach((i) => beat(0.04 + i * 0.1, () => EX.show("sp-" + i)));
+  beat(0.72, () => note("n4a", "n4b"));
+});
+EX.scene("redundancy", (beat) => {
+  only("rel");
+  beat(0.05, () => { EX.show("rb-a"); EX.show("rb-w"); });
+  beat(0.3, () => EX.show("rb-b"));
+  beat(0.55, () => EX.show("rb-eos"));
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>

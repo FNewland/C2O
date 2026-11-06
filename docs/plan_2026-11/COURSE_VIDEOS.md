@@ -50,6 +50,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-DES-08 | 3 | Design concept: thermal control in a vacuum — heat in/out, α/ε and coatings, hot and cold single-node cases, temperature margins and the battery heater, the toolbox | — (whole design team) | written 2026-11-06 (`thermal.html`) |
 | V-DES-09 | 4 | Design concept: attitude determination and control — the loop, architecture by pointing need (EOSAT-1: wheels, star tracker, MTQ), disturbance torques (residual dipole dominates), wheel momentum and desaturation, no MTQ torque along B | — (whole design team) | written 2026-11-06 (`aocs.html`) |
 | V-DES-10 | 4 | Design concept: the link budget — chain, decibels, S-band waterfall (margin 17.4 dB), margin against data rate (spectrum limit), data budget (720 vs 956 MB/day) | — (whole design team); leads into the SpaceCDF link budget tool | written 2026-11-06 (`comms.html`) |
+| V-DES-11 | 5 | Design concept: risk, failure modes and redundancy — risk loop and register, 5×5 matrix and a mitigation (12 → 4), one FMECA line, single-point failures, 3-of-4 wheels (0.941 → 0.998) | — (whole design team) | written 2026-11-06 (`risk.html`) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
