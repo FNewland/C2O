@@ -566,11 +566,11 @@ stopped one picks it up at its next boot. Old versions are disabled. A laptop ne
 **Updating C2O** (push to GitHub first; update both VMs **and** the laptop to the same commit):
 
 ```bash
-for vm in c2o-ground-vm c2o-sim-vm; do
-  gcloud compute ssh $vm --zone=northamerica-northeast2-a --tunnel-through-iap \
-      --command='sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh update'
-done
+deploy/gcp/c2o update            # both VMs; or: c2o update ground | c2o update sim
 ```
+
+(It runs `vm-bootstrap.sh update` on each VM over IAP SSH: git pull of `REPO_REF`, rebuild, restart.
+`vm-bootstrap.sh` itself only runs on the VMs; started on a laptop it says so and stops.)
 
 A stopped sim VM must be started for this (`c2o up --sim=cloud`). Otherwise it keeps its old
 checkout. After editing anything in `deploy/gcp/` itself, rerun `setup.sh`: it refreshes the startup

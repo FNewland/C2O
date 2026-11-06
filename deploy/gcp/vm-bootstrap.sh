@@ -36,6 +36,14 @@
 #        use them, deletes the files with the already-built image (no pulls),
 #        starts them again. Never touches scenarios, breakpoints, config
 #        history or link state (space-workspace). `c2o data clean` runs this.
+# This script runs ON the VMs (root, Linux). Run from a laptop by mistake, it
+# would fail on the first bash-4 line below; say what to do instead.
+if [ -z "${C2O_APP_DIR:-}" ] && { [ "$(uname -s)" != Linux ] || [ "$(id -u)" != 0 ]; }; then   # C2O_APP_DIR: offline tests
+    echo "vm-bootstrap.sh runs on the C2O VMs as root, not here." >&2
+    echo "From your laptop:  deploy/gcp/c2o update    (pull + rebuild + restart both VMs)" >&2
+    echo "On a VM:           sudo bash /opt/c2o/deploy/gcp/vm-bootstrap.sh ${1:-boot}" >&2
+    exit 2
+fi
 set -euo pipefail
 shopt -s inherit_errexit
 
