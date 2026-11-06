@@ -1,0 +1,137 @@
+# Design concept — thermal control in a vacuum (textbook § 9.4): heat in and
+# out, coatings and alpha/epsilon, the EOSat-3U single-node hot and cold cases
+# (+91 °C screening, -53 °C steady but only ~8 °C drop in one eclipse),
+# temperature margins and the battery example, the thermal toolbox.
+# Animated page video/explainers/thermal.html. Whole design team; EPS/TCS.
+id: V-DES-08
+week: 3
+audience: all
+title:
+  en: "Thermal control in a vacuum"
+  fr: "Le contrôle thermique dans le vide"
+summary:
+  en: "How a spacecraft stays within its temperature limits with no air to cool it: the heat coming in and going out, coatings, the hot and cold design cases, temperature margins, and the toolbox of insulation, heaters and heat pipes."
+  fr: "Comment un satellite reste dans ses limites de température sans air pour le refroidir : la chaleur qui entre et qui sort, les revêtements, les cas chaud et froid, les marges de température, et la boîte à outils : isolation, réchauffeurs et caloducs."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/09_power_and_thermal.md (§ 9.4)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/thermal.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: environment
+    title: {en: "Heat in, heat out", fr: "Chaleur entrante, chaleur sortante"}
+    say:
+      en: >-
+        In orbit there is no air, so no convection and no fan. Heat arrives from four places:
+        direct sunlight, sunlight reflected by the Earth, the Earth's own infrared glow, and the
+        electronics, because nearly every watt the spacecraft uses ends up as heat. Heat leaves in
+        only one way: radiated from the outer surfaces to deep space. Inside, it must be conducted
+        out to those surfaces.
+      fr: >-
+        En orbite, il n’y a pas d’air : ni convection ni ventilateur. La chaleur arrive de quatre
+        sources : le Soleil en direct, la lumière solaire renvoyée par la Terre, le rayonnement
+        infrarouge propre de la Terre, et l’électronique, car presque chaque watt consommé finit
+        en chaleur. La chaleur ne part que d’une façon : rayonnée par les surfaces extérieures vers
+        l’espace. À l’intérieur, elle doit être conduite jusqu’à ces surfaces.
+    do:
+      - js: "EX.play('environment', ${say})"
+
+  - id: coatings
+    title: {en: "Coatings", fr: "Les revêtements"}
+    say:
+      en: >-
+        Two numbers describe a surface: alpha, how much sunlight it absorbs, and epsilon, how well
+        it radiates infrared. Their ratio sets how warm it runs. White paint absorbs little and
+        radiates well, so it stays cool: use it on radiators. Gold tape absorbs and hardly
+        radiates, so it stays warm: use it to insulate. Ultraviolet light darkens white paint over
+        the years, so a radiator runs warmer at end of life.
+      fr: >-
+        Deux nombres décrivent une surface : alpha, la part de lumière solaire absorbée, et
+        epsilon, sa capacité à rayonner l’infrarouge. Leur rapport fixe sa température. La
+        peinture blanche absorbe peu et rayonne bien : elle reste froide, on la met sur les
+        radiateurs. Le ruban doré absorbe et rayonne à peine : il reste chaud, on s’en sert pour
+        isoler. Les ultraviolets foncent la peinture blanche au fil des ans : un radiateur chauffe
+        davantage en fin de vie.
+    do:
+      - js: "EX.play('coatings', ${say})"
+
+  - id: cases
+    title: {en: "Hot case and cold case", fr: "Cas chaud et cas froid"}
+    say:
+      en: >-
+        The design must survive both extremes. The hot case: full sun, the downlink running, worn
+        coatings. A one-node model of this 3U CubeSat adds up fifty-four watts and predicts
+        ninety-one degrees. That is a screening alarm, not an answer: a model with several nodes
+        gives forty to fifty-five. The cold case: eclipse, safe mode, under eight watts in,
+        minus fifty-three at steady state. But the eclipse lasts only thirty-six minutes, and the
+        spacecraft cools by about eight degrees.
+      fr: >-
+        La conception doit survivre aux deux extrêmes. Le cas chaud : plein soleil, transmission
+        en cours, revêtements vieillis. Un modèle à un seul nœud de ce CubeSat 3U additionne
+        cinquante-quatre watts et prévoit quatre-vingt-onze degrés. C’est une alerte de tri, pas
+        une réponse : un modèle à plusieurs nœuds donne quarante à cinquante-cinq. Le cas froid :
+        éclipse, mode sûr, moins de huit watts entrants, moins cinquante-trois degrés à
+        l’équilibre. Mais l’éclipse ne dure que trente-six minutes, et le satellite ne perd
+        qu’environ huit degrés.
+    do:
+      - js: "EX.play('cases', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Which coating properties make the cold case most conservative?"
+        fr: "Quelles propriétés de revêtement rendent le cas froid le plus prudent ?"
+      options:
+        - text: {en: "Beginning-of-life properties, when white paint absorbs the least sunlight.", fr: "Celles du début de vie, quand la peinture blanche absorbe le moins de lumière solaire."}
+          correct: true
+          why: {en: "Lowest absorptance means least heat in: the coldest prediction.", fr: "L’absorptance la plus faible donne le moins de chaleur entrante : la prévision la plus froide."}
+        - text: {en: "End-of-life properties, after ultraviolet darkening.", fr: "Celles de fin de vie, après le noircissement par les ultraviolets."}
+          why: {en: "Darkened paint absorbs more: that is the hot case.", fr: "Une peinture noircie absorbe plus : c’est le cas chaud."}
+        - text: {en: "It makes no difference in eclipse.", fr: "Cela ne change rien en éclipse."}
+          why: {en: "The cold case also covers the sunlit part of a cold orbit and the start of eclipse.", fr: "Le cas froid couvre aussi la partie éclairée d’une orbite froide et l’entrée en éclipse."}
+
+  - id: margins
+    title: {en: "Temperature margins", fr: "Les marges de température"}
+    say:
+      en: >-
+        Models are uncertain, so keep a margin between the prediction and the limit: in this
+        course, five degrees in operation, ten for acceptance tests and fifteen for qualification.
+        Here the battery is predicted at minus eight degrees, against a limit of minus ten. Two
+        degrees of margin is not enough. Add a half-watt heater on a thermostat at minus five, or
+        insulate the pack.
+      fr: >-
+        Les modèles sont incertains : gardez une marge entre la prévision et la limite. Dans ce
+        cours, cinq degrés en fonctionnement, dix pour les essais de recette et quinze pour la
+        qualification. Ici, la batterie est prévue à moins huit degrés, pour une limite de moins
+        dix. Deux degrés de marge, ce n’est pas assez. Ajoutez un réchauffeur d’un demi-watt sur
+        thermostat à moins cinq, ou isolez le pack.
+    do:
+      - js: "EX.play('margins', ${say})"
+
+  - id: toolbox
+    title: {en: "The thermal toolbox", fr: "La boîte à outils thermique"}
+    say:
+      en: >-
+        The toolbox is short. Coatings, chosen face by face. Multi-layer insulation, blankets of
+        thin reflective films, though on a CubeSat full of connectors they work far worse than in
+        theory. Heaters, thin foils of half a watt to a few watts. And heat pipes or straps to
+        carry heat to a radiator. Most low-orbit CubeSats need only coatings and a battery heater,
+        and every heater watt comes out of the eclipse power budget.
+      fr: >-
+        La boîte à outils est courte. Les revêtements, choisis face par face. L’isolation
+        multicouche, des couvertures de films minces réfléchissants, mais sur un CubeSat plein de
+        connecteurs, elles marchent bien moins bien qu’en théorie. Les réchauffeurs, de minces
+        films d’un demi-watt à quelques watts. Et les caloducs ou tresses qui portent la chaleur
+        vers un radiateur. La plupart des CubeSats en orbite basse n’ont besoin que de revêtements
+        et d’un réchauffeur de batterie, et chaque watt de chauffage sort du bilan d’éclipse.
+    do:
+      - js: "EX.play('toolbox', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Which unit on your spacecraft has the narrowest temperature range, and what will keep it inside that range in the cold case?"
+        fr: "Quel équipement de votre satellite a la plage de température la plus étroite, et qu’est-ce qui l’y maintiendra dans le cas froid ?"

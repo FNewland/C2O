@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Architecture, interfaces and budgets</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .diag rect { fill: #24323e; stroke: var(--accent); stroke-width: 1.5; }
+  .pwr { stroke: var(--warn); stroke-width: 3; fill: none; }
+  .dat { stroke: var(--accent); stroke-width: 2; fill: none; stroke-dasharray: 6 5; }
+  .alloc { stroke: var(--text); stroke-width: 2.5; stroke-dasharray: 8 6; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Block diagram, N-squared interface matrix, mass budget with margins, power budget by mode</title>
+  <g id="bd" class="ex-hidden"></g>
+  <g id="n2" class="ex-hidden"></g>
+  <g id="mass" class="ex-hidden"></g>
+  <g id="comp" class="ex-hidden"></g>
+  <g id="pwr" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Architecture, interfaces and budgets",
+    PL: "Payload", EPS: "Power (EPS)", OBC: "Computer (OBC)", AOCS: "Attitude (AOCS)", TTC: "Radio (TT&C)", TCS: "Thermal", STR: "Structure",
+    leg_p: "power", leg_d: "data",
+    ground: "Ground segment", user: "Users",
+    from: "from (row) ↓ / to (column) →",
+    c_pw: "power, HK", c_bolt: "bolts", c_cmd: "commands", c_i2c: "commands, I²C", c_tm: "TM frames",
+    c_req: "power request", c_att: "attitude, HK", c_atp: "attitude", c_pt: "pointing", c_vib: "vibration",
+    c_rx: "received TC", c_ant: "antenna mount", c_sci: "science data", c_preq: "pointing request", c_fov: "field of view",
+    c_mnt: "sensor mounts", c_amnt: "antenna mounts", c_pmnt: "payload mount",
+    wheel: "the chosen wheel speaks RS-422",
+    fix: "Options: another wheel · an I²C to RS-422 bridge · another computer",
+    m_cbe: "Current best estimate (CBE)", m_mev: "+ equipment maturity margin, 20 %", m_sys: "+ system margin, Phase A, 20 %",
+    m_alloc: "launcher allocation 6.00 kg", m_left: "margin 0.70 kg = 11.7 %: amber",
+    thr: "green > 20 % · amber 10–20 % · red < 10 %",
+    c_cap: "Total allowance above the best estimate", cA: "Phase A, new equipment", cC: "Phase C, mostly flown", cD: "Phase D, measured",
+    modes: "Power by mode (W)", sub: "Subsystem",
+    mSafe: "Safe", mNom: "Nominal", mImg: "Imaging", mDl: "Downlink", mEcl: "Eclipse", tot: "Total",
+    avg: "orbit average", avg_s: "nominal 45 % · imaging 10 % · downlink 7 % · eclipse 38 %",
+    n1a: "Draw the blocks and the lines between them before sizing anything.",
+    n1b: "Every line is an interface: power, data, mechanical, thermal or radio (textbook § 8.2).",
+    n2a: "The N² matrix lists every interface once: row delivers to column.",
+    n2b: "Compare both sides of each cell: voltage, protocol, band, location. A mismatch is a conflict.",
+    n3a: "The design closes, but only just: 0.70 kg is 11.7 % of the allocation.",
+    n3b: "Margins sit on top of the best estimate, at equipment level and at system level (Table 8.3).",
+    n4a: "The two margins compound: about 44 % in Phase A, 16 % in Phase C, 5 % in Phase D.",
+    n4b: "Release margin only as estimates become measurements.",
+    n5a: "Orbit average: 4.63 W. The 10 W downlink and the 3.5 W eclipse load size array and battery.",
+    n5b: "The budget is per mode, because not everything is on at once (§ 8.4.3–8.4.4).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 8 · EOSat-3U example (Tables 8.1, 8.3, 8.4) · products named in the textbook are examples",
+  },
+  fr: {
+    kicker: "Notion", title: "Architecture, interfaces et bilans",
+    PL: "Charge utile", EPS: "Énergie (EPS)", OBC: "Ordinateur (OBC)", AOCS: "Attitude (SCAO)", TTC: "Radio (TT&C)", TCS: "Thermique", STR: "Structure",
+    leg_p: "énergie", leg_d: "données",
+    ground: "Segment sol", user: "Utilisateurs",
+    from: "de (ligne) ↓ / vers (colonne) →",
+    c_pw: "énergie, HK", c_bolt: "boulons", c_cmd: "commandes", c_i2c: "commandes, I²C", c_tm: "trames TM",
+    c_req: "demande d’énergie", c_att: "attitude, HK", c_atp: "attitude", c_pt: "pointage", c_vib: "vibrations",
+    c_rx: "TC reçues", c_ant: "fixation d’antenne", c_sci: "données science", c_preq: "demande de pointage", c_fov: "champ de vue",
+    c_mnt: "fixations capteurs", c_amnt: "fixations antennes", c_pmnt: "fixation charge utile",
+    wheel: "la roue choisie parle RS-422",
+    fix: "Options : une autre roue · un pont I²C vers RS-422 · un autre ordinateur",
+    m_cbe: "Meilleure estimation actuelle (CBE)", m_mev: "+ marge de maturité des équipements, 20 %", m_sys: "+ marge système, phase A, 20 %",
+    m_alloc: "allocation du lanceur 6,00 kg", m_left: "marge 0,70 kg = 11,7 % : orange",
+    thr: "vert > 20 % · orange 10–20 % · rouge < 10 %",
+    c_cap: "Marge totale au-dessus de la meilleure estimation", cA: "Phase A, équipements neufs", cC: "Phase C, surtout déjà volés", cD: "Phase D, mesurée",
+    modes: "Puissance par mode (W)", sub: "Sous-système",
+    mSafe: "Sûr", mNom: "Nominal", mImg: "Prise de vue", mDl: "Transmission", mEcl: "Éclipse", tot: "Total",
+    avg: "moyenne orbitale", avg_s: "nominal 45 % · prise de vue 10 % · transmission 7 % · éclipse 38 %",
+    n1a: "Dessinez les blocs et les liens entre eux avant de dimensionner quoi que ce soit.",
+    n1b: "Chaque lien est une interface : énergie, données, mécanique, thermique ou radio (manuel § 8.2).",
+    n2a: "La matrice N² liste chaque interface une fois : la ligne fournit à la colonne.",
+    n2b: "Comparez les deux côtés de chaque case : tension, protocole, bande, position. Un écart est un conflit.",
+    n3a: "La conception se ferme, de justesse : 0,70 kg, c’est 11,7 % de l’allocation.",
+    n3b: "Les marges s’ajoutent à la meilleure estimation, au niveau équipement et au niveau système (tableau 8.3).",
+    n4a: "Les deux marges se cumulent : environ 44 % en phase A, 16 % en phase C, 5 % en phase D.",
+    n4b: "On ne libère la marge qu’à mesure que les estimations deviennent des mesures.",
+    n5a: "Moyenne orbitale : 4,63 W. Les 10 W de transmission et les 3,5 W d’éclipse dimensionnent panneaux et batterie.",
+    n5b: "Le bilan se fait par mode, car tout n’est pas allumé en même temps (§ 8.4.3–8.4.4).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 8 · exemple EOSat-3U (tableaux 8.1, 8.3, 8.4) · les produits cités dans le manuel sont des exemples",
+  },
+});
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+const fmt = (v, d) => { const s = v.toFixed(d); return EX.lang === "fr" ? s.replace(".", ",") : s; };
+function box(parent, id, x, y, w, h, key, cls, tcls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  if (key) EX.el("text", { x: x + w / 2, y: y + h / 2 + 6, "text-anchor": "middle", class: tcls || "", label: key }, g);
+  return g;
+}
+
+// 1. block diagram: EPS feeds all; OBC hub for data
+const B = { PL: [960, 70], EPS: [80, 70], OBC: [520, 210], AOCS: [960, 210], TTC: [80, 350], TCS: [80, 210], STR: [520, 350] };
+const BW = 240, BH = 64, c = (k) => [B[k][0] + BW / 2, B[k][1] + BH / 2];
+["PL", "OBC", "AOCS", "TTC", "TCS"].forEach((k) => {
+  const [x1, y1] = c("EPS"), [x2, y2] = c(k);
+  EX.el("path", { id: "bp-" + k, class: "pwr ex-hidden", d: `M ${x1} ${y1} L ${x1 + 200} ${y1} L ${x1 + 200} ${y2 - 10} L ${x2} ${y2 - 10}` }, "bd");
+});
+["PL", "AOCS", "TTC", "EPS", "TCS"].forEach((k) => {
+  const [x1, y1] = c("OBC"), [x2, y2] = c(k);
+  EX.el("path", { id: "bdl-" + k, class: "dat ex-hidden", d: `M ${x1} ${y1 + 10} L ${x2} ${y2 + 10}` }, "bd");
+});
+Object.keys(B).forEach((k) => box("bd", "b-" + k, B[k][0], B[k][1], BW, BH, k));
+const gr = box("bd", "b-gnd", 960, 350, 240, 64, "ground");
+EX.el("path", { id: "b-rf", class: "dat ex-hidden", d: `M ${c("TTC")[0]} ${c("TTC")[1] + 32} L ${c("TTC")[0]} 450 L 1080 450 L 1080 414`, style: "stroke:var(--ok)" }, "bd");
+EX.el("line", { x1: 60, y1: 476, x2: 100, y2: 476, class: "pwr" }, "bd");
+EX.el("text", { x: 110, y: 482, class: "small muted", label: "leg_p" }, "bd");
+EX.el("line", { x1: 220, y1: 476, x2: 260, y2: 476, class: "dat" }, "bd");
+EX.el("text", { x: 270, y: 482, class: "small muted", label: "leg_d" }, "bd");
+
+// 2. N2 matrix
+const N = ["EPS", "OBC", "AOCS", "TTC", "PL", "STR"];
+const CELL = {
+  EPS: { OBC: "c_pw", AOCS: "c_pw", TTC: "c_pw", PL: "c_pw", STR: "c_bolt" },
+  OBC: { EPS: "c_cmd", AOCS: "c_i2c", TTC: "c_tm", PL: "c_cmd" },
+  AOCS: { EPS: "c_req", OBC: "c_att", TTC: "c_atp", PL: "c_pt", STR: "c_vib" },
+  TTC: { EPS: "c_req", OBC: "c_rx", STR: "c_ant" },
+  PL: { EPS: "c_req", OBC: "c_sci", AOCS: "c_preq", STR: "c_fov" },
+  STR: { AOCS: "c_mnt", TTC: "c_amnt", PL: "c_pmnt" },
+};
+const NX = 80, NY = 64, CW = 186, CH = 62;
+EX.el("text", { x: NX, y: 48, class: "small muted", label: "from" }, "n2");
+N.forEach((r, i) => N.forEach((col, j) => {
+  const x = NX + j * CW, y = NY + i * CH;
+  if (i === j) {
+    const g = EX.el("g", { id: "nd-" + i, class: "diag ex-hidden" }, "n2");
+    EX.el("rect", { x: x + 2, y: y + 2, width: CW - 4, height: CH - 4, rx: 6 }, g);
+    EX.el("text", { x: x + CW / 2, y: y + CH / 2 + 6, "text-anchor": "middle", class: "small", style: "font-weight:600", label: r }, g);
+  } else if (CELL[r][col]) {
+    const g = EX.el("g", { id: `nc-${i}-${j}`, class: "blk ex-hidden" }, "n2");
+    EX.el("rect", { x: x + 2, y: y + 2, width: CW - 4, height: CH - 4, rx: 6 }, g);
+    EX.el("text", { x: x + CW / 2, y: y + CH / 2 + 5, "text-anchor": "middle", class: "small", label: CELL[r][col] }, g);
+  } else {
+    EX.el("rect", { x: x + 2, y: y + 2, width: CW - 4, height: CH - 4, rx: 6, fill: "#191d22" }, "n2");
+  }
+}));
+EX.el("text", { id: "n-wheel", x: NX, y: NY + 6 * CH + 28, class: "small ex-hidden", style: "fill:var(--bad)", label: "wheel" }, "n2");
+EX.el("text", { id: "n-fix", x: NX, y: NY + 6 * CH + 54, class: "small ex-hidden", label: "fix" }, "n2");
+
+// 3. mass waterfall
+const KX = 380, KS = 125; // px per kg
+const SUBS = [["PL", 1.50], ["EPS", 0.75], ["AOCS", 0.55], ["STR", 0.35], ["TTC", 0.25], ["H", 0.15], ["OBC", 0.08], ["TCS", 0.05]];
+const MR = [["m_cbe", 0, 3.68, "acc"], ["m_mev", 3.68, 4.42, "warn"], ["m_sys", 4.42, 5.30, "warn"]];
+MR.forEach(([k, a, b, cls], i) => {
+  const y = 70 + i * 92, g = EX.el("g", { id: "mr-" + i, class: "ex-hidden" }, "mass");
+  EX.el("text", { x: 40, y: y + 30, class: "small", label: k }, g);
+  if (i === 0) {
+    let x = KX;
+    SUBS.forEach(([s, m], j) => {
+      EX.el("rect", { x, y, width: m * KS - 2, height: 44, class: "acc", opacity: j % 2 ? 0.55 : 0.85 }, g);
+      if (m > 0.3) EX.el("text", { x: x + 6, y: y + 28, class: "small", style: "fill:#15191e;font-weight:600", text: s === "STR" ? "STR" : s }, g);
+      x += m * KS;
+    });
+  } else {
+    EX.el("rect", { x: KX + a * KS, y, width: (b - a) * KS, height: 44, class: cls, opacity: 0.8 }, g);
+  }
+  EX.el("text", { x: i === 2 ? KX + 6 * KS + 12 : KX + b * KS + 10, y: y + 30, class: "big mono", text: fmt(b, 2) + " kg" }, g);
+});
+EX.el("line", { id: "m-al", x1: KX + 6 * KS, y1: 50, x2: KX + 6 * KS, y2: 360, class: "alloc ex-hidden" }, "mass");
+EX.el("text", { id: "m-alt", x: KX + 6 * KS - 8, y: 44, class: "small ex-hidden", "text-anchor": "end", label: "m_alloc" }, "mass");
+EX.el("rect", { id: "m-gap", x: KX + 5.30 * KS, y: 254, width: 0.70 * KS, height: 44, fill: "none", stroke: "var(--warn)", "stroke-width": 3, "stroke-dasharray": "5 4", class: "ex-hidden" }, "mass");
+EX.el("text", { id: "m-left", x: 40, y: 420, class: "big ex-hidden", style: "fill:var(--warn)", label: "m_left" }, "mass");
+EX.el("text", { id: "m-thr", x: 40, y: 456, class: "small muted ex-hidden", label: "thr" }, "mass");
+
+// 4. compound margins
+EX.el("text", { x: 40, y: 60, class: "small muted", label: "c_cap" }, "comp");
+[["cA", "1.20 × 1.20", 44, "bad"], ["cC", "1.05 × 1.10", 16, "warn"], ["cD", "≈ 1.05", 5, "ok"]].forEach(([k, f, p, cls], i) => {
+  const y = 90 + i * 120, g = EX.el("g", { id: "cp-" + i, class: "ex-hidden" }, "comp");
+  EX.el("text", { x: 40, y: y + 34, label: k }, g);
+  EX.el("text", { x: 40, y: y + 64, class: "small mono muted", text: f }, g);
+  EX.el("rect", { id: "cpb-" + i, x: 400, y: y + 10, width: 0, height: 56, rx: 4, class: cls, opacity: 0.8 }, g);
+  EX.el("text", { x: 410 + p * 16, y: y + 50, class: "huge mono", text: p + " %" }, g);
+});
+
+// 5. power by mode
+const MC = ["mSafe", "mNom", "mImg", "mDl", "mEcl"];
+const PT = [["OBC", [1.0, 1.0, 1.0, 1.0, 1.0]], ["AOCS", [0.3, 1.5, 2.5, 2.0, 1.5]], ["PL", [0, 0, 3.5, 0, 0]], ["TTC", [0.2, 0.5, 0.5, 6.0, 0.5]], ["TCS", [0.5, 1.0, 0.5, 1.0, 0.5]]];
+const TX = 330, TW = 170;
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "modes" }, "pwr");
+MC.forEach((k, j) => EX.el("text", { id: "ph-" + j, x: TX + j * TW + TW / 2, y: 50, class: "small", "text-anchor": "middle", style: "font-weight:600", label: k }, "pwr"));
+PT.forEach(([s, v], i) => {
+  const y = 64 + i * 52, g = EX.el("g", { id: "pr-" + i, class: "ex-hidden" }, "pwr");
+  EX.el("text", { x: 40, y: y + 30, label: s }, g);
+  v.forEach((w, j) => {
+    EX.el("rect", { x: TX + j * TW + 10, y: y + 6, width: TW - 20, height: 38, rx: 5, fill: w >= 2 ? "#1f3442" : "var(--panel)", stroke: "var(--line)" }, g);
+    EX.el("text", { x: TX + j * TW + TW / 2, y: y + 31, class: "mono", "text-anchor": "middle", text: fmt(w, 1) }, g);
+  });
+});
+const tr = EX.el("g", { id: "pr-tot", class: "ex-hidden" }, "pwr");
+EX.el("text", { x: 40, y: 360, class: "big", label: "tot" }, tr);
+[2.0, 4.0, 8.0, 10.0, 3.5].forEach((w, j) => EX.el("text", { x: TX + j * TW + TW / 2, y: 362, class: "huge mono", "text-anchor": "middle", style: j === 3 || j === 4 ? "fill:var(--warn)" : "", text: fmt(w, 1) }, tr));
+const av = EX.el("g", { id: "p-avg", class: "ex-hidden" }, "pwr");
+EX.el("text", { x: 40, y: 440, class: "big", style: "fill:var(--ok)", label: "avg" }, av);
+EX.el("text", { id: "p-avgn", x: TX + 10, y: 442, class: "huge mono", style: "fill:var(--ok)", text: "" }, av);
+EX.el("text", { x: TX + 200, y: 440, class: "small muted", label: "avg_s" }, av);
+
+function only(...ids) { ["bd", "n2", "mass", "comp", "pwr", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+const grow = (id, w, ms) => { const n = EX.$(id); n.style.transition = `width ${ms}ms ease`; n.setAttribute("width", w); };
+
+EX.scene("blocks", (beat) => {
+  only("bd");
+  ["PL", "EPS", "OBC", "AOCS", "TTC", "TCS", "STR"].forEach((k, i) => beat(0.03 + i * 0.05, () => EX.show("b-" + k)));
+  beat(0.4, () => { EX.mark("b-EPS", "on"); ["PL", "OBC", "AOCS", "TTC", "TCS"].forEach((k) => EX.draw("bp-" + k, 700)); });
+  beat(0.55, () => { EX.mark("b-EPS", "on", false); EX.mark("b-OBC", "on"); ["PL", "AOCS", "TTC", "EPS", "TCS"].forEach((k) => EX.draw("bdl-" + k, 600)); });
+  beat(0.65, () => { EX.show("b-gnd"); EX.draw("b-rf", 600); });
+  beat(0.75, () => note("n1a", "n1b"));
+});
+EX.scene("n2", (beat) => {
+  only("n2");
+  N.forEach((_, i) => beat(0.03 + i * 0.04, () => EX.show("nd-" + i)));
+  N.forEach((r, i) => beat(0.3 + i * 0.05, () => N.forEach((col, j) => { if (i !== j && CELL[r][col]) EX.show(`nc-${i}-${j}`); })));
+  beat(0.62, () => { EX.mark("nc-1-2", "bad"); EX.show("n-wheel"); });
+  beat(0.72, () => EX.show("n-fix"));
+  beat(0.8, () => note("n2a", "n2b"));
+});
+EX.scene("mass", (beat) => {
+  only("mass");
+  MR.forEach((_, i) => beat(0.05 + i * 0.16, () => EX.show("mr-" + i)));
+  beat(0.55, () => { EX.show("m-al"); EX.show("m-alt"); });
+  beat(0.62, () => { EX.show("m-gap"); EX.pulse("m-gap", 2); EX.show("m-left"); EX.show("m-thr"); });
+  beat(0.76, () => note("n3a", "n3b"));
+});
+EX.scene("compound", (beat) => {
+  only("comp");
+  [44, 16, 5].forEach((p, i) => beat(0.05 + i * 0.18, () => { EX.show("cp-" + i); grow("cpb-" + i, p * 16, 900); }));
+  beat(0.7, () => note("n4a", "n4b"));
+});
+EX.scene("power", (beat) => {
+  only("pwr");
+  PT.forEach((_, i) => beat(0.04 + i * 0.07, () => EX.show("pr-" + i)));
+  beat(0.42, () => EX.show("pr-tot"));
+  beat(0.56, () => { EX.show("p-avg"); EX.count("p-avgn", 0, 4.63, 900, (v) => fmt(v, 2) + " W"); });
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>
