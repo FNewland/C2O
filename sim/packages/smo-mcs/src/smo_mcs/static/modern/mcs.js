@@ -770,8 +770,15 @@ function startClocks() {
     // MET label above it (Agent 5 screenshot fix: read "MET MET 000/…")
     setText("met-clock", fmtMET(S.state.met_s).replace(/^MET /, ""));
     const tc = S.state.time_correlation || {};
-    const cuc = fmtCUC(tc.sc_cuc_coarse, tc.sc_cuc_fine, tc.epoch);
-    setText("sc-time-clock", cuc.utc === "—" ? "—" : cuc.utc.slice(11));
+    // The on-board clock NOW: ground time plus the measured offset (taken at
+    // the last OBDH sample's reception). Showing the raw sample made this
+    // clock jump once per SID 4 period and lag by up to 8 s.
+    if (Number.isFinite(tc.offset_s) && Math.abs(tc.offset_s) < 1e8) {
+      setText("sc-time-clock", fmtUTC(new Date(simNowMs() + tc.offset_s * 1000), { seconds: true }));
+    } else {
+      const cuc = fmtCUC(tc.sc_cuc_coarse, tc.sc_cuc_fine, tc.epoch);
+      setText("sc-time-clock", cuc.utc === "—" ? "—" : cuc.utc.slice(11));
+    }
     updateNextCard();     // countdowns re-derive every second on simNow()
   }, 1000);
   // The PUS panels' fetched inputs -- S12 monitor definitions, S19 rules, the
