@@ -148,7 +148,7 @@ function emit(sid) {
     .finished.then(() => d.remove());
 }
 function flow(sid, iv, k) { emit(sid); flows.push(setInterval(() => emit(sid), iv * k)); }
-function laneDim(except) { SIDS.forEach(([sid]) => EX.dim("sid" + sid, !except.includes(sid))); }
+function laneDim(except) { SIDS.forEach(([sid]) => EX.dim("sid" + sid, except.length > 0 && !except.includes(sid))); }
 function note(a, b) { EX.text("hk-note-a", a); EX.text("hk-note-b", b); EX.show("hk-note"); }
 
 function only(...ids) { ["pkt", "pri", "sec", "svcs", "hk", "hk-note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
