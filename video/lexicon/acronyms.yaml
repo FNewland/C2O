@@ -105,8 +105,26 @@ PRR:   {en: "preliminary requirements review", fr: "revue préliminaire des exig
 SRR:   {en: "system requirements review", fr: "revue des exigences système", short: {en: S-R-R, fr: S-R-R}, kind: letters, expand: true}
 MCR:   {en: "mission concept review", fr: "revue du concept de mission", short: {en: M-C-R, fr: M-C-R}, kind: letters, expand: true}
 CBE:   {en: "current best estimate", fr: "meilleure estimation actuelle", short: {en: C-B-E, fr: C-B-E}, kind: letters, expand: true}
+QR:    {en: "qualification review", fr: "revue de qualification", short: {en: Q-R, fr: Q-R}, kind: letters, expand: true}
+AR:    {en: "acceptance review", fr: "revue de recette", short: {en: A-R, fr: A-R}, kind: letters, expand: true}
 TRL:   {en: "technology readiness level", fr: "niveau de maturité technologique", short: {en: T-R-L, fr: T-R-L}, kind: letters, expand: true}
 ConOps: {en: "concept of operations", fr: "concept d’opérations", short: {en: con-ops, fr: con-ops}, kind: word, expand: true}
+
+
+# --- Canadian space landscape (V-DES-01) ------------------------------------
+CSA:   {en: "Canadian Space Agency", fr: "Agence spatiale canadienne", short: {en: C-S-A, fr: A-S-C}, kind: letters, expand: true, note: "FR on screen and in speech: ASC"}
+ASC:   {en: "Canadian Space Agency", fr: "Agence spatiale canadienne", short: {en: "-", fr: A-S-C}, kind: letters, expand: true}
+ISED:  {en: "Innovation, Science and Economic Development Canada", fr: "Innovation, Sciences et Développement économique Canada", short: {en: I-S-E-D, fr: I-S-D-E}, kind: letters, expand: true}
+ISDE:  {en: "Innovation, Science and Economic Development Canada", fr: "Innovation, Sciences et Développement économique Canada", short: {en: "-", fr: I-S-D-E}, kind: letters, expand: true}
+ITU:   {en: "International Telecommunication Union", fr: "Union internationale des télécommunications", short: {en: I-T-U, fr: U-I-T}, kind: letters, expand: true}
+RSSSA: {en: "Remote Sensing Space Systems Act", fr: "Loi sur les systèmes de télédétection spatiale", short: {en: R-S-S-S-A, fr: L-S-T-S}, kind: letters, expand: true}
+GAC:   {en: "Global Affairs Canada", fr: "Affaires mondiales Canada", short: {en: G-A-C, fr: A-M-C}, kind: letters, expand: true}
+PSPC:  {en: "Public Services and Procurement Canada", fr: "Services publics et Approvisionnement Canada", short: {en: P-S-P-C, fr: S-P-A-C}, kind: letters, expand: true}
+NSERC: {en: "Natural Sciences and Engineering Research Council", fr: "Conseil de recherches en sciences naturelles et en génie", short: {en: N-SERC, fr: C-R-S-N-G}, kind: word, expand: true}
+CFI:   {en: "Canada Foundation for Innovation", fr: "Fondation canadienne pour l’innovation", short: {en: C-F-I, fr: F-C-I}, kind: letters, expand: true}
+NRC:   {en: "National Research Council", fr: "Conseil national de recherches", short: {en: N-R-C, fr: C-N-R-C}, kind: letters, expand: true}
+STDP:  {en: "Space Technology Development Program", fr: "Programme de développement des technologies spatiales", short: {en: S-T-D-P, fr: P-D-T-S}, kind: letters, expand: true}
+ISS:   {en: "International Space Station", fr: "Station spatiale internationale", short: {en: I-S-S, fr: I-S-S}, kind: letters, expand: true}
 
 # --- deliberately not expanded ----------------------------------------------
 GO:       {expand: false, note: "poll answer"}

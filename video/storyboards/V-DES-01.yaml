@@ -1,0 +1,165 @@
+# Design concept — the Canadian space landscape a university mission works in:
+# the agency, the industry, the niche strategy, and the regulators and launch
+# route a CubeSat meets. Animated page video/explainers/landscape.html.
+# Whole design team. Facts checked against primary sources on 2026-11-06:
+# RSSSA administered by Global Affairs Canada; Controlled Goods Program by
+# PSPC; Bill C-28 (Canadian Space Launch Act) at second reading on
+# 2026-10-23; sector revenue and jobs from the CSA State of the Canadian
+# Space Sector Report 2025 (2024 data). Textbook ch. 2 corrected to match.
+id: V-DES-01
+week: 1
+audience: all
+title:
+  en: "The Canadian space landscape"
+  fr: "Le paysage spatial canadien"
+summary:
+  en: "Who is who in Canadian space and what that means for a university mission: the Canadian Space Agency, the industry tiers and Canada's niche strategy, where funding comes from, the regulators a CubeSat meets, and how it gets to orbit."
+  fr: "Qui fait quoi dans le spatial canadien, et ce que cela implique pour une mission universitaire : l’Agence spatiale canadienne, les niveaux de l’industrie et la stratégie de niche du Canada, les sources de financement, les organismes de réglementation qu’un CubeSat rencontre, et le chemin vers l’orbite."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/02_canadian_ecosystem.md
+  - https://www.canada.ca/en/space-agency/news/2026/05/state-of-the-canadian-space-sector-report-2025-strength-and-growth-of-canadas-space-economy.html
+  - https://international.gc.ca/world-monde/issues_development-enjeux_developpement/peace_security-paix_securite/RSSSA-guide-LSTS.aspx?lang=eng
+  - https://openparliament.ca/bills/45-1/C-28/
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/landscape.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: agency
+    title: {en: "The agency", fr: "L’agence"}
+    say:
+      en: >-
+        Every Canadian space mission sits in a landscape. At its centre is the Canadian Space
+        Agency, the CSA, in Saint-Hubert, Quebec. It sets space policy, runs the national
+        programmes and funds much of the work. Canada has no launcher of its own, so it works
+        through international partners: the space station, the Artemis lunar programme, and
+        data agreements with the European Space Agency.
+      fr: >-
+        Toute mission spatiale canadienne s’inscrit dans un paysage. Au centre se trouve
+        l’Agence spatiale canadienne, l’ASC, à Saint-Hubert, au Québec. Elle fixe la politique
+        spatiale, mène les programmes nationaux et finance une grande partie du travail. Le
+        Canada n’a pas de lanceur à lui : il travaille avec des partenaires internationaux, la
+        station spatiale, le programme lunaire Artemis, et des accords de données avec l’Agence
+        spatiale européenne.
+    do:
+      - js: "EX.play('agency', ${say})"
+
+  - id: industry
+    title: {en: "The industry", fr: "L’industrie"}
+    say:
+      en: >-
+        The industry comes in tiers. Prime contractors integrate whole systems and run
+        constellations. Subsystem suppliers build the units. Small companies and start-ups bring
+        niche technology, data and services. And universities do research and train the people
+        who will work there, often by building small satellites. In 2024 the sector earned about
+        five billion dollars and supported more than twenty-eight thousand jobs.
+      fr: >-
+        L’industrie s’organise en niveaux. Les maîtres d’œuvre intègrent des systèmes complets
+        et exploitent des constellations. Les fournisseurs de sous-systèmes construisent les
+        équipements. Les petites entreprises et les jeunes pousses apportent des technologies de
+        niche, des données et des services. Et les universités font de la recherche et forment
+        ceux qui y travailleront, souvent en construisant de petits satellites. En 2024, le
+        secteur a généré environ cinq milliards de dollars et soutenu plus de vingt-huit mille
+        emplois.
+    do:
+      - js: "EX.play('industry', ${say})"
+
+  - id: niche
+    title: {en: "Niche excellence", fr: "L’excellence de niche"}
+    say:
+      en: >-
+        Canada does not try to do everything. It builds world-class capability in a few
+        domains, space robotics, radar Earth observation, instruments and small satellites, and
+        trades those contributions for access to much larger programmes. The robotic arms on the
+        space station are the classic example. For your mission, it means partners and suppliers
+        in exactly those fields are close at hand.
+      fr: >-
+        Le Canada ne cherche pas à tout faire. Il développe une capacité de premier plan dans
+        quelques domaines, la robotique spatiale, l’observation radar de la Terre, les
+        instruments et les petits satellites, et échange ces contributions contre l’accès à des
+        programmes bien plus grands. Les bras robotiques de la station spatiale en sont l’exemple
+        type. Pour votre mission, cela veut dire des partenaires et des fournisseurs tout proches,
+        justement dans ces domaines.
+    do:
+      - js: "EX.play('niche', ${say})"
+
+  - id: mission
+    title: {en: "Where your mission fits", fr: "La place de votre mission"}
+    say:
+      en: >-
+        Now put a university CubeSat in the middle. It buys units and services from the
+        industry, and its money comes through a few routes: Canadian Space Agency grants and
+        technology development programmes, research council and infrastructure funding, and,
+        for companies, the National Research Council's support for small firms. Each route has
+        its own calendar, and that calendar shapes your schedule.
+      fr: >-
+        Placez maintenant un CubeSat universitaire au milieu. Il achète équipements et services à
+        l’industrie, et son financement passe par quelques voies : les subventions et les
+        programmes de développement technologique de l’Agence spatiale canadienne, les fonds des
+        conseils de recherche et d’infrastructure, et, pour les entreprises, l’aide du Conseil
+        national de recherches aux petites entreprises. Chaque voie a son calendrier, et ce
+        calendrier façonne le vôtre.
+    do:
+      - js: "EX.play('mission', ${say})"
+
+  - id: regulators
+    title: {en: "The regulators", fr: "Les organismes de réglementation"}
+    say:
+      en: >-
+        Canada has no single space act. Your mission meets several regulators, each with its own
+        law. Innovation, Science and Economic Development Canada licenses your radio, and files
+        your frequencies with the International Telecommunication Union. Global Affairs Canada
+        licenses any satellite that images the Earth, and issues export permits. Public Services
+        and Procurement Canada runs the controlled goods program. Start early: spectrum
+        coordination alone can take years.
+      fr: >-
+        Le Canada n’a pas de loi spatiale unique. Votre mission rencontre plusieurs organismes,
+        chacun avec sa loi. Innovation, Sciences et Développement économique Canada délivre la
+        licence radio et dépose vos fréquences auprès de l’Union internationale des
+        télécommunications. Affaires mondiales Canada délivre la licence de tout satellite qui
+        image la Terre, ainsi que les licences d’exportation. Services publics et
+        Approvisionnement Canada gère le programme des marchandises contrôlées. Commencez tôt :
+        la coordination des fréquences peut à elle seule prendre des années.
+    do:
+      - js: "EX.play('regulators', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Your CubeSat carries a camera that images the Earth. Which licence does that add, and from whom?"
+        fr: "Votre CubeSat embarque une caméra qui image la Terre. Quelle licence cela ajoute-t-il, et auprès de qui ?"
+      options:
+        - text: {en: "An operating licence under the Remote Sensing Space Systems Act, from Global Affairs Canada.", fr: "Une licence d’exploitation au titre de la Loi sur les systèmes de télédétection spatiale, auprès d’Affaires mondiales Canada."}
+          correct: true
+          why: {en: "Operating an Earth-imaging system from Canada needs an RSSSA licence; Global Affairs administers the Act.", fr: "Exploiter depuis le Canada un système qui image la Terre exige une licence LSTS ; Affaires mondiales applique la loi."}
+        - text: {en: "A second radio licence from ISED.", fr: "Une seconde licence radio auprès d’ISDE."}
+          why: {en: "The radio licence covers the transmitters, whatever the payload.", fr: "La licence radio couvre les émetteurs, quelle que soit la charge utile."}
+        - text: {en: "None: imaging is only regulated for commercial missions.", fr: "Aucune : l’imagerie n’est réglementée que pour les missions commerciales."}
+          why: {en: "The Act applies to anyone operating such a system from Canada, university missions included.", fr: "La loi s’applique à quiconque exploite un tel système depuis le Canada, missions universitaires comprises."}
+
+  - id: launch
+    title: {en: "Getting to orbit", fr: "Rejoindre l’orbite"}
+    say:
+      en: >-
+        Last, the ride. Canadian satellites launch abroad, on a foreign vehicle, under that
+        country's rules, and the export permits must be in hand before the spacecraft ships. A
+        Canadian Space Launch Act, which would let Transport Canada license launches from
+        Canadian soil, was introduced in April 2026 and is still before Parliament. Keep an eye
+        on it: it may change the options for your team.
+      fr: >-
+        Reste le voyage. Les satellites canadiens partent de l’étranger, sur un lanceur étranger,
+        sous les règles de ce pays, et les licences d’exportation doivent être obtenues avant
+        l’expédition du satellite. Une loi canadienne sur les lancements spatiaux, qui
+        permettrait à Transports Canada d’autoriser des lancements depuis le sol canadien, a été
+        déposée en avril 2026 et est toujours devant le Parlement. Suivez-la : elle pourrait
+        changer les options de votre équipe.
+    do:
+      - js: "EX.play('launch', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "List the licences and permits your own mission will need, who issues each one, and at which review gate you should have applied."
+        fr: "Dressez la liste des licences et autorisations dont votre mission aura besoin, de l’organisme qui délivre chacune, et de la revue à laquelle vous devriez en avoir fait la demande."

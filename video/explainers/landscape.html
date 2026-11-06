@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Canadian space landscape</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .node rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .node.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .node.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .node.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .link { stroke: var(--line); stroke-width: 2; fill: none; }
+  .link.on { stroke: var(--accent); stroke-width: 2.5; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Canadian space ecosystem and regulators</title>
+  <g id="links"></g>
+  <g id="nodes"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "The Canadian space landscape",
+    csa: "Canadian Space Agency", csa_s: "policy, programmes, funding",
+    prime: "Primes", prime_s: "integration, constellations",
+    tier2: "Subsystem suppliers", tier2_s: "units, components, ground systems",
+    sme: "SMEs and start-ups", sme_s: "niche technology, data, services",
+    acad: "Universities", acad_s: "research, training, small satellites",
+    intl: "International partners", intl_s: "ISS, Artemis, ESA data, launch",
+    mission: "Your mission", mission_s: "a university CubeSat",
+    ised: "ISED", ised_s: "radio spectrum licence (and the ITU filing)",
+    gac: "Global Affairs Canada", gac_s: "RSSSA licence if it images · export permits",
+    pspc: "PSPC", pspc_s: "controlled goods, if you handle any",
+    tc: "Transport Canada", tc_s: "launch from Canada: Bill C-28, not yet law",
+    launch: "Launch abroad", launch_s: "a foreign vehicle and its rules",
+    fund: "Funding routes", fund_s: "CSA grants and STDP · NSERC, CFI · NRC IRAP",
+    n1a: "About $5B in revenue and more than 28,000 jobs in 2024.",
+    n1b: "CSA, State of the Canadian Space Sector Report 2025",
+    n2a: "Niche excellence: robotics, radar Earth observation, instruments, small satellites.",
+    n2b: "Canada trades world-class contributions for access to larger programmes (textbook § 2.4.2).",
+    n3a: "No single space act: each regulator has its own statute and its own lead time.",
+    n3b: "Spectrum coordination can take years. Start at the preliminary design review, not after it (textbook § 2.7).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 2 · facts as of November 2026 · company names are examples, not endorsements",
+  },
+  fr: {
+    kicker: "Notion", title: "Le paysage spatial canadien",
+    csa: "Agence spatiale canadienne", csa_s: "politique, programmes, financement",
+    prime: "Maîtres d’œuvre", prime_s: "intégration, constellations",
+    tier2: "Fournisseurs de sous-systèmes", tier2_s: "équipements, composants, sol",
+    sme: "PME et jeunes pousses", sme_s: "niches, données, services",
+    acad: "Universités", acad_s: "recherche, formation, petits satellites",
+    intl: "Partenaires internationaux", intl_s: "ISS, Artemis, données ESA, lancement",
+    mission: "Votre mission", mission_s: "un CubeSat universitaire",
+    ised: "ISDE", ised_s: "licence radio (et le dépôt à l’UIT)",
+    gac: "Affaires mondiales Canada", gac_s: "licence LSTS (imagerie) · exportations",
+    pspc: "SPAC", pspc_s: "marchandises contrôlées, le cas échéant",
+    tc: "Transports Canada", tc_s: "lancer du Canada : projet C-28, pas en vigueur",
+    launch: "Lancement à l’étranger", launch_s: "un lanceur étranger et ses règles",
+    fund: "Sources de financement", fund_s: "ASC, PDTS · CRSNG, FCI · PARI-CNRC",
+    n1a: "Environ 5 G$ de revenus et plus de 28 000 emplois en 2024.",
+    n1b: "ASC, Rapport sur l’état du secteur spatial canadien 2025",
+    n2a: "Excellence de niche : robotique, observation radar de la Terre, instruments, petits satellites.",
+    n2b: "Le Canada échange des contributions de premier plan contre l’accès à de plus grands programmes (manuel § 2.4.2).",
+    n3a: "Pas de loi spatiale unique : chaque organisme a sa loi et ses propres délais.",
+    n3b: "La coordination des fréquences peut prendre des années. Commencez dès la revue de conception préliminaire (manuel § 2.7).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 2 · faits à novembre 2026 · les noms d’entreprises sont des exemples, pas des recommandations",
+  },
+});
+
+// layout: [id, x, y, w]
+const N = {
+  csa: [465, 30, 350], prime: [40, 150, 330], tier2: [40, 240, 330], sme: [40, 330, 330], acad: [40, 420, 330],
+  intl: [890, 30, 350], mission: [465, 260, 350],
+  ised: [890, 150, 350], gac: [890, 240, 350], pspc: [890, 330, 350], tc: [890, 420, 350],
+  launch: [465, 420, 350], fund: [465, 130, 350],
+};
+const H = 70;
+for (const [id, [x, y, w]] of Object.entries(N)) {
+  const g = EX.el("g", { id: "n-" + id, class: "node ex-hidden" }, "nodes");
+  EX.el("rect", { x, y, width: w, height: H, rx: 10 }, g);
+  EX.el("text", { x: x + 14, y: y + 30, label: id }, g);
+  EX.el("text", { x: x + 14, y: y + 54, class: "small muted", label: id + "_s" }, g);
+}
+const mid = (id, side) => { const [x, y, w] = N[id]; return side === "l" ? [x, y + H / 2] : side === "r" ? [x + w, y + H / 2] : side === "t" ? [x + w / 2, y] : [x + w / 2, y + H]; };
+const LINKS = [["csa", "b", "fund", "t"], ["fund", "b", "mission", "t"], ["prime", "r", "mission", "l"], ["tier2", "r", "mission", "l"], ["sme", "r", "mission", "l"], ["acad", "r", "mission", "l"],
+  ["mission", "r", "ised", "l"], ["mission", "r", "gac", "l"], ["mission", "r", "pspc", "l"], ["mission", "r", "tc", "l"], ["mission", "b", "launch", "t"], ["csa", "r", "intl", "l"]];
+LINKS.forEach(([a, sa, b, sb], i) => {
+  const [x1, y1] = mid(a, sa), [x2, y2] = mid(b, sb);
+  const p = EX.el("path", { id: `l-${a}-${b}`, class: "link ex-hidden", d: `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}` }, "links");
+});
+const showN = (...ids) => ids.forEach((id) => EX.show("n-" + id));
+const showL = (...pairs) => pairs.forEach((p) => EX.draw("l-" + p, 700));
+const markN = (cls, ...ids) => ids.forEach((id) => EX.mark("n-" + id, cls));
+function clear() { Object.keys(N).forEach((id) => ["on", "warn", "ok"].forEach((c) => EX.mark("n-" + id, c, false))); EX.hide("note", 150); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("agency", (beat) => {
+  clear();
+  beat(0.05, () => showN("csa")); beat(0.15, () => markN("on", "csa"));
+  beat(0.5, () => { showN("intl"); showL("csa-intl"); });
+});
+EX.scene("industry", (beat) => {
+  clear();
+  ["prime", "tier2", "sme", "acad"].forEach((id, i) => beat(0.06 + i * 0.12, () => { showN(id); markN("on", id); }));
+  beat(0.62, () => note("n1a", "n1b"));
+});
+EX.scene("niche", (beat) => {
+  clear(); markN("on", "csa", "intl"); showL("csa-intl");
+  beat(0.1, () => note("n2a", "n2b"));
+});
+EX.scene("mission", (beat) => {
+  clear();
+  beat(0.05, () => { showN("mission"); markN("ok", "mission"); });
+  beat(0.25, () => showL("prime-mission", "tier2-mission", "sme-mission", "acad-mission"));
+  beat(0.55, () => { showN("fund"); showL("csa-fund", "fund-mission"); markN("on", "fund"); });
+});
+EX.scene("regulators", (beat) => {
+  clear(); markN("ok", "mission");
+  [["ised", "mission-ised"], ["gac", "mission-gac"], ["pspc", "mission-pspc"]].forEach(([id, l], i) => beat(0.06 + i * 0.2, () => { showN(id); showL(l); markN("on", id); }));
+  beat(0.7, () => note("n3a", "n3b"));
+});
+EX.scene("launch", (beat) => {
+  clear(); markN("ok", "mission");
+  beat(0.05, () => { showN("launch"); showL("mission-launch"); markN("on", "launch"); });
+  beat(0.4, () => { showN("tc"); showL("mission-tc"); markN("warn", "tc"); });
+});
+</script>
+</body>
+</html>

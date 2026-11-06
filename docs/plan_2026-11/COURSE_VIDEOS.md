@@ -33,13 +33,15 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-04 | 5 | LEOP-001 Step 5a (LOW refused, beacon mode off, LOW) and LEOP-002 health check | WB-5.5-L002 q1/q2 | rendered EN+FR from `card-LEOP-001`, Steps 2–5 sent through the MCS API in setup |
 | V-OPS-05 | 5 | LEOP-004: wings deployed, read on the EPS power flow and the orbit-average margin | card LEOP-004 | rendered EN+FR from `card-LEOP-004` |
 | V-OPS-06 | 5 | LEOP-007: AOCS line, SID 2, magnetometer and magnetorquers before DETUMBLE | WB-5.5-L007 q3/q4/q5 | rendered EN+FR from `card-LEOP-007` |
-| V-OPS-07 | 5 | LEOP-005: starting rates, the automatic COARSE_SUN handover live, sun hold, power | WB-5.5-L005 q1/q3/q4 | dry-run only: held until COARSE_SUN holds the Sun ([AOCS_COARSE_SUN_MTQ_ONLY.md](AOCS_COARSE_SUN_MTQ_ONLY.md)) |
+| V-OPS-07 | 5 | LEOP-005: starting rates, the automatic COARSE_SUN handover live, sun hold, power | WB-5.5-L005 q1/q3/q4 | released 2026-11-06: the AOCS fix holds the Sun ([AOCS_COARSE_SUN_MTQ_ONLY.md](AOCS_COARSE_SUN_MTQ_ONLY.md)) |
 | V-OPS-08 | 5 | LEOP-006: unset clock, offset with light time, set from the ground, residual | WB-5.5-L006 q2/q3/q5 | rendered EN+FR from `card-LEOP-006` |
-| V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | dry-run only: held for the same reason (0x0217 ~60° HH alarm on screen) |
+| V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | released 2026-11-06 (sun hold ~12°, no attitude alarm in COARSE_SUN) |
 | V-CON-06 | 4 | Concept: a telecommand's life — acceptance checks, S1 1,1/1,2/1,3/1,7/1,8, failure notice, deferred completion, completed ≠ verified | — (team) | rendered EN+FR (animated page `video/explainers/tc-life.html`); check EN 0.92, FR 0.85 |
 | V-CON-05 | 4 | Concept: CCSDS packet, primary and PUS headers, APID 0x002 → 0x001, services, HK SIDs, requested vs enabled, powered ≠ reporting | — (team) | rendered EN+FR (`packets.html`); check EN 0.90, FR 0.81 |
 | V-CON-04 | 7 | Concept: FDIR hierarchy, then S12 → S5 → S19 rule 2001 → S8 desaturation → S1 → TM(12,10) | — (team, deeper for fdir_systems) | rendered EN+FR (`fdir.html`); check EN 0.95, FR 0.91; nominal momentum chain, no scored recovery |
 | V-CON-02 | 6 | Concept: energy balance through one orbit — eclipse, generation, load, SoC, orbit-average margin, the eclipse trap | card LEOP-004 (team) | rendered EN+FR (`energy.html`, one orbit from the production EPS model: `explainers/data/gen_energy_orbit.py`); check EN 0.94, FR 0.88 |
+| V-DES-01 | 1 | Design concept: the Canadian space landscape — CSA, industry tiers, niche strategy, funding routes, regulators (ISED/ITU, GAC RSSSA and export, PSPC), launch abroad and Bill C-28 | — (whole design team) | written 2026-11-06 (`landscape.html`); facts checked against primary sources; textbook ch. 2 corrected |
+| V-DES-02 | 1 | Design concept: the SE process — sequential vs concurrent, the V and traceability, ECSS phases and gates, margins by phase (Table 8.3), concurrent design | — (whole design team) | written 2026-11-06 (`seprocess.html`) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
@@ -61,7 +63,7 @@ Concept explainers (2026-11-06): `video/explainers/` holds small bilingual SVG p
 a storyboard step runs `js: "EX.play('scene', ${say})"`, where `${say}` is that step's
 narration length, so each scene is paced to its own narration. Same pipeline, captions, H5P.
 
-**COM card videos are held (2026-11-06).** At `card-COM-002` (COARSE_SUN) the attitude
+**COM card videos (2026-11-06, updated).** The AOCS model is fixed and `card_breakpoints.py` now lets the attitude settle before each save, so the COM breakpoints are clean (COM-007: 0.2°). Original note: At `card-COM-002` (COARSE_SUN) the attitude
 error hunts with a red alarm on screen, as in LEOP-005. At `card-COM-007` (wheels, NOMINAL)
 the error starts at ~25° after the breakpoint loads and then oscillates between 0.3° and
 2.5°: `aocs.att_error` red alarms (> 2°) come and go, so every COM video would show an

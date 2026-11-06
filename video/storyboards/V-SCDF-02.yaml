@@ -17,7 +17,8 @@ ties:
   decisions: [D-2.4-MASS, D-2.4-POWER]
 sources:
   - design/tests/test_api/diagram_seed.py (the EOSAT-1-like study)
-  - design/configs/margin_policy.yaml (C2O default ladder 25 / 20 / 20 / 10 %)
+  - design/configs/margin_policy.yaml (textbook Table 8.3 ladder: 20 / 15 / 10 %)
+  - design/docs/oer/chapters/08_architecture_interfaces_budgets.md (§ 8.4.2, Table 8.3)
 
 setup:
   - python: {call: "video/c2ovideo/helpers.py:seed_spacecdf_eosat", app: spacecdf, save: study}
@@ -34,15 +35,15 @@ steps:
         Open the Budget tab. The bar is the current best estimate of the mass. The hatched part
         is the maturity margin: each component carries one that depends on how well it is known,
         from a catalogue item already flown to a new design. On top of that comes the system
-        margin, insurance the team holds as a whole: twenty-five percent at this first review,
-        the mission definition review, MDR, by the C2O default.
+        margin, insurance the team holds as a whole: twenty percent at this first review, the
+        mission definition review, MDR, as in Table 8.3 of the textbook.
       fr: >-
         Ouvrez l’onglet Bilans. La barre est la meilleure estimation actuelle de la masse. La
         partie hachurée est la marge de maturité : chaque composant en porte une qui dépend de
         sa connaissance, d’un article de catalogue déjà en vol à une conception nouvelle.
         Par-dessus s’ajoute la marge système, une assurance que l’équipe détient dans son
-        ensemble : vingt-cinq pour cent à cette première revue, la revue de définition de la
-        mission, la MDR, selon la valeur par défaut de C2O.
+        ensemble : vingt pour cent à cette première revue, la revue de définition de la
+        mission, la MDR, comme dans le tableau 8.3 du manuel.
     do:
       - click: {role: tab, name: Budget}
       - wait: 1.0
@@ -52,13 +53,13 @@ steps:
       type: multichoice
       worksheet: LW-2.4/A
       text:
-        en: "The system margin is 25 % at the mission definition review (MDR). What happens to it at later reviews?"
-        fr: "La marge système est de 25 % à la revue de définition de la mission (MDR). Que devient-elle aux revues suivantes ?"
+        en: "The system margin is 20 % at the mission definition review (MDR). What happens to it at later reviews?"
+        fr: "La marge système est de 20 % à la revue de définition de la mission (MDR). Que devient-elle aux revues suivantes ?"
       options:
-        - text: {en: "It shrinks as the estimates mature: 20 % at the preliminary design review (PDR), 10 % at the critical design review (CDR).", fr: "Elle diminue à mesure que les estimations mûrissent : 20 % à la revue de conception préliminaire (PDR), 10 % à la revue critique de conception (CDR)."}
+        - text: {en: "It shrinks as the estimates mature: 15 % at the preliminary design review (PDR), 10 % at the critical design review (CDR).", fr: "Elle diminue à mesure que les estimations mûrissent : 15 % à la revue de conception préliminaire (PDR), 10 % à la revue critique de conception (CDR)."}
           correct: true
-          why: {en: "The C2O ladder is 25 / 20 / 20 / 10 % (MDR; PRR–SRR, the preliminary and system requirements reviews; PDR; CDR).", fr: "L’échelle C2O est 25 / 20 / 20 / 10 % (MDR ; PRR–SRR, la revue préliminaire des exigences et la revue des exigences système ; PDR ; CDR)."}
-        - text: {en: "It stays at 25 % until launch.", fr: "Elle reste à 25 % jusqu’au lancement."}
+          why: {en: "Table 8.3: 20 % in Phases 0 and A (MDR, PRR), 15 % in Phase B (SRR, PDR), 10 % at CDR, 5 % in Phase D.", fr: "Tableau 8.3 : 20 % en phases 0 et A (MDR, PRR), 15 % en phase B (SRR, PDR), 10 % à la CDR, 5 % en phase D."}
+        - text: {en: "It stays at 20 % until launch.", fr: "Elle reste à 20 % jusqu’au lancement."}
           why: {en: "Margins are released as uncertainty falls.", fr: "Les marges sont libérées à mesure que l’incertitude baisse."}
         - text: {en: "It grows, because more equipment is added later.", fr: "Elle augmente, car on ajoute de l’équipement plus tard."}
           why: {en: "Added equipment raises the estimate, not the margin.", fr: "L’équipement ajouté augmente l’estimation, pas la marge."}
@@ -86,13 +87,15 @@ steps:
     say:
       en: >-
         The Power view adds two numbers that matter: the orbit average, the power averaged over
-        sunlight and eclipse, which sizes the solar array and the energy balance, and the peak, which sizes the power distribution. Both
+        sunlight and eclipse, which sets the energy balance, and the peak, which sizes the power
+        distribution. The solar array itself is sized on the worst sunlit mode. All of them
         come from the operating modes. Record why you chose those modes and that margin: that
         is decision D two point four, Power.
       fr: >-
         La vue Puissance ajoute deux chiffres essentiels : la moyenne orbitale, la puissance
-        moyennée sur l’ensoleillement et l’éclipse, qui dimensionne le générateur solaire et le bilan d’énergie, et la crête, qui dimensionne la
-        distribution de puissance. Les deux viennent des modes de fonctionnement. Consignez
+        moyennée sur l’ensoleillement et l’éclipse, qui fixe le bilan d’énergie, et la crête, qui
+        dimensionne la distribution de puissance. Le générateur solaire, lui, se dimensionne sur
+        le mode ensoleillé le plus exigeant. Tous viennent des modes de fonctionnement. Consignez
         pourquoi vous avez choisi ces modes et cette marge : c’est la décision D deux point
         quatre, Puissance.
     do:

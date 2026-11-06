@@ -1,0 +1,142 @@
+# Design concept — the systems engineering process: why sequential design fails
+# late, the V and traceability, the ECSS phases and their review gates, the
+# system margin released phase by phase (textbook Table 8.3, now also
+# SpaceCDF's ladder), and concurrent design on one shared model.
+# Animated page video/explainers/seprocess.html. Whole design team.
+id: V-DES-02
+week: 1
+audience: all
+title:
+  en: "The systems engineering process"
+  fr: "Le processus d’ingénierie système"
+summary:
+  en: "How a space mission is engineered: why late problems cost the most, the V and its traceability, the lifecycle phases and their review gates, why margins shrink as a design matures, and how concurrent design puts every discipline on one shared model."
+  fr: "Comment on conçoit une mission spatiale : pourquoi les problèmes tardifs coûtent le plus, le V et sa traçabilité, les phases du cycle de vie et leurs revues, pourquoi les marges diminuent à mesure que la conception mûrit, et comment la conception concourante réunit toutes les disciplines sur un seul modèle partagé."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/01_concurrent_design.md (§ 1.1–1.5)
+  - design/docs/oer/chapters/08_architecture_interfaces_budgets.md (§ 8.4.2, Table 8.3)
+  - design/configs/margin_policy.yaml (system_margin_ladder)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/seprocess.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: sequential
+    title: {en: "Why late is expensive", fr: "Pourquoi tard coûte cher"}
+    say:
+      en: >-
+        For decades spacecraft were designed one discipline after another: the payload team
+        finished and handed over to power, then attitude, then communications, and so on. Each
+        handover hid assumptions. Problems surfaced late, at integration or at a review, and the
+        cost of fixing an error grows roughly tenfold with every phase it survives. An error
+        found in orbit can cost a thousand times what it would have cost at the concept stage.
+      fr: >-
+        Pendant des décennies, on a conçu les satellites une discipline après l’autre : l’équipe
+        charge utile terminait et transmettait à l’énergie, puis à l’attitude, puis aux
+        télécommunications, et ainsi de suite. Chaque transmission cachait des hypothèses. Les
+        problèmes apparaissaient tard, à l’intégration ou à une revue, et le coût de correction
+        d’une erreur est multiplié par dix environ à chaque phase qu’elle traverse. Une erreur
+        découverte en orbite peut coûter mille fois ce qu’elle aurait coûté au stade du concept.
+    do:
+      - js: "EX.play('sequential', ${say})"
+
+  - id: vee
+    title: {en: "The V and traceability", fr: "Le V et la traçabilité"}
+    say:
+      en: >-
+        Systems engineering organises the work as a V. Down the left side you decompose: the
+        mission need, then requirements, architecture, subsystems and components. Up the right
+        side you integrate and verify, at the same levels, in reverse. The V is a map, not a
+        timeline: every row on the left has its check on the right. Each requirement names how
+        it will be verified, by analysis, test, inspection or review. That pairing is
+        traceability.
+      fr: >-
+        L’ingénierie système organise le travail en V. En descendant à gauche, on décompose : le
+        besoin de mission, puis les exigences, l’architecture, les sous-systèmes et les
+        composants. En remontant à droite, on intègre et on vérifie, aux mêmes niveaux, dans
+        l’ordre inverse. Le V est une carte, pas un calendrier : chaque ligne de gauche a sa
+        vérification à droite. Chaque exigence dit comment elle sera vérifiée, par analyse,
+        essai, inspection ou revue. Ce couplage, c’est la traçabilité.
+    do:
+      - js: "EX.play('vee', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "A requirement says the battery shall hold 120 Wh at end of life. What must it have before the design can be called traceable?"
+        fr: "Une exigence dit que la batterie doit contenir 120 Wh en fin de vie. Que lui faut-il pour que la conception soit dite traçable ?"
+      options:
+        - text: {en: "A verification method, and the activity on the right of the V that will carry it out.", fr: "Une méthode de vérification, et l’activité à droite du V qui la réalisera."}
+          correct: true
+          why: {en: "Traceability pairs each requirement with how and where it will be verified.", fr: "La traçabilité associe chaque exigence à la façon et à l’endroit où elle sera vérifiée."}
+        - text: {en: "A supplier for the battery.", fr: "Un fournisseur pour la batterie."}
+          why: {en: "A supplier is a design choice, not the verification of the requirement.", fr: "Un fournisseur est un choix de conception, pas la vérification de l’exigence."}
+        - text: {en: "A launch date.", fr: "Une date de lancement."}
+          why: {en: "Schedule is managed separately from traceability.", fr: "Le calendrier se gère à part de la traçabilité."}
+
+  - id: phases
+    title: {en: "Phases and review gates", fr: "Phases et revues"}
+    say:
+      en: >-
+        In time, a mission moves through phases. In the European standards, from the European
+        Cooperation for Space Standardization, the ECSS, Phase zero
+        defines the need, A tests feasibility, B and C define the design in more and more detail,
+        D builds and qualifies it, E operates it and F disposes of it. Each phase ends at a review
+        gate, such as the mission definition review, MDR, the preliminary design review, PDR, or
+        the critical design review, CDR. There, a board decides: go on, or not yet.
+      fr: >-
+        Dans le temps, une mission traverse des phases. Dans les normes européennes de la
+        Coopération européenne pour la normalisation spatiale, l’ECSS, la
+        phase zéro définit le besoin, A étudie la faisabilité, B et C définissent la conception de
+        plus en plus finement, D la fabrique et la qualifie, E l’exploite et F la retire. Chaque
+        phase se termine par une revue, comme la revue de définition de la mission, la MDR, la
+        revue de conception préliminaire, la PDR, ou la revue critique de conception, la CDR. Un
+        comité y décide : on continue, ou pas encore.
+    do:
+      - js: "EX.play('phases', ${say})"
+
+  - id: margins
+    title: {en: "Margins shrink as the design matures", fr: "Les marges diminuent quand la conception mûrit"}
+    say:
+      en: >-
+        Early on, nobody knows the masses and powers well, so the team holds a system margin on
+        top of every estimate: twenty percent in the first phases, fifteen in Phase B, ten at the
+        critical design review, five in production. As the design matures and estimates become
+        measurements, the margin is released. A budget that only closes by eating next phase's
+        margin is a warning, not a pass.
+      fr: >-
+        Au début, personne ne connaît bien les masses ni les puissances : l’équipe garde donc une
+        marge système au-dessus de chaque estimation, vingt pour cent dans les premières phases,
+        quinze en phase B, dix à la revue critique de conception, cinq en production. À mesure
+        que la conception mûrit et que les estimations deviennent des mesures, la marge est
+        libérée. Un bilan qui ne se ferme qu’en mangeant la marge de la phase suivante est un
+        avertissement, pas une réussite.
+    do:
+      - js: "EX.play('margins', ${say})"
+
+  - id: concurrent
+    title: {en: "Concurrent design", fr: "La conception concourante"}
+    say:
+      en: >-
+        Concurrent design is the answer to the sequential problem. Every discipline works at the
+        same time on one shared model, and each parameter is owned by one position. When power
+        changes the solar array, structures sees the mass at once; when a budget breaks, the
+        conflict is flagged straight away and the systems engineer arbitrates. That is how
+        SpaceCDF works, and how your team will design its mission.
+      fr: >-
+        La conception concourante répond au problème séquentiel. Toutes les disciplines
+        travaillent en même temps sur un seul modèle partagé, et chaque paramètre appartient à un
+        poste. Quand l’énergie modifie le générateur solaire, la structure en voit aussitôt la
+        masse ; quand un bilan casse, le conflit est signalé tout de suite et l’ingénieur système
+        arbitre. C’est ainsi que fonctionne SpaceCDF, et ainsi que votre équipe concevra sa
+        mission.
+    do:
+      - js: "EX.play('concurrent', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Name one parameter your position will own in SpaceCDF, and one other position whose budget it changes."
+        fr: "Nommez un paramètre que votre poste détiendra dans SpaceCDF, et un autre poste dont il modifie le bilan."
