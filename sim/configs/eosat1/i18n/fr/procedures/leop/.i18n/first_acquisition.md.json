@@ -20,7 +20,7 @@
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/prerequisites",
    "en_hash": "482a89c774734634",
-   "fr_hash": "a9ab66e9243f1dd5"
+   "fr_hash": "0b9e56f05d53a4d2"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps",
@@ -49,13 +49,13 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5-boot-obc-into-application-image",
-   "en_hash": "d4a521707701d7f4",
-   "fr_hash": "9f9dc962e1143aff"
+   "en_hash": "22dd0a9e09ba62e0",
+   "fr_hash": "0792da7299f4facf"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-5a-clear-beacon-mode-and-move-to-the-low-rung",
-   "en_hash": "9089afb8179d64ea",
-   "fr_hash": "75591d7accfb7622"
+   "en_hash": "aeaed8870115e7a8",
+   "fr_hash": "1653f37a00ca9364"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-6-note-the-unset-clock-do-not-sync-here",
@@ -74,13 +74,13 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/off-nominal-handling",
-   "en_hash": "87dcc1bbaf36444d",
-   "fr_hash": "12f1e33e6a89c389"
+   "en_hash": "7f2154ed13a47241",
+   "fr_hash": "0b206dddff8c9122"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/exit-state",
    "en_hash": "4814bbdda257d0f8",
-   "fr_hash": "82e286c94e741886"
+   "fr_hash": "9d28f5a2b1a4b4ea"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/post-conditions",
@@ -88,5 +88,5 @@
    "fr_hash": "255f3c828e6e48a7"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "b010e1a"
 }

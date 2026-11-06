@@ -463,7 +463,7 @@ quatre verrous différents renvoient tous `0x0007`.
 | N° | Verrou | S'applique à | Code | Ce que dit la notice d'échec |
 |---|------|-----------|-----:|------------------------------|
 | 1 | Le code de palier doit désigner un palier existant | tous | `0x0003` | `Invalid TM rate/tier <x>. Valid: 0=LOW(16000 bps), 1=HIGH(128000 bps), …` |
-| 2 | **Le mode balise impose le palier balise** | LOW, HIGH | `0x0007` | `TM rate is forced to the beacon tier in beacon mode (LOW refused)` |
+| 2 | **Le mode balise impose le palier balise** | LOW, HIGH | `0x0007` | `TM rate is forced to the SAFE tier in beacon mode (LOW refused)` |
 | 3 | SAFE est réservé au chargeur d'amorçage | SAFE (`0xFF`) | `0x0007` | `SAFE is a bootloader-only tier (1000 bps); not selectable in nominal operations` |
 | 4 | L'antenne doit être déployée | HIGH | `0x0007` | `HIGH (128000 bps) requires a deployed antenna` |
 | 5 | Le mode DOWNLINK/vidage doit être actif | HIGH | `0x0007` | `HIGH (128000 bps) requires DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE)` |

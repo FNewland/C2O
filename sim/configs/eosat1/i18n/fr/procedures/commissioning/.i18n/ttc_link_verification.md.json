@@ -34,8 +34,8 @@
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-0-configure-the-s-band-chain-for-measurement",
-   "en_hash": "77227b4a7e2684af",
-   "fr_hash": "fcdfc66f5a71c628"
+   "en_hash": "7dbea6d6c59c0f23",
+   "fr_hash": "7f9960a514c54de0"
   },
   {
    "id": "com-006-ttc-link-verification/procedure-steps/step-1-baseline-primary-transponder-performance",
@@ -108,5 +108,5 @@
    "fr_hash": "bad3dde81e56a8d0"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "b010e1a"
 }

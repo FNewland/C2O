@@ -74,8 +74,8 @@ est mis en marche lors de la préparation de la prise de vue, étape 2 de NOM-00
 ### Étape 7 --- Déclaration de disponibilité pour le passage
 **Jalon GO/NO-GO --- Tour de table du directeur de vol :**
 - EPS : SoC > 50 %, tension du bus > 30.9 V, marge de puissance positive --- GO / NO-GO
-- AOCS : NOMINAL, att_error < 1 deg, vitesses < 0.05 deg/s --- GO / NO-GO
-- TTC : liaison UP, RSSI > -100 dBm, marge > 3 dB --- GO / NO-GO
+- AOCS : NOMINAL, att_error < 1 deg, vitesses de roulis et de lacet < 0.05 deg/s, vitesse de tangage à la vitesse orbitale (0.043 à 0.083 deg/s, étape 3) --- GO / NO-GO
+- TTC : liaison UP, RSSI > -126 dBm, marge > 3 dB (étape 2) --- GO / NO-GO
 - TCS : toutes les températures dans les limites nominales --- GO / NO-GO
 - OBDH : NOMINAL, CPU < 80 % --- GO / NO-GO
 - Charge utile : STANDBY (si requis), stockage < 90 % --- GO / NO-GO

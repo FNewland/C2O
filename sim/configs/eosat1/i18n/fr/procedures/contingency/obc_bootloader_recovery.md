@@ -128,7 +128,7 @@ Cela prend environ 10 à 30 secondes.
 chargeur d'amorçage a verrouillé `ttc.beacon_mode` (0x0521) = 1, et ce verrouillage persiste une fois le
 logiciel applicatif en cours d'exécution. Tant qu'il est verrouillé, le palier SAFE (1 000 bit/s, ex-BEACON) est le SEUL
 palier autorisé : toute `TTC_SET_DATA_RATE` est refusée par un échec d'exécution S1.8, erreur
-`0x0007`, dont l'avis d'échec indique « TM rate is forced to the beacon tier in beacon
+`0x0007`, dont l'avis d'échec indique « TM rate is forced to the SAFE tier in beacon
 mode (LOW refused) ». Le même texte est émis comme événement S5 `0x030B COMMAND_REJECTED`.
 **TC:** `TTC_SET_BEACON_MODE(on=0)` (Service 8, Subtype 1, func_id 70) — Sortir du mode balise
 **Verify:** acceptation S1.1 + exécution S1.7 terminée en 5 s

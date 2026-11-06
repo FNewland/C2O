@@ -70,7 +70,7 @@ en NOMINAL dont la ligne du réchauffeur batterie est hors tension dérive jusqu
 ### Étape 3 --- Relecture consolidée de l'état final de la charge utile
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27)
 **Verify:** `payload.mode` (0x0600) = 1 --- STANDBY (jamais laissée en IMAGING)
-**Verify:** `payload.fpa_ready` (0x0610) = 1 --- refroidisseur en régulation (COM-010)
+**Verify:** `payload.fpa_ready` (0x0610) = 0 --- le refroidisseur est éteint en STANDBY (décision du 2026-11-03) : il ne fonctionne que pour préparer l’imagerie (NOM-002 l’allume avant chaque fenêtre)
 **Verify:** `payload.transfer_active` (0x062D) = 0 --- aucune session S13 laissée ouverte
 **GO/NO-GO:** Recette de la charge utile effectuée, charge utile au repos
 
@@ -112,7 +112,7 @@ et que `aocs.mode` (0x020F) reste dans {4, 5, 8} tout du long.
 
 ## État de sortie
 - Phase de mission 6, `sat.mode` = 1 (NOMINAL) ; FDIR entièrement armée
-- AOCS en NOMINAL commandé ; charge utile en STANDBY avec le FPA en régulation ; liaison descendante en LOW ;
+- AOCS en NOMINAL commandé ; charge utile en STANDBY avec le refroidisseur éteint ; liaison descendante en LOW ;
   OBC en NOMINAL ; aucun verrouillage, aucune session ni aucun verrou laissé ouvert
 - Le satellite constitue la référence des opérations nominales que suppose NOM-001
 

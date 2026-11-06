@@ -465,7 +465,7 @@ four different gates all report `0x0007`.
 | # | Gate | Applies to | Code | What the failure notice says |
 |---|------|-----------|-----:|------------------------------|
 | 1 | Tier code must be a real tier | any | `0x0003` | `Invalid TM rate/tier <x>. Valid: 0=LOW(16000 bps), 1=HIGH(128000 bps), …` |
-| 2 | **Beacon mode forces the beacon tier** | LOW, HIGH | `0x0007` | `TM rate is forced to the beacon tier in beacon mode (LOW refused)` |
+| 2 | **Beacon mode forces the SAFE tier** | LOW, HIGH | `0x0007` | `TM rate is forced to the SAFE tier in beacon mode (LOW refused)` |
 | 3 | SAFE is bootloader-only | SAFE (`0xFF`) | `0x0007` | `SAFE is a bootloader-only tier (1000 bps); not selectable in nominal operations` |
 | 4 | Antenna must be deployed | HIGH | `0x0007` | `HIGH (128000 bps) requires a deployed antenna` |
 | 5 | DOWNLINK/dump mode must be on | HIGH | `0x0007` | `HIGH (128000 bps) requires DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE)` |

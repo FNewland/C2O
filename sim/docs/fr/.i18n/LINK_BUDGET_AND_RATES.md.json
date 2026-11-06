@@ -104,8 +104,8 @@
   },
   {
    "id": "eosat-1-link-budget-and-the-tm-data-rate-ladder/6-operating-the-ladder/6-3-how-to-change-rate-and-why-a-change-can-be-refused",
-   "en_hash": "5315c053178b767c",
-   "fr_hash": "11342e93d8ca363a"
+   "en_hash": "ba406c95bf6dd820",
+   "fr_hash": "37ecfeff74149f6b"
   },
   {
    "id": "eosat-1-link-budget-and-the-tm-data-rate-ladder/7-changing-the-numbers",
@@ -148,5 +148,5 @@
    "fr_hash": "a23d6353ec7413ab"
   }
  ],
- "en_commit": "8067e5b"
+ "en_commit": "b010e1a"
 }

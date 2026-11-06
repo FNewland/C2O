@@ -1746,14 +1746,15 @@ worksheets:
       en: '7. FD: Pass readiness declaration: poll each position GO / NO-GO'
       fr: '7. FD : Déclaration de disponibilité pour le passage : tour de table GO / NO-GO'
     hint:
-      en: 'EPS: SoC > 50 %, bus > 30.9 V, margin positive · AOCS: NOMINAL, error < 1°, rates < 0.05°/s
-        · TT&C: link up, RSSI > −100 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS
-        page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal
-        procedure first'
-      fr: 'EPS : SoC > 50 %, bus > 30.9 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses < 0.05°/s
-        · TT&C : liaison établie, RSSI > −100 dBm, marge > 3 dB · TCS : chaque zone dans les limites de
-        la page TCS · OBDH : NOMINAL, CPU < 80 % · Charge utile : STANDBY si nécessaire, mémoire < 90
-        %. Tout NO-GO : d''abord sa procédure hors nominal'
+      en: 'EPS: SoC > 50 %, bus > 30.9 V, margin positive · AOCS: NOMINAL, error < 1°, roll and yaw rates
+        < 0.05°/s, pitch at the orbit rate · TT&C: link up, RSSI > −126 dBm, margin > 3 dB · TCS: every
+        zone inside the limits on the TCS page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed,
+        store < 90 %. Any NO-GO: its off-nominal procedure first'
+      fr: 'EPS : SoC > 50 %, bus > 30.9 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses de roulis
+        et de lacet < 0.05°/s, tangage à la vitesse orbitale · TT&C : liaison établie, RSSI > −126 dBm,
+        marge > 3 dB · TCS : chaque zone dans les limites de la page TCS · OBDH : NOMINAL, CPU < 80 %
+        · Charge utile : STANDBY si nécessaire, mémoire < 90 %. Tout NO-GO : d''abord sa procédure hors
+        nominal'
     step: '7'
     where:
     - tool: mcs
@@ -4667,9 +4668,9 @@ worksheets:
   - id: q7
     kind: check
     text:
-      en: Thermal confirms FPA at its uncooled equilibrium, payload.fpa_temp (0x0601) +8 to +14 °C
+      en: Thermal confirms FPA at its uncooled equilibrium, payload.fpa_temp (0x0601) about −5 to +7 °C
       fr: Le poste thermique confirme que le FPA est à son équilibre non refroidi, payload.fpa_temp (0x0601)
-        de +8 à +14 °C
+        d’environ −5 à +7 °C
     where:
     - tool: mcs
       page: pld
@@ -4927,10 +4928,10 @@ worksheets:
       fr: 1. HK thermique — HK_REQUEST(sid=3) (S3.27 ; SID 3 = TCS, cadence de 60 s)
     hint:
       en: tcs.temp_obc (0x0406) inside the OBC limits on the TCS page; tcs.temp_battery (0x0407) ∈ [+5,
-        +35] °C; tcs.temp_fpa (0x0408) reported — payload off and uncooled, +8 to +14 °C
+        +35] °C; tcs.temp_fpa (0x0408) reported — payload off and uncooled, about −5 to +7 °C
       fr: tcs.temp_obc (0x0406) dans les limites OBC de la page TCS ; tcs.temp_battery (0x0407) ∈ [+5,
-        +35] °C ; tcs.temp_fpa (0x0408) remontée — charge utile éteinte et non refroidie, de +8 à +14
-        °C
+        +35] °C ; tcs.temp_fpa (0x0408) remontée — charge utile éteinte et non refroidie, d’environ −5
+        à +7 °C
     step: '1'
     where:
     - tool: mcs
@@ -5067,27 +5068,29 @@ worksheets:
   - id: q6
     kind: check
     text:
-      en: 6. Read the battery thermostat thresholds — GET_PARAM(param_id=0x0410), GET_PARAM(param_id=0x0411)
+      en: 6. Read the heater thermostat thresholds — GET_PARAM(param_id=0x0330), GET_PARAM(param_id=0x0331)
         (S20.3)
-      fr: 6. Lire les seuils du thermostat de la batterie — GET_PARAM(param_id=0x0410), GET_PARAM(param_id=0x0411)
+      fr: 6. Lire les seuils des thermostats des réchauffeurs — GET_PARAM(param_id=0x0330), GET_PARAM(param_id=0x0331)
         (S20.3)
     hint:
-      en: ON at +5 °C, OFF at +10 °C; the card reads them, it does not change them
-      fr: marche à +5 °C, arrêt à +10 °C ; la fiche les lit, elle ne les modifie pas
+      en: battery ON at +5 °C (OFF at +10 °C), OBC ON at −10 °C (OFF at −5 °C); the card reads them, it
+        does not change them
+      fr: 'batterie : marche à +5 °C (arrêt à +10 °C), OBC : marche à −10 °C (arrêt à −5 °C) ; la fiche
+        les lit, elle ne les modifie pas'
     step: '6'
     where:
     - tool: mcs
       page: tcs
-      param: '0x0410'
+      param: '0x0330'
       label:
-        en: MCS › TCS › tcs.htr_duty_thruster (0x0410)
-        fr: MCS › TCS › tcs.htr_duty_thruster (0x0410)
+        en: MCS › TCS › tcs.setpoint_bat (0x0330)
+        fr: MCS › TCS › tcs.setpoint_bat (0x0330)
     - tool: mcs
       page: tcs
-      param: '0x0411'
+      param: '0x0331'
       label:
-        en: MCS › TCS › tcs.htr_total_power (0x0411)
-        fr: MCS › TCS › tcs.htr_total_power (0x0411)
+        en: MCS › TCS › tcs.setpoint_obc (0x0331)
+        fr: MCS › TCS › tcs.setpoint_obc (0x0331)
   - id: q7
     kind: check
     text:
@@ -5095,9 +5098,9 @@ worksheets:
       fr: 7. Interface du refroidisseur du FPA avant activation — GET_PARAM(param_id=0x040C), GET_PARAM(param_id=0x0114)
     hint:
       en: tcs.cooler_fpa (0x040C) = 0; eps.pl_fpa_cooler (0x0114) = 0; tcs.temp_fpa (0x0408) at the uncooled
-        equilibrium, +8 to +14 °C — recorded for COM-010
+        equilibrium, about −5 to +7 °C — recorded for COM-010
       fr: tcs.cooler_fpa (0x040C) = 0 ; eps.pl_fpa_cooler (0x0114) = 0 ; tcs.temp_fpa (0x0408) à l'équilibre
-        non refroidi, de +8 à +14 °C — consignée pour COM-010
+        non refroidi, d’environ −5 à +7 °C — consignée pour COM-010
     step: '7'
     where:
     - tool: mcs

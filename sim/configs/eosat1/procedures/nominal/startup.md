@@ -74,8 +74,8 @@ switched on as the imaging preparation, NOM-002 Step 2, at least 10 min before t
 ### Step 7 --- Pass Readiness Declaration
 **GO/NO-GO Gate --- Flight Director Poll:**
 - EPS: SoC > 50 %, bus voltage > 30.9 V, positive power margin --- GO / NO-GO
-- AOCS: NOMINAL, att_error < 1 deg, rates < 0.05 deg/s --- GO / NO-GO
-- TTC: Link UP, RSSI > -100 dBm, margin > 3 dB --- GO / NO-GO
+- AOCS: NOMINAL, att_error < 1 deg, roll and yaw rates < 0.05 deg/s, pitch rate at the orbit rate (0.043 to 0.083 deg/s, Step 3) --- GO / NO-GO
+- TTC: Link UP, RSSI > -126 dBm, margin > 3 dB (Step 2) --- GO / NO-GO
 - TCS: All temps within nominal limits --- GO / NO-GO
 - OBDH: NOMINAL, CPU < 80 % --- GO / NO-GO
 - Payload: STANDBY (if required), storage < 90 % --- GO / NO-GO

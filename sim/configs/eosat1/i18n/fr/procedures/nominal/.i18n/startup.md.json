@@ -59,8 +59,8 @@
   },
   {
    "id": "nom-001-pass-startup/procedure-steps/step-7-pass-readiness-declaration",
-   "en_hash": "6dec943014af3f48",
-   "fr_hash": "a041ffd7c26fc1c8"
+   "en_hash": "c07b6e64a6821d31",
+   "fr_hash": "5a385224db40cbce"
   },
   {
    "id": "nom-001-pass-startup/off-nominal-handling",
@@ -73,5 +73,5 @@
    "fr_hash": "4d6271f1c5d7d847"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "b010e1a"
 }

@@ -47,7 +47,7 @@ for mission operations.
 **Action:** Perform this step during sunlit orbit phase with stable sun-pointing.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.power_gen` (0x0107) in range [40W, 90W] within 10s (88.6 W is the whole-spacecraft peak in `subsystems/eps.yaml`; ~80 W is normal when sun-pointed)
-**Action:** Record power generation. Expected ~64W peak at optimal sun angle with deployed wings (0.78 m², 29.5% GaAs cells). Actual value depends on current beta angle, wing deployment status, and attitude accuracy.
+**Action:** Record power generation. Expected up to ~89 W peak (beginning of life) at the best sun angle with both wings deployed: 0.24 m² of wing cells plus the body panels, 29.5% GaAs (subsystems/eps.yaml). About 74 W at end of life. Actual value depends on current beta angle, wing deployment status, and attitude accuracy.
 **GO/NO-GO:** Solar array power generation within expected range
 
 ### Step 4 — Eclipse Discharge Monitoring

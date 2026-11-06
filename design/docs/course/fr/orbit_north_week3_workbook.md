@@ -285,7 +285,7 @@ l'autre le sous-système désigné. Consignez ce qui a été dit.
 | 4 | TT&C | Établir la liaison : `TTC_SWITCH_PRIMARY` (S8.1) | `ttc.link_status` (0x0501) = **2** (LOCKED) en 15 s ; page TT&C (sol) : `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB. Pas de liaison en 15 s : `TTC_SWITCH_REDUNDANT` et vérifier de nouveau ; échec des deux → anomalie TT&C | ☐ | |
 | 5 | SPACON | Collecte complète des données de servitude : `HK_REQUEST` (S3.27) des SID 1 EPS, 2 AOCS, 3 TCS, 4 OBDH, 5 charge utile, 6 TT&C | les six paquets en 30 s ; aucun paramètre hors limites signalé par le contrôle de limites du MCS | ☐ | |
 | 6 | Charge utile | Préparation de la charge utile, seulement si une prise de vue ou un vidage est prévu : `PAYLOAD_SET_MODE(mode=1)` STANDBY (S8.1 func 26) | `payload.mode` (0x0600) = 1 en 20 s ; `tcs.cooler_fpa` (0x040C) = 0 (le mode STANDBY ne fait pas fonctionner le refroidisseur ; il est mis en marche lors de la préparation de la prise de vue, étape 2 de NOM-002) ; `payload.store_used` (0x0604) < 90 % | ☐ | non prévu ☐ |
-| 7 | FD | Déclaration de disponibilité pour le passage : tour de table GO / NO-GO | EPS : SoC > 50 %, bus > 30.9 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses < 0.05°/s · TT&C : liaison établie, RSSI > −100 dBm, marge > 3 dB · TCS : chaque zone dans les limites de la page TCS · OBDH : NOMINAL, CPU < 80 % · Charge utile : STANDBY si nécessaire, mémoire < 90 %. Tout NO-GO : d'abord sa procédure hors nominal | ☐ | |
+| 7 | FD | Déclaration de disponibilité pour le passage : tour de table GO / NO-GO | EPS : SoC > 50 %, bus > 30.9 V, marge positive · AOCS : NOMINAL, erreur < 1°, vitesses de roulis et de lacet < 0.05°/s, tangage à la vitesse orbitale · TT&C : liaison établie, RSSI > −126 dBm, marge > 3 dB · TCS : chaque zone dans les limites de la page TCS · OBDH : NOMINAL, CPU < 80 % · Charge utile : STANDBY si nécessaire, mémoire < 90 %. Tout NO-GO : d'abord sa procédure hors nominal | ☐ | |
 
 Les lectures à la demande se font par `HK_REQUEST` (S3.27) ; l'émission
 périodique s'active par `HK_ENABLE` (S3.5). Seuls les SID 1 (EPS) et 11
@@ -834,7 +834,7 @@ Imprimez 9 exemplaires (un par poste de console).
 | Chronologie de la série de passages comprise (4 passages simulés en 2,5 h de temps réel) | ☐ |
 | Les 13 procédures de recette en orbite (COM-001…COM-013) chargées dans l'index des procédures | ☐ |
 | L'EPS confirme un SoC d'environ 90 %, `eps.pl_payload` (0x0113) = 0 | ☐ |
-| Le poste thermique confirme que le FPA est à son équilibre non refroidi, `payload.fpa_temp` (0x0601) de +8 à +14 °C | ☐ |
+| Le poste thermique confirme que le FPA est à son équilibre non refroidi, `payload.fpa_temp` (0x0601) d’environ −5 à +7 °C | ☐ |
 | Les opérations charge utile ont étudié en détail COM-009/-010/-011/-012 | ☐ |
 | Cible candidate pour la première lumière choisie (FDS) | ☐ |
 | Multiplicateur de vitesse du temps compressé réglé (enseignant) | ☐ |
@@ -867,13 +867,13 @@ sur la batterie de **100 Wh**.
 
 | N° | Action | Attendu | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | HK thermique — `HK_REQUEST(sid=3)` (S3.27 ; SID 3 = TCS, cadence de 60 s) | `tcs.temp_obc` (0x0406) dans les limites OBC de la page TCS ; `tcs.temp_battery` (0x0407) ∈ [+5, +35] °C ; `tcs.temp_fpa` (0x0408) remontée — charge utile éteinte et non refroidie, de +8 à +14 °C | ☐ | obc :__ bat :__ fpa :__ |
+| 1 | HK thermique — `HK_REQUEST(sid=3)` (S3.27 ; SID 3 = TCS, cadence de 60 s) | `tcs.temp_obc` (0x0406) dans les limites OBC de la page TCS ; `tcs.temp_battery` (0x0407) ∈ [+5, +35] °C ; `tcs.temp_fpa` (0x0408) remontée — charge utile éteinte et non refroidie, d’environ −5 à +7 °C | ☐ | obc :__ bat :__ fpa :__ |
 | 2 | Profil en phase éclairée — `HK_REQUEST(sid=3)` toutes les 120 s pendant 30 min | `tcs.temp_obc` stable ou en hausse de moins de 1 °C/min ; `tcs.temp_battery` stable | ☐ | |
 | 3 | Profil en éclipse — `HK_REQUEST(sid=3)` à l'entrée, à mi-éclipse et à la sortie | `tcs.temp_obc` au-dessus de la limite basse OBC de la page TCS pendant toute l'éclipse ; `tcs.temp_battery` > +5 °C pendant toute l'éclipse ; vitesses de refroidissement consignées (OBC environ 0.5 °C/min, batterie tamponnée) | ☐ | |
 | 4 | Circuit du réchauffeur batterie, ligne d'abord : consigner `eps.pl_htr_bat` (0x0115) ; `EPS_POWER_ON(line_index=5)` (S8.1 func 19) ; `HEATER_BATTERY(on=1)`, puis `HEATER_BATTERY(on=0)` (func **40**) ; `HEATER_AUTO_MODE(circuit=0)` (func **45**) | `eps.pl_htr_bat` = 1 en 5 s ; ON et OFF acquittés ; `tcs.temp_battery` (0x0407) en hausse ou stable sur 3 min ; la ligne **reste sur ON** sous la régulation du thermostat (marche sous +5 °C, arrêt au-dessus de +10 °C) | ☐ | entrée : ____ |
 | 5 | Circuit du réchauffeur OBC, ligne d'abord : consigner `eps.pl_htr_obc` (0x0116) ; `EPS_POWER_ON(line_index=6)` ; `HEATER_OBC(on=1)`, puis `HEATER_OBC(on=0)` (func **41** — et non 42, le réchauffeur du lit catalytique du propulseur) ; `HEATER_AUTO_MODE(circuit=1)` | `eps.pl_htr_obc` = 1 en 5 s ; ON et OFF acquittés ; `tcs.temp_obc` (0x0406) stable ou en hausse sur 2 min ; la ligne **reste sur ON** sous son thermostat | ☐ | entrée : ____ |
-| 6 | Lire les seuils du thermostat de la batterie — `GET_PARAM(param_id=0x0410)`, `GET_PARAM(param_id=0x0411)` (S20.3) | marche à +5 °C, arrêt à +10 °C ; la fiche les lit, elle ne les modifie pas | ☐ | |
-| 7 | Interface du refroidisseur du FPA avant activation — `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` | `tcs.cooler_fpa` (0x040C) = 0 ; `eps.pl_fpa_cooler` (0x0114) = 0 ; `tcs.temp_fpa` (0x0408) à l'équilibre non refroidi, de +8 à +14 °C — consignée pour COM-010 | ☐ | T_fpa : ____ °C |
+| 6 | Lire les seuils des thermostats des réchauffeurs — `GET_PARAM(param_id=0x0330)`, `GET_PARAM(param_id=0x0331)` (S20.3) | batterie : marche à +5 °C (arrêt à +10 °C), OBC : marche à −10 °C (arrêt à −5 °C) ; la fiche les lit, elle ne les modifie pas | ☐ | |
+| 7 | Interface du refroidisseur du FPA avant activation — `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` | `tcs.cooler_fpa` (0x040C) = 0 ; `eps.pl_fpa_cooler` (0x0114) = 0 ; `tcs.temp_fpa` (0x0408) à l'équilibre non refroidi, d’environ −5 à +7 °C — consignée pour COM-010 | ☐ | T_fpa : ____ °C |
 | 8 | Établir le rapport thermique de référence : minimum, maximum et moyenne de chaque zone sur une orbite, comparés au modèle thermique | conforme à la prédiction du modèle à ± 5 °C | ☐ | |
 
 Les deux lignes de réchauffeurs restent sur **ON** à la fin de cette fiche :
@@ -1055,7 +1055,7 @@ qui autorise la prise de vue. La consommation propre du refroidisseur est
 
 | Temps écoulé | T_fpa (°C) | `payload.cooler_pwr` 0x0602 (W) | Éclipse ? | Note |
 |---------|-----------|------------------|:--------:|------|
-| 0:00 | | | ☐ | début, de +8 à +14 °C |
+| 0:00 | | | ☐ | début, d’environ −5 à +7 °C |
 | 0:01 | | | ☐ | |
 | 0:02 | | | ☐ | attendu < +4 °C |
 | 0:03 | | | ☐ | |

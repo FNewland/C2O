@@ -24,7 +24,7 @@ exécutant son logiciel applicatif.
 - [ ] Séparation du lanceur confirmée (télémesure du fournisseur de lancement)
 - [ ] Antenne de la station sol d'Iqaluit configurée sur la fréquence de réception en bande S d'EOSAT-1
 - [ ] Démodulateur de la station sol configuré pour le échelon **SAFE** de l'échelle de débits
-      TM (le échelon à 1000 bit/s, renommé de BEACON en 2026-08c — « balise » désigne désormais
+      TM (l’échelon à 1000 bit/s, renommé de BEACON en 2026-08c — « balise » désigne désormais
       toujours l'émetteur UHF distinct à antenne fouet) — BPSK, conv(7,1/2)+RS,
       1 kBd, ~3,1 kHz de bande occupée. C'est le SEUL débit émis par le chargeur d'amorçage
       (`subsystems/ttc.yaml` `beacon_tier: SAFE`) ; le démodulateur
@@ -82,12 +82,12 @@ exécutant son logiciel applicatif.
 **TC:** `HK_ENABLE(sid=6)` (Service 3, Subtype 5) — données de servitude périodiques TT&C
 **Verify:** `obdh.boot_state` (0x0A15) = 2 sous 15s (SID 4, désormais activé)
 **Verify:** Les SID périodiques 3, 4 et 6 commencent à apparaître en l'espace d'une période de structure (SID 3 = 60 s, SID 4 = 8 s, SID 6 = 8 s). Les SID 2 (AOCS) et 5 (charge utile) sont activés dans LEOP-007, une fois leurs lignes alimentées.
-**Note:** L'amorçage de l'application ne désactive **PAS** le mode balise. `ttc.beacon_mode` (0x0521) reste à 1 et le satellite reste sur le palier BEACON jusqu'à ce que ce mode soit explicitement désactivé à l'étape 5a. D'ici là, tout `TTC_SET_DATA_RATE` est REFUSÉ par un S1.8 avec l'erreur `0x0007` et l'avis d'échec « TM rate is forced to the beacon tier in beacon mode (LOW refused) ».
+**Note:** L'amorçage de l'application ne désactive **PAS** le mode balise. `ttc.beacon_mode` (0x0521) reste à 1 et le satellite reste sur le palier SAFE jusqu'à ce que ce mode soit explicitement désactivé à l'étape 5a. D'ici là, tout `TTC_SET_DATA_RATE` est REFUSÉ par un S1.8 avec l'erreur `0x0007` et l'avis d'échec « TM rate is forced to the SAFE tier in beacon mode (LOW refused) ».
 **GO/NO-GO:** Image applicative en cours d'exécution, ensemble complet des services PUS disponible — l'étape 5a (sortie du mode balise) précède tout changement de débit
 
 ### Étape 5a — Désactiver le mode balise et passer sur le palier LOW
 **TC:** `TTC_SET_BEACON_MODE(on=0)` (Service 8, Subtype 1, func_id 70)
-**Action:** Désactiver le mode balise. C'est le verrou de toute l'échelle de débits : tant que le mode balise est verrouillé, BEACON est le SEUL palier autorisé et LOW comme HIGH sont refusés. C'est une étape distincte et délibérée, car le palier balise est la ligne de vie — le satellite ne le quitte jamais par accident.
+**Action:** Désactiver le mode balise. C'est le verrou de toute l'échelle de débits : tant que le mode balise est verrouillé, SAFE est le SEUL palier autorisé et LOW comme HIGH sont refusés. C'est une étape distincte et délibérée, car le palier SAFE est la ligne de vie — le satellite ne le quitte jamais par accident.
 **Verify:** Acceptation S1.1 + fin d'exécution S1.7 reçues sous 5s
 **Verify:** `ttc.beacon_mode` (0x0521) = 0 sous 10s
 **Verify:** `ttc.link_status` (0x0501) = 2 (LOCKED) sous 15s (SID 6, activé à l'étape 5)
@@ -125,7 +125,7 @@ la logique « amorcer puis synchroniser » n'est écrite qu'une fois. Cette 
 - **Aucun S1.1 en retour à CONNECTION_TEST :** le maintien automatique de l'émetteur de la plateforme ne se déclenche que sur des TC acceptées ; si aucun S1.1 n'arrive, soit la liaison montante ne passe pas (contrôler la géométrie du passage et le pointage de la station sol), soit le récepteur est défaillant. Réessayer une fois. Toujours rien : repointer et tenter avec Troll lors de son prochain passage programmé.
 - **`obdh.sw_image` ne change pas après OBC_BOOT_APP :** le décompte d'amorçage de l'application est de 10s. Lire d'abord `obdh.boot_state` (0x0A15) : 1 = toujours VERIFYING (attendre le S1.7), 3 = FAILED, le CRC de l'application échoue — on observera aussi un S1.8 sur la télécommande d'amorçage de l'application et l'événement 0x0305 BOOT_FAILURE. En cas d'amorçage FAILED, faire remonter à l'ingénieur OBDH et envisager `OBC_BOOT_INHIBIT(0)` puis `OBC_REBOOT`.
 - **SID 1 non émis après boot_app, ou SID 3/4/6 toujours absents après les `HK_ENABLE` de l'étape 5 :** vérifier que `obdh.sw_image` est réellement passé à 1. Si oui, se rappeler que l'amorçage de l'application réapplique `default_enabled_sids: [1, 11]` et désactive tout le reste : tout SID activé avant l'amorçage est donc de nouveau désactivé. Renvoyer `HK_ENABLE(sid=N)` (Service 3, Subtype 5) pour chaque SID manquant après l'amorçage.
-- **`TTC_SET_DATA_RATE` refusé par un S1.8 avec l'erreur 0x0007 après l'amorçage de l'application :** le mode balise est toujours verrouillé — l'étape 5a a été omise ou son `TTC_SET_BEACON_MODE(on=0)` n'a pas été accepté. Lire l'avis d'échec S1.8 : il nomme le verrou mot pour mot (« TM rate is forced to the beacon tier in beacon mode (LOW refused) »), et le même texte apparaît comme événement S5 `0x030B COMMAND_REJECTED` dans le journal des événements et le journal FDIR. Exécuter de nouveau l'étape 5a. L'amorçage de l'application ne désactive délibérément pas le mode balise.
+- **`TTC_SET_DATA_RATE` refusé par un S1.8 avec l'erreur 0x0007 après l'amorçage de l'application :** le mode balise est toujours verrouillé — l'étape 5a a été omise ou son `TTC_SET_BEACON_MODE(on=0)` n'a pas été accepté. Lire l'avis d'échec S1.8 : il nomme le verrou mot pour mot (« TM rate is forced to the SAFE tier in beacon mode (LOW refused) »), et le même texte apparaît comme événement S5 `0x030B COMMAND_REJECTED` dans le journal des événements et le journal FDIR. Exécuter de nouveau l'étape 5a. L'amorçage de l'application ne désactive délibérément pas le mode balise.
 - **Le maintien automatique de l'émetteur expire avant la fin de la procédure :** toute TC acceptée ultérieurement réarme la temporisation à 15 minutes ; cela ne devrait donc pas se produire au cours d'un passage normal. Si l'opérateur reste 15 minutes sans envoyer de commande, la liaison tombe — renvoyer une TC quelconque pour la réalimenter.
 
 ## État de sortie
@@ -134,7 +134,7 @@ la logique « amorcer puis synchroniser » n'est écrite qu'une fois. Cette 
   qui ont besoin de la liaison descendante la rétablissent, elles ne la supposent pas acquise)
 - OBC sur l'image applicative (`obdh.sw_image` 0x0311 = 1) ; phase de mission = 4
   (LEOP, avancée automatiquement par l'amorçage)
-- Mode balise désactivé (`ttc.beacon_mode` 0x0521 = 0), liaison descendante sur le échelon LOW
+- Mode balise désactivé (`ttc.beacon_mode` 0x0521 = 0), liaison descendante sur l’échelon LOW
   (`ttc.tm_tier` 0x0539 = 1) ; SID HK 1, 3, 4, 6, 11 activés — les SID 2/5/7/8/9/12
   restent désactivés jusqu'à ce que la fiche qui alimente leur sous-système les active
 - Horloge toujours NON RÉGLÉE (`obdh.time_ref` 0x0A13 = 0) — synchronisée dans LEOP-006

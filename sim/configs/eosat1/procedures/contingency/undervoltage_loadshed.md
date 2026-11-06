@@ -132,7 +132,7 @@ downlink is already gone.
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — Disable power amplifier
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping
 **Verify:** `ttc.pa_on` (0x0516) = 0 within 5 s
-**Verify:** `eps.power_cons` (0x0106) decreases by ~20 W
+**Verify:** `eps.power_cons` (0x0106) decreases by ~5 W at LOW, ~11 W at HIGH (the transmitter's draw, subsystems/eps.yaml)
 **Note:** WARNING — This will terminate downlink capability. Uplink (RX) remains active.
 The spacecraft can still receive commands but cannot send telemetry.
 

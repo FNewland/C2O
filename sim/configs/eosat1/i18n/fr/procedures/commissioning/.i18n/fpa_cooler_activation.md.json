@@ -19,8 +19,8 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/prerequisites",
-   "en_hash": "74539534e450907e",
-   "fr_hash": "6ced91e844202d98"
+   "en_hash": "9589ffd0b9a5dcec",
+   "fr_hash": "b78913ef3eae03b9"
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps",
@@ -34,8 +34,8 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps/step-2-enable-fpa-cooler",
-   "en_hash": "b918758fe7497bc2",
-   "fr_hash": "d789e3bc1628ee0a"
+   "en_hash": "092b7c86f723fb05",
+   "fr_hash": "30b6847b53e9374c"
   },
   {
    "id": "com-010-fpa-cooler-activation/procedure-steps/step-3-verify-cooler-power-draw",
@@ -84,9 +84,9 @@
   },
   {
    "id": "com-010-fpa-cooler-activation/exit-state",
-   "en_hash": "47cf9268bd53224a",
-   "fr_hash": "a9973e4843e5b74f"
+   "en_hash": "bf501326d2d85a1b",
+   "fr_hash": "9bfad2fa691179a0"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "b010e1a"
 }

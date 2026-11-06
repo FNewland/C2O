@@ -39,8 +39,8 @@
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-3-consolidated-payload-end-state-readback",
-   "en_hash": "f3c236c30f5555a3",
-   "fr_hash": "02b174da238ebb14"
+   "en_hash": "cfc5241e7c40f620",
+   "fr_hash": "0f26c5983e781161"
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/procedure-steps/step-4-declare-nominal-operations-phase-6",
@@ -59,8 +59,8 @@
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/exit-state",
-   "en_hash": "8747fc7b568e4e9d",
-   "fr_hash": "c55463f466b01de7"
+   "en_hash": "d65575865419349a",
+   "fr_hash": "f534fc7b966929e9"
   },
   {
    "id": "com-013-adcs-commissioning-closure-nominal-declaration/post-conditions",
@@ -68,5 +68,5 @@
    "fr_hash": "4c735488e70ca893"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "b010e1a"
 }

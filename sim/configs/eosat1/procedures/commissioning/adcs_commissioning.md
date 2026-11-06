@@ -70,7 +70,7 @@ with a dark battery-heater line drifts into the red in eclipse
 ### Step 3 --- Consolidated Payload End-State Readback
 **TC:** `HK_REQUEST(sid=5)` (Service 3, Subtype 27)
 **Verify:** `payload.mode` (0x0600) = 1 --- STANDBY (never left IMAGING)
-**Verify:** `payload.fpa_ready` (0x0610) = 1 --- cooler regulating (COM-010)
+**Verify:** `payload.fpa_ready` (0x0610) = 0 --- the cooler is OFF in STANDBY (ruling 2026-11-03): it runs only to prepare for imaging (NOM-002 switches it on before each window)
 **Verify:** `payload.transfer_active` (0x062D) = 0 --- no S13 session left open
 **GO/NO-GO:** Payload commissioned and quiescent
 
@@ -112,7 +112,7 @@ to the nominal-operations shift (NOM-001 onward).
 
 ## Exit state
 - Mission phase 6, `sat.mode` = 1 (NOMINAL); FDIR fully armed
-- AOCS commanded NOMINAL; payload STANDBY with FPA regulating; downlink LOW;
+- AOCS commanded NOMINAL; payload STANDBY with the cooler off; downlink LOW;
   OBC NOMINAL; no latches, sessions or gates left open
 - The spacecraft is the nominal-operations baseline that NOM-001 assumes
 

@@ -269,8 +269,8 @@ procedures:
     required_positions: [flight_director, payload_ops, eps_tcs]
     position_roles:
       flight_director: "Authorize cooler start"
-      payload_ops: "Activate cooler, monitor FPA temp"
-      eps_tcs: "Monitor power consumption and thermal"
+      payload_ops: "Monitor the FPA cooldown and fpa_ready"
+      eps_tcs: "Switch the cooler on (FPA_COOLER is an EPS/TCS command); watch its power"
     command_services: [3, 8, 20]
 
   - id: COM-011

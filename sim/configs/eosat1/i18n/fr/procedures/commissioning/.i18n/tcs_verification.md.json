@@ -29,8 +29,8 @@
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-1-request-thermal-housekeeping",
-   "en_hash": "83ebba17c65f0bf0",
-   "fr_hash": "e92e963e30506f92"
+   "en_hash": "ff7c4b052e80aa13",
+   "fr_hash": "61f0941a729e9bda"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-2-monitor-thermal-profile-through-sunlit-phase",
@@ -54,13 +54,13 @@
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-6-verify-autonomous-heater-thermostat-settings",
-   "en_hash": "e6d8174f35608954",
-   "fr_hash": "88c38bc9efb73913"
+   "en_hash": "395e3982c308397b",
+   "fr_hash": "2dbea42b5ae42eaa"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-7-fpa-cooler-interface-check-pre-activation",
-   "en_hash": "64eb2ef2ed6c7a99",
-   "fr_hash": "5c8448d91a89cfb8"
+   "en_hash": "c501a6a27368a856",
+   "fr_hash": "5ddecec7fa14d518"
   },
   {
    "id": "com-002-tcs-verification/procedure-steps/step-8-compile-thermal-baseline-report",
@@ -83,5 +83,5 @@
    "fr_hash": "7984bd73e55c7de5"
   }
  ],
- "en_commit": "21af365"
+ "en_commit": "b010e1a"
 }

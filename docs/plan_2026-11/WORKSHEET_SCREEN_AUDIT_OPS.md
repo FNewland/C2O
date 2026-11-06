@@ -550,7 +550,7 @@ Deferred: 3 (reason in the Fix column).
 | q4 | Pass-set timeline understood (4 sim passes in 2.5 h real time) | n/a |  |  |  |
 | q5 | All 13 commissioning procedures (COM-001…COM-013) loaded in the procedure index | screen | MCS › PRC (procedures) |  |  |
 | q6 | EPS confirms SoC ~90 %, eps.pl_payload (0x0113) = 0 | n/a | MCS › EPS › eps.pl_payload (0x0113) |  |  |
-| q7 | Thermal confirms FPA at its uncooled equilibrium, payload.fpa_temp (0x0601) +8 to +14 °C | n/a | MCS › PLD › payload.fpa_temp (0x0601) |  |  |
+| q7 | Thermal confirms FPA at its uncooled equilibrium, payload.fpa_temp (0x0601) about −5 to +7 °C | n/a | MCS › PLD › payload.fpa_temp (0x0601) |  |  |
 | q8 | Payload Ops has reviewed COM-009/-010/-011/-012 in detail | manual only | Procedure COM-009; Procedure COM-012 |  |  |
 | q9 | First Light target candidate selected (FDS) | screen | Planner › Imaging opportunities |  |  |
 | q10 | Compressed-time speed multiplier set (instructor) | n/a |  |  |  |
@@ -577,7 +577,7 @@ Deferred: 3 (reason in the Fix column).
 | step 3 | Eclipse profile — HK_REQUEST(sid=3) at entry, mid-eclipse and exit | screen | MCS › TRD (trends); MCS › EPS › Projections › Next eclipse; MCS › TCS › tcs.temp_obc (0x0406); MCS › TCS › tcs.temp_battery (0x0407) |  |  |
 | step 4 | Battery heater circuit, line first: record eps.pl_htr_bat (0x0115); EPS_POWER_ON(line_index=5) (S8.1 func 1… | screen | MCS › EPS › eps.pl_htr_bat (0x0115); MCS › TCS › tcs.temp_battery (0x0407) |  |  |
 | step 5 | OBC heater circuit, line first: record eps.pl_htr_obc (0x0116); EPS_POWER_ON(line_index=6); HEATER_OBC(on=1… | screen | MCS › EPS › eps.pl_htr_obc (0x0116); MCS › TCS › tcs.temp_obc (0x0406) |  |  |
-| step 6 | Read the battery thermostat thresholds — GET_PARAM(param_id=0x0410), GET_PARAM(param_id=0x0411) (S20.3) | screen | MCS › TCS › tcs.htr_duty_thruster (0x0410); MCS › TCS › tcs.htr_total_power (0x0411) |  |  |
+| step 6 | Read the heater thermostat thresholds — GET_PARAM(param_id=0x0330), GET_PARAM(param_id=0x0331) (S20.3) | screen | MCS › TCS › tcs.setpoint_bat (0x0330); MCS › TCS › tcs.setpoint_obc (0x0331) |  |  |
 | step 7 | FPA cooler interface before activation — GET_PARAM(param_id=0x040C), GET_PARAM(param_id=0x0114) | screen | MCS › TCS › tcs.cooler_fpa (0x040C); MCS › EPS › eps.pl_fpa_cooler (0x0114); MCS › TCS › tcs.temp_fpa (0x0408) |  |  |
 | step 8 | Compile the thermal baseline report: minimum, maximum and mean of each zone over one orbit, against the the… | screen | MCS › TRD (trends); Manual 03 TCS › §4 Temperature zones | Trends plots each zone over a chosen window; minimum, maximum and mean are read off the plot or the CSV export. | Linked to Trends (24 h window, EXPORT CSV). |
 | q9 | GO COM-005 | n/a |  |  |  |
