@@ -1,7 +1,8 @@
-# Week 5 — LEOP-005: watch B-dot damp the rates and the AOCS hand itself to
-# COARSE_SUN; command nothing. From card-LEOP-005. To show the whole damping
-# in one video the simulator keeps contact (pass override) and runs faster;
-# the narration says so. Prepares WB-5.5-L005 steps 1–4.
+# Week 5 — LEOP-005: record the rates, see the AOCS hand itself from DETUMBLE
+# to COARSE_SUN live, and check the sun hold; command nothing. From
+# card-LEOP-005, frozen in setup so the handover happens on camera. The
+# fly-through's tip-off rates are small: the narration says real ones are
+# usually larger. Prepares WB-5.5-L005 steps 1, 3 and 4.
 id: V-OPS-07
 week: 5
 audience: all
@@ -22,9 +23,13 @@ sources:
 
 setup:
   - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-005}}
-  - wait: 2
-  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 420, min_elevation: 15, after_aos: 10}}
+  - wait: 1
+  # freeze at once: the handover comes ~30 s after the rates settle, and must
+  # happen on camera. The simulator keeps contact (pass override) meanwhile.
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: freeze}}
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: true}}
   - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0002", name: HK_REQUEST, position: flight_director}}
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: step, seconds: 3}}
   - wait: 3
   - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
   - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
@@ -35,80 +40,57 @@ steps:
     title: {en: "Step 1: record the starting rates", fr: "Étape 1 : relever les vitesses de départ"}
     say:
       en: >-
-        DETUMBLE is running from the previous card. This card commands nothing: it observes.
-        Open the attitude page and record the starting point: the mode, and the three body
-        rates, roll, pitch and yaw. After separation a few degrees per second on each axis is
-        normal. These numbers are your baseline.
+        DETUMBLE is running from the previous card, and this card commands nothing: it
+        observes. Open the attitude page and record the starting point: the mode, and the three
+        body rates, roll, pitch and yaw. In this run the separation left EOSAT-1 turning very
+        slowly. A real separation often leaves a few degrees per second, and then B-dot needs
+        tens of minutes, roughly halving the rates every ten to fifteen.
       fr: >-
-        DETUMBLE tourne depuis la fiche précédente. Cette fiche ne commande rien : elle
+        DETUMBLE tourne depuis la fiche précédente, et cette fiche ne commande rien : elle
         observe. Ouvrez la page attitude et relevez le point de départ : le mode, et les trois
-        vitesses angulaires, roulis, tangage et lacet. Après la séparation, quelques degrés par
-        seconde sur chaque axe, c’est normal. Ces valeurs sont votre référence.
+        vitesses angulaires, roulis, tangage et lacet. Dans ce déroulé, la séparation a laissé
+        EOSAT-1 tourner très lentement. Une vraie séparation laisse souvent quelques degrés par
+        seconde, et B-point a alors besoin de dizaines de minutes, en divisant à peu près les
+        vitesses par deux toutes les dix à quinze.
     do:
       - click: {css: "#rail-aocs"}
-      - wait: 3.0
-      - highlight: {target: {css: "#aocs-att2d"}, seconds: 3, point: false}
-      - highlight: {target: {css: "#page-aocs tr[data-param='0x020F']"}, seconds: 2}
+      - wait: 2.0
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x020F']"}, seconds: 2.5}
       - highlight: {target: {css: "#page-aocs tr[data-param='0x0204']"}, seconds: 2}
       - highlight: {target: {css: "#page-aocs tr[data-param='0x0206']"}, seconds: 2}
-
-  - id: damping
-    title: {en: "Step 2: watch the rates fall", fr: "Étape 2 : regarder les vitesses baisser"}
-    say:
-      en: >-
-        B-dot roughly halves the rates every ten to fifteen minutes, so this takes a while.
-        To show it in one go, the simulator now keeps the link open and runs twenty times
-        faster; in operations you would follow it across several passes. Watch the rates come
-        down. If they do not, look at the magnetic field first: a zero means the magnetometer
-        dropped out and B-dot is blind.
-      fr: >-
-        B-point divise à peu près les vitesses par deux toutes les dix à quinze minutes : cela
-        prend du temps. Pour le montrer d’un seul tenant, le simulateur garde maintenant la
-        liaison ouverte et tourne vingt fois plus vite ; en exploitation, vous le suivriez sur
-        plusieurs passages. Regardez les vitesses baisser. Si elles ne baissent pas, regardez
-        d’abord le champ magnétique : un zéro signifie que le magnétomètre a décroché et que
-        B-point est aveugle.
-    do:
-      - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: true}}
-      - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 20}}
-      - wait: 4
-      - highlight: {target: {css: "#page-aocs tr[data-param='0x0204']"}, seconds: 3}
-      - highlight: {target: {css: "#page-aocs tr[data-param='0x0277']"}, seconds: 3}
     question:
       type: multichoice
       worksheet: WB-5.5-L005/q1
       text:
-        en: "Why does this card command nothing during the damping?"
-        fr: "Pourquoi cette fiche ne commande-t-elle rien pendant l’amortissement ?"
+        en: "The rates are not falling after fifteen minutes of DETUMBLE. What do you look at first?"
+        fr: "Les vitesses ne baissent pas après quinze minutes de DETUMBLE. Que regardez-vous d’abord ?"
       options:
-        - text: {en: "B-dot runs on board; the operator's job is to confirm it works and to step in only if it does not.", fr: "B-point tourne à bord ; le rôle de l’opérateur est de confirmer qu’il fonctionne et d’intervenir seulement s’il ne fonctionne pas."}
+        - text: {en: "The measured magnetic field and the magnetometer and magnetorquer enable flags.", fr: "Le champ magnétique mesuré et les indicateurs d’activation du magnétomètre et des magnéto-coupleurs."}
           correct: true
-          why: {en: "The off-nominal section says what to check if the rates stop falling.", fr: "La section hors nominal dit quoi vérifier si les vitesses cessent de baisser."}
-        - text: {en: "Commands are refused in DETUMBLE.", fr: "Les commandes sont refusées en DETUMBLE."}
-          why: {en: "They are accepted; there is simply nothing to command.", fr: "Elles sont acceptées ; il n’y a simplement rien à commander."}
-        - text: {en: "The transmitter is off during DETUMBLE.", fr: "L’émetteur est éteint pendant DETUMBLE."}
-          why: {en: "The link has nothing to do with the attitude mode.", fr: "La liaison n’a rien à voir avec le mode d’attitude."}
+          why: {en: "B-dot needs both legs. A zeroed field means it is blind.", fr: "B-point a besoin des deux. Un champ à zéro signifie qu’il est aveugle."}
+        - text: {en: "Command COARSE_SUN to force the spacecraft out of DETUMBLE.", fr: "Commander COARSE_SUN pour forcer la sortie de DETUMBLE."}
+          why: {en: "Sun pointing at high rates cannot hold; the card forbids commanding it.", fr: "Le pointage solaire à vitesse élevée ne tient pas ; la fiche interdit de le commander."}
+        - text: {en: "The reaction wheel speeds.", fr: "Les vitesses des roues de réaction."}
+          why: {en: "The wheels are still disabled at this point.", fr: "Les roues sont encore désactivées à ce stade."}
 
   - id: handover
     title: {en: "Step 3: the automatic handover", fr: "Étape 3 : le passage automatique"}
     say:
       en: >-
         When all three rates have stayed below half a degree per second for thirty seconds,
-        the AOCS switches itself from DETUMBLE to COARSE_SUN. Do not command that mode: you
-        would be asking for something the spacecraft does on its own. Your job is to see it
-        happen, and to find it in the event log.
+        the AOCS switches itself from DETUMBLE to COARSE_SUN. Watch the mode. Do not command
+        it: you would be asking for something the spacecraft does on its own. Your job is to
+        see it happen and log the time.
       fr: >-
         Quand les trois vitesses sont restées sous un demi-degré par seconde pendant trente
-        secondes, le SCAO passe de lui-même de DETUMBLE à COARSE_SUN. Ne commandez pas ce
-        mode : vous demanderiez ce que le satellite fait tout seul. Votre rôle est de le voir
-        se produire, et de le retrouver dans le journal des événements.
+        secondes, le SCAO passe de lui-même de DETUMBLE à COARSE_SUN. Surveillez le mode. Ne le
+        commandez pas : vous demanderiez ce que le satellite fait tout seul. Votre rôle est de
+        le voir se produire et d’en noter l’heure.
     do:
-      - wait_for: {target: {css: "#page-aocs tr[data-param='0x020F']:has-text('COARSE')"}, timeout: 240}
-      - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 1}}
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: resume}}
       - highlight: {target: {css: "#page-aocs tr[data-param='0x020F']"}, seconds: 3}
-      - click: {css: "[data-bd='events']"}
-      - wait: 1.0
-      - highlight: {target: {css: "#bdp-events :text-matches('COARSE', 'i')"}, seconds: 3}
+      - wait_for: {target: {css: "#page-aocs tr[data-param='0x020F']:has-text('COARSE')"}, timeout: 90}
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x020F']"}, seconds: 3}
     question:
       type: truefalse
       worksheet: WB-5.5-L005/q3
@@ -118,28 +100,49 @@ steps:
         fr: "Une fois les vitesses faibles, commandez AOCS_SET_MODE(mode=3) pour passer en COARSE_SUN."
 
   - id: hold
-    title: {en: "Step 4: the sun hold, and the power", fr: "Étape 4 : la tenue au Soleil, et la puissance"}
+    title: {en: "Step 4: the sun hold", fr: "Étape 4 : la tenue au Soleil"}
     say:
       en: >-
-        In COARSE_SUN the attitude error converges towards the Sun; within fifteen degrees is
-        enough here, since there are no wheels yet, only magnetorquers. The coarse sun sensors
-        report how confident they are that they see the Sun. And the reason for all of this is
-        on the power page: with the wings facing the Sun, generation climbs well above what the
-        tumbling spacecraft gave.
+        In COARSE_SUN the attitude error converges towards the Sun. With no wheels yet, only
+        magnetorquers, it is slow and rough: the card allows ten minutes to get within fifteen
+        degrees. Ask for the coarse sun sensors' confidence by parameter number: above one half,
+        they see the Sun.
       fr: >-
-        En COARSE_SUN, l’erreur d’attitude converge vers le Soleil ; à quinze degrés près,
-        cela suffit ici, puisqu’il n’y a pas encore de roues, seulement les magnéto-coupleurs.
-        Les capteurs solaires grossiers indiquent leur confiance de voir le Soleil. Et la raison
-        de tout cela se trouve sur la page énergie : ailes face au Soleil, la production monte
-        bien au-dessus de ce que donnait le satellite en rotation.
+        En COARSE_SUN, l’erreur d’attitude converge vers le Soleil. Sans roues, avec les seuls
+        magnéto-coupleurs, c’est lent et approximatif : la fiche accorde dix minutes pour
+        descendre sous quinze degrés. Demandez la confiance des capteurs solaires grossiers par
+        son numéro de paramètre : au-dessus d’un demi, ils voient le Soleil.
     do:
       - highlight: {target: {css: "#page-aocs tr[data-param='0x0217']"}, seconds: 3}
-      - click: {css: "#rail-eps"}
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: GET_PARAM}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='param_id']"}, text: "533"}
+      - click: {css: "#cmd-send"}
       - wait: 2.0
-      - highlight: {target: {css: "#eps-flow"}, seconds: 4, point: false}
+      - click: {css: "#rail-aocs"}
+      - wait: 1.5
+      - highlight: {target: {css: "#page-aocs tr[data-param='0x0215']"}, seconds: 3}
     question:
       type: reflect
       worksheet: WB-5.5-L005/q4
       text:
         en: "The attitude error stays at 20° for ten minutes in COARSE_SUN. What do you check, in what order, before you call anyone?"
         fr: "L’erreur d’attitude reste à 20° pendant dix minutes en COARSE_SUN. Que vérifiez-vous, dans quel ordre, avant d’appeler qui que ce soit ?"
+
+  - id: power
+    title: {en: "Step 5: what it brings", fr: "Étape 5 : ce que cela apporte"}
+    say:
+      en: >-
+        The reason for all of this is on the power page. As the wings turn to the Sun,
+        generation climbs and the orbit-average margin moves up with it. In eclipse there is
+        nothing to see: the card says to wait for eclipse exit and check again.
+      fr: >-
+        La raison de tout cela se trouve sur la page énergie. À mesure que les ailes se tournent
+        vers le Soleil, la production monte et la marge moyenne sur l’orbite avec elle. En
+        éclipse, il n’y a rien à voir : la fiche dit d’attendre la sortie d’éclipse et de
+        vérifier à nouveau.
+    do:
+      - click: {css: "#rail-eps"}
+      - wait: 2.0
+      - highlight: {target: {css: "#eps-flow"}, seconds: 4, point: false}
+      - highlight: {target: {css: "#eps-orbit-margin"}, seconds: 3}

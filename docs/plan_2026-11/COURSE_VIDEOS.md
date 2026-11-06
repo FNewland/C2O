@@ -31,11 +31,20 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-PLN-01 | 3 | Planner: 24 h view, next contact, ground track and beta, imaging activity, constraint check | WB-5.3-PP q1/q3/q7 | rendered EN+FR (fresh simulator: same passes in both takes) |
 | V-SCDF-02 | 5 | SpaceCDF mass and power budgets, margins, allocations, power by mode, energy per orbit | LW-2.4 A/B/E, D-2.4-MASS, D-2.4-POWER | rendered EN+FR on an EOSAT-1-like study seeded through the API |
 | V-OPS-04 | 5 | LEOP-001 Step 5a (LOW refused, beacon mode off, LOW) and LEOP-002 health check | WB-5.5-L002 q1/q2 | rendered EN+FR from `card-LEOP-001`, Steps 2–5 sent through the MCS API in setup |
+| V-OPS-05 | 5 | LEOP-004: wings deployed, read on the EPS power flow and the orbit-average margin | card LEOP-004 | rendered EN+FR from `card-LEOP-004` |
+| V-OPS-06 | 5 | LEOP-007: AOCS line, SID 2, magnetometer and magnetorquers before DETUMBLE | WB-5.5-L007 q3/q4/q5 | rendered EN+FR from `card-LEOP-007` |
+| V-OPS-07 | 5 | LEOP-005: starting rates, the automatic COARSE_SUN handover live, sun hold, power | WB-5.5-L005 q1/q3/q4 | dry-run only: held until COARSE_SUN holds the Sun ([AOCS_COARSE_SUN_MTQ_ONLY.md](AOCS_COARSE_SUN_MTQ_ONLY.md)) |
+| V-OPS-08 | 5 | LEOP-006: unset clock, offset with light time, set from the ground, residual | WB-5.5-L006 q2/q3/q5 | rendered EN+FR from `card-LEOP-006` |
+| V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | dry-run only: held for the same reason (0x0217 ~60° HH alarm on screen) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`
 (loaded by the simulator at start-up; `python -m c2ovideo stack up sim` makes them when missing).
 Ops storyboards set `fresh_stack: sim`: the simulator and MCS restart before each take.
+
+Fixed while filming (LEOP-004 to LEOP-003): the MCS command builder could not send S2, S13 or
+S18 catalogue commands (sent as TC(0,1)); the S9 clock offset grew with the age of the last
+OBDH sample. Found and not fixed: COARSE_SUN on magnetorquers alone does not hold the Sun.
 
 Fixed while filming: the MCS event list printed `TC(undefined,undefined)` for every S1
 report (it now names the command); the SpaceCDF French allocate button said "les 1
@@ -45,12 +54,17 @@ parser read `simulation.yaml` as a parameter.
 
 ## Backlog (from the research shortlist)
 
-1. Energy balance through an orbit in the simulator (`powerflow.js` with live telemetry).
-2. Link budget term by term (`link_budget_ladder.py`).
-3. CTG-001 under-voltage load shed (instructor inject).
-4. LEOP-004 to LEOP-007 and the COM cards (same breakpoint pattern).
+1. Link budget term by term: no screen shows it yet. SpaceCDF's `LinkBudgetTool.tsx` (a
+   term-by-term cascade) is not mounted anywhere; the design loop shows only the margins.
+   Mount it (Analyses or level 3), then film it (LW-3.3 B, D-3.3-LINK).
+2. CTG-001 under-voltage load shed: waiting for a ruling on whether the under-voltage
+   scenarios are scored; the video would show a recovery.
+3. The COM cards (same breakpoint pattern, `card-COM-001` … `card-COM-013`).
 
-Enablers still to build:
+Enablers built (2026-11-05): the instructor `step` command (+10 s button; API up to 1 h) and
+the missing ops sheets in the logbook (WB-5.4-VL, WB-5.7-SA, -LL, -WI, -FR, WB-B, WB-C).
+WB-5.4-Q (graded) and WB-5.7-CE (anonymous) stay out of the logbook on purpose.
 
-* an instructor `step` command (advance N sim-seconds while frozen) for frame-exact repeat takes;
-* the five ops sheets missing from the worksheet YAML (WB-5.4-VL, WB-5.7-WI, WB-5.7-FR, WB-B, WB-C).
+French narration check (2026-11-05): a lone "É" is read "É accent aigu" and "E." is dropped,
+so EOSAT-1 is now "Euh-o-satte un", SpaceCDF "Spèïsse C D F", and French acronyms are spelled
+without full stops. Every French take was re-rendered.
