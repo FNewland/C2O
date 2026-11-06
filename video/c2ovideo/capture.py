@@ -189,15 +189,24 @@ def locator(page, spec: Any, c: Ctx):
 async def _stable_box(page, loc, tries: int = 12):
     """Scroll the target into view and wait until it stops moving (smooth
     scrolling, tables re-rendered by live telemetry), then return its box."""
-    await loc.scroll_into_view_if_needed(timeout=15000)
-    prev = await loc.bounding_box()
-    for _ in range(tries):
-        await page.wait_for_timeout(80)
-        box = await loc.bounding_box()
-        if box and prev and all(abs(box[k] - prev[k]) < 1 for k in ("x", "y", "width", "height")):
-            return box
-        prev = box
-    return prev
+    # Rows of live tables are replaced on every telemetry update: a locator
+    # can resolve to a node that is gone a moment later. Re-resolve and retry.
+    for attempt in range(6):
+        try:
+            await loc.scroll_into_view_if_needed(timeout=5000 if attempt else 15000)
+            prev = await loc.bounding_box(timeout=5000)
+            for _ in range(tries):
+                await page.wait_for_timeout(80)
+                box = await loc.bounding_box(timeout=5000)
+                if box and prev and all(abs(box[k] - prev[k]) < 1 for k in ("x", "y", "width", "height")):
+                    return box
+                prev = box
+            return prev
+        except Exception as e:  # detached / not stable: the table re-rendered
+            if attempt == 5 or "attached" not in str(e) and "stable" not in str(e):
+                raise
+            await page.wait_for_timeout(150)
+    return None
 
 
 async def _point_at(page, loc, ms: int = MOVE_MS) -> None:
