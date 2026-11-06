@@ -1,0 +1,125 @@
+# Design concept — structure, propulsion and data handling (textbook ch. 12):
+# launch loads and what fails, margin of safety and first frequency, the
+# rocket equation for a 600 km deorbit (cold gas, green mono, electrospray,
+# whole-system mass), the on-board computer, radiation and storage sizing.
+# Animated page video/explainers/structure.html. Whole design team.
+id: V-DES-14
+week: 6
+audience: all
+title:
+  en: "Structure, propulsion and data handling"
+  fr: "Structure, propulsion et gestion de bord"
+summary:
+  en: "Surviving launch, moving in orbit and keeping the data: launch loads and margins of safety, stiffness, the rocket equation and why whole systems must be compared, and the on-board computer, radiation and storage sizing."
+  fr: "Survivre au lancement, manœuvrer en orbite et garder les données : charges de lancement et marges de sécurité, raideur, l’équation de la fusée et pourquoi comparer des systèmes entiers, et l’ordinateur de bord, le rayonnement et le dimensionnement du stockage."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/12_structures_propulsion_obdh.md (§ 12.1, 12.2, 12.3)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/structure.html?lang={lang}", settle: 1.5}
+  - cursor: hide
+
+steps:
+  - id: loads
+    title: {en: "Launch loads", fr: "Les charges de lancement"}
+    say:
+      en: >-
+        The launch is the harshest few minutes of the spacecraft's life. Thrust and air loads
+        press six to twelve g along its axis. The launcher's low modes shake it slowly; acoustic
+        noise shakes it fast, five to fifteen g r m s; and separation brings shocks of hundreds to
+        thousands of g. On the shaker, what breaks is rarely the frame: it is solder joints on tall
+        parts, hold-downs and hinges, lenses, and harness rubbing on an edge.
+      fr: >-
+        Le lancement, ce sont les minutes les plus dures de la vie du satellite. La poussée et les
+        charges aérodynamiques appuient de six à douze g le long de son axe. Les modes bas du
+        lanceur le secouent lentement ; le bruit acoustique, vite, cinq à quinze g efficaces ; et
+        les séparations apportent des chocs de centaines à milliers de g. Sur le pot vibrant, ce
+        qui casse est rarement le cadre : ce sont les soudures des composants hauts, les gerbages
+        et charnières, les lentilles, et le câblage qui frotte sur une arête.
+    do:
+      - js: "EX.play('loads', ${say})"
+
+  - id: margin
+    title: {en: "Strength and stiffness", fr: "Résistance et raideur"}
+    say:
+      en: >-
+        For strength, every load case needs a positive margin of safety: the allowable stress,
+        divided by the design stress times a factor of safety, minus one. A 3U rail at nine g
+        carries about a hundred and ten newtons, a tiny stress in aluminium, so its margin is huge.
+        For stiffness, the first natural frequency must stay above the launcher's, usually forty
+        hertz. The box alone is near three hundred and thirty; a heavy unit on a bracket usually
+        sets the real first mode.
+      fr: >-
+        Pour la résistance, chaque cas de charge exige une marge de sécurité positive : la
+        contrainte admissible, divisée par la contrainte de calcul fois un coefficient de
+        sécurité, moins un. Un rail de 3U à neuf g porte environ cent dix newtons, une contrainte
+        minuscule dans l’aluminium : sa marge est énorme. Pour la raideur, la première fréquence
+        propre doit rester au-dessus de celle du lanceur, en général quarante hertz. La boîte seule
+        est vers trois cent trente ; un équipement lourd sur une ferrure fixe en général le vrai
+        premier mode.
+    do:
+      - js: "EX.play('margin', ${say})"
+
+  - id: propulsion
+    title: {en: "The rocket equation", fr: "L’équation de la fusée"}
+    say:
+      en: >-
+        To deorbit from six hundred kilometres takes about a hundred and twelve metres per second.
+        The rocket equation says propellant grows exponentially with that speed change divided by
+        the exhaust speed. Cold gas needs a kilogram of propellant. A green monopropellant needs a
+        quarter of that, but its system weighs three kilograms. An electrospray thruster is the
+        lightest overall, but the burn takes months. Compare whole systems, not propellant alone.
+        At five hundred kilometres, EOSat-3U needs none: drag brings it down.
+      fr: >-
+        Désorbiter depuis six cents kilomètres demande environ cent douze mètres par seconde.
+        L’équation de la fusée dit que les ergols croissent exponentiellement avec ce changement de
+        vitesse divisé par la vitesse d’éjection. Le gaz froid demande un kilogramme d’ergols. Un
+        monergol vert en demande quatre fois moins, mais son système pèse trois kilogrammes. Un
+        propulseur à électronébulisation est le plus léger au total, mais la poussée dure des mois.
+        Comparez des systèmes entiers, pas les ergols seuls. À cinq cents kilomètres, EOSat-3U n’en
+        a pas besoin : la traînée le fait rentrer.
+    do:
+      - js: "EX.play('propulsion', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Why can the propulsion option with the least propellant still be the heaviest choice?"
+        fr: "Pourquoi l’option de propulsion avec le moins d’ergols peut-elle être le choix le plus lourd ?"
+      options:
+        - text: {en: "Tanks, valves, heaters and electronics can outweigh the propellant saved.", fr: "Réservoirs, vannes, réchauffeurs et électronique peuvent peser plus que les ergols économisés."}
+          correct: true
+          why: {en: "Green monopropellant: 0.25 kg of propellant, but about 3 kg of system.", fr: "Monergol vert : 0,25 kg d’ergols, mais environ 3 kg de système."}
+        - text: {en: "Higher specific impulse always means a heavier thruster.", fr: "Une impulsion spécifique plus élevée signifie toujours un propulseur plus lourd."}
+          why: {en: "Electrospray has the highest Isp here and the lightest system.", fr: "L’électronébulisation a ici l’Isp le plus élevé et le système le plus léger."}
+        - text: {en: "The rocket equation adds the dry mass twice.", fr: "L’équation de la fusée compte deux fois la masse sèche."}
+          why: {en: "It uses dry mass once, to scale the propellant.", fr: "Elle n’utilise la masse sèche qu’une fois, pour proportionner les ergols."}
+
+  - id: obdh
+    title: {en: "Computer and storage", fr: "Ordinateur et stockage"}
+    say:
+      en: >-
+        The on-board computer usually runs a real-time operating system: deterministic, small,
+        with tasks kept apart. In orbit, particles flip bits and can latch a circuit, so memory
+        carries error detection and correction, EDAC, a watchdog resets a hung processor, and
+        current limiters catch latch-ups. Size the storage for bad days, not good ones: seven
+        hundred and twenty megabytes a day, three days without a full downlink, times two. Specify
+        eight gigabytes.
+      fr: >-
+        L’ordinateur de bord tourne en général sous un système d’exploitation temps réel :
+        déterministe, léger, avec des tâches isolées. En orbite, des particules inversent des bits
+        et peuvent verrouiller un circuit : la mémoire porte une détection et correction d’erreurs,
+        l’EDAC, un chien de garde relance un processeur bloqué, et des limiteurs de courant
+        attrapent les verrouillages. Dimensionnez le stockage pour les mauvais jours, pas les bons :
+        sept cent vingt mégaoctets par jour, trois jours sans vidage complet, fois deux. Spécifiez
+        huit gigaoctets.
+    do:
+      - js: "EX.play('obdh', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Does your mission need propulsion at all? Justify it from your altitude, lifetime and the disposal rule."
+        fr: "Votre mission a-t-elle besoin de propulsion ? Justifiez-le par votre altitude, votre durée de vie et la règle de retrait."
