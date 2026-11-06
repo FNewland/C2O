@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The link budget</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .flow { stroke: var(--accent); stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+  .gain { fill: var(--ok); opacity: .8; } .loss { fill: var(--warn); opacity: .8; }
+  .curve { fill: none; stroke: var(--accent); stroke-width: 3; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">The link chain, decibels, the S-band link budget waterfall, margin against data rate, the data budget</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5fb4dc"/></marker></defs>
+  <g id="chain" class="ex-hidden"></g>
+  <g id="db" class="ex-hidden"></g>
+  <g id="wf" class="ex-hidden"></g>
+  <g id="rate" class="ex-hidden"></g>
+  <g id="data" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "The link budget",
+    c_tx: "Transmitter", c_tx_s: "power, antenna, cable", c_eirp: "EIRP", c_ch: "The path", c_ch_s: "distance, air, pointing",
+    c_rx: "Receiver", c_rx_s: "dish gain ÷ noise: G/T", c_dem: "Demodulator", c_dem_s: "Eb/N0 needed", c_m: "Margin", c_m_s: "≥ 3 dB",
+    q: "Does each bit arrive with enough energy, compared with the noise?",
+    d1: "× 2", d1s: "+ 3 dB", d2: "× 10", d2s: "+ 10 dB", d3: "× 100", d3s: "+ 20 dB", d4: "÷ 2", d4s: "− 3 dB",
+    d5: "2 W", d5s: "+ 3 dBW", d6: "1 W", d6s: "+ 30 dBm",
+    d_rule: "Multiply and divide in watts = add and subtract in decibels",
+    w_cap: "S-band downlink, 500 km, 10° elevation, 1 Mbit/s, 3 m dish (dB)",
+    w1: "TX 2 W", w2: "patch", w3: "cable", w4: "EIRP", w5: "path, 1695 km", w6: "air", w7: "pointing", w8: "polarisation",
+    w9: "G/T", w10: "− Boltzmann", w11: "C/N0",
+    e1: "C/N0 83.4 − rate 60.0 = Eb/N0 23.4 dB", e2: "needed 4.0 (QPSK + LDPC) + implementation 2.0",
+    e3: "margin 17.4 dB ≥ 3 dB: the link closes",
+    r_cap: "Margin against data rate, same link", r_x: "data rate (Mbit/s, log scale)", r_y: "margin (dB)",
+    r_p1: "1 Mbit/s: 17.4 dB", r_p2: "5 Mbit/s: 10.4 dB", r_p3: "27 Mbit/s: 3 dB, the power limit", r_bw: "a 5 MHz channel carries about 7.5 Mbit/s",
+    b_cap: "Data budget, per day", b_gen: "Collected", b_gen_s: "240 Mbit/s × 1 min × 4 passes ÷ 10 compression",
+    b_cap2: "Downlinked", b_cap2_s: "5 Mbit/s × 5 passes × 6 min × 85 % protocol",
+    b_dbl: "Imaging 2 min per pass", b_ok: "closes, 33 % to spare", b_bad: "does not close: the backlog grows",
+    b_opt: "Options: X-band · more stations · more compression · choose what to send",
+    n1a: "The link budget adds every gain and loss from amplifier to demodulator.",
+    n1b: "The question: is there enough energy per bit, Eb/N0, above the noise? (textbook § 11.1)",
+    n2a: "Decibels turn the chain of multiplications into one column of additions.",
+    n2b: "Every 3 dB is a factor of two; every 10 dB a factor of ten.",
+    n3a: "Path loss dwarfs everything else; the ground dish wins most of it back.",
+    n3b: "Margin covers what the budget did not foresee: a bad pass, a degraded amplifier (§ 11.8.1).",
+    n4a: "Spend surplus margin on data rate, until the channel width stops you.",
+    n4b: "Each doubling of the rate costs 3 dB of margin.",
+    n5a: "A link that closes is not enough: the data budget must close too.",
+    n5b: "Downlinked per day must be at least collected per day, or storage fills (§ 11.9).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 11 · EOSat-3U S-band worked example (§ 11.8.1) and data budget (§ 11.9)",
+  },
+  fr: {
+    kicker: "Notion", title: "Le bilan de liaison",
+    c_tx: "Émetteur", c_tx_s: "puissance, antenne, câble", c_eirp: "PIRE", c_ch: "Le trajet", c_ch_s: "distance, air, pointage",
+    c_rx: "Récepteur", c_rx_s: "gain ÷ bruit : G/T", c_dem: "Démodulateur", c_dem_s: "Eb/N0 nécessaire", c_m: "Marge", c_m_s: "≥ 3 dB",
+    q: "Chaque bit arrive-t-il avec assez d’énergie, face au bruit ?",
+    d1: "× 2", d1s: "+ 3 dB", d2: "× 10", d2s: "+ 10 dB", d3: "× 100", d3s: "+ 20 dB", d4: "÷ 2", d4s: "− 3 dB",
+    d5: "2 W", d5s: "+ 3 dBW", d6: "1 W", d6s: "+ 30 dBm",
+    d_rule: "Multiplier et diviser en watts = additionner et soustraire en décibels",
+    w_cap: "Liaison descendante en bande S, 500 km, élévation 10°, 1 Mbit/s, antenne de 3 m (dB)",
+    w1: "TX 2 W", w2: "patch", w3: "câble", w4: "PIRE", w5: "trajet, 1695 km", w6: "air", w7: "pointage", w8: "polarisation",
+    w9: "G/T", w10: "− Boltzmann", w11: "C/N0",
+    e1: "C/N0 83,4 − débit 60,0 = Eb/N0 23,4 dB", e2: "nécessaire 4,0 (QPSK + LDPC) + réalisation 2,0",
+    e3: "marge 17,4 dB ≥ 3 dB : la liaison se ferme",
+    r_cap: "Marge selon le débit, même liaison", r_x: "débit (Mbit/s, échelle log)", r_y: "marge (dB)",
+    r_p1: "1 Mbit/s : 17,4 dB", r_p2: "5 Mbit/s : 10,4 dB", r_p3: "27 Mbit/s : 3 dB, la limite de puissance", r_bw: "un canal de 5 MHz porte environ 7,5 Mbit/s",
+    b_cap: "Bilan de données, par jour", b_gen: "Collecté", b_gen_s: "240 Mbit/s × 1 min × 4 passages ÷ 10 compression",
+    b_cap2: "Transmis", b_cap2_s: "5 Mbit/s × 5 passages × 6 min × 85 % protocole",
+    b_dbl: "Prise de vue 2 min par passage", b_ok: "se ferme, 33 % de reste", b_bad: "ne se ferme pas : le retard s’accumule",
+    b_opt: "Options : bande X · plus de stations · plus de compression · choisir ce qu’on envoie",
+    n1a: "Le bilan de liaison additionne chaque gain et chaque perte, de l’amplificateur au démodulateur.",
+    n1b: "La question : assez d’énergie par bit, Eb/N0, au-dessus du bruit ? (manuel § 11.1)",
+    n2a: "Les décibels changent la chaîne de multiplications en une colonne d’additions.",
+    n2b: "Chaque 3 dB est un facteur deux ; chaque 10 dB, un facteur dix.",
+    n3a: "L’affaiblissement de trajet écrase tout ; l’antenne au sol en regagne l’essentiel.",
+    n3b: "La marge couvre l’imprévu : un mauvais passage, un amplificateur dégradé (§ 11.8.1).",
+    n4a: "Dépensez la marge en trop en débit, jusqu’à ce que la largeur du canal vous arrête.",
+    n4b: "Chaque doublement du débit coûte 3 dB de marge.",
+    n5a: "Une liaison qui se ferme ne suffit pas : le bilan de données doit se fermer aussi.",
+    n5b: "Ce qu’on transmet par jour doit couvrir ce qu’on collecte, sinon la mémoire se remplit (§ 11.9).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 11 · exemple résolu EOSat-3U en bande S (§ 11.8.1) et bilan de données (§ 11.9)",
+  },
+});
+const fmt = (v, d) => { const s = v.toFixed(d); return EX.lang === "fr" ? s.replace(".", ",") : s; };
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+
+// 1. chain
+const CH = [["tx", 40, 220], ["eirp", 300, 120], ["ch", 460, 220], ["rx", 720, 230], ["dem", 990, 250]];
+CH.forEach(([k, x, w], i) => {
+  const g = box("chain", "ch-" + k, x, 160, w, 100, k === "eirp" ? "on" : "");
+  EX.el("text", { x: x + 14, y: 200, class: k === "eirp" ? "big" : "", label: "c_" + k }, g);
+  if (k !== "eirp") EX.el("text", { x: x + 14, y: 230, class: "small muted", label: "c_" + k + "_s" }, g);
+  if (i) EX.el("path", { id: "cf-" + i, class: "flow ex-hidden", d: `M ${CH[i - 1][1] + CH[i - 1][2]} 210 L ${x - 2} 210` }, "chain");
+});
+const mg = box("chain", "ch-m", 990, 300, 250, 90, "ok");
+EX.el("text", { x: 1004, y: 336, class: "big", label: "c_m" }, mg);
+EX.el("text", { x: 1004, y: 370, class: "small", label: "c_m_s" }, mg);
+EX.el("path", { id: "cf-m", class: "flow ex-hidden", d: "M 1115 262 L 1115 298" }, "chain");
+EX.el("text", { id: "ch-q", x: 40, y: 100, class: "big ex-hidden", label: "q" }, "chain");
+
+// 2. decibels
+[[1, 2], [3, 4], [5, 6]].forEach(([a, b], i) => {
+  [a, b].forEach((k, j) => {
+    const x = 40 + i * 410, y = 60 + j * 150, g = box("db", "db-" + k, x, y, 380, 120, j ? "" : "on");
+    EX.el("text", { x: x + 24, y: y + 74, class: "huge mono", label: "d" + k }, g);
+    EX.el("text", { x: x + 356, y: y + 74, class: "huge mono", "text-anchor": "end", style: "fill:var(--ok)", label: "d" + k + "s" }, g);
+  });
+});
+EX.el("text", { id: "db-rule", x: 40, y: 400, class: "big ex-hidden", label: "d_rule" }, "db");
+
+// 3. waterfall
+const WS = [["w1", 3.0], ["w2", 6.0], ["w3", -1.5], ["w4", null], ["w5", -164.1], ["w6", -0.5], ["w7", -1.0], ["w8", -0.3], ["w9", 13.2], ["w10", 228.6], ["w11", null]];
+const WY0 = 120, WK = 1.4, wy = (v) => WY0 + (90 - v) * WK; // +90 at top
+EX.el("text", { x: 40, y: 40, class: "small muted", label: "w_cap" }, "wf");
+[80, 40, 0, -40, -80, -120, -160].forEach((v) => {
+  EX.el("line", { x1: 100, y1: wy(v), x2: 1240, y2: wy(v), class: "grid" }, "wf");
+  EX.el("text", { x: 92, y: wy(v) + 5, class: "small mono muted", "text-anchor": "end", text: v }, "wf");
+});
+let lvl = 0;
+WS.forEach(([k, d], i) => {
+  const x = 110 + i * 102, g = EX.el("g", { id: "wf-" + i, class: "ex-hidden" }, "wf");
+  let top, h, cls, val;
+  if (d === null) { top = Math.min(wy(lvl), wy(0)); h = Math.abs(wy(lvl) - wy(0)); cls = "acc"; val = lvl; }
+  else { const a = lvl, b = lvl + d; top = wy(Math.max(a, b)); h = Math.max(2, Math.abs(d) * WK); cls = d > 0 ? "gain" : "loss"; lvl = b; val = d; }
+  EX.el("rect", { x, y: top, width: 86, height: h, class: cls }, g);
+  EX.el("text", { x: x + 43, y: (d === null ? top : top) - 8, class: "small mono", "text-anchor": "middle", text: (d !== null && d > 0 ? "+" : "") + fmt(val, 1) }, g);
+  EX.el("text", { x: x + 43, y: 478, class: "small", "text-anchor": "middle", label: k }, g);
+});
+const ew = EX.el("g", { id: "wf-eb", class: "ex-hidden" }, "wf");
+EX.el("rect", { x: 300, y: 50, width: 640, height: 130, rx: 8, fill: "#1b2027", stroke: "var(--line)" }, ew);
+EX.el("text", { x: 316, y: 82, class: "small mono", label: "e1" }, ew);
+EX.el("text", { x: 316, y: 112, class: "small mono muted", label: "e2" }, ew);
+EX.el("text", { x: 316, y: 160, class: "big", style: "fill:var(--ok)", label: "e3" }, ew);
+
+// 4. margin against rate: M = 83.4 - 10 log10(R) - 6
+const RX0 = 140, RW = 980, rx = (r) => RX0 + (Math.log10(r) + 0) / 2 * RW, RY0 = 440, RK = 18, ry = (m) => RY0 - m * RK; // 1..100 Mbit/s
+EX.el("text", { x: 40, y: 40, class: "small muted", label: "r_cap" }, "rate");
+[0, 5, 10, 15, 20].forEach((m) => {
+  EX.el("line", { x1: RX0, y1: ry(m), x2: RX0 + RW, y2: ry(m), class: "grid" }, "rate");
+  EX.el("text", { x: RX0 - 10, y: ry(m) + 5, class: "small mono muted", "text-anchor": "end", text: m }, "rate");
+});
+[1, 2, 5, 10, 20, 50, 100].forEach((r) => EX.el("text", { x: rx(r), y: RY0 + 26, class: "small mono muted", "text-anchor": "middle", text: r }, "rate"));
+EX.el("text", { x: RX0 + RW, y: RY0 + 52, class: "small muted", "text-anchor": "end", label: "r_x" }, "rate");
+EX.el("line", { x1: RX0, y1: ry(3), x2: RX0 + RW, y2: ry(3), stroke: "var(--bad)", "stroke-width": 2, "stroke-dasharray": "8 6" }, "rate");
+let rc = "";
+for (let e = 0; e <= 2.0001; e += 0.02) { const r = 10 ** e, m = 83.4 - 10 * Math.log10(r * 1e6) - 6; rc += (e ? " L " : "M ") + rx(r).toFixed(1) + " " + ry(Math.max(m, -1)).toFixed(1); }
+EX.el("path", { id: "r-curve", class: "curve ex-hidden", d: rc }, "rate");
+EX.el("rect", { id: "r-bw", x: rx(7.5), y: 70, width: RX0 + RW - rx(7.5), height: RY0 - 70, fill: "var(--muted)", opacity: 0 }, "rate");
+EX.el("text", { id: "r-bwt", x: rx(7.5) + 10, y: 92, class: "small ex-hidden", label: "r_bw" }, "rate");
+[[1, 17.4, "r_p1"], [5, 10.4, "r_p2"], [27, 3.0, "r_p3"]].forEach(([r, m, k], i) => {
+  const g = EX.el("g", { id: "rp-" + i, class: "ex-hidden" }, "rate");
+  EX.el("circle", { cx: rx(r), cy: ry(m), r: 9, fill: i === 2 ? "var(--bad)" : "var(--ok)" }, g);
+  EX.el("text", { x: rx(r) + 16, y: ry(m) - 12, class: "small", label: k }, g);
+});
+
+// 5. data budget
+EX.el("text", { x: 40, y: 40, class: "small muted", label: "b_cap" }, "data");
+const BK = 0.55; // px per MB
+[["gen", 720, "acc", "b_gen_s"], ["cap2", 956, "ok", "b_cap2_s"]].forEach(([k, mb, cls, s], i) => {
+  const y = 70 + i * 120, g = EX.el("g", { id: "bd-" + i, class: "ex-hidden" }, "data");
+  EX.el("text", { x: 40, y: y + 30, class: "big", label: "b_" + k }, g);
+  EX.el("text", { x: 40, y: y + 58, class: "small muted", label: s }, g);
+  EX.el("rect", { x: 420, y: y + 4, width: mb * BK, height: 46, rx: 4, class: cls, opacity: 0.8 }, g);
+  EX.el("text", { x: 430 + mb * BK, y: y + 36, class: "big mono", text: mb + " MB" }, g);
+});
+EX.el("text", { id: "bd-ok", x: 420, y: 300, class: "big ex-hidden", style: "fill:var(--ok)", label: "b_ok" }, "data");
+const dbl = EX.el("g", { id: "bd-dbl", class: "ex-hidden" }, "data");
+EX.el("text", { x: 40, y: 356, class: "big", label: "b_dbl" }, dbl);
+EX.el("rect", { x: 420, y: 330, width: 1440 * BK, height: 46, rx: 4, class: "bad", opacity: 0.8 }, dbl);
+EX.el("text", { x: 430 + 1440 * BK - 140, y: 362, class: "big mono", text: "1440 MB" }, dbl);
+EX.el("line", { x1: 420 + 956 * BK, y1: 180, x2: 420 + 956 * BK, y2: 390, stroke: "var(--ok)", "stroke-width": 2, "stroke-dasharray": "6 5" }, dbl);
+EX.el("text", { x: 420, y: 412, class: "small", style: "fill:var(--bad)", label: "b_bad" }, dbl);
+EX.el("text", { id: "bd-opt", x: 40, y: 470, class: "small ex-hidden", label: "b_opt" }, "data");
+
+function only(...ids) { ["chain", "db", "wf", "rate", "data", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+
+EX.scene("chain", (beat) => {
+  only("chain");
+  beat(0.03, () => EX.show("ch-q"));
+  CH.forEach(([k], i) => beat(0.12 + i * 0.09, () => { EX.show("ch-" + k); if (i) EX.draw("cf-" + i, 300); }));
+  beat(0.6, () => { EX.draw("cf-m", 300); EX.show("ch-m"); });
+  beat(0.74, () => note("n1a", "n1b"));
+});
+EX.scene("decibels", (beat) => {
+  only("db");
+  [1, 2, 3, 4, 5, 6].forEach((k, i) => beat(0.04 + i * 0.08, () => EX.show("db-" + k)));
+  beat(0.56, () => EX.show("db-rule"));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("waterfall", (beat) => {
+  only("wf");
+  WS.forEach((_, i) => beat(0.03 + i * 0.05, () => EX.show("wf-" + i)));
+  beat(0.62, () => EX.show("wf-eb"));
+  beat(0.78, () => note("n3a", "n3b"));
+});
+EX.scene("rate", (beat) => {
+  only("rate");
+  beat(0.04, () => EX.draw("r-curve", 1500));
+  [0, 1, 2].forEach((i) => beat(0.25 + i * 0.1, () => EX.show("rp-" + i)));
+  beat(0.56, () => { op("r-bw", 0.14); EX.show("r-bwt"); });
+  beat(0.72, () => note("n4a", "n4b"));
+});
+EX.scene("data", (beat) => {
+  only("data");
+  beat(0.04, () => EX.show("bd-0"));
+  beat(0.16, () => EX.show("bd-1"));
+  beat(0.28, () => EX.show("bd-ok"));
+  beat(0.45, () => EX.show("bd-dbl"));
+  beat(0.6, () => EX.show("bd-opt"));
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>

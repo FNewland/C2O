@@ -49,6 +49,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-DES-07 | 3 | Design concept: sizing the array and the battery — worst sunlit mode plus eclipse recharge (13.8 W EOL), degradation and temperature (16 W BOL, 0.053 m²), battery 8.8/10.6 Wh at 25 % DoD, cycle life, failure modes | — (whole design team) | written 2026-11-06 (`power.html`) |
 | V-DES-08 | 3 | Design concept: thermal control in a vacuum — heat in/out, α/ε and coatings, hot and cold single-node cases, temperature margins and the battery heater, the toolbox | — (whole design team) | written 2026-11-06 (`thermal.html`) |
 | V-DES-09 | 4 | Design concept: attitude determination and control — the loop, architecture by pointing need (EOSAT-1: wheels, star tracker, MTQ), disturbance torques (residual dipole dominates), wheel momentum and desaturation, no MTQ torque along B | — (whole design team) | written 2026-11-06 (`aocs.html`) |
+| V-DES-10 | 4 | Design concept: the link budget — chain, decibels, S-band waterfall (margin 17.4 dB), margin against data rate (spectrum limit), data budget (720 vs 956 MB/day) | — (whole design team); leads into the SpaceCDF link budget tool | written 2026-11-06 (`comms.html`) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`

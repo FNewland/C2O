@@ -1,0 +1,137 @@
+# Design concept — the link budget (textbook ch. 11): the chain from
+# transmitter to margin, decibels, the EOSat-3U S-band downlink waterfall
+# (C/N0 83.4 dBHz, Eb/N0 23.4 dB, margin 17.4 dB), margin against data rate
+# (3 dB each doubling; 27 Mbit/s power limit; 7.5 Mbit/s channel limit), and
+# the data budget (720 against 956 MB/day). Leads into the SpaceCDF link
+# budget tool video. Animated page video/explainers/comms.html.
+id: V-DES-10
+week: 4
+audience: all
+title:
+  en: "The link budget"
+  fr: "Le bilan de liaison"
+summary:
+  en: "Will the signal get through? The chain of gains and losses from transmitter to demodulator, decibels, a complete S-band downlink budget, trading margin for data rate, and the data budget that must close as well."
+  fr: "Le signal passera-t-il ? La chaîne des gains et des pertes de l’émetteur au démodulateur, les décibels, un bilan complet de liaison descendante en bande S, l’échange entre marge et débit, et le bilan de données qui doit lui aussi se fermer."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/11_communications.md (§ 11.1, 11.2, 11.8.1, 11.9)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/comms.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: chain
+    title: {en: "The link chain", fr: "La chaîne de liaison"}
+    say:
+      en: >-
+        A link budget answers one question: does each bit arrive with enough energy, compared
+        with the noise, to be decoded? Start at the transmitter: its power, its antenna and its
+        cable give the effective radiated power. The path takes most of it away: distance, the
+        atmosphere, pointing. The receiver's dish gain against its noise is its figure of merit.
+        The demodulator needs a certain energy per bit. What is left over is the margin, and it
+        should be at least three decibels.
+      fr: >-
+        Un bilan de liaison répond à une question : chaque bit arrive-t-il avec assez d’énergie,
+        face au bruit, pour être décodé ? Partez de l’émetteur : sa puissance, son antenne et son
+        câble donnent la puissance isotrope rayonnée équivalente. Le trajet en enlève l’essentiel :
+        la distance, l’atmosphère, le pointage. Le gain de l’antenne au sol face à son bruit est
+        son facteur de mérite. Le démodulateur exige une certaine énergie par bit. Ce qui reste,
+        c’est la marge, et elle doit être d’au moins trois décibels.
+    do:
+      - js: "EX.play('chain', ${say})"
+
+  - id: decibels
+    title: {en: "Decibels", fr: "Les décibels"}
+    say:
+      en: >-
+        The budget is kept in decibels because a chain of multiplications becomes a column of
+        additions. Twice the power is plus three decibels; ten times is plus ten; a hundred times,
+        plus twenty. Half is minus three. Two watts is plus three decibel-watts, and one watt is
+        plus thirty decibels above a milliwatt.
+      fr: >-
+        Le bilan se tient en décibels, car une chaîne de multiplications devient une colonne
+        d’additions. Deux fois la puissance, c’est plus trois décibels ; dix fois, plus dix ; cent
+        fois, plus vingt. La moitié, c’est moins trois. Deux watts font plus trois
+        décibels-watts, et un watt fait plus trente décibels au-dessus du milliwatt.
+    do:
+      - js: "EX.play('decibels', ${say})"
+
+  - id: waterfall
+    title: {en: "An S-band downlink", fr: "Une liaison descendante en bande S"}
+    say:
+      en: >-
+        Here is a real budget: a two-watt S-band transmitter on a 3U at five hundred kilometres,
+        a patch antenna, one megabit per second, to a three-metre dish at ten degrees elevation.
+        The path loss over seventeen hundred kilometres is a hundred and sixty-four decibels, and
+        it dwarfs everything else. The dish and the noise constant win it back. Subtract the data
+        rate, then what the modulation and coding need: seventeen point four decibels of margin.
+        The link closes, with plenty to spare.
+      fr: >-
+        Voici un vrai bilan : un émetteur de deux watts en bande S sur un 3U à cinq cents
+        kilomètres, une antenne patch, un mégabit par seconde, vers une antenne de trois mètres à
+        dix degrés d’élévation. L’affaiblissement sur dix-sept cents kilomètres est de cent
+        soixante-quatre décibels, et il écrase tout le reste. L’antenne et la constante de bruit
+        le regagnent. Retirez le débit, puis ce qu’exigent la modulation et le codage : dix-sept
+        virgule quatre décibels de marge. La liaison se ferme, largement.
+    do:
+      - js: "EX.play('waterfall', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "The ground station swaps its 3 m dish for one half the diameter. Roughly what happens to the margin?"
+        fr: "La station sol remplace son antenne de 3 m par une de diamètre moitié. Qu’arrive-t-il à peu près à la marge ?"
+      options:
+        - text: {en: "It falls by about 6 dB: gain goes with the area, a quarter of the area is −6 dB.", fr: "Elle baisse d’environ 6 dB : le gain suit la surface, un quart de la surface fait −6 dB."}
+          correct: true
+          why: {en: "Dish gain grows with diameter squared; 17.4 − 6 still leaves about 11 dB.", fr: "Le gain croît avec le carré du diamètre ; 17,4 − 6 laisse encore environ 11 dB."}
+        - text: {en: "It falls by about 3 dB.", fr: "Elle baisse d’environ 3 dB."}
+          why: {en: "That would be half the area, not half the diameter.", fr: "Ce serait la moitié de la surface, pas du diamètre."}
+        - text: {en: "Nothing: the dish only affects the uplink.", fr: "Rien : l’antenne ne compte que pour la montée."}
+          why: {en: "Its gain is the G in G/T on the downlink.", fr: "Son gain est le G du G/T en descente."}
+
+  - id: rate
+    title: {en: "Margin buys data rate", fr: "La marge achète du débit"}
+    say:
+      en: >-
+        Surplus margin can be spent on data rate. Each doubling of the rate costs three decibels.
+        At five megabits per second the margin is still ten decibels; power alone would allow about
+        twenty-seven before reaching the three-decibel floor. But the channel the radio licence
+        allows, five megahertz wide, carries only about seven and a half megabits per second. Here
+        the spectrum, not the power, sets the limit.
+      fr: >-
+        La marge en trop peut se dépenser en débit. Chaque doublement du débit coûte trois
+        décibels. À cinq mégabits par seconde, la marge est encore de dix décibels ; la puissance
+        seule permettrait environ vingt-sept avant d’atteindre le plancher de trois décibels. Mais
+        le canal autorisé par la licence radio, large de cinq mégahertz, ne porte qu’environ sept
+        mégabits et demi par seconde. Ici, c’est le spectre, et non la puissance, qui fixe la
+        limite.
+    do:
+      - js: "EX.play('rate', ${say})"
+
+  - id: data
+    title: {en: "The data budget", fr: "Le bilan de données"}
+    say:
+      en: >-
+        A link that closes is not the end. Each day, the camera collects about seven hundred and
+        twenty megabytes after compression; five passes at five megabits per second bring down
+        about nine hundred and fifty. The data budget closes with a third to spare. Double the
+        imaging time, and it no longer closes: the backlog grows every day. Then you need X-band,
+        more ground stations, more compression, or a choice of what to send.
+      fr: >-
+        Une liaison qui se ferme n’est pas la fin. Chaque jour, la caméra collecte environ sept
+        cent vingt mégaoctets après compression ; cinq passages à cinq mégabits par seconde en
+        descendent environ neuf cent cinquante. Le bilan de données se ferme, avec un tiers de
+        reste. Doublez le temps de prise de vue, et il ne se ferme plus : le retard grandit chaque
+        jour. Il faut alors la bande X, plus de stations sol, plus de compression, ou choisir ce
+        qu’on envoie.
+    do:
+      - js: "EX.play('data', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "For your mission, which closes with less to spare: the link budget or the data budget? What would you change first?"
+        fr: "Pour votre mission, lequel se ferme avec le moins de reste : le bilan de liaison ou le bilan de données ? Que changeriez-vous en premier ?"
