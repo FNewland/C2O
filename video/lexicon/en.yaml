@@ -31,7 +31,11 @@ rules:
   - ['\b(eps|aocs|ttc|obdh|tcs|fdir|obc)\.(?=[a-z])', '{spell:\1} ']
   - ['\b(payload|prop|sim|mcs)\.(?=[a-z])', '\1 ']
   - ['\b(LEOP)-(\d{3})\b', 'lee-op {digits:\2}']
-  - ['\b(NOM|COM|CTG|EMG)-(\d{3})\b', '{spell:\1} {digits:\2}']
+  # card prefixes are said the way the team says them: "nom zero zero one"
+  - ['\bNOM-(\d{3})\b', 'nom {digits:\1}']
+  - ['\bCOM-(\d{3})\b', 'com {digits:\1}']
+  - ['\bCTG-(\d{3})\b', 'contingency {digits:\1}']
+  - ['\bEMG-(\d{3})\b', 'emergency {digits:\1}']
   - ['\bLW-(\d)\.(\d)\b', 'learner worksheet \1 point \2']
   - ['\bS(\d{1,2})\b', 'S \1']
   - ['\b0x([0-9A-F]{4})\b', 'hex {spell:\1}']

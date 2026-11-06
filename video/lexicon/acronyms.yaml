@@ -1,0 +1,112 @@
+# Acronyms and abbreviations used (or about to be used) in the course videos.
+#
+# The rule for narration (video/README.md, "Acronyms"): the first time a video
+# SAYS an acronym, it says the full form, then the short form the team uses
+# ("nominal procedure one, NOM-001 — nom for short"). After that the short form
+# is fine. Each video stands alone: learners watch them out of order, so the
+# first use is counted per video and per language.
+#
+#   en / fr     the expansion, as the narrator should say it at first use.
+#               The lint looks for its leading words near the first use.
+#   short       how operators say the short form aloud (doc only; the
+#               pronunciation itself lives in en.yaml / fr.yaml).
+#   expand      false: a state word, label or name that needs no expansion
+#               (GO, SAFE, NONE, GPS…). Listed so the lint knows it is deliberate.
+#   kind        letters | word: whether it is spelled or said as a word.
+#
+# Sources: sim/docs (OPERATIONS_GUIDE, PUS_SERVICE_REFERENCE, TIME_ARCHITECTURE,
+# INSTRUCTOR_GUIDE glossary), design/docs/oer, the i18n glossaries.
+
+# --- procedure card prefixes ------------------------------------------------
+NOM:   {en: "nominal procedure", fr: "procédure nominale", short: {en: nom, fr: nom}, kind: word, expand: true}
+LEOP:  {en: "launch and early orbit phase", fr: "phase de lancement et de début d’orbite", short: {en: lee-op, fr: Léop}, kind: word, expand: true}
+COM:   {en: "commissioning procedure", fr: "procédure de mise en service", short: {en: com, fr: com}, kind: word, expand: true}
+CTG:   {en: "contingency procedure", fr: "procédure de contingence", short: {en: contingency, fr: contingence}, kind: word, expand: true}
+EMG:   {en: "emergency procedure", fr: "procédure d’urgence", short: {en: emergency, fr: urgence}, kind: word, expand: true}
+
+# --- subsystems and positions -----------------------------------------------
+AOCS:  {en: "attitude and orbit control", fr: "contrôle d’attitude et d’orbite", short: {en: A-O-C-S, fr: A-O-C-S}, kind: letters, expand: true,
+        note: "Console position and identifier stay AOCS on screen; French prose says SCAO."}
+SCAO:  {en: "attitude and orbit control", fr: "système de contrôle d’attitude et d’orbite", short: {en: "-", fr: S-C-A-O}, kind: letters, expand: true}
+ADCS:  {en: "attitude determination and control", fr: "détermination et contrôle d’attitude", short: {en: A-D-C-S, fr: A-D-C-S}, kind: letters, expand: true}
+EPS:   {en: "electrical power", fr: "sous-système énergie", short: {en: E-P-S, fr: E-P-S}, kind: letters, expand: true}
+TCS:   {en: "thermal control", fr: "contrôle thermique", short: {en: T-C-S, fr: T-C-S}, kind: letters, expand: true}
+TTC:   {en: "telemetry, tracking and command", fr: "télémesure, poursuite et télécommande", short: {en: T-T-C, fr: T-T-C}, kind: letters, expand: true}
+OBC:   {en: "on-board computer", fr: "ordinateur de bord", short: {en: O-B-C, fr: O-B-C}, kind: letters, expand: true}
+OBDH:  {en: "on-board data handling", fr: "gestion de bord", short: {en: O-B-D-H, fr: O-B-D-H}, kind: letters, expand: true}
+FDIR:  {en: "fault detection, isolation and recovery", fr: "détection, isolation et reprise des pannes", short: {en: F-DIR, fr: F-D-I-R}, kind: letters, expand: true}
+MCS:   {en: "mission control system", fr: "système de contrôle de mission", short: {en: M-C-S, fr: M-C-S}, kind: letters, expand: true}
+PCDU:  {en: "power conditioning and distribution unit", fr: "unité de conditionnement et de distribution de puissance", short: {en: P-C-D-U, fr: P-C-D-U}, kind: letters, expand: true}
+BCR:   {en: "battery charge regulator", fr: "régulateur de charge batterie", short: {en: B-C-R, fr: B-C-R}, kind: letters, expand: true}
+LCL:   {en: "latching current limiter", fr: "limiteur de courant à verrouillage", short: {en: L-C-L, fr: L-C-L}, kind: letters, expand: true}
+MPPT:  {en: "maximum power point tracking", fr: "suivi du point de puissance maximale", short: {en: M-P-P-T, fr: M-P-P-T}, kind: letters, expand: true}
+MTQ:   {en: "magnetorquer", fr: "magnéto-coupleur", short: {en: M-T-Q, fr: M-T-Q}, kind: letters, expand: true}
+CSS:   {en: "coarse sun sensor", fr: "capteur solaire grossier", short: {en: C-S-S, fr: C-S-S}, kind: letters, expand: true}
+RW:    {en: "reaction wheel", fr: "roue de réaction", short: {en: R-W, fr: R-W}, kind: letters, expand: true}
+OBCP:  {en: "on-board control procedure", fr: "procédure de contrôle de bord", short: {en: O-B-C-P, fr: O-B-C-P}, kind: letters, expand: true}
+
+# --- data, packets, commanding ----------------------------------------------
+PUS:   {en: "packet utilisation standard", fr: "norme d’utilisation des paquets", short: {en: P-U-S, fr: P-U-S}, kind: letters, expand: true}
+TM:    {en: "telemetry", fr: "télémesure", short: {en: T-M, fr: T-M}, kind: letters, expand: true}
+TC:    {en: "telecommand", fr: "télécommande", short: {en: T-C, fr: T-C}, kind: letters, expand: true}
+HK:    {en: "housekeeping", fr: "données de servitude", short: {en: H-K, fr: H-K}, kind: letters, expand: true}
+SID:   {en: "structure identifier", fr: "identifiant de structure", short: {en: S-I-D, fr: S-I-D}, kind: letters, expand: true}
+APID:  {en: "application process identifier", fr: "identifiant de processus applicatif", short: {en: A-P-I-D, fr: A-P-I-D}, kind: letters, expand: true}
+CCSDS: {en: "Consultative Committee for Space Data Systems", fr: "Comité consultatif pour les systèmes de données spatiales", short: {en: C-C-S-D-S, fr: C-C-S-D-S}, kind: letters, expand: true}
+CUC:   {en: "CCSDS unsegmented time code", fr: "code temporel non segmenté du CCSDS", short: {en: C-U-C, fr: C-U-C}, kind: letters, expand: true}
+OBT:   {en: "on-board time", fr: "temps de bord", short: {en: O-B-T, fr: O-B-T}, kind: letters, expand: true}
+OWLT:  {en: "one-way light time", fr: "temps de propagation aller", short: {en: O-W-L-T, fr: O-W-L-T}, kind: letters, expand: true}
+UTC:   {en: "coordinated universal time", fr: "temps universel coordonné", short: {en: U-T-C, fr: U-T-C}, kind: letters, expand: true}
+"S1":  {en: "service one, request verification", fr: "service un, vérification des requêtes", short: {en: S one, fr: S un}, kind: letters, expand: true,
+        note: "Any S<n> (PUS service n): first use says 'service n' and what it does. The lint checks the pattern S\\d+ generically."}
+
+# --- ground segment and passes ----------------------------------------------
+AOS:   {en: "acquisition of signal", fr: "acquisition du signal", short: {en: A-O-S, fr: A-O-S}, kind: letters, expand: true}
+LOS:   {en: "loss of signal", fr: "perte du signal", short: {en: L-O-S, fr: L-O-S}, kind: letters, expand: true}
+TCA:   {en: "time of closest approach", fr: "instant de plus courte distance", short: {en: T-C-A, fr: T-C-A}, kind: letters, expand: true}
+RF:    {en: "radio frequency", fr: "radiofréquence", short: {en: R-F, fr: R-F}, kind: letters, expand: true}
+EIRP:  {en: "equivalent isotropic radiated power", fr: "puissance isotrope rayonnée équivalente", short: {en: E-I-R-P, fr: P-I-R-E}, kind: letters, expand: true}
+BER:   {en: "bit error rate", fr: "taux d’erreur binaire", short: {en: B-E-R, fr: B-E-R}, kind: letters, expand: true}
+FEC:   {en: "forward error correction", fr: "correction d’erreurs directe", short: {en: F-E-C, fr: F-E-C}, kind: letters, expand: true}
+
+# --- orbit and flight dynamics ----------------------------------------------
+LEO:   {en: "low Earth orbit", fr: "orbite basse", short: {en: L-E-O, fr: L-E-O}, kind: letters, expand: true}
+SSO:   {en: "Sun-synchronous orbit", fr: "orbite héliosynchrone", short: {en: S-S-O, fr: S-S-O}, kind: letters, expand: true}
+LTAN:  {en: "local time of the ascending node", fr: "heure locale du nœud ascendant", short: {en: L-TAN, fr: L-T-A-N}, kind: letters, expand: true}
+RAAN:  {en: "right ascension of the ascending node", fr: "ascension droite du nœud ascendant", short: {en: R-A-A-N, fr: R-A-A-N}, kind: letters, expand: true}
+IOD:   {en: "initial orbit determination", fr: "restitution d’orbite initiale", short: {en: I-O-D, fr: I-O-D}, kind: letters, expand: true}
+TLE:   {en: "two-line element set", fr: "jeu d’éléments à deux lignes", short: {en: T-L-E, fr: T-L-E}, kind: letters, expand: true}
+GSD:   {en: "ground sample distance", fr: "distance d’échantillonnage au sol", short: {en: G-S-D, fr: G-S-D}, kind: letters, expand: true}
+
+# --- power -------------------------------------------------------------------
+SoC:   {en: "state of charge", fr: "état de charge", short: {en: state of charge, fr: état de charge}, kind: word, expand: false,
+        note: "Already said in full by the lexicon."}
+DoD:   {en: "depth of discharge", fr: "profondeur de décharge", short: {en: depth of discharge, fr: profondeur de décharge}, kind: word, expand: false}
+
+# --- design reviews (SpaceCDF) -----------------------------------------------
+CDF:   {en: "concurrent design facility", fr: "plateau de conception concourante", short: {en: C-D-F, fr: C-D-F}, kind: letters, expand: true}
+MDR:   {en: "mission definition review", fr: "revue de définition de mission", short: {en: M-D-R, fr: M-D-R}, kind: letters, expand: true}
+PDR:   {en: "preliminary design review", fr: "revue de conception préliminaire", short: {en: P-D-R, fr: P-D-R}, kind: letters, expand: true}
+CDR:   {en: "critical design review", fr: "revue critique de conception", short: {en: C-D-R, fr: C-D-R}, kind: letters, expand: true}
+TRL:   {en: "technology readiness level", fr: "niveau de maturité technologique", short: {en: T-R-L, fr: T-R-L}, kind: letters, expand: true}
+ConOps: {en: "concept of operations", fr: "concept d’opérations", short: {en: con-ops, fr: con-ops}, kind: word, expand: true}
+
+# --- deliberately not expanded ----------------------------------------------
+GO:       {expand: false, note: "poll answer"}
+NO-GO:    {expand: false, note: "poll answer"}
+GPS:      {expand: false, note: "universally known; say 'the GPS receiver'"}
+HTML:     {expand: false, note: "file format name"}
+PRC:      {expand: false, note: "MCS rail label: say 'the procedures page, PRC'"}
+SAFE:     {expand: false, note: "mode name"}
+LOW:      {expand: false, note: "mode name"}
+HIGH:     {expand: false, note: "mode name"}
+NONE:     {expand: false, note: "on-screen value"}
+GROUND:   {expand: false, note: "on-screen value"}
+TIME:     {expand: false, note: "page label (S9 TIME)"}
+DETUMBLE: {expand: false, note: "mode name"}
+COARSE_SUN: {expand: false, note: "mode name"}
+EOSAT-1:  {expand: false, note: "spacecraft name"}
+EOSAT:    {expand: false, note: "spacecraft name"}
+C2O:      {expand: false, note: "product name"}
+NASA:     {expand: false}
+ESA:      {expand: false}

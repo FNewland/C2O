@@ -25,7 +25,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import LANGS, assemble, h5p, review, storyboard, tts, uitext, worksheets
+from . import LANGS, acronyms, assemble, h5p, review, storyboard, tts, uitext, worksheets
 from .storyboard import ROOT, tr
 
 OUT = Path(os.environ.get("C2O_VIDEO_OUT", ROOT / "out"))
@@ -199,6 +199,8 @@ def main(argv=None) -> int:
             print(f"{sb.id}: {'ok' if not probs else str(len(probs)) + ' problem(s)'}")
             for pr in probs:
                 print("   ✗", pr)
+            for w in acronyms.lint(sb):
+                print("   ! acronym:", w)
             bad += len(probs)
         return 1 if bad else 0
     elif a.cmd == "narrate":
