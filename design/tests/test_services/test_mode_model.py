@@ -62,17 +62,17 @@ def test_cds_envelope_6u_12u_length_and_body_frame():
 # ------------------------------------------------------------------ F2 / F3: margins
 
 def test_one_margin_ladder_in_consistency_engine():
-    params = {"systems.mass_margin_percent": 22.0, "systems.power_margin_percent": 22.0}
-    # MDR asks 25 % (C2O ladder) -> both below; PDR asks 20 % -> both pass
+    params = {"systems.mass_margin_percent": 17.0, "systems.power_margin_percent": 17.0}
+    # MDR asks 20 % (textbook Table 8.3) -> both below; PDR asks 15 % -> both pass
     mdr = run_consistency_check(design_params=params, margin_gate="mdr")
     pdr = run_consistency_check(design_params=params, margin_gate="pdr")
     assert {i.id for i in mdr.issues if i.category == "budgets"} == {"CON-BDG-MASS", "CON-BDG-POWE"}
     assert not [i for i in pdr.issues if i.category == "budgets"]
-    assert "25" in next(i.title for i in mdr.issues if i.category == "budgets")
-    # without a gate the phase picks the ladder step (phase_0 -> MDR 25 %), not the old 30 %
-    p0 = run_consistency_check(design_params={"systems.mass_margin_percent": 26.0}, phase_id="phase_0")
+    assert "20" in next(i.title for i in mdr.issues if i.category == "budgets")
+    # without a gate the phase picks the ladder step (phase_0 -> MDR 20 %), not the old 30 %
+    p0 = run_consistency_check(design_params={"systems.mass_margin_percent": 21.0}, phase_id="phase_0")
     assert not [i for i in p0.issues if i.id == "CON-BDG-MASS"]
-    assert system_margin_percent("mdr") == 25 and system_margin_percent("cdr", "power") == 10
+    assert system_margin_percent("mdr") == 20 and system_margin_percent("cdr", "power") == 10
 
 
 def test_one_maturity_source():
@@ -333,7 +333,7 @@ def test_equipment_budgets(sat):
     assert rows["cam"]["power_by_mode_w"]["img"] == 6.0 and rows["cam"]["data_by_mode_bps"]["img"] == 50_000_000
     assert rows["tx"]["dissipation_by_mode_w"]["dl"] == pytest.approx(10.8)
     t = res["totals"]
-    assert t["mass_total_kg"] == pytest.approx(t["mass_with_maturity_kg"] * 1.2, abs=1e-3)
-    assert res["system_margin"]["gate"] == "pdr" and res["system_margin"]["power_percent"] == 20
+    assert t["mass_total_kg"] == pytest.approx(t["mass_with_maturity_kg"] * 1.15, abs=1e-3)
+    assert res["system_margin"]["gate"] == "pdr" and res["system_margin"]["power_percent"] == 15
     assert res["system_margin"]["convention"]["id"] == "percent_of_nominal"
     assert t["cost_keur"] == pytest.approx(15 + 28)

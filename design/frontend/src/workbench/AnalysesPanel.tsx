@@ -29,6 +29,7 @@ import { FMECAPanel } from '../components/FMECAPanel'
 import { OptionCompare } from '../components/OptionCompare'
 import { ConflictsPanel } from '../components/ConflictsPanel'
 import { BudgetPanel } from './BudgetPanel'
+import { LinkBudgetTool } from '../components/LinkBudgetTool'
 import type { AnalysisRun, AnalysisConflict } from '../types/analyses'
 import { Button, Chevron, Note, Panel, StatusBadge } from '../components/ui'
 import { useWhereSection } from '../where/where'
@@ -259,9 +260,13 @@ export function AnalysesPanel() {
   const optionId = useActiveOptionId(studyId)
   const [open, setOpen] = useState<AnalysisId | null>(null)
   const [showCompare, setShowCompare] = useState(false)
+  const [showLink, setShowLink] = useState(false)
   const opt = optionQuery(optionId)
   // "Where in SpaceCDF" links open an analysis card (where/where.ts)
-  useWhereSection('analyses', sec => { if (ANALYSIS_CARDS.some(c => c.id === sec)) setOpen(sec as AnalysisId) })
+  useWhereSection('analyses', sec => {
+    if (sec === 'link_budget') setShowLink(true)
+    else if (ANALYSIS_CARDS.some(c => c.id === sec)) setOpen(sec as AnalysisId)
+  })
 
   const { data: runs = [], error: runsError } = useAnalysisRuns(studyId, optionId)
   const { data: conflicts } = useQuery<{ design: AnalysisConflict[]; analysis: AnalysisConflict[] }>({
@@ -289,6 +294,9 @@ export function AnalysesPanel() {
             : t('Engineering analyses for the baseline. Open one to see its results; Run recalculates it and refreshes parameters, conflicts and margins.')}
         </span>
         <span className="grow" />
+        <Button size="sm" aria-pressed={showLink} className="c2o-toggle" data-where="analyses:link_budget" onClick={() => setShowLink(v => !v)}>
+          {t('Link budget')}
+        </Button>
         <Button size="sm" aria-pressed={showCompare} className="c2o-toggle" onClick={() => setShowCompare(v => !v)}>
           {t('Compare options')}
         </Button>
@@ -304,6 +312,14 @@ export function AnalysesPanel() {
           />
         ))}
       </ul>
+
+      {showLink && (
+        <div data-where="analyses-link-budget">
+          <Section title={t('Link budget, term by term')} color="var(--text-2)">
+            <ErrorBoundary phaseName="Link budget"><LinkBudgetTool /></ErrorBoundary>
+          </Section>
+        </div>
+      )}
 
       {showCompare && (
         <Section title={t('Options')} color="var(--text-2)">

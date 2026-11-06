@@ -44,8 +44,8 @@
   },
   {
    "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-2-canadian-space-industry-map/2-2-1-industry-structure",
-   "en_hash": "6b71902a92860f15",
-   "fr_hash": "148bc6b4416b7029"
+   "en_hash": "ec60c9f5deda1ca2",
+   "fr_hash": "2b7912c27e96bfea"
   },
   {
    "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-2-canadian-space-industry-map/2-2-2-key-canadian-space-capabilities",
@@ -79,8 +79,8 @@
   },
   {
    "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-5-regulatory-framework-overview",
-   "en_hash": "b51ef2a8afea8104",
-   "fr_hash": "2bec8fca0d6a061d"
+   "en_hash": "2e708b5aceaaf251",
+   "fr_hash": "b31df12a0496ccfb"
   },
   {
    "id": "chapter-2-the-canadian-space-ecosystem-and-regulatory-environment/2-6-remote-sensing-space-systems-act-rsssa",
@@ -178,5 +178,5 @@
    "fr_hash": "034cf6b093421974"
   }
  ],
- "en_commit": "3ea7113"
+ "en_commit": "b010e1a"
 }

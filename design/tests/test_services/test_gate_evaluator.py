@@ -161,14 +161,14 @@ def test_pdr_should_pass_items_are_advisory_and_do_not_block():
 def test_pdr_margin_and_requirement_failures_block():
     reqs = [{"id": "R1", "code": "SYS-PWR-003", "threshold_param_path": "eps.power_w",
              "threshold_op": "<=", "threshold_value": 10}]
-    # 10.5 kg × 1.2 (PDR ladder step) = 12.6 kg > 12 kg
+    # 10.5 kg × 1.15 (PDR, Phase B, textbook Table 8.3) = 12.075 kg > 12 kg
     params = {"mass.dry_mass_kg": 10.5, "power.total_sunlight_w": 10.0, "power.sa_power_eol_w": 30.0,
               "eps.power_w": 12}
     by = {c["id"]: c for c in ge.evaluate_gate("PDR", design_params=params, requirements=reqs,
                                                target_mass_kg=12.0)["criteria"]}
     assert by["PDR-EC-03"]["verdict"] == "fail"
-    assert by["PDR-EC-03"]["evidence_params"]["margin"] == "20"
-    assert by["PDR-EC-03"]["evidence_params"]["total"] == "12.60"
+    assert by["PDR-EC-03"]["evidence_params"]["margin"] == "15"
+    assert by["PDR-EC-03"]["evidence_params"]["total"] == "12.07"
     assert by["PDR-EC-01"]["verdict"] == "fail"
     assert "SYS-PWR-003" in by["PDR-EC-01"]["evidence_found"]
 

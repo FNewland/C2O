@@ -64,7 +64,7 @@ La stratégie *Exploration, imagination, innovation : une nouvelle stratégie s
 
 ### 2.2.1 Structure de l'industrie
 
-L'industrie spatiale canadienne a généré un chiffre d'affaires d'environ 2,7 G$ (2022) et emploie env. 12 000 personnes. Elle est structurée en niveaux ; une carte représentative des organisations avec lesquelles une mission canadienne est en relation est présentée à la figure 2.1.
+Le secteur spatial canadien a généré environ 5 G$ de revenus en 2024 et soutenait plus de 28 000 emplois (ASC, *Rapport sur l’état du secteur spatial canadien 2025*). Elle est structurée en niveaux ; une carte représentative des organisations avec lesquelles une mission canadienne est en relation est présentée à la figure 2.1.
 
 ![Carte représentative des parties prenantes des missions spatiales canadiennes : agence, maîtres d'œuvre, fournisseurs de sous-systèmes, PME, milieu universitaire et organismes de réglementation.](../assets/figures/fig_canadian_sector.png)
 
@@ -165,11 +165,11 @@ Les activités spatiales au Canada relèvent de plusieurs organismes fédéraux.
 |----------------|---------|-------------------|---------------------------|
 | **ASC** | Loi sur l'Agence spatiale canadienne | Coordination du programme spatial, politique | Approbation des missions, financement |
 | **ISDE** | Loi sur la radiocommunication | Attribution du spectre radioélectrique, licences | Licences de fréquences pour toutes les émissions RF |
-| **ISDE** | Loi sur les systèmes de télédétection spatiale (LSTS) | Exploitation des satellites de télédétection | Licence pour tout satellite qui prend des images de la Terre |
+| **AMC** | Loi sur les systèmes de télédétection spatiale (LSTS) | Exploitation des satellites de télédétection | Licence pour tout satellite qui prend des images de la Terre |
 | **AMC** | Loi sur les licences d'exportation et d'importation (LLEI) | Contrôle des exportations de marchandises stratégiques | Licences d'exportation pour les technologies satellitaires |
-| **AMC** | Programme des marchandises contrôlées | Accès aux marchandises contrôlées (ITAR/MC) | Habilitations de sécurité du personnel |
+| **SPAC** | Programme des marchandises contrôlées (Loi sur la production de défense) | Accès aux marchandises contrôlées (ITAR/MC) | Habilitations de sécurité du personnel |
 | **MDN/RDDC** | Loi sur la défense nationale | Technologies à double usage, spatial militaire | Classification, exigences de sécurité |
-| **Transports Canada** | (Aucune loi actuellement) | Opérations de lancement (à venir) | Le Canada n'a pas encore de réglementation nationale des lancements |
+| **Transports Canada** | Loi canadienne sur les lancements spatiaux (projet de loi C-28, déposé en avril 2026 ; en deuxième lecture en octobre 2026) | Lancements et rentrées depuis le territoire canadien | Tant qu’elle n’est pas adoptée, le Canada n’a pas de régime national de licences de lancement |
 
 ---
 

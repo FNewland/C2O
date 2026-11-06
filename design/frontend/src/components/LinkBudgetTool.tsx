@@ -8,6 +8,7 @@ import { useState, useMemo, useRef, useCallback } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
 import { fs } from '../theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 interface LinkBudgetLine {
   label: string
@@ -15,9 +16,11 @@ interface LinkBudgetLine {
   unit: string
   notes: string
   type: 'gain' | 'loss' | 'result'
+  key?: string
 }
 
 export function LinkBudgetTool() {
+  const { t } = useTranslation()
   const reqs = useDesignStore(s => s.requirements)
   const setParam = useDesignStore(s => s.setParameter)
   const alt = reqs.orbit.altitude_km
@@ -65,21 +68,21 @@ export function LinkBudgetTool() {
     const margin = ebN0 - reqEbN0 - implMargin
 
     return [
-      { label: 'TX Power', value: round(10 * Math.log10(txPower)), unit: 'dBW', notes: `${txPower} W`, type: 'gain' },
-      { label: 'TX Antenna Gain', value: round(txGain), unit: 'dBi', notes: 'Spacecraft antenna', type: 'gain' },
-      { label: 'TX Losses', value: round(-txLosses), unit: 'dB', notes: 'Cable, filter, mismatch', type: 'loss' },
-      { label: 'EIRP', value: round(eirp), unit: 'dBW', notes: 'Effective Isotropic Radiated Power', type: 'result' },
-      { label: 'Free Space Path Loss', value: round(-fspl), unit: 'dB', notes: `${slantRange} km at ${frequency} MHz`, type: 'loss' },
-      { label: 'Atmospheric Loss', value: round(-atmosphericLoss), unit: 'dB', notes: 'Rain, gas absorption', type: 'loss' },
-      { label: 'Pointing Loss', value: round(-pointingLoss), unit: 'dB', notes: 'Antenna misalignment', type: 'loss' },
-      { label: 'Polarisation Loss', value: round(-polLoss), unit: 'dB', notes: 'Pol mismatch', type: 'loss' },
-      { label: 'RX Antenna Gain', value: round(rxGain), unit: 'dBi', notes: 'Ground station antenna', type: 'gain' },
-      { label: 'System G/T', value: round(gt), unit: 'dB/K', notes: `Tsys = ${rxTemp} K`, type: 'result' },
-      { label: 'C/N₀', value: round(cn0), unit: 'dBHz', notes: 'Carrier-to-noise density', type: 'result' },
-      { label: 'Eb/N₀ (available)', value: round(ebN0), unit: 'dB', notes: `Data rate: ${(dataRate / 1e6).toFixed(1)} Mbps`, type: 'result' },
-      { label: 'Eb/N₀ (required)', value: round(-reqEbN0), unit: 'dB', notes: 'Modulation + coding threshold', type: 'loss' },
-      { label: 'Implementation Margin', value: round(-implMargin), unit: 'dB', notes: 'ECSS-E-ST-50-05C', type: 'loss' },
-      { label: 'LINK MARGIN', value: round(margin), unit: 'dB', notes: margin >= 3 ? 'Closes with margin' : margin >= 0 ? 'Marginal' : 'DOES NOT CLOSE', type: 'result' },
+      { label: t('TX Power'), value: round(10 * Math.log10(txPower)), unit: 'dBW', notes: `${txPower} W`, type: 'gain' },
+      { label: t('TX Antenna Gain'), value: round(txGain), unit: 'dBi', notes: t('Spacecraft antenna'), type: 'gain' },
+      { label: t('TX Losses'), value: round(-txLosses), unit: 'dB', notes: t('Cable, filter, mismatch'), type: 'loss' },
+      { label: 'EIRP', value: round(eirp), unit: 'dBW', notes: t('Effective Isotropic Radiated Power'), type: 'result' },
+      { label: t('Free Space Path Loss'), value: round(-fspl), unit: 'dB', notes: t('{{km}} km at {{mhz}} MHz', { km: slantRange, mhz: frequency }), type: 'loss' },
+      { label: t('Atmospheric Loss'), value: round(-atmosphericLoss), unit: 'dB', notes: t('Rain, gas absorption'), type: 'loss' },
+      { label: t('Pointing Loss'), value: round(-pointingLoss), unit: 'dB', notes: t('Antenna misalignment'), type: 'loss' },
+      { label: t('Polarisation Loss'), value: round(-polLoss), unit: 'dB', notes: t('Pol mismatch'), type: 'loss' },
+      { label: t('RX Antenna Gain'), value: round(rxGain), unit: 'dBi', notes: t('Ground station antenna'), type: 'gain' },
+      { label: t('System G/T'), value: round(gt), unit: 'dB/K', notes: `Tsys = ${rxTemp} K`, type: 'result' },
+      { label: 'C/N₀', value: round(cn0), unit: 'dBHz', notes: t('Carrier-to-noise density'), type: 'result' },
+      { label: t('Eb/N₀ (available)'), value: round(ebN0), unit: 'dB', notes: t('Data rate: {{v}} Mbps', { v: (dataRate / 1e6).toFixed(1) }), type: 'result' },
+      { label: t('Eb/N₀ (required)'), value: round(-reqEbN0), unit: 'dB', notes: t('Modulation + coding threshold'), type: 'loss' },
+      { label: t('Implementation Margin'), value: round(-implMargin), unit: 'dB', notes: 'ECSS-E-ST-50-05C', type: 'loss' },
+      { label: t('LINK MARGIN'), key: 'margin', value: round(margin), unit: 'dB', notes: margin >= 3 ? t('Closes with margin') : margin >= 0 ? t('Marginal') : t('DOES NOT CLOSE'), type: 'result' },
     ]
   }, [txPower, txGain, txLosses, frequency, slantRange, atmosphericLoss, pointingLoss, polLoss, rxGain, rxTemp, dataRate, reqEbN0, implMargin])
 
@@ -102,9 +105,9 @@ export function LinkBudgetTool() {
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
-      <h2 style={{ marginBottom: '0.25rem' }}>Link Budget Calculator</h2>
+      <h2 style={{ marginBottom: '0.25rem' }}>{t('Link Budget Calculator')}</h2>
       <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.75rem' }}>
-        Per ECSS-E-ST-50-05C. Edit any parameter to see the impact on link margin.
+        {t('Per ECSS-E-ST-50-05C. Edit any parameter to see the impact on link margin.')}
       </p>
 
       {/* Uplink / Downlink toggle */}
@@ -114,13 +117,13 @@ export function LinkBudgetTool() {
           background: linkDirection === 'downlink' ? 'var(--interactive)' : 'var(--bg-secondary, var(--surface-2))',
           color: linkDirection === 'downlink' ? 'white' : 'var(--text-2)',
           border: `1px solid ${linkDirection === 'downlink' ? 'var(--interactive)' : 'var(--line)'}`,
-        }}>Downlink (Space→Ground)</button>
+        }}>{t('Downlink (Space→Ground)')}</button>
         <button onClick={() => setLinkDirection('uplink')} style={{
           padding: '0.25rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
           background: linkDirection === 'uplink' ? 'var(--cat-2)' : 'var(--bg-secondary, var(--surface-2))',
           color: linkDirection === 'uplink' ? 'white' : 'var(--text-2)',
           border: `1px solid ${linkDirection === 'uplink' ? 'var(--cat-2)' : 'var(--line)'}`,
-        }}>Uplink (Ground→Space)</button>
+        }}>{t('Uplink (Ground→Space)')}</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -128,51 +131,51 @@ export function LinkBudgetTool() {
         <div>
           <div className="card">
             <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>
-              Transmitter ({linkDirection === 'downlink' ? 'Spacecraft' : 'Ground Station'})
+              {linkDirection === 'downlink' ? t('Transmitter (Spacecraft)') : t('Transmitter (Ground Station)')}
             </h3>
-            <InputRow label="TX Power (W)" value={txPower} onChange={setTxPower} step={0.5} />
-            <InputRow label="TX Antenna Gain (dBi)" value={txGain} onChange={setTxGain} step={1} />
-            <InputRow label="TX Losses (dB)" value={txLosses} onChange={setTxLosses} step={0.1} />
-            <InputRow label="Frequency (MHz)" value={frequency} onChange={setFrequency} step={100} />
+            <InputRow label={t('TX Power (W)')} value={txPower} onChange={setTxPower} step={0.5} />
+            <InputRow label={t('TX Antenna Gain (dBi)')} value={txGain} onChange={setTxGain} step={1} />
+            <InputRow label={t('TX Losses (dB)')} value={txLosses} onChange={setTxLosses} step={0.1} />
+            <InputRow label={t('Frequency (MHz)')} value={frequency} onChange={setFrequency} step={100} />
           </div>
           <div className="card">
-            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Path</h3>
-            <InputRow label="Slant Range (km)" value={slantRange} onChange={setSlantRange} step={50} />
-            <InputRow label="Atmospheric Loss (dB)" value={atmosphericLoss} onChange={setAtmosphericLoss} step={0.1} />
-            <InputRow label="Pointing Loss (dB)" value={pointingLoss} onChange={setPointingLoss} step={0.1} />
-            <InputRow label="Polarisation Loss (dB)" value={polLoss} onChange={setPolLoss} step={0.1} />
+            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>{t('Path')}</h3>
+            <InputRow label={t('Slant Range (km)')} value={slantRange} onChange={setSlantRange} step={50} />
+            <InputRow label={t('Atmospheric Loss (dB)')} value={atmosphericLoss} onChange={setAtmosphericLoss} step={0.1} />
+            <InputRow label={t('Pointing Loss (dB)')} value={pointingLoss} onChange={setPointingLoss} step={0.1} />
+            <InputRow label={t('Polarisation Loss (dB)')} value={polLoss} onChange={setPolLoss} step={0.1} />
           </div>
           <div className="card">
-            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Receiver (Ground)</h3>
-            <InputRow label="RX Antenna Gain (dBi)" value={rxGain} onChange={setRxGain} step={1} />
-            <InputRow label="System Temp (K)" value={rxTemp} onChange={setRxTemp} step={10} />
-            <InputRow label="Data Rate (bps)" value={dataRate} onChange={setDataRate} step={100000} />
-            <InputRow label="Required Eb/N₀ (dB)" value={reqEbN0} onChange={setReqEbN0} step={0.5} />
-            <InputRow label="Implementation Margin (dB)" value={implMargin} onChange={setImplMargin} step={0.5} />
+            <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>{t('Receiver (Ground)')}</h3>
+            <InputRow label={t('RX Antenna Gain (dBi)')} value={rxGain} onChange={setRxGain} step={1} />
+            <InputRow label={t('System Temp (K)')} value={rxTemp} onChange={setRxTemp} step={10} />
+            <InputRow label={t('Data Rate (bps)')} value={dataRate} onChange={setDataRate} step={100000} />
+            <InputRow label={t('Required Eb/N₀ (dB)')} value={reqEbN0} onChange={setReqEbN0} step={0.5} />
+            <InputRow label={t('Implementation Margin (dB)')} value={implMargin} onChange={setImplMargin} step={0.5} />
           </div>
         </div>
 
         {/* Budget cascade column */}
         <div className="card">
-          <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>Link Budget Cascade</h3>
+          <h3 style={{ fontSize: fs.body, marginBottom: '0.4rem' }}>{t('Link Budget Cascade')}</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
             <thead>
               <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
-                <th style={th}>Parameter</th>
-                <th style={thR}>Value</th>
-                <th style={th}>Notes</th>
+                <th style={th}>{t('Parameter')}</th>
+                <th style={thR}>{t('Value')}</th>
+                <th style={th}>{t('Notes')}</th>
               </tr>
             </thead>
             <tbody>
               {budget.map((line, i) => (
                 <tr key={i} style={{
                   borderBottom: line.type === 'result' ? '2px solid var(--line)' : '1px solid color-mix(in srgb, var(--text) 5%, transparent)',
-                  background: line.label === 'LINK MARGIN' ? (margin >= 3 ? 'rgba(16,185,129,0.1)' : margin >= 0 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)') : 'transparent',
+                  background: line.key === 'margin' ? (margin >= 3 ? 'rgba(16,185,129,0.1)' : margin >= 0 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)') : 'transparent',
                 }}>
                   <td style={{ ...td, fontWeight: line.type === 'result' ? 700 : 400 }}>{line.label}</td>
                   <td style={{
                     ...tdR, fontWeight: line.type === 'result' ? 700 : 400,
-                    color: line.type === 'gain' ? 'var(--status-ok)' : line.type === 'loss' ? 'var(--status-alarm)' : line.label === 'LINK MARGIN' ? (margin >= 3 ? 'var(--status-ok)' : margin >= 0 ? 'var(--status-caution)' : 'var(--status-alarm)') : 'var(--text)',
+                    color: line.type === 'gain' ? 'var(--status-ok)' : line.type === 'loss' ? 'var(--status-alarm)' : line.key === 'margin' ? (margin >= 3 ? 'var(--status-ok)' : margin >= 0 ? 'var(--status-caution)' : 'var(--status-alarm)') : 'var(--text)',
                   }}>
                     {line.value >= 0 ? '+' : ''}{line.value.toFixed(1)} {line.unit}
                   </td>
@@ -187,7 +190,7 @@ export function LinkBudgetTool() {
       {/* Apply to design */}
       <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
         style={{ marginTop: '0.75rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.body }}>
-        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
+        {applied ? t('Applied — reconverging...') : t('Apply to Design')}
       </button>
     </div>
   )
