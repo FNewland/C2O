@@ -83,12 +83,28 @@ def inputs(sb) -> list[str]:
     return sorted(set(paths))
 
 
-def compute(sb) -> str:
+def _spoken(sb) -> str:
+    """What the narrator will actually say, after the lexicon: so a lexicon edit
+    rebuilds only the videos whose speech it changes."""
+    from . import LANGS, lexicon, tts
+    h = hashlib.sha256()
+    for step in sb.steps:
+        for lang in LANGS:
+            for sent in tts.sentences((step.say or {}).get(lang, "")):
+                h.update(f"{lang}|{lexicon.spoken(sent, lang)}\n".encode())
+    return h.hexdigest()
+
+
+def compute(sb, legacy: bool = False) -> str:
     h = hashlib.sha256()
     for rel in inputs(sb):
+        if rel == "video/lexicon" and not legacy:
+            continue
         for f in _files(rel):
             h.update(f.encode())
             h.update(_hash_file(f).encode())
+    if not legacy:
+        h.update(b"spoken:" + _spoken(sb).encode())
     return h.hexdigest()[:20]
 
 
@@ -123,5 +139,11 @@ def status(sb, langs: list[str]) -> tuple[bool, str]:
             return True, f"{lang} package missing"
     fp = compute(sb)
     if fp != rec.get("fingerprint"):
-        return True, "inputs changed"
+        # a record from before the lexicon was fingerprinted by spoken text:
+        # if it matches the old scheme, move it to the new one without a rebuild
+        if rec.get("fingerprint") == compute(sb, legacy=True):
+            rec["fingerprint"] = fp
+            record_path(sb).write_text(json.dumps(rec, indent=1))
+        else:
+            return True, "inputs changed"
     return False, f"up to date (built {rec.get('built', '?')})"
