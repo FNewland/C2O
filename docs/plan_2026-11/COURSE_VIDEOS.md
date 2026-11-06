@@ -52,6 +52,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-DES-10 | 4 | Design concept: the link budget — chain, decibels, S-band waterfall (margin 17.4 dB), margin against data rate (spectrum limit), data budget (720 vs 956 MB/day) | — (whole design team); leads into the SpaceCDF link budget tool | written 2026-11-06 (`comms.html`) |
 | V-DES-11 | 5 | Design concept: risk, failure modes and redundancy — risk loop and register, 5×5 matrix and a mitigation (12 → 4), one FMECA line, single-point failures, 3-of-4 wheels (0.941 → 0.998) | — (whole design team) | written 2026-11-06 (`risk.html`) |
 | V-DES-12 | 5 | Design concept: verification and validation — built right vs right thing (GSD example), proto-flight test sequence, random vibration (6.8 → 9.6 g rms), thermal vacuum cycles, verification matrix and waivers; the ops rehearsal as validation | — (whole design team) | written 2026-11-06 (`vv.html`) |
+| V-DES-13 | 6 | Design concept: cost and design reviews — estimate accuracy by method, 3U cost breakdown (490 k€, launch 200), P50/P70/P80 and reserve, SRR gate criteria and outcomes, the board and presenting | — (whole design team) | written 2026-11-06 (`reviews.html`) |
 
 Card-start breakpoints: `sim/tools/card_breakpoints.py` flies the acceptance LEOP + commissioning
 sequence and saves `card-LEOP-001` … `card-COM-013`, `card-END` into `workspace/breakpoints`

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cost and design reviews</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .funnel { fill: var(--accent); fill-opacity: .18; stroke: var(--accent); stroke-width: 2; }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Cost estimate accuracy by phase, cost breakdown, confidence levels, review gate criteria, the review board</title>
+  <g id="fun" class="ex-hidden"></g>
+  <g id="wbs" class="ex-hidden"></g>
+  <g id="conf" class="ex-hidden"></g>
+  <g id="gate" class="ex-hidden"></g>
+  <g id="board" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Cost and design reviews",
+    f_cap: "How well can you know the cost? (± 1σ)",
+    f1: "Parametric", f1_s: "fitted to past missions", f1_p: "Phase 0/A · ± 30–50 %",
+    f2: "Analogy", f2_s: "a similar mission, adjusted", f2_p: "Phase A/B · ± 20–40 %",
+    f3: "Bottom-up", f3_s: "quotes and labour, summed", f3_p: "Phase B/C · ± 10–20 %",
+    w_cap: "3U EO CubeSat, parametric estimate: 490 k€", w_launch: "launch 200", w_pl: "payload 65", w_aocs: "AOCS 45", w_ops: "operations, 3 yr 45",
+    w_mgmt: "management, SE, PA 23", w_ttc: "radio 22", w_it: "integration and test 21", w_eps: "power 18", w_rest: "software, computer, ground, structure, thermal, harness 51",
+    w_hw: "flight hardware: 178 k€, about a third",
+    c_cap: "Confidence levels", c50: "P50", c50_s: "half the time it costs less: the baseline", c70: "P70", c70_s: "≈ 1.2 × P50: NASA’s commitment level",
+    c80: "P80", c80_s: "≈ 1.3 × P50: typical for proposals", c_res: "the reserve between P50 and P80 belongs to the project manager",
+    g_cap: "System requirements review (Phase A → B)",
+    g1: "requirements baselined", g2: "ConOps for every phase", g3: "architecture trades done", g4: "all budgets close with margin",
+    g5: "risk register with mitigations", g6: "verification approach", g7: "cost and schedule (P50, P80)", g8: "interfaces identified",
+    must: "must pass", should: "should pass",
+    go: "GO", gowa: "GO WITH ACTIONS", nogo: "NO GO",
+    b1: "Chair", b1_s: "covers every criterion", b2: "Systems", b2_s: "do the budgets close? minimum margin?",
+    b3: "Technical", b3_s: "why this part over the others?", b4: "Risk", b4_s: "what is your top risk?", b5: "Operations", b5_s: "what if you lose contact for 48 h?",
+    b_do: "Lead with the conclusion · show evidence · state assumptions · say “we will take an action”",
+    n1a: "A cost estimate narrows as the design matures, like the mass estimate.",
+    n1b: "The three methods are a sequence, not alternatives (textbook § 16.1).",
+    n2a: "For a CubeSat, launch is the largest single line; flight hardware is about a third.",
+    n2b: "Parametric came out about 7 % above bottom-up: inherent contingency (§ 16.1.6).",
+    n3a: "Commit at a confidence level, not at the most likely cost.",
+    n3b: "The reserve is released against the risk register, not spent by subsystems (§ 16.4).",
+    n4a: "A gate is a checklist with evidence: each criterion must or should pass.",
+    n4b: "A failed must-pass gives NO GO or GO WITH ACTIONS; every action has an owner and a date.",
+    n5a: "An independent board finds what the team can no longer see.",
+    n5b: "Your SpaceCDF reviews follow the same gates, roles and outcomes (§ 16.6).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 16 · EOSat-3U cost example (§ 16.1.6) · NPR 7120.5F · products in the textbook are examples",
+  },
+  fr: {
+    kicker: "Notion", title: "Coûts et revues de conception",
+    f_cap: "À quel point peut-on connaître le coût ? (± 1σ)",
+    f1: "Paramétrique", f1_s: "ajusté sur des missions passées", f1_p: "phase 0/A · ± 30–50 %",
+    f2: "Analogie", f2_s: "une mission semblable, corrigée", f2_p: "phase A/B · ± 20–40 %",
+    f3: "Ascendante", f3_s: "devis et main-d’œuvre, additionnés", f3_p: "phase B/C · ± 10–20 %",
+    w_cap: "CubeSat 3U d’observation, estimation paramétrique : 490 k€", w_launch: "lancement 200", w_pl: "charge utile 65", w_aocs: "SCAO 45", w_ops: "exploitation, 3 ans 45",
+    w_mgmt: "gestion, IS, AP 23", w_ttc: "radio 22", w_it: "intégration et essais 21", w_eps: "énergie 18", w_rest: "logiciel, ordinateur, sol, structure, thermique, câblage 51",
+    w_hw: "matériel de vol : 178 k€, environ un tiers",
+    c_cap: "Niveaux de confiance", c50: "P50", c50_s: "une fois sur deux, cela coûte moins : la référence", c70: "P70", c70_s: "≈ 1,2 × P50 : le niveau d’engagement de la NASA",
+    c80: "P80", c80_s: "≈ 1,3 × P50 : courant pour les propositions", c_res: "la réserve entre P50 et P80 appartient au chef de projet",
+    g_cap: "Revue des exigences système (phase A → B)",
+    g1: "exigences figées", g2: "ConOps pour chaque phase", g3: "compromis d’architecture faits", g4: "tous les bilans se ferment avec marge",
+    g5: "registre des risques et atténuations", g6: "approche de vérification", g7: "coût et calendrier (P50, P80)", g8: "interfaces identifiées",
+    must: "obligatoire", should: "souhaitable",
+    go: "GO", gowa: "GO AVEC ACTIONS", nogo: "NO GO",
+    b1: "Président", b1_s: "couvre chaque critère", b2: "Système", b2_s: "les bilans se ferment-ils ? marge minimale ?",
+    b3: "Technique", b3_s: "pourquoi cette pièce plutôt qu’une autre ?", b4: "Risques", b4_s: "quel est votre premier risque ?", b5: "Opérations", b5_s: "et si vous perdez le contact 48 h ?",
+    b_do: "Commencer par la conclusion · montrer les preuves · énoncer les hypothèses · dire « nous prenons une action »",
+    n1a: "Une estimation de coût se resserre à mesure que la conception mûrit, comme la masse.",
+    n1b: "Les trois méthodes se succèdent ; ce ne sont pas des options (manuel § 16.1).",
+    n2a: "Pour un CubeSat, le lancement est la plus grosse ligne ; le matériel de vol, environ un tiers.",
+    n2b: "Le paramétrique sort environ 7 % au-dessus de l’ascendant : une contingence inhérente (§ 16.1.6).",
+    n3a: "On s’engage à un niveau de confiance, pas au coût le plus probable.",
+    n3b: "La réserve se libère face au registre des risques, pas au gré des sous-systèmes (§ 16.4).",
+    n4a: "Une revue est une liste de critères avec preuves : chacun obligatoire ou souhaitable.",
+    n4b: "Un critère obligatoire manqué donne NO GO ou GO AVEC ACTIONS ; chaque action a un responsable et une date.",
+    n5a: "Un comité indépendant trouve ce que l’équipe ne voit plus.",
+    n5b: "Vos revues dans SpaceCDF suivent les mêmes critères, rôles et issues (§ 16.6).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 16 · exemple de coût EOSat-3U (§ 16.1.6) · NPR 7120.5F · les produits du manuel sont des exemples",
+  },
+});
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+
+// 1. funnel
+EX.el("text", { x: 40, y: 44, class: "small muted", label: "f_cap" }, "fun");
+EX.el("path", { id: "fn", class: "funnel ex-hidden", d: "M 60 70 L 1220 200 L 1220 250 L 60 400 Z" }, "fun");
+EX.el("line", { x1: 60, y1: 225, x2: 1220, y2: 225, stroke: "var(--text)", "stroke-width": 2, "stroke-dasharray": "6 6" }, "fun");
+[["f1", 80], ["f2", 470], ["f3", 860]].forEach(([k, x], i) => {
+  const g = box("fun", "fn-" + i, x, 464, 360, 0, ""); // placeholder group
+  EX.el("text", { x, y: 456, class: "big", label: k }, g);
+  EX.el("text", { x, y: 482, class: "small muted", label: k + "_s" }, g);
+  EX.el("text", { x, y: 506, class: "small", style: "fill:var(--accent)", label: k + "_p" }, g);
+});
+
+// 2. WBS bar (kEUR, total 490)
+const WK = 1180 / 490;
+const W = [["w_launch", 200, "#c08a3e"], ["w_pl", 65, "#5fb4dc"], ["w_aocs", 45, "#4a8fb0"], ["w_ops", 45, "#8e7cc3"], ["w_mgmt", 23, "#6b7c8c"],
+           ["w_ttc", 22, "#3f7590"], ["w_it", 21, "#7a8a5a"], ["w_eps", 18, "#336178"], ["w_rest", 51, "#46525e"]];
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "w_cap" }, "wbs");
+let wx = 50;
+W.forEach(([k, v, col], i) => {
+  const g = EX.el("g", { id: "wb-" + i, class: "ex-hidden" }, "wbs");
+  EX.el("rect", { x: wx, y: 80, width: v * WK - 2, height: 90, fill: col }, g);
+  const ly = 210 + (i % 4) * 30 + (i >= 4 ? 0 : 0);
+  EX.el("line", { x1: wx + v * WK / 2, y1: 170, x2: wx + v * WK / 2, y2: 196 + i * 30 - (i > 0 ? 0 : 0), stroke: col, "stroke-width": 1.5 }, g);
+  EX.el("text", { x: i >= 5 ? wx + v * WK / 2 - 6 : wx + v * WK / 2 + 6, y: 202 + i * 30, class: "small", "text-anchor": i >= 5 ? "end" : "start", label: k }, g);
+  wx += v * WK;
+});
+EX.el("text", { id: "wb-hw", x: 40, y: 500, class: "big ex-hidden", style: "fill:var(--accent)", label: "w_hw" }, "wbs");
+
+// 3. confidence
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "c_cap" }, "conf");
+[["c50", 500, "on"], ["c70", 600, "warn"], ["c80", 650, "ok"]].forEach(([k, v, cls], i) => {
+  const y = 80 + i * 110, g = EX.el("g", { id: "cf-" + i, class: "ex-hidden" }, "conf");
+  EX.el("text", { x: 40, y: y + 44, class: "huge mono", label: k }, g);
+  EX.el("rect", { x: 160, y: y + 10, width: v * 1.2, height: 50, rx: 4, class: cls === "on" ? "acc" : cls, opacity: 0.75 }, g);
+  EX.el("text", { x: 170 + v * 1.2, y: y + 44, class: "big mono", text: v + " k€" }, g);
+  EX.el("text", { x: 160, y: y + 86, class: "small muted", label: k + "_s" }, g);
+});
+EX.el("text", { id: "cf-res", x: 40, y: 470, class: "small ex-hidden", style: "fill:var(--warn)", label: "c_res" }, "conf");
+
+// 4. gate checklist
+EX.el("text", { x: 40, y: 44, class: "big", label: "g_cap" }, "gate");
+const GM = [1, 1, 1, 1, 1, 0, 1, 0];
+GM.forEach((must, i) => {
+  const x = 40 + (i % 2) * 600, y = 66 + Math.floor(i / 2) * 76, g = box("gate", "gt-" + i, x, y, 580, 62, "");
+  EX.el("text", { x: x + 18, y: y + 38, label: "g" + (i + 1) }, g);
+  EX.el("text", { x: x + 562, y: y + 38, class: "small", "text-anchor": "end", style: `fill:var(--${must ? "warn" : "muted"})`, label: must ? "must" : "should" }, g);
+});
+[["go", "ok", 40], ["gowa", "warn", 360], ["nogo", "bad", 860]].forEach(([k, cls, x]) => {
+  const g = box("gate", "out-" + k, x, 390, k === "gowa" ? 460 : 300, 64, cls);
+  EX.el("text", { x: x + 20, y: 432, class: "big", label: k }, g);
+});
+
+// 5. board
+[1, 2, 3, 4, 5].forEach((i) => {
+  const x = 40 + ((i - 1) % 3) * 404, y = 40 + Math.floor((i - 1) / 3) * 150, g = box("board", "bd-" + i, x, y, 384, 130, i === 1 ? "on" : "");
+  EX.el("text", { x: x + 20, y: y + 46, class: "big", label: "b" + i }, g);
+  EX.el("text", { x: x + 20, y: y + 90, class: "small muted", label: "b" + i + "_s" }, g);
+});
+EX.el("text", { id: "bd-do", x: 40, y: 380, class: "small ex-hidden", style: "fill:var(--ok)", label: "b_do" }, "board");
+
+function only(...ids) { ["fun", "wbs", "conf", "gate", "board", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("methods", (beat) => {
+  only("fun");
+  beat(0.04, () => EX.show("fn"));
+  [0, 1, 2].forEach((i) => beat(0.15 + i * 0.15, () => EX.show("fn-" + i)));
+  beat(0.72, () => note("n1a", "n1b"));
+});
+EX.scene("breakdown", (beat) => {
+  only("wbs");
+  W.forEach((_, i) => beat(0.04 + i * 0.06, () => EX.show("wb-" + i)));
+  beat(0.62, () => EX.show("wb-hw"));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("confidence", (beat) => {
+  only("conf");
+  [0, 1, 2].forEach((i) => beat(0.05 + i * 0.15, () => EX.show("cf-" + i)));
+  beat(0.55, () => EX.show("cf-res"));
+  beat(0.72, () => note("n3a", "n3b"));
+});
+EX.scene("gates", (beat) => {
+  only("gate");
+  GM.forEach((_, i) => beat(0.04 + i * 0.05, () => EX.show("gt-" + i)));
+  ["go", "gowa", "nogo"].forEach((k, i) => beat(0.5 + i * 0.06, () => EX.show("out-" + k)));
+  beat(0.74, () => note("n4a", "n4b"));
+});
+EX.scene("board", (beat) => {
+  only("board");
+  [1, 2, 3, 4, 5].forEach((i) => beat(0.04 + i * 0.08, () => EX.show("bd-" + i)));
+  beat(0.55, () => EX.show("bd-do"));
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>
