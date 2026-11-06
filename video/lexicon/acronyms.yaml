@@ -88,6 +88,10 @@ CDF:   {en: "concurrent design facility", fr: "plateau de conception concourante
 MDR:   {en: "mission definition review", fr: "revue de définition de mission", short: {en: M-D-R, fr: M-D-R}, kind: letters, expand: true}
 PDR:   {en: "preliminary design review", fr: "revue de conception préliminaire", short: {en: P-D-R, fr: P-D-R}, kind: letters, expand: true}
 CDR:   {en: "critical design review", fr: "revue critique de conception", short: {en: C-D-R, fr: C-D-R}, kind: letters, expand: true}
+PRR:   {en: "preliminary requirements review", fr: "revue préliminaire des exigences", short: {en: P-R-R, fr: P-R-R}, kind: letters, expand: true}
+SRR:   {en: "system requirements review", fr: "revue des exigences système", short: {en: S-R-R, fr: S-R-R}, kind: letters, expand: true}
+MCR:   {en: "mission concept review", fr: "revue du concept de mission", short: {en: M-C-R, fr: M-C-R}, kind: letters, expand: true}
+CBE:   {en: "current best estimate", fr: "meilleure estimation actuelle", short: {en: C-B-E, fr: C-B-E}, kind: letters, expand: true}
 TRL:   {en: "technology readiness level", fr: "niveau de maturité technologique", short: {en: T-R-L, fr: T-R-L}, kind: letters, expand: true}
 ConOps: {en: "concept of operations", fr: "concept d’opérations", short: {en: con-ops, fr: con-ops}, kind: word, expand: true}
 
