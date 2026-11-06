@@ -1450,9 +1450,21 @@ class MCSServer:
             never_synced = (time_ref_i == 0)
 
         # ── The correlation: on-board minus sim, in seconds ─────────
+        # Compared at the sample's RECEPTION time, not now. The OBC time is
+        # the value in the last OBDH packet; comparing it with the current
+        # ground time made the offset grow by the sample's age (a sawtooth of
+        # up to one SID 4 period, 8 s), so LEOP-006's "< 1 s residual" could
+        # not be read off the console. Reception time minus OWLT (below) is
+        # how a ground station correlates a clock.
         offset_s = None
         if sc_cuc_seconds is not None:
-            offset_s = sc_cuc_seconds - datetime_to_cuc_seconds(sim_utc)
+            rx_ts = obc_time_entry.get("last_update_ts") if obc_time_entry else None
+            try:
+                ref_utc = (datetime.fromtimestamp(float(rx_ts), tz=timezone.utc)
+                           if rx_ts else sim_utc)          # 0 / None: not known
+            except (TypeError, ValueError, OverflowError, OSError):
+                ref_utc = sim_utc
+            offset_s = sc_cuc_seconds - datetime_to_cuc_seconds(ref_utc)
         warn_s = float(self._staleness_policy.get("clock_offset_warn_s", 5.0))
         alarm_s = float(self._staleness_policy.get("clock_offset_alarm_s", 30.0))
         if offset_s is None:
