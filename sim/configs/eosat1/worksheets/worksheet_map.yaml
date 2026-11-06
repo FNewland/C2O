@@ -186,6 +186,8 @@ worksheets:
   # ── Day 5: review ───────────────────────────────────────────────────────
   # (WB-5.7-CE, the anonymous course evaluation, stays on paper: a logbook
   # record carries the author's name.)
+  WB-5.7-SA: {phase: debrief, tools: [mcs, portal]}
+  WB-5.7-LL: {phase: debrief, tools: [mcs, portal]}
   WB-5.7-WI: {phase: debrief, tools: [instructor, mcs, portal]}
   WB-5.7-FR: {phase: debrief, tools: [mcs, portal]}
 

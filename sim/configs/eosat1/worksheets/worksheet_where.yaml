@@ -631,6 +631,10 @@ sheets:
       "step 5": {status: screen, where: [planner.sched, planner.contacts]}
 
   # ── Day 5 review and appendices ─────────────────────────────────────────
+  WB-5.7-SA:
+    default: {status: na}
+  WB-5.7-LL:
+    default: {status: na}
   WB-5.7-WI:
     default: {status: na}
   WB-5.7-FR:

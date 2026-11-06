@@ -10045,6 +10045,185 @@ worksheets:
     - tool: planner
       focus: panel-contacts
       label: *id012
+- id: WB-5.7-SA
+  title:
+    en: Day 5 Personal Self-Assessment
+    fr: 'Jour 5 : autoévaluation personnelle'
+  phase: debrief
+  applies:
+    tools:
+    - mcs
+    - portal
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: text
+    text:
+      en: 1. Voice-loop discipline
+      fr: 1. Discipline de boucle vocale
+  - id: q2
+    kind: text
+    text:
+      en: 2. Procedure compliance
+      fr: 2. Respect des procédures
+  - id: q3
+    kind: text
+    text:
+      en: 3. Telemetry interpretation
+      fr: 3. Interprétation de la télémesure
+  - id: q4
+    kind: text
+    text:
+      en: 4. Anomaly response timing
+      fr: 4. Délai de traitement des anomalies
+  - id: q5
+    kind: text
+    text:
+      en: 5. Handover quality
+      fr: 5. Qualité de la passation
+  - id: q6
+    kind: text
+    text:
+      en: 6. Position rotation completion
+      fr: 6. Achèvement du tour des postes
+  - id: q7
+    kind: text
+    text:
+      en: 7. Pass-plan quality (Day 1 exercise)
+      fr: 7. Qualité du plan de passage (exercice du jour 1)
+  - id: q8
+    kind: text
+    text:
+      en: 8. Quiz score / 15
+      fr: 8. Note au quiz / 15
+  - id: q9
+    kind: text
+    text:
+      en: 9. Debrief contribution
+      fr: 9. Contribution au débriefing
+  - id: q10
+    kind: text
+    text:
+      en: Three things I am proudest of this week
+      fr: Les trois choses dont je suis le plus fier cette semaine
+  - id: q11
+    kind: text
+    text:
+      en: Three things I want to keep working on
+      fr: Les trois choses sur lesquelles je veux continuer à travailler
+- id: WB-5.7-LL
+  title:
+    en: Cohort Lessons-Learned Contribution
+    fr: Contribution au retour d'expérience de la promotion
+  phase: debrief
+  applies:
+    tools:
+    - mcs
+    - portal
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: text
+    text:
+      en: Title
+      fr: Titre
+    section:
+      en: Lesson 1
+      fr: Enseignement 1
+  - id: q2
+    kind: text
+    text:
+      en: What we observed
+      fr: Ce que nous avons observé
+    section:
+      en: Lesson 1
+      fr: Enseignement 1
+  - id: q3
+    kind: text
+    text:
+      en: Why it matters
+      fr: Pourquoi c'est important
+    section:
+      en: Lesson 1
+      fr: Enseignement 1
+  - id: q4
+    kind: text
+    text:
+      en: Recommendation
+      fr: Recommandation
+    section:
+      en: Lesson 1
+      fr: Enseignement 1
+  - id: q5
+    kind: text
+    text:
+      en: Title
+      fr: Titre
+    section:
+      en: Lesson 2
+      fr: Enseignement 2
+  - id: q6
+    kind: text
+    text:
+      en: What we observed
+      fr: Ce que nous avons observé
+    section:
+      en: Lesson 2
+      fr: Enseignement 2
+  - id: q7
+    kind: text
+    text:
+      en: Why it matters
+      fr: Pourquoi c'est important
+    section:
+      en: Lesson 2
+      fr: Enseignement 2
+  - id: q8
+    kind: text
+    text:
+      en: Recommendation
+      fr: Recommandation
+    section:
+      en: Lesson 2
+      fr: Enseignement 2
+  - id: q9
+    kind: text
+    text:
+      en: Title
+      fr: Titre
+    section:
+      en: Lesson 3
+      fr: Enseignement 3
+  - id: q10
+    kind: text
+    text:
+      en: What we observed
+      fr: Ce que nous avons observé
+    section:
+      en: Lesson 3
+      fr: Enseignement 3
+  - id: q11
+    kind: text
+    text:
+      en: Why it matters
+      fr: Pourquoi c'est important
+    section:
+      en: Lesson 3
+      fr: Enseignement 3
+  - id: q12
+    kind: text
+    text:
+      en: Recommendation
+      fr: Recommandation
+    section:
+      en: Lesson 3
+      fr: Enseignement 3
 - id: WB-5.7-WI
   title:
     en: '"What If" Branch Reflection'
