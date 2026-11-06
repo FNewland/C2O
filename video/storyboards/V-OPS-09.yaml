@@ -34,17 +34,19 @@ steps:
     title: {en: "Step 1: is the fix good enough?", fr: "Étape 1 : le point est-il suffisant ?"}
     say:
       en: >-
-        The GPS receiver was switched on in LEOP-007 and has had time to find satellites.
-        Request its navigation report, SID twelve, and read three numbers on the attitude page:
-        the fix type must be at least two, a three-dimensional fix; at least four satellites;
-        and record the dilution of precision. A fix that fails here makes everything after it
-        meaningless.
+        This is the last card of the launch and early orbit phase, LEOP. The GPS receiver,
+        switched on in LEOP-007, has had time to find satellites. Request its navigation
+        report, structure identifier twelve, SID twelve, and read three numbers on the attitude
+        page: the fix type must be at least two, a three-dimensional fix; at least four
+        satellites; and record the dilution of precision. A fix that fails here makes
+        everything after it meaningless.
       fr: >-
-        Le récepteur GPS a été allumé dans LEOP-007 et a eu le temps de trouver des
-        satellites. Demandez son rapport de navigation, SID douze, et lisez trois valeurs sur la
-        page attitude : le type de point doit valoir au moins deux, un point en trois
-        dimensions ; au moins quatre satellites ; et notez la dilution de précision. Un point
-        qui échoue ici rend tout le reste sans valeur.
+        C’est la dernière fiche de la phase de lancement et de début d’orbite, la LEOP. Le
+        récepteur GPS, allumé dans LEOP-007, a eu le temps de trouver des satellites. Demandez
+        son rapport de navigation, identifiant de structure douze, SID douze, et lisez trois
+        valeurs sur la page attitude : le type de point doit valoir au moins deux, un point en
+        trois dimensions ; au moins quatre satellites ; et notez la dilution de précision. Un
+        point qui échoue ici rend tout le reste sans valeur.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
@@ -64,13 +66,14 @@ steps:
         Latitude, longitude and altitude are not in the routine report, so ask for each one
         by parameter number. The altitude must fall inside the check band, four hundred and
         ninety-five to five hundred and forty kilometres. Outside it, either the fix or the
-        insertion is wrong, and Flight Dynamics needs to know before anything else.
+        insertion, the orbit the launcher delivered, is wrong, and Flight Dynamics needs to know
+        before anything else.
       fr: >-
         Latitude, longitude et altitude ne sont pas dans le rapport courant : demandez chacune
         par son numéro de paramètre. L’altitude doit se trouver dans la bande de contrôle, de
         quatre cent quatre-vingt-quinze à cinq cent quarante kilomètres. En dehors, c’est le
-        point ou l’injection qui est faux, et la dynamique du vol doit le savoir avant toute
-        autre chose.
+        point ou l’injection, l’orbite livrée par le lanceur, qui est faux, et la dynamique du
+        vol doit le savoir avant toute autre chose.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: GET_PARAM}
@@ -106,19 +109,20 @@ steps:
     say:
       en: >-
         Step 3 reads the full position and velocity the same way, six parameters. Their sizes
-        must make sense for a near-circular low orbit: about six thousand nine hundred
-        kilometres from the Earth's centre, about seven and a half kilometres per second.
-        Flight Dynamics turns them into orbital elements and compares them with the launcher's
-        prediction: the inclination, the eccentricity and the local time of the ascending node.
-        A second fix ten minutes later checks that the solution is repeatable.
+        must suit a near-circular low orbit: about six thousand nine hundred kilometres from
+        the Earth's centre, about seven and a half kilometres per second. Flight Dynamics turns
+        them into orbital elements and compares them with the launcher's prediction:
+        inclination, eccentricity, and the local time of the ascending node, LTAN, the local
+        solar time when the spacecraft crosses the equator heading north. A second fix ten
+        minutes later checks that the solution repeats.
       fr: >-
         L’étape 3 lit de la même façon la position et la vitesse complètes, six paramètres.
-        Leurs normes doivent être cohérentes avec une orbite basse presque circulaire : environ
-        six mille neuf cents kilomètres du centre de la Terre, environ sept kilomètres et demi
-        par seconde. La dynamique du vol en tire les éléments orbitaux et les compare à la
-        prévision du lanceur : l’inclinaison, l’excentricité et l’heure locale du nœud
-        ascendant. Un second point, dix minutes plus tard, vérifie que la solution est
-        reproductible.
+        Leurs normes doivent convenir à une orbite basse presque circulaire : environ six mille
+        neuf cents kilomètres du centre de la Terre, environ sept kilomètres et demi par
+        seconde. La dynamique du vol en tire les éléments orbitaux et les compare à la
+        prévision du lanceur : inclinaison, excentricité et heure locale du nœud ascendant,
+        LTAN, l’heure solaire locale quand le satellite franchit l’équateur vers le nord. Un
+        second point, dix minutes plus tard, vérifie que la solution se répète.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}

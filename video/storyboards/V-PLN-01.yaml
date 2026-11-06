@@ -45,15 +45,17 @@ steps:
     title: {en: "The next contact", fr: "Le prochain contact"}
     say:
       en: >-
-        On the right, the next contact: the station, the time of acquisition of signal, how
-        long the pass lasts and its maximum elevation. A short, low pass leaves little time
-        for commanding, so check the duration before you put a procedure in it. The contacts
-        table further down lists every pass with its loss of signal.
+        On the right, the next contact: the station, the time of acquisition of signal, AOS,
+        how long the pass lasts and its maximum elevation, how high it climbs above the
+        horizon. A short, low pass leaves little time for commanding, so check the duration
+        before you put a procedure in it. The contacts table further down lists every pass with
+        its loss of signal, LOS.
       fr: >-
-        À droite, le prochain contact : la station, l’heure d’acquisition du signal, la durée du
-        passage et son élévation maximale. Un passage court et bas laisse peu de temps pour
-        commander : vérifiez la durée avant d’y placer une procédure. Le tableau des contacts,
-        plus bas, liste chaque passage avec sa perte du signal.
+        À droite, le prochain contact : la station, l’heure d’acquisition du signal, l’AOS, la
+        durée du passage et son élévation maximale, la hauteur atteinte au-dessus de l’horizon.
+        Un passage court et bas laisse peu de temps pour commander : vérifiez la durée avant d’y
+        placer une procédure. Le tableau des contacts, plus bas, liste chaque passage avec sa
+        perte du signal, la LOS.
     do:
       - highlight: {target: {css: "#factAos"}, seconds: 3.5}
       - scroll: {css: "#panel-contacts"}
@@ -62,8 +64,8 @@ steps:
       type: blanks
       worksheet: WB-5.3-PP/q3
       intro:
-        en: "The next pass over Iqaluit starts at about 12:14 UTC and lasts 8 minutes."
-        fr: "Le prochain passage au-dessus d’Iqaluit commence vers 12:14 UTC et dure 8 minutes."
+        en: "The next pass over Iqaluit starts at about 12:14 UTC (coordinated universal time) and lasts 8 minutes."
+        fr: "Le prochain passage au-dessus d’Iqaluit commence vers 12:14 UTC (temps universel coordonné) et dure 8 minutes."
       text:
         en: "Its loss of signal is at about *12:22* UTC (hh:mm)."
         fr: "Sa perte du signal a lieu vers *12:22* UTC (hh:mm)."
@@ -93,12 +95,14 @@ steps:
     say:
       en: >-
         Imaging opportunities lists the targets the spacecraft will fly over, with the capture
-        time, the access time, the off-nadir angle and the Sun elevation. Schedule one. The
+        time, the access time, the off-nadir angle, how far the camera tilts from straight
+        down, and the Sun elevation. Schedule one. The
         activity starts before the capture time, because the detector cooler needs about eight
         minutes to cool down first.
       fr: >-
         Les opportunités d’imagerie listent les cibles que le satellite survolera, avec l’heure
-        de prise de vue, la durée d’accès, l’angle de dépointage et l’élévation du Soleil.
+        de prise de vue, la durée d’accès, l’angle de dépointage, l’inclinaison de la caméra par
+        rapport à la verticale, et l’élévation du Soleil.
         Programmez-en une. L’activité commence avant l’heure de prise de vue, car le
         refroidisseur du détecteur a besoin d’environ huit minutes pour refroidir d’abord.
     do:
@@ -113,7 +117,7 @@ steps:
         en: "Why does the imaging activity start several minutes before the capture time?"
         fr: "Pourquoi l’activité d’imagerie commence-t-elle plusieurs minutes avant l’heure de prise de vue ?"
       options:
-        - text: {en: "The FPA cooler has to cool the detector before it can image.", fr: "Le refroidisseur du plan focal doit refroidir le détecteur avant la prise de vue."}
+        - text: {en: "The focal plane array (FPA) cooler has to cool the detector before it can image.", fr: "Le refroidisseur du plan focal (FPA) doit refroidir le détecteur avant la prise de vue."}
           correct: true
           why: {en: "The cooler is off in STANDBY; imaging preparation switches it on.", fr: "Le refroidisseur est arrêté en STANDBY ; la préparation de l’imagerie l’allume."}
         - text: {en: "The spacecraft must wait for the next eclipse.", fr: "Le satellite doit attendre la prochaine éclipse."}
