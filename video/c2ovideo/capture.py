@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import importlib.util
+import inspect
 import json
 import re
 import time
@@ -118,6 +119,28 @@ class Client:
 import urllib.parse  # noqa: E402  (used by Client.request)
 
 
+class AsyncClient:
+    """The same client with awaitable methods (seed helpers use ``await c.post(...)``)."""
+
+    def __init__(self, sync: Client):
+        self._c = sync
+
+    async def get(self, path, **kw):
+        return await asyncio.to_thread(self._c.get, path, **kw)
+
+    async def post(self, path, json=None, **kw):  # noqa: A002
+        return await asyncio.to_thread(self._c.post, path, json, **kw)
+
+    async def put(self, path, json=None, **kw):  # noqa: A002
+        return await asyncio.to_thread(self._c.put, path, json, **kw)
+
+    async def patch(self, path, json=None, **kw):  # noqa: A002
+        return await asyncio.to_thread(self._c.patch, path, json, **kw)
+
+    async def delete(self, path, **kw):
+        return await asyncio.to_thread(self._c.delete, path, **kw)
+
+
 def _dig(obj: Any, dotted: str) -> Any:
     for part in dotted.split("."):
         if isinstance(obj, list):
@@ -163,9 +186,22 @@ def locator(page, spec: Any, c: Ctx):
     return loc.nth(int(spec.get("nth", 0)))
 
 
-async def _point_at(page, loc, ms: int = MOVE_MS) -> None:
+async def _stable_box(page, loc, tries: int = 12):
+    """Scroll the target into view and wait until it stops moving (smooth
+    scrolling, tables re-rendered by live telemetry), then return its box."""
     await loc.scroll_into_view_if_needed(timeout=15000)
-    box = await loc.bounding_box()
+    prev = await loc.bounding_box()
+    for _ in range(tries):
+        await page.wait_for_timeout(80)
+        box = await loc.bounding_box()
+        if box and prev and all(abs(box[k] - prev[k]) < 1 for k in ("x", "y", "width", "height")):
+            return box
+        prev = box
+    return prev
+
+
+async def _point_at(page, loc, ms: int = MOVE_MS) -> None:
+    box = await _stable_box(page, loc)
     if not box:
         return
     x = box["x"] + min(box["width"] / 2, 60 if box["width"] > 160 else box["width"] / 2)
@@ -175,8 +211,7 @@ async def _point_at(page, loc, ms: int = MOVE_MS) -> None:
 
 
 async def _ring(page, loc, secs: float) -> None:
-    await loc.scroll_into_view_if_needed(timeout=15000)
-    box = await loc.bounding_box()
+    box = await _stable_box(page, loc)
     if box:
         await page.evaluate("([l,t,w,h,s]) => window.__c2oCursor && window.__c2oCursor.ring(l,t,w,h,s)",
                             [box["x"], box["y"], box["width"], box["height"], secs])
@@ -276,8 +311,12 @@ async def run_action(page, act: dict, c: Ctx) -> None:
     elif kind == "python":
         fn = _load_callable(arg["call"])
         cl = Client(c.urls[arg.get("app", c.app)])
+        if inspect.iscoroutinefunction(fn):
+            cl = AsyncClient(cl)          # repo seed helpers written for httpx.AsyncClient
         args = [cl if a == "client" else c.sub(a) for a in arg.get("args", ["client"])]
         res = fn(*args, **c.sub(arg.get("kwargs") or {}))
+        if inspect.isawaitable(res):
+            res = await res
         if arg.get("save"):
             c.vars[arg["save"]] = res
     elif kind == "shot":
