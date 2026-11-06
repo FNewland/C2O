@@ -1,0 +1,153 @@
+# Design concept — writing requirements: anatomy of a shall statement, the
+# requirement types, SMART and the implementation trap, splitting compound
+# requirements, traceability up/down/across, and verification methods.
+# Animated page video/explainers/requirements.html. Whole design team.
+id: V-DES-04
+week: 2
+audience: all
+title:
+  en: "Writing requirements"
+  fr: "Rédiger des exigences"
+summary:
+  en: "How to write a requirement that can be verified: the shall statement, the five types, the SMART screen and the implementation trap, splitting compound requirements, traceability, and choosing a verification method."
+  fr: "Comment rédiger une exigence vérifiable : l’énoncé avec « doit », les cinq types, le filtre SMART et le piège de la mise en œuvre, la scission des exigences composées, la traçabilité, et le choix d’une méthode de vérification."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/05_requirements.md (§ 5.2–5.5)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/requirements.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: shall
+    title: {en: "Anatomy of a requirement", fr: "Anatomie d’une exigence"}
+    say:
+      en: >-
+        A requirement is a formal statement of what the system must do or how well, that someone
+        can verify. It names who, uses the word shall, gives a measurable threshold, with a
+        number and a unit, and states the conditions. Here: the payload shall achieve a ground
+        sample distance, GSD, of ten metres or better, at nadir, from the operational orbit.
+        Shall is binding. Should is only a goal, and will is a statement of fact.
+      fr: >-
+        Une exigence est un énoncé formel de ce que le système doit faire, ou à quel niveau, que
+        quelqu’un peut vérifier. Elle nomme le sujet, emploie le verbe devoir, donne un seuil
+        mesurable, avec un nombre et une unité, et précise les conditions. Ici : la charge utile
+        doit atteindre une distance d’échantillonnage au sol, une GSD, de dix mètres ou mieux, au
+        nadir, depuis l’orbite opérationnelle. « Doit » engage. « Devrait » n’est qu’un objectif,
+        et « va » un simple constat.
+    do:
+      - js: "EX.play('shall', ${say})"
+
+  - id: types
+    title: {en: "Five kinds of requirement", fr: "Cinq types d’exigences"}
+    say:
+      en: >-
+        Requirements come in five kinds. Functional: what the system does. Performance: how well
+        it does it. Interface: the agreements at a boundary, such as a regulated bus voltage.
+        Constraint: limits from outside, such as total mass. And environmental: what it must
+        survive, such as launch loads. Interface requirements are the one place where a specific
+        value is right, because both sides have agreed it.
+      fr: >-
+        Les exigences sont de cinq types. Fonctionnelle : ce que fait le système. Performance :
+        à quel niveau il le fait. Interface : les accords à une frontière, comme la tension d’un
+        bus régulé. Contrainte : les limites venues de l’extérieur, comme la masse totale. Et
+        environnement : ce à quoi il doit résister, comme les charges au lancement. Les exigences
+        d’interface sont le seul endroit où une valeur précise est correcte, parce que les deux
+        côtés l’ont acceptée.
+    do:
+      - js: "EX.play('types', ${say})"
+
+  - id: smart
+    title: {en: "The SMART screen", fr: "Le filtre SMART"}
+    say:
+      en: >-
+        A quick screen is SMART: specific, measurable, achievable, relevant and traceable. A
+        common trap: the spacecraft shall use triple-junction gallium arsenide cells. That names
+        a technology, a design choice. Ask what the cells were for, and require that instead: the
+        power subsystem shall generate at least fifteen watts at end of life, from no more than
+        half a square metre of array.
+      fr: >-
+        Un premier filtre est SMART : spécifique, mesurable, atteignable, pertinente et traçable.
+        Un piège courant : le satellite doit utiliser des cellules à l’arséniure de gallium à
+        triple jonction. Cela nomme une technologie, un choix de conception. Demandez à quoi
+        servaient les cellules, et exigez cela à la place : le sous-système d’énergie doit
+        produire au moins quinze watts en fin de vie, avec au plus un demi-mètre carré de
+        panneaux.
+    do:
+      - js: "EX.play('smart', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Which is a requirement rather than a design choice?"
+        fr: "Lequel est une exigence plutôt qu’un choix de conception ?"
+      options:
+        - text: {en: "The TT&C system shall receive commands with a bit error rate of 10⁻⁶ or better.", fr: "Le TT&C doit recevoir les télécommandes avec un taux d’erreur binaire de 10⁻⁶ ou mieux."}
+          correct: true
+          why: {en: "It states how well, with a number, and leaves the protocol and radio open.", fr: "Elle dit à quel niveau, avec un nombre, et laisse le protocole et la radio ouverts."}
+        - text: {en: "The spacecraft shall use the AX.25 protocol.", fr: "Le satellite doit utiliser le protocole AX.25."}
+          why: {en: "That prescribes an implementation.", fr: "Cela impose une mise en œuvre."}
+        - text: {en: "The spacecraft shall be a 3U CubeSat.", fr: "Le satellite doit être un CubeSat 3U."}
+          why: {en: "That prescribes a form factor; require the mass and the deployer envelope instead.", fr: "Cela impose un format ; exigez plutôt la masse et l’enveloppe du déployeur."}
+
+  - id: split
+    title: {en: "One concern per requirement", fr: "Un sujet par exigence"}
+    say:
+      en: >-
+        Watch for the word and. The system shall provide ten-metre imagery with a five-day revisit
+        and twenty-four-hour latency is three requirements in one. If it fails, which part
+        failed? Split it into three, each with its own number, so each can pass or fail on its
+        own, and the team knows exactly what to fix.
+      fr: >-
+        Méfiez-vous du mot « et ». Le système doit fournir une imagerie à dix mètres avec une
+        revisite de cinq jours et une latence de vingt-quatre heures : ce sont trois exigences en
+        une. Si elle échoue, quelle partie a échoué ? Scindez-la en trois, chacune avec son
+        numéro, pour que chacune réussisse ou échoue seule, et que l’équipe sache exactement quoi
+        corriger.
+    do:
+      - js: "EX.play('split', ${say})"
+
+  - id: trace
+    title: {en: "Traceability", fr: "La traçabilité"}
+    say:
+      en: >-
+        Requirements form a tree: the need, then mission, system, subsystem and component
+        requirements. Every requirement traces three ways. Up, to its parent: why does it exist?
+        Down, to its children: how is it decomposed? And across, to a verification method: how
+        will we know it is met? The traceability matrix records all three, and the target is one
+        hundred percent coverage.
+      fr: >-
+        Les exigences forment un arbre : le besoin, puis les exigences de mission, système,
+        sous-système et composant. Chaque exigence se trace dans trois directions. Vers le haut,
+        vers son parent : pourquoi existe-t-elle ? Vers le bas, vers ses enfants : comment se
+        décompose-t-elle ? Et de côté, vers une méthode de vérification : comment saura-t-on
+        qu’elle est satisfaite ? La matrice de traçabilité enregistre les trois, et la cible est
+        cent pour cent de couverture.
+    do:
+      - js: "EX.play('trace', ${say})"
+
+  - id: verify
+    title: {en: "How it will be verified", fr: "Comment la vérifier"}
+    say:
+      en: >-
+        There are four ways to verify, plus one: analysis, test, inspection, review of design,
+        and demonstration. Weigh it to check the mass. Simulate the pointing, then confirm it on
+        a test bench. A link margin is shown by analysis, since the full test needs the satellite
+        in orbit. Launch loads need a vibration test. Data latency is demonstrated in an
+        end-to-end rehearsal, and a redundant power path is found in the schematics.
+      fr: >-
+        On vérifie de quatre façons, plus une : analyse, essai, inspection, revue de conception,
+        et démonstration. On pèse pour vérifier la masse. On simule le pointage, puis on le
+        confirme sur un banc d’essai. Une marge de liaison se montre par analyse, car l’essai
+        complet exige le satellite en orbite. Les charges au lancement demandent un essai de
+        vibration. La latence des données se démontre dans une répétition de bout en bout, et un
+        chemin d’alimentation redondant se constate sur les schémas.
+    do:
+      - js: "EX.play('verify', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Take one of your team's requirements. Name its parent, one child, and the verification method you would assign, and why."
+        fr: "Prenez une exigence de votre équipe. Nommez son parent, un enfant, et la méthode de vérification que vous lui attribueriez, et pourquoi."

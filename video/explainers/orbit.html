@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choosing an orbit</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .earth { fill: #1e3a52; stroke: #5fb4dc; stroke-width: 2; }
+  .orb { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 7 6; }
+  .curve { fill: none; stroke: var(--warn); stroke-width: 3; }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+  .track { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .swath { fill: none; stroke: var(--accent); stroke-opacity: .18; stroke-width: 10; }
+  .cell { fill: var(--panel); stroke: var(--line); stroke-width: 1.2; }
+  .c-ok { fill: #1d2f22; stroke: var(--ok); } .c-warn { fill: #2d2618; stroke: var(--warn); } .c-bad { fill: #2c1c1e; stroke: var(--bad); }
+  .saa { fill: var(--bad); fill-opacity: .22; stroke: var(--bad); stroke-width: 2; }
+  .vis { fill: var(--ok); fill-opacity: .15; stroke: var(--ok); stroke-width: 2; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Orbit size and period, eclipse and beta angle, the altitude trade, ground track and coverage, radiation</title>
+  <g id="kep" class="ex-hidden"></g>
+  <g id="ecl" class="ex-hidden"></g>
+  <g id="alt" class="ex-hidden"></g>
+  <g id="map" class="ex-hidden"></g>
+  <g id="rad" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Choosing an orbit",
+    earth: "Earth, R = 6378 km", h: "altitude h", a: "a = R + h",
+    k_T: "Period", k_v: "Speed", k_i: "Sun-synchronous inclination", k_e: "EOSAT-1",
+    v_T: "94.6 min", v_v: "7.61 km/s", v_i: "97.4°", v_e: "about 513 km, 97.4°, crossing at about 10:00",
+    at500: "a circular orbit at 500 km",
+    beta_x: "β: angle between the Sun and the orbit plane", beta_y: "eclipse, % of the orbit",
+    worst: "β = 0: 37.8 %, 36 min", eos: "EOSAT-1 today: β ≈ −30°, about 34 min", sunlit: "β > 68°: never in shadow",
+    col400: "400 km", col500: "500 km", col600: "600 km",
+    r_life: "Natural lifetime", r_rule: "5-year disposal rule", r_pass: "Longest pass (10° mask)", r_gsd: "Ground resolution, same camera", r_tid: "Radiation dose",
+    life400: "about 9 months", life500: "about 5 years", life600: "20 to 50 years",
+    rule400: "met by drag", rule500: "marginal: depends on the Sun", rule600: "needs a deorbit system",
+    pass400: "6.2 min", pass500: "7.4 min", pass600: "8.5 min",
+    gsd400: "×0.8 (better)", gsd500: "×1.0", gsd600: "×1.2 (worse)",
+    tid400: "low", tid500: "5–10 krad/yr", tid600: "rising",
+    shift: "each orbit: 23.7° further west", ott: "Ottawa", ott_s: "in view while inside the circle (10° mask)",
+    swath: "swath", saa: "South Atlantic Anomaly",
+    tid_cap: "Total dose per year behind 2 mm of aluminium (krad)", iss: "ISS, 410 km", sso5: "Sun-synch., 500 km", sso8: "Sun-synch., 800 km",
+    mit: "Designing for it", m1: "EDAC memory", m2: "watchdog", m3: "latch-up protection",
+    n1a: "Altitude sets the period and the speed: about 95 minutes and 7.6 km/s at 500 km.",
+    n1b: "Sun-synchronous: J2 turns the orbit plane 360° a year, so it keeps the same local time.",
+    n2a: "Size the battery for the worst case, β = 0, unless the β history rules it out.",
+    n2b: "A dawn–dusk orbit, β near 90°, is almost never in eclipse (textbook § 7.1.2).",
+    n3a: "No altitude wins everything: lifetime, debris rules, links, resolution and dose pull apart.",
+    n3b: "At 500 km a CubeSat sits on the five-year line: the solar cycle decides (§ 7.3.3).",
+    n4a: "Revisit ≈ track spacing ÷ swath × period. A narrow swath means days between looks.",
+    n4b: "A station sees a 500 km satellite for at most about 7 minutes, 4 to 6 passes a day.",
+    n5a: "Low orbit is kind to off-the-shelf parts; the South Atlantic Anomaly is not.",
+    n5b: "Plan for upsets and latch-ups there, and expect noisy detector frames (§ 7.6).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 7 · computed with R = 6378.137 km, μ = 398 600.44 km³/s², J2 = 1.0826 × 10⁻³ · map without coastlines",
+  },
+  fr: {
+    kicker: "Notion", title: "Choisir une orbite",
+    earth: "Terre, R = 6378 km", h: "altitude h", a: "a = R + h",
+    k_T: "Période", k_v: "Vitesse", k_i: "Inclinaison héliosynchrone", k_e: "EOSAT-1",
+    v_T: "94,6 min", v_v: "7,61 km/s", v_i: "97,4°", v_e: "environ 513 km, 97,4°, passage vers 10 h",
+    at500: "une orbite circulaire à 500 km",
+    beta_x: "β : angle entre le Soleil et le plan de l’orbite", beta_y: "éclipse, % de l’orbite",
+    worst: "β = 0 : 37,8 %, 36 min", eos: "EOSAT-1 aujourd’hui : β ≈ −30°, environ 34 min", sunlit: "β > 68° : jamais à l’ombre",
+    col400: "400 km", col500: "500 km", col600: "600 km",
+    r_life: "Durée de vie naturelle", r_rule: "Règle des 5 ans", r_pass: "Plus long passage (masque 10°)", r_gsd: "Résolution au sol, même caméra", r_tid: "Dose de rayonnement",
+    life400: "environ 9 mois", life500: "environ 5 ans", life600: "20 à 50 ans",
+    rule400: "respectée par la traînée", rule500: "limite : dépend du Soleil", rule600: "système de désorbitation",
+    pass400: "6,2 min", pass500: "7,4 min", pass600: "8,5 min",
+    gsd400: "×0,8 (meilleure)", gsd500: "×1,0", gsd600: "×1,2 (moins bonne)",
+    tid400: "faible", tid500: "5–10 krad/an", tid600: "en hausse",
+    shift: "à chaque orbite : 23,7° plus à l’ouest", ott: "Ottawa", ott_s: "visible tant qu’il est dans le cercle (masque 10°)",
+    swath: "fauchée", saa: "Anomalie de l’Atlantique Sud",
+    tid_cap: "Dose totale par an derrière 2 mm d’aluminium (krad)", iss: "ISS, 410 km", sso5: "Héliosynchrone, 500 km", sso8: "Héliosynchrone, 800 km",
+    mit: "En conception", m1: "mémoire EDAC", m2: "chien de garde", m3: "protection contre le verrouillage",
+    n1a: "L’altitude fixe la période et la vitesse : environ 95 minutes et 7,6 km/s à 500 km.",
+    n1b: "Héliosynchrone : J2 fait tourner le plan de l’orbite de 360° par an ; l’heure locale reste la même.",
+    n2a: "Dimensionnez la batterie pour le pire cas, β = 0, sauf si l’historique de β l’exclut.",
+    n2b: "Une orbite aube-crépuscule, β proche de 90°, n’est presque jamais éclipsée (manuel § 7.1.2).",
+    n3a: "Aucune altitude ne gagne partout : durée de vie, débris, liaisons, résolution et dose s’opposent.",
+    n3b: "À 500 km, un CubeSat est sur la limite des cinq ans : le cycle solaire tranche (§ 7.3.3).",
+    n4a: "Revisite ≈ écart entre traces ÷ fauchée × période. Une fauchée étroite, ce sont des jours d’attente.",
+    n4b: "Une station voit un satellite à 500 km au plus 7 minutes environ, 4 à 6 passages par jour.",
+    n5a: "L’orbite basse ménage les composants du commerce ; l’Anomalie de l’Atlantique Sud, non.",
+    n5b: "Prévoyez-y des inversions de bits et des verrouillages, et des images bruitées (§ 7.6).",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 7 · calculé avec R = 6378,137 km, μ = 398 600,44 km³/s², J2 = 1,0826 × 10⁻³ · carte sans côtes",
+  },
+});
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+const D2R = Math.PI / 180;
+
+// 1. size and period
+EX.el("circle", { cx: 300, cy: 270, r: 170, class: "earth" }, "kep");
+EX.el("text", { x: 300, y: 276, class: "small", "text-anchor": "middle", label: "earth" }, "kep");
+EX.el("circle", { id: "k-orb", cx: 300, cy: 270, r: 215, class: "orb ex-hidden" }, "kep");
+EX.el("line", { id: "k-h", x1: 300, y1: 100, x2: 300, y2: 55, stroke: "var(--warn)", "stroke-width": 3, class: "ex-hidden" }, "kep");
+EX.el("text", { id: "k-ht", x: 312, y: 84, class: "small ex-hidden", style: "fill:var(--warn)", label: "h" }, "kep");
+EX.el("text", { id: "k-at", x: 40, y: 500, class: "small muted ex-hidden", label: "a" }, "kep");
+const sat = EX.el("g", { id: "k-sat", class: "ex-hidden" }, "kep");
+EX.el("rect", { x: -9, y: -9, width: 18, height: 18, fill: "var(--text)" }, sat);
+EX.el("rect", { x: -30, y: -4, width: 18, height: 8, fill: "var(--accent)" }, sat);
+EX.el("rect", { x: 12, y: -4, width: 18, height: 8, fill: "var(--accent)" }, sat);
+let satAnim = null;
+function orbitSat(ms) {
+  const t0 = performance.now();
+  if (satAnim) cancelAnimationFrame(satAnim);
+  (function tick(now) {
+    const u = ((now - t0) / ms) * 2 * Math.PI - Math.PI / 2;
+    sat.setAttribute("transform", `translate(${300 + 215 * Math.cos(u)} ${270 + 215 * Math.sin(u)})`);
+    satAnim = requestAnimationFrame(tick);
+  })(t0);
+}
+EX.el("text", { id: "k-cap", x: 640, y: 70, class: "small muted ex-hidden", label: "at500" }, "kep");
+["T", "v", "i", "e"].forEach((k, i) => {
+  const g = EX.el("g", { id: "k-" + k, class: "blk ex-hidden" }, "kep");
+  const y = 90 + i * 98;
+  EX.el("rect", { x: 640, y, width: 600, height: 80, rx: 8 }, g);
+  EX.el("text", { x: 658, y: y + 30, class: "small muted", label: "k_" + k }, g);
+  EX.el("text", { x: 658, y: y + 64, class: k === "e" ? "big" : "huge mono", label: "v_" + k }, g);
+});
+
+// 2. eclipse fraction against beta, 500 km
+const PX0 = 140, PY0 = 440, PXW = 1000 / 90, PYH = 340 / 40;
+const RE = 6378.137, H = 500, A = RE + H, BS = Math.asin(RE / A);
+const fe = (b) => { const br = Math.abs(b) * D2R; return br >= BS ? 0 : Math.acos(Math.sqrt(H * H + 2 * RE * H) / (A * Math.cos(br))) / Math.PI; };
+for (let p = 0; p <= 40; p += 10) {
+  EX.el("line", { x1: PX0, y1: PY0 - p * PYH, x2: PX0 + 1000, y2: PY0 - p * PYH, class: "grid" }, "ecl");
+  EX.el("text", { x: PX0 - 12, y: PY0 - p * PYH + 6, class: "small mono muted", "text-anchor": "end", text: p + " %" }, "ecl");
+}
+for (let b = 0; b <= 90; b += 15) EX.el("text", { x: PX0 + b * PXW, y: PY0 + 26, class: "small mono muted", "text-anchor": "middle", text: b + "°" }, "ecl");
+EX.el("text", { x: PX0, y: PY0 + 56, class: "small", label: "beta_x" }, "ecl");
+EX.el("text", { x: PX0, y: 76, class: "small muted", label: "beta_y" }, "ecl");
+let cd = "";
+for (let b = 0; b <= 90; b += 0.5) cd += (b ? " L " : "M ") + (PX0 + b * PXW).toFixed(1) + " " + (PY0 - fe(b) * 100 * PYH).toFixed(1);
+EX.el("path", { id: "e-curve", class: "curve ex-hidden", d: cd }, "ecl");
+const pt = (id, b, key, dx, dy, col) => {
+  const g = EX.el("g", { id, class: "ex-hidden" }, "ecl");
+  const x = PX0 + Math.abs(b) * PXW, y = PY0 - fe(b) * 100 * PYH;
+  EX.el("circle", { cx: x, cy: y, r: 8, fill: col }, g);
+  EX.el("text", { x: x + dx, y: y + dy, class: "small", style: `fill:${col}`, label: key }, g);
+};
+pt("e-worst", 0, "worst", 16, -14, "var(--bad)");
+pt("e-eos", -30.5, "eos", 14, -16, "var(--accent)");
+EX.el("line", { id: "e-bs", x1: PX0 + BS / D2R * PXW, y1: 90, x2: PX0 + BS / D2R * PXW, y2: PY0, stroke: "var(--ok)", "stroke-width": 2, "stroke-dasharray": "6 6", class: "ex-hidden" }, "ecl");
+EX.el("text", { id: "e-bst", x: PX0 + BS / D2R * PXW + 10, y: 120, class: "small ex-hidden", style: "fill:var(--ok)", label: "sunlit" }, "ecl");
+
+// 3. altitude trade table
+const COLS = ["400", "500", "600"], ROWS = ["life", "rule", "pass", "gsd", "tid"];
+const TONE = { life: ["bad", "warn", "ok"], rule: ["ok", "warn", "bad"], pass: ["warn", "", "ok"], gsd: ["ok", "", "warn"], tid: ["ok", "", "warn"] };
+COLS.forEach((c, j) => EX.el("text", { id: "a-h" + j, x: 470 + j * 260, y: 56, class: "big ex-hidden", label: "col" + c }, "alt"));
+ROWS.forEach((r, i) => {
+  const y = 76 + i * 84;
+  EX.el("text", { id: "a-r" + i, x: 40, y: y + 42, class: "ex-hidden", label: "r_" + r }, "alt");
+  COLS.forEach((c, j) => {
+    const g = EX.el("g", { id: `a-${i}-${j}`, class: "ex-hidden" }, "alt");
+    EX.el("rect", { x: 460 + j * 260, y, width: 244, height: 66, rx: 8, class: "cell " + (TONE[r][j] ? "c-" + TONE[r][j] : "") }, g);
+    EX.el("text", { x: 474 + j * 260, y: y + 40, class: "small", label: r + c }, g);
+  });
+});
+
+// 4. map: ground tracks, swath, a station
+const MX = 40, MY = 66, MW = 1200, MH = 400;
+const mx = (lon) => MX + (lon + 180) / 360 * MW, my = (lat) => MY + (90 - lat) / 180 * MH;
+for (let lat = -60; lat <= 60; lat += 30) {
+  EX.el("line", { x1: MX, y1: my(lat), x2: MX + MW, y2: my(lat), class: "grid" }, "map");
+  EX.el("text", { x: MX + 4, y: my(lat) - 4, class: "small mono faint", text: lat + "°" }, "map");
+}
+for (let lon = -150; lon <= 150; lon += 30) EX.el("line", { x1: mx(lon), y1: MY, x2: mx(lon), y2: MY + MH, class: "grid" }, "map");
+EX.el("rect", { x: MX, y: MY, width: MW, height: MH, fill: "none", stroke: "var(--line)" }, "map");
+const INC = 97.4 * D2R, TP = 94.6 * 60, WE = 360 / 86164;
+function track(k, lon0) {
+  // one revolution starting at the ascending node at lon0, split at the date line
+  let d = "", prev = null;
+  for (let s = 0; s <= TP; s += 30) {
+    const u = 2 * Math.PI * s / TP;
+    const lat = Math.asin(Math.sin(INC) * Math.sin(u)) / D2R;
+    let lon = lon0 + Math.atan2(Math.cos(INC) * Math.sin(u), Math.cos(u)) / D2R - WE * s;
+    lon = ((lon + 540) % 360) - 180;
+    d += (prev === null || Math.abs(lon - prev) > 180 ? " M " : " L ") + mx(lon).toFixed(1) + " " + my(lat).toFixed(1);
+    prev = lon;
+  }
+  EX.el("path", { id: "sw-" + k, class: "swath ex-hidden", d }, "map");
+  EX.el("path", { id: "tk-" + k, class: "track ex-hidden", d }, "map");
+}
+[0, 1, 2].forEach((k) => track(k, -40 - k * 23.7));
+EX.el("text", { id: "m-shift", x: MX, y: 52, class: "small ex-hidden", style: "fill:var(--accent)", label: "shift" }, "map");
+EX.el("text", { id: "m-sw", x: mx(-24), y: my(-50), class: "small ex-hidden", style: "fill:var(--accent)", label: "swath" }, "map");
+const OT = [45.4, -75.7], LAM = 14.0;
+EX.el("ellipse", { id: "m-vis", cx: mx(OT[1]), cy: my(OT[0]), rx: LAM / Math.cos(OT[0] * D2R) / 360 * MW, ry: LAM / 180 * MH, class: "vis ex-hidden" }, "map");
+const og = EX.el("g", { id: "m-ott", class: "ex-hidden" }, "map");
+EX.el("circle", { cx: mx(OT[1]), cy: my(OT[0]), r: 6, fill: "var(--ok)" }, og);
+EX.el("text", { x: MX, y: 494, class: "small", style: "fill:var(--ok)", label: "ott" }, og);
+EX.el("text", { x: MX + 90, y: 494, class: "small muted", label: "ott_s" }, og);
+
+// 5. radiation (on the map's frame)
+EX.el("ellipse", { id: "r-saa", cx: mx(-50), cy: my(-25), rx: 110, ry: 62, class: "saa ex-hidden" }, "map");
+EX.el("text", { id: "r-saat", x: mx(-50), y: my(-25) + 92, class: "small ex-hidden", "text-anchor": "middle", style: "fill:var(--bad)", label: "saa" }, "map");
+const rp = EX.el("g", { id: "r-panel", class: "ex-hidden" }, "rad");
+EX.el("rect", { x: 700, y: 250, width: 540, height: 250, rx: 10, fill: "#1b2027", stroke: "var(--line)" }, rp);
+EX.el("text", { x: 716, y: 278, class: "small muted", label: "tid_cap" }, rp);
+[["iss", 2, 5], ["sso5", 5, 10], ["sso8", 10, 20]].forEach(([k, lo, hi], i) => {
+  const y = 300 + i * 46, s = 11;
+  EX.el("text", { x: 716, y: y + 18, class: "small", label: k }, rp);
+  EX.el("rect", { x: 930 + lo * s, y: y + 2, width: (hi - lo) * s, height: 22, rx: 4, class: i === 2 ? "warn" : "acc", opacity: 0.8 }, rp);
+  EX.el("text", { x: 938 + hi * s, y: y + 19, class: "small mono muted", text: `${lo}–${hi}` }, rp);
+});
+EX.el("text", { x: 716, y: 460, class: "small", label: "mit" }, rp);
+EX.el("text", { x: 716, y: 486, class: "small", style: "fill:var(--ok)", text: `${EX.t("m1")} · ${EX.t("m2")} · ${EX.t("m3")}` }, rp);
+
+function only(...ids) { ["kep", "ecl", "alt", "map", "rad", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("size", (beat, s) => {
+  only("kep");
+  beat(0.03, () => { EX.draw("k-orb", 900); EX.show("k-sat"); orbitSat(s * 1000 * 0.6); });
+  beat(0.12, () => { EX.show("k-h"); EX.show("k-ht"); EX.show("k-at"); EX.show("k-cap"); });
+  ["T", "v", "i", "e"].forEach((k, i) => beat(0.22 + i * 0.1, () => { EX.show("k-" + k); if (k === "e") EX.mark("k-e", "on"); }));
+  beat(0.72, () => note("n1a", "n1b"));
+});
+EX.scene("eclipse", (beat) => {
+  only("ecl"); if (satAnim) cancelAnimationFrame(satAnim);
+  beat(0.05, () => EX.draw("e-curve", 1600));
+  beat(0.3, () => EX.show("e-worst"));
+  beat(0.45, () => { EX.show("e-bs"); EX.show("e-bst"); });
+  beat(0.6, () => EX.show("e-eos"));
+  beat(0.72, () => note("n2a", "n2b"));
+});
+EX.scene("altitude", (beat) => {
+  only("alt");
+  COLS.forEach((_, j) => beat(0.02, () => EX.show("a-h" + j)));
+  ROWS.forEach((_, i) => beat(0.06 + i * 0.11, () => { EX.show("a-r" + i); COLS.forEach((__, j) => EX.show(`a-${i}-${j}`)); }));
+  beat(0.7, () => note("n3a", "n3b"));
+});
+EX.scene("coverage", (beat) => {
+  only("map");
+  [0, 1, 2].forEach((k) => beat(0.04 + k * 0.12, () => EX.draw("tk-" + k, 1400)));
+  beat(0.3, () => EX.show("m-shift"));
+  beat(0.42, () => { [0, 1, 2].forEach((k) => EX.show("sw-" + k)); EX.show("m-sw"); });
+  beat(0.55, () => { EX.show("m-vis"); EX.show("m-ott"); });
+  beat(0.72, () => note("n4a", "n4b"));
+});
+EX.scene("radiation", (beat) => {
+  only("map", "rad");
+  ["tk-0", "tk-1", "tk-2", "sw-0", "sw-1", "sw-2", "m-vis", "m-ott"].forEach((id) => EX.show(id, 0));
+  beat(0.02, () => ["tk-0", "tk-1", "tk-2", "sw-0", "sw-1", "sw-2", "m-vis", "m-ott", "m-shift", "m-sw"].forEach((id) => EX.dim(id)));
+  beat(0.1, () => { EX.show("r-saa"); EX.show("r-saat"); EX.pulse("r-saa", 3); });
+  beat(0.4, () => EX.show("r-panel"));
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>

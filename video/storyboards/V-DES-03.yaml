@@ -1,0 +1,151 @@
+# Design concept — from need to concept of operations: the problem statement,
+# WHAT before HOW, the measure chain from need to TPM, a trade study with its
+# sensitivity, and the ConOps (modes, duty cycle, orbit-average power, data
+# balance). Animated page video/explainers/needs.html. Whole design team.
+# Trade numbers are illustrative: buy-the-data wins 0.79 to 0.52; training
+# would need a 31 % weight (0.4 / 1.3) before the own-CubeSat option wins.
+id: V-DES-03
+week: 1
+audience: all
+title:
+  en: "From need to concept of operations"
+  fr: "Du besoin au concept d’opérations"
+summary:
+  en: "Start from the problem, not the spacecraft: a good problem statement, what versus how, the chain from stakeholder need to tracked design parameter, a trade study and its sensitivity, and the concept of operations that sizes power and data."
+  fr: "Partir du problème, pas du satellite : un bon énoncé de problème, le quoi et le comment, la chaîne du besoin au paramètre suivi, une étude de compromis et sa sensibilité, et le concept d’opérations qui dimensionne l’énergie et les données."
+apps:
+  viz: default
+fresh_stack: viz
+ties: {}
+sources:
+  - design/docs/oer/chapters/04_mission_needs_conops.md (§ 4.1, 4.3, 4.5, 4.6, 4.8)
+
+setup:
+  - goto: {app: viz, path: "/video/explainers/needs.html?lang={lang}", settle: 1.5}
+
+steps:
+  - id: problem
+    title: {en: "Start from the problem", fr: "Partir du problème"}
+    say:
+      en: >-
+        The most common failure in mission design is solving the wrong problem. "We need a
+        six-unit CubeSat at five hundred kilometres" is not a problem statement; it is a
+        solution. A problem statement answers four questions: what is missing, who is affected,
+        what it costs them, and what limits apply, such as budget and schedule.
+      fr: >-
+        L’échec le plus courant en conception de mission, c’est de résoudre le mauvais problème.
+        « Il nous faut un CubeSat six unités à cinq cents kilomètres » n’est pas un énoncé de
+        problème : c’est une solution. Un énoncé de problème répond à quatre questions : que
+        manque-t-il, qui est touché, quel en est le coût, et quelles limites s’appliquent, comme
+        le budget et le calendrier.
+    do:
+      - js: "EX.play('problem', ${say})"
+
+  - id: whathow
+    title: {en: "What before how", fr: "Le quoi avant le comment"}
+    say:
+      en: >-
+        At this stage, write down what is needed, not how to achieve it. Ten-metre imagery, not a
+        fifteen-centimetre telescope. A five-day revisit, not a twelve-satellite constellation.
+        The choices on the right are not wrong; they belong later, in Phases A and B. Fix them now
+        and you close off options that might serve the users better, such as buying the data.
+      fr: >-
+        À ce stade, écrivez ce qu’il faut, pas comment l’obtenir. Une imagerie à dix mètres, pas
+        un télescope de quinze centimètres. Une revisite de cinq jours, pas une constellation de
+        douze satellites. Les choix de droite ne sont pas faux : ils viennent plus tard, en
+        phases A et B. Les figer maintenant ferme des options qui serviraient peut-être mieux les
+        utilisateurs, comme acheter les données.
+    do:
+      - js: "EX.play('whathow', ${say})"
+
+  - id: chain
+    title: {en: "From need to tracked parameter", fr: "Du besoin au paramètre suivi"}
+    say:
+      en: >-
+        A chain of measures links the need to the design. The users judge a measure of
+        effectiveness: the share of crop assessments delivered on time. That gives a mission
+        objective, and a measure of performance the systems engineer can verify: a ground sample
+        distance, GSD, of ten metres or better. It becomes a requirement, and the design team
+        tracks a technical performance measure, such as the imager's mass against its
+        allocation, in every phase.
+      fr: >-
+        Une chaîne de mesures relie le besoin à la conception. Les utilisateurs jugent une
+        mesure d’efficacité : la part des bilans de cultures livrés à temps. On en tire un
+        objectif de mission, et une mesure de performance que l’ingénieur système peut vérifier :
+        une distance d’échantillonnage au sol, la GSD, de dix mètres ou mieux. Elle devient une
+        exigence, et l’équipe de conception suit une mesure de performance technique, comme la
+        masse de l’imageur face à son allocation, à chaque phase.
+    do:
+      - js: "EX.play('chain', ${say})"
+
+  - id: trade
+    title: {en: "A trade study", fr: "Une étude de compromis"}
+    say:
+      en: >-
+        To choose between options, run a trade study: a decision, at least three real
+        alternatives, criteria, weights that add up to one, and scores. Here, the weighted scores
+        say buy commercial imagery, well ahead of our own CubeSat and an aerial survey. That is
+        the most important trade of all: does this need space at all?
+      fr: >-
+        Pour choisir entre des options, on mène une étude de compromis : une décision, au moins
+        trois vraies options, des critères, des poids dont la somme fait un, et des notes. Ici,
+        les scores pondérés disent d’acheter des images commerciales, loin devant notre propre
+        CubeSat et un relevé aérien. C’est le compromis le plus important : ce besoin
+        exige-t-il vraiment l’espace ?
+    do:
+      - js: "EX.play('trade', ${say})"
+    question:
+      type: multichoice
+      text:
+        en: "Why must a trade study's weights be agreed before the alternatives are scored?"
+        fr: "Pourquoi faut-il fixer les poids d’une étude de compromis avant de noter les options ?"
+      options:
+        - text: {en: "Weights set after seeing the scores tend to be bent toward the option someone already prefers.", fr: "Des poids fixés après avoir vu les notes ont tendance à favoriser l’option que quelqu’un préfère déjà."}
+          correct: true
+          why: {en: "The weights say what matters; set late, they quietly decide the answer.", fr: "Les poids disent ce qui compte ; fixés trop tard, ils décident discrètement de la réponse."}
+        - text: {en: "The scores cannot be normalised until the weights exist.", fr: "On ne peut pas normaliser les notes tant que les poids n’existent pas."}
+          why: {en: "Scores are normalised per criterion, independently of the weights.", fr: "Les notes se normalisent par critère, indépendamment des poids."}
+        - text: {en: "It makes the weights add up to one.", fr: "Cela garantit que la somme des poids fait un."}
+          why: {en: "Normalising does that, whenever the weights are set.", fr: "C’est la normalisation qui le garantit, quel que soit le moment."}
+
+  - id: sensitivity
+    title: {en: "Is the answer robust?", fr: "La réponse est-elle robuste ?"}
+    say:
+      en: >-
+        Then test how robust the answer is. Raise the weight on training value, and watch the
+        totals. Our own CubeSat only wins once training carries about thirty-one percent of the
+        weight. If your sponsor's real goal is training engineers, say so, and agree the weights
+        before anyone sees the scores.
+      fr: >-
+        Vérifiez ensuite la robustesse de la réponse. Augmentez le poids de la valeur de
+        formation, et regardez les totaux. Notre CubeSat ne l’emporte que lorsque la formation
+        pèse environ trente et un pour cent. Si le vrai but de votre commanditaire est de former
+        des ingénieurs, dites-le, et fixez les poids avant que quiconque voie les notes.
+    do:
+      - js: "EX.play('sensitivity', ${say})"
+
+  - id: conops
+    title: {en: "The concept of operations", fr: "Le concept d’opérations"}
+    say:
+      en: >-
+        The concept of operations, the ConOps, says how the mission will run: its phases, its
+        modes and how data flows. A safe mode, Sun-pointing at minimum load, is the anchor;
+        imaging and downlink add load on top. Lay one orbit out with each mode's duty cycle, and
+        the orbit-average power, here about five watts, sizes the solar array, while the
+        thirty-five minute eclipse sizes the battery. The same goes for data: each day's downlink
+        must cover each day's collection.
+      fr: >-
+        Le concept d’opérations, le ConOps, dit comment la mission fonctionnera : ses phases,
+        ses modes et le parcours des données. Un mode sûr, pointé vers le Soleil à charge
+        minimale, sert d’ancrage ; la prise de vue et la transmission s’y ajoutent. Déroulez une
+        orbite avec le cycle de service de chaque mode : la puissance moyenne orbitale, ici
+        environ cinq watts, dimensionne le générateur solaire, et l’éclipse de trente-cinq
+        minutes, la batterie. Même chose pour les données : ce qu’on transmet chaque jour doit
+        couvrir ce qu’on collecte.
+    do:
+      - js: "EX.play('conops', ${say})"
+    question:
+      type: reflect
+      text:
+        en: "Write your mission's problem statement in four lines: what is missing, who is affected, what it costs them, and what limits apply."
+        fr: "Rédigez l’énoncé de problème de votre mission en quatre lignes : ce qui manque, qui est touché, ce que cela leur coûte, et quelles limites s’appliquent."

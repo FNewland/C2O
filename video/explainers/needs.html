@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>From need to concept of operations</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .strike { stroke: var(--bad); stroke-width: 3; }
+  .sun { fill: #e0c25a; } .ecl { fill: #2b3442; }
+  .pw { fill: none; stroke: var(--accent); stroke-width: 3; }
+  .avg { stroke: var(--ok); stroke-width: 2.5; stroke-dasharray: 8 6; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Problem statement, what versus how, measures, trade study and concept of operations</title>
+  <g id="prob" class="ex-hidden"></g>
+  <g id="wh" class="ex-hidden"></g>
+  <g id="chain" class="ex-hidden"></g>
+  <g id="trade" class="ex-hidden"></g>
+  <g id="ops" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "From need to concept of operations",
+    bad: "“We need a 6U CubeSat at 500 km, Sun-synchronous.”",
+    bad_s: "a solution statement: it says nothing about the problem",
+    good_cap: "A problem statement answers four questions",
+    q1: "What is missing?", a1: "timely, affordable 10 m imagery, every 5 days",
+    q2: "Who is affected?", a2: "agricultural agencies in sub-Saharan Africa",
+    q3: "What does it cost them?", a3: "late crop forecasts; food aid for 300 million people",
+    q4: "What limits apply?", a4: "under $10 M; first data within 3 years",
+    what: "WHAT (the need, now)", how: "HOW (a design choice, later)",
+    w1: "10 m resolution imagery", h1: "a 15 cm aperture telescope",
+    w2: "revisit every 5 days", h2: "a constellation of 12 satellites",
+    w3: "data within 6 hours", h3: "X-band to 3 ground stations",
+    w4: "total cost under $10 M", h4: "off-the-shelf parts only",
+    c_need: "Stakeholder need", e_need: "timely crop monitoring for food security", o_need: "users",
+    c_moe: "Measure of effectiveness", e_moe: "% of crop assessments delivered within 5 days", o_moe: "users · judged in operations",
+    c_obj: "Mission objective", e_obj: "10 m multispectral imagery, revisit ≤ 5 days", o_obj: "users and systems engineer",
+    c_mop: "Measure of performance", e_mop: "GSD ≤ 10 m at nadir", o_mop: "systems engineer · verified in C/D",
+    c_req: "Requirement", e_req: "The payload shall achieve GSD ≤ 10 m at nadir.", o_req: "systems engineer",
+    c_tpm: "Technical performance measure", e_tpm: "imager mass: best estimate against a 1.5 kg allocation", o_tpm: "design team · every phase",
+    t_q: "Decision: how do we get the crop imagery?",
+    altA: "Our own CubeSat", altB: "Buy commercial imagery", altC: "Aerial survey",
+    k_cov: "Coverage and revisit", k_cost: "Cost", k_sch: "Schedule", k_risk: "Risk", k_train: "Training value",
+    weight: "weight", total: "Weighted score",
+m_stby: "Standby · 4 W", m_img: "Imaging · 8 W", m_dl: "Downlink · 10 W",
+    sunlit: "sunlight · 60 min", eclipse: "eclipse · 35 min", watts: "W", avg: "orbit average",
+    minutes: "one 95-minute orbit with a pass",
+    n1a: "Need first: what is missing, for whom, at what cost, within which limits.",
+    n1b: "WHAT before HOW (textbook § 4.1). A design fixed too early closes off better options.",
+    n2a: "Each level answers to the one above it, and each has an owner.",
+    n2b: "Users judge effectiveness; the systems engineer verifies performance; the team tracks the design.",
+    n3a: "Buying the data wins: the most important trade is space against no space.",
+    n3b: "Five elements: decision, at least three real alternatives, criteria, weights, scores (§ 4.5).",
+    n4a: "Training would need about 31 % of the weight before our own CubeSat wins.",
+    n4b: "Sensitivity: find the swing criteria. Set the weights before you see the scores.",
+    n5a: "The orbit average, about 4.9 W, sizes the array; the 35-minute eclipse sizes the battery.",
+    n5b: "Data too: what you downlink each day must be at least what you collect, or the memory fills.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 4 · numbers are the textbook's illustrative example",
+  },
+  fr: {
+    kicker: "Notion", title: "Du besoin au concept d’opérations",
+    bad: "« Il nous faut un CubeSat 6U à 500 km, héliosynchrone. »",
+    bad_s: "une solution : rien sur le problème",
+    good_cap: "Un énoncé de problème répond à quatre questions",
+    q1: "Que manque-t-il ?", a1: "une imagerie à 10 m, abordable, tous les 5 jours",
+    q2: "Qui est touché ?", a2: "les agences agricoles d’Afrique subsaharienne",
+    q3: "Quel en est le coût ?", a3: "prévisions tardives ; aide alimentaire de 300 millions",
+    q4: "Quelles limites ?", a4: "moins de 10 M$ ; premières données en 3 ans",
+    what: "QUOI (le besoin, maintenant)", how: "COMMENT (un choix, plus tard)",
+    w1: "imagerie à 10 m de résolution", h1: "un télescope de 15 cm",
+    w2: "revisite tous les 5 jours", h2: "une constellation de 12 satellites",
+    w3: "données en moins de 6 heures", h3: "bande X vers 3 stations sol",
+    w4: "coût total sous 10 M$", h4: "uniquement des pièces du commerce",
+    c_need: "Besoin des parties prenantes", e_need: "suivi des cultures à temps pour la sécurité alimentaire", o_need: "utilisateurs",
+    c_moe: "Mesure d’efficacité", e_moe: "% des bilans de cultures livrés en 5 jours", o_moe: "utilisateurs · en exploitation",
+    c_obj: "Objectif de mission", e_obj: "imagerie multispectrale à 10 m, revisite ≤ 5 jours", o_obj: "utilisateurs et ingénieur système",
+    c_mop: "Mesure de performance", e_mop: "GSD ≤ 10 m au nadir", o_mop: "ingénieur système · vérifiée en C/D",
+    c_req: "Exigence", e_req: "La charge utile doit atteindre une GSD ≤ 10 m au nadir.", o_req: "ingénieur système",
+    c_tpm: "Mesure de performance technique", e_tpm: "masse de l’imageur : estimation face à 1,5 kg alloué", o_tpm: "équipe · à chaque phase",
+    t_q: "Décision : comment obtenir l’imagerie des cultures ?",
+    altA: "Notre CubeSat", altB: "Acheter des images", altC: "Relevé aérien",
+    k_cov: "Couverture et revisite", k_cost: "Coût", k_sch: "Calendrier", k_risk: "Risque", k_train: "Valeur de formation",
+    weight: "poids", total: "Score pondéré",
+m_stby: "Veille · 4 W", m_img: "Prise de vue · 8 W", m_dl: "Transmission · 10 W",
+    sunlit: "jour · 60 min", eclipse: "éclipse · 35 min", watts: "W", avg: "moyenne orbitale",
+    minutes: "une orbite de 95 minutes avec un passage",
+    n1a: "Le besoin d’abord : ce qui manque, pour qui, à quel coût, dans quelles limites.",
+    n1b: "Le QUOI avant le COMMENT (manuel § 4.1). Figer la conception trop tôt ferme de meilleures options.",
+    n2a: "Chaque niveau répond à celui du dessus, et chacun a un responsable.",
+    n2b: "Les utilisateurs jugent l’efficacité ; l’ingénieur système vérifie la performance ; l’équipe suit la conception.",
+    n3a: "Acheter les données l’emporte : le compromis le plus important, c’est l’espace ou pas.",
+    n3b: "Cinq éléments : décision, au moins trois vraies options, critères, poids, notes (§ 4.5).",
+    n4a: "Il faudrait environ 31 % du poids à la formation pour que notre CubeSat gagne.",
+    n4b: "Sensibilité : trouvez les critères décisifs. Fixez les poids avant de voir les notes.",
+    n5a: "La moyenne orbitale, environ 4,9 W, dimensionne le générateur ; l’éclipse de 35 min, la batterie.",
+    n5b: "Les données aussi : ce qu’on transmet chaque jour doit couvrir ce qu’on collecte, sinon la mémoire se remplit.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 4 · les chiffres sont l’exemple illustratif du manuel",
+  },
+});
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+function box(parent, id, x, y, w, h, key, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  if (key) EX.el("text", { x: x + 14, y: y + h / 2 + 6, label: key }, g);
+  return g;
+}
+
+// 1. problem statement
+const bad = box("prob", "p-bad", 40, 60, 1200, 76, null);
+EX.el("text", { x: 60, y: 94, class: "big", label: "bad" }, bad);
+EX.el("text", { x: 60, y: 122, class: "small muted", label: "bad_s" }, bad);
+EX.el("line", { id: "p-strike", class: "strike ex-hidden", x1: 56, y1: 88, x2: 760, y2: 88 }, "prob");
+const badText = bad.querySelector("text");
+EX.el("text", { id: "p-cap", x: 40, y: 190, class: "small muted ex-hidden", label: "good_cap" }, "prob");
+[1, 2, 3, 4].forEach((i) => {
+  const y = 210 + (i - 1) * 74;
+  const g = box("prob", "p-q" + i, 40, y, 1200, 60, null);
+  EX.el("text", { x: 58, y: y + 37, class: "big", style: "fill:var(--accent)", label: "q" + i }, g);
+  EX.el("text", { x: 420, y: y + 37, label: "a" + i }, g);
+});
+
+// 2. what vs how
+EX.el("text", { x: 40, y: 60, class: "big", style: "fill:var(--ok)", label: "what" }, "wh");
+EX.el("text", { x: 680, y: 60, class: "big", style: "fill:var(--warn)", label: "how" }, "wh");
+[1, 2, 3, 4].forEach((i) => {
+  const y = 90 + (i - 1) * 92;
+  box("wh", "w" + i, 40, y, 560, 66, "w" + i, "ok");
+  box("wh", "h" + i, 680, y, 560, 66, "h" + i);
+  EX.el("text", { x: 618, y: y + 40, class: "muted", text: "→" }, "wh");
+});
+
+// 3. need -> TPM chain
+const CH = ["need", "moe", "obj", "mop", "req", "tpm"];
+CH.forEach((k, i) => {
+  const y = 34 + i * 79;
+  const g = EX.el("g", { id: "ch-" + k, class: "blk ex-hidden" }, "chain");
+  EX.el("rect", { x: 40, y, width: 1200, height: 62, rx: 8 }, g);
+  EX.el("text", { x: 56, y: y + 38, class: "small", style: "fill:var(--accent)", label: "c_" + k }, g);
+  EX.el("text", { x: 360, y: y + 38, label: "e_" + k }, g);
+  EX.el("text", { x: 1224, y: y + 38, class: "small muted", "text-anchor": "end", label: "o_" + k }, g);
+});
+
+// 4. trade study table: weights and scores
+const ALT = ["altA", "altB", "altC"];
+const CR = [["k_cov", 0.35, [0.6, 0.9, 0.3]], ["k_cost", 0.25, [0.4, 0.7, 0.6]], ["k_sch", 0.15, [0.3, 1.0, 0.8]],
+            ["k_risk", 0.15, [0.4, 0.9, 0.7]], ["k_train", 0.10, [1.0, 0.1, 0.3]]];
+const AX = [470, 730, 990];
+EX.el("text", { x: 40, y: 44, class: "big", label: "t_q" }, "trade");
+EX.el("text", { x: 330, y: 84, class: "small muted", label: "weight" }, "trade");
+ALT.forEach((k, j) => EX.el("text", { id: "alt-" + j, x: AX[j], y: 84, class: "small", style: "font-weight:600", label: k }, "trade"));
+CR.forEach(([k, w, s], i) => {
+  const y = 100 + i * 50;
+  const row = EX.el("g", { id: "cr-" + i, class: "ex-hidden" }, "trade");
+  EX.el("text", { x: 40, y: y + 26, label: k }, row);
+  EX.el("text", { id: "w-" + i, x: 330, y: y + 26, class: "mono", text: w.toFixed(2) }, row);
+  s.forEach((v, j) => {
+    EX.el("rect", { x: AX[j], y: y + 10, width: 200, height: 22, rx: 4, fill: "var(--panel)" }, row);
+    EX.el("rect", { x: AX[j], y: y + 10, width: 200 * v, height: 22, rx: 4, class: "acc", opacity: 0.55 }, row);
+    EX.el("text", { x: AX[j] + 206, y: y + 27, class: "small mono muted", text: v.toFixed(1) }, row);
+  });
+});
+const tot = EX.el("g", { id: "tot", class: "ex-hidden" }, "trade");
+EX.el("text", { x: 40, y: 400, class: "big", label: "total" }, tot);
+ALT.forEach((k, j) => {
+  EX.el("rect", { x: AX[j], y: 376, width: 200, height: 34, rx: 4, fill: "var(--panel)" }, tot);
+  EX.el("rect", { id: "tb-" + j, x: AX[j], y: 376, width: 0, height: 34, rx: 4, class: "ok", opacity: 0.8 }, tot);
+  EX.el("text", { id: "tv-" + j, x: AX[j] + 100, y: 440, class: "huge mono", "text-anchor": "middle", text: "0.00" }, tot);
+});
+const W0 = CR.map((c) => c[1]);
+let W = W0.slice();
+function totals() { return ALT.map((_, j) => CR.reduce((s, c, i) => s + W[i] * c[2][j], 0)); }
+function paint() {
+  const T = totals(), best = T.indexOf(Math.max(...T));
+  T.forEach((v, j) => {
+    EX.$("tb-" + j).setAttribute("width", 200 * v);
+    EX.$("tb-" + j).setAttribute("class", j === best ? "ok" : "acc");
+    EX.raw("tv-" + j, v.toFixed(2));
+  });
+  W.forEach((w, i) => EX.raw("w-" + i, w.toFixed(2)));
+}
+// raise the training weight to wt, scaling the others so the weights still sum to 1
+function setTraining(wt) { W = W0.map((w, i) => (i === 4 ? wt : w * (1 - wt) / (1 - W0[4]))); paint(); }
+function sweep(a, b, ms) {
+  const t0 = performance.now();
+  (function tick(now) { const k = Math.min(1, (now - t0) / ms); setTraining(a + (b - a) * k); if (k < 1) requestAnimationFrame(tick); })(t0);
+}
+
+// 5. ConOps: one orbit
+const X0 = 120, PX = 1080 / 95, BASE = 440, PW = 24;
+const xm = (m) => X0 + m * PX;
+EX.el("text", { x: 40, y: 40, class: "small muted", label: "minutes" }, "ops");
+EX.el("rect", { x: xm(0), y: 56, width: 60 * PX, height: 26, class: "sun" }, "ops");
+EX.el("rect", { x: xm(60), y: 56, width: 35 * PX, height: 26, class: "ecl" }, "ops");
+EX.el("text", { x: xm(2), y: 75, class: "small", style: "fill:#15191e", label: "sunlit" }, "ops");
+EX.el("text", { x: xm(62), y: 75, class: "small", label: "eclipse" }, "ops");
+const MODES = [["m_stby", 0, 15, 4], ["m_img", 15, 25, 8], ["m_stby", 25, 70, 4], ["m_dl", 70, 78, 10], ["m_stby", 78, 95, 4]];
+MODES.forEach(([k, a, b, p], i) => {
+  const g = EX.el("g", { id: "md-" + i, class: "blk ex-hidden" + (p > 4 ? " on" : "") }, "ops");
+  EX.el("rect", { x: xm(a) + 1, y: 96, width: (b - a) * PX - 2, height: 46, rx: 6 }, g);
+  if (b - a > 20) EX.el("text", { x: xm(a) + 8, y: 125, class: "small", label: k }, g);
+  else if (p > 4) EX.el("text", { x: xm(a), y: 166, class: "small", style: "fill:var(--accent)", label: k }, g);
+});
+EX.el("line", { x1: X0, y1: BASE, x2: xm(95), y2: BASE, class: "wire" }, "ops");
+[0, 5, 10].forEach((w) => {
+  EX.el("text", { x: X0 - 12, y: BASE - w * PW + 6, class: "small mono muted", "text-anchor": "end", text: w + " W" }, "ops");
+  EX.el("line", { x1: X0, y1: BASE - w * PW, x2: xm(95), y2: BASE - w * PW, stroke: "#2a313a" }, "ops");
+});
+let d = `M ${X0} ${BASE - 4 * PW}`;
+MODES.forEach(([, a, b, p]) => { d += ` L ${xm(a)} ${BASE - p * PW} L ${xm(b)} ${BASE - p * PW}`; });
+EX.el("path", { id: "pw", class: "pw ex-hidden", d }, "ops");
+const AVG = (10 * 8 + 8 * 10 + 77 * 4) / 95;
+EX.el("line", { id: "avg", class: "avg ex-hidden", x1: X0, y1: BASE - AVG * PW, x2: xm(95), y2: BASE - AVG * PW }, "ops");
+EX.el("text", { id: "avg-t", x: xm(30), y: BASE - AVG * PW - 12, class: "big mono ex-hidden", style: "fill:var(--ok)", text: "" }, "ops");
+
+function only(...ids) { ["prob", "wh", "chain", "trade", "ops", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+
+EX.scene("problem", (beat) => {
+  only("prob");
+  beat(0.03, () => { EX.show("p-bad"); EX.mark("p-bad", "bad"); });
+  beat(0.22, () => { const bb = badText.getBBox(); EX.$("p-strike").setAttribute("x2", bb.x + bb.width + 4); EX.draw("p-strike", 600); });
+  beat(0.3, () => EX.show("p-cap"));
+  [1, 2, 3, 4].forEach((i) => beat(0.34 + i * 0.09, () => EX.show("p-q" + i)));
+  beat(0.82, () => note("n1a", "n1b"));
+});
+EX.scene("whathow", (beat) => {
+  only("wh");
+  [1, 2, 3, 4].forEach((i) => beat(0.04 + i * 0.08, () => { EX.show("w" + i); EX.show("h" + i); }));
+  beat(0.55, () => [1, 2, 3, 4].forEach((i) => EX.dim("h" + i)));
+  beat(0.8, () => note("n1a", "n1b"));
+});
+EX.scene("chain", (beat) => {
+  only("chain");
+  CH.forEach((k, i) => beat(0.04 + i * 0.1, () => { EX.show("ch-" + k); EX.mark("ch-" + k, "on"); if (i) EX.mark("ch-" + CH[i - 1], "on", false); }));
+  beat(0.7, () => note("n2a", "n2b"));
+});
+EX.scene("trade", (beat) => {
+  only("trade"); setTraining(W0[4]);
+  CR.forEach((_, i) => beat(0.05 + i * 0.09, () => EX.show("cr-" + i)));
+  beat(0.55, () => { EX.show("tot"); paint(); });
+  beat(0.72, () => note("n3a", "n3b"));
+});
+EX.scene("sensitivity", (beat, s) => {
+  only("trade"); CR.forEach((_, i) => EX.show("cr-" + i, 0)); EX.show("tot", 0); setTraining(W0[4]);
+  beat(0.12, () => EX.mark("cr-4", "ex-glow"));
+  beat(0.15, () => sweep(0.10, 0.32, s * 0.45 * 1000));
+  beat(0.7, () => note("n4a", "n4b"));
+});
+EX.scene("conops", (beat) => {
+  only("ops");
+  MODES.forEach((_, i) => beat(0.04 + i * 0.06, () => EX.show("md-" + i)));
+  beat(0.38, () => EX.draw("pw", 1200));
+  beat(0.55, () => { EX.show("avg"); EX.show("avg-t"); EX.count("avg-t", 0, AVG, 900, (v) => `${EX.t("avg")} ${v.toFixed(1).replace(".", EX.lang === "fr" ? "," : ".")} W`); });
+  beat(0.7, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>
