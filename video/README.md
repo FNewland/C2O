@@ -112,6 +112,22 @@ Every script follows these rules (from the 2026-11-06 script review,
    textbook (`design/docs/oer/chapters/`), animated by replaying a
    `shared/ui-viz` module or with Manim / Motion Canvas.
 
+## Rebuild everything that changed
+
+```bash
+python -m c2ovideo build-all --dry-run     # what would be built, and why
+python -m c2ovideo build-all --publish     # build them, one after another
+python -m c2ovideo build-all V-OPS-05      # just these (a held video named here is built)
+```
+
+Each build records a fingerprint of its inputs in `out/<id>/build.json`: the storyboard,
+the lexicons and voices, the pipeline code, and the sources of every tool it films (for an
+ops video the simulator, MCS, configs, cards and worksheets; for SpaceCDF the frontend and
+server; for an explainer its page and data). `build-all` skips a video whose fingerprint is
+unchanged. A storyboard with `hold: "reason"` is skipped and listed with its reason. Failed
+videos are listed at the end and do not stop the run; captured frames are deleted after each
+video (`--keep-frames` to keep them), since they take 0.5–1 GB per language.
+
 ## Concept explainers
 
 `explainers/` holds the animated concept pages: one self-contained, bilingual SVG page per
