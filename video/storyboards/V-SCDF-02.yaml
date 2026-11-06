@@ -34,13 +34,15 @@ steps:
         Open the Budget tab. The bar is the current best estimate of the mass. The hatched part
         is the maturity margin: each component carries one that depends on how well it is known,
         from a catalogue item already flown to a new design. On top of that comes the system
-        margin: twenty-five percent at this first review, by the C2O default.
+        margin, insurance the team holds as a whole: twenty-five percent at this first review,
+        the mission definition review, MDR, by the C2O default.
       fr: >-
         Ouvrez l’onglet Bilans. La barre est la meilleure estimation actuelle de la masse. La
         partie hachurée est la marge de maturité : chaque composant en porte une qui dépend de
-        sa connaissance, d’un article de catalogue déjà en vol à une conception nouvelle. Par
-        dessus s’ajoute la marge système : vingt-cinq pour cent à cette première revue, selon la
-        valeur par défaut de C2O.
+        sa connaissance, d’un article de catalogue déjà en vol à une conception nouvelle.
+        Par-dessus s’ajoute la marge système, une assurance que l’équipe détient dans son
+        ensemble : vingt-cinq pour cent à cette première revue, la revue de définition de la
+        mission, la MDR, selon la valeur par défaut de C2O.
     do:
       - click: {role: tab, name: Budget}
       - wait: 1.0
@@ -50,12 +52,12 @@ steps:
       type: multichoice
       worksheet: LW-2.4/A
       text:
-        en: "The system margin is 25 % at MDR. What happens to it at later reviews?"
-        fr: "La marge système est de 25 % à la MDR. Que devient-elle aux revues suivantes ?"
+        en: "The system margin is 25 % at the mission definition review (MDR). What happens to it at later reviews?"
+        fr: "La marge système est de 25 % à la revue de définition de la mission (MDR). Que devient-elle aux revues suivantes ?"
       options:
-        - text: {en: "It shrinks as the estimates mature: 20 % at PDR, 10 % at CDR.", fr: "Elle diminue à mesure que les estimations mûrissent : 20 % à la PDR, 10 % à la CDR."}
+        - text: {en: "It shrinks as the estimates mature: 20 % at the preliminary design review (PDR), 10 % at the critical design review (CDR).", fr: "Elle diminue à mesure que les estimations mûrissent : 20 % à la revue de conception préliminaire (PDR), 10 % à la revue critique de conception (CDR)."}
           correct: true
-          why: {en: "The C2O ladder is 25 / 20 / 20 / 10 % (MDR, PRR–SRR, PDR, CDR).", fr: "L’échelle C2O est 25 / 20 / 20 / 10 % (MDR, PRR–SRR, PDR, CDR)."}
+          why: {en: "The C2O ladder is 25 / 20 / 20 / 10 % (MDR; PRR–SRR, the preliminary and system requirements reviews; PDR; CDR).", fr: "L’échelle C2O est 25 / 20 / 20 / 10 % (MDR ; PRR–SRR, la revue préliminaire des exigences et la revue des exigences système ; PDR ; CDR)."}
         - text: {en: "It stays at 25 % until launch.", fr: "Elle reste à 25 % jusqu’au lancement."}
           why: {en: "Margins are released as uncertainty falls.", fr: "Les marges sont libérées à mesure que l’incertitude baisse."}
         - text: {en: "It grows, because more equipment is added later.", fr: "Elle augmente, car on ajoute de l’équipement plus tard."}
@@ -83,13 +85,13 @@ steps:
     title: {en: "Power: orbit average and peak", fr: "Puissance : moyenne orbitale et crête"}
     say:
       en: >-
-        The Power view adds two numbers that matter: the orbit average, which sizes the solar
-        array and the energy balance, and the peak, which sizes the power distribution. Both
+        The Power view adds two numbers that matter: the orbit average, the power averaged over
+        sunlight and eclipse, which sizes the solar array and the energy balance, and the peak, which sizes the power distribution. Both
         come from the operating modes. Record why you chose those modes and that margin: that
         is decision D two point four, Power.
       fr: >-
-        La vue Puissance ajoute deux chiffres essentiels : la moyenne orbitale, qui dimensionne
-        le générateur solaire et le bilan d’énergie, et la crête, qui dimensionne la
+        La vue Puissance ajoute deux chiffres essentiels : la moyenne orbitale, la puissance
+        moyennée sur l’ensoleillement et l’éclipse, qui dimensionne le générateur solaire et le bilan d’énergie, et la crête, qui dimensionne la
         distribution de puissance. Les deux viennent des modes de fonctionnement. Consignez
         pourquoi vous avez choisi ces modes et cette marge : c’est la décision D deux point
         quatre, Puissance.
@@ -125,17 +127,17 @@ steps:
     say:
       en: >-
         Energy per orbit closes the loop. For each mode, it compares the load, with margins,
-        to what the array generates in that mode's attitude, and asks one question: could the
+        to what the array generates in that mode's attitude, the way the spacecraft points, and asks one question: could the
         spacecraft stay in this mode for a whole orbit? Nominal can. Imaging and downlink
         cannot: they drain the battery. That is fine for a few minutes, not for an orbit. This
         check is Part E of your worksheet: the budget health check.
       fr: >-
         L’énergie par orbite boucle la boucle. Pour chaque mode, elle compare la charge, marges
-        comprises, à ce que produit le générateur dans l’attitude de ce mode, et pose une
+        comprises, à ce que produit le générateur dans l’attitude de ce mode, c’est-à-dire son orientation, et pose une
         question : le satellite pourrait-il rester dans ce mode pendant toute une orbite ? En
         nominal, oui. En imagerie et en liaison descendante, non : la batterie se vide. C’est
         acceptable quelques minutes, pas pendant une orbite. Cette vérification est la partie E
-        de votre fiche : le bilan de santé des budgets.
+        de votre fiche : le contrôle de l’état des bilans.
     do:
       - click: {role: tab, name: Energy per orbit}
       - wait: 1.5

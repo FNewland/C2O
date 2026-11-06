@@ -29,16 +29,18 @@ steps:
     title: {en: "SpaceCDF and your logbook", fr: "SpaceCDF et votre journal de bord"}
     say:
       en: >-
-        This is SpaceCDF, the concurrent design facility you will use all term. Every design
-        study starts here. Create New Mission walks your team through four steps: the problem,
-        the stakeholders, the alternatives and a first architecture. Keep one idea in mind as
-        you go: the tool records what you chose, and your logbook records why.
+        This is SpaceCDF. CDF stands for concurrent design facility: a place where every
+        discipline works on one design at the same time. Every study you do this term starts
+        here. Create New Mission walks your team through four steps: the problem, the
+        stakeholders, the alternatives and a first architecture. Keep one idea in mind: the
+        tool records what you chose, and your logbook records why.
       fr: >-
-        Voici SpaceCDF, l’installation de conception concourante que vous utiliserez toute la
-        session. Chaque étude commence ici. Créer une mission guide votre équipe en quatre
-        étapes : le problème, les parties prenantes, les solutions de rechange et une première
-        architecture. Gardez une idée en tête : l’outil enregistre ce que vous avez choisi, et
-        votre journal de bord enregistre pourquoi.
+        Voici SpaceCDF. Le sigle CDF désigne un centre de conception concourante : un lieu où
+        toutes les disciplines travaillent sur une même conception en même temps. Chaque étude
+        de la session commence ici. Créer une mission guide votre équipe en quatre étapes : le
+        problème, les parties prenantes, les solutions de rechange et une première architecture.
+        Gardez une idée en tête : l’outil enregistre ce que vous avez choisi, et votre journal
+        de bord enregistre pourquoi.
     do:
       - highlight: {target: {role: button, name: Create New Mission}, seconds: 3}
       - highlight: {target: {role: button, name: Logbook}, seconds: 2.5}
@@ -117,12 +119,12 @@ steps:
       en: >-
         Save the record. It stays private to you, in this browser, and the server deletes it
         forty-eight hours after your last entry. So at the end of every session, download your
-        logbook as Markdown or printable HTML and keep it with your workbook. The Worksheets tab
+        logbook as Markdown, a plain-text format, or as printable HTML and keep it with your workbook. The Worksheets tab
         lists the worksheet parts that match the step you are on.
       fr: >-
         Enregistrez la fiche. Elle reste privée, dans ce navigateur, et le serveur la supprime
         quarante-huit heures après votre dernière saisie. À la fin de chaque séance, téléchargez
-        donc votre journal de bord en Markdown ou en HTML imprimable, et gardez-le avec votre
+        donc votre journal de bord en Markdown, un format texte simple, ou en HTML imprimable, et gardez-le avec votre
         cahier de travail. L’onglet des fiches liste les parties de fiches qui correspondent à
         l’étape où vous êtes.
     do:
@@ -168,8 +170,8 @@ steps:
       worksheet: LW-1.4/C
       answer: false
       text:
-        en: "An objective without a way to measure it can still be verified at the PDR."
-        fr: "Un objectif sans méthode de mesure peut tout de même être vérifié à la PDR."
+        en: "An objective without a way to measure it can still be verified at the preliminary design review (PDR)."
+        fr: "Un objectif sans méthode de mesure peut tout de même être vérifié à la revue de conception préliminaire (PDR)."
 
   - id: alternatives
     title: {en: "Step 3: is space the answer?", fr: "Étape 3 : l’espace est-il la réponse ?"}
