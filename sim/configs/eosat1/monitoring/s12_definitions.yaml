@@ -160,6 +160,7 @@ s12_definitions:
     low_limit: 0.0
     high_limit: 1.0
     severity: WARNING
+    validity: { param_id: 0x02D3, mask: 0x1, value: 0x1 }   # wheel-controlled hold
     description: "Attitude error exceeds 1.0 degree"
 
   # Star tracker status monitoring (status 3=blind, 4=failed)

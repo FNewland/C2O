@@ -1,8 +1,7 @@
-# COARSE_SUN on magnetorquers alone does not hold the Sun (found 2026-11-05)
+# COARSE_SUN on magnetorquers alone did not hold the Sun (found 2026-11-05, fixed 2026-11-06)
 
-Found while filming LEOP-005 and LEOP-003 for the course videos. **Not fixed**: the
-gain experiment below shows it is not a tuning problem, and the change belongs
-in an AOCS session, not a video one.
+Found while filming LEOP-005 and LEOP-003 for the course videos. **Fixed 2026-11-06**
+(Franz: "fix the model now"): see the last section.
 
 ## What the cards expect
 
@@ -71,3 +70,45 @@ with no sun vector, and damping on a wrong rate pumps energy in. Candidates to l
 V-OPS-07 (LEOP-005) and V-OPS-09 (LEOP-003) are written and dry-run but not rendered: on
 screen they would contradict their cards. They render as soon as the model holds the Sun
 (or the cards are changed).
+
+## The fix (2026-11-06)
+
+`AOCSBasicModel._mag_sun_dipole` replaces the magnetic-only branch. It points ONE axis (+X,
+the wing normal) at the Sun and leaves the rotation about the sun line free, and it uses
+measured quantities only, never the MEKF:
+
+1. B-dot on the magnetometer, sun and eclipse (damps ω ⊥ B with no rate estimate);
+2. sunlit: damping of ω ⊥ sun line from the CSS sun vector's own rate, ω⊥ = ṡ × ŝ
+   (`_update_sun_rate`, once per tick, low-passed);
+3. sunlit: pointing τ = Kp·(x̂ × ŝ) (full unit demand past 90°), realised ⊥ B as
+   m = (B × τ)/|B|², the dampers having first claim on the rod headroom.
+
+Root causes found on the way: damping on the MEKF rate (its gyro-bias estimate wanders in
+eclipse by 0.1–0.35 °/s, and the old law then drove the body to that wrong rate after eclipse
+exit), the ×25 Kp scaling against a full three-axis sun-frame target, a constant torque about
+the minor (Z) axis when the Sun was behind, and saturation scaling the sum so a large pointing
+demand starved the damper.
+
+Gains (`aocs.yaml` `magnetorquers.coarse_sun_mag`), swept over three orbits from
+`card-LEOP-005`:
+
+| Kp (N·m) | B-dot k | Kd (N·m·s) | first < 15° | sunlit time < 15° | peak rate |
+|---:|---:|---:|---:|---:|---:|
+| old law | | | 720 s, then lost | — | 0.52 °/s |
+| 6e-5 | 5e5 | 5e-3 | 451 s | 73 % | 0.82 °/s |
+| **6e-5** | **1e6** | **5e-3** | **482 s** | **62 %** | **0.50 °/s** |
+| 6e-5 | 5e5 | 1e-2 | 844 s | 81 % | 0.76 °/s |
+| 6e-5 | 2e6 | 5e-3 | 553 s | 53 % | 0.79 °/s |
+
+"Sunlit time < 15°" counts the ~10 min reacquisition after every eclipse exit; once held, the
+error stays 0–7° until eclipse, where it drifts (no sun sensor) as the card says.
+
+Also found: the wheel-controlled NOMINAL hold was never the problem (it settles to 0.05° in
+~2.5 min). `card-COM-007` had been saved mid-transient (33° error, 0.3 °/s) after COM-005's
+mode tests, so every load of it raised attitude alarms. `tools/card_breakpoints.py` now lets
+a wheel-controlled attitude settle before each save.
+
+And: the ground limits on 0x0217 (yellow 1°, red 2°) and its S12 1° monitor describe a
+wheel-controlled hold. They now carry a validity flag, `aocs.pointing_limits_valid` 0x02D3
+(1 in NOMINAL, FINE_POINT, INERTIAL; in SID 2), as the FPA bands carry 0x0426, so a correct
+COARSE_SUN hold is no longer a red alarm.

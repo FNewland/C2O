@@ -70,6 +70,17 @@ magnetorquers:
   # amplifies differentiated magnetometer noise faster than it adds damping,
   # and k = 4e6 does not converge at all.
   bdot_gain_am2_per_tps: 5.0e5
+  # COARSE_SUN with no wheels (LEOP-005, before COM-004 enables them): point
+  # +X at the Sun with the rods alone (2026-11-06). Swept from card-LEOP-005
+  # over three orbits (Kp, B-dot k, sun-rate Kd): 6e-5 / 1e6 / 5e-3 gives the
+  # first < 15 deg at 8 min (card: 10), 0-7 deg while sunlit, reacquisition
+  # ~10 min after eclipse exit, peak body rate 0.50 deg/s. Higher Kd (1e-2)
+  # holds slightly better but first acquires only after 14 min; higher k
+  # (2e6) lets the rate about the sun line grow. Law: AOCSBasicModel._mag_sun_dipole.
+  coarse_sun_mag:
+    kp_nm: 6.0e-5                    # pointing torque per unit (x × s)
+    bdot_gain_am2_per_tps: 1.0e6     # damping ⊥ B, sun and eclipse
+    kd_nms: 5.0e-3                   # damping ⊥ sun line, from the CSS rate (sunlit)
 
   desaturation:
     # Cross-product momentum dump: m = k·(h_body x B)/|B|²  ⇒  τ = −k·h_perp.

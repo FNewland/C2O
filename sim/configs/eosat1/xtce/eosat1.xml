@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+a67c6c40129e" classification="Unclassified — Simulation"/>
+  <Header version="1.0+5467baa7f751" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -2513,6 +2513,9 @@
             <Unit>deg/s</Unit>
           </UnitSet>
         </IntegerParameterType>
+        <IntegerParameterType name="aocs_pointing_limits_valid_Type" signed="false">
+          <IntegerDataEncoding sizeInBits="8" encoding="unsigned"/>
+        </IntegerParameterType>
         <FloatParameterType name="aocs_wheels_enabled_Type">
           <FloatDataEncoding sizeInBits="32"/>
         </FloatParameterType>
@@ -3004,6 +3007,9 @@
         <Parameter name="aocs_gyro_bias_resid" parameterTypeRef="aocs_gyro_bias_resid_Type">
           <LongDescription>Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the hardware bias persists</LongDescription>
         </Parameter>
+        <Parameter name="aocs_pointing_limits_valid" parameterTypeRef="aocs_pointing_limits_valid_Type">
+          <LongDescription>Attitude-error limit validity: 1 = wheel-controlled hold (NOMINAL, FINE_POINT, INERTIAL), the 0x0217 limits and its S12 monitor are checked; 0 = unchecked (DETUMBLE, COARSE_SUN, SAFE, DESAT, SLEW)</LongDescription>
+        </Parameter>
         <Parameter name="aocs_wheels_enabled" parameterTypeRef="aocs_wheels_enabled_Type">
           <LongDescription>Number of enabled reaction wheels</LongDescription>
         </Parameter>
@@ -3056,6 +3062,7 @@
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rate_pitch"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rate_yaw"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_att_error"/>
+            <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_pointing_limits_valid"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw1_speed"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw2_speed"/>
             <ParameterRefEntry parameterRef="/EOSAT-1/AOCS/aocs_rw3_speed"/>

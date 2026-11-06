@@ -280,6 +280,7 @@ parameters:
   - { id: 0x02D0, name: aocs.gyro_cal_reject, subsystem: aocs, description: "Failure code of the last gyro-calibration refusal or abort (0 = none). 0x0A01 unpowered, 0x0A02 a gyro unit off, 0x0A03 no star-tracker reference, 0x0A04 rate too high, 0x0A05 already running, 0x0A06 preconditions lost mid-run, 0x0A07 abort with nothing running" }
   - { id: 0x02D1, name: aocs.gyro_units_mask, subsystem: aocs, description: "Per-unit gyro power state as a bitmask: bit0 = X unit (S2 device 0x0206), bit1 = Y (0x0207), bit2 = Z (0x0208). 0x07 = all three on. Tells the operator WHICH unit is off, which the 0x0294 count cannot" }
   - { id: 0x02D2, name: aocs.gyro_bias_resid, subsystem: aocs, units: 'deg/s', description: "Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the hardware bias persists" }
+  - { id: 0x02D3, name: aocs.pointing_limits_valid, subsystem: aocs, description: "Attitude-error limit validity: 1 = wheel-controlled hold (NOMINAL, FINE_POINT, INERTIAL), the 0x0217 limits and its S12 monitor are checked; 0 = unchecked (DETUMBLE, COARSE_SUN, SAFE, DESAT, SLEW)" }
 
   # ===== OBDH =====
   - { id: 0x0300, name: obdh.mode, subsystem: obdh }

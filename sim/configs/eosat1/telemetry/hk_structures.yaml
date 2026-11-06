@@ -119,6 +119,7 @@ structures:
       - { param_id: 0x0205, pack_format: h, scale: 10000 }
       - { param_id: 0x0206, pack_format: h, scale: 10000 }
       - { param_id: 0x0217, pack_format: H, scale: 1000 }
+      - { param_id: 0x02D3, pack_format: B, scale: 1 }
       - { param_id: 0x0207, pack_format: h, scale: 1 }
       - { param_id: 0x0208, pack_format: h, scale: 1 }
       - { param_id: 0x0209, pack_format: h, scale: 1 }

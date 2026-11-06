@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="AOCS" Creator="EOSAT-1 SMDL Generator" Version="1.0+a67c6c40129e">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="AOCS" Creator="EOSAT-1 SMDL Generator" Version="1.0+5467baa7f751">
   <Description>SMP2 model catalogue for AOCS subsystem</Description>
   <Type Name="UInt8" Uuid="5f89f604-a171-5501-aa33-4d555fe61f64" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="6ba6c296-ed3b-5fbe-8a66-31fe90cbfb0d" xsi:type="Integer" Size="2" Signed="false"/>
@@ -436,6 +436,9 @@
     </Field>
     <Field Name="aocs_gyro_bias_resid" Uuid="c0bcba94-79d9-579d-8749-cbfd3fcf583f" Type="UInt16" Kind="Output" View="true">
       <Description>Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the hardware bias persists [deg/s]</Description>
+    </Field>
+    <Field Name="aocs_pointing_limits_valid" Uuid="702be1d6-1312-56ce-94d4-58a0637e3bd2" Type="UInt8" Kind="Output" View="true">
+      <Description>Attitude-error limit validity: 1 = wheel-controlled hold (NOMINAL, FINE_POINT, INERTIAL), the 0x0217 limits and its S12 monitor are checked; 0 = unchecked (DETUMBLE, COARSE_SUN, SAFE, DESAT, SLEW)</Description>
     </Field>
     <Field Name="aocs_wheels_enabled" Uuid="63b4d534-375b-5ebd-a05e-384938daa7cc" Type="Float32" Kind="Output" View="true">
       <Description>Number of enabled reaction wheels</Description>
