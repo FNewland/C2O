@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The systems engineering process</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .gate { fill: var(--warn); }
+  .trace { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 6; fill: none; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Sequential and concurrent design, the V, phases, gates and margins</title>
+  <g id="seq" class="ex-hidden"></g>
+  <g id="cost" class="ex-hidden"></g>
+  <g id="vee" class="ex-hidden"></g>
+  <g id="phases" class="ex-hidden"></g>
+  <g id="cdf" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "The systems engineering process",
+    d_payload: "Payload", d_power: "Power", d_aocs: "Attitude", d_comms: "Comms", d_thermal: "Thermal", d_struct: "Structure",
+    seq_cap: "Sequential: each discipline finishes, documents, hands over",
+    cost_cap: "Cost of fixing one error, by the phase where it is found (the 1-10-100 rule)",
+    c0: "concept", c1: "design", c2: "build and test", c3: "in orbit",
+    v_need: "Mission need", v_req: "Requirements", v_arch: "Architecture", v_sub: "Subsystems", v_comp: "Components",
+    v_cv: "Component tests", v_sv: "Subsystem tests", v_int: "Integration", v_sys: "System verification", v_val: "Mission validation",
+    v_left: "decompose: what must be done?", v_right: "integrate and verify: did we do it?",
+    p0: "0 · need", pA: "A · feasibility", pB: "B · preliminary", pC: "C · detailed", pD: "D · build, test", pE: "E · operate", pF: "F · dispose",
+    marg: "system margin", margins: "System margin by phase (textbook Table 8.3)",
+    model: "Shared model", model_s: "one set of parameters, each owned by one position",
+    sys: "Systems engineer", conflict: "conflict flagged: mass over target",
+    n1a: "Sequential design finds problems late, when they cost the most.", n1b: "Interfaces mismatch at integration; budgets overrun at the review, not the day they break.",
+    n2a: "The V is a map, not a timeline: every row on the left has its check on the right.", n2b: "That pairing is traceability: each requirement has a verification method, analysis, test, inspection or review.",
+    n3a: "Each phase ends at a review gate: the board decides go, or not yet.", n3b: "Margins are released as the design matures: 20 % early, 15 % in Phase B, 10 % at CDR, 5 % in Phase D.",
+    n4a: "Concurrent design: everyone works on one model at the same time.", n4b: "A change shows its effect on every budget at once, and the systems engineer arbitrates. SpaceCDF works this way.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 1 (§ 1.1–1.5) and ch. 8 Table 8.3 · ECSS-M-ST-10C phases",
+  },
+  fr: {
+    kicker: "Notion", title: "Le processus d’ingénierie système",
+    d_payload: "Charge utile", d_power: "Énergie", d_aocs: "Attitude", d_comms: "Télécoms", d_thermal: "Thermique", d_struct: "Structure",
+    seq_cap: "Séquentiel : chaque discipline termine, documente, transmet",
+    cost_cap: "Coût de correction d’une erreur, selon la phase où on la découvre (règle 1-10-100)",
+    c0: "concept", c1: "conception", c2: "fabrication et essais", c3: "en orbite",
+    v_need: "Besoin de mission", v_req: "Exigences", v_arch: "Architecture", v_sub: "Sous-systèmes", v_comp: "Composants",
+    v_cv: "Essais composants", v_sv: "Essais sous-systèmes", v_int: "Intégration", v_sys: "Vérification système", v_val: "Validation de mission",
+    v_left: "décomposer : que faut-il faire ?", v_right: "intégrer et vérifier : l’a-t-on fait ?",
+    p0: "0 · besoin", pA: "A · faisabilité", pB: "B · préliminaire", pC: "C · détaillée", pD: "D · production", pE: "E · exploitation", pF: "F · retrait",
+    marg: "marge système", margins: "Marge système par phase (manuel, tableau 8.3)",
+    model: "Modèle partagé", model_s: "un seul jeu de paramètres, chacun détenu par un poste",
+    sys: "Ingénieur système", conflict: "conflit signalé : masse au-dessus de la cible",
+    n1a: "La conception séquentielle découvre les problèmes tard, quand ils coûtent le plus.", n1b: "Les interfaces divergent à l’intégration ; les bilans débordent à la revue, pas le jour où ils cassent.",
+    n2a: "Le V est une carte, pas un calendrier : chaque ligne de gauche a sa vérification à droite.", n2b: "Ce couplage, c’est la traçabilité : chaque exigence a sa méthode de vérification, analyse, essai, inspection ou revue.",
+    n3a: "Chaque phase se termine par une revue : le comité dit go, ou pas encore.", n3b: "Les marges sont libérées à mesure que la conception mûrit : 20 % au début, 15 % en phase B, 10 % à la CDR, 5 % en phase D.",
+    n4a: "Conception concourante : tout le monde travaille sur un seul modèle, en même temps.", n4b: "Une modification montre aussitôt son effet sur chaque bilan, et l’ingénieur système arbitre. SpaceCDF fonctionne ainsi.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 1 (§ 1.1–1.5) et ch. 8 tableau 8.3 · phases ECSS-M-ST-10C",
+  },
+});
+const D = ["d_payload", "d_power", "d_aocs", "d_comms", "d_thermal", "d_struct"];
+// 1. sequential chain
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "seq_cap" }, "seq");
+D.forEach((k, i) => {
+  const g = EX.el("g", { id: "s-" + k, class: "blk ex-hidden" }, "seq");
+  EX.el("rect", { x: 40 + i * 205, y: 70, width: 175, height: 60, rx: 8 }, g);
+  EX.el("text", { x: 56 + i * 205, y: 107, label: k }, g);
+  if (i < D.length - 1) EX.el("text", { x: 220 + i * 205, y: 107, class: "muted", text: "→" }, "seq");
+});
+// 2. cost bars
+EX.el("text", { x: 40, y: 190, class: "small muted", label: "cost_cap" }, "cost");
+[["c0", 1], ["c1", 10], ["c2", 100], ["c3", 1000]].forEach(([k, v], i) => {
+  const h = Math.log10(v) * 80 + 18, x = 80 + i * 300;
+  EX.el("rect", { id: "bar-" + k, x, y: 470 - h, width: 120, height: h, rx: 4, class: "bad", opacity: 0 }, "cost");
+  EX.el("text", { x: x + 60, y: 462 - h, class: "big", "text-anchor": "middle", text: "×" + v }, "cost");
+  EX.el("text", { x: x + 60, y: 496, class: "small muted", "text-anchor": "middle", label: k }, "cost");
+});
+// 3. the V
+const L = ["v_need", "v_req", "v_arch", "v_sub", "v_comp"], R = ["v_val", "v_sys", "v_int", "v_sv", "v_cv"];
+L.forEach((k, i) => {
+  const g = EX.el("g", { id: "v-" + k, class: "blk ex-hidden" }, "vee");
+  EX.el("rect", { x: 40 + i * 70, y: 60 + i * 88, width: 230, height: 54, rx: 8 }, g);
+  EX.el("text", { x: 56 + i * 70, y: 93 + i * 88, label: k }, g);
+});
+R.forEach((k, i) => {
+  const g = EX.el("g", { id: "v-" + k, class: "blk ex-hidden" }, "vee");
+  EX.el("rect", { x: 1010 - i * 70, y: 60 + i * 88, width: 230, height: 54, rx: 8 }, g);
+  EX.el("text", { x: 1026 - i * 70, y: 93 + i * 88, label: k }, g);
+  EX.el("path", { id: "t-" + i, class: "trace ex-hidden", d: `M ${270 + i * 70} ${87 + i * 88} L ${1010 - i * 70} ${87 + i * 88}` }, "vee");
+});
+EX.el("text", { x: 40, y: 44, class: "small", style: "fill:var(--accent)", label: "v_left" }, "vee");
+EX.el("text", { x: 1240, y: 44, class: "small", "text-anchor": "end", style: "fill:var(--accent)", label: "v_right" }, "vee");
+// 4. phases, gates, margins
+const P = [["p0", ["MDR"], 20], ["pA", ["PRR"], 20], ["pB", ["SRR", "PDR"], 15], ["pC", ["CDR"], 10], ["pD", ["QR", "AR"], 5], ["pE", [], null], ["pF", [], null]];
+P.forEach(([k, gates, m], i) => {
+  const x = 40 + i * 175;
+  const g = EX.el("g", { id: "ph-" + k, class: "blk ex-hidden" }, "phases");
+  EX.el("rect", { x, y: 60, width: 160, height: 64, rx: 8 }, g);
+  EX.el("text", { x: x + 12, y: 98, class: "small", label: k }, g);
+  gates.forEach((gt, j) => {
+    const gg = EX.el("g", { id: "gate-" + gt, class: "ex-hidden" }, "phases");
+    const gx = x + 150 - (gates.length - 1 - j) * 46;
+    EX.el("path", { class: "gate", d: `M ${gx} 136 l 10 16 l -20 0 z` }, gg);
+    EX.el("text", { x: gx, y: 174, class: "small mono", "text-anchor": "middle", text: gt }, gg);
+  });
+  if (m !== null) {
+    const h = m * 9;
+    EX.el("rect", { id: "m-" + k, x: x + 50, y: 470 - h, width: 60, height: h, rx: 4, class: "acc", opacity: 0 }, "phases");
+    EX.el("text", { id: "mt-" + k, x: x + 80, y: 462 - h, class: "big", "text-anchor": "middle", text: m + " %", opacity: 0 }, "phases");
+  }
+});
+EX.el("text", { id: "mcap", x: 40, y: 218, class: "small muted", label: "margins", opacity: 0 }, "phases");
+// 5. concurrent design hub (lines first, then boxes on top)
+const POS = [[60, 50], [490, 50], [920, 50], [60, 400], [490, 400], [920, 400]];
+D.forEach((k, i) => {
+  const [x, y] = POS[i];
+  EX.el("path", { id: "hl-" + k, class: "trace ex-hidden", d: `M ${x + 150} ${y + 30} L 640 255` }, "cdf");
+});
+EX.el("path", { id: "hl-sys", class: "trace ex-hidden", d: "M 1060 255 L 640 255" }, "cdf");
+const hub = EX.el("g", { id: "hub", class: "blk" }, "cdf");
+EX.el("rect", { x: 400, y: 205, width: 480, height: 100, rx: 10 }, hub);
+EX.el("text", { x: 420, y: 243, class: "big", label: "model" }, hub);
+EX.el("text", { x: 420, y: 275, class: "small muted", label: "model_s" }, hub);
+D.forEach((k, i) => {
+  const [x, y] = POS[i];
+  const g = EX.el("g", { id: "c-" + k, class: "blk ex-hidden" }, "cdf");
+  EX.el("rect", { x, y, width: 300, height: 60, rx: 8 }, g);
+  EX.el("text", { x: x + 16, y: y + 37, label: k }, g);
+});
+const se = EX.el("g", { id: "c-sys", class: "blk ex-hidden" }, "cdf");
+EX.el("rect", { x: 920, y: 225, width: 320, height: 60, rx: 8 }, se);
+EX.el("text", { x: 936, y: 262, label: "sys" }, se);
+EX.el("text", { id: "conf", x: 420, y: 340, class: "small", style: "fill:var(--bad)", label: "conflict", opacity: 0 }, "cdf");
+
+function only(...ids) { ["seq", "cost", "vee", "phases", "cdf", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+
+EX.scene("sequential", (beat) => {
+  only("seq", "cost");
+  D.forEach((k, i) => beat(0.04 + i * 0.07, () => { EX.show("s-" + k); EX.mark("s-" + k, "on"); if (i) EX.mark("s-" + D[i - 1], "on", false); }));
+  ["c0", "c1", "c2", "c3"].forEach((k, i) => beat(0.5 + i * 0.08, () => op("bar-" + k, 0.85)));
+  beat(0.84, () => note("n1a", "n1b"));
+});
+EX.scene("vee", (beat) => {
+  only("vee");
+  L.forEach((k, i) => beat(0.04 + i * 0.07, () => EX.show("v-" + k)));
+  [...R].reverse().forEach((k, i) => beat(0.4 + i * 0.07, () => EX.show("v-" + k)));
+  [0, 1, 2, 3, 4].forEach((i) => beat(0.75 + i * 0.03, () => EX.draw("t-" + i, 600)));
+  beat(0.86, () => note("n2a", "n2b"));
+});
+EX.scene("phases", (beat) => {
+  only("phases");
+  P.forEach(([k, gates], i) => beat(0.04 + i * 0.07, () => { EX.show("ph-" + k); gates.forEach((g) => EX.show("gate-" + g)); }));
+  beat(0.6, () => note("n3a", ""));
+});
+EX.scene("margins", (beat) => {
+  only("phases"); P.forEach(([k, gates]) => { EX.show("ph-" + k, 0); gates.forEach((g) => EX.show("gate-" + g, 0)); });
+  beat(0.05, () => op("mcap", 1));
+  ["p0", "pA", "pB", "pC", "pD"].forEach((k, i) => beat(0.12 + i * 0.1, () => { op("m-" + k, 0.85); op("mt-" + k, 1); EX.mark("ph-" + k, "on"); }));
+  beat(0.7, () => note("n3a", "n3b"));
+});
+EX.scene("concurrent", (beat) => {
+  only("cdf");
+  D.forEach((k, i) => beat(0.05 + i * 0.06, () => { EX.show("c-" + k); EX.draw("hl-" + k, 500); }));
+  beat(0.45, () => { EX.show("c-sys"); EX.draw("hl-sys", 400); EX.mark("hub", "on"); });
+  beat(0.6, () => { EX.mark("c-d_power", "on"); EX.mark("c-d_struct", "bad"); op("conf", 1); });
+  beat(0.78, () => note("n4a", "n4b"));
+});
+</script>
+</body>
+</html>
