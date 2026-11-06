@@ -97,3 +97,19 @@ def test_procedure_worksheets_follow_the_id_convention():
     assert mp["WB-5.4-N012"]["procedures"] == ["NOM-012"]
     for n in ("1", "2", "3", "5", "6", "7"):
         assert mp[f"WB-5.5-L00{n}"]["procedures"] == [f"LEOP-00{n}"]
+
+
+def test_appendix_sheets_checklists_and_log_grids_parse():
+    """WB-B / WB-C are appendices without card sub-headings; WB-C is a ☐
+    checklist; WB-5.7-FR has a log grid whose bare row labels need columns."""
+    sheets = {w["id"]: w for w in yaml.safe_load(GENERATED.read_text(encoding="utf-8"))["worksheets"]}
+    for wid in ("WB-5.4-VL", "WB-5.7-WI", "WB-5.7-FR", "WB-B", "WB-C"):
+        assert wid in sheets, wid
+    c = sheets["WB-C"]["questions"]
+    assert sum(q["kind"] == "check" for q in c) >= 30
+    fr = [q["text"]["en"] for q in sheets["WB-5.7-FR"]["questions"]]
+    assert "Wed — Anomaly · Procedure · Outcome · Root cause" in fr
+    assert "Wed" not in fr
+    assert any(t.startswith("Section 6") for t in fr)
+    # the graded gate quiz and the anonymous evaluation never become records
+    assert "WB-5.4-Q" not in sheets and "WB-5.7-CE" not in sheets

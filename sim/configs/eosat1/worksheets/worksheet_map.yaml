@@ -70,6 +70,8 @@ worksheets:
       Next pass: next_pass
       GO authorisations outstanding: gonogo_open
   WB-5.4-FD: {phase: exercise, tools: [orbit]}
+  # voice-loop drill: spoken callouts, the scenario values are on the sheet
+  WB-5.4-VL: {phase: exercise, tools: [mcs, portal]}
 
   # ── Day 3: LEOP ─────────────────────────────────────────────────────────
   WB-5.5-PB:
@@ -180,3 +182,13 @@ worksheets:
   WB-A-CTG-017: {phase: during, tools: [mcs], procedures: [CTG-017]}
   WB-A-CTG-019: {phase: during, tools: [mcs, radio], procedures: [CTG-019]}
   WB-A-CTG-020: {phase: during, tools: [mcs, radio], procedures: [CTG-020]}
+
+  # ── Day 5: review ───────────────────────────────────────────────────────
+  # (WB-5.7-CE, the anonymous course evaluation, stays on paper: a logbook
+  # record carries the author's name.)
+  WB-5.7-WI: {phase: debrief, tools: [instructor, mcs, portal]}
+  WB-5.7-FR: {phase: debrief, tools: [mcs, portal]}
+
+  # ── Appendices B and C ──────────────────────────────────────────────────
+  WB-B: {phase: debrief, tools: [mcs, instructor]}
+  WB-C: {phase: debrief, tools: [portal]}

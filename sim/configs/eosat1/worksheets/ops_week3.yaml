@@ -2250,6 +2250,81 @@ worksheets:
     section:
       en: Exercise 3 — Eclipse arithmetic
       fr: Exercice 3 — Calculs d'éclipse
+- id: WB-5.4-VL
+  title:
+    en: Day 2 Voice-Loop Callout Drill
+    fr: 'Jour 2 : exercice d''entraînement aux annonces de boucle vocale'
+  phase: exercise
+  applies:
+    tools:
+    - mcs
+    - portal
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: text
+    text:
+      en: 1. FD asks AOCS for pointing report
+      fr: 1. Le FD demande à l'AOCS un compte rendu de pointage
+  - id: q2
+    kind: text
+    text:
+      en: 2. AOCS reports pointing 0.28°, nominal
+      fr: 2. L'AOCS annonce un pointage de 0.28°, nominal
+  - id: q3
+    kind: text
+    text:
+      en: 3. FD asks EPS for eclipse-entry predictor
+      fr: 3. Le FD demande à l'EPS la prédiction d'entrée en éclipse
+  - id: q4
+    kind: text
+    text:
+      en: 4. EPS reports eclipse entry T+04:12, SoC at exit 78%
+      fr: 4. L'EPS annonce une entrée en éclipse à T+04:12, SoC en sortie 78 %
+  - id: q5
+    kind: text
+    text:
+      en: 5. FD polls 3 positions for GO on payload power-on
+      fr: 5. Le FD interroge 3 postes pour un GO de mise sous tension de la charge utile
+  - id: q6
+    kind: text
+    text:
+      en: '6. EPS responds: "no-go, payload line 3 already drawing 0.35 A with the line commanded OFF"'
+      fr: '6. L''EPS répond : « no-go, payload line 3 already drawing 0.35 A with the line commanded OFF
+        »'
+  - id: q7
+    kind: text
+    text:
+      en: 7. FD calls HOLD on payload power-on
+      fr: 7. Le FD annonce un HOLD sur la mise sous tension de la charge utile
+  - id: q8
+    kind: text
+    text:
+      en: '8. TT&C calls anomaly: BER climbed to 1e-3'
+      fr: '8. Le TT&C annonce une anomalie : TEB monté à 1e-3'
+  - id: q9
+    kind: text
+    text:
+      en: 9. FD requests rate fallback
+      fr: 9. Le FD demande un repli de débit
+  - id: q10
+    kind: text
+    text:
+      en: 10. TT&C reports tier stepped down HIGH→LOW, rate 16 kbps, BER 1e-7 nominal
+      fr: 10. Le TT&C annonce que le palier est descendu de HIGH→LOW, débit 16 kbit/s, TEB 1e-7 nominal
+  - id: q11
+    kind: text
+    text:
+      en: Self-score (out of 10)
+      fr: Autoévaluation (sur 10)
+  - id: q12
+    kind: text
+    text:
+      en: One callout I want to practice more
+      fr: Une annonce que je veux travailler davantage
 - id: WB-5.5-PB
   title:
     en: Day 3 LEOP Pre-Pass Briefing Checklist
@@ -9970,3 +10045,609 @@ worksheets:
     - tool: planner
       focus: panel-contacts
       label: *id012
+- id: WB-5.7-WI
+  title:
+    en: '"What If" Branch Reflection'
+    fr: Réflexion sur la branche « Et si ? »
+  phase: debrief
+  applies:
+    tools:
+    - instructor
+    - mcs
+    - portal
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: text
+    text:
+      en: Original decision
+      fr: Décision d'origine
+  - id: q2
+    kind: text
+    text:
+      en: Alternative decision tried in replay
+      fr: Autre décision essayée lors de la reprise
+  - id: q3
+    kind: text
+    text:
+      en: What changed in the next 15 simulated minutes
+      fr: Ce qui a changé au cours des 15 minutes simulées suivantes
+  - id: q4
+    kind: text
+    text:
+      en: Which decision would you take next time? Why?
+      fr: Quelle décision prendriez-vous la prochaine fois ? Pourquoi ?
+- id: WB-5.7-FR
+  title:
+    en: Final Mission Review Prep
+    fr: Préparation de la revue finale de mission
+  phase: debrief
+  applies:
+    tools:
+    - mcs
+    - portal
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: text
+    text:
+      en: Operated all 9 positions for at least one full pass
+      fr: Avoir tenu les 9 postes pendant au moins un passage complet
+    hint:
+      en: /
+      fr: /
+    section:
+      en: Section 1 — Mission objectives
+      fr: Section 1 — Objectifs de la mission
+  - id: q2
+    kind: text
+    text:
+      en: Ran a planning cycle end-to-end
+      fr: Avoir mené un cycle de planification de bout en bout
+    hint:
+      en: /
+      fr: /
+    section:
+      en: Section 1 — Mission objectives
+      fr: Section 1 — Objectifs de la mission
+  - id: q3
+    kind: text
+    text:
+      en: Executed one nominal procedure as lead
+      fr: Avoir exécuté une procédure nominale en tant que responsable
+    hint:
+      en: /
+      fr: /
+    section:
+      en: Section 1 — Mission objectives
+      fr: Section 1 — Objectifs de la mission
+  - id: q4
+    kind: text
+    text:
+      en: Executed one contingency procedure as lead
+      fr: Avoir exécuté une procédure de contingence en tant que responsable
+    hint:
+      en: /
+      fr: /
+    section:
+      en: Section 1 — Mission objectives
+      fr: Section 1 — Objectifs de la mission
+  - id: q5
+    kind: text
+    text:
+      en: Critiqued a peer team's shift
+      fr: Avoir critiqué le quart d'une équipe de pairs
+    hint:
+      en: /
+      fr: /
+    section:
+      en: Section 1 — Mission objectives
+      fr: Section 1 — Objectifs de la mission
+  - id: q6
+    kind: text
+    text:
+      en: Produced a shift log and anomaly ticket
+      fr: Avoir produit une main courante et une fiche d'anomalie
+    hint:
+      en: /
+      fr: /
+    section:
+      en: Section 1 — Mission objectives
+      fr: Section 1 — Objectifs de la mission
+  - id: q7
+    kind: text
+    text:
+      en: Three most-watched parameters and their typical values
+      fr: Les trois paramètres les plus surveillés et leurs valeurs typiques
+    section:
+      en: Section 2 — Telemetry summary across the week
+      fr: Section 2 — Synthèse de la télémesure sur la semaine
+    where:
+    - tool: mcs
+      page: trnd
+      label: *id031
+  - id: q8
+    kind: text
+    text:
+      en: Wed — Anomaly · Procedure · Outcome · Root cause
+      fr: Mer. — Anomalie · Procédure · Résultat · Cause première
+    section:
+      en: Section 3 — Anomalies log
+      fr: Section 3 — Journal des anomalies
+    where:
+    - tool: mcs
+      page: fdir
+      focus: fdir-journal
+      label: *id024
+  - id: q9
+    kind: text
+    text:
+      en: Wed — Anomaly · Procedure · Outcome · Root cause
+      fr: Mer. — Anomalie · Procédure · Résultat · Cause première
+    section:
+      en: Section 3 — Anomalies log
+      fr: Section 3 — Journal des anomalies
+    where:
+    - tool: mcs
+      page: fdir
+      focus: fdir-journal
+      label: *id024
+  - id: q10
+    kind: text
+    text:
+      en: Thu — Anomaly · Procedure · Outcome · Root cause
+      fr: Jeu. — Anomalie · Procédure · Résultat · Cause première
+    section:
+      en: Section 3 — Anomalies log
+      fr: Section 3 — Journal des anomalies
+    where:
+    - tool: mcs
+      page: fdir
+      focus: fdir-journal
+      label: *id024
+  - id: q11
+    kind: text
+    text:
+      en: Thu — Anomaly · Procedure · Outcome · Root cause
+      fr: Jeu. — Anomalie · Procédure · Résultat · Cause première
+    section:
+      en: Section 3 — Anomalies log
+      fr: Section 3 — Journal des anomalies
+    where:
+    - tool: mcs
+      page: fdir
+      focus: fdir-journal
+      label: *id024
+  - id: q12
+    kind: check
+    text:
+      en: 5.1 Operability principles
+      fr: 5.1 Principes d'opérabilité
+    section:
+      en: Section 4 — Compliance with ECSS-E-ST-70-11C
+      fr: Section 4 — Conformité à l'ECSS-E-ST-70-11C
+    where:
+    - tool: ext
+      url: https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+      label:
+        en: ECSS-E-ST-70-11C — Space segment operability
+        fr: ECSS-E-ST-70-11C — opérabilité du segment spatial (en anglais)
+  - id: q13
+    kind: check
+    text:
+      en: 5.2 Operations preparation
+      fr: 5.2 Préparation des opérations
+    section:
+      en: Section 4 — Compliance with ECSS-E-ST-70-11C
+      fr: Section 4 — Conformité à l'ECSS-E-ST-70-11C
+    where:
+    - tool: ext
+      url: https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+      label:
+        en: ECSS-E-ST-70-11C — Space segment operability
+        fr: ECSS-E-ST-70-11C — opérabilité du segment spatial (en anglais)
+  - id: q14
+    kind: check
+    text:
+      en: 5.3 Procedure design
+      fr: 5.3 Conception des procédures
+    section:
+      en: Section 4 — Compliance with ECSS-E-ST-70-11C
+      fr: Section 4 — Conformité à l'ECSS-E-ST-70-11C
+    where:
+    - tool: ext
+      url: https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+      label:
+        en: ECSS-E-ST-70-11C — Space segment operability
+        fr: ECSS-E-ST-70-11C — opérabilité du segment spatial (en anglais)
+  - id: q15
+    kind: check
+    text:
+      en: 5.4 Anomaly management
+      fr: 5.4 Gestion des anomalies
+    section:
+      en: Section 4 — Compliance with ECSS-E-ST-70-11C
+      fr: Section 4 — Conformité à l'ECSS-E-ST-70-11C
+    where:
+    - tool: ext
+      url: https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+      label:
+        en: ECSS-E-ST-70-11C — Space segment operability
+        fr: ECSS-E-ST-70-11C — opérabilité du segment spatial (en anglais)
+  - id: q16
+    kind: check
+    text:
+      en: 5.5 Reporting and review
+      fr: 5.5 Comptes rendus et revue
+    section:
+      en: Section 4 — Compliance with ECSS-E-ST-70-11C
+      fr: Section 4 — Conformité à l'ECSS-E-ST-70-11C
+    where:
+    - tool: ext
+      url: https://ecss.nl/standard/ecss-e-st-70-11c-space-segment-operability/
+      label:
+        en: ECSS-E-ST-70-11C — Space segment operability
+        fr: ECSS-E-ST-70-11C — opérabilité du segment spatial (en anglais)
+  - id: q17
+    kind: text
+    text:
+      en: FD
+      fr: FD
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q18
+    kind: text
+    text:
+      en: SPACON
+      fr: SPACON
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q19
+    kind: text
+    text:
+      en: AOCS
+      fr: AOCS
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q20
+    kind: text
+    text:
+      en: EPS
+      fr: EPS
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q21
+    kind: text
+    text:
+      en: Thermal
+      fr: Thermique
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q22
+    kind: text
+    text:
+      en: TT&C
+      fr: TT&C
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q23
+    kind: text
+    text:
+      en: Payload
+      fr: Charge utile
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q24
+    kind: text
+    text:
+      en: FDS
+      fr: FDS
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q25
+    kind: text
+    text:
+      en: Ground Seg
+      fr: Segment sol
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q26
+    kind: text
+    text:
+      en: Mission Manager
+      fr: Responsable de mission
+    section:
+      en: Section 5 — Crew performance self-assessment
+      fr: Section 5 — Autoévaluation des performances de l'équipage
+  - id: q27
+    kind: text
+    text:
+      en: Section 6 — Recommendations for next cycle
+      fr: Section 6 — Recommandations pour le prochain cycle
+    section:
+      en: Section 6 — Recommendations for next cycle
+      fr: Section 6 — Recommandations pour le prochain cycle
+- id: WB-B
+  title:
+    en: End-of-Week Shift Log (cohort copy)
+    fr: Main courante de clôture de la semaine (exemplaire de la promotion)
+  phase: debrief
+  applies:
+    tools:
+    - mcs
+    - instructor
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: text
+    text:
+      en: Shift date
+      fr: Date du quart
+  - id: q2
+    kind: text
+    text:
+      en: Shift FD
+      fr: FD du quart
+  - id: q3
+    kind: text
+    text:
+      en: Team
+      fr: Équipe
+    hint:
+      en: Borealis / Austral
+      fr: Borealis / Austral
+  - id: q4
+    kind: text
+    text:
+      en: Pass(es) covered
+      fr: Passage(s) couvert(s)
+  - id: q5
+    kind: text
+    text:
+      en: Procedures executed
+      fr: Procédures exécutées
+    where:
+    - tool: mcs
+      page: proc
+      label: *id025
+  - id: q6
+    kind: text
+    text:
+      en: Anomalies (count + ticket IDs)
+      fr: Anomalies (nombre + ID des fiches)
+    where:
+    - tool: mcs
+      page: fdir
+      focus: fdir-journal
+      label: *id024
+  - id: q7
+    kind: text
+    text:
+      en: FDIR rules triggered
+      fr: Règles FDIR déclenchées
+    where:
+    - tool: mcs
+      page: fdir
+      label:
+        en: MCS › FDR (FDIR page)
+        fr: MCS › FDR (page FDIR)
+  - id: q8
+    kind: text
+    text:
+      en: GO/NO-GO outcome
+      fr: Issue du GO/NO-GO
+    where:
+    - tool: mcs
+      bd: gonogo
+      label: *id008
+  - id: q9
+    kind: text
+    text:
+      en: Customer commitments (planner bookings) met / deferred
+      fr: Engagements client (réservations du planificateur) tenus / reportés
+    where:
+    - tool: planner
+      focus: panel-sched
+      label: *id053
+  - id: q10
+    kind: text
+    text:
+      en: One-line summary for cohort archive
+      fr: Synthèse en une ligne pour les archives de la promotion
+- id: WB-C
+  title:
+    en: Workbook self-check
+    fr: Autocontrôle du cahier
+  phase: debrief
+  applies:
+    tools:
+    - portal
+    procedures: []
+    pages: []
+    scenarios: []
+    context_keys: []
+  questions:
+  - id: q1
+    kind: check
+    text:
+      en: WB-5.0 orientation check (filled before Monday)
+      fr: WB-5.0 vérification des acquis préalables (remplie avant lundi)
+  - id: q2
+    kind: check
+    text:
+      en: WB-5.1 seven position score cards (one per MCS console)
+      fr: WB-5.1 sept cartes de score par poste (une par console MCS)
+  - id: q3
+    kind: check
+    text:
+      en: WB-5.3-PP pass-plan exercise output
+      fr: WB-5.3-PP résultat de l'exercice de plan de passage
+  - id: q4
+    kind: check
+    text:
+      en: WB-5.4-VL voice-loop drill responses
+      fr: WB-5.4-VL réponses à l'exercice de boucle vocale
+  - id: q5
+    kind: check
+    text:
+      en: WB-5.4-N001 NOM-001 confirm-each-step (one per pass)
+      fr: WB-5.4-N001 NOM-001 à confirmer étape par étape (une par passage)
+  - id: q6
+    kind: check
+    text:
+      en: WB-5.4-C003 CTG-003 confirm-each-step (if invoked)
+      fr: WB-5.4-C003 CTG-003 à confirmer étape par étape (si déclenchée)
+  - id: q7
+    kind: check
+    text:
+      en: WB-5.4-N012 NOM-012 handover (one per handover)
+      fr: WB-5.4-N012 passation NOM-012 (une par passation)
+  - id: q8
+    kind: check
+    text:
+      en: WB-5.4-FD flight-dynamics workshop output
+      fr: WB-5.4-FD résultat de l'atelier de dynamique du vol
+  - id: q9
+    kind: check
+    text:
+      en: WB-5.4-Q quiz response sheet (graded)
+      fr: WB-5.4-Q feuille de réponses du quiz (corrigée)
+  - id: q10
+    kind: check
+    text:
+      en: WB-5.5-PB LEOP pre-pass briefing checklist (one per pass)
+      fr: WB-5.5-PB liste de vérification du briefing avant passage LEOP (une par passage)
+  - id: q11
+    kind: check
+    text:
+      en: WB-5.5-L001 / -L006 / -L002 / -L007 / -L005 confirm-each-step (one each per pass operated)
+      fr: WB-5.5-L001 / -L006 / -L002 / -L007 / -L005 à confirmer étape par étape (une de chaque par passage
+        exploité)
+  - id: q12
+    kind: check
+    text:
+      en: WB-5.5-AT anomaly tickets (≥ 1 per pass operated)
+      fr: WB-5.5-AT fiches d'anomalie (≥ 1 par passage exploité)
+  - id: q13
+    kind: check
+    text:
+      en: WB-5.5-GO end-of-pass scorecard
+      fr: WB-5.5-GO grille de fin de passage
+  - id: q14
+    kind: check
+    text:
+      en: WB-5.5-OBS observer worksheet (one per pass observed)
+      fr: WB-5.5-OBS fiche d'observation (une par passage observé)
+  - id: q15
+    kind: check
+    text:
+      en: WB-5.5-HO inter-pass handover (one per position)
+      fr: WB-5.5-HO passation entre passages (une par poste)
+  - id: q16
+    kind: check
+    text:
+      en: WB-5.5-DB debrief reflection
+      fr: WB-5.5-DB réflexion de débriefing
+  - id: q17
+    kind: check
+    text:
+      en: WB-5.6-PB pre-pass-set briefing
+      fr: WB-5.6-PB briefing avant la série de passages
+  - id: q18
+    kind: check
+    text:
+      en: WB-5.6-C001 through WB-5.6-C012 confirm-each-step (one each)
+      fr: WB-5.6-C001 à WB-5.6-C012 à confirmer étape par étape (une de chaque)
+  - id: q19
+    kind: check
+    text:
+      en: WB-5.6-FPA cool-down monitor sheet
+      fr: WB-5.6-FPA fiche de suivi de la mise en froid
+  - id: q20
+    kind: check
+    text:
+      en: WB-5.6-FL First Light assessment
+      fr: WB-5.6-FL évaluation de la première lumière
+  - id: q21
+    kind: check
+    text:
+      en: WB-5.6-MA multi-anomaly form (if applicable)
+      fr: WB-5.6-MA formulaire d'anomalies multiples (le cas échéant)
+  - id: q22
+    kind: check
+    text:
+      en: WB-5.6-GO pass-set scorecard
+      fr: WB-5.6-GO grille de la série de passages
+  - id: q23
+    kind: check
+    text:
+      en: WB-5.6-OBS observer worksheet
+      fr: WB-5.6-OBS fiche d'observation
+  - id: q24
+    kind: check
+    text:
+      en: WB-5.6-HO inter-pass handover
+      fr: WB-5.6-HO passation entre passages
+  - id: q25
+    kind: check
+    text:
+      en: WB-5.6-DB debrief reflection
+      fr: WB-5.6-DB réflexion de débriefing
+  - id: q26
+    kind: check
+    text:
+      en: WB-5.7-SA personal self-assessment
+      fr: WB-5.7-SA autoévaluation personnelle
+  - id: q27
+    kind: check
+    text:
+      en: WB-5.7-LL ≥ 3 cohort lessons-learned contributions
+      fr: WB-5.7-LL ≥ 3 contributions au retour d'expérience de la promotion
+  - id: q28
+    kind: check
+    text:
+      en: WB-5.7-WI what-if reflection (if a branch replay ran)
+      fr: WB-5.7-WI réflexion « Et si ? » (si une branche a été rejouée)
+  - id: q29
+    kind: check
+    text:
+      en: WB-5.7-FR final mission review prep (cohort copy)
+      fr: WB-5.7-FR préparation de la revue finale de mission (exemplaire de la promotion)
+  - id: q30
+    kind: check
+    text:
+      en: WB-5.7-CE course evaluation (anonymous; in the box)
+      fr: WB-5.7-CE évaluation du cours (anonyme ; dans la boîte)
+  - id: q31
+    kind: check
+    text:
+      en: WB-A contingency confirm-each-step pages used as needed
+      fr: WB-A pages de contingence à confirmer étape par étape, utilisées au besoin
+  - id: q32
+    kind: check
+    text:
+      en: WB-B shift log per shift
+      fr: WB-B main courante par quart
+  - id: q33
+    kind: text
+    text:
+      en: Workbook handed to instructor
+      fr: Cahier remis à l'enseignant
