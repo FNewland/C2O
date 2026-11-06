@@ -86,13 +86,13 @@ steps:
     say:
       en: >-
         A review gate is a checklist with evidence. At the system requirements review, between
-        Phases A and B, the requirements must be baselined, the ConOps cover every phase, the
+        Phases A and B, the requirements must be baselined, the concept of operations, the ConOps, cover every phase, the
         architecture trades be done, every budget close with margin, the risk register exist, and
         cost and schedule be estimated. Some criteria must pass, others should. The board
         decides: go, go with actions, or no go, and every action gets an owner and a date.
       fr: >-
         Une revue est une liste de critères avec preuves. À la revue des exigences système, entre
-        les phases A et B, les exigences doivent être figées, le ConOps couvrir chaque phase, les
+        les phases A et B, les exigences doivent être figées, le concept d’opérations, le ConOps, couvrir chaque phase, les
         compromis d’architecture être faits, chaque bilan se fermer avec marge, le registre des
         risques exister, et le coût et le calendrier être estimés. Certains critères sont
         obligatoires, d’autres souhaitables. Le comité décide : go, go avec actions, ou no go, et
