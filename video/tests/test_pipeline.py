@@ -56,7 +56,9 @@ def test_lexicon_reads_identifiers_aloud_and_keeps_captions():
     en = lexicon.spoken("Send HK_REQUEST with SID 1 during LEOP-001; the bus reads 28.8 V.", "en")
     assert "H K request" in en and "S I D" in en and "lee-op zero zero one" in en and "28.8 volts" in en
     fr = lexicon.spoken("Le bus lit 28.8 V à NOM-001 ; voir LW-1.4.", "fr")
-    assert "28 virgule 8 volts" in fr and "N. O. M. zéro zéro un" in fr and "fiche 1 point 4" in fr
+    assert "28 virgule 8 volts" in fr and "N O M zéro zéro un" in fr and "fiche 1 point 4" in fr
+    # never a lone É (read "É accent aigu"), never "E." (the French voice drops it)
+    assert lexicon.spoken("EOSAT-1 et l’EPS", "fr") == "Euh-o-satte un et l’E P S"
     assert lexicon.unknown_tokens("Check the XYZ unit", "en") == ["XYZ"]
 
 

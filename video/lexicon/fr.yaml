@@ -1,10 +1,12 @@
 # Prononciation pour la narratrice française (les sous-titres gardent la forme écrite).
 # Les identifiants restent en anglais à l'écran (règle bilingue) ; on les lit
 # comme un opérateur francophone les lirait.
+# Jamais de « É » isolé : la voix lit « É accent aigu » (EOSAT-1 était lu ainsi).
+# Pas de points après les lettres épelées : « E. P. S. » perd son E.
 terms:
-  SpaceCDF: "Space C.D.F."
-  EOSAT-1: "É.O. Sat un"
-  EOSAT: "É.O. Sat"
+  SpaceCDF: "Spèïsse C D F"
+  EOSAT-1: "Euh-o-satte un"
+  EOSAT: "Euh-o-satte"
   C2O: "C deux O"
   c2o.live: "C deux O point live"
   LEOP: "Léop"
@@ -23,6 +25,7 @@ terms:
   H5P: "H cinq P"
   workbook: "cahier de travail"
   Markdown: "Mark-daoune"
+  prérequis: "pré-requis"
 words: [ORBIT, NORTH, NASA, ESA, OK]
 spell: [MCS, AOCS, ADCS, SCAO, TTC, OBC, OBDH, EPS, TCS, PUS, CCSDS, TM, TC, HK, SID, AOS, LOS,
         MDR, PRR, SRR, PDR, CDR, QR, FRR, ECSS, CDF, GSD, SSO, LTAN, TCA, ASC, CSA, FPA, PCDU,

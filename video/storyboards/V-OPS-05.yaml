@@ -1,0 +1,183 @@
+# Week 5 — LEOP-004: deploy the solar wings and read the energy balance before
+# and after on the EPS power flow. Starts from card-LEOP-004 (the card's real
+# entry state) in a pass. Nominal card: nothing here is a scored-run recovery.
+id: V-OPS-05
+week: 5
+audience: all
+title:
+  en: "LEOP-004: solar wings and the energy balance"
+  fr: "LEOP-004 : ailes solaires et bilan d’énergie"
+summary:
+  en: "Read the power flow on body panels alone, deploy both wings, confirm them, and see what the deployment does to the orbit-average energy balance."
+  fr: "Lire le flux de puissance sur les seuls panneaux de structure, déployer les deux ailes, les confirmer, et voir ce que le déploiement change au bilan d’énergie moyen sur l’orbite."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  cards: [LEOP-004]
+sources:
+  - sim/configs/eosat1/procedures/leop/solar_array_verification.md (LEOP-004)
+  - sim/packages/smo-common/src/smo_common/ui/viz/powerflow.js (the power flow)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-LEOP-004}}
+  - wait: 2
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 480, min_elevation: 15, after_aos: 10}}
+  # any accepted command re-arms the transmitter (auto-TX hold-down)
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0001", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 4
+
+steps:
+  - id: before
+    title: {en: "Body panels only", fr: "Les panneaux de structure seuls"}
+    say:
+      en: >-
+        The wings are still stowed. Open the power page. The power flow draws every watt from
+        the arrays, through the bus, to the loads and the battery, with the line width
+        proportional to the power. Only the body panels are lit, and they give a few watts.
+        Now look at the projection on the right: the orbit-average margin, energy in minus
+        energy out over a whole orbit, is negative. Stay like this and the battery runs down,
+        orbit after orbit.
+      fr: >-
+        Les ailes sont encore repliées. Ouvrez la page énergie. Le flux de puissance dessine
+        chaque watt, des générateurs au bus, puis aux charges et à la batterie, avec une largeur
+        de trait proportionnelle à la puissance. Seuls les panneaux de structure sont éclairés,
+        et ils ne donnent que quelques watts. Regardez maintenant la projection à droite : la marge moyenne sur
+        l’orbite, l’énergie qui entre moins celle qui sort sur une orbite entière, est négative.
+        Si rien ne change, la batterie se vide, orbite après orbite.
+    do:
+      - click: {css: "#rail-eps"}
+      - wait: 1.5
+      - highlight: {target: {css: "#eps-flow"}, seconds: 4, point: false}
+      - highlight: {target: {css: "#eps-orbit-margin"}, seconds: 4}
+    question:
+      type: multichoice
+      text:
+        en: "Before deployment the orbit-average margin is negative. What does that tell you?"
+        fr: "Avant le déploiement, la marge moyenne sur l’orbite est négative. Qu’est-ce que cela vous apprend ?"
+      options:
+        - text: {en: "Over a full orbit the loads take more energy than the arrays give: the battery loses charge every orbit.", fr: "Sur une orbite entière, les charges prennent plus d’énergie que n’en donnent les générateurs : la batterie perd de la charge à chaque orbite."}
+          correct: true
+          why: {en: "It is a balance over the orbit, eclipse included, not an instant reading.", fr: "C’est un bilan sur l’orbite, éclipse comprise, pas une mesure instantanée."}
+        - text: {en: "The battery is discharging right now.", fr: "La batterie se décharge en ce moment."}
+          why: {en: "Look at the flow: in sunlight it is still charging. The margin is about the whole orbit.", fr: "Regardez le flux : au soleil, elle se charge encore. La marge porte sur toute l’orbite."}
+        - text: {en: "One of the wings has failed.", fr: "L’une des ailes est en panne."}
+          why: {en: "They are not deployed yet: that is the point of this card.", fr: "Elles ne sont pas encore déployées : c’est l’objet de cette fiche."}
+
+  - id: deploy
+    title: {en: "Step 0: deploy both wings", fr: "Étape 0 : déployer les deux ailes"}
+    say:
+      en: >-
+        Step 0 deploys both wings in one command: wing code two. It is a critical command, so
+        the console asks you to confirm it. The release takes up to forty-five seconds: the
+        wing status first shows deploying, then deployed. Watch the array regulator while it
+        happens.
+      fr: >-
+        L’étape 0 déploie les deux ailes en une seule commande : code d’aile deux. C’est une
+        commande critique, la console vous demande donc de la confirmer. Le déploiement prend
+        jusqu’à quarante-cinq secondes : l’état des ailes indique d’abord en cours, puis
+        déployé. Surveillez le régulateur des générateurs pendant ce temps.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: EPS_DEPLOY_WING}
+      - wait: 0.6
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='wing']"}, text: "2"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 1.0
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
+      - click: {css: "#rail-eps"}
+      - wait: 1.0
+      - highlight: {target: {css: "#eps-flow"}, seconds: 4, point: false}
+
+  - id: confirm
+    title: {en: "Steps 1 to 3: confirm each wing", fr: "Étapes 1 à 3 : confirmer chaque aile"}
+    say:
+      en: >-
+        A rising number is not a confirmation. Request the power report, then read the wing
+        status: three means both wings deployed. The wing currents are not in the routine
+        report, so the card asks for each one by name: parameter one four six for the plus Y
+        wing, one four seven for the minus Y wing. In sunlight, each must carry current. Until
+        you ask, the wings on the power flow read no data.
+      fr: >-
+        Un chiffre qui monte n’est pas une confirmation. Demandez le rapport énergie, puis
+        lisez l’état des ailes : trois signifie les deux ailes déployées. Les courants des ailes
+        ne sont pas dans le rapport courant : la fiche les demande donc un par un, le paramètre
+        un quatre six pour l’aile plus Y, un quatre sept pour l’aile moins Y. Au soleil, chacune
+        doit débiter du courant. Tant que vous ne les demandez pas, les ailes du flux de
+        puissance affichent pas de données.
+    do:
+      - wait: 18
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "1"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.5
+      - select: {target: {css: "#cmd-catalog"}, value: GET_PARAM}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='param_id']"}, text: "326"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.2
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='param_id']"}, text: "327"}
+      - click: {css: "#cmd-send"}
+      - wait: 1.5
+      - click: {css: "#rail-eps"}
+      - wait: 1.0
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0144']"}, seconds: 2.5}
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0146']"}, seconds: 2}
+      - highlight: {target: {css: "#page-eps tr[data-param='0x0147']"}, seconds: 2}
+
+  - id: after
+    title: {en: "The energy balance after", fr: "Le bilan d’énergie après"}
+    say:
+      en: >-
+        Back to the power flow. The wings now show their own power, and generation is up. But
+        watch the margin: it swings around zero. The spacecraft is still tumbling, so the wings
+        catch the Sun only part of the time. At the bottom, this orbit's energy in and energy
+        out, in watt-hours, tell you whether the battery ends the orbit higher or lower.
+        Deploying the wings is not enough: the next card, sun acquisition, points them at the
+        Sun.
+      fr: >-
+        Revenez au flux de puissance. Les ailes affichent maintenant leur propre puissance, et
+        la production augmente. Mais regardez la marge : elle oscille autour de zéro. Le
+        satellite tourne encore sur lui-même : les ailes ne voient le Soleil qu’une partie du
+        temps. En bas, l’énergie entrée et sortie sur cette orbite, en wattheures, vous dit si
+        la batterie finit l’orbite plus haut ou plus bas. Déployer les ailes ne suffit pas : la
+        fiche suivante, l’acquisition du Soleil, les oriente vers le Soleil.
+    do:
+      - scroll: {css: "#eps-flow"}
+      - highlight: {target: {css: "#eps-flow"}, seconds: 3.5, point: false}
+      - highlight: {target: {css: "#eps-orbit-margin"}, seconds: 3.5}
+    question:
+      type: truefalse
+      answer: false
+      text:
+        en: "If the arrays give 20 W in sunlight, the spacecraft can run 20 W of loads all orbit long."
+        fr: "Si les générateurs donnent 20 W au soleil, le satellite peut alimenter 20 W de charges pendant toute l’orbite."
+
+  - id: card
+    title: {en: "Record it on the card", fr: "Le consigner sur la fiche"}
+    say:
+      en: >-
+        On the card, capture the values and mark Step 0 GO. Two checks remain for later in the
+        pass or the next one: the power profile through an eclipse, where generation falls to
+        zero and the battery carries every load, and the symmetry of the two wing currents,
+        within fifteen percent.
+      fr: >-
+        Sur la fiche, relevez les valeurs et marquez l’étape 0 GO. Deux vérifications restent
+        pour la suite du passage ou le suivant : le profil de puissance pendant une éclipse, où
+        la production tombe à zéro et la batterie porte toutes les charges, et la symétrie des
+        courants des deux ailes, à quinze pour cent près.
+    do:
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 0.8
+      - select: {target: {css: "#proc-type"}, value: leop/solar_array_verification.md}
+      - wait: 2.0
+      - scroll: {css: "#proc-doc section[data-pc-step='s0']"}
+      - click: {css: "#proc-doc section[data-pc-step='s0'] [data-pc='capture']"}
+      - click: {css: "#proc-doc section[data-pc-step='s0'] [data-pc='tick'][data-r='go']"}
+      - wait: 1.0
+      - scroll: {css: "#proc-doc section[data-pc-step='s5']"}
+      - highlight: {target: {css: "#proc-doc section[data-pc-step='s5']"}, seconds: 3, point: false}

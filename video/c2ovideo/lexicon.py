@@ -48,7 +48,9 @@ def spell(token: str, lang: str) -> str:
         if ch.isdigit():
             out.append(DIGITS[lang][int(ch)])
         elif ch.isalpha():
-            out.append(LETTERS[lang].get(ch.upper(), ch) + ("." if lang == "fr" else ""))
+            # no full stops after French letters: the French voice drops an "E."
+            # ("E. P. S." came out as "P S"); "E P S" is read as letters
+            out.append(LETTERS[lang].get(ch.upper(), ch))
         else:
             out.append(" ")
     return " ".join(x for x in out if x.strip())
