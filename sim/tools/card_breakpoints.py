@@ -114,12 +114,30 @@ def build(out: Path) -> list[str]:
         f.write_text(json.dumps(state, sort_keys=True, separators=(",", ":"), default=str), encoding="utf-8")
         written.append(f.name)
 
+    aocs = eng.subsystems["aocs"]
+
+    def settle(limit_s: int = 900) -> None:
+        """Let a wheel-controlled attitude finish converging before the save.
+
+        The previous card's last command (a mode change, a slew back to nadir)
+        can leave the spacecraft mid-transient; COM-007's entry state was saved
+        at 33° error and 0.3 °/s, so every load of it raised attitude alarms
+        that had nothing to do with the card. Only NOMINAL / FINE_POINT /
+        INERTIAL are settled; DETUMBLE and COARSE_SUN are left as found."""
+        for _ in range(limit_s):
+            st = aocs._state
+            if st.mode not in (4, 5, 9) or aocs.get_telemetry().get(0x0217, 0.0) < 0.2:
+                return
+            fly.run(1)
+
     for name, fn in methods:
         card = _card_id(name)
         doc = (fn.__doc__ or "").strip().splitlines()
+        settle()
         save(f"card-{card}", f"Entry state of {card} (fly-through, {name})" + (f": {doc[0]}" if doc else ""))
         print(f"  {card:9s} saved, flying …", flush=True)
         fn(inst, fly)
+    settle()
     save("card-END", "Commissioning complete: NOMINAL hold after COM-013")
     return written
 

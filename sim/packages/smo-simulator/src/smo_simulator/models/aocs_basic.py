@@ -549,6 +549,9 @@ class AOCSBasicModel(SubsystemModel):
         # guard in ~3*tau = 20 min, and the commanded dipole at 10 deg/s
         # (|Bdot| ~ 5e-6 T/s) is 2.6 A.m2 -> saturated, as it should be.
         self._bdot_gain = 5.0e5
+        self._cs_mag_kp = 6.0e-5
+        self._cs_mag_kbdot = 1.0e6
+        self._cs_mag_kd = 5.0e-3
         self._bdot_prev_B = None
         self._bdot_prev_dt = 0.0
         self._bdot_filt = np.zeros(3)
@@ -794,6 +797,10 @@ class AOCSBasicModel(SubsystemModel):
         self._desat_timeout_s = float(des.get("timeout_s", 3600.0))
         self._desat_saturate = bool(des.get("saturate_rods", False))
         self._bdot_gain = float(mtq.get("bdot_gain_am2_per_tps", 5.0e5))
+        csm = mtq.get("coarse_sun_mag", {}) or {}
+        self._cs_mag_kp = float(csm.get("kp_nm", 6.0e-5))
+        self._cs_mag_kbdot = float(csm.get("bdot_gain_am2_per_tps", 1.0e6))
+        self._cs_mag_kd = float(csm.get("kd_nms", 5.0e-3))
 
 
         self._param_ids = config.get("param_ids", {
@@ -2097,6 +2104,8 @@ class AOCSBasicModel(SubsystemModel):
         wheels_ok = sum(1 for w in s.active_wheels if w) >= 3
         nom = float(self._rw_nominal_speed)
         bias = [nom, -nom, nom, -nom]
+        if not wheels_ok:
+            self._update_sun_rate(s, dt)
 
         def control_fn(h):
             B_b = att.quat_to_dcm(np.asarray(s.q_true, float)) @ self._env['B_eci']
@@ -2116,16 +2125,7 @@ class AOCSBasicModel(SubsystemModel):
                         m *= self._mtq_max_dipole / mmax
                 return tau_w + self._mtq_dipole_torque(s, m, B_b)
             tau_w = self._apply_wheel_torque(s, h, np.zeros(3), None, 0.0)
-            m = np.zeros(3)
-            if s.mtq_enabled and Bmag > 1e-9:
-                # Magnetic-only: realise the achievable component ⊥ B
-                tau_des = self._pd_torque(s, q_ref, w_ref, 0.005, 1.0)
-                m = np.cross(B_b, tau_des) / (Bmag * Bmag) * 25.0
-                m += 800.0 * np.cross(self._omega_est, B_b / Bmag)
-                mmax = max(abs(float(x)) for x in m)
-                if mmax > self._mtq_max_dipole:
-                    m *= self._mtq_max_dipole / mmax
-            return tau_w + self._mtq_dipole_torque(s, m, B_b)
+            return tau_w + self._mtq_dipole_torque(s, self._mag_sun_dipole(s, h), B_b)
         self._run_control_dynamics(s, dt, control_fn)
         # att_error = true sun-pointing error (angle sun-to-+X axis)
         sb = self._true_sun_body()
@@ -2134,6 +2134,110 @@ class AOCSBasicModel(SubsystemModel):
         else:
             s.att_error = math.degrees(
                 math.acos(max(-1.0, min(1.0, float(sb[0])))))
+
+    def _update_sun_rate(self, s: AOCSState, dt: float) -> None:
+        """ω⊥ŝ from the CSS sun vector's rate of change (once per model tick).
+
+        ṡ = −ω × ŝ in the body frame, so ω⊥ = ṡ × ŝ. Low-passed: the CSS
+        composite carries ~0.02 per-head noise, which at 1 Hz differencing is
+        ~0.03 rad/s of rate noise unfiltered."""
+        if not s.css_valid:
+            self._cs_sun_prev = None
+            self._cs_w_perp = None
+            return
+        sun = np.array([s.css_sun_x, s.css_sun_y, s.css_sun_z], float)
+        n = float(np.linalg.norm(sun))
+        if n < 0.1:
+            return
+        sun /= n
+        prev = getattr(self, '_cs_sun_prev', None)
+        self._cs_sun_prev = sun
+        if prev is None or dt <= 0.0:
+            return
+        w = np.cross((sun - prev) / dt, sun)
+        old = getattr(self, '_cs_w_perp', None)
+        self._cs_w_perp = w if old is None else 0.85 * old + 0.15 * w
+
+    def _mag_sun_dipole(self, s: AOCSState, h: float) -> np.ndarray:
+        """Magnetic-only sun acquisition (COARSE_SUN without wheels).
+
+        Points ONE axis, +X (the wing normal), at the Sun and leaves the
+        rotation about the sun line free: torque is only available ⊥ B, so a
+        full three-axis sun-frame hold is out of reach with rods alone, and
+        chasing it is what made the old law hunt through tens of degrees.
+
+        Three dipoles, all from MEASURED quantities, none from the MEKF:
+
+        * B-dot on the magnetometer (as DETUMBLE), sun or shadow: damps the
+          rate ⊥ B with no rate estimate at all;
+        * sunlit: damping of the rate ⊥ the sun line taken from the CSS sun
+          vector's own rate of change (see _update_sun_rate);
+        * sunlit: pointing, τ = Kp·(x̂ × ŝ) (full unit demand past 90°),
+          realised ⊥ B as m = (B × τ)/|B|², with the dampers given the rod
+          headroom first.
+
+        The old law damped on the MEKF rate. In eclipse the estimator has no
+        sun vector and its gyro-bias estimate wanders (0.1-0.35 °/s measured);
+        damping on it pumped energy in (0.15 → 0.52 °/s in 25 min) and steered
+        the body to a wrong rate after eclipse exit.
+
+        Measured from card-LEOP-005 over three orbits (config defaults in
+        aocs.yaml `magnetorquers.coarse_sun_mag`): first < 15° after 8 min,
+        then 0-7° while sunlit, drifting in eclipse (no sun sensor) and
+        reacquired ~10 min after eclipse exit; body rates ≤ 0.5 °/s.
+        """
+        m = np.zeros(3)
+        if not (s.mtq_enabled and s.mag_valid):
+            return m
+        B_meas = np.array([s.mag_x, s.mag_y, s.mag_z]) * 1e-9          # T, measured
+        Bm2 = float(B_meas @ B_meas)
+        if Bm2 < 1e-16:
+            return m
+        prev = getattr(self, '_bdot_prev_B', None)
+        prev_t = getattr(self, '_bdot_prev_dt', 0.0)
+        if prev is not None and prev_t > 1e-6:
+            Bdot = (B_meas - prev) / prev_t
+            self._bdot_filt = 0.7 * getattr(self, '_bdot_filt', np.zeros(3)) + 0.3 * Bdot
+        self._bdot_prev_B = B_meas
+        self._bdot_prev_dt = h
+        if prev is not None:
+            # B-dot: damps the rate ⊥ B, needs no rate estimate (sun or shadow)
+            m = m - self._cs_mag_kbdot * self._bdot_filt
+        w_perp = getattr(self, '_cs_w_perp', None)
+        if s.css_valid and w_perp is not None:
+            # sunlit: the rate ⊥ the sun line, straight from the coarse sun
+            # sensors (ω⊥ = ṡ × ŝ, the Sun being fixed inertially). Damping on
+            # the MEKF rate instead let a gyro-bias error picked up in eclipse
+            # (0.1-0.35 °/s measured) drive the body to a wrong rate.
+            m = m + (self._cs_mag_kd / Bm2) * np.cross(w_perp, B_meas)
+        if s.css_valid:
+            sun = np.array([s.css_sun_x, s.css_sun_y, s.css_sun_z], float)
+            n = float(np.linalg.norm(sun))
+            if n > 0.1:
+                sun /= n
+                e = np.cross(np.array([1.0, 0.0, 0.0]), sun)
+                en = float(np.linalg.norm(e))
+                if sun[0] < 0.0:
+                    # past 90°, sin() would shrink the demand as the error
+                    # grows: use the full unit demand about the same axis
+                    # (about +Y, the wing axis, if exactly behind)
+                    e = e / en if en > 1e-3 else np.array([0.0, 1.0, 0.0])
+                tau = self._cs_mag_kp * e
+                m_pt = np.cross(B_meas, tau) / Bm2
+                # damping has priority: the pointing dipole only gets the
+                # rod headroom the damper leaves (scaling the SUM let a large
+                # pointing demand starve the damper and pump nutation)
+                head = self._mtq_max_dipole - max(abs(float(x)) for x in m)
+                pmax = max(abs(float(x)) for x in m_pt)
+                if head <= 0.0:
+                    m_pt = np.zeros(3)
+                elif pmax > head:
+                    m_pt *= head / pmax
+                m = m + m_pt
+        mmax = max(abs(float(x)) for x in m)
+        if mmax > self._mtq_max_dipole:
+            m *= self._mtq_max_dipole / mmax
+        return m
 
     def _tick_wheel_pointing(self, s: AOCSState, dt: float, mode: int,
                              bias_rpm: float | None = None,
@@ -3401,6 +3505,12 @@ class AOCSBasicModel(SubsystemModel):
         shared_params[0x02D1] = float(self._gyro_units_mask(s))
         _resid = self._gyro_bias_residual(s)
         shared_params[0x02D2] = float(math.sqrt(sum(b * b for b in _resid)))
+        # 0x02D3 (2026-11-06): the attitude-error limits (ground 0x0217 band
+        # and the S12 1° monitor) describe a WHEEL-controlled hold. In
+        # DETUMBLE, COARSE_SUN (degree-class on rods, drifting in eclipse),
+        # SAFE, DESAT or a SLEW they would alarm on correct behaviour, so they
+        # carry this validity flag, as the FPA bands carry 0x0426.
+        shared_params[0x02D3] = 1 if s.mode in (MODE_NOMINAL, MODE_FINE_POINT, MODE_INERTIAL) else 0
 
         # ── Gyro bias calibration (S8.1 func 13) ──
         shared_params[0x02C9] = float(s.gyro_cal_state)

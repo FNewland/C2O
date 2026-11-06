@@ -19,8 +19,8 @@ Columns:
 
 | | Count |
 |---|---:|
-| Catalogued parameters | 457 |
-| In at least one HK SID | 322 |
+| Catalogued parameters | 458 |
+| In at least one HK SID | 323 |
 | On-demand (S20-readable) | 129 |
 | Declared stubs (model does not compute) | 14 |
 | Ground limit bands | 49 |
@@ -32,7 +32,7 @@ Columns:
 | SID | Name | Members |
 |---:|---|---:|
 | 1 | EPS | 52 |
-| 2 | AOCS | 75 |
+| 2 | AOCS | 76 |
 | 3 | TCS | 18 |
 | 4 | Platform | 36 |
 | 5 | Payload | 29 |
@@ -201,6 +201,7 @@ Columns:
 | `0x02D0` | aocs.gyro_cal_reject |  | 7 |  |  |  |  |
 | `0x02D1` | aocs.gyro_units_mask |  | 2 |  |  |  |  |
 | `0x02D2` | aocs.gyro_bias_resid | deg/s | 2 |  |  |  |  |
+| `0x02D3` | aocs.pointing_limits_valid |  | 2 |  |  |  |  |
 
 ## eps
 

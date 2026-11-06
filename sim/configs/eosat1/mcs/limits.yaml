@@ -38,7 +38,9 @@ limits:
   - { param_id: 0x0120, yellow_low: 0.0, yellow_high: 60.0, red_low: 0.0, red_high: 80.0, check_interval_s: 8 }
 
   # ===== AOCS =====
-  - { param_id: 0x0217, yellow_low: -1.0, yellow_high: 1.0, red_low: -2.0, red_high: 2.0, check_interval_s: 4 }
+  # valid_when (2026-11-06): a wheel-controlled hold only (0x02D3); COARSE_SUN on
+  # rods holds degree-class and drifts in eclipse, which is correct, not an alarm.
+  - { param_id: 0x0217, yellow_low: -1.0, yellow_high: 1.0, red_low: -2.0, red_high: 2.0, check_interval_s: 4, valid_when: { param_id: 0x02D3, mask: 0x1, value: 0x1 } }
   - { param_id: 0x0204, yellow_low: -0.5, yellow_high: 0.5, red_low: -2.0, red_high: 2.0, check_interval_s: 1 }
   - { param_id: 0x0205, yellow_low: -0.5, yellow_high: 0.5, red_low: -2.0, red_high: 2.0, check_interval_s: 1 }
   - { param_id: 0x0206, yellow_low: -0.5, yellow_high: 0.5, red_low: -2.0, red_high: 2.0, check_interval_s: 1 }
