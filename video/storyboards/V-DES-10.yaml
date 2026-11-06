@@ -22,6 +22,7 @@ sources:
 
 setup:
   - goto: {app: viz, path: "/video/explainers/comms.html?lang={lang}", settle: 1.5}
+  - cursor: hide
 
 steps:
   - id: chain

@@ -20,6 +20,7 @@ sources:
 
 setup:
   - goto: {app: viz, path: "/video/explainers/requirements.html?lang={lang}", settle: 1.5}
+  - cursor: hide
 
 steps:
   - id: shall
@@ -36,7 +37,7 @@ steps:
         quelqu’un peut vérifier. Elle nomme le sujet, emploie le verbe devoir, donne un seuil
         mesurable, avec un nombre et une unité, et précise les conditions. Ici : la charge utile
         doit atteindre une distance d’échantillonnage au sol, une GSD, de dix mètres ou mieux, au
-        nadir, depuis l’orbite opérationnelle. « Doit » engage. « Devrait » n’est qu’un objectif,
+        nadir, depuis l’orbite opérationnelle. Le verbe « doit » engage. « Devrait » n’est qu’un objectif,
         et « va » un simple constat.
     do:
       - js: "EX.play('shall', ${say})"
