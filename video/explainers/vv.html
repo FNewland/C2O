@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Verification and validation</title>
+<link rel="stylesheet" href="explainer.css">
+<style>
+  .blk rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; transition: stroke .4s, fill .4s; }
+  .blk.on rect { stroke: var(--accent); stroke-width: 2.5; fill: #1f3442; }
+  .blk.ok rect { stroke: var(--ok); stroke-width: 2.5; fill: #1d2f22; }
+  .blk.bad rect { stroke: var(--bad); stroke-width: 2.5; fill: #2c1c1e; }
+  .blk.warn rect { stroke: var(--warn); stroke-width: 2.5; fill: #2d2618; }
+  .flow { stroke: var(--accent); stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+  .grid { stroke: #2a313a; stroke-width: 1; }
+  .curve { fill: none; stroke: var(--accent); stroke-width: 3; }
+  .curve2 { fill: none; stroke: var(--warn); stroke-width: 3; stroke-dasharray: 8 6; }
+</style>
+</head>
+<body>
+<div class="ex-frame">
+  <div class="ex-head"><span class="ex-kicker" data-t="kicker"></span><span class="ex-title" data-t="title"></span></div>
+  <div class="ex-stage">
+<svg viewBox="0 0 1280 620" id="stage" aria-labelledby="stage-title">
+  <title id="stage-title">Verification against validation, the environmental test sequence, random vibration, thermal vacuum cycles, the verification matrix</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5fb4dc"/></marker></defs>
+  <g id="vv" class="ex-hidden"></g>
+  <g id="seq" class="ex-hidden"></g>
+  <g id="vib" class="ex-hidden"></g>
+  <g id="tv" class="ex-hidden"></g>
+  <g id="vm" class="ex-hidden"></g>
+  <g id="note" class="ex-hidden">
+    <rect x="40" y="520" width="1200" height="80" rx="8" fill="#1f2b33" stroke="#5fb4dc"/>
+    <text x="58" y="552" id="note-a"></text>
+    <text x="58" y="580" class="small muted" id="note-b"></text>
+  </g>
+</svg>
+  </div>
+  <div class="ex-foot" data-t="foot"></div>
+</div>
+<script src="explainer.js"></script>
+<script>
+EX.labels({
+  en: {
+    kicker: "Concept", title: "Verification and validation",
+    v_h: "Verification", v_q: "Did we build the system right?", v_a: "against the requirements · by the engineering team",
+    l_h: "Validation", l_q: "Did we build the right system?", l_a: "against the stakeholder needs · by users and operators",
+    ex_r: "Requirement: GSD ≤ 10 m", ex_v: "calibration images: 9.2 m · verified", ex_l: "users: “we cannot tell crops apart; we needed 5 m” · not validated",
+    s_f: "functional", s_sine: "sine vib.", s_rand: "random vib.", s_tvac: "thermal vacuum", s_emc: "EMC",
+    s_cap: "Proto-flight test sequence: a functional test brackets every environment",
+    s_why: "so any damage is pinned to the test that caused it",
+    p_cap: "Random vibration, power spectral density (g²/Hz, log–log)", p_x: "frequency (Hz)",
+    p_acc: "workmanship 6.8 g rms", p_pf: "proto-flight +3 dB: 9.6 g rms, 1 min per axis",
+    t_cap: "Thermal vacuum, proto-flight: four cycles, < 10⁻⁵ mbar", t_hot: "predicted max + 10 °C", t_cold: "predicted min − 10 °C",
+    t_fn: "functional test at each extreme · dwell ≥ 1 h", t_x: "time",
+    m_req: "Requirement", m_st: "Status",
+    q1: "mass ≤ 6 kg", q2: "survive launch loads", q3: "pointing ≤ 0.1°", q4: "link margin ≥ 3 dB", q5: "data latency ≤ 24 h",
+    st1: "closed", st2: "closed", st3: "open: test pending", st4: "closed", st5: "rehearsal planned",
+    m_w: "A requirement that cannot be met needs a waiver, approved and recorded, not silence.",
+    n1a: "Verification: built right. Validation: built the right thing.",
+    n1b: "Every requirement can pass and the mission still fail its users (textbook § 14.1).",
+    n2a: "Test the hardware the way launch and orbit will treat it, in a fixed order.",
+    n2b: "The deployer or launcher user’s guide sets the binding levels (§ 14.3).",
+    n3a: "Random vibration is specified as a spectrum; its area gives the g rms.",
+    n3b: "Proto-flight doubles the spectrum: +3 dB above workmanship.",
+    n4a: "Thermal vacuum tests beyond the predictions: the thermal margins of the design, in a chamber.",
+    n4b: "Start and end hot; full functional tests at both extremes.",
+    n5a: "The verification matrix: every requirement, its methods, its status.",
+    n5b: "Your operations rehearsal in the simulator is a demonstration, and a first validation.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 14 · ECSS-E-ST-10-02C · ECSS-E-ST-10-03C · GSFC-STD-7000B",
+  },
+  fr: {
+    kicker: "Notion", title: "Vérification et validation",
+    v_h: "Vérification", v_q: "A-t-on bien construit le système ?", v_a: "face aux exigences · par l’équipe d’ingénierie",
+    l_h: "Validation", l_q: "A-t-on construit le bon système ?", l_a: "face aux besoins des parties prenantes · par les utilisateurs et opérateurs",
+    ex_r: "Exigence : GSD ≤ 10 m", ex_v: "images d’étalonnage : 9,2 m · vérifiée", ex_l: "utilisateurs : « on ne distingue pas les cultures ; il fallait 5 m » · non validée",
+    s_f: "fonctionnel", s_sine: "vib. sinus", s_rand: "vib. aléatoire", s_tvac: "vide thermique", s_emc: "CEM",
+    s_cap: "Séquence d’essais proto-vol : un essai fonctionnel encadre chaque environnement",
+    s_why: "pour attribuer tout dommage à l’essai qui l’a causé",
+    p_cap: "Vibration aléatoire, densité spectrale de puissance (g²/Hz, log–log)", p_x: "fréquence (Hz)",
+    p_acc: "fabrication 6,8 g eff.", p_pf: "proto-vol +3 dB : 9,6 g eff., 1 min par axe",
+    t_cap: "Vide thermique, proto-vol : quatre cycles, < 10⁻⁵ mbar", t_hot: "max prévu + 10 °C", t_cold: "min prévu − 10 °C",
+    t_fn: "essai fonctionnel à chaque extrême · palier ≥ 1 h", t_x: "temps",
+    m_req: "Exigence", m_st: "État",
+    q1: "masse ≤ 6 kg", q2: "résister au lancement", q3: "pointage ≤ 0,1°", q4: "marge de liaison ≥ 3 dB", q5: "latence ≤ 24 h",
+    st1: "close", st2: "close", st3: "ouverte : essai à venir", st4: "close", st5: "répétition prévue",
+    m_w: "Une exigence qui ne peut être tenue demande une dérogation, approuvée et consignée, pas le silence.",
+    n1a: "Vérification : bien construit. Validation : construit la bonne chose.",
+    n1b: "Toutes les exigences peuvent passer et la mission décevoir ses utilisateurs (manuel § 14.1).",
+    n2a: "Essayez le matériel comme le lancement et l’orbite le traiteront, dans un ordre fixe.",
+    n2b: "Le guide du déployeur ou du lanceur fixe les niveaux contraignants (§ 14.3).",
+    n3a: "La vibration aléatoire se spécifie en spectre ; son aire donne les g efficaces.",
+    n3b: "Le proto-vol double le spectre : +3 dB au-dessus du niveau de fabrication.",
+    n4a: "Le vide thermique essaie au-delà des prévisions : les marges thermiques, en chambre.",
+    n4b: "Commencer et finir à chaud ; essais fonctionnels complets aux deux extrêmes.",
+    n5a: "La matrice de vérification : chaque exigence, ses méthodes, son état.",
+    n5b: "Votre répétition d’opérations dans le simulateur est une démonstration, et une première validation.",
+    foot: "Concurrent Spacecraft Design (CC BY 4.0) ch. 14 · ECSS-E-ST-10-02C · ECSS-E-ST-10-03C · GSFC-STD-7000B",
+  },
+});
+function box(parent, id, x, y, w, h, cls) {
+  const g = EX.el("g", { id, class: "blk ex-hidden" + (cls ? " " + cls : "") }, parent);
+  EX.el("rect", { x, y, width: w, height: h, rx: 8 }, g);
+  return g;
+}
+
+// 1. V vs V
+[["v", 40, "on"], ["l", 660, "ok"]].forEach(([k, x, cls]) => {
+  const g = box("vv", "vv-" + k, x, 30, 580, 170, cls);
+  EX.el("text", { x: x + 20, y: 72, class: "big", label: k + "_h" }, g);
+  EX.el("text", { x: x + 20, y: 116, label: k + "_q" }, g);
+  EX.el("text", { x: x + 20, y: 160, class: "small muted", label: k + "_a" }, g);
+});
+const ex = EX.el("g", { id: "vv-ex", class: "ex-hidden" }, "vv");
+EX.el("text", { x: 40, y: 270, class: "big", label: "ex_r" }, ex);
+EX.el("text", { id: "vv-exv", x: 40, y: 320, style: "fill:var(--ok)", label: "ex_v" }, ex);
+EX.el("text", { id: "vv-exl", x: 40, y: 366, style: "fill:var(--bad)", label: "ex_l", opacity: 0 }, ex);
+
+// 2. test sequence
+const SQ = ["s_f", "s_sine", "s_f", "s_rand", "s_f", "s_tvac", "s_f", "s_emc", "s_f"];
+EX.el("text", { x: 40, y: 60, class: "small muted", label: "s_cap" }, "seq");
+SQ.forEach((k, i) => {
+  const x = 40 + i * 136, env = k !== "s_f";
+  const g = box("seq", "sq-" + i, x, env ? 120 : 160, 120, env ? 120 : 40, env ? "warn" : "ok");
+  EX.el("text", { x: x + 60, y: env ? 186 : 186, class: "small", "text-anchor": "middle", label: k }, g);
+  if (i) EX.el("path", { id: "sqa-" + i, class: "flow ex-hidden", d: `M ${x - 16} 180 L ${x - 2} 180` }, "seq");
+});
+EX.el("text", { id: "sq-why", x: 40, y: 300, class: "small ex-hidden", style: "fill:var(--ok)", label: "s_why" }, "seq");
+
+// 3. random vibration PSD, log-log 20..2000 Hz, 0.005..0.2 g2/Hz
+const VX = 160, VW = 960, VY = 440, VH = 340;
+const vx = (f) => VX + (Math.log10(f) - Math.log10(20)) / 2 * VW, vy = (p) => VY - (Math.log10(p) - Math.log10(0.005)) / Math.log10(40) * VH;
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "p_cap" }, "vib");
+[20, 50, 100, 200, 500, 1000, 2000].forEach((f) => { EX.el("line", { x1: vx(f), y1: VY - VH, x2: vx(f), y2: VY, class: "grid" }, "vib"); EX.el("text", { x: vx(f), y: VY + 24, class: "small mono muted", "text-anchor": "middle", text: f }, "vib"); });
+[0.01, 0.02, 0.04, 0.08, 0.16].forEach((p) => { EX.el("line", { x1: VX, y1: vy(p), x2: VX + VW, y2: vy(p), class: "grid" }, "vib"); EX.el("text", { x: VX - 10, y: vy(p) + 5, class: "small mono muted", "text-anchor": "end", text: String(p).replace(".", EX.lang === "fr" ? "," : ".") }, "vib"); });
+EX.el("text", { x: VX + VW, y: VY + 50, class: "small muted", "text-anchor": "end", label: "p_x" }, "vib");
+const prof = (k) => `M ${vx(20)} ${vy(0.01 * k)} L ${vx(80)} ${vy(0.04 * k)} L ${vx(500)} ${vy(0.04 * k)} L ${vx(2000)} ${vy(0.01 * k)}`;
+EX.el("path", { id: "pv-a", class: "curve ex-hidden", d: prof(1) }, "vib");
+EX.el("path", { id: "pv-b", class: "curve2 ex-hidden", d: prof(2) }, "vib");
+EX.el("text", { id: "pv-at", x: vx(110), y: vy(0.04) + 28, class: "small ex-hidden", style: "fill:var(--accent)", label: "p_acc" }, "vib");
+EX.el("text", { id: "pv-bt", x: vx(110), y: vy(0.08) - 14, class: "small ex-hidden", style: "fill:var(--warn)", label: "p_pf" }, "vib");
+
+// 4. TVAC profile: 4 cycles
+const TX0 = 140, TW = 1040, TY = 260, TA = 140;
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "t_cap" }, "tv");
+EX.el("line", { x1: TX0, y1: TY - TA, x2: TX0 + TW, y2: TY - TA, stroke: "var(--bad)", "stroke-width": 2, "stroke-dasharray": "8 6" }, "tv");
+EX.el("line", { x1: TX0, y1: TY + TA, x2: TX0 + TW, y2: TY + TA, stroke: "var(--accent)", "stroke-width": 2, "stroke-dasharray": "8 6" }, "tv");
+EX.el("text", { x: TX0, y: TY - TA - 12, class: "small", style: "fill:var(--bad)", label: "t_hot" }, "tv");
+EX.el("text", { x: TX0, y: TY + TA + 26, class: "small", style: "fill:var(--accent)", label: "t_cold" }, "tv");
+let td = `M ${TX0} ${TY}`; const seg = TW / 19.2; let x = TX0;
+td += ` L ${x += seg} ${TY - TA}`;
+for (let c = 0; c < 4; c++) { td += ` L ${x += seg} ${TY - TA} L ${x += seg * 1.2} ${TY + TA} L ${x += seg} ${TY + TA} L ${x += seg * 1.2} ${TY - TA}`; }
+td += ` L ${x += seg * 0.6} ${TY - TA}`;
+EX.el("path", { id: "tv-p", class: "curve ex-hidden", d: td, style: "stroke:var(--warn)" }, "tv");
+EX.el("text", { id: "tv-fn", x: TX0, y: 470, class: "small ex-hidden", style: "fill:var(--ok)", label: "t_fn" }, "tv");
+
+// 5. verification matrix
+const MCOL = ["A", "T", "I", "R", "D"], MXC = 520;
+EX.el("text", { x: 40, y: 50, class: "small muted", label: "m_req" }, "vm");
+MCOL.forEach((m, j) => EX.el("text", { x: MXC + j * 70 + 20, y: 50, class: "big mono", "text-anchor": "middle", style: "fill:var(--accent)", text: m }, "vm"));
+EX.el("text", { x: 900, y: 50, class: "small muted", label: "m_st" }, "vm");
+const MR = [["q1", "I", "st1", "ok"], ["q2", "T", "st2", "ok"], ["q3", "AT", "st3", "warn"], ["q4", "A", "st4", "ok"], ["q5", "D", "st5", "on"]];
+MR.forEach(([k, ms, st, cls], i) => {
+  const y = 66 + i * 70, g = box("vm", "vr-" + i, 40, y, 1200, 56, cls);
+  EX.el("text", { x: 58, y: y + 36, label: k }, g);
+  MCOL.forEach((m, j) => { if (ms.includes(m)) EX.el("circle", { cx: MXC + j * 70 + 20, cy: y + 28, r: 11, fill: "var(--accent)" }, g); });
+  EX.el("text", { x: 900, y: y + 36, class: "small", label: st }, g);
+});
+EX.el("text", { id: "vm-w", x: 40, y: 470, class: "small ex-hidden", style: "fill:var(--warn)", label: "m_w" }, "vm");
+
+function only(...ids) { ["vv", "seq", "vib", "tv", "vm", "note"].forEach((g) => { if (ids.includes(g)) EX.show(g); else { EX.dim(g, false); EX.hide(g, 200); } }); }
+function note(a, b) { EX.text("note-a", a); EX.text("note-b", b); EX.show("note"); }
+const op = (id, v) => { const n = EX.$(id); n.style.transition = "opacity .6s"; n.setAttribute("opacity", v); };
+
+EX.scene("vv", (beat) => {
+  only("vv");
+  beat(0.04, () => EX.show("vv-v"));
+  beat(0.18, () => EX.show("vv-l"));
+  beat(0.4, () => EX.show("vv-ex"));
+  beat(0.55, () => op("vv-exl", 1));
+  beat(0.74, () => note("n1a", "n1b"));
+});
+EX.scene("sequence", (beat) => {
+  only("seq");
+  SQ.forEach((_, i) => beat(0.04 + i * 0.06, () => { EX.show("sq-" + i); if (i) EX.draw("sqa-" + i, 200); }));
+  beat(0.62, () => EX.show("sq-why"));
+  beat(0.74, () => note("n2a", "n2b"));
+});
+EX.scene("vibration", (beat) => {
+  only("vib");
+  beat(0.05, () => { EX.draw("pv-a", 1200); EX.show("pv-at"); });
+  beat(0.4, () => { EX.draw("pv-b", 1200); EX.show("pv-bt"); });
+  beat(0.72, () => note("n3a", "n3b"));
+});
+EX.scene("tvac", (beat) => {
+  only("tv");
+  beat(0.05, () => EX.draw("tv-p", 2500));
+  beat(0.5, () => EX.show("tv-fn"));
+  beat(0.72, () => note("n4a", "n4b"));
+});
+EX.scene("matrix", (beat) => {
+  only("vm");
+  MR.forEach((_, i) => beat(0.04 + i * 0.09, () => EX.show("vr-" + i)));
+  beat(0.55, () => EX.show("vm-w"));
+  beat(0.72, () => note("n5a", "n5b"));
+});
+</script>
+</body>
+</html>
