@@ -6,6 +6,7 @@
 id: V-OPS-07
 week: 5
 audience: all
+hold: "AOCS model: the sun hold and the NOMINAL pointing do not converge (docs/plan_2026-11/AOCS_COARSE_SUN_MTQ_ONLY.md)"
 title:
   en: "LEOP-005: sun acquisition, hands off"
   fr: "LEOP-005 : acquisition du Soleil, sans toucher"

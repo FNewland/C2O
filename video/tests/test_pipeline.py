@@ -188,3 +188,14 @@ def test_explainer_labels_in_both_languages():
         assert m, f
         keys = lambda block: set(re.findall(r"(\w+):\s*\"", block))
         assert keys(m.group(1)) == keys(m.group(2)), (f, keys(m.group(1)) ^ keys(m.group(2)))
+
+
+# ------------------------------------------------------------- build-all
+def test_fingerprint_changes_with_the_storyboard(tmp_path, monkeypatch):
+    from c2ovideo import fingerprint
+    sb = storyboard.load("V-CON-06")
+    a = fingerprint.compute(sb)
+    assert a == fingerprint.compute(sb)
+    assert "video/explainers/tc-life.html" in fingerprint.inputs(sb)
+    ops = storyboard.load("V-OPS-01")
+    assert any(p.startswith("sim/packages/smo-mcs") for p in fingerprint.inputs(ops))

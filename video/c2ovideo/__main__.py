@@ -4,6 +4,7 @@
     fetch-h5p                  download the H5P runtime libraries (once, ~4 MB)
     list                       storyboards, weeks, ties
     validate [ID ...]          schema, worksheet ties, UI strings resolvable in FR
+    build-all [ID ...]         rebuild only videos whose inputs changed (--dry-run, --force, --publish)
     narrate ID [--lang en,fr]  synthesise narration only (prints timings)
     build ID [--lang en,fr]    narrate → capture → assemble → H5P → review
          [--tts silence]       dry run without the voice model
@@ -157,11 +158,56 @@ def cmd_build(a) -> int:
         bad = {k: v for k, v in info["libraries"].items() if v not in ("MIT", "pd", None, "unspecified")}
         print(f"[{lang}] {info['package']}" + (f"  (non-MIT libraries: {bad})" if bad else ""))
     review.build(sb, all_clips, media)
+    if not a.lang:
+        from . import fingerprint
+        fingerprint.save(sb, fingerprint.compute(sb), list(_langs(None)))
     if a.publish:
         from . import publish
         print("published →", publish.publish(sb, media))
     print("done:", media)
     return 0
+
+
+def cmd_build_all(a) -> int:
+    """Rebuild every storyboard whose inputs changed since its last build here."""
+    import shutil
+    from . import fingerprint
+    langs = list(_langs(None))
+    want = set(a.ids or [])
+    todo, report = [], []
+    for sb in storyboard.all_storyboards():
+        if want and sb.id not in want:
+            continue
+        hold = sb.raw.get("hold")
+        if hold and sb.id not in want:
+            report.append((sb.id, "held", str(hold).splitlines()[0][:80]))
+            continue
+        need, why = (True, "forced") if a.force else fingerprint.status(sb, langs)
+        report.append((sb.id, "build" if need else "skip", why))
+        if need:
+            todo.append(sb)
+    for vid, what, why in report:
+        print(f"  {vid:12} {what:5}  {why}")
+    if a.dry_run or not todo:
+        print(f"{len(todo)} to build" + (" (dry run)" if a.dry_run else ""))
+        return 0
+    failed = []
+    for i, sb in enumerate(todo, 1):
+        print(f"\n=== [{i}/{len(todo)}] {sb.id}")
+        args = argparse.Namespace(id=sb.id, lang=None, tts=None, url=[], publish=a.publish, headful=False,
+                                  reuse_capture=False, force=False)
+        try:
+            rc = cmd_build(args)
+        except (SystemExit, Exception) as e:   # keep going: one bad take must not stop the night
+            print(f"FAILED {sb.id}: {e}")
+            rc = 1
+        if rc:
+            failed.append(sb.id)
+        if not a.keep_frames:                   # ~0.5–1 GB per language per video
+            for take in (OUT / sb.slug).glob("take-*/frames"):
+                shutil.rmtree(take, ignore_errors=True)
+    print(f"\nbuilt {len(todo) - len(failed)} of {len(todo)}" + (f"; failed: {', '.join(failed)}" if failed else ""))
+    return 1 if failed else 0
 
 
 def main(argv=None) -> int:
@@ -177,6 +223,12 @@ def main(argv=None) -> int:
     b.add_argument("--publish", action="store_true"); b.add_argument("--headful", action="store_true")
     b.add_argument("--reuse-capture", action="store_true", help="re-assemble from the last capture (narration unchanged)")
     b.add_argument("--force", action="store_true")
+    ba = sub.add_parser("build-all", help="rebuild every video whose inputs changed")
+    ba.add_argument("ids", nargs="*", help="only these (a held video named here is built)")
+    ba.add_argument("--dry-run", action="store_true", help="list what would be built, and why")
+    ba.add_argument("--force", action="store_true", help="rebuild even if up to date")
+    ba.add_argument("--publish", action="store_true")
+    ba.add_argument("--keep-frames", action="store_true", help="keep captured frames (needed for --reuse-capture)")
     p = sub.add_parser("publish"); p.add_argument("id"); p.add_argument("--dir")
     c = sub.add_parser("check"); c.add_argument("id"); c.add_argument("--lang"); c.add_argument("--model", default="small")
     sub.add_parser("reviews")
@@ -211,6 +263,8 @@ def main(argv=None) -> int:
                 cs = clips[st.id]
                 print(f"[{lang}] {st.id:14} {tts.total_seconds(cs):5.1f} s  {len(cs)} sentence(s)")
             print(f"[{lang}] total {sum(tts.total_seconds(c) for c in clips.values()):.1f} s")
+    elif a.cmd == "build-all":
+        return cmd_build_all(a)
     elif a.cmd == "build":
         return cmd_build(a)
     elif a.cmd == "publish":
