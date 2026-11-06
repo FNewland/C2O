@@ -42,6 +42,7 @@ LCL:   {en: "latching current limiter", fr: "limiteur de courant à verrouillage
 MPPT:  {en: "maximum power point tracking", fr: "suivi du point de puissance maximale", short: {en: M-P-P-T, fr: M-P-P-T}, kind: letters, expand: true}
 MTQ:   {en: "magnetorquer", fr: "magnéto-coupleur", short: {en: M-T-Q, fr: M-T-Q}, kind: letters, expand: true}
 CSS:   {en: "coarse sun sensor", fr: "capteur solaire grossier", short: {en: C-S-S, fr: C-S-S}, kind: letters, expand: true}
+ST:    {en: "star tracker", fr: "senseur stellaire", short: {en: S-T, fr: S-T}, kind: letters, expand: true, note: "ST1/ST2 = star tracker one/two"}
 RW:    {en: "reaction wheel", fr: "roue de réaction", short: {en: R-W, fr: R-W}, kind: letters, expand: true}
 OBCP:  {en: "on-board control procedure", fr: "procédure de contrôle de bord", short: {en: O-B-C-P, fr: O-B-C-P}, kind: letters, expand: true}
 
@@ -68,6 +69,11 @@ RF:    {en: "radio frequency", fr: "radiofréquence", short: {en: R-F, fr: R-F},
 EIRP:  {en: "equivalent isotropic radiated power", fr: "puissance isotrope rayonnée équivalente", short: {en: E-I-R-P, fr: P-I-R-E}, kind: letters, expand: true}
 BER:   {en: "bit error rate", fr: "taux d’erreur binaire", short: {en: B-E-R, fr: B-E-R}, kind: letters, expand: true}
 FEC:   {en: "forward error correction", fr: "correction d’erreurs directe", short: {en: F-E-C, fr: F-E-C}, kind: letters, expand: true}
+
+UHF:   {en: "ultra-high frequency", fr: "ultra-haute fréquence", short: {en: U-H-F, fr: U-H-F}, kind: letters, expand: true}
+CRC:   {en: "cyclic redundancy check", fr: "contrôle de redondance cyclique", short: {en: C-R-C, fr: C-R-C}, kind: letters, expand: true}
+S-band: {expand: false, note: "band name"}
+FD:    {en: "flight director", fr: "directeur de vol", short: {en: F-D, fr: F-D}, kind: letters, expand: true}
 
 # --- orbit and flight dynamics ----------------------------------------------
 LEO:   {en: "low Earth orbit", fr: "orbite basse", short: {en: L-E-O, fr: L-E-O}, kind: letters, expand: true}
