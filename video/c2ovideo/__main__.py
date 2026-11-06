@@ -110,10 +110,22 @@ def _need_running(sb, overrides: dict) -> None:
             continue
         try:
             urllib.request.urlopen(url, timeout=5)
+            continue
         except Exception:
-            stack_name = which.get(app, "sim")
-            raise SystemExit(f"{app} is not running at {url}.\n"
-                             f"Start it first:  python -m c2ovideo stack up {stack_name}")
+            pass
+        stack_name = which.get(app, "sim")
+        # SpaceCDF and the explainer server run on throw-away state: start them.
+        if stack_name in ("spacecdf", "viz") and not overrides.get(app):
+            from . import stack
+            print(f"{app} is not running at {url}: starting it (python -m c2ovideo stack up {stack_name})")
+            stack.run("up", stack_name)
+            try:
+                urllib.request.urlopen(url, timeout=10)
+                continue
+            except Exception:
+                pass
+        raise SystemExit(f"{app} is not running at {url}.\n"
+                         f"Start it first:  python -m c2ovideo stack up {stack_name}")
 
 
 def cmd_build(a) -> int:
