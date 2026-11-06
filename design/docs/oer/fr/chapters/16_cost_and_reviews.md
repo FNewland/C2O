@@ -349,7 +349,7 @@ Les revues de conception sont des jalons de décision formels au cours desquels 
 |---|-----------|----------|----------|
 | 1 | Toutes les exigences allouées aux sous-systèmes | Obligatoire | Matrice d'allocation des exigences (chapitre 6) |
 | 2 | Définition préliminaire achevée pour tous les sous-systèmes | Obligatoire | Documents de conception, schémas fonctionnels (chapitres 9 à 12) |
-| 3 | Tous les bilans bouclent avec une marge ≥ 20 % | Obligatoire | Bilans de masse, de puissance, de liaison, de données et de pointage (tableau 8.3 du chapitre 8 pour le barème des marges) |
+| 3 | Tous les bilans bouclent avec la marge système de la phase B (15 %) | Obligatoire | Bilans de masse, de puissance, de liaison, de données et de pointage (tableau 8.3 du chapitre 8 pour le barème des marges) |
 | 4 | Équipements sélectionnés (nomenclature) | Obligatoire | Nomenclature avec TRL, héritage, coût et délai d'approvisionnement (chapitre 13) |
 | 5 | Toutes les interfaces définies (matrice N²) | Obligatoire | Documents de contrôle d'interface (chapitre 8, §8.3) |
 | 6 | Matrice de vérification complète avec méthodes attribuées | Obligatoire | Matrice de vérification (chapitre 14, §14.4) |

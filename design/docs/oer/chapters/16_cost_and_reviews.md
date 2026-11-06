@@ -349,7 +349,7 @@ Design reviews are formal decision gates at which the project demonstrates readi
 |---|-----------|----------|----------|
 | 1 | All requirements allocated to subsystems | Must pass | Requirements allocation matrix (Chapter 6) |
 | 2 | Preliminary design complete for all subsystems | Must pass | Design documents, block diagrams (Chapters 9–12) |
-| 3 | All budgets close with ≥ 20 % margin | Must pass | Mass, power, link, data, pointing budgets (Chapter 8 Table 8.3 for the margin schedule) |
+| 3 | All budgets close with the Phase B system margin (15 %) | Must pass | Mass, power, link, data, pointing budgets (Chapter 8 Table 8.3 for the margin schedule) |
 | 4 | Equipment selected (BOM) | Must pass | BOM with TRL, heritage, cost, lead time (Chapter 13) |
 | 5 | All interfaces defined (N² matrix) | Must pass | Interface control documents (Chapter 8 §8.3) |
 | 6 | Verification matrix complete with methods assigned | Must pass | Verification matrix (Chapter 14 §14.4) |

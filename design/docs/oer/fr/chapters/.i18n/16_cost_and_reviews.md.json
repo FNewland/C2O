@@ -119,8 +119,8 @@
   },
   {
    "id": "chapter-16-cost-estimation-and-design-reviews/16-5-design-reviews-gate-criteria-and-presentation/16-5-2-gate-criteria-for-pdr-phase-b-c",
-   "en_hash": "0c93f19a28e2cd5a",
-   "fr_hash": "503e621966b22ad0"
+   "en_hash": "dd507a930ababbed",
+   "fr_hash": "d54fe03f8b179b50"
   },
   {
    "id": "chapter-16-cost-estimation-and-design-reviews/16-5-design-reviews-gate-criteria-and-presentation/16-5-3-presenting-at-a-review",
@@ -163,5 +163,5 @@
    "fr_hash": "0768a2cc84325b68"
   }
  ],
- "en_commit": "c4a140a"
+ "en_commit": "adc96cb"
 }
