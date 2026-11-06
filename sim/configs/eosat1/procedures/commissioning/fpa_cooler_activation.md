@@ -30,7 +30,7 @@ imaging operations can begin.
 ## Prerequisites
 - [ ] COM-009 (Payload Power-On) completed — payload in STANDBY (mode 1)
 - [ ] `payload.imager_status` (0x0611) shows no fault bits (COM-009 Step 5)
-- [ ] `payload.fpa_temp` (0x0601) at the uncooled equilibrium (+8C to +14C)
+- [ ] `payload.fpa_temp` (0x0601) at the uncooled equilibrium (about -5C to +7C)
 - [ ] `eps.bat_soc` (0x0101) > 70% (cooler adds 15 W continuous load)
 - [ ] `eps.power_gen` (0x0107) > 40W (sunlit phase, wings deployed)
 - [ ] AOCS holding attitude in the NOMINAL family: `aocs.mode` (0x020F) = 4
@@ -52,7 +52,7 @@ imaging operations can begin.
 **GO/NO-GO:** FPA at ambient temperature, payload in STANDBY
 
 ### Step 2 — Enable FPA Cooler
-**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — FPA cooler enable
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — FPA cooler enable, sent by EPS/TCS (func 43 is in that position's command set; payload ops watches the FPA)
 **Wire:** `2B 01`
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`
 **TC:** `GET_PARAM(param_id=0x0114)` (Service 20, Subtype 3) — `eps.pl_fpa_cooler`
@@ -191,4 +191,4 @@ and above 1.0C indicates a degraded loop.
 - `payload.fpa_ready` (0x0610) = 1 --- FPA at setpoint
 - No other state touched
 
-**NEXT:** COM-011 (Payload Calibration)
+**NEXT:** COM-012 (First Light --- the cooled FPA is what first light needs; COM-011 calibration follows it)

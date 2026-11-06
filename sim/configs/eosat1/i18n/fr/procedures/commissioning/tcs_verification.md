@@ -42,7 +42,7 @@ propulsion (le cas échéant). Établir les profils thermiques de référence su
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
 **Verify:** `tcs.temp_obc` (0x0406) dans la plage [-10C, +50C] sous 10s
 **Verify:** `tcs.temp_battery` (0x0407) dans la plage [+5C, +35C] sous 10s
-**Verify:** `tcs.temp_fpa` (0x0408) rapportée (charge utile hors tension, non refroidie : +8C à +14C attendus) sous 10s
+**Verify:** `tcs.temp_fpa` (0x0408) rapportée (charge utile hors tension, non refroidie : environ -5C à +7C attendus, en hausse au soleil et en baisse en éclipse) sous 10s
 **GO/NO-GO:** Toutes les zones thermiques dans les limites opérationnelles
 
 ### Étape 2 — Surveiller le profil thermique pendant la phase éclairée
@@ -90,10 +90,11 @@ piège dans lequel l'ancienne fiche était tombée.
 **GO/NO-GO:** Circuit du réchauffeur OBC opérationnel, ligne sur ON sous contrôle thermostatique
 
 ### Étape 6 — Vérifier les réglages des thermostats autonomes des réchauffeurs
-**TC:** `GET_PARAM(param_id=0x0410)` (Service 20, Subtype 3) — seuil de mise sur ON du réchauffeur batterie
-**TC:** `GET_PARAM(param_id=0x0411)` (Service 20, Subtype 3) — seuil de mise sur OFF du réchauffeur batterie
-**Verify:** Seuil ON du réchauffeur batterie = +5C sous 10s
-**Verify:** Seuil OFF du réchauffeur batterie = +10C sous 10s
+**TC:** `GET_PARAM(param_id=0x0330)` (Service 20, Subtype 3) — `tcs.setpoint_bat`, seuil de mise sur ON du réchauffeur batterie
+**TC:** `GET_PARAM(param_id=0x0331)` (Service 20, Subtype 3) — `tcs.setpoint_obc`, seuil de mise sur ON du réchauffeur OBC
+**Verify:** `tcs.setpoint_bat` (0x0330) = +5C sous 10s (le circuit repasse sur OFF à +10C : hystérésis fixe de 5 K, non télémesurée)
+**Verify:** `tcs.setpoint_obc` (0x0331) = -10C sous 10s (OFF à -5C)
+**Note:** Révision 2.2 (2026-11-06) : cette étape lisait 0x0410 et 0x0411, qui sont `tcs.htr_duty_thruster` et `tcs.htr_total_power`, et non des seuils.
 **Action:** Confirmer que le thermostat autonome maintiendra la batterie dans la plage [+5C, +35C] sans intervention du sol.
 **GO/NO-GO:** Seuils autonomes des réchauffeurs correctement configurés
 
@@ -103,7 +104,7 @@ piège dans lequel l'ancienne fiche était tombée.
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (refroidisseur sur OFF) sous 10s
 **TC:** `GET_PARAM(param_id=0x0114)` (Service 20, Subtype 3) — `eps.pl_fpa_cooler`, l'alimentation EPS du refroidisseur
 **Verify:** `eps.pl_fpa_cooler` (0x0114) = 0 (ligne non alimentée) sous 10s
-**Verify:** `tcs.temp_fpa` (0x0408) cohérente avec l'équilibre non refroidi (+8C à +14C) sous 10s
+**Verify:** `tcs.temp_fpa` (0x0408) cohérente avec la plage non refroidie (environ -5C à +7C, étape 1) sous 10s
 **Action:** Consigner la température de référence du FPA pour comparaison lors de l'activation du refroidisseur (COM-010).
 **GO/NO-GO:** Interface thermique du FPA saine, température de référence consignée
 

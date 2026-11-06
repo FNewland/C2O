@@ -130,7 +130,7 @@ de la branche correspond à ce que la prose appelait « attendre 30 s et cont
 **TC:** `TTC_PA_OFF` (Service 8, Subtype 1, func_id 67) — Désactiver l'amplificateur de puissance
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — Télémesure de servitude TT&C
 **Verify:** `ttc.pa_on` (0x0516) = 0 en 5 s
-**Verify:** `eps.power_cons` (0x0106) diminue d'environ 20 W
+**Verify:** `eps.power_cons` (0x0106) diminue d’environ 5 W en LOW, 11 W en HIGH (la consommation de l’émetteur, subsystems/eps.yaml)
 **Note:** AVERTISSEMENT — Cette action supprime la capacité de liaison descendante. La liaison montante (RX) reste active.
 Le satellite peut encore recevoir des commandes mais ne peut plus émettre de télémesure.
 

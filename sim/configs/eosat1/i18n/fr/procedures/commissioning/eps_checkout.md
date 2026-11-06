@@ -47,7 +47,7 @@ pour l'exploitation de la mission.
 **Action:** Effectuer cette étape pendant la phase éclairée de l'orbite, avec un pointage solaire stable.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27)
 **Verify:** `eps.power_gen` (0x0107) dans la plage [40W, 90W] sous 10s (88.6 W est le pic de l'ensemble du satellite dans `subsystems/eps.yaml` ; ~80 W est normal en pointage solaire)
-**Action:** Consigner la production électrique. Valeur crête attendue ~64 W à l'angle solaire optimal avec les panneaux déployés (0,78 m², cellules GaAs à 29,5 %). La valeur réelle dépend de l'angle bêta actuel, de l'état de déploiement des panneaux et de la précision d'attitude.
+**Action:** Consigner la production électrique. Valeur crête attendue jusqu’à ~89 W (début de vie) au meilleur angle solaire avec les deux ailes déployées : 0,24 m² de cellules sur les ailes plus les panneaux du corps, GaAs à 29,5 % (subsystems/eps.yaml). Environ 74 W en fin de vie. La valeur réelle dépend de l'angle bêta actuel, de l'état de déploiement des panneaux et de la précision d'attitude.
 **GO/NO-GO:** Production électrique du générateur solaire dans la plage attendue
 
 ### Étape 4 — Surveillance de la décharge en éclipse

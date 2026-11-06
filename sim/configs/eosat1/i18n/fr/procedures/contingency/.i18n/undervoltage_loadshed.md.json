@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-4-shed-load-priority-3-tx-transmitter-off",
-   "en_hash": "58aca8d408acd8fd",
-   "fr_hash": "d29899d91e4a3f7b"
+   "en_hash": "b990412907ab9806",
+   "fr_hash": "7ef63fabac958cff"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-5-shed-load-priority-4-reaction-wheels-off",
@@ -93,5 +93,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "08e21e1"
+ "en_commit": "b010e1a"
 }

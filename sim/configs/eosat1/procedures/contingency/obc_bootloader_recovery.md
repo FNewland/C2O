@@ -128,7 +128,7 @@ This takes approximately 10-30 seconds.
 bootloader latched `ttc.beacon_mode` (0x0521) = 1, and it stays latched after the
 application is running. While it is latched, the SAFE rung (1 000 bps, ex-BEACON) is the ONLY permitted
 tier: every `TTC_SET_DATA_RATE` is refused with an S1.8 execution failure, error
-`0x0007`, whose failure notice reads "TM rate is forced to the beacon tier in beacon
+`0x0007`, whose failure notice reads "TM rate is forced to the SAFE tier in beacon
 mode (LOW refused)". The same text is raised as S5 event `0x030B COMMAND_REJECTED`.
 **TC:** `TTC_SET_BEACON_MODE(on=0)` (Service 8, Subtype 1, func_id 70) — Clear beacon mode
 **Verify:** S1.1 acceptance + S1.7 execution complete within 5 s

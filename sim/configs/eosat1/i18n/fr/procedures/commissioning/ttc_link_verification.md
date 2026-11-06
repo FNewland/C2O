@@ -79,7 +79,7 @@ révèle une erreur de modélisation, et non un problème de liaison.
 n'établissait jamais : la ligne d'alimentation EPS `ttc_tx`, le PA, une antenne DÉPLOYÉE
 (`requires_antenna` vaut true pour HIGH ; LOW boucle sur le patch replié), et la désactivation de `beacon_mode`
 — tant que le mode balise est verrouillé, les DEUX paliers opérationnels sont refusés avec
-l'erreur S1.8 `0x0007`, « TM rate is forced to the beacon tier in beacon mode ».
+l'erreur S1.8 `0x0007`, « TM rate is forced to the SAFE tier in beacon mode ».
 Le mode balise survit à l'amorçage de l'application ; un satellite peut donc arriver à cette
 fiche encore verrouillé.
 **TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — la ligne `ttc_tx`

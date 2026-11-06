@@ -54,8 +54,8 @@
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-3a-clear-beacon-mode-and-restore-the-low-rung",
-   "en_hash": "e157dda51cc719e3",
-   "fr_hash": "ef0c1397016de774"
+   "en_hash": "75b5571f8c1eb76e",
+   "fr_hash": "5dc6eb7c85650f2c"
   },
   {
    "id": "ctg-021-obc-bootloader-recovery/procedure-steps/step-4-inhibit-auto-boot-and-check-memory-integrity",
@@ -88,5 +88,5 @@
    "fr_hash": "c1ecf00778e8d91c"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "b010e1a"
 }

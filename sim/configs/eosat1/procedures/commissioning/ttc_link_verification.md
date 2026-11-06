@@ -79,12 +79,12 @@ indicates a modelling error, not a link problem.
 never established: the `ttc_tx` EPS power line, the PA, a DEPLOYED antenna
 (`requires_antenna` is true for HIGH; LOW closes on the stowed patch), and `beacon_mode` being
 clear — while beacon mode is latched, BOTH operational tiers are refused with
-S1.8 error `0x0007`, "TM rate is forced to the beacon tier in beacon mode".
+S1.8 error `0x0007`, "TM rate is forced to the SAFE tier in beacon mode".
 Beacon mode survives an application boot, so a spacecraft can arrive at this
 card still latched.
 **TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — the `ttc_tx` line
 **TC:** `TTC_PA_ON` (Service 8, Subtype 1, func_id 66) — S-band power amplifier
-**TC:** `TTC_SET_BEACON_MODE(on=0)` (Service 8, Subtype 1, func_id 70) — release the forced beacon tier
+**TC:** `TTC_SET_BEACON_MODE(on=0)` (Service 8, Subtype 1, func_id 70) — release the forced SAFE tier
 **TC:** `TTC_DEPLOY_ANTENNA` (Service 8, Subtype 1, func_id 69) — S-band antenna deployment
 **TC:** `HK_REQUEST(sid=6)` (Service 3, Subtype 27) — TT&C housekeeping
 **Verify:** `eps.pl_ttc_tx == 1` (0x0112, timeout 10 s) — transmitter line energised

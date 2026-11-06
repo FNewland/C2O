@@ -43,7 +43,7 @@ propulsion (if applicable). Establish baseline thermal profiles over a full orbi
 **TC:** `HK_REQUEST(sid=3)` (Service 3, Subtype 27)
 **Verify:** `tcs.temp_obc` (0x0406) in range [-10C, +50C] within 10s
 **Verify:** `tcs.temp_battery` (0x0407) in range [+5C, +35C] within 10s
-**Verify:** `tcs.temp_fpa` (0x0408) reported (payload off, uncooled: expect +8C to +14C) within 10s
+**Verify:** `tcs.temp_fpa` (0x0408) reported (payload off, uncooled: expect about -5C to +7C, rising in sunlight and falling in eclipse) within 10s
 **GO/NO-GO:** All thermal zones within operational limits
 
 ### Step 2 — Monitor Thermal Profile Through Sunlit Phase
@@ -91,10 +91,11 @@ trap the old card fell into.
 **GO/NO-GO:** OBC heater circuit operational, line ON under thermostat control
 
 ### Step 6 — Verify Autonomous Heater Thermostat Settings
-**TC:** `GET_PARAM(param_id=0x0410)` (Service 20, Subtype 3) — battery heater ON threshold
-**TC:** `GET_PARAM(param_id=0x0411)` (Service 20, Subtype 3) — battery heater OFF threshold
-**Verify:** Battery heater ON threshold = +5C within 10s
-**Verify:** Battery heater OFF threshold = +10C within 10s
+**TC:** `GET_PARAM(param_id=0x0330)` (Service 20, Subtype 3) — `tcs.setpoint_bat`, the battery heater ON threshold
+**TC:** `GET_PARAM(param_id=0x0331)` (Service 20, Subtype 3) — `tcs.setpoint_obc`, the OBC heater ON threshold
+**Verify:** `tcs.setpoint_bat` (0x0330) = +5C within 10s (the circuit switches OFF again at +10C: a fixed 5 K hysteresis, not telemetered)
+**Verify:** `tcs.setpoint_obc` (0x0331) = -10C within 10s (OFF at -5C)
+**Note:** Revision 2.2 (2026-11-06): this step used to read 0x0410 and 0x0411, which are `tcs.htr_duty_thruster` and `tcs.htr_total_power`, not thresholds.
 **Action:** Confirm autonomous thermostat will maintain battery within [+5C, +35C] range without ground intervention.
 **GO/NO-GO:** Autonomous heater thresholds correctly configured
 
@@ -104,7 +105,7 @@ trap the old card fell into.
 **Verify:** `tcs.cooler_fpa` (0x040C) = 0 (cooler OFF) within 10s
 **TC:** `GET_PARAM(param_id=0x0114)` (Service 20, Subtype 3) — `eps.pl_fpa_cooler`, the EPS supply to the cooler
 **Verify:** `eps.pl_fpa_cooler` (0x0114) = 0 (line unpowered) within 10s
-**Verify:** `tcs.temp_fpa` (0x0408) consistent with the uncooled equilibrium (+8C to +14C) within 10s
+**Verify:** `tcs.temp_fpa` (0x0408) consistent with the uncooled range (about -5C to +7C, Step 1) within 10s
 **Action:** Record baseline FPA temperature for comparison during cooler activation (COM-010).
 **GO/NO-GO:** FPA thermal interface healthy, baseline temperature recorded
 

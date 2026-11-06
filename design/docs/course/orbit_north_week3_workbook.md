@@ -286,7 +286,7 @@ other plays the named subsystem. Record what was said.
 | 4 | TT&C | Establish the link: `TTC_SWITCH_PRIMARY` (S8.1) | `ttc.link_status` (0x0501) = **2** (LOCKED) within 15 s; TT&C page (ground): `ttc.rssi` (0x0502) > −126 dBm, `ttc.link_margin` (0x0503) > 3.0 dB. No link in 15 s: `TTC_SWITCH_REDUNDANT` and verify again; both fail → TT&C anomaly | ☐ | |
 | 5 | SPACON | Full housekeeping collection: `HK_REQUEST` (S3.27) of SIDs 1 EPS, 2 AOCS, 3 TCS, 4 OBDH, 5 Payload, 6 TT&C | all six packets within 30 s; no out-of-limit parameter flagged by the MCS limit checker | ☐ | |
 | 6 | Payload | Payload preparation, only if imaging or a downlink is planned: `PAYLOAD_SET_MODE(mode=1)` STANDBY (S8.1 func 26) | `payload.mode` (0x0600) = 1 within 20 s; `tcs.cooler_fpa` (0x040C) = 0 (STANDBY does not run the cooler; it is switched on as the imaging preparation, NOM-002 step 2); `payload.store_used` (0x0604) < 90 % | ☐ | not planned ☐ |
-| 7 | FD | Pass readiness declaration: poll each position GO / NO-GO | EPS: SoC > 50 %, bus > 30.9 V, margin positive · AOCS: NOMINAL, error < 1°, rates < 0.05°/s · TT&C: link up, RSSI > −100 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal procedure first | ☐ | |
+| 7 | FD | Pass readiness declaration: poll each position GO / NO-GO | EPS: SoC > 50 %, bus > 30.9 V, margin positive · AOCS: NOMINAL, error < 1°, roll and yaw rates < 0.05°/s, pitch at the orbit rate · TT&C: link up, RSSI > −126 dBm, margin > 3 dB · TCS: every zone inside the limits on the TCS page · OBDH: NOMINAL, CPU < 80 % · Payload: STANDBY if needed, store < 90 %. Any NO-GO: its off-nominal procedure first | ☐ | |
 
 On-demand reads are `HK_REQUEST` (S3.27); periodic reporting is switched on with
 `HK_ENABLE` (S3.5). Only SIDs 1 (EPS) and 11 (beacon) are enabled at boot; the
@@ -830,7 +830,7 @@ Print 9 copies (one per console position).
 | Pass-set timeline understood (4 sim passes in 2.5 h real time) | ☐ |
 | All 13 commissioning procedures (COM-001…COM-013) loaded in the procedure index | ☐ |
 | EPS confirms SoC ~90 %, `eps.pl_payload` (0x0113) = 0 | ☐ |
-| Thermal confirms FPA at its uncooled equilibrium, `payload.fpa_temp` (0x0601) +8 to +14 °C | ☐ |
+| Thermal confirms FPA at its uncooled equilibrium, `payload.fpa_temp` (0x0601) about −5 to +7 °C | ☐ |
 | Payload Ops has reviewed COM-009/-010/-011/-012 in detail | ☐ |
 | First Light target candidate selected (FDS) | ☐ |
 | Compressed-time speed multiplier set (instructor) | ☐ |
@@ -862,13 +862,13 @@ duty-cycled in), on the **100 Wh** pack.
 
 | # | Action | Expected | ☐ | Note |
 |---|--------|----------|:-:|------|
-| 1 | Thermal HK — `HK_REQUEST(sid=3)` (S3.27; SID 3 = TCS, 60 s cadence) | `tcs.temp_obc` (0x0406) inside the OBC limits on the TCS page; `tcs.temp_battery` (0x0407) ∈ [+5, +35] °C; `tcs.temp_fpa` (0x0408) reported — payload off and uncooled, +8 to +14 °C | ☐ | obc:__ bat:__ fpa:__ |
+| 1 | Thermal HK — `HK_REQUEST(sid=3)` (S3.27; SID 3 = TCS, 60 s cadence) | `tcs.temp_obc` (0x0406) inside the OBC limits on the TCS page; `tcs.temp_battery` (0x0407) ∈ [+5, +35] °C; `tcs.temp_fpa` (0x0408) reported — payload off and uncooled, about −5 to +7 °C | ☐ | obc:__ bat:__ fpa:__ |
 | 2 | Sunlit profile — `HK_REQUEST(sid=3)` every 120 s for 30 min | `tcs.temp_obc` stable or rising slower than 1 °C/min; `tcs.temp_battery` stable | ☐ | |
 | 3 | Eclipse profile — `HK_REQUEST(sid=3)` at entry, mid-eclipse and exit | `tcs.temp_obc` above the OBC lower limit on the TCS page throughout; `tcs.temp_battery` > +5 °C throughout; drop rates recorded (OBC about 0.5 °C/min, battery buffered) | ☐ | |
 | 4 | Battery heater circuit, line first: record `eps.pl_htr_bat` (0x0115); `EPS_POWER_ON(line_index=5)` (S8.1 func 19); `HEATER_BATTERY(on=1)`, then `HEATER_BATTERY(on=0)` (func **40**); `HEATER_AUTO_MODE(circuit=0)` (func **45**) | `eps.pl_htr_bat` = 1 within 5 s; ON and OFF acknowledged; `tcs.temp_battery` (0x0407) rising or stable over 3 min; the line **stays ON** under thermostat control (ON below +5 °C, OFF above +10 °C) | ☐ | entry: ____ |
 | 5 | OBC heater circuit, line first: record `eps.pl_htr_obc` (0x0116); `EPS_POWER_ON(line_index=6)`; `HEATER_OBC(on=1)`, then `HEATER_OBC(on=0)` (func **41** — not 42, the thruster catbed heater); `HEATER_AUTO_MODE(circuit=1)` | `eps.pl_htr_obc` = 1 within 5 s; ON and OFF acknowledged; `tcs.temp_obc` (0x0406) stable or rising over 2 min; the line **stays ON** under its thermostat | ☐ | entry: ____ |
-| 6 | Read the battery thermostat thresholds — `GET_PARAM(param_id=0x0410)`, `GET_PARAM(param_id=0x0411)` (S20.3) | ON at +5 °C, OFF at +10 °C; the card reads them, it does not change them | ☐ | |
-| 7 | FPA cooler interface before activation — `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` | `tcs.cooler_fpa` (0x040C) = 0; `eps.pl_fpa_cooler` (0x0114) = 0; `tcs.temp_fpa` (0x0408) at the uncooled equilibrium, +8 to +14 °C — recorded for COM-010 | ☐ | T_fpa: ____ °C |
+| 6 | Read the heater thermostat thresholds — `GET_PARAM(param_id=0x0330)`, `GET_PARAM(param_id=0x0331)` (S20.3) | battery ON at +5 °C (OFF at +10 °C), OBC ON at −10 °C (OFF at −5 °C); the card reads them, it does not change them | ☐ | |
+| 7 | FPA cooler interface before activation — `GET_PARAM(param_id=0x040C)`, `GET_PARAM(param_id=0x0114)` | `tcs.cooler_fpa` (0x040C) = 0; `eps.pl_fpa_cooler` (0x0114) = 0; `tcs.temp_fpa` (0x0408) at the uncooled equilibrium, about −5 to +7 °C — recorded for COM-010 | ☐ | T_fpa: ____ °C |
 | 8 | Compile the thermal baseline report: minimum, maximum and mean of each zone over one orbit, against the thermal model | within the model prediction ± 5 °C | ☐ | |
 
 Both heater lines are left **ON** at the end of this card: thermostat control
@@ -1049,7 +1049,7 @@ record `payload.fpa_temp` (0x0601) every minute for the first
 
 | Elapsed | T_fpa (°C) | `payload.cooler_pwr` 0x0602 (W) | Eclipse? | Note |
 |---------|-----------|------------------|:--------:|------|
-| 0:00 | | | ☐ | start, +8 to +14 °C |
+| 0:00 | | | ☐ | start, about −5 to +7 °C |
 | 0:01 | | | ☐ | |
 | 0:02 | | | ☐ | expect < +4 °C |
 | 0:03 | | | ☐ | |

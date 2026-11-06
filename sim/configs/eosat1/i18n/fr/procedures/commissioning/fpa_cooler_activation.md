@@ -30,7 +30,7 @@ opérations de prise de vue puissent commencer.
 ## Prérequis
 - [ ] COM-009 (Mise sous tension de la charge utile) terminée — charge utile en STANDBY (mode 1)
 - [ ] `payload.imager_status` (0x0611) sans bit de panne (COM-009, étape 5)
-- [ ] `payload.fpa_temp` (0x0601) à l'équilibre non refroidi (+8C à +14C)
+- [ ] `payload.fpa_temp` (0x0601) à l'équilibre non refroidi (environ -5C à +7C)
 - [ ] `eps.bat_soc` (0x0101) > 70 % (le refroidisseur ajoute une charge continue de 15 W)
 - [ ] `eps.power_gen` (0x0107) > 40W (phase éclairée, panneaux déployés)
 - [ ] AOCS maintenant l'attitude dans la famille NOMINAL : `aocs.mode` (0x020F) = 4
@@ -52,7 +52,7 @@ opérations de prise de vue puissent commencer.
 **GO/NO-GO:** FPA à température ambiante, charge utile en STANDBY
 
 ### Étape 2 — Activer le refroidisseur du FPA
-**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — activation du refroidisseur du FPA
+**TC:** `FPA_COOLER(on=1)` (Service 8, Subtype 1, func_id 43) — activation du refroidisseur du FPA, envoyée par l’EPS/TCS (la fonction 43 fait partie des commandes de ce poste ; la charge utile surveille le FPA)
 **Octets émis :** `2B 01`
 **TC:** `GET_PARAM(param_id=0x040C)` (Service 20, Subtype 3) — `tcs.cooler_fpa`
 **TC:** `GET_PARAM(param_id=0x0114)` (Service 20, Subtype 3) — `eps.pl_fpa_cooler`
@@ -191,4 +191,4 @@ et au-delà de 1,0 °C elle indique une boucle dégradée.
 - `payload.fpa_ready` (0x0610) = 1 --- FPA à la consigne
 - Aucun autre état touché
 
-**PROCÉDURE SUIVANTE :** COM-011 (Étalonnage de la charge utile)
+**PROCÉDURE SUIVANTE :** COM-012 (Première lumière --- le FPA refroidi est ce dont la première lumière a besoin ; l’étalonnage COM-011 suit)

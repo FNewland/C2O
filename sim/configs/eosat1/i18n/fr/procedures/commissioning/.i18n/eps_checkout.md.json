@@ -39,8 +39,8 @@
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-3-solar-array-sunlit-performance",
-   "en_hash": "832f3c842b2c4610",
-   "fr_hash": "cb20fa1b5c9ab6f2"
+   "en_hash": "3a8c11a4b5fdfd50",
+   "fr_hash": "8b2f32baec2bc639"
   },
   {
    "id": "com-001-eps-power-system-checkout/procedure-steps/step-4-eclipse-discharge-monitoring",
@@ -78,5 +78,5 @@
    "fr_hash": "17e43cc1a8dd3741"
   }
  ],
- "en_commit": "08e21e1"
+ "en_commit": "b010e1a"
 }
