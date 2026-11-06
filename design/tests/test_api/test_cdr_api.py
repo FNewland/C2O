@@ -166,7 +166,7 @@ async def test_eosat1_reference_import_round_trips(client, study_obj, study):
     r = await client.post(f"/api/studies/{study}/cdr/import/eosat1", json={})
     assert r.status_code == 200, r.text
     counts = r.json()["counts"]
-    assert counts["parameters"] == 457 and counts["hk"] == 11 and counts["commands"] == 220 and counts["events"] == 155
+    assert counts["parameters"] == 458 and counts["hk"] == 11 and counts["commands"] == 220 and counts["events"] == 155
     assert counts["monitors"] == 41 and counts["event_actions"] == 30 + 17 and counts["rate_tiers"] == 3
     v = await _view(client, study)
     assert v["dataset"] == "reference"
