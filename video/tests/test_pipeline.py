@@ -56,7 +56,7 @@ def test_lexicon_reads_identifiers_aloud_and_keeps_captions():
     en = lexicon.spoken("Send HK_REQUEST with SID 1 during LEOP-001; the bus reads 28.8 V.", "en")
     assert "H K request" in en and "S I D" in en and "lee-op zero zero one" in en and "28.8 volts" in en
     fr = lexicon.spoken("Le bus lit 28.8 V à NOM-001 ; voir LW-1.4.", "fr")
-    assert "28 virgule 8 volts" in fr and "N O M zéro zéro un" in fr and "fiche 1 point 4" in fr
+    assert "28 virgule 8 volts" in fr and "nom zéro zéro un" in fr and "fiche 1 point 4" in fr
     # never a lone É (read "É accent aigu"), never "E." (the French voice drops it)
     assert lexicon.spoken("EOSAT-1 et l’EPS", "fr") == "Euh-o-satte un et l’E P S"
     assert lexicon.unknown_tokens("Check the XYZ unit", "en") == ["XYZ"]
@@ -138,3 +138,26 @@ def test_h5p_content_for_a_storyboard():
     assert c["l10n"]["mute"] == "Couper le son"
     libs = h5p.closure([h5p.MAIN] + [h5p.LIBS[s.question["type"]][:3] for s in sb.steps if s.question])
     assert not any(l.startswith("H5PEditor.") for l in libs)
+
+
+# ------------------------------------------------------------- acronyms
+def test_acronym_register_has_both_languages():
+    from c2ovideo import acronyms
+    for key, info in acronyms.register().items():
+        if isinstance(info, dict) and info.get("expand"):
+            assert info.get("en") and info.get("fr"), key
+
+
+def test_acronym_lint_wants_the_full_form_once():
+    from types import SimpleNamespace as NS
+    from c2ovideo import acronyms
+
+    def sb(en, fr):
+        return NS(steps=[NS(id="s1", say={"en": en, "fr": fr})])
+
+    bad = acronyms.lint(sb("Open NOM-001 and power the AOCS.", "Ouvrez NOM-001 et alimentez le SCAO."))
+    assert any("'NOM'" in w for w in bad) and any("'AOCS'" in w for w in bad) and any("'SCAO'" in w for w in bad)
+    good = acronyms.lint(sb(
+        "Open nominal procedure one, NOM-001. Power the attitude and orbit control system, the AOCS. Then the AOCS again.",
+        "Ouvrez la procédure nominale un, NOM-001. Alimentez le système de contrôle d’attitude et d’orbite, le SCAO."))
+    assert good == []

@@ -83,6 +83,35 @@ re-assembles without re-recording. `--lang fr` renders one language only.
 On GCP: `deploy/gcp/c2o update` once (so the server has the `/videos` pages), then
 `deploy/gcp/c2o videos push` copies the published folder to the ground VM.
 
+## Acronyms, jargon, explanations, audience
+
+Every script follows these rules (from the 2026-11-06 script review,
+`docs/plan_2026-11/script_review/`):
+
+1. **First use, full form.** The first time a video *says* an acronym, it says
+   the full form, then the short form the team uses: "nominal procedure one,
+   NOM-001", "the attitude and orbit control system, the AOCS" / « le système
+   de contrôle d’attitude et d’orbite, le SCAO ». After that, the short form:
+   operators work in acronyms, and learners should get used to hearing them.
+   Each video stands alone, so this is per video and per language.
+2. The register is `lexicon/acronyms.yaml`: expansion in EN and FR, how the
+   team says the short form, and `expand: false` for names, mode names and
+   on-screen values (GO, SAFE, DETUMBLE, GPS…). Add new acronyms there first.
+   How the voice *pronounces* them stays in `lexicon/en.yaml` / `fr.yaml`.
+3. `python -m c2ovideo validate` warns (`! acronym:`) when a first use has no
+   expansion nearby. It never blocks a build.
+4. Opaque jargon that is not an acronym (B-dot, light time, orbit-average
+   margin) gets a short plain gloss at first use too.
+5. Each storyboard has an `audience:` — `all` when the whole team needs it to
+   follow the pass or the poll, or a list of console positions
+   (`flight_director`, `eps_tcs`, `aocs`, `ttc`, `payload_ops`,
+   `fdir_systems`, `propulsion`) when only those seats command or judge it.
+   No videos for instructors.
+6. When a step needs more depth than the card gives, do not lengthen the
+   walkthrough: point to (or make) a short concept explainer built from the
+   textbook (`design/docs/oer/chapters/`), animated by replaying a
+   `shared/ui-viz` module or with Manim / Motion Canvas.
+
 ## French review
 
 1. `python -m c2ovideo check <id>` runs speech recognition on every sentence and

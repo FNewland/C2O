@@ -37,7 +37,11 @@ rules:
   - ['\b(eps|aocs|ttc|obdh|tcs|fdir|obc)\.(?=[a-z])', '{spell:\1} ']
   - ['\b(payload|prop|sim|mcs)\.(?=[a-z])', '\1 ']
   - ['\b(LEOP)-(\d{3})\b', 'Léop {digits:\2}']
-  - ['\b(NOM|COM|CTG|EMG)-(\d{3})\b', '{spell:\1} {digits:\2}']
+  # préfixes de fiches, dits comme l'équipe les dit : « nom zéro zéro un »
+  - ['\bNOM-(\d{3})\b', 'nom {digits:\1}']
+  - ['\bCOM-(\d{3})\b', 'com {digits:\1}']
+  - ['\bCTG-(\d{3})\b', 'contingence {digits:\1}']
+  - ['\bEMG-(\d{3})\b', 'urgence {digits:\1}']
   - ['\bLW-(\d)\.(\d)\b', 'fiche \1 point \2']
   - ['\bS(\d{1,2})\b', 'S \1']
   - ['\b0x([0-9A-F]{4})\b', 'hexa {spell:\1}']
