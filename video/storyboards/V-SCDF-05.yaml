@@ -47,7 +47,7 @@ steps:
       - wait: 1
       - dblclick: {text: {en: "EOSAT mission", fr: "EOSAT mission"}, exact: true}
       - wait: 1.5
-      - dblclick: {text: {en: "Space Segment", fr: "Space Segment"}, exact: true}
+      - dblclick: {text: {en: "Space Segment", fr: "Segment spatial"}, exact: true}
       - wait: 1.5
       - dblclick: {text: {en: "EOSAT-1", fr: "EOSAT-1"}, exact: true}
       - wait: 2
