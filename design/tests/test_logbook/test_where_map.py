@@ -76,6 +76,8 @@ def _sections() -> dict[str, set[str]]:
     """Section ids each tab's panel listens for (useWhereSection) and can show."""
     decide = set(re.findall(r'whereId="([\w-]+)"', _src("workbench/DecisionPanel.tsx")))
     analyses = set(re.findall(r"id: '(\w+)', label: CARD_LABELS", _src("workbench/AnalysesPanel.tsx")))
+    # panels opened by a toggle rather than a card (useWhereSection: if (sec === '…'))
+    analyses |= set(re.findall(r"sec === '(\w+)'", _src("workbench/AnalysesPanel.tsx")))
     return {
         "decide": decide,
         "analyses": analyses,
@@ -159,7 +161,7 @@ def test_labels_use_the_screen_words_in_both_languages():
         if t.get("tab") == "decide" and t.get("section"):
             words.append(decide_titles[t["section"]].split(" (")[0])
         if t.get("tab") == "analyses" and t.get("section"):
-            words.append(card[t["section"]])
+            words.append(card.get(t["section"], "Link budget" if t["section"] == "link_budget" else t["section"]))
         if t.get("tab") == "modes" and t.get("section") in mode_views:
             words.append(mode_views[t["section"]])
         if t.get("tab") == "budget":

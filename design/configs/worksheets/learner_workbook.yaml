@@ -952,7 +952,7 @@ worksheets:
         ? O / N'}
     - {en: 'If margin is excessive, maximum achievable data rate at 3 dB margin:', fr: 'Si la marge est
         excessive, débit maximal atteignable avec une marge de 3 dB :'}
-    where: [analyses.dl_link, analyses.ground]
+    where: [analyses.link_budget, analyses.dl_link, analyses.ground]
     book: ['11.2', '11.4', '11.8']
   - id: C
     text: {en: 'Part C: Data Budget', fr: 'Partie C : Bilan de données'}
