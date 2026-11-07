@@ -340,6 +340,7 @@
 .c2o-riskmx__cell.is-low { background: var(--surface-2); }
 .c2o-riskmx__cell.is-med { background: var(--status-caution-wash); }
 .c2o-riskmx__cell.is-high { background: var(--status-alarm-wash); }
+.c2o-riskmx__cell.is-crit { background: color-mix(in srgb, var(--status-alarm, #c0392b) 38%, var(--surface-2)); }
 .c2o-riskmx__cell.has-risk { box-shadow: inset 0 0 0 2px var(--text-value); }
 .c2o-num-select { width: 52px; }
 

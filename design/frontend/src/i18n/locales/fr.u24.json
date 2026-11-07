@@ -67,5 +67,7 @@
   "edit": "modifier",
   "Edit {{code}}": "Modifier {{code}}",
   "Operator": "Opérateur",
-  "Threshold": "Seuil"
+  "Threshold": "Seuil",
+  "Mitigation of {{id}}": "Atténuation de {{id}}",
+  "Owner of {{id}}": "Responsable de {{id}}"
 }

@@ -634,6 +634,20 @@ function BudgetTraceability({ studyId }: { studyId: string | null }) {
 
 // ─── Risk Register ───
 
+/** A table cell that edits in place: commits on Enter or when focus leaves. */
+function InlineText({ value, label, placeholder, narrow, onCommit }: {
+  value: string; label: string; placeholder: string; narrow?: boolean; onCommit: (v: string) => void
+}) {
+  const [v, setV] = useState(value || '')
+  useEffect(() => { setV(value || '') }, [value])
+  const commit = () => { if (v !== (value || '')) onCommit(v) }
+  return (
+    <Input dense aria-label={label} placeholder={placeholder} value={v} style={{ width: narrow ? '9rem' : '100%', minWidth: narrow ? undefined : '14rem' }}
+      onChange={e => setV(e.target.value)} onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); (e.target as HTMLInputElement).blur() } }} />
+  )
+}
+
 interface Risk {
   id: string; description: string; category: string
   likelihood: number; consequence: number; rpn: number
@@ -709,12 +723,13 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
     void send(`${API}/studies/${studyId}/risks/${encodeURIComponent(r.id)}`, 'DELETE')
   }
 
-  const riskStatus = (rpn: number): Status => rpn >= 15 ? 'alarm' : rpn >= 8 ? 'caution' : 'neutral'
-  const zone = (rpn: number) => rpn >= 15 ? 'is-high' : rpn >= 8 ? 'is-med' : 'is-low'
+  // Bands of the textbook (§ 15.2): low 1–4 accept, medium 5–9, high 10–15 mitigate, critical 16–25 redesign
+  const riskStatus = (rpn: number): Status => rpn >= 16 ? 'alarm' : rpn >= 10 ? 'caution' : 'neutral'
+  const zone = (rpn: number) => rpn >= 16 ? 'is-crit' : rpn >= 10 ? 'is-high' : rpn >= 5 ? 'is-med' : 'is-low'
 
   // Stats
-  const critical = risks.filter(r => r.rpn >= 15).length
-  const high = risks.filter(r => r.rpn >= 8 && r.rpn < 15).length
+  const critical = risks.filter(r => r.rpn >= 16).length
+  const high = risks.filter(r => r.rpn >= 10 && r.rpn < 16).length
   const open = risks.filter(r => r.status === 'open').length
 
   return (
@@ -770,8 +785,12 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
                   {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
                 </Select>) },
               { key: 'rpn', header: 'RPN', num: true, sort: r => r.rpn, render: r => riskStatus(r.rpn) === 'neutral' ? <span className="w-600">{r.rpn}</span> : <StatusBadge status={riskStatus(r.rpn)}>{String(r.rpn)}</StatusBadge> },
-              { key: 'mit', header: t('Mitigation'), render: r => r.mitigation || <NoData label={t('none')} /> },
-              { key: 'own', header: t('Owner'), render: r => r.owner || <NoData label={t('none')} /> },
+              { key: 'mit', header: t('Mitigation'), render: r => (
+                <InlineText value={r.mitigation} label={t('Mitigation of {{id}}', { id: r.id })} placeholder={t('none')}
+                  onCommit={v => updateRisk(r, 'mitigation', v)} />) },
+              { key: 'own', header: t('Owner'), render: r => (
+                <InlineText value={r.owner} label={t('Owner of {{id}}', { id: r.id })} placeholder={t('none')} narrow
+                  onCommit={v => updateRisk(r, 'owner', v)} />) },
               { key: 'st', header: t('Status'), sort: r => r.status, render: r => (
                 <Select dense aria-label={t('Status of {{id}}', { id: r.id })} value={r.status} onChange={e => updateRisk(r, 'status', e.target.value)}>
                   <option value="open">{t('Open', { context: 'risk' })}</option><option value="mitigating">{t('Mitigating', { context: 'risk' })}</option>
