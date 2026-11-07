@@ -219,7 +219,7 @@ Where = the logbook's "Where in SpaceCDF" links, in order. Book = sections of th
 | Part | Question | Before | Now | Where in SpaceCDF | Book | Gap | Fix |
 |---|---|---|---|---|---|---|---|
 | A | Part A: Frequency Band Selection (6 sub-questions) | partial | screen+book | Decide › Architecture Trades (level 2); Analyses › Ground segment | §11.5, §2.7 | Bands are on screen; licence type, filing and cost are not. | Licensing from textbook §2.7 and the ISED and ITU pages. Links: ised-space, itu-smallsat. |
-| B | Part B: Complete Link Budget (3 sub-questions) | partial | screen+book | Analyses › Design loop › Link and data; Analyses › Ground segment | §11.2, §11.4, §11.8 | Only per-station G/T and margin were visible; downlink, TT&C and uplink margins from the design loop were hidden. | Design loop › Link and data shows the three margins and the downlink rate; the line-by-line budget stays the student's calculation (the worksheet is that calculation). |
+| B | Part B: Complete Link Budget (3 sub-questions) | partial | screen+book | Analyses › Link budget, term by term; Analyses › Design loop › Link and data; Analyses › Ground segment | §11.2, §11.4, §11.8 | Only per-station G/T and margin were visible; downlink, TT&C and uplink margins from the design loop were hidden. | Design loop › Link and data shows the three margins and the downlink rate; Analyses › Link budget (2026-11) lays the budget out term by term, downlink and uplink, so students can check their own calculation against it. |
 | C | Part C: Data Budget (3 sub-questions) | screen | screen+book | Modes › Data chain; Analyses › Ground segment; Analyses › Design loop › Link and data; Budget › Data (level 2) | §11.9 | — | — |
 | D | Part D: SpaceCDF Comparison | gap | screen | Analyses › Design loop › Link and data; Analyses › Ground segment | — | Named a "Link Budget tab". | Reworded (EN+FR) to Analyses › Design loop (link and data) and Analyses › Ground segment. |
 | E | Part E: Modulation and Coding Selection (5 sub-questions) | book | screen+book | TM/TC › Rate ladder | §11.6 | — | TM/TC › Rate ladder lists modulation and coding per tier once the database is proposed. Links: ccsds. |
@@ -382,7 +382,7 @@ Where comes from the decision's own entry in `where_map.yaml`, else from its wor
 | D-3.2-WHEELS | PDR | aocs_engineer | LW-3.2/C | Analyses › Physics (mass / AOCS / thermal) › AOCS; Blocks › Equipment Catalog (level 3, AOCS) | — | — |
 | D-3.2-POINTING | PDR | aocs_engineer | LW-3.2/D | Analyses › Physics (mass / AOCS / thermal) › AOCS | — | — |
 | D-3.3-BAND | SRR | comms_engineer | LW-3.3/A | Decide › Architecture Trades (level 2); Analyses › Ground segment | decide:arch-trade | ised-space, itu-smallsat |
-| D-3.3-LINK | PDR | comms_engineer | LW-3.3/B | Analyses › Design loop › Link and data; Analyses › Ground segment | — | — |
+| D-3.3-LINK | PDR | comms_engineer | LW-3.3/B | Analyses › Link budget, term by term; Analyses › Design loop › Link and data; Analyses › Ground segment | — | — |
 | D-3.3-DATA | PDR | comms_engineer | LW-3.3/C | Budget › Data (level 2); Modes › Data chain | budget:data | — |
 | D-3.3-MODCOD | PDR | comms_engineer | LW-3.3/E | TM/TC › Rate ladder | — | ccsds |
 | D-3.4-FORMFACTOR | SRR | structures_engineer | LW-3.4/A | Spacecraft (level 2); Blocks › Equipment Catalog (level 3, Structure) | — | cds |
@@ -497,6 +497,7 @@ What each "Where in SpaceCDF" link opens (checked against the frontend by `test_
 | `analyses.design_loop` | Analyses › Design loop | Analyses › Boucle de conception | tab=analyses section=design_loop |
 | `analyses.dl_orbit` | Analyses › Design loop › Orbit | Analyses › Boucle de conception › Orbite | tab=analyses section=design_loop anchor=dl-orbit |
 | `analyses.dl_power` | Analyses › Design loop › Power sizing | Analyses › Boucle de conception › Dimensionnement électrique | tab=analyses section=design_loop anchor=dl-power |
+| `analyses.link_budget` | Analyses › Link budget, term by term | Analyses › Bilan de liaison, terme à terme | tab=analyses section=link_budget |
 | `analyses.dl_link` | Analyses › Design loop › Link and data | Analyses › Boucle de conception › Liaison et données | tab=analyses section=design_loop anchor=dl-link |
 | `analyses.dl_dv` | Analyses › Design loop › Delta-v and propulsion | Analyses › Boucle de conception › Delta-v et propulsion | tab=analyses section=design_loop anchor=dl-dv |
 | `analyses.dl_cost` | Analyses › Design loop › Cost by element | Analyses › Boucle de conception › Coût par poste | tab=analyses section=design_loop anchor=dl-cost |

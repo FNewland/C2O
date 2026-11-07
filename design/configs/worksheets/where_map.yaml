@@ -92,6 +92,7 @@ targets:
   analyses.design_loop: {tab: analyses, section: design_loop, label: {en: "Analyses › Design loop", fr: "Analyses › Boucle de conception"}}
   analyses.dl_orbit: {tab: analyses, section: design_loop, anchor: dl-orbit, label: {en: "Analyses › Design loop › Orbit", fr: "Analyses › Boucle de conception › Orbite"}}
   analyses.dl_power: {tab: analyses, section: design_loop, anchor: dl-power, label: {en: "Analyses › Design loop › Power sizing", fr: "Analyses › Boucle de conception › Dimensionnement électrique"}}
+  analyses.link_budget: {tab: analyses, section: link_budget, label: {en: "Analyses › Link budget, term by term", fr: "Analyses › Bilan de liaison, terme à terme"}}
   analyses.dl_link: {tab: analyses, section: design_loop, anchor: dl-link, label: {en: "Analyses › Design loop › Link and data", fr: "Analyses › Boucle de conception › Liaison et données"}}
   analyses.dl_dv: {tab: analyses, section: design_loop, anchor: dl-dv, label: {en: "Analyses › Design loop › Delta-v and propulsion", fr: "Analyses › Boucle de conception › Delta-v et propulsion"}}
   analyses.dl_cost: {tab: analyses, section: design_loop, anchor: dl-cost, label: {en: "Analyses › Design loop › Cost by element", fr: "Analyses › Boucle de conception › Coût par poste"}}
@@ -500,10 +501,10 @@ parts:
   LW-3.3/B:
     before: partial
     status: screen+book
-    where: [analyses.dl_link, analyses.ground]
+    where: [analyses.link_budget, analyses.dl_link, analyses.ground]
     book: ["11.2", "11.4", "11.8"]
     gap: Only per-station G/T and margin were visible; downlink, TT&C and uplink margins from the design loop were hidden.
-    fix: Design loop › Link and data shows the three margins and the downlink rate; the line-by-line budget stays the student's calculation (the worksheet is that calculation).
+    fix: Design loop › Link and data shows the three margins and the downlink rate; Analyses › Link budget (2026-11) lays the budget out term by term, downlink and uplink, so students can check their own calculation against it.
   LW-3.3/C: {before: screen, status: screen+book, where: [modes.data, analyses.ground, analyses.dl_link, budget.data], book: ["11.9"]}
   LW-3.3/D:
     before: gap
@@ -686,7 +687,7 @@ decisions:
   D-3.2-WHEELS: {where: [analyses.physics_aocs, equipment.aocs]}
   D-3.2-POINTING: {where: [analyses.physics_aocs]}
   D-3.3-BAND: {where: [decide.arch, analyses.ground]}
-  D-3.3-LINK: {where: [analyses.dl_link, analyses.ground]}
+  D-3.3-LINK: {where: [analyses.link_budget, analyses.dl_link, analyses.ground]}
   D-3.3-DATA: {where: [budget.data, modes.data]}
   D-3.3-MODCOD: {where: [tmtc.ladder], links: [ccsds]}
   D-3.3-LADDER: {where: [tmtc.ladder]}
