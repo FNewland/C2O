@@ -146,6 +146,7 @@ export function RequirementsPanel() {
       setNewCode('')
       setDeriveFromId(null)
       setShowAdd(false)
+      setRecheck(n => n + 1)
     },
   })
 
@@ -173,6 +174,13 @@ export function RequirementsPanel() {
     setNewReqType(parentReq.rationale || 'performance')
     setNewMethod(parentReq.verification_method || 'A')
     setNewElementId(focusElementId || '')
+    // A child's code extends its parent's: SR-002 → SR-002.1, SR-002.2 …
+    if (parentReq.code) {
+      const taken = new Set(allRequirements.map((r: any) => r.code))
+      let n = 1
+      while (taken.has(`${parentReq.code}.${n}`)) n++
+      setNewCode(`${parentReq.code}.${n}`)
+    }
     // Store parent ID for the derive API call
     setDeriveFromId(parentReq.id)
     setShowAdd(true)
