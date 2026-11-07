@@ -173,7 +173,7 @@ steps:
       - wait: 1.0
       - click: {role: button, name: "SMART Check"}
       - wait: 1.5
-      - highlight: {target: {role: button, name: "Record decision", exact: true}, seconds: 2.5}
+      - highlight: {target: {css: "[role=status] button"}, seconds: 2.5}
     question:
       type: reflect
       worksheet: LW-2.1/C
