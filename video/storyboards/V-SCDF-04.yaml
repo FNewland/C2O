@@ -79,7 +79,7 @@ steps:
       fr: >-
         Appuyez sur modifier sur SR-003. Le texte reste tel quel ; ajoutez le seuil que les
         outils peuvent tester : inférieur ou égal à douze, en kilogrammes, vérifié par
-        inspection, en pesant le satellite. Enregistrez. Le bilan de masse peut maintenant être
+        inspection, en pesant le satellite. Puis enregistrez la modification. Le bilan de masse peut maintenant être
         comparé automatiquement à cette exigence.
     do:
       - click: {role: button, name: edit, exact: true, within: ".c2o-reqs__row:has-text('SR-003')"}

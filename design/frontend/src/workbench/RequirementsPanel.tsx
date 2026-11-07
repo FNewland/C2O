@@ -146,7 +146,6 @@ export function RequirementsPanel() {
       setNewCode('')
       setDeriveFromId(null)
       setShowAdd(false)
-      setRecheck(n => n + 1)
     },
   })
 
@@ -190,6 +189,9 @@ export function RequirementsPanel() {
   // SMART findings for the requirements at this level, after a check (id → codes)
   const [smart, setSmart] = useState<Record<string, string[]> | null>(null)
   const [recheck, setRecheck] = useState(0)
+  // a requirement added or removed at this level: re-run a check already on screen
+  const visibleKey = requirements.map((r: any) => r.id).join(',')
+  useEffect(() => { if (smart) setRecheck(n => n + 1) }, [visibleKey])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Inline edit: text, threshold and verification method (what the SMART check needs)
   const [editId, setEditId] = useState<string | null>(null)
