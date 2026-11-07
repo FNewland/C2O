@@ -119,12 +119,12 @@ phases:
       - id: MDR-EC-09
         question: "Have initial technical risks been identified?"
         category: risk
-        evidence: "risk.total_risks >= 0 (risk agent has executed)"
+        evidence: ">= 1 risk in the study's risk register (or found by the risk analysis)"
         status: auto
         priority: should_pass
         owner_seat: team_leader
         step: S6
-        fix: analyses
+        fix: vv:risks
 
       - id: MDR-EC-10
         question: "Is the mission concept compatible with debris mitigation requirements?"

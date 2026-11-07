@@ -507,9 +507,16 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                      "Cost {{cost}} MEUR vs target {{target}} MEUR", cost=_fmt(cost, 1), target=_fmt(target, 1))
 
     elif cid == "MDR-EC-09":
-        v = _need(result, dp, "risk.total_risks")
-        if v:
-            _set(result, "pass", "Risk analysis run: {{n}} risk(s) identified", n=int(v[0]))
+        # The team's register is the evidence (textbook § 15.1); the risk agent's
+        # findings count only when the register is still empty.
+        n = len([r for r in ctx["risks"] if (r.get("status") or "open") != "deleted"])
+        agent = _get_param(dp, "risk.total_risks")
+        if n >= 1:
+            _set(result, "pass", "{{n}} risk(s) in the risk register", n=n)
+        elif agent:
+            _set(result, "pass", "Risk analysis run: {{n}} risk(s) identified", n=int(agent))
+        else:
+            _set(result, "fail", "{{n}} risk(s) in the risk register", n=0)
 
     elif cid == "MDR-EC-10":
         v = _need(result, dp, "debris.compliance_score")

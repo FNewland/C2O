@@ -44,6 +44,8 @@ def _register_builtins() -> None:
         # "community": "spacecdf_agents.tier2.community.CommunityImpactAgent",  # SCDF-005: hidden until C4 integration
     }
     for name, qualname in builtins.items():
+        if name in _registry:
+            continue
         module_path, class_name = qualname.rsplit(".", 1)
         try:
             import importlib
@@ -69,9 +71,10 @@ def discover_agents() -> dict[str, Type[DesignAgent]]:
                 logger.debug("Registered agent: %s -> %s", ep.name, cls.__name__)
         except Exception as e:
             logger.warning("Failed to load agent entry point %s: %s", ep.name, e)
-    if not _registry:
-        logger.info("No entry points found, loading built-in agents")
-        _register_builtins()
+    # The built-ins fill in what the installed entry points do not list (an
+    # editable install keeps the entry points of its first install, so agents
+    # added later, such as debris compliance, would otherwise never run).
+    _register_builtins()
     return dict(_registry)
 
 
