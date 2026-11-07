@@ -1,0 +1,164 @@
+# Week 4 — SpaceCDF risk register and FMECA: the 5×5 matrix with the
+# textbook bands, mitigating a critical risk (likelihood down, status,
+# owner), completing a risk's mitigation and owner, and the design-based FMECA
+# in Analyses (top risks, critical count, redundancy recommendations).
+# Prepares LW-4.3/A, LW-4.3/D and the decision record D-4.3-RISKS. Follows V-DES-11.
+id: V-SCDF-06
+week: 4
+audience: all
+title:
+  en: "Risk register and FMECA in SpaceCDF"
+  fr: "Registre des risques et AMDEC dans SpaceCDF"
+summary:
+  en: "Manage risk in SpaceCDF: read the five-by-five matrix, mitigate a critical risk and give it an owner, complete a risk's mitigation, then run the FMECA from your design and read its top risks and redundancy recommendations."
+  fr: "Gérer les risques dans SpaceCDF : lire la matrice cinq sur cinq, atténuer un risque critique et lui donner un responsable, compléter l’atténuation d’un risque, puis lancer l’AMDEC à partir de votre conception et lire ses principaux risques et ses recommandations de redondance."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-4.3/A, LW-4.3/D]
+  decisions: [D-4.3-RISKS]
+sources:
+  - design/frontend/src/workbench/VVPanel.tsx (RiskRegister)
+  - design/frontend/src/components/FMECAPanel.tsx
+  - design/docs/oer/chapters/15_risk_interfaces_fmeca.md (§ 15.1, 15.2, 15.4)
+
+setup:
+  - python: {call: "video/c2ovideo/helpers.py:seed_spacecdf_eosat", app: spacecdf, save: study}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "Ava (Systems)", fr: "Ava (Systèmes)"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2
+
+steps:
+  - id: matrix
+    title: {en: "The risk matrix", fr: "La matrice des risques"}
+    say:
+      en: >-
+        The risk register is in V and V, Risk Register. The matrix places each risk by
+        likelihood and consequence, with the bands from the textbook: sixteen and above is
+        critical, ten to fifteen high. This team has three risks. The S-band licence arriving
+        late scores four times four, sixteen: critical. Star tracker blinding scores twelve:
+        high. Battery fade scores six: medium.
+      fr: >-
+        Le registre des risques se trouve dans V et V, Registre des risques. La matrice place
+        chaque risque selon sa vraisemblance et sa conséquence, avec les bandes du manuel : seize
+        et plus, c’est critique ; dix à quinze, élevé. Cette équipe a trois risques. La licence
+        en bande S qui arrive en retard obtient quatre fois quatre, seize : critique.
+        L’éblouissement du senseur stellaire obtient douze : élevé. La perte de capacité de la
+        batterie obtient six : moyen.
+    do:
+      - click: {text: "V&V", exact: true}
+      - wait: 1.2
+      - click: {role: tab, name: "Risk Register", exact: true}
+      - wait: 1.5
+      - highlight: {target: {css: ".c2o-riskmx"}, seconds: 3}
+      - highlight: {target: {css: "tr:has-text('RSK-003')"}, seconds: 3}
+
+  - id: mitigate
+    title: {en: "Mitigate the critical risk", fr: "Atténuer le risque critique"}
+    say:
+      en: >-
+        The mitigation is already written: file with the International Telecommunication Union
+        early. Once the filing is in, the licence is much less likely to be late. Set the
+        likelihood to two: the score falls to eight, medium. Mark it Mitigating and give it an
+        owner, the communications engineer. A risk with no owner is a risk nobody is watching.
+      fr: >-
+        L’atténuation est déjà écrite : déposer tôt auprès de l’Union internationale des
+        télécommunications. Une fois le dépôt fait, le retard de la licence devient bien moins
+        vraisemblable. Réglez la vraisemblance à deux : le score tombe à huit, moyen. Passez-le en
+        Atténuation et donnez-lui un responsable, l’ingénieur télécommunications. Un risque sans
+        responsable est un risque que personne ne surveille.
+    do:
+      - select: {target: {label: {en: "Likelihood of RSK-003", fr: "Vraisemblance de RSK-003"}, exact: true}, value: "2"}
+      - wait: 1.2
+      - select: {target: {label: {en: "Status of RSK-003", fr: "Statut de RSK-003"}, exact: true}, value: "mitigating"}
+      - wait: 0.8
+      - fill: {target: {label: {en: "Owner of RSK-003", fr: "Responsable de RSK-003"}, exact: true}, text: {en: "Kai (Communications)", fr: "Kai (Télécommunications)"}, typed: true, press: Enter}
+      - wait: 1.2
+      - highlight: {target: {css: ".c2o-riskmx"}, seconds: 2.5}
+    question:
+      type: multichoice
+      worksheet: LW-4.3/A
+      text:
+        en: "A risk scores likelihood 3 and consequence 5. Which band is it in, and what does the textbook ask of it?"
+        fr: "Un risque obtient une vraisemblance de 3 et une conséquence de 5. Dans quelle bande est-il, et que demande le manuel ?"
+      options:
+        - text: {en: "15: high. Mitigate it, with an owner and a date.", fr: "15 : élevé. L’atténuer, avec un responsable et une date."}
+          correct: true
+          why: {en: "High is 10–15; critical starts at 16.", fr: "Élevé va de 10 à 15 ; critique commence à 16."}
+        - text: {en: "15: critical. Redesign.", fr: "15 : critique. Reconcevoir."}
+          why: {en: "Critical is 16–25 in the textbook's bands.", fr: "Critique va de 16 à 25 dans les bandes du manuel."}
+        - text: {en: "8: medium. Accept and watch.", fr: "8 : moyen. Accepter et surveiller."}
+          why: {en: "The score multiplies: 3 × 5 = 15.", fr: "Le score se multiplie : 3 × 5 = 15."}
+
+  - id: complete
+    title: {en: "Complete the register", fr: "Compléter le registre"}
+    say:
+      en: >-
+        The battery fade risk has no mitigation and no owner yet. Type them in place: keep the
+        depth of discharge shallow and monitor every cell, owned by the power engineer. The
+        register is the team's shared list: every risk, its score, what is being done, and who
+        is doing it.
+      fr: >-
+        Le risque de perte de capacité de la batterie n’a encore ni atténuation ni responsable.
+        Saisissez-les sur place : garder une décharge peu profonde et surveiller chaque cellule,
+        sous la responsabilité de l’ingénieur énergie. Le registre est la liste partagée de
+        l’équipe : chaque risque, son score, ce qui est fait, et qui le fait.
+    do:
+      - fill: {target: {label: {en: "Mitigation of RSK-002", fr: "Atténuation de RSK-002"}, exact: true}, text: {en: "Shallow depth of discharge, per-cell monitoring", fr: "Décharge peu profonde, surveillance par cellule"}, typed: true, press: Enter}
+      - wait: 1
+      - fill: {target: {label: {en: "Owner of RSK-002", fr: "Responsable de RSK-002"}, exact: true}, text: {en: "Lena (Power)", fr: "Lena (Énergie)"}, typed: true, press: Enter}
+      - wait: 1.2
+      - highlight: {target: {css: "tr:has-text('RSK-002')"}, seconds: 2.5}
+
+  - id: fmeca
+    title: {en: "FMECA from the design", fr: "L’AMDEC à partir de la conception"}
+    say:
+      en: >-
+        The register holds the risks the team has thought of. The failure modes, effects and
+        criticality analysis looks for the ones it has not. In Analyses, open FMECA and run it
+        from the study: it builds failure modes for every element of this design. Solar array
+        and antenna deployments, and the battery, come out on top. Six failure modes have
+        severity four or five: mission loss or major degradation.
+      fr: >-
+        Le registre contient les risques auxquels l’équipe a pensé. L’analyse des modes de
+        défaillance, de leurs effets et de leur criticité, l’AMDEC, cherche ceux auxquels elle
+        n’a pas pensé. Dans Analyses, ouvrez FMECA et lancez-la depuis l’étude : elle construit
+        les modes de défaillance de chaque élément de cette conception. Les déploiements du
+        générateur solaire et de l’antenne, et la batterie, arrivent en tête. Six modes de
+        défaillance ont une gravité de quatre ou cinq : perte de mission ou dégradation majeure.
+    do:
+      - click: {role: tab, name: Analyses, exact: true}
+      - wait: 1.2
+      - click: {css: "button:has-text('FMECA')"}
+      - wait: 1.5
+      - click: {role: button, name: "Run from study"}
+      - wait: 3
+      - scroll: {target: {text: "Top Risks", exact: true}}
+      - highlight: {target: {text: "Top Risks", exact: true}, seconds: 3}
+
+  - id: redundancy
+    title: {en: "From findings to decisions", fr: "Des constats aux décisions"}
+    say:
+      en: >-
+        Below, the tool recommends redundancy where a single failure would end the mission, with
+        the reduction in risk each change should buy. These are proposals, not decisions: a
+        second release mechanism costs little, a redundant battery string costs mass and power.
+        Carry the ones you accept into the risk register, and record decision D four point
+        three, Risks.
+      fr: >-
+        Plus bas, l’outil recommande de la redondance là où une seule panne terminerait la
+        mission, avec la réduction de risque attendue pour chaque changement. Ce sont des
+        propositions, pas des décisions : un second mécanisme de libération coûte peu, une
+        chaîne de batterie redondante coûte de la masse et de la puissance. Reportez celles que
+        vous retenez dans le registre des risques, et consignez la décision D quatre point trois,
+        Risques.
+    do:
+      - scroll: {target: {text: "Redundancy Recommendations", exact: true}}
+      - highlight: {target: {text: "Redundancy Recommendations", exact: true}, seconds: 3}
+    question:
+      type: reflect
+      worksheet: LW-4.3/D
+      text:
+        en: "Take the top failure mode for your design. Would you add redundancy, change the design, or accept it? What does each option cost?"
+        fr: "Prenez le premier mode de défaillance de votre conception. Ajouteriez-vous de la redondance, changeriez-vous la conception, ou l’accepteriez-vous ? Que coûte chaque option ?"
