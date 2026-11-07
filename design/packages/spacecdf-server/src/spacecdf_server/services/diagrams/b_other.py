@@ -648,7 +648,7 @@ def risk(d: DiagramData, **_: Any) -> dict:
     D.label(x0 + 2.5 * cs, y0 + 5 * cs + 38, T("Consequence"), anchor="middle", size=12, style="text3")
     D.label(30, y0 + 2.5 * cs + 30, T("Likelihood"), anchor="middle", size=12, style="text3", rotate=-90)
     D.legend([{"kind": "box", "style": "risk-low", "label": T("Low (≤ 4)")}, {"kind": "box", "style": "risk-med", "label": T("Medium (5–9)")},
-              {"kind": "box", "style": "risk-high", "label": T("High (10–15)")}, {"kind": "box", "style": "risk-vhigh", "label": T("Very high (≥ 16)")}])
+              {"kind": "box", "style": "risk-high", "label": T("High (10–15)")}, {"kind": "box", "style": "risk-vhigh", "label": T("Critical (≥ 16)")}])
     rows = [[str(r.get("id") or ""), clip(r.get("description") or r.get("title") or "", 90), str(r.get("likelihood") or ""),
              str(r.get("consequence") or ""), r.get("mitigation") or "—", r.get("status") or "open"] for r in risks]
     if not risks:
@@ -656,9 +656,10 @@ def risk(d: DiagramData, **_: Any) -> dict:
     no_mit = [r for r in risks if not (r.get("mitigation") or "").strip()]
     if no_mit:
         D.gap("no_mitigation", T("missing: mitigation for {{n}} risks", n=len(no_mit)), len(no_mit), fix="risks")
-    high = [r for r in risks if int(r.get("likelihood") or 0) * int(r.get("consequence") or 0) >= 16]
+    high = [r for r in risks if int(r.get("likelihood") or 0) * int(r.get("consequence") or 0) >= 16
+            and (r.get("status") or "open") != "closed"]
     if high:
-        D.gap("very_high", T("{{n}} very high risks open", n=len(high)), len(high), severity="alarm", fix="risks")
+        D.gap("critical", T("{{n}} critical risks open", n=len(high)), len(high), severity="alarm", fix="risks")
     D.completeness(max(1, len(risks)), len(risks) - len(no_mit) if risks else 0)
     D.table([T("Id"), T("Risk"), T("L"), T("C"), T("Mitigation"), T("Status")], rows)
     return D.finish()

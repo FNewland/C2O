@@ -22,6 +22,8 @@ SMART validation:
 """
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -226,6 +228,9 @@ def generate_smart_requirements(
     return suggestions
 
 
+_SHALL = re.compile(r"\b(shall|doit|doivent)\b", re.IGNORECASE)
+
+
 def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     """Validate a requirement against SMART criteria.
 
@@ -240,7 +245,8 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     issues: list[str] = []
 
     # Specific
-    if "shall" in text.lower() and len(text) > 20:
+    # "shall", or its French equivalent « doit » / « doivent » (bilingual course)
+    if _SHALL.search(text) and len(text) > 20:
         check.specific = True
     else:
         issues.append("Not specific: requirement should use 'shall' and be detailed")
