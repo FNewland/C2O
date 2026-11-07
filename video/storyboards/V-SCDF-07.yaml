@@ -79,7 +79,7 @@ steps:
         not run yet, such as the mass and power margins of the design loop. The button takes
         you to Analyses. A gate cannot pass on a number nobody has computed.
       fr: >-
-        Certaines lignes indiquent N slash A : non évalué. Elles lisent les résultats d’une
+        Certaines lignes ne sont pas encore évaluées : elles lisent les résultats d’une
         analyse qui n’a pas encore tourné, comme les marges de masse et de puissance de la
         boucle de conception. Le bouton vous mène aux Analyses. Un jalon ne peut pas passer sur
         un nombre que personne n’a calculé.
@@ -114,7 +114,7 @@ steps:
         come back to the gate. The missing mitigation is gone. The critical licence risk is
         still open: that one needs a decision, not just a line of text.
       fr: >-
-        Comblez-en un maintenant. Dans le registre des risques, donnez son atténuation au risque
+        Comblez maintenant l’un de ces manques : dans le registre des risques, donnez son atténuation au risque
         de perte de capacité de la batterie, puis revenez au jalon. L’atténuation manquante a
         disparu. Le risque critique sur la licence reste ouvert : celui-là demande une décision,
         pas seulement une ligne de texte.
