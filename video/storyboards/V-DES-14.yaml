@@ -106,16 +106,14 @@ steps:
         with tasks kept apart. In orbit, particles flip bits and can latch a circuit, so memory
         carries error detection and correction, EDAC, a watchdog resets a hung processor, and
         current limiters catch latch-ups. Size the storage for bad days, not good ones: seven
-        hundred and twenty megabytes a day, three days without a full downlink, times two. Specify
-        eight gigabytes.
+        hundred and twenty megabytes a day, three days without a full downlink, times two. So specify eight gigabytes of storage.
       fr: >-
         L’ordinateur de bord tourne en général sous un système d’exploitation temps réel :
         déterministe, léger, avec des tâches isolées. En orbite, des particules inversent des bits
         et peuvent verrouiller un circuit : la mémoire porte une détection et correction d’erreurs,
         l’EDAC, un chien de garde relance un processeur bloqué, et des limiteurs de courant
         attrapent les verrouillages. Dimensionnez le stockage pour les mauvais jours, pas les bons :
-        sept cent vingt mégaoctets par jour, trois jours sans vidage complet, fois deux. Spécifiez
-        huit gigaoctets.
+        sept cent vingt mégaoctets par jour, trois jours sans vidage complet, fois deux. Il faut donc spécifier huit gigaoctets de mémoire.
     do:
       - js: "EX.play('obdh', ${say})"
     question:
