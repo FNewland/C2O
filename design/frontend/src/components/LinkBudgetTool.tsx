@@ -224,12 +224,12 @@ export function LinkBudgetTool() {
 
 function InputRow({ label, value, onChange, step }: { label: string; value: number; onChange: (v: number) => void; step: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
       <span style={{ flex: 1, fontSize: fs.label, color: 'var(--text-2)' }}>{label}</span>
-      <input className="input" type="number" value={value} step={step}
+      <input className="input" type="number" value={value} step={step} aria-label={label}
         onChange={e => onChange(Number(e.target.value))}
         style={{ width: '80px', fontSize: fs.label, textAlign: 'right' }} />
-    </div>
+    </label>
   )
 }
 
