@@ -1,0 +1,173 @@
+# Week 6 — the SpaceCDF link budget tool (Analyses › Link budget): the
+# downlink term by term at the worst-case slant range, margin traded for data
+# rate, a smaller ground dish, the uplink, and Apply to Design. Prepares
+# LW-3.3/B and the decision record D-3.3-LINK. Follows the concept video
+# V-DES-10 (same S-band numbers: margin 17.5 dB at 1 Mbit/s, 1695 km).
+id: V-SCDF-03
+week: 6
+audience: all
+title:
+  en: "The link budget tool"
+  fr: "L’outil de bilan de liaison"
+summary:
+  en: "Use SpaceCDF's link budget, term by term: read the downlink at the worst-case range, trade margin for data rate, test a smaller ground antenna, check the uplink, and apply the result to the design."
+  fr: "Utiliser le bilan de liaison de SpaceCDF, terme par terme : lire la liaison descendante à la distance la plus défavorable, échanger de la marge contre du débit, essayer une antenne sol plus petite, vérifier la liaison montante, et appliquer le résultat à la conception."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-3.3/B]
+  decisions: [D-3.3-LINK]
+sources:
+  - design/frontend/src/components/LinkBudgetTool.tsx
+  - design/docs/oer/chapters/11_communications.md (§ 11.2, 11.4.1, 11.8.1)
+  - design/tests/test_api/diagram_seed.py (the EOSAT-1-like study)
+
+setup:
+  - python: {call: "video/c2ovideo/helpers.py:seed_spacecdf_eosat", app: spacecdf, save: study}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "Kai (Communications)", fr: "Kai (Télécommunications)"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2
+
+steps:
+  - id: open
+    title: {en: "Open the link budget", fr: "Ouvrir le bilan de liaison"}
+    say:
+      en: >-
+        The link budget lives in the Analyses tab. Press Link budget. On the left are the
+        inputs: the transmitter, the path and the ground receiver. On the right, the budget is
+        laid out term by term, exactly as in chapter eleven of the textbook. The slant range
+        starts at the worst case, the distance to a ground station at ten degrees elevation:
+        about seventeen hundred kilometres from a five hundred kilometre orbit.
+      fr: >-
+        Le bilan de liaison se trouve dans l’onglet Analyses. Appuyez sur Bilan de liaison. À
+        gauche, les données : l’émetteur, le trajet et le récepteur au sol. À droite, le bilan
+        terme par terme, exactement comme au chapitre onze du manuel. La distance oblique part du
+        pire cas, la distance jusqu’à une station sol à dix degrés d’élévation : environ dix-sept
+        cents kilomètres depuis une orbite à cinq cents kilomètres.
+    do:
+      - click: {role: tab, name: Analyses}
+      - wait: 1.0
+      - click: {css: "[data-where='analyses:link_budget']"}
+      - wait: 1.2
+      - scroll: {target: {text: "Link Budget Calculator", exact: true}}
+      - highlight: {target: {label: "Slant Range (km)", exact: true}, seconds: 3}
+
+  - id: read
+    title: {en: "Reading the budget", fr: "Lire le bilan"}
+    say:
+      en: >-
+        Read it from the top. Two watts, a six decibel patch and the cable losses give an
+        effective radiated power of seven and a half decibel-watts. The path loss takes a hundred
+        and sixty-four decibels away. The ground station's figure of merit, gain against noise,
+        wins most of it back. After the data rate and what the modulation needs, the margin is
+        seventeen and a half decibels. Anything above three closes.
+      fr: >-
+        Lisez-le depuis le haut. Deux watts, une antenne patch de six décibels et les pertes de
+        câble donnent une puissance rayonnée de sept décibels-watts et demi. L’affaiblissement de
+        trajet en retire cent soixante-quatre décibels. Le facteur de mérite de la station sol,
+        le gain face au bruit, en regagne l’essentiel. Après le débit et ce qu’exige la
+        modulation, la marge est de dix-sept décibels et demi. Au-dessus de trois, la liaison se
+        ferme.
+    do:
+      - highlight: {target: {css: "tr:has-text('EIRP')"}, seconds: 2.5}
+      - highlight: {target: {css: "tr:has-text('Free Space Path Loss'), tr:has-text('Affaiblissement')"}, seconds: 2.5}
+      - highlight: {target: {css: "tr:has-text('G/T')"}, seconds: 2.5}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 3}
+
+  - id: rate
+    title: {en: "Spend margin on data rate", fr: "Dépenser la marge en débit"}
+    say:
+      en: >-
+        That much margin is unused capacity. Raise the data rate from one to five megabits per
+        second. The margin falls by seven decibels, to about ten and a half: every doubling of
+        the rate costs three. More data per pass, and still plenty of margin.
+      fr: >-
+        Une telle marge, c’est de la capacité inutilisée. Passez le débit d’un à cinq mégabits
+        par seconde. La marge baisse de sept décibels, à environ dix et demi : chaque doublement
+        du débit en coûte trois. Plus de données par passage, et encore beaucoup de marge.
+    do:
+      - fill: {target: {label: "Data Rate (bps)", exact: true}, text: "5000000", settle: 1.0}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: LW-3.3/B
+      text:
+        en: "At 5 Mbit/s the margin is about 10.5 dB. Roughly what is it at 10 Mbit/s?"
+        fr: "À 5 Mbit/s, la marge est d’environ 10,5 dB. Que vaut-elle à peu près à 10 Mbit/s ?"
+      options:
+        - text: {en: "About 7.5 dB: doubling the rate costs 3 dB.", fr: "Environ 7,5 dB : doubler le débit coûte 3 dB."}
+          correct: true
+          why: {en: "10 log10(2) ≈ 3 dB less energy per bit.", fr: "10 log10(2) ≈ 3 dB d’énergie par bit en moins."}
+        - text: {en: "About 5 dB: half the margin.", fr: "Environ 5 dB : la moitié de la marge."}
+          why: {en: "Decibels subtract; they do not halve.", fr: "Les décibels se soustraient ; ils ne se divisent pas par deux."}
+        - text: {en: "Still 10.5 dB: the rate does not enter the budget.", fr: "Toujours 10,5 dB : le débit n’entre pas dans le bilan."}
+          why: {en: "Eb/N0 = C/N0 − 10 log10(rate).", fr: "Eb/N0 = C/N0 − 10 log10(débit)."}
+
+  - id: dish
+    title: {en: "A smaller ground station", fr: "Une station sol plus petite"}
+    say:
+      en: >-
+        Now test the ground segment. A university station might have a one and a half metre dish
+        instead of three metres: a quarter of the area, six decibels less gain. Set the receive
+        gain to twenty-nine. The margin drops to about four and a half decibels: it still closes,
+        but with little left for a bad pass. That is the kind of result to record, with the
+        options you weighed.
+      fr: >-
+        Essayez maintenant le segment sol. Une station universitaire peut avoir une antenne d’un
+        mètre et demi au lieu de trois : un quart de la surface, six décibels de gain en moins.
+        Réglez le gain de réception à vingt-neuf. La marge tombe à environ quatre décibels et
+        demi : la liaison se ferme encore, mais avec peu de réserve pour un mauvais passage. C’est
+        le genre de résultat à consigner, avec les options envisagées.
+    do:
+      - fill: {target: {label: "RX Antenna Gain (dBi)", exact: true}, text: "29", settle: 1.0}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 3}
+
+  - id: uplink
+    title: {en: "The uplink", fr: "La liaison montante"}
+    say:
+      en: >-
+        Press Uplink to look the other way. The ground station now transmits: twenty watts into a
+        big dish, an effective radiated power around forty-six decibel-watts, to a small patch on
+        the spacecraft at only a few kilobits per second. The margin is huge. For a small
+        satellite the hard link is almost always the downlink, not the commands. The uplink is a
+        what-if here: it does not overwrite the design.
+      fr: >-
+        Appuyez sur Montante pour regarder dans l’autre sens. C’est maintenant la station sol qui
+        émet : vingt watts dans une grande antenne, une puissance rayonnée d’environ
+        quarante-six décibels-watts, vers une petite antenne patch sur le satellite, à quelques
+        kilobits par seconde seulement. La marge est énorme. Pour un petit satellite, la liaison
+        difficile est presque toujours la descendante, pas les télécommandes. Ici, la montante
+        est une simulation : elle ne remplace pas la conception.
+    do:
+      - click: {role: button, name: "Uplink (Ground→Space)"}
+      - wait: 1.0
+      - highlight: {target: {css: "tr:has-text('EIRP')"}, seconds: 2.5}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 2.5}
+
+  - id: apply
+    title: {en: "Apply to the design", fr: "Appliquer à la conception"}
+    say:
+      en: >-
+        Back on the downlink, your settings return. Apply to Design writes the link parameters
+        into the shared model, so the design loop, the data budget and the other positions all
+        see the same link. Then record decision D three point three, Link: which margin you
+        accept, with which antenna, power and ground station, and why.
+      fr: >-
+        De retour sur la descendante, vos réglages reviennent. Appliquer à la conception écrit
+        les paramètres de liaison dans le modèle partagé : la boucle de conception, le bilan de
+        données et les autres postes voient tous la même liaison. Consignez ensuite la décision
+        D trois point trois, Liaison : quelle marge vous acceptez, avec quelle antenne, quelle
+        puissance et quelle station sol, et pourquoi.
+    do:
+      - click: {role: button, name: "Downlink (Space→Ground)"}
+      - wait: 1.0
+      - highlight: {target: {role: button, name: "Apply to Design"}, seconds: 2.5}
+      - click: {role: button, name: "Apply to Design"}
+      - wait: 1.5
+    question:
+      type: reflect
+      worksheet: LW-3.3/B
+      text:
+        en: "Which ground station will your mission use, and what margin does your downlink have at 10° elevation with it?"
+        fr: "Quelle station sol votre mission utilisera-t-elle, et quelle marge votre liaison descendante a-t-elle avec elle à 10° d’élévation ?"
