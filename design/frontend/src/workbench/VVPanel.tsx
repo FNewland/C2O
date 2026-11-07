@@ -540,23 +540,25 @@ function FMECASummary({ studyId }: { studyId: string | null }) {
   const modes: any[] = result?.failure_modes?.slice(0, 20) ?? []
   return (
     <Panel level={2} title={t('Failure Mode Analysis (FMECA)')}
-      meta={result?.summary ? t('{{n}} failure modes', { n: result.summary.total || result.failure_modes?.length }) : undefined}
+      meta={result ? t('{{n}} failure modes', { n: result.failure_modes?.length ?? 0 }) : undefined}
       actions={<Button variant="primary" size="sm" onClick={runFMECA} busy={loading} active={loading}>{loading ? t('Analysing...') : t('Run FMECA')}</Button>}>
-      {result?.summary?.critical > 0 && (
-        <Note tone="alarm" className="mb-2">{t('Critical:')} <b>{result.summary.critical}</b></Note>
+      {result && (
+        <p className="t-12 c-3 m-0 mb-2">{t('S severity, O occurrence, D detection (1–5 each, 5 worst); RPN = S × O × D. Generic failure modes for each subsystem type: Analyses › FMECA builds them from your design.')}</p>
       )}
       {result ? (
         <DataTable dense caption={t('Failure Mode Analysis (FMECA)')} rows={modes} rowKey={(_: any, i) => String(i)}
           defaultSort={{ key: 'rpn', dir: 'desc' }}
           empty={t('No failure modes returned.')}
           columns={[
-            { key: 'ss', header: t('Subsystem'), render: (fm: any) => <span className="w-500">{fm.subsystem}</span>, sort: (fm: any) => fm.subsystem },
-            { key: 'fm', header: t('Failure Mode'), render: (fm: any) => fm.failure_mode || fm.description },
-            { key: 'sev', header: t('Severity'), num: true, sort: (fm: any) => fm.severity,
-              render: (fm: any) => (fm.severity || 0) > 7 ? <StatusBadge status="alarm">{String(fm.severity)}</StatusBadge> : fm.severity },
-            { key: 'p', header: t('Probability'), num: true, render: (fm: any) => fm.probability || fm.occurrence, sort: (fm: any) => fm.probability || fm.occurrence },
+            { key: 'ss', header: t('Subsystem'), render: (fm: any) => <span className="w-500">{fm.component ?? fm.subsystem}</span>, sort: (fm: any) => fm.component ?? fm.subsystem },
+            { key: 'fm', header: t('Failure Mode'), render: (fm: any) => fm.mode ?? fm.failure_mode ?? fm.description },
+            { key: 'eff', header: t('System effect'), render: (fm: any) => <span className="c-2">{fm.system_effect}</span> },
+            { key: 'sev', header: t('S'), num: true, sort: (fm: any) => fm.severity,
+              render: (fm: any) => (fm.severity || 0) >= 5 ? <StatusBadge status="alarm">{String(fm.severity)}</StatusBadge> : fm.severity },
+            { key: 'p', header: t('O'), num: true, render: (fm: any) => fm.occurrence ?? fm.probability, sort: (fm: any) => fm.occurrence ?? fm.probability },
+            { key: 'd', header: t('D'), num: true, render: (fm: any) => fm.detection, sort: (fm: any) => fm.detection },
             { key: 'rpn', header: 'RPN', num: true, sort: (fm: any) => fm.rpn,
-              render: (fm: any) => (fm.rpn || 0) > 100 ? <StatusBadge status="alarm">{String(fm.rpn)}</StatusBadge> : <span className="w-600">{fm.rpn}</span> },
+              render: (fm: any) => <span className="w-600">{fm.rpn}</span> },
             { key: 'mit', header: t('Mitigation'), render: (fm: any) => <span className="c-2">{fm.mitigation || fm.recommended_action}</span> },
           ]} />
       ) : (

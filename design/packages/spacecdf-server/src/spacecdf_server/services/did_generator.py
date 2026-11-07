@@ -730,8 +730,9 @@ def generate_rmp(
             risk_items.append(ar)
 
     # ---- Risk counts by severity ----
-    critical_count = sum(1 for r in risk_items if r.get("likelihood", 0) * r.get("consequence", 0) >= 15)
-    major_count = sum(1 for r in risk_items if 8 <= r.get("likelihood", 0) * r.get("consequence", 0) < 15)
+    # bands of textbook § 15.2: critical 16–25, high 10–15 (the risk register uses the same)
+    critical_count = sum(1 for r in risk_items if r.get("likelihood", 0) * r.get("consequence", 0) >= 16)
+    major_count = sum(1 for r in risk_items if 10 <= r.get("likelihood", 0) * r.get("consequence", 0) < 16)
 
     # ---- Risk register subsections ----
     risk_subsections: list[dict] = []

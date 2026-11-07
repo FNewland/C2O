@@ -69,5 +69,7 @@
   "Operator": "Opérateur",
   "Threshold": "Seuil",
   "Mitigation of {{id}}": "Atténuation de {{id}}",
-  "Owner of {{id}}": "Responsable de {{id}}"
+  "Owner of {{id}}": "Responsable de {{id}}",
+  "System effect": "Effet système",
+  "S severity, O occurrence, D detection (1–5 each, 5 worst); RPN = S × O × D. Generic failure modes for each subsystem type: Analyses › FMECA builds them from your design.": "G gravité, O occurrence, D détection (1 à 5 chacune, 5 = pire) ; IPR = G × O × D. Modes de défaillance génériques par type de sous-système : Analyses › FMECA les construit à partir de votre conception."
 }
