@@ -116,24 +116,31 @@ steps:
     say:
       en: >-
         The register holds the risks the team has thought of. The failure modes, effects and
-        criticality analysis looks for the ones it has not. In Analyses, open FMECA and run it
-        from the study: it builds failure modes for every element of this design. Solar array
-        and antenna deployments, and the battery, come out on top. Six failure modes have
-        severity four or five: mission loss or major degradation.
+        criticality analysis looks for the ones it has not. Back at mission level, in Analyses,
+        open FMECA and run it from the study. It lists failure modes for every element of this
+        design and flags the single points of failure: eight here, five of them on elements
+        that carry critical functions. Below, the top risks: the solar array and antenna
+        deployments, and the battery. Six failure modes have severity four or five: mission
+        loss or major degradation.
       fr: >-
         Le registre contient les risques auxquels l’équipe a pensé. L’analyse des modes de
         défaillance, de leurs effets et de leur criticité, l’AMDEC, cherche ceux auxquels elle
-        n’a pas pensé. Dans Analyses, ouvrez FMECA et lancez-la depuis l’étude : elle construit
-        les modes de défaillance de chaque élément de cette conception. Les déploiements du
-        générateur solaire et de l’antenne, et la batterie, arrivent en tête. Six modes de
+        n’a pas pensé. De retour au niveau mission, dans Analyses, ouvrez FMECA et lancez-la
+        depuis l’étude. Elle liste les modes de défaillance de chaque élément de cette
+        conception et signale les points de défaillance uniques : huit ici, dont cinq sur des
+        éléments qui portent des fonctions critiques. Plus bas, les principaux risques : les
+        déploiements du générateur solaire et de l’antenne, et la batterie. Six modes de
         défaillance ont une gravité de quatre ou cinq : perte de mission ou dégradation majeure.
     do:
+      - click: {css: ".c2o-appbar__levels button:first-child"}
+      - wait: 1.2
       - click: {role: tab, name: Analyses, exact: true}
       - wait: 1.2
       - click: {css: "button:has-text('FMECA')"}
       - wait: 1.5
       - click: {role: button, name: "Run from study"}
       - wait: 3
+      - highlight: {target: {text: {en: "8 single points", fr: "8 points uniques"}}, seconds: 3}
       - scroll: {target: {text: "Top Risks", exact: true}}
       - highlight: {target: {text: "Top Risks", exact: true}, seconds: 3}
 

@@ -1,0 +1,165 @@
+# Week 4 — SpaceCDF review gates: the gate profile, the exit criteria with their
+# owners and the workflow step that closes each, not-evaluated items, the diagrams
+# and decision records a gate expects, closing a gap (a risk mitigation), and the
+# go / no-go record. Prepares every gate week (MDR, PRR+SRR, PDR). Follows V-DES-13.
+id: V-SCDF-07
+week: 4
+audience: all
+title:
+  en: "Review gates in SpaceCDF"
+  fr: "Les jalons de revue dans SpaceCDF"
+summary:
+  en: "Prepare a review with SpaceCDF: choose the gate, read each exit criterion with its owner and the step that closes it, see which items wait for an analysis, close a gap the gate found, and record the go or no-go decision."
+  fr: "Préparer une revue avec SpaceCDF : choisir le jalon, lire chaque critère de sortie avec son responsable et l’étape qui le ferme, voir quels points attendent une analyse, combler un manque relevé par le jalon, et consigner la décision go ou no go."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: []
+sources:
+  - design/frontend/src/workbench/VVPanel.tsx (ReviewGates)
+  - design/configs/gate_exit_criteria.yaml
+  - design/docs/oer/chapters/16_cost_and_reviews.md (§ 16.3)
+
+setup:
+  - python: {call: "video/c2ovideo/helpers.py:seed_spacecdf_eosat", app: spacecdf, save: study}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "Ava (Systems)", fr: "Ava (Systèmes)"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2
+
+steps:
+  - id: gate
+    title: {en: "Choose the gate", fr: "Choisir le jalon"}
+    say:
+      en: >-
+        Review gates are in V and V, Review Gates. The profile sets which reviews your course
+        holds: the full sequence of the European Cooperation for Space Standardization, the ECSS, the ESA CubeSat sequence, the three C2O gates, or the
+        same reviews under NASA's names. Then pick the gate: here, the Mission Definition
+        Review. Note the margin line: at this gate, budgets carry a twenty per cent system
+        margin.
+      fr: >-
+        Les jalons de revue se trouvent dans V et V, Jalons de revue. Le profil fixe les revues
+        que tient votre cours : la séquence complète de la Coopération européenne pour la normalisation spatiale, l’ECSS, la séquence CubeSat de l’ESA, les
+        trois jalons C2O, ou les mêmes revues sous les noms de la NASA. Choisissez ensuite le
+        jalon : ici, la revue de définition de mission. Notez la ligne des marges : à ce jalon,
+        les bilans portent une marge système de vingt pour cent.
+    do:
+      - click: {text: "V&V", exact: true}
+      - wait: 1.2
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 2
+      - highlight: {target: {label: "Gate profile", exact: true}, seconds: 2.5}
+      - highlight: {target: {role: tab, name: MDR, exact: true}, seconds: 2}
+
+  - id: verdict
+    title: {en: "Ready or not", fr: "Prête ou non"}
+    say:
+      en: >-
+        The verdict comes first: not ready. Six criteria are must-pass, and only one passes so
+        far. Each line is one exit criterion: the question the reviewers will ask, what the tool
+        found, the seat that owns it, and the step of the team workflow that closes it.
+        Stakeholders, for example: none identified yet. That is the team leader's, in step two.
+      fr: >-
+        Le verdict vient d’abord : pas prête. Six critères sont obligatoires, et un seul est
+        rempli pour l’instant. Chaque ligne est un critère de sortie : la question que poseront
+        les relecteurs, ce que l’outil a trouvé, le poste qui en est responsable, et l’étape du
+        travail d’équipe qui le ferme. Les parties prenantes, par exemple : aucune n’est encore
+        identifiée. C’est au chef d’équipe, à l’étape deux.
+    do:
+      - highlight: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-01')"}, seconds: 2}
+      - scroll: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-02')"}}
+      - highlight: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-02')"}, seconds: 3.5}
+
+  - id: notyet
+    title: {en: "Not evaluated yet", fr: "Pas encore évalué"}
+    say:
+      en: >-
+        Some lines say N slash A: not evaluated. They read results from an analysis that has
+        not run yet, such as the mass and power margins of the design loop. The button takes
+        you to Analyses. A gate cannot pass on a number nobody has computed.
+      fr: >-
+        Certaines lignes indiquent N slash A : non évalué. Elles lisent les résultats d’une
+        analyse qui n’a pas encore tourné, comme les marges de masse et de puissance de la
+        boucle de conception. Le bouton vous mène aux Analyses. Un jalon ne peut pas passer sur
+        un nombre que personne n’a calculé.
+    do:
+      - scroll: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-07')"}}
+      - highlight: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-07')"}, seconds: 3.5}
+
+  - id: diagrams
+    title: {en: "What the gate expects", fr: "Ce qu’attend le jalon"}
+    say:
+      en: >-
+        Below the criteria, the diagrams each gate expects. The mission timeline and the mode
+        diagram are complete. The risk matrix has two gaps: one risk without a mitigation, and
+        one critical risk still open. Below that, the decision records due by this review, each
+        with the seat that records it.
+      fr: >-
+        Sous les critères, les schémas qu’attend chaque jalon. La chronologie de mission et le
+        schéma des modes sont complets. La matrice des risques a deux manques : un risque sans
+        atténuation, et un risque critique encore ouvert. Plus bas, les décisions à consigner
+        avant cette revue, chacune avec le poste qui la consigne.
+    do:
+      - scroll: {target: {css: "[aria-labelledby='gd-mdr']"}}
+      - highlight: {target: {css: "[aria-labelledby='gd-mdr'] li:has-text('5 × 5')"}, seconds: 3.5}
+      - scroll: {target: {css: "#gatedec-h"}}
+      - highlight: {target: {css: "#gatedec-h"}, seconds: 2}
+
+  - id: close
+    title: {en: "Close a gap", fr: "Combler un manque"}
+    say:
+      en: >-
+        Close one now. In the Risk Register, give the battery fade risk its mitigation, then
+        come back to the gate. The missing mitigation is gone. The critical licence risk is
+        still open: that one needs a decision, not just a line of text.
+      fr: >-
+        Comblez-en un maintenant. Dans le registre des risques, donnez son atténuation au risque
+        de perte de capacité de la batterie, puis revenez au jalon. L’atténuation manquante a
+        disparu. Le risque critique sur la licence reste ouvert : celui-là demande une décision,
+        pas seulement une ligne de texte.
+    do:
+      - click: {role: tab, name: "Risk Register", exact: true}
+      - wait: 1.2
+      - fill: {target: {label: {en: "Mitigation of RSK-002", fr: "Atténuation de RSK-002"}, exact: true}, text: {en: "Shallow depth of discharge, per-cell monitoring", fr: "Décharge peu profonde, surveillance par cellule"}, typed: true, press: Enter}
+      - wait: 1.2
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 2
+      - scroll: {target: {css: "[aria-labelledby='gd-mdr']"}}
+      - highlight: {target: {css: "[aria-labelledby='gd-mdr'] li:has-text('5 × 5')"}, seconds: 3}
+    question:
+      type: multichoice
+      text:
+        en: "Four must-pass criteria fail a week before the review. What should the team leader record?"
+        fr: "Quatre critères obligatoires échouent une semaine avant la revue. Que doit consigner le chef d’équipe ?"
+      options:
+        - text: {en: "No go: close the failed criteria first, with an owner and a date for each.", fr: "No go : fermer d’abord les critères en échec, chacun avec un responsable et une date."}
+          correct: true
+          why: {en: "Must-pass means the review cannot pass without them.", fr: "Obligatoire veut dire que la revue ne peut pas passer sans eux."}
+        - text: {en: "Go: hold the review and discuss the failures there.", fr: "Go : tenir la revue et y discuter des échecs."}
+          why: {en: "A review held on failed must-pass items cannot pass; it only spends the reviewers' time.", fr: "Une revue tenue avec des critères obligatoires en échec ne peut pas passer ; elle ne fait que prendre le temps des relecteurs."}
+        - text: {en: "Switch to a profile with fewer gates.", fr: "Passer à un profil avec moins de jalons."}
+          why: {en: "The profile is set by the course, and every profile has a mission definition review.", fr: "Le profil est fixé par le cours, et chaque profil comporte une revue de définition de mission."}
+
+  - id: decide
+    title: {en: "Go or no go", fr: "Go ou no go"}
+    say:
+      en: >-
+        The go or no-go decision is the team leader's. Record go or no-go opens a decision
+        record in the logbook, already filled in: the verdict, how many criteria pass and fail,
+        and the open issues, one per failed criterion. What the tool cannot fill in is the
+        rationale: why the team decides as it does. When every must-pass item passes, the
+        review can start, and passing it saves a baseline of the design.
+      fr: >-
+        La décision go ou no go revient au chef d’équipe. Consigner la décision go ou no go ouvre
+        une fiche de décision dans le journal de bord, déjà remplie : le verdict, le nombre de
+        critères remplis et en échec, et les points ouverts, un par critère en échec. Ce que
+        l’outil ne peut pas remplir, c’est la justification : pourquoi l’équipe décide ainsi.
+        Quand tous les critères obligatoires sont remplis, la revue peut commencer, et la passer
+        enregistre une référence de la conception.
+    do:
+      - scroll: {target: {css: "button.c2o-lb-record:has-text('go / no')"}}
+      - click: {css: "button.c2o-lb-record:has-text('go / no')"}
+      - wait: 1.5
+      - highlight: {target: {css: "#c2o-logbook"}, seconds: 3}
+      - highlight: {target: {css: "#c2o-logbook textarea"}, seconds: 3}
