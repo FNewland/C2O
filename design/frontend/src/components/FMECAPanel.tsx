@@ -111,7 +111,7 @@ export function FMECAPanel({ studyId, optionId }: { studyId?: string | null; opt
     <div style={{ padding: '1rem', overflowY: 'auto', height: '100%' }}>
       <h2 className="t-15 mb-1">{t('FMECA — Design Risk Awareness')}</h2>
       <p className="t-12 c-2 mb-3">
-        {t('Failure modes for current architecture. Use this to inform redundancy and architecture decisions. Critical items (RPN ≥ 60) should drive architecture changes.')}
+        {t('Failure modes for current architecture. Use this to inform redundancy and architecture decisions. Critical items (severity 4 or 5: mission loss or major degradation) should drive architecture changes.')}
       </p>
 
       {/* SCDF-177: study-driven run */}
@@ -172,7 +172,7 @@ export function FMECAPanel({ studyId, optionId }: { studyId?: string | null; opt
         </div>
         <div className="py-2 px-3 bg-2 rounded ta-c">
           <div style={{ fontSize: fs.title, fontWeight: 700, color: result.critical_count > 0 ? 'var(--status-alarm)' : 'var(--status-ok)' }}>{result.critical_count}</div>
-          <div className="t-12 c-3">{t('Critical (RPN ≥ 60)')}</div>
+          <div className="t-12 c-3">{t('Critical (severity ≥ 4)')}</div>
         </div>
         <div className="py-2 px-3 bg-2 rounded ta-c">
           <div className="t-20 w-600 c-caution">{result.total_rpn}</div>
@@ -204,7 +204,7 @@ export function FMECAPanel({ studyId, optionId }: { studyId?: string | null; opt
           {result.redundancy_recommendations.map((s: any, i: number) => (
             <div key={i} className="py-1 px-0 t-12">
               <span className="w-600">{s.component}:</span> {s.recommendation}
-              {s.expected_rpn_reduction && <span className="c-ok ml-1">(RPN -{s.expected_rpn_reduction})</span>}
+              {s.expected_rpn_reduction && <span className="c-ok ml-1">{t('(expected RPN −{{n}})', { n: s.expected_rpn_reduction })}</span>}
             </div>
           ))}
         </div>

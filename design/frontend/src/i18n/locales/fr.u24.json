@@ -71,5 +71,8 @@
   "Mitigation of {{id}}": "Atténuation de {{id}}",
   "Owner of {{id}}": "Responsable de {{id}}",
   "System effect": "Effet système",
-  "S severity, O occurrence, D detection (1–5 each, 5 worst); RPN = S × O × D. Generic failure modes for each subsystem type: Analyses › FMECA builds them from your design.": "G gravité, O occurrence, D détection (1 à 5 chacune, 5 = pire) ; IPR = G × O × D. Modes de défaillance génériques par type de sous-système : Analyses › FMECA les construit à partir de votre conception."
+  "S severity, O occurrence, D detection (1–5 each, 5 worst); RPN = S × O × D. Generic failure modes for each subsystem type: Analyses › FMECA builds them from your design.": "G gravité, O occurrence, D détection (1 à 5 chacune, 5 = pire) ; IPR = G × O × D. Modes de défaillance génériques par type de sous-système : Analyses › FMECA les construit à partir de votre conception.",
+  "Failure modes for current architecture. Use this to inform redundancy and architecture decisions. Critical items (severity 4 or 5: mission loss or major degradation) should drive architecture changes.": "Modes de défaillance de l’architecture actuelle. Servez-vous-en pour décider de la redondance et de l’architecture. Les éléments critiques (gravité 4 ou 5 : perte de mission ou dégradation majeure) doivent faire évoluer l’architecture.",
+  "Critical (severity ≥ 4)": "Critiques (gravité ≥ 4)",
+  "(expected RPN −{{n}})": "(IPR attendu −{{n}})"
 }
