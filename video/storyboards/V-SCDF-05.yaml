@@ -122,9 +122,9 @@ steps:
         matrice est complète pour ce niveau : rien ne manque. Les deux vues s’exportent, en image
         pour votre rapport ou dans le document d’exigences d’interface.
     do:
-      - click: {role: button, name: Table, exact: true}
+      - click: {role: tab, name: Table, exact: true}
       - wait: 2
-      - click: {role: button, name: Diagram, exact: true}
+      - click: {role: tab, name: Diagram, exact: true}
       - wait: 1.5
 
   - id: icd
