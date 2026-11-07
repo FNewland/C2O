@@ -6,7 +6,7 @@
  * - Typed: functional, performance, interface, regulatory, process
  * - Verified: A (analysis), T (test), I (inspection), R (review), D (demonstration)
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
@@ -34,6 +34,16 @@ const REQ_TYPES = [
 
 const VERIFICATION_METHODS: Record<string, string> = {
   A: 'Analysis', T: 'Test', I: 'Inspection', R: 'Review', D: 'Demonstration',
+}
+
+// English text is the i18n key — SMART check finding codes (server: requirement_engine.validate_smart)
+const SMART_CODES: Record<string, string> = {
+  specific: 'not specific (use “shall”)',
+  measurable: 'not measurable (no threshold)',
+  relevant: 'not relevant (no objective, parent or rationale)',
+  traceable: 'not traceable (no objective, function or parent)',
+  how: 'says HOW, not WHAT',
+  orphan: 'orphan (no parent)',
 }
 
 // Requirement status → display status (colour + glyph + text).
@@ -169,6 +179,31 @@ export function RequirementsPanel() {
   }
   const [deriveFromId, setDeriveFromId] = useState<string | null>(null)
 
+  // SMART findings for the requirements at this level, after a check (id → codes)
+  const [smart, setSmart] = useState<Record<string, string[]> | null>(null)
+  const [recheck, setRecheck] = useState(0)
+
+  // Inline edit: text, threshold and verification method (what the SMART check needs)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [editOp, setEditOp] = useState('<=')
+  const [editValue, setEditValue] = useState('')
+  const [editMethod, setEditMethod] = useState('')
+  const startEdit = (req: any) => {
+    setEditId(req.id); setEditText(req.text || ''); setEditOp(req.threshold_op || '<=')
+    setEditValue(req.threshold_value != null ? String(req.threshold_value) : ''); setEditMethod(req.verification_method || '')
+  }
+  const saveEdit = useMutation({
+    mutationFn: async (reqId: string) => {
+      const value = editValue.trim() === '' ? null : Number(editValue.replace(',', '.'))
+      await fetch(`${API}/requirements/${reqId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: editText, threshold_op: value == null ? null : editOp, threshold_value: value, verification_method: editMethod || null }),
+      })
+    },
+    onSuccess: () => { setEditId(null); qc.invalidateQueries({ queryKey: ['requirements', studyId] }); setRecheck(n => n + 1) },
+  })
+
   // Group requirements by element
   const grouped = new Map<string, any[]>()
   for (const req of requirements) {
@@ -186,8 +221,8 @@ export function RequirementsPanel() {
     if (parentCode && !parentReq) { void showAlert(t('Requirement "{{code}}" not found', { code: parentCode })); return }
     fetch(`${API}/requirements/${req.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ derived_from_requirement_id: parentReq?.id || null }),
-    }).then(() => qc.invalidateQueries({ queryKey: ['requirements', studyId] }))
+      body: JSON.stringify({ derived_from_requirement_id: parentReq?.id || null, parent_id: parentReq?.id || null }),
+    }).then(() => { qc.invalidateQueries({ queryKey: ['requirements', studyId] }); setRecheck(n => n + 1) })
   }
 
   return (
@@ -195,7 +230,7 @@ export function RequirementsPanel() {
       <Panel
         title={t('Requirements ({{n}})', { n: requirements.length })}
         actions={<>
-          <SmartVerifyButton studyId={studyId} />
+          <SmartVerifyButton studyId={studyId} visibleIds={requirements.map((r: any) => r.id)} recheck={recheck} onResult={setSmart} />
           <RecordDecision decision="D-2.1-FLOWDOWN" capture="requirements:flowdown" label={t('Record flow-down decision')}
             prefill={() => {
               const by = (lvl: string) => allRequirements.filter((r: any) => r.level === lvl).length
@@ -228,12 +263,15 @@ export function RequirementsPanel() {
             </h4>
             {reqs.map((req: any) => {
               const reqType = REQ_TYPES.find(rt => rt.value === (req.level === 'interface' ? 'interface' : req.rationale)) || REQ_TYPES[0]
-              const parentCode = req.derived_from_requirement_id
-                ? allRequirements.find((r: any) => r.id === req.derived_from_requirement_id)?.code || t('traced')
+              const parentId = req.derived_from_requirement_id || req.parent_id
+              const parentCode = parentId
+                ? allRequirements.find((r: any) => r.id === parentId)?.code || t('traced')
                 : null
+              const findings = smart?.[req.id] ?? []
               const orphan = !parentCode && req.level !== 'mission' && req.level !== 'interface'
               return (
-                <div key={req.id} className="c2o-reqs__row">
+                <div key={req.id}>
+                <div className="c2o-reqs__row">
                   <span className="c2o-reqs__code mono">{req.code}</span>
                   <Tag title={t(reqType.label)}>{t(reqType.label)[0]}</Tag>
                   {req.level === 'interface' ? <RequirementIrInfo req={req} /> : <span className="c2o-reqs__text">{req.text}</span>}
@@ -264,10 +302,45 @@ export function RequirementsPanel() {
                     ) : (
                       <Button size="sm" variant="quiet" onClick={() => linkParent(req)} title={t('Click to link to a parent requirement')}>{t('link ↑')}</Button>
                     )}
+                    {req.level !== 'interface' && (
+                      <Button size="sm" variant="quiet" onClick={() => startEdit(req)} title={t('Edit text, threshold and verification method')}>{t('edit')}</Button>
+                    )}
                     <Button size="sm" variant="quiet" onClick={() => startDerive(req)} title={t('Flow down — derive a child requirement')}>{t('flow ↓')}</Button>
                     <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete {{code}}', { code: req.code })}
                       onConfirm={() => deleteMutation.mutate(req.id)} />
                   </span>
+                </div>
+                {findings.length > 0 && (
+                  <div className="c2o-reqs__smart t-13" role="note" style={{ padding: '0 0 0.4rem 9.5rem', color: 'var(--caution, #b7791f)' }}>
+                    {t('SMART: {{list}}', { list: findings.map(c => t(SMART_CODES[c] ?? c)).join(' · ') })}
+                  </div>
+                )}
+                {editId === req.id && (
+                  <form className="c2o-blocks__add" aria-label={t('Edit {{code}}', { code: req.code })}
+                    onSubmit={e => { e.preventDefault(); saveEdit.mutate(req.id) }}>
+                    <Field label={t('Requirement text')} className="grow c2o-reqs__textfield">
+                      <Input dense value={editText} onChange={e => setEditText(e.target.value)} />
+                    </Field>
+                    <Field label={t('Operator')}>
+                      <Select dense value={editOp} onChange={e => setEditOp(e.target.value)}>
+                        {['<=', '>=', '<', '>', '=='].map(o => <option key={o} value={o}>{o}</option>)}
+                      </Select>
+                    </Field>
+                    <Field label={t('Threshold')}>
+                      <Input dense className="mono" value={editValue} onChange={e => setEditValue(e.target.value)} inputMode="decimal" />
+                    </Field>
+                    <Field label={t('Verification method')}>
+                      <Select dense value={editMethod} onChange={e => setEditMethod(e.target.value)}>
+                        <option value="">{t('none')}</option>
+                        {Object.entries(VERIFICATION_METHODS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
+                      </Select>
+                    </Field>
+                    <span className="row gap-2">
+                      <Button type="submit" variant="primary" size="sm" busy={saveEdit.isPending}>{t('Save')}</Button>
+                      <Button size="sm" onClick={() => setEditId(null)}>{t('Cancel')}</Button>
+                    </span>
+                  </form>
+                )}
                 </div>
               )
             })}
@@ -323,7 +396,12 @@ export function RequirementsPanel() {
   )
 }
 
-function SmartVerifyButton({ studyId }: { studyId: string | null }) {
+function SmartVerifyButton({ studyId, visibleIds, recheck, onResult }: {
+  studyId: string | null
+  visibleIds: string[]               // the requirements shown at this level: counts and findings are scoped to them
+  recheck: number                    // bumped after an edit or a new link: re-run a check already shown
+  onResult: (findings: Record<string, string[]>) => void
+}) {
   const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -333,9 +411,19 @@ function SmartVerifyButton({ studyId }: { studyId: string | null }) {
     setLoading(true)
     try {
       const res = await fetch(`${API}/requirements/verify?study_id=${studyId}`)
-      if (res.ok) setResult(await res.json())
+      if (res.ok) {
+        const all = await res.json()
+        const ids = new Set(visibleIds)
+        const issues = (all.issues ?? []).filter((i: any) => ids.has(i.requirement_id))
+        const smartFail = issues.filter((i: any) => (i.codes ?? []).some((c: string) => c !== 'orphan')).length
+        const orphans = issues.filter((i: any) => (i.codes ?? []).includes('orphan')).length
+        setResult({ ...all, issues, smart_pass: ids.size - smartFail, smart_fail: smartFail, orphans })
+        onResult(Object.fromEntries(issues.map((i: any) => [i.requirement_id, i.codes ?? []])))
+      }
     } finally { setLoading(false) }
   }
+  // re-run after an edit, but only if a check is already on screen
+  useEffect(() => { if (recheck && result) void verify() }, [recheck])  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex ai-c gap-3 wrap">
@@ -343,7 +431,7 @@ function SmartVerifyButton({ studyId }: { studyId: string | null }) {
         <span className="iflex ai-c gap-3" role="status">
           <StatusBadge status="ok">{t('{{count}} ok', { count: result.smart_pass })}</StatusBadge>
           {result.smart_fail > 0 && (
-            <span title={result.issues?.map((i: any) => `${i.code}: ${i.issues.join('; ')}`).join('\n')}>
+            <span title={result.issues?.map((i: any) => `${i.code}: ${(i.codes ?? []).map((c: string) => t(SMART_CODES[c] ?? c)).join('; ')}`).join('\n')}>
               <StatusBadge status="caution">{t('{{count}} issues', { count: result.smart_fail })}</StatusBadge>
             </span>
           )}
@@ -356,7 +444,7 @@ function SmartVerifyButton({ studyId }: { studyId: string | null }) {
             ],
             // The tool's findings, one line per requirement: the student says which get rewritten, split or deleted.
             open_issues: [
-              ...(result.issues ?? []).slice(0, 12).map((i: any) => `${i.code ?? i.id ?? '?'}: ${(i.issues ?? []).join('; ')}`.slice(0, 160)),
+              ...(result.issues ?? []).slice(0, 12).map((i: any) => `${i.code ?? i.id ?? '?'}: ${(i.codes ?? []).map((c: string) => t(SMART_CODES[c] ?? c)).join('; ')}`.slice(0, 160)),
               ...((result.issues ?? []).length > 12 ? [t('{{n}} more requirements with issues', { n: result.issues.length - 12 })] : []),
             ].join('\n') || undefined,
           })} />

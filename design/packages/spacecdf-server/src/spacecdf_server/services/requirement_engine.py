@@ -36,6 +36,7 @@ class SMARTCheck:
     relevant: bool = False
     traceable: bool = False
     issues: list[str] = field(default_factory=list)
+    codes: list[str] = field(default_factory=list)  # stable ids for the UI: specific, measurable, relevant, traceable, how
     is_smart: bool = False
     is_how_not_what: bool = False  # Flags if req describes HOW instead of WHAT
 
@@ -243,6 +244,7 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
         check.specific = True
     else:
         issues.append("Not specific: requirement should use 'shall' and be detailed")
+        check.codes.append("specific")
 
     # Measurable
     threshold = req.get("threshold")
@@ -250,23 +252,31 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
         check.measurable = True
     elif req.get("operator") and req.get("unit"):
         check.measurable = True
+    elif req.get("threshold_op") and isinstance(req.get("threshold_value"), (int, float)):
+        check.measurable = True     # the workbench's threshold fields
     else:
         issues.append("Not measurable: add a threshold value with operator and unit")
+        check.codes.append("measurable")
 
     # Achievable (simplified — just check it's not obviously impossible)
     check.achievable = True  # Would need class envelope check in production
 
+    # A derived requirement traces up through its parent (textbook § 5.4)
+    has_parent = bool(req.get("derived_from_requirement_id") or req.get("parent_id"))
+
     # Relevant
-    if req.get("objective_id") or req.get("rationale"):
+    if req.get("objective_id") or req.get("rationale") or has_parent:
         check.relevant = True
     else:
-        issues.append("Not relevant: should trace to an objective or have a rationale")
+        issues.append("Not relevant: should trace to an objective, a parent requirement or have a rationale")
+        check.codes.append("relevant")
 
     # Traceable
-    if req.get("objective_id") or req.get("function_id") or req.get("mission_need_id"):
+    if req.get("objective_id") or req.get("function_id") or req.get("mission_need_id") or has_parent:
         check.traceable = True
     else:
-        issues.append("Not traceable: should link to an objective or function")
+        issues.append("Not traceable: should link to an objective, a function or a parent requirement")
+        check.codes.append("traceable")
 
     # Check HOW vs WHAT
     text_lower = text.lower()
@@ -276,6 +286,7 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
             if indicator in text_lower:
                 check.is_how_not_what = True
                 issues.append(f"Describes HOW not WHAT: '{indicator}' — rephrase to describe the capability needed, not the implementation")
+                check.codes.append("how")
                 break
 
     check.issues = issues

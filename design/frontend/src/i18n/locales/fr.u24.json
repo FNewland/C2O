@@ -55,5 +55,17 @@
   "Implementation Margin (dB)": "Marge d’implémentation (dB)",
   "Link budget": "Bilan de liaison",
   "Link budget, term by term": "Bilan de liaison, terme à terme",
-  "Data rate: {{v}} kbps": "Débit : {{v}} kbit/s"
+  "Data rate: {{v}} kbps": "Débit : {{v}} kbit/s",
+  "not specific (use “shall”)": "pas spécifique (employer « doit »)",
+  "not measurable (no threshold)": "pas mesurable (aucun seuil)",
+  "not relevant (no objective, parent or rationale)": "pas pertinente (ni objectif, ni parent, ni justification)",
+  "not traceable (no objective, function or parent)": "pas traçable (ni objectif, ni fonction, ni parent)",
+  "says HOW, not WHAT": "dit COMMENT, pas QUOI",
+  "orphan (no parent)": "orpheline (aucun parent)",
+  "SMART: {{list}}": "SMART : {{list}}",
+  "Edit text, threshold and verification method": "Modifier le texte, le seuil et la méthode de vérification",
+  "edit": "modifier",
+  "Edit {{code}}": "Modifier {{code}}",
+  "Operator": "Opérateur",
+  "Threshold": "Seuil"
 }

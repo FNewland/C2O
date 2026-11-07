@@ -100,9 +100,13 @@ async def verify_requirements(study_id: str) -> dict:
 
     for req in reqs:
         req_issues: list[str] = []
-        if req.get("level") in ("system", "subsystem") and not req.get("derived_from_requirement_id") and not req.get("parent_id"):
+        req_codes: list[str] = []
+        # same rule as the Requirements tab: anything below mission level, other
+        # than an interface requirement, needs a parent
+        if req.get("level") not in ("mission", "interface") and not req.get("derived_from_requirement_id") and not req.get("parent_id"):
             orphans += 1
             req_issues.append("Not derived from a parent requirement (orphan)")
+            req_codes.append("orphan")
         try:
             check = validate_smart(req)
             if check.is_smart:
@@ -110,10 +114,11 @@ async def verify_requirements(study_id: str) -> dict:
             else:
                 smart_fail += 1
                 req_issues.extend(check.issues)
+                req_codes.extend(check.codes)
         except Exception:
             pass
         if req_issues:
-            issues.append({"requirement_id": req["id"], "code": req.get("code", ""), "text": req.get("text", ""), "issues": req_issues})
+            issues.append({"requirement_id": req["id"], "code": req.get("code", ""), "text": req.get("text", ""), "issues": req_issues, "codes": req_codes})
 
     return {"study_id": study_id, "total": len(reqs), "smart_pass": smart_pass, "smart_fail": smart_fail, "orphans": orphans, "issues": issues}
 
