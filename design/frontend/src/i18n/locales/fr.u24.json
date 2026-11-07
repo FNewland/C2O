@@ -54,5 +54,6 @@
   "Required Eb/N₀ (dB)": "Eb/N₀ requis (dB)",
   "Implementation Margin (dB)": "Marge d’implémentation (dB)",
   "Link budget": "Bilan de liaison",
-  "Link budget, term by term": "Bilan de liaison, terme à terme"
+  "Link budget, term by term": "Bilan de liaison, terme à terme",
+  "Data rate: {{v}} kbps": "Débit : {{v}} kbit/s"
 }

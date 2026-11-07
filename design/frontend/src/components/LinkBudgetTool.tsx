@@ -27,10 +27,13 @@ export function LinkBudgetTool() {
 
   // Helper: set local state immediately, debounce designStore write to avoid render storms
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const writeStoreRef = useRef(true)
   const useLinkedState = (initial: number, paramId: string): [number, (v: number) => void] => {
     const [val, setVal] = useState(initial)
     const setter = useCallback((v: number) => {
       setVal(v)
+      // The uplink is a what-if: only the downlink writes the design's link parameters
+      if (!writeStoreRef.current) return
       // Debounce the store write — only fires after 500ms of no changes
       if (timersRef.current[paramId]) clearTimeout(timersRef.current[paramId])
       timersRef.current[paramId] = setTimeout(() => setParam(paramId, v, 'link-budget'), 500)
@@ -45,7 +48,12 @@ export function LinkBudgetTool() {
   const [txGain, setTxGain] = useLinkedState(linkDirection === 'downlink' ? 6.0 : 35.0, 'link.tx_antenna_gain_db')
   const [txLosses, setTxLosses] = useLinkedState(1.5, 'link.tx_losses_db')
   const [frequency, setFrequency] = useLinkedState(linkDirection === 'downlink' ? 2250 : 2050, 'link.frequency_mhz')
-  const [slantRange, setSlantRange] = useLinkedState(alt * 1.15 || 575, 'link.slant_range_km')
+  // Worst case: the slant range at the lowest usable elevation (10°), textbook § 11.4.1
+  const slantAt = (h: number, elDeg: number) => {
+    const re = 6378.137, e = elDeg * Math.PI / 180
+    return Math.round(Math.sqrt((re + h) ** 2 - (re * Math.cos(e)) ** 2) - re * Math.sin(e))
+  }
+  const [slantRange, setSlantRange] = useLinkedState(slantAt(alt || 500, 10), 'link.slant_range_km')
   const [atmosphericLoss, setAtmosphericLoss] = useLinkedState(0.5, 'link.atmospheric_loss_db')
   const [pointingLoss, setPointingLoss] = useLinkedState(1.0, 'link.pointing_loss_db')
   const [polLoss, setPolLoss] = useLinkedState(0.3, 'link.polarisation_loss_db')
@@ -54,6 +62,24 @@ export function LinkBudgetTool() {
   const [dataRate, setDataRate] = useLinkedState(1e6, 'link.data_rate_bps')
   const [reqEbN0, setReqEbN0] = useState(4.0)
   const [implMargin, setImplMargin] = useState(2.0)
+
+  // Switching direction swaps the station and spacecraft ends. Typical S-band
+  // telecommand uplink: 20 W into a 35 dBi dish (EIRP ≈ 46 dBW, textbook § 11.7),
+  // a 6 dBi patch on board, a 600 K receiver, 4 kbit/s.
+  const downlinkSaved = useRef<number[] | null>(null)
+  const switchDirection = (dir: 'downlink' | 'uplink') => {
+    if (dir === linkDirection) return
+    const setters = [setTxPower, setTxGain, setFrequency, setRxGain, setRxTemp, setDataRate]
+    if (dir === 'uplink') {
+      downlinkSaved.current = [txPower, txGain, frequency, rxGain, rxTemp, dataRate]
+      writeStoreRef.current = false
+      ;[20, 35, 2050, 6, 600, 4000].forEach((v, i) => setters[i](v))
+    } else {
+      writeStoreRef.current = true
+      ;(downlinkSaved.current ?? [2, 6, 2250, 35, 150, 1e6]).forEach((v, i) => setters[i](v))
+    }
+    setLinkDirection(dir)
+  }
 
   const budget = useMemo<LinkBudgetLine[]>(() => {
     const c = 3e8
@@ -69,22 +95,22 @@ export function LinkBudgetTool() {
 
     return [
       { label: t('TX Power'), value: round(10 * Math.log10(txPower)), unit: 'dBW', notes: `${txPower} W`, type: 'gain' },
-      { label: t('TX Antenna Gain'), value: round(txGain), unit: 'dBi', notes: t('Spacecraft antenna'), type: 'gain' },
+      { label: t('TX Antenna Gain'), value: round(txGain), unit: 'dBi', notes: linkDirection === 'downlink' ? t('Spacecraft antenna') : t('Ground station antenna'), type: 'gain' },
       { label: t('TX Losses'), value: round(-txLosses), unit: 'dB', notes: t('Cable, filter, mismatch'), type: 'loss' },
       { label: 'EIRP', value: round(eirp), unit: 'dBW', notes: t('Effective Isotropic Radiated Power'), type: 'result' },
       { label: t('Free Space Path Loss'), value: round(-fspl), unit: 'dB', notes: t('{{km}} km at {{mhz}} MHz', { km: slantRange, mhz: frequency }), type: 'loss' },
       { label: t('Atmospheric Loss'), value: round(-atmosphericLoss), unit: 'dB', notes: t('Rain, gas absorption'), type: 'loss' },
       { label: t('Pointing Loss'), value: round(-pointingLoss), unit: 'dB', notes: t('Antenna misalignment'), type: 'loss' },
       { label: t('Polarisation Loss'), value: round(-polLoss), unit: 'dB', notes: t('Pol mismatch'), type: 'loss' },
-      { label: t('RX Antenna Gain'), value: round(rxGain), unit: 'dBi', notes: t('Ground station antenna'), type: 'gain' },
+      { label: t('RX Antenna Gain'), value: round(rxGain), unit: 'dBi', notes: linkDirection === 'downlink' ? t('Ground station antenna') : t('Spacecraft antenna'), type: 'gain' },
       { label: t('System G/T'), value: round(gt), unit: 'dB/K', notes: `Tsys = ${rxTemp} K`, type: 'result' },
       { label: 'C/N₀', value: round(cn0), unit: 'dBHz', notes: t('Carrier-to-noise density'), type: 'result' },
-      { label: t('Eb/N₀ (available)'), value: round(ebN0), unit: 'dB', notes: t('Data rate: {{v}} Mbps', { v: (dataRate / 1e6).toFixed(1) }), type: 'result' },
+      { label: t('Eb/N₀ (available)'), value: round(ebN0), unit: 'dB', notes: dataRate >= 1e5 ? t('Data rate: {{v}} Mbps', { v: (dataRate / 1e6).toFixed(1) }) : t('Data rate: {{v}} kbps', { v: (dataRate / 1e3).toFixed(1) }), type: 'result' },
       { label: t('Eb/N₀ (required)'), value: round(-reqEbN0), unit: 'dB', notes: t('Modulation + coding threshold'), type: 'loss' },
       { label: t('Implementation Margin'), value: round(-implMargin), unit: 'dB', notes: 'ECSS-E-ST-50-05C', type: 'loss' },
       { label: t('LINK MARGIN'), key: 'margin', value: round(margin), unit: 'dB', notes: margin >= 3 ? t('Closes with margin') : margin >= 0 ? t('Marginal') : t('DOES NOT CLOSE'), type: 'result' },
     ]
-  }, [txPower, txGain, txLosses, frequency, slantRange, atmosphericLoss, pointingLoss, polLoss, rxGain, rxTemp, dataRate, reqEbN0, implMargin])
+  }, [txPower, txGain, txLosses, frequency, slantRange, atmosphericLoss, pointingLoss, polLoss, rxGain, rxTemp, dataRate, reqEbN0, implMargin, linkDirection])
 
   const margin = budget[budget.length - 1]?.value || 0
   const [applied, setApplied] = useState(false)
@@ -112,13 +138,13 @@ export function LinkBudgetTool() {
 
       {/* Uplink / Downlink toggle */}
       <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
-        <button onClick={() => setLinkDirection('downlink')} style={{
+        <button onClick={() => switchDirection('downlink')} style={{
           padding: '0.25rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
           background: linkDirection === 'downlink' ? 'var(--interactive)' : 'var(--bg-secondary, var(--surface-2))',
           color: linkDirection === 'downlink' ? 'white' : 'var(--text-2)',
           border: `1px solid ${linkDirection === 'downlink' ? 'var(--interactive)' : 'var(--line)'}`,
         }}>{t('Downlink (Space→Ground)')}</button>
-        <button onClick={() => setLinkDirection('uplink')} style={{
+        <button onClick={() => switchDirection('uplink')} style={{
           padding: '0.25rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
           background: linkDirection === 'uplink' ? 'var(--cat-2)' : 'var(--bg-secondary, var(--surface-2))',
           color: linkDirection === 'uplink' ? 'white' : 'var(--text-2)',
