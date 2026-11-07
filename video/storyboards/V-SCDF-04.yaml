@@ -1,0 +1,182 @@
+# Week 2 — SpaceCDF Requirements tab: the SMART check and its findings, making
+# a requirement measurable (threshold), linking an orphan to its parent, a
+# flow-down, and the traceability view. Prepares LW-2.1/B and LW-2.1/C and
+# the decision records D-2.1-QUALITY and D-2.1-FLOWDOWN. Follows V-DES-04.
+id: V-SCDF-04
+week: 2
+audience: all
+title:
+  en: "Requirements in SpaceCDF"
+  fr: "Les exigences dans SpaceCDF"
+summary:
+  en: "Check your requirements in SpaceCDF: run the SMART check and read its findings, add a threshold so a requirement becomes measurable, link an orphan to its parent, flow a requirement down, and follow the chain in the traceability view."
+  fr: "Vérifier vos exigences dans SpaceCDF : lancer le contrôle SMART et lire ses constats, ajouter un seuil pour rendre une exigence mesurable, rattacher une orpheline à son parent, décliner une exigence, et suivre la chaîne dans la vue de traçabilité."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-2.1/B, LW-2.1/C]
+  decisions: [D-2.1-QUALITY, D-2.1-FLOWDOWN]
+sources:
+  - design/frontend/src/workbench/RequirementsPanel.tsx
+  - design/packages/spacecdf-server/src/spacecdf_server/services/requirement_engine.py (validate_smart)
+  - design/docs/oer/chapters/05_requirements.md (§ 5.2–5.4)
+
+setup:
+  - python: {call: "video/c2ovideo/helpers.py:seed_spacecdf_eosat", app: spacecdf, save: study}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "Ava (Systems)", fr: "Ava (Systèmes)"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2
+
+steps:
+  - id: tab
+    title: {en: "The Requirements tab", fr: "L’onglet Exigences"}
+    say:
+      en: >-
+        Open the Requirements tab. Each line is one requirement: its code, its type, the text,
+        the verification method, its status, and the parent it traces up to. This study has one
+        mission requirement, three system requirements and two subsystem requirements. The
+        system engineer owns this list.
+      fr: >-
+        Ouvrez l’onglet Exigences. Chaque ligne est une exigence : son code, son type, le texte,
+        la méthode de vérification, son état, et le parent dont elle découle. Cette étude compte
+        une exigence de mission, trois exigences système et deux exigences de sous-système.
+        C’est l’ingénieur système qui tient cette liste.
+    do:
+      - click: {role: tab, name: Requirements, exact: true}
+      - wait: 1.2
+      - highlight: {target: {css: ".c2o-reqs__row:has-text('SR-002')"}, seconds: 3}
+
+  - id: smart
+    title: {en: "Run the SMART check", fr: "Lancer le contrôle SMART"}
+    say:
+      en: >-
+        Press SMART Check. Each requirement is tested: does it say shall, does it have a
+        measurable threshold, does it trace to an objective or a parent? Under each line the
+        tool says what is missing. Most of these are not measurable: the number is in the text,
+        but not in a threshold the tools can check. And SR-003, the mass limit, is an orphan:
+        nothing says why it exists.
+      fr: >-
+        Appuyez sur Contrôle SMART. Chaque exigence est testée : dit-elle « doit », a-t-elle un
+        seuil mesurable, se rattache-t-elle à un objectif ou à un parent ? Sous chaque ligne,
+        l’outil indique ce qui manque. La plupart ne sont pas mesurables : le nombre est dans le
+        texte, mais pas dans un seuil que les outils peuvent vérifier. Et SR-003, la limite de
+        masse, est orpheline : rien ne dit pourquoi elle existe.
+    do:
+      - click: {role: button, name: "SMART Check"}
+      - wait: 2
+      - highlight: {target: {css: ".c2o-reqs__row:has-text('SR-001') + .c2o-reqs__smart"}, seconds: 2.5}
+      - highlight: {target: {css: ".c2o-reqs__row:has-text('SR-003')"}, seconds: 3}
+
+  - id: threshold
+    title: {en: "Make it measurable", fr: "La rendre mesurable"}
+    say:
+      en: >-
+        Press edit on SR-003. The text stays as written; add the threshold the tools can test:
+        less than or equal to twelve, in kilograms, verified by inspection, by weighing the
+        spacecraft. Save. Now the mass budget can be checked against this requirement
+        automatically.
+      fr: >-
+        Appuyez sur modifier sur SR-003. Le texte reste tel quel ; ajoutez le seuil que les
+        outils peuvent tester : inférieur ou égal à douze, en kilogrammes, vérifié par
+        inspection, en pesant le satellite. Enregistrez. Le bilan de masse peut maintenant être
+        comparé automatiquement à cette exigence.
+    do:
+      - click: {role: button, name: edit, exact: true, within: ".c2o-reqs__row:has-text('SR-003')"}
+      - wait: 0.8
+      - select: {target: {label: Operator, exact: true}, value: "<="}
+      - fill: {target: {label: Threshold, exact: true}, text: "12", typed: true}
+      - highlight: {target: {label: "Verification method", exact: true, within: "form[aria-label^='Edit'], form[aria-label^='Modifier']"}, seconds: 2}
+      - click: {role: button, name: Save, exact: true, within: "form[aria-label^='Edit'], form[aria-label^='Modifier']"}
+      - wait: 2
+
+  - id: parent
+    title: {en: "Link the orphan", fr: "Rattacher l’orpheline"}
+    say:
+      en: >-
+        Now give SR-003 a parent. The mass limit comes from the launch opportunity, which serves
+        the mission requirement, so link it up to MR-001. The check runs again by itself: SR-003
+        now passes. Every requirement below mission level should trace up like this; an orphan
+        is either missing its reason, or should not be there.
+      fr: >-
+        Donnez maintenant un parent à SR-003. La limite de masse vient de l’occasion de
+        lancement, qui sert l’exigence de mission : rattachez-la à MR-001. Le contrôle se relance
+        de lui-même : SR-003 passe. Toute exigence sous le niveau mission devrait remonter ainsi ;
+        une orpheline, soit il lui manque sa raison d’être, soit elle n’a rien à faire là.
+    do:
+      - click: {css: ".c2o-reqs__row:has-text('SR-003') .c2o-reqs__orphan"}
+      - wait: 0.8
+      - fill: {target: {role: textbox, within: "[role=dialog]"}, text: "MR-001", typed: true}
+      - click: {role: button, name: OK, exact: true, within: "[role=dialog]"}
+      - wait: 3
+      - highlight: {target: {css: ".c2o-reqs__row:has-text('SR-003')"}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: LW-2.1/B
+      text:
+        en: "SR-001 says “downlink 2 GB of payload data per day”, but the check says it is not measurable. What fixes that?"
+        fr: "SR-001 dit « transmettre 2 Go de données de charge utile par jour », mais le contrôle la dit non mesurable. Qu’est-ce qui corrige cela ?"
+      options:
+        - text: {en: "Add the threshold: ≥ 2 GB per day, so tools can check the data budget against it.", fr: "Ajouter le seuil : ≥ 2 Go par jour, pour que les outils puissent y comparer le bilan de données."}
+          correct: true
+          why: {en: "A number in the text is for people; the threshold is what the analyses can test.", fr: "Un nombre dans le texte est pour les personnes ; le seuil est ce que les analyses peuvent tester."}
+        - text: {en: "Change the verification method to Test.", fr: "Changer la méthode de vérification pour Essai."}
+          why: {en: "The method says how it will be verified, not what the pass mark is.", fr: "La méthode dit comment elle sera vérifiée, pas quel est le seuil de réussite."}
+        - text: {en: "Mark it Approved.", fr: "La marquer Approuvée."}
+          why: {en: "Status records a review decision; it does not make the requirement measurable.", fr: "L’état consigne une décision de revue ; il ne rend pas l’exigence mesurable."}
+
+  - id: flowdown
+    title: {en: "Flow a requirement down", fr: "Décliner une exigence"}
+    say:
+      en: >-
+        Requirements flow down. Press flow on SR-002, the pointing accuracy. The new requirement
+        is pre-filled as derived from SR-002: here, the attitude knowledge the star tracker must
+        give, verified by test. The tree grows one level at a time, and each child keeps the
+        link to the parent that justifies it.
+      fr: >-
+        Les exigences se déclinent. Appuyez sur décliner sur SR-002, la précision de pointage. La
+        nouvelle exigence est préremplie comme dérivée de SR-002 : ici, la connaissance
+        d’attitude que doit fournir le senseur stellaire, vérifiée par essai. L’arbre grandit un
+        niveau à la fois, et chaque enfant garde le lien vers le parent qui le justifie.
+    do:
+      - click: {role: button, name: "flow ↓", exact: true, within: ".c2o-reqs__row:has-text('SR-002')"}
+      - wait: 0.8
+      - fill:
+          target: {label: "Requirement text", exact: true, within: "form[aria-label='Add requirement'], form[aria-label='Ajouter une exigence']"}
+          text:
+            en: "The AOCS shall know the attitude to 0.02° (3σ)."
+            fr: "Le SCAO doit connaître l’attitude à 0,02° (3σ)."
+          typed: true
+      - select: {target: {label: "Verification method", exact: true, within: "form[aria-label='Add requirement'], form[aria-label='Ajouter une exigence']"}, value: "T"}
+      - click: {role: button, name: Add, exact: true, within: "form[aria-label='Add requirement'], form[aria-label='Ajouter une exigence']"}
+      - wait: 2
+
+  - id: trace
+    title: {en: "Follow the chain", fr: "Suivre la chaîne"}
+    say:
+      en: >-
+        The Traceability tab shows the whole V: objectives, the requirement chain, the elements
+        and functions that meet them, and how each will be verified. Requirements with no
+        objective are listed, so you can see where the chain breaks. Back in Requirements,
+        record the quality decision: which requirements you rewrote, split or removed, and why.
+      fr: >-
+        L’onglet Traçabilité montre tout le V : les objectifs, la chaîne des exigences, les
+        éléments et fonctions qui les satisfont, et comment chacune sera vérifiée. Les exigences
+        sans objectif sont listées, pour voir où la chaîne se rompt. De retour dans Exigences,
+        consignez la décision de qualité : quelles exigences vous avez réécrites, scindées ou
+        supprimées, et pourquoi.
+    do:
+      - click: {role: tab, name: Traceability, exact: true}
+      - wait: 1.5
+      - highlight: {target: {text: "V-Model Traceability", exact: true}, seconds: 3}
+      - click: {role: tab, name: Requirements, exact: true}
+      - wait: 1.0
+      - click: {role: button, name: "SMART Check"}
+      - wait: 1.5
+      - highlight: {target: {role: button, name: "Record decision", exact: true}, seconds: 2.5}
+    question:
+      type: reflect
+      worksheet: LW-2.1/C
+      text:
+        en: "Pick one of your system requirements. Name its parent, one child it flows down to, and the threshold that makes it measurable."
+        fr: "Choisissez une de vos exigences système. Nommez son parent, un enfant vers lequel elle se décline, et le seuil qui la rend mesurable."
