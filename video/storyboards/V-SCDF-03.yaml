@@ -73,7 +73,7 @@ steps:
       - highlight: {target: {css: "tr:has-text('EIRP')"}, seconds: 2.5}
       - highlight: {target: {css: "tr:has-text('Free Space Path Loss'), tr:has-text('Affaiblissement')"}, seconds: 2.5}
       - highlight: {target: {css: "tr:has-text('G/T')"}, seconds: 2.5}
-      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 3}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 3}
 
   - id: rate
     title: {en: "Spend margin on data rate", fr: "Dépenser la marge en débit"}
@@ -88,7 +88,7 @@ steps:
         du débit en coûte trois. Plus de données par passage, et encore beaucoup de marge.
     do:
       - fill: {target: {label: "Data Rate (bps)", exact: true}, text: "5000000", settle: 1.0}
-      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 3}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 3}
     question:
       type: multichoice
       worksheet: LW-3.3/B
@@ -121,7 +121,7 @@ steps:
         le genre de résultat à consigner, avec les options envisagées.
     do:
       - fill: {target: {label: "RX Antenna Gain (dBi)", exact: true}, text: "29", settle: 1.0}
-      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 3}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 3}
 
   - id: uplink
     title: {en: "The uplink", fr: "La liaison montante"}
@@ -143,7 +143,7 @@ steps:
       - click: {role: button, name: "Uplink (Ground→Space)"}
       - wait: 1.0
       - highlight: {target: {css: "tr:has-text('EIRP')"}, seconds: 2.5}
-      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE')"}, seconds: 2.5}
+      - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 2.5}
 
   - id: apply
     title: {en: "Apply to the design", fr: "Appliquer à la conception"}

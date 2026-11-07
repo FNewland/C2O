@@ -30,7 +30,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-03 | 5 | Alarm → ACK → anomaly ticket → the call | WB-5.5-AT q4/q10/q12 | rendered EN+FR from `card-END`; star-tracker failure (not a scored-run fault), no recovery shown |
 | V-PLN-01 | 3 | Planner: 24 h view, next contact, ground track and beta, imaging activity, constraint check | WB-5.3-PP q1/q3/q7 | rendered EN+FR (fresh simulator: same passes in both takes) |
 | V-SCDF-02 | 5 | SpaceCDF mass and power budgets, margins, allocations, power by mode, energy per orbit | LW-2.4 A/B/E, D-2.4-MASS, D-2.4-POWER | rendered EN+FR on an EOSAT-1-like study seeded through the API |
-| V-SCDF-03 | 6 | SpaceCDF link budget tool: downlink term by term at the 10° worst-case range (17.5 dB), margin for rate (5 Mbit/s), a 1.5 m dish, the uplink, Apply to Design | LW-3.3/B, D-3.3-LINK | written 2026-11-06; tool fixed first (slant range, uplink) |
+| V-SCDF-03 | 6 | SpaceCDF link budget tool: downlink term by term at the 10° worst-case range (17.5 dB), margin for rate (5 Mbit/s), a 1.5 m dish, the uplink, Apply to Design | LW-3.3/B, D-3.3-LINK | written 2026-11-06; tool fixed first (slant range, uplink); rendered EN+FR; check EN 0.92, FR 0.86 |
 | V-OPS-04 | 5 | LEOP-001 Step 5a (LOW refused, beacon mode off, LOW) and LEOP-002 health check | WB-5.5-L002 q1/q2 | rendered EN+FR from `card-LEOP-001`, Steps 2–5 sent through the MCS API in setup |
 | V-OPS-05 | 5 | LEOP-004: wings deployed, read on the EPS power flow and the orbit-average margin | card LEOP-004 | rendered EN+FR from `card-LEOP-004` |
 | V-OPS-06 | 5 | LEOP-007: AOCS line, SID 2, magnetometer and magnetorquers before DETUMBLE | WB-5.5-L007 q3/q4/q5 | rendered EN+FR from `card-LEOP-007` |
