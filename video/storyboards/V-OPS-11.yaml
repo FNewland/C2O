@@ -73,24 +73,25 @@ steps:
     title: {en: "Step 1: rule out the ground", fr: "Étape 1 : écarter le sol"}
     say:
       en: >-
-        Step one is the ground. On the TT&C page, the station's receiver measures a signal:
-        about minus one hundred and eighteen dBm, strong. But read the note under the key
-        parameters: that is the UHF beacon, a separate radio, not the S-band. And the lock
-        chain says carrier, bit and frame: the spacecraft's receiver has locked on to our
-        uplink. The antenna is tracking and the uplink is getting through. The ground is
+        Step one is the ground. On the TT&C page, the station's receiver measures a strong
+        signal, about minus one hundred and nineteen dBm. Read the note under the key
+        parameters: it is the UHF beacon, a separate radio, not the S-band. So the antenna is
+        tracking and the station's receive chain works. The lock chain beside it is stale: it
+        travels in the S-band housekeeping, which is exactly what is missing. The ground is
         nominal; the fault is on board.
       fr: >-
-        L’étape un, c’est le sol. Sur la page TT&C, le récepteur de la station mesure un
-        signal : environ moins cent dix-huit dBm, un signal fort. Mais lisez la note sous les
-        paramètres clés : c’est la balise UHF, une radio distincte, pas la bande S. Et la chaîne
-        de verrouillage indique porteuse, bit et trame : le récepteur du satellite s’est
-        verrouillé sur notre liaison montante. L’antenne poursuit et la liaison montante passe.
-        Le sol est nominal ; la panne est à bord.
+        L’étape un, c’est le sol. Sur la page TT&C, le récepteur de la station mesure un signal
+        fort, environ moins cent dix-neuf dBm. Lisez la note sous les paramètres clés : c’est la
+        balise UHF, une radio distincte, pas la bande S. L’antenne poursuit donc, et la chaîne de
+        réception de la station fonctionne. La chaîne de verrouillage, à côté, est périmée :
+        elle voyage dans la servitude en bande S, justement ce qui manque. Le sol est nominal ;
+        la panne est à bord.
     do:
       - click: {css: "#rail-ttc"}
       - wait_for: {target: {css: "#ttc-stepper"}, timeout: 20}
       - wait: 1.5
-      - highlight: {target: {css: "#ttc-params"}, seconds: 3.5, point: false}
+      - scroll: {css: "#ttc-station-note"}
+      - highlight: {target: {css: "#ttc-station-note"}, seconds: 4}
       - highlight: {target: {css: ".ds-card:has(#ttc-stepper)"}, seconds: 3}
     question:
       type: multichoice
@@ -105,7 +106,7 @@ steps:
         - text: {en: "The S-band downlink, too weak to decode.", fr: "La liaison descendante en bande S, trop faible pour être décodée."}
           why: {en: "Minus 118 dBm is a strong signal, and the note names the UHF beacon.", fr: "Moins 118 dBm est un signal fort, et la note nomme la balise UHF."}
         - text: {en: "Interference near the station.", fr: "Un brouillage près de la station."}
-          why: {en: "Interference would not lock the spacecraft's receiver on our uplink.", fr: "Un brouillage ne verrouillerait pas le récepteur du satellite sur notre liaison montante."}
+          why: {en: "Interference does not decode into beacon packets, and the beacon packets are arriving.", fr: "Un brouillage ne se décode pas en paquets de balise, et les paquets de balise arrivent."}
 
   - id: blind
     title: {en: "Step 2: the blind request", fr: "Étape 2 : la demande en aveugle"}
@@ -141,18 +142,22 @@ steps:
     title: {en: "Nothing comes back", fr: "Rien ne revient"}
     say:
       en: >-
-        Thirty seconds, and the power report has not arrived: the blocks are still stale. Read
-        what that rules out. The command has powered the transmitter's line, so the line is not
+        Look at the verification: it stops at sent. Acceptance and execution reports come down
+        the same silent downlink, so a blind command never confirms itself. Thirty seconds, and
+        the power report has not arrived: the blocks are still stale. Read what that rules out. The command has powered the transmitter's line, so the line is not
         the cause. Had telemetry come back, you would read the cause from it and go to step
         six. It has not, so the fault is further down the chain.
       fr: >-
-        Trente secondes, et le rapport d’énergie n’est pas arrivé : les blocs sont toujours
-        périmés. Lisez ce que cela écarte. La commande a mis sous tension la ligne de
+        Regardez la vérification : elle s’arrête à « envoyée ». Les rapports d’acceptation et
+        d’exécution descendent par la même liaison muette : une commande en aveugle ne se
+        confirme jamais d’elle-même. Trente secondes, et le rapport d’énergie n’est pas arrivé :
+        les blocs sont toujours périmés. Lisez ce que cela écarte. La commande a mis sous tension la ligne de
         l’émetteur : la ligne n’est donc pas en cause. Si la télémesure était revenue, vous en
         auriez lu la cause et vous seriez passé à l’étape six. Elle n’est pas revenue : la panne
         est plus loin dans la chaîne.
     do:
-      - wait: 14
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
+      - wait: 8
       - click: {css: "#rail-ovr"}
       - wait: 1.5
       - highlight: {target: {css: "#ovr-power-card"}, seconds: 3, point: false}
