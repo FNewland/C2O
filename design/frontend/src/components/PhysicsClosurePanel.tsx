@@ -30,6 +30,7 @@ import type {
   AnalysisConflict, PhysicsRun, PhysicsRunResponse, PhysicsSeries, PlacementItem, PlacementResponse, RunSeriesResponse,
 } from '../types/analyses'
 import { fs } from '../theme/tokens'
+import { serverText } from '../i18n/serverText'
 
 const API = '/api'
 const ANALYSIS = 'physics'
@@ -138,10 +139,10 @@ function ConflictList({ conflicts, empty }: { conflicts: AnalysisConflict[]; emp
             <div className="flex gap-2 ai-c wrap">
               <Badge text={t(SEVERITY_LABELS[c.severity] ?? c.severity)} color={color} />
               <span className="mono t-12 c-2">{c.code}</span>
-              <strong className="t-12">{c.title}</strong>
+              <strong className="t-12">{serverText(c.title)}</strong>
             </div>
-            {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{c.detail}</div>}
-            {c.suggested_fix && <div style={{ fontSize: fs.label, marginTop: 2 }}><span className="c-accent">{t('Fix:')} </span>{c.suggested_fix}</div>}
+            {c.detail && <div style={{ fontSize: fs.label, color: 'var(--text-secondary)', marginTop: 2 }}>{serverText(c.detail)}</div>}
+            {c.suggested_fix && <div style={{ fontSize: fs.label, marginTop: 2 }}><span className="c-accent">{t('Fix:')} </span>{serverText(c.suggested_fix)}</div>}
           </li>
         )
       })}

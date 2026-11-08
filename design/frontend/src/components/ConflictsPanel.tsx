@@ -15,6 +15,7 @@ import { useUIStore } from '../stores/uiStore'
 import { optionQuery } from '../stores/optionStore'
 import type { AnalysisConflict } from '../types/analyses'
 import { fs } from '../theme/tokens'
+import { serverText } from '../i18n/serverText'
 
 const API = '/api'
 
@@ -79,7 +80,7 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
         <span style={{ fontSize: fs.label, padding: '0 0.35rem', borderRadius: 3, background: `color-mix(in srgb, ${sev} 13%, transparent)`, color: sev, border: `1px solid color-mix(in srgb, ${sev} 33%, transparent)`, textTransform: 'uppercase' }}>
           {SEVERITY_LABELS[c.severity] ? t(SEVERITY_LABELS[c.severity]) : c.severity}
         </span>
-        <h3 className="t-13 m-0">{c.title}</h3>
+        <h3 className="t-13 m-0">{serverText(c.title)}</h3>
         <span className="t-12 c-2 mono">{c.code}</span>
         <span className="grow" />
         {c.resolved ? (
@@ -91,7 +92,7 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
           </button>
         )}
       </div>
-      {c.detail && <p className="t-12 mb-1">{c.detail}</p>}
+      {c.detail && <p className="t-12 mb-1">{serverText(c.detail)}</p>}
       {c.element_ids?.length > 0 && (
         <div className="flex gap-1 wrap mb-1">
           {c.element_ids.map(id => {
@@ -111,7 +112,7 @@ function AnalysisConflictCard({ c, elements, onResolve, resolving }: {
       )}
       {c.suggested_fix && (
         <div className="t-12 bt pt-1">
-          <span className="t-12 w-600 c-2">{t('SUGGESTED FIX:')} </span>{c.suggested_fix}
+          <span className="t-12 w-600 c-2">{t('SUGGESTED FIX:')} </span>{serverText(c.suggested_fix)}
         </div>
       )}
     </div>
@@ -225,13 +226,13 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
             style={{ borderLeft: `4px solid ${style.border}`, background: style.bg, marginBottom: '0.75rem' }}
           >
             <div className="flex jc-sb ai-c mb-2">
-              <h3 className="t-13">{conflict.title}</h3>
+              <h3 className="t-13">{serverText(conflict.title)}</h3>
               <span className={`badge badge-${conflict.severity === 'critical' ? 'red' : conflict.severity === 'major' ? 'amber' : 'green'}`}>
                 {t(style.label)}
               </span>
             </div>
 
-            <p className="t-13 mb-2">{conflict.description}</p>
+            <p className="t-13 mb-2">{serverText(conflict.description)}</p>
 
             {/* Positions involved */}
             <div className="flex gap-4 mb-2 t-12 c-2">
@@ -248,7 +249,7 @@ export function ConflictsPanel({ studyId, optionId, analysisFilter }: { studyId?
                 </div>
                 {conflict.resolutions.map((res: any, i: number) => (
                   <div key={i} className="t-12 py-1 px-0 bt">
-                    <strong>{res.position_responsible?.replace('_', ' ')}:</strong> {res.description}
+                    <strong>{res.position_responsible?.replace('_', ' ')}:</strong> {serverText(res.description)}
                     {res.estimated_impact && <span className="c-2"> — {res.estimated_impact}</span>}
                   </div>
                 ))}

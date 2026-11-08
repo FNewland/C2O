@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { useDesignStore } from '../stores/designStore'
 import { fs } from '../theme/tokens'
+import { serverText } from '../i18n/serverText'
 
 type Resolution = 'resolve' | 'accept_risk' | 'defer' | 'pending'
 
@@ -104,7 +105,7 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
                     textTransform: 'uppercase',
                     background: `color-mix(in srgb, ${SEVERITY_COLORS[c.severity]} 13%, transparent)`, color: SEVERITY_COLORS[c.severity],
                   }}>{c.severity}</span>
-                  <span style={{ fontSize: fs.body, fontWeight: 600 }}>{c.title}</span>
+                  <span style={{ fontSize: fs.body, fontWeight: 600 }}>{serverText(c.title)}</span>
                   {decision && (
                     <span style={{
                       fontSize: fs.label, padding: '0.1rem 0.35rem', borderRadius: '3px',
@@ -113,7 +114,7 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
                   )}
                 </div>
                 <div style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.2rem' }}>
-                  {c.description}
+                  {serverText(c.description)}
                 </div>
                 <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
                   {c.domain_a} ({c.param_a}: {c.value_a_str}) vs {c.domain_b} ({c.param_b}: {c.value_b_str})
@@ -136,7 +137,7 @@ export function ConflictReviewModal({ onClose }: { onClose: () => void }) {
                         Suggested resolutions:
                         {c.resolutions.map((r, i) => (
                           <div key={i} style={{ fontSize: fs.label, color: 'var(--text-2)', marginLeft: '0.5rem' }}>
-                            - {r.description}: change {r.parameter_to_change} {r.suggested_direction}
+                            - {serverText(r.description)}: change {r.parameter_to_change} {r.suggested_direction}
                           </div>
                         ))}
                       </div>

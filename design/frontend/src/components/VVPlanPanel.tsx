@@ -27,6 +27,7 @@ import type {
   VVMethod, VVPhase, VVRun, VVRunResponse, VVStatus,
 } from '../types/analyses'
 import { fs } from '../theme/tokens'
+import { serverText } from '../i18n/serverText'
 
 const API = '/api'
 const ANALYSIS = 'vv'
@@ -317,8 +318,8 @@ export function VVPlanPanel({ studyId, optionId }: { studyId: string | null; opt
             <div key={c.id} style={{ display: 'flex', gap: '0.4rem', alignItems: 'baseline', fontSize: fs.label, padding: '0.2rem 0.4rem', borderLeft: `3px solid ${SEVERITY_COLORS[c.severity] || 'var(--text-3)'}`, background: 'var(--bg-card)', borderRadius: 3 }}>
               <Badge text={c.severity} color={SEVERITY_COLORS[c.severity] || 'var(--text-3)'} />
               <span className="mono c-2">{c.code}</span>
-              <span className="w-500">{c.title}</span>
-              {c.suggested_fix && <span className="c-2">— {c.suggested_fix}</span>}
+              <span className="w-500">{serverText(c.title)}</span>
+              {c.suggested_fix && <span className="c-2">— {serverText(c.suggested_fix)}</span>}
             </div>
           ))}
         </div>
