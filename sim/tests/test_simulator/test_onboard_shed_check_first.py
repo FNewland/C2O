@@ -65,6 +65,7 @@ def test_onboard_shedder_is_tiered(engine):
     assert int(engine.params[0x0113]) == 0                # payload shed
     for pid in (0x0112, 0x0117):                          # ttc_tx, aocs_wheels kept
         assert int(engine.params[pid]) == 1, f"0x{pid:04X} shed above its level"
+    assert int(engine.params[0x0134]) == 1                # one line shed = stage 1, not 3
 
 
 def test_ground_shed_of_an_open_line_is_refused(engine):

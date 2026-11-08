@@ -1188,7 +1188,10 @@ class EPSBasicModel(SubsystemModel):
         # stage used to be recomputed to 0 here every tick).
         cur_load_shed_stage = int(getattr(s, "commanded_shed_stage", 0))
         if s.bus_voltage < self._shed_voltage:
-            shed_count = sum(1 for ln in self._shed_order if not s.power_lines.get(ln, False))
+            # Lines the shedder itself opened, not every line that happens to be
+            # off: the FPA cooler and prop are normally off, which read as L3 as
+            # soon as the tiered shedder took the payload alone.
+            shed_count = len(s.shed_lines)
             cur_load_shed_stage = max(cur_load_shed_stage, min(3, shed_count))
 
         # One event PER STAGE crossed, so a direct 0 -> 3 shed still logs
