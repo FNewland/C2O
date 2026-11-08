@@ -216,6 +216,7 @@ L’étiquette du 7 nov. présente SYS 5186 comme introduction/développement se
 | V-OPS-07 LEOP-005 : acquisition du Soleil, sans toucher | LO 6 | 2.3† Jumeau numérique et simulation | rates (multichoice) → 2.3† ; handover (truefalse) → 2.3† ; hold (reflect) → 2.3†, 6.2† |
 | V-OPS-08 LEOP-006 : régler l’horloge de bord | LO 6 | 1.4 Décision en situation d’incertitude | unset (multichoice) → 1.4 ; verify (truefalse) → 1.4 |
 | V-OPS-09 LEOP-003 : où sommes-nous ? Puis fin de la LEOP | LO 6 | 1.3† Intégration et vérification, 1.4 Décision en situation d’incertitude | position (multichoice) → 1.3†, 1.4 ; end (reflect) → 1.3†, 1.4, 6.2† |
+| V-OPS-10 Sous-tension : vérifier avant de délester | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | check (multichoice) → 1.4, 2.3† ; decide (multichoice) → 1.4, 2.3† ; recover (reflect) → 1.4, 2.3†, 6.2† |
 | V-PLN-01 Planifier un passage dans le planificateur de mission | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | contact (blanks) → 1.4, 2.3† ; imaging (multichoice) → 1.4, 2.3† |
 
 ## 7. Vérification de couverture
@@ -229,7 +230,7 @@ L’étiquette du 7 nov. présente SYS 5186 comme introduction/développement se
 | LO 3 | 2 · 1 | A4 |
 | LO 4 | 10 · 11 | A3, A4, A8 |
 | LO 5 | 2 · 4 | A3, A4 |
-| LO 6 | 49 · 14 | A5, A6, A7, A8 |
+| LO 6 | 49 · 15 | A5, A6, A7, A8 |
 | LO 7 | 11 · 0 | A2, A6, A7 |
 | LO 8 | 7 · 0 | A9 |
 | LO G1 | 1 · 0 | A4 |
