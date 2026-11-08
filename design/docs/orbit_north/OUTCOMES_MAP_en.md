@@ -219,6 +219,7 @@ CLO tags, proposed: 1.1, 1.2, 1.3†, 1.4, 2.3†, 2.4, 3.1, 3.2, 3.3†, 3.4†
 | V-OPS-10 Under-voltage: check before you shed | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | check (multichoice) → 1.4, 2.3†; decide (multichoice) → 1.4, 2.3†; recover (reflect) → 1.4, 2.3†, 6.2† |
 | V-OPS-11 No telemetry at AOS: work down the chain | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | ground (multichoice) → 1.4, 2.3†; nothing (multichoice) → 1.4, 2.3†; paon (multichoice) → 1.4, 2.3†; verify (reflect) → 1.4, 2.3†, 6.2† |
 | V-OPS-12 Fine pointing handover: from the sun hold to nadir | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | wheels (multichoice) → 1.4, 2.3†; nominal (multichoice) → 1.4, 2.3†; tracking (reflect) → 1.4, 2.3†, 6.2† |
+| V-OPS-13 First light: from fine pointing to the first image down | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | ready (multichoice) → 1.4, 2.3†; capture (multichoice) → 1.4, 2.3†; downlink (multichoice) → 1.4, 2.3†; down (reflect) → 1.4, 2.3†, 6.2† |
 | V-PLN-01 Plan a pass in the mission planner | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | contact (blanks) → 1.4, 2.3†; imaging (multichoice) → 1.4, 2.3† |
 
 ## 7. Coverage check
@@ -232,7 +233,7 @@ CLO tags, proposed: 1.1, 1.2, 1.3†, 1.4, 2.3†, 2.4, 3.1, 3.2, 3.3†, 3.4†
 | LO 3 | 2 · 1 | A4 |
 | LO 4 | 10 · 11 | A3, A4, A8 |
 | LO 5 | 2 · 4 | A3, A4 |
-| LO 6 | 49 · 17 | A5, A6, A7, A8 |
+| LO 6 | 49 · 18 | A5, A6, A7, A8 |
 | LO 7 | 11 · 0 | A2, A6, A7 |
 | LO 8 | 7 · 0 | A9 |
 | LO G1 | 1 · 0 | A4 |

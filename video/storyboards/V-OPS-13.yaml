@@ -1,0 +1,263 @@
+# Week 6 — a unique task: first light, worked with COM-012 rev 2.0 (WB-5.6-C012).
+# Starts from the card's real entry state (breakpoint card-COM-012): payload in
+# STANDBY with the cooler at -15 C, AOCS NOMINAL with a tracker in the loop.
+# Fine-ready check, FINE_POINT, IMAGING, the capture, the image in memory,
+# STANDBY, then the product down over Service 13 at HIGH. Ruled 2026-11-07 as
+# one of the three ops videos. No screen shows the image itself (the
+# worksheet map lists an image quick-look tool as a deferred gap), so the
+# video stops where the operator's part stops: the product is down.
+id: V-OPS-13
+week: 6
+audience: all
+title:
+  en: "First light: from fine pointing to the first image down"
+  fr: "Première lumière : du pointage fin à la première image au sol"
+summary:
+  en: "The first image of the mission: check the spacecraft is ready for fine pointing, point, image, confirm the frame is in memory, return the payload to standby and bring the product down over Service 13, card in hand."
+  fr: "La première image de la mission : vérifier que le satellite est prêt pour le pointage fin, pointer, imager, confirmer que l’image est en mémoire, remettre la charge utile en attente et descendre le produit par le service 13, fiche en main."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-5.6-C012, WB-5.6-C012/q1, WB-5.6-C012/q6, WB-5.6-C012/q8]
+  cards: [COM-012]
+sources:
+  - sim/configs/eosat1/procedures/commissioning/first_light.md (COM-012 rev 2.0)
+  - sim/configs/eosat1/worksheets/ops_week3.yaml (WB-5.6-C012)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-COM-012}}
+  - wait: 2
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: false}, allow_error: true}
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 540, min_elevation: 15, after_aos: 8}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0002", name: HK_REQUEST, position: flight_director}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0007", name: HK_ENABLE, position: flight_director}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0005", name: HK_ENABLE, position: flight_director}}
+  - wait: 4
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 5
+
+steps:
+  - id: ready
+    title: {en: "Step 1: is it ready for fine pointing?", fr: "Étape 1 : prêt pour le pointage fin ?"}
+    say:
+      en: >-
+        Card COM-012, first light. The payload has been on standby with its cooler holding
+        minus fifteen degrees; the attitude control is in NOMINAL with a star tracker in the
+        loop. Imaging needs FINE_POINT, and the spacecraft refuses that mode unless every
+        precondition holds. So ask first: the fine-ready check. Each box is one condition:
+        enough stars, three wheels, a converged estimator, low rates, momentum margin, no
+        slew. All clear: zero.
+      fr: >-
+        Fiche COM-012, première lumière. La charge utile est en attente, son refroidisseur à
+        moins quinze degrés ; le contrôle d’attitude est en NOMINAL avec un senseur stellaire
+        dans la boucle. L’imagerie demande FINE_POINT, et le satellite refuse ce mode tant que
+        chaque condition n’est pas remplie. Demandez donc d’abord : le contrôle d’aptitude au
+        pointage fin. Chaque case est une condition : assez d’étoiles, trois roues, un
+        estimateur convergé, des vitesses faibles, de la marge de moment cinétique, pas de
+        basculement. Tout est vert : zéro.
+    do:
+      - click: {css: "#rail-aocs"}
+      - wait_for: {target: {css: "#aocs-quick-list"}, timeout: 20}
+      - wait: 1.0
+      - click: {css: "#aocs-quick-list button", has_text: {en: "Fine-Ready Check", fr: "Contrôle aptitude FINE"}}
+      - wait: 3
+      - js: "document.getElementById('aocs-fineready').scrollIntoView({block: 'center'})"
+      - wait: 1.0
+      - highlight: {target: {css: "#aocs-fineready"}, seconds: 5}
+    question:
+      type: multichoice
+      worksheet: WB-5.6-C012/q1
+      text:
+        en: "Why send the fine-ready check before commanding FINE_POINT?"
+        fr: "Pourquoi envoyer le contrôle d’aptitude avant de commander FINE_POINT ?"
+      options:
+        - text: {en: "FINE_POINT is refused unless every precondition holds; the mask names the one that does not.", fr: "FINE_POINT est refusé si une condition manque ; le masque nomme celle qui manque."}
+          correct: true
+          why: {en: "A refused mode command only says no; the mask says why.", fr: "Une commande de mode refusée dit seulement non ; le masque dit pourquoi."}
+        - text: {en: "It switches the star tracker into the loop.", fr: "Il fait entrer le senseur stellaire dans la boucle."}
+          why: {en: "It only reports; it changes nothing on board.", fr: "Il ne fait que rendre compte ; il ne change rien à bord."}
+        - text: {en: "It calibrates the gyros before imaging.", fr: "Il étalonne les gyromètres avant l’imagerie."}
+          why: {en: "Gyro calibration is COM-003, long before first light.", fr: "L’étalonnage des gyromètres, c’est COM-003, bien avant la première lumière."}
+
+  - id: fine
+    title: {en: "FINE_POINT", fr: "FINE_POINT"}
+    say:
+      en: >-
+        Now command fine pointing. The mode chain moves to FINE_POINT, and within half a
+        minute the pointing error settles to a few hundredths of a degree. The capture gate is
+        five hundredths: below that, the payload will take the picture; above it, it refuses.
+      fr: >-
+        Commandez maintenant le pointage fin. La chaîne des modes passe à FINE_POINT et, en
+        une demi-minute, l’erreur de pointage descend à quelques centièmes de degré. La
+        condition de prise de vue est de cinq centièmes : en dessous, la charge utile prend
+        l’image ; au-dessus, elle refuse.
+    do:
+      - click: {css: "#aocs-quick-list button", has_text: {en: "Fine Point", fr: "Pointage fin"}}
+      - wait: 3
+      - js: "document.getElementById('att3d').scrollIntoView({block: 'center'})"
+      - wait: 1.0
+      - highlight: {target: {css: ".ds-card:has(#aocs-stepper)"}, seconds: 3}
+      - wait: 8
+      - highlight: {target: {css: "#aocs-params"}, seconds: 4, point: false}
+
+  - id: imaging
+    title: {en: "Steps 2 to 4: payload to IMAGING", fr: "Étapes 2 à 4 : la charge utile en IMAGING"}
+    say:
+      en: >-
+        On the payload page: the focal plane is at minus fifteen and a half degrees, inside its
+        band, and ready. Note the memory used and the image count before you capture: they are
+        the baseline. Then command IMAGING.
+      fr: >-
+        Sur la page de la charge utile : le plan focal est à moins quinze et demi, dans sa
+        bande, et prêt. Notez la mémoire utilisée et le nombre d’images avant la prise de vue :
+        c’est la référence. Puis commandez IMAGING.
+    do:
+      - click: {css: "#rail-pld"}
+      - wait_for: {target: {css: "#pld-quick-list"}, timeout: 20}
+      - wait: 1.5
+      - highlight: {target: {css: "#pld-schematic"}, seconds: 4, point: false}
+      - js: "document.getElementById('pld-quick-list').scrollIntoView({block: 'center'})"
+      - wait: 0.8
+      - click: {css: "#pld-quick-list button", has_text: {en: "Imaging", fr: "Prise de vue"}}
+      - wait: 4
+
+  - id: capture
+    title: {en: "Step 5: the first image", fr: "Étape 5 : la première image"}
+    say:
+      en: >-
+        Step five: the capture, from the command builder: scene one, two thousand and
+        forty-eight lines. The imager scans for about eight seconds. Then read the evidence
+        on the payload page: the image count goes to one, the last scene is one, and the
+        memory used has grown by about a megabyte, the compressed frame.
+      fr: >-
+        Étape cinq : la prise de vue, depuis le constructeur de commandes : scène un, deux
+        mille quarante-huit lignes. L’imageur balaie pendant environ huit secondes. Lisez
+        ensuite les preuves sur la page de la charge utile : le nombre d’images passe à un, la
+        dernière scène est la une, et la mémoire utilisée a augmenté d’environ un mégaoctet,
+        l’image compressée.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: PAYLOAD_CAPTURE}
+      - wait: 0.6
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='scene_id']"}, text: "1"}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='lines']"}, text: "2048"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 2.5
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 2.5}
+      - wait: 6
+      - click: {css: "#rail-pld"}
+      - wait: 2
+      - highlight: {target: {css: "#pld-schematic"}, seconds: 4, point: false}
+      - highlight: {target: {css: "#pld-params"}, seconds: 3, point: false}
+    question:
+      type: multichoice
+      worksheet: WB-5.6-C012/q6
+      text:
+        en: "payload.mem_used_mb (0x060B) reads 4001 MB after the capture. What does that tell you on its own?"
+        fr: "payload.mem_used_mb (0x060B) lit 4001 Mo après la prise de vue. Qu’est-ce que cela vous dit à lui seul ?"
+      options:
+        - text: {en: "Nothing: it is the total used memory. Only the change from the baseline measures the new image.", fr: "Rien : c’est la mémoire totale utilisée. Seul l’écart à la référence mesure la nouvelle image."}
+          correct: true
+          why: {en: "That is why step 3 records the baseline before the capture.", fr: "C’est pourquoi l’étape 3 note la référence avant la prise de vue."}
+        - text: {en: "The image is 4001 MB.", fr: "L’image fait 4001 Mo."}
+          why: {en: "One frame is 4 MB raw, 1-2.7 MB compressed.", fr: "Une image fait 4 Mo brute, 1 à 2,7 Mo compressée."}
+        - text: {en: "The memory is nearly full.", fr: "La mémoire est presque pleine."}
+          why: {en: "The store is 20 GB; 4 GB is 20 %.", fr: "La mémoire fait 20 Go ; 4 Go, c’est 20 %."}
+
+  - id: standby
+    title: {en: "Step 7: back to STANDBY", fr: "Étape 7 : retour en attente"}
+    say:
+      en: >-
+        The image is safe in memory, so return the payload to standby. Standby also switches
+        the cooler off: watch the cooler power drop to zero, fifteen watts back for the rest
+        of the spacecraft.
+      fr: >-
+        L’image est en sécurité en mémoire : remettez la charge utile en attente. L’attente
+        coupe aussi le refroidisseur : regardez sa puissance tomber à zéro, quinze watts rendus
+        au reste du satellite.
+    do:
+      - js: "document.getElementById('pld-quick-list').scrollIntoView({block: 'center'})"
+      - wait: 0.8
+      - click: {css: "#pld-quick-list button", has_text: {en: "Standby", fr: "Attente"}}
+      - wait: 4
+      - js: "document.getElementById('pld-schematic').scrollIntoView({block: 'center'})"
+      - wait: 1.0
+      - highlight: {target: {css: "#pld-schematic"}, seconds: 3.5, point: false}
+
+  - id: downlink
+    title: {en: "Step 8: the product down", fr: "Étape 8 : le produit au sol"}
+    say:
+      en: >-
+        Step eight: the downlink. Open the high-rate gate first: downlink mode on, then the
+        HIGH rate, one hundred and twenty-eight kilobits per second. The strip shows the tier.
+        Then open a Service 13 transfer for scene one. Its first report gives the transfer
+        identifier, the number of blocks, and the checksum the instrument computed at capture.
+        Watch the transfer progress climb.
+      fr: >-
+        Étape huit : la descente. Ouvrez d’abord la voie haut débit : le mode de liaison
+        descendante, puis le débit HIGH, cent vingt-huit kilobits par seconde. Le bandeau
+        affiche le palier. Ouvrez ensuite un transfert du service 13 pour la scène un. Son
+        premier rapport donne l’identifiant du transfert, le nombre de blocs et la somme de
+        contrôle calculée par l’instrument à la prise de vue. Regardez la progression monter.
+    do:
+      - click: {css: "#rail-ttc"}
+      - wait_for: {target: {css: "#ttc-quick-list"}, timeout: 20}
+      - js: "document.getElementById('ttc-quick-list').scrollIntoView({block: 'center'})"
+      - wait: 0.8
+      - click: {css: "#ttc-quick-list button", has_text: {en: "DL Mode ON", fr: "Mode LD ON"}}
+      - wait: 1.5
+      - click: {css: "#ttc-quick-list button", has_text: {en: "Rate HIGH", fr: "Débit HIGH"}}
+      - wait: 4
+      - highlight: {target: {css: "#sa-see"}, seconds: 3}
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: S13_CREATE_TRANSFER}
+      - wait: 0.6
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='scene_id']"}, text: "1"}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='size_mb']"}, text: "0"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 3
+      - click: {css: "#rail-pld"}
+      - wait: 1.5
+      - highlight: {target: {css: "#pld-schematic"}, seconds: 3, point: false}
+    question:
+      type: multichoice
+      worksheet: WB-5.6-C012/q8
+      text:
+        en: "Why does the card open DOWNLINK mode and the HIGH rate before the Service 13 transfer?"
+        fr: "Pourquoi la fiche ouvre-t-elle le mode de liaison descendante et le débit HIGH avant le transfert du service 13 ?"
+      options:
+        - text: {en: "The transfer drains at the active rate: at LOW it would take eight times longer, most of a pass.", fr: "Le transfert se vide au débit actif : en LOW, il prendrait huit fois plus longtemps, l’essentiel d’un passage."}
+          correct: true
+          why: {en: "128 kbit/s against 16 kbit/s. And the card closes the gate again at the end.", fr: "128 kbit/s contre 16 kbit/s. Et la fiche referme la voie à la fin."}
+        - text: {en: "Service 13 is refused at LOW.", fr: "Le service 13 est refusé en LOW."}
+          why: {en: "It works at any rate; only the duration changes.", fr: "Il fonctionne à tout débit ; seule la durée change."}
+        - text: {en: "HIGH has a better checksum.", fr: "HIGH a une meilleure somme de contrôle."}
+          why: {en: "The checksum belongs to the product, not to the rate.", fr: "La somme de contrôle appartient au produit, pas au débit."}
+
+  - id: down
+    title: {en: "Down, and checked", fr: "Au sol, et vérifiée"}
+    say:
+      en: >-
+        A little over a minute later the transfer reaches one hundred percent and closes. On
+        the ground, the product is checked against the checksum from the first report, and the
+        payload team looks at the image: the geometry, every band present, no striping. Then
+        the card puts the rate back to LOW and closes the high-rate gate. The gate is never
+        left open at the end of a card. First light.
+      fr: >-
+        Un peu plus d’une minute plus tard, le transfert atteint cent pour cent et se ferme.
+        Au sol, le produit est vérifié avec la somme de contrôle du premier rapport, et
+        l’équipe de la charge utile examine l’image : la géométrie, toutes les bandes
+        présentes, pas de stries. La fiche remet ensuite le débit en LOW et referme la voie haut
+        débit. La voie n’est jamais laissée ouverte en fin de fiche. Première lumière.
+    do:
+      - python: {call: "video/c2ovideo/helpers.py:wait_mcs_param", app: mcs, kwargs: {pid: "0x062E", at_least: 100, timeout_s: 120}}
+      - highlight: {target: {css: "#pld-schematic"}, seconds: 3, point: false}
+      - wait: 2
+    question:
+      type: reflect
+      worksheet: WB-5.6-C012/q9
+      text:
+        en: "The payload team reports that the first-light image is completely dark. Using the card, what do you check before you blame the instrument?"
+        fr: "L’équipe de la charge utile signale que l’image de première lumière est entièrement noire. Avec la fiche, que vérifiez-vous avant de mettre en cause l’instrument ?"
