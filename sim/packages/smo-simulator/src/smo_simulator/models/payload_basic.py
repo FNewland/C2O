@@ -293,6 +293,7 @@ class PayloadState:
     _prev_storage_critical: bool = False
     _prev_storage_full: bool = False
     _prev_cooler_failed: bool = False
+    _prev_checksum_errors: int = 0
     _prev_snr_degraded: bool = False
     _prev_bad_segment: bool = False
     _prev_compression_error: bool = False
@@ -1298,9 +1299,13 @@ class PayloadBasicModel(SubsystemModel):
             events_to_emit.append(0x0606)  # COOLER_FAILURE
         s._prev_cooler_failed = s.cooler_failed
 
-        # IMAGE_CHECKSUM_ERROR — probabilistic, each fire is a distinct event
-        if s.checksum_errors > 0 and self.rng.random() < 0.01 * dt:
+        # IMAGE_CHECKSUM_ERROR — once per NEW error. It used to re-fire at
+        # random (1 %/s) for as long as the counter was non-zero, so a single
+        # bad frame raised the same alarm every ~100 s for the rest of the
+        # session (seen while filming first light, 2026-11-08).
+        if s.checksum_errors > s._prev_checksum_errors:
             events_to_emit.append(0x0607)  # IMAGE_CHECKSUM_ERROR
+        s._prev_checksum_errors = s.checksum_errors
 
         # SNR_DEGRADED (< 25 dB) — rising-edge only.
         # Only meaningful while actually imaging (snr is forced to 0.0 in
