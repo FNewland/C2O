@@ -502,5 +502,8 @@
   "Narration review": "Relecture de la narration",
   "Listen to each sentence in both languages. Note anything that sounds wrong: a word, a pronunciation, a term that is not the one used in class. Notes are kept for the people who re-render the video.": "Écoutez chaque phrase dans les deux langues. Notez tout ce qui sonne faux : un mot, une prononciation, un terme qui n’est pas celui employé en cours. Les notes sont conservées pour les personnes qui régénèrent la vidéo.",
   "Watch the full video": "Regarder la vidéo complète",
-  "Answer: {{a}}": "Réponse : {{a}}"
+  "Answer: {{a}}": "Réponse : {{a}}",
+  "Note": "Note",
+  "Loading…": "Chargement…",
+  "Welcome page": "Page d’accueil"
 }

@@ -409,8 +409,8 @@ parameters:
   # ===== TTC =====
   - { id: 0x0500, name: ttc.mode, subsystem: ttc }
   - { id: 0x0501, name: ttc.link_status, subsystem: ttc }
-  - { id: 0x0502, name: ttc.rssi, subsystem: ttc, units: dBm, visibility: ground_derived }  # downlink level at the GROUND antenna (an uplink RSSI would be real)
-  - { id: 0x0503, name: ttc.link_margin, subsystem: ttc, units: dB, visibility: ground_derived }  # downlink margin against a ground link budget
+  - { id: 0x0502, name: ttc.rssi, subsystem: ttc, units: dBm, description: "Downlink signal level at the ground antenna", visibility: ground_derived }  # downlink level at the GROUND antenna (an uplink RSSI would be real)
+  - { id: 0x0503, name: ttc.link_margin, subsystem: ttc, units: dB, description: "Downlink margin against the ground link budget", visibility: ground_derived }  # downlink margin against a ground link budget
   # ACTIVE information bit rate of the tier now on air. Under the three-rung
   # ladder (subsystems/ttc.yaml tm_rate_tiers) this is 1000 / 16000 / 128000
   # and nothing else; anything in between means a corrupt decode.

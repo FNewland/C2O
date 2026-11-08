@@ -818,6 +818,10 @@ entries:
   en: "Magnitude of the bias still present at the gyro output after on-board compensation. This is what drives GYRO_BIAS_HIGH (0x020B); a successful calibration drives it to zero even while the hardware bias persists"
   en_hash: "38ac3685d145ddf1"
   fr: "Amplitude du biais encore présent en sortie gyroscope après compensation à bord. C'est ce qui déclenche GYRO_BIAS_HIGH (0x020B) ; un étalonnage réussi le ramène à zéro même si le biais matériel persiste"
+- key: "tm:aocs.pointing_limits_valid:description"
+  en: "Attitude-error limit validity: 1 = wheel-controlled hold (NOMINAL, FINE_POINT, INERTIAL), the 0x0217 limits and its S12 monitor are checked; 0 = unchecked (DETUMBLE, COARSE_SUN, SAFE, DESAT, SLEW)"
+  en_hash: "4b43908c330c82cb"
+  fr: null
 - key: "tm:obdh.last_tc_error_code:description"
   en: "S1 failure code of the most recently refused telecommand (0=none since boot; see FAILURE_CODES)"
   en_hash: "6af96bc9e010d3f6"
@@ -1086,6 +1090,14 @@ entries:
   en: "Live propulsion power draw (valves while armed/firing + catbed heater) — the EPS prop line bills this"
   en_hash: "489115d215413306"
   fr: "Consommation instantanée de la propulsion (vannes en armé/tir + réchauffeur du lit catalytique) — la ligne prop. de l'EPS l'impute"
+- key: "tm:ttc.rssi:description"
+  en: "Downlink signal level at the ground antenna"
+  en_hash: "e01ae0b4aaa8160e"
+  fr: "Niveau du signal descendant à l'antenne sol"
+- key: "tm:ttc.link_margin:description"
+  en: "Downlink margin against the ground link budget"
+  en_hash: "fe0463e4016432f9"
+  fr: "Marge de la liaison descendante par rapport au bilan de liaison sol"
 - key: "tm:ttc.tm_data_rate:description"
   en: "Active TM information rate (SAFE 1000 / LOW 16000 / HIGH 128000)"
   en_hash: "c5fef0f844cfbe98"
@@ -11197,14 +11209,3 @@ entries:
   en_hash: "e239614704b294fe"
   fr: "TTC minuterie de perte de commande (24 h) -> basculer sur le transpondeur redondant"
   orphan: true
-
-# Station-measured link figures (M1): the MCS serves these descriptions with the
-# station prefix (server.py, /api/param-catalog), so the keys carry the full text.
-- key: "tm:ttc.rssi:description"
-  en: "Station-measured (ground receiver monitoring data, not spacecraft TM)."
-  en_hash: "2dae6d08822874e8"
-  fr: "Mesure de la station (données de surveillance du récepteur sol, pas de la TM du satellite)."
-- key: "tm:ttc.link_margin:description"
-  en: "Station-measured (ground receiver monitoring data, not spacecraft TM)."
-  en_hash: "2dae6d08822874e8"
-  fr: "Mesure de la station (données de surveillance du récepteur sol, pas de la TM du satellite)."
