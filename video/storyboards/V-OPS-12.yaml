@@ -1,0 +1,211 @@
+# Week 6 — a hard task: the fine pointing handover, from the LEOP sun hold to
+# wheel-controlled NOMINAL with a star tracker up (COM-004 Steps 1-1b, then
+# COM-003 Step 3). Starts from the card's real entry state (breakpoint
+# card-COM-004). Ruled 2026-11-07 as one of the three ops videos. The slew
+# from the sun hold to nadir can start anywhere up to 180 deg (121 deg on this
+# pass); it was invisible until 2026-11-08, when 0x0217 was packed x1000 and
+# read 0.0 above 65.5 deg.
+id: V-OPS-12
+week: 6
+audience: all
+title:
+  en: "Fine pointing handover: from the sun hold to nadir"
+  fr: "Passage au pointage fin : du maintien solaire au nadir"
+summary:
+  en: "Out of the LEOP sun hold: enable the reaction wheels, command NOMINAL and read the attitude error jump to the new reference, watch the slew to nadir, then bring a star tracker up."
+  fr: "Sortir du maintien solaire du LEOP : activer les roues de réaction, commander NOMINAL et comprendre le saut de l’erreur d’attitude vers la nouvelle référence, suivre le basculement vers le nadir, puis démarrer un senseur stellaire."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  cards: [COM-004, COM-003]
+sources:
+  - sim/configs/eosat1/procedures/commissioning/aocs_actuator_checkout.md (COM-004 rev 2.1, Steps 1-1b)
+  - sim/configs/eosat1/procedures/commissioning/aocs_sensor_calibration.md (COM-003 Step 3)
+  - sim/configs/eosat1/telemetry/hk_structures.yaml (0x0217 x100 since 2026-11-08)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-COM-004}}
+  - wait: 2
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: false}, allow_error: true}
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 540, min_elevation: 15, after_aos: 8}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0002", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=aocs", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 5
+
+steps:
+  - id: hold
+    title: {en: "The sun hold", fr: "Le maintien solaire"}
+    say:
+      en: >-
+        Commissioning has started. The spacecraft is still in the hold it reached in LEOP,
+        coarse sun: the magnetorquers keep the arrays facing the Sun, using only the sun
+        sensors and the magnetometer. The attitude error here, about seven degrees, is
+        measured against the Sun. The reaction wheels are powered but disabled, and no star
+        tracker is on. Nothing on board will leave this hold by itself: the operator does it.
+      fr: >-
+        La mise en service a commencé. Le satellite est toujours dans le maintien atteint au
+        LEOP, le Soleil grossier : les magnéto-coupleurs gardent les panneaux face au Soleil,
+        avec les seuls capteurs solaires et le magnétomètre. L’erreur d’attitude, environ sept
+        degrés, se mesure ici par rapport au Soleil. Les roues de réaction sont alimentées mais
+        désactivées, et aucun senseur stellaire n’est allumé. Rien à bord ne quittera ce
+        maintien de lui-même : c’est l’opérateur qui le fait.
+    do:
+      - click: {css: "#rail-aocs"}
+      - wait_for: {target: {css: "#aocs-att2d"}, timeout: 20}
+      - wait: 1.5
+      - highlight: {target: {css: "#aocs-att2d"}, seconds: 3.5, point: false}
+      - highlight: {target: {css: "#aocs-params"}, seconds: 3, point: false}
+      - highlight: {target: {css: "#aocs-equip"}, seconds: 3, point: false}
+
+  - id: wheels
+    title: {en: "Step 1: enable the wheels", fr: "Étape 1 : activer les roues"}
+    say:
+      en: >-
+        Card COM-004, step one. The wheels came out of the bootloader disabled, and powering
+        their line does not enable them. That separation is deliberate: a power switch must
+        never hand attitude control back to a wheel by accident. Enable them one at a time,
+        all four, and watch their speeds start to move as the control loop picks them up.
+      fr: >-
+        Fiche COM-004, étape un. Les roues sont sorties du chargeur d’amorçage désactivées, et
+        alimenter leur ligne ne les active pas. Cette séparation est voulue : une mise sous
+        tension ne doit jamais rendre par accident le contrôle d’attitude à une roue.
+        Activez-les une à une, toutes les quatre, et regardez leurs vitesses bouger dès que la
+        boucle de contrôle les prend en charge.
+    do:
+      - scroll: {css: "#aocs-quick-list"}
+      - click: {css: "#aocs-quick-list button", has_text: {en: "RW0 On", fr: "RW0 marche"}}
+      - wait: 1.2
+      - click: {css: "#aocs-quick-list button", has_text: {en: "RW1 On", fr: "RW1 marche"}}
+      - wait: 1.2
+      - click: {css: "#aocs-quick-list button", has_text: {en: "RW2 On", fr: "RW2 marche"}}
+      - wait: 1.2
+      - click: {css: "#aocs-quick-list button", has_text: {en: "RW3 On", fr: "RW3 marche"}}
+      - wait: 3
+      - highlight: {target: {css: "#aocs-equip"}, seconds: 3.5, point: false}
+    question:
+      type: multichoice
+      text:
+        en: "The aocs_wheels power line is on. Why must the wheels still be enabled one by one?"
+        fr: "La ligne d’alimentation aocs_wheels est sous tension. Pourquoi faut-il encore activer les roues une à une ?"
+      options:
+        - text: {en: "Power and enable are separate on purpose: a power switch must never give a wheel attitude authority.", fr: "Alimentation et activation sont séparées exprès : une mise sous tension ne doit jamais donner l’autorité d’attitude à une roue."}
+          correct: true
+          why: {en: "COM-004 Step 1: powering the line energises the drive electronics only.", fr: "COM-004, étape 1 : alimenter la ligne n’alimente que l’électronique de commande."}
+        - text: {en: "The wheels need a warm-up before they spin.", fr: "Les roues ont besoin de chauffer avant de tourner."}
+          why: {en: "Nothing in the card waits for temperature here.", fr: "Rien dans la fiche n’attend une température ici."}
+        - text: {en: "Only one wheel can be powered at a time.", fr: "Une seule roue peut être alimentée à la fois."}
+          why: {en: "One line feeds all four; the enables are per wheel.", fr: "Une seule ligne alimente les quatre ; l’activation se fait roue par roue."}
+
+  - id: nominal
+    title: {en: "Step 1b: command NOMINAL", fr: "Étape 1b : commander NOMINAL"}
+    say:
+      en: >-
+        Step one b: command NOMINAL. Now watch the attitude error: from seven degrees to more
+        than one hundred and twenty. Nothing moved. The reference did. NOMINAL points the
+        imager at nadir, the Earth below, and the spacecraft is still facing the Sun. The
+        error measures the whole slew still to come.
+      fr: >-
+        Étape un b : commander NOMINAL. Regardez maintenant l’erreur d’attitude : de sept
+        degrés à plus de cent vingt. Rien n’a bougé. C’est la référence qui a changé. NOMINAL
+        pointe l’imageur vers le nadir, la Terre en dessous, et le satellite fait encore face
+        au Soleil. L’erreur mesure tout le basculement qui reste à faire.
+    do:
+      - click: {css: "#aocs-quick-list button", has_text: {en: "Nominal", fr: "Nominal"}}
+      - wait: 3
+      - scroll: {css: "#aocs-params"}
+      - highlight: {target: {css: "#aocs-params"}, seconds: 4, point: false}
+      - highlight: {target: {css: ".ds-card:has(#aocs-stepper)"}, seconds: 2.5}
+    question:
+      type: multichoice
+      text:
+        en: "After NOMINAL is commanded, aocs.att_error jumps from 7 deg to 122 deg. What happened?"
+        fr: "Après la commande NOMINAL, aocs.att_error saute de 7 deg à 122 deg. Que s’est-il passé ?"
+      options:
+        - text: {en: "The reference changed from the Sun to nadir; the attitude did not move.", fr: "La référence est passée du Soleil au nadir ; l’attitude n’a pas bougé."}
+          correct: true
+          why: {en: "The error is always measured against the active mode's reference.", fr: "L’erreur se mesure toujours par rapport à la référence du mode actif."}
+        - text: {en: "The wheels kicked the spacecraft off its attitude.", fr: "Les roues ont fait perdre son attitude au satellite."}
+          why: {en: "The rates stay small; only the reference jumped.", fr: "Les vitesses restent faibles ; seule la référence a sauté."}
+        - text: {en: "The error is invalid until a star tracker is on.", fr: "L’erreur n’est pas valide tant qu’aucun senseur stellaire n’est allumé."}
+          why: {en: "The coarse sensors are enough to see 120 degrees.", fr: "Les capteurs grossiers suffisent pour voir 120 degrés."}
+
+  - id: slew
+    title: {en: "The slew to nadir", fr: "Le basculement vers le nadir"}
+    say:
+      en: >-
+        The wheels turn the spacecraft at a fraction of a degree per second, so the slew takes
+        several minutes; the instructor speeds the simulator up to save time. Watch the model
+        turn the imager down towards the Earth, the error fall, and the wheels take up the
+        momentum. The card needs the error under five degrees before any wheel test.
+      fr: >-
+        Les roues font tourner le satellite à une fraction de degré par seconde : le
+        basculement prend plusieurs minutes, et l’instructeur accélère le simulateur pour
+        gagner du temps. Regardez le modèle tourner l’imageur vers la Terre, l’erreur baisser
+        et les roues absorber le moment cinétique. La fiche demande une erreur sous cinq
+        degrés avant tout essai de roue.
+    do:
+      - scroll: {css: "#aocs-att2d"}
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 10}}
+      - highlight: {target: {css: "#aocs-att2d"}, seconds: 0.1, point: false}
+      - wait: 24
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 1}}
+      - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0002", name: HK_REQUEST, position: flight_director}}
+      - wait: 3
+      - highlight: {target: {css: "#aocs-params"}, seconds: 3, point: false}
+
+  - id: tracker
+    title: {en: "COM-003: a star tracker", fr: "COM-003 : un senseur stellaire"}
+    say:
+      en: >-
+        The attitude is now known only coarsely, from the Sun and the magnetic field. The next
+        card, COM-003, brings a star tracker into the loop: power both trackers, then select
+        tracker one. Each takes about a minute to boot and recognise the sky. First check that
+        the Sun is outside its fifteen-degree exclusion: the view lists it for each tracker.
+        Then wait for the star count.
+      fr: >-
+        L’attitude n’est encore connue que grossièrement, par le Soleil et le champ
+        magnétique. La fiche suivante, COM-003, fait entrer un senseur stellaire dans la
+        boucle : alimenter les deux senseurs, puis sélectionner le senseur un. Chacun met
+        environ une minute à démarrer et à reconnaître le ciel. Vérifiez d’abord que le Soleil
+        est hors de son exclusion de quinze degrés : la vue l’indique pour chaque senseur.
+        Puis attendez le nombre d’étoiles.
+    do:
+      - scroll: {css: "#aocs-quick-list"}
+      - click: {css: "#aocs-quick-list button", has_text: {en: "ST1 On", fr: "ST1 marche"}}
+      - wait: 1.2
+      - click: {css: "#aocs-quick-list button", has_text: {en: "ST2 On", fr: "ST2 marche"}}
+      - wait: 1.2
+      - click: {css: "#aocs-quick-list button", has_text: {en: "ST Select 1", fr: "Sélection ST 1"}}
+      - wait: 2
+      - scroll: {css: "#aocs-att2d"}
+      - highlight: {target: {css: "#aocs-att2d"}, seconds: 4, point: false}
+      - wait: 20
+
+  - id: tracking
+    title: {en: "Tracking", fr: "En poursuite"}
+    say:
+      en: >-
+        A minute after power-on, tracker one counts its stars: more than the five the card asks
+        for. The handover is done: the wheels hold nadir, and the attitude can now be known to
+        arcseconds. What comes next is calibration of the gyros against the tracker, and
+        only after that the fine pointing that imaging needs.
+      fr: >-
+        Une minute après la mise sous tension, le senseur un compte ses étoiles : plus que les
+        cinq exigées par la fiche. Le passage est fait : les roues tiennent le nadir, et
+        l’attitude peut maintenant être connue à la seconde d’arc près. La suite, c’est
+        l’étalonnage des gyromètres par rapport au senseur, et seulement ensuite le pointage
+        fin dont l’imagerie a besoin.
+    do:
+      - wait_for: {target: {css: "#aocs-equip"}, timeout: 20}
+      - scroll: {css: "#aocs-equip"}
+      - wait: 6
+      - highlight: {target: {css: "#aocs-equip .eq:has-text('ST1')"}, seconds: 3.5}
+      - highlight: {target: {css: "#aocs-params"}, seconds: 3, point: false}
+    question:
+      type: reflect
+      text:
+        en: "Why does the card bring the star tracker up only after the slew to nadir, and not in the sun hold?"
+        fr: "Pourquoi la fiche ne démarre-t-elle le senseur stellaire qu’après le basculement vers le nadir, et pas dans le maintien solaire ?"
