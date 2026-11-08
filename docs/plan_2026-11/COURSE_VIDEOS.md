@@ -26,7 +26,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 |---|---|---|---|---|
 | V-SCDF-01 | 2 | SpaceCDF wizard → decision records | LW-1.4 A/B/C/E, D-1.4-PROBLEM, D-1.4-SPACE | rendered EN+FR, published locally; French narration check mean 0.88 (EN 0.96) |
 | V-OPS-01 | 2 | MCS NOM-001 card as workbook | WB-5.4-N001 q1/q2/q8 | rendered EN+FR (fast-forward to a real pass, battery set below the Step 2 check) |
-| V-OPS-02 | 4 | LEOP-001 by hand: blind uplink, bootloader, boot, HK on | WB-5.5-L001 q2/q5/q9 | rendered EN+FR from breakpoint `card-LEOP-001` |
+| V-OPS-02 | 4 | LEOP-001 by hand: blind uplink, bootloader, boot, HK on | WB-5.5-L001 q2/q5/q9 | rendered EN+FR from breakpoint `card-LEOP-001`; re-render due 2026-11-08 (narration fixed: the auto-TX hold-down is five minutes, not fifteen) |
 | V-OPS-03 | 5 | Alarm → ACK → anomaly ticket → the call | WB-5.5-AT q4/q10/q12 | rendered EN+FR from `card-END`; star-tracker failure (not a scored-run fault), no recovery shown |
 | V-PLN-01 | 3 | Planner: 24 h view, next contact, ground track and beta, imaging activity, constraint check | WB-5.3-PP q1/q3/q7 | rendered EN+FR (fresh simulator: same passes in both takes) |
 | V-SCDF-02 | 5 | SpaceCDF mass and power budgets, margins, allocations, power by mode, energy per orbit | LW-2.4 A/B/E, D-2.4-MASS, D-2.4-POWER | rendered EN+FR on an EOSAT-1-like study seeded through the API |
@@ -42,6 +42,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-08 | 5 | LEOP-006: unset clock, offset with light time, set from the ground, residual | WB-5.5-L006 q2/q3/q5 | rendered EN+FR from `card-LEOP-006` |
 | V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | released 2026-11-06 (sun hold ~12°, no attitude alarm in COARSE_SUN); rendered EN+FR; check EN 0.86, FR 0.86 (low lines are numbers written as digits) |
 | V-OPS-10 | 5 | Under-voltage, check before you shed (CTG-001): the alarm, what the spacecraft already shed (tiered on-board shed, L1 payload), the card's objective and branch (hold at this level), monitoring, sped-up recovery with the on-board restore at 28.9 V | WB-A-CTG-001 q1, q2, q7 | rendered EN+FR 2026-11-07 after the model/card fixes (tiered shed, stage count, MCS procedure link); check EN 0.92, FR 0.91 |
+| V-OPS-11 | 5 | No telemetry at AOS (CTG-019 rev 1.1): stale blocks with only the UHF beacon arriving, the ground ruled out from the station note, blind-TC armed, the blind HK request (auto-TX) that never confirms past SENT, the beacon's ttc.pa_on = 0, PA ON, verify | WB-A-CTG-019 q1, q2, q4, q6 | rendered EN+FR 2026-11-08 after the card fixes (auto-TX Step 2, cold-redundant Step 3, beacon note) and the fr.db.json rebuild; check EN 0.93, FR 0.87 |
 | V-CON-06 | 4 | Concept: a telecommand's life — acceptance checks, S1 1,1/1,2/1,3/1,7/1,8, failure notice, deferred completion, completed ≠ verified | — (team) | rendered EN+FR (animated page `video/explainers/tc-life.html`); check EN 0.92, FR 0.85 |
 | V-CON-05 | 4 | Concept: CCSDS packet, primary and PUS headers, APID 0x002 → 0x001, services, HK SIDs, requested vs enabled, powered ≠ reporting | — (team) | rendered EN+FR (`packets.html`); check EN 0.90, FR 0.81 |
 | V-CON-04 | 7 | Concept: FDIR hierarchy, then S12 → S5 → S19 rule 2001 → S8 desaturation → S1 → TM(12,10) | — (team, deeper for fdir_systems) | rendered EN+FR (`fdir.html`); check EN 0.95, FR 0.91; nominal momentum chain, no scored recovery |
@@ -101,7 +102,7 @@ Step 1 expectation of +8 to +14 °C.
 3. Ops videos (ruled 2026-11-07): not one video per COM card, only the hard or unique tasks:
    fine pointing handover (COARSE_SUN to NOMINAL, wheels and star tracker), first light
    (FPA cooler, payload on, first image down), no telemetry at a pass (ground, link or
-   spacecraft?). SpaceCDF open items are fixed first.
+   spacecraft?; DONE: V-OPS-11). SpaceCDF open items are fixed first.
 
 Enablers built (2026-11-05): the instructor `step` command (+10 s button; API up to 1 h) and
 the missing ops sheets in the logbook (WB-5.4-VL, WB-5.7-SA, -LL, -WI, -FR, WB-B, WB-C).
