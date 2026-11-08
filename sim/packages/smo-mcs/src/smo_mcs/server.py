@@ -131,6 +131,22 @@ def _station_id(name: str) -> str:
     return slug or "gs"
 
 
+
+#: Sim time can jump BACKWARDS (a breakpoint load, a scenario reset). A reading
+#: stamped more than this many seconds after "now" describes a moment that has
+#: not happened on the new timeline, so it has no age: it reads as no data until
+#: fresh telemetry replaces it (it used to be clamped to 0 s, i.e. "live", and
+#: stayed live for as long as no frame arrived: a whole silent pass).
+TIME_JUMP_TOL_S = 2.0
+
+
+def _age(now: float, ts: Optional[float]) -> Optional[float]:
+    """Age of a reading on the sim clock, or None (unknown) for a pre-jump one."""
+    if ts is None:
+        return None
+    d = now - ts
+    return None if d < -TIME_JUMP_TOL_S else max(0.0, d)
+
 class MCSServer:
     """Mission Control System web server."""
 
@@ -2912,16 +2928,11 @@ class MCSServer:
 
                 # Compute liveness/staleness — ages in SIM SECONDS.
                 #
-                # Clamped at zero because sim time can jump BACKWARDS (a
-                # breakpoint load, a scenario reset). A negative age is not a
-                # useful thing to publish; "0 s" says "we have telemetry for
-                # this instant", which is true, and the next frame corrects it.
-                if last_tm_ts is None:
-                    stale = True
-                    age_s: Optional[float] = None
-                else:
-                    age_s = max(0.0, now - last_tm_ts)
-                    stale = age_s > 60.0
+                # Sim time can jump BACKWARDS (a breakpoint load, a scenario
+                # reset): a frame stamped after "now" has no age (see _age);
+                # the link reads stale until a real frame arrives.
+                age_s: Optional[float] = _age(now, last_tm_ts)
+                stale = age_s is None or age_s > 60.0
 
                 data: dict = {
                     "stale": stale,
@@ -2955,7 +2966,9 @@ class MCSServer:
                     if not meta:
                         continue
                     sub = meta["subsystem"] or "other"
-                    param_age = max(0.0, now - entry.get("last_update_ts", 0))
+                    param_age = _age(now, entry.get("last_update_ts", 0))
+                    if param_age is None:
+                        continue
                     if sub not in subsystem_staleness or param_age < subsystem_staleness[sub]:
                         subsystem_staleness[sub] = param_age
                 data["subsystem_staleness"] = {
@@ -2965,7 +2978,7 @@ class MCSServer:
                 # telemetry cells as STALE when their last update is older than
                 # the expected HK interval, not just the subsystem as a whole.
                 data["params_age"] = {
-                    str(pid): round(max(0.0, now - entry.get("last_update_ts", 0)), 1)
+                    str(pid): (None if (a := _age(now, entry.get("last_update_ts", 0))) is None else round(a, 1))
                     for pid, entry in cache.items()
                 }
                 # Station monitoring data (M1). Merged into the flat params so
@@ -3012,7 +3025,7 @@ class MCSServer:
                     sid_seen = dict(self._sid_last_seen)
                 sid_commanded = dict(self._tc_manager.hk_commanded)
                 data["hk_sid_age_s"] = {
-                    str(sid): round(max(0.0, now - ts), 1)
+                    str(sid): (None if (a := _age(now, ts)) is None else round(a, 1))
                     for sid, ts in sid_seen.items()
                 }
                 if sid_commanded:
@@ -3947,7 +3960,8 @@ class MCSServer:
         for sid in sorted(self._hk_sid_meta):
             meta = dict(self._hk_sid_meta[sid])
             seen_ts = last_seen.get(sid)
-            age = None if seen_ts is None else round(max(0.0, now - seen_ts), 1)
+            a = _age(now, seen_ts)
+            age = None if a is None else round(a, 1)
             interval = float(meta.get("interval_s") or 0.0)
             # Two missed cycles (plus a second of slack) before calling it silent.
             silent_after = interval * 2.5 + 1.0 if interval > 0 else 30.0
