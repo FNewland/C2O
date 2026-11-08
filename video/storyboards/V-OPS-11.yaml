@@ -1,0 +1,261 @@
+# Week 5 — a complex task: no S-band telemetry at AOS, worked with CTG-019 rev 1.1
+# (WB-A-CTG-019). The power amplifier was left OFF at the end of the previous pass
+# (set up off camera), so the auto-TX hold-down cannot cure it: the blind HK request
+# powers the ttc_tx line and nothing comes back. The UHF beacon, which keeps
+# transmitting when the S-band is silent, carries ttc.pa_on = 0, and the card's
+# Step 2 note sends the operator straight to Step 4 (rulings 2026-11-07).
+id: V-OPS-11
+week: 5
+audience: all
+title:
+  en: "No telemetry at AOS: work down the chain"
+  fr: "Pas de télémesure à l’acquisition : descendre la chaîne"
+summary:
+  en: "The pass starts and the S-band stays silent. Rule out the ground, send the blind housekeeping request that also keys the transmitter, read the UHF beacon, and bring the downlink back with the power amplifier, card in hand."
+  fr: "Le passage commence et la bande S reste muette. Écarter le sol, envoyer la demande de servitude en aveugle qui allume aussi l’émetteur, lire la balise UHF et rétablir la liaison descendante avec l’amplificateur de puissance, fiche en main."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-A-CTG-019, WB-A-CTG-019/q1, WB-A-CTG-019/q2, WB-A-CTG-019/q4, WB-A-CTG-019/q6]
+  cards: [CTG-019]
+sources:
+  - sim/configs/eosat1/procedures/contingency/no_telemetry_at_pass.md (CTG-019 rev 1.1)
+  - sim/configs/eosat1/simulation.yaml (ttc.auto_tx_hold_s)
+  - sim/configs/eosat1/telemetry/hk_structures.yaml (SID 11 beacon carries ttc.pa_on)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-END}}
+  - wait: 2
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: false}, allow_error: true}
+  # the previous pass: housekeeping, then the PA is switched off before LOS (the fault)
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 300, min_elevation: 5, after_aos: 15}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0001", name: HK_REQUEST, position: flight_director}}
+  - wait: 4
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 8, subtype: 1, data_hex: "43", name: TTC_PA_OFF, position: flight_director}}
+  - wait: 4
+  # the pass of the video: a long one, a few seconds after AOS
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 540, min_elevation: 15, after_aos: 8}}
+  - goto: {app: mcs, path: "/?lang={lang}&position=ttc", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 5
+
+steps:
+  - id: silent
+    title: {en: "A silent pass", fr: "Un passage muet"}
+    say:
+      en: >-
+        Acquisition of signal, the start of a pass. The overview should be filling with fresh
+        housekeeping, and it is not: the subsystem blocks are stale, their last values an orbit
+        old. The strip at the top says late. Something is reaching the ground, but not the
+        S-band telemetry. This is the contingency procedure CTG-019, no telemetry at pass
+        start, and the TT&C operator leads it.
+      fr: >-
+        Acquisition du signal, le début d’un passage. La vue d’ensemble devrait se remplir de
+        servitude fraîche, et ce n’est pas le cas : les blocs des sous-systèmes sont périmés,
+        leurs dernières valeurs datent d’une orbite. Le bandeau du haut indique un retard.
+        Quelque chose arrive au sol, mais pas la télémesure en bande S. C’est la procédure de
+        contingence CTG-019, absence de télémesure en début de passage, et c’est l’opérateur
+        TT&C qui la mène.
+    do:
+      - wait: 1.0
+      - highlight: {target: {css: "#sa-see"}, seconds: 3}
+      - wait: 1.0
+      - highlight: {target: {css: "#ovr-power-card"}, seconds: 3, point: false}
+      - click: {css: "#rail-proc"}
+      - select: {target: {css: "#proc-source"}, value: ops}
+      - wait: 1.0
+      - select: {target: {css: "#proc-type"}, value: contingency/no_telemetry_at_pass.md}
+      - wait_for: {target: {css: "#proc-doc h4"}, timeout: 20}
+      - wait: 1.0
+
+  - id: ground
+    title: {en: "Step 1: rule out the ground", fr: "Étape 1 : écarter le sol"}
+    say:
+      en: >-
+        Step one is the ground. On the TT&C page, the station's receiver measures a signal:
+        about minus one hundred and eighteen dBm, strong. But read the note under the key
+        parameters: that is the UHF beacon, a separate radio, not the S-band. And the lock
+        chain says carrier, bit and frame: the spacecraft's receiver has locked on to our
+        uplink. The antenna is tracking and the uplink is getting through. The ground is
+        nominal; the fault is on board.
+      fr: >-
+        L’étape un, c’est le sol. Sur la page TT&C, le récepteur de la station mesure un
+        signal : environ moins cent dix-huit dBm, un signal fort. Mais lisez la note sous les
+        paramètres clés : c’est la balise UHF, une radio distincte, pas la bande S. Et la chaîne
+        de verrouillage indique porteuse, bit et trame : le récepteur du satellite s’est
+        verrouillé sur notre liaison montante. L’antenne poursuit et la liaison montante passe.
+        Le sol est nominal ; la panne est à bord.
+    do:
+      - click: {css: "#rail-ttc"}
+      - wait_for: {target: {css: "#ttc-stepper"}, timeout: 20}
+      - wait: 1.5
+      - highlight: {target: {css: "#ttc-params"}, seconds: 3.5, point: false}
+      - highlight: {target: {css: ".ds-card:has(#ttc-stepper)"}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: WB-A-CTG-019/q1
+      text:
+        en: "The station measures a strong signal, but no S-band housekeeping arrives. What is the station hearing?"
+        fr: "La station mesure un signal fort, mais aucune servitude en bande S n’arrive. Qu’entend la station ?"
+      options:
+        - text: {en: "The UHF beacon, which transmits whenever the S-band is silent.", fr: "La balise UHF, qui émet dès que la bande S se tait."}
+          correct: true
+          why: {en: "The key parameters say where the reading comes from. A strong beacon also tells you the ground chain works.", fr: "Les paramètres clés disent d’où vient la mesure. Une balise forte montre aussi que la chaîne sol fonctionne."}
+        - text: {en: "The S-band downlink, too weak to decode.", fr: "La liaison descendante en bande S, trop faible pour être décodée."}
+          why: {en: "Minus 118 dBm is a strong signal, and the note names the UHF beacon.", fr: "Moins 118 dBm est un signal fort, et la note nomme la balise UHF."}
+        - text: {en: "Interference near the station.", fr: "Un brouillage près de la station."}
+          why: {en: "Interference would not lock the spacecraft's receiver on our uplink.", fr: "Un brouillage ne verrouillerait pas le récepteur du satellite sur notre liaison montante."}
+
+  - id: blind
+    title: {en: "Step 2: the blind request", fr: "Étape 2 : la demande en aveugle"}
+    say:
+      en: >-
+        Step two. With no telemetry to confirm anything, the flight director gives a GO for
+        blind commanding: arm it, then confirm. Every command is now tagged blind in the log.
+        Send a housekeeping request for the power report, SID one. Any command the spacecraft
+        accepts also switches the transmitter's power line on for five minutes: the auto-TX
+        hold-down. So this one request is the test. Give it thirty seconds.
+      fr: >-
+        L’étape deux. Sans télémesure pour rien confirmer, le directeur de vol donne un GO pour
+        la commande en aveugle : armer, puis confirmer. Chaque commande est maintenant marquée
+        en aveugle dans le journal. Envoyez une demande de servitude pour le rapport d’énergie,
+        le SID un. Toute commande acceptée par le satellite met aussi sous tension la ligne
+        d’alimentation de l’émetteur pendant cinq minutes : le maintien automatique de
+        l’émission. Cette seule demande est donc le test. Donnez-lui trente secondes.
+    do:
+      - scroll: {css: "#ttc-blind-btn"}
+      - click: {css: "#ttc-blind-btn"}
+      - wait: 1.2
+      - click: {css: "#ttc-blind-btn"}
+      - wait: 1.0
+      - highlight: {target: {css: "#ttc-blind-status"}, seconds: 2.5}
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
+      - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "1"}
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 2.5
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
+
+  - id: nothing
+    title: {en: "Nothing comes back", fr: "Rien ne revient"}
+    say:
+      en: >-
+        Thirty seconds, and the power report has not arrived: the blocks are still stale. Read
+        what that rules out. The command has powered the transmitter's line, so the line is not
+        the cause. Had telemetry come back, you would read the cause from it and go to step
+        six. It has not, so the fault is further down the chain.
+      fr: >-
+        Trente secondes, et le rapport d’énergie n’est pas arrivé : les blocs sont toujours
+        périmés. Lisez ce que cela écarte. La commande a mis sous tension la ligne de
+        l’émetteur : la ligne n’est donc pas en cause. Si la télémesure était revenue, vous en
+        auriez lu la cause et vous seriez passé à l’étape six. Elle n’est pas revenue : la panne
+        est plus loin dans la chaîne.
+    do:
+      - wait: 14
+      - click: {css: "#rail-ovr"}
+      - wait: 1.5
+      - highlight: {target: {css: "#ovr-power-card"}, seconds: 3, point: false}
+      - wait: 2
+    question:
+      type: multichoice
+      worksheet: WB-A-CTG-019/q2
+      text:
+        en: "The blind HK request was sent 30 s ago and no S-band telemetry has come back. What does that rule out?"
+        fr: "La demande HK en aveugle est partie il y a 30 s et aucune télémesure en bande S n’est revenue. Qu’est-ce que cela écarte ?"
+      options:
+        - text: {en: "The transmitter's power line: the accepted command switched it on.", fr: "La ligne d’alimentation de l’émetteur : la commande acceptée l’a mise sous tension."}
+          correct: true
+          why: {en: "The auto-TX hold-down powers ttc_tx for 300 s on any accepted TC. A separate power-on command would add nothing.", fr: "Le maintien automatique alimente ttc_tx pendant 300 s à chaque TC acceptée. Une commande de mise sous tension séparée n’apporterait rien."}
+        - text: {en: "The power amplifier.", fr: "L’amplificateur de puissance."}
+          why: {en: "The hold-down powers the line, not the amplifier. That is a later step.", fr: "Le maintien alimente la ligne, pas l’amplificateur. C’est une étape suivante."}
+        - text: {en: "Nothing: wait for the next pass.", fr: "Rien : attendre le passage suivant."}
+          why: {en: "The card is worked in this pass, while the spacecraft can hear you.", fr: "La fiche se traite pendant ce passage, tant que le satellite vous entend."}
+
+  - id: beacon
+    title: {en: "Read the beacon", fr: "Lire la balise"}
+    say:
+      en: >-
+        The card's note in step two: the UHF beacon. It is the one packet that still arrives
+        when the S-band is silent, and it says the computer is alive. It carries one
+        diagnostic: whether the power amplifier is on. On the TT&C page it reads zero. The
+        amplifier is off. The note says: go straight to step four.
+      fr: >-
+        La note de la fiche à l’étape deux : la balise UHF. C’est le seul paquet qui arrive
+        encore quand la bande S se tait, et il dit que l’ordinateur est vivant. Il transporte un
+        diagnostic : l’amplificateur de puissance est-il allumé ? Sur la page TT&C, il lit zéro.
+        L’amplificateur est coupé. La note dit : la suite est directement l’étape quatre.
+    do:
+      - click: {css: "#rail-proc"}
+      - wait_for: {target: {css: "#proc-doc h4"}, timeout: 20}
+      - scroll: {target: {text: {en: "The UHF beacon (HK SID 11", fr: "La balise UHF (HK SID 11"}}}
+      - highlight: {target: {text: {en: "The UHF beacon (HK SID 11", fr: "La balise UHF (HK SID 11"}}, seconds: 3.5}
+      - click: {css: "#rail-ttc"}
+      - wait_for: {target: {css: "#ttc-equip .eq"}, timeout: 20}
+      - wait: 1.0
+      - highlight: {target: {css: "#ttc-equip .eq:has-text('PA ON')"}, seconds: 4}
+
+  - id: paon
+    title: {en: "Step 4: the power amplifier", fr: "Étape 4 : l’amplificateur de puissance"}
+    say:
+      en: >-
+        Step four: send PA on, blind. The command is accepted, the amplifier comes up, and
+        within seconds the frames flow again: the strip turns green and every block refreshes.
+        From now on, keep commanding, a housekeeping request every minute: the hold-down
+        lasts five minutes from the last accepted command.
+      fr: >-
+        L’étape quatre : envoyer PA ON, en aveugle. La commande est acceptée, l’amplificateur
+        démarre et en quelques secondes les trames reviennent : le bandeau passe au vert et
+        chaque bloc se rafraîchit. Désormais, continuez à commander, une demande de servitude
+        par minute : le maintien dure cinq minutes après la dernière commande acceptée.
+    do:
+      - click: {css: "#rail-cmd"}
+      - select: {target: {css: "#cmd-catalog"}, value: TTC_PA_ON}
+      - wait: 0.6
+      - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
+      - wait: 2.0
+      - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 2.5}
+      - wait: 3
+      - highlight: {target: {css: "#sa-see"}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: WB-A-CTG-019/q4
+      text:
+        en: "The beacon reads ttc.pa_on = 0. Why go straight to step 4 instead of switching transponders first?"
+        fr: "La balise lit ttc.pa_on = 0. Pourquoi passer directement à l’étape 4 au lieu de basculer d’abord de transpondeur ?"
+      options:
+        - text: {en: "The beacon already names the cause: the amplifier is off, and the receiver hears us.", fr: "La balise nomme déjà la cause : l’amplificateur est coupé, et le récepteur nous entend."}
+          correct: true
+          why: {en: "A transponder switch would test a unit nothing points at, and a cold-redundant switch can leave you on a unit you cannot see.", fr: "Un basculement testerait un équipement que rien ne met en cause, et en redondance froide il peut vous laisser sur un équipement que vous ne voyez pas."}
+        - text: {en: "Step 3 is only for the first pass after launch.", fr: "L’étape 3 ne sert qu’au premier passage après le lancement."}
+          why: {en: "Step 3 is for a transponder fault, at any time.", fr: "L’étape 3 traite une panne de transpondeur, à tout moment."}
+        - text: {en: "The beacon is more reliable than the S-band.", fr: "La balise est plus fiable que la bande S."}
+          why: {en: "Reliability is not the point: what matters is the parameter it carries.", fr: "La fiabilité n’est pas la question : ce qui compte, c’est le paramètre qu’elle transporte."}
+
+  - id: verify
+    title: {en: "Step 6: verify and log", fr: "Étape 6 : vérifier et consigner"}
+    say:
+      en: >-
+        Step six: verify, do not assume. The lock chain shows the frames, the amplifier reads
+        one, and the station now measures the S-band itself, with margin to spare. Log which
+        step restored the link, step four, the amplifier was off, and find out why it was off
+        before the next pass. That question goes to the anomaly ticket.
+      fr: >-
+        L’étape six : vérifier, ne pas supposer. La chaîne de verrouillage montre les trames,
+        l’amplificateur lit un, et la station mesure maintenant la bande S elle-même, avec de la
+        marge. Consignez l’étape qui a rétabli la liaison, l’étape quatre, l’amplificateur était
+        coupé, et cherchez pourquoi il l’était avant le passage suivant. Cette question va dans
+        la fiche d’anomalie.
+    do:
+      - click: {css: "#rail-ttc"}
+      - wait_for: {target: {css: "#ttc-equip .eq"}, timeout: 20}
+      - wait: 1.5
+      - highlight: {target: {css: "#ttc-equip .eq:has-text('PA ON')"}, seconds: 2.5}
+      - highlight: {target: {css: "#ttc-params"}, seconds: 3, point: false}
+      - wait: 1.5
+    question:
+      type: reflect
+      worksheet: WB-A-CTG-019/q6
+      text:
+        en: "The same silent pass, but the beacon reads ttc.pa_on = 1. Walk through what you would send next, and what you could and could not learn from it."
+        fr: "Le même passage muet, mais la balise lit ttc.pa_on = 1. Décrivez ce que vous enverriez ensuite, et ce que vous pourriez ou non en apprendre."

@@ -255,6 +255,7 @@ videos:
   V-OPS-08: {los: [LO6], clos: ["1.4"]}
   V-OPS-09: {los: [LO6], clos: ["1.3", "1.4"]}
   V-OPS-10: {los: [LO6], clos: ["1.4", "2.3"]}
+  V-OPS-11: {los: [LO6], clos: ["1.4", "2.3"]}
   V-PLN-01: {los: [LO6], clos: ["1.4", "2.3"]}
 
 # Reflect questions practise reflection (CLO 6.2) as well as the video's own CLOs.
