@@ -53,6 +53,31 @@ def ff_to_pass(client, planner: str = "http://127.0.0.1:9091", min_duration: flo
     return c["gs_name"]
 
 
+
+async def fast_until_aocs_error(client, below: float = 5.0, speed: float = 10, timeout_s: float = 90) -> float:
+    """Run the simulator at ``speed`` until the TRUE attitude error is under ``below`` deg.
+
+    A fixed wall-clock wait is not a fixed amount of sim time while a capture
+    is running (the simulator does not keep up with 10x), so a slew filmed with
+    one stalled mid-way. Async, so the capture keeps recording while it waits.
+    Returns the error reached; always ends at real time.
+    """
+    import asyncio
+
+    async def err() -> float:
+        r = await client.get("/api/state")
+        return float(r.json().get("aocs", {}).get("att_error_deg", 999.0))
+
+    t0 = time.time()
+    try:
+        await client.post("/api/command", json={"type": "set_speed", "value": speed})
+        while time.time() - t0 < timeout_s and await err() >= below:
+            await asyncio.sleep(0.5)
+    finally:
+        await client.post("/api/command", json={"type": "set_speed", "value": 1})
+    return await err()
+
+
 async def seed_spacecdf_eosat(client, name: str = "EOSAT-1") -> str:
     """A new SpaceCDF study seeded with the EOSAT-1-like design used in the API tests
     (design/tests/test_api/diagram_seed.py): product tree, modes, power lines,
