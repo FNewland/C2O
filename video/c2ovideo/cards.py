@@ -25,13 +25,14 @@ L = {
 
 CSS = """
 html,body{margin:0;height:100%;background:#0b1626;color:#e8eef7;font-family:'IBM Plex Sans',system-ui,sans-serif}
-.card{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 9%;
+.card{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 9% 96px;
   background:radial-gradient(1200px 700px at 85% 15%,#173a63 0,#0b1626 60%)}
 .k{font:600 22px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#ffb000;text-transform:uppercase}
 h1{font-weight:600;font-size:64px;line-height:1.08;margin:22px 0 18px;max-width:22ch}
 p{font-size:28px;line-height:1.4;color:#b9c7da;max-width:46ch;margin:0}
 ul{margin:26px 0 0;padding:0;list-style:none}
-li{font-size:30px;line-height:1.35;margin:10px 0;padding-left:34px;position:relative}
+li{font-size:30px;line-height:1.35;margin:10px 0;padding-left:34px;position:relative;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 li:before{content:'';position:absolute;left:0;top:.5em;width:14px;height:14px;border-radius:3px;background:#ffb000}
 li code{font:500 24px 'IBM Plex Mono',monospace;color:#ffd27a;margin-right:12px}
 .foot{position:absolute;left:9%;right:9%;bottom:48px;font-size:18px;color:#7f93ad;display:flex;justify-content:space-between}

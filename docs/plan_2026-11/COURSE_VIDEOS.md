@@ -41,6 +41,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-07 | 5 | LEOP-005: starting rates, the automatic COARSE_SUN handover live, sun hold, power | WB-5.5-L005 q1/q3/q4 | released 2026-11-06: the AOCS fix holds the Sun ([AOCS_COARSE_SUN_MTQ_ONLY.md](AOCS_COARSE_SUN_MTQ_ONLY.md)); rendered EN+FR, attitude error ~0.2° in the stills; check EN 0.91, FR 0.90 |
 | V-OPS-08 | 5 | LEOP-006: unset clock, offset with light time, set from the ground, residual | WB-5.5-L006 q2/q3/q5 | rendered EN+FR from `card-LEOP-006` |
 | V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | released 2026-11-06 (sun hold ~12°, no attitude alarm in COARSE_SUN); rendered EN+FR; check EN 0.86, FR 0.86 (low lines are numbers written as digits) |
+| V-OPS-10 | 5 | Under-voltage, check before you shed (CTG-001): the alarm, what the spacecraft already shed (tiered on-board shed, L1 payload), the card's objective and branch (hold at this level), monitoring, sped-up recovery with the on-board restore at 28.9 V | WB-A-CTG-001 q1, q2, q7 | rendered EN+FR 2026-11-07 after the model/card fixes (tiered shed, stage count, MCS procedure link); check EN 0.92, FR 0.91 |
 | V-CON-06 | 4 | Concept: a telecommand's life — acceptance checks, S1 1,1/1,2/1,3/1,7/1,8, failure notice, deferred completion, completed ≠ verified | — (team) | rendered EN+FR (animated page `video/explainers/tc-life.html`); check EN 0.92, FR 0.85 |
 | V-CON-05 | 4 | Concept: CCSDS packet, primary and PUS headers, APID 0x002 → 0x001, services, HK SIDs, requested vs enabled, powered ≠ reporting | — (team) | rendered EN+FR (`packets.html`); check EN 0.90, FR 0.81 |
 | V-CON-04 | 7 | Concept: FDIR hierarchy, then S12 → S5 → S19 rule 2001 → S8 desaturation → S1 → TM(12,10) | — (team, deeper for fdir_systems) | rendered EN+FR (`fdir.html`); check EN 0.95, FR 0.91; nominal momentum chain, no scored recovery |
@@ -94,7 +95,7 @@ Step 1 expectation of +8 to +14 °C.
 1. Link budget term by term: no screen shows it yet. SpaceCDF's `LinkBudgetTool.tsx` (a
    term-by-term cascade) is not mounted anywhere; the design loop shows only the margins.
    Mount it (Analyses or level 3), then film it (LW-3.3 B, D-3.3-LINK).
-2. CTG-001 under-voltage load shed (ruled 2026-11-07): fix the model so shedding visibly
+2. CTG-001 under-voltage load shed (ruled 2026-11-07; DONE: V-OPS-10): fix the model so shedding visibly
    slows the fall (in eclipse), make the card's restore limits consistent (32.1 V was about
    87 % SoC, not 40 %), then film the operator working the branches.
 3. Ops videos (ruled 2026-11-07): not one video per COM card, only the hard or unique tasks:
