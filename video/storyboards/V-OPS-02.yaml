@@ -66,14 +66,14 @@ steps:
         With no downlink, the first command goes up blind, inside the scheduled pass. The
         connection test is on the bootloader's short list of accepted commands. Once the
         spacecraft accepts it, the auto-transmit hold-down switches the transmitter on for
-        fifteen minutes. Watch the reports from service one, request verification, S1 on the
+        five minutes. Watch the reports from service one, request verification, S1 on the
         console: accepted, then executed. And the strip at the top: we can now see the
         spacecraft.
       fr: >-
         Sans liaison descendante, la première commande monte en aveugle, pendant le passage
         prévu. Le test de connexion fait partie de la courte liste des commandes acceptées par
         le chargeur d’amorçage. Dès que le satellite l’accepte, le maintien automatique de
-        l’émetteur l’allume pour quinze minutes. Suivez les rapports du service un, vérification
+        l’émetteur l’allume pour cinq minutes. Suivez les rapports du service un, vérification
         des requêtes, S1 sur la console : acceptée, puis exécutée. Et le bandeau du haut : nous
         voyons maintenant le satellite.
     do:

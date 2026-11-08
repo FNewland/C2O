@@ -48,7 +48,7 @@ application-running platform.
 
 ### Step 2 — Send First Uplink (Connection Test)
 **TC:** `CONNECTION_TEST` (Service 17, Subtype 1)
-**Action:** Service 17 ping is on the bootloader allow-list, so it is accepted by the OBC even before the application image is loaded. On acceptance, the platform's **auto-TX hold-down** kicks in: any accepted TC autonomously powers `ttc_tx` ON for 15 minutes, energising the downlink without further commanding.
+**Action:** Service 17 ping is on the bootloader allow-list, so it is accepted by the OBC even before the application image is loaded. On acceptance, the platform's **auto-TX hold-down** kicks in: any accepted TC autonomously powers `ttc_tx` ON for 5 minutes (300 s, `auto_tx_hold_s`), energising the downlink without further commanding.
 **Verify:** S1.1 (Service 1, Subtype 1) acceptance received within 10s
 **Verify:** S17.2 connection test report received within 10s
 **Verify:** Beacon (SID 11) packets start arriving within 30 s — the downlink now exists. The bootloader emits SID 11 only, and SID 11 does not carry `eps.pl_ttc_tx` (0x0112): that line is confirmed in Step 7, once the application emits SID 1
@@ -126,7 +126,7 @@ boot-then-sync logic is written exactly once. This card sends no time command.
 - **`obdh.sw_image` does not transition after OBC_BOOT_APP:** the boot-app countdown is 10s. Read `obdh.boot_state` (0x0A15) first: 1 = still VERIFYING (wait for the S1.7), 3 = FAILED, the application CRC is failing — there will also be an S1.8 against the boot-app telecommand and event 0x0305 BOOT_FAILURE. On a FAILED boot, escalate to the OBDH engineer and consider `OBC_BOOT_INHIBIT(0)` then `OBC_REBOOT`.
 - **SID 1 not emitting after boot_app, or SIDs 3/4/6 still absent after the `HK_ENABLE`s in Step 5:** verify `obdh.sw_image` actually went to 1. If yes, remember that application boot re-applies `default_enabled_sids: [1, 11]` and disables everything else, so any SID commanded on before the boot is switched back off. Re-issue `HK_ENABLE(sid=N)` (Service 3, Subtype 5) for each missing SID after the boot.
 - **`TTC_SET_DATA_RATE` answered with S1.8 error 0x0007 after the application booted:** beacon mode is still latched — Step 5a was skipped or its `TTC_SET_BEACON_MODE(on=0)` was not accepted. Read the S1.8 failure notice: it names the gate verbatim ("TM rate is forced to the SAFE tier in beacon mode (LOW refused)"), and the same text appears as S5 event `0x030B COMMAND_REJECTED` in the event log and the FDIR journal. Re-issue Step 5a. The application boot deliberately does not clear beacon mode.
-- **Auto-TX hold-down expires before procedure complete:** any subsequent accepted TC re-arms the timer to 15 minutes, so this should not happen during a normal pass. If the operator goes 15 minutes without commanding, the link will drop — re-issue any TC to re-energise.
+- **Auto-TX hold-down expires before procedure complete:** any subsequent accepted TC re-arms the timer to 5 minutes, so this should not happen while you keep commanding (an HK request every minute is enough). If the operator goes 5 minutes without commanding, the link will drop — re-issue any TC to re-energise.
 
 ## Exit state
 - Bidirectional S-band link established (auto-TX hold-down active; `ttc_tx`

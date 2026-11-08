@@ -34,8 +34,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-2-send-first-uplink-connection-test",
-   "en_hash": "898a31c06c17709d",
-   "fr_hash": "ed67b6b77f1be585"
+   "en_hash": "1b180764010534b6",
+   "fr_hash": "86f0b6a55b6b688f"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/procedure-steps/step-3-verify-carrier-lock-and-link-quality",
@@ -74,8 +74,8 @@
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/off-nominal-handling",
-   "en_hash": "7f2154ed13a47241",
-   "fr_hash": "0b206dddff8c9122"
+   "en_hash": "a4c7f281389934c7",
+   "fr_hash": "9e9bacec33f7ffdb"
   },
   {
    "id": "leop-001-first-acquisition-of-signal-obc-boot/exit-state",
@@ -88,5 +88,5 @@
    "fr_hash": "255f3c828e6e48a7"
   }
  ],
- "en_commit": "b010e1a"
+ "en_commit": "8d8aca0"
 }
