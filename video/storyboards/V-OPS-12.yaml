@@ -147,7 +147,8 @@ steps:
         et les roues absorber le moment cinétique. La fiche demande une erreur sous cinq
         degrés avant tout essai de roue.
     do:
-      - scroll: {css: "#aocs-att2d"}
+      - js: "document.getElementById('aocs-att2d').scrollIntoView({block: 'start'})"
+      - wait: 0.8
       - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 10}}
       - highlight: {target: {css: "#aocs-att2d"}, seconds: 0.1, point: false}
       - wait: 24
@@ -180,7 +181,8 @@ steps:
       - wait: 1.2
       - click: {css: "#aocs-quick-list button", has_text: {en: "ST Select 1", fr: "Sélection ST 1"}}
       - wait: 2
-      - scroll: {css: "#aocs-att2d"}
+      - js: "document.getElementById('aocs-att2d').scrollIntoView({block: 'start'})"
+      - wait: 0.8
       - highlight: {target: {css: "#aocs-att2d"}, seconds: 4, point: false}
       - wait: 20
 
