@@ -136,8 +136,14 @@ def test_h5p_content_for_a_storyboard():
     acts = iv["assets"]["interactions"]
     assert len(acts) == len(meta["questions"]) and all(a["pause"] for a in acts)
     assert c["l10n"]["mute"] == "Couper le son"
-    libs = h5p.closure([h5p.MAIN] + [h5p.LIBS[s.question["type"]][:3] for s in sb.steps if s.question])
-    assert not any(l.startswith("H5PEditor.") for l in libs)
+    roots = [h5p.MAIN] + [h5p.LIBS[s.question["type"]][:3] for s in sb.steps if s.question]
+    assert not any(l.startswith("H5PEditor.") for l in h5p.closure(roots))
+    # packages carry the editor libraries too: Moodle refuses a package without them
+    full = h5p.closure(roots, editor=True)
+    assert any(l.startswith("H5PEditor.InteractiveVideo-") for l in full)
+    # file copyright uses the copyright semantics ("PD" + version), not the metadata value
+    copy = iv["video"]["files"][0]["copyright"]
+    assert copy == {"license": "PD", "version": "CC0 1.0"}
 
 
 # ------------------------------------------------------------- acronyms

@@ -80,19 +80,27 @@ def _libjson(dirname: str) -> dict:
     return json.loads((LIBDIR / dirname / "library.json").read_text(encoding="utf-8"))
 
 
-def closure(roots: list[tuple[str, int, int]]) -> list[str]:
-    """Runtime library folders needed by ``roots`` (editor libraries excluded)."""
+def closure(roots: list[tuple[str, int, int]], editor: bool = False) -> list[str]:
+    """Library folders needed by ``roots``.
+
+    With ``editor`` the editor libraries are followed too: strict platforms
+    (Moodle's core_h5p) refuse a package whose libraries name an
+    ``editorDependencies`` entry the package does not carry.
+    """
     seen: list[str] = []
     stack = [f"{n}-{a}.{b}" for n, a, b in roots]
     while stack:
         d = stack.pop()
-        if d in seen or d.startswith("H5PEditor."):
+        if d in seen or (not editor and d.startswith("H5PEditor.")):
             continue
         if not (LIBDIR / d).exists():
             raise FileNotFoundError(f"H5P library {d} missing from the hub download")
         seen.append(d)
-        for dep in _libjson(d).get("preloadedDependencies", []):
-            stack.append(f"{dep['machineName']}-{dep['majorVersion']}.{dep['minorVersion']}")
+        lj = _libjson(d)
+        keys = ["preloadedDependencies"] + (["editorDependencies", "dynamicDependencies"] if editor else [])
+        for k in keys:
+            for dep in lj.get(k, []):
+                stack.append(f"{dep['machineName']}-{dep['majorVersion']}.{dep['minorVersion']}")
     return sorted(seen)
 
 
@@ -201,16 +209,16 @@ def content(sb: Storyboard, lang: str, meta: dict, video_rel: str, vtt_rel: str,
         "video": {
             "startScreenOptions": {"title": tr(sb.title, lang), "hideStartTitle": False},
             "textTracks": {"videoTrack": [{"label": LANG_NAMES[lang][lang], "kind": "subtitles", "srcLang": lang,
-                                           "track": {"path": vtt_rel, "mime": "text/vtt", "copyright": {"license": "CC0 1.0"}}}],
+                                           "track": {"path": vtt_rel, "mime": "text/vtt", "copyright": {"license": "PD", "version": "CC0 1.0"}}}],
                            "defaultTrackLabel": LANG_NAMES[lang][lang]},
-            "files": [{"path": video_rel, "mime": "video/mp4", "copyright": {"license": "CC0 1.0"}}],
+            "files": [{"path": video_rel, "mime": "video/mp4", "copyright": {"license": "PD", "version": "CC0 1.0"}}],
         },
         "assets": {"interactions": [], "bookmarks": [], "endscreens": []},
         "summary": hub["interactiveVideo"]["summary"],
     }
     if poster_rel:
         iv["video"]["startScreenOptions"]["poster"] = {"path": poster_rel, "mime": "image/jpeg", "width": 1280, "height": 720,
-                                                        "copyright": {"license": "CC0 1.0"}}
+                                                        "copyright": {"license": "PD", "version": "CC0 1.0"}}
     for ch in meta["chapters"]:
         m, s = divmod(int(ch["start"]), 60)
         iv["assets"]["bookmarks"].append({"time": ch["start"], "label": f"{m}:{s:02d} {ch['title']}"})
@@ -260,7 +268,7 @@ def build(sb: Storyboard, lang: str, media: Path, meta: dict) -> dict:
     fetch_libraries()
     stem = f"{sb.slug}.{lang}"
     roots = [MAIN] + [LIBS[s.question["type"]][:3] for s in sb.steps if s.question]
-    libs = closure(roots)
+    libs = closure(roots, editor=True)
     vid, vtt, poster = f"videos/{stem}.mp4", f"videos/{stem}.vtt", f"images/{stem}.poster.jpg"
     c = content(sb, lang, meta, vid, vtt, poster)
     hj = h5p_json(sb, lang, libs)
@@ -288,6 +296,36 @@ def build(sb: Storyboard, lang: str, media: Path, meta: dict) -> dict:
         depth = len(Path(rel).parts) + 2               # content/<dir>/file -> ../../../
         dst.symlink_to(Path(*([".."] * depth)) / src)
     return {"package": pkg.name, "libraries": licences(libs)}
+
+
+def repack(pkg: Path) -> list[str]:
+    """Rewrite an existing package with the current library closure (no re-capture)."""
+    fetch_libraries()
+    with zipfile.ZipFile(pkg) as z:
+        hj = json.loads(z.read("h5p.json"))
+        content_files = {n: z.read(n) for n in z.namelist() if n.startswith("content/")}
+    # file copyright blocks use the copyright semantics: "PD" + version, not the metadata value
+    cj = content_files["content/content.json"].decode("utf-8")
+    cj = cj.replace('"copyright": {"license": "CC0 1.0"}', '"copyright": {"license": "PD", "version": "CC0 1.0"}')
+    content_files["content/content.json"] = cj.encode("utf-8")
+    roots = [(d["machineName"], d["majorVersion"], d["minorVersion"]) for d in hj["preloadedDependencies"]]
+    libs = closure(roots, editor=True)
+    tmp = pkg.with_suffix(".h5p.tmp")
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("h5p.json", json.dumps(hj, ensure_ascii=False))
+        for n, b in content_files.items():
+            stored = n.endswith((".mp4", ".jpg"))
+            z.writestr(n, b, compress_type=zipfile.ZIP_STORED if stored else zipfile.ZIP_DEFLATED)
+        for d in libs:
+            for f in sorted((LIBDIR / d).rglob("*")):
+                if f.is_file():
+                    z.write(f, f"{d}/{f.relative_to(LIBDIR / d).as_posix()}")
+    tmp.replace(pkg)
+    lang = pkg.name.split(".")[-2]
+    unpacked = pkg.parent / "h5p" / lang / "content" / "content.json"
+    if unpacked.exists():
+        unpacked.write_text(cj, encoding="utf-8")
+    return libs
 
 
 def export_libraries(dst: Path) -> list[str]:

@@ -276,6 +276,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("publish"); p.add_argument("id"); p.add_argument("--dir")
     c = sub.add_parser("check"); c.add_argument("id"); c.add_argument("--lang"); c.add_argument("--model", default="small")
     sub.add_parser("reviews")
+    r = sub.add_parser("repack", help="rewrite built .h5p packages with the current library set")
+    r.add_argument("ids", nargs="*")
     s = sub.add_parser("stack"); s.add_argument("action", choices=["setup", "up", "down", "status"]); s.add_argument("which", nargs="?", default="spacecdf")
     a = ap.parse_args(argv)
 
@@ -326,6 +328,11 @@ def main(argv=None) -> int:
             for n in notes.get("notes", []):
                 if n.get("status", "open") == "open":
                     print(f"{f.stem} {n.get('step')} [{n.get('lang')}] {n.get('by', '?')}: {n.get('text')}")
+    elif a.cmd == "repack":
+        sbs = [storyboard.load(i) for i in a.ids] if a.ids else storyboard.all_storyboards()
+        for sb in sbs:
+            for pkg in sorted((OUT / sb.slug).glob(f"{sb.slug}.*.h5p")):
+                print(f"{pkg.name}: {len(h5p.repack(pkg))} libraries")
     elif a.cmd == "stack":
         from . import stack
         return stack.run(a.action, a.which)
