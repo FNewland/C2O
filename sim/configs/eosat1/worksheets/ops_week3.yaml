@@ -9776,9 +9776,11 @@ worksheets:
         ligne ttc_tx pendant 300 s (maintien d''émission automatique) : cette demande est donc le test'
     hint:
       en: telemetry back → read why from it (eps.pl_ttc_tx (0x0112), ttc.pa_on (0x0516), EPS events),
-        keep commanding, step 6; nothing → the line is ruled out, step 3
+        keep commanding, step 6; nothing → the line is ruled out, step 3 (step 4 if the UHF beacon, SID
+        11, reads ttc.pa_on (0x0516) = 0)
       fr: télémesure revenue → en lire la raison (eps.pl_ttc_tx (0x0112), ttc.pa_on (0x0516), événements
-        EPS), continuer à commander, étape 6 ; rien → la ligne est hors de cause, étape 3
+        EPS), continuer à commander, étape 6 ; rien → la ligne est hors de cause, étape 3 (étape 4 si
+        la balise UHF, SID 11, lit ttc.pa_on (0x0516) = 0)
     step: '2'
     where:
     - tool: radio

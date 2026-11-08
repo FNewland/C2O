@@ -75,10 +75,14 @@ télémesure avant elle est normale ; l'absence de télémesure APRÈS elle es
 disjoncté et la commande l'a remise sous tension. Lire la raison dans la HK reçue : `eps.pl_ttc_tx`
 (0x0112), `ttc.pa_on` (0x0516) et les événements EPS (une disjonction sur surintensité de `ttc_tx`).
 Continuer à commander (HK toutes les 60 s) : le maintien dure 300 s après la dernière TC acceptée.
+**Note:** La balise UHF (HK SID 11, toutes les 30 s) est une radio distincte qui émet dès que la
+chaîne bande S se tait. Ses trames montrent que l'OBC est vivant, mais ce n'est pas la télémesure bande S
+qu'attend cette étape. La balise transporte `ttc.pa_on` (0x0516) : 0 signifie que l'amplificateur de
+puissance est coupé ; la suite est directement l'étape 4.
 **Action:** Si rien ne revient : la ligne est maintenant alimentée, elle n'est donc pas en cause.
 Chercher plus loin dans la chaîne : transpondeur (étape 3), amplificateur de puissance (étape 4),
 antenne (étape 5).
-**GO/NO-GO:** La télémesure est revenue après la demande en aveugle -> GO `STEP-6` | NO-GO `STEP-3`
+**GO/NO-GO:** La télémesure bande S est revenue après la demande en aveugle -> GO `STEP-6` | NO-GO `STEP-3` (ou `STEP-4` si la balise lit `ttc.pa_on` = 0)
 
 ### Étape 3 : Commander le basculement de transpondeur (en aveugle)
 **LABEL:** `STEP-3`

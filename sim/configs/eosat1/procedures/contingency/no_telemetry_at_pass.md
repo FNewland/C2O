@@ -75,9 +75,13 @@ normal; no telemetry AFTER it is the contingency.
 tripped and the command re-energised it. Read why in the HK that arrived: `eps.pl_ttc_tx`
 (0x0112), `ttc.pa_on` (0x0516) and the EPS events (an overcurrent trip on `ttc_tx`).
 Keep commanding (HK every 60 s): the hold-down lasts 300 s from the last accepted TC.
+**Note:** The UHF beacon (HK SID 11, every 30 s) is a separate radio that transmits
+whenever the S-band chain is silent. Beacon frames mean the OBC is alive, but they are
+not the S-band telemetry this step is waiting for. The beacon carries `ttc.pa_on`
+(0x0516): 0 means the power amplifier is off, so go straight to Step 4.
 **Action:** If nothing returns: the line is now powered, so it is not the cause. Look
 further down the chain: transponder (Step 3), power amplifier (Step 4), antenna (Step 5).
-**GO/NO-GO:** Telemetry returned after the blind request -> GO `STEP-6` | NO-GO `STEP-3`
+**GO/NO-GO:** S-band telemetry returned after the blind request -> GO `STEP-6` | NO-GO `STEP-3` (or `STEP-4` when the beacon reads `ttc.pa_on` = 0)
 
 ### Step 3: Command Transponder Switch (Blind)
 **LABEL:** `STEP-3`

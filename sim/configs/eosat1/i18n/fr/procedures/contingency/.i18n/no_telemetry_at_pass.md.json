@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-2-blind-hk-request-it-also-keys-the-transmitter",
-   "en_hash": "5bdeb7fa8ddd4bb0",
-   "fr_hash": "a8f424c7f4eabe49"
+   "en_hash": "a788f46a410783ea",
+   "fr_hash": "e3e4d12fdd348e8e"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-3-command-transponder-switch-blind",
@@ -83,5 +83,5 @@
    "fr_hash": "df142d7db536d00d"
   }
  ],
- "en_commit": "6f4195d"
+ "en_commit": "aeabd1e"
 }
