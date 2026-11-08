@@ -51,3 +51,10 @@ MOODLE_CONFIG=/path/to/moodle/config.php php build_course.php --category=1 --out
 
 The video packages must carry the H5P editor libraries (`python -m c2ovideo repack`)
 or Moodle refuses them.
+
+## Section banners (Edwiser card format)
+
+`banners/make_banners.py` draws 15 text-free 1200×675 banners (course, the 12
+days numbered 1.1–3.5, team workspace, references) in the deck palette, so one
+image serves both languages. Set them per section in the card format's section
+settings after restore.
