@@ -201,9 +201,9 @@
   <g class="ds-node" data-param="0x0605"><rect class="bx" x="630" y="50" width="150" height="70" rx="3"/><text x="640" y="72" class="sm">IMAGES</text><text x="640" y="98" class="vl">—</text></g>
   <g data-param="0x0600"><text x="30" y="160" class="sm">MODE <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0610"><text x="180" y="160" class="sm" data-i18n>FPA READY <tspan class="vl">—</tspan></text></g>
-  <g data-param="0x0616" data-units="dB"><text x="340" y="160" class="sm">SNR <tspan class="vl">—</tspan></text></g>
+  <g data-param="0x060B" data-units="MB"><text x="340" y="160" class="sm" data-i18n>MEM USED <tspan class="vl">—</tspan></text></g>
   <g data-param="0x062B" data-units="%"><text x="480" y="160" class="sm" data-i18n>CAL PROG <tspan class="vl">—</tspan></text></g>
-  <g data-param="0x060D" data-units="%"><text x="640" y="160" class="sm" data-i18n>LAST QUALITY <tspan class="vl">—</tspan></text></g>
+  <g data-param="0x062E" data-units="%"><text x="640" y="160" class="sm" data-i18n>TRANSFER <tspan class="vl">—</tspan></text></g>
 </symbol>
 
 <!-- ═══════════════ PROP L2 - FEED SYSTEM (traced from #prop-diagram) ═══════ -->
@@ -222,7 +222,7 @@
   <g data-param="0x0B03" data-units="%"><text x="470" y="150" class="sm" data-i18n>PROPELLANT <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0B0C" data-units="m/s"><text x="640" y="150" class="sm" data-i18n>dV REMAINING <tspan class="vl">—</tspan></text></g>
   <g data-param="0x0B0D"><text x="260" y="180" class="sm" data-i18n>BURN STATUS <tspan class="vl">—</tspan></text></g>
-  <g data-param="0x0B16" data-units="mg/s"><text x="470" y="180" class="sm" data-i18n>LEAK RATE <tspan class="vl">—</tspan></text></g>
+  <g data-param="0x0B02" data-units="g"><text x="470" y="180" class="sm" data-i18n>PROP MASS <tspan class="vl">—</tspan></text></g>
 </symbol>
 
 <!-- ═══════════════ OBDH L2 - OBC ARCHITECTURE (traced from #obdh-diagram) ══ -->

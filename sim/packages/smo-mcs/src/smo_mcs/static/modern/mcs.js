@@ -1560,7 +1560,7 @@ const L2 = {
         active: Number.isFinite(stage) ? stage : -1 };
     },
     equipment: [["SA-A", "0x0103", "A"], ["SA-B", "0x0104", "A"], ["BATTERY", "0x0101", "%"],
-      ["BUS", "0x0105", "V"], ["MPPT", "0x0122", ""], ["LOAD", "0x0148", "A"]] },
+      ["BUS", "0x0105", "V"], ["DOD", "0x0120", "%"], ["LOAD", "0x0148", "A"]] },
   tcs: { title: "Thermal control", sym: "sch-tcs",
     key: ["0x0406", "0x0407", "0x0408", "0x0409", "0x0411", "0x041A"],
     stepper: () => ({ label: tText("FPA cooldown"), src: "0x040C", states: ["OFF", "COOLING", "REGULATING"],
@@ -1597,14 +1597,18 @@ const L2 = {
     equipment: [["XPDR", "0x0507", "°C"], ["PA", "0x050F", "°C"], ["PA ON", "0x0516", ""],
       ["BEACON", "0x0526", ""], ["TIER", "0x0539", ""], ["TIER CMD", "0x053A", ""]] },
   pld: { title: "Payload", sym: "sch-pld",
-    key: ["0x0601", "0x0604", "0x0605", "0x0616", "0x0602", "0x060D"],
+    // 0x0616 SNR and 0x060D image quality are instructor truth, never
+    // downlinked: image quality is judged on the ground from the product.
+    key: ["0x0601", "0x0604", "0x0605", "0x060B", "0x0602", "0x062E"],
     stepper: () => ({ label: tText("Instrument state"), src: "0x0600",
       states: ["OFF", "STANDBY", "IMAGING", "CAL", "TRANSFER"],
       active: (() => { const m = Number(paramVal("0x0600")); return Number.isFinite(m) ? Math.min(m, 4) : -1; })() }),
     equipment: [["FPA", "0x0601", "°C"], ["COOLER", "0x0602", "W"], ["STORE", "0x0604", "%"],
-      ["IMAGES", "0x0605", ""], ["SNR", "0x0616", "dB"], ["FPA READY", "0x0610", ""]] },
+      ["IMAGES", "0x0605", ""], ["LAST SCENE", "0x060C", ""], ["FPA READY", "0x0610", ""]] },
   prp: { title: "Propulsion", sym: "sch-prp",
-    key: ["0x0B01", "0x0B03", "0x0B04", "0x0B05", "0x0B0C", "0x0B16"],
+    // 0x0B16 leak rate is instructor truth; the operator sees a leak in the
+    // 0x0B01 pressure trend (S12 delta monitor).
+    key: ["0x0B01", "0x0B03", "0x0B04", "0x0B05", "0x0B0C", "0x0B02"],
     stepper: () => {
       const st2 = Number(paramVal("0x0B0D"));
       return { label: tText("Burn sequence"), src: "0x0B0D",
