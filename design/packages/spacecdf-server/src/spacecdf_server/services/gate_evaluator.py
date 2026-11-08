@@ -56,6 +56,7 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "ConOps summary is empty",
     "Mass margin {{mass}}%, power margin {{power}}%",
     "No cost target set",
+    "No spacecraft mass limit set: enter the target mass in the mission brief",
     "Cost {{cost}} MEUR vs target {{target}} MEUR",
     "Risk analysis run: {{n}} risk(s) identified",
     "Debris compliance score {{score}}/100",
@@ -488,6 +489,11 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             _set(result, "fail", "ConOps summary is empty")
 
     elif cid == "MDR-EC-07":
+        if (_get_param(dp, "systems.power_margin_percent") is not None
+                and _get_param(dp, "systems.mass_margin_percent") is None and not ctx["target_mass"]):
+            # The design loop ran, but it has no mass limit to compute a margin against.
+            _set(result, "not_evaluated", "No spacecraft mass limit set: enter the target mass in the mission brief")
+            return
         v = _need(result, dp, "systems.mass_margin_percent", "systems.power_margin_percent")
         if v:
             mass, power = v

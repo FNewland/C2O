@@ -125,6 +125,25 @@ def test_empty_study_fails_must_pass_and_skips_missing_parameters():
     assert res["ready"] is False
 
 
+def test_mdr_ec07_names_the_missing_mass_limit_after_a_design_run():
+    """The loop ran (power margin present) but there is no mass limit: say so, not 'run the loop'."""
+    by = {c["id"]: c for c in ge.evaluate_gate(
+        "MDR", design_params={"systems.power_margin_percent": 30})["criteria"]}
+    assert by["MDR-EC-07"]["status"] == "not_evaluated"
+    assert "mass limit" in by["MDR-EC-07"]["evidence_found"]
+    with_target = {c["id"]: c for c in ge.evaluate_gate(
+        "MDR", design_params={"systems.power_margin_percent": 30}, target_mass_kg=12)["criteria"]}
+    assert with_target["MDR-EC-07"]["evidence_key"] == ge.MSG_RUN_DESIGN
+
+
+def test_mdr_ec09_reads_the_risk_register():
+    risks = [{"id": "RSK-001", "status": "open"}, {"id": "RSK-002", "status": "open"}]
+    by = {c["id"]: c for c in ge.evaluate_gate("MDR", risks=risks)["criteria"]}
+    assert by["MDR-EC-09"]["status"] == "pass" and by["MDR-EC-09"]["evidence_params"] == {"n": 2}
+    none = {c["id"]: c for c in ge.evaluate_gate("MDR", design_params={"risk.total_risks": 0})["criteria"]}
+    assert none["MDR-EC-09"]["status"] == "fail"
+
+
 def test_pdr_should_pass_items_are_advisory_and_do_not_block():
     """Q23: PDR should-pass items stay advisory."""
     reqs = [{"id": "R1", "code": "SYS-001", "threshold_param_path": "systems.mass_margin_percent",

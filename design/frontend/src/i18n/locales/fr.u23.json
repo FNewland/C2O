@@ -64,5 +64,6 @@
   "{{n}} stakeholder(s) identified": "{{n}} partie(s) prenante(s) identifiée(s)",
   "{{ok}}/{{total}} requirements have a verification method and a threshold": "{{ok}}/{{total}} exigences ont une méthode de vérification et un seuil",
   "{{ok}}/{{total}} subsystems have at least one component": "{{ok}}/{{total}} sous-systèmes ont au moins un composant",
-  "{{traced}}/{{total}} objectives traced to requirements": "{{traced}}/{{total}} objectifs tracés vers des exigences"
+  "{{traced}}/{{total}} objectives traced to requirements": "{{traced}}/{{total}} objectifs tracés vers des exigences",
+  "No spacecraft mass limit set: enter the target mass in the mission brief": "Aucune limite de masse du satellite : saisir la masse cible dans la fiche de mission"
 }

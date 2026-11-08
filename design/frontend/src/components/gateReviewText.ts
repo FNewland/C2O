@@ -76,6 +76,7 @@ export const EVIDENCE_KEYS = [
   'ConOps summary is empty',
   'Mass margin {{mass}}%, power margin {{power}}%',
   'No cost target set',
+  'No spacecraft mass limit set: enter the target mass in the mission brief',
   'Cost {{cost}} MEUR vs target {{target}} MEUR',
   'Risk analysis run: {{n}} risk(s) identified',
   'Debris compliance score {{score}}/100',
