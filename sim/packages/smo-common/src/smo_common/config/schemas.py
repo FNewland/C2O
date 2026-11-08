@@ -1038,6 +1038,9 @@ class SimEPSLoadShedConfig(StrictModel):
     # None (the default) = the named ``eps.bus_protection.uv_v``. Set only to
     # override the shed trigger in a test or scenario harness.
     bus_voltage_v: float | None = None
+    # Per-line shed level, bus V (CTG-001 ruling, 2026-11): a line is shed only
+    # once the bus has fallen to its level. Lines not listed use the trigger.
+    levels_v: dict[str, float] = Field(default_factory=dict)
     restore_hysteresis_v: float = 0.5
     # Automatic restore of shed lines once the bus recovers above
     # bus_voltage_v + restore_hysteresis_v — one line per tick, reverse shed

@@ -8,14 +8,20 @@
 shed, the ground should --- but check the spacecraft first"). Each shed level now
 reads the line state first and sheds from the ground only what on-board FDIR has
 not already switched off; restoration re-powers each line before its mode command.
+Revision 1.2 --- 2026-11-07 (ruling: shedding must visibly slow the fall). The on-board
+shedder is tiered at this card's own levels, and the restore limits now agree with the
+battery curve (29.0 V is about 52 % charge; the old 32.1 V was about 85 %, never "40 %").
 
 ## Objective
 Respond to an undervoltage condition on the main power bus by completing, from the
 ground, the load shedding the spacecraft has not already done, in a controlled
-priority order. The EPS sheds on its own below the named shed level, 28.4 V
-(`eps.bus_protection.uv_v`; payload → FPA cooler →
-`ttc_tx` → AOCS wheels → prop, one line per second, events LOAD_SHED_STAGE_1..3
-0x0106-0x0108), and EPS safe/emergency modes and the S19 SoC rules open lines too:
+priority order. The EPS also sheds on its own, one line each time the bus falls to that
+line's level (`eps.load_shed.levels_v`): payload 28.4 V, FPA cooler 27.8 V, `ttc_tx`
+27.2 V, AOCS wheels 26.5 V, prop 26.1 V (events LOAD_SHED_STAGE_1..3 0x0106-0x0108).
+These are the levels this card checks, so the ground can shed the next level before the
+spacecraft does. Shedding does not lift the bus: the bus follows the battery's charge.
+What shedding changes is how fast it falls, so each check below asks whether the bus
+has fallen to the next level. EPS safe/emergency modes and the S19 SoC rules open lines too:
 by the time this card is flown some lines may already be off. Loads are shed starting with the lowest
 priority (payload) and progressing through the FPA cooler, TX transmitter, and reaction
 wheels to arrest bus voltage decline and protect critical spacecraft functions. Recovery
@@ -99,8 +105,9 @@ on-board FDIR has already opened it: send nothing and go to the voltage check.
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Wait 30 s and re-check bus voltage
 **Verify:** `eps.bus_voltage` (0x0105) — record new value
 **BRANCH:** `eps.bus_voltage > 28.4` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
-**Note:** GO — the shed worked; HOLD at this level and go straight to monitoring.
-NO-GO — still declining; fall through to the next shed level. The 60 s branch
+**Note:** GO — the bus is holding above the shed level (in sunlight it climbs as the
+battery charges): HOLD at this level and go straight to monitoring. NO-GO — still
+falling towards the next level; fall through to the next shed level. The 60 s branch
 timeout is what the prose called "wait 30 s and re-check": it gives the bus two
 1 Hz SID 1 samples to settle before the predicate is judged.
 
@@ -183,11 +190,13 @@ where shedding the payload alone recovered the bus.
 **Verify:** `eps.power_gen` (0x0107) > 0 W when in sunlight
 **Verify:** `eps.bat_current` (0x0109) — positive (charging) in sunlight
 **Action:** Continue monitoring until:
-- `eps.bus_voltage` > 32.1 V
-- `eps.bat_soc` > 40%
+- `eps.bus_voltage` > 29.0 V
+- `eps.bat_soc` > 50%
 **Note:** Recovery may take multiple orbits depending on depth of discharge and
-available solar array power.
-**GO/NO-GO:** Bus voltage > 32.1 V and SoC > 40% — proceed to restore loads.
+available solar array power. The two limits agree: 29.0 V is about 52 % charge on this
+battery (24.0 V empty, 33.6 V full). The spacecraft's own auto-restore brings shed lines
+back at 28.9 V (the shed level + 0.5 V), so some lines may already be on when you get here.
+**GO/NO-GO:** Bus voltage > 29.0 V and SoC > 50% — proceed to restore loads.
 
 ### Step 7: Restore Loads in Reverse Priority Order
 **Note:** Re-enable loads one at a time, waiting 5 min between each to verify stability.
@@ -206,14 +215,14 @@ before the unit's mode command: with the line open every mode command is refused
 **GO/NO-GO:** Bus stable for 5 min with the FPA cooler line restored — restore the next load
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — the `payload` line first, if `eps.pl_payload` (0x0113) = 0: the mode command is otherwise refused S1.8 "power line 'payload' is OFF"
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Payload to STANDBY: verify `payload.mode` = 1
-**Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 31.5 V
-and `eps.bat_soc` (0x0101) remains > 35%.
+**Verify:** After each load addition, confirm `eps.bus_voltage` (0x0105) remains > 28.4 V
+(the shed level) and `eps.bat_soc` (0x0101) remains > 46%.
 **GO/NO-GO:** All loads restored and power budget positive — procedure complete.
 
 ## Verification Criteria
 - [ ] `eps.uv_flag` (0x010E) = 0 (cleared)
-- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
-- [ ] `eps.bat_soc` (0x0101) > 40%
+- [ ] `eps.bus_voltage` (0x0105) > 29.0 V
+- [ ] `eps.bat_soc` (0x0101) > 50%
 - [ ] All subsystems restored to nominal operating modes
 - [ ] Power budget is positive (generation > consumption) with margin
 - [ ] No repeat undervoltage events for at least 2 orbits

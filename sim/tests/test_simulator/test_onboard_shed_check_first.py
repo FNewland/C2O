@@ -4,8 +4,9 @@ Franz: "if the spacecraft does not shed, the ground should — but check the
 spacecraft first". The rewritten cards (CTG-001, CTG-005, CTG-013, CTG-023,
 EMG-001, EMG-002) branch on the `eps.pl_*` line states because:
 
-* the EPS sheds on its own below the shed voltage, one line per tick in the
-  order payload -> fpa_cooler -> ttc_tx -> aocs_wheels -> prop, and publishes
+* the EPS sheds on its own, one line each time the bus falls to that line's
+  level (2026-11 ruling: payload 28.4, fpa_cooler 27.8, ttc_tx 27.2,
+  aocs_wheels 26.5, prop 26.1 V — CTG-001's own branch levels), and publishes
   each line's state (SID 1, 1 Hz) and the shed stage 0x0134;
 * a ground shed of a line already open is refused at acceptance (S1.2/0x0004
   "power line ... is OFF"), so the old cards' shed steps could never pass;
@@ -38,12 +39,11 @@ def engine(tmp_path):
     return eng
 
 
-def _shed(engine):
-    # BPX 8S-1P curve (2026-11): one dead cell (-3.7 V) takes the bus below
-    # the 28.4 V shed level only below ~88 % SoC, so start from 80 % (bus
-    # 31.7 -> 28.0 V, under the shed level but above EPS-safe 27.7 V — the
-    # same place in the ladder the old 90 % / 25.0 V setup landed).
-    engine.subsystems["eps"]._state.bat_soc_pct = 80.0
+def _shed(engine, soc=62.0):
+    # BPX 8S-1P curve: one dead cell (-3.7 V). From 62 % SoC the bus sits near
+    # 26.3 V: below the wheels' 26.5 V level (a deep shed, every line open) but
+    # above prop / AOCS-safe (26.1 V) and the cascade (25.9 V).
+    engine.subsystems["eps"]._state.bat_soc_pct = soc
     engine.subsystems["eps"].inject_failure("bat_cell", 1.0)   # -3.7 V
     for _ in range(10):
         engine._tick_once(1.0)
@@ -52,10 +52,19 @@ def _shed(engine):
 def test_onboard_shedder_opens_the_lines_and_says_so(engine):
     assert int(engine.params[0x0113]) == 1
     _shed(engine)
-    assert engine.params[0x0105] < engine._sim_cfg.eps.bus_protection.uv_v
+    assert engine.params[0x0105] < 26.5
     for pid in (0x0113, 0x0114, 0x0112, 0x0117):      # payload..aocs_wheels
         assert int(engine.params[pid]) == 0, f"0x{pid:04X} not shed"
     assert int(engine.params[0x0134]) >= 3
+
+
+def test_onboard_shedder_is_tiered(engine):
+    """Just under the 28.4 V flag only the payload goes; the rest wait for their level."""
+    _shed(engine, soc=80.0)                               # bus ~28.0 V
+    assert 27.8 < engine.params[0x0105] < 28.4
+    assert int(engine.params[0x0113]) == 0                # payload shed
+    for pid in (0x0112, 0x0117):                          # ttc_tx, aocs_wheels kept
+        assert int(engine.params[pid]) == 1, f"0x{pid:04X} shed above its level"
 
 
 def test_ground_shed_of_an_open_line_is_refused(engine):

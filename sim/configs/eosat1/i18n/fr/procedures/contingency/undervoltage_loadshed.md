@@ -8,12 +8,20 @@
 doit le faire --- mais vérifier d'abord le satellite »). Chaque niveau de délestage lit maintenant
 d'abord l'état de la ligne et ne déleste depuis le sol que ce que la FDIR de bord n'a pas déjà coupé ;
 le rétablissement réalimente chaque ligne avant la commande de mode de son unité.
+Révision 1.2 --- 2026-11-07 (décision : le délestage doit ralentir visiblement la baisse). Le délesteur
+de bord est échelonné aux niveaux mêmes de cette fiche, et les limites de rétablissement concordent
+maintenant avec la courbe de la batterie (29,0 V correspond à environ 52 % de charge ; l'ancien
+32,1 V correspondait à environ 85 %, jamais à « 40 % »).
 
 ## Objectif
 Traiter une sous-tension sur le bus d'alimentation principal en achevant depuis le sol le délestage
-que le satellite n'a pas déjà fait, dans un ordre de priorité maîtrisé. L'EPS déleste de lui-même sous
-le seuil de délestage nommé, 28,4 V (`eps.bus_protection.uv_v` ; charge utile → refroidisseur du FPA → `ttc_tx` → roues AOCS → prop, une ligne par seconde,
-événements LOAD_SHED_STAGE_1..3 0x0106-0x0108), et les modes safe/emergency de l'EPS ainsi que les
+que le satellite n'a pas déjà fait, dans un ordre de priorité maîtrisé. L'EPS déleste aussi de lui-même,
+une ligne chaque fois que le bus descend au niveau de cette ligne (`eps.load_shed.levels_v`) : charge utile
+28,4 V, refroidisseur du FPA 27,8 V, `ttc_tx` 27,2 V, roues AOCS 26,5 V, prop 26,1 V (événements
+LOAD_SHED_STAGE_1..3 0x0106-0x0108). Ce sont les niveaux que vérifie cette fiche : le sol peut donc
+délester le niveau suivant avant le satellite. Le délestage ne relève pas le bus : le bus suit la charge
+de la batterie. Ce que le délestage change, c'est la vitesse de la baisse ; chaque vérification ci-dessous
+demande donc si le bus est descendu au niveau suivant. Par ailleurs, les modes safe/emergency de l'EPS ainsi que les
 règles S19 sur l'état de charge ouvrent aussi des lignes : au moment où cette fiche est exécutée,
 certaines lignes peuvent déjà être coupées. Les charges sont délestées en commençant par la plus basse
 priorité (charge utile), puis le refroidisseur du FPA, l'émetteur TX et les roues
@@ -98,8 +106,9 @@ FDIR de bord l'a déjà ouverte : ne rien envoyer et passer au contrôle de ten
 **TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Attendre 30 s et contrôler de nouveau la tension du bus
 **Verify:** `eps.bus_voltage` (0x0105) — consigner la nouvelle valeur
 **BRANCH:** `eps.bus_voltage > 28.4` -> GO `STEP-6` | NO-GO `STEP-3` (timeout 60 s)
-**Note:** GO — le délestage a suffi ; MAINTENIR (HOLD) ce niveau, la suite est directement la surveillance.
-NO-GO — la tension baisse encore ; le niveau de délestage suivant s'applique. La temporisation de 60 s
+**Note:** GO — le bus tient au-dessus du niveau de délestage (au Soleil, il remonte à mesure que la
+batterie se charge) : MAINTENIR (HOLD) ce niveau, la suite est directement la surveillance.
+NO-GO — la tension descend encore vers le niveau suivant ; le niveau de délestage suivant s'applique. La temporisation de 60 s
 de la branche correspond à ce que la prose appelait « attendre 30 s et contrôler de nouveau » : elle laisse au bus deux
 échantillons SID 1 à 1 Hz pour se stabiliser avant l'évaluation du prédicat.
 
@@ -181,11 +190,14 @@ où le délestage de la seule charge utile suffisait à rétablir le bus.
 **Verify:** `eps.power_gen` (0x0107) > 0 W au Soleil
 **Verify:** `eps.bat_current` (0x0109) — positif (charge) au Soleil
 **Action:** Poursuivre la surveillance jusqu'à ce que :
-- `eps.bus_voltage` > 32.1 V ;
-- `eps.bat_soc` > 40 %.
+- `eps.bus_voltage` > 29.0 V ;
+- `eps.bat_soc` > 50 %.
 **Note:** Le rétablissement peut prendre plusieurs orbites selon la profondeur de décharge et
-la puissance disponible du générateur solaire.
-**GO/NO-GO:** Tension du bus > 32.1 V et SoC > 40 % — passer au rétablissement des charges.
+la puissance disponible du générateur solaire. Les deux limites concordent : 29,0 V correspond à environ
+52 % de charge sur cette batterie (24,0 V vide, 33,6 V pleine). Le rétablissement automatique de bord
+réalimente les lignes délestées à 28,9 V (niveau de délestage + 0,5 V) : certaines lignes peuvent donc
+être déjà rétablies quand vous arrivez ici.
+**GO/NO-GO:** Tension du bus > 29.0 V et SoC > 50 % — passer au rétablissement des charges.
 
 ### Étape 7 : Rétablir les charges dans l'ordre de priorité inverse
 **Note:** Réactiver les charges une par une, en attendant 5 min entre chacune pour vérifier la stabilité.
@@ -204,14 +216,14 @@ commande de mode de l'unité : ligne ouverte, toute commande de mode est refus�
 **GO/NO-GO:** Bus stable pendant 5 min avec la ligne du refroidisseur du FPA rétablie — rétablir la charge suivante
 **TC:** `EPS_POWER_ON(line_index=3)` (Service 8, Subtype 1, func_id 19) — d'abord la ligne `payload`, si `eps.pl_payload` (0x0113) = 0 : sinon la commande de mode est refusée par un S1.8 « power line 'payload' is OFF »
 **TC:** `PAYLOAD_SET_MODE(mode=1)` (Service 8, Subtype 1, func_id 26) — 4. Charge utile en STANDBY : vérifier `payload.mode` = 1
-**Verify:** Après chaque ajout de charge, confirmer que `eps.bus_voltage` (0x0105) reste > 31.5 V
-et que `eps.bat_soc` (0x0101) reste > 35 %.
+**Verify:** Après chaque ajout de charge, confirmer que `eps.bus_voltage` (0x0105) reste > 28.4 V
+(le niveau de délestage) et que `eps.bat_soc` (0x0101) reste > 46 %.
 **GO/NO-GO:** Toutes les charges rétablies et bilan de puissance positif — procédure terminée.
 
 ## Critères de vérification
 - [ ] `eps.uv_flag` (0x010E) = 0 (retombé)
-- [ ] `eps.bus_voltage` (0x0105) > 32.1 V
-- [ ] `eps.bat_soc` (0x0101) > 40 %
+- [ ] `eps.bus_voltage` (0x0105) > 29.0 V
+- [ ] `eps.bat_soc` (0x0101) > 50 %
 - [ ] Tous les sous-systèmes revenus dans leurs modes de fonctionnement nominaux
 - [ ] Bilan de puissance positif (production > consommation) avec marge
 - [ ] Aucune nouvelle sous-tension pendant au moins 2 orbites

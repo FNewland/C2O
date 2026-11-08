@@ -9,13 +9,13 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed",
-   "en_hash": "6d3000b85a649f95",
-   "fr_hash": "71cb4f93da788728"
+   "en_hash": "184ddbf0dbd319ba",
+   "fr_hash": "23bc5eee56066f3f"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/objective",
-   "en_hash": "d810d78d79e7aa95",
-   "fr_hash": "ab25f115edc1b4c1"
+   "en_hash": "896e3e4910095ae9",
+   "fr_hash": "7a129898e7c02fc9"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/prerequisites",
@@ -44,8 +44,8 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-2-shed-load-priority-1-payload-off",
-   "en_hash": "f025657d44de8c06",
-   "fr_hash": "030db91979ac97b4"
+   "en_hash": "556f883184527ecc",
+   "fr_hash": "29c936ee8dada1e1"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-3-shed-load-priority-2-fpa-cooler-off",
@@ -69,18 +69,18 @@
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-6-monitor-recovery",
-   "en_hash": "dc55aee444e1cbbb",
-   "fr_hash": "e07e10c092fdefec"
+   "en_hash": "b9f21bfe0dccdd4c",
+   "fr_hash": "26cf0773c46ee5e3"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/procedure-steps/step-7-restore-loads-in-reverse-priority-order",
-   "en_hash": "f8219ac7527ed5ac",
-   "fr_hash": "13f94c6c1ed35bf4"
+   "en_hash": "f65b37505ac541c2",
+   "fr_hash": "a95749b90633eb05"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/verification-criteria",
-   "en_hash": "85618eac05fd7001",
-   "fr_hash": "599a2f0aeab77c50"
+   "en_hash": "0a94b9a0fd0c560f",
+   "fr_hash": "f75f72e438c2e989"
   },
   {
    "id": "ctg-001-under-voltage-load-shed/contingency",
@@ -93,5 +93,5 @@
    "fr_hash": "7425a0351c1744bc"
   }
  ],
- "en_commit": "b010e1a"
+ "en_commit": "cf4ba45"
 }

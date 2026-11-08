@@ -299,6 +299,9 @@ class EPSBasicModel(SubsystemModel):
         self._line_power_w = dict(self.LINE_POWER_DEFAULTS_W)
         self._shed_order = list(LOAD_SHED_ORDER)
         self._shed_voltage = LOAD_SHED_VOLTAGE
+        # Per-line shed level (bus V). Empty = every line at _shed_voltage (the old
+        # single-threshold shedder); configure() fills it from load_shed.levels_v.
+        self._shed_levels: dict[str, float] = {}
         self._shed_hysteresis_v = 0.5
         self._oc_thresholds = dict(OC_THRESHOLDS)
         self._oc_trip_time_s = OC_TRIP_TIME_S
@@ -448,6 +451,7 @@ class EPSBasicModel(SubsystemModel):
         self._shed_voltage = _pick(shed.get("bus_voltage_v"), bp["uv_v"])
         self._shed_hysteresis_v = float(shed.get("restore_hysteresis_v", 0.5))
         self._shed_auto_restore = bool(shed.get("auto_restore", False))
+        self._shed_levels = {str(k): float(v) for k, v in (shed.get("levels_v") or {}).items()}
 
         self._heater_duty_from_tcs = bool(sim.get("heater_duty_from_tcs", False))
 
@@ -1099,8 +1103,16 @@ class EPSBasicModel(SubsystemModel):
         # drops below the load-shedding threshold.  Loads are shed in priority
         # order (lowest priority first).  Lines are restored only when bus
         # voltage recovers above threshold + 0.5 V hysteresis.
+        # Tiered (2026-11, CTG-001 ruling): each line has its own level, so a
+        # line is shed only once the bus has fallen to it. Shedding slows the
+        # discharge rather than lifting the voltage (the bus follows the
+        # battery), so a single threshold used to strip every line within
+        # seconds; with levels the fall flattens and stops before the next one.
+        lvl = lambda ln: self._shed_levels.get(ln, self._shed_voltage)  # noqa: E731
         if s.bus_voltage < self._shed_voltage:
             for shed_line in self._shed_order:
+                if s.bus_voltage >= lvl(shed_line):
+                    break  # the bus has not fallen to this line's level (or any later one)
                 if s.power_lines.get(shed_line, False):
                     s.power_lines[shed_line] = False
                     s.shed_lines.append(shed_line)  # for auto-restore (WP-7)
@@ -1114,6 +1126,8 @@ class EPSBasicModel(SubsystemModel):
                     break  # Shed one line per tick to allow recovery
         elif (self._shed_auto_restore and s.shed_lines
               and s.bus_voltage > self._shed_voltage + self._shed_hysteresis_v):
+            # Every line comes back only once the bus is clear of the UV flag
+            # (uv_v + hysteresis), whatever its shed level.
             # Hysteresis restore (brief 01 F15 / WP-7): the code comment above
             # promised this for a year while no restore code existed. One line
             # per tick, REVERSE shed order, only lines this shedder shed.

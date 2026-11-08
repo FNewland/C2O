@@ -161,6 +161,13 @@ eps:
     # — every session stripped payload/cooler/TX/wheels in the first eclipse.
     # ~45 % SoC leaves the ladder reachable under failures (bus_short, array
     # loss) but not in nominal operations.
+    # Per-line shed level, bus V (2026-11, CTG-001 ruling). The bus follows the
+    # battery, so shedding slows the fall rather than lifting the voltage: with
+    # one threshold every line went within seconds. Each line now goes only when
+    # the bus reaches its level — the same levels as CTG-001's branch checks, so
+    # the ground can shed a level before the spacecraft does. Lines not listed
+    # use bus_protection.uv_v.
+    levels_v: {payload: 28.4, fpa_cooler: 27.8, ttc_tx: 27.2, aocs_wheels: 26.5, prop: 26.1}
     restore_hysteresis_v: 0.5
     # Phase B (brief 01 F15 / WP-7): the documented hysteresis restore now
     # exists — shed lines are restored one per tick, in reverse shed order,
