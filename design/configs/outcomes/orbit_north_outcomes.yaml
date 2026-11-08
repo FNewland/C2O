@@ -1,0 +1,260 @@
+# ORBIT NORTH (GNG 3100 / SYS 5186) — course learning outcomes tied to the Master of
+# Systems Engineering program outcomes, and every assessment, worksheet, decision record,
+# video and embedded question tied to both.
+#
+# Source of the program side: "Master of Systems Engineering — Program Learning Outcomes",
+# draft 7 November 2026 (F. Newland, GPD): Senate PLOs 1–5 + PLO 6 (MASc / MEng), the
+# reflective-practice thread (CLO 6.2 → GDLE 6), 28 CLOs + R.1, R.2, one five-level scale:
+#   1 Initial thoughts · 2 First engagement · 3 Deeper engagement · 4 First leadership ·
+#   5 Deeper leadership.
+#
+# Who sees what (ruling 2026-11-07): students see the course outcomes, and for the LARGE
+# assessments the PLO / CLO rubrics and the level they are marked against. Worksheets,
+# decision records, videos and their questions carry tags for the instructor only.
+#
+# Generated from this file: docs/orbit_north/OUTCOMES_MAP.md (+ fr/), by
+# `python3 tools/gen_outcomes.py` (it also checks every ID below exists).
+
+version: "2026-11-07 draft"
+
+levels:
+  1: {en: "Initial thoughts", fr: "Premières réflexions"}
+  2: {en: "First engagement", fr: "Premier engagement"}
+  3: {en: "Deeper engagement", fr: "Engagement approfondi"}
+  4: {en: "First leadership", fr: "Premier leadership"}
+  5: {en: "Deeper leadership", fr: "Leadership approfondi"}
+
+# Target levels for the large assessments (ruling 2026-11-07).
+targets:
+  GNG3100: {level: 3, en: "Level 3 (Deeper engagement) is the target for an A.",
+            fr: "Le niveau 3 (engagement approfondi) est la cible d’un A."}
+  SYS5186: {level: 3, a_grade: 4,
+            en: "Level 3 (Deeper engagement) is the baseline; an A shows a substantial share of Level 4 (First leadership).",
+            fr: "Le niveau 3 (engagement approfondi) est le niveau de base ; un A montre une part importante de niveau 4 (premier leadership)."}
+
+plos:
+  PLO1: {en: "SE principles", fr: "Principes d’ingénierie des systèmes", gdle: [1, 3]}
+  PLO2: {en: "Design, V&V", fr: "Conception, V&V", gdle: [2, 3]}
+  PLO3: {en: "Communication", fr: "Communication", gdle: [5]}
+  PLO4: {en: "Professional practice", fr: "Pratique professionnelle", gdle: [4]}
+  PLO5: {en: "Interdisciplinary & digital (MBSE)", fr: "Interdisciplinarité et numérique (MBSE)", gdle: [1]}
+  PLO6-MEng: {en: "Applied project", fr: "Projet appliqué", gdle: [3]}
+  PLO6-MASc: {en: "Original research", fr: "Recherche originale", gdle: [2]}
+  GDLE6: {en: "Reflective practice thread (limits of knowledge)", fr: "Fil de la pratique réflexive (limites des connaissances)", gdle: [6]}
+
+# The program CLOs this course uses, with their home PLO. on_label: on the draft
+# SYS 5186 Learning Facts label of 7 Nov 2026; false = proposed addition.
+clos:
+  "1.1": {plo: PLO1, on_label: true,  en: "Problem framing & need analysis", fr: "Cadrage du problème et analyse des besoins"}
+  "1.2": {plo: PLO2, on_label: true,  en: "Requirements & architecture", fr: "Exigences et architecture"}
+  "1.3": {plo: PLO2, on_label: false, en: "Integration & verification", fr: "Intégration et vérification"}
+  "1.4": {plo: PLO1, on_label: true,  en: "Decision under uncertainty", fr: "Décision en situation d’incertitude"}
+  "2.3": {plo: PLO5, on_label: false, en: "Digital twin & simulation", fr: "Jumeau numérique et simulation"}
+  "2.4": {plo: PLO5, on_label: true,  en: "Concurrent design participation", fr: "Participation à la conception concourante"}
+  "3.1": {plo: PLO1, on_label: true,  en: "Margin & budget management", fr: "Gestion des marges et des bilans"}
+  "3.2": {plo: PLO1, on_label: true,  en: "Trade study execution", fr: "Conduite d’études de compromis"}
+  "3.3": {plo: PLO4, on_label: false, en: "Technical decision leadership", fr: "Leadership des décisions techniques"}
+  "3.4": {plo: PLO4, on_label: false, en: "Risk management", fr: "Gestion des risques"}
+  "4.1": {plo: PLO3, on_label: false, en: "Stakeholder engagement", fr: "Mobilisation des parties prenantes"}
+  "4.2": {plo: PLO4, on_label: true,  en: "Multidisciplinary collaboration", fr: "Collaboration multidisciplinaire"}
+  "4.3": {plo: PLO4, on_label: false, en: "Ethics & governance", fr: "Éthique et gouvernance"}
+  "4.4": {plo: PLO3, on_label: false, en: "Communication & facilitation", fr: "Communication et animation"}
+  "5.1": {plo: PLO4, on_label: false, en: "Standards: select & tailor", fr: "Normes : choisir et adapter"}
+  "5.4": {plo: PLO4, on_label: false, en: "Controlled / cleared practice", fr: "Pratique contrôlée ou habilitée"}
+  "6.1": {plo: PLO5, on_label: true,  en: "Domain learning agility", fr: "Agilité d’apprentissage d’un domaine"}
+  "6.2": {plo: GDLE6, on_label: false, en: "Reflective practice", fr: "Pratique réflexive"}
+  "6.3": {plo: GDLE6, on_label: true, en: "Portfolio curation", fr: "Constitution du portfolio"}
+  "7.1": {plo: PLO3, on_label: true,  en: "Cross-domain translation", fr: "Transposition entre domaines"}
+  "7.4": {plo: PLO6-MEng, on_label: true, en: "Ecosystem navigation", fr: "Navigation dans l’écosystème"}
+
+# The syllabus outcomes, numbered (LO 1–8 both codes; LO G1–G4 SYS 5186 only).
+course_outcomes:
+  LO1:  {clos: ["7.4", "6.1"], en: "Describe the Canadian space ecosystem and situate a mission concept in it.",
+         fr: "Décrire l’écosystème spatial canadien et y situer un concept de mission."}
+  LO2:  {clos: ["1.1", "1.2", "3.1", "5.1"], en: "Apply the SE scaffolding of a CDF: scope, ConOps, functional architecture, preliminary budgets.",
+         fr: "Appliquer l’échafaudage d’ingénierie des systèmes d’un CDF : portée, ConOps, architecture fonctionnelle, bilans préliminaires."}
+  LO3:  {clos: ["5.4", "4.3"], en: "Navigate Canadian satellite regulation well enough to know when professional advice is required.",
+         fr: "Naviguer la réglementation canadienne des satellites assez bien pour savoir quand un avis professionnel est requis."}
+  LO4:  {clos: ["2.4", "3.2", "4.2", "7.1"], en: "Contribute to a CDF intensive in a discipline role, delivering a complete preliminary design.",
+         fr: "Contribuer à un intensif en CDF dans un rôle disciplinaire et livrer une conception préliminaire complète."}
+  LO5:  {clos: ["3.4", "3.1"], en: "Maintain a risk register and a planning baseline in the CDF tool.",
+         fr: "Tenir un registre des risques et une base de planification dans l’outil CDF."}
+  LO6:  {clos: ["1.4", "2.3", "6.1"], en: "Execute operations procedures in mission control: nominal, planning and anomaly response.",
+         fr: "Exécuter des procédures d’opérations en contrôle de mission : nominal, planification et réponse aux anomalies."}
+  LO7:  {clos: ["4.2", "4.4"], en: "Collaborate in interdisciplinary teams; give and receive structured technical critique.",
+         fr: "Collaborer en équipes interdisciplinaires ; donner et recevoir une critique technique structurée."}
+  LO8:  {clos: ["6.2", "6.3", "4.3"], en: "Reflect critically on your own learning and on the ethics of space activity.",
+         fr: "Réfléchir de façon critique à son apprentissage et à l’éthique de l’activité spatiale."}
+  LOG1: {grad: true, clos: ["3.2", "3.1", "4.4"], en: "Evaluate architecture trade-offs quantitatively and defend them in writing and in review.",
+         fr: "Évaluer quantitativement les compromis d’architecture et les défendre par écrit et en revue."}
+  LOG2: {grad: true, clos: ["3.3", "1.2"], en: "Lead a sub-area of design and operations, coordinating others and managing interfaces.",
+         fr: "Diriger un sous-domaine de la conception et des opérations, en coordonnant les autres et en gérant les interfaces."}
+  LOG3: {grad: true, clos: ["6.2", "7.1"], en: "Synthesise simulation lessons into an improvement proposal grounded in SE and human-factors literature.",
+         fr: "Synthétiser les leçons de la simulation en une proposition d’amélioration ancrée dans la littérature."}
+  LOG4: {grad: true, clos: ["6.1", "6.2"], en: "Situate the course experience in a strand of the scholarly literature.",
+         fr: "Situer l’expérience du cours dans une mouvance de la littérature scientifique."}
+
+# Assessments, in syllabus order. large: true = students see the rubric link and level.
+# rubrics: the program CLO rubrics the marker uses (the PLO each one rolls up to is implied).
+assessments:
+  A1: {large: false, weight: {GNG3100: 5, SYS5186: 3}, los: [LO1, LO2], rubrics: ["7.4"],
+       en: "Pre-course readiness quiz", fr: "Quiz de préparation pré-cours"}
+  A2: {large: true, weight: {GNG3100: 15, SYS5186: 15}, los: [LO1, LO2, LO7], rubrics: ["1.1", "4.1", "4.4"],
+       en: "Mission Concept Review (MCR, informal)", fr: "Examen du concept de mission (MCR, informel)"}
+  A3: {large: false, weight: {GNG3100: 10, SYS5186: 5}, los: [LO2, LO4, LO5], rubrics: ["2.4"],
+       en: "CDF daily worksheets and participation", fr: "Cahiers d’exercices CDF et participation"}
+  A4: {large: true, weight: {GNG3100: 20, SYS5186: 22}, los: [LO2, LO3, LO4, LO5, LOG1, LOG2],
+       rubrics: ["1.2", "3.1", "3.2", "3.4", "2.4", "4.4"],
+       en: "Preliminary Design Review (PDR-style)", fr: "Revue de conception préliminaire (type PDR)"}
+  A5: {large: false, weight: {GNG3100: 5, SYS5186: 2}, los: [LO6], rubrics: ["6.1"],
+       en: "Operations training quiz", fr: "Quiz de formation aux opérations"}
+  A6: {large: true, weight: {GNG3100: 15, SYS5186: 18}, los: [LO6, LO7, LOG2], rubrics: ["1.4", "2.3", "4.2", "3.3"],
+       en: "Simulation performance — operator shift", fr: "Performance en simulation — quart d’opérateur"}
+  A7: {large: true, weight: {GNG3100: 10, SYS5186: 10}, los: [LO6, LO7, LOG3], rubrics: ["4.4", "4.2"],
+       en: "Observer critique report", fr: "Rapport de critique d’observateur"}
+  A8: {large: true, weight: {GNG3100: 10, SYS5186: 5}, los: [LO4, LO6, LOG2], rubrics: ["1.3", "4.4"],
+       en: "Final mission review", fr: "Revue finale de mission"}
+  A9: {large: true, weight: {GNG3100: 10, SYS5186: 20}, los: [LO8, LOG3, LOG4], rubrics: ["6.2", "6.3", "4.3"],
+       en: "Individual reflective portfolio", fr: "Portfolio réflexif individuel"}
+
+# ── Instructor-only tags ───────────────────────────────────────────────────────────
+# Worksheets: design workbook (LW-*) and the week-3 operations workbook (WB-*).
+worksheets:
+  LW-1.1: {los: [LO1, LO2], clos: ["1.1"]}
+  LW-1.2: {los: [LO1, LO3], clos: ["7.4", "5.4"]}
+  LW-1.3: {los: [LO2], clos: ["5.1"]}
+  LW-1.4: {los: [LO2], clos: ["1.1", "4.1", "3.2"]}
+  LW-2.1: {los: [LO2], clos: ["1.2"]}
+  LW-2.2: {los: [LO2], clos: ["1.2"]}
+  LW-2.3: {los: [LO2, LO4], clos: ["3.2"]}
+  LW-2.4: {los: [LO2, LO4], clos: ["1.2", "3.1"]}
+  LW-3.1: {los: [LO4], clos: ["2.4", "3.1"]}
+  LW-3.2: {los: [LO4], clos: ["2.4", "3.1"]}
+  LW-3.3: {los: [LO4], clos: ["2.4", "3.1"]}
+  LW-3.4: {los: [LO4], clos: ["2.4", "3.2"]}
+  LW-4.1: {los: [LO3, LO4], clos: ["3.2", "5.4"]}
+  LW-4.2: {los: [LO4], clos: ["1.3"]}
+  LW-4.3: {los: [LO5], clos: ["3.4", "1.2"]}
+  LW-4.4: {los: [LO4, LO5, LOG1], clos: ["3.1", "4.4"]}
+  LW-5.1: {los: [LO6], clos: ["1.2"]}
+  LW-5.2: {los: [LO6], clos: ["1.4"]}
+  LW-5.3: {los: [LO6, LO7], clos: ["1.4", "2.3"]}
+  LW-5.4: {los: [LO7, LO8], clos: ["4.4", "6.2"]}
+  WB-5.0: {los: [LO6], clos: ["6.1"]}
+  WB-5.1: {los: [LO6, LO7], clos: ["6.1", "4.2"]}
+  WB-5.3-PP: {los: [LO6], clos: ["1.4", "2.3"]}
+  WB-5.4-N001: {los: [LO6], clos: ["1.4"]}
+  WB-5.4-C003: {los: [LO6], clos: ["1.4"]}
+  WB-5.4-N012: {los: [LO6, LO7], clos: ["4.4"]}
+  WB-5.4-FD: {los: [LO6], clos: ["2.3"]}
+  WB-5.4-VL: {los: [LO7], clos: ["4.4"]}
+  WB-5.5-PB: {los: [LO6, LO7], clos: ["4.4"]}
+  WB-5.5-L001: {los: [LO6], clos: ["1.4"]}
+  WB-5.5-L006: {los: [LO6], clos: ["1.4"]}
+  WB-5.5-L002: {los: [LO6], clos: ["1.4"]}
+  WB-5.5-L007: {los: [LO6], clos: ["1.4"]}
+  WB-5.5-L005: {los: [LO6], clos: ["2.3"]}
+  WB-5.5-L003: {los: [LO6], clos: ["1.4", "2.3"]}
+  WB-5.5-AT: {los: [LO6], clos: ["1.4"]}
+  WB-5.5-GO: {los: [LO6, LOG2], clos: ["1.4", "3.3"]}
+  WB-5.5-OBS: {los: [LO7], clos: ["4.4", "4.2"]}
+  WB-5.5-HO: {los: [LO6, LO7], clos: ["4.4"]}
+  WB-5.5-DB: {los: [LO8], clos: ["6.2"]}
+  WB-5.6-PB: {los: [LO6, LO7], clos: ["4.4"]}
+  WB-5.6-C001: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C002: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C005: {los: [LO6], clos: ["1.3", "2.3"]}
+  WB-5.6-C006: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C007: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C008: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C009: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C010: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-FPA: {los: [LO6], clos: ["2.3"]}
+  WB-5.6-C011: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-C012: {los: [LO6], clos: ["1.3"]}
+  WB-5.6-FL: {los: [LO6], clos: ["1.3", "1.4"]}
+  WB-5.6-MA: {los: [LO6, LOG2], clos: ["1.4", "3.3"]}
+  WB-5.6-GO: {los: [LO6, LOG2], clos: ["1.4", "3.3"]}
+  WB-5.6-OBS: {los: [LO7], clos: ["4.4", "4.2"]}
+  WB-5.6-HO: {los: [LO6, LO7], clos: ["4.4"]}
+  WB-5.6-DB: {los: [LO8], clos: ["6.2"]}
+  WB-A-CTG-001: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-002: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-007: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-008: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-009: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-010: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-012: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-015: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-017: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-019: {los: [LO6], clos: ["1.4"]}
+  WB-A-CTG-020: {los: [LO6], clos: ["1.4"]}
+  WB-5.7-SA: {los: [LO8], clos: ["6.2", "6.3"]}
+  WB-5.7-LL: {los: [LO8, LOG3], clos: ["6.2"]}
+  WB-5.7-WI: {los: [LO8], clos: ["6.2", "1.4"]}
+  WB-5.7-FR: {los: [LO4, LO6], clos: ["4.4"]}
+  WB-B: {los: [LO6], clos: ["6.3"]}
+  WB-C: {los: [LO8], clos: ["6.3"]}
+
+# Decision records: tagged by their worksheet group (D-<n.m>-*), plus the gate and CDR records.
+decision_groups:
+  "D-1.2": {los: [LO1, LO3], clos: ["7.4", "5.4"]}
+  "D-1.3": {los: [LO2], clos: ["5.1"]}
+  "D-1.4": {los: [LO2], clos: ["1.1", "4.1"]}
+  "D-2.1": {los: [LO2], clos: ["1.2"]}
+  "D-2.2": {los: [LO2], clos: ["1.2"]}
+  "D-2.3": {los: [LO2, LO4], clos: ["3.2"]}
+  "D-2.4": {los: [LO2, LO4], clos: ["3.1", "1.2"]}
+  "D-3.1": {los: [LO4], clos: ["2.4", "3.2"]}
+  "D-3.2": {los: [LO4], clos: ["2.4", "3.2"]}
+  "D-3.3": {los: [LO4], clos: ["2.4", "3.1"]}
+  "D-3.4": {los: [LO4], clos: ["3.2", "3.1"]}
+  "D-4.1": {los: [LO3, LO4], clos: ["3.2", "5.4"]}
+  "D-4.2": {los: [LO4], clos: ["1.3"]}
+  "D-4.3": {los: [LO5], clos: ["3.4"]}
+  "D-4.4": {los: [LO5, LOG1], clos: ["3.1", "1.4"]}
+  "D-GATE": {los: [LO5, LOG2], clos: ["3.3", "1.4"]}
+  "D-5.1": {los: [LO6], clos: ["1.2"]}
+  "D-5.2": {los: [LO6], clos: ["1.4", "1.2"]}
+  "D-CDR": {los: [LO4], clos: ["1.2"]}
+
+# Videos. Each embedded question (step id) inherits the video's tags unless listed.
+videos:
+  V-DES-01: {los: [LO1, LO3], clos: ["7.4"]}
+  V-DES-02: {los: [LO2], clos: ["1.2", "2.4"]}
+  V-DES-03: {los: [LO2], clos: ["1.1", "3.2"]}
+  V-DES-04: {los: [LO2], clos: ["1.2"]}
+  V-DES-05: {los: [LO2, LO4], clos: ["3.2"]}
+  V-DES-06: {los: [LO2, LO4], clos: ["1.2", "3.1"]}
+  V-DES-07: {los: [LO4], clos: ["3.1"]}
+  V-DES-08: {los: [LO4], clos: ["3.1"]}
+  V-DES-09: {los: [LO4], clos: ["3.1"]}
+  V-DES-10: {los: [LO4], clos: ["3.1"]}
+  V-DES-11: {los: [LO5], clos: ["3.4"]}
+  V-DES-12: {los: [LO4], clos: ["1.3"]}
+  V-DES-13: {los: [LO5, LOG2], clos: ["3.3", "3.1"]}
+  V-DES-14: {los: [LO4], clos: ["3.2"]}
+  V-SCDF-01: {los: [LO2], clos: ["1.1", "4.1"]}
+  V-SCDF-02: {los: [LO2, LO4], clos: ["3.1"]}
+  V-SCDF-03: {los: [LO4], clos: ["3.1", "2.4"]}
+  V-SCDF-04: {los: [LO2], clos: ["1.2"]}
+  V-SCDF-05: {los: [LO2, LO4], clos: ["1.2", "2.4"]}
+  V-SCDF-06: {los: [LO5], clos: ["3.4"]}
+  V-SCDF-07: {los: [LO5, LOG2], clos: ["3.3", "1.4"]}
+  V-CON-02: {los: [LO6], clos: ["3.1", "2.3"]}
+  V-CON-04: {los: [LO6], clos: ["1.4"]}
+  V-CON-05: {los: [LO6], clos: ["6.1"]}
+  V-CON-06: {los: [LO6], clos: ["1.3"]}
+  V-OPS-01: {los: [LO6], clos: ["1.4"]}
+  V-OPS-02: {los: [LO6], clos: ["1.4"]}
+  V-OPS-03: {los: [LO6], clos: ["1.4", "4.4"]}
+  V-OPS-04: {los: [LO6], clos: ["1.4"]}
+  V-OPS-05: {los: [LO6], clos: ["3.1", "2.3"]}
+  V-OPS-06: {los: [LO6], clos: ["1.4"]}
+  V-OPS-07: {los: [LO6], clos: ["2.3"]}
+  V-OPS-08: {los: [LO6], clos: ["1.4"]}
+  V-OPS-09: {los: [LO6], clos: ["1.3", "1.4"]}
+  V-PLN-01: {los: [LO6], clos: ["1.4", "2.3"]}
+
+# Reflect questions practise reflection (CLO 6.2) as well as the video's own CLOs.
+reflect_adds_clo: "6.2"

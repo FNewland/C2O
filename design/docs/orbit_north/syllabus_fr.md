@@ -174,48 +174,69 @@ gradués au moyen des mêmes activités.
 
 ### Résultats partagés — pour les deux codes
 
-- Décrire l'écosystème spatial canadien (passé, présent, en émergence)
+- **LO 1.** Décrire l'écosystème spatial canadien (passé, présent, en émergence)
   et y situer un concept de mission donné.
-- Appliquer l'échafaudage d'ingénierie système intégré à un Centre de
+- **LO 2.** Appliquer l'échafaudage d'ingénierie système intégré à un Centre de
   conception concourante pour structurer un concept de mission spatiale
   par sa portée, son concept d'opérations (ConOps), son architecture
   fonctionnelle et ses budgets préliminaires, en s'appuyant sur les
   ECSS et le NASA Systems Engineering Handbook.
-- Naviguer les obligations réglementaires canadiennes en matière de
+- **LO 3.** Naviguer les obligations réglementaires canadiennes en matière de
   satellites — la Loi sur les systèmes de télédétection spatiale,
   l'octroi de licences de radiocommunication, le contrôle des
   exportations et l'atténuation des débris — à un niveau suffisant
   pour reconnaître quand un avis professionnel est requis.
-- Contribuer de façon substantielle à une activité de conception
+- **LO 4.** Contribuer de façon substantielle à une activité de conception
   intensive en CDF, en assumant un rôle disciplinaire et en livrant
   une conception préliminaire complète d'une mission CubeSat couvrant
   tous les principaux sous-systèmes.
-- Maintenir un registre des risques et une base de planification dans
+- **LO 5.** Maintenir un registre des risques et une base de planification dans
   l'outil CDF tout au long de la semaine de conception.
-- Exécuter des procédures d'opérations spatiales dans un environnement
+- **LO 6.** Exécuter des procédures d'opérations spatiales dans un environnement
   de contrôle de mission, y compris les opérations nominales, la
   planification et la réponse aux anomalies.
-- Collaborer en équipes interdisciplinaires ; donner et recevoir une
+- **LO 7.** Collaborer en équipes interdisciplinaires ; donner et recevoir une
   critique technique structurée.
-- Réfléchir de manière critique sur sa propre trajectoire
+- **LO 8.** Réfléchir de manière critique sur sa propre trajectoire
   d'apprentissage et sur les dimensions éthiques de l'activité
   spatiale.
 
 ### Résultats supplémentaires des cycles supérieurs — SYS 5186 seulement
 
-- Évaluer de façon critique les compromis d'architecture à l'aide de
+- **LO G1.** Évaluer de façon critique les compromis d'architecture à l'aide de
   méthodes quantitatives (budgets fondés sur des marges, comparaison
   ajustée au risque) et défendre l'évaluation par écrit et lors d'une
   revue.
-- Diriger un sous-domaine de la conception et des opérations de la
+- **LO G2.** Diriger un sous-domaine de la conception et des opérations de la
   mission de l'équipe, en coordonnant les contributions des autres
   membres et en gérant la définition des interfaces.
-- Synthétiser les leçons apprises de la simulation en une proposition
+- **LO G3.** Synthétiser les leçons apprises de la simulation en une proposition
   d'amélioration structurée, ancrée dans la littérature en ingénierie
   des systèmes et en facteurs humains.
-- Situer son expérience du cours dans au moins une mouvance de la
+- **LO G4.** Situer son expérience du cours dans au moins une mouvance de la
   littérature scientifique sur l'ingénierie des systèmes spatiaux,
   les opérations spatiales ou les pratiques *new-space*.
+
+<!-- outcomes-plo:begin -->
+### Lien entre ces résultats et la maîtrise en ingénierie des systèmes
+
+Pour les étudiantes et étudiants de SYS 5186, ORBIT NORTH contribue aux résultats d’apprentissage du programme (PLO) de la maîtrise en ingénierie des systèmes ; les travaux de GNG 3100 sont corrigés avec les mêmes grilles. Chaque résultat du cours ci-dessous développe un ou plusieurs résultats de cours du programme (CLO), et chaque CLO relève d’un PLO. La même échelle de grilles à cinq niveaux sert dans tout le programme : 1 Premières réflexions, 2 Premier engagement, 3 Engagement approfondi, 4 Premier leadership, 5 Leadership approfondi.
+
+| Résultat du cours | CLO du programme | PLO |
+|---|---|---|
+| LO 1 | 7.4 Navigation dans l’écosystème, 6.1 Agilité d’apprentissage d’un domaine | PLO6-MEng Projet appliqué, PLO5 Interdisciplinarité et numérique (MBSE) |
+| LO 2 | 1.1 Cadrage du problème et analyse des besoins, 1.2 Exigences et architecture, 3.1 Gestion des marges et des bilans, 5.1 Normes : choisir et adapter | PLO1 Principes d’ingénierie des systèmes, PLO2 Conception, V&V, PLO4 Pratique professionnelle |
+| LO 3 | 5.4 Pratique contrôlée ou habilitée, 4.3 Éthique et gouvernance | PLO4 Pratique professionnelle |
+| LO 4 | 2.4 Participation à la conception concourante, 3.2 Conduite d’études de compromis, 4.2 Collaboration multidisciplinaire, 7.1 Transposition entre domaines | PLO5 Interdisciplinarité et numérique (MBSE), PLO1 Principes d’ingénierie des systèmes, PLO4 Pratique professionnelle, PLO3 Communication |
+| LO 5 | 3.4 Gestion des risques, 3.1 Gestion des marges et des bilans | PLO4 Pratique professionnelle, PLO1 Principes d’ingénierie des systèmes |
+| LO 6 | 1.4 Décision en situation d’incertitude, 2.3 Jumeau numérique et simulation, 6.1 Agilité d’apprentissage d’un domaine | PLO1 Principes d’ingénierie des systèmes, PLO5 Interdisciplinarité et numérique (MBSE) |
+| LO 7 | 4.2 Collaboration multidisciplinaire, 4.4 Communication et animation | PLO4 Pratique professionnelle, PLO3 Communication |
+| LO 8 | 6.2 Pratique réflexive, 6.3 Constitution du portfolio, 4.3 Éthique et gouvernance | GDLE6 Fil de la pratique réflexive (limites des connaissances), PLO4 Pratique professionnelle |
+| LO G1 | 3.2 Conduite d’études de compromis, 3.1 Gestion des marges et des bilans, 4.4 Communication et animation | PLO1 Principes d’ingénierie des systèmes, PLO3 Communication |
+| LO G2 | 3.3 Leadership des décisions techniques, 1.2 Exigences et architecture | PLO4 Pratique professionnelle, PLO2 Conception, V&V |
+| LO G3 | 6.2 Pratique réflexive, 7.1 Transposition entre domaines | GDLE6 Fil de la pratique réflexive (limites des connaissances), PLO3 Communication |
+| LO G4 | 6.1 Agilité d’apprentissage d’un domaine, 6.2 Pratique réflexive | PLO5 Interdisciplinarité et numérique (MBSE), GDLE6 Fil de la pratique réflexive (limites des connaissances) |
+<!-- outcomes-plo:end -->
 
 ## Philosophie d'enseignement
 
@@ -303,6 +324,26 @@ publiés dans Brightspace au début du cours.
 | Revue finale de mission | Équipe | 10 % | 5 % | Jour 5, semaine 3 |
 | Portfolio réflexif individuel (1<sup>er</sup> cycle : réflexion structurée ; cycles supérieurs : analyse critique appuyée sur la littérature, 2 500 – 3 000 mots) | Individuel | 10 % | 20 % | 1 semaine après la semaine 3 |
 | **Total** |  | **100 %** | **100 %** | |
+
+<!-- outcomes-assess:begin -->
+### Ce qu’évaluent les grandes évaluations
+
+Les grandes évaluations sont corrigées avec les grilles du programme indiquées ci-dessous (publiées dans Brightspace). Les quiz et les cahiers d’exercices quotidiens du CDF sont corrigés selon leur propre corrigé.
+
+| Évaluation | Résultats du cours | Grilles du programme (CLO → PLO) |
+|---|---|---|
+| Examen du concept de mission (MCR, informel) | LO 1, LO 2, LO 7 | 1.1 Cadrage du problème et analyse des besoins → PLO1 ; 4.1 Mobilisation des parties prenantes → PLO3 ; 4.4 Communication et animation → PLO3 |
+| Revue de conception préliminaire (type PDR) | LO 2, LO 3, LO 4, LO 5, LO G1, LO G2 | 1.2 Exigences et architecture → PLO2 ; 3.1 Gestion des marges et des bilans → PLO1 ; 3.2 Conduite d’études de compromis → PLO1 ; 3.4 Gestion des risques → PLO4 ; 2.4 Participation à la conception concourante → PLO5 ; 4.4 Communication et animation → PLO3 |
+| Performance en simulation — quart d’opérateur | LO 6, LO 7, LO G2 | 1.4 Décision en situation d’incertitude → PLO1 ; 2.3 Jumeau numérique et simulation → PLO5 ; 4.2 Collaboration multidisciplinaire → PLO4 ; 3.3 Leadership des décisions techniques → PLO4 |
+| Rapport de critique d’observateur | LO 6, LO 7, LO G3 | 4.4 Communication et animation → PLO3 ; 4.2 Collaboration multidisciplinaire → PLO4 |
+| Revue finale de mission | LO 4, LO 6, LO G2 | 1.3 Intégration et vérification → PLO2 ; 4.4 Communication et animation → PLO3 |
+| Portfolio réflexif individuel | LO 8, LO G3, LO G4 | 6.2 Pratique réflexive → GDLE6 ; 6.3 Constitution du portfolio → GDLE6 ; 4.3 Éthique et gouvernance → PLO4 |
+
+**Niveau attendu**
+
+- GNG 3100 : Le niveau 3 (engagement approfondi) est la cible d’un A.
+- SYS 5186 : Le niveau 3 (engagement approfondi) est le niveau de base ; un A montre une part importante de niveau 4 (premier leadership).
+<!-- outcomes-assess:end -->
 
 ## Charge de travail
 

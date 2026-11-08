@@ -52,6 +52,7 @@ docs:
   # Pre-existing hand-made bilingual pairs (HOUSE French, not 1:1 mirrors): parity findings warn only.
   - {group: orbit-north-legacy, en: docs/orbit_north/syllabus_en.md, fr: docs/orbit_north/syllabus_fr.md, legacy: true}
   - {group: orbit-north-legacy, en: docs/orbit_north/recruitment_en.md, fr: docs/orbit_north/recruitment_fr.md, legacy: true}
+  - {group: orbit-north-legacy, en: docs/orbit_north/OUTCOMES_MAP_en.md, fr: docs/orbit_north/OUTCOMES_MAP_fr.md, legacy: true}
 
 # ---------------------------------------------------------------- UI catalog
 # react-i18next, FLAT i18next-v4 JSON, natural-language keys (key = English text; keySeparator and

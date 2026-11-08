@@ -153,43 +153,64 @@ across the same activities.
 
 ### Shared outcomes — both codes
 
-- Describe the Canadian space ecosystem (past, present, emerging) and
+- **LO 1.** Describe the Canadian space ecosystem (past, present, emerging) and
   situate a given mission concept within it.
-- Apply the systems-engineering scaffolding embedded in a Concurrent
+- **LO 2.** Apply the systems-engineering scaffolding embedded in a Concurrent
   Design Facility to structure a space mission concept through scope,
   ConOps, functional architecture, and preliminary budgets, drawing
   on ECSS and the NASA Systems Engineering Handbook.
-- Navigate Canadian satellite regulatory obligations — the Remote
+- **LO 3.** Navigate Canadian satellite regulatory obligations — the Remote
   Sensing Space Systems Act, radiocommunication licensing, export
   controls, and debris mitigation — at a level sufficient to identify
   when professional advice is required.
-- Contribute substantively to a Concurrent Design Facility intensive
+- **LO 4.** Contribute substantively to a Concurrent Design Facility intensive
   design activity, taking a discipline role and delivering a complete
   preliminary CubeSat mission design across all principal subsystems.
-- Maintain a risk register and a planning baseline inside the CDF tool
+- **LO 5.** Maintain a risk register and a planning baseline inside the CDF tool
   through the full design week.
-- Execute spacecraft operations procedures in a mission control
+- **LO 6.** Execute spacecraft operations procedures in a mission control
   environment, including nominal operations, planning, and anomaly
   response.
-- Collaborate in interdisciplinary student teams; give and receive
+- **LO 7.** Collaborate in interdisciplinary student teams; give and receive
   structured technical critique.
-- Reflect critically on your own learning trajectory and on the
+- **LO 8.** Reflect critically on your own learning trajectory and on the
   ethical dimensions of space activity.
 
 ### Additional graduate outcomes — SYS 5186 only
 
-- Critically evaluate architecture trade-offs using quantitative
+- **LO G1.** Critically evaluate architecture trade-offs using quantitative
   methods (margin-based budgets, risk-adjusted comparison) and
   defend the evaluation in writing and in a review setting.
-- Lead a sub-area of the team's mission design and operations,
+- **LO G2.** Lead a sub-area of the team's mission design and operations,
   coordinating contributions from other team members and managing
   interface definition.
-- Synthesise lessons learned from the simulation into a structured
+- **LO G3.** Synthesise lessons learned from the simulation into a structured
   improvement proposal grounded in the systems engineering and
   human-factors literature.
-- Situate your experience in the course within at least one strand of
+- **LO G4.** Situate your experience in the course within at least one strand of
   the scholarly literature on space systems engineering, operations,
   or new-space practice.
+
+<!-- outcomes-plo:begin -->
+### How these outcomes connect to the Master of Systems Engineering
+
+For SYS 5186 students, ORBIT NORTH counts towards the program learning outcomes (PLOs) of the Master of Systems Engineering; GNG 3100 work is marked with the same rubrics. Each course outcome below builds one or more of the program's course-level outcomes (CLOs), and each CLO belongs to a PLO. The same five-level rubric scale is used throughout the program: 1 Initial thoughts, 2 First engagement, 3 Deeper engagement, 4 First leadership, 5 Deeper leadership.
+
+| Course outcome | Program CLOs | PLOs |
+|---|---|---|
+| LO 1 | 7.4 Ecosystem navigation, 6.1 Domain learning agility | PLO6-MEng Applied project, PLO5 Interdisciplinary & digital (MBSE) |
+| LO 2 | 1.1 Problem framing & need analysis, 1.2 Requirements & architecture, 3.1 Margin & budget management, 5.1 Standards: select & tailor | PLO1 SE principles, PLO2 Design, V&V, PLO4 Professional practice |
+| LO 3 | 5.4 Controlled / cleared practice, 4.3 Ethics & governance | PLO4 Professional practice |
+| LO 4 | 2.4 Concurrent design participation, 3.2 Trade study execution, 4.2 Multidisciplinary collaboration, 7.1 Cross-domain translation | PLO5 Interdisciplinary & digital (MBSE), PLO1 SE principles, PLO4 Professional practice, PLO3 Communication |
+| LO 5 | 3.4 Risk management, 3.1 Margin & budget management | PLO4 Professional practice, PLO1 SE principles |
+| LO 6 | 1.4 Decision under uncertainty, 2.3 Digital twin & simulation, 6.1 Domain learning agility | PLO1 SE principles, PLO5 Interdisciplinary & digital (MBSE) |
+| LO 7 | 4.2 Multidisciplinary collaboration, 4.4 Communication & facilitation | PLO4 Professional practice, PLO3 Communication |
+| LO 8 | 6.2 Reflective practice, 6.3 Portfolio curation, 4.3 Ethics & governance | GDLE6 Reflective practice thread (limits of knowledge), PLO4 Professional practice |
+| LO G1 | 3.2 Trade study execution, 3.1 Margin & budget management, 4.4 Communication & facilitation | PLO1 SE principles, PLO3 Communication |
+| LO G2 | 3.3 Technical decision leadership, 1.2 Requirements & architecture | PLO4 Professional practice, PLO2 Design, V&V |
+| LO G3 | 6.2 Reflective practice, 7.1 Cross-domain translation | GDLE6 Reflective practice thread (limits of knowledge), PLO3 Communication |
+| LO G4 | 6.1 Domain learning agility, 6.2 Reflective practice | PLO5 Interdisciplinary & digital (MBSE), GDLE6 Reflective practice thread (limits of knowledge) |
+<!-- outcomes-plo:end -->
 
 ## Teaching Philosophy
 
@@ -269,6 +290,26 @@ rubrics will be posted in Brightspace at the start of the course.
 | Final mission review | Team | 10 % | 5 % | Day 5, Week 3 |
 | Individual reflective portfolio (UG: structured reflection; Grad: critical literature-informed analysis, 2500 – 3000 words) | Individual | 10 % | 20 % | 1 week after Week 3 |
 | **Total** |  | **100 %** | **100 %** | |
+
+<!-- outcomes-assess:begin -->
+### What the major assessments assess
+
+The major assessments are marked with the program rubrics listed below (posted in Brightspace). The quizzes and the daily CDF worksheets are marked on their own keys.
+
+| Assessment | Course outcomes | Program rubrics (CLO → PLO) |
+|---|---|---|
+| Mission Concept Review (MCR, informal) | LO 1, LO 2, LO 7 | 1.1 Problem framing & need analysis → PLO1; 4.1 Stakeholder engagement → PLO3; 4.4 Communication & facilitation → PLO3 |
+| Preliminary Design Review (PDR-style) | LO 2, LO 3, LO 4, LO 5, LO G1, LO G2 | 1.2 Requirements & architecture → PLO2; 3.1 Margin & budget management → PLO1; 3.2 Trade study execution → PLO1; 3.4 Risk management → PLO4; 2.4 Concurrent design participation → PLO5; 4.4 Communication & facilitation → PLO3 |
+| Simulation performance — operator shift | LO 6, LO 7, LO G2 | 1.4 Decision under uncertainty → PLO1; 2.3 Digital twin & simulation → PLO5; 4.2 Multidisciplinary collaboration → PLO4; 3.3 Technical decision leadership → PLO4 |
+| Observer critique report | LO 6, LO 7, LO G3 | 4.4 Communication & facilitation → PLO3; 4.2 Multidisciplinary collaboration → PLO4 |
+| Final mission review | LO 4, LO 6, LO G2 | 1.3 Integration & verification → PLO2; 4.4 Communication & facilitation → PLO3 |
+| Individual reflective portfolio | LO 8, LO G3, LO G4 | 6.2 Reflective practice → GDLE6; 6.3 Portfolio curation → GDLE6; 4.3 Ethics & governance → PLO4 |
+
+**Level expected**
+
+- GNG 3100: Level 3 (Deeper engagement) is the target for an A.
+- SYS 5186: Level 3 (Deeper engagement) is the baseline; an A shows a substantial share of Level 4 (First leadership).
+<!-- outcomes-assess:end -->
 
 ## Time Commitment
 
