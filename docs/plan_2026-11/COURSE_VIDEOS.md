@@ -43,6 +43,7 @@ Research: project doc `research/Free H5P and animation tools.md`. Code: `video/`
 | V-OPS-09 | 5 | LEOP-003: GPS fix, altitude check band, comparison, end of LEOP | WB-5.5-L003 q1/q2/q7 | released 2026-11-06 (sun hold ~12°, no attitude alarm in COARSE_SUN); rendered EN+FR; check EN 0.86, FR 0.86 (low lines are numbers written as digits) |
 | V-OPS-10 | 5 | Under-voltage, check before you shed (CTG-001): the alarm, what the spacecraft already shed (tiered on-board shed, L1 payload), the card's objective and branch (hold at this level), monitoring, sped-up recovery with the on-board restore at 28.9 V | WB-A-CTG-001 q1, q2, q7 | rendered EN+FR 2026-11-07 after the model/card fixes (tiered shed, stage count, MCS procedure link); check EN 0.92, FR 0.91 |
 | V-OPS-11 | 5 | No telemetry at AOS (CTG-019 rev 1.1): stale blocks with only the UHF beacon arriving, the ground ruled out from the station note, blind-TC armed, the blind HK request (auto-TX) that never confirms past SENT, the beacon's ttc.pa_on = 0, PA ON, verify | WB-A-CTG-019 q1, q2, q4, q6 | rendered EN+FR 2026-11-08 after the card fixes (auto-TX Step 2, cold-redundant Step 3, beacon note) and the fr.db.json rebuild; check EN 0.93, FR 0.87 |
+| V-OPS-12 | 6 | Fine pointing handover (COM-004 Steps 1-1b, COM-003 Step 3): the sun hold, wheels enabled one by one, NOMINAL and the error jumping to the new reference (127 deg), the slew to nadir in the 3D view, both trackers on and ST1 counting stars | (no worksheet: COM-003/004 have none) | rendered EN+FR 2026-11-08 after three fixes found while filming: 0x0217 read 0.0 above 65.5 deg and body rates capped at 3.27 deg/s (HK packing), and NOMINAL without a tracker coasted on the gyros and drifted off nadir (estimator); check EN 0.92, FR 0.85 |
 | V-CON-06 | 4 | Concept: a telecommand's life — acceptance checks, S1 1,1/1,2/1,3/1,7/1,8, failure notice, deferred completion, completed ≠ verified | — (team) | rendered EN+FR (animated page `video/explainers/tc-life.html`); check EN 0.92, FR 0.85 |
 | V-CON-05 | 4 | Concept: CCSDS packet, primary and PUS headers, APID 0x002 → 0x001, services, HK SIDs, requested vs enabled, powered ≠ reporting | — (team) | rendered EN+FR (`packets.html`); check EN 0.90, FR 0.81 |
 | V-CON-04 | 7 | Concept: FDIR hierarchy, then S12 → S5 → S19 rule 2001 → S8 desaturation → S1 → TM(12,10) | — (team, deeper for fdir_systems) | rendered EN+FR (`fdir.html`); check EN 0.95, FR 0.91; nominal momentum chain, no scored recovery |
@@ -100,7 +101,7 @@ Step 1 expectation of +8 to +14 °C.
    slows the fall (in eclipse), make the card's restore limits consistent (32.1 V was about
    87 % SoC, not 40 %), then film the operator working the branches.
 3. Ops videos (ruled 2026-11-07): not one video per COM card, only the hard or unique tasks:
-   fine pointing handover (COARSE_SUN to NOMINAL, wheels and star tracker), first light
+   fine pointing handover (COARSE_SUN to NOMINAL, wheels and star tracker; DONE: V-OPS-12), first light
    (FPA cooler, payload on, first image down), no telemetry at a pass (ground, link or
    spacecraft?; DONE: V-OPS-11). SpaceCDF open items are fixed first.
 
