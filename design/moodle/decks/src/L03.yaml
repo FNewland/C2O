@@ -1,0 +1,98 @@
+slot: {en: "Week 1 · Day 2", fr: "Semaine 1 · Jour 2"}
+title: {en: "From need to concept: architecture, ConOps and the Mission Concept Review", fr: "Du besoin au concept : architecture, ConOps et revue de concept de mission"}
+subtitle: {en: "Problem statements, stakeholders, trade studies, a first concept of operations, and what to bring to the MCR", fr: "Énoncés de problème, parties prenantes, études de compromis, un premier concept d'opérations, et quoi apporter à la MCR"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Write a problem statement that defines the need without prescribing a solution", fr: "Rédiger un énoncé du problème qui définit le besoin sans imposer de solution"}
+  - {en: "Trace objectives to measurable criteria through the MoE, MoP and TPM chain", fr: "Relier les objectifs à des critères mesurables par la chaîne MoE, MoP et TPM"}
+  - {en: "Run a weighted trade study, including a sensitivity check", fr: "Mener une étude de compromis pondérée, avec une vérification de sensibilité"}
+  - {en: "Sketch a concept of operations: segments, modes and data flow", fr: "Esquisser un concept d'opérations : segments, modes et flux de données"}
+  - {en: "Open a risk register and present a concept at an informal MCR", fr: "Ouvrir un registre des risques et présenter un concept à une MCR informelle"}
+- kind: split
+  k: {en: "Problem statement", fr: "Énoncé du problème"}
+  h: {en: "What is needed, not how to build it", fr: "Ce qui est nécessaire, pas comment le construire"}
+  left:
+    t: {en: "A good statement answers", fr: "Un bon énoncé répond à"}
+    items:
+    - {en: "What is needed?", fr: "De quoi a-t-on besoin ?"}
+    - {en: "Who needs it?", fr: "Qui en a besoin ?"}
+    - {en: "What impact if it is met, or not?", fr: "Quel impact si on y répond, ou non ?"}
+    - {en: "Which constraints are real (budget, schedule, regulation)?", fr: "Quelles contraintes sont réelles (budget, calendrier, réglementation) ?"}
+  right:
+    t: {en: "Warning signs", fr: "Signaux d'alarme"}
+    items:
+    - {en: "It names a satellite, an orbit or a sensor", fr: "Il nomme un satellite, une orbite ou un capteur"}
+    - {en: "It could only be met by the solution you already like", fr: "Seule la solution que vous préférez déjà pourrait y répondre"}
+    - {en: "No user is named", fr: "Aucun utilisateur n'est nommé"}
+- kind: table
+  k: {en: "Stakeholders", fr: "Parties prenantes"}
+  h: {en: "Everyone with a legitimate interest", fr: "Tous ceux qui ont un intérêt légitime"}
+  header: [{en: "Capture", fr: "À consigner"}, {en: "Why it matters", fr: "Pourquoi c'est important"}]
+  rows:
+  - [{en: "Need", fr: "Besoin"}, {en: "Becomes an objective, then requirements", fr: "Devient un objectif, puis des exigences"}]
+  - [{en: "Constraint", fr: "Contrainte"}, {en: "Limits your design space (a regulator, a funder, a launch provider)", fr: "Limite votre espace de conception (régulateur, bailleur de fonds, lanceur)"}]
+  - [{en: "Priority", fr: "Priorité"}, {en: "Sets the weights in your trade studies", fr: "Fixe les poids de vos études de compromis"}]
+  - [{en: "Influence", fr: "Influence"}, {en: "Tells you whom to keep informed, and whom to consult", fr: "Indique qui tenir informé, et qui consulter"}]
+- kind: steps
+  k: {en: "Objectives", fr: "Objectifs"}
+  h: {en: "From a stakeholder need to a number you can track", fr: "D'un besoin de partie prenante à un chiffre que l'on peut suivre"}
+  items:
+  - {en: "**Measure of effectiveness (MoE)**: how well the mission meets the need, in the user's terms (for example, revisit of a coastline)", fr: "**Mesure d'efficacité (MoE)** : à quel point la mission répond au besoin, dans les termes de l'utilisateur (par exemple, la revisite d'un littoral)"}
+  - {en: "**Measure of performance (MoP)**: a system characteristic that drives the MoE (swath, orbit, number of stations)", fr: "**Mesure de performance (MoP)** : une caractéristique du système qui détermine la MoE (fauchée, orbite, nombre de stations)"}
+  - {en: "**Technical performance measure (TPM)**: a design parameter you watch at every review (mass margin, link margin)", fr: "**Mesure de performance technique (TPM)** : un paramètre de conception surveillé à chaque revue (marge de masse, marge de liaison)"}
+- kind: table
+  k: {en: "Trade studies", fr: "Études de compromis"}
+  h: {en: "Five elements, and one check", fr: "Cinq éléments, et une vérification"}
+  header: [{en: "Element", fr: "Élément"}, {en: "What you write down", fr: "Ce que vous consignez"}]
+  rows:
+  - [{en: "Decision", fr: "Décision"}, {en: "The one question being decided", fr: "La seule question à trancher"}]
+  - [{en: "Alternatives", fr: "Options"}, {en: "At least three, including a non-space option when one exists", fr: "Au moins trois, dont une option non spatiale quand il y en a une"}]
+  - [{en: "Criteria", fr: "Critères"}, {en: "Traceable to stakeholder needs, not to taste", fr: "Liés aux besoins des parties prenantes, pas aux goûts"}]
+  - [{en: "Weights", fr: "Poids"}, {en: "Agreed before scoring, from stakeholder priorities", fr: "Fixés avant la notation, d'après les priorités des parties prenantes"}]
+  - [{en: "Scores", fr: "Notes"}, {en: "With evidence for each", fr: "Avec une justification pour chacune"}]
+  - [{en: "Sensitivity", fr: "Sensibilité"}, {en: "Does the winner change if a weight moves? If so, say so", fr: "Le gagnant change-t-il si un poids bouge ? Si oui, dites-le"}]
+- kind: statement
+  k: {en: "Space or not", fr: "Spatial ou non"}
+  text: {en: "An existing service may already meet the need.", fr: "Un service existant répond peut-être déjà au besoin."}
+  sub: {en: "Aircraft, drones, buoys or someone else's satellite data: evaluate them honestly before committing to build. The MCR asks this question first.", fr: "Avions, drones, bouées ou données satellitaires d'autrui : évaluez-les honnêtement avant de vous engager à construire. La MCR pose d'abord cette question."}
+- kind: cards
+  k: {en: "Concept of operations", fr: "Concept d'opérations"}
+  h: {en: "Three segments, joined by data", fr: "Trois segments, reliés par les données"}
+  cards:
+  - {t: {en: "Space segment", fr: "Segment spatial"}, d: {en: "The spacecraft and its modes: safe, sun-pointing, nominal, imaging, downlink", fr: "Le satellite et ses modes : survie, pointage solaire, nominal, imagerie, vidage"}}
+  - {t: {en: "Ground segment", fr: "Segment sol"}, d: {en: "Stations, mission control and planning; when you can talk to the spacecraft, and for how long", fr: "Stations, contrôle de mission et planification ; quand on peut parler au satellite, et combien de temps"}}
+  - {t: {en: "User segment", fr: "Segment utilisateur"}, d: {en: "Who receives the product, in what form, and how late is too late", fr: "Qui reçoit le produit, sous quelle forme, et à partir de quel délai c'est trop tard"}}
+- kind: bullets
+  k: {en: "Two ConOps checks", fr: "Deux vérifications du ConOps"}
+  h: {en: "Modes drive power; data must get down", fr: "Les modes déterminent l'énergie ; les données doivent descendre"}
+  items:
+  - {en: "Each mode has a power draw and a duty cycle: together they give the orbit-average power the array must supply", fr: "Chaque mode a une consommation et un cycle de service : ensemble, ils donnent la puissance moyenne par orbite que les panneaux doivent fournir"}
+  - {en: "Daily downlink capacity must equal or exceed daily data generation", fr: "La capacité de liaison descendante quotidienne doit égaler ou dépasser la production quotidienne de données"}
+  - {en: "If either check fails at concept level, it will not pass later: change the concept now", fr: "Si l'une ou l'autre échoue au stade du concept, elle n'aboutira pas plus tard : changez le concept maintenant"}
+- kind: table
+  k: {en: "Risk register, opened today", fr: "Registre des risques, ouvert aujourd'hui"}
+  h: {en: "Likelihood times consequence", fr: "Probabilité fois conséquence"}
+  header: [{en: "Score (1–25)", fr: "Note (1 à 25)"}, {en: "Band", fr: "Niveau"}, {en: "Usual response", fr: "Réponse habituelle"}]
+  rows:
+  - ["1–4", {en: "Low", fr: "Faible"}, {en: "Accept and watch", fr: "Accepter et surveiller"}]
+  - ["5–9", {en: "Medium", fr: "Moyen"}, {en: "Mitigate", fr: "Atténuer"}]
+  - ["10–15", {en: "High", fr: "Élevé"}, {en: "Mitigate, with an owner and a date", fr: "Atténuer, avec un responsable et une échéance"}]
+  - ["16–25", {en: "Critical", fr: "Critique"}, {en: "Avoid: change the design or the plan", fr: "Éviter : changer la conception ou le plan"}]
+- kind: bullets
+  k: {en: "Informal MCR, end of today", fr: "MCR informelle, en fin de journée"}
+  h: {en: "What to bring", fr: "Quoi apporter"}
+  items:
+  - {en: "Problem statement and stakeholder table", fr: "Énoncé du problème et tableau des parties prenantes"}
+  - {en: "The alternatives trade, with its sensitivity check", fr: "L'étude de compromis des options, avec sa vérification de sensibilité"}
+  - {en: "Concept v0 and a top-level ConOps v0", fr: "Concept v0 et ConOps v0 de haut niveau"}
+  - {en: "The first entries in your risk register", fr: "Les premières entrées de votre registre des risques"}
+  - {en: "Lead with your conclusion, then the evidence; say plainly what you do not know yet", fr: "Commencez par votre conclusion, puis les preuves ; dites clairement ce que vous ne savez pas encore"}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: From need to concept of operations; Risk register and FMECA in SpaceCDF; Review gates in SpaceCDF", fr: "À regarder : Du besoin au concept d’opérations ; Registre des risques et AMDEC dans SpaceCDF ; Les jalons de revue dans SpaceCDF"}
+  - {en: "Morning: alternatives trade and ConOps in the CDF", fr: "Matin : étude des options et ConOps dans la CDF"}
+  - {en: "Afternoon: refine, open the risk register, hold the MCR", fr: "Après-midi : affiner, ouvrir le registre des risques, tenir la MCR"}

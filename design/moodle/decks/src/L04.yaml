@@ -1,0 +1,52 @@
+slot: {en: "Week 2 · Day 1 · Morning", fr: "Semaine 2 · Jour 1 · matin"}
+title: {en: "Closing the MCR and locking the concept", fr: "Clore la MCR et figer le concept"}
+subtitle: {en: "Action items, concept v1, top-level requirements and the programmatic envelope", fr: "Actions de revue, concept v1, exigences de haut niveau et enveloppe programmatique"}
+slides:
+- kind: objectives
+  k: {en: "By the end of this morning", fr: "À la fin de la matinée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Close review action items with evidence, not promises", fr: "Clore les actions de revue avec des preuves, pas des promesses"}
+  - {en: "Lock concept v1 and record why the alternatives lost", fr: "Figer le concept v1 et consigner pourquoi les autres options ont perdu"}
+  - {en: "Write the first top-level mission requirements", fr: "Rédiger les premières exigences de mission de haut niveau"}
+  - {en: "State the programmatic envelope your design must fit", fr: "Énoncer l'enveloppe programmatique dans laquelle votre conception doit tenir"}
+- kind: steps
+  k: {en: "Review actions", fr: "Actions de revue"}
+  h: {en: "Closing an action item", fr: "Clore une action"}
+  items:
+  - {en: "Restate the action exactly as the board wrote it", fr: "Reformuler l'action exactement comme le comité l'a écrite"}
+  - {en: "Show what changed: a new analysis, a revised trade, a corrected number", fr: "Montrer ce qui a changé : une nouvelle analyse, un compromis révisé, un chiffre corrigé"}
+  - {en: "Point to where the evidence lives in the mission file", fr: "Indiquer où se trouvent les preuves dans le dossier de mission"}
+  - {en: "Propose closed, or open with a date and an owner", fr: "Proposer « close », ou « ouverte » avec une date et un responsable"}
+- kind: statement
+  k: {en: "Concept lock", fr: "Concept figé"}
+  text: {en: "Locking the concept is a decision, recorded with its reasons.", fr: "Figer le concept est une décision, consignée avec ses raisons."}
+  sub: {en: "From now on a change to the concept is a change request with an impact assessment, not a new idea in a meeting.", fr: "Désormais, modifier le concept passe par une demande de changement avec une analyse d'impact, pas par une nouvelle idée en réunion."}
+- kind: table
+  k: {en: "Top-level requirements", fr: "Exigences de haut niveau"}
+  h: {en: "From objectives to mission requirements", fr: "Des objectifs aux exigences de mission"}
+  header: [{en: "Objective", fr: "Objectif"}, {en: "Mission requirement (example form)", fr: "Exigence de mission (forme type)"}]
+  rows:
+  - [{en: "Monitor coastal ocean colour", fr: "Surveiller la couleur de l'océan côtier"}, {en: "The mission shall image each target coastline at least once every N days", fr: "La mission doit imager chaque littoral cible au moins une fois tous les N jours"}]
+  - [{en: "Deliver data to users", fr: "Livrer les données aux utilisateurs"}, {en: "The mission shall deliver each image to users within N hours of acquisition", fr: "La mission doit livrer chaque image aux utilisateurs dans les N heures suivant l'acquisition"}]
+  - [{en: "Comply with debris rules", fr: "Respecter les règles sur les débris"}, {en: "The spacecraft shall re-enter within N years of end of mission", fr: "Le satellite doit rentrer dans l'atmosphère dans les N ans suivant la fin de mission"}]
+- kind: cards
+  k: {en: "Programmatic envelope", fr: "Enveloppe programmatique"}
+  h: {en: "The box your design must fit", fr: "La boîte dans laquelle tenir"}
+  cards:
+  - {t: {en: "Cost", fr: "Coût"}, d: {en: "A cap, with a stated confidence level; unfunded margin is not margin", fr: "Un plafond, avec un niveau de confiance énoncé ; une marge non financée n'est pas une marge"}}
+  - {t: {en: "Schedule", fr: "Calendrier"}, d: {en: "Launch opportunity, licence lead times, integration slot", fr: "Occasion de lancement, délais de licence, créneau d'intégration"}}
+  - {t: {en: "Launch and form factor", fr: "Lancement et format"}, d: {en: "Deployer size and mass limits: a 6U CubeSat carries what a 6U can carry", fr: "Taille et masse admises par le déployeur : un CubeSat 6U emporte ce qu'un 6U peut emporter"}}
+  - {t: {en: "Team", fr: "Équipe"}, d: {en: "Who can build, test and operate it, and for how long", fr: "Qui peut le construire, l'essayer et l'exploiter, et pendant combien de temps"}}
+- kind: bullets
+  k: {en: "Risk register v0", fr: "Registre des risques v0"}
+  h: {en: "From a list of worries to a register", fr: "D'une liste d'inquiétudes à un registre"}
+  items:
+  - {en: "Each risk: an if-then statement, likelihood, consequence, owner", fr: "Chaque risque : un énoncé « si… alors… », probabilité, conséquence, responsable"}
+  - {en: "Regulatory and schedule risks belong here too, not only technical ones", fr: "Les risques réglementaires et de calendrier y ont leur place, pas seulement les risques techniques"}
+  - {en: "Every high or critical risk gets a mitigation with a date", fr: "Tout risque élevé ou critique reçoit une mesure d'atténuation datée"}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Morning: close MCR actions, lock concept v1, write top-level requirements", fr: "Matin : clore les actions de la MCR, figer le concept v1, rédiger les exigences de haut niveau"}
+  - {en: "Afternoon: the Canadian regulatory landscape, then your two-page regulatory brief", fr: "Après-midi : le paysage réglementaire canadien, puis votre note réglementaire de deux pages"}

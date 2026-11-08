@@ -1,0 +1,84 @@
+slot: {en: "Week 2 · Day 4 · CDF Day 3", fr: "Semaine 2 · Jour 4 · jour 3 de CDF"}
+title: {en: "Communications, structure, propulsion and the formal trades", fr: "Télécommunications, structure, propulsion et études de compromis formelles"}
+subtitle: {en: "The link budget, band and licensing, structural margins, onboard data handling, and two trade studies", fr: "Le bilan de liaison, bande et licences, marges structurales, gestion de bord, et deux études de compromis"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Build a link budget in decibels and read its margin", fr: "Établir un bilan de liaison en décibels et lire sa marge"}
+  - {en: "Choose a frequency band with its licensing consequences", fr: "Choisir une bande de fréquences avec ses conséquences de licence"}
+  - {en: "Check structural margin of safety and first-mode frequency", fr: "Vérifier la marge de sécurité structurale et la fréquence du premier mode"}
+  - {en: "Size onboard storage and choose a processor", fr: "Dimensionner la mémoire de bord et choisir un processeur"}
+  - {en: "Run two formal trades: link band and propulsion", fr: "Mener deux compromis formels : bande de liaison et propulsion"}
+- kind: formulas
+  k: {en: "Link budget", fr: "Bilan de liaison"}
+  h: {en: "Everything in decibels, then add", fr: "Tout en décibels, puis additionner"}
+  items:
+  - {f: "EIRP = P_TX + G_TX − L_TX", d: {en: "What the transmitter puts into the beam", fr: "Ce que l'émetteur met dans le faisceau"}}
+  - {f: "FSPL = 92.45 + 20 log d_km + 20 log f_GHz", d: {en: "Free-space path loss: spreading, not absorption; +6 dB per doubling of distance or frequency", fr: "Affaiblissement en espace libre : étalement, pas absorption ; +6 dB à chaque doublement de distance ou de fréquence"}}
+  - {f: "G/T", d: {en: "Receiver figure of merit: the ground station's most important number", fr: "Facteur de mérite du récepteur : le chiffre le plus important de la station sol"}}
+  - {f: "Margin = Eb/N0 avail − Eb/N0 req − L_impl ≥ 3 dB", d: {en: "Close the link with at least 3 dB to spare", fr: "Fermer la liaison avec au moins 3 dB de réserve"}}
+- kind: bullets
+  k: {en: "Link budget traps", fr: "Pièges du bilan de liaison"}
+  h: {en: "Where first budgets go wrong", fr: "Là où les premiers bilans se trompent"}
+  items:
+  - {en: "Slant range, not altitude: at 500 km and 10° elevation the range is 1695 km, 3.4 times nadir: 10.6 dB more loss", fr: "La distance oblique, pas l'altitude : à 500 km et 10° d'élévation, la distance est de 1695 km, 3,4 fois le nadir : 10,6 dB de pertes en plus"}
+  - {en: "Pointing loss grows with the square of the error over the beamwidth", fr: "La perte de pointage croît comme le carré de l'erreur rapportée à l'ouverture du faisceau"}
+  - {en: "Coding is free gain: LDPC rate 3/4 needs about 4 dB Eb/N0; QPSK is the usual modulation", fr: "Le codage est un gain gratuit : un LDPC de rendement 3/4 demande environ 4 dB d'Eb/N0 ; la QPSK est la modulation habituelle"}
+  - {en: "UHF: Faraday rotation, noisy ground; use circular polarisation and FEC", fr: "UHF : rotation de Faraday, sol bruité ; utiliser la polarisation circulaire et un code correcteur"}
+  - {en: "The data budget must close too: daily capacity at least daily generation", fr: "Le bilan de données doit aussi fermer : capacité quotidienne au moins égale à la production quotidienne"}
+- kind: table
+  k: {en: "Band selection", fr: "Choix de la bande"}
+  h: {en: "Data rate sets the band; the band sets the licence", fr: "Le débit fixe la bande ; la bande fixe la licence"}
+  header: [{en: "Band", fr: "Bande"}, {en: "Suits", fr: "Convient à"}, {en: "Watch for", fr: "Attention à"}]
+  rows:
+  - ["UHF", {en: "Below 9.6 kbps; telemetry, beacons", fr: "Moins de 9,6 kbit/s ; télémesure, balises"}, {en: "Crowded; amateur rules limit use", fr: "Encombrée ; les règles amateur limitent l'usage"}]
+  - [{en: "S-band", fr: "Bande S"}, {en: "Up to about 10 Mbps", fr: "Jusqu'à environ 10 Mbit/s"}, {en: "6–12 months of licensing", fr: "6 à 12 mois de licence"}]
+  - [{en: "X-band", fr: "Bande X"}, {en: "Up to about 400 Mbps", fr: "Jusqu'à environ 400 Mbit/s"}, {en: "1–3 dB rain fade; 12 months or more", fr: "1 à 3 dB d'affaiblissement par la pluie ; 12 mois ou plus"}]
+  - [{en: "Ka-band", fr: "Bande Ka"}, {en: "Above 400 Mbps", fr: "Au-delà de 400 Mbit/s"}, {en: "3–15 dB rain fade; pointing", fr: "3 à 15 dB d'affaiblissement par la pluie ; pointage"}]
+- kind: formulas
+  k: {en: "Structure", fr: "Structure"}
+  h: {en: "Survive the launch, and stay stiff", fr: "Survivre au lancement, et rester rigide"}
+  items:
+  - {f: "MoS = σ_allow / (σ_design · FoS) − 1 ≥ 0", d: {en: "Factor of safety 1.25 on yield, 1.5 on ultimate, for metals", fr: "Coefficient de sécurité 1,25 en limite élastique, 1,5 en rupture, pour les métaux"}}
+  - {f: "f₁ > 40 Hz", d: {en: "First mode above the deployer's limit; local modes (boards, deployables) are the real risk", fr: "Premier mode au-dessus de la limite du déployeur ; les modes locaux (cartes, déployables) sont le vrai risque"}}
+  - {f: {en: "6–12 g quasi-static · 6.8 grms random", fr: "6 à 12 g quasi statique · 6,8 grms aléatoire"}, d: {en: "Typical launch loads; solder joints on boards are the weak point", fr: "Charges de lancement typiques ; les soudures des cartes sont le point faible"}}
+- kind: table
+  k: {en: "Onboard data handling", fr: "Gestion de bord"}
+  h: {en: "Processor and storage", fr: "Processeur et mémoire"}
+  header: [{en: "Choice", fr: "Choix"}, {en: "Typical CubeSat answer", fr: "Réponse type pour un CubeSat"}]
+  rows:
+  - [{en: "Command and data handling", fr: "Commande et gestion des données"}, {en: "Cortex-M class processor running an RTOS", fr: "Processeur de classe Cortex-M sous RTOS"}]
+  - [{en: "Payload processing", fr: "Traitement de la charge utile"}, {en: "A larger processor running Linux", fr: "Un processeur plus puissant sous Linux"}]
+  - [{en: "Storage size", fr: "Taille de la mémoire"}, {en: "At least twice the daily data generation", fr: "Au moins deux fois la production quotidienne de données"}]
+  - [{en: "Radiation upsets", fr: "Perturbations par radiation"}, {en: "EDAC memory, watchdog, redundancy", fr: "Mémoire EDAC, chien de garde, redondance"}]
+- kind: split
+  k: {en: "Propulsion", fr: "Propulsion"}
+  h: {en: "Do you need it, and what kind?", fr: "En faut-il, et de quel type ?"}
+  left:
+    t: {en: "Drivers", fr: "Moteurs du choix"}
+    items:
+    - {en: "Deorbit to meet debris rules", fr: "Désorbiter pour respecter les règles sur les débris"}
+    - {en: "Orbit maintenance against drag", fr: "Maintien d'orbite contre la traînée"}
+    - {en: "Collision avoidance", fr: "Évitement de collision"}
+  right:
+    t: {en: "Trade criteria", fr: "Critères du compromis"}
+    items:
+    - {en: "Delta-v delivered for the mass and volume", fr: "Delta-v fourni pour la masse et le volume"}
+    - {en: "Propellant safety and range rules", fr: "Sécurité des ergols et règles du site de lancement"}
+    - {en: "Power draw and heritage (TRL)", fr: "Consommation et héritage (NMT)"}
+    - {en: "Cost and export status", fr: "Coût et statut d'exportation"}
+- kind: bullets
+  k: {en: "Today's deliverables", fr: "Livrables du jour"}
+  h: {en: "Two formal trade studies", fr: "Deux études de compromis formelles"}
+  items:
+  - {en: "Link band trade and propulsion trade, both in the SpaceCDF trade-study module", fr: "Compromis de bande de liaison et de propulsion, tous deux dans le module d'études de compromis de SpaceCDF"}
+  - {en: "Each: decision, at least three alternatives, criteria, agreed weights, scores with evidence, sensitivity", fr: "Chacun : décision, au moins trois options, critères, poids convenus, notes justifiées, sensibilité"}
+  - {en: "Run the regulatory check on the chosen band", fr: "Lancez la vérification réglementaire sur la bande choisie"}
+  - {en: "Select equipment in the SpaceCDF library and map suppliers where you can", fr: "Choisissez l'équipement dans la bibliothèque de SpaceCDF et identifiez les fournisseurs quand c'est possible"}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: The link budget; The link budget tool; Structure, propulsion and data handling", fr: "À regarder : Le bilan de liaison ; L’outil de bilan de liaison ; Structure, propulsion et gestion de bord"}
+  - {en: "Worksheet 3; equipment selection list; two trade-study reports", fr: "Feuille de travail 3 ; liste de sélection d'équipement ; deux rapports d'étude de compromis"}

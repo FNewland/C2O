@@ -1,0 +1,81 @@
+slot: {en: "Week 2 · Day 5 · CDF Day 4", fr: "Semaine 2 · Jour 5 · jour 4 de CDF"}
+title: {en: "Integration, verification, cost, risk, and the PDR", fr: "Intégration, vérification, coûts, risques, et la PDR"}
+subtitle: {en: "Closing interfaces, the verification matrix, test levels, cost estimates, FMECA, and presenting to a review board", fr: "Fermer les interfaces, la matrice de vérification, les niveaux d'essai, l'estimation des coûts, l'AMDEC, et la présentation devant un comité de revue"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Close every interface in the N² matrix", fr: "Fermer chaque interface de la matrice N²"}
+  - {en: "Build a verification matrix and plan environmental tests", fr: "Établir une matrice de vérification et planifier les essais d'environnement"}
+  - {en: "Estimate cost three ways and state a confidence level", fr: "Estimer les coûts de trois façons et énoncer un niveau de confiance"}
+  - {en: "Find single-point failures with an FMECA", fr: "Trouver les points de défaillance uniques avec une AMDEC"}
+  - {en: "Present a preliminary design to a review board", fr: "Présenter une conception préliminaire à un comité de revue"}
+- kind: bullets
+  k: {en: "Interfaces", fr: "Interfaces"}
+  h: {en: "The N² matrix", fr: "La matrice N²"}
+  items:
+  - {en: "Subsystems on the diagonal; each off-diagonal cell is an interface", fr: "Les sous-systèmes sur la diagonale ; chaque case hors diagonale est une interface"}
+  - {en: "Six types: mechanical, electrical, thermal, data, RF, operational", fr: "Six types : mécanique, électrique, thermique, données, RF, opérationnel"}
+  - {en: "Typical conflicts: protocol mismatch, voltage mismatch, band mismatch", fr: "Conflits typiques : protocole incompatible, tension incompatible, bande incompatible"}
+  - {en: "Classify each conflict critical, major or minor, and close it with a written interface requirement", fr: "Classez chaque conflit critique, majeur ou mineur, et fermez-le par une exigence d'interface écrite"}
+- kind: split
+  k: {en: "V and V", fr: "V et V"}
+  h: {en: "Two different questions", fr: "Deux questions différentes"}
+  left:
+    t: {en: "Verification", fr: "Vérification"}
+    items:
+    - {en: "Did we build it right?", fr: "L'a-t-on bien construit ?"}
+    - {en: "Against requirements, by analysis, test, inspection, review or demonstration", fr: "Par rapport aux exigences, par analyse, essai, inspection, revue ou démonstration"}
+  right:
+    t: {en: "Validation", fr: "Validation"}
+    items:
+    - {en: "Did we build the right thing?", fr: "A-t-on construit la bonne chose ?"}
+    - {en: "Against stakeholder needs, in conditions close to the real mission", fr: "Par rapport aux besoins des parties prenantes, dans des conditions proches de la mission réelle"}
+- kind: table
+  k: {en: "Environmental tests", fr: "Essais d'environnement"}
+  h: {en: "Proto-flight: one unit, qualification levels, acceptance durations", fr: "Protovol : un seul exemplaire, niveaux de qualification, durées de recette"}
+  header: [{en: "Test", fr: "Essai"}, {en: "Typical proto-flight level", fr: "Niveau protovol type"}]
+  rows:
+  - [{en: "Sine vibration", fr: "Vibrations sinusoïdales"}, {en: "5–100 Hz, 1.25 g, 4 octaves/min, three axes", fr: "5 à 100 Hz, 1,25 g, 4 octaves/min, trois axes"}]
+  - [{en: "Random vibration", fr: "Vibrations aléatoires"}, {en: "20–2000 Hz, about 9.6 grms (workmanship 6.8 grms + 3 dB), 1 min per axis", fr: "20 à 2000 Hz, environ 9,6 grms (qualité de fabrication 6,8 grms + 3 dB), 1 min par axe"}]
+  - [{en: "Thermal vacuum", fr: "Vide thermique"}, {en: "Predicted extremes ± 10 °C, 4 cycles, functional test at each extreme", fr: "Extrêmes prévus ± 10 °C, 4 cycles, essai fonctionnel à chaque extrême"}]
+- kind: bullets
+  k: {en: "Verification matrix", fr: "Matrice de vérification"}
+  h: {en: "One row per requirement", fr: "Une ligne par exigence"}
+  items:
+  - {en: "Method, phase, level, responsible, status, evidence", fr: "Méthode, phase, niveau, responsable, statut, preuve"}
+  - {en: "A requirement no one can verify is not yet a requirement: rewrite it", fr: "Une exigence que personne ne peut vérifier n'est pas encore une exigence : réécrivez-la"}
+  - {en: "Waivers: record the deviation, the reason, the risk and the compensating measures", fr: "Dérogations : consigner l'écart, la raison, le risque et les mesures compensatoires"}
+- kind: table
+  k: {en: "Cost", fr: "Coûts"}
+  h: {en: "Three ways to estimate, and a confidence level", fr: "Trois façons d'estimer, et un niveau de confiance"}
+  header: [{en: "Method", fr: "Méthode"}, {en: "When", fr: "Quand"}, {en: "How", fr: "Comment"}]
+  rows:
+  - [{en: "Parametric", fr: "Paramétrique"}, {en: "Early", fr: "Tôt"}, {en: "Cost estimating relationships, Cost = a·Mᵇ", fr: "Relations d'estimation des coûts, Coût = a·Mᵇ"}]
+  - [{en: "Analogy", fr: "Analogie"}, {en: "When a similar mission exists", fr: "Quand une mission semblable existe"}, {en: "Scale a reference mission", fr: "Mettre à l'échelle une mission de référence"}]
+  - [{en: "Bottom-up", fr: "Ascendante"}, {en: "When you have a bill of materials", fr: "Quand on a une nomenclature"}, {en: "Vendor quotes plus labour, by WBS element", fr: "Devis fournisseurs plus main-d'œuvre, par élément de l'OTP"}]
+  - [{en: "Confidence", fr: "Confiance"}, {en: "Always", fr: "Toujours"}, {en: "P50 baseline, P70 commitment, P80 ≈ 1.3 × P50", fr: "P50 de référence, P70 d'engagement, P80 ≈ 1,3 × P50"}]
+- kind: formulas
+  k: {en: "Risk and reliability", fr: "Risques et fiabilité"}
+  h: {en: "FMECA, single-point failures, and the arithmetic", fr: "AMDEC, points de défaillance uniques, et le calcul"}
+  items:
+  - {f: {en: "mode → cause → effect → severity", fr: "mode → cause → effet → gravité"}, d: {en: "FMECA row: then detection and mitigation", fr: "Ligne d'AMDEC : puis détection et atténuation"}}
+  - {f: "R_series = Π Rᵢ", d: {en: "Every unit must work: reliability falls with each one added", fr: "Chaque unité doit fonctionner : la fiabilité baisse à chaque ajout"}}
+  - {f: "R_parallel = 1 − Π (1 − Rᵢ)", d: {en: "Any unit suffices: redundancy removes a single-point failure", fr: "Une seule unité suffit : la redondance supprime un point de défaillance unique"}}
+  - {f: "R(t) = e^(−λt)", d: {en: "Constant failure rate λ over mission time t", fr: "Taux de défaillance constant λ sur la durée de mission t"}}
+- kind: bullets
+  k: {en: "PDR-style review, this afternoon", fr: "Revue de type PDR, cet après-midi"}
+  h: {en: "Does the preliminary design meet the requirements?", fr: "La conception préliminaire satisfait-elle les exigences ?"}
+  items:
+  - {en: "Design description; mass, power, link and cost budgets with margins", fr: "Description de la conception ; bilans de masse, d'énergie, de liaison et de coûts avec marges"}
+  - {en: "Interface and verification matrices", fr: "Matrices d'interfaces et de vérification"}
+  - {en: "Risk register with mitigations; the regulatory path", fr: "Registre des risques avec atténuations ; le parcours réglementaire"}
+  - {en: "The ECSS-aligned document set exported from SpaceCDF", fr: "Le jeu de documents aligné sur l'ECSS, exporté de SpaceCDF"}
+  - {en: "Lead with conclusions, show the evidence, name the risks, answer the question asked", fr: "Commencez par les conclusions, montrez les preuves, nommez les risques, répondez à la question posée"}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: Interfaces and the N² chart in SpaceCDF; Verification and validation; Cost and design reviews; Risk, failure modes and redundancy", fr: "À regarder : Les interfaces et la matrice N² dans SpaceCDF ; Vérification et validation ; Coûts et revues de conception ; Risques, modes de défaillance et redondance"}
+  - {en: "Morning: close interfaces, V&V, cost, risks. Afternoon: optimiser run, document export, PDR", fr: "Matin : fermer interfaces, V et V, coûts, risques. Après-midi : optimiseur, export des documents, PDR"}
+  - {en: "Next week you fly a spacecraft someone else designed: EOSAT-1", fr: "La semaine prochaine, vous pilotez un satellite conçu par d'autres : EOSAT-1"}

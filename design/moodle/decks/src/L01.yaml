@@ -1,0 +1,80 @@
+slot: {en: "Week 1 · Day 1 · Morning", fr: "Semaine 1 · Jour 1 · matin"}
+title: {en: "Canada in space, and how this course works", fr: "Le Canada dans l'espace, et le fonctionnement du cours"}
+subtitle: {en: "Past, present and emerging Canadian space activity; teams, roles and tools for the next three weeks", fr: "Activités spatiales canadiennes d'hier, d'aujourd'hui et de demain ; équipes, rôles et outils pour les trois semaines à venir"}
+slides:
+- kind: objectives
+  k: {en: "By the end of this session", fr: "À la fin de cette séance"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Name the Canadian missions and companies that shaped the sector, and say what each is known for", fr: "Nommer les missions et entreprises canadiennes qui ont façonné le secteur, et dire ce qui fait la réputation de chacune"}
+  - {en: "Describe the three-week arc of ORBIT NORTH: concept, preliminary design, operations", fr: "Décrire l'arc des trois semaines d'ORBIT NORTH : concept, conception préliminaire, exploitation"}
+  - {en: "Explain your team, your discipline role and the tools you will use", fr: "Expliquer votre équipe, votre rôle disciplinaire et les outils que vous utiliserez"}
+  - {en: "Choose a mission area with your team", fr: "Choisir un domaine de mission avec votre équipe"}
+- kind: statement
+  k: {en: "Why start here", fr: "Pourquoi commencer ici"}
+  text: {en: "Canada builds what it is best at, and flies it with partners.", fr: "Le Canada construit ce qu'il fait de mieux, et le fait voler avec des partenaires."}
+  sub: {en: "Robotics, radar, communications and instruments: a niche-excellence strategy that every Canadian mission still sits inside.", fr: "Robotique, radar, télécommunications et instruments : une stratégie d'excellence de créneau dans laquelle s'inscrit encore chaque mission canadienne."}
+- kind: table
+  k: {en: "Past", fr: "Hier"}
+  h: {en: "Missions that built the sector", fr: "Les missions qui ont bâti le secteur"}
+  header: [{en: "Mission", fr: "Mission"}, {en: "Year", fr: "Année"}, {en: "Why it matters", fr: "Pourquoi c'est important"}]
+  rows:
+  - ["Alouette 1", "1962", {en: "First Canadian satellite: Canada becomes the third nation to design and build one", fr: "Premier satellite canadien : le Canada devient le troisième pays à en concevoir et construire un"}]
+  - ["Anik A1", "1972", {en: "First domestic geostationary communications satellite: TV and telephone across the North", fr: "Premier satellite géostationnaire de télécommunications nationales : télévision et téléphone jusque dans le Nord"}]
+  - ["Canadarm", "1981", {en: "Shuttle robotic arm; the root of Canada's robotics reputation (Canadarm2, Dextre)", fr: "Bras robotique de la navette ; origine de la réputation canadienne en robotique (Canadarm2, Dextre)"}]
+  - ["RADARSAT-1", "1995", {en: "Synthetic aperture radar imaging; ice, ships and disasters, day and night", fr: "Imagerie radar à synthèse d'ouverture ; glaces, navires et catastrophes, de jour comme de nuit"}]
+  - [{en: "RADARSAT Constellation", fr: "Constellation RADARSAT"}, "2019", {en: "Three satellites for daily coverage of Canada's land and oceans", fr: "Trois satellites pour une couverture quotidienne des terres et des océans du Canada"}]
+- kind: cards
+  k: {en: "Present", fr: "Aujourd'hui"}
+  h: {en: "Who builds and flies today", fr: "Qui construit et exploite aujourd'hui"}
+  cards:
+  - {t: "MDA", d: {en: "Robotics, radar satellites and ground systems; prime contractor on large Canadian programmes", fr: "Robotique, satellites radar et systèmes sol ; maître d'œuvre des grands programmes canadiens"}}
+  - {t: "Telesat", d: {en: "Satellite communications operator; building a low Earth orbit broadband constellation", fr: "Opérateur de télécommunications par satellite ; construit une constellation de large bande en orbite basse"}}
+  - {t: "GHGSat · Kepler · NorthStar", d: {en: "New-space companies: methane monitoring, data relay, space situational awareness", fr: "Entreprises du nouvel espace : suivi du méthane, relais de données, connaissance de la situation spatiale"}}
+  - {t: {en: "Universities", fr: "Universités"}, d: {en: "Student CubeSats and small-satellite labs: where many of you will start", fr: "CubeSats étudiants et laboratoires de petits satellites : là où plusieurs d'entre vous commenceront"}}
+- kind: bullets
+  k: {en: "Emerging", fr: "Demain"}
+  h: {en: "Where the sector is heading", fr: "Où va le secteur"}
+  items:
+  - {en: "Canadian Space Agency funding programmes (STDP, FAST and others) seed technology and student missions", fr: "Les programmes de financement de l'Agence spatiale canadienne (PDTS, VITES et autres) amorcent technologies et missions étudiantes"}
+  - {en: "Artemis: with Gateway paused (March 2026), Canadarm3 technologies are being repurposed for lunar-surface operations", fr: "Artemis : la Passerelle lunaire étant suspendue (mars 2026), les technologies de Canadarm3 sont réorientées vers les opérations à la surface de la Lune"}
+  - {en: "Small, focused science and surveillance missions in the NEOSSat class", fr: "Petites missions ciblées de science et de surveillance de la classe NEOSSat"}
+  - {en: "Commercial Earth observation and communications built on government seed funding", fr: "Observation de la Terre et télécommunications commerciales bâties sur un financement public d'amorçage"}
+- kind: table
+  k: {en: "The course", fr: "Le cours"}
+  h: {en: "Three weeks, one mission arc", fr: "Trois semaines, un seul arc de mission"}
+  header: [{en: "Week", fr: "Semaine"}, {en: "Focus", fr: "Thème"}, {en: "You finish with", fr: "Vous terminez avec"}]
+  rows:
+  - [{en: "Week 1 (2 days)", fr: "Semaine 1 (2 jours)"}, {en: "Canadian context, concurrent design, concept", fr: "Contexte canadien, conception concurrente, concept"}, {en: "Concept v0, ConOps v0, informal Mission Concept Review", fr: "Concept v0, ConOps v0, revue de concept de mission informelle"}]
+  - [{en: "Week 2 (5 days)", fr: "Semaine 2 (5 jours)"}, {en: "Regulation, concurrent design intensive", fr: "Réglementation, conception concurrente intensive"}, {en: "Preliminary design and a PDR-style review", fr: "Conception préliminaire et revue de type PDR"}]
+  - [{en: "Week 3 (5 days)", fr: "Semaine 3 (5 jours)"}, {en: "Operations and mission simulation", fr: "Exploitation et simulation de mission"}, {en: "Two simulated shifts flying EOSAT-1, and a final mission review", fr: "Deux quarts simulés aux commandes d'EOSAT-1, et une revue de mission finale"}]
+- kind: split
+  k: {en: "Your team", fr: "Votre équipe"}
+  h: {en: "Each of you owns a domain", fr: "Chacun de vous est responsable d'un domaine"}
+  left:
+    t: {en: "Weeks 1–2: design positions", fr: "Semaines 1 et 2 : postes de conception"}
+    items:
+    - {en: "Systems engineer, mission analyst, payload lead", fr: "Ingénieur système, analyste de mission, responsable charge utile"}
+    - {en: "Power, AOCS, thermal, comms, propulsion, structures", fr: "Énergie, SCAO, thermique, télécoms, propulsion, structures"}
+    - {en: "Cost, compliance, operations, ground segment", fr: "Coûts, conformité, exploitation, segment sol"}
+    - {en: "Each position owns parameters; conflicts surface at interfaces", fr: "Chaque poste possède des paramètres ; les conflits apparaissent aux interfaces"}
+  right:
+    t: {en: "Week 3: control-room positions", fr: "Semaine 3 : postes de la salle de contrôle"}
+    items:
+    - {en: "Flight Director, SPACON (FDIR and systems)", fr: "Directeur de vol, SPACON (FDIR et systèmes)"}
+    - {en: "AOCS, EPS, thermal, TT&C, payload", fr: "SCAO, EPS, thermique, TT&C, charge utile"}
+    - {en: "Flight dynamics, ground segment, mission manager", fr: "Dynamique du vol, segment sol, gestionnaire de mission"}
+    - {en: "Teams alternate operator and observer roles", fr: "Les équipes alternent les rôles d'opérateur et d'observateur"}
+- kind: cards
+  k: {en: "Tools", fr: "Outils"}
+  h: {en: "What you will use", fr: "Ce que vous utiliserez"}
+  cards:
+  - {t: "SpaceCDF", d: {en: "Concurrent design platform: shared parameters, budgets, trade studies, requirements and document export", fr: "Plateforme de conception concurrente : paramètres partagés, bilans, études de compromis, exigences et export de documents"}}
+  - {t: {en: "EOSAT-1 simulator and MCS", fr: "Simulateur EOSAT-1 et MCS"}, d: {en: "A 6U Earth-observation CubeSat you will operate in Week 3 from a mission control system", fr: "Un CubeSat 6U d'observation de la Terre que vous exploiterez en semaine 3 depuis un système de contrôle de mission"}}
+  - {t: {en: "This Moodle course", fr: "Ce cours Moodle"}, d: {en: "Videos with questions, lecture slides, handouts and your team workspace; nothing here is graded", fr: "Vidéos avec questions, diapositives, documents et espace d'équipe ; rien ici n'est noté"}}
+- kind: close
+  h: {en: "This afternoon and tomorrow", fr: "Cet après-midi et demain"}
+  items:
+  - {en: "Form your team, take your role and choose a mission area", fr: "Formez votre équipe, prenez votre rôle et choisissez un domaine de mission"}
+  - {en: "Watch: The Canadian space landscape; The systems engineering process", fr: "À regarder : Le paysage spatial canadien ; Le processus d’ingénierie système"}
+  - {en: "This afternoon: regulatory teaser, then open your mission file", fr: "Cet après-midi : survol réglementaire, puis ouverture de votre dossier de mission"}

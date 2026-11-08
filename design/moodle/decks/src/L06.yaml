@@ -1,0 +1,93 @@
+slot: {en: "Week 2 · Day 2 · CDF Day 1", fr: "Semaine 2 · Jour 2 · jour 1 de CDF"}
+title: {en: "The System-V, requirements and first budgets", fr: "Le cycle en V, les exigences et les premiers bilans"}
+subtitle: {en: "From mission objectives to SMART requirements, a function tree, and mass and power budgets with margins", fr: "Des objectifs de mission aux exigences SMART, un arbre fonctionnel, et des bilans de masse et d'énergie avec marges"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Explain how requirements flow down the left of the V and verification flows up the right", fr: "Expliquer comment les exigences descendent la branche gauche du V et la vérification remonte la droite"}
+  - {en: "Write requirements that are SMART and say what, not how", fr: "Rédiger des exigences SMART qui disent quoi, et non comment"}
+  - {en: "Build a function tree and allocate functions to subsystems", fr: "Construire un arbre fonctionnel et allouer les fonctions aux sous-systèmes"}
+  - {en: "Assign a verification method to each requirement", fr: "Attribuer une méthode de vérification à chaque exigence"}
+  - {en: "Build mass and power budgets with ECSS margins", fr: "Établir des bilans de masse et d'énergie avec les marges ECSS"}
+- kind: split
+  k: {en: "The System-V", fr: "Le cycle en V"}
+  h: {en: "Decompose on the left, integrate and verify on the right", fr: "Décomposer à gauche, intégrer et vérifier à droite"}
+  left:
+    t: {en: "Left branch: decomposition", fr: "Branche gauche : décomposition"}
+    items:
+    - {en: "Mission requirements", fr: "Exigences de mission"}
+    - {en: "System requirements and architecture", fr: "Exigences système et architecture"}
+    - {en: "Subsystem requirements and design", fr: "Exigences et conception des sous-systèmes"}
+    - {en: "Each level is derived from the one above", fr: "Chaque niveau découle de celui du dessus"}
+  right:
+    t: {en: "Right branch: verification", fr: "Branche droite : vérification"}
+    items:
+    - {en: "Subsystem verification", fr: "Vérification des sous-systèmes"}
+    - {en: "System integration and verification", fr: "Intégration et vérification du système"}
+    - {en: "Mission validation: does it meet the need?", fr: "Validation de la mission : répond-elle au besoin ?"}
+    - {en: "Each level verifies against its matching left-side level", fr: "Chaque niveau se vérifie par rapport au niveau correspondant à gauche"}
+- kind: table
+  k: {en: "Good requirements", fr: "De bonnes exigences"}
+  h: {en: "SMART, one concern each, what not how", fr: "SMART, une seule préoccupation chacune, quoi et non comment"}
+  header: [{en: "Letter", fr: "Lettre"}, {en: "Test", fr: "Critère"}]
+  rows:
+  - [S, {en: "Specific: one reading only; one concern per requirement", fr: "Spécifique : une seule lecture possible ; une préoccupation par exigence"}]
+  - [M, {en: "Measurable: a number, a unit, a condition", fr: "Mesurable : un nombre, une unité, une condition"}]
+  - [A, {en: "Achievable: within physics, budget and schedule", fr: "Atteignable : dans les limites de la physique, du budget et du calendrier"}]
+  - [R, {en: "Relevant: traces to a stakeholder need", fr: "Pertinente : se rattache à un besoin de partie prenante"}]
+  - [T, {en: "Traceable: parent and children recorded, both ways", fr: "Traçable : parent et enfants consignés, dans les deux sens"}]
+- kind: split
+  k: {en: "What, not how", fr: "Quoi, et non comment"}
+  h: {en: "Keep design freedom until the trade study", fr: "Garder la liberté de conception jusqu'à l'étude de compromis"}
+  left:
+    t: {en: "Prescribes a solution", fr: "Impose une solution"}
+    items:
+    - {en: "The spacecraft shall use an X-band transmitter", fr: "Le satellite doit utiliser un émetteur en bande X"}
+    - {en: "The battery shall be a 100 Wh Li-ion pack", fr: "La batterie doit être un bloc Li-ion de 100 Wh"}
+  right:
+    t: {en: "States the need", fr: "Énonce le besoin"}
+    items:
+    - {en: "The spacecraft shall downlink at least N GB per day to the ground segment", fr: "Le satellite doit transmettre au moins N Go par jour au segment sol"}
+    - {en: "The power subsystem shall supply the eclipse load at a depth of discharge of no more than N %", fr: "Le sous-système d'énergie doit fournir la charge d'éclipse à une profondeur de décharge d'au plus N %"}
+- kind: table
+  k: {en: "Verification methods", fr: "Méthodes de vérification"}
+  h: {en: "ATIR(D): one method per requirement, per phase", fr: "ATIR(D) : une méthode par exigence, par phase"}
+  header: [{en: "Method", fr: "Méthode"}, {en: "Use it when", fr: "À utiliser quand"}]
+  rows:
+  - [{en: "Analysis", fr: "Analyse"}, {en: "A model or similarity argument is credible and a test is impractical", fr: "Un modèle ou un argument de similarité est crédible et un essai est irréaliste"}]
+  - [{en: "Test", fr: "Essai"}, {en: "You need a measured, quantitative result", fr: "Il faut un résultat mesuré et quantitatif"}]
+  - [{en: "Inspection", fr: "Inspection"}, {en: "A physical feature can be checked by looking or measuring", fr: "Une caractéristique physique se vérifie en regardant ou en mesurant"}]
+  - [{en: "Review of design", fr: "Revue de conception"}, {en: "Documents and drawings show compliance", fr: "Les documents et les plans démontrent la conformité"}]
+  - [{en: "(Demonstration)", fr: "(Démonstration)"}, {en: "A function is shown to work, without measuring performance", fr: "On montre qu'une fonction marche, sans mesurer la performance"}]
+- kind: bullets
+  k: {en: "Functional decomposition", fr: "Décomposition fonctionnelle"}
+  h: {en: "From objectives to a function tree", fr: "Des objectifs à un arbre fonctionnel"}
+  items:
+  - {en: "Decompose each objective into functions, three levels or more", fr: "Décomposez chaque objectif en fonctions, sur trois niveaux ou plus"}
+  - {en: "Five functions every spacecraft needs: power, thermal, launch survival, TT&C, disposal", fr: "Cinq fonctions nécessaires à tout satellite : énergie, thermique, survie au lancement, TT&C, retrait"}
+  - {en: "Allocate each leaf function to one or more subsystems; shared functions create interfaces", fr: "Allouez chaque fonction feuille à un ou plusieurs sous-systèmes ; les fonctions partagées créent des interfaces"}
+  - {en: "Functions produce derived requirements no stakeholder asked for", fr: "Les fonctions produisent des exigences dérivées qu'aucune partie prenante n'a demandées"}
+  - {en: "Coverage check: every leaf function traces to at least one requirement", fr: "Vérification de couverture : chaque fonction feuille se rattache à au moins une exigence"}
+- kind: formulas
+  k: {en: "Mass budget", fr: "Bilan de masse"}
+  h: {en: "Margins shrink as the design matures", fr: "Les marges diminuent à mesure que la conception mûrit"}
+  items:
+  - {f: {en: "MEV = CBE + equipment margin + system margin", fr: "MEV = CBE + marge équipement + marge système"}, d: {en: "Maximum expected value from the current best estimate plus margins", fr: "Valeur maximale attendue : meilleure estimation courante plus marges"}}
+  - {f: {en: "equipment margin: 5 % / 10 % / 20 %", fr: "marge équipement : 5 % / 10 % / 20 %"}, d: {en: "Off-the-shelf, modified, new development (by maturity of each item)", fr: "Sur étagère, modifié, nouveau développement (selon la maturité de chaque élément)"}}
+  - {f: {en: "total margin ≈ 44 % (A) → 13 % (C/D)", fr: "marge totale ≈ 44 % (A) → 13 % (C/D)"}, d: {en: "Typical ECSS-style total margin from Phase A to Phase C/D", fr: "Marge totale type de style ECSS, de la phase A à la phase C/D"}}
+  - {f: {en: "margin < 0  ⇒  design does not close", fr: "marge < 0  ⇒  la conception ne converge pas"}, d: {en: "Cut demand or win more allocation; do not hide it", fr: "Réduire la demande ou obtenir plus d'allocation ; ne pas le cacher"}}
+- kind: formulas
+  k: {en: "Power budget", fr: "Bilan d'énergie"}
+  h: {en: "Mode by mode, then averaged over the orbit", fr: "Mode par mode, puis moyenné sur l'orbite"}
+  items:
+  - {f: "P_avg = Σ P_mode · duty_mode", d: {en: "Orbit-average power from each mode's draw and duty cycle", fr: "Puissance moyenne par orbite, d'après la consommation et le cycle de service de chaque mode"}}
+  - {f: "P_SA = P_peak + P_recharge", d: {en: "In sunlight the array must carry the load and recharge the battery", fr: "Au soleil, les panneaux doivent alimenter la charge et recharger la batterie"}}
+  - {f: "E_ecl = P_ecl · t_ecl", d: {en: "Energy the battery must deliver through each eclipse", fr: "Énergie que la batterie doit fournir à chaque éclipse"}}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: Writing requirements; Requirements in SpaceCDF; Architecture, interfaces and budgets; Budgets, margins and energy per orbit", fr: "À regarder : Rédiger des exigences ; Les exigences dans SpaceCDF ; Architecture, interfaces et bilans ; Bilans, marges et énergie par orbite"}
+  - {en: "In the CDF: requirements baseline, function tree, first mass, power, data and link budgets", fr: "Dans la CDF : référentiel d'exigences, arbre fonctionnel, premiers bilans de masse, d'énergie, de données et de liaison"}
+  - {en: "Worksheet 1; update the risk register", fr: "Feuille de travail 1 ; mettre à jour le registre des risques"}

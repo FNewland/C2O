@@ -1,0 +1,61 @@
+slot: {en: "Week 3 · Day 5", fr: "Semaine 3 · Jour 5"}
+title: {en: "Debrief, synthesis and pathways", fr: "Débriefing, synthèse et parcours"}
+subtitle: {en: "What the simulations taught us, how design decisions came back as operations, and where you go from here", fr: "Ce que les simulations nous ont appris, comment les décisions de conception sont revenues sous forme d'exploitation, et la suite pour vous"}
+slides:
+- kind: objectives
+  k: {en: "By the end of the course", fr: "À la fin du cours"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Run a structured, blameless debrief", fr: "Mener un débriefing structuré et sans recherche de coupable"}
+  - {en: "Trace an operations problem back to the design decision behind it", fr: "Remonter d'un problème d'exploitation à la décision de conception qui l'explique"}
+  - {en: "Present a final mission review to your peers", fr: "Présenter une revue de mission finale à vos pairs"}
+  - {en: "Name concrete next steps into the Canadian space sector", fr: "Nommer des étapes concrètes pour entrer dans le secteur spatial canadien"}
+- kind: steps
+  k: {en: "Morning debrief", fr: "Débriefing du matin"}
+  h: {en: "Led by the student Flight Directors", fr: "Mené par les directeurs de vol étudiants"}
+  items:
+  - {en: "Each FD: what the shift set out to do, what it did, what it left open", fr: "Chaque FD : ce que le quart devait faire, ce qu'il a fait, ce qu'il a laissé en suspens"}
+  - {en: "Observers present to operators, axis by axis, with timestamps", fr: "Les observateurs présentent aux opérateurs, axe par axe, horodatage à l'appui"}
+  - {en: "Operators accept one point and defend one point per axis", fr: "Les opérateurs acceptent un point et en défendent un par axe"}
+  - {en: "Cross-team synthesis: what both teams got wrong is a training finding, not a team finding", fr: "Synthèse entre équipes : ce que les deux équipes ont manqué relève de la formation, pas d'une équipe"}
+- kind: statement
+  k: {en: "Blameless", fr: "Sans recherche de coupable"}
+  text: {en: "Ask what made the error easy, not who made it.", fr: "Demandez ce qui a rendu l'erreur facile, pas qui l'a commise."}
+  sub: {en: "A confusing display, an ambiguous card step, two numbers that look alike: these are fixable. People under time pressure are not.", fr: "Un affichage confus, une étape de fiche ambiguë, deux nombres qui se ressemblent : cela se corrige. Les gens sous pression, non."}
+- kind: table
+  k: {en: "Synthesis", fr: "Synthèse"}
+  h: {en: "Design decisions you met again in operations", fr: "Des décisions de conception retrouvées en exploitation"}
+  header: [{en: "Design decision", fr: "Décision de conception"}, {en: "What it meant on console", fr: "Ce que cela signifiait à la console"}]
+  rows:
+  - [{en: "A separate UHF beacon", fr: "Une balise UHF distincte"}, {en: "With the S-band transmitter off you could still see the spacecraft", fr: "Émetteur en bande S coupé, on voyait encore le satellite"}]
+  - [{en: "Three gyros, no spare; one magnetometer", fr: "Trois gyromètres, sans rechange ; un seul magnétomètre"}, {en: "A sensor loss is a degraded mission, not a switchover", fr: "La perte d'un capteur dégrade la mission, il n'y a pas de bascule"}]
+  - [{en: "Four wheels in a pyramid", fr: "Quatre roues en pyramide"}, {en: "Fine pointing survives one wheel lost, flagged as degraded", fr: "Le pointage fin survit à la perte d'une roue, signalé comme dégradé"}]
+  - [{en: "12–18 W of payload headroom", fr: "12 à 18 W de marge pour la charge utile"}, {en: "Every payload pass was an energy decision", fr: "Chaque passage de charge utile était une décision d'énergie"}]
+  - [{en: "Load-shed order fixed in design", fr: "Ordre de délestage fixé à la conception"}, {en: "Under-voltage response was already decided for you", fr: "La réponse à la sous-tension était déjà décidée pour vous"}]
+- kind: bullets
+  k: {en: "Final mission review", fr: "Revue de mission finale"}
+  h: {en: "This afternoon, within the cohort", fr: "Cet après-midi, au sein de la cohorte"}
+  items:
+  - {en: "Your mission from need to operations, in one story", fr: "Votre mission, du besoin à l'exploitation, en un seul récit"}
+  - {en: "What you would change in your Week 2 design after flying EOSAT-1", fr: "Ce que vous changeriez à votre conception de la semaine 2 après avoir piloté EOSAT-1"}
+  - {en: "Your three most important lessons, with the evidence for each", fr: "Vos trois leçons les plus importantes, avec les preuves de chacune"}
+- kind: cards
+  k: {en: "Pathways", fr: "Parcours"}
+  h: {en: "Where this can lead", fr: "Où cela peut mener"}
+  cards:
+  - {t: {en: "Student missions", fr: "Missions étudiantes"}, d: {en: "University CubeSat teams need systems engineers, operators and people who write procedures", fr: "Les équipes CubeSat universitaires cherchent ingénieurs système, opérateurs et rédacteurs de procédures"}}
+  - {t: {en: "Industry", fr: "Industrie"}, d: {en: "Primes, subsystem suppliers and new-space firms; mission operations is a career in itself", fr: "Maîtres d'œuvre, fournisseurs de sous-systèmes et entreprises du nouvel espace ; l'exploitation de mission est un métier à part entière"}}
+  - {t: {en: "Government", fr: "Gouvernement"}, d: {en: "The Canadian Space Agency, regulators, defence research: someone has to write and apply the rules", fr: "L'Agence spatiale canadienne, les régulateurs, la recherche de défense : il faut bien rédiger et appliquer les règles"}}
+  - {t: {en: "Research", fr: "Recherche"}, d: {en: "Graduate study in space systems, autonomy, operations and human factors", fr: "Études supérieures en systèmes spatiaux, autonomie, exploitation et facteurs humains"}}
+- kind: bullets
+  k: {en: "Keep going", fr: "Continuer"}
+  h: {en: "Share what you made", fr: "Partagez ce que vous avez fait"}
+  items:
+  - {en: "Use the team workspace in this course to assemble a public showcase of your mission", fr: "Utilisez l'espace d'équipe de ce cours pour préparer une vitrine publique de votre mission"}
+  - {en: "Share only what your whole team agrees to make public, and nothing graded", fr: "Ne partagez que ce que toute l'équipe accepte de rendre public, et rien de noté"}
+  - {en: "Graded work, including your reflective portfolio, goes through the university's systems, not this site", fr: "Les travaux notés, y compris votre portfolio réflexif, passent par les systèmes de l'université, pas par ce site"}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Morning: debrief, observer presentations, lessons-learned synthesis", fr: "Matin : débriefing, présentations des observateurs, synthèse des leçons apprises"}
+  - {en: "Afternoon: course synthesis, pathways, course evaluation, final mission review", fr: "Après-midi : synthèse du cours, parcours, évaluation du cours, revue de mission finale"}

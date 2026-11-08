@@ -1,0 +1,95 @@
+slot: {en: "Week 2 · Day 1 · Afternoon", fr: "Semaine 2 · Jour 1 · après-midi"}
+title: {en: "The Canadian regulatory landscape", fr: "Le paysage réglementaire canadien"}
+subtitle: {en: "Remote sensing licences, spectrum, export control, debris and registration, and when each one bites", fr: "Licences de télédétection, spectre, contrôle des exportations, débris et immatriculation, et quand chacun entre en jeu"}
+slides:
+- kind: objectives
+  k: {en: "By the end of this session", fr: "À la fin de cette séance"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Say which statute and which body governs each part of your mission", fr: "Dire quelle loi et quel organisme régissent chaque partie de votre mission"}
+  - {en: "Describe the remote sensing licence and the conditions it imposes", fr: "Décrire la licence de télédétection et les conditions qu'elle impose"}
+  - {en: "Explain the two levels of spectrum licensing, national and international", fr: "Expliquer les deux niveaux de licence de spectre, national et international"}
+  - {en: "Classify a component for export control and know what that implies", fr: "Classer un composant pour le contrôle des exportations et savoir ce que cela implique"}
+  - {en: "Draft your team's two-page regulatory brief", fr: "Rédiger la note réglementaire de deux pages de votre équipe"}
+- kind: table
+  k: {en: "Who regulates what", fr: "Qui réglemente quoi"}
+  h: {en: "The statutes behind a Canadian mission", fr: "Les lois derrière une mission canadienne"}
+  header: [{en: "Statute", fr: "Loi"}, {en: "Regulates", fr: "Réglemente"}, {en: "Touches your design through", fr: "Touche votre conception par"}]
+  rows:
+  - [{en: "Radiocommunication Act", fr: "Loi sur la radiocommunication"}, {en: "Every radio transmission", fr: "Toute transmission radio"}, {en: "Band, power, licence lead time", fr: "Bande, puissance, délai de licence"}]
+  - [{en: "Remote Sensing Space Systems Act", fr: "Loi sur les systèmes de télédétection spatiale"}, {en: "Operating a satellite that images Earth", fr: "L'exploitation d'un satellite qui image la Terre"}, {en: "Data handling, shutter control, disposal plan", fr: "Traitement des données, contrôle de l'obturateur, plan de retrait"}]
+  - [{en: "Export and Import Permits Act", fr: "Loi sur les licences d'exportation et d'importation"}, {en: "Export of strategic goods and technology", fr: "L'exportation de biens et technologies stratégiques"}, {en: "Supplier choice, foreign partners, schedule", fr: "Choix des fournisseurs, partenaires étrangers, calendrier"}]
+  - [{en: "Controlled Goods Program", fr: "Programme des marchandises contrôlées"}, {en: "Access to controlled goods", fr: "L'accès aux marchandises contrôlées"}, {en: "Who on the team may handle what", fr: "Qui dans l'équipe peut manipuler quoi"}]
+  - [{en: "(No launch statute yet)", fr: "(Pas encore de loi sur le lancement)"}, {en: "Launch from Canada", fr: "Le lancement depuis le Canada"}, {en: "You launch abroad, under that country's rules", fr: "Vous lancez à l'étranger, selon les règles de ce pays"}]
+- kind: table
+  k: {en: "Remote sensing licence", fr: "Licence de télédétection"}
+  h: {en: "Any satellite that images Earth from Canada", fr: "Tout satellite qui image la Terre depuis le Canada"}
+  header: [{en: "Condition", fr: "Condition"}, {en: "What it means for you", fr: "Ce que cela signifie pour vous"}]
+  rows:
+  - [{en: "No resolution threshold", fr: "Aucun seuil de résolution"}, {en: "Every ground sample distance needs a licence", fr: "Toute résolution au sol exige une licence"}]
+  - [{en: "Priority access", fr: "Accès prioritaire"}, {en: "The Government of Canada can request priority imaging", fr: "Le gouvernement du Canada peut demander une imagerie prioritaire"}]
+  - [{en: "Shutter control", fr: "Contrôle de l'obturateur"}, {en: "Imaging of specified areas can be restricted", fr: "L'imagerie de certaines zones peut être restreinte"}]
+  - [{en: "Data disposition", fr: "Disposition des données"}, {en: "An approved plan for storage, distribution and destruction", fr: "Un plan approuvé de stockage, de diffusion et de destruction"}]
+  - [{en: "Foreign access", fr: "Accès étranger"}, {en: "Any foreign partner needs an interoperability arrangement", fr: "Tout partenaire étranger exige une entente d'interopérabilité"}]
+  - [{en: "System disposal", fr: "Retrait du système"}, {en: "An end-of-life plan, tied to debris mitigation", fr: "Un plan de fin de vie, lié à la réduction des débris"}]
+- kind: split
+  k: {en: "Spectrum", fr: "Spectre"}
+  h: {en: "Two levels, both slow", fr: "Deux niveaux, tous deux lents"}
+  left:
+    t: {en: "National: ISED", fr: "National : ISDE"}
+    items:
+    - {en: "Licence under the Radiocommunication Act, following the client procedure circular for space stations (CPC-2-6-02)", fr: "Licence en vertu de la Loi sur la radiocommunication, selon la circulaire des procédures concernant les clients pour les stations spatiales (CPC-2-6-02)"}
+    - {en: "Covers the spacecraft and its ground stations", fr: "Couvre le satellite et ses stations au sol"}
+    - {en: "Draft the application this week", fr: "Rédigez la demande cette semaine"}
+  right:
+    t: {en: "International: ITU", fr: "International : UIT"}
+    items:
+    - {en: "Canada is in ITU Region 2; allocations differ by region", fr: "Le Canada est dans la Région 2 de l'UIT ; les attributions varient selon la région"}
+    - {en: "Coordination with other operators to avoid interference", fr: "Coordination avec les autres exploitants pour éviter le brouillage"}
+    - {en: "Notification records the system in the Master International Frequency Register", fr: "La notification inscrit le système au Fichier de référence international des fréquences"}
+- kind: table
+  k: {en: "Bands and lead times", fr: "Bandes et délais"}
+  h: {en: "The band you choose sets the paperwork", fr: "La bande choisie détermine la paperasse"}
+  header: [{en: "Route", fr: "Voie"}, {en: "Typical cost", fr: "Coût type"}, {en: "Typical lead time", fr: "Délai type"}]
+  rows:
+  - [{en: "Amateur UHF (IARU coordination)", fr: "UHF amateur (coordination IARU)"}, {en: "Free", fr: "Gratuit"}, {en: "3–6 months", fr: "3 à 6 mois"}]
+  - [{en: "S-band", fr: "Bande S"}, "$30–45K", {en: "6–12 months", fr: "6 à 12 mois"}]
+  - [{en: "X-band", fr: "Bande X"}, "$50–80K", {en: "12 months or more", fr: "12 mois ou plus"}]
+  - [{en: "Whole process, start to finish", fr: "Processus complet, du début à la fin"}, "—", {en: "Start in Phase A; plan on two years or more", fr: "Commencer en phase A ; prévoir deux ans ou plus"}]
+- kind: cards
+  k: {en: "Export control", fr: "Contrôle des exportations"}
+  h: {en: "Three overlapping regimes", fr: "Trois régimes qui se chevauchent"}
+  cards:
+  - {t: {en: "Canada: Export Control List", fr: "Canada : Liste des marchandises d'exportation contrôlée"}, d: {en: "Permits under EIPA for strategic goods and technology leaving Canada", fr: "Licences en vertu de la LLEI pour les biens et technologies stratégiques qui quittent le Canada"}}
+  - {t: "ITAR", d: {en: "US defence articles: re-export and access restrictions follow the part wherever it goes", fr: "Articles de défense américains : les restrictions de réexportation et d'accès suivent la pièce où qu'elle aille"}}
+  - {t: "EAR", d: {en: "US dual-use items: each part has an ECCN or is EAR99; most satellite parts land here", fr: "Biens américains à double usage : chaque pièce a un ECCN ou est EAR99 ; la plupart des pièces de satellite tombent ici"}}
+- kind: bullets
+  k: {en: "In practice", fr: "En pratique"}
+  h: {en: "Classify early, or lose months", fr: "Classer tôt, ou perdre des mois"}
+  items:
+  - {en: "Classify every component in your bill of materials: EAR99, an ECCN, or ITAR", fr: "Classez chaque composant de votre nomenclature : EAR99, un ECCN ou ITAR"}
+  - {en: "Nearly every mission meets US controls through one part or another", fr: "Presque toute mission rencontre des contrôles américains par une pièce ou une autre"}
+  - {en: "Foreign team members and foreign launch both raise questions: ask before you share", fr: "Les membres étrangers de l'équipe et le lancement à l'étranger soulèvent tous deux des questions : demandez avant de partager"}
+- kind: table
+  k: {en: "Debris and registration", fr: "Débris et immatriculation"}
+  h: {en: "Responsibility does not end at launch", fr: "La responsabilité ne s'arrête pas au lancement"}
+  header: [{en: "Rule", fr: "Règle"}, {en: "What it asks", fr: "Ce qu'elle demande"}]
+  rows:
+  - [{en: "IADC guidelines", fr: "Directives de l'IADC"}, {en: "Leave low Earth orbit within 25 years of end of mission; passivate", fr: "Quitter l'orbite basse dans les 25 ans suivant la fin de mission ; passiver"}]
+  - [{en: "FCC 5-year rule (2024 onward)", fr: "Règle des 5 ans de la FCC (depuis 2024)"}, {en: "Within 5 years, for spacecraft licensed in or serving the US", fr: "En 5 ans, pour les engins autorisés aux États-Unis ou y offrant des services"}]
+  - [{en: "ISO 24113", fr: "ISO 24113"}, {en: "The engineering standard for debris mitigation requirements", fr: "La norme d'ingénierie des exigences de réduction des débris"}]
+  - [{en: "UN Registration Convention", fr: "Convention sur l'immatriculation (ONU)"}, {en: "Canada registers the object; Canada is liable for Canadian space activities", fr: "Le Canada immatricule l'objet ; le Canada est responsable des activités spatiales canadiennes"}]
+- kind: bullets
+  k: {en: "Your deliverable", fr: "Votre livrable"}
+  h: {en: "The two-page regulatory brief", fr: "La note réglementaire de deux pages"}
+  items:
+  - {en: "Which licences your mission needs, and from whom", fr: "Quelles licences votre mission exige, et de qui"}
+  - {en: "The lead time of each, mapped onto your schedule", fr: "Le délai de chacune, reporté sur votre calendrier"}
+  - {en: "Design decisions the rules force (band, orbit, deorbit, data handling)", fr: "Les décisions de conception imposées par les règles (bande, orbite, désorbitation, traitement des données)"}
+  - {en: "The regulatory risks, entered in your register", fr: "Les risques réglementaires, inscrits dans votre registre"}
+  - {en: "Plus a draft ISED application", fr: "Ainsi qu'une ébauche de demande à ISDE"}
+- kind: close
+  h: {en: "This afternoon", fr: "Cet après-midi"}
+  items:
+  - {en: "Write the regulatory brief as a team; draft the ISED application", fr: "Rédigez la note réglementaire en équipe ; ébauchez la demande à ISDE"}
+  - {en: "Tomorrow: CDF Day 1, the System-V and requirements", fr: "Demain : jour 1 de CDF, le cycle en V et les exigences"}

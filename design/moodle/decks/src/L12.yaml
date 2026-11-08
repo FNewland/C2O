@@ -1,0 +1,80 @@
+slot: {en: "Week 3 · Day 3 · Simulation day 1", fr: "Semaine 3 · Jour 3 · jour de simulation 1"}
+title: {en: "Simulation briefing: LEOP and commissioning", fr: "Briefing de simulation : LEOP et mise en service"}
+subtitle: {en: "The procedure order, what done looks like at the end of each pass, the red lines, and how to observe", fr: "L'ordre des procédures, à quoi ressemble « terminé » en fin de passage, les lignes rouges, et comment observer"}
+slides:
+- kind: objectives
+  k: {en: "By the end of the day", fr: "À la fin de la journée"}
+  h: {en: "Your team will have", fr: "Votre équipe aura"}
+  items:
+  - {en: "Flown LEOP from first contact to the end-of-LEOP declaration, or observed it closely", fr: "Mené la LEOP du premier contact à la déclaration de fin de LEOP, ou l'aura observée de près"}
+  - {en: "Started commissioning, up to fine pointing and first light", fr: "Commencé la mise en service, jusqu'au pointage fin et à la première lumière"}
+  - {en: "Responded to injected anomalies with tickets filed", fr: "Répondu aux anomalies injectées, fiches à l'appui"}
+  - {en: "Written a structured critique of the other team's shift", fr: "Rédigé une critique structurée du quart de l'autre équipe"}
+- kind: table
+  k: {en: "LEOP", fr: "LEOP"}
+  h: {en: "Seven procedures, in this order", fr: "Sept procédures, dans cet ordre"}
+  header: [{en: "Procedure", fr: "Procédure"}, {en: "Lead", fr: "Responsable"}, {en: "Critical step", fr: "Étape critique"}]
+  rows:
+  - [{en: "LEOP-001 First acquisition and OBC boot", fr: "LEOP-001 Première acquisition et démarrage de l'OBC"}, "TT&C · SPACON", {en: "Boot the application, then clear beacon mode", fr: "Démarrer l'application, puis quitter le mode balise"}]
+  - [{en: "LEOP-002 Initial health check", fr: "LEOP-002 Bilan de santé initial"}, "SPACON", {en: "Housekeeping in band; AOCS, payload, cooler, propulsion lines off", fr: "Données de servitude dans les limites ; lignes SCAO, charge utile, refroidisseur, propulsion coupées"}]
+  - [{en: "LEOP-004 Solar array verification", fr: "LEOP-004 Vérification des panneaux solaires"}, "EPS", {en: "Deploy the wings; check symmetry", fr: "Déployer les ailes ; vérifier la symétrie"}]
+  - [{en: "LEOP-007 Sequential power-on", fr: "LEOP-007 Mise sous tension séquentielle"}, "SPACON · EPS · AOCS", {en: "AOCS line on; mode 2 DETUMBLE", fr: "Ligne SCAO sous tension ; mode 2 DETUMBLE"}]
+  - [{en: "LEOP-005 Sun acquisition", fr: "LEOP-005 Acquisition du Soleil"}, "AOCS", {en: "Watch the automatic step to COARSE_SUN; command nothing", fr: "Observer le passage automatique en COARSE_SUN ; ne rien commander"}]
+  - [{en: "LEOP-006 Time synchronisation", fr: "LEOP-006 Synchronisation de l'heure"}, "SPACON", {en: "Set time, residual under 1.0 s; then GPS discipline", fr: "Régler l'heure, résidu inférieur à 1,0 s ; puis asservissement GPS"}]
+  - [{en: "LEOP-003 Initial orbit determination", fr: "LEOP-003 Détermination d'orbite initiale"}, "FDS · FD", {en: "Declare phase 5: the end of LEOP", fr: "Déclarer la phase 5 : la fin de la LEOP"}]
+- kind: bullets
+  k: {en: "Why that order", fr: "Pourquoi cet ordre"}
+  h: {en: "Power before load, then only what LEOP needs", fr: "L'énergie avant la charge, puis seulement ce dont la LEOP a besoin"}
+  items:
+  - {en: "The wings deploy straight after the health check, before anything else draws power", fr: "Les ailes se déploient juste après le bilan de santé, avant que quoi que ce soit d'autre ne consomme"}
+  - {en: "LEOP-007 powers only the AOCS suite, magnetometer, magnetorquers and GPS; wheels and star trackers wait for commissioning", fr: "LEOP-007 n'alimente que l'ensemble SCAO, le magnétomètre, les magnétocoupleurs et le GPS ; roues et viseurs d'étoiles attendent la mise en service"}
+  - {en: "Sun acquisition is observed, not commanded: the AOCS promotes itself", fr: "L'acquisition du Soleil s'observe, elle ne se commande pas : le SCAO passe de lui-même au mode suivant"}
+  - {en: "LEOP-001 deliberately does not set the clock; LEOP-006 does", fr: "LEOP-001 ne règle volontairement pas l'horloge ; c'est LEOP-006 qui le fait"}
+- kind: table
+  k: {en: "End of a LEOP pass", fr: "Fin d'un passage de LEOP"}
+  h: {en: "What GO looks like", fr: "À quoi ressemble un GO"}
+  header: [{en: "Check", fr: "Vérification"}, {en: "In telemetry", fr: "En télémesure"}]
+  rows:
+  - [{en: "Application software running", fr: "Logiciel applicatif en marche"}, "obdh.sw_image = 1"]
+  - [{en: "Beacon mode cleared, downlink at LOW", fr: "Mode balise quitté, liaison descendante à LOW"}, "ttc.beacon_mode = 0 · ttc.tm_tier = 1"]
+  - [{en: "Both wings deployed", fr: "Les deux ailes déployées"}, "eps.wing_status = 0x03"]
+  - [{en: "Onboard time set", fr: "Heure de bord réglée"}, {en: "residual < 1.0 s", fr: "résidu < 1,0 s"}]
+  - [{en: "AOCS detumbling, rates falling", fr: "SCAO en amortissement, vitesses en baisse"}, {en: "mode 2, then 3 COARSE_SUN below 0.5 °/s", fr: "mode 2, puis 3 COARSE_SUN sous 0,5 °/s"}]
+  - [{en: "A ticket for every anomaly", fr: "Une fiche pour chaque anomalie"}, {en: "Anomaly log", fr: "Journal des anomalies"}]
+- kind: table
+  k: {en: "Commissioning", fr: "Mise en service"}
+  h: {en: "Four passes, eleven cards", fr: "Quatre passages, onze fiches"}
+  header: [{en: "Pass", fr: "Passage"}, {en: "Procedures", fr: "Procédures"}, {en: "Critical activity", fr: "Activité critique"}]
+  rows:
+  - ["1", "COM-001, 002, 004, 003", {en: "Wheels enabled; first wheel-controlled NOMINAL", fr: "Roues activées ; premier mode NOMINAL contrôlé par les roues"}]
+  - ["2", "COM-005, 006, 007, 008", {en: "AOCS mode ladder up to FINE_POINT; protection stack configured", fr: "Échelle des modes SCAO jusqu'à FINE_POINT ; protections configurées"}]
+  - ["3", "COM-009, 010", {en: "Payload on; cooler takes the focal plane to −15 °C in about ten minutes", fr: "Charge utile sous tension ; le refroidisseur amène le plan focal à −15 °C en une dizaine de minutes"}]
+  - ["4", "COM-011, 012", {en: "Dark and flat calibration; first light, one image captured and downlinked", fr: "Étalonnage d'obscurité et de champ plat ; première lumière, une image prise et transmise"}]
+- kind: cards
+  k: {en: "Red lines", fr: "Lignes rouges"}
+  h: {en: "Three rules that stop the shift", fr: "Trois règles qui arrêtent le quart"}
+  cards:
+  - {t: {en: "No command without FD GO", fr: "Aucune commande sans GO du FD"}, d: {en: "The shift is called and the violation logged. No penalty if the team learns from it", fr: "Le quart est arrêté et l'écart consigné. Pas de pénalité si l'équipe en tire la leçon"}}
+  - {t: {en: "The clock runs", fr: "L'horloge tourne"}, d: {en: "No pausing the simulator to win an exercise; a pass closes when the orbit closes", fr: "Pas de pause du simulateur pour réussir un exercice ; un passage se termine quand l'orbite le dicte"}}
+  - {t: {en: "No silent FD", fr: "Pas de FD muet"}, d: {en: "The FD stays on the loop. If overloaded, a 30-second hold resets the position", fr: "Le FD reste sur la boucle. S'il est débordé, une pause de 30 secondes réinitialise le poste"}}
+- kind: cards
+  k: {en: "Observing", fr: "Observer"}
+  h: {en: "Four axes, one worksheet each", fr: "Quatre axes, une feuille chacun"}
+  cards:
+  - {t: {en: "Team", fr: "Équipe"}, d: {en: "Roles held, workload shared, the FD leading", fr: "Rôles tenus, charge partagée, le FD qui dirige"}}
+  - {t: {en: "Communications", fr: "Communications"}, d: {en: "Loop discipline, read-backs, callout timing", fr: "Discipline de boucle, répétitions, délai des annonces"}}
+  - {t: {en: "Space usage", fr: "Usage de l'espace"}, d: {en: "Who moved where, who looked at what, and when", fr: "Qui s'est déplacé où, qui a regardé quoi, et quand"}}
+  - {t: {en: "Technical", fr: "Technique"}, d: {en: "Right procedure, right step, verified results", fr: "Bonne procédure, bonne étape, résultats vérifiés"}}
+- kind: steps
+  k: {en: "Debrief", fr: "Débriefing"}
+  h: {en: "After the shift", fr: "Après le quart"}
+  items:
+  - {en: "**Hot-wash**: each FD reads the shift-log highlights; no critique yet", fr: "**À chaud** : chaque FD lit les faits marquants du journal de quart ; pas encore de critique"}
+  - {en: "**Anomaly walkthrough**: operators walk through their response; observers challenge", fr: "**Revue des anomalies** : les opérateurs présentent leur réponse ; les observateurs questionnent"}
+  - {en: "**Peer-review readout**: observers read their worksheets; operators accept one point and defend one per axis", fr: "**Lecture des évaluations** : les observateurs lisent leurs feuilles ; les opérateurs acceptent un point et en défendent un par axe"}
+  - {en: "**Lessons learned**: one consolidated list for the cohort", fr: "**Leçons apprises** : une seule liste consolidée pour la cohorte"}
+- kind: close
+  h: {en: "Before and during the shift", fr: "Avant et pendant le quart"}
+  items:
+  - {en: "Watch: the LEOP videos (LEOP-001 to LEOP-003 and beacon mode), Fine pointing handover, and First light", fr: "À regarder : les vidéos de LEOP (LEOP-001 à LEOP-003 et le mode balise), Passage au pointage fin, et Première lumière"}
+  - {en: "Operators: sim log and anomaly tickets. Observers: critique notes on your assigned axis", fr: "Opérateurs : journal de simulation et fiches d'anomalie. Observateurs : notes de critique sur l'axe attribué"}

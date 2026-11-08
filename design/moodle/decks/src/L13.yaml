@@ -1,0 +1,85 @@
+slot: {en: "Week 3 · Day 4 · Simulation day 2", fr: "Semaine 3 · Jour 4 · jour de simulation 2"}
+title: {en: "Simulation briefing: nominal operations and contingency", fr: "Briefing de simulation : exploitation nominale et contingence"}
+subtitle: {en: "Routine passes, the checks every shift runs, and two contingencies worked down step by step", fr: "Passages de routine, les vérifications de chaque quart, et deux contingences traitées pas à pas"}
+slides:
+- kind: objectives
+  k: {en: "By the end of the day", fr: "À la fin de la journée"}
+  h: {en: "Your team will have", fr: "Votre équipe aura"}
+  items:
+  - {en: "Flown routine passes: startup, imaging, downlink, momentum management", fr: "Mené des passages de routine : démarrage, imagerie, vidage, gestion du moment cinétique"}
+  - {en: "Run the operator checks before each decision", fr: "Effectué les vérifications d'opérateur avant chaque décision"}
+  - {en: "Worked at least one contingency from symptom to ticket", fr: "Traité au moins une contingence, du symptôme à la fiche"}
+  - {en: "Swapped operator and observer roles with the other team", fr: "Échangé les rôles d'opérateur et d'observateur avec l'autre équipe"}
+- kind: table
+  k: {en: "Nominal operations", fr: "Exploitation nominale"}
+  h: {en: "The cards you will fly most", fr: "Les fiches que vous utiliserez le plus"}
+  header: [{en: "Card", fr: "Fiche"}, {en: "Lead", fr: "Responsable"}, {en: "What it does", fr: "Ce qu'elle fait"}]
+  rows:
+  - ["NOM-001", "FD", {en: "Pass startup: link, health, FDIR sweep", fr: "Démarrage de passage : liaison, santé, revue FDIR"}]
+  - ["NOM-002", {en: "Payload", fr: "Charge utile"}, {en: "Imaging session; halt imaging at 95 % store and downlink first", fr: "Séance d'imagerie ; arrêter à 95 % de mémoire et vider d'abord"}]
+  - ["NOM-003", "TT&C", {en: "Data downlink", fr: "Vidage des données"}]
+  - ["NOM-004", {en: "FDS · AOCS", fr: "FDS · SCAO"}, {en: "Plan an orbit-maintenance manoeuvre; 66.9 m/s is the whole budget", fr: "Planifier une manœuvre de maintien d'orbite ; 66,9 m/s, c'est tout le budget"}]
+  - ["NOM-007", "AOCS", {en: "Momentum management: dump wheel momentum with the magnetorquers", fr: "Gestion du moment cinétique : décharger les roues avec les magnétocoupleurs"}]
+  - ["NOM-012", "FD", {en: "Shift handover", fr: "Passation de quart"}]
+- kind: table
+  k: {en: "Operator checks", fr: "Vérifications d'opérateur"}
+  h: {en: "Arithmetic every shift does", fr: "Les calculs de chaque quart"}
+  header: [{en: "Check", fr: "Vérification"}, {en: "Question it answers", fr: "Question à laquelle elle répond"}]
+  rows:
+  - [{en: "Pass timing", fr: "Horaire des passages"}, {en: "How long is this pass, and is there time to verify before LOS?", fr: "Combien dure ce passage, et a-t-on le temps de vérifier avant la LOS ?"}]
+  - [{en: "Eclipse-exit state of charge", fr: "État de charge à la sortie d'éclipse"}, {en: "If we do this now, what is the battery at the end of the next eclipse?", fr: "Si on le fait maintenant, où sera la batterie à la fin de la prochaine éclipse ?"}]
+  - [{en: "Pointing budget", fr: "Bilan de pointage"}, {en: "Root-sum-square of the error sources: will the image land on target?", fr: "Somme quadratique des erreurs : l'image tombera-t-elle sur la cible ?"}]
+  - [{en: "Delayed-telemetry gap", fr: "Écart de télémesure différée"}, {en: "What happened while we were out of contact?", fr: "Que s'est-il passé hors contact ?"}]
+  - [{en: "Link margin", fr: "Marge de liaison"}, {en: "Is the margin what the geometry predicts?", fr: "La marge correspond-elle à ce que prévoit la géométrie ?"}]
+  - [{en: "Desaturation scheduling", fr: "Planification de la désaturation"}, {en: "When must the wheels be dumped, and not during imaging?", fr: "Quand décharger les roues, et pas pendant l'imagerie ?"}]
+- kind: statement
+  k: {en: "Contingency 1 · CTG-001", fr: "Contingence 1 · CTG-001"}
+  text: {en: "Under-voltage: check before you shed.", fr: "Sous-tension : vérifier avant de délester."}
+  sub: {en: "Request EPS housekeeping and confirm the flag, bus voltage, state of charge, generation and consumption. Then shed in priority order, one load at a time, verifying each.", fr: "Demander les données de servitude EPS et confirmer l'indicateur, la tension du bus, l'état de charge, la production et la consommation. Puis délester par ordre de priorité, une charge à la fois, en vérifiant chacune."}
+- kind: steps
+  k: {en: "CTG-001 shedding order", fr: "Ordre de délestage CTG-001"}
+  h: {en: "Least essential first; restore in reverse", fr: "Le moins essentiel d'abord ; rétablir dans l'ordre inverse"}
+  items:
+  - {en: "Payload off", fr: "Charge utile coupée"}
+  - {en: "Focal-plane cooler off", fr: "Refroidisseur du plan focal coupé"}
+  - {en: "S-band transmitter off (the UHF beacon keeps reporting)", fr: "Émetteur en bande S coupé (la balise UHF continue d'émettre)"}
+  - {en: "Reaction wheels off", fr: "Roues de réaction coupées"}
+  - {en: "Last resort: OBC emergency mode. Then monitor, and restore loads in reverse order once the bus recovers", fr: "Dernier recours : mode urgence de l'OBC. Puis surveiller, et rétablir les charges dans l'ordre inverse une fois le bus rétabli"}
+- kind: statement
+  k: {en: "Contingency 2 · CTG-019", fr: "Contingence 2 · CTG-019"}
+  text: {en: "No telemetry at AOS: work down the chain, ground first.", fr: "Pas de télémesure à l'acquisition : descendre la chaîne, le sol d'abord."}
+  sub: {en: "Before you command a spacecraft you cannot hear, prove the ground is not the problem.", fr: "Avant de commander un satellite qu'on n'entend pas, prouver que le sol n'est pas en cause."}
+- kind: steps
+  k: {en: "CTG-019", fr: "CTG-019"}
+  h: {en: "From the ground station out to the antenna", fr: "De la station au sol jusqu'à l'antenne"}
+  items:
+  - {en: "**Ground station**: antenna tracking, baseband healthy, received signal above −126 dBm?", fr: "**Station au sol** : poursuite de l'antenne, bande de base saine, signal reçu au-dessus de −126 dBm ?"}
+  - {en: "**Blind housekeeping request**: it also keys the transmitter. Telemetry back? Then verify the link", fr: "**Demande de servitude à l'aveugle** : elle déclenche aussi l'émetteur. La télémesure revient ? Alors vérifier la liaison"}
+  - {en: "**Transponder switch**, blind, to the cold-redundant unit; or **PA on** if the beacon shows the amplifier off", fr: "**Bascule de transpondeur**, à l'aveugle, vers l'unité redondante froide ; ou **PA en marche** si la balise montre l'amplificateur coupé"}
+  - {en: "**Antenna deployment**: only if its state is genuinely uncertain", fr: "**Déploiement de l'antenne** : seulement si son état est réellement incertain"}
+  - {en: "**Verify** margin above 3 dB and subsystems nominal, or **escalate**", fr: "**Vérifier** une marge supérieure à 3 dB et des sous-systèmes nominaux, ou **escalader**"}
+- kind: table
+  k: {en: "Classes of contingency", fr: "Classes de contingence"}
+  h: {en: "What you might meet today", fr: "Ce que vous pourriez rencontrer aujourd'hui"}
+  header: [{en: "Class", fr: "Classe"}, {en: "Examples", fr: "Exemples"}]
+  rows:
+  - [{en: "Communications", fr: "Communications"}, {en: "Link degraded or lost, bit-error rate rising", fr: "Liaison dégradée ou perdue, taux d'erreur binaire en hausse"}]
+  - [{en: "Power", fr: "Énergie"}, {en: "Under-voltage, over-current, an array string lost", fr: "Sous-tension, surintensité, perte d'une chaîne de cellules"}]
+  - [{en: "AOCS", fr: "SCAO"}, {en: "Wheel saturation, a star tracker or gyro lost", fr: "Saturation de roue, perte d'un viseur d'étoiles ou d'un gyromètre"}]
+  - [{en: "Thermal", fr: "Thermique"}, {en: "A zone walking toward a limit", fr: "Une zone qui dérive vers une limite"}]
+  - [{en: "Payload", fr: "Charge utile"}, {en: "Mode not entered, corrupted image", fr: "Mode non atteint, image corrompue"}]
+  - [{en: "FDIR safe mode", fr: "Mode survie FDIR"}, {en: "The spacecraft has already acted: understand why before recovering", fr: "Le satellite a déjà agi : comprendre pourquoi avant de rétablir"}]
+- kind: bullets
+  k: {en: "Load-shed thresholds", fr: "Seuils de délestage"}
+  h: {en: "What the spacecraft will do on its own", fr: "Ce que le satellite fera de lui-même"}
+  items:
+  - {en: "Stage 1, power conservation: 30 % state of charge", fr: "Étage 1, économie d'énergie : 30 % d'état de charge"}
+  - {en: "Stage 2, payload offline: 20 %", fr: "Étage 2, charge utile hors ligne : 20 %"}
+  - {en: "Stage 3, survival mode: 10 %", fr: "Étage 3, mode survie : 10 %"}
+  - {en: "The operator restores shed loads; they do not come back by themselves", fr: "C'est l'opérateur qui rétablit les charges délestées ; elles ne reviennent pas d'elles-mêmes"}
+- kind: close
+  h: {en: "Before and during the shift", fr: "Avant et pendant le quart"}
+  items:
+  - {en: "Watch: Under-voltage: check before you shed; No telemetry at AOS: work down the chain", fr: "À regarder : Sous-tension : vérifier avant de délester ; Pas de télémesure à l’acquisition : descendre la chaîne"}
+  - {en: "Teams swap roles relative to yesterday", fr: "Les équipes échangent leurs rôles par rapport à hier"}
+  - {en: "Operators: sim log and anomaly tickets. Observers: critique notes", fr: "Opérateurs : journal de simulation et fiches d'anomalie. Observateurs : notes de critique"}

@@ -1,0 +1,79 @@
+slot: {en: "Week 3 · Day 1", fr: "Semaine 3 · Jour 1"}
+title: {en: "From design to operations: the ground segment and the mission control system", fr: "De la conception à l'exploitation : le segment sol et le système de contrôle de mission"}
+subtitle: {en: "EOSAT-1, mission phases, passes, packets and services, and how a telecommand lives and dies", fr: "EOSAT-1, phases de mission, passages, paquets et services, et la vie d'une télécommande"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Describe EOSAT-1 and the phases of its operational life", fr: "Décrire EOSAT-1 et les phases de sa vie opérationnelle"}
+  - {en: "Lay out a pass from briefing to debrief", fr: "Dérouler un passage, du briefing au débriefing"}
+  - {en: "Read a housekeeping packet and name the PUS services you will use", fr: "Lire un paquet de servitude et nommer les services PUS que vous utiliserez"}
+  - {en: "Follow a telecommand through its verification stages", fr: "Suivre une télécommande à travers ses étapes de vérification"}
+  - {en: "Plan a pass in the mission planning system", fr: "Planifier un passage dans le système de planification de mission"}
+- kind: table
+  k: {en: "What we are flying", fr: "Ce que nous pilotons"}
+  h: {en: "EOSAT-1 at a glance", fr: "EOSAT-1 en bref"}
+  header: [{en: "Item", fr: "Élément"}, {en: "Value", fr: "Valeur"}]
+  rows:
+  - [{en: "Mission", fr: "Mission"}, {en: "Ocean-current monitoring along Canadian coasts; four-band imager (443, 560, 665, 865 nm)", fr: "Suivi des courants océaniques le long des côtes canadiennes ; imageur à quatre bandes (443, 560, 665, 865 nm)"}]
+  - [{en: "Orbit", fr: "Orbite"}, {en: "Sun-synchronous, 513 km, 97.39°, ascending node at 10:00 local time; eclipse every orbit", fr: "Héliosynchrone, 513 km, 97,39°, nœud ascendant à 10 h heure locale ; éclipse à chaque orbite"}]
+  - [{en: "Platform", fr: "Plateforme"}, {en: "6U CubeSat, 12.0 kg dry; 100 Wh Li-ion battery; two deployable wings", fr: "CubeSat 6U, 12,0 kg à sec ; batterie Li-ion de 100 Wh ; deux ailes déployables"}]
+  - [{en: "Radios", fr: "Radios"}, {en: "S-band prime chain for commands and telemetry; a separate UHF beacon", fr: "Chaîne principale en bande S pour commandes et télémesure ; une balise UHF distincte"}]
+  - [{en: "Attitude", fr: "Attitude"}, {en: "Four-wheel pyramid, two star trackers, three gyros, magnetometer, sun sensors, magnetorquers", fr: "Pyramide de quatre roues, deux viseurs d'étoiles, trois gyromètres, magnétomètre, capteurs solaires, magnétocoupleurs"}]
+- kind: table
+  k: {en: "Operational life", fr: "Vie opérationnelle"}
+  h: {en: "Phases, and the procedures for each", fr: "Les phases, et les procédures de chacune"}
+  header: [{en: "Phase", fr: "Phase"}, {en: "Duration", fr: "Durée"}, {en: "Procedures", fr: "Procédures"}]
+  rows:
+  - [{en: "First contact and boot", fr: "Premier contact et démarrage"}, {en: "Hours", fr: "Heures"}, "LEOP-001, LEOP-002"]
+  - [{en: "LEOP: power-on, wings, detumble, sun", fr: "LEOP : mise sous tension, ailes, amortissement, Soleil"}, {en: "0–72 h", fr: "0 à 72 h"}, "LEOP-003 … 007"]
+  - [{en: "Commissioning: checkout to first light", fr: "Mise en service : vérifications jusqu'à la première lumière"}, {en: "1–4 weeks", fr: "1 à 4 semaines"}, "COM-001 … 013"]
+  - [{en: "Nominal operations", fr: "Exploitation nominale"}, {en: "Mission life", fr: "Durée de la mission"}, "NOM-001 … 014"]
+  - [{en: "Contingency · emergency", fr: "Contingence · urgence"}, {en: "Any time", fr: "À tout moment"}, "CTG-… · EMG-…"]
+- kind: table
+  k: {en: "Passes", fr: "Passages"}
+  h: {en: "The rhythm of a pass", fr: "Le rythme d'un passage"}
+  header: [{en: "When", fr: "Quand"}, {en: "What", fr: "Quoi"}, {en: "Lead", fr: "Responsable"}]
+  rows:
+  - [{en: "AOS − 30 to − 15 min", fr: "AOS − 30 à − 15 min"}, {en: "Pre-pass briefing, plan and ticket review", fr: "Briefing avant passage, revue du plan et des fiches"}, "FD"]
+  - [{en: "AOS − 10 to − 5 min", fr: "AOS − 10 à − 5 min"}, {en: "Station ready, antenna pre-positioned", fr: "Station prête, antenne prépositionnée"}, {en: "Ground", fr: "Sol"}]
+  - ["AOS", {en: "Carrier lock; link status 2 = LOCKED (1 is only acquiring)", fr: "Accrochage de la porteuse ; état de liaison 2 = LOCKED (1 n'est qu'en acquisition)"}, "TT&C"]
+  - [{en: "AOS + 1 min", fr: "AOS + 1 min"}, {en: "Connection test, health check, FDIR sweep", fr: "Test de connexion, bilan de santé, revue FDIR"}, "SPACON"]
+  - [{en: "Mid-pass", fr: "En cours de passage"}, {en: "Planned activities: imaging, downlink", fr: "Activités planifiées : imagerie, vidage"}, {en: "Per plan", fr: "Selon le plan"}]
+  - [{en: "LOS − 2 min to LOS + 15", fr: "LOS − 2 min à LOS + 15"}, {en: "Pre-LOS check, close-out, hot-wash debrief", fr: "Vérification avant LOS, clôture, débriefing à chaud"}, "SPACON · FD"]
+- kind: statement
+  k: {en: "Passes are short", fr: "Les passages sont courts"}
+  text: {en: "About 7.5 minutes on average, nine at best.", fr: "Environ 7,5 minutes en moyenne, neuf au mieux."}
+  sub: {en: "Five polar stations (Iqaluit, Inuvik, Svalbard, Troll, O'Higgins) give contact on most orbits. The plan is made before the pass; during the pass you execute it and respond to anomalies.", fr: "Cinq stations polaires (Iqaluit, Inuvik, Svalbard, Troll, O'Higgins) assurent un contact sur la plupart des orbites. Le plan se fait avant le passage ; pendant le passage, on l'exécute et on répond aux anomalies."}
+- kind: table
+  k: {en: "Packets and services", fr: "Paquets et services"}
+  h: {en: "The PUS services you will meet most", fr: "Les services PUS que vous rencontrerez le plus"}
+  header: [{en: "Service", fr: "Service"}, {en: "Purpose", fr: "Rôle"}, {en: "You see it as", fr: "Vous le voyez comme"}]
+  rows:
+  - [S1, {en: "Telecommand verification", fr: "Vérification des télécommandes"}, {en: "The acceptance and execution reports for every command", fr: "Les rapports d'acceptation et d'exécution de chaque commande"}]
+  - [S3, {en: "Housekeeping", fr: "Données de servitude"}, {en: "HK packets TM(3,25), one structure ID per subsystem", fr: "Paquets HK TM(3,25), un identifiant de structure par sous-système"}]
+  - [S5, {en: "Event reporting", fr: "Rapports d'événements"}, {en: "Events, whose subtype is the severity", fr: "Des événements, dont le sous-type est la gravité"}]
+  - [S8, {en: "Function management", fr: "Gestion des fonctions"}, {en: "Most commands: a function ID with arguments", fr: "La plupart des commandes : un identifiant de fonction avec arguments"}]
+  - [S12 · S19, {en: "Monitoring · event-action", fr: "Surveillance · événement-action"}, {en: "On-board limit checks and the autonomous FDIR rules", fr: "Contrôles de limites à bord et règles FDIR autonomes"}]
+  - [S15 · S13, {en: "Storage · large data", fr: "Stockage · gros volumes"}, {en: "Packet stores and image downlink", fr: "Mémoires de paquets et vidage d'images"}]
+- kind: steps
+  k: {en: "A telecommand's life", fr: "La vie d'une télécommande"}
+  h: {en: "Accepted is not done", fr: "Acceptée n'est pas terminée"}
+  items:
+  - {en: "**Built and sent** from the MCS; the ground sees it leave", fr: "**Construite et envoyée** depuis le MCS ; le sol la voit partir"}
+  - {en: "**Accepted** on board: TM(1,1). The packet was valid; nothing has happened yet", fr: "**Acceptée** à bord : TM(1,1). Le paquet était valide ; rien ne s'est encore passé"}
+  - {en: "**Executed**: TM(1,7). The function ran to completion; a failure is TM(1,8)", fr: "**Exécutée** : TM(1,7). La fonction s'est déroulée jusqu'au bout ; un échec donne TM(1,8)"}
+  - {en: "**Verified in telemetry**: the parameter you meant to change has changed. Only now is it done", fr: "**Vérifiée en télémesure** : le paramètre visé a bien changé. Ce n'est qu'alors que c'est terminé"}
+- kind: cards
+  k: {en: "Your tools this week", fr: "Vos outils cette semaine"}
+  h: {en: "Three web applications", fr: "Trois applications web"}
+  cards:
+  - {t: {en: "Mission control system", fr: "Système de contrôle de mission"}, d: {en: "One console per position: telemetry mosaic, commanding, procedures, FDIR panel", fr: "Une console par poste : mosaïque de télémesure, commande, procédures, panneau FDIR"}}
+  - {t: {en: "Mission planning system", fr: "Système de planification de mission"}, d: {en: "Contact schedule, imaging targets, activity sequence and conflict check", fr: "Calendrier des contacts, cibles d'imagerie, séquence d'activités et contrôle des conflits"}}
+  - {t: {en: "Procedure cards", fr: "Fiches de procédure"}, d: {en: "Every action you take comes from a card, step by step, with an FD GO", fr: "Chaque action provient d'une fiche, pas à pas, avec le GO du directeur de vol"}}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: Packets, services and housekeeping; A telecommand's life; Plan a pass in the mission planner; NOM-001: the procedure card is your workbook", fr: "À regarder : Paquets, services et données de servitude ; La vie d’une télécommande ; Planifier un passage dans le planificateur de mission ; NOM-001 : la fiche de procédure est votre cahier de travail"}
+  - {en: "Hands-on: MCS round-robin across positions; pass-plan team exercise", fr: "Pratique : tour des postes du MCS ; exercice d'équipe de planification de passage"}

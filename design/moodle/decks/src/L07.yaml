@@ -1,0 +1,78 @@
+slot: {en: "Week 2 · Day 3 · CDF Day 2", fr: "Semaine 2 · Jour 3 · jour 2 de CDF"}
+title: {en: "Orbit, power, attitude and thermal", fr: "Orbite, énergie, attitude et thermique"}
+subtitle: {en: "The orbit trade, array and battery sizing, AOCS architecture and a first thermal balance", fr: "Le compromis d'orbite, le dimensionnement des panneaux et de la batterie, l'architecture SCAO et un premier équilibre thermique"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Compute period, velocity and eclipse for a circular orbit, and pick an altitude", fr: "Calculer période, vitesse et éclipse pour une orbite circulaire, et choisir une altitude"}
+  - {en: "Size a solar array and a battery from the power budget", fr: "Dimensionner panneaux solaires et batterie d'après le bilan d'énergie"}
+  - {en: "Choose an AOCS architecture from the pointing requirement", fr: "Choisir une architecture SCAO d'après l'exigence de pointage"}
+  - {en: "Solve a single-node thermal balance for the hot and cold cases", fr: "Résoudre un équilibre thermique à un nœud pour les cas chaud et froid"}
+- kind: formulas
+  k: {en: "Orbit", fr: "Orbite"}
+  h: {en: "Circular orbit essentials", fr: "L'essentiel de l'orbite circulaire"}
+  items:
+  - {f: "T = 2π √(a³ / μ)", d: {en: "Period; μ = 398 600 km³/s², a = Earth radius + altitude", fr: "Période ; μ = 398 600 km³/s², a = rayon terrestre + altitude"}}
+  - {f: "v = √(μ / a)", d: {en: "Orbital speed: about 7.6 km/s at 500 km", fr: "Vitesse orbitale : environ 7,6 km/s à 500 km"}}
+  - {f: {en: "sun-synchronous: i ≈ 97–98°", fr: "héliosynchrone : i ≈ 97–98°"}, d: {en: "J2 precession turns the orbit plane with the Sun; the exact value depends on altitude", fr: "La précession J2 fait tourner le plan orbital avec le Soleil ; la valeur exacte dépend de l'altitude"}}
+  - {f: {en: "ΔV_deorbit ≈ 100 m/s from 600 km", fr: "ΔV_désorbitation ≈ 100 m/s depuis 600 km"}, d: {en: "A key propulsion input if you must lower the orbit to meet debris rules", fr: "Une donnée clé pour la propulsion s'il faut abaisser l'orbite pour respecter les règles sur les débris"}}
+- kind: table
+  k: {en: "The orbit trade", fr: "Le compromis d'orbite"}
+  h: {en: "Altitude is the highest-leverage decision", fr: "L'altitude est la décision qui pèse le plus"}
+  header: [{en: "Lower", fr: "Plus bas"}, {en: "Higher", fr: "Plus haut"}]
+  rows:
+  - [{en: "Finer ground sample distance, stronger link", fr: "Résolution au sol plus fine, liaison plus forte"}, {en: "Wider swath, longer passes", fr: "Fauchée plus large, passages plus longs"}]
+  - [{en: "More drag: shorter life, natural decay helps debris compliance", fr: "Plus de traînée : vie plus courte, la décroissance naturelle aide pour les débris"}, {en: "Above about 550 km you need active deorbit", fr: "Au-delà d'environ 550 km, il faut une désorbitation active"}]
+  - [{en: "Below about 600 km commercial parts usually survive the radiation", fr: "Sous environ 600 km, les composants commerciaux survivent généralement aux radiations"}, {en: "Higher dose: radiation-tolerant parts; South Atlantic Anomaly upsets", fr: "Dose plus élevée : composants tolérants aux radiations ; perturbations dans l'anomalie de l'Atlantique Sud"}]
+- kind: formulas
+  k: {en: "Power", fr: "Énergie"}
+  h: {en: "Sizing the array and the battery", fr: "Dimensionner panneaux et batterie"}
+  items:
+  - {f: "P_EOL = P_BOL · (1 − δ)ⁿ · L_T", d: {en: "Degradation about 2.5 %/yr in LEO; temperature loss about 0.19 %/°C", fr: "Dégradation d'environ 2,5 %/an en orbite basse ; perte thermique d'environ 0,19 %/°C"}}
+  - {f: "A = P_BOL / (η · S · cosθ · f_pack · f_cover)", d: {en: "Array area; triple-junction cells reach 28–30 % efficiency", fr: "Surface des panneaux ; les cellules à triple jonction atteignent 28 à 30 % de rendement"}}
+  - {f: "E_bat = P_ecl · t_ecl / (DoD · η)", d: {en: "Battery capacity; keep depth of discharge at 20–30 % for a multi-year LEO mission", fr: "Capacité de la batterie ; garder la profondeur de décharge à 20 à 30 % pour une mission de plusieurs années en orbite basse"}}
+- kind: statement
+  k: {en: "Reality check", fr: "Retour au réel"}
+  text: {en: "A real 6U with deployable wings has 12–18 W of orbit-average payload headroom.", fr: "Un vrai 6U avec ailes déployables dispose de 12 à 18 W de marge moyenne par orbite pour la charge utile."}
+  sub: {en: "EOSAT-1: 88.6 W peak, 45.1 W orbit-average at end of life, against a 22.7 W nominal load. If your budget shows 40 W of slack, the budget is wrong.", fr: "EOSAT-1 : 88,6 W en crête, 45,1 W en moyenne par orbite en fin de vie, pour une charge nominale de 22,7 W. Si votre bilan affiche 40 W de marge, il est faux."}
+- kind: table
+  k: {en: "AOCS architecture", fr: "Architecture SCAO"}
+  h: {en: "The pointing requirement picks the hardware", fr: "L'exigence de pointage choisit le matériel"}
+  header: [{en: "Pointing need", fr: "Besoin de pointage"}, {en: "Typical architecture", fr: "Architecture type"}]
+  rows:
+  - [{en: "Coarser than 5°", fr: "Plus grossier que 5°"}, {en: "Passive magnetic stabilisation", fr: "Stabilisation magnétique passive"}]
+  - [{en: "2–5°", fr: "2 à 5°"}, {en: "Magnetorquers with sun sensors and magnetometer", fr: "Magnétocoupleurs avec capteurs solaires et magnétomètre"}]
+  - [{en: "Finer than 0.1°", fr: "Plus fin que 0,1°"}, {en: "Reaction wheels with star trackers, gyros and a Kalman filter", fr: "Roues de réaction avec viseurs d'étoiles, gyromètres et filtre de Kalman"}]
+- kind: bullets
+  k: {en: "AOCS sizing", fr: "Dimensionnement SCAO"}
+  h: {en: "Disturbances, wheels and momentum dumping", fr: "Perturbations, roues et décharge du moment cinétique"}
+  items:
+  - {en: "Four disturbances: gravity gradient, aerodynamic, solar pressure, magnetic dipole; for CubeSats the residual dipole usually dominates", fr: "Quatre perturbations : gradient de gravité, aérodynamique, pression solaire, dipôle magnétique ; pour les CubeSats, le dipôle résiduel domine le plus souvent"}
+  - {en: "Wheel torque at least twice the disturbance; momentum at least half an orbit's accumulation", fr: "Couple des roues au moins deux fois la perturbation ; moment cinétique au moins l'accumulation d'une demi-orbite"}
+  - {en: "Magnetorquers cannot point: they detumble and dump wheel momentum against Earth's field", fr: "Les magnétocoupleurs ne peuvent pas pointer : ils amortissent la rotation et déchargent les roues contre le champ terrestre"}
+  - {en: "Pointing budget: root-sum-square of the error sources; improve the dominant term, not the smallest", fr: "Bilan de pointage : somme quadratique des sources d'erreur ; améliorer le terme dominant, pas le plus petit"}
+  - {en: "Detumbling with B-dot is slow: tens of minutes, not two", fr: "L'amortissement par B-dot est lent : des dizaines de minutes, pas deux"}
+- kind: formulas
+  k: {en: "Thermal", fr: "Thermique"}
+  h: {en: "In vacuum, only radiation carries heat away", fr: "Dans le vide, seul le rayonnement évacue la chaleur"}
+  items:
+  - {f: "Q_in = Q_out", d: {en: "Sun, albedo, Earth infrared and internal dissipation in; radiation out", fr: "Entrées : Soleil, albédo, infrarouge terrestre et dissipation interne ; sortie : rayonnement"}}
+  - {f: "T = (Q / ε σ A)^(1/4)", d: {en: "Single-node equilibrium temperature; solve it for the hot case and the cold case", fr: "Température d'équilibre à un nœud ; la résoudre pour le cas chaud et le cas froid"}}
+  - {f: {en: "α/ε low → cold; α/ε high → warm", fr: "α/ε faible → froid ; α/ε élevé → chaud"}, d: {en: "Surface finish is a design variable: radiators want low α/ε", fr: "Le revêtement est une variable de conception : les radiateurs veulent un α/ε faible"}}
+  - {f: "P_heater = ε σ A T_min⁴ − Q_env − Q_int", d: {en: "Heater power to hold the minimum temperature in the cold case", fr: "Puissance de réchauffage pour tenir la température minimale dans le cas froid"}}
+- kind: table
+  k: {en: "Thermal margins", fr: "Marges thermiques"}
+  h: {en: "Design to the limits, then add margin", fr: "Concevoir aux limites, puis ajouter la marge"}
+  header: [{en: "Level", fr: "Niveau"}, {en: "Margin on predicted temperature", fr: "Marge sur la température prévue"}]
+  rows:
+  - [{en: "Operating", fr: "Fonctionnement"}, "± 5 °C"]
+  - [{en: "Acceptance", fr: "Recette"}, "± 10 °C"]
+  - [{en: "Qualification", fr: "Qualification"}, "± 15 °C"]
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: Choosing an orbit; Sizing the array and the battery; Energy balance through an orbit; Attitude determination and control; Thermal control in a vacuum", fr: "À regarder : Choisir une orbite ; Dimensionner panneaux et batterie ; Le bilan énergétique sur une orbite ; Détermination et contrôle d’attitude ; Le contrôle thermique dans le vide"}
+  - {en: "In the CDF: orbit trade, array and battery sizing, AOCS selection, thermal concept", fr: "Dans la CDF : compromis d'orbite, dimensionnement panneaux et batterie, choix SCAO, concept thermique"}
+  - {en: "Worksheet 2; log each subsystem decision", fr: "Feuille de travail 2 ; consigner chaque décision de sous-système"}

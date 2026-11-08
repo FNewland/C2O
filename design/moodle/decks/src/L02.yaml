@@ -1,0 +1,91 @@
+slot: {en: "Week 1 · Day 1 · Afternoon", fr: "Semaine 1 · Jour 1 · après-midi"}
+title: {en: "Rules you design inside, and the concurrent design method", fr: "Les règles qui encadrent la conception, et la méthode de conception concurrente"}
+subtitle: {en: "A first look at Canadian space regulation; how a concurrent design facility turns a team into one design", fr: "Premier regard sur la réglementation spatiale canadienne ; comment une installation de conception concurrente fait d'une équipe une seule conception"}
+slides:
+- kind: objectives
+  k: {en: "By the end of this session", fr: "À la fin de cette séance"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Name the three families of rules every Canadian mission meets: remote sensing, spectrum, export control", fr: "Nommer les trois familles de règles que rencontre toute mission canadienne : télédétection, spectre, contrôle des exportations"}
+  - {en: "Contrast concurrent design with sequential design", fr: "Opposer la conception concurrente à la conception séquentielle"}
+  - {en: "Map lifecycle phases to their review gates, NASA and ECSS", fr: "Associer les phases du cycle de vie à leurs revues, NASA et ECSS"}
+  - {en: "Say which parameters your design position owns", fr: "Dire quels paramètres possède votre poste de conception"}
+- kind: statement
+  k: {en: "Regulatory teaser", fr: "Survol réglementaire"}
+  text: {en: "Regulation is a design input, not paperwork at the end.", fr: "La réglementation est une donnée de conception, pas de la paperasse de fin de projet."}
+  sub: {en: "Licences take months to years. Started late, they decide your launch date for you.", fr: "Les licences prennent des mois, voire des années. Commencées trop tard, elles fixent votre date de lancement à votre place."}
+- kind: cards
+  k: {en: "Three families of rules", fr: "Trois familles de règles"}
+  h: {en: "What every Canadian mission meets", fr: "Ce que rencontre toute mission canadienne"}
+  cards:
+  - {t: {en: "Remote sensing (RSSSA)", fr: "Télédétection (LSTS)"}, d: {en: "Any remote sensing satellite operated from Canada needs a licence, including shutter control by government on request", fr: "Tout satellite de télédétection exploité depuis le Canada exige une licence, y compris le contrôle de l'obturateur par le gouvernement sur demande"}}
+  - {t: {en: "Spectrum (ISED + ITU)", fr: "Spectre (ISDE + UIT)"}, d: {en: "National licence and international coordination; start in Phase A, expect two years or more", fr: "Licence nationale et coordination internationale ; commencer en phase A, prévoir deux ans ou plus"}}
+  - {t: {en: "Export control", fr: "Contrôle des exportations"}, d: {en: "Canadian controls (EIPA) plus US ITAR and EAR; nearly every mission touches US-controlled parts", fr: "Contrôles canadiens (LLEI) et américains ITAR et EAR ; presque toute mission touche des pièces sous contrôle américain"}}
+- kind: bullets
+  k: {en: "And one more", fr: "Et une de plus"}
+  h: {en: "Debris rules shape the orbit", fr: "Les règles sur les débris façonnent l'orbite"}
+  items:
+  - {en: "IADC guideline: leave low Earth orbit within 25 years of end of mission", fr: "Directive IADC : quitter l'orbite basse dans les 25 ans suivant la fin de mission"}
+  - {en: "FCC rule for US-licensed spacecraft (2024 onward): within 5 years", fr: "Règle de la FCC pour les engins sous licence américaine (depuis 2024) : en 5 ans"}
+  - {en: "Above roughly 550 km you will need a way to deorbit actively", fr: "Au-delà d'environ 550 km, il faut un moyen de désorbitation active"}
+  - {en: "Passivation at end of life: empty tanks, discharge batteries, switch off transmitters", fr: "Passivation en fin de vie : vider les réservoirs, décharger les batteries, couper les émetteurs"}
+  - {en: "Week 2, Day 1 covers all of this in depth", fr: "Le jour 1 de la semaine 2 approfondit tout cela"}
+- kind: split
+  k: {en: "Concurrent design", fr: "Conception concurrente"}
+  h: {en: "One room, one model, every discipline at once", fr: "Une salle, un modèle, toutes les disciplines en même temps"}
+  left:
+    t: {en: "Sequential design", fr: "Conception séquentielle"}
+    items:
+    - {en: "Each discipline works in turn, then hands over", fr: "Chaque discipline travaille à son tour, puis passe la main"}
+    - {en: "Conflicts are found late, after decisions harden", fr: "Les conflits apparaissent tard, une fois les décisions figées"}
+    - {en: "A study takes months", fr: "Une étude prend des mois"}
+  right:
+    t: {en: "Concurrent design", fr: "Conception concurrente"}
+    items:
+    - {en: "All positions work on a shared parameter model in the same sessions", fr: "Tous les postes travaillent sur un modèle de paramètres partagé, dans les mêmes séances"}
+    - {en: "A change propagates at once; conflicts show up while they are cheap", fr: "Un changement se propage aussitôt ; les conflits apparaissent quand ils coûtent peu"}
+    - {en: "A feasibility study takes weeks, or days", fr: "Une étude de faisabilité prend des semaines, voire des jours"}
+- kind: table
+  k: {en: "Lifecycle", fr: "Cycle de vie"}
+  h: {en: "Phases and the review that closes each", fr: "Les phases et la revue qui clôt chacune"}
+  header: [{en: "NASA", fr: "NASA"}, {en: "ECSS", fr: "ECSS"}, {en: "Activity", fr: "Activité"}, {en: "Exit review", fr: "Revue de sortie"}]
+  rows:
+  - ["Pre-A", "0", {en: "Need, feasibility, ConOps", fr: "Besoin, faisabilité, ConOps"}, "MCR"]
+  - ["A", "A", {en: "Requirements, technology development", fr: "Exigences, développement technologique"}, "SRR / SDR"]
+  - ["B", "B", {en: "Preliminary design, budgets allocated", fr: "Conception préliminaire, bilans alloués"}, "PDR"]
+  - ["C", "C", {en: "Detailed design, fabrication", fr: "Conception détaillée, fabrication"}, "CDR"]
+  - ["D", "D", {en: "Integration, test, launch", fr: "Intégration, essais, lancement"}, "TRR / FRR"]
+  - ["E · F", "E · F", {en: "Operations; then disposal", fr: "Exploitation ; puis retrait"}, "—"]
+- kind: bullets
+  k: {en: "In this course", fr: "Dans ce cours"}
+  h: {en: "Two gates you will pass", fr: "Deux revues que vous franchirez"}
+  items:
+  - {en: "**MCR** (Friday, informal): is the need justified, and is space the right answer?", fr: "**MCR** (vendredi, informelle) : le besoin est-il justifié, et l'espace est-il la bonne réponse ?"}
+  - {en: "**PDR-style review** (end of Week 2): does the preliminary design meet the requirements with positive margins?", fr: "**Revue de type PDR** (fin de la semaine 2) : la conception préliminaire satisfait-elle les exigences avec des marges positives ?"}
+  - {en: "Week 2 compresses the requirements reviews (SRR) into the first CDF day", fr: "La semaine 2 condense les revues d'exigences (SRR) dans la première journée de CDF"}
+- kind: table
+  k: {en: "Positions", fr: "Postes"}
+  h: {en: "Each position owns parameters", fr: "Chaque poste possède des paramètres"}
+  header: [{en: "Position", fr: "Poste"}, {en: "Owns, for example", fr: "Possède, par exemple"}]
+  rows:
+  - [{en: "Systems engineer", fr: "Ingénieur système"}, {en: "Mass and power margins, system budgets; arbitrates conflicts", fr: "Marges de masse et d'énergie, bilans système ; arbitre les conflits"}]
+  - [{en: "Mission analyst", fr: "Analyste de mission"}, {en: "Altitude, inclination, eclipse fraction, contact time", fr: "Altitude, inclinaison, fraction d'éclipse, temps de contact"}]
+  - [{en: "Payload lead", fr: "Responsable charge utile"}, {en: "Ground sample distance, bands, data rate", fr: "Résolution au sol, bandes, débit de données"}]
+  - [{en: "Power · AOCS · thermal", fr: "Énergie · SCAO · thermique"}, {en: "Array area and battery; pointing and momentum; temperature limits and heaters", fr: "Surface des panneaux et batterie ; pointage et moment cinétique ; limites de température et réchauffeurs"}]
+  - [{en: "Comms · propulsion · structures", fr: "Télécoms · propulsion · structures"}, {en: "Link margin and band; delta-v and propellant; structure mass and margins of safety", fr: "Marge de liaison et bande ; delta-v et ergols ; masse de structure et marges de sécurité"}]
+  - [{en: "Cost · compliance · ops · ground", fr: "Coûts · conformité · exploitation · sol"}, {en: "Cost; licences and export status; contact plan; station network", fr: "Coût ; licences et statut d'exportation ; plan de contacts ; réseau de stations"}]
+- kind: table
+  k: {en: "Where conflicts live", fr: "Où vivent les conflits"}
+  h: {en: "Typical interface conflicts", fr: "Conflits d'interface typiques"}
+  header: [{en: "Conflict", fr: "Conflit"}, {en: "Usual way out", fr: "Issue habituelle"}]
+  rows:
+  - [{en: "Mass budget exceeded", fr: "Bilan de masse dépassé"}, {en: "Reallocate margin, lighter parts, descope the payload", fr: "Réallouer la marge, pièces plus légères, réduire la charge utile"}]
+  - [{en: "Power budget exceeded", fr: "Bilan d'énergie dépassé"}, {en: "Duty cycles, more array area, a lower-power payload mode", fr: "Cycles de service, plus de surface de panneaux, mode charge utile moins gourmand"}]
+  - [{en: "Downlink below data generated", fr: "Liaison descendante inférieure aux données produites"}, {en: "More stations, higher rate, compression", fr: "Plus de stations, débit plus élevé, compression"}]
+  - [{en: "Pointing beyond actuator capability", fr: "Pointage hors de portée des actionneurs"}, {en: "Relax the requirement or change the actuator suite", fr: "Assouplir l'exigence ou changer d'actionneurs"}]
+- kind: close
+  h: {en: "Now", fr: "Maintenant"}
+  items:
+  - {en: "Open your team's mission file in SpaceCDF", fr: "Ouvrez le dossier de mission de votre équipe dans SpaceCDF"}
+  - {en: "Draft a problem statement: what is needed, for whom, and why, without naming a solution", fr: "Rédigez un énoncé du problème : quel besoin, pour qui et pourquoi, sans nommer de solution"}
+  - {en: "Watch: Mission need to decision record (SpaceCDF)", fr: "À regarder : Du besoin de mission à la fiche de décision (SpaceCDF)"}

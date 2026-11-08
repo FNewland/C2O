@@ -1,0 +1,86 @@
+slot: {en: "Week 3 · Day 2", fr: "Semaine 3 · Jour 2"}
+title: {en: "The control room: positions, the voice loop and anomaly response", fr: "La salle de contrôle : postes, boucle vocale et réponse aux anomalies"}
+subtitle: {en: "Who does what, how the room talks, and what to do in the first minutes of something unexpected", fr: "Qui fait quoi, comment la salle communique, et que faire dans les premières minutes d'un imprévu"}
+slides:
+- kind: objectives
+  k: {en: "By the end of today", fr: "À la fin de la journée"}
+  h: {en: "You will be able to", fr: "Vous saurez"}
+  items:
+  - {en: "Sit your position and say what it owns and what it never does", fr: "Tenir votre poste et dire ce qui lui revient et ce qu'il ne fait jamais"}
+  - {en: "Make and answer callouts on the voice loop, including GO, NO-GO and HOLD", fr: "Faire et recevoir des annonces sur la boucle vocale, y compris GO, NO-GO et HOLD"}
+  - {en: "Apply the five-step anomaly framework", fr: "Appliquer la démarche en cinq étapes face à une anomalie"}
+  - {en: "Tell an FDIR severity from a recovery escalation level", fr: "Distinguer une gravité FDIR d'un niveau d'escalade de rétablissement"}
+  - {en: "Hand over a shift cleanly", fr: "Passer un quart proprement"}
+- kind: table
+  k: {en: "Positions", fr: "Postes"}
+  h: {en: "Nine seats, one authority", fr: "Neuf places, une seule autorité"}
+  header: [{en: "Position", fr: "Poste"}, {en: "Mandate", fr: "Mandat"}]
+  rows:
+  - [{en: "Flight Director (FD)", fr: "Directeur de vol (FD)"}, {en: "Sole authority on the loop; grants every GO; does not command", fr: "Seule autorité sur la boucle ; donne chaque GO ; ne commande pas"}]
+  - ["SPACON", {en: "Drives procedure execution; watches FDIR; assesses anomalies", fr: "Conduit l'exécution des procédures ; surveille la FDIR ; évalue les anomalies"}]
+  - [{en: "AOCS · EPS · Thermal", fr: "SCAO · EPS · Thermique"}, {en: "Attitude; battery, arrays and power lines; heaters and zones", fr: "Attitude ; batterie, panneaux et lignes d'alimentation ; réchauffeurs et zones"}]
+  - [{en: "TT&C · Payload", fr: "TT&C · Charge utile"}, {en: "The radio link; the imager, its storage and the downlink queue", fr: "La liaison radio ; l'imageur, sa mémoire et la file de vidage"}]
+  - [{en: "Flight dynamics", fr: "Dynamique du vol"}, {en: "Orbit determination, pass prediction, manoeuvres", fr: "Détermination d'orbite, prévision des passages, manœuvres"}]
+  - [{en: "Ground segment · Mission manager", fr: "Segment sol · Gestionnaire de mission"}, {en: "Antenna and baseband; the customer and mission-level decisions", fr: "Antenne et bande de base ; le client et les décisions au niveau de la mission"}]
+- kind: bullets
+  k: {en: "On the MCS", fr: "Dans le MCS"}
+  h: {en: "Nine people, seven consoles", fr: "Neuf personnes, sept consoles"}
+  items:
+  - {en: "EPS and Thermal share the Power & Thermal console, seated side by side", fr: "EPS et Thermique partagent la console Énergie et thermique, assis côte à côte"}
+  - {en: "AOCS and flight dynamics both work from the Flight Dynamics console", fr: "SCAO et dynamique du vol travaillent tous deux depuis la console Dynamique du vol"}
+  - {en: "Only the Propulsion position can command a burn; the flight dynamics operator usually doubles as Propulsion", fr: "Seul le poste Propulsion peut commander une poussée ; l'opérateur de dynamique du vol double habituellement comme Propulsion"}
+  - {en: "Ground segment and mission manager have no MCS console", fr: "Le segment sol et le gestionnaire de mission n'ont pas de console MCS"}
+- kind: formulas
+  k: {en: "The voice loop", fr: "La boucle vocale"}
+  h: {en: "Addressee first, then speaker, then message", fr: "D'abord le destinataire, puis l'émetteur, puis le message"}
+  items:
+  - {f: {en: "AOCS, FD — pointing report.", fr: "SCAO, FD — rapport de pointage."}, d: {en: "Who you want, who you are, what you want", fr: "Qui vous voulez, qui vous êtes, ce que vous voulez"}}
+  - {f: {en: "FD, AOCS — pointing 0.28°, nominal.", fr: "FD, SCAO — pointage 0,28°, nominal."}, d: {en: "The answer: a value with its unit, then a verdict", fr: "La réponse : une valeur avec son unité, puis un verdict"}}
+  - {f: {en: "FD, EPS — GO. / NO-GO, reason. / HOLD, reason.", fr: "FD, EPS — GO. / NO-GO, raison. / HOLD, raison."}, d: {en: "Answering a GO poll: honest, short, with the reason", fr: "Répondre à une demande de GO : honnête, bref, avec la raison"}}
+  - {f: {en: "FD, TT&C — anomaly, link margin, 2 dB, falling.", fr: "FD, TT&C — anomalie, marge de liaison, 2 dB, en baisse."}, d: {en: "Anomaly callout: parameter, value, trend; then wait for FD", fr: "Annonce d'anomalie : paramètre, valeur, tendance ; puis attendre le FD"}}
+- kind: statement
+  k: {en: "Target", fr: "Objectif"}
+  text: {en: "From the first telemetry change to your callout: under 15 seconds.", fr: "Du premier changement de télémesure à votre annonce : moins de 15 secondes."}
+  sub: {en: "You do not need to understand it to call it. You need to see it, say it, and wait for direction.", fr: "Pas besoin de comprendre pour annoncer. Il faut le voir, le dire et attendre les directives."}
+- kind: steps
+  k: {en: "Anomaly response", fr: "Réponse aux anomalies"}
+  h: {en: "First, do no harm", fr: "D'abord, ne pas nuire"}
+  items:
+  - {en: "**Recognise and confirm**: is it real? Cross-check another sensor, the frame count, the trend", fr: "**Reconnaître et confirmer** : est-ce réel ? Recouper avec un autre capteur, le compteur de trames, la tendance"}
+  - {en: "**Preserve the spacecraft**: power, thermal, attitude; stop commanding into a fault", fr: "**Préserver le satellite** : énergie, thermique, attitude ; cesser de commander dans une panne"}
+  - {en: "**Isolate the cause**: what did we do last, and what did the spacecraft do on its own?", fr: "**Isoler la cause** : qu'avons-nous fait en dernier, et qu'a fait le satellite de lui-même ?"}
+  - {en: "**Decide**: recover now, defer, or escalate to safe mode (FD only)", fr: "**Décider** : rétablir maintenant, différer, ou passer en mode survie (FD seulement)"}
+  - {en: "**Communicate and log**, in parallel with all of the above; open the ticket now, not after the pass", fr: "**Communiquer et consigner**, en parallèle de tout le reste ; ouvrir la fiche maintenant, pas après le passage"}
+- kind: split
+  k: {en: "Two numbers", fr: "Deux nombres"}
+  h: {en: "Severity is not escalation level", fr: "La gravité n'est pas le niveau d'escalade"}
+  left:
+    t: {en: "FDIR severity (0–4): how bad", fr: "Gravité FDIR (0 à 4) : à quel point c'est grave"}
+    items:
+    - {en: "0 informational: note it on the loop", fr: "0 information : le signaler sur la boucle"}
+    - {en: "1 caution: discuss in the debrief", fr: "1 attention : en discuter au débriefing"}
+    - {en: "2 warning: run the recovery procedure", fr: "2 avertissement : exécuter la procédure de rétablissement"}
+    - {en: "3 severe: recovery procedure and a ticket", fr: "3 grave : procédure de rétablissement et fiche"}
+    - {en: "4 critical: safe-mode candidate; confirm, brief the mission manager", fr: "4 critique : candidat au mode survie ; confirmer, informer le gestionnaire de mission"}
+  right:
+    t: {en: "Recovery escalation (1–3): how hard the spacecraft has tried", fr: "Escalade de rétablissement (1 à 3) : ce que le satellite a déjà tenté"}
+    items:
+    - {en: "Each domain has three recovery levels, for example EPS load-shed stages 1, 2, 3", fr: "Chaque domaine a trois niveaux de rétablissement, par exemple les étages de délestage EPS 1, 2, 3"}
+    - {en: "30 s before level 2, 60 s before level 3; level 3 is final", fr: "30 s avant le niveau 2, 60 s avant le niveau 3 ; le niveau 3 est le dernier"}
+    - {en: "A severity 4 can sit at level 1; a severity 2 can reach level 3", fr: "Une gravité 4 peut rester au niveau 1 ; une gravité 2 peut atteindre le niveau 3"}
+    - {en: "Say which number you mean, every time", fr: "Dites de quel nombre vous parlez, à chaque fois"}
+- kind: bullets
+  k: {en: "Shift handover", fr: "Passation de quart"}
+  h: {en: "What the next shift must hear", fr: "Ce que le quart suivant doit entendre"}
+  items:
+  - {en: "Spacecraft state: mode, power, thermal, attitude, storage", fr: "État du satellite : mode, énergie, thermique, attitude, mémoire"}
+  - {en: "Open tickets and what is being watched", fr: "Fiches ouvertes et ce qui est sous surveillance"}
+  - {en: "What was commanded and not yet verified", fr: "Ce qui a été commandé et pas encore vérifié"}
+  - {en: "The next passes and what is planned in each", fr: "Les prochains passages et ce qui est prévu à chacun"}
+  - {en: "The incoming operator reads it back before the outgoing one leaves", fr: "L'opérateur entrant le répète avant que le sortant ne parte"}
+- kind: close
+  h: {en: "Today", fr: "Aujourd'hui"}
+  items:
+  - {en: "Watch: Alarm to anomaly ticket; From monitor to action: on-board FDIR; LEOP-001: first contact and OBC boot", fr: "À regarder : De l’alarme à la fiche d’anomalie ; Du moniteur à l’action : la FDIR de bord ; LEOP-001 : premier contact et démarrage de l’OBC"}
+  - {en: "Voice-loop drills; procedure walkthroughs; flight-dynamics workshop; two dry runs", fr: "Exercices de boucle vocale ; parcours de procédures ; atelier de dynamique du vol ; deux répétitions"}
+  - {en: "Operations training quiz", fr: "Questionnaire de formation à l'exploitation"}
