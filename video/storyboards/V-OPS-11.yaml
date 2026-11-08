@@ -255,9 +255,11 @@ steps:
       - click: {css: "#rail-ttc"}
       - wait_for: {target: {css: "#ttc-equip .eq"}, timeout: 20}
       - wait: 1.5
+      - scroll: {css: "#ttc-stepper"}
+      - highlight: {target: {css: ".ds-card:has(#ttc-stepper)"}, seconds: 2.5}
       - highlight: {target: {css: "#ttc-equip .eq:has-text('PA ON')"}, seconds: 2.5}
-      - highlight: {target: {css: "#ttc-params"}, seconds: 3, point: false}
-      - wait: 1.5
+      - scroll: {css: "#ttc-station-note"}
+      - highlight: {target: {css: "#ttc-station-note"}, seconds: 3}
     question:
       type: reflect
       worksheet: WB-A-CTG-019/q6
