@@ -1861,12 +1861,16 @@ class AOCSBasicModel(SubsystemModel):
             q_meas = self._st_measurement(s, s.st_selected, n_avg=n_avg)
             if self._ekf.update_st(q_meas, n_avg=n_avg):
                 source |= 0x01
-        elif s.mode in (MODE_DETUMBLE, MODE_COARSE_SUN) or n_gyro == 0:
-            # With every gyro unit off there is no rate reference at all, so
-            # the coarse two-vector (CSS + magnetometer TRIAD) path is the ONLY
-            # thing keeping the estimate bounded — run it in any mode, and let
-            # the covariance grow honestly when the vectors are unavailable too
-            # (eclipse: no sun ⇒ pure coast).
+        else:
+            # No star tracker aiding: the coarse two-vector (CSS + magnetometer
+            # TRIAD) path keeps the estimate bounded, in ANY mode. It used to
+            # run only in DETUMBLE/COARSE_SUN or with every gyro off, so the
+            # wheel-controlled NOMINAL that COM-004 commands BEFORE COM-003
+            # brings a tracker up coasted on the uncalibrated gyros: the
+            # knowledge 3-sigma grew past 100 deg in a pass and the controller
+            # followed a drifting estimate off nadir (2026-11-08). In eclipse
+            # the CSS drops out and the covariance grows honestly on the
+            # magnetometer alone.
             env = self._env
             q_triad = None
             if s.css_valid and s.mag_valid:
