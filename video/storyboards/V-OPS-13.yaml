@@ -253,8 +253,9 @@ steps:
         débit. La voie n’est jamais laissée ouverte en fin de fiche. Première lumière.
     do:
       - python: {call: "video/c2ovideo/helpers.py:wait_mcs_param", app: mcs, kwargs: {pid: "0x062E", at_least: 100, timeout_s: 120}}
+      - wait: 3
       - highlight: {target: {css: "#pld-schematic"}, seconds: 3, point: false}
-      - wait: 2
+      - wait: 3
     question:
       type: reflect
       worksheet: WB-5.6-C012/q9
