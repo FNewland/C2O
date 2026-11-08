@@ -8,6 +8,7 @@ components:
     manufacturer: GomSpace
     category: eps_board
     mass_kg: 0.095
+    power_w: 0.16      # own consumption, P31u datasheet (160 mW; 260 mW for the 16 V version)
     dimensions_mm: [96, 90, 12]
     form_factor: PC/104
     cost_keur: 15
@@ -30,6 +31,7 @@ components:
     manufacturer: GomSpace
     category: eps_board
     mass_kg: 0.250
+    power_w: 0.6       # system standby consumption, P60 ACU-200 datasheet § 7 (600 mW)
     dimensions_mm: [96, 90, 25]
     form_factor: PC/104
     cost_keur: 25
