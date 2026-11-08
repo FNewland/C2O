@@ -9,8 +9,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start",
-   "en_hash": "3a43b924a2d03172",
-   "fr_hash": "93348c7ed5e64677"
+   "en_hash": "5e9a166910cc2ad5",
+   "fr_hash": "c04e82e64c16a64a"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/objective",
@@ -24,8 +24,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/required-telemetry",
-   "en_hash": "b383610a807c624d",
-   "fr_hash": "193a7f2cd8ab27a2"
+   "en_hash": "704c61064174cb50",
+   "fr_hash": "26795602c8a4a59e"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/required-commands",
@@ -43,14 +43,14 @@
    "fr_hash": "9d8eaa042e5b8b5f"
   },
   {
-   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-2-check-ttc-tx-power-line-status",
-   "en_hash": "ea6c638dfdb54422",
-   "fr_hash": "6faa273a1e613e17"
+   "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-2-blind-hk-request-it-also-keys-the-transmitter",
+   "en_hash": "5bdeb7fa8ddd4bb0",
+   "fr_hash": "a8f424c7f4eabe49"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-3-command-transponder-switch-blind",
-   "en_hash": "f9f239ecf2ef4bb7",
-   "fr_hash": "77c44d91a0f3fa7a"
+   "en_hash": "998a24f76d71fa81",
+   "fr_hash": "35abe76a1931790c"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-4-command-pa-on-blind",
@@ -64,8 +64,8 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-6-verify-link-quality-and-subsystem-health",
-   "en_hash": "7e1cd41757fe2df1",
-   "fr_hash": "22948679ef8df8cd"
+   "en_hash": "61d5f4371aa79342",
+   "fr_hash": "8bade2eeccf0ea0c"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/procedure-steps/step-7-escalation-no-link-recovery",
@@ -74,14 +74,14 @@
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/verification-criteria",
-   "en_hash": "df61fcede5758478",
-   "fr_hash": "fbe9fd6e1287e794"
+   "en_hash": "baa81d8f929cc78b",
+   "fr_hash": "15e1e58b431fe1c0"
   },
   {
    "id": "ctg-019-no-telemetry-at-pass-start/contingency",
-   "en_hash": "a055165b72434664",
-   "fr_hash": "2e10ab8643774508"
+   "en_hash": "f47af3432c4d14b4",
+   "fr_hash": "df142d7db536d00d"
   }
  ],
- "en_commit": "f614a01"
+ "en_commit": "6f4195d"
 }

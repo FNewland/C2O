@@ -4,6 +4,7 @@
 **Position Lead:** TT&C
 **Cross-Position:** Flight Director, EPS/TCS
 **Difficulty:** Advanced
+**Revision:** 1.1 --- 2026-11-07 (ruling: the card follows the auto-TX hold-down). Step 2's blind HK request also keys the transmitter for 300 s, so the old blind power-on branch (2B) is gone; RSSI limits aligned on -126 dBm (a healthy pass reads about -121 dBm).
 
 ## Objective
 Recover telemetry downlink when no spacecraft signal is received at the predicted
@@ -24,7 +25,7 @@ verification, PA commanding, antenna deployment checks, and transponder switchov
 | Parameter | ID | Expected Value |
 |---|---|---|
 | ttc.link_status | 0x0501 | 2 (LOCKED) — currently 0 (NO_LINK) or 1 (ACQUIRING) (triggering condition) |
-| ttc.rssi | 0x0502 | > -95 dBm when link is active |
+| ttc.rssi | 0x0502 | > -126 dBm when link is active |
 | ttc.link_margin | 0x0503 | > 3.0 dB when link is active |
 | ttc.pa_on | 0x0516 | 1 (PA enabled) |
 | ttc.pa_temp | 0x050F | < 55 C |
@@ -63,27 +64,29 @@ frequency), resolve locally. Do not proceed with spacecraft-side recovery until 
 is confirmed nominal.
 **GO/NO-GO:** Ground station confirmed nominal — proceed with spacecraft-side diagnosis.
 
-### Step 2: Check TTC TX Power Line Status
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Send blind HK request — EPS
-**Note:** This is a blind command — no telemetry return is expected if downlink is dead.
-The purpose is to trigger downlink activity and check for faint signal.
-**Action:** Wait 30 s and check ground station receiver for any signal indication.
-**Action:** If ground receiver detects a weak carrier, proceed to Step 4 (PA investigation).
-**GO/NO-GO:** Ground receiver detects a weak carrier -> GO `STEP-4` | NO-GO `STEP-2B`
-**LABEL:** `STEP-2B`
-**Action:** If no signal at all, assess whether the TTC TX power line may be off.
-**Note:** The `eps.pl_ttc_tx` (0x0112) parameter indicates TX power line state, but this
-requires a working downlink to read. If the TX power line was tripped by an overcurrent
-event, the transponder has no power to transmit.
-**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — Send blind power-on command
-this commands the TTC TX power line ON.
-**Verify:** Wait 30 s for transponder to power up and re-acquire.
-**Verify:** Check ground station receiver for downlink carrier.
-**GO/NO-GO:** If signal appears, proceed to Step 6 (link verification). If still no signal, proceed to Step 3. -> GO `STEP-6` | NO-GO `STEP-3`
+### Step 2: Blind HK Request — It Also Keys the Transmitter
+**Note:** Any telecommand the spacecraft accepts energises the `ttc_tx` power line for
+300 s (the auto-TX hold-down, `auto_tx_hold_s` in simulation.yaml), so the first
+command of a pass is also what turns the downlink on. No telemetry before it is
+normal; no telemetry AFTER it is the contingency.
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — blind EPS housekeeping request
+**Action:** Wait 30 s and watch the frame counter and the ground station receiver.
+**Action:** If telemetry returns: the transmitter was simply not keyed, or its line had
+tripped and the command re-energised it. Read why in the HK that arrived: `eps.pl_ttc_tx`
+(0x0112), `ttc.pa_on` (0x0516) and the EPS events (an overcurrent trip on `ttc_tx`).
+Keep commanding (HK every 60 s): the hold-down lasts 300 s from the last accepted TC.
+**Action:** If nothing returns: the line is now powered, so it is not the cause. Look
+further down the chain: transponder (Step 3), power amplifier (Step 4), antenna (Step 5).
+**GO/NO-GO:** Telemetry returned after the blind request -> GO `STEP-6` | NO-GO `STEP-3`
 
 ### Step 3: Command Transponder Switch (Blind)
 **LABEL:** `STEP-3`
-**Note:** The primary transponder may have failed. Attempt blind switchover:
+**Note:** The primary transponder may have failed. Attempt blind switchover.
+The transponders are cold-redundant: the switch is received only by the SELECTED unit.
+If the primary is dead it hears nothing and this command is lost; the switch then
+happens only on board, when the 24 h command-loss timer expires (Step 7, EMG-004).
+It is still worth sending: the receiver may be alive with the loss further down the
+transmit chain (the PA, Step 4), and then the switch is executed.
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1, func_id 64) — blind command
 **Verify:** Wait 45 s for redundant transponder power-up and frequency lock.
 **Verify:** Check ground station receiver for downlink carrier on redundant transponder frequency.
@@ -156,7 +159,7 @@ produce a dramatic improvement in signal level (15-25 dB gain increase).
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Request OBDH housekeeping
 **Verify:** `obdh.mode` (0x0300) — confirm OBC did not enter safe/emergency mode
 **Action:** Log which recovery step restored the link:
-- Step 2: TX power line was off
+- Step 2: telemetry returned on the first command (transmitter not keyed, or its line had tripped: see the EPS events)
 - Step 3: Primary transponder failure, now on redundant
 - Step 4: PA was disabled
 - Step 5: Antennas were stowed
@@ -175,7 +178,7 @@ produce a dramatic improvement in signal level (15-25 dB gain increase).
 ## Verification Criteria
 **LABEL:** `STEP-END`
 - [ ] `ttc.link_status` (0x0501) = 2 (LOCKED link established)
-- [ ] `ttc.rssi` (0x0502) > -90 dBm
+- [ ] `ttc.rssi` (0x0502) > -126 dBm
 - [ ] `ttc.link_margin` (0x0503) > 3.0 dB
 - [ ] `ttc.pa_on` (0x0516) = 1
 - [ ] `ttc.antenna_deployed` (0x0520) = 1
@@ -184,7 +187,7 @@ produce a dramatic improvement in signal level (15-25 dB gain increase).
 - [ ] If unrecovered: EMG-004 escalation initiated
 
 ## Contingency
-- If link restores but RSSI < -95 dBm or margin < 1.5 dB: Step down to LOW
+- If link restores but RSSI < -126 dBm or margin < 1.5 dB: Step down to LOW
   (16 kbps) via `TTC_SET_DATA_RATE(rate=0)` (func_id 65) to gain 9.03 dB of Eb/N0
   plus 1.5 dB of coding gain. LOW is the routine operations rate, so this costs
   nothing but the ability to dump. Investigate antenna or PA degradation.

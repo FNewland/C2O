@@ -4,6 +4,7 @@
 **Poste responsable :** TT&C
 **Postes associés :** Directeur de vol, EPS/TCS
 **Difficulté :** Avancé
+**Révision :** 1.1 --- 2026-11-07 (décision : la fiche suit le maintien d'émission automatique). La demande HK en aveugle de l'étape 2 active aussi l'émetteur pendant 300 s ; l'ancienne branche de mise sous tension en aveugle (2B) disparaît ; limites de RSSI alignées sur -126 dBm (un passage sain lit environ -121 dBm).
 
 ## Objectif
 Rétablir la liaison descendante de télémesure lorsqu'aucun signal du satellite n'est reçu à l'heure
@@ -24,7 +25,7 @@ d'alimentation EPS, la commande du PA, les contrôles du déploiement d'antenne 
 | Paramètre | ID | Valeur attendue |
 |---|---|---|
 | ttc.link_status | 0x0501 | 2 (LOCKED) — actuellement 0 (NO_LINK) ou 1 (ACQUIRING) (condition de déclenchement) |
-| ttc.rssi | 0x0502 | > -95 dBm lorsque la liaison est active |
+| ttc.rssi | 0x0502 | > -126 dBm lorsque la liaison est active |
 | ttc.link_margin | 0x0503 | > 3.0 dB lorsque la liaison est active |
 | ttc.pa_on | 0x0516 | 1 (PA en marche) |
 | ttc.pa_temp | 0x050F | < 55 °C |
@@ -63,27 +64,30 @@ fréquence), résoudre le problème localement. Ne pas engager la reprise côté
 n'est pas confirmé nominal.
 **GO/NO-GO:** Station sol confirmée nominale — engager le diagnostic côté satellite.
 
-### Étape 2 : Contrôler l'état de la ligne d'alimentation TX du TTC
-**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — Envoyer une demande HK en aveugle — EPS
-**Note:** Il s'agit d'une commande en aveugle — aucun retour de télémesure n'est attendu si la liaison descendante est hors service.
-Le but est de déclencher une activité sur la liaison descendante et de rechercher un signal faible.
-**Action:** Attendre 30 s et vérifier si le récepteur de la station sol indique un signal.
-**Action:** Si le récepteur sol détecte une porteuse faible, l'étape 4 (analyse du PA) s'applique.
-**GO/NO-GO:** Le récepteur sol détecte une porteuse faible -> GO `STEP-4` | NO-GO `STEP-2B`
-**LABEL:** `STEP-2B`
-**Action:** En l'absence totale de signal, évaluer si la ligne d'alimentation TX du TTC peut être coupée.
-**Note:** Le paramètre `eps.pl_ttc_tx` (0x0112) indique l'état de la ligne d'alimentation TX, mais sa lecture
-exige une liaison descendante opérationnelle. Si la ligne d'alimentation TX a disjoncté sur une surintensité,
-le transpondeur n'a plus d'alimentation pour émettre.
-**TC:** `EPS_POWER_ON(line_index=2)` (Service 8, Subtype 1, func_id 19) — Envoyer une commande de mise sous tension en aveugle
-cette commande met la ligne d'alimentation TX du TTC sur ON.
-**Verify:** Attendre 30 s la mise sous tension et la réacquisition du transpondeur.
-**Verify:** Rechercher la porteuse descendante sur le récepteur de la station sol.
-**GO/NO-GO:** Si un signal apparaît, l'étape 6 (vérification de la liaison) s'applique. Toujours sans signal, l'étape 3 s'applique. -> GO `STEP-6` | NO-GO `STEP-3`
+### Étape 2 : Demande HK en aveugle — elle allume aussi l'émetteur
+**Note:** Toute télécommande acceptée par le satellite met la ligne d'alimentation `ttc_tx` sous tension
+pendant 300 s (le maintien d'émission automatique, `auto_tx_hold_s` dans simulation.yaml) ; la
+première commande d'un passage est donc aussi celle qui allume la liaison descendante. L'absence de
+télémesure avant elle est normale ; l'absence de télémesure APRÈS elle est la contingence.
+**TC:** `HK_REQUEST(sid=1)` (Service 3, Subtype 27) — demande de servitude EPS en aveugle
+**Action:** Attendre 30 s en surveillant le compteur de trames et le récepteur de la station sol.
+**Action:** Si la télémesure revient : l'émetteur n'était simplement pas activé, ou sa ligne avait
+disjoncté et la commande l'a remise sous tension. Lire la raison dans la HK reçue : `eps.pl_ttc_tx`
+(0x0112), `ttc.pa_on` (0x0516) et les événements EPS (une disjonction sur surintensité de `ttc_tx`).
+Continuer à commander (HK toutes les 60 s) : le maintien dure 300 s après la dernière TC acceptée.
+**Action:** Si rien ne revient : la ligne est maintenant alimentée, elle n'est donc pas en cause.
+Chercher plus loin dans la chaîne : transpondeur (étape 3), amplificateur de puissance (étape 4),
+antenne (étape 5).
+**GO/NO-GO:** La télémesure est revenue après la demande en aveugle -> GO `STEP-6` | NO-GO `STEP-3`
 
 ### Étape 3 : Commander le basculement de transpondeur (en aveugle)
 **LABEL:** `STEP-3`
-**Note:** Le transpondeur principal est peut-être en panne. Tenter un basculement en aveugle :
+**Note:** Le transpondeur principal est peut-être en panne. Tenter un basculement en aveugle.
+Les transpondeurs sont en redondance froide : le basculement n'est reçu que par l'unité SÉLECTIONNÉE.
+Si le principal est en panne, il n'entend rien et cette commande est perdue ; le basculement ne se fait
+alors qu'à bord, à l'expiration du temporisateur de perte de commande de 24 h (étape 7, EMG-004).
+Il vaut quand même la peine de l'envoyer : le récepteur peut fonctionner, la perte se trouvant plus loin
+dans la chaîne d'émission (le PA, étape 4), et le basculement est alors exécuté.
 **TC:** `TTC_SWITCH_REDUNDANT` (Service 8, Subtype 1, func_id 64) — commande en aveugle
 **Verify:** Attendre 45 s la mise sous tension et le verrouillage en fréquence du transpondeur redondant.
 **Verify:** Rechercher la porteuse descendante sur la fréquence du transpondeur redondant, sur le récepteur de la station sol.
@@ -156,7 +160,7 @@ améliorer considérablement le niveau du signal (gain supplémentaire de 15-25�
 **TC:** `HK_REQUEST(sid=4)` (Service 3, Subtype 27) — Demander les données de servitude OBDH
 **Verify:** `obdh.mode` (0x0300) — confirmer que l'OBC n'est pas passé en mode survie ou EMERGENCY
 **Action:** Consigner l'étape de reprise qui a rétabli la liaison :
-- étape 2 : la ligne d'alimentation TX était coupée ;
+- étape 2 : la télémesure est revenue dès la première commande (émetteur non activé, ou ligne disjonctée : voir les événements EPS) ;
 - étape 3 : panne du transpondeur principal, fonctionnement désormais sur le redondant ;
 - étape 4 : le PA était désactivé ;
 - étape 5 : les antennes étaient repliées.
@@ -175,7 +179,7 @@ améliorer considérablement le niveau du signal (gain supplémentaire de 15-25�
 ## Critères de vérification
 **LABEL:** `STEP-END`
 - [ ] `ttc.link_status` (0x0501) = 2 (liaison LOCKED établie)
-- [ ] `ttc.rssi` (0x0502) > -90 dBm
+- [ ] `ttc.rssi` (0x0502) > -126 dBm
 - [ ] `ttc.link_margin` (0x0503) > 3.0 dB
 - [ ] `ttc.pa_on` (0x0516) = 1
 - [ ] `ttc.antenna_deployed` (0x0520) = 1
@@ -184,7 +188,7 @@ améliorer considérablement le niveau du signal (gain supplémentaire de 15-25�
 - [ ] En l'absence de rétablissement : escalade EMG-004 engagée
 
 ## Contingence
-- Si la liaison se rétablit mais que le RSSI est < -95 dBm ou la marge < 1.5 dB : descendre en LOW
+- Si la liaison se rétablit mais que le RSSI est < -126 dBm ou la marge < 1.5 dB : descendre en LOW
   (16 kbit/s) au moyen de `TTC_SET_DATA_RATE(rate=0)` (func_id 65) pour gagner 9,03 dB d'Eb/N0
   plus 1,5 dB de gain de codage. LOW est le débit des opérations courantes : la seule perte
   est la possibilité de vidage. Rechercher une dégradation de l'antenne ou du PA.

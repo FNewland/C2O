@@ -704,7 +704,7 @@ procedures:
     position_roles:
       flight_director: "Coordinate RF chain diagnostics"
       ttc: "Diagnose transponder/antenna/GS issues"
-      eps_tcs: "Re-energise the ttc_tx line if it is off (Step 2, card Cross-Position)"
+      eps_tcs: "Read the ttc_tx line state and EPS events in the first HK (Step 2, card Cross-Position)"
     command_services: [3, 8]
 
   - id: CTG-020
