@@ -9770,15 +9770,15 @@ worksheets:
   - id: q2
     kind: check
     text:
-      en: '2. TT&C TX power line, blind: HK_REQUEST(sid=1) (S3.27), EPS_POWER_ON(line_index=2) (S8.1 func
-        19); wait 30 s'
-      fr: '2. Ligne d''alimentation TX du TT&C, en aveugle : HK_REQUEST(sid=1) (S3.27), EPS_POWER_ON(line_index=2)
-        (S8.1 func 19) ; attendre 30 s'
+      en: 2. Blind HK_REQUEST(sid=1) (S3.27); wait 30 s. Any accepted TC also powers the ttc_tx line for
+        300 s (auto-TX hold-down), so this request is the test
+      fr: '2. HK_REQUEST(sid=1) en aveugle (S3.27) ; attendre 30 s. Toute TC acceptée alimente aussi la
+        ligne ttc_tx pendant 300 s (maintien d''émission automatique) : cette demande est donc le test'
     hint:
-      en: downlink carrier on the ground receiver? signal → step 6; weak carrier → step 4; nothing → step
-        3
-      fr: porteuse descendante sur le récepteur sol ? signal → étape 6 ; porteuse faible → étape 4 ; rien
-        → étape 3
+      en: telemetry back → read why from it (eps.pl_ttc_tx (0x0112), ttc.pa_on (0x0516), EPS events),
+        keep commanding, step 6; nothing → the line is ruled out, step 3
+      fr: télémesure revenue → en lire la raison (eps.pl_ttc_tx (0x0112), ttc.pa_on (0x0516), événements
+        EPS), continuer à commander, étape 6 ; rien → la ligne est hors de cause, étape 3
     step: '2'
     where:
     - tool: radio
@@ -9788,13 +9788,26 @@ worksheets:
       page: ttc
       focus: ttc-stepper
       label: *id052
+    - tool: mcs
+      page: eps
+      param: '0x0112'
+      label:
+        en: MCS › EPS › eps.pl_ttc_tx (0x0112)
+        fr: MCS › EPS › eps.pl_ttc_tx (0x0112)
+    - tool: mcs
+      page: ttc
+      param: '0x0516'
+      label:
+        en: MCS › TTC › ttc.pa_on (0x0516)
+        fr: MCS › TTC › ttc.pa_on (0x0516)
   - id: q3
     kind: check
     text:
       en: '3. Transponder switch, blind: TTC_SWITCH_REDUNDANT (func 64), wait 45 s; then TTC_SWITCH_PRIMARY
-        (func 63)'
+        (func 63). Cold-redundant: a dead primary never hears it (only the 24 h timer switches, step 7)'
       fr: '3. Basculement de transpondeur, en aveugle : TTC_SWITCH_REDUNDANT (func 64), attendre 45 s
-        ; puis TTC_SWITCH_PRIMARY (func 63)'
+        ; puis TTC_SWITCH_PRIMARY (func 63). Redondance froide : un principal en panne ne l''entend pas
+        (seul le temporisateur de 24 h bascule, étape 7)'
     hint:
       en: carrier on the redundant unit's frequency → step 6; neither unit → step 4
       fr: porteuse sur la fréquence de l'équipement redondant → étape 6 ; aucun des deux → étape 4

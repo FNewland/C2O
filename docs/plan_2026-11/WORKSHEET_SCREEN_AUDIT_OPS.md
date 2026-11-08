@@ -902,8 +902,8 @@ Deferred: 3 (reason in the Fix column).
 | # | Question | Answerable? | Where | Gap | Fix |
 |---|---|---|---|---|---|
 | step 1 | Confirm the ground station is nominal: antenna tracking with valid pointing, uplink transmitter on frequenc… | n/a | Radio › Lock status; Radio › RF measurements |  |  |
-| step 2 | TT&C TX power line, blind: HK_REQUEST(sid=1) (S3.27), EPS_POWER_ON(line_index=2) (S8.1 func 19); wait 30 s | screen | Radio › Lock status; MCS › TTC › Link lock chain |  |  |
-| step 3 | Transponder switch, blind: TTC_SWITCH_REDUNDANT (func 64), wait 45 s; then TTC_SWITCH_PRIMARY (func 63) | screen | Radio › Lock status; MCS › TTC › ttc.mode (0x0500) |  |  |
+| step 2 | Blind HK_REQUEST(sid=1) (S3.27); wait 30 s. Any accepted TC also powers the ttc_tx line for 300 s (auto-TX … | screen | Radio › Lock status; MCS › TTC › Link lock chain; MCS › EPS › eps.pl_ttc_tx (0x0112); MCS › TTC › ttc.pa_on (0x0516) |  |  |
+| step 3 | Transponder switch, blind: TTC_SWITCH_REDUNDANT (func 64), wait 45 s; then TTC_SWITCH_PRIMARY (func 63). Co… | screen | Radio › Lock status; MCS › TTC › ttc.mode (0x0500) |  |  |
 | step 4 | PA on, blind: TTC_PA_ON (func 66), wait 15 s; still nothing: TTC_PA_OFF (func 67), 10 s, TTC_PA_ON, 15 s | screen | Radio › Lock status; MCS › TTC › ttc.pa_on (0x0516) |  |  |
 | step 5 | Antenna, only if its deployment is uncertain or known stowed: TTC_DEPLOY_ANTENNA (func 69) — irreversible b… | screen | MCS › TTC › ttc.antenna_deployed (0x0520); MCS › TTC › ttc.antenna_deployment_sensor (0x0536); MCS › TTC › ttc.antenna_deployment_ready (0x0535) |  |  |
 | step 6 | Verify link quality and subsystem health: HK_REQUEST(sid=6), HK_REQUEST(sid=1), HK_REQUEST(sid=4) | screen | MCS › TTC › ttc.link_status (0x0501); MCS › TTC › ttc.rssi (0x0502); MCS › TTC › ttc.link_margin (0x0503); MCS › TTC › ttc.pa_on (0x0516) |  |  |
