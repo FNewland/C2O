@@ -53,7 +53,14 @@ def _row_to_dict(row: RequirementRow) -> dict:
     ext = d.pop("external_ids_json", None)
     if ext is not None:
         d["external_ids"] = ext
+    # Before Nov 2026 the Requirements panel stored the type in ``rationale``; move it.
+    if not d.get("req_type") and d.get("rationale") in REQ_TYPES:
+        d["req_type"], d["rationale"] = d["rationale"], None
     return d
+
+
+#: Requirement types (RequirementsPanel REQ_TYPES).
+REQ_TYPES = frozenset({"functional", "performance", "interface", "regulatory", "process"})
 
 
 # ── Public API (write-through) ─────────────────────────────────────────

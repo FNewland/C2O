@@ -417,7 +417,7 @@ function StatusBar() {
                       study_id: newStudyId,
                       element_id: elementId,
                       level: req.level || 'mission',
-                      code: req.code, text: req.text, rationale: req.rationale,
+                      code: req.code, text: req.text, rationale: req.rationale, req_type: req.req_type,
                       verification_method: req.verification_method,
                       status: req.status || 'draft',
                     }),

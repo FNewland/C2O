@@ -116,7 +116,7 @@ export function RequirementsPanel() {
             text: newText,
             element_id: newElementId || focusElementId || undefined,
             code: newCode || undefined,
-            rationale: newReqType,
+            req_type: newReqType,
             verification_method: newMethod,
           }),
         })
@@ -132,7 +132,7 @@ export function RequirementsPanel() {
           level: levelName,
           code: newCode || undefined,
           text: newText,
-          rationale: newReqType,
+          req_type: newReqType,
           verification_method: newMethod,
           status: 'draft',
         }),
@@ -170,7 +170,7 @@ export function RequirementsPanel() {
   // "Derive" pre-fills the add form with parent context — user edits before submitting
   const startDerive = (parentReq: any) => {
     setNewText(t('[Derived from {{code}}] ', { code: parentReq.code || t('parent') }))
-    setNewReqType(parentReq.rationale || 'performance')
+    setNewReqType(parentReq.req_type || 'performance')
     setNewMethod(parentReq.verification_method || 'A')
     setNewElementId(focusElementId || '')
     // A child's code extends its parent's: SR-002 → SR-002.1, SR-002.2 …
@@ -272,7 +272,7 @@ export function RequirementsPanel() {
               <span className="c2o-panel__meta">{reqs.length}</span>
             </h4>
             {reqs.map((req: any) => {
-              const reqType = REQ_TYPES.find(rt => rt.value === (req.level === 'interface' ? 'interface' : req.rationale)) || REQ_TYPES[0]
+              const reqType = REQ_TYPES.find(rt => rt.value === (req.level === 'interface' ? 'interface' : req.req_type)) || REQ_TYPES[0]
               const parentId = req.derived_from_requirement_id || req.parent_id
               const parentCode = parentId
                 ? allRequirements.find((r: any) => r.id === parentId)?.code || t('traced')

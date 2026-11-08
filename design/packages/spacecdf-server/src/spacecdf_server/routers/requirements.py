@@ -154,6 +154,7 @@ async def create_requirement(body: dict[str, Any]) -> dict:
         "code": body.get("code", req_id),
         "text": body.get("text", ""),
         "rationale": body.get("rationale"),
+        "req_type": body.get("req_type"),
         "threshold_param_path": body.get("threshold_param_path"),
         "threshold_op": body.get("threshold_op"),
         "threshold_value": body.get("threshold_value"),
@@ -169,6 +170,9 @@ async def create_requirement(body: dict[str, Any]) -> dict:
         # Interface requirement data (level "interface"): endpoints/type for IF-02, template info
         "ir_json": body.get("ir_json"),
     }
+    from ..db.requirement_repo import REQ_TYPES
+    if not req["req_type"] and req["rationale"] in REQ_TYPES:   # older clients sent the type here
+        req["req_type"], req["rationale"] = req["rationale"], None
     _requirements[req_id] = req
     await db_create_requirement(req)
     if level == "interface":
@@ -210,7 +214,7 @@ async def update_requirement(req_id: str, body: dict[str, Any]) -> dict:
     if req.get("level") == "interface":
         from ..services.interface_requirements import on_requirement_patched
         on_requirement_patched(req, body)
-    for key in ("text", "rationale", "threshold_param_path", "threshold_op",
+    for key in ("text", "rationale", "req_type", "threshold_param_path", "threshold_op",
                 "threshold_value", "verification_method", "verification_phase",
                 "responsible_position", "status", "code", "element_id",
                 "parent_id", "derived_from_requirement_id", "objective_id", "external_id"):

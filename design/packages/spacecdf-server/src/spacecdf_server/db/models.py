@@ -130,6 +130,8 @@ class RequirementRow(Base):
     code: Mapped[str] = mapped_column(String(32))  # e.g. "MR-001", "SR-PWR-002"
     text: Mapped[str] = mapped_column(Text)
     rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # functional / performance / interface / regulatory / process (was stored in rationale)
+    req_type: Mapped[str | None] = mapped_column(String(24), nullable=True)
     threshold_param_path: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     threshold_op: Mapped[str | None] = mapped_column(String(16), nullable=True)  # <= >= == in_range exists
     threshold_value: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON-encoded
