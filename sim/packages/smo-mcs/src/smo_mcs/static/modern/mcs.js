@@ -4427,7 +4427,7 @@ function buildProcPage() {
           <div class="row" style="margin-top:8px">
             <button class="ds-btn" id="pb-save" data-i18n="Save procedure">Save procedure</button>
             <button class="ds-btn" id="pb-run" data-i18n="Run these steps">Run these steps</button>
-            <button class="ds-btn" id="pb-clear" data-i18n="Clear">Clear</button>
+            <button class="ds-btn" id="pb-clear" data-i18n="Clear steps">Clear steps</button>
             <select id="pb-saved" class="in" aria-label="Saved procedures" data-i18n-aria-label><option value="" data-i18n>— load saved —</option></select>
           </div>
           <div id="pb-result" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
