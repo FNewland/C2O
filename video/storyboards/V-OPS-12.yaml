@@ -54,9 +54,9 @@ steps:
         maintien de lui-même : c’est l’opérateur qui le fait.
     do:
       - click: {css: "#rail-aocs"}
-      - wait_for: {target: {css: "#aocs-att2d"}, timeout: 20}
+      - wait_for: {target: {css: "#att3d"}, timeout: 20}
       - wait: 1.5
-      - highlight: {target: {css: "#aocs-att2d"}, seconds: 3.5, point: false}
+      - highlight: {target: {css: "#att3d"}, seconds: 3.5, point: false}
       - highlight: {target: {css: "#aocs-params"}, seconds: 3, point: false}
       - highlight: {target: {css: "#aocs-equip"}, seconds: 3, point: false}
 
@@ -147,7 +147,7 @@ steps:
         et les roues absorber le moment cinétique. La fiche demande une erreur sous cinq
         degrés avant tout essai de roue.
     do:
-      - js: "document.getElementById('page-aocs').scrollIntoView({block: 'start'})"
+      - js: "document.getElementById('att3d').scrollIntoView({block: 'center'})"
       - wait: 0.8
       - python: {call: "video/c2ovideo/helpers.py:fast_until_aocs_error", app: instructor, kwargs: {below: 4.0, speed: 10, timeout_s: 75}}
       - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0002", name: HK_REQUEST, position: flight_director}}
@@ -178,10 +178,12 @@ steps:
       - wait: 1.2
       - click: {css: "#aocs-quick-list button", has_text: {en: "ST Select 1", fr: "Sélection ST 1"}}
       - wait: 2
-      - js: "document.getElementById('page-aocs').scrollIntoView({block: 'start'})"
+      - js: "document.getElementById('att3d').scrollIntoView({block: 'center'})"
       - wait: 0.8
-      - highlight: {target: {css: "#aocs-att2d"}, seconds: 4, point: false}
-      - wait: 36
+      - highlight: {target: {css: "#att3d"}, seconds: 4, point: false}
+      - wait: 20
+      # tracker one boots in ~60 s; SID 2 carries its star count (0x0241)
+      - python: {call: "video/c2ovideo/helpers.py:wait_mcs_param", app: mcs, kwargs: {pid: "0x0241", at_least: 5, timeout_s: 90}}
 
   - id: tracking
     title: {en: "Tracking", fr: "En poursuite"}

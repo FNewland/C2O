@@ -78,6 +78,24 @@ async def fast_until_aocs_error(client, below: float = 5.0, speed: float = 10, t
     return await err()
 
 
+
+async def wait_mcs_param(client, pid: str, at_least: float, timeout_s: float = 120) -> float | None:
+    """Wait (capture still recording) until the MCS shows ``pid`` >= ``at_least``.
+
+    ``client`` is the MCS API; ``pid`` is the hex id as /api/state keys it
+    ("0x0241"). Returns the last value seen (None if never received).
+    """
+    import asyncio
+
+    t0, v = time.time(), None
+    while time.time() - t0 < timeout_s:
+        r = await client.get("/api/state")
+        v = r.json().get("params", {}).get(pid)
+        if v is not None and float(v) >= at_least:
+            break
+        await asyncio.sleep(1.0)
+    return v
+
 async def seed_spacecdf_eosat(client, name: str = "EOSAT-1") -> str:
     """A new SpaceCDF study seeded with the EOSAT-1-like design used in the API tests
     (design/tests/test_api/diagram_seed.py): product tree, modes, power lines,
