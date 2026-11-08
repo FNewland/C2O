@@ -500,7 +500,9 @@ async def test_clocks_track_engine_under_latency(e2e):
                    timeout=10, msg="MCS anchored at x60")
     await wait_for(lambda: e2e.ticks.ready, timeout=5, msg="engine ticks observed")
     tick = TICK_S * SPEED
-    slack = 0.5 * SPEED
+    # 0.75 s of wall time: 0.5 s failed the 2026-11-08 nightly by 10 ms of
+    # runner jitter (all three clocks ran ahead together, i.e. the runner).
+    slack = 0.75 * SPEED
     rows = []
     anchors: dict[float, str] = {}
     for i in range(40):
