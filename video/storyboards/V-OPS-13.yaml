@@ -29,7 +29,7 @@ setup:
   - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-COM-012}}
   - wait: 2
   - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: false}, allow_error: true}
-  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 540, min_elevation: 15, after_aos: 8}}
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 540, min_elevation: 15, after_aos: 90}}
   - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0002", name: HK_REQUEST, position: flight_director}}
   - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0007", name: HK_ENABLE, position: flight_director}}
   - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 5, data_hex: "0005", name: HK_ENABLE, position: flight_director}}
