@@ -1,0 +1,197 @@
+# Week 5 — a complex task: under-voltage in a pass, worked with CTG-001 (WB-A-CTG-001).
+# The bus drops below the 28.4 V flag; the spacecraft has already shed the payload
+# (tiered on-board shedder, CTG-001 ruling 2026-11-07); the operator checks before
+# commanding, reads the card's branch, holds and monitors; the instructor speeds
+# time and the spacecraft restores the line at 28.9 V.
+id: V-OPS-10
+week: 5
+audience: all
+title:
+  en: "Under-voltage: check before you shed"
+  fr: "Sous-tension : vérifier avant de délester"
+summary:
+  en: "The bus voltage drops below its limit in the middle of a pass. Read the alarm, see what the spacecraft has already shed, follow CTG-001's branch, hold and monitor, and watch the spacecraft restore the line as the battery recovers."
+  fr: "La tension du bus passe sous sa limite au milieu d’un passage. Lire l’alarme, voir ce que le satellite a déjà délesté, suivre la branche de CTG-001, maintenir et surveiller, et voir le satellite rétablir la ligne à mesure que la batterie se recharge."
+apps:
+  mcs: default
+fresh_stack: sim
+ties:
+  worksheets: [WB-A-CTG-001, WB-A-CTG-001/q1, WB-A-CTG-001/q2, WB-A-CTG-001/q7]
+  cards: [CTG-001]
+sources:
+  - sim/configs/eosat1/procedures/contingency/undervoltage_loadshed.md (CTG-001 rev 1.2)
+  - sim/configs/eosat1/simulation.yaml (eps.load_shed.levels_v, auto_restore)
+
+setup:
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: load_breakpoint, name: card-END}}
+  - wait: 2
+  - api: {app: instructor, method: POST, path: /api/command, json: {type: override_passes, enabled: false}, allow_error: true}
+  - python: {call: "video/c2ovideo/helpers.py:ff_to_pass", app: instructor, kwargs: {planner: "${planner_url}", min_duration: 420, min_elevation: 15, after_aos: 20}}
+  - api: {app: mcs, method: POST, path: /api/pus-command, json: {service: 3, subtype: 27, data_hex: "0001", name: HK_REQUEST, position: flight_director}}
+  - wait: 3
+  - goto: {app: mcs, path: "/?lang={lang}&position=flight_director", settle: 4}
+  - js: "fetch('/api/logbook', {method: 'DELETE', credentials: 'same-origin'})"
+  - reload: 5
+
+steps:
+  - id: calm
+    title: {en: "A sunlit pass", fr: "Un passage au soleil"}
+    say:
+      en: >-
+        A pass over Iqaluit, in sunlight. The power picture on the overview shows the arrays
+        feeding the bus and the battery charging. Then the instructor drains the battery: a
+        cell problem, an eclipse that ran long, it does not matter yet. Watch the power block.
+      fr: >-
+        Un passage au-dessus d’Iqaluit, au soleil. Le schéma d’énergie de la vue d’ensemble
+        montre les générateurs qui alimentent le bus et la batterie qui se charge. Puis
+        l’instructeur vide la batterie : une cellule en défaut, une éclipse trop longue, peu
+        importe pour l’instant. Surveillez le bloc énergie.
+    do:
+      - wait: 1.0
+      - highlight: {target: {css: "#ovr-power-card"}, seconds: 3, point: false}
+      - wait: 4
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: failure_inject, subsystem: eps, failure: undervoltage, onset: step, magnitude: 1.0, soc_pct: 54}}
+      - wait: 3
+
+  - id: alarm
+    title: {en: "Read the alarm", fr: "Lire l’alarme"}
+    say:
+      en: >-
+        Two alarms on the bus voltage: twenty-eight point three volts, under the twenty-eight
+        point four limit. One comes from the spacecraft's own monitor, the other from the
+        ground limit. Both rows name the same card: the contingency procedure CTG-001, the under-voltage load shed.
+        Acknowledge: you have seen it and you own it.
+      fr: >-
+        Deux alarmes sur la tension du bus : vingt-huit virgule trois volts, sous la limite de
+        vingt-huit virgule quatre. L’une vient du moniteur de bord, l’autre de la limite au
+        sol. Les deux lignes nomment la même fiche : la procédure de contingence CTG-001, le délestage sur sous-tension.
+        Acquittez : vous l’avez vue et vous en êtes responsable.
+    do:
+      - wait_for: {target: {css: "#alarms-btn"}, timeout: 30}
+      - click: {css: "#alarms-btn"}
+      - wait_for: {target: {css: "#alarm-drawer.open div[data-id] [data-act='ack']"}, timeout: 40}
+      - highlight: {target: {css: "#alarm-drawer.open div[data-id]:has-text('bus_voltage')"}, seconds: 4, point: false}
+      - click: {css: "#alarm-drawer.open div[data-id]:has-text('bus_voltage') [data-act='ack']"}
+      - wait: 1.5
+
+  - id: check
+    title: {en: "Check before you command", fr: "Vérifier avant de commander"}
+    say:
+      en: >-
+        The card's first rule: read before you command. Open the power page. The spacecraft
+        has already acted: the payload line is off, the load shed ladder sits at level one,
+        and the events say load shed stage one. Sending Payload Off now would be a command
+        for nothing. Everything else is still on, and the battery is charging.
+      fr: >-
+        Première règle de la fiche : lire avant de commander. Ouvrez la page énergie. Le
+        satellite a déjà agi : la ligne de la charge utile est coupée, l’échelle de délestage
+        est au niveau un, et les événements indiquent le délestage de niveau un. Envoyer Payload
+        Off maintenant serait une commande pour rien. Tout le reste est encore alimenté, et la
+        batterie se charge.
+    do:
+      - click: {css: "[data-page='eps']"}
+      - wait_for: {target: {css: "#eps-flow svg, #eps-flow *"}, timeout: 20}
+      - wait: 1.5
+      - highlight: {target: {css: ".ds-card:has(#eps-flow)"}, seconds: 3, point: false}
+      - highlight: {target: {css: ".ds-card:has(#eps-stepper)"}, seconds: 2.5}
+      - highlight: {target: {css: ".ds-card:has(#eps-events)"}, seconds: 2.5}
+    question:
+      type: multichoice
+      worksheet: WB-A-CTG-001/q1
+      text:
+        en: "The bus is under its limit. What do you do before sending any shed command?"
+        fr: "Le bus est sous sa limite. Que faites-vous avant d’envoyer une commande de délestage ?"
+      options:
+        - text: {en: "Read the line states: the spacecraft may already have shed some loads.", fr: "Lire l’état des lignes : le satellite a peut-être déjà délesté certaines charges."}
+          correct: true
+          why: {en: "On-board FDIR acts in a second; the ground sheds only what is still on.", fr: "La FDIR de bord agit en une seconde ; le sol ne déleste que ce qui est encore alimenté."}
+        - text: {en: "Send every shed command at once, to be safe.", fr: "Envoyer toutes les commandes de délestage d’un coup, par sécurité."}
+          why: {en: "Shedding the transmitter can cost you the link you need to recover.", fr: "Couper l’émetteur peut vous faire perdre la liaison dont vous avez besoin pour rétablir."}
+        - text: {en: "Wait for the next pass and see whether it clears.", fr: "Attendre le passage suivant pour voir si cela se résorbe."}
+          why: {en: "In eclipse the battery keeps draining; the card is worked in this pass.", fr: "En éclipse, la batterie continue de se vider ; la fiche se traite pendant ce passage."}
+
+  - id: card
+    title: {en: "What the card says", fr: "Ce que dit la fiche"}
+    say:
+      en: >-
+        The alarm row opens the card. Its objective explains the physics: shedding does not lift
+        the bus, because the bus follows the battery's charge. What shedding changes is how
+        fast it falls. So each check asks whether the bus has fallen to the next level.
+      fr: >-
+        La ligne d’alarme ouvre la fiche. Son objectif explique la physique : délester ne relève
+        pas le bus, parce que le bus suit la charge de la batterie. Ce que le délestage change,
+        c’est la vitesse de la baisse. Chaque vérification demande donc si le bus est descendu
+        au niveau suivant.
+    do:
+      - js: "(() => { const d = document.getElementById('alarm-drawer'); if (!d.classList.contains('open')) document.getElementById('alarms-btn').click(); })()"
+      - wait: 1.0
+      - click: {css: "#alarm-drawer.open div[data-id]:has-text('bus_voltage') a.proc"}
+      - wait_for: {target: {css: "#proc-doc h4"}, timeout: 20}
+      - wait: 1.5
+      - scroll: {target: {text: {en: "Shedding does not lift the bus", fr: "Le délestage ne relève pas le bus"}}}
+      - highlight: {target: {text: {en: "Shedding does not lift the bus", fr: "Le délestage ne relève pas le bus"}}, seconds: 4}
+
+  - id: decide
+    title: {en: "Hold at this level", fr: "Maintenir ce niveau"}
+    say:
+      en: >-
+        Step two is the payload, and the spacecraft has done it. Its check: is the bus above
+        twenty-eight point four volts? It is climbing back, in sunlight, as the battery charges.
+        That is a GO: hold at this level and go straight to monitoring. In eclipse it would
+        still be falling, and you would look at the next level, the cooler, at twenty-seven
+        point eight.
+      fr: >-
+        L’étape deux, c’est la charge utile, et le satellite l’a déjà fait. Sa vérification : le
+        bus est-il au-dessus de vingt-huit virgule quatre volts ? Il remonte, au soleil, à mesure
+        que la batterie se charge. C’est un GO : maintenir ce niveau et passer directement à la
+        surveillance. En éclipse, il baisserait encore, et vous regarderiez le niveau suivant,
+        le refroidisseur, à vingt-sept virgule huit.
+    do:
+      - scroll: {target: {text: {en: "Shed Load Priority 1", fr: "Délester la charge de priorité 1"}}}
+      - highlight: {target: {text: {en: "Shed Load Priority 1", fr: "Délester la charge de priorité 1"}}, seconds: 3}
+      - scroll: {target: {text: {en: "Step 6: Monitor Recovery", fr: "Surveiller le rétablissement"}}}
+      - highlight: {target: {text: {en: "Step 6: Monitor Recovery", fr: "Surveiller le rétablissement"}}, seconds: 3}
+    question:
+      type: multichoice
+      worksheet: WB-A-CTG-001/q2
+      text:
+        en: "The payload is off and the bus reads 28.35 V, rising slowly in sunlight. What next?"
+        fr: "La charge utile est coupée et le bus lit 28,35 V, en lente hausse au soleil. Et ensuite ?"
+      options:
+        - text: {en: "Hold at this level and monitor: the fall has stopped.", fr: "Maintenir ce niveau et surveiller : la baisse s’est arrêtée."}
+          correct: true
+          why: {en: "Each check asks whether the bus is still falling towards the next level. It is not.", fr: "Chaque vérification demande si le bus descend encore vers le niveau suivant. Ce n’est pas le cas."}
+        - text: {en: "Shed the cooler: the bus is still under 28.4 V.", fr: "Délester le refroidisseur : le bus est encore sous 28,4 V."}
+          why: {en: "Shedding does not lift the bus; only charging does. The cooler would buy nothing here.", fr: "Délester ne relève pas le bus ; seule la charge le fait. Le refroidisseur n’apporterait rien ici."}
+        - text: {en: "Restore the payload: the bus is rising.", fr: "Rétablir la charge utile : le bus remonte."}
+          why: {en: "Restore waits for 29.0 V and 50 % charge, with the bus stable.", fr: "Le rétablissement attend 29,0 V et 50 % de charge, avec un bus stable."}
+
+  - id: recover
+    title: {en: "Recovery", fr: "Le rétablissement"}
+    say:
+      en: >-
+        Monitoring means a housekeeping request every minute and your eyes on the bus. To save
+        time, the instructor speeds the simulator up. The battery charges and the bus climbs.
+        At twenty-eight point nine volts the spacecraft restores the payload line by itself.
+        The card's last step then commands only what is still needed, one load at a time, with
+        the bus staying above the shed level.
+      fr: >-
+        Surveiller, c’est une demande de servitude chaque minute et les yeux sur le bus. Pour
+        gagner du temps, l’instructeur accélère le simulateur. La batterie se charge et le bus
+        remonte. À vingt-huit virgule neuf volts, le satellite rétablit lui-même la ligne de la
+        charge utile. La dernière étape de la fiche ne commande alors que ce qui manque encore,
+        une charge à la fois, avec un bus qui reste au-dessus du niveau de délestage.
+    do:
+      - click: {css: "[data-page='eps']"}
+      - wait: 1.5
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 10}}
+      - highlight: {target: {css: ".ds-card:has(#eps-flow)"}, seconds: 0.1, point: false}
+      - wait: 22
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 1}}
+      - highlight: {target: {css: ".ds-card:has(#eps-stepper)"}, seconds: 2.5}
+    question:
+      type: reflect
+      worksheet: WB-A-CTG-001/q7
+      text:
+        en: "The same fault hits just after the spacecraft enters eclipse. Walk through what you would read, and when you would shed the next level."
+        fr: "La même panne survient juste après l’entrée en éclipse. Décrivez ce que vous liriez, et à quel moment vous délesteriez le niveau suivant."
