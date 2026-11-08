@@ -4501,6 +4501,9 @@ async function loadProcDoc() {
     let md = txt;
     try { const j = JSON.parse(txt); if (j && typeof j === "object") md = j.content_md || ""; }
     catch (e) { /* plain markdown */ }
+    // A newer selection won the race (an alarm's procedure link refreshes the
+    // list, which starts loading the previous card): drop this stale card.
+    if (($("proc-type") ? $("proc-type").value : "") !== v) return;
     setHTML("proc-doc", renderMarkdown(md));
     await mountProcDocCard(v);
   } catch (e) { setHTML("proc-doc", t("document unavailable")); }
