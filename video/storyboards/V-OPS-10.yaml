@@ -50,7 +50,7 @@ steps:
       - wait: 1.0
       - highlight: {target: {css: "#ovr-power-card"}, seconds: 3, point: false}
       - wait: 4
-      - api: {app: instructor, method: POST, path: /api/command, json: {type: failure_inject, subsystem: eps, failure: undervoltage, onset: step, magnitude: 1.0, soc_pct: 54}}
+      - api: {app: instructor, method: POST, path: /api/command, json: {type: failure_inject, subsystem: eps, failure: undervoltage, onset: step, magnitude: 1.0, soc_pct: 57}}
       - wait: 3
 
   - id: alarm
@@ -186,7 +186,8 @@ steps:
       - wait: 1.5
       - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 10}}
       - highlight: {target: {css: ".ds-card:has(#eps-flow)"}, seconds: 0.1, point: false}
-      - wait: 22
+      # ~4.5 min of simulated charging: the line comes back at 28.9 V, before LOS
+      - wait: 30
       - api: {app: instructor, method: POST, path: /api/command, json: {type: set_speed, value: 1}}
       - highlight: {target: {css: ".ds-card:has(#eps-stepper)"}, seconds: 2.5}
     question:
