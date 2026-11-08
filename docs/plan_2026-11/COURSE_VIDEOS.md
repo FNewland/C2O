@@ -94,9 +94,13 @@ Step 1 expectation of +8 to +14 °C.
 1. Link budget term by term: no screen shows it yet. SpaceCDF's `LinkBudgetTool.tsx` (a
    term-by-term cascade) is not mounted anywhere; the design loop shows only the margins.
    Mount it (Analyses or level 3), then film it (LW-3.3 B, D-3.3-LINK).
-2. CTG-001 under-voltage load shed: waiting for a ruling on whether the under-voltage
-   scenarios are scored; the video would show a recovery.
-3. The COM cards (same breakpoint pattern, `card-COM-001` … `card-COM-013`).
+2. CTG-001 under-voltage load shed (ruled 2026-11-07): fix the model so shedding visibly
+   slows the fall (in eclipse), make the card's restore limits consistent (32.1 V was about
+   87 % SoC, not 40 %), then film the operator working the branches.
+3. Ops videos (ruled 2026-11-07): not one video per COM card, only the hard or unique tasks:
+   fine pointing handover (COARSE_SUN to NOMINAL, wheels and star tracker), first light
+   (FPA cooler, payload on, first image down), no telemetry at a pass (ground, link or
+   spacecraft?). SpaceCDF open items are fixed first.
 
 Enablers built (2026-11-05): the instructor `step` command (+10 s button; API up to 1 h) and
 the missing ops sheets in the logbook (WB-5.4-VL, WB-5.7-SA, -LL, -WI, -FR, WB-B, WB-C).
