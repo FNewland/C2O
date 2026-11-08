@@ -3497,7 +3497,12 @@ function groundHighRateWarning(cmdName, rateVal) {
   const high = ladder.find((tr) => String(tr.name || "").toUpperCase() === "HIGH");
   const gate = high && Number(high.min_elevation_deg) > 0
     ? Number(high.min_elevation_deg) : 10;
-  const el = Number(paramVal("0x050A"));
+  // 0x050A is ground-derived and nothing feeds it, so reading it alone made
+  // this hold fire on EVERY HIGH request ("elevation unknown"), and the first
+  // press never sent anything (2026-11-08). The MCS's own pass geometry has
+  // the station elevation.
+  const el0 = paramVal("0x050A");
+  const el = Number(el0 != null && el0 !== "" ? el0 : (S.state || {}).gs_elevation_deg);
   const inContact = linkState(S.state).contact;
   if (inContact && Number.isFinite(el) && el >= gate) return null;
   const why = (!inContact || !Number.isFinite(el))

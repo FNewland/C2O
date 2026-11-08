@@ -1785,7 +1785,7 @@ commands:
       warns when HIGH is commanded below 10 deg from its own contact
       geometry, and the planner schedules HIGH dumps above it.
     arg_schema_version: 1
-    readback: { param_id: 0x0510, description: "ttc.tm_data_rate" }
+    readback: { param_id: 0x0506, description: "ttc.tm_data_rate" }
     deprecated_aliases:
       - form: "rate_bps uint32 (4 B)"
         note: >-

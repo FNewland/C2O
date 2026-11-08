@@ -2,7 +2,7 @@
 
 **Document ID:** EOSAT1-UM-REF-010  
 **Issue:** 2.0  
-**Source revision:** `tc_catalog.yaml@54eeb829db00`  
+**Source revision:** `tc_catalog.yaml@5540a9a08163`  
 **Classification:** UNCLASSIFIED — Mission Operations
 
 > **GENERATED FILE — DO NOT EDIT BY HAND.**  
@@ -1464,7 +1464,7 @@ Example: `40`
 
 #### TTC_SET_DATA_RATE
 
-**S8.1** · func_id **65** (0x41) · 2 data byte(s) · readback ttc.tm_data_rate (0x0510)
+**S8.1** · func_id **65** (0x41) · 2 data byte(s) · readback ttc.tm_data_rate (0x0506)
 
 Select a rung of the TM data-rate ladder defined in subsystems/ttc.yaml tm_rate_tiers. Sets data_rate_mode (the COMMANDED tier), which the TTC tick resolves the active tier from, so the commanded tier survives the tick and is authoritative. Three tiers: LOW 16 kbps BPSK conv(7,1/2)+RS — ROUTINE OPERATIONS, and the safe-mode / FDIR fallback; HIGH 128 kbps QPSK RS(255,223) — delayed-telemetry playback and image dumps only; SAFE 1 kbps BPSK conv(7,1/2)+RS — bootloader/contingency lifeline rate (renamed from BEACON, 2026-08c — "beacon" always means the UHF whip transmitter now), entered with TTC_SET_BEACON_MODE, not selectable here. LEGACY ENCODING PRESERVED VERBATIM: rate=0 still means "the low rate" and rate=1 still means "the high rate" — they now select LOW (16 kbps) and HIGH (128 kbps) instead of 1 kbps and 64 kbps, so existing procedures, OBCPs and the FDIR ttc_reduce_power action keep their meaning. Permission rules are enforced by REJECTION with an S1.8 execution failure (error 0x0007), never by silent clamping: HIGH requires a deployed antenna and DOWNLINK/dump mode (TTC_SET_DOWNLINK_MODE), and every tier except SAFE is refused while beacon mode is latched. An unknown tier code gives error 0x0003. There is NO on-board elevation gate (2026-08c): the 10 deg HIGH policy is a GROUND rule — the MCS warns when HIGH is commanded below 10 deg from its own contact geometry, and the planner schedules HIGH dumps above it.
 
