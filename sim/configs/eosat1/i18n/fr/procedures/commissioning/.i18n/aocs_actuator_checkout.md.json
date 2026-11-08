@@ -34,8 +34,8 @@
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-1b-command-wheel-controlled-nominal",
-   "en_hash": "b7607a40dc8b782d",
-   "fr_hash": "24262157c13d72fe"
+   "en_hash": "044e19cb5869300f",
+   "fr_hash": "0a3acc204fa6cf8f"
   },
   {
    "id": "com-004-aocs-actuator-checkout/procedure-steps/step-2-record-baseline-wheel-speeds",
@@ -93,5 +93,5 @@
    "fr_hash": "d8d817b8c2456954"
   }
  ],
- "en_commit": "d6b51dd"
+ "en_commit": "afcf903"
 }

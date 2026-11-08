@@ -27,6 +27,16 @@ TimeSourceResult = Union[float, int, CucTime]
 TimeSource = Callable[[], TimeSourceResult]
 
 
+
+#: Integer ranges of the HK pack formats (saturation, not wrap or zero).
+_INT_RANGE = {
+    'b': (-2**7, 2**7 - 1), 'B': (0, 2**8 - 1),
+    'h': (-2**15, 2**15 - 1), 'H': (0, 2**16 - 1),
+    'i': (-2**31, 2**31 - 1), 'I': (0, 2**32 - 1),
+    'l': (-2**31, 2**31 - 1), 'L': (0, 2**32 - 1),
+    'q': (-2**63, 2**63 - 1), 'Q': (0, 2**64 - 1),
+}
+
 class MissingTimeSourceError(RuntimeError):
     """Raised when a TM packet is built with no on-board clock available.
 
@@ -131,9 +141,19 @@ class TMBuilder:
         for param_id, fmt, scale in hk_structure:
             value = params.get(param_id, 0)
             try:
-                packed_val = int(round(float(value) * scale))
+                raw = float(value) * scale
+                if fmt in ('f', 'd'):
+                    data += struct.pack('>' + fmt, raw)
+                    continue
+                # Saturate at the field's range, as a flight packer does: an
+                # out-of-range value used to go down as 0, so a 121 deg
+                # attitude error (0x0217, H x1000, max 65.5) read 0.0 deg.
+                lo, hi = _INT_RANGE.get(fmt, (None, None))
+                packed_val = int(round(raw))
+                if lo is not None:
+                    packed_val = max(lo, min(hi, packed_val))
                 data += struct.pack('>' + fmt, packed_val)
-            except (struct.error, OverflowError, TypeError):
+            except (struct.error, OverflowError, TypeError, ValueError):
                 data += struct.pack('>' + fmt, 0)
         if apid is not None and (int(apid) & 0x7FF) != self._apid:
             return self._pack_tm_as(int(apid) & 0x7FF, 3, 25, data, cuc)

@@ -64,7 +64,7 @@ senseur dans l'estimateur. Cette commande mémorise aussi `aocs.commanded_mode`
 **Verify:** `aocs.mode` (0x020F) dans {4, 8} sous 300s --- 8 (ECLIPSE) est le
 passage de relais côté ombre du même état commandé
 **Verify:** `aocs.commanded_mode` (0x0297) = 4 sous 10s
-**Verify:** `aocs.att_error` (0x0217) < 5.0 deg sous 900s --- le basculement du maintien solaire vers le nadir doit être terminé AVANT l'étape 3 : les contrôles de mise en rotation jugent une perturbation de 5 deg, et le basculement lui-même part de 40-60 deg
+**Verify:** `aocs.att_error` (0x0217) < 5.0 deg sous 900s --- le basculement du maintien solaire vers le nadir doit être terminé AVANT l'étape 3 : les contrôles de mise en rotation jugent une perturbation de 5 deg, et le basculement lui-même peut partir de n'importe quel angle jusqu'à 180 deg : le maintien solaire pointe +X vers le Soleil, l'erreur de départ est donc la géométrie Soleil-nadir du moment (121 deg lors d'un passage ensoleillé au-dessus d'Iqaluit)
 **GO/NO-GO:** AOCS en NOMINAL sur les roues
 
 ### Étape 2 — Consigner les vitesses de référence des roues

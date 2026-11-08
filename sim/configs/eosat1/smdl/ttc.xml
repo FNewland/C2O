@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="TTC" Creator="EOSAT-1 SMDL Generator" Version="1.0+5467baa7f751">
+<Catalogue xmlns="http://www.ecss.nl/smp/2019/Smdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="TTC" Creator="EOSAT-1 SMDL Generator" Version="1.0+0053cf0b376a">
   <Description>SMP2 model catalogue for TTC subsystem</Description>
   <Type Name="UInt8" Uuid="ab46787a-5742-5d41-9471-82b8d26b3826" xsi:type="Integer" Size="1" Signed="false"/>
   <Type Name="UInt16" Uuid="00ba295b-550c-5551-b87d-d604e30c7592" xsi:type="Integer" Size="2" Signed="false"/>
@@ -13,10 +13,10 @@
     <Field Name="ttc_mode" Uuid="8f5bb849-45e7-5143-a30e-8f5ce0579ef1" Type="UInt8" Kind="Output" View="true"/>
     <Field Name="ttc_link_status" Uuid="e9e6357b-f16e-54ef-bcc3-83d61507eb52" Type="UInt8" Kind="Output" View="true"/>
     <Field Name="ttc_rssi" Uuid="af92ee2e-3960-52a1-96d2-0dc8cfc1410c" Type="Float32" Kind="Output" View="true">
-      <Description>[dBm]</Description>
+      <Description>Downlink signal level at the ground antenna [dBm]</Description>
     </Field>
     <Field Name="ttc_link_margin" Uuid="28c0962f-0bb7-559b-bd65-cdcacf307dd7" Type="Float32" Kind="Output" View="true">
-      <Description>[dB]</Description>
+      <Description>Downlink margin against the ground link budget [dB]</Description>
     </Field>
     <Field Name="ttc_tm_data_rate" Uuid="9daa0594-4459-5a14-a4a7-5e968a032f21" Type="UInt32" Kind="Output" View="true">
       <Description>Active TM information rate (SAFE 1000 / LOW 16000 / HIGH 128000) [bps]</Description>

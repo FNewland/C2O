@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SpaceSystem xmlns="http://www.omg.org/spec/XTCE/20180204" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="EOSAT-1">
-  <Header version="1.0+5467baa7f751" classification="Unclassified — Simulation"/>
+  <Header version="1.0+0053cf0b376a" classification="Unclassified — Simulation"/>
   <SpaceSystem name="CCSDS">
     <LongDescription>CCSDS Space Packet Protocol header definitions</LongDescription>
     <TelemetryMetaData>
@@ -1385,7 +1385,7 @@
           <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
             <DefaultCalibrator>
               <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
+                <Term coefficient="0.001" exponent="1"/>
               </PolynomialCalibrator>
             </DefaultCalibrator>
           </IntegerDataEncoding>
@@ -1397,7 +1397,7 @@
           <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
             <DefaultCalibrator>
               <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
+                <Term coefficient="0.001" exponent="1"/>
               </PolynomialCalibrator>
             </DefaultCalibrator>
           </IntegerDataEncoding>
@@ -1409,7 +1409,7 @@
           <IntegerDataEncoding sizeInBits="16" encoding="twosComplement">
             <DefaultCalibrator>
               <PolynomialCalibrator>
-                <Term coefficient="0.0001" exponent="1"/>
+                <Term coefficient="0.001" exponent="1"/>
               </PolynomialCalibrator>
             </DefaultCalibrator>
           </IntegerDataEncoding>
@@ -1528,7 +1528,7 @@
           <IntegerDataEncoding sizeInBits="16" encoding="unsigned">
             <DefaultCalibrator>
               <PolynomialCalibrator>
-                <Term coefficient="0.001" exponent="1"/>
+                <Term coefficient="0.01" exponent="1"/>
               </PolynomialCalibrator>
             </DefaultCalibrator>
           </IntegerDataEncoding>
@@ -5040,8 +5040,12 @@
       <ParameterSet>
         <Parameter name="ttc_mode" parameterTypeRef="ttc_mode_Type"/>
         <Parameter name="ttc_link_status" parameterTypeRef="ttc_link_status_Type"/>
-        <Parameter name="ttc_rssi" parameterTypeRef="ttc_rssi_Type"/>
-        <Parameter name="ttc_link_margin" parameterTypeRef="ttc_link_margin_Type"/>
+        <Parameter name="ttc_rssi" parameterTypeRef="ttc_rssi_Type">
+          <LongDescription>Downlink signal level at the ground antenna</LongDescription>
+        </Parameter>
+        <Parameter name="ttc_link_margin" parameterTypeRef="ttc_link_margin_Type">
+          <LongDescription>Downlink margin against the ground link budget</LongDescription>
+        </Parameter>
         <Parameter name="ttc_tm_data_rate" parameterTypeRef="ttc_tm_data_rate_Type">
           <LongDescription>Active TM information rate (SAFE 1000 / LOW 16000 / HIGH 128000)</LongDescription>
         </Parameter>

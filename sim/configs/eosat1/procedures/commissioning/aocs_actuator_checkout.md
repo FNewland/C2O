@@ -64,7 +64,7 @@ tracker into the estimator. This command also latches `aocs.commanded_mode`
 **Verify:** `aocs.mode` (0x020F) in {4, 8} within 300s --- 8 (ECLIPSE) is the
 shadow-side handover of the same commanded state
 **Verify:** `aocs.commanded_mode` (0x0297) = 4 within 10s
-**Verify:** `aocs.att_error` (0x0217) < 5.0 deg within 900s --- the slew from the sun hold to nadir must finish BEFORE Step 3: the spin-up checks judge a 5 deg disturbance, and the slew itself starts at 40-60 deg
+**Verify:** `aocs.att_error` (0x0217) < 5.0 deg within 900s --- the slew from the sun hold to nadir must finish BEFORE Step 3: the spin-up checks judge a 5 deg disturbance, and the slew itself can start anywhere up to 180 deg: the sun hold points +X at the Sun, so the starting error is the Sun-to-nadir geometry of the moment (121 deg on a sunlit Iqaluit pass)
 **GO/NO-GO:** AOCS in NOMINAL on the wheels
 
 ### Step 2 — Record Baseline Wheel Speeds

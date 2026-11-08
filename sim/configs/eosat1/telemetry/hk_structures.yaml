@@ -115,10 +115,10 @@ structures:
       - { param_id: 0x0201, pack_format: h, scale: 10000 }
       - { param_id: 0x0202, pack_format: h, scale: 10000 }
       - { param_id: 0x0203, pack_format: h, scale: 10000 }
-      - { param_id: 0x0204, pack_format: h, scale: 10000 }
-      - { param_id: 0x0205, pack_format: h, scale: 10000 }
-      - { param_id: 0x0206, pack_format: h, scale: 10000 }
-      - { param_id: 0x0217, pack_format: H, scale: 1000 }
+      - { param_id: 0x0204, pack_format: h, scale: 1000 }  # body rates x1000: +-32.7 deg/s covers the 14 deg/s separation tumble (x10000 capped at 3.27)
+      - { param_id: 0x0205, pack_format: h, scale: 1000 }
+      - { param_id: 0x0206, pack_format: h, scale: 1000 }
+      - { param_id: 0x0217, pack_format: H, scale: 100 }    # att_error, 0.01 deg steps: 0-180 deg fits (x1000 capped at 65.5 deg)
       - { param_id: 0x02D3, pack_format: B, scale: 1 }
       - { param_id: 0x0207, pack_format: h, scale: 1 }
       - { param_id: 0x0208, pack_format: h, scale: 1 }
