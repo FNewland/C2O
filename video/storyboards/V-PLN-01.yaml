@@ -27,16 +27,18 @@ steps:
     title: {en: "The next 24 hours", fr: "Les 24 prochaines heures"}
     say:
       en: >-
-        The planner shows the next twenty-four hours on one time axis. The top row is eclipse:
-        about thirty-four minutes in every ninety-five-minute orbit. Below it, one row per
-        ground station, with every pass. At the bottom is the predicted battery charge, with
-        the planned activities applied. Everything you plan is judged against that curve.
+        The mission planner displays the next twenty-four hours on a single time axis. The top
+        row shows eclipses, which last about thirty-four minutes in each ninety-five-minute
+        orbit. Below it is one row per ground station, showing every pass. The bottom row shows
+        the predicted battery state of charge, taking the planned activities into account. Every
+        planned activity is assessed against this curve.
       fr: >-
-        Le planificateur montre les vingt-quatre prochaines heures sur un même axe du temps. La
-        première ligne est l’éclipse : environ trente-quatre minutes sur chaque orbite de
-        quatre-vingt-quinze minutes. En dessous, une ligne par station sol, avec chaque passage.
-        En bas, la charge prévue de la batterie, activités planifiées comprises. Tout ce que
-        vous planifiez est jugé par rapport à cette courbe.
+        Le planificateur de mission présente les vingt-quatre prochaines heures sur un seul axe
+        du temps. La première ligne indique les éclipses, qui durent environ trente-quatre
+        minutes sur chaque orbite de quatre-vingt-quinze minutes. En dessous figure une ligne
+        par station sol, avec chaque passage. La dernière ligne présente l’état de charge prévu
+        de la batterie, compte tenu des activités planifiées. Chaque activité planifiée est
+        évaluée par rapport à cette courbe.
     do:
       - wait: 1.0
       - highlight: {target: {css: "#panel-overview svg"}, seconds: 4, point: false}
@@ -45,17 +47,17 @@ steps:
     title: {en: "The next contact", fr: "Le prochain contact"}
     say:
       en: >-
-        On the right, the next contact: the station, the time of acquisition of signal, AOS,
-        how long the pass lasts and its maximum elevation, how high it climbs above the
-        horizon. A short, low pass leaves little time for commanding, so check the duration
-        before you put a procedure in it. The contacts table further down lists every pass with
-        its loss of signal, LOS.
+        The panel on the right shows the next contact: the ground station, the time of
+        acquisition of signal, or AOS, the duration of the pass and its maximum elevation above
+        the horizon. A short, low pass leaves little time for commanding, so the duration should
+        be checked before a procedure is scheduled in it. The contacts table further down lists
+        every pass together with its time of loss of signal, or LOS.
       fr: >-
-        À droite, le prochain contact : la station, l’heure d’acquisition du signal, l’AOS, la
-        durée du passage et son élévation maximale, la hauteur atteinte au-dessus de l’horizon.
-        Un passage court et bas laisse peu de temps pour commander : vérifiez la durée avant d’y
-        placer une procédure. Le tableau des contacts, plus bas, liste chaque passage avec sa
-        perte du signal, la LOS.
+        Le panneau de droite indique le prochain contact : la station sol, l’heure d’acquisition
+        du signal, ou AOS, la durée du passage et son élévation maximale au-dessus de l’horizon.
+        Un passage court et bas laisse peu de temps pour commander : il faut donc vérifier la
+        durée avant d’y programmer une procédure. Le tableau des contacts, plus bas, liste
+        chaque passage avec son heure de perte du signal, ou LOS.
     do:
       - highlight: {target: {css: "#factAos"}, seconds: 3.5}
       - scroll: {css: "#panel-contacts"}
@@ -74,17 +76,19 @@ steps:
     title: {en: "Ground track and eclipse", fr: "Trace au sol et éclipse"}
     say:
       en: >-
-        The ground track shows where the spacecraft was over the last ninety minutes and where
-        it will be over the next ninety. The shaded part of the track is in eclipse. The
-        numbers beside it give the orbit: period, inclination and the beta angle, the angle
-        between the orbit plane and the Sun. Beta sets how long the eclipses are, and so how
-        much energy each orbit gives you.
+        The ground track shows the position of the spacecraft over the previous ninety minutes
+        and its predicted position over the next ninety. The shaded section of the track is in
+        eclipse. The values beside it describe the orbit: the period, the inclination and the
+        beta angle, which is the angle between the orbit plane and the direction of the Sun. The
+        beta angle determines the length of the eclipses, and therefore the energy available in
+        each orbit.
       fr: >-
-        La trace au sol montre où se trouvait le satellite pendant les quatre-vingt-dix dernières
-        minutes et où il sera pendant les quatre-vingt-dix prochaines. La partie ombrée de la
-        trace est en éclipse. Les chiffres à côté donnent l’orbite : période, inclinaison et
-        angle bêta, l’angle entre le plan de l’orbite et le Soleil. Bêta fixe la durée des
-        éclipses, et donc l’énergie que vous donne chaque orbite.
+        La trace au sol présente la position du satellite au cours des quatre-vingt-dix
+        dernières minutes et sa position prévue pour les quatre-vingt-dix prochaines. La partie
+        ombrée de la trace correspond à l’éclipse. Les valeurs à côté décrivent l’orbite : la
+        période, l’inclinaison et l’angle bêta, c’est-à-dire l’angle entre le plan de l’orbite
+        et la direction du Soleil. L’angle bêta détermine la durée des éclipses, et donc
+        l’énergie disponible sur chaque orbite.
     do:
       - scroll: {css: "#panel-map"}
       - highlight: {target: {css: "#groundTrackMap"}, seconds: 4, point: false}
@@ -94,17 +98,18 @@ steps:
     title: {en: "Schedule an imaging activity", fr: "Programmer une activité d’imagerie"}
     say:
       en: >-
-        Imaging opportunities lists the targets the spacecraft will fly over, with the capture
-        time, the access time, the off-nadir angle, how far the camera tilts from straight
-        down, and the Sun elevation. Schedule one. The
-        activity starts before the capture time, because the detector cooler needs about eight
-        minutes to cool down first.
+        The imaging opportunities list shows the targets the spacecraft will pass over, with the
+        capture time, the access duration, the off-nadir angle, which is the camera tilt from
+        the vertical, and the Sun elevation. In this example one opportunity is scheduled. The
+        activity begins before the capture time, because the detector cooler needs about eight
+        minutes to reach its operating temperature.
       fr: >-
-        Les opportunités d’imagerie listent les cibles que le satellite survolera, avec l’heure
-        de prise de vue, la durée d’accès, l’angle de dépointage, l’inclinaison de la caméra par
-        rapport à la verticale, et l’élévation du Soleil.
-        Programmez-en une. L’activité commence avant l’heure de prise de vue, car le
-        refroidisseur du détecteur a besoin d’environ huit minutes pour refroidir d’abord.
+        La liste des opportunités d’imagerie présente les cibles que le satellite survolera,
+        avec l’heure de prise de vue, la durée d’accès, l’angle de dépointage, c’est-à-dire
+        l’inclinaison de la caméra par rapport à la verticale, et l’élévation du Soleil. Dans
+        cet exemple, une opportunité est programmée. L’activité commence avant l’heure de prise
+        de vue, car le refroidisseur du détecteur a besoin d’environ huit minutes pour atteindre
+        sa température de fonctionnement.
     do:
       - scroll: {css: "#panel-imaging"}
       - highlight: {target: {css: "#imagingOpportunitiesPanel tr:visible:has-text('Gulf Stream')"}, seconds: 3, point: false}
@@ -129,16 +134,16 @@ steps:
     title: {en: "Check the constraints", fr: "Vérifier les contraintes"}
     say:
       en: >-
-        Before anything is uploaded, run the constraint check. It replays the plan against
-        power, attitude, thermal and data volume, and flags any conflict between activities.
-        A plan is only ready when the schedule is valid and the constraints are met. That is
-        your Day 1 pass plan, ready for the other team to challenge.
+        Before anything is uploaded, the constraint check is run. It evaluates the plan against
+        power, attitude, thermal and data volume constraints, and reports any conflict between
+        activities. A plan is ready only when the schedule is valid and all constraints are
+        satisfied. The result is the team's Day 1 pass plan, which the other team then reviews.
       fr: >-
-        Avant tout envoi, lancez la vérification des contraintes. Elle rejoue le plan face à
-        l’énergie, à l’attitude, au thermique et au volume de données, et signale tout conflit
-        entre activités. Un plan n’est prêt que si le programme est valide et les contraintes
-        respectées. Voilà votre plan de passage du jour 1, prêt à être contesté par l’autre
-        équipe.
+        Avant tout envoi, on lance la vérification des contraintes. Elle évalue le plan au
+        regard des contraintes d’énergie, d’attitude, de thermique et de volume de données, et
+        signale tout conflit entre activités. Un plan n’est prêt que lorsque le programme est
+        valide et que toutes les contraintes sont respectées. Le résultat est le plan de passage
+        du jour 1 de l’équipe, que l’autre équipe examine ensuite.
     do:
       - scroll: {css: "#btnValidateConstraints"}
       - click: {css: "#btnValidateConstraints"}

@@ -75,5 +75,5 @@ slides:
 - kind: close
   h: {en: "Today", fr: "Aujourd'hui"}
   items:
-  - {en: "Watch: Packets, services and housekeeping; A telecommand's life; Plan a pass in the mission planner; NOM-001: the procedure card is your workbook", fr: "À regarder : Paquets, services et données de servitude ; La vie d’une télécommande ; Planifier un passage dans le planificateur de mission ; NOM-001 : la fiche de procédure est votre cahier de travail"}
+  - {en: "Watch: Packets, services and housekeeping; A telecommand's life; Plan a pass in the mission planner; NOM-001: working through a procedure card", fr: "À regarder : Paquets, services et données de servitude ; La vie d’une télécommande ; Planifier un passage dans le planificateur de mission ; NOM-001 : dérouler une fiche de procédure"}
   - {en: "Hands-on: MCS round-robin across positions; pass-plan team exercise", fr: "Pratique : tour des postes du MCS ; exercice d'équipe de planification de passage"}

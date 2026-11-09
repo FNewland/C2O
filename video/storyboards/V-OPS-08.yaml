@@ -35,20 +35,23 @@ steps:
     title: {en: "Step 2: a clock that was never set", fr: "Étape 2 : une horloge jamais réglée"}
     say:
       en: >-
-        Every packet the spacecraft sends carries its own time, so that time must be right
-        before commissioning. Open the page for the packet utilisation standard, PUS, at service
-        nine, time management, S9 TIME on the console, and request a time report. Since boot,
-        the on-board clock has counted from its epoch, the mission's zero: noon on the first of
-        January two thousand, years behind the ground clock. The time reference reads NONE, and
-        the time since the last sync says never synced. That is expected: no one has set it yet.
+        Every packet the spacecraft sends is time-stamped on board, so the on-board time must be
+        correct before commissioning begins. The operator opens the page for the packet
+        utilisation standard, PUS, at service nine, time management, shown as S9 TIME on the
+        console, and requests a time report. Since the boot, the on-board clock has been
+        counting from the mission epoch, which is noon on the first of January two thousand, and
+        it is therefore years behind the ground clock. The time reference reads NONE and the
+        time since the last synchronisation reads never synchronised. This is expected, because
+        the clock has not yet been set.
       fr: >-
-        Chaque paquet émis par le satellite porte sa propre date : cette heure doit être juste
-        avant la mise en service. Ouvrez la page de la norme d’utilisation des paquets, PUS, au
-        service neuf, gestion du temps, S9 TIME sur la console, et demandez un rapport de temps.
-        Depuis le démarrage, l’horloge de bord compte à partir de son époque, le zéro de la
-        mission : le premier janvier deux mille à midi, des années en retard sur l’horloge sol.
-        La référence de temps indique NONE, et le temps depuis la dernière synchronisation
-        indique jamais synchronisée. C’est normal : personne ne l’a encore réglée.
+        Chaque paquet émis par le satellite est daté à bord : l’heure de bord doit donc être
+        correcte avant le début de la mise en service. L’opérateur ouvre la page de la norme
+        d’utilisation des paquets, PUS, au service neuf, gestion du temps, affichée S9 TIME sur
+        la console, et demande un rapport de temps. Depuis le démarrage, l’horloge de bord
+        compte à partir de l’époque de la mission, le premier janvier deux mille à midi, et elle
+        a donc des années de retard sur l’horloge sol. La référence de temps indique NONE et le
+        temps depuis la dernière synchronisation indique jamais synchronisée. C’est normal,
+        puisque l’horloge n’a pas encore été réglée.
     do:
       - click: {css: "#rail-diag"}
       - wait: 0.8
@@ -76,17 +79,18 @@ steps:
     title: {en: "Step 3: the offset, light time included", fr: "Étape 3 : l’écart, temps de propagation compris"}
     say:
       en: >-
-        Step 3 computes the offset: on-board time minus ground time, corrected by the one-way
-        light time, the time the report took to travel down. The console shows both. In low
-        Earth orbit the light time is a few milliseconds, far below the one-second accuracy this
-        card needs, but the method is the one used for any mission. The Flight Director approves
-        the correction before it is sent.
+        Step 3 calculates the offset: the on-board time minus the ground time, corrected for the
+        one-way light time, which is the time the report took to reach the ground. The console
+        displays both values. In low Earth orbit the light time is only a few milliseconds, well
+        below the one-second accuracy this procedure requires, but the method is the same for
+        any mission. The Flight Director approves the correction before it is sent.
       fr: >-
-        L’étape 3 calcule l’écart : temps de bord moins temps sol, corrigé du temps de
-        propagation, le temps qu’a mis le rapport pour descendre. La console affiche les deux.
-        En orbite basse, ce temps de propagation n’est que de quelques millisecondes, bien en
-        dessous de la précision d’une seconde demandée ici, mais la méthode est celle de toute
-        mission. Le directeur de vol approuve la correction avant l’envoi.
+        L’étape 3 calcule l’écart : le temps de bord moins le temps sol, corrigé du temps de
+        propagation, c’est-à-dire le temps mis par le rapport pour atteindre le sol. La console
+        affiche les deux valeurs. En orbite basse, le temps de propagation n’est que de quelques
+        millisecondes, bien en dessous de la précision d’une seconde exigée par cette procédure,
+        mais la méthode est la même pour toute mission. Le directeur de vol approuve la
+        correction avant son envoi.
     do:
       - highlight: {target: {css: "#s9-owlt"}, seconds: 3}
       - highlight: {target: {css: "#s9-dt"}, seconds: 3}
@@ -95,17 +99,17 @@ steps:
     title: {en: "Step 4: set the clock", fr: "Étape 4 : régler l’horloge"}
     say:
       en: >-
-        Now send the time update: S9, subtype one, set time. Sync time to ground computes the
-        on-board time code from the ground clock at the moment of sending: a time typed in
-        earlier would already be stale. Read the code it sent: it counts from the mission
-        epoch, and a Unix timestamp, which counts from nineteen seventy, would put the
-        spacecraft decades out.
+        The operator then sends the time update, S9 subtype one, set time. The Sync time to
+        ground button calculates the on-board time code from the ground clock at the moment the
+        command is sent, because a time entered earlier would already be out of date. The code
+        sent counts from the mission epoch. A Unix timestamp, which counts from nineteen
+        seventy, would place the spacecraft clock decades out.
       fr: >-
-        Envoyez maintenant la mise à l’heure : S9, sous-type un, réglage de l’heure. Le bouton
-        Synchro sur le sol calcule le code temporel de bord à partir de l’horloge sol au moment
-        de l’envoi : une heure saisie plus tôt serait déjà périmée. Lisez le code envoyé : il
-        compte depuis l’époque de la mission, et un horodatage Unix, qui compte depuis mille
-        neuf cent soixante-dix, placerait le satellite à des décennies de là.
+        L’opérateur envoie ensuite la mise à l’heure, S9 sous-type un, réglage de l’heure. Le
+        bouton Synchro sur le sol calcule le code temporel de bord à partir de l’horloge sol au
+        moment de l’envoi, car une heure saisie plus tôt serait déjà périmée. Le code envoyé
+        compte depuis l’époque de la mission. Un horodatage Unix, qui compte depuis mille neuf
+        cent soixante-dix, décalerait l’horloge du satellite de plusieurs décennies.
     do:
       - highlight: {target: {css: "#s9-sync"}, seconds: 2}
       - click: {css: "#s9-sync"}
@@ -116,20 +120,22 @@ steps:
     title: {en: "Step 5: check the result", fr: "Étape 5 : vérifier le résultat"}
     say:
       en: >-
-        Request a second time report. The reference now reads GROUND, the time since sync starts
-        from zero, and the offset is down to a fraction of a second, inside the one-second
-        threshold. Record the residual. Step 6a must not be skipped: enable the GPS navigation
-        report, structure identifier twelve, SID twelve, or the next card runs blind. Once the receiver has a fix, the clock
-        can be disciplined, steered continuously, to GPS time; and initial orbit determination
-        closes the launch and early orbit phase, LEOP.
+        A second time report is then requested. The reference now reads GROUND, the time since
+        synchronisation restarts from zero, and the offset is a fraction of a second, within the
+        one-second threshold. The operator records the residual. Step 6a must not be omitted: it
+        enables the GPS navigation report, structure identifier twelve, or SID twelve, without
+        which the next procedure would have no navigation data. Once the receiver has a position
+        fix, the clock can be disciplined, that is, continuously adjusted, to GPS time, and
+        initial orbit determination completes the launch and early orbit phase, LEOP.
       fr: >-
-        Demandez un second rapport de temps. La référence indique maintenant GROUND, le temps
-        depuis la synchronisation repart de zéro, et l’écart est tombé à une fraction de
-        seconde, sous le seuil d’une seconde. Notez le résidu. Ne sautez pas l’étape 6a :
-        activez le rapport de navigation GPS, identifiant de structure douze, SID douze, sinon la fiche suivante travaille à
-        l’aveugle. Une fois que le récepteur aura un point, l’horloge pourra être asservie,
-        recalée en continu, au temps GPS ; et la restitution d’orbite initiale clôt la phase
-        de lancement et de début d’orbite, la LEOP.
+        Un second rapport de temps est ensuite demandé. La référence indique maintenant GROUND,
+        le temps depuis la synchronisation repart de zéro, et l’écart n’est plus qu’une fraction
+        de seconde, sous le seuil d’une seconde. L’opérateur consigne le résidu. L’étape 6a ne
+        doit pas être omise : elle active le rapport de navigation GPS, identifiant de structure
+        douze, ou SID douze, sans lequel la procédure suivante n’aurait aucune donnée de
+        navigation. Dès que le récepteur dispose d’un point, l’horloge peut être asservie,
+        c’est-à-dire ajustée en continu, au temps GPS, et la restitution d’orbite initiale clôt
+        la phase de lancement et de début d’orbite, la LEOP.
     do:
       - click: {css: "#s9-report"}
       - wait: 3.0

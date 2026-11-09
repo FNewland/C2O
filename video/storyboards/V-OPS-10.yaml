@@ -7,11 +7,11 @@ id: V-OPS-10
 week: 5
 audience: all
 title:
-  en: "Under-voltage: check before you shed"
-  fr: "Sous-tension : vérifier avant de délester"
+  en: "Under-voltage: confirming the cause before shedding loads"
+  fr: "Sous-tension : confirmer la cause avant de délester"
 summary:
-  en: "The bus voltage drops below its limit in the middle of a pass. Read the alarm, see what the spacecraft has already shed, follow CTG-001's branch, hold and monitor, and watch the spacecraft restore the line as the battery recovers."
-  fr: "La tension du bus passe sous sa limite au milieu d’un passage. Lire l’alarme, voir ce que le satellite a déjà délesté, suivre la branche de CTG-001, maintenir et surveiller, et voir le satellite rétablir la ligne à mesure que la batterie se recharge."
+  en: "In this video, the bus voltage falls below its limit during a pass. The operator reads the alarm, identifies the loads the spacecraft has already shed, follows the relevant branch of CTG-001 and monitors the situation. The spacecraft then restores the load line as the battery recovers."
+  fr: "Dans cette vidéo, la tension du bus passe sous sa limite pendant un passage. L’opérateur lit l’alarme, identifie les charges que le satellite a déjà délestées, suit la branche correspondante de CTG-001 et surveille la situation. Le satellite rétablit ensuite la ligne à mesure que la batterie se recharge."
 apps:
   mcs: default
 fresh_stack: sim
@@ -38,14 +38,16 @@ steps:
     title: {en: "A sunlit pass", fr: "Un passage au soleil"}
     say:
       en: >-
-        A pass over Iqaluit, in sunlight. The power picture on the overview shows the arrays
-        feeding the bus and the battery charging. Then the instructor drains the battery: a
-        cell problem, an eclipse that ran long, it does not matter yet. Watch the power block.
+        This is a pass over Iqaluit, in sunlight. The power diagram on the overview shows the
+        solar arrays supplying the bus and the battery charging. The instructor then drains the
+        battery to simulate a fault; the cause, whether a failed cell or an unusually long
+        eclipse, is not important at this stage. The operator monitors the power block.
       fr: >-
-        Un passage au-dessus d’Iqaluit, au soleil. Le schéma d’énergie de la vue d’ensemble
-        montre les générateurs qui alimentent le bus et la batterie qui se charge. Puis
-        l’instructeur vide la batterie : une cellule en défaut, une éclipse trop longue, peu
-        importe pour l’instant. Surveillez le bloc énergie.
+        Il s’agit d’un passage au-dessus d’Iqaluit, au soleil. Le schéma d’énergie de la vue
+        d’ensemble montre les générateurs solaires qui alimentent le bus et la batterie en
+        charge. L’instructeur vide ensuite la batterie pour simuler une panne ; la cause,
+        cellule défaillante ou éclipse anormalement longue, n’a pas d’importance à ce stade.
+        L’opérateur surveille le bloc énergie.
     do:
       - wait: 1.0
       - highlight: {target: {css: "#ovr-power-card"}, seconds: 3, point: false}
@@ -57,15 +59,17 @@ steps:
     title: {en: "Read the alarm", fr: "Lire l’alarme"}
     say:
       en: >-
-        Two alarms on the bus voltage: twenty-eight point three volts, under the twenty-eight
-        point four limit. One comes from the spacecraft's own monitor, the other from the
-        ground limit. Both rows name the same card: the contingency procedure CTG-001, the under-voltage load shed.
-        Acknowledge: you have seen it and you own it.
+        Two alarms appear on the bus voltage, which reads twenty-eight point three volts, below
+        the limit of twenty-eight point four. One alarm comes from the on-board monitoring and
+        the other from the ground limit. Both refer to the same procedure: the contingency
+        procedure CTG-001, under-voltage load shedding. The operator acknowledges the alarms,
+        which confirms that they have been seen and that the operator is responsible for them.
       fr: >-
-        Deux alarmes sur la tension du bus : vingt-huit virgule trois volts, sous la limite de
-        vingt-huit virgule quatre. L’une vient du moniteur de bord, l’autre de la limite au
-        sol. Les deux lignes nomment la même fiche : la procédure de contingence CTG-001, le délestage sur sous-tension.
-        Acquittez : vous l’avez vue et vous en êtes responsable.
+        Deux alarmes apparaissent sur la tension du bus, qui affiche vingt-huit virgule trois
+        volts, sous la limite de vingt-huit virgule quatre. L’une provient de la surveillance de
+        bord, l’autre de la limite au sol. Les deux renvoient à la même procédure : la procédure
+        de contingence CTG-001, le délestage sur sous-tension. L’opérateur acquitte les alarmes,
+        ce qui confirme qu’elles ont été vues et qu’il en assume la responsabilité.
     do:
       - wait_for: {target: {css: "#alarms-btn"}, timeout: 30}
       - click: {css: "#alarms-btn"}
@@ -78,16 +82,18 @@ steps:
     title: {en: "Check before you command", fr: "Vérifier avant de commander"}
     say:
       en: >-
-        The card's first rule: read before you command. Open the power page. The spacecraft
-        has already acted: the payload line is off, the load shed ladder sits at level one,
-        and the events say load shed stage one. Sending Payload Off now would be a command
-        for nothing. Everything else is still on, and the battery is charging.
+        The first rule of the procedure is to read the telemetry before sending any command. The
+        power page shows that the spacecraft has already acted: the payload line is off, the
+        load-shed sequence is at level one, and the event list reports load shed stage one.
+        Sending a payload off command now would serve no purpose. All other loads are still on,
+        and the battery is charging.
       fr: >-
-        Première règle de la fiche : lire avant de commander. Ouvrez la page énergie. Le
-        satellite a déjà agi : la ligne de la charge utile est coupée, l’échelle de délestage
-        est au niveau un, et les événements indiquent le délestage de niveau un. Envoyer Payload
-        Off maintenant serait une commande pour rien. Tout le reste est encore alimenté, et la
-        batterie se charge.
+        La première règle de la procédure est de lire la télémesure avant d’envoyer la moindre
+        commande. La page énergie montre que le satellite a déjà agi : la ligne de la charge
+        utile est coupée, la séquence de délestage est au niveau un et la liste des événements
+        signale le délestage de niveau un. Envoyer maintenant une commande de coupure de la
+        charge utile ne servirait à rien. Toutes les autres charges sont encore alimentées, et
+        la batterie se charge.
     do:
       - click: {css: "[data-page='eps']"}
       - wait_for: {target: {css: "#eps-flow svg, #eps-flow *"}, timeout: 20}
@@ -114,14 +120,17 @@ steps:
     title: {en: "What the card says", fr: "Ce que dit la fiche"}
     say:
       en: >-
-        The alarm row opens the card. Its objective explains the physics: shedding does not lift
-        the bus, because the bus follows the battery's charge. What shedding changes is how
-        fast it falls. So each check asks whether the bus has fallen to the next level.
+        The procedure is opened from the alarm row. Its objective explains the physics: load
+        shedding does not raise the bus voltage, because the bus voltage follows the battery
+        state of charge. What shedding changes is the rate at which the voltage falls. Each
+        check in the procedure therefore asks whether the bus voltage has fallen to the next
+        threshold.
       fr: >-
-        La ligne d’alarme ouvre la fiche. Son objectif explique la physique : délester ne relève
-        pas le bus, parce que le bus suit la charge de la batterie. Ce que le délestage change,
-        c’est la vitesse de la baisse. Chaque vérification demande donc si le bus est descendu
-        au niveau suivant.
+        La procédure s’ouvre depuis la ligne d’alarme. Son objectif en explique la physique : le
+        délestage ne relève pas la tension du bus, car celle-ci suit l’état de charge de la
+        batterie. Ce que le délestage modifie, c’est la vitesse à laquelle la tension baisse.
+        Chaque vérification de la procédure demande donc si la tension du bus est descendue au
+        seuil suivant.
     do:
       - js: "(() => { const d = document.getElementById('alarm-drawer'); if (!d.classList.contains('open')) document.getElementById('alarms-btn').click(); })()"
       - wait: 1.0
@@ -135,17 +144,19 @@ steps:
     title: {en: "Hold at this level", fr: "Maintenir ce niveau"}
     say:
       en: >-
-        Step two is the payload, and the spacecraft has done it. Its check: is the bus above
-        twenty-eight point four volts? It is climbing back, in sunlight, as the battery charges.
-        That is a GO: hold at this level and go straight to monitoring. In eclipse it would
-        still be falling, and you would look at the next level, the cooler, at twenty-seven
-        point eight.
+        Step two concerns the payload, which the spacecraft has already switched off. The check
+        is whether the bus voltage is above twenty-eight point four volts. Here it is rising
+        again, because the spacecraft is in sunlight and the battery is charging. The result is
+        GO: the procedure holds at this level and moves directly to monitoring. In eclipse the
+        voltage would still be falling, and the operator would assess the next threshold, the
+        cooler, at twenty-seven point eight volts.
       fr: >-
-        L’étape deux, c’est la charge utile, et le satellite l’a déjà fait. Sa vérification : le
-        bus est-il au-dessus de vingt-huit virgule quatre volts ? Il remonte, au soleil, à mesure
-        que la batterie se charge. C’est un GO : maintenir ce niveau et passer directement à la
-        surveillance. En éclipse, il baisserait encore, et vous regarderiez le niveau suivant,
-        le refroidisseur, à vingt-sept virgule huit.
+        L’étape deux concerne la charge utile, que le satellite a déjà coupée. La vérification
+        consiste à savoir si la tension du bus est supérieure à vingt-huit virgule quatre volts.
+        Ici, elle remonte, car le satellite est au soleil et la batterie se charge. Le résultat
+        est un GO : la procédure se maintient à ce niveau et passe directement à la
+        surveillance. En éclipse, la tension baisserait encore, et l’opérateur examinerait le
+        seuil suivant, le refroidisseur, à vingt-sept virgule huit volts.
     do:
       - scroll: {target: {text: {en: "Shed Load Priority 1", fr: "Délester la charge de priorité 1"}}}
       - highlight: {target: {text: {en: "Shed Load Priority 1", fr: "Délester la charge de priorité 1"}}, seconds: 3}
@@ -170,17 +181,19 @@ steps:
     title: {en: "Recovery", fr: "Le rétablissement"}
     say:
       en: >-
-        Monitoring means a housekeeping request every minute and your eyes on the bus. To save
-        time, the instructor speeds the simulator up. The battery charges and the bus climbs.
-        At twenty-eight point nine volts the spacecraft restores the payload line by itself.
-        The card's last step then commands only what is still needed, one load at a time, with
-        the bus staying above the shed level.
+        Monitoring consists of a housekeeping request every minute and continuous observation of
+        the bus voltage. To save time in this video, the instructor increases the simulation
+        speed. The battery charges and the bus voltage rises. At twenty-eight point nine volts
+        the spacecraft restores the payload line automatically. The last step of the procedure
+        then commands only the loads that are still off, one at a time, while confirming that
+        the bus voltage remains above the shedding threshold.
       fr: >-
-        Surveiller, c’est une demande de servitude chaque minute et les yeux sur le bus. Pour
-        gagner du temps, l’instructeur accélère le simulateur. La batterie se charge et le bus
-        remonte. À vingt-huit virgule neuf volts, le satellite rétablit lui-même la ligne de la
-        charge utile. La dernière étape de la fiche ne commande alors que ce qui manque encore,
-        une charge à la fois, avec un bus qui reste au-dessus du niveau de délestage.
+        La surveillance consiste en une demande de servitude chaque minute et en une observation
+        continue de la tension du bus. Pour gagner du temps dans cette vidéo, l’instructeur
+        accélère la simulation. La batterie se charge et la tension du bus remonte. À vingt-huit
+        virgule neuf volts, le satellite rétablit automatiquement la ligne de la charge utile.
+        La dernière étape de la procédure ne commande alors que les charges encore coupées, une
+        à la fois, en vérifiant que la tension du bus reste au-dessus du seuil de délestage.
     do:
       - click: {css: "[data-page='eps']"}
       - wait: 1.5

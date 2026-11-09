@@ -5,11 +5,11 @@ id: V-OPS-06
 week: 5
 audience: all
 title:
-  en: "LEOP-007: power the AOCS, then DETUMBLE"
-  fr: "LEOP-007 : alimenter le SCAO, puis DETUMBLE"
+  en: "LEOP-007: AOCS power-on and DETUMBLE"
+  fr: "LEOP-007 : mise sous tension du SCAO et mode DETUMBLE"
 summary:
-  en: "Energise the AOCS suite, enable its housekeeping, switch on the magnetometer and the magnetorquers before commanding DETUMBLE, and check the mode against a live magnetic-field reading."
-  fr: "Alimenter la chaîne SCAO, activer ses données de servitude, allumer le magnétomètre et les magnétocoupleurs avant de commander DETUMBLE, et vérifier le mode sur une mesure réelle du champ magnétique."
+  en: "This video powers the attitude and orbit control units and enables their housekeeping. The magnetometer and the magnetorquers are switched on before DETUMBLE is commanded, and the mode is checked against a live magnetic-field measurement."
+  fr: "Cette vidéo met sous tension les équipements du SCAO et active leurs données de servitude. Le magnétomètre et les magnétocoupleurs sont allumés avant la commande du mode DETUMBLE, et le mode est vérifié sur une mesure réelle du champ magnétique."
 apps:
   mcs: default
 fresh_stack: sim
@@ -34,20 +34,22 @@ steps:
     title: {en: "What this card powers, and what it does not", fr: "Ce que la fiche alimente, et ce qu’elle n’alimente pas"}
     say:
       en: >-
-        The wings are out, but the spacecraft is still tumbling. This launch and early orbit
-        phase card, LEOP-007, brings the attitude and orbit control system, the AOCS, to life,
-        one step at a time, with a check after each. Just as important is what it leaves off:
-        the wheels, the payload, the camera's cooler and propulsion each belong to a later
-        card. Step 1 checks the power baseline; Step 2 switches on a heater only if a
-        temperature calls for it.
+        The solar wings are deployed, but the spacecraft is still tumbling. LEOP-007, a
+        procedure of the launch and early orbit phase, brings the attitude and orbit control
+        system, or AOCS, into operation one step at a time, with a check after each step. The
+        procedure deliberately leaves several units off: the reaction wheels, the payload, the
+        camera cooler and the propulsion system are each switched on by a later procedure. Step
+        1 checks the power baseline, and step 2 switches on a heater only if a temperature
+        requires it.
       fr: >-
-        Les ailes sont déployées, mais le satellite tourne encore sur lui-même. Cette fiche de
-        la phase de lancement et de début d’orbite, LEOP-007, met en route le système de
-        contrôle d’attitude et d’orbite, le SCAO, AOCS sur la console, une étape à la fois, avec
-        une vérification après chacune. Ce qu’elle laisse éteint compte tout autant : les roues,
-        la charge utile, le refroidisseur de la caméra et la propulsion appartiennent chacun à
-        une fiche ultérieure. L’étape 1 vérifie la référence énergie ; l’étape 2 n’allume un
-        réchauffeur que si une température l’exige.
+        Les ailes solaires sont déployées, mais le satellite tourne encore sur lui-même.
+        LEOP-007, une procédure de la phase de lancement et de début d’orbite, met en service le
+        système de contrôle d’attitude et d’orbite, le SCAO, AOCS sur la console, une étape à la
+        fois, avec une vérification après chaque étape. La procédure laisse volontairement
+        plusieurs unités éteintes : les roues de réaction, la charge utile, le refroidisseur de
+        la caméra et le système de propulsion sont chacun mis sous tension par une procédure
+        ultérieure. L’étape 1 vérifie la référence énergie, et l’étape 2 n’allume un réchauffeur
+        que si une température l’exige.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -61,14 +63,16 @@ steps:
     title: {en: "Step 3: the AOCS line and its housekeeping", fr: "Étape 3 : la ligne SCAO et ses données"}
     say:
       en: >-
-        Step 3 powers the AOCS suite supply, power line seven. Then enable its housekeeping
-        report, structure identifier two, SID two. Powering a unit never turns its report on;
-        without this second command you would fly the next steps blind.
+        Step 3 switches on power line seven, which supplies the AOCS units. The operator then
+        enables the AOCS housekeeping report, structure identifier two, or SID two. Switching on
+        a unit does not enable its report, and without this second command the following steps
+        would have to be performed without telemetry.
       fr: >-
-        L’étape 3 alimente la chaîne SCAO, la ligne d’alimentation sept. Activez ensuite ses
-        données de servitude, identifiant de structure deux, SID deux. Alimenter une unité
-        n’active jamais son rapport ; sans cette seconde commande, vous piloteriez les étapes
-        suivantes à l’aveugle.
+        L’étape 3 met sous tension la ligne d’alimentation sept, qui alimente les unités du
+        SCAO. L’opérateur active ensuite le rapport de servitude du SCAO, identifiant de
+        structure deux, ou SID deux. La mise sous tension d’une unité n’active pas son rapport,
+        et sans cette seconde commande, les étapes suivantes devraient être menées sans
+        télémesure.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: EPS_POWER_ON}
@@ -87,19 +91,22 @@ steps:
     title: {en: "Step 4: sensor and actuator first", fr: "Étape 4 : capteur et actionneur d’abord"}
     say:
       en: >-
-        DETUMBLE, the mode that slows the tumble, runs the B-dot law, B for the magnetic field,
-        dot for its rate of change: the magnetometer measures how the Earth's field turns in
-        the body, and the magnetorquers, electromagnet rods, push against that turning. So both must be on first. Switch on the magnetometer, device five two one. Enable the
-        magnetorquers. And start the GPS receiver now: the time and orbit cards need its first
-        fix later.
+        DETUMBLE, the mode that reduces the tumble, uses the B-dot control law, where B stands
+        for the magnetic field and dot for its rate of change. The magnetometer measures how the
+        Earth's field rotates relative to the spacecraft body, and the magnetorquers, which are
+        electromagnetic rods, generate torque to oppose that rotation. Both units must therefore
+        be switched on first: the magnetometer, device five two one, and then the magnetorquers.
+        The GPS receiver is also started at this point, because the time and orbit procedures
+        will need its first position fix later.
       fr: >-
-        DETUMBLE, le mode qui amortit le culbutage, applique la loi B-dot, B pour le champ
-        magnétique, point pour sa dérivée : le magnétomètre mesure comment le champ terrestre
-        tourne dans le repère du satellite, et les magnétocoupleurs, des barreaux
-        électromagnétiques, s’opposent à cette rotation. Les deux doivent donc être allumés d’abord. Allumez le magnétomètre,
-        l’équipement cinq deux un. Activez les magnétocoupleurs. Et démarrez le récepteur GPS
-        dès maintenant : les fiches de temps et d’orbite auront besoin de son premier point plus
-        tard.
+        DETUMBLE, le mode qui amortit la rotation, utilise la loi de commande B-dot, où B
+        désigne le champ magnétique et dot sa dérivée. Le magnétomètre mesure la rotation du
+        champ terrestre par rapport à la structure du satellite, et les magnétocoupleurs, des
+        barreaux électromagnétiques, produisent un couple qui s’oppose à cette rotation. Les
+        deux unités doivent donc être allumées en premier : le magnétomètre, l’équipement cinq
+        deux un, puis les magnétocoupleurs. Le récepteur GPS est également démarré à ce stade,
+        car les procédures de temps et d’orbite auront besoin de son premier point de position
+        plus tard.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: S2_AOCS_MAGNETOMETER}
       - wait: 0.5
@@ -137,18 +144,20 @@ steps:
     title: {en: "Step 5: DETUMBLE, checked on the field", fr: "Étape 5 : DETUMBLE, vérifié sur le champ"}
     say:
       en: >-
-        Now command DETUMBLE, mode two. Accepted, executed. Open the attitude page. The mode
-        reads DETUMBLE, but the real check is the magnetic field: the total must sit between
-        five thousand and seventy thousand nanotesla. A zero there means the magnetometer is
-        not feeding the law, whatever the mode says. Note the body rates, how fast it spins
-        about each axis: the next card watches them fall.
+        The operator then commands DETUMBLE, mode two, and the command is accepted and executed.
+        On the attitude page the mode shows DETUMBLE, but the important check is the magnetic
+        field: its magnitude must be between five thousand and seventy thousand nanotesla. A
+        reading of zero means that the magnetometer is not providing data to the control law,
+        regardless of the mode displayed. The operator also records the body rates, the rotation
+        rate about each axis, which the next procedure monitors as they decrease.
       fr: >-
-        Commandez maintenant DETUMBLE, le mode deux. Acceptée, exécutée. Ouvrez la page
-        attitude. Le mode indique DETUMBLE, mais la vraie vérification, c’est le champ
-        magnétique : sa norme doit se situer entre cinq mille et soixante-dix mille nanoteslas.
-        Un zéro signifie que le magnétomètre n’alimente pas la loi, quoi qu’en dise le mode.
-        Notez les vitesses angulaires, la rotation autour de chaque axe : la fiche suivante les
-        regarde baisser.
+        L’opérateur commande ensuite DETUMBLE, le mode deux, et la commande est acceptée puis
+        exécutée. Sur la page attitude, le mode indique DETUMBLE, mais la vérification
+        importante porte sur le champ magnétique : sa norme doit être comprise entre cinq mille
+        et soixante-dix mille nanoteslas. Une valeur nulle signifie que le magnétomètre ne
+        fournit pas de données à la loi de commande, quel que soit le mode affiché. L’opérateur
+        relève aussi les vitesses angulaires, c’est-à-dire la vitesse de rotation autour de
+        chaque axe, que la procédure suivante surveille pendant leur décroissance.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: AOCS_SET_MODE}
       - wait: 0.5
@@ -173,16 +182,18 @@ steps:
     title: {en: "Record it, and what comes next", fr: "Le consigner, et la suite"}
     say:
       en: >-
-        On the card, capture the values and mark Steps 3 to 5 GO. Step 6 confirms the exit
-        power state: payload, cooler and propulsion lines still off, wheels still disabled.
-        From here nothing is commanded for a while: LEOP-005 only watches B-dot slow the
-        spacecraft down, and the AOCS hands itself to sun pointing.
+        On the card, the operator captures the values and marks steps 3 to 5 GO. Step 6 confirms
+        the power state at the end of the procedure: the payload, cooler and propulsion lines
+        are still off, and the wheels are still disabled. No further commands are sent for some
+        time. LEOP-005 monitors the B-dot law as it slows the spacecraft, until the AOCS changes
+        to Sun pointing on its own.
       fr: >-
-        Sur la fiche, relevez les valeurs et marquez les étapes 3 à 5 GO. L’étape 6 confirme
-        l’état d’alimentation en sortie : lignes charge utile, refroidisseur et propulsion
-        toujours éteintes, roues toujours désactivées. Ensuite, on ne commande plus rien
-        pendant un moment : LEOP-005 regarde simplement B-dot ralentir le satellite, et le
-        SCAO passe de lui-même au pointage solaire.
+        Sur la fiche, l’opérateur relève les valeurs et marque les étapes 3 à 5 GO. L’étape 6
+        confirme l’état d’alimentation en fin de procédure : les lignes de la charge utile, du
+        refroidisseur et de la propulsion sont toujours éteintes, et les roues toujours
+        désactivées. Aucune autre commande n’est envoyée pendant un certain temps. LEOP-005
+        surveille la loi B-dot pendant qu’elle ralentit le satellite, jusqu’à ce que le SCAO
+        passe de lui-même au pointage solaire.
     do:
       - click: {css: "#rail-proc"}
       - wait: 1.0

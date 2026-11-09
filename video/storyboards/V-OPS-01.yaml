@@ -4,11 +4,11 @@ id: V-OPS-01
 week: 2
 audience: all
 title:
-  en: "NOM-001: the procedure card is your workbook"
-  fr: "NOM-001 : la fiche de procédure est votre cahier de travail"
+  en: "NOM-001: working through a procedure card"
+  fr: "NOM-001 : dérouler une fiche de procédure"
 summary:
-  en: "Open NOM-001 Pass Startup in mission control, compare expected and live values, record GO, NO-GO and deviations, and find every tick in your workbook."
-  fr: "Ouvrir NOM-001 Ouverture de passage dans le centre de contrôle, comparer valeurs attendues et valeurs en direct, consigner GO, NO-GO et écarts, et retrouver chaque coche dans votre cahier de travail."
+  en: "This video opens procedure NOM-001, Pass Startup, in mission control. It shows how to compare expected and live values, how to record GO, NO-GO and deviations, and where each recorded step appears in the workbook."
+  fr: "Cette vidéo ouvre la procédure NOM-001, Ouverture de passage, dans le centre de contrôle. Elle montre comment comparer les valeurs attendues et les valeurs en direct, comment consigner GO, NO-GO et les écarts, et où chaque étape consignée apparaît dans le cahier de travail."
 apps:
   mcs: default
 # restart simulator + MCS before each take (python -m c2ovideo stack)
@@ -35,16 +35,15 @@ steps:
     title: {en: "The Flight Director's console", fr: "Le poste du directeur de vol"}
     say:
       en: >-
-        This is mission control for EOSAT-1, seen from the Flight Director's position. The strip
-        across the top answers four questions at a glance: can I see the spacecraft, can I talk
-        to it, is it well, and what comes next. Every pass starts the same way, with the nominal
-        procedure NOM-001, Pass Startup — nom for short.
+        This is the EOSAT-1 mission control system, seen from the Flight Director's position.
+        The status strip at the top of the screen summarises four things: whether the spacecraft
+        is visible, whether a link is established, whether it is healthy, and what is scheduled
+        next. Every pass begins with the same nominal procedure, NOM-001, Pass Startup.
       fr: >-
-        Voici le centre de contrôle d’EOSAT-1, vu du poste du directeur de vol. Le bandeau du
-        haut répond d’un coup d’œil à quatre questions : est-ce que je vois le satellite, est-ce
-        que je peux lui parler, va-t-il bien, et quelle est la suite. Chaque passage commence de
-        la même façon, avec la procédure nominale NOM-001, Ouverture de passage — nom, en
-        abrégé.
+        Voici le système de contrôle de mission d’EOSAT-1, vu du poste du directeur de vol. Le
+        bandeau d’état, en haut de l’écran, résume quatre éléments : si le satellite est
+        visible, si la liaison est établie, s’il est en bon état et ce qui est prévu ensuite.
+        Chaque passage commence par la même procédure nominale, NOM-001, Ouverture de passage.
     do:
       - wait: 1.5
       - highlight: {target: {css: "header, .mcs-strip, #strip"}, seconds: 3.5, point: false}
@@ -53,15 +52,16 @@ steps:
     title: {en: "Open the card", fr: "Ouvrir la fiche"}
     say:
       en: >-
-        Procedures live on the procedures page, PRC. Choose Ops procedure, then NOM-001. Below
-        the runner, which steps through the procedure, is the procedure card. It is not a copy of the manual: it is your working copy, and every
-        box you tick on it is saved to your logbook as you go.
+        Procedures are opened from the procedures page, PRC. Select Ops procedure, then NOM-001.
+        The procedure runner steps through the procedure, and below it is the procedure card.
+        The card is the operator's working copy rather than a reference copy of the manual: each
+        box ticked on it is saved to the logbook as the procedure progresses.
       fr: >-
-        Les procédures se trouvent sur la page des procédures, PRC. Choisissez Procédure
-        d’exploitation, puis NOM-001. Sous l’exécuteur, qui déroule la procédure, se trouve la
-        fiche de procédure. Ce n’est pas une copie du
-        manuel : c’est votre copie de travail, et chaque case que vous cochez est enregistrée
-        dans votre journal de bord au fur et à mesure.
+        Les procédures s’ouvrent depuis la page des procédures, PRC. Sélectionnez Procédure
+        d’exploitation, puis NOM-001. L’exécuteur déroule la procédure et, en dessous, se trouve
+        la fiche de procédure. Cette fiche est la copie de travail de l’opérateur, et non une
+        copie de référence du manuel : chaque case cochée est enregistrée dans le journal de
+        bord au fil de la procédure.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -75,15 +75,14 @@ steps:
     title: {en: "Prerequisites first", fr: "D’abord les prérequis"}
     say:
       en: >-
-        Start with the prerequisites. They are part of the procedure, not a formality: the
-        antenna is tracking, the pass plan is loaded, flight dynamics, the orbit prediction, is
-        current, and the Flight Director is on the voice loop. Tick each one only when you have
-        checked it.
+        The prerequisites come first, and they are part of the procedure. The antenna must be
+        tracking, the pass plan loaded, the flight dynamics orbit prediction up to date, and the
+        Flight Director on the voice loop. Each item is ticked only after it has been checked.
       fr: >-
-        Commencez par les prérequis. Ils font partie de la procédure, ce n’est pas une
-        formalité : l’antenne suit le satellite, le plan de passage est chargé, la dynamique du
-        vol, la prévision d’orbite, est à jour et le directeur de vol est sur la boucle vocale.
-        Ne cochez chacun qu’après l’avoir vérifié.
+        Les prérequis viennent en premier et font partie intégrante de la procédure. L’antenne
+        doit suivre le satellite, le plan de passage doit être chargé, la prévision d’orbite de
+        la dynamique du vol doit être à jour et le directeur de vol doit être sur la boucle
+        vocale. Chaque élément n’est coché qu’après vérification.
     do:
       - check: {css: "#proc-doc li[data-key='p1'] input.pc-pre"}
       - check: {css: "#proc-doc li[data-key='p2'] input.pc-pre"}
@@ -94,16 +93,17 @@ steps:
     title: {en: "Step 1: expected, live, captured", fr: "Étape 1 : attendu, en direct, relevé"}
     say:
       en: >-
-        Step one verifies the on-board computer, the OBC. The table puts three columns side by side: what
-        the card expects, what telemetry shows live, and what you captured. A green tick means
-        the live value meets the check. Capture values freezes them into your record, so you
-        can show later what you saw when you said GO.
+        Step one verifies the on-board computer, the OBC. The table shows three columns side by
+        side: the value the card expects, the live telemetry value, and the value captured by
+        the operator. A green tick indicates that the live value satisfies the check. Capturing
+        the values records them in the logbook, so that it is possible to show afterwards what
+        was displayed when the GO was given.
       fr: >-
-        La première étape vérifie l’ordinateur de bord, l’OBC. Le tableau met trois colonnes côte à
-        côte : ce que la fiche attend, ce que la télémesure montre en direct, et ce que vous
-        avez relevé. Une coche verte signifie que la valeur en direct satisfait la vérification.
-        Relever les valeurs les fige dans votre fiche : vous pourrez montrer plus tard ce que
-        vous voyiez quand vous avez dit GO.
+        La première étape vérifie l’ordinateur de bord, l’OBC. Le tableau présente trois
+        colonnes côte à côte : la valeur attendue par la fiche, la valeur de télémesure en
+        direct et la valeur relevée par l’opérateur. Une coche verte indique que la valeur en
+        direct satisfait la vérification. Le relevé des valeurs les enregistre dans le journal
+        de bord, ce qui permet de montrer ensuite ce qui était affiché au moment du GO.
     do:
       - scroll: {css: "#proc-doc section[data-pc-step='s1']"}
       - highlight: {target: {css: "#proc-doc section[data-pc-step='s1'] table.pc-vals"}, seconds: 3.5}
@@ -128,15 +128,17 @@ steps:
     title: {en: "A NO-GO with a reason", fr: "Un NO-GO motivé"}
     say:
       en: >-
-        Now Step 2 fails: the battery reads just under fifty percent, below the check. Write the deviation in the note, then press NO-GO. A NO-GO with a reason is far
-        more useful to the next shift than a blank step. If the call needed judgement, Record
-        decision opens a decision record from this step.
+        In this example, step two fails: the battery state of charge is just below fifty
+        percent, which is under the threshold. The operator records the deviation in the note
+        field and selects NO-GO. A NO-GO with a stated reason is much more useful to the next
+        shift than a step left blank. Where the decision required judgement, Record decision
+        opens a decision record linked to this step.
       fr: >-
-        Ici, l’étape 2 échoue : la batterie affiche un peu moins de cinquante pour cent,
-        sous le seuil. Écrivez l’écart dans la note, puis appuyez sur NO-GO. Un
-        NO-GO motivé est bien plus utile à l’équipe suivante qu’une étape laissée vide. Si la
-        décision demandait du jugement, Consigner la décision ouvre une fiche de décision depuis
-        cette étape.
+        Dans cet exemple, l’étape deux échoue : l’état de charge de la batterie est légèrement
+        inférieur à cinquante pour cent, sous le seuil. L’opérateur consigne l’écart dans le
+        champ de note et sélectionne NO-GO. Un NO-GO accompagné de sa raison est bien plus utile
+        à l’équipe suivante qu’une étape laissée vide. Lorsque la décision a demandé du
+        jugement, Consigner la décision ouvre une fiche de décision liée à cette étape.
     do:
       - scroll: {css: "#proc-doc section[data-pc-step='s2']"}
       - highlight: {target: {css: "#proc-doc section[data-pc-step='s2'] table.pc-vals"}, seconds: 2.5, point: false}
@@ -160,16 +162,16 @@ steps:
     title: {en: "The same ticks in your workbook", fr: "Les mêmes coches dans votre cahier"}
     say:
       en: >-
-        Open the logbook and its Workbook tab. Worksheet N001 shows the same steps, with the same
-        GO, NO-GO and notes, because the card and the worksheet are one record. At the end of the
-        session, download the logbook as Markdown or printable HTML: it is deleted from the
-        server forty-eight hours after your last entry.
+        The Workbook tab of the logbook shows worksheet N001 with the same steps, the same GO
+        and NO-GO results and the same notes, because the procedure card and the worksheet are a
+        single record. At the end of the session, download the logbook in Markdown or as
+        printable HTML. It is deleted from the server forty-eight hours after the last entry.
       fr: >-
-        Ouvrez le journal de bord et son onglet Cahier de travail. La fiche N001 montre les mêmes
-        étapes, avec les mêmes GO, NO-GO et notes, car la fiche de procédure et la fiche du cahier
-        ne forment qu’un seul enregistrement. En fin de séance, téléchargez le journal en Markdown
-        ou en HTML imprimable : il est supprimé du serveur quarante-huit heures après votre
-        dernière saisie.
+        L’onglet Cahier de travail du journal de bord présente la fiche N001 avec les mêmes
+        étapes, les mêmes résultats GO et NO-GO et les mêmes notes, car la fiche de procédure et
+        la fiche du cahier forment un seul enregistrement. En fin de séance, téléchargez le
+        journal en Markdown ou en HTML imprimable. Il est supprimé du serveur quarante-huit
+        heures après la dernière saisie.
     do:
       - click: {css: "#proc-doc [data-pc='workbook']"}
       - wait: 2.0

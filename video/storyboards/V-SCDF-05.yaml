@@ -33,15 +33,17 @@ steps:
     title: {en: "Down to the spacecraft", fr: "Jusqu’au satellite"}
     say:
       en: >-
-        Interfaces live between blocks at the same level. At mission level there is only one
-        block, so drill down: double-click the mission, then the space segment, then the
-        spacecraft, EOSAT-1. Now its subsystems are the blocks, and the lines between them are
-        the links: power, data, mechanical, thermal, timing.
+        Interfaces exist between blocks at the same level of the architecture. At mission level
+        there is only one block, so the user must move down the hierarchy: the mission, then the
+        space segment, then the spacecraft, EOSAT-1, each opened with a double-click. The
+        subsystems are now the blocks, and the lines between them are the links: power, data,
+        mechanical, thermal and timing.
       fr: >-
-        Les interfaces relient des blocs d’un même niveau. Au niveau mission, il n’y a qu’un
-        bloc : descendez donc. Double-cliquez sur la mission, puis sur le segment spatial, puis
-        sur le satellite, EOSAT-1. Ses sous-systèmes sont maintenant les blocs, et les traits
-        entre eux sont les liens : énergie, données, mécanique, thermique, synchronisation.
+        Les interfaces relient des blocs situés au même niveau de l’architecture. Au niveau
+        mission, il n’y a qu’un bloc : il faut donc descendre dans la hiérarchie, en ouvrant par
+        double-clic la mission, puis le segment spatial, puis le satellite, EOSAT-1. Les
+        sous-systèmes sont maintenant les blocs, et les traits qui les relient sont les liens :
+        énergie, données, mécanique, thermique et synchronisation.
     do:
       - click: {role: tab, name: Blocks, exact: true}
       - wait: 1
@@ -56,17 +58,19 @@ steps:
     title: {en: "Proposed and accepted links", fr: "Liens proposés et acceptés"}
     say:
       en: >-
-        Open the Interfaces tab. SpaceCDF proposes the links a spacecraft like this needs, and
-        the system engineer accepts, edits or rejects each one. Every accepted link names its
-        provider and its consumer, and creates interface requirements, such as the regulated
-        twenty-eight point eight volt rail from the power subsystem to the payload. Both teams
-        must agree to it: that is what the provider and consumer boxes record.
+        The Interfaces tab lists the links that SpaceCDF proposes for a spacecraft of this type,
+        and the systems engineer accepts, edits or rejects each one. Every accepted link
+        identifies a provider and a consumer and generates interface requirements, such as the
+        regulated twenty-eight point eight volt supply from the power subsystem to the payload.
+        Both teams must agree to each interface, and the provider and consumer fields record
+        that agreement.
       fr: >-
-        Ouvrez l’onglet Interfaces. SpaceCDF propose les liens dont un tel satellite a besoin, et
-        l’ingénieur système accepte, modifie ou rejette chacun. Chaque lien accepté nomme son
-        fournisseur et son consommateur, et crée des exigences d’interface, comme le bus régulé
-        de vingt-huit virgule huit volts de l’énergie vers la charge utile. Les deux équipes
-        doivent l’accepter : c’est ce qu’enregistrent les cases fournisseur et consommateur.
+        L’onglet Interfaces liste les liens que SpaceCDF propose pour un satellite de ce type,
+        et l’ingénieur système accepte, modifie ou rejette chacun d’eux. Chaque lien accepté
+        désigne un fournisseur et un consommateur et génère des exigences d’interface, comme
+        l’alimentation régulée de vingt-huit virgule huit volts fournie par le sous-système
+        énergie à la charge utile. Les deux équipes doivent approuver chaque interface, et les
+        champs fournisseur et consommateur consignent cet accord.
     do:
       - click: {role: tab, name: Interfaces, exact: true}
       - wait: 1.5
@@ -77,17 +81,19 @@ steps:
     title: {en: "The N² chart", fr: "La matrice N²"}
     say:
       en: >-
-        The Diagrams tab draws the N² chart from these links. The units sit on the diagonal; each
-        cell holds what the row sends to the column: P for power, D for data, M for mechanical,
-        Th for thermal. Read across the row of the electrical power subsystem, the EPS: it powers almost everything. Read down the
-        computer's column: data arrives from every unit. And the structure carries and conducts
-        heat for all of them.
+        The Diagrams tab generates the N-squared chart from these links. The units are placed on
+        the diagonal, and each cell shows what the unit in that row provides to the unit in that
+        column: P for power, D for data, M for mechanical and Th for thermal. The row of the
+        electrical power subsystem, or EPS, shows that it supplies almost every unit. The column
+        of the on-board computer shows that it receives data from every unit, and the structure
+        supports all of them and conducts their heat.
       fr: >-
-        L’onglet Schémas dessine la matrice N² à partir de ces liens. Les équipements sont sur la
-        diagonale ; chaque case contient ce que la ligne envoie à la colonne : P pour l’énergie,
-        D pour les données, M pour la mécanique, Th pour la thermique. Lisez la ligne du sous-système énergie, l’EPS :
-        il alimente presque tout. Lisez la colonne de l’ordinateur : les données arrivent de
-        chaque équipement. Et la structure porte et conduit la chaleur de tous.
+        L’onglet Schémas génère la matrice N² à partir de ces liens. Les équipements sont placés
+        sur la diagonale, et chaque case indique ce que l’équipement de la ligne fournit à celui
+        de la colonne : P pour l’énergie, D pour les données, M pour la mécanique et Th pour la
+        thermique. La ligne du sous-système énergie, l’EPS, montre qu’il alimente presque tous
+        les équipements. La colonne de l’ordinateur de bord montre qu’il reçoit des données de
+        chaque équipement, et la structure les porte tous et conduit leur chaleur.
     do:
       - click: {role: tab, name: Diagrams, exact: true}
       - wait: 1.5
@@ -114,13 +120,13 @@ steps:
     title: {en: "Diagram or table", fr: "Schéma ou tableau"}
     say:
       en: >-
-        Switch to Table to see the same links as a list you can sort and check. The chart is
-        complete for this level: nothing is missing. Both views export, as a picture for your
-        report or as part of the interface requirements document.
+        The Table view presents the same links as a list that can be sorted and checked. The
+        chart is complete at this level, with no missing links. Both views can be exported,
+        either as an image for a report or as part of the interface requirements document.
       fr: >-
-        Passez en Tableau pour voir les mêmes liens sous forme de liste à trier et vérifier. La
-        matrice est complète pour ce niveau : rien ne manque. Les deux vues s’exportent, en image
-        pour votre rapport ou dans le document d’exigences d’interface.
+        La vue Tableau présente les mêmes liens sous forme de liste triable et vérifiable. La
+        matrice est complète à ce niveau, sans lien manquant. Les deux vues peuvent être
+        exportées, en image pour un rapport ou dans le document d’exigences d’interface.
     do:
       - click: {role: tab, name: Table, exact: true}
       - wait: 2
@@ -131,17 +137,19 @@ steps:
     title: {en: "The interface control document", fr: "Le document de contrôle d’interface"}
     say:
       en: >-
-        The ICD tab is where each link gets its details. The battery bus already carries its
-        voltage, but most links still have no exchange item: what flows, at what rate, over
-        which connector. Filling these in is how the N² chart becomes an agreement both teams
-        can build to. Then record decision D two point four, Interfaces: which you accepted,
-        edited or rejected, and why.
+        The interface control document, or ICD, tab is where the details of each link are
+        defined. The battery bus already has its voltage, but most links do not yet have an
+        exchange item specifying what is transferred, at what rate and through which connector.
+        Completing these details turns the N-squared chart into an agreement that both teams can
+        design to. The team then records decision D two point four, Interfaces: which interfaces
+        were accepted, edited or rejected, and why.
       fr: >-
-        L’onglet ICD est l’endroit où chaque lien reçoit ses détails. Le bus batterie porte déjà
-        sa tension, mais la plupart des liens n’ont pas encore d’élément échangé : ce qui passe, à
-        quel débit, par quel connecteur. C’est en les remplissant que la matrice N² devient un
-        accord sur lequel les deux équipes peuvent construire. Consignez ensuite la décision D
-        deux point quatre, Interfaces : celles acceptées, modifiées ou rejetées, et pourquoi.
+        L’onglet du document de contrôle d’interface, l’ICD, permet de définir les détails de
+        chaque lien. Le bus batterie porte déjà sa tension, mais la plupart des liens n’ont pas
+        encore d’élément échangé précisant ce qui transite, à quel débit et par quel connecteur.
+        En complétant ces détails, la matrice N² devient un accord sur lequel les deux équipes
+        peuvent concevoir. L’équipe consigne ensuite la décision D deux point quatre, Interfaces
+        : celles qui ont été acceptées, modifiées ou rejetées, et pourquoi.
     do:
       - click: {role: tab, name: ICD, exact: true}
       - wait: 2

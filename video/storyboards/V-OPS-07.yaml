@@ -7,11 +7,11 @@ id: V-OPS-07
 week: 5
 audience: all
 title:
-  en: "LEOP-005: sun acquisition, hands off"
-  fr: "LEOP-005 : acquisition du Soleil, sans toucher"
+  en: "LEOP-005: monitoring the autonomous Sun acquisition"
+  fr: "LEOP-005 : suivi de l’acquisition autonome du Soleil"
 summary:
-  en: "Record the body rates, watch the magnetorquers slow the spacecraft down, see the AOCS switch itself to sun pointing, and check the sun hold and the power it brings."
-  fr: "Relever les vitesses angulaires, regarder les magnétocoupleurs ralentir le satellite, voir le SCAO passer de lui-même au pointage solaire, et vérifier la tenue au Soleil et la puissance qu’elle apporte."
+  en: "This video records the body rates and follows the magnetorquers as they slow the spacecraft. The AOCS then switches to Sun pointing on its own, and the operator checks the Sun-pointing attitude and the resulting increase in power."
+  fr: "Cette vidéo relève les vitesses angulaires et suit les magnétocoupleurs pendant qu’ils ralentissent le satellite. Le SCAO passe ensuite de lui-même au pointage solaire, et l’opérateur vérifie l’attitude de pointage solaire et l’augmentation de puissance qui en résulte."
 apps:
   mcs: default
 fresh_stack: sim
@@ -40,20 +40,22 @@ steps:
     title: {en: "Step 1: record the starting rates", fr: "Étape 1 : relever les vitesses de départ"}
     say:
       en: >-
-        DETUMBLE is running from the previous card. This launch and early orbit phase card,
-        LEOP-005, commands nothing: it observes. Open the attitude page and record the starting
-        point: the mode, and the three body rates, roll, pitch and yaw. In this run the
-        separation left EOSAT-1 turning very slowly. A real separation often leaves a few
-        degrees per second, and then B-dot, the magnetic braking law, needs tens of minutes,
-        roughly halving the rates every ten to fifteen.
+        DETUMBLE has been running since the previous procedure. LEOP-005, a procedure of the
+        launch and early orbit phase, sends no commands; it is an observation procedure. On the
+        attitude page, the operator records the starting point: the mode and the three body
+        rates, roll, pitch and yaw. In this example, the separation left EOSAT-1 rotating very
+        slowly. A real separation often leaves rates of a few degrees per second, in which case
+        the B-dot magnetic control law needs several tens of minutes, roughly halving the rates
+        every ten to fifteen minutes.
       fr: >-
-        DETUMBLE tourne depuis la fiche précédente. Cette fiche de la phase de lancement et de
-        début d’orbite, LEOP-005, ne commande rien : elle observe. Ouvrez la page attitude et
-        relevez le point de départ : le mode, et les trois vitesses angulaires, roulis, tangage
-        et lacet. Dans ce déroulé, la séparation a laissé EOSAT-1 tourner très lentement. Une
-        vraie séparation laisse souvent quelques degrés par seconde, et B-dot, la loi de
-        freinage magnétique, a alors besoin de dizaines de minutes, en divisant à peu près les
-        vitesses par deux toutes les dix à quinze.
+        DETUMBLE est actif depuis la procédure précédente. LEOP-005, une procédure de la phase
+        de lancement et de début d’orbite, n’envoie aucune commande : c’est une procédure
+        d’observation. Sur la page attitude, l’opérateur relève le point de départ : le mode et
+        les trois vitesses angulaires, roulis, tangage et lacet. Dans cet exemple, la séparation
+        a laissé EOSAT-1 tourner très lentement. Une séparation réelle laisse souvent quelques
+        degrés par seconde ; la loi de commande magnétique B-dot a alors besoin de plusieurs
+        dizaines de minutes, et divise les vitesses à peu près par deux toutes les dix à quinze
+        minutes.
     do:
       - click: {css: "#rail-aocs"}
       - wait: 2.0
@@ -79,17 +81,17 @@ steps:
     title: {en: "Step 3: the automatic handover", fr: "Étape 3 : le passage automatique"}
     say:
       en: >-
-        When all three rates have stayed below half a degree per second for thirty seconds,
-        the attitude and orbit control system, the AOCS, switches itself from DETUMBLE to
-        COARSE_SUN, coarse sun pointing. Watch the mode. Do not command
-        it: you would be asking for something the spacecraft does on its own. Your job is to
-        see it happen and log the time.
+        When all three rates have remained below half a degree per second for thirty seconds,
+        the attitude and orbit control system, or AOCS, changes from DETUMBLE to COARSE_SUN,
+        coarse Sun pointing, on its own. The operator monitors the mode but does not command the
+        change, since the spacecraft performs it autonomously. The operator's task is to observe
+        the transition and record the time.
       fr: >-
-        Quand les trois vitesses sont restées sous un demi-degré par seconde pendant trente
+        Lorsque les trois vitesses sont restées sous un demi-degré par seconde pendant trente
         secondes, le système de contrôle d’attitude et d’orbite, le SCAO, passe de lui-même de
-        DETUMBLE à COARSE_SUN, le pointage solaire grossier. Surveillez le mode. Ne le
-        commandez pas : vous demanderiez ce que le satellite fait tout seul. Votre rôle est de
-        le voir se produire et d’en noter l’heure.
+        DETUMBLE à COARSE_SUN, le pointage solaire grossier. L’opérateur surveille le mode mais
+        ne commande pas ce changement, que le satellite effectue de façon autonome. Son rôle est
+        d’observer la transition et d’en noter l’heure.
     do:
       - api: {app: instructor, method: POST, path: /api/command, json: {type: resume}}
       - highlight: {target: {css: "#page-aocs tr[data-param='0x020F']"}, seconds: 3}
@@ -107,17 +109,18 @@ steps:
     title: {en: "Step 4: the sun hold", fr: "Étape 4 : la tenue au Soleil"}
     say:
       en: >-
-        In COARSE_SUN the attitude error, the angle between the pointing and the Sun, shrinks.
-        With no wheels yet, only
-        magnetorquers, it is slow and rough: the card allows ten minutes to get within fifteen
-        degrees. Ask for the coarse sun sensors' confidence by parameter number: above one half,
-        they see the Sun.
+        In COARSE_SUN, the attitude error, which is the angle between the spacecraft pointing
+        and the Sun direction, decreases. Without the reaction wheels, using the magnetorquers
+        alone, this is slow and imprecise, and the procedure allows ten minutes for the error to
+        fall below fifteen degrees. The operator requests the coarse Sun sensor confidence by
+        its parameter number; a value above one half means that the sensors can see the Sun.
       fr: >-
-        En COARSE_SUN, l’erreur d’attitude, l’angle entre le pointage et le Soleil, diminue.
-        Sans roues, avec les seuls
-        magnétocoupleurs, c’est lent et approximatif : la fiche accorde dix minutes pour
-        descendre sous quinze degrés. Demandez la confiance des capteurs solaires grossiers par
-        son numéro de paramètre : au-dessus d’un demi, ils voient le Soleil.
+        En COARSE_SUN, l’erreur d’attitude, c’est-à-dire l’angle entre le pointage du satellite
+        et la direction du Soleil, diminue. Sans les roues de réaction, avec les seuls
+        magnétocoupleurs, c’est lent et imprécis, et la procédure accorde dix minutes pour que
+        l’erreur descende sous quinze degrés. L’opérateur demande l’indice de confiance des
+        capteurs solaires grossiers par son numéro de paramètre ; une valeur supérieure à un
+        demi signifie que les capteurs voient le Soleil.
     do:
       - highlight: {target: {css: "#page-aocs tr[data-param='0x0217']"}, seconds: 3}
       - click: {css: "#rail-cmd"}
@@ -139,16 +142,17 @@ steps:
     title: {en: "Step 5: what it brings", fr: "Étape 5 : ce que cela apporte"}
     say:
       en: >-
-        The reason for all of this is on the power page. As the wings turn to the Sun,
-        generation climbs and the orbit-average margin, energy in minus energy out over an
-        orbit, moves up with it. In eclipse there is
-        nothing to see: the card says to wait for eclipse exit and check again.
+        The purpose of this sequence can be seen on the power page. As the wings turn towards
+        the Sun, the generated power increases, and the orbit-average margin, the energy
+        generated minus the energy consumed over an orbit, increases with it. During eclipse
+        there is nothing to observe, and the procedure instructs the operator to wait for
+        eclipse exit and repeat the check.
       fr: >-
-        La raison de tout cela se trouve sur la page énergie. À mesure que les ailes se tournent
-        vers le Soleil, la production monte, et avec elle la marge moyenne sur l’orbite,
-        l’énergie qui entre moins celle qui sort sur une orbite. En
-        éclipse, il n’y a rien à voir : la fiche dit d’attendre la sortie d’éclipse et de
-        vérifier à nouveau.
+        L’objet de cette séquence apparaît sur la page énergie. À mesure que les ailes se
+        tournent vers le Soleil, la puissance produite augmente, et avec elle la marge moyenne
+        sur l’orbite, c’est-à-dire l’énergie produite moins l’énergie consommée sur une orbite.
+        Pendant l’éclipse, il n’y a rien à observer : la procédure demande d’attendre la sortie
+        d’éclipse et de refaire la vérification.
     do:
       - click: {css: "#rail-eps"}
       - wait: 2.0

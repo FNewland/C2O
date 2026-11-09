@@ -5,11 +5,11 @@ id: V-OPS-05
 week: 5
 audience: all
 title:
-  en: "LEOP-004: solar wings and the energy balance"
-  fr: "LEOP-004 : ailes solaires et bilan d’énergie"
+  en: "LEOP-004: solar array deployment and the energy balance"
+  fr: "LEOP-004 : déploiement des panneaux solaires et bilan d’énergie"
 summary:
-  en: "Read the power flow on body panels alone, deploy both wings, confirm them, and see what the deployment does to the orbit-average energy balance."
-  fr: "Lire le flux de puissance sur les seuls panneaux de structure, déployer les deux ailes, les confirmer, et voir ce que le déploiement change au bilan d’énergie moyen sur l’orbite."
+  en: "This video reads the power flow with only the body-mounted panels, deploys both solar array wings and confirms their deployment. It then shows the effect of the deployment on the orbit-average energy balance."
+  fr: "Cette vidéo lit le flux de puissance avec les seuls panneaux de structure, déploie les deux ailes du générateur solaire et confirme leur déploiement. Elle montre ensuite l’effet du déploiement sur le bilan d’énergie moyen sur l’orbite."
 apps:
   mcs: default
 fresh_stack: sim
@@ -35,20 +35,22 @@ steps:
     title: {en: "Body panels only", fr: "Les panneaux de structure seuls"}
     say:
       en: >-
-        This is LEOP-004, a launch and early orbit phase card, and the wings are still stowed.
-        Open the power page. The power flow draws every watt from the arrays, through the bus,
-        the shared supply line, to the loads and the battery, with the line width proportional
-        to the power. Only the panels fixed to the body are lit, and they give a few watts.
-        Now look at the projection on the right: the orbit-average margin, energy in minus
-        energy out over a whole orbit, is negative: stay like this and the battery runs down.
+        This is LEOP-004, a procedure of the launch and early orbit phase, and the solar wings
+        are still stowed. The power page shows the power flow from the arrays through the bus,
+        the common supply line, to the loads and the battery, with the width of each line
+        proportional to the power. Only the body-mounted panels are illuminated, and they
+        provide a few watts. The projection on the right shows the orbit-average margin, which
+        is the energy generated minus the energy consumed over a complete orbit. It is negative,
+        which means that the battery would discharge if nothing changed.
       fr: >-
-        Voici LEOP-004, une fiche de la phase de lancement et de début d’orbite, et les ailes
-        sont encore repliées. Ouvrez la page énergie. Le flux de puissance dessine chaque watt,
-        des générateurs au bus d’alimentation commun, puis aux charges et à la batterie, avec une
-        largeur de trait proportionnelle à la puissance. Seuls les panneaux fixés sur la structure sont éclairés,
-        et ils ne donnent que quelques watts. Regardez maintenant la projection à droite : la marge moyenne sur
-        l’orbite, l’énergie qui entre moins celle qui sort sur une orbite entière, est négative.
-        Si rien ne change, la batterie se vide.
+        Voici LEOP-004, une procédure de la phase de lancement et de début d’orbite, et les
+        ailes solaires sont encore repliées. La page énergie présente le flux de puissance, des
+        générateurs au bus, la ligne d’alimentation commune, puis aux charges et à la batterie,
+        la largeur de chaque trait étant proportionnelle à la puissance. Seuls les panneaux
+        fixés sur la structure sont éclairés, et ils fournissent quelques watts. La projection à
+        droite indique la marge moyenne sur l’orbite, c’est-à-dire l’énergie produite moins
+        l’énergie consommée sur une orbite complète. Elle est négative : la batterie se
+        déchargerait si rien ne changeait.
     do:
       - click: {css: "#rail-eps"}
       - wait: 1.5
@@ -72,16 +74,17 @@ steps:
     title: {en: "Step 0: deploy both wings", fr: "Étape 0 : déployer les deux ailes"}
     say:
       en: >-
-        Step 0 deploys both wings in one command: wing code two. It is a critical command, one
-        you cannot undo, so the console asks you to confirm it. The release takes up to
-        forty-five seconds: the wing status first shows deploying, then deployed. Watch the
-        array regulator, the box that shows total generation, while it happens.
+        Step 0 deploys both wings with a single command, wing code two. This is a critical,
+        irreversible command, so the console asks for confirmation before sending it. The
+        release takes up to forty-five seconds: the wing status first shows deploying and then
+        deployed. The operator monitors the array regulator, which displays the total generated
+        power, during the deployment.
       fr: >-
-        L’étape 0 déploie les deux ailes en une seule commande : code d’aile deux. C’est une
-        commande critique, irréversible, la console vous demande donc de la confirmer. Le
-        déploiement prend jusqu’à quarante-cinq secondes : l’état des ailes indique d’abord en
-        cours, puis déployé. Surveillez le régulateur des générateurs, la case qui affiche la
-        production totale, pendant ce temps.
+        L’étape 0 déploie les deux ailes en une seule commande, code d’aile deux. Il s’agit
+        d’une commande critique et irréversible : la console demande donc une confirmation avant
+        de l’envoyer. Le déploiement prend jusqu’à quarante-cinq secondes : l’état des ailes
+        indique d’abord en cours, puis déployé. L’opérateur surveille le régulateur des
+        générateurs, qui affiche la puissance totale produite, pendant le déploiement.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: EPS_DEPLOY_WING}
@@ -98,20 +101,22 @@ steps:
     title: {en: "Steps 1 to 3: confirm each wing", fr: "Étapes 1 à 3 : confirmer chaque aile"}
     say:
       en: >-
-        A rising number is not a confirmation. Request the power housekeeping report, structure
-        identifier one, SID one, then read the wing status: three means both wings deployed.
-        The wing currents are not in the routine report, so the card asks for each one by name:
-        parameter hex one four six for the plus Y wing, hex one four seven for the minus Y
-        wing. In sunlight, each must carry current. Until you ask, the wings on the power flow
-        read no data.
+        An increase in generated power does not by itself confirm the deployment. The operator
+        requests the power housekeeping report, structure identifier one, or SID one, and reads
+        the wing status, where a value of three means that both wings are deployed. The wing
+        currents are not included in the routine report, so the card requests each one by
+        parameter number: hex one four six for the plus Y wing and hex one four seven for the
+        minus Y wing. In sunlight, both wings must deliver current. Until these parameters are
+        requested, the wings on the power flow show no data.
       fr: >-
-        Un chiffre qui monte n’est pas une confirmation. Demandez les données de servitude
-        énergie, identifiant de structure un, SID un, puis lisez l’état des ailes : trois
-        signifie les deux ailes déployées. Les courants des ailes ne sont pas dans le rapport
-        courant : la fiche les demande donc un par un, le paramètre hexadécimal un quatre six
-        pour l’aile plus Y, un quatre sept pour l’aile moins Y. Au soleil, chacune doit débiter
-        du courant. Tant que vous ne les demandez pas, les ailes du flux de puissance affichent
-        pas de données.
+        Une hausse de la puissance produite ne confirme pas à elle seule le déploiement.
+        L’opérateur demande le rapport de servitude énergie, identifiant de structure un, ou SID
+        un, et lit l’état des ailes, la valeur trois signifiant que les deux ailes sont
+        déployées. Les courants des ailes ne figurent pas dans le rapport courant : la fiche
+        demande donc chacun par son numéro de paramètre, un quatre six hexadécimal pour l’aile
+        plus Y et un quatre sept hexadécimal pour l’aile moins Y. Au soleil, les deux ailes
+        doivent débiter du courant. Tant que ces paramètres n’ont pas été demandés, les ailes du
+        flux de puissance n’affichent aucune donnée.
     do:
       - wait: 18
       - click: {css: "#rail-cmd"}
@@ -136,19 +141,20 @@ steps:
     title: {en: "The energy balance after", fr: "Le bilan d’énergie après"}
     say:
       en: >-
-        Back to the power flow. The wings now show their own power, and generation is up. But
-        watch the margin: it swings around zero. The spacecraft is still tumbling, so the wings
-        catch the Sun only part of the time. At the bottom, this orbit's energy in and energy
-        out, in watt-hours, tell you whether the battery ends the orbit higher or lower.
-        Deploying the wings is not enough: the next card, sun acquisition, points them at the
-        Sun.
+        The power flow now shows the power from each wing, and total generation has increased.
+        The margin, however, fluctuates around zero, because the spacecraft is still tumbling
+        and the wings face the Sun only part of the time. The energy generated and consumed over
+        the current orbit, shown in watt-hours at the bottom, indicates whether the battery will
+        end the orbit with more or less charge. Deploying the wings is therefore not sufficient
+        on its own; the next procedure, Sun acquisition, points them towards the Sun.
       fr: >-
-        Revenez au flux de puissance. Les ailes affichent maintenant leur propre puissance, et
-        la production augmente. Mais regardez la marge : elle oscille autour de zéro. Le
-        satellite tourne encore sur lui-même : les ailes ne voient le Soleil qu’une partie du
-        temps. En bas, l’énergie entrée et sortie sur cette orbite, en wattheures, vous dit si
-        la batterie finit l’orbite plus haut ou plus bas. Déployer les ailes ne suffit pas : la
-        fiche suivante, l’acquisition du Soleil, les oriente vers le Soleil.
+        Le flux de puissance affiche maintenant la puissance de chaque aile, et la production
+        totale a augmenté. La marge, en revanche, oscille autour de zéro, car le satellite
+        tourne encore sur lui-même et les ailes ne font face au Soleil qu’une partie du temps.
+        L’énergie produite et consommée sur l’orbite en cours, affichée en wattheures en bas,
+        indique si la batterie finira l’orbite plus ou moins chargée. Le déploiement des ailes
+        ne suffit donc pas à lui seul ; la procédure suivante, l’acquisition du Soleil, les
+        oriente vers le Soleil.
     do:
       - scroll: {css: "#eps-flow"}
       - highlight: {target: {css: "#eps-flow"}, seconds: 3.5, point: false}
@@ -164,15 +170,16 @@ steps:
     title: {en: "Record it on the card", fr: "Le consigner sur la fiche"}
     say:
       en: >-
-        On the card, capture the values and mark Step 0 GO. Two checks remain for later in the
-        pass or the next one: the power profile through an eclipse, where generation falls to
-        zero and the battery carries every load, and the symmetry of the two wing currents,
-        within fifteen percent.
+        On the card, the operator captures the values and marks step 0 GO. Two checks are
+        completed later in the pass or during the next one: the power profile through an
+        eclipse, when generation falls to zero and the battery supplies all the loads, and the
+        symmetry of the two wing currents, which must agree within fifteen percent.
       fr: >-
-        Sur la fiche, relevez les valeurs et marquez l’étape 0 GO. Deux vérifications restent
-        pour la suite du passage ou le suivant : le profil de puissance pendant une éclipse, où
-        la production tombe à zéro et la batterie porte toutes les charges, et la symétrie des
-        courants des deux ailes, à quinze pour cent près.
+        Sur la fiche, l’opérateur relève les valeurs et marque l’étape 0 GO. Deux vérifications
+        sont effectuées plus tard dans le passage ou au passage suivant : le profil de puissance
+        pendant une éclipse, lorsque la production tombe à zéro et que la batterie alimente
+        toutes les charges, et la symétrie des courants des deux ailes, qui doivent concorder à
+        quinze pour cent près.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}

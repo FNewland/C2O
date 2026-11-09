@@ -34,7 +34,7 @@ slides:
   - [{en: "Desaturation scheduling", fr: "Planification de la désaturation"}, {en: "When must the wheels be dumped, and not during imaging?", fr: "Quand décharger les roues, et pas pendant l'imagerie ?"}]
 - kind: statement
   k: {en: "Contingency 1 · CTG-001", fr: "Contingence 1 · CTG-001"}
-  text: {en: "Under-voltage: check before you shed.", fr: "Sous-tension : vérifier avant de délester."}
+  text: {en: "Under-voltage: confirming the cause before shedding loads.", fr: "Sous-tension : confirmer la cause avant de délester."}
   sub: {en: "Request EPS housekeeping and confirm the flag, bus voltage, state of charge, generation and consumption. Then shed in priority order, one load at a time, verifying each.", fr: "Demander les données de servitude EPS et confirmer l'indicateur, la tension du bus, l'état de charge, la production et la consommation. Puis délester par ordre de priorité, une charge à la fois, en vérifiant chacune."}
 - kind: steps
   k: {en: "CTG-001 shedding order", fr: "Ordre de délestage CTG-001"}
@@ -47,7 +47,7 @@ slides:
   - {en: "Last resort: OBC emergency mode. Then monitor, and restore loads in reverse order once the bus recovers", fr: "Dernier recours : mode urgence de l'OBC. Puis surveiller, et rétablir les charges dans l'ordre inverse une fois le bus rétabli"}
 - kind: statement
   k: {en: "Contingency 2 · CTG-019", fr: "Contingence 2 · CTG-019"}
-  text: {en: "No telemetry at AOS: work down the chain, ground first.", fr: "Pas de télémesure à l'acquisition : descendre la chaîne, le sol d'abord."}
+  text: {en: "No telemetry at acquisition of signal: tracing the fault, ground first.", fr: "Pas de télémesure à l'acquisition : descendre la chaîne, le sol d'abord."}
   sub: {en: "Before you command a spacecraft you cannot hear, prove the ground is not the problem.", fr: "Avant de commander un satellite qu'on n'entend pas, prouver que le sol n'est pas en cause."}
 - kind: steps
   k: {en: "CTG-019", fr: "CTG-019"}
@@ -80,6 +80,6 @@ slides:
 - kind: close
   h: {en: "Before and during the shift", fr: "Avant et pendant le quart"}
   items:
-  - {en: "Watch: Under-voltage: check before you shed; No telemetry at AOS: work down the chain", fr: "À regarder : Sous-tension : vérifier avant de délester ; Pas de télémesure à l’acquisition : descendre la chaîne"}
+  - {en: "Watch: Under-voltage: confirming the cause before shedding loads; No telemetry at acquisition of signal: tracing the fault", fr: "À regarder : Sous-tension : confirmer la cause avant de délester ; Pas de télémesure à l’acquisition du signal : localiser la panne"}
   - {en: "Teams swap roles relative to yesterday", fr: "Les équipes échangent leurs rôles par rapport à hier"}
   - {en: "Operators: sim log and anomaly tickets. Observers: critique notes", fr: "Opérateurs : journal de simulation et fiches d'anomalie. Observateurs : notes de critique"}

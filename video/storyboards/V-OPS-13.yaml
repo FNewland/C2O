@@ -43,20 +43,26 @@ steps:
     title: {en: "Step 1: is it ready for fine pointing?", fr: "Étape 1 : prêt pour le pointage fin ?"}
     say:
       en: >-
-        Card COM-012, first light. The payload has been on standby with its cooler holding
-        minus fifteen degrees; the attitude control is in NOMINAL with a star tracker in the
-        loop. Imaging needs FINE_POINT, and the spacecraft refuses that mode unless every
-        precondition holds. So ask first: the fine-ready check. Each box is one condition:
-        enough stars, three wheels, a converged estimator, low rates, momentum margin, no
-        slew. All clear: zero.
+        This video follows the commissioning procedure COM-012, first light. At the start of the
+        procedure the payload is in standby, with the cooler holding the focal plane at minus
+        fifteen degrees, and the attitude control system is in NOMINAL mode with a star tracker
+        in the loop. Imaging requires FINE_POINT mode, and the spacecraft will reject a
+        FINE_POINT command unless all of its preconditions are met. The first step is therefore
+        to request the fine-ready check. Each field in the result corresponds to one condition:
+        sufficient stars, three wheels available, a converged estimator, low body rates,
+        adequate momentum margin and no slew in progress. A value of zero means that all the
+        conditions are met.
       fr: >-
-        Fiche COM-012, première lumière. La charge utile est en attente, son refroidisseur à
-        moins quinze degrés ; le contrôle d’attitude est en NOMINAL avec un senseur stellaire
-        dans la boucle. L’imagerie demande FINE_POINT, et le satellite refuse ce mode tant que
-        chaque condition n’est pas remplie. Demandez donc d’abord : le contrôle d’aptitude au
-        pointage fin. Chaque case est une condition : assez d’étoiles, trois roues, un
-        estimateur convergé, des vitesses faibles, de la marge de moment cinétique, pas de
-        basculement. Tout est vert : zéro.
+        Cette vidéo suit la procédure de mise en service COM-012, première lumière. Au début de
+        la procédure, la charge utile est en attente, son refroidisseur maintenant le plan focal
+        à moins quinze degrés, et le système de contrôle d’attitude est en mode NOMINAL avec un
+        senseur stellaire dans la boucle. L’imagerie exige le mode FINE_POINT, et le satellite
+        rejette toute commande FINE_POINT tant que l’ensemble de ses conditions préalables n’est
+        pas rempli. La première étape consiste donc à demander le contrôle d’aptitude au
+        pointage fin. Chaque champ du résultat correspond à une condition : nombre d’étoiles
+        suffisant, trois roues disponibles, estimateur convergé, vitesses angulaires faibles,
+        marge de moment cinétique suffisante et aucun basculement en cours. Une valeur nulle
+        indique que toutes les conditions sont remplies.
     do:
       - click: {css: "#rail-aocs"}
       - wait_for: {target: {css: "#aocs-quick-list"}, timeout: 20}
@@ -85,14 +91,14 @@ steps:
     title: {en: "FINE_POINT", fr: "FINE_POINT"}
     say:
       en: >-
-        Now command fine pointing. The mode chain moves to FINE_POINT, and within half a
-        minute the pointing error settles to a few hundredths of a degree. The capture gate is
-        five hundredths: below that, the payload will take the picture; above it, it refuses.
+        The operator then commands FINE_POINT. The mode changes, and within about thirty seconds
+        the pointing error settles to a few hundredths of a degree. The payload will only start
+        a capture when the error is below five hundredths of a degree.
       fr: >-
-        Commandez maintenant le pointage fin. La chaîne des modes passe à FINE_POINT et, en
-        une demi-minute, l’erreur de pointage descend à quelques centièmes de degré. La
-        condition de prise de vue est de cinq centièmes : en dessous, la charge utile prend
-        l’image ; au-dessus, elle refuse.
+        L’opérateur commande ensuite FINE_POINT. Le mode change et, en une trentaine de
+        secondes, l’erreur de pointage se stabilise à quelques centièmes de degré. La charge
+        utile ne lance une prise de vue que si l’erreur est inférieure à cinq centièmes de
+        degré.
     do:
       - click: {css: "#aocs-quick-list button", has_text: {en: "Fine Point", fr: "Pointage fin"}}
       - wait: 3
@@ -106,13 +112,16 @@ steps:
     title: {en: "Steps 2 to 4: payload to IMAGING", fr: "Étapes 2 à 4 : la charge utile en IMAGING"}
     say:
       en: >-
-        On the payload page: the focal plane is at minus fifteen and a half degrees, inside its
-        band, and ready. Note the memory used and the image count before you capture: they are
-        the baseline. Then command IMAGING.
+        On the payload page, the focal plane temperature is minus fifteen and a half degrees,
+        which is within its operating band, and the instrument reports that it is ready. Before
+        the capture, record the memory used and the image count; these are the reference values
+        for checking the result. The payload is then commanded to IMAGING mode.
       fr: >-
-        Sur la page de la charge utile : le plan focal est à moins quinze et demi, dans sa
-        bande, et prêt. Notez la mémoire utilisée et le nombre d’images avant la prise de vue :
-        c’est la référence. Puis commandez IMAGING.
+        Sur la page de la charge utile, la température du plan focal est de moins quinze degrés
+        et demi, ce qui est dans sa plage de fonctionnement, et l’instrument indique qu’il est
+        prêt. Avant la prise de vue, notez la mémoire utilisée et le nombre d’images : ce sont
+        les valeurs de référence pour vérifier le résultat. La charge utile est ensuite
+        commandée en mode IMAGING.
     do:
       - click: {css: "#rail-pld"}
       - wait_for: {target: {css: "#pld-quick-list"}, timeout: 20}
@@ -127,16 +136,17 @@ steps:
     title: {en: "Step 5: the first image", fr: "Étape 5 : la première image"}
     say:
       en: >-
-        Step five: the capture, from the command builder: scene one, two thousand and
-        forty-eight lines. The imager scans for about eight seconds. Then read the evidence
-        on the payload page: the image count goes to one, the last scene is one, and the
-        memory used has grown by about a megabyte, the compressed frame.
+        Step five is the capture itself, sent from the command builder for scene one, with two
+        thousand and forty-eight lines. The scan takes about eight seconds. The result is
+        confirmed on the payload page: the image count has increased to one, the last scene
+        number is one, and the memory used has increased by approximately one megabyte, the size
+        of the compressed image.
       fr: >-
-        Étape cinq : la prise de vue, depuis le constructeur de commandes : scène un, deux
-        mille quarante-huit lignes. L’imageur balaie pendant environ huit secondes. Lisez
-        ensuite les preuves sur la page de la charge utile : le nombre d’images passe à un, la
-        dernière scène est la une, et la mémoire utilisée a augmenté d’environ un mégaoctet,
-        l’image compressée.
+        L’étape cinq est la prise de vue elle-même, envoyée depuis le constructeur de commandes
+        pour la scène un, avec deux mille quarante-huit lignes. Le balayage dure environ huit
+        secondes. Le résultat se vérifie sur la page de la charge utile : le nombre d’images est
+        passé à un, le numéro de la dernière scène est un, et la mémoire utilisée a augmenté
+        d’environ un mégaoctet, soit la taille de l’image compressée.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: PAYLOAD_CAPTURE}
@@ -170,13 +180,13 @@ steps:
     title: {en: "Step 7: back to STANDBY", fr: "Étape 7 : retour en attente"}
     say:
       en: >-
-        The image is safe in memory, so return the payload to standby. Standby also switches
-        the cooler off: watch the cooler power drop to zero, fifteen watts back for the rest
-        of the spacecraft.
+        Once the image is stored, the payload is returned to standby. This also switches off the
+        cooler. Its power consumption falls to zero, which makes about fifteen watts available
+        to the rest of the spacecraft.
       fr: >-
-        L’image est en sécurité en mémoire : remettez la charge utile en attente. L’attente
-        coupe aussi le refroidisseur : regardez sa puissance tomber à zéro, quinze watts rendus
-        au reste du satellite.
+        Une fois l’image enregistrée, la charge utile est remise en attente. Cette commande
+        coupe aussi le refroidisseur : sa consommation tombe à zéro, ce qui libère environ
+        quinze watts pour le reste du satellite.
     do:
       - js: "document.getElementById('pld-quick-list').scrollIntoView({block: 'center'})"
       - wait: 0.8
@@ -190,17 +200,18 @@ steps:
     title: {en: "Step 8: the product down", fr: "Étape 8 : le produit au sol"}
     say:
       en: >-
-        Step eight: the downlink. Open the high-rate gate first: downlink mode on, then the
-        HIGH rate, one hundred and twenty-eight kilobits per second. The strip shows the tier.
-        Then open a Service 13 transfer for scene one. Its first report gives the transfer
-        identifier, the number of blocks, and the checksum the instrument computed at capture.
-        Watch the transfer progress climb.
+        Step eight is the downlink. The high-rate link is enabled first: downlink mode on, then
+        the HIGH data rate of one hundred and twenty-eight kilobits per second, which appears on
+        the status strip. A Service 13 transfer is then opened for scene one. The first report
+        gives the transfer identifier, the number of blocks and the checksum calculated by the
+        instrument at the time of capture. The transfer progress increases as the blocks arrive.
       fr: >-
-        Étape huit : la descente. Ouvrez d’abord la voie haut débit : le mode de liaison
-        descendante, puis le débit HIGH, cent vingt-huit kilobits par seconde. Le bandeau
-        affiche le palier. Ouvrez ensuite un transfert du service 13 pour la scène un. Son
-        premier rapport donne l’identifiant du transfert, le nombre de blocs et la somme de
-        contrôle calculée par l’instrument à la prise de vue. Regardez la progression monter.
+        L’étape huit est la transmission au sol. La liaison haut débit est d’abord activée : le
+        mode de liaison descendante, puis le débit HIGH de cent vingt-huit kilobits par seconde,
+        qui s’affiche dans le bandeau d’état. Un transfert du service 13 est ensuite ouvert pour
+        la scène un. Le premier rapport indique l’identifiant du transfert, le nombre de blocs
+        et la somme de contrôle calculée par l’instrument au moment de la prise de vue. La
+        progression du transfert augmente à mesure que les blocs arrivent.
     do:
       - click: {css: "#rail-ttc"}
       - wait_for: {target: {css: "#ttc-quick-list"}, timeout: 20}
@@ -240,17 +251,19 @@ steps:
     title: {en: "Down, and checked", fr: "Au sol, et vérifiée"}
     say:
       en: >-
-        A little over a minute later the transfer reaches one hundred percent and closes. On
-        the ground, the product is checked against the checksum from the first report, and the
-        payload team looks at the image: the geometry, every band present, no striping. Then
-        the card puts the rate back to LOW and closes the high-rate gate. The gate is never
-        left open at the end of a card. First light.
+        After a little over a minute the transfer reaches one hundred percent and is closed. On
+        the ground, the product is verified against the checksum from the first report, and the
+        payload team inspects the image for correct geometry, the presence of all four bands and
+        any striping. The procedure ends by returning the data rate to LOW and disabling the
+        high-rate link, which must not be left enabled at the end of the procedure. This
+        completes first light.
       fr: >-
-        Un peu plus d’une minute plus tard, le transfert atteint cent pour cent et se ferme.
-        Au sol, le produit est vérifié avec la somme de contrôle du premier rapport, et
-        l’équipe de la charge utile examine l’image : la géométrie, toutes les bandes
-        présentes, pas de stries. La fiche remet ensuite le débit en LOW et referme la voie haut
-        débit. La voie n’est jamais laissée ouverte en fin de fiche. Première lumière.
+        Après un peu plus d’une minute, le transfert atteint cent pour cent et se ferme. Au sol,
+        le produit est vérifié à l’aide de la somme de contrôle du premier rapport, et l’équipe
+        de la charge utile examine l’image : géométrie correcte, présence des quatre bandes,
+        absence de stries. La procédure se termine en remettant le débit à LOW et en désactivant
+        la liaison haut débit, qui ne doit pas rester activée en fin de procédure. La première
+        lumière est ainsi réalisée.
     do:
       - python: {call: "video/c2ovideo/helpers.py:wait_mcs_param", app: mcs, kwargs: {pid: "0x062E", at_least: 100, timeout_s: 120}}
       - wait: 3

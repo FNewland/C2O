@@ -7,6 +7,10 @@ Backends (``video/voices.yaml`` picks one per language):
   restriction on the audio, so it can be published under CC0.
 * ``piper`` — the ``piper`` command line with a downloaded ``.onnx`` voice
   (check each voice's model card before publishing; licences differ by voice).
+* ``chatterbox`` — Chatterbox Multilingual (Resemble AI, MIT) cloning a reference
+  recording, through ``cbx_worker.py`` in its own Python (``python`` key). The reference
+  recording is personal: keep it outside the repository (``ref`` is resolved under
+  ``$C2O_VIDEO_CACHE/voices`` when relative). Output carries Resemble's Perth watermark.
 * ``silence`` — silent audio of a plausible length; for tests and dry runs.
 
 Sentences are synthesised separately so caption timing is exact.
@@ -94,6 +98,31 @@ class Clip:
     seconds: float
 
 
+VOICES_DIR = CACHE / "voices"
+_CBX = None
+
+
+def _ref_path(engine: dict) -> Path:
+    p = Path(engine["ref"]).expanduser()
+    return p if p.is_absolute() else VOICES_DIR / p
+
+
+def _cbx(engine: dict):
+    """Start (once) the Chatterbox worker under the voice's own Python."""
+    global _CBX
+    if _CBX is None or _CBX.poll() is not None:
+        py = str(Path(engine.get("python", "python3")).expanduser())
+        _CBX = subprocess.Popen([py, str(Path(__file__).with_name("cbx_worker.py"))], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
+        while True:
+            line = _CBX.stdout.readline()
+            if not line:
+                raise RuntimeError("Chatterbox worker exited during start-up")
+            if line.startswith("{") and json.loads(line).get("ready"):
+                break
+    return _CBX
+
+
 def _synth(engine: dict, text: str, lang: str) -> np.ndarray:
     kind = engine["backend"]
     if kind == "silence":
@@ -116,7 +145,27 @@ def _synth(engine: dict, text: str, lang: str) -> np.ndarray:
         sr = int(engine.get("sample_rate", 22050))
         a = np.frombuffer(out.stdout, dtype=np.int16).astype(np.float32) / 32768.0
         return np.interp(np.linspace(0, len(a), int(len(a) * SR / sr), endpoint=False), np.arange(len(a)), a).astype(np.float32)
+    if kind == "chatterbox":
+        import tempfile
+        w = _cbx(engine)
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            out = f.name
+        req = {"text": text, "lang": engine.get("lang", lang)[:2], "ref": str(_ref_path(engine)), "out": out,
+               "exaggeration": engine.get("exaggeration", 0.5), "cfg_weight": engine.get("cfg_weight", 0.5),
+               "seed": int(hashlib.sha256(text.encode()).hexdigest()[:8], 16)}
+        w.stdin.write(json.dumps(req) + "\n")
+        w.stdin.flush()
+        rep = json.loads(w.stdout.readline() or "{}")
+        if not rep.get("ok"):
+            raise RuntimeError(f"Chatterbox failed: {rep.get('error', 'worker died')}")
+        a = read_wav(Path(out))
+        os.unlink(out)
+        sr = int(rep["sr"])
+        if sr != SR:
+            a = np.interp(np.linspace(0, len(a), int(len(a) * SR / sr), endpoint=False), np.arange(len(a)), a).astype(np.float32)
+        return a
     raise ValueError(f"unknown TTS backend {kind!r}")
+
 
 
 def _trim(a: np.ndarray, thr: float = 0.004) -> np.ndarray:
@@ -152,6 +201,9 @@ def engine_for(lang: str, override: str | None = None) -> dict:
 def say(text: str, lang: str, override: str | None = None) -> list[Clip]:
     """Synthesise ``text`` sentence by sentence; return cached clips."""
     engine = engine_for(lang, override)
+    if engine["backend"] == "chatterbox":
+        # key the cache on the reference recording's content, not just its name
+        engine = dict(engine, ref_sha=hashlib.sha256(_ref_path(engine).read_bytes()).hexdigest()[:16])
     clips = []
     for sent in sentences(text):
         spoken_text = lexicon.spoken(sent, lang)

@@ -8,11 +8,11 @@ id: V-OPS-11
 week: 5
 audience: all
 title:
-  en: "No telemetry at AOS: work down the chain"
-  fr: "Pas de télémesure à l’acquisition : descendre la chaîne"
+  en: "No telemetry at acquisition of signal: tracing the fault"
+  fr: "Pas de télémesure à l’acquisition du signal : localiser la panne"
 summary:
-  en: "The pass starts and the S-band stays silent. Rule out the ground, send the blind housekeeping request that also keys the transmitter, read the UHF beacon, and bring the downlink back with the power amplifier, card in hand."
-  fr: "Le passage commence et la bande S reste muette. Écarter le sol, envoyer la demande de servitude en aveugle qui allume aussi l’émetteur, lire la balise UHF et rétablir la liaison descendante avec l’amplificateur de puissance, fiche en main."
+  en: "In this video, the pass begins but no S-band signal is received. The operator rules out the ground segment, sends a blind housekeeping request that also switches on the transmitter, reads the UHF beacon and restores the downlink using the power amplifier, following the contingency card."
+  fr: "Dans cette vidéo, le passage commence mais aucun signal en bande S n’est reçu. L’opérateur écarte le segment sol, envoie en aveugle une demande de servitude qui allume aussi l’émetteur, lit la balise UHF et rétablit la liaison descendante au moyen de l’amplificateur de puissance, en suivant la fiche de contingence."
 apps:
   mcs: default
 fresh_stack: sim
@@ -45,18 +45,19 @@ steps:
     title: {en: "A silent pass", fr: "Un passage muet"}
     say:
       en: >-
-        Acquisition of signal, the start of a pass. The overview should be filling with fresh
-        housekeeping, and it is not: the subsystem blocks are stale, their last values an orbit
-        old. The strip at the top says late. Something is reaching the ground, but not the
-        S-band telemetry. This is the contingency procedure CTG-019, no telemetry at pass
-        start, and the TT&C operator leads it.
+        This is acquisition of signal, the start of a pass. The overview should now be updating
+        with new housekeeping data, but it is not: the subsystem blocks are stale, and their
+        last values are an orbit old. The status strip reports that data is late. A signal is
+        reaching the ground, but it is not the S-band telemetry. This situation is covered by
+        the contingency procedure CTG-019, no telemetry at pass start, which is led by the TT&C
+        operator.
       fr: >-
-        Acquisition du signal, le début d’un passage. La vue d’ensemble devrait se remplir de
-        servitude fraîche, et ce n’est pas le cas : les blocs des sous-systèmes sont périmés,
-        leurs dernières valeurs datent d’une orbite. Le bandeau du haut indique un retard.
-        Quelque chose arrive au sol, mais pas la télémesure en bande S. C’est la procédure de
-        contingence CTG-019, absence de télémesure en début de passage, et c’est l’opérateur
-        TT&C qui la mène.
+        Nous sommes à l’acquisition du signal, au début d’un passage. La vue d’ensemble devrait
+        se mettre à jour avec de nouvelles données de servitude, mais ce n’est pas le cas : les
+        blocs des sous-systèmes sont périmés et leurs dernières valeurs datent d’une orbite. Le
+        bandeau d’état signale un retard. Un signal parvient au sol, mais ce n’est pas la
+        télémesure en bande S. Cette situation relève de la procédure de contingence CTG-019,
+        absence de télémesure en début de passage, menée par l’opérateur TT&C.
     do:
       - wait: 1.0
       - highlight: {target: {css: "#sa-see"}, seconds: 3}
@@ -73,19 +74,21 @@ steps:
     title: {en: "Step 1: rule out the ground", fr: "Étape 1 : écarter le sol"}
     say:
       en: >-
-        Step one is the ground. On the TT&C page, the station's receiver measures a strong
-        signal, about minus one hundred and nineteen dBm. Read the note under the key
-        parameters: it is the UHF beacon, a separate radio, not the S-band. So the antenna is
-        tracking and the station's receive chain works. The lock chain beside it is stale: it
-        travels in the S-band housekeeping, which is exactly what is missing. The ground is
-        nominal; the fault is on board.
+        Step one checks the ground segment. On the TT&C page, the station receiver measures a
+        strong signal of about minus one hundred and nineteen dBm. The note under the key
+        parameters explains that this is the ultra-high frequency, or UHF, beacon, a separate
+        radio, and not the S-band. The antenna is therefore tracking and the station receive
+        chain is working. The lock status next to it is stale because it is carried in the
+        S-band housekeeping, which is the data that is missing. The ground segment is nominal,
+        so the fault is on board.
       fr: >-
-        L’étape un, c’est le sol. Sur la page TT&C, le récepteur de la station mesure un signal
-        fort, environ moins cent dix-neuf dBm. Lisez la note sous les paramètres clés : c’est la
-        balise UHF, une radio distincte, pas la bande S. L’antenne poursuit donc, et la chaîne de
-        réception de la station fonctionne. La chaîne de verrouillage, à côté, est périmée :
-        elle voyage dans la servitude en bande S, justement ce qui manque. Le sol est nominal ;
-        la panne est à bord.
+        L’étape un vérifie le segment sol. Sur la page TT&C, le récepteur de la station mesure
+        un signal fort, d’environ moins cent dix-neuf dBm. La note sous les paramètres clés
+        précise qu’il s’agit de la balise en ultra-haute fréquence, UHF, une radio distincte, et
+        non de la bande S. L’antenne poursuit donc le satellite et la chaîne de réception de la
+        station fonctionne. L’état de verrouillage, à côté, est périmé, car il est transmis dans
+        les données de servitude en bande S, qui sont précisément celles qui manquent. Le
+        segment sol est nominal : la panne se trouve à bord.
     do:
       - click: {css: "#rail-ttc"}
       - wait_for: {target: {css: "#ttc-stepper"}, timeout: 20}
@@ -112,18 +115,21 @@ steps:
     title: {en: "Step 2: the blind request", fr: "Étape 2 : la demande en aveugle"}
     say:
       en: >-
-        Step two. With no telemetry to confirm anything, the flight director gives a GO for
-        blind commanding: arm it, then confirm. Every command is now tagged blind in the log.
-        Send a housekeeping request for the power report, SID one. Any command the spacecraft
-        accepts also switches the transmitter's power line on for five minutes: the auto-TX
-        hold-down. So this one request is the test. Give it thirty seconds.
+        In step two, with no telemetry available to confirm any action, the Flight Director
+        authorises blind commanding, which the operator arms and then confirms. Every command is
+        now marked as blind in the log. The operator sends a housekeeping request for the power
+        report, structure identifier one, or SID one. Any command accepted by the spacecraft
+        also switches on the transmitter power line for five minutes, through the auto-transmit
+        hold-down. This single request therefore serves as the test, and the operator allows
+        thirty seconds for a response.
       fr: >-
-        L’étape deux. Sans télémesure pour rien confirmer, le directeur de vol donne un GO pour
-        la commande en aveugle : armer, puis confirmer. Chaque commande est maintenant marquée
-        en aveugle dans le journal. Envoyez une demande de servitude pour le rapport d’énergie,
-        le SID un. Toute commande acceptée par le satellite met aussi sous tension la ligne
-        d’alimentation de l’émetteur pendant cinq minutes : le maintien automatique de
-        l’émission. Cette seule demande est donc le test. Donnez-lui trente secondes.
+        À l’étape deux, faute de télémesure pour confirmer quoi que ce soit, le directeur de vol
+        autorise la commande en aveugle, que l’opérateur arme puis confirme. Chaque commande est
+        désormais marquée en aveugle dans le journal. L’opérateur envoie une demande de
+        servitude pour le rapport d’énergie, identifiant de structure un, ou SID un. Toute
+        commande acceptée par le satellite met aussi sous tension la ligne d’alimentation de
+        l’émetteur pendant cinq minutes, grâce au maintien automatique de l’émission. Cette
+        seule demande sert donc de test, et l’opérateur laisse trente secondes pour une réponse.
     do:
       - scroll: {css: "#ttc-blind-btn"}
       - click: {css: "#ttc-blind-btn"}
@@ -142,19 +148,22 @@ steps:
     title: {en: "Nothing comes back", fr: "Rien ne revient"}
     say:
       en: >-
-        Look at the verification: it stops at sent. Acceptance and execution reports come down
-        the same silent downlink, so a blind command never confirms itself. Thirty seconds, and
-        the power report has not arrived: the blocks are still stale. Read what that rules out. The command has powered the transmitter's line, so the line is not
-        the cause. Had telemetry come back, you would read the cause from it and go to step
-        six. It has not, so the fault is further down the chain.
+        The verification status stops at sent, because the acceptance and execution reports
+        would be returned on the same downlink that is silent. A blind command can never be
+        confirmed by its own reports. After thirty seconds the power report has not arrived, and
+        the blocks are still stale. This result rules out one cause: the command has switched on
+        the transmitter power line, so the power line is not the fault. If telemetry had
+        returned, the operator would identify the cause from it and go to step six. Since it has
+        not, the fault lies further along the chain.
       fr: >-
-        Regardez la vérification : elle s’arrête à « envoyée ». Les rapports d’acceptation et
-        d’exécution descendent par la même liaison muette : une commande en aveugle ne se
-        confirme jamais d’elle-même. Trente secondes, et le rapport d’énergie n’est pas arrivé :
-        les blocs sont toujours périmés. Lisez ce que cela écarte. La commande a mis sous tension la ligne de
-        l’émetteur : la ligne n’est donc pas en cause. Si la télémesure était revenue, vous en
-        auriez lu la cause et vous seriez passé à l’étape six. Elle n’est pas revenue : la panne
-        est plus loin dans la chaîne.
+        L’état de vérification s’arrête à « envoyée », car les rapports d’acceptation et
+        d’exécution reviendraient par la même liaison descendante, qui est muette. Une commande
+        en aveugle ne peut jamais être confirmée par ses propres rapports. Au bout de trente
+        secondes, le rapport d’énergie n’est pas arrivé et les blocs sont toujours périmés. Ce
+        résultat écarte une cause : la commande a mis sous tension la ligne d’alimentation de
+        l’émetteur, la ligne n’est donc pas en cause. Si la télémesure était revenue,
+        l’opérateur en aurait déduit la cause et serait passé à l’étape six. Comme elle n’est
+        pas revenue, la panne se situe plus loin dans la chaîne.
     do:
       - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
       - wait: 8
@@ -181,15 +190,17 @@ steps:
     title: {en: "Read the beacon", fr: "Lire la balise"}
     say:
       en: >-
-        The card's note in step two: the UHF beacon. It is the one packet that still arrives
-        when the S-band is silent, and it says the computer is alive. It carries one
-        diagnostic: whether the power amplifier is on. On the TT&C page it reads zero. The
-        amplifier is off. The note says: go straight to step four.
+        The note in step two refers to the UHF beacon. Its packet is the only one that still
+        arrives when the S-band is silent, and it confirms that the on-board computer is
+        running. It also carries one diagnostic: whether the power amplifier is on. On the TT&C
+        page this value reads zero, so the amplifier is off. In that case the note directs the
+        operator straight to step four.
       fr: >-
-        La note de la fiche à l’étape deux : la balise UHF. C’est le seul paquet qui arrive
-        encore quand la bande S se tait, et il dit que l’ordinateur est vivant. Il transporte un
-        diagnostic : l’amplificateur de puissance est-il allumé ? Sur la page TT&C, il lit zéro.
-        L’amplificateur est coupé. La note dit : la suite est directement l’étape quatre.
+        La note de l’étape deux renvoie à la balise UHF. Son paquet est le seul qui arrive
+        encore quand la bande S est muette, et il confirme que l’ordinateur de bord fonctionne.
+        Il transporte aussi un diagnostic : l’état de l’amplificateur de puissance. Sur la page
+        TT&C, cette valeur est à zéro : l’amplificateur est donc coupé. Dans ce cas, la note
+        renvoie l’opérateur directement à l’étape quatre.
     do:
       - click: {css: "#rail-proc"}
       - wait_for: {target: {css: "#proc-doc h4"}, timeout: 20}
@@ -204,15 +215,18 @@ steps:
     title: {en: "Step 4: the power amplifier", fr: "Étape 4 : l’amplificateur de puissance"}
     say:
       en: >-
-        Step four: send PA on, blind. The command is accepted, the amplifier comes up, and
-        within seconds the frames flow again: the strip turns green and every block refreshes.
-        From now on, keep commanding, a housekeeping request every minute: the hold-down
-        lasts five minutes from the last accepted command.
+        In step four, the operator sends the power amplifier on command, PA on, blind. The
+        command is accepted, the amplifier switches on, and within a few seconds telemetry
+        frames are received again: the status strip turns green and every block is updated. From
+        this point the operator continues to send a housekeeping request every minute, because
+        the hold-down lasts five minutes from the last accepted command.
       fr: >-
-        L’étape quatre : envoyer PA ON, en aveugle. La commande est acceptée, l’amplificateur
-        démarre et en quelques secondes les trames reviennent : le bandeau passe au vert et
-        chaque bloc se rafraîchit. Désormais, continuez à commander, une demande de servitude
-        par minute : le maintien dure cinq minutes après la dernière commande acceptée.
+        À l’étape quatre, l’opérateur envoie en aveugle la commande de mise en marche de
+        l’amplificateur de puissance, PA ON. La commande est acceptée, l’amplificateur démarre
+        et, en quelques secondes, les trames de télémesure sont de nouveau reçues : le bandeau
+        d’état passe au vert et chaque bloc se met à jour. À partir de ce moment, l’opérateur
+        continue d’envoyer une demande de servitude chaque minute, car le maintien dure cinq
+        minutes après la dernière commande acceptée.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: TTC_PA_ON}
@@ -241,16 +255,19 @@ steps:
     title: {en: "Step 6: verify and log", fr: "Étape 6 : vérifier et consigner"}
     say:
       en: >-
-        Step six: verify, do not assume. The lock chain shows the frames, the amplifier reads
-        one, and the station now measures the S-band itself, with margin to spare. Log which
-        step restored the link, step four, the amplifier was off, and find out why it was off
-        before the next pass. That question goes to the anomaly ticket.
+        Step six verifies the result rather than assuming it. The lock status shows that frames
+        are being received, the amplifier status reads one, and the station now measures the
+        S-band signal directly, with adequate margin. The operator records which step restored
+        the link, step four, because the amplifier was off. The reason the amplifier was off
+        must be investigated before the next pass, and that question is recorded in the anomaly
+        ticket.
       fr: >-
-        L’étape six : vérifier, ne pas supposer. La chaîne de verrouillage montre les trames,
-        l’amplificateur lit un, et la station mesure maintenant la bande S elle-même, avec de la
-        marge. Consignez l’étape qui a rétabli la liaison, l’étape quatre, l’amplificateur était
-        coupé, et cherchez pourquoi il l’était avant le passage suivant. Cette question va dans
-        la fiche d’anomalie.
+        L’étape six vérifie le résultat au lieu de le supposer. L’état de verrouillage montre
+        que les trames sont reçues, l’état de l’amplificateur est à un, et la station mesure
+        maintenant directement le signal en bande S, avec une marge suffisante. L’opérateur
+        consigne l’étape qui a rétabli la liaison, l’étape quatre, puisque l’amplificateur était
+        coupé. La raison de cette coupure doit être recherchée avant le passage suivant, et
+        cette question est inscrite dans la fiche d’anomalie.
     do:
       - click: {css: "#rail-ttc"}
       - wait_for: {target: {css: "#ttc-equip .eq"}, timeout: 20}

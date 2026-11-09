@@ -34,17 +34,17 @@ steps:
     title: {en: "Sun, then shadow", fr: "Le Soleil, puis l’ombre"}
     say:
       en: >-
-        This is one orbit of EOSAT-1, seen from above. The Sun is to the right. Each orbit
-        lasts about ninety-four and a half minutes, and on this date about thirty-four of them
-        are spent in the Earth's shadow, in eclipse. How long the eclipse lasts depends on the
-        beta angle, the angle between the Sun and the plane of the orbit. Here it is about
-        thirty degrees.
+        This diagram shows one orbit of EOSAT-1, viewed from above, with the Sun to the right.
+        Each orbit lasts about ninety-four and a half minutes, and on this date about
+        thirty-four minutes of each orbit are spent in the Earth's shadow, in eclipse. The
+        eclipse duration depends on the beta angle, which is the angle between the direction of
+        the Sun and the orbit plane. Here it is about thirty degrees.
       fr: >-
-        Voici une orbite d’EOSAT-1, vue de dessus. Le Soleil est à droite. Chaque orbite dure
-        environ quatre-vingt-quatorze minutes et demie, et à cette date, environ trente-quatre
-        d’entre elles se passent dans l’ombre de la Terre, en éclipse. La durée de l’éclipse
-        dépend de l’angle bêta, l’angle entre le Soleil et le plan de l’orbite. Ici, il est
-        d’environ trente degrés.
+        Ce schéma présente une orbite d’EOSAT-1, vue de dessus, avec le Soleil à droite. Chaque
+        orbite dure environ quatre-vingt-quatorze minutes et demie, et à cette date, environ
+        trente-quatre minutes de chaque orbite se passent dans l’ombre de la Terre, en éclipse.
+        La durée de l’éclipse dépend de l’angle bêta, c’est-à-dire l’angle entre la direction du
+        Soleil et le plan de l’orbite. Ici, il est d’environ trente degrés.
     do:
       - js: "EX.play('orbit', ${say})"
 
@@ -52,15 +52,15 @@ steps:
     title: {en: "Generation", fr: "La production"}
     say:
       en: >-
-        In sunlight, the solar arrays generate power: here between about sixty and seventy-four
-        watts, for arrays at the end of their design life. The moment the spacecraft enters
-        the shadow, generation drops to zero, and stays there until eclipse exit. There is no
-        dimmer: it is on, or it is off.
+        In sunlight the solar arrays generate between about sixty and seventy-four watts, for
+        arrays at the end of their design life. As soon as the spacecraft enters the shadow,
+        generation falls to zero and remains there until eclipse exit. There is no gradual
+        transition: the arrays are either illuminated or not.
       fr: >-
-        Au soleil, les panneaux solaires produisent de la puissance : ici entre soixante et
-        soixante-quatorze watts environ, pour des panneaux en fin de vie. Dès que le satellite
-        entre dans l’ombre, la production tombe à zéro, et y reste jusqu’à la sortie d’éclipse.
-        Il n’y a pas de variateur : c’est allumé, ou éteint.
+        Au soleil, les panneaux solaires produisent entre soixante et soixante-quatorze watts
+        environ, pour des panneaux en fin de vie. Dès que le satellite entre dans l’ombre, la
+        production tombe à zéro et y reste jusqu’à la sortie d’éclipse. Il n’y a pas de
+        transition progressive : les panneaux sont éclairés ou ne le sont pas.
     do:
       - js: "EX.play('generation', ${say})"
 
@@ -68,16 +68,17 @@ steps:
     title: {en: "Load", fr: "La consommation"}
     say:
       en: >-
-        The spacecraft uses power all the time: the computer, the attitude control, the heaters,
-        the radio. In nominal operations that is about twenty to thirty watts. The bumps are the
-        transmitter switching on for passes over the ground stations. Imaging, the cooler for
-        the camera's focal plane and propulsion would add to this line.
+        The spacecraft consumes power continuously, for the on-board computer, the attitude
+        control, the heaters and the radio. In nominal operations this amounts to about twenty
+        to thirty watts. The peaks correspond to the transmitter being switched on during passes
+        over the ground stations. Imaging, the cooler for the camera focal plane and propulsion
+        would all add to this load.
       fr: >-
-        Le satellite consomme en permanence : l’ordinateur, le contrôle d’attitude, les
-        réchauffeurs, la radio. En opérations nominales, cela fait vingt à trente watts environ.
-        Les bosses sont l’émetteur qui s’allume pour les passages au-dessus des stations sol.
-        L’imagerie, le refroidisseur du plan focal de la caméra et la propulsion s’ajouteraient
-        à cette courbe.
+        Le satellite consomme de l’énergie en permanence, pour l’ordinateur de bord, le contrôle
+        d’attitude, les réchauffeurs et la radio. En exploitation nominale, cela représente
+        environ vingt à trente watts. Les pics correspondent à la mise en marche de l’émetteur
+        pendant les passages au-dessus des stations sol. L’imagerie, le refroidisseur du plan
+        focal de la caméra et la propulsion s’ajouteraient tous à cette charge.
     do:
       - js: "EX.play('load', ${say})"
 
@@ -85,15 +86,17 @@ steps:
     title: {en: "The battery carries the eclipse", fr: "La batterie passe l’éclipse"}
     say:
       en: >-
-        The difference goes into the battery, or comes out of it. In sunlight the battery charges
-        and its state of charge climbs towards full. In eclipse it is the only source, and the
-        state of charge falls, here by about ten percent. The deepest point, the depth of
-        discharge, comes right at eclipse exit.
+        The difference between generation and consumption either charges or discharges the
+        battery. In sunlight, the battery charges and its state of charge rises towards full. In
+        eclipse, the battery is the only source of power, and its state of charge falls, in this
+        case by about ten percent. The lowest point, which defines the depth of discharge,
+        occurs at eclipse exit.
       fr: >-
-        La différence entre dans la batterie, ou en sort. Au soleil, la batterie se charge et son
-        état de charge remonte vers le plein. En éclipse, c’est la seule source, et l’état de
-        charge baisse, ici d’environ dix pour cent. Le point le plus bas, la profondeur de
-        décharge, tombe juste à la sortie d’éclipse.
+        La différence entre la production et la consommation charge ou décharge la batterie. Au
+        soleil, la batterie se charge et son état de charge remonte vers le plein. En éclipse,
+        la batterie est la seule source d’énergie, et son état de charge baisse, ici d’environ
+        dix pour cent. Le point le plus bas, qui définit la profondeur de décharge, se situe à
+        la sortie d’éclipse.
     do:
       - js: "EX.play('battery', ${say})"
 
@@ -101,16 +104,16 @@ steps:
     title: {en: "The orbit-average margin", fr: "La marge moyenne sur l’orbite"}
     say:
       en: >-
-        Now add it all up over one whole orbit. The arrays generate about seventy-one watt-hours.
-        The spacecraft uses about thirty-six. The difference, about thirty-five watt-hours, is
-        the orbit-average margin. Positive means the battery ends each orbit as full as it
-        started, or fuller. This is the number the power cards check.
+        Over a complete orbit, the arrays generate about seventy-one watt-hours and the
+        spacecraft consumes about thirty-six. The difference, about thirty-five watt-hours, is
+        the orbit-average margin. A positive margin means that the battery ends each orbit at
+        least as fully charged as it started. This is the value checked by the power procedures.
       fr: >-
-        Faites maintenant le total sur une orbite entière. Les panneaux produisent environ
-        soixante et onze wattheures. Le satellite en consomme environ trente-six. La différence,
-        environ trente-cinq wattheures, est la marge moyenne sur l’orbite. Positive, elle veut
-        dire que la batterie finit chaque orbite aussi pleine qu’au départ, ou plus. C’est le
-        nombre que vérifient les fiches énergie.
+        Sur une orbite complète, les panneaux produisent environ soixante et onze wattheures et
+        le satellite en consomme environ trente-six. La différence, environ trente-cinq
+        wattheures, constitue la marge moyenne sur l’orbite. Une marge positive signifie que la
+        batterie termine chaque orbite au moins aussi chargée qu’au départ. C’est la valeur que
+        vérifient les procédures énergie.
     do:
       - js: "EX.play('average', ${say})"
 
@@ -118,15 +121,19 @@ steps:
     title: {en: "The eclipse trap", fr: "Le piège de l’éclipse"}
     say:
       en: >-
-        Here is the trap. In the middle of an eclipse, the power page shows zero generation and
-        the battery discharging at about twenty watts. That looks alarming, and it is normal.
-        The orbit, not the moment, tells you whether you are gaining energy. Judge the state of
-        charge at eclipse exit, and the orbit-average margin.
+        A common error is to judge the energy balance from instantaneous values. In the middle
+        of an eclipse, the power page shows zero generation and the battery discharging at about
+        twenty watts. This may appear alarming, but it is normal. Whether the spacecraft is
+        gaining or losing energy is determined over the orbit, not at a single moment. The
+        relevant indicators are the state of charge at eclipse exit and the orbit-average
+        margin.
       fr: >-
-        Voici le piège. En plein milieu d’une éclipse, la page énergie affiche une production
-        nulle et une batterie qui se décharge à environ vingt watts. Cela a l’air alarmant, et
-        c’est normal. C’est l’orbite, pas l’instant, qui dit si vous gagnez de l’énergie. Jugez
-        l’état de charge à la sortie d’éclipse, et la marge moyenne sur l’orbite.
+        Une erreur fréquente consiste à juger le bilan d’énergie sur des valeurs instantanées.
+        En plein milieu d’une éclipse, la page énergie affiche une production nulle et une
+        batterie qui se décharge à environ vingt watts. Cela peut paraître inquiétant, mais
+        c’est normal. C’est sur l’orbite, et non à un instant donné, que l’on détermine si le
+        satellite gagne ou perd de l’énergie. Les indicateurs pertinents sont l’état de charge à
+        la sortie d’éclipse et la marge moyenne sur l’orbite.
     do:
       - js: "EX.play('instant', ${say})"
     question:
@@ -147,17 +154,21 @@ steps:
     title: {en: "What moves the margin", fr: "Ce qui fait bouger la marge"}
     say:
       en: >-
-        The margin moves with two things. More load: imaging, the focal plane cooler, a radio
-        that stays on longer, heaters on a cold day. Less generation: wings still stowed, a worse
-        beta angle, aged cells, or pointing away from the Sun. Every position's request is paid
-        from this one budget, and the electrical power and thermal control position, EPS and
-        TCS, keeps the books.
+        The margin depends on two factors. It decreases when the load increases, for example
+        with imaging, the focal plane cooler, a longer transmitter on-time, or heaters in cold
+        conditions. It also decreases when generation falls, for example if the wings are still
+        stowed, the beta angle is less favourable, the cells have aged, or the spacecraft is
+        pointed away from the Sun. Every request from every position is paid for from this
+        single budget, which is managed by the electrical power and thermal control position,
+        EPS and TCS.
       fr: >-
-        La marge bouge avec deux choses. Plus de charge : l’imagerie, le refroidisseur du plan
-        focal, une radio allumée plus longtemps, les réchauffeurs par temps froid. Moins de
-        production : ailes encore repliées, angle bêta défavorable, cellules vieillies, ou un
-        pointage loin du Soleil. Chaque demande de chaque poste se paie sur ce seul budget, et
-        le poste du sous-système énergie et du contrôle thermique, EPS et TCS, tient les comptes.
+        La marge dépend de deux facteurs. Elle diminue quand la charge augmente, par exemple
+        avec l’imagerie, le refroidisseur du plan focal, un émetteur allumé plus longtemps ou
+        des réchauffeurs par temps froid. Elle diminue aussi quand la production baisse, par
+        exemple si les ailes sont encore repliées, si l’angle bêta est moins favorable, si les
+        cellules ont vieilli ou si le satellite est pointé loin du Soleil. Chaque demande de
+        chaque poste est prélevée sur ce budget unique, géré par le poste du sous-système
+        énergie et du contrôle thermique, EPS et TCS.
     do:
       - js: "EX.play('levers', ${say})"
     question:

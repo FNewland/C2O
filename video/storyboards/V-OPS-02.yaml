@@ -36,20 +36,22 @@ steps:
     title: {en: "A silent spacecraft", fr: "Un satellite muet"}
     say:
       en: >-
-        EOSAT-1 has just separated from the launcher. Only the receiver and the on-board
-        computer, the OBC, are powered. The OBC is still in its bootloader, the small start-up
-        program that runs first. The transmitter is off and the clock is
-        unset, so the ground hears nothing. LEOP-001, the first card of the launch and early
-        orbit phase, LEOP, turns this one-way listener into a spacecraft we can talk to. You
-        work it by hand: commands from the Commanding page, each check recorded on the card.
+        EOSAT-1 has just separated from the launch vehicle. Only the receiver and the on-board
+        computer, the OBC, are powered. The OBC is still running its bootloader, the small
+        start-up program that runs before the main flight software. The transmitter is off and
+        the on-board clock has not been set, so the ground station receives nothing. LEOP-001 is
+        the first procedure of the launch and early orbit phase, or LEOP, and its purpose is to
+        establish two-way communication with the spacecraft. It is executed manually: commands
+        are sent from the Commanding page and each check is recorded on the card.
       fr: >-
         EOSAT-1 vient de se séparer du lanceur. Seuls le récepteur et l’ordinateur de bord,
-        l’OBC, sont alimentés. L’OBC est encore dans son chargeur d’amorçage, le petit
-        programme qui démarre en premier. L’émetteur est éteint et
-        l’horloge n’est pas réglée : le sol n’entend donc rien. LEOP-001, la première fiche de
-        la phase de lancement et de début d’orbite, la LEOP, transforme cet auditeur à sens
-        unique en un satellite avec qui l’on peut parler. La fiche se travaille à la main : les
-        commandes depuis la page Commande, chaque vérification consignée sur la fiche.
+        l’OBC, sont alimentés. L’OBC exécute encore son chargeur d’amorçage, le petit programme
+        de démarrage qui précède le logiciel de vol principal. L’émetteur est éteint et
+        l’horloge de bord n’a pas été réglée : la station sol ne reçoit donc rien. LEOP-001 est
+        la première procédure de la phase de lancement et de début d’orbite, la LEOP, et son
+        objet est d’établir une communication bidirectionnelle avec le satellite. Elle s’exécute
+        manuellement : les commandes sont envoyées depuis la page Commande et chaque
+        vérification est consignée sur la fiche.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -63,19 +65,20 @@ steps:
     title: {en: "Step 2: the blind first uplink", fr: "Étape 2 : la première montée en aveugle"}
     say:
       en: >-
-        With no downlink, the first command goes up blind, inside the scheduled pass. The
-        connection test is on the bootloader's short list of accepted commands. Once the
-        spacecraft accepts it, the auto-transmit hold-down switches the transmitter on for
-        five minutes. Watch the reports from service one, request verification, S1 on the
-        console: accepted, then executed. And the strip at the top: we can now see the
-        spacecraft.
+        Because there is no downlink yet, the first command is sent without confirmation, during
+        the scheduled pass. The connection test is one of the few commands the bootloader
+        accepts. When the spacecraft accepts it, the auto-transmit hold-down switches the
+        transmitter on for five minutes. The reports from service one, request verification,
+        shown as S1 on the console, confirm that the command was accepted and then executed. The
+        status strip now shows that the spacecraft is visible.
       fr: >-
-        Sans liaison descendante, la première commande monte en aveugle, pendant le passage
-        prévu. Le test de connexion fait partie de la courte liste des commandes acceptées par
-        le chargeur d’amorçage. Dès que le satellite l’accepte, le maintien automatique de
-        l’émetteur l’allume pour cinq minutes. Suivez les rapports du service un, vérification
-        des requêtes, S1 sur la console : acceptée, puis exécutée. Et le bandeau du haut : nous
-        voyons maintenant le satellite.
+        Comme il n’y a pas encore de liaison descendante, la première commande est envoyée sans
+        confirmation, pendant le passage prévu. Le test de connexion fait partie des quelques
+        commandes acceptées par le chargeur d’amorçage. Lorsque le satellite l’accepte, le
+        maintien automatique de l’émetteur l’allume pour cinq minutes. Les rapports du service
+        un, vérification des requêtes, affichés S1 sur la console, confirment que la commande a
+        été acceptée, puis exécutée. Le bandeau d’état indique maintenant que le satellite est
+        visible.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: CONNECTION_TEST}
@@ -103,15 +106,17 @@ steps:
     title: {en: "Step 4: confirm the bootloader", fr: "Étape 4 : confirmer le chargeur d’amorçage"}
     say:
       en: >-
-        Before booting, confirm where we start. Request the beacon housekeeping report, the
-        routine health data, structure identifier eleven, SID eleven: it is the only report the
-        bootloader sends, and it carries the software image, which program is running. Zero
-        means bootloader.
+        Before the boot, the operator confirms the starting state by requesting the beacon
+        housekeeping report, structure identifier eleven, or SID eleven. Housekeeping is the
+        routine health data, and this is the only report the bootloader sends. It includes the
+        software image parameter, which identifies the program that is running. A value of zero
+        means the bootloader.
       fr: >-
-        Avant de démarrer, confirmez le point de départ. Demandez le rapport de servitude de la
-        balise, les données de santé courantes, identifiant de structure onze, SID onze : c’est
-        le seul rapport qu’envoie le chargeur d’amorçage, et il contient l’image logicielle,
-        c’est-à-dire le programme qui tourne. Zéro signifie chargeur d’amorçage.
+        Avant le démarrage, l’opérateur confirme l’état de départ en demandant le rapport de
+        servitude de la balise, identifiant de structure onze, ou SID onze. Les données de
+        servitude sont les données de santé courantes, et ce rapport est le seul qu’envoie le
+        chargeur d’amorçage. Il contient le paramètre d’image logicielle, qui identifie le
+        programme en cours d’exécution. La valeur zéro correspond au chargeur d’amorçage.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
       - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "11"}
@@ -122,16 +127,19 @@ steps:
     title: {en: "Step 5: boot the application", fr: "Étape 5 : démarrer l’application"}
     say:
       en: >-
-        Now boot the application image. The computer checks that the image is intact over a
-        ten-second window. Acceptance arrives at once, but the boot is only done when execution completes,
-        at the end of that window. Until then the computer is still the bootloader and refuses
-        anything else, so wait for it before you send the next command.
+        The operator then commands the boot of the application image. The computer verifies the
+        integrity of the image over a period of ten seconds. The acceptance report arrives
+        immediately, but the boot is complete only when the execution report arrives at the end
+        of that period. Until then the computer is still running the bootloader and rejects
+        other commands, so the operator waits for the execution report before sending the next
+        command.
       fr: >-
-        Démarrez maintenant l’image applicative. L’ordinateur vérifie l’intégrité de l’image
-        pendant une fenêtre de dix secondes. L’acceptation arrive aussitôt, mais le démarrage n’est fait
-        qu’à la fin de l’exécution, à la fin de cette fenêtre. D’ici là, l’ordinateur reste le
-        chargeur d’amorçage et refuse tout le reste : attendez avant d’envoyer la commande
-        suivante.
+        L’opérateur commande ensuite le démarrage de l’image applicative. L’ordinateur vérifie
+        l’intégrité de l’image pendant dix secondes. Le rapport d’acceptation arrive
+        immédiatement, mais le démarrage n’est terminé qu’à la réception du rapport d’exécution,
+        à la fin de cette période. D’ici là, l’ordinateur exécute encore le chargeur d’amorçage
+        et rejette les autres commandes : l’opérateur attend donc le rapport d’exécution avant
+        d’envoyer la commande suivante.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: OBC_BOOT_APP}
       - click: {css: "#cmd-send:not(.hide), #cmd-send-crit:not(.hide)"}
@@ -150,14 +158,16 @@ steps:
     title: {en: "Turn the housekeeping on", fr: "Activer les données de servitude"}
     say:
       en: >-
-        The application starts with only two reports enabled: power and beacon. Everything
-        else must be switched on. Enable SID three for thermal, four for the computer and six
-        for the radio. Powering a subsystem never enables its report: that is always a command.
+        The application software starts with only two housekeeping reports enabled, power and
+        beacon. The others must be enabled by command: SID three for thermal, SID four for the
+        on-board computer and SID six for the radio. Switching on a subsystem does not enable
+        its report; that always requires a separate command.
       fr: >-
-        L’application démarre avec seulement deux rapports activés : l’énergie et la balise.
-        Tout le reste doit être activé. Activez le SID trois pour le thermique, quatre pour
-        l’ordinateur et six pour la radio. Alimenter un sous-système n’active jamais son
-        rapport : c’est toujours une commande.
+        Le logiciel applicatif démarre avec seulement deux rapports de servitude activés :
+        l’énergie et la balise. Les autres doivent être activés par commande : le SID trois pour
+        le thermique, le SID quatre pour l’ordinateur de bord et le SID six pour la radio. La
+        mise sous tension d’un sous-système n’active pas son rapport ; il faut toujours une
+        commande distincte.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: HK_ENABLE}
       - fill: {target: {css: "#cmd-fields [data-cmd-field='sid']"}, text: "3"}
@@ -174,16 +184,17 @@ steps:
     title: {en: "Record it on the card", fr: "Le consigner sur la fiche"}
     say:
       en: >-
-        Back on the card, record each step: capture the values and mark GO. Step 5a, clearing
-        beacon mode and moving to the LOW rate, comes next and has its own short video. Finally,
-        Step 8 asks for the log line: the time of first contact, the first accepted command and
-        the boot time. It goes in your workbook and in the handover.
+        On the card, each step is recorded by capturing the values and marking GO. Step 5a,
+        which clears beacon mode and changes to the LOW data rate, follows and is covered in a
+        separate short video. Step 8 then asks for the log entry: the time of first contact, the
+        first accepted command and the boot time. This entry is recorded in the workbook and
+        included in the shift handover.
       fr: >-
-        De retour sur la fiche, consignez chaque étape : relevez les valeurs et marquez GO.
-        L’étape 5a, qui lève le mode balise et passe au débit LOW, vient ensuite et a sa propre
-        courte vidéo. Enfin, l’étape 8 demande la ligne de journal : l’heure du premier contact,
-        la première commande acceptée et l’heure du démarrage. Elle va dans votre cahier de
-        travail et dans la relève.
+        Sur la fiche, chaque étape est consignée en relevant les valeurs et en marquant GO.
+        L’étape 5a, qui lève le mode balise et passe au débit LOW, vient ensuite et fait l’objet
+        d’une courte vidéo distincte. L’étape 8 demande enfin l’entrée de journal : l’heure du
+        premier contact, la première commande acceptée et l’heure du démarrage. Cette entrée est
+        consignée dans le cahier de travail et reprise dans la relève de quart.
     do:
       - click: {css: "#rail-proc"}
       - wait: 1.0

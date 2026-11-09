@@ -29,16 +29,18 @@ steps:
     title: {en: "Start from the problem", fr: "Partir du problème"}
     say:
       en: >-
-        The most common failure in mission design is solving the wrong problem. "We need a
-        six-unit CubeSat at five hundred kilometres" is not a problem statement; it is a
-        solution. A problem statement answers four questions: what is missing, who is affected,
-        what it costs them, and what limits apply, such as budget and schedule.
+        One of the most common failures in mission design is solving the wrong problem. A
+        statement such as "we need a six-unit CubeSat at five hundred kilometres" is not a
+        problem statement but a solution. A problem statement answers four questions: what is
+        missing, who is affected, what the consequences are for them, and which constraints
+        apply, such as budget and schedule.
       fr: >-
-        L’échec le plus courant en conception de mission, c’est de résoudre le mauvais problème.
-        « Il nous faut un CubeSat six unités à cinq cents kilomètres » n’est pas un énoncé de
-        problème : c’est une solution. Un énoncé de problème répond à quatre questions : que
-        manque-t-il, qui est touché, quel en est le coût, et quelles limites s’appliquent, comme
-        le budget et le calendrier.
+        L’une des erreurs les plus courantes en conception de mission consiste à résoudre le
+        mauvais problème. Une phrase comme « il nous faut un CubeSat six unités à cinq cents
+        kilomètres » n’est pas un énoncé de problème, mais une solution. Un énoncé de problème
+        répond à quatre questions : ce qui manque, qui est touché, quelles en sont les
+        conséquences pour ces personnes et quelles contraintes s’appliquent, comme le budget et
+        le calendrier.
     do:
       - js: "EX.play('problem', ${say})"
 
@@ -46,16 +48,18 @@ steps:
     title: {en: "What before how", fr: "Le quoi avant le comment"}
     say:
       en: >-
-        At this stage, write down what is needed, not how to achieve it. Ten-metre imagery, not a
-        fifteen-centimetre telescope. A five-day revisit, not a twelve-satellite constellation.
-        The choices on the right are not wrong; they belong later, in Phases A and B. Fix them now
-        and you close off options that might serve the users better, such as buying the data.
+        At this stage the team records what is needed, not how it will be achieved: ten-metre
+        imagery rather than a fifteen-centimetre telescope, and a five-day revisit rather than a
+        twelve-satellite constellation. The solution-level choices are not wrong, but they
+        belong to Phases A and B. Fixing them too early rules out options that might serve the
+        users better, such as purchasing existing data.
       fr: >-
-        À ce stade, écrivez ce qu’il faut, pas comment l’obtenir. Une imagerie à dix mètres, pas
-        un télescope de quinze centimètres. Une revisite de cinq jours, pas une constellation de
-        douze satellites. Les choix de droite ne sont pas faux : ils viennent plus tard, en
-        phases A et B. Les figer maintenant ferme des options qui serviraient peut-être mieux les
-        utilisateurs, comme acheter les données.
+        À ce stade, l’équipe consigne ce qui est nécessaire, et non la façon de l’obtenir : une
+        imagerie à dix mètres plutôt qu’un télescope de quinze centimètres, et une revisite de
+        cinq jours plutôt qu’une constellation de douze satellites. Les choix de solution ne
+        sont pas erronés, mais ils relèvent des phases A et B. Les figer trop tôt écarte des
+        options qui pourraient mieux servir les utilisateurs, comme l’achat de données
+        existantes.
     do:
       - js: "EX.play('whathow', ${say})"
 
@@ -63,19 +67,20 @@ steps:
     title: {en: "From need to tracked parameter", fr: "Du besoin au paramètre suivi"}
     say:
       en: >-
-        A chain of measures links the need to the design. The users judge a measure of
-        effectiveness: the share of crop assessments delivered on time. That gives a mission
-        objective, and a measure of performance the systems engineer can verify: a ground sample
-        distance, GSD, of ten metres or better. It becomes a requirement, and the design team
-        tracks a technical performance measure, such as the imager's mass against its
-        allocation, in every phase.
+        A chain of measures connects the need to the design. The users assess a measure of
+        effectiveness, here the proportion of crop assessments delivered on time. This leads to
+        a mission objective and to a measure of performance that the systems engineer can
+        verify: a ground sample distance, or GSD, of ten metres or better. That measure becomes
+        a requirement, and the design team then tracks a technical performance measure, such as
+        the mass of the imager against its allocation, in every phase.
       fr: >-
-        Une chaîne de mesures relie le besoin à la conception. Les utilisateurs jugent une
-        mesure d’efficacité : la part des bilans de cultures livrés à temps. On en tire un
-        objectif de mission, et une mesure de performance que l’ingénieur système peut vérifier :
-        une distance d’échantillonnage au sol, la GSD, de dix mètres ou mieux. Elle devient une
-        exigence, et l’équipe de conception suit une mesure de performance technique, comme la
-        masse de l’imageur face à son allocation, à chaque phase.
+        Une chaîne de mesures relie le besoin à la conception. Les utilisateurs évaluent une
+        mesure d’efficacité, ici la proportion de bilans de cultures livrés à temps. On en
+        déduit un objectif de mission et une mesure de performance que l’ingénieur système peut
+        vérifier : une distance d’échantillonnage au sol, ou GSD, de dix mètres ou mieux. Cette
+        mesure devient une exigence, et l’équipe de conception suit ensuite une mesure de
+        performance technique, comme la masse de l’imageur par rapport à son allocation, à
+        chaque phase.
     do:
       - js: "EX.play('chain', ${say})"
 
@@ -83,16 +88,18 @@ steps:
     title: {en: "A trade study", fr: "Une étude de compromis"}
     say:
       en: >-
-        To choose between options, run a trade study: a decision, at least three real
-        alternatives, criteria, weights that add up to one, and scores. Here, the weighted scores
-        say buy commercial imagery, well ahead of our own CubeSat and an aerial survey. That is
-        the most important trade of all: does this need space at all?
+        Choices between options are made through a trade study, which defines the decision, at
+        least three genuine alternatives, the evaluation criteria, weights that sum to one, and
+        the scores. In this example, the weighted scores favour buying commercial imagery, well
+        ahead of a dedicated CubeSat or an aerial survey. This is the most important trade of
+        all, because it asks whether the need requires a space mission at all.
       fr: >-
-        Pour choisir entre des options, on mène une étude de compromis : une décision, au moins
-        trois vraies options, des critères, des poids dont la somme fait un, et des notes. Ici,
-        les scores pondérés disent d’acheter des images commerciales, loin devant notre propre
-        CubeSat et un relevé aérien. C’est le compromis le plus important : ce besoin
-        exige-t-il vraiment l’espace ?
+        Le choix entre plusieurs options se fait au moyen d’une étude de compromis, qui définit
+        la décision, au moins trois options réelles, les critères d’évaluation, des poids dont
+        la somme vaut un, et les notes. Dans cet exemple, les scores pondérés favorisent l’achat
+        d’images commerciales, nettement devant un CubeSat dédié ou un relevé aérien. C’est le
+        compromis le plus important, car il pose la question de savoir si le besoin exige
+        réellement une mission spatiale.
     do:
       - js: "EX.play('trade', ${say})"
     question:
@@ -113,15 +120,17 @@ steps:
     title: {en: "Is the answer robust?", fr: "La réponse est-elle robuste ?"}
     say:
       en: >-
-        Then test how robust the answer is. Raise the weight on training value, and watch the
-        totals. Our own CubeSat only wins once training carries about thirty-one percent of the
-        weight. If your sponsor's real goal is training engineers, say so, and agree the weights
-        before anyone sees the scores.
+        The robustness of the result is then tested. As the weight given to training value is
+        increased, the totals change, and the dedicated CubeSat becomes the preferred option
+        only when training accounts for about thirty-one percent of the total weight. If the
+        sponsor's real objective is to train engineers, this should be stated explicitly, and
+        the weights agreed before the scores are seen.
       fr: >-
-        Vérifiez ensuite la robustesse de la réponse. Augmentez le poids de la valeur de
-        formation, et regardez les totaux. Notre CubeSat ne l’emporte que lorsque la formation
-        pèse environ trente et un pour cent. Si le vrai but de votre commanditaire est de former
-        des ingénieurs, dites-le, et fixez les poids avant que quiconque voie les notes.
+        On évalue ensuite la robustesse du résultat. Lorsque le poids attribué à la valeur de
+        formation augmente, les totaux évoluent, et le CubeSat dédié ne devient l’option
+        préférée que lorsque la formation représente environ trente et un pour cent du poids
+        total. Si l’objectif réel du commanditaire est de former des ingénieurs, il faut
+        l’indiquer explicitement et fixer les poids avant que les notes ne soient connues.
     do:
       - js: "EX.play('sensitivity', ${say})"
 
@@ -129,20 +138,22 @@ steps:
     title: {en: "The concept of operations", fr: "Le concept d’opérations"}
     say:
       en: >-
-        The concept of operations, the ConOps, says how the mission will run: its phases, its
-        modes and how data flows. A safe mode, Sun-pointing at minimum load, is the anchor;
-        imaging and downlink add load on top. Lay one orbit out with each mode's duty cycle, and
-        the orbit-average power, here about five watts, sizes the solar array, while the
-        thirty-five minute eclipse sizes the battery. The same goes for data: each day's downlink
-        must cover each day's collection.
+        The concept of operations, or ConOps, describes how the mission will operate: its
+        phases, its modes and the flow of data. A safe mode, Sun-pointing at minimum load,
+        provides the baseline, and imaging and downlink add load to it. When one orbit is laid
+        out with the duty cycle of each mode, the orbit-average power, here about five watts,
+        sizes the solar array, and the thirty-five-minute eclipse sizes the battery. The same
+        principle applies to data: the daily downlink capacity must cover the data collected
+        each day.
       fr: >-
-        Le concept d’opérations, le ConOps, dit comment la mission fonctionnera : ses phases,
+        Le concept d’opérations, ou ConOps, décrit le fonctionnement de la mission : ses phases,
         ses modes et le parcours des données. Un mode sûr, pointé vers le Soleil à charge
-        minimale, sert d’ancrage ; la prise de vue et la transmission s’y ajoutent. Déroulez une
-        orbite avec le cycle de service de chaque mode : la puissance moyenne orbitale, ici
-        environ cinq watts, dimensionne le générateur solaire, et l’éclipse de trente-cinq
-        minutes, la batterie. Même chose pour les données : ce qu’on transmet chaque jour doit
-        couvrir ce qu’on collecte.
+        minimale, constitue la référence, et la prise de vue et la transmission s’y ajoutent.
+        Lorsqu’on déroule une orbite avec le cycle de service de chaque mode, la puissance
+        moyenne sur l’orbite, ici environ cinq watts, dimensionne le générateur solaire, et
+        l’éclipse de trente-cinq minutes dimensionne la batterie. Le même principe s’applique
+        aux données : la capacité de transmission quotidienne doit couvrir les données
+        collectées chaque jour.
     do:
       - js: "EX.play('conops', ${say})"
     question:

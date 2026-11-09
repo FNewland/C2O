@@ -81,6 +81,6 @@ slides:
 - kind: close
   h: {en: "Today", fr: "Aujourd'hui"}
   items:
-  - {en: "Watch: Alarm to anomaly ticket; From monitor to action: on-board FDIR; LEOP-001: first contact and OBC boot", fr: "À regarder : De l’alarme à la fiche d’anomalie ; Du moniteur à l’action : la FDIR de bord ; LEOP-001 : premier contact et démarrage de l’OBC"}
+  - {en: "Watch: Alarm to anomaly ticket; On-board fault detection, isolation and recovery; LEOP-001: first contact and OBC boot", fr: "À regarder : De l’alarme à la fiche d’anomalie ; Détection, isolation et reprise des pannes à bord ; LEOP-001 : premier contact et démarrage de l’OBC"}
   - {en: "Voice-loop drills; procedure walkthroughs; flight-dynamics workshop; two dry runs", fr: "Exercices de boucle vocale ; parcours de procédures ; atelier de dynamique du vol ; deux répétitions"}
   - {en: "Operations training quiz", fr: "Questionnaire de formation à l'exploitation"}

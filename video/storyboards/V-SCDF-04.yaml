@@ -33,15 +33,15 @@ steps:
     title: {en: "The Requirements tab", fr: "L’onglet Exigences"}
     say:
       en: >-
-        Open the Requirements tab. Each line is one requirement: its code, its type, the text,
-        the verification method, its status, and the parent it traces up to. This study has one
-        mission requirement, three system requirements and two subsystem requirements. The
-        system engineer owns this list.
+        The Requirements tab lists one requirement per line, with its identifier, its type, the
+        text, the verification method, its status and the parent requirement from which it is
+        derived. This study contains one mission requirement, three system requirements and two
+        subsystem requirements. The systems engineer is responsible for this list.
       fr: >-
-        Ouvrez l’onglet Exigences. Chaque ligne est une exigence : son code, son type, le texte,
-        la méthode de vérification, son état, et le parent dont elle découle. Cette étude compte
-        une exigence de mission, trois exigences système et deux exigences de sous-système.
-        C’est l’ingénieur système qui tient cette liste.
+        L’onglet Exigences présente une exigence par ligne, avec son identifiant, son type, le
+        texte, la méthode de vérification, son état et l’exigence parente dont elle découle.
+        Cette étude comprend une exigence de mission, trois exigences système et deux exigences
+        de sous-système. L’ingénieur système est responsable de cette liste.
     do:
       - click: {role: tab, name: Requirements, exact: true}
       - wait: 1.2
@@ -51,17 +51,19 @@ steps:
     title: {en: "Run the SMART check", fr: "Lancer le contrôle SMART"}
     say:
       en: >-
-        Press SMART Check. Each requirement is tested: does it say shall, does it have a
-        measurable threshold, does it trace to an objective or a parent? Under each line the
-        tool says what is missing. Most of these are not measurable: the number is in the text,
-        but not in a threshold the tools can check. And SR-003, the mass limit, is an orphan:
-        nothing says why it exists.
+        The SMART Check button tests each requirement: whether it uses the word shall, whether
+        it has a measurable threshold, and whether it traces to an objective or a parent
+        requirement. Under each line, the tool states what is missing. Most of these
+        requirements are not measurable: the value appears in the text, but not as a threshold
+        the tools can check. In addition, SR-003, the mass limit, is an orphan, because nothing
+        records why it exists.
       fr: >-
-        Appuyez sur Contrôle SMART. Chaque exigence est testée : dit-elle « doit », a-t-elle un
-        seuil mesurable, se rattache-t-elle à un objectif ou à un parent ? Sous chaque ligne,
-        l’outil indique ce qui manque. La plupart ne sont pas mesurables : le nombre est dans le
-        texte, mais pas dans un seuil que les outils peuvent vérifier. Et SR-003, la limite de
-        masse, est orpheline : rien ne dit pourquoi elle existe.
+        Le bouton Contrôle SMART teste chaque exigence : emploie-t-elle le mot « doit »,
+        comporte-t-elle un seuil mesurable, et se rattache-t-elle à un objectif ou à une
+        exigence parente ? Sous chaque ligne, l’outil indique ce qui manque. La plupart de ces
+        exigences ne sont pas mesurables : la valeur figure dans le texte, mais pas sous forme
+        de seuil que les outils peuvent vérifier. De plus, SR-003, la limite de masse, est
+        orpheline, car rien n’indique pourquoi elle existe.
     do:
       - click: {role: button, name: "SMART Check"}
       - wait: 2
@@ -72,15 +74,15 @@ steps:
     title: {en: "Make it measurable", fr: "La rendre mesurable"}
     say:
       en: >-
-        Press edit on SR-003. The text stays as written; add the threshold the tools can test:
-        less than or equal to twelve, in kilograms, verified by inspection, by weighing the
-        spacecraft. Save. Now the mass budget can be checked against this requirement
-        automatically.
+        The operator edits SR-003. The text remains unchanged, and a testable threshold is
+        added: less than or equal to twelve kilograms, verified by inspection, that is, by
+        weighing the spacecraft. Once the change is saved, the mass budget can be checked
+        automatically against this requirement.
       fr: >-
-        Appuyez sur modifier sur SR-003. Le texte reste tel quel ; ajoutez le seuil que les
-        outils peuvent tester : inférieur ou égal à douze, en kilogrammes, vérifié par
-        inspection, en pesant le satellite. Puis enregistrez la modification. Le bilan de masse peut maintenant être
-        comparé automatiquement à cette exigence.
+        L’opérateur modifie SR-003. Le texte reste inchangé, et un seuil vérifiable est ajouté :
+        inférieur ou égal à douze kilogrammes, vérifié par inspection, c’est-à-dire par la pesée
+        du satellite. Une fois la modification enregistrée, le bilan de masse peut être comparé
+        automatiquement à cette exigence.
     do:
       - click: {role: button, name: edit, exact: true, within: ".c2o-reqs__row:has-text('SR-003')"}
       - wait: 0.8
@@ -94,15 +96,17 @@ steps:
     title: {en: "Link the orphan", fr: "Rattacher l’orpheline"}
     say:
       en: >-
-        Now give SR-003 a parent. The mass limit comes from the launch opportunity, which serves
-        the mission requirement, so link it up to MR-001. The check runs again by itself: SR-003
-        now passes. Every requirement below mission level should trace up like this; an orphan
-        is either missing its reason, or should not be there.
+        SR-003 is then given a parent. The mass limit is set by the launch opportunity, which
+        supports the mission requirement, so it is linked to MR-001. The check runs again
+        automatically, and SR-003 now passes. Every requirement below mission level should trace
+        upwards in this way; an orphan requirement is either missing its justification or should
+        not be in the specification.
       fr: >-
-        Donnez maintenant un parent à SR-003. La limite de masse vient de l’occasion de
-        lancement, qui sert l’exigence de mission : rattachez-la à MR-001. Le contrôle se relance
-        de lui-même : SR-003 passe. Toute exigence sous le niveau mission devrait remonter ainsi ;
-        une orpheline, soit il lui manque sa raison d’être, soit elle n’a rien à faire là.
+        On attribue ensuite un parent à SR-003. La limite de masse découle de l’occasion de
+        lancement, qui sert l’exigence de mission : elle est donc rattachée à MR-001. Le
+        contrôle se relance automatiquement et SR-003 est maintenant conforme. Toute exigence
+        sous le niveau mission doit remonter ainsi ; une exigence orpheline soit manque de
+        justification, soit n’a pas sa place dans la spécification.
     do:
       - click: {css: ".c2o-reqs__row:has-text('SR-003') .c2o-reqs__orphan"}
       - wait: 0.8
@@ -129,15 +133,17 @@ steps:
     title: {en: "Flow a requirement down", fr: "Décliner une exigence"}
     say:
       en: >-
-        Requirements flow down. Press flow on SR-002, the pointing accuracy. The new requirement
-        is pre-filled as derived from SR-002: here, the attitude knowledge the star tracker must
-        give, verified by test. The tree grows one level at a time, and each child keeps the
-        link to the parent that justifies it.
+        Requirements are flowed down to lower levels. The Flow button on SR-002, the pointing
+        accuracy requirement, creates a new requirement already marked as derived from SR-002:
+        in this case, the attitude knowledge that the star tracker must provide, verified by
+        test. The requirement tree grows one level at a time, and each child requirement retains
+        the link to the parent that justifies it.
       fr: >-
-        Les exigences se déclinent. Appuyez sur décliner sur SR-002, la précision de pointage. La
-        nouvelle exigence est préremplie comme dérivée de SR-002 : ici, la connaissance
-        d’attitude que doit fournir le senseur stellaire, vérifiée par essai. L’arbre grandit un
-        niveau à la fois, et chaque enfant garde le lien vers le parent qui le justifie.
+        Les exigences se déclinent vers les niveaux inférieurs. Le bouton Décliner sur SR-002,
+        l’exigence de précision de pointage, crée une nouvelle exigence déjà marquée comme
+        dérivée de SR-002 : ici, la connaissance d’attitude que doit fournir le senseur
+        stellaire, vérifiée par essai. L’arbre des exigences se développe un niveau à la fois,
+        et chaque exigence enfant conserve le lien vers le parent qui la justifie.
     do:
       - click: {role: button, name: "flow ↓", exact: true, within: ".c2o-reqs__row:has-text('SR-002')"}
       - wait: 0.8
@@ -155,16 +161,17 @@ steps:
     title: {en: "Follow the chain", fr: "Suivre la chaîne"}
     say:
       en: >-
-        The Traceability tab shows the whole V: objectives, the requirement chain, the elements
-        and functions that meet them, and how each will be verified. Requirements with no
-        objective are listed, so you can see where the chain breaks. Back in Requirements,
-        record the quality decision: which requirements you rewrote, split or removed, and why.
+        The Traceability tab presents the whole V: the objectives, the chain of requirements,
+        the elements and functions that satisfy them, and the verification method for each.
+        Requirements without an objective are listed, which shows where the chain is broken.
+        Back in the Requirements tab, the team records the quality decision: which requirements
+        were rewritten, split or removed, and why.
       fr: >-
-        L’onglet Traçabilité montre tout le V : les objectifs, la chaîne des exigences, les
-        éléments et fonctions qui les satisfont, et comment chacune sera vérifiée. Les exigences
-        sans objectif sont listées, pour voir où la chaîne se rompt. De retour dans Exigences,
-        consignez la décision de qualité : quelles exigences vous avez réécrites, scindées ou
-        supprimées, et pourquoi.
+        L’onglet Traçabilité présente l’ensemble du V : les objectifs, la chaîne des exigences,
+        les éléments et fonctions qui les satisfont, et la méthode de vérification de chacune.
+        Les exigences sans objectif sont listées, ce qui montre où la chaîne est rompue. De
+        retour dans l’onglet Exigences, l’équipe consigne la décision de qualité : quelles
+        exigences ont été réécrites, scindées ou supprimées, et pourquoi.
     do:
       - click: {role: tab, name: Traceability, exact: true}
       - wait: 1.5

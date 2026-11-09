@@ -38,14 +38,15 @@ steps:
     title: {en: "A quiet pass", fr: "Un passage calme"}
     say:
       en: >-
-        Commissioning is finished and EOSAT-1 is in nominal operations. We are in a pass, the
-        housekeeping is flowing and the strip says nominal. This is when alarms matter most:
-        when nobody expects one. Keep an eye on the alarm count at the top.
+        Commissioning is complete and EOSAT-1 is in nominal operations. A pass is in progress,
+        housekeeping telemetry is arriving and the status strip shows nominal. Alarms are most
+        important at times like this, when none is expected, so the alarm count at the top of
+        the screen should be monitored throughout the pass.
       fr: >-
-        La mise en service est terminée et EOSAT-1 est en exploitation nominale. Nous sommes en
-        passage, les données de servitude arrivent et le bandeau indique nominal. C’est là que
-        les alarmes comptent le plus : quand personne n’en attend. Surveillez le compteur
-        d’alarmes en haut.
+        La mise en service est terminée et EOSAT-1 est en exploitation nominale. Un passage est
+        en cours, la télémesure de servitude arrive et le bandeau d’état indique nominal. C’est
+        dans ces moments, où personne n’attend d’alarme, que les alarmes comptent le plus : le
+        compteur d’alarmes en haut de l’écran doit donc être surveillé pendant tout le passage.
     do:
       - wait: 1.0
       - highlight: {target: {css: "#alarms-btn"}, seconds: 3}
@@ -57,16 +58,17 @@ steps:
     title: {en: "Read the alarm", fr: "Lire l’alarme"}
     say:
       en: >-
-        Open the alarm list. Each row gives the priority, the parameter and its value against
-        the limit, when it started, and the procedure that covers it. Star tracker one, the
-        star camera of the attitude and orbit control system, the AOCS, reports a status above
-        two: it has lost lock on the stars. Read the whole row before you do anything.
+        The alarm list gives, for each alarm, the priority, the parameter and its value compared
+        with the limit, the start time and the procedure that applies. Here, star tracker one,
+        the star camera of the attitude and orbit control system, or AOCS, reports a status
+        above two, which means that it has lost lock on the stars. The whole row should be read
+        before any action is taken.
       fr: >-
-        Ouvrez la liste des alarmes. Chaque ligne donne la priorité, le paramètre et sa valeur
-        par rapport à la limite, l’heure de début et la procédure qui la couvre. Le senseur
+        La liste des alarmes donne, pour chaque alarme, la priorité, le paramètre et sa valeur
+        par rapport à la limite, l’heure de début et la procédure applicable. Ici, le senseur
         stellaire un, la caméra stellaire du système de contrôle d’attitude et d’orbite, le
-        SCAO, indique un état supérieur à deux : il a perdu l’accrochage sur les étoiles. Lisez
-        toute la ligne avant de faire quoi que ce soit.
+        SCAO, indique un état supérieur à deux, ce qui signifie qu’il a perdu l’accrochage sur
+        les étoiles. Il faut lire toute la ligne avant d’entreprendre quoi que ce soit.
     do:
       - wait_for: {target: {css: "#alarms-btn"}, timeout: 30}
       - wait: 6
@@ -92,14 +94,17 @@ steps:
     title: {en: "Acknowledge is not fix", fr: "Acquitter n’est pas réparer"}
     say:
       en: >-
-        Acknowledge it. That says one thing: I have seen this and I own it. The condition is
-        still active, and the row stays until the value returns to normal. Say it on the voice
-        loop too, so the Flight Director knows who has it.
+        The operator then acknowledges the alarm. Acknowledgement means only that the alarm has
+        been seen and that the operator has taken responsibility for it. The condition remains
+        active, and the row stays in the list until the value returns to normal. The
+        acknowledgement is also reported on the voice loop, so that the Flight Director knows
+        who is dealing with it.
       fr: >-
-        Acquittez-la. Cela ne dit qu’une chose : j’ai vu cette alarme et je m’en occupe. La
-        condition est toujours active, et la ligne reste tant que la valeur n’est pas revenue
-        à la normale. Annoncez-le aussi sur la boucle vocale, pour que le directeur de vol sache qui
-        s’en charge.
+        L’opérateur acquitte ensuite l’alarme. L’acquittement signifie seulement que l’alarme a
+        été vue et que l’opérateur la prend en charge. La condition reste active et la ligne
+        demeure dans la liste tant que la valeur n’est pas revenue à la normale. L’acquittement
+        est aussi annoncé sur la boucle vocale, pour que le directeur de vol sache qui s’en
+        occupe.
     do:
       - click: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status') [data-act='ack']"}
       - wait: 2.0
@@ -108,15 +113,17 @@ steps:
     title: {en: "File the ticket from the alarm", fr: "Ouvrir la fiche depuis l’alarme"}
     say:
       en: >-
-        Ticket opens the anomaly ticket in your logbook, already filled from the alarm: the
-        time, the parameter, the value and the rule. You add what only the team knows: the
-        actions taken, word for word from the loop, the outcome so far, and a hypothesis. Keep
-        the hypothesis to what the evidence supports.
+        The Ticket button opens an anomaly ticket in the logbook, already completed with the
+        information from the alarm: the time, the parameter, the value and the monitoring rule.
+        The operator adds the information that only the team has: the actions taken, as stated
+        on the voice loop, the outcome so far, and a hypothesis. The hypothesis should be
+        limited to what the evidence supports.
       fr: >-
-        Fiche ouvre la fiche d’anomalie dans votre journal de bord, déjà remplie à partir de
-        l’alarme : l’heure, le paramètre, la valeur et la règle. Vous ajoutez ce que seule
-        l’équipe sait : les actions menées, mot pour mot depuis la boucle, le résultat à ce
-        stade, et une hypothèse. Limitez l’hypothèse à ce que les faits permettent.
+        Le bouton Fiche ouvre une fiche d’anomalie dans le journal de bord, déjà remplie avec
+        les informations de l’alarme : l’heure, le paramètre, la valeur et la règle de
+        surveillance. L’opérateur ajoute les informations que seule l’équipe possède : les
+        actions menées, telles qu’annoncées sur la boucle vocale, le résultat à ce stade et une
+        hypothèse. L’hypothèse doit se limiter à ce que les faits permettent d’affirmer.
     do:
       - click: {css: "#alarm-drawer.open div[data-id]:has-text('st1_status') [data-act='ticket']"}
       - wait_for: {target: {css: "details.wb-sheet[data-w='WB-5.5-AT'] .wb-form"}, timeout: 15}
@@ -150,13 +157,15 @@ steps:
     title: {en: "Make the call", fr: "Prendre la décision"}
     say:
       en: >-
-        The row also names the contingency procedure. Whether to run it in this pass is the
-        Flight Director's call, made on the loop as GO or NO-GO, with the ticket as the record.
-        The next shift reads the ticket, not your memory.
+        The alarm row also identifies the contingency procedure. Whether that procedure is run
+        during this pass is decided by the Flight Director, on the voice loop, as a GO or a
+        NO-GO, and the ticket records the decision. The next shift relies on the ticket, not on
+        anyone's recollection of the pass.
       fr: >-
-        La ligne d’alarme nomme aussi la procédure de contingence. L’exécuter ou non dans ce
-        passage, c’est la décision du directeur de vol, prise sur la boucle en GO ou NO-GO, avec
-        la fiche comme trace. L’équipe suivante lit la fiche, pas votre mémoire.
+        La ligne d’alarme indique aussi la procédure de contingence. La décision de l’exécuter
+        pendant ce passage revient au directeur de vol, qui la prend sur la boucle vocale sous
+        forme de GO ou de NO-GO, et la fiche en garde la trace. L’équipe suivante s’appuie sur
+        la fiche, et non sur les souvenirs de quiconque.
     do:
       - click: {css: "#c2o-logbook [data-lb='close']"}
       - move: {css: "#alarms-btn"}

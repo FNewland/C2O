@@ -196,7 +196,7 @@ CLO tags, proposed: 1.1, 1.2, 1.3†, 1.4, 2.3†, 2.4, 3.1, 3.2, 3.3†, 3.4†
 | V-DES-12 Verification and validation | LO 4 | 1.3† Integration & verification | vibration (multichoice) → 1.3†; matrix (reflect) → 1.3†, 6.2† |
 | V-DES-13 Cost and design reviews | LO 5, LO G2 | 3.3† Technical decision leadership, 3.1 Margin & budget management | gates (multichoice) → 3.3†, 3.1; board (reflect) → 3.3†, 3.1, 6.2† |
 | V-DES-14 Structure, propulsion and data handling | LO 4 | 3.2 Trade study execution | propulsion (multichoice) → 3.2; obdh (reflect) → 3.2, 6.2† |
-| V-SCDF-01 Mission need to decision record | LO 2 | 1.1 Problem framing & need analysis, 4.1† Stakeholder engagement | problem (multichoice) → 1.1, 4.1†; stakeholders (truefalse) → 1.1, 4.1†; alternatives (reflect) → 1.1, 4.1†, 6.2† |
+| V-SCDF-01 From mission need to decision record | LO 2 | 1.1 Problem framing & need analysis, 4.1† Stakeholder engagement | problem (multichoice) → 1.1, 4.1†; stakeholders (truefalse) → 1.1, 4.1†; alternatives (reflect) → 1.1, 4.1†, 6.2† |
 | V-SCDF-02 Budgets, margins and energy per orbit | LO 2, LO 4 | 3.1 Margin & budget management | mass (multichoice) → 3.1; energy (reflect) → 3.1, 6.2† |
 | V-SCDF-03 The link budget tool | LO 4 | 3.1 Margin & budget management, 2.4 Concurrent design participation | rate (multichoice) → 3.1, 2.4; apply (reflect) → 3.1, 2.4, 6.2† |
 | V-SCDF-04 Requirements in SpaceCDF | LO 2 | 1.2 Requirements & architecture | parent (multichoice) → 1.2; trace (reflect) → 1.2, 6.2† |
@@ -204,21 +204,21 @@ CLO tags, proposed: 1.1, 1.2, 1.3†, 1.4, 2.3†, 2.4, 3.1, 3.2, 3.3†, 3.4†
 | V-SCDF-06 Risk register and FMECA in SpaceCDF | LO 5 | 3.4† Risk management | mitigate (multichoice) → 3.4†; redundancy (reflect) → 3.4†, 6.2† |
 | V-SCDF-07 Review gates in SpaceCDF | LO 5, LO G2 | 3.3† Technical decision leadership, 1.4 Decision under uncertainty | close (multichoice) → 3.3†, 1.4 |
 | V-CON-02 Energy balance through an orbit | LO 6 | 3.1 Margin & budget management, 2.3† Digital twin & simulation | instant (multichoice) → 3.1, 2.3†; levers (reflect) → 3.1, 2.3†, 6.2† |
-| V-CON-04 From monitor to action: on-board FDIR | LO 6 | 1.4 Decision under uncertainty | onerule (truefalse) → 1.4; ground (reflect) → 1.4, 6.2† |
+| V-CON-04 On-board fault detection, isolation and recovery | LO 6 | 1.4 Decision under uncertainty | onerule (truefalse) → 1.4; ground (reflect) → 1.4, 6.2† |
 | V-CON-05 Packets, services and housekeeping | LO 6 | 6.1 Domain learning agility | primary (multichoice) → 6.1; power (truefalse) → 6.1 |
-| V-CON-06 A telecommand's life: accepted is not done | LO 6 | 1.3† Integration & verification | reject (multichoice) → 1.3†; deferred (truefalse) → 1.3†; verify (reflect) → 1.3†, 6.2† |
-| V-OPS-01 NOM-001: the procedure card is your workbook | LO 6 | 1.4 Decision under uncertainty | step1 (multichoice) → 1.4; nogo (truefalse) → 1.4; workbook (reflect) → 1.4, 6.2† |
+| V-CON-06 The life of a telecommand, from acceptance to completion | LO 6 | 1.3† Integration & verification | reject (multichoice) → 1.3†; deferred (truefalse) → 1.3†; verify (reflect) → 1.3†, 6.2† |
+| V-OPS-01 NOM-001: working through a procedure card | LO 6 | 1.4 Decision under uncertainty | step1 (multichoice) → 1.4; nogo (truefalse) → 1.4; workbook (reflect) → 1.4, 6.2† |
 | V-OPS-02 LEOP-001: first contact and OBC boot | LO 6 | 1.4 Decision under uncertainty | uplink (multichoice) → 1.4; boot (truefalse) → 1.4; card (reflect) → 1.4, 6.2† |
 | V-OPS-03 Alarm to anomaly ticket | LO 6 | 1.4 Decision under uncertainty, 4.4† Communication & facilitation | read (multichoice) → 1.4, 4.4†; ticket (reflect) → 1.4, 4.4†, 6.2† |
-| V-OPS-04 Beacon mode off, then the first health check | LO 6 | 1.4 Decision under uncertainty | refused (multichoice) → 1.4; eps (truefalse) → 1.4; record (reflect) → 1.4, 6.2† |
-| V-OPS-05 LEOP-004: solar wings and the energy balance | LO 6 | 3.1 Margin & budget management, 2.3† Digital twin & simulation | before (multichoice) → 3.1, 2.3†; after (truefalse) → 3.1, 2.3† |
-| V-OPS-06 LEOP-007: power the AOCS, then DETUMBLE | LO 6 | 1.4 Decision under uncertainty | legs (multichoice) → 1.4; detumble (truefalse) → 1.4 |
-| V-OPS-07 LEOP-005: sun acquisition, hands off | LO 6 | 2.3† Digital twin & simulation | rates (multichoice) → 2.3†; handover (truefalse) → 2.3†; hold (reflect) → 2.3†, 6.2† |
+| V-OPS-04 Leaving beacon mode and the first health check | LO 6 | 1.4 Decision under uncertainty | refused (multichoice) → 1.4; eps (truefalse) → 1.4; record (reflect) → 1.4, 6.2† |
+| V-OPS-05 LEOP-004: solar array deployment and the energy balance | LO 6 | 3.1 Margin & budget management, 2.3† Digital twin & simulation | before (multichoice) → 3.1, 2.3†; after (truefalse) → 3.1, 2.3† |
+| V-OPS-06 LEOP-007: AOCS power-on and DETUMBLE | LO 6 | 1.4 Decision under uncertainty | legs (multichoice) → 1.4; detumble (truefalse) → 1.4 |
+| V-OPS-07 LEOP-005: monitoring the autonomous Sun acquisition | LO 6 | 2.3† Digital twin & simulation | rates (multichoice) → 2.3†; handover (truefalse) → 2.3†; hold (reflect) → 2.3†, 6.2† |
 | V-OPS-08 LEOP-006: set the on-board clock | LO 6 | 1.4 Decision under uncertainty | unset (multichoice) → 1.4; verify (truefalse) → 1.4 |
-| V-OPS-09 LEOP-003: where are we? Then end LEOP | LO 6 | 1.3† Integration & verification, 1.4 Decision under uncertainty | position (multichoice) → 1.3†, 1.4; end (reflect) → 1.3†, 1.4, 6.2† |
-| V-OPS-10 Under-voltage: check before you shed | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | check (multichoice) → 1.4, 2.3†; decide (multichoice) → 1.4, 2.3†; recover (reflect) → 1.4, 2.3†, 6.2† |
-| V-OPS-11 No telemetry at AOS: work down the chain | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | ground (multichoice) → 1.4, 2.3†; nothing (multichoice) → 1.4, 2.3†; paon (multichoice) → 1.4, 2.3†; verify (reflect) → 1.4, 2.3†, 6.2† |
-| V-OPS-12 Fine pointing handover: from the sun hold to nadir | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | wheels (multichoice) → 1.4, 2.3†; nominal (multichoice) → 1.4, 2.3†; tracking (reflect) → 1.4, 2.3†, 6.2† |
+| V-OPS-09 LEOP-003: orbit check and the end of LEOP | LO 6 | 1.3† Integration & verification, 1.4 Decision under uncertainty | position (multichoice) → 1.3†, 1.4; end (reflect) → 1.3†, 1.4, 6.2† |
+| V-OPS-10 Under-voltage: confirming the cause before shedding loads | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | check (multichoice) → 1.4, 2.3†; decide (multichoice) → 1.4, 2.3†; recover (reflect) → 1.4, 2.3†, 6.2† |
+| V-OPS-11 No telemetry at acquisition of signal: tracing the fault | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | ground (multichoice) → 1.4, 2.3†; nothing (multichoice) → 1.4, 2.3†; paon (multichoice) → 1.4, 2.3†; verify (reflect) → 1.4, 2.3†, 6.2† |
+| V-OPS-12 Transition from Sun pointing to nadir fine pointing | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | wheels (multichoice) → 1.4, 2.3†; nominal (multichoice) → 1.4, 2.3†; tracking (reflect) → 1.4, 2.3†, 6.2† |
 | V-OPS-13 First light: from fine pointing to the first image down | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | ready (multichoice) → 1.4, 2.3†; capture (multichoice) → 1.4, 2.3†; downlink (multichoice) → 1.4, 2.3†; down (reflect) → 1.4, 2.3†, 6.2† |
 | V-PLN-01 Plan a pass in the mission planner | LO 6 | 1.4 Decision under uncertainty, 2.3† Digital twin & simulation | contact (blanks) → 1.4, 2.3†; imaging (multichoice) → 1.4, 2.3† |
 

@@ -28,18 +28,19 @@ steps:
     title: {en: "The block diagram", fr: "Le schéma fonctionnel"}
     say:
       en: >-
-        Before sizing anything, draw the spacecraft as blocks: the payload, power, the on-board
-        computer, attitude control, the radio, thermal control and the structure. Then draw the
-        lines between them. Power flows out from the power subsystem; data flows through the
-        computer; the radio links the spacecraft to the ground. Every line is an interface, and
-        every interface is a place where two teams must agree.
+        Before any sizing is carried out, the spacecraft is represented as a set of blocks: the
+        payload, power, the on-board computer, attitude control, the radio, thermal control and
+        the structure. The connections between the blocks are then added. Power is distributed
+        from the power subsystem, data passes through the on-board computer, and the radio links
+        the spacecraft to the ground. Each connection is an interface, and each interface
+        requires agreement between two teams.
       fr: >-
-        Avant de dimensionner quoi que ce soit, dessinez le satellite en blocs : la charge utile,
-        l’énergie, l’ordinateur de bord, le contrôle d’attitude, la radio, le contrôle thermique
-        et la structure. Puis tracez les liens entre eux. L’énergie part du sous-système
-        d’énergie ; les données passent par l’ordinateur ; la radio relie le satellite au sol.
-        Chaque lien est une interface, et chaque interface est un endroit où deux équipes doivent
-        s’entendre.
+        Avant tout dimensionnement, le satellite est représenté sous forme de blocs : la charge
+        utile, l’énergie, l’ordinateur de bord, le contrôle d’attitude, la radio, le contrôle
+        thermique et la structure. On ajoute ensuite les liaisons entre les blocs. L’énergie est
+        distribuée par le sous-système énergie, les données transitent par l’ordinateur de bord
+        et la radio relie le satellite au sol. Chaque liaison est une interface, et chaque
+        interface exige un accord entre deux équipes.
     do:
       - js: "EX.play('blocks', ${say})"
 
@@ -47,18 +48,21 @@ steps:
     title: {en: "The N-squared matrix", fr: "La matrice N carré"}
     say:
       en: >-
-        The N-squared matrix lists them all. The subsystems sit on the diagonal; each other cell
-        holds what the row delivers to the column. Then compare both sides of every cell. Here the
-        computer sends wheel commands over I two C, but the wheel the attitude team chose speaks
-        RS four twenty-two. That is an interface conflict. Choose another wheel, add a bridge, or
-        change the computer, and record the decision.
+        The N-squared matrix lists all the interfaces. The subsystems are placed on the
+        diagonal, and each of the other cells shows what the subsystem in that row provides to
+        the one in that column. Both sides of each cell are then compared. In this example, the
+        on-board computer sends wheel commands over an I two C bus, but the wheel selected by
+        the attitude team uses RS four twenty-two. This is an interface conflict. The options
+        are to select a different wheel, add a converter or change the computer, and the
+        decision must be recorded.
       fr: >-
-        La matrice N carré les liste toutes. Les sous-systèmes sont sur la diagonale ; chaque
-        autre case contient ce que la ligne fournit à la colonne. Comparez ensuite les deux côtés
-        de chaque case. Ici, l’ordinateur envoie les commandes des roues en I deux C, mais la roue
-        choisie par l’équipe d’attitude parle RS quatre cent vingt-deux. C’est un conflit
-        d’interface. Choisissez une autre roue, ajoutez un pont, ou changez d’ordinateur, et
-        consignez la décision.
+        La matrice N carré liste toutes les interfaces. Les sous-systèmes sont placés sur la
+        diagonale, et chacune des autres cases indique ce que le sous-système de la ligne
+        fournit à celui de la colonne. On compare ensuite les deux côtés de chaque case. Dans
+        cet exemple, l’ordinateur de bord envoie les commandes des roues sur un bus I deux C,
+        mais la roue choisie par l’équipe d’attitude utilise le RS quatre cent vingt-deux. Il
+        s’agit d’un conflit d’interface. Les options sont de choisir une autre roue, d’ajouter
+        un convertisseur ou de changer d’ordinateur, et la décision doit être consignée.
     do:
       - js: "EX.play('n2', ${say})"
 
@@ -66,18 +70,20 @@ steps:
     title: {en: "The mass budget", fr: "Le bilan de masse"}
     say:
       en: >-
-        Budgets answer one question: will the design close? Start from the current best estimate
-        of each subsystem's mass: three point six eight kilograms. Add a maturity margin to each
-        item, twenty percent for new equipment, then a system margin for the phase, twenty
-        percent in Phase A. That gives five point three kilograms, against a six-kilogram launcher
-        allocation: zero point seven kilograms to spare, eleven point seven percent. Amber.
+        Budgets show whether the design closes. The starting point is the current best estimate
+        of the mass of each subsystem, three point six eight kilograms in total. A maturity
+        margin is added to each item, twenty percent for new equipment, followed by a system
+        margin appropriate to the phase, twenty percent in Phase A. The result is five point
+        three kilograms against a launch allocation of six kilograms, leaving zero point seven
+        kilograms, or eleven point seven percent, in reserve. This is shown in amber.
       fr: >-
-        Les bilans répondent à une question : la conception se ferme-t-elle ? Partez de la
-        meilleure estimation actuelle de la masse de chaque sous-système : trois virgule six huit
-        kilogrammes. Ajoutez une marge de maturité à chaque équipement, vingt pour cent pour du
-        neuf, puis une marge système liée à la phase, vingt pour cent en phase A. On obtient cinq
-        virgule trois kilogrammes, face à une allocation du lanceur de six kilogrammes : zéro
-        virgule sept kilogramme de reste, onze virgule sept pour cent. Orange.
+        Les bilans indiquent si la conception se ferme. Le point de départ est la meilleure
+        estimation actuelle de la masse de chaque sous-système, soit trois virgule six huit
+        kilogrammes au total. On ajoute à chaque équipement une marge de maturité, vingt pour
+        cent pour un équipement neuf, puis une marge système adaptée à la phase, vingt pour cent
+        en phase A. Le résultat est de cinq virgule trois kilogrammes pour une allocation de
+        lancement de six kilogrammes, ce qui laisse une réserve de zéro virgule sept kilogramme,
+        soit onze virgule sept pour cent. Ce résultat s’affiche en orange.
     do:
       - js: "EX.play('mass', ${say})"
     question:
@@ -98,18 +104,19 @@ steps:
     title: {en: "Margins compound", fr: "Les marges se cumulent"}
     say:
       en: >-
-        The two margins multiply. In Phase A, with new equipment, one point two times one point
-        two is about forty-four percent above the best estimate. By Phase C, with mostly flown
-        equipment, it is about sixteen percent; in Phase D, with measured masses, about five. You
-        release margin only as estimates become measurements, never because a budget will not
-        otherwise close.
+        The two margins are multiplied together. In Phase A, with new equipment, one point two
+        multiplied by one point two gives about forty-four percent above the best estimate. In
+        Phase C, with mostly flight-proven equipment, the total is about sixteen percent, and in
+        Phase D, with measured masses, about five percent. Margin is released only as estimates
+        are replaced by measurements, and never simply because a budget would not otherwise
+        close.
       fr: >-
         Les deux marges se multiplient. En phase A, avec des équipements neufs, un virgule deux
-        fois un virgule deux donne environ quarante-quatre pour cent au-dessus de la meilleure
-        estimation. En phase C, avec des équipements surtout déjà volés, environ seize pour cent ;
-        en phase D, avec des masses mesurées, environ cinq. On ne libère de la marge qu’à mesure
-        que les estimations deviennent des mesures, jamais parce qu’un bilan ne se fermerait pas
-        autrement.
+        multiplié par un virgule deux donne environ quarante-quatre pour cent au-dessus de la
+        meilleure estimation. En phase C, avec des équipements surtout éprouvés en vol, le total
+        est d’environ seize pour cent, et en phase D, avec des masses mesurées, d’environ cinq
+        pour cent. La marge n’est libérée qu’à mesure que les mesures remplacent les
+        estimations, et jamais simplement parce qu’un bilan ne se fermerait pas autrement.
     do:
       - js: "EX.play('compound', ${say})"
 
@@ -117,17 +124,18 @@ steps:
     title: {en: "The power budget", fr: "Le bilan de puissance"}
     say:
       en: >-
-        Power is budgeted mode by mode, because not everything is on at once: two watts in safe
-        mode, four nominal, eight when imaging, ten during a downlink, and three and a half in
-        eclipse. Weight each mode by its share of the orbit, and the orbit average is four point
-        six three watts. The array must supply that on average; the battery must carry the eclipse
-        load.
+        Power is budgeted mode by mode, because not all equipment operates at the same time: two
+        watts in safe mode, four in nominal mode, eight during imaging, ten during a downlink
+        and three and a half in eclipse. When each mode is weighted by its share of the orbit,
+        the orbit-average power is four point six three watts. The solar array must provide this
+        on average, and the battery must supply the eclipse load.
       fr: >-
-        La puissance se budgète mode par mode, car tout n’est pas allumé en même temps : deux
-        watts en mode sûr, quatre en nominal, huit en prise de vue, dix pendant une transmission,
-        et trois et demi en éclipse. Pondérez chaque mode par sa part de l’orbite : la moyenne
-        orbitale est de quatre virgule six trois watts. Le générateur doit fournir cela en
-        moyenne ; la batterie doit porter la charge d’éclipse.
+        La puissance est budgétée mode par mode, car tous les équipements ne fonctionnent pas en
+        même temps : deux watts en mode sûr, quatre en mode nominal, huit pendant la prise de
+        vue, dix pendant une transmission et trois et demi en éclipse. Lorsque chaque mode est
+        pondéré par sa part de l’orbite, la puissance moyenne sur l’orbite est de quatre virgule
+        six trois watts. Le générateur solaire doit fournir cette puissance en moyenne, et la
+        batterie doit assurer la charge pendant l’éclipse.
     do:
       - js: "EX.play('power', ${say})"
     question:

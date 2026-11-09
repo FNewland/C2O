@@ -4,11 +4,11 @@ id: V-SCDF-01
 week: 2
 audience: all
 title:
-  en: "Mission need to decision record"
+  en: "From mission need to decision record"
   fr: "Du besoin de mission à la fiche de décision"
 summary:
-  en: "Start a study in SpaceCDF: write the problem, name the stakeholders and objectives, test the alternatives, and record why in your logbook."
-  fr: "Démarrer une étude dans SpaceCDF : rédiger le problème, nommer les parties prenantes et les objectifs, examiner les solutions de rechange et consigner le pourquoi dans votre journal de bord."
+  en: "This video starts a study in SpaceCDF. It shows how to state the problem, identify the stakeholders and objectives, assess the alternatives and record the reasons for each decision in the logbook."
+  fr: "Cette vidéo démarre une étude dans SpaceCDF. Elle montre comment énoncer le problème, identifier les parties prenantes et les objectifs, évaluer les solutions possibles et consigner dans le journal de bord les raisons de chaque décision."
 apps:
   spacecdf: default
 ties:
@@ -29,18 +29,18 @@ steps:
     title: {en: "SpaceCDF and your logbook", fr: "SpaceCDF et votre journal de bord"}
     say:
       en: >-
-        This is SpaceCDF. CDF stands for concurrent design facility: a place where every
-        discipline works on one design at the same time. Every study you do this term starts
-        here. Create New Mission walks your team through four steps: the problem, the
-        stakeholders, the alternatives and a first architecture. Keep one idea in mind: the
-        tool records what you chose, and your logbook records why.
+        This is SpaceCDF. CDF stands for concurrent design facility, an environment in which all
+        the engineering disciplines work on a single design at the same time. Each study in this
+        course begins here. Create New Mission takes the team through four steps: the problem,
+        the stakeholders, the alternatives and a first architecture. Throughout the process, the
+        tool records what the team chose, and the logbook records the reasons for each choice.
       fr: >-
-        Voici SpaceCDF. Le sigle CDF désigne un centre de conception concourante : un lieu où
-        toutes les disciplines travaillent sur une même conception en même temps. Chaque étude
-        de la session commence ici. Créer une mission guide votre équipe en quatre étapes : le
-        problème, les parties prenantes, les solutions de rechange et une première architecture.
-        Gardez une idée en tête : l’outil enregistre ce que vous avez choisi, et votre journal
-        de bord enregistre pourquoi.
+        Voici SpaceCDF. Le sigle CDF désigne un centre de conception concourante, un
+        environnement dans lequel toutes les disciplines d’ingénierie travaillent sur une même
+        conception en même temps. Chaque étude de ce cours commence ici. Créer une mission guide
+        l’équipe en quatre étapes : le problème, les parties prenantes, les solutions de
+        rechange et une première architecture. Tout au long du processus, l’outil enregistre les
+        choix de l’équipe, et le journal de bord en consigne les raisons.
     do:
       - highlight: {target: {role: button, name: Create New Mission}, seconds: 3}
       - highlight: {target: {role: button, name: Logbook}, seconds: 2.5}
@@ -49,15 +49,17 @@ steps:
     title: {en: "Step 1: the problem statement", fr: "Étape 1 : l’énoncé du problème"}
     say:
       en: >-
-        Step one asks what problem the mission solves. A good problem statement names the gap,
-        who suffers from it, and what happens if nobody acts. It does not name a satellite yet.
-        Our example team is worried that wildfires in the boreal forest are found too late.
-        The operational context says when and how the mission's products will be used.
+        The first step asks what problem the mission addresses. A good problem statement
+        identifies the gap, who is affected by it, and the consequences if no action is taken.
+        It does not yet specify a satellite. The example team is concerned that wildfires in the
+        boreal forest are detected too late. The operational context describes when and how the
+        mission products will be used.
       fr: >-
-        La première étape demande quel problème la mission résout. Un bon énoncé nomme le manque,
-        qui en souffre, et ce qui arrive si personne n’agit. Il ne nomme pas encore de satellite.
-        Notre équipe d’exemple s’inquiète que les feux de la forêt boréale soient détectés trop tard.
-        Le contexte opérationnel indique quand et comment les produits de la mission seront utilisés.
+        La première étape demande quel problème la mission doit résoudre. Un bon énoncé du
+        problème identifie le manque, les personnes touchées et les conséquences de l’inaction.
+        Il ne précise pas encore de satellite. L’équipe de l’exemple constate que les feux de la
+        forêt boréale sont détectés trop tard. Le contexte opérationnel décrit quand et comment
+        les produits de la mission seront utilisés.
     do:
       - click: {role: button, name: Create New Mission}
       - type: {target: {label: Mission Name}, text: BorealWatch-1}
@@ -92,16 +94,17 @@ steps:
     title: {en: "Record the decision", fr: "Consigner la décision"}
     say:
       en: >-
-        Beside the form is Record decision. It opens your logbook on decision D one point four
-        Problem, with the statement you typed already filled in as the choice. The record tells
-        you which part of your workbook it answers, and where in SpaceCDF to look. What only
-        you can write is the rationale: why this statement, and what you left out of scope.
+        Next to the form is the Record decision button. It opens the logbook at decision D one
+        point four, Problem, with the statement already entered as the choice. The record
+        identifies the part of the workbook it addresses and the place in SpaceCDF where the
+        relevant information can be found. The rationale must be written by the team: why this
+        statement was chosen, and what was left out of scope.
       fr: >-
-        À côté du formulaire se trouve Consigner la décision. Le bouton ouvre votre journal de
-        bord sur la décision D un point quatre Problème, avec l’énoncé que vous avez saisi déjà
-        repris comme choix. La fiche indique à quelle partie de votre cahier de travail elle
-        répond, et où regarder dans SpaceCDF. Ce que vous seuls pouvez écrire, c’est la
-        justification : pourquoi cet énoncé, et ce que vous avez laissé hors du périmètre.
+        À côté du formulaire se trouve le bouton Consigner la décision. Il ouvre le journal de
+        bord sur la décision D un point quatre, Problème, avec l’énoncé déjà repris comme choix.
+        La fiche indique la partie du cahier de travail à laquelle elle répond et l’endroit de
+        SpaceCDF où trouver les informations utiles. La justification doit être rédigée par
+        l’équipe : pourquoi cet énoncé a été retenu, et ce qui a été exclu du périmètre.
     do:
       - click: {css: "[data-decision='D-1.4-PROBLEM']"}
       - wait_for: {css: "#c2o-logbook"}
@@ -117,16 +120,17 @@ steps:
     title: {en: "Your logbook is your workbook", fr: "Votre journal de bord est votre cahier de travail"}
     say:
       en: >-
-        Save the record. It stays private to you, in this browser, and the server deletes it
-        forty-eight hours after your last entry. So at the end of every session, download your
-        logbook as Markdown, a plain-text format, or as printable HTML and keep it with your workbook. The Worksheets tab
-        lists the worksheet parts that match the step you are on.
+        The record is then saved. It is private to the user and stored in this browser, and the
+        server deletes it forty-eight hours after the last entry. At the end of each session,
+        the logbook should therefore be downloaded, either as Markdown, a plain-text format, or
+        as printable HTML, and kept with the workbook. The Worksheets tab lists the worksheet
+        sections that correspond to the current step.
       fr: >-
-        Enregistrez la fiche. Elle reste privée, dans ce navigateur, et le serveur la supprime
-        quarante-huit heures après votre dernière saisie. À la fin de chaque séance, téléchargez
-        donc votre journal de bord en Markdown, un format texte simple, ou en HTML imprimable, et gardez-le avec votre
-        cahier de travail. L’onglet des fiches liste les parties de fiches qui correspondent à
-        l’étape où vous êtes.
+        La fiche est ensuite enregistrée. Elle est privée et conservée dans ce navigateur, et le
+        serveur la supprime quarante-huit heures après la dernière saisie. À la fin de chaque
+        séance, il faut donc télécharger le journal de bord, en Markdown, un format texte
+        simple, ou en HTML imprimable, et le conserver avec le cahier de travail. L’onglet des
+        fiches liste les sections du cahier qui correspondent à l’étape en cours.
     do:
       - click: {role: button, name: Save decision record}
       - wait: 0.8
@@ -139,16 +143,17 @@ steps:
     title: {en: "Step 2: stakeholders and objectives", fr: "Étape 2 : parties prenantes et objectifs"}
     say:
       en: >-
-        Step two asks who cares and what they need. Name each stakeholder by role: who funds,
-        who uses, who operates and who regulates. Then write at least two objectives. Each one
-        gets a priority and, most importantly, a way to measure it. An objective you cannot
-        measure is one you cannot verify at the review.
+        The second step identifies the stakeholders and their needs. Each stakeholder is named
+        by role: who funds the mission, who uses its products, who operates it and who regulates
+        it. The team then writes at least two objectives, each with a priority and, most
+        importantly, a means of measurement. An objective that cannot be measured cannot be
+        verified at the review.
       fr: >-
-        La deuxième étape demande qui est concerné et ce dont chacun a besoin. Nommez chaque
-        partie prenante par son rôle : qui finance, qui utilise, qui exploite et qui réglemente.
-        Rédigez ensuite au moins deux objectifs. Chacun reçoit une priorité et, surtout, une
-        façon de le mesurer. Un objectif que l’on ne peut pas mesurer ne peut pas être vérifié
-        à la revue.
+        La deuxième étape identifie les parties prenantes et leurs besoins. Chaque partie
+        prenante est désignée par son rôle : qui finance la mission, qui en utilise les
+        produits, qui l’exploite et qui la réglemente. L’équipe rédige ensuite au moins deux
+        objectifs, chacun avec une priorité et, surtout, un moyen de mesure. Un objectif qui ne
+        peut pas être mesuré ne peut pas être vérifié lors de la revue.
     do:
       - click: {role: button, name: "Next →"}
       - fill: {target: {label: "Stakeholder 1: name / organisation"}, text: {en: "Canadian Space Agency", fr: "Agence spatiale canadienne"}}
@@ -177,16 +182,18 @@ steps:
     title: {en: "Step 3: is space the answer?", fr: "Étape 3 : l’espace est-il la réponse ?"}
     say:
       en: >-
-        Step three is the honest question: does this need a new space mission at all? Compare
-        the alternatives: buying existing data, aircraft, ground sensors, or a dedicated
-        spacecraft. Choose one, and say in the justification why the others fall short. Then
-        record decision D one point four Space. Next time, the architecture step.
+        The third step asks whether the need actually requires a new space mission. The team
+        compares the alternatives, such as purchasing existing data, aircraft, ground-based
+        sensors or a dedicated spacecraft, selects one, and explains in the justification why
+        the others are not sufficient. The team then records decision D one point four, Space.
+        The architecture step is covered in the next session.
       fr: >-
-        La troisième étape pose la question honnête : ce besoin exige-t-il vraiment une nouvelle
-        mission spatiale ? Comparez les solutions de rechange : acheter des données existantes,
-        des avions, des capteurs au sol, ou un engin spatial dédié. Choisissez-en une, et dites
-        dans la justification pourquoi les autres ne suffisent pas. Consignez ensuite la
-        décision D un point quatre Espace. La prochaine fois : l’étape de l’architecture.
+        La troisième étape demande si le besoin exige réellement une nouvelle mission spatiale.
+        L’équipe compare les solutions de rechange, comme l’achat de données existantes, les
+        avions, les capteurs au sol ou un engin spatial dédié, en retient une et explique dans
+        la justification pourquoi les autres ne suffisent pas. L’équipe consigne ensuite la
+        décision D un point quatre, Espace. L’étape de l’architecture est traitée à la séance
+        suivante.
     do:
       - click: {role: button, name: "Next →"}
       - wait: 1.0

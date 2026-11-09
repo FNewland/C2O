@@ -27,18 +27,19 @@ steps:
     title: {en: "Anatomy of a requirement", fr: "Anatomie d’une exigence"}
     say:
       en: >-
-        A requirement is a formal statement of what the system must do or how well, that someone
-        can verify. It names who, uses the word shall, gives a measurable threshold, with a
-        number and a unit, and states the conditions. Here: the payload shall achieve a ground
-        sample distance, GSD, of ten metres or better, at nadir, from the operational orbit.
-        Shall is binding. Should is only a goal, and will is a statement of fact.
+        A requirement is a formal, verifiable statement of what the system must do or how well
+        it must do it. It identifies the subject, uses the word shall, gives a measurable
+        threshold with a value and a unit, and states the conditions. For example: the payload
+        shall achieve a ground sample distance, or GSD, of ten metres or better, at nadir, from
+        the operational orbit. Shall denotes a binding requirement, should denotes a goal, and
+        will denotes a statement of fact.
       fr: >-
-        Une exigence est un énoncé formel de ce que le système doit faire, ou à quel niveau, que
-        quelqu’un peut vérifier. Elle nomme le sujet, emploie le verbe devoir, donne un seuil
-        mesurable, avec un nombre et une unité, et précise les conditions. Ici : la charge utile
-        doit atteindre une distance d’échantillonnage au sol, une GSD, de dix mètres ou mieux, au
-        nadir, depuis l’orbite opérationnelle. Le verbe « doit » engage. « Devrait » n’est qu’un objectif,
-        et « va » un simple constat.
+        Une exigence est un énoncé formel et vérifiable de ce que le système doit faire ou du
+        niveau de performance attendu. Elle désigne le sujet, emploie le verbe devoir, donne un
+        seuil mesurable avec une valeur et une unité, et précise les conditions. Par exemple :
+        la charge utile doit atteindre une distance d’échantillonnage au sol, ou GSD, de dix
+        mètres ou mieux, au nadir, depuis l’orbite opérationnelle. « Doit » exprime une
+        obligation, « devrait » un objectif et « va » un simple constat.
     do:
       - js: "EX.play('shall', ${say})"
 
@@ -46,18 +47,20 @@ steps:
     title: {en: "Five kinds of requirement", fr: "Cinq types d’exigences"}
     say:
       en: >-
-        Requirements come in five kinds. Functional: what the system does. Performance: how well
-        it does it. Interface: the agreements at a boundary, such as a regulated bus voltage.
-        Constraint: limits from outside, such as total mass. And environmental: what it must
-        survive, such as launch loads. Interface requirements are the one place where a specific
-        value is right, because both sides have agreed it.
+        There are five types of requirement. Functional requirements state what the system does,
+        and performance requirements state how well it does it. Interface requirements define
+        the agreements at a boundary, such as a regulated bus voltage. Constraints are limits
+        imposed from outside, such as the total mass, and environmental requirements state what
+        the system must withstand, such as launch loads. Interface requirements are the one case
+        where a specific value is appropriate, because both parties have agreed to it.
       fr: >-
-        Les exigences sont de cinq types. Fonctionnelle : ce que fait le système. Performance :
-        à quel niveau il le fait. Interface : les accords à une frontière, comme la tension d’un
-        bus régulé. Contrainte : les limites venues de l’extérieur, comme la masse totale. Et
-        environnement : ce à quoi il doit résister, comme les charges au lancement. Les exigences
-        d’interface sont le seul endroit où une valeur précise est correcte, parce que les deux
-        côtés l’ont acceptée.
+        Il existe cinq types d’exigences. Les exigences fonctionnelles indiquent ce que fait le
+        système, et les exigences de performance, à quel niveau il le fait. Les exigences
+        d’interface définissent les accords à une frontière, comme la tension d’un bus régulé.
+        Les contraintes sont des limites imposées de l’extérieur, comme la masse totale, et les
+        exigences d’environnement indiquent ce à quoi le système doit résister, comme les
+        charges au lancement. Les exigences d’interface sont le seul cas où une valeur précise
+        est appropriée, car les deux parties l’ont acceptée.
     do:
       - js: "EX.play('types', ${say})"
 
@@ -65,18 +68,19 @@ steps:
     title: {en: "The SMART screen", fr: "Le filtre SMART"}
     say:
       en: >-
-        A quick screen is SMART: specific, measurable, achievable, relevant and traceable. A
-        common trap: the spacecraft shall use triple-junction gallium arsenide cells. That names
-        a technology, a design choice. Ask what the cells were for, and require that instead: the
-        power subsystem shall generate at least fifteen watts at end of life, from no more than
-        half a square metre of array.
+        A useful first check is SMART: specific, measurable, achievable, relevant and traceable.
+        A common error is a requirement such as: the spacecraft shall use triple-junction
+        gallium arsenide cells. This specifies a technology, which is a design choice. The
+        requirement should instead state the purpose of the cells, for example: the power
+        subsystem shall generate at least fifteen watts at end of life from no more than half a
+        square metre of array.
       fr: >-
-        Un premier filtre est SMART : spécifique, mesurable, atteignable, pertinente et traçable.
-        Un piège courant : le satellite doit utiliser des cellules à l’arséniure de gallium à
-        triple jonction. Cela nomme une technologie, un choix de conception. Demandez à quoi
-        servaient les cellules, et exigez cela à la place : le sous-système d’énergie doit
-        produire au moins quinze watts en fin de vie, avec au plus un demi-mètre carré de
-        panneaux.
+        Un premier contrôle utile est SMART : spécifique, mesurable, atteignable, pertinente et
+        traçable. Une erreur fréquente est une exigence telle que : le satellite doit utiliser
+        des cellules à l’arséniure de gallium à triple jonction. Elle impose une technologie, ce
+        qui relève d’un choix de conception. L’exigence doit plutôt exprimer la fonction des
+        cellules, par exemple : le sous-système énergie doit produire au moins quinze watts en
+        fin de vie, avec au plus un demi-mètre carré de panneaux.
     do:
       - js: "EX.play('smart', ${say})"
     question:
@@ -97,16 +101,18 @@ steps:
     title: {en: "One concern per requirement", fr: "Un sujet par exigence"}
     say:
       en: >-
-        Watch for the word and. The system shall provide ten-metre imagery with a five-day revisit
-        and twenty-four-hour latency is three requirements in one. If it fails, which part
-        failed? Split it into three, each with its own number, so each can pass or fail on its
-        own, and the team knows exactly what to fix.
+        The word and often indicates a compound requirement. The statement that the system shall
+        provide ten-metre imagery with a five-day revisit and twenty-four-hour latency contains
+        three requirements. If it is not met, it is unclear which part has failed. It should be
+        split into three requirements, each with its own identifier, so that each can be
+        verified independently and the team knows exactly what needs to be corrected.
       fr: >-
-        Méfiez-vous du mot « et ». Le système doit fournir une imagerie à dix mètres avec une
-        revisite de cinq jours et une latence de vingt-quatre heures : ce sont trois exigences en
-        une. Si elle échoue, quelle partie a échoué ? Scindez-la en trois, chacune avec son
-        numéro, pour que chacune réussisse ou échoue seule, et que l’équipe sache exactement quoi
-        corriger.
+        Le mot « et » signale souvent une exigence composée. L’énoncé selon lequel le système
+        doit fournir une imagerie à dix mètres avec une revisite de cinq jours et une latence de
+        vingt-quatre heures contient trois exigences. S’il n’est pas satisfait, on ne sait pas
+        quelle partie est en défaut. Il faut le scinder en trois exigences, chacune avec son
+        identifiant, afin que chacune puisse être vérifiée indépendamment et que l’équipe sache
+        exactement ce qu’il faut corriger.
     do:
       - js: "EX.play('split', ${say})"
 
@@ -114,18 +120,19 @@ steps:
     title: {en: "Traceability", fr: "La traçabilité"}
     say:
       en: >-
-        Requirements form a tree: the need, then mission, system, subsystem and component
-        requirements. Every requirement traces three ways. Up, to its parent: why does it exist?
-        Down, to its children: how is it decomposed? And across, to a verification method: how
-        will we know it is met? The traceability matrix records all three, and the target is one
-        hundred percent coverage.
+        Requirements form a hierarchy: the need, followed by mission, system, subsystem and
+        component requirements. Each requirement is traced in three directions: upwards to its
+        parent, which explains why it exists; downwards to its children, which shows how it is
+        decomposed; and across to a verification method, which shows how compliance will be
+        demonstrated. The traceability matrix records all three, and the objective is complete
+        coverage.
       fr: >-
-        Les exigences forment un arbre : le besoin, puis les exigences de mission, système,
-        sous-système et composant. Chaque exigence se trace dans trois directions. Vers le haut,
-        vers son parent : pourquoi existe-t-elle ? Vers le bas, vers ses enfants : comment se
-        décompose-t-elle ? Et de côté, vers une méthode de vérification : comment saura-t-on
-        qu’elle est satisfaite ? La matrice de traçabilité enregistre les trois, et la cible est
-        cent pour cent de couverture.
+        Les exigences forment une hiérarchie : le besoin, puis les exigences de mission,
+        système, sous-système et composant. Chaque exigence est tracée dans trois directions :
+        vers le haut, vers son parent, qui explique sa raison d’être ; vers le bas, vers ses
+        enfants, qui montrent sa décomposition ; et latéralement, vers une méthode de
+        vérification, qui montre comment la conformité sera démontrée. La matrice de traçabilité
+        consigne les trois, et l’objectif est une couverture complète.
     do:
       - js: "EX.play('trace', ${say})"
 
@@ -133,18 +140,20 @@ steps:
     title: {en: "How it will be verified", fr: "Comment la vérifier"}
     say:
       en: >-
-        There are four ways to verify, plus one: analysis, test, inspection, review of design,
-        and demonstration. Weigh it to check the mass. Simulate the pointing, then confirm it on
-        a test bench. A link margin is shown by analysis, since the full test needs the satellite
-        in orbit. Launch loads need a vibration test. Data latency is demonstrated in an
-        end-to-end rehearsal, and a redundant power path is found in the schematics.
+        There are four principal verification methods, analysis, test, inspection and review of
+        design, together with demonstration. Mass is verified by weighing the spacecraft.
+        Pointing is simulated and then confirmed on a test bench. Link margin is verified by
+        analysis, since a full test would require the satellite to be in orbit. Launch loads
+        require a vibration test, data latency is demonstrated in an end-to-end rehearsal, and a
+        redundant power path is confirmed by review of the schematics.
       fr: >-
-        On vérifie de quatre façons, plus une : analyse, essai, inspection, revue de conception,
-        et démonstration. On pèse pour vérifier la masse. On simule le pointage, puis on le
-        confirme sur un banc d’essai. Une marge de liaison se montre par analyse, car l’essai
-        complet exige le satellite en orbite. Les charges au lancement demandent un essai de
-        vibration. La latence des données se démontre dans une répétition de bout en bout, et un
-        chemin d’alimentation redondant se constate sur les schémas.
+        Il existe quatre méthodes de vérification principales, l’analyse, l’essai, l’inspection
+        et la revue de conception, auxquelles s’ajoute la démonstration. La masse se vérifie en
+        pesant le satellite. Le pointage est simulé, puis confirmé sur un banc d’essai. La marge
+        de liaison se vérifie par analyse, car un essai complet exigerait que le satellite soit
+        en orbite. Les charges au lancement exigent un essai de vibration, la latence des
+        données se démontre lors d’une répétition de bout en bout et un chemin d’alimentation
+        redondant se confirme par la revue des schémas.
     do:
       - js: "EX.play('verify', ${say})"
     question:

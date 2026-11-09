@@ -29,17 +29,18 @@ steps:
     title: {en: "One packet", fr: "Un paquet"}
     say:
       en: >-
-        Every telecommand you send and every report that comes down is a packet: a CCSDS space
-        packet, from the Consultative Committee for Space Data Systems, the standard almost
-        every mission uses. It has four parts. A primary header. A secondary header. The data
-        itself. And at the end, a cyclic redundancy check, a CRC, two octets that let the
-        receiver reject a packet damaged on the way.
+        Every telecommand sent to the spacecraft and every report it returns is a packet: a
+        CCSDS space packet, defined by the Consultative Committee for Space Data Systems and
+        used by almost every mission. A packet has four parts: a primary header, a secondary
+        header, the data field, and finally a cyclic redundancy check, or CRC, two octets that
+        allow the receiver to reject a packet that has been corrupted in transmission.
       fr: >-
-        Chaque télécommande envoyée et chaque rapport reçu est un paquet : un paquet spatial
-        CCSDS, du Comité consultatif pour les systèmes de données spatiales, la norme qu’utilisent
-        presque toutes les missions. Il a quatre parties. Un en-tête primaire. Un en-tête
-        secondaire. Les données elles-mêmes. Et à la fin, un contrôle de redondance cyclique, un
-        CRC, deux octets qui permettent au récepteur de rejeter un paquet abîmé en route.
+        Chaque télécommande envoyée au satellite et chaque rapport qu’il renvoie est un paquet :
+        un paquet spatial CCSDS, défini par le Comité consultatif pour les systèmes de données
+        spatiales et utilisé par presque toutes les missions. Un paquet comprend quatre parties
+        : un en-tête primaire, un en-tête secondaire, le champ de données et, enfin, un contrôle
+        de redondance cyclique, ou CRC, deux octets qui permettent au récepteur de rejeter un
+        paquet altéré pendant la transmission.
     do:
       - js: "EX.play('packet', ${say})"
 
@@ -47,17 +48,21 @@ steps:
     title: {en: "The primary header", fr: "L’en-tête primaire"}
     say:
       en: >-
-        The primary header is six octets. It says whether this is telemetry, TM, coming down,
-        or a telecommand, TC, going up. It carries the application process identifier, the APID: who on board
-        sent it. On EOSAT-1, zero zero two is the bootloader and zero zero one is the
-        application, so when the traffic switches from two to one, the computer has booted.
-        A sequence count goes up by one with every packet: a gap means a packet was lost.
+        The primary header is six octets long. It indicates whether the packet is telemetry, TM,
+        sent to the ground, or a telecommand, TC, sent to the spacecraft. It also carries the
+        application process identifier, or APID, which identifies the on-board source. On
+        EOSAT-1, zero zero two is the bootloader and zero zero one is the application software,
+        so a change in traffic from two to one shows that the computer has booted. A sequence
+        count increases by one with each packet, so a gap in the count means that a packet has
+        been lost.
       fr: >-
-        L’en-tête primaire fait six octets. Il dit s’il s’agit de télémesure, TM, qui descend,
-        ou d’une télécommande, TC, qui monte. Il porte l’identifiant de processus applicatif, l’APID : qui,
-        à bord, l’a envoyé. Sur EOSAT-1, zéro zéro deux est le chargeur d’amorçage et zéro zéro
-        un l’application : quand le trafic passe de deux à un, l’ordinateur a démarré. Un
-        compteur de séquence augmente d’un à chaque paquet : un trou signifie un paquet perdu.
+        L’en-tête primaire compte six octets. Il indique si le paquet est de la télémesure, TM,
+        envoyée au sol, ou une télécommande, TC, envoyée au satellite. Il contient aussi
+        l’identifiant de processus applicatif, ou APID, qui désigne la source à bord. Sur
+        EOSAT-1, zéro zéro deux correspond au chargeur d’amorçage et zéro zéro un au logiciel
+        applicatif : le passage du trafic de deux à un montre donc que l’ordinateur a démarré.
+        Un compteur de séquence augmente d’une unité à chaque paquet : une interruption dans le
+        compte signifie qu’un paquet a été perdu.
     do:
       - js: "EX.play('primary', ${say})"
     question:
@@ -78,19 +83,20 @@ steps:
     title: {en: "The secondary header: what, and when", fr: "L’en-tête secondaire : quoi, et quand"}
     say:
       en: >-
-        The secondary header comes from the packet utilisation standard, PUS, written by the
-        European Cooperation for Space Standardization, ECSS. Its key fields are the service and
-        the subtype: two numbers that say what kind of packet this is. Three comma twenty-five
-        is a housekeeping report. Telemetry also carries a time stamp: on-board time, counted
-        in seconds and fractions since the mission epoch, from the spacecraft's own clock.
-        That is why the clock card matters.
+        The secondary header is defined by the packet utilisation standard, PUS, published by
+        the European Cooperation for Space Standardization, or ECSS. Its main fields are the
+        service and the subtype, two numbers that identify the type of packet; three comma
+        twenty-five, for example, is a housekeeping report. Telemetry packets also carry a time
+        stamp from the spacecraft clock, giving the on-board time in seconds and fractions of a
+        second since the mission epoch. This is why the clock-setting procedure is important.
       fr: >-
-        L’en-tête secondaire vient de la norme d’utilisation des paquets, PUS, rédigée par la
-        Coopération européenne pour la normalisation spatiale, l’ECSS. Ses champs clés sont le
-        service et le sous-type : deux nombres qui disent quel genre de paquet c’est. Trois
-        virgule vingt-cinq est un rapport de servitude. La télémesure porte aussi une date : le
-        temps de bord, compté en secondes et fractions depuis l’époque de la mission, sur
-        l’horloge du satellite. C’est pourquoi la fiche de l’horloge compte.
+        L’en-tête secondaire est défini par la norme d’utilisation des paquets, PUS, publiée par
+        la Coopération européenne pour la normalisation spatiale, ou ECSS. Ses principaux champs
+        sont le service et le sous-type, deux nombres qui identifient le type de paquet ; trois
+        virgule vingt-cinq, par exemple, est un rapport de servitude. Les paquets de télémesure
+        portent aussi une date fournie par l’horloge du satellite, qui donne le temps de bord en
+        secondes et fractions de seconde depuis l’époque de la mission. C’est pourquoi la
+        procédure de mise à l’heure est importante.
     do:
       - js: "EX.play('secondary', ${say})"
 
@@ -98,18 +104,19 @@ steps:
     title: {en: "The services", fr: "Les services"}
     say:
       en: >-
-        A service is a family of related packets. Your cards use about a dozen. Service one
-        verifies every command. Service three is housekeeping. Service eight runs functions:
-        most of what you command. Service nine sets the time. Twelve watches parameters on
-        board, and nineteen acts on events. When a card writes three comma twenty-seven, you
-        now know how to read it: service three, subtype twenty-seven.
+        A service is a family of related packets, and the procedures in this course use about a
+        dozen of them. Service one verifies every command. Service three handles housekeeping.
+        Service eight runs on-board functions and covers most of the commands sent. Service nine
+        sets the time. Service twelve monitors parameters on board, and service nineteen
+        responds to events. A procedure step written as three comma twenty-seven therefore means
+        service three, subtype twenty-seven.
       fr: >-
-        Un service est une famille de paquets apparentés. Vos fiches en utilisent une douzaine.
-        Le service un vérifie chaque commande. Le service trois, ce sont les données de
-        servitude. Le service huit exécute des fonctions : l’essentiel de ce que vous commandez.
-        Le service neuf règle l’heure. Le douze surveille des paramètres à bord, et le
-        dix-neuf réagit aux événements. Quand une fiche écrit trois virgule vingt-sept, vous
-        savez maintenant le lire : service trois, sous-type vingt-sept.
+        Un service est une famille de paquets apparentés, et les procédures de ce cours en
+        utilisent une douzaine. Le service un vérifie chaque commande. Le service trois gère les
+        données de servitude. Le service huit exécute des fonctions de bord et couvre la plupart
+        des commandes envoyées. Le service neuf règle l’heure. Le service douze surveille des
+        paramètres à bord, et le service dix-neuf réagit aux événements. Une étape de procédure
+        notée trois virgule vingt-sept signifie donc service trois, sous-type vingt-sept.
     do:
       - js: "EX.play('services', ${say})"
 
@@ -117,18 +124,18 @@ steps:
     title: {en: "Housekeeping: one structure per subsystem", fr: "Servitude : une structure par sous-système"}
     say:
       en: >-
-        Housekeeping, HK, is the spacecraft's routine health data. Each subsystem has its own
-        report structure, named by a structure identifier, a SID, and each repeats at its own
-        rate: power every second, attitude every four, thermal once a minute. The beacon is the
-        only one the bootloader sends. The data field of each report is the list of parameters
-        you read on the console pages.
+        Housekeeping, or HK, is the routine health data of the spacecraft. Each subsystem has
+        its own report structure, designated by a structure identifier, or SID, and each is
+        generated at its own rate: power every second, attitude every four seconds and thermal
+        once a minute. The beacon report is the only one the bootloader sends. The data field of
+        each report contains the parameters displayed on the console pages.
       fr: >-
-        Les données de servitude, HK, sont les données de santé courantes du satellite. Chaque
-        sous-système a sa structure de rapport, désignée par un identifiant de structure, un
-        SID, et chacune se répète à son rythme : l’énergie chaque seconde, l’attitude toutes les
-        quatre, la thermique une fois par minute. La balise est la seule qu’envoie le chargeur
-        d’amorçage. Le champ de données de chaque rapport est la liste des paramètres que vous
-        lisez sur les pages de la console.
+        Les données de servitude, ou HK, sont les données de santé courantes du satellite.
+        Chaque sous-système possède sa propre structure de rapport, désignée par un identifiant
+        de structure, ou SID, et chacune est générée à son propre rythme : l’énergie chaque
+        seconde, l’attitude toutes les quatre secondes et le thermique une fois par minute. Le
+        rapport de balise est le seul qu’envoie le chargeur d’amorçage. Le champ de données de
+        chaque rapport contient les paramètres affichés sur les pages de la console.
     do:
       - js: "EX.play('hk', ${say})"
 
@@ -136,16 +143,17 @@ steps:
     title: {en: "Requested once, or enabled", fr: "Demandé une fois, ou activé"}
     say:
       en: >-
-        There are two ways to get a report. Request it, three comma twenty-seven, and one
-        snapshot comes down, now, and nothing more. Enable it, three comma five, and it keeps
-        coming on its own at its rate until you disable it. Cards request a report when they
-        need one fresh reading, and enable one when the next steps depend on it.
+        A report can be obtained in two ways. A request, three comma twenty-seven, returns a
+        single snapshot immediately and nothing further. Enabling the report, three comma five,
+        makes it repeat automatically at its own rate until it is disabled. Procedures request a
+        report when they need a single current reading, and enable it when the following steps
+        depend on it.
       fr: >-
-        Il y a deux façons d’obtenir un rapport. Le demander, trois virgule vingt-sept : un seul
-        instantané descend, maintenant, et rien de plus. L’activer, trois virgule cinq : il
-        arrive alors tout seul à son rythme jusqu’à ce que vous le désactiviez. Les fiches
-        demandent un rapport quand il leur faut une lecture fraîche, et l’activent quand les
-        étapes suivantes en dépendent.
+        Un rapport peut être obtenu de deux façons. Une demande, trois virgule vingt-sept,
+        renvoie immédiatement un seul instantané, sans suite. L’activation du rapport, trois
+        virgule cinq, le fait revenir automatiquement à son propre rythme jusqu’à sa
+        désactivation. Les procédures demandent un rapport lorsqu’elles ont besoin d’une seule
+        lecture à jour, et l’activent lorsque les étapes suivantes en dépendent.
     do:
       - js: "EX.play('request', ${say})"
 
@@ -153,16 +161,18 @@ steps:
     title: {en: "Powered is not reporting", fr: "Alimentée n’est pas en train de rapporter"}
     say:
       en: >-
-        One trap catches every new team. Powering a unit never switches its report on. After
-        the attitude units are powered, structure two stays silent, and the attitude page goes
-        on showing old or missing values. It takes its own command, housekeeping enable, SID
-        two. Then the reports arrive, and the next steps can be checked.
+        New teams frequently overlook one point: switching on a unit does not enable its report.
+        After the attitude units are powered, structure two remains silent, and the attitude
+        page continues to show old or missing values. A separate command is required, the
+        housekeeping enable for SID two. Once it is sent, the reports arrive and the following
+        steps can be verified.
       fr: >-
-        Un piège attrape toutes les nouvelles équipes. Alimenter une unité n’active jamais son
-        rapport. Une fois les unités d’attitude alimentées, la structure deux reste muette, et la
-        page attitude continue d’afficher des valeurs anciennes ou absentes. Il faut sa propre
-        commande, l’activation de servitude, SID deux. Alors les rapports arrivent, et les étapes
-        suivantes peuvent être vérifiées.
+        Les nouvelles équipes négligent souvent un point : la mise sous tension d’une unité
+        n’active pas son rapport. Une fois les unités d’attitude alimentées, la structure deux
+        reste muette, et la page attitude continue d’afficher des valeurs anciennes ou absentes.
+        Une commande distincte est nécessaire : l’activation de la servitude pour le SID deux.
+        Une fois cette commande envoyée, les rapports arrivent et les étapes suivantes peuvent
+        être vérifiées.
     do:
       - js: "EX.play('power', ${say})"
     question:

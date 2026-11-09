@@ -32,18 +32,20 @@ steps:
     title: {en: "The mass budget and its margins", fr: "Le bilan de masse et ses marges"}
     say:
       en: >-
-        Open the Budget tab. The bar is the current best estimate of the mass. The hatched part
-        is the maturity margin: each component carries one that depends on how well it is known,
-        from a catalogue item already flown to a new design. On top of that comes the system
-        margin, insurance the team holds as a whole: twenty percent at this first review, the
-        mission definition review, MDR, as in Table 8.3 of the textbook.
+        The Budget tab shows the mass budget. The bar represents the current best estimate of
+        the mass. The hatched section is the maturity margin: each component carries a margin
+        that reflects how well it is known, ranging from a catalogue item with flight heritage
+        to a new design. In addition, there is a system margin held by the team as a whole, set
+        at twenty percent at the first review, the mission definition review, or MDR, as given
+        in Table 8.3 of the textbook.
       fr: >-
-        Ouvrez l’onglet Bilans. La barre est la meilleure estimation actuelle de la masse. La
-        partie hachurée est la marge de maturité : chaque composant en porte une qui dépend de
-        sa connaissance, d’un article de catalogue déjà en vol à une conception nouvelle.
-        Par-dessus s’ajoute la marge système, une assurance que l’équipe détient dans son
-        ensemble : vingt pour cent à cette première revue, la revue de définition de la
-        mission, la MDR, comme dans le tableau 8.3 du manuel.
+        L’onglet Bilans présente le bilan de masse. La barre représente la meilleure estimation
+        actuelle de la masse. La partie hachurée correspond à la marge de maturité : chaque
+        composant porte une marge qui reflète son degré de connaissance, d’un article de
+        catalogue ayant déjà volé à une conception nouvelle. S’y ajoute une marge système
+        détenue par l’équipe dans son ensemble, fixée à vingt pour cent lors de la première
+        revue, la revue de définition de la mission, ou MDR, conformément au tableau 8.3 du
+        manuel.
     do:
       - click: {role: tab, name: Budget}
       - wait: 1.0
@@ -68,15 +70,16 @@ steps:
     title: {en: "Allocations", fr: "Les allocations"}
     say:
       en: >-
-        An estimate says what the design weighs now. An allocation says what each element is
-        allowed to weigh. Allocate here gives every unallocated element its estimate plus ten
-        percent, a starting point the team then negotiates. When an estimate grows past its
-        allocation, the bar shows it at once.
+        An estimate states the current mass of the design, whereas an allocation states the mass
+        that each element is permitted. The Allocate function assigns each unallocated element
+        its estimate plus ten percent, which the team then uses as the starting point for
+        negotiation. When an estimate exceeds its allocation, the bar shows this immediately.
       fr: >-
-        Une estimation dit ce que pèse la conception aujourd’hui. Une allocation dit ce que
-        chaque élément a le droit de peser. Allouer ici donne à chaque élément non alloué son
-        estimation plus dix pour cent, un point de départ que l’équipe négocie ensuite. Quand
-        une estimation dépasse son allocation, la barre le montre aussitôt.
+        Une estimation indique la masse actuelle de la conception, alors qu’une allocation
+        indique la masse autorisée pour chaque élément. La fonction Allouer attribue à chaque
+        élément non alloué son estimation plus dix pour cent, qui sert ensuite de point de
+        départ à la négociation au sein de l’équipe. Lorsqu’une estimation dépasse son
+        allocation, la barre le signale immédiatement.
     do:
       - click: {css: "main button:has-text('+10 %')"}
       - wait: 1.5
@@ -86,18 +89,18 @@ steps:
     title: {en: "Power: orbit average and peak", fr: "Puissance : moyenne orbitale et crête"}
     say:
       en: >-
-        The Power view adds two numbers that matter: the orbit average, the power averaged over
-        sunlight and eclipse, which sets the energy balance, and the peak, which sizes the power
-        distribution. The solar array itself is sized on the worst sunlit mode. All of them
-        come from the operating modes. Record why you chose those modes and that margin: that
-        is decision D two point four, Power.
+        The Power view adds two important values: the orbit-average power, averaged over
+        sunlight and eclipse, which determines the energy balance, and the peak power, which
+        sizes the power distribution. The solar array itself is sized on the most demanding
+        sunlit mode. All these values are derived from the operating modes. The team records the
+        reasons for the choice of modes and margin as decision D two point four, Power.
       fr: >-
-        La vue Puissance ajoute deux chiffres essentiels : la moyenne orbitale, la puissance
-        moyennée sur l’ensoleillement et l’éclipse, qui fixe le bilan d’énergie, et la crête, qui
-        dimensionne la distribution de puissance. Le générateur solaire, lui, se dimensionne sur
-        le mode ensoleillé le plus exigeant. Tous viennent des modes de fonctionnement. Consignez
-        pourquoi vous avez choisi ces modes et cette marge : c’est la décision D deux point
-        quatre, Puissance.
+        La vue Puissance ajoute deux valeurs importantes : la puissance moyenne sur l’orbite,
+        moyennée sur l’ensoleillement et l’éclipse, qui détermine le bilan d’énergie, et la
+        puissance de crête, qui dimensionne la distribution de puissance. Le générateur solaire,
+        lui, est dimensionné sur le mode ensoleillé le plus exigeant. Toutes ces valeurs
+        découlent des modes de fonctionnement. L’équipe consigne les raisons du choix des modes
+        et de la marge dans la décision D deux point quatre, Puissance.
     do:
       - click: {role: tab, name: Power, exact: true}
       - wait: 1.2
@@ -108,16 +111,16 @@ steps:
     title: {en: "Power by mode", fr: "Puissance par mode"}
     say:
       en: >-
-        The Modes tab shows where those numbers come from. Power by mode lists every unit in
-        every mode, with its power and its state: off, standby, on or peak. The imager draws
-        sixteen watts only in imaging; the transceiver peaks at nineteen watts in downlink.
-        This table is where the power budget comes from.
+        The Modes tab shows the origin of these values. The power-by-mode table lists every unit
+        in every mode, with its power and its state: off, standby, on or peak. For example, the
+        imager draws sixteen watts only in imaging mode, and the transceiver reaches a peak of
+        nineteen watts during downlink. The power budget is derived from this table.
       fr: >-
-        L’onglet Modes montre d’où viennent ces chiffres. Puissance par mode liste chaque unité
-        dans chaque mode, avec sa puissance et son état : éteinte, en veille, allumée ou en
-        crête. L’imageur ne consomme seize watts qu’en imagerie ; l’émetteur-récepteur monte à
-        dix-neuf watts en liaison descendante. C’est de ce tableau que vient le bilan de
-        puissance.
+        L’onglet Modes montre l’origine de ces valeurs. Le tableau de puissance par mode liste
+        chaque unité dans chaque mode, avec sa puissance et son état : éteinte, en veille,
+        allumée ou en crête. Par exemple, l’imageur ne consomme seize watts qu’en mode imagerie,
+        et l’émetteur-récepteur atteint une crête de dix-neuf watts en liaison descendante. Le
+        bilan de puissance est établi à partir de ce tableau.
     do:
       - click: {role: tab, name: Modes, exact: true}
       - wait: 1.0
@@ -129,18 +132,20 @@ steps:
     title: {en: "Energy per orbit", fr: "Énergie par orbite"}
     say:
       en: >-
-        Energy per orbit closes the loop. For each mode, it compares the load, with margins,
-        to what the array generates in that mode's attitude, the way the spacecraft points, and asks one question: could the
-        spacecraft stay in this mode for a whole orbit? Nominal can. Imaging and downlink
-        cannot: they drain the battery. That is fine for a few minutes, not for an orbit. This
-        check is Part E of your worksheet: the budget health check.
+        The energy-per-orbit view completes the analysis. For each mode, it compares the load,
+        including margins, with the power the array generates in the attitude used in that mode,
+        and determines whether the spacecraft could remain in that mode for a complete orbit.
+        The nominal mode is sustainable. The imaging and downlink modes are not, because they
+        discharge the battery; this is acceptable for a few minutes but not for a full orbit.
+        This check corresponds to Part E of the worksheet, the budget health check.
       fr: >-
-        L’énergie par orbite boucle la boucle. Pour chaque mode, elle compare la charge, marges
-        comprises, à ce que produit le générateur dans l’attitude de ce mode, c’est-à-dire son orientation, et pose une
-        question : le satellite pourrait-il rester dans ce mode pendant toute une orbite ? En
-        nominal, oui. En imagerie et en liaison descendante, non : la batterie se vide. C’est
-        acceptable quelques minutes, pas pendant une orbite. Cette vérification est la partie E
-        de votre fiche : le contrôle de l’état des bilans.
+        La vue d’énergie par orbite complète l’analyse. Pour chaque mode, elle compare la
+        charge, marges comprises, à la puissance produite par le générateur dans l’attitude
+        propre à ce mode, et détermine si le satellite pourrait rester dans ce mode pendant une
+        orbite complète. Le mode nominal est tenable. Les modes imagerie et liaison descendante
+        ne le sont pas, car ils déchargent la batterie ; c’est acceptable pendant quelques
+        minutes, mais pas pendant une orbite entière. Cette vérification correspond à la partie
+        E de la fiche, le contrôle de l’état des bilans.
     do:
       - click: {role: tab, name: Energy per orbit}
       - wait: 1.5

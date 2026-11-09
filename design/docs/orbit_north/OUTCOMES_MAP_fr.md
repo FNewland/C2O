@@ -210,7 +210,7 @@ L’étiquette du 7 nov. présente SYS 5186 comme introduction/développement se
 | V-OPS-01 NOM-001 : la fiche de procédure est votre cahier de travail | LO 6 | 1.4 Décision en situation d’incertitude | step1 (multichoice) → 1.4 ; nogo (truefalse) → 1.4 ; workbook (reflect) → 1.4, 6.2† |
 | V-OPS-02 LEOP-001 : premier contact et démarrage de l’OBC | LO 6 | 1.4 Décision en situation d’incertitude | uplink (multichoice) → 1.4 ; boot (truefalse) → 1.4 ; card (reflect) → 1.4, 6.2† |
 | V-OPS-03 De l’alarme à la fiche d’anomalie | LO 6 | 1.4 Décision en situation d’incertitude, 4.4† Communication et animation | read (multichoice) → 1.4, 4.4† ; ticket (reflect) → 1.4, 4.4†, 6.2† |
-| V-OPS-04 Mode balise coupé, puis le premier bilan de santé | LO 6 | 1.4 Décision en situation d’incertitude | refused (multichoice) → 1.4 ; eps (truefalse) → 1.4 ; record (reflect) → 1.4, 6.2† |
+| V-OPS-04 Sortie du mode balise et premier bilan de santé | LO 6 | 1.4 Décision en situation d’incertitude | refused (multichoice) → 1.4 ; eps (truefalse) → 1.4 ; record (reflect) → 1.4, 6.2† |
 | V-OPS-05 LEOP-004 : ailes solaires et bilan d’énergie | LO 6 | 3.1 Gestion des marges et des bilans, 2.3† Jumeau numérique et simulation | before (multichoice) → 3.1, 2.3† ; after (truefalse) → 3.1, 2.3† |
 | V-OPS-06 LEOP-007 : alimenter le SCAO, puis DETUMBLE | LO 6 | 1.4 Décision en situation d’incertitude | legs (multichoice) → 1.4 ; detumble (truefalse) → 1.4 |
 | V-OPS-07 LEOP-005 : acquisition du Soleil, sans toucher | LO 6 | 2.3† Jumeau numérique et simulation | rates (multichoice) → 2.3† ; handover (truefalse) → 2.3† ; hold (reflect) → 2.3†, 6.2† |

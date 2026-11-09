@@ -29,16 +29,18 @@ steps:
     title: {en: "The risk loop", fr: "La boucle des risques"}
     say:
       en: >-
-        Risk management is a loop that runs for the whole project. Identify what can go wrong.
-        Assess how likely it is and how bad it would be. Mitigate, by reducing one or the other.
-        Then monitor: is the risk rising, falling, or has its trigger fired? The risk register
-        holds one line per risk, each with an owner and a trend.
+        Risk management is a continuous process that runs throughout the project. Risks are
+        identified, then assessed for their likelihood and their consequence, and then mitigated
+        by reducing one or the other. They are then monitored to establish whether each risk is
+        increasing or decreasing, or whether its trigger has occurred. The risk register
+        contains one line per risk, each with an owner and a trend.
       fr: >-
-        La gestion des risques est une boucle qui tourne pendant tout le projet. Identifier ce
-        qui peut mal tourner. Évaluer sa probabilité et sa gravité. Atténuer, en réduisant l’une
-        ou l’autre. Puis surveiller : le risque monte-t-il, baisse-t-il, son déclencheur s’est-il
-        produit ? Le registre des risques tient une ligne par risque, chacune avec un responsable
-        et une tendance.
+        La gestion des risques est un processus continu qui se poursuit pendant tout le projet.
+        Les risques sont identifiés, puis évalués selon leur probabilité et leur conséquence,
+        puis atténués en réduisant l’une ou l’autre. Ils sont ensuite suivis afin de déterminer
+        si chaque risque augmente ou diminue, ou si son événement déclencheur s’est produit. Le
+        registre des risques contient une ligne par risque, chacune avec un responsable et une
+        tendance.
     do:
       - js: "EX.play('process', ${say})"
 
@@ -46,18 +48,21 @@ steps:
     title: {en: "Scoring a risk", fr: "Noter un risque"}
     say:
       en: >-
-        Score each risk from one to five for likelihood and for consequence, and multiply. Up to
-        four is low: accept it and watch. Five to nine, mitigate if it is worth it. Ten to fifteen,
-        mitigate. Sixteen and above means redesign. An antenna that might not deploy scores three
-        times four, twelve: high. A second, independent release mechanism, tested a hundred times
-        on the ground, drops the likelihood to one, and the score to four.
+        Each risk is scored from one to five for likelihood and for consequence, and the two
+        scores are multiplied. A score of four or less is low, and the risk is accepted and
+        monitored. Between five and nine, the risk is mitigated if the cost is justified;
+        between ten and fifteen, it must be mitigated; and at sixteen or above, a redesign is
+        required. An antenna that might fail to deploy scores three times four, twelve, which is
+        high. A second, independent release mechanism, tested a hundred times on the ground,
+        reduces the likelihood to one and the score to four.
       fr: >-
-        Notez chaque risque de un à cinq en probabilité et en conséquence, et multipliez. Jusqu’à
-        quatre, c’est faible : on accepte et on surveille. De cinq à neuf, on atténue si cela en
-        vaut la peine. De dix à quinze, on atténue. Seize et plus, il faut reconcevoir. Une
-        antenne qui pourrait ne pas se déployer obtient trois fois quatre, douze : élevé. Un
-        second mécanisme de libération indépendant, testé cent fois au sol, ramène la probabilité
-        à un, et le score à quatre.
+        Chaque risque est noté de un à cinq pour la probabilité et pour la conséquence, et les
+        deux notes sont multipliées. Un score de quatre ou moins est faible : le risque est
+        accepté et suivi. Entre cinq et neuf, le risque est atténué si le coût est justifié ;
+        entre dix et quinze, il doit être atténué ; à partir de seize, une reconception est
+        nécessaire. Une antenne susceptible de ne pas se déployer obtient trois fois quatre,
+        soit douze, ce qui est élevé. Un second mécanisme de libération indépendant, testé cent
+        fois au sol, ramène la probabilité à un et le score à quatre.
     do:
       - js: "EX.play('matrix', ${say})"
     question:
@@ -78,20 +83,24 @@ steps:
     title: {en: "One line of an FMECA", fr: "Une ligne d’AMDEC"}
     say:
       en: >-
-        A failure modes, effects and criticality analysis takes each item in turn. The antenna's
-        function is to radiate the link. Its failure mode: it does not deploy, because the
-        mechanism jams. The effect: no commanding and no telemetry. Severity five. How would we
-        know? No beacon is heard. What saves us? A second release, burn wire and spring. Without
-        it, this is criticality one, a single-point failure. And that detection column becomes
-        the operators' telemetry, limits and automatic responses.
+        A failure modes, effects and criticality analysis, or FMECA, examines each item in turn.
+        The function of the antenna is to radiate the communication link. Its failure mode is
+        non-deployment, caused by a jammed mechanism, and the effect is the loss of both
+        commanding and telemetry, with a severity of five. Detection would be the absence of the
+        beacon. The compensating provision is a second release mechanism, a burn wire and
+        spring. Without it, this would be criticality one, a single-point failure. The detection
+        column of the FMECA later becomes the telemetry, limits and automatic responses used by
+        the operators.
       fr: >-
         Une analyse des modes de défaillance, de leurs effets et de leur criticité, l’AMDEC,
-        reprend chaque élément tour à tour. La fonction de l’antenne : rayonner la liaison. Son
-        mode de défaillance : elle ne se déploie pas, car le mécanisme se coince. L’effet : ni
-        commande ni télémesure. Gravité cinq. Comment le saurait-on ? Aucune balise n’est reçue.
-        Qu’est-ce qui nous sauve ? Une seconde libération, fil à brûler et ressort. Sans elle,
-        c’est une criticité un, un point de défaillance unique. Et cette colonne de détection
-        devient la télémesure, les limites et les réponses automatiques des opérateurs.
+        examine chaque élément tour à tour. La fonction de l’antenne est de rayonner la liaison
+        de communication. Son mode de défaillance est l’absence de déploiement, due à un
+        mécanisme coincé, et l’effet est la perte de la commande et de la télémesure, avec une
+        gravité de cinq. La détection se ferait par l’absence de balise. La disposition
+        compensatoire est un second mécanisme de libération, un fil à brûler et un ressort. Sans
+        lui, la criticité serait de un, un point de défaillance unique. La colonne de détection
+        de l’AMDEC devient ensuite la télémesure, les limites et les réponses automatiques
+        utilisées par les opérateurs.
     do:
       - js: "EX.play('fmeca', ${say})"
 
@@ -99,18 +108,20 @@ steps:
     title: {en: "Single-point failures", fr: "Points de défaillance unique"}
     say:
       en: >-
-        Every CubeSat has single points of failure: the on-board computer, the battery, the
-        antenna and array deployments, the power board. The job is to know them and protect them:
-        a watchdog and an autonomous safe mode for the computer, cell monitoring and shallow
-        discharge for the battery, two release mechanisms for each deployment. Some, like the
-        power board, are accepted, with the justification written down.
+        Every CubeSat has single points of failure, typically the on-board computer, the
+        battery, the antenna and array deployments, and the power board. The design task is to
+        identify them and to protect them: a watchdog and an autonomous safe mode for the
+        computer, cell monitoring and a limited depth of discharge for the battery, and two
+        release mechanisms for each deployment. Some single points of failure, such as the power
+        board, are accepted, provided the justification is recorded.
       fr: >-
-        Tout CubeSat a des points de défaillance unique : l’ordinateur de bord, la batterie, les
-        déploiements d’antenne et de panneaux, la carte d’énergie. Le travail est de les
-        connaître et de les protéger : un chien de garde et un mode sûr autonome pour
-        l’ordinateur, la surveillance des cellules et une décharge peu profonde pour la batterie,
-        deux mécanismes de libération pour chaque déploiement. Certains, comme la carte
-        d’énergie, sont acceptés, avec la justification consignée par écrit.
+        Tout CubeSat comporte des points de défaillance uniques, en général l’ordinateur de
+        bord, la batterie, les déploiements de l’antenne et des panneaux, et la carte
+        d’alimentation. La tâche de conception consiste à les identifier et à les protéger : un
+        chien de garde et un mode sûr autonome pour l’ordinateur, la surveillance des cellules
+        et une profondeur de décharge limitée pour la batterie, et deux mécanismes de libération
+        pour chaque déploiement. Certains points de défaillance uniques, comme la carte
+        d’alimentation, sont acceptés, à condition que la justification soit consignée.
     do:
       - js: "EX.play('spf', ${say})"
 
@@ -118,18 +129,20 @@ steps:
     title: {en: "What a spare buys", fr: "Ce qu’apporte une rechange"}
     say:
       en: >-
-        Redundancy is where reliability numbers pay off. Take wheels that each have a
-        ninety-eight percent chance of lasting two years. With three wheels, all must work:
-        ninety-four percent. Add a fourth, in a pyramid where any three can control all three
-        axes, and the chance rises to ninety-nine point eight percent. EOSAT-1 flies four wheels
-        and can fine-point on three.
+        Redundancy is where reliability calculations have the greatest effect. Consider reaction
+        wheels that each have a ninety-eight percent probability of operating for two years.
+        With three wheels, all three must work, giving an overall probability of ninety-four
+        percent. Adding a fourth wheel in a pyramid configuration, in which any three wheels can
+        control all three axes, raises the probability to ninety-nine point eight percent.
+        EOSAT-1 carries four wheels and can maintain fine pointing with three.
       fr: >-
-        C’est avec la redondance que les chiffres de fiabilité paient. Prenez des roues qui ont
-        chacune quatre-vingt-dix-huit pour cent de chances de durer deux ans. Avec trois roues,
-        toutes doivent marcher : quatre-vingt-quatorze pour cent. Ajoutez-en une quatrième, en
-        pyramide, où trois roues quelconques contrôlent les trois axes, et la probabilité monte à
-        quatre-vingt-dix-neuf virgule huit pour cent. EOSAT-1 emporte quatre roues et peut
-        pointer finement sur trois.
+        C’est dans la redondance que les calculs de fiabilité ont le plus d’effet. Prenons des
+        roues de réaction dont chacune a une probabilité de quatre-vingt-dix-huit pour cent de
+        fonctionner pendant deux ans. Avec trois roues, les trois doivent fonctionner, ce qui
+        donne une probabilité globale de quatre-vingt-quatorze pour cent. L’ajout d’une
+        quatrième roue en configuration pyramidale, où trois roues quelconques peuvent contrôler
+        les trois axes, porte la probabilité à quatre-vingt-dix-neuf virgule huit pour cent.
+        EOSAT-1 emporte quatre roues et peut maintenir un pointage fin avec trois.
     do:
       - js: "EX.play('redundancy', ${say})"
     question:

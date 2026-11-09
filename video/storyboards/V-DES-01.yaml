@@ -33,17 +33,19 @@ steps:
     title: {en: "The agency", fr: "L’agence"}
     say:
       en: >-
-        Every Canadian space mission sits in a landscape. At its centre is the Canadian Space
-        Agency, the CSA, in Saint-Hubert, Quebec. It sets space policy, runs the national
-        programmes and funds much of the work. Canada has no launcher of its own, so it works
-        through international partners: the space station, the Artemis lunar programme, and
-        data agreements with the European Space Agency.
+        Every Canadian space mission operates within a wider national context. At its centre is
+        the Canadian Space Agency, or CSA, based in Saint-Hubert, Quebec. The agency sets space
+        policy, manages the national programmes and funds a large share of the work. Canada does
+        not have its own launch vehicle, so it works through international partnerships,
+        including the International Space Station, the Artemis lunar programme and data
+        agreements with the European Space Agency.
       fr: >-
-        Toute mission spatiale canadienne s’inscrit dans un paysage. Au centre se trouve
-        l’Agence spatiale canadienne, l’ASC, à Saint-Hubert, au Québec. Elle fixe la politique
-        spatiale, mène les programmes nationaux et finance une grande partie du travail. Le
-        Canada n’a pas de lanceur à lui : il travaille avec des partenaires internationaux, la
-        station spatiale, le programme lunaire Artemis, et des accords de données avec l’Agence
+        Toute mission spatiale canadienne s’inscrit dans un contexte national plus large. Au
+        centre se trouve l’Agence spatiale canadienne, l’ASC, située à Saint-Hubert, au Québec.
+        L’Agence définit la politique spatiale, gère les programmes nationaux et finance une
+        grande partie des travaux. Le Canada ne dispose pas de son propre lanceur : il travaille
+        donc dans le cadre de partenariats internationaux, notamment la Station spatiale
+        internationale, le programme lunaire Artemis et des accords de données avec l’Agence
         spatiale européenne.
     do:
       - js: "EX.play('agency', ${say})"
@@ -52,19 +54,20 @@ steps:
     title: {en: "The industry", fr: "L’industrie"}
     say:
       en: >-
-        The industry comes in tiers. Prime contractors integrate whole systems and run
-        constellations. Subsystem suppliers build the units. Small companies and start-ups bring
-        niche technology, data and services. And universities do research and train the people
-        who will work there, often by building small satellites. In 2024 the sector earned about
-        five billion dollars and supported more than twenty-eight thousand jobs.
+        The Canadian space industry is organised in tiers. Prime contractors integrate complete
+        systems and operate constellations. Subsystem suppliers build the units. Small companies
+        and start-ups provide specialised technology, data and services. Universities carry out
+        research and train the future workforce, often by building small satellites. In 2024 the
+        sector generated revenue of about five billion dollars and supported more than
+        twenty-eight thousand jobs.
       fr: >-
-        L’industrie s’organise en niveaux. Les maîtres d’œuvre intègrent des systèmes complets
-        et exploitent des constellations. Les fournisseurs de sous-systèmes construisent les
-        équipements. Les petites entreprises et les jeunes pousses apportent des technologies de
-        niche, des données et des services. Et les universités font de la recherche et forment
-        ceux qui y travailleront, souvent en construisant de petits satellites. En 2024, le
-        secteur a généré environ cinq milliards de dollars et soutenu plus de vingt-huit mille
-        emplois.
+        L’industrie spatiale canadienne s’organise en niveaux. Les maîtres d’œuvre intègrent des
+        systèmes complets et exploitent des constellations. Les fournisseurs de sous-systèmes
+        construisent les équipements. Les petites entreprises et les jeunes pousses fournissent
+        des technologies spécialisées, des données et des services. Les universités mènent des
+        recherches et forment la main-d’œuvre de demain, souvent en construisant de petits
+        satellites. En 2024, le secteur a généré environ cinq milliards de dollars de revenus et
+        soutenu plus de vingt-huit mille emplois.
     do:
       - js: "EX.play('industry', ${say})"
 
@@ -72,18 +75,20 @@ steps:
     title: {en: "Niche excellence", fr: "L’excellence de niche"}
     say:
       en: >-
-        Canada does not try to do everything. It builds world-class capability in a few
-        domains, space robotics, radar Earth observation, instruments and small satellites, and
-        trades those contributions for access to much larger programmes. The robotic arms on the
-        space station are the classic example. For your mission, it means partners and suppliers
-        in exactly those fields are close at hand.
+        Canada does not attempt to cover every area of space activity. Instead, it has developed
+        world-class capability in a small number of fields, namely space robotics, radar Earth
+        observation, instruments and small satellites, and it contributes these capabilities in
+        exchange for access to much larger programmes. The robotic arms on the International
+        Space Station are the best-known example. For a Canadian mission, this means that
+        partners and suppliers in these fields are readily available.
       fr: >-
-        Le Canada ne cherche pas à tout faire. Il développe une capacité de premier plan dans
-        quelques domaines, la robotique spatiale, l’observation radar de la Terre, les
-        instruments et les petits satellites, et échange ces contributions contre l’accès à des
-        programmes bien plus grands. Les bras robotiques de la station spatiale en sont l’exemple
-        type. Pour votre mission, cela veut dire des partenaires et des fournisseurs tout proches,
-        justement dans ces domaines.
+        Le Canada ne cherche pas à couvrir tous les domaines de l’activité spatiale. Il a plutôt
+        développé une capacité de premier plan dans un petit nombre de domaines, à savoir la
+        robotique spatiale, l’observation radar de la Terre, les instruments et les petits
+        satellites, et il apporte ces capacités en échange d’un accès à des programmes bien plus
+        importants. Les bras robotiques de la Station spatiale internationale en sont l’exemple
+        le plus connu. Pour une mission canadienne, cela signifie que des partenaires et des
+        fournisseurs dans ces domaines sont facilement accessibles.
     do:
       - js: "EX.play('niche', ${say})"
 
@@ -91,18 +96,19 @@ steps:
     title: {en: "Where your mission fits", fr: "La place de votre mission"}
     say:
       en: >-
-        Now put a university CubeSat in the middle. It buys units and services from the
-        industry, and its money comes through a few routes: Canadian Space Agency grants and
-        technology development programmes, research council and infrastructure funding, and,
-        for companies, the National Research Council's support for small firms. Each route has
-        its own calendar, and that calendar shapes your schedule.
+        Consider a university CubeSat within this landscape. It buys units and services from
+        industry, and it is funded through a small number of routes: Canadian Space Agency
+        grants and technology development programmes, research council and infrastructure
+        funding, and, for companies, the National Research Council's support for small
+        businesses. Each funding route has its own calendar, which in turn determines the
+        project schedule.
       fr: >-
-        Placez maintenant un CubeSat universitaire au milieu. Il achète équipements et services à
-        l’industrie, et son financement passe par quelques voies : les subventions et les
-        programmes de développement technologique de l’Agence spatiale canadienne, les fonds des
-        conseils de recherche et d’infrastructure, et, pour les entreprises, l’aide du Conseil
-        national de recherches aux petites entreprises. Chaque voie a son calendrier, et ce
-        calendrier façonne le vôtre.
+        Prenons un CubeSat universitaire dans ce paysage. Il achète des équipements et des
+        services à l’industrie, et son financement passe par un petit nombre de voies : les
+        subventions et les programmes de développement technologique de l’Agence spatiale
+        canadienne, les fonds des conseils de recherche et d’infrastructure et, pour les
+        entreprises, l’aide du Conseil national de recherches aux petites entreprises. Chaque
+        voie de financement a son propre calendrier, qui détermine à son tour celui du projet.
     do:
       - js: "EX.play('mission', ${say})"
 
@@ -110,20 +116,23 @@ steps:
     title: {en: "The regulators", fr: "Les organismes de réglementation"}
     say:
       en: >-
-        Canada has no single space act. Your mission meets several regulators, each with its own
-        law. Innovation, Science and Economic Development Canada licenses your radio, and files
-        your frequencies with the International Telecommunication Union. Global Affairs Canada
-        licenses any satellite that images the Earth, and issues export permits. Public Services
-        and Procurement Canada runs the controlled goods program. Start early: spectrum
-        coordination alone can take years.
+        Canada does not have a single space law, so a mission deals with several regulators,
+        each applying its own legislation. Innovation, Science and Economic Development Canada
+        licenses the radio equipment and files the mission's frequencies with the International
+        Telecommunication Union. Global Affairs Canada licenses any satellite that images the
+        Earth and issues export permits. Public Services and Procurement Canada administers the
+        Controlled Goods Program. These processes should be started early, since frequency
+        coordination alone can take several years.
       fr: >-
-        Le Canada n’a pas de loi spatiale unique. Votre mission rencontre plusieurs organismes,
-        chacun avec sa loi. Innovation, Sciences et Développement économique Canada délivre la
-        licence radio et dépose vos fréquences auprès de l’Union internationale des
+        Le Canada n’a pas de loi spatiale unique : une mission traite donc avec plusieurs
+        organismes de réglementation, chacun appliquant sa propre législation. Innovation,
+        Sciences et Développement économique Canada délivre les licences des équipements radio
+        et dépose les fréquences de la mission auprès de l’Union internationale des
         télécommunications. Affaires mondiales Canada délivre la licence de tout satellite qui
-        image la Terre, ainsi que les licences d’exportation. Services publics et
-        Approvisionnement Canada gère le programme des marchandises contrôlées. Commencez tôt :
-        la coordination des fréquences peut à elle seule prendre des années.
+        image la Terre ainsi que les licences d’exportation. Services publics et
+        Approvisionnement Canada administre le Programme des marchandises contrôlées. Ces
+        démarches doivent être engagées tôt, car la coordination des fréquences peut à elle
+        seule prendre plusieurs années.
     do:
       - js: "EX.play('regulators', ${say})"
     question:
@@ -144,18 +153,20 @@ steps:
     title: {en: "Getting to orbit", fr: "Rejoindre l’orbite"}
     say:
       en: >-
-        Last, the ride. Canadian satellites launch abroad, on a foreign vehicle, under that
-        country's rules, and the export permits must be in hand before the spacecraft ships. A
-        Canadian Space Launch Act, which would let Transport Canada license launches from
-        Canadian soil, was introduced in April 2026 and is still before Parliament. Keep an eye
-        on it: it may change the options for your team.
+        The final consideration is the launch. Canadian satellites are launched from other
+        countries, on foreign launch vehicles and under the regulations of the launching state,
+        and the export permits must be obtained before the spacecraft is shipped. A Canadian
+        Space Launch Act, which would allow Transport Canada to license launches from Canadian
+        territory, was introduced in April 2026 and is still before Parliament. Its progress
+        should be followed, as it may change the options available to the team.
       fr: >-
-        Reste le voyage. Les satellites canadiens partent de l’étranger, sur un lanceur étranger,
-        sous les règles de ce pays, et les licences d’exportation doivent être obtenues avant
-        l’expédition du satellite. Une loi canadienne sur les lancements spatiaux, qui
-        permettrait à Transports Canada d’autoriser des lancements depuis le sol canadien, a été
-        déposée en avril 2026 et est toujours devant le Parlement. Suivez-la : elle pourrait
-        changer les options de votre équipe.
+        Le dernier point concerne le lancement. Les satellites canadiens sont lancés depuis
+        d’autres pays, sur des lanceurs étrangers et selon la réglementation de l’État de
+        lancement, et les licences d’exportation doivent être obtenues avant l’expédition du
+        satellite. Une loi canadienne sur les lancements spatiaux, qui permettrait à Transports
+        Canada d’autoriser des lancements depuis le territoire canadien, a été déposée en avril
+        2026 et est toujours à l’étude au Parlement. Il convient d’en suivre l’évolution, car
+        elle pourrait modifier les options offertes à l’équipe.
     do:
       - js: "EX.play('launch', ${say})"
     question:

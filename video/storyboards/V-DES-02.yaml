@@ -29,18 +29,20 @@ steps:
     title: {en: "Why late is expensive", fr: "Pourquoi tard coûte cher"}
     say:
       en: >-
-        For decades spacecraft were designed one discipline after another: the payload team
-        finished and handed over to power, then attitude, then communications, and so on. Each
-        handover hid assumptions. Problems surfaced late, at integration or at a review, and the
-        cost of fixing an error grows roughly tenfold with every phase it survives. An error
-        found in orbit can cost a thousand times what it would have cost at the concept stage.
+        For several decades, spacecraft were designed one discipline at a time: the payload team
+        completed its work and passed it to the power team, then to attitude control, then to
+        communications, and so on. Each handover concealed assumptions. Problems emerged late,
+        during integration or at a review, and the cost of correcting an error increases by
+        roughly a factor of ten in each phase it passes through undetected. An error discovered
+        in orbit can cost a thousand times more than it would have cost at the concept stage.
       fr: >-
-        Pendant des décennies, on a conçu les satellites une discipline après l’autre : l’équipe
-        charge utile terminait et transmettait à l’énergie, puis à l’attitude, puis aux
-        télécommunications, et ainsi de suite. Chaque transmission cachait des hypothèses. Les
-        problèmes apparaissaient tard, à l’intégration ou à une revue, et le coût de correction
-        d’une erreur est multiplié par dix environ à chaque phase qu’elle traverse. Une erreur
-        découverte en orbite peut coûter mille fois ce qu’elle aurait coûté au stade du concept.
+        Pendant plusieurs décennies, les satellites ont été conçus une discipline après l’autre
+        : l’équipe de la charge utile terminait son travail et le transmettait à l’équipe
+        énergie, puis au contrôle d’attitude, puis aux télécommunications, et ainsi de suite.
+        Chaque transmission dissimulait des hypothèses. Les problèmes apparaissaient tard,
+        pendant l’intégration ou lors d’une revue, et le coût de correction d’une erreur est
+        multiplié environ par dix à chaque phase qu’elle traverse sans être détectée. Une erreur
+        découverte en orbite peut coûter mille fois plus qu’au stade du concept.
     do:
       - js: "EX.play('sequential', ${say})"
 
@@ -48,19 +50,21 @@ steps:
     title: {en: "The V and traceability", fr: "Le V et la traçabilité"}
     say:
       en: >-
-        Systems engineering organises the work as a V. Down the left side you decompose: the
-        mission need, then requirements, architecture, subsystems and components. Up the right
-        side you integrate and verify, at the same levels, in reverse. The V is a map, not a
-        timeline: every row on the left has its check on the right. Each requirement names how
-        it will be verified, by analysis, test, inspection or review. That pairing is
+        Systems engineering organises the work in the form of a V. The left side of the V is
+        decomposition: the mission need, then the requirements, the architecture, the subsystems
+        and the components. The right side is integration and verification, at the same levels
+        in reverse order. The V is a map rather than a timeline, since each level on the left
+        has a corresponding verification on the right. Each requirement specifies how it will be
+        verified, whether by analysis, test, inspection or review, and this pairing is known as
         traceability.
       fr: >-
-        L’ingénierie système organise le travail en V. En descendant à gauche, on décompose : le
-        besoin de mission, puis les exigences, l’architecture, les sous-systèmes et les
-        composants. En remontant à droite, on intègre et on vérifie, aux mêmes niveaux, dans
-        l’ordre inverse. Le V est une carte, pas un calendrier : chaque ligne de gauche a sa
-        vérification à droite. Chaque exigence dit comment elle sera vérifiée, par analyse,
-        essai, inspection ou revue. Ce couplage, c’est la traçabilité.
+        L’ingénierie système organise le travail sous la forme d’un V. La branche gauche du V
+        correspond à la décomposition : le besoin de mission, puis les exigences,
+        l’architecture, les sous-systèmes et les composants. La branche droite correspond à
+        l’intégration et à la vérification, aux mêmes niveaux, dans l’ordre inverse. Le V est
+        une carte plutôt qu’un calendrier, car chaque niveau de gauche a sa vérification
+        correspondante à droite. Chaque exigence précise comment elle sera vérifiée, par
+        analyse, essai, inspection ou revue, et ce couplage s’appelle la traçabilité.
     do:
       - js: "EX.play('vee', ${say})"
     question:
@@ -81,20 +85,22 @@ steps:
     title: {en: "Phases and review gates", fr: "Phases et revues"}
     say:
       en: >-
-        In time, a mission moves through phases. In the European standards, from the European
-        Cooperation for Space Standardization, the ECSS, Phase zero
-        defines the need, A tests feasibility, B and C define the design in more and more detail,
-        D builds and qualifies it, E operates it and F disposes of it. Each phase ends at a review
-        gate, such as the mission definition review, MDR, the preliminary design review, PDR, or
-        the critical design review, CDR. There, a board decides: go on, or not yet.
+        Over time, a mission progresses through a series of phases. In the standards of the
+        European Cooperation for Space Standardization, or ECSS, Phase zero defines the need,
+        Phase A assesses feasibility, Phases B and C define the design in increasing detail,
+        Phase D covers manufacture and qualification, Phase E is operations and Phase F is
+        disposal. Each phase ends at a review, such as the mission definition review, or MDR,
+        the preliminary design review, or PDR, and the critical design review, or CDR. At each
+        review, a board decides whether the project may proceed.
       fr: >-
-        Dans le temps, une mission traverse des phases. Dans les normes européennes de la
-        Coopération européenne pour la normalisation spatiale, l’ECSS, la
-        phase zéro définit le besoin, A étudie la faisabilité, B et C définissent la conception de
-        plus en plus finement, D la fabrique et la qualifie, E l’exploite et F la retire. Chaque
-        phase se termine par une revue, comme la revue de définition de la mission, la MDR, la
-        revue de conception préliminaire, la PDR, ou la revue critique de conception, la CDR. Un
-        comité y décide : on continue, ou pas encore.
+        Au fil du temps, une mission franchit une série de phases. Dans les normes de la
+        Coopération européenne pour la normalisation spatiale, l’ECSS, la phase zéro définit le
+        besoin, la phase A évalue la faisabilité, les phases B et C définissent la conception de
+        façon de plus en plus détaillée, la phase D couvre la fabrication et la qualification,
+        la phase E l’exploitation et la phase F le retrait de service. Chaque phase se termine
+        par une revue, comme la revue de définition de la mission, la MDR, la revue de
+        conception préliminaire, la PDR, et la revue critique de conception, la CDR. À chaque
+        revue, un comité décide si le projet peut se poursuivre.
     do:
       - js: "EX.play('phases', ${say})"
 
@@ -102,18 +108,20 @@ steps:
     title: {en: "Margins shrink as the design matures", fr: "Les marges diminuent quand la conception mûrit"}
     say:
       en: >-
-        Early on, nobody knows the masses and powers well, so the team holds a system margin on
-        top of every estimate: twenty percent in the first phases, fifteen in Phase B, ten at the
-        critical design review, five in production. As the design matures and estimates become
-        measurements, the margin is released. A budget that only closes by eating next phase's
-        margin is a warning, not a pass.
+        In the early phases, masses and power consumption are not known accurately, so the team
+        holds a system margin in addition to every estimate: twenty percent in the first phases,
+        fifteen percent in Phase B, ten percent at the critical design review and five percent
+        during production. As the design matures and estimates are replaced by measurements, the
+        margin is released. A budget that closes only by using the margin intended for the next
+        phase should be treated as a warning, not as a pass.
       fr: >-
-        Au début, personne ne connaît bien les masses ni les puissances : l’équipe garde donc une
-        marge système au-dessus de chaque estimation, vingt pour cent dans les premières phases,
-        quinze en phase B, dix à la revue critique de conception, cinq en production. À mesure
-        que la conception mûrit et que les estimations deviennent des mesures, la marge est
-        libérée. Un bilan qui ne se ferme qu’en mangeant la marge de la phase suivante est un
-        avertissement, pas une réussite.
+        Dans les premières phases, les masses et les puissances ne sont pas connues avec
+        précision : l’équipe conserve donc une marge système en plus de chaque estimation, vingt
+        pour cent dans les premières phases, quinze pour cent en phase B, dix pour cent à la
+        revue critique de conception et cinq pour cent pendant la production. À mesure que la
+        conception mûrit et que les mesures remplacent les estimations, la marge est libérée. Un
+        bilan qui ne se ferme qu’en utilisant la marge prévue pour la phase suivante doit être
+        considéré comme un avertissement, et non comme une réussite.
     do:
       - js: "EX.play('margins', ${say})"
 
@@ -121,17 +129,19 @@ steps:
     title: {en: "Concurrent design", fr: "La conception concourante"}
     say:
       en: >-
-        Concurrent design is the answer to the sequential problem. Every discipline works at the
-        same time on one shared model, and each parameter is owned by one position. When power
-        changes the solar array, structures sees the mass at once; when a budget breaks, the
-        conflict is flagged straight away and the systems engineer arbitrates. That is how
-        SpaceCDF works, and how your team will design its mission.
+        Concurrent design addresses the problems of the sequential approach. All disciplines
+        work at the same time on a single shared model, and each parameter is owned by one
+        position. When the power engineer changes the solar array, the structures engineer sees
+        the effect on mass immediately, and when a budget is exceeded, the conflict is flagged
+        at once and resolved by the systems engineer. This is the approach used in SpaceCDF, and
+        the one each team will follow to design its mission.
       fr: >-
-        La conception concourante répond au problème séquentiel. Toutes les disciplines
-        travaillent en même temps sur un seul modèle partagé, et chaque paramètre appartient à un
-        poste. Quand l’énergie modifie le générateur solaire, la structure en voit aussitôt la
-        masse ; quand un bilan casse, le conflit est signalé tout de suite et l’ingénieur système
-        arbitre. C’est ainsi que fonctionne SpaceCDF, et ainsi que votre équipe concevra sa
+        La conception concourante répond aux problèmes de l’approche séquentielle. Toutes les
+        disciplines travaillent en même temps sur un seul modèle partagé, et chaque paramètre
+        appartient à un poste. Lorsque l’ingénieur énergie modifie le générateur solaire,
+        l’ingénieur structure en voit immédiatement l’effet sur la masse, et lorsqu’un bilan est
+        dépassé, le conflit est signalé aussitôt et arbitré par l’ingénieur système. C’est
+        l’approche utilisée dans SpaceCDF, et celle que chaque équipe suivra pour concevoir sa
         mission.
     do:
       - js: "EX.play('concurrent', ${say})"

@@ -6,11 +6,11 @@ id: V-OPS-04
 week: 5
 audience: all
 title:
-  en: "Beacon mode off, then the first health check"
-  fr: "Mode balise coupé, puis le premier bilan de santé"
+  en: "Leaving beacon mode and the first health check"
+  fr: "Sortie du mode balise et premier bilan de santé"
 summary:
-  en: "Finish LEOP-001 by clearing beacon mode and moving to the LOW rate, then run LEOP-002: request each housekeeping report, read it against the card, and confirm that what should be dark is dark."
-  fr: "Terminer LEOP-001 en levant le mode balise et en passant au débit LOW, puis dérouler LEOP-002 : demander chaque rapport de servitude, le lire par rapport à la fiche, et confirmer que ce qui doit être éteint l’est."
+  en: "This video completes LEOP-001 by clearing beacon mode and changing to the LOW data rate. It then runs LEOP-002, in which each housekeeping report is requested and read against the procedure card, and the operator confirms that the units which should be off are off."
+  fr: "Cette vidéo termine LEOP-001 en levant le mode balise et en passant au débit LOW. Elle déroule ensuite LEOP-002 : chaque rapport de servitude est demandé et lu par rapport à la fiche de procédure, et l’opérateur confirme que les équipements qui doivent être éteints le sont."
 apps:
   mcs: default
 fresh_stack: sim
@@ -44,19 +44,19 @@ steps:
     title: {en: "Why LOW is refused", fr: "Pourquoi LOW est refusé"}
     say:
       en: >-
-        The application is running, but the downlink is still on the SAFE rate, one kilobit
-        per second, the slowest and most robust. Try to select LOW straight away and the
-        spacecraft refuses. Read the failure notice in the event list: it names the gate, the
-        condition that is not met. Beacon mode is still latched, and booting the application
-        does not clear it. That is deliberate: the SAFE rate is the
-        lifeline, and the spacecraft never leaves it by accident.
+        The application software is running, but the downlink is still at the SAFE rate of one
+        kilobit per second, the slowest and most robust rate. If the operator selects LOW at
+        this point, the spacecraft rejects the command. The failure notice in the event list
+        identifies the condition that is not met: beacon mode is still latched, and booting the
+        application does not clear it. This is intentional. The SAFE rate is the link of last
+        resort, and the spacecraft does not leave it unless commanded to.
       fr: >-
-        L’application tourne, mais la liaison descendante est encore au débit SAFE, un kilobit
-        par seconde, le plus lent et le plus robuste. Essayez de choisir LOW tout de suite : le
-        satellite refuse. Lisez l’avis d’échec dans la liste des événements : il nomme la
-        condition qui n’est pas remplie. Le mode balise est
-        toujours verrouillé, et le démarrage de l’application ne le lève pas. C’est voulu : le
-        débit SAFE est la ligne de vie, et le satellite ne le quitte jamais par accident.
+        Le logiciel applicatif est en marche, mais la liaison descendante est encore au débit
+        SAFE d’un kilobit par seconde, le plus lent et le plus robuste. Si l’opérateur
+        sélectionne LOW à ce stade, le satellite rejette la commande. L’avis d’échec dans la
+        liste des événements indique la condition non remplie : le mode balise est toujours
+        verrouillé, et le démarrage de l’application ne le lève pas. C’est voulu. Le débit SAFE
+        est la liaison de dernier recours, et le satellite ne le quitte que sur commande.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: TTC_SET_DATA_RATE}
@@ -87,18 +87,20 @@ steps:
     title: {en: "Step 5a: clear beacon mode, select LOW", fr: "Étape 5a : lever le mode balise, choisir LOW"}
     say:
       en: >-
-        Step 5a of LEOP-001, the first card of the launch and early orbit phase, LEOP, does it
-        in order. First, clear beacon mode. Wait for execution complete. Then
-        select the LOW rate: sixteen kilobits per second, enough for all the routine
-        housekeeping. This time it is accepted and executed. The faster HIGH rate is kept for
-        data dumps, much later, once the antenna is deployed.
+        Step 5a of LEOP-001, the first procedure of the launch and early orbit phase, or LEOP,
+        performs these actions in the correct order. Beacon mode is cleared first, and the
+        operator waits for the execution report. The LOW rate of sixteen kilobits per second,
+        which is sufficient for all routine housekeeping, is then selected. This time the
+        command is accepted and executed. The faster HIGH rate is reserved for data downlinks
+        later in the mission, after the antenna has been deployed.
       fr: >-
-        L’étape 5a de LEOP-001, la première fiche de la phase de lancement et de début
-        d’orbite, la LEOP, le fait dans l’ordre. D’abord, levez le mode balise. Attendez la fin
-        d’exécution. Puis choisissez le débit LOW : seize kilobits par seconde, assez pour
-        toutes les données de servitude courantes. Cette fois, la commande est acceptée et
-        exécutée. Le débit HIGH, plus rapide, est réservé aux vidages de données, bien plus
-        tard, une fois l’antenne déployée.
+        L’étape 5a de LEOP-001, la première procédure de la phase de lancement et de début
+        d’orbite, la LEOP, effectue ces actions dans le bon ordre. Le mode balise est d’abord
+        levé, et l’opérateur attend le rapport d’exécution. Le débit LOW de seize kilobits par
+        seconde, suffisant pour toutes les données de servitude courantes, est ensuite
+        sélectionné. Cette fois, la commande est acceptée et exécutée. Le débit HIGH, plus
+        rapide, est réservé aux transmissions de données plus tard dans la mission, après le
+        déploiement de l’antenne.
     do:
       - select: {target: {css: "#cmd-catalog"}, value: TTC_SET_BEACON_MODE}
       - wait: 0.6
@@ -116,16 +118,18 @@ steps:
     title: {en: "LEOP-002: a card that only observes", fr: "LEOP-002 : une fiche qui ne fait qu’observer"}
     say:
       en: >-
-        Now LEOP-002, the initial health check. It powers nothing and changes no mode: it only
-        looks. It checks the subsystems that are powered at this point, power, thermal, the
-        computer and the radio, and it confirms that everything else is still dark. The values
-        you read now become the mission's baseline, the reference for every later reading.
+        The next procedure is LEOP-002, the initial health check. It does not power any
+        equipment or change any mode; it is a check only. It verifies the subsystems that are
+        powered at this stage, namely power, thermal, the on-board computer and the radio, and
+        confirms that all other equipment is still off. The values recorded now become the
+        baseline for the mission and the reference for all later readings.
       fr: >-
-        Voici LEOP-002, le bilan de santé initial. Elle n’alimente rien et ne change aucun
-        mode : elle se contente de regarder. Elle vérifie les sous-systèmes alimentés à ce
-        stade, l’énergie, le thermique, l’ordinateur et la radio, et confirme que tout le reste
-        est encore éteint. Les valeurs relevées maintenant deviennent la référence de la mission,
-        à laquelle on comparera chaque relevé ultérieur.
+        La procédure suivante est LEOP-002, le bilan de santé initial. Elle ne met aucun
+        équipement sous tension et ne change aucun mode : il s’agit uniquement d’une
+        vérification. Elle contrôle les sous-systèmes alimentés à ce stade, à savoir l’énergie,
+        le thermique, l’ordinateur de bord et la radio, et confirme que tous les autres
+        équipements sont encore éteints. Les valeurs relevées maintenant deviennent la référence
+        de la mission pour tous les relevés ultérieurs.
     do:
       - click: {css: "#rail-proc"}
       - select: {target: {css: "#proc-source"}, value: ops}
@@ -139,18 +143,19 @@ steps:
     title: {en: "Step 1: power housekeeping", fr: "Étape 1 : servitude énergie"}
     say:
       en: >-
-        Step 1 asks for the power housekeeping report, structure identifier one, SID one. Then
-        read it on the power page: the bus voltage between twenty-nine point six and
-        thirty-four point six volts, the battery charge above fifty percent. Power generation
-        may well read zero: if the eclipse flag is set, the spacecraft is in Earth's shadow and
-        that is expected. Record it, and check again after eclipse exit.
+        Step 1 requests the power housekeeping report, structure identifier one, or SID one,
+        which is then read on the power page. The bus voltage should be between twenty-nine
+        point six and thirty-four point six volts, and the battery state of charge above fifty
+        percent. Power generation may read zero: if the eclipse flag is set, the spacecraft is
+        in the Earth's shadow and this is expected. The operator notes it and repeats the check
+        after eclipse exit.
       fr: >-
-        L’étape 1 demande le rapport de servitude énergie, identifiant de structure un, SID un.
-        Lisez-le ensuite sur la page énergie : la tension du bus entre vingt-neuf virgule six et
-        trente-quatre virgule six volts, la charge de la batterie au-dessus de cinquante pour
-        cent. La puissance générée peut fort bien afficher zéro : si l’indicateur d’éclipse est
-        levé, le satellite est dans l’ombre de la Terre, et c’est attendu. Notez-le, et
-        vérifiez de nouveau après la sortie d’éclipse.
+        L’étape 1 demande le rapport de servitude énergie, identifiant de structure un, ou SID
+        un, que l’on lit ensuite sur la page énergie. La tension du bus doit être comprise entre
+        vingt-neuf virgule six et trente-quatre virgule six volts, et l’état de charge de la
+        batterie supérieur à cinquante pour cent. La puissance générée peut afficher zéro : si
+        l’indicateur d’éclipse est levé, le satellite est dans l’ombre de la Terre et c’est
+        normal. L’opérateur le note et refait la vérification après la sortie d’éclipse.
     do:
       - click: {css: "#rail-cmd"}
       - select: {target: {css: "#cmd-catalog"}, value: HK_REQUEST}
@@ -174,18 +179,20 @@ steps:
     title: {en: "Step 2: what must be dark", fr: "Étape 2 : ce qui doit être éteint"}
     say:
       en: >-
-        The same report carries the on-off flag of every power line. Step 2 is the honest health
-        check for a unit that is not powered yet: the reaction wheels, the payload and its
-        cooler, and propulsion must all read zero. Do not ask for the attitude or payload reports here: those reports are
-        not enabled, and their units are off. A line that reads one was switched on out of
-        sequence, and that is an anomaly to log.
+        The same report contains the on-off status of every power line. For equipment that is
+        not yet powered, step 2 is the relevant health check: the reaction wheels, the payload
+        and its cooler, and the propulsion system must all read zero. The attitude and payload
+        reports should not be requested at this stage, because they are not enabled and their
+        units are off. A line that reads one has been switched on out of sequence, and this must
+        be logged as an anomaly.
       fr: >-
-        Le même rapport contient l’indicateur marche-arrêt de chaque ligne d’alimentation.
-        L’étape 2 est le vrai bilan de santé d’une unité pas encore alimentée : les roues de
-        réaction, la charge utile et son refroidisseur, et la propulsion doivent tous afficher
-        zéro. Ne demandez pas ici les
-        rapports d’attitude ou de charge utile : ils ne sont pas activés, et leurs unités sont
-        éteintes. Une ligne à un a été allumée hors séquence : c’est une anomalie à consigner.
+        Le même rapport contient l’état marche-arrêt de chaque ligne d’alimentation. Pour les
+        équipements pas encore alimentés, l’étape 2 constitue le bilan de santé pertinent : les
+        roues de réaction, la charge utile et son refroidisseur, ainsi que le système de
+        propulsion, doivent tous afficher zéro. Il ne faut pas demander les rapports d’attitude
+        ou de charge utile à ce stade, car ils ne sont pas activés et leurs unités sont
+        éteintes. Une ligne qui affiche un a été allumée hors séquence, et cela doit être
+        consigné comme anomalie.
     do:
       - highlight: {target: {css: "#page-eps tr[data-param='0x0117']"}, seconds: 2.5}
       - highlight: {target: {css: "#page-eps tr[data-param='0x0113']"}, seconds: 2.5}
@@ -195,16 +202,16 @@ steps:
     title: {en: "Record each step", fr: "Consigner chaque étape"}
     say:
       en: >-
-        Back on the card, capture the values and mark each step GO. Steps 3 to 5 do the same
-        for thermal, the computer and the radio. Step 6 is the health assessment for the
-        Flight Director: every powered subsystem nominal, everything else dark. Only then is
-        the team clear to deploy the solar wings, in LEOP-004.
+        On the card, the operator captures the values and marks each step GO. Steps 3 to 5 apply
+        the same checks to thermal, the on-board computer and the radio. Step 6 is the health
+        assessment for the Flight Director: every powered subsystem is nominal and all other
+        equipment is off. Only then can the team proceed to deploy the solar wings, in LEOP-004.
       fr: >-
-        De retour sur la fiche, relevez les valeurs et marquez chaque étape GO. Les étapes 3 à 5
-        font de même pour le thermique, l’ordinateur et la radio. L’étape 6 est le bilan de
-        santé pour le directeur de vol : chaque sous-système alimenté nominal, tout le reste
-        éteint. C’est seulement alors que l’équipe peut déployer les ailes solaires, dans
-        LEOP-004.
+        Sur la fiche, l’opérateur relève les valeurs et marque chaque étape GO. Les étapes 3 à 5
+        appliquent les mêmes vérifications au thermique, à l’ordinateur de bord et à la radio.
+        L’étape 6 est le bilan de santé destiné au directeur de vol : chaque sous-système
+        alimenté est nominal et tous les autres équipements sont éteints. L’équipe peut alors
+        seulement passer au déploiement des ailes solaires, dans LEOP-004.
     do:
       - click: {css: "#rail-proc"}
       - wait: 1.0

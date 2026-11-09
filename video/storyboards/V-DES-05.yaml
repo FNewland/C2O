@@ -33,20 +33,24 @@ steps:
     title: {en: "Altitude, period and speed", fr: "Altitude, période et vitesse"}
     say:
       en: >-
-        The orbit is the most far-reaching early design decision: it reaches every subsystem. For
-        a circular orbit, the altitude sets everything else. At five hundred kilometres, one orbit
-        takes about ninety-five minutes, at seven point six kilometres per second. Tilt the orbit
-        to ninety-seven point four degrees, and the Earth's equatorial bulge turns the orbit plane
-        once a year, so the satellite crosses the equator at the same local time every day: a
-        Sun-synchronous orbit. EOSAT-1 flies one, at about five hundred and thirteen kilometres.
+        The choice of orbit is the early design decision with the widest consequences, because
+        it affects every subsystem. For a circular orbit, the altitude determines most of the
+        other parameters. At five hundred kilometres, one orbit takes about ninety-five minutes
+        at a speed of seven point six kilometres per second. At an inclination of ninety-seven
+        point four degrees, the Earth's equatorial bulge rotates the orbit plane once a year, so
+        that the satellite crosses the equator at the same local time every day. This is a
+        Sun-synchronous orbit, and EOSAT-1 operates in one at about five hundred and thirteen
+        kilometres.
       fr: >-
-        L’orbite est la décision de conception la plus lourde de conséquences au début : elle
-        touche tous les sous-systèmes. Pour une orbite circulaire, l’altitude fixe tout le reste.
-        À cinq cents kilomètres, une orbite dure environ quatre-vingt-quinze minutes, à sept
-        virgule six kilomètres par seconde. Inclinez l’orbite à quatre-vingt-dix-sept virgule
-        quatre degrés, et le renflement équatorial de la Terre fait tourner le plan de l’orbite
-        une fois par an : le satellite passe l’équateur chaque jour à la même heure locale. C’est
-        une orbite héliosynchrone. EOSAT-1 en suit une, à environ cinq cent treize kilomètres.
+        Le choix de l’orbite est la décision de conception initiale dont les conséquences sont
+        les plus étendues, car il touche tous les sous-systèmes. Pour une orbite circulaire,
+        l’altitude détermine la plupart des autres paramètres. À cinq cents kilomètres, une
+        orbite dure environ quatre-vingt-quinze minutes, à une vitesse de sept virgule six
+        kilomètres par seconde. Avec une inclinaison de quatre-vingt-dix-sept virgule quatre
+        degrés, le renflement équatorial de la Terre fait tourner le plan de l’orbite une fois
+        par an, de sorte que le satellite franchit l’équateur chaque jour à la même heure
+        locale. C’est une orbite héliosynchrone, et EOSAT-1 en suit une à environ cinq cent
+        treize kilomètres.
     do:
       - js: "EX.play('size', ${say})"
 
@@ -54,19 +58,22 @@ steps:
     title: {en: "Eclipse and the beta angle", fr: "L’éclipse et l’angle bêta"}
     say:
       en: >-
-        How long the satellite spends in the Earth's shadow depends on beta, the angle between the
-        Sun and the orbit plane. With the Sun in the plane, beta zero, the eclipse is longest:
-        thirty-eight percent of the orbit, about thirty-six minutes at five hundred kilometres.
-        Beyond about sixty-eight degrees, the orbit never enters the shadow. EOSAT-1 sits near
-        minus thirty degrees, with about thirty-four minutes. Size the battery for beta zero,
-        unless you know your orbit never gets there.
+        The time the satellite spends in the Earth's shadow depends on the beta angle, which is
+        the angle between the direction of the Sun and the orbit plane. When the Sun lies in the
+        orbit plane, at a beta angle of zero, the eclipse is longest: thirty-eight percent of
+        the orbit, or about thirty-six minutes at five hundred kilometres. Above about
+        sixty-eight degrees, the orbit does not enter the shadow at all. EOSAT-1 operates near
+        minus thirty degrees, with eclipses of about thirty-four minutes. The battery should be
+        sized for a beta angle of zero, unless it is certain that the orbit never reaches it.
       fr: >-
-        Le temps passé dans l’ombre de la Terre dépend de bêta, l’angle entre le Soleil et le
-        plan de l’orbite. Avec le Soleil dans le plan, bêta nul, l’éclipse est la plus longue :
-        trente-huit pour cent de l’orbite, environ trente-six minutes à cinq cents kilomètres.
-        Au-delà d’environ soixante-huit degrés, l’orbite n’entre jamais dans l’ombre. EOSAT-1 se
-        trouve vers moins trente degrés, avec environ trente-quatre minutes. Dimensionnez la
-        batterie pour bêta nul, sauf si vous savez que votre orbite n’y arrive jamais.
+        Le temps passé par le satellite dans l’ombre de la Terre dépend de l’angle bêta,
+        c’est-à-dire l’angle entre la direction du Soleil et le plan de l’orbite. Lorsque le
+        Soleil se trouve dans le plan de l’orbite, avec un angle bêta nul, l’éclipse est la plus
+        longue : trente-huit pour cent de l’orbite, soit environ trente-six minutes à cinq cents
+        kilomètres. Au-delà d’environ soixante-huit degrés, l’orbite n’entre plus du tout dans
+        l’ombre. EOSAT-1 se situe vers moins trente degrés, avec des éclipses d’environ
+        trente-quatre minutes. La batterie doit être dimensionnée pour un angle bêta nul, à
+        moins d’être certain que l’orbite ne l’atteint jamais.
     do:
       - js: "EX.play('eclipse', ${say})"
     question:
@@ -87,19 +94,22 @@ steps:
     title: {en: "The altitude trade", fr: "Le compromis d’altitude"}
     say:
       en: >-
-        No altitude wins everything. Lower is better for resolution, radiation and debris rules:
-        at four hundred kilometres, drag brings a CubeSat down in about nine months. But a short
-        life may not meet the mission. At six hundred kilometres the passes are longer, but the
-        satellite stays up for decades and needs a way to deorbit. Five hundred kilometres sits
-        right on the five-year disposal line, and where the Sun is in its cycle decides which
-        side.
+        No single altitude is best in every respect. A lower altitude is better for resolution,
+        radiation and compliance with debris rules: at four hundred kilometres, atmospheric drag
+        brings a CubeSat down in about nine months, although such a short lifetime may not
+        satisfy the mission. At six hundred kilometres, passes are longer, but the satellite
+        remains in orbit for decades and requires a means of deorbiting. Five hundred kilometres
+        lies close to the five-year disposal limit, and the phase of the solar cycle determines
+        on which side of it the mission falls.
       fr: >-
-        Aucune altitude ne gagne partout. Plus bas, c’est mieux pour la résolution, le
-        rayonnement et les règles sur les débris : à quatre cents kilomètres, la traînée fait
-        rentrer un CubeSat en neuf mois environ. Mais une vie courte peut ne pas suffire à la
-        mission. À six cents kilomètres, les passages sont plus longs, mais le satellite reste en
-        orbite des décennies et doit pouvoir se désorbiter. Cinq cents kilomètres se trouve
-        exactement sur la limite des cinq ans, et c’est le cycle solaire qui décide de quel côté.
+        Aucune altitude n’est la meilleure à tous égards. Une altitude plus basse est préférable
+        pour la résolution, le rayonnement et le respect des règles sur les débris : à quatre
+        cents kilomètres, la traînée atmosphérique fait rentrer un CubeSat en neuf mois environ,
+        mais une durée de vie aussi courte peut ne pas suffire à la mission. À six cents
+        kilomètres, les passages sont plus longs, mais le satellite reste en orbite pendant des
+        décennies et doit disposer d’un moyen de désorbitation. Cinq cents kilomètres se situe
+        près de la limite de retrait de cinq ans, et c’est la phase du cycle solaire qui
+        détermine de quel côté de cette limite se trouve la mission.
     do:
       - js: "EX.play('altitude', ${say})"
 
@@ -107,18 +117,21 @@ steps:
     title: {en: "Ground track and passes", fr: "Trace au sol et passages"}
     say:
       en: >-
-        While the satellite goes round, the Earth turns beneath it, so each track lands about
-        twenty-four degrees further west. The camera only sees a narrow swath, so revisit is
-        roughly the track spacing divided by the swath, times the period: days, for one
-        satellite. A ground station sees the satellite only while it is inside a circle around the
-        station: at five hundred kilometres, at most about seven minutes, four to six times a day.
+        While the satellite orbits, the Earth rotates beneath it, so each successive ground
+        track is shifted about twenty-four degrees further west. Because the camera covers only
+        a narrow swath, the revisit time is approximately the track spacing divided by the swath
+        width, multiplied by the orbital period, which amounts to several days for a single
+        satellite. A ground station can communicate with the satellite only while it is within a
+        circle around the station: at five hundred kilometres, for at most about seven minutes,
+        four to six times a day.
       fr: >-
-        Pendant que le satellite tourne, la Terre tourne sous lui : chaque trace tombe environ
-        vingt-quatre degrés plus à l’ouest. La caméra ne voit qu’une fauchée étroite : la revisite
-        vaut à peu près l’écart entre les traces divisé par la fauchée, fois la période. Des
-        jours, pour un seul satellite. Une station sol ne voit le satellite que lorsqu’il est
-        dans un cercle autour d’elle : à cinq cents kilomètres, au plus sept minutes environ,
-        quatre à six fois par jour.
+        Pendant que le satellite décrit son orbite, la Terre tourne sous lui : chaque trace au
+        sol successive est donc décalée d’environ vingt-quatre degrés vers l’ouest. Comme la
+        caméra ne couvre qu’une fauchée étroite, le temps de revisite est approximativement égal
+        à l’écart entre les traces divisé par la largeur de la fauchée, multiplié par la période
+        orbitale, soit plusieurs jours pour un seul satellite. Une station sol ne peut
+        communiquer avec le satellite que lorsqu’il se trouve dans un cercle autour d’elle : à
+        cinq cents kilomètres, pendant sept minutes au plus, quatre à six fois par jour.
     do:
       - js: "EX.play('coverage', ${say})"
 
@@ -126,19 +139,22 @@ steps:
     title: {en: "Radiation", fr: "Le rayonnement"}
     say:
       en: >-
-        Radiation dose rises steeply with altitude. Below about six hundred kilometres,
-        off-the-shelf electronics can last a three-year mission behind modest shielding. But over
-        South America the inner radiation belt dips low: the South Atlantic Anomaly. There, expect
-        bit flips, latch-ups and noisy detector frames, and design for them with error detection
-        and correction memory, EDAC, a watchdog and latch-up protection.
+        The radiation dose increases rapidly with altitude. Below about six hundred kilometres,
+        commercial off-the-shelf electronics can survive a three-year mission with modest
+        shielding. Over South America, however, the inner radiation belt comes closer to the
+        Earth, in a region known as the South Atlantic Anomaly. In this region, bit flips,
+        latch-ups and noisy detector frames should be expected, and the design must account for
+        them with error detection and correction memory, or EDAC, a watchdog and latch-up
+        protection.
       fr: >-
-        La dose de rayonnement augmente fortement avec l’altitude. Sous six cents kilomètres
-        environ, l’électronique du commerce peut tenir une mission de trois ans derrière un
-        blindage modeste. Mais au-dessus de l’Amérique du Sud, la ceinture de radiation intérieure
-        descend bas : c’est l’Anomalie de l’Atlantique Sud. Attendez-vous à des inversions de
-        bits, des verrouillages et des images bruitées, et concevez en conséquence : mémoire à
-        détection et correction d’erreurs, l’EDAC, chien de garde et protection contre le
-        verrouillage.
+        La dose de rayonnement augmente rapidement avec l’altitude. Sous six cents kilomètres
+        environ, l’électronique commerciale peut supporter une mission de trois ans avec un
+        blindage modeste. Au-dessus de l’Amérique du Sud, cependant, la ceinture de radiation
+        intérieure se rapproche de la Terre, dans une région appelée l’Anomalie de l’Atlantique
+        Sud. Dans cette région, il faut s’attendre à des inversions de bits, à des verrouillages
+        et à des images bruitées, et la conception doit en tenir compte avec une mémoire à
+        détection et correction d’erreurs, ou EDAC, un chien de garde et une protection contre
+        le verrouillage.
     do:
       - js: "EX.play('radiation', ${say})"
     question:

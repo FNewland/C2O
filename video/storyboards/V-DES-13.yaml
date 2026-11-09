@@ -28,18 +28,20 @@ steps:
     title: {en: "Estimating cost", fr: "Estimer le coût"}
     say:
       en: >-
-        A cost estimate narrows as the design matures, just like the mass. Early on, a parametric
-        estimate, fitted to past missions, is good to thirty to fifty percent. With a similar
-        mission to compare against, an analogy gets to twenty to forty. Once you have quotes and
-        labour estimates, a bottom-up sum gets to ten to twenty percent. The three methods follow
-        one another; they are not alternatives.
+        Like the mass estimate, the cost estimate becomes more accurate as the design matures.
+        In the early phases, a parametric estimate based on past missions is accurate to within
+        thirty to fifty percent. When a comparable mission is available, an estimate by analogy
+        improves this to twenty to forty percent. Once supplier quotes and labour estimates are
+        available, a bottom-up estimate is accurate to within ten to twenty percent. The three
+        methods are used in succession, not as alternatives.
       fr: >-
-        Une estimation de coût se resserre à mesure que la conception mûrit, comme la masse. Au
-        début, une estimation paramétrique, ajustée sur des missions passées, est juste à trente
-        ou cinquante pour cent près. Avec une mission semblable pour comparer, une analogie
-        descend à vingt ou quarante. Une fois les devis et la main-d’œuvre connus, une somme
-        ascendante atteint dix à vingt pour cent. Les trois méthodes se succèdent ; ce ne sont pas
-        des options.
+        Comme l’estimation de masse, l’estimation de coût gagne en précision à mesure que la
+        conception mûrit. Dans les premières phases, une estimation paramétrique fondée sur des
+        missions passées est précise à trente à cinquante pour cent près. Lorsqu’une mission
+        comparable est disponible, une estimation par analogie ramène cette incertitude à vingt
+        à quarante pour cent. Une fois les devis des fournisseurs et les estimations de
+        main-d’œuvre connus, une estimation ascendante est précise à dix à vingt pour cent près.
+        Les trois méthodes s’utilisent successivement, et non comme des options concurrentes.
     do:
       - js: "EX.play('methods', ${say})"
 
@@ -47,18 +49,20 @@ steps:
     title: {en: "Where the money goes", fr: "Où va l’argent"}
     say:
       en: >-
-        Here is a parametric estimate for a 3U Earth observation CubeSat: about four hundred and
-        ninety thousand euros. The launch alone is two hundred thousand, the biggest single line.
-        The payload and attitude control come next, then three years of operations. All the flight
-        hardware together is only about a third. The bottom-up estimate came out seven percent
-        lower: parametric models carry their own contingency.
+        This parametric estimate for a 3U Earth observation CubeSat gives a total of about four
+        hundred and ninety thousand euros. The launch alone accounts for two hundred thousand,
+        the largest single item, followed by the payload, the attitude control system and three
+        years of operations. All the flight hardware together accounts for only about a third of
+        the total. The bottom-up estimate was seven percent lower, because parametric models
+        include their own contingency.
       fr: >-
-        Voici une estimation paramétrique pour un CubeSat 3U d’observation de la Terre : environ
-        quatre cent quatre-vingt-dix mille euros. Le lancement seul en coûte deux cent mille, la
-        plus grosse ligne. Viennent ensuite la charge utile et le contrôle d’attitude, puis trois
-        ans d’exploitation. Tout le matériel de vol réuni ne fait qu’environ un tiers.
-        L’estimation ascendante est sortie sept pour cent plus bas : les modèles paramétriques
-        portent leur propre contingence.
+        Cette estimation paramétrique pour un CubeSat 3U d’observation de la Terre donne un
+        total d’environ quatre cent quatre-vingt-dix mille euros. Le lancement représente à lui
+        seul deux cent mille euros, le poste le plus important, suivi de la charge utile, du
+        système de contrôle d’attitude et de trois années d’exploitation. L’ensemble du matériel
+        de vol ne représente qu’environ un tiers du total. L’estimation ascendante s’est révélée
+        inférieure de sept pour cent, car les modèles paramétriques intègrent leur propre
+        provision pour aléas.
     do:
       - js: "EX.play('breakdown', ${say})"
 
@@ -66,18 +70,20 @@ steps:
     title: {en: "Confidence and reserve", fr: "Confiance et réserve"}
     say:
       en: >-
-        A single number hides the uncertainty, so commit at a confidence level. The fifty percent
-        point is the cost you beat half the time: the baseline. NASA commits at seventy percent,
-        about one point two times that; proposals often use eighty, about one point three times.
-        The difference is the reserve. It belongs to the project manager, and it is released when
-        a risk in the register actually happens.
+        A single value conceals the uncertainty in an estimate, so the commitment is made at a
+        stated confidence level. The fifty percent point, the cost that is not exceeded in half
+        of cases, is the baseline. NASA commits at the seventy percent level, about one point
+        two times the baseline, and proposals often use the eighty percent level, about one
+        point three times. The difference is the cost reserve. It is held by the project manager
+        and released when a risk in the register actually occurs.
       fr: >-
-        Un seul nombre cache l’incertitude : on s’engage donc à un niveau de confiance. Le point à
-        cinquante pour cent est le coût qu’on bat une fois sur deux : la référence. La NASA
-        s’engage à soixante-dix pour cent, environ un virgule deux fois plus ; les propositions
-        prennent souvent quatre-vingts, environ un virgule trois fois. La différence est la
-        réserve. Elle appartient au chef de projet, et se libère quand un risque du registre se
-        produit vraiment.
+        Une valeur unique masque l’incertitude d’une estimation : l’engagement se prend donc à
+        un niveau de confiance déclaré. Le point à cinquante pour cent, le coût qui n’est pas
+        dépassé dans la moitié des cas, constitue la référence. La NASA s’engage au niveau de
+        soixante-dix pour cent, environ un virgule deux fois la référence, et les propositions
+        retiennent souvent le niveau de quatre-vingts pour cent, environ un virgule trois fois.
+        La différence constitue la réserve de coûts. Elle est détenue par le chef de projet et
+        libérée lorsqu’un risque du registre se réalise effectivement.
     do:
       - js: "EX.play('confidence', ${say})"
 
@@ -85,18 +91,22 @@ steps:
     title: {en: "A review gate", fr: "Une revue"}
     say:
       en: >-
-        A review gate is a checklist with evidence. At the system requirements review, between
-        Phases A and B, the requirements must be baselined, the concept of operations, the ConOps, cover every phase, the
-        architecture trades be done, every budget close with margin, the risk register exist, and
-        cost and schedule be estimated. Some criteria must pass, others should. The board
-        decides: go, go with actions, or no go, and every action gets an owner and a date.
+        A review gate is a set of criteria, each supported by evidence. At the system
+        requirements review, between Phases A and B, the requirements must be baselined, the
+        concept of operations, or ConOps, must cover every phase, the architecture trades must
+        be complete, every budget must close with margin, the risk register must be in place,
+        and cost and schedule must be estimated. Some criteria are mandatory and others are
+        recommended. The review board decides on one of three outcomes, go, go with actions, or
+        no go, and every action is assigned an owner and a due date.
       fr: >-
-        Une revue est une liste de critères avec preuves. À la revue des exigences système, entre
-        les phases A et B, les exigences doivent être figées, le concept d’opérations, le ConOps, couvrir chaque phase, les
-        compromis d’architecture être faits, chaque bilan se fermer avec marge, le registre des
-        risques exister, et le coût et le calendrier être estimés. Certains critères sont
-        obligatoires, d’autres souhaitables. Le comité décide : go, go avec actions, ou no go, et
-        chaque action reçoit un responsable et une date.
+        Une revue est un ensemble de critères, chacun étayé par des preuves. À la revue des
+        exigences système, entre les phases A et B, les exigences doivent être figées, le
+        concept d’opérations, ou ConOps, doit couvrir chaque phase, les compromis d’architecture
+        doivent être terminés, chaque bilan doit se fermer avec marge, le registre des risques
+        doit être en place, et le coût et le calendrier doivent être estimés. Certains critères
+        sont obligatoires, d’autres recommandés. Le comité de revue choisit l’une de trois
+        issues, go, go avec actions ou no go, et chaque action reçoit un responsable et une
+        échéance.
     do:
       - js: "EX.play('gates', ${say})"
     question:
@@ -117,18 +127,21 @@ steps:
     title: {en: "The review board", fr: "Le comité de revue"}
     say:
       en: >-
-        The board is independent: people who did not do the design, because they can see what
-        the team no longer can. A chair covers every criterion; reviewers probe the systems view,
-        the technical choices, the risks and the operations. When you present, lead with the
-        conclusion, show the evidence, state your assumptions, and when you do not know, say so
-        and take an action. Your SpaceCDF reviews work the same way.
+        The review board is independent, made up of people who were not involved in the design,
+        because they can see issues that the team may no longer notice. A chair ensures that
+        every criterion is addressed, and the reviewers examine the systems view, the technical
+        choices, the risks and the operations. When presenting to a board, the team should state
+        its conclusion first, then present the evidence and its assumptions. Where an answer is
+        not known, the team should say so and take an action. Reviews in SpaceCDF follow the
+        same approach.
       fr: >-
-        Le comité est indépendant : des personnes qui n’ont pas fait la conception, parce qu’elles
-        voient ce que l’équipe ne voit plus. Un président couvre chaque critère ; des examinateurs
-        sondent la vue système, les choix techniques, les risques et les opérations. Quand vous
-        présentez, commencez par la conclusion, montrez les preuves, énoncez vos hypothèses, et
-        quand vous ne savez pas, dites-le et prenez une action. Vos revues dans SpaceCDF
-        fonctionnent de la même façon.
+        Le comité de revue est indépendant : il réunit des personnes qui n’ont pas participé à
+        la conception, car elles peuvent voir des problèmes que l’équipe ne remarque plus. Un
+        président veille à ce que chaque critère soit traité, et les examinateurs étudient la
+        vue système, les choix techniques, les risques et l’exploitation. Lorsqu’elle présente
+        devant un comité, l’équipe doit d’abord énoncer sa conclusion, puis présenter les
+        preuves et ses hypothèses. Lorsqu’elle ne connaît pas une réponse, elle doit le dire et
+        prendre une action. Les revues dans SpaceCDF suivent la même démarche.
     do:
       - js: "EX.play('board', ${say})"
     question:

@@ -34,18 +34,20 @@ steps:
     title: {en: "The risk matrix", fr: "La matrice des risques"}
     say:
       en: >-
-        The risk register is in V and V, Risk Register. The matrix places each risk by
-        likelihood and consequence, with the bands from the textbook: sixteen and above is
-        critical, ten to fifteen high. This team has three risks. The S-band licence arriving
-        late scores four times four, sixteen: critical. Star tracker blinding scores twelve:
-        high. Battery fade scores six: medium.
+        The risk register is found under V and V, Risk Register. The matrix positions each risk
+        by likelihood and consequence, using the bands from the textbook: a score of sixteen or
+        more is critical, and ten to fifteen is high. This team has identified three risks. Late
+        delivery of the S-band licence scores four by four, sixteen, which is critical. Star
+        tracker blinding scores twelve, which is high. Battery capacity fade scores six, which
+        is medium.
       fr: >-
-        Le registre des risques se trouve dans V et V, Registre des risques. La matrice place
-        chaque risque selon sa vraisemblance et sa conséquence, avec les bandes du manuel : seize
-        et plus, c’est critique ; dix à quinze, élevé. Cette équipe a trois risques. La licence
-        en bande S qui arrive en retard obtient quatre fois quatre, seize : critique.
-        L’éblouissement du senseur stellaire obtient douze : élevé. La perte de capacité de la
-        batterie obtient six : moyen.
+        Le registre des risques se trouve sous V et V, Registre des risques. La matrice
+        positionne chaque risque selon sa vraisemblance et sa conséquence, avec les niveaux
+        définis dans le manuel : un score de seize ou plus est critique, et de dix à quinze,
+        élevé. Cette équipe a identifié trois risques. Le retard de la licence en bande S
+        obtient quatre fois quatre, soit seize, ce qui est critique. L’éblouissement du senseur
+        stellaire obtient douze, ce qui est élevé. La perte de capacité de la batterie obtient
+        six, ce qui est moyen.
     do:
       - click: {text: "V&V", exact: true}
       - wait: 1.2
@@ -58,16 +60,18 @@ steps:
     title: {en: "Mitigate the critical risk", fr: "Atténuer le risque critique"}
     say:
       en: >-
-        The mitigation is already written: file with the International Telecommunication Union
-        early. Once the filing is in, the licence is much less likely to be late. Set the
-        likelihood to two: the score falls to eight, medium. Mark it Mitigating and give it an
-        owner, the communications engineer. A risk with no owner is a risk nobody is watching.
+        A mitigation has already been defined for the licence risk: filing early with the
+        International Telecommunication Union. Once the filing has been made, a late licence
+        becomes much less likely, so the likelihood is reduced to two and the score falls to
+        eight, which is medium. The risk is marked as Mitigating and assigned an owner, the
+        communications engineer. A risk without an owner is a risk that nobody is monitoring.
       fr: >-
-        L’atténuation est déjà écrite : déposer tôt auprès de l’Union internationale des
-        télécommunications. Une fois le dépôt fait, le retard de la licence devient bien moins
-        vraisemblable. Réglez la vraisemblance à deux : le score tombe à huit, moyen. Passez-le en
-        Atténuation et donnez-lui un responsable, l’ingénieur télécommunications. Un risque sans
-        responsable est un risque que personne ne surveille.
+        Une atténuation a déjà été définie pour le risque de licence : déposer tôt la demande
+        auprès de l’Union internationale des télécommunications. Une fois le dépôt effectué, un
+        retard de la licence devient bien moins vraisemblable : la vraisemblance est ramenée à
+        deux et le score tombe à huit, ce qui est moyen. Le risque passe à l’état Atténuation et
+        reçoit un responsable, l’ingénieur télécommunications. Un risque sans responsable est un
+        risque que personne ne surveille.
     do:
       - select: {target: {label: {en: "Likelihood of RSK-003", fr: "Vraisemblance de RSK-003"}, exact: true}, value: "2"}
       - wait: 1.2
@@ -95,15 +99,16 @@ steps:
     title: {en: "Complete the register", fr: "Compléter le registre"}
     say:
       en: >-
-        The battery fade risk has no mitigation and no owner yet. Type them in place: keep the
-        depth of discharge shallow and monitor every cell, owned by the power engineer. The
-        register is the team's shared list: every risk, its score, what is being done, and who
-        is doing it.
+        The battery capacity fade risk does not yet have a mitigation or an owner. Both are
+        entered directly in the register: limit the depth of discharge and monitor every cell,
+        with the power engineer as owner. The register is the team's shared record of every
+        risk, its score, the action being taken and the person responsible for it.
       fr: >-
         Le risque de perte de capacité de la batterie n’a encore ni atténuation ni responsable.
-        Saisissez-les sur place : garder une décharge peu profonde et surveiller chaque cellule,
-        sous la responsabilité de l’ingénieur énergie. Le registre est la liste partagée de
-        l’équipe : chaque risque, son score, ce qui est fait, et qui le fait.
+        Les deux sont saisis directement dans le registre : limiter la profondeur de décharge et
+        surveiller chaque cellule, sous la responsabilité de l’ingénieur énergie. Le registre
+        est le relevé commun de l’équipe : chaque risque, son score, l’action en cours et la
+        personne qui en est responsable.
     do:
       - fill: {target: {label: {en: "Mitigation of RSK-002", fr: "Atténuation de RSK-002"}, exact: true}, text: {en: "Shallow depth of discharge, per-cell monitoring", fr: "Décharge peu profonde, surveillance par cellule"}, typed: true, press: Enter}
       - wait: 1
@@ -115,22 +120,23 @@ steps:
     title: {en: "FMECA from the design", fr: "L’AMDEC à partir de la conception"}
     say:
       en: >-
-        The register holds the risks the team has thought of. The failure modes, effects and
-        criticality analysis looks for the ones it has not. Back at mission level, in Analyses,
-        open FMECA and run it from the study. It lists failure modes for every element of this
-        design and flags the single points of failure: eight here, five of them on elements
-        that carry critical functions. Below, the top risks: the solar array and antenna
-        deployments, and the battery. Six failure modes have severity four or five: mission
-        loss or major degradation.
+        The register contains the risks the team has identified. The failure modes, effects and
+        criticality analysis, or FMECA, looks for those it has not. At mission level, in
+        Analyses, the FMECA is run from the study. It lists the failure modes of every element
+        in this design and identifies the single points of failure: eight in this case, five of
+        them on elements that perform critical functions. The main risks listed below are the
+        solar array and antenna deployments and the battery. Six failure modes have a severity
+        of four or five, meaning loss of the mission or major degradation.
       fr: >-
-        Le registre contient les risques auxquels l’équipe a pensé. L’analyse des modes de
-        défaillance, de leurs effets et de leur criticité, l’AMDEC, cherche ceux auxquels elle
-        n’a pas pensé. De retour au niveau mission, dans Analyses, ouvrez FMECA et lancez-la
-        depuis l’étude. Elle liste les modes de défaillance de chaque élément de cette
-        conception et signale les points de défaillance uniques : huit ici, dont cinq sur des
-        éléments qui portent des fonctions critiques. Plus bas, les principaux risques : les
-        déploiements du générateur solaire et de l’antenne, et la batterie. Six modes de
-        défaillance ont une gravité de quatre ou cinq : perte de mission ou dégradation majeure.
+        Le registre contient les risques que l’équipe a identifiés. L’analyse des modes de
+        défaillance, de leurs effets et de leur criticité, l’AMDEC, recherche ceux qu’elle n’a
+        pas identifiés. Au niveau mission, dans Analyses, l’AMDEC se lance depuis l’étude. Elle
+        liste les modes de défaillance de chaque élément de cette conception et identifie les
+        points de défaillance uniques : huit dans ce cas, dont cinq sur des éléments qui
+        assurent des fonctions critiques. Les principaux risques, listés plus bas, sont les
+        déploiements du générateur solaire et de l’antenne, ainsi que la batterie. Six modes de
+        défaillance ont une gravité de quatre ou cinq, c’est-à-dire une perte de mission ou une
+        dégradation majeure.
     do:
       - click: {css: ".c2o-appbar__levels button:first-child"}
       - wait: 1.2
@@ -148,18 +154,18 @@ steps:
     title: {en: "From findings to decisions", fr: "Des constats aux décisions"}
     say:
       en: >-
-        Below, the tool recommends redundancy where a single failure would end the mission, with
-        the reduction in risk each change should buy. These are proposals, not decisions: a
-        second release mechanism costs little, a redundant battery string costs mass and power.
-        Carry the ones you accept into the risk register, and record decision D four point
-        three, Risks.
+        The tool then recommends redundancy wherever a single failure would end the mission,
+        with the expected reduction in risk for each change. These are proposals rather than
+        decisions: a second release mechanism costs little, whereas a redundant battery string
+        costs mass and power. The proposals the team accepts are carried into the risk register,
+        and the team records decision D four point three, Risks.
       fr: >-
-        Plus bas, l’outil recommande de la redondance là où une seule panne terminerait la
-        mission, avec la réduction de risque attendue pour chaque changement. Ce sont des
-        propositions, pas des décisions : un second mécanisme de libération coûte peu, une
-        chaîne de batterie redondante coûte de la masse et de la puissance. Reportez celles que
-        vous retenez dans le registre des risques, et consignez la décision D quatre point trois,
-        Risques.
+        L’outil recommande ensuite de la redondance partout où une seule panne mettrait fin à la
+        mission, avec la réduction de risque attendue pour chaque modification. Il s’agit de
+        propositions et non de décisions : un second mécanisme de libération coûte peu, alors
+        qu’une chaîne de batterie redondante coûte de la masse et de la puissance. Les
+        propositions retenues par l’équipe sont reportées dans le registre des risques, et
+        l’équipe consigne la décision D quatre point trois, Risques.
     do:
       - scroll: {target: {text: "Redundancy Recommendations", exact: true}}
       - highlight: {target: {text: "Redundancy Recommendations", exact: true}, seconds: 3}

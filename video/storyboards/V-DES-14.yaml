@@ -28,18 +28,22 @@ steps:
     title: {en: "Launch loads", fr: "Les charges de lancement"}
     say:
       en: >-
-        The launch is the harshest few minutes of the spacecraft's life. Thrust and air loads
-        press six to twelve g along its axis. The launcher's low modes shake it slowly; acoustic
-        noise shakes it fast, five to fifteen g r m s; and separation brings shocks of hundreds to
-        thousands of g. On the shaker, what breaks is rarely the frame: it is solder joints on tall
-        parts, hold-downs and hinges, lenses, and harness rubbing on an edge.
+        Launch is the most severe environment the spacecraft will experience. Thrust and
+        aerodynamic loads produce six to twelve g along its axis. The low-frequency modes of the
+        launch vehicle cause slow vibration, acoustic noise causes rapid vibration of five to
+        fifteen g r m s, and separation events produce shocks of hundreds to thousands of g. In
+        vibration testing, the primary structure rarely fails. Failures are more often found in
+        the solder joints of tall components, in hold-down and hinge mechanisms, in lenses, and
+        in harnesses that chafe against an edge.
       fr: >-
-        Le lancement, ce sont les minutes les plus dures de la vie du satellite. La poussée et les
-        charges aérodynamiques appuient de six à douze g le long de son axe. Les modes bas du
-        lanceur le secouent lentement ; le bruit acoustique, vite, cinq à quinze g efficaces ; et
-        les séparations apportent des chocs de centaines à milliers de g. Sur le pot vibrant, ce
-        qui casse est rarement le cadre : ce sont les soudures des composants hauts, les gerbages
-        et charnières, les lentilles, et le câblage qui frotte sur une arête.
+        Le lancement constitue l’environnement le plus sévère que subira le satellite. La
+        poussée et les charges aérodynamiques produisent six à douze g le long de son axe. Les
+        modes basse fréquence du lanceur provoquent des vibrations lentes, le bruit acoustique
+        des vibrations rapides de cinq à quinze g efficaces, et les séparations des chocs de
+        plusieurs centaines à plusieurs milliers de g. Lors des essais de vibration, la
+        structure primaire cède rarement. Les défaillances se situent plus souvent dans les
+        soudures des composants hauts, les mécanismes de maintien et les charnières, les
+        lentilles et les faisceaux qui frottent contre une arête.
     do:
       - js: "EX.play('loads', ${say})"
 
@@ -47,20 +51,22 @@ steps:
     title: {en: "Strength and stiffness", fr: "Résistance et raideur"}
     say:
       en: >-
-        For strength, every load case needs a positive margin of safety: the allowable stress,
-        divided by the design stress times a factor of safety, minus one. A 3U rail at nine g
-        carries about a hundred and ten newtons, a tiny stress in aluminium, so its margin is huge.
-        For stiffness, the first natural frequency must stay above the launcher's, usually forty
-        hertz. The box alone is near three hundred and thirty; a heavy unit on a bracket usually
-        sets the real first mode.
+        For strength, every load case must show a positive margin of safety, defined as the
+        allowable stress divided by the product of the design stress and a factor of safety,
+        minus one. A 3U rail at nine g carries about one hundred and ten newtons, which produces
+        a very low stress in aluminium, so its margin is very large. For stiffness, the first
+        natural frequency must remain above the limit set by the launch vehicle, usually forty
+        hertz. The structure alone has a first mode near three hundred and thirty hertz, so in
+        practice the first mode is usually determined by a heavy unit mounted on a bracket.
       fr: >-
-        Pour la résistance, chaque cas de charge exige une marge de sécurité positive : la
-        contrainte admissible, divisée par la contrainte de calcul fois un coefficient de
-        sécurité, moins un. Un rail de 3U à neuf g porte environ cent dix newtons, une contrainte
-        minuscule dans l’aluminium : sa marge est énorme. Pour la raideur, la première fréquence
-        propre doit rester au-dessus de celle du lanceur, en général quarante hertz. La boîte seule
-        est vers trois cent trente ; un équipement lourd sur une ferrure fixe en général le vrai
-        premier mode.
+        Pour la résistance, chaque cas de charge doit présenter une marge de sécurité positive,
+        définie comme la contrainte admissible divisée par le produit de la contrainte de calcul
+        et d’un coefficient de sécurité, moins un. Un rail de 3U à neuf g supporte environ cent
+        dix newtons, ce qui produit une contrainte très faible dans l’aluminium : sa marge est
+        donc très importante. Pour la raideur, la première fréquence propre doit rester
+        au-dessus de la limite fixée par le lanceur, généralement quarante hertz. La structure
+        seule a un premier mode vers trois cent trente hertz : en pratique, le premier mode est
+        donc généralement déterminé par un équipement lourd monté sur une ferrure.
     do:
       - js: "EX.play('margin', ${say})"
 
@@ -68,20 +74,24 @@ steps:
     title: {en: "The rocket equation", fr: "L’équation de la fusée"}
     say:
       en: >-
-        To deorbit from six hundred kilometres takes about a hundred and twelve metres per second.
-        The rocket equation says propellant grows exponentially with that speed change divided by
-        the exhaust speed. Cold gas needs a kilogram of propellant. A green monopropellant needs a
-        quarter of that, but its system weighs three kilograms. An electrospray thruster is the
-        lightest overall, but the burn takes months. Compare whole systems, not propellant alone.
-        At five hundred kilometres, EOSat-3U needs none: drag brings it down.
+        Deorbiting from six hundred kilometres requires a velocity change of about one hundred
+        and twelve metres per second. According to the rocket equation, the propellant mass
+        increases exponentially with the ratio of this velocity change to the exhaust velocity.
+        A cold-gas system needs about a kilogram of propellant. A green monopropellant needs a
+        quarter of that, but the complete system has a mass of three kilograms. An electrospray
+        thruster gives the lowest total mass, but the manoeuvre takes several months. Complete
+        systems should be compared, not only their propellant. At five hundred kilometres,
+        EOSat-3U needs no propulsion, because atmospheric drag brings it down.
       fr: >-
-        Désorbiter depuis six cents kilomètres demande environ cent douze mètres par seconde.
-        L’équation de la fusée dit que les ergols croissent exponentiellement avec ce changement de
-        vitesse divisé par la vitesse d’éjection. Le gaz froid demande un kilogramme d’ergols. Un
-        monergol vert en demande quatre fois moins, mais son système pèse trois kilogrammes. Un
-        propulseur à électronébulisation est le plus léger au total, mais la poussée dure des mois.
-        Comparez des systèmes entiers, pas les ergols seuls. À cinq cents kilomètres, EOSat-3U n’en
-        a pas besoin : la traînée le fait rentrer.
+        Désorbiter depuis six cents kilomètres exige un changement de vitesse d’environ cent
+        douze mètres par seconde. Selon l’équation de la fusée, la masse d’ergols augmente de
+        façon exponentielle avec le rapport entre ce changement de vitesse et la vitesse
+        d’éjection. Un système à gaz froid nécessite environ un kilogramme d’ergols. Un monergol
+        vert en demande quatre fois moins, mais le système complet a une masse de trois
+        kilogrammes. Un propulseur à électronébulisation donne la masse totale la plus faible,
+        mais la manœuvre dure plusieurs mois. Il faut comparer des systèmes complets, et pas
+        seulement leurs ergols. À cinq cents kilomètres, EOSat-3U n’a pas besoin de propulsion,
+        car la traînée atmosphérique le fait rentrer.
     do:
       - js: "EX.play('propulsion', ${say})"
     question:
@@ -102,18 +112,23 @@ steps:
     title: {en: "Computer and storage", fr: "Ordinateur et stockage"}
     say:
       en: >-
-        The on-board computer usually runs a real-time operating system: deterministic, small,
-        with tasks kept apart. In orbit, particles flip bits and can latch a circuit, so memory
-        carries error detection and correction, EDAC, a watchdog resets a hung processor, and
-        current limiters catch latch-ups. Size the storage for bad days, not good ones: seven
-        hundred and twenty megabytes a day, three days without a full downlink, times two. So specify eight gigabytes of storage.
+        The on-board computer usually runs a real-time operating system, which is deterministic
+        and compact and keeps tasks separate. In orbit, energetic particles can flip bits and
+        cause latch-up in circuits, so the memory uses error detection and correction, or EDAC,
+        a watchdog resets the processor if it stops responding, and current limiters protect
+        against latch-up. Data storage should be sized for adverse conditions: seven hundred and
+        twenty megabytes per day, for three days without a complete downlink, with a factor of
+        two margin. This leads to a specification of eight gigabytes of storage.
       fr: >-
-        L’ordinateur de bord tourne en général sous un système d’exploitation temps réel :
-        déterministe, léger, avec des tâches isolées. En orbite, des particules inversent des bits
-        et peuvent verrouiller un circuit : la mémoire porte une détection et correction d’erreurs,
-        l’EDAC, un chien de garde relance un processeur bloqué, et des limiteurs de courant
-        attrapent les verrouillages. Dimensionnez le stockage pour les mauvais jours, pas les bons :
-        sept cent vingt mégaoctets par jour, trois jours sans vidage complet, fois deux. Il faut donc spécifier huit gigaoctets de mémoire.
+        L’ordinateur de bord fonctionne généralement sous un système d’exploitation temps réel,
+        déterministe et compact, qui isole les tâches les unes des autres. En orbite, des
+        particules énergétiques peuvent inverser des bits et provoquer le verrouillage de
+        circuits : la mémoire utilise donc une détection et correction d’erreurs, ou EDAC, un
+        chien de garde réinitialise le processeur s’il cesse de répondre, et des limiteurs de
+        courant protègent contre le verrouillage. Le stockage des données doit être dimensionné
+        pour des conditions défavorables : sept cent vingt mégaoctets par jour, pendant trois
+        jours sans transmission complète, avec une marge d’un facteur deux. On aboutit ainsi à
+        une spécification de huit gigaoctets de mémoire.
     do:
       - js: "EX.play('obdh', ${say})"
     question:

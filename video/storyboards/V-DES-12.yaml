@@ -28,18 +28,22 @@ steps:
     title: {en: "Built right, or the right thing?", fr: "Bien construit, ou la bonne chose ?"}
     say:
       en: >-
-        Verification asks: did we build the system right? It checks the design against the
-        requirements, and the engineering team does it. Validation asks: did we build the right
-        system? It checks against what the stakeholders needed, and users and operators do it. A
-        camera can meet its ten-metre requirement at nine point two, verified, and still fail the
-        users, who needed five metres to tell crops apart. Not validated.
+        Verification determines whether the system has been built correctly, by checking the
+        design against the requirements, and it is carried out by the engineering team.
+        Validation determines whether the right system has been built, by checking it against
+        the stakeholders' needs, and it is carried out by the users and operators. A camera can
+        meet its ten-metre requirement with a measured nine point two metres, and so be
+        verified, but still fail to satisfy users who needed five metres to distinguish between
+        crops. In that case it is not validated.
       fr: >-
-        La vérification demande : a-t-on bien construit le système ? Elle compare la conception
-        aux exigences, et c’est l’équipe d’ingénierie qui la fait. La validation demande : a-t-on
-        construit le bon système ? Elle compare aux besoins des parties prenantes, et ce sont les
-        utilisateurs et les opérateurs qui la font. Une caméra peut tenir son exigence de dix
-        mètres avec neuf virgule deux, vérifiée, et décevoir pourtant les utilisateurs, à qui il
-        fallait cinq mètres pour distinguer les cultures. Non validée.
+        La vérification détermine si le système a été correctement construit, en comparant la
+        conception aux exigences, et elle est menée par l’équipe d’ingénierie. La validation
+        détermine si l’on a construit le bon système, en le comparant aux besoins des parties
+        prenantes, et elle est menée par les utilisateurs et les opérateurs. Une caméra peut
+        satisfaire son exigence de dix mètres avec une valeur mesurée de neuf virgule deux
+        mètres, et donc être vérifiée, sans pour autant répondre aux besoins des utilisateurs, à
+        qui il fallait cinq mètres pour distinguer les cultures. Dans ce cas, elle n’est pas
+        validée.
     do:
       - js: "EX.play('vv', ${say})"
 
@@ -47,16 +51,17 @@ steps:
     title: {en: "The test sequence", fr: "La séquence d’essais"}
     say:
       en: >-
-        Before launch, the spacecraft goes through the environments it will meet, in a fixed
-        order: sine vibration, random vibration, thermal vacuum, electromagnetic compatibility. A
-        functional test comes before and after each one, so that if something breaks, you know
-        which test broke it. The deployer or launcher sets the binding levels.
+        Before launch, the spacecraft is exposed to the environments it will encounter, in a
+        fixed sequence: sine vibration, random vibration, thermal vacuum and electromagnetic
+        compatibility. A functional test is performed before and after each environmental test,
+        so that any damage can be attributed to a specific test. The test levels are set by the
+        deployer or launch vehicle provider.
       fr: >-
-        Avant le lancement, le satellite traverse les environnements qu’il rencontrera, dans un
-        ordre fixe : vibration sinusoïdale, vibration aléatoire, vide thermique, compatibilité
-        électromagnétique. Un essai fonctionnel vient avant et après chacun : si quelque chose
-        casse, on sait quel essai l’a cassé. Le déployeur ou le lanceur fixe les niveaux
-        contraignants.
+        Avant le lancement, le satellite est soumis aux environnements qu’il rencontrera, dans
+        un ordre fixe : vibrations sinusoïdales, vibrations aléatoires, vide thermique et
+        compatibilité électromagnétique. Un essai fonctionnel est réalisé avant et après chaque
+        essai d’environnement, afin de pouvoir attribuer tout dommage à un essai précis. Les
+        niveaux d’essai sont fixés par le fournisseur du déployeur ou du lanceur.
     do:
       - js: "EX.play('sequence', ${say})"
 
@@ -64,17 +69,19 @@ steps:
     title: {en: "Random vibration", fr: "La vibration aléatoire"}
     say:
       en: >-
-        Random vibration is specified as a spectrum: how much shaking at each frequency, rising to
-        a plateau between eighty and five hundred hertz. The area under the curve gives the
-        overall level, six point eight g r m s for workmanship. A proto-flight unit, the one that
-        will fly, is tested three decibels higher, twice the spectrum: nine point six, for one
-        minute on each axis.
+        Random vibration is specified as a spectrum giving the vibration level at each
+        frequency, rising to a plateau between eighty and five hundred hertz. The area under the
+        curve gives the overall level, six point eight g r m s for workmanship testing. A
+        proto-flight unit, which is the unit that will fly, is tested three decibels higher, at
+        twice the spectral level, which gives nine point six g r m s, for one minute on each
+        axis.
       fr: >-
-        La vibration aléatoire se spécifie par un spectre : combien de secousses à chaque
-        fréquence, avec un plateau entre quatre-vingts et cinq cents hertz. L’aire sous la courbe
-        donne le niveau global, six virgule huit g efficaces pour le niveau de fabrication. Une
-        unité proto-vol, celle qui volera, est essayée trois décibels plus haut, deux fois le
-        spectre : neuf virgule six, pendant une minute sur chaque axe.
+        Les vibrations aléatoires se spécifient par un spectre qui donne le niveau de vibration
+        à chaque fréquence, avec un plateau entre quatre-vingts et cinq cents hertz. L’aire sous
+        la courbe donne le niveau global, six virgule huit g efficaces pour l’essai de
+        fabrication. Une unité protovol, c’est-à-dire l’unité qui volera, est essayée trois
+        décibels plus haut, soit deux fois le niveau spectral, ce qui donne neuf virgule six g
+        efficaces, pendant une minute sur chaque axe.
     do:
       - js: "EX.play('vibration', ${say})"
     question:
@@ -95,17 +102,19 @@ steps:
     title: {en: "Thermal vacuum", fr: "Le vide thermique"}
     say:
       en: >-
-        In thermal vacuum the spacecraft cycles between hot and cold in a chamber at less than a
-        hundred-thousandth of a millibar. A proto-flight test goes ten degrees beyond the
-        predicted maximum and minimum, four times, starting and ending hot, and holds each extreme
-        for at least an hour, with a full functional test there. These are the design's thermal
-        margins, put to the test.
+        In thermal vacuum testing, the spacecraft is cycled between hot and cold conditions in a
+        chamber at a pressure below one hundred-thousandth of a millibar. A proto-flight test
+        extends ten degrees beyond the predicted maximum and minimum temperatures, for four
+        cycles that begin and end hot, and each extreme is held for at least one hour while a
+        full functional test is carried out. The test confirms the thermal margins of the
+        design.
       fr: >-
-        En vide thermique, le satellite passe du chaud au froid dans une chambre à moins d’un
-        cent-millième de millibar. Un essai proto-vol va dix degrés au-delà du maximum et du
-        minimum prévus, quatre fois, en commençant et en finissant à chaud, et tient chaque
-        extrême au moins une heure, avec un essai fonctionnel complet. Ce sont les marges
-        thermiques de la conception, mises à l’épreuve.
+        Lors de l’essai en vide thermique, le satellite subit des cycles entre conditions
+        chaudes et froides dans une chambre à une pression inférieure à un cent-millième de
+        millibar. Un essai protovol va dix degrés au-delà des températures maximale et minimale
+        prévues, sur quatre cycles qui commencent et se terminent à chaud, et chaque extrême est
+        maintenu au moins une heure pendant un essai fonctionnel complet. L’essai confirme les
+        marges thermiques de la conception.
     do:
       - js: "EX.play('tvac', ${say})"
 
@@ -113,18 +122,21 @@ steps:
     title: {en: "The verification matrix", fr: "La matrice de vérification"}
     say:
       en: >-
-        The verification matrix lists every requirement, the methods that will verify it, and its
-        status. Most close by test or analysis; some stay open until a test is run. A requirement
-        that cannot be met needs a waiver, approved and recorded, never silence. And data latency
-        is closed by demonstration: your operations rehearsal in the simulator is exactly that,
-        and a first validation of your concept of operations.
+        The verification matrix lists every requirement, the methods by which it will be
+        verified and its current status. Most requirements are closed by test or analysis, and
+        some remain open until a test has been performed. A requirement that cannot be met
+        requires a formally approved and recorded waiver; it must never simply be left
+        unaddressed. Data latency is closed by demonstration, and the operations rehearsal in
+        the simulator is such a demonstration, as well as a first validation of the concept of
+        operations.
       fr: >-
-        La matrice de vérification liste chaque exigence, les méthodes qui la vérifieront, et son
-        état. La plupart se ferment par essai ou par analyse ; certaines restent ouvertes jusqu’à
-        un essai. Une exigence qui ne peut être tenue demande une dérogation, approuvée et
-        consignée, jamais le silence. Et la latence des données se ferme par démonstration :
-        votre répétition d’opérations dans le simulateur, c’est exactement cela, et une première
-        validation de votre concept d’opérations.
+        La matrice de vérification liste chaque exigence, les méthodes par lesquelles elle sera
+        vérifiée et son état actuel. La plupart des exigences sont fermées par essai ou par
+        analyse, et certaines restent ouvertes jusqu’à la réalisation d’un essai. Une exigence
+        qui ne peut pas être satisfaite exige une dérogation formellement approuvée et consignée
+        ; elle ne doit jamais être simplement laissée de côté. La latence des données se ferme
+        par démonstration, et la répétition d’exploitation dans le simulateur constitue une
+        telle démonstration, ainsi qu’une première validation du concept d’opérations.
     do:
       - js: "EX.play('matrix', ${say})"
     question:

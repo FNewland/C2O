@@ -33,17 +33,19 @@ steps:
     title: {en: "Choose the gate", fr: "Choisir le jalon"}
     say:
       en: >-
-        Review gates are in V and V, Review Gates. The profile sets which reviews your course
-        holds: the full sequence of the European Cooperation for Space Standardization, the ECSS, the ESA CubeSat sequence, the three C2O gates, or the
-        same reviews under NASA's names. Then pick the gate: here, the Mission Definition
-        Review. Note the margin line: at this gate, budgets carry a twenty per cent system
-        margin.
+        Review gates are found under V and V, Review Gates. The profile determines which reviews
+        the course holds: the full sequence of the European Cooperation for Space
+        Standardization, or ECSS, the ESA CubeSat sequence, the three C2O gates, or the same
+        reviews under their NASA names. The gate is then selected, in this case the Mission
+        Definition Review. The margin line shows that, at this gate, budgets carry a system
+        margin of twenty percent.
       fr: >-
-        Les jalons de revue se trouvent dans V et V, Jalons de revue. Le profil fixe les revues
-        que tient votre cours : la séquence complète de la Coopération européenne pour la normalisation spatiale, l’ECSS, la séquence CubeSat de l’ESA, les
-        trois jalons C2O, ou les mêmes revues sous les noms de la NASA. Choisissez ensuite le
-        jalon : ici, la revue de définition de mission. Notez la ligne des marges : à ce jalon,
-        les bilans portent une marge système de vingt pour cent.
+        Les jalons de revue se trouvent sous V et V, Jalons de revue. Le profil détermine les
+        revues que comporte le cours : la séquence complète de la Coopération européenne pour la
+        normalisation spatiale, l’ECSS, la séquence CubeSat de l’ESA, les trois jalons C2O, ou
+        les mêmes revues sous leurs noms NASA. On sélectionne ensuite le jalon, ici la revue de
+        définition de mission. La ligne des marges indique qu’à ce jalon, les bilans portent une
+        marge système de vingt pour cent.
     do:
       - click: {text: "V&V", exact: true}
       - wait: 1.2
@@ -56,16 +58,18 @@ steps:
     title: {en: "Ready or not", fr: "Prête ou non"}
     say:
       en: >-
-        The verdict comes first: not ready. Six criteria are must-pass, and only one passes so
-        far. Each line is one exit criterion: the question the reviewers will ask, what the tool
-        found, the seat that owns it, and the step of the team workflow that closes it.
-        Stakeholders, for example: none identified yet. That is the team leader's, in step two.
+        The verdict is shown first: not ready. Six criteria are mandatory, and only one of them
+        is currently met. Each line is an exit criterion and shows the question the reviewers
+        will ask, what the tool has found, the position responsible, and the step of the team
+        workflow in which the criterion is closed. For example, no stakeholders have yet been
+        identified; this is the responsibility of the team leader, in step two.
       fr: >-
-        Le verdict vient d’abord : pas prête. Six critères sont obligatoires, et un seul est
-        rempli pour l’instant. Chaque ligne est un critère de sortie : la question que poseront
-        les relecteurs, ce que l’outil a trouvé, le poste qui en est responsable, et l’étape du
-        travail d’équipe qui le ferme. Les parties prenantes, par exemple : aucune n’est encore
-        identifiée. C’est au chef d’équipe, à l’étape deux.
+        Le verdict s’affiche en premier : pas prête. Six critères sont obligatoires, et un seul
+        est rempli pour l’instant. Chaque ligne correspond à un critère de sortie et indique la
+        question que poseront les examinateurs, ce que l’outil a constaté, le poste responsable
+        et l’étape du travail d’équipe au cours de laquelle le critère est fermé. Par exemple,
+        aucune partie prenante n’a encore été identifiée ; c’est la responsabilité du chef
+        d’équipe, à l’étape deux.
     do:
       - highlight: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-01')"}, seconds: 2}
       - scroll: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-02')"}}
@@ -75,14 +79,15 @@ steps:
     title: {en: "Not evaluated yet", fr: "Pas encore évalué"}
     say:
       en: >-
-        Some lines say N slash A: not evaluated. They read results from an analysis that has
-        not run yet, such as the mass and power margins of the design loop. The button takes
-        you to Analyses. A gate cannot pass on a number nobody has computed.
+        Some lines show N/A, meaning not evaluated. They depend on the results of an analysis
+        that has not yet been run, such as the mass and power margins from the design loop. The
+        button on the line opens the Analyses tab. A gate cannot be passed on a value that has
+        not been calculated.
       fr: >-
-        Certaines lignes ne sont pas encore évaluées : elles lisent les résultats d’une
-        analyse qui n’a pas encore tourné, comme les marges de masse et de puissance de la
-        boucle de conception. Le bouton vous mène aux Analyses. Un jalon ne peut pas passer sur
-        un nombre que personne n’a calculé.
+        Certaines lignes ne sont pas encore évaluées. Elles dépendent des résultats d’une
+        analyse qui n’a pas encore été lancée, comme les marges de masse et de puissance de la
+        boucle de conception. Le bouton de la ligne ouvre l’onglet Analyses. Un jalon ne peut
+        pas être franchi sur une valeur qui n’a pas été calculée.
     do:
       - scroll: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-07')"}}
       - highlight: {target: {css: ".c2o-criteria__row:has-text('MDR-EC-07')"}, seconds: 3.5}
@@ -91,15 +96,15 @@ steps:
     title: {en: "What the gate expects", fr: "Ce qu’attend le jalon"}
     say:
       en: >-
-        Below the criteria, the diagrams each gate expects. The mission timeline and the mode
-        diagram are complete. The risk matrix has two gaps: one risk without a mitigation, and
-        one critical risk still open. Below that, the decision records due by this review, each
-        with the seat that records it.
+        Below the criteria are the diagrams required at each gate. The mission timeline and the
+        mode diagram are complete. The risk matrix has two gaps: one risk without a mitigation,
+        and one critical risk that is still open. Below that are the decision records required
+        for this review, each with the position responsible for recording it.
       fr: >-
-        Sous les critères, les schémas qu’attend chaque jalon. La chronologie de mission et le
-        schéma des modes sont complets. La matrice des risques a deux manques : un risque sans
-        atténuation, et un risque critique encore ouvert. Plus bas, les décisions à consigner
-        avant cette revue, chacune avec le poste qui la consigne.
+        Sous les critères figurent les schémas exigés à chaque jalon. La chronologie de mission
+        et le schéma des modes sont complets. La matrice des risques présente deux manques : un
+        risque sans atténuation et un risque critique encore ouvert. Plus bas figurent les
+        décisions à consigner pour cette revue, chacune avec le poste chargé de la consigner.
     do:
       - scroll: {target: {css: "[aria-labelledby='gd-mdr']"}}
       - highlight: {target: {css: "[aria-labelledby='gd-mdr'] li:has-text('5 × 5')"}, seconds: 3.5}
@@ -110,14 +115,15 @@ steps:
     title: {en: "Close a gap", fr: "Combler un manque"}
     say:
       en: >-
-        Close one now. In the Risk Register, give the battery fade risk its mitigation, then
-        come back to the gate. The missing mitigation is gone. The critical licence risk is
-        still open: that one needs a decision, not just a line of text.
+        One of these gaps can be closed now. In the risk register, the battery capacity fade
+        risk is given its mitigation, and on returning to the gate, the missing mitigation no
+        longer appears. The critical licence risk remains open, because it requires a decision
+        rather than an additional line of text.
       fr: >-
-        Comblez maintenant l’un de ces manques : dans le registre des risques, donnez son atténuation au risque
-        de perte de capacité de la batterie, puis revenez au jalon. L’atténuation manquante a
-        disparu. Le risque critique sur la licence reste ouvert : celui-là demande une décision,
-        pas seulement une ligne de texte.
+        L’un de ces manques peut être comblé tout de suite. Dans le registre des risques, on
+        attribue son atténuation au risque de perte de capacité de la batterie et, de retour au
+        jalon, l’atténuation manquante n’apparaît plus. Le risque critique lié à la licence
+        reste ouvert, car il exige une décision et non une simple ligne de texte supplémentaire.
     do:
       - click: {role: tab, name: "Risk Register", exact: true}
       - wait: 1.2
@@ -145,18 +151,19 @@ steps:
     title: {en: "Go or no go", fr: "Go ou no go"}
     say:
       en: >-
-        The go or no-go decision is the team leader's. Record go or no-go opens a decision
-        record in the logbook, already filled in: the verdict, how many criteria pass and fail,
-        and the open issues, one per failed criterion. What the tool cannot fill in is the
-        rationale: why the team decides as it does. When every must-pass item passes, the
-        review can start, and passing it saves a baseline of the design.
+        The go or no-go decision belongs to the team leader. Record go or no-go opens a decision
+        record in the logbook, already completed with the verdict, the number of criteria met
+        and not met, and the open issues, one for each criterion not met. The rationale,
+        explaining why the team has reached its decision, cannot be completed by the tool. When
+        all mandatory criteria are met, the review can begin, and passing it saves a baseline of
+        the design.
       fr: >-
-        La décision go ou no go revient au chef d’équipe. Consigner la décision go ou no go ouvre
-        une fiche de décision dans le journal de bord, déjà remplie : le verdict, le nombre de
-        critères remplis et en échec, et les points ouverts, un par critère en échec. Ce que
-        l’outil ne peut pas remplir, c’est la justification : pourquoi l’équipe décide ainsi.
-        Quand tous les critères obligatoires sont remplis, la revue peut commencer, et la passer
-        enregistre une référence de la conception.
+        La décision go ou no go appartient au chef d’équipe. Consigner la décision go ou no go
+        ouvre une fiche de décision dans le journal de bord, déjà remplie avec le verdict, le
+        nombre de critères remplis et non remplis, et les points ouverts, un par critère non
+        rempli. La justification, qui explique pourquoi l’équipe a pris sa décision, ne peut pas
+        être remplie par l’outil. Lorsque tous les critères obligatoires sont remplis, la revue
+        peut commencer, et son franchissement enregistre une référence de la conception.
     do:
       - scroll: {target: {css: "button.c2o-lb-record:has-text('go / no')"}}
       - click: {css: "button.c2o-lb-record:has-text('go / no')"}

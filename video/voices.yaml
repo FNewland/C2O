@@ -6,16 +6,30 @@
 # only. None of them restricts the audio, so videos can be released CC0.
 # Do NOT switch to XTTS-v2 (CPML: non-commercial, outputs included) or to
 # edge-tts (Microsoft's service terms) for published material.
+#
+# Since 2026-11-09 both languages are Franz Newland's own voice, cloned with
+# Chatterbox Multilingual (Resemble AI, MIT; output watermarked as synthetic)
+# from his reference recordings. The recordings are personal and are NOT in
+# the repository: put them in $C2O_VIDEO_CACHE/voices/ (franz_en.wav,
+# franz_fr.wav; 10-15 s of clean speech each). Chatterbox runs in its own
+# virtualenv (`python`), see c2ovideo/cbx_worker.py.
 en:
-  backend: kokoro
-  voice: af_heart        # grade A in the Kokoro voice list; bf_emma for a British voice
-  lang: en-us
-  speed: 1.0
+  backend: chatterbox
+  ref: franz_en.wav
+  python: ~/cbx-venv/bin/python
+  lang: en
+  exaggeration: 0.5
+  cfg_weight: 0.5
 fr:
-  backend: kokoro
-  voice: ff_siwis        # European French (SIWIS); the only Kokoro French voice
-  lang: fr-fr
-  speed: 1.0
+  backend: chatterbox
+  ref: franz_fr.wav
+  python: ~/cbx-venv/bin/python
+  lang: fr
+  exaggeration: 0.5
+  cfg_weight: 0.5
+# Previous synthetic voices (Kokoro, no reference recording needed):
+#   en: {backend: kokoro, voice: af_heart, lang: en-us, speed: 1.0}   # bm_george / bm_lewis for British male
+#   fr: {backend: kokoro, voice: ff_siwis, lang: fr-fr, speed: 1.0}
 # Alternative European French voice (Piper, `pip install piper-tts`):
 #   fr:
 #     backend: piper

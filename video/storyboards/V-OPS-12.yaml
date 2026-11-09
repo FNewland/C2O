@@ -9,11 +9,11 @@ id: V-OPS-12
 week: 6
 audience: all
 title:
-  en: "Fine pointing handover: from the sun hold to nadir"
-  fr: "Passage au pointage fin : du maintien solaire au nadir"
+  en: "Transition from Sun pointing to nadir fine pointing"
+  fr: "Passage du pointage solaire au pointage fin nadir"
 summary:
-  en: "Out of the LEOP sun hold: enable the reaction wheels, command NOMINAL and read the attitude error jump to the new reference, watch the slew to nadir, then bring a star tracker up."
-  fr: "Sortir du maintien solaire du LEOP : activer les roues de réaction, commander NOMINAL et comprendre le saut de l’erreur d’attitude vers la nouvelle référence, suivre le basculement vers le nadir, puis démarrer un senseur stellaire."
+  en: "This video takes the spacecraft out of the LEOP Sun-pointing attitude. The reaction wheels are enabled and NOMINAL mode is commanded, and the video explains the step change in attitude error caused by the new reference. It then follows the slew to nadir and starts a star tracker."
+  fr: "Cette vidéo fait sortir le satellite de l’attitude de pointage solaire de la LEOP. Les roues de réaction sont activées et le mode NOMINAL est commandé, et la vidéo explique le saut de l’erreur d’attitude dû à la nouvelle référence. Elle suit ensuite le basculement vers le nadir et démarre un senseur stellaire."
 apps:
   mcs: default
 fresh_stack: sim
@@ -40,18 +40,22 @@ steps:
     title: {en: "The sun hold", fr: "Le maintien solaire"}
     say:
       en: >-
-        Commissioning has started. The spacecraft is still in the hold it reached in LEOP,
-        coarse sun: the magnetorquers keep the arrays facing the Sun, using only the sun
-        sensors and the magnetometer. The attitude error here, about seven degrees, is
-        measured against the Sun. The reaction wheels are powered but disabled, and no star
-        tracker is on. Nothing on board will leave this hold by itself: the operator does it.
+        Commissioning has started. The spacecraft is still in the attitude it reached during the
+        launch and early orbit phase, or LEOP: coarse Sun pointing, in which the magnetorquers
+        keep the solar arrays facing the Sun using only the Sun sensors and the magnetometer.
+        The attitude error shown here, about seven degrees, is measured relative to the Sun. The
+        reaction wheels are powered but disabled, and no star tracker is switched on. The
+        spacecraft will not leave this attitude on its own; the operator must command the
+        change.
       fr: >-
-        La mise en service a commencé. Le satellite est toujours dans le maintien atteint au
-        LEOP, le Soleil grossier : les magnéto-coupleurs gardent les panneaux face au Soleil,
-        avec les seuls capteurs solaires et le magnétomètre. L’erreur d’attitude, environ sept
-        degrés, se mesure ici par rapport au Soleil. Les roues de réaction sont alimentées mais
-        désactivées, et aucun senseur stellaire n’est allumé. Rien à bord ne quittera ce
-        maintien de lui-même : c’est l’opérateur qui le fait.
+        La mise en service a commencé. Le satellite se trouve toujours dans l’attitude atteinte
+        pendant la phase de lancement et de début d’orbite, la LEOP : le pointage solaire
+        grossier, dans lequel les magnétocoupleurs maintiennent les panneaux solaires face au
+        Soleil à l’aide des seuls capteurs solaires et du magnétomètre. L’erreur d’attitude
+        affichée ici, environ sept degrés, est mesurée par rapport au Soleil. Les roues de
+        réaction sont alimentées mais désactivées, et aucun senseur stellaire n’est allumé. Le
+        satellite ne quittera pas cette attitude de lui-même : c’est à l’opérateur de commander
+        le changement.
     do:
       - click: {css: "#rail-aocs"}
       - wait_for: {target: {css: "#att3d"}, timeout: 20}
@@ -64,16 +68,18 @@ steps:
     title: {en: "Step 1: enable the wheels", fr: "Étape 1 : activer les roues"}
     say:
       en: >-
-        Card COM-004, step one. The wheels came out of the bootloader disabled, and powering
-        their line does not enable them. That separation is deliberate: a power switch must
-        never hand attitude control back to a wheel by accident. Enable them one at a time,
-        all four, and watch their speeds start to move as the control loop picks them up.
+        This is step one of the commissioning procedure COM-004. The wheels were left disabled
+        when the bootloader started, and powering their line does not enable them. This
+        separation is intentional: switching on a power line must never return attitude control
+        to a wheel unintentionally. The operator enables the four wheels one at a time and
+        observes their speeds begin to change as the control loop takes them over.
       fr: >-
-        Fiche COM-004, étape un. Les roues sont sorties du chargeur d’amorçage désactivées, et
-        alimenter leur ligne ne les active pas. Cette séparation est voulue : une mise sous
-        tension ne doit jamais rendre par accident le contrôle d’attitude à une roue.
-        Activez-les une à une, toutes les quatre, et regardez leurs vitesses bouger dès que la
-        boucle de contrôle les prend en charge.
+        Voici l’étape un de la procédure de mise en service COM-004. Les roues sont restées
+        désactivées au démarrage du chargeur d’amorçage, et la mise sous tension de leur ligne
+        ne les active pas. Cette séparation est voulue : la mise sous tension d’une ligne ne
+        doit jamais rendre involontairement le contrôle d’attitude à une roue. L’opérateur
+        active les quatre roues une à une et observe leurs vitesses commencer à varier à mesure
+        que la boucle de contrôle les prend en charge.
     do:
       - scroll: {css: "#aocs-quick-list"}
       - click: {css: "#aocs-quick-list button", has_text: {en: "RW0 On", fr: "RW0 marche"}}
@@ -103,15 +109,17 @@ steps:
     title: {en: "Step 1b: command NOMINAL", fr: "Étape 1b : commander NOMINAL"}
     say:
       en: >-
-        Step one b: command NOMINAL. Now watch the attitude error: from seven degrees to more
-        than one hundred and twenty. Nothing moved. The reference did. NOMINAL points the
-        imager at nadir, the Earth below, and the spacecraft is still facing the Sun. The
-        error measures the whole slew still to come.
+        Step one b commands NOMINAL mode. The attitude error immediately increases from seven
+        degrees to more than one hundred and twenty. The spacecraft has not moved; the reference
+        has changed. NOMINAL mode points the imager at nadir, directly towards the Earth, while
+        the spacecraft is still facing the Sun, so the error now represents the full slew that
+        remains to be performed.
       fr: >-
-        Étape un b : commander NOMINAL. Regardez maintenant l’erreur d’attitude : de sept
-        degrés à plus de cent vingt. Rien n’a bougé. C’est la référence qui a changé. NOMINAL
-        pointe l’imageur vers le nadir, la Terre en dessous, et le satellite fait encore face
-        au Soleil. L’erreur mesure tout le basculement qui reste à faire.
+        L’étape un b commande le mode NOMINAL. L’erreur d’attitude passe aussitôt de sept degrés
+        à plus de cent vingt. Le satellite n’a pas bougé : c’est la référence qui a changé. Le
+        mode NOMINAL pointe l’imageur vers le nadir, directement vers la Terre, alors que le
+        satellite fait encore face au Soleil ; l’erreur représente donc tout le basculement qui
+        reste à effectuer.
     do:
       - click: {css: "#aocs-quick-list button", has_text: {en: "Nominal", fr: "Nominal"}}
       - wait: 3
@@ -136,16 +144,17 @@ steps:
     title: {en: "The slew to nadir", fr: "Le basculement vers le nadir"}
     say:
       en: >-
-        The wheels turn the spacecraft at a fraction of a degree per second, so the slew takes
-        several minutes; the instructor speeds the simulator up to save time. Watch the model
-        turn the imager down towards the Earth, the error fall, and the wheels take up the
-        momentum. The card needs the error under five degrees before any wheel test.
+        The wheels rotate the spacecraft at a fraction of a degree per second, so the slew takes
+        several minutes, and the instructor increases the simulation speed to save time. The
+        model shows the imager turning towards the Earth, the attitude error decreasing and the
+        wheels absorbing the angular momentum. The procedure requires the error to be below five
+        degrees before any wheel test is performed.
       fr: >-
-        Les roues font tourner le satellite à une fraction de degré par seconde : le
-        basculement prend plusieurs minutes, et l’instructeur accélère le simulateur pour
-        gagner du temps. Regardez le modèle tourner l’imageur vers la Terre, l’erreur baisser
-        et les roues absorber le moment cinétique. La fiche demande une erreur sous cinq
-        degrés avant tout essai de roue.
+        Les roues font tourner le satellite à une fraction de degré par seconde : le basculement
+        prend donc plusieurs minutes, et l’instructeur accélère la simulation pour gagner du
+        temps. Le modèle montre l’imageur qui se tourne vers la Terre, l’erreur d’attitude qui
+        diminue et les roues qui absorbent le moment cinétique. La procédure exige une erreur
+        inférieure à cinq degrés avant tout essai de roue.
     do:
       - js: "document.getElementById('att3d').scrollIntoView({block: 'center'})"
       - wait: 0.8
@@ -158,18 +167,20 @@ steps:
     title: {en: "COM-003: a star tracker", fr: "COM-003 : un senseur stellaire"}
     say:
       en: >-
-        The attitude is now known only coarsely, from the Sun and the magnetic field. The next
-        card, COM-003, brings a star tracker into the loop: power both trackers, then select
-        tracker one. Each takes about a minute to boot and recognise the sky. First check that
-        the Sun is outside its fifteen-degree exclusion: the view lists it for each tracker.
-        Then wait for the star count.
+        At this point the attitude is known only approximately, from the Sun direction and the
+        magnetic field. The next procedure, COM-003, brings a star tracker into the control
+        loop: both trackers are powered, and tracker one is selected. Each tracker takes about a
+        minute to start and identify the star field. The operator first checks that the Sun is
+        outside the fifteen-degree exclusion zone of each tracker, which is shown on the
+        display, and then waits for the star count.
       fr: >-
-        L’attitude n’est encore connue que grossièrement, par le Soleil et le champ
-        magnétique. La fiche suivante, COM-003, fait entrer un senseur stellaire dans la
-        boucle : alimenter les deux senseurs, puis sélectionner le senseur un. Chacun met
-        environ une minute à démarrer et à reconnaître le ciel. Vérifiez d’abord que le Soleil
-        est hors de son exclusion de quinze degrés : la vue l’indique pour chaque senseur.
-        Puis attendez le nombre d’étoiles.
+        À ce stade, l’attitude n’est connue que de façon approximative, par la direction du
+        Soleil et le champ magnétique. La procédure suivante, COM-003, fait entrer un senseur
+        stellaire dans la boucle de contrôle : les deux senseurs sont alimentés et le senseur un
+        est sélectionné. Chaque senseur met environ une minute à démarrer et à identifier le
+        champ d’étoiles. L’opérateur vérifie d’abord que le Soleil se trouve hors de la zone
+        d’exclusion de quinze degrés de chaque senseur, indiquée à l’écran, puis attend le
+        nombre d’étoiles.
     do:
       - scroll: {css: "#aocs-quick-list"}
       - click: {css: "#aocs-quick-list button", has_text: {en: "ST1 On", fr: "ST1 marche"}}
@@ -189,16 +200,17 @@ steps:
     title: {en: "Tracking", fr: "En poursuite"}
     say:
       en: >-
-        A minute after power-on, tracker one counts its stars: more than the five the card asks
-        for. The handover is done: the wheels hold nadir, and the attitude can now be known to
-        arcseconds. What comes next is calibration of the gyros against the tracker, and
-        only after that the fine pointing that imaging needs.
+        About a minute after power-on, tracker one reports more than the five stars required by
+        the procedure. The handover is complete: the wheels maintain nadir pointing, and the
+        attitude can now be determined to within arcseconds. The next steps are the calibration
+        of the gyroscopes against the star tracker, and then the fine pointing required for
+        imaging.
       fr: >-
-        Une minute après la mise sous tension, le senseur un compte ses étoiles : plus que les
-        cinq exigées par la fiche. Le passage est fait : les roues tiennent le nadir, et
-        l’attitude peut maintenant être connue à la seconde d’arc près. La suite, c’est
-        l’étalonnage des gyromètres par rapport au senseur, et seulement ensuite le pointage
-        fin dont l’imagerie a besoin.
+        Environ une minute après la mise sous tension, le senseur un indique plus que les cinq
+        étoiles exigées par la procédure. Le transfert est terminé : les roues maintiennent le
+        pointage au nadir, et l’attitude peut désormais être déterminée à quelques secondes
+        d’arc près. Les étapes suivantes sont l’étalonnage des gyromètres par rapport au senseur
+        stellaire, puis le pointage fin nécessaire à l’imagerie.
     do:
       - wait_for: {target: {css: "#aocs-equip"}, timeout: 20}
       - scroll: {css: "#aocs-equip"}

@@ -29,19 +29,23 @@ steps:
     title: {en: "The link chain", fr: "La chaîne de liaison"}
     say:
       en: >-
-        A link budget answers one question: does each bit arrive with enough energy, compared
-        with the noise, to be decoded? Start at the transmitter: its power, its antenna and its
-        cable give the effective radiated power. The path takes most of it away: distance, the
-        atmosphere, pointing. The receiver's dish gain against its noise is its figure of merit.
-        The demodulator needs a certain energy per bit. What is left over is the margin, and it
-        should be at least three decibels.
+        A link budget determines whether each bit arrives with enough energy, relative to the
+        noise, to be decoded correctly. It begins at the transmitter, where the output power,
+        the antenna gain and the cable losses give the effective isotropic radiated power. The
+        propagation path accounts for most of the losses, through distance, atmospheric
+        absorption and pointing errors. The ratio of the ground antenna gain to the system noise
+        temperature is the receiver's figure of merit. The demodulator requires a certain energy
+        per bit, and the remainder is the link margin, which should be at least three decibels.
       fr: >-
-        Un bilan de liaison répond à une question : chaque bit arrive-t-il avec assez d’énergie,
-        face au bruit, pour être décodé ? Partez de l’émetteur : sa puissance, son antenne et son
-        câble donnent la puissance isotrope rayonnée équivalente. Le trajet en enlève l’essentiel :
-        la distance, l’atmosphère, le pointage. Le gain de l’antenne au sol face à son bruit est
-        son facteur de mérite. Le démodulateur exige une certaine énergie par bit. Ce qui reste,
-        c’est la marge, et elle doit être d’au moins trois décibels.
+        Un bilan de liaison détermine si chaque bit arrive avec suffisamment d’énergie, par
+        rapport au bruit, pour être décodé correctement. Il commence à l’émetteur, où la
+        puissance de sortie, le gain d’antenne et les pertes de câble donnent la puissance
+        isotrope rayonnée équivalente. Le trajet de propagation représente l’essentiel des
+        pertes, par la distance, l’absorption atmosphérique et les erreurs de pointage. Le
+        rapport entre le gain de l’antenne au sol et la température de bruit du système
+        constitue le facteur de mérite du récepteur. Le démodulateur exige une certaine énergie
+        par bit, et le reste constitue la marge de liaison, qui doit être d’au moins trois
+        décibels.
     do:
       - js: "EX.play('chain', ${say})"
 
@@ -49,15 +53,17 @@ steps:
     title: {en: "Decibels", fr: "Les décibels"}
     say:
       en: >-
-        The budget is kept in decibels because a chain of multiplications becomes a column of
-        additions. Twice the power is plus three decibels; ten times is plus ten; a hundred times,
-        plus twenty. Half is minus three. Two watts is plus three decibel-watts, and one watt is
-        plus thirty decibels above a milliwatt.
+        The budget is expressed in decibels, because a chain of multiplications then becomes a
+        column of additions. Doubling the power adds three decibels, a factor of ten adds ten
+        decibels and a factor of one hundred adds twenty. Halving the power subtracts three
+        decibels. Two watts corresponds to plus three decibel-watts, and one watt is thirty
+        decibels above one milliwatt.
       fr: >-
-        Le bilan se tient en décibels, car une chaîne de multiplications devient une colonne
-        d’additions. Deux fois la puissance, c’est plus trois décibels ; dix fois, plus dix ; cent
-        fois, plus vingt. La moitié, c’est moins trois. Deux watts font plus trois
-        décibels-watts, et un watt fait plus trente décibels au-dessus du milliwatt.
+        Le bilan s’exprime en décibels, car une chaîne de multiplications devient alors une
+        colonne d’additions. Doubler la puissance ajoute trois décibels, un facteur dix ajoute
+        dix décibels et un facteur cent en ajoute vingt. Diviser la puissance par deux retire
+        trois décibels. Deux watts correspondent à plus trois décibels-watts, et un watt se
+        situe trente décibels au-dessus d’un milliwatt.
     do:
       - js: "EX.play('decibels', ${say})"
 
@@ -65,19 +71,22 @@ steps:
     title: {en: "An S-band downlink", fr: "Une liaison descendante en bande S"}
     say:
       en: >-
-        Here is a real budget: a two-watt S-band transmitter on a 3U at five hundred kilometres,
-        a patch antenna, one megabit per second, to a three-metre dish at ten degrees elevation.
-        The path loss over seventeen hundred kilometres is a hundred and sixty-four decibels, and
-        it dwarfs everything else. The dish and the noise constant win it back. Subtract the data
-        rate, then what the modulation and coding need: seventeen point four decibels of margin.
-        The link closes, with plenty to spare.
+        This example is a realistic budget: a two-watt S-band transmitter on a 3U CubeSat at
+        five hundred kilometres, with a patch antenna, transmitting one megabit per second to a
+        three-metre dish at ten degrees elevation. The path loss over seventeen hundred
+        kilometres is one hundred and sixty-four decibels, far larger than any other term. The
+        dish gain and the Boltzmann constant term recover most of it. After the data rate and
+        the energy per bit required by the modulation and coding are subtracted, the margin is
+        seventeen point four decibels, so the link closes comfortably.
       fr: >-
-        Voici un vrai bilan : un émetteur de deux watts en bande S sur un 3U à cinq cents
-        kilomètres, une antenne patch, un mégabit par seconde, vers une antenne de trois mètres à
-        dix degrés d’élévation. L’affaiblissement sur dix-sept cents kilomètres est de cent
-        soixante-quatre décibels, et il écrase tout le reste. L’antenne et la constante de bruit
-        le regagnent. Retirez le débit, puis ce qu’exigent la modulation et le codage : dix-sept
-        virgule quatre décibels de marge. La liaison se ferme, largement.
+        Cet exemple est un bilan réaliste : un émetteur de deux watts en bande S sur un CubeSat
+        3U à cinq cents kilomètres, équipé d’une antenne patch, qui transmet un mégabit par
+        seconde vers une antenne de trois mètres à dix degrés d’élévation. L’affaiblissement de
+        trajet sur dix-sept cents kilomètres est de cent soixante-quatre décibels, bien
+        supérieur à tous les autres termes. Le gain de l’antenne et le terme de la constante de
+        Boltzmann en compensent l’essentiel. Après soustraction du débit et de l’énergie par bit
+        exigée par la modulation et le codage, la marge est de dix-sept virgule quatre décibels
+        : la liaison se ferme confortablement.
     do:
       - js: "EX.play('waterfall', ${say})"
     question:
@@ -98,18 +107,21 @@ steps:
     title: {en: "Margin buys data rate", fr: "La marge achète du débit"}
     say:
       en: >-
-        Surplus margin can be spent on data rate. Each doubling of the rate costs three decibels.
-        At five megabits per second the margin is still ten decibels; power alone would allow about
-        twenty-seven before reaching the three-decibel floor. But the channel the radio licence
-        allows, five megahertz wide, carries only about seven and a half megabits per second. Here
-        the spectrum, not the power, sets the limit.
+        Surplus margin can be used to increase the data rate, with each doubling of the rate
+        costing three decibels. At five megabits per second the margin is still ten decibels,
+        and the available power alone would allow about twenty-seven megabits per second before
+        the margin reached the three-decibel minimum. However, the channel permitted by the
+        radio licence is five megahertz wide and can carry only about seven and a half megabits
+        per second. In this case the limit is set by the spectrum allocation rather than by the
+        power.
       fr: >-
-        La marge en trop peut se dépenser en débit. Chaque doublement du débit coûte trois
-        décibels. À cinq mégabits par seconde, la marge est encore de dix décibels ; la puissance
-        seule permettrait environ vingt-sept avant d’atteindre le plancher de trois décibels. Mais
-        le canal autorisé par la licence radio, large de cinq mégahertz, ne porte qu’environ sept
-        mégabits et demi par seconde. Ici, c’est le spectre, et non la puissance, qui fixe la
-        limite.
+        La marge excédentaire peut servir à augmenter le débit, chaque doublement du débit
+        coûtant trois décibels. À cinq mégabits par seconde, la marge est encore de dix
+        décibels, et la puissance disponible permettrait à elle seule environ vingt-sept
+        mégabits par seconde avant que la marge n’atteigne le minimum de trois décibels.
+        Cependant, le canal autorisé par la licence radio a une largeur de cinq mégahertz et ne
+        peut transporter qu’environ sept mégabits et demi par seconde. Dans ce cas, la limite
+        est fixée par l’attribution de spectre et non par la puissance.
     do:
       - js: "EX.play('rate', ${say})"
 
@@ -117,18 +129,20 @@ steps:
     title: {en: "The data budget", fr: "Le bilan de données"}
     say:
       en: >-
-        A link that closes is not the end. Each day, the camera collects about seven hundred and
-        twenty megabytes after compression; five passes at five megabits per second bring down
-        about nine hundred and fifty. The data budget closes with a third to spare. Double the
-        imaging time, and it no longer closes: the backlog grows every day. Then you need X-band,
-        more ground stations, more compression, or a choice of what to send.
+        A link that closes is not sufficient on its own. Each day, the camera collects about
+        seven hundred and twenty megabytes after compression, and five passes at five megabits
+        per second can return about nine hundred and fifty megabytes. The data budget therefore
+        closes with about a third in reserve. If the imaging time were doubled, it would no
+        longer close, and the backlog would grow every day. The options would then be to move to
+        X-band, add ground stations, increase compression or select which data to transmit.
       fr: >-
-        Une liaison qui se ferme n’est pas la fin. Chaque jour, la caméra collecte environ sept
-        cent vingt mégaoctets après compression ; cinq passages à cinq mégabits par seconde en
-        descendent environ neuf cent cinquante. Le bilan de données se ferme, avec un tiers de
-        reste. Doublez le temps de prise de vue, et il ne se ferme plus : le retard grandit chaque
-        jour. Il faut alors la bande X, plus de stations sol, plus de compression, ou choisir ce
-        qu’on envoie.
+        Une liaison qui se ferme ne suffit pas à elle seule. Chaque jour, la caméra collecte
+        environ sept cent vingt mégaoctets après compression, et cinq passages à cinq mégabits
+        par seconde permettent d’en transmettre environ neuf cent cinquante. Le bilan de données
+        se ferme donc avec une réserve d’environ un tiers. Si le temps de prise de vue doublait,
+        il ne se fermerait plus, et le retard s’accumulerait chaque jour. Les options seraient
+        alors de passer en bande X, d’ajouter des stations sol, d’augmenter la compression ou de
+        sélectionner les données à transmettre.
     do:
       - js: "EX.play('data', ${say})"
     question:

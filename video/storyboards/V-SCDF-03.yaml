@@ -34,17 +34,19 @@ steps:
     title: {en: "Open the link budget", fr: "Ouvrir le bilan de liaison"}
     say:
       en: >-
-        The link budget lives in the Analyses tab. Press Link budget. On the left are the
-        inputs: the transmitter, the path and the ground receiver. On the right, the budget is
-        laid out term by term, exactly as in chapter eleven of the textbook. The slant range
-        starts at the worst case, the distance to a ground station at ten degrees elevation:
-        about seventeen hundred kilometres from a five hundred kilometre orbit.
+        The link budget is in the Analyses tab, under Link budget. The inputs are on the left:
+        the transmitter, the propagation path and the ground receiver. The budget is set out
+        term by term on the right, in the same form as chapter eleven of the textbook. The slant
+        range is initially set to the worst case, which is the distance to a ground station at
+        ten degrees elevation: about seventeen hundred kilometres from a five-hundred-kilometre
+        orbit.
       fr: >-
-        Le bilan de liaison se trouve dans l’onglet Analyses. Appuyez sur Bilan de liaison. À
-        gauche, les données : l’émetteur, le trajet et le récepteur au sol. À droite, le bilan
-        terme par terme, exactement comme au chapitre onze du manuel. La distance oblique part du
-        pire cas, la distance jusqu’à une station sol à dix degrés d’élévation : environ dix-sept
-        cents kilomètres depuis une orbite à cinq cents kilomètres.
+        Le bilan de liaison se trouve dans l’onglet Analyses, sous Bilan de liaison. Les données
+        d’entrée sont à gauche : l’émetteur, le trajet de propagation et le récepteur au sol. Le
+        bilan est présenté terme par terme à droite, sous la même forme qu’au chapitre onze du
+        manuel. La distance oblique est d’abord réglée sur le cas le plus défavorable, soit la
+        distance jusqu’à une station sol à dix degrés d’élévation : environ dix-sept cents
+        kilomètres depuis une orbite à cinq cents kilomètres.
     do:
       - click: {role: tab, name: Analyses}
       - wait: 1.0
@@ -57,18 +59,21 @@ steps:
     title: {en: "Reading the budget", fr: "Lire le bilan"}
     say:
       en: >-
-        Read it from the top. Two watts, a six decibel patch and the cable losses give an
-        effective radiated power of seven and a half decibel-watts. The path loss takes a hundred
-        and sixty-four decibels away. The ground station's figure of merit, gain against noise,
-        wins most of it back. After the data rate and what the modulation needs, the margin is
-        seventeen and a half decibels. Anything above three closes.
+        The budget is read from the top. A two-watt transmitter, a six-decibel patch antenna and
+        the cable losses give an effective isotropic radiated power of seven and a half
+        decibel-watts. The free-space path loss removes one hundred and sixty-four decibels. The
+        figure of merit of the ground station, its gain-to-noise-temperature ratio, recovers
+        most of this loss. After accounting for the data rate and the requirement of the
+        modulation scheme, the margin is seventeen and a half decibels. Any margin above three
+        decibels closes the link.
       fr: >-
-        Lisez-le depuis le haut. Deux watts, une antenne patch de six décibels et les pertes de
-        câble donnent une puissance rayonnée de sept décibels-watts et demi. L’affaiblissement de
-        trajet en retire cent soixante-quatre décibels. Le facteur de mérite de la station sol,
-        le gain face au bruit, en regagne l’essentiel. Après le débit et ce qu’exige la
-        modulation, la marge est de dix-sept décibels et demi. Au-dessus de trois, la liaison se
-        ferme.
+        Le bilan se lit de haut en bas. Un émetteur de deux watts, une antenne patch de six
+        décibels et les pertes de câble donnent une puissance isotrope rayonnée équivalente de
+        sept décibels-watts et demi. L’affaiblissement en espace libre retire cent
+        soixante-quatre décibels. Le facteur de mérite de la station sol, le rapport entre son
+        gain et sa température de bruit, compense l’essentiel de cette perte. Compte tenu du
+        débit et de l’exigence du schéma de modulation, la marge est de dix-sept décibels et
+        demi. Toute marge supérieure à trois décibels permet de fermer la liaison.
     do:
       - highlight: {target: {css: "tr:has-text('EIRP')"}, seconds: 2.5}
       - highlight: {target: {css: "tr:has-text('Free Space Path Loss'), tr:has-text('Affaiblissement')"}, seconds: 2.5}
@@ -79,13 +84,15 @@ steps:
     title: {en: "Spend margin on data rate", fr: "Dépenser la marge en débit"}
     say:
       en: >-
-        That much margin is unused capacity. Raise the data rate from one to five megabits per
-        second. The margin falls by seven decibels, to about ten and a half: every doubling of
-        the rate costs three. More data per pass, and still plenty of margin.
+        A margin this large represents unused capacity. When the data rate is increased from one
+        to five megabits per second, the margin falls by seven decibels, to about ten and a
+        half, since each doubling of the data rate costs three decibels. The link then delivers
+        more data per pass while retaining a comfortable margin.
       fr: >-
-        Une telle marge, c’est de la capacité inutilisée. Passez le débit d’un à cinq mégabits
-        par seconde. La marge baisse de sept décibels, à environ dix et demi : chaque doublement
-        du débit en coûte trois. Plus de données par passage, et encore beaucoup de marge.
+        Une marge aussi importante représente une capacité inutilisée. Lorsque le débit passe
+        d’un à cinq mégabits par seconde, la marge baisse de sept décibels, à environ dix et
+        demi, puisque chaque doublement du débit coûte trois décibels. La liaison transmet alors
+        davantage de données par passage tout en conservant une marge confortable.
     do:
       - fill: {target: {label: "Data Rate (bps)", exact: true}, text: "5000000", settle: 1.0}
       - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 3}
@@ -108,17 +115,19 @@ steps:
     title: {en: "A smaller ground station", fr: "Une station sol plus petite"}
     say:
       en: >-
-        Now test the ground segment. A university station might have a one and a half metre dish
-        instead of three metres: a quarter of the area, six decibels less gain. Set the receive
-        gain to twenty-nine. The margin drops to about four and a half decibels: it still closes,
-        but with little left for a bad pass. That is the kind of result to record, with the
-        options you weighed.
+        The ground segment can be tested in the same way. A university station might use a
+        one-and-a-half-metre dish instead of a three-metre dish, which has a quarter of the area
+        and therefore six decibels less gain. With the receive gain set to twenty-nine decibels,
+        the margin falls to about four and a half decibels. The link still closes, but with
+        little reserve for a poor pass. A result of this kind should be recorded, together with
+        the options that were considered.
       fr: >-
-        Essayez maintenant le segment sol. Une station universitaire peut avoir une antenne d’un
-        mètre et demi au lieu de trois : un quart de la surface, six décibels de gain en moins.
-        Réglez le gain de réception à vingt-neuf. La marge tombe à environ quatre décibels et
-        demi : la liaison se ferme encore, mais avec peu de réserve pour un mauvais passage. C’est
-        le genre de résultat à consigner, avec les options envisagées.
+        Le segment sol peut être évalué de la même façon. Une station universitaire peut
+        utiliser une antenne d’un mètre et demi au lieu de trois mètres, soit un quart de la
+        surface et donc six décibels de gain en moins. Avec un gain de réception réglé à
+        vingt-neuf décibels, la marge tombe à environ quatre décibels et demi. La liaison se
+        ferme encore, mais avec peu de réserve pour un passage défavorable. Un résultat de ce
+        type doit être consigné, avec les options envisagées.
     do:
       - fill: {target: {label: "RX Antenna Gain (dBi)", exact: true}, text: "29", settle: 1.0}
       - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 3}
@@ -127,18 +136,20 @@ steps:
     title: {en: "The uplink", fr: "La liaison montante"}
     say:
       en: >-
-        Press Uplink to look the other way. The ground station now transmits: twenty watts into a
-        big dish, an effective radiated power around forty-six decibel-watts, to a small patch on
-        the spacecraft at only a few kilobits per second. The margin is huge. For a small
-        satellite the hard link is almost always the downlink, not the commands. The uplink is a
-        what-if here: it does not overwrite the design.
+        The Uplink button reverses the direction of the link. The ground station now transmits
+        twenty watts into a large dish, an effective radiated power of about forty-six
+        decibel-watts, towards a small patch antenna on the spacecraft, at only a few kilobits
+        per second. The margin is very large. For a small satellite the limiting link is almost
+        always the downlink rather than the command uplink. The uplink calculation here is a
+        what-if analysis and does not change the design.
       fr: >-
-        Appuyez sur Montante pour regarder dans l’autre sens. C’est maintenant la station sol qui
-        émet : vingt watts dans une grande antenne, une puissance rayonnée d’environ
+        Le bouton Montante inverse le sens de la liaison. C’est maintenant la station sol qui
+        émet vingt watts dans une grande antenne, soit une puissance rayonnée d’environ
         quarante-six décibels-watts, vers une petite antenne patch sur le satellite, à quelques
-        kilobits par seconde seulement. La marge est énorme. Pour un petit satellite, la liaison
-        difficile est presque toujours la descendante, pas les télécommandes. Ici, la montante
-        est une simulation : elle ne remplace pas la conception.
+        kilobits par seconde seulement. La marge est très importante. Pour un petit satellite,
+        la liaison limitante est presque toujours la liaison descendante, et non la liaison
+        montante des télécommandes. Le calcul de la liaison montante est ici une analyse de
+        sensibilité et ne modifie pas la conception.
     do:
       - click: {role: button, name: "Uplink (Ground→Space)"}
       - wait: 1.0
@@ -149,16 +160,18 @@ steps:
     title: {en: "Apply to the design", fr: "Appliquer à la conception"}
     say:
       en: >-
-        Back on the downlink, your settings return. Apply to Design writes the link parameters
-        into the shared model, so the design loop, the data budget and the other positions all
-        see the same link. Then record decision D three point three, Link: which margin you
-        accept, with which antenna, power and ground station, and why.
+        Returning to the downlink restores the previous settings. Apply to Design writes the
+        link parameters into the shared model, so that the design loop, the data budget and the
+        other positions all use the same link. The team then records decision D three point
+        three, Link: the margin accepted, with the antenna, transmit power and ground station
+        chosen, and the reasons for that choice.
       fr: >-
-        De retour sur la descendante, vos réglages reviennent. Appliquer à la conception écrit
-        les paramètres de liaison dans le modèle partagé : la boucle de conception, le bilan de
-        données et les autres postes voient tous la même liaison. Consignez ensuite la décision
-        D trois point trois, Liaison : quelle marge vous acceptez, avec quelle antenne, quelle
-        puissance et quelle station sol, et pourquoi.
+        Le retour à la liaison descendante rétablit les réglages précédents. Appliquer à la
+        conception enregistre les paramètres de liaison dans le modèle partagé, afin que la
+        boucle de conception, le bilan de données et les autres postes utilisent tous la même
+        liaison. L’équipe consigne ensuite la décision D trois point trois, Liaison : la marge
+        retenue, avec l’antenne, la puissance d’émission et la station sol choisies, et les
+        raisons de ce choix.
     do:
       - click: {role: button, name: "Downlink (Space→Ground)"}
       - wait: 1.0
