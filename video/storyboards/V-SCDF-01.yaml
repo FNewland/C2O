@@ -117,7 +117,7 @@ steps:
             fr: "La détection tardive est le problème commun aux trois agences interrogées. Nous laissons la prévision de la fumée hors du périmètre : elle demande un autre capteur."
 
   - id: save
-    title: {en: "Your logbook is your workbook", fr: "Votre journal de bord est votre cahier de travail"}
+    title: {en: "Saving the logbook", fr: "Enregistrer le journal de bord"}
     say:
       en: >-
         The record is then saved. It is private to the user and stored in this browser, and the
@@ -179,7 +179,7 @@ steps:
         fr: "Un objectif sans méthode de mesure peut tout de même être vérifié à la revue de conception préliminaire (PDR)."
 
   - id: alternatives
-    title: {en: "Step 3: is space the answer?", fr: "Étape 3 : l’espace est-il la réponse ?"}
+    title: {en: "Step 3: assessing alternatives", fr: "Étape 3 : évaluer les solutions possibles"}
     say:
       en: >-
         The third step asks whether the need actually requires a new space mission. The team

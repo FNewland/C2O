@@ -35,7 +35,7 @@ setup:
 
 steps:
   - id: calm
-    title: {en: "A quiet pass", fr: "Un passage calme"}
+    title: {en: "A nominal pass", fr: "Un passage nominal"}
     say:
       en: >-
         Commissioning is complete and EOSAT-1 is in nominal operations. A pass is in progress,
@@ -91,7 +91,7 @@ steps:
           why: {en: "That is the first-action time, a different field.", fr: "C’est l’heure de la première action, un autre champ."}
 
   - id: ack
-    title: {en: "Acknowledge is not fix", fr: "Acquitter n’est pas réparer"}
+    title: {en: "Acknowledging an alarm", fr: "Acquitter une alarme"}
     say:
       en: >-
         The operator then acknowledges the alarm. Acknowledgement means only that the alarm has
@@ -110,7 +110,7 @@ steps:
       - wait: 2.0
 
   - id: ticket
-    title: {en: "File the ticket from the alarm", fr: "Ouvrir la fiche depuis l’alarme"}
+    title: {en: "Raising an anomaly report", fr: "Ouvrir une fiche d’anomalie"}
     say:
       en: >-
         The Ticket button opens an anomaly ticket in the logbook, already completed with the
@@ -154,7 +154,7 @@ steps:
         fr: "Quelle télémesure permettrait de distinguer un viseur d’étoiles ébloui d’un viseur en panne ? Nommez les paramètres à surveiller, pas la réparation."
 
   - id: call
-    title: {en: "Make the call", fr: "Prendre la décision"}
+    title: {en: "The decision", fr: "La décision"}
     say:
       en: >-
         The alarm row also identifies the contingency procedure. Whether that procedure is run

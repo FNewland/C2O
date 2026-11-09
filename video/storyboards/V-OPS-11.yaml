@@ -42,7 +42,7 @@ setup:
 
 steps:
   - id: silent
-    title: {en: "A silent pass", fr: "Un passage muet"}
+    title: {en: "No signal at acquisition", fr: "Aucun signal à l’acquisition"}
     say:
       en: >-
         This is acquisition of signal, the start of a pass. The overview should now be updating
@@ -145,7 +145,7 @@ steps:
       - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 3}
 
   - id: nothing
-    title: {en: "Nothing comes back", fr: "Rien ne revient"}
+    title: {en: "No response", fr: "Aucune réponse"}
     say:
       en: >-
         The verification status stops at sent, because the acceptance and execution reports

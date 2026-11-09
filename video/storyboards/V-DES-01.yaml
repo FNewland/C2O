@@ -72,7 +72,7 @@ steps:
       - js: "EX.play('industry', ${say})"
 
   - id: niche
-    title: {en: "Niche excellence", fr: "L’excellence de niche"}
+    title: {en: "Areas of specialisation", fr: "Les domaines de spécialisation"}
     say:
       en: >-
         Canada does not attempt to cover every area of space activity. Instead, it has developed
@@ -150,7 +150,7 @@ steps:
           why: {en: "The Act applies to anyone operating such a system from Canada, university missions included.", fr: "La loi s’applique à quiconque exploite un tel système depuis le Canada, missions universitaires comprises."}
 
   - id: launch
-    title: {en: "Getting to orbit", fr: "Rejoindre l’orbite"}
+    title: {en: "Launch access", fr: "L’accès au lancement"}
     say:
       en: >-
         The final consideration is the launch. Canadian satellites are launched from other

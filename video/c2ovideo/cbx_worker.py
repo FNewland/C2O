@@ -8,6 +8,7 @@ reply: {"ok": true, "seconds": ...} or {"ok": false, "error": ...}.
 Chatterbox Multilingual (Resemble AI) is MIT-licensed; its output carries Resemble's
 inaudible Perth watermark marking the audio as synthetic.
 """
+import gc
 import json
 import sys
 import warnings
@@ -29,10 +30,12 @@ def main() -> None:
         try:
             r = json.loads(line)
             torch.manual_seed(int(r.get("seed", 0)))
-            wav = model.generate(r["text"], language_id=r["lang"], audio_prompt_path=r["ref"],
-                                 exaggeration=float(r.get("exaggeration", 0.5)),
-                                 cfg_weight=float(r.get("cfg_weight", 0.5)))
+            with torch.inference_mode():
+                wav = model.generate(r["text"], language_id=r["lang"], audio_prompt_path=r["ref"],
+                                     exaggeration=float(r.get("exaggeration", 0.5)),
+                                     cfg_weight=float(r.get("cfg_weight", 0.5)))
             ta.save(r["out"], wav, model.sr, encoding="PCM_S", bits_per_sample=16)
+            gc.collect()
             print(json.dumps({"ok": True, "seconds": wav.shape[-1] / model.sr, "sr": model.sr}), flush=True)
         except Exception as e:  # report and keep serving
             print(json.dumps({"ok": False, "error": f"{type(e).__name__}: {e}"}), flush=True)

@@ -25,7 +25,7 @@ setup:
 
 steps:
   - id: vv
-    title: {en: "Built right, or the right thing?", fr: "Bien construit, ou la bonne chose ?"}
+    title: {en: "Verification and validation", fr: "Vérification et validation"}
     say:
       en: >-
         Verification determines whether the system has been built correctly, by checking the

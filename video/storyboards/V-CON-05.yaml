@@ -26,7 +26,7 @@ setup:
 
 steps:
   - id: packet
-    title: {en: "One packet", fr: "Un paquet"}
+    title: {en: "The structure of a packet", fr: "La structure d’un paquet"}
     say:
       en: >-
         Every telecommand sent to the spacecraft and every report it returns is a packet: a
@@ -80,7 +80,7 @@ steps:
           why: {en: "Loss shows as a gap in the sequence count.", fr: "Une perte se voit comme un trou dans le compteur de séquence."}
 
   - id: secondary
-    title: {en: "The secondary header: what, and when", fr: "L’en-tête secondaire : quoi, et quand"}
+    title: {en: "The secondary header: type and time", fr: "L’en-tête secondaire : type et heure"}
     say:
       en: >-
         The secondary header is defined by the packet utilisation standard, PUS, published by
@@ -140,7 +140,7 @@ steps:
       - js: "EX.play('hk', ${say})"
 
   - id: request
-    title: {en: "Requested once, or enabled", fr: "Demandé une fois, ou activé"}
+    title: {en: "Single requests and periodic reports", fr: "Demandes ponctuelles et rapports périodiques"}
     say:
       en: >-
         A report can be obtained in two ways. A request, three comma twenty-seven, returns a
@@ -158,7 +158,7 @@ steps:
       - js: "EX.play('request', ${say})"
 
   - id: power
-    title: {en: "Powered is not reporting", fr: "Alimentée n’est pas en train de rapporter"}
+    title: {en: "A powered unit is not necessarily reporting", fr: "Un équipement alimenté ne transmet pas forcément"}
     say:
       en: >-
         New teams frequently overlook one point: switching on a unit does not enable its report.

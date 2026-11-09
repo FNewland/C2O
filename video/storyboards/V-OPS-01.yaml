@@ -90,7 +90,7 @@ steps:
       - check: {css: "#proc-doc li[data-key='p4'] input.pc-pre"}
 
   - id: step1
-    title: {en: "Step 1: expected, live, captured", fr: "Étape 1 : attendu, en direct, relevé"}
+    title: {en: "Step 1: expected and live values", fr: "Étape 1 : valeurs attendues et en direct"}
     say:
       en: >-
         Step one verifies the on-board computer, the OBC. The table shows three columns side by
@@ -159,7 +159,7 @@ steps:
         fr: "Si une vérification échoue mais que le passage doit continuer, il vaut mieux laisser l’étape vide que consigner un NO-GO."
 
   - id: workbook
-    title: {en: "The same ticks in your workbook", fr: "Les mêmes coches dans votre cahier"}
+    title: {en: "The record in the workbook", fr: "L’enregistrement dans le cahier de travail"}
     say:
       en: >-
         The Workbook tab of the logbook shows worksheet N001 with the same steps, the same GO

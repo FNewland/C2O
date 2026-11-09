@@ -50,7 +50,7 @@ steps:
       - js: "EX.play('loop', ${say})"
 
   - id: architecture
-    title: {en: "Pointing need sets the architecture", fr: "Le besoin de pointage fixe l’architecture"}
+    title: {en: "Pointing requirements and architecture", fr: "Exigences de pointage et architecture"}
     say:
       en: >-
         The required pointing accuracy determines the hardware. For accuracies coarser than five
@@ -92,7 +92,7 @@ steps:
       - js: "EX.play('disturbances', ${say})"
 
   - id: momentum
-    title: {en: "Wheels fill up", fr: "Les roues se remplissent"}
+    title: {en: "Momentum saturation", fr: "La saturation des roues"}
     say:
       en: >-
         A reaction wheel rotates the spacecraft by spinning up in the opposite direction. When
@@ -128,7 +128,7 @@ steps:
           why: {en: "The residual dipole is unwanted; the magnetorquer dipole is commanded separately.", fr: "Le dipôle résiduel est indésirable ; celui des magnéto-coupleurs est commandé à part."}
 
   - id: magnetorquer
-    title: {en: "Why magnetorquers cannot point", fr: "Pourquoi les magnéto-coupleurs ne pointent pas"}
+    title: {en: "The limits of magnetorquers", fr: "Les limites des magnétocoupleurs"}
     say:
       en: >-
         A magnetorquer is a coil. A current through the coil creates a magnetic dipole, and the

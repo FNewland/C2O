@@ -31,7 +31,7 @@ setup:
 
 steps:
   - id: orbit
-    title: {en: "Sun, then shadow", fr: "Le Soleil, puis l’ombre"}
+    title: {en: "Sunlight and eclipse", fr: "Ensoleillement et éclipse"}
     say:
       en: >-
         This diagram shows one orbit of EOSAT-1, viewed from above, with the Sun to the right.
@@ -49,7 +49,7 @@ steps:
       - js: "EX.play('orbit', ${say})"
 
   - id: generation
-    title: {en: "Generation", fr: "La production"}
+    title: {en: "Power generation", fr: "La production d’énergie"}
     say:
       en: >-
         In sunlight the solar arrays generate between about sixty and seventy-four watts, for
@@ -65,7 +65,7 @@ steps:
       - js: "EX.play('generation', ${say})"
 
   - id: load
-    title: {en: "Load", fr: "La consommation"}
+    title: {en: "Power consumption", fr: "La consommation"}
     say:
       en: >-
         The spacecraft consumes power continuously, for the on-board computer, the attitude
@@ -83,7 +83,7 @@ steps:
       - js: "EX.play('load', ${say})"
 
   - id: battery
-    title: {en: "The battery carries the eclipse", fr: "La batterie passe l’éclipse"}
+    title: {en: "The battery during eclipse", fr: "La batterie pendant l’éclipse"}
     say:
       en: >-
         The difference between generation and consumption either charges or discharges the
@@ -118,7 +118,7 @@ steps:
       - js: "EX.play('average', ${say})"
 
   - id: instant
-    title: {en: "The eclipse trap", fr: "Le piège de l’éclipse"}
+    title: {en: "Instantaneous power in eclipse", fr: "La puissance instantanée en éclipse"}
     say:
       en: >-
         A common error is to judge the energy balance from instantaneous values. In the middle
@@ -151,7 +151,7 @@ steps:
           why: {en: "Shedding is for a negative orbit balance or a low state of charge, not for a normal eclipse.", fr: "Le délestage sert quand le bilan sur l’orbite est négatif ou l’état de charge bas, pas pour une éclipse normale."}
 
   - id: levers
-    title: {en: "What moves the margin", fr: "Ce qui fait bouger la marge"}
+    title: {en: "Factors that affect the margin", fr: "Les facteurs qui influent sur la marge"}
     say:
       en: >-
         The margin depends on two factors. It decreases when the load increases, for example

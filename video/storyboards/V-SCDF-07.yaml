@@ -55,7 +55,7 @@ steps:
       - highlight: {target: {role: tab, name: MDR, exact: true}, seconds: 2}
 
   - id: verdict
-    title: {en: "Ready or not", fr: "Prête ou non"}
+    title: {en: "The readiness verdict", fr: "Le verdict de préparation"}
     say:
       en: >-
         The verdict is shown first: not ready. Six criteria are mandatory, and only one of them
@@ -148,7 +148,7 @@ steps:
           why: {en: "The profile is set by the course, and every profile has a mission definition review.", fr: "Le profil est fixé par le cours, et chaque profil comporte une revue de définition de mission."}
 
   - id: decide
-    title: {en: "Go or no go", fr: "Go ou no go"}
+    title: {en: "The go or no-go decision", fr: "La décision go ou no go"}
     say:
       en: >-
         The go or no-go decision belongs to the team leader. Record go or no-go opens a decision

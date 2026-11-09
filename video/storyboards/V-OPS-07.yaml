@@ -106,7 +106,7 @@ steps:
         fr: "Une fois les vitesses faibles, commandez AOCS_SET_MODE(mode=3) pour passer en COARSE_SUN."
 
   - id: hold
-    title: {en: "Step 4: the sun hold", fr: "Étape 4 : la tenue au Soleil"}
+    title: {en: "Step 4: Sun pointing", fr: "Étape 4 : le pointage solaire"}
     say:
       en: >-
         In COARSE_SUN, the attitude error, which is the angle between the spacecraft pointing
@@ -139,7 +139,7 @@ steps:
         fr: "L’erreur d’attitude reste à 20° pendant dix minutes en COARSE_SUN. Que vérifiez-vous, dans quel ordre, avant d’appeler qui que ce soit ?"
 
   - id: power
-    title: {en: "Step 5: what it brings", fr: "Étape 5 : ce que cela apporte"}
+    title: {en: "Step 5: the power gain", fr: "Étape 5 : le gain de puissance"}
     say:
       en: >-
         The purpose of this sequence can be seen on the power page. As the wings turn towards

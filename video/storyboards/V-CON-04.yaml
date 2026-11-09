@@ -70,7 +70,7 @@ steps:
       - js: "EX.play('monitor', ${say})"
 
   - id: chain
-    title: {en: "Event, rule, function", fr: "Événement, règle, fonction"}
+    title: {en: "Event, event-action rule and function", fr: "Événement, règle événement-action et fonction"}
     say:
       en: >-
         The limit crossing generates a service five event. Service nineteen, event-action,
@@ -91,7 +91,7 @@ steps:
       - js: "EX.play('chain', ${say})"
 
   - id: clear
-    title: {en: "Back inside the limit", fr: "De retour dans la limite"}
+    title: {en: "Return within the limit", fr: "Retour dans la limite"}
     say:
       en: >-
         When the momentum falls back below the limit, the monitor sends its second and final
@@ -109,7 +109,7 @@ steps:
       - js: "EX.play('clear', ${say})"
 
   - id: onerule
-    title: {en: "One rule, one function", fr: "Une règle, une fonction"}
+    title: {en: "Each rule starts one function", fr: "Chaque règle lance une fonction"}
     say:
       en: >-
         Each rule runs exactly one function, with no arguments. Any response that requires
@@ -133,7 +133,7 @@ steps:
         fr: "Une règle événement-action S19 peut lancer une courte séquence de commandes, par exemple alimenter une ligne puis changer de mode."
 
   - id: ground
-    title: {en: "Where you come in", fr: "Là où vous intervenez"}
+    title: {en: "The role of the ground", fr: "Le rôle du sol"}
     say:
       en: >-
         At the console, the operator sees the result: an alarm, the events, a new mode and the

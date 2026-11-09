@@ -26,7 +26,7 @@ setup:
 
 steps:
   - id: send
-    title: {en: "Send is only the start", fr: "Envoyer n’est que le début"}
+    title: {en: "Sending the command", fr: "L’envoi de la commande"}
     say:
       en: >-
         When the operator presses Send on the command page, the telecommand, or TC, is
@@ -67,7 +67,7 @@ steps:
       - js: "EX.play('accept', ${say})"
 
   - id: reject
-    title: {en: "Refused at the door: 1,2", fr: "Refusée à l’entrée : 1,2"}
+    title: {en: "Acceptance failure: report 1,2", fr: "Échec d’acceptation : rapport 1,2"}
     say:
       en: >-
         If a check fails, the response is one comma two, acceptance failure, with a failure
@@ -118,7 +118,7 @@ steps:
       - js: "EX.play('execute', ${say})"
 
   - id: fail
-    title: {en: "Failed in execution: read the notice", fr: "Échec à l’exécution : lisez le motif"}
+    title: {en: "Execution failure and its failure notice", fr: "Échec d’exécution et son motif"}
     say:
       en: >-
         In the next example, the HIGH rate is requested while the transmitter is not in downlink
@@ -166,7 +166,7 @@ steps:
         fr: "OBC_BOOT_APP affiche 1,1 et 1,3 mais pas de 1,7 au bout de cinq secondes : le démarrage a échoué et il faut le renvoyer."
 
   - id: verify
-    title: {en: "Completed is not verified", fr: "Terminée n’est pas vérifiée"}
+    title: {en: "Verifying the result in telemetry", fr: "Vérifier le résultat en télémesure"}
     say:
       en: >-
         The final example shows why telemetry verification is required. The operator commands

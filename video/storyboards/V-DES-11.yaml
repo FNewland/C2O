@@ -26,7 +26,7 @@ setup:
 
 steps:
   - id: process
-    title: {en: "The risk loop", fr: "La boucle des risques"}
+    title: {en: "The risk management process", fr: "Le processus de gestion des risques"}
     say:
       en: >-
         Risk management is a continuous process that runs throughout the project. Risks are
@@ -126,7 +126,7 @@ steps:
       - js: "EX.play('spf', ${say})"
 
   - id: redundancy
-    title: {en: "What a spare buys", fr: "Ce qu’apporte une rechange"}
+    title: {en: "The value of redundancy", fr: "L’apport de la redondance"}
     say:
       en: >-
         Redundancy is where reliability calculations have the greatest effect. Consider reaction

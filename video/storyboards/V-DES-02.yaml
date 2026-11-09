@@ -26,7 +26,7 @@ setup:
 
 steps:
   - id: sequential
-    title: {en: "Why late is expensive", fr: "Pourquoi tard coûte cher"}
+    title: {en: "The cost of late changes", fr: "Le coût des modifications tardives"}
     say:
       en: >-
         For several decades, spacecraft were designed one discipline at a time: the payload team

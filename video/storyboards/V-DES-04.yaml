@@ -65,7 +65,7 @@ steps:
       - js: "EX.play('types', ${say})"
 
   - id: smart
-    title: {en: "The SMART screen", fr: "Le filtre SMART"}
+    title: {en: "The SMART criteria", fr: "Les critères SMART"}
     say:
       en: >-
         A useful first check is SMART: specific, measurable, achievable, relevant and traceable.

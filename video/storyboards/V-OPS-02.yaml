@@ -33,7 +33,7 @@ setup:
 
 steps:
   - id: silent
-    title: {en: "A silent spacecraft", fr: "Un satellite muet"}
+    title: {en: "No signal from the spacecraft", fr: "Aucun signal du satellite"}
     say:
       en: >-
         EOSAT-1 has just separated from the launch vehicle. Only the receiver and the on-board
@@ -155,7 +155,7 @@ steps:
         fr: "Dès qu’OBC_BOOT_APP est acceptée (S1.1), on peut envoyer la commande suivante."
 
   - id: hk
-    title: {en: "Turn the housekeeping on", fr: "Activer les données de servitude"}
+    title: {en: "Enabling housekeeping", fr: "Activer les données de servitude"}
     say:
       en: >-
         The application software starts with only two housekeeping reports enabled, power and

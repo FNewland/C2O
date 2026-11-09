@@ -46,7 +46,7 @@ steps:
       - js: "EX.play('methods', ${say})"
 
   - id: breakdown
-    title: {en: "Where the money goes", fr: "Où va l’argent"}
+    title: {en: "Cost breakdown", fr: "La répartition des coûts"}
     say:
       en: >-
         This parametric estimate for a 3U Earth observation CubeSat gives a total of about four

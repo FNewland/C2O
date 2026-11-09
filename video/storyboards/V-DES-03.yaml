@@ -26,7 +26,7 @@ setup:
 
 steps:
   - id: problem
-    title: {en: "Start from the problem", fr: "Partir du problème"}
+    title: {en: "Defining the problem", fr: "Définir le problème"}
     say:
       en: >-
         One of the most common failures in mission design is solving the wrong problem. A
@@ -45,7 +45,7 @@ steps:
       - js: "EX.play('problem', ${say})"
 
   - id: whathow
-    title: {en: "What before how", fr: "Le quoi avant le comment"}
+    title: {en: "Function before solution", fr: "La fonction avant la solution"}
     say:
       en: >-
         At this stage the team records what is needed, not how it will be achieved: ten-metre
@@ -117,7 +117,7 @@ steps:
           why: {en: "Normalising does that, whenever the weights are set.", fr: "C’est la normalisation qui le garantit, quel que soit le moment."}
 
   - id: sensitivity
-    title: {en: "Is the answer robust?", fr: "La réponse est-elle robuste ?"}
+    title: {en: "Sensitivity analysis", fr: "L’analyse de sensibilité"}
     say:
       en: >-
         The robustness of the result is then tested. As the weight given to training value is

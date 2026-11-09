@@ -88,7 +88,7 @@ steps:
       - highlight: {target: {css: "#cmd-verif-stepper"}, seconds: 2.5}
 
   - id: legs
-    title: {en: "Step 4: sensor and actuator first", fr: "Étape 4 : capteur et actionneur d’abord"}
+    title: {en: "Step 4: magnetometer and magnetorquers", fr: "Étape 4 : magnétomètre et magnétocoupleurs"}
     say:
       en: >-
         DETUMBLE, the mode that reduces the tumble, uses the B-dot control law, where B stands
@@ -141,7 +141,7 @@ steps:
           why: {en: "The wheels stay disabled until COM-004.", fr: "Les roues restent désactivées jusqu’à COM-004."}
 
   - id: detumble
-    title: {en: "Step 5: DETUMBLE, checked on the field", fr: "Étape 5 : DETUMBLE, vérifié sur le champ"}
+    title: {en: "Step 5: DETUMBLE and the magnetic-field check", fr: "Étape 5 : DETUMBLE et contrôle du champ magnétique"}
     say:
       en: >-
         The operator then commands DETUMBLE, mode two, and the command is accepted and executed.
@@ -179,7 +179,7 @@ steps:
         fr: "aocs.mode affiche 2 (DETUMBLE) : l’étape 5 est donc GO."
 
   - id: record
-    title: {en: "Record it, and what comes next", fr: "Le consigner, et la suite"}
+    title: {en: "Recording the result and the next card", fr: "Consigner le résultat et la fiche suivante"}
     say:
       en: >-
         On the card, the operator captures the values and marks steps 3 to 5 GO. Step 6 confirms

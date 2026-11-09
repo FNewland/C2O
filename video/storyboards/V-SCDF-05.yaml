@@ -30,7 +30,7 @@ setup:
 
 steps:
   - id: drill
-    title: {en: "Down to the spacecraft", fr: "Jusqu’au satellite"}
+    title: {en: "Opening the spacecraft level", fr: "Le niveau satellite"}
     say:
       en: >-
         Interfaces exist between blocks at the same level of the architecture. At mission level

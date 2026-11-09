@@ -37,7 +37,7 @@ setup:
 
 steps:
   - id: hold
-    title: {en: "The sun hold", fr: "Le maintien solaire"}
+    title: {en: "Sun pointing", fr: "Le pointage solaire"}
     say:
       en: >-
         Commissioning has started. The spacecraft is still in the attitude it reached during the

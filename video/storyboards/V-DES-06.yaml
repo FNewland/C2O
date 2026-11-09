@@ -101,7 +101,7 @@ steps:
           why: {en: "It applies in every phase, at a smaller value each time (Table 8.3).", fr: "Elle s’applique à chaque phase, avec une valeur plus petite à chaque fois (tableau 8.3)."}
 
   - id: compound
-    title: {en: "Margins compound", fr: "Les marges se cumulent"}
+    title: {en: "Combining margins", fr: "Le cumul des marges"}
     say:
       en: >-
         The two margins are multiplied together. In Phase A, with new equipment, one point two

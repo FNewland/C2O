@@ -71,7 +71,7 @@ steps:
           why: {en: "They are not deployed yet: that is the point of this card.", fr: "Elles ne sont pas encore déployées : c’est l’objet de cette fiche."}
 
   - id: deploy
-    title: {en: "Step 0: deploy both wings", fr: "Étape 0 : déployer les deux ailes"}
+    title: {en: "Step 0: deploy both solar array wings", fr: "Étape 0 : déployer les deux ailes solaires"}
     say:
       en: >-
         Step 0 deploys both wings with a single command, wing code two. This is a critical,

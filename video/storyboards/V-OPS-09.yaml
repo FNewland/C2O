@@ -31,7 +31,7 @@ setup:
 
 steps:
   - id: fix
-    title: {en: "Step 1: is the fix good enough?", fr: "Étape 1 : le point est-il suffisant ?"}
+    title: {en: "Step 1: GPS solution quality", fr: "Étape 1 : qualité de la solution GPS"}
     say:
       en: >-
         This is the last procedure of the launch and early orbit phase, LEOP. The GPS receiver,

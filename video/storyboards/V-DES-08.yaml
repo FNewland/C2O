@@ -25,7 +25,7 @@ setup:
 
 steps:
   - id: environment
-    title: {en: "Heat in, heat out", fr: "Chaleur entrante, chaleur sortante"}
+    title: {en: "The thermal environment", fr: "L’environnement thermique"}
     say:
       en: >-
         In orbit there is no air, so there is no convection and fans cannot be used. Heat comes
@@ -126,7 +126,7 @@ steps:
       - js: "EX.play('margins', ${say})"
 
   - id: toolbox
-    title: {en: "The thermal toolbox", fr: "La boîte à outils thermique"}
+    title: {en: "Thermal control methods", fr: "Les moyens de contrôle thermique"}
     say:
       en: >-
         Only a few thermal control methods are available. Coatings are selected for each face of

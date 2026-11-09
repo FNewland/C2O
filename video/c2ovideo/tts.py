@@ -147,15 +147,22 @@ def _synth(engine: dict, text: str, lang: str) -> np.ndarray:
         return np.interp(np.linspace(0, len(a), int(len(a) * SR / sr), endpoint=False), np.arange(len(a)), a).astype(np.float32)
     if kind == "chatterbox":
         import tempfile
-        w = _cbx(engine)
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
             out = f.name
         req = {"text": text, "lang": engine.get("lang", lang)[:2], "ref": str(_ref_path(engine)), "out": out,
                "exaggeration": engine.get("exaggeration", 0.5), "cfg_weight": engine.get("cfg_weight", 0.5),
                "seed": int(hashlib.sha256(text.encode()).hexdigest()[:8], 16)}
-        w.stdin.write(json.dumps(req) + "\n")
-        w.stdin.flush()
-        rep = json.loads(w.stdout.readline() or "{}")
+        rep = {}
+        for _attempt in range(2):  # a worker killed for memory is restarted once
+            w = _cbx(engine)
+            try:
+                w.stdin.write(json.dumps(req) + "\n")
+                w.stdin.flush()
+                rep = json.loads(w.stdout.readline() or "{}")
+            except (BrokenPipeError, OSError):
+                rep = {}
+            if rep or w.poll() is None:
+                break
         if not rep.get("ok"):
             raise RuntimeError(f"Chatterbox failed: {rep.get('error', 'worker died')}")
         a = read_wav(Path(out))

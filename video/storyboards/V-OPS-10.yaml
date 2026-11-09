@@ -141,7 +141,7 @@ steps:
       - highlight: {target: {text: {en: "Shedding does not lift the bus", fr: "Le délestage ne relève pas le bus"}}, seconds: 4}
 
   - id: decide
-    title: {en: "Hold at this level", fr: "Maintenir ce niveau"}
+    title: {en: "Holding and monitoring", fr: "Maintenir et surveiller"}
     say:
       en: >-
         Step two concerns the payload, which the spacecraft has already switched off. The check

@@ -81,7 +81,7 @@ steps:
       - highlight: {target: {css: "tr:has-text('LINK MARGIN'), tr:has-text('MARGE DE LIAISON')"}, seconds: 3}
 
   - id: rate
-    title: {en: "Spend margin on data rate", fr: "Dépenser la marge en débit"}
+    title: {en: "Trading margin for data rate", fr: "Échanger la marge contre du débit"}
     say:
       en: >-
         A margin this large represents unused capacity. When the data rate is increased from one

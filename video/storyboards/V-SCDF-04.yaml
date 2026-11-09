@@ -93,7 +93,7 @@ steps:
       - wait: 2
 
   - id: parent
-    title: {en: "Link the orphan", fr: "Rattacher l’orpheline"}
+    title: {en: "Linking an orphan requirement", fr: "Rattacher une exigence orpheline"}
     say:
       en: >-
         SR-003 is then given a parent. The mass limit is set by the launch opportunity, which
@@ -158,7 +158,7 @@ steps:
       - wait: 2
 
   - id: trace
-    title: {en: "Follow the chain", fr: "Suivre la chaîne"}
+    title: {en: "Tracing the requirement chain", fr: "Suivre la chaîne des exigences"}
     say:
       en: >-
         The Traceability tab presents the whole V: the objectives, the chain of requirements,

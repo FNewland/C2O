@@ -104,7 +104,7 @@ steps:
           why: {en: "Its gain is the G in G/T on the downlink.", fr: "Son gain est le G du G/T en descente."}
 
   - id: rate
-    title: {en: "Margin buys data rate", fr: "La marge achète du débit"}
+    title: {en: "Trading margin for data rate", fr: "Échanger la marge contre du débit"}
     say:
       en: >-
         Surplus margin can be used to increase the data rate, with each doubling of the rate

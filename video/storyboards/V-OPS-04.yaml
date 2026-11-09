@@ -176,7 +176,7 @@ steps:
         fr: "eps.power_gen affiche 0 W pendant l’étape 1. Les panneaux solaires sont en panne : NO-GO."
 
   - id: dark
-    title: {en: "Step 2: what must be dark", fr: "Étape 2 : ce qui doit être éteint"}
+    title: {en: "Step 2: units that should be off", fr: "Étape 2 : équipements qui doivent être éteints"}
     say:
       en: >-
         The same report contains the on-off status of every power line. For equipment that is
