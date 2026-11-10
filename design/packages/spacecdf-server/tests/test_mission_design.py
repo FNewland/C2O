@@ -344,20 +344,21 @@ class TestElementTree:
 
 class TestEquipmentKB:
     def test_kb_components_are_cubesat_appropriate(self, kb_components):
-        """No space-segment component mass > 10kg in any YAML file (excluding ground equipment).
+        """No space-segment component mass > 10kg in any YAML file; ground equipment has its own limit.
 
         Threshold is 10 kg to accommodate larger nano-class (12U-16U) and
         borderline micro-class components (optical terminals, hall thrusters)
         while still flagging anything clearly outside CubeSat/small-sat scope.
+        Ground files (``ground_*``: dishes, rotators, racks) are large by nature;
+        they are checked against a 5 t sanity limit that still catches g/kg slips.
         """
         for category, components in kb_components.items():
-            if category == "ground_equipment":
-                continue  # Ground antennas etc. are large by nature
+            limit = 5000.0 if category.startswith("ground_") else 10.0
             for comp in components:
                 mass = comp.get("mass_kg", 0) or 0
-                assert mass <= 10.0, (
+                assert mass <= limit, (
                     f"Component {comp.get('id', '?')} in {category} has mass "
-                    f"{mass} kg, exceeding CubeSat/small-sat range (10 kg max per component)"
+                    f"{mass} kg, exceeding the {limit:g} kg per-component limit"
                 )
 
     def test_kb_no_duplicate_ids(self, kb_components):
@@ -382,13 +383,14 @@ class TestEquipmentKB:
         # Hard-code the mapping to avoid importing equipment.py which requires spacecdf_common
         domain_to_categories = {
             "power": ["batteries", "solar_cells", "solar_panels", "eps_boards"],
-            "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers"],
+            "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers", "adcs_integrated"],
             "link": ["transponders", "antennas", "gps_receivers"],
             "propulsion": ["thrusters"],
-            "structure": ["cubesat_structures", "deployers", "mechanical_hardware"],
+            "structure": ["cubesat_structures", "deployers", "mechanical_hardware", "deorbit_devices"],
             "data": ["obcs"],
             "thermal": ["thermal_hardware"],
             "integration": ["harnesses"],
+            "payload": ["payload_imagers", "payload_optics", "payload_controllers"],
         }
 
         for domain, categories in domain_to_categories.items():
@@ -401,22 +403,28 @@ class TestEquipmentKB:
                 )
 
     def test_ground_equipment_exists(self, kb_components):
-        """ground_equipment.yaml has components."""
-        assert "ground_equipment" in kb_components, "ground_equipment.yaml missing from KB"
-        assert len(kb_components["ground_equipment"]) > 0, "ground_equipment.yaml has 0 components"
+        """The ground-segment files (ground_antennas, ground_rf, ...) have components.
+
+        The old combined ground_equipment.yaml duplicated every id of the split files
+        and was removed (Nov 2026)."""
+        for cat in ("ground_antennas", "ground_rf", "ground_baseband", "ground_software", "ground_timing"):
+            assert cat in kb_components, f"{cat}.yaml missing from KB"
+            assert len(kb_components[cat]) > 0, f"{cat}.yaml has 0 components"
+        assert "ground_equipment" not in kb_components
 
     def test_equipment_domain_mapping_complete(self):
         """Every KB category maps to a subsystem domain."""
         # Hard-code the mapping to avoid import dependency on spacecdf_common
         domain_to_categories = {
             "power": ["batteries", "solar_cells", "solar_panels", "eps_boards"],
-            "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers"],
+            "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers", "adcs_integrated"],
             "link": ["transponders", "antennas", "gps_receivers"],
             "propulsion": ["thrusters"],
-            "structure": ["cubesat_structures", "deployers", "mechanical_hardware"],
+            "structure": ["cubesat_structures", "deployers", "mechanical_hardware", "deorbit_devices"],
             "data": ["obcs"],
             "thermal": ["thermal_hardware"],
             "integration": ["harnesses"],
+            "payload": ["payload_imagers", "payload_optics", "payload_controllers"],
             "ground_rf": ["ground_antennas", "ground_rf", "ground_baseband"],
             "ground_ops": ["ground_software", "ground_timing"],
         }
@@ -429,6 +437,7 @@ class TestEquipmentKB:
             "batteries", "solar_panels", "eps_boards", "reaction_wheels",
             "star_trackers", "sun_sensors", "magnetorquers", "transponders",
             "antennas", "obcs", "cubesat_structures", "thrusters",
+            "adcs_integrated", "deorbit_devices", "payload_optics", "payload_controllers",
         }
         for cat in expected_yamls:
             assert cat in all_categories, (

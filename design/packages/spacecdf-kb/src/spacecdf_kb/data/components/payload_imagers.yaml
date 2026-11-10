@@ -83,3 +83,262 @@ components:
       boresight: [0, 0, -1]
       fov_deg: 29.856
     notes: The simulator's EOSAT-1 imager (geometry.yaml payload, payload.yaml; thermal node 1.1 kg); power is a C2O estimate
+
+  # NFI research 2026-11-10 (nfi/research/payload.md): real catalogue cameras with `sources:`;
+  # `estimated:` lists the fields that are estimates. Camera mass/cost INCLUDE the lens and filter
+  # named in performance.lens (do not add a payload_optic entry for the same lens to the budget).
+  - id: pl-av-alvium-1800c-530-vswir
+    name: Alvium 1800 C-530 VSWIR (Sony IMX992 InGaAs), with 35 mm f/1.4 SWIR lens
+    manufacturer: Allied Vision
+    category: payload_imager
+    mass_kg: 0.19            # 0.040 camera + 0.130 lens (Kowa LM35HC-SW) + ~0.020 filter in mount (est.)
+    dimensions_mm: [43, 43, 74]   # lens dia x lens dia x (26 body + 43 lens + 5 filter)
+    cost_keur: 20.6          # camera 19.8 (proposal CAD 30k, not public) + lens/filter est. 0.8
+    trl: 4
+    power_w: 2.7
+    interfaces: [MIPI CSI-2 (4 lanes), GPIO trigger x2, 5V over CSI-2]
+    operating_temp_c: [-20, 55]
+    heritage_missions: []
+    performance:
+      sensor: Sony IMX992 InGaAs (SenSWIR), global shutter, no TEC (IMX992-AABJ inferred)
+      spectral_range_nm: [400, 1700]
+      bands: [{name: SWIR1550, center_nm: 1550, fwhm_nm: 50, filter: Edmund 85-903}]
+      qe_at_865nm: 0.73
+      qe_at_1550nm: 0.72
+      pixel_pitch_um: 3.45
+      resolution_px: [2592, 2056]
+      bit_depth: 12
+      full_well_e: 51125            # LUCID Atlas10 IMX992 EMVA, gain 0 dB, TEC 20 C
+      read_noise_e: 155             # same; high-gain class ~71 e- (ZWO ASI992MM Pro)
+      dark_current_e_per_s_at_20c: 11780
+      dynamic_range_db: 50.4
+      max_frame_rate_fps: 84
+      exposure_range_s: [3.6e-5, 10]
+      lens: 35 mm f/1.4 (Kowa LM35HC-SW)
+      focal_length_mm: 35
+      f_number: 1.4
+      gsd_m_at_500km: 49.3
+      gsd_m_at_590km: 58.2
+      swath_km: 127.7               # at 500 km; 150.7 km at 590 km
+      fov_deg: 14.56                # across-track; 11.57 along-track
+      data_rate_mbps: 4.5           # 7.99 MB per frame every 14.2 s
+      frame_size_mb: 7.99
+    mechanical:
+      mount_class: bracket
+      envelope_mm: [43, 43, 74]
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 14.56
+    estimated: [mass_kg (filter part), cost_keur, trl]
+    notes: >-
+      Camera spec from the Allied Vision datasheet. QE values are read from Sony's absolute QE
+      plot (datasheet p.3). Full well, read noise and dark current are IMX992 values from LUCID
+      (other cameras), because Allied Vision publishes no EMVA data. Power is typical: 2.7 W on
+      the web datasheet; PDF v1.0.1 said tbd. The housing limit is 55 C on the current page vs
+      65 C in the 2024 PDF. Cost is the NFI proposal quote (CAD 30,000), not a public price;
+      lens and filter cost estimated. Export control: the analogous IMX990 camera is EU dual-use
+      ECCN 6A003.b.4.a with a licence required (Basler); get Allied Vision's ECCN in writing.
+      No space or radiation heritage found. Do not use DRRS (rolling-shutter) mode in orbit.
+    sources:
+      - https://www.1stvision.com/cameras/AVT/dataman/Alvium_1800_C-530_VSWIR_DataSheet.pdf
+      - https://www.alliedvision.com/en/products/area-scan-cameras/alvium/alvium-c/view/1269
+      - https://www.alliedvision.com/en/products/area-scan-cameras/alvium/alvium-c/datasheet/1269?t=camera
+      - https://1stvision.com/cameras/sensor_specs/IMX990_991_992_993_Flyer.pdf
+      - https://thinklucid.com/?p=189362
+      - https://www.testar.com.au/collections/zwo/products/zwo-asi992mm-pro-scientific-swir-camera
+      - https://www.baslerweb.com/en/products/cameras/area-scan-cameras/ace2/a2a1280-80gmswir/
+      - https://aegis-elec.com/kowa-lm35hc-sw-2-3-35-mm.html
+
+  - id: pl-av-alvium-1800c-1620m
+    name: Alvium 1800 C-1620m (Sony IMX542 mono), with 50 mm f/2.4 NIR lens
+    manufacturer: Allied Vision
+    category: payload_imager
+    mass_kg: 0.13            # 0.040 camera + 0.070 lens (Kowa LM50EC-IR) + ~0.020 filter (est.)
+    dimensions_mm: [33, 33, 82]   # lens dia x lens dia x (26 body + 50.8 lens + 5 filter)
+    cost_keur: 2.7           # camera ~1.6 (Edmund EU list for USB3 U-1620m, EUR 1,570) + lens/filter est. 1.1
+    trl: 4
+    power_w: 3.8
+    interfaces: [MIPI CSI-2 (4 lanes), GPIO trigger x2, 5V over CSI-2]
+    operating_temp_c: [-20, 65]
+    heritage_missions: []
+    performance:
+      sensor: Sony IMX542 CMOS (Pregius S), monochrome, global shutter, type 1.1 (16.8 mm diag)
+      spectral_range_nm: [300, 1100]
+      bands: [{name: NIR865, center_nm: 875, fwhm_nm: 50, filter: Edmund 86-958}]
+      qe_at_529nm: 0.68
+      qe_at_865nm: 0.15
+      pixel_pitch_um: 2.74
+      resolution_px: [5328, 3040]
+      bit_depth: 12
+      full_well_e: 9400
+      read_noise_e: 2.3
+      dynamic_range_db: 70
+      max_frame_rate_fps: 30
+      exposure_range_s: [1.3e-5, 10]
+      lens: 50 mm f/2.4 (Kowa LM50EC-IR, 1.2-inch format, 400-1000 nm)
+      focal_length_mm: 50
+      f_number: 2.4
+      gsd_m_at_500km: 27.4
+      gsd_m_at_590km: 32.3
+      swath_km: 146.0               # at 500 km; 172.3 km at 590 km
+      fov_deg: 16.61                # across-track; 9.52 along-track
+      data_rate_mbps: 13.7          # 24.30 MB per frame every 14.2 s
+      frame_size_mb: 24.30
+    mechanical:
+      mount_class: bracket
+      envelope_mm: [33, 33, 82]
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 16.61
+    estimated: [mass_kg (filter part), cost_keur (CSI-2 variant, lens), trl]
+    notes: >-
+      EMVA values from the Allied Vision datasheet. QE at 865 nm is read from the plot and is
+      only ~15%, so NFI meets its SNR targets only after 2x2 binning to the 60 m grid; see
+      payload.md section 3.4. It needs a lens of 1.1-inch format or larger, since 2/3-inch
+      lenses vignette. Fresh snow saturates at f/2.4 with a 2.3 ms exposure in June; use a
+      seasonal exposure table. The proposal quotes CAD 3,300 (2.2 keur). No space heritage found.
+    sources:
+      - https://www.wdlsystems.com/specifications/spec_16481.pdf
+      - https://www.alliedvision.com/de/products/area-scan-cameras/alvium/alvium-c/datasheet/1169?t=camera
+      - https://edmundoptics.eu/f/PdfExport/39627
+      - https://aegis-elec.com/kowa-lm50ec-ir.html
+
+  - id: pl-raptor-owl-640m
+    name: Owl 640 M VIS-SWIR camera (TEC-less InGaAs), with 35 mm lens
+    manufacturer: Raptor Photonics
+    category: payload_imager
+    mass_kg: 0.17
+    dimensions_mm: [62, 42, 42]
+    cost_keur: 25            # (est.) price not public
+    trl: 6                   # (est.) marketed as a satellite camera, no named mission
+    power_w: 2.5
+    interfaces: [C-mount, TTL trigger in/out, 12V input]
+    heritage_missions: []
+    performance:
+      sensor: InGaAs PIN photodiode, global shutter, TEC-less
+      spectral_range_nm: [600, 1700]
+      pixel_pitch_um: 15
+      resolution_px: [640, 512]
+      lens: 35 mm (illustrative; ~150 mm needed for ~50 m GSD)
+      focal_length_mm: 35
+      gsd_m_at_500km: 214
+      swath_km: 137
+      fov_deg: 15.6
+    mechanical:
+      mount_class: bracket
+      envelope_mm: [42, 42, 62]
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 15.6
+    estimated: [cost_keur, trl, gsd/swath/fov depend on the assumed 35 mm lens]
+    notes: >-
+      Mass, power and dimensions from SatNow; the 2.5 W is an upper bound ("less than 2.5 W").
+      The low pixel count makes NFI's ~58 m over 150 km impossible. It is listed as an
+      alternative SWIR detector class only.
+    sources:
+      - https://satnow.com/products/satellite-cameras/raptor-photonics/113-1297-owl-640-m
+
+  - id: pl-dragonfly-chameleon-swir
+    name: Chameleon SWIR imager
+    manufacturer: Dragonfly Aerospace
+    category: payload_imager
+    mass_kg: 1.6
+    dimensions_mm: [98, 98, 250]   # 2.5U per catalogue; mm envelope (est.)
+    cost_keur: 300           # (est.) price not public
+    trl: 8
+    power_w: 7.0
+    interfaces: []
+    operating_temp_c: [10, 30]
+    heritage_missions: [LatConnect 60 SWIRSAT (3 units, launch 2026; customer, not yet flown)]
+    performance:
+      sensor: SWIR (4 bands)
+      spectral_range_nm: [1000, 1750]
+      gsd_m_at_500km: 8.7
+      swath_km: 11.2
+      fov_deg: 1.28            # (calc) 2*atan(5.6/500)
+      bit_depth: 10
+    mechanical:
+      mount_class: u_module
+      u_size: 2.5
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 1.28
+    estimated: [dimensions_mm, cost_keur, fov_deg (calc)]
+    notes: >-
+      Catalogue specs. Survival range -20 to +55 C. The catalogue lists "1000-1750 mm",
+      almost certainly meaning nm. Too narrow for NFI's landscape-scale use, and 1.6 kg / 2.5U
+      exceeds the 1U / 0.7 kg payload allocation.
+    sources:
+      - https://satcatalog.com/component/chameleon-swir
+      - https://www.satellitetoday.com/imagery-and-sensing/2025/01/10/dragonfly-aerospace-to-provide-imagers-for-latconnect-60-swirsat-satellites
+
+  - id: pl-dragonfly-gecko
+    name: Gecko imager (RGB)
+    manufacturer: Dragonfly Aerospace
+    category: payload_imager
+    mass_kg: 0.5
+    dimensions_mm: [65, 90, 105]
+    cost_keur: 60            # (est.) price not public
+    trl: 9
+    power_w: 7.0
+    interfaces: []
+    heritage_missions: [flight heritage since 2018 (missions not named in catalogue)]
+    performance:
+      sensor: snapshot RGB
+      bands: [RGB]
+      gsd_m_at_500km: 39
+      swath_km: 80             # 160 km wide-swath variant
+      fov_deg: 9.1             # (calc) 2*atan(40/500)
+      bit_depth: 10
+    mechanical:
+      mount_class: u_module
+      u_size: 1
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 9.1
+    estimated: [cost_keur, fov_deg (calc)]
+    notes: Catalogue specs. Flown, wide-swath, 1U, but RGB only with no NIR/SWIR band for NFI.
+    sources:
+      - https://www.satcatalog.com/component/gecko-imager/
+
+  - id: pl-simera-multiscape100-cis
+    name: MultiScape100 CIS (VNIR multispectral, TDI)
+    manufacturer: Simera Sense
+    category: payload_imager
+    mass_kg: 1.1
+    dimensions_mm: [98.3, 98.3, 176.5]
+    cost_keur: 200           # (est.) price not public
+    trl: 9
+    power_w: 5.8
+    interfaces: []
+    heritage_missions: [Phi-sat-2 (ESA)]
+    performance:
+      sensor: CMOS global shutter, digital TDI up to 32 stages, 8-band filter
+      spectral_range_nm: [450, 900]
+      focal_length_mm: 580
+      aperture_mm: 95
+      fov_deg: 2.22
+      gsd_m_at_500km: 4.7      # (calc) assuming 5.5 um pixel
+      swath_km: 19.4           # (calc) 2*500*tan(1.11 deg)
+      bit_depth: 10
+    mechanical:
+      mount_class: u_module
+      u_size: 1.75
+      anchor: nadir
+      face: mz
+      boresight: [0, 0, -1]
+      fov_deg: 2.22
+    estimated: [cost_keur, gsd_m_at_500km (pixel pitch assumed 5.5 um), swath_km (calc)]
+    notes: >-
+      SatNow gives conflicting mass (1.26 kg in the text, 1.1 kg in the table) and power
+      (3.25-7 W; 5.8 W imaging, 2.5 W idle). Bit depth is 10 or 12. No SWIR band, so it is
+      not a NFI fit.
+    sources:
+      - https://satcatalog.com/component/multiscape100-cis/
+      - https://www.satnow.com/products/satellite-cameras/simera-sense/113-1295-multiscape100-cis
+      - https://www.esa.int/ESA_Multimedia/Images/2024/02/Phsat-2_s_imager

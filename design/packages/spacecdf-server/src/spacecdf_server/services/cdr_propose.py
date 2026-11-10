@@ -48,7 +48,10 @@ CLASS_SUBSYSTEM = {
     "battery": "eps", "eps": "eps", "solar_array": "eps", "obc": "obdh", "transmitter": "ttc", "receiver": "ttc",
     "antenna": "ttc", "wheel": "aocs", "star_tracker": "aocs", "magnetorquer": "aocs", "adcs_sensor": "aocs",
     "gnss": "aocs", "heater": "tcs", "payload": "payload", "propulsion": "prop", "structure": "str",
+    "adcs_unit": "aocs", "payload_electronics": "payload",
 }
+#: Classes an integrated ADCS unit (class adcs_unit) provides by itself.
+ADCS_UNIT_PROVIDES = ("wheel", "magnetorquer", "adcs_sensor")
 
 
 def _kbp(e: dict) -> dict:
@@ -140,6 +143,9 @@ def design_facts(facts: dict) -> dict[str, Any]:
     for u in units:
         classes.setdefault(u["cls"], []).append(u)
 
+    # An integrated ADCS unit carries its own wheels, magnetorquers and sensors.
+    provided = set(ADCS_UNIT_PROVIDES) if classes.get("adcs_unit") else set()
+
     def n_of(cls: str) -> int:
         return sum(u["qty"] for u in classes.get(cls, []))
 
@@ -157,10 +163,11 @@ def design_facts(facts: dict) -> dict[str, Any]:
         "star_tracker_redundant": redundant("star_tracker"),
         "bus_redundant": any((b.get("redundancy") or "none") != "none" for b in buses)
                          or len({(b.get("protocol"), b.get("segment")) for b in buses}) >= 2,
-        "wheel": bool(classes.get("wheel")), "magnetorquer": bool(classes.get("magnetorquer")),
+        "wheel": bool(classes.get("wheel")) or "wheel" in provided,
+        "magnetorquer": bool(classes.get("magnetorquer")) or "magnetorquer" in provided,
         "star_tracker": bool(classes.get("star_tracker")), "payload": bool(classes.get("payload")),
         "propulsion": bool(classes.get("propulsion")), "heater": bool(heaters or heater_units),
-        "adcs_sensor": bool(classes.get("adcs_sensor")), "gnss": bool(classes.get("gnss")),
+        "adcs_sensor": bool(classes.get("adcs_sensor")) or "adcs_sensor" in provided, "gnss": bool(classes.get("gnss")),
     }
     subs = {"sys", "fdir"} | {u["sub"] for u in units}
     if lines:
@@ -171,7 +178,7 @@ def design_facts(facts: dict) -> dict[str, Any]:
     heater_names = [h.get("name") or h.get("id") for h in heaters] or [u["name"] for u in heater_units]
     return {"c": c, "mc": mc, "els": els, "by_id": by_id, "units": units, "classes": classes, "flags": flags,
             "subs": subs, "lines": lines, "buses": buses, "heaters": heaters, "heater_names": heater_names,
-            "modes": modes, "n_wheels": n_of("wheel"),
+            "modes": modes, "n_wheels": n_of("wheel"), "provided": provided,
             "rails_all": [r for r in facts.get("rails") or [] if r.get("status") != "rejected" and not r.get("deleted_at")]}
 
 
@@ -692,7 +699,7 @@ def _aocs_modes(f: dict) -> tuple[list[dict], list[dict]]:
     c = f["c"]
     if "aocs" not in f["subs"]:
         return [], []
-    have = set(f["classes"])
+    have = set(f["classes"]) | f.get("provided", set())
     modes = []
     for m in c["aocs"]["modes"]:
         if any(n not in have for n in m.get("needs") or []):

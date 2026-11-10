@@ -7,23 +7,29 @@ components:
     name: NanoMind A3200
     manufacturer: GomSpace
     category: obc
-    mass_kg: 0.045
-    dimensions_mm: [96, 90, 10]
-    form_factor: PC/104
+    mass_kg: 0.024              # 24 g (datasheet)
+    dimensions_mm: [65, 40, 7.1]
+    form_factor: GomSpace 65x40 module   # mounts in a P60 dock slot (X3) or a NanoDock (PC/104)
     cost_keur: 12
     trl: 9
     heritage_missions: [GOMX-1, GOMX-3, OPS-SAT]
     performance:
-      processor: ARM Cortex-M3
-      clock_mhz: 48
-      ram_mb: 2
-      flash_mb: 8
+      processor: Atmel AT32UC3C (AVR32) with FPU
+      clock_mhz: 64            # 8-64 MHz
+      ram_mb: 32               # SDRAM
+      flash_mb: 128            # NOR; plus 512 kB internal flash and 32 kB FRAM
       storage_gb: 0
       os: FreeRTOS
-    power_w: 0.4
-    interfaces: [I2C, SPI, UART, CAN, PC/104]
-    operating_temp_c: [-40, 85]
-    notes: Proven CubeSat OBC, over 100 missions flown
+      onboard_sensors: [MPU-3300 gyro, HMC5843 magnetometer]
+    power_w: 0.15             # 45 mA at 3.3 V typical, running ADCS at 32 MHz
+    interfaces: [I2C, SPI, UART, CAN, PC/104, PPS input, PWM (3x magnetorquer drivers)]
+    operating_temp_c: [-30, 85]
+    notes: >-
+      Proven CubeSat OBC, over 100 missions flown. Corrected from the 2025 datasheet (NFI research
+      2026-11-10 (bus.md)): 65x40 mm module that needs a dock (P60 dock slot X3 or NanoDock);
+      on-board gyro and magnetometer, three PWM magnetorquer drivers
+    sources:
+      - https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanomind-a3200_1006901-2.0.pdf
 
   - id: obc-isis-iobc
     name: iOBC
@@ -172,3 +178,27 @@ components:
       os: FreeRTOS
     power_w: 0.5
     interfaces: [CAN, RS422, RS485, SPI, I2C, UART, Ethernet]
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: obc-gom-nanomind-z7000
+    name: NanoMind Z7000
+    manufacturer: GomSpace
+    category: obc
+    mass_kg: 0.077        # 76.8 g PCB + shield (28.7 g PCB only)
+    dimensions_mm: [65, 40, 6.5]
+    cost_keur: 20         # (est.) not published
+    trl: 9
+    heritage_missions: []
+    performance:
+      processor: Xilinx Zynq 7030 (dual ARM Cortex-A9) + FPGA 125k LC
+      clock_mhz: 800
+      ram_mb: 1024
+      flash_mb: 0          # QSPI NOR size not stated
+      storage_gb: 32
+      os: Linux
+    power_w: 2.3           # max; ~0.7 A typ at 3.3 V
+    interfaces: [CAN, I2C, RS422, UART, USB, SPI, SD, time-sync input]
+    operating_temp_c: [-40, 85]
+    notes: 65x40 mm module (needs a GomSpace dock/motherboard, not a PC/104 board). Datasheet says flight proven, no missions named. Cost (est.).
+    sources:
+      - https://gomspace.com/wp-content/uploads/2025/12/gs-ds-nanomind-z7000-15-1.pdf

@@ -30,6 +30,8 @@ roles:
   source: c2o_default
   by_category:
     payload_imager: payload
+    payload_controller: payload
+    adcs_integrated: adcs
     battery: battery
     eps_board: eps
     obc: obc

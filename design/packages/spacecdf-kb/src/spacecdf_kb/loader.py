@@ -101,11 +101,12 @@ class KnowledgeBase:
         categories = [category] if category else list(self._components.keys())
         for cat in categories:
             for comp in self._components.get(cat, []):
-                if comp.get("trl", 9) < min_trl:
+                # null = not published (reference entries): never filtered out as "too heavy"
+                if (comp.get("trl") or 9) < min_trl:
                     continue
-                if max_mass_kg and comp.get("mass_kg", 0) > max_mass_kg:
+                if max_mass_kg and (comp.get("mass_kg") or 0) > max_mass_kg:
                     continue
-                if max_power_w and comp.get("power_w", 0) > max_power_w:
+                if max_power_w and (comp.get("power_w") or 0) > max_power_w:
                     continue
                 results.append(comp)
         return results

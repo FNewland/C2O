@@ -60,19 +60,26 @@ components:
     name: UHF Deployable Antenna System
     manufacturer: ISISPACE
     category: antenna
-    mass_kg: 0.055
+    mass_kg: 0.089              # typical; < 100 g
     dimensions_mm: [98, 98, 7]
     cost_keur: 3
+    operating_temp_c: [-20, 60]   # qualified -40 to +80 C
     trl: 9
     heritage_missions: [Delfi-C3, QB50, many CubeSats]
     performance:
-      frequency_mhz: 435
+      frequency_mhz: 435           # user-tuned VHF/UHF; > 10 MHz usable bandwidth per element
       band: UHF
       gain_dbi: 2.0
       polarisation: linear
       type: turnstile_deployable
       deployment: burn_wire
-    notes: Most widely used CubeSat UHF antenna system
+      configurations: [1-2 dipoles, up to 4 monopoles, turnstile]
+      deploy_power_w: 2             # < 3 s per element above 0 C, < 20 s at -40 C; standby < 40 mW
+    notes: >-
+      Most widely used CubeSat UHF antenna system. Corrected from the antenna-system datasheet
+      (NFI research 2026-11-10 (bus.md))
+    sources:
+      - https://www.isispace.nl/wp-content/uploads/2021/01/ISIS-ANTS-DSH-0001-Antenna_System_Datasheet-04_00.pdf
 
   - id: ant-uhf-monopole
     name: UHF Monopole Antenna
@@ -127,3 +134,26 @@ components:
       type: patch_array
       deployment: body_mounted
     notes: French space heritage, ESA-funded development
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: ant-endurosat-uhf-antenna-iii
+    name: UHF Antenna III
+    manufacturer: Endurosat
+    category: antenna
+    mass_kg: 0.210
+    dimensions_mm: [98, 98, 7]      # (est.) end-plate form, not on product page
+    cost_keur: 4                    # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      frequency_mhz: 401.5          # commercial option 400-403 MHz (also 435-438 MHz, VHF 144-148 MHz)
+      band: UHF
+      gain_dbi: 0.0                 # ">0 dBi"
+      polarisation: linear
+      type: dipole_deployable
+      deployment: burn_wire
+      rf_power_handling_w: 2
+    interfaces: [RS485, I2C, UART]
+    notes: Offers a 400-403 MHz commercial tuning but not 450 MHz. Triple-redundant burn wire with feedback. Dimensions and cost (est.).
+    sources:
+      - https://www.endurosat.com/products/uhf-antenna-iii

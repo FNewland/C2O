@@ -147,7 +147,24 @@ async def get_equipment_needs(study_id: str) -> dict:
         {"category": "cubesat_structures", "required": True, "reason": "Spacecraft structure", "quantity": 1},
         {"category": "thermal_hardware", "required": True, "reason": "Thermal control", "quantity": 1},
         {"category": "thrusters", "required": False, "reason": "Propulsion (if delta-V required)", "quantity": 0},
+        {"category": "deorbit_devices", "required": False, "reason": "Post-mission disposal by drag sail (no propulsion)",
+         "quantity": 1},
     ]
+    # Alternatives: one integrated ADCS unit covers the AOCS parts; a drag sail or thrusters
+    # cover disposal. satisfied_by: what the study's KB parts already provide.
+    from ..services.equipment_logic import (ADCS_PARTS, DEORBIT_DEVICES, INTEGRATED_ADCS,
+                                            selected_kb_categories)
+    from .elements import _elements
+    alt = {**{c: [INTEGRATED_ADCS] for c in ADCS_PARTS}, "thrusters": [DEORBIT_DEVICES],
+           DEORBIT_DEVICES: ["thrusters"]}
+    try:
+        selected = selected_kb_categories([e for e in _elements.values() if e.get("study_id") == study_id])
+    except Exception:  # noqa: BLE001 — KB unavailable: report needs without coverage
+        selected = set()
+    for n in needs:
+        n["alternatives"] = alt.get(n["category"], [])
+        by = n["category"] if n["category"] in selected else next((a for a in n["alternatives"] if a in selected), None)
+        n["satisfied"], n["satisfied_by"] = by is not None, by
     return {"needs": needs, "study_id": study_id}
 
 
@@ -440,18 +457,12 @@ async def get_equipment_needs(study_id: str) -> dict:
         mission_duration_years=req.design_lifetime_years,
     )
 
+    from ..services.equipment_logic import needs_coverage, selected_kb_categories
+    from .elements import _elements
+    selected = selected_kb_categories([e for e in _elements.values() if e.get("study_id") == study_id])
     return {
         "study_id": study_id,
-        "needs": [
-            {
-                "category": n.category,
-                "reason": n.reason,
-                "quantity": n.quantity,
-                "required": n.required,
-                "notes": n.notes,
-            }
-            for n in needs
-        ],
+        "needs": needs_coverage(needs, selected),
         "required_categories": [n.category for n in needs if n.required],
         "optional_categories": [n.category for n in needs if not n.required],
     }

@@ -115,6 +115,7 @@ roles:
     data: false
   adcs_computer:
     label: {en: ADCS computer, fr: Calculateur SCAO}
+    kb_categories: [adcs_integrated]   # integrated ADCS unit: its own wheels, torquers and sensors
     names: ['adcs (computer|controller|board|unit|module)', '\bacs computer', 'iadcs', 'aocs (computer|controller)']
     powered: true
     data: true
@@ -146,7 +147,8 @@ roles:
     data: true
   mass_memory:
     label: {en: Payload data handling, fr: Traitement des données de charge utile}
-    names: ['mass memory', '\bpdh\b', 'payload data handl', 'data storage', 'solid.state recorder']
+    kb_categories: [payload_controller]
+    names: ['payload (controller|computer)', 'mass memory', '\bpdh\b', 'payload data handl', 'data storage', 'solid.state recorder']
     powered: true
     data: true
   transceiver:
@@ -239,6 +241,19 @@ roles:
     label: {en: Harness, fr: Faisceau}
     kb_categories: [harnesses, harness]
     names: ['harness', 'cable']
+    powered: false
+    data: false
+  deorbit_device:
+    label: {en: De-orbit device (drag sail), fr: Dispositif de désorbitation (voile de traînée)}
+    kb_categories: [deorbit_device]
+    names: ['drag (sail|tape)', 'de-?orbit']
+    powered: true           # release actuator (HDRM / pyro cutter / SMA) drawn at disposal
+    data: true              # deploy command and deployed-status feedback
+    deployable: true
+  optic:
+    label: {en: Lens or filter, fr: Objectif ou filtre}
+    kb_categories: [payload_optic]
+    names: ['\blens\b', 'bandpass filter']
     powered: false
     data: false
   payload:

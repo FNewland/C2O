@@ -30,6 +30,15 @@ class EquipmentNeed:
     quantity: int = 1
     required: bool = True  # False = optional/nice-to-have
     notes: str = ""
+    # KB categories that satisfy this need instead (e.g. one integrated ADCS unit
+    # replaces separate wheels, magnetorquers and sensors; see needs_coverage()).
+    alternatives: list[str] = field(default_factory=list)
+
+
+#: An integrated ADCS unit (wheels + magnetorquers + sensors + computer) covers these needs.
+ADCS_PARTS = ("star_trackers", "reaction_wheels", "magnetorquers", "sun_sensors")
+INTEGRATED_ADCS = "adcs_integrated"
+DEORBIT_DEVICES = "deorbit_devices"
 
 
 def determine_equipment_needs(
@@ -91,6 +100,10 @@ def determine_equipment_needs(
                                    notes=f"Pointing req: {pointing_accuracy_deg}° — magnetorquers sufficient"))
         needs.append(EquipmentNeed("sun_sensors", "Basic attitude reference", 2))
 
+    for n in needs:  # one integrated ADCS unit satisfies every AOCS part need
+        if n.category in ADCS_PARTS:
+            n.alternatives.append(INTEGRATED_ADCS)
+
     # --- GPS: needed for precise orbit knowledge ---
     if orbit_type in ("sso", "leo") and altitude_km < 2000:
         if pointing_accuracy_deg <= 1.0 or mission_type in ("earth_observation", "sar"):
@@ -105,9 +118,47 @@ def determine_equipment_needs(
                                    notes="Cold gas, electric, or chemical depending on ΔV need"))
     elif altitude_km > 600 and mission_duration_years > 2:
         needs.append(EquipmentNeed("thrusters", "May need propulsion for 25-year deorbit rule", 1,
-                                   required=False, notes="Consider drag augmentation as alternative"))
+                                   required=False, notes="Consider drag augmentation as alternative",
+                                   alternatives=[DEORBIT_DEVICES]))
+
+    # --- Post-mission disposal without propulsion: drag augmentation (drag sail / tape) ---
+    # C2O default thresholds: above ~600 km a 3U decays in more than 25 years; from 500 km
+    # up a drag device is what keeps it inside the 5-year rule (FCC 2022).
+    if not has_propulsion and altitude_km >= 500:
+        needs.append(EquipmentNeed(DEORBIT_DEVICES, "Post-mission disposal by drag augmentation", 1,
+                                   required=altitude_km > 600,
+                                   notes=f"{altitude_km:.0f} km without propulsion: a drag sail shortens "
+                                         "the natural decay (check the disposal analysis)",
+                                   alternatives=["thrusters"]))
 
     return needs
+
+
+def needs_coverage(needs: list[EquipmentNeed], selected_categories: set[str] | list[str]) -> list[dict[str, Any]]:
+    """Which needs the selected KB categories (file stems) satisfy.
+
+    A need is satisfied by its own category or by any of its ``alternatives``
+    (an integrated ADCS covers wheels / magnetorquers / sensors; a drag sail covers
+    the disposal need). Returns one dict per need with ``satisfied_by`` (category or None).
+    """
+    sel = set(selected_categories)
+    out = []
+    for n in needs:
+        by = n.category if n.category in sel else next((a for a in n.alternatives if a in sel), None)
+        out.append({"category": n.category, "reason": n.reason, "quantity": n.quantity,
+                    "required": n.required, "notes": n.notes, "alternatives": list(n.alternatives),
+                    "satisfied": by is not None, "satisfied_by": by})
+    return out
+
+
+def selected_kb_categories(elements: list[dict[str, Any]]) -> set[str]:
+    """KB categories (file stems, as in the needs) of the elements' KB parts."""
+    ids = {str(e.get("kb_component_id")) for e in elements if e.get("kb_component_id") and not e.get("deleted_at")}
+    if not ids:
+        return set()
+    from spacecdf_kb.loader import KnowledgeBase
+    kb = KnowledgeBase()
+    return {cat for cat in kb.categories for c in kb.search_components(category=cat) if str(c.get("id")) in ids}
 
 
 # ---------------------------------------------------------------------------

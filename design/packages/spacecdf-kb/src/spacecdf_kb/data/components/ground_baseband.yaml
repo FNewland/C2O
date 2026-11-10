@@ -133,3 +133,99 @@ components:
       (~$3k) covers UHF through S-band. GNU Radio flowgraphs available
       for CCSDS, AX.25, and custom protocols. Requires significant
       software expertise. SatNOGS uses this stack for its global network.
+
+  # NFI research 2026-11-10 (nfi/research/mission.md): sources per entry; 'unverified' in notes = needs a quote
+  - id: gs-bb-usrp-b210
+    name: Ettus USRP B210 (board)
+    manufacturer: Ettus Research (NI/Emerson)
+    category: ground_baseband
+    mass_kg: 0.35
+    power_w: 6
+    cost_keur: 2.2           # USD 2,387 (Ettus); CAD 3,505 (RobotShop)
+    trl: 8
+    performance:
+      type: software_defined_radio
+      frequency_mhz: 70-6000
+      instantaneous_bw_mhz: 56
+      channels: 2 TX + 2 RX (full duplex)
+      interface: USB 3.0
+      modulation: [user-defined (GNU Radio, gr-satellites)]
+    heritage_missions: [university CubeSat ground stations, SatNOGS]
+    notes: >
+      Full-duplex 2x2 lets one radio run the 401 MHz RX and 450 MHz TX chains at once. TX output
+      is low (mW level) so needs a driver + PA. The existing KB entry gs-bb-gnuradio-sdr
+      describes the GNU Radio stack built on this hardware.
+    sources:
+      - https://www.ettus.com/allproducts/ub210-kit
+      - https://ca.robotshop.com/products/digilent-ettus-usrp-b210-2x2-70mhz-6ghz-sdr-cognitive-radio
+
+  - id: gs-bb-adalm-pluto
+    name: Analog Devices ADALM-PLUTO (PlutoSDR)
+    manufacturer: Analog Devices
+    category: ground_baseband
+    mass_kg: 0.12
+    power_w: 2.5
+    cost_keur: 0.14          # USD 149 at launch; current price higher, verify
+    trl: 7
+    performance:
+      type: software_defined_radio
+      frequency_mhz: 325-3800
+      instantaneous_bw_mhz: 20
+      channels: 1 TX + 1 RX
+      adc_bits: 12
+      interface: USB 2.0
+    heritage_missions: [teaching, amateur]
+    notes: >
+      Very low cost TX-capable SDR (AD9363 + Zynq). Adequate for 38.4 kbps; USB 2.0 and
+      temperature stability (no external reference without modification) limit operational use.
+      Good for student test benches and the spacecraft EGSE.
+    sources:
+      - https://www.rtl-sdr.com/adalm-pluto-new-149-tx-capable-sdr-325-3800-mhz-range-12-bit-adc-20-mhz-bandwidth/
+
+  - id: gs-bb-limesdr-mini-2
+    name: Lime Microsystems LimeSDR Mini 2.0
+    manufacturer: Lime Microsystems
+    category: ground_baseband
+    mass_kg: 0.05
+    power_w: 3
+    cost_keur: 0.37          # USD 399 (CrowdSupply)
+    trl: 7
+    performance:
+      type: software_defined_radio
+      frequency_mhz: 10-3500
+      instantaneous_bw_mhz: 40
+      channels: 1 TX + 1 RX (full duplex)
+      adc_bits: 12
+      tx_power_dbm: 10
+      interface: USB 3.0
+    heritage_missions: [amateur, teaching]
+    notes: >
+      Open-hardware full-duplex alternative to the B210 at a fraction of the price. The original
+      2x2 LimeSDR was discontinued.
+    sources:
+      - https://limemicro.com/boards/limesdr-mini/
+      - https://www.rtl-sdr.com/limesdr-2-0-mini-now-crowdfunding-standard-limesdr-discontinued/
+
+  - id: gs-bb-airspy-r2
+    name: Airspy R2 (receive-only SDR)
+    manufacturer: Airspy
+    category: ground_baseband
+    mass_kg: 0.065
+    power_w: 1.5
+    cost_keur: 0.17          # unverified (~USD 169-199 typical)
+    trl: 7
+    performance:
+      type: software_defined_radio (RX only)
+      frequency_mhz: 24-1700
+      instantaneous_bw_mhz: 10
+      adc_bits: 12
+      noise_figure_db: 3.5
+      interface: USB 2.0
+      external_clock: 10-100 MHz MCX input
+    heritage_missions: [SatNOGS stations, amateur]
+    notes: >
+      Low-cost receive chain for downlink-only or monitoring stations (e.g. a second RX at a
+      remote site). External clock input allows GPSDO discipline.
+    sources:
+      - https://airspy.com/airspy-r2/
+      - https://www.wimo.com/en/airspy-r2

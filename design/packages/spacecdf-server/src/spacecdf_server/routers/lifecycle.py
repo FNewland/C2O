@@ -103,6 +103,8 @@ _EXAMPLE_CATEGORY_DOMAIN: dict[str, str] = {
     "thrusters": "propulsion", "propulsion": "propulsion",
     "heaters": "thermal", "thermal": "thermal",
     "cameras": "payload", "imagers": "payload", "payloads": "payload",
+    "adcs_integrated": "aocs", "deorbit_devices": "structure", "drag_sails": "structure",
+    "payload_imagers": "payload", "payload_optics": "payload", "payload_controllers": "payload",
 }
 _DOMAIN_NAME = {"payload": "Payload", "power": "EPS", "aocs": "AOCS", "ttc": "Communications",
                 "obc": "On-Board Computer", "thermal": "Thermal", "structure": "Structure",

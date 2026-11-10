@@ -161,3 +161,92 @@ components:
       Enables simultaneous transmit and receive on a single antenna feed.
       High isolation protects the LNA from transmitter power. Essential
       for any S-band station doing both uplink and downlink.
+
+  # NFI research 2026-11-10 (nfi/research/mission.md): sources per entry; 'unverified' in notes = needs a quote
+  - id: gs-rf-lna-403-filtered
+    name: 400-406 MHz Filtered Low-Noise Preamplifier
+    manufacturer: antennas-amplifiers.com (Nuxcom)
+    category: ground_rf
+    mass_kg: 0.2
+    power_w: 1.3
+    cost_keur: 0.2           # EUR 174 + 15 bias-tee + 10 outdoor housing
+    trl: 8
+    performance:
+      band: UHF
+      frequency_mhz: 400-406
+      noise_figure_db: 0.6
+      gain_db: 20.5
+      filtering: input band-pass (144 MHz -10 dB, 806 MHz -8 dB, 1296 MHz -36 dB)
+      supply: 10-15 V, ~100 mA, optional bias-tee
+    heritage_missions: [radiosonde and 403 MHz DCS reception]
+    notes: >
+      Covers NFI 401-402 MHz downlink. Rejection at 450 MHz is not specified; with a co-sited
+      450 MHz uplink (25-50 W) add a cavity band-pass/notch ahead of the LNA (or rely on separate
+      antennas with >40 dB isolation). Weatherproof housing is an option.
+    sources:
+      - https://antennas-amplifiers.com/400-403-406mhz-low-noise-preamplifier/
+
+  - id: gs-rf-lna-minicircuits-zx60-p33uln
+    name: Mini-Circuits ZX60-P33ULN+ Wideband LNA (0.4-3 GHz)
+    manufacturer: Mini-Circuits
+    category: ground_rf
+    mass_kg: 0.05
+    power_w: 0.3
+    cost_keur: 0.15          # unverified (distributor price not captured)
+    trl: 8
+    performance:
+      band: UHF-S
+      frequency_mhz: 400-3000
+      noise_figure_db: 0.4   # approx. near 400 MHz from vendor graph; verify
+      gain_db: 18            # approx.; verify
+      supply: 3.0-3.3 V
+    heritage_missions: []
+    notes: >
+      Connectorised wideband LNA; must be combined with a band-pass filter and weatherproof
+      enclosure for masthead use (no internal filtering). Lower edge of band is 400 MHz, so check
+      performance at 401 MHz before committing.
+    sources:
+      - https://www.digikey.ca/en/products/detail/mini-circuits/ZX60-P33ULN/16682811
+      - https://www.minicircuits.com/pages/s-params/ZX60-P33ULN+_GRAPHS.pdf
+
+  - id: gs-rf-lna-ssb-mast-70cm
+    name: SSB-Electronic Masthead Preamplifier, 70 cm (RF-VOX / sequenced)
+    manufacturer: SSB-Electronic
+    category: ground_rf
+    mass_kg: 0.6
+    power_w: 2
+    cost_keur: 0.43          # "as low as" EUR 429 for the series
+    trl: 9
+    performance:
+      band: UHF
+      frequency_mhz: 430-440 (amateur 70 cm)
+      tx_pass_through_w: 100 (VOX models) / 1500 (MHP models, sequencer required)
+      connector: N
+    heritage_missions: [amateur satellite stations]
+    notes: >
+      Classic switched masthead preamp for a single TX/RX antenna. Tuned to 70 cm, so not usable
+      at 401/450 MHz without retuning; listed as a reference design pattern (RF-sensed TX
+      bypass, sequencer). Noise figure/gain for 70 cm model not captured.
+    sources:
+      - https://www.wimo.com/en/ssb-electronic-mast-preamp-6m-4m-2m-70cm
+
+  - id: gs-rf-pa-minicircuits-zhl-50w-52
+    name: Mini-Circuits ZHL-50W-52-S+ 50 W Amplifier (50-500 MHz)
+    manufacturer: Mini-Circuits
+    category: ground_rf
+    mass_kg: 0.14            # without heatsink
+    power_w: 220             # 24 V, up to 9.3 A
+    cost_keur: 2.5           # unverified estimate
+    trl: 8
+    performance:
+      band: VHF-UHF
+      frequency_mhz: 50-500
+      output_power_w: 45     # P1dB +46.5 dBm typ; Psat +48 dBm typ
+      gain_db: 52
+      supply: 24 V
+    heritage_missions: []
+    notes: >
+      Covers the 450 MHz uplink (and a 148-150 MHz VHF fallback) with one part. 25 W is ample
+      for NFI's uplink; run backed-off. Needs heatsink/fan and a harmonic filter at the output.
+    sources:
+      - https://www.minicircuits.com/pdfs/ZHL-50W-52-S+.pdf

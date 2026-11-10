@@ -32,9 +32,9 @@ async def test_kb_copy_and_maturity_on_create(client, study_obj):
     sid = study_obj.id
     els = await _sat(client, sid)
     obc = els["obc"]
-    assert obc["dimensions_mm"] == [96.0, 90.0, 10.0]                          # F4
-    assert obc["kb_spec"]["form_factor"] == "PC/104" and "I2C" in obc["kb_spec"]["interfaces"]
-    assert obc["kb_spec"]["operating_temp_c"] == [-40, 85] and obc["kb_spec"]["kb_hash"]
+    assert obc["dimensions_mm"] == [65.0, 40.0, 7.1]                            # F4 (A3200 datasheet, Nov 2026)
+    assert obc["kb_spec"]["form_factor"] == "GomSpace 65x40 module" and "I2C" in obc["kb_spec"]["interfaces"]
+    assert obc["kb_spec"]["operating_temp_c"] == [-30, 85] and obc["kb_spec"]["kb_hash"]
     assert obc["margin_percent"] == 5.0                                        # F3: TRL 9 + heritage -> A
     assert els["cam"]["margin_percent"] == 20.0                                 # no part -> D
     # an explicit margin_percent is ignored (derived only)
@@ -44,7 +44,7 @@ async def test_kb_copy_and_maturity_on_create(client, study_obj):
     # persisted: reload from the DB
     from spacecdf_server.db.element_repo import load_all_elements
     loaded, _ = await load_all_elements()
-    assert loaded[obc["id"]]["kb_spec"]["form_factor"] == "PC/104"
+    assert loaded[obc["id"]]["kb_spec"]["form_factor"] == "GomSpace 65x40 module"
     # budgets show policy margins + the gate's system margin and the convention
     b = (await client.get(f"/api/elements/{obc['parent_id']}/budget/mass")).json()
     line = next(x for x in b["lines"] if x["element_id"] == obc["id"])

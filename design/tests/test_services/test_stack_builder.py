@@ -100,7 +100,8 @@ def test_payload_imager_category_is_schema_v2():
     assert len(imagers) >= 3 and all(c["category"] == "payload_imager" for c in imagers)
     for c in imagers:
         m = mechanical_of(c)
-        assert m["source"] == "kb" and m["mount_class"] == "u_module" and m["anchor"] == "nadir"
+        # a U-module imager, or a small catalogue camera on a bracket (NFI Alvium entries)
+        assert m["source"] == "kb" and m["mount_class"] in ("u_module", "bracket") and m["anchor"] == "nadir"
         assert m["boresight"] == [0, 0, -1] and m["fov_deg"] > 0 and c["mass_kg"] > 0
     eosat = next(c for c in imagers if c["id"] == "pl-imager-2u-eosat")
     assert eosat["performance"]["fov_deg"] == pytest.approx(29.856)      # = sim geometry.yaml payload.fov_deg

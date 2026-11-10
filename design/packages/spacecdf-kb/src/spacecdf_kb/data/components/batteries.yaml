@@ -29,23 +29,28 @@ components:
     name: NanoPower BPX
     manufacturer: GomSpace
     category: battery
-    chemistry: Li-ion (pouch)
-    mass_kg: 0.200
+    chemistry: Li-ion (18650)     # 8x 18650 3000 mAh
+    mass_kg: 0.500
+    dimensions_mm: [93, 86, 41]
     cost_keur: 10
     trl: 9
     heritage_missions:
       - ESAIL
       - Arctic Weather Satellite
     performance:
-      capacity_wh: 77.0
-      specific_energy_wh_kg: 385
+      capacity_wh: 86.0          # 8x 18650 3000 mAh
+      specific_energy_wh_kg: 172
       cycle_life: 2000
-      voltage_v:
-        nominal: 14.8
-        min: 12.0
-        max: 16.8
+      voltage_v: {nominal: 14.4, min: 12.0, max: 16.8}   # 4S-2P configuration
       operating_temp_c: [-10, 45]
-    notes: High-density CubeSat battery, 4S configuration
+      configurations_v: {2S-4P: 7.2, 4S-2P: 14.4, 8S-1P: 28.8}
+      heater_w: 6
+    notes: >-
+      High-density CubeSat battery, 4S configuration. Corrected from the 2026 datasheet (NFI
+      research 2026-11-10 (bus.md)): 8 cells, 2S-4P / 4S-2P / 8S-1P, 6 W heater; PCB electronics -40
+      to +85 C. Heritage ESAIL / Arctic Weather Satellite not verified
+    sources:
+      - https://gomspace.com/wp-content/uploads/2026/01/gs-ds-nanopower-bpx-3-2.1-DS-1018161-1-4.1-1.pdf
 
   - id: bat-clyde-3g-optimus
     name: 3rd Gen Optimus
@@ -192,13 +197,20 @@ components:
     trl: 9
     heritage_missions: [GOMX-3, GOMX-4, numerous CubeSats]
     performance:
-      capacity_wh: 38.5
+      capacity_wh: 43.0          # both 2P-2S and 1P-4S
       specific_energy_wh_kg: 149
       cycle_life: 5000
-      voltage_v: {nominal: 14.4, min: 12.0, max: 16.8}
+      voltage_v: {nominal: 14.4, min: 12.0, max: 16.8}   # 1P-4S; 2P-2S is 6.0-8.4 V
       operating_temp_c: [-20, 50]
+      configurations_v: {1P-4S: [12.0, 16.8], 2P-2S: [6.0, 8.4]}
+      heater_w: 6               # 7 W max
     interfaces: [I2C]
-    notes: 4S1P configuration, ISS-approved ground breaker
+    notes: >-
+      4S1P configuration, ISS-approved ground breaker. Datasheet (NFI research 2026-11-10
+      (bus.md)): 43 Wh in both configurations; heater 6 W typical, 7 W max; mass kept at 258 g
+      (features list says 270 g)
+    sources:
+      - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanopower-bp4_(DS_-_1013024_-_1_-_31)_-_1.pdf
 
   - id: bat-gom-nanopow-bp8
     name: NanoPower BP8
