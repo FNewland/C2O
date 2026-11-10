@@ -4,8 +4,10 @@
  * Computes EIRP, FSPL, received power, C/N0, Eb/N0, margin per ECSS-E-ST-50-05C.
  * Shows each term as a cascade with the final margin.
  */
-import { useState, useMemo, useRef, useCallback } from 'react'
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDesignStore } from '../stores/designStore'
+import { useUIStore } from '../stores/uiStore'
 import { useApplyToDesign } from '../hooks/useApplyToDesign'
 import { fs } from '../theme/tokens'
 import { useTranslation } from 'react-i18next'
@@ -23,7 +25,15 @@ export function LinkBudgetTool() {
   const { t } = useTranslation()
   const reqs = useDesignStore(s => s.requirements)
   const setParam = useDesignStore(s => s.setParameter)
-  const alt = reqs.orbit.altitude_km
+  // Nov 2026: the study's mission definition (orbit, link) — not the legacy browser store
+  const studyId = useUIStore(s => s.studyId)
+  const qc = useQueryClient()
+  const { data: study } = useQuery<any>({
+    queryKey: ['study', studyId],
+    queryFn: () => fetch(`/api/studies/${studyId}`).then(r => (r.ok ? r.json() : null)),
+    enabled: !!studyId,
+  })
+  const alt = study?.requirements?.orbit?.altitude_km ?? reqs.orbit.altitude_km
 
   // Helper: set local state immediately, debounce designStore write to avoid render storms
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
@@ -62,6 +72,25 @@ export function LinkBudgetTool() {
   const [dataRate, setDataRate] = useLinkedState(1e6, 'link.data_rate_bps')
   const [reqEbN0, setReqEbN0] = useState(4.0)
   const [implMargin, setImplMargin] = useState(2.0)
+
+  // Start from the study: its orbit's worst-case slant range and the link it has chosen
+  const seededFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (!study || !studyId || seededFor.current === studyId) return
+    seededFor.current = studyId
+    const l = study.requirements?.link || {}
+    const pos = (v: unknown) => (typeof v === 'number' && v > 0 ? v : null)
+    const a = study.requirements?.orbit?.altitude_km
+    setSlantRange(pos(l.slant_range_km) ?? slantAt(typeof a === 'number' ? a : 500, 10))
+    if (pos(l.tx_power_w)) setTxPower(l.tx_power_w)
+    if (typeof l.tx_antenna_gain_dbi === 'number') setTxGain(l.tx_antenna_gain_dbi)
+    if (typeof l.tx_losses_db === 'number') setTxLosses(l.tx_losses_db)
+    if (pos(l.downlink_frequency_mhz)) setFrequency(l.downlink_frequency_mhz)
+    if (typeof l.rx_antenna_gain_dbi === 'number') setRxGain(l.rx_antenna_gain_dbi)
+    if (pos(l.system_noise_temp_k)) setRxTemp(l.system_noise_temp_k)
+    if (pos(l.downlink_rate_bps)) setDataRate(l.downlink_rate_bps)
+    if (typeof l.required_ebn0_db === 'number') setReqEbN0(l.required_ebn0_db)
+  }, [study, studyId])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Switching direction swaps the station and spacecraft ends. Typical S-band
   // telecommand uplink: 20 W into a 35 dBi dish (EIRP ≈ 46 dBW, textbook § 11.7),
@@ -114,6 +143,29 @@ export function LinkBudgetTool() {
 
   const margin = budget[budget.length - 1]?.value || 0
   const [applied, setApplied] = useState(false)
+  const [applyError, setApplyError] = useState<string | null>(null)
+
+  /** Save the link on the study (PATCH /studies/{id}/mission ``link``): the design loop's
+   *  link agent and the ground / simulation closures read it. Uplink values only set the
+   *  uplink fields. */
+  const persist = async () => {
+    if (!studyId) return
+    const link = linkDirection === 'downlink'
+      ? {
+          downlink_frequency_mhz: frequency, downlink_rate_bps: dataRate, tx_power_w: txPower, tx_antenna_gain_dbi: txGain,
+          tx_losses_db: txLosses, rx_antenna_gain_dbi: rxGain, system_noise_temp_k: rxTemp, slant_range_km: slantRange,
+          required_ebn0_db: reqEbN0, margin_db: margin, source: 'link_budget_tool',
+        }
+      : { uplink_frequency_mhz: frequency, uplink_rate_bps: dataRate, source: 'link_budget_tool' }
+    const res = await fetch(`/api/studies/${encodeURIComponent(studyId)}/mission`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ link }),
+    })
+    if (!res.ok) {
+      const d = (await res.json().catch(() => ({})))?.detail
+      throw new Error(typeof d === 'string' ? d : t('Could not save the mission definition'))
+    }
+    for (const k of ['study', 'analyses', 'analysis']) qc.invalidateQueries({ queryKey: [k] })
+  }
 
   const apply = useApplyToDesign({
     events: [
@@ -214,9 +266,14 @@ export function LinkBudgetTool() {
       </div>
 
       {/* Apply to design */}
-      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+      {applyError && <div role="alert" style={{ color: 'var(--status-alarm)', fontSize: fs.label, marginTop: '0.5rem' }}>{applyError}</div>}
+      <button className="btn" onClick={async () => {
+        setApplyError(null)
+        try { await persist() } catch (e) { setApplyError((e as Error).message); return }
+        await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000)
+      }}
         style={{ marginTop: '0.75rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.body }}>
-        {applied ? t('Applied — reconverging...') : t('Apply to Design')}
+        {applied ? t('Saved to the mission definition — re-run the analyses') : t('Apply to Design')}
       </button>
     </div>
   )

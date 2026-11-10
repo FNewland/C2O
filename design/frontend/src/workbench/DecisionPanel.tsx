@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { RecordDecision } from '../logbook'
 import { useTranslation } from 'react-i18next'
+import { serverText } from '../i18n/serverText'
 import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
 import { pairKey, pairwiseWeights } from './pairwise'
@@ -286,6 +287,14 @@ function Compliance({ ok }: { ok: boolean | null | undefined }) {
   )
 }
 
+/** Orbit-trade candidate → PATCH /studies/{id}/mission ``orbit`` (SSO: inclination from the altitude). */
+function tradeOrbitPatch(c: any): Record<string, unknown> {
+  const t = String(c.orbit_type || '').toLowerCase()
+  if (t === 'sso') return { orbit_type: 'sso', altitude_km: c.altitude_km, auto_inclination: true }
+  const type = ['leo', 'meo', 'geo', 'heo', 'gto'].includes(t) ? t : t === 'molniya' || t === 'tundra' ? 'heo' : t === 'lunar' ? 'lunar' : 'leo'
+  return { orbit_type: type, altitude_km: c.altitude_km, inclination_deg: c.inclination_deg, ltan: null, ...(c.eccentricity ? { eccentricity: c.eccentricity } : {}) }
+}
+
 function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
   const { t } = useTranslation()
   const [result, setResult] = useState<any>(null)
@@ -343,21 +352,21 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                   <td className="p-1 ta-r mono c-ok">{((c.total_score || c.weighted_score || c.score || 0) * 100).toFixed(0)}%</td>
                   <td className="p-1 ta-c">
                     <button onClick={async () => {
-                      // Apply this orbit to the focused spacecraft element
-                      const fid = useUIStore.getState().focusElementId
+                      // Make this the mission orbit (study.requirements.orbit, read by every
+                      // analysis). It used to go on the focused element's performance, which no
+                      // analysis read.
                       const sid = useUIStore.getState().studyId
-                      if (!fid || !sid) { void showAlert(i18n.t('Drill into a spacecraft element first')); return }
-                      const els: any[] = qc.getQueryData(['elements', sid]) || []
-                      const el = els.find((e: any) => e.id === fid)
-                      if (!el) return
-                      await fetch(`${API}/elements/${fid}`, {
+                      if (!sid) return
+                      const res = await fetch(`${API}/studies/${encodeURIComponent(sid)}/mission`, {
                         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          performance: { ...((el as any).performance || {}), orbit_altitude_km: c.altitude_km, orbit_inclination_deg: c.inclination_deg, orbit_type: c.orbit_type },
-                          version: el.version,
-                        }),
+                        body: JSON.stringify({ orbit: tradeOrbitPatch(c) }),
                       })
-                      qc.invalidateQueries({ queryKey: ['elements'] })
+                      if (!res.ok) {
+                        const d = (await res.json().catch(() => ({})))?.detail
+                        void showAlert(typeof d === 'string' ? serverText(d) : i18n.t('Could not save the mission definition'))
+                        return
+                      }
+                      for (const k of ['study', 'analyses', 'analysis']) qc.invalidateQueries({ queryKey: [k] })
                       void showAlert(i18n.t('Applied: {{name}} ({{alt}}km, {{incl}}°)', { name: c.name, alt: c.altitude_km, incl: c.inclination_deg }))
                     }} type="button" className="c2o-btn c2o-btn--sm">
                       {t('Apply')}
@@ -368,9 +377,9 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
                         return els.find((e: any) => e.id === useUIStore.getState().focusElementId)?.name ?? null
                       })() }}
                       prefill={() => {
-                        const els: any[] = qc.getQueryData(['elements', useUIStore.getState().studyId]) || []
-                        const el = els.find((e: any) => e.id === useUIStore.getState().focusElementId)
-                        const perf = el?.performance || {}
+                        const study: any = qc.getQueryData(['study', useUIStore.getState().studyId])
+                        const o = study?.requirements?.orbit || {}
+                        const perf = { orbit_altitude_km: o.altitude_km, orbit_inclination_deg: o.inclination_deg }
                         return {
                           options: orbitOptions(result.candidates, c),
                           choice: `${orbitName(c)}, ${Number(c.inclination_deg ?? 0).toFixed(1)}°`,
@@ -388,7 +397,7 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
             </tbody>
           </table>
           <p className="t-12 c-3 m-0 mt-1 measure">
-            {t('Lifetime: natural decay without propulsion at mean solar activity. 25-yr: re-entry within 25 years (IADC / COPUOS guideline). FCC 5-yr: re-entry within 5 years after the mission ends (FCC rule, 2022). Apply puts the orbit on the spacecraft in focus; re-run Analyses to see what it changes.')}
+            {t('Lifetime: natural decay without propulsion at mean solar activity. 25-yr: re-entry within 25 years (IADC / COPUOS guideline). FCC 5-yr: re-entry within 5 years after the mission ends (FCC rule, 2022). Apply makes it the mission orbit; the analyses run with the old orbit are then marked stale.')}
           </p>
         </div>
       )}
@@ -578,34 +587,35 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
     if (!studyId) return
     setLoading(true)
     try {
-      // Read actual orbit and ground stations from the design
+      // The mission orbit (study.requirements.orbit) and the study's ground stations with
+      // their own coordinates (KB picks and stations entered by hand)
       const elements: any[] = qc.getQueryData(['elements', studyId]) || await fetch(`${API}/studies/${studyId}/elements`).then(r => r.json())
-
-      // Find orbit params from spacecraft element performance or use defaults
-      let altitude = 500, inclination = 97.4
-      for (const el of elements) {
-        const perf = el.performance || {}
-        if (perf.orbit_altitude_km) { altitude = perf.orbit_altitude_km; inclination = perf.orbit_inclination_deg || inclination; break }
-      }
-
-      // Find ground stations from elements
-      const gsElements = elements.filter((e: any) => e.segment === 'ground' && (e.performance || {}).latitude)
-      const customStations = gsElements.map((e: any) => ({
-        id: e.name.toLowerCase().replace(/\s+/g, '_'),
-        name: e.name,
-        lat: e.performance.latitude,
-        lon: e.performance.longitude,
-        antenna_m: e.performance.antenna_diameter_m || e.performance.antenna_m || 3.7,
-        min_elevation_deg: e.performance.min_elevation_deg || 5,
-        bands: e.performance.bands || ['S'],
+      const study: any = await fetch(`${API}/studies/${studyId}`).then(r => (r.ok ? r.json() : null))
+      const altitude = study?.requirements?.orbit?.altitude_km ?? 500
+      const inclination = study?.requirements?.orbit?.inclination_deg ?? 97.4
+      const gs: any = await fetch(`${API}/studies/${studyId}/ground-stations`).then(r => (r.ok ? r.json() : { selected: [] }))
+      const gsElements: any[] = (gs.selected || []).filter((s: any) => s.lat !== null && s.lat !== undefined && s.lon !== null && s.lon !== undefined)
+      // POST /api/ground/schedule takes ``orbit_params`` and ``stations`` (StationIn); the
+      // widget used to send ``orbit`` / ``custom_stations``, which the server ignored.
+      const customStations = gsElements.map((s: any) => ({
+        id: String(s.station_id || s.kb_station_id || s.element_id),
+        name: s.name,
+        latitude_deg: Number(s.lat),
+        longitude_deg: Number(s.lon),
+        elevation_m: Number(s.alt_m) || 0,
+        antenna_diameter_m: Number(s.antenna_m) || 3.7,
+        min_elevation_deg: Number(s.min_elevation_deg) || 5,
+        band: String((s.bands || ['S'])[0] || 'S'),
       }))
 
       // Find number of spacecraft
       const spacecraft = elements.filter((e: any) => e.segment === 'space' && e.element_type === 'system')
       const totalSats = spacecraft.reduce((s: number, e: any) => s + (e.quantity || 1), 0)
 
-      const body: any = { orbit: { altitude_km: altitude, inclination_deg: inclination } }
-      if (customStations.length > 0) body.custom_stations = customStations
+      const body: any = { orbit_params: { altitude_km: altitude, inclination_deg: inclination } }
+      if (customStations.length > 0) body.stations = customStations
+      const rate = Number(study?.requirements?.link?.downlink_rate_bps)
+      if (rate > 0) body.data_rate_mbps = rate / 1e6
 
       const res = await fetch(`${API}/ground/schedule`, {
         method: 'POST',
@@ -615,6 +625,7 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
       if (res.ok) {
         const data = await res.json()
         data._design_context = { altitude, inclination, ground_stations: gsElements.length, spacecraft: totalSats }
+        data._names = Object.fromEntries(customStations.map((s: any) => [s.id, s.name]))
         setResult(data)
       }
     } finally { setLoading(false) }
@@ -638,8 +649,8 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
           {(result.coverage_stats || result.contacts) && (
             <div className="c2o-dec-row">
               <span>{t('Contacts:')} <b>{result.contacts?.length || result.coverage_stats?.total_passes_per_day || '?'}</b></span>
-              {result.coverage_stats?.total_contact_minutes_per_day && (
-                <span className="ml-2">{t('Contact:')} <b>{t('{{min}} min/day', { min: result.coverage_stats.total_contact_minutes_per_day.toFixed(1) })}</b></span>
+              {(result.total_contact_min_per_day ?? result.coverage_stats?.total_contact_minutes_per_day) != null && (
+                <span className="ml-2">{t('Contact:')} <b>{t('{{min}} min/day', { min: Number(result.total_contact_min_per_day ?? result.coverage_stats?.total_contact_minutes_per_day).toFixed(1) })}</b></span>
               )}
             </div>
           )}
@@ -647,7 +658,7 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
             const dur = w.duration_min ?? ((w.end_s - w.start_s) / 60)
             return (
               <div key={i} className="p-1 t-12 c-2 bb">
-                <span className="w-500 c-1">{w.station || w.station_id}</span>
+                <span className="w-500 c-1">{w.station || result._names?.[w.station_id] || w.station_id}</span>
                 {' '}{t('{{dur}} min | max el: {{el}}°', { dur: dur.toFixed(1), el: w.max_elevation_deg?.toFixed(0) })}
                 {w.data_volume_mbit && ` | ${(w.data_volume_mbit / 1000).toFixed(1)} Gbit`}
               </div>

@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 CLOSURE_OWNED_DOMAINS = frozenset({"mission_simulation", "ground_segment", "physics", "fmeca", "vv"})
 
 HASH_KEYS: tuple[str, ...] = (
-    "elements", "params", "modes", "orbit", "power", "thermal", "stations", "requirements",
+    "elements", "params", "modes", "orbit", "power", "thermal", "stations", "requirements", "mission",
 )
 
 #: Provenances whose effective value is an *override* of the column / agent value.
@@ -268,15 +268,41 @@ def _enum_str(v: Any) -> str:
 
 
 def _build_orbit(flat: dict, latest: dict, study: Any) -> dict[str, Any]:
-    def pick(path: str) -> float | None:
+    """The orbit every analysis uses.
+
+    Nov 2026 (mission definition editor): the study's mission definition
+    (``study.requirements.orbit``, editable with ``PATCH /api/studies/{id}/mission``) wins
+    over the last design run's copy, and the derived period / eclipse values of that run
+    are reused only when it ran at the same altitude and inclination. Before, an edited
+    orbit (e.g. 500 -> 590 km) kept the old period and eclipse until the design loop re-ran.
+    An element override in ``flat`` still wins over both.
+    """
+    def pick_flat(path: str) -> float | None:
         v = flat.get(path)
-        if v is None and path in latest:
-            v = latest[path].get("value") if isinstance(latest[path], dict) else latest[path]
-        return v if isinstance(v, (int, float)) else None
+        return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+    def pick_latest(path: str) -> float | None:
+        if path not in latest:
+            return None
+        v = latest[path].get("value") if isinstance(latest[path], dict) else latest[path]
+        return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
 
     req_orbit = getattr(getattr(study, "requirements", None), "orbit", None)
-    alt = pick("orbit.altitude_km") or (req_orbit.altitude_km if req_orbit else 500.0)
-    inc = pick("orbit.inclination_deg") or (req_orbit.inclination_deg if req_orbit else 97.4)
+    alt = pick_flat("orbit.altitude_km")
+    if alt is None:
+        alt = req_orbit.altitude_km if req_orbit else (pick_latest("orbit.altitude_km") or 500.0)
+    inc = pick_flat("orbit.inclination_deg")
+    if inc is None:
+        inc = req_orbit.inclination_deg if req_orbit else (pick_latest("orbit.inclination_deg") or 97.4)
+    l_alt, l_inc = pick_latest("orbit.altitude_km"), pick_latest("orbit.inclination_deg")
+    latest_matches = (l_alt is None or abs(l_alt - alt) < 1e-6) and (l_inc is None or abs(l_inc - inc) < 1e-6)
+
+    def pick(path: str) -> float | None:
+        v = pick_flat(path)
+        if v is None and latest_matches:
+            v = pick_latest(path)
+        return v
+
     period = pick("orbit.period_s")
     ecl = pick("orbit.eclipse_fraction")
     sun = pick("orbit.sunlight_fraction")
@@ -299,6 +325,29 @@ def _build_orbit(flat: dict, latest: dict, study: Any) -> dict[str, Any]:
         "orbit_type": _enum_str(getattr(req_orbit, "orbit_type", "")) if req_orbit else "",
         "contact_time_per_day_s": pick("orbit.contact_time_per_day_s"),
     }
+
+
+#: Mission-definition link fields (``study.requirements.link``) → flat paths the closures read.
+_LINK_TO_FLAT: tuple[tuple[str, str, float], ...] = (
+    ("downlink_frequency_mhz", "link.frequency_ghz", 1e-3),
+    ("downlink_rate_bps", "link.downlink_rate_bps", 1.0),
+    ("tx_power_w", "link.tx_power_w", 1.0),
+    ("tx_antenna_gain_dbi", "link.tx_antenna_gain_dbi", 1.0),
+)
+
+
+def _overlay_mission_link(flat: dict, study: Any) -> None:
+    """Put the mission definition's link choice on the flat paths the ground / simulation
+    closures read (``_pick``: flat before the last design run), unless an element
+    parameter already sets the path. Nov 2026: the link-budget tool's "Apply to Design"
+    writes ``study.requirements.link``."""
+    link = getattr(getattr(study, "requirements", None), "link", None)
+    if link is None:
+        return
+    for field_name, path, scale in _LINK_TO_FLAT:
+        v = getattr(link, field_name, None)
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 and path not in flat:
+            flat[path] = float(v) * scale
 
 
 def _parse_guards(text: str | None) -> list[dict]:
@@ -451,15 +500,51 @@ def _kb_stations() -> list[dict]:
         return []
 
 
+def _num_or_none(v: Any) -> float | None:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return f if f == f else None
+
+
+def custom_station(e: dict) -> dict | None:
+    """A ground-segment element that carries its own coordinates (no KB entry): the user's
+    station (Nov 2026, ``POST /studies/{id}/ground-stations`` with ``lat``/``lon``).
+    ``performance`` keys ``lat``/``lon`` (or ``latitude``/``longitude``)."""
+    if e.get("segment") != "ground" or e.get("element_type") not in ("system", "component"):
+        return None
+    perf = e.get("performance_json") or e.get("performance") or {}
+    if not isinstance(perf, dict):
+        return None
+    lat = _num_or_none(perf.get("lat", perf.get("latitude")))
+    lon = _num_or_none(perf.get("lon", perf.get("longitude")))
+    if lat is None or lon is None:
+        return None
+    bands = perf.get("bands") or ([perf["band"]] if perf.get("band") else None)
+    out = {"id": f"custom-{e['id']}", "name": e.get("name") or "Ground station", "lat": lat, "lon": lon,
+           "custom": True}
+    for k in ("alt_m", "antenna_m", "min_elevation_deg", "g_over_t_db_k", "eirp_dbw", "operator"):
+        if perf.get(k) is not None:
+            out[k] = perf[k]
+    if bands:
+        out["bands"] = list(bands)
+    return out
+
+
 def _select_stations(elements: list[dict], all_stations: list[dict]) -> list[dict]:
     by_id = {s.get("id"): s for s in all_stations}
     by_name = {s.get("name"): s for s in all_stations}
     out: list[dict] = []
     seen: set[str] = set()
     for e in elements:
-        if e.get("segment") != "ground" or not e.get("kb_component_id"):
+        if e.get("segment") != "ground":
             continue
-        s = by_id.get(e["kb_component_id"]) or by_name.get(e["kb_component_id"])
+        s = None
+        if e.get("kb_component_id"):
+            s = by_id.get(e["kb_component_id"]) or by_name.get(e["kb_component_id"])
+        if s is None:
+            s = custom_station(e)   # a station of the user's own, with its coordinates
         if s and s.get("id") not in seen:
             seen.add(s.get("id"))
             out.append({**s, "element_id": e["id"]})
@@ -543,6 +628,7 @@ async def build_context(study_id: str, *, option_id: str | None = None) -> Analy
         if any((eid, prop) in overridden_cols for eid, prop in contribs) and path in ctx.flat
     }
 
+    _overlay_mission_link(ctx.flat, ctx.study)
     ctx.orbit = _build_orbit(ctx.flat, ctx.latest_design, ctx.study)
     ctx.modes = await _build_modes(study_id, eff_elements, ctx.study)
     ctx.power = _build_power(ctx.flat, ctx.latest_design, eff_elements)
@@ -582,7 +668,18 @@ def _hash_subset(ctx: AnalysisContext, key: str) -> Any:
     if key == "thermal":
         return ctx.thermal
     if key == "stations":
-        return sorted(s.get("id") or s.get("name") or "" for s in ctx.ground_stations)
+        # Nov 2026: coordinates too — moving a station of the user's own changes its contacts
+        return sorted([s.get("id") or s.get("name") or "", s.get("lat"), s.get("lon"), s.get("min_elevation_deg")]
+                      for s in ctx.ground_stations)
+    if key == "mission":
+        # Nov 2026: the mission definition (PATCH /api/studies/{id}/mission) — payloads,
+        # class, lifetime, link, launch / disposal. The name is a label, not an input.
+        req = getattr(ctx.study, "requirements", None)
+        if req is None or not hasattr(req, "model_dump"):
+            return {}
+        d = req.model_dump(mode="json")
+        d.pop("name", None)
+        return d
     if key == "requirements":
         return sorted(
             [r.get("id"), r.get("parent_id"), r.get("threshold_param_path"), r.get("threshold_op"),

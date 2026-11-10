@@ -81,6 +81,39 @@ class PayloadRequirements(BaseModel):
     fov_deg: float = 5.0
     duty_cycle_percent: float = 25.0
     description: str = ""
+    # Nov 2026 (mission definition editor): imaging parameters a team states up front.
+    # Optional: None / [] = not stated (analyses fall back to their defaults).
+    gsd_m: float | None = Field(default=None, description="Ground sample distance at nadir (m)")
+    swath_km: float | None = Field(default=None, description="Swath width at nadir (km)")
+    wavelengths_nm: list[float] = Field(default_factory=list, description="Band centre wavelengths (nm)")
+    data_per_image_mb: float | None = Field(default=None, description="Data volume of one acquisition (MB)")
+
+
+class LinkRequirements(BaseModel):
+    """Communication link chosen for the mission (Nov 2026).
+
+    Written by the mission definition editor and by the link-budget tool's "Apply to
+    Design"; read by the design loop's link agent and the ground / mission-simulation
+    closures in preference to their class defaults. Every field is optional.
+    """
+
+    band: str | None = Field(default=None, description="UHF, VHF, S, X, Ka ...")
+    downlink_frequency_mhz: float | None = None
+    uplink_frequency_mhz: float | None = None
+    downlink_rate_bps: float | None = None
+    uplink_rate_bps: float | None = None
+    tx_power_w: float | None = None
+    tx_antenna_gain_dbi: float | None = None
+    tx_losses_db: float | None = None
+    rx_antenna_gain_dbi: float | None = Field(default=None, description="Ground station antenna gain (downlink)")
+    system_noise_temp_k: float | None = None
+    slant_range_km: float | None = None
+    required_ebn0_db: float | None = None
+    margin_db: float | None = Field(default=None, description="Margin the link-budget tool computed")
+    source: str | None = Field(default=None, description="mission_editor | link_budget_tool | ...")
+
+    def is_set(self) -> bool:
+        return any(v is not None for k, v in self.model_dump().items() if k not in ("source", "margin_db"))
 
 
 class MissionRequirements(BaseModel):
@@ -98,6 +131,10 @@ class MissionRequirements(BaseModel):
     num_spacecraft: int = 1
     launch_date_target: str | None = None
     ground_stations: list[str] = Field(default_factory=lambda: ["KSAT Svalbard"])
+    # Nov 2026 (mission definition editor)
+    link: LinkRequirements = Field(default_factory=LinkRequirements)
+    launch_vehicle: str | None = Field(default=None, description="Launch / deployer choice, free text")
+    disposal_method: str | None = Field(default=None, description="natural_decay | drag_sail | propulsive | ...")
     constraints: dict[str, Any] = Field(default_factory=dict, description="Additional mission-specific constraints")
 
 

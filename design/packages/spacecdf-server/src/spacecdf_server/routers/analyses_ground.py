@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..db import analysis_repo
 from ..services import analysis_results
@@ -43,8 +43,18 @@ STATION_PROPS = ("lat", "lon", "alt_m", "bands", "antenna_m", "g_over_t_db_k", "
 
 
 class StationAdd(BaseModel):
-    kb_station_id: str
-    min_elevation_deg: float | None = None
+    """A KB station (``kb_station_id``) or, Nov 2026, a station of the user's own given by
+    its name and coordinates (``name`` + ``lat`` + ``lon``, optional antenna / bands)."""
+    kb_station_id: str | None = None
+    min_elevation_deg: float | None = Field(default=None, ge=0, le=90)
+    name: str | None = Field(default=None, max_length=120)
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lon: float | None = Field(default=None, ge=-180, le=360)
+    alt_m: float | None = None
+    bands: list[str] | None = None
+    antenna_m: float | None = Field(default=None, gt=0)
+    g_over_t_db_k: float | None = None
+    operator: str | None = None
 
 
 def _kb_stations() -> list[dict]:
@@ -62,15 +72,21 @@ def _study_elements(study_id: str) -> list[dict]:
 
 
 def _station_elements(study_id: str) -> list[dict]:
+    from ..services.analysis_context import custom_station
     return [e for e in _study_elements(study_id)
-            if e.get("segment") == "ground" and e.get("kb_component_id") and e.get("element_type") in ("system", "component")]
+            if e.get("segment") == "ground" and e.get("element_type") in ("system", "component")
+            and (e.get("kb_component_id") or custom_station(e) is not None)]
 
 
 def _serialise(el: dict, catalogue: dict[str, dict]) -> dict:
     kb = catalogue.get(el.get("kb_component_id") or "", {})
     perf = el.get("performance_json") or el.get("performance") or {}
     props = {k: (perf.get(k) if perf.get(k) is not None else kb.get(k)) for k in STATION_PROPS}
+    if props.get("lat") is None and perf.get("latitude") is not None:
+        props["lat"], props["lon"] = perf.get("latitude"), perf.get("longitude")
+    custom = not el.get("kb_component_id")
     return {"element_id": el["id"], "kb_station_id": el.get("kb_component_id"), "name": el.get("name"),
+            "station_id": f"custom-{el['id']}" if custom else el.get("kb_component_id"), "custom": custom,
             "parent_id": el.get("parent_id"), "version": el.get("version"), **props, "in_catalogue": bool(kb)}
 
 
@@ -110,8 +126,42 @@ async def list_ground_stations(study_id: str) -> dict:
             "catalogue": [{**s, "selected": s.get("id") in chosen} for s in catalogue]}
 
 
+async def _add_custom_station(study_id: str, body: StationAdd) -> dict:
+    name = (body.name or "").strip()
+    if not name or body.lat is None or body.lon is None:
+        raise HTTPException(422, "a station of your own needs name, lat and lon (or give kb_station_id)")
+    lon = body.lon - 360.0 if body.lon > 180 else body.lon
+    if any((e.get("name") or "").strip().lower() == name.lower() for e in _station_elements(study_id)):
+        raise HTTPException(409, f"Ground station {name!r} is already in the study")
+    perf: dict = {"lat": body.lat, "lon": lon}
+    for k in ("alt_m", "bands", "antenna_m", "g_over_t_db_k", "operator", "min_elevation_deg"):
+        v = getattr(body, k)
+        if v is not None:
+            perf[k] = v
+    perf.setdefault("min_elevation_deg", 5.0)
+    segment = await _ensure_ground_segment(study_id)
+    placeholder = _placeholder_station(study_id, segment["id"])
+    if placeholder is not None:
+        upd = {"name": name, "subsystem_domain": "ground", "manufacturer": body.operator,
+               "performance": {**(placeholder.get("performance") or {}), **perf}}
+        placeholder["subsystem_domain"] = "ground"
+        el = await elements_router.apply_element_update(placeholder, {k: v for k, v in upd.items() if v is not None})
+    else:
+        create = elements_router.ElementCreate(
+            name=name, element_type="system", parent_id=segment["id"], subsystem_domain="ground",
+            segment="ground", manufacturer=body.operator, performance=perf,
+            description="Ground station of the team's own (coordinates entered by hand)",
+        )
+        el = await elements_router.create_element(create, study_id=study_id)
+    await broadcast_mutation(study_id, "ground_station_added", "element", el["id"],
+                             {"custom": True, "analysis": ANALYSIS})
+    return _serialise(el, {})
+
+
 @router.post("/studies/{study_id}/ground-stations")
 async def add_ground_station(study_id: str, body: StationAdd) -> dict:
+    if not body.kb_station_id:
+        return await _add_custom_station(study_id, body)
     catalogue = _kb_stations()
     kb = next((s for s in catalogue if s.get("id") == body.kb_station_id or s.get("name") == body.kb_station_id), None)
     if kb is None:

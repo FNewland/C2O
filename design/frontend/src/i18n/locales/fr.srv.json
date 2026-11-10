@@ -174,5 +174,9 @@
   "Tight Budget with Low-TRL Technology Risk": "Budget serré et risque technologique à faible TRL",
   "Cost estimate {{cost}} MEUR is at {{pct}}% of target {{target}} MEUR, with {{n}} low-TRL component(s). Technology maturation costs may push budget over.": "Le coût estimé, {{cost}} MEUR, atteint {{pct}} % de la cible de {{target}} MEUR, avec {{n}} composant(s) à faible TRL. La maturation technologique peut faire dépasser le budget.",
   "Use proven (TRL 7+) alternatives to reduce development risk/cost": "Utiliser des solutions éprouvées (TRL 7+) pour réduire le risque et le coût de développement",
-  "Increase cost budget to accommodate technology maturation": "Augmenter le budget pour couvrir la maturation technologique"
+  "Increase cost budget to accommodate technology maturation": "Augmenter le budget pour couvrir la maturation technologique",
+  "inclination {{inc}}° is not sun-synchronous at {{alt}} km (J2 value {{ideal}}°)": "l’inclinaison {{inc}}° n’est pas héliosynchrone à {{alt}} km (valeur J2 {{ideal}}°)",
+  "LTAN only holds for a sun-synchronous orbit": "le LTAN n’a de sens que pour une orbite héliosynchrone",
+  "disposal method '{{m}}' is not one of {{list}}; kept as entered": "la méthode de fin de vie '{{m}}' ne fait pas partie de {{list}} ; conservée telle quelle",
+  "altitude {{alt}} km is outside {{range}} km for a {{type}} orbit": "l’altitude {{alt}} km est hors de la plage {{range}} km pour une orbite {{type}}"
 }

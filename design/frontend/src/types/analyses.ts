@@ -234,7 +234,11 @@ export interface KbGroundStation {
 /** A station selected for the study (a ``segment='ground'`` component element). */
 export interface SelectedGroundStation {
   element_id: string
-  kb_station_id: string
+  /** null for a station of the team's own (coordinates entered by hand, Nov 2026) */
+  kb_station_id: string | null
+  /** id the ground-segment closure uses (KB id, or ``custom-<element_id>``) */
+  station_id?: string | null
+  custom?: boolean
   name: string
   parent_id: string | null
   version: number

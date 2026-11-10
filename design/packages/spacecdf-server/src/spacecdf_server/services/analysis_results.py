@@ -66,10 +66,10 @@ logger = logging.getLogger(__name__)
 #: Context subsets each analysis reads — what its ``inputs_hash`` covers.
 #: Unknown analyses hash every subset.
 ANALYSIS_INPUT_KEYS: dict[str, tuple[str, ...]] = {
-    "design_loop": ("elements", "params", "orbit", "modes", "requirements"),
-    "mission_simulation": ("elements", "params", "orbit", "modes", "power", "thermal", "stations"),
-    "ground": ("elements", "params", "orbit", "stations"),
-    "physics": ("elements", "params", "orbit", "thermal", "requirements"),   # pointing budget vs requirement
+    "design_loop": ("elements", "params", "orbit", "modes", "requirements", "mission"),
+    "mission_simulation": ("elements", "params", "orbit", "modes", "power", "thermal", "stations", "mission"),
+    "ground": ("elements", "params", "orbit", "stations", "mission"),
+    "physics": ("elements", "params", "orbit", "thermal", "requirements", "mission"),   # pointing budget vs requirement
     "vv": ("requirements", "elements"),
     "fmeca": ("elements",),
 }
