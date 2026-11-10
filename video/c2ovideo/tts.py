@@ -100,7 +100,7 @@ class Clip:
 
 VOICES_DIR = CACHE / "voices"
 CBX_LOG = CACHE / "cbx_worker.log"
-_CBX = None
+_CBX: dict = {}  # one worker per (python, model)
 
 
 def _ref_path(engine: dict) -> Path:
@@ -109,24 +109,26 @@ def _ref_path(engine: dict) -> Path:
 
 
 def _cbx(engine: dict):
-    """Start (once) the Chatterbox worker under the voice's own Python."""
-    global _CBX
-    if _CBX is None or _CBX.poll() is not None:
-        py = str(Path(engine.get("python", "python3")).expanduser())
+    """Start (once per Python and model) the Chatterbox worker under the voice's own Python."""
+    py = str(Path(engine.get("python", "python3")).expanduser())
+    model = engine.get("model", "multilingual")
+    w = _CBX.get((py, model))
+    if w is None or w.poll() is not None:
         CACHE.mkdir(parents=True, exist_ok=True)
         errlog = open(CBX_LOG, "a", encoding="utf-8")
-        _CBX = subprocess.Popen([py, str(Path(__file__).with_name("cbx_worker.py"))], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=errlog, text=True, bufsize=1,
-                                env={**os.environ, "PYTORCH_ENABLE_MPS_FALLBACK": "1"})
+        w = subprocess.Popen([py, str(Path(__file__).with_name("cbx_worker.py"))], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=errlog, text=True, bufsize=1,
+                             env={**os.environ, "PYTORCH_ENABLE_MPS_FALLBACK": "1", "C2O_CBX_MODEL": model})
         while True:
-            line = _CBX.stdout.readline()
+            line = w.stdout.readline()
             if not line:
                 tail = CBX_LOG.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-15:]
                 raise RuntimeError("Chatterbox worker exited during start-up. Last lines of "
                                    f"{CBX_LOG}:\n" + "\n".join(tail))
             if line.startswith("{") and json.loads(line).get("ready"):
                 break
-    return _CBX
+        _CBX[(py, model)] = w
+    return w
 
 
 def _synth(engine: dict, text: str, lang: str) -> np.ndarray:

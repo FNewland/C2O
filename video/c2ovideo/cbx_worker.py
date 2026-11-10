@@ -1,4 +1,8 @@
-"""Chatterbox Multilingual worker: one long-lived process, one JSON request per line.
+"""Chatterbox worker: one long-lived process, one JSON request per line.
+
+C2O_CBX_MODEL picks the model: "multilingual" (default; Chatterbox Multilingual, any
+language) or "english" (the original English-only Chatterbox, which keeps an English
+speaker's own accent more faithfully; it ignores the language id).
 
 Runs under its own Python (the ``python`` key of the chatterbox voice in voices.yaml),
 because Chatterbox pins torch and transformers versions the rest of the pipeline does
@@ -33,13 +37,17 @@ def _devices(torch) -> list:
 def main() -> None:
     import torch
     import torchaudio as ta
-    from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+    english = os.environ.get("C2O_CBX_MODEL", "multilingual") == "english"
+    if english:
+        from chatterbox.tts import ChatterboxTTS as Model
+    else:
+        from chatterbox.mtl_tts import ChatterboxMultilingualTTS as Model
 
     torch.set_num_threads(max(1, torch.get_num_threads()))
     model = None
     for device in _devices(torch):
         try:
-            model = ChatterboxMultilingualTTS.from_pretrained(device=device)
+            model = Model.from_pretrained(device=device)
             break
         except Exception as e:  # e.g. an MPS op missing on an older macOS: fall back
             print(f"chatterbox: {device} unavailable ({type(e).__name__}: {e})", file=sys.stderr, flush=True)
@@ -53,9 +61,11 @@ def main() -> None:
             r = json.loads(line)
             torch.manual_seed(int(r.get("seed", 0)))
             with torch.inference_mode():
-                wav = model.generate(r["text"], language_id=r["lang"], audio_prompt_path=r["ref"],
-                                     exaggeration=float(r.get("exaggeration", 0.5)),
-                                     cfg_weight=float(r.get("cfg_weight", 0.5)))
+                kw = dict(audio_prompt_path=r["ref"], exaggeration=float(r.get("exaggeration", 0.5)),
+                          cfg_weight=float(r.get("cfg_weight", 0.5)))
+                if not english:
+                    kw["language_id"] = r["lang"]
+                wav = model.generate(r["text"], **kw)
             ta.save(r["out"], wav, model.sr, encoding="PCM_S", bits_per_sample=16)
             gc.collect()
             print(json.dumps({"ok": True, "seconds": wav.shape[-1] / model.sr, "sr": model.sr}), flush=True)
