@@ -662,6 +662,12 @@ def _day_in_the_life(windows, classes, days, usable_s, fr, prof, pc_by, stored_m
     ov = (plan or {}).get("overrides") or {}
     names = {s["id"]: s.get("name") or s["id"] for s in st_list}
     info = fr["information_rate_bps"]
+
+    def p_of(k: str) -> dict:
+        return pc_by.get(k) or {}
+
+    def rt_of(k: str) -> float:
+        return float((prof.get(str(p_of(k).get("rt_profile") or "FULL").split()[0]) or {"pass_bps": 0.0})["pass_bps"])
     # steady state: the delayed-HK queue is served from the previous day's start; payload always has data
     slots, meta = [], []
     for i, w in enumerate(windows):
@@ -679,7 +685,7 @@ def _day_in_the_life(windows, classes, days, usable_s, fr, prof, pc_by, stored_m
         slots.append(PassSlot(start_s=w.start_s, usable_s=usable_s(w), rt_bps=float(pr["pass_bps"]), order=order, label=str(i)))
         meta.append((i, k, order))
     res = allocate_passes(slots, info, {"VC1": stored_mb * MB / DAY_S, "VC2": 0.0},
-                          initial_bits={"VC1": 0.0, "VC2": 1e15}, efficiency={"VC2": 1.0})
+                          initial_bits={"VC1": 0.0, "VC2": 1e15}, efficiency={"VC2": 1.0}, t0_s=lo - DAY_S)
     rows = []
     for (i, k, order), r in zip(meta, res["slots"]):
         if i not in idx:
@@ -692,6 +698,9 @@ def _day_in_the_life(windows, classes, days, usable_s, fr, prof, pc_by, stored_m
                      "usable_min": round(usable_s(w) / 60, 1), "channel_mb": round(r["capacity_bits"] / MB, 2),
                      "rt_hk_mb": round(r["sent_bits"].get("VC0", 0) / MB, 3), "delayed_hk_mb": round(r["sent_bits"].get("VC1", 0) / MB, 3),
                      "payload_mb": round(r["sent_bits"].get("VC2", 0) / MB * cfdp, 2),
+                     "payload_channel_mb": round(r["sent_bits"].get("VC2", 0) / MB, 3),
+                     "idle_mb": round(r["idle_bits"] / MB, 3), "rt_profile": str(p_of(k).get("rt_profile") or "FULL"),
+                     "rt_bps": round(rt_of(k), 1), "order": list(order), "override": bool(ov.get(str(i - idx[0]))),
                      "above_30deg_min": w.min_above_30deg})
     tot = {k: round(sum(x[k] for x in rows), 2) for k in ("minutes", "usable_min", "channel_mb", "rt_hk_mb", "delayed_hk_mb", "payload_mb")}
     return {"day_index": d, "utc_offset_h": utc_offset_h, "windows": rows, "totals": tot,
@@ -726,15 +735,25 @@ def _backlog(windows, classes, days, usable_s, fr, prof, pc_by, stored_mb, sci, 
 # ───────────────────────────────────────────────────────────── study loader
 
 async def for_study(study_id: str, scenario: dict | None = None, *, days: float = 30.0, step_s: float = 10.0,
-                    rows: list[dict] | None = None, include_degraded: bool = True) -> dict[str, Any]:
-    """The data budget of a stored study (CDR rows, modes, ground network, link)."""
+                    rows: list[dict] | None = None, include_degraded: bool = True, gate: str | None = None) -> dict[str, Any]:
+    """The data budget of a stored study (CDR rows, modes, ground network, link). ``gate``: the
+    margin-ladder step of the closure statuses (default: the study's current gate)."""
     from ..db import cdr_repo
-    from . import ground_closure as gc
     from .analysis_context import build_context
-    from .ground_scheduler import contact_statistics
-    from .mode_model import cfg as mode_cfg
     rows = rows if rows is not None else await cdr_repo.list_rows(study_id)
     ctx = await build_context(study_id)
+    return from_context(ctx, rows, scenario, days=days, step_s=step_s, include_degraded=include_degraded, gate=gate,
+                        study_id=study_id)
+
+
+def from_context(ctx, rows: list[dict], scenario: dict | None = None, *, days: float = 30.0, step_s: float = 10.0,
+                 include_degraded: bool = True, gate: str | None = None, study_id: str | None = None) -> dict[str, Any]:
+    """``for_study`` on an already loaded ``AnalysisContext`` and CDR rows (synchronous: the
+    diagram builders call it)."""
+    from . import ground_closure as gc
+    from .ground_scheduler import contact_statistics
+    from .mode_model import cfg as mode_cfg
+    study_id = study_id or getattr(ctx, "study_id", None)
     warnings: list[str] = []
     net = gc.network(ctx, warnings)
     modes = [_mode_dict(m) for m in study_modes(ctx.elements)]
@@ -751,12 +770,12 @@ async def for_study(study_id: str, scenario: dict | None = None, *, days: float 
         degraded = degraded[:1]          # the worst single-station loss
     tiers = [{"name": t.get("name"), "bps": t.get("bps")} for t in cm.live_data(rows, "rate_tiers")]
     stations = [{"id": g.id, "name": g.name, "lon": g.longitude_deg, "control": g.id in net["control"]} for g in net["included"]]
-    gate = None
-    try:
-        from ..routers.gates import study_margin_gate
-        gate = study_margin_gate(ctx.study)
-    except Exception:  # noqa: BLE001
-        gate = None
+    if gate is None:
+        try:
+            from ..routers.gates import study_margin_gate
+            gate = study_margin_gate(ctx.study)
+        except Exception:  # noqa: BLE001
+            gate = None
     res = compute(rows, modes, contacts=stats, link_rate_bps=net["link"].downlink_bps, period_s=ctx.orbit.get("period_s") or 5700.0,
                   stations=stations, tiers=tiers, scenario=scenario, degraded=degraded, gate=gate,
                   fallback_hk_bps=float(mode_cfg()["data"]["housekeeping_bps"]["value"]))
@@ -767,7 +786,67 @@ async def for_study(study_id: str, scenario: dict | None = None, *, days: float 
                       "orbit": {"altitude_km": net["orbit"].altitude_km, "inclination_deg": net["orbit"].inclination_deg}}
     res["degraded"] = degraded
     res["study_id"] = study_id
+    res["margin_gate"] = gate
     return res
+
+
+# ───────────────────────────────────────────────────────────── downstream views (W3.05)
+
+def ops_pass(b: dict) -> dict | None:
+    """One real operations pass of the day in the life (the first OPS window of the day: the
+    morning pass after the imaging), for the ``ops_pass`` diagram and the ConOps: duration,
+    usable time, stations, real-time profile, VC order and the channel split VC0 / VC1 / VC2
+    (MB on the channel and minutes at the information rate). ``None`` without a contact plan."""
+    wins = (b.get("day_in_the_life") or {}).get("windows") or []
+    if not wins:
+        return None
+    w = next((x for x in wins if x.get("class") == "OPS"), None) or max(wins, key=lambda x: x.get("usable_min") or 0)
+    fr = b.get("framing") or {}
+    info = float(fr.get("information_rate_bps") or 0.0)
+
+    def mins(mb: float) -> float:
+        return round(mb * MB / info / 60.0, 2) if info else 0.0
+    vc0, vc1 = float(w.get("rt_hk_mb") or 0.0), float(w.get("delayed_hk_mb") or 0.0)
+    vc2 = float(w.get("payload_channel_mb") if w.get("payload_channel_mb") is not None else (w.get("payload_mb") or 0.0))
+    idle = float(w.get("idle_mb") or 0.0)
+    order = list(w.get("order") or ["VC0", w.get("first_vc") or "VC1"])
+    vcs = [{"vc": "VC0", "content": "real-time HK", "mb": round(vc0, 3), "min": mins(vc0)},
+           {"vc": "VC1", "content": "delayed HK", "mb": round(vc1, 3), "min": mins(vc1)},
+           {"vc": "VC2", "content": "payload files", "mb": round(vc2, 3), "min": mins(vc2), "delivered_mb": w.get("payload_mb")}]
+    return {"index": w.get("index"), "local": w.get("local"), "class": w.get("class"), "minutes": w.get("minutes"),
+            "usable_min": w.get("usable_min"), "acquisition_s": fr.get("acquisition_s"), "stations": w.get("stations") or [],
+            "max_elevation_deg": w.get("max_elevation_deg"), "rt_profile": w.get("rt_profile"), "rt_bps": w.get("rt_bps"),
+            "first_vc": w.get("first_vc"), "order": ["VC0", *[v for v in order if v != "VC0"]], "channel_mb": w.get("channel_mb"),
+            "idle_mb": round(idle, 3), "information_rate_bps": info, "vcs": vcs,
+            "rate_bps": (b.get("link") or {}).get("rate_bps"), "band": (b.get("link") or {}).get("band"),
+            "utc_offset_h": (b.get("day_in_the_life") or {}).get("utc_offset_h")}
+
+
+def gate_check(b: dict | None, gate: str | None) -> dict:
+    """The PDR / CDR data-budget question (W3.05): does the daily budget (HK + science) close with
+    the gate's margin in the diagnostics-campaign case (C2, else the closure case), and does every
+    sized HK store hold ``min_store_days`` at its worst sizing rate?"""
+    need = _gate_margin(gate)
+    n_days = float(defaults().get("min_store_days") or 7)
+    if not b:
+        return {"gate": gate, "ok": None, "reason": "no data budget", "required_percent": need, "store_days": n_days}
+    cases = {c["id"]: c for c in b.get("cases") or []}
+    case = cases.get("C2") or b.get("closure") or {}
+    mg = case.get("margin_pct")
+    closes = None if mg is None else mg >= need
+    stores = []
+    for s in b.get("stores") or []:
+        chk = s.get("check")
+        if not chk:
+            continue
+        held = [v for k, v in (s.get("days_held") or {}).items() if k in (chk.get("sizing_modes") or []) and v is not None]
+        stores.append({"name": s.get("name"), "size_mb": s.get("size_mb"), "days_held_worst": min(held) if held else None,
+                       "need_mb": chk.get("need_mb"), "ok": chk.get("ok")})
+    stores_ok = (all(x["ok"] is not False for x in stores) and any(x["ok"] for x in stores)) if stores else None
+    ok = bool(closes) and bool(stores_ok)
+    return {"gate": gate, "ok": ok if closes is not None else None, "case": case.get("id"), "margin_pct": mg,
+            "required_percent": need, "closes": closes, "store_days": n_days, "stores": stores, "stores_ok": stores_ok,
+            "status": b.get("status")}
 
 
 def study_modes(elements: list[dict]) -> list[dict]:

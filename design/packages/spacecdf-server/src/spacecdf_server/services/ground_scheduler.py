@@ -635,14 +635,15 @@ class PassSlot:
 
 def allocate_passes(slots: list[PassSlot], info_rate_bps: float, gen_bps: dict[str, float],
                     initial_bits: dict[str, float] | None = None, horizon_s: float | None = None,
-                    efficiency: dict[str, float] | None = None) -> dict[str, Any]:
+                    efficiency: dict[str, float] | None = None, t0_s: float = 0.0) -> dict[str, Any]:
     """Serve the queues pass by pass. ``gen_bps``: generation rate of each queue (VC1, VC2, …).
     ``efficiency``: per-queue extra efficiency on the channel (e.g. CFDP 0.96 for VC2: one bit
-    of file data costs 1/0.96 channel bits). Returns per-slot allocations (bits) and the queue
-    level at the end of every slot and at ``horizon_s``."""
+    of file data costs 1/0.96 channel bits). ``t0_s``: when the queues start filling from
+    ``initial_bits`` (the slots of a day-in-the-life window do not start at 0). Returns per-slot
+    allocations (bits) and the queue level at the end of every slot and at ``horizon_s``."""
     eff = efficiency or {}
     level = {q: float((initial_bits or {}).get(q, 0.0)) for q in gen_bps}
-    last = 0.0
+    last = float(t0_s)
     rows = []
     for s in sorted(slots, key=lambda x: x.start_s):
         dt = max(0.0, s.start_s - last)

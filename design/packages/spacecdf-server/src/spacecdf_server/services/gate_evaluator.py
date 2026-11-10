@@ -101,6 +101,11 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "{{params}} parameters, {{hk}} HK structures, {{tc}} telecommands, {{events}} events; {{suggested}} suggestion(s) to review, {{alarms}} alarm finding(s)",
     "No rate tier or HK structure to check the downlink budget",
     "Housekeeping fits the downlink in {{ok}}/{{total}} regimes",
+    # W3.05: the daily data budget (services/data_budget.gate_check)
+    "No data budget yet: no mode, no contact plan or no link rate",
+    "Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); no HK store sized yet",
+    "Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days at the worst rate (required {{need}})",
+    "Housekeeping fits the downlink in {{ok}}/{{total}} regimes; daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days (required {{need}})",
     "{{recovered}}/{{critical}} critical failure modes detected and recovered; {{alarms}} FDIR alarm finding(s)",
     "Safe mode and load-shed table defined; {{alarms}} alarm finding(s)",
     "Safe mode or load-shed table missing",
@@ -323,6 +328,10 @@ def evaluate_gate(
         "risks": list(risks or []),
         "margin_gate": (margin_gate or str(gate.get("gate", ""))).lower(),
         "cdr": cdr,
+        # W3.05: the daily data budget (services/data_budget) for PDR-EC-06 / CDR-EC-04 — from the
+        # CDR model summary (routers/cdr.cdr_gate_summary) or design_params["_data_budget"]
+        "data_budget": (cdr or {}).get("data_budget")
+        or (design_params.get("_data_budget") if isinstance(design_params, dict) else None),
         "rollup": rollup or (design_params or {}).get("_rollup") if isinstance(design_params, dict) else rollup,
     }
 
@@ -759,6 +768,9 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             _set(result, "pass" if ok == len(subs) else "fail",
                  "{{ok}}/{{total}} subsystems have at least one component", ok=ok, total=len(subs))
 
+    elif cid == "PDR-EC-06":
+        _data_budget_criterion(result, ctx)
+
     elif cid in ("PDR-EC-05",):
         v = _need(result, dp, "reliability.mission_reliability")
         if v:
@@ -895,8 +907,14 @@ def _cdr_criterion(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 —
             _set(result, "not_evaluated", "No rate tier or HK structure to check the downlink budget")
             return
         ok = sum(1 for r in regs if r["ok"])
-        _set(result, "pass" if ok == len(regs) else "fail", "Housekeeping fits the downlink in {{ok}}/{{total}} regimes",
-             ok=ok, total=len(regs))
+        gc = _data_budget_check(ctx)
+        if gc is None:
+            _set(result, "pass" if ok == len(regs) else "fail", "Housekeeping fits the downlink in {{ok}}/{{total}} regimes",
+                 ok=ok, total=len(regs))
+            return
+        _set(result, "pass" if ok == len(regs) and gc.get("ok") else "fail",
+             "Housekeeping fits the downlink in {{ok}}/{{total}} regimes; daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days (required {{need}})",
+             ok=ok, total=len(regs), **_db_params(gc))
     elif cid == "CDR-EC-05":
         f = cdr.get("fmeca") or {}
         crit, rec = int(f.get("critical") or 0), int(f.get("critical_recovered") or 0)
@@ -943,6 +961,37 @@ def _cdr_criterion(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 —
              positions=n("positions"), gonogo=n("gonogo"), rules=n("flight_rules"), uncovered=unc)
     else:
         _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
+
+
+def _data_budget_check(ctx: dict) -> dict | None:
+    b = ctx.get("data_budget")
+    if not b:
+        return None
+    from .data_budget import gate_check
+    return gate_check(b, ctx.get("margin_gate"))
+
+
+def _db_params(gc: dict) -> dict:
+    held = [x["days_held_worst"] for x in gc.get("stores") or [] if x.get("days_held_worst") is not None]
+    return {"case": gc.get("case") or "–", "margin": _fmt(float(gc["margin_pct"]), 1) if gc.get("margin_pct") is not None else "–",
+            "required": _fmt(float(gc.get("required_percent") or 0)), "days": _fmt(min(held), 1) if held else "–",
+            "need": _fmt(float(gc.get("store_days") or 0))}
+
+
+def _data_budget_criterion(result: dict, ctx: dict) -> None:
+    """PDR-EC-06 (W3.05): the daily data budget closes with the gate's margin in the
+    diagnostics-campaign case and every sized HK store holds the required days."""
+    gc = _data_budget_check(ctx)
+    if gc is None or gc.get("closes") is None:
+        _set(result, "not_evaluated" if gc is None else "fail", "No data budget yet: no mode, no contact plan or no link rate")
+        return
+    if not gc.get("stores"):
+        _set(result, "fail", "Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); no HK store sized yet",
+             **{k: v for k, v in _db_params(gc).items() if k in ("case", "margin", "required")})
+        return
+    _set(result, "pass" if gc["ok"] else "fail",
+         "Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days at the worst rate (required {{need}})",
+         **_db_params(gc))
 
 
 def _rollup_power(ctx: dict) -> tuple[float, float, float] | None:

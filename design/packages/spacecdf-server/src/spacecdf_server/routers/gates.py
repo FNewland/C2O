@@ -96,7 +96,7 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
     ctx["risks"] = list(getattr(study, "risk_register", None) or []) if study else []
     try:  # the CDR model (TM/TC database, FDIR, AOCS, TT&C, operations) for the CDR criteria
         gates = (study_profile(study).get("gates") or []) if study else []
-        if any("cdr" in (g.get("covers") or []) for g in gates):
+        if any(c in (g.get("covers") or []) for g in gates for c in ("cdr", "pdr")):   # W3.05: PDR-EC-06 data budget
             from .cdr import cdr_gate_summary
             ctx["cdr"] = await cdr_gate_summary(study_id)
         else:

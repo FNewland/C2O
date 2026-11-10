@@ -98,5 +98,19 @@
   "union of the passes (the stations add up to {{sum}} min/day; one transmitter)": "union des passages (les stations totalisent {{sum}} min/jour ; un seul émetteur)",
   "after {{rt}} MB/day of real-time housekeeping in contact": "après {{rt}} Mo/jour de servitude temps réel en contact",
   "Stored HK (bit/s)": "HK stockée (bit/s)",
-  "Real-time HK in contact (bit/s)": "HK temps réel en contact (bit/s)"
+  "Real-time HK in contact (bit/s)": "HK temps réel en contact (bit/s)",
+  "Does the daily data budget (housekeeping + science) close with margin, and do the stores hold the required days?": "Le bilan quotidien des données (servitude + science) est-il bouclé avec marge, et les mémoires de masse tiennent-elles le nombre de jours requis ?",
+  "Does the housekeeping fit the downlink in every mode, does the daily budget close with margin and do the stores hold the required days?": "La télémesure de servitude tient-elle dans la liaison descendante dans chaque mode, le bilan quotidien est-il bouclé avec marge et les mémoires de masse tiennent-elles le nombre de jours requis ?",
+  "No data budget yet: no mode, no contact plan or no link rate": "Pas encore de bilan des données : aucun mode, aucun plan de contacts ou aucun débit de liaison",
+  "Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); no HK store sized yet": "Bilan quotidien, cas {{case}} : marge {{margin}} % (requis : {{required}} %) ; aucune mémoire de servitude dimensionnée",
+  "Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days at the worst rate (required {{need}})": "Bilan quotidien, cas {{case}} : marge {{margin}} % (requis : {{required}} %) ; les mémoires tiennent {{days}} jours au débit le plus élevé (requis : {{need}})",
+  "Housekeeping fits the downlink in {{ok}}/{{total}} regimes; daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days (required {{need}})": "La servitude tient dans la liaison descendante dans {{ok}}/{{total}} régimes ; bilan quotidien, cas {{case}} : marge {{margin}} % (requis : {{required}} %) ; les mémoires tiennent {{days}} jours (requis : {{need}})",
+  "VC0 real-time HK, {{profile}} profile ({{bps}} bit/s)": "VC0 HK temps réel, profil {{profile}} ({{bps}} bit/s)",
+  "VC1 delayed HK dump: {{mb}} MB": "VC1 vidage de la HK différée : {{mb}} Mo",
+  "VC2 payload files: {{mb}} MB": "VC2 fichiers charge utile : {{mb}} Mo",
+  "Channel": "Canal",
+  "{{cls}} pass at {{local}} (local), {{min}} min ({{usable}} min usable) over {{station}}, max. elevation {{el}}°; channel {{ch}} MB: VC0 {{vc0}}, VC1 {{vc1}}, VC2 {{vc2}} MB": "Passage {{cls}} à {{local}} (heure locale), {{min}} min ({{usable}} min utiles) au-dessus de {{station}}, élévation max. {{el}}° ; canal {{ch}} Mo : VC0 {{vc0}}, VC1 {{vc1}}, VC2 {{vc2}} Mo",
+  "Pass and channel split from the data budget (day in the life, pass plan); the seat steps are the C2O pass template": "Passage et répartition du canal tirés du bilan des données (journée type, plan des passages) ; les étapes des postes suivent le gabarit de passage C2O",
+  "Daily closure {{case}}: {{margin}} %": "Bouclage quotidien {{case}} : {{margin}} %",
+  "{{demand}} MB/day of {{capacity}} MB/day downlink capacity (real-time HK, stored HK, science); same numbers as the Data budget page": "{{demand}} Mo/jour sur {{capacity}} Mo/jour de capacité descendante (HK temps réel, HK stockée, science) ; mêmes chiffres que la page Bilan de données"
 }

@@ -120,7 +120,7 @@ def _fmeca(study_id: str, els: list[dict], monitored: set[str]) -> list[dict]:
         return []
 
 
-async def cdr_view(study_id: str, *, rows: list[dict] | None = None) -> dict[str, Any]:
+async def cdr_view(study_id: str, *, rows: list[dict] | None = None, keep: dict | None = None) -> dict[str, Any]:
     from ..services.cdr_checks import fmeca_coverage, hk_budget, run_checks, summarise
     from ..services.cdr_propose import design_facts
     rows = rows if rows is not None else await repo.list_rows(study_id)
@@ -139,6 +139,8 @@ async def cdr_view(study_id: str, *, rows: list[dict] | None = None) -> dict[str
         except Exception:  # noqa: BLE001 — the checks run without the daily budget
             logger.debug("data budget unavailable for %s", study_id, exc_info=True)
     findings = run_checks(rows, ctx)
+    if keep is not None and "data_budget" in ctx:
+        keep["data_budget"] = ctx["data_budget"]
     c = cm.cfg()
     return {
         "study_id": study_id, "dataset": dataset,
@@ -167,11 +169,21 @@ async def cdr_view(study_id: str, *, rows: list[dict] | None = None) -> dict[str
 
 
 async def cdr_gate_summary(study_id: str) -> dict[str, Any]:
-    """What the CDR exit criteria read (routers/gates.gate_inputs → ctx["cdr"])."""
+    """What the CDR exit criteria read (routers/gates.gate_inputs → ctx["cdr"]). ``data_budget``:
+    the daily data budget (W3.05: PDR-EC-06 and CDR-EC-04 read it through gate_evaluator)."""
     rows = await repo.list_rows(study_id)
-    v = await cdr_view(study_id, rows=rows)
+    keep: dict[str, Any] = {}
+    v = await cdr_view(study_id, rows=rows, keep=keep)
+    budget = keep.get("data_budget")
+    if budget is None and v["dataset"] != "reference":
+        try:
+            from ..services.data_budget import for_study
+            budget = await for_study(study_id, rows=rows, include_degraded=False)
+        except Exception:  # noqa: BLE001 — no modes or no network: the criteria say so
+            logger.debug("data budget unavailable for %s", study_id, exc_info=True)
     return {"dataset": v["dataset"], "rows": rows, "checks": v["checks"], "summary": v["summary"],
-            "budget": v["budget"], "fmeca": v["fmeca"]["summary"], "lines": v["lines"], "modes": v["modes"]}
+            "budget": v["budget"], "fmeca": v["fmeca"]["summary"], "lines": v["lines"], "modes": v["modes"],
+            "data_budget": budget}
 
 
 # ───────────────────────────────────────────────────────────── routes: read

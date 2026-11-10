@@ -437,6 +437,17 @@ phases:
         step: C2
         fix: analyses
 
+      # W3.05 (HK §8.5): the data return is a PDR driver for a store-and-forward mission
+      - id: PDR-EC-06
+        question: "Does the daily data budget (housekeeping + science) close with margin, and do the stores hold the required days?"
+        category: budgets
+        evidence: "Daily closure, diagnostics-campaign case (C2, else the baseline): capacity of the union of the passes against real-time HK + stored HK + science on the channel, margin >= the gate's daily margin (cdr_rules.yaml daily_margin_percent); every sized HK store holds min_store_days at its worst sizing rate with the storage margin (services/data_budget.gate_check, C2O default)"
+        status: auto
+        priority: must_pass
+        owner_seat: mission_analyst
+        step: A6
+        fix: tmtc
+
   # Nov 2026 (phase 2): the Critical Design Review, the last gate of the full ECSS profile.
   # Expectations after ECSS-E-ST-10C Annex A / ECSS-M-ST-10C Rev.1 §4.4.3.4.5 (clause numbers
   # to verify): the detailed design is justified and meets the requirements, the ICDs are
@@ -484,9 +495,9 @@ phases:
         fix: tmtc
 
       - id: CDR-EC-04
-        question: "Does the housekeeping fit the downlink in every mode?"
+        question: "Does the housekeeping fit the downlink in every mode, does the daily budget close with margin and do the stores hold the required days?"
         category: tmtc
-        evidence: "HK bit rate ≤ HK share of the rate tier in the bootloader, safe, nominal and downlink regimes (cdr_rules.yaml downlink_budget, C2O default)"
+        evidence: "HK bit rate ≤ HK share of the rate tier in the bootloader, safe, nominal and downlink regimes (cdr_rules.yaml downlink_budget, C2O default); the daily closure of the diagnostics-campaign case (C2) keeps the CDR daily margin and every sized HK store holds min_store_days (W3.05, services/data_budget.gate_check)"
         status: auto
         priority: must_pass
         owner_seat: comms_engineer

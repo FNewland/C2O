@@ -266,6 +266,10 @@ def modes(d: DiagramData, **_: Any) -> dict:
 # ───────────────────────────────────────────────────────────── ops scenario swimlane
 
 def ops_pass(d: DiagramData, **_: Any) -> dict:
+    """W3.05: one real operations pass of the day in the life (services/data_budget.ops_pass):
+    duration, acquisition, real-time profile and the VC order the pass plan chose, with the
+    channel split VC0 / VC1 / VC2 as bars. Without a data budget: the C2O pass template with the
+    mean pass of the first station."""
     D = Diagram("ops_pass", T("Operations scenario — one ground-station pass"), "swimlane",
                 T("Seats and segments over a downlink pass; timings from the contact analysis, rates from the link model"))
     D.source("ground stations", "link inputs", "modes", "C2O pass template")
@@ -273,37 +277,81 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
     st = next((s for s in stations if not s.get("_default")), stations[0] if stations else None)
     rate = getattr(link, "downlink_bps", None) if link else None
     band = getattr(link, "band", None) if link else None
+    op = None
+    try:
+        from ..data_budget import ops_pass as real_pass
+        b = d.data_budget() if hasattr(d, "data_budget") else None
+        op = real_pass(b) if b else None
+    except Exception:  # noqa: BLE001
+        op = None
     pass_min = 8.0
     contact_src = prov("template", note="C2O default pass length")
-    try:
-        if st is not None and d.ctx is not None:
-            from .. import ground_closure as gc
-            orbit = gc.OrbitParams(altitude_km=float(d.ctx.orbit.get("altitude_km") or 500.0),
-                                   inclination_deg=float(d.ctx.orbit.get("inclination_deg") or 97.4),
-                                   period_s=float(d.ctx.orbit.get("period_s") or 0.0))
-            gs = gc.station_to_ground_station(st, band)
-            minutes, n = gc._contact_minutes(orbit, gs, (rate or 1e6) / 1e6)
-            if n:
-                pass_min = max(3.0, minutes / n)
-                contact_src = prov("derived", st.get("id") or st.get("name"), note="contact prediction")
-    except Exception:  # noqa: BLE001
-        pass
-    dump = max(1.0, pass_min - 3.0)
-    vol_mb = (rate or 0) * dump * 60 / 8e6
-    st_name = (st or {}).get("name") or plain(T("Ground station"))
+    if op:
+        D.source("data budget (day in the life)")
+        pass_min = float(op.get("minutes") or pass_min)
+        rate = op.get("rate_bps") or rate
+        band = op.get("band") or band
+        contact_src = prov("derived", f"pass {op.get('index')}", note="day in the life (data budget)")
+    else:
+        try:
+            if st is not None and d.ctx is not None:
+                from .. import ground_closure as gc
+                orbit = gc.OrbitParams(altitude_km=float(d.ctx.orbit.get("altitude_km") or 500.0),
+                                       inclination_deg=float(d.ctx.orbit.get("inclination_deg") or 97.4),
+                                       period_s=float(d.ctx.orbit.get("period_s") or 0.0))
+                gs = gc.station_to_ground_station(st, band)
+                minutes, n = gc._contact_minutes(orbit, gs, (rate or 1e6) / 1e6)
+                if n:
+                    pass_min = max(3.0, minutes / n)
+                    contact_src = prov("derived", st.get("id") or st.get("name"), note="contact prediction")
+        except Exception:  # noqa: BLE001
+            pass
     lanes = [("sc", T("Spacecraft")), ("gs", T("Ground station")), ("mcc", T("Mission control")), ("ops", T("Operators"))]
-    steps = [
-        ("ops", -15.0, 6.0, T("Pass plan approved"), None),
-        ("mcc", -8.0, 4.0, T("Schedule and antenna pointing sent"), None),
-        ("gs", 0.0, 1.0, T("AOS: carrier lock ({{band}}-band)", band=band or "?"), None),
-        ("sc", 0.5, 1.5, T("Beacon and housekeeping TM"), None),
-        ("mcc", 1.5, 1.5, T("TC uplink: time-tagged plan"), None),
-        ("sc", 2.5, dump, T("Payload data dump at {{rate}}", rate=_rate_txt(rate)), None),
-        ("gs", 2.5 + dump - 0.2, 0.6, T("LOS"), None),
-        ("mcc", 3.0 + dump, 4.0, T("Data to processing; pass report"), None),
-        ("ops", 4.5 + dump, 5.0, T("Review pass, plan next"), None),
-    ]
-    t0, t1 = -16.0, 15.0 + dump
+    if op:
+        acq = max(0.2, float(op.get("acquisition_s") or 0.0) / 60.0)
+        usable = max(0.5, pass_min - acq)
+        vcs = {v["vc"]: v for v in op.get("vcs") or []}
+        st_name = " + ".join(str(x).replace("GS ", "") for x in op.get("stations") or []) or plain(T("Ground station"))
+        steps = [
+            ("ops", -15.0, 6.0, T("Pass plan approved"), None),
+            ("mcc", -8.0, 4.0, T("Schedule and antenna pointing sent"), None),
+            ("gs", 0.0, max(acq, 0.5), T("AOS: carrier lock ({{band}}-band)", band=band or "?"), None),
+            ("sc", acq, usable, T("VC0 real-time HK, {{profile}} profile ({{bps}} bit/s)", profile=op.get("rt_profile") or "FULL",
+                                  bps=f"{float(op.get('rt_bps') or 0):.0f}"), None),
+            ("mcc", acq + 0.3, 1.5, T("TC uplink: time-tagged plan"), None),
+        ]
+        t = acq
+        for vc in [v for v in op.get("order") or [] if v in ("VC1", "VC2")]:
+            v = vcs.get(vc) or {}
+            dur = float(v.get("min") or 0.0)
+            if dur <= 0.05:
+                continue
+            lab = (T("VC1 delayed HK dump: {{mb}} MB", mb=f"{float(v.get('mb') or 0):.2f}") if vc == "VC1" else
+                   T("VC2 payload files: {{mb}} MB", mb=f"{float(v.get('mb') or 0):.2f}"))
+            steps.append(("sc", t, dur, lab, None))
+            t += dur
+        steps += [
+            ("gs", pass_min - 0.2, 0.6, T("LOS"), None),
+            ("mcc", pass_min + 0.5, 4.0, T("Data to processing; pass report"), None),
+            ("ops", pass_min + 2.0, 5.0, T("Review pass, plan next"), None),
+        ]
+        dump = pass_min
+    else:
+        dump = max(1.0, pass_min - 3.0)
+        st_name = (st or {}).get("name") or plain(T("Ground station"))
+        steps = [
+            ("ops", -15.0, 6.0, T("Pass plan approved"), None),
+            ("mcc", -8.0, 4.0, T("Schedule and antenna pointing sent"), None),
+            ("gs", 0.0, 1.0, T("AOS: carrier lock ({{band}}-band)", band=band or "?"), None),
+            ("sc", 0.5, 1.5, T("Beacon and housekeeping TM"), None),
+            ("mcc", 1.5, 1.5, T("TC uplink: time-tagged plan"), None),
+            ("sc", 2.5, dump, T("Payload data dump at {{rate}}", rate=_rate_txt(rate)), None),
+            ("gs", 2.5 + dump - 0.2, 0.6, T("LOS"), None),
+            ("mcc", 3.0 + dump, 4.0, T("Data to processing; pass report"), None),
+            ("ops", 4.5 + dump, 5.0, T("Review pass, plan next"), None),
+        ]
+    vol_mb = (rate or 0) * max(1.0, pass_min - 3.0) * 60 / 8e6
+    t0, t1 = -16.0, (pass_min + 8.0 if op else 15.0 + dump)
     lane_h, x0, px = 76.0, 140.0, 30.0
     width = (t1 - t0) * px
     y0 = 40.0
@@ -326,7 +374,7 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
         lane_end[(lid, sub)] = x + w
         y = lane_y[lid] + 22 + sub * 26
         D.node(f"s{k}", lab, x, y, w, 24, shape="step", style="accent" if lid == "sc" else "default",
-               p=contact_src if k in (2, 6) else prov("template"))
+               p=contact_src if lid == "gs" and k < len(steps) - 2 else prov("template"))
         if prev is not None:
             pa = prev
             sx = max(pa["x"] + 8, min(pa["x"] + pa["w"] - 8, x + 6))
@@ -336,16 +384,46 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
                    style={"type": "message", "dash": "", "width": 1.1, "color": "text3"})
         prev = {"x": x, "y": y, "w": w}
         rows.append([dict(lanes)[lid], f"{ts:+.1f} min", f"{dur:.1f} min", lab])
-    D.label(x0, y0 + lane_h * len(lanes) + 14,
-            T("Pass {{min}} min at {{station}}; dump {{vol}} MB per pass", min=f"{pass_min:.1f}", station=st_name,
-              vol=f"{vol_mb:.0f}"), size=12, style="text2")
+    yb = y0 + lane_h * len(lanes) + 6
+    if op:
+        # the channel of the pass: VC0 / VC1 / VC2 (and idle) at the information rate, on the time axis
+        D.label(x0 - 8, yb + 15, T("Channel"), anchor="end", size=12, style="text2")
+        info = float(op.get("information_rate_bps") or 0.0)
+        idle_min = round(float(op.get("idle_mb") or 0.0) * 8e6 / info / 60.0, 2) if info else 0.0
+        segs = [(v.get("vc"), float(v.get("min") or 0.0), float(v.get("mb") or 0.0)) for v in op.get("vcs") or []]
+        segs.append(("idle", idle_min, float(op.get("idle_mb") or 0.0)))
+        style = {"VC0": "on", "VC1": "total", "VC2": "ok", "idle": "unknown"}
+        x = x0 + (acq - t0) * px
+        for vc, mn, mb in segs:
+            if mn <= 0.01:
+                continue
+            w = mn * px
+            txt = f"{vc} {mb:.2f} MB" if text_w(f"{vc} {mb:.2f} MB", 11) + 6 < w else (vc if text_w(vc, 11) + 4 < w else "")
+            D.cell(x, yb, w, 22, text=txt, style=style.get(vc, "cell"), title=f"{vc}: {mb:.3f} MB, {mn:.2f} min")
+            x += w
+        yb += 30
+        D.label(x0, yb + 8,
+                T("{{cls}} pass at {{local}} (local), {{min}} min ({{usable}} min usable) over {{station}}, max. elevation {{el}}°; channel {{ch}} MB: VC0 {{vc0}}, VC1 {{vc1}}, VC2 {{vc2}} MB",
+                  cls=op.get("class") or "OPS", local=op.get("local") or "", min=f"{pass_min:.1f}",
+                  usable=f"{float(op.get('usable_min') or 0):.1f}", station=st_name, el=f"{float(op.get('max_elevation_deg') or 0):.0f}",
+                  ch=f"{float(op.get('channel_mb') or 0):.2f}", vc0=f"{float((vcs.get('VC0') or {}).get('mb') or 0):.2f}",
+                  vc1=f"{float((vcs.get('VC1') or {}).get('mb') or 0):.2f}", vc2=f"{float((vcs.get('VC2') or {}).get('mb') or 0):.2f}"),
+                size=12, style="text2")
+    else:
+        D.label(x0, yb + 8,
+                T("Pass {{min}} min at {{station}}; dump {{vol}} MB per pass", min=f"{pass_min:.1f}", station=st_name,
+                  vol=f"{vol_mb:.0f}"), size=12, style="text2")
     if not stations or all(s.get("_default") for s in stations):
         D.gap("no_station", T("missing: ground station selection (catalogue default used)"), fix="ground")
     if link is None or (getattr(link, "source", {}) or {}).get("downlink_rate") == "fallback":
         D.gap("no_rate", T("missing: downlink rate in the model (fallback rate used)"), fix="analyses")
     if not any(_kind(m) == "downlink" for m in d.modes):
         D.gap("no_downlink_mode", T("missing: a downlink mode"), severity="info", fix="modes")
-    D.gap("template", T("Scenario steps are the C2O pass template; timings and rates come from the model"), severity="info")
+    if op:
+        D.gap("template", T("Pass and channel split from the data budget (day in the life, pass plan); the seat steps are the C2O pass template"),
+              severity="info")
+    else:
+        D.gap("template", T("Scenario steps are the C2O pass template; timings and rates come from the model"), severity="info")
     D.completeness(3, sum([bool(stations) and not all(s.get("_default") for s in stations), bool(rate) and
                            (getattr(link, "source", {}) or {}).get("downlink_rate") != "fallback",
                            any(_kind(m) == "downlink" for m in d.modes)]))

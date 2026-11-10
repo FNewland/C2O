@@ -174,7 +174,28 @@ def test_pdr_should_pass_items_are_advisory_and_do_not_block():
     assert res["ready"] is False
     assert res["ready_pending_manual"] is False
     assert res["summary"]["advisory"] == 1
-    assert res["summary"]["must_pass"] == 4 and res["summary"]["must_pass_met"] == 3
+    # W3.05: PDR-EC-06 (daily data budget) is must-pass and not evaluated without a data budget
+    assert by["PDR-EC-06"]["status"] == "not_evaluated"
+    assert res["summary"]["must_pass"] == 5 and res["summary"]["must_pass_met"] == 3
+
+
+def test_pdr_data_budget_question_reads_the_budget():
+    """W3.05: PDR-EC-06 passes when the C2 case keeps the gate's daily margin and the sized HK
+    store holds min_store_days; it fails on a thin margin or an undersized store."""
+    def budget(margin: float, store_ok: bool) -> dict:
+        return {"status": "designed", "closure": {"id": "C1", "margin_pct": margin + 2},
+                "cases": [{"id": "C1", "margin_pct": margin + 2}, {"id": "C2", "margin_pct": margin}],
+                "stores": [{"name": "HK_STORE", "size_mb": 16, "days_held": {"nominal_mix": 22.4, "safe": 13.8, "survival": 49.4},
+                            "check": {"ok": store_ok, "need_mb": 12.2, "sizing_modes": ["nominal_mix", "safe", "survival"]}}]}
+    def c6(b: dict) -> dict:
+        res = ge.evaluate_gate("PDR", design_params={"_data_budget": b})
+        return {c["id"]: c for c in res["criteria"]}["PDR-EC-06"]
+    ok = c6(budget(36.0, True))
+    assert ok["status"] == "pass" and ok["evidence_params"]["case"] == "C2"
+    assert ok["evidence_params"]["days"] == "13.8" and ok["evidence_params"]["need"] == "7"
+    assert c6(budget(5.0, True))["status"] == "fail"
+    assert c6(budget(36.0, False))["status"] == "fail"
+    assert c6({**budget(36.0, True), "stores": []})["evidence_key"].endswith("no HK store sized yet")
 
 
 def test_pdr_margin_and_requirement_failures_block():

@@ -72,6 +72,12 @@ export interface DataChain {
     band?: string; rate_source?: string; sum_of_stations_min_per_day?: number; contact_basis?: string; usable_min_per_day?: number | null
     stations: { name: string; contact_min_per_day: number; margin_db: number | null; used: boolean; low_margin: boolean; status: string; capacity_gb_per_day: number }[] }
   backlog_growth_gb_per_day: number; days_to_full: number | null; checks: Check[]; warnings: string[]
+  /** W3.05: the daily closure of the data budget (the numbers of the Data budget page) */
+  data_budget?: { status: string; closure: DailyCase | null } | null
+}
+export interface DailyCase {
+  id: string; label: Bi; capacity_mb: number; rt_hk_mb: number; stored_hk_mb: number; science_mb: number; other_mb: number
+  demand_mb: number; margin_pct: number | null; status: string
 }
 export interface EquipRow {
   element_id: string; name: string; quantity: number; unit_class: string; maturity_category: string

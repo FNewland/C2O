@@ -22,7 +22,8 @@ import { useWhereSection } from '../where/where'
 import { Button, DataTable, Disclosure, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, askConfirm, fmtNum, showAlert,
   tabPanelProps, type Column, type Status } from '../components/ui'
 import { ModeDiagram } from './ModeDiagram'
-import { bi, get, modeKeys, send, useInvalidateModes, useModes, type DataChain, type Energy, type EquipBudgets,
+import { ConopsPhases } from '../workbench/ConopsPhases'
+import { bi, get, modeKeys, send, useInvalidateModes, useModes, type DailyCase, type DataChain, type Energy, type EquipBudgets,
   type Member, type Mode, type ModesOverview, type Proposal, type StaleRow, type SystemMargin, type Transition, type Unit } from './api'
 import { KIND_LABELS, PHASE_LABELS, POINTING_LABELS, PROPOSAL_KIND_LABELS, STATE_LABELS, STATUS_LABELS, TRIGGER_LABELS } from './labels'
 import './modes.css'
@@ -79,6 +80,7 @@ export function ModesPanel() {
         items={VIEWS.map(v => ({ id: v, label: t(VIEW_LABELS[v]) }))} />
       <div {...tabPanelProps('modes', view)} className="stack gap-4">
         {view === 'machine' && <MachineView data={data} sid={sid} onChange={invalidate} />}
+        {view === 'machine' && <ConopsPhases studyId={sid} />}
         {view === 'matrix' && <MatrixView data={data} sid={sid} onChange={invalidate} />}
         {view === 'energy' && <EnergyView sid={sid} />}
         {view === 'data' && <DataChainView sid={sid} />}
@@ -487,6 +489,7 @@ function DataChainView({ sid }: { sid: string }) {
           {chk['DC-DOWNLINK'] && <StatusBadge status={statusOf(chk['DC-DOWNLINK'].status)}>{bi(chk['DC-DOWNLINK'].label)}</StatusBadge>}
         </div>
       </div>
+      {data.data_budget?.closure && <DailyClosure c={data.data_budget.closure} />}
       {data.backlog_growth_gb_per_day > 0
         ? <Note tone="alarm">{t('The backlog grows by {{gb}} GB per day{{full}}.', { gb: fmtNum(data.backlog_growth_gb_per_day, 2),
             full: data.days_to_full != null ? t('; storage is full after {{d}} days', { d: fmtNum(data.days_to_full, 1) }) : '' })}</Note>
@@ -515,6 +518,26 @@ function DataChainView({ sid }: { sid: string }) {
         </Panel>
       </div>
     </>
+  )
+}
+
+/** W3.05: the daily closure case of the data budget, as the Data budget page and the exports quote it. */
+function closureText(c: DailyCase): { capacity: string; demand: string; margin: string; tone: 'ok' | 'caution' | 'alarm' | 'nodata' } {
+  return {
+    capacity: fmtNum(c.capacity_mb, 2), demand: fmtNum(c.demand_mb, 2),
+    margin: c.margin_pct == null ? '—' : `${c.margin_pct >= 0 ? '+' : ''}${fmtNum(c.margin_pct, 1)}`,
+    tone: c.status === 'pass' ? 'ok' : c.status === 'warn' ? 'caution' : c.status === 'fail' ? 'alarm' : 'nodata',
+  }
+}
+
+function DailyClosure({ c }: { c: DailyCase }) {
+  const { t } = useTranslation()
+  const x = closureText(c)
+  return (
+    <p className="t-13 c-2 m-0 row gap-2 ai-c" data-testid="daily-closure">
+      <StatusBadge status={x.tone}>{t('Daily closure {{case}}: {{margin}} %', { case: c.id, margin: x.margin })}</StatusBadge>
+      <span>{t('{{demand}} MB/day of {{capacity}} MB/day downlink capacity (real-time HK, stored HK, science); same numbers as the Data budget page', { demand: x.demand, capacity: x.capacity })}</span>
+    </p>
   )
 }
 
