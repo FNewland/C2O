@@ -37,7 +37,7 @@ import zipfile
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response
 
 from . import _common
 
@@ -81,6 +81,52 @@ async def _checklist(study_id: str, plan, profile: dict) -> dict:
     except Exception:  # noqa: BLE001 — the pack still builds without the checklist
         logger.warning("gate checklist for the %s pack failed", plan.gate, exc_info=True)
         return {}
+
+
+async def _deliverables(study_id: str, study: Any, plan, sx: Any) -> dict:
+    """The protocol deliverables of the pack's gate (SE-02): agent S's deliverables service
+    (``services/se_deliverables.evaluate``), else the ``se_phase`` section when the study is at
+    that gate, else the stub marker (the index lists it as an open item for S)."""
+    gate = plan.covers[-1]
+    try:
+        from ...services import se_deliverables as sd
+    except ImportError:
+        sd = None
+    fn = getattr(sd, "evaluate", None) if sd is not None else None
+    if fn is not None:
+        for call in (lambda: fn(study_id, gate), lambda: fn(study_id, study, gate=gate), lambda: fn(study_id, gate=gate)):
+            try:
+                out = call()
+                if inspect.isawaitable(out):
+                    out = await out
+            except TypeError:
+                continue
+            except Exception:  # noqa: BLE001 — the pack still builds
+                logger.warning("deliverables for the %s pack failed", gate, exc_info=True)
+                break
+            if isinstance(out, dict):
+                its = out.get("deliverables") if out.get("deliverables") is not None else out.get("items")
+                if out.get("status") == "not_implemented":
+                    return {**out, "gate": gate}
+                return {"gate": gate, "items": list(its or [])}
+            if isinstance(out, list):
+                return {"gate": gate, "items": out}
+            break
+    ph = getattr(sx, "se_phase", None) or {}
+    if ph.get("deliverables") and str(ph.get("gate") or "").lower() == gate:
+        return {"gate": gate, "items": list(ph["deliverables"])}
+    return {"status": "not_implemented", "owner": "S", "work_package": "3.S2", "gate": gate, "items": []}
+
+
+async def _diagram_catalogue(study_id: str, plan) -> list[dict]:
+    """The diagrams the gate expects with their gaps (the figures are in Diagrams.docx)."""
+    try:
+        from ...services import diagrams as dg
+        d = await dg.load(study_id)
+        return dg.catalogue(d, list(plan.covers))
+    except Exception:  # noqa: BLE001
+        logger.warning("diagram catalogue for the %s pack failed", plan.gate, exc_info=True)
+        return []
 
 
 async def _crosscheck(study_id: str) -> dict:
@@ -227,7 +273,7 @@ async def build_documents(study_id: str, sx: Any, plan, lang: str, crosscheck: d
     return files, status
 
 
-def index_markdown(plan, pkg, status: dict, lang: str) -> str:
+def index_markdown(plan, pkg, status: dict, lang: str, deliverables: dict | None = None) -> str:
     from spacecdf_agents.exporters.docs.study_pack import Tr
     t = Tr("fr" if str(lang).startswith("fr") else "en")
     lines = [f"# {plan.short} — {pkg.study_name}: {t('Package index')}", ""]
@@ -243,6 +289,18 @@ def index_markdown(plan, pkg, status: dict, lang: str) -> str:
     lines += ["", f"## {t('Products expected at this review')}", "",
               f"| {t('Product')} | {t('Maturity')} | {t('Owner')} |", "|---|---|---|"]
     lines += [f"| {t.pick(p['label'])} | {p['maturity']} | {p.get('owner_seat') or ''} |" for p in plan.products]
+    dl = deliverables or {}
+    fr = t.lang == "fr"
+    lines += ["", "## " + ("Systems-engineering deliverables" if not fr else "Livrables d’ingénierie système"), ""]
+    if dl.get("items"):
+        lines += [f"| {t('Item')} | {t('Owner')} | {t('Status')} | {t('Evidence')} |", "|---|---|---|---|"]
+        for d in dl["items"]:
+            lab = d.get("label")
+            lines.append(f"| {t.pick(lab) if isinstance(lab, dict) else (lab or d.get('id') or '')} | {d.get('owner_seat') or ''} | "
+                         f"{d.get('state') or ''} | {str(d.get('evidence') or '').replace('|', '/')} |")
+    else:
+        lines.append(("Not evaluated yet (deliverables service: " if not fr else "Pas encore évalués (service des livrables : ")
+                     + f"{dl.get('owner') or 'S'} {dl.get('work_package') or '3.S2'})")
     lines += ["", f"## {t('Open items')} ({len(pkg.open_items)})", ""]
     lines += [f"{i + 1}. {o['text']}" + (f" ({o['owner']})" if o.get("owner") else "") for i, o in enumerate(pkg.open_items)]
     return "\n".join(lines).rstrip() + "\n"
@@ -288,30 +346,31 @@ async def export_design_document(
     sx = await collect(study_id, gate=plan.margin_gate, lang=lang)
     cross = await _crosscheck(study_id) if crosscheck else {}
     checklist = await _checklist(study_id, plan, profile)
+    extras = {"checklist": checklist, "crosscheck": cross, "deliverables": await _deliverables(study_id, study, plan, sx),
+              "diagrams": await _diagram_catalogue(study_id, plan)}
 
     if fmt.lower() == "markdown":
         status = {d.id: {"status": "missing", "note": "built in the zip pack (fmt=zip)"} for d in plan.documents}
-        pkg = build_package(sx.as_dict(), plan, lang=lang,
-                            extras={"documents": status, "checklist": checklist, "crosscheck": cross})
+        pkg = build_package(sx.as_dict(), plan, lang=lang, extras={"documents": status, **extras})
         md = render_markdown(pkg)
         return JSONResponse(content={"review_type": plan.gate, "short": plan.short, "covers": plan.covers,
                                      "document_markdown": md, "sections": len(pkg.sections),
-                                     "section_titles": pkg.sections, "open_items": len(pkg.open_items)})
+                                     "section_titles": pkg.sections, "open_items": len(pkg.open_items),
+                                     "open_item_list": pkg.open_items,
+                                     "deliverables": extras["deliverables"]})
 
     files, status = await build_documents(study_id, sx, plan, lang, cross)
-    pkg = build_package(sx.as_dict(), plan, lang=lang,
-                        extras={"documents": status, "checklist": checklist, "crosscheck": cross})
+    pkg = build_package(sx.as_dict(), plan, lang=lang, extras={"documents": status, **extras})
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("INDEX.md", index_markdown(plan, pkg, status, lang))
+        zf.writestr("INDEX.md", index_markdown(plan, pkg, status, lang, extras["deliverables"]))
         zf.writestr(f"docs/{plan.gate}.md", render_markdown(pkg))
         zf.writestr(f"docs/{plan.gate}.docx", render_docx(pkg))
         for d in plan.documents:
             if d.id in files:
                 zf.writestr(d.file, files[d.id])
     filename = f"{_slug(plan.short)}_{_slug(sx.study_name)}_review_pack.zip"
-    return StreamingResponse(
-        io.BytesIO(buf.getvalue()),
+    return Response(content=buf.getvalue(),
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

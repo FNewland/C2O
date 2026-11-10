@@ -13,6 +13,8 @@ writes one workbook with live formulas:
 * **Link**      bands, the design case and every named link case (W4.04)
 * **Pointing**  payload pointing requirements and the physics run's AOCS figures
 * **Margins**   the system margin ladder per gate and the maturity margins
+* **Ledger**    the allocation ledger (wave 3): every line with owner and status, a sum per budget
+* **Performance** pointing, registration (RSS) and timing (linear sum) contributors from the ledger
 * **Cost**      equipment cost by subsystem and the P50-P90 spread
 * **Open items**  what the workbook could not fill and who adds it
 
@@ -296,7 +298,7 @@ def _sheet_data(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
     if _stub(db) or not (cases or scal):
         opens.append(["Data", "Daily data budget against the downlink (generated, stored, downlinked, margin per case)",
                       _owner(db, "H W3.02")])
-    _headers(ws, r, ["Payload", "Data per day (GB)", "Data rate (Mbit/s)", "Duty cycle (%)"], [40, 16, 16, 14])
+    _headers(ws, r, ["Payload", "Frames acquired per day (GB)", "Data rate (Mbit/s)", "Duty cycle (%)"], [40, 16, 16, 14])
     pls = ((sx.get("mission") or {}).get("definition") or {}).get("payloads") or []
     for i, p in enumerate(pls, start=r + 1):
         ws.cell(row=i, column=1, value=p.get("name"))
@@ -305,9 +307,17 @@ def _sheet_data(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
         ws.cell(row=i, column=4, value=_f(p.get("duty_cycle_percent")))
     if pls:
         tr = r + len(pls) + 1
-        _total(ws, tr, 1, "Generated per day (GB, payload definition)")
+        _total(ws, tr, 1, "Frames acquired on board per day (GB, before ROI selection)")
         _total(ws, tr, 2, f"=SUM(B{r + 1}:B{tr - 1})")
         r = tr + 2
+    from .v_sections import payload_data_lines
+    pdl = payload_data_lines(sx)
+    if pdl:
+        _headers(ws, r, ["Payload definition: acquired and delivered", "Value"])
+        for i, (k, v) in enumerate(pdl, start=r + 1):
+            ws.cell(row=i, column=1, value=k)
+            ws.cell(row=i, column=2, value=v)
+        r = r + len(pdl) + 2
     hk = ((sx.get("cdr") or {}).get("budget") or {})
     scal = [(k, v) for k, v in hk.items() if isinstance(v, (int, float, str)) and not isinstance(v, bool)]
     if scal:
@@ -394,6 +404,82 @@ def _sheet_margins(wb: Workbook, sx: dict) -> None:
         ws.cell(row=i, column=3, value=n)
     _note(ws, ws.max_row + 2, "configs/margin_policy.yaml: maturity margins A/B 5 %, C 10 %, D 20 %; "
                               "system margin ladder per gate.")
+
+
+LEDGER_COLUMNS = ["Budget", "Element", "Kind", "Allocation", "Unit", "CBE", "With maturity", "Requirement", "Budget ref",
+                  "Owner", "Status", "Contributor"]
+
+
+def _sheet_ledger(wb: Workbook, sx: dict, opens: list[list[str]]) -> dict[str, float]:
+    """The allocation ledger (3.A2): every line with its owner and sign-off; a SUM per budget."""
+    from .v_sections import BUDGET_LABEL, g, items
+    ws = wb.create_sheet("Ledger")
+    sec = sx.get("allocations") or {}
+    _headers(ws, 1, LEDGER_COLUMNS, [16, 10, 11, 12, 9, 10, 12, 14, 22, 18, 10, 40])
+    if _stub(sec):
+        opens.append(["Ledger", "Allocation ledger (budget shares agreed by their owners)", _owner(sec, "A 3.A2")])
+        return {}
+    lines = items(sec)
+    r = 2
+    sums: dict[str, float] = {}
+    for bt in list(BUDGET_LABEL) + sorted({str(g(x, "budget_type", default="")) for x in lines} - set(BUDGET_LABEL)):
+        mine = [x for x in lines if str(g(x, "budget_type", default="")) == bt]
+        if not mine:
+            continue
+        first = r
+        for x in mine:
+            reserve = str(g(x, "line_kind", default="")) == "reserve" or str(g(x, "element_code", default="")).upper() == "SYS"
+            row = [BUDGET_LABEL.get(bt, (bt, bt))[0], g(x, "element_code", default=""), g(x, "line_kind", default="allocation"),
+                   _f(g(x, "value")), g(x, "unit", default=""), _f(g(x, "cbe")), _f(g(x, "margined")),
+                   g(x, "requirement_code", default=""), g(x, "budget_ref", default=""), g(x, "owner_seat", default=""),
+                   g(x, "status", default=""), (g(x, "data", default={}) or {}).get("contributor") or g(x, "mode_key", default="")]
+            for j, v in enumerate(row, start=1):
+                ws.cell(row=r, column=j, value=v)
+            if not reserve:
+                sums[bt] = round(sums.get(bt, 0.0) + (_f(g(x, "value")) or 0.0), 6)
+            r += 1
+        _total(ws, r, 1, f"Sum of the {BUDGET_LABEL.get(bt, (bt,))[0].lower()} allocations")
+        _total(ws, r, 4, f'=SUMIFS(D{first}:D{r - 1},C{first}:C{r - 1},"<>reserve")')
+        r += 2
+    if not lines:
+        opens.append(["Ledger", "Allocation ledger is empty", "systems_engineer"])
+    _note(ws, r + 1, "Allocation ledger of the study (agreed, proposed or disputed by the element owner). The Systems "
+                     "reserve is its own line (kind reserve) and is not in the sums.")
+    return sums
+
+
+def _sheet_performance(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
+    """Performance budgets (pointing, registration, timing) from the ledger contributors."""
+    from .v_sections import g, items
+    ws = wb.create_sheet("Performance")
+    sec = sx.get("allocations") or {}
+    _headers(ws, 1, ["Budget", "Contributor", "Allocation", "Unit", "Requirement", "Status"], [14, 50, 12, 8, 22, 10])
+    if _stub(sec):
+        opens.append(["Performance", "Pointing, registration and timing budgets (ledger contributors)", _owner(sec, "A 3.A2")])
+        return
+    r = 2
+    for bt, rule in (("pointing", "each contributor against its requirement"), ("registration", "root sum of squares"),
+                     ("timing", "worst-case linear sum")):
+        mine = [x for x in items(sec) if str(g(x, "budget_type", default="")) == bt]
+        if not mine:
+            opens.append(["Performance", f"No {bt} budget lines in the ledger", "systems_engineer"])
+            continue
+        first = r
+        for x in mine:
+            row = [bt, (g(x, "data", default={}) or {}).get("contributor") or g(x, "element_code", default=""), _f(g(x, "value")),
+                   g(x, "unit", default=""), g(x, "requirement_code", default=""), g(x, "status", default="")]
+            for j, v in enumerate(row, start=1):
+                ws.cell(row=r, column=j, value=v)
+            r += 1
+        if bt == "registration":
+            _total(ws, r, 2, "RSS (" + rule + ")")
+            _total(ws, r, 3, f"=SQRT(SUMSQ(C{first}:C{r - 1}))")
+        elif bt == "timing":
+            _total(ws, r, 2, "Sum (" + rule + ")")
+            _total(ws, r, 3, f"=SUM(C{first}:C{r - 1})")
+        else:
+            _total(ws, r, 2, rule)
+        r += 2
 
 
 def cost_spread(lines: list[tuple[float, str]]) -> dict[str, float]:
@@ -491,6 +577,8 @@ def generate_master_budget(sx: dict[str, Any], output: Path | None = None, *, cr
     _sheet_link(wb, sx, opens)
     _sheet_pointing(wb, sx, opens)
     _sheet_margins(wb, sx)
+    _sheet_ledger(wb, sx, opens)
+    _sheet_performance(wb, sx, opens)
     spread = _sheet_cost(wb, sx, lk, opens)
     _sheet_summary(summary, sx, spread, crosscheck)
     ws = wb.create_sheet("Open items")

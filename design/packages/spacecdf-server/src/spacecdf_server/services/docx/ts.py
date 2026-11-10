@@ -131,11 +131,15 @@ _TXT = {
     "conv": {"en": "Priority: 1 mandatory (the mission or a licence fails without it), 2 needed for full performance, "
                    "3 goal. Verification methods (ECSS-E-ST-10-02C): T test (including demonstration), A analysis, "
                    "R review of design, I inspection. Stage: the review that closes the requirement (PDR, CDR, QR, AR) "
-                   "or IOV, in-orbit verification. Stakeholder needs are in the MRD; x",
+                   "or IOV, in-orbit verification; model, event and acceptance say on which model, in which "
+                   "verification event and against which criterion it closes. Stakeholder needs are in the MRD; the "
+                   "interface requirements generated from the links are in the IRD.",
              "fr": "Priorité : 1 obligatoire (la mission ou une licence échoue sans elle), 2 nécessaire à la pleine "
                    "performance, 3 objectif. Méthodes de vérification (ECSS-E-ST-10-02C) : T essai (y compris "
                    "démonstration), A analyse, R revue de conception, I inspection. Étape : la revue qui clôt "
-                   "l’exigence (PDR, CDR, QR, AR) ou IOV, vérification en orbite. Les besoins des parties prenantes "
+                   "l’exigence (PDR, CDR, QR, AR) ou IOV, vérification en orbite ; modèle, événement et acceptation "
+                   "disent sur quel modèle, lors de quel événement de vérification et selon quel critère elle est "
+                   "close. Les besoins des parties prenantes "
                    "sont dans le MRD ; les exigences d’interface générées à partir des liaisons sont dans l’IRD."},
     "docs": {"en": "Applicable and reference documents", "fr": "Documents applicables et de référence"},
     "sysdesc": {"en": "System description", "fr": "Description du système"},
@@ -168,11 +172,11 @@ _TXT = {
 }
 _COLS = {
     "en": ["Code", "Requirement", "Threshold", "Unit", "Pri.", "Level", "Category", "Method", "Ver. level", "Stage",
-           "Parents", "Allocated to", "Rationale"],
+           "Model", "Event", "Acceptance", "Parents", "Allocated to", "Rationale"],
     "fr": ["Code", "Exigence", "Seuil", "Unité", "Prio.", "Niveau", "Catégorie", "Méthode", "Niv. vérif.", "Étape",
-           "Mères", "Allouée à", "Justification"],
+           "Modèle", "Événement", "Acceptation", "Mères", "Allouée à", "Justification"],
 }
-_WIDTHS = [2.2, 5.6, 1.6, 1.4, 0.8, 1.4, 1.6, 1.0, 1.4, 1.0, 2.2, 2.2, 3.8]
+_WIDTHS = [2.0, 4.8, 1.3, 1.0, 0.7, 1.2, 1.3, 0.9, 1.2, 0.9, 1.0, 1.5, 3.0, 1.8, 1.8, 2.8]
 
 
 def _row(r: dict[str, Any]) -> list[Any]:
@@ -180,7 +184,8 @@ def _row(r: dict[str, Any]) -> list[Any]:
     return [r.get("code") or r.get("id", ""), r.get("text") or "", threshold_value_text(r),
             r.get("threshold_unit") or r.get("unit") or "", r.get("priority"), r.get("level") or "",
             r.get("category") or "", _methods(r), r.get("verification_level") or "",
-            r.get("verification_phase") or "", parents, r.get("allocated_to") or "", r.get("rationale") or ""]
+            r.get("verification_phase") or "", r.get("verification_model") or "", r.get("verification_event") or "",
+            r.get("acceptance") or "", parents, r.get("allocated_to") or "", r.get("rationale") or ""]
 
 
 def build_ts(name: str, reqs: list[dict[str, Any]], *, need: dict | None = None, orbit: dict | None = None,

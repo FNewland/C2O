@@ -163,7 +163,9 @@ async def test_catalogue_lists_gates_and_filters_by_gate(client, eosat):
     assert {"gate": "pdr", "maturity": "B"} in blk["gates"] and blk["product"] == "design_files"
     assert isinstance(blk["gaps"], int) and blk["completeness"]["expected"] > 0
     mdr = (await client.get(f"/api/studies/{sid}/diagrams?gate=mdr")).json()
-    assert {d["kind"] for d in mdr["diagrams"]} == {"phases", "modes", "risk"}
+    # wave 3 (3.X1): the SE diagrams of the V expected at the MDR join the ConOps and risk figures
+    assert {d["kind"] for d in mdr["diagrams"]} == {"phases", "modes", "risk", "context", "stakeholder_map", "v_model",
+                                                     "trade_matrix"}
     pdr = {d["kind"] for d in (await client.get(f"/api/studies/{sid}/diagrams?gate=pdr")).json()["diagrams"]}
     assert {"power", "data_bus", "stack", "block", "modes"} <= pdr and "phases" not in pdr
 
@@ -199,7 +201,9 @@ async def test_exports_embed_the_same_diagrams(client, eosat):
     assert ird.status_code == 200 and len(images(ird.content)) >= 5
     assert "Electrical power block diagram" in text(ird.content) and "N² chart" in text(ird.content)
     doc = await client.get(f"/api/studies/{sid}/diagrams-document.docx?set=all")
-    assert doc.status_code == 200 and len(images(doc.content)) == len(KINDS)
+    # one figure per kind, plus the functional N² and one trade matrix per trade (identical
+    # pictures, e.g. two empty figures, are stored once in the docx)
+    assert doc.status_code == 200 and len(images(doc.content)) >= len(KINDS)
     assert "missing:" in text(doc.content)          # the gaps travel with the figures
 
 

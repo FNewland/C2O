@@ -103,6 +103,9 @@ async def _enriched_items(study_id: str) -> list[dict]:
             "requirement_code": req.get("code") or req["id"], "requirement_text": req.get("text") or "",
             "requirement_level": req.get("level"), "threshold_param_path": req.get("threshold_param_path"),
             "threshold_op": req.get("threshold_op"), "threshold_value": req.get("threshold_value"),
+            # wave 3 (3.X2): the v2 verification fields of the requirement (model, event, acceptance)
+            "verification_model": req.get("verification_model") or "", "verification_event": req.get("verification_event") or "",
+            "requirement_acceptance": req.get("acceptance") or "",
             "linked_elements": els, "linked_element_names": [names.get(e) or e for e in els],
             "linked_functions": _linked_functions(req, relations),
             "auto_closed": bool((it.get("evidence_ref") or "").startswith("analysis:")) and not it.get("edited_by_user")
@@ -268,12 +271,14 @@ def build_vcd_did(study_name: str, items: list[dict]) -> dict:
     for i, lvl in enumerate(LEVEL_ORDER):
         rows = [it for it in items if it.get("level") == lvl]
         if rows:
-            lines = ["| Req | Requirement | Method | Phase | Facility | Acceptance criterion | Status | Evidence |",
-                     "|---|---|---|---|---|---|---|---|"]
+            lines = ["| Req | Requirement | Method | Phase | Model | Event | Facility | Acceptance criterion | Status | Evidence |",
+                     "|---|---|---|---|---|---|---|---|---|---|"]
             for it in sorted(rows, key=lambda i: i.get("requirement_code") or ""):
+                acc = it.get("requirement_acceptance") or it.get("acceptance_criterion")
                 lines.append(f"| {esc(it.get('requirement_code'))} | {esc((it.get('requirement_text') or '')[:120])} | "
-                             f"{esc(it.get('method'))} | {esc(it.get('phase'))} | {esc(it.get('facility'))} | "
-                             f"{esc(it.get('acceptance_criterion'))} | {esc(it.get('status'))} | {esc(it.get('evidence_ref'))} |")
+                             f"{esc(it.get('method'))} | {esc(it.get('phase'))} | {esc(it.get('verification_model'))} | "
+                             f"{esc(it.get('verification_event'))} | {esc(it.get('facility'))} | "
+                             f"{esc(acc)} | {esc(it.get('status'))} | {esc(it.get('evidence_ref'))} |")
             content = "\n".join(lines)
         else:
             content = f"No verification items at {lvl} level."

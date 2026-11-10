@@ -66,7 +66,8 @@ export function DiagramsView() {
   const kind = useDiagramNav(s => s.kind)
   const open = useDiagramNav(s => s.open)
   const [gate, setGate] = useState('')
-  const [level, setLevel] = useState<'unit' | 'system'>('unit')
+  const [level, setLevel] = useState<'unit' | 'system' | 'functions'>('unit')
+  const [trade, setTrade] = useState('')
   const [focus, setFocus] = useState('')
   const [allTypes, setAllTypes] = useState(false)
   const { data: cat } = useDiagramCatalogue(studyId, gate || null)
@@ -81,8 +82,9 @@ export function DiagramsView() {
     g.items.push(e)
   }
   const current = entries.find(e => e.kind === kind)
-  const opts = kind === 'block' ? { level, focus: focus || undefined, types: allTypes ? 'all' : undefined }
-    : kind === 'n2' ? { level } : {}
+  const opts = kind === 'block' ? { level: level === 'functions' ? 'unit' : level, focus: focus || undefined, types: allTypes ? 'all' : undefined }
+    : kind === 'n2' ? (level === 'functions' ? { view: 'functions' } : { level })
+      : kind === 'trade_matrix' ? { focus: trade || undefined } : {}
   const subsystems = blockModel?.options?.subsystems ?? []
   const pick = (k: string) => { open(k); document.getElementById('act-panel')?.scrollTo({ top: 0 }) }
   return (
@@ -105,8 +107,9 @@ export function DiagramsView() {
         <div className="stack gap-1 mt-3">
           <span className="t-12 c-3">{t('Word documents with these diagrams')}</span>
           <a className="c2o-btn c2o-btn--sm" href={diagramDocUrl(studyId, 'all', lang)} download>{t('All diagrams (DOCX)')}</a>
-          <a className="c2o-btn c2o-btn--sm" href={`/api/exports/docx/semp?study_id=${encodeURIComponent(studyId)}`} target="_blank" rel="noreferrer"
-            onClick={e => { e.preventDefault(); void download(`/api/exports/docx/semp?study_id=${encodeURIComponent(studyId)}`, `SEMP_${studyId}.docx`) }}>
+          <a className="c2o-btn c2o-btn--sm" href={diagramDocUrl(studyId, 'se', lang)} download>{t('Systems-engineering diagrams (DOCX)')}</a>
+          <a className="c2o-btn c2o-btn--sm" href={`/api/exports/docx/semp?study_id=${encodeURIComponent(studyId)}&lang=${lang}`} target="_blank" rel="noreferrer"
+            onClick={e => { e.preventDefault(); void download(`/api/exports/docx/semp?study_id=${encodeURIComponent(studyId)}&lang=${lang}`, `SEMP_${studyId}.docx`) }}>
             {t('SEMP (DOCX)')}</a>
           <a className="c2o-btn c2o-btn--sm" href={`/api/exports/docx/ird?study_id=${encodeURIComponent(studyId)}`}
             onClick={e => { e.preventDefault(); void download(`/api/exports/docx/ird?study_id=${encodeURIComponent(studyId)}`, `IRD_${studyId}.docx`) }}>
@@ -124,11 +127,17 @@ export function DiagramsView() {
         ) : (
           <DiagramFigure key={kind} studyId={studyId} kind={kind} opts={opts}
             extraView={kind === 'stack' ? { label: t('3D'), render: () => <Stack3D studyId={studyId} /> } : undefined}
-            toolbar={(kind === 'block' || kind === 'n2') ? (
+            toolbar={kind === 'trade_matrix' ? (
+              <Select dense aria-label={t('Trade')} value={trade} onChange={e => setTrade(e.target.value)}>
+                {(current?.instances ?? []).map(id => <option key={id} value={id}>{id}</option>)}
+              </Select>
+            ) : (kind === 'block' || kind === 'n2') ? (
               <span className="row gap-2 ai-c wrap">
-                <Select dense aria-label={t('Level')} value={level} onChange={e => { setLevel(e.target.value as 'unit' | 'system'); setFocus('') }}>
+                <Select dense aria-label={t('Level')} value={kind === 'block' && level === 'functions' ? 'unit' : level}
+                  onChange={e => { setLevel(e.target.value as 'unit' | 'system' | 'functions'); setFocus('') }}>
                   <option value="unit">{t('Equipment level')}</option>
                   <option value="system">{t('Subsystem level')}</option>
+                  {kind === 'n2' && <option value="functions">{t('Functions')}</option>}
                 </Select>
                 {kind === 'block' && level === 'unit' && (
                   <>

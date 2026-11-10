@@ -9,12 +9,23 @@ import pytest
 
 from tests.fixtures.nfi import ELEMENT_IDS, load, seed_nfi
 
-#: the stub sections of step 0 and their owners (W0_SEAMS §9); owners removed their entries as the real code landed
-WAVE3_SECTIONS = {"allocations": "A", "open_items": "D", "semp": "X", "reliability": "A", "thermal_model": "A", "change_control": "D", "cost": "A"}
+#: the wave-3 export sections of step 0 and their owners (W0_SEAMS §9); every one is real now
+WAVE3_SECTIONS = {"stakeholders": "S", "allocations": "A", "validation": "S", "assumptions": "S", "changes": "L",
+                  "open_items": "D", "negotiations": "H", "se_phase": "S",
+                  # PI addendum
+                  "semp": "X", "icds": "R", "reliability": "A", "thermal_model": "A", "debris": "L",
+                  "change_control": "D", "cost": "A"}
 
-#: one GET per stub router (owner) and the write routes that answer 501 until the owner lands
-STUB_GETS = {"/open-items": "D", "/allocation-ledger": "A", "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/cost/items": "A", "/changes/ECP-01/control": "D"}
-STUB_POSTS = ("/open-items/import", "/allocation-ledger/import", "/reliability/run", "/fmea/propose", "/thermal-model/propose", "/changes/ECP-01/control/start", "/cost/price")
+#: one GET per wave-3 router (owner) and the write routes; none answers "not_implemented" any more
+WAVE3_GETS = {"/moes": "S", "/validation/activities": "S", "/validation/need-validation": "S",
+              "/validation/coverage": "S", "/assumptions": "S", "/negotiations": "H", "/sensitivity": "H",
+              "/sensitivity/altitude": "H", "/changes": "L", "/open-items": "D", "/allocation-ledger": "A",
+              "/icds": "R", "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/debris-assessment": "L",
+              "/cost/items": "A", "/changes/ECP-01/control": "D"}
+WAVE3_POSTS = ("/moes", "/stakeholders/import", "/validation/import", "/assumptions/import", "/negotiations",
+               "/changes/import", "/impact/preview", "/open-items/import", "/allocation-ledger/import",
+               "/icds/ICD-DEP-01/issue", "/reliability/run", "/fmea/propose", "/thermal-model/propose",
+               "/debris-assessment/run", "/changes/ECP-01/control/start", "/cost/price")
 
 
 async def test_s1_store_holds_the_v2_baseline_by_level(client):
@@ -37,7 +48,7 @@ async def test_s1_store_holds_the_v2_baseline_by_level(client):
     assert set(ELEMENT_IDS.values()) <= els, set(ELEMENT_IDS.values()) - els
 
 
-async def test_s0_contracts_phase_sections_and_stub_routes(client):
+async def test_s0_contracts_phase_sections_and_wave3_routes(client):
     from spacecdf_server.app import app
     s = await seed_nfi(client, "S0")
     sid = s.study_id
@@ -47,25 +58,21 @@ async def test_s0_contracts_phase_sections_and_stub_routes(client):
     assert ph["gate"] == "mdr" and ph["phase"] == "0"
     sx = (await client.get(f"/api/studies/{sid}/export-context")).json()
     import importlib
-    for name, owner in WAVE3_SECTIONS.items():
-        # a stub until its owner lands it; once real it keeps the keys of its empty shape
-        if sx[name].get("status") == "not_implemented":
-            assert sx[name]["owner"] == owner, name
-        else:
-            mod = importlib.import_module(f"spacecdf_server.services.export_context.sections.{name}")
-            assert set(mod.empty()) <= set(sx[name]), name
+    for name in WAVE3_SECTIONS:   # every section is real and keeps the keys of its empty shape
+        assert sx[name].get("status") != "not_implemented", name
+        mod = importlib.import_module(f"spacecdf_server.services.export_context.sections.{name}")
+        assert set(mod.empty()) <= set(sx[name]), name
     assert sx["errors"] == {}
     paths = app.openapi()["paths"]
-    for p, owner in STUB_GETS.items():
+    for p in WAVE3_GETS:
         assert f"/api/studies/{{study_id}}{p}".replace("ECP-01", "{change_id}") in paths, p
         r = await client.get(f"/api/studies/{sid}{p}")
-        if r.json().get("status") == "not_implemented":
-            assert r.status_code == 200 and r.json()["owner"] == owner and r.json()["items"] == [], p
-        else:   # landed by its owner: a real answer (404 for an unknown change id is fine)
-            assert r.status_code in (200, 404), (p, r.status_code)
-    for p in STUB_POSTS:
+        assert r.status_code in (200, 404), (p, r.status_code)   # 404 for an unknown change id at S0
+        if r.status_code == 200 and isinstance(r.json(), dict):
+            assert r.json().get("status") != "not_implemented", p
+    for p in WAVE3_POSTS:
         r = await client.post(f"/api/studies/{sid}{p}", json={})
-        assert r.status_code < 500 or r.status_code == 501, (p, r.status_code)
+        assert r.status_code < 500, (p, r.status_code)
     assert (await client.get("/api/studies/nope/moes")).status_code == 404
 
 

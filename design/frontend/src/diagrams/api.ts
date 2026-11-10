@@ -37,16 +37,17 @@ export interface DiagramModel {
   gaps: DGap[]; completeness: { expected: number; filled: number; score: number }
   table: { columns: DText[]; rows: DText[][] }; sources: string[]; notes: DText[]; empty: DText | null
   gates: { gate: string; maturity: string }[]; product: string; ref: string; group: string
-  options?: { level?: string; focus?: string | null; subsystems?: { id: string; name: string }[]; which?: string; geometry?: boolean; hidden_types?: string[] }
+  options?: { level?: string; focus?: string | null; subsystems?: { id: string; name: string }[]; which?: string; geometry?: boolean; hidden_types?: string[]; view?: string; trades?: { id: string; title: string }[] }
 }
 export interface CatalogueEntry {
   kind: string; title: DText; group: string; group_label: DText; gates: { gate: string; maturity: string }[]
   product: string; ref: string; link?: string | null; gaps: number; gap_alarm: number
   completeness: { expected: number; filled: number; score: number } | null; empty: boolean; top_gaps: DText[]
+  instances?: string[]; views?: string[]
 }
 export interface Catalogue { study_id: string; gate: string | null; covers: string[] | null; diagrams: CatalogueEntry[] }
 
-export interface DiagramOpts { level?: string; focus?: string; types?: string }
+export interface DiagramOpts { level?: string; focus?: string; types?: string; view?: string }
 
 function qs(o: Record<string, string | undefined>): string {
   const p = Object.entries(o).filter(([, v]) => v).map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
@@ -69,7 +70,7 @@ export function useDiagramCatalogue(studyId: string | null, gate?: string | null
 
 export function useDiagram(studyId: string | null, kind: string | null, opts: DiagramOpts = {}) {
   return useQuery<DiagramModel>({
-    queryKey: ['diagram', studyId, kind, opts.level ?? '', opts.focus ?? '', opts.types ?? ''],
+    queryKey: ['diagram', studyId, kind, opts.level ?? '', opts.focus ?? '', opts.types ?? '', opts.view ?? ''],
     queryFn: () => getJson(`${API}/studies/${encodeURIComponent(studyId || '')}/diagrams/${kind}${qs({ ...opts })}`),
     enabled: !!studyId && !!kind, staleTime: 5_000, refetchInterval: 15_000,
   })
@@ -79,7 +80,7 @@ export function diagramUrl(studyId: string, kind: string, fmt: 'svg' | 'png', op
   return `${API}/studies/${encodeURIComponent(studyId)}/diagrams/${kind}/${fmt}${qs({ ...opts, lang, download: '1' })}`
 }
 
-export function diagramDocUrl(studyId: string, set: 'semp' | 'ird' | 'all', lang: string): string {
+export function diagramDocUrl(studyId: string, set: 'semp' | 'ird' | 'se' | 'all', lang: string): string {
   return `${API}/studies/${encodeURIComponent(studyId)}/diagrams-document.docx${qs({ set, lang })}`
 }
 
