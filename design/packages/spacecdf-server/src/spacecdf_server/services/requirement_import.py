@@ -555,6 +555,14 @@ async def import_requirements(study_id: str, doc: Any, *, fmt: str | None = None
     finally:
         irs._busy.reset(token)
     report["relations_created"], report["relations_removed"] = rc, rm
+    # wave 3 (3.R1): ``function_codes`` become ``satisfies`` relations function → requirement
+    # (functions imported before the requirements; a later function import links them too)
+    try:
+        from .requirement_queries import link_function_requirements
+        report["function_links"] = await link_function_requirements(study_id)
+    except Exception:  # noqa: BLE001 — no function table: the codes stay on the rows
+        logger.exception("function links of %s not made", study_id)
+        report["function_links"] = None
     report["seconds"] = round(time.perf_counter() - t0, 3)
     from ..routers._arcadia_events import broadcast_mutation
     await broadcast_mutation(study_id, "requirements_imported", "study", study_id,

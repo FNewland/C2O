@@ -243,7 +243,7 @@ async def test_cdr_gate_reads_the_cdr_model(client, study_obj, study):
     assert cdr_gate["margin_gate"] == "cdr"
     g = (await client.get(f"/api/studies/{study}/rules/gates/cdr")).json()
     by = {c["id"]: c for c in g["criteria"]}
-    assert [c["id"] for c in g["criteria"]] == [f"CDR-EC-{i:02d}" for i in range(1, 12)]
+    assert [c["id"] for c in g["criteria"] if "-EC-" in c["id"]] == [f"CDR-EC-{i:02d}" for i in range(1, 12)]
     assert g["system_margin"]["mass_percent"] == 10
     assert by["CDR-EC-03"]["status"] == "fail" and "propose" in by["CDR-EC-03"]["evidence_found"]
     assert {p["id"] for p in g["products_baselined"]} >= {"tmtc_db", "fdir_spec", "aocs_design", "interfaces", "design_files"}

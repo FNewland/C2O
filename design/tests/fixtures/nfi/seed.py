@@ -423,6 +423,7 @@ async def _s3(api: _Api, seed: NfiSeed) -> None:
     await _s3_validation(api, seed)
     await _s3_assumptions(api, seed)
     await _s3_negotiations(api, seed)
+    await _s3_icd_inventory(api, seed)
 
 
 async def _s4(api: _Api, seed: NfiSeed) -> None:
@@ -779,22 +780,9 @@ async def _w2_import_baseline(api: _Api, seed: NfiSeed) -> None:
             seed.requirements[code] = rid
     seed.report["requirements_import"] = {k: rep[k] for k in ("created", "updated", "unchanged", "by_level",
                                                                 "relations_created", "unallocated", "seconds")}
-    # wave 2 integration: the budget rows are checked against the study's budget figures
-    # (gate_evaluator.BUDGET_PARAMS: roll-up, data budget, design link case), as a student sets
-    # "checked against" on the Requirements tab; SRR-EC-03 and PDR-EC-01 then evaluate them
-    for code, path in BUDGET_PARAM_PATHS.items():
-        if code in seed.requirements:
-            await api.call("PATCH", f"/api/requirements/{seed.requirements[code]}", {"threshold_param_path": path})
-
-
-#: requirement code -> the budget figure its threshold is checked against (W2 integration)
-BUDGET_PARAM_PATHS = {
-    "SYS-BUD-01": "budget.mass_total_dry_kg",                     # <= 6.0 kg (predicted until weighed)
-    "SYS-BUD-02": "budget.mass_system_margin_available_percent",  # >= 20 % system margin on the margined mass
-    "SYS-BUD-03": "budget.power_margin_eol_percent",              # >= 20 % EOL power margin
-    "SYS-BUD-05": "budget.data_margin_percent",                   # >= 10 % daily data-volume margin
-    "SYS-BUD-06": "budget.link_margin_design_case_db",            # >= 3 dB at 10 deg (design link case)
-}
+    # wave 3 (3.R2): the budget rows are bound to the study's computed figures by
+    # ``_s1_bindings`` (the proposals of services/threshold_binding, accepted as a student does
+    # in the "checked against" column); the wave-2 constant of five paths is gone
 
 
 async def _w2_link_interfaces(api: _Api, seed: NfiSeed) -> None:
@@ -911,14 +899,44 @@ async def _s0_stakeholders(api: _Api, seed: NfiSeed) -> None:
 
 
 async def _s1_functions(api: _Api, seed: NfiSeed) -> None:
-    """TODO(R, 3.R1): ``functions.yaml`` in at most 3 calls, before the requirements: 86 functions
-    (13 / 70 / 3), 5 enabling processes (PR-*), leaf allocations to the elements (``ELEMENT_IDS``),
-    37 functional exchanges."""
+    """3.R1: ``functions.yaml`` in one call, before the requirements: 86 functions (13 / 70 / 3),
+    5 enabling processes (PR-*), the leaf allocations to the elements (``ELEMENT_IDS``) and the
+    37 functional exchanges. The elements the leaves are allocated to that the S1 tree lacks
+    (Science Segment, Operations, Harness; ``W2_EXTRA_ELEMENTS``) are made first."""
+    sid = seed.study_id
+    for name, etype, parent, segment in W2_EXTRA_ELEMENTS:
+        if name not in seed.elements:
+            seed.elements[name] = await api.element(
+                sid, name=name, element_type=etype, parent_id=seed.elements[parent]["id"], segment=segment,
+                subsystem_domain="harness" if name == "Harness" else ("ground" if segment == "operations" else None),
+                owner_position="systems_engineer" if name == "Harness" else None)
+    emap = {code: _element_for(seed, name) for code, name in ELEMENT_IDS.items()}
+    rep = await api.post(f"/api/studies/{sid}/functions/import",
+                         {"document": load("functions"), "element_map": {c: e for c, e in emap.items() if e}})
+    if rep.get("unresolved_elements"):
+        raise SeedError(f"function import: unresolved elements {rep['unresolved_elements']}")
+    seed.report["functions_import"] = {k: rep[k] for k in ("functions", "processes", "by_depth", "leaves",
+                                                             "leaves_allocated", "exchanges_created", "seconds")}
 
 
 async def _s1_bindings(api: _Api, seed: NfiSeed) -> None:
-    """TODO(R, 3.R2): accept the threshold-binding proposals (``budget_ref`` → roll-up, data-budget,
-    link paths); then drop ``BUDGET_PARAM_PATHS`` and its loop in ``_w2_import_baseline``."""
+    """3.R2: accept every threshold-binding proposal (``budget_ref``, unit and keywords → roll-up,
+    allocation closure, per-mode power, data budget, link and design-loop figures) in one call,
+    as a student accepts the "checked against" column of the Requirements tab."""
+    rep = await api.post(f"/api/studies/{seed.study_id}/requirements/bindings/accept", {})
+    seed.report["bindings"] = {"accepted": rep["accepted"]}
+
+
+#: the ICDs the v2 baseline needs at Issue A by the PDR, signed by both interface owners
+#: (v2 REVIEW_READINESS, PDR item 11): deployer, radio–OBC, payload–OBC, sail–EPS, space–ground
+PDR_ICDS = ("ICD-LAUNCH", "ICD-RADIO-OBC", "ICD-PAY-OBC", "ICD-SAIL", "ICD-SPACE-GROUND")
+
+
+async def _s3_icd_inventory(api: _Api, seed: NfiSeed) -> None:
+    """3.R5/3.R6 (agent R, end of S3): the five ICDs the PDR needs are put under issue control
+    as drafts (the PDR inventory), so PDR-EC-02 lists them as not agreed. Raising Issue A and
+    the two seats' sign-offs are done on camera (ICD tab), not seeded."""
+    await api.post(f"/api/studies/{seed.study_id}/icds/inventory", {"icd_refs": list(PDR_ICDS), "required_at": "pdr"})
 
 
 async def _s2_allocations(api: _Api, seed: NfiSeed) -> None:

@@ -166,3 +166,39 @@ async def sync_relations(study_id: str, wanted: list[dict], owned: set[tuple[str
                 removed += 1
         await session.commit()
     return created, removed
+
+
+async def sync_incoming(study_id: str, kind: str, source_kind: str, target_kind: str,
+                        wanted: set[tuple[str, str]], managed_targets: set[str],
+                        rationale: str = "") -> tuple[int, int]:
+    """Make the ``kind`` relations ``source_kind`` → ``target_kind`` exact for the targets in
+    ``managed_targets`` (wave 3, 3.R1: the functions that satisfy a requirement). ``wanted``
+    holds (source id, target id) pairs. Relations to other targets are untouched. Returns
+    (created or revived, removed)."""
+    from datetime import datetime, timezone
+    factory = get_session_factory()
+    created = removed = 0
+    async with factory() as session:
+        rows = (await session.execute(select(RequirementRelationRow).where(
+            RequirementRelationRow.study_id == study_id, RequirementRelationRow.kind == kind,
+            RequirementRelationRow.source_kind == source_kind,
+            RequirementRelationRow.target_kind == target_kind))).scalars().all()
+        have = {(r.source_id, r.target_id): r for r in rows}
+        for key in sorted(wanted):
+            row = have.get(key)
+            if row is None:
+                session.add(RequirementRelationRow(**dict_to_kwargs(RequirementRelationRow, {
+                    "id": new_id("rel"), "study_id": study_id, "kind": kind, "source_kind": source_kind,
+                    "source_id": key[0], "target_kind": target_kind, "target_id": key[1],
+                    "rationale": rationale or ""})))
+                created += 1
+            elif row.deleted_at is not None:
+                row.deleted_at = None
+                created += 1
+        now = datetime.now(timezone.utc)
+        for key, row in have.items():
+            if row.deleted_at is None and key[1] in managed_targets and key not in wanted:
+                row.deleted_at = now
+                removed += 1
+        await session.commit()
+    return created, removed

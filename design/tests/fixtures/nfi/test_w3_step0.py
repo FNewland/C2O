@@ -13,17 +13,17 @@ from tests.fixtures.nfi import ELEMENT_IDS, load, seed_nfi
 WAVE3_SECTIONS = {"allocations": "A", "changes": "L",      # S's four sections are real (3.S1–3.S6)
                   "open_items": "D", "negotiations": "H",
                   # PI addendum
-                  "semp": "X", "icds": "R", "reliability": "A", "thermal_model": "A", "debris": "L",
+                  "semp": "X", "reliability": "A", "thermal_model": "A", "debris": "L",
                   "change_control": "D", "cost": "A"}
 
 #: one GET per stub router (owner) and the write routes that answer 501 until the owner lands
 STUB_GETS = {"/negotiations": "H", "/sensitivity": "H",
              "/sensitivity/altitude": "H", "/changes": "L", "/open-items": "D", "/allocation-ledger": "A",
-             "/icds": "R", "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/debris-assessment": "L",
+             "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/debris-assessment": "L",
              "/cost/items": "A", "/changes/ECP-01/control": "D"}
 STUB_POSTS = ("/negotiations",
               "/changes/import", "/impact/preview", "/open-items/import", "/allocation-ledger/import",
-              "/icds/ICD-DEP-01/issue", "/reliability/run", "/fmea/propose", "/thermal-model/propose",
+              "/reliability/run", "/fmea/propose", "/thermal-model/propose",
               "/debris-assessment/run", "/changes/ECP-01/control/start", "/cost/price")
 
 

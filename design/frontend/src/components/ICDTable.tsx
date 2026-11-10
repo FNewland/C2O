@@ -6,6 +6,10 @@
  * name/kind/properties, detach, download CSV.
  * W2.07: the "Requirements" column lists the interface requirement codes of each row (those
  * that name the interface or the exchange item, and the boundary rows that cover the link).
+ * Wave 3 (3.R5, 3.R6): "ICD documents under issue control" above the table: each ICD the
+ * requirements cite, its issue (draft, A, B …, baselined) and the sign-off of its provider and
+ * consumer seats (Agree per side); the team puts ICDs under control (the PDR inventory), raises
+ * the next issue and baselines a signed one. PDR-EC-02 reads the same state.
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -158,6 +162,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
           {error} <button className="c2o-btn c2o-btn--sm" onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
+      <IcdIssues studyId={studyId} onError={setError} />
       {isLoading && <div className="c-2">{t('Loading…')}</div>}
       {!isLoading && rows.length === 0 && (
         <div className="c-2 t-12">{t('No interfaces yet. Define interfaces between elements first; each one then appears here for exchange items.')}</div>
@@ -258,6 +263,133 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
         </table>
       )}
     </div>
+  )
+}
+
+// ─── wave 3: ICD issue control ───
+
+interface IcdItem {
+  icd_ref: string; title: string; refs: string[]; codes: string[]; controlled: boolean; issue: string | null
+  revision: number | null; state: string; provider_seat: string | null; consumer_seat: string | null
+  signed?: string[]; unsigned?: string[]; agreed: boolean; stale: boolean; history: number; required_at?: string | null
+}
+
+// English text is the i18n key
+const ICD_STATE_LABEL: Record<string, string> = {
+  none: 'not under issue control', draft: 'draft', issue_a: 'Issue A', issue_b: 'Issue B or later',
+  baselined: 'baselined', superseded: 'superseded',
+}
+
+export function IcdIssues({ studyId, onError }: { studyId: string; onError: (m: string) => void }) {
+  const { t, i18n } = useTranslation()
+  const qc = useQueryClient()
+  const [pick, setPick] = useState('')
+  const [open, setOpen] = useState<string | null>(null)
+  const fr = i18n.language.startsWith('fr')
+  const { data } = useQuery<{ items: IcdItem[]; counts: Record<string, number>; unsigned_by_seat: Record<string, string[]> }>({
+    queryKey: ['icds', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/icds`).then(jsonOrThrow),
+    enabled: !!studyId, structuralSharing: false,
+  })
+  const { data: seats } = useQuery<any>({
+    queryKey: ['seat-catalogue'],
+    queryFn: () => fetch(`${API}/seats/catalogue`).then(r => (r.ok ? r.json() : { seats: [] })),
+    staleTime: Infinity,
+  })
+  const { data: hist } = useQuery<any>({
+    queryKey: ['icd-history', studyId, open],
+    queryFn: () => fetch(`${API}/studies/${studyId}/icds/${encodeURIComponent(open!)}/history`).then(jsonOrThrow),
+    enabled: !!open,
+  })
+  const seatLabel = (id?: string | null) => {
+    const s = (seats?.seats ?? []).find((x: any) => x.id === id)
+    return s ? (fr ? s.label.fr : s.label.en) : (id ?? '')
+  }
+  const post = async (url: string, body: unknown) => {
+    try {
+      await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(jsonOrThrow)
+      qc.invalidateQueries({ queryKey: ['icds', studyId] })
+      qc.invalidateQueries({ queryKey: ['icd-history', studyId] })
+    } catch (e: any) { onError(e.message) }
+  }
+  const items = data?.items ?? []
+  const controlled = items.filter(i => i.controlled)
+  const free = items.filter(i => !i.controlled)
+  const issued = (i: IcdItem) => ['issue_a', 'issue_b', 'baselined'].includes(i.state)
+  return (
+    <section className="card mb-2" aria-label={t('ICD documents under issue control')}>
+      <div className="flex ai-c gap-2 wrap mb-1">
+        <span className="w-600 t-12">{t('ICD documents under issue control')}</span>
+        {data && <span className="t-12 c-2">{t('{{agreed}}/{{n}} agreed by both seats · {{issued}} at Issue A or later',
+          { agreed: data.counts.agreed ?? 0, n: data.counts.controlled ?? 0, issued: data.counts.at_issue_a ?? 0 })}</span>}
+        <span className="grow" />
+        <select className="c2o-select c2o-select--sm" value={pick} onChange={e => setPick(e.target.value)} aria-label={t('ICD to put under issue control')}>
+          <option value="">{t('Put an ICD under issue control…')}</option>
+          {free.map(i => <option key={i.icd_ref} value={i.icd_ref}>{i.icd_ref} ({i.codes.join(', ')})</option>)}
+        </select>
+        <button className="c2o-btn c2o-btn--sm" disabled={!pick}
+          onClick={() => { void post(`${API}/studies/${studyId}/icds/inventory`, { icd_refs: [pick], required_at: 'pdr' }); setPick('') }}>
+          {t('Add to the PDR inventory')}</button>
+      </div>
+      {controlled.length === 0
+        ? <p className="t-12 c-2 m-0">{t('No ICD under issue control yet. Put the ICDs the PDR needs under control, raise Issue A and have both owning seats sign it.')}</p>
+        : (
+          <table className="c2o-table t-12" style={{ width: '100%' }}>
+            <thead><tr>
+              <th>{t('ICD')}</th><th>{t('Requirements')}</th><th>{t('Issue')}</th><th>{t('Provider')}</th>
+              <th>{t('Consumer')}</th><th>{t('State')}</th><th />
+            </tr></thead>
+            <tbody>
+              {controlled.map(i => {
+                const side = (which: 'provider' | 'consumer') => {
+                  const seat = which === 'provider' ? i.provider_seat : i.consumer_seat
+                  const ok = (i.signed ?? []).includes(seat ?? '')
+                  return (
+                    <span className="row gap-1 ai-c">
+                      <span className={ok ? 'c-ok' : 'c-2'}>{ok ? '✓ ' : ''}{seatLabel(seat)}</span>
+                      {issued(i) && <button className="c2o-btn c2o-btn--sm"
+                        onClick={() => void post(`${API}/studies/${studyId}/icds/${encodeURIComponent(i.icd_ref)}/signoff`, { side: which, agree: !ok })}>
+                        {ok ? t('Withdraw') : t('Agree')}</button>}
+                    </span>)
+                }
+                return [
+                  <tr key={i.icd_ref}>
+                    <td className="mono">{i.icd_ref}<div className="c-2">{i.title}</div></td>
+                    <td className="mono">{i.codes.join(', ')}</td>
+                    <td className="mono">{i.issue ? `${i.issue}${i.revision ? `.${i.revision}` : ''}` : t('draft')}</td>
+                    <td>{side('provider')}</td>
+                    <td>{side('consumer')}</td>
+                    <td>
+                      <span className={i.agreed ? 'c-ok' : i.stale ? 'c-caution' : 'c-2'}>
+                        {t(ICD_STATE_LABEL[i.state] ?? i.state)}{i.agreed ? ` · ${t('agreed')}` : ''}
+                        {i.stale ? ` · ${t('changed since signed')}` : ''}</span>
+                    </td>
+                    <td className="row gap-1">
+                      <button className="c2o-btn c2o-btn--sm"
+                        onClick={() => void post(`${API}/studies/${studyId}/icds/${encodeURIComponent(i.icd_ref)}/issue`, {})}>
+                        {i.issue ? t('Raise the next issue') : t('Raise Issue A')}</button>
+                      {i.agreed && i.state !== 'baselined' && <button className="c2o-btn c2o-btn--sm"
+                        onClick={() => void post(`${API}/studies/${studyId}/icds/${encodeURIComponent(i.icd_ref)}/issue`, { baseline: true })}>
+                        {t('Baseline')}</button>}
+                      <button className="c2o-btn c2o-btn--sm" onClick={() => setOpen(open === i.icd_ref ? null : i.icd_ref)}>
+                        {t('History ({{n}})', { n: i.history })}</button>
+                    </td>
+                  </tr>,
+                  open === i.icd_ref && (
+                    <tr key={`${i.icd_ref}-h`}><td colSpan={7}>
+                      <ul className="m-0 t-12">
+                        {(hist?.items ?? []).map((h: any) => (
+                          <li key={h.id}><span className="mono">{h.issue || t('draft')}{h.revision ? `.${h.revision}` : ''}</span>
+                            {' · '}{t(ICD_STATE_LABEL[h.state] ?? h.state)}
+                            {Object.keys(h.signoffs || {}).length > 0 && ` · ${t('signed by {{seats}}', { seats: Object.keys(h.signoffs).map(seatLabel).join(', ') })}`}
+                            {h.change_note ? ` · ${h.change_note}` : ''}</li>))}
+                      </ul>
+                    </td></tr>),
+                ]
+              })}
+            </tbody>
+          </table>)}
+    </section>
   )
 }
 

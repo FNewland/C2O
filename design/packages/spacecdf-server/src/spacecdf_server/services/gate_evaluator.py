@@ -136,6 +136,34 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "Every subsystem at TRL {{min}} or above (lowest: {{subsystem}} at TRL {{trl}})",
     "No component has a TRL yet",
     "{{ok}}/{{total}} subsystems have at least one component or a mass allowance",
+    # wave 3 (3.R4, 3.R5): SE deliverables, function coverage, allocated baseline, validation,
+    # logbook decisions (SRR-EC-04), ICD issue control (PDR-EC-02), reliability horizon
+    "All {{total}} ICDs under issue control at Issue A and signed by both seats",
+    "{{agreed}}/{{total}} ICDs under issue control at Issue A and signed by both seats; not agreed: {{unsigned}}",
+    "All {{total}} decisions due at the SRR recorded in the logbook",
+    "{{recorded}}/{{total}} decisions due at the SRR recorded in the logbook; open: {{open}}",
+    "All {{total}} deliverables of the gate ready",
+    "{{ok}}/{{total}} deliverables of the gate ready; missing: {{names}}",
+    "No deliverables listed for this gate",
+    "The deliverables check is not available yet",
+    "All {{total}} primary objectives have a validation activity performed by a stakeholder",
+    "{{ok}}/{{total}} primary objectives have a validation activity performed by a stakeholder; without: {{ids}}",
+    "All {{total}} primary objectives have an in-orbit validation activity planned",
+    "{{ok}}/{{total}} primary objectives have an in-orbit validation activity planned; without: {{ids}}",
+    "No in-orbit validation activity planned",
+    "The validation plan is not available yet",
+    "Allocations with the system margin exceed the limit: {{mass}} kg vs {{mlimit}} kg; {{power}} W vs {{plimit}} W",
+    "Lines not agreed by their owner: {{names}}; {{mass}} kg vs {{mlimit}} kg; {{power}} W vs {{plimit}} W",
+    "Mass and power lines agreed for {{n}} subsystem(s); {{mass}} ≤ {{mlimit}} kg; {{power}} ≤ {{plimit}} W",
+    "No allocation ledger lines yet",
+    "No mass or power line for: {{names}}",
+    "{{n}} allocation line(s) without a covering requirement: {{names}}",
+    "No function tree yet",
+    "{{leaves}} leaf function(s) covered by requirements; {{subs}} space subsystem(s) with requirements",
+    "{{uncovered}}/{{leaves}} leaf function(s) without a requirement: {{codes}}; {{nosubs}} space subsystem(s) without one: {{names}}",
+    "{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated",
+    "{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated; unallocated: {{codes}}",
+    "Reliability {{rel}} over {{horizon}} vs target {{target}}",
 )
 
 
@@ -323,6 +351,7 @@ def evaluate_gate(
     rollup: dict[str, Any] | None = None,
     conflicts: list[dict] | None = None,
     ait: dict[str, Any] | None = None,
+    evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
@@ -338,6 +367,9 @@ def evaluate_gate(
     further parents and objectives then count (W2.03).
     ``conflicts``: the study's unresolved analysis conflicts (SRR-EC-05); ``ait``: ``{"models",
     "tests"}`` of the AIT model philosophy (SRR-EC-07). Absent, those criteria are not evaluated.
+    ``evidence``: :func:`collect_evidence` of the study (wave 3: function coverage, threshold-binding
+    values, ICD issue control, allocation ledger, SE deliverables, validation, logbook decisions);
+    else ``design_params["_evidence"]``, else the study's last collection.
 
     Returns::
 
@@ -385,6 +417,18 @@ def evaluate_gate(
         "conflicts": conflicts,
         "ait": ait,
     }
+    ev = evidence
+    if ev is None and isinstance(design_params, dict):
+        ev = design_params.get("_evidence")
+    if ev is None:
+        sid = next((r.get("study_id") for r in ctx["reqs"] if r.get("study_id")), None) \
+            or next((e.get("study_id") for e in ctx["elements"] if e.get("study_id")), None)
+        ev = _EVIDENCE.get(sid or "")
+    ctx["ev"] = ev or {}
+    # wave 3 (3.R2): the figures the bound thresholds name (allocation closure, per-subsystem
+    # roll-up, per-mode power, data budget) are design parameters for the compliance checks
+    for k, v in (ctx["ev"].get("binding_values") or {}).items():
+        ctx["dp"].setdefault(k, v)
     _add_budget_params(ctx)
 
     # wave 2 (W4.09): the review-record items of QR / AR / FRR are evaluated with the RID log by
@@ -654,7 +698,9 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         if not target or target <= 0:
             _set(result, "pass", "No cost target set")
         else:
-            v = _need(result, dp, "cost.total_meur")
+            # wave 3: the priced cost (A, 3.A7: labour, test campaigns, reserve) wins over the
+            # design loop's parametric estimate
+            v = [_cost_total(ctx)] if _cost_total(ctx) is not None else _need(result, dp, "cost.total_meur")
             if v:
                 cost = v[0]
                 # 20 % allowance on Phase 0 estimates
@@ -757,7 +803,23 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                      total=len(spec))
 
     elif cid == "SRR-EC-04":
-        _positions_criterion(result, ctx)
+        _decisions_criterion(result, ctx)
+
+    # ---------------------------------------------------------------- wave 3 (3.R4)
+    elif cid.endswith("-SE-01"):
+        _se_criterion(cid, result, ctx)
+
+    elif cid in ("SRR-EC-12", "PDR-EC-08"):
+        _coverage_criterion(result, ctx)
+
+    elif cid == "PDR-EC-07":
+        _allocation_criterion(result, ctx)
+
+    elif cid == "SRR-EC-13":
+        _validation_criterion(result, ctx)
+
+    elif cid == "FRR-EC-01":
+        _iov_criterion(result, ctx)
 
     elif cid == "SRR-EC-05":
         conflicts = ctx.get("conflicts")
@@ -817,6 +879,9 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                      n=len(failed), codes=", ".join(failed[:8]) + (" …" if len(failed) > 8 else ""))
             else:
                 _set(result, "pass", "All {{n}} checkable requirements met", n=len(res))
+
+    elif cid == "PDR-EC-02" and _ev(ctx).get("icds") and _icd_pdr(result, ctx):
+        pass
 
     elif cid in ("PDR-EC-02", "CDR-EC-02"):
         # Every subsystem has its expected power/data/mechanical/thermal links
@@ -893,11 +958,19 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         _data_budget_criterion(result, ctx)
 
     elif cid in ("PDR-EC-05",):
-        v = _need(result, dp, "reliability.mission_reliability")
+        # wave 3 (3.A5): A's reliability analysis wins over the design loop's estimate; the
+        # evidence quotes the mission-success horizon it is computed over (3.A1)
+        rel_ev = _first_num(_ev(ctx).get("reliability") or {}, "mission_reliability", "reliability")
+        v = [rel_ev] if rel_ev is not None else _need(result, dp, "reliability.mission_reliability")
         if v:
             target = ctx["rel_target"] or 0.9
-            _set(result, "pass" if v[0] >= target else "fail",
-                 "Reliability {{rel}} vs target {{target}}", rel=_fmt(v[0], 3), target=_fmt(target, 2))
+            hz = _reliability_horizon(ctx)
+            if hz:
+                _set(result, "pass" if v[0] >= target else "fail", "Reliability {{rel}} over {{horizon}} vs target {{target}}",
+                     rel=_fmt(v[0], 3), horizon=hz, target=_fmt(target, 2))
+            else:
+                _set(result, "pass" if v[0] >= target else "fail",
+                     "Reliability {{rel}} vs target {{target}}", rel=_fmt(v[0], 3), target=_fmt(target, 2))
 
     # ---------------------------------------------------------------- PRR
     elif cid == "PRR-EC-01":
@@ -925,7 +998,19 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
 
     elif cid == "PRR-EC-03":
         n = ctx["function_count"] or 0
-        _set(result, "pass" if n >= 1 else "fail", "{{n}} function(s) in the function tree", n=n)
+        cov = _ev(ctx).get("function_coverage")
+        if n >= 1 and cov and cov.get("leaves"):
+            # wave 3: every leaf function allocated to an element
+            un = list(cov.get("leaves_unallocated") or [])
+            if un:
+                _set(result, "fail", "{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated; unallocated: {{codes}}",
+                     n=n, allocated=cov.get("leaves_allocated") or 0, leaves=cov["leaves"],
+                     codes=", ".join(un[:10]) + (" …" if len(un) > 10 else ""))
+            else:
+                _set(result, "pass", "{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated",
+                     n=n, allocated=cov.get("leaves_allocated") or 0, leaves=cov["leaves"])
+        else:
+            _set(result, "pass" if n >= 1 else "fail", "{{n}} function(s) in the function tree", n=n)
 
     elif cid == "PRR-EC-04":
         hw = [e for e in elements if e.get("segment", "space") == "space" and e.get("in_scope") is not False]
@@ -968,7 +1053,7 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         if not target or target <= 0:
             _set(result, "pass", "No cost target set")
         else:
-            v = _need(result, dp, "cost.total_meur")
+            v = [_cost_total(ctx)] if _cost_total(ctx) is not None else _need(result, dp, "cost.total_meur")
             if v:
                 _set(result, "pass" if v[0] <= target else "fail",
                      "Cost {{cost}} MEUR vs target {{target}} MEUR", cost=_fmt(v[0], 1), target=_fmt(target, 1))
@@ -1291,3 +1376,410 @@ def _trl_criterion(result: dict, ctx: dict) -> None:
     else:
         _set(result, "pass", "Every subsystem at TRL {{min}} or above (lowest: {{subsystem}} at TRL {{trl}})",
              min=MIN_TRL_PHASE_B, subsystem=lowest[0], trl=lowest[1][0])
+
+
+# --------------------------------------------------------------------------- wave 3 (3.R4, 3.R5)
+#
+# Evidence the wave-3 criteria read. ``collect_evidence(study_id)`` gathers it asynchronously
+# from the owners' evidence functions (R: function coverage, threshold-binding values, ICD issue
+# control, allocation requirements; A: the allocation ledger, reliability, cost; S: the SE
+# deliverables and the validation coverage; the logbook: decisions recorded for the study). The
+# gate route passes it to ``evaluate_gate(evidence=…)`` (or as ``design_params["_evidence"]``);
+# the last collection per study is also kept, so an evaluation without it still sees it.
+
+_EVIDENCE: dict[str, dict[str, Any]] = {}
+
+#: the space subsystems PDR-EC-07 expects mass and power lines for (v2 element codes); a harness
+#: carried as a roll-up allowance has none
+LEDGER_TYPES = ("mass", "power_avg")
+SE_GATES = ("mdr", "prr", "srr", "pdr", "cdr")
+
+
+async def _maybe(coro_fn, *a, **k) -> Any:
+    try:
+        res = await coro_fn(*a, **k)
+    except Exception:  # noqa: BLE001 — an owner's evidence is missing: the criterion says so
+        logger.debug("evidence %s unavailable", getattr(coro_fn, "__name__", coro_fn), exc_info=True)
+        return None
+    if isinstance(res, dict) and res.get("status") == "not_implemented":
+        return None
+    return res
+
+
+async def _ledger_lines(study_id: str) -> list[dict] | None:
+    """The allocation-ledger lines (A, 3.A2): A's ``allocation_ledger.status`` when it exists,
+    else the ``allocation_ledger`` table read directly."""
+    try:
+        from . import allocation_ledger as al            # A's evidence function (3.A2)
+        st = await al.status(study_id)
+        lines = st.get("lines") if isinstance(st, dict) else st
+        if isinstance(lines, list):
+            return lines
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from .allocation_requirements import _ledger
+        return await _ledger(study_id)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+async def _logbook_decisions(study_id: str) -> set[str] | None:
+    """Decision ids of the catalogue recorded (with content) for this study in any logbook of
+    the team (only the ids are read; the records stay private)."""
+    try:
+        from ..logbook import decisions as dec
+        from ..logbook.router import store
+        from ..logbook.store import _parse_lines, fold
+        root = store.root
+        if not root.exists():
+            return set()
+        out: set[str] = set()
+        for p in root.glob("*.jsonl"):
+            try:
+                entries = fold(_parse_lines(p.read_bytes())).entries.values()
+            except OSError:
+                continue
+            for did, es in dec.recorded(entries, study_id).items():
+                if any(dec.has_content(e.get("record") or {}) or (e.get("text") or "").strip() for e in es):
+                    out.add(did)
+        return out
+    except Exception:  # noqa: BLE001
+        logger.debug("logbook unavailable", exc_info=True)
+        return None
+
+
+async def collect_evidence(study_id: str) -> dict[str, Any]:
+    """Everything the wave-3 criteria read (see above). Never raises."""
+    from .requirement_queries import function_coverage
+    from .threshold_binding import values as binding_values
+    from .interface_requirements import icd_status
+    from .allocation_requirements import status as ar_status
+    ev: dict[str, Any] = {"study_id": study_id}
+    ev["function_coverage"] = await _maybe(function_coverage, study_id)
+    ev["binding_values"] = await _maybe(binding_values, study_id) or {}
+    ev["icds"] = await _maybe(icd_status, study_id, gate="pdr")
+    ev["ledger"] = await _ledger_lines(study_id)
+    ev["allocation_requirements"] = await _maybe(ar_status, study_id)
+    try:
+        from .requirement_queries import element_code_map
+        ev["element_codes"] = await element_code_map(study_id)
+    except Exception:  # noqa: BLE001
+        ev["element_codes"] = {}
+    ev["decisions_recorded"] = await _logbook_decisions(study_id)
+    try:                                   # S (3.S2): the SE deliverables per gate
+        from . import se_deliverables as sd
+        ev["se_deliverables"] = {g: await _maybe(sd.evaluate, study_id, g) for g in SE_GATES}
+        blocking = getattr(sd, "blocking", None)
+        ev["se_blocking"] = bool(await blocking(study_id)) if blocking else False
+    except Exception:  # noqa: BLE001
+        ev["se_deliverables"] = None
+    try:                                   # S (3.S5): validation coverage per objective
+        from ..routers.validation import validation_coverage
+        ev["validation"] = await _maybe(validation_coverage, study_id)
+    except Exception:  # noqa: BLE001
+        ev["validation"] = None
+    try:                                   # A (3.A5): reliability over the mission-success horizon
+        from ..routers.reliability import get_reliability
+        ev["reliability"] = await _maybe(get_reliability, study_id)
+    except Exception:  # noqa: BLE001
+        ev["reliability"] = None
+    try:                                   # A (3.A7): the priced cost (labour, tests, reserve)
+        from ..routers.schedule import list_cost_items
+        ev["cost"] = await _maybe(list_cost_items, study_id)
+    except Exception:  # noqa: BLE001
+        ev["cost"] = None
+    _EVIDENCE[study_id] = ev
+    return ev
+
+
+def _ev(ctx: dict) -> dict[str, Any]:
+    return ctx.get("ev") or {}
+
+
+def _first_num(d: Any, *keys: str) -> float | None:
+    for k in keys:
+        v = d.get(k) if isinstance(d, dict) else None
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            return float(v)
+    return None
+
+
+def _se_criterion(cid: str, result: dict, ctx: dict) -> None:
+    """``<GATE>-SE-01``: the SE deliverables of the gate (S's ``se_deliverables.evaluate``)."""
+    gate = cid.split("-", 1)[0].lower()
+    ev = _ev(ctx)
+    if ev.get("se_blocking"):
+        result["priority"], result["advisory"] = "must_pass", False
+    per = (ev.get("se_deliverables") or {}).get(gate) if isinstance(ev.get("se_deliverables"), dict) else None
+    items = per.get("deliverables") if isinstance(per, dict) else per
+    if items is None:
+        _set(result, "not_evaluated", "The deliverables check is not available yet")
+        return
+    items = [i for i in items if isinstance(i, dict)]
+    if not items:
+        _set(result, "not_evaluated", "No deliverables listed for this gate")
+        return
+    ok = [i for i in items if (i.get("state") or i.get("status")) in ("ok", "pass", "done")]
+    if len(ok) == len(items):
+        _set(result, "pass", "All {{total}} deliverables of the gate ready", total=len(items))
+    else:
+        def name(i: dict) -> str:
+            lb = i.get("label")
+            return str((lb.get("en") if isinstance(lb, dict) else lb) or i.get("id") or "?")
+        miss = [name(i) for i in items if i not in ok]
+        _set(result, "fail", "{{ok}}/{{total}} deliverables of the gate ready; missing: {{names}}",
+             ok=len(ok), total=len(items), names=", ".join(miss[:8]) + (" …" if len(miss) > 8 else ""))
+
+
+def _coverage_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-12 / PDR-EC-08: every leaf function covered; every space subsystem has a requirement."""
+    cov = _ev(ctx).get("function_coverage")
+    if not cov or not cov.get("functions"):
+        _set(result, "fail" if cov is not None else "not_evaluated", "No function tree yet")
+        return
+    leaves = cov.get("leaves") or 0
+    bad = list(cov.get("leaves_without_requirement") or [])
+    nosub = list(cov.get("subsystems_without_requirement") or [])
+    if bad or nosub:
+        _set(result, "fail",
+             "{{uncovered}}/{{leaves}} leaf function(s) without a requirement: {{codes}}; {{nosubs}} space subsystem(s) without one: {{names}}",
+             uncovered=len(bad), leaves=leaves, codes=", ".join(bad[:10]) + (" …" if len(bad) > 10 else "") or "-",
+             nosubs=len(nosub), names=", ".join(nosub[:8]) or "-")
+    else:
+        _set(result, "pass", "{{leaves}} leaf function(s) covered by requirements; {{subs}} space subsystem(s) with requirements",
+             leaves=leaves, subs=cov.get("subsystems") or 0)
+
+
+def _allocation_criterion(result: dict, ctx: dict) -> None:
+    """PDR-EC-07: mass and power lines agreed for every space subsystem; Σ allocations ×
+    (1 + system margin) ≤ the limit; every line covered by a requirement."""
+    ev = _ev(ctx)
+    lines = ev.get("ledger")
+    if not lines:
+        _set(result, "fail" if lines is not None else "not_evaluated", "No allocation ledger lines yet")
+        return
+    elements = ctx["elements"]
+    subs = [e for e in elements if e.get("element_type") == "subsystem" and (e.get("segment") or "space") == "space"
+            and e.get("in_scope") is not False and e.get("subsystem_domain") != "harness"
+            and str(e.get("name") or "").strip().lower() != "harness"]
+    alloc = [ln for ln in lines if (ln.get("line_kind") or "allocation") == "allocation"
+             and ln.get("budget_type") in LEDGER_TYPES]
+    ar = ev.get("allocation_requirements") or {}
+    codes = ev.get("element_codes") or {}
+    by_el: dict[str, dict[str, dict]] = {}
+    for ln in alloc:      # a line names its element by id, or by its v2 code only
+        eid = ln.get("element_id") or codes.get(ln.get("element_code") or "") or ""
+        by_el.setdefault(eid, {})[ln["budget_type"]] = ln
+    missing, unagreed = [], []
+    for s in subs:
+        mine = by_el.get(s["id"]) or {}
+        name = str(s.get("name") or s["id"])
+        if any(t not in mine for t in LEDGER_TYPES):
+            missing.append(name)
+        elif any(mine[t].get("status") != "agreed" for t in LEDGER_TYPES):
+            unagreed.append(name)
+    ru = ctx.get("rollup") or {}
+    sys_m = float(((ru.get("mass") or {}).get("system_margin_percent")) or 0.0)
+    sys_p = float(((ru.get("power") or {}).get("system_margin_percent")) or sys_m)
+    mass = sum(float(ln.get("value") or 0) for ln in alloc if ln["budget_type"] == "mass") * (1 + sys_m / 100)
+    power = sum(float(ln.get("value") or 0) for ln in alloc if ln["budget_type"] == "power_avg") * (1 + sys_p / 100)
+
+    def closure_limit(ref: str) -> float | None:
+        for r in ctx["reqs"]:
+            if r.get("budget_ref") == ref and r.get("threshold_op") in ("<=", "<"):
+                try:
+                    raw = r.get("threshold_value")
+                    return float(json.loads(raw) if isinstance(raw, str) else raw)
+                except (TypeError, ValueError):
+                    return None
+        return None
+    mlim = closure_limit("mass.closure") or (ru.get("mass") or {}).get("limit_kg") or ctx.get("target_mass")
+    plim = closure_limit("power.closure") or _get_param(ctx["dp"], "power.sa_power_eol_w")
+    params = dict(mass=_fmt(mass, 3), mlimit=_fmt(float(mlim), 1) if mlim else "?",
+                  power=_fmt(power, 3), plimit=_fmt(float(plim), 1) if plim else "?")
+    uncovered = [x for x in ar.get("lines") or [] if x.get("state") == "uncovered"
+                 and x.get("budget_type") in LEDGER_TYPES]
+    if missing:
+        _set(result, "fail", "No mass or power line for: {{names}}", names=", ".join(missing))
+    elif unagreed:
+        _set(result, "fail", "Lines not agreed by their owner: {{names}}; {{mass}} kg vs {{mlimit}} kg; {{power}} W vs {{plimit}} W",
+             names=", ".join(unagreed), **params)
+    elif uncovered:
+        _set(result, "fail", "{{n}} allocation line(s) without a covering requirement: {{names}}", n=len(uncovered),
+             names=", ".join(f"{x.get('element_code')} {x.get('budget_type')}" for x in uncovered[:8]))
+    elif (mlim and mass > float(mlim)) or (plim and power > float(plim)):
+        _set(result, "fail", "Allocations with the system margin exceed the limit: {{mass}} kg vs {{mlimit}} kg; {{power}} W vs {{plimit}} W",
+             **params)
+    elif not mlim or not plim:
+        _set(result, "not_evaluated", "No mass target or form factor to check the mass budget against")
+    else:
+        _set(result, "pass", "Mass and power lines agreed for {{n}} subsystem(s); {{mass}} ≤ {{mlimit}} kg; {{power}} ≤ {{plimit}} W",
+             n=len(subs), **params)
+
+
+def _primary_objectives(ctx: dict) -> list[str]:
+    return [str(o.get("id")) for o in ctx["mn"].get("objectives") or []
+            if (o.get("priority") or "primary") == "primary" and o.get("id")]
+
+
+def _validation_items(ctx: dict) -> list[dict] | None:
+    v = _ev(ctx).get("validation")
+    if v is None:
+        return None
+    items = v.get("items") if isinstance(v, dict) else v
+    if isinstance(v, dict) and isinstance(v.get("objectives"), dict):
+        items = [{"objective_id": k, **(x if isinstance(x, dict) else {})} for k, x in v["objectives"].items()]
+    return [i for i in items or [] if isinstance(i, dict)]
+
+
+def _objective_of(i: dict) -> str | None:
+    return i.get("objective_id") or i.get("objective") or i.get("id")
+
+
+def _validation_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-13: every primary objective has a validation activity performed by a stakeholder."""
+    items = _validation_items(ctx)
+    if items is None:
+        _set(result, "not_evaluated", "The validation plan is not available yet")
+        return
+    prim = _primary_objectives(ctx)
+    if not prim:
+        _set(result, "fail", "No objectives defined")
+        return
+    ok = set()
+    for i in items:
+        acts = [a for a in i.get("activities") or [] if isinstance(a, dict)]
+        if i.get("stakeholder_performer") or i.get("has_stakeholder_performer") or i.get("covered") \
+                or any(a.get("performer_kind") == "stakeholder" or a.get("stakeholder_performer")
+                       or a.get("performer_stakeholder_id") for a in acts):
+            o = _objective_of(i)
+            if o:
+                ok.add(str(o))
+    miss = [o for o in prim if o not in ok]
+    if miss:
+        _set(result, "fail", "{{ok}}/{{total}} primary objectives have a validation activity performed by a stakeholder; without: {{ids}}",
+             ok=len(prim) - len(miss), total=len(prim), ids=", ".join(miss))
+    else:
+        _set(result, "pass", "All {{total}} primary objectives have a validation activity performed by a stakeholder",
+             total=len(prim))
+
+
+def _iov_criterion(result: dict, ctx: dict) -> None:
+    """FRR-EC-01: every primary objective has an in-orbit validation activity planned."""
+    items = _validation_items(ctx)
+    if items is None:
+        _set(result, "not_evaluated", "The validation plan is not available yet")
+        return
+    prim = _primary_objectives(ctx)
+    have = set()
+    for i in items:
+        for a in [a for a in i.get("activities") or [] if isinstance(a, dict)]:
+            stage = str(a.get("stage") or a.get("gate") or "").upper()
+            if stage in ("IOV", "COMMISSIONING", "E1", "ORR", "CRR") or a.get("in_orbit"):
+                o = _objective_of(i)
+                if o:
+                    have.add(str(o))
+    miss = [o for o in prim if o not in have]
+    if not have:
+        _set(result, "fail", "No in-orbit validation activity planned")
+    elif miss:
+        _set(result, "fail", "{{ok}}/{{total}} primary objectives have an in-orbit validation activity planned; without: {{ids}}",
+             ok=len(prim) - len(miss), total=len(prim), ids=", ".join(miss))
+    else:
+        _set(result, "pass", "All {{total}} primary objectives have an in-orbit validation activity planned", total=len(prim))
+
+
+def _decisions_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-04 (wave 3): the seat decisions the decision catalogue makes due at the SRR are
+    recorded in a logbook of the team ("Record decision" in the tool or the logbook)."""
+    rec = _ev(ctx).get("decisions_recorded")
+    if rec is None:
+        _positions_criterion(result, ctx)          # no logbook: the position-guidance check
+        return
+    try:
+        from ..logbook.decisions import catalogue
+        due = [d["id"] for d in catalogue().get("decisions") or [] if d.get("gate") == "srr"]
+    except Exception:  # noqa: BLE001
+        due = []
+    if not due:
+        _set(result, "not_evaluated", "No position questions to check")
+        return
+    open_ = [d for d in due if d not in rec]
+    if open_:
+        _set(result, "fail", "{{recorded}}/{{total}} decisions due at the SRR recorded in the logbook; open: {{open}}",
+             recorded=len(due) - len(open_), total=len(due), open=", ".join(open_[:8]) + (" …" if len(open_) > 8 else ""))
+    else:
+        _set(result, "pass", "All {{total}} decisions due at the SRR recorded in the logbook", total=len(due))
+
+
+def _icd_criterion(result: dict, ctx: dict) -> bool:
+    """PDR-EC-02 (3.R5): when the team has ICDs under issue control, each is at Issue A or later
+    and signed by both owning seats (the unsigned ones are listed by seat). Returns False when no
+    ICD is under issue control (the per-link agreement check then applies)."""
+    st = _ev(ctx).get("icds")
+    inv = [i for i in (st or {}).get("items") or [] if i.get("controlled")
+           and i.get("required_at") in (None, "", "pdr")]
+    if not inv:
+        return False
+    agreed = [i for i in inv if i.get("agreed")]
+    if len(agreed) == len(inv):
+        _set(result, "pass", "All {{total}} ICDs under issue control at Issue A and signed by both seats", total=len(inv))
+    else:
+        by_seat: dict[str, list[str]] = {}
+        for i in inv:
+            if i.get("agreed"):
+                continue
+            for s in (i.get("unsigned") or []) or [None]:
+                by_seat.setdefault(s or "?", []).append(f"{i['icd_ref']} ({(i.get('issue') or 'draft')})")
+        unsigned = "; ".join(f"{s}: {', '.join(v)}" for s, v in sorted(by_seat.items()))
+        _set(result, "fail", "{{agreed}}/{{total}} ICDs under issue control at Issue A and signed by both seats; not agreed: {{unsigned}}",
+             agreed=len(agreed), total=len(inv), unsigned=unsigned)
+    return True
+
+
+def _reliability_horizon(ctx: dict) -> str | None:
+    rel = _ev(ctx).get("reliability") or {}
+    m = _first_num(rel, "horizon_months", "mission_success_months")
+    y = _first_num(rel, "horizon_years")
+    if m is None:
+        m = _get_param(ctx["dp"], "reliability.horizon_months")
+    if m is not None:
+        return f"{_fmt(m)} months"
+    if y is None:
+        y = _get_param(ctx["dp"], "reliability.horizon_years")
+    return f"{_fmt(y, 1)} years" if y is not None else None
+
+
+def _icd_pdr(result: dict, ctx: dict) -> bool:
+    """PDR-EC-02 with ICDs under issue control: the expected subsystem links are present and
+    reviewed, then the ICD inventory decides (instead of the per-link agreement)."""
+    elements = ctx["elements"]
+    subs = [e for e in elements if e.get("element_type") == "subsystem" and e.get("in_scope") is not False]
+    if subs:
+        from .interface_proposer import Context, RuleConfigError, load_rules
+        from .readiness import interface_coverage
+        try:
+            cov = interface_coverage(Context(elements, load_rules()), ctx["interfaces"], [e["id"] for e in subs])
+        except RuleConfigError:
+            return False
+        sub_ids = {e["id"] for e in subs}
+        suggested = sum(1 for i in ctx["interfaces"] if i.get("status") == "suggested"
+                        and (i.get("from_element_id") in sub_ids or i.get("to_element_id") in sub_ids))
+        if cov["missing"] or suggested:
+            _set(result, "fail",
+                 "{{met}}/{{required}} expected subsystem links present; {{suggested}} suggested link(s) not reviewed",
+                 met=cov["met"], required=cov["required"], suggested=suggested)
+            return True
+    return _icd_criterion(result, ctx)
+
+
+def _cost_total(ctx: dict) -> float | None:
+    cost = _ev(ctx).get("cost")
+    if not isinstance(cost, dict):
+        return None
+    meur = _first_num(cost, "total_meur")
+    if meur is None:
+        keur = _first_num(cost, "total_keur")
+        meur = keur / 1000.0 if keur is not None else None
+    return meur

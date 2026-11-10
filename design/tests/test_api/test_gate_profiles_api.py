@@ -63,7 +63,7 @@ async def test_profiles_endpoint(client):
 async def test_prr_is_shown_with_its_criteria_and_owners(client, study_obj):
     g = (await client.get(f"/api/studies/{study_obj.id}/rules/gates/prr")).json()
     assert g["gate"]["short"] == "PRR" and g["profile"]["id"] == "full_ecss"
-    ids = [c["id"] for c in g["criteria"]]
+    ids = [c["id"] for c in g["criteria"] if "-EC-" in c["id"]]   # wave 3 adds PRR-SE-01 (SE deliverables)
     assert ids[0] == "PRR-EC-01" and len(ids) == 12
     c = g["criteria"][0]
     assert c["owner_seat"] == "systems_engineer" and c["owner_seat_label"]["fr"]
@@ -75,7 +75,7 @@ async def test_prr_is_shown_with_its_criteria_and_owners(client, study_obj):
 async def test_merged_gate_holds_the_criteria_of_both(client, study_obj):
     assert (await client.put(f"/api/studies/{study_obj.id}/gate-profile", json={"profile": "esa_iod"})).status_code == 200
     g = (await client.get(f"/api/studies/{study_obj.id}/rules/gates/cr")).json()
-    ids = [c["id"] for c in g["criteria"]]
+    ids = [c["id"] for c in g["criteria"] if "-EC-" in c["id"]]   # wave 3 adds the <GATE>-SE-01 items
     assert ids[:10] == [f"MDR-EC-{i:02d}" for i in range(1, 11)] and ids[10:] == [f"PRR-EC-{i:02d}" for i in range(1, 13)]
     assert g["gate"]["covers"] == ["mdr", "prr"]
     assert (await client.get(f"/api/studies/{study_obj.id}/rules/gates/srr")).json()["gate"]["id"] == "pdr"

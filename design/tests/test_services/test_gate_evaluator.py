@@ -100,7 +100,10 @@ def test_mdr_complete_mission_need_and_design_is_ready():
               "risk.total_risks": 4, "debris.compliance_score": 70, "cost.total_meur": 1.0}
     res = ge.evaluate_gate("MDR", mission_need=GOOD_NEED, design_params=params)
     by = {c["id"]: c for c in res["criteria"]}
-    assert all(c["status"] == "pass" for c in res["criteria"]), {k: c["evidence_found"] for k, c in by.items()}
+    # wave 3: MDR-SE-01 (advisory) reads the SE deliverables evidence, absent here
+    assert by["MDR-SE-01"]["status"] == "not_evaluated" and by["MDR-SE-01"]["verdict"] == "advisory"
+    assert all(c["status"] == "pass" for c in res["criteria"] if not c["id"].endswith("-SE-01")), \
+        {k: c["evidence_found"] for k, c in by.items()}
     assert res["ready"] and res["ready_pending_manual"]
     assert by["MDR-EC-04"]["evidence_found"] == "2 alternative(s), including a non-space option"
     assert by["MDR-EC-07"]["evidence_params"] == {"mass": "12", "power": "8"}
@@ -174,10 +177,13 @@ def test_pdr_should_pass_items_are_advisory_and_do_not_block():
     assert by["PDR-EC-02"]["evidence_params"]["met"] == 0
     assert res["ready"] is False
     assert res["ready_pending_manual"] is False
-    assert res["summary"]["advisory"] == 1
-    # W3.05: PDR-EC-06 (daily data budget) is must-pass and not evaluated without a data budget
+    # wave 3: PDR-SE-01 (SE deliverables, advisory) is the second advisory item
+    assert res["summary"]["advisory"] == 2 and by["PDR-SE-01"]["verdict"] == "advisory"
+    # W3.05: PDR-EC-06 (daily data budget) is must-pass and not evaluated without a data budget;
+    # wave 3: PDR-EC-07 (allocated baseline) and PDR-EC-08 (function coverage) need their evidence
     assert by["PDR-EC-06"]["status"] == "not_evaluated"
-    assert res["summary"]["must_pass"] == 5 and res["summary"]["must_pass_met"] == 3
+    assert by["PDR-EC-07"]["status"] == by["PDR-EC-08"]["status"] == "not_evaluated"
+    assert res["summary"]["must_pass"] == 7 and res["summary"]["must_pass_met"] == 3
 
 
 def test_pdr_data_budget_question_reads_the_budget():
@@ -318,7 +324,9 @@ def test_post_cdr_review_record_items_come_from_the_yaml_with_the_interim_behavi
 
 def test_evaluate_gate_leaves_review_record_items_to_the_review_record():
     res = ge.evaluate_gate("frr")
-    assert res["found"] and res["gate"] == "FRR" and res["criteria"] == []
+    # wave 3: FRR-EC-01 (in-orbit validation planned) is evaluated here, from the validation evidence
+    assert res["found"] and res["gate"] == "FRR" and [c["id"] for c in res["criteria"]] == ["FRR-EC-01"]
+    assert res["criteria"][0]["status"] == "not_evaluated"
     qr = ge.evaluate_gate("qr", requirements=[
         {"id": "a", "code": "SYS-1", "level": "system", "verification_method": "T", "verification_phase": "CDR"},
         {"id": "b", "code": "OBJ-O1", "level": "mission", "verification_method": None},
