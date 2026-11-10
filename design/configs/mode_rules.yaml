@@ -162,6 +162,12 @@ states:
     magnetorquer: {leop: peak, commissioning: nominal, nominal: standby, imaging: standby, downlink: standby, safe: nominal, survival: standby}
     gnss:         {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
     payload:      {leop: "off", commissioning: standby, nominal: standby, imaging: peak, downlink: standby, safe: "off", survival: "off"}
+    # Integrated ADCS unit (computer + wheels + torquers + sensors): detumbles in LEOP, wheels at peak while imaging.
+    adcs_unit:    {leop: nominal, commissioning: nominal, nominal: nominal, imaging: peak, downlink: nominal, safe: nominal, survival: standby}
+    # Payload controller: runs the cameras while imaging and hands data on in a pass; produces no data itself.
+    payload_electronics: {leop: "off", commissioning: standby, nominal: standby, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
+    # Unpowered in every ConOps mode: lenses and filters, and de-orbit devices (released once, at disposal).
+    passive:      {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
     propulsion:   {leop: "off", commissioning: standby, nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
     heater:       {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
     structure:    {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
@@ -173,6 +179,9 @@ states:
   # How an element maps to a class: KB category first, then name keyword, then domain.
   match:
     - {class: heater, kb: [thermal_hardware], keywords: [heater]}
+    - {class: adcs_unit, kb: [adcs_integrated]}
+    - {class: payload_electronics, kb: [payload_controller], keywords: [payload controller, payload computer]}
+    - {class: passive, kb: [payload_optic, deorbit_device], keywords: [lens, bandpass filter, drag sail]}
     - {class: obc, kb: [obc], keywords: [obc, on-board computer, flight computer], domains: [obc, data]}
     - {class: eps, kb: [eps_board], keywords: [eps, pcdu, power distribution]}
     - {class: battery, kb: [battery], keywords: [batter]}
@@ -187,7 +196,7 @@ states:
     - {class: gnss, kb: [gps_receiver], keywords: [gps, gnss]}
     - {class: propulsion, kb: [thruster], keywords: [thruster, propulsion, tank]}
     - {class: structure, kb: [cubesat_structure, deployer, mechanical_hardware, harness], keywords: [structure, frame, chassis, harness]}
-    - {class: payload, keywords: [camera, imager, payload, instrument, spectrometer], domains: [payload]}
+    - {class: payload, kb: [payload_imager], keywords: [camera, imager, payload, instrument, spectrometer], domains: [payload]}
     - {class: generic, domains: [power, aocs, ttc, thermal, propulsion, structure]}
 
 # ------------------------------------------------------------------ FDIR stubs (rule 8)
@@ -216,6 +225,7 @@ fdir:
     thermal:        {param: temperature_c, check: limit, limit: op_range, action: EVENT_ONLY, level: 1}
     payload:        {param: temperature_c, check: limit, limit: op_range, action: POWER_OFF_UNIT, level: 1}
     structure:      {param: none, check: none, action: EVENT_ONLY, level: 1}
+    deorbit_device: {param: deployed_flag, check: expected_value, expected: 1, action: EVENT_ONLY, level: 1}
     generic:        {param: temperature_c, check: limit, limit: op_range, action: ENTER_SAFE_MODE, level: 2}
   persistence: 3          # consecutive samples out of limits before the event (C2O default)
   period_s: 4             # monitoring period (C2O default)

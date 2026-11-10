@@ -1,0 +1,220 @@
+# Payload optics: lenses and bandpass filters (category payload_optic, KB schema v2)
+# Passive parts that mount on a camera (C-mount / filter thread); they add mass and cost to
+# the payload but no power. performance: focal_length_mm, f_number_range, format,
+# wavelength_nm, filter_thread; filters: center_nm, fwhm_nm, diameter_mm,
+# transmission_min, blocking_od, blocking_range_nm.
+# NFI research 2026-11-10 (nfi/research/payload.md). Every entry lists its `sources:`;
+# `estimated:` lists the fields that are estimates. cost_keur conversions: 1 CAD = 0.66 EUR,
+# 1 USD = 0.92 EUR, 1 GBP = 1.17 EUR, 1 TWD = 0.029 EUR (assumed rates).
+
+components:
+  - id: opt-kowa-lm35hc-sw
+    name: LM35HC-SW 35 mm SWIR lens
+    manufacturer: Kowa
+    category: payload_optic
+    mass_kg: 0.130
+    dimensions_mm: [43, 43, 43]
+    cost_keur: 2.5           # (est.) quote only
+    trl: 4
+    power_w: 0
+    interfaces: [C-mount]
+    operating_temp_c: [-10, 50]
+    performance:
+      focal_length_mm: 35
+      f_number_range: [1.4, 16]
+      format: 1 inch
+      wavelength_nm: [1000, 2000]
+      filter_thread: M35.5x0.5
+    estimated: [cost_keur]
+    notes: >-
+      Recommended NFI SWIR lens; it covers the 11.4 mm IMX992 diagonal with margin. It has a
+      manual iris and focus that must be staked and vented for vacuum. The 865 nm band is out of
+      its design range.
+    sources:
+      - https://aegis-elec.com/kowa-lm35hc-sw-2-3-35-mm.html
+
+  - id: opt-edmund-68-689
+    name: 35 mm FL SWIR fixed focal length lens (#68-689)
+    manufacturer: Edmund Optics
+    category: payload_optic
+    mass_kg: 0.135
+    dimensions_mm: [42, 42, 43]
+    cost_keur: 2.29
+    trl: 4
+    power_w: 0
+    interfaces: [C-mount]
+    performance:
+      focal_length_mm: 35
+      f_number_range: [1.4, 16]
+      format: 1 inch
+      wavelength_nm: [800, 2000]
+      max_distortion_pct: 0.5
+      filter_thread: M35.5x0.5
+    notes: Price EUR 2,286 (Edmund EU, excl. VAT).
+    sources:
+      - https://www.edmundoptics.eu/p/35mm-fl-swir-fixed-focal-length-lens/23308
+
+  - id: opt-edmund-23-223
+    name: 35 mm C Series SWIR lens (#23-223)
+    manufacturer: Edmund Optics
+    category: payload_optic
+    mass_kg: 0.072
+    dimensions_mm: [33, 33, 41]
+    cost_keur: 0.44
+    trl: 4
+    power_w: 0
+    interfaces: [C-mount]
+    performance:
+      focal_length_mm: 35
+      f_number_range: [1.65, 22]
+      format: 2/3 inch (11 mm) - marginal for IMX992 (11.4 mm diag)
+      wavelength_nm: [900, 1700]
+      max_distortion_pct: 0.2
+      filter_thread: M25.5x0.5 (female)
+    notes: Low-cost breadboard/EM option; expect slight corner vignetting on the IMX992. Price EUR 438.
+    sources:
+      - https://www.edmundoptics.eu/p/35mm-c-series-fixed-focal-length-swir-lens/52454/
+      - https://www.edmundoptics.eu/f/PdfExport/40034
+
+  - id: opt-computar-m3518-apvsw
+    name: M3518-APVSW ViSWIR Hyper-APO 35 mm (Edmund #74-627)
+    manufacturer: Computar (CBC)
+    category: payload_optic
+    mass_kg: 0.199
+    dimensions_mm: [41, 41, 67]
+    cost_keur: 4.28          # NT$147,735 x 0.029
+    trl: 4
+    power_w: 0
+    interfaces: [C-mount]
+    operating_temp_c: [-10, 50]
+    performance:
+      focal_length_mm: 35
+      f_number_range: [1.8, 16]
+      format: 1/1.4 inch (11.4 mm image circle)
+      wavelength_nm: [400, 1700]
+      filter_thread: M37.5x0.5
+    notes: >-
+      Apochromatic from 400 to 1700 nm, so it suits the single-IMX992 split-filter option
+      (865 + 1550 nm on one lens). It is heavy and long for a 1U bench.
+    sources:
+      - https://aegis-elec.com/computar-m3518-apvsw-35mm-f1-8-viswir-hyper-apo-swir-lens.html
+      - https://www.edmundoptics.com.tw/p/2335mmf18c-mountviswir-broadband/56676/
+
+  - id: opt-kowa-lm35hc-vis-sw
+    name: LM35HC-VIS-SW 35 mm VIS-SWIR lens
+    manufacturer: Kowa
+    category: payload_optic
+    mass_kg: 0.150
+    dimensions_mm: [39, 39, 56.4]
+    cost_keur: 3.23          # USD 3,509 x 0.92
+    trl: 4
+    power_w: 0
+    interfaces: [C-mount]
+    operating_temp_c: [-10, 50]
+    performance:
+      focal_length_mm: 35
+      f_number_range: [1.8, 16]
+      format: 1 inch (16 mm image circle)
+      wavelength_nm: [450, 2000]
+      filter_thread: M34x0.5
+    notes: Broadband alternative for a single-camera 865/1550 nm design.
+    sources:
+      - https://machinevisiondirect.com/products/kowa-lm35hc-vis-sw
+
+  - id: opt-kowa-lm50ec-ir
+    name: LM50EC-IR 50 mm IR-corrected lens (fixed aperture plates)
+    manufacturer: Kowa
+    category: payload_optic
+    mass_kg: 0.070
+    dimensions_mm: [33, 33, 50.8]
+    cost_keur: 0.8           # (est.) quote only
+    trl: 4
+    power_w: 0
+    interfaces: [C-mount]
+    operating_temp_c: [-10, 50]
+    performance:
+      focal_length_mm: 50
+      f_number_options: [2.4, 2.8, 4, 5.6, 8]
+      format: 1.2 inch (19.2 mm)
+      wavelength_nm: [400, 1000]
+      pixel_rating_um: 2.5
+      filter_thread: M30.5x0.5
+    estimated: [cost_keur]
+    notes: >-
+      Recommended NFI VNIR lens. It covers the 1.1-inch IMX542, is NIR-corrected, and has fixed
+      aperture plates instead of an iris. Use the F2.4 or F2.8 plate.
+    sources:
+      - https://aegis-elec.com/kowa-lm50ec-ir.html
+
+  - id: opt-edmund-86-958
+    name: 875 nm CWL, 50 nm FWHM, 25 mm hard-coated OD4 bandpass filter (#86-958)
+    manufacturer: Edmund Optics
+    category: payload_optic
+    mass_kg: 0.008           # (est.)
+    dimensions_mm: [25, 25, 5]
+    cost_keur: 0.28          # GBP 236 x 1.17
+    trl: 4
+    power_w: 0
+    interfaces: [mounted ring, 25 mm]
+    performance:
+      center_nm: 875
+      fwhm_nm: 50
+      diameter_mm: 25
+      substrate_thickness_mm: 3.5
+      transmission_min: 0.90
+      blocking_od: 4
+      blocking_range_nm: [200, 1200]
+    estimated: [mass_kg]
+    notes: NIR filter for the IMX542 camera; the blocking range covers the full Si response.
+    sources:
+      - https://www.edmundoptics.co.uk/p/875nm-cwl-25mm-dia-hard-coated-od-4-50nm-bandpass-filter/29370
+
+  - id: opt-edmund-84-790
+    name: 850 nm CWL, 50 nm FWHM, 25 mm hard-coated OD4 bandpass filter (#84-790)
+    manufacturer: Edmund Optics
+    category: payload_optic
+    mass_kg: 0.008           # (est.)
+    dimensions_mm: [25, 25, 5]
+    cost_keur: 0.30
+    trl: 4
+    power_w: 0
+    interfaces: [mounted ring, 25 mm]
+    performance:
+      center_nm: 850
+      fwhm_nm: 50
+      diameter_mm: 25
+      substrate_thickness_mm: 3.5
+      transmission_min: 0.90
+      blocking_od: 4
+      blocking_range_nm: [200, 1200]
+    estimated: [mass_kg]
+    notes: Alternative NIR filter; price EUR 295.
+    sources:
+      - https://www.edmundoptics.eu/p/850nm-cwl-25mm-dia-hard-coated-od-4-50nm-bandpass-filter/27859/
+
+  - id: opt-edmund-85-903
+    name: 1550 nm CWL, 50 nm FWHM, 25 mm hard-coated OD4 bandpass filter (#85-903)
+    manufacturer: Edmund Optics
+    category: payload_optic
+    mass_kg: 0.008           # (est.)
+    dimensions_mm: [25, 25, 3.5]
+    cost_keur: 0.36
+    trl: 4
+    power_w: 0
+    interfaces: [25 mm unmounted/mounted]
+    performance:
+      center_nm: 1550
+      fwhm_nm: 50
+      cut_on_nm: 1525
+      cut_off_nm: 1575
+      diameter_mm: 25
+      substrate_thickness_mm: 3.5
+      blocking_od: 4
+      blocking_range_nm: null    # NOT stated - must cover 400-1700 nm for the IMX992
+    estimated: [mass_kg]
+    notes: >-
+      SWIR filter. The blocking range is unverified. The IMX992 has about 70% QE in the visible,
+      so require OD >= 4 over 400-1700 nm. Price EUR 360.
+    sources:
+      - https://www.edmundoptics.eu/p/1550nm-cwl-30nm-fwhm-25mm-diameter-7.5mm-thickness/20285/
+      - https://3doptix.com/catalog/optics/filter/edmund-optics/85-903

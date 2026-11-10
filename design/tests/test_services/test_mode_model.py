@@ -99,14 +99,15 @@ def test_equipment_selection_uses_policy_margin():
 def test_kb_copy_carries_physical_facts():
     part = find_kb_part("obc-gom-nanomind-a3200")
     f = kb_element_fields(part)
-    assert f["dimensions_mm"] == [96.0, 90.0, 10.0]
+    # A3200 values as corrected from the 2025 datasheet (NFI KB research, Nov 2026)
+    assert f["dimensions_mm"] == [65.0, 40.0, 7.1]
     spec = f["kb_spec"]
-    assert spec["form_factor"] == "PC/104" and "CAN" in spec["interfaces"]
-    assert spec["operating_temp_c"] == [-40, 85] and spec["kb_hash"] == kb_hash(part) and spec["category"] == "obc"
-    assert f["heritage_json"] and f["mass_kg"] == 0.045
+    assert spec["form_factor"] == "GomSpace 65x40 module" and "CAN" in spec["interfaces"]
+    assert spec["operating_temp_c"] == [-30, 85] and spec["kb_hash"] == kb_hash(part) and spec["category"] == "obc"
+    assert f["heritage_json"] and f["mass_kg"] == 0.024
     el = {"id": "e1", "name": "My OBC", "kb_component_id": part["id"], "mass_kg": 0.05}
     apply_to_element(el, part)
-    assert el["mass_kg"] == 0.05 and el["kb_spec"]["form_factor"] == "PC/104"   # explicit value kept
+    assert el["mass_kg"] == 0.05 and el["kb_spec"]["form_factor"] == "GomSpace 65x40 module"   # explicit value kept
 
 
 def test_kb_staleness_detects_changed_part():

@@ -49,8 +49,8 @@ components:
     name: OEM719
     manufacturer: NovAtel
     category: gps_receiver
-    mass_kg: 0.048
-    dimensions_mm: [60, 100, 9]
+    mass_kg: 0.031
+    dimensions_mm: [46, 71, 11]
     cost_keur: 10
     trl: 7
     heritage_missions: [various CubeSats]
@@ -61,10 +61,16 @@ components:
       max_velocity_ms: 15000
       cold_start_s: 30
       constellations: [GPS, GLONASS, Galileo, BeiDou]
-    power_w: 1.8
+      power_by_config_w: {gps_l1: 0.9, gps_glonass_l1_l2: 1.3, all_signals: 1.8}
+      pps_output: true           # time accuracy 20 ns RMS
+    power_w: 1.8                # all signals; 0.9 W GPS L1, 1.3 W GPS+GLONASS L1/L2
     interfaces: [UART, USB]
     operating_temp_c: [-40, 85]
-    notes: Multi-constellation GNSS, highest accuracy but needs space qualification
+    notes: >-
+      Multi-constellation GNSS, highest accuracy but needs space qualification. Corrected from the
+      product sheet (NFI research 2026-11-10 (bus.md))
+    sources:
+      - https://www.gnss.ca/brochures/oem719-product-sheet.html
 
   - id: gps-ublox-max-m10s
     name: MAX-M10S
@@ -91,14 +97,46 @@ components:
     name: NanoSense GPS Kit
     manufacturer: GomSpace
     category: gps_receiver
-    mass_kg: 0.085
-    cost_keur: 20
+    mass_kg: 0.057              # kit 54-57 g by cable length; receiver 31 g
+    dimensions_mm: [72, 46, 11]
+    cost_keur: 20               # (est.) NFI brief says CAD 5k; get a quote
     trl: 9
     performance:
       position_accuracy_m: 1.5
       velocity_accuracy_ms: 0.03
       max_altitude_km: 2000
-      constellations: [GPS, GLONASS, Galileo, BeiDou]
+      constellations: [GPS, GLONASS, Galileo, BeiDou]   # per OEM719 firmware; the TW1322 antenna is single-band
+      pps_output: true           # 20 ns RMS (OEM719)
     power_w: 1.3
     interfaces: [UART]
-    notes: NovAtel OEM719 + antenna, no COCOM limits
+    notes: >-
+      NovAtel OEM719 + antenna, no COCOM limits. Corrected from the kit datasheet (NFI research
+      2026-11-10 (bus.md)); cost (est.)
+    sources:
+      - https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanosense-gpskit-26.pdf
+      - https://www.gnss.ca/brochures/oem719-product-sheet.html
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: gps-skyfox-pinav-ng
+    name: piNAV-NG
+    manufacturer: SkyFox Labs
+    category: gps_receiver
+    mass_kg: 0.024
+    dimensions_mm: [71.1, 45.7, 11]
+    cost_keur: 10           # (est.)
+    trl: 9                  # "space heritage: yes"
+    heritage_missions: []
+    performance:
+      position_accuracy_m: 10
+      velocity_accuracy_ms: null   # listing shows an erroneous value
+      max_altitude_km: null
+      max_velocity_ms: null
+      cold_start_s: null
+      constellations: [GPS]
+      pps_output: unknown
+    power_w: 0.125
+    interfaces: []
+    operating_temp_c: [-40, 85]
+    notes: GPS L1 C/A only. Low-power alternative to the OEM719-based kit. PPS not specified in the listing. Cost (est.).
+    sources:
+      - https://www.satnow.com/products/gnss-receivers/skyfox-labs/143-1320-pinav-ng

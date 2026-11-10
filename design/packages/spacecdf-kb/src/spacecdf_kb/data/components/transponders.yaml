@@ -240,15 +240,21 @@ components:
     trl: 9
     heritage_missions: [GOMX-1, GOMX-3, OPS-SAT, 100+ missions]
     performance:
-      frequency_mhz: 437
+      frequency_mhz: 437           # AX100U covers 430-440 MHz
       band: UHF
-      data_rate_bps: 38400
+      data_rate_bps: 115200        # max; 500-19200 bps within a 25 kHz channel
       tx_power_dbm: 30
       modulation: [GFSK, GMSK]
-    power_w: 3.0
+      frequency_range_mhz: [430, 440]   # variants: AX100UL 395-405 (excl. 399.5-400.5), AX100V 140-150
+      rx_power_w: 0.15
+    power_w: 2.64               # TX, 800 mA at 3.3 V
     interfaces: [I2C, UART, CAN]
-    operating_temp_c: [-40, 85]
-    notes: Most widely used CubeSat UHF transceiver
+    operating_temp_c: [-30, 85]
+    notes: >-
+      Most widely used CubeSat UHF transceiver. Corrected from the AX100 datasheet (NFI research
+      2026-11-10 (bus.md)): HMAC authentication only, no encryption listed
+    sources:
+      - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanocom-ax100-33.pdf
 
   - id: txr-gom-link-s
     name: NanoCom Link S
@@ -298,6 +304,11 @@ components:
       duplex: full
     power_w: 4.8
     interfaces: [I2C]
+    notes: >-
+      The VHF-up/UHF-down unit has a 400.15-402 MHz TX option (NFI research 2026-11-10 (bus.md)).
+      Duplicate of txrx-isis-trxvu (different numbers); not merged
+    sources:
+      - https://blog.satsearch.co/2020-12-16-satellite-uhf-and-vhf-transceivers-and-transmitters
 
   - id: txr-isis-txs
     name: TxS S-Band Transmitter
@@ -320,15 +331,24 @@ components:
     manufacturer: Endurosat
     category: transponder
     mass_kg: 0.200
-    cost_keur: 8
+    dimensions_mm: [89, 95, 23.2]
+    cost_keur: 5.4              # USD 6,300 list
     trl: 9
+    operating_temp_c: [-40, 80]
     performance:
-      frequency_mhz: 437
+      frequency_mhz: 437           # amateur variant 430-440 MHz
       band: UHF
-      data_rate_bps: 19600
-      tx_power_dbm: 33
+      data_rate_bps: 19600         # vendor 1.2-19.6 kbps
+      tx_power_dbm: 33             # 27-33 dBm (1 W, 2 W option)
+      frequency_ranges_mhz: [[400, 403], [430, 440]]   # commercial / amateur variants
+      encryption: AES-256
     power_w: 8.0
     interfaces: [CAN]
+    notes: >-
+      Corrected from the satsearch listing (NFI research 2026-11-10 (bus.md)): 400-403 MHz
+      commercial or 430-440 MHz amateur; AES-256; about 1 week lead time
+    sources:
+      - https://satsearch.co/products/endurosat-uhf-transceiver-ii
 
   - id: txr-endurosat-sband
     name: S-Band Transceiver
@@ -360,3 +380,105 @@ components:
     power_w: 12.0
     interfaces: [UART, RS485, LVDS]
     notes: Up to 150 Mbps, DVB-S2
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: txr-aac-spacequest-trx-u
+    name: TRX-U UHF Transceiver
+    manufacturer: AAC Clyde Space (SpaceQuest)
+    category: transponder
+    mass_kg: 0.125
+    dimensions_mm: [83, 57, 16]
+    cost_keur: 15          # (est.) not published
+    trl: 9
+    heritage_missions: [multiple SpaceQuest/AAC missions (unnamed in datasheet)]
+    performance:
+      frequency_mhz: 401.5     # NFI downlink setting; tunable
+      band: UHF
+      tx_frequency_mhz: [370, 470]
+      rx_frequency_mhz: [370, 470]
+      channels: 20             # programmable, 1 kHz steps
+      data_rate_bps: 19200
+      tx_power_dbm: 37         # 5 W max (0.25-5 W adjustable)
+      modulation: [FSK, GFSK]
+      rx_power_w: 0.23
+      encryption: none_stated
+    power_w: 8.0             # TX, >5 W RF at 6 V input
+    interfaces: [UART]        # (est.) interface not given on datasheet page
+    operating_temp_c: [-35, 80]
+    notes: Covers both NFI bands (401-402 MHz TX, 449.75-450.25 MHz RX) on paper, but max 19.2 kbps (brief target 38.4). satsearch survey lists 390-450 MHz; AAC datasheet says 370-470 MHz (used here). Interface and cost (est.).
+    sources:
+      - https://www.aac-clyde.space/wp-content/uploads/2021/11/TRX-U-datasheet.pdf
+      - https://blog.satsearch.co/2020-12-16-satellite-uhf-and-vhf-transceivers-and-transmitters
+
+  - id: txr-spacemanic-murgas
+    name: Murgas VHF/UHF Transceiver
+    manufacturer: Spacemanic
+    category: transponder
+    mass_kg: 0.025
+    dimensions_mm: [67, 42, 7]
+    cost_keur: 8           # (est.) not published
+    trl: 8                 # (est.) "built on flight-proven hardware", vib + TVAC + rad tested
+    heritage_missions: []
+    performance:
+      frequency_mhz: 401.5
+      band: UHF
+      tx_frequency_mhz: [[400, 402], [420, 450], [144, 148]]
+      rx_frequency_mhz: [[400, 402], [420, 450], [144, 148]]
+      data_rate_bps: 38400
+      tx_power_dbm: 30
+      modulation: [GFSK, GMSK, CW]
+      encryption: none_stated
+    power_w: 5.0            # (est.) TX <1 A, supply voltage not stated on datasheet
+    interfaces: []          # not stated in datasheet excerpt
+    operating_temp_c: [-40, 85]
+    notes: Best single-unit fit for NFI (401-402 MHz TX at 38.4 kbps). 449.75-450.25 MHz RX at the 450 MHz band edge must be confirmed with Spacemanic. RX <40 mA. TID 20 krad, SEE 60 MeV tested. power_w and cost (est.).
+    sources:
+      - https://spacemanic.com/files/datasheet/datasheet-TRX_Murgas.pdf
+      - https://satsearch.co/products/spacemanic-murgas-the-uhf-vhf-transceiver
+
+  - id: txr-gom-ax100ul
+    name: NanoCom AX100UL
+    manufacturer: GomSpace
+    category: transponder
+    mass_kg: 0.0245
+    dimensions_mm: [65, 40, 6.5]
+    cost_keur: 5           # same class as AX100 KB entry (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      frequency_mhz: 401.5
+      band: UHF
+      tx_frequency_mhz: [395, 405]      # excluding 399.5-400.5 MHz
+      rx_frequency_mhz: [395, 405]
+      data_rate_bps: 115200             # 500-19200 bps within 25 kHz bandwidth
+      tx_power_dbm: 30
+      modulation: [GFSK, GMSK]
+      authentication: HMAC
+    power_w: 2.64            # 800 mA typ TX at 3.3 V; RX 45 mA
+    interfaces: [I2C, UART, CAN]
+    operating_temp_c: [-30, 85]
+    notes: UHF-Low variant of the AX100. Covers the NFI 401-402 MHz downlink only; a 449.75-450.25 MHz uplink needs a second receiver.
+    sources:
+      - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanocom-ax100-33.pdf
+
+  - id: txr-stt-r0405
+    name: R0405 UHF Telecommand Receiver
+    manufacturer: STT-Systemtechnik
+    category: transponder
+    mass_kg: 0.200
+    dimensions_mm: [120, 60, 22]
+    cost_keur: 15          # (est.)
+    trl: 8                 # (est.)
+    heritage_missions: []
+    performance:
+      frequency_mhz: 450
+      band: UHF
+      rx_frequency_mhz: [390, 470]
+      synth_step_khz: 25
+      data_rate_bps: null
+      tx_power_dbm: null    # receiver only
+    power_w: 0.5             # 50 mA at 10-36 V (~0.5 W at 10 V)
+    interfaces: []
+    notes: Receive-only TC unit; option for a dedicated 449.75-450.25 MHz uplink paired with a 401 MHz transmitter. Large for a 3U. TRL and cost (est.).
+    sources:
+      - https://www.satnow.com/products/gnss-receivers/stt-systemtechnik-gmbh/143-1373-r0405

@@ -45,10 +45,10 @@ components:
     name: 3U CubeSat Structure
     manufacturer: ISISPACE
     category: cubesat_structure
-    mass_kg: 0.380
+    mass_kg: 0.304              # primary 0.243 + secondary
     dimensions_mm: [100, 100, 340.5]
     form_factor: 3U
-    cost_keur: 7
+    cost_keur: 4.9              # cubesatshop EUR 4,900; satcatalog average USD 4,315
     trl: 9
     heritage_missions: [OPS-SAT, many university missions]
     performance:
@@ -57,6 +57,12 @@ components:
       rails: CDS_compliant
       deployment_switches: 4
       pc104_slots: 12
+    notes: >-
+      Corrected (NFI research 2026-11-10 (bus.md)): lead time 4-6 weeks; flight heritage since
+      2013
+    sources:
+      - https://satcatalog.com/component/3-unit-cubesat-structure
+      - https://www.cubesatshop.com/?p=89
 
   - id: struct-isis-6u
     name: 6U CubeSat Structure
@@ -96,10 +102,10 @@ components:
     name: 3U CubeSat Structure
     manufacturer: Endurosat
     category: cubesat_structure
-    mass_kg: 0.350
+    mass_kg: 0.285              # 3U Structure II
     dimensions_mm: [100, 100, 340.5]
     form_factor: 3U
-    cost_keur: 6
+    cost_keur: 3.0              # USD 3,300-3,600
     trl: 9
     heritage_missions: [EnduroSat One]
     performance:
@@ -108,6 +114,10 @@ components:
       rails: CDS_compliant
       deployment_switches: 4
       pc104_slots: 12
+    notes: >-
+      Corrected from satcatalog (NFI research 2026-11-10 (bus.md)) for the 3U Structure II
+    sources:
+      - https://satcatalog.com/component/3u-cubesat-structure-ii/
 
   - id: struct-endurosat-6u
     name: 6U CubeSat Structure
@@ -144,3 +154,25 @@ components:
       pc104_slots: 12
       integrated_solar_panel_mounting: true
     notes: US-made, includes integrated deployment hardware
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: struct-clyde-3u
+    name: 3U Structure
+    manufacturer: AAC Clyde Space
+    category: cubesat_structure
+    mass_kg: 0.394
+    dimensions_mm: [100, 100, 340.5]
+    form_factor: 3U
+    cost_keur: 6                    # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      volume_cm3: 3000
+      material: Al-7075/6082
+      rails: CDS_compliant
+      deployment_switches: 4        # (est.) CDS-typical
+      pc104_slots: 12               # (est.)
+    interfaces: [CDS rail, PC/104 stack]
+    notes: NASA GEVS compliant. Switches, slots and cost (est.).
+    sources:
+      - https://www.satnow.com/products/satellite-bus-platforms/aac-clyde-space/45-1154-3u-structure

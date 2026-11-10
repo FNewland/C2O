@@ -1,0 +1,141 @@
+# Payload controllers: camera / payload data-handling computers (category payload_controller)
+# They command the cameras, time-tag and store frames and hand data to the OBC or radio
+# (interface role "Payload data handling"). performance: processor, ram_mb, storage_gb, os,
+# csi2_ports / csi2_lanes, camera_interfaces, tid_krad.
+# NFI research 2026-11-10 (nfi/research/payload.md). Every entry lists its `sources:`;
+# `estimated:` lists the fields that are estimates. cost_keur conversions: 1 USD = 0.92 EUR.
+
+components:
+  - id: pc-rpi-cm4
+    name: Raspberry Pi Compute Module 4 (on custom carrier)
+    manufacturer: Raspberry Pi Ltd
+    category: payload_controller
+    mass_kg: 0.08            # (est.) module + minimal carrier
+    dimensions_mm: [55, 40, 4.7]   # module only
+    form_factor: SoM (carrier required)
+    cost_keur: 0.08          # (est.) module list price class
+    trl: 5
+    power_w: 7.0             # typical operating 1.4 A @ 5 V; idle 2.0 W (0.4 A)
+    interfaces: [MIPI CSI-2 4-lane x1, MIPI CSI-2 2-lane x1, PCIe Gen2 x1, Gigabit Ethernet, USB 2.0, GPIO, I2C, SPI, UART]
+    operating_temp_c: [-20, 85]
+    heritage_missions: [VERTECS CCB (6U, TVAC-tested, not yet flown)]
+    performance:
+      processor: Broadcom BCM2711, 4x Cortex-A72
+      ram_mb: 8192
+      storage_gb: 32
+      os: Linux (Raspberry Pi OS)
+      csi2_ports: [{lanes: 4}, {lanes: 2}]
+      idle_power_w: 2.0
+    estimated: [mass_kg, cost_keur, trl]
+    notes: >-
+      The datasheet gives 0.4 A idle and about 1.4 A typical operating at 5 V. The VERTECS board
+      measured 1.25 W idle and 3.75 W at full load. There is no ECC RAM and no rad data; use a
+      supervisor MCU and switched, current-limited camera rails. The Alvium driver on the Pi
+      camera front-end is not yet demonstrated.
+    sources:
+      - https://datasheets.raspberrypi.com/cm4/cm4-datasheet.pdf
+      - https://arxiv.org/pdf/2406.00935
+
+  - id: pc-rpi-cm5
+    name: Raspberry Pi Compute Module 5 (on custom carrier)
+    manufacturer: Raspberry Pi Ltd
+    category: payload_controller
+    mass_kg: 0.08            # (est.)
+    dimensions_mm: [55, 40, 4.7]
+    form_factor: SoM (carrier required)
+    cost_keur: 0.12          # CM5 4 GB / 32 GB eMMC USD 135
+    trl: 4
+    power_w: 5.0             # (est.) typical; input rated up to 5 A @ 5 V
+    interfaces: [MIPI CSI-2/DSI 4-lane x2, PCIe, Gigabit Ethernet, USB 3.0, GPIO]
+    operating_temp_c: [-20, 85]
+    heritage_missions: []
+    performance:
+      processor: Broadcom BCM2712 (Raspberry Pi 5 class)
+      ram_mb: 4096
+      storage_gb: 32
+      os: Linux
+      csi2_ports: [{lanes: 4}, {lanes: 4}]
+    estimated: [mass_kg, power_w, trl]
+    notes: >-
+      Two 4-lane MIPI ports fit two Alvium cameras directly. No flight heritage found and no
+      typical power figure in the product brief.
+    sources:
+      - https://pip-assets.raspberrypi.com/categories/944-raspberry-pi-compute-module-5/documents/RP-008181-DS-10-cm5-product-brief.pdf
+
+  - id: pc-nvidia-jetson-orin-nano-8gb
+    name: Jetson Orin Nano 8GB module
+    manufacturer: NVIDIA
+    category: payload_controller
+    mass_kg: 0.10            # (est.) module + carrier, no heatsink
+    dimensions_mm: [69.6, 45, 5]   # height (est.)
+    form_factor: SoM (carrier required)
+    cost_keur: 0.3           # (est.)
+    trl: 5
+    power_w: 15              # 7-15 W modes
+    interfaces: [MIPI CSI-2 8 lanes (up to 4 cameras), PCIe, Ethernet, USB]
+    heritage_missions: [Orin NX (sibling) on Aethero/CSC CubeSat, Transporter-11 2024]
+    performance:
+      processor: 6-core Arm Cortex-A78AE + Ampere GPU
+      ai_inference_tops: 40
+      ram_mb: 8192
+      storage_gb: 0          # external NVMe
+      os: Linux (JetPack)
+      csi2_lanes: 8
+    estimated: [mass_kg, cost_keur, trl]
+    notes: >-
+      Best Alvium driver support (Allied Vision Jetson drivers), but 7-15 W is high for a 3U
+      with roughly 8 W of payload power. The flown heritage is for the Orin NX, not the Nano.
+    sources:
+      - https://static6.arrow.com/aropdfconversion/b4f120a8c52d5dd5e59875b129c4f94b77c7c3b6/jetson-orin-nano-datasheet-web.pdf
+      - https://www.space.com/ai-nvidia-gpu-spacex-launch-transporter-11
+      - https://forums.developer.nvidia.com/t/allied-vision-releases-new-alvium-csi-2-camera-driver-2-0-for-nvidia-jetson/184052
+
+  - id: pc-xiphos-q8s
+    name: Q8S processor card (flight model of Q8)
+    manufacturer: Xiphos Systems
+    category: payload_controller
+    mass_kg: 0.056
+    dimensions_mm: [80, 80, 11.2]
+    form_factor: Q-Card
+    cost_keur: 40            # (est.) price not public
+    trl: 9
+    power_w: 5.0             # 3.5-25 W scalable; "as little as 5 W"
+    interfaces: [Gigabit Ethernet, USB 2.0/3.1, LVDS x64, GPIO x52, RS-232/422/485, CAN (via PIM)]
+    operating_temp_c: [-40, 60]   # FM acceptance range
+    heritage_missions: [Q8S flying since Sept 2020, Q-Card family since 2002]
+    performance:
+      processor: Xilinx Zynq UltraScale+ XCZU7EG (4x A53 1.2 GHz, 2x R5)
+      ram_mb: 4096
+      storage_gb: 256
+      os: Linux
+      tid_krad: 30
+      csi2_ports: none native (FPGA IP + custom daughterboard needed)
+    estimated: [cost_keur]
+    notes: >-
+      Canadian (Montreal) high-heritage option with EDAC RAM, TMR control FPGA and scrubbing.
+      Using the Alvium CSI-2 cameras needs a custom D-PHY front-end. The Xiphos Q8 Camera Board
+      offers Camera Link and GigE instead.
+    sources:
+      - https://resources.epiqsolutions.com/hubfs/Xiphos-2023/PDFs/XTI-2001-2024-i-Q8-Rev-C-Spec-Sheet.pdf?hsLang=en
+      - https://resources.epiqsolutions.com/hubfs/Xiphos/Xiphos%20Q8%20Camera%20Board%20spec%20sheet.pdf?hsLang=en
+
+  - id: pc-xiphos-q8-camera-board
+    name: Q8 Camera Board (daughterboard)
+    manufacturer: Xiphos Systems
+    category: payload_controller
+    mass_kg: 0.098
+    dimensions_mm: [150, 110, 10]
+    form_factor: daughterboard to Q8
+    cost_keur: 10            # (est.)
+    trl: 7                   # (est.)
+    power_w: 5.0             # 4 W idle, 5 W max
+    interfaces: [Camera Link Base x1, Camera Link Medium x1, GigE x1, RS-485 x3, GPS PPS in, heater drivers x3, RTD inputs x3]
+    heritage_missions: []
+    performance:
+      camera_interfaces: [Camera Link Base, Camera Link Medium, GigE]
+      trigger_out: TTL
+      pps_input: true
+    estimated: [cost_keur, trl]
+    notes: No MIPI CSI-2; it is relevant only if NFI moves to GigE or Camera Link cameras.
+    sources:
+      - https://resources.epiqsolutions.com/hubfs/Xiphos/Xiphos%20Q8%20Camera%20Board%20spec%20sheet.pdf?hsLang=en

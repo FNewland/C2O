@@ -123,15 +123,44 @@ components:
     name: CubeStar
     manufacturer: CubeSpace
     category: star_tracker
-    mass_kg: 0.040
-    cost_keur: 18
+    mass_kg: 0.047
+    dimensions_mm: [35, 49, 24]
+    cost_keur: 15.1             # Gen 1 add-on USD 15,390 (USD 17,600 bundle with Earth sensor)
     trl: 9
     heritage_missions: [ZACube-2, nSight-1, EIRSAT-1, 100+ in orbit]
     performance:
-      accuracy_arcsec: 20
-      fov_deg: [58, 47]
-      update_rate_hz: 5
+      accuracy_arcsec: 72          # cross-axis 0.02 deg 3 sigma
+      fov_deg: 42                  # 59.4 diagonal
+      update_rate_hz: 1
       lost_in_space: true
       sun_exclusion_deg: 30
-    power_w: 0.7
+      roll_accuracy_arcsec: 216    # 0.06 deg 3 sigma
+      peak_power_w: 0.271
+    power_w: 0.165              # average; 0.271 W peak
     interfaces: [I2C, UART, CAN]
+    notes: >-
+      Corrected from the CubeSpace sensors and Gen 1 ADCS price lists (NFI research 2026-11-10
+      (bus.md))
+    sources:
+      - https://www.cubesatshop.com/wp-content/uploads/2023/06/CubeSpace-SENSORS-2023.pdf
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/GEN-1-ADCS-Jan-2023-web.pdf
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: st-arcsec-twinkle
+    name: Twinkle
+    manufacturer: arcsec
+    category: star_tracker
+    mass_kg: 0.035
+    power_w: 1.0              # "<1 W" nominal
+    cost_keur: 25             # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      accuracy_arcsec: 15.0   # 1 sigma cross-boresight (listing also says 8"); 90-100" about boresight
+      fov_deg: 10.4
+      update_rate_hz: 2.0
+      tracking_stars: null
+      sensitivity_mv: null
+    notes: 20x20x40 mm. Lead time 4 months. The listing's accuracy and FOV values conflict. Cost (est.).
+    sources:
+      - https://satsearch.co/products/arcsec-twinkle-star-tracker

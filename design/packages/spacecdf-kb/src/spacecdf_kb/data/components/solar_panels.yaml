@@ -43,18 +43,23 @@ components:
     name: NanoPower P110
     manufacturer: GomSpace
     category: solar_panel
-    mass_kg: 0.045
+    mass_kg: 0.026              # P110A/B; 0.029 C; 0.057 UA/UB (with magnetorquer); 0.065 UC
     dimensions_mm: [98, 82, 2]
     cost_keur: 4
     trl: 9
     heritage_missions: [GOMX-1, GOMX-3]
     performance:
-      power_bol_w: 2.4
+      power_bol_w: 2.4             # 2.27-2.40 W by variant
       power_eol_w: 2.2
       cell_type: triple_junction_gaas
       cell_efficiency_percent: 30
       area_m2: 0.008
       deployment: body_mounted
+    notes: >-
+      Datasheet (NFI research 2026-11-10 (bus.md)): 2x AzurSpace 3G30A, 60.36 cm2 of cells;
+      U-variants carry a 0.038 Am2 PCB magnetorquer; -40 to +85 C
+    sources:
+      - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanopower-p110-210.pdf
 
   - id: sp-dhv-csa-3u-deploy
     name: CSA 3U Deployable Array
@@ -125,3 +130,132 @@ components:
       cell_efficiency_percent: 30
       area_m2: 0.060
       deployment: deployable_double_wing
+
+  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  - id: sp-endurosat-3u-body
+    name: 3U Solar Panel (body-mounted)
+    manufacturer: Endurosat
+    category: solar_panel
+    mass_kg: 0.147
+    dimensions_mm: [326, 82, 2]     # (est.) 3U long-face panel envelope
+    cost_keur: 5.9                  # USD 6,900 list
+    trl: 9
+    heritage_missions: []
+    performance:
+      power_bol_w: 8.4
+      power_eol_w: 8.1              # (est.) from 30% BOL / 29% EOL cell efficiency
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.021                # (est.) 7 cells
+      deployment: body_mounted
+    notes: 7 TJ cells, 16.8-17.5 V, <=512 mA; up to 3 photodiodes plus temperature and sun sensors; optional magnetorquer connector. Lead time 1 week (listing). Dimensions, area and EOL (est.).
+    sources:
+      - https://www.endurosat.com/products/3u-solar-panel/
+      - https://satsearch.co/products/endurosat-3u-cubesat-solar-panel
+
+  - id: sp-endurosat-3u-deploy-single
+    name: 3U Deployable Solar Array (single)
+    manufacturer: Endurosat
+    category: solar_panel
+    mass_kg: 0.300                  # 285-315 g
+    dimensions_mm: [335, 84, 7.68]  # stowed
+    cost_keur: 12                   # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      power_bol_w: 16.8
+      power_eol_w: 16.2             # (est.)
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.042                # (est.) 14 cells
+      deployment: deployable_single_wing
+    notes: Burn-wire release, 90 or 135 deg hinge. EOL, area and cost (est.).
+    sources:
+      - https://www.endurosat.com/products/3u-deployable-solar-array
+
+  - id: sp-endurosat-3u-deploy-double
+    name: 3U Double Deployable Solar Array
+    manufacturer: Endurosat
+    category: solar_panel
+    mass_kg: 0.453                  # 438-468 g
+    dimensions_mm: [335, 87, 8.5]   # stowed
+    cost_keur: 18                   # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      power_bol_w: 25.2
+      power_eol_w: 24.4             # (est.)
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: 0.063                # (est.) 21 cells
+      deployment: deployable_double_wing
+    notes: Documented fallback for the NFI deployable array (2 needed). Burn-wire release. EOL, area and cost (est.).
+    sources:
+      - https://www.endurosat.com/products/3u-deployable-solar-array
+
+  - id: sp-exa-dmsa-3u-a
+    name: DMSA 3U/A Deployable Multifunction Solar Array
+    manufacturer: EXA (Ecuadorian Space Agency)
+    category: solar_panel
+    mass_kg: 0.250                  # (est.) per wing; no 3U mass published
+    dimensions_mm: [340, 98, 6.25]  # (est.) length/width; 6.25 mm folded thickness is published
+    cost_keur: 13.6                 # brief CAD 22k for the set; list range EUR 4.4-45k
+    trl: 9                          # "TRL 9 since 2013, 40+ missions" (vendor)
+    heritage_missions: []
+    performance:
+      power_bol_w: null             # 3U figure not published; 1U >=3.75 W (low-cost) to >=12 W (3G30)
+      power_eol_w: null
+      cell_type: triple_junction_gaas   # AzurSpace 3G30 option (or low-cost Si)
+      cell_efficiency_percent: 30       # (est.) 3G30 class
+      area_m2: null
+      deployment: deployable_multi_panel
+      embedded_antennas: VHF to L-band, 2 monopoles or 1 dipole
+      embedded_magnetorquer: true
+    operating_temp_c: [-80, 130]
+    notes: "The proposed NFI array. Spring hinges with \"artificial muscle\" release within 5 s. Panels 1.5 mm thick. Mass, envelope and power (est./unknown): request the 3U datasheet."
+    sources:
+      - https://satsearch.co/products/exa-dmsa-3u-a-deployable-multifunction-solar-array
+      - https://www.satnow.com/products/solar-panels/ecuadorian-space-agency/102-1595-dmsa-deployable-multifunction-solar-array
+      - https://www.cubesatshop.com/?p=1359
+
+  - id: sp-clyde-photon-3u-side
+    name: Photon 3U SIDE (body-mounted)
+    manufacturer: AAC Clyde Space
+    category: solar_panel
+    mass_kg: 0.135
+    dimensions_mm: [326, 82, 3.5]   # (est.) length/width; 3.5 mm stowed height published
+    cost_keur: 6                    # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      power_bol_w: 9.0
+      power_eol_w: 8.6              # (est.)
+      cell_type: triple_junction_gaas   # Spectrolab XTJ-Prime
+      cell_efficiency_percent: 30.7
+      area_m2: null
+      deployment: body_mounted
+    operating_temp_c: [-40, 80]
+    notes: Photon SD/DD/TD deployables are 310/330/330 g (7/9.55/9.5 mm stowed). Dimensions, EOL and cost (est.).
+    sources:
+      - https://www.aac-clyde.space/assets/000/000/220/AAC_DataSheet_Photon_original.pdf?1605785007
+
+  - id: sp-isis-3u-xl-body
+    name: 3U(XL) Solar Panel
+    manufacturer: ISISPACE
+    category: solar_panel
+    mass_kg: 0.150
+    dimensions_mm: [326, 82, 2]     # (est.)
+    cost_keur: 6                    # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      power_bol_w: 8.6              # (est.) 7 cells x 1.23 W per cell BOL
+      power_eol_w: 8.2              # (est.)
+      cell_type: triple_junction_gaas
+      cell_efficiency_percent: 30
+      area_m2: null
+      deployment: body_mounted
+    operating_temp_c: [-40, 80]
+    notes: ISIS publishes about 1.23 W and 2.7 V per cell BOL. 3U cell count assumed to be 7 (est.).
+    sources:
+      - https://isispace.nl/product/small-satellite-solar-panels/

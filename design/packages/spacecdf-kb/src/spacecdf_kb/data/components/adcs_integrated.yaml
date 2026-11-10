@@ -1,0 +1,131 @@
+# Integrated ADCS units (category adcs_integrated, KB schema v2 with `mechanical:`)
+# One unit = ADCS computer + reaction wheels + magnetorquers + sensors, so it satisfies the
+# AOCS equipment need on its own (services/equipment_logic.py: `alternatives`).
+# NFI research 2026-11-10 (nfi/research/bus.md). Every entry lists its `sources:`;
+# values not on a manufacturer or catalogue page say "(est.)" in `notes`.
+# cost_keur conversions: 1 USD = 0.86 EUR, 1 CAD = 0.62 EUR (approximate late-2025 rates).
+
+components:
+  - id: adcs-cubespace-cubeadcs-3axis-small
+    name: CubeADCS 3-Axis (Small configuration, Gen 1)
+    manufacturer: CubeSpace
+    category: adcs_integrated
+    mass_kg: 0.500              # "<500 g" excluding CubeStar/FSS options
+    dimensions_mm: [90, 96, 57] # with actuators; 90x96x32 mm without
+    form_factor: PC/104
+    power_w: 1.3                # (est.) nominal fine pointing; datasheet range 0.57-2.3 W
+    cost_keur: 31.8             # base USD 37,000 (no star tracker); with CubeStar+FSS USD 55,640 = 47.9 k EUR
+    trl: 9
+    heritage_missions: [ZACube-2, nSight-1, EIRSAT-1]
+    performance:
+      pointing_accuracy_deg: 1.0        # (est.) not published; "depends on sensors/orbit"
+      knowledge_accuracy_deg: 0.06      # only with the CubeStar option (0.02 cross / 0.06 roll, 3 sigma)
+      reaction_wheels: 3x CubeWheel Small
+      wheel_momentum_nms: 0.00177
+      wheel_torque_nm: 0.00023
+      magnetorquers: 2x CubeTorquer Small + 1x CubeCoil
+      sensors_standard: [MEMS rate sensor]
+      sensors_optional: [deployable magnetometer, coarse sun sensors, fine sun sensor, Earth sensor, CubeStar star tracker, redundant magnetometer]
+      options_cost_usd: {star_tracker: 15390, fine_sun_sensor: 3250, backup_magnetometer: 2300}
+      radiation_krad: 20
+      lead_time_weeks: 16
+    interfaces: [I2C, UART, CAN]
+    operating_temp_c: [-10, 60]
+    mechanical:
+      mount_class: pc104_module
+      envelope_mm: [96, 90, 57]
+      stack_height_mm: 57
+    notes: The proposed NFI ADCS. Gen 1 product (Jan-2023 price list); Gen 2 (CubeADCS Core) is the current line, so check obsolescence. The brief's CAD 55k matches the base system without a star tracker. Pointing accuracy and nominal power (est.).
+    sources:
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/GEN-1-ADCS-Jan-2023-web.pdf
+      - https://satnow.com/products/adcs-systems/cubespace/46-1187-cubeadcs-3-axis
+      - https://satsearch.co/products/cubespace-gen1-cubeadcs-3-axis
+      - https://www.cubesatshop.com/wp-content/uploads/2023/06/CubeSpace-SENSORS-2023.pdf
+
+  - id: adcs-cubespace-cubeadcs-gen2-3u
+    name: CubeADCS Gen 2 (Core + 3x CW0017 + CubeStar), 3U build
+    manufacturer: CubeSpace
+    category: adcs_integrated
+    mass_kg: 0.500              # (est.) build-up
+    dimensions_mm: [96, 90, 60] # (est.)
+    form_factor: PC/104
+    power_w: 1.2                # (est.)
+    cost_keur: 53.5             # (est.) USD 62.2k build-up from the Gen 2 price list
+    trl: 9
+    heritage_missions: []
+    performance:
+      pointing_accuracy_deg: 1.0        # (est.)
+      knowledge_accuracy_deg: 0.06      # CubeStar 3 sigma roll
+      reaction_wheels: 3x CW0017
+      wheel_momentum_nms: 0.00177
+      wheel_torque_nm: 0.00023
+      magnetorquers: 3x CR0002/CR0003 (0.2-0.3 Am2)
+      sensors: [CubeStar, CubeSense Sun, CubeMag Compact]
+      price_build_usd: {core: 21000, wheels_3x_CW0017: 15510, torquers_3x_CR0002: 2190, cubestar_plus_earth_bundle: 17600, cubesense_sun: 3580, cubemag_compact: 2300}
+      radiation_krad: 24
+      lead_time_weeks: 17       # "average 4 months"
+    interfaces: [I2C, UART, CAN]
+    operating_temp_c: [-20, 80]  # qualification (TVAC) range, not operating
+    mechanical:
+      mount_class: pc104_module
+      envelope_mm: [96, 90, 60]
+    notes: Current CubeSpace line. Mass, dimensions, power and pointing are (est.); the price is a sum of list items. Request a CubeSpace ADCS analysis.
+    sources:
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/CubeSpace-GEN-2-ADCS-2023.pdf
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/CubeSpace-GEN-2-ACTUATORS-2023.pdf
+      - https://satnow.com/products/adcs-systems/cubespace/46-1187-cubeadcs-core-gen-2
+      - https://satcatalog.com/component/gen2-cubeadcs
+
+  - id: adcs-aac-iadcs200
+    name: iADCS200
+    manufacturer: AAC Clyde Space (Hyperion)
+    category: adcs_integrated
+    mass_kg: 0.435              # 400/435/470 g by configuration
+    dimensions_mm: [95, 90, 32]
+    form_factor: PC/104
+    power_w: 1.4                # nominal; idle 1.15 W; peak 4.0-4.5 W (TBC)
+    cost_keur: 50               # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      pointing_accuracy_deg: 1.0        # "<1 deg"
+      knowledge_accuracy_deg: 0.0083    # 30 arcsec 3 sigma
+      reaction_wheels: 3x RW210
+      wheel_momentum_nms: 0.003         # 1.5/3.0/6.0 mNms options
+      wheel_torque_nm: 0.0001
+      magnetorquers: MTQ200 (0.2/0.2/0.1 Am2)
+      sensors: [ST200 star tracker, magnetometer, sun sensors]
+    interfaces: [I2C, UART, CAN]      # (est.)
+    operating_temp_c: [-20, 85]       # garbled on the source; confirm
+    mechanical:
+      mount_class: pc104_module
+      envelope_mm: [95, 90, 32]
+    notes: About 0.3U with the star tracker included; flying since 2017. Interfaces and cost (est.).
+    sources:
+      - https://www.aac-clyde.space/wp-content/uploads/2021/11/iADCS200.pdf
+
+  - id: adcs-bct-xact-15
+    name: XACT-15
+    manufacturer: Blue Canyon Technologies
+    category: adcs_integrated
+    mass_kg: 1.10
+    dimensions_mm: [100, 100, 50]
+    form_factor: 0.5U
+    power_w: 2.0                # (est.) not published on the listing; 12 V supply
+    cost_keur: 130              # (est.)
+    trl: 9
+    heritage_missions: []
+    performance:
+      pointing_accuracy_deg: 0.003      # +/-10.8 arcsec (2 axes)
+      knowledge_accuracy_deg: null
+      wheel_momentum_nms: 0.015
+      sensors: [star tracker]
+    interfaces: []
+    operating_temp_c: [-20, 60]
+    mechanical:
+      mount_class: u_module
+      u_size: 0.5
+      envelope_mm: [100, 100, 50]
+    notes: Over-performing and heavy for NFI; listed for the trade only. Power and cost (est.).
+    sources:
+      - https://www.satnow.com/products/adcs-systems/blue-canyon-technologies/46-1186-xact-15

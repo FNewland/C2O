@@ -144,46 +144,62 @@ components:
     manufacturer: CubeSpace
     category: reaction_wheel
     mass_kg: 0.060
-    dimensions_mm: [28, 31, 26]
-    cost_keur: 8
+    dimensions_mm: [28, 26, 28]
+    cost_keur: 4.4              # CW0017 USD 5,170
     trl: 9
     heritage_missions: [ZACube-2, nSight-1, 80+ in orbit]
     performance:
       momentum_nms: 0.00177
       max_torque_nm: 0.00023
       max_speed_rpm: 8000
-    power_w: 0.6
+      peak_power_w: 0.58
+    power_w: 0.15               # average at 2000 rpm; 0.58 W peak
     interfaces: [I2C, UART, CAN]
+    operating_temp_c: [-20, 80]   # TVAC qualification range
+    notes: >-
+      Corrected from the Gen 2 actuators price list (NFI research 2026-11-10 (bus.md))
+    sources:
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/CubeSpace-GEN-2-ACTUATORS-2023.pdf
 
   - id: rw-cubespace-cubewheel-medium
-    name: CubeWheel Medium
+    name: CubeWheel Medium (Gen 2 CW0057)
     manufacturer: CubeSpace
     category: reaction_wheel
-    mass_kg: 0.120
-    dimensions_mm: [46, 46, 31.5]
-    cost_keur: 12
+    mass_kg: 0.115
+    dimensions_mm: [35, 24, 35]
+    cost_keur: 6.2              # USD 7,220
     trl: 9
     performance:
-      momentum_nms: 0.010
-      max_torque_nm: 0.001
-      max_speed_rpm: 8000
-    power_w: 1.0
+      momentum_nms: 0.0057
+      max_torque_nm: 0.002
+      max_speed_rpm: 10000
+      peak_power_w: 16.5
+    power_w: 0.336              # average; 16.5 W peak
     interfaces: [I2C, UART, CAN]
+    notes: >-
+      Corrected from the Gen 2 actuators price list (NFI research 2026-11-10 (bus.md))
+    sources:
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/CubeSpace-GEN-2-ACTUATORS-2023.pdf
 
   - id: rw-cubespace-cubewheel-large
-    name: CubeWheel Large
+    name: CubeWheel Large (Gen 2 CW0162)
     manufacturer: CubeSpace
     category: reaction_wheel
-    mass_kg: 0.200
-    dimensions_mm: [50, 50, 40]
-    cost_keur: 18
+    mass_kg: 0.144
+    dimensions_mm: [46, 24, 46]
+    cost_keur: 7.7              # USD 8,950
     trl: 9
     performance:
       momentum_nms: 0.0162
       max_torque_nm: 0.007
-      max_speed_rpm: 6000
-    power_w: 2.0
+      max_speed_rpm: 10000
+      peak_power_w: 16.5
+    power_w: 0.336              # average; 16.5 W peak
     interfaces: [I2C, UART, CAN]
+    notes: >-
+      Corrected from the Gen 2 actuators price list (NFI research 2026-11-10 (bus.md))
+    sources:
+      - https://www.cubesatshop.com/wp-content/uploads/2023/05/CubeSpace-GEN-2-ACTUATORS-2023.pdf
 
   - id: rw-gom-gsw600
     name: NanoTorque GSW-600

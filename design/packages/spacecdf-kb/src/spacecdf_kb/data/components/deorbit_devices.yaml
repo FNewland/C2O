@@ -1,0 +1,160 @@
+# De-orbit devices: drag sails and drag tapes (category deorbit_device, KB schema v2)
+# Passive post-mission disposal by drag augmentation. Domain `structure` in the Equipment
+# Catalog (Structures & mechanisms seat owns deployable mechanisms). power_w is the
+# release (actuation) power, drawn once at disposal; the unit is off in every ConOps mode.
+# Satisfies the disposal equipment need (services/equipment_logic.py).
+# NFI research 2026-11-10 (nfi/research/bus.md). Every entry lists its `sources:`;
+# values not on a manufacturer page say "(est.)" in `notes`. mass_kg / power_w / cost_keur
+# are null where nothing is published (reference entries); do not invent them.
+# cost_keur conversions: 1 USD = 0.86 EUR, 1 CAD = 0.62 EUR (approximate late-2025 rates).
+
+components:
+  - id: deorb-npc-artica
+    name: ARTICA Deorbiting Sail
+    manufacturer: NPC Spacemind
+    category: deorbit_device
+    mass_kg: 0.210            # brochure 05/2025; web configs A 0.300 / B 0.260 / C 0.230
+    dimensions_mm: [96, 90, 35]   # (est.) from 0.35U and PC/104 compatibility
+    form_factor: 0.35U
+    power_w: 6.0              # actuation
+    cost_keur: 5.6            # brief CAD 9k (not verified)
+    trl: 9
+    heritage_missions: [FUTURA SM1 (launched 2023-01-03; deployment result not published)]
+    performance:
+      deployed_area_m2: 2.1
+      effective_area_m2: null   # tumbling average not published (CanX-7 analogue ~0.4-0.5 x nominal)
+      deployment: spring_booms
+      release: spring_HDRM
+      independent_power: config_A_only    # A: own storage+deployment power, 2-year max mission life
+      independent_timer: unknown          # "integrated autonomous kill switches"
+      standby_power_w: 0.0003             # config B/C storage
+      bus_voltage_v: [3, 12]
+      connector: Micro-D 9 (redundant power line, HDRM feedback)
+      deorbit_claim: "<5 years from 650 km (host mass not stated)"
+      lead_time_weeks: 10       # 2-3 months
+    mechanical:
+      mount_class: u_module
+      u_size: 0.35
+      anchor: zenith
+      face: pz
+      deployable: {kind: boom, panels: 4, hinge: centre}
+    notes: The proposed NFI sail. It exceeds the 0.25U allocation, and its area only just meets the >=2.0 m2 requirement. Dimensions and effective area (est.).
+    sources:
+      - https://www.npcspacemind.com/wp-content/uploads/2025/09/ARTICA-BROCHURE.pdf
+      - https://npcspacemind.com/cubesat-deorbiting-system
+      - https://satsearch.co/products/npcspacemind-artica-deorbiting-system
+      - https://space.skyrocket.de/doc_sdat/futura-sm1.htm
+
+  - id: deorb-hps-adeo-p
+    name: ADEO-P
+    manufacturer: HPS GmbH
+    category: deorbit_device
+    mass_kg: 0.45
+    dimensions_mm: [98, 98, 36]
+    form_factor: 0.36U
+    power_w: 12.0             # (est.) pyro cutter pulse (12 V, 1 A, 10 ms)
+    cost_keur: 25             # (est.)
+    trl: 8                    # (est.) family TRL 9 (ADEO-N2)
+    heritage_missions: [ADEO-N2 on ION-SCV003 (family, 3.6 m2, Dec 2022)]
+    performance:
+      deployed_area_m2: 1.7
+      deployment: spring
+      release: pyro_cutter
+      independent_power: false
+      independent_timer: false
+      host_mass_kg: [1, 20]
+    mechanical:
+      mount_class: u_module
+      envelope_mm: [98, 98, 36]
+      anchor: zenith
+      face: pz
+    notes: The ADEO family has deployed in orbit (ADEO-N2). The pico variant itself has no named flight. Power, cost and TRL (est.).
+    sources:
+      - https://indico.esa.int/event/516/contributions/10000/attachments/6287/10797/CSD2024_Hoffmann_ADEO.pdf
+
+  - id: deorb-hps-adeo-c
+    name: ADEO-C
+    manufacturer: HPS GmbH
+    category: deorbit_device
+    mass_kg: 0.8
+    dimensions_mm: [95, 95, 72]
+    form_factor: 0.72U
+    power_w: 12.0             # (est.)
+    cost_keur: 35             # (est.)
+    trl: 8                    # (est.)
+    heritage_missions: []
+    performance:
+      deployed_area_m2: 3.4
+      deployment: spring
+      release: pyro_cutter
+      host_mass_kg: [5, 50]
+    mechanical:
+      mount_class: u_module
+      envelope_mm: [95, 95, 72]
+      anchor: zenith
+      face: pz
+    notes: Too large and heavy for the NFI allocation; listed for the trade. Power, cost and TRL (est.).
+    sources:
+      - https://indico.esa.int/event/516/contributions/10000/attachments/6287/10797/CSD2024_Hoffmann_ADEO.pdf
+
+  - id: deorb-tui-terminator-tape-cubesat
+    name: CubeSat Terminator Tape
+    manufacturer: Tethers Unlimited
+    category: deorbit_device
+    mass_kg: 0.083
+    dimensions_mm: [100, 83, 6.5]
+    form_factor: end_plate
+    power_w: 3.0              # SMA actuation
+    cost_keur: 15             # (est.)
+    trl: 8                    # (est.)
+    heritage_missions: []
+    performance:
+      deployed_area_m2: null    # conductive tape; area not published
+      deployment: tape_unreel
+      release: SMA_actuator
+      independent_power: true   # own solar cells on the top surface
+      independent_timer: unknown
+    mechanical:
+      mount_class: face_panel
+      envelope_mm: [100, 83, 6.5]
+      face: pz
+    notes: Low mass, but the tape gives far less drag area than a 2 m2 sail. Check that it meets NFI's 5-year disposal from 590 km before considering it. TRL and cost (est.).
+    sources:
+      - https://satsearch.co/products/tui-cubesat-terminator-tape
+
+  - id: deorb-vestigo-spinnaker-2p4
+    name: Spinnaker (2.4 m2 variant)
+    manufacturer: Vestigo Aerospace
+    category: deorbit_device
+    mass_kg: null
+    power_w: null
+    cost_keur: null
+    trl: 6                    # (est.) Spinnaker3 was on Firefly Alpha FLTA001 (Sept 2021), which failed at launch
+    heritage_missions: []
+    performance:
+      deployed_area_m2: 2.4     # line spans 2.4-51.4 m2
+      deployment: booms_membrane
+    notes: Only area figures are published; mass and volume need a quote. TRL (est.).
+    sources:
+      - https://vestigoaerospace.com/images/Spinnaker_Datasheet.pdf
+      - https://www.purdue.edu/research/features/stories/upcoming-space-mission-to-test-purdue-developed-drag-sail-pulling-rocket-back-to-earth
+
+  - id: deorb-sfl-canx7-dsm
+    name: CanX-7 Drag Sail (reference, not for sale)
+    manufacturer: UTIAS Space Flight Laboratory
+    category: deorbit_device
+    mass_kg: null
+    form_factor: 4 modules within a 3U bus
+    power_w: null
+    cost_keur: null
+    trl: 9
+    heritage_missions: [CanX-7 (sail deployed May 2017, re-entered 2022-04-21)]
+    performance:
+      deployed_area_m2: 4.0       # 4 x ~1 m2 (eoPortal also quotes ~5 m2)
+      effective_area_m2: 1.9      # 1.85-2 m2 estimated after deployment
+      deployment: tape_spring_booms
+      release: door_release_ground_ARM_FIRE
+      independent_power: per_module_electronics
+    notes: Calibration reference for NFI's lifetime model (NRLMSIS tuned on CanX-7). Shows effective area at about 40-50% of nominal.
+    sources:
+      - https://eoportal.org/satellite-missions/canx-7

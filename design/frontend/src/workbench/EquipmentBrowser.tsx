@@ -21,6 +21,22 @@ const DOMAIN_LABELS: Record<string, string> = {
   structure: 'Structure', propulsion: 'Propulsion', obc: 'OBC / C&DH', ground: 'Ground',
 }
 
+// English text is the i18n key: KB categories (component file stems) shown on each catalogue line
+const CATEGORY_LABELS: Record<string, string> = {
+  batteries: 'Batteries', solar_cells: 'Solar cells', solar_panels: 'Solar panels', eps_boards: 'EPS boards',
+  reaction_wheels: 'Reaction wheels', star_trackers: 'Star trackers', sun_sensors: 'Sun sensors',
+  magnetorquers: 'Magnetorquers', adcs_integrated: 'Integrated ADCS units',
+  transponders: 'Transceivers', antennas: 'Antennas', gps_receivers: 'GNSS receivers', thrusters: 'Thrusters',
+  cubesat_structures: 'Structures', deployers: 'Deployers', mechanical_hardware: 'Mechanical hardware',
+  deorbit_devices: 'De-orbit devices (drag sails)', obcs: 'On-board computers', thermal_hardware: 'Thermal hardware',
+  harnesses: 'Harnesses', payload_imagers: 'Imagers and cameras', payload_optics: 'Lenses and filters',
+  payload_controllers: 'Payload controllers', ground_antennas: 'Ground antennas and positioners',
+  ground_rf: 'Ground RF', ground_baseband: 'Baseband and modems', ground_software: 'Ground software',
+  ground_timing: 'Time and frequency',
+}
+const categoryLabel = (t: (k: string) => string, cat: string) =>
+  CATEGORY_LABELS[cat] ? t(CATEGORY_LABELS[cat]) : cat.replace(/_/g, ' ')
+
 const DOMAINS = [
   { id: 'payload', label: DOMAIN_LABELS.payload, color: subsystemStyle('payload').color },
   { id: 'power', label: DOMAIN_LABELS.power, color: subsystemStyle('power').color },
@@ -172,7 +188,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
                 background: `color-mix(in srgb, ${domainInfo.color} 13%, transparent)`, color: domainInfo.color,
                 fontWeight: 600, flexShrink: 0, textTransform: 'uppercase',
               }}>
-                {item.category.replace(/_/g, ' ')}
+                {categoryLabel(t, item.category)}
               </span>
 
               {/* Name + manufacturer */}
@@ -228,7 +244,7 @@ export function EquipmentBrowser({ onClose }: { onClose?: () => void }) {
                     ...(x.trl != null ? { TRL: x.trl } : {}),
                   })
                   return {
-                    subject: `${t(DOMAIN_LABELS[domain] ?? domain)}: ${item.category.replace(/_/g, ' ')}`,
+                    subject: `${t(DOMAIN_LABELS[domain] ?? domain)}: ${categoryLabel(t, item.category)}`,
                     options: peers.map(p => ({
                       name: String(p.component?.name || p.component?.id),
                       summary: p.component?.manufacturer || undefined,

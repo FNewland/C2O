@@ -17,16 +17,21 @@ logger = logging.getLogger(__name__)
 # Map SpaceCDF domains to KB component categories
 DOMAIN_TO_CATEGORIES = {
     "power": ["batteries", "solar_cells", "solar_panels", "eps_boards"],
-    "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers"],
+    # adcs_integrated: one unit (computer + wheels + torquers + sensors) instead of the four parts
+    "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers", "adcs_integrated"],
     "link": ["transponders", "antennas", "gps_receivers"],
     "ttc": ["transponders", "antennas", "gps_receivers"],  # alias — UI uses ttc
     "propulsion": ["thrusters"],
-    "structure": ["cubesat_structures", "deployers", "mechanical_hardware"],
+    # deorbit_devices (drag sails): passive deployable mechanisms, owned by the Structures &
+    # mechanisms seat, which every study has (the Propulsion seat is optional, added only if ΔV > 0)
+    "structure": ["cubesat_structures", "deployers", "mechanical_hardware", "deorbit_devices"],
     "data": ["obcs"],
     "obc": ["obcs"],  # alias — UI uses obc
     "thermal": ["thermal_hardware"],
     "integration": ["harnesses"],
-    "payload": ["payload_imagers", "antennas"],  # imagers: KB schema v2 category (stack builder)
+    # imagers: KB schema v2 category (stack builder); optics (lenses, filters) and payload
+    # controllers add their mass / power / cost to the payload
+    "payload": ["payload_imagers", "payload_optics", "payload_controllers", "antennas"],
     # Ground segment equipment
     "ground": ["ground_antennas", "ground_rf", "ground_baseband", "ground_software", "ground_timing"],
     "ground_rf": ["ground_antennas", "ground_rf", "ground_baseband"],
@@ -109,8 +114,8 @@ def _score_component(
     scores: list[float] = []
 
     # Basic scoring: does the component exist and have data
-    mass = comp.get("mass_kg", 0)
-    trl = comp.get("trl", 5)
+    mass = comp.get("mass_kg") or 0  # null = not published
+    trl = comp.get("trl") or 5
 
     # TRL score — higher TRL is better for baseline, but we also value innovation
     trl_score = min(trl / 9.0, 1.0)
@@ -180,10 +185,10 @@ def apply_equipment_selection(
     changed = set()
     comp_id = component.get("id", "unknown")
     comp_name = component.get("name", "Unknown")
-    mass = component.get("mass_kg", 0) * quantity
-    power = component.get("power_w", 0) * quantity
+    mass = (component.get("mass_kg") or 0) * quantity
+    power = (component.get("power_w") or 0) * quantity
     cost = component.get("cost_keur") or 0
-    trl = component.get("trl", 5)
+    trl = component.get("trl") or 5
 
     # Map category to parameter prefix
     param_prefix = f"{domain}"

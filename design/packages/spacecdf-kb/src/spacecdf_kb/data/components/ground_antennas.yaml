@@ -206,3 +206,227 @@ components:
       rates possible (>500 Mbps) but rain attenuation is significant.
       Requires tight pointing. TRL 7 reflects limited CubeSat heritage
       but the ground technology itself is mature from GEO/MEO applications.
+
+  # NFI research 2026-11-10 (nfi/research/mission.md): sources per entry; 'unverified' in notes = needs a quote
+  # Az/El rotators have no category of their own: filed here with performance.type: positioner
+  - id: gs-ant-m2-400cp24
+    name: M2 400CP24 Circular-Polarised Yagi (395-405 MHz)
+    manufacturer: M2 Antenna Systems
+    category: ground_antennas
+    mass_kg: 3.2
+    power_w: 0
+    cost_keur: 0.81          # USD 875 list
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 395-405
+      gain_dbi: 15.0         # dBic
+      beamwidth_deg: 35
+      polarisation: circular (RHCP or LHCP, axial ratio < 3 dB)
+      boom_length_m: 3.02
+      power_handling_w: 1500
+      connector: N-female
+      tracking: az/el rotator
+    heritage_missions: [commercial 400 MHz telemetry/radiosonde reception]
+    notes: >
+      Best COTS match found for the NFI 401-402 MHz downlink. Pair with a separate 450 MHz
+      uplink Yagi (see gs-ant-m2-450cp-custom) on a common cross-boom, or with a diplexer and a
+      wideband antenna. Price from M2 product page (may not be current).
+    sources:
+      - https://www.m2inc.com/FG400CP24
+
+  - id: gs-ant-m2-401cp14
+    name: M2 401CP14 Circular-Polarised Yagi (400-415 MHz)
+    manufacturer: M2 Antenna Systems
+    category: ground_antennas
+    mass_kg: 1.8
+    power_w: 0
+    cost_keur: 0.5           # unverified estimate
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 400-415
+      gain_dbi: 11.5         # dBic
+      beamwidth_deg: 60
+      polarisation: circular
+      boom_length_m: 1.24
+      power_handling_w: 600
+      tracking: az/el rotator (wide beam tolerates coarse pointing)
+    heritage_missions: []
+    notes: >
+      Short, wide-beam option for a low-cost or portable station (e.g. Arctic site) where
+      pointing accuracy and wind load matter more than gain. 3.5 dB less gain than 400CP24.
+    sources:
+      - https://m2inc.com/content/PDF%20MANUALS/COMM%20CP-XP%20YAGIS/401CP14MAN01-W.pdf
+
+  - id: gs-ant-m2-450cp-custom
+    name: M2 CP Yagi for 450 MHz uplink (custom, 466CP42-class)
+    manufacturer: M2 Antenna Systems
+    category: ground_antennas
+    mass_kg: 5.9
+    power_w: 0
+    cost_keur: 1.0           # unverified estimate for a custom-frequency build
+    trl: 8
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 449.75-450.25 (custom tuning; reference model 466CP42 covers 462-470)
+      gain_dbi: 19.0         # dBic, reference model 466CP42
+      beamwidth_deg: 23
+      polarisation: circular
+      boom_length_m: 5.54
+      power_handling_w: 600
+      tracking: az/el rotator
+    heritage_missions: []
+    notes: >
+      M2 builds CP Yagis for commercial bands between 395 and 470 MHz; no catalogue model centred
+      on 450 MHz was found, so this entry uses the 466CP42 (462-470 MHz) as the performance
+      reference. A shorter 12-14 dBic build is sufficient: the uplink closes with >10 dB margin
+      at 25 W (see mission.md section 3). A narrow beam also limits interference into 450 MHz
+      land-mobile users near the station.
+    sources:
+      - https://www.m2inc.com/content/PDF%20MANUALS/COMM%20CP-XP%20YAGIS/466CP42MAN1-W.pdf
+      - https://www.m2inc.com/content/PDF%20MANUALS/COMM%20CP-XP%20YAGIS/425CP24MAN01.pdf
+
+  - id: gs-ant-m2-436cp42ug
+    name: M2 436CP42UG Circular-Polarised Yagi (430-438 MHz)
+    manufacturer: M2 Antenna Systems
+    category: ground_antennas
+    mass_kg: 3.4
+    power_w: 0
+    cost_keur: 0.84          # USD 910.95 (M2) / GBP 699 (UK dealer)
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 430-438
+      gain_dbi: 18.9         # dBic
+      beamwidth_deg: 21
+      polarisation: circular (optional RHCP/LHCP polarity switch)
+      boom_length_m: 5.74
+      power_handling_w: 1000 (500 with polarity switch)
+      tracking: az/el rotator
+    heritage_missions: [many university/amateur 70 cm satellite stations]
+    notes: >
+      Reference amateur-band satellite Yagi. NOT suitable as the primary NFI antenna: NFI
+      uses 401 and 450 MHz, which lie outside its tuned range. Useful for a station that also
+      supports amateur-band CubeSats (training, SatNOGS).
+    sources:
+      - https://www.m2inc.com/FG436CP42UG
+      - https://www.hamradio.co.uk/m2-436cp42ug-420-440-mhz-pd-13716
+
+  - id: gs-ant-wimo-xquad-70
+    name: WiMo X-Quad 70 cm (18 element, switchable polarisation)
+    manufacturer: WiMo
+    category: ground_antennas
+    mass_kg: 1.6
+    power_w: 0
+    cost_keur: 0.28          # GBP 239.99
+    trl: 9
+    performance:
+      type: directional
+      bands: [UHF]
+      frequency_mhz: 432 (70 cm amateur band)
+      gain_dbi: 13           # unverified (vendor does not publish); typical for 18-el X-quad
+      polarisation: switchable H/V/RHCP/LHCP (with phasing accessory)
+      boom_length_m: 1.27
+      connector: 2 x N-female
+      tracking: az/el rotator
+    heritage_missions: [amateur satellite stations]
+    notes: >
+      Light, compact and polarisation-agile, but tuned for 432 MHz; expect degraded match and gain
+      at 401 and 450 MHz. Training/backup antenna only.
+    sources:
+      - https://www.wimo.com/en/x-quad
+      - https://www.hamradio.co.uk/x-quad-antennas-for-144-and-432-mhz
+
+  - id: gs-rot-yaesu-g5500dc
+    name: Yaesu G-5500DC Az/El Rotator
+    manufacturer: Yaesu
+    category: ground_antennas
+    mass_kg: 9
+    power_w: 60
+    cost_keur: 0.76          # GBP 650
+    trl: 9
+    performance:
+      type: positioner
+      azimuth_range_deg: 450
+      elevation_range_deg: 180
+      slew_time_s: 60        # approx. full rotation each axis
+      wind_area_m2: 0.93     # ~10 sq ft
+      control: analogue position voltages; GS-232 computer interface (option) or Hamlib rotctld
+    heritage_missions: [SatNOGS stations, most university UHF/VHF stations]
+    notes: >
+      The default low-cost satellite rotator. ~1 deg/s slew is adequate for 590 km passes except
+      near-overhead (keyhole) passes. Controller is 117 VAC (US/Canada version). Mass not stated
+      by vendor; 9 kg is an estimate for both units.
+    sources:
+      - https://www.hamradio.co.uk//yaesu-g-5500dc
+
+  - id: gs-rot-spid-ras
+    name: SPID RAS Az/El Rotator
+    manufacturer: SPID Elektronik
+    category: ground_antennas
+    mass_kg: 13
+    power_w: 100
+    cost_keur: 1.24
+    trl: 9
+    performance:
+      type: positioner
+      azimuth_range_deg: 360
+      elevation_range_deg: 180
+      slew_time_s: 45        # 360 deg at 24 V (90 s at 12 V)
+      torque_nm: 158-366
+      brake_torque_nm: 1582
+      resolution_deg: 1
+      control: digital control unit (Rot2Prog), USB; Hamlib-compatible
+    heritage_missions: [SatNOGS stations, university stations]
+    notes: >
+      More robust than G-5500 for cold/windy Arctic sites; operating temperature -20 to +50 C per
+      vendor, so a heated enclosure or a cold-rated alternative is needed for Iqaluit/Yellowknife.
+      Vendor page has inconsistent mass (13 vs 19 kg).
+    sources:
+      - https://www.wimo.com/en/ras
+
+  - id: gs-rot-spid-big-ras
+    name: SPID BIG-RAS Az/El Rotator (heavy duty)
+    manufacturer: SPID Elektronik
+    category: ground_antennas
+    mass_kg: 20
+    power_w: 150
+    cost_keur: 1.6
+    trl: 9
+    performance:
+      type: positioner
+      azimuth_range_deg: 360
+      elevation_range_deg: 180
+      control: Rot2Prog / MD-01 / MD-02
+    heritage_missions: [SatNOGS stations, Onsala SALSA radio telescope]
+    notes: >
+      Heavy-duty version for two long Yagis (401 + 450 MHz) on one cross-boom. Detailed specs not
+      captured; check manufacturer datasheet.
+    sources:
+      - https://wiki.satnogs.org/SPID_Big_RAS
+      - https://www.wimo.com/en/big-ras
+
+  - id: gs-rot-satnogs-v3
+    name: SatNOGS Rotator v3 (open hardware)
+    manufacturer: Libre Space Foundation (open source, self-built)
+    category: ground_antennas
+    mass_kg: 5
+    power_w: 30
+    cost_keur: 0.4           # 300-500 USD for a v3 station (vendor FAQ estimate)
+    trl: 7
+    performance:
+      type: positioner
+      azimuth_range_deg: 360
+      elevation_range_deg: 180
+      control: Arduino-based controller, Hamlib rotctld, SatNOGS client
+    heritage_missions: [SatNOGS network]
+    notes: >
+      3D-printed/aluminium-extrusion rotator suited to light antennas. Good for student build
+      and teaching; not recommended for the two-Yagi NFI operational array or Arctic weather.
+    sources:
+      - https://satnogs.org/faq/

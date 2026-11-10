@@ -220,7 +220,27 @@ types:
          local: {en: "Satellite does not power on, or powers on in the dispenser", fr: "Le satellite ne démarre pas, ou démarre dans le déployeur"},
          system: {en: "Mission loss or launch-safety violation", fr: "Perte de mission ou non-respect de la sécurité au lancement"},
          mitigation: {en: "Several switches in series (CDS 2.3.2), acceptance test", fr: "Plusieurs interrupteurs en série (CDS 2.3.2), essai de réception"}}
+  adcs_unit:
+    kb_categories: [adcs_integrated]
+    modes:
+      - {id: ADCS-01, s: 4, o: 2, d: 2,
+         mode: {en: "Integrated ADCS unit failure", fr: "Défaillance de l’unité SCAO intégrée"},
+         cause: {en: "Processor latch-up or reset, internal bus failure", fr: "Verrouillage ou réinitialisation du processeur, panne du bus interne"},
+         local: {en: "No attitude estimate or control from the unit", fr: "Plus d’estimation ni de contrôle d’attitude par l’unité"},
+         system: {en: "Loss of pointing; wheels, magnetorquers and sensors all lost together", fr: "Perte du pointage ; roues, magnétocoupleurs et senseurs perdus ensemble"},
+         mitigation: {en: "Latch-up protection, OBC watchdog and power cycle, OBC B-dot back-up with its own magnetometer", fr: "Protection contre le verrouillage, chien de garde et recyclage par l’OBC, B-dot de secours sur l’OBC avec son propre magnétomètre"}}
+  deorbit_device:
+    kb_categories: [deorbit_device]
+    keywords: [drag sail, deorbit, de-orbit]
+    modes:
+      - {id: DOR-01, s: 3, o: 2, d: 2,
+         mode: {en: "Drag sail fails to deploy", fr: "Voile de traînée non déployée"},
+         cause: {en: "Release mechanism failure, boom jam, no power at end of life", fr: "Défaillance du mécanisme de libération, blocage d’un mât, absence d’énergie en fin de vie"},
+         local: {en: "Sail stowed or partly deployed", fr: "Voile repliée ou partiellement déployée"},
+         system: {en: "Disposal not within the required lifetime (debris rule)", fr: "Désorbitation hors du délai exigé (règle sur les débris)"},
+         mitigation: {en: "Redundant release circuit, deployment feedback, independent timer, deployment test", fr: "Circuit de libération redondant, retour d’état de déploiement, minuterie indépendante, essai de déploiement"}}
   payload:
+    kb_categories: [payload_imager, payload_optic, payload_controller]
     keywords: [camera, imager, instrument, payload, sensor, detector, spectrometer]
     domains: [payload]
     modes:

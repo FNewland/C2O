@@ -7,9 +7,9 @@ components:
     name: NanoPower P31us
     manufacturer: GomSpace
     category: eps_board
-    mass_kg: 0.095
+    mass_kg: 0.100
     power_w: 0.16      # own consumption, P31u datasheet (160 mW; 260 mW for the 16 V version)
-    dimensions_mm: [96, 90, 12]
+    dimensions_mm: [89.3, 92.9, 15.3]
     form_factor: PC/104
     cost_keur: 15
     trl: 9
@@ -17,37 +17,51 @@ components:
     performance:
       bus_voltage_v: 3.3
       max_battery_strings: 2
-      max_solar_input_w: 40
-      mppt_channels: 6
-      output_channels: 12
+      max_solar_input_w: 30
+      mppt_channels: 3             # 2 A each; 8.5 V, or 17 V for the 16 V version
+      output_channels: 6           # switchable (<= 2.5 A), plus 3.3 V at 5 A and 5 V at 4 A buses
       latchup_protection: true
       efficiency_percent: 95
+      battery_packs: [BP4, BPX]    # 8 V or 16 V
     interfaces: [I2C, PC/104]
     operating_temp_c: [-40, 85]
-    notes: Standard CubeSat EPS, flight proven on 100+ missions
+    notes: >-
+      Standard CubeSat EPS, flight proven on 100+ missions. Corrected from the P31u datasheet (NFI
+      research 2026-11-10 (bus.md)). The datasheet product is 'NanoPower P31u' (name kept)
+    sources:
+      - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanopower-p31u-32_(1).pdf
 
   - id: eps-gom-nanopow-p60
     name: NanoPower P60
     manufacturer: GomSpace
     category: eps_board
-    mass_kg: 0.250
+    mass_kg: 0.181              # Dock 80 g + 1 ACU 54 g + 1 PDU 47 g; +54 g per extra ACU, +47 g per extra PDU
     power_w: 0.6       # system standby consumption, P60 ACU-200 datasheet § 7 (600 mW)
-    dimensions_mm: [96, 90, 25]
+    dimensions_mm: [92, 88.9, 28.9]   # 19.9-28.9 mm by module count
     form_factor: PC/104
     cost_keur: 25
     trl: 9
     heritage_missions: [GOMX-4, Arctic Weather Satellite]
     performance:
-      bus_voltage_v: [3.3, 5.0, 12.0]
+      bus_voltage_v: [3.3, 5.0, 12.0]   # regulated 3.3 V and 5 V; 12 V from a PDU-200 channel (3.3-18 V)
       max_battery_strings: 4
-      max_solar_input_w: 120
-      mppt_channels: 10
-      output_channels: 24
+      max_solar_input_w: 128
+      mppt_channels: 6             # per ACU-200 (2 A, <= 25 V each)
+      output_channels: 9           # per PDU-200 (up to 4 modules in the dock)
       latchup_protection: true
-      efficiency_percent: 96
+      efficiency_percent: 90       # ACU PV-to-battery typical
+      battery_bus_v: [16, 32]       # battery voltage class
+      pdu_rail_range_v: [3.3, 18]
     interfaces: [I2C, CAN, PC/104]
-    operating_temp_c: [-40, 85]
-    notes: Modular EPS for 6U-12U. Handles higher power missions.
+    operating_temp_c: [-35, 85]
+    notes: >-
+      Modular EPS for 6U-12U. Handles higher power missions. Corrected from the P60 dock and ACU-200
+      datasheets (NFI research 2026-11-10 (bus.md)). The datasheet names no missions; Arctic
+      Weather Satellite heritage not verified
+    sources:
+      - https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanopower-p60-dock-3.1.pdf
+      - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanopower-p60-acu200-23.pdf
+      - https://gomspace.com/product/nanopower-p60/
 
   - id: eps-endurosat-eps-i-plus
     name: EPS I Plus
