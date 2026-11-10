@@ -778,3 +778,6 @@ from . import electrical_models as _electrical_models  # noqa: E402,F401
 # CDR design model (TM/TC database, FDIR, AOCS modes, TT&C ladder, line states, operations):
 # one generic table, registered on Base.metadata for create_all.
 from . import cdr_models as _cdr_models  # noqa: E402,F401
+
+# W5.03 Licensing tab (agent L): one study-owned row per study.
+from . import models_licensing as _models_licensing  # noqa: E402,F401

@@ -127,6 +127,30 @@ def _estimate_revisit_days(
     return round(track_spacing_km / sw, 1)
 
 
+def _service_of(centre_mhz: Any, direction: str) -> str:
+    """ITU service of an assignment, derived from the band (spectrum catalogue)."""
+    try:
+        from .spectrum import service_for
+        f = float(centre_mhz)
+    except (TypeError, ValueError):
+        return "to be determined from the band"
+    d = "space-to-Earth" if str(direction).lower().startswith("down") else "Earth-to-space"
+    return service_for(f, d)["service"]
+
+
+def _physics_lifetime_years(altitude_km: float, mass_kg: float, area_m2: float | None,
+                            start_year: float = 2030.5, scenario: str = "nominal") -> float:
+    """Lifetime from the calibrated disposal model (EG D8: the cross-section is used)."""
+    from spacecdf_common.physics.disposal import decay_lifetime_years
+    if area_m2:
+        a = float(area_m2)
+    else:   # mean tumbling area by mass class (CubeSat table of physics/debris.py, else 0.01 m^(2/3))
+        m = max(float(mass_kg), 0.1)
+        a = 0.01 if m <= 2 else 0.02 if m <= 4 else 0.035 if m <= 6 else 0.06 if m <= 12 else 0.01 * m ** (2 / 3)
+    return decay_lifetime_years(float(altitude_km), float(start_year), max(float(mass_kg), 0.1), a, scenario,
+                                max_years=200.0)
+
+
 def _estimate_orbital_lifetime_years(altitude_km: float) -> float:
     """Simplified orbital lifetime estimate for LEO circular orbits.
 
@@ -463,7 +487,7 @@ def generate_rsssa_template(
             "disposal_plan": {
                 "deorbit_method": _manual("[Natural decay / propulsive / drag augmentation]"),
                 "post_mission_lifetime_years": _field(
-                    round(max(0, _estimate_orbital_lifetime_years(alt) - design_lifetime_years), 1)
+                    round(max(0, _physics_lifetime_years(alt, float(_mass or 4.0), None) - design_lifetime_years), 1)
                 ),
                 "passivation_plan": _manual("[Battery discharge, RF shutdown, momentum dump]"),
                 "performance_guarantee": _manual("[Financial or technical guarantee for disposal]"),
@@ -577,7 +601,7 @@ def generate_itu_api_filing(
             "emission_designator": _field(emiss) if emiss else _manual("[e.g. 200KG1D]"),
             "eirp_dbw": _field(fa_eirp) if fa_eirp is not None else _manual("[Compute from Tx power + antenna gain]"),
             "polarisation": _field(fa.get("polarisation", _pol)),
-            "service": _field(fa.get("service", "EESS")),
+            "service": _field(fa.get("service") or _service_of(centre_mhz, direction)),
             "pfd_dbw_m2_at_5deg": _field(fa_pfd) if fa_pfd is not None else _manual("[Auto-computed from EIRP + altitude]"),
         }
         computed_assignments.append(entry)
@@ -592,7 +616,7 @@ def generate_itu_api_filing(
             "emission_designator": _manual(),
             "eirp_dbw": _manual(),
             "polarisation": _manual(),
-            "service": _manual("[EESS / FSS / AMS / other]"),
+            "service": _manual("[derived from the band: e.g. Space Operation (space-to-Earth)]"),
             "pfd_dbw_m2_at_5deg": _manual(),
         })
 
@@ -609,7 +633,10 @@ def generate_itu_api_filing(
             },
             "satellite_network": {
                 "network_name": _field(network_name or f"{operator_name or 'MISSION'}-SAT-1"),
-                "service_type": _field("Earth Exploration-Satellite Service (EESS)"),
+                "service_type": _field("; ".join(sorted({
+                    str(a["service"]["value"]) for a in computed_assignments
+                    if a["service"].get("auto_populated")})) or "to be determined from the frequency assignments",
+                    auto=any(a["service"].get("auto_populated") for a in computed_assignments)),
                 "number_of_satellites": _field(num_satellites),
             },
             "orbital_elements": {
@@ -805,6 +832,9 @@ def generate_eol_report(
     battery_capacity_wh: float | None = None,
     # Mission
     mission_duration_years: float = 3.0,
+    # Drag sail (W5.02): deployed area; decay start (decimal year of the end of operations - duration)
+    drag_sail_area_m2: float | None = None,
+    start_year: float | None = None,
     # Design params passthrough
     design_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -825,9 +855,20 @@ def generate_eol_report(
     _isp = isp_s or dp.get("isp_s")
     _batt = battery_capacity_wh or dp.get("battery_capacity_wh")
 
-    # --- Orbital lifetime ---
-    lifetime_years = _estimate_orbital_lifetime_years(alt)
+    _sail = drag_sail_area_m2 or dp.get("drag_sail_area_m2")
+    _start = start_year or dp.get("start_year") or 2030.5
+
+    # --- Orbital lifetime (calibrated disposal model; uses the cross-section, EG D8) ---
+    lifetime_years = round(_physics_lifetime_years(alt, _dry, _cs, _start), 1)
     post_mission_years = max(0.0, lifetime_years - mission_duration_years)
+    sail_lifetime_years: float | None = None
+    if _sail:
+        from spacecdf_common.physics.disposal import BUS_AREA_WITH_SAIL_M2, SAIL_EFFECTIVE_FRACTION
+        eff = SAIL_EFFECTIVE_FRACTION * float(_sail) + BUS_AREA_WITH_SAIL_M2
+        sail_lifetime_years = round(max(
+            _physics_lifetime_years(alt, _dry, eff, _start + mission_duration_years, sc)
+            for sc in ("strong", "nominal", "weak")), 1)
+        post_mission_years = sail_lifetime_years
 
     # --- 25-year and 5-year compliance ---
     compliant_25yr = post_mission_years <= 25.0
@@ -911,6 +952,9 @@ def generate_eol_report(
         deorbit_method = "Propulsive deorbit (sufficient delta-V available)"
     elif _has_prop:
         deorbit_method = "Propulsive deorbit (verify delta-V budget)"
+    elif _sail:
+        deorbit_method = (f"Drag sail ({float(_sail):g} m2 deployed) at end of operations: "
+                          f"{sail_lifetime_years} y worst solar scenario")
     elif compliant_25yr:
         deorbit_method = "Natural orbital decay (compliant with 25-year guideline)"
     else:
@@ -929,7 +973,9 @@ def generate_eol_report(
                 "mission_duration_years": _field(mission_duration_years),
                 "post_mission_lifetime_years": _field(round(post_mission_years, 1)),
                 "area_to_mass_ratio_m2_kg": _field(area_to_mass) if area_to_mass else _manual("[Cross-section / mass]"),
-                "model_used": _field("Simplified empirical (moderate solar activity, Cd=2.2)"),
+                "drag_sail_area_m2": _field(_sail) if _sail else _field(None),
+                "post_mission_lifetime_with_sail_years": _field(sail_lifetime_years),
+                "model_used": _field("NRLMSIS 2.1 table, SWPC/Hathaway solar cycle, Cd=2.2 (physics/disposal.py)"),
                 "note": _field("For regulatory filing, use DAS/DRAMA/STK for high-fidelity lifetime prediction"),
             },
             "compliance_25yr": {
@@ -937,6 +983,12 @@ def generate_eol_report(
                 "post_mission_years": _field(round(post_mission_years, 1)),
                 "limit_years": _field(25),
                 "standard": _field("IADC / ECSS-U-AS-10C / UN COPUOS Guidelines"),
+            },
+            "compliance_ised_5yr": {
+                "compliant": _field(compliant_5yr),
+                "post_mission_years": _field(round(post_mission_years, 1)),
+                "limit_years": _field(5),
+                "standard": _field("ISED decision on space debris mitigation, April 2026 (decision number to be confirmed)"),
             },
             "compliance_5yr_fcc": {
                 "compliant": _field(compliant_5yr),
@@ -982,6 +1034,7 @@ def generate_eol_report(
             },
         },
         "regulatory_compliance_summary": {
+            "ISED_5yr_disposal": _field(compliant_5yr),
             "IADC_25yr_guideline": _field(compliant_25yr),
             "FCC_5yr_rule": _field(compliant_5yr),
             "ECSS_U_AS_10C": _field(compliant_25yr),

@@ -177,6 +177,11 @@ async def build_rich_study(c, monkeypatch) -> tuple[str, dict]:
     await _ok(await c.post("/api/logbook/entries", json={
         "kind": "decision", "text": f"Chose S-band for {sc['id']}", "context": {"study_id": sid, "where": "decide"}}))
 
+    # W5.03 licensing record (agent L)
+    await _ok(await c.put(f"/api/lifecycle/licensing/{sid}", json={
+        "applicant": {"legal_name": "Example applicant"},
+        "filings": [{"id": "ised_preconsultation", "status": "submitted", "submitted": "2026-11-10"}]}))
+
     await _legacy_rows(sid, eps["id"])
 
     # seats last (writes need a seat afterwards): preset, claims, a pending cross-seat edit
@@ -582,3 +587,12 @@ async def test_bad_files_are_refused(client, db_factory):
     assert r.status_code == 400 and "newer SpaceCDF" in r.text
     r = await client.get("/api/studies/nope/export")
     assert r.status_code == 404
+
+
+async def test_licensing_record_round_trip(client, rich):
+    """W5.03: the Licensing tab's record travels with the project file."""
+    sid, _ = rich
+    res = await _import(client, await _export(client, sid))
+    j = await _ok(await client.get(f"/api/lifecycle/licensing/{res['id']}"))
+    assert j["record"]["applicant"]["legal_name"] == "Example applicant"
+    assert next(f for f in j["filings"] if f["id"] == "ised_preconsultation")["status"] == "submitted"

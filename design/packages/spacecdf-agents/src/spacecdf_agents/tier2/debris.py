@@ -61,6 +61,18 @@ class DebrisComplianceAgent(DesignAgent):
             deorbit_dv = state.get("orbit.delta_v_deorbit_ms", 0) or 0
             available_dv = deorbit_dv  # Allocated for deorbit
 
+        # W5.02: a drag sail's deployed area (design parameter, or the mission constraint)
+        sail_area = state.get("deorbit.drag_area_m2") or state.get_requirement("constraints.drag_sail_area_m2") or 0.0
+        try:
+            sail_area = float(sail_area)
+        except (TypeError, ValueError):
+            sail_area = 0.0
+        launch = state.get_requirement("launch_date_target")
+        start_year = None
+        if launch:
+            from spacecdf_common.physics.disposal import year_of
+            start_year = year_of(str(launch))
+
         dc = compute_debris_compliance(
             altitude_km=alt,
             inclination_deg=inc,
@@ -71,6 +83,8 @@ class DebrisComplianceAgent(DesignAgent):
             has_battery=True,
             has_pressurised_tanks=has_propulsion,
             mission_duration_years=mission_years,
+            drag_device_area_m2=sail_area,
+            start_year=start_year,
         )
 
         result.add_param("debris.lifetime_years", "Orbital Lifetime",

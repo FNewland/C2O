@@ -933,7 +933,10 @@ async def get_spectrum_bands(
 ) -> dict:
     """Get available frequency bands filtered by mission type and license."""
     from ..services.spectrum import get_bands_for_mission
-    bands = get_bands_for_mission(mission_type, license_type, data_rate_mbps)
+    try:
+        bands = get_bands_for_mission(mission_type, license_type, data_rate_mbps)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
     return {"bands": bands, "count": len(bands)}
 
 
@@ -941,7 +944,10 @@ async def get_spectrum_bands(
 async def generate_itu_template(body: dict[str, Any]) -> dict:
     """Generate ITU Advance Publication Information filing template."""
     from ..services.spectrum import generate_itu_api_template
-    return generate_itu_api_template(**body)
+    try:
+        return generate_itu_api_template(**body)
+    except (TypeError, ValueError) as exc:   # unknown keys or a malformed band (EG D9: was HTTP 500)
+        raise HTTPException(422, str(exc)) from None
 
 
 @router.post("/spectrum/iaru-template")
@@ -1258,3 +1264,9 @@ def _margin_gate(study) -> str | None:
         return study_margin_gate(study)
     except Exception:  # noqa: BLE001 — no gate profile: the phase picks the step
         return None
+
+
+# --- Licensing tab (W5.01-W5.03, agent L): /api/lifecycle/licensing/{study_id} ---
+from . import licensing as _licensing_routes  # noqa: E402
+
+router.include_router(_licensing_routes.router)
