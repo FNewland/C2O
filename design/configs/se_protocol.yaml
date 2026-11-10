@@ -1,0 +1,658 @@
+# SpaceCDF systems-engineering protocol (wave 3, 3.S1 / 3.S4; owner S).
+#
+# What each phase of the V asks of the team, as DATA plus deterministic checks (docs/RULES_AND_AI.md):
+#   entry         "Before you start" (phase entry, check 1): earlier gate passed, what to read
+#   deliverables  "Deliverables this phase" (check 2): products, diagrams, trades, documents, objects,
+#                 each evaluated live from the study (services/se_deliverables.py)
+#   analysis      "Analysis standard" (check 3): open assumptions due by the gate, basis of numbers
+#   coaching      cards in three communication registers (learning = default, plain, practitioner),
+#                 one set per phase and one card per seat (configs/seats.yaml), plus pointer cards
+#
+# The coaching PARAPHRASES the systems-engineering skill (PI ruling): no sentence is copied from it,
+# every card cites its source (key of `sources` below), and tools/se_paraphrase_check.py checks that
+# no run of 12 or more words is copied where a local copy of the skill exists. The optional AI coach
+# (wave 4) reads this same file, so the rule-based cards and the coach cannot disagree.
+#
+# PI rulings applied: enforcement WARN by default (the instructor can set block per profile in
+# gate_profiles.yaml, agent D); system-level trades are orbit and launch at the MDR and the data
+# architecture at the SRR; architecture trades at the PDR; ORR and CRR are validation stages, not gates.
+#
+# Deliverable kinds:   product  (gate-profile product at a maturity; evidence rule in se_deliverables.PRODUCT_RULES)
+#                      diagram  (diagram catalogue kind: present, gaps; kinds planned this wave are accepted)
+#                      trade    (trade records by level and gate)
+#                      document (a review-pack document, judged by the check it carries)
+#                      criteria (a gate exit criterion id, evaluated by the gate evaluator)
+#                      object   (a count query of se_deliverables.OBJECT_QUERIES)
+# severity: info | warn | block  (block only bites when the profile's enforcement is "block")
+# `fix` is a where-target for the Phase panel: "<panel>" or "<panel>:<focus>" (D maps it to a tab).
+# `draft` is what "Draft it" opens: {kind: pack|diagram|trade|editor, ref}.
+#
+# French: international French, typographic apostrophe, U+00A0 before ":" and U+202F before ";".
+
+version: 1
+enforcement_default: warn
+registers: [learning, plain, practitioner]
+default_register: learning
+register_labels:
+  learning: {en: "Learning as we go", fr: "Apprendre en avançant"}
+  plain: {en: "Plain language", fr: "Langage courant"}
+  practitioner: {en: "Practitioner", fr: "Praticien"}
+
+sources:
+  skill_core: "SE skill, SKILL.md (phase entry protocol, stage transition, analysis standards, proactive triggers)"
+  skill_modes: "SE skill, SKILL.md (communication modes)"
+  skill_concept: "SE skill, references/lifecycle/phase-concept.md"
+  skill_requirements: "SE skill, references/lifecycle/phase-requirements.md"
+  skill_architecture: "SE skill, references/lifecycle/phase-architecture.md"
+  skill_detailed: "SE skill, references/lifecycle/phase-detailed-design.md"
+  skill_integration: "SE skill, references/lifecycle/phase-integration.md"
+  skill_vv_phase: "SE skill, references/lifecycle/phase-vv.md"
+  skill_operations: "SE skill, references/lifecycle/phase-operations.md"
+  skill_gates_ecss: "SE skill, references/reviews/review-gates-ecss.md"
+  skill_trades: "SE skill, references/methods/trade-studies.md"
+  skill_reqeng: "SE skill, references/methods/requirements-eng.md"
+  skill_vv: "SE skill, references/methods/verification-validation.md"
+  skill_risk: "SE skill, references/methods/risk-management.md"
+  skill_cost: "SE skill, references/methods/cost-estimation-evm.md"
+  skill_cyber: "SE skill, references/methods/cybersecurity-se.md"
+  skill_team: "SE skill, references/methods/team-dynamics-decisions.md"
+  skill_cm: "SE skill, references/methods/configuration-management.md"
+  skill_specialty: "SE skill, references/methods/specialty-engineering.md"
+  skill_archdesign: "SE skill, references/methods/architecture-design.md"
+  skill_participatory: "SE skill, references/frameworks/participatory-justice.md (pointer only)"
+  skill_two_eyed: "SE skill, references/frameworks/two-eyed-seeing.md (pointer only; not community-authored)"
+  ecss_m10: "ECSS-M-ST-10C Rev.1 (to verify)"
+  ecss_e10: "ECSS-E-ST-10C Rev.1 (to verify)"
+  textbook_04: "Concurrent Spacecraft Design, ch. 4 Mission needs and ConOps"
+  textbook_05: "Concurrent Spacecraft Design, ch. 5 Requirements"
+  textbook_06: "Concurrent Spacecraft Design, ch. 6 Functional decomposition"
+  textbook_08: "Concurrent Spacecraft Design, ch. 8 Architecture, interfaces and budgets"
+  textbook_14: "Concurrent Spacecraft Design, ch. 14 Verification and validation"
+  textbook_16: "Concurrent Spacecraft Design, ch. 16 Cost and reviews"
+  textbook_21: "Concurrent Spacecraft Design, ch. 21 Position reference"
+
+phases:
+  # ════════════════════════════════════════════════════════════════════════ MDR (Phase 0)
+  mdr:
+    phase: {ecss: "0", label: {en: "Phase 0: mission analysis", fr: "Phase 0 : analyse de mission"}}
+    sources: [skill_concept, skill_gates_ecss, ecss_m10, textbook_04]
+    purpose:
+      plain:
+        en: "Agree on the problem, on who it matters to and on what success would look like, before anyone picks a satellite design."
+        fr: "Se mettre d’accord sur le problème, sur les personnes concernées et sur ce que serait une réussite, avant de choisir un satellite."
+      learning:
+        en: "Phase 0 turns a need into a mission concept that people agree on. The output is not a design: it is a checked statement of the problem, the stakeholders and their needs, measures of effectiveness (MOEs: how each objective will be judged) and a reasoned choice between candidate concepts, including ones that do not fly."
+        fr: "La phase 0 transforme un besoin en un concept de mission partagé. Elle ne produit pas une conception : elle produit un énoncé vérifié du problème, les parties prenantes et leurs besoins, des mesures d’efficacité (MOE : la façon de juger chaque objectif) et un choix argumenté entre concepts candidats, y compris des solutions sans satellite."
+      practitioner:
+        en: "Mission analysis to MDR: validated need, stakeholder register with decision authority, objectives with MOEs, concept alternatives assessed, preliminary ConOps, constraints and top risks."
+        fr: "Analyse de mission jusqu’à la MDR : besoin validé, registre des parties prenantes avec l’autorité de décision, objectifs avec MOE, solutions évaluées, ConOps préliminaire, contraintes et risques majeurs."
+    matters:
+      - {en: "Describe the need, not a solution: a concept chosen first and justified afterwards is the classic early failure.", fr: "Décrire le besoin, pas une solution : un concept choisi d’abord et justifié ensuite est l’échec précoce classique."}
+      - {en: "Find out who decides, which is a different question from who is interested.", fr: "Établir qui décide, ce qui n’est pas la même question que qui est intéressé."}
+      - {en: "Where communities hold authority over lands or data, their consent starts now and is renewed at every later phase.", fr: "Là où des communautés ont autorité sur des terres ou des données, leur consentement commence maintenant et se renouvelle à chaque phase suivante."}
+      - {en: "Give each objective a measure the stakeholders recognise, and leave the ones they must define open rather than inventing them.", fr: "Donner à chaque objectif une mesure que les parties prenantes reconnaissent, et laisser ouvertes celles qu’elles doivent définir plutôt que de les inventer."}
+      - {en: "Compare at least one option that does not need a new spacecraft.", fr: "Comparer au moins une option qui ne demande pas de nouveau véhicule spatial."}
+    exit:
+      en: "Everyone who decides agrees on the problem, the objectives and how they will be measured, and on which concept goes into Phase A."
+      fr: "Tous ceux qui décident sont d’accord sur le problème, les objectifs et leur mesure, et sur le concept qui passe en phase A."
+    failures:
+      - {en: "Objectives that are really design choices (an orbit, an instrument) instead of outcomes.", fr: "Des objectifs qui sont en fait des choix de conception (une orbite, un instrument) au lieu de résultats."}
+      - {en: "Stakeholder agreement assumed, never checked with them.", fr: "Un accord des parties prenantes supposé, jamais vérifié avec elles."}
+      - {en: "Constraints (mass, cost, schedule, licences) left as words instead of numbers.", fr: "Des contraintes (masse, coût, calendrier, licences) laissées en mots au lieu de chiffres."}
+    entry:
+      - {id: MDR-IN-01, kind: object, query: problem_statement, severity: warn, owner_seat: team_leader, fix: "mission_need",
+         label: {en: "The need is written as a problem, not as a solution", fr: "Le besoin est écrit comme un problème, pas comme une solution"}}
+      - {id: MDR-IN-02, kind: reading, ref: textbook_04, where: "guide",
+         label: {en: "Read: mission needs and ConOps (textbook ch. 4)", fr: "À lire : besoins de mission et ConOps (manuel, ch. 4)"}}
+    deliverables:
+      - {id: MDR-DL-01, kind: product, ref: mission_statement, maturity: B, owner_seat: team_leader, severity: warn, fix: "mission_need",
+         draft: {kind: editor, ref: mission_need},
+         label: {en: "Mission statement and problem", fr: "Énoncé de mission et problème"}}
+      - {id: MDR-DL-02, kind: object, query: stakeholder_register, owner_seat: team_leader, severity: warn, fix: "mission_need:stakeholders",
+         draft: {kind: editor, ref: stakeholders},
+         label: {en: "Stakeholder register (category, authority, engagement)", fr: "Registre des parties prenantes (catégorie, autorité, engagement)"}}
+      - {id: MDR-DL-03, kind: object, query: objectives_moes, owner_seat: team_leader, severity: warn, fix: "mission_need:moes",
+         draft: {kind: editor, ref: moes},
+         label: {en: "Objectives with measures of effectiveness", fr: "Objectifs avec mesures d’efficacité"}}
+      - {id: MDR-DL-04, kind: object, query: alternatives, owner_seat: systems_engineer, severity: warn, fix: "mission_need:alternatives",
+         label: {en: "Alternatives compared, including one that does not fly", fr: "Solutions comparées, dont une sans vol spatial"}}
+      - {id: MDR-DL-05, kind: trade, levels: [mission, system], gates: [mdr], min: 2, owner_seat: mission_analyst, severity: warn, fix: "decide",
+         draft: {kind: trade, ref: mission},
+         label: {en: "System-level trades: orbit and launch", fr: "Compromis de niveau système : orbite et lancement"}}
+      - {id: MDR-DL-06, kind: diagram, ref: context, owner_seat: systems_engineer, severity: warn, fix: "diagrams:context",
+         draft: {kind: diagram, ref: context},
+         label: {en: "Context diagram (boundary, external interfaces, stakeholders)", fr: "Diagramme de contexte (frontière, interfaces externes, parties prenantes)"}}
+      - {id: MDR-DL-07, kind: diagram, ref: stakeholder_map, owner_seat: team_leader, severity: warn, fix: "diagrams:stakeholder_map",
+         draft: {kind: diagram, ref: stakeholder_map},
+         label: {en: "Stakeholder map", fr: "Carte des parties prenantes"}}
+      - {id: MDR-DL-08, kind: product, ref: conops, maturity: D, owner_seat: mission_analyst, severity: warn, fix: "modes",
+         label: {en: "ConOps outline (phases and modes)", fr: "Esquisse de ConOps (phases et modes)"}}
+      - {id: MDR-DL-09, kind: product, ref: risk_register, maturity: D, owner_seat: team_leader, severity: warn, fix: "vv:risks",
+         label: {en: "Concept-level risk register", fr: "Registre des risques au niveau concept"}}
+      - {id: MDR-DL-10, kind: document, ref: mrd, owner_seat: systems_engineer, severity: warn, fix: "export",
+         check: {query: requirements_at_level, level: mission, min: 1}, draft: {kind: pack, ref: mrd},
+         label: {en: "Mission requirements document (draft)", fr: "Document des exigences de mission (projet)"}}
+      - {id: MDR-DL-11, kind: object, query: need_validation, owner_seat: team_leader, severity: warn, fix: "ait:validation",
+         label: {en: "How each need will be validated with its holders", fr: "Comment chaque besoin sera validé avec ceux qui l’expriment"}}
+    analysis:
+      - {id: MDR-AN-01, kind: assumptions_due, severity: warn,
+         label: {en: "Open assumptions due by this gate", fr: "Hypothèses ouvertes à lever pour ce jalon"}}
+      - {id: MDR-AN-02, kind: object, query: assumptions_register, severity: info,
+         label: {en: "Every assumed number is in the register with what would replace it", fr: "Chaque valeur supposée figure au registre avec ce qui la remplacera"}}
+    coaching:
+      seats:
+        team_leader:
+          source: skill_concept
+          why: {en: "The review asks whether the people who decide agree on the problem. You hold that agreement together.", fr: "La revue demande si ceux qui décident s’accordent sur le problème. Vous êtes garant de cet accord."}
+          focus: {en: "Problem statement, stakeholder register with decision authority, objectives with MOEs; check that MOE-04 and MOE-10 stay marked to co-define.", fr: "Énoncé du problème, registre des parties prenantes avec l’autorité de décision, objectifs avec MOE ; vérifier que MOE-04 et MOE-10 restent marquées à co-définir."}
+        systems_engineer:
+          source: skill_core
+          why: {en: "A picture of the boundary shows what is inside your design and what you only talk to. Drawing it early exposes the interfaces nobody owns.", fr: "Une image de la frontière montre ce qui est dans votre conception et ce avec quoi vous ne faites qu’échanger. La tracer tôt révèle les interfaces sans responsable."}
+          focus: {en: "Context diagram and stakeholder map; alternatives compared with the evaluation table, not just a conclusion.", fr: "Diagramme de contexte et carte des parties prenantes ; solutions comparées avec le tableau d’évaluation, pas seulement une conclusion."}
+        mission_analyst:
+          source: skill_trades
+          why: {en: "The orbit and the way to reach it drive power, data, licensing and disposal. Choosing them by comparison, not by habit, keeps later phases honest.", fr: "L’orbite et la façon de l’atteindre pilotent l’énergie, les données, les licences et la fin de vie. Les choisir par comparaison, et non par habitude, rend les phases suivantes honnêtes."}
+          focus: {en: "Orbit trade and launch trade at system level: two real options each, criteria traced to MOEs, weights fixed before scoring, a ±20 % weight check.", fr: "Compromis d’orbite et de lancement au niveau système : deux vraies options chacun, critères reliés aux MOE, poids fixés avant la notation, vérification à ±20 % des poids."}
+        payload_lead:
+          source: skill_concept
+          why: {en: "The science need is the reason the mission exists. Your job now is to say what must be observed, not which camera to buy.", fr: "Le besoin scientifique est la raison d’être de la mission. Votre rôle est de dire ce qu’il faut observer, pas quelle caméra acheter."}
+          focus: {en: "Objectives O1–O4 phrased as observations with a measure; flag any objective that names an instrument.", fr: "Objectifs O1 à O4 formulés comme des observations avec une mesure ; signaler tout objectif qui nomme un instrument."}
+        power_engineer:
+          source: skill_core
+          why: {en: "Early power numbers are guesses. Labelling them as estimates now stops a guess from becoming a requirement by accident.", fr: "Les premiers chiffres de puissance sont des estimations. Les étiqueter comme telles évite qu’une estimation devienne par accident une exigence."}
+          focus: {en: "A rough orbit-average and peak power envelope for the concept, each number tagged calculated, estimated or assumed.", fr: "Une enveloppe grossière de puissance moyenne orbitale et de crête pour le concept, chaque valeur marquée calculée, estimée ou supposée."}
+        aocs_engineer:
+          source: skill_concept
+          why: {en: "Pointing needs come from what the cameras must see. Asking that question now avoids buying accuracy nobody needs.", fr: "Les besoins de pointage viennent de ce que les caméras doivent voir. Poser la question maintenant évite d’acheter une précision inutile."}
+          focus: {en: "Note the pointing and stability the observation implies, as a range with its basis; no unit selection yet.", fr: "Noter le pointage et la stabilité qu’implique l’observation, sous forme de plage avec sa base ; pas encore de choix d’équipement."}
+        comms_engineer:
+          source: skill_concept
+          why: {en: "How much data must reach the ground each day is a stakeholder need, and spectrum is licensed by a regulator who decides.", fr: "La quantité de données à ramener chaque jour est un besoin des parties prenantes, et le spectre est accordé par un régulateur qui décide."}
+          focus: {en: "Daily delivered volume tied to MOE-08; the regulator listed as a decision authority in the register.", fr: "Volume livré par jour relié à la MOE-08 ; le régulateur inscrit comme autorité de décision dans le registre."}
+        thermal_engineer:
+          source: skill_core
+          why: {en: "Thermal limits of the instruments can rule out a concept. Raising them early is cheaper than discovering them at test.", fr: "Les limites thermiques des instruments peuvent exclure un concept. Les signaler tôt coûte moins que de les découvrir en essai."}
+          focus: {en: "List the units with tight temperature ranges and mark each range as datasheet or assumed.", fr: "Lister les équipements aux plages de température étroites et marquer chaque plage comme fiche technique ou supposée."}
+        structures_engineer:
+          source: skill_concept
+          why: {en: "The form factor and the launch interface are constraints set by others. Writing them down as constraints keeps them from being argued later.", fr: "Le format et l’interface lanceur sont des contraintes fixées par d’autres. Les écrire comme contraintes évite de les rediscuter plus tard."}
+          focus: {en: "Record the mass and volume envelope as constraints with their source (deployer, sponsor).", fr: "Inscrire l’enveloppe de masse et de volume comme contraintes avec leur source (déployeur, commanditaire)."}
+        propulsion_engineer:
+          source: skill_concept
+          why: {en: "Leaving orbit at the end is a requirement owed to other operators and to the regulator. It shapes the orbit choice from day one.", fr: "Quitter l’orbite en fin de mission est une obligation envers les autres opérateurs et le régulateur. Elle oriente le choix d’orbite dès le départ."}
+          focus: {en: "State the disposal need (years to re-entry, probability) as a constraint and feed it to the orbit trade.", fr: "Énoncer le besoin de fin de vie (années avant rentrée, probabilité) comme contrainte et l’apporter au compromis d’orbite."}
+        cost_engineer:
+          source: skill_cost
+          why: {en: "Early estimates built from the plan alone tend to come out low. Comparing with what similar missions really cost is the correction.", fr: "Les estimations construites à partir du seul plan sortent souvent trop basses. Les comparer au coût réel de missions semblables les corrige."}
+          focus: {en: "A rough cost with a reference class of similar CubeSat missions and an explicit reserve; flag it as an early estimate.", fr: "Un coût approximatif avec une classe de référence de missions CubeSat semblables et une réserve explicite ; le signaler comme estimation précoce."}
+        customer:
+          source: skill_concept
+          why: {en: "You represent the people the mission is for. The review needs to hear from you whether the problem is described the way you see it.", fr: "Vous représentez les personnes pour qui la mission existe. La revue doit entendre de vous si le problème est décrit comme vous le voyez."}
+          focus: {en: "Read the need statement and the objectives; say which measures you recognise and which you would define differently.", fr: "Lire l’énoncé du besoin et les objectifs ; dire quelles mesures vous reconnaissez et lesquelles vous définiriez autrement."}
+        observer:
+          source: skill_team
+          why: {en: "An outside eye notices what a team has stopped seeing. Your notes are evidence for the review, not criticism.", fr: "Un regard extérieur remarque ce qu’une équipe ne voit plus. Vos notes servent de preuve à la revue, pas de critique."}
+          focus: {en: "Note where a decision was taken without a comparison, or where a stakeholder was spoken for instead of heard.", fr: "Noter où une décision a été prise sans comparaison, ou là où l’on a parlé à la place d’une partie prenante au lieu de l’écouter."}
+        instructor:
+          source: skill_gates_ecss
+          why: {en: "Phase 0 is where students learn that a review can say no. A clear no-go with actions is a good teaching outcome.", fr: "La phase 0 est l’occasion d’apprendre qu’une revue peut dire non. Un refus clair avec des actions est un bon résultat pédagogique."}
+          focus: {en: "Check the deliverable list, then decide warn or block for this profile; ask each seat for one open question.", fr: "Vérifier la liste des livrables, puis choisir avertir ou bloquer pour ce profil ; demander une question ouverte à chaque poste."}
+
+  # ════════════════════════════════════════════════════════════════════════ PRR (Phase A)
+  prr:
+    phase: {ecss: "A", label: {en: "Phase A: feasibility", fr: "Phase A : faisabilité"}}
+    sources: [skill_concept, skill_requirements, skill_gates_ecss, ecss_m10, textbook_05]
+    purpose:
+      plain:
+        en: "Show that the chosen idea can work, and write down what it must do in a form everyone can check."
+        fr: "Montrer que l’idée retenue peut fonctionner, et écrire ce qu’elle doit faire sous une forme que chacun peut vérifier."
+      learning:
+        en: "Phase A checks that the preferred concept is feasible and turns the needs into the first mission requirements. Each requirement should trace back to a need, so the team can later prove it built the right thing (validation) as well as built it right (verification)."
+        fr: "La phase A vérifie que le concept retenu est faisable et transforme les besoins en premières exigences de mission. Chaque exigence doit remonter à un besoin, pour que l’équipe puisse prouver plus tard qu’elle a construit la bonne chose (validation) et qu’elle l’a bien construite (vérification)."
+      practitioner:
+        en: "Feasibility of the preferred concept, preliminary mission requirements traced to needs, first function and product trees, trade-off records, risk register update, needs validation with stakeholders (V1)."
+        fr: "Faisabilité du concept retenu, exigences de mission préliminaires reliées aux besoins, premiers arbres fonctionnel et produit, rapports de compromis, mise à jour du registre des risques, validation des besoins avec les parties prenantes (V1)."
+    matters:
+      - {en: "A requirement says what is needed, not how to build it; design inside a requirement costs money later.", fr: "Une exigence dit ce qui est nécessaire, pas comment le construire ; de la conception cachée dans une exigence coûte cher plus tard."}
+      - {en: "A requirement with no need behind it should be questioned before it is kept.", fr: "Une exigence sans besoin derrière elle doit être questionnée avant d’être gardée."}
+      - {en: "Walk the needs back to the people who hold them (V1) before the requirements freeze.", fr: "Présenter les besoins aux personnes qui les expriment (V1) avant que les exigences ne se figent."}
+      - {en: "Keep the trade records: the options you rejected explain your choice when a requirement moves.", fr: "Garder les rapports de compromis : les options écartées expliquent votre choix quand une exigence change."}
+    exit:
+      en: "The stakeholders confirm the needs, the mission requirements trace to them, and the concept is shown to be feasible."
+      fr: "Les parties prenantes confirment les besoins, les exigences de mission y remontent et la faisabilité du concept est montrée."
+    failures:
+      - {en: "Requirements copied from a similar mission without asking whether this mission needs them.", fr: "Des exigences copiées d’une mission semblable sans se demander si celle-ci en a besoin."}
+      - {en: "Feasibility claimed from one optimistic analysis.", fr: "Une faisabilité affirmée sur la base d’une seule analyse optimiste."}
+    entry:
+      - {id: PRR-IN-01, kind: gate_passed, ref: mdr, severity: warn,
+         label: {en: "Mission definition review passed", fr: "Revue de définition de la mission passée"}}
+      - {id: PRR-IN-02, kind: reading, ref: textbook_05, where: "guide",
+         label: {en: "Read: requirements (textbook ch. 5)", fr: "À lire : exigences (manuel, ch. 5)"}}
+    deliverables:
+      - {id: PRR-DL-01, kind: product, ref: trade_reports, maturity: B, owner_seat: systems_engineer, severity: warn, fix: "decide",
+         label: {en: "Trade-off records of the mission-level choices", fr: "Rapports de compromis des choix de niveau mission"}}
+      - {id: PRR-DL-02, kind: product, ref: trs, maturity: B, owner_seat: systems_engineer, severity: warn, fix: "requirements",
+         label: {en: "Mission requirements traced to needs", fr: "Exigences de mission reliées aux besoins"}}
+      - {id: PRR-DL-03, kind: diagram, ref: context, owner_seat: systems_engineer, severity: warn, fix: "diagrams:context",
+         label: {en: "Context diagram, updated", fr: "Diagramme de contexte mis à jour"}}
+      - {id: PRR-DL-04, kind: diagram, ref: req_tree, owner_seat: systems_engineer, severity: warn, fix: "diagrams:req_tree",
+         label: {en: "Requirement hierarchy", fr: "Hiérarchie des exigences"}}
+      - {id: PRR-DL-05, kind: diagram, ref: function_tree, owner_seat: systems_engineer, severity: warn, fix: "diagrams:function_tree",
+         label: {en: "First function tree", fr: "Premier arbre fonctionnel"}}
+      - {id: PRR-DL-06, kind: diagram, ref: product_tree, owner_seat: systems_engineer, severity: warn, fix: "diagrams:product_tree",
+         label: {en: "First product tree", fr: "Premier arbre produit"}}
+      - {id: PRR-DL-07, kind: product, ref: mission_analysis, maturity: B, owner_seat: mission_analyst, severity: warn, fix: "analyses",
+         label: {en: "Mission analysis (orbit, lifetime, contacts)", fr: "Analyse de mission (orbite, durée de vie, contacts)"}}
+      - {id: PRR-DL-08, kind: object, query: validation_at_stage, stage: PRR, owner_seat: team_leader, severity: warn, fix: "ait:validation",
+         label: {en: "Needs validation with the stakeholders (V1)", fr: "Validation des besoins avec les parties prenantes (V1)"}}
+      - {id: PRR-DL-09, kind: product, ref: risk_register, maturity: U, owner_seat: team_leader, severity: warn, fix: "vv:risks",
+         label: {en: "Risk register updated", fr: "Registre des risques mis à jour"}}
+      - {id: PRR-DL-10, kind: document, ref: trades, owner_seat: systems_engineer, severity: info, fix: "export",
+         check: {query: trades_decided, min: 1}, draft: {kind: pack, ref: trades},
+         label: {en: "Trade-off report", fr: "Rapport de compromis"}}
+    analysis:
+      - {id: PRR-AN-01, kind: assumptions_due, severity: warn,
+         label: {en: "Open assumptions due by this gate", fr: "Hypothèses ouvertes à lever pour ce jalon"}}
+    coaching:
+      seats:
+        team_leader:
+          source: skill_vv
+          why: {en: "Validation asks whether you are building the right thing. Doing it with the stakeholders now is far cheaper than after launch.", fr: "La validation demande si l’on construit la bonne chose. La faire maintenant avec les parties prenantes coûte bien moins qu’après le lancement."}
+          focus: {en: "Run V1: walk each stakeholder group through the needs, objectives and MOEs in plain language and record their confirmation per need.", fr: "Mener V1 : présenter à chaque groupe les besoins, objectifs et MOE en langage courant et consigner leur confirmation pour chaque besoin."}
+        systems_engineer:
+          source: skill_requirements
+          why: {en: "A requirement that cannot be traced to a need is either missing its reason or should not exist. Tracing now keeps the tree honest.", fr: "Une exigence qu’on ne peut relier à un besoin a perdu sa raison d’être ou ne devrait pas exister. Tracer maintenant garde l’arbre honnête."}
+          focus: {en: "Mission requirements each with a parent objective or need, a verification method and a rationale; first function and product trees.", fr: "Exigences de mission chacune avec un objectif ou un besoin parent, une méthode de vérification et une justification ; premiers arbres fonctionnel et produit."}
+        mission_analyst:
+          source: skill_concept
+          why: {en: "Contact time and lifetime decide whether the data and disposal needs can be met at all; this is the feasibility case.", fr: "Le temps de contact et la durée de vie décident si les besoins en données et en fin de vie peuvent être tenus ; c’est le dossier de faisabilité."}
+          focus: {en: "Orbit, eclipse, contacts per day with the planned stations and decay time, each with its method.", fr: "Orbite, éclipses, contacts par jour avec les stations prévues et durée de décroissance, chacun avec sa méthode."}
+        payload_lead:
+          source: skill_requirements
+          why: {en: "Science requirements are where needs become numbers. Each number should say where it comes from.", fr: "Les exigences scientifiques sont l’endroit où les besoins deviennent des chiffres. Chaque chiffre doit dire d’où il vient."}
+          focus: {en: "Ground sampling, bands, scene counts and calibration needs written as mission requirements with their parent objective.", fr: "Échantillonnage au sol, bandes, nombre de scènes et besoins d’étalonnage écrits comme exigences de mission avec leur objectif parent."}
+        power_engineer:
+          source: skill_core
+          why: {en: "Feasibility depends on whether the energy balance can close with margin. A sanity check against similar spacecraft catches large errors.", fr: "La faisabilité dépend de la possibilité de boucler le bilan d’énergie avec marge. Une comparaison avec des engins semblables repère les grosses erreurs."}
+          focus: {en: "First energy balance per mode with the system margin of the ladder, and a comparison with a reference CubeSat of the same class.", fr: "Premier bilan d’énergie par mode avec la marge système de l’échelle, et une comparaison avec un CubeSat de référence de même classe."}
+        aocs_engineer:
+          source: skill_requirements
+          why: {en: "Pointing needs now become mission requirements. Stating them as performance, not as a sensor, keeps the design open.", fr: "Les besoins de pointage deviennent des exigences de mission. Les exprimer en performance, pas en capteur, garde la conception ouverte."}
+          focus: {en: "Knowledge, control and stability needs expressed as performance with their source in the imaging geometry.", fr: "Besoins de connaissance, de commande et de stabilité exprimés en performance avec leur source dans la géométrie de prise de vue."}
+        comms_engineer:
+          source: skill_requirements
+          why: {en: "The daily data volume and the licence conditions are the first link requirements. Tracing them to MOE-08 and to the regulator makes them defensible.", fr: "Le volume quotidien et les conditions de licence sont les premières exigences de liaison. Les relier à la MOE-08 et au régulateur les rend défendables."}
+          focus: {en: "Delivered volume per day, bands and licensing steps as mission requirements, with the regulator's process dates noted.", fr: "Volume livré par jour, bandes et étapes de licence comme exigences de mission, avec les dates du processus du régulateur."}
+        thermal_engineer:
+          source: skill_requirements
+          why: {en: "Temperature limits become requirements once the orbit is known. A limit with no source is an assumption to log.", fr: "Les limites de température deviennent des exigences dès que l’orbite est connue. Une limite sans source est une hypothèse à consigner."}
+          focus: {en: "Unit limits with their source; any limit without a datasheet goes to the assumption register.", fr: "Limites des équipements avec leur source ; toute limite sans fiche technique va au registre des hypothèses."}
+        structures_engineer:
+          source: skill_requirements
+          why: {en: "Launch and deployer rules are external requirements you inherit. Capturing them as interface requirements early protects integration.", fr: "Les règles du lanceur et du déployeur sont des exigences externes héritées. Les saisir tôt comme exigences d’interface protège l’intégration."}
+          focus: {en: "Deployer envelope, mass and centre-of-mass limits as interface requirements with the launch segment.", fr: "Enveloppe du déployeur, limites de masse et de centre de masse comme exigences d’interface avec le segment lancement."}
+        propulsion_engineer:
+          source: skill_requirements
+          why: {en: "The disposal requirement is owed to others, so it must be verifiable from the start.", fr: "L’exigence de fin de vie est due à d’autres, elle doit donc être vérifiable dès le départ."}
+          focus: {en: "Disposal requirement with years, probability and verification method (analysis now, test of the device later).", fr: "Exigence de fin de vie avec années, probabilité et méthode de vérification (analyse maintenant, essai du dispositif plus tard)."}
+        cost_engineer:
+          source: skill_cost
+          why: {en: "A cost that leaves out labour, tests or reserve looks feasible on paper only.", fr: "Un coût qui oublie la main-d’œuvre, les essais ou la réserve n’est faisable que sur le papier."}
+          focus: {en: "Cost with labour, test campaigns and reserve (launch provided), compared with a reference class.", fr: "Coût avec main-d’œuvre, campagnes d’essais et réserve (lancement fourni), comparé à une classe de référence."}
+        customer:
+          source: skill_vv
+          why: {en: "Before the requirements freeze, you are asked whether these needs, read back to you, are the right ones.", fr: "Avant que les exigences ne se figent, on vous demande si ces besoins, relus avec vous, sont les bons."}
+          focus: {en: "Take part in V1 and confirm or correct each need in the record.", fr: "Participer à V1 et confirmer ou corriger chaque besoin dans le compte rendu."}
+        observer:
+          source: skill_team
+          why: {en: "Silence in a review is not agreement. Notice who did not speak.", fr: "Le silence en revue n’est pas un accord. Remarquer qui n’a pas parlé."}
+          focus: {en: "Note requirements that carry a design choice and needs that were confirmed only by the team.", fr: "Noter les exigences qui portent un choix de conception et les besoins confirmés par l’équipe seule."}
+        instructor:
+          source: skill_gates_ecss
+          why: {en: "PRR checks that requirements are stable enough to go on, not that they are final.", fr: "La PRR vérifie que les exigences sont assez stables pour continuer, pas qu’elles sont définitives."}
+          focus: {en: "Sample five requirements for trace and verifiability; check V1 records exist for each need.", fr: "Prélever cinq exigences pour la traçabilité et la vérifiabilité ; vérifier qu’un compte rendu V1 existe pour chaque besoin."}
+
+  # ════════════════════════════════════════════════════════════════════════ SRR (Phase B, functional baseline)
+  srr:
+    phase: {ecss: "B", label: {en: "Phase B: system requirements", fr: "Phase B : exigences système"}}
+    sources: [skill_requirements, skill_gates_ecss, skill_trades, ecss_m10, textbook_05, textbook_06]
+    purpose:
+      plain:
+        en: "Finish the list of what the whole system must do, agree it with the people who will use it, and choose how data gets to the ground."
+        fr: "Terminer la liste de ce que tout le système doit faire, l’approuver avec ceux qui l’utiliseront, et choisir comment les données arrivent au sol."
+      learning:
+        en: "The system requirements review fixes the functional baseline: a complete, consistent and verifiable set of system requirements, traced up to the mission level and down to functions. The data architecture is decided here by a system-level trade, and the requirements are validated by tracing ConOps scenarios through them (V2)."
+        fr: "La revue des exigences système fige la référence fonctionnelle : un ensemble d’exigences système complet, cohérent et vérifiable, relié au niveau mission et aux fonctions. L’architecture des données y est décidée par un compromis de niveau système, et les exigences sont validées en parcourant les scénarios de ConOps (V2)."
+      practitioner:
+        en: "Functional baseline: SRD complete and verifiable, MRD-to-SRD trace, functions allocated, data-architecture trade decided, SEMP, preliminary verification plan and IRD, requirements validation (V2)."
+        fr: "Référence fonctionnelle : SRD complet et vérifiable, traçabilité MRD vers SRD, fonctions allouées, compromis d’architecture des données décidé, SEMP, plan de vérification et IRD préliminaires, validation des exigences (V2)."
+    matters:
+      - {en: "Every system requirement has a parent, a rationale and a way to verify it.", fr: "Chaque exigence système a un parent, une justification et un moyen de la vérifier."}
+      - {en: "Put interface requirements under control before the subsystems start designing to them.", fr: "Placer les exigences d’interface sous contrôle avant que les sous-systèmes ne s’en servent pour concevoir."}
+      - {en: "Ask of each ConOps scenario: if every requirement were met, would the need be met?", fr: "Demander pour chaque scénario de ConOps : si toutes les exigences étaient tenues, le besoin le serait-il ?"}
+      - {en: "Decide the data architecture with a recorded trade, not by default.", fr: "Décider l’architecture des données par un compromis consigné, pas par défaut."}
+    exit:
+      en: "The system requirements are complete enough to design against, every one can be checked, and the people who will use the system agree they describe it."
+      fr: "Les exigences système sont assez complètes pour concevoir, chacune peut être vérifiée, et les futurs utilisateurs reconnaissent qu’elles décrivent le système."
+    failures:
+      - {en: "Requirements that cannot be checked one by one.", fr: "Des exigences qu’on ne peut pas vérifier une par une."}
+      - {en: "A weak link between mission and system requirements.", fr: "Un lien faible entre exigences de mission et exigences système."}
+      - {en: "Sign-off by the people who will use the system assumed rather than obtained.", fr: "Une approbation des futurs utilisateurs supposée au lieu d’être obtenue."}
+    entry:
+      - {id: SRR-IN-01, kind: gate_passed, ref: prr, severity: warn,
+         label: {en: "Preliminary requirements review passed", fr: "Revue des exigences préliminaires passée"}}
+      - {id: SRR-IN-02, kind: reading, ref: textbook_06, where: "guide",
+         label: {en: "Read: functional decomposition (textbook ch. 6)", fr: "À lire : décomposition fonctionnelle (manuel, ch. 6)"}}
+    deliverables:
+      - {id: SRR-DL-01, kind: trade, levels: [mission, system], gates: [srr], min: 1, owner_seat: systems_engineer, severity: warn, fix: "decide",
+         draft: {kind: trade, ref: system},
+         label: {en: "System-level trade: data architecture", fr: "Compromis de niveau système : architecture des données"}}
+      - {id: SRR-DL-02, kind: object, query: requirements_verifiable, level: system, owner_seat: systems_engineer, severity: warn, fix: "requirements",
+         label: {en: "System requirements, each with a verification method", fr: "Exigences système, chacune avec une méthode de vérification"}}
+      - {id: SRR-DL-03, kind: product, ref: function_tree, maturity: U, owner_seat: systems_engineer, severity: warn, fix: "functions",
+         label: {en: "Function tree", fr: "Arbre fonctionnel"}}
+      - {id: SRR-DL-04, kind: diagram, ref: allocation, owner_seat: systems_engineer, severity: warn, fix: "diagrams:allocation",
+         label: {en: "Function × product allocation", fr: "Allocation fonctions × produits"}}
+      - {id: SRR-DL-05, kind: diagram, ref: n2, owner_seat: systems_engineer, severity: warn, fix: "diagrams:n2",
+         label: {en: "N² interface chart", fr: "Matrice N² des interfaces"}}
+      - {id: SRR-DL-06, kind: diagram, ref: req_tree, owner_seat: systems_engineer, severity: warn, fix: "diagrams:req_tree",
+         label: {en: "Requirement tree and traceability", fr: "Arbre des exigences et traçabilité"}}
+      - {id: SRR-DL-07, kind: object, query: validation_coverage, owner_seat: team_leader, severity: warn, fix: "ait:validation",
+         label: {en: "Each primary objective has a validation activity with a stakeholder", fr: "Chaque objectif principal a une activité de validation avec une partie prenante"}}
+      - {id: SRR-DL-08, kind: document, ref: semp, owner_seat: team_leader, severity: warn, fix: "export",
+         check: {query: section_ready, section: semp}, draft: {kind: pack, ref: semp},
+         label: {en: "Systems engineering management plan (SEMP)", fr: "Plan de management de l’ingénierie système (SEMP)"}}
+      - {id: SRR-DL-09, kind: product, ref: vcd, maturity: D, owner_seat: systems_engineer, severity: warn, fix: "requirements",
+         label: {en: "Verification approach per requirement (VCD draft)", fr: "Approche de vérification par exigence (projet de VCD)"}}
+      - {id: SRR-DL-10, kind: product, ref: conops, maturity: U, owner_seat: mission_analyst, severity: warn, fix: "modes",
+         label: {en: "ConOps with scenarios for requirements validation", fr: "ConOps avec scénarios de validation des exigences"}}
+    analysis:
+      - {id: SRR-AN-01, kind: assumptions_due, severity: warn,
+         label: {en: "Open assumptions due by this gate", fr: "Hypothèses ouvertes à lever pour ce jalon"}}
+    coaching:
+      seats:
+        team_leader:
+          source: skill_vv
+          why: {en: "A requirement set can be complete and still describe the wrong system. V2 checks it against how the mission will really be used.", fr: "Un jeu d’exigences peut être complet et décrire pourtant le mauvais système. V2 le confronte à l’usage réel de la mission."}
+          focus: {en: "Run V2 with operators, scientists and community representatives; raise a change for every scenario the requirements do not cover.", fr: "Mener V2 avec les opérateurs, les scientifiques et des représentants des communautés ; ouvrir une modification pour chaque scénario non couvert."}
+        systems_engineer:
+          source: skill_trades
+          why: {en: "The data architecture decides where products are made and how they reach the ground; it touches payload, computer, radio and ground at once.", fr: "L’architecture des données décide où les produits sont fabriqués et comment ils arrivent au sol ; elle touche à la fois charge utile, calculateur, radio et sol."}
+          focus: {en: "Data-architecture trade with criteria from MOEs, weights fixed first, ±20 % sensitivity and dissent recorded; functions allocated; SEMP drafted.", fr: "Compromis d’architecture des données avec critères issus des MOE, poids fixés d’abord, sensibilité à ±20 % et désaccords consignés ; fonctions allouées ; SEMP rédigé."}
+        mission_analyst:
+          source: skill_requirements
+          why: {en: "ConOps scenarios are the test cases for the requirements. A scenario no requirement covers is a gap in the design.", fr: "Les scénarios de ConOps sont les cas d’essai des exigences. Un scénario qu’aucune exigence ne couvre est une lacune de conception."}
+          focus: {en: "Scenarios (LEOP, nominal, degraded, end of life) each linked to the requirements that serve it.", fr: "Scénarios (LEOP, nominal, dégradé, fin de vie) reliés chacun aux exigences qui le servent."}
+        payload_lead:
+          source: skill_trades
+          why: {en: "How much is processed on board against how much is sent down is a payload question with system consequences.", fr: "La part traitée à bord face à la part envoyée au sol est une question de charge utile aux conséquences système."}
+          focus: {en: "Product sizes, compression ratio and on-board selection as inputs to the data-architecture trade, each with its basis.", fr: "Tailles des produits, taux de compression et sélection à bord comme entrées du compromis d’architecture des données, chacune avec sa base."}
+        power_engineer:
+          source: skill_requirements
+          why: {en: "System requirements on power are budgets other seats design against; they must be verifiable numbers.", fr: "Les exigences système de puissance sont des bilans sur lesquels les autres postes conçoivent ; ce doivent être des chiffres vérifiables."}
+          focus: {en: "Power and energy requirements per mode with the method and the stage at which each is verified.", fr: "Exigences de puissance et d’énergie par mode avec la méthode et l’étape de vérification de chacune."}
+        aocs_engineer:
+          source: skill_requirements
+          why: {en: "Pointing requirements flow into the timing and registration budgets. Checking that the chain closes avoids a surprise at PDR.", fr: "Les exigences de pointage alimentent les bilans de datation et de recalage. Vérifier que la chaîne se ferme évite une surprise en PDR."}
+          focus: {en: "Pointing, stability and knowledge requirements with their allocation in the pointing budget.", fr: "Exigences de pointage, de stabilité et de connaissance avec leur allocation dans le bilan de pointage."}
+        comms_engineer:
+          source: skill_requirements
+          why: {en: "Interface requirements with the ground segment are where two teams meet. Controlling them now prevents integration failures.", fr: "Les exigences d’interface avec le segment sol sont le point de rencontre de deux équipes. Les contrôler maintenant évite les échecs d’intégration."}
+          focus: {en: "Space-to-ground interface requirements (rates, protocols, protection) listed in the IRD and owned by both seats.", fr: "Exigences d’interface espace-sol (débits, protocoles, protection) inscrites à l’IRD et détenues par les deux postes."}
+        thermal_engineer:
+          source: skill_requirements
+          why: {en: "Thermal requirements become verifiable once each limit has a reference point and a case.", fr: "Les exigences thermiques deviennent vérifiables dès que chaque limite a un point de référence et un cas."}
+          focus: {en: "Unit limits at a reference point, hot and cold cases named, the uncertainty margin stated.", fr: "Limites des équipements à un point de référence, cas chaud et froid nommés, marge d’incertitude indiquée."}
+        structures_engineer:
+          source: skill_requirements
+          why: {en: "Structural requirements are verified late and expensively; writing the method now avoids an untestable requirement.", fr: "Les exigences structurales se vérifient tard et cher ; écrire la méthode maintenant évite une exigence impossible à essayer."}
+          focus: {en: "Stiffness, strength and envelope requirements each with method and stage (analysis at PDR, test at QR).", fr: "Exigences de raideur, de résistance et d’enveloppe, chacune avec méthode et étape (analyse en PDR, essai en QR)."}
+        propulsion_engineer:
+          source: skill_requirements
+          why: {en: "The disposal function must be allocated to a device and its triggers must be verifiable.", fr: "La fonction de fin de vie doit être allouée à un dispositif et ses déclencheurs doivent être vérifiables."}
+          focus: {en: "Disposal function allocated; trigger requirements (command, timer, loss of contact) with methods.", fr: "Fonction de fin de vie allouée ; exigences de déclenchement (commande, minuterie, perte de contact) avec leurs méthodes."}
+        cost_engineer:
+          source: skill_cost
+          why: {en: "The SEMP and the schedule are where cost risk becomes visible; reserve without a reason is not a plan.", fr: "Le SEMP et le calendrier rendent visible le risque de coût ; une réserve sans justification n’est pas un plan."}
+          focus: {en: "Cost and schedule baseline with reserve tied to named risks.", fr: "Référence de coût et de calendrier avec une réserve liée à des risques nommés."}
+        customer:
+          source: skill_vv
+          why: {en: "This is the last easy moment to say a requirement misreads your need.", fr: "C’est le dernier moment simple pour dire qu’une exigence comprend mal votre besoin."}
+          focus: {en: "Join V2: follow one scenario that matters to you through the requirements and say whether it would work.", fr: "Participer à V2 : suivre un scénario qui compte pour vous à travers les exigences et dire s’il fonctionnerait."}
+        observer:
+          source: skill_team
+          why: {en: "Reviews meant to close a gate tend to stop looking for problems. Your job is to keep looking.", fr: "Les revues faites pour franchir un jalon cessent souvent de chercher les problèmes. Votre rôle est de continuer à chercher."}
+          focus: {en: "Note which trade options were screened out and whether the reason was recorded.", fr: "Noter quelles options ont été écartées et si la raison a été consignée."}
+        instructor:
+          source: skill_gates_ecss
+          why: {en: "SRR fixes the functional baseline; after it, changes go through change control.", fr: "La SRR fige la référence fonctionnelle ; après elle, les modifications passent par la gestion des modifications."}
+          focus: {en: "Confirm the SEMP exists and V2 was run; decide whether ECP-02 is the worked change example.", fr: "Confirmer que le SEMP existe et que V2 a été mené ; décider si l’ECP-02 sert d’exemple de modification."}
+
+  # ════════════════════════════════════════════════════════════════════════ PDR (Phase B, allocated baseline)
+  pdr:
+    phase: {ecss: "B", label: {en: "Phase B: preliminary design", fr: "Phase B : conception préliminaire"}}
+    sources: [skill_architecture, skill_gates_ecss, skill_trades, skill_specialty, ecss_m10, textbook_08]
+    purpose:
+      plain:
+        en: "Choose the main building blocks, share out mass, power and data between them, and check there is enough left over for surprises."
+        fr: "Choisir les grands blocs, répartir la masse, l’énergie et les données entre eux, et vérifier qu’il reste de quoi faire face aux surprises."
+      learning:
+        en: "The preliminary design review fixes the allocated baseline: the architecture, the budgets shared out to each element with margins, and the interfaces between elements. It is the last cheap point to change course, so an honest review that finds problems is worth more than a smooth one."
+        fr: "La revue de conception préliminaire fige la référence allouée : l’architecture, les bilans répartis entre éléments avec leurs marges et les interfaces entre éléments. C’est le dernier moment peu coûteux pour changer de cap ; une revue honnête qui trouve des problèmes vaut mieux qu’une revue sans accroc."
+      practitioner:
+        en: "Allocated baseline: architecture trades closed, budgets allocated and agreed with margins per ECSS, ICDs at issue A agreed by both owners, preliminary VVP and model philosophy, risk register with handling, TRL status, open assumptions resolved or carried as risks."
+        fr: "Référence allouée : compromis d’architecture clos, bilans alloués et approuvés avec marges ECSS, ICD à l’édition A approuvés par les deux responsables, VVP et philosophie des modèles préliminaires, registre des risques avec traitement, état des TRL, hypothèses levées ou portées comme risques."
+    matters:
+      - {en: "Architecture choices are the hardest to undo; decide them by trade, with the rejected options on record.", fr: "Les choix d’architecture sont les plus difficiles à défaire ; les décider par compromis, options écartées consignées."}
+      - {en: "Security of the command link is an architecture decision, not a later add-on.", fr: "La sécurité de la liaison de commande est une décision d’architecture, pas un ajout ultérieur."}
+      - {en: "Every interface between elements is defined and agreed by both sides before detailed design.", fr: "Chaque interface entre éléments est définie et approuvée des deux côtés avant la conception détaillée."}
+      - {en: "Margins are justified, not just present: each owner agrees the share given to their element.", fr: "Les marges sont justifiées, pas seulement présentes : chaque responsable approuve la part donnée à son élément."}
+    exit:
+      en: "The design is shared out between the elements with agreed budgets and interfaces, the margins cover the known unknowns, and nothing open would force a redesign."
+      fr: "La conception est répartie entre les éléments avec des bilans et des interfaces approuvés, les marges couvrent les inconnues connues, et rien d’ouvert n’imposerait de reprendre la conception."
+    failures:
+      - {en: "Margins that are thin or never explained.", fr: "Des marges minces ou jamais expliquées."}
+      - {en: "Trades still open at the review, or interfaces agreed by one side only.", fr: "Des compromis encore ouverts en revue, ou des interfaces approuvées d’un seul côté."}
+      - {en: "A verification plan nobody believes can be carried out.", fr: "Un plan de vérification dont personne ne croit qu’il peut être exécuté."}
+    entry:
+      - {id: PDR-IN-01, kind: gate_passed, ref: srr, severity: warn,
+         label: {en: "System requirements review passed", fr: "Revue des exigences système passée"}}
+      - {id: PDR-IN-02, kind: reading, ref: textbook_08, where: "guide",
+         label: {en: "Read: architecture, interfaces and budgets (textbook ch. 8)", fr: "À lire : architecture, interfaces et bilans (manuel, ch. 8)"}}
+    deliverables:
+      - {id: PDR-DL-01, kind: trade, levels: [architecture, system], gates: [pdr], min: 1, owner_seat: systems_engineer, severity: warn, fix: "decide",
+         draft: {kind: trade, ref: architecture},
+         label: {en: "Architecture trades decided", fr: "Compromis d’architecture décidés"}}
+      - {id: PDR-DL-02, kind: product, ref: budgets, maturity: B, owner_seat: systems_engineer, severity: warn, fix: "budget",
+         label: {en: "Budgets allocated and agreed by each owner", fr: "Bilans alloués et approuvés par chaque responsable"}}
+      - {id: PDR-DL-03, kind: diagram, ref: context, owner_seat: systems_engineer, severity: warn, fix: "diagrams:context",
+         label: {en: "Context diagram", fr: "Diagramme de contexte"}}
+      - {id: PDR-DL-04, kind: diagram, ref: ffbd, owner_seat: systems_engineer, severity: warn, fix: "diagrams:ffbd",
+         label: {en: "Functional flow block diagram", fr: "Diagramme de flux fonctionnel"}}
+      - {id: PDR-DL-05, kind: diagram, ref: block, owner_seat: systems_engineer, severity: warn, fix: "diagrams:block",
+         label: {en: "Physical block diagram", fr: "Schéma de principe physique"}}
+      - {id: PDR-DL-06, kind: diagram, ref: n2, owner_seat: systems_engineer, severity: warn, fix: "diagrams:n2",
+         label: {en: "N² interface chart", fr: "Matrice N² des interfaces"}}
+      - {id: PDR-DL-07, kind: diagram, ref: trade_matrix, owner_seat: systems_engineer, severity: warn, fix: "diagrams:trade_matrix",
+         label: {en: "Trade matrices with sensitivity", fr: "Matrices de compromis avec sensibilité"}}
+      - {id: PDR-DL-08, kind: product, ref: interfaces, maturity: B, owner_seat: systems_engineer, severity: warn, fix: "icd",
+         label: {en: "Interface control documents at issue A", fr: "Documents de contrôle d’interface à l’édition A"}}
+      - {id: PDR-DL-09, kind: product, ref: aiv_plan, maturity: B, owner_seat: systems_engineer, severity: warn, fix: "ait",
+         label: {en: "Verification plan with model philosophy", fr: "Plan de vérification avec philosophie des modèles"}}
+      - {id: PDR-DL-10, kind: object, query: requirements_verifiable, level: subsystem, owner_seat: systems_engineer, severity: warn, fix: "requirements",
+         label: {en: "Subsystem requirements, each with a verification method", fr: "Exigences sous-système, chacune avec une méthode de vérification"}}
+      - {id: PDR-DL-11, kind: product, ref: risk_register, maturity: U, owner_seat: team_leader, severity: warn, fix: "vv:risks",
+         label: {en: "Risk register with handling and residual risk", fr: "Registre des risques avec traitement et risque résiduel"}}
+      - {id: PDR-DL-12, kind: document, ref: vp, owner_seat: systems_engineer, severity: info, fix: "export",
+         check: {query: ait_models, min: 1}, draft: {kind: pack, ref: vp},
+         label: {en: "Verification plan document", fr: "Document du plan de vérification"}}
+    analysis:
+      - {id: PDR-AN-01, kind: assumptions_due, severity: warn,
+         label: {en: "Open assumptions due by this gate", fr: "Hypothèses ouvertes à lever pour ce jalon"}}
+      - {id: PDR-AN-02, kind: object, query: budget_assumptions, severity: warn,
+         label: {en: "Budget lines resting on an open assumption", fr: "Lignes de bilan reposant sur une hypothèse ouverte"}}
+    coaching:
+      seats:
+        team_leader:
+          source: skill_team
+          why: {en: "A small team reviewing its own work misses what it has normalised. An independent reviewer is cheap insurance.", fr: "Une petite équipe qui revoit son propre travail rate ce qu’elle a fini par trouver normal. Un relecteur indépendant est une assurance peu coûteuse."}
+          focus: {en: "Invite an independent reviewer; make sure every open item that blocks PDR has an owner and a date.", fr: "Inviter un relecteur indépendant ; s’assurer que chaque point ouvert qui bloque la PDR a un responsable et une date."}
+        systems_engineer:
+          source: skill_architecture
+          why: {en: "The allocated baseline is a promise each owner makes to the others. Agreement, not just numbers, is the deliverable.", fr: "La référence allouée est un engagement de chaque responsable envers les autres. L’accord, pas seulement les chiffres, est le livrable."}
+          focus: {en: "Architecture trades closed, every allocation agreed by its seat, ICDs at issue A signed by both owners, the Systems reserve shown.", fr: "Compromis d’architecture clos, chaque allocation approuvée par son poste, ICD à l’édition A signés par les deux responsables, réserve système affichée."}
+        mission_analyst:
+          source: skill_architecture
+          why: {en: "The ground network and the operations concept are part of the architecture; their limits shape the space segment.", fr: "Le réseau sol et le concept d’opérations font partie de l’architecture ; leurs limites façonnent le segment spatial."}
+          focus: {en: "Contact plan capacity against the data budget, debris assessment results, operations concept per mode.", fr: "Capacité du plan de contacts face au bilan de données, résultats de l’évaluation des débris, concept d’opérations par mode."}
+        payload_lead:
+          source: skill_trades
+          why: {en: "The imaging architecture trade sets mass, power and data for the whole spacecraft; keep its evidence and its dissent.", fr: "Le compromis d’architecture d’imagerie fixe masse, énergie et données de tout le véhicule ; en garder les preuves et les désaccords."}
+          focus: {en: "Payload architecture trade decided or carried as an open item with a fallback; payload allocations agreed.", fr: "Compromis d’architecture de la charge utile décidé ou porté comme point ouvert avec une solution de repli ; allocations de la charge utile approuvées."}
+        power_engineer:
+          source: skill_specialty
+          why: {en: "Power margins protect the mission against degradation and estimates that grow; they must be stated per mode.", fr: "Les marges de puissance protègent la mission contre la dégradation et les estimations qui grossissent ; elles se donnent par mode."}
+          focus: {en: "Orbit-average and peak power with maturity and system margins, end-of-life generation, battery depth of discharge per mode.", fr: "Puissance moyenne orbitale et de crête avec marges de maturité et système, production en fin de vie, profondeur de décharge par mode."}
+        aocs_engineer:
+          source: skill_specialty
+          why: {en: "Pointing budgets mix measured and assumed contributors; the assumed ones are where the risk sits.", fr: "Les bilans de pointage mêlent contributions mesurées et supposées ; le risque se trouve dans les supposées."}
+          focus: {en: "Pointing and stability budgets closed with margin; each assumed contributor in the register with its evidence plan.", fr: "Bilans de pointage et de stabilité bouclés avec marge ; chaque contribution supposée au registre avec son plan de preuve."}
+        comms_engineer:
+          source: skill_cyber
+          why: {en: "Whoever can command the spacecraft controls the mission. Protecting the command link is decided now, in the architecture.", fr: "Qui peut commander le véhicule contrôle la mission. La protection de la liaison de commande se décide maintenant, dans l’architecture."}
+          focus: {en: "Link budgets per station with margin, the command authentication and encryption design, the radio ICD at issue A.", fr: "Bilans de liaison par station avec marge, conception de l’authentification et du chiffrement des commandes, ICD radio à l’édition A."}
+        thermal_engineer:
+          source: skill_specialty
+          why: {en: "At PDR a thermal model with hot and cold cases replaces the single-node estimate; limits need the uncertainty margin.", fr: "En PDR, un modèle thermique avec cas chaud et froid remplace l’estimation à un nœud ; les limites portent la marge d’incertitude."}
+          focus: {en: "Nodal model, hot and cold cases from the orbit, predicted temperatures against design ranges, heater sizing.", fr: "Modèle nodal, cas chaud et froid issus de l’orbite, températures prévues face aux plages de conception, dimensionnement des réchauffeurs."}
+        structures_engineer:
+          source: skill_architecture
+          why: {en: "Mass allocation is agreed now; after PDR a growth is a change, not an update.", fr: "L’allocation de masse s’approuve maintenant ; après la PDR, une augmentation est une modification, pas une mise à jour."}
+          focus: {en: "Mass allocations agreed per element, stack layout, centre of mass within the deployer limits.", fr: "Allocations de masse approuvées par élément, empilement, centre de masse dans les limites du déployeur."}
+        propulsion_engineer:
+          source: skill_architecture
+          why: {en: "The disposal device is an element with its own interfaces and failure modes; the debris assessment depends on it.", fr: "Le dispositif de fin de vie est un élément avec ses interfaces et ses modes de défaillance ; l’évaluation des débris en dépend."}
+          focus: {en: "Drag sail allocation, its deployment triggers in the ICD, decay results with and without the sail.", fr: "Allocation de la voile de traînée, déclencheurs de déploiement dans l’ICD, résultats de décroissance avec et sans voile."}
+        cost_engineer:
+          source: skill_cost
+          why: {en: "Cost risk is priced, not hoped away; the reserve should be traceable to the risks it covers.", fr: "Le risque de coût se chiffre au lieu d’être espéré nul ; la réserve doit se relier aux risques qu’elle couvre."}
+          focus: {en: "Cost at completion with reserve per risk, the test campaigns priced, the schedule critical path.", fr: "Coût à terminaison avec réserve par risque, campagnes d’essais chiffrées, chemin critique du calendrier."}
+        customer:
+          source: skill_architecture
+          why: {en: "Design choices made here fix what the mission can deliver; ask what each open item means for you.", fr: "Les choix faits ici fixent ce que la mission pourra livrer ; demander ce que chaque point ouvert signifie pour vous."}
+          focus: {en: "Review the open items that touch your needs and the fallback each one has.", fr: "Revoir les points ouverts qui touchent vos besoins et la solution de repli de chacun."}
+        observer:
+          source: skill_team
+          why: {en: "A review board that never says no is a scheduling exercise. Record where the evidence is thin.", fr: "Un comité de revue qui ne dit jamais non n’est qu’un exercice de calendrier. Consigner où les preuves sont minces."}
+          focus: {en: "Note margins quoted without basis and interfaces signed by one side.", fr: "Noter les marges citées sans base et les interfaces signées d’un seul côté."}
+        instructor:
+          source: skill_gates_ecss
+          why: {en: "PDR is the allocated baseline; a no-go with clear RIDs teaches more than a pass by default.", fr: "La PDR est la référence allouée ; un refus avec des RID clairs enseigne plus qu’un succès par défaut."}
+          focus: {en: "Check open assumptions due at PDR, the trades still open and ECP-01; set the review outcome with RIDs.", fr: "Vérifier les hypothèses à lever en PDR, les compromis encore ouverts et l’ECP-01 ; fixer l’issue de la revue avec des RID."}
+
+  # ════════════════════════════════════════════════════════════════════════ CDR … FRR: skeleton (wave 4 fills them)
+  cdr:
+    phase: {ecss: "C", label: {en: "Phase C: detailed design", fr: "Phase C : conception détaillée"}}
+    skeleton: true
+    sources: [skill_detailed, skill_gates_ecss, ecss_m10]
+    purpose:
+      learning:
+        en: "The critical design review checks that the detailed design is complete and ready to build, and fixes the product baseline."
+        fr: "La revue critique de conception vérifie que la conception détaillée est complète et prête à fabriquer, et fige la référence produit."
+    exit: {en: "The design is frozen, every interface is baselined and the test plans are complete.", fr: "La conception est figée, chaque interface est en référence et les plans d’essais sont complets."}
+    entry:
+      - {id: CDR-IN-01, kind: gate_passed, ref: pdr, severity: warn, label: {en: "Preliminary design review passed", fr: "Revue de conception préliminaire passée"}}
+    deliverables:
+      - {id: CDR-DL-01, kind: product, ref: interfaces, maturity: B, owner_seat: systems_engineer, severity: warn, fix: "icd",
+         label: {en: "Interface control documents baselined", fr: "Documents de contrôle d’interface en référence"}}
+      - {id: CDR-DL-02, kind: diagram, ref: product_tree, owner_seat: systems_engineer, severity: warn, fix: "diagrams:product_tree",
+         label: {en: "Component breakdown", fr: "Décomposition en composants"}}
+      - {id: CDR-DL-03, kind: product, ref: tmtc_db, maturity: B, owner_seat: comms_engineer, severity: warn, fix: "tmtc",
+         label: {en: "TM/TC database", fr: "Base de données TM/TC"}}
+    analysis:
+      - {id: CDR-AN-01, kind: assumptions_due, severity: warn, label: {en: "Open assumptions due by this gate", fr: "Hypothèses ouvertes à lever pour ce jalon"}}
+  qr:
+    phase: {ecss: "D", label: {en: "Phase D: qualification", fr: "Phase D : qualification"}}
+    skeleton: true
+    sources: [skill_vv_phase, skill_gates_ecss]
+    purpose:
+      learning:
+        en: "The qualification review checks that the design has been shown, by test and analysis, to meet its requirements with margin."
+        fr: "La revue de qualification vérifie que la conception a montré, par essai et analyse, qu’elle tient ses exigences avec marge."
+    exit: {en: "Qualification evidence closes every requirement due at QR.", fr: "Les preuves de qualification soldent chaque exigence due en QR."}
+    entry:
+      - {id: QR-IN-01, kind: gate_passed, ref: cdr, severity: warn, label: {en: "Critical design review passed", fr: "Revue critique de conception passée"}}
+    deliverables:
+      - {id: QR-DL-01, kind: object, query: ait_models, min: 1, owner_seat: systems_engineer, severity: warn, fix: "ait",
+         label: {en: "Models built per the model philosophy", fr: "Modèles réalisés selon la philosophie des modèles"}}
+    analysis: []
+  ar:
+    phase: {ecss: "D", label: {en: "Phase D: acceptance", fr: "Phase D : recette"}}
+    skeleton: true
+    sources: [skill_vv_phase, skill_gates_ecss]
+    purpose:
+      learning:
+        en: "The acceptance review checks that the flight unit was built and tested as designed and is free of workmanship faults."
+        fr: "La revue de recette vérifie que le modèle de vol a été réalisé et essayé comme prévu et qu’il est exempt de défauts de fabrication."
+    exit: {en: "The flight unit is accepted and its data package is complete.", fr: "Le modèle de vol est accepté et son dossier de données est complet."}
+    entry:
+      - {id: AR-IN-01, kind: gate_passed, ref: qr, severity: warn, label: {en: "Qualification review passed", fr: "Revue de qualification passée"}}
+    deliverables:
+      - {id: AR-DL-01, kind: object, query: validation_at_stage, stage: AR, owner_seat: team_leader, severity: warn, fix: "ait:validation",
+         label: {en: "Product validation with simulated data (V3)", fr: "Validation des produits avec données simulées (V3)"}}
+    analysis: []
+  frr:
+    phase: {ecss: "D", label: {en: "Phase D/E: flight readiness", fr: "Phase D/E : aptitude au vol"}}
+    skeleton: true
+    sources: [skill_operations, skill_gates_ecss]
+    purpose:
+      learning:
+        en: "The flight readiness review checks that the spacecraft, the ground segment and the operators are ready to launch and operate. ORR and CRR are validation stages around it, not gates."
+        fr: "La revue d’aptitude au vol vérifie que le véhicule, le segment sol et les opérateurs sont prêts pour le lancement et l’exploitation. ORR et CRR sont des étapes de validation autour d’elle, pas des jalons."
+    exit: {en: "Operators are certified, contingencies rehearsed and in-orbit validation planned.", fr: "Les opérateurs sont certifiés, les contingences répétées et la validation en orbite planifiée."}
+    entry:
+      - {id: FRR-IN-01, kind: gate_passed, ref: ar, severity: warn, label: {en: "Acceptance review passed", fr: "Revue de recette passée"}}
+    deliverables:
+      - {id: FRR-DL-01, kind: object, query: validation_in_orbit, owner_seat: team_leader, severity: warn, fix: "ait:validation",
+         label: {en: "In-orbit validation activities planned", fr: "Activités de validation en orbite planifiées"}}
+    analysis: []
+
+# ──────────────────────────────────────────────────────────────────────── pointer cards
+# Shown when their gates are active (and to the listed seats first). `approval: pi_pending` marks a
+# draft the PI must approve before the walkthrough recording (PI default: community data-governance
+# wording to be shown to the PI).
+pointers:
+  - id: PTR-COST-01
+    gates: [mdr, prr, srr, pdr]
+    seats: [cost_engineer, team_leader]
+    source: skill_cost
+    title: {en: "Early cost estimates run low", fr: "Les premières estimations de coût sont basses"}
+    body:
+      en: "Estimates built from the project's own plan tend to come out lower than what similar projects actually cost, and approval pressure pushes them lower still. Check the figure against a reference class of comparable missions, price the risks, and label the result as an early estimate."
+      fr: "Les estimations construites à partir du plan du projet sortent souvent plus basses que le coût réel de projets semblables, et la pression de l’approbation les fait encore baisser. Comparer le chiffre à une classe de référence de missions comparables, chiffrer les risques et présenter le résultat comme une estimation précoce."
+  - id: PTR-REVIEW-01
+    gates: [prr, srr, pdr]
+    seats: [team_leader, instructor, observer]
+    source: skill_team
+    title: {en: "Ask for an independent review", fr: "Demander une revue indépendante"}
+    body:
+      en: "A small team carrying a whole mission reviews its own assumptions and stops seeing them. Ask someone outside the team to review the gate package and to look for the problem, not for the pass. Record their findings as RIDs like any other."
+      fr: "Une petite équipe qui porte toute une mission relit ses propres hypothèses et finit par ne plus les voir. Demander à une personne extérieure de relire le dossier du jalon en cherchant le problème, pas l’approbation. Consigner ses remarques comme des RID ordinaires."
+  - id: PTR-CYBER-01
+    gates: [srr, pdr]
+    seats: [comms_engineer, systems_engineer]
+    source: skill_cyber
+    title: {en: "Protect the command link (TT&C)", fr: "Protéger la liaison de commande (TT&C)"}
+    body:
+      en: "Anyone who can send accepted telecommands controls the spacecraft. Decide in the architecture how commands are authenticated, how keys are managed and what the spacecraft does with a command it cannot authenticate; these choices cannot be added after integration without rework."
+      fr: "Quiconque peut envoyer des télécommandes acceptées contrôle le véhicule. Décider dans l’architecture comment les commandes sont authentifiées, comment les clés sont gérées et ce que fait le véhicule d’une commande qu’il ne peut authentifier ; ces choix ne s’ajoutent pas après l’intégration sans reprise."
+  - id: PTR-DATAGOV-01
+    gates: [mdr, prr, srr, pdr]
+    seats: [team_leader, payload_lead, customer, instructor]
+    source: skill_core
+    approval: pi_pending
+    title: {en: "Data about northern lands and communities", fr: "Données sur les terres et les communautés du Nord"}
+    body:
+      en: "This mission observes lands where communities, including First Nations, Inuit and Métis communities, may hold authority over what is observed and how data about their lands is shared. Treat their governance bodies as decision authorities, not as people to consult, and design consent as something renewed at each phase. Principles of Indigenous data governance such as OCAP® and the CARE principles are a starting point to read about. Whether specific legal obligations apply to a given site is uncertain and is a question for legal counsel. This tool can record decisions and agreements; it cannot replace the relationship with the communities, which is built by people over time."
+      fr: "Cette mission observe des terres où des communautés, dont des communautés des Premières Nations, inuites et métisses, peuvent avoir autorité sur ce qui est observé et sur la diffusion des données relatives à leurs terres. Traiter leurs instances de gouvernance comme des autorités de décision, et non comme des interlocuteurs à consulter, et concevoir le consentement comme une démarche renouvelée à chaque phase. Des principes de gouvernance autochtone des données comme les principes PCAP® et CARE sont un point de départ de lecture. L’existence d’obligations juridiques précises pour un site donné est incertaine et relève d’un conseil juridique. Cet outil peut consigner des décisions et des ententes ; il ne remplace pas la relation avec les communautés, que des personnes construisent dans la durée."
+    legal_confidence: uncertain

@@ -900,8 +900,14 @@ async def _s2_margin_hold(api: _Api, seed: NfiSeed) -> None:
 # ``seed.recording`` to leave out what the walkthrough films on camera.
 
 async def _s0_stakeholders(api: _Api, seed: NfiSeed) -> None:
-    """TODO(S, 3.S3): ``stakeholders.yaml``: 12 stakeholders in 5 categories with authority and
-    engagement, the 12 needs (SN-*), the 15 MOEs (MOE-04 and MOE-10 placeholders)."""
+    """3.S3 (S): ``stakeholders.yaml`` in one call: 12 stakeholders in 5 categories with authority
+    and engagement, the 12 needs (SN-*), the 15 MOEs (MOE-04 and MOE-10 placeholders to co-define
+    with the communities), the governance notes; each objective linked to the holders of its needs."""
+    sh = load("stakeholders")
+    objectives = {o["id"]: list(o.get("needs") or []) for o in load("requirements")["objectives"]}
+    seed.report["stakeholders"] = await api.post(f"/api/studies/{seed.study_id}/stakeholders/import", {
+        "stakeholders": sh["stakeholders"], "needs": sh["needs"], "moes": sh["moes"],
+        "governance_notes": sh.get("governance_notes") or {}, "objective_needs": objectives, "replace": True})
 
 
 async def _s1_functions(api: _Api, seed: NfiSeed) -> None:
@@ -945,13 +951,23 @@ async def _s3_changes(api: _Api, seed: NfiSeed) -> None:
 
 
 async def _s3_validation(api: _Api, seed: NfiSeed) -> None:
-    """TODO(S, 3.S5): the v2 validation plan V1–V7 (``vv_plan.yaml``) and the 12 need-validation
-    rows (``stakeholders.yaml``)."""
+    """3.S5 (S): the v2 validation plan V1–V7 (``vv_plan.yaml``) and the 12 need-validation rows
+    (``stakeholders.yaml``) in one call; the MOEs tie each activity to its objectives."""
+    sh = load("stakeholders")
+    seed.report["validation"] = await api.post(f"/api/studies/{seed.study_id}/validation/import", {
+        "validation_plan": load("vv_plan")["validation_plan"], "need_validation": sh["need_validation"],
+        "moes": sh["moes"], "replace": True})
 
 
 async def _s3_assumptions(api: _Api, seed: NfiSeed) -> None:
-    """TODO(S, 3.S6): the ``[ASSUMPTION]`` tags of ``budgets.yaml`` and the requirement rows whose
-    ``open_item_note`` names an assumption."""
+    """3.S6 (S): the ``[ASSUMPTION]`` tags of ``budgets.yaml`` and the requirement rows whose
+    ``open_item_note`` names an assumption, in one call (the register merges a budget tag with the
+    requirement row it names)."""
+    keep = ("id", "rationale", "open_item_note", "budget_ref", "allocation", "subsystem")
+    rows = [{k: r.get(k) for k in keep} for r in load("requirements")["requirements"] if r.get("open_item_note")]
+    res = await api.post(f"/api/studies/{seed.study_id}/assumptions/import",
+                         {"budgets": load("budgets"), "requirements": rows, "replace": True})
+    seed.report["assumptions"] = len(res["items"])
 
 
 async def _s3_negotiations(api: _Api, seed: NfiSeed) -> None:

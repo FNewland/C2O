@@ -1,11 +1,10 @@
-"""Section ``se_phase``: the systems-engineering phase of the study (the /phase contract of services/se_protocol.py): entry, deliverables, analysis, coaching. Owner: S (3.S1).
+"""Section ``se_phase``: the systems-engineering phase of the study (the /phase contract of
+services/se_protocol.py): entry, deliverables, analysis, coaching. Owner: S (3.S1).
 
-STEP 0 STUB (wave 3): returns ``status: not_implemented`` with the owner and the empty shape
-``"gate": None, "phase": None, "entry": [], "deliverables": [], "analysis": [], "coaching": {}``. TODO(S, 3.S1): read the model and return the real shape (keep these keys).
+For a gate export (``gate="pdr"``) it is that gate's block; otherwise the gate the study prepares
+for. The pack index (X, 3.X2) lists ``deliverables`` with state and owner.
 """
 from __future__ import annotations
-
-from ._util import stub
 
 
 def empty() -> dict:
@@ -13,4 +12,7 @@ def empty() -> dict:
 
 
 async def collect(ctx) -> dict:
-    return stub("S", "3.S1", **empty())
+    from ...se_protocol import phase
+    if ctx.study is None:
+        return empty()
+    return await phase(ctx.study_id, ctx.study, lang=ctx.lang, gate=ctx.gate)
