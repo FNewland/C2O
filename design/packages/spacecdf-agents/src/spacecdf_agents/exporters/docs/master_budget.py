@@ -209,6 +209,11 @@ def _sheet_power(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
         opens.append(["Power", "No energy balance per mode (Modes tab)", "H"])
 
 
+#: case key of this sheet -> the export section's name for it
+_EXPORT_CASE_KEYS = (("capacity_mb", "capacity"), ("rt_hk_mb", "rt_hk"), ("stored_hk_mb", "stored_hk"),
+                     ("science_mb", "science"), ("other_mb", "other"), ("demand_mb", "demand"))
+
+
 def data_budget_cases(db: dict) -> tuple[dict, list[dict]]:
     """(closure, cases) of the ``data_budget`` section: ``daily.closure`` / ``daily.cases`` (W3.02,
     each case {id, label, capacity_mb, rt_hk_mb, stored_hk_mb, science_mb, other_mb, demand_mb,
@@ -219,7 +224,10 @@ def data_budget_cases(db: dict) -> tuple[dict, list[dict]]:
         cases = db.get("cases")
     if isinstance(cases, dict):
         cases = [{"id": k, **(v or {})} for k, v in cases.items()]
-    cases = [c for c in cases or [] if isinstance(c, dict)]
+    # the export section (H, wave 2) names the case figures as NUMBERS.yaml does (capacity,
+    # demand, ...; ``sections/data_budget.CASE_KEYS``): map them to this sheet's keys
+    cases = [{**{k: c.get(ek) for k, ek in _EXPORT_CASE_KEYS if k not in c and ek in c}, **c}
+             for c in cases or [] if isinstance(c, dict)]
     closure = daily.get("closure") if isinstance(daily, dict) and isinstance(daily.get("closure"), dict) else {}
     return closure, cases
 
@@ -263,6 +271,9 @@ def _sheet_data(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
         r += 1
     cap = daily.get("capacity") if isinstance(daily.get("capacity"), dict) else {}
     sci = daily.get("science") if isinstance(daily.get("science"), dict) else {}
+    if not _stub(db):     # wave 2 section shape: capacity / science at the top level
+        cap = cap or (db.get("capacity") if isinstance(db.get("capacity"), dict) else {})
+        sci = sci or (db.get("science") if isinstance(db.get("science"), dict) else {})
     scal = [(f"capacity.{k}", v) for k, v in cap.items() if isinstance(v, (int, float)) and not isinstance(v, bool)]
     scal += [(f"science.{k}", v) for k, v in sci.items() if isinstance(v, (int, float)) and not isinstance(v, bool)]
     scal += [(k, v) for k, v in daily.items() if isinstance(v, (int, float, str)) and not isinstance(v, bool)]

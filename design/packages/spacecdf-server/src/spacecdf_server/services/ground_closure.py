@@ -185,6 +185,16 @@ def _link_band(freq_ghz: float) -> str:
     return _band_key(name.split()[0]) if name else "X"
 
 
+def _path_source(ctx: AnalysisContext, path: str) -> str:
+    """Provenance label of a flat ``link.*`` path: the path itself when the model states it, or
+    where ``analysis_context._derive_link`` took it from (the TT&C element or a link case)."""
+    link = getattr(ctx, "link", None) or {}
+    if path in (link.get("derived_paths") or ()):
+        src = str(link.get("source") or "")
+        return "ttc element" if src.startswith("ttc element") else (src or path)
+    return path
+
+
 def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
     sc_class = str(getattr(getattr(ctx.study, "requirements", None), "spacecraft_class", "small") or "small").lower()
     d_freq, d_pow, _d_diam, d_gain = CLASS_LINK_DEFAULTS.get(sc_class, CLASS_LINK_DEFAULTS["small"])
@@ -192,7 +202,7 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
 
     freq = _pick(ctx, "link.frequency_ghz", "link.downlink_frequency_ghz")
     if freq is not None:
-        src["frequency"] = "link.frequency_ghz"
+        src["frequency"] = _path_source(ctx, "link.frequency_ghz")
     if freq is None:
         freq = _perf_num(ctx, "ttc", "frequency_ghz", "downlink_frequency_ghz")
         if freq is not None:
@@ -212,14 +222,14 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
         src["eirp"] = "link.eirp_dbw" if "link.eirp_dbw" in ctx.flat or "link.eirp_dbw" in ctx.latest_design else "ttc element"
     else:
         tx_power = _pick(ctx, "link.tx_power_w")
-        src["tx_power"] = "link.tx_power_w"
+        src["tx_power"] = _path_source(ctx, "link.tx_power_w")
         if tx_power is None:
             tx_power = _perf_num(ctx, "ttc", "tx_power_w", "power_tx_w", "rf_power_w")
             src["tx_power"] = "ttc element"
         if tx_power is None:
             tx_power, src["tx_power"] = d_pow, f"class default ({sc_class})"
         gain = _pick(ctx, "link.tx_antenna_gain_dbi", "link.antenna_gain_dbi")
-        src["tx_gain"] = "link.tx_antenna_gain_dbi"
+        src["tx_gain"] = _path_source(ctx, "link.tx_antenna_gain_dbi")
         if gain is None:
             gain = _perf_num(ctx, "ttc", "gain_dbi", "antenna_gain_dbi", "tx_antenna_gain_dbi")
             src["tx_gain"] = "ttc element"
@@ -228,7 +238,7 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
         line = 1.0
 
     rate = _pick(ctx, "link.downlink_rate_bps")
-    src["downlink_rate"] = "link.downlink_rate_bps"
+    src["downlink_rate"] = _path_source(ctx, "link.downlink_rate_bps")
     if rate is None:
         mbps = _pick(ctx, "link.downlink_rate_mbps", "link.data_rate_mbps")
         rate = mbps * 1e6 if mbps is not None else None

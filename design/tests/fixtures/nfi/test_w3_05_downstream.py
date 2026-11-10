@@ -144,7 +144,11 @@ async def test_w305_downstream_agree_on_s4(client):
     rows = list(wb["Data"].iter_rows(values_only=True))
     head = rows[0]
     c2 = next(r for r in rows if r[0] == "C2")
-    assert c2[head.index("margin_pct")] == cases["C2"]["margin_pct"] and c2[head.index("capacity")] == cases["C2"]["capacity"]
+    # the sheet's headers are the readable ones of master_budget.DB_COLUMNS (agent X's layout)
+    from spacecdf_agents.exporters.docs.master_budget import DB_COLUMNS
+    hdr = dict(DB_COLUMNS)
+    assert c2[head.index(hdr["margin_pct"])] == pytest.approx(cases["C2"]["margin_pct"])
+    assert c2[head.index(hdr["capacity_mb"])] == pytest.approx(cases["C2"]["capacity"])
     assert sx["data_budget"]["gate_check"]["ok"] is True and sx["data_budget"]["gate_check"]["required_percent"] == 10
 
 

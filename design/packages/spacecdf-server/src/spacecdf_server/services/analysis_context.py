@@ -467,9 +467,13 @@ async def _derive_link(ctx: "AnalysisContext", eff_elements: list[dict]) -> dict
                 out = {"band": b, "frequency_ghz": f, "source": src}
                 paths["link.frequency_ghz"] = f
                 paths.update(extra)
+    derived = []
     for path, v in paths.items():
         if path not in ctx.flat:
             ctx.flat[path] = v
+            derived.append(path)
+    if derived:
+        out["derived_paths"] = derived   # provenance: these flat paths came from ``source``
     return out
 
 
