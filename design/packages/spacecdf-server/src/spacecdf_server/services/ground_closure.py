@@ -53,7 +53,8 @@ from spacecdf_common.physics.link_budget import compute_link_budget, frequency_b
 
 from .analysis_context import AnalysisContext
 from .analysis_results import ANALYSIS_INPUT_KEYS, Conflict, ParamWrite
-from .ground_scheduler import ContactWindow, GroundStation, OrbitParams, ScheduleResult, predict_contacts, schedule_downlinks
+from .ground_scheduler import (ContactWindow, GroundStation, OrbitParams, ScheduleResult, contact_statistics, parse_epoch,
+                               parse_ltan_h, predict_contacts_j2, schedule_downlinks, sso_inclination_deg)
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,8 @@ DEFAULT_FALLBACK_STATIONS = 2
 BUFFER_TRACE_STEP_S = 60.0
 DEFICIT_TOL_GB = 0.01
 DEFICIT_TOL_FRAC = 0.05             # greedy scheduler + contact placement jitter between days
+STATS_DAYS = 30.0                   # contact statistics: J2 propagation over 30 days ...
+STATS_STEP_S = 10.0                 # ... at a 10 s step (W4.05 contact table: 5 s)
 
 #: Link agent class defaults: (frequency_ghz, tx_power_w, gs_diameter_m, tx_gain_dbi).
 CLASS_LINK_DEFAULTS: dict[str, tuple[float, float, float, float]] = {
@@ -195,7 +198,7 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
         if freq is not None:
             src["frequency"] = "ttc element"
     if freq is None:
-        freq = _band_to_ghz(_perf_str(ctx, "ttc", "frequency_band", "band"))
+        freq = _band_to_ghz(_perf_str(ctx, "ttc", "frequency_band", "band", "rf_band"))
         if freq is not None:
             src["frequency"] = "ttc element band"
     if freq is None:
@@ -345,9 +348,139 @@ def _pick_stations(ctx: AnalysisContext, warnings: list[str]) -> list[dict]:
     return [dict(s) for s in defaults]
 
 
-def _contact_minutes(orbit: OrbitParams, gs: GroundStation, rate_mbps: float) -> tuple[float, int]:
-    cs = predict_contacts(orbit, [gs], 24.0, rate_mbps)
-    return sum(c.duration_s for c in cs) / 60.0, len(cs)
+def _contact_minutes(orbit: OrbitParams, gs: GroundStation, rate_mbps: float, ltan_h: float | None = None,
+                     epoch: tuple[int, int, int] | None = None) -> tuple[float, int]:
+    """(minutes per day, passes per day rounded) of one station: J2 propagation over 30 days."""
+    st = contact_statistics(orbit, [gs], days=STATS_DAYS, step_s=STATS_STEP_S, ltan_h=ltan_h, epoch=epoch)
+    row = st.stations.get(gs.id) or {}
+    return float(row.get("min_per_day") or 0.0), int(round(float(row.get("passes_per_day") or 0.0)))
+
+
+def orbit_inputs(ctx: AnalysisContext) -> tuple[OrbitParams, float | None, tuple[int, int, int]]:
+    """Orbit of the contact prediction, the LTAN (h) and the epoch (the launch date target)."""
+    altitude = float(ctx.orbit.get("altitude_km") or 500.0)
+    inc = _num(ctx.orbit.get("inclination_deg"))
+    if inc is None:
+        inc = sso_inclination_deg(altitude) if str(ctx.orbit.get("orbit_type") or "").lower() == "sso" else 97.4
+    orbit = OrbitParams(altitude_km=altitude, inclination_deg=float(inc), period_s=float(ctx.orbit.get("period_s") or 0.0))
+    req = getattr(ctx.study, "requirements", None)
+    return orbit, parse_ltan_h(ctx.orbit.get("ltan")), parse_epoch(getattr(req, "launch_date_target", None))
+
+
+def _is_control(s: dict) -> bool:
+    role = str(s.get("role") or s.get("description") or "").lower()
+    return bool(s.get("control") or s.get("mission_control")) or "mission control" in role or "control centre" in role
+
+
+def _rate_from_transmitter(ctx: AnalysisContext, link: _LinkInputs, warnings: list[str]) -> None:
+    """No link rate in the parameters: use the selected transmitter's rate (KB part / element)."""
+    from . import mode_model as mm
+    from .rule_inputs import kb_component, perf
+    best = None
+    for e in mm.proposal_units(ctx.elements):
+        if mm.unit_class(e) != "transmitter":
+            continue
+        r = perf(e).get("data_rate_bps") or ((kb_component(e) or {}).get("performance") or {}).get("data_rate_bps")
+        if isinstance(r, (int, float)) and r > 0 and (best is None or r > best[0]):
+            best = (float(r), e.get("name"))
+    if best:
+        link.downlink_bps = best[0]
+        link.source["downlink_rate"] = f"transmitter part ({best[1]})"
+        warnings[:] = [w for w in warnings if "no downlink rate" not in w]
+
+
+def network(ctx: AnalysisContext, warnings: list[str]) -> dict[str, Any]:
+    """The ground network the downlink uses: link inputs, orbit, per-station rows (contact
+    statistics and link margin) and the stations included (band carried, margin ≥ 0 dB)."""
+    link = _link_inputs(ctx, warnings)
+    if link.source.get("downlink_rate") == "fallback":
+        _rate_from_transmitter(ctx, link, warnings)
+    orbit, ltan_h, epoch = orbit_inputs(ctx)
+    rows: list[dict] = []
+    included: list[GroundStation] = []
+    control: set[str] = set()
+    picked = _pick_stations(ctx, warnings)
+    gss = [station_to_ground_station(s, link.band) for s in picked]
+    stats = contact_statistics(orbit, gss, days=STATS_DAYS, step_s=STATS_STEP_S, ltan_h=ltan_h, epoch=epoch) if gss else None
+    for s, gs in zip(picked, gss):
+        bands = [_band_key(str(b)) for b in (s.get("bands") or [gs.band])]
+        st = (stats.stations.get(gs.id) if stats else None) or {}
+        row = {"station_id": gs.id, "name": gs.name, "element_id": s.get("element_id"), "lat": gs.latitude_deg,
+               "lon": gs.longitude_deg, "bands": bands, "antenna_m": gs.antenna_diameter_m,
+               "min_elevation_deg": gs.min_elevation_deg, "contact_min_per_day": round(float(st.get("min_per_day") or 0.0), 2),
+               "contacts_per_day": int(round(float(st.get("passes_per_day") or 0.0))),
+               "passes_per_day": st.get("passes_per_day"), "mean_pass_min": st.get("mean_pass_min"),
+               "max_pass_min": st.get("max_pass_min"), "passes_above_30deg_per_day": st.get("passes_above_30deg_per_day"),
+               "margin_db": None, "g_t_db_k": _num(s.get("g_over_t_db_k")), "status": "ok", "reason": None,
+               "control": _is_control(s)}
+        if link.band not in bands:
+            row["status"], row["reason"] = "excluded", f"no {link.band}-band ({'/'.join(bands)})"
+        else:
+            margin, g_t = _station_margin_db(link, gs, _num(s.get("g_over_t_db_k")), orbit.altitude_km,
+                                             row["contact_min_per_day"] * 60.0)
+            row["margin_db"], row["g_t_db_k"] = round(margin, 2), round(g_t, 2)
+            if margin < 0:
+                row["status"], row["reason"] = "excluded", f"link margin {margin:.1f} dB < 0 dB at {link.downlink_bps / 1e6:.2f} Mbps"
+            elif margin < MARGIN_WARN_DB:
+                row["status"] = "low_margin"
+            elif not row["contacts_per_day"] and not row["contact_min_per_day"]:
+                row["status"], row["reason"] = "no_contact", "orbit never visible"
+        if row["status"] != "excluded":
+            included.append(gs)
+            if row["control"]:
+                control.add(gs.id)
+        rows.append(row)
+    if included and not control:
+        control.add(included[0].id)          # the first station hosts mission control unless one says so
+        for r in rows:
+            r["control"] = r["station_id"] == included[0].id
+    return {"link": link, "orbit": orbit, "ltan_h": ltan_h, "epoch": epoch, "rows": rows, "included": included,
+            "control": control, "stats": stats}
+
+
+def contact_table(ctx: AnalysisContext, warnings: list[str] | None = None, *, days: float = 30.0,
+                  step_s: float = 5.0) -> dict[str, Any]:
+    """W4.05: per station and union — minutes/day, passes/day, mean and maximum pass, longest
+    gap, data per day at the information rate; plus the leave-one-out unions."""
+    W = warnings if warnings is not None else []
+    net = network(ctx, W)
+    from .data_budget import framing as _framing
+    info = net["link"].downlink_bps
+    inc = net["included"]
+    stats = contact_statistics(net["orbit"], inc, days=days, step_s=step_s, ltan_h=net["ltan_h"], epoch=net["epoch"]) if inc else None
+    fr = _framing([], info)
+    acq, avail, eff = fr["acquisition_s"], fr["availability"], fr["frame_efficiency"]
+
+    def mb(min_day: float, windows_day: float) -> float:
+        return max(0.0, (min_day - windows_day * acq / 60.0) * avail) * 60 * info * eff / 8e6
+
+    stations = []
+    for r in net["rows"]:
+        st = (stats.stations.get(r["station_id"]) if stats else None) or {}
+        stations.append({"id": r["station_id"], "name": r["name"], "lat": r["lat"], "lon": r["lon"], "status": r["status"],
+                         "reason": r["reason"], "control": r["control"], "margin_db": r["margin_db"],
+                         "min_per_day": st.get("min_per_day", 0.0), "passes_per_day": st.get("passes_per_day", 0.0),
+                         "mean_pass_min": st.get("mean_pass_min", 0.0), "max_pass_min": st.get("max_pass_min", 0.0),
+                         "passes_above_30deg_per_day": st.get("passes_above_30deg_per_day", 0.0),
+                         "data_mb_per_day_alone": round(mb(st.get("min_per_day", 0.0), st.get("passes_per_day", 0.0)), 2)})
+    union = dict(stats.union) if stats else {}
+    if stats:
+        union["data_mb_per_day"] = round(mb(union["min_per_day"], union["windows_per_day"]), 2)
+    loo = []
+    if stats and len(inc) > 1:
+        for gs in inc:
+            s2 = contact_statistics(net["orbit"], [g for g in inc if g.id != gs.id], days=days, step_s=step_s,
+                                    ltan_h=net["ltan_h"], epoch=net["epoch"])
+            loo.append({"without": gs.name, "union_min_per_day": s2.union["min_per_day"],
+                        "windows_per_day": s2.union["windows_per_day"], "longest_gap_h": s2.union["longest_gap_h"],
+                        "data_mb_per_day": round(mb(s2.union["min_per_day"], s2.union["windows_per_day"]), 2)})
+    return {"stations": stations, "union": union, "leave_one_out": loo, "days": days, "step_s": step_s,
+            "method": {"propagator": "J2 secular, circular", "ltan_h": net["ltan_h"] if net["ltan_h"] is not None else 22.5,
+                       "epoch": list(net["epoch"]), "altitude_km": net["orbit"].altitude_km,
+                       "inclination_deg": round(net["orbit"].inclination_deg, 3),
+                       "information_rate_bps": round(info * eff, 1), "frame_efficiency": eff,
+                       "acquisition_s": acq, "availability": avail},
+            "link": {"band": net["link"].band, "rate_bps": info}, "warnings": W}
 
 
 def _buffer_trace(contacts: list[ContactWindow], fill_mbps: float, buffer_mbit: float, rate_mbps: float,
@@ -400,6 +533,32 @@ def _shift(c: ContactWindow, by_s: float = DAY_S) -> ContactWindow:
                          max_elevation_deg=c.max_elevation_deg, data_volume_mbit=c.data_volume_mbit)
 
 
+async def _hk_terms(ctx: AnalysisContext, net: dict) -> dict | None:
+    """Stored HK (MB/day), acquisition per window and the share of the channel left for stored
+    data, from the data budget — None when the study has no housekeeping SIDs."""
+    try:
+        from ..db import cdr_repo
+        from . import data_budget as db_
+        rows = await cdr_repo.list_rows(ctx.study_id)
+        if not any(r.get("kind") == "hk" and not r.get("deleted_at") and r.get("status") != "rejected" for r in rows):
+            return None
+        modes = [db_._mode_dict(m) for m in db_.study_modes(ctx.elements)]
+        res = db_.compute(rows, modes, contacts=net["stats"] if net["included"] else None, link_rate_bps=net["link"].downlink_bps,
+                          period_s=ctx.orbit.get("period_s") or 5700.0,
+                          stations=[{"id": g.id, "name": g.name, "lon": g.longitude_deg, "control": g.id in net["control"]}
+                                    for g in net["included"]])
+    except Exception:  # noqa: BLE001 — the analysis still runs on the payload alone
+        logger.debug("data budget unavailable for %s", ctx.study_id, exc_info=True)
+        return None
+    fr = res["framing"]
+    cap = res["capacity"]["capacity_mb_per_day"]
+    rt = next((c["rt_hk_mb"] for c in res["cases"] if c["id"] == "C1"), 0.0)
+    factor = fr["frame_efficiency"] * fr["availability"] * (max(0.0, cap - rt) / cap if cap else 1.0)
+    return {"stored_mb_per_day": res["stored"]["mb_per_day"], "acquisition_s": fr["acquisition_s"],
+            "payload_rate_factor": factor, "rt_hk_mb_per_day": rt, "capacity_mb_per_day": cap,
+            "frame_efficiency": fr["frame_efficiency"], "availability": fr["availability"]}
+
+
 # ── public entry ────────────────────────────────────────────────────────
 
 async def run_ground_segment(ctx: AnalysisContext) -> AnalysisOutput:
@@ -410,47 +569,37 @@ async def run_ground_segment(ctx: AnalysisContext) -> AnalysisOutput:
     root = ctx.mission_root
     root_id = root["id"] if root else None
 
-    link = _link_inputs(ctx, W)
+    net = network(ctx, W)
+    link = net["link"]
     gen_gb, gen_src = _data_generated_gb_per_day(ctx, W)
     storage_gb = _storage_gb(ctx)
     rate_mbps = link.downlink_bps / 1e6
+    orbit, ltan_h, epoch = net["orbit"], net["ltan_h"], net["epoch"]
+    altitude = orbit.altitude_km
+    rows = net["rows"]
+    stations = rows
+    included = net["included"]
+
+    # Housekeeping and framing from the data budget when the study designs its TM (W3.03): stored HK
+    # is generated data too; passes lose the acquisition time and the availability; the channel
+    # carries frame data at the frame efficiency, minus the real-time HK of each pass.
+    hk = await _hk_terms(ctx, net)
+    acq_s = 0.0
+    if hk:
+        gen_gb += hk["stored_mb_per_day"] / 1000.0
+        gen_src += f" + stored HK {hk['stored_mb_per_day']:.2f} MB/day (TM/TC SIDs)"
+        rate_mbps = rate_mbps * hk["payload_rate_factor"]
+        acq_s = hk["acquisition_s"]
     fill_mbps = gen_gb * 8000.0 / DAY_S
     buffer_mbit = storage_gb * 8000.0 if storage_gb else 1e12
-    altitude = float(ctx.orbit.get("altitude_km") or 500.0)
-    orbit = OrbitParams(altitude_km=altitude, inclination_deg=float(ctx.orbit.get("inclination_deg") or 97.4),
-                        period_s=float(ctx.orbit.get("period_s") or 0.0))
-
-    stations = _pick_stations(ctx, W)
-    rows: list[dict] = []
-    included: list[GroundStation] = []
-    for s in stations:
-        gs = station_to_ground_station(s, link.band)
-        minutes, n = _contact_minutes(orbit, gs, rate_mbps)
-        bands = [_band_key(str(b)) for b in (s.get("bands") or [gs.band])]
-        row = {
-            "station_id": gs.id, "name": gs.name, "element_id": s.get("element_id"), "lat": gs.latitude_deg,
-            "lon": gs.longitude_deg, "bands": bands, "antenna_m": gs.antenna_diameter_m,
-            "min_elevation_deg": gs.min_elevation_deg, "contacts_per_day": n, "contact_min_per_day": round(minutes, 2),
-            "margin_db": None, "g_t_db_k": _num(s.get("g_over_t_db_k")), "status": "ok", "reason": None,
-        }
-        if link.band not in bands:
-            row["status"], row["reason"] = "excluded", f"no {link.band}-band ({'/'.join(bands)})"
-        else:
-            margin, g_t = _station_margin_db(link, gs, _num(s.get("g_over_t_db_k")), altitude, minutes * 60.0)
-            row["margin_db"], row["g_t_db_k"] = round(margin, 2), round(g_t, 2)
-            if margin < 0:
-                row["status"], row["reason"] = "excluded", f"link margin {margin:.1f} dB < 0 dB at {rate_mbps:.2f} Mbps"
-            elif margin < MARGIN_WARN_DB:
-                row["status"] = "low_margin"
-            elif n == 0:
-                row["status"], row["reason"] = "no_contact", "orbit never visible"
-        if row["status"] != "excluded":
-            included.append(gs)
-        rows.append(row)
 
     # Two days are scheduled and the *second* is reported, so the day starts
     # with the previous day's tail on board (steady state, not a cold start).
-    all_contacts = _deconflict(predict_contacts(orbit, included, 48.0, rate_mbps)) if included else []
+    all_contacts = _deconflict(predict_contacts_j2(orbit, included, 48.0, rate_mbps, ltan_h=ltan_h, epoch=epoch)) if included else []
+    if acq_s:
+        all_contacts = [ContactWindow(station_id=c.station_id, start_s=round(c.start_s + acq_s, 1), end_s=c.end_s,
+                                      max_elevation_deg=c.max_elevation_deg, data_volume_mbit=c.data_volume_mbit)
+                        for c in all_contacts if c.end_s - c.start_s > acq_s + 1.0]
     sched48 = schedule_downlinks(all_contacts, rate_mbps, buffer_mbit, fill_mbps, 48.0)
     t48, gb48, backlog_end = _buffer_trace(sched48.contacts, fill_mbps, buffer_mbit, rate_mbps, 2 * DAY_S)
     contacts = [_shift(c) for c in all_contacts if c.start_s >= DAY_S]
@@ -521,7 +670,7 @@ async def run_ground_segment(ctx: AnalysisContext) -> AnalysisOutput:
             bands = [_band_key(str(b)) for b in (s.get("bands") or [])]
             if bands and link.band not in bands:
                 continue
-            m, _n = _contact_minutes(orbit, station_to_ground_station(s, link.band), rate_mbps)
+            m, _n = _contact_minutes(orbit, station_to_ground_station(s, link.band), rate_mbps, ltan_h, epoch)
             if best is None or m > best[0]:
                 best = (m, str(s.get("name") or s.get("id")))
         if best and best[0] > 0:
@@ -553,7 +702,8 @@ async def run_ground_segment(ctx: AnalysisContext) -> AnalysisOutput:
     }
     out.summary = {
         **{p.name: p.value for p in P},
-        "stations": rows, "backlog_growth_gb_per_day": round(growth, 4), "max_gap_hours": sched.max_gap_hours, "coverage_pct": sched.coverage_pct,
+        "stations": rows, "union": dict(net["stats"].union) if net["stats"] else {},
+        "housekeeping": hk, "backlog_growth_gb_per_day": round(growth, 4), "max_gap_hours": sched.max_gap_hours, "coverage_pct": sched.coverage_pct,
         "downlink_rate_mbps": round(rate_mbps, 4), "band": link.band, "frequency_ghz": link.frequency_ghz,
         "data_source": gen_src, "closure_pct": round(100.0 * returned_gb / gen_gb, 1) if gen_gb > 0 else 100.0,
         "conflict_codes": [c.code for c in C], "warnings": W,

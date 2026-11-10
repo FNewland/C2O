@@ -134,6 +134,7 @@ async def test_collect_on_an_empty_study_returns_every_section(client, study_obj
         assert d[stub].get("status") != "not_implemented" or d[stub]["owner"] in {"H", "L", "A"}
     assert d["ait"]["status"] == d["schedule"]["status"] == "proposed"     # W8a / W11a defaults
     assert d["licensing"]["owner"] == "L" and d["licensing"]["filings"]     # W5.06: no longer a stub
+    assert "closure" in d["data_budget"]["daily"] and isinstance(d["contacts"]["stations"], list)   # W3.02 / W4.05 (H)
     r = await client.get(f"/api/studies/{study_obj.id}/export-context")
     assert r.status_code == 200 and set(SECTIONS) <= set(r.json())
 

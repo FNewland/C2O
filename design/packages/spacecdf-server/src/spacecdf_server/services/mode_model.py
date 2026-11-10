@@ -144,11 +144,26 @@ def propose_member(e: dict, mode_kind: str, c: dict | None = None) -> dict[str, 
     avg = _num(e.get("power_avg_w")) or 0.0
     peak = _num(e.get("power_peak_w"))
     pm = _power_modes(e)
-    if pm and _num(pm.get(state)) is not None:
-        p = float(pm[state])
+    pm_key = ((st_cfg.get("power_mode_keys") or {}).get(cls) or {}).get(state, state)
+    cls_w = _num(((st_cfg.get("class_power_w") or {}).get(cls) or {}).get(state))
+    kb_w = _num((kb_component(e) or {}).get("power_w")) or _num((e.get("kb_spec") or {}).get("power_w"))
+    if pm and _num(pm.get(pm_key)) is not None:
+        p = float(pm[pm_key])
         src, c2o = "KB power_modes_w", False
-        why_en = f"{state} power of the part from the knowledge base"
-        why_fr = f"puissance « {state} » de la pièce, base de connaissances"
+        why_en = f"{pm_key} power of the part from the knowledge base"
+        why_fr = f"puissance « {pm_key} » de la pièce, base de connaissances"
+    elif pm_key != state and state != "off" and (kb_w or avg or peak):
+        # e.g. a de-orbit device: the KB power is the release actuation, drawn only in the disposal mode
+        p = float(kb_w or peak or avg)
+        src, c2o = "KB power_w", False
+        why_en = f"{pm_key} power of the part (KB power_w), drawn only in {mode_kind} mode"
+        why_fr = f"puissance « {pm_key} » de la pièce (KB power_w), appelée seulement en mode {mode_kind}"
+    elif cls_w is not None and not avg and not peak:
+        p = cls_w
+        r = ref(st_cfg, c)
+        src, c2o = r["standard_ref"], True
+        why_en = f"{cls} units draw about {cls_w:g} W when {state} (C2O default)"
+        why_fr = f"les unités {cls} consomment environ {cls_w:g} W à l’état « {state} » (défaut C2O)"
     else:
         if state == "off":
             p = 0.0
@@ -265,6 +280,20 @@ def mode_power(mode: Any, by_id: dict[str, dict]) -> dict[str, float]:
 
 # ───────────────────────────────────────────────────────────── energy balance (MO-02)
 
+MIX_KINDS = ("nominal", "imaging", "downlink")
+
+
+def in_operational_mix(m: Any) -> bool:
+    """A mode of the operational orbit: kind nominal / imaging / downlink with a share of orbit,
+    or a custom mode of the nominal phase with 0 < share < 1."""
+    f = _num(_attr(m, "orbit_fraction")) or 0.0
+    kind = _attr(m, "kind") or "custom"
+    if kind in MIX_KINDS:
+        return f > 0
+    phase = _attr(m, "phase")
+    return kind == "custom" and (phase or "nominal") == "nominal" and 0 < f < 1
+
+
 def _gen_factor(pointing: str | None, c: dict) -> float:
     vals = c["energy"]["array_pointing_factor"]["values"]
     return float(vals.get(str(pointing or "nadir"), vals.get("nadir", 0.65)))
@@ -325,9 +354,10 @@ def energy_balance(modes: list[Any], elements: list[dict], *, period_s: float, e
             "status": status,
         })
 
-    # Operational orbit: the nominal-phase mix by orbit_fraction (sunlit-only modes in the sun).
-    mix = [(m, float(_attr(m, "orbit_fraction") or 0.0)) for m in modes
-           if (_attr(m, "kind") or "") in ("nominal", "imaging", "downlink") and (_attr(m, "orbit_fraction") or 0) > 0]
+    # Operational orbit: the nominal-phase mix by orbit_fraction (sunlit-only modes in the sun):
+    # nominal, imaging and downlink modes, plus custom modes of the nominal phase with a share of
+    # an orbit (W1.03: e.g. an exploratory night acquisition mode).
+    mix = [(m, float(_attr(m, "orbit_fraction") or 0.0)) for m in modes if in_operational_mix(m)]
 
     def mix_balance(fracs: list[tuple[Any, float]]) -> dict[str, float] | None:
         tot = sum(f for _, f in fracs)
@@ -418,45 +448,72 @@ def storage_capacity_gb(elements: list[dict]) -> tuple[float | None, list[str]]:
 
 
 def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stations: list[dict],
-               storage_gb: float | None, storage_margin_percent: float, c: dict | None = None) -> dict[str, Any]:
+               storage_gb: float | None, storage_margin_percent: float, budget: dict | None = None,
+               c: dict | None = None) -> dict[str, Any]:
     """Generation per mode → per day (operational orbit) → storage need vs capacity → downlink capacity.
 
-    ``stations``: ``[{name, contact_min_per_day, margin_db, status}]`` from the contact plan
-    (ground_closure). Downlink capacity uses the link-budget rate × protocol efficiency over the
-    contact minutes of the stations whose link closes (margin ≥ 0 dB).
+    ``budget`` (``services/data_budget.compute``): housekeeping from the study's SIDs — stored HK
+    per mode is generated all orbit, real-time HK uses the channel during contact — and the
+    capacity from the **union** of the station contacts (overlapping passes count once) after
+    framing, acquisition and availability. Without a budget, or without SIDs, the
+    ``housekeeping_bps`` constant is used and flagged ``not designed``.
+    ``stations``: ``[{name, contact_min_per_day, margin_db, status}]`` (per-station rows).
     """
     c = c or cfg()
     d = c["data"]
-    hk = float(d["housekeeping_bps"]["value"])
+    hk_const = float(d["housekeeping_bps"]["value"])
     eff = float(d["protocol_efficiency"]["value"])
     buffer_days = float(d["buffer_days"]["value"])
     min_margin = float(d["min_link_margin_db"]["value"])
     T = float(period_s or 5700.0)
     orbits_per_day = 86400.0 / T
+    designed = bool(budget) and budget.get("status") in ("designed", "legacy")
+    hk_by_mode = {r["id"]: r for r in (budget or {}).get("modes") or []}
     per_mode = []
     for m in modes:
-        rate = float(_attr(m, "data_rate_bps") or 0.0) + hk
+        pay = float(_attr(m, "data_rate_bps") or 0.0)
+        hkr = hk_by_mode.get(_attr(m, "id"))
+        hk_st = float(hkr["store_bps"]) if (designed and hkr) else hk_const
+        rate = pay + hk_st
         per_mode.append({"mode_id": _attr(m, "id"), "name": _attr(m, "name"), "kind": _attr(m, "kind") or "",
+                         "payload_bps": round(pay, 1), "hk_stored_bps": round(hk_st, 1),
+                         "hk_realtime_bps": round(float(hkr["rt_bps"]), 1) if (designed and hkr) else None,
                          "generation_bps": round(rate, 1), "orbit_fraction": _attr(m, "orbit_fraction"),
-                         "per_orbit_mb": round(rate * T / 8e6, 3)})
-    mix = [p for p in per_mode if p["kind"] in ("nominal", "imaging", "downlink") and (p["orbit_fraction"] or 0) > 0]
+                         "in_mix": in_operational_mix(m), "per_orbit_mb": round(rate * T / 8e6, 3)})
+    mix = [p for m, p in zip(modes, per_mode) if in_operational_mix(m)]
     tot = sum(p["orbit_fraction"] for p in mix) or 0.0
     if mix:
         bits_orbit = sum(p["generation_bps"] * p["orbit_fraction"] / tot * T for p in mix)
     else:
-        bits_orbit = (max((p["generation_bps"] for p in per_mode), default=hk)) * T
+        bits_orbit = (max((p["generation_bps"] for p in per_mode), default=hk_const)) * T
     gen_gb_day = bits_orbit * orbits_per_day / 8e9
+    if designed:
+        gen_gb_day += float(budget["stored"]["events_mb_per_day"]) / 1000.0
 
     st_rows = []
-    contact_min = 0.0
+    contact_sum = 0.0
     for s in stations:
         ok = s.get("margin_db") is None or float(s["margin_db"]) >= 0
+        ok = ok and s.get("status") != "excluded"
         low = s.get("margin_db") is not None and float(s["margin_db"]) < min_margin
         mins = float(s.get("contact_min_per_day") or 0.0) if ok else 0.0
-        contact_min += mins
+        contact_sum += mins
         st_rows.append({**s, "used": ok, "low_margin": bool(low and ok),
                         "capacity_gb_per_day": round(mins * 60 * link_rate_bps * eff / 8e9, 4)})
-    cap_gb_day = contact_min * 60 * link_rate_bps * eff / 8e9
+    rt_mb = 0.0
+    if budget and budget.get("capacity"):
+        cap = budget["capacity"]
+        contact_min = float(cap["union_min_per_day"])
+        rt_mb = float(next((x["rt_hk_mb"] for x in budget.get("cases") or [] if x["id"] == "C1"), 0.0)) if designed else 0.0
+        cap_gb_day = max(0.0, float(cap["capacity_mb_per_day"]) - rt_mb) / 1000.0
+        fr = budget.get("framing") or {}
+        eff_used = float(fr.get("frame_efficiency") or eff)
+        cap_src = "union"
+    else:
+        contact_min = contact_sum
+        cap_gb_day = contact_min * 60 * link_rate_bps * eff / 8e9
+        eff_used = eff
+        cap_src = "sum_of_stations"
     need_gb = gen_gb_day * buffer_days
     need_with_margin = need_gb * (1 + storage_margin_percent / 100)
     growth = gen_gb_day - cap_gb_day
@@ -474,18 +531,31 @@ def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stati
                    "status": ("not_evaluated" if not storage_gb else "pass" if storage_gb >= need_with_margin else "fail"),
                    "value": storage_gb, "limit": round(need_with_margin, 4), "unit": "GB",
                    **ref(d["buffer_days"], c)})
+    if not designed:
+        checks.append({"id": "DC-HK-NOT-DESIGNED", "label": {
+            "en": f"Housekeeping is the {hk_const / 1000:g} kbit/s default: no SID is designed in TM/TC",
+            "fr": f"La télémesure de servitude est la valeur par défaut de {hk_const / 1000:g} kbit/s : aucun SID n’est conçu dans TM/TC"},
+            "status": "warn", "value": hk_const, "limit": None, "unit": "bit/s", **ref(d["housekeeping_bps"], c)})
     if any(r["low_margin"] for r in st_rows):
         checks.append({"id": "DC-LINK-MARGIN", "label": {"en": f"Link margin ≥ {min_margin:g} dB at every station used",
                                                          "fr": f"Marge de liaison ≥ {min_margin:g} dB à chaque station utilisée"},
                        "status": "warn", "value": min(r["margin_db"] for r in st_rows if r["low_margin"]),
                        "limit": min_margin, "unit": "dB", **ref(d["min_link_margin_db"], c)})
+    hk = {"designed": designed, "source": "TM/TC SIDs" if designed else "mode_rules.data.housekeeping_bps (not designed)",
+          "stored_mb_per_day": round(float(budget["stored"]["mb_per_day"]), 3) if designed else round(hk_const * 86400 / 8e6, 3),
+          "realtime_mb_per_day": round(rt_mb, 3),
+          "realtime_contact_bps": (budget or {}).get("realtime", {}).get("full_designed_bps") if designed else None,
+          "realtime_allocation_bps": (budget or {}).get("realtime", {}).get("full_allocation_bps") if designed else None}
     return {
-        "per_mode": per_mode, "housekeeping_bps": hk, "orbits_per_day": round(orbits_per_day, 3),
+        "per_mode": per_mode, "housekeeping_bps": hk_const if not designed else round(float(budget["stored"]["mix_bps"]), 1),
+        "housekeeping": hk, "orbits_per_day": round(orbits_per_day, 3),
         "generated_gb_per_day": round(gen_gb_day, 4),
         "storage": {"capacity_gb": storage_gb, "buffer_days": buffer_days, "need_gb": round(need_gb, 4),
                     "need_with_margin_gb": round(need_with_margin, 4), "margin_percent": storage_margin_percent},
-        "downlink": {"rate_bps": link_rate_bps, "protocol_efficiency": eff, "contact_min_per_day": round(contact_min, 2),
-                     "capacity_gb_per_day": round(cap_gb_day, 4), "stations": st_rows},
+        "downlink": {"rate_bps": link_rate_bps, "protocol_efficiency": round(eff_used, 4), "contact_min_per_day": round(contact_min, 2),
+                     "sum_of_stations_min_per_day": round(contact_sum, 2), "contact_basis": cap_src,
+                     "capacity_gb_per_day": round(cap_gb_day, 4), "stations": st_rows,
+                     "usable_min_per_day": (budget or {}).get("capacity", {}).get("usable_min_per_day")},
         "backlog_growth_gb_per_day": round(growth, 4), "days_to_full": days_to_full,
         "checks": checks,
     }
@@ -527,7 +597,8 @@ def validate_machine(modes: list[dict], transitions: list[dict], monitors: Itera
             out.append({"id": "MM-UNREACHABLE", "severity": "major", "mode_id": m["id"],
                         "text": {"en": f"{names[m['id']]} cannot be reached from the initial mode.",
                                  "fr": f"{names[m['id']]} est inatteignable depuis le mode initial."}})
-        if len(modes) > 1 and not any(t["from_mode_id"] == m["id"] for t in live_t):
+        if len(modes) > 1 and (m.get("performance") or {}).get("mode_kind") != "disposal" \
+                and not any(t["from_mode_id"] == m["id"] for t in live_t):
             out.append({"id": "MM-NO-EXIT", "severity": "minor", "mode_id": m["id"],
                         "text": {"en": f"{names[m['id']]} has no exit transition.",
                                  "fr": f"{names[m['id']]} n’a aucune transition de sortie."}})

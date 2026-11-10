@@ -217,7 +217,10 @@ def plan(study_id: str, facts: dict) -> dict[str, dict[str, dict]]:
     # ── settings, APIDs, services
     db = c["database"]
     put("settings", {"spacecraft_id": db["spacecraft_id"], "pus_version": db["pus_version"], "time_code": db["time_code"],
-                     "application_apid": db["application_apid"], "bootloader_apid": db["bootloader_apid"]},
+                     "application_apid": db["application_apid"], "bootloader_apid": db["bootloader_apid"],
+                     # W3.01: the HK packet overhead the budgets use (full PUS-C: counter + destination id, CUC 4+2, uint16 SID)
+                     **dict(c["downlink_budget"].get("packet_layout") or {}),
+                     "packet_overhead_bytes": int(c["downlink_budget"]["packet_overhead_bytes"])},
         "Spacecraft id, PUS-C and the application / bootloader APIDs of the EOSAT-1 reference design.",
         "Identifiant du satellite, PUS-C et APID de l’application et du chargeur d’amorçage de la conception de référence EOSAT-1.",
         c["database"])
@@ -258,7 +261,7 @@ def plan(study_id: str, facts: dict) -> dict[str, dict[str, dict]]:
             cal["values"] = enums.get(cal["ref"], [])
         d = {"param_id": pid, "name": full, "subsystem": sub, "type": t.get("type", "uint8"), "unit": t.get("unit", ""),
              "calibration": cal, "range": t.get("range"), "source_element_id": element,
-             "sampling_s": sc["hk_period_s"], "on_demand": bool(t.get("on_demand")),
+             "sampling_s": sc["hk_period_s"], "on_demand": bool(t.get("on_demand")), "tags": list(t.get("tags") or []) or None,
              "description": t.get("description") or {"en": full, "fr": full}, **(extra or {})}
         params.append(d)
         put("parameters", d, why[0], why[1], c["parameters"])
@@ -318,25 +321,88 @@ def plan(study_id: str, facts: dict) -> dict[str, dict[str, dict]]:
                     sid_names.setdefault(d["subsystem"], d["sid"])
     salloc = _Alloc(sid_names, sid_used)
     hk_rows: list[dict] = []
+    modes = f["modes"] or [{"id": k, "name": k, "kind": k} for k in ("leop", "commissioning", "nominal", "imaging", "downlink", "safe", "survival")]
+    off = int(hk.get("store_sid_offset") or 100)
+
+    def by_mode(table: dict, sub: str) -> dict:
+        row = {**(table.get("default") or {}), **(table.get(sub) or {})}
+        return {m["id"]: row.get(m.get("kind") or "custom", row.get("custom")) for m in modes}
+
+    def nominal_of(per: dict) -> float | None:
+        vals = [per.get(m["id"]) for m in modes if m.get("kind") in ("nominal", "downlink")] + list(per.values())
+        return next((float(v) for v in vals if v), None)
+
+    is_diag = lambda p: "diagnostic" in (p.get("tags") or [])  # noqa: E731
+    diag_next = int(hk.get("diagnostic_sid_start") or 20)
     for s in present:
-        ps = [p for p in params if p["subsystem"] == s and not p["on_demand"]]
-        if not ps:
-            continue
-        sid = salloc.get(s, 1, 99)
+        ps = [p for p in params if p["subsystem"] == s and not p["on_demand"] and not is_diag(p)]
         sc = sub_cfg[s]
-        d = {"sid": sid, "name": sc["label"]["en"], "subsystem": s, "apid": db["application_apid"],
-             "period_s": sc["hk_period_s"], "parameter_ids": [p["param_id"] for p in ps],
-             "enabled_at_boot": s in hk["enabled_at_boot"], "beacon": False}
-        hk_rows.append(d)
-        put("hk", d, f"{sc['label']['en']}: one packet every {sc['hk_period_s']} s with the subsystem's {len(ps)} points.",
-            f"{sc['label']['fr']} : un paquet toutes les {sc['hk_period_s']} s avec les {len(ps)} points du sous-système.", hk)
+        if ps:
+            sid = salloc.get(s, 1, 99)
+            rt = by_mode(hk.get("rt_intervals") or {}, s)
+            st = by_mode(hk.get("store_intervals") or {}, s)
+            d = {"sid": sid, "name": sc["label"]["en"], "subsystem": s, "apid": db["application_apid"],
+                 "period_s": nominal_of(rt) or sc["hk_period_s"], "parameter_ids": [p["param_id"] for p in ps],
+                 "enabled_at_boot": s in hk["enabled_at_boot"], "beacon": False,
+                 "enabled": {"realtime": True, "stored": True}, "diagnostic": False,
+                 "store_sid": sid + off, "store_id": hk.get("hk_store_id", 1),
+                 "rt_period_by_mode": rt, "store_period_by_mode": st}
+            hk_rows.append(d)
+            put("hk", d, f"{sc['label']['en']}: {len(ps)} points; real-time interval per mode (thermal once per minute), "
+                         f"stored copy SID {sid + off} routed to the HK store with its own interval per mode.",
+                f"{sc['label']['fr']} : {len(ps)} points ; intervalle temps réel par mode (thermique une fois par minute), "
+                f"copie stockée SID {sid + off} vers la mémoire HK avec son propre intervalle par mode.", hk)
+        dps = [p for p in params if p["subsystem"] == s and not p["on_demand"] and is_diag(p)]
+        if dps:
+            key = f"{s}_diag"
+            sid = salloc.get(key, diag_next, 99)
+            diag_next = (sid or diag_next) + 1
+            if sid is None:
+                continue
+            d = {"sid": sid, "name": f"{sc['label']['en']} diagnostics", "subsystem": s, "apid": db["application_apid"],
+                 "period_s": float(hk.get("diagnostic_rt_s") or 1), "parameter_ids": [p["param_id"] for p in dps],
+                 "enabled_at_boot": False, "beacon": False, "diagnostic": True,
+                 "enabled": {"realtime": False, "stored": False}, "store_sid": sid + off,
+                 "store_id": hk.get("diagnostic_store_id", 3), "auto_disable_s": hk.get("diagnostic_auto_disable_s"),
+                 "rt_period_by_mode": {m["id"]: (None if m.get("kind") in ("imaging", "survival", "disposal") else float(hk.get("diagnostic_rt_s") or 1)) for m in modes},
+                 "store_period_by_mode": {m["id"]: (None if m.get("kind") in ("survival", "disposal") else float(hk.get("diagnostic_store_s") or 2)) for m in modes}}
+            hk_rows.append(d)
+            put("hk", d, f"{sc['label']['en']} diagnostics ({len(dps)} raw sensor and estimator points): off by default, "
+                         "enabled by campaign, disabled automatically after about one orbit.",
+                f"Diagnostic {sc['label']['fr']} ({len(dps)} points bruts des capteurs et de l’estimateur) : désactivé par défaut, "
+                "activé par campagne, désactivé automatiquement après environ une orbite.", hk)
     bparams = [pname[n]["param_id"] for n in hk["beacon"]["params"] if n in pname]
     if bparams:
+        bk = set(hk["beacon"].get("modes") or [])
         d = {"sid": hk["beacon"]["sid"], "name": "Beacon", "subsystem": "ttc", "apid": db["bootloader_apid"],
-             "period_s": hk["beacon"]["period_s"], "parameter_ids": bparams, "enabled_at_boot": True, "beacon": True}
+             "period_s": hk["beacon"]["period_s"], "parameter_ids": bparams, "enabled_at_boot": True, "beacon": True,
+             "enabled": {"realtime": True, "stored": False}, "diagnostic": False, "store_sid": None,
+             "rt_period_by_mode": {m["id"]: (hk["beacon"]["period_s"] if (m.get("kind") in bk or not bk) else None) for m in modes}}
         hk_rows.append(d)
         put("hk", d, "Beacon packet: the few points the ground needs to see from the bootloader before any command.",
             "Paquet de balise : les quelques points que le sol doit voir depuis le chargeur d’amorçage avant toute commande.", hk)
+
+    # ── data budget (W3.02): link framing, packet stores, real-time profiles, service reports,
+    #    pass classes and payload products — editable defaults
+    dbc = c["data_budget"]
+    put("link_framing", dict(dbc["link_framing"]),
+        "CCSDS TM SDLP frames in RS(255,223) interleave 2 with SDLS authentication and the CLCW; 30 s acquisition per pass, 90 % of passes usable.",
+        "Trames CCSDS TM SDLP en RS(255,223) entrelacement 2 avec authentification SDLS et CLCW ; 30 s d’acquisition par passage, 90 % des passages utilisables.", dbc)
+    for st_ in dbc["stores"]:
+        put("stores", dict(st_), f"Packet store {st_['name']} ({st_['size_mb']} MB, {'circular' if st_.get('circular') else 'linear'}) in the OBC flash.",
+            f"Mémoire de paquets {st_['name']} ({st_['size_mb']} Mo, {'circulaire' if st_.get('circular') else 'linéaire'}) dans la flash de l’OBC.", dbc)
+    for pr in dbc["rt_profiles"]:
+        put("rt_profiles", dict(pr), f"Real-time profile {pr['name']}: {pr['description']['en']}.",
+            f"Profil temps réel {pr['name']} : {pr['description']['fr']}.", dbc)
+    put("service_allowances", dict(dbc["service_allowances"]),
+        "Service reports sharing the real-time channel and the stores: S1 verification, S5 events, S9 time, S15 store status.",
+        "Rapports de service partageant le canal temps réel et les mémoires : vérification S1, événements S5, temps S9, état des mémoires S15.", dbc)
+    for pc in dbc["pass_classes"]:
+        put("pass_classes", dict(pc), f"Pass class {pc['name']}: real-time profile {pc['rt_profile']}, then {' then '.join(pc['order'])}.",
+            f"Classe de passage {pc['name']} : profil temps réel {pc['rt_profile']}, puis {' puis '.join(pc['order'])}.", dbc)
+    put("payload_products", dict(dbc["payload_products"]),
+        "Payload products downlinked per day and their lossless compression: set by the payload lead.",
+        "Produits de la charge utile transmis par jour et leur compression sans perte : fixés par le responsable de la charge utile.", dbc)
 
     # ── TC functions
     f_names, f_used = _existing_numbers(existing, "commands", "func_id")

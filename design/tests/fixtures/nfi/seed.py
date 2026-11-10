@@ -29,8 +29,11 @@ Known gaps, each owned by a later work package (the seed grows with them):
 * requirement levels ``stakeholder``/``segment``/``interface`` are posted as ``tool_level`` (W2.01);
   extra parents/objectives (``derives``/``traces``), priority, category, unit and source are not
   stored (W2.02/W2.03); requirements are created one by one, not by the bulk import (W2.04);
-* housekeeping SIDs (``hk_sids.yaml``) are not loaded (W3.01-W3.04);
-* licensing (W5.03), AIT (W8a), schedule (W11a) have no model yet.
+* housekeeping SIDs (``hk_sids.yaml``) are loaded at the end of S4 (W3: the rule-proposed SIDs are
+  rejected, the baseline SIDs with their per-mode intervals, stores, profiles, service reports,
+  framing and payload products are entered as user rows);
+* W1.03 (end of S2): the "Sail deploy / end of life" mode is the template's disposal mode (kind
+  ``disposal``), so the drag sail is powered there only;
 
 Loaded by agent D (wave 1), each at the end of its stage: S0 the mission-need fields (success
 criteria, alternative types; W1.06); S2 the mission phases from ``modes.yaml`` (W7.01) and the
@@ -254,6 +257,7 @@ async def _s2(api: _Api, seed: NfiSeed) -> None:
                 performance=perf or None)
     await _accept_all_suggestions(api, sid)
     await _modes(api, seed)
+    await _w103_disposal_mode(api, seed)
     await _s2_conops_phases(api, seed)
     await _s2_link_cases(api, seed)
 
@@ -295,6 +299,25 @@ async def _modes(api: _Api, seed: NfiSeed) -> None:
                            {"power_w_in_mode": w, "power_state": "nominal" if w > 0 else "off"})
 
 
+async def _w103_disposal_mode(api: _Api, seed: NfiSeed) -> None:
+    """W1.03: the end-of-life mode is the template's disposal mode ("Sail deploy", template key
+    ``eol``), patched above to the baseline name. Its kind goes back to ``disposal`` (modes.yaml
+    says custom: the baseline predates the disposal kind) and the template's ARM + FIRE transition,
+    which the baseline adds again, is kept once."""
+    sid = seed.study_id
+    eol = seed.modes.get("eol")
+    if not eol:
+        return
+    seed.modes["eol"] = await api.call("PATCH", f"/api/studies/{sid}/modes/{eol['id']}", {"kind": "disposal", "phase": "disposal"})
+    ov = await api.call("GET", f"/api/studies/{sid}/modes")
+    seen: set[tuple] = set()
+    for t in sorted(ov["transitions"], key=lambda t: 0 if t.get("origin") != "template" else 1):
+        k = (t["from_mode_id"], t["to_mode_id"], t.get("trigger"))
+        if k in seen:
+            await api.call("DELETE", f"/api/studies/{sid}/mode-transitions/{t['id']}")
+        seen.add(k)
+
+
 async def _s3(api: _Api, seed: NfiSeed) -> None:
     await _post_requirements(api, seed, lambda r: True)
     for r in load("risks")["risks"]:
@@ -321,6 +344,7 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     await api.post(f"/api/studies/{sid}/ait/propose")
     await api.call("PUT", f"/api/studies/{sid}/schedule/settings", {"launch_provided": True, "currency": "CAD"})
     await api.post(f"/api/studies/{sid}/schedule/propose")
+    await _hk_sids(api, seed)
 
 
 # ───────────────────────────────────── agent D (wave 1): mission need, ConOps, links, trades, review
@@ -510,6 +534,80 @@ async def _s3_mdr_review(api: _Api, seed: NfiSeed) -> None:
         "decision": "go_with_actions", "board": "Team leader (chair), Systems, Mission analysis & ops, Customer",
         "chair_note": "Mission definition accepted. The radio receive band, the spectrum pre-consultation and the "
                       "drag-sail evidence are carried as actions to the PRR."})
+
+
+
+def _mode_map(seed: NfiSeed, table: dict | None) -> dict | None:
+    """``{leop: 1, ...}`` keyed by the modes.yaml keys -> keyed by the study's mode ids."""
+    if not isinstance(table, dict):
+        return None
+    return {seed.modes[k]["id"]: v for k, v in table.items() if k in seed.modes}
+
+
+async def _hk_sids(api: _Api, seed: NfiSeed) -> None:
+    """W3: the housekeeping design of ``hk_sids.yaml`` replaces the rule-proposed SIDs: every SID
+    with its parameter list, real-time and stored intervals per mode, enable flags and stores; the
+    real-time profiles, service reports, link framing and the payload products of NUMBERS.yaml."""
+    sid, hk, n = seed.study_id, load("hk_sids"), load("NUMBERS")
+    view = await api.call("GET", f"/api/studies/{sid}/cdr")
+    for r in view["rows"]["hk"]:
+        if r["status"] != "rejected":
+            await api.call("DELETE", f"/api/studies/{sid}/cdr/hk/{r['id']}")
+    for x in hk["sids"]:
+        rt = _mode_map(seed, x.get("rt_interval_s"))
+        st = _mode_map(seed, x.get("store_interval_s")) if x.get("store_sid") is not None else None
+        nominal = (x.get("rt_interval_s") or {}).get("nominal") or (x.get("rt_interval_s") or {}).get("leop") or 30
+        data = {"sid": x["id"], "store_sid": x.get("store_sid"), "name": x["name"], "subsystem": x["subsystem"],
+                "apid": x["apid"], "params": x["parameters"], "period_s": nominal,
+                "enabled": dict(x["enabled_by_default"]), "enabled_at_boot": bool(x["enabled_by_default"]["realtime"]),
+                "diagnostic": bool(x.get("diagnostic")), "beacon": bool(x.get("beacon")),
+                "rt_period_by_mode": rt, "store_period_by_mode": st,
+                "store_id": (3 if x.get("diagnostic") else 1) if x.get("store_sid") is not None else None,
+                "rationale_text": x.get("rationale")}
+        if x.get("diagnostic"):
+            data.update({"auto_disable_s": 5796, "obcp": "disable SID 20 and 120 after one orbit"})
+        await api.post(f"/api/studies/{sid}/cdr/hk", {"data": data})
+    rows = (await api.call("GET", f"/api/studies/{sid}/cdr"))["rows"]
+
+    async def put(kind: str, key_field: str | None, data: dict) -> None:
+        mine = [r for r in rows.get(kind) or [] if r["status"] != "rejected" and
+                (key_field is None or str(r["data"].get(key_field)) == str(data.get(key_field)))]
+        if mine:
+            await api.call("PATCH", f"/api/studies/{sid}/cdr/{kind}/{mine[0]['id']}", {"data": data})
+        else:
+            await api.post(f"/api/studies/{sid}/cdr/{kind}", {"data": data})
+
+    fr = hk["link_framing"]
+    await put("link_framing", None, {"rs_n": 255, "rs_k": 223, "rs_interleave": 2, "asm_bytes": 4,
+                                     **{f"{k}_bytes" if not k.endswith("_bytes") else k: v for k, v in
+                                        {"tf_header": fr["frame_overhead_bytes"]["tf_primary_header"],
+                                         "sdls_header": fr["frame_overhead_bytes"]["sdls_security_header"],
+                                         "sdls_mac": fr["frame_overhead_bytes"]["sdls_mac_truncated"],
+                                         "ocf": fr["frame_overhead_bytes"]["ocf_clcw"]}.items()},
+                                     "acquisition_s": n["data_budget"]["pass_overheads"]["acquisition_s_per_window"],
+                                     "availability": n["data_budget"]["pass_overheads"]["availability"],
+                                     "virtual_channels": fr["virtual_channels"]})
+    for st in hk["stores"]:
+        content = ({"sids": list(range(101, 111))} if st["id"] == 1 else {"services": [5]} if st["id"] == 2 else
+                   {"stored_diagnostic": True} if st["id"] == 3 else {"payload": True} if st["id"] == 5 else {"services": [6, 23]})
+        await put("stores", "id", {"id": st["id"], "name": st["name"], "size_mb": st.get("size_mb"), "size_gb": st.get("size_gb"),
+                                   "circular": bool(st.get("circular")), "content": content, "location": st.get("location") or "OBC",
+                                   "description": st.get("content")})
+    pr = hk["rt_profiles"]
+    await put("rt_profiles", "name", {"name": "FULL", "mode_intervals": True, "allocation_bps": pr["FULL"]["allocation_bps"],
+                                      "interval_factor": None, "description": {"en": pr["FULL"]["note"], "fr": pr["FULL"]["note"]}})
+    await put("rt_profiles", "name", {"name": "LEAN", "mode_intervals": False, "interval_factor": None,
+                                      "intervals_s": {str(k): v for k, v in pr["LEAN"]["intervals_s"].items()},
+                                      "description": {"en": pr["LEAN"]["note"], "fr": pr["LEAN"]["note"]}})
+    sa = hk["service_allowances"]
+    await put("service_allowances", None, {k: sa[k] for k in ("S1_verification", "S5_events", "S9_time_report", "S15_store_status")})
+    pp = n["data_budget"]["products"]
+    await put("payload_products", None, {
+        "science_mb_per_day": n["data_budget"]["science_target_mb_per_day_after_compression"]["value"],
+        "compression_ratio": 1.5, "cfdp_efficiency": n["data_budget"]["pass_overheads"]["cfdp_efficiency"],
+        "products": [{"name": "ROI pair", "mb_raw": pp["roi_pair_mb_raw"]["value"], "per_day": pp["planned_set_per_day"]["roi_pairs"], "priority": 2},
+                     {"name": "Quicklook", "mb_raw": pp["quicklook_mb_raw"]["value"], "per_day": pp["planned_set_per_day"]["quicklooks"], "priority": 1}],
+        "compression_required": pp["compression_required"]["value"]})
 
 
 _STEPS = {"S0": _s0, "S1": _s1, "S2": _s2, "S3": _s3, "S4": _s4}

@@ -95,7 +95,7 @@ async def test_propose_default_database_from_the_design(client, study_obj, study
     assert "flight_director" in pos and "eps_tcs" in pos
     # line states per mode: one row per mode; the OBC line is on in every mode
     ls = _data(v, "line_states")
-    assert len(ls) == len(v["modes"]) == 7
+    assert len(ls) == len(v["modes"]) == 8          # W1.03: the template has the disposal mode
     obc_line = next(ln for ln in lines if not ln["switchable"])
     assert all(s["states"][obc_line["id"]] == "on" for s in ls)
     # owners: parameters by subsystem seat, the rest of the DB by Comms & OBDH
@@ -105,7 +105,7 @@ async def test_propose_default_database_from_the_design(client, study_obj, study
     assert v["rows"]["hk"][0]["owner_seat"] == "comms_engineer"
     # budget closes in every regime for this database
     assert all(r["ok"] for r in v["budget"]["regimes"] if r["ok"] is not None)
-    assert len(v["budget"]["modes"]) == 7
+    assert len(v["budget"]["modes"]) == 8
 
 
 async def test_propose_is_idempotent_and_keeps_edits(client, study_obj, study):

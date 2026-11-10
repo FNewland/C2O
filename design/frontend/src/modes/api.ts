@@ -62,11 +62,14 @@ export interface Energy {
 }
 export interface Check { id: string; label: Bi; status: string; value: number | null; limit: number | null; unit: string; standard_ref: string; c2o_default: boolean }
 export interface DataChain {
-  per_mode: { mode_id: string; name: string; kind: string; generation_bps: number; orbit_fraction: number | null; per_orbit_mb: number }[]
+  per_mode: { mode_id: string; name: string; kind: string; generation_bps: number; orbit_fraction: number | null; per_orbit_mb: number
+    payload_bps?: number; hk_stored_bps?: number; hk_realtime_bps?: number | null; in_mix?: boolean }[]
   housekeeping_bps: number; orbits_per_day: number; generated_gb_per_day: number
+  housekeeping?: { designed: boolean; source: string; stored_mb_per_day: number; realtime_mb_per_day: number
+    realtime_contact_bps: number | null; realtime_allocation_bps: number | null }
   storage: { capacity_gb: number | null; buffer_days: number; need_gb: number; need_with_margin_gb: number; margin_percent: number }
   downlink: { rate_bps: number; protocol_efficiency: number; contact_min_per_day: number; capacity_gb_per_day: number
-    band?: string; rate_source?: string
+    band?: string; rate_source?: string; sum_of_stations_min_per_day?: number; contact_basis?: string; usable_min_per_day?: number | null
     stations: { name: string; contact_min_per_day: number; margin_db: number | null; used: boolean; low_margin: boolean; status: string; capacity_gb_per_day: number }[] }
   backlog_growth_gb_per_day: number; days_to_full: number | null; checks: Check[]; warnings: string[]
 }

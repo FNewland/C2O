@@ -142,7 +142,7 @@ def test_domain_map_and_rules_know_the_new_categories(kb):
     assert {"payload_optics", "payload_controllers", "payload_imagers"} <= set(DOMAIN_TO_CATEGORIES["payload"])
     first = {stem: kb.search_components(category=stem)[0]["id"] for stem in NEW}
     classes = {stem: unit_class({"kb_component_id": kid, "name": "x"}, cfg()) for stem, kid in first.items()}
-    assert classes == {"adcs_integrated": "adcs_unit", "deorbit_devices": "passive",
+    assert classes == {"adcs_integrated": "adcs_unit", "deorbit_devices": "deorbit_device",
                        "payload_optics": "passive", "payload_controllers": "payload_electronics"}
 
 

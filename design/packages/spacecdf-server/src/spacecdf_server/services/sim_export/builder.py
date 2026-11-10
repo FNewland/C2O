@@ -1371,6 +1371,15 @@ def _overlay_design_db(ex: SimConfigExport, d: Design, rows: list[dict], ctx: di
     sims = ex.load("telemetry/hk_structures.yaml").get("structures") or []
     enabled = set()
     applied = 0
+    own = [h for h in hk if h.get("store_sid") is not None or isinstance(h.get("rt_period_by_mode"), dict) or h.get("params")]
+    if own:
+        # W4.05: a study-specific SID layout (stored copies, per-mode intervals, own parameter lists)
+        # is kept whole in design_db/telemetry/ — never merged into the EOSAT-1 structures by subsystem.
+        ex.note("tmtc", "housekeeping structures", "unsupported",
+                f"{src}: {len(own)} study-specific SIDs (stored copies, intervals per mode) kept whole in "
+                "design_db/telemetry/hk_structures.yaml and hk_mode_intervals.yaml; the simulator's EOSAT-1 structures are not changed",
+                "telemetry/hk_structures.yaml", "")
+        hk = [h for h in hk if h not in own]
     for h in hk:
         sub = h.get("subsystem") or ""
         if sub in ("sys", "fdir", "str") and not h.get("beacon"):

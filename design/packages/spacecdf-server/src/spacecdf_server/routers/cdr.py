@@ -11,6 +11,9 @@
     DELETE /api/studies/{sid}/cdr/import                remove the reference database
     GET    /api/studies/{sid}/cdr/export/sim            the rows in the simulator's file shapes
     GET    /api/cdr/export-map                          CDR kind/field → simulator file/key
+    GET    /api/studies/{sid}/cdr/export/tmtc.{json,csv,xlsx}  the TM/TC database generated from the SIDs (W4.05)
+    GET    /api/studies/{sid}/data-budget               the data budget (W3.02, services/data_budget.py)
+    POST   /api/studies/{sid}/data-budget/scenario      {compression_ratio, science_mb_per_day, rt_policy, diagnostics, …}
 
 Ownership (REDESIGN_DECISIONS.md ruling 5): the TM/TC database belongs to Comms & OBDH and each
 parameter (and its monitors and limits) to the seat of its subsystem; event-actions, safe mode
@@ -129,6 +132,12 @@ async def cdr_view(study_id: str, *, rows: list[dict] | None = None) -> dict[str
     fmeca = [] if ref else _fmeca(study_id, facts["elements"], credited_elements(rows, facts["fdir_proposals"]))
     ctx = {"lines": [] if ref else facts["lines"], "units": units, "members": facts["members"],
            "modes": [] if ref else facts["modes"], "fmeca_rows": fmeca, "reference": ref}
+    if not ref and any(r.get("kind") == "hk" and not r.get("deleted_at") for r in rows):
+        try:
+            from ..services.data_budget import for_study
+            ctx["data_budget"] = await for_study(study_id, rows=rows, include_degraded=False)
+        except Exception:  # noqa: BLE001 — the checks run without the daily budget
+            logger.debug("data budget unavailable for %s", study_id, exc_info=True)
     findings = run_checks(rows, ctx)
     c = cm.cfg()
     return {
@@ -189,6 +198,63 @@ async def export_sim(study_id: str) -> dict:
     from ..services.cdr_sim import EXPORT_MAP, export_sim as to_sim
     rows = await repo.list_rows(study_id)
     return jsonable_encoder({"study_id": study_id, "files": to_sim(rows), "map": EXPORT_MAP})
+
+
+@router.get("/studies/{study_id}/data-budget")
+async def get_data_budget(study_id: str) -> dict:
+    """W3.02: real-time and stored HK per mode and profile, stores, per-pass allocation, day in the
+    life, 7-day backlog and the daily closure cases — the numbers every other view quotes."""
+    from ..services.data_budget import for_study
+    await _study_or_404(study_id)
+    return jsonable_encoder(await for_study(study_id))
+
+
+class ScenarioBody(BaseModel):
+    compression_ratio: float | None = None
+    science_mb_per_day: float | None = None
+    basis: str | None = None                 # target | products
+    rt_policy: str | None = None             # per_pass | full_every_pass
+    diagnostics: bool = False
+    other_mb: float | None = None
+    link_rate_bps: float | None = None
+
+
+@router.post("/studies/{study_id}/data-budget/scenario")
+async def data_budget_scenario(study_id: str, body: ScenarioBody) -> dict:
+    """The data budget with what-if values (nothing is stored); the closure is the scenario case."""
+    from ..services.data_budget import for_study
+    await _study_or_404(study_id)
+    sc = {k: v for k, v in body.model_dump().items() if v is not None and v is not False}
+    return jsonable_encoder(await for_study(study_id, sc or {"rt_policy": "per_pass"}))
+
+
+async def _study_or_404(study_id: str) -> None:
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None and not _els(study_id):
+        raise HTTPException(404, f"Study {study_id} not found")
+
+
+@router.get("/studies/{study_id}/cdr/export/tmtc.{fmt}")
+async def export_tmtc(study_id: str, fmt: str):
+    """W4.05: the TM/TC database generated from the study's SIDs — parameters, SIDs with their
+    real-time and stored intervals per mode and enable flags, stores, profiles, services, events
+    and commands — as JSON, CSV (one file, a ``table`` column per section) or XLSX (one sheet each)."""
+    from fastapi.responses import Response
+    from ..services import tmtc_export
+    await _study_or_404(study_id)
+    if fmt not in ("json", "csv", "xlsx"):
+        raise HTTPException(404, "format must be json, csv or xlsx")
+    rows = await repo.list_rows(study_id)
+    modes = (await gather_facts(study_id))["modes"]
+    data = tmtc_export.tables(rows, modes)
+    if fmt == "json":
+        return jsonable_encoder(data)
+    if fmt == "csv":
+        return Response(tmtc_export.to_csv(data), media_type="text/csv",
+                        headers={"Content-Disposition": f'attachment; filename="tmtc_{study_id[:8]}.csv"'})
+    return Response(tmtc_export.to_xlsx(data),
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="tmtc_{study_id[:8]}.xlsx"'})
 
 
 # ───────────────────────────────────────────────────────────── routes: propose / import

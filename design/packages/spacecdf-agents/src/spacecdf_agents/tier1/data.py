@@ -20,7 +20,7 @@ class DataAgent(DesignAgent):
     def input_parameters(self) -> list[str]:
         return [
             "payload.0.data_rate_mbps", "payload.0.duty_cycle",
-            "link.data_per_day_gb",
+            "link.data_per_day_gb", "hk.per_day_gb", "data.compression_ratio",
         ]
 
     def output_parameters(self) -> list[str]:
@@ -50,10 +50,15 @@ class DataAgent(DesignAgent):
                 gen_per_day_gb += explicit
             elif dr is not None:
                 dc = state.get(f"payload.{i}.duty_cycle", 0.25) or 0.25
-                # 2:1 compression assumption for raw-rate-derived estimates
-                gen_per_day_gb += (dr / 8000) * dc * 86400 * 0.5
+                # 2:1 compression assumption for raw-rate-derived estimates (or the study's ratio)
+                cr = state.get("data.compression_ratio") or 2.0
+                gen_per_day_gb += (dr / 8000) * dc * 86400 / max(float(cr), 1.0)
             i += 1
 
+        # W3.03: housekeeping stored on board and the payload's compression ratio from the data
+        # budget (services/data_budget.py) when the study gives them; the 2:1 default otherwise.
+        hk_gb = state.get("hk.per_day_gb", 0) or 0
+        gen_per_day_gb += hk_gb
         downlink_per_day = state.get("link.data_per_day_gb", 0) or 0
 
         # Storage = buffer for 2 days of data generation
@@ -106,7 +111,8 @@ class DataAgent(DesignAgent):
             "per_day_gb": gen_per_day_gb,
             "downlink_capacity_gb": downlink_per_day,
             "storage_required_gb": storage_gb,
-            "compression_ratio": 2.0,
+            "compression_ratio": state.get("data.compression_ratio") or 2.0,
+            "hk_per_day_gb": hk_gb,
             "obdh_mass_kg": obdh_mass,
         }
 

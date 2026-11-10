@@ -37,6 +37,13 @@ KINDS: dict[str, dict[str, Any]] = {
     "events":          {"group": "tmtc", "owner": "comms_engineer"},
     "rate_tiers":      {"group": "tmtc", "owner": "comms_engineer"},
     "ttc":             {"group": "tmtc", "singleton": "ttc", "owner": "comms_engineer"},
+    # W3 (Nov 2026): data budget — link framing, packet stores, real-time profiles, service
+    # reports, payload products; the pass classes and the operators' pass plan are operations rows
+    "link_framing":    {"group": "tmtc", "singleton": "link_framing", "owner": "comms_engineer"},
+    "stores":          {"group": "tmtc", "owner": "comms_engineer"},
+    "rt_profiles":     {"group": "tmtc", "owner": "comms_engineer"},
+    "service_allowances": {"group": "tmtc", "singleton": "service_allowances", "owner": "comms_engineer"},
+    "payload_products": {"group": "tmtc", "singleton": "payload_products", "owner": "payload_lead"},
     # FDIR
     "monitors":        {"group": "fdir", "owner": "subsystem"},
     "event_actions":   {"group": "fdir", "owner": "systems_engineer"},
@@ -53,6 +60,8 @@ KINDS: dict[str, dict[str, Any]] = {
     "positions":       {"group": "ops", "owner": "mission_analyst"},
     "gonogo":          {"group": "ops", "owner": "mission_analyst"},
     "flight_rules":    {"group": "ops", "owner": "mission_analyst"},
+    "pass_classes":    {"group": "ops", "owner": "mission_analyst"},
+    "pass_plan":       {"group": "ops", "singleton": "pass_plan", "owner": "mission_analyst"},
 }
 GROUPS = ("tmtc", "fdir", "aocs", "ops")
 RULE_OF = {
@@ -61,7 +70,8 @@ RULE_OF = {
     "monitors": "FDIR-MON", "event_actions": "FDIR-EA", "load_shed": "FDIR-SHED", "safe_mode": "FDIR-SAFE",
     "fdir_levels": "FDIR-LVL", "limits": "OPS-LIM", "aocs_modes": "AOCS-MODE", "aocs_transitions": "AOCS-TRANS",
     "aocs_control": "AOCS-CTRL", "line_states": "EL-STATE", "positions": "OPS-POS", "gonogo": "OPS-GNG",
-    "flight_rules": "OPS-FR",
+    "flight_rules": "OPS-FR", "link_framing": "TMTC-FRAME", "stores": "TMTC-STORE", "rt_profiles": "TMTC-PROFILE",
+    "service_allowances": "TMTC-SVC", "payload_products": "TMTC-PAYLOAD", "pass_classes": "OPS-PASS", "pass_plan": "OPS-PASS",
 }
 IMPORT_ORIGIN = "import:eosat1"
 
@@ -203,6 +213,10 @@ def key_of(kind: str, data: dict) -> str:
         return str(data.get("pmon_id") or data.get("name") or "")
     if kind == "fdir_levels":
         return str(data.get("level"))
+    if kind == "stores":
+        return str(data.get("id") if data.get("id") is not None else data.get("name") or "")
+    if kind in ("rt_profiles", "pass_classes"):
+        return str(data.get("name") or "")
     if kind == "aocs_transitions":
         return f"{data.get('from')}>{data.get('to')}"
     if kind == "line_states":

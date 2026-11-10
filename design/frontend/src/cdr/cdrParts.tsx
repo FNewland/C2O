@@ -18,6 +18,7 @@ const GROUP_OF: Record<string, CdrGroup> = {
   settings: 'tmtc', apids: 'tmtc', services: 'tmtc', parameters: 'tmtc', hk: 'tmtc', commands: 'tmtc', events: 'tmtc', rate_tiers: 'tmtc', ttc: 'tmtc',
   monitors: 'fdir', event_actions: 'fdir', load_shed: 'fdir', safe_mode: 'fdir', fdir_levels: 'fdir', limits: 'fdir',
   aocs_modes: 'aocs', aocs_transitions: 'aocs', aocs_control: 'aocs', line_states: 'aocs', positions: 'ops', gonogo: 'ops', flight_rules: 'ops',
+  link_framing: 'tmtc', stores: 'tmtc', rt_profiles: 'tmtc', service_allowances: 'tmtc', payload_products: 'tmtc', pass_classes: 'ops', pass_plan: 'ops',
 }
 
 /** The tab frame: title, dataset line, propose / reference actions, findings, then the body. */

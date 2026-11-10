@@ -25,6 +25,7 @@ export type CdrKind =
   | 'monitors' | 'event_actions' | 'load_shed' | 'safe_mode' | 'fdir_levels' | 'limits'
   | 'aocs_modes' | 'aocs_transitions' | 'aocs_control' | 'line_states'
   | 'positions' | 'gonogo' | 'flight_rules'
+  | 'link_framing' | 'stores' | 'rt_profiles' | 'service_allowances' | 'payload_products' | 'pass_classes' | 'pass_plan'
 
 export type CdrGroup = 'tmtc' | 'fdir' | 'aocs' | 'ops'
 
@@ -50,6 +51,7 @@ export interface CdrView {
     regimes: BudgetRegime[]
     modes: { mode_id: string; mode: string; regime: string; tier: string | null; hk_bps: number | null; budget_bps: number | null; ok: boolean | null }[]
     hk_share_percent: number; frame_efficiency: number; packet_overhead_bytes: number; standard_ref: string
+    excluded_sids?: number[]
   }
   fmeca: {
     rows: { fmeca_row_id: string; element_id: string; component: string; mode: Bilingual | string; severity: number; critical: boolean
@@ -88,7 +90,7 @@ export function useCdr(studyId: string | null) {
 
 export function useInvalidateCdr(studyId: string | null) {
   const qc = useQueryClient()
-  return () => { for (const k of ['cdr', 'gates']) qc.invalidateQueries({ queryKey: [k, studyId] }) }
+  return () => { for (const k of ['cdr', 'gates', 'data-budget']) qc.invalidateQueries({ queryKey: [k, studyId] }) }
 }
 
 export interface ProposeResult { created: number; updated: number; removed: number; unchanged: number; skipped_rejected: number }
@@ -135,3 +137,67 @@ export const hex4 = (n: unknown) => (typeof n === 'number' ? `0x${n.toString(16)
 
 /** Rows of a kind that count (not rejected). */
 export const live = (rows: CdrRow[] | undefined) => (rows ?? []).filter(r => r.status !== 'rejected')
+
+// ───────────────────────────────────────────────────────────── data budget (W3.02, services/data_budget.py)
+
+export interface DbSid {
+  row_id: string; sid: number; store_sid: number | null; name: string; subsystem: string; bytes: number; n_parameters: number
+  diagnostic: boolean; beacon: boolean; enabled: { realtime: boolean; stored: boolean }; designed: boolean
+  rt_period_by_mode: Record<string, number | null> | null; store_period_by_mode: Record<string, number | null> | null
+  rt_interval_by_mode: Record<string, number | null>; store_interval_by_mode: Record<string, number | null>
+  rt_bps_by_mode: Record<string, number>; store_bps_by_mode: Record<string, number>
+}
+export interface DbMode { id: string; name: string; kind: string; orbit_fraction: number | null; in_mix: boolean
+  rt_bps: number; rt_beacon_bps: number; rt_diag_bps: number; store_bps: number; store_diag_bps: number; store_mb_per_day: number }
+export interface DbCase { id: string; label: Bilingual; capacity_mb: number; rt_hk_mb: number; stored_hk_mb: number; science_mb: number
+  other_mb: number; demand_mb: number; margin_pct: number | null; status: 'pass' | 'warn' | 'fail' | 'not_evaluated' }
+export interface DbStore { id: number; name: string; size_mb: number | null; circular: boolean; location: string | null
+  fill_mb_per_day: Record<string, number>; days_held: Record<string, number | null>; fill_mb_per_orbit?: number; orbits_held?: number | null
+  check?: { min_days: number; worst_mb_per_day: number; need_mb: number; ok: boolean | null } }
+export interface DbProfile { name: string; description: Bilingual | null; designed_bps: number; allocation_bps: number | null; pass_bps: number
+  reserve_bps: number | null; tier_fit: { tier: string; bps: number; hk_budget_bps: number; ok: boolean }[] }
+export interface DbPass { index: number; local: string; minutes: number; max_elevation_deg: number; stations: string[]; class: string
+  first_vc: string; usable_min: number; channel_mb: number; rt_hk_mb: number; delayed_hk_mb: number; payload_mb: number }
+export interface DataBudgetView {
+  study_id: string; status: 'designed' | 'legacy' | 'not_designed'; hk_source: string
+  packet: { overhead_bytes: number; breakdown: Record<string, number> }
+  sids: DbSid[]; modes: DbMode[]; mix: { mode_id: string; name: string; share: number }[]
+  profiles: DbProfile[]
+  realtime: { full_designed_bps: number; full_allocation_bps: number | null; lean_bps: number; diag_bps: number; with_diag_bps: number }
+  stored: { mix_bps: number; mb_per_day: number; events_mb_per_day: number; diag_mb_per_orbit: number }
+  framing: { frame_efficiency: number; raw_rate_bps: number; information_rate_bps: number; acquisition_s: number; availability: number; designed: boolean }
+  capacity: { union_min_per_day: number; usable_min_per_day: number; raw_mb_per_day: number; capacity_mb_per_day: number }
+  contacts: { union: Record<string, number>; stations: { id: string; name: string; min_per_day: number; passes_per_day: number }[] }
+  science: { target_mb_per_day: number | null; compression_ratio: number; cfdp_efficiency: number; raw_mb_per_day: number
+    delivered_mb_per_day: number; on_channel_mb_per_day: number; compression_needed: number | null; compression_ok: boolean | null
+    largest_with_margin_mb_per_day: number }
+  pass_classes: { name: string; per_day: number; usable_min_per_day: number; rt_profile: string; rt_bps: number; order: string[]; rt_mb_per_day: number }[]
+  cases: DbCase[]; closure: DbCase; margin_required_percent: number
+  stores: DbStore[]
+  day_in_the_life: { day_index: number | null; utc_offset_h: number; windows: DbPass[]; totals: Record<string, number>; after_availability: Record<string, number> }
+  backlog: { days: number[]; vc1_mb: number[]; vc2_mb: number[]; growing?: boolean }
+  link?: { band: string; rate_bps: number; rate_source: string }
+  warnings: string[]
+}
+
+export function useDataBudget(studyId: string | null) {
+  return useQuery<DataBudgetView>({
+    queryKey: ['data-budget', studyId],
+    queryFn: async () => json<DataBudgetView>(await fetch(`${API}/studies/${studyId}/data-budget`)),
+    enabled: !!studyId, refetchInterval: 15000, structuralSharing: false,
+  })
+}
+
+export function useInvalidateDataBudget(studyId: string | null) {
+  const qc = useQueryClient()
+  return () => { for (const k of ['data-budget', 'cdr']) qc.invalidateQueries({ queryKey: [k, studyId] }) }
+}
+
+export async function dataBudgetScenario(studyId: string, body: Record<string, unknown>): Promise<DataBudgetView> {
+  return json(await fetch(`${API}/studies/${studyId}/data-budget/scenario`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }))
+}
+
+export const tmtcExportUrl = (studyId: string, fmt: 'csv' | 'xlsx' | 'json') => `${API}/studies/${studyId}/cdr/export/tmtc.${fmt}`
+export const contactsExportUrl = (studyId: string) => `${API}/studies/${studyId}/contacts?format=csv`
