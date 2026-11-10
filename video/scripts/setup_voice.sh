@@ -53,6 +53,11 @@ fi
 
 # 4. Smoke test: one sentence in each language --------------------------------
 say "test sentence (the first run downloads the voice model, about 3 GB)"
-python3 -m c2ovideo narrate V-OPS-13 --lang en >/dev/null && echo "English voice OK"
-python3 -m c2ovideo narrate V-OPS-13 --lang fr >/dev/null && echo "French voice OK"
-say "ready: bash video/scripts/render_all.sh"
+"$venv/bin/python" -c "import chatterbox.mtl_tts, torch; print('chatterbox', 'MPS' if torch.backends.mps.is_available() else 'CPU')" \
+  || { echo "Chatterbox does not import in $venv: see the error above."; exit 1; }
+if python3 -m c2ovideo narrate V-OPS-13 --lang en >/dev/null && python3 -m c2ovideo narrate V-OPS-13 --lang fr >/dev/null; then
+  say "ready: bash video/scripts/render_all.sh"
+else
+  echo "The voice test failed. Worker log: ${C2O_VIDEO_CACHE:-$HOME/.cache/c2o-video}/cbx_worker.log"
+  exit 1
+fi

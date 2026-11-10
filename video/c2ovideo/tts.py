@@ -99,6 +99,7 @@ class Clip:
 
 
 VOICES_DIR = CACHE / "voices"
+CBX_LOG = CACHE / "cbx_worker.log"
 _CBX = None
 
 
@@ -112,13 +113,17 @@ def _cbx(engine: dict):
     global _CBX
     if _CBX is None or _CBX.poll() is not None:
         py = str(Path(engine.get("python", "python3")).expanduser())
+        CACHE.mkdir(parents=True, exist_ok=True)
+        errlog = open(CBX_LOG, "a", encoding="utf-8")
         _CBX = subprocess.Popen([py, str(Path(__file__).with_name("cbx_worker.py"))], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1,
+                                stdout=subprocess.PIPE, stderr=errlog, text=True, bufsize=1,
                                 env={**os.environ, "PYTORCH_ENABLE_MPS_FALLBACK": "1"})
         while True:
             line = _CBX.stdout.readline()
             if not line:
-                raise RuntimeError("Chatterbox worker exited during start-up")
+                tail = CBX_LOG.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-15:]
+                raise RuntimeError("Chatterbox worker exited during start-up. Last lines of "
+                                   f"{CBX_LOG}:\n" + "\n".join(tail))
             if line.startswith("{") and json.loads(line).get("ready"):
                 break
     return _CBX
