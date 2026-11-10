@@ -36,6 +36,11 @@ SOURCE_KINDS = frozenset({"standard", "guideline", "c2o_default"})
 
 _errors: dict[str, list[str]] = {}
 
+try:  # libyaml when available (same data, several times faster)
+    _YAML_LOADER: Any = yaml.CSafeLoader
+except AttributeError:  # pragma: no cover
+    _YAML_LOADER = yaml.SafeLoader
+
 
 class RuleConfigError(ValueError):
     """A rule config file is missing or does not match its schema."""
@@ -45,6 +50,12 @@ def configs_dir() -> Path:
     env = os.environ.get("SPACECDF_RULES_DIR")
     if env:
         return Path(env)
+    return _find_configs_dir()
+
+
+@lru_cache(maxsize=1)
+def _find_configs_dir() -> Path:
+    """The repository's ``configs/`` (found once: the walk up the tree ran on every rule lookup)."""
     here = Path(__file__).resolve()
     for parent in here.parents:
         candidate = parent / "configs" / "margin_policy.yaml"
@@ -53,24 +64,40 @@ def configs_dir() -> Path:
     raise RuleConfigError("configs/margin_policy.yaml not found above " + str(here))
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=64)
+def _raw_at(path: str, _stamp: tuple[int, int]) -> dict[str, Any]:
+    p = Path(path)
+    try:
+        data = yaml.load(p.read_text(encoding="utf-8"), Loader=_YAML_LOADER) or {}  # noqa: S506 — safe loader
+    except yaml.YAMLError as exc:
+        raise RuleConfigError(f"{p.name}: YAML error: {exc}") from exc
+    if not isinstance(data, dict):
+        raise RuleConfigError(f"{p.name}: top level must be a mapping")
+    return data
+
+
 def _raw(name: str) -> dict[str, Any]:
+    """The parsed file, kept until its modification time or size changes (an instructor's edit
+    is picked up on the next call without ``reload()``)."""
     path = configs_dir() / f"{name}.yaml"
     if not path.is_file():
         raise RuleConfigError(f"{path} not found")
-    try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError as exc:
-        raise RuleConfigError(f"{path.name}: YAML error: {exc}") from exc
-    if not isinstance(data, dict):
-        raise RuleConfigError(f"{path.name}: top level must be a mapping")
-    return data
+    st = path.stat()
+    return _raw_at(str(path), (st.st_mtime_ns, st.st_size))
+
+
+#: name -> (the parsed object that was validated, its errors): validation runs once per parse
+_validated: dict[str, tuple[dict[str, Any], list[str]]] = {}
 
 
 def load(name: str) -> dict[str, Any]:
     """The validated config ``name`` (without .yaml). Raises RuleConfigError."""
     data = _raw(name)
-    errs = validate(name, data)
+    hit = _validated.get(name)
+    if hit is None or hit[0] is not data:
+        hit = (data, validate(name, data))
+        _validated[name] = hit
+    errs = hit[1]
     if errs:
         raise RuleConfigError(f"{name}.yaml: " + "; ".join(errs))
     return data
@@ -78,7 +105,8 @@ def load(name: str) -> dict[str, Any]:
 
 def reload() -> None:
     """Drop the cache (tests, or after an instructor edits a file)."""
-    _raw.cache_clear()
+    _raw_at.cache_clear()
+    _validated.clear()
     _errors.clear()
 
 

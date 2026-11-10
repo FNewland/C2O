@@ -18,6 +18,7 @@ components:
     dimensions_mm: [96, 90, 35]   # (est.) from 0.35U and PC/104 compatibility
     form_factor: 0.35U
     power_w: 6.0              # actuation
+    power_modes_w: {deploy: 6.0}   # release power in the disposal mode (mode rules: deorbit_device peak = deploy)
     cost_keur: 5.6            # (est.) no public price; get a quote
     trl: 9
     heritage_missions: [FUTURA SM1 (launched 2023-01-03; deployment result not published)]

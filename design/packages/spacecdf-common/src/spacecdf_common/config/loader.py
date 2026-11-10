@@ -5,6 +5,7 @@ Follows the same pattern as SMO's config/loader.py.
 """
 from __future__ import annotations
 
+import copy
 import logging
 from pathlib import Path
 from typing import Any, TypeVar
@@ -17,13 +18,46 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 
+#: Parsed YAML files, keyed by resolved path, valid while (mtime_ns, size) is unchanged.
+_YAML_CACHE: dict[str, tuple[tuple[int, int], Any]] = {}
+
+try:  # libyaml is about six times faster than the pure-Python parser and gives the same data
+    _SafeLoader: Any = yaml.CSafeLoader
+except AttributeError:  # pragma: no cover — PyYAML built without libyaml
+    _SafeLoader = yaml.SafeLoader
+
+
+def read_yaml_cached(path: str | Path) -> Any:
+    """Parse a YAML file once and return a private deep copy on every call.
+
+    The parse is kept until the file's modification time or size changes, so an edited KB or
+    configuration file is picked up on the next call without a restart. Callers get their own
+    copy and may mutate it freely. Missing files raise ``FileNotFoundError``.
+    """
+    p = Path(path)
+    st = p.stat()
+    key = str(p.resolve())
+    stamp = (st.st_mtime_ns, st.st_size)
+    hit = _YAML_CACHE.get(key)
+    if hit is None or hit[0] != stamp:
+        with open(p, encoding="utf-8") as f:
+            data = yaml.load(f, Loader=_SafeLoader)  # noqa: S506 — CSafeLoader is the safe loader
+        hit = (stamp, data)
+        _YAML_CACHE[key] = hit
+    return copy.deepcopy(hit[1])
+
+
+def clear_yaml_cache() -> None:
+    """Forget every parsed file (tests that rewrite files within one mtime tick)."""
+    _YAML_CACHE.clear()
+
+
 def load_yaml(path: str | Path) -> dict[str, Any]:
-    """Load a YAML file and return its contents as a dict."""
+    """Load a YAML file and return its contents as a dict (cached on mtime, see ``read_yaml_cached``)."""
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
-    with open(path) as f:
-        data = yaml.safe_load(f)
+    data = read_yaml_cached(path)
     if data is None:
         return {}
     if not isinstance(data, dict):

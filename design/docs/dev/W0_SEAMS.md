@@ -201,7 +201,7 @@ The files are copied unchanged from the frozen Northern Fire and Ice teaching ba
 
 - `NUMBERS.yaml` (the source of truth);
 - `mission.yaml`, `equipment.yaml`, `modes.yaml`;
-- `requirements.yaml`: 216 rows, plus 5 objectives;
+- `requirements.yaml`: 216 rows, plus 5 objectives and 6 stakeholder needs;
 - `hk_sids.yaml`, `risks.yaml`, `trades.yaml`, `ground_stations.yaml`;
 - `logbook.yaml`, `roundtrip_checklist.yaml`.
 
@@ -218,57 +218,68 @@ Each stage adds to the one before:
 
 | Stage | Contents |
 |---|---|
-| S0 | Study created solo, with the mission definition and the mission need |
-| S1 | Product tree; 4 generic ground stations (Ottawa, Yellowknife, Iqaluit, Inuvik); mission control; launch segment; OBJ-* requirements and the mission-level requirements |
-| S2 | Equipment, with maturity categories; links, electrical and data accepted; modes patched to `modes.yaml`, with shares of orbit, the power matrix and the extra transitions |
-| S3 | All 216 requirements and the risk register |
-| S4 | CDR model accepted; stack placed and approved; V&V, ground-segment, physics and mission-simulation runs |
+| S0 | Study created solo, with the mission definition and the mission need (success criteria, constraints) |
+| S1 | Product tree; 4 generic ground stations (Ottawa, Yellowknife, Iqaluit, Inuvik); mission control; launch segment; Science Segment, Operations and Harness; OBJ-* rows and the bulk import of the whole requirement baseline (W2.04) |
+| S2 | Equipment, with maturity categories; links, electrical and data accepted; modes patched to `modes.yaml`, with shares of orbit, the power matrix, the extra transitions and the disposal mode; ConOps phases; the 8 named link cases, with the rural 1 W downlink and the 600 K uplink applied as design cases (`requirements.link`, UHF) |
+| S3 | The remaining requirements and the risk register; IF rows linked to their interfaces; the 8 trades (Pugh, decisions recorded); the MDR review with its RIDs |
+| S4 | CDR model accepted; stack placed and approved; V&V, ground-segment, physics and mission-simulation runs; AIT model philosophy and test matrix (W8a); schedule and cost settings (W11a); HK SIDs from `hk_sids.yaml` (W3) |
 
-To run the fixture tests: `pytest tests/fixtures/nfi`. Use `-k seed` for the seed tests. Measured
-times:
+To run the fixture tests: `pytest tests/fixtures/nfi`. Use `-k seed` for the seed tests. To seed a
+running server (the dry run), see `docs/dev/DRY_RUN.md`: `python -m tests.fixtures.nfi --url … --stage S4`.
+Measured times (wave 2, after the KB/YAML caches):
 
-- S4 builds in about 30 s, with 0 errors and 0 `403`s.
+- S4 builds in about 14 s on a quiet two-core machine (about 11 s of CPU; it was about 32 s and
+  30 s of CPU before). With six test runs on two cores the wall clock stretches to 70–100 s, so
+  `test_seed.py` holds the CPU time under 30 s and the wall clock under 60 s only when the load per
+  core is at most 1. 0 errors and 0 `403`s.
 - The S2 roll-up gives 3.871 / 4.147 / 4.976 kg (NUMBERS: 3.87 / 4.15 / 4.98) and 3U.
 
 Each work package extends the seed for its model, in `seed.py`, in its own stage step. Add to the
 end of a step and never reorder earlier calls. Each package also adds its acceptance test as
-`tests/fixtures/nfi/test_<wp>.py` or in its own test folder. What is still missing, and who adds
-it:
+`tests/fixtures/nfi/test_<wp>.py` or in its own test folder. What wave 1 delivered, and what is
+still missing:
 
-| Missing today | Added by |
-|---|---|
-| `stakeholder`/`segment`/`interface` levels (rows are posted with `tool_level`) | R: W2.01 |
-| Extra parents and objectives, priority, category, unit, source | R: W2.02, W2.03 |
-| Bulk import: the seed creates requirements one by one today | R: W2.04 |
-| Science Segment and Harness elements, so every row can be allocated | R: W2.09 |
-| HK SIDs from `hk_sids.yaml` | H: W3 |
-| Trades from `trades.yaml` | D: W6 |
-| Link cases | D: W4.04 |
-| Licensing | L: W5.03 |
-| AIT | A: W8a |
-| Schedule | A: W11a |
+| Item | Status | By |
+|---|---|---|
+| `stakeholder`/`segment`/`interface` levels | done (rows carry their own level) | R: W2.01 |
+| Extra parents and objectives, priority, category, unit, source | done | R: W2.02, W2.03 |
+| Bulk import (`POST /studies/{id}/requirements/import`) | done: S1 imports the baseline in one call | R: W2.04 |
+| Science Segment, Operations and Harness elements, so every row can be allocated | done (S1) | R: W2.09 |
+| Interface requirements per subsystem boundary (`IR-*`), IF rows linked | done (S3); the store holds 216 + 5 + 6 rows plus the generated `IR-*` rows, so count from the store, not from the YAML | R: W2.05–W2.07 |
+| HK SIDs from `hk_sids.yaml` | done (S4) | H: W3 |
+| Trades from `trades.yaml` | done (S3) | D: W6 |
+| Link cases | done (S2), design cases applied | D: W4.04 |
+| MDR review and RIDs | done (S3); MDR not passed yet (MDR-EC-07 needs a design-loop run) | D: W4.08 |
+| AIT | done (S4) | A: W8a |
+| Schedule | done (S4) | A: W11a |
+| Licensing (applicant, assignments, filings) | **missing**: the licensing tests seed their own record | L: W5.03 |
 
 Requirement ids are `"<study id>:<code>"`, so several seeded studies can share one database.
 
-**Known tool finding.** The Modes energy mix leaves out custom modes, so the exploratory Night SWIR
-mode (1 %) is not counted. The tool gives an orbit average of about 4.09 W, against 4.17 W in
-`NUMBERS.yaml`. The fixture test allows ±0.1 W. H decides whether custom modes with an
-`orbit_fraction` enter the mix (W1.03/W3).
+Requirement ids are `"<study id>:<code>"`, so several seeded studies can share one database.
+
+**Known tool finding (resolved in wave 1, H: W1.03/W3).** Custom modes with an `orbit_fraction`
+now enter the operational mix, so the exploratory Night SWIR mode (1 %) is counted and the orbit
+average is 4.17 W, as in `NUMBERS.yaml` (`test_w3_telemetry.py`). `test_seed.py` still allows ±0.1 W.
 
 To refresh the fixture, copy the newer baseline files over these and run `pytest tests/fixtures/nfi`.
 
-## 6. Stale frontend guard (W0.5)
+## 6. Stale frontend guard (W0.5, wave 2)
 
-`video/c2ovideo/stack.py` `frontend_build_problem()` checks the frontend build. `stack up spacecdf`
-exits non-zero, before touching any state, when:
+`video/c2ovideo/stack.py` `frontend_build_problem()` checks the frontend build. It is stale when:
 
 - `design/frontend/dist/index.html` is missing; or
 - any file in `src/`, `index.html`, `package*.json`, `vite.config.ts` or `tsconfig*.json` is newer
   than the build.
 
-The message names the newest file. `C2O_VIDEO_ALLOW_STALE_DIST=1` films an old build on purpose.
-`dist/` is not tracked by git: rebuild it with `cd design/frontend && npm run build` in every
-checkout that films.
+Since wave 2, `stack up spacecdf` rebuilds a missing or stale build itself (`vite build` in
+`design/frontend`, through its `node_modules`, which may be a link to the main checkout's), so the
+server always serves the frontend of the checkout it runs from. It still exits non-zero, before
+touching any state, when the build cannot be made (no `node_modules/.bin/vite`, or the build fails)
+or when `C2O_VIDEO_NO_BUILD=1`. `C2O_VIDEO_ALLOW_STALE_DIST=1` films an old build on purpose. The
+server runs on `C2O_VIDEO_SPACECDF_PYTHON`, else `design/.venv`, else (in a git worktree) the main
+checkout's `design/.venv`; `PYTHONPATH` makes it import this checkout's packages. `dist/` is not
+tracked by git. See `docs/dev/DRY_RUN.md`.
 
 ## 7. Conventions for every wave-1 agent (plan §1 W0 and §3)
 

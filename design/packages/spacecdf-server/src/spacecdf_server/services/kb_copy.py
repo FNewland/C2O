@@ -35,16 +35,20 @@ def kb_dir() -> Path:
 
 
 def find_kb_part(kb_id: str) -> dict | None:
-    """The raw KB record with ``id`` (or ``name``) == ``kb_id``, read fresh from the YAML files."""
-    import yaml
+    """The raw KB record with ``id`` (or ``name``) == ``kb_id``, as the YAML files hold it now.
+
+    The files are parsed once and re-read when their modification time changes
+    (``read_yaml_cached``), so an edited part is still seen at once (staleness, rule 13)."""
+    from spacecdf_common.config.loader import read_yaml_cached
     d = kb_dir()
     if not kb_id or not d.exists():
         return None
     for f in sorted(d.glob("*.yaml")):
         try:
-            with open(f, encoding="utf-8") as fp:
-                data = yaml.safe_load(fp) or {}
+            data = read_yaml_cached(f) or {}
         except Exception:  # noqa: BLE001 — a broken file must not hide the others
+            continue
+        if not isinstance(data, dict):
             continue
         for c in data.get("components", []) or []:
             if isinstance(c, dict) and (c.get("id") == kb_id or c.get("name") == kb_id):
