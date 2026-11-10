@@ -7,8 +7,8 @@ with Playwright's Chromium.
     npm install                        # fonts (SIL OFL), once
     python3 build_poster_12week.py     # -> ../../pdf/ORBIT_NORTH_Recruitment_12wk_{EN,FR}.pdf
 
-The hero photograph of the uOttawa Cyberrange is not in the repository. Put it
-next to this script as cyberrange.jpg, or pass --photo PATH; without it the hero
+The hero photograph (a mission control room) is not in the repository. Put it
+next to this script as hero.jpg, or pass --photo PATH; without it the hero
 panel is left as a plain dark field.
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ T = {
         "eyebrow": "Space mission design<br>and operations",
         "lede": "Design a CubeSat mission. Command a live mission-control simulation. Build a career in space — over one term.",
         "meta": "<b>Winter 2027</b> · University of Ottawa · 3 credits",
-        "caption": "uOttawa Cyberrange<br>Mission Control Facility",
+        "caption": "",
         "stats": [("12", "Weeks · one term"), ("1", "Mission · end to end"), ("2", "Codes · UG &amp; grad"),
                   ("0", "Prior space experience<br>needed")],
         "intro": "ORBIT NORTH takes you from the Canadian space sector and its regulations, through a complete "
@@ -54,7 +54,7 @@ T = {
              "studios. Week 9 is a Preliminary Design Review.",
              ["Requirements", "Subsystem design", "Trade studies", "Risk register", "PDR"]),
             ("Weeks 10 – 12", "Operations", "Live mission operations simulation",
-             "Operations training at the uOttawa Cyberrange: control-room positions, the voice loop, pass planning, "
+             "Operations training in a mission control room: positions, the voice loop, pass planning, "
              "anomaly response and dry runs. Then two six-hour simulation blocks flying the EOSAT-1 Earth-observation "
              "satellite — launch, early operations and commissioning, then nominal operations with contingencies "
              "injected in real time. One team operates while another observes and documents, then the teams swap. "
@@ -64,7 +64,7 @@ T = {
         "rhythm_h": "How the term works",
         "rhythm": [("1.5 h", "Lecture and seminar", "Each week, a short lecture on the week’s topic, then discussion."),
                    ("3 h", "Studio", "Team work in the design facility (Weeks 1–9) or the mission control room (Week 10)."),
-                   ("6 h", "Simulation blocks", "Weeks 11 and 12: a full operations shift at the Cyberrange.")],
+                   ("6 h", "Simulation blocks", "Weeks 11 and 12: a full operations shift, run without a break.")],
         "rhythm_note": "In person, with a reading break after Week 6. Nothing to buy: the open textbook "
                        "<i>Concurrent Spacecraft Design</i>, the course videos, SpaceCDF and the simulator are all provided.",
         "outcomes_h": "What you’ll be able to do",
@@ -80,7 +80,7 @@ T = {
                    "Graduate. Additional outcomes in quantitative trade-off evaluation, sub-area leadership and "
                    "literature-grounded synthesis.")],
         "who_h": "Who’s involved",
-        "who": ["University of Ottawa SEDTI", "uOttawa Cyberrange"],
+        "who": ["University of Ottawa", "Faculty of Engineering · SEDTI"],
         "cta_eyebrow": "Interested? Get in touch.",
         "cta": "Express your interest →",
         "contact": "Dr Franz Newland · SEDTI, University of Ottawa<br>fnewland@uottawa.ca",
@@ -93,7 +93,7 @@ T = {
         "lede": "Concevez une mission CubeSat. Commandez une simulation de contrôle de mission en direct. "
                 "Lancez votre carrière dans le spatial — en une session.",
         "meta": "<b>Hiver 2027</b> · Université d’Ottawa · 3 crédits",
-        "caption": "Cyberrange uOttawa<br>Centre de contrôle de mission",
+        "caption": "",
         "stats": [("12", "Semaines · une session"), ("1", "Mission · de bout en bout"),
                   ("2", "Codes · 1<sup>er</sup> cycle<br>et cycles sup."), ("0", "Expérience spatiale<br>préalable requise")],
         "intro": "ORBIT NORTH vous mène du secteur spatial canadien et de sa réglementation, à travers la conception "
@@ -120,7 +120,7 @@ T = {
              "une véritable analyse entre les ateliers. La semaine 9 est une revue de conception préliminaire.",
              ["Exigences", "Sous-systèmes", "Études de compromis", "Registre des risques", "PDR"]),
             ("Semaines 10 à 12", "Exploitation", "Simulation d’opérations de mission en direct",
-             "Formation aux opérations au Cyberrange uOttawa : postes de la salle de contrôle, boucle vocale, "
+             "Formation aux opérations en salle de contrôle de mission : postes, boucle vocale, "
              "planification des passages, réponse aux anomalies et répétitions. Puis deux blocs de simulation de "
              "six heures aux commandes du satellite d’observation de la Terre EOSAT-1 — lancement, premières "
              "opérations et mise en service, puis opérations nominales avec des contingences injectées en temps "
@@ -131,7 +131,7 @@ T = {
         "rhythm_h": "Le déroulement de la session",
         "rhythm": [("1,5 h", "Cours et séminaire", "Chaque semaine, un court exposé sur le thème de la semaine, puis une discussion."),
                    ("3 h", "Atelier", "Travail d’équipe au centre de conception (semaines 1 à 9) ou en salle de contrôle (semaine 10)."),
-                   ("6 h", "Blocs de simulation", "Semaines 11 et 12 : un quart d’exploitation complet au Cyberrange.")],
+                   ("6 h", "Blocs de simulation", "Semaines 11 et 12 : un quart d’exploitation complet, sans interruption.")],
         "rhythm_note": "En présentiel, avec une semaine de lecture après la semaine 6. Rien à acheter : le manuel libre "
                        "<i>Concurrent Spacecraft Design</i>, les vidéos du cours, SpaceCDF et le simulateur sont fournis.",
         "outcomes_h": "Ce que vous saurez faire",
@@ -147,7 +147,7 @@ T = {
                    "Cycles supérieurs. Résultats supplémentaires en évaluation quantitative des compromis, leadership "
                    "d’un sous-domaine et synthèse appuyée sur la littérature.")],
         "who_h": "Qui est impliqué",
-        "who": ["SEDTI, Université d’Ottawa", "Cyberrange uOttawa"],
+        "who": ["Université d’Ottawa", "Faculté de génie · SEDTI"],
         "cta_eyebrow": "Intéressé·e ? Contactez-nous.",
         "cta": "Exprimez votre intérêt →",
         "contact": "D<sup>r</sup> Franz Newland · SEDTI, Université d’Ottawa<br>fnewland@uottawa.ca",
@@ -281,6 +281,7 @@ def localise(t: dict) -> dict:
 def page_html(t: dict, photo: str | None) -> str:
     t = localise(t)
     bg = f"background-image:url('{photo}')" if photo else ""
+    caption = f'<div class="caption mono">{t["caption"]}</div>' if t["caption"] else ""
     stats = "".join(f'<div class="stat"><div class="num">{n}</div><div class="lbl mono">{l}</div></div>' for n, l in t["stats"])
     p1 = f"""
 <section class="page">
@@ -291,7 +292,7 @@ def page_html(t: dict, photo: str | None) -> str:
       <div class="lede">{t['lede']}</div>
       <div class="meta mono">{t['meta']}</div>
     </div>
-    <div class="hero-photo" style="{bg}"><div class="caption mono">{t['caption']}</div></div>
+    <div class="hero-photo" style="{bg}">{caption}</div>
   </div>
   <div class="stats">{stats}</div>
   <div class="body">
@@ -335,7 +336,7 @@ def page_html(t: dict, photo: str | None) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--photo", type=Path, default=HERE / "cyberrange.jpg")
+    ap.add_argument("--photo", type=Path, default=HERE / "hero.jpg")
     ap.add_argument("--out", type=Path, default=OUT)
     a = ap.parse_args()
     photo = None
