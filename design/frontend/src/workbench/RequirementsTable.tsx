@@ -10,6 +10,10 @@
  *   stage and level, allocation over the whole product tree, and for an interface requirement
  *   its interface and ICD row (exchange item).
  * - "Import requirements": YAML / JSON / CSV with a dry-run preview, or ReqIF.
+ * - Wave 3: a Functions column and picker (the functions and processes that satisfy a row,
+ *   3.R1); a "Checked against" column with the proposed binding of each threshold to a figure
+ *   the tool computes, accepted per row or all at once, and its verdict (3.R2); the acceptance
+ *   criterion, verification model and event; the allocation flag of rule AR-01 (3.R3).
  *
  * No polling: the study socket broadcasts every requirement change (useCollaboration).
  */
@@ -32,7 +36,7 @@ export const LEVEL_LABELS: Record<string, string> = {
 export const LEVEL_ORDER = ['stakeholder', 'mission', 'segment', 'system', 'subsystem', 'interface']
 const STATUS_LABELS: Record<string, string> = { draft: 'Draft', approved: 'Approved', verified: 'Verified', violated: 'Violated' }
 const REQ_STATUS: Record<string, Status> = { draft: 'neutral', approved: 'info', verified: 'ok', violated: 'alarm' }
-export const STAGES = ['PDR', 'CDR', 'QR', 'AR', 'IOV']
+export const STAGES = ['PRR', 'SRR', 'PDR', 'CDR', 'QR', 'AR', 'IOV']
 const STAGE_LABELS: Record<string, string> = { IOV: 'In-orbit verification' }
 export const METHODS: Record<string, string> = { T: 'Test', A: 'Analysis', R: 'Review', I: 'Inspection' }
 const PRIORITY_LABELS: Record<string, string> = { '1': '1 mandatory', '2': '2 performance', '3': '3 goal' }
@@ -52,10 +56,23 @@ export interface Req {
   responsible_position?: string | null; priority?: number | null; source_ref?: string | null; status: string
   threshold_op?: string | null; threshold_value?: unknown; threshold_unit?: string | null; open_item?: boolean | null
   ir_json?: Record<string, any> | null
+  // wave 3 (v2 baseline)
+  acceptance?: string | null; verification_model?: string | null; verification_event?: string | null
+  budget_ref?: string | null; function_codes?: string[] | null; allocation_codes?: string[] | null
+  threshold_param_path?: string | null; external_ids?: Record<string, any> | null
 }
+
+export interface FnLink { id: string; code?: string | null; name?: string | null; kind: string; level?: number; is_leaf?: boolean }
+export interface BindingRow {
+  requirement_id: string; code: string; budget_ref?: string | null; current_path?: string | null; accepted: boolean
+  proposal?: { path: string; reason: string; unit: string } | null; status?: string | null; achieved?: number | null
+  margin_pct?: number | null
+}
+export interface CatalogueItem { path: string; unit: string; family: string; label: { en: string; fr: string }; value?: number | null }
 
 type ColKey = 'code' | 'level' | 'text' | 'owner' | 'category' | 'priority' | 'method' | 'stage' | 'status'
   | 'parents' | 'objectives' | 'element' | 'threshold' | 'rationale' | 'source'
+  | 'functions' | 'checked' | 'acceptance' | 'vmodel' | 'vevent'
 // English text is the i18n key
 const COLUMNS: { key: ColKey; label: string; width: string }[] = [
   { key: 'code', label: 'Code', width: '9.5rem' },
@@ -73,8 +90,14 @@ const COLUMNS: { key: ColKey; label: string; width: string }[] = [
   { key: 'threshold', label: 'Threshold', width: '9rem' },
   { key: 'rationale', label: 'Rationale', width: 'minmax(10rem, 2fr)' },
   { key: 'source', label: 'Source', width: '9rem' },
+  { key: 'functions', label: 'Functions', width: '7rem' },
+  { key: 'checked', label: 'Checked against', width: '13rem' },
+  { key: 'acceptance', label: 'Acceptance', width: 'minmax(10rem, 2fr)' },
+  { key: 'vmodel', label: 'Model', width: '4.5rem' },
+  { key: 'vevent', label: 'Event', width: '7rem' },
 ]
-const DEFAULT_COLS: ColKey[] = ['code', 'level', 'text', 'owner', 'priority', 'method', 'stage', 'status', 'parents']
+const DEFAULT_COLS: ColKey[] = ['code', 'level', 'text', 'owner', 'priority', 'method', 'stage', 'status', 'parents',
+  'functions', 'checked']
 
 function loadCols(): ColKey[] {
   try {
@@ -132,6 +155,14 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
   }
   const nameOf = useMemo(() => Object.fromEntries(elements.map((e: any) => [e.id, e.name])), [elements])
   const codeOf = useMemo(() => Object.fromEntries(requirements.map(r => [r.id, r.code])), [requirements])
+  const { links, functions, bindings, catalogue } = useTraceData(studyId, requirements)
+  const bindingOf = useMemo(() => Object.fromEntries(bindings.map(b => [b.requirement_id, b])), [bindings])
+  const pathLabel = (path?: string | null) => {
+    if (!path) return ''
+    const c = catalogue.find(x => x.path === path)
+    return c ? (fr ? c.label.fr : c.label.en) : path
+  }
+  const pending = bindings.filter(b => b.proposal && b.proposal.reason === 'budget_ref' && !b.accepted && !b.current_path)
 
   // filters
   const [q, setQ] = useState('')
@@ -163,6 +194,11 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
       case 'element': return nameOf[r.element_id ?? ''] ?? ''
       case 'threshold': return thresholdText(r)
       case 'source': return r.source_ref ?? ''
+      case 'functions': return (links[r.id] ?? []).map(f => f.code ?? '').join(',')
+      case 'checked': return r.threshold_param_path ?? (bindingOf[r.id]?.proposal ? '~' : '~~')
+      case 'acceptance': return r.acceptance ?? ''
+      case 'vmodel': return r.verification_model ?? ''
+      case 'vevent': return r.verification_event ?? ''
       default: return String((r as any)[k === 'text' ? 'text' : k] ?? '')
     }
   }
@@ -214,7 +250,12 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
     setCols(next)
     try { localStorage.setItem('c2o.reqtable.cols', JSON.stringify(next)) } catch { /* ignore */ }
   }
-  const invalidate = () => { qc.invalidateQueries({ queryKey: ['requirements', studyId] }) }
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['requirements', studyId] })
+    qc.invalidateQueries({ queryKey: ['requirement-bindings', studyId] })
+    qc.invalidateQueries({ queryKey: ['function-links', studyId] })
+    qc.invalidateQueries({ queryKey: ['function-coverage', studyId] })
+  }
 
   const patch = async (id: string, body: Record<string, unknown>) => {
     try { await send(`${API}/requirements/${id}`, 'PATCH', body); invalidate() } catch (e: any) { void showAlert(e.message) }
@@ -225,6 +266,10 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
       case 'code': return (
         <button type="button" className="c2o-rt__code mono" onClick={() => setEditing(r.id)} title={t('Edit {{code}}', { code: r.code })}>
           {r.code}{r.open_item ? ' ⚑' : ''}
+          {['stale', 'retired'].includes(r.external_ids?.allocation_sync?.state)
+            ? <span className="c-caution" title={r.external_ids?.allocation_sync?.state === 'stale'
+              ? t('The allocation changed: {{v}} proposed', { v: r.external_ids?.allocation_sync?.proposed_value })
+              : t('Allocation retired')}> ⚠</span> : null}
         </button>)
       case 'level': return <Tag>{t(LEVEL_LABELS[r.level] ?? r.level)}</Tag>
       case 'text': return <span className="c2o-rt__clip" title={r.text}>{r.text}</span>
@@ -243,7 +288,40 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
       case 'rationale': return <InlineText value={r.rationale ?? ''} label={t('Rationale of {{code}}', { code: r.code })}
         onSave={v => patch(r.id, { rationale: v || null })} />
       case 'source': return <span className="c2o-rt__clip" title={r.source_ref ?? ''}>{r.source_ref ?? ''}</span>
+      case 'functions': {
+        const fs = links[r.id] ?? []
+        return <button type="button" className="c2o-rt__inline mono c2o-rt__clip" onClick={() => setEditing(r.id)}
+          title={fs.map(f => `${f.code ?? ''} ${f.name ?? ''}`).join('\n') || t('No function: pick one in the editor')}>
+          {fs.map(f => f.code ?? f.name).join(', ') || <span className="c-caution">{t('none')}</span>}</button>
+      }
+      case 'checked': {
+        const b = bindingOf[r.id]
+        if (r.threshold_param_path) {
+          const st = b?.status === 'pass' ? 'ok' : b?.status === 'fail' ? 'alarm' : 'neutral'
+          return <span className="row gap-1 ai-c c2o-rt__clip" title={r.threshold_param_path}>
+            <StatusBadge status={st as Status}>{b?.achieved != null ? String(Math.round(b.achieved * 1000) / 1000) : '–'}</StatusBadge>
+            <span className="c2o-rt__clip t-12">{pathLabel(r.threshold_param_path)}</span></span>
+        }
+        if (b?.proposal) return (
+          <Button size="sm" onClick={() => void bind(r.id, b.proposal!.path)} title={b.proposal.path}>
+            {t('Accept: {{figure}}', { figure: pathLabel(b.proposal.path) })}</Button>)
+        return <span className="c-3 t-12">{r.budget_ref ? t('no figure yet') : ''}</span>
+      }
+      case 'acceptance': return <InlineText value={r.acceptance ?? ''} label={t('Acceptance of {{code}}', { code: r.code })}
+        onSave={v => patch(r.id, { acceptance: v || null })} />
+      case 'vmodel': return <span className="mono">{r.verification_model ?? ''}</span>
+      case 'vevent': return <span className="mono c2o-rt__clip">{r.verification_event ?? ''}</span>
     }
+  }
+  const bind = async (id: string, path: string | null) => {
+    try { await send(`${API}/requirements/${id}/binding`, 'PUT', { path }); invalidate() } catch (e: any) { void showAlert(e.message) }
+  }
+  const acceptAll = async () => {
+    try {
+      const res = await send(`${API}/studies/${studyId}/requirements/bindings/accept`, 'POST', {})
+      void showAlert(t('{{n}} threshold(s) now checked against a computed figure.', { n: res.accepted }))
+      invalidate()
+    } catch (e: any) { void showAlert(e.message) }
   }
 
   const allVisibleSelected = rows.length > 0 && rows.every(r => selected.has(r.id))
@@ -284,6 +362,10 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
         </label>
         <span className="t-12 c-2" role="status">{t('{{shown}} of {{total}} requirements', { shown: rows.length, total: requirements.length })}</span>
         <Button size="sm" onClick={() => setShowImport(v => !v)}>{t('Import requirements')}</Button>
+        {pending.length > 0 && (
+          <Button size="sm" variant="primary" onClick={() => void acceptAll()}
+            title={t('Bind each budget threshold to the figure the tool computes for it')}>
+            {t('Accept {{n}} proposed bindings', { n: pending.length })}</Button>)}
       </div>
 
       <Disclosure summary={t('Columns')} meta={String(shown.length)}>
@@ -345,6 +427,8 @@ export function RequirementsTable({ studyId, requirements }: { studyId: string; 
 
       {editReq && <RequirementEditor key={editReq.id} studyId={studyId} req={editReq} requirements={requirements}
         elements={elements} study={study} seats={seats} seatLabel={seatLabel}
+        fnLinks={links[editReq.id] ?? []} functions={functions} binding={bindingOf[editReq.id]} catalogue={catalogue}
+        pathLabel={pathLabel}
         onClose={() => setEditing(null)} onSaved={() => { setEditing(null); invalidate() }} />}
     </div>
   )
@@ -408,11 +492,18 @@ function BulkEdit({ studyId, ids, seats, seatLabel, onDone }: {
 
 // ─── Editor ───
 
-export function RequirementEditor({ studyId, req, requirements, elements, study, seats, seatLabel, onClose, onSaved }: {
+export function RequirementEditor({ studyId, req, requirements, elements, study, seats, seatLabel, onClose, onSaved,
+  fnLinks = [], functions = [], binding, catalogue = [], pathLabel = (p?: string | null) => p ?? '' }: {
   studyId: string; req: Req; requirements: Req[]; elements: any[]; study: any; seats: any[]
   seatLabel: (id?: string | null) => string; onClose: () => void; onSaved: () => void
+  fnLinks?: FnLink[]; functions?: FnLink[]; binding?: BindingRow; catalogue?: CatalogueItem[]
+  pathLabel?: (p?: string | null) => string
 }) {
   const { t } = useTranslation()
+  const [fnIds, setFnIds] = useState<string[]>(fnLinks.map(f => f.id))
+  const [fnPick, setFnPick] = useState('')
+  const [path, setPath] = useState<string>(req.threshold_param_path ?? '')
+  const flag = req.external_ids?.allocation_sync
   const v0 = req.threshold_value as any
   const [f, setF] = useState({
     code: req.code, level: req.level, text: req.text, rationale: req.rationale ?? '', req_type: req.req_type ?? '',
@@ -424,6 +515,7 @@ export function RequirementEditor({ studyId, req, requirements, elements, study,
     tv: req.threshold_op === 'in_range' ? '' : (v0 != null && typeof v0 !== 'object' ? String(v0) : ''),
     tmin: v0 && typeof v0 === 'object' ? String(v0.min ?? '') : '', tmax: v0 && typeof v0 === 'object' ? String(v0.max ?? '') : '',
     parent_ids: req.parent_ids ?? [], objective_ids: req.objective_ids ?? [],
+    acceptance: req.acceptance ?? '', verification_model: req.verification_model ?? '', verification_event: req.verification_event ?? '',
     interface_id: req.ir_json?.interface_id ?? '', exchange_item_ids: (req.ir_json?.exchange_item_ids ?? []) as string[],
   })
   const [busy, setBusy] = useState(false)
@@ -462,11 +554,24 @@ export function RequirementEditor({ studyId, req, requirements, elements, study,
         verification_level: f.verification_level || null, threshold_op: f.threshold_op || null,
         threshold_value: value(), threshold_unit: f.threshold_unit || null,
         parent_ids: f.parent_ids, objective_ids: f.objective_ids,
+        acceptance: f.acceptance || null, verification_model: f.verification_model || null,
+        verification_event: f.verification_event || null,
       }
       if (isIR) { body.interface_id = f.interface_id || null; body.exchange_item_ids = f.exchange_item_ids }
       await send(`${API}/requirements/${req.id}`, 'PATCH', body)
+      const before = fnLinks.map(x => x.id)
+      if (fnIds.length !== before.length || fnIds.some(x => !before.includes(x))) {
+        await send(`${API}/requirements/${req.id}/functions`, 'PUT', { function_ids: fnIds })
+      }
+      if ((path || null) !== (req.threshold_param_path ?? null)) {
+        await send(`${API}/requirements/${req.id}/binding`, 'PUT', { path: path || null })
+      }
       onSaved()
     } catch (e: any) { void showAlert(e.message) } finally { setBusy(false) }
+  }
+  const resolveFlag = async (action: string) => {
+    try { await send(`${API}/requirements/${req.id}/allocation-sync`, 'POST', { action }); onSaved() }
+    catch (e: any) { void showAlert(e.message) }
   }
   const others = requirements.filter(r => r.id !== req.id && LEVEL_ORDER.indexOf(r.level) <= LEVEL_ORDER.indexOf(req.level === 'interface' ? 'subsystem' : req.level))
   const toggle = (k: 'verification_methods' | 'objective_ids' | 'exchange_item_ids', id: string) =>
@@ -580,12 +685,74 @@ export function RequirementEditor({ studyId, req, requirements, elements, study,
             </label>))}
         </fieldset>)}
       <Field label={t('Source')}><Input dense value={f.source_ref} onChange={e => set('source_ref', e.target.value)} /></Field>
+      <Field label={t('Acceptance criterion')}>
+        <Textarea rows={2} value={f.acceptance} onChange={e => set('acceptance', e.target.value)} />
+      </Field>
+      <div className="c2o-rt__grid">
+        <Field label={t('Verification model')}><Input dense className="mono" value={f.verification_model} maxLength={16}
+          onChange={e => set('verification_model', e.target.value)} /></Field>
+        <Field label={t('Verification event')}><Input dense className="mono" value={f.verification_event} maxLength={32}
+          onChange={e => set('verification_event', e.target.value)} /></Field>
+        <Field label={t('Checked against')}>
+          <Select dense value={path} onChange={e => setPath(e.target.value)}>
+            <option value="">{t('not checked against a figure')}</option>
+            {binding?.proposal && <option value={binding.proposal.path}>{t('Proposed: {{figure}}', { figure: pathLabel(binding.proposal.path) })}</option>}
+            {catalogue.filter(c => c.path !== binding?.proposal?.path).map(c => (
+              <option key={c.path} value={c.path}>{pathLabel(c.path)}{c.value != null ? ` (${Math.round(c.value * 1000) / 1000} ${c.unit})` : ''}</option>))}
+          </Select>
+        </Field>
+      </div>
+      <fieldset className="c2o-rt__set">
+        <legend className="t-12">{t('Functions and processes this requirement serves')}</legend>
+        {fnIds.length === 0 && <span className="t-12 c-caution">{t('No function yet: every requirement should serve a function or an enabling process.')}</span>}
+        {fnIds.map(id => {
+          const fn = functions.find(x => x.id === id) ?? fnLinks.find(x => x.id === id)
+          return <span key={id} className="c2o-rt__chip mono">{fn?.code ?? fn?.name ?? id}
+            <button type="button" aria-label={t('Remove function {{code}}', { code: fn?.code ?? fn?.name ?? id })}
+              onClick={() => setFnIds(fnIds.filter(x => x !== id))}>×</button></span>
+        })}
+        <Select dense value={fnPick} aria-label={t('Add a function')}
+          onChange={e => { const id = e.target.value; setFnPick(''); if (id && !fnIds.includes(id)) setFnIds([...fnIds, id]) }}>
+          <option value="">{t('+ function…')}</option>
+          {functions.map(x => <option key={x.id} value={x.id}>{x.code ? `${x.code} — ` : ''}{x.name}{x.kind === 'process' ? ` (${t('enabling process')})` : ''}</option>)}
+        </Select>
+      </fieldset>
+      {flag && ['stale', 'retired'].includes(flag.state) && (
+        <div className="card bl-caution t-12" role="status">
+          {flag.state === 'stale'
+            ? t('The allocation ledger now says {{v}}; this requirement still says {{old}}.', { v: flag.proposed_value, old: flag.row_value })
+            : t('Its allocation line was deleted from the ledger (allocation retired).')}
+          <span className="row gap-2 mt-1">
+            <Button size="sm" variant="primary" onClick={() => void resolveFlag('accept')}>
+              {flag.state === 'stale' ? t('Take the ledger value') : t('Retire this requirement')}</Button>
+            <Button size="sm" onClick={() => void resolveFlag('dismiss')}>{t('Keep as it is')}</Button>
+          </span>
+        </div>)}
       <span className="row gap-2">
         <Button type="submit" variant="primary" size="sm" busy={busy}>{t('Save')}</Button>
         <Button size="sm" onClick={onClose}>{t('Cancel')}</Button>
       </span>
     </form>
   )
+}
+
+/** The function links and the threshold bindings of the study (wave 3, 3.R1 and 3.R2). */
+export function useTraceData(studyId: string | null, requirements: Req[]) {
+  const n = requirements.length
+  const fl = useQuery({
+    queryKey: ['function-links', studyId, n],
+    queryFn: () => fetch(`${API}/studies/${studyId}/requirements/function-links`).then(r => (r.ok ? r.json() : { links: {}, functions: [] })),
+    enabled: !!studyId, structuralSharing: false,
+  })
+  const bd = useQuery({
+    queryKey: ['requirement-bindings', studyId, n],
+    queryFn: () => fetch(`${API}/studies/${studyId}/requirements/bindings`).then(r => (r.ok ? r.json() : { rows: [], catalogue: [] })),
+    enabled: !!studyId, structuralSharing: false,
+  })
+  return {
+    links: (fl.data?.links ?? {}) as Record<string, FnLink[]>, functions: (fl.data?.functions ?? []) as FnLink[],
+    bindings: (bd.data?.rows ?? []) as BindingRow[], catalogue: (bd.data?.catalogue ?? []) as CatalogueItem[],
+  }
 }
 
 /** Every element of the product tree, indented by depth (allocation picker over the whole tree). */

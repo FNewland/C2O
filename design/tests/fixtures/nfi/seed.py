@@ -423,6 +423,7 @@ async def _s3(api: _Api, seed: NfiSeed) -> None:
     await _s3_validation(api, seed)
     await _s3_assumptions(api, seed)
     await _s3_negotiations(api, seed)
+    await _s3_icd_inventory(api, seed)
 
 
 async def _s4(api: _Api, seed: NfiSeed) -> None:
@@ -918,6 +919,18 @@ async def _s1_bindings(api: _Api, seed: NfiSeed) -> None:
     as a student accepts the "checked against" column of the Requirements tab."""
     rep = await api.post(f"/api/studies/{seed.study_id}/requirements/bindings/accept", {})
     seed.report["bindings"] = {"accepted": rep["accepted"]}
+
+
+#: the ICDs the v2 baseline needs at Issue A by the PDR, signed by both interface owners
+#: (v2 REVIEW_READINESS, PDR item 11): deployer, radio–OBC, payload–OBC, sail–EPS, space–ground
+PDR_ICDS = ("ICD-LAUNCH", "ICD-RADIO-OBC", "ICD-PAY-OBC", "ICD-SAIL", "ICD-SPACE-GROUND")
+
+
+async def _s3_icd_inventory(api: _Api, seed: NfiSeed) -> None:
+    """3.R5/3.R6 (agent R, end of S3): the five ICDs the PDR needs are put under issue control
+    as drafts (the PDR inventory), so PDR-EC-02 lists them as not agreed. Raising Issue A and
+    the two seats' sign-offs are done on camera (ICD tab), not seeded."""
+    await api.post(f"/api/studies/{seed.study_id}/icds/inventory", {"icd_refs": list(PDR_ICDS), "required_at": "pdr"})
 
 
 async def _s2_allocations(api: _Api, seed: NfiSeed) -> None:

@@ -83,7 +83,7 @@ async def test_r1_function_import_and_coverage(client):
 # ─────────────────────────────────────────────────────────────── helpers
 
 BUDGETS = load("budgets")
-PDR_ICDS = ("ICD-LAUNCH", "ICD-RADIO-OBC", "ICD-PAY-OBC", "ICD-SAIL", "ICD-SPACE-GROUND")
+from tests.fixtures.nfi.seed import PDR_ICDS  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -298,8 +298,11 @@ def test_r4_validation_criteria_read_the_validation_coverage():
 async def test_r5_r6_icds_at_issue_a_signed_by_both_seats(client):
     s = await seed_nfi(client, "S3")
     sid = s.study_id
+    # the seed (end of S3) put the five ICDs the v2 PDR needs under issue control, as drafts
+    st = (await client.get(f"/api/studies/{sid}/icds")).json()
+    assert st["inventory"] == sorted(PDR_ICDS) and st["counts"]["at_issue_a"] == 0
     r = await client.post(f"/api/studies/{sid}/icds/inventory", json={"icd_refs": list(PDR_ICDS)})
-    assert r.status_code == 200 and r.json()["declared"] == list(PDR_ICDS)
+    assert r.status_code == 200 and r.json()["declared"] == []          # idempotent
     pdr = await _gate(client, sid, "pdr")
     c = pdr["PDR-EC-02"]
     assert c["status"] == "fail" and c["evidence_params"]["agreed"] == 0 and c["evidence_params"]["total"] == 5

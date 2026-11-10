@@ -5,6 +5,11 @@
  * functions router: add child / rename / delete / layer / allocation to a
  * design element / ports / functional exchanges. Shows a
  * "Migrate legacy functions" button while the tree is empty.
+ *
+ * Wave 3 (3.R1): a function may be allocated to several elements (the first is the allocation
+ * row, the others are kept on the function); a parent's allocation is the union of its leaves.
+ * Each function shows its code and the number of requirements it satisfies, and the header the
+ * function ↔ requirement coverage (GET …/requirements/function-coverage).
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -138,6 +143,23 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
     mutationFn: (id: string) => fetch(`${API}/functional-exchanges/${id}`, { method: 'DELETE' }).then(jsonOrThrow),
     onSuccess: invalidate, onError: onErr,
   })
+  const allocateAlso = useMutation({
+    mutationFn: ({ id, element_id }: { id: string; element_id: string }) =>
+      fetch(`${API}/functions/${id}/allocate/also`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ element_id }),
+      }).then(jsonOrThrow),
+    onSuccess: invalidate, onError: onErr,
+  })
+  const unallocateAlso = useMutation({
+    mutationFn: ({ id, element_id }: { id: string; element_id: string }) =>
+      fetch(`${API}/functions/${id}/allocate/also/${element_id}`, { method: 'DELETE' }).then(jsonOrThrow),
+    onSuccess: invalidate, onError: onErr,
+  })
+  const { data: coverage } = useQuery<any>({
+    queryKey: ['function-coverage', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/requirements/function-coverage`).then(jsonOrThrow),
+    enabled: !!studyId, structuralSharing: false,
+  })
   const migrate = useMutation({
     mutationFn: () => fetch(`${API}/studies/${studyId}/functions/migrate-legacy`, { method: 'POST' }).then(jsonOrThrow),
     onSuccess: invalidate, onError: onErr,
@@ -150,7 +172,10 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
   const all = flatten(tree)
   const portsById = new Map<string, { port: FunctionPort; fn: FunctionNode }>()
   for (const fn of all) for (const p of fn.ports || []) portsById.set(p.id, { port: p, fn })
-  const unallocated = all.filter(f => (f.allocations || []).length === 0).length
+  // a parent's allocation is the union of its leaves; a process (enabling process) is not allocated
+  const unallocated = all.filter(f => (f.children || []).length === 0 && f.function_type !== 'process'
+    && (f.allocations || []).length === 0).length
+  const reqsOf: Record<string, string[]> = coverage?.per_function ?? {}
 
   const toggle = (id: string) => setCollapsed(prev => {
     const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n
@@ -163,6 +188,14 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
         <span className="c-2 t-12">
           {unallocated > 0 ? t('{{n}} unallocated', { n: unallocated }) : t('all allocated')} · {t('{{n}} exchanges', { n: exchanges.length })}
         </span>
+        {coverage && coverage.functions > 0 && (
+          <span className={`t-12 ${coverage.leaves_without_requirement.length || coverage.requirements_without_function.length ? 'c-caution' : 'c-ok'}`}
+            role="status" title={[...coverage.leaves_without_requirement, ...coverage.requirements_without_function].slice(0, 30).join(', ')}>
+            {t('Coverage: {{leaves}} leaf function(s), {{bare}} without a requirement; {{reqs}}/{{total}} requirements with a function',
+              { leaves: coverage.leaves, bare: coverage.leaves_without_requirement.length,
+                reqs: coverage.requirements_with_function, total: coverage.requirements })}
+            {coverage.allocation_warnings.length > 0 && ` · ${t('{{n}} allocation warning(s)', { n: coverage.allocation_warnings.length })}`}
+          </span>)}
         <span className="grow" />
         {ARCADIA_LAYERS.map(l => <LayerBadge key={l} layer={l} />)}
         <button className="c2o-btn c2o-btn--sm"
@@ -208,6 +241,9 @@ export function FunctionTree({ studyId: studyIdProp }: { studyId?: string | null
           onDelete={async (id) => { if ((await askConfirm(t('Delete this function and its sub-functions?')))) deleteFn.mutate(id) }}
           onAllocate={(id, element_id, layer) => allocate.mutate({ id, element_id, layer })}
           onUnallocate={(id, layer) => unallocate.mutate({ id, layer })}
+          onAllocateAlso={(id, element_id) => allocateAlso.mutate({ id, element_id })}
+          onUnallocateAlso={(id, element_id) => unallocateAlso.mutate({ id, element_id })}
+          reqsOf={reqsOf}
           onAddPort={(id, name, direction) => createPort.mutate({ id, name, direction })}
           onDeletePort={(portId) => deletePort.mutate(portId)}
         />
@@ -233,6 +269,9 @@ interface RowProps {
   onDelete: (id: string) => void
   onAllocate: (id: string, elementId: string, layer: string) => void
   onUnallocate: (id: string, layer: string) => void
+  onAllocateAlso: (id: string, elementId: string) => void
+  onUnallocateAlso: (id: string, elementId: string) => void
+  reqsOf: Record<string, string[]>
   onAddPort: (id: string, name: string, direction: string) => void
   onDeletePort: (portId: string) => void
 }
@@ -276,7 +315,12 @@ function FunctionRowView(p: RowProps) {
             {node.name}
           </span>
         )}
-        {node.function_type && <span className="t-12 c-2">{node.function_type}</span>}
+        {node.external_id && <span className="t-12 mono c-2">{node.external_id}</span>}
+        {node.function_type && node.function_type !== 'function' && <span className="t-12 c-2">{t(node.function_type === 'process' ? 'enabling process' : node.function_type)}</span>}
+        {node.external_id && (p.reqsOf[node.external_id] ?? []).length > 0 && (
+          <span className="t-12 c-2" title={(p.reqsOf[node.external_id] ?? []).join(', ')}>
+            {t('{{n}} requirement(s)', { n: (p.reqsOf[node.external_id] ?? []).length })}
+          </span>)}
 
         {/* allocations */}
         {allocs.map(a => (
@@ -285,11 +329,13 @@ function FunctionRowView(p: RowProps) {
             background: 'rgba(16,185,129,0.15)', color: 'var(--status-ok)', border: '1px solid rgba(16,185,129,0.4)',
           }}>
             → {a.element?.name || a.element_id.slice(0, 8)} <span style={{ opacity: 0.6 }}>[{a.layer}]</span>
-            <button onClick={() => p.onUnallocate(node.id, a.layer)} title={t('Remove allocation')}
+            <button onClick={() => ((a as any).secondary ? p.onUnallocateAlso(node.id, a.element_id) : p.onUnallocate(node.id, a.layer))}
+              title={t('Remove allocation')}
               className="bg-none bd-0 c-ok cursor-p py-0 pl-1 pr-0 t-12">×</button>
           </span>
         ))}
-        {allocs.length === 0 && <span className="t-12 c-caution">{t('unallocated')}</span>}
+        {allocs.length === 0 && kids.length === 0 && node.function_type !== 'process' && <span className="t-12 c-caution">{t('unallocated')}</span>}
+        {allocs.length === 0 && kids.length > 0 && <span className="t-12 c-2">{t('allocated through its sub-functions')}</span>}
 
         <span className="grow" />
         <button className="c2o-btn c2o-btn--sm" onClick={() => setEditing(true)}>{t('rename')}</button>
@@ -311,6 +357,11 @@ function FunctionRowView(p: RowProps) {
             onClick={() => { p.onAllocate(node.id, pickId, node.layer); setPicking(false); setPickId('') }}>
             {t('Allocate at {{layer}}', { layer: node.layer })}
           </button>
+          {allocs.length > 0 && (
+            <button className="c2o-btn c2o-btn--sm" disabled={!pickId}
+              onClick={() => { p.onAllocateAlso(node.id, pickId); setPicking(false); setPickId('') }}>
+              {t('Add this element (keep the others)')}
+            </button>)}
           <button className="c2o-btn c2o-btn--sm" onClick={() => setPicking(false)}>{t('cancel')}</button>
         </div>
       )}
