@@ -13,7 +13,7 @@ from tests.fixtures.nfi import ELEMENT_IDS, load, seed_nfi
 WAVE3_SECTIONS = {"stakeholders": "S", "allocations": "A", "validation": "S", "assumptions": "S", "changes": "L",
                   "open_items": "D", "negotiations": "H", "se_phase": "S",
                   # PI addendum
-                  "semp": "X", "icds": "R", "reliability": "A", "thermal_model": "A", "debris": "L",
+                  "icds": "R", "reliability": "A", "thermal_model": "A", "debris": "L",
                   "change_control": "D", "cost": "A"}
 
 #: one GET per stub router (owner) and the write routes that answer 501 until the owner lands
