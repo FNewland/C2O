@@ -158,6 +158,13 @@ export interface GroundStationRow {
   status: GroundStationStatus
   reason: string | null
   data_gb_per_day?: number
+  /** MB/day the greedy schedule of the reported day routed through this station */
+  data_mb_per_day_scheduled?: number
+  /** MB/day the station could return on its own (the contact table's "alone" figure) */
+  data_mb_per_day_alone?: number
+  /** where the margin comes from: "link_case:<name>" or "station G/T model" */
+  margin_source?: string
+  model_margin_db?: number
 }
 
 export interface GroundSegmentSummary extends Partial<Record<GroundSegmentParameter, number>> {

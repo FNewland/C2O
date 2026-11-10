@@ -621,16 +621,28 @@ def _eps_rails(ctx: Context, provider: Unit) -> list[float]:
     return _with_unregulated_bus(ctx, [float(v) for v in _class_default(ctx, "rails_by_class")])
 
 
+def _with_control_channels(ctx: Context, protos: list[str]) -> list[str]:
+    """A payload-only data interface brings its control channel (``defaults.control_channels``,
+    e.g. CSI-2 -> I2C for the camera control interface): the unit speaks both."""
+    cc = (ctx.defaults.get("control_channels") or {}) if isinstance(ctx.defaults, dict) else {}
+    out = list(protos)
+    for p in protos:
+        c = cc.get(p)
+        if c and c not in out:
+            out.append(c)
+    return out
+
+
 def _protocols_of(ctx: Context, u: Unit) -> list[str]:
     if u.level == "component":
-        return [p for p in u.facts.get("protocols") or [] if p not in NON_DATA_PROTOCOLS]
+        return _with_control_channels(ctx, [p for p in u.facts.get("protocols") or [] if p not in NON_DATA_PROTOCOLS])
     out: list[str] = []
     for c in ctx.units.values():   # a subsystem speaks what its units speak
         if c.level == "component" and u.id in {a["id"] for a in ctx.ancestors(c.id)}:
             for p in c.facts.get("protocols") or []:
                 if p not in NON_DATA_PROTOCOLS and p not in out:
                     out.append(p)
-    return out
+    return _with_control_channels(ctx, out)
 
 
 def _band_of(ctx: Context, u: Unit) -> str | None:

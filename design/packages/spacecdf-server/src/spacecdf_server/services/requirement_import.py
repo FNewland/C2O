@@ -220,8 +220,12 @@ def objective_rows(objectives: list[dict], need_codes: set[str]) -> list[dict]:
             "rationale": o.get("measure") or o.get("measurable_criterion"),
             "req_type": "functional", "category": "objective", "element_name": o.get("subsystem"),
             "parents": [n for n in _list(o.get("needs")) if n in need_codes], "objectives": [oid],
-            "verifies": [], "verification_methods": _list(o.get("verification_method")),
-            "verification_phase": o.get("verification_phase"), "verification_level": None,
+            # an objective is closed out by review (R) of the evidence of the requirements below it:
+            # in orbit for a mission objective, at acceptance for a programmatic constraint (QR-EC-01
+            # asks every row for a method and a close-out stage); the document's own values win
+            "verifies": [], "verification_methods": _list(o.get("verification_method")) or ["R"],
+            "verification_phase": o.get("verification_phase")
+            or ("AR" if str(o.get("priority") or "").lower() == "constraint" else "IOV"), "verification_level": None,
             "responsible_position": o.get("owner_seat") or "customer",
             "priority": OBJECTIVE_PRIORITY.get(str(o.get("priority") or "").lower(), _blank(o.get("priority"))),
             "source_ref": o.get("source"), "status": o.get("status") or "draft",

@@ -118,6 +118,16 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
         logger.exception("CDR model unavailable for %s", study_id)
         ctx["cdr"] = None
     ctx["rids"] = await list_review_items(study_id)
+    try:  # SRR-EC-05: the analyses' open conflicts
+        from ..db import analysis_repo
+        ctx["conflicts"] = await analysis_repo.list_conflicts(study_id)
+    except Exception:  # noqa: BLE001
+        ctx["conflicts"] = None
+    try:  # SRR-EC-07: the AIT model philosophy and test matrix (W8a)
+        from ..services import ait as _ait
+        ctx["ait"] = {"models": await _ait.list_models(study_id), "tests": await _ait.list_tests(study_id)}
+    except Exception:  # noqa: BLE001 — no AIT tables: the criterion is not evaluated
+        ctx["ait"] = None
     ctx["gate_order"] = [g["id"] for g in (study_profile(study).get("gates") or [])] if study else []
     try:  # instructor sign-offs of manual / hybrid items (WP9)
         from ..seats import store as seat_store
@@ -164,6 +174,7 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
             requirements=ctx["requirements"], elements=ctx["elements"], interfaces=ctx["interfaces"],
             mission=req_model, function_count=ctx.get("function_count"), risks=ctx.get("risks"),
             margin_gate=mg, cdr=ctx.get("cdr"), rollup=ctx.get("rollup"),
+            conflicts=ctx.get("conflicts"), ait=ctx.get("ait"),
         )
         if canon in gp.POST_CDR:
             from ..services.gate_reviews import post_cdr_criteria

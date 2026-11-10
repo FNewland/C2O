@@ -346,6 +346,40 @@ def _station_margin_db(link: _LinkInputs, gs: GroundStation, g_t_db_k: float | N
     return lb.downlink_margin_db, g_t_db_k
 
 
+def _case_margin(c: dict) -> float | None:
+    m = _num(c.get("margin_db"))
+    return m if m is not None else _num((c.get("results") or {}).get("margin_db"))
+
+
+def station_link_case(ctx: AnalysisContext, link: _LinkInputs, station_name: str) -> dict | None:
+    """The stored downlink case that states this station's margin (integration, wave 2): a case
+    in the link's band naming the station (else one for all sites), preferring the one at the
+    operational transmit power and rate, then the design case's coding, then the design case,
+    then display order. ``None`` when the study has no such case (the model margin is used)."""
+    from ..routers.link_budgets import _station_matches
+    cases = [c for c in (getattr(ctx, "link_cases", None) or [])
+             if c.get("direction") == "downlink" and _case_margin(c) is not None
+             and _num(c.get("frequency_mhz")) and _link_band(float(c["frequency_mhz"]) / 1000.0) == link.band
+             and _station_matches(c.get("station") or "", station_name)]
+    if not cases:
+        return None
+    design = next((c for c in (getattr(ctx, "link_cases", None) or [])
+                   if c.get("direction") == "downlink" and c.get("is_design_case")), {})
+
+    def close(a: Any, b: float) -> bool:
+        a = _num(a)
+        return a is not None and abs(a - b) <= 1e-6 * max(1.0, abs(b))
+
+    def rank(c: dict) -> tuple:
+        cs = (c.get("station") or "").strip().lower()
+        return (0 if cs and not cs.startswith("all") else 1,
+                0 if close(c.get("tx_power_w"), link.tx_power_w) else 1,
+                0 if close(c.get("data_rate_bps"), link.downlink_bps) else 1,
+                0 if (c.get("coding") or "") == (design.get("coding") or "") else 1,
+                0 if c.get("is_design_case") else 1, c.get("order") or 0)
+    return sorted(cases, key=rank)[0]
+
+
 def _pick_stations(ctx: AnalysisContext, warnings: list[str]) -> list[dict]:
     if ctx.ground_stations:
         return [_station_overlay(ctx, s) for s in ctx.ground_stations]
@@ -429,6 +463,15 @@ def network(ctx: AnalysisContext, warnings: list[str]) -> dict[str, Any]:
             margin, g_t = _station_margin_db(link, gs, _num(s.get("g_over_t_db_k")), orbit.altitude_km,
                                              row["contact_min_per_day"] * 60.0)
             row["margin_db"], row["g_t_db_k"] = round(margin, 2), round(g_t, 2)
+            row["margin_source"] = "station G/T model"
+            case = station_link_case(ctx, link, gs.name)
+            if case is not None:
+                # the stored link case of this site (its noise temperature, losses and coding) is
+                # the margin of record; the generic G/T model figure is kept beside it
+                row["model_margin_db"] = row["margin_db"]
+                margin = float(_case_margin(case))
+                row["margin_db"] = round(margin, 2)
+                row["margin_source"] = f"link_case:{case.get('name') or case.get('id')}"
             if margin < 0:
                 row["status"], row["reason"] = "excluded", f"link margin {margin:.1f} dB < 0 dB at {link.downlink_bps / 1e6:.2f} Mbps"
             elif margin < MARGIN_WARN_DB:
@@ -628,8 +671,21 @@ async def run_ground_segment(ctx: AnalysisContext) -> AnalysisOutput:
     per_station_data: dict[str, float] = {}
     for c in sched.contacts:
         per_station_data[c.station_id] = per_station_data.get(c.station_id, 0.0) + c.data_volume_mbit / 8000.0
+    # Two different per-station volumes (integration, wave 2): what the greedy schedule of the
+    # reported day actually routed through the station (shared with the other stations, overlaps
+    # given to one) and what the station could return on its own (the W4.05 contact table's
+    # "alone" figure: mean minutes x availability less acquisition, at the information rate).
+    from .data_budget import framing as _framing
+    fr = _framing([], link.downlink_bps)
     for r in rows:
         r["data_gb_per_day"] = round(per_station_data.get(r["station_id"], 0.0), 3)
+        r["data_mb_per_day_scheduled"] = round(per_station_data.get(r["station_id"], 0.0) * 1000.0, 2)
+        alone = 0.0
+        if r["status"] != "excluded":
+            alone = max(0.0, (float(r.get("contact_min_per_day") or 0.0) - float(r.get("passes_per_day") or 0.0)
+                              * fr["acquisition_s"] / 60.0) * fr["availability"]) * 60 * link.downlink_bps \
+                * fr["frame_efficiency"] / 8e6
+        r["data_mb_per_day_alone"] = round(alone, 2)
 
     # ── parameters
     P = out.parameters

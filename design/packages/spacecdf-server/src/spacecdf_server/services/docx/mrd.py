@@ -233,7 +233,7 @@ def generate_mrd_docx(
                            r.get("text", ""),
                            r.get("verification_method", ""),
                        ]
-                       for r in mission_reqs[:80]
+                       for r in mission_reqs
                    ])
     elif reqs:
         doc.add_paragraph(
@@ -257,7 +257,7 @@ def generate_mrd_docx(
                            r.get("text", ""),
                            r.get("verification_method", ""),
                        ]
-                       for r in system_reqs[:80]
+                       for r in system_reqs
                    ])
     elif not mission_reqs and reqs:
         # No level-tagged reqs -- show all
@@ -272,7 +272,7 @@ def generate_mrd_docx(
                            r.get("text", ""),
                            r.get("verification_method", ""),
                        ]
-                       for r in reqs[:80]
+                       for r in reqs
                    ])
     else:
         doc.add_paragraph("[System requirements to be derived from mission requirements]")

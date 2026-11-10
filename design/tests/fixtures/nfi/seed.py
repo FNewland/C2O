@@ -687,6 +687,22 @@ async def _w2_import_baseline(api: _Api, seed: NfiSeed) -> None:
             seed.requirements[code] = rid
     seed.report["requirements_import"] = {k: rep[k] for k in ("created", "updated", "unchanged", "by_level",
                                                                 "relations_created", "unallocated", "seconds")}
+    # wave 2 integration: the budget rows are checked against the study's budget figures
+    # (gate_evaluator.BUDGET_PARAMS: roll-up, data budget, design link case), as a student sets
+    # "checked against" on the Requirements tab; SRR-EC-03 and PDR-EC-01 then evaluate them
+    for code, path in BUDGET_PARAM_PATHS.items():
+        if code in seed.requirements:
+            await api.call("PATCH", f"/api/requirements/{seed.requirements[code]}", {"threshold_param_path": path})
+
+
+#: requirement code -> the budget figure its threshold is checked against (W2 integration)
+BUDGET_PARAM_PATHS = {
+    "SYS-BUD-01": "budget.mass_total_dry_kg",                     # <= 6.0 kg (predicted until weighed)
+    "SYS-BUD-02": "budget.mass_system_margin_available_percent",  # >= 20 % system margin on the margined mass
+    "SYS-BUD-03": "budget.power_margin_eol_percent",              # >= 20 % EOL power margin
+    "SYS-BUD-05": "budget.data_margin_percent",                   # >= 10 % daily data-volume margin
+    "SYS-BUD-06": "budget.link_margin_design_case_db",            # >= 3 dB at 10 deg (design link case)
+}
 
 
 async def _w2_link_interfaces(api: _Api, seed: NfiSeed) -> None:
