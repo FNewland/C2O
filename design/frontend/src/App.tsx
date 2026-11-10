@@ -16,6 +16,7 @@ import { crumbIndexForLevel, workbenchLevel } from './workbench/blockLevels'
 import { ReadinessChecklist } from './workbench/ReadinessChecklist'
 import { EscalationBanner } from './workbench/EscalationBanner'
 import { ExportPanel } from './workbench/ExportPanel'
+import { loadProjectFile, saveProjectFile } from './workbench/projectFile'
 import { GuidancePanel } from './workbench/GuidancePanel'
 import { PresenceBar } from './workbench/PresenceBar'
 import { MarginTower } from './components/MarginTower'
@@ -275,186 +276,26 @@ function StatusBar() {
       </button>
       <span className="c2o-contextbar__sep" aria-hidden="true" />
 
-      {/* Save */}
+      {/* Save: the complete project file from the server (workbench/projectFile.ts) */}
       <button
         onClick={async () => {
           if (!studyId) return
-          try {
-            const [elements, interfaces, requirements, allocations, study] = await Promise.all([
-              fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-              fetch(`${API}/studies/${studyId}/interfaces`).then(r => r.json()),
-              fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
-              fetch(`${API}/studies/${studyId}/allocations`).then(r => r.ok ? r.json() : []),
-              fetch(`${API}/studies/${studyId}`).then(r => r.ok ? r.json() : null),
-            ])
-            const { breadcrumb, currentLevel, focusElementId } = useUIStore.getState()
-            const uiState = { breadcrumb, currentLevel, focusElementId }
-            // Team records are on the server per study (WP0); the file carries them.
-            const riskRegister = study?.risk_register ?? []
-            const pughMatrix = study?.trade_records?.pugh?.state ?? {}
-            const blob = new Blob([JSON.stringify({
-              studyId, elements, interfaces, requirements, allocations,
-              studyMetadata: study, uiState, riskRegister, pughMatrix,
-            }, null, 2)], { type: 'application/json' })
-            const a = document.createElement('a')
-            a.href = URL.createObjectURL(blob)
-            a.download = `spacecdf_${new Date().toISOString().slice(0, 10)}.json`
-            a.click()
-            URL.revokeObjectURL(a.href)
-          } catch { void showAlert(i18n.t('Save failed')) }
+          try { await saveProjectFile(studyId) }
+          catch (err) { void showAlert(i18n.t('Save failed: {{message}}', { message: (err as Error).message })) }
         }}
         type="button"
         className="c2o-btn"
+        title={t('Download the whole study as a project file')}
       >
         {t('Save')}
       </button>
 
-      {/* Load */}
+      {/* Load: a project file becomes a new study (workbench/projectFile.ts) */}
       <button
-        onClick={() => {
-          const input = document.createElement('input')
-          input.type = 'file'
-          input.accept = '.json'
-          input.onchange = async (e: any) => {
-            const file = e.target.files?.[0]
-            if (!file) return
-            try {
-              const text = await file.text()
-              const data = JSON.parse(text)
-              if (!data.elements || !Array.isArray(data.elements)) {
-                void showAlert(i18n.t('Invalid save file — no elements found'))
-                return
-              }
-              // Create a new study
-              const studyRes = await fetch(`${API}/studies/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ requirements: { name: 'Loaded Mission' }, mission_need: {} }),
-              })
-              if (!studyRes.ok) { void showAlert(i18n.t('Failed to create study')); return }
-              const newStudy = await studyRes.json()
-              const newStudyId = newStudy.id
-
-              // Sort elements so parents are created before children
-              const sorted: any[] = []
-              const remaining = [...data.elements]
-              const created = new Set<string>()
-              const oldToNew = new Map<string, string>()
-
-              // First pass: roots (no parent_id)
-              while (remaining.length > 0) {
-                const batch = remaining.filter((el: any) =>
-                  !el.parent_id || created.has(el.parent_id)
-                )
-                if (batch.length === 0) {
-                  // Circular or orphans — just add them
-                  sorted.push(...remaining)
-                  break
-                }
-                for (const el of batch) {
-                  sorted.push(el)
-                  created.add(el.id)
-                  remaining.splice(remaining.indexOf(el), 1)
-                }
-              }
-
-              // Create elements in order
-              for (const el of sorted) {
-                const body: any = {
-                  name: el.name,
-                  element_type: el.element_type,
-                  segment: el.segment || 'space',
-                  parent_id: el.parent_id ? (oldToNew.get(el.parent_id) || null) : null,
-                  subsystem_domain: el.subsystem_domain || undefined,
-                  mass_kg: el.mass_kg, power_avg_w: el.power_avg_w, power_peak_w: el.power_peak_w,
-                  cost_recurring_keur: el.cost_recurring_keur, cost_nre_keur: el.cost_nre_keur,
-                  trl: el.trl, manufacturer: el.manufacturer, kb_component_id: el.kb_component_id,
-                  quantity: el.quantity || 1, margin_percent: el.margin_percent ?? 20,
-                  description: el.description || '',
-                  in_scope: el.in_scope ?? true, frozen: el.frozen ?? false,
-                  diagram_x: el.diagram_x, diagram_y: el.diagram_y,
-                  performance: el.performance,
-                }
-                const res = await fetch(`${API}/elements/?study_id=${newStudyId}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(body),
-                })
-                if (res.ok) {
-                  const created = await res.json()
-                  oldToNew.set(el.id, created.id)
-                }
-              }
-
-              // Create interfaces
-              if (data.interfaces) {
-                for (const iface of data.interfaces) {
-                  const fromId = oldToNew.get(iface.from_element_id)
-                  const toId = oldToNew.get(iface.to_element_id)
-                  if (fromId && toId) {
-                    await fetch(`${API}/interfaces/?study_id=${newStudyId}`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        name: iface.name, interface_type: iface.interface_type,
-                        direction: iface.direction || 'bidirectional',
-                        from_element_id: fromId, to_element_id: toId,
-                        diagram_label: iface.diagram_label,
-                      }),
-                    })
-                  }
-                }
-              }
-
-              // Create requirements
-              if (data.requirements) {
-                for (const req of data.requirements) {
-                  const elementId = req.element_id ? oldToNew.get(req.element_id) : undefined
-                  await fetch(`${API}/requirements/`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      study_id: newStudyId,
-                      element_id: elementId,
-                      level: req.level || 'mission',
-                      code: req.code, text: req.text, rationale: req.rationale, req_type: req.req_type,
-                      verification_method: req.verification_method,
-                      status: req.status || 'draft',
-                    }),
-                  })
-                }
-              }
-
-              // Switch to the new study
-              useUIStore.getState().setStudyId(newStudyId)
-              useUIStore.getState().drillUp(-1)  // reset to root
-
-              // Restore UI state if present
-              if (data.uiState && data.uiState.breadcrumb) {
-                const mappedBreadcrumb = data.uiState.breadcrumb
-                  .map((crumb: { id: string; name: string; type?: string | null }) => {
-                    const newId = oldToNew.get(crumb.id)
-                    return newId ? { id: newId, name: crumb.name, type: crumb.type } : null
-                  })
-                  .filter(Boolean) as Array<{ id: string; name: string; type?: string | null }>
-
-                if (mappedBreadcrumb.length > 0) {
-                  // Replay drill-down from root to restore breadcrumb
-                  for (const crumb of mappedBreadcrumb) {
-                    useUIStore.getState().drillInto(crumb.id, crumb.name, crumb.type)
-                  }
-                }
-              }
-
-              qc.invalidateQueries()
-            } catch (err) {
-              void showAlert(i18n.t('Load failed: {{message}}', { message: (err as Error).message }))
-            }
-          }
-          input.click()
-        }}
+        onClick={() => loadProjectFile(() => { void qc.invalidateQueries() })}
         type="button"
         className="c2o-btn"
+        title={t('Open a project file as a new study')}
       >
         {t('Load')}
       </button>

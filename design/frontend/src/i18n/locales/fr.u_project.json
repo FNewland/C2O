@@ -1,0 +1,10 @@
+{
+  "Download the whole study as a project file": "Télécharger toute l'étude sous forme de fichier de projet",
+  "Open a project file as a new study": "Ouvrir un fichier de projet comme nouvelle étude",
+  "Project file": "Fichier de projet",
+  "Save failed: {{message}}": "Échec de l'enregistrement : {{message}}",
+  "The study was loaded with warnings: {{warnings}}": "L'étude a été chargée avec des avertissements : {{warnings}}",
+  "The whole study in one file (the file Load opens): every table, layout, seats, gates, results and your logbook entries": "Toute l'étude dans un seul fichier (celui qu'ouvre Charger) : toutes les tables, la disposition, les postes, les jalons, les résultats et vos entrées du journal de bord",
+  "This file is not a SpaceCDF project file.": "Ce fichier n'est pas un fichier de projet SpaceCDF.",
+  "This file was saved by an older version of SpaceCDF. It was opened with what it holds: elements, interfaces, requirements, allocations, risks and the Pugh matrix.": "Ce fichier a été enregistré par une version antérieure de SpaceCDF. Il a été ouvert avec ce qu'il contient : éléments, interfaces, exigences, allocations, risques et matrice de Pugh."
+}

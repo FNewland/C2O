@@ -9,6 +9,7 @@ import { ExchangePanel } from '../components/ExchangePanel'
 import { getLang } from '../i18n'
 import { Button, Dialog, Note } from '../components/ui'
 import { SimConfigExportDialog } from './SimConfigExportDialog'
+import { saveProjectFile } from './projectFile'
 
 const API = '/api'
 
@@ -171,12 +172,8 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void): Doc
       ]},
     ]},
     { name: t('Data Export'), color: 'var(--text-3)', docs: [
-      { id: 'full', label: t('Full Study Export'), description: t('Elements, interfaces, requirements — complete backup'), formats: [
-        { fmt: 'JSON', label: 'JSON', action: async () => {
-          const [elements, interfaces, requirements] = await Promise.all([fetch(`${API}/studies/${sid}/elements`).then(r=>r.json()), fetch(`${API}/studies/${sid}/interfaces`).then(r=>r.json()), fetch(`${API}/requirements/tree?study_id=${sid}`).then(r=>r.json())])
-          const blob = new Blob([JSON.stringify({studyId: sid, elements, interfaces, requirements}, null, 2)], {type: 'application/json'})
-          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SpaceCDF_Full_${sid}.json`; a.click()
-        }},
+      { id: 'full', label: t('Project file'), description: t('The whole study in one file (the file Load opens): every table, layout, seats, gates, results and your logbook entries'), formats: [
+        { fmt: 'JSON', label: 'JSON', action: async () => saveProjectFile(sid) },
       ]},
     ]},
   ]
