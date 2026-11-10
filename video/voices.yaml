@@ -15,11 +15,12 @@
 # virtualenv (`python`), see c2ovideo/cbx_worker.py.
 en:
   backend: chatterbox
+  model: english          # English-only Chatterbox keeps the speaker's British accent (A/B 2026-11-10, variant C)
   ref: franz_en.wav
   python: ~/cbx-venv/bin/python
   lang: en
-  exaggeration: 0.5
-  cfg_weight: 0.5
+  exaggeration: 0.35
+  cfg_weight: 0.6
 fr:
   backend: chatterbox
   ref: franz_fr.wav
