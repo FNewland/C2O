@@ -219,7 +219,7 @@ L’étiquette du 7 nov. présente SYS 5186 comme introduction/développement se
 | V-OPS-10 Sous-tension : vérifier avant de délester | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | check (multichoice) → 1.4, 2.3† ; decide (multichoice) → 1.4, 2.3† ; recover (reflect) → 1.4, 2.3†, 6.2† |
 | V-OPS-11 Pas de télémesure à l’acquisition : descendre la chaîne | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | ground (multichoice) → 1.4, 2.3† ; nothing (multichoice) → 1.4, 2.3† ; paon (multichoice) → 1.4, 2.3† ; verify (reflect) → 1.4, 2.3†, 6.2† |
 | V-OPS-12 Passage au pointage fin : du maintien solaire au nadir | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | wheels (multichoice) → 1.4, 2.3† ; nominal (multichoice) → 1.4, 2.3† ; tracking (reflect) → 1.4, 2.3†, 6.2† |
-| V-OPS-13 Première lumière : du pointage fin à la première image au sol | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | ready (multichoice) → 1.4, 2.3† ; capture (multichoice) → 1.4, 2.3† ; downlink (multichoice) → 1.4, 2.3† ; down (reflect) → 1.4, 2.3†, 6.2† |
+| V-OPS-13 Première lumière : du pointage fin à la transmission de la première image | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | ready (multichoice) → 1.4, 2.3† ; capture (multichoice) → 1.4, 2.3† ; downlink (multichoice) → 1.4, 2.3† ; down (reflect) → 1.4, 2.3†, 6.2† |
 | V-PLN-01 Planifier un passage dans le planificateur de mission | LO 6 | 1.4 Décision en situation d’incertitude, 2.3† Jumeau numérique et simulation | contact (blanks) → 1.4, 2.3† ; imaging (multichoice) → 1.4, 2.3† |
 
 ## 7. Vérification de couverture

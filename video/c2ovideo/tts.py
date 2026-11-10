@@ -113,7 +113,8 @@ def _cbx(engine: dict):
     if _CBX is None or _CBX.poll() is not None:
         py = str(Path(engine.get("python", "python3")).expanduser())
         _CBX = subprocess.Popen([py, str(Path(__file__).with_name("cbx_worker.py"))], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1,
+                                env={**os.environ, "PYTORCH_ENABLE_MPS_FALLBACK": "1"})
         while True:
             line = _CBX.stdout.readline()
             if not line:

@@ -10,11 +10,11 @@ id: V-OPS-13
 week: 6
 audience: all
 title:
-  en: "First light: from fine pointing to the first image down"
-  fr: "Première lumière : du pointage fin à la première image au sol"
+  en: "First light: from fine pointing to the first image downlink"
+  fr: "Première lumière : du pointage fin à la transmission de la première image"
 summary:
-  en: "The first image of the mission: check the spacecraft is ready for fine pointing, point, image, confirm the frame is in memory, return the payload to standby and bring the product down over Service 13, card in hand."
-  fr: "La première image de la mission : vérifier que le satellite est prêt pour le pointage fin, pointer, imager, confirmer que l’image est en mémoire, remettre la charge utile en attente et descendre le produit par le service 13, fiche en main."
+  en: "This video records the first image of the mission. It checks that the spacecraft is ready for fine pointing, commands fine pointing, captures the image and confirms that it is stored in memory. The payload is then returned to standby, and the image is transmitted to the ground using Service 13, following the procedure card."
+  fr: "Cette vidéo enregistre la première image de la mission. Elle vérifie que le satellite est prêt pour le pointage fin, commande le pointage fin, réalise la prise de vue et confirme que l’image est en mémoire. La charge utile est ensuite remise en attente, et l’image est transmise au sol par le service 13, en suivant la fiche de procédure."
 apps:
   mcs: default
 fresh_stack: sim
@@ -40,7 +40,7 @@ setup:
 
 steps:
   - id: ready
-    title: {en: "Step 1: is it ready for fine pointing?", fr: "Étape 1 : prêt pour le pointage fin ?"}
+    title: {en: "Step 1: the fine-pointing readiness check", fr: "Étape 1 : contrôle de préparation au pointage fin"}
     say:
       en: >-
         This video follows the commissioning procedure COM-012, first light. At the start of the
@@ -88,7 +88,7 @@ steps:
           why: {en: "Gyro calibration is COM-003, long before first light.", fr: "L’étalonnage des gyromètres, c’est COM-003, bien avant la première lumière."}
 
   - id: fine
-    title: {en: "FINE_POINT", fr: "FINE_POINT"}
+    title: {en: "FINE_POINT mode", fr: "Le mode FINE_POINT"}
     say:
       en: >-
         The operator then commands FINE_POINT. The mode changes, and within about thirty seconds
@@ -197,7 +197,7 @@ steps:
       - highlight: {target: {css: "#pld-schematic"}, seconds: 3.5, point: false}
 
   - id: downlink
-    title: {en: "Step 8: the product down", fr: "Étape 8 : le produit au sol"}
+    title: {en: "Step 8: transmitting the image", fr: "Étape 8 : transmission de l’image"}
     say:
       en: >-
         Step eight is the downlink. The high-rate link is enabled first: downlink mode on, then
@@ -248,7 +248,7 @@ steps:
           why: {en: "The checksum belongs to the product, not to the rate.", fr: "La somme de contrôle appartient au produit, pas au débit."}
 
   - id: down
-    title: {en: "Down, and checked", fr: "Au sol, et vérifiée"}
+    title: {en: "Transfer complete and verified", fr: "Transfert terminé et vérifié"}
     say:
       en: >-
         After a little over a minute the transfer reaches one hundred percent and is closed. On

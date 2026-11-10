@@ -11,12 +11,37 @@ re-render. Nothing is edited by hand.
 |---|---|
 | Code (`c2ovideo/`) | MIT (`LICENSE`) |
 | Storyboards, lexicons, rendered videos, captions, transcripts, H5P content | CC0 1.0 (public domain) |
-| Narration voice | Kokoro-82M (Apache-2.0 weights) via kokoro-onnx (MIT); espeak-ng phonemiser for French |
+| Narration voice | Franz Newland's voice, cloned with Chatterbox Multilingual (Resemble AI, MIT; output carries the inaudible Perth watermark). Kokoro-82M (Apache-2.0) remains available as a fallback in `voices.yaml` |
 | H5P runtime | H5P content types from the official H5P hub (MIT); h5p-standalone player (MIT) |
 
 The pipeline does not use XTTS-v2 (its licence is non-commercial, outputs
 included), edge-tts (Microsoft's service terms) or Remotion (it needs a
 company licence for universities).
+
+## Rendering with the cloned voice
+
+The narration uses Chatterbox Multilingual, which reproduces a speaker from a
+15-second reference recording in each language. The references are personal and
+are **not** in this repository: they live in `~/.cache/c2o-video/voices/`
+(`franz_en.wav`, `franz_fr.wav`; 24 kHz mono, normalised to -20 LUFS).
+`voices.yaml` points at them and at the separate Python environment
+(`~/cbx-venv`) that Chatterbox needs.
+
+On a Mac with Apple silicon:
+
+```bash
+bash video/scripts/setup_voice.sh ~/Downloads/franz_en.wav ~/Downloads/franz_fr.wav   # once
+bash video/scripts/render_all.sh            # all videos, EN and FR; resumable
+bash video/scripts/render_all.sh V-OPS-02   # or named videos only
+```
+
+The voice runs on the GPU (MPS) when available, otherwise on the CPU; set
+`C2O_CBX_DEVICE=cpu` to force one. On a 2-core cloud CPU it produces about one
+sentence a minute; an M-series Mac is several times faster. Each sentence is
+cached under `~/.cache/c2o-video/tts/`, keyed by the text and the reference
+recording, so re-running after a script change only re-voices the sentences that
+changed. Pronunciation fixes for identifiers (FINE_POINT, HIGH, DETUMBLE, ...)
+go in `lexicon/en.yaml` and `lexicon/fr.yaml`.
 
 ## One storyboard, two languages
 

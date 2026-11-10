@@ -10,10 +10,24 @@ inaudible Perth watermark marking the audio as synthetic.
 """
 import gc
 import json
+import os
 import sys
 import warnings
 
 warnings.filterwarnings("ignore")
+
+
+def _devices(torch) -> list:
+    """C2O_CBX_DEVICE if set, else Apple GPU (MPS), then CUDA, then CPU."""
+    forced = os.environ.get("C2O_CBX_DEVICE")
+    if forced:
+        return [forced]
+    out = []
+    if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+        out.append("mps")
+    if torch.cuda.is_available():
+        out.append("cuda")
+    return out + ["cpu"]
 
 
 def main() -> None:
@@ -22,7 +36,15 @@ def main() -> None:
     from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
     torch.set_num_threads(max(1, torch.get_num_threads()))
-    model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+    model = None
+    for device in _devices(torch):
+        try:
+            model = ChatterboxMultilingualTTS.from_pretrained(device=device)
+            break
+        except Exception as e:  # e.g. an MPS op missing on an older macOS: fall back
+            print(f"chatterbox: {device} unavailable ({type(e).__name__}: {e})", file=sys.stderr, flush=True)
+    if model is None:
+        raise SystemExit("chatterbox: no usable device")
     print(json.dumps({"ready": True}), flush=True)
     for line in sys.stdin:
         if not line.strip():
