@@ -238,7 +238,7 @@ async def test_create_row_and_duplicates(client, study_obj, study):
 
 async def test_cdr_gate_reads_the_cdr_model(client, study_obj, study):
     ov = (await client.get(f"/api/studies/{study}/gates")).json()
-    assert [g["id"] for g in ov["gates"]] == ["mdr", "prr", "srr", "pdr", "cdr"]
+    assert [g["id"] for g in ov["gates"]] == ["mdr", "prr", "srr", "pdr", "cdr", "qr", "ar", "frr"]
     cdr_gate = next(g for g in ov["gates"] if g["id"] == "cdr")
     assert cdr_gate["margin_gate"] == "cdr"
     g = (await client.get(f"/api/studies/{study}/rules/gates/cdr")).json()

@@ -12,7 +12,7 @@
 #   label         EN / FR
 #   kind          lead | systems | domain | customer | observer | instructor
 #   exclusive     one holder at a time (Customer and Observer: unlimited)
-#   optional      added by the study (Propulsion if ΔV > 0, Cost & risk)
+#   optional      added by the study (Propulsion if ΔV > 0 or a disposal device, Cost & risk)
 #   fallback      who owns this seat's parameters when the study does not use the seat
 #   owns          parameter key prefixes (``power.*``) and element subsystem_domain values
 #                 (``element_domains``) the seat owns
@@ -137,7 +137,10 @@ seats:
     kb_position: propulsion_engineer
     owns:
       prefixes: [propulsion]
-      element_domains: [propulsion, prop]
+      # PI decision (Nov 2026): the Propulsion seat owns the disposal function, so the drag sail
+      # and any other deorbit device belong to it, and the seat is added to every study that needs
+      # a disposal device even with no ΔV (seats/guard.py required_optional_seats).
+      element_domains: [propulsion, prop, disposal, deorbit]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "ΔV budget, propellant", fr: "Bilan de ΔV, ergols"}}
     tabs: [blocks, spacecraft, budget, analyses, decide]
 

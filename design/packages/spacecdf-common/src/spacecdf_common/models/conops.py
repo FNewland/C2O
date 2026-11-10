@@ -186,6 +186,10 @@ class ConceptOfOperations(BaseModel):
     # Summary (the old text field, kept for backward compatibility)
     summary: str = ""
 
+    # Nov 2026 (W7.01): True once the team edited the phases (durations, entry and exit
+    # criteria); the auto-generated ConOps then never replaces them.
+    phases_edited: bool = False
+
     def get_mode(self, mode_id: str) -> OperationalMode | None:
         for m in self.modes:
             if m.id == mode_id:

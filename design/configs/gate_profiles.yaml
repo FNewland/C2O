@@ -9,7 +9,10 @@
 # the TM/TC database, FDIR, AOCS mode and operations products the simulator needs).
 #
 # A profile covers the canonical gates in order, from MDR up to PDR at least; it may stop at
-# PDR (the C2O teaching spine) or go on to CDR. QR and AR are not modelled yet.
+# PDR (the C2O teaching spine) or go on to CDR, the qualification and acceptance reviews (QR, AR)
+# and the flight readiness review (FRR). QR, AR and FRR have no criteria in
+# gate_exit_criteria.yaml yet (W4.09): their checklist is the review-record criteria of
+# services/gate_reviews.py (earlier RIDs closed, board evidence signed off by the instructor).
 #
 #   id        stable id used in URLs, stored gate states and logbook context
 #   short     the label shown on the gate tab (e.g. "MDR", or "MCR" in the NASA skin)
@@ -23,17 +26,17 @@
 # primary texts before release.
 
 version: 1
-canonical_gates: [mdr, prr, srr, pdr, cdr]
+canonical_gates: [mdr, prr, srr, pdr, cdr, qr, ar, frr]
 default_profile: full_ecss
 # Gate ids written before Nov 2026 (MCR was the old name of MDR, ruling 3)
 legacy_gate_ids: {mcr: mdr}
 
 profiles:
   full_ecss:
-    label: {en: "Full ECSS (MDR → PRR → SRR → PDR → CDR)", fr: "ECSS complet (MDR → PRR → SRR → PDR → CDR)"}
+    label: {en: "Full ECSS (MDR → PRR → SRR → PDR → CDR → QR → AR → FRR)", fr: "ECSS complet (MDR → PRR → SRR → PDR → CDR → QR → AR → FRR)"}
     description:
-      en: "Five separate reviews as in ECSS-M-ST-10C Rev.1: Mission Definition, Preliminary Requirements, System Requirements, Preliminary Design and Critical Design."
-      fr: "Cinq revues distinctes, comme dans l’ECSS-M-ST-10C Rev.1 : définition de la mission, exigences préliminaires, exigences système, conception préliminaire et conception détaillée."
+      en: "Separate reviews as in ECSS-M-ST-10C Rev.1: Mission Definition, Preliminary Requirements, System Requirements, Preliminary Design, Critical Design, Qualification and Acceptance, then the Flight Readiness Review before launch."
+      fr: "Revues distinctes, comme dans l’ECSS-M-ST-10C Rev.1 : définition de la mission, exigences préliminaires, exigences système, conception préliminaire, conception détaillée, qualification et recette, puis la revue d’aptitude au vol avant le lancement."
     source: "ECSS-M-ST-10C Rev.1 §4.4 (to verify)"
     gates:
       - id: mdr
@@ -56,6 +59,21 @@ profiles:
         short: CDR
         name: {en: "Critical Design Review", fr: "revue critique de conception"}
         covers: [cdr]
+      - id: qr
+        short: QR
+        name: {en: "Qualification Review", fr: "revue de qualification"}
+        covers: [qr]
+        margin_gate: cdr
+      - id: ar
+        short: AR
+        name: {en: "Acceptance Review", fr: "revue de recette"}
+        covers: [ar]
+        margin_gate: cdr
+      - id: frr
+        short: FRR
+        name: {en: "Flight Readiness Review", fr: "revue d’aptitude au vol"}
+        covers: [frr]
+        margin_gate: cdr
 
   esa_iod:
     label: {en: "ESA IOD CubeSat (concept review → PDR → CDR)", fr: "CubeSat IOD de l’ESA (revue de concept → PDR → CDR)"}

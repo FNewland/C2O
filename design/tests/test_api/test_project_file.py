@@ -173,6 +173,12 @@ async def build_rich_study(c, monkeypatch) -> tuple[str, dict]:
     await _ok(await c.post(f"/api/studies/{sid}/gates/{g0}/review", json={"action": "pass", "note": "passed"}))
     monkeypatch.setattr(gates_router, "_evaluate", real)
 
+    # agent D (wave 1): a named link case (W4.04) and a RID at the first gate (W4.08)
+    await _ok(await c.post(f"/api/studies/{sid}/link-budgets", json={
+        "name": "DL rural 1 W", "direction": "downlink", "band": "UHF", "station": "GS-1", "tx_power_w": 1.0}))
+    await _ok(await c.post(f"/api/studies/{sid}/gates/{g0}/rids", json={
+        "description": "Confirm the receive band", "owner_seat": "comms_engineer", "due_date": "2027-09-30"}))
+
     # logbook entry tagged with the study (this client's cookie)
     await _ok(await c.post("/api/logbook/entries", json={
         "kind": "decision", "text": f"Chose S-band for {sc['id']}", "context": {"study_id": sid, "where": "decide"}}))
@@ -582,3 +588,22 @@ async def test_bad_files_are_refused(client, db_factory):
     assert r.status_code == 400 and "newer SpaceCDF" in r.text
     r = await client.get("/api/studies/nope/export")
     assert r.status_code == 404
+
+
+async def test_decide_records_round_trip(client, rich):
+    """Agent D (wave 1): trades (study record, legacy Pugh read as T-01), link cases and RIDs
+    survive export and import."""
+    sid, _ = rich
+    res = await _import(client, await _export(client, sid))
+    new = res["id"]
+    for path, key in ((f"/api/studies/{{}}/trades", "items"), (f"/api/studies/{{}}/link-budgets", "items"),
+                      (f"/api/studies/{{}}/rids", "items")):
+        a = (await _ok(await client.get(path.format(sid))))[key]
+        b = (await _ok(await client.get(path.format(new))))[key]
+        assert a and len(a) == len(b), path
+    t = (await _ok(await client.get(f"/api/studies/{new}/trades/T-01")))
+    assert t["state"]["criteria"] == ["Mass"] and t["state"]["options"] == ["A", "B"]
+    case = (await _ok(await client.get(f"/api/studies/{new}/link-budgets")))["items"][0]
+    assert case["name"] == "DL rural 1 W" and case["margin_db"] is not None
+    rid = (await _ok(await client.get(f"/api/studies/{new}/rids")))["items"][0]
+    assert rid["number"].startswith("RID-") and rid["owner_seat"] == "comms_engineer"

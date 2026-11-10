@@ -18,11 +18,12 @@ IAP = {"x-goog-authenticated-user-email": "accounts.google.com:bob@example.org"}
 def test_profiles_validate_and_full_ecss_is_the_default():
     assert gp.validate() == []
     assert gp.default_profile_id() == "full_ecss"
-    assert [g["id"] for g in gp.get_profile(None)["gates"]] == ["mdr", "prr", "srr", "pdr", "cdr"]
+    assert [g["id"] for g in gp.get_profile(None)["gates"]] == ["mdr", "prr", "srr", "pdr", "cdr", "qr", "ar", "frr"]
 
 
 @pytest.mark.parametrize("profile,gates,covers", [
-    ("full_ecss", ["MDR", "PRR", "SRR", "PDR", "CDR"], [["mdr"], ["prr"], ["srr"], ["pdr"], ["cdr"]]),
+    ("full_ecss", ["MDR", "PRR", "SRR", "PDR", "CDR", "QR", "AR", "FRR"],
+     [["mdr"], ["prr"], ["srr"], ["pdr"], ["cdr"], ["qr"], ["ar"], ["frr"]]),
     ("esa_iod", ["CR", "PDR", "CDR"], [["mdr", "prr"], ["srr", "pdr"], ["cdr"]]),
     ("c2o_3gate", ["MDR", "PRR+SRR", "PDR"], [["mdr"], ["prr", "srr"], ["pdr"]]),
     ("nasa", ["MCR", "SRR", "MDR/SDR", "PDR", "CDR"], [["mdr"], ["prr"], ["srr"], ["pdr"], ["cdr"]]),
@@ -175,7 +176,7 @@ async def test_logbook_decisions_due_follow_the_profile(client, study_obj):
     prr_ids = {d["id"] for d in full["decisions"] if d["ecss_gate"] == "prr"}
     assert prr_ids and prr_ids <= set(full["due"]["open"]), "PRR decisions are due at the PRR"
     assert not any(d["ecss_gate"] == "srr" and d["id"] in full["due"]["open"] for d in full["decisions"])
-    assert [g["short"] for g in full["gates"]] == ["MDR", "PRR", "SRR", "PDR", "CDR"]
+    assert [g["short"] for g in full["gates"]] == ["MDR", "PRR", "SRR", "PDR", "CDR", "QR", "AR", "FRR"]
 
     await client.put(f"/api/studies/{sid}/gate-profile", json={"profile": "esa_iod"})
     iod = (await client.get(f"/api/logbook/decisions?study_id={sid}&gate=cr&lang=fr")).json()

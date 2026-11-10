@@ -778,3 +778,8 @@ from . import electrical_models as _electrical_models  # noqa: E402,F401
 # CDR design model (TM/TC database, FDIR, AOCS modes, TT&C ladder, line states, operations):
 # one generic table, registered on Base.metadata for create_all.
 from . import cdr_models as _cdr_models  # noqa: E402,F401
+
+# Decide, mission and ConOps (wave 1, agent D): named link-budget cases (W4.04) and the gate
+# review record (RIDs and actions, W4.08), each in its own module.
+from . import models_links as _models_links  # noqa: E402,F401
+from . import models_reviews as _models_reviews  # noqa: E402,F401

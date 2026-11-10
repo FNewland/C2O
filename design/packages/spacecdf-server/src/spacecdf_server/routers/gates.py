@@ -12,8 +12,23 @@ All routes are mounted under ``/api``:
 * ``GET  /studies/{sid}/gates/baselines/{bid}``   — one baseline snapshot
 * ``GET/POST /studies/{sid}/risks``, ``PATCH/DELETE /studies/{sid}/risks/{rid}``,
   ``POST /studies/{sid}/risks/import``            — the team risk register (was localStorage)
-* ``GET/PUT /studies/{sid}/trades/{key}``         — trade records, e.g. the Pugh matrix
-                                                    (was one global localStorage key)
+* ``/studies/{sid}/trades...``                    — trade studies T-01... (routers/trades.py, W6)
+* ``/studies/{sid}/link-budgets...``              — named link cases (routers/link_budgets.py, W4.04)
+* ``/studies/{sid}/conops/...``                   — ConOps phases and document (routers/conops.py, W7)
+
+Gate review record (W4.08):
+
+* ``GET  /studies/{sid}/rids``                    — every RID and action of the study (``?gate=``)
+* ``POST /studies/{sid}/gates/{gate}/rids``       — raise a RID or an action at a gate
+* ``PATCH/DELETE /studies/{sid}/rids/{rid}``      — update (status, owner, due date, closure evidence)
+* ``PUT  /studies/{sid}/gates/{gate}/record``     — chair note and go / no-go decision
+* ``POST /studies/{sid}/gates/{gate}/report``     — the review report (.docx)
+* ``GET  /studies/{sid}/gate-baselines/diff``    — what changed between two baselines (``?a=&b=``
+                                                    baseline ids, or ``?gate=`` = against the gate before)
+
+Gates after CDR (QR, AR, FRR) have no criteria in gate_exit_criteria.yaml yet: their checklist is
+the review-record criteria of services/gate_reviews.py (earlier RIDs closed; board evidence that
+the instructor signs off).
 
 The checklist never reads client state: the request carries no mission need and no
 parameters (walkthrough top problems 2 and 19).
@@ -89,6 +104,8 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
     except Exception:  # noqa: BLE001
         logger.exception("CDR model unavailable for %s", study_id)
         ctx["cdr"] = None
+    ctx["rids"] = await list_review_items(study_id)
+    ctx["gate_order"] = [g["id"] for g in (study_profile(study).get("gates") or [])] if study else []
     try:  # instructor sign-offs of manual / hybrid items (WP9)
         from ..seats import store as seat_store
         ctx["signoffs"] = dict((await seat_store.get_team(study_id)).get("signoffs") or {})
@@ -135,6 +152,12 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
             mission=req_model, function_count=ctx.get("function_count"), risks=ctx.get("risks"),
             margin_gate=mg, cdr=ctx.get("cdr"),
         )
+        if canon in gp.POST_CDR:
+            from ..services.gate_reviews import post_cdr_criteria
+            order = ctx.get("gate_order") or []
+            earlier = set(order[: order.index(pg["id"])]) if pg["id"] in order else set()
+            res = {**res, "criteria": [*(res.get("criteria") or []),
+                                       *post_cdr_criteria(canon, ctx.get("rids") or [], earlier)]}
         for c in res.get("criteria", []):
             c["canonical_gate"] = canon
             so = (ctx.get("signoffs") or {}).get(c.get("id"))
@@ -195,6 +218,7 @@ async def evaluate_study_gate(study_id: str, gate: str, form_factor: str | None 
         "state": display_state(entry, ev["ready"]),
         "history": list((entry or {}).get("history") or []),
         "baselines": list((entry or {}).get("baselines") or []),
+        "review": dict((entry or {}).get("review") or {}),
         "products_baselined": gp.products_baselined(pg),
         **ev,
     }
@@ -329,6 +353,11 @@ async def _save_baseline(study, profile, pg, ev, ctx, by) -> dict:
         "risk_register": list(study.risk_register or []), "parameters": ctx["params"],
         "criteria": [{k: c.get(k) for k in ("id", "status", "verdict", "evidence_found")} for c in ev["criteria"]],
         "products": products,
+        "rids": [{k: r.get(k) for k in ("id", "number", "gate", "kind", "status", "owner_seat")}
+                 for r in ctx.get("rids") or []],
+        "trades": {k: {"status": (v.get("state") or {}).get("status"), "version": v.get("version")}
+                   for k, v in _trade_records(study).items()},
+        "review": dict((study.gate_states.get(pg["id"]) or {}).get("review") or {}),
     }
     summary = {"summary": ev["summary"], "products": [p["id"] for p in products],
                "elements": len(ctx["elements"]), "requirements": len(ctx["requirements"])}
@@ -468,41 +497,6 @@ async def import_risks(study_id: str, body: RiskImport) -> dict:
     return {"imported": added, "risks": risks}
 
 
-TRADE_KEYS = ("pugh",)
-
-
-class TradeBody(BaseModel):
-    state: dict[str, Any]
-    version: int | None = None   # the version the client edited; None = overwrite
-
-
-@router.get("/studies/{study_id}/trades/{key}")
-async def get_trade(study_id: str, key: str) -> dict:
-    if key not in TRADE_KEYS:
-        raise HTTPException(status_code=404, detail=f"Unknown trade record: {key}")
-    rec = (_study_or_404(study_id).trade_records or {}).get(key)
-    return rec or {"state": None, "version": 0}
-
-
-@router.put("/studies/{study_id}/trades/{key}")
-async def put_trade(study_id: str, key: str, body: TradeBody) -> dict:
-    if key not in TRADE_KEYS:
-        raise HTTPException(status_code=404, detail=f"Unknown trade record: {key}")
-    study = _study_or_404(study_id)
-    recs = dict(study.trade_records or {})
-    cur = recs.get(key) or {"version": 0}
-    if body.version is not None and body.version != cur.get("version", 0):
-        raise HTTPException(status_code=409, detail={"code": "stale", "current": cur})
-    import json
-    if len(json.dumps(body.state)) > 200_000:
-        raise HTTPException(status_code=413, detail="Trade record too large")
-    recs[key] = {"state": body.state, "version": int(cur.get("version", 0)) + 1}
-    study.trade_records = recs
-    await _save(study)
-    await _broadcast(study_id, "study_records_changed", {"kind": f"trade:{key}"})
-    return recs[key]
-
-
 # ─── helpers ──────────────────────────────────────────────────────────────
 
 async def _save(study) -> None:
@@ -526,3 +520,266 @@ async def study_margin_ladder(study_id: str, gate: str | None = Query(None)) -> 
     g = gp.legacy_gate_id(gate) if gate else study_margin_gate(study)
     return {"study_id": study_id, "gate": g, "mass_percent": system_margin_percent(g, "mass"),
             "power_percent": system_margin_percent(g, "power"), **ladder()}
+
+
+# ─── gate review record (W4.08): RIDs and actions ─────────────────────────
+
+def _trade_records(study) -> dict:
+    from ..services.trades import normalise_records
+    return normalise_records(getattr(study, "trade_records", None))
+
+
+def _rid_dict(r) -> dict[str, Any]:
+    return {"id": r.id, "study_id": r.study_id, "gate": r.gate, "number": r.number, "kind": r.kind,
+            "criterion_id": r.criterion_id, "raised_by_seat": r.raised_by_seat, "raised_by": r.raised_by,
+            "description": r.description, "severity": r.severity, "owner_seat": r.owner_seat,
+            "due_date": r.due_date, "status": r.status, "closure_evidence": r.closure_evidence,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+            "closed_at": r.closed_at.isoformat() if r.closed_at else None}
+
+
+async def list_review_items(study_id: str, gate: str | None = None) -> list[dict[str, Any]]:
+    """Every RID and action of the study (in raising order); [] when the DB is unavailable."""
+    try:
+        from sqlalchemy import select
+        from ..db.engine import get_session_factory
+        from ..db.models_reviews import ReviewItemRow
+        async with get_session_factory()() as s:
+            q = select(ReviewItemRow).where(ReviewItemRow.study_id == study_id)
+            if gate:
+                q = q.where(ReviewItemRow.gate == gate)
+            rows = (await s.execute(q.order_by(ReviewItemRow.created_at, ReviewItemRow.number))).scalars().all()
+            return [_rid_dict(r) for r in rows]
+    except Exception:  # noqa: BLE001
+        logger.debug("review items unavailable for %s", study_id, exc_info=True)
+        return []
+
+
+_DATE = __import__("re").compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+class RidBody(BaseModel):
+    description: str = Field(..., min_length=1, max_length=4000)
+    kind: str = "rid"
+    criterion_id: str = Field("", max_length=40)
+    raised_by_seat: str = Field("", max_length=40)
+    severity: str = "minor"
+    owner_seat: str = Field("", max_length=40)
+    due_date: str = Field("", max_length=10)
+    status: str = "open"
+    closure_evidence: str = Field("", max_length=4000)
+
+
+def _check_rid_fields(d: dict[str, Any]) -> None:
+    from ..services.gate_reviews import RID_KINDS, RID_SEVERITIES, RID_STATUSES
+    if "kind" in d and d["kind"] not in RID_KINDS:
+        raise HTTPException(422, f"kind must be one of {', '.join(RID_KINDS)}")
+    if "status" in d and d["status"] not in RID_STATUSES:
+        raise HTTPException(422, f"status must be one of {', '.join(RID_STATUSES)}")
+    if "severity" in d and d["severity"] not in RID_SEVERITIES:
+        raise HTTPException(422, f"severity must be one of {', '.join(RID_SEVERITIES)}")
+    if d.get("due_date") and not _DATE.match(str(d["due_date"])):
+        raise HTTPException(422, "due_date must be YYYY-MM-DD")
+
+
+@router.get("/studies/{study_id}/rids")
+async def get_rids(study_id: str, gate: str | None = Query(None)) -> dict:
+    _study_or_404(study_id)
+    items = await list_review_items(study_id, gate)
+    from ..services.gate_reviews import RID_OPEN
+    return {"study_id": study_id, "items": items, "open": sum(1 for r in items if r["status"] in RID_OPEN)}
+
+
+@router.post("/studies/{study_id}/gates/{gate}/rids")
+async def raise_rid(study_id: str, gate: str, body: RidBody, request: Request) -> dict:
+    """Raise a RID (review item discrepancy) or an action at a gate. Any editing seat may raise
+    one (``raised_by_seat`` defaults to the active seat)."""
+    from uuid import uuid4
+
+    from ..db.engine import get_session_factory
+    from ..db.models_reviews import ReviewItemRow
+    from ..services.gate_reviews import rid_number
+    study = _study_or_404(study_id)
+    pg = gp.gate_of(study_profile(study), gate)
+    if pg is None:
+        raise HTTPException(404, f"Unknown review gate: {gate}")
+    d = body.model_dump()
+    _check_rid_fields(d)
+    seat = d["raised_by_seat"]
+    if not seat:
+        try:
+            from ..seats.service import seat_ctx
+            ctx = await seat_ctx(request, study_id)
+            seat = ctx.active or ""
+        except Exception:  # noqa: BLE001
+            seat = ""
+    existing = [r for r in await list_review_items(study_id, pg["id"]) if r["kind"] == d["kind"]]
+    row = ReviewItemRow(id=uuid4().hex[:16], study_id=study_id, gate=pg["id"],
+                        number=rid_number(d["kind"], pg.get("short") or pg["id"], len(existing) + 1),
+                        kind=d["kind"], criterion_id=d["criterion_id"], raised_by_seat=seat,
+                        raised_by=_who(request, ""), description=d["description"].strip(),
+                        severity=d["severity"], owner_seat=d["owner_seat"], due_date=d["due_date"],
+                        status=d["status"], closure_evidence=d["closure_evidence"])
+    async with get_session_factory()() as s:
+        s.add(row)
+        await s.commit()
+        await s.refresh(row)
+        out = _rid_dict(row)
+    await _broadcast(study_id, "study_records_changed", {"kind": "rids"})
+    return out
+
+
+@router.patch("/studies/{study_id}/rids/{rid_id}")
+async def update_rid(study_id: str, rid_id: str, body: dict[str, Any]) -> dict:
+    from datetime import datetime, timezone
+
+    from ..db.engine import get_session_factory
+    from ..db.models_reviews import ReviewItemRow
+    _study_or_404(study_id)
+    fields = ("description", "kind", "criterion_id", "severity", "owner_seat", "due_date", "status",
+              "closure_evidence", "raised_by_seat")
+    patch = {k: v for k, v in (body or {}).items() if k in fields}
+    _check_rid_fields(patch)
+    async with get_session_factory()() as s:
+        row = await s.get(ReviewItemRow, rid_id)
+        if row is None or row.study_id != study_id:
+            raise HTTPException(404, f"RID {rid_id} not found")
+        for k, v in patch.items():
+            setattr(row, k, str(v if v is not None else "")[:4000])
+        if "status" in patch:
+            row.closed_at = datetime.now(timezone.utc) if patch["status"] in ("closed", "rejected") else None
+        await s.commit()
+        await s.refresh(row)
+        out = _rid_dict(row)
+    await _broadcast(study_id, "study_records_changed", {"kind": "rids"})
+    return out
+
+
+@router.delete("/studies/{study_id}/rids/{rid_id}")
+async def delete_rid(study_id: str, rid_id: str) -> dict:
+    from ..db.engine import get_session_factory
+    from ..db.models_reviews import ReviewItemRow
+    _study_or_404(study_id)
+    async with get_session_factory()() as s:
+        row = await s.get(ReviewItemRow, rid_id)
+        if row is None or row.study_id != study_id:
+            raise HTTPException(404, f"RID {rid_id} not found")
+        await s.delete(row)
+        await s.commit()
+    await _broadcast(study_id, "study_records_changed", {"kind": "rids"})
+    return {"deleted": rid_id}
+
+
+class RecordBody(BaseModel):
+    chair_note: str = Field("", max_length=4000)
+    decision: str | None = None      # go | go_with_actions | no_go
+    board: str = Field("", max_length=1000)
+    by: str = ""
+
+
+@router.put("/studies/{study_id}/gates/{gate}/record")
+async def put_review_record(study_id: str, gate: str, body: RecordBody, request: Request) -> dict:
+    """The review's chair note and go / no-go decision (Team leader or instructor in a seat study)."""
+    from ..services.gate_reviews import DECISIONS, clean_review
+    study = _study_or_404(study_id)
+    from ..seats.service import require_gate_role
+    await require_gate_role(request, study_id)
+    pg = gp.gate_of(study_profile(study), gate)
+    if pg is None:
+        raise HTTPException(404, f"Unknown review gate: {gate}")
+    if body.decision is not None and body.decision not in DECISIONS:
+        raise HTTPException(422, f"decision must be one of {', '.join(DECISIONS)}")
+    states = dict(study.gate_states or {})
+    entry = {"state": None, "history": [], "baselines": [], **(states.get(pg["id"]) or {})}
+    entry["review"] = clean_review(body.model_dump(), by=_who(request, body.by))
+    states[pg["id"]] = entry
+    study.gate_states = states
+    await _save(study)
+    await _broadcast(study_id, "gate_state_changed", {"gate": pg["id"], "state": entry.get("state")})
+    return {"gate": pg["id"], "review": entry["review"]}
+
+
+async def review_report_data(study_id: str, gate: str) -> dict[str, Any]:
+    """Everything the review report shows: the gate evaluation, the review record, the RIDs and
+    actions raised at this gate and still open from earlier ones, and the baseline diff against
+    the previous gate's baseline."""
+    from ..services.gate_reviews import RID_OPEN
+    study = _study_or_404(study_id)
+    ev = await evaluate_study_gate(study_id, gate)
+    gid = ev["gate"]["id"]
+    entry = (study.gate_states or {}).get(gid) or {}
+    rids = await list_review_items(study_id)
+    order = [g["id"] for g in ev["profile"]["gates"]]
+    earlier = set(order[: order.index(gid)]) if gid in order else set()
+    diff = None
+    try:
+        diff = await baseline_diff(study_id, a=None, b=None, gate=gid)
+    except HTTPException:
+        diff = None
+    return {"study_name": study.name, "evaluation": ev, "review": entry.get("review") or {},
+            "history": entry.get("history") or [],
+            "rids": [r for r in rids if r["gate"] == gid],
+            "carried": [r for r in rids if r["gate"] in earlier and r["status"] in RID_OPEN],
+            "diff": diff}
+
+
+@router.post("/studies/{study_id}/gates/{gate}/report")
+async def gate_review_report(study_id: str, gate: str, lang: str = Query("en")):
+    """The review report (.docx): criteria with results and evidence, open items, RIDs and
+    actions, chair note, go / no-go, and the baseline diff against the previous gate."""
+    import io
+
+    from fastapi.responses import StreamingResponse
+
+    from ..services.docx.review_report import generate_review_report_docx
+    data = await review_report_data(study_id, gate)
+    blob = generate_review_report_docx(data, lang=lang)
+    short = data["evaluation"]["gate"]["short"].replace("/", "-")
+    name = (data["study_name"] or "study").replace(" ", "_")
+    return StreamingResponse(io.BytesIO(blob),
+                             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                             headers={"Content-Disposition": f'attachment; filename="SpaceCDF_{short}_review_report_{name}.docx"'})
+
+
+@router.get("/studies/{study_id}/gate-baselines/diff")
+async def baseline_diff(study_id: str, a: str | None = Query(None), b: str | None = Query(None),
+                        gate: str | None = Query(None)) -> dict:
+    """Changes between two baselines: ``a`` and ``b`` (baseline ids), or ``gate``: the latest
+    baseline of that gate against the latest baseline of the gate before it."""
+    from ..db.gate_baseline_repo import get_baseline, list_baselines
+    from ..services.gate_reviews import diff_snapshots
+    study = _study_or_404(study_id)
+    if gate:
+        profile = study_profile(study)
+        pg = gp.gate_of(profile, gate)
+        if pg is None:
+            raise HTTPException(404, f"Unknown review gate: {gate}")
+        order = [g["id"] for g in profile.get("gates") or []]
+        rows = await list_baselines(study_id)
+        latest: dict[str, dict] = {}
+        for r in rows:
+            latest[r["gate"]] = r
+        prev = [g for g in order[: order.index(pg["id"])] if g in latest]
+        if pg["id"] not in latest or not prev:
+            raise HTTPException(404, "No two baselines to compare")
+        a, b = latest[prev[-1]]["id"], latest[pg["id"]]["id"]
+    if not a or not b:
+        raise HTTPException(422, "Give two baseline ids (a, b) or a gate")
+    ra, rb = await get_baseline(a), await get_baseline(b)
+    if not ra or not rb or ra["study_id"] != study_id or rb["study_id"] != study_id:
+        raise HTTPException(404, "Baseline not found")
+    return {"a": {k: ra[k] for k in ("id", "gate", "created_at", "created_by")},
+            "b": {k: rb[k] for k in ("id", "gate", "created_at", "created_by")},
+            "changes": diff_snapshots(ra.get("snapshot") or {}, rb.get("snapshot") or {})}
+
+
+# ─── sub-routers of the Decide / mission / ConOps work (wave 1, agent D) ───
+# Included here so app.py needs no new line; they share the "/api" prefix of this router.
+from . import conops as _conops_router  # noqa: E402
+from . import link_budgets as _link_budgets_router  # noqa: E402
+from . import trades as _trades_router  # noqa: E402
+
+router.include_router(_trades_router.router)
+router.include_router(_link_budgets_router.router)
+router.include_router(_conops_router.study_router)

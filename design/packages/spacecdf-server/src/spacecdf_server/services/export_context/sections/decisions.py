@@ -1,5 +1,6 @@
 """Section ``decisions``: the study's decision records (``study.decision_records``). Logbook
-entries kept by the logbook service are added by W12.07. Owner: D."""
+entries kept by the logbook service are added by W12.07. A decided trade (W6) writes its record here
+(``POST /studies/{id}/trades/{tid}/decision``). Owner: D."""
 from __future__ import annotations
 
 from ._util import dump

@@ -17,6 +17,7 @@ from ._common import (
     _add_section,
     _add_table,
     _add_toc_placeholder,
+    _render_bullet,
     _render_rich_content,
     _setup_margins,
     _setup_styles,
@@ -27,18 +28,82 @@ from ._common import (
 # Legacy per-type generators (preserved for backward compat)
 # ---------------------------------------------------------------------------
 
+#: Mission constraints (``requirements.constraints``) the MRD names in words (W1.06).
+_CONSTRAINT_TEXT = {
+    "apogee_max_km": ("Apogee ≤ {v} km", "Technical"),
+    "disposal_max_years": ("Disposal (re-entry) ≤ {v} years after end of operations", "Regulatory"),
+    "disposal_probability_min": ("Probability of successful disposal ≥ {v}", "Regulatory"),
+    "collision_probability_max": ("Collision probability < {v}", "Regulatory"),
+    "downlink_band_mhz": ("Downlink band {v} MHz", "Regulatory"),
+    "uplink_band_mhz": ("Uplink band {v} MHz", "Regulatory"),
+    "daylight_node_window": ("Daylight node crossing between {v} (local time)", "Technical"),
+}
+
+
+def _constraint_rows(constraints: dict[str, Any] | None, mission: dict[str, Any] | None,
+                     mn: dict[str, Any]) -> list[list[str]]:
+    """Constraints table rows: the mission constraints, the programmatic targets, the constraint
+    objectives and what the stakeholders impose."""
+    rows: list[list[str]] = []
+    for k, v in (constraints or {}).items():
+        if isinstance(v, (list, tuple)):
+            vv = "–".join(str(x) for x in v)
+        else:
+            vv = str(v)
+        text, cat = _CONSTRAINT_TEXT.get(k, (f"{k.replace('_', ' ')}: {{v}}", "Technical"))
+        rows.append([cat, text.format(v=vv), "mission definition"])
+    m = mission or {}
+    for key, label in (("target_mass_kg", "Spacecraft mass ≤ {v} kg"), ("target_cost_meur", "Cost target {v} M€"),
+                       ("launch_date_target", "Launch target {v}")):
+        if m.get(key) not in (None, ""):
+            rows.append(["Programmatic", label.format(v=m[key]), "mission definition"])
+    for o in mn.get("objectives") or []:
+        if str(o.get("priority", "")).lower() == "constraint":
+            rows.append(["Constraint objective", o.get("text", "") + (f" ({o['measurable_criterion']})"
+                                                                     if o.get("measurable_criterion") else ""),
+                         o.get("id", "")])
+    for sh in mn.get("stakeholders") or []:
+        for c in sh.get("constraints") or []:
+            if str(c).strip():
+                rows.append(["Stakeholder", str(c), sh.get("name", "")])
+    return rows
+
+
+def mrd_kwargs_from_export(sx: Any) -> dict[str, Any]:
+    """``generate_mrd_docx`` keyword arguments from a ``StudyExport`` (export_context), so a route
+    passes the whole mission need (success criteria, ConOps summary, stakeholder constraints) and
+    the mission constraints."""
+    need = dict(getattr(sx, "need", None) or {})
+    need.setdefault("alternatives", need.get("alternatives_considered") or [])
+    mission = (getattr(sx, "mission", None) or {}).get("definition") or {}
+    return {"study_name": getattr(sx, "study_name", "") or mission.get("name", ""), "mission_need": need,
+            "requirements": (getattr(sx, "requirements", None) or {}).get("items") or [],
+            "orbit": (getattr(sx, "mission", None) or {}).get("orbit") or mission.get("orbit") or {},
+            "elements": (getattr(sx, "elements", None) or {}).get("items") or [],
+            "constraints": mission.get("constraints") or {}, "mission": mission}
+
+
 def generate_mrd_docx(
     study_name: str = "",
     mission_need: dict[str, Any] | None = None,
     requirements: list[dict[str, Any]] | None = None,
     orbit: dict[str, Any] | None = None,
     elements: list[dict[str, Any]] | None = None,
+    constraints: dict[str, Any] | None = None,
+    mission: dict[str, Any] | None = None,
 ) -> bytes:
-    """Generate Mission Requirements Document as .docx bytes."""
+    """Generate Mission Requirements Document as .docx bytes.
+
+    W1.06 (Nov 2026): renders the ConOps summary and the success criteria of the mission need,
+    and a constraints table from ``constraints`` (``requirements.constraints``), the programmatic
+    targets of ``mission`` (``requirements``), the constraint objectives and the stakeholders'
+    constraints. ``mrd_kwargs_from_export`` builds every argument from a StudyExport."""
     doc = Document()
     _setup_styles(doc)
     _setup_margins(doc)
-    mn = mission_need or {}
+    mn = dict(mission_need or {})
+    if not mn.get("alternatives") and mn.get("alternatives_considered"):
+        mn["alternatives"] = mn["alternatives_considered"]
     reqs = requirements or []
     orb = orbit or {}
     elems = elements or []
@@ -107,6 +172,13 @@ def generate_mrd_docx(
                    ])
     else:
         doc.add_paragraph("[Objectives to be defined]")
+    _add_section(doc, "4.1", "Success Criteria")
+    success = [c for c in mn.get("success_criteria") or [] if str(c).strip()]
+    if success:
+        for c in success:
+            _render_bullet(doc, f"- {c}")
+    else:
+        doc.add_paragraph("[Success criteria to be defined]")
 
     # ── Section 5: Alternatives Analysis ──
     _add_section(doc, "5", "Alternatives Analysis")
@@ -144,6 +216,8 @@ def generate_mrd_docx(
             doc.add_paragraph(selected_alt["description"])
     _add_section(doc, "6.1", "Selection Rationale",
                  mn.get("selection_rationale", "[To be documented]"))
+    _add_section(doc, "6.2", "Concept of Operations (summary)",
+                 mn.get("conops_summary") or "[ConOps summary to be written]")
 
     # ── Section 7: Mission Requirements ──
     _add_section(doc, "7", "Mission Requirements")
@@ -239,12 +313,16 @@ def generate_mrd_docx(
 
     # ── Section 10: Constraints ──
     _add_section(doc, "10", "Constraints")
-    _add_section(doc, "10.1", "Programmatic Constraints",
-                 "[Budget, schedule, launch date constraints]")
-    _add_section(doc, "10.2", "Technical Constraints",
-                 "[Orbit, mass, interfaces, regulatory]")
-    _add_section(doc, "10.3", "Regulatory Constraints",
-                 "Space debris mitigation per ECSS-U-AS-10C Rev.2. ITU frequency coordination required.")
+    crow = _constraint_rows(constraints, mission, mn)
+    if crow:
+        _add_table(doc, ["Category", "Constraint", "Source"], crow)
+    else:
+        _add_section(doc, "10.1", "Programmatic Constraints",
+                     "[Budget, schedule, launch date constraints]")
+        _add_section(doc, "10.2", "Technical Constraints",
+                     "[Orbit, mass, interfaces, regulatory]")
+        _add_section(doc, "10.3", "Regulatory Constraints",
+                     "Space debris mitigation per ECSS-U-AS-10C Rev.2. ITU frequency coordination required.")
 
     # Return as bytes
     buffer = io.BytesIO()

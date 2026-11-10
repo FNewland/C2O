@@ -224,8 +224,15 @@ def apply_mission_patch(study: Study, patch: MissionPatch) -> tuple[list[str], l
     # Derived study content that the creation step generated from these values
     if any(c.startswith(("requirements.payloads", "requirements.spacecraft_class",
                          "requirements.design_lifetime_years")) for c in changed):
+        # W7.01: the regenerated legacy ConOps model never replaces what the team edited (phases,
+        # summary, ground segment, data pipeline); only its auto modes follow the new values.
+        # The ConOps document reads the Modes tab, not these auto modes.
         from ..routers.studies import _generate_default_conops
-        study.conops = _generate_default_conops(new_req)
+        auto = _generate_default_conops(new_req)
+        if study.conops.phases_edited:
+            study.conops = study.conops.model_copy(update={"modes": auto.modes})
+        else:
+            study.conops = auto
     if objectives_changed and new_need.objectives and not study.functional_decomposition.functions:
         # only fill an empty decomposition: a populated one may hold the team's work
         from spacecdf_common.models.functions import generate_starter_decomposition
