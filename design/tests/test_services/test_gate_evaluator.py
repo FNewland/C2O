@@ -39,16 +39,17 @@ GOOD_NEED = {
 @pytest.mark.parametrize("key,phase", [
     ("MDR", "phase_0"), ("mdr", "phase_0"), ("MCR", "phase_0"), ("mcr", "phase_0"),
     ("pre_phase_a", "phase_0"), ("prr", "phase_a"), ("srr", "phase_b1"),
-    ("PDR", "phase_b"), ("phase_b1", "phase_b1"), ("cdr", "phase_c"), ("CDR", "phase_c"), ("qr", None), ("", None),
+    ("PDR", "phase_b"), ("phase_b1", "phase_b1"), ("cdr", "phase_c"), ("CDR", "phase_c"), ("qr", "phase_d_qr"), ("FRR", "phase_e_frr"),
+    ("orr", None), ("", None),
 ])
 def test_resolve_phase_accepts_gate_names(key, phase):
     """MCR (the old name, ruling 3) and pre_phase_a still resolve to the MDR."""
     assert ge.resolve_phase(key) == phase
 
 
-def test_gate_options_list_mdr_prr_srr_pdr_cdr():
+def test_gate_options_list_mdr_prr_srr_pdr_cdr_qr_ar_frr():
     gates = [g["gate"] for g in ge.list_gate_options()]
-    assert gates == ["MDR", "PRR", "SRR", "PDR", "CDR"]
+    assert gates == ["MDR", "PRR", "SRR", "PDR", "CDR", "QR", "AR", "FRR"]
 
 
 def test_legacy_criterion_ids_map_to_mdr():
@@ -90,7 +91,7 @@ def test_every_yaml_criterion_is_returned_in_order(gate):
 
 
 def test_unknown_gate_is_reported_not_raised():
-    res = ge.evaluate_gate("qr")
+    res = ge.evaluate_gate("orr")
     assert res["found"] is False and res["criteria"] == [] and res["ready"] is False
 
 
@@ -273,3 +274,37 @@ def test_evidence_keys_and_questions_are_translatable():
     for text in [*ge.EVIDENCE_KEYS, *questions]:
         assert f"'{text}'" in _FRONT_TEXT, f"not listed in gateReviewText.ts: {text!r}"
         assert text in fr, f"no French translation: {text!r}"
+
+
+# ─── wave 2 (W4.09): QR, AR and FRR criteria live in the YAML ─────────────────────────────
+
+
+def test_post_cdr_review_record_items_come_from_the_yaml_with_the_interim_behaviour():
+    """gate_reviews.POST_CDR_CRITERIA (agent D's interim table) is now read from the YAML: every
+    interim item is there with the same question, category, owner, evidence and auto rule."""
+    from spacecdf_server.services import gate_reviews
+    table = ge.review_record_table()
+    assert set(table) == {"qr", "ar", "frr"}
+    for gate, specs in gate_reviews.POST_CDR_CRITERIA.items():
+        by_id = {s["id"]: s for s in table[gate]}
+        for spec in specs:
+            got = by_id[spec["id"]]
+            for k in ("question", "category", "owner_seat", "auto", "evidence"):
+                assert got.get(k) == spec.get(k), (spec["id"], k)
+    # FRR (agency CubeSat practice: before delivery): VCD, licences, operations, mass properties, delivery
+    assert [s["id"] for s in table["frr"]] == [f"FRR-RR-0{i}" for i in range(1, 7)]
+
+
+def test_evaluate_gate_leaves_review_record_items_to_the_review_record():
+    res = ge.evaluate_gate("frr")
+    assert res["found"] and res["gate"] == "FRR" and res["criteria"] == []
+    qr = ge.evaluate_gate("qr", requirements=[
+        {"id": "a", "code": "SYS-1", "level": "system", "verification_method": "T", "verification_phase": "CDR"},
+        {"id": "b", "code": "OBJ-O1", "level": "mission", "verification_method": None},
+        {"id": "c", "code": "SN-01", "level": "stakeholder"}])
+    assert [c["id"] for c in qr["criteria"]] == ["QR-EC-01"]
+    c = qr["criteria"][0]
+    assert c["status"] == "fail" and c["evidence_params"]["codes"] == "OBJ-O1" and c["evidence_params"]["total"] == 2
+    ok = ge.evaluate_gate("qr", requirements=[{"id": "a", "code": "SYS-1", "level": "system",
+                                               "verification_methods": ["T"], "verification_phase": "QR"}])
+    assert ok["criteria"][0]["status"] == "pass"

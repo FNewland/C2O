@@ -562,3 +562,202 @@ phases:
         owner_seat: systems_engineer
         step: C3
         fix: vv:risks
+
+  # ─────────────────────────────────────────────────────────── after CDR (wave 2, W4.09)
+  # The reviews after CDR (ECSS-M-ST-10C Rev.1 §4.4; clause numbers and wording to verify):
+  # * QR, end of qualification: the verification record shows the design meets the
+  #   requirements, the qualification is complete and the deviations and waivers are acceptable.
+  # * AR, acceptance of the flight model: the product is free of workmanship errors, its
+  #   acceptance tests are passed and the acceptance data package (as built) is complete.
+  # * FRR, flight readiness. In ECSS the FRR is held before launch, once the spacecraft is on
+  #   the launcher. Canadian-agency CubeSat practice holds a flight readiness review before the
+  #   spacecraft is delivered to the launch provider (it is integrated in the deployer by others
+  #   and cannot be touched after delivery), so the FRR here also checks the delivery: launch
+  #   provider documents accepted and the delivery configuration recorded.
+  #
+  # ``evaluated_by: review_record`` items are evaluated by services/gate_reviews.py
+  # (post_cdr_criteria) with the RID log of the study: ``auto: rids_closed`` passes when every
+  # RID and action of the earlier gates is closed or rejected; the others are board evidence
+  # that the instructor signs off (manual, "Missing evidence: …" until then, so an unsigned FRR
+  # is not ready and names what is missing). gate_evaluator.evaluate_gate leaves them to it and
+  # evaluates the other items itself (QR-EC-01 from the requirement store). These replace the
+  # interim gate_reviews.POST_CDR_CRITERIA table (same ids, questions and behaviour).
+  phase_d_qr:
+    gate: QR
+    gate_name: "Qualification Review"
+    purpose: >
+      Confirm that the verification record shows the design meets every requirement, that the
+      qualification campaign is complete and its non-conformances closed, and that the
+      deviations and waivers are acceptable.
+    authority: "Project Manager / Customer"
+    exit_criteria:
+      - id: QR-RR-01
+        question: "Are the RIDs and actions of the earlier reviews closed?"
+        category: review
+        evidence: "Every RID and action of the earlier reviews closed or rejected"
+        status: auto
+        evaluated_by: review_record
+        auto: rids_closed
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: QR-RR-02
+        question: "Have the qualification test results been reviewed and accepted by the board?"
+        category: verification
+        evidence: "Qualification test reports and the verification control document at qualification"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: QR-RR-03
+        question: "Are the non-conformances of the qualification campaign closed or waived?"
+        category: verification
+        evidence: "NCR log with closure or waiver for every item"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: QR-RR-04
+        question: "Are the deviations and waivers against the requirements accepted?"
+        category: verification
+        evidence: "Request-for-deviation and request-for-waiver log, each accepted by the customer (ECSS-M-ST-40C, to verify)"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: team_leader
+        step: C3
+
+      - id: QR-EC-01
+        question: "Does every requirement have a verification method and a close-out stage?"
+        category: verification
+        evidence: "Every live requirement other than a stakeholder need has a verification method and a close-out stage (verification control document, ECSS-E-ST-10-02C, to verify)"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+        fix: requirements
+
+  phase_d_ar:
+    gate: AR
+    gate_name: "Acceptance Review"
+    purpose: >
+      Confirm that the flight model is free of workmanship errors, has passed its acceptance
+      tests, and that its acceptance data package (as-built configuration, logbook, waivers) is
+      complete.
+    authority: "Customer"
+    exit_criteria:
+      - id: AR-RR-01
+        question: "Are the RIDs and actions of the earlier reviews closed?"
+        category: review
+        evidence: "Every RID and action of the earlier reviews closed or rejected"
+        status: auto
+        evaluated_by: review_record
+        auto: rids_closed
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: AR-RR-02
+        question: "Has the flight model passed its acceptance tests?"
+        category: verification
+        evidence: "Acceptance test reports of the flight (protoflight) model"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: AR-RR-03
+        question: "Is the acceptance data package complete (as-built configuration, logbook, waivers)?"
+        category: programmatic
+        evidence: "Acceptance data package"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: team_leader
+        step: C3
+
+      - id: AR-RR-04
+        question: "Are the non-conformances of the acceptance campaign closed or waived?"
+        category: verification
+        evidence: "NCR log of the flight model with closure or waiver for every item"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+  phase_e_frr:
+    gate: FRR
+    gate_name: "Flight Readiness Review"
+    purpose: >
+      Confirm, before the spacecraft is delivered to the launch provider, that it is verified,
+      licensed and ready to fly, that operations are ready, and that the delivery configuration
+      and the launch provider's documents are accepted.
+    authority: "Customer / Launch provider"
+    exit_criteria:
+      - id: FRR-RR-01
+        question: "Are the RIDs and actions of the earlier reviews closed?"
+        category: review
+        evidence: "Every RID and action of the earlier reviews closed or rejected"
+        status: auto
+        evaluated_by: review_record
+        auto: rids_closed
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: FRR-RR-02
+        question: "Is every verification item closed, or waived with a recorded justification?"
+        category: verification
+        evidence: "Verification control document with every item closed or waived"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: C3
+
+      - id: FRR-RR-03
+        question: "Are the licences granted (spectrum, space station, earth stations, remote sensing)?"
+        category: regulatory
+        evidence: "Licences and their conditions"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: team_leader
+        step: C3
+
+      - id: FRR-RR-04
+        question: "Are operations ready (procedures validated, team trained, ground segment tested end to end)?"
+        category: operations
+        evidence: "Operations readiness: validated procedures, training records, end-to-end test report"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: mission_analyst
+        step: D4
+
+      - id: FRR-RR-05
+        question: "Are the as-built mass properties within the launch interface limits?"
+        category: launch
+        evidence: "Measured mass, centre of mass and the launch ICD limits"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: structures_engineer
+        step: A6
+
+      - id: FRR-RR-06
+        question: "Is the spacecraft ready for delivery (launch provider documents accepted, delivery configuration recorded)?"
+        category: launch
+        evidence: "Launch provider compliance checklist and ICD verification accepted; delivery configuration (remove-before-flight pin fitted, battery state of charge, storage limits) recorded"
+        status: manual
+        evaluated_by: review_record
+        priority: must_pass
+        owner_seat: team_leader
+        step: C3

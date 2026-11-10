@@ -115,6 +115,9 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "{{n}} requirement(s) below mission level without a parent",
     "Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; orbit-average power {{power}} W ({{ptotal}} W with {{margin}}% margin) vs {{avail}} W generated at end of life",
     "Orbit-average power {{power}} W ({{ptotal}} W with {{pmargin}}% margin) vs {{avail}} W generated at end of life; mass margin {{mass}}%",
+    # wave 2 (W4.09): QR-EC-01
+    "{{ok}}/{{total}} requirements have a verification method and a close-out stage; without: {{codes}}",
+    "All {{total}} requirements have a verification method and a close-out stage",
 )
 
 
@@ -186,6 +189,35 @@ def resolve_phase(key: str) -> str | None:
 def get_gate(phase_id: str) -> dict[str, Any] | None:
     pid = resolve_phase(phase_id)
     return _load().get("phases", {}).get(pid) if pid else None
+
+
+#: wave 2 (W4.09): ``evaluated_by`` value of the QR / AR / FRR items that gate_reviews evaluates
+REVIEW_RECORD = "review_record"
+
+
+def review_record_criteria(canonical: str) -> list[dict[str, Any]]:
+    """The review-record items of a gate after CDR (``qr``, ``ar``, ``frr``), from
+    gate_exit_criteria.yaml, in the shape of the interim ``gate_reviews.POST_CDR_CRITERIA``
+    rows: ``{id, question, category, owner_seat, evidence, auto?}`` (plus ``step``)."""
+    gate = get_gate(canonical)
+    out = []
+    for ec in (gate or {}).get("exit_criteria") or []:
+        if ec.get("evaluated_by") != REVIEW_RECORD:
+            continue
+        spec = {"id": ec["id"], "owner_seat": ec.get("owner_seat"), "category": ec.get("category", "review"),
+                "question": ec.get("question", ""), "step": ec.get("step")}
+        if ec.get("auto"):
+            spec["auto"] = ec["auto"]
+        else:
+            spec["evidence"] = ec.get("evidence", "")
+        out.append(spec)
+    return out
+
+
+def review_record_table(gates: tuple[str, ...] = ("qr", "ar", "frr")) -> dict[str, list[dict[str, Any]]]:
+    """``{canonical gate: review_record_criteria(gate)}``: the drop-in for
+    ``gate_reviews.POST_CDR_CRITERIA``."""
+    return {g: review_record_criteria(g) for g in gates}
 
 
 # --------------------------------------------------------------------------- inputs
@@ -326,7 +358,10 @@ def evaluate_gate(
         "rollup": rollup or (design_params or {}).get("_rollup") if isinstance(design_params, dict) else rollup,
     }
 
-    results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])]
+    # wave 2 (W4.09): the review-record items of QR / AR / FRR are evaluated with the RID log by
+    # services/gate_reviews.post_cdr_criteria (routers/gates.py appends them)
+    results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])
+               if ec.get("evaluated_by") != REVIEW_RECORD]
 
     must_pass = [r for r in results if r["priority"] == "must_pass"]
     summary = {
@@ -673,6 +708,23 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         else:
             _set(result, "fail" if orphans else "pass",
                  "{{n}} requirement(s) below mission level without a parent", n=len(orphans))
+
+    elif cid == "QR-EC-01":
+        # wave 2 (W4.09): the verification control document is complete at qualification
+        spec = [r for r in reqs if r.get("level") != "stakeholder"]
+        if not spec:
+            _set(result, "not_evaluated", "No requirements defined")
+        else:
+            miss = [r for r in spec if not (r.get("verification_method") or r.get("verification_methods"))
+                    or not r.get("verification_phase")]
+            if miss:
+                codes = sorted(str(r.get("code") or r.get("id")) for r in miss)
+                _set(result, "fail", "{{ok}}/{{total}} requirements have a verification method and a close-out stage; without: {{codes}}",
+                     ok=len(spec) - len(miss), total=len(spec),
+                     codes=", ".join(codes[:12]) + (" …" if len(codes) > 12 else ""))
+            else:
+                _set(result, "pass", "All {{total}} requirements have a verification method and a close-out stage",
+                     total=len(spec))
 
     elif cid == "SRR-EC-10":
         v = _need(result, dp, "sustainability.score", "debris.casualty_compliant")

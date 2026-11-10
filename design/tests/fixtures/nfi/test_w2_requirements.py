@@ -296,3 +296,84 @@ async def test_w2_07_interface_requirements_link_to_icd_rows_without_duplicates(
     r = await client.patch(f"/api/requirements/{q['id']}", json={"exchange_item_ids": [items[-1]["id"]],
                                                                  "text": q["text"] + " "})
     assert r.status_code == 200 and r.json()["ir_json"]["exchange_item_ids"] == [items[-1]["id"]]
+
+
+# ─── wave 2 (agent R): what the full import reveals, and the queries the TS / IRD read ──────
+
+async def test_w2b_full_baseline_counts_parents_and_generated_rows(client, monkeypatch):
+    """docs/dev/REQUIREMENT_COUNTS.md: the store holds the needs, the objective rows, the 216
+    baseline rows and the interface requirements generated from the accepted links; every row
+    below the needs has a parent, the SMART check passes everywhere, and no generated row is
+    vague (more than half of its values TBD) or a duplicate."""
+    monkeypatch.setenv("SPACECDF_AUTO_IRD", "1")        # as in the running app
+    s = await seed_nfi(client, "S3")
+    sid = s.study_id
+    reqs = await _reqs(client, sid)
+    gen = [q for q in reqs if q["code"].startswith("IR-")]
+    counts = (await client.get(f"/api/studies/{sid}/requirements/counts")).json()
+    assert counts["stakeholder"] == len(BASE["stakeholder_needs"])
+    assert counts["objective"] == len(BASE["objectives"])
+    assert counts["user"] == len(ROWS)
+    assert counts["generated_interface"] == len(gen) > 0
+    assert counts["all"] == len(reqs) == len(ROWS) + len(BASE["objectives"]) + len(BASE["stakeholder_needs"]) + len(gen)
+    assert counts["specification"] == counts["all"] - counts["stakeholder"]
+    assert counts["specification_without_generated"] == len(ROWS) + len(BASE["objectives"])
+
+    code_of = {q["id"]: q["code"] for q in reqs}
+    assert [q["code"] for q in reqs if q["level"] != "stakeholder" and not q["parent_ids"]] == []
+    ver = (await client.get(f"/api/requirements/verify?study_id={sid}")).json()
+    assert ver["orphans"] == 0 and ver["smart_fail"] == 0, [(i["code"], i["codes"]) for i in ver["issues"]]
+    cov = (await client.get(f"/api/studies/{sid}/requirements/coverage")).json()
+    assert cov["orphans"] == [] and cov["interface_without_parent"] == []
+    assert all(v["direct"] > 0 for v in cov["objectives"].values())
+
+    from spacecdf_server.services.interface_requirements import load_templates
+    tpl = {t["id"]: t for t in load_templates()["templates"]}
+    seen: set = set()
+    for q in gen:
+        ir = q["ir_json"]
+        need = tpl[ir["template_id"]].get("values") or []
+        assert len(set(ir.get("missing") or []) & set(need)) * 2 <= len(need), q["text"]
+        assert q["text"] not in seen, q["text"]
+        seen.add(q["text"])
+    texts = " | ".join(q["text"] for q in gen)
+    assert "TBD bus TBD" not in texts and "with umbilical" not in texts
+    # the EPS row takes the CAN node of the P60 (the unit link it covers); one power-path row
+    eps = next(q for q in gen if q["text"].startswith("The EPS shall respond"))
+    assert "CAN bus CAN-A at address 0x10" in eps["text"]
+    assert sum(1 for q in gen if q["ir_json"]["template_id"] == "IRT-SIG-POWER-PATH") == 1
+    pp = next(q for q in gen if q["ir_json"]["template_id"] == "IRT-SIG-POWER-PATH")
+    assert code_of[pp["parent_ids"][0]] == "EPS-INH-01"
+
+
+async def test_w2b_ts_rows_and_ird_dataset_for_the_documents(client, monkeypatch):
+    from spacecdf_server.services.requirement_queries import TS_GROUPS
+    monkeypatch.setenv("SPACECDF_AUTO_IRD", "1")
+    s = await seed_nfi(client, "S3")
+    sid = s.study_id
+    counts = (await client.get(f"/api/studies/{sid}/requirements/counts")).json()
+    ts = (await client.get(f"/api/studies/{sid}/requirements/ts-rows")).json()
+    assert [g["id"] for g in ts["groups"]] == list(TS_GROUPS) and all(g["count"] > 0 for g in ts["groups"])
+    assert len(ts["rows"]) == counts["specification"] == sum(g["count"] for g in ts["groups"])
+    rows = {r["code"]: r for r in ts["rows"]}
+    assert rows["EPS-INH-01"]["threshold"] == "≥ 3 independent inhibits (TBC)"
+    assert rows["EPS-INH-01"]["unit"] == "independent inhibits (TBC)"
+    assert rows["SEG-US-01"]["allocation"] == "Science Segment"
+    assert all(r["stage"] for r in ts["rows"] if r["group"] != "functional" or not r["code"].startswith("OBJ-"))
+    assert rows["IF-ADC-OBC-01"]["group"] == "interface" and rows["IF-ADC-OBC-01"]["parents"][0] == "ADC-OUT-01"
+    assert rows["SYS-ENV-01"]["group"] == "environmental"
+    no_gen = (await client.get(f"/api/studies/{sid}/requirements/ts-rows?include_generated=false")).json()
+    assert len(no_gen["rows"]) == counts["specification_without_generated"]
+
+    ird = (await client.get(f"/api/studies/{sid}/ird-dataset")).json()
+    assert ird["counts"]["interface_requirements"] == counts["by_level"]["interface"]
+    assert ird["counts"]["generated"] == counts["generated_interface"]
+    nodes = [i["node"] for i in ird["interfaces"] if i["node"]]
+    assert {n["protocol"] for n in nodes} >= {"CAN", "I2C"} and any(n["address"] == "0x10" for n in nodes)
+    items = {x["name"]: x for x in ird["exchange_items"]}
+    assert "IF-ADC-OBC-01" in items["ICD-ADCS-OBC"]["requirements"] and items["ICD-ADCS-OBC"]["interfaces"]
+    assert ird["segment_interfaces"]
+    seg = [i for i in ird["interfaces"] if i["segment_interface"]]
+    assert any({i["from"]["segment"], i["to"]["segment"]} == {"Launch Segment", "Space Segment"} for i in seg)
+    blob = str(ird)
+    assert "SpaceWire" not in blob and "28 V" not in blob
