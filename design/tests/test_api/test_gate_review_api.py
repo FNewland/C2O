@@ -11,7 +11,7 @@ from tests.test_api.conftest import make_element, make_requirement
 async def test_gates_listing(client):
     r = await client.get("/api/ecss/gates")
     assert r.status_code == 200
-    assert [g["gate"] for g in r.json()] == ["MDR", "PRR", "SRR", "PDR", "CDR"]
+    assert [g["gate"] for g in r.json()] == ["MDR", "PRR", "SRR", "PDR", "CDR", "QR", "AR", "FRR"]   # W4.09
 
 
 async def test_get_accepts_gate_names(client, study_obj, study):

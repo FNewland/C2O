@@ -30,8 +30,14 @@ per template per link:
 * **A user's interface requirement covers the templates** of its interface type on the same
   subsystem pair (``IF-EPS-ALL-01`` "EPS ↔ all units" covers every power link of the EPS); the
   template is then reported as covered by that code, not instantiated.
-* **No all-TBD rows.** A template whose every value is unknown is offered as a suggestion
-  (``suggestions(study_id)``, ``GET …/interface-requirements``) instead of a "TBD bus TBD" row.
+* **No all-TBD rows.** A template with fewer than half of its values known (wave 2; W2.07 said
+  "every value unknown") is offered as a suggestion (``suggestions(study_id)``,
+  ``GET …/interface-requirements``) instead of a "TBD bus TBD" row. A boundary row takes the
+  values it lacks from the unit links it covers when they agree (:func:`fill_from_members`), and
+  links of one boundary that render the same templates are one row set.
+* **Parents (wave 2).** A generated row gets as parent the user requirement on either end whose
+  text holds most of the template's trace words (:func:`parent_for`), e.g. the RF-inhibit row
+  derives from EPS-INH-01.
 * Imported interface requirements name their end points by element name
   (``ir_json.endpoint_names``) and their ICD row (``ir_json.icd_ref``): :func:`link_imported`
   links them to the accepted interface(s) between those elements, records the ICD row as an
@@ -106,8 +112,126 @@ def templates_for(iface: dict) -> list[dict]:
         subs = tpl.get("subtypes")
         if subs is not None and sub not in subs:
             continue
+        if sub in (tpl.get("subtypes_except") or ()):
+            continue
         out.append(tpl)
     return out
+
+
+#: wave 2 (agent R): words that find a generated row's parent requirement, per interface type,
+#: when the template has no ``trace_words`` of its own. A word ending in ``*`` is a prefix,
+#: any other word or phrase matches whole words only.
+TRACE_WORDS = {
+    "power": ("power", "supply", "voltage", "rail", "line", "lcl", "current"),
+    "data": ("telemetry", "telecommand", "bus", "can", "i2c", "csp", "command"),
+    "rf": ("link", "downlink", "uplink", "band", "margin", "transceiver"),
+    "mechanical": ("configuration", "accommodat*", "mount", "bracket", "fasten*"),
+    "thermal": ("operating limits", "temperature", "heat", "radiat*", "heater*"),
+    "timing": ("time", "pps", "clock", "synchron*"),
+    "optical": ("field of view", "obstruct*", "baffle*"),
+    "electrical_signal": ("inhibit*", "signal", "release"),
+    "fluid": ("feed", "propellant", "fitting"),
+}
+#: value placeholders whose known value is also a trace phrase (``45 min``), worth two words
+_VALUE_PHRASES = {"delay_min": "{} min", "inhibit_count": "{} independent inhibits"}
+
+
+def trace_words(tpl: dict, itype: str | None) -> tuple[str, ...]:
+    words = tpl.get("trace_words")
+    return tuple(str(w).casefold() for w in words) if words else TRACE_WORDS.get(itype or "", ())
+
+
+def _word_re(w: str) -> re.Pattern:
+    if w.endswith("*"):
+        return re.compile(r"(?<![a-z0-9])" + re.escape(w[:-1]))
+    return re.compile(r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])")
+
+
+def known_enough(tpl: dict, missing: list[str]) -> bool:
+    """Wave 2: a template row is written when at least half of its values are known; with fewer
+    it says nothing measurable ("on CAN bus TBD at address TBD at TBD bit/s") and is a
+    suggestion instead (fill the link, then sync)."""
+    need = list(tpl.get("values") or [])
+    if not need:
+        return True
+    unknown = len(set(need) & set(missing))
+    return unknown * 2 <= len(need)
+
+
+def fill_from_members(values: dict[str, Any], members: list[dict], els: dict[str, dict], ctx: Any,
+                      rows: dict[str, list[dict]]) -> dict[str, Any]:
+    """A boundary row takes a value it lacks from the unit links it covers when every covered
+    link that knows the value agrees on it (wave 2: the OBC → EPS row names the CAN bus, address
+    and rate of the OBC → P60 node; two units at two addresses give no address)."""
+    if not members:
+        return values
+    out = dict(values)
+    member_values = [resolve_values(m, els, ctx, rows) for m in members]
+    for k, v in values.items():
+        if k in ("from", "to") or (v is not None and v != ""):
+            continue
+        seen = {repr(mv.get(k)): mv.get(k) for mv in member_values if mv.get(k) not in (None, "")}
+        if len(seen) == 1:
+            out[k] = next(iter(seen.values()))
+    return out
+
+
+_LEVEL_RANK = {"subsystem": 0, "system": 1, "segment": 2, "interface": 3, "mission": 4}
+
+
+def parent_for(text: str, tpl: dict, iface: dict, els: dict[str, dict], reqs: list[dict],
+               values: dict[str, Any] | None = None) -> dict | None:
+    """Wave 2 (agent R): the parent of a generated interface requirement (ECSS-E-ST-10-06C: every
+    requirement traces to a higher one). Candidates are the user requirements placed on either
+    end of the link, on the subsystem (or higher element) each end belongs to, on a unit inside
+    those, or on a subsystem of the template's ``trace_domains`` (the Thermal subsystem for a
+    conductive path); process requirements (verification, model philosophy) are not parents.
+    The candidate whose text holds most of the template's trace words wins; a known delay or
+    inhibit count in the text ("45 min") counts double. Ties: the subject's side, then the lower
+    level, then the code. None when no candidate holds a word: the row then traces only to its
+    interface, and the SMART check says so."""
+    words = trace_words(tpl, iface.get("type") or iface.get("interface_type"))
+    pats = [(_word_re(w), 1) for w in words]
+    for k, fmt in _VALUE_PHRASES.items():
+        v = (values or {}).get(k)
+        if v not in (None, "") and k in (tpl.get("values") or []):
+            pats.append((_word_re(fmt.format(_fmt(v) if isinstance(v, float) else v).casefold()), 2))
+    if not pats:
+        return None
+    f_el, t_el = els.get(iface["from_element_id"]), els.get(iface["to_element_id"])
+    subject_id = iface["from_element_id"] if tpl.get("subject") == "from" else iface["to_element_id"]
+    sides: dict[str, int] = {}
+    for el in (f_el, t_el):
+        if not el:
+            continue
+        rank = 0 if el["id"] == subject_id else 1
+        b = _boundary(el, els)
+        for eid in _related(b or el["id"], els) | {el["id"]}:
+            if els.get(eid, {}).get("element_type") == "mission":
+                continue
+            sides[eid] = min(rank, sides.get(eid, rank))
+    domains = set(tpl.get("trace_domains") or ())
+    for e in els.values():
+        if domains and e.get("subsystem_domain") in domains and e.get("element_type") == "subsystem":
+            for eid in _related(e["id"], els):
+                if els.get(eid, {}).get("element_type") not in ("mission", "segment", "system"):
+                    sides.setdefault(eid, 1)
+    best, best_key = None, None
+    for r in reqs:
+        if r.get("status") == "retired" or _is_rule(r) or r.get("level") in ("stakeholder", "mission") \
+                or r.get("req_type") == "process":
+            continue
+        side = sides.get(r.get("element_id") or "")
+        if side is None:
+            continue
+        body = (r.get("text") or "").casefold()
+        score = sum(wt for p, wt in pats if p.search(body))
+        if score == 0:
+            continue
+        key = (-score, side, _LEVEL_RANK.get(r.get("level") or "", 9), str(r.get("code") or ""))
+        if best_key is None or key < best_key:
+            best, best_key = r, key
+    return best
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -453,12 +577,21 @@ def coverage_plan(interfaces: list[dict], els: dict[str, dict], reqs: list[dict]
         if rid:
             plan[i["id"]] = ("requirement", rid)
             continue
-        groups.setdefault((a, b, t(i), i.get("subtype")) if not per_link else (i["id"],), []).append(i)
+        # wave 2: links of one boundary that render the same templates are one row set (the
+        # deployment switch and the RBF pin, Structure → EPS, are both power-path inhibits)
+        tset = tuple(sorted(tp["id"] for tp in templates_for(i))) or (i.get("subtype"),)
+        groups.setdefault((a, b, t(i), tset) if not per_link else (i["id"],), []).append(i)
     for members in groups.values():
         members.sort(key=lambda i: (_depth(els[i["from_element_id"]], els) + _depth(els[i["to_element_id"]], els), i["id"]))
         for i in members[1:]:
             plan[i["id"]] = ("link", members[0]["id"])
     return plan
+
+
+def members_of(iface_id: str, plan: dict[str, tuple[str, str]], interfaces: list[dict]) -> list[dict]:
+    """The links a boundary row covers (``plan`` entries ``("link", iface_id)``), shallowest first."""
+    ids = {i for i, (why, ref) in plan.items() if why == "link" and ref == iface_id}
+    return [i for i in interfaces if i["id"] in ids]
 
 
 def suggestions(study_id: str) -> list[dict]:
@@ -482,11 +615,11 @@ async def compute_suggestions(study_id: str) -> list[dict]:
         if iface.get("status") != "accepted" or iface.get("deleted_at") or iface["id"] in plan \
                 or iface["from_element_id"] not in els or iface["to_element_id"] not in els:
             continue
-        values = resolve_values(iface, els, ctx, rows)
+        values = fill_from_members(resolve_values(iface, els, ctx, rows), members_of(iface["id"], plan, interfaces),
+                                   els, ctx, rows)
         for tpl in templates_for(iface):
             texts, missing = render(tpl, values)
-            need = list(tpl.get("values") or [])
-            if need and set(need) <= set(missing):
+            if not known_enough(tpl, missing):
                 out[(iface["id"], tpl["id"])] = {"interface_id": iface["id"], "template_id": tpl["id"],
                                                  "interface_name": iface.get("name") or "",
                                                  "text": texts, "missing": missing}
@@ -739,14 +872,34 @@ async def _sync(study_id: str, interface_ids: set[str] | None) -> dict[str, int]
             continue
 
         values = resolve_values(iface, els, ctx, rows)
-        for tpl in templates_for(iface):
+        if ird_scope() != "link":
+            values = fill_from_members(values, members_of(iface["id"], plan, interfaces), els, ctx, rows)
+        tpls = templates_for(iface)
+        # wave 2: a rule row whose template no longer applies to the link (the templates file
+        # changed) retires like the row of a removed link
+        for tid, r in mine.items():
+            if tid in {tp["id"] for tp in tpls} or r.get("status") == "retired":
+                continue
+            ir = dict(r.get("ir_json") or {})
+            if r.get("status") == "draft" and not ir.get("edited"):
+                r["status"] = "retired"
+                ir.update({"retired_by": "rule", "review": None})
+                counts["retired"] += 1
+            elif ir.get("review") != "retire":
+                ir["review"] = "retire"
+                counts["retire_proposed"] += 1
+            else:
+                continue
+            r["ir_json"] = ir
+            await db_update_requirement(r["id"], r)
+        for tpl in tpls:
             texts, missing = render(tpl, values)
             h = _hash({"texts": texts})
             subject = els.get(iface["from_element_id"] if tpl.get("subject") == "from" else iface["to_element_id"])
             r = mine.get(tpl["id"])
-            need = list(tpl.get("values") or [])
-            if need and set(need) <= set(missing) and ird_scope() != "link":
-                # every value unknown (W2.07): a suggestion, not a "TBD … TBD" requirement
+            if not known_enough(tpl, missing) and ird_scope() != "link":
+                # fewer than half of the values known (W2.07: every value; wave 2: half): a
+                # suggestion, not a "TBD … TBD" requirement
                 sugg[(iface["id"], tpl["id"])] = {"interface_id": iface["id"], "template_id": tpl["id"],
                                                   "interface_name": iface.get("name") or "",
                                                   "text": texts, "missing": missing}
@@ -761,15 +914,19 @@ async def _sync(study_id: str, interface_ids: set[str] | None) -> dict[str, int]
                 continue
             if r is None:
                 rid = f"REQ-{uuid4().hex[:8]}"
+                parent = parent_for(texts["en"], tpl, iface, els, study_reqs, values)
                 r = {
-                    "id": rid, "study_id": study_id, "parent_id": None, "element_id": (subject or {}).get("id"),
+                    "id": rid, "study_id": study_id, "parent_id": (parent or {}).get("id"),
+                    "element_id": (subject or {}).get("id"),
                     "level": "interface", "code": _next_code(study_id, iface.get("type") or "", _requirements),
                     "text": texts["en"], "rationale": None, "req_type": "interface", "category": "interface",
                     "threshold_param_path": None, "threshold_op": None, "threshold_value": None,
                     "verification_method": tpl.get("method"), "verification_phase": tpl.get("phase"),
                     "responsible_position": owner_seat(subject, els), "status": "draft",
-                    "derived_from_requirement_id": None, "objective_id": None, "external_id": None,
+                    "derived_from_requirement_id": (parent or {}).get("id"),
+                    "objective_id": (parent or {}).get("objective_id"), "external_id": None,
                     "ir_json": {"origin": ORIGIN, "template_id": tpl["id"], "interface_id": iface["id"],
+                                "parent_rule": "trace_words" if parent else None,
                                 "inputs_hash": h, "text_i18n": texts, "missing": missing,
                                 "values": {k: values.get(k) for k in tpl.get("values") or []},
                                 "edited": False, "review": None, "proposed_text": None,
@@ -785,6 +942,13 @@ async def _sync(study_id: str, interface_ids: set[str] | None) -> dict[str, int]
                 continue
             ir = dict(r.get("ir_json") or {})
             changed = False
+            if not r.get("parent_id") and not ir.get("edited") and not ir.get("parent_rule"):
+                parent = parent_for(texts["en"], tpl, iface, els, study_reqs, values)
+                if parent:
+                    r.update({"parent_id": parent["id"], "derived_from_requirement_id": parent["id"],
+                              "objective_id": r.get("objective_id") or parent.get("objective_id")})
+                    ir["parent_rule"] = "trace_words"
+                    changed = True
             if r.get("status") == "retired":
                 if ir.get("retired_by") != "rule":
                     continue

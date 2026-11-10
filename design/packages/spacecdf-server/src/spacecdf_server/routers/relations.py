@@ -450,6 +450,38 @@ async def requirement_coverage(study_id: str) -> dict:
                if r.get("level") not in ("stakeholder", "mission", "interface")
                and not any(p in ids for p in _parents_of(r, extra))]
     multi = [r.get("code") for r in reqs if len([p for p in _parents_of(r, extra) if p in ids]) > 1]
+    # wave 2: interface rows are not orphans (they trace to their interface), but the ones with
+    # no parent requirement either are listed
+    if_alone = [r.get("code") for r in reqs if r.get("level") == "interface"
+                and not any(p in ids for p in _parents_of(r, extra))]
     return {"study_id": study_id, "requirements": len(reqs),
             "objectives": coverage(study_id, reqs, extra, extra_obj, oids),
-            "orphans": sorted(c for c in orphans if c), "multi_parent": len(multi)}
+            "orphans": sorted(c for c in orphans if c), "multi_parent": len(multi),
+            "interface_without_parent": sorted(c for c in if_alone if c)}
+
+
+@router.get("/studies/{study_id}/requirements/counts")
+async def requirement_counts(study_id: str) -> dict:
+    """Wave 2: live requirements by kind (stakeholder, objective, generated_interface, user), by
+    level and by TS group, and the totals documents quote (docs/dev/REQUIREMENT_COUNTS.md)."""
+    from ..services.requirement_queries import requirement_counts as counts
+    return {"study_id": study_id, **(await counts(study_id))}
+
+
+@router.get("/studies/{study_id}/requirements/ts-rows")
+async def requirement_ts_rows(study_id: str, include_generated: bool = True) -> dict:
+    """Wave 2 (for the TS, W4.06): the specification rows grouped by TS group, with unit,
+    threshold, stage, parents, rationale and allocation."""
+    from ..services.requirement_queries import TS_GROUP_LABELS, TS_GROUPS, ts_rows
+    rows = await ts_rows(study_id, include_generated=include_generated)
+    return {"study_id": study_id, "groups": [{"id": g, "label": TS_GROUP_LABELS[g],
+                                              "count": sum(1 for r in rows if r["group"] == g)} for g in TS_GROUPS],
+            "rows": rows}
+
+
+@router.get("/studies/{study_id}/ird-dataset")
+async def ird_dataset(study_id: str) -> dict:
+    """Wave 2 (for the IRD/ICD, W4.07): interfaces, interface requirements, exchange items,
+    power lines and bus nodes, from data."""
+    from ..services.requirement_queries import ird_dataset as dataset
+    return {"study_id": study_id, **(await dataset(study_id))}

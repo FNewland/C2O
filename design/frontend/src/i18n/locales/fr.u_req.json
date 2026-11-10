@@ -66,5 +66,20 @@
   "Import": "Importer",
   "Preview": "Aperçu",
   "{{created}} new, {{updated}} changed, {{unchanged}} unchanged; {{errors}} error(s).": "{{created}} nouvelles, {{updated}} modifiées, {{unchanged}} inchangées ; {{errors}} erreur(s).",
-  "Stakeholder need": "Besoin de partie prenante"
+  "Stakeholder need": "Besoin de partie prenante",
+  "Are the RIDs and actions of the earlier reviews closed?": "Les RID et les actions des revues précédentes sont-ils clos ?",
+  "Have the qualification test results been reviewed and accepted by the board?": "Les résultats des essais de qualification ont-ils été examinés et acceptés par le comité ?",
+  "Are the non-conformances of the qualification campaign closed or waived?": "Les non-conformités de la campagne de qualification sont-elles closes ou dérogées ?",
+  "Are the deviations and waivers against the requirements accepted?": "Les écarts et les dérogations aux exigences sont-ils acceptés ?",
+  "Does every requirement have a verification method and a close-out stage?": "Chaque exigence a-t-elle une méthode de vérification et une étape de clôture ?",
+  "Has the flight model passed its acceptance tests?": "Le modèle de vol a-t-il réussi ses essais de recette ?",
+  "Is the acceptance data package complete (as-built configuration, logbook, waivers)?": "Le dossier de recette est-il complet (configuration telle que construite, journal de bord, dérogations) ?",
+  "Are the non-conformances of the acceptance campaign closed or waived?": "Les non-conformités de la campagne de recette sont-elles closes ou dérogées ?",
+  "Is every verification item closed, or waived with a recorded justification?": "Chaque élément de vérification est-il clos, ou dérogé avec une justification consignée ?",
+  "Are the licences granted (spectrum, space station, earth stations, remote sensing)?": "Les licences sont-elles accordées (spectre, station spatiale, stations terriennes, télédétection) ?",
+  "Are operations ready (procedures validated, team trained, ground segment tested end to end)?": "L’exploitation est-elle prête (procédures validées, équipe formée, segment sol essayé de bout en bout) ?",
+  "Are the as-built mass properties within the launch interface limits?": "Les propriétés de masse telles que construites respectent-elles les limites de l’interface de lancement ?",
+  "Is the spacecraft ready for delivery (launch provider documents accepted, delivery configuration recorded)?": "Le satellite est-il prêt à être livré (documents du fournisseur de lancement acceptés, configuration de livraison consignée) ?",
+  "{{ok}}/{{total}} requirements have a verification method and a close-out stage; without: {{codes}}": "{{ok}}/{{total}} exigences ont une méthode de vérification et une étape de clôture ; sans : {{codes}}",
+  "All {{total}} requirements have a verification method and a close-out stage": "Les {{total}} exigences ont toutes une méthode de vérification et une étape de clôture"
 }

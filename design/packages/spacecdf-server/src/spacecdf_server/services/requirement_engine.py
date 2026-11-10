@@ -229,6 +229,15 @@ def generate_smart_requirements(
 
 
 _SHALL = re.compile(r"\b(shall|doit|doivent)\b", re.IGNORECASE)
+_NUMBER = re.compile(r"\d")
+#: wave 2: words that cite an applicable document whose levels make the statement measurable
+#: (same list as gate_evaluator._CITES_DOCUMENT, SRR-EC-02)
+CITES_DOCUMENT = ("according to", "in accordance with", "as defined in", "as specified in", " per ", "ecss-",
+                  " icd", "standard", "specification", "conformément", "selon la norme")
+
+
+def _is_objective(req: dict[str, Any]) -> bool:
+    return req.get("category") == "objective" or str(req.get("code") or "").startswith("OBJ-")
 
 #: Requirement types verified as pass/fail (no numeric threshold needed).
 PASS_FAIL_TYPES = frozenset({"functional", "interface", "regulatory", "process"})
@@ -291,6 +300,11 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     elif (req.get("req_type") in PASS_FAIL_TYPES or req.get("level") == "interface") \
             and (req.get("verification_method") or "") in ("T", "I", "R", "A"):
         check.measurable = True     # a pass/fail statement: the acceptance criterion is the "shall"
+    elif _is_objective(req) and _NUMBER.search(str(req.get("rationale") or req.get("measurable_criterion") or "")):
+        check.measurable = True     # wave 2: an objective is measured by its success criterion
+    elif (req.get("verification_method") or "") in ("T", "I", "R", "A") \
+            and any(w in f" {text.lower()} " for w in CITES_DOCUMENT):
+        check.measurable = True     # wave 2: the levels are those of a cited document (launch ICD, ECSS)
     else:
         issues.append("Not measurable: add a threshold value with operator and unit")
         check.codes.append("measurable")

@@ -181,6 +181,28 @@ export const EVIDENCE_KEYS_HK = [
   'Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days at the worst rate (required {{need}})',
   'Housekeeping fits the downlink in {{ok}}/{{total}} regimes; daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days (required {{need}})',
 ]
+// English text is the i18n key — QR, AR and FRR (wave 2, W4.09): questions of
+// gate_exit_criteria.yaml phase_d_qr, phase_d_ar and phase_e_frr
+export const GATE_QUESTIONS_POST_CDR = [
+  'Are the RIDs and actions of the earlier reviews closed?',
+  'Have the qualification test results been reviewed and accepted by the board?',
+  'Are the non-conformances of the qualification campaign closed or waived?',
+  'Are the deviations and waivers against the requirements accepted?',
+  'Does every requirement have a verification method and a close-out stage?',
+  'Has the flight model passed its acceptance tests?',
+  'Is the acceptance data package complete (as-built configuration, logbook, waivers)?',
+  'Are the non-conformances of the acceptance campaign closed or waived?',
+  'Is every verification item closed, or waived with a recorded justification?',
+  'Are the licences granted (spectrum, space station, earth stations, remote sensing)?',
+  'Are operations ready (procedures validated, team trained, ground segment tested end to end)?',
+  'Are the as-built mass properties within the launch interface limits?',
+  'Is the spacecraft ready for delivery (launch provider documents accepted, delivery configuration recorded)?',
+]
+// English text is the i18n key — QR-EC-01 evidence (wave 2, W4.09)
+export const EVIDENCE_KEYS_QR = [
+  '{{ok}}/{{total}} requirements have a verification method and a close-out stage; without: {{codes}}',
+  'All {{total}} requirements have a verification method and a close-out stage',
+]
 
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).

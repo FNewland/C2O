@@ -16,6 +16,16 @@
 #   text       {en, fr} with {placeholders}; a missing value renders "TBD" and the
 #              requirement stays draft (C2O-TBD check in requirement_rules.yaml)
 #   values     placeholders the generator must resolve (beyond {from} {to})
+#   subtypes_except  (wave 2) any subtype but these
+#   trace_words      (wave 2) words that find the generated row's parent requirement: the
+#              requirement on either end (or its subsystem) whose text holds most of them
+#              ("word*" = prefix; default per interface type in interface_requirements.py)
+#   trace_domains    (wave 2) subsystems also searched for the parent (thermal rows: Thermal)
+#
+# Wave 2 (agent R): a template row is written only when at least half of its values are known;
+# otherwise it is a suggestion (fill the link, then sync). A subsystem-boundary row takes a
+# value it lacks from the unit links it covers when they all agree on it (the OBC → EPS link
+# takes the CAN bus, address and rate of the OBC → P60 node).
 #
 # Placeholders the generator resolves (services/interface_requirements.py `_values`):
 #   from, to, rail_voltage, line, lcl_limit_a, current_peak_a, v_min, v_max, p_eol, protocol,
@@ -145,6 +155,8 @@ templates:
     subject: to
     method: I
     phase: CDR
+    trace_words: [configuration, "accommodat*", mount, bracket, "fasten*"]
+    trace_domains: [structure]
     text:
       en: "The {to} shall mount to the {from} by {mount_type}."
       fr: "L'élément {to} doit être fixé à l'élément {from} par {mount_type}."
@@ -157,6 +169,8 @@ templates:
     subject: to
     method: A
     phase: PDR
+    trace_words: [operating limits, every unit, stay within, temperature]
+    trace_domains: [thermal]
     text:
       en: "The {to} interface with the {from} shall stay within {t_min} to {t_max} °C."
       fr: "L'interface de l'élément {to} avec l'élément {from} doit rester entre {t_min} et {t_max} °C."
@@ -167,6 +181,8 @@ templates:
     subject: to
     method: A
     phase: PDR
+    trace_words: ["radiat*", heat, operating limits, every unit]
+    trace_domains: [thermal]
     text:
       en: "The {to} shall reject the heat conducted from the {from} to space through its radiating surface."
       fr: "L'élément {to} doit évacuer vers l'espace, par sa surface rayonnante, la chaleur conduite depuis l'élément {from}."
@@ -177,6 +193,8 @@ templates:
     subject: from
     method: T
     phase: CDR
+    trace_words: ["heater*", survival, minimum operating temperature, operating limits]
+    trace_domains: [thermal]
     text:
       en: "When the {to} is below its minimum operating temperature, the {from} shall deliver {heater_power_w} W to it."
       fr: "Lorsque l'élément {to} est sous sa température minimale de fonctionnement, l'élément {from} doit lui fournir {heater_power_w} W."
@@ -205,14 +223,64 @@ templates:
     values: [fov_deg]
 
   # ── electrical signals (CubeSat Design Specification rev 14.1 §2.3) ────────
+  # Wave 2 (agent R): one template per kind of signal. The single "provide the {to} with
+  # {signal} through at least {inhibit_count} independent inhibits" template rendered
+  # "provide the Space Segment with umbilical through at least TBD independent inhibits" and
+  # asked a deployment switch for an inhibit count it does not have.
   - id: IRT-SIG-INHIBIT
     type: electrical_signal
+    subtypes: [inhibit]
     subject: from
     method: T
     phase: CDR
+    trace_words: ["inhibit*", "transmi*", silent, separation]
+    text:
+      en: "The {from} shall hold every transmitter of the {to} behind at least {inhibit_count} independent inhibits and keep it silent for at least {delay_min} min after deployment."
+      fr: "L’élément {from} doit maintenir tout émetteur de l’élément {to} derrière au moins {inhibit_count} inhibitions indépendantes et le garder silencieux pendant au moins {delay_min} min après le déploiement."
+    values: [inhibit_count, delay_min]
+  - id: IRT-SIG-RELEASE
+    type: electrical_signal
+    subtypes: [release]
+    subject: from
+    method: T
+    phase: CDR
+    trace_words: [release, "deploy*", separation, "inhibit*"]
+    text:
+      en: "The {from} shall command the release of the {to} only through at least {inhibit_count} independent inhibits and not earlier than {delay_min} min after deployment."
+      fr: "L’élément {from} ne doit commander le déploiement de l’élément {to} qu’au travers d’au moins {inhibit_count} inhibitions indépendantes et pas avant {delay_min} min après le déploiement."
+    values: [inhibit_count, delay_min]
+  - id: IRT-SIG-POWER-PATH
+    type: electrical_signal
+    subtypes: [deployment_switch, rbf]
+    subject: from
+    method: T
+    phase: CDR
+    trace_words: [deployment switch*, remove-before-flight, rbf, unpowered, "inhibit*"]
+    text:
+      en: "The {from} shall provide the {to} with the {signal}, so that no load is powered while the spacecraft is in the deployer."
+      fr: "L’élément {from} doit fournir à l’élément {to} le dispositif suivant : {signal}, de sorte qu’aucune charge ne soit alimentée tant que le satellite est dans le déployeur."
+    values: [signal]
+  - id: IRT-SIG-SEPARATION
+    type: electrical_signal
+    subtypes: [umbilical, separation]
+    subject: from
+    method: T
+    phase: CDR
+    trace_words: [deployer, separation, deployment switch, cubesat design specification, launch]
+    text:
+      en: "The {from} shall signal separation to the {to} by releasing its deployment switches, or through an umbilical where the launch ICD provides one."
+      fr: "L’élément {from} doit signaler la séparation à l’élément {to} en libérant ses interrupteurs de déploiement, ou par un ombilical si l’ICD de lancement en prévoit un."
+    values: []
+  - id: IRT-SIG-GENERIC
+    type: electrical_signal
+    subtypes_except: [inhibit, release, deployment_switch, rbf, umbilical, separation]
+    subject: from
+    method: T
+    phase: CDR
+    trace_words: [signal, "inhibit*"]
     text:
       en: "The {from} shall provide the {to} with {signal} through at least {inhibit_count} independent inhibits."
-      fr: "L'élément {from} doit fournir à l'élément {to} le signal {signal} par au moins {inhibit_count} inhibitions indépendantes."
+      fr: "L’élément {from} doit fournir à l’élément {to} le signal {signal} par au moins {inhibit_count} inhibitions indépendantes."
     values: [signal, inhibit_count]
 
   # ── fluid ────────────────────────────────────────────────────────────────
