@@ -4,6 +4,8 @@
  * One row per interface × exchange item from GET /api/studies/{id}/icd.
  * Inline: create an exchange item and attach it to an interface, edit item
  * name/kind/properties, detach, download CSV.
+ * W2.07: the "Requirements" column lists the interface requirement codes of each row (those
+ * that name the interface or the exchange item, and the boundary rows that cover the link).
  */
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -72,6 +74,20 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
     queryFn: () => fetch(`${API}/studies/${studyId}/exchange-items`).then(jsonOrThrow),
     enabled: !!studyId, structuralSharing: false,
   })
+
+  const { data: reqs = [] } = useQuery<any[]>({
+    queryKey: ['requirements', studyId],
+    queryFn: () => fetch(`${API}/requirements/tree?study_id=${studyId}`).then(jsonOrThrow),
+    enabled: !!studyId, structuralSharing: false,
+  })
+  const irCodes = (ifaceId: string, itemId?: string) => reqs
+    .filter(r => r.level === 'interface' && r.status !== 'retired')
+    .filter(r => {
+      const ir = r.ir_json || {}
+      if (itemId && (ir.exchange_item_ids || []).includes(itemId)) return true
+      return ir.interface_id === ifaceId || (ir.interface_ids || []).includes(ifaceId) || (ir.covers_interface_ids || []).includes(ifaceId)
+    })
+    .map(r => r.code as string).sort()
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['icd', studyId] })
@@ -151,7 +167,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
           <thead>
             <tr>
               <th>{t('Interface')}</th><th>{t('From')}</th><th>{t('To')}</th><th>{t('Type')}</th>
-              <th>{t('Exchange item')}</th><th>{t('Kind')}</th><th>{t('Key properties')}</th><th></th>
+              <th>{t('Exchange item')}</th><th>{t('Kind')}</th><th>{t('Key properties')}</th><th>{t('Requirements')}</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -181,6 +197,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
                         </select>
                       </td>
                       <td><input value={editProps} onChange={e => setEditProps(e.target.value)} placeholder="rate_hz=10; bits=16" className="c2o-input c2o-input--sm w-full" /></td>
+                      <td className="mono t-12">{irCodes(r.interface_id, xi?.id).join(', ') || '—'}</td>
                       <td className="nowrap">
                         <button className="c2o-btn c2o-btn--sm" onClick={() => updateItem.mutate({ id: xi!.id, name: editName, kind: editKind, props: editProps })}>{t('save')}</button>{' '}
                         <button className="c2o-btn c2o-btn--sm" onClick={() => setEditItem(null)}>{t('cancel')}</button>
@@ -191,6 +208,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
                       <td>{xi ? xi.name : <span className="c-caution t-12">{t('no exchange item')}</span>}</td>
                       <td>{xi?.kind || ''}</td>
                       <td className="c-2 t-12">{xi ? propsToText(xi.properties) : propsToText(r.interface_properties)}</td>
+                      <td className="mono t-12">{irCodes(r.interface_id, xi?.id).join(', ') || '—'}</td>
                       <td className="nowrap">
                         {xi && <>
                           <button className="c2o-btn c2o-btn--sm" onClick={() => { setEditItem(xi.id); setEditName(xi.name || ''); setEditKind(xi.kind || 'data'); setEditProps(propsToText(xi.properties)) }}>{t('edit')}</button>{' '}
@@ -211,7 +229,7 @@ export function ICDTable({ studyId: studyIdProp }: { studyId?: string | null }) 
               const available = items.filter(it => !attached.has(it.id))
               return [row, (
                 <tr key={`attach-${r.interface_id}`}>
-                  <td colSpan={8} className="bg-2">
+                  <td colSpan={9} className="bg-2">
                     <div className="flex gap-2 ai-c wrap">
                       <span className="t-12 c-2">{t('New item:')}</span>
                       <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('name')} className="c2o-input c2o-input--sm" />

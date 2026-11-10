@@ -10,7 +10,16 @@ Dict <-> row mapping is column-driven (``hasattr(RequirementRow, key)``), so
 new columns such as ``objective_id`` / ``external_id`` flow through without
 edits here. ``external_ids`` (API key) <-> ``external_ids_json`` (column).
 
-All DB errors are logged and swallowed so the hot path never crashes.
+``threshold_value`` is JSON text in the column. It is decoded on load and normalised on write
+(``normalise_threshold_value``), so the API serves the same value before and after a restart:
+``15``, ``15.0`` and ``"15"`` all become ``15``; ``{"min": .., "max": ..}`` stays a dict; a date or
+any other text stays a string (W1.01).
+
+Write errors are no longer swallowed (W2.04): a duplicate live code in a study raises
+``DuplicateCodeError`` (the API answers 409); any other integrity or data error (duplicate id,
+unknown parent) raises ``RequirementStoreError``, so a caller never believes a row was saved
+when it was not. Only an unavailable database (no table, locked, read-only) is still logged
+and tolerated, so the in-memory store keeps working.
 """
 from __future__ import annotations
 
@@ -26,7 +35,56 @@ from .models import RequirementRow
 
 logger = logging.getLogger(__name__)
 
-_JSON_FIELDS = {"external_ids": "external_ids_json"}
+
+class RequirementStoreError(RuntimeError):
+    """A requirement write failed in the database."""
+
+
+class DuplicateCodeError(RequirementStoreError):
+    """Another live requirement of the study already has this code."""
+
+
+def normalise_threshold_value(v: Any) -> Any:
+    """One canonical in-memory form for a threshold value (see the module doc).
+
+    JSON text is decoded; numeric text becomes a number; an integral float becomes an int;
+    a dict with numeric text (``{"min": "449.75"}``) gets numbers; anything else is kept."""
+    if v is None:
+        return None
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, str):
+        t = v.strip()
+        if t == "":
+            return None
+        try:
+            v = json.loads(t)
+        except (ValueError, TypeError):
+            try:
+                v = float(t.replace(",", "."))
+            except ValueError:
+                return t
+        if isinstance(v, str):
+            return normalise_threshold_value(v) if v.strip() != t else v
+    if isinstance(v, float):
+        if v != v or v in (float("inf"), float("-inf")):
+            return v
+        return int(v) if v.is_integer() else v
+    if isinstance(v, dict):
+        return {k: normalise_threshold_value(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [normalise_threshold_value(x) for x in v]
+    return v
+
+
+def _encode_threshold(v: Any) -> str | None:
+    v = normalise_threshold_value(v)
+    if v is None:
+        return None
+    return json.dumps(v)
+
+
+_JSON_FIELDS = {"external_ids": "external_ids_json", "verification_methods": "verification_methods_json"}
 _TIMESTAMPS = ("created_at", "updated_at")
 
 
@@ -37,8 +95,8 @@ def _dict_to_row_kwargs(d: dict) -> dict:
         col = _JSON_FIELDS.get(k, k)
         if col in _TIMESTAMPS or not hasattr(RequirementRow, col):
             continue
-        if col == "threshold_value" and v is not None and not isinstance(v, str):
-            v = json.dumps(v)  # column is Text (JSON-encoded)
+        if col == "threshold_value":
+            v = _encode_threshold(v)  # column is Text (JSON-encoded)
         kw[col] = v
     return kw
 
@@ -53,6 +111,8 @@ def _row_to_dict(row: RequirementRow) -> dict:
     ext = d.pop("external_ids_json", None)
     if ext is not None:
         d["external_ids"] = ext
+    d["verification_methods"] = d.pop("verification_methods_json", None)
+    d["threshold_value"] = normalise_threshold_value(d.get("threshold_value"))
     # Before Nov 2026 the Requirements panel stored the type in ``rationale``; move it.
     if not d.get("req_type") and d.get("rationale") in REQ_TYPES:
         d["req_type"], d["rationale"] = d["rationale"], None
@@ -85,19 +145,47 @@ async def load_all_requirements() -> dict[str, dict]:
     return out
 
 
+def _raise(op: str, req_id: Any, exc: Exception) -> None:
+    """Integrity and data errors (duplicate code or id, missing parent, bad value) are raised;
+    an environment error (no table yet, database locked or read-only) is logged and the
+    in-memory write stands, as before (the next start-up reloads from the database)."""
+    from sqlalchemy.exc import DataError, IntegrityError, OperationalError
+    msg = str(getattr(exc, "orig", exc))
+    if isinstance(exc, IntegrityError) and ("code" in msg or "uq_requirements_study_code_live" in msg):
+        raise DuplicateCodeError(f"{op} {req_id}: duplicate requirement code ({msg})") from exc
+    if isinstance(exc, OperationalError) and not isinstance(exc, (IntegrityError, DataError)):
+        logger.exception("%s failed for %s (database unavailable; kept in memory)", op, req_id)
+        return
+    logger.exception("%s failed for %s", op, req_id)
+    raise RequirementStoreError(f"{op} {req_id}: {msg}") from exc
+
+
 async def db_create_requirement(req: dict) -> None:
-    """Persist a new requirement (write-through; non-fatal)."""
+    """Persist a new requirement (write-through). Raises on a database error."""
     try:
         factory = get_session_factory()
         async with factory() as session:
             session.add(RequirementRow(**_dict_to_row_kwargs(req)))
             await session.commit()
-    except Exception:
-        logger.exception("db_create_requirement failed for %s", req.get("id"))
+    except Exception as exc:
+        _raise("db_create_requirement", req.get("id"), exc)
+
+
+async def db_create_requirements(reqs: list[dict]) -> None:
+    """Persist many new requirements in one transaction (bulk import). All or nothing."""
+    if not reqs:
+        return
+    try:
+        factory = get_session_factory()
+        async with factory() as session:
+            session.add_all([RequirementRow(**_dict_to_row_kwargs(r)) for r in reqs])
+            await session.commit()
+    except Exception as exc:
+        _raise("db_create_requirements", f"{len(reqs)} rows", exc)
 
 
 async def db_update_requirement(req_id: str, full_dict: dict) -> None:
-    """Persist the full current state of a requirement (write-through; non-fatal)."""
+    """Persist the full current state of a requirement (write-through). Raises on a database error."""
     try:
         factory = get_session_factory()
         async with factory() as session:
@@ -108,8 +196,26 @@ async def db_update_requirement(req_id: str, full_dict: dict) -> None:
                 sa_update(RequirementRow).where(RequirementRow.id == req_id).values(**kw)
             )
             await session.commit()
-    except Exception:
-        logger.exception("db_update_requirement failed for %s", req_id)
+    except Exception as exc:
+        _raise("db_update_requirement", req_id, exc)
+
+
+async def db_update_requirements(reqs: list[dict]) -> None:
+    """Persist the full state of many requirements in one transaction (bulk import)."""
+    if not reqs:
+        return
+    try:
+        factory = get_session_factory()
+        async with factory() as session:
+            now = datetime.now(timezone.utc)
+            for r in reqs:
+                kw = _dict_to_row_kwargs(r)
+                kw.pop("id", None)
+                kw["updated_at"] = now
+                await session.execute(sa_update(RequirementRow).where(RequirementRow.id == r["id"]).values(**kw))
+            await session.commit()
+    except Exception as exc:
+        _raise("db_update_requirements", f"{len(reqs)} rows", exc)
 
 
 async def db_upsert_requirement(req: dict) -> None:
@@ -118,9 +224,8 @@ async def db_upsert_requirement(req: dict) -> None:
         factory = get_session_factory()
         async with factory() as session:
             exists = await session.get(RequirementRow, req["id"])
-    except Exception:
-        logger.exception("db_upsert_requirement lookup failed for %s", req.get("id"))
-        return
+    except Exception as exc:
+        _raise("db_upsert_requirement", req.get("id"), exc)
     if exists is None:
         await db_create_requirement(req)
     else:
@@ -138,5 +243,5 @@ async def db_soft_delete_requirement(req_id: str) -> None:
                 .values(status="retired", updated_at=datetime.now(timezone.utc))
             )
             await session.commit()
-    except Exception:
-        logger.exception("db_soft_delete_requirement failed for %s", req_id)
+    except Exception as exc:
+        _raise("db_soft_delete_requirement", req_id, exc)

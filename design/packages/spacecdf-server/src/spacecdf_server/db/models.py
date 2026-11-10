@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint, text as sa_text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -151,8 +151,22 @@ class RequirementRow(Base):
     # Interface requirement (level "interface", design rules IF-01..IF-05):
     # {origin, template_id, interface_id, inputs_hash, review, edited, proposed_text, values, endpoints}
     ir_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # W2.02 (Nov 2026): baseline fields of an imported requirement set
+    priority: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1 mandatory, 2 performance, 3 goal
+    category: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)  # science, regulatory, ...
+    source_ref: Mapped[str | None] = mapped_column(Text, nullable=True)  # where the requirement comes from
+    threshold_unit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    verification_level: Mapped[str | None] = mapped_column(String(16), nullable=True)  # mission .. unit
+    verification_methods_json: Mapped[list | None] = mapped_column(JSON, nullable=True)  # ["A", "T"]
+    open_item: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # TBD/TBC flagged by the baseline
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+    # W2.04: one live requirement per code in a study (retired rows keep their code)
+    __table_args__ = (
+        Index("uq_requirements_study_code_live", "study_id", "code", unique=True,
+              sqlite_where=sa_text("status != 'retired'"), postgresql_where=sa_text("status != 'retired'")),
+    )
 
     study: Mapped["StudyRow"] = relationship(foreign_keys=[study_id])
     parent: Mapped["RequirementRow | None"] = relationship(

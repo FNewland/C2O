@@ -24,6 +24,7 @@ EOSAT_PARTS = {
 @pytest.fixture(autouse=True)
 def _auto(monkeypatch):
     monkeypatch.setenv("SPACECDF_AUTO_IRD", "1")
+    monkeypatch.setenv("SPACECDF_IRD_SCOPE", "link")   # these tests pin the per-link rule (W2.07 default: boundary)
 
 
 async def _component(client, study, name, parent, domain, kb):

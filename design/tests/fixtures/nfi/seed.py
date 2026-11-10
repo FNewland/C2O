@@ -172,6 +172,10 @@ async def _s1(api: _Api, seed: NfiSeed) -> None:
                                             "text": f"The mission shall {o['text'][0].lower()}{o['text'][1:]}",
                                             "rationale": o.get("measure"), "objectives": [o["id"]]})
     await _post_requirements(api, seed, lambda r: r["tool_level"] == "mission")
+    # W2.09 (agent R): the elements the baseline allocates to that the tree above lacks, then the
+    # whole baseline through the bulk import (W2.04): needs, objectives and all 216 rows with
+    # every field, extra parents and objectives; the rows posted above are updated in place.
+    await _w2_import_baseline(api, seed)
 
 
 def _element_for(seed: NfiSeed, name: str | None) -> str | None:
@@ -290,6 +294,9 @@ async def _s3(api: _Api, seed: NfiSeed) -> None:
             "consequence": int(r["C"]), "mitigation": r.get("mit", ""), "owner": r.get("owner", ""),
             "status": r.get("status", "open"), "source": str(r.get("src", ""))[:120]})
         seed.risks.append(res)
+    # W2.07 (agent R): the 12 IF rows linked to their interfaces and ICD rows; the interfaces
+    # they name that the proposer did not make (IF-02 suggestions) are accepted
+    await _w2_link_interfaces(api, seed)
 
 
 async def _s4(api: _Api, seed: NfiSeed) -> None:
@@ -320,3 +327,43 @@ async def seed_nfi(client, stage: str = "S4") -> NfiSeed:
         seed.report["seconds"][s] = round(time.perf_counter() - t0, 2)
         seed.stage = s
     return seed
+
+
+# ───────────────────────────────────────────── W2 (agent R): bulk import of the baseline
+
+#: elements the requirement baseline allocates rows to, beyond the S1 tree above
+W2_EXTRA_ELEMENTS = (
+    # name, element_type, parent key in seed.elements, segment
+    ("Science Segment", "segment", "mission", "user"),
+    ("Operations", "segment", "mission", "operations"),
+    ("Harness", "subsystem", "spacecraft", "space"),
+)
+
+
+async def _w2_import_baseline(api: _Api, seed: NfiSeed) -> None:
+    sid = seed.study_id
+    for name, etype, parent, segment in W2_EXTRA_ELEMENTS:
+        if name not in seed.elements:
+            seed.elements[name] = await api.element(
+                sid, name=name, element_type=etype, parent_id=seed.elements[parent]["id"], segment=segment,
+                subsystem_domain="harness" if name == "Harness" else ("ground" if segment == "operations" else None),
+                owner_position="systems_engineer" if name == "Harness" else None)
+    rep = await api.post(f"/api/studies/{sid}/requirements/import",
+                         {"document": load("requirements"), "study_id": sid})
+    if rep.get("errors"):
+        raise SeedError(f"requirement import: {rep['errors'][:5]}")
+    for code, rid in rep["id_map"].items():
+        if not code.startswith("SN-"):
+            seed.requirements[code] = rid
+    seed.report["requirements_import"] = {k: rep[k] for k in ("created", "updated", "unchanged", "by_level",
+                                                                "relations_created", "unallocated", "seconds")}
+
+
+async def _w2_link_interfaces(api: _Api, seed: NfiSeed) -> None:
+    sid = seed.study_id
+    rep = await api.post(f"/api/studies/{sid}/interface-requirements/link")
+    for i in await api.call("GET", f"/api/studies/{sid}/interfaces?status=suggested"):
+        if i.get("origin") == "rule:IF-02":
+            await api.call("PATCH", f"/api/interfaces/{i['id']}", {"status": "accepted"})
+    await api.post(f"/api/studies/{sid}/interface-requirements/sync")
+    seed.report["interface_link"] = rep

@@ -285,7 +285,7 @@ phases:
       - id: SRR-EC-02
         question: "Are system requirements complete, verifiable, and non-conflicting?"
         category: requirements
-        evidence: "All requirements have verification_method and threshold"
+        evidence: "Every requirement (below the objectives; interface requirements apart) has a verification_method and a threshold (number, range or date) or an acceptance criterion (test, inspection or review of the statement; analysis of a pass/fail statement)"
         status: auto
         priority: must_pass
         owner_seat: systems_engineer
@@ -368,6 +368,16 @@ phases:
         owner_seat: mission_analyst
         step: A1
         fix: analyses
+
+      - id: SRR-EC-11
+        question: "Does every requirement below mission level flow down from a parent requirement?"
+        category: traceability
+        evidence: "Every segment, system and subsystem requirement has a parent (parent_id or a derives relation)"
+        status: auto
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: B1
+        fix: requirements
 
   phase_b:
     gate: PDR

@@ -29,7 +29,7 @@ async def test_create_survives_restart(client, study_obj, study):
     for k in ("id", "study_id", "level", "code", "text", "objective_id", "verification_method",
               "threshold_param_path", "threshold_op", "status"):
         assert got[k] == created[k], k
-    assert got["threshold_value"] == "12"  # JSON-encoded Text column
+    assert got["threshold_value"] == 12  # JSON text in the column, decoded on load (W1.01)
     assert got["external_id"] == "CUST-7"
     tree = (await client.get(f"/api/requirements/tree?study_id={study}")).json()
     assert [t["id"] for t in tree] == ["MR-1"]

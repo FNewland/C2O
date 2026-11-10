@@ -68,7 +68,7 @@ TYPE_ALIASES: dict[str, str] = {
 #: Subtypes per type (the values the proposer emits; users may add others).
 SUBTYPES: dict[str, tuple[str, ...]] = {
     "power": ("regulated", "battery_bus", "switched", "array_input"),
-    "data": ("tm_tc", "payload_data", "bus"),
+    "data": ("tm_tc", "payload_data", "bus", "csi2", "timing"),   # csi2, timing: W2.07
     "rf": ("coax", "space_ground"),
     "mechanical": ("mount", "deployer", "launcher"),
     "thermal": ("conductive", "radiative", "heater"),
@@ -225,6 +225,8 @@ SUBTYPE_LABELS: dict[str, dict[str, str]] = {
     "tm_tc": {"en": "TM/TC", "fr": "TM/TC"},
     "payload_data": {"en": "Payload data", "fr": "Données de charge utile"},
     "bus": {"en": "Bus", "fr": "Bus"},
+    "csi2": {"en": "Camera link (MIPI CSI-2)", "fr": "Liaison caméra (MIPI CSI-2)"},
+    "timing": {"en": "Time signal", "fr": "Signal de temps"},
     "coax": {"en": "Coax", "fr": "Coaxial"},
     "space_ground": {"en": "Space–ground link", "fr": "Liaison sol–espace"},
     "mount": {"en": "Mount", "fr": "Fixation"},

@@ -363,6 +363,7 @@ async def test_pdr_gate_and_consistency_use_interfaces(client, study_obj, study,
     from spacecdf_server.services.readiness import build_context, interface_coverage
 
     monkeypatch.setenv("SPACECDF_AUTO_IRD", "1")   # accepted links get interface requirements
+    monkeypatch.setenv("SPACECDF_IRD_SCOPE", "link")   # one row set per link (W2.07 default: boundary)
     _, _, body = await _populated(client, study, include_equipment=False)
     els = [e for e in _elements.values() if e["study_id"] == study]
 

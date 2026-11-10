@@ -6,6 +6,11 @@ Public API:
     get_relation(id) / soft_delete_relation(id)
     list_relations_by_study(study_id, kind=None)
     list_relations_for(entity_kind, entity_id, kind=None, direction="both")
+    sync_relations(study_id, wanted, owned)                 bulk: make a set of relations exact
+
+Entity kinds (Nov 2026, W2.03/W2.07): ``objective`` (a MissionNeed objective id such as ``O1``;
+``traces`` requirement -> objective) and ``exchange_item`` (an ICD row; ``allocates`` interface
+requirement -> exchange item). Further parents are ``derives`` requirement -> parent requirement.
 """
 from __future__ import annotations
 
@@ -22,7 +27,8 @@ from .models import RequirementRelationRow
 logger = logging.getLogger(__name__)
 
 RELATION_KINDS = ("satisfies", "verifies", "refines", "derives", "traces", "allocates")
-ENTITY_KINDS = ("requirement", "element", "function", "interface", "parameter", "test")
+ENTITY_KINDS = ("requirement", "element", "function", "interface", "parameter", "test", "objective",
+                "exchange_item")
 
 
 async def load_all_relations(study_id: str | None = None) -> dict[str, dict]:
@@ -117,3 +123,46 @@ async def list_relations_for(entity_kind: str, entity_id: str, kind: str | None 
     if kind:
         filters.append(RequirementRelationRow.kind == kind)
     return await list_rows(RequirementRelationRow, *filters)
+
+
+async def sync_relations(study_id: str, wanted: list[dict], owned: set[tuple[str, str, str]]) -> tuple[int, int]:
+    """Bulk upsert in one transaction (requirement import).
+
+    ``wanted``: relation dicts (kind, source_kind, source_id, target_kind, target_id, rationale?).
+    ``owned``: (kind, source_id, target_kind) groups the caller manages: a live relation of the
+    study in one of these groups that is not in ``wanted`` is soft-deleted. Returns
+    (created or revived, removed)."""
+    from datetime import datetime, timedelta, timezone
+    factory = get_session_factory()
+    created = removed = 0
+    t0 = datetime.now(timezone.utc)
+    async with factory() as session:
+        rows = (await session.execute(select(RequirementRelationRow).where(
+            RequirementRelationRow.study_id == study_id))).scalars().all()
+        have = {(r.kind, r.source_kind, r.source_id, r.target_kind, r.target_id): r for r in rows}
+        want_keys = set()
+        for d in wanted:
+            key = (d["kind"], d["source_kind"], d["source_id"], d["target_kind"], d["target_id"])
+            if key in want_keys:
+                continue
+            want_keys.add(key)
+            if d["kind"] not in RELATION_KINDS or d["source_kind"] not in ENTITY_KINDS \
+                    or d["target_kind"] not in ENTITY_KINDS:
+                raise ValueError(f"invalid relation {key}")
+            row = have.get(key)
+            if row is None:
+                # explicit, increasing creation times keep the file order of further parents/objectives
+                session.add(RequirementRelationRow(**dict_to_kwargs(RequirementRelationRow, {
+                    "id": new_id("rel"), "study_id": study_id, **d,
+                    "created_at": t0 + timedelta(microseconds=len(want_keys))})))
+                created += 1
+            elif row.deleted_at is not None:
+                row.deleted_at = None
+                created += 1
+        now = datetime.now(timezone.utc)
+        for key, row in have.items():
+            if row.deleted_at is None and key not in want_keys and (key[0], key[2], key[3]) in owned:
+                row.deleted_at = now
+                removed += 1
+        await session.commit()
+    return created, removed

@@ -78,12 +78,12 @@ async def test_traceability_tree(client, study_obj, study):
     obj1, obj2 = tree["objectives"]
     assert obj1["id"] == "OBJ-1" and obj2["requirements"] == []
     mr = obj1["requirements"][0]
-    assert mr["id"] == "MR-1" and mr["level"] == "mission" and mr["verification"]["method"] == "analysis"
+    assert mr["id"] == "MR-1" and mr["level"] == "mission" and mr["verification"]["method"] == "A"  # W2.02: stored as the ECSS code
     sr = mr["children"][0]
     assert sr["id"] == "SR-1"
     assert sr["elements"] == [{"id": sc["id"], "name": "Spacecraft", "element_type": "system",
                                "subsystem_domain": None, "relation": "element_id"}]
-    assert sr["verification"] == {"method": "test", "phase": "AIT", "status": "approved"}
+    assert sr["verification"] == {"method": "T", "phase": "AIT", "status": "approved"}  # W2.02: ECSS code
     ssr = sr["children"][0]
     assert ssr["id"] == "SSR-1" and ssr["children"] == []
     assert [(e["id"], e["relation"]) for e in ssr["elements"]] == [(eps["id"], "satisfies")]

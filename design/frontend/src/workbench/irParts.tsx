@@ -41,7 +41,9 @@ export function InterfaceIrLinks({ interfaceId }: { interfaceId: string }) {
   const invalidate = useInvalidateElectrical(studyId)
   const [busy, setBusy] = useState(false)
   if (!data) return null
-  const irs = data.requirements.filter(r => r.ir_json?.interface_id === interfaceId)
+  // W2.07: an IR names one or several interfaces, and a boundary's rows cover the unit links under it
+  const irs = data.requirements.filter(r => r.ir_json?.interface_id === interfaceId
+    || (r.ir_json as any)?.interface_ids?.includes(interfaceId) || (r.ir_json as any)?.covers_interface_ids?.includes(interfaceId))
   const ag = data.agreements[interfaceId]
   const seat = (s: string | null) => (s ? t(SEAT_LABEL[s] ?? s) : t('no seat'))
   const agree = async (side: 'provider' | 'consumer', on: boolean) => {

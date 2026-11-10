@@ -582,3 +582,20 @@ async def test_bad_files_are_refused(client, db_factory):
     assert r.status_code == 400 and "newer SpaceCDF" in r.text
     r = await client.get("/api/studies/nope/export")
     assert r.status_code == 404
+
+
+async def test_requirement_baseline_fields_round_trip(client, db_factory):
+    """W2 (agent R): the new requirement columns and the derives / traces→objective /
+    allocates→exchange_item relations travel with the project file."""
+    from tests.fixtures.nfi import seed_nfi
+    s = await seed_nfi(client, "S1")
+    a = await _export(client, s.study_id)
+    res = await _import(client, a)
+    b = await _export(client, res["id"])
+    cols = ("code", "level", "priority", "category", "source_ref", "threshold_unit", "threshold_value",
+            "verification_phase", "verification_methods_json", "open_item")
+    pick = lambda d: sorted(tuple(json.dumps(r.get(c), sort_keys=True) for c in cols) for r in d["tables"]["requirements"])  # noqa: E731
+    assert pick(a) == pick(b) and len(a["tables"]["requirements"]) >= 216 + 5 + 6
+    kinds = lambda d: sorted((r["kind"], r["target_kind"]) for r in d["tables"]["requirement_relations"]  # noqa: E731
+                             if not r.get("deleted_at"))
+    assert kinds(a) == kinds(b) and ("traces", "objective") in kinds(b) and ("derives", "requirement") in kinds(b)

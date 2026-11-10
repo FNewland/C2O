@@ -2,6 +2,7 @@
 
     GET  /api/product-tree/levels                       ECSS / NASA levels and allowed children
     POST /api/studies/{id}/product-tree/default         mission → segments → spacecraft → subsystems
+                                                         (+ User Segment and a Harness subsystem: W2.09)
     POST /api/studies/{id}/spacecraft                   another spacecraft under the space segment
     GET  /api/studies/{id}/product-tree/check           elements placed at the wrong level
     POST /api/studies/{id}/product-tree/migrate         insert a Spacecraft above subsystems that
@@ -91,6 +92,12 @@ async def create_default_tree(study_id: str, body: DefaultTreeRequest) -> dict:
         populated.append(await er.populate_subsystems(
             study_id, parent_element_id=sc["id"],
             body=er.PopulateRequest(spacecraft_class=body.spacecraft_class, include_equipment=body.include_equipment)))
+        # W2.09: a Harness subsystem, so harness requirements have an element to land on
+        if not any(e.get("parent_id") == sc["id"] and "harness" in (e.get("name") or "").lower()
+                   for e in _study_elements(study_id)):
+            created.append(await _new(study_id, name="Harness", element_type="subsystem", segment="space",
+                                      parent_id=sc["id"], subsystem_domain="harness",
+                                      owner_position="systems_engineer"))
     await _broadcast(study_id, "product_tree_created", len(created))
     return {"mission_id": root["id"], "created": len(created) + sum(p.get("created", 0) for p in populated),
             "segment_ids": {e["name"]: e["id"] for e in created if e["element_type"] == "segment"},
