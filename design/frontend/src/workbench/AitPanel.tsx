@@ -16,6 +16,7 @@ import i18n from '../i18n'
 import { Button, DataTable, Disclosure, Input, Note, Panel, Tag, Tabs, tabPanelProps } from '../components/ui'
 import { ReliabilityPanel } from './ReliabilityPanel'
 import { ThermalModelPanel } from './ThermalModelPanel'
+import { ValidationPanel } from './ValidationPanel'
 
 const API = '/api'
 
@@ -163,6 +164,8 @@ export function AitPanel({ studyId }: { studyId: string | null }) {
       <div className="stack gap-4 mt-4">
         <ReliabilityPanel studyId={studyId} />
         <ThermalModelPanel studyId={studyId} />
+        {/* wave 3 (3.S5): validation activities and need validation (agent S) */}
+        <ValidationPanel studyId={studyId} />
       </div>
     </Panel>
   )

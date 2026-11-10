@@ -45,7 +45,8 @@ def _row_dict(r) -> dict[str, Any]:
             "unresolved_codes": list(d.get("unresolved_codes") or []), "affected_other": list(d.get("affected_other") or []),
             "source_trade": r.source_trade, "status": r.status, "status_text": d.get("status_text", ""),
             "decision_gate": r.decision_gate, "decided_by": r.decided_by, "baseline_ref": d.get("baseline_ref", ""),
-            "previews": list(d.get("previews") or []), "history": list(d.get("history") or []),
+            "previews": list(d.get("previews") or []), "apply": list(d.get("apply") or []),
+            "history": list(d.get("history") or []),
             "origin": r.origin, "order": r.order,
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "updated_at": r.updated_at.isoformat() if r.updated_at else None}
@@ -136,7 +137,7 @@ def _clean(body: dict[str, Any], study_id: str, *, partial: bool = False) -> dic
     if "affected" in body or "affected_codes" in body:
         codes, ids, unres, other = split_affected(body.get("affected") or body.get("affected_codes") or [], study_id)
         out.update(affected_codes=codes, affected_requirement_ids=ids, unresolved_codes=unres, affected_other=other)
-    for f in ("previews", "baseline_ref"):
+    for f in ("previews", "baseline_ref", "apply"):   # apply: requirement edits on approval (D's change control)
         if f in body:
             out[f] = body[f]
     if out.get("source_trade") is not None:
@@ -155,7 +156,7 @@ def _apply(row, c: dict[str, Any]) -> None:
         row.affected_codes_json = c["affected_codes"]
         row.affected_requirement_ids_json = c["affected_requirement_ids"]
     d = dict(row.data_json or {})
-    for f in ("class_text", "status_text", "unresolved_codes", "affected_other", "previews", "baseline_ref"):
+    for f in ("class_text", "status_text", "unresolved_codes", "affected_other", "previews", "baseline_ref", "apply"):
         if f in c:
             d[f] = c[f]
     row.data_json = d
@@ -342,6 +343,8 @@ async def import_changes(study_id: str, body: dict[str, Any], request: Request) 
             b["decision_gate"] = r["decision_gate"]
         if r.get("previews") or previews.get(code):
             b["previews"] = r.get("previews") or previews.get(code)
+        if isinstance(r.get("apply"), list):
+            b["apply"] = r["apply"]
         rec, was_created = await upsert(study_id, b, origin="import", by=by)
         created += int(was_created)
         updated += int(not was_created)

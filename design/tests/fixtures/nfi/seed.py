@@ -1095,11 +1095,18 @@ CHANGE_PREVIEWS = {
 }
 
 
+#: the review each change record is decided at (v2 REVIEW_READINESS; PI decision 2): ECP-01 at the
+#: PDR (NIR filter quote and breadboard), ECP-02 at the SRR (the launch request), CR-V2 approved
+#: with the allocated baseline at the PDR
+CHANGE_GATES = {"ECP-01": "pdr", "ECP-02": "srr", "CR-V2": "pdr"}
+
+
 async def _s3_changes(api: _Api, seed: NfiSeed) -> None:
     """3.L4: ``risks.yaml`` ``configuration_management.change_records``: ECP-01, ECP-02, CR-V2, in
-    one call, with their impact-preview specs. Imported as proposed: the walkthrough decides ECP-01
-    and ECP-02 on camera (change control, agent D)."""
-    recs = load("risks")["configuration_management"]["change_records"]
+    one call, with their impact-preview specs and decision gates. Imported as proposed: the
+    walkthrough decides ECP-01 and ECP-02 on camera (change control, agent D)."""
+    recs = [{**r, "decision_gate": CHANGE_GATES.get(r["id"], r.get("decision_gate"))}
+            for r in load("risks")["configuration_management"]["change_records"]]
     rep = await api.post(f"/api/studies/{seed.study_id}/changes/import", {"records": recs, "previews": CHANGE_PREVIEWS})
     seed.report["changes"] = {"created": rep["created"], "updated": rep["updated"]}
 

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -243,8 +244,20 @@ async def propose(study_id: str, *, gate: str | None = None) -> dict[str, Any]:
         return None
 
     code_of = {v: k for k, v in CODE_DOMAIN.items()}
+    # integration: the power line is the subsystem's ORBIT-AVERAGE share of the operational mode
+    # mix with its maturity margin (the same figure the bound PWR rows check, R 3.R2), not the
+    # units' ON power; the ON power is the fallback while the study has no operational mix
+    oa: dict[str, float] = {}
+    try:
+        from .threshold_binding import values as binding_values
+        for k, v in (await binding_values(study_id) or {}).items():
+            m = re.match(r"^rollup\.power\.(\w+)\.orbit_average_with_maturity_w$", k)
+            if m and isinstance(v, (int, float)):
+                oa[m.group(1)] = float(v)
+    except Exception:  # noqa: BLE001 — no modes: the ON power below
+        logger.debug("no orbit-average shares for %s", study_id, exc_info=True)
     agg: dict[tuple[str, str], dict[str, float]] = {}
-    for kind, units in (("mass", ru.mass.units), ("power_avg", ru.power.units)):
+    for kind, units in (("mass", ru.mass.units), ("power_avg", [] if oa else ru.power.units)):
         for u in units or []:
             sub = sub_of(u.get("element_id") or "")
             if sub is None or (sub.get("segment") or "space") != "space":
@@ -252,10 +265,21 @@ async def propose(study_id: str, *, gate: str | None = None) -> dict[str, Any]:
             a = agg.setdefault((kind, sub["id"]), {"cbe": 0.0, "margined": 0.0})
             a["cbe"] += float(u.get("cbe") or 0.0)
             a["margined"] += float(u.get("with_margin") or 0.0)
+    space_subs = [e for e in els.values() if e.get("element_type") == "subsystem"
+                  and (e.get("segment") or "space") == "space" and e.get("in_scope", True) is not False
+                  and code_of.get(e.get("subsystem_domain") or "") not in (None, "HAR")]
+    if oa:
+        for sub in space_subs:
+            v = oa.get(code_of.get(sub.get("subsystem_domain") or "") or "")
+            agg[("power_avg", sub["id"])] = {"cbe": None, "margined": float(v or 0.0)}   # type: ignore[dict-item]
+    # a subsystem with a mass line and no power gets a nil power line (0 W: no requirement needed)
+    for sub in space_subs:
+        if ("mass", sub["id"]) in agg:
+            agg.setdefault(("power_avg", sub["id"]), {"cbe": 0.0, "margined": 0.0})
     have = {(r["budget_type"], r.get("element_id")) for r in await sr.list_rows(Row, study_id)}
     rows = []
     for (kind, sid_), a in sorted(agg.items(), key=lambda kv: (kv[0][0], els[kv[0][1]].get("name", ""))):
-        if (kind, sid_) in have or a["margined"] <= 0:
+        if (kind, sid_) in have or (a["margined"] <= 0 and kind != "power_avg"):
             continue
         sub = els[sid_]
         code = code_of.get(sub.get("subsystem_domain") or "", (sub.get("subsystem_domain") or "SC").upper()[:6])
@@ -263,10 +287,13 @@ async def propose(study_id: str, *, gate: str | None = None) -> dict[str, Any]:
         value = math.ceil(a["margined"] / step - 1e-9) * step
         from ..seats import config as seat_cfg
         rows.append({"budget_type": kind, "element_code": code, "element_id": sid_, "value": round(value, 3),
-                     "unit": UNITS[kind], "cbe": round(a["cbe"], 4), "margined": round(a["margined"], 4),
+                     "unit": UNITS[kind], "cbe": round(a["cbe"], 4) if a["cbe"] is not None else None,
+                     "margined": round(a["margined"], 4),
                      "owner_seat": seat_cfg.seat_for_domain(sub.get("subsystem_domain")) or CODE_SEAT.get(code, "systems_engineer"),
                      "status": "proposed", "origin": "proposed",
-                     "rationale": "CBE with maturity margin, rounded up (roll-up)", "order": 100 + len(rows),
+                     "rationale": ("Orbit-average share of the operational mix with maturity margin, rounded up (Modes)"
+                                   if kind == "power_avg" and oa else "CBE with maturity margin, rounded up (roll-up)"),
+                     "order": 100 + len(rows),
                      "history_json": [{"at": _now().isoformat(), "by": "roll-up", "field": "created", "old": None,
                                        "new": round(value, 3), "why": "proposed from the roll-up"}]})
     await sr.insert_rows(Row, study_id, rows, prefix="al")

@@ -97,8 +97,10 @@ async def _function_count(study_id: str, study: Any) -> int:
     return n
 
 
-async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str, Any]:
-    """Everything a gate evaluation reads, from the server's stored study only."""
+async def gate_inputs(study_id: str, form_factor: str | None = None,
+                      gates: tuple[str, ...] | None = None) -> dict[str, Any]:
+    """Everything a gate evaluation reads, from the server's stored study only. ``gates``: the
+    canonical gates about to be evaluated (narrows the SE-deliverables evidence; all when None)."""
     from .rules import _context
     ctx = await _context(study_id, form_factor)
     study = ctx["study"]
@@ -146,13 +148,15 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
         ctx["signoffs"] = dict((await seat_store.get_team(study_id)).get("signoffs") or {})
     except Exception:  # noqa: BLE001
         ctx["signoffs"] = {}
-    # wave 3 (PI addendum): the review-readiness evidence of SRR and PDR (SEMP, debris, ICDs,
-    # reliability and FMEA, thermal model, change decisions), read from the other tools' records
-    covers = {c for g in ((study_profile(study).get("gates") or []) if study else []) for c in (g.get("covers") or [])}
-    if covers & set(READINESS_CRITERIA):
-        from ..services import gate_evidence
-        ctx["evidence"] = await gate_evidence.collect(study_id)
-    else:
+    # wave 3: the evidence the wave-3 criteria read (R's collection: function coverage, ICD issue
+    # control, allocation ledger, SE deliverables, validation, reliability and FMEA, debris, ConOps
+    # scenarios, cost) with D's readiness probes (SEMP, change decisions, thermal model) under
+    # "readiness"; read from the other tools' records, so SRR and PDR pass once the work exists
+    try:
+        from ..services import gate_evaluator
+        ctx["evidence"] = await gate_evaluator.collect_evidence(study_id, gates)
+    except Exception:  # noqa: BLE001 — no evidence: the wave-3 criteria say so
+        logger.exception("gate evidence unavailable for %s", study_id)
         ctx["evidence"] = {}
     return ctx
 
@@ -194,7 +198,7 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
             requirements=ctx["requirements"], elements=ctx["elements"], interfaces=ctx["interfaces"],
             mission=req_model, function_count=ctx.get("function_count"), risks=ctx.get("risks"),
             margin_gate=mg, cdr=ctx.get("cdr"), rollup=ctx.get("rollup"),
-            conflicts=ctx.get("conflicts"), ait=ctx.get("ait"),
+            conflicts=ctx.get("conflicts"), ait=ctx.get("ait"), evidence=ctx.get("evidence"),
         )
         if canon in gp.POST_CDR:
             from ..services.gate_reviews import post_cdr_criteria
@@ -204,7 +208,7 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
                                        *post_cdr_criteria(canon, ctx.get("rids") or [], earlier)]}
         if canon in READINESS_CRITERIA:   # wave 3 (PI addendum): SRR-RD-*, PDR-RD-*
             res = {**res, "criteria": [*(res.get("criteria") or []),
-                                       *readiness_criteria(canon, ctx.get("evidence"))]}
+                                       *readiness_criteria(canon, (ctx.get("evidence") or {}).get("readiness"))]}
         for c in res.get("criteria", []):
             c["canonical_gate"] = canon
             so = (ctx.get("signoffs") or {}).get(c.get("id"))
@@ -251,7 +255,11 @@ def _gate_public(pg: dict[str, Any]) -> dict[str, Any]:
 
 async def evaluate_study_gate(study_id: str, gate: str, form_factor: str | None = None,
                               ctx: dict[str, Any] | None = None) -> dict[str, Any]:
-    ctx = ctx or await gate_inputs(study_id, form_factor)
+    if ctx is None:
+        from .studies import get_study_store
+        st0 = get_study_store().get(study_id)
+        pg0 = gp.gate_of(study_profile(st0), gate) if st0 is not None else None
+        ctx = await gate_inputs(study_id, form_factor, gates=tuple(pg0.get("covers") or []) if pg0 else None)
     study = ctx["study"]
     profile = study_profile(study)
     pg = gp.gate_of(profile, gate)
@@ -373,7 +381,8 @@ async def gate_review_action(study_id: str, gate: str, body: ReviewBody, request
     study = _study_or_404(study_id)
     from ..seats.service import require_gate_role
     seat = await require_gate_role(request, study_id)
-    ctx = await gate_inputs(study_id)
+    pg0 = gp.gate_of(study_profile(study), gate)
+    ctx = await gate_inputs(study_id, gates=tuple(pg0.get("covers") or []) if pg0 else None)
     profile = study_profile(study)
     pg = gp.gate_of(profile, gate)
     if pg is None:

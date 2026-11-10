@@ -89,6 +89,10 @@ async def apply_pending(pc: dict[str, Any]) -> dict[str, Any]:
         new = dict(pc.get("new") or {})
         kind, row_id = new.pop("_entity"), new.pop("_id")
         return await apply_change(pc["study_id"], kind, row_id, new)
+    if pc["kind"] == "allocation_ledger":
+        # wave 3 (3.A2): a non-owner's edit of an allocation-ledger line, accepted by the owner
+        from ..services.allocation_ledger import apply_ledger_change
+        return await apply_ledger_change(pc)
     if pc["kind"] == "cdr":
         # TM/TC database, FDIR, AOCS, TT&C, line-state and operations rows (routers/cdr.py)
         from ..routers.cdr import apply_change as cdr_apply

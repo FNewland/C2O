@@ -258,5 +258,9 @@ async def collect(ctx) -> dict:
     for p in PROCESSES:
         ev = {k: _count(sections, k) for k in p["evidence"]}
         processes.append({"id": p["id"], "label": p["label"], "standard": p["standard"], "how": p["how"], "evidence": ev})
+    iss = dict((getattr(ctx.study, "document_issues", None) or {}).get("semp") or {}) if ctx.study is not None else {}
     return {"organisation": await _organisation(ctx), "lifecycle": await _lifecycle(ctx), "processes": processes,
-            "tailoring": _tailoring(ctx), "configuration_management": _configuration(ctx)}
+            "tailoring": _tailoring(ctx), "configuration_management": _configuration(ctx),
+            # the issue the team recorded (POST /studies/{sid}/semp/issue); SRR-EC-09 passes on it
+            "issue": iss.get("issue"), "issued_at": iss.get("issued_at"), "issued_by": iss.get("by"),
+            "issue_history": list(iss.get("history") or [])}

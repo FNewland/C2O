@@ -209,6 +209,9 @@ class Study(BaseModel):
     # e.g. {"study_override": {"percent": 20, "through_gate": "pdr", "resources": ["mass", "power"],
     # "rationale": "..."}} (services/rollup.py applies it; the ladder is still quoted beside it).
     margin_policy: dict[str, Any] = Field(default_factory=dict)
+    # Wave 3 integration: documents the team issues from the study (e.g. "semp": {"issue": "A",
+    # "issued_at": ISO time, "by": seat, "note": "", "history": [...]}); SRR-EC-09 reads the SEMP's
+    document_issues: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod

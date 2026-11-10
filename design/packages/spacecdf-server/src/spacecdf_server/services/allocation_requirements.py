@@ -285,6 +285,18 @@ async def sync(study_id: str, *, create: bool = True) -> dict[str, Any]:
             "counts": st["counts"]}
 
 
+async def ledger_changed(study_id: str, line: dict | None = None, old_value: Any = None, *,
+                         create: bool = True) -> dict[str, Any]:
+    """The one entry point A's ledger calls after a change (create, value edit, propose, import,
+    agree, delete): AR-01 applied to the whole study (``line`` / ``old_value`` are informative;
+    :func:`sync` reads the ledger itself). Never raises: a failed sync is logged."""
+    try:
+        return await sync(study_id, create=create)
+    except Exception:  # noqa: BLE001 — the ledger edit stands; the sync can be run on demand
+        logger.warning("allocation requirement sync failed for %s", study_id, exc_info=True)
+        return {"study_id": study_id, "created": [], "stale": [], "retired": [], "cleared": [], "error": True}
+
+
 async def resolve(req: dict, action: str) -> dict:
     """The owner's answer to a flag: ``accept`` (the threshold takes the ledger value; a retired
     row is retired) or ``dismiss`` (the row is kept as it is)."""

@@ -196,17 +196,18 @@ async def _trade_seat(study_id: str, source: str) -> str:
 
 
 async def impact_preview(study_id: str, p: dict[str, Any]) -> dict[str, Any]:
-    """Agent L's impact preview of the change (``POST /impact/preview``, dry run), else the
-    study's key numbers as they stand (``source: key_numbers``) with the impact the proposal states."""
-    body = {"kind": "change_proposal", "change_id": p["id"], "code": p["code"], "impact": p.get("impact"),
-            "affected_codes": p.get("affected_codes"), "change": p.get("data", {}).get("proposed") or {}}
-    try:
-        from ..routers.impact import impact_preview as route
-        res = await route(study_id, body)
-        if isinstance(res, dict) and res.get("status") != "not_implemented":
-            return {"source": "impact_preview", **res}
-    except Exception as exc:  # noqa: BLE001 — L's preview not landed (501) or failed
-        logger.debug("impact preview unavailable for %s: %s", study_id, exc)
+    """Agent L's impact preview of the record (its ``previews`` specs applied together as a dry
+    run, the same service as ``POST /changes/{id}/preview``), else the study's key numbers as they
+    stand (``source: key_numbers``) with the impact the proposal states."""
+    specs = list((p.get("data") or {}).get("previews") or [])
+    if specs:
+        try:
+            from .impact_preview import preview
+            res = await preview(study_id, {"changes": specs})
+            if isinstance(res, dict):
+                return {"source": "impact_preview", "change_code": p.get("code"), "change_id": p["id"], **res}
+        except Exception as exc:  # noqa: BLE001 — a spec the preview cannot apply: key numbers
+            logger.debug("impact preview failed for %s %s: %s", study_id, p.get("code"), exc)
     try:
         from .key_numbers import key_numbers
         kn = await key_numbers(study_id)
@@ -321,11 +322,12 @@ async def decide(study_id: str, change_id: str, decision: str, *, note: str = ""
         b.baseline_ref = baseline.get("id") or ""
         b.data_json = {**dict(b.data_json or {}), "applied": applied, "baseline": baseline}
         cp = await s.get(ChangeProposalRow, p["id"])
-        cp.status = "accepted" if decision == "approve" else "rejected"
-        cp.decided_by = (by or "board")[:120]
-        cp.data_json = {**dict(cp.data_json or {}), "decided_at": now.isoformat(), "decision_note": note.strip()[:4000],
-                        **({"baseline_ref": baseline.get("id")} if baseline.get("id") else {})}
+        cp.data_json = {**dict(cp.data_json or {}), "decided_at": now.isoformat(), "decision_note": note.strip()[:4000]}
         await s.commit()
+    # the record's status through L's register (history, baseline reference): one code path
+    from ..routers.changes import set_status
+    await set_status(study_id, p["id"], "accepted" if decision == "approve" else "rejected", by=(by or "board"),
+                     baseline_ref=baseline.get("id") or "", note=note.strip()[:4000])
     return await view(study_id, p["id"])
 
 

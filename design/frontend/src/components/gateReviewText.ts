@@ -271,6 +271,26 @@ export const EVIDENCE_KEYS_W3_4 = [
   'Reliability {{rel}} over {{horizon}} vs target {{target}}',
 ]
 
+// English text is the i18n key — wave 3 integration evidence (1/2)
+export const EVIDENCE_KEYS_W3_5 = [
+  'ConOps summary documented; {{n}} operational scenario(s) with requirements',
+  '{{n}} operational scenario(s) with requirements',
+  'SEMP issue {{issue}} recorded',
+  'SEMP content ready ({{parts}}/{{of}} parts): review it and record its issue',
+  'The SEMP generator has no content yet ({{parts}}/{{of}} parts)',
+  'No debris assessment has been run',
+]
+
+// English text is the i18n key — wave 3 integration evidence (2/2)
+export const EVIDENCE_KEYS_W3_6 = [
+  'Debris assessment v{{version}} not accepted yet',
+  'Debris assessment v{{version}} accepted, but the design changed since the run: run it again',
+  'Debris assessment v{{version}} accepted, not compliant and no deviation recorded',
+  'Debris assessment v{{version}} accepted at {{gate}}',
+  'Reliability {{rel}} over {{horizon}} vs target {{target}}; FMEA {{rows}} line(s), {{critical}} critical, all linked',
+  'Reliability analysis not acceptable: {{reasons}}',
+]
+
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
 export const FIX_LABEL: Record<string, string> = {

@@ -13,7 +13,7 @@ probe              read from                                                    
 ``icds``           ``icd_issues`` (latest issue per ``icd_ref``, both sign-offs)  R 3.R6
 ``reliability``    ``reliability_blocks`` (computed blocks)                     A 3.A5
 ``fmea``           ``fmea_rows``                                                A 3.A5
-``thermal``        ``thermal_nodes``, ``thermal_cases`` (solved, margins)        A 3.A6
+``thermal``        ``thermal_model.evidence`` (solved, ranges, heaters)          A 3.A6
 =================  ===========================================================  =========
 
 Every probe is defensive: a table that is empty or a section that is still a stub gives "no
@@ -129,25 +129,11 @@ async def fmea(study_id: str) -> dict[str, Any]:
             "single_points": sum(1 for r in rows if r.single_point)}
 
 
-def _min_margin(results: Any) -> float | None:
-    vals: list[float] = []
-    for v in (results or {}).values() if isinstance(results, dict) else []:
-        if isinstance(v, dict):
-            for k in ("margin_design_c", "margin_c", "design_margin_c"):
-                if isinstance(v.get(k), (int, float)):
-                    vals.append(float(v[k]))
-                    break
-    return min(vals) if vals else None
-
-
 async def thermal(study_id: str) -> dict[str, Any]:
-    from ..db.models_thermal import ThermalCaseRow, ThermalNodeRow
-    nodes = [n for n in await _rows(ThermalNodeRow, study_id) if (n.kind or "diffusion") != "boundary"]
-    cases = await _rows(ThermalCaseRow, study_id)
-    return {"nodes": len(nodes),
-            "cases": [{"code": c.code, "kind": c.kind, "status": c.status,
-                       "solved": c.status == "solved" or bool(c.results_json),
-                       "min_margin_c": _min_margin(c.results_json)} for c in cases]}
+    """A's thermal evidence (``services.thermal_model.evidence``, 3.A6): a solved model with at
+    least 6 nodes, hot and cold cases, every node inside its design range or a sized heater for it."""
+    from .thermal_model import evidence
+    return await evidence(study_id)
 
 
 async def collect(study_id: str, probes: tuple[str, ...] | None = None) -> dict[str, Any]:

@@ -164,6 +164,19 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated",
     "{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated; unallocated: {{codes}}",
     "Reliability {{rel}} over {{horizon}} vs target {{target}}",
+    # integration (wave 3): ConOps scenarios (D), SEMP issue (X), debris assessment (L), reliability + FMEA (A)
+    "ConOps summary documented; {{n}} operational scenario(s) with requirements",
+    "{{n}} operational scenario(s) with requirements",
+    "SEMP issue {{issue}} recorded",
+    "SEMP content ready ({{parts}}/{{of}} parts): review it and record its issue",
+    "The SEMP generator has no content yet ({{parts}}/{{of}} parts)",
+    "No debris assessment has been run",
+    "Debris assessment v{{version}} not accepted yet",
+    "Debris assessment v{{version}} accepted, but the design changed since the run: run it again",
+    "Debris assessment v{{version}} accepted, not compliant and no deviation recorded",
+    "Debris assessment v{{version}} accepted at {{gate}}",
+    "Reliability {{rel}} over {{horizon}} vs target {{target}}; FMEA {{rows}} line(s), {{critical}} critical, all linked",
+    "Reliability analysis not acceptable: {{reasons}}",
 )
 
 
@@ -661,8 +674,15 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
             _set(result, "fail", "No concept selected")
 
     elif cid == "MDR-EC-06":
+        # wave 3 (3.D5): the operational scenarios with requirements count as the ConOps too
+        n = _ev(ctx).get("conops_scenarios")
         if (mn.get("conops_summary") or "").strip():
-            _set(result, "pass", "ConOps summary documented")
+            if n:
+                _set(result, "pass", "ConOps summary documented; {{n}} operational scenario(s) with requirements", n=n)
+            else:
+                _set(result, "pass", "ConOps summary documented")
+        elif n:
+            _set(result, "pass", "{{n}} operational scenario(s) with requirements", n=n)
         else:
             _set(result, "fail", "ConOps summary is empty")
 
@@ -858,6 +878,12 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
     elif cid == "SRR-EC-08":
         _trl_criterion(result, ctx)
 
+    elif cid == "SRR-EC-09":
+        _semp_criterion(result, ctx)
+
+    elif cid == "SRR-EC-10" and "debris" in _ev(ctx):
+        _debris_criterion(result, ctx)
+
     elif cid == "SRR-EC-10":
         v = _need(result, dp, "sustainability.score", "debris.casualty_compliant")
         if v:
@@ -956,6 +982,9 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
 
     elif cid == "PDR-EC-06":
         _data_budget_criterion(result, ctx)
+
+    elif cid == "PDR-EC-05" and isinstance(_ev(ctx).get("reliability"), dict) and "ok" in _ev(ctx)["reliability"]:
+        _reliability_criterion(result, ctx)
 
     elif cid in ("PDR-EC-05",):
         # wave 3 (3.A5): A's reliability analysis wins over the design loop's estimate; the
@@ -1410,9 +1439,9 @@ async def _ledger_lines(study_id: str) -> list[dict] | None:
     """The allocation-ledger lines (A, 3.A2): A's ``allocation_ledger.status`` when it exists,
     else the ``allocation_ledger`` table read directly."""
     try:
-        from . import allocation_ledger as al            # A's evidence function (3.A2)
-        st = await al.status(study_id)
-        lines = st.get("lines") if isinstance(st, dict) else st
+        from . import allocation_ledger as al            # A's ledger (3.A2)
+        led = await al.list_lines(study_id)
+        lines = led.get("items") if isinstance(led, dict) else led
         if isinstance(lines, list):
             return lines
     except Exception:  # noqa: BLE001
@@ -1449,8 +1478,9 @@ async def _logbook_decisions(study_id: str) -> set[str] | None:
         return None
 
 
-async def collect_evidence(study_id: str) -> dict[str, Any]:
-    """Everything the wave-3 criteria read (see above). Never raises."""
+async def collect_evidence(study_id: str, gates: tuple[str, ...] | list[str] | None = None) -> dict[str, Any]:
+    """Everything the wave-3 criteria read (see above). Never raises. ``gates``: the canonical
+    gates about to be evaluated (the SE deliverables are evaluated for those only; all when None)."""
     from .requirement_queries import function_coverage
     from .threshold_binding import values as binding_values
     from .interface_requirements import icd_status
@@ -1469,21 +1499,39 @@ async def collect_evidence(study_id: str) -> dict[str, Any]:
     ev["decisions_recorded"] = await _logbook_decisions(study_id)
     try:                                   # S (3.S2): the SE deliverables per gate
         from . import se_deliverables as sd
-        ev["se_deliverables"] = {g: await _maybe(sd.evaluate, study_id, g) for g in SE_GATES}
+        want = [g for g in SE_GATES if gates is None or g in gates]
+        ev["se_deliverables"] = {g: await _maybe(sd.evaluate, study_id, g) for g in want}
         blocking = getattr(sd, "blocking", None)
         ev["se_blocking"] = bool(await blocking(study_id)) if blocking else False
     except Exception:  # noqa: BLE001
         ev["se_deliverables"] = None
     try:                                   # S (3.S5): validation coverage per objective
-        from ..routers.validation import validation_coverage
+        from ..routers.validation import coverage as validation_coverage
         ev["validation"] = await _maybe(validation_coverage, study_id)
     except Exception:  # noqa: BLE001
         ev["validation"] = None
-    try:                                   # A (3.A5): reliability over the mission-success horizon
-        from ..routers.reliability import get_reliability
-        ev["reliability"] = await _maybe(get_reliability, study_id)
+    try:                                   # A (3.A5): reliability over the horizon and the FMEA
+        from .reliability_model import evidence as reliability_evidence
+        ev["reliability"] = await _maybe(reliability_evidence, study_id)
     except Exception:  # noqa: BLE001
         ev["reliability"] = None
+    try:                                   # L (3.L8): the debris assessment accepted at the SRR
+        from .debris_assessment import srr_evidence
+        ev["debris"] = await _maybe(srr_evidence, study_id)
+    except Exception:  # noqa: BLE001
+        ev["debris"] = None
+    try:                                   # D (3.D5): operational scenarios with requirements
+        from ..routers.conops import scenario_count
+        from ..routers.studies import get_study_store
+        st = get_study_store().get(study_id)
+        ev["conops_scenarios"] = scenario_count(st) if st is not None else None
+    except Exception:  # noqa: BLE001
+        ev["conops_scenarios"] = None
+    try:                                   # D's probes: the SEMP content and issue (X 3.X3), the change
+        from . import gate_evidence        # proposals (L 3.L4) and the thermal model (A 3.A6)
+        ev["readiness"] = await gate_evidence.collect(study_id, probes=("semp", "changes", "thermal"))
+    except Exception:  # noqa: BLE001
+        ev["readiness"] = {}
     try:                                   # A (3.A7): the priced cost (labour, tests, reserve)
         from ..routers.schedule import list_cost_items
         ev["cost"] = await _maybe(list_cost_items, study_id)
@@ -1637,8 +1685,27 @@ def _objective_of(i: dict) -> str | None:
     return i.get("objective_id") or i.get("objective") or i.get("id")
 
 
+def _coverage_of(ctx: dict) -> dict | None:
+    """S's ``routers.validation.coverage`` (3.S5): ``{objectives: {id: {stakeholder_performed,
+    in_orbit, ...}}, primary, uncovered_primary, in_orbit_planned, ok}``, when that is the shape."""
+    v = _ev(ctx).get("validation")
+    return v if isinstance(v, dict) and "uncovered_primary" in v and isinstance(v.get("objectives"), dict) else None
+
+
 def _validation_criterion(result: dict, ctx: dict) -> None:
     """SRR-EC-13: every primary objective has a validation activity performed by a stakeholder."""
+    cov = _coverage_of(ctx)
+    if cov is not None:
+        prim, miss = list(cov.get("primary") or []), list(cov.get("uncovered_primary") or [])
+        if not prim:
+            _set(result, "fail", "No objectives defined")
+        elif miss:
+            _set(result, "fail", "{{ok}}/{{total}} primary objectives have a validation activity performed by a stakeholder; without: {{ids}}",
+                 ok=len(prim) - len(miss), total=len(prim), ids=", ".join(miss))
+        else:
+            _set(result, "pass", "All {{total}} primary objectives have a validation activity performed by a stakeholder",
+                 total=len(prim))
+        return
     items = _validation_items(ctx)
     if items is None:
         _set(result, "not_evaluated", "The validation plan is not available yet")
@@ -1667,6 +1734,19 @@ def _validation_criterion(result: dict, ctx: dict) -> None:
 
 def _iov_criterion(result: dict, ctx: dict) -> None:
     """FRR-EC-01: every primary objective has an in-orbit validation activity planned."""
+    cov = _coverage_of(ctx)
+    if cov is not None:
+        prim = list(cov.get("primary") or [])
+        objs = cov["objectives"]
+        miss = [o for o in prim if not (objs.get(o) or {}).get("in_orbit")]
+        if not cov.get("in_orbit_planned"):
+            _set(result, "fail", "No in-orbit validation activity planned")
+        elif miss:
+            _set(result, "fail", "{{ok}}/{{total}} primary objectives have an in-orbit validation activity planned; without: {{ids}}",
+                 ok=len(prim) - len(miss), total=len(prim), ids=", ".join(miss))
+        else:
+            _set(result, "pass", "All {{total}} primary objectives have an in-orbit validation activity planned", total=len(prim))
+        return
     items = _validation_items(ctx)
     if items is None:
         _set(result, "not_evaluated", "The validation plan is not available yet")
@@ -1783,3 +1863,57 @@ def _cost_total(ctx: dict) -> float | None:
         keur = _first_num(cost, "total_keur")
         meur = keur / 1000.0 if keur is not None else None
     return meur
+
+
+def _semp_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-09 (PI addendum; X 3.X3): the SEMP generated from the study and issued by the team.
+    Content ready but not issued stays ``manual`` (the instructor may sign it off instead)."""
+    sm = (_ev(ctx).get("readiness") or {}).get("semp")
+    if not isinstance(sm, dict):
+        _set(result, "manual", "Requires manual assessment")
+        return
+    if sm.get("issue"):
+        _set(result, "pass", "SEMP issue {{issue}} recorded", issue=sm["issue"])
+    elif sm.get("ready"):
+        _set(result, "manual", "SEMP content ready ({{parts}}/{{of}} parts): review it and record its issue",
+             parts=sm.get("parts", 0), of=sm.get("of", 0))
+    else:
+        _set(result, "fail", "The SEMP generator has no content yet ({{parts}}/{{of}} parts)",
+             parts=sm.get("parts", 0), of=sm.get("of", 0))
+
+
+def _debris_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-10 (PI addendum; L 3.L8): the debris assessment run in the tool, accepted at or
+    before the SRR, compliant (or with a recorded deviation) and still about the current design."""
+    d = _ev(ctx).get("debris")
+    if not isinstance(d, dict) or d.get("version") is None:
+        _set(result, "fail", "No debris assessment has been run")
+        return
+    v = d.get("version")
+    if not d.get("accepted"):
+        _set(result, "fail", "Debris assessment v{{version}} not accepted yet", version=v)
+    elif d.get("stale"):
+        _set(result, "fail", "Debris assessment v{{version}} accepted, but the design changed since the run: run it again",
+             version=v)
+    elif d.get("status") != "pass":
+        _set(result, "fail", "Debris assessment v{{version}} accepted, not compliant and no deviation recorded", version=v)
+    else:
+        _set(result, "pass", "Debris assessment v{{version}} accepted at {{gate}}",
+             version=v, gate=str(d.get("gate") or "").upper())
+
+
+def _reliability_criterion(result: dict, ctx: dict) -> None:
+    """PDR-EC-05 (PI addendum; A 3.A5): the reliability block diagram over the mission-success
+    horizon against the target, and the FMEA covering every space subsystem with its critical
+    rows linked to FDIR, a risk or a mitigation."""
+    r = _ev(ctx)["reliability"]
+    if r.get("ok"):
+        rel, tgt = r.get("reliability"), r.get("target")
+        _set(result, "pass",
+             "Reliability {{rel}} over {{horizon}} vs target {{target}}; FMEA {{rows}} line(s), {{critical}} critical, all linked",
+             rel=_fmt(float(rel), 3) if isinstance(rel, (int, float)) else "?", horizon=_reliability_horizon(ctx) or "?",
+             target=_fmt(float(tgt), 2) if isinstance(tgt, (int, float)) else "?",
+             rows=r.get("fmea_rows", 0), critical=r.get("critical_rows", 0))
+    else:
+        _set(result, "fail", "Reliability analysis not acceptable: {{reasons}}",
+             reasons="; ".join(x for x in r.get("reasons") or [] if x) or "-")

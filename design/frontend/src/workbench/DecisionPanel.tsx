@@ -23,6 +23,9 @@ import { useSeatStore } from '../seats/api'
 import { useWhereSection } from '../where/where'
 import { AbsoluteScaleMatrix, ChangeControlCard, ConditionFields, GATES, LEVEL_LABEL, LEVELS, OpenItemsPanel, RecordAsTradeButton,
   TradeGateSummary, TradeSensitivityPm20, type ConditionValue, type TradeEvaluationV2, type TradeStateV2 } from './DecideV2'
+import { ChangesPanel, RaiseChangeButton } from './ChangesPanel'
+import { NegotiationPanel } from './NegotiationPanel'
+import { SensitivityView } from '../components/SensitivityView'
 
 const API = '/api'
 
@@ -235,6 +238,10 @@ export function DecisionPanel() {
       {/* Wave 3 (3.D4, 3.D7): the open-item register and the change-control flow */}
       <OpenItemsPanel studyId={studyId} />
       <ChangeControlCard studyId={studyId} />
+      {/* Wave 3: change proposals (L 3.L4), negotiation records (H 3.H6), sensitivity (H 3.H5) */}
+      {studyId && <div className="mt-2"><ChangesPanel studyId={studyId} /></div>}
+      <div className="mt-2"><NegotiationPanel studyId={studyId} /></div>
+      <div className="mt-2"><SensitivityView studyId={studyId} /></div>
     </div>
   )
 }
@@ -401,6 +408,7 @@ function TradeLinksAndDecision({ tradeId, state, evaluation, onChange, onDecide 
   onDecide: (selected: string, rationale: string, cond: ConditionValue) => Promise<boolean>
 }) {
   const { t } = useTranslation()
+  const studyId = useUIStore(s => s.studyId)
   const links = state.links ?? {}
   const dec = state.decision ?? {}
   const [selected, setSelected] = useState<string>(dec.selected ?? evaluation?.winner ?? state.options[state.datum] ?? '')
@@ -474,6 +482,9 @@ function TradeLinksAndDecision({ tradeId, state, evaluation, onChange, onDecide 
             rationale: why || undefined,
             evidence: [{ label: t('Method'), value: t('Pugh Matrix (Weighted)') }, { label: t('Trade'), value: `${tradeId} ${state.title}` }],
           })} />
+          {studyId && dec.selected && (
+            <RaiseChangeButton studyId={studyId} tradeId={tradeId} decided={state.status === 'decided' || !!dec.selected} />
+          )}
         </div>
         {msg && <div role="status" className="t-12 c-2">{msg}</div>}
       </div>

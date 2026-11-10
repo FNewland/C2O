@@ -12,6 +12,7 @@ import { tabPanelProps } from '../components/ui/util'
 import { StatusBadge, Tag } from '../components/ui/StatusBadge'
 import { askConfirm, askText } from '../components/ui/Dialog'
 import { fmtDate } from '../i18n'
+import { ImpactPreview } from '../components/ImpactPreview'
 import { api, pick, post, seatLabel, useSeatStore, type DrawerTab, type PendingChange, type SeatView } from './api'
 import { useLedger, usePending, useSeatEvents, useSubscriptions } from './hooks'
 
@@ -287,6 +288,10 @@ function ChangeRow({ pc, review }: { pc: PendingChange; review: boolean }) {
         {t('{{name}} ({{seat}}) · {{when}}', { name: pc.by_name, seat: seatLabel(pc.by_seat, i18n.language), when: fmtDate(pc.created_at, { timeStyle: 'short' } as any) })}
         {pc.comment && <> · <q>{pc.comment}</q></>}
       </div>
+      {/* wave 3 (3.L6): who else the change moves, as a dry run, before the owner answers */}
+      {pc.status === 'pending' && review && studyId && (
+        <ImpactPreview studyId={studyId} change={{ kind: 'pending_change', id: pc.id }} compact />
+      )}
       {pc.status === 'pending' && (
         <div className="flex gap-1">
           {review ? <>

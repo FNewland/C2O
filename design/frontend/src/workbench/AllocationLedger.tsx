@@ -15,11 +15,12 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Button, DataTable, Note, Panel, StatusBadge, askText, fmtNum, type Column } from '../components/ui'
 import { seatLabel } from '../seats/api'
+import { ImpactPreview } from '../components/ImpactPreview'
 
 const API = '/api'
 
 interface LedgerLine {
-  id: string; element_code: string; budget_type: string; mode_key: string; value: number | null; unit: string
+  id: string; element_code: string; element_id?: string | null; budget_type: string; mode_key: string; value: number | null; unit: string
   cbe: number | null; margined: number | null; requirement_code: string; owner_seat: string
   status: 'proposed' | 'agreed' | 'disputed'; agreed_by: string; agreed_at: string | null; version: number
   rationale: string; type_label?: { en: string; fr: string }
@@ -49,6 +50,7 @@ export function AllocationLedger({ studyId, budget = 'all' }: { studyId: string 
   const qc = useQueryClient()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [previewId, setPreviewId] = useState<string | null>(null)
   const { data } = useQuery<Ledger>({
     queryKey: ['allocation-ledger', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/allocation-ledger`).then(r => r.json()),
@@ -107,8 +109,13 @@ export function AllocationLedger({ studyId, budget = 'all' }: { studyId: string 
         {l.status !== 'agreed' && <Button size="sm" onClick={() => agree(l)} busy={busy}>{t('Agree')}</Button>}
         {l.status !== 'disputed' && <Button size="sm" variant="quiet" onClick={() => dispute(l)} busy={busy}>{t('Dispute')}</Button>}
         <Button size="sm" variant="quiet" onClick={() => edit(l)} busy={busy}>{t('Edit')}</Button>
+        {l.status !== 'agreed' && (l.budget_type === 'mass' || l.budget_type === 'power_avg') && l.element_id && l.value != null &&
+          <Button size="sm" variant="quiet" aria-pressed={previewId === l.id}
+            onClick={() => setPreviewId(previewId === l.id ? null : l.id)}>{t('Who is affected')}</Button>}
       </span>) },
   ]
+  // wave 3 (3.L6): the proposed allocation against the element's rolled-up value (dry run)
+  const previewLine = rows.find(r => r.id === previewId) ?? null
   const closures = Object.entries(data?.closure ?? {}).filter(([k]) => kinds.includes(k))
   const agreed = rows.filter(r => r.status === 'agreed').length
 
@@ -128,6 +135,10 @@ export function AllocationLedger({ studyId, budget = 'all' }: { studyId: string 
       {error && <Note tone="caution" role="alert">{error}</Note>}
       <DataTable columns={columns} rows={rows} rowKey={l => l.id} dense caption={t('Allocation ledger')}
         empty={<span className="c-3">{t('No allocation yet. Propose the lines from the roll-up, then each owner seat agrees its line.')}</span>} />
+      {previewLine && (
+        <ImpactPreview studyId={studyId} compact change={{ kind: 'allocation', element_id: previewLine.element_id,
+          resource: previewLine.budget_type === 'mass' ? 'mass' : 'power', value: previewLine.value }} />
+      )}
     </Panel>
   )
 }

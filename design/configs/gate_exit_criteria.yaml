@@ -377,16 +377,20 @@ phases:
       - id: SRR-EC-09
         question: "Has the Systems Engineering Management Plan been baselined?"
         category: management
-        evidence: "Manual: SEMP exists and is approved"
-        status: manual
-        priority: should_pass
+        # wave 3 (PI addendum): the SEMP generated from the study (X 3.X3) and issued by the team
+        # (POST /studies/{sid}/semp/issue); content ready but not issued stays manual (sign-off)
+        evidence: "SEMP generated from the study (organisation, life cycle and gates, technical processes, configuration management, tailoring) and issued"
+        status: hybrid
+        priority: must_pass
         owner_seat: team_leader
         step: S0.1
 
       - id: SRR-EC-10
         question: "Is the mission sustainable (debris, EOL, casualty risk)?"
         category: sustainability
-        evidence: "sustainability.score >= 55 AND debris.casualty_compliant == 1"
+        # wave 3 (PI addendum): the debris assessment run in the tool and accepted (L 3.L8) when
+        # the study has the evidence collection; the design-loop scores otherwise
+        evidence: "Debris assessment (lifetime, casualty risk, collision probability) run on the current design and accepted at or before the SRR; else sustainability.score >= 55 AND debris.casualty_compliant == 1"
         status: auto
         priority: must_pass
         owner_seat: mission_analyst
@@ -487,7 +491,7 @@ phases:
       - id: PDR-EC-05
         question: "Is the reliability analysis acceptable?"
         category: reliability
-        evidence: "reliability.mission_reliability >= reliability_target, over the mission-success horizon of the reliability analysis"
+        evidence: "reliability.mission_reliability >= reliability_target, over the mission-success horizon of the reliability analysis; FMEA covering every space subsystem, critical rows linked to FDIR, a risk or a mitigation"
         status: auto
         priority: must_pass
         owner_seat: systems_engineer

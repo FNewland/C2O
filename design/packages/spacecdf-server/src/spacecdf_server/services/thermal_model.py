@@ -116,6 +116,8 @@ async def proposed_cases(study_id: str) -> list[dict]:
     try:
         from . import orbit_season   # 3.H4 (agent H)
         cases = await orbit_season.thermal_cases(study_id)
+        if isinstance(cases, dict):   # H's shape: {"hot": {beta_deg, eclipse_min, ...}, "cold": {...}, ...}
+            cases = [{"kind": k, **cases[k]} for k in ("hot", "cold") if isinstance(cases.get(k), dict)]
         out = []
         for c in cases or []:
             kind = str(c.get("kind") or "").lower()
@@ -523,6 +525,10 @@ def _gate(study: Any) -> str:
         return "pdr"
 
 
+#: thermostat set point above the node's design minimum (operational minimum + uncertainty), °C
+THERMOSTAT_OFFSET_C = 1.0
+
+
 async def run(study_id: str) -> dict[str, Any]:
     """Solve every case; store per-node temperatures, margins and the heater sizing."""
     if not await sr.list_rows(ThermalNodeRow, study_id):
@@ -538,16 +544,40 @@ async def run(study_id: str) -> dict[str, Any]:
     diss = await _mode_dissipation(study_id, nodes)
     gate = _gate(study)
     unc = UNCERTAINTY_C.get(gate, 10.0)
-    # thermostatic heaters (the node's ``heater_w``) are on in the cold case, off in the hot case
+    # thermostatic heaters (the node's ``heater_w``): on in the cold case. In the hot case the
+    # thermostat only works when a node would fall below its design minimum (operational minimum +
+    # uncertainty) with the heater off: it then delivers the orbit-average power that keeps the
+    # node there (at most the installed power; its duty cycle). Integration fix: the battery's
+    # coldest point is in the hot case with the heater off, which no cold-case heater fixed, and a
+    # heater left full on in the hot case overheats it.
     heaters = {n["code"]: float(n.get("heater_w") or 0.0) for n in nodes
                if (n.get("heater_w") or 0) > 0 and not (n.get("data_json") or {}).get("external")}
+    op_min = {n["code"]: float(n["op_min_c"]) for n in nodes if n.get("op_min_c") is not None}
+    setpoint = unc + THERMOSTAT_OFFSET_C          # the thermostat holds the node 1 °C above its design minimum
+
+    def solve(c: dict, extra: dict[str, float]) -> dict:
+        if c["kind"] != "hot":
+            return solve_case(nodes, cps, c, diss, alt, extra_heat=extra or None)
+        r = solve_case(nodes, cps, c, diss, alt, extra_heat=None)
+        on: dict[str, float] = {}
+        for k, w in extra.items():
+            if w <= 0 or k not in r or k not in op_min or r[k]["t_min_c"] - setpoint >= op_min[k]:
+                continue
+            lo, hi = 0.0, w
+            for _ in range(7):
+                mid = (lo + hi) / 2
+                t = solve_case(nodes, cps, c, diss, alt, extra_heat={**on, k: mid}, dt=20.0, orbits=8)[k]["t_min_c"]
+                lo, hi = (lo, mid) if t - setpoint >= op_min[k] else (mid, hi)
+            on[k] = round(hi, 3)
+        return solve_case(nodes, cps, c, diss, alt, extra_heat=on) if on else r
+
     sol: dict[str, dict] = {}
     for c in cases:
-        res = solve_case(nodes, cps, c, diss, alt, extra_heat=heaters if c["kind"] == "cold" else None)
+        res = solve(c, heaters)
         sol[c["kind"]] = res
         await sr.update_row(ThermalCaseRow, c["id"], {"results_json": res, "status": "solved"})
     # heater sizing on the cold case: smallest extra power keeping the node's minimum (with the
-    # uncertainty) at or above its lower limit
+    # uncertainty) at or above its lower limit (the hot case then needs at most that power)
     cold_case = next((c for c in cases if c["kind"] == "cold"), None)
     for n in nodes:
         m = margins(n, (sol.get("hot") or {}).get(n["code"]), (sol.get("cold") or {}).get(n["code"]), unc)

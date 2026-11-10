@@ -152,7 +152,7 @@ phases:
         mission_analyst:
           source: skill_trades
           why: {en: "The orbit and the way to reach it drive power, data, licensing and disposal. Choosing them by comparison, not by habit, keeps later phases honest.", fr: "L’orbite et la façon de l’atteindre pilotent l’énergie, les données, les licences et la fin de vie. Les choisir par comparaison, et non par habitude, rend les phases suivantes honnêtes."}
-          focus: {en: "Orbit trade and launch trade at system level: two real options each, criteria traced to MOEs, weights fixed before scoring, a ±20 % weight check.", fr: "Compromis d’orbite et de lancement au niveau système : deux vraies options chacun, critères reliés aux MOE, poids fixés avant la notation, vérification à ±20 % des poids."}
+          focus: {en: "Orbit trade and launch trade at system level: two real options each, criteria traced to MOEs, weights fixed before scoring, a ±20 % weight check.", fr: "Compromis d’orbite et de lancement au niveau système : deux vraies options chacun, critères reliés aux MOE, poids fixés avant la notation, vérification à ±20 % des poids."}
         payload_lead:
           source: skill_concept
           why: {en: "The science need is the reason the mission exists. Your job now is to say what must be observed, not which camera to buy.", fr: "Le besoin scientifique est la raison d’être de la mission. Votre rôle est de dire ce qu’il faut observer, pas quelle caméra acheter."}
@@ -378,7 +378,7 @@ phases:
         systems_engineer:
           source: skill_trades
           why: {en: "The data architecture decides where products are made and how they reach the ground; it touches payload, computer, radio and ground at once.", fr: "L’architecture des données décide où les produits sont fabriqués et comment ils arrivent au sol ; elle touche à la fois charge utile, calculateur, radio et sol."}
-          focus: {en: "Data-architecture trade with criteria from MOEs, weights fixed first, ±20 % sensitivity and dissent recorded; functions allocated; SEMP drafted.", fr: "Compromis d’architecture des données avec critères issus des MOE, poids fixés d’abord, sensibilité à ±20 % et désaccords consignés ; fonctions allouées ; SEMP rédigé."}
+          focus: {en: "Data-architecture trade with criteria from MOEs, weights fixed first, ±20 % sensitivity and dissent recorded; functions allocated; SEMP drafted.", fr: "Compromis d’architecture des données avec critères issus des MOE, poids fixés d’abord, sensibilité à ±20 % et désaccords consignés ; fonctions allouées ; SEMP rédigé."}
         mission_analyst:
           source: skill_requirements
           why: {en: "ConOps scenarios are the test cases for the requirements. A scenario no requirement covers is a gap in the design.", fr: "Les scénarios de ConOps sont les cas d’essai des exigences. Un scénario qu’aucune exigence ne couvre est une lacune de conception."}

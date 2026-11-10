@@ -12,6 +12,7 @@ import { Disclosure } from './ui/Disclosure'
 import { MissionDefinitionEditor } from './MissionDefinitionEditor'
 import { CLASS_LABELS, DISPOSAL_LABELS, orbitSummary } from '../workbench/missionDef'
 import { ConopsPhases } from '../workbench/ConopsPhases'
+import { StakeholderEditor } from './StakeholderEditor'
 
 const API = '/api'
 
@@ -146,6 +147,7 @@ export function MissionNeedCard({ studyId }: { studyId: string | null }) {
         </dl>
         <p className="t-12 c-3 m-0 mt-1">{t('Entered when the study was created and editable here; every analysis reads these values. The objectives below carry on into the requirements.')}</p>
         </>)}
+        <StakeholderEditor studyId={studyId} />
         <ConopsPhases studyId={studyId} />
       </Disclosure>
     </div>

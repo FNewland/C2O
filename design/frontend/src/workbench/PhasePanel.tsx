@@ -11,6 +11,7 @@
  * instructor can set block). ``StartReviewInventory`` is what "Start review" shows before the
  * confirmation.
  */
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore, type ActivityPanel } from '../stores/uiStore'
@@ -18,6 +19,7 @@ import { useSeatStore } from '../seats/api'
 import { openDiagram } from '../diagrams/GateDiagrams'
 import { pick, type Bilingual } from '../components/useGateReview'
 import { Button, Note, Panel, Select, StatusBadge, Tag, type Status } from '../components/ui'
+import { PhaseCoaching } from './GuidancePanel'
 
 const API = '/api'
 
@@ -52,7 +54,7 @@ export interface OpenItem {
 }
 
 export interface Inventory {
-  gate: { id: string; short: string; name: Bilingual }
+  gate: { id: string; short: string; name: Bilingual; covers?: string[] }
   entry: PhaseItem[]
   deliverables: PhaseItem[]
   protocol_source: string
@@ -236,8 +238,54 @@ export function PhasePanel({ studyId, gate, onOpenSection }: { studyId: string |
             <OpenItemList items={inv.open_items ?? []} />
           </section>
         )}
+        {(inv?.gate.covers ?? [gate]).some(c => c === 'srr') && <SempIssueCard studyId={studyId} />}
+        {/* wave 3 (3.S4): the coaching cards of this phase, by register and seat (agent S) */}
+        <div className="mt-2"><PhaseCoaching studyId={studyId} gate={gate} /></div>
       </div>
     </Panel>
+  )
+}
+
+interface SempIssue { ready: boolean; parts: number | null; of: number | null; issue: string | null; issued_at: string | null; by: string | null }
+
+/** The SEMP generated from the study, issued by the team (SRR-EC-09). */
+function SempIssueCard({ studyId }: { studyId: string }) {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  const { data } = useQuery<SempIssue | null>({
+    queryKey: ['semp-issue', studyId],
+    queryFn: () => fetch(`${API}/studies/${encodeURIComponent(studyId)}/semp/issue`).then(r => (r.ok ? r.json() : null)),
+  })
+  if (!data) return null
+  const issue = async () => {
+    setBusy(true); setMsg(null)
+    const r = await fetch(`${API}/studies/${encodeURIComponent(studyId)}/semp/issue`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    setBusy(false)
+    if (!r.ok) { setMsg(t('The SEMP could not be issued ({{code}}).', { code: r.status })); return }
+    void qc.invalidateQueries({ queryKey: ['semp-issue', studyId] })
+    void qc.invalidateQueries({ queryKey: ['gate-review', studyId] })
+    void qc.invalidateQueries({ queryKey: ['gate-inventory', studyId] })
+  }
+  return (
+    <section className="mt-2" data-testid="semp-issue">
+      <h4 className="c2o-reqs__group">{t('Systems engineering management plan')}</h4>
+      <p className="t-12 c-2 m-0">
+        {data.issue
+          ? t('SEMP issue {{issue}} recorded', { issue: data.issue })
+          : data.ready
+            ? t('SEMP content ready ({{parts}}/{{of}} parts): review it and record its issue', { parts: data.parts ?? 0, of: data.of ?? 0 })
+            : t('The SEMP generator has no content yet ({{parts}}/{{of}} parts)', { parts: data.parts ?? 0, of: data.of ?? 0 })}
+      </p>
+      {data.ready && (
+        <Button size="sm" busy={busy} onClick={() => void issue()}>
+          {data.issue ? t('Record the next SEMP issue') : t('Record the SEMP issue')}
+        </Button>
+      )}
+      {msg && <Note tone="caution" role="alert">{msg}</Note>}
+    </section>
   )
 }
 

@@ -438,26 +438,28 @@ the end. Every row has `data_json`; prefer it to a new column.
 
 | Router | Routes (under `/api/studies/{study_id}`) | Owner |
 |---|---|---|
-| `se_phase.py` | `GET /phase` (stub contract, below) | S 3.S1 |
-| `moes.py` | `GET/POST /moes`, `PATCH/DELETE /moes/{id}`, `POST /stakeholders/import` | S 3.S3 |
-| `validation.py` | `GET/POST /validation/activities`, `PATCH …/{id}`, `POST /validation/propose`, `POST /validation/import`, `GET /validation/need-validation`, `GET /validation/coverage` | S 3.S5 |
+| `se_phase.py` | `GET /phase` (stub contract, below), `GET /phase/deliverables`, `GET /api/se-protocol`; integration: `POST /semp/issue` (the team issues the SEMP; SRR-EC-09) | S 3.S1 |
+| `moes.py` | `GET/POST /moes`, `PATCH/DELETE /moes/{id}`, `POST /stakeholders/import`; S added `GET /stakeholders`, `PUT /stakeholders/{id}` | S 3.S3 |
+| `validation.py` | `GET/POST /validation/activities`, `PATCH/DELETE …/{id}`, `POST /validation/propose`, `POST /validation/import`, `GET /validation/need-validation`, `GET /validation/coverage` | S 3.S5 |
 | `assumptions.py` | `GET/POST /assumptions`, `PATCH /assumptions/{id}`, `POST /assumptions/import` | S 3.S6 |
 | `negotiations.py` | `GET/POST /negotiations`, `GET/PATCH /negotiations/{id}`, `POST …/{id}/signoff`, `POST …/{id}/reopen` | H 3.H6 |
 | `sensitivity.py` | `GET /sensitivity?parameter=`, `GET /sensitivity/altitude` | H 3.H5 |
-| `changes.py` | `GET/POST /changes`, `PATCH /changes/{id}`, `POST /changes/import`, `POST /changes/from-trade/{trade_id}` | L 3.L4 |
+| `changes.py` | `GET/POST /changes`, `PATCH /changes/{id}`, `POST /changes/import`, `POST /changes/from-trade/{trade_id}`, `POST /changes/{id}/preview` (the record's own `previews`; change control uses the same service) | L 3.L4 |
 | `impact.py` | `GET /key-numbers` (real), `POST /impact/preview` | L 3.L6 |
 | `open_items.py` | `GET /open-items?blocks_gate=`, `POST /open-items`, `PATCH /open-items/{id}`, `POST /open-items/import` | D 3.D4 |
 | `elements.py` | `GET/PUT /margin-policy` (real); `GET/POST /allocation-ledger`, `POST /allocation-ledger/import`, `PATCH …/{id}`, `POST …/{id}/agree`, `POST …/{id}/dispute` | A 3.0c, 3.A2 |
-| `icd_issues.py` | `GET /icds`, `POST /icds/{icd_ref}/issue`, `POST /icds/{icd_ref}/signoff`, `GET /icds/{icd_ref}/history` | R 3.R6 |
+| `icd_issues.py` | `GET /icds`, `POST /icds/inventory`, `POST /icds/{icd_ref}/issue`, `POST /icds/{icd_ref}/signoff`, `GET /icds/{icd_ref}/history` | R 3.R6 |
 | `reliability.py` | `GET /reliability`, `POST /reliability/run`, `GET/POST /fmea`, `POST /fmea/propose`, `PATCH /fmea/{id}` | A 3.A5 |
 | `thermal_model.py` | `GET /thermal-model`, `POST /thermal-model/propose`, `POST /thermal-model/nodes`, `PATCH …/nodes/{id}`, `POST /thermal-model/run` | A 3.A6 |
-| `debris_assessment.py` | `GET /debris-assessment`, `POST /debris-assessment/run`, `POST /debris-assessment/accept` | L 3.L8 |
+| `debris_assessment.py` | `GET /debris-assessment`, `POST /debris-assessment/run`, `POST /debris-assessment/accept`, `GET /debris-assessment/sweep` | L 3.L8 |
 | `change_control.py` | `GET /changes/{id}/control`, `POST …/control/start`, `POST …/control/agree`, `POST …/control/decide` | D 3.D7 |
 | `schedule.py` | `GET/POST /cost/items`, `POST /cost/price` | A 3.A7 |
 | (R's own file) `functions.py` | `POST /functions/import` (bulk; R adds it in 3.R1) | R 3.R1 |
 
-The SEMP has no new route. `POST /api/exports/docx/semp` (X) builds it from `collect()`, and the
-`semp` section holds the content no other section has.
+`POST /api/exports/docx/semp` (X) builds the SEMP from `collect()`, and the `semp` section holds
+the content no other section has, plus the issue the team recorded (`issue`, `issued_at`,
+`issued_by`, `issue_history`, from `Study.document_issues["semp"]`, written by
+`POST /semp/issue`, 409 `semp_incomplete` until every part is filled).
 
 ### 9.5 Export sections (`SECTIONS`; 15 new stubs, each module owned as listed)
 
@@ -494,6 +496,18 @@ L owns the file after step 0 and adds keys on request.
 - L: debris acceptance (SRR);
 - A: the thermal model margins (the thermal criteria).
 
+Wired at integration (one collection, `gate_evaluator.collect_evidence`, called by
+`routers/gates.gate_inputs` as `ctx["evidence"]` and passed to `evaluate_gate(evidence=…)`):
+SE-01 ← `se_deliverables.evaluate`; SRR-EC-13 / FRR-EC-01 ← `routers.validation.coverage`
+(`uncovered_primary`, `in_orbit_planned`); PDR-EC-07 ← the ledger lines (`allocation_ledger.list_lines`)
+and `allocation_requirements.status`; PDR-EC-05 ← `reliability_model.evidence` (reliability over
+the horizon and FMEA); SRR-EC-10 ← `debris_assessment.srr_evidence`; MDR-EC-06 ←
+`routers.conops.scenario_count`; SRR-EC-09 (now hybrid, must pass) ← the SEMP issue; MDR-EC-08 /
+PRR-EC-11 ← the priced cost (`total_keur`). D's readiness probes run inside the same collection
+(`evidence["readiness"]`): of D's appended criteria only SRR-RD-03 / PDR-RD-04 (change decisions)
+and PDR-RD-03 (thermal model, `thermal_model.evidence`) remain; SRR-RD-01/02 and PDR-RD-01/02 were
+dropped as duplicates of SRR-EC-09/10 and PDR-EC-02/05.
+
 ### 9.7 Seed steps (`tests/fixtures/nfi/seed.py`; empty until filled; append-only, never reorder)
 
 | Stage | Step | Owner |
@@ -508,6 +522,9 @@ L owns the file after step 0 and adds keys on request.
 | S3 | `_s3_changes` | L |
 | S3 | `_s3_validation`, `_s3_assumptions` | S |
 | S3 | `_s3_negotiations` (skip when `seed.recording`) | H |
+| S3 | `_s3_icd_inventory` (last of S3): the five ICDs the PDR needs under issue control, as drafts | R |
+| S0 | `_s0_mission_success` (end of S0): the 12-month mission-success horizon, target 0.80 | A |
+| S2 | `_s2_array_generation` (before `_s2_allocations`): the selected arrays' orbit-average EOL generation | A |
 | S4 | `_s4_ait_v2` (after `ait/propose`) | A |
 | S4 | `_s4_licensing` (skipped when `seed.recording`) | L |
 | S4 | `_s4_negotiations` (last; skipped when `seed.recording`): the S3 records recomputed on the S4 design, the baseline option chosen and signed by every seat | H |
@@ -560,6 +577,6 @@ For R to wire into `gate_evaluator.py` (one call each; all `async`, all read-onl
 - `services/reliability_model.evidence(study_id)` → `{ok, reliability, target, horizon_months, exposure_months, evidence, fmea_rows, critical_rows, fmea_missing_subsystems[], critical_unlinked[], reasons[]}` (PDR-EC-05; quote `evidence`, e.g. "R = 0.881 over 12 months of operations after commissioning …").
 - `services/thermal_model.evidence(study_id)` → `{ok, solved, nodes, cases[], out_of_design[], heaters[], worst_design_margin_c, reasons[]}` (thermal criteria).
 - `services/cost_pricing.total(study_id)` → `{total_keur, total_meur, by_category, launch_keur, labour_keur, target_meur, within_target}` or `None` before pricing (MDR-EC-08, PRR-EC-11). The design loop's `cost.total_meur` already quotes it.
-- Ledger value changes call `services/allocation_requirements.ledger_changed(study_id, line, old_value)` when R's module defines it (rule AR-01); until then the line carries `data_json.requirement_sync = {status: "stale", …}`.
+- Ledger value changes call `services/allocation_requirements.ledger_changed(study_id, line, old_value)` (rule AR-01; integration: R's module defines it as the one entry point, a whole-study `sync`). The ledger routes call it too after create, propose and agree (create rows) and after import and delete (mark only: the baseline rows may arrive after the ledger).
 
 New routes beyond §9.4: `GET /allocation-ledger/status`, `POST /allocation-ledger/propose`, `DELETE /allocation-ledger/{id}`; `PUT /reliability/horizon`, `GET /reliability/evidence`, `PATCH /reliability/blocks/{id}`, `DELETE /fmea/{id}`; `GET /thermal-model/evidence`, `PATCH /thermal-model/couplings/{id}`, `PATCH /thermal-model/cases/{id}`, `POST /thermal-model/heaters/accept`; `PATCH/DELETE /cost/items/{id}`; `POST /ait/import`. New configs: `configs/reliability_rates.yaml`, `configs/cost_pricing.yaml`. New seed steps (A): `_s0_mission_success` (end of S0), `_s2_array_generation` (S2, before `_s2_allocations`).

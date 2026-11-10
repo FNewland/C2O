@@ -82,6 +82,7 @@ _FR: dict[str, str] = {
     "Decision": "Décision", "Rationale": "Justification",
     "Subsystem": "Sous-système", "Qty": "Qté", "Mass (kg)": "Masse (kg)", "Power (W)": "Puissance (W)",
     "TRL": "NMT", "Cat.": "Cat.", "KB id": "Id BC",
+    "TRL at PDR": "NMT à la PDR", "TRL at CDR": "NMT à la CDR", "Maturation": "Maturation",
     "Item": "Élément", "Value": "Valeur", "Source": "Source", "Parametric cross-check": "Contrôle paramétrique",
     "Mode": "Mode", "Kind": "Type", "Share of orbit": "Part de l’orbite", "Pointing": "Pointage",
     "Power CBE (W)": "Puissance MEA (W)", "With margins (W)": "Avec marges (W)", "Energy per orbit (Wh)": "Énergie par orbite (Wh)",
@@ -923,10 +924,14 @@ def _trl(c: Ctx) -> None:
     c.pkg.h1(t("Technology readiness") + c.mat("trl_matrix"))
     eq = view.equipment()
     units = {u.get("element_id"): u for u in ((c.sx.get("rollup") or {}).get("mass") or {}).get("units") or []}
-    rows = [[e.get("name"), view.subsystem_of(e), e.get("trl"), (units.get(e["id"]) or {}).get("category") or
-             (e.get("performance") or {}).get("maturity_category") or ""] for e in sorted(eq, key=lambda x: (_num(x.get("trl")) or 0, str(x.get("name"))))]
+    # wave 3 (3.L7): the TRL targets at PDR and CDR and the maturation plan of each element
+    def perf(e: dict, k: str) -> Any:
+        return (e.get("performance") or {}).get(k)
+    rows = [[e.get("name"), view.subsystem_of(e), e.get("trl"), perf(e, "trl_target_pdr") or "", perf(e, "trl_target_cdr") or "",
+             perf(e, "trl_maturation") or "", (units.get(e["id"]) or {}).get("category") or perf(e, "maturity_category") or ""]
+            for e in sorted(eq, key=lambda x: (_num(x.get("trl")) or 0, str(x.get("name"))))]
     if rows:
-        c.pkg.table([t("Name"), t("Subsystem"), t("TRL"), t("Cat.")], rows,
+        c.pkg.table([t("Name"), t("Subsystem"), t("TRL"), t("TRL at PDR"), t("TRL at CDR"), t("Maturation"), t("Cat.")], rows,
                     caption="Maturity category: A/B off the shelf, C modified, D new (margin policy)" if t.lang != "fr"
                     else "Catégorie de maturité : A/B sur étagère, C modifié, D nouveau")
         low = [e for e in eq if (_num(e.get("trl")) or 0) < 6]

@@ -76,6 +76,8 @@ class MissionPatch(BaseModel):
     spacecraft_class: str | None = None
     design_lifetime_years: float | None = Field(default=None, gt=0, le=50)
     reliability_target: float | None = Field(default=None, gt=0, le=1)
+    # wave 3 (3.A1/3.A5): the mission-success horizon (months) the reliability analysis uses
+    success_horizon_months: float | None = Field(default=None, gt=0, le=600)
     target_cost_meur: float | None = Field(default=None, ge=0)
     target_mass_kg: float | None = Field(default=None, gt=0)
     num_spacecraft: int | None = Field(default=None, ge=1, le=10000)
@@ -140,10 +142,11 @@ def apply_mission_patch(study: Study, patch: MissionPatch) -> tuple[list[str], l
     req = study.requirements.model_dump()
 
     for f in ("name", "mission_type", "spacecraft_class", "design_lifetime_years", "reliability_target",
-              "target_cost_meur", "target_mass_kg", "num_spacecraft", "launch_date_target",
-              "launch_vehicle", "ground_stations"):
+              "success_horizon_months", "target_cost_meur", "target_mass_kg", "num_spacecraft",
+              "launch_date_target", "launch_vehicle", "ground_stations"):
         if f in sent and (getattr(patch, f) is not None or f in ("target_cost_meur", "target_mass_kg",
-                                                                 "launch_date_target", "launch_vehicle")):
+                                                                 "launch_date_target", "launch_vehicle",
+                                                                 "success_horizon_months")):
             req[f] = getattr(patch, f)
     if "disposal_method" in sent:
         dm = (patch.disposal_method or "").strip().lower() or None

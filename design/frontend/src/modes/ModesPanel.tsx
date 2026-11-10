@@ -23,6 +23,7 @@ import { Button, DataTable, Disclosure, Note, NoData, Panel, Select, StatusBadge
   tabPanelProps, type Column, type Status } from '../components/ui'
 import { ModeDiagram } from './ModeDiagram'
 import { ConopsPhases } from '../workbench/ConopsPhases'
+import { ImpactPreview } from '../components/ImpactPreview'
 import { bi, get, modeKeys, send, useInvalidateModes, useModes, type Bi, type DailyCase, type DataChain, type Energy, type EquipBudgets,
   type Member, type Mode, type ModesOverview, type Proposal, type StaleRow, type SystemMargin, type Transition, type Unit } from './api'
 import { KIND_LABELS, PHASE_LABELS, POINTING_LABELS, PROPOSAL_KIND_LABELS, STATE_LABELS, STATUS_LABELS, TRIGGER_LABELS } from './labels'
@@ -503,6 +504,11 @@ function ShareProposals({ sid }: { sid: string }) {
           </span>) },
       ]} />
       <p className="t-12 c-3 m-0">{t('The owner accepts a proposal or overrides it with a reason; a change of stations, settle time or products re-proposes it. The nominal mode takes the balance of the orbit.')}</p>
+      {/* wave 3 (3.L6): what accepting the open proposals moves, before accepting (dry run) */}
+      {open.some(p => p.proposed_fraction != null) && (
+        <ImpactPreview studyId={sid} compact change={open.filter(p => p.proposed_fraction != null)
+          .map(p => ({ kind: 'mode_share', mode: p.mode_id, share_pct: (p.proposed_fraction ?? 0) * 100 }))} />
+      )}
     </Panel>
   )
 }

@@ -189,7 +189,20 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
             study_inputs = {}
         initial_state = seed_design_state(ctx, requirements=study.requirements,
                                           conops=conops_from_modes(ctx, study.conops), study_inputs=study_inputs)
-        run_id = await start_run(study_id, DESIGN_LOOP, context_hash(ctx, input_keys_for(DESIGN_LOOP)), option_id)
+        # wave 3 (3.H1): the study's data budget (science product set, capacity of the union of the
+        # passes, closure) feeds the tier-1 data and link agents as sticky study figures
+        try:
+            from spacecdf_common.models.parameter import ParameterSource, ParameterValue
+
+            from ..services.data_budget import design_overlay_for_study
+            for path, value in (await design_overlay_for_study(study_id)).items():
+                initial_state.parameters[path] = ParameterValue(
+                    id=path, name=path, value=value, unit="", domain=path.split(".")[0],
+                    source=ParameterSource.POSITION_OVERRIDE, confidence=1.0, margin_percent=0.0,
+                    updated_by="study", rationale="study value: data budget (Modes tab and contact plan)")
+        except Exception:  # noqa: BLE001 — the loop keeps its own Phase 0 estimate
+            logger.warning("design loop: data budget overlay unavailable for %s", study_id, exc_info=True)
+        run_id =await start_run(study_id, DESIGN_LOOP, context_hash(ctx, input_keys_for(DESIGN_LOOP)), option_id)
     except Exception:
         logger.warning("design loop: model coupling unavailable for %s (running uncoupled)", study_id, exc_info=True)
         ctx, initial_state, run_id = None, None, None

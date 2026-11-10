@@ -109,6 +109,16 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Stack layout cache init failed (continuing with empty cache): %s", e)
 
+    # Wave 3: validate the SE protocol (configs/se_protocol.yaml) once at start-up (logs the errors)
+    try:
+        from .services.se_protocol import validate_at_startup
+        errs = validate_at_startup()
+        if errs:
+            logger.error("se_protocol.yaml INVALID — the Phase panel and coaching report it:\n  %s",
+                         "\n  ".join(errs[:20]))
+    except Exception as e:
+        logger.warning("SE protocol validation failed (continuing): %s", e)
+
     # Validate the expected-interface rules (configs/interface_rules.yaml) once at start-up
     try:
         from .services.interface_proposer import rules_status

@@ -113,11 +113,28 @@ def product_tree(d: DiagramData, **_: Any) -> dict:
 
 # ───────────────────────────────────────────────────────────── function tree
 
+def _product_functions(d: DiagramData) -> list[dict]:
+    """The functions of the product (wave 3, 3.R1): the processes the v2 import carries
+    (``function_type == "process"``, e.g. "Manage the project") and their sub-functions are not
+    allocated to a product, so the tree and the allocation matrix leave them out."""
+    proc = {f["id"] for f in d.functions if f.get("function_type") == "process"}
+    by_id = {f["id"]: f for f in d.functions}
+
+    def under_process(f: dict) -> bool:
+        seen = set()
+        while f is not None and f["id"] not in seen:
+            if f["id"] in proc:
+                return True
+            seen.add(f["id"])
+            f = by_id.get(f.get("parent_id") or "")
+        return False
+    return [f for f in d.functions if not under_process(f)] if proc else list(d.functions)
+
 def function_tree(d: DiagramData, **_: Any) -> dict:
     D = Diagram("function_tree", T("Function tree"), "graph",
                 T("Functions decomposed to leaves; the allocated product is shown under each function"))
     D.source("functions", "function allocations")
-    fns = d.functions
+    fns = _product_functions(d)
     if not fns:
         D.empty(T("No functions yet: build the function tree in Functions."))
         D.gap("no_functions", T("missing: function tree"), severity="alarm", fix="functions")
@@ -181,7 +198,7 @@ def allocation(d: DiagramData, **_: Any) -> dict:
     D = Diagram("allocation", T("Function × product allocation"), "matrix",
                 T("Rows: leaf functions; columns: products they are allocated to"))
     D.source("functions", "function allocations", "elements")
-    fns = d.functions
+    fns = _product_functions(d)
     if not fns:
         D.empty(T("No functions yet: build the function tree in Functions."))
         D.gap("no_functions", T("missing: function tree"), severity="alarm", fix="functions")

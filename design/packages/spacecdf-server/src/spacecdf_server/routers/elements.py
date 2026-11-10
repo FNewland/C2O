@@ -1578,6 +1578,12 @@ async def put_margin_policy(study_id: str, body: dict[str, Any]) -> dict:
 
 # ─── wave 3 (3.A2): allocation ledger with owner sign-off ────────────────────
 
+async def _ar_sync(study_id: str, *, create: bool = True) -> None:
+    """Rule AR-01 (R, 3.R3) after a ledger change: one entry point, never raises."""
+    from ..services.allocation_requirements import ledger_changed
+    await ledger_changed(study_id, create=create)
+
+
 async def _ledger_line(study_id: str, line_id: str) -> dict:
     from ..db.models_alloc import AllocationLedgerRow
     from ..services import study_rows
@@ -1632,9 +1638,11 @@ async def create_ledger_line(study_id: str, body: dict[str, Any], request: Reque
     study_or_404(study_id)
     actor = await _ledger_actor(request, study_id, body.get("owner_seat"))
     try:
-        return await al.create_line(study_id, body, by=actor["by"] or str(body.get("seat") or ""))
+        row = await al.create_line(study_id, body, by=actor["by"] or str(body.get("seat") or ""))
     except ValueError as exc:
         raise HTTPException(422, str(exc))
+    await _ar_sync(study_id)
+    return row
 
 
 @router.post("/studies/{study_id}/allocation-ledger/import")
@@ -1647,8 +1655,11 @@ async def import_ledger(study_id: str, body: dict[str, Any]) -> dict:
     budgets = body.get("budgets") or body.get("document")
     if not isinstance(budgets, dict):
         raise HTTPException(422, "budgets must be the budgets.yaml document (an object)")
-    return await al.import_budgets(study_id, budgets, agree=bool(body.get("agree")),
-                                   replace=body.get("replace", True) is not False, by=str(body.get("by") or ""))
+    res = await al.import_budgets(study_id, budgets, agree=bool(body.get("agree")),
+                                  replace=body.get("replace", True) is not False, by=str(body.get("by") or ""))
+    # the baseline rows may arrive after the ledger (seed S2 → S3): mark, do not create
+    await _ar_sync(study_id, create=False)
+    return res
 
 
 @router.post("/studies/{study_id}/allocation-ledger/propose")
@@ -1657,7 +1668,9 @@ async def propose_ledger(study_id: str) -> dict:
     from ..services import allocation_ledger as al
     from ._wave3_stub import study_or_404
     study_or_404(study_id)
-    return await al.propose(study_id)
+    res = await al.propose(study_id)
+    await _ar_sync(study_id)
+    return res
 
 
 @router.patch("/studies/{study_id}/allocation-ledger/{line_id}")
@@ -1727,7 +1740,9 @@ async def agree_ledger_line(study_id: str, line_id: str, request: Request, body:
         raise HTTPException(403, {"code": "not_owner", "owner_seat": actor["owner"],
                                   "message": "Only the owner seat agrees its allocation"})
     by = actor["by"] or str((body or {}).get("seat") or line.get("owner_seat") or "")
-    return await al.agree(line, by)
+    row = await al.agree(line, by)
+    await _ar_sync(study_id, create=False)
+    return row
 
 
 @router.post("/studies/{study_id}/allocation-ledger/{line_id}/dispute")
@@ -1754,4 +1769,5 @@ async def delete_ledger_line(study_id: str, line_id: str) -> dict:
     line = await _ledger_line(study_id, line_id)
     await study_rows.delete_rows(AllocationLedgerRow, study_id, ids=[line["id"]])
     await al.refresh_reserves(study_id)
+    await _ar_sync(study_id, create=False)
     return {"deleted": line_id}

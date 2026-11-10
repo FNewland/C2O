@@ -323,29 +323,20 @@ def finding_text(f: dict[str, Any], lang: str = "en") -> str:
 # criteria read the records the other agents' tools write (``services/gate_evidence.py``), so the
 # gates pass legitimately once the work is done in the tool and not before.
 
+#: Integration (wave 3): SEMP, debris, ICDs and reliability/FMEA are evaluated by R's YAML criteria
+#: on the same evidence (SRR-EC-09, SRR-EC-10, PDR-EC-02, PDR-EC-05; services/gate_evaluator.py);
+#: the change decisions and the thermal model have no YAML equivalent and stay here.
 READINESS_CRITERIA: dict[str, list[dict[str, Any]]] = {
     "srr": [
-        {"id": "SRR-RD-01", "probe": "semp", "mode": "hybrid", "owner_seat": "systems_engineer", "category": "management",
-         "question": "Is the systems engineering management plan (SEMP) issued for the review?",
-         "evidence": "SEMP generated from the study (organisation, life cycle and gates, technical processes, "
-                     "model philosophy, risk and configuration management, tailoring) and issued"},
-        {"id": "SRR-RD-02", "probe": "debris", "owner_seat": "mission_analyst", "category": "sustainability",
-         "question": "Is the debris assessment completed and accepted (lifetime, casualty risk, collision probability)?",
-         "evidence": "Debris assessment run in the tool and accepted"},
         {"id": "SRR-RD-03", "probe": "changes", "owner_seat": "team_leader", "category": "configuration",
          "question": "Are the change proposals due at this review decided?",
          "evidence": "Every change proposal whose decision gate is this review or an earlier one approved or rejected"},
     ],
     "pdr": [
-        {"id": "PDR-RD-01", "probe": "icds", "owner_seat": "systems_engineer", "category": "interfaces",
-         "question": "Are the interface control documents at Issue A and signed by both owning seats?",
-         "evidence": "Every ICD at Issue A (or later) with the provider and consumer sign-off"},
-        {"id": "PDR-RD-02", "probe": "reliability", "owner_seat": "cost_engineer", "category": "dependability",
-         "question": "Is the reliability analysis run and the FMEA worksheet filled for the space segment?",
-         "evidence": "Reliability block diagram computed over the mission-success horizon and FMEA lines per subsystem"},
         {"id": "PDR-RD-03", "probe": "thermal", "owner_seat": "thermal_engineer", "category": "thermal",
          "question": "Is the thermal model solved for the hot and cold cases with positive design margins?",
-         "evidence": "Nodal thermal model (at least 6 nodes) solved for a hot and a cold case; no negative design margin"},
+         "evidence": "Nodal thermal model (at least 6 nodes) solved for a hot and a cold case; every node within "
+                     "its design range or with a sized heater taken"},
         {"id": "PDR-RD-04", "probe": "changes", "owner_seat": "team_leader", "category": "configuration",
          "question": "Are the change proposals due at this review decided?",
          "evidence": "Every change proposal whose decision gate is this review or an earlier one approved or rejected"},
@@ -419,24 +410,18 @@ def _probe(kind: str, canonical: str, ev: dict[str, Any]) -> tuple[str, str]:
         return "pass", ((f"Mission reliability {val:.3f}" if isinstance(val, (int, float)) else "Reliability computed")
                         + (f" over {r['horizon_months']:g} months" if isinstance(r.get("horizon_months"), (int, float)) else "")
                         + f"; FMEA {f['rows']} lines over {len(f.get('subsystems') or [])} subsystems")
-    if kind == "thermal":
+    if kind == "thermal":   # A's thermal_model.evidence (3.A6)
         t = ev.get("thermal") or {}
-        nodes = int(t.get("nodes") or 0)
-        cases = t.get("cases") or []
-        solved = {c.get("kind") for c in cases if c.get("solved")}
-        miss = []
-        if nodes < 6:
-            miss.append(f"{nodes} node(s), at least 6 needed")
-        for k in ("hot", "cold"):
-            if k not in solved:
-                miss.append(f"no solved {k} case")
-        neg = [c for c in cases if isinstance(c.get("min_margin_c"), (int, float)) and c["min_margin_c"] < 0]
-        if neg:
-            miss.append("negative design margin: " + ", ".join(f"{c.get('code')} {c['min_margin_c']:.1f} °C" for c in neg))
-        if miss:
-            return "fail", "Missing evidence: " + "; ".join(miss)
-        mm = [c["min_margin_c"] for c in cases if isinstance(c.get("min_margin_c"), (int, float))]
-        return "pass", f"{nodes} nodes; hot and cold cases solved" + (f"; smallest design margin {min(mm):.1f} °C" if mm else "")
+        if not t:
+            return "fail", "Missing evidence: no thermal model"
+        if not t.get("ok"):
+            return "fail", "Missing evidence: " + "; ".join(r for r in t.get("reasons") or [] if r)
+        wm = t.get("worst_design_margin_c")
+        heaters = t.get("heaters")
+        nh = len(heaters) if isinstance(heaters, (list, dict)) else heaters
+        return "pass", (f"{t.get('nodes', 0)} nodes; hot and cold cases solved"
+                        + (f"; smallest design margin {wm:.1f} °C" if isinstance(wm, (int, float)) else "")
+                        + (f"; {nh} heater(s) sized" if nh else ""))
     return "not_evaluated", ""
 
 
