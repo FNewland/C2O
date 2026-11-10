@@ -420,6 +420,8 @@ components:
     trl: 8                 # (est.) "built on flight-proven hardware", vib + TVAC + rad tested
     heritage_missions: []
     performance:
+      lead_time_weeks: [18, 32]     # research brief 18-32 weeks for the UHF radio class (not verified)
+      export_control: {eccn: 5A002 when the link encryption (AES-256) is enabled; otherwise not listed (verify), origin: SK}
       frequency_mhz: 401.5
       band: UHF
       tx_frequency_mhz: [[400, 402], [420, 450], [144, 148]]

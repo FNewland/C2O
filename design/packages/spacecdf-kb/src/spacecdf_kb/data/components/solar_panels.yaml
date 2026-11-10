@@ -203,6 +203,8 @@ components:
     trl: 9                          # "TRL 9 since 2013, 40+ missions" (vendor)
     heritage_missions: []
     performance:
+      lead_time_weeks: [6, 16]      # research brief 6-16 weeks (not verified)
+      export_control: {eccn: not listed (verify with vendor), origin: EC}
       power_bol_w: null             # 3U figure not published; 1U >=3.75 W (low-cost) to >=12 W (3G30)
       power_eol_w: null
       cell_type: triple_junction_gaas   # AzurSpace 3G30 option (or low-cost Si)

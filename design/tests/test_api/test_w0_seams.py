@@ -127,7 +127,9 @@ async def test_collect_on_an_empty_study_returns_every_section(client, study_obj
     assert sx.requirements["items"] == [] and sx.risks["items"] == [] and sx.elements["items"] == []
     assert sx.rollup["mass"]["cbe_kg"] == 0
     for stub in ("data_budget", "contacts", "licensing", "ait", "schedule"):
-        assert d[stub]["status"] == "not_implemented" and d[stub]["owner"] in {"H", "L", "A"}
+        # a stub names its owner; an implemented section answers with its empty or proposed shape
+        assert d[stub].get("status") != "not_implemented" or d[stub]["owner"] in {"H", "L", "A"}
+    assert d["ait"]["status"] == d["schedule"]["status"] == "proposed"     # W8a / W11a defaults
     r = await client.get(f"/api/studies/{study_obj.id}/export-context")
     assert r.status_code == 200 and set(SECTIONS) <= set(r.json())
 

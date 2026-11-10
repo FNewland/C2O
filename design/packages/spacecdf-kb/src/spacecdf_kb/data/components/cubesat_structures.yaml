@@ -52,6 +52,8 @@ components:
     trl: 9
     heritage_missions: [OPS-SAT, many university missions]
     performance:
+      lead_time_weeks: [4, 6]       # vendor listing 4-6 weeks
+      export_control: {eccn: not listed, origin: NL}
       volume_cm3: 3000
       material: Al-7075-T6
       rails: CDS_compliant

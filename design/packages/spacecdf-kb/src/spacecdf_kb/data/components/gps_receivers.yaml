@@ -102,6 +102,8 @@ components:
     cost_keur: 20               # (est.) get a quote
     trl: 9
     performance:
+      lead_time_weeks: [10, 18]     # research brief 10-18 weeks (not verified)
+      export_control: {eccn: 7A994 (7A005 / 7A105 if the COCOM speed and altitude limits are removed; verify), origin: DK, origin_note: OEM719 receiver made in Canada, permit: none expected for a Canadian mission; re-export of the spacecraft needs a check}
       position_accuracy_m: 1.5
       velocity_accuracy_ms: 0.03
       max_altitude_km: 2000

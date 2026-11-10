@@ -778,3 +778,8 @@ from . import electrical_models as _electrical_models  # noqa: E402,F401
 # CDR design model (TM/TC database, FDIR, AOCS modes, TT&C ladder, line states, operations):
 # one generic table, registered on Base.metadata for create_all.
 from . import cdr_models as _cdr_models  # noqa: E402,F401
+
+# W8a / W11a (platform, AIT and schedule): model philosophy and test matrix; project settings,
+# milestones and work packages. Importing them registers the tables on Base.metadata.
+from . import models_ait as _models_ait  # noqa: E402,F401
+from . import models_schedule as _models_schedule  # noqa: E402,F401

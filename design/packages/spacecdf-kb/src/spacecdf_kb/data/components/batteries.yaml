@@ -197,6 +197,8 @@ components:
     trl: 9
     heritage_missions: [GOMX-3, GOMX-4, numerous CubeSats]
     performance:
+      lead_time_weeks: [12, 22]     # research brief 12-22 weeks for the EPS + battery (not verified)
+      export_control: {eccn: not listed (verify with vendor), origin: DK, notes: Li-ion cells ship as UN3480 dangerous goods}
       capacity_wh: 43.0          # both 2P-2S and 1P-4S
       specific_energy_wh_kg: 149
       cycle_life: 5000

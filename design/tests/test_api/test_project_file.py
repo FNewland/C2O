@@ -177,6 +177,11 @@ async def build_rich_study(c, monkeypatch) -> tuple[str, dict]:
     await _ok(await c.post("/api/logbook/entries", json={
         "kind": "decision", "text": f"Chose S-band for {sc['id']}", "context": {"study_id": sid, "where": "decide"}}))
 
+    # W8a / W11a: model philosophy and test matrix; project settings, milestones, work packages
+    await _ok(await c.post(f"/api/studies/{sid}/ait/propose"))
+    await _ok(await c.put(f"/api/studies/{sid}/schedule/settings", json={"currency": "CAD", "launch_provided": True}))
+    await _ok(await c.post(f"/api/studies/{sid}/schedule/propose"))
+
     await _legacy_rows(sid, eps["id"])
 
     # seats last (writes need a seat afterwards): preset, claims, a pending cross-seat edit
@@ -313,6 +318,9 @@ async def test_round_trip_is_exact(client, rich):
     assert all(e["context"]["study_id"] == new for e in b["logbook"])
     # 4. study object
     assert b["study"]["name"] == a["study"]["name"] == "EOSAT-1"
+    # W8a / W11a tables travel (models, tests, settings, milestones, work packages)
+    assert [len(b["tables"][t]) for t in ("ait_models", "ait_tests", "project_settings")] == [3, 12, 1]
+    assert b["tables"]["project_settings"][0]["launch_provided"] and len(b["tables"]["work_packages"]) >= 10
     # 5. inf / NaN (legacy optimiser rows) survive the JSON file and come back as floats
     assert a["tables"]["optimization_runs"][0]["best_y"] == {"__float__": "inf"}
     assert b["tables"]["optimization_runs"][0]["best_y"] == {"__float__": "inf"}

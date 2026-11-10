@@ -19,6 +19,7 @@ import { useWhereSection } from '../where/where'
 import { displayElementName } from './BlocksPanel'
 import { RecordDecision } from '../logbook'
 import { Button, DataTable, Disclosure, MarginBar, MarginBarKey, Note, NoData, Panel, Tabs, fmtNum, tabPanelProps, type Column } from '../components/ui'
+import { ProjectPanel } from './ProjectPanel'
 
 const API = '/api'
 
@@ -86,6 +87,16 @@ export function BudgetPanel() {
     refetchInterval: 3000,  // live multi-user updates
   })
 
+  // W1.08: the study roll-up (services/rollup.py) gives the two power figures side by side —
+  // the sum of the units' ON powers and the orbit average from the Modes energy balance.
+  const { data: rollup } = useQuery({
+    queryKey: ['rollup', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/rollup`).then(r => (r.ok ? r.json() : null)),
+    enabled: !!studyId && activeBudget === 'power',
+    refetchInterval: 5000,
+  })
+  const ruPower: { sum_on_power_w?: number; orbit_average_w?: number | null; orbit_average_with_margin_w?: number | null; system_margin_percent?: number } | null = rollup?.power ?? null
+
   const bt = BUDGET_TYPES.find(b => b.id === activeBudget)!
 
   const setAllocation = useCallback(async (elementId: string, value: number) => {
@@ -150,7 +161,8 @@ export function BudgetPanel() {
                 { label: t('{{name}}: with maturity margin', { name: parentName }), value: budget?.sum_with_margin ?? 0, unit: u },
                 ...(parentAlloc != null ? [{ label: t('{{name}}: allocation', { name: parentName }), value: parentAlloc, unit: u }] : []),
                 ...(marginPct != null ? [{ label: t('Margin to allocation'), value: marginPct, unit: '%' }] : []),
-                ...(activeBudget === 'power' && budget?.total_avg_power != null ? [{ label: t('Orbit average'), value: budget.total_avg_power, unit: 'W' }, { label: t('Peak'), value: budget.total_peak_power, unit: 'W' }] : []),
+                ...(activeBudget === 'power' && budget?.total_avg_power != null ? [{ label: t('Average of the units'), value: budget.total_avg_power, unit: 'W' }, { label: t('Peak'), value: budget.total_peak_power, unit: 'W' }] : []),
+                ...(activeBudget === 'power' && ruPower ? [{ label: t('Sum of ON powers'), value: ruPower.sum_on_power_w ?? 0, unit: 'W' }, ...(ruPower.orbit_average_w != null ? [{ label: `${t('Orbit average')} (${t('Modes')})`, value: ruPower.orbit_average_w, unit: 'W' }] : [])] : []),
                 ...(activeBudget === 'data' && budget?.total_data_volume_gb_per_day != null ? [{ label: t('Volume per day'), value: budget.total_data_volume_gb_per_day, unit: 'GB' }] : []),
               ],
               margin_impact: marginPct != null
@@ -178,12 +190,32 @@ export function BudgetPanel() {
               {bt.unit}
             </span>
             {activeBudget === 'power' && budget?.total_avg_power != null && (
-              <span>{t('Orbit average')} <span className="mono c-v t-13">{fmtNum(budget.total_avg_power, 1)}</span> W · {t('Peak')} <span className="mono c-v t-13">{fmtNum(budget.total_peak_power, 1)}</span> W</span>
-            )}
-            {activeBudget === 'data' && budget?.total_data_rate_mbps != null && (
-              <span>{t('Volume per day')} <span className="mono c-v t-13">{fmtNum(budget.total_data_volume_gb_per_day, 3)}</span> GB</span>
+              <span>{t('Average of the units')} <span className="mono c-v t-13">{fmtNum(budget.total_avg_power, 1)}</span> W · {t('Peak')} <span className="mono c-v t-13">{fmtNum(budget.total_peak_power, 1)}</span> W</span>
             )}
           </div>
+          {activeBudget === 'power' && ruPower && (
+            <div className="row wrap gap-4 t-12 c-3" data-testid="budget-power-figures">
+              <span title={t('Every space unit counted as if it were always on (power × quantity, most detailed level only)')}>
+                {t('Sum of ON powers')} <span className="mono c-v t-13" data-testid="budget-sum-on-power">{fmtNum(ruPower.sum_on_power_w ?? 0, 2)}</span> W
+              </span>
+              <span title={t('Load averaged over the operational orbit from the Modes tab (nominal, imaging and downlink modes weighted by their share of the orbit)')}>
+                {t('Orbit average')} ({t('Modes')}){' '}
+                {ruPower.orbit_average_w != null ? (
+                  <>
+                    <span className="mono c-v t-13" data-testid="budget-orbit-average">{fmtNum(ruPower.orbit_average_w, 2)}</span> W
+                    {ruPower.orbit_average_with_margin_w != null && (
+                      <> · {t('{{value}} W with the {{pct}} % system margin', { value: fmtNum(ruPower.orbit_average_with_margin_w, 2), pct: ruPower.system_margin_percent ?? 0 })}</>
+                    )}
+                  </>
+                ) : <span className="c-3">{t('no operational modes yet')}</span>}
+              </span>
+            </div>
+          )}
+          {activeBudget === 'data' && budget?.total_data_rate_mbps != null && (
+            <div className="row wrap gap-4 t-12 c-3">
+              <span>{t('Volume per day')} <span className="mono c-v t-13">{fmtNum(budget.total_data_volume_gb_per_day, 3)}</span> GB</span>
+            </div>
+          )}
           {budget?.system_margin && (
             <p className="t-12 c-3 m-0 measure" data-testid="budget-system-margin">
               {t('System margin at {{gate}}: {{pct}} % ({{label}}), on top of the maturity margins; total with system margin {{total}} {{unit}}.', {
@@ -222,6 +254,9 @@ export function BudgetPanel() {
             <BudgetTable kind={activeBudget} unit={bt.unit} digits={bt.digits} lines={lines} budget={budget} totalChildAlloc={totalChildAlloc} onSet={setAllocation} />
           </Disclosure>
         )}
+
+        {/* W11a: the project view (schedule, WBS, long-lead items, bottom-up cost) under Cost */}
+        {activeBudget === 'cost' && <ProjectPanel studyId={studyId} />}
       </div>
     </div>
   )

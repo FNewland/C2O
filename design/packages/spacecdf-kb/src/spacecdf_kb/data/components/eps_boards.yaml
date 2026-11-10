@@ -43,6 +43,8 @@ components:
     trl: 9
     heritage_missions: [GOMX-4, Arctic Weather Satellite]
     performance:
+      lead_time_weeks: [12, 22]     # research brief 12-22 weeks with the battery (not verified with the vendor)
+      export_control: {eccn: not listed (verify with vendor), origin: DK}
       bus_voltage_v: [3.3, 5.0, 12.0]   # regulated 3.3 V and 5 V; 12 V from a PDU-200 channel (3.3-18 V)
       max_battery_strings: 4
       max_solar_input_w: 128

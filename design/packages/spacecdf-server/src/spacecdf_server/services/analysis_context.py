@@ -688,13 +688,70 @@ def _hash_subset(ctx: AnalysisContext, key: str) -> Any:
     raise KeyError(f"unknown context hash key {key!r}; valid: {HASH_KEYS}")
 
 
+_NUMERIC_TEXT = re.compile(r"^\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?\s*$")
+
+
+def _canonical(value: Any) -> Any:
+    """Canonical form of a hashed value, so that one model state gives one hash
+    however it was loaded (W1.01: a run hashed with ``15`` went stale after a
+    restart that reloaded ``15.0`` or ``"15"``).
+
+    * an integral float becomes an int (``15.0`` → ``15``); ``-0.0`` → ``0``;
+    * numeric text becomes a number (``"15"`` → ``15``, ``"2.5"`` → ``2.5``);
+    * JSON object/array text is decoded (``'{"a": 1}'`` → ``{"a": 1}``), so a
+      ``performance_json`` string from the database hashes like the dict the
+      element cache holds;
+    * dict entries whose value is ``None`` are dropped (absent ≡ null);
+    * tuples become lists; booleans stay booleans.
+    """
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, float):
+        if value != value or value in (float("inf"), float("-inf")):
+            return str(value)
+        if value.is_integer():
+            return int(value)
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text[:1] in ("{", "["):
+            try:
+                return _canonical(json.loads(text))
+            except (ValueError, TypeError):
+                return value
+        if _NUMERIC_TEXT.match(text):
+            try:
+                return _canonical(float(text)) if any(c in text for c in ".eE") else int(text)
+            except (ValueError, OverflowError):
+                return value
+        return value
+    if isinstance(value, dict):
+        return {str(k): _canonical(v) for k, v in value.items() if v is not None}
+    if isinstance(value, (list, tuple)):
+        return [_canonical(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted((_canonical(v) for v in value), key=lambda x: json.dumps(x, sort_keys=True, default=str))
+    if hasattr(value, "model_dump"):
+        try:
+            return _canonical(value.model_dump(mode="json"))
+        except Exception:
+            return str(value)
+    if hasattr(value, "value") and type(value).__module__ != "builtins":   # enums
+        return _canonical(value.value)
+    return value
+
+
 def context_hash(ctx: AnalysisContext, keys: list[str] | tuple[str, ...]) -> str:
     """Stable SHA-256 (hex) over the named context subsets (see ``HASH_KEYS``).
 
     The same model state always yields the same hash; a change in any named
-    subset changes it. Unknown keys raise ``KeyError``.
+    subset changes it. Unknown keys raise ``KeyError``. Values are passed
+    through :func:`_canonical` first, so ``15``, ``15.0`` and ``"15"`` (and a
+    JSON string versus its decoded dict) hash the same.
     """
-    payload = {k: _hash_subset(ctx, k) for k in sorted(set(keys))}
+    payload = {k: _canonical(_hash_subset(ctx, k)) for k in sorted(set(keys))}
     blob = json.dumps(payload, sort_keys=True, default=str, separators=(",", ":"))
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 

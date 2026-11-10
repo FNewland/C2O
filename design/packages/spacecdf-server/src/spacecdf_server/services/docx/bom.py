@@ -119,7 +119,9 @@ def _render_bom_docx(bom_data: dict[str, Any]) -> bytes:
                 str(line.get("trl", "")),
                 line.get("model_level", ""),
                 line.get("procurement_status", ""),
-                str(line.get("lead_time_weeks", "")),
+                (f"{line['lead_time_min_weeks']}-{line['lead_time_weeks']}"
+                 if line.get("lead_time_min_weeks") not in (None, line.get("lead_time_weeks"))
+                 else str(line.get("lead_time_weeks", ""))),
             ])
 
         _render_formatted_table(doc, bom_headers, bom_rows)
@@ -149,13 +151,16 @@ def _render_bom_docx(bom_data: dict[str, Any]) -> bytes:
     doc.add_heading("5 Export Control Summary", level=1)
     export_items = [l for l in bom_data.get("lines", []) if l.get("export_control") not in ("none", "", None)]
     if export_items:
-        exp_headers = ["Line", "Name", "Manufacturer", "Export Control"]
+        # W5.05: per-part ECCN, origin and permit (bom_generator.export_control_of)
+        exp_headers = ["Line", "Name", "Manufacturer", "ECCN", "Origin", "Permit"]
         exp_rows = [
             [
                 str(l.get("line", "")),
                 l.get("name", ""),
                 l.get("manufacturer", ""),
-                l.get("export_control", ""),
+                l.get("eccn") or l.get("export_control", ""),
+                l.get("origin", ""),
+                l.get("permit", ""),
             ]
             for l in export_items
         ]
