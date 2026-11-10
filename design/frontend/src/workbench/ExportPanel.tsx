@@ -89,8 +89,11 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void, pack
     ]},
     { name: t('Systems Engineering'), color: 'var(--cat-2)', docs: [
       { id: 'semp', label: 'SEMP', description: t('Systems Engineering Management Plan'), formats: [
-        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/semp?study_id=${sid}`, `SEMP_${sid}.docx`) },
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/semp?study_id=${sid}${docLang}`, `SEMP_${sid}.docx`) },
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/ecss/dids/semp/generate?study_id=${sid}`, `SEMP_${sid}.json`) },
+      ]},
+      { id: 'se-diagrams', label: t('Systems-engineering diagrams of the V'), description: t('Context, stakeholder map, function tree, FFBD, functional and physical N², V diagram, one trade matrix per trade, budget flow-down and verification flow'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/diagrams-document.docx?set=se${docLang}`, `SE_diagrams_${sid}.docx`, 'GET') },
       ]},
       { id: 'diagrams', label: t('SEMP / ECSS diagram set'), description: t('Every diagram with its gaps and data table (same as the Diagrams tab)'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/diagrams-document.docx?set=all${docLang}`, `Diagrams_${sid}.docx`, 'GET') },

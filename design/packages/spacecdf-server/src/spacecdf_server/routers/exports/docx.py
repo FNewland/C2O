@@ -74,12 +74,13 @@ LICENSING_KINDS = {"rsssa": "rsssa", "itu_api": "itu-api", "copuos": "un-registr
                    "export": "export-control"}
 #: documents built from the study collector when a study is given: type -> sections they read
 STUDY_DOCS: dict[str, tuple[str, ...]] = {
-    "mrd": ("need", "mission", "requirements", "elements"),
+    "mrd": ("need", "mission", "requirements", "elements", "stakeholders", "validation"),
     "conops": (),                       # routers.conops collects its own sections
     "vp": ("mission", "requirements", "ait", "schedule"),
     "ts": ("need", "mission", "elements", "requirements", "ait"),
     "ird": ("mission", "elements", "requirements", "links", "electrical"),
     **{k: () for k in LICENSING_KINDS},  # services.licensing_docs.SECTIONS_NEEDED
+    "semp": (),                         # wave 3 (3.X3): every section (collected in full)
 }
 
 
@@ -98,6 +99,18 @@ async def study_document(doc_type: str, study_id: str, *, sx=None, lang: str = "
         from ...services.docx.conops import generate_conops_from_view
         from ..conops import conops_view
         return generate_conops_from_view(await conops_view(study_id, lang=lang, sx=sx), lang=lang)
+    if doc_type == "semp":
+        from ...services.docx.semp import generate_semp_from_export
+        s = sx if sx is not None else await collect(study_id, lang=lang)
+        figs = []
+        try:
+            from ...services import diagrams as dg
+            ddata = await dg.load(study_id)
+            figs = [dg.build(k, ddata, **o) for k, o in dg.expand(dg.DOCUMENT_SETS["semp"], ddata)]
+        except Exception:  # noqa: BLE001 — the plan still renders without figures
+            import logging
+            logging.getLogger(__name__).warning("diagrams for the SEMP failed", exc_info=True)
+        return generate_semp_from_export(s, lang, figs)
     if doc_type in LICENSING_KINDS:
         from ...services import licensing_docs as ld
         from ...services.docx.regulatory import render_regulatory_docx
@@ -119,7 +132,7 @@ async def study_document(doc_type: str, study_id: str, *, sx=None, lang: str = "
         try:
             from ...services import diagrams as dg
             ddata = await dg.load(study_id)
-            diagrams = [dg.build(k, ddata) for k in dg.DOCUMENT_SETS["ird"]]
+            diagrams = [dg.build(k, ddata, **o) for k, o in dg.expand(dg.DOCUMENT_SETS["ird"], ddata)]
         except Exception:  # noqa: BLE001 — the document still renders without figures
             import logging
             logging.getLogger(__name__).warning("diagrams for the IRD failed", exc_info=True)
@@ -279,7 +292,7 @@ async def docx_document(doc_type: str, study_id: str | None, *, sx=None, lang: s
         try:
             from ...services import diagrams as dg
             ddata = await dg.load(study_id)
-            data["diagrams"] = [dg.build(k, ddata) for k in dg.DOCUMENT_SETS[doc_type]]
+            data["diagrams"] = [dg.build(k, ddata, **o) for k, o in dg.expand(dg.DOCUMENT_SETS[doc_type], ddata)]
         except Exception:  # noqa: BLE001 — the document still renders without figures
             import logging
             logging.getLogger(__name__).warning("diagrams for %s export failed", doc_type, exc_info=True)

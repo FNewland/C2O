@@ -506,8 +506,9 @@ def diagrams_docx(d: Any, kinds: list[str], *, study_name: str, lang: str = "en"
     doc.add_paragraph(f"{study_name}")
     doc.add_paragraph(tx({"t": "Each figure is drawn from the design model; the gaps list what the model still lacks for it."}, lang))
     doc.add_paragraph(tx({"t": "Maturity per gate: D draft, B baselined, U updated."}, lang))
-    for kind in kinds:
-        m = build(kind, d)
+    from . import expand
+    for kind, opts in expand(kinds, d):
+        m = build(kind, d, **opts)
         add_diagram(doc, m, lang=lang, heading_level=1, gaps=True, table=True)
     buf = io.BytesIO()
     doc.save(buf)

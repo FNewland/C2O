@@ -80,7 +80,8 @@ def mrd_kwargs_from_export(sx: Any) -> dict[str, Any]:
             "requirements": (getattr(sx, "requirements", None) or {}).get("items") or [],
             "orbit": (getattr(sx, "mission", None) or {}).get("orbit") or mission.get("orbit") or {},
             "elements": (getattr(sx, "elements", None) or {}).get("items") or [],
-            "constraints": mission.get("constraints") or {}, "mission": mission}
+            "constraints": mission.get("constraints") or {}, "mission": mission,
+            "se": {"stakeholders": getattr(sx, "stakeholders", None) or {}, "validation": getattr(sx, "validation", None) or {}}}
 
 
 def generate_mrd_docx(
@@ -91,6 +92,7 @@ def generate_mrd_docx(
     elements: list[dict[str, Any]] | None = None,
     constraints: dict[str, Any] | None = None,
     mission: dict[str, Any] | None = None,
+    se: dict[str, Any] | None = None,
 ) -> bytes:
     """Generate Mission Requirements Document as .docx bytes.
 
@@ -139,7 +141,28 @@ def generate_mrd_docx(
     # ── Section 3: Stakeholder Register ──
     _add_section(doc, "3", "Stakeholder Register")
     stakeholders = mn.get("stakeholders", [])
-    if stakeholders:
+    from spacecdf_agents.exporters.docs.v_sections import g as _g, is_placeholder, items as _items
+    se = se or {}
+    reg = _items(se.get("stakeholders") or {})
+    if reg:
+        cats: dict[str, int] = {}
+        for x in reg:
+            k = str(_g(x, "category", default="—")).replace("_", " ")
+            cats[k] = cats.get(k, 0) + 1
+        doc.add_paragraph(f"{len(reg)} stakeholders in {len(cats)} categories: "
+                          + "; ".join(f"{k} ({v})" for k, v in cats.items()) + ".")
+        _add_table(doc, ["ID", "Name", "Category", "Authority", "Engagement", "Needs"],
+                   [[_g(x, "code", "id", default=""), _g(x, "name", default=""),
+                     str(_g(x, "category", default="")).replace("_", " "), _g(x, "authority", default=""),
+                     _g(x, "engagement", default=""), ", ".join(str(n) for n in (_g(x, "needs", default=[]) or []))]
+                    for x in reg])
+        needs = _items(se.get("stakeholders") or {}, "needs")
+        if needs:
+            _add_section(doc, "3.1", "Stakeholder Needs")
+            _add_table(doc, ["ID", "Need", "Stakeholder"],
+                       [[_g(n, "code", "id", default=""), _g(n, "need", "text", default=""),
+                         str(_g(n, "stakeholder", "stakeholders", default=""))] for n in needs])
+    elif stakeholders:
         _add_table(doc,
                    ["Name", "Role", "Key Needs", "Priority"],
                    [
@@ -179,6 +202,25 @@ def generate_mrd_docx(
             _render_bullet(doc, f"- {c}")
     else:
         doc.add_paragraph("[Success criteria to be defined]")
+
+    moes = _items(se.get("stakeholders") or {}, "moes")
+    if moes:
+        _add_section(doc, "4.2", "Measures of Effectiveness")
+        _add_table(doc, ["ID", "Measure", "Threshold", "Objectives", "Needs", "Defined by"],
+                   [[_g(m, "code", "id", default=""), _g(m, "measure", "name", default=""), str(_g(m, "threshold", default="")),
+                     ", ".join(str(o) for o in (_g(m, "objectives", default=[]) or [])),
+                     ", ".join(str(o) for o in (_g(m, "needs", default=[]) or [])),
+                     "to co-define" if is_placeholder(m) else _g(m, "defined_by", default="")] for m in moes])
+        ph = [str(_g(m, "code", "id", default="")) for m in moes if is_placeholder(m)]
+        if ph:
+            doc.add_paragraph(f"{', '.join(ph)}: to co-define with the communities; the values shown are engineering "
+                              "proposals, not agreed measures.")
+    nv = _items(se.get("validation") or {}, "need_validation")
+    if nv:
+        _add_section(doc, "4.3", "Need Validation")
+        _add_table(doc, ["Need", "How it is validated", "Stage", "Status"],
+                   [[_g(x, "need_code", "need", default=""), _g(x, "method", "criterion", default=""), _g(x, "stage", default=""),
+                     _g(x, "status", default="")] for x in nv])
 
     # ── Section 5: Alternatives Analysis ──
     _add_section(doc, "5", "Alternatives Analysis")

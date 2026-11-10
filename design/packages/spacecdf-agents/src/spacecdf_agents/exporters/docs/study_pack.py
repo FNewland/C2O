@@ -360,6 +360,8 @@ def _index(c: Ctx) -> None:
         if st.get("status") != "included":
             c.pkg.open(f"{t.pick(d.title)}: {st.get('note') or 'not produced'}",
                        owner=f"{d.owner} {d.work_package}".strip(), section=t("Package index"))
+    from . import v_sections
+    v_sections.deliverables(c)
 
 
 def _mission_statement(c: Ctx) -> None:
@@ -372,7 +374,7 @@ def _mission_statement(c: Ctx) -> None:
     c.pkg.p(need.get("problem_statement") or "")
     c.pkg.p(need.get("operational_context") or "")
     sh = need.get("stakeholders") or []
-    if sh:
+    if sh and not c.plan.has("stakeholder_register"):
         c.pkg.h2(t("Stakeholders"))
         c.pkg.table([t("Name"), t("Role"), t("Needs"), t("Priority")],
                     [[s.get("name"), s.get("role"), "; ".join(s.get("needs") or []), s.get("priority") or ""] for s in sh])
@@ -520,7 +522,7 @@ def _mission_analysis(c: Ctx) -> None:
     if pls:
         c.pkg.h2("Payload complement" if t.lang != "fr" else "Charges utiles")
         c.pkg.table([t("Name"), t("Type"), t("Mass (kg)"), t("Power (W)"), "Peak (W)" if t.lang != "fr" else "Crête (W)",
-                     "Data per day (GB)" if t.lang != "fr" else "Données par jour (Go)", t("Description")],
+                     "Frames acquired per day (GB)" if t.lang != "fr" else "Images acquises par jour (Go)", t("Description")],
                     [[p.get("name"), p.get("type"), p.get("mass_kg"), p.get("power_w"), p.get("power_peak_w"),
                       p.get("data_volume_per_day_gb"), p.get("description") or ""] for p in pls])
     _analysis_runs(c, ("mission_simulation", "ground_segment"))
@@ -734,11 +736,13 @@ def _budgets(c: Ctx) -> None:
 def _data_budget(c: Ctx) -> None:
     t, sx, view = c.t, c.sx, c.view
     c.pkg.h2(t("Data budget"))
-    pls = view.definition().get("payloads") or []
-    gen = sum(float(p.get("data_volume_per_day_gb") or 0) for p in pls)
-    if pls:
-        c.pkg.p((f"Payload data generated per day (payload definition): {gen * 1000:.0f} MB."
-                 if t.lang != "fr" else f"Données de charge utile produites par jour (définition) : {gen * 1000:.0f} Mo."))
+    from .v_sections import payload_data_lines
+    pdl = payload_data_lines(sx, t.lang)
+    if pdl:
+        c.pkg.table([t("Item"), t("Value")], pdl,
+                    caption=("Payload definition: what the cameras acquire on board, and what the mission delivers"
+                             if t.lang != "fr" else "Définition de la charge utile : ce que les caméras acquièrent à bord, "
+                                                     "et ce que la mission livre"))
     db = sx.get("data_budget") or {}
     from .master_budget import DB_COLUMNS, data_budget_cases
     closure, cases = data_budget_cases(db) if not is_stub(db) else ({}, [])
@@ -977,6 +981,8 @@ def _cost_schedule(c: Ctx) -> None:
     else:
         c.pkg.table([t("Name"), "Date", t("Status")], [[m.get("name") or m.get("id"), m.get("date") or m.get("due") or "", m.get("status") or ""]
                                                        for m in sch.get("milestones") or []])
+    from .v_sections import cost_items
+    cost_items(c)
 
 
 def _debris(c: Ctx) -> None:
@@ -999,6 +1005,8 @@ def _debris(c: Ctx) -> None:
         c.pkg.open("No disposal device in the design", "propulsion_engineer")
     c.pkg.p("The lifetime and compliance figures are in the disposal and debris mitigation report of this pack."
             if t.lang != "fr" else "La durée de vie orbitale et la conformité figurent dans le rapport d’élimination de ce dossier.")
+    from .v_sections import debris_assessment
+    debris_assessment(c)
 
 
 def _spectrum(c: Ctx) -> None:
@@ -1200,11 +1208,18 @@ def _open_items(c: Ctx) -> None:
         c.pkg.p("None." if t.lang != "fr" else "Aucun.")
 
 
+def _v(name: str, c: Ctx) -> None:
+    """A section of the systems-engineering V (``v_sections.py``, wave 3)."""
+    from . import v_sections
+    getattr(v_sections, name)(c)
+
+
 #: section function per product (order = order in the package); ``None`` products are always present
 SECTION_PLAN: tuple[tuple[str | None, SectionFn], ...] = (
     (None, _scope),
     (None, _index),
     ("mission_statement|objectives", _mission_statement),
+    ("stakeholder_register", lambda c: _v("stakeholders", c)),
     ("concept_report", _concept),
     ("trade_reports", _trades),
     ("conops", _conops),
@@ -1213,11 +1228,18 @@ SECTION_PLAN: tuple[tuple[str | None, SectionFn], ...] = (
     ("function_tree", _functions),
     ("product_tree", _product_tree),
     ("budgets", _budgets),
+    ("allocation_ledger", lambda c: _v("allocations", c)),
+    ("negotiation_records", lambda c: _v("negotiations", c)),
     ("design_files", _design),
     ("interfaces", _interfaces),
+    ("icd_issues", lambda c: _v("icds", c)),
     ("aiv_plan", _verification),
+    ("validation_plan", lambda c: _v("validation", c)),
+    ("reliability_fmea", lambda c: _v("reliability", c)),
+    ("thermal_model", lambda c: _v("thermal_model", c)),
     ("trl_matrix", _trl),
     ("risk_register", _risks),
+    ("open_items_register", lambda c: _v("open_items_and_changes", c)),
     ("cost_schedule", _cost_schedule),
     ("debris", _debris),
     ("spectrum", _spectrum),
@@ -1232,6 +1254,8 @@ SECTION_PLAN: tuple[tuple[str | None, SectionFn], ...] = (
     ("launch_acceptance", _launch),
     ("ops_readiness", _ops_readiness),
     ("review_record", _previous_reviews),
+    ("assumption_register", lambda c: _v("assumptions", c)),
+    (None, lambda c: _v("figures", c)),
     (None, _checklist),
 )
 

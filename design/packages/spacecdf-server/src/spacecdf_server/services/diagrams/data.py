@@ -36,6 +36,11 @@ class DiagramData:
     cdr_rows: list[dict] = field(default_factory=list)   # CDR model rows (HK SIDs, stores, framing, pass plan)
     _budget: Any = None
     _budget_done: bool = False
+    #: wave 3 (3.X1): the export sections the systems-engineering diagrams read (``b_se.py``):
+    #: need, stakeholders, validation, allocations, trades, links, rollup, data_budget
+    se: dict[str, dict] = field(default_factory=dict)
+    #: functional exchanges resolved to functions: [{id, name, from_fn, to_fn}]
+    exchanges: list[dict] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
     # ---- lookups
@@ -170,7 +175,47 @@ async def load(study_id: str) -> DiagramData:
         d.warnings.append(f"cdr: {exc}")
     d.risks = list(getattr(d.study, "risk_register", None) or []) if d.study is not None else []
     d.stack = await _stack(study_id)
+    d.exchanges = await _exchanges(study_id, d)
+    d.se = await _se_sections(study_id, d)
     return d
+
+
+#: export sections read by the systems-engineering diagrams (b_se.py); collected once per load
+SE_SECTIONS = ("need", "rollup", "data_budget", "links", "trades", "stakeholders", "validation", "allocations")
+
+
+async def _se_sections(study_id: str, d: DiagramData) -> dict[str, dict]:
+    """The export sections the SE diagrams read (the same data the review packs print)."""
+    try:
+        from ..export_context import collect
+        sx = await collect(study_id, sections=SE_SECTIONS)
+        return {k: sx.section(k) or {} for k in SE_SECTIONS}
+    except Exception as exc:  # noqa: BLE001 — the other diagrams still draw
+        logger.info("SE sections for diagrams failed: %s", exc)
+        d.warnings.append(f"se sections: {exc}")
+        return {}
+
+
+async def _exchanges(study_id: str, d: DiagramData) -> list[dict]:
+    """Functional exchanges with the function at each end (port -> function)."""
+    try:
+        from ...db import function_repo as fr
+        if not d.functions:
+            return []
+        ports = await fr.load_all_function_ports(study_id)
+        fns = {f["id"] for f in d.functions}
+        out = []
+        for x in await fr.list_functional_exchanges_by_study(study_id):
+            if x.get("deleted_at"):
+                continue
+            a = (ports.get(x.get("from_port_id")) or {}).get("function_id")
+            b = (ports.get(x.get("to_port_id")) or {}).get("function_id")
+            if a in fns and b in fns:
+                out.append({"id": x["id"], "name": x.get("name") or "", "from_fn": a, "to_fn": b})
+        return out
+    except Exception as exc:  # noqa: BLE001
+        d.warnings.append(f"functional exchanges: {exc}")
+        return []
 
 
 async def _stack(study_id: str) -> dict[str, Any]:
