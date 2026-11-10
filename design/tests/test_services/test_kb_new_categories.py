@@ -138,11 +138,11 @@ def test_domain_map_and_rules_know_the_new_categories(kb):
     from spacecdf_server.services.equipment import DOMAIN_TO_CATEGORIES
     from spacecdf_server.services.mode_model import cfg, unit_class
     assert "adcs_integrated" in DOMAIN_TO_CATEGORIES["aocs"]
-    assert "deorbit_devices" in DOMAIN_TO_CATEGORIES["structure"]
+    assert "deorbit_devices" in DOMAIN_TO_CATEGORIES["propulsion"]      # W1.03: the Propulsion seat (disposal function)
     assert {"payload_optics", "payload_controllers", "payload_imagers"} <= set(DOMAIN_TO_CATEGORIES["payload"])
     first = {stem: kb.search_components(category=stem)[0]["id"] for stem in NEW}
     classes = {stem: unit_class({"kb_component_id": kid, "name": "x"}, cfg()) for stem, kid in first.items()}
-    assert classes == {"adcs_integrated": "adcs_unit", "deorbit_devices": "passive",
+    assert classes == {"adcs_integrated": "adcs_unit", "deorbit_devices": "deorbit_device",
                        "payload_optics": "passive", "payload_controllers": "payload_electronics"}
 
 
@@ -188,5 +188,5 @@ def test_null_mass_entries_do_not_break_search(kb):
     assert kb.search_components(category="deorbit_devices", max_mass_kg=1.0)
     from spacecdf_common.agents.base import DesignState
     from spacecdf_server.services.equipment import search_compatible_equipment
-    res = search_compatible_equipment("structure", DesignState(), {"deorbit_devices": kb.search_components(category="deorbit_devices")})
+    res = search_compatible_equipment("propulsion", DesignState(), {"deorbit_devices": kb.search_components(category="deorbit_devices")})
     assert {m.component["id"] for m in res["deorbit_devices"]} >= UNPUBLISHED

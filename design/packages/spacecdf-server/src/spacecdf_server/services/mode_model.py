@@ -152,9 +152,9 @@ def propose_member(e: dict, mode_kind: str, c: dict | None = None) -> dict[str, 
         src, c2o = "KB power_modes_w", False
         why_en = f"{pm_key} power of the part from the knowledge base"
         why_fr = f"puissance « {pm_key} » de la pièce, base de connaissances"
-    elif pm_key != state and state != "off" and not avg and not peak and kb_w:
+    elif pm_key != state and state != "off" and (kb_w or avg or peak):
         # e.g. a de-orbit device: the KB power is the release actuation, drawn only in the disposal mode
-        p = float(kb_w)
+        p = float(kb_w or peak or avg)
         src, c2o = "KB power_w", False
         why_en = f"{pm_key} power of the part (KB power_w), drawn only in {mode_kind} mode"
         why_fr = f"puissance « {pm_key} » de la pièce (KB power_w), appelée seulement en mode {mode_kind}"

@@ -21,7 +21,7 @@ def _kb(cid: str) -> dict:
 
 
 @pytest.mark.parametrize("domain, category, n", [
-    ("aocs", "adcs_integrated", 4), ("structure", "deorbit_devices", 6),
+    ("aocs", "adcs_integrated", 4), ("propulsion", "deorbit_devices", 6),
     ("payload", "payload_optics", 9), ("payload", "payload_controllers", 5),
 ])
 async def test_catalog_lists_new_categories_under_their_domain(client, domain, category, n):
@@ -33,7 +33,7 @@ async def test_catalog_lists_new_categories_under_their_domain(client, domain, c
 
 
 async def test_catalog_with_a_study_scores_the_new_parts(client, study_obj):
-    r = await client.get(f"/api/engineering/equipment/structure/search?study_id={study_obj.id}")
+    r = await client.get(f"/api/engineering/equipment/propulsion/search?study_id={study_obj.id}")
     assert r.status_code == 200, r.text
     ids = {i["component"]["id"] for i in r.json()["categories"]["deorbit_devices"]}
     assert SAIL in ids and "deorb-sfl-canx7-dsm" in ids        # null-mass reference entry still listed
@@ -66,7 +66,7 @@ async def test_selected_parts_show_in_the_equipment_budgets(client, study_obj):
     assert (await client.post(f"/api/studies/{sid}/modes/propose")).status_code == 200
     ov = (await client.get(f"/api/studies/{sid}/modes")).json()
     classes = {u["id"]: u["unit_class"] for u in ov["units"]}
-    assert classes[els["adcs"]["id"]] == "adcs_unit" and classes[els["sail"]["id"]] == "passive"
+    assert classes[els["adcs"]["id"]] == "adcs_unit" and classes[els["sail"]["id"]] == "deorbit_device"   # W1.03
     assert classes[els["lens"]["id"]] == "passive" and classes[els["ctrl"]["id"]] == "payload_electronics"
     assert classes[els["cam"]["id"]] == "payload"
 
@@ -86,8 +86,9 @@ async def test_selected_parts_show_in_the_equipment_budgets(client, study_obj):
 
     # the integrated ADCS is on from LEOP (detumbling); wheels at peak while imaging
     assert p(ADCS, "leop") == pytest.approx(_kb(ADCS)["power_w"]) and p(ADCS, "imaging") > p(ADCS, "nominal")
-    # the drag sail's release power is not a running load; optics draw nothing
-    assert all(v == 0 for v in rows[SAIL]["power_by_mode_w"].values())
+    # the drag sail's release power is drawn only in the disposal mode (W1.03); optics draw nothing
+    assert all(v == 0 for mid, v in rows[SAIL]["power_by_mode_w"].items() if kinds[mid] != "disposal")
+    assert p(SAIL, "disposal") == pytest.approx(_kb(SAIL)["power_w"])
     assert all(v == 0 for v in rows[LENS]["power_by_mode_w"].values())
     # the controller runs with the camera while imaging, and adds no data of its own
     assert p(CTRL, "imaging") == pytest.approx(_kb(CTRL)["power_w"]) and p(CTRL, "safe") == 0
