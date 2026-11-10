@@ -270,9 +270,9 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
                 T("Seats and segments over a downlink pass; timings from the contact analysis, rates from the link model"))
     D.source("ground stations", "link inputs", "modes", "C2O pass template")
     link, stations, warns = d.link()
-    st = next((s for s in stations if not s.get("_default")), stations[0] if stations else None)
-    rate = getattr(link, "downlink_bps", None) if link else None
-    band = getattr(link, "band", None) if link else None
+    band, rate, link_src = mission_link(d, link)
+    st = next((s for s in stations if not s.get("_default") and _has_band(s, band)),
+              next((s for s in stations if not s.get("_default")), stations[0] if stations else None))
     pass_min = 8.0
     contact_src = prov("template", note="C2O default pass length")
     try:
@@ -341,17 +341,75 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
               vol=f"{vol_mb:.0f}"), size=12, style="text2")
     if not stations or all(s.get("_default") for s in stations):
         D.gap("no_station", T("missing: ground station selection (catalogue default used)"), fix="ground")
-    if link is None or (getattr(link, "source", {}) or {}).get("downlink_rate") == "fallback":
+    if link_src == "fallback":
         D.gap("no_rate", T("missing: downlink rate in the model (fallback rate used)"), fix="analyses")
     if not any(_kind(m) == "downlink" for m in d.modes):
         D.gap("no_downlink_mode", T("missing: a downlink mode"), severity="info", fix="modes")
     D.gap("template", T("Scenario steps are the C2O pass template; timings and rates come from the model"), severity="info")
-    D.completeness(3, sum([bool(stations) and not all(s.get("_default") for s in stations), bool(rate) and
-                           (getattr(link, "source", {}) or {}).get("downlink_rate") != "fallback",
+    D.completeness(3, sum([bool(stations) and not all(s.get("_default") for s in stations),
+                           bool(rate) and link_src != "fallback",
                            any(_kind(m) == "downlink" for m in d.modes)]))
     D.table([T("Lane"), T("Start"), T("Duration"), T("Step")], rows)
     _ = warns
     return D.finish()
+
+
+def _band_of_mhz(mhz: Any) -> str | None:
+    try:
+        f = float(mhz)
+    except (TypeError, ValueError):
+        return None
+    if f <= 0:
+        return None
+    from .. import ground_closure as gc
+    return gc._link_band(f / 1000.0)
+
+
+def mission_link(d: DiagramData, link: Any = None) -> tuple[str | None, float | None, str]:
+    """(band, downlink rate in bit/s, source) of the operations pass, from the mission first:
+
+    1. the design link case (``requirements.link``: band, downlink frequency and rate, which the
+       link-budget tool's "Apply" writes);
+    2. the mission constraints (``downlink_band_mhz`` / ``downlink_frequency_mhz`` / ``band``);
+    3. the analysis link model (``ground_closure``), whose frequency falls back to a class default
+       (X-band) when the model has none, so it is the last resort for the band.
+
+    Source is ``design_case``, ``constraints``, ``model`` or ``fallback`` (no rate anywhere)."""
+    req = getattr(getattr(d, "study", None), "requirements", None)
+    dl = getattr(req, "link", None)
+    cons = getattr(req, "constraints", None) or {}
+    band = (getattr(dl, "band", None) or _band_of_mhz(getattr(dl, "downlink_frequency_mhz", None))) if dl else None
+    src = "design_case" if band else ""
+    if not band:
+        rng = cons.get("downlink_band_mhz")
+        mid = (sum(float(x) for x in rng) / len(rng)) if isinstance(rng, (list, tuple)) and rng else None
+        band = cons.get("band") or cons.get("link_band") or _band_of_mhz(cons.get("downlink_frequency_mhz")) \
+            or _band_of_mhz(mid)
+        src = "constraints" if band else ""
+    model_fallback = link is None or (getattr(link, "source", {}) or {}).get("downlink_rate") == "fallback"
+    if not band and link is not None:
+        band, src = getattr(link, "band", None), "model"
+    rate = None
+    try:
+        rate = float(getattr(dl, "downlink_rate_bps", None) or 0) or None if dl else None
+    except (TypeError, ValueError):
+        rate = None
+    if rate:
+        src = src or "design_case"
+    elif link is not None and not model_fallback:
+        rate = getattr(link, "downlink_bps", None)
+        src = src or "model"
+    else:
+        rate = getattr(link, "downlink_bps", None) if link is not None else None
+        src = "fallback"
+    return (str(band) if band else None), rate, src
+
+
+def _has_band(st: dict, band: str | None) -> bool:
+    if not band:
+        return True
+    have = [str(b).upper().split()[0] for b in (st.get("bands") or ([st["band"]] if st.get("band") else [])) if str(b)]
+    return not have or band.upper() in have
 
 
 def _rate_txt(bps: float | None) -> str:

@@ -16,7 +16,8 @@ import { serverText } from '../i18n/serverText'
 
 const API = '/api'
 
-interface ObjectiveRow { id: string; text: string; priority: string; measurable_criterion: string }
+/** ``orig`` is the id the row was loaded with, so a renamed objective keeps its other fields. */
+interface ObjectiveRow { id: string; text: string; priority: string; measurable_criterion: string; orig?: string }
 interface StakeholderRow { id: string; name: string; role: string; needs: string; constraints: string }
 interface AlternativeRow { id: string; name: string; pros: string; cons: string; feasibility_score: number; decision: string }
 
@@ -40,7 +41,7 @@ export function MissionDefinitionEditor({ studyId, study, onDone }: { studyId: s
   const [problem, setProblem] = useState<string>(need.problem_statement || '')
   const [context, setContext] = useState<string>(need.operational_context || '')
   const [objectives, setObjectives] = useState<ObjectiveRow[]>(
-    (need.objectives || []).map((o: any) => ({ id: o.id || '', text: o.text || '', priority: o.priority || 'primary', measurable_criterion: o.measurable_criterion || '' })))
+    (need.objectives || []).map((o: any) => ({ id: o.id || '', orig: o.id || '', text: o.text || '', priority: o.priority || 'primary', measurable_criterion: o.measurable_criterion || '' })))
   const [conops, setConops] = useState<string>(need.conops_summary || '')
   const [success, setSuccess] = useState<string[]>(need.success_criteria?.length ? need.success_criteria : [''])
   const [stakeholders, setStakeholders] = useState<StakeholderRow[]>(
@@ -59,12 +60,16 @@ export function MissionDefinitionEditor({ studyId, study, onDone }: { studyId: s
   const setSh = (i: number, patch: Partial<StakeholderRow>) => setStakeholders(xs => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)))
   const setAlt = (i: number, patch: Partial<AlternativeRow>) => setAlternatives(xs => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)))
   /** The next free objective id (O1, O2 …) — ids stay editable (W1.05). */
-  const nextObjectiveId = () => {
+  /** Same rule as the wizard: O1, O2 … (C1, C2 … for constraints), the first free number. */
+  const nextObjectiveId = (priority = 'primary') => {
+    const prefix = priority === 'constraint' ? 'C' : 'O'
     const used = new Set(objectives.map(o => o.id))
-    let n = objectives.length + 1
-    while (used.has(`O${n}`)) n++
-    return `O${n}`
+    let n = 1
+    while (used.has(`${prefix}${n}`)) n++
+    return `${prefix}${n}`
   }
+  const objIds = objectives.filter(o => o.text.trim()).map((o, i) => o.id.trim() || `O${i + 1}`)
+  const dupObjIds = [...new Set(objIds.filter((x, i) => objIds.indexOf(x) !== i))]
 
   const save = async () => {
     setSaving(true); setError(null); setResult(null)
@@ -81,7 +86,7 @@ export function MissionDefinitionEditor({ studyId, study, onDone }: { studyId: s
           problem_statement: problem,
           operational_context: context,
           objectives: objectives.filter(o => o.text.trim()).map((o, i) => {
-            const prev = old.find(x => x.id && x.id === o.id) || {}
+            const prev = old.find(x => x.id && x.id === (o.orig || o.id)) || {}
             return { ...prev, id: o.id.trim() || `O${i + 1}`, text: o.text.trim(), priority: o.priority, measurable_criterion: o.measurable_criterion }
           }),
           conops_summary: conops.trim(),
@@ -148,7 +153,8 @@ export function MissionDefinitionEditor({ studyId, study, onDone }: { studyId: s
         {objectives.map((o, i) => (
           <div key={i} className="flex wrap gap-1 ai-c mb-1">
             <input className="c2o-input mono" style={{ width: '5rem' }} aria-label={t('Objective {{n}}: id', { n: i + 1 })} value={o.id}
-              placeholder={`O${i + 1}`} onChange={e => setObj(i, { id: e.target.value.replace(/\s+/g, '') })} />
+              placeholder={`O${i + 1}`} onChange={e => setObj(i, { id: e.target.value.replace(/\s+/g, '').slice(0, 12) })}
+              title={t('Short identifier, used in the requirement code OBJ-{{id}}', { id: o.id })} />
             <select className="c2o-select" aria-label={t('Objective {{n}}: priority', { n: i + 1 })} value={o.priority} onChange={e => setObj(i, { priority: e.target.value })}>
               {PRIORITIES.map(p => <option key={p} value={p}>{p === 'primary' ? t('Primary') : p === 'secondary' ? t('Secondary', { context: 'priority' }) : t('Constraint', { context: 'priority' })}</option>)}
             </select>
@@ -158,9 +164,10 @@ export function MissionDefinitionEditor({ studyId, study, onDone }: { studyId: s
               onClick={() => setObjectives(os => os.filter((_, j) => j !== i))}>×</button>
           </div>
         ))}
-        <button type="button" className="c2o-btn c2o-btn--sm" onClick={() => setObjectives(os => [...os, { id: nextObjectiveId(), text: '', priority: 'primary', measurable_criterion: '' }])}>
+        <button type="button" className="c2o-btn c2o-btn--sm" onClick={() => setObjectives(os => [...os, { id: nextObjectiveId('primary'), text: '', priority: 'primary', measurable_criterion: '' }])}>
           {t('+ Add objective')}
         </button>
+        {dupObjIds.length > 0 && <div className="c-alarm t-12" role="alert">{t('Two objectives share the id {{ids}}: give each a unique id', { ids: dupObjIds.join(', ') })}</div>}
       </fieldset>
       <fieldset className="c2o-wfield" data-testid="success-criteria-editor">
         <legend className="c2o-wfield__label">{t('Success criteria')}</legend>
@@ -215,7 +222,7 @@ export function MissionDefinitionEditor({ studyId, study, onDone }: { studyId: s
         </div>
       )}
       <div className="flex gap-1">
-        <button type="button" className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={saving || errs.length > 0} onClick={save}>
+        <button type="button" className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={saving || errs.length > 0 || dupObjIds.length > 0} onClick={save}>
           {saving ? t('Saving…') : t('Save mission definition')}
         </button>
         <button type="button" className="c2o-btn c2o-btn--sm" onClick={onDone}>{t('Close')}</button>

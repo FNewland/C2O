@@ -251,21 +251,71 @@ def _text(v: Any, lang: str) -> str:
     return str(v or "")
 
 
-def data_flow_section(sx) -> Dict[str, Any]:
-    """HOOK for wave 2 (W3.02/W3.05, agent H's data budget): the ConOps data-flow and
-    downlink-allocation numbers. Until the ``data_budget`` section is implemented this returns
-    ``status: "open"`` and the document prints an open item instead of numbers; once it is,
-    the daily figures (``daily``: science volume after compression, capacity, margin; ``hk``)
-    are passed through unchanged. Nothing here computes a data number itself."""
+def _num(v: Any) -> Any:
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def data_flow_section(sx, lang: str = "en") -> Dict[str, Any]:
+    """The ConOps data flow and downlink allocation (W7.02), read from the ``data_budget``
+    section (agent H's ``services/data_budget.py``); nothing here computes a data number.
+
+    ``status`` is ``open`` while the study has no data budget (no closure), else ``ready`` with:
+    ``volume`` (payload products, compression, the science delivered and on the channel per
+    day), ``capacity`` (union and usable contact minutes, MB per day), ``closure`` (the baseline
+    case: demand by stream against capacity, margin and the required margin), ``cases`` (every
+    closure case), ``allocation`` (the pass classes: passes per day, usable minutes, real-time HK
+    profile, VC order), ``stores`` (size, days held in the nominal mix, check) and ``backlog``."""
     db = getattr(sx, "data_budget", None) or {}
     link = (getattr(sx, "links", None) or {}).get("design_case") or {}
     out: Dict[str, Any] = {"downlink_rate_bps": link.get("downlink_rate_bps"),
-                           "uplink_rate_bps": link.get("uplink_rate_bps")}
-    if not db or db.get("status") == "not_implemented":
+                           "uplink_rate_bps": link.get("uplink_rate_bps"),
+                           "band": link.get("band") or (db.get("link") or {}).get("band")}
+    daily = db.get("daily") or {}
+    closure = daily.get("closure") or {}
+    if not db or db.get("status") in ("not_implemented", "empty") or not closure:
         return {**out, "status": "open", "owner": db.get("owner", "H"),
                 "work_package": db.get("work_package", "W3.02/W3.05")}
-    return {**out, "status": "ready", "daily": db.get("daily") or {}, "stores": db.get("stores") or [],
-            "hk": db.get("hk") or {}, "cases": db.get("cases") or []}
+    sci = daily.get("science") or {}
+    cap = daily.get("capacity") or {}
+    req_margin = _num(daily.get("margin_required_percent"))
+
+    def case(c: dict) -> Dict[str, Any]:
+        return {"id": c.get("id"), "label": _text(c.get("label"), lang), "baseline": c.get("id") == closure.get("id"),
+                **{k: _num(c.get(k)) for k in ("capacity_mb", "demand_mb", "science_mb", "rt_hk_mb", "stored_hk_mb",
+                                                "other_mb", "margin_pct")},
+                "status": c.get("status")}
+
+    stores = []
+    for st in db.get("stores") or []:
+        chk = st.get("check") or {}
+        stores.append({"id": st.get("id"), "name": st.get("name"),
+                       "size_mb": _num(st.get("size_mb")) if st.get("size_mb") is not None
+                       else (_num(st.get("size_gb")) or 0) * 1000 or None,
+                       "days_held": _num((st.get("days_held") or {}).get("nominal_mix")),
+                       "fill_mb_per_day": _num((st.get("fill_mb_per_day") or {}).get("nominal_mix")),
+                       "ok": chk.get("ok") if chk else None})
+    backlog = db.get("backlog") or {}
+    return {**out, "status": "ready",
+            "volume": {k: _num(sci.get(k)) for k in ("raw_mb_per_day", "compression_ratio", "compression_needed",
+                                                     "target_mb_per_day", "delivered_mb_per_day",
+                                                     "on_channel_mb_per_day", "cfdp_efficiency")}
+            | {"compression_ok": sci.get("compression_ok"),
+               "products": [{"name": p.get("name"), "per_day": _num(p.get("per_day")), "mb_raw": _num(p.get("mb_raw")),
+                             "mb_per_day_raw": _num(p.get("mb_per_day_raw")), "priority": p.get("priority")}
+                            for p in sci.get("products") or []]},
+            "capacity": {k: _num(cap.get(k)) for k in ("union_min_per_day", "usable_min_per_day", "raw_mb_per_day",
+                                                       "capacity_mb_per_day")},
+            "closure": {**case(closure), "margin_required_pct": req_margin},
+            "cases": [case(c) for c in daily.get("cases") or [] if isinstance(c, dict)],
+            "allocation": [{"name": pc.get("name"), "per_day": _num(pc.get("per_day")),
+                            "usable_min_per_day": _num(pc.get("usable_min_per_day")), "rt_profile": pc.get("rt_profile"),
+                            "rt_mb_per_day": _num(pc.get("rt_mb_per_day")), "order": list(pc.get("order") or []),
+                            "delayed_hk": pc.get("delayed_hk")} for pc in db.get("pass_classes") or []],
+            "stores": stores,
+            "backlog": {"growing": backlog.get("growing"), "days": len(backlog.get("days") or []),
+                        "last_vc1_mb": _num((backlog.get("vc1_mb") or [None])[-1]),
+                        "last_vc2_mb": _num((backlog.get("vc2_mb") or [None])[-1])} if backlog else {},
+            "warnings": [_text(w, lang) for w in db.get("warnings") or []]}
 
 
 async def conops_view(study_id: str, lang: str = "en", sx=None) -> Dict[str, Any]:
@@ -350,7 +400,7 @@ async def conops_view(study_id: str, lang: str = "en", sx=None) -> Dict[str, Any
             "orbit": (sx.mission or {}).get("orbit") or {}, "phases": phases, "phases_edited": bool(study.conops.phases_edited),
             "modes": mode_rows, "transitions": transitions,
             "operational_orbit": energy.get("operational_orbit"), "energy_warnings": energy.get("warnings") or [],
-            "typical_day": typical, "data_flow": data_flow_section(sx),
+            "typical_day": typical, "data_flow": data_flow_section(sx, lang),
             "link": (sx.links or {}).get("design_case") or {},
             "ground_stations": list(req_def.get("ground_stations") or []),
             "flight_rules": flight_rules, "contingencies": contingencies,
