@@ -248,3 +248,40 @@ async def get_ground(study_id: str, option_id: str | None = Query(None)) -> dict
         raise HTTPException(404, f"No {ANALYSIS} run for study {study_id}")
     run["conflicts"] = await analysis_repo.list_conflicts(study_id, option_id=option_id, analysis=ANALYSIS)
     return run
+
+
+# ── W4.05: contact table ───────────────────────────────────────────────
+
+@router.get("/studies/{study_id}/contacts")
+async def contact_table(study_id: str, format: str = Query("json", pattern="^(json|csv)$"), days: float = Query(30.0, ge=1, le=60)):
+    """Per station and union: minutes/day, passes/day, mean and maximum pass, passes above 30°,
+    longest gap, data per day at the information rate, and the leave-one-out unions (J2
+    propagation, 5 s step). Feeds the ConOps and the review packs (export section ``contacts``)."""
+    from fastapi.responses import Response
+    from ..services.ground_closure import contact_table as table
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    ctx = await build_context(study_id)
+    t = table(ctx, [], days=days)
+    if format == "json":
+        return t
+    import csv
+    import io
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["station", "role", "status", "min_per_day", "passes_per_day", "mean_pass_min", "max_pass_min",
+                "passes_above_30deg_per_day", "data_mb_per_day_alone"])
+    for s in t["stations"]:
+        w.writerow([s["name"], "control" if s["control"] else "", s["status"], s["min_per_day"], s["passes_per_day"],
+                    s["mean_pass_min"], s["max_pass_min"], s["passes_above_30deg_per_day"], s["data_mb_per_day_alone"]])
+    u = t["union"]
+    if u:
+        w.writerow(["UNION", "", "", u["min_per_day"], u["windows_per_day"], u["mean_window_min"], u["max_window_min"], "",
+                    u.get("data_mb_per_day")])
+        w.writerow(["longest_gap_h", u["longest_gap_h"], "sum_of_stations_min_per_day", u["sum_of_stations_min_per_day"],
+                    "min_above_30deg_per_day", u["min_above_30deg_per_day"]])
+    for x in t["leave_one_out"]:
+        w.writerow([f"without {x['without']}", "", "", x["union_min_per_day"], x["windows_per_day"], "", "", "", x["data_mb_per_day"]])
+    return Response(buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="contacts_{study_id[:8]}.csv"'})

@@ -248,7 +248,7 @@ def test_validate_machine_findings():
 def test_template_config_is_complete():
     c = mm.cfg()
     kinds = {m["kind"] for m in c["template"]["modes"]}
-    assert {"leop", "commissioning", "nominal", "imaging", "downlink", "safe", "survival"} == kinds
+    assert {"leop", "commissioning", "nominal", "imaging", "downlink", "safe", "survival", "disposal"} == kinds
     assert sum(m["orbit_fraction"] for m in c["template"]["modes"] if m["phase"] == "nominal") == pytest.approx(1.0)
     assert mm.validate_config() == []
 

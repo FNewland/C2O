@@ -330,6 +330,13 @@ def import_eosat1(study_id: str, root: Path | None = None) -> list[dict]:  # noq
 
 # ───────────────────────────────────────────────────────────── export
 
+def _pack_of_inline(p: dict) -> str:
+    t = str(p.get("type") or "u16").lower()
+    return {"u8": "B", "i8": "b", "u16": "H", "i16": "h", "u32": "I", "i32": "i", "f32": "f", "f64": "d",
+            "uint8": "B", "int8": "b", "uint16": "H", "int16": "h", "uint32": "I", "int32": "i", "float32": "f",
+            "float64": "d"}.get(t, "H")
+
+
 def export_sim(rows: list[dict]) -> dict[str, Any]:
     """The CDR rows in the simulator's file shapes (the files that have one)."""
     D = lambda k: cm.live_data(rows, k)  # noqa: E731
@@ -350,11 +357,40 @@ def export_sim(rows: list[dict]) -> dict[str, Any]:
         cal = p.get("calibration") or {}
         return {"param_id": pid, "pack_format": TYPE_PACK.get(p.get("type") or "uint16", "H"),
                 "scale": cal.get("scale", 1) if cal.get("type") == "linear" else 1}
-    out["telemetry/hk_structures.yaml"] = {"structures": [
-        {"sid": h["sid"], "name": h.get("name"), "interval_s": h.get("period_s"),
-         "parameters": list(h.get("pack") or [pack_of(i) for i in h.get("parameter_ids") or []])}
-        for h in D("hk")]}
-    out["simulation.yaml#housekeeping"] = {"default_enabled_sids": sorted(h["sid"] for h in D("hk") if h.get("enabled_at_boot"))}
+    # W4.05: whole structures — the real-time SID and its stored copy (store_sid) with the same
+    # parameter list; the per-mode intervals as a mode table the simulator can apply; inline
+    # parameter lists (``params``) are written by name, with their wire type.
+    structures, mode_table = [], {}
+    for h in D("hk"):
+        params_h = list(h.get("pack") or [pack_of(i) for i in h.get("parameter_ids") or []]) or \
+            [{"name": p.get("name"), "pack_format": _pack_of_inline(p)} for p in h.get("params") or []]
+        rt_iv = h.get("period_s")
+        structures.append({k: v for k, v in {"sid": h["sid"], "name": h.get("name"), "interval_s": rt_iv, "parameters": params_h,
+                                             "diagnostic": True if h.get("diagnostic") else None}.items() if v is not None})
+        if isinstance(h.get("rt_period_by_mode"), dict):
+            mode_table.setdefault(str(h["sid"]), {})["realtime"] = h["rt_period_by_mode"]
+        if h.get("store_sid") is not None:
+            st_by = h.get("store_period_by_mode") if isinstance(h.get("store_period_by_mode"), dict) else {}
+            st_iv = next((v for v in st_by.values() if v), None) or rt_iv
+            structures.append({"sid": h["store_sid"], "name": f"{h.get('name')} (stored)", "interval_s": st_iv,
+                               "parameters": params_h, "stored_copy_of": h["sid"], "store_id": h.get("store_id")})
+            if st_by:
+                mode_table.setdefault(str(h["store_sid"]), {})["stored"] = st_by
+    out["telemetry/hk_structures.yaml"] = {"structures": structures}
+    def _rt_on(h: dict) -> bool:
+        en = h.get("enabled")
+        return bool(en.get("realtime")) if isinstance(en, dict) and en.get("realtime") is not None else bool(h.get("enabled_at_boot"))
+    out["simulation.yaml#housekeeping"] = {"default_enabled_sids": sorted(h["sid"] for h in D("hk") if _rt_on(h))}
+    if mode_table:
+        out["telemetry/hk_mode_intervals.yaml"] = {"note": "interval (s) per mode of each SID; null = disabled in the mode",
+                                                   "sids": mode_table}
+    stores = D("stores")
+    if stores:
+        out["telemetry/tm_stores.yaml"] = {"stores": [{k: v for k, v in {"id": x.get("id"), "name": x.get("name"),
+                                                                          "size_mb": x.get("size_mb"), "size_gb": x.get("size_gb"),
+                                                                          "circular": x.get("circular"), "content": x.get("content"),
+                                                                          "location": x.get("location")}.items() if v is not None}
+                                                       for x in stores]}
 
     def cmd(t: dict) -> dict:
         fields = t.get("fields") or [{k: v for k, v in {"name": a.get("name"), "type": a.get("type"), "unit": a.get("unit") or None,

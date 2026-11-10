@@ -10,6 +10,7 @@ import { Button, DataTable, Field, Input, Tag, Textarea, type Column } from '../
 import { createCdr, type CdrRow, type CdrView } from './cdrApi'
 import { CdrFrame, CheckCell, OwnerTag, RowState, Section } from './cdrParts'
 import { bil, rowClass, useCdrPanel, type CdrPanelCtx } from './cdrUtil'
+import { PassPlan } from './PassPlan'
 
 export function OpsPanel() {
   const { t } = useTranslation()
@@ -19,6 +20,7 @@ export function OpsPanel() {
       owners={t('Owned by Mission analysis & ops.')}>
       {view => (
         <>
+          <PassPlan ctx={ctx} view={view} />
           <Positions ctx={ctx} view={view} />
           <GoNoGo ctx={ctx} view={view} />
           <Rules ctx={ctx} view={view} />

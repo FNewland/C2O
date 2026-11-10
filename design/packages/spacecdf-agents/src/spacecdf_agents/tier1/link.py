@@ -194,7 +194,13 @@ class LinkAgent(DesignAgent):
         result.add_param("link.payload_margin_db", "Payload DL Margin", round(payload_margin, 1), "dB")
         result.add_param("link.uplink_margin_db", "Uplink Margin", round(uplink_margin, 1), "dB")
         result.add_param("link.downlink_rate_bps", "Downlink Data Rate", round(lb.downlink_data_rate_bps, 0), "bps")
-        result.add_param("link.data_per_day_gb", "Data Downlinked/Day", round(lb.data_downlinked_per_day_gb, 2), "GB")
+        # W3.03: when the study designs its link framing (TM/TC → link_framing: RS coding, transfer frame,
+        # SDLS), the daily volume uses that frame efficiency instead of the generic 10 % protocol overhead.
+        per_day_gb = lb.data_downlinked_per_day_gb
+        frame_eff = state.get("link.frame_efficiency")
+        if frame_eff and 0 < frame_eff <= 1:
+            per_day_gb = per_day_gb / 0.9 * float(frame_eff)
+        result.add_param("link.data_per_day_gb", "Data Downlinked/Day", round(per_day_gb, 2), "GB")
         dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
         ttc_mass = calibrate_mass("ttc", lb.ttc_mass_kg, dry_est, sc_class)
         result.add_param("link.ttc_mass_kg", "TTC Mass", round(ttc_mass, 2), "kg", margin_percent=10)

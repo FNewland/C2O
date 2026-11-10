@@ -21,10 +21,10 @@ DOMAIN_TO_CATEGORIES = {
     "aocs": ["reaction_wheels", "star_trackers", "sun_sensors", "magnetorquers", "adcs_integrated"],
     "link": ["transponders", "antennas", "gps_receivers"],
     "ttc": ["transponders", "antennas", "gps_receivers"],  # alias — UI uses ttc
-    "propulsion": ["thrusters"],
-    # deorbit_devices (drag sails): passive deployable mechanisms, owned by the Structures &
-    # mechanisms seat, which every study has (the Propulsion seat is optional, added only if ΔV > 0)
-    "structure": ["cubesat_structures", "deployers", "mechanical_hardware", "deorbit_devices"],
+    # deorbit_devices (drag sails): the disposal function, owned by the Propulsion seat (PI decision,
+    # Nov 2026); a study that needs a disposal device keeps the Propulsion seat even with no ΔV.
+    "propulsion": ["thrusters", "deorbit_devices"],
+    "structure": ["cubesat_structures", "deployers", "mechanical_hardware"],
     "data": ["obcs"],
     "obc": ["obcs"],  # alias — UI uses obc
     "thermal": ["thermal_hardware"],

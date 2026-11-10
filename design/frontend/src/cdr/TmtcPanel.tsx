@@ -9,10 +9,12 @@
 import { useMemo, useState } from 'react'
 import { useWhereSection } from '../where/where'
 import { useTranslation } from 'react-i18next'
-import { DataTable, MarginBar, NoData, StatusBadge, Tabs, Tag, tabPanelProps, type Column } from '../components/ui'
-import { hex4, live, type CdrRow, type CdrView } from './cdrApi'
+import { DataTable, MarginBar, NoData, Note, StatusBadge, Tabs, Tag, tabPanelProps, type Column } from '../components/ui'
+import { CommitInput } from '../workbench/electricalParts'
+import { useUIStore } from '../stores/uiStore'
+import { hex4, live, tmtcExportUrl, useDataBudget, type CdrRow, type CdrView, type DataBudgetView, type DbSid } from './cdrApi'
 import { CdrFrame, CheckCell, Filter, NumCell, OwnerTag, RowState, Section, SelectCell } from './cdrParts'
-import { bil, fmt, rowClass, useCdrPanel, type CdrPanelCtx } from './cdrUtil'
+import { bil, fmt, num, rowClass, useCdrPanel, type CdrPanelCtx } from './cdrUtil'
 
 type Sub = 'db' | 'params' | 'hk' | 'tc' | 'events' | 'ladder'
 
@@ -138,13 +140,15 @@ function ParamsSection({ ctx, view }: { ctx: CdrPanelCtx; view: CdrView }) {
 
 function HkSection({ ctx, view }: { ctx: CdrPanelCtx; view: CdrView }) {
   const { t } = useTranslation()
+  const [tab, setTab] = useState<HkTab>('rt')
+  const db = useDataBudget(ctx.studyId)
   const b = view.budget
   const bySid = new Map(b.sids.map(s => [s.sid, s]))
   const cols: Column<CdrRow>[] = [
-    { key: 'sid', header: t('SID'), num: true, sort: r => r.data.sid, render: r => <span className="mono w-500">{r.data.sid}</span> },
-    { key: 'name', header: t('Packet'), render: r => <span>{r.data.name} {r.data.beacon && <Tag accent>{t('beacon')}</Tag>}</span> },
+    { key: 'sid', header: t('SID'), num: true, sort: r => r.data.sid, render: r => <span className="mono w-500">{r.data.sid}{r.data.store_sid != null && <span className="c-3"> / {r.data.store_sid}</span>}</span> },
+    { key: 'name', header: t('Packet'), render: r => <span>{r.data.name} {r.data.beacon && <Tag accent>{t('beacon')}</Tag>} {r.data.diagnostic && <Tag>{t('diagnostic')}</Tag>}</span> },
     { key: 'apid', header: t('APID'), num: true, render: r => <span className="mono">{r.data.apid}</span> },
-    { key: 'n', header: t('Parameters'), num: true, render: r => (r.data.parameter_ids ?? []).length },
+    { key: 'n', header: t('Parameters'), num: true, render: r => (r.data.params ?? r.data.parameter_ids ?? []).length },
     { key: 'per', header: t('Period (s)'), num: true, render: r => <NumCell ctx={ctx} kind="hk" row={r} field="period_s" label={t('Period of SID {{n}} (s)', { n: r.data.sid })} width={56} /> },
     { key: 'bytes', header: t('Bytes'), num: true, render: r => <span className="mono">{bySid.get(r.data.sid)?.bytes ?? ''}</span> },
     { key: 'bps', header: t('bit/s'), num: true, sort: r => bySid.get(r.data.sid)?.bps ?? 0, render: r => <span className="mono">{fmt(bySid.get(r.data.sid)?.bps, 1)}</span> },
@@ -153,6 +157,169 @@ function HkSection({ ctx, view }: { ctx: CdrPanelCtx; view: CdrView }) {
   ]
   return (
     <>
+      <HkSummary data={db.data} />
+      <Tabs<HkTab> label={t('Housekeeping views')} idBase="tmtc-hk" variant="segmented" value={tab} onChange={setTab}
+        items={[
+          { id: 'rt', label: t('Real time') }, { id: 'stored', label: t('Stored') },
+          { id: 'stores', label: t('Stores'), meta: db.data ? String(db.data.stores.length) : undefined },
+          { id: 'profiles', label: t('Profiles') }, { id: 'list', label: t('Structures') },
+        ]} />
+      <div {...tabPanelProps('tmtc-hk', tab)} className="pt-2">
+        {(tab === 'rt' || tab === 'stored') && <SidMatrix ctx={ctx} view={view} data={db.data} copy={tab === 'rt' ? 'rt' : 'stored'} />}
+        {tab === 'stores' && <StoresView data={db.data} />}
+        {tab === 'profiles' && <ProfilesView data={db.data} view={view} />}
+        {tab === 'list' && (
+          <Section id="tmtc-hk" title={t('Housekeeping structures (ST[03])')}>
+            <DataTable dense rows={view.rows.hk} rowKey={r => r.id} columns={cols} caption={t('Housekeeping structures')} rowClassName={rowClass}
+              defaultSort={{ key: 'sid', dir: 'asc' }} empty={t('No housekeeping structure yet.')} />
+          </Section>
+        )}
+      </div>
+    </>
+  )
+}
+
+type HkTab = 'rt' | 'stored' | 'stores' | 'profiles' | 'list'
+
+function HkSummary({ data }: { data: DataBudgetView | undefined }) {
+  const { t, i18n } = useTranslation()
+  const studyId = useUIStore(s => s.studyId)
+  if (!data) return <p className="t-13 c-3">{t('Loading…')}</p>
+  const c = data.closure
+  return (
+    <Section id="tmtc-hk-sum" title={t('Housekeeping and downlink budget')}
+      note={t('Real-time SIDs go down in contact; stored copies fill the HK store and go down as delayed TM. Capacity is the union of the station passes after framing ({{eff}}), {{acq}} s acquisition per pass and {{av}} % availability.',
+        { eff: fmt(data.framing.frame_efficiency, 3), acq: data.framing.acquisition_s, av: fmt(data.framing.availability * 100, 0) })}>
+      {data.status !== 'designed' && <Note tone="caution">{t('Housekeeping is not designed per mode yet: the budget uses one period per SID (or the 2 kbit/s default when there is no SID).')}</Note>}
+      <dl className="c2o-cdr__kv" data-testid="hk-summary">
+        <dt>{t('Real time FULL (designed / allocated)')}</dt><dd className="mono">{fmt(data.realtime.full_designed_bps, 0)} / {data.realtime.full_allocation_bps != null ? fmt(data.realtime.full_allocation_bps, 0) : '–'} bit/s</dd>
+        <dt>{t('Real time LEAN')}</dt><dd className="mono">{fmt(data.realtime.lean_bps, 0)} bit/s</dd>
+        <dt>{t('With diagnostics')}</dt><dd className="mono">{fmt(data.realtime.with_diag_bps, 0)} bit/s</dd>
+        <dt>{t('Stored HK')}</dt><dd className="mono">{fmt(data.stored.mix_bps, 1)} bit/s · {fmt(data.stored.mb_per_day, 2)} {t('MB/day')}</dd>
+        <dt>{t('Capacity')}</dt><dd className="mono">{fmt(data.capacity.capacity_mb_per_day, 2)} {t('MB/day')} ({fmt(data.capacity.union_min_per_day, 1)} {t('min/day union')})</dd>
+        <dt>{t('Daily closure')}</dt><dd><StatusBadge status={c.status === 'pass' ? 'ok' : c.status === 'warn' ? 'caution' : c.status === 'fail' ? 'alarm' : 'nodata'}>
+          {bil(c.label, i18n.language)}: {c.margin_pct == null ? '–' : `${fmt(c.margin_pct, 1)} %`}</StatusBadge></dd>
+        <dt>{t('Packet overhead')}</dt><dd className="mono">{data.packet.overhead_bytes} B</dd>
+      </dl>
+      {studyId && <p className="t-12 m-0 pb-2"><a href={tmtcExportUrl(studyId, 'xlsx')} download>{t('Download the TM/TC database (XLSX)')}</a>
+        {' · '}<a href={tmtcExportUrl(studyId, 'csv')} download>{t('CSV')}</a></p>}
+    </Section>
+  )
+}
+
+/** SID × mode matrix: interval per mode (s; empty = disabled), bit/s under it, a total row per mode. */
+function SidMatrix({ ctx, view, data, copy }: { ctx: CdrPanelCtx; view: CdrView; data: DataBudgetView | undefined; copy: 'rt' | 'stored' }) {
+  const { t } = useTranslation()
+  if (!data) return <p className="t-13 c-3">{t('Loading…')}</p>
+  const rowsById = new Map(view.rows.hk.map(r => [r.id, r]))
+  const sids = data.sids.filter(s => copy === 'rt' || s.store_sid != null || s.store_period_by_mode)
+  const field = copy === 'rt' ? 'rt_period_by_mode' : 'store_period_by_mode'
+  const intervalOf = (s: DbSid, m: string) => (copy === 'rt' ? s.rt_interval_by_mode : s.store_interval_by_mode)[m]
+  const bpsOf = (s: DbSid, m: string) => (copy === 'rt' ? s.rt_bps_by_mode : s.store_bps_by_mode)[m] ?? 0
+  const enabled = (s: DbSid) => (copy === 'rt' ? s.enabled.realtime : s.enabled.stored)
+  const total = (m: string) => sids.filter(s => enabled(s) && !s.diagnostic && !(copy === 'rt' && s.beacon)).reduce((a, s) => a + bpsOf(s, m), 0)
+  const edit = (s: DbSid, m: string, v: string) => {
+    const row = rowsById.get(s.row_id)
+    if (!row) return
+    const n = num(v)
+    if (n === undefined) return
+    const base = (row.data[field] as Record<string, number | null> | null) ?? Object.fromEntries(data.modes.map(x => [x.id, intervalOf(s, x.id) ?? null]))
+    ctx.patchData('hk', row.id, { [field]: { ...base, [m]: n && n > 0 ? n : null } })
+  }
+  const toggle = (s: DbSid, on: boolean) => {
+    const row = rowsById.get(s.row_id)
+    if (row) ctx.patchData('hk', row.id, { enabled: { ...s.enabled, [copy === 'rt' ? 'realtime' : 'stored']: on } })
+  }
+  return (
+    <Section id={`tmtc-hk-${copy}`} title={copy === 'rt' ? t('Real-time collection interval per mode (s)') : t('Stored-copy collection interval per mode (s)')}
+      note={copy === 'rt' ? t('Real-time SIDs are enabled at acquisition of signal and disabled after loss of signal. An empty cell disables the SID in that mode. Diagnostic SIDs are not in the totals.')
+        : t('Stored copies are routed to a packet store (ST[15]) and go down as delayed TM. Thermal is sampled once per minute.')}>
+      <div className="c2o-cdr__matrix" style={{ overflowX: 'auto' }}>
+        <table className="c2o-table c2o-table--dense" data-testid={`sid-matrix-${copy}`}>
+          <caption className="sr-only">{t('SID × mode matrix')}</caption>
+          <thead><tr>
+            <th scope="col">{t('SID')}</th><th scope="col">{t('Packet')}</th><th scope="col">{t('Bytes')}</th><th scope="col">{t('Enabled')}</th>
+            {data.modes.map(m => <th key={m.id} scope="col" className="num">{m.name}</th>)}
+          </tr></thead>
+          <tbody>
+            {sids.map(s => {
+              const row = rowsById.get(s.row_id)
+              const ro = !row || row.origin.startsWith('import:')
+              return (
+                <tr key={`${s.sid}`} className={s.diagnostic ? 'is-suggested' : undefined}>
+                  <th scope="row" className="mono">{copy === 'rt' ? s.sid : (s.store_sid ?? '–')}</th>
+                  <td>{s.name} {s.beacon && <Tag accent>{t('beacon')}</Tag>} {s.diagnostic && <Tag>{t('diagnostic')}</Tag>}</td>
+                  <td className="mono num">{s.bytes}</td>
+                  <td className="center"><input type="checkbox" checked={enabled(s)} disabled={ro}
+                    aria-label={t('SID {{n}} enabled', { n: s.sid })} onChange={e => toggle(s, e.target.checked)} /></td>
+                  {data.modes.map(m => {
+                    const iv = intervalOf(s, m.id)
+                    return (
+                      <td key={m.id} className="num">
+                        {ro ? <span className="mono">{iv ?? '–'}</span>
+                          : <CommitInput label={t('Interval of SID {{n}} in {{mode}} (s)', { n: s.sid, mode: m.name })} value={iv == null ? '' : fmt(iv, 2)}
+                            width={52} placeholder="–" onCommit={v => edit(s, m.id, v)} />}
+                        <div className="t-12 c-3 mono">{iv ? fmt(bpsOf(s, m.id), 1) : ''}</div>
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot><tr>
+            <th scope="row" colSpan={4}>{copy === 'rt' ? t('Routine total (bit/s)') : t('Stored total (bit/s)')}</th>
+            {data.modes.map(m => <td key={m.id} className="mono num w-600">{fmt(total(m.id), 1)}</td>)}
+          </tr></tfoot>
+        </table>
+      </div>
+    </Section>
+  )
+}
+
+function StoresView({ data }: { data: DataBudgetView | undefined }) {
+  const { t } = useTranslation()
+  if (!data) return <p className="t-13 c-3">{t('Loading…')}</p>
+  return (
+    <Section id="tmtc-stores" title={t('Packet stores (ST[15])')}
+      note={t('Days each store holds without a dump. The HK store must hold {{d}} days at the worst rate with the storage margin.', { d: data.stores.find(s => s.check)?.check?.min_days ?? 7 })}>
+      {data.stores.length === 0 && <NoData label={t('No packet store yet')} />}
+      {data.stores.map(s => {
+        const days = s.days_held.nominal_mix ?? null
+        return (
+          <div key={`${s.id}`} className="pb-2">
+            <MarginBar label={`${s.name} · ${s.size_mb != null ? fmt(s.size_mb, 0) + ' MB' : '–'}`} unit={t('days')}
+              nominal={s.check ? s.check.min_days : null} allocation={days} digits={1}
+              title={Object.entries(s.days_held).map(([k, v]) => `${k}: ${v ?? '–'}`).join(' · ')} />
+            <p className="t-12 c-3 m-0">
+              {Object.entries(s.fill_mb_per_day).map(([k, v]) => t('{{mode}}: {{mb}} MB/day, {{d}} days', { mode: k, mb: fmt(v, 3), d: s.days_held[k] ?? '–' })).join(' · ')}
+              {s.orbits_held != null && t('{{mb}} MB per orbit, {{n}} orbits', { mb: fmt(s.fill_mb_per_orbit ?? 0, 3), n: fmt(s.orbits_held, 1) })}
+              {s.check?.ok === false && <> <StatusBadge status="alarm">{t('too small')}</StatusBadge></>}
+            </p>
+          </div>
+        )
+      })}
+    </Section>
+  )
+}
+
+function ProfilesView({ data, view }: { data: DataBudgetView | undefined; view: CdrView }) {
+  const { t, i18n } = useTranslation()
+  const b = view.budget
+  if (!data) return <p className="t-13 c-3">{t('Loading…')}</p>
+  return (
+    <>
+      <Section id="tmtc-profiles" title={t('Real-time profiles and the rate tiers')}
+        note={t('HK may use {{share}} % of the information rate of a tier. The pass plan picks a profile per pass.', { share: b.hk_share_percent })}>
+        {data.profiles.map(p => (
+          <div key={p.name} className="pb-2">
+            <p className="t-13 m-0"><span className="mono w-600">{p.name}</span> · {fmt(p.designed_bps, 0)} bit/s {t('designed')}
+              {p.allocation_bps != null && <> · {fmt(p.allocation_bps, 0)} bit/s {t('allocated')}</>} <span className="c-3">{bil(p.description, i18n.language)}</span></p>
+            {p.tier_fit.map(f => <MarginBar key={f.tier} label={`${f.tier} (${fmt(f.bps / 1000, 1)} kbit/s)`} unit="bit/s"
+              nominal={p.pass_bps} allocation={f.hk_budget_bps} digits={0} />)}
+          </div>
+        ))}
+      </Section>
       <Section id="tmtc-budget" title={t('Housekeeping downlink budget')}
         note={t('HK may use {{share}} % of the TM rate of each regime after {{eff}} frame efficiency; each packet carries {{ovh}} bytes of header, SID and CRC. {{src}}',
           { share: b.hk_share_percent, eff: fmt(b.frame_efficiency, 2), ovh: b.packet_overhead_bytes, src: b.standard_ref })}>
@@ -166,13 +333,9 @@ function HkSection({ ctx, view }: { ctx: CdrPanelCtx; view: CdrView }) {
         {b.modes.length > 0 && (
           <p className="t-12 c-2 m-0 pb-2">{t('Per mode:')}{' '}
             {b.modes.map(m => <span key={m.mode_id} className="c2o-cdr__chips" style={{ marginRight: 8 }}>
-              <StatusBadge status={m.ok === false ? 'alarm' : m.ok ? 'ok' : 'nodata'}>{m.mode}: {t(REGIME_LABEL[m.regime] ?? m.regime)}</StatusBadge></span>)}
+              <StatusBadge status={m.ok === false ? 'alarm' : m.ok ? 'ok' : 'nodata'}>{m.mode}: {fmt(m.hk_bps, 0)} bit/s</StatusBadge></span>)}
           </p>
         )}
-      </Section>
-      <Section id="tmtc-hk" title={t('Housekeeping structures (ST[03])')}>
-        <DataTable dense rows={view.rows.hk} rowKey={r => r.id} columns={cols} caption={t('Housekeeping structures')} rowClassName={rowClass}
-          defaultSort={{ key: 'sid', dir: 'asc' }} empty={t('No housekeeping structure yet.')} />
       </Section>
     </>
   )

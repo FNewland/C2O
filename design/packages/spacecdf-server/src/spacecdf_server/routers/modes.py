@@ -486,62 +486,43 @@ async def mode_energy(study_id: str, gate: str | None = Query(None)) -> dict:
 
 
 def _station_rows(ctx, link, warnings: list[str]) -> list[dict]:
+    """Per-station contact rows (J2 contact statistics, link margin); kept for the diagrams."""
     from ..services import ground_closure as gc
-    rows = []
-    altitude = float(ctx.orbit.get("altitude_km") or 500.0)
-    orbit = gc.OrbitParams(altitude_km=altitude, inclination_deg=float(ctx.orbit.get("inclination_deg") or 97.4),
-                           period_s=float(ctx.orbit.get("period_s") or 0.0))
-    rate_mbps = link.downlink_bps / 1e6
-    for s in gc._pick_stations(ctx, warnings):
-        gs = gc.station_to_ground_station(s, link.band)
-        bands = [gc._band_key(str(b)) for b in (s.get("bands") or [gs.band])]
-        minutes, n = gc._contact_minutes(orbit, gs, rate_mbps)
-        row = {"name": gs.name, "contacts_per_day": n, "contact_min_per_day": round(minutes, 2), "margin_db": None,
-               "bands": bands, "status": "ok"}
-        if link.band not in bands:
-            row.update(status="excluded", margin_db=None, contact_min_per_day=0.0)
-        else:
-            margin, _gt = gc._station_margin_db(link, gs, gc._num(s.get("g_over_t_db_k")), altitude, minutes * 60.0)
-            row["margin_db"] = round(margin, 2)
-        rows.append(row)
-    if not rows and ctx.orbit.get("contact_time_per_day_s"):
-        rows.append({"name": "orbit.contact_time_per_day_s", "contact_min_per_day": ctx.orbit["contact_time_per_day_s"] / 60,
-                     "margin_db": None, "status": "ok"})
-    return rows
+    net = gc.network(ctx, warnings)
+    return [{"name": r["name"], "contacts_per_day": r["contacts_per_day"], "contact_min_per_day": r["contact_min_per_day"],
+             "margin_db": r["margin_db"], "bands": r["bands"], "status": "excluded" if r["status"] == "excluded" else "ok"}
+            for r in net["rows"]]
 
 
 @router.get("/studies/{study_id}/modes/data-chain")
 async def mode_data_chain(study_id: str) -> dict:
-    """EB-03 / MO-03: data generated per mode and per day, storage need vs capacity, downlink capacity."""
-    from ..services import ground_closure as gc
+    """EB-03 / MO-03: data generated per mode and per day, storage need vs capacity, downlink capacity.
+
+    Housekeeping comes from the TM/TC SIDs through the data budget (stored HK per mode, real-time HK
+    in contact) and the downlink from the **union** of the station contacts (W3.01); without SIDs the
+    ``housekeeping_bps`` constant is used and flagged "not designed"."""
+    from ..services import data_budget as dbs
     from ..services.margin_policy import CONFIG as MP
     _guard()
     ctx = await _ctx(study_id)
-    warnings: list[str] = []
-    link = gc._link_inputs(ctx, warnings)
-    if link.source.get("downlink_rate") == "fallback":
-        # no link rate in the parameters: use the selected transmitter's rate (KB part / element)
-        from ..services.rule_inputs import kb_component, perf
-        best = None
-        for e in mm.proposal_units(ctx.elements):
-            if mm.unit_class(e) != "transmitter":
-                continue
-            r = perf(e).get("data_rate_bps") or ((kb_component(e) or {}).get("performance") or {}).get("data_rate_bps")
-            if isinstance(r, (int, float)) and r > 0 and (best is None or r > best[0]):
-                best = (float(r), e.get("name"))
-        if best:
-            link.downlink_bps = best[0]
-            link.source["downlink_rate"] = f"transmitter part ({best[1]})"
-            warnings[:] = [w for w in warnings if "no downlink rate" not in w]
-    stations = _station_rows(ctx, link, warnings)
+    budget = await dbs.for_study(study_id, include_degraded=False)
+    stations = [{"name": r["name"], "contacts_per_day": r.get("contacts_per_day"), "contact_min_per_day": r["contact_min_per_day"],
+                 "margin_db": r["margin_db"], "bands": r.get("bands"), "status": "excluded" if r["status"] == "excluded" else "ok"}
+                for r in (budget.get("network") or {}).get("stations") or []]
+    if not stations and ctx.orbit.get("contact_time_per_day_s"):
+        stations.append({"name": "orbit.contact_time_per_day_s", "contact_min_per_day": ctx.orbit["contact_time_per_day_s"] / 60,
+                         "margin_db": None, "status": "ok"})
     cap, used = mm.storage_capacity_gb(ctx.elements)
     smargin = float(rc.load(MP)["data_handling"]["storage_margin_percent"]["value"])
+    link = budget.get("link") or {}
     res = _wrap(lambda: mm.data_chain(_element_modes(ctx), period_s=ctx.orbit.get("period_s") or 5700.0,
-                                      link_rate_bps=link.downlink_bps, stations=stations, storage_gb=cap,
-                                      storage_margin_percent=smargin))
-    res["downlink"].update({"band": link.band, "rate_source": link.source.get("downlink_rate")})
+                                      link_rate_bps=float(link.get("rate_bps") or 0.0), stations=stations, storage_gb=cap,
+                                      storage_margin_percent=smargin, budget=budget if budget.get("capacity", {}).get("union_min_per_day") else None))
+    res["downlink"].update({"band": link.get("band"), "rate_source": link.get("rate_source")})
     res["storage"]["elements"] = used
-    return {"study_id": study_id, **res, "warnings": warnings}
+    res["data_budget"] = {"status": budget.get("status"), "closure": budget.get("closure"),
+                          "stored": budget.get("stored"), "realtime": budget.get("realtime")}
+    return {"study_id": study_id, **res, "warnings": budget.get("warnings") or []}
 
 
 @router.get("/studies/{study_id}/modes/dissipation")

@@ -43,8 +43,8 @@ sources:
     verified: true
 
 # ------------------------------------------------------------------ ConOps mode template
-# The seven ConOps states (LEOP -> commissioning -> nominal operations, plus the two
-# fallback modes). orbit_fraction is the share of an operational orbit spent in the mode
+# The ConOps states (LEOP -> commissioning -> nominal operations, the two fallback modes, and
+# the disposal mode that releases the de-orbit device). orbit_fraction is the share of an operational orbit spent in the mode
 # (the nominal-phase mix sums to 1). pointing drives the array generation factor below.
 template:
   source: c2o_default
@@ -78,6 +78,11 @@ template:
        name: {en: "Survival", fr: "Survie minimale"},
        description: {en: "Minimum load: OBC, receiver and heaters only; entered on a low battery.",
                      fr: "Charge minimale : OBC, récepteur et réchauffeurs seulement ; entrée sur batterie faible."}}
+    # W1.03: the de-orbit device (drag sail) is released only here; its actuation power for seconds.
+    - {key: eol, kind: disposal, phase: disposal, pointing: tumbling, sunlit_only: false, orbit_fraction: 1.0,
+       name: {en: "Sail deploy", fr: "Déploiement de la voile"},
+       description: {en: "End of life: the de-orbit device is released (two-step arm and fire, or the independent timer), then the transmitters are off and the battery is passivated.",
+                     fr: "Fin de vie : le dispositif de désorbitation est libéré (armement puis mise à feu, ou la minuterie indépendante), puis les émetteurs sont coupés et la batterie passivée."}}
   # Transitions: trigger = ground_tc | autonomous | timer | event. Autonomous and event
   # transitions name the monitored quantity in their guard (a proposed ST[12] monitor).
   transitions:
@@ -94,10 +99,11 @@ template:
     - {from: safe, to: survival, trigger: autonomous, guard: {param: battery.soc_percent, op: "<", value: 10, unit: "%"}}
     - {from: safe, to: nominal, trigger: ground_tc, guard: {text: "anomaly understood, recovery approved"}}
     - {from: survival, to: safe, trigger: ground_tc, guard: {text: "battery recharged above 40 %"}}
+    - {from: nominal, to: eol, trigger: ground_tc, guard: {text: "two-step ARM + FIRE of the de-orbit device"}}
   guard_source: c2o_default   # thresholds after the EOSAT-1 simulator FDIR table (SoC 20 % / 10 %)
 
 trigger_kinds: [ground_tc, autonomous, timer, event]
-mode_kinds: [leop, commissioning, nominal, imaging, downlink, safe, survival, custom]
+mode_kinds: [leop, commissioning, nominal, imaging, downlink, safe, survival, disposal, custom]
 pointing_kinds: [tumbling, sun, nadir, target, station, inertial]
 
 # ------------------------------------------------------------------ energy balance
@@ -112,12 +118,14 @@ energy:
   max_dod_percent: {value: 30, source: c2o_default, clause: "LEO cycle life (≈ 5 000 cycles/yr)"}
   # Mode kinds held for a full orbit are checked as "sustainable"; short modes (imaging,
   # downlink) are checked through the operational-orbit mix and the sustainable duty.
-  full_orbit_kinds: [leop, commissioning, nominal, safe, survival]
+  full_orbit_kinds: [leop, commissioning, nominal, safe, survival, disposal]
 
 # ------------------------------------------------------------------ data chain
 data:
-  housekeeping_bps: {value: 2000, source: c2o_default, clause: "OBC housekeeping + event telemetry, all modes"}
-  protocol_efficiency: {value: 0.85, source: c2o_default, clause: "CCSDS framing, coding and pass set-up overhead"}
+  # Fallbacks only: a study with housekeeping SIDs (TM/TC) and a link framing row gets its HK and
+  # its channel efficiency from services/data_budget.py; these values are then flagged "not designed".
+  housekeeping_bps: {value: 2000, source: c2o_default, clause: "OBC housekeeping + event telemetry, all modes (fallback: no SID designed)"}
+  protocol_efficiency: {value: 0.85, source: c2o_default, clause: "CCSDS framing, coding and pass set-up overhead (fallback: no link framing)"}
   buffer_days: {value: 1.0, source: c2o_default, clause: "storage must hold one day of data before margin"}
   min_link_margin_db: {value: 3.0, source: c2o_default, clause: "GSFC-STD-1000G Rule 1.06 RF margin (to verify)"}
 
@@ -150,38 +158,54 @@ states:
   standby_factor: 0.25
   peak_factor: 1.6
   classes:
-    obc:          {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
-    eps:          {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
-    battery:      {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
-    receiver:     {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
-    transmitter:  {leop: standby, commissioning: standby, nominal: standby, imaging: standby, downlink: peak, safe: standby, survival: "off"}
-    antenna:      {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
-    adcs_sensor:  {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: "off"}
-    star_tracker: {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
-    wheel:        {leop: "off", commissioning: nominal, nominal: nominal, imaging: peak, downlink: nominal, safe: standby, survival: "off"}
-    magnetorquer: {leop: peak, commissioning: nominal, nominal: standby, imaging: standby, downlink: standby, safe: nominal, survival: standby}
-    gnss:         {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
-    payload:      {leop: "off", commissioning: standby, nominal: standby, imaging: peak, downlink: standby, safe: "off", survival: "off"}
-    # Integrated ADCS unit (computer + wheels + torquers + sensors): detumbles in LEOP, wheels at peak while imaging.
-    adcs_unit:    {leop: nominal, commissioning: nominal, nominal: nominal, imaging: peak, downlink: nominal, safe: nominal, survival: standby}
+    obc:          {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal, disposal: nominal}
+    eps:          {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal, disposal: nominal}
+    battery:      {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal, disposal: nominal}
+    receiver:     {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal, disposal: nominal}
+    transmitter:  {leop: standby, commissioning: standby, nominal: standby, imaging: standby, downlink: peak, safe: standby, survival: "off", disposal: "off"}
+    antenna:      {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off", disposal: "off"}
+    adcs_sensor:  {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: "off", disposal: "off"}
+    star_tracker: {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off", disposal: "off"}
+    wheel:        {leop: "off", commissioning: nominal, nominal: nominal, imaging: peak, downlink: nominal, safe: standby, survival: "off", disposal: "off"}
+    magnetorquer: {leop: peak, commissioning: nominal, nominal: standby, imaging: standby, downlink: standby, safe: nominal, survival: standby, disposal: "off"}
+    gnss:         {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: "off", survival: "off", disposal: "off"}
+    payload:      {leop: "off", commissioning: standby, nominal: standby, imaging: peak, downlink: standby, safe: "off", survival: "off", disposal: "off"}
+    # Integrated ADCS unit (computer + wheels + torquers + sensors): detumbles in LEOP (B-dot on its own
+    # magnetometer and torquers), wheels at peak while imaging. Separate magnetometers / sun sensors
+    # (adcs_sensor) and torquers are on in LEOP too: B-dot needs them.
+    adcs_unit:    {leop: nominal, commissioning: nominal, nominal: nominal, imaging: peak, downlink: nominal, safe: nominal, survival: standby, disposal: "off"}
     # Payload controller: runs the cameras while imaging and hands data on in a pass; produces no data itself.
-    payload_electronics: {leop: "off", commissioning: standby, nominal: standby, imaging: nominal, downlink: nominal, safe: "off", survival: "off"}
-    # Unpowered in every ConOps mode: lenses and filters, and de-orbit devices (released once, at disposal).
-    passive:      {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
-    propulsion:   {leop: "off", commissioning: standby, nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
-    heater:       {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal}
-    structure:    {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
-    solar_array:  {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off"}
-    generic:      {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: standby, survival: "off"}
+    payload_electronics: {leop: "off", commissioning: standby, nominal: standby, imaging: nominal, downlink: nominal, safe: "off", survival: "off", disposal: "off"}
+    # Unpowered in every ConOps mode: lenses and filters.
+    passive:      {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off", disposal: "off"}
+    propulsion:   {leop: "off", commissioning: standby, nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off", disposal: "off"}
+    heater:       {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal, disposal: "off"}
+    structure:    {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off", disposal: "off"}
+    solar_array:  {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off", disposal: "off"}
+    generic:      {leop: "off", commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: standby, survival: "off", disposal: "off"}
+    # De-orbit device (drag sail; PI decision: owned by the Propulsion seat, disposal function): unpowered
+    # until the disposal mode, where its release actuator draws its KB "deploy" power for seconds.
+    deorbit_device: {leop: "off", commissioning: "off", nominal: "off", imaging: "off", downlink: "off", safe: "off", survival: "off", disposal: peak}
+    # The OBC-independent de-orbit timer (and its battery) runs in every mode.
+    deorbit_timer:  {leop: nominal, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: nominal, safe: nominal, survival: nominal, disposal: nominal}
+  # Power-mode key of the KB part per class and state when it differs from the state name
+  # (KB deorbit devices give power_modes_w.deploy for the release actuation).
+  power_mode_keys:
+    deorbit_device: {peak: deploy}
+  # Power of a class when neither the KB nor the element gives one (W), per state.
+  class_power_w:
+    deorbit_timer: {nominal: 0.05}
   # Which units produce data (data_rate_bps from the part, else the default here).
   produces:
     payload: {default_bps: 10000000}
   # How an element maps to a class: KB category first, then name keyword, then domain.
   match:
+    - {class: deorbit_timer, keywords: [deorbit timer, de-orbit timer, sail timer, independent timer]}
     - {class: heater, kb: [thermal_hardware], keywords: [heater]}
     - {class: adcs_unit, kb: [adcs_integrated]}
     - {class: payload_electronics, kb: [payload_controller], keywords: [payload controller, payload computer]}
-    - {class: passive, kb: [payload_optic, deorbit_device], keywords: [lens, bandpass filter, drag sail]}
+    - {class: deorbit_device, kb: [deorbit_device], keywords: [drag sail, deorbit sail, de-orbit sail, drag device, deorbit device]}
+    - {class: passive, kb: [payload_optic], keywords: [lens, bandpass filter]}
     - {class: obc, kb: [obc], keywords: [obc, on-board computer, flight computer], domains: [obc, data]}
     - {class: eps, kb: [eps_board], keywords: [eps, pcdu, power distribution]}
     - {class: battery, kb: [battery], keywords: [batter]}

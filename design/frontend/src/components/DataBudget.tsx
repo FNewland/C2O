@@ -1,388 +1,74 @@
 /**
- * DataBudget — Data pipeline budget from generation to user delivery.
+ * DataBudget — the daily data budget of the study, read from the one data-budget service
+ * (GET /api/studies/{id}/data-budget, services/data_budget.py, W3.04).
  *
- * Two tabs: "Payload Data" and "TMTC".
- * Payload Data: generation rate, onboard storage, downlink capacity, balance.
- * TMTC: HK telemetry, TC uplink, CCSDS overhead, Reed-Solomon framing.
- * Mission profile selector for different acquisition patterns.
- *
- * All quantities in bits/bytes/MB/GB — no power/energy references.
+ * Generation (science after compression, stored housekeeping), the downlink capacity from the
+ * union of the station passes after framing, acquisition and availability, real-time HK in
+ * contact, the daily closure and its cases. Housekeeping is designed in TM/TC → Housekeeping
+ * (SIDs per mode) and the per-pass choices in Operations → Pass plan: this page has no local HK
+ * input any more, so it quotes the same numbers as the Modes data chain and the review packs.
  */
-import { useMemo, useState } from 'react'
-import { useDesignStore } from '../stores/designStore'
-import { useActiveParameters } from '../hooks/useActiveParameters'
-import { useApplyToDesign } from '../hooks/useApplyToDesign'
-import { fs } from '../theme/tokens'
-
-type DataTab = 'payload' | 'tmtc'
-type MissionProfile = 'leo_imaging' | '24_7_rf' | 'wide_fov'
-
-const PROFILE_LABELS: Record<MissionProfile, string> = {
-  leo_imaging: 'LEO Imaging (slew-based)',
-  '24_7_rf': '24/7 RF (continuous acquisition)',
-  wide_fov: 'Wide FOV (continuous, no slew)',
-}
-
-const PROFILE_DUTY: Record<MissionProfile, number> = {
-  leo_imaging: 25,   // 25% duty cycle per orbit
-  '24_7_rf': 100,    // 100% duty cycle
-  wide_fov: 100,     // continuous
-}
-
-// CCSDS packet overhead constants
-const CCSDS_PRIMARY_HEADER_BYTES = 6
-const CCSDS_SECONDARY_HEADER_BYTES = 10
-const CCSDS_TOTAL_HEADER_BYTES = CCSDS_PRIMARY_HEADER_BYTES + CCSDS_SECONDARY_HEADER_BYTES
-
-// Reed-Solomon coding overhead
-const RS_CODED = 255
-const RS_DATA = 223
-const RS_OVERHEAD_RATIO = RS_CODED / RS_DATA  // ~1.143
+import { useTranslation } from 'react-i18next'
+import { useDataBudget } from '../cdr/cdrApi'
+import { fmt } from '../cdr/cdrUtil'
+import { useUIStore } from '../stores/uiStore'
+import { pickLang } from '../types/interfaces'
+import { DataTable, MarginBar, NoData, Note, Panel, StatusBadge } from './ui'
 
 export function DataBudget() {
-  const reqs = useDesignStore(s => s.requirements)
-  const params = useActiveParameters()
-  const get = (id: string) => { const p = params[id]; return p && typeof p.value === 'number' ? p.value : 0 }
-
-  const [activeTab, setActiveTab] = useState<DataTab>('payload')
-  const [profile, setProfile] = useState<MissionProfile>('leo_imaging')
-  const [hkRate_kbps, setHkRate] = useState(1)  // default 1 kbps continuous HK
-  const [tcRate_kbps, setTcRate] = useState(4)   // default 4 kbps uplink
-  const [packetDataBytes, setPacketDataBytes] = useState(440)  // typical CCSDS packet data field
-  const [useReedSolomon, setUseReedSolomon] = useState(true)
-
-  const pipeline = useMemo(() => {
-    const pl = reqs.payloads?.[0]
-    const dataRateMbps = pl?.data_rate_mbps || 10
-    const dutyCyclePct = profile === 'leo_imaging' ? (pl?.duty_cycle_percent || 25) : PROFILE_DUTY[profile]
-    const orbitPeriodMin = 95 // ~500km LEO
-    const orbitsPerDay = (24 * 60) / orbitPeriodMin  // ~15.16
-
-    // Generation: data rate * duty cycle * active time per day
-    const activeTimePerOrbitSec = orbitPeriodMin * 60 * (dutyCyclePct / 100)
-    const genBitsPerOrbit = dataRateMbps * 1e6 * activeTimePerOrbitSec
-    const genBitsPerDay = genBitsPerOrbit * orbitsPerDay
-    const genMBPerDay = genBitsPerDay / (8 * 1e6)
-    const genGBPerDay = genMBPerDay / 1000
-
-    // Storage
-    const storageGB = get('data.storage_gb') || 32
-    const storageMB = storageGB * 1000
-    const fillTimeDays = storageMB / Math.max(genMBPerDay, 0.01)
-
-    // Downlink
-    const contactMinPerDay = get('link.contact_min_per_day') || 30
-    const dlRateMbps = get('link.downlink_data_rate_mbps') || dataRateMbps
-    const dlBitsPerDay = dlRateMbps * 1e6 * contactMinPerDay * 60
-    const dlMBPerDay = dlBitsPerDay / (8 * 1e6)
-    const dlGBPerDay = dlMBPerDay / 1000
-
-    // Balance
-    const balanceMBPerDay = dlMBPerDay - genMBPerDay
-
-    return {
-      generation: {
-        rate_mbps: dataRateMbps,
-        duty_pct: dutyCyclePct,
-        daily_bits: genBitsPerDay,
-        daily_mb: genMBPerDay,
-        daily_gb: genGBPerDay,
-      },
-      storage: {
-        capacity_gb: storageGB,
-        capacity_mb: storageMB,
-        fill_time_days: fillTimeDays,
-      },
-      downlink: {
-        rate_mbps: dlRateMbps,
-        contact_min: contactMinPerDay,
-        daily_bits: dlBitsPerDay,
-        daily_mb: dlMBPerDay,
-        daily_gb: dlGBPerDay,
-      },
-      balance: {
-        surplus_mb: balanceMBPerDay,
-        balanced: balanceMBPerDay >= 0,
-      },
-    }
-  }, [reqs, params, profile])
-
-  // TMTC calculations
-  const tmtc = useMemo(() => {
-    const hkBitsPerDay = hkRate_kbps * 1000 * 86400  // continuous
-    const hkMBPerDay = hkBitsPerDay / (8 * 1e6)
-    const tcBitsPerPass = tcRate_kbps * 1000 * (get('link.contact_min_per_day') || 30) * 60
-    const tcMBPerDay = tcBitsPerPass / (8 * 1e6)
-
-    // Packet overhead
-    const totalPacketBytes = CCSDS_TOTAL_HEADER_BYTES + packetDataBytes
-    const overheadPct = (CCSDS_TOTAL_HEADER_BYTES / totalPacketBytes) * 100
-
-    // Frame overhead with/without RS
-    const frameOverheadPct = useReedSolomon ? ((RS_OVERHEAD_RATIO - 1) * 100) : 0
-    const totalOverheadPct = overheadPct + frameOverheadPct
-
-    // Effective data after overhead
-    const effectiveRatio = (1 - totalOverheadPct / 100)
-
-    return {
-      hk_rate_kbps: hkRate_kbps,
-      hk_daily_mb: hkMBPerDay,
-      tc_rate_kbps: tcRate_kbps,
-      tc_daily_mb: tcMBPerDay,
-      packet_header_bytes: CCSDS_TOTAL_HEADER_BYTES,
-      packet_data_bytes: packetDataBytes,
-      packet_total_bytes: CCSDS_TOTAL_HEADER_BYTES + packetDataBytes,
-      packet_overhead_pct: overheadPct,
-      rs_overhead_pct: frameOverheadPct,
-      total_overhead_pct: totalOverheadPct,
-      effective_ratio: effectiveRatio,
-    }
-  }, [hkRate_kbps, tcRate_kbps, packetDataBytes, useReedSolomon, params])
-
-  const p = pipeline
-  const [applied, setApplied] = useState(false)
-
-  const apply = useApplyToDesign({
-    events: [
-      { kind: 'parameter_override', target_id: 'data.storage_gb', new_value: p.storage.capacity_gb },
-      { kind: 'parameter_override', target_id: 'link.downlink_data_rate_mbps', new_value: p.downlink.rate_mbps },
-      { kind: 'parameter_override', target_id: 'link.contact_min_per_day', new_value: p.downlink.contact_min },
-    ],
-    correlation_id: 'data-budget',
-    rationale: 'Apply data pipeline budget parameters',
-  })
-
+  const { t, i18n } = useTranslation()
+  const studyId = useUIStore(s => s.studyId)
+  const { data, error, isLoading } = useDataBudget(studyId)
+  if (!studyId) return null
+  if (isLoading) return <div className="card t-13 c-3">{t('Loading…')}</div>
+  if (error || !data) return <div className="card"><Note tone="alarm">{t('The data budget could not be loaded: {{message}}', { message: String((error as Error)?.message ?? '') })}</Note></div>
+  const c = data.closure
+  const sci = data.science
   return (
-    <div className="card">
-      <h3 style={{ fontSize: fs.value, marginBottom: '0.3rem' }}>Data Budget</h3>
-      <p style={{ fontSize: fs.label, color: 'var(--text-2)', marginBottom: '0.5rem' }}>
-        Data volume analysis in bits/bytes. Payload data and TMTC overhead.
+    <Panel title={t('Data budget')} meta={c.margin_pct == null ? '' : t('{{m}} % margin ({{case}})', { m: fmt(c.margin_pct, 1), case: c.id })}>
+      <p className="t-12 c-2 m-0 pb-2">
+        {t('Housekeeping comes from the TM/TC SIDs (TM/TC → Housekeeping) and the per-pass choices from Operations → Pass plan. MB = 10⁶ bytes.')}
       </p>
-
-      {/* Mission profile selector */}
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: fs.label, color: 'var(--text-2)', fontWeight: 600 }}>Mission Profile:</span>
-        {(Object.entries(PROFILE_LABELS) as [MissionProfile, string][]).map(([id, label]) => (
-          <button key={id} onClick={() => setProfile(id)} style={{
-            padding: '0.25rem 0.6rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
-            background: profile === id ? 'var(--interactive)' : 'var(--bg-secondary, var(--surface-2))',
-            color: profile === id ? 'white' : 'var(--text-2)',
-            border: `1px solid ${profile === id ? 'var(--interactive)' : 'var(--line)'}`,
-          }}>{label}</button>
-        ))}
+      {data.status !== 'designed' && <Note tone="caution">{t('Housekeeping is not designed per mode yet: the budget uses one period per SID (or the 2 kbit/s default when there is no SID).')}</Note>}
+      {data.warnings.map((w, i) => <Note key={i} tone="caution">{w}</Note>)}
+      <div className="row ai-s wrap gap-5" data-testid="data-budget-flow">
+        <Figure label={t('Science delivered')} value={fmt(sci.delivered_mb_per_day, 2)} unit={t('MB/day')}
+          sub={t('after {{cr}}:1 lossless compression; {{ch}} MB/day on the channel', { cr: fmt(sci.compression_ratio, 2), ch: fmt(sci.on_channel_mb_per_day, 2) })} />
+        <Figure label={t('Stored HK')} value={fmt(data.stored.mb_per_day, 2)} unit={t('MB/day')}
+          sub={t('{{bps}} bit/s over the operational mix, events included', { bps: fmt(data.stored.mix_bps, 1) })} />
+        <Figure label={t('Real-time HK in contact')} value={fmt(data.realtime.full_designed_bps, 0)} unit="bit/s"
+          sub={data.realtime.full_allocation_bps != null ? t('{{a}} bit/s allocated; LEAN {{l}} bit/s', { a: fmt(data.realtime.full_allocation_bps, 0), l: fmt(data.realtime.lean_bps, 0) }) : t('LEAN {{l}} bit/s', { l: fmt(data.realtime.lean_bps, 0) })} />
+        <Figure label={t('Downlink capacity')} value={fmt(data.capacity.capacity_mb_per_day, 2)} unit={t('MB/day')}
+          sub={t('{{u}} min/day union of the passes ({{us}} usable) at {{r}} kbit/s × {{e}}', { u: fmt(data.capacity.union_min_per_day, 1),
+            us: fmt(data.capacity.usable_min_per_day, 1), r: fmt(data.framing.raw_rate_bps / 1000, 1), e: fmt(data.framing.frame_efficiency, 3) })} />
       </div>
-
-      {/* Tab selector */}
-      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.75rem' }}>
-        {([
-          { id: 'payload' as DataTab, label: 'Payload Data' },
-          { id: 'tmtc' as DataTab, label: 'TM/TC' },
-        ]).map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-            padding: '0.3rem 0.75rem', fontSize: fs.label, borderRadius: '4px', cursor: 'pointer',
-            background: activeTab === t.id ? 'var(--cat-2)' : 'var(--bg-secondary, var(--surface-2))',
-            color: activeTab === t.id ? 'white' : 'var(--text-2)',
-            border: `1px solid ${activeTab === t.id ? 'var(--cat-2)' : 'var(--line)'}`,
-          }}>{t.label}</button>
-        ))}
-      </div>
-
-      {/* Payload Data tab */}
-      {activeTab === 'payload' && (
-        <>
-          {/* Flow diagram */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginBottom: '0.75rem', fontSize: fs.label, flexWrap: 'wrap' }}>
-            <FlowBox label="Generate" value={`${p.generation.daily_mb.toFixed(1)} MB/day`} sub={`${p.generation.rate_mbps} Mbps × ${p.generation.duty_pct}% duty`} color="var(--cat-2)" />
-            <Arrow />
-            <FlowBox label="Store" value={`${p.storage.capacity_gb} GB capacity`} sub={`fills in ${p.storage.fill_time_days.toFixed(1)} days`} color="var(--interactive)" />
-            <Arrow />
-            <FlowBox label="Downlink" value={`${p.downlink.daily_mb.toFixed(1)} MB/day`} sub={`${p.downlink.rate_mbps} Mbps × ${p.downlink.contact_min} min/day`} color="var(--status-ok)" />
-          </div>
-
-          {/* Detailed numbers table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label, marginBottom: '0.75rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-primary, var(--surface-0))' }}>
-                <th style={th}>Parameter</th>
-                <th style={{ ...th, textAlign: 'right' }}>Value</th>
-                <th style={{ ...th, textAlign: 'right' }}>Unit</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: 'var(--cat-2)' }}>Generation</strong></td></tr>
-              <tr style={trBorder}><td style={tdL}>Payload data rate</td><td style={tdR}>{p.generation.rate_mbps}</td><td style={tdR}>Mbps</td></tr>
-              <tr style={trBorder}><td style={tdL}>Duty cycle</td><td style={tdR}>{p.generation.duty_pct}</td><td style={tdR}>%</td></tr>
-              <tr style={trBorder}><td style={tdL}>Daily generation</td><td style={tdR}>{p.generation.daily_mb.toFixed(1)}</td><td style={tdR}>MB/day</td></tr>
-              <tr style={trBorder}><td style={tdL}>Daily generation</td><td style={tdR}>{(p.generation.daily_bits / 1e9).toFixed(2)}</td><td style={tdR}>Gbit/day</td></tr>
-
-              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: 'var(--interactive)' }}>Onboard Storage</strong></td></tr>
-              <tr style={trBorder}><td style={tdL}>Capacity</td><td style={tdR}>{p.storage.capacity_gb}</td><td style={tdR}>GB</td></tr>
-              <tr style={trBorder}><td style={tdL}>Capacity</td><td style={tdR}>{p.storage.capacity_mb.toFixed(0)}</td><td style={tdR}>MB</td></tr>
-              <tr style={trBorder}><td style={tdL}>Time to fill</td><td style={tdR}>{p.storage.fill_time_days.toFixed(1)}</td><td style={tdR}>days</td></tr>
-
-              <tr style={trBorder}><td style={tdL} colSpan={3}><strong style={{ color: 'var(--status-ok)' }}>Downlink</strong></td></tr>
-              <tr style={trBorder}><td style={tdL}>Link data rate</td><td style={tdR}>{p.downlink.rate_mbps}</td><td style={tdR}>Mbps</td></tr>
-              <tr style={trBorder}><td style={tdL}>Contact time / day</td><td style={tdR}>{p.downlink.contact_min}</td><td style={tdR}>min</td></tr>
-              <tr style={trBorder}><td style={tdL}>Daily downlink capacity</td><td style={tdR}>{p.downlink.daily_mb.toFixed(1)}</td><td style={tdR}>MB/day</td></tr>
-              <tr style={trBorder}><td style={tdL}>Daily downlink capacity</td><td style={tdR}>{(p.downlink.daily_bits / 1e9).toFixed(2)}</td><td style={tdR}>Gbit/day</td></tr>
-            </tbody>
-          </table>
-
-          {/* Balance indicator */}
-          <div style={{
-            padding: '0.4rem 0.6rem', borderRadius: '4px', fontSize: fs.label,
-            background: p.balance.balanced ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${p.balance.balanced ? 'var(--status-ok)' : 'var(--status-alarm)'}`,
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-          }}>
-            <span style={{ fontWeight: 700, color: p.balance.balanced ? 'var(--status-ok)' : 'var(--status-alarm)' }}>
-              {p.balance.balanced ? 'BALANCED' : 'OVERFLOW'}
-            </span>
-            <span style={{ color: 'var(--text-2)' }}>
-              {p.balance.balanced ? 'Surplus' : 'Deficit'}: {Math.abs(p.balance.surplus_mb).toFixed(1)} MB/day
-            </span>
-            {!p.balance.balanced && (
-              <span style={{ color: 'var(--status-alarm)', fontSize: fs.label }}>
-                — need higher data rate, more contact time, or reduced duty cycle
-              </span>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* TMTC tab */}
-      {activeTab === 'tmtc' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            {/* HK Telemetry */}
-            <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)' }}>
-              <h4 style={{ fontSize: fs.label, color: 'var(--interactive)', marginBottom: '0.3rem' }}>HK Telemetry (Downlink)</h4>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.3rem' }}>
-                <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Rate:</label>
-                <input type="number" min={0.1} max={100} step={0.1} value={hkRate_kbps}
-                  onChange={e => setHkRate(Number(e.target.value))}
-                  style={{ width: '50px', fontSize: fs.label, textAlign: 'center', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)' }} />
-                <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>kbps (continuous)</span>
-              </div>
-              <div style={{ fontSize: fs.label, color: 'var(--text)' }}>
-                Daily HK volume: <strong>{tmtc.hk_daily_mb.toFixed(2)} MB/day</strong>
-              </div>
-              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
-                = {(tmtc.hk_daily_mb * 8).toFixed(1)} Mbit/day
-              </div>
-            </div>
-
-            {/* TC Uplink */}
-            <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)' }}>
-              <h4 style={{ fontSize: fs.label, color: 'var(--status-caution)', marginBottom: '0.3rem' }}>TC Uplink</h4>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.3rem' }}>
-                <label style={{ fontSize: fs.label, color: 'var(--text-2)' }}>Rate:</label>
-                <input type="number" min={0.1} max={100} step={0.1} value={tcRate_kbps}
-                  onChange={e => setTcRate(Number(e.target.value))}
-                  style={{ width: '50px', fontSize: fs.label, textAlign: 'center', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)' }} />
-                <span style={{ fontSize: fs.label, color: 'var(--text-3)' }}>kbps</span>
-              </div>
-              <div style={{ fontSize: fs.label, color: 'var(--text)' }}>
-                Daily TC volume: <strong>{tmtc.tc_daily_mb.toFixed(3)} MB/day</strong>
-              </div>
-              <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>
-                (during {get('link.contact_min_per_day') || 30} min contact)
-              </div>
-            </div>
-          </div>
-
-          {/* Packet overhead */}
-          <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontSize: fs.label, color: 'var(--cat-2)', marginBottom: '0.3rem' }}>CCSDS Packet Overhead</h4>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
-              <tbody>
-                <tr style={trBorder}>
-                  <td style={tdL}>Primary header</td>
-                  <td style={tdR}>{CCSDS_PRIMARY_HEADER_BYTES} bytes</td>
-                </tr>
-                <tr style={trBorder}>
-                  <td style={tdL}>Secondary header</td>
-                  <td style={tdR}>{CCSDS_SECONDARY_HEADER_BYTES} bytes</td>
-                </tr>
-                <tr style={trBorder}>
-                  <td style={tdL}>
-                    Data field
-                    <input type="number" min={1} max={65536} step={1} value={packetDataBytes}
-                      onChange={e => setPacketDataBytes(Number(e.target.value))}
-                      style={{ width: '60px', fontSize: fs.label, textAlign: 'center', marginLeft: '0.3rem', background: 'var(--bg-secondary, var(--surface-2))', border: '1px solid var(--line)', borderRadius: '3px', color: 'var(--text)' }} />
-                    <span style={{ fontSize: fs.label, color: 'var(--text-3)', marginLeft: '0.2rem' }}>bytes</span>
-                  </td>
-                  <td style={tdR}>{packetDataBytes} bytes</td>
-                </tr>
-                <tr style={{ ...trBorder, fontWeight: 700 }}>
-                  <td style={tdL}>Total packet size</td>
-                  <td style={tdR}>{tmtc.packet_total_bytes} bytes</td>
-                </tr>
-                <tr style={trBorder}>
-                  <td style={tdL}>Packet overhead</td>
-                  <td style={{ ...tdR, color: 'var(--status-caution)' }}>{tmtc.packet_overhead_pct.toFixed(1)}%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Frame overhead */}
-          <div style={{ background: 'var(--bg-primary, var(--surface-1))', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line)', marginBottom: '0.75rem' }}>
-            <h4 style={{ fontSize: fs.label, color: 'var(--status-ok)', marginBottom: '0.3rem' }}>Frame Coding Overhead</h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: fs.label, color: 'var(--text)', cursor: 'pointer' }}>
-                <input type="checkbox" checked={useReedSolomon} onChange={e => setUseReedSolomon(e.target.checked)}
-                  style={{ accentColor: 'var(--status-ok)' }} />
-                Reed-Solomon ({RS_CODED}/{RS_DATA})
-              </label>
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs.label }}>
-              <tbody>
-                <tr style={trBorder}>
-                  <td style={tdL}>RS overhead</td>
-                  <td style={tdR}>{useReedSolomon ? `${tmtc.rs_overhead_pct.toFixed(1)}%` : 'N/A (no RS)'}</td>
-                </tr>
-                <tr style={{ ...trBorder, fontWeight: 700 }}>
-                  <td style={tdL}>Total protocol overhead (packet + frame)</td>
-                  <td style={{ ...tdR, color: 'var(--status-caution)' }}>{tmtc.total_overhead_pct.toFixed(1)}%</td>
-                </tr>
-                <tr style={trBorder}>
-                  <td style={tdL}>Effective user data ratio</td>
-                  <td style={{ ...tdR, color: 'var(--status-ok)' }}>{(tmtc.effective_ratio * 100).toFixed(1)}%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      <button className="btn" onClick={async () => { await apply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
-        style={{ marginTop: '0.5rem', width: '100%', background: applied ? 'var(--status-ok)' : 'var(--interactive)', fontSize: fs.label }}>
-        {applied ? 'Applied — reconverging...' : 'Apply to Design'}
-      </button>
-    </div>
+      <MarginBar lead label={t('Daily demand against capacity ({{case}})', { case: c.id })} unit={t('MB/day')}
+        nominal={c.demand_mb} allocation={c.capacity_mb} digits={2} cautionBelowPct={data.margin_required_percent} />
+      {sci.compression_needed != null && (
+        <p className="t-12 c-2 m-0 pb-2">
+          <StatusBadge status={sci.compression_ok ? 'ok' : 'alarm'}>{t('Compression {{cr}}:1 against {{need}}:1 needed', { cr: fmt(sci.compression_ratio, 2), need: fmt(sci.compression_needed, 2) })}</StatusBadge>
+          {' '}{t('Planned products: {{raw}} MB/day before compression.', { raw: fmt(sci.raw_mb_per_day, 2) })}
+        </p>)}
+      <DataTable dense caption={t('Daily data budget')} rows={data.cases} rowKey={r => r.id}
+        empty={<NoData label={t('no data')} />} columns={[
+          { key: 'id', header: t('Case'), render: r => <span className="mono">{r.id}</span> },
+          { key: 'l', header: t('Description'), render: r => pickLang(r.label, i18n.language) },
+          { key: 'cap', header: t('Capacity'), num: true, render: r => fmt(r.capacity_mb, 2) },
+          { key: 'd', header: t('Demand'), num: true, render: r => fmt(r.demand_mb, 2) },
+          { key: 'm', header: t('Margin'), num: true, render: r => (
+            <StatusBadge status={r.status === 'pass' ? 'ok' : r.status === 'warn' ? 'caution' : r.status === 'fail' ? 'alarm' : 'nodata'}>
+              {r.margin_pct == null ? '–' : `${fmt(r.margin_pct, 1)} %`}</StatusBadge>) },
+        ]} />
+    </Panel>
   )
 }
 
-function FlowBox({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+function Figure({ label, value, unit, sub }: { label: string; value: string; unit: string; sub: string }) {
   return (
-    <div style={{
-      padding: '0.3rem 0.5rem', borderRadius: '4px', minWidth: '100px', textAlign: 'center',
-      background: `color-mix(in srgb, ${color} 7%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-    }}>
-      <div style={{ fontSize: fs.label, color, fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: fs.label, fontWeight: 700, color: 'var(--text)' }}>{value}</div>
-      <div style={{ fontSize: fs.label, color: 'var(--text-3)' }}>{sub}</div>
+    <div className="stack gap-0" style={{ minWidth: 160 }}>
+      <span className="t-12 c-3">{label}</span>
+      <span><span className="mono t-20 c-v">{value}</span> <span className="t-12 c-3">{unit}</span></span>
+      <span className="t-12 c-3">{sub}</span>
     </div>
   )
 }
-
-function Arrow() {
-  return <span style={{ fontSize: fs.value, color: 'var(--text-3)' }}>→</span>
-}
-
-const th: React.CSSProperties = { padding: '0.3rem 0.5rem', textAlign: 'left', fontSize: fs.label, textTransform: 'uppercase', color: 'var(--text-2)' }
-const tdL: React.CSSProperties = { padding: '0.25rem 0.5rem', color: 'var(--text)' }
-const tdR: React.CSSProperties = { padding: '0.25rem 0.5rem', textAlign: 'right', fontFamily: 'monospace', color: 'var(--text)' }
-const trBorder: React.CSSProperties = { borderBottom: '1px solid color-mix(in srgb, var(--text) 5%, transparent)' }

@@ -199,7 +199,22 @@ parameters:
       - {name: "{unit}_enabled", type: uint8, unit: "", range: [0, 1], per_quantity: true, description: {en: "{name} enabled", fr: "{name} activée"}}
     star_tracker: [{name: "{unit}_valid", type: uint8, unit: "", range: [0, 1], monitor_param: valid_attitude_flag, per_quantity: true, description: {en: "{name} valid attitude", fr: "Attitude valide de {name}"}}]
     magnetorquer: [{name: "{unit}_current", type: int16, unit: A, range: [-1, 1], calibration: {type: linear, scale: 1000}, monitor_param: coil_current_a, per_quantity: true, description: {en: "{name} coil current", fr: "Courant de bobine de {name}"}}]
-    adcs_sensor:  [{name: "{unit}_valid", type: uint8, unit: "", range: [0, 1], monitor_param: sun_vector_valid, description: {en: "{name} measurement valid", fr: "Mesure valide de {name}"}}]
+    adcs_sensor:
+      - {name: "{unit}_valid", type: uint8, unit: "", range: [0, 1], monitor_param: sun_vector_valid, description: {en: "{name} measurement valid", fr: "Mesure valide de {name}"}}
+      - {name: "{unit}_raw1", type: int16, unit: "", tags: [diagnostic], description: {en: "{name} raw reading, axis 1", fr: "Mesure brute de {name}, axe 1"}}
+      - {name: "{unit}_raw2", type: int16, unit: "", tags: [diagnostic], description: {en: "{name} raw reading, axis 2", fr: "Mesure brute de {name}, axe 2"}}
+      - {name: "{unit}_raw3", type: int16, unit: "", tags: [diagnostic], description: {en: "{name} raw reading, axis 3", fr: "Mesure brute de {name}, axe 3"}}
+    adcs_unit:
+      - {name: "{unit}_est_status", type: uint8, unit: "", range: [0, 255], tags: [output], description: {en: "{name} estimator status", fr: "État de l’estimateur de {name}"}}
+      - {name: "{unit}_mag_raw1", type: int16, unit: nT, calibration: {type: linear, scale: 0.2}, tags: [diagnostic], description: {en: "{name} raw magnetometer, axis 1", fr: "Magnétomètre brut de {name}, axe 1"}}
+      - {name: "{unit}_mag_raw2", type: int16, unit: nT, calibration: {type: linear, scale: 0.2}, tags: [diagnostic], description: {en: "{name} raw magnetometer, axis 2", fr: "Magnétomètre brut de {name}, axe 2"}}
+      - {name: "{unit}_mag_raw3", type: int16, unit: nT, calibration: {type: linear, scale: 0.2}, tags: [diagnostic], description: {en: "{name} raw magnetometer, axis 3", fr: "Magnétomètre brut de {name}, axe 3"}}
+      - {name: "{unit}_gyro_raw1", type: int16, unit: deg/s, calibration: {type: linear, scale: 1000}, tags: [diagnostic], description: {en: "{name} raw gyro, axis 1", fr: "Gyromètre brut de {name}, axe 1"}}
+      - {name: "{unit}_gyro_raw2", type: int16, unit: deg/s, calibration: {type: linear, scale: 1000}, tags: [diagnostic], description: {en: "{name} raw gyro, axis 2", fr: "Gyromètre brut de {name}, axe 2"}}
+      - {name: "{unit}_gyro_raw3", type: int16, unit: deg/s, calibration: {type: linear, scale: 1000}, tags: [diagnostic], description: {en: "{name} raw gyro, axis 3", fr: "Gyromètre brut de {name}, axe 3"}}
+      - {name: "{unit}_innov_norm", type: uint16, unit: "", tags: [diagnostic], description: {en: "{name} estimator innovation norm", fr: "Norme des innovations de l’estimateur de {name}"}}
+    deorbit_device: [{name: "{unit}_deployed", type: uint8, unit: "", range: [0, 1], monitor_param: deployed_flag, description: {en: "{name} deployed", fr: "{name} déployée"}}]
+    deorbit_timer:  [{name: "{unit}_days_left", type: uint16, unit: d, range: [0, 365], description: {en: "{name}: days before autonomous release", fr: "{name} : jours avant la libération autonome"}}]
     gnss:
       - {name: "{unit}_fix", type: uint8, unit: "", range: [0, 1], monitor_param: fix_valid_flag, description: {en: "{name} fix valid", fr: "Solution valide de {name}"}}
       - {name: "{unit}_lat", type: float32, unit: deg, range: [-90, 90], on_demand: true, description: {en: "{name} latitude", fr: "Latitude de {name}"}}
@@ -219,25 +234,92 @@ parameters:
   op_range_default: [-20, 50]
 
 # ------------------------------------------------------------------ housekeeping
+# W3 (Nov 2026): SIDs with a collection interval per mode, a stored copy (SID + store_sid_offset)
+# routed to the HK packet store by ST[15], enable flags, and a diagnostic SID per subsystem for
+# the points tagged ``diagnostic`` (disabled by default, billed only when a campaign enables it).
+# Thermal is sampled once per minute in every mode (PI ruling). null = SID disabled in the mode.
 housekeeping:
   source: c2o_default
-  clause: "one SID per subsystem at the subsystem period; EPS, OBDH and the beacon enabled at boot (EOSAT-1: SIDs 1 and 11)"
+  clause: "one routine SID per subsystem with a stored copy and per-mode intervals; EPS, OBDH and the beacon enabled at boot (EOSAT-1: SIDs 1 and 11)"
   enabled_at_boot: [eps, obdh, sys]
   beacon:
     sid: 11
     period_s: 30
     params: [eps.bat_soc, eps.bus_voltage, sys.sc_mode, obdh.mode, obdh.reboot_count, ttc.rssi, obdh.temp]
+    modes: [leop, commissioning, safe, survival]     # main TM chain silent: the bootloader lifeline
   sid_order: [eps, aocs, tcs, obdh, payload, ttc, sys, fdir, prop, str]
+  store_sid_offset: 100
+  diagnostic_sid_start: 20
+  diagnostic_store_id: 3
+  hk_store_id: 1
+  # mode kind -> real-time interval (s) per subsystem; "*" = every other subsystem; null = disabled.
+  # Imaging: the radio does not transmit during an acquisition, so no real-time SID.
+  rt_intervals:
+    default:  {leop: 1, commissioning: 1, nominal: 1, imaging: null, downlink: 1, safe: 2, survival: 10, disposal: 10, custom: 1}
+    tcs:      {leop: 60, commissioning: 60, nominal: 60, imaging: null, downlink: 60, safe: 60, survival: 60, disposal: 60, custom: 60}
+    payload:  {leop: null, commissioning: 1, nominal: 1, imaging: null, downlink: 1, safe: null, survival: null, disposal: null, custom: 1}
+    str:      {leop: 4, commissioning: 30, nominal: 60, imaging: null, downlink: 60, safe: 30, survival: 60, disposal: 4, custom: 60}
+  store_intervals:
+    default:  {leop: 60, commissioning: 60, nominal: 300, imaging: 300, downlink: 300, safe: 60, survival: 300, disposal: 60, custom: 300}
+    eps:      {leop: 10, commissioning: 10, nominal: 30, imaging: 10, downlink: 30, safe: 10, survival: 60, disposal: 10, custom: 10}
+    aocs:     {leop: 10, commissioning: 10, nominal: 30, imaging: 5, downlink: 30, safe: 30, survival: 120, disposal: 60, custom: 5}
+    tcs:      {leop: 60, commissioning: 60, nominal: 60, imaging: 60, downlink: 60, safe: 60, survival: 60, disposal: 60, custom: 60}
+    payload:  {leop: null, commissioning: 60, nominal: 600, imaging: 10, downlink: 300, safe: null, survival: null, disposal: null, custom: 10}
+    str:      {leop: 30, commissioning: 600, nominal: 3600, imaging: 3600, downlink: 3600, safe: 600, survival: 3600, disposal: 4, custom: 3600}
+  diagnostic_rt_s: 1
+  diagnostic_store_s: 2
+  diagnostic_auto_disable_s: 5800       # an OBCP disables a forgotten diagnostic SID after about one orbit
 
-# Downlink budget for HK (rule TMTC-HK-BW): bits per second of each SID = packet bytes × 8 / period.
+# Downlink budget for HK (rule TMTC-HK-BW): bits per second of each SID = packet bytes × 8 / interval.
 downlink_budget:
   source: c2o_default
   clause: "HK share of the TM rate per regime"
-  packet_overhead_bytes: 20     # 6 primary header + 11 PUS-C TM secondary header (7-byte CUC) + 1 SID + 2 CRC
+  # Packet overhead per HK packet, from the database settings (settings row) when they say it:
+  # CCSDS primary header 6 + PUS-C TM secondary header (version/time status 1, service 1, subtype 1,
+  # message-type counter 2, destination id 2, CUC time) + SID + CRC 2. Full PUS-C, CUC 4+2, uint16 SID: 23 B.
+  packet_layout: {primary_header: 6, version_byte: 1, service_bytes: 2, msg_counter: 2, destination_id: 2, time_bytes: 6, sid_bytes: 2, crc_bytes: 2}
+  packet_overhead_bytes: 23
   hk_share_percent: 50
-  frame_efficiency: 0.85        # CCSDS TM frame + RS(255,223) check symbols + idle (C2O default)
+  frame_efficiency: 0.85        # used only when the study has no link_framing row
   # mode kind (mode_rules.yaml) -> regime -> rate tier role
-  regime_of_mode_kind: {leop: safe, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: downlink, safe: safe, survival: safe, custom: nominal}
+  regime_of_mode_kind: {leop: safe, commissioning: nominal, nominal: nominal, imaging: nominal, downlink: downlink, safe: safe, survival: safe, disposal: safe, custom: nominal}
+
+# ------------------------------------------------------------------ data budget (W3.02)
+# Defaults proposed for the link framing, the packet stores, the real-time profiles, the service
+# reports, the pass classes and the payload products. Every value is editable in the CDR rows.
+data_budget:
+  source: c2o_default
+  clause: "CCSDS TM SDLP + SDLS framing, PUS-C ST[15] packet stores, per-pass virtual-channel priority (C2O defaults after the Northern Fire and Ice teaching baseline)"
+  link_framing: {rs_n: 255, rs_k: 223, rs_interleave: 2, asm_bytes: 4, tf_header_bytes: 6, sdls_header_bytes: 6, sdls_mac_bytes: 8,
+                 ocf_bytes: 4, fecf_bytes: 0, acquisition_s: 30, availability: 0.90,
+                 virtual_channels: {VC0: "real-time HK and reports", VC1: "delayed HK and events", VC2: "payload files (CFDP)"}}
+  stores:
+    - {id: 1, name: HK_STORE, size_mb: 16, circular: true, content: {stored_routine: true}, location: OBC}
+    - {id: 2, name: EVENT_STORE, size_mb: 1, circular: false, content: {services: [5]}, location: OBC}
+    - {id: 3, name: ADCS_DIAG_STORE, size_mb: 4, circular: true, content: {stored_diagnostic: true}, location: OBC}
+    - {id: 4, name: FILE_STORE, size_mb: 8, circular: false, content: {services: [6, 23]}, location: OBC}
+  rt_profiles:
+    - {name: FULL, mode_intervals: true, allocation_bps: null, description: {en: "Every routine SID at the mode interval: operations passes, LEOP, commissioning, anomalies", fr: "Chaque SID de routine à l’intervalle du mode : passages d’exploitation, LEOP, recette, anomalies"}}
+    - {name: LEAN, mode_intervals: false, interval_factor: 4, keep_subsystems: [eps, aocs, obdh, ttc, fdir, tcs], description: {en: "Core SIDs slowed down: payload-dump passes and the low rate tier", fr: "SID essentiels ralentis : passages de vidage de la charge utile et palier bas débit"}}
+    - {name: BEACON, mode_intervals: false, beacon_only: true, description: {en: "Beacon only (main TM chain silent)", fr: "Balise seule (chaîne TM principale muette)"}}
+  service_allowances:
+    S1_verification: {packet_bytes: 27, reports_per_tc: 2, tcs_per_ops_pass: 150, tcs_per_dump_pass: 15, rt_bps_ops_pass: 120}
+    S5_events: {packet_bytes: 31, rt_rate_per_s: 0.2, burst_rate_per_s: 5, stored_per_day: 400}
+    S9_time_report: {packet_bytes: 28, interval_s: 60}
+    S15_store_status: {packet_bytes: 69, per_pass: 2, rt_bps: 2.0}
+  pass_classes:
+    - {name: OPS, rule: {control_stations: true, per_cluster: 1, clusters_local_h: [[4, 16], [16, 4]]}, rt_profile: FULL, order: [VC1, VC2], delayed_hk: since_last_dump, max_tcs: 150}
+    - {name: SHORT, rule: {max_minutes: 3}, rt_profile: LEAN, order: [VC2, VC1], delayed_hk: event_store_only, max_tcs: 0}
+    - {name: DUMP, rule: {min_minutes: 3}, rt_profile: LEAN, order: [VC2, VC1], delayed_hk: on_operator_request, max_tcs: 15}
+    - {name: ANOMALY_SAFE, rule: {manual: true}, rt_profile: FULL, order: [VC1, VC2], delayed_hk: all_newest_first, max_tcs: 150}
+    - {name: LEOP_COMMISSIONING, rule: {manual: true}, rt_profile: FULL, order: [VC1, VC2], delayed_hk: all, max_tcs: 150}
+  payload_products: {science_mb_per_day: null, compression_ratio: 1.0, cfdp_efficiency: 0.96, products: []}
+  # rules TMTC-HK-DAY / TMTC-STORE / TMTC-DIAG
+  min_store_days: 7
+  # The store must hold min_store_days at the worst of these rates without a dump (the nominal mix
+  # and the fallback modes); LEOP and commissioning are attended, with a dump on every pass.
+  store_sizing_modes: [nominal_mix, safe, survival]
+  daily_margin_percent: {default: 10, mdr: 20, prr: 20, srr: 15, pdr: 10, cdr: 10}
 
 # ------------------------------------------------------------------ TC functions (S8)
 # needs: unit classes / facts that must exist for the function to be proposed.

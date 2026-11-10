@@ -126,8 +126,9 @@ async def test_collect_on_an_empty_study_returns_every_section(client, study_obj
     assert set(SECTIONS) <= set(d) and sx.errors == {}
     assert sx.requirements["items"] == [] and sx.risks["items"] == [] and sx.elements["items"] == []
     assert sx.rollup["mass"]["cbe_kg"] == 0
-    for stub in ("data_budget", "contacts", "licensing", "ait", "schedule"):
+    for stub in ("licensing", "ait", "schedule"):
         assert d[stub]["status"] == "not_implemented" and d[stub]["owner"] in {"H", "L", "A"}
+    assert "closure" in d["data_budget"]["daily"] and isinstance(d["contacts"]["stations"], list)   # W3.02 / W4.05 (H)
     r = await client.get(f"/api/studies/{study_obj.id}/export-context")
     assert r.status_code == 200 and set(SECTIONS) <= set(r.json())
 

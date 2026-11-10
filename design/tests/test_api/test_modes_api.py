@@ -57,18 +57,18 @@ async def test_mode_template_matrix_and_budgets(client, study_obj):
     els = await _sat(client, sid)
     r = await client.post(f"/api/studies/{sid}/modes/template", json={})
     assert r.status_code == 200, r.text
-    assert len(r.json()["created"]) == 7
+    assert len(r.json()["created"]) == 8          # W1.03: + the disposal mode (sail deploy)
     assert (await client.post(f"/api/studies/{sid}/modes/template", json={})).status_code == 409
 
     ov = (await client.get(f"/api/studies/{sid}/modes")).json()
     kinds = {m["kind"]: m for m in ov["modes"]}
-    assert set(kinds) == {"leop", "commissioning", "nominal", "imaging", "downlink", "safe", "survival"}
-    assert kinds["leop"]["initial"] and len(ov["transitions"]) == 13
+    assert set(kinds) == {"leop", "commissioning", "nominal", "imaging", "downlink", "safe", "survival", "disposal"}
+    assert kinds["leop"]["initial"] and len(ov["transitions"]) == 14
     assert not [f for f in ov["findings"] if f["id"] in ("MM-UNREACHABLE", "MM-AUTO-NO-GUARD", "MM-NO-SAFE")]
     assert {u["unit_class"] for u in ov["units"]} >= {"obc", "transmitter", "payload"}
 
     p = (await client.post(f"/api/studies/{sid}/modes/propose")).json()
-    assert p["counts"]["new"] == 7 * len(ov["units"])
+    assert p["counts"]["new"] == 8 * len(ov["units"])
     again = (await client.post(f"/api/studies/{sid}/modes/propose")).json()
     assert again["counts"]["new"] == 0 and again["counts"]["kept"] == p["counts"]["new"]
 
@@ -88,7 +88,7 @@ async def test_mode_template_matrix_and_budgets(client, study_obj):
     tx = (await client.get(f"/api/elements/{els['tx']['id']}")).json()
     await client.patch(f"/api/elements/{tx['id']}", json={"version": tx["version"], "power_avg_w": 9.0})
     s = (await client.post(f"/api/studies/{sid}/modes/propose")).json()
-    assert s["counts"]["stale"] == 7
+    assert s["counts"]["stale"] == 8
 
     en = (await client.get(f"/api/studies/{sid}/modes/energy")).json()
     rows = {r["kind"]: r for r in en["modes"]}
@@ -104,11 +104,11 @@ async def test_mode_template_matrix_and_budgets(client, study_obj):
 
     ds = (await client.get(f"/api/studies/{sid}/modes/dissipation")).json()
     tx_d = next(u for u in ds["units"] if u["element_id"] == els["tx"]["id"])
-    assert tx_d["hot_w"] > 0 and len(tx_d["by_mode"]) == 7
+    assert tx_d["hot_w"] > 0 and len(tx_d["by_mode"]) == 8
 
     eq = (await client.get(f"/api/studies/{sid}/budgets/equipment")).json()
     obc_row = next(r for r in eq["rows"] if r["element_id"] == els["obc"]["id"])
-    assert obc_row["maturity_category"] == "A" and len(obc_row["power_by_mode_w"]) == 7
+    assert obc_row["maturity_category"] == "A" and len(obc_row["power_by_mode_w"]) == 8
     assert next(r for r in eq["rows"] if r["element_id"] == els["tx"]["id"])["link"]["tx_power_w"] == 2.0
 
     # thermal analysis uses the mode dissipation

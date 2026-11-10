@@ -47,57 +47,98 @@ def _hexs(v: Any) -> str:
 
 # ───────────────────────────────────────────────────────────── housekeeping budget
 
-def packet_bytes(hk: dict, params_by_id: dict[int, dict], c: dict) -> int:
-    sizes = c["types"]["bytes"]
-    body = 0
-    for pid in hk.get("parameter_ids") or []:
-        p = params_by_id.get(pid) or {}
-        body += int(sizes.get(p.get("type") or "uint16", 2))
-    return int(c["downlink_budget"]["packet_overhead_bytes"]) + body
+def packet_bytes(hk: dict, params_by_id: dict[int, dict], c: dict, overhead: int | None = None) -> int:
+    """Bytes of one HK packet: parameters (inline ``params`` with bits, or ``parameter_ids``) plus
+    the packet overhead (the database settings; 23 B for full PUS-C by default)."""
+    from .data_budget import _body_bytes
+    body, _n = _body_bytes(hk, params_by_id, c)
+    ovh = int(c["downlink_budget"]["packet_overhead_bytes"]) if overhead is None else int(overhead)
+    return ovh + body
 
 
 def hk_budget(rows: list[dict], modes: list[dict] | None = None) -> dict[str, Any]:
     """HK bit rate per regime (bootloader / safe / nominal / downlink) and per mode against the
-    rate tier of that regime × the HK share (cdr_rules.yaml downlink_budget)."""
+    rate tier of that regime × the HK share (cdr_rules.yaml downlink_budget).
+
+    W3.01: disabled SIDs and diagnostic SIDs are not billed (a diagnostic SID is billed only in
+    the data budget's campaign case); a SID with per-mode intervals counts at the interval of the
+    regime's mode (null = disabled there); the packet overhead comes from the settings."""
+    from . import data_budget as dbs
     c = cm.cfg()
     db = c["downlink_budget"]
-    params = {p.get("param_id"): p for p in cm.live_data(rows, "parameters")}
-    hks = cm.live_data(rows, "hk")
+    sids, ovh = dbs.sid_table(rows, c)
     tiers = {t.get("name"): t for t in cm.live_data(rows, "rate_tiers")}
     ttc = cm.singleton(rows, "ttc")
     share = float(db["hk_share_percent"]) / 100.0
-    eff = float(db["frame_efficiency"])
+    eff = dbs.framing(rows, 0.0)["frame_efficiency"] if cm.singleton(rows, "link_framing") else float(db["frame_efficiency"])
+    modes = list(modes or [])
+    rep = {}
+    for m in modes:
+        rep.setdefault(m.get("kind") or "custom", m)
+
+    def rt(s: dict, kind: str) -> float:
+        m = rep.get(kind)
+        if s["designed"] and m is not None:
+            return dbs._bps(s["bytes"], dbs.rt_period(s, m))
+        return dbs._bps(s["bytes"], s.get("period_s"))
+
     per_sid = []
-    for h in hks:
-        b = packet_bytes(h, params, c)
-        per = _num(h.get("period_s")) or 0.0
-        bps = b * 8 / per if per > 0 else 0.0
-        per_sid.append({"sid": h.get("sid"), "name": h.get("name"), "bytes": b, "period_s": per, "bps": round(bps, 1),
-                        "enabled_at_boot": bool(h.get("enabled_at_boot")), "beacon": bool(h.get("beacon"))})
+    for s in sids:
+        nominal_period = dbs.rt_period(s, rep["nominal"]) if (s["designed"] and rep.get("nominal")) else s.get("period_s")
+        per_sid.append({"sid": s["sid"], "store_sid": s.get("store_sid"), "name": s["name"], "bytes": s["bytes"],
+                        "period_s": nominal_period or s.get("period_s") or 0.0,
+                        "bps": round(dbs._bps(s["bytes"], nominal_period or s.get("period_s")), 1),
+                        "enabled_at_boot": s["enabled"]["realtime"], "enabled": s["enabled"], "beacon": s["beacon"],
+                        "diagnostic": s["diagnostic"], "designed": s["designed"],
+                        "rt_bps_by_mode": {m["id"]: round(dbs._bps(s["bytes"], dbs.rt_period(s, m)), 1) for m in modes} if s["designed"] else {},
+                        "store_bps_by_mode": {m["id"]: round(dbs._bps(s["bytes"], dbs.store_period(s, m)), 2) for m in modes} if s["designed"] else {}})
+    by_sid = {x["sid"]: x for x in per_sid}
+
+    def counts(s: dict, reg: str) -> bool:
+        if s["diagnostic"]:
+            return False
+        if reg == "bootloader":
+            return s["beacon"]
+        if not s["designed"]:          # legacy rows: one period per SID, "enabled at boot" (beacon included)
+            return s["enabled"]["realtime"] if reg == "safe" else (not s["beacon"] or s["enabled"]["realtime"])
+        if s["beacon"]:
+            return False
+        return s["enabled"]["realtime"]
+
+    kind_of = {"bootloader": None, "safe": "safe", "nominal": "nominal", "downlink": "downlink"}
     tier_of = {"bootloader": ttc.get("beacon_tier"), "safe": ttc.get("safe_tier"), "nominal": ttc.get("default_tier"),
                "downlink": next((t["name"] for t in tiers.values() if t.get("requires_downlink_mode")), ttc.get("default_tier"))}
-    sel = {"bootloader": lambda s: s["beacon"], "safe": lambda s: s["enabled_at_boot"],
-           "nominal": lambda s: not s["beacon"] or s["enabled_at_boot"], "downlink": lambda s: not s["beacon"] or s["enabled_at_boot"]}
     regimes = []
     for reg, tname in tier_of.items():
         t = tiers.get(tname or "")
-        used = sum(s["bps"] for s in per_sid if sel[reg](s))
+        used_sids = [s for s in sids if counts(s, reg)]
+        if reg == "bootloader":
+            used = sum(dbs._bps(s["bytes"], s.get("period_s") or (dbs.rt_period(s, rep["safe"]) if rep.get("safe") else None)) for s in used_sids)
+        else:
+            used = sum(rt(s, kind_of[reg]) if s["designed"] else dbs._bps(s["bytes"], s.get("period_s")) for s in used_sids)
         avail = (float(t.get("bps") or 0) * eff * share) if t else None
         regimes.append({"regime": reg, "tier": tname, "tier_bps": (t or {}).get("bps"), "hk_bps": round(used, 1),
                         "budget_bps": round(avail, 1) if avail is not None else None,
                         "use_percent": round(100 * used / avail, 1) if avail else None,
                         "ok": (used <= avail) if avail is not None else None,
-                        "sids": [s["sid"] for s in per_sid if sel[reg](s)]})
+                        "sids": [s["sid"] for s in used_sids if reg == "bootloader" or not s["designed"] or rt(s, kind_of[reg]) > 0]})
     by_reg = {r["regime"]: r for r in regimes}
     per_mode = []
-    for m in modes or []:
+    for m in modes:
         reg = db["regime_of_mode_kind"].get(m.get("kind") or "custom", "nominal")
         r = by_reg.get(reg) or {}
+        if any(s["designed"] for s in sids):
+            hk_bps = round(sum(dbs._bps(s["bytes"], dbs.rt_period(s, m)) for s in sids
+                               if not s["diagnostic"] and not s["beacon"] and s["enabled"]["realtime"]), 1)
+            ok = (hk_bps <= r["budget_bps"]) if r.get("budget_bps") is not None else None
+        else:
+            hk_bps, ok = r.get("hk_bps"), r.get("ok")
         per_mode.append({"mode_id": m.get("id"), "mode": m.get("name"), "regime": reg, "tier": r.get("tier"),
-                         "hk_bps": r.get("hk_bps"), "budget_bps": r.get("budget_bps"), "ok": r.get("ok")})
+                         "hk_bps": hk_bps, "budget_bps": r.get("budget_bps"), "ok": ok})
     return {"sids": per_sid, "regimes": regimes, "modes": per_mode, "hk_share_percent": db["hk_share_percent"],
-            "frame_efficiency": eff, "packet_overhead_bytes": db["packet_overhead_bytes"],
-            **cm.ref(db, c)}
+            "frame_efficiency": eff, "packet_overhead_bytes": ovh,
+            "excluded_sids": [s["sid"] for s in sids if s["diagnostic"] or not s["enabled"]["realtime"]],
+            **cm.ref(db, c), "_by_sid": None if not by_sid else None}
 
 
 # ───────────────────────────────────────────────────────────── FMECA coverage
@@ -138,6 +179,40 @@ def fmeca_coverage(rows: list[dict], fmeca_rows: list[dict], *, accepted_only: b
 
 
 # ───────────────────────────────────────────────────────────── checks
+
+def _data_budget_findings(rows: list[dict], budget: dict | None, HK: list[dict]) -> list[dict]:
+    """TMTC-HK-DAY (the daily budget closes with the gate margin), TMTC-STORE (each store holds
+    the minimum days at the worst rate with the storage margin), TMTC-DIAG (a diagnostic SID needs
+    an automatic disable: an OBCP or a duration)."""
+    out: list[dict] = []
+    for h in HK:
+        if h.get("diagnostic") and not (_num(h.get("auto_disable_s")) or h.get("obcp")):
+            out.append(_f(f"TMTC-DIAG-{h['_id']}", "TMTC-DIAG", "caution", "hk", h["_id"],
+                          f"Diagnostic SID {h.get('sid')} has no automatic disable (on-board procedure or duration): a forgotten campaign fills its store.",
+                          f"Le SID de diagnostic {h.get('sid')} n’a pas de désactivation automatique (procédure bord ou durée) : une campagne oubliée remplit sa mémoire."))
+    if not budget or not HK:
+        return out
+    cl = budget.get("closure") or {}
+    need = float(budget.get("margin_required_percent") or 0)
+    mg = cl.get("margin_pct")
+    if mg is not None and mg < need:
+        out.append(_f("TMTC-HK-DAY", "TMTC-HK-DAY", "alarm" if mg < 0 else "caution", "hk", "",
+                      f"The daily data budget ({cl.get('id')}) has {mg:.1f} % margin against {need:.0f} % required: "
+                      f"{cl.get('demand_mb'):.2f} MB/day of demand for {cl.get('capacity_mb'):.2f} MB/day of capacity.",
+                      f"Le bilan de données journalier ({cl.get('id')}) a {mg:.1f} % de marge pour {need:.0f} % requis : "
+                      f"{cl.get('demand_mb'):.2f} Mo/jour demandés pour {cl.get('capacity_mb'):.2f} Mo/jour de capacité.",
+                      margin_pct=mg, required_pct=need))
+    for st in budget.get("stores") or []:
+        chk = st.get("check") or {}
+        if chk.get("ok") is False:
+            out.append(_f(f"TMTC-STORE-{st.get('id')}", "TMTC-STORE", "alarm", "stores", st.get("_id") or "",
+                          f"Store {st.get('name')} ({st.get('size_mb')} MB) does not hold {chk['min_days']:.0f} days at "
+                          f"{chk['worst_mb_per_day']:.2f} MB/day with {chk['storage_margin_percent']:.0f} % margin (needs {chk['need_mb']:.1f} MB).",
+                          f"La mémoire {st.get('name')} ({st.get('size_mb')} Mo) ne contient pas {chk['min_days']:.0f} jours à "
+                          f"{chk['worst_mb_per_day']:.2f} Mo/jour avec {chk['storage_margin_percent']:.0f} % de marge (il faut {chk['need_mb']:.1f} Mo).",
+                          need_mb=chk["need_mb"]))
+    return out
+
 
 def run_checks(rows: list[dict], ctx: dict | None = None) -> list[dict]:  # noqa: C901
     ctx = ctx or {}
@@ -227,7 +302,8 @@ def run_checks(rows: list[dict], ctx: dict | None = None) -> list[dict]:  # noqa
             out.append(_f(f"TMTC-HK-PARAM-{h['_id']}", "TMTC-HK", "alarm", "hk", h["_id"],
                           f"SID {h.get('sid')} lists {len(missing)} unknown parameter id(s) ({', '.join(_hexs(m) for m in missing[:4])}).",
                           f"Le SID {h.get('sid')} cite {len(missing)} identifiant(s) inconnu(s) ({', '.join(_hexs(m) for m in missing[:4])})."))
-        if not (_num(h.get("period_s")) or 0) > 0:
+        per_mode = [v for v in (h.get("rt_period_by_mode") or {}).values()] + [v for v in (h.get("store_period_by_mode") or {}).values()]
+        if not (_num(h.get("period_s")) or 0) > 0 and not any((_num(v) or 0) > 0 for v in per_mode):
             out.append(_f(f"TMTC-HK-PERIOD-{h['_id']}", "TMTC-HK", "alarm", "hk", h["_id"], f"SID {h.get('sid')} has no period.",
                           f"Le SID {h.get('sid')} n’a pas de période."))
     if HK and TIERS:
@@ -242,6 +318,7 @@ def run_checks(rows: list[dict], ctx: dict | None = None) -> list[dict]:  # noqa
                 out.append(_f(f"TMTC-HK-BW-{r['regime']}", "TMTC-HK-BW", "caution", "hk", "",
                               f"No rate tier is set for the {r['regime']} regime: its HK budget is not checked.",
                               f"Aucun palier de débit pour le régime {r['regime']} : son bilan HK n’est pas vérifié."))
+    out.extend(_data_budget_findings(rows, ctx.get("data_budget"), HK))
     if (ttc.get("beacon") or {}).get("enabled") and not any(h.get("beacon") for h in HK) and HK:
         out.append(_f("TMTC-BEACON", "TMTC-HK", "caution", "hk", "", "The beacon is enabled but no SID is marked as the beacon packet.",
                       "La balise est active mais aucun SID n’est marqué comme paquet de balise."))

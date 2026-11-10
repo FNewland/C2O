@@ -465,7 +465,9 @@ function DataChainView({ sid }: { sid: string }) {
         <div className="mdl-flow__box">
           <span className="t-12 c-3">{t('Generated')}</span>
           <span><span className="mono t-20 c-v">{fmtNum(data.generated_gb_per_day, 2)}</span> <span className="t-12 c-3">{t('GB/day')}</span></span>
-          <span className="t-12 c-3">{t('payload in each mode + {{hk}} kbit/s housekeeping', { hk: fmtNum(data.housekeeping_bps / 1000, 1) })}</span>
+          <span className="t-12 c-3">{data.housekeeping?.designed
+            ? t('payload in each mode + stored housekeeping from the TM/TC SIDs ({{mb}} MB/day)', { mb: fmtNum(data.housekeeping.stored_mb_per_day, 2) })
+            : t('payload in each mode + {{hk}} kbit/s housekeeping', { hk: fmtNum(data.housekeeping_bps / 1000, 1) })}</span>
         </div>
         <span className="mdl-flow__arrow" aria-hidden="true">→</span>
         <div className="mdl-flow__box">
@@ -479,7 +481,9 @@ function DataChainView({ sid }: { sid: string }) {
           <span className="t-12 c-3">{t('Downlink capacity')}</span>
           <span><span className="mono t-20 c-v">{fmtNum(dl.capacity_gb_per_day, 2)}</span> <span className="t-12 c-3">{t('GB/day')}</span></span>
           <span className="t-12 c-3">{t('{{min}} min/day at {{rate}} Mbit/s ({{band}}-band) × {{eff}}', { min: fmtNum(dl.contact_min_per_day, 1),
-            rate: fmtNum(dl.rate_bps / 1e6, 2), band: dl.band ?? '?', eff: dl.protocol_efficiency })}</span>
+            rate: fmtNum(dl.rate_bps / 1e6, 4), band: dl.band ?? '?', eff: dl.protocol_efficiency })}</span>
+          {dl.contact_basis === 'union' && <span className="t-12 c-3">{t('union of the passes (the stations add up to {{sum}} min/day; one transmitter)', { sum: fmtNum(dl.sum_of_stations_min_per_day ?? 0, 1) })}</span>}
+          {data.housekeeping?.designed && <span className="t-12 c-3">{t('after {{rt}} MB/day of real-time housekeeping in contact', { rt: fmtNum(data.housekeeping.realtime_mb_per_day, 2) })}</span>}
           {chk['DC-DOWNLINK'] && <StatusBadge status={statusOf(chk['DC-DOWNLINK'].status)}>{bi(chk['DC-DOWNLINK'].label)}</StatusBadge>}
         </div>
       </div>
@@ -494,6 +498,8 @@ function DataChainView({ sid }: { sid: string }) {
           <DataTable dense caption={t('Generation per mode')} rows={data.per_mode} rowKey={r => r.mode_id} columns={[
             { key: 'n', header: t('Mode'), render: r => r.name },
             { key: 'r', header: t('kbit/s'), num: true, render: r => fmtNum(r.generation_bps / 1000, 1) },
+            { key: 'h', header: t('Stored HK (bit/s)'), num: true, render: r => r.hk_stored_bps == null ? '' : fmtNum(r.hk_stored_bps, 1) },
+            { key: 'rt', header: t('Real-time HK in contact (bit/s)'), num: true, render: r => r.hk_realtime_bps == null ? '' : fmtNum(r.hk_realtime_bps, 0) },
             { key: 'f', header: t('Share of orbit'), num: true, render: r => r.orbit_fraction != null ? `${fmtNum(r.orbit_fraction * 100, 0)} %` : '' },
             { key: 'o', header: t('MB per orbit'), num: true, render: r => fmtNum(r.per_orbit_mb, 1) },
           ]} />

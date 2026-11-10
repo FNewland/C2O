@@ -54,7 +54,7 @@ async def test_two_stations_close_the_data_loop(db_factory, study, clean_caches)
     # 0.2 Mbps x 50 % duty = 1.08 GB/day; two polar stations at 20 Mbps return it all
     assert abs(s["gs_data_generated_gb_per_day"] - 1.08) < 1e-3
     assert s["gs_data_return_gb_per_day"] >= s["gs_data_generated_gb_per_day"] - 0.02
-    assert s["gs_backlog_end_gb"] < 0.1 and s["closure_pct"] > 95 and abs(s["backlog_growth_gb_per_day"]) < 0.01
+    assert s["gs_backlog_end_gb"] < 0.1 and s["closure_pct"] > 95 and abs(s["backlog_growth_gb_per_day"]) < 0.02  # real (J2) passes: day-to-day jitter
     assert s["gs_min_link_margin_db"] > 3 and s["band"] == "X" and s["frequency_ghz"] == 8.2
     assert not any(c.code in ("GS_DATA_DEFICIT", "GS_NO_STATIONS", "GS_STATION_EXCLUDED") for c in out.conflicts)
     rows = {r["station_id"]: r for r in s["stations"]}
