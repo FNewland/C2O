@@ -48,6 +48,8 @@ class LinkAgent(DesignAgent):
             "link.ttc_power_w", "link.ttc_cost_keur",
             "link.ttc_margin_db", "link.payload_margin_db",
             "link.uplink_margin_db",
+            # wave 3 (3.H1): the design case and the loop's own estimate beside it
+            "link.frequency_ghz", "link.phase0_payload_margin_db", "link.phase0_data_per_day_gb",
         ]
 
     def dependencies(self) -> list[str]:
@@ -188,6 +190,24 @@ class LinkAgent(DesignAgent):
 
         # Payload downlink is the main link budget (already computed as `lb`)
         payload_margin = lb.downlink_margin_db
+        phase0_margin = payload_margin
+
+        # Wave 3 (3.H1, A1): the study's design link case (link-budget tool → "Apply to design",
+        # ``requirements.link.margin_db``) is the margin of record; with one radio for TT&C and
+        # payload data (a UHF CubeSat) the TT&C channel is the same link. The parametric value
+        # stays beside it as the "Phase 0 estimate".
+        design_case = None
+        if isinstance(link_req, dict) and not is_deep_space:
+            m = link_req.get("margin_db")
+            if isinstance(m, (int, float)) and not isinstance(m, bool):
+                design_case = float(m)
+        if design_case is not None:
+            payload_margin = design_case
+            if freq_ghz < 1.0:
+                ttc_margin = design_case
+                um = link_req.get("uplink_margin_db")
+                uplink_margin = float(um) if isinstance(um, (int, float)) and not isinstance(um, bool) else uplink_margin
+            result.log(f"Design link case: {design_case:+.2f} dB (Phase 0 estimate {phase0_margin:+.2f} dB)")
 
         result.add_param("link.downlink_margin_db", "Downlink Margin (worst)", round(min(ttc_margin, payload_margin), 1), "dB")
         result.add_param("link.ttc_margin_db", "TTC Margin", round(ttc_margin, 1), "dB")
@@ -200,7 +220,14 @@ class LinkAgent(DesignAgent):
         frame_eff = state.get("link.frame_efficiency")
         if frame_eff and 0 < frame_eff <= 1:
             per_day_gb = per_day_gb / 0.9 * float(frame_eff)
-        result.add_param("link.data_per_day_gb", "Data Downlinked/Day", round(per_day_gb, 2), "GB")
+        phase0_per_day = per_day_gb
+        cap_mb = state.get("data.capacity_mb_per_day")
+        if cap_mb is not None:      # wave 3: the data budget's capacity (union, framing, acquisition, availability)
+            per_day_gb = float(cap_mb) / 1000.0
+        result.add_param("link.data_per_day_gb", "Data Downlinked/Day", round(per_day_gb, 5), "GB")
+        result.add_param("link.frequency_ghz", "Downlink Frequency", round(freq_ghz, 4), "GHz")
+        result.add_param("link.phase0_payload_margin_db", "Payload DL Margin (Phase 0 estimate)", round(phase0_margin, 1), "dB")
+        result.add_param("link.phase0_data_per_day_gb", "Data Downlinked/Day (Phase 0 estimate)", round(phase0_per_day, 4), "GB")
         dry_est = state.get("mass.dry_mass_estimate_kg", 100.0) or 100.0
         ttc_mass = calibrate_mass("ttc", lb.ttc_mass_kg, dry_est, sc_class)
         result.add_param("link.ttc_mass_kg", "TTC Mass", round(ttc_mass, 2), "kg", margin_percent=10)
@@ -220,6 +247,14 @@ class LinkAgent(DesignAgent):
             f"{lb.free_space_loss_db:.1f} dB at the worst-case slant range of "
             f"{lb.slant_range_km:.0f} km."
         )
+        if design_case is not None:
+            result.rationale = (
+                f"Link margin of record from the study's design link case: {design_case:+.1f} dB at "
+                f"{freq_ghz * 1000:.1f} MHz, {tx_power:.1f} W ({link_req.get('source') or 'link-budget tool'}).  "
+                f"The parametric Phase 0 estimate is {phase0_margin:+.1f} dB; the difference is the station, "
+                f"the noise temperature and the losses the team entered term by term.  Daily volume "
+                f"{per_day_gb * 1000:.2f} MB/day from the union of the passes."
+            )
         result.assumptions = [
             f"{lb.elevation_deg:.0f}° minimum elevation; ITU-R P.676/P.618 atmospheric model.",
             f"GS antenna {gs_diam:.1f} m, efficiency 0.55, system noise temperature 200 K.",
@@ -264,6 +299,9 @@ class LinkAgent(DesignAgent):
             "ttc_margin_db": ttc_margin,
             "uplink_margin_db": uplink_margin,
             "is_deep_space": is_deep_space,
+            "source": "design link case" if design_case is not None else "Phase 0 estimate",
+            "phase0_payload_margin_db": phase0_margin,
+            "phase0_data_per_day_gb": phase0_per_day,
         }
 
         result.confidence = 0.85

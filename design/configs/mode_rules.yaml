@@ -129,6 +129,28 @@ data:
   buffer_days: {value: 1.0, source: c2o_default, clause: "storage must hold one day of data before margin"}
   min_link_margin_db: {value: 3.0, source: c2o_default, clause: "GSFC-STD-1000G Rule 1.06 RF margin (to verify)"}
 
+# ------------------------------------------------------------------ mode shares (wave 3, 3.H3)
+# Proposals of the share of the operational orbit per mode, from the ConOps: the downlink share is
+# the union of the station passes per day / 1440 min (one transmitter, every pass used); the imaging
+# share is acquisitions per orbit x (acquisition + attitude settle) / orbit period; the nominal mode
+# takes the balance. The payload products row (TM/TC) may set acquisitions_per_orbit, acquisition_s
+# and settle_s; these are the fallbacks.
+shares:
+  acquisitions_per_orbit: {value: 1, source: c2o_default, clause: "one target acquisition per daylight pass over the area of interest"}
+  acquisition_s: {value: 240, source: c2o_default, clause: "acquisition window incl. calibration frames (4 min)"}
+  settle_s: {value: 60, source: c2o_default, clause: "roll manoeuvre and settle before the acquisition (SEG-SS-02 class)"}
+  match_tolerance: 0.0005
+
+# ------------------------------------------------------------------ orbit season (wave 3, 3.H4)
+# services/orbit_season.py: beta over the year, eclipse range, sun elevation at the daylight node,
+# thermal hot / cold beta cases.
+orbit_season:
+  min_sun_elevation_deg: {value: 10, source: c2o_default, clause: "optical imaging of the ground needs the sun at least 10 deg above the horizon"}
+  freeze_up_latitude_deg: {value: 60, source: c2o_default, clause: "northern latitude band of the freeze-up observation"}
+  latitudes_deg: [48, 52, 56, 60, 64, 68]
+  beta_margin_deg: {value: 2.5, source: c2o_default, clause: "beta uncertainty for the thermal cases: node drift from the inclination tolerance and injection dispersion (rounded)"}
+  node_window_h: {early: -1.0, late: 3.0, source: c2o_default, clause: "daylight-node time window of the thermal cases around the nominal node (launch dispersion and drift)"}
+
 # ------------------------------------------------------------------ thermal
 thermal:
   # Share of a transmitter's DC power radiated as RF (the rest is heat).

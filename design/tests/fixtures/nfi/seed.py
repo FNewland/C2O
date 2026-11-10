@@ -146,6 +146,7 @@ class NfiSeed:
     link_cases: dict[str, dict] = field(default_factory=dict)   # case name -> link case
     rids: list[dict] = field(default_factory=list)              # MDR RIDs and actions
     report: dict[str, Any] = field(default_factory=lambda: {"calls": 0, "forbidden": 0, "seconds": {}})
+    negotiations: dict[str, dict] = field(default_factory=dict)  # wave 3 (H): template code -> record
 
 
 class _Api:
@@ -448,6 +449,7 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     if not seed.recording:       # PI ruling: the team fills the Licensing tab on camera
         await _s4_licensing(api, seed)
     await _s4_link_licensing(api, seed)
+    await _s4_negotiations(api, seed)        # wave 3 (H): options on the S4 design, signed
 
 
 # ───────────────────────────────────── agent D (wave 1): mission need, ConOps, links, trades, review
@@ -728,9 +730,23 @@ async def _hk_sids(api: _Api, seed: NfiSeed) -> None:
         "products": [{"name": "ROI pair", "mb_raw": pp["roi_pair_mb_raw"]["value"], "per_day": pp["planned_set_per_day"]["roi_pairs"], "priority": 2},
                      {"name": "Quicklook", "mb_raw": pp["quicklook_mb_raw"]["value"], "per_day": pp["planned_set_per_day"]["quicklooks"], "priority": 1}],
         "compression_required": pp["compression_required"]["value"]})
+    # wave 3 (3.H5): the radio's rate ladder of hk_sids.yaml (1.2 / 9.6 / 19.2 / 38.4 kbit/s) over the
+    # rule-proposed tiers, so the fallback case and the sensitivity run at the baseline's 19.2 kbit/s.
+    # The rule-proposed tier names are kept (the TT&C configuration names them).
+    ladder = {t["name"]: t for t in hk["rate_tiers"]}
+    tiers = [r for r in rows.get("rate_tiers") or [] if r["status"] != "rejected"]
+    by_role = {r["data"].get("role"): r for r in tiers}
+    for role, src in (("beacon", "BEACON"), ("default", "LOW"), ("downlink", "HIGH")):
+        if role in by_role and src in ladder:
+            await api.call("PATCH", f"/api/studies/{sid}/cdr/rate_tiers/{by_role[role]['id']}",
+                           {"data": {**by_role[role]["data"], "bps": ladder[src]["bps"]}})
+    if "DEFAULT" in ladder and not any(r["data"].get("bps") == ladder["DEFAULT"]["bps"] for r in tiers):
+        base = dict((by_role.get("default") or {}).get("data") or {})
+        await api.post(f"/api/studies/{sid}/cdr/rate_tiers", {"data": {**base, "name": "DEFAULT", "role": "fallback",
+                                                                      "bps": ladder["DEFAULT"]["bps"]}})
 
 
-_STEPS = {"S0": _s0, "S1": _s1, "S2": _s2, "S3": _s3, "S4": _s4}
+_STEPS ={"S0": _s0, "S1": _s1, "S2": _s2, "S3": _s3, "S4": _s4}
 
 
 async def seed_nfi(client, stage: str = "S4", recording: bool = False) -> NfiSeed:
@@ -1047,9 +1063,41 @@ async def _s3_assumptions(api: _Api, seed: NfiSeed) -> None:
     seed.report["assumptions"] = len(res["items"])
 
 
+#: wave 3 (3.H6): the four negotiation scenes and the option each ends on (PI: all four in the
+#: walkthrough, each signed by every involved seat); the recording seed leaves them to the team
+NEGOTIATIONS = (("N1", "keep"), ("N3", "keep"), ("N7", "hold"), ("GS4", "with"))
+
+
 async def _s3_negotiations(api: _Api, seed: NfiSeed) -> None:
-    """TODO(H, 3.H6): negotiation records N1 (science and downlink), N3 (payload peak and battery),
-    N7 (mass envelopes). Not in the recording seed (the scenes are filmed)."""
+    """Negotiation records from the four templates: N1 (science volume and downlink), N3 (payload
+    peak and imaging duty against the battery), N7 (mass envelopes) and GS4 (the ground-station
+    ripple), proposed with their options computed from the study. Not in the recording seed (the
+    scenes are filmed); ``_s4_negotiations`` recomputes the options on the full S4 design and signs."""
+    if seed.recording:
+        return
+    for code, _opt in NEGOTIATIONS:
+        rec = await api.post(f"/api/studies/{seed.study_id}/negotiations?live=false", {"template": code})
+        seed.negotiations[code] = rec
+
+
+async def _s4_negotiations(api: _Api, seed: NfiSeed) -> None:
+    """Wave 3 (3.H6): the S3 records with their options recomputed on the S4 design (housekeeping,
+    products, stations), the option of the baseline chosen and every seat's sign-off."""
+    if seed.recording:
+        return
+    sid = seed.study_id
+    for code, opt in NEGOTIATIONS:
+        rec = seed.negotiations.get(code)
+        if not rec:
+            continue
+        url = f"/api/studies/{sid}/negotiations/{rec['id']}"
+        rec = await api.call("PATCH", f"{url}?live=false", {"recompute_options": True})
+        if any(o.get("key") == opt for o in rec["options"]):
+            rec = await api.call("PATCH", f"{url}?live=false", {"chosen_option": opt})
+        for seat in rec["seats"]:
+            rec = await api.post(f"{url}/signoff?live=false",
+                                 {"seat": seat, "by": "seed", "note": "baseline"})
+        seed.negotiations[code] = rec
 
 
 async def _s4_ait_v2(api: _Api, seed: NfiSeed) -> None:

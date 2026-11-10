@@ -9,22 +9,12 @@ import pytest
 
 from tests.fixtures.nfi import ELEMENT_IDS, load, seed_nfi
 
-#: the stub sections of step 0 and their owners (W0_SEAMS §9)
-WAVE3_SECTIONS = {"allocations": "A",      # S's four sections are real (3.S1–3.S6)
-                  "open_items": "D", "negotiations": "H",
-                  # PI addendum
-                  "semp": "X", "reliability": "A", "thermal_model": "A",
-                  "change_control": "D", "cost": "A"}
+#: the stub sections of step 0 and their owners (W0_SEAMS §9); owners removed their entries as the real code landed
+WAVE3_SECTIONS = {"allocations": "A", "open_items": "D", "semp": "X", "reliability": "A", "thermal_model": "A", "change_control": "D", "cost": "A"}
 
 #: one GET per stub router (owner) and the write routes that answer 501 until the owner lands
-STUB_GETS = {"/negotiations": "H", "/sensitivity": "H",
-             "/sensitivity/altitude": "H", "/open-items": "D", "/allocation-ledger": "A",
-             "/reliability": "A", "/fmea": "A", "/thermal-model": "A",
-             "/cost/items": "A", "/changes/ECP-01/control": "D"}
-STUB_POSTS = ("/negotiations",
-              "/open-items/import", "/allocation-ledger/import",
-              "/reliability/run", "/fmea/propose", "/thermal-model/propose",
-              "/changes/ECP-01/control/start", "/cost/price")
+STUB_GETS = {"/open-items": "D", "/allocation-ledger": "A", "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/cost/items": "A", "/changes/ECP-01/control": "D"}
+STUB_POSTS = ("/open-items/import", "/allocation-ledger/import", "/reliability/run", "/fmea/propose", "/thermal-model/propose", "/changes/ECP-01/control/start", "/cost/price")
 
 
 async def test_s1_store_holds_the_v2_baseline_by_level(client):

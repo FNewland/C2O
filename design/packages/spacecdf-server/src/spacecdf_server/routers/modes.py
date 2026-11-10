@@ -482,6 +482,24 @@ async def mode_energy(study_id: str, gate: str | None = Query(None)) -> dict:
         max_dod_percent=ctx.power.get("battery_dod_percent")))
     res["inputs"].update({"sa_power_source": sa_src, "battery_source": bat_src,
                           "altitude_km": ctx.orbit.get("altitude_km")})
+    # wave 3 (3.H4): the eclipse range over the year (orbit_season) and the operational orbit in
+    # the longest eclipse, the energy balance's worst case
+    try:
+        from ..services import orbit_season as osn
+        from ..services.ground_closure import orbit_inputs
+        orbit, ltan_h, epoch = orbit_inputs(ctx)
+        ss = osn.compute(altitude_km=orbit.altitude_km, inclination_deg=orbit.inclination_deg,
+                         ltan_h=ltan_h if ltan_h is not None else 22.5, year=int(epoch[0]), step_days=2.0)
+        worst = _wrap(lambda: mm.energy_balance(
+            _element_modes(ctx), ctx.elements, period_s=ctx.orbit.get("period_s") or 5700.0,
+            eclipse_fraction=ss["eclipse"]["fraction_max"], sa_power_eol_w=sa, battery_wh=bat,
+            system_margin_percent=sys_p, max_dod_percent=ctx.power.get("battery_dod_percent")))
+        res["season"] = {"beta": ss["beta"], "eclipse": ss["eclipse"], "year": ss["inputs"]["year"],
+                         "worst_eclipse_orbit": worst.get("operational_orbit"),
+                         "source": "services/orbit_season.py"}
+    except Exception:  # noqa: BLE001 — no orbit yet
+        logger.debug("orbit season unavailable for %s", study_id, exc_info=True)
+        res["season"] = None
     return {"study_id": study_id, "system_margin": {"gate": g, "percent": sys_p, **convention()}, **res}
 
 
@@ -523,6 +541,100 @@ async def mode_data_chain(study_id: str) -> dict:
     res["data_budget"] = {"status": budget.get("status"), "closure": budget.get("closure"),
                           "stored": budget.get("stored"), "realtime": budget.get("realtime")}
     return {"study_id": study_id, **res, "warnings": budget.get("warnings") or []}
+
+
+# ───────────────────────────────────────────────────────────── mode shares from the ConOps (3.H3)
+
+def _share_mode(m: dict) -> dict:
+    p = m.get("performance") or {}
+    return {"id": m["id"], "name": m.get("name"), "kind": p.get("mode_kind") or "custom", "phase": p.get("phase") or "",
+            "orbit_fraction": p.get("orbit_fraction"), "share_basis": p.get("share_basis")}
+
+
+async def share_view(study_id: str, *, budget: dict | None = None) -> dict:
+    """The share proposals of the operational mix (A4) and their inputs; pure read."""
+    from ..db import cdr_repo
+    from ..services import cdr_model as cm
+    from ..services import data_budget as dbs
+    ctx = await _ctx(study_id)
+    rows = await cdr_repo.list_rows(study_id)
+    b = budget if budget is not None else dbs.from_context(ctx, rows, include_degraded=False, study_id=study_id)
+    cap = b.get("capacity") or {}
+    stations = [r["name"] for r in (b.get("network") or {}).get("stations") or [] if r.get("status") != "excluded"]
+    union = cap.get("union_min_per_day") if stations else None
+    modes = [_share_mode(m) for m in _modes(_els(study_id)) if not m.get("deleted_at")]
+    props = mm.share_proposals(modes, union_min_per_day=union, period_s=ctx.orbit.get("period_s") or 5700.0,
+                               products=cm.singleton(rows, "payload_products"), stations=stations)
+    return {"study_id": study_id, "proposals": props, "union_min_per_day": union, "stations": stations,
+            "period_s": ctx.orbit.get("period_s"), "share_total": round(sum(float(m["orbit_fraction"] or 0) for m in modes
+                                                                             if mm.in_operational_mix(m)), 4)}
+
+
+@router.get("/studies/{study_id}/modes/share-proposals")
+async def get_share_proposals(study_id: str) -> dict:
+    """A4: the proposed share of orbit of the downlink (union contact ÷ 1440), imaging
+    (acquisitions × duration ÷ period) and nominal (the balance) modes, with provenance and the
+    state of the owner's decision (matches / proposed / accepted / overridden / stale)."""
+    _guard()
+    return await share_view(study_id)
+
+
+class ShareAccept(BaseModel):
+    mode_id: str | None = None           # one mode; None = every proposal that is not current
+    fraction: float | None = Field(None, ge=0, le=1)   # an override of the proposal (needs a reason)
+    reason: str | None = None
+    by: str | None = None
+    rebalance: bool = True               # the nominal mode takes the balance of the orbit
+
+
+@router.post("/studies/{study_id}/modes/share-proposals/accept")
+async def accept_share_proposals(study_id: str, body: ShareAccept) -> dict:
+    """The owner accepts a share proposal, or overrides it with a reason. The accepted inputs are
+    kept on the mode (``share_basis``) so a later change of stations, settle time or products marks
+    it stale and re-proposes. With ``rebalance`` the nominal mode takes the balance."""
+    from datetime import datetime, timezone
+    from .elements import apply_element_update
+    _guard()
+    view = await share_view(study_id)
+    props = {p["mode_id"]: p for p in view["proposals"]}
+    if body.mode_id is not None and body.mode_id not in props:
+        _check_mode(study_id, body.mode_id)
+        raise HTTPException(422, "This mode has no share proposal (only the downlink, imaging and nominal modes of the mix)")
+    targets = [props[body.mode_id]] if body.mode_id else [p for p in props.values()
+                                                          if p["kind"] != "nominal" and p["proposed_fraction"] is not None]
+    now = datetime.now(timezone.utc).isoformat()
+    done: list[str] = []
+    for p in targets:
+        val = p["proposed_fraction"]
+        reason = (body.reason or "").strip()
+        if body.mode_id and body.fraction is not None and (val is None or abs(body.fraction - val) > 1e-4):
+            if not reason:
+                raise HTTPException(422, "An override of the proposed share needs a reason")
+            val = body.fraction
+        elif val is None:
+            raise HTTPException(409, "Nothing to accept: the proposal cannot be evaluated (no contact plan)")
+        else:
+            reason = ""
+        m = _check_mode(study_id, p["mode_id"])
+        basis = {"proposed_fraction": p["proposed_fraction"], "accepted_fraction": round(val, 4), "basis": p["basis"],
+                 "inputs": p["inputs"], "inputs_hash": p["inputs_hash"], "provenance": p["provenance"],
+                 "override_reason": reason or None, "by": body.by, "at": now}
+        await apply_element_update(m, {"performance": {**(m.get("performance") or {}), "orbit_fraction": round(val, 4),
+                                                        "share_basis": basis}})
+        done.append(p["mode_id"])
+    if body.rebalance and not (body.mode_id and props[body.mode_id]["kind"] == "nominal"):
+        after = await share_view(study_id)
+        nom = next((p for p in after["proposals"] if p["kind"] == "nominal"), None)
+        if nom is not None and nom["proposed_fraction"] is not None and nom["status"] not in ("matches", "accepted"):
+            m = _check_mode(study_id, nom["mode_id"])
+            basis = {"proposed_fraction": nom["proposed_fraction"], "accepted_fraction": nom["proposed_fraction"],
+                     "basis": "balance", "inputs": nom["inputs"], "inputs_hash": nom["inputs_hash"],
+                     "provenance": nom["provenance"], "override_reason": None, "by": body.by, "at": now}
+            await apply_element_update(m, {"performance": {**(m.get("performance") or {}),
+                                                            "orbit_fraction": nom["proposed_fraction"], "share_basis": basis}})
+            done.append(nom["mode_id"])
+    await _broadcast(study_id, "mode")
+    return {"accepted": done, **(await share_view(study_id))}
 
 
 @router.get("/studies/{study_id}/modes/dissipation")

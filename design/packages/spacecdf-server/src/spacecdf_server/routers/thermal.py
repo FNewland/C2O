@@ -181,3 +181,36 @@ async def thermal_transient(req: ThermalTransientRequest) -> ThermalTransientRes
         num_orbits=req.num_orbits,
     )
     return ThermalTransientResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# Wave 3 (3.H4): the orbit through the seasons and the thermal design cases
+# ---------------------------------------------------------------------------
+
+
+def _study_or_404(study_id: str):
+    from fastapi import HTTPException
+    from .studies import get_study_store
+    study = get_study_store().get(study_id)
+    if study is None:
+        raise HTTPException(status_code=404, detail=f"Study {study_id} not found")
+    return study
+
+
+@router.get("/studies/{study_id}/orbit-season")
+async def orbit_season(study_id: str) -> dict:
+    """β over the year of the launch-date target, the eclipse range, the sun elevation at the
+    daylight node per month and latitude (flags where the optical payload cannot see the ground,
+    e.g. freeze-up north of 60° N after mid-November) and the proposed hot / cold β cases."""
+    from ..services import orbit_season as osn
+    _study_or_404(study_id)
+    return await osn.season(study_id)
+
+
+@router.get("/studies/{study_id}/cases")
+async def thermal_cases(study_id: str) -> dict:
+    """The hot and cold β cases proposed to the Thermal seat (``thermal_cases.source =
+    "orbit_season"``); A's thermal nodal model reads the same function."""
+    from ..services import orbit_season as osn
+    _study_or_404(study_id)
+    return {"study_id": study_id, **(await osn.thermal_cases(study_id))}

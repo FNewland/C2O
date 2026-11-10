@@ -320,6 +320,9 @@ data_budget:
   # and the fallback modes); LEOP and commissioning are attended, with a dump on every pass.
   store_sizing_modes: [nominal_mix, safe, survival]
   daily_margin_percent: {default: 10, mdr: 20, prr: 20, srr: 15, pdr: 10, cdr: 10}
+  # Wave 3 (3.H2): the share of the channel capacity the seats may allocate (the rest is the
+  # Systems reserve of the data ledger; the Northern Fire and Ice baseline allocates at 90 %).
+  allocatable_percent: 90
 
 # ------------------------------------------------------------------ TC functions (S8)
 # needs: unit classes / facts that must exist for the function to be proposed.

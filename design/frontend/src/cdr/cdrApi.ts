@@ -166,7 +166,9 @@ export interface DataBudgetView {
   realtime: { full_designed_bps: number; full_allocation_bps: number | null; lean_bps: number; diag_bps: number; with_diag_bps: number }
   stored: { mix_bps: number; mb_per_day: number; events_mb_per_day: number; diag_mb_per_orbit: number }
   framing: { frame_efficiency: number; raw_rate_bps: number; information_rate_bps: number; acquisition_s: number; availability: number; designed: boolean }
-  capacity: { union_min_per_day: number; usable_min_per_day: number; raw_mb_per_day: number; capacity_mb_per_day: number }
+  capacity: { union_min_per_day: number; usable_min_per_day: number; raw_mb_per_day: number; capacity_mb_per_day: number
+    /** wave 3 (3.H2) */
+    remaining_after_realtime_hk_mb_per_day?: number; allocatable_percent?: number; allocatable_mb_per_day?: number }
   contacts: { union: Record<string, number>; stations: { id: string; name: string; min_per_day: number; passes_per_day: number }[] }
   science: { target_mb_per_day: number | null; compression_ratio: number; cfdp_efficiency: number; raw_mb_per_day: number
     delivered_mb_per_day: number; on_channel_mb_per_day: number; compression_needed: number | null; compression_ok: boolean | null

@@ -14,6 +14,7 @@ import { fmt } from '../cdr/cdrUtil'
 import { useUIStore } from '../stores/uiStore'
 import { pickLang } from '../types/interfaces'
 import { DataTable, MarginBar, NoData, Note, Panel, StatusBadge } from './ui'
+import { SensitivityView } from './SensitivityView'
 
 export function DataBudget() {
   const { t, i18n } = useTranslation()
@@ -25,6 +26,7 @@ export function DataBudget() {
   const c = data.closure
   const sci = data.science
   return (
+    <>
     <Panel title={t('Data budget')} meta={c.margin_pct == null ? '' : t('{{m}} % margin ({{case}})', { m: fmt(c.margin_pct, 1), case: c.id })}>
       <p className="t-12 c-2 m-0 pb-2">
         {t('Housekeeping comes from the TM/TC SIDs (TM/TC → Housekeeping) and the per-pass choices from Operations → Pass plan. MB = 10⁶ bytes.')}
@@ -59,7 +61,11 @@ export function DataBudget() {
             <StatusBadge status={r.status === 'pass' ? 'ok' : r.status === 'warn' ? 'caution' : r.status === 'fail' ? 'alarm' : 'nodata'}>
               {r.margin_pct == null ? '–' : `${fmt(r.margin_pct, 1)} %`}</StatusBadge>) },
         ]} />
+      <p className="t-12 c-3 m-0 pt-2">{t('Allocatable: {{a}} MB/day ({{p}} % of the capacity); {{r}} MB/day remain after the real-time HK of the passes.',
+        { a: fmt(data.capacity.allocatable_mb_per_day ?? 0, 2), p: data.capacity.allocatable_percent ?? 90, r: fmt(data.capacity.remaining_after_realtime_hk_mb_per_day ?? 0, 2) })}</p>
     </Panel>
+    <SensitivityView studyId={studyId} />
+    </>
   )
 }
 
