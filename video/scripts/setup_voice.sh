@@ -35,7 +35,9 @@ if [ ! -x "$venv/bin/python" ]; then
 fi
 "$venv/bin/python" -m pip install -q --upgrade pip
 say "installing Chatterbox (a few GB the first time)"
-"$venv/bin/python" -m pip install -q "chatterbox-tts==0.1.7"
+# setuptools < 81: the Perth watermarker still imports pkg_resources, which 81 removed;
+# without it Chatterbox fails at start-up with "'NoneType' object is not callable".
+"$venv/bin/python" -m pip install -q "chatterbox-tts==0.1.7" "setuptools<81"
 
 # 3. The video pipeline itself -----------------------------------------------
 say "video pipeline requirements"
