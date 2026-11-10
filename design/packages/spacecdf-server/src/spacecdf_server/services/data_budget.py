@@ -574,13 +574,21 @@ def compute(rows: list[dict], modes: list[dict], *, contacts=None, link_rate_bps
                      "union": dict(getattr(contacts, "union", {}) or {}),
                      "stations": [{"id": k, **v} for k, v in (getattr(contacts, "stations", {}) or {}).items()]},
         "capacity": {"union_min_per_day": round(union_min, 2), "usable_min_per_day": round(usable_min, 2),
-                     "raw_mb_per_day": round(raw_mb, 2), "capacity_mb_per_day": round(cap_mb, 2)},
+                     "raw_mb_per_day": round(raw_mb, 2), "capacity_mb_per_day": round(cap_mb, 2),
+                     # wave 3 (3.H2): after the real-time HK of the passes (C1), and the allocatable share
+                     "remaining_after_realtime_hk_mb_per_day": round(max(0.0, cap_mb - rt_c1), 2),
+                     "allocatable_percent": _allocatable_pct(),
+                     "allocatable_mb_per_day": round(cap_mb * _allocatable_pct() / 100.0, 2)},
         "science": {**sci, "largest_with_margin_mb_per_day": round(max(0.0, fit10), 2)},
         "pass_classes": pass_rows,
         "cases": cases, "closure": closure, "margin_required_percent": margin_need,
         "stores": stores, "day_in_the_life": dil, "backlog": backlog,
         "scenario": sc or None, "warnings": warnings,
     }
+
+
+def _allocatable_pct() -> float:
+    return float(_num(defaults().get("allocatable_percent")) or 90.0)
 
 
 def _gate_margin(gate: str | None) -> float:
@@ -863,3 +871,51 @@ def _mode_dict(m: dict) -> dict:
     return {"id": m["id"], "name": m.get("name"), "kind": p.get("mode_kind") or "custom", "phase": p.get("phase") or "",
             "orbit_fraction": p.get("orbit_fraction"), "template_key": p.get("template_key"),
             "data_rate_bps": p.get("data_rate_bps")}
+
+
+# ───────────────────────────────────────────────────────────── design-loop overlay (wave 3, 3.H1)
+
+#: design-state paths the tier-1 agents read from the data budget (``AG/tier1/data.py``, ``link.py``)
+DESIGN_PATHS = ("data.science_raw_mb_per_day", "data.science_delivered_mb_per_day", "data.science_on_channel_mb_per_day",
+                "data.hk_stored_mb_per_day", "data.hk_realtime_mb_per_day", "data.capacity_mb_per_day",
+                "data.demand_mb_per_day", "data.margin_pct", "data.compression_ratio", "link.frame_efficiency")
+
+
+def design_overlay(b: dict | None) -> dict[str, float]:
+    """The data budget as design-loop parameters (A1, data and link part): the science product set
+    (raw, delivered after compression, on the channel), the housekeeping, the capacity of the union
+    of the passes and the closure case. The design loop then compares the delivered science with
+    the capacity instead of summing the payloads' acquired volumes (the "Phase 0 estimate").
+    Empty when the study has no contact plan or no budget."""
+    if not b:
+        return {}
+    cl = b.get("closure") or {}
+    cap = b.get("capacity") or {}
+    sci = b.get("science") or {}
+    fr = b.get("framing") or {}
+    st = b.get("stored") or {}
+    vals = {
+        "data.science_raw_mb_per_day": sci.get("raw_mb_per_day"),
+        "data.science_delivered_mb_per_day": sci.get("delivered_mb_per_day"),
+        "data.science_on_channel_mb_per_day": sci.get("on_channel_mb_per_day"),
+        "data.hk_stored_mb_per_day": st.get("mb_per_day"),
+        "data.hk_realtime_mb_per_day": cl.get("rt_hk_mb"),
+        "data.capacity_mb_per_day": cap.get("capacity_mb_per_day") if cap.get("union_min_per_day") else None,
+        "data.demand_mb_per_day": cl.get("demand_mb"),
+        "data.margin_pct": cl.get("margin_pct"),
+        "data.compression_ratio": sci.get("compression_ratio"),
+        "link.frame_efficiency": fr.get("frame_efficiency") if fr.get("designed") else None,
+    }
+    out = {k: float(v) for k, v in vals.items() if _num(v) is not None}
+    if "data.capacity_mb_per_day" not in out:          # no contact plan: the loop keeps its own estimate
+        for k in ("data.capacity_mb_per_day", "data.demand_mb_per_day", "data.margin_pct"):
+            out.pop(k, None)
+    return out
+
+
+async def design_overlay_for_study(study_id: str) -> dict[str, float]:
+    """``design_overlay`` of a stored study (never raises: {} when the budget cannot be built)."""
+    try:
+        return design_overlay(await for_study(study_id, include_degraded=False))
+    except Exception:  # noqa: BLE001
+        return {}

@@ -11,18 +11,17 @@ from tests.fixtures.nfi import ELEMENT_IDS, load, seed_nfi
 
 #: the stub sections of step 0 and their owners (W0_SEAMS §9)
 WAVE3_SECTIONS = {"stakeholders": "S", "allocations": "A", "validation": "S", "assumptions": "S", "changes": "L",
-                  "open_items": "D", "negotiations": "H", "se_phase": "S",
+                  "open_items": "D", "se_phase": "S",
                   # PI addendum
                   "semp": "X", "icds": "R", "reliability": "A", "thermal_model": "A", "debris": "L",
                   "change_control": "D", "cost": "A"}
 
 #: one GET per stub router (owner) and the write routes that answer 501 until the owner lands
 STUB_GETS = {"/moes": "S", "/validation/activities": "S", "/validation/need-validation": "S",
-             "/validation/coverage": "S", "/assumptions": "S", "/negotiations": "H", "/sensitivity": "H",
-             "/sensitivity/altitude": "H", "/changes": "L", "/open-items": "D", "/allocation-ledger": "A",
+             "/validation/coverage": "S", "/assumptions": "S", "/changes": "L", "/open-items": "D", "/allocation-ledger": "A",
              "/icds": "R", "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/debris-assessment": "L",
              "/cost/items": "A", "/changes/ECP-01/control": "D"}
-STUB_POSTS = ("/moes", "/stakeholders/import", "/validation/import", "/assumptions/import", "/negotiations",
+STUB_POSTS = ("/moes", "/stakeholders/import", "/validation/import", "/assumptions/import",
               "/changes/import", "/impact/preview", "/open-items/import", "/allocation-ledger/import",
               "/icds/ICD-DEP-01/issue", "/reliability/run", "/fmea/propose", "/thermal-model/propose",
               "/debris-assessment/run", "/changes/ECP-01/control/start", "/cost/price")

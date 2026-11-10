@@ -39,24 +39,37 @@ class ConflictDetectionAgent(DesignAgent):
         conflicts: list[CrossDomainConflict] = []
 
         # --- Rule 1: Data Rate vs Downlink Capacity ---
-        gen_gb = state.get("data.generated_per_day_gb", 0) or 0
-        dl_gb = state.get("data.downlinked_per_day_gb", 0) or 0
-        if gen_gb > 0 and dl_gb > 0 and gen_gb > dl_gb * 1.1:
+        # Wave 3 (3.H1): with the study's data budget in the state, compare what goes down the link
+        # (science after compression on the channel + housekeeping) with the capacity of the union
+        # of the passes; the payloads' acquired volume is only the Phase 0 estimate. Suggestions
+        # follow the band of the link (no Ka-band advice on a UHF study).
+        demand_mb = state.get("data.demand_mb_per_day")
+        cap_mb = state.get("data.capacity_mb_per_day")
+        if demand_mb is not None and cap_mb is not None:
+            gen_gb, dl_gb = float(demand_mb) / 1000.0, float(cap_mb) / 1000.0
+            tol = 1.0
+        else:
+            gen_gb = state.get("data.generated_per_day_gb", 0) or 0
+            dl_gb = state.get("data.downlinked_per_day_gb", 0) or 0
+            tol = 1.1
+        if gen_gb > 0 and dl_gb > 0 and gen_gb > dl_gb * tol:
             deficit_pct = ((gen_gb - dl_gb) / gen_gb) * 100
             severity = ConflictSeverity.MAJOR if deficit_pct > 50 else ConflictSeverity.MINOR
+            unit, scale = ("MB/day", 1000.0) if gen_gb < 1 else ("GB/day", 1.0)
+            band = link_band(state)
             conflicts.append(CrossDomainConflict(
                 id="CONF-DATA-001",
                 severity=severity,
                 title="Data Rate vs Downlink Capacity",
                 description=(
-                    f"Payload generates {gen_gb:.1f} GB/day but comms can only downlink "
-                    f"{dl_gb:.1f} GB/day — {deficit_pct:.0f}% data deficit. "
+                    f"Payload generates {gen_gb * scale:.1f} {unit} but comms can only downlink "
+                    f"{dl_gb * scale:.1f} {unit} — {deficit_pct:.0f}% data deficit. "
                     f"Either reduce payload data rate, increase downlink capacity, or add onboard selection/compression."
                 ),
                 domain_a="data", domain_b="link",
                 position_a="payload_lead", position_b="comms_engineer",
                 param_a="data.generated_per_day_gb", param_b="link.data_per_day_gb",
-                value_a_str=f"{gen_gb:.1f} GB/day", value_b_str=f"{dl_gb:.1f} GB/day",
+                value_a_str=f"{gen_gb * scale:.1f} {unit}", value_b_str=f"{dl_gb * scale:.1f} {unit}",
                 resolutions=[
                     ConflictResolution(
                         description="Reduce payload duty cycle or apply onboard data selection",
@@ -65,20 +78,14 @@ class ConflictDetectionAgent(DesignAgent):
                         suggested_direction="decrease",
                         estimated_impact=f"Reducing duty cycle to {(dl_gb/gen_gb)*100:.0f}% would close the gap",
                     ),
-                    ConflictResolution(
-                        description="Upgrade to Ka-band or add ground station passes",
-                        position_responsible="comms_engineer",
-                        parameter_to_change="link.downlink_rate_bps",
-                        suggested_direction="increase",
-                        estimated_impact="Ka-band at 26 GHz could provide 10x data rate improvement",
-                    ),
+                    *capacity_resolutions(band),
                     ConflictResolution(
                         description="Add onboard compression (2-4x typical for imaging payloads)",
                         position_responsible="payload_lead",
                         parameter_to_change="data.generated_per_day_gb",
                         suggested_direction="decrease",
                         estimated_impact="Compression ratio of 3:1 would reduce effective data to "
-                                         f"{gen_gb/3:.1f} GB/day",
+                                         f"{gen_gb * scale / 3:.1f} {unit}",
                     ),
                 ],
             ))
@@ -360,3 +367,51 @@ class ConflictDetectionAgent(DesignAgent):
 
         result.confidence = 0.90
         return result
+
+
+# ───────────────────────────────────────────────────────────── band-aware advice (wave 3, 3.H1)
+
+def link_band(state: DesignState) -> str:
+    """The downlink band from the link agent's frequency or the mission link (``UHF`` … ``Ka``)."""
+    f = state.get("link.frequency_ghz")
+    if f is None:
+        link = state.get_requirement("link") or {}
+        mhz = link.get("downlink_frequency_mhz") if isinstance(link, dict) else None
+        f = float(mhz) / 1000.0 if isinstance(mhz, (int, float)) and mhz > 0 else None
+    if f is None:
+        return ""
+    f = float(f)
+    return "VHF" if f < 0.3 else "UHF" if f < 1.0 else "L" if f < 2.0 else "S" if f < 4.0 else "X" if f < 12.0 \
+        else "Ku" if f < 18.0 else "Ka"
+
+
+def capacity_resolutions(band: str) -> list[ConflictResolution]:
+    """Ways to raise the downlink capacity that fit the band of the study."""
+    if band in ("VHF", "UHF"):
+        return [
+            ConflictResolution(description="Use the next rate tier of the radio when the link margin allows it",
+                               position_responsible="comms_engineer", parameter_to_change="link.downlink_rate_bps",
+                               suggested_direction="increase",
+                               estimated_impact="Doubling the rate doubles the capacity at about 3 dB less margin"),
+            ConflictResolution(description="Add a ground station (the union of the passes, not the sum, counts)",
+                               position_responsible="mission_analyst", parameter_to_change="orbit.contact_time_per_day_s",
+                               suggested_direction="increase",
+                               estimated_impact="A northern site adds most passes on a sun-synchronous orbit"),
+            ConflictResolution(description="Add an S-band downlink for payload data (new licence and radio)",
+                               position_responsible="comms_engineer", parameter_to_change="link.downlink_rate_bps",
+                               suggested_direction="increase",
+                               estimated_impact="About 10x the UHF rate, at the cost of mass, power and a new frequency filing"),
+        ]
+    nxt = {"L": "S-band", "S": "X-band", "X": "Ka-band", "Ku": "Ka-band"}.get(band)
+    out = [ConflictResolution(description="Add ground station passes", position_responsible="mission_analyst",
+                              parameter_to_change="orbit.contact_time_per_day_s", suggested_direction="increase",
+                              estimated_impact="Capacity scales with the union of the pass time")]
+    if nxt:
+        out.insert(0, ConflictResolution(description=f"Move the payload downlink to {nxt}", position_responsible="comms_engineer",
+                                         parameter_to_change="link.downlink_rate_bps", suggested_direction="increase",
+                                         estimated_impact=f"{nxt} supports a much higher data rate (new licence and radio)"))
+    else:
+        out.insert(0, ConflictResolution(description="Raise the downlink data rate (modulation and coding)",
+                                         position_responsible="comms_engineer", parameter_to_change="link.downlink_rate_bps",
+                                         suggested_direction="increase"))
+    return out

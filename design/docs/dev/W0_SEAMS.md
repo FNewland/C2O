@@ -510,6 +510,7 @@ L owns the file after step 0 and adds keys on request.
 | S3 | `_s3_negotiations` (skip when `seed.recording`) | H |
 | S4 | `_s4_ait_v2` (after `ait/propose`) | A |
 | S4 | `_s4_licensing` (skipped when `seed.recording`) | L |
+| S4 | `_s4_negotiations` (last; skipped when `seed.recording`): the S3 records recomputed on the S4 design, the baseline option chosen and signed by every seat | H |
 
 The addendum work (ICD issues, reliability, thermal model, debris assessment, change control,
 cost) has no seed step. The walkthrough does it on camera. An owner who needs fixture data for

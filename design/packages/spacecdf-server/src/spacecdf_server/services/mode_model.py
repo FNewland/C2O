@@ -327,10 +327,12 @@ def energy_balance(modes: list[Any], elements: list[dict], *, period_s: float, e
 
     rows = []
     load_w: dict[str, float] = {}
+    cbe_w: dict[str, float] = {}
     for m in modes:
         pw = mode_power(m, by_id)
         p_tot = pw["with_maturity_w"] * sysf
         load_w[_attr(m, "id")] = p_tot
+        cbe_w[_attr(m, "id")] = pw["cbe_w"]
         f = _gen_factor(_attr(m, "pointing"), c)
         gen = (sa_power_eol_w or 0.0) * f
         e_gen = gen * t_sun / 3600
@@ -391,6 +393,9 @@ def energy_balance(modes: list[Any], elements: list[dict], *, period_s: float, e
                    "generated_wh": round(b["generated_wh"], 3), "needed_wh": round(b["needed_wh"], 3),
                    "balance_wh": round(b["balance_wh"], 3) if sa_power_eol_w else None,
                    "orbit_average_load_w": round(sum(load_w[_attr(m, "id")] * f for m, f in mix) / (sum(f for _, f in mix) or 1), 3),
+                   # wave 3 (3.H3): the current best estimate over the mix (no maturity, no system margin)
+                   "orbit_average_cbe_w": round(sum(cbe_w[_attr(m, "id")] * f for m, f in mix) / (sum(f for _, f in mix) or 1), 3),
+                   "share_total": round(sum(f for _, f in mix), 4),
                    "dod_percent": round(dod, 2) if dod is not None else None,
                    "status": ("not_evaluated" if not sa_power_eol_w else
                               "pass" if b["balance_wh"] >= 0 and (dod is None or dod <= dod_lim) else "fail")}
@@ -490,6 +495,12 @@ def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stati
     if designed:
         gen_gb_day += float(budget["stored"]["events_mb_per_day"]) / 1000.0
 
+    # Wave 3 (3.H2): with a data budget, every capacity figure applies what the ground closure
+    # applies: the frame efficiency, the acquisition time of each window and the availability.
+    fr_b = (budget or {}).get("framing") or {}
+    acq_s = float(fr_b.get("acquisition_s") or 0.0) if budget else 0.0
+    avail = float(fr_b.get("availability") or 1.0) if budget else 1.0
+    st_eff = float(fr_b.get("frame_efficiency") or eff) if budget else eff
     st_rows = []
     contact_sum = 0.0
     for s in stations:
@@ -498,25 +509,43 @@ def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stati
         low = s.get("margin_db") is not None and float(s["margin_db"]) < min_margin
         mins = float(s.get("contact_min_per_day") or 0.0) if ok else 0.0
         contact_sum += mins
-        st_rows.append({**s, "used": ok, "low_margin": bool(low and ok),
-                        "capacity_gb_per_day": round(mins * 60 * link_rate_bps * eff / 8e9, 4)})
+        usable = max(0.0, mins - float(s.get("contacts_per_day") or 0.0) * acq_s / 60.0) * avail
+        st_rows.append({**s, "used": ok, "low_margin": bool(low and ok), "usable_min_per_day": round(usable, 2),
+                        "capacity_gb_per_day": round(usable * 60 * link_rate_bps * st_eff / 8e9, 4)})
     rt_mb = 0.0
+    total_mb = alloc_mb = None
     if budget and budget.get("capacity"):
         cap = budget["capacity"]
         contact_min = float(cap["union_min_per_day"])
         rt_mb = float(next((x["rt_hk_mb"] for x in budget.get("cases") or [] if x["id"] == "C1"), 0.0)) if designed else 0.0
-        cap_gb_day = max(0.0, float(cap["capacity_mb_per_day"]) - rt_mb) / 1000.0
-        fr = budget.get("framing") or {}
-        eff_used = float(fr.get("frame_efficiency") or eff)
+        total_mb = float(cap["capacity_mb_per_day"])
+        alloc_mb = cap.get("allocatable_mb_per_day")
+        cap_gb_day = max(0.0, total_mb - rt_mb) / 1000.0
+        eff_used = float(fr_b.get("frame_efficiency") or eff)
         cap_src = "union"
     else:
         contact_min = contact_sum
         cap_gb_day = contact_min * 60 * link_rate_bps * eff / 8e9
         eff_used = eff
         cap_src = "sum_of_stations"
-    need_gb = gen_gb_day * buffer_days
+    # What goes down the link: with designed payload products (TM/TC → payload products) the
+    # science files after compression on the channel plus the stored HK, not the frames the
+    # camera writes at its interface rate during an acquisition (those stay on the payload store
+    # and are sized there). Without products, every mode's data rate counts (the older model).
+    sci = (budget or {}).get("science") or {}
+    products = bool(sci.get("products")) and sci.get("on_channel_mb_per_day") is not None
+    acquired_gb_day = gen_gb_day
+    if products:
+        stored_mb = float(budget["stored"]["mb_per_day"]) if designed else hk_const * 86400 / 8e6
+        to_dl_gb_day = (float(sci["on_channel_mb_per_day"]) + stored_mb) / 1000.0
+        gen_basis = "products"
+    else:
+        to_dl_gb_day = gen_gb_day
+        gen_basis = "modes"
+    need_gb = to_dl_gb_day * buffer_days
     need_with_margin = need_gb * (1 + storage_margin_percent / 100)
-    growth = gen_gb_day - cap_gb_day
+    growth = to_dl_gb_day - cap_gb_day
+    gen_gb_day = to_dl_gb_day
     days_to_full = None
     if storage_gb and growth > 0:
         days_to_full = round(storage_gb / growth, 2)
@@ -550,6 +579,9 @@ def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stati
         "per_mode": per_mode, "housekeeping_bps": hk_const if not designed else round(float(budget["stored"]["mix_bps"]), 1),
         "housekeeping": hk, "orbits_per_day": round(orbits_per_day, 3),
         "generated_gb_per_day": round(gen_gb_day, 4),
+        # "products": generated = science files on the channel + stored HK; "acquired" is what the
+        # payload writes at its interface rate over the operational mix (mode data rates)
+        "generation_basis": gen_basis, "acquired_gb_per_day": round(acquired_gb_day, 4),
         "storage": {"capacity_gb": storage_gb, "buffer_days": buffer_days, "need_gb": round(need_gb, 4),
                     "need_with_margin_gb": round(need_with_margin, 4), "margin_percent": storage_margin_percent},
         "downlink": {"rate_bps": link_rate_bps, "protocol_efficiency": round(eff_used, 4), "contact_min_per_day": round(contact_min, 2),
@@ -558,13 +590,116 @@ def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stati
                      # the figure above is what is LEFT for stored data after the real-time HK of the
                      # passes; the data budget's total channel capacity is beside it (labelled in the UI)
                      "capacity_basis": "after_realtime_hk" if rt_mb > 0 else "total",
-                     "total_capacity_mb_per_day": round(float(budget["capacity"]["capacity_mb_per_day"]), 2)
-                     if budget and budget.get("capacity") else round(cap_gb_day * 1000.0, 2),
+                     "total_capacity_mb_per_day": round(total_mb, 2) if total_mb is not None else round(cap_gb_day * 1000.0, 2),
+                     "remaining_after_realtime_hk_mb_per_day": round(cap_gb_day * 1000.0, 2),
+                     "allocatable_mb_per_day": alloc_mb,
+                     "allocatable_percent": (budget or {}).get("capacity", {}).get("allocatable_percent"),
+                     "acquisition_s": acq_s if budget else None, "availability": avail if budget else None,
                      "realtime_hk_mb_per_day": round(rt_mb, 3),
                      "usable_min_per_day": (budget or {}).get("capacity", {}).get("usable_min_per_day")},
         "backlog_growth_gb_per_day": round(growth, 4), "days_to_full": days_to_full,
         "checks": checks,
     }
+
+
+# ───────────────────────────────────────────────────────────── mode shares from the ConOps (3.H3)
+
+def share_inputs(products: dict | None = None, c: dict | None = None) -> dict[str, float]:
+    """Imaging-share inputs: the payload products row (TM/TC) first, then ``mode_rules.shares``."""
+    c = c or cfg()
+    sh = c.get("shares") or {}
+    p = products or {}
+
+    def pick(k: str, dflt: float) -> float:
+        v = _num(p.get(k))
+        return float(v) if v is not None and v >= 0 else float(_num((sh.get(k) or {}).get("value")) or dflt)
+    return {"acquisitions_per_orbit": pick("acquisitions_per_orbit", 1.0), "acquisition_s": pick("acquisition_s", 240.0),
+            "settle_s": pick("settle_s", 60.0)}
+
+
+def share_proposals(modes: list[Any], *, union_min_per_day: float | None, period_s: float,
+                    products: dict | None = None, stations: list[str] | None = None,
+                    c: dict | None = None) -> list[dict[str, Any]]:
+    """The proposed share of the operational orbit of every mode of the mix (A4), with provenance.
+
+    * downlink kind: union of the station passes ÷ 1440 min (the radio transmits on every pass);
+    * imaging kind: acquisitions per orbit × (acquisition + settle) ÷ period;
+    * nominal kind: the balance, 1 − the other modes of the operational mix;
+    * other modes of the mix (custom, e.g. a seasonal night mode) keep their share (no rule).
+
+    Each row carries ``inputs`` and their hash, and the mode's accepted ``share_basis`` (stored in
+    the mode's performance by the accept route): ``status`` is ``matches`` (current = proposed),
+    ``proposed``, ``accepted``, ``overridden`` (accepted with a reason) or ``stale`` (accepted on
+    other inputs: the stations, the settle time or the products changed since)."""
+    c = c or cfg()
+    tol = float((c.get("shares") or {}).get("match_tolerance") or 0.0005)
+    T = float(period_s or 5700.0)
+    si = share_inputs(products, c)
+    mix = [m for m in modes if in_operational_mix(m) or (_attr(m, "kind") or "") in MIX_KINDS]
+    rows: list[dict[str, Any]] = []
+    proposed: dict[str, float | None] = {}
+    for m in mix:
+        kind = _attr(m, "kind") or "custom"
+        mid = _attr(m, "id")
+        inp: dict[str, Any] = {}
+        if kind == "downlink":
+            if union_min_per_day is None:
+                val, prov = None, {"en": "no contact plan: add ground stations", "fr": "pas de plan de contact : ajouter des stations sol"}
+            else:
+                val = float(union_min_per_day) / 1440.0
+                inp = {"union_min_per_day": round(float(union_min_per_day), 2), "stations": sorted(stations or [])}
+                prov = {"en": f"union of the station passes {union_min_per_day:.1f} min/day ÷ 1440 min = {100 * val:.1f} %",
+                        "fr": f"union des passages aux stations {union_min_per_day:.1f} min/j ÷ 1440 min = {100 * val:.1f} %"}
+            basis = "union_contact"
+        elif kind == "imaging":
+            dur = si["acquisition_s"] + si["settle_s"]
+            val = si["acquisitions_per_orbit"] * dur / T
+            inp = {**si, "period_s": round(T, 1)}
+            prov = {"en": f"{si['acquisitions_per_orbit']:g} acquisition(s) per orbit × ({si['acquisition_s']:g} s + "
+                          f"{si['settle_s']:g} s settle) ÷ {T / 60:.1f} min = {100 * val:.1f} %",
+                    "fr": f"{si['acquisitions_per_orbit']:g} acquisition(s) par orbite × ({si['acquisition_s']:g} s + "
+                          f"{si['settle_s']:g} s de stabilisation) ÷ {T / 60:.1f} min = {100 * val:.1f} %"}
+            basis = "acquisitions"
+        else:
+            continue
+        proposed[mid] = val
+        rows.append({"mode_id": mid, "name": _attr(m, "name"), "kind": kind, "basis": basis, "inputs": inp,
+                     "proposed_fraction": round(val, 4) if val is not None else None, "provenance": prov})
+    nominal = next((m for m in mix if (_attr(m, "kind") or "") == "nominal"), None)
+    if nominal is not None:
+        others = 0.0
+        for m in mix:
+            if m is nominal:
+                continue
+            v = proposed.get(_attr(m, "id"))
+            others += float(v if v is not None else (_num(_attr(m, "orbit_fraction")) or 0.0))
+        val = max(0.0, 1.0 - others)
+        rows.append({"mode_id": _attr(nominal, "id"), "name": _attr(nominal, "name"), "kind": "nominal", "basis": "balance",
+                     "inputs": {"other_modes": round(others, 4)}, "proposed_fraction": round(val, 4),
+                     "provenance": {"en": f"balance of the orbit: 100 % − {100 * others:.1f} % of the other modes = {100 * val:.1f} %",
+                                    "fr": f"solde de l’orbite : 100 % − {100 * others:.1f} % des autres modes = {100 * val:.1f} %"}})
+    by_id = {_attr(m, "id"): m for m in mix}
+    for r in rows:
+        m = by_id[r["mode_id"]]
+        cur = _num(_attr(m, "orbit_fraction"))
+        r["current_fraction"] = cur
+        r["inputs_hash"] = _hash(r["inputs"])
+        acc = _attr(m, "share_basis") or None
+        r["accepted"] = acc
+        p = r["proposed_fraction"]
+        if p is None:
+            r["status"] = "not_evaluated"
+        elif acc and acc.get("inputs_hash") and acc["inputs_hash"] != r["inputs_hash"] and \
+                (cur is None or abs(cur - p) > tol):
+            r["status"] = "stale"
+        elif cur is not None and abs(cur - p) <= tol:
+            r["status"] = "accepted" if acc and not acc.get("override_reason") else "matches"
+        elif acc and acc.get("override_reason") and acc.get("inputs_hash") == r["inputs_hash"]:
+            r["status"] = "overridden"
+        else:
+            r["status"] = "proposed"
+    order = {"downlink": 0, "imaging": 1, "nominal": 2}
+    return sorted(rows, key=lambda r: order.get(r["kind"], 3))
 
 
 # ───────────────────────────────────────────────────────────── mode machine checks (MO-05/06)
