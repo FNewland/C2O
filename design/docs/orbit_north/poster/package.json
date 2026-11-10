@@ -1,0 +1,10 @@
+{
+  "name": "orbit-north-poster",
+  "private": true,
+  "description": "Fonts for the ORBIT NORTH recruitment poster (SIL OFL 1.1)",
+  "dependencies": {
+    "@fontsource/manrope": "5.3.0",
+    "@fontsource/space-mono": "5.3.0",
+    "@fontsource/unbounded": "5.3.0"
+  }
+}
