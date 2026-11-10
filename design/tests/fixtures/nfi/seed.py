@@ -580,17 +580,28 @@ TRADE_CHOICE = {"T-01": 1, "T-02": 0, "T-03": 0, "T-04": 1, "T-05": 1, "T-06": 0
 
 
 async def _s3_trades(api: _Api, seed: NfiSeed) -> None:
-    """W6: every trade of ``trades.yaml`` with its pairwise weights, linked to the requirements,
-    risks and the subsystem it affects, then decided (decision record + logbook entry)."""
+    """W6, rewritten in wave 3 (3.D3): the v2 system trades (T-M01 orbit and T-M02 launch at MDR,
+    T-S01 data architecture at SRR; PI ruling), the architecture trades of the PDR (T-A01, T-A02)
+    and the eight subsystem trades of ``trades.yaml``, each linked to the requirements, risks and
+    the subsystem it affects; then decided: the subsystem trades as the logbook records them, the
+    system trades and T-A02 on their recommendation (option A), T-A01 left open (ECP-01)."""
     import re
     sid, data = seed.study_id, load("trades")
     cites: dict[str, list[str]] = {}
     for r in load("requirements")["requirements"]:
         blob = " ".join(str(r.get(k) or "") for k in ("source", "rationale", "text"))
-        for tid in set(re.findall(r"\bT-0\d\b", blob)):
+        for tid in set(re.findall(r"\bT-(?:[MSA])?0\d\b", blob)):
             cites.setdefault(tid, []).append(r["id"])
     names = {e.get("name"): e for e in seed.elements.values()}
     trades = []
+    for t in [*data["system_trades"], *data["architecture_trades"]]:
+        tid = t["id"]
+        blob = " ".join(str(x) for x in [*(t.get("must") or []), *(t.get("acceptance_conditions") or []),
+                                          *[c.get("weight_rationale") or "" for c in t.get("criteria") or []]])
+        codes = [c for c in re.findall(r"\b[A-Z]{3}-[A-Z]{2,4}-\d{2}\b", blob) if c in seed.requirements]
+        reqs = list(dict.fromkeys([*codes, *[c for c in cites.get(tid, []) if c in seed.requirements]]))
+        risks = list(dict.fromkeys(m for x in t.get("risks_of_selected") or [] for m in re.findall(r"RSK-\d{3}", str(x))))
+        trades.append({**t, "links": {"requirements": reqs, "risks": risks, "elements": []}})
     for t in data["trades"]:
         tid = t["id"]
         reqs = [c for c in dict.fromkeys([*TRADE_REQUIREMENTS.get(tid, []), *cites.get(tid, [])]) if c in seed.requirements]
@@ -599,8 +610,14 @@ async def _s3_trades(api: _Api, seed: NfiSeed) -> None:
         trades.append({**t, "links": {"requirements": reqs, "risks": TRADE_RISKS.get(tid, []), "elements": els,
                                       "decision_record": t.get("decision_record")}})
     res = await api.post(f"/api/studies/{sid}/trades/import", {"trades": trades, "pairwise_inputs": data["pairwise_inputs"]})
-    if len(res["added"]) != len(data["trades"]):
+    if len(res["added"]) != len(trades):
         raise SeedError(f"trades import: {res}")
+    for t in [*data["system_trades"], *data["architecture_trades"]]:
+        if t["id"] in SYSTEM_TRADE_CHOICE:
+            seed.trades[t["id"]] = await api.post(f"/api/studies/{sid}/trades/{t['id']}/decision", {
+                "selected": SYSTEM_TRADE_CHOICE[t["id"]], "rationale": t.get("recommendation", ""), "seat": t.get("seat", "")})
+        else:
+            seed.trades[t["id"]] = await api.call("GET", f"/api/studies/{sid}/trades/{t['id']}")
     notes = {e["decision"].split()[-1]: e for e in load("logbook")["entries"] if str(e["decision"]).startswith("decide:pugh")}
     for t in data["trades"]:
         tid = t["id"]
@@ -614,6 +631,11 @@ async def _s3_trades(api: _Api, seed: NfiSeed) -> None:
                                                     "context": {"study_id": sid, "where": "decide", "trade": tid,
                                                                 "decision_record": t.get("decision_record") or ""}},
                            ok=(200, 201))
+
+
+#: wave 3 (3.D3): the decided v2 system and architecture trades (their recommendation); T-A01 stays
+#: open until ECP-01 is decided at the PDR
+SYSTEM_TRADE_CHOICE = {"T-M01": "A", "T-M02": "A", "T-S01": "A", "T-A02": "A"}
 
 
 #: three MDR RIDs / actions (logbook.yaml LB-23 lists the MCR actions), neutral wording
@@ -1009,18 +1031,50 @@ async def _readiness_patch(api: _Api, seed: NfiSeed, name: str, r: dict) -> None
 
 
 async def _s2_conops_scenarios(api: _Api, seed: NfiSeed) -> None:
-    """TODO(D, 3.D5): the 12 ConOps scenarios of ``vv_plan.yaml``
-    ``conops_scenarios_for_requirements_validation`` with their requirement links."""
+    """3.D5: the 12 ConOps scenarios of ``vv_plan.yaml`` ``conops_scenarios_for_requirements_validation``
+    with their requirement codes (resolved when the requirements arrive at S3), in one call."""
+    sc = load("vv_plan")["conops_scenarios_for_requirements_validation"]
+    res = await api.post(f"/api/studies/{seed.study_id}/conops/scenarios/import", {"scenarios": sc})
+    seed.report["conops_scenarios"] = res["counts"]["total"]
 
 
 async def _s3_risks(api: _Api, seed: NfiSeed) -> None:
-    """TODO(D, 3.D6): residual L/C and owner seats of the v2 risks (the loop in ``_s3`` posts the
-    37 risks without them today)."""
+    """3.D6: the residual L × C and the owner seat (from the v2 owner label) of every v2 risk, in
+    one call, on the risks the loop in ``_s3`` posted (same order, so the same RSK ids)."""
+    rows = load("risks")["risks"]
+    patch = [{"id": posted["id"], "residual_likelihood": int(r["residual"][0]), "residual_consequence": int(r["residual"][1]),
+              "owner_seat": r.get("owner", "")} for posted, r in zip(seed.risks, rows) if r.get("residual")]
+    res = await api.post(f"/api/studies/{seed.study_id}/risks/bulk-update", {"risks": patch})
+    if res["missing"]:
+        raise SeedError(f"risks bulk-update: {res}")
+    seed.risks = await api.call("GET", f"/api/studies/{seed.study_id}/risks")
+
+
+#: 3.D4: the gate each open decision of NUMBERS blocks (v2 REVIEW_READINESS, PDR actions 3, 4, 6)
+#: and the PI's ruling on the two PI decisions (PI_DECISIONS: 13 MB/day after compression; >= 1.3:1)
+OPEN_DECISION_GATES = {"D-PI-01": "prr", "D-PI-02": "prr", "D-GND-01": "pdr", "D-GND-02": "pdr",
+                       "D-PAY-01": "pdr", "D-COM-01": "pdr"}
+PI_RULINGS = {
+    "D-PI-01": "PI ruling: keep 13 MB/day of science delivered after lossless compression as the target "
+               "(robust to losing a site).",
+    "D-PI-02": "PI ruling: lossless compression of at least 1.3:1 is a payload requirement, 1.5:1 the goal, "
+               "verified on simulated scenes before CDR.",
+}
 
 
 async def _s3_open_items(api: _Api, seed: NfiSeed) -> None:
-    """TODO(D, 3.D4): NUMBERS ``open_decisions`` (D-PI-01/02 closed by the PI ruling, D-GND-01/02,
-    D-PAY-01, D-COM-01 open); the T-07 condition and fallback."""
+    """3.D4: NUMBERS ``open_decisions`` in one call (D-PI-01/02 closed by the PI ruling; D-GND-01/02,
+    D-PAY-01, D-COM-01 open, blocking the PDR); then the T-07 radio decision becomes conditional:
+    "450.25 MHz receive edge confirmed", fallback AX100UL + R0405, risks RSK-001 and RSK-010."""
+    sid = seed.study_id
+    items = [{**d, "blocks_gate": OPEN_DECISION_GATES.get(d["id"], ""),
+              **({"status": "closed", "resolution": PI_RULINGS[d["id"]]} if d["id"] in PI_RULINGS else {})}
+             for d in load("NUMBERS")["open_decisions"]]
+    res = await api.post(f"/api/studies/{sid}/open-items/import", {"items": items})
+    seed.report["open_items"] = len(res["added"])
+    seed.trades["T-07"] = await api.call("PUT", f"/api/studies/{sid}/trades/T-07/condition", {
+        "condition": "450.25 MHz receive edge confirmed by the radio vendor", "fallback": "AX100UL + R0405",
+        "risks": ["RSK-001", "RSK-010"], "blocks_gate": "pdr"})
 
 
 #: 3.L4: the impact-preview specs of the change records, read from their ``impact`` lines in

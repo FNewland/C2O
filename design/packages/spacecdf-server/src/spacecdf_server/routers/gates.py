@@ -26,6 +26,17 @@ Gate review record (W4.08):
 * ``GET  /studies/{sid}/gate-baselines/diff``    — what changed between two baselines (``?a=&b=``
                                                     baseline ids, or ``?gate=`` = against the gate before)
 
+Wave 3 (3.D1, PI ruling: warn by default, the instructor can block):
+
+* ``GET/PUT /studies/{sid}/gate-enforcement``     — ``{"mode": off|warn|block}`` (PUT: instructor)
+* ``GET  /studies/{sid}/gates/{gate}/inventory``  — the stage-transition inventory shown before a review
+                                                    starts: protocol entry items and deliverables,
+                                                    order, open items, products and baseline kind
+* ``start`` checks the protocol: ``warn`` → 200 and ``warnings[]`` written to the history;
+  ``block`` → 409 ``out_of_order`` or ``deliverables_missing``; ``pass`` names the baseline kind
+  (mission, functional, allocated, product).
+* SRR and PDR carry the review-readiness criteria SRR-RD-*, PDR-RD-* (``gate_reviews``).
+
 Gates after CDR (QR, AR, FRR) have no criteria in gate_exit_criteria.yaml yet: their checklist is
 the review-record criteria of services/gate_reviews.py (earlier RIDs closed; board evidence that
 the instructor signs off).
@@ -42,7 +53,8 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from ..services import gate_profiles as gp
-from ..services.gate_reviews import GateTransitionError, display_state, transition
+from ..services.gate_reviews import (READINESS_CRITERIA, GateTransitionError, display_state, readiness_criteria,
+                                     transition)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -134,6 +146,14 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
         ctx["signoffs"] = dict((await seat_store.get_team(study_id)).get("signoffs") or {})
     except Exception:  # noqa: BLE001
         ctx["signoffs"] = {}
+    # wave 3 (PI addendum): the review-readiness evidence of SRR and PDR (SEMP, debris, ICDs,
+    # reliability and FMEA, thermal model, change decisions), read from the other tools' records
+    covers = {c for g in ((study_profile(study).get("gates") or []) if study else []) for c in (g.get("covers") or [])}
+    if covers & set(READINESS_CRITERIA):
+        from ..services import gate_evidence
+        ctx["evidence"] = await gate_evidence.collect(study_id)
+    else:
+        ctx["evidence"] = {}
     return ctx
 
 
@@ -182,6 +202,9 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
             earlier = set(order[: order.index(pg["id"])]) if pg["id"] in order else set()
             res = {**res, "criteria": [*(res.get("criteria") or []),
                                        *post_cdr_criteria(canon, ctx.get("rids") or [], earlier)]}
+        if canon in READINESS_CRITERIA:   # wave 3 (PI addendum): SRR-RD-*, PDR-RD-*
+            res = {**res, "criteria": [*(res.get("criteria") or []),
+                                       *readiness_criteria(canon, ctx.get("evidence"))]}
         for c in res.get("criteria", []):
             c["canonical_gate"] = canon
             so = (ctx.get("signoffs") or {}).get(c.get("id"))
@@ -236,6 +259,14 @@ async def evaluate_study_gate(study_id: str, gate: str, form_factor: str | None 
         raise HTTPException(status_code=404, detail=f"Unknown review gate for profile {profile['id']}: {gate}")
     ev = _evaluate(ctx, pg)
     entry = (getattr(study, "gate_states", None) or {}).get(pg["id"]) if study else None
+    from ..services.gate_reviews import baseline_kind, enforcement_mode
+    open_items: list[dict] = []
+    if study is not None:
+        try:   # 3.D4: the open items that block this gate (or an earlier one)
+            from ..services.open_items import register
+            open_items = (await register(study_id, study, blocks_gate=pg["id"]))["items"]
+        except Exception:  # noqa: BLE001
+            logger.debug("open items unavailable for %s", study_id, exc_info=True)
     return {
         "study_id": study_id, "study_found": study is not None,
         "profile": gp.public_profile(profile), "gate": _gate_public(pg),
@@ -244,6 +275,9 @@ async def evaluate_study_gate(study_id: str, gate: str, form_factor: str | None 
         "baselines": list((entry or {}).get("baselines") or []),
         "review": dict((entry or {}).get("review") or {}),
         "products_baselined": gp.products_baselined(pg),
+        "baseline_kind": baseline_kind(pg, gp.load()),
+        "enforcement": enforcement_mode(profile, getattr(study, "gate_states", None) if study else None, gp.load()),
+        "open_items": open_items,
         **ev,
     }
 
@@ -347,10 +381,28 @@ async def gate_review_action(study_id: str, gate: str, body: ReviewBody, request
     ev = _evaluate(ctx, pg)
     states = dict(study.gate_states or {})
     by = _who(request, body.by)
+    warnings: list[dict] = []
+    if body.action == "start":    # 3.D1: the protocol before the review (warn | block | off)
+        from ..services.gate_reviews import blocking_code, enforcement_mode, finding_text
+        mode = enforcement_mode(profile, states, gp.load())["mode"]
+        if mode != "off":
+            inv = await transition_inventory(study_id, study, profile, pg)
+            findings = inv["findings"]
+            code = blocking_code(findings)
+            if mode == "block" and code:
+                blocking = [f for f in findings if f["code"] == code or (code == "deliverables_missing"
+                                                                          and f["code"] == "entry_missing")]
+                raise HTTPException(status_code=409, detail={
+                    "code": code, "message": "; ".join(finding_text(f) for f in blocking),
+                    "items": blocking, "enforcement": mode})
+            warnings = [{**f, "text": finding_text(f)} for f in findings]
     try:
         entry = transition(states.get(pg["id"]), body.action, ready=ev["ready"], by=by, note=body.note)
     except GateTransitionError as exc:
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": str(exc)}) from exc
+    if warnings:
+        entry["history"][-1]["warnings"] = [{k: w.get(k) for k in ("code", "kind", "id", "owner_seat", "state", "text")}
+                                            for w in warnings]
     if body.action == "pass":
         baseline = await _save_baseline(study, profile, pg, ev, ctx, by)
         entry["baselines"] = [*entry.get("baselines", []), baseline]
@@ -363,14 +415,138 @@ async def gate_review_action(study_id: str, gate: str, body: ReviewBody, request
         await seat_store.log_event(study_id, "team_leader" if seat.holds("team_leader") else "instructor", seat.person,
                                    f"gate_{body.action}", pg["id"], {"note": body.note})
         request.state.seat_logged = True
-    return await evaluate_study_gate(study_id, pg["id"])
+    out = await evaluate_study_gate(study_id, pg["id"])
+    if warnings:
+        out["warnings"] = warnings
+    return out
+
+
+async def protocol_items(study_id: str, study: Any, pg: dict[str, Any]) -> dict[str, Any]:
+    """The protocol's entry items and deliverables for profile gate ``pg``: agent S's
+    deliverables service when it has landed (``se_deliverables.evaluate``), else ``/phase`` when
+    it describes this gate, plus the trade deliverable of the PI ruling (D's trades) when the
+    protocol lists none."""
+    from ..services import trades as tr
+    entry: list[dict] = []
+    deliverables: list[dict] = []
+    source = "none"
+    try:
+        from ..services import se_deliverables as sd   # agent S, 3.S2
+        fn = getattr(sd, "evaluate", None)
+        res = None
+        if fn is not None:
+            for call in (lambda: fn(study_id, gate=pg["id"]), lambda: fn(study_id, pg["id"]),
+                         lambda: fn(study_id, study, pg["id"])):
+                try:
+                    res = call()
+                    if hasattr(res, "__await__"):
+                        res = await res
+                    break
+                except TypeError:
+                    continue
+        if isinstance(res, list):
+            deliverables, source = res, "se_deliverables"
+        elif isinstance(res, dict):
+            deliverables, entry, source = list(res.get("deliverables") or []), list(res.get("entry") or []), "se_deliverables"
+    except ImportError:
+        pass
+    except Exception:  # noqa: BLE001 — a broken protocol never stops a review
+        logger.exception("se_deliverables failed for %s", study_id)
+    if source == "none":
+        try:
+            from ..services.se_protocol import phase
+            ph = await phase(study_id, study)
+            if ph.get("status") != "not_implemented" and str(ph.get("gate") or "") in (pg["id"], *(pg.get("covers") or [])):
+                entry, deliverables, source = list(ph.get("entry") or []), list(ph.get("deliverables") or []), "phase"
+        except Exception:  # noqa: BLE001
+            logger.debug("phase unavailable for %s", study_id, exc_info=True)
+    if not any(d.get("kind") == "trade" for d in deliverables):
+        recs = _trade_records(study)
+        for canon in pg.get("covers") or []:
+            d = tr.trade_deliverable(recs, canon)
+            if d:
+                deliverables.append(d)
+    return {"entry": entry, "deliverables": deliverables, "source": source}
+
+
+async def transition_inventory(study_id: str, study: Any, profile: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
+    """The stage-transition inventory of a gate (shown before "Start review"): the protocol's
+    entry items and deliverables, the gates before it, the products it baselines and the
+    baseline kind, and the findings a start would warn about or block on."""
+    from ..services.gate_reviews import baseline_kind, enforcement_mode, protocol_checks
+    states = dict(getattr(study, "gate_states", None) or {})
+    prot = await protocol_items(study_id, study, pg)
+    order = [g["id"] for g in profile.get("gates") or []]
+    findings = protocol_checks(pg["id"], order, states, prot["entry"], prot["deliverables"])
+    return {"gate": _gate_public(pg), "entry": prot["entry"], "deliverables": prot["deliverables"],
+            "protocol_source": prot["source"],
+            "earlier_gates": [{"id": g, "state": (states.get(g) or {}).get("state") or "not_passed"}
+                              for g in order[: order.index(pg["id"])]] if pg["id"] in order else [],
+            "products_baselined": gp.products_baselined(pg), "baseline_kind": baseline_kind(pg, gp.load()),
+            "enforcement": enforcement_mode(profile, states, gp.load()), "findings": findings}
+
+
+@router.get("/studies/{study_id}/gates/{gate}/inventory")
+async def gate_inventory(study_id: str, gate: str) -> dict:
+    """The stage-transition inventory of a gate (3.D2: shown before the review starts)."""
+    study = _study_or_404(study_id)
+    profile = study_profile(study)
+    pg = gp.gate_of(profile, gate)
+    if pg is None:
+        raise HTTPException(status_code=404, detail=f"Unknown review gate: {gate}")
+    inv = await transition_inventory(study_id, study, profile, pg)
+    try:
+        from ..services.open_items import register
+        inv["open_items"] = (await register(study_id, study, blocks_gate=pg["id"]))["items"]
+    except Exception:  # noqa: BLE001
+        inv["open_items"] = []
+    return {"study_id": study_id, **inv}
+
+
+class EnforcementBody(BaseModel):
+    mode: str
+
+
+@router.get("/studies/{study_id}/gate-enforcement")
+async def get_gate_enforcement(study_id: str) -> dict:
+    from ..services.gate_reviews import ENFORCEMENT_MODES, enforcement_mode
+    study = _study_or_404(study_id)
+    return {"study_id": study_id, "modes": list(ENFORCEMENT_MODES),
+            **enforcement_mode(study_profile(study), study.gate_states, gp.load())}
+
+
+@router.put("/studies/{study_id}/gate-enforcement")
+async def put_gate_enforcement(study_id: str, body: EnforcementBody, request: Request) -> dict:
+    """The instructor sets how the protocol is enforced at review start (PI ruling: ``warn`` by
+    default; ``block`` refuses a start with missing deliverables or out of order)."""
+    from ..services.gate_reviews import ENFORCEMENT_MODES, SETTINGS_KEY, enforcement_mode
+    from ..seats.service import seat_ctx
+    study = _study_or_404(study_id)
+    ctx = await seat_ctx(request, study_id)
+    if ctx.enabled and not ctx.instructor:
+        raise HTTPException(status_code=403, detail={"code": "instructor_only",
+                                                     "message": "Only the instructor sets the gate enforcement"})
+    if body.mode not in ENFORCEMENT_MODES:
+        raise HTTPException(status_code=422, detail=f"mode must be one of {', '.join(ENFORCEMENT_MODES)}")
+    from datetime import datetime, timezone
+    states = dict(study.gate_states or {})
+    states[SETTINGS_KEY] = {**dict(states.get(SETTINGS_KEY) or {}), "se_enforcement": body.mode,
+                            "set_by": _who(request, ""), "set_at": datetime.now(timezone.utc).isoformat()}
+    study.gate_states = states
+    await _save(study)
+    await _broadcast(study_id, "gate_profile_changed", {"enforcement": body.mode})
+    return {"study_id": study_id, "modes": list(ENFORCEMENT_MODES),
+            **enforcement_mode(study_profile(study), study.gate_states, gp.load())}
 
 
 async def _save_baseline(study, profile, pg, ev, ctx, by) -> dict:
     from datetime import datetime, timezone
+
+    from ..services.gate_reviews import baseline_kind
     products = gp.products_baselined(pg)
+    kind = baseline_kind(pg, gp.load())
     snapshot = {
-        "profile": profile["id"], "gate": pg["id"], "covers": pg.get("covers"),
+        "profile": profile["id"], "gate": pg["id"], "covers": pg.get("covers"), "kind": kind,
         "mission_need": study.mission_need.model_dump(mode="json"),
         "requirements_model": study.requirements.model_dump(mode="json"),
         "elements": ctx["elements"], "interfaces": ctx["interfaces"], "requirements": ctx["requirements"],
@@ -383,16 +559,16 @@ async def _save_baseline(study, profile, pg, ev, ctx, by) -> dict:
                    for k, v in _trade_records(study).items()},
         "review": dict((study.gate_states.get(pg["id"]) or {}).get("review") or {}),
     }
-    summary = {"summary": ev["summary"], "products": [p["id"] for p in products],
+    summary = {"summary": ev["summary"], "products": [p["id"] for p in products], "kind": kind,
                "elements": len(ctx["elements"]), "requirements": len(ctx["requirements"])}
     try:
         from ..db.gate_baseline_repo import save_baseline
         row = await save_baseline(study.id, pg["id"], profile["id"], by, summary, snapshot)
-        return {"id": row["id"], "at": row["created_at"], "by": by, "products": summary["products"]}
+        return {"id": row["id"], "at": row["created_at"], "by": by, "products": summary["products"], "kind": kind}
     except Exception:  # noqa: BLE001 — the pass is recorded even if the DB is down
         logger.exception("baseline snapshot not saved for %s/%s", study.id, pg["id"])
         return {"id": None, "at": datetime.now(timezone.utc).isoformat(), "by": by,
-                "products": summary["products"], "error": "snapshot not saved"}
+                "products": summary["products"], "kind": kind, "error": "snapshot not saved"}
 
 
 @router.get("/studies/{study_id}/gates/baselines/{baseline_id}")
@@ -448,6 +624,9 @@ def _clean_risk(d: dict[str, Any], rid: str) -> dict[str, Any]:
     r["residual_rpn"] = (r["residual_likelihood"] * r["residual_consequence"]
                          if r["residual_likelihood"] and r["residual_consequence"] else None)
     r["owner_seat"] = str(r.get("owner_seat") or "")[:48]
+    if r["owner_seat"]:   # 3.D6: a seat label ("Comms & OBDH") is stored as its seat id
+        from ..services.open_items import seat_for_label
+        r["owner_seat"] = seat_for_label(r["owner_seat"]) or r["owner_seat"]
     return r
 
 
@@ -502,6 +681,32 @@ async def delete_risk(study_id: str, risk_id: str) -> dict:
     await _save(study)
     await _broadcast(study_id, "study_records_changed", {"kind": "risks"})
     return {"deleted": risk_id}
+
+
+class RiskBulkUpdate(BaseModel):
+    risks: list[dict[str, Any]] = Field(default_factory=list, max_length=500)   # [{id, field: value …}]
+
+
+@router.post("/studies/{study_id}/risks/bulk-update")
+async def bulk_update_risks(study_id: str, body: RiskBulkUpdate) -> dict:
+    """Update many risks in one call (3.D6: the v2 residual L × C and owner seats at S3)."""
+    study = _study_or_404(study_id)
+    risks = list(study.risk_register or [])
+    idx = {r.get("id"): i for i, r in enumerate(risks)}
+    updated, missing = [], []
+    for patch in body.risks:
+        rid = str((patch or {}).get("id") or "")
+        if rid not in idx:
+            missing.append(rid)
+            continue
+        i = idx[rid]
+        risks[i] = _clean_risk({**risks[i], **{k: v for k, v in patch.items() if k in RISK_FIELDS}}, rid)
+        updated.append(rid)
+    if updated:
+        study.risk_register = risks
+        await _save(study)
+        await _broadcast(study_id, "study_records_changed", {"kind": "risks"})
+    return {"updated": updated, "missing": missing}
 
 
 class RiskImport(BaseModel):

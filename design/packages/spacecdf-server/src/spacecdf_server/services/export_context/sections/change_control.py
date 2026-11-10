@@ -1,11 +1,7 @@
-"""Section ``change_control``: the change-control flow of each change proposal: affected seats and their decisions, board decision, new baseline. Owner: D (3.D7).
-
-STEP 0 STUB (wave 3, PI addendum): returns ``status: not_implemented`` with the owner and the
-empty shape below. TODO(D, 3.D7): read the model and return the real shape (keep these keys).
-"""
+"""Section ``change_control``: the change-control flow of each change proposal: affected seats
+and their answers, the impact the board saw, the board decision and the baseline revision it
+produced. Owner: D (3.D7; ``services/change_control.py``)."""
 from __future__ import annotations
-
-from ._util import stub
 
 
 def empty() -> dict:
@@ -13,4 +9,11 @@ def empty() -> dict:
 
 
 async def collect(ctx) -> dict:
-    return stub("D", "3.D7", **empty())
+    if ctx.study is None:
+        return empty()
+    from ...change_control import list_all
+    items = await list_all(ctx.study_id)
+    counts: dict[str, int] = {"total": len(items)}
+    for i in items:
+        counts[i["state"]] = counts.get(i["state"], 0) + 1
+    return {"items": items, "counts": counts}

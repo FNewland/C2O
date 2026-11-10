@@ -34,7 +34,11 @@ async def s3(client):
 
 async def test_every_trade_is_kept_with_its_weights_links_and_decision(client, s3):
     data = load("trades")
-    items = (await client.get(f"/api/studies/{s3.study_id}/trades")).json()["items"]
+    every = (await client.get(f"/api/studies/{s3.study_id}/trades")).json()["items"]
+    # wave 3: the v2 system and architecture trades sit beside the eight subsystem trades (test_w3_decide)
+    v2 = [t["id"] for t in [*data["system_trades"], *data["architecture_trades"]]]
+    assert sorted(i["id"] for i in every) == sorted([t["id"] for t in data["trades"]] + v2)
+    items = [i for i in every if i["id"] not in v2]
     assert [i["id"] for i in items] == [t["id"] for t in data["trades"]]
     st = (await client.get(f"/api/studies/{s3.study_id}")).json()
     records = {r["id"]: r for r in st["decision_records"]}
@@ -62,7 +66,7 @@ async def test_every_trade_is_kept_with_its_weights_links_and_decision(client, s
     assert "OBD-SEC-01" in t07["state"]["links"]["requirements"]
     # every trade is in the decisions section and the trade-off report
     sx = (await client.get(f"/api/studies/{s3.study_id}/export-context?sections=trades,decisions")).json()
-    assert sx["trades"]["counts"] == {"total": len(data["trades"]), "decided": len(data["trades"])}
+    assert sx["trades"]["counts"] == {"total": len(data["trades"]) + len(v2), "decided": len(data["trades"]) + len(v2) - 1}
     r = await client.post(f"/api/studies/{s3.study_id}/trades/report")
     assert r.status_code == 200
     text = _text(r.content)

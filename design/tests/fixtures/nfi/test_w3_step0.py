@@ -46,17 +46,22 @@ async def test_s0_contracts_phase_sections_and_stub_routes(client):
     assert {"gate", "phase", "entry", "deliverables", "analysis", "coaching"} <= set(ph)
     assert ph["gate"] == "mdr" and ph["phase"] == "0"
     sx = (await client.get(f"/api/studies/{sid}/export-context")).json()
-    for name, owner in WAVE3_SECTIONS.items():
-        assert sx[name]["status"] == "not_implemented" and sx[name]["owner"] == owner, name
+    for name, owner in WAVE3_SECTIONS.items():   # a stub until its owner lands it (then real, no "status")
+        assert sx[name].get("status", "real") in ("not_implemented", "real"), name
+        if sx[name].get("status") == "not_implemented":
+            assert sx[name]["owner"] == owner, name
     assert sx["errors"] == {}
     paths = app.openapi()["paths"]
     for p, owner in STUB_GETS.items():
         assert f"/api/studies/{{study_id}}{p}".replace("ECP-01", "{change_id}") in paths, p
         r = await client.get(f"/api/studies/{sid}{p}")
-        assert r.status_code == 200 and r.json()["owner"] == owner and r.json()["items"] == [], p
+        if r.json().get("status") == "not_implemented":
+            assert r.status_code == 200 and r.json()["owner"] == owner and r.json()["items"] == [], p
+        else:   # landed by its owner: a real answer (404 for an unknown change id is fine)
+            assert r.status_code in (200, 404), (p, r.status_code)
     for p in STUB_POSTS:
         r = await client.post(f"/api/studies/{sid}{p}", json={})
-        assert r.status_code == 501, (p, r.status_code)
+        assert r.status_code < 500 or r.status_code == 501, (p, r.status_code)
     assert (await client.get("/api/studies/nope/moes")).status_code == 404
 
 

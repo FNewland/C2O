@@ -30,6 +30,7 @@ import { GateActionError, gateAction, pick, setGateProfile, useGateProfiles, use
 import { FIX_LABEL, STATE_LABEL, STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
 import { getLang } from '../i18n'
 import { GateReviewRecord } from './GateReviewRecord'
+import { BASELINE_LABEL, OpenItemList, PhasePanel, StartReviewInventory, type OpenItem } from './PhasePanel'
 import { subsystemStyle } from '../theme/tokens'
 import { ArmButton, Button, DataTable, Disclosure, Field, Input, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, tabPanelProps, type Status } from '../components/ui'
 
@@ -284,7 +285,8 @@ function gateDecisionId(covers: string[] | undefined, id: string): string {
 }
 
 /** The gate evaluation with its review record (W4.08: chair note, go / no-go). */
-type GateResultWithReview = { review?: { chair_note?: string; decision?: 'go' | 'go_with_actions' | 'no_go' | null; board?: string } }
+type GateResultWithReview = { review?: { chair_note?: string; decision?: 'go' | 'go_with_actions' | 'no_go' | null; board?: string }
+  open_items?: OpenItem[]; baseline_kind?: string }
 
 const STATE_STATUS: Record<GateState, Status> = {
   not_ready: 'alarm', ready: 'ok', under_review: 'info', passed: 'ok', reopened: 'caution',
@@ -312,6 +314,9 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
     || seatHeld.some(h => !['customer', 'observer'].includes(h)))
   const [busy, setBusy] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  // 3.D2: "Start review" shows the stage-transition inventory first; the start's warnings follow
+  const [inventoryOpen, setInventoryOpen] = useState(false)
+  const [startWarnings, setStartWarnings] = useState<string[]>([])
 
   const failCount = gateResult ? gateResult.criteria.filter(c => c.verdict === 'fail').length : 0
   const short = gateResult?.gate.short ?? activeGate?.toUpperCase() ?? ''
@@ -337,17 +342,23 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
     void qc.invalidateQueries({ queryKey: ['gate-review', studyId] })
     void qc.invalidateQueries({ queryKey: ['logbook-decisions'] })
     void qc.invalidateQueries({ queryKey: ['margin-ladder', studyId] })
+    void qc.invalidateQueries({ queryKey: ['gate-inventory', studyId] })
+    void qc.invalidateQueries({ queryKey: ['phase', studyId] })
   }
   const act = async (action: 'start' | 'cancel' | 'pass' | 'reopen') => {
     if (!studyId || !activeGate) return
-    setBusy(action); setActionError(null)
+    setBusy(action); setActionError(null); setStartWarnings([])
     setPicked(activeGate)   // stay on this gate (passing it moves the "current" gate on)
     try {
-      await gateAction(studyId, activeGate, action, userName)
+      const res = await gateAction(studyId, activeGate, action, userName) as GateResultWithReview & { warnings?: Array<{ text: string }> }
+      if (action === 'start') { setInventoryOpen(false); setStartWarnings((res.warnings ?? []).map(w => w.text)) }
       refresh()
     } catch (e) {
       const code = e instanceof GateActionError ? e.code : ''
-      setActionError(code === 'not_ready' ? t('Not every must-pass item passes yet.') : t('The gate could not change state ({{code}}).', { code: code || String(e) }))
+      setActionError(code === 'not_ready' ? t('Not every must-pass item passes yet.')
+        : code === 'out_of_order' ? t('Blocked: an earlier gate has not passed.')
+          : code === 'deliverables_missing' ? t('Blocked: a deliverable of this phase is missing.')
+            : t('The gate could not change state ({{code}}).', { code: code || String(e) }))
     } finally { setBusy(null) }
   }
   const changeProfile = async (pid: string) => {
@@ -386,6 +397,7 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
         )}
       </>}>
       <div {...(activeGate ? tabPanelProps('gate', activeGate) : {})}>
+        <PhasePanel studyId={studyId} gate={activeGate} onOpenSection={onOpenSection} />
         {isLoading && <p className="c-2 m-0">{t('Evaluating...')}</p>}
         {isError && !gateResult && <Note tone="caution">{t('Gate review service unreachable.')}</Note>}
 
@@ -412,7 +424,8 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
               <span className="row gap-2 ml-auto wrap">
                 {!canGate && <span className="t-12 c-3">{t('Gate decisions: Team leader or instructor')}</span>}
                 {canGate && (state === 'ready' || (state === 'reopened' && gateResult.ready)) && (
-                  <Button size="sm" variant="primary" busy={busy === 'start'} onClick={() => void act('start')}>{t('Start {{gate}} review', { gate: short })}</Button>
+                  <Button size="sm" variant="primary" busy={busy === 'start'} onClick={() => setInventoryOpen(true)}
+                    data-testid="start-review">{t('Start {{gate}} review', { gate: short })}</Button>
                 )}
                 {canGate && state === 'reopened' && !gateResult.ready && (
                   <Button size="sm" disabledReason={t('Every must-pass item must pass first')}>{t('Start {{gate}} review', { gate: short })}</Button>
@@ -454,6 +467,22 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
               </span>
             </div>
             {actionError && <Note tone="caution" className="mb-2">{actionError}</Note>}
+            {inventoryOpen && studyId && activeGate && (
+              <StartReviewInventory studyId={studyId} gate={activeGate} busy={busy === 'start'}
+                onConfirm={() => void act('start')} onCancel={() => setInventoryOpen(false)} />
+            )}
+            {startWarnings.length > 0 && (
+              <Note tone="caution" className="mb-2">
+                {t('Review started with warnings (kept in the gate history):')}
+                <ul className="m-0">{startWarnings.map(w => <li key={w}>{w}</li>)}</ul>
+              </Note>
+            )}
+            {((gateResult as GateResultWithReview).open_items ?? []).length > 0 && (
+              <Disclosure ruled summary={t('Open items that block {{gate}}', { gate: short })}
+                meta={t('{{n}} open', { n: (gateResult as GateResultWithReview).open_items!.length })}>
+                <OpenItemList items={(gateResult as GateResultWithReview).open_items!} />
+              </Disclosure>
+            )}
 
             <ul className="list-reset c2o-criteria">
               {gateResult.criteria.map(c => {
@@ -501,6 +530,7 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
                     <li key={b.id ?? i}>
                       {t('{{gate}} passed {{date}} by {{who}}: baseline saved, {{n}} products baselined', {
                         gate: short, date: fmtDate(b.at), who: b.by || t('unknown'), n: b.products.length })}
+                      {(b as { kind?: string }).kind && <> · <Tag>{t(BASELINE_LABEL[(b as { kind?: string }).kind!] ?? (b as { kind?: string }).kind!)}</Tag></>}
                       {b.error && <span className="c-caution"> · {t('the snapshot could not be stored')}</span>}
                     </li>
                   ))}
@@ -667,6 +697,8 @@ interface Risk {
   id: string; description: string; category: string
   likelihood: number; consequence: number; rpn: number
   mitigation: string; owner: string; status: string
+  // wave 3 (3.D6): residual L × C after mitigation, owner as a seat
+  residual_likelihood?: number | null; residual_consequence?: number | null; residual_rpn?: number | null; owner_seat?: string
 }
 
 // Categories are stored with each risk: keep the English value, translate when shown.
@@ -751,29 +783,35 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
     <Panel level={2} title={t('Risk Register')}
       actions={!showAdd && <Button variant="primary" size="sm" onClick={() => setShowAdd(true)}>{t('+ Add Risk')}</Button>}>
       <div className="c2o-risk">
-        {/* Picture first: the 5×5 likelihood × consequence matrix with counts. */}
-        <figure className="c2o-riskmx m-0" aria-label={t('Likelihood × Consequence Matrix:')}>
-          <div className="c2o-riskmx__grid">
-            <span className="c2o-riskmx__axis" aria-hidden="true" />
-            {C_LABELS.slice(1).map(c => <span key={c} className="c2o-riskmx__head">{t(c)}</span>)}
-            {[5, 4, 3, 2, 1].map(l => (
-              <Fragment key={l}>
-                <span className="c2o-riskmx__side">{t(L_LABELS[l])}</span>
-                {[1, 2, 3, 4, 5].map(c => {
-                  const rpn = l * c
-                  const count = risks.filter(r => r.likelihood === l && r.consequence === c).length
-                  return (
-                    <span key={`${l}-${c}`} className={`c2o-riskmx__cell ${zone(rpn)}${count > 0 ? ' has-risk' : ''}`}
-                      title={t('L{{l}} × C{{c}} = RPN {{rpn}}: {{count}} risks', { l, c, rpn, count })}>
-                      {count > 0 ? count : ''}
-                    </span>
-                  )
-                })}
-              </Fragment>
-            ))}
-          </div>
-          <figcaption className="t-12 c-3 mt-1">{t('Rows: likelihood. Columns: consequence. Figures: number of risks in the cell.')}</figcaption>
-        </figure>
+        {/* Picture first: the 5×5 likelihood × consequence matrices with counts, inherent and residual (3.D6). */}
+        {([['inherent', t('Inherent (before mitigation)')], ['residual', t('Residual (after mitigation)')]] as const).map(([which, caption]) => (
+          <figure key={which} className="c2o-riskmx m-0" aria-label={`${t('Likelihood × Consequence Matrix:')} ${caption}`}
+            data-testid={`risk-matrix-${which}`}>
+            <div className="c2o-riskmx__grid">
+              <span className="c2o-riskmx__axis" aria-hidden="true" />
+              {C_LABELS.slice(1).map(c => <span key={c} className="c2o-riskmx__head">{t(c)}</span>)}
+              {[5, 4, 3, 2, 1].map(l => (
+                <Fragment key={l}>
+                  <span className="c2o-riskmx__side">{t(L_LABELS[l])}</span>
+                  {[1, 2, 3, 4, 5].map(c => {
+                    const rpn = l * c
+                    const count = risks.filter(r => which === 'inherent'
+                      ? r.likelihood === l && r.consequence === c
+                      : r.residual_likelihood === l && r.residual_consequence === c).length
+                    return (
+                      <span key={`${l}-${c}`} className={`c2o-riskmx__cell ${zone(rpn)}${count > 0 ? ' has-risk' : ''}`}
+                        title={t('L{{l}} × C{{c}} = RPN {{rpn}}: {{count}} risks', { l, c, rpn, count })}>
+                        {count > 0 ? count : ''}
+                      </span>
+                    )
+                  })}
+                </Fragment>
+              ))}
+            </div>
+            <figcaption className="t-12 c-3 mt-1">{caption}</figcaption>
+          </figure>
+        ))}
+        <p className="t-12 c-3 m-0">{t('Rows: likelihood. Columns: consequence. Figures: number of risks in the cell.')}</p>
         <dl className="c2o-stats c2o-stats--col">
           <div><dt>{t('Total')}</dt><dd>{risks.length}</dd></div>
           <div><dt>{critical > 0 ? <StatusBadge status="alarm">{t('Critical')}</StatusBadge> : t('Critical')}</dt><dd>{critical}</dd></div>
@@ -800,12 +838,25 @@ function RiskRegister({ studyId }: { studyId: string | null }) {
                   {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
                 </Select>) },
               { key: 'rpn', header: 'RPN', num: true, sort: r => r.rpn, render: r => riskStatus(r.rpn) === 'neutral' ? <span className="w-600">{r.rpn}</span> : <StatusBadge status={riskStatus(r.rpn)}>{String(r.rpn)}</StatusBadge> },
+              { key: 'res', header: t('Residual L × C'), num: true, sort: r => r.residual_rpn ?? 0, render: r => (
+                <span className="row gap-1 ai-c">
+                  {(['residual_likelihood', 'residual_consequence'] as const).map(f => (
+                    <Select key={f} dense className="c2o-num-select" value={r[f] ?? ''}
+                      aria-label={f === 'residual_likelihood' ? t('Residual likelihood of {{id}}', { id: r.id }) : t('Residual consequence of {{id}}', { id: r.id })}
+                      onChange={e => updateRisk(r, f, parseInt(e.target.value))}>
+                      <option value="">—</option>
+                      {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                    </Select>
+                  ))}
+                  {r.residual_rpn != null && <span className="mono">= {r.residual_rpn}</span>}
+                </span>) },
               { key: 'mit', header: t('Mitigation'), render: r => (
                 <InlineText value={r.mitigation} label={t('Mitigation of {{id}}', { id: r.id })} placeholder={t('none')}
                   onCommit={v => updateRisk(r, 'mitigation', v)} />) },
               { key: 'own', header: t('Owner'), render: r => (
                 <InlineText value={r.owner} label={t('Owner of {{id}}', { id: r.id })} placeholder={t('none')} narrow
                   onCommit={v => updateRisk(r, 'owner', v)} />) },
+              { key: 'seat', header: t('Owner seat'), sort: r => r.owner_seat ?? '', render: r => r.owner_seat ? <Tag>{r.owner_seat}</Tag> : <span className="c-3">—</span> },
               { key: 'st', header: t('Status'), sort: r => r.status, render: r => (
                 <Select dense aria-label={t('Status of {{id}}', { id: r.id })} value={r.status} onChange={e => updateRisk(r, 'status', e.target.value)}>
                   <option value="open">{t('Open', { context: 'risk' })}</option><option value="mitigating">{t('Mitigating', { context: 'risk' })}</option>

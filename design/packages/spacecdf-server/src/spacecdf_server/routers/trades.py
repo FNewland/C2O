@@ -15,6 +15,17 @@ Mounted under ``/api`` (included by routers/gates.py, which owned the single Pug
                                                    study decision record (``study.decision_records``)
 
 ``pugh`` (the old single record, the Decide tab before Nov 2026) is an alias of ``T-01``.
+
+Wave 3 (3.D3, 3.D4):
+
+* ``GET    /studies/{sid}/trades/summary``         trades by review gate and level, and the protocol's
+                                                   trade deliverable per gate (PI ruling)
+* ``POST   /studies/{sid}/trades/from-tool``       "Record as trade" from the orbit or ground tools: a
+                                                   draft system-level trade with the tool's candidates
+* ``PUT    /studies/{sid}/trades/{tid}/condition`` the condition, due date, fallback and linked risks
+                                                   of a conditional decision
+* the decision body takes ``condition``, ``due``, ``fallback`` and ``risks``; a PUT that changes the
+  weights after scoring keeps them but sets ``post_hoc_weights`` and logs the change.
 """
 from __future__ import annotations
 
@@ -137,6 +148,82 @@ async def trades_report(study_id: str, lang: str = Query("en")) -> StreamingResp
                              headers={"Content-Disposition": f'attachment; filename="SpaceCDF_Trade_reports_{name}.docx"'})
 
 
+@router.get("/studies/{study_id}/trades/summary")
+async def trades_summary(study_id: str) -> dict:
+    """Trades by gate and level, plus the trade deliverable of each gate that asks one."""
+    recs = _records(_study(study_id))
+    out = tr.gate_summary(recs)
+    out["deliverables"] = {g: tr.trade_deliverable(recs, g) for g in tr.GATE_TRADE_LEVELS}
+    return {"study_id": study_id, **out}
+
+
+class FromToolBody(BaseModel):
+    tool: str = Field("orbit", max_length=24)          # orbit | ground | other
+    title: str = Field("", max_length=300)
+    gate: str = Field("", max_length=8)
+    level: str = Field("", max_length=24)
+    seat: str = Field("", max_length=40)
+    options: list[dict[str, Any]] = Field(default_factory=list, max_length=tr.MAX_OPTIONS)   # {id, label, metrics{}}
+    criteria: list[dict[str, Any]] = Field(default_factory=list, max_length=tr.MAX_CRITERIA)  # {name, weight, source, scale}
+    datum: str = ""
+    id: str | None = None
+
+
+#: default gate, level and seat of a trade recorded from a tool (PI ruling: orbit at MDR)
+TOOL_DEFAULTS = {"orbit": ("mdr", "mission", "mission_analyst"), "ground": ("srr", "system", "comms_engineer"),
+                 "other": ("", "system", "systems_engineer")}
+
+
+@router.post("/studies/{study_id}/trades/from-tool")
+async def trade_from_tool(study_id: str, body: FromToolBody) -> dict:
+    """"Record as trade": the candidates the orbit or ground tool compared become a draft
+    absolute-scale trade (options with their labels and metrics as evidence, criteria from the
+    metrics unless given). The team then writes the scales, sources and weights before scoring."""
+    study = _study(study_id)
+    recs = _records(study)
+    if len(recs) >= MAX_TRADES:
+        raise HTTPException(413, "Too many trades in this study")
+    if len(body.options) < 2:
+        raise HTTPException(422, "A trade needs at least two candidates")
+    g0, l0, s0 = TOOL_DEFAULTS.get(body.tool, TOOL_DEFAULTS["other"])
+    opts = [str(o.get("id") or chr(65 + i))[:24] for i, o in enumerate(body.options)]
+    labels = {k: str(o.get("label") or o.get("name") or k)[:400] for k, o in zip(opts, body.options)}
+    metrics: list[str] = []
+    for o in body.options:
+        for m in (o.get("metrics") or {}):
+            if m not in metrics:
+                metrics.append(str(m)[:200])
+    crit = body.criteria or [{"name": m} for m in metrics[: tr.MAX_CRITERIA]]
+    n = max(len(crit), 1)
+    crit = [{**c, "weight": c.get("weight", round(1 / n, 4))} for c in crit]
+    evidence = {str(c.get("name")): "; ".join(f"{k}: {(o.get('metrics') or {}).get(c.get('name'))}" for k, o in zip(opts, body.options)
+                                             if (o.get("metrics") or {}).get(c.get("name")) is not None)
+                for c in crit}
+    tid = tr.resolve_id((body.id or "").strip()) or _next_level_id(recs, body.level or l0)
+    if tid in recs:
+        raise HTTPException(409, {"code": "exists", "message": f"Trade {tid} exists"})
+    state = tr.clean_state({"title": body.title or f"{body.tool.capitalize()} candidates", "seat": body.seat or s0,
+                            "level": body.level or l0, "gate": body.gate or g0, "method": "absolute_scale",
+                            "options": opts, "option_labels": labels, "datum": body.datum if body.datum in opts else opts[0],
+                            "criteria": crit, "weights_mode": "direct",
+                            "evidence_by_criterion": {k: v for k, v in evidence.items() if v},
+                            "note": f"Recorded from the {body.tool} tool"}, tid)
+    recs[tid] = {"state": state, "version": 1}
+    study.trade_records = recs
+    await _save(study, f"trade:{tid}")
+    return _public(tid, recs[tid])
+
+
+def _next_level_id(recs: dict[str, Any], level: str) -> str:
+    """T-Mnn (mission), T-Snn (system), T-Ann (architecture), else T-nn."""
+    import re
+    prefix = {"mission": "T-M", "system": "T-S", "architecture": "T-A"}.get(level)
+    if not prefix:
+        return tr.next_id(recs)
+    n = max([int(m.group(1)) for k in recs for m in [re.match(rf"^{prefix}(\d+)$", k)] if m] or [0])
+    return f"{prefix}{n + 1:02d}"
+
+
 @router.get("/studies/{study_id}/trades/{trade_id}")
 async def get_trade(study_id: str, trade_id: str) -> dict:
     tid = tr.resolve_id(trade_id)
@@ -171,7 +258,15 @@ async def put_trade(study_id: str, trade_id: str, body: TradeBody) -> dict:
     _check_size(body.state)
     if tid not in recs and len(recs) >= MAX_TRADES:
         raise HTTPException(413, "Too many trades in this study")
-    merged = {**(cur.get("state") or {}), **body.state}
+    old = cur.get("state") or {}
+    merged = {**old, **body.state}
+    # wave 3 (3.D3): weights lock at the first score; a later change is kept and flagged
+    if old.get("weights_locked_at") and tr.weights_changed(old, tr.clean_state(merged, tid)):
+        from datetime import datetime, timezone
+        merged["post_hoc_weights"] = True
+        merged["weight_history"] = [*(old.get("weight_history") or []),
+                                    {"at": datetime.now(timezone.utc).isoformat(), "from": tr.weights_of(old),
+                                     "to": tr.weights_of(tr.clean_state(merged, tid))}]
     recs[tid] = {"state": tr.clean_state(merged, tid), "version": int(cur.get("version") or 0) + 1}
     study.trade_records = recs
     await _save(study, f"trade:{tid}")
@@ -195,6 +290,12 @@ class DecisionBody(BaseModel):
     selected: str
     rationale: str = Field("", max_length=4000)
     seat: str = Field("", max_length=40)
+    # wave 3 (3.D4): a conditional decision stays in the open-item register until met
+    condition: str = Field("", max_length=4000)
+    due: str = Field("", max_length=10)
+    fallback: str = Field("", max_length=4000)
+    risks: list[str] = Field(default_factory=list, max_length=50)
+    blocks_gate: str = Field("", max_length=8)
 
 
 @router.post("/studies/{study_id}/trades/{trade_id}/decision")
@@ -207,7 +308,9 @@ async def record_trade_decision(study_id: str, trade_id: str, body: DecisionBody
     if tid not in recs:
         raise HTTPException(404, f"Unknown trade: {trade_id}")
     try:
-        state = tr.decide(recs[tid]["state"], body.selected, body.rationale, body.seat or recs[tid]["state"].get("seat", ""))
+        state = tr.decide(recs[tid]["state"], body.selected, body.rationale, body.seat or recs[tid]["state"].get("seat", ""),
+                          condition=body.condition, due=body.due, fallback=body.fallback, risks=body.risks,
+                          blocks_gate=body.blocks_gate)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     recs[tid] = {"state": state, "version": int(recs[tid].get("version") or 0) + 1}
@@ -215,3 +318,39 @@ async def record_trade_decision(study_id: str, trade_id: str, body: DecisionBody
     record = tr.upsert_decision_record(study, state)
     await _save(study, f"trade:{tid}")
     return {**_public(tid, recs[tid]), "decision_record": record}
+
+
+class ConditionBody(BaseModel):
+    condition: str = Field("", max_length=4000)
+    due: str = Field("", max_length=10)
+    fallback: str = Field("", max_length=4000)
+    risks: list[str] = Field(default_factory=list, max_length=50)
+    blocks_gate: str = Field("", max_length=8)
+    met: bool = False            # the condition is met: the decision is no longer conditional
+    note: str = Field("", max_length=2000)
+
+
+@router.put("/studies/{study_id}/trades/{trade_id}/condition")
+async def put_trade_condition(study_id: str, trade_id: str, body: ConditionBody) -> dict:
+    """Set (or clear, with ``met``) the condition of a decided trade (3.D4)."""
+    from datetime import datetime, timezone
+    tid = tr.resolve_id(trade_id)
+    study = _study(study_id)
+    recs = _records(study)
+    if tid not in recs:
+        raise HTTPException(404, f"Unknown trade: {trade_id}")
+    st = dict(recs[tid]["state"])
+    dec = {k: v for k, v in dict(st.get("decision") or {}).items()
+           if k not in ("condition", "due", "fallback", "risks", "blocks_gate")}
+    if body.met:
+        old = dict(st.get("decision") or {})
+        if old.get("condition"):
+            dec["condition_met"] = {"condition": old["condition"], "at": datetime.now(timezone.utc).isoformat(),
+                                    "note": body.note[:2000]}
+    else:
+        dec.update(tr.conditional(body.condition, body.due, body.fallback, body.risks, body.blocks_gate))
+    st["decision"] = dec
+    recs[tid] = {"state": tr.clean_state(st, tid), "version": int(recs[tid].get("version") or 0) + 1}
+    study.trade_records = recs
+    await _save(study, f"trade:{tid}")
+    return _public(tid, recs[tid])

@@ -245,6 +245,138 @@ async def put_phases(study_id: str, body: PhasesBody) -> dict:
     return {"study_id": study_id, "edited": True, "phases": _phase_dicts(study)}
 
 
+# ─── wave 3 (3.D5): operational scenarios for requirements validation ──────────
+
+SCENARIO_KINDS = ("nominal", "degraded", "contingency", "end_of_life")
+
+
+class ScenarioIn(BaseModel):
+    id: str = Field("", max_length=24)
+    name: str = Field("", max_length=300)
+    kind: str = "nominal"
+    phase_id: str = Field("", max_length=64)
+    description: str = Field("", max_length=4000)
+    requirement_codes: List[str] = Field(default_factory=list, max_length=200)
+    modes: List[str] = Field(default_factory=list, max_length=30)
+
+
+class ScenariosBody(BaseModel):
+    scenarios: List[ScenarioIn] = Field(default_factory=list, max_length=60)
+
+
+def scenario_kind(name: str) -> str:
+    """A kind from the scenario's words (import of ``vv_plan.yaml``, which has none)."""
+    n = (name or "").lower()
+    if any(w in n for w in ("end of life", "disposal", "end-of-life", "deorbit")):
+        return "end_of_life"
+    if any(w in n for w in ("safe", "failure", "out for", "anomal", "stop transmissions", "regulator", "embargo",
+                            "data-governance request")):
+        return "contingency" if any(w in n for w in ("regulator", "embargo", "governance")) else "degraded"
+    return "nominal"
+
+
+def _scenario_dicts(study) -> List[Dict[str, Any]]:
+    return [x.model_dump(mode="json") for x in getattr(study.conops, "scenarios", None) or []]
+
+
+async def _requirement_codes(study_id: str) -> Dict[str, Dict[str, Any]]:
+    try:
+        from .requirements import _ensure_loaded, _requirements
+        await _ensure_loaded()
+        return {r["code"]: r for r in _requirements.values() if r.get("study_id") == study_id and r.get("code")}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+async def scenarios_view(study_id: str, study=None) -> Dict[str, Any]:
+    """The scenarios with each requirement resolved (code, text, found) and the counts."""
+    study = study or _study(study_id)
+    reqs = await _requirement_codes(study_id)
+    items = []
+    for sc in _scenario_dicts(study):
+        rows = [{"code": c, "found": c in reqs, "text": (reqs.get(c) or {}).get("text") or "",
+                 "level": (reqs.get(c) or {}).get("level") or ""} for c in sc["requirement_codes"]]
+        items.append({**sc, "requirements": rows, "missing": [r["code"] for r in rows if not r["found"]]})
+    by_kind = {k: sum(1 for i in items if i["kind"] == k) for k in SCENARIO_KINDS}
+    covered = sorted({r["code"] for i in items for r in i["requirements"] if r["found"]})
+    return {"study_id": study_id, "items": items, "kinds": list(SCENARIO_KINDS),
+            "counts": {"total": len(items), "with_requirements": sum(1 for i in items if i["requirements"]),
+                       "requirements_covered": len(covered), "by_kind": by_kind}}
+
+
+def _clean_scenarios(raw: List[ScenarioIn]):
+    from fastapi import HTTPException
+    from spacecdf_common.models.conops import ConopsScenario
+    out, seen = [], set()
+    for i, sc in enumerate(raw):
+        kind = sc.kind if sc.kind in SCENARIO_KINDS else None
+        if kind is None:
+            raise HTTPException(422, f"kind must be one of {', '.join(SCENARIO_KINDS)}")
+        sid = (sc.id or "").strip() or f"S{i + 1}"
+        if sid in seen:
+            raise HTTPException(422, f"duplicate scenario id {sid}")
+        seen.add(sid)
+        codes = list(dict.fromkeys(c.strip() for c in sc.requirement_codes if c and c.strip()))
+        out.append(ConopsScenario(**{**sc.model_dump(), "id": sid, "requirement_codes": codes}))
+    return out
+
+
+@study_router.get("/studies/{study_id}/conops/scenarios")
+async def get_scenarios(study_id: str) -> dict:
+    return await scenarios_view(study_id)
+
+
+@study_router.put("/studies/{study_id}/conops/scenarios")
+async def put_scenarios(study_id: str, body: ScenariosBody) -> dict:
+    """Replace the operational scenarios (3.D5): id, name, kind, phase, requirement codes."""
+    study = _study(study_id)
+    study.conops = study.conops.model_copy(update={"scenarios": _clean_scenarios(body.scenarios)})
+    from .gates import _broadcast, _save
+    await _save(study)
+    await _broadcast(study_id, "study_records_changed", {"kind": "conops_scenarios"})
+    return await scenarios_view(study_id, study)
+
+
+class ScenarioImport(BaseModel):
+    scenarios: List[Dict[str, Any]] = Field(default_factory=list, max_length=60)
+    replace: bool = False
+
+
+@study_router.post("/studies/{study_id}/conops/scenarios/import")
+async def import_scenarios(study_id: str, body: ScenarioImport) -> dict:
+    """Scenarios in the ``vv_plan.yaml`` form (``id``, ``scenario``, ``requirements``) in one call;
+    the kind is read from the name unless given. Existing ids are kept unless ``replace``."""
+    study = _study(study_id)
+    have = {s.id: s for s in getattr(study.conops, "scenarios", None) or []}
+    raw = []
+    for x in body.scenarios:
+        if not isinstance(x, dict):
+            continue
+        name = str(x.get("name") or x.get("scenario") or "")
+        raw.append(ScenarioIn(id=str(x.get("id") or ""), name=name, kind=x.get("kind") or scenario_kind(name),
+                              phase_id=str(x.get("phase_id") or ""), description=str(x.get("description") or ""),
+                              requirement_codes=list(x.get("requirement_codes") or x.get("requirements") or []),
+                              modes=list(x.get("modes") or [])))
+    new = _clean_scenarios(raw)
+    merged = dict(have)
+    added = []
+    for sc in new:
+        if sc.id in merged and not body.replace:
+            continue
+        merged[sc.id] = sc
+        added.append(sc.id)
+    study.conops = study.conops.model_copy(update={"scenarios": list(merged.values())})
+    from .gates import _broadcast, _save
+    await _save(study)
+    await _broadcast(study_id, "study_records_changed", {"kind": "conops_scenarios"})
+    return {"added": added, **await scenarios_view(study_id, study)}
+
+
+def scenario_count(study) -> int:
+    """MDR-EC-06 evidence (R wires it): the number of operational scenarios with ≥ 1 requirement."""
+    return sum(1 for s in getattr(getattr(study, "conops", None), "scenarios", None) or [] if s.requirement_codes)
+
+
 def _text(v: Any, lang: str) -> str:
     if isinstance(v, dict):
         return str(v.get(lang) or v.get("en") or "")
@@ -401,7 +533,9 @@ async def conops_view(study_id: str, lang: str = "en", sx=None) -> Dict[str, Any
                            if k.startswith(("disposal", "collision", "apogee"))},
            "requirements": disposal_reqs}
     need = sx.need or {}
-    return {"study_id": study_id, "study_name": study.name, "lang": lang,
+    scen = await scenarios_view(study_id, study)
+    return {"study_id": study_id, "study_name": study.name, "lang": lang, "scenarios": scen["items"],
+            "scenario_counts": scen["counts"],
             "summary": need.get("conops_summary") or "",
             "success_criteria": need.get("success_criteria") or [],
             "orbit": (sx.mission or {}).get("orbit") or {}, "phases": phases, "phases_edited": bool(study.conops.phases_edited),

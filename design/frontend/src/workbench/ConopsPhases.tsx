@@ -9,6 +9,10 @@
  *
  * Mounted in Traceability › Mission need; the Modes panel can mount it as well
  * (``<ConopsPhases studyId={…} />``).
+ *
+ * Wave 3 (3.D5): ``ConopsScenarios`` below the phases: the operational scenarios (nominal,
+ * degraded, contingency, end of life) with the requirements each one exercises, edited here and
+ * listed in the ConOps document (GET/PUT /api/studies/{id}/conops/scenarios).
  */
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -123,7 +127,88 @@ export function ConopsPhases({ studyId }: { studyId: string | null }) {
           <Button size="sm" onClick={() => void download()}>{t('ConOps document (.docx)')}</Button>
         </div>
         {msg && <Note tone={msg.tone} role="status">{msg.text}</Note>}
+        <ConopsScenarios studyId={studyId} />
       </div>
     </Disclosure>
+  )
+}
+
+interface Scenario {
+  id: string; name: string; kind: string; phase_id: string; description: string; requirement_codes: string[]
+  requirements?: Array<{ code: string; found: boolean; text: string }>; missing?: string[]
+}
+
+// English text is the i18n key
+const SCENARIO_KIND: Record<string, string> = {
+  nominal: 'Nominal', degraded: 'Degraded', contingency: 'Contingency', end_of_life: 'End of life',
+}
+
+/** Operational scenarios with their requirements (3.D5; requirements validation by walk-through). */
+export function ConopsScenarios({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+  const { data } = useQuery<{ items: Scenario[]; counts: { total: number; requirements_covered: number } }>({
+    queryKey: ['conops-scenarios', studyId],
+    queryFn: () => fetch(`${API}/studies/${studyId}/conops/scenarios`).then(r => (r.ok ? r.json() : null)),
+    enabled: !!studyId,
+  })
+  const [rows, setRows] = useState<Scenario[] | null>(null)
+  const [msg, setMsg] = useState<{ tone: 'ok' | 'alarm'; text: string } | null>(null)
+  useEffect(() => { setRows(null); setMsg(null) }, [studyId])
+  const view = rows ?? data?.items ?? []
+  const set = (i: number, patch: Partial<Scenario>) => setRows(view.map((x, j) => (j === i ? { ...x, ...patch } : x)))
+  const save = async () => {
+    if (!studyId || !rows) return
+    const res = await fetch(`${API}/studies/${encodeURIComponent(studyId)}/conops/scenarios`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenarios: rows.map(({ requirements: _r, missing: _m, ...x }) => x) }),
+    })
+    if (!res.ok) { setMsg({ tone: 'alarm', text: t('The scenarios could not be saved ({{code}}).', { code: res.status }) }); return }
+    setRows(null)
+    setMsg({ tone: 'ok', text: t('Scenarios saved.') })
+    void qc.invalidateQueries({ queryKey: ['conops-scenarios', studyId] })
+  }
+  return (
+    <section className="mt-2" data-testid="conops-scenarios">
+      <h4 className="c2o-reqs__group">{t('Operational scenarios')}</h4>
+      <p className="t-12 c-2 m-0">
+        {t('Walk each scenario through with the requirements it exercises: a scenario the requirements cannot carry shows a missing requirement.')}
+        {data && ` ${t('{{n}} scenarios cover {{r}} requirements.', { n: data.counts.total, r: data.counts.requirements_covered })}`}
+      </p>
+      <table className="c2o-table c2o-table--dense">
+        <thead><tr className="bb"><th>ID</th><th>{t('Scenario')}</th><th>{t('Kind')}</th><th>{t('Requirements')}</th><th /></tr></thead>
+        <tbody>
+          {view.map((x, i) => (
+            <tr key={`${x.id}-${i}`} className="bb">
+              <td className="mono">{x.id}</td>
+              <td><input className="c2o-input c2o-input--sm" aria-label={t('Scenario {{id}}: name', { id: x.id })} value={x.name}
+                onChange={e => set(i, { name: e.target.value })} /></td>
+              <td>
+                <select className="c2o-select c2o-select--sm" aria-label={t('Scenario {{id}}: kind', { id: x.id })} value={x.kind}
+                  onChange={e => set(i, { kind: e.target.value })}>
+                  {Object.keys(SCENARIO_KIND).map(k => <option key={k} value={k}>{t(SCENARIO_KIND[k])}</option>)}
+                </select>
+              </td>
+              <td>
+                <input className="c2o-input c2o-input--sm" style={{ width: '100%' }} aria-label={t('Scenario {{id}}: requirements', { id: x.id })}
+                  value={x.requirement_codes.join(', ')}
+                  onChange={e => set(i, { requirement_codes: e.target.value.split(/[,;\s]+/).map(c => c.trim()).filter(Boolean) })} />
+                {(x.missing ?? []).length > 0 && <span className="t-12 c-caution">{t('Not in the requirement set: {{list}}', { list: (x.missing ?? []).join(', ') })}</span>}
+              </td>
+              <td><button type="button" className="c2o-btn c2o-btn--sm c2o-btn--danger" aria-label={t('Remove scenario {{id}}', { id: x.id })}
+                onClick={() => setRows(view.filter((_, j) => j !== i))}>×</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="flex gap-1 wrap mt-1">
+        <Button size="sm" onClick={() => setRows([...view, { id: `S${view.length + 1}`, name: t('New scenario'), kind: 'nominal', phase_id: '', description: '', requirement_codes: [] }])}>
+          {t('+ Add scenario')}
+        </Button>
+        <span className="grow" />
+        <Button size="sm" variant="primary" disabledReason={rows === null ? t('Nothing to save') : undefined} onClick={() => void save()}>{t('Save scenarios')}</Button>
+      </div>
+      {msg && <Note tone={msg.tone} role="status">{msg.text}</Note>}
+    </section>
   )
 }

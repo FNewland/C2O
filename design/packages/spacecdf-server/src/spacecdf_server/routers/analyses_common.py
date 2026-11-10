@@ -2,6 +2,7 @@
 
     GET  /api/studies/{study_id}/conflicts?option_id=      {design: [...], analysis: [...]}
     POST /api/conflicts/{conflict_id}/resolve              mark an analysis conflict resolved
+                                                           ({rationale, seat}: kept in the open-item register)
     GET  /api/studies/{study_id}/analyses?option_id=       last run per analysis with ``stale``
     GET  /api/studies/{study_id}/analyses/{analysis}       last run of one analysis (404 if never run)
 
@@ -15,6 +16,7 @@ every other analysis' conflicts.
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from ..db import analysis_repo
 from ..services import analysis_results
@@ -36,11 +38,25 @@ async def get_study_conflicts(study_id: str, option_id: str | None = Query(None)
     }
 
 
+class ResolveBody(BaseModel):
+    """Wave 3 (3.D4): why the conflict is resolved or accepted, and by which seat."""
+    rationale: str = Field("", max_length=4000)
+    seat: str = Field("", max_length=48)
+    by: str = Field("", max_length=120)
+
+
 @router.post("/conflicts/{conflict_id}/resolve")
-async def resolve_conflict(conflict_id: str) -> dict:
+async def resolve_conflict(conflict_id: str, body: ResolveBody | None = None) -> dict:
+    """Mark an analysis conflict resolved. With a ``rationale`` and a ``seat`` (wave 3) the
+    resolution is kept in the open-item register (kind ``conflict_resolution``, closed), so the
+    SRR sees who accepted what and why."""
     row = await analysis_results.resolve_conflict(conflict_id)
     if row is None:
         raise HTTPException(404, f"Conflict {conflict_id} not found")
+    if body is not None and (body.rationale.strip() or body.seat.strip()):
+        from ..services.open_items import record_resolution, seat_for_label
+        seat = seat_for_label(body.seat) or body.seat.strip()
+        row = {**row, "resolution": await record_resolution(row["study_id"], row, body.rationale.strip(), seat, body.by)}
     return row
 
 
