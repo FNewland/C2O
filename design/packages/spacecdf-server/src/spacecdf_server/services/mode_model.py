@@ -260,7 +260,7 @@ def _attr(m: Any, k: str) -> Any:
 
 def _maturity_pct(e: dict) -> float:
     from .margin_policy import maturity_percent
-    return maturity_percent(e)
+    return maturity_percent(e, resource="power")   # wave 3 step 0: the unit's power maturity
 
 
 def mode_power(mode: Any, by_id: dict[str, dict]) -> dict[str, float]:

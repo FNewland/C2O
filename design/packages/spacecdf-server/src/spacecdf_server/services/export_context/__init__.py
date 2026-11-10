@@ -20,7 +20,9 @@ analyses, modes, data_budget, links, contacts, licensing, ait, schedule, cdr, fu
 
 (``cdr`` and ``functions`` were added by W4.01 for the review packs: the CDR design model and the
 function tree; ``electrical`` was added by W4.07 for the IRD: rails, power lines, buses, bus
-nodes, ports and exchange items.)
+nodes, ports and exchange items. Wave 3 step 0 added stakeholders, allocations, validation,
+assumptions, changes, open_items, negotiations and se_phase as stubs, and for the PI addendum
+semp, icds, reliability, thermal_model, debris, change_control and cost.)
 
 Contract for a section collector:
 
@@ -49,6 +51,11 @@ SECTIONS: tuple[str, ...] = (
     "need", "mission", "elements", "rollup", "requirements", "verification", "risks", "trades",
     "decisions", "gates", "analyses", "modes", "data_budget", "links", "contacts", "licensing",
     "ait", "schedule", "cdr", "functions", "electrical",
+    # wave 3, step 0: stubs until their owners fill them (W0_SEAMS §9)
+    "stakeholders", "allocations", "validation", "assumptions", "changes", "open_items", "negotiations",
+    "se_phase",
+    # wave 3, step 0, PI addendum
+    "semp", "icds", "reliability", "thermal_model", "debris", "change_control", "cost",
 )
 
 Collector = Callable[["CollectContext"], Awaitable[dict]]
@@ -95,6 +102,25 @@ class StudyExport:
     cdr: dict = field(default_factory=dict)
     functions: dict = field(default_factory=dict)
     electrical: dict = field(default_factory=dict)
+    # wave 3, step 0 (owners: stakeholders S, allocations A, validation S, assumptions S, changes L,
+    # open_items D, negotiations H, se_phase S)
+    stakeholders: dict = field(default_factory=dict)
+    allocations: dict = field(default_factory=dict)
+    validation: dict = field(default_factory=dict)
+    assumptions: dict = field(default_factory=dict)
+    changes: dict = field(default_factory=dict)
+    open_items: dict = field(default_factory=dict)
+    negotiations: dict = field(default_factory=dict)
+    se_phase: dict = field(default_factory=dict)
+    # PI addendum (owners: semp X, icds R, reliability A, thermal_model A, debris L,
+    # change_control D, cost A)
+    semp: dict = field(default_factory=dict)
+    icds: dict = field(default_factory=dict)
+    reliability: dict = field(default_factory=dict)
+    thermal_model: dict = field(default_factory=dict)
+    debris: dict = field(default_factory=dict)
+    change_control: dict = field(default_factory=dict)
+    cost: dict = field(default_factory=dict)
     errors: dict[str, str] = field(default_factory=dict)
 
     def section(self, name: str) -> dict:

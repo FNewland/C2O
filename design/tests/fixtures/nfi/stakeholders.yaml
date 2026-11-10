@@ -1,0 +1,379 @@
+# Northern Fire and Ice v2 - stakeholders, needs, measures of effectiveness and validation of each need.
+note: Stakeholder register (five categories kept separate; communities disaggregated), needs, measures of effectiveness and
+  how each need is validated. No person or institution is named.
+stakeholders:
+- id: STK-01
+  name: Funding agency (student CubeSat programme)
+  category: decision authority
+  role: sponsor
+  authority: Funds the mission; decides go / no-go at each gate.
+  needs:
+  - SN-01
+  engagement: involve (gate reviews)
+- id: STK-02
+  name: Governance bodies of the site communities
+  category: decision authority / rights-holder
+  role: user
+  authority: Decides whether its community takes part, which sites are observed and how data about its lands are released
+    (site agreement).
+  needs:
+  - SN-02
+  - SN-09
+  engagement: collaborate / co-decide
+  note: 'Northern site communities may include First Nations, Inuit and Metis communities. Their governance bodies are decision
+    authorities, not consultees. Whether free, prior and informed consent obligations apply in law (UNDRIP as adopted by Bill
+    C-15, 2021) is [Uncertain: legal question, verify with counsel]; the SE process treats consent and data governance as
+    requirements either way (MIS-IF-06). TRC Call to Action 92 applies to a publicly funded programme as a practice expectation.'
+  consent_status: 'not yet initiated (teaching baseline: no site is named)'
+- id: STK-03
+  name: Community land users (harvesters, ice-road and river users, elders and knowledge holders, youth)
+  category: mission beneficiary
+  role: user
+  authority: None formal; their use decides whether the products are useful.
+  needs:
+  - SN-02
+  - SN-10
+  engagement: consult and involve through the community governance body
+  note: 'Disaggregated on purpose: the need of an ice-road user (timing) differs from that of a knowledge holder (long seasonal
+    record).'
+- id: STK-04
+  name: Science team (fire and ice)
+  category: mission beneficiary
+  role: science_pi
+  authority: Owns the science requirements and product validation.
+  needs:
+  - SN-03
+  engagement: collaborate
+- id: STK-05
+  name: Mission operations team (mission control)
+  category: mission beneficiary
+  role: operator
+  authority: Operates the spacecraft; certifies operators.
+  needs:
+  - SN-04
+  engagement: collaborate
+- id: STK-06
+  name: Spectrum and debris regulator (ISED) and the ITU through ISED
+  category: decision authority
+  role: regulator
+  authority: Grants space and earth station licences; sets debris conditions.
+  needs:
+  - SN-05
+  engagement: inform and apply
+- id: STK-07
+  name: Remote-sensing licensing authority (RSSSA, Global Affairs Canada) and export control
+  category: decision authority
+  role: regulator
+  authority: Grants the RSSSA licence; approves command and data protection plans; issues export permits.
+  needs:
+  - SN-05
+  engagement: inform and apply
+- id: STK-08
+  name: Student engineering team
+  category: mission beneficiary
+  role: partner
+  authority: Designs, builds and tests; holds the seats.
+  needs:
+  - SN-06
+  engagement: empower
+- id: STK-09
+  name: Open-data users (researchers, agencies, public)
+  category: mission beneficiary
+  role: user
+  authority: None.
+  needs:
+  - SN-07
+  engagement: inform
+- id: STK-10
+  name: Launch provider
+  category: decision authority
+  role: partner
+  authority: Accepts or rejects the spacecraft for flight (ICD, safety).
+  needs:
+  - SN-08
+  engagement: contract
+- id: STK-11
+  name: Other space operators and the orbital environment (future users of the orbit)
+  category: affected party / non-human stakeholder
+  role: affected
+  authority: Represented by the debris rules of the regulator and by conjunction services.
+  needs:
+  - SN-11
+  engagement: comply and share ephemerides
+- id: STK-12
+  name: Ground-station host sites and local land-use authorities
+  category: affected party
+  role: affected
+  authority: Permit antenna siting (CPC-2-0-03 consultation).
+  needs:
+  - SN-12
+  engagement: consult
+needs:
+- id: SN-01
+  stakeholder: Funding agency (student CubeSat programme)
+  role: sponsor
+  need: A student-built mission that flies, trains students and delivers its science within the programme budget and schedule,
+    on a rideshare launch.
+- id: SN-02
+  stakeholder: Northern communities that select the sites
+  role: user
+  need: Seasonal ice-on/ice-off, break-up and burn-scar information for community-selected sites, openly published with a
+    stated uncertainty.
+- id: SN-03
+  stakeholder: Science team (fire and ice)
+  role: science_pi
+  need: NIR and SWIR imagery at about 60 m, cross-calibrated against Sentinel-2 and Landsat, with enough clear scenes over
+    burns and ice sites.
+- id: SN-04
+  stakeholder: Mission operations team (mission control, Ottawa)
+  role: operator
+  need: A reliable encrypted two-way UHF link, a spacecraft that runs a stored plan, organised housekeeping and a ground network
+    that returns at least 13 MB of compressed science products per day.
+- id: SN-05
+  stakeholder: ISED Canada and Global Affairs Canada (RSSSA)
+  role: regulator
+  need: Licensable spectrum use at 401/450 MHz, disposal within 5 years with at least 90 % probability, collision risk below
+    0.001, command and data protection.
+- id: SN-06
+  stakeholder: Student engineering team
+  role: partner
+  need: Clear interfaces, early breadboards and a schedule that fits teaching terms.
+  traces_to:
+  - SYS-IF-14
+  - SYS-IF-15
+  - VER-MOD-01
+- id: SN-07
+  stakeholder: Open-data users
+  role: user
+  need: Calibrated fire and ice products with a stated uncertainty that they can find, download without registration and cite.
+- id: SN-08
+  stakeholder: Launch provider
+  role: partner
+  need: A spacecraft that meets the deployer interface and safety requirements and is delivered with its data package on time.
+  traces_to:
+  - MIS-IF-01
+  - MIS-IF-03
+  - SEG-LS-01
+  - SEG-LS-05
+- id: SN-09
+  stakeholder: Governance bodies of the site communities
+  role: user
+  need: Control over which of their sites are observed and how data and products about their lands are released, with their
+    decisions recorded and honoured.
+- id: SN-10
+  stakeholder: Community land users
+  role: user
+  need: Ice and burn information in a form and language they can use, at the time of break-up, freeze-up and the fire season,
+    and a way to ask for sites and say whether it helped.
+- id: SN-11
+  stakeholder: Other operators and the orbital environment
+  role: affected
+  need: 'No lasting debris or collision hazard: the spacecraft leaves orbit within 5 years of the end of operations and shares
+    its ephemeris.'
+- id: SN-12
+  stakeholder: Ground-station host sites
+  role: affected
+  need: Stations that have local permission, respect land use and stay within RF exposure limits.
+  traces_to:
+  - REG-SPC-05
+  - SEG-GS-02
+  - SEG-GS-03
+moes:
+- id: MOE-01
+  measure: Usable cloud-free burn scene pairs in year 1
+  threshold: '>= 40 over >= 3 burns'
+  objectives:
+  - O1
+  needs:
+  - SN-02
+  - SN-03
+  defined_by: science team (from the brief)
+- id: MOE-02
+  measure: Burn-index bias against the dNBR-calibrated reference
+  threshold: <= 0.08
+  objectives:
+  - O1
+  - O4
+  needs:
+  - SN-03
+  defined_by: science team
+- id: MOE-03
+  measure: Complete break-up seasons observed at community sites
+  threshold: '>= 1 season at >= 3 sites'
+  objectives:
+  - O3
+  needs:
+  - SN-02
+  - SN-03
+  defined_by: science team with the communities
+- id: MOE-04
+  measure: Ice-product delivery time to the community in break-up
+  threshold: <= 7 days
+  objectives:
+  - O3
+  needs:
+  - SN-10
+  defined_by: '[PLACEHOLDER: confirm with each community; 7 days is an engineering proposal]'
+- id: MOE-05
+  measure: Radiometric repeatability and matchups per year
+  threshold: <= 5 % and >= 20 per product type
+  objectives:
+  - O4
+  needs:
+  - SN-03
+  - SN-07
+  defined_by: science team
+- id: MOE-06
+  measure: Geolocation after registration
+  threshold: <= 2 product pixels
+  objectives:
+  - O4
+  needs:
+  - SN-03
+  defined_by: science team
+- id: MOE-07
+  measure: Night-SWIR campaign outcome reported
+  threshold: detection or null result with detection limit
+  objectives:
+  - O2
+  needs:
+  - SN-03
+  defined_by: science team
+- id: MOE-08
+  measure: Compressed science volume delivered per day
+  threshold: '>= 13 MB/day (7-day average)'
+  objectives:
+  - O1
+  - O3
+  needs:
+  - SN-04
+  defined_by: PI decision D-PI-01
+- id: MOE-09
+  measure: Licences before launch and disposal compliance
+  threshold: all licences; re-entry <= 5 y with >= 90 %
+  objectives:
+  - C1
+  needs:
+  - SN-05
+  - SN-11
+  defined_by: regulators
+- id: MOE-10
+  measure: Community assessment of usefulness
+  threshold: '[PLACEHOLDER: measure and threshold to be co-defined with each community]'
+  objectives:
+  - O1
+  - O3
+  needs:
+  - SN-02
+  - SN-10
+  defined_by: communities (co-defined, not by the engineering team)
+- id: MOE-11
+  measure: Delivered within the programme envelope and trained students
+  threshold: 'launch mid-2030 within budget; [PLACEHOLDER: training measure from the sponsor]'
+  objectives:
+  - C1
+  needs:
+  - SN-01
+  - SN-06
+  defined_by: sponsor
+- id: MOE-12
+  measure: Products open, archived and citable
+  threshold: 100 % of released products in the catalogue; archive transferred <= 12 months after end of mission
+  objectives:
+  - O4
+  needs:
+  - SN-07
+  defined_by: science team
+- id: MOE-13
+  measure: Site agreements honoured
+  threshold: 0 releases contrary to a site agreement
+  objectives:
+  - O1
+  - O3
+  needs:
+  - SN-09
+  defined_by: communities
+- id: MOE-14
+  measure: Launch interface accepted
+  threshold: launch ICD signed before CDR; acceptance data package accepted at first submission
+  objectives:
+  - C1
+  needs:
+  - SN-08
+  defined_by: launch provider
+- id: MOE-15
+  measure: Ground-station siting accepted
+  threshold: consultation or exemption complete at all 4 sites >= 12 months before launch
+  objectives:
+  - C1
+  needs:
+  - SN-12
+  defined_by: host sites / land-use authorities
+need_validation:
+- need: SN-01
+  method: V1 sponsor review of the mission need and objectives; V7 mission results review
+  stage: MDR, PRR, FRR
+- need: SN-02
+  method: V1 walkthrough with community representatives; V3 simulated products; V6 seasonal assessment
+  stage: PRR, AR, Phase E
+- need: SN-03
+  method: V1 science requirements review; V3 simulated products; V5 in-orbit matchups
+  stage: PRR, CDR, CRR
+- need: SN-04
+  method: V2 scenario tracing with operators; V4 operational rehearsals on the simulator
+  stage: SRR, ORR
+- need: SN-05
+  method: V1 pre-consultation records; licences granted
+  stage: PRR, launch - 12 months
+- need: SN-06
+  method: V1 team review of interfaces and schedule; seat retrospectives at each gate
+  stage: PRR and each gate
+- need: SN-07
+  method: V3 catalogue test with an outside user; V7 usage statistics
+  stage: AR, Phase E
+- need: SN-08
+  method: Launch ICD signed; acceptance data package accepted
+  stage: CDR, AR
+- need: SN-09
+  method: V1 site agreements drafted with community governance; V6 record of releases against agreements
+  stage: PRR, CDR, Phase E
+- need: SN-10
+  method: V3 simulated products reviewed in the community's language; V6 seasonal assessment (SEG-US-10)
+  stage: AR, Phase E
+- need: SN-11
+  method: Disposal analysis (DRAMA/DAS) and conjunction-service registration
+  stage: PDR, launch - 90 days
+- need: SN-12
+  method: Siting consultation records per station
+  stage: launch - 12 months
+validation_events:
+- id: V1
+  name: Needs validation
+  when: MDR to PRR
+- id: V2
+  name: Requirements validation
+  when: SRR
+- id: V3
+  name: Pre-launch product validation with simulated data
+  when: CDR to AR
+- id: V4
+  name: Operational validation of the ground segment and operators
+  when: QR to ORR/FRR
+- id: V5
+  name: In-orbit validation of products against reference imagery
+  when: commissioning (CRR)
+- id: V6
+  name: Operational validation with communities
+  when: first break-up season and first fire season
+- id: V7
+  name: Mission results review
+  when: end of year 1 (FRR-type results review) and end of mission
+governance_notes:
+  community_decision_authority: 'Community governance bodies decide participation, sites and data release (site agreement).
+    Consent is designed as recurring: re-confirmed when scope changes (sites, products, release).'
+  data_governance: OCAP and CARE principles considered for data about community lands; the site agreement is the controlling
+    document (MIS-IF-06).
+  legal_status: '[Uncertain] whether specific legal obligations (UNDRIP as adopted in Canadian law, Bill C-15 2021) apply
+    to a given site is a legal question; verify with counsel. TRC Call to Action 92 noted for a publicly funded programme.'
+  limits: This baseline can state the process requirements; it cannot substitute for the relationship with the communities,
+    which is built by people, not documents.

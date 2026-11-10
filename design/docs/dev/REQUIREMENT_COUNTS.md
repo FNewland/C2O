@@ -1,38 +1,47 @@
 # Requirement counts of the Northern Fire and Ice study
 
-Wave 2, agent R. For the agents whose tests or documents count requirements: what the
-requirement store holds after each seed stage, where every row comes from, and which total a
-document should quote. **Count from the store, not from a hard-coded number.** Use
-`GET /api/studies/{id}/requirements/counts` (or `services.requirement_queries.requirement_counts`).
+Wave 2, agent R; rewritten for the **v2 baseline** in wave 3, step 0. For the agents whose tests
+or documents count requirements: what the requirement store holds after each seed stage, where
+every row comes from, and which total a document should quote. **Count from the store, not from
+a hard-coded number.** Use `GET /api/studies/{id}/requirements/counts` (or
+`services.requirement_queries.requirement_counts`), or the fixture (`load("requirements")`).
 
-## 1. Where the rows come from
+## 1. Where the rows come from (v2)
 
 | Kind (`counts` key) | Codes | S0 | S1, S2 | S3, S4 | Made by |
 |---|---|---|---|---|---|
-| `stakeholder` | `SN-01` … `SN-06` | 0 | 6 | 6 | the bulk import (W2.01/W2.04): `stakeholder_needs` of `requirements.yaml`, level `stakeholder` |
-| `objective` | `OBJ-O1` … `OBJ-O4`, `OBJ-C1` | 0 | 5 | 5 | W1.05: one mission-level row per mission objective ("The mission shall …"), parent = the need |
-| `user` | the baseline (`MIS-`, `SEG-`, `SYS-`, `PAY-` … `IF-`) | 0 | 216 | 216 | the bulk import: the 216 rows of `requirements.yaml` |
+| `stakeholder` | `SN-01` … `SN-12` | 0 | 12 | 12 | the bulk import: `stakeholder_needs` of `requirements.yaml`, level `stakeholder` |
+| `objective` | `OBJ-O1` … `OBJ-O4`, `OBJ-C1` | 0 | 5 | 5 | one mission-level row per mission objective ("The mission shall …"), parent = the needs |
+| `user` | the baseline (`MIS-`, `REG-`, `SEG-`, `OPS-`, `SYS-`, `VER-`, `PAY-` … `IF-`) | 0 | 302 | 302 | the bulk import of `requirements.yaml`, each row at its own `level` |
 | `generated_interface` | `IR-<type>-nnn` | 0 | 0 | 13 | rule IF-01 (`services/interface_requirements.py`) from the accepted links, at the S3 sync |
-| **all** | | 0 | **227** | **240** | |
+| **all** | | 0 | **319** | **332** | |
 
-By level at S3/S4: stakeholder 6, mission 58 (53 baseline + 5 objective rows), segment 36,
-system 40, subsystem 75, interface 25 (12 baseline `IF-*` + 13 `IR-*`).
+By level at S3/S4 (`by_level`): stakeholder 12, mission 73 (68 baseline + 5 objective rows),
+segment 40, system 67, subsystem 115, interface 25 (12 baseline `IF-*` + 13 `IR-*`). The v2 file
+counts these in `baseline.counts` (`level_*`). It also has a `tool_level` that folds the segment
+rows into system; the import reads `level`.
 
-The numbers wave-1 tests met:
+The totals tests met over the waves (all intended):
 
-- **221** = 216 baseline + 5 objective rows. This was the count before W2.01 added the
-  stakeholder level and before the IF-01 rows existed in the seed.
-- **227** = 221 + 6 stakeholder needs. Stages S1 and S2 (no interface requirement sync yet).
-- **237** = 227 + 10 `IR-*` rows. Stages S3 and S4 on main after wave 1.
-- **240** = 227 + 13 `IR-*` rows. Stages S3 and S4 after this change (section 2).
+- **v1** (waves 1–2): 216 baseline rows, 6 needs. That gave 221 (rows + objectives), 227 (+ needs)
+  and 240 (+ 13 `IR-*`).
+- **v2** (wave 3): 302 baseline rows, 12 needs. That gives 307 (rows + objectives), 319 (+ needs)
+  and 332 (+ 13 `IR-*`).
 
-All of these are intended. The needs are the stakeholder level of the baseline (W2.01). The
-objective rows make every objective a requirement that the rest trace to (W1.05, SRR-EC-01).
-The `IR-*` rows are the IRD content of the links that no baseline `IF-*` row covers (IF-01,
-W2.07). A test should take the expected total from `counts`, or from the fixture
-(`len(ROWS) + len(objectives) + len(stakeholder_needs)`) plus `counts["generated_interface"]`.
+A test takes the expected total from `counts`, or from the fixture:
+`len(requirements) + len(objectives) + len(stakeholder_needs)`, plus `counts["generated_interface"]`.
+
+**v2 fields on every row** (3.0b): `function_codes` and `allocation_codes` (v2 `function` /
+`allocation`), `budget_ref` (62 rows), `verification_level`, `verification_model`,
+`verification_event`, `acceptance`, `open_item_note` (12 rows). Stages now include `PRR` and
+`SRR` (one row each). Distribution of stages in the v2 matrix: PDR 72, CDR 109, QR 71, AR 15,
+IOV 33, PRR 1, SRR 1.
 
 ## 2. The generated interface requirements (S3/S4)
+
+*Written for v1 in wave 2. On v2 the same 13 `IR-*` rows are generated. Some baseline parents
+changed in v2 (for example `IF-ADC-OBC-01` now hangs off `SYS-IF-03`), so take parent codes from
+the fixture, not from this table.*
 
 The seed accepts 139 links. Of these, 109 need no row of their own:
 
@@ -68,7 +77,9 @@ What the full import revealed on main, and what changed in wave 2:
 | Two rows for one boundary (Structure → EPS deployment switch, and the RBF pin on the unit link under it) | links of one boundary are grouped by the templates they render, not by subtype |
 | `OBJ-*` rows "not measurable"; SEG-LS-03 and HAR-DER-01 (levels set by the launch ICD and ECSS-Q-ST-30-11C) "not measurable" | SMART: an objective is measured by its success criterion; a requirement with a method whose text cites a document is measurable (as SRR-EC-02 already did) |
 
-After the change, at S3/S4: SMART passes on 240 of 240 rows, there are 0 orphans, and every row
+After the change, at S3/S4 (v1): SMART passed on 240 of 240 rows (v2: 332 of 332; the two v2 rows
+whose measure is only in the text, PAY-OPT-06 and THM-PAY-02, are measurable through their
+`acceptance` criterion), there are 0 orphans, and every row
 below the needs has a parent. Every objective is covered (the `direct` count is above 0 for
 O1–O4 and C1).
 
@@ -83,12 +94,12 @@ They do appear in the IRD dataset's bus nodes.
 
 ## 3. Which total a document quotes
 
-| Document | Rows | S3/S4 |
+| Document | Rows | S3/S4 (v2) |
 |---|---|---|
-| TS (W4.06), V&V matrix, verification plan | `specification`: every live row except the needs (`ts_rows`) | 234 |
-| the same without generated rows | `specification_without_generated` (`ts_rows(include_generated=False)`) | 221 |
+| TS (W4.06), V&V matrix, verification plan | `specification`: every live row except the needs (`ts_rows`) | 320 |
+| the same without generated rows | `specification_without_generated` (`ts_rows(include_generated=False)`) | 307 |
 | IRD (W4.07) | `by_level["interface"]` (`ird_dataset()["requirements"]`) | 25 |
-| MRD | the needs and the mission level | 6 + 58 |
+| MRD | the needs and the mission level | 12 + 73 |
 
 The generated rows are drafts that need verification like any other (method T/I/A, stage CDR),
 so the V&V matrix should list them. A document that wants only the written baseline uses

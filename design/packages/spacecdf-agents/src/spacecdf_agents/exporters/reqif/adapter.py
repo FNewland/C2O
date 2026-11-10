@@ -28,7 +28,9 @@ Source of truth for requirements is the in-memory store the API serves
 Nov 2026 (W2.02): the requirement type, owner seat, allocation (by element **name**, so it maps
 into another study), every objective, priority, category, source, threshold unit, verification
 level and methods and the open-item flag travel as attributes too, so a ReqIF export imported
-into a new study gives the same fields on every row. ``threshold_value`` is JSON.
+into a new study gives the same fields on every row. ``threshold_value`` is JSON. Wave 3 (v2
+baseline) adds acceptance, verification model and event, budget reference, open-item note and the
+function / allocation code lists (comma-separated).
 Further parents are ``derives`` SPEC-RELATIONs; further objectives ride in ``objective_ids``.
 
 Import
@@ -74,12 +76,19 @@ ATTRIBUTES = ("code", "text", "rationale", "level", "verification_method", "veri
               "threshold_param_path", "threshold_op", "threshold_value",
               # W2.02 (Nov 2026)
               "req_type", "element", "responsible_position", "objective_ids", "priority", "category", "source_ref",
-              "threshold_unit", "verification_level", "verification_methods", "open_item")
+              "threshold_unit", "verification_level", "verification_methods", "open_item",
+              # wave 3, step 0 (v2 baseline)
+              "acceptance", "verification_model", "verification_event", "budget_ref", "open_item_note",
+              "function_codes", "allocation_codes")
+#: Comma-separated list attributes.
+LIST_ATTRIBUTES = ("verification_methods", "function_codes", "allocation_codes")
 #: Attributes that are cleared on import when the ReqIF value is empty.
 CLEARABLE_ATTRIBUTES = ("rationale", "verification_method", "verification_phase",
                         "threshold_param_path", "threshold_op", "threshold_value",
                         "req_type", "responsible_position", "priority", "category", "source_ref", "threshold_unit",
-                        "verification_level", "verification_methods", "open_item")
+                        "verification_level", "verification_methods", "open_item",
+                        "acceptance", "verification_model", "verification_event", "budget_ref", "open_item_note",
+                        "function_codes", "allocation_codes")
 RELATION_KINDS = ("satisfies", "verifies", "refines", "derives", "traces")
 SPEC_OBJECT_TYPE_ID = "SCDF-TYPE-REQUIREMENT"
 SPECIFICATION_TYPE_ID = "SCDF-TYPE-SPECIFICATION"
@@ -178,8 +187,8 @@ def _export_value(req: dict, a: str, objectives: dict[str, list[str]]) -> str:
         first = req.get("objective_id")
         ids = ([first] if first else []) + [o for o in objectives.get(req["id"], []) if o != first]
         return ",".join(ids)
-    if a == "verification_methods":
-        return ",".join(req.get("verification_methods") or [])
+    if a in LIST_ATTRIBUTES:
+        return ",".join(req.get(a) or [])
     if a == "open_item":
         return "" if req.get(a) is None else ("true" if req.get(a) else "false")
     return _s(req.get(a))
@@ -344,8 +353,9 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
                 fields["priority"] = None
         if "open_item" in fields and fields["open_item"] is not None:
             fields["open_item"] = str(fields["open_item"]).lower() in ("true", "1", "yes")
-        if "verification_methods" in fields and fields["verification_methods"]:
-            fields["verification_methods"] = [m for m in str(fields["verification_methods"]).split(",") if m]
+        for la in LIST_ATTRIBUTES:
+            if la in fields and fields[la]:
+                fields[la] = [m for m in str(fields[la]).split(",") if m]
         if "element" in fields:
             name = fields.pop("element")
             fields["element_id"] = resolve_element(name, study_elements) if name else None

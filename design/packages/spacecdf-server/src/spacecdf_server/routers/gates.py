@@ -406,7 +406,9 @@ async def get_gate_baseline(study_id: str, baseline_id: str) -> dict:
 
 # ─── team records: risk register and trade records ────────────────────────
 
-RISK_FIELDS = ("description", "category", "likelihood", "consequence", "mitigation", "owner", "status", "source")
+RISK_FIELDS = ("description", "category", "likelihood", "consequence", "mitigation", "owner", "status", "source",
+               # wave 3, step 0 (v2 risks; 3.D6 fills them): residual L × C after mitigation, owner as a seat
+               "residual_likelihood", "residual_consequence", "owner_seat")
 RISK_STATUSES = ("open", "mitigating", "closed", "accepted")
 
 
@@ -419,6 +421,9 @@ class RiskBody(BaseModel):
     owner: str = Field("", max_length=120)
     status: str = "open"
     source: str = Field("", max_length=120)
+    residual_likelihood: int | None = Field(None, ge=1, le=5)
+    residual_consequence: int | None = Field(None, ge=1, le=5)
+    owner_seat: str = Field("", max_length=48)
 
 
 def _clean_risk(d: dict[str, Any], rid: str) -> dict[str, Any]:
@@ -434,6 +439,15 @@ def _clean_risk(d: dict[str, Any], rid: str) -> dict[str, Any]:
         r["status"] = "open"
     for k in ("description", "category", "mitigation", "owner", "source"):
         r[k] = str(r.get(k) or "")[:2000]
+    # wave 3: residual likelihood / consequence (None until assessed) and the owner seat
+    for k in ("residual_likelihood", "residual_consequence"):
+        try:
+            r[k] = min(5, max(1, int(r[k]))) if r.get(k) not in (None, "") else None
+        except (TypeError, ValueError):
+            r[k] = None
+    r["residual_rpn"] = (r["residual_likelihood"] * r["residual_consequence"]
+                         if r["residual_likelihood"] and r["residual_consequence"] else None)
+    r["owner_seat"] = str(r.get("owner_seat") or "")[:48]
     return r
 
 

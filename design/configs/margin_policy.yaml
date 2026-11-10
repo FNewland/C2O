@@ -92,6 +92,19 @@ system_margin_ladder:
     pdr: {value: 15, source: ecss_hb_10_02, clause: "Table 8.3, Phase B"}
     cdr: {value: 10, source: ecss_hb_10_02, clause: "Table 8.3, Phase C"}
 
+# A study may HOLD a larger system margin than the ladder through a given gate (wave 3, step 0;
+# the Northern Fire and Ice mission holds 20 % through PDR, which satisfies both the course
+# ladder and the ECSS system-engineering practice that keeps 20 % at PDR). The hold is the
+# study's choice (Study.margin_policy.study_override = {percent, through_gate, resources,
+# rationale}); the ladder above is unchanged and is still quoted next to it. A hold can only
+# raise the margin: below the ladder the ladder applies.
+study_override:
+  source: c2o_default
+  label: {en: "Study hold", fr: "Marge retenue par l’étude"}
+  min_percent: 0
+  max_percent: 50
+  resources: [mass, power]
+
 mass:
   system_margin_percent: {value: 20, source: esa_margin_1_3, clause: "2.1.1 R-M1-1 / 2.1.2"}
   harness_percent:       {value: 5,  source: esa_margin_1_3, clause: "R-M1-7"}

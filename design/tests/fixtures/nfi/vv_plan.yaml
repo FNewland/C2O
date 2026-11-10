@@ -1,0 +1,3968 @@
+# Northern Fire and Ice v2 - verification and validation plan: model philosophy, verification matrix by level and stage, events, validation plan.
+note: Right side of the V. Verification per ECSS-E-ST-10-02C (methods T test, A analysis, I inspection, R review of design);
+  validation per ISO 15288 Validation process. Generated from requirements.yaml v2.
+v_levels:
+- left: Stakeholder needs and MOEs (stakeholders.yaml)
+  right: Validation V1-V7
+  review: MDR/PRR (needs), CRR, FRR / mission results
+- left: Mission requirements (MIS, REG, MIS-IF, MIS-VAL)
+  right: Mission verification in orbit (IOV) and by analysis
+  review: PRR -> CRR
+- left: Segment requirements (SEG, OPS)
+  right: 'Segment verification: ground segment acceptance, end-to-end'
+  review: SRR -> ORR
+- left: System requirements (SYS, SYS-IF, VER)
+  right: System verification on the PFM
+  review: SRR/PDR -> QR/AR
+- left: Subsystem and interface requirements
+  right: Subsystem verification on EM / PFM; interface tests
+  review: PDR -> CDR/QR
+- left: Unit specifications (procured and built units)
+  right: Unit acceptance (supplier data, breadboard tests)
+  review: CDR
+model_philosophy:
+- model: BB
+  name: Breadboards
+  month: 6
+  purpose: 'Payload: both cameras on the controller (CSI-2 driver, trigger skew, compression on sample scenes); flatsat start
+    (OBC, EPS, radio); disposal timer breadboard.'
+  levels:
+  - unit
+  - subsystem
+  trl_target: TRL 4 -> 5 for the payload chain and the timer
+- model: EM
+  name: Engineering model and flatsat
+  month: 18
+  purpose: Functional and interface tests of every subsystem; deployment tests of sail, antennas and wings; payload focus-in-vacuum
+    method; software on the simulator (SVF).
+  levels:
+  - subsystem
+  - system
+  trl_target: TRL 6 for the payload bench and the timer before CDR
+- model: PFM
+  name: Protoflight model
+  month: 30
+  purpose: 'Qualification levels at acceptance durations: sine and random vibration, TVAC 4 cycles, functional before and
+    after, EMC self-compatibility, end-to-end, 72 h day-in-the-life, mass properties and magnetic dipole, payload calibration.'
+  levels:
+  - system
+  trl_target: TRL 7-8 at AR
+- model: LV
+  name: Launch provider final vibration in the deployer
+  month: 34
+  purpose: Acceptance vibration of the integrated deployer by the launch provider.
+  levels:
+  - system
+  trl_target: '-'
+- model: GS
+  name: Ground segment integration
+  month: 24
+  purpose: Station acceptance at each site, VPN, scheduling, key store; end-to-end with the PFM.
+  levels:
+  - segment
+  trl_target: '-'
+- model: flight
+  name: In-orbit verification and validation
+  month: 36
+  purpose: LEOP and commissioning tests; science validation in year 1.
+  levels:
+  - mission
+  trl_target: TRL 9
+independence: 'ECSS separates product assurance from design. In the student project the Instructor and Observer seats act
+  as the independent reviewers: they witness PFM tests (QR/AR) and close anomalies; designers do not close their own NCRs.'
+summary_level_by_stage:
+  unit:
+    PRR: 0
+    SRR: 0
+    PDR: 0
+    CDR: 12
+    QR: 2
+    AR: 1
+    IOV: 0
+  subsystem:
+    PRR: 0
+    SRR: 0
+    PDR: 23
+    CDR: 52
+    QR: 26
+    AR: 3
+    IOV: 0
+  system:
+    PRR: 0
+    SRR: 0
+    PDR: 21
+    CDR: 22
+    QR: 28
+    AR: 2
+    IOV: 0
+  segment:
+    PRR: 0
+    SRR: 0
+    PDR: 4
+    CDR: 15
+    QR: 9
+    AR: 2
+    IOV: 0
+  mission:
+    PRR: 1
+    SRR: 1
+    PDR: 24
+    CDR: 8
+    QR: 6
+    AR: 7
+    IOV: 33
+summary_method_by_model:
+  A/design: 83
+  A/flight: 7
+  I/EM: 18
+  I/GS: 3
+  I/PFM: 2
+  I/design: 1
+  I/flight: 1
+  R/design: 32
+  R/flight: 4
+  T/BB: 1
+  T/BB+EM: 8
+  T/EM: 38
+  T/GS: 17
+  T/PFM: 66
+  T/flight: 21
+events:
+- id: AN-BUD
+  description: analysis report
+  requirements:
+  - SYS-BUD-02
+  - SYS-BUD-03
+  - SYS-BUD-04
+  - SYS-BUD-05
+  - SYS-BUD-06
+  - SYS-BUD-07
+  - SYS-BUD-09
+  - SYS-BUD-10
+  - SYS-BUD-12
+  - SYS-BUD-13
+  - SYS-BUD-14
+  - SYS-BUD-15
+  - PAY-BUD-03
+  - PAY-DAT-01
+  - EPS-BUD-01
+  - EPS-BUD-02
+  - ADC-BUD-01
+  - ADC-BUD-02
+  - OBD-BUD-01
+  - OBD-BUD-02
+  - OBD-DAT-01
+  - COM-BUD-01
+  - COM-BUD-02
+  - STR-BUD-01
+  - THM-BUD-01
+  - THM-BUD-02
+  - DIS-BUD-01
+  - DIS-BUD-02
+  count: 28
+- id: AN-DAT
+  description: analysis report
+  requirements:
+  - MIS-DAT-01
+  - MIS-DAT-02
+  count: 2
+- id: AN-DEB
+  description: analysis report
+  requirements:
+  - MIS-LIF-01
+  - MIS-LIF-02
+  - MIS-DIS-01
+  - MIS-DIS-02
+  - MIS-DIS-03
+  - DIS-SAIL-04
+  - DIS-BAT-01
+  count: 7
+- id: AN-DHS
+  description: analysis report
+  requirements:
+  - SYS-DH-02
+  - SYS-DH-05
+  - SYS-DH-04
+  - SYS-IF-04
+  count: 4
+- id: AN-ENV
+  description: analysis report
+  requirements:
+  - SYS-ENV-01
+  - SYS-ENV-02
+  count: 2
+- id: AN-FDIR
+  description: analysis report
+  requirements:
+  - SYS-MOD-03
+  count: 1
+- id: AN-GSG
+  description: analysis report
+  requirements:
+  - SEG-GS-01
+  - SEG-GS-13
+  count: 2
+- id: AN-HAR
+  description: analysis report
+  requirements:
+  - HAR-DER-01
+  count: 1
+- id: AN-LCH
+  description: analysis report
+  requirements:
+  - SEG-LS-06
+  count: 1
+- id: AN-MIS
+  description: analysis report
+  requirements:
+  - MIS-COV-01
+  - MIS-COV-02
+  - MIS-COV-03
+  - MIS-COV-04
+  count: 4
+- id: AN-PAY
+  description: analysis report
+  requirements:
+  - PAY-OPT-03
+  - PAY-OPT-04
+  - PAY-RAD-01
+  - PAY-RAD-02
+  - PAY-GEO-04
+  count: 5
+- id: AN-PNT
+  description: analysis report
+  requirements:
+  - MIS-IF-10
+  - ADC-PNT-01
+  - ADC-PNT-04
+  - ADC-MOD-01
+  - ADC-MOM-01
+  - ADC-STB-01
+  - ADC-STB-02
+  - GNS-PRP-01
+  count: 8
+- id: AN-PWR
+  description: analysis report
+  requirements:
+  - EPS-SA-01
+  - EPS-BAT-02
+  count: 2
+- id: AN-REG
+  description: analysis report
+  requirements:
+  - REG-DEB-01
+  - REG-DEB-03
+  count: 2
+- id: AN-REL
+  description: analysis report
+  requirements:
+  - SYS-REL-01
+  - SYS-REL-02
+  - SYS-REL-03
+  count: 3
+- id: AN-SSG
+  description: analysis report
+  requirements:
+  - SEG-SS-03
+  count: 1
+- id: AN-STR
+  description: analysis report
+  requirements:
+  - STR-MOD-01
+  - STR-FOS-01
+  - STR-MEC-01
+  count: 3
+- id: AN-THM
+  description: analysis report
+  requirements:
+  - THM-PAY-01
+  - THM-PAY-02
+  - THM-ALL-01
+  - THM-BEN-01
+  - THM-BAT-01
+  - THM-PCT-01
+  count: 6
+- id: AN-USR
+  description: analysis report
+  requirements:
+  - SEG-US-09
+  count: 1
+- id: IN-EM-CLN
+  description: inspection
+  requirements:
+  - SYS-CLN-01
+  count: 1
+- id: IN-EM-DEB
+  description: inspection
+  requirements:
+  - DIS-SAIL-01
+  - DIS-SAIL-02
+  count: 2
+- id: IN-EM-DHS
+  description: inspection
+  requirements:
+  - SYS-IF-05
+  - SYS-IF-06
+  - SYS-IF-14
+  - SYS-IF-15
+  - OBD-HK-02
+  count: 5
+- id: IN-EM-EMC
+  description: inspection
+  requirements:
+  - SYS-IF-08
+  count: 1
+- id: IN-EM-GSG
+  description: inspection
+  requirements:
+  - SEG-GS-10
+  count: 1
+- id: IN-EM-HAR
+  description: inspection
+  requirements:
+  - SYS-IF-10
+  - HAR-SEG-01
+  count: 2
+- id: IN-EM-LCH
+  description: inspection
+  requirements:
+  - SYS-LCH-01
+  count: 1
+- id: IN-EM-PAY
+  description: inspection
+  requirements:
+  - PAY-GEO-02
+  - PAY-BUD-04
+  count: 2
+- id: IN-EM-REG
+  description: inspection
+  requirements:
+  - REG-DEB-04
+  count: 1
+- id: IN-EM-STR
+  description: inspection
+  requirements:
+  - SYS-IF-12
+  count: 1
+- id: IN-EM-VER
+  description: inspection
+  requirements:
+  - VER-WKM-01
+  count: 1
+- id: IN-GS-GSG
+  description: inspection
+  requirements:
+  - SEG-GS-02
+  count: 1
+- id: IN-GS-OPS
+  description: inspection
+  requirements:
+  - MIS-OPS-03
+  count: 1
+- id: IN-GS-USR
+  description: inspection
+  requirements:
+  - SEG-US-07
+  count: 1
+- id: IN-PFM-SAF
+  description: inspection
+  requirements:
+  - EPS-SAF-01
+  count: 1
+- id: IN-PFM-STR
+  description: inspection
+  requirements:
+  - STR-ENV-01
+  count: 1
+- id: IN-design-BUD
+  description: inspection
+  requirements:
+  - SYS-BUD-08
+  count: 1
+- id: IOV-COM
+  description: commissioning tests
+  requirements:
+  - MIS-IF-02
+  - SEG-GS-06
+  - PAY-GEO-01
+  - PAY-CAL-01
+  - ADC-PNT-03
+  count: 5
+- id: IOV-OPS
+  description: operations records in Phase E
+  requirements:
+  - MIS-DAT-03
+  - MIS-DAT-04
+  - MIS-DAT-05
+  - MIS-DAT-06
+  - MIS-OPS-01
+  - MIS-IF-07
+  - REG-REG-01
+  - OPS-DLS-01
+  - OPS-CTG-01
+  - OPS-CNJ-01
+  count: 10
+- id: IOV-SCI
+  description: in-orbit science verification and validation (matchups, campaigns)
+  requirements:
+  - MIS-SCI-01
+  - MIS-SCI-02
+  - MIS-SCI-03
+  - MIS-SCI-04
+  - MIS-SCI-05
+  - MIS-SCI-06
+  - MIS-SCI-07
+  - MIS-SCI-08
+  - MIS-SCI-09
+  - MIS-SCI-10
+  - MIS-SCI-11
+  - MIS-IF-05
+  - MIS-VAL-04
+  - SEG-US-02
+  - SEG-US-04
+  - SEG-US-05
+  - SEG-US-06
+  - SEG-US-10
+  count: 18
+- id: RV-AR-DAT
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-DAT-07
+  count: 1
+- id: RV-AR-OPS
+  description: review of design / documents at the stage gate
+  requirements:
+  - OPS-CRT-01
+  - OPS-PRC-01
+  count: 2
+- id: RV-AR-REG
+  description: review of design / documents at the stage gate
+  requirements:
+  - REG-EXP-02
+  count: 1
+- id: RV-AR-SCI
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-SCI-12
+  count: 1
+- id: RV-AR-VAL
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-VAL-03
+  count: 1
+- id: RV-CDR-ICD
+  description: review of design / documents at the stage gate
+  requirements:
+  - IF-SC-POD-01
+  count: 1
+- id: RV-CDR-LCH
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-IF-01
+  - MIS-IF-03
+  - SEG-LS-05
+  count: 3
+- id: RV-CDR-SCI
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-SCI-13
+  - MIS-SCI-14
+  - MIS-IF-08
+  count: 3
+- id: RV-CDR-USR
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-IF-06
+  - SEG-US-03
+  count: 2
+- id: RV-PDR-LCH
+  description: review of design / documents at the stage gate
+  requirements:
+  - SEG-LS-01
+  - SEG-LS-02
+  count: 2
+- id: RV-PDR-REG
+  description: review of design / documents at the stage gate
+  requirements:
+  - REG-SPC-01
+  - REG-SPC-02
+  - REG-SPC-03
+  - REG-SPC-04
+  - REG-SPC-05
+  - REG-RSS-01
+  - REG-RSS-02
+  - REG-RSS-05
+  - REG-EXP-01
+  count: 9
+- id: RV-PDR-STR
+  description: review of design / documents at the stage gate
+  requirements:
+  - STR-ACC-01
+  count: 1
+- id: RV-PDR-THM
+  description: review of design / documents at the stage gate
+  requirements:
+  - SYS-IF-13
+  count: 1
+- id: RV-PDR-VER
+  description: review of design / documents at the stage gate
+  requirements:
+  - VER-MOD-01
+  - VER-VCD-01
+  count: 2
+- id: RV-PRR-VAL
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-VAL-01
+  count: 1
+- id: RV-SRR-VAL
+  description: review of design / documents at the stage gate
+  requirements:
+  - MIS-VAL-02
+  count: 1
+- id: TS-BB-SYS
+  description: breadboard or early demonstration test before PDR
+  requirements:
+  - MIS-OPS-04
+  count: 1
+- id: TS-EM-AOCS
+  description: engineering-model or flatsat test
+  requirements:
+  - ADC-OUT-01
+  - ADC-BUD-03
+  - GNS-POS-01
+  - GNS-PPS-01
+  - GNS-OPS-01
+  - GNS-OPS-02
+  - IF-ADC-OBC-01
+  - IF-GNS-OBC-01
+  count: 8
+- id: TS-EM-COM
+  description: engineering-model or flatsat test
+  requirements:
+  - COM-DL-02
+  - COM-DL-03
+  - COM-ANT-01
+  - COM-BUD-03
+  - IF-COM-OBC-01
+  count: 5
+- id: TS-EM-DIS
+  description: engineering-model or flatsat test
+  requirements:
+  - DIS-BUD-03
+  - IF-DIS-EPS-01
+  count: 2
+- id: TS-EM-EPS
+  description: engineering-model or flatsat test
+  requirements:
+  - EPS-BAT-01
+  - EPS-PWR-01
+  - EPS-DST-01
+  - EPS-THM-01
+  - IF-EPS-ALL-01
+  count: 5
+- id: TS-EM-OBC
+  description: engineering-model or flatsat test
+  requirements:
+  - OBD-HK-01
+  - OBD-HK-03
+  - OBD-TT-01
+  - OBD-TIM-01
+  - OBD-TIM-02
+  count: 5
+- id: TS-EM-PAY
+  description: engineering-model or flatsat test
+  requirements:
+  - PAY-OPT-01
+  - PAY-OPT-06
+  - PAY-OPT-02
+  - PAY-OPT-05
+  - PAY-FUN-01
+  - PAY-FUN-02
+  - PAY-FUN-03
+  - PAY-FUN-04
+  - PAY-FUN-06
+  - PAY-FUN-05
+  - PAY-BUD-01
+  - PAY-BUD-02
+  - PAY-BUD-05
+  - IF-PAY-OBC-01
+  - IF-PAY-CAM-01
+  count: 15
+- id: TS-EM-SYS
+  description: engineering-model or flatsat test
+  requirements:
+  - SEG-GS-08
+  - SYS-IF-01
+  - SYS-IF-02
+  - SYS-IF-03
+  - SYS-IF-07
+  - IF-SG-02
+  count: 6
+- id: TS-GS-ACC
+  description: ground station / mission control / science system acceptance
+  requirements:
+  - MIS-IF-04
+  - MIS-IF-09
+  - REG-DEB-02
+  - SEG-GS-04
+  - SEG-GS-07
+  - SEG-GS-09
+  - SEG-GS-11
+  - SEG-GS-12
+  - IF-GS-MCC-01
+  - IF-MCC-SCI-01
+  count: 10
+- id: TS-GS-E2E
+  description: ground segment end-to-end with the PFM
+  requirements:
+  - SEG-GS-05
+  - SEG-US-01
+  - SEG-US-08
+  - OPS-CRT-02
+  - OPS-PLN-01
+  - OPS-PLN-02
+  count: 6
+- id: TS-GS-SURVEY
+  description: site survey or early ground test before PDR
+  requirements:
+  - SEG-GS-03
+  count: 1
+- id: TS-PFM-CAL
+  description: 'payload calibration: sphere, spectral, boresight map, focus in vacuum'
+  requirements:
+  - VER-CAL-01
+  - PAY-RAD-03
+  - PAY-GEO-03
+  count: 3
+- id: TS-PFM-DEP
+  description: deployment and release-circuit tests (EM full deployments, PFM circuits)
+  requirements:
+  - MIS-DIS-04
+  - VER-DEP-01
+  - EPS-SA-02
+  - DIS-SAIL-03
+  - DIS-TRG-01
+  - DIS-REL-01
+  - DIS-IND-01
+  - DIS-RST-01
+  - DIS-TLM-01
+  count: 9
+- id: TS-PFM-DITL
+  description: 72 h day-in-the-life on the PFM incl. command loss and Safe recovery
+  requirements:
+  - MIS-OPS-02
+  - SYS-MOD-01
+  - SYS-MOD-02
+  - SYS-AUT-01
+  - SYS-AUT-02
+  - SYS-AUT-03
+  - SYS-AUT-05
+  - SYS-AUT-04
+  - SYS-DH-01
+  - SYS-DH-03
+  - SYS-FDR-01
+  - VER-DIL-01
+  - OBD-SW-01
+  - OBD-STO-01
+  - OBD-SEC-01
+  - OBD-SW-02
+  - OBD-WD-01
+  count: 17
+- id: TS-PFM-E2E
+  description: 'end-to-end test: mission control - 2 stations - RF - PFM - science L1C'
+  requirements:
+  - MIS-IF-12
+  - REG-SPC-06
+  - REG-RSS-03
+  - REG-RSS-04
+  - SYS-SEC-01
+  - SYS-SEC-02
+  - SYS-SEC-03
+  - VER-E2E-01
+  - COM-DL-01
+  - COM-DL-04
+  - COM-UL-01
+  - COM-UL-02
+  - COM-ANT-02
+  - COM-BCN-01
+  - IF-SG-01
+  count: 15
+- id: TS-PFM-EMC
+  description: EMC self-compatibility, receiver and GNSS desensitisation
+  requirements:
+  - SYS-EMC-01
+  - SYS-EMC-02
+  - SYS-IF-09
+  - SYS-IF-11
+  count: 4
+- id: TS-PFM-FUN
+  description: PFM full functional test
+  requirements:
+  - SEG-SS-01
+  - SEG-SS-02
+  - VER-FUN-01
+  - EPS-INH-01
+  - EPS-PAS-01
+  - ADC-PNT-02
+  - ADC-MOD-02
+  - ADC-MOD-03
+  count: 8
+- id: TS-PFM-MP
+  description: mass properties and magnetic dipole
+  requirements:
+  - SYS-BUD-01
+  - ADC-MAG-01
+  - STR-CG-01
+  count: 3
+- id: TS-PFM-TVAC
+  description: PFM thermal vacuum, 4 cycles, functional at plateaux
+  requirements:
+  - VER-ENV-02
+  count: 1
+- id: TS-PFM-VIB
+  description: PFM sine + random vibration (protoflight levels), resonance surveys
+  requirements:
+  - SEG-LS-03
+  - SEG-LS-04
+  - SYS-LCH-02
+  - SYS-LCH-03
+  - VER-ENV-01
+  - STR-BEN-01
+  count: 6
+matrix:
+- id: MIS-SCI-01
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 40 scene pairs, measured in IOV-SCI'
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-02
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 3 sites, measured in IOV-SCI'
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-03
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 3 sites, measured in IOV-SCI'
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-04
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 10 night images per burn, measured in IOV-SCI'
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-05
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 20 matchups per product type per year, measured in IOV-SCI'
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-06
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: statement met as written, measured in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-07
+  level: mission
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: <= 175 m channel width, shown by analysis in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-08
+  level: mission
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: <= 0.08 absolute burn-index bias, shown by analysis in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-09
+  level: mission
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: <= 5 % (1 sigma, 30 days), shown by analysis in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-10
+  level: mission
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: <= 120 m (2 px) after registration, shown by analysis in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-11
+  level: mission
+  method: I
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: statement met as written, confirmed by inspection in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-12
+  level: mission
+  method: R
+  stage: AR
+  verification_level: mission
+  model: design
+  event: RV-AR-SCI
+  acceptance: <= 6 months after campaign, confirmed by review in RV-AR-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-13
+  level: mission
+  method: R
+  stage: CDR
+  verification_level: mission
+  model: design
+  event: RV-CDR-SCI
+  acceptance: statement met as written, confirmed by review in RV-CDR-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-SCI-14
+  level: mission
+  method: R
+  stage: CDR
+  verification_level: mission
+  model: design
+  event: RV-CDR-SCI
+  acceptance: '>= 3 sites per product type, confirmed by review in RV-CDR-SCI'
+  owner_seat: customer
+  status: planned
+- id: MIS-COV-01
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-MIS
+  acceptance: '>= 10 opportunities per site per month, shown by analysis in AN-MIS'
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-COV-02
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-MIS
+  acceptance: '>= 15 deg sun elevation, shown by analysis in AN-MIS'
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-COV-03
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-MIS
+  acceptance: <= 600 km apogee, shown by analysis in AN-MIS
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-COV-04
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-MIS
+  acceptance: <= 0.15 deg inclination error, shown by analysis in AN-MIS
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-LIF-01
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DEB
+  acceptance: '>= 24 months of operations, shown by analysis in AN-DEB'
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-LIF-02
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DEB
+  acceptance: '>= 0.8 probability, shown by analysis in AN-DEB'
+  owner_seat: systems_engineer
+  status: planned
+- id: MIS-DAT-01
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DAT
+  acceptance: '>= 13 MB/day compressed payload products (7-day mean), shown by analysis in AN-DAT'
+  owner_seat: comms_engineer
+  status: planned
+- id: MIS-DAT-02
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DAT
+  acceptance: '>= 80 ROI pairs per day (plus 10 quicklooks), shown by analysis in AN-DAT'
+  owner_seat: comms_engineer
+  status: planned
+- id: MIS-DAT-03
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: '>= 80 % of quicklooks within 24 h, measured in IOV-OPS'
+  owner_seat: comms_engineer
+  status: planned
+- id: MIS-DAT-04
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 7 days, measured in IOV-OPS
+  owner_seat: customer
+  status: planned
+- id: MIS-DAT-05
+  level: mission
+  method: R
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 6 months, confirmed by review in IOV-OPS
+  owner_seat: customer
+  status: planned
+- id: MIS-DAT-06
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 7 days from request, measured in IOV-OPS
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-DAT-07
+  level: mission
+  method: R
+  stage: AR
+  verification_level: mission
+  model: design
+  event: RV-AR-DAT
+  acceptance: '>= 10 years after end of mission, confirmed by review in RV-AR-DAT'
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-OPS-01
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 90 days after separation, measured in IOV-OPS
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-OPS-02
+  level: mission
+  method: T
+  stage: QR
+  verification_level: mission
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: '>= 48 h without contact, measured in TS-PFM-DITL'
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-OPS-03
+  level: mission
+  method: I
+  stage: CDR
+  verification_level: mission
+  model: GS
+  event: IN-GS-OPS
+  acceptance: statement met as written, confirmed by inspection in IN-GS-OPS
+  owner_seat: team_leader
+  status: planned
+- id: MIS-OPS-04
+  level: mission
+  method: T
+  stage: PDR
+  verification_level: mission
+  model: BB
+  event: TS-BB-SYS
+  acceptance: statement met as written, measured in TS-BB-SYS
+  owner_seat: comms_engineer
+  status: planned
+- id: MIS-DIS-01
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DEB
+  acceptance: '>= 0.9 probability of re-entry <= 5 y, shown by analysis in AN-DEB'
+  owner_seat: propulsion_engineer
+  status: planned
+- id: MIS-DIS-02
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DEB
+  acceptance: < 0.001 collision probability (> 10 cm objects), shown by analysis in AN-DEB
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-DIS-03
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-DEB
+  acceptance: <= 90 days after end of operational life, shown by analysis in AN-DEB
+  owner_seat: propulsion_engineer
+  status: planned
+- id: MIS-DIS-04
+  level: mission
+  method: T
+  stage: QR
+  verification_level: mission
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: statement met as written, measured in TS-PFM-DEP
+  owner_seat: comms_engineer
+  status: planned
+- id: MIS-IF-01
+  level: mission
+  method: R
+  stage: CDR
+  verification_level: mission
+  model: design
+  event: RV-CDR-LCH
+  acceptance: '>= 2 deployer designs, confirmed by review in RV-CDR-LCH'
+  owner_seat: structures_engineer
+  status: planned
+- id: MIS-IF-02
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-COM
+  acceptance: <= 24 h, measured in IOV-COM
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-IF-03
+  level: mission
+  method: R
+  stage: CDR
+  verification_level: mission
+  model: design
+  event: RV-CDR-LCH
+  acceptance: statement met as written, confirmed by review in RV-CDR-LCH
+  owner_seat: systems_engineer
+  status: planned
+- id: MIS-IF-04
+  level: mission
+  method: T
+  stage: AR
+  verification_level: mission
+  model: GS
+  event: TS-GS-ACC
+  acceptance: statement met as written, measured in TS-GS-ACC
+  owner_seat: payload_lead
+  status: planned
+- id: MIS-IF-05
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: statement met as written, measured in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: MIS-IF-06
+  level: mission
+  method: R
+  stage: CDR
+  verification_level: mission
+  model: design
+  event: RV-CDR-USR
+  acceptance: statement met as written, confirmed by review in RV-CDR-USR
+  owner_seat: team_leader
+  status: planned
+- id: MIS-IF-07
+  level: mission
+  method: R
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 12 months, confirmed by review in IOV-OPS
+  owner_seat: payload_lead
+  status: planned
+- id: MIS-IF-08
+  level: mission
+  method: R
+  stage: CDR
+  verification_level: mission
+  model: design
+  event: RV-CDR-SCI
+  acceptance: statement met as written, confirmed by review in RV-CDR-SCI
+  owner_seat: payload_lead
+  status: planned
+- id: MIS-IF-09
+  level: mission
+  method: T
+  stage: AR
+  verification_level: mission
+  model: GS
+  event: TS-GS-ACC
+  acceptance: <= 7 days between ephemeris deliveries, measured in TS-GS-ACC
+  owner_seat: mission_analyst
+  status: planned
+- id: MIS-IF-10
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-PNT
+  acceptance: statement met as written, shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: MIS-IF-12
+  level: mission
+  method: T
+  stage: QR
+  verification_level: mission
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: <= 8 h, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: MIS-VAL-01
+  level: mission
+  method: R
+  stage: PRR
+  verification_level: mission
+  model: design
+  event: RV-PRR-VAL
+  acceptance: statement met as written, confirmed by review in RV-PRR-VAL
+  owner_seat: team_leader
+  status: planned
+- id: MIS-VAL-02
+  level: mission
+  method: R
+  stage: SRR
+  verification_level: mission
+  model: design
+  event: RV-SRR-VAL
+  acceptance: statement met as written, confirmed by review in RV-SRR-VAL
+  owner_seat: systems_engineer
+  status: planned
+- id: MIS-VAL-03
+  level: mission
+  method: R
+  stage: AR
+  verification_level: mission
+  model: design
+  event: RV-AR-VAL
+  acceptance: '>= 3 communities, confirmed by review in RV-AR-VAL'
+  owner_seat: customer
+  status: planned
+- id: MIS-VAL-04
+  level: mission
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 5 matchups, measured in IOV-SCI'
+  owner_seat: payload_lead
+  status: planned
+- id: REG-SPC-01
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: <= 2027-03-31 date, confirmed by review in RV-PDR-REG
+  owner_seat: comms_engineer
+  status: planned
+- id: REG-SPC-02
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: '>= 30 months before launch, confirmed by review in RV-PDR-REG'
+  owner_seat: comms_engineer
+  status: planned
+- id: REG-SPC-03
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: '>= 24 months before launch, confirmed by review in RV-PDR-REG'
+  owner_seat: comms_engineer
+  status: planned
+- id: REG-SPC-04
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: '>= 12 months before launch, confirmed by review in RV-PDR-REG'
+  owner_seat: mission_analyst
+  status: planned
+- id: REG-SPC-05
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: '>= 12 months before launch, confirmed by review in RV-PDR-REG'
+  owner_seat: mission_analyst
+  status: planned
+- id: REG-SPC-06
+  level: mission
+  method: T
+  stage: QR
+  verification_level: mission
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: REG-RSS-01
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: '>= 24 months before launch, confirmed by review in RV-PDR-REG'
+  owner_seat: team_leader
+  status: planned
+- id: REG-RSS-02
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: <= 45 days after each review, confirmed by review in RV-PDR-REG
+  owner_seat: team_leader
+  status: planned
+- id: REG-RSS-03
+  level: mission
+  method: T
+  stage: QR
+  verification_level: mission
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: REG-RSS-04
+  level: mission
+  method: T
+  stage: QR
+  verification_level: mission
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: REG-RSS-05
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: <= 30 days from request, confirmed by review in RV-PDR-REG
+  owner_seat: team_leader
+  status: planned
+- id: REG-EXP-01
+  level: mission
+  method: R
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: RV-PDR-REG
+  acceptance: statement met as written, confirmed by review in RV-PDR-REG
+  owner_seat: payload_lead
+  status: planned
+- id: REG-EXP-02
+  level: mission
+  method: R
+  stage: AR
+  verification_level: mission
+  model: design
+  event: RV-AR-REG
+  acceptance: '>= 9 months before launch, confirmed by review in RV-AR-REG'
+  owner_seat: team_leader
+  status: planned
+- id: REG-DEB-01
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-REG
+  acceptance: statement met as written, shown by analysis in AN-REG
+  owner_seat: mission_analyst
+  status: planned
+- id: REG-DEB-02
+  level: mission
+  method: T
+  stage: AR
+  verification_level: mission
+  model: GS
+  event: TS-GS-ACC
+  acceptance: <= 90 days before launch, measured in TS-GS-ACC
+  owner_seat: mission_analyst
+  status: planned
+- id: REG-DEB-03
+  level: mission
+  method: A
+  stage: PDR
+  verification_level: mission
+  model: design
+  event: AN-REG
+  acceptance: <= 0.0001 casualty risk, shown by analysis in AN-REG
+  owner_seat: mission_analyst
+  status: planned
+- id: REG-DEB-04
+  level: mission
+  method: I
+  stage: CDR
+  verification_level: mission
+  model: EM
+  event: IN-EM-REG
+  acceptance: statement met as written, confirmed by inspection in IN-EM-REG
+  owner_seat: structures_engineer
+  status: planned
+- id: REG-REG-01
+  level: mission
+  method: R
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 60 days after launch, confirmed by review in IOV-OPS
+  owner_seat: team_leader
+  status: planned
+- id: SEG-SS-01
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: statement met as written, measured in TS-PFM-FUN
+  owner_seat: systems_engineer
+  status: planned
+- id: SEG-SS-02
+  level: segment
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: '>= 30 deg roll, measured in TS-PFM-FUN'
+  owner_seat: systems_engineer
+  status: planned
+- id: SEG-SS-03
+  level: segment
+  method: A
+  stage: PDR
+  verification_level: segment
+  model: design
+  event: AN-SSG
+  acceptance: '>= 520 km lowest operating altitude, shown by analysis in AN-SSG'
+  owner_seat: systems_engineer
+  status: planned
+- id: SEG-GS-01
+  level: segment
+  method: A
+  stage: PDR
+  verification_level: segment
+  model: design
+  event: AN-GSG
+  acceptance: '>= 100 min/day contact (union, 10 deg mask), shown by analysis in AN-GSG'
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-02
+  level: segment
+  method: I
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: IN-GS-GSG
+  acceptance: == 4 stations, confirmed by inspection in IN-GS-GSG
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-03
+  level: segment
+  method: T
+  stage: PDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-SURVEY
+  acceptance: <= 300 K system noise temperature, measured in TS-GS-SURVEY
+  owner_seat: comms_engineer
+  status: planned
+- id: SEG-GS-04
+  level: segment
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: <= 25 W PA output, measured in TS-GS-ACC
+  owner_seat: comms_engineer
+  status: planned
+- id: SEG-GS-05
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: TS-GS-E2E
+  acceptance: statement met as written, measured in TS-GS-E2E
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-06
+  level: segment
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-COM
+  acceptance: '>= 95 % of scheduled passes per station per month, shown by analysis in IOV-COM'
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-07
+  level: segment
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: '>= -45 degC lowest operating temperature, measured in TS-GS-ACC'
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-08
+  level: segment
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: EM
+  event: TS-EM-SYS
+  acceptance: statement met as written, measured in TS-EM-SYS
+  owner_seat: comms_engineer
+  status: planned
+- id: SEG-GS-09
+  level: segment
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: '>= 24 h schedule look-ahead, measured in TS-GS-ACC'
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-10
+  level: segment
+  method: I
+  stage: CDR
+  verification_level: segment
+  model: EM
+  event: IN-EM-GSG
+  acceptance: statement met as written, confirmed by inspection in IN-EM-GSG
+  owner_seat: comms_engineer
+  status: planned
+- id: SEG-GS-11
+  level: segment
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: statement met as written, measured in TS-GS-ACC
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-12
+  level: segment
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: <= 60 min after pass end, measured in TS-GS-ACC
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-GS-13
+  level: segment
+  method: A
+  stage: CDR
+  verification_level: segment
+  model: design
+  event: AN-GSG
+  acceptance: <= 1 km at 24 h, shown by analysis in AN-GSG
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-LS-01
+  level: segment
+  method: R
+  stage: PDR
+  verification_level: system
+  model: design
+  event: RV-PDR-LCH
+  acceptance: statement met as written, confirmed by review in RV-PDR-LCH
+  owner_seat: systems_engineer
+  status: planned
+- id: SEG-LS-02
+  level: segment
+  method: R
+  stage: PDR
+  verification_level: segment
+  model: design
+  event: RV-PDR-LCH
+  acceptance: <= 590 km nominal apogee requested, confirmed by review in RV-PDR-LCH
+  owner_seat: mission_analyst
+  status: planned
+- id: SEG-LS-03
+  level: segment
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-VIB
+  acceptance: statement met as written, measured in TS-PFM-VIB
+  owner_seat: systems_engineer
+  status: planned
+- id: SEG-LS-04
+  level: segment
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-VIB
+  acceptance: '>= 6 months in deployer, measured in TS-PFM-VIB'
+  owner_seat: power_engineer
+  status: planned
+- id: SEG-LS-05
+  level: segment
+  method: R
+  stage: CDR
+  verification_level: system
+  model: design
+  event: RV-CDR-LCH
+  acceptance: '>= 4 months before launch, confirmed by review in RV-CDR-LCH'
+  owner_seat: systems_engineer
+  status: planned
+- id: SEG-LS-06
+  level: segment
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-LCH
+  acceptance: '>= 10 deg/s tip-off rate, shown by analysis in AN-LCH'
+  owner_seat: aocs_engineer
+  status: planned
+- id: SEG-US-01
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: TS-GS-E2E
+  acceptance: statement met as written, measured in TS-GS-E2E
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-02
+  level: segment
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: <= 1 SWIR px RMS residual, measured in IOV-SCI
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-03
+  level: segment
+  method: R
+  stage: CDR
+  verification_level: segment
+  model: design
+  event: RV-CDR-USR
+  acceptance: statement met as written, confirmed by review in RV-CDR-USR
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-04
+  level: segment
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: '>= 2 PICS acquisitions per month, measured in IOV-SCI'
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-05
+  level: segment
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: statement met as written, shown by analysis in IOV-SCI
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-06
+  level: segment
+  method: A
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: statement met as written, shown by analysis in IOV-SCI
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-07
+  level: segment
+  method: I
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: IN-GS-USR
+  acceptance: statement met as written, confirmed by inspection in IN-GS-USR
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-08
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: TS-GS-E2E
+  acceptance: '>= 72 h before acquisition, measured in TS-GS-E2E'
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-09
+  level: segment
+  method: A
+  stage: CDR
+  verification_level: segment
+  model: design
+  event: AN-USR
+  acceptance: <= 0.2 SWIR px RMS, shown by analysis in AN-USR
+  owner_seat: payload_lead
+  status: planned
+- id: SEG-US-10
+  level: segment
+  method: R
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-SCI
+  acceptance: statement met as written, confirmed by review in IOV-SCI
+  owner_seat: customer
+  status: planned
+- id: OPS-CRT-01
+  level: segment
+  method: R
+  stage: AR
+  verification_level: segment
+  model: design
+  event: RV-AR-OPS
+  acceptance: '>= 10 supervised simulator passes, confirmed by review in RV-AR-OPS'
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-CRT-02
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: TS-GS-E2E
+  acceptance: statement met as written, measured in TS-GS-E2E
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-PRC-01
+  level: segment
+  method: R
+  stage: AR
+  verification_level: segment
+  model: design
+  event: RV-AR-OPS
+  acceptance: statement met as written, confirmed by review in RV-AR-OPS
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-PLN-01
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: TS-GS-E2E
+  acceptance: statement met as written, measured in TS-GS-E2E
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-PLN-02
+  level: segment
+  method: T
+  stage: QR
+  verification_level: segment
+  model: GS
+  event: TS-GS-E2E
+  acceptance: '>= 120 s, measured in TS-GS-E2E'
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-DLS-01
+  level: segment
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 7 days, measured in IOV-OPS
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-CTG-01
+  level: segment
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 24 h from detection, measured in IOV-OPS
+  owner_seat: mission_analyst
+  status: planned
+- id: OPS-CNJ-01
+  level: segment
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-OPS
+  acceptance: <= 24 h, measured in IOV-OPS
+  owner_seat: mission_analyst
+  status: planned
+- id: SYS-BUD-01
+  level: system
+  method: T
+  stage: AR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-MP
+  acceptance: <= 6.0 kg, measured in TS-PFM-MP
+  owner_seat: structures_engineer
+  status: planned
+- id: SYS-BUD-02
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: '>= 20 % system mass margin, shown by analysis in AN-BUD'
+  owner_seat: structures_engineer
+  status: planned
+- id: SYS-BUD-03
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: '>= 20 % power margin (EOL), shown by analysis in AN-BUD'
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-BUD-04
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 15 % depth of discharge, shown by analysis in AN-BUD
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-BUD-05
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: '>= 10 % data-volume margin, shown by analysis in AN-BUD'
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-BUD-06
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: '>= 3 dB link margin at 10 deg, shown by analysis in AN-BUD'
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-BUD-07
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 1.5 km before registration, shown by analysis in AN-BUD
+  owner_seat: aocs_engineer
+  status: planned
+- id: SYS-BUD-08
+  level: system
+  method: I
+  stage: PDR
+  verification_level: system
+  model: design
+  event: IN-design-BUD
+  acceptance: '>= 10 % stack height margin, confirmed by inspection in IN-design-BUD'
+  owner_seat: structures_engineer
+  status: planned
+- id: SYS-BUD-09
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 6.0 kg, shown by analysis in AN-BUD
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-BUD-10
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 12.2 W, shown by analysis in AN-BUD
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-BUD-12
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 1 ms, shown by analysis in AN-BUD
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-BUD-13
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 1.0 SWIR px RMS, shown by analysis in AN-BUD
+  owner_seat: payload_lead
+  status: planned
+- id: SYS-BUD-14
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.1 SWIR px, shown by analysis in AN-BUD
+  owner_seat: aocs_engineer
+  status: planned
+- id: SYS-BUD-15
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.5 SWIR px, shown by analysis in AN-BUD
+  owner_seat: aocs_engineer
+  status: planned
+- id: SYS-MOD-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-MOD-02
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-MOD-03
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-FDIR
+  acceptance: '>= 20 % power margin in Safe, shown by analysis in AN-FDIR'
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-AUT-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: '>= 48 h stored plan, measured in TS-PFM-DITL'
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-AUT-02
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: <= 72 h without valid TC, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-AUT-03
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: < 40 % SoC, measured in TS-PFM-DITL
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-AUT-05
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: < 10 % SoC, measured in TS-PFM-DITL
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-AUT-04
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: < 20 % SoC, measured in TS-PFM-DITL
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-DH-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-DH-02
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-DHS
+  acceptance: <= 4800 bit/s, shown by analysis in AN-DHS
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-DH-05
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-DHS
+  acceptance: <= 1200 bit/s, shown by analysis in AN-DHS
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-DH-03
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: '>= 7 days stored HK retention, measured in TS-PFM-DITL'
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-DH-04
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-DHS
+  acceptance: '>= 7 days of planned acquisitions, shown by analysis in AN-DHS'
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-SEC-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-SEC-02
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-SEC-03
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: '>= 2 key slots, measured in TS-PFM-E2E'
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-ENV-01
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-ENV
+  acceptance: '>= 10 krad(Si) TID, shown by analysis in AN-ENV'
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-ENV-02
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-ENV
+  acceptance: '>= 3 years in orbit, shown by analysis in AN-ENV'
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-REL-01
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-REL
+  acceptance: statement met as written, shown by analysis in AN-REL
+  owner_seat: propulsion_engineer
+  status: planned
+- id: SYS-REL-02
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-REL
+  acceptance: '>= 0.95 probability, shown by analysis in AN-REL'
+  owner_seat: propulsion_engineer
+  status: planned
+- id: SYS-REL-03
+  level: system
+  method: A
+  stage: PDR
+  verification_level: system
+  model: design
+  event: AN-REL
+  acceptance: '>= 20 % power margin, shown by analysis in AN-REL'
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-EMC-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-EMC
+  acceptance: <= 1 dB desensitisation, measured in TS-PFM-EMC
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-EMC-02
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-EMC
+  acceptance: statement met as written, measured in TS-PFM-EMC
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-CLN-01
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-CLN
+  acceptance: <= 1.0 % TML, confirmed by inspection in IN-EM-CLN
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-LCH-01
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-LCH
+  acceptance: statement met as written, confirmed by inspection in IN-EM-LCH
+  owner_seat: structures_engineer
+  status: planned
+- id: SYS-LCH-02
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-VIB
+  acceptance: '>= 30 min, measured in TS-PFM-VIB'
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-LCH-03
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-VIB
+  acceptance: '>= 45 min, measured in TS-PFM-VIB'
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-IF-01
+  level: system
+  method: T
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: TS-EM-SYS
+  acceptance: within 12.0 to 16.8 V, measured in TS-EM-SYS
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-IF-02
+  level: system
+  method: T
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: TS-EM-SYS
+  acceptance: statement met as written, measured in TS-EM-SYS
+  owner_seat: power_engineer
+  status: planned
+- id: SYS-IF-03
+  level: system
+  method: T
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: TS-EM-SYS
+  acceptance: statement met as written, measured in TS-EM-SYS
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-IF-04
+  level: system
+  method: A
+  stage: CDR
+  verification_level: system
+  model: design
+  event: AN-DHS
+  acceptance: <= 50 %, shown by analysis in AN-DHS
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-IF-05
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-DHS
+  acceptance: statement met as written, confirmed by inspection in IN-EM-DHS
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-IF-06
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-DHS
+  acceptance: statement met as written, confirmed by inspection in IN-EM-DHS
+  owner_seat: comms_engineer
+  status: planned
+- id: SYS-IF-07
+  level: system
+  method: T
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: TS-EM-SYS
+  acceptance: statement met as written, measured in TS-EM-SYS
+  owner_seat: payload_lead
+  status: planned
+- id: SYS-IF-08
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-EMC
+  acceptance: '>= 1 MOhm, confirmed by inspection in IN-EM-EMC'
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-IF-09
+  level: system
+  method: T
+  stage: AR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-EMC
+  acceptance: <= 2.5 mOhm, measured in TS-PFM-EMC
+  owner_seat: structures_engineer
+  status: planned
+- id: SYS-IF-10
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-HAR
+  acceptance: statement met as written, confirmed by inspection in IN-EM-HAR
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-IF-11
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-EMC
+  acceptance: statement met as written, measured in TS-PFM-EMC
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-IF-12
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-STR
+  acceptance: statement met as written, confirmed by inspection in IN-EM-STR
+  owner_seat: structures_engineer
+  status: planned
+- id: SYS-IF-13
+  level: system
+  method: R
+  stage: PDR
+  verification_level: system
+  model: design
+  event: RV-PDR-THM
+  acceptance: statement met as written, confirmed by review in RV-PDR-THM
+  owner_seat: thermal_engineer
+  status: planned
+- id: SYS-IF-14
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-DHS
+  acceptance: statement met as written, confirmed by inspection in IN-EM-DHS
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-IF-15
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-DHS
+  acceptance: statement met as written, confirmed by inspection in IN-EM-DHS
+  owner_seat: systems_engineer
+  status: planned
+- id: SYS-FDR-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-MOD-01
+  level: system
+  method: R
+  stage: PDR
+  verification_level: system
+  model: design
+  event: RV-PDR-VER
+  acceptance: statement met as written, confirmed by review in RV-PDR-VER
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-VCD-01
+  level: system
+  method: R
+  stage: PDR
+  verification_level: system
+  model: design
+  event: RV-PDR-VER
+  acceptance: statement met as written, confirmed by review in RV-PDR-VER
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-ENV-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-VIB
+  acceptance: <= 5 % first-mode shift, measured in TS-PFM-VIB
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-ENV-02
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-TVAC
+  acceptance: '>= 4 thermal cycles, measured in TS-PFM-TVAC'
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-FUN-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: statement met as written, measured in TS-PFM-FUN
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-E2E-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: '>= 2 ground stations in the test, measured in TS-PFM-E2E'
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-DIL-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: '>= 72 h, measured in TS-PFM-DITL'
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-DEP-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: statement met as written, measured in TS-PFM-DEP
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-CAL-01
+  level: system
+  method: T
+  stage: QR
+  verification_level: system
+  model: PFM
+  event: TS-PFM-CAL
+  acceptance: statement met as written, measured in TS-PFM-CAL
+  owner_seat: systems_engineer
+  status: planned
+- id: VER-WKM-01
+  level: system
+  method: I
+  stage: CDR
+  verification_level: system
+  model: EM
+  event: IN-EM-VER
+  acceptance: statement met as written, confirmed by inspection in IN-EM-VER
+  owner_seat: cost_engineer
+  status: planned
+- id: PAY-OPT-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-PAY
+  acceptance: <= 100 nm SWIR FWHM, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-OPT-06
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-PAY
+  acceptance: statement met as written, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-OPT-02
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-PAY
+  acceptance: '>= 4 OD out-of-band, measured in TS-EM-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-OPT-03
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-PAY
+  acceptance: <= 75 m SWIR GSD, shown by analysis in AN-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-OPT-04
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-PAY
+  acceptance: '>= 140 km common swath, shown by analysis in AN-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-OPT-05
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-PAY
+  acceptance: '>= 0.2 system MTF at Nyquist, measured in TS-EM-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-RAD-01
+  level: subsystem
+  method: A
+  stage: QR
+  verification_level: subsystem
+  model: design
+  event: AN-PAY
+  acceptance: '>= 30 SNR, shown by analysis in AN-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-RAD-02
+  level: subsystem
+  method: A
+  stage: QR
+  verification_level: subsystem
+  model: design
+  event: AN-PAY
+  acceptance: '>= 10 SNR, shown by analysis in AN-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-RAD-03
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-CAL
+  acceptance: '>= 0.95 reflectance unsaturated, measured in TS-PFM-CAL'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-GEO-01
+  level: subsystem
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-COM
+  acceptance: <= 1.0 SWIR px RMS, measured in IOV-COM
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-GEO-02
+  level: subsystem
+  method: I
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: IN-EM-PAY
+  acceptance: statement met as written, confirmed by inspection in IN-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-GEO-03
+  level: subsystem
+  method: T
+  stage: AR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-CAL
+  acceptance: <= 0.3 SWIR px RMS, measured in TS-PFM-CAL
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-GEO-04
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-PAY
+  acceptance: <= 0.3 SWIR px RMS, shown by analysis in AN-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-FUN-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: <= 1 ms time-tag error, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-FUN-02
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: <= 60 s to dark frame, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-FUN-03
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: '>= 1.3 mean lossless compression ratio, measured in TS-EM-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-FUN-04
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: '>= 8 GB usable store, measured in TS-EM-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-FUN-06
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: <= 0.2 ms, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-FUN-05
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: statement met as written, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-CAL-01
+  level: subsystem
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-COM
+  acceptance: '>= 1 dark-frame set per day, measured in IOV-COM'
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-BUD-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-PAY
+  acceptance: <= 0.76 kg, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-BUD-04
+  level: subsystem
+  method: I
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: IN-EM-PAY
+  acceptance: <= 100 mm stack height, confirmed by inspection in IN-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-BUD-02
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-PAY
+  acceptance: <= 12 W, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-BUD-05
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-PAY
+  acceptance: <= 3 W, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-BUD-03
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 1.1 W, shown by analysis in AN-BUD
+  owner_seat: payload_lead
+  status: planned
+- id: PAY-DAT-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 13.0 MB/day, shown by analysis in AN-BUD
+  owner_seat: payload_lead
+  status: planned
+- id: EPS-SA-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-PWR
+  acceptance: '>= 12 W orbit average EOL, shown by analysis in AN-PWR'
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-SA-02
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: statement met as written, measured in TS-PFM-DEP
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-BAT-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-EPS
+  acceptance: '>= 40 Wh, measured in TS-EM-EPS'
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-BAT-02
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: unit
+  model: design
+  event: AN-PWR
+  acceptance: '>= 80 % of BOL capacity, shown by analysis in AN-PWR'
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-PWR-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-EPS
+  acceptance: '>= 20 W peak for 5 min, measured in TS-EM-EPS'
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-DST-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-EPS
+  acceptance: <= 10 ms trip time, measured in TS-EM-EPS
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-THM-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-EPS
+  acceptance: '>= 0 degC while charging, measured in TS-EM-EPS'
+  owner_seat: thermal_engineer
+  status: planned
+- id: EPS-SAF-01
+  level: subsystem
+  method: I
+  stage: QR
+  verification_level: unit
+  model: PFM
+  event: IN-PFM-SAF
+  acceptance: statement met as written, confirmed by inspection in IN-PFM-SAF
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-INH-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: '>= 3 independent inhibits (TBC), measured in TS-PFM-FUN'
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-PAS-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: statement met as written, measured in TS-PFM-FUN
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 1.75 kg, shown by analysis in AN-BUD
+  owner_seat: power_engineer
+  status: planned
+- id: EPS-BUD-02
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 1.0 W, shown by analysis in AN-BUD
+  owner_seat: power_engineer
+  status: planned
+- id: ADC-PNT-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 1.0 deg (3 sigma), shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-PNT-04
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 0.08 deg (3 sigma), shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-PNT-02
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: <= 60 s slew and settle (30 deg), measured in TS-PFM-FUN
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-PNT-03
+  level: subsystem
+  method: T
+  stage: IOV
+  verification_level: mission
+  model: flight
+  event: IOV-COM
+  acceptance: <= 0.05 deg alignment knowledge, measured in IOV-COM
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-MOD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 3 orbits, shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-MOD-02
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: <= 10 deg sun-pointing error, measured in TS-PFM-FUN
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-MOD-03
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-FUN
+  acceptance: '>= 30 s, measured in TS-PFM-FUN'
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-MOM-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 80 % wheel momentum capacity, shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-MAG-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-MP
+  acceptance: <= 0.05 A m2 residual dipole, measured in TS-PFM-MP
+  owner_seat: systems_engineer
+  status: planned
+- id: ADC-OUT-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: statement met as written, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.65 kg, shown by analysis in AN-BUD
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-BUD-02
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 2.0 W, shown by analysis in AN-BUD
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-BUD-03
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: <= 3.3 W, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-STB-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 0.1 deg/s, shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: ADC-STB-02
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 0.05 deg/s, shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: OBD-SW-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-HK-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-OBC
+  acceptance: '>= 1 s minimum SID period, measured in TS-EM-OBC'
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-HK-02
+  level: subsystem
+  method: I
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: IN-EM-DHS
+  acceptance: == 60 s thermal SID period, confirmed by inspection in IN-EM-DHS
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-HK-03
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-OBC
+  acceptance: statement met as written, measured in TS-EM-OBC
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-STO-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-TT-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-OBC
+  acceptance: '>= 1000 time-tagged commands, measured in TS-EM-OBC'
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-SEC-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-SW-02
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: statement met as written, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-WD-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DITL
+  acceptance: <= 60 s to reset, measured in TS-PFM-DITL
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-TIM-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-OBC
+  acceptance: <= 1 ms, measured in TS-EM-OBC
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-TIM-02
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-OBC
+  acceptance: <= 1 s/day, measured in TS-EM-OBC
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.05 kg, shown by analysis in AN-BUD
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-BUD-02
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.2 W, shown by analysis in AN-BUD
+  owner_seat: comms_engineer
+  status: planned
+- id: OBD-DAT-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.8 MB/day, shown by analysis in AN-BUD
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-DL-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: <= 50 kHz occupied bandwidth, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-DL-02
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-COM
+  acceptance: statement met as written, measured in TS-EM-COM
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-DL-03
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-COM
+  acceptance: '>= 76.8 kbps goal above 30 deg, measured in TS-EM-COM'
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-DL-04
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: unit
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-UL-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: '>= 9.6 kbps, measured in TS-PFM-E2E'
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-UL-02
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-ANT-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-COM
+  acceptance: statement met as written, measured in TS-EM-COM
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-ANT-02
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-BCN-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: <= 60 s beacon interval, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.2 kg, shown by analysis in AN-BUD
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-BUD-02
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.5 W, shown by analysis in AN-BUD
+  owner_seat: comms_engineer
+  status: planned
+- id: COM-BUD-03
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-COM
+  acceptance: <= 3.6 W, measured in TS-EM-COM
+  owner_seat: comms_engineer
+  status: planned
+- id: STR-ENV-01
+  level: subsystem
+  method: I
+  stage: AR
+  verification_level: subsystem
+  model: PFM
+  event: IN-PFM-STR
+  acceptance: <= 6.5 mm protrusion, confirmed by inspection in IN-PFM-STR
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-CG-01
+  level: subsystem
+  method: T
+  stage: AR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-MP
+  acceptance: <= 20 mm CoG offset in X and Y, measured in TS-PFM-MP
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-MOD-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-STR
+  acceptance: '>= 100 Hz first mode (TBC), shown by analysis in AN-STR'
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-FOS-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-STR
+  acceptance: '>= 1.25 yield factor of safety, shown by analysis in AN-STR'
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-ACC-01
+  level: subsystem
+  method: R
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: RV-PDR-STR
+  acceptance: statement met as written, confirmed by review in RV-PDR-STR
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-BEN-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-VIB
+  acceptance: <= 0.5 SWIR px boresight change, measured in TS-PFM-VIB
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-MEC-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-STR
+  acceptance: '>= 2 motorisation factor, shown by analysis in AN-STR'
+  owner_seat: structures_engineer
+  status: planned
+- id: STR-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.45 kg, shown by analysis in AN-BUD
+  owner_seat: structures_engineer
+  status: planned
+- id: THM-PAY-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-THM
+  acceptance: <= 25 degC SWIR camera during imaging, shown by analysis in AN-THM
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-PAY-02
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-THM
+  acceptance: statement met as written, shown by analysis in AN-THM
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-ALL-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-THM
+  acceptance: '>= 10 degC uncertainty margin, shown by analysis in AN-THM'
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-BEN-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-THM
+  acceptance: <= 2 degC between camera mounts, shown by analysis in AN-THM
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.15 kg, shown by analysis in AN-BUD
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-BUD-02
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.1 W, shown by analysis in AN-BUD
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-BAT-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-THM
+  acceptance: within 0 to 40 degC, shown by analysis in AN-THM
+  owner_seat: thermal_engineer
+  status: planned
+- id: THM-PCT-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-THM
+  acceptance: within -20 to 70 degC, shown by analysis in AN-THM
+  owner_seat: thermal_engineer
+  status: planned
+- id: DIS-SAIL-01
+  level: subsystem
+  method: I
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: IN-EM-DEB
+  acceptance: '>= 2.0 m2, confirmed by inspection in IN-EM-DEB'
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-SAIL-04
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-DEB
+  acceptance: '>= 3.5 years in orbit, shown by analysis in AN-DEB'
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-SAIL-03
+  level: subsystem
+  method: T
+  stage: AR
+  verification_level: unit
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: <= 0.32 kg, measured in TS-PFM-DEP
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-SAIL-02
+  level: subsystem
+  method: I
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: IN-EM-DEB
+  acceptance: <= 0.35 U, confirmed by inspection in IN-EM-DEB
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-TRG-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: <= 90 days without valid TC, measured in TS-PFM-DEP
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-REL-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: '>= 2 independent release circuits, measured in TS-PFM-DEP'
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-IND-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: statement met as written, measured in TS-PFM-DEP
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-BAT-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-DEB
+  acceptance: '>= 2 release actuations at 3.5 y, shown by analysis in AN-DEB'
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-RST-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: statement met as written, measured in TS-PFM-DEP
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-TLM-01
+  level: subsystem
+  method: T
+  stage: QR
+  verification_level: subsystem
+  model: PFM
+  event: TS-PFM-DEP
+  acceptance: statement met as written, measured in TS-PFM-DEP
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-BUD-01
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.42 kg, shown by analysis in AN-BUD
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-BUD-02
+  level: subsystem
+  method: A
+  stage: PDR
+  verification_level: subsystem
+  model: design
+  event: AN-BUD
+  acceptance: <= 0.01 W, shown by analysis in AN-BUD
+  owner_seat: propulsion_engineer
+  status: planned
+- id: DIS-BUD-03
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-DIS
+  acceptance: <= 6.5 W, measured in TS-EM-DIS
+  owner_seat: propulsion_engineer
+  status: planned
+- id: HAR-DER-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-HAR
+  acceptance: statement met as written, shown by analysis in AN-HAR
+  owner_seat: systems_engineer
+  status: planned
+- id: HAR-SEG-01
+  level: subsystem
+  method: I
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: IN-EM-HAR
+  acceptance: statement met as written, confirmed by inspection in IN-EM-HAR
+  owner_seat: systems_engineer
+  status: planned
+- id: GNS-POS-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: <= 20 m position (3 sigma), measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: GNS-PPS-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: <= 1 us PPS error, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: GNS-OPS-01
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: statement met as written, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: GNS-OPS-02
+  level: subsystem
+  method: T
+  stage: CDR
+  verification_level: unit
+  model: BB+EM
+  event: TS-EM-AOCS
+  acceptance: <= 90 s, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: GNS-PRP-01
+  level: subsystem
+  method: A
+  stage: CDR
+  verification_level: subsystem
+  model: design
+  event: AN-PNT
+  acceptance: <= 2 km after 48 h, shown by analysis in AN-PNT
+  owner_seat: aocs_engineer
+  status: planned
+- id: IF-PAY-OBC-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-PAY
+  acceptance: '>= 100 kbit/s sustained file transfer, measured in TS-EM-PAY'
+  owner_seat: payload_lead
+  status: planned
+- id: IF-PAY-CAM-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: BB+EM
+  event: TS-EM-PAY
+  acceptance: <= 100 us trigger skew, measured in TS-EM-PAY
+  owner_seat: payload_lead
+  status: planned
+- id: IF-ADC-OBC-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: statement met as written, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: IF-GNS-OBC-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-AOCS
+  acceptance: statement met as written, measured in TS-EM-AOCS
+  owner_seat: aocs_engineer
+  status: planned
+- id: IF-EPS-ALL-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-EPS
+  acceptance: statement met as written, measured in TS-EM-EPS
+  owner_seat: power_engineer
+  status: planned
+- id: IF-COM-OBC-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-COM
+  acceptance: statement met as written, measured in TS-EM-COM
+  owner_seat: comms_engineer
+  status: planned
+- id: IF-DIS-EPS-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: subsystem
+  model: EM
+  event: TS-EM-DIS
+  acceptance: statement met as written, measured in TS-EM-DIS
+  owner_seat: propulsion_engineer
+  status: planned
+- id: IF-SC-POD-01
+  level: interface
+  method: R
+  stage: CDR
+  verification_level: segment
+  model: design
+  event: RV-CDR-ICD
+  acceptance: statement met as written, confirmed by review in RV-CDR-ICD
+  owner_seat: structures_engineer
+  status: planned
+- id: IF-SG-01
+  level: interface
+  method: T
+  stage: QR
+  verification_level: segment
+  model: PFM
+  event: TS-PFM-E2E
+  acceptance: statement met as written, measured in TS-PFM-E2E
+  owner_seat: comms_engineer
+  status: planned
+- id: IF-SG-02
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: EM
+  event: TS-EM-SYS
+  acceptance: <= 30 s acquisition time, measured in TS-EM-SYS
+  owner_seat: comms_engineer
+  status: planned
+- id: IF-GS-MCC-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: <= 2 s frame forwarding latency, measured in TS-GS-ACC
+  owner_seat: mission_analyst
+  status: planned
+- id: IF-MCC-SCI-01
+  level: interface
+  method: T
+  stage: CDR
+  verification_level: segment
+  model: GS
+  event: TS-GS-ACC
+  acceptance: statement met as written, measured in TS-GS-ACC
+  owner_seat: payload_lead
+  status: planned
+validation_plan:
+- id: V1
+  name: Needs validation
+  when: MDR to PRR
+  who: each stakeholder group (communities through their governance bodies)
+  method: Plain-language walkthrough of the need statement, objectives and MOEs; communities co-define MOE-04/MOE-10; record
+    in a validation record per group.
+  requirements:
+  - MIS-VAL-01
+  - MIS-SCI-14
+  exit: every SN has a signed or recorded confirmation; changes fed into the requirements
+- id: V2
+  name: Requirements validation
+  when: SRR
+  who: operators, science team, community representatives
+  method: Trace each ConOps scenario through the requirements ("if all were met, would the need be met?"); plain-language
+    review of the mission-level and interface requirements.
+  requirements:
+  - MIS-VAL-02
+  exit: every scenario covered; gaps raised as requirement changes
+- id: V3
+  name: Pre-launch product validation with simulated data
+  when: CDR to AR
+  who: science team and >= 3 site communities
+  method: Simulated L1/L2 products from Sentinel-2/Landsat for every site (MIS-SCI-13) reviewed by the communities in their
+    formats and languages.
+  requirements:
+  - MIS-SCI-13
+  - MIS-VAL-03
+  - MIS-IF-05
+  exit: product definition confirmed or changed before AR
+- id: V4
+  name: Operational validation of the ground segment and operators
+  when: QR to ORR/FRR
+  who: certified operators
+  method: 'Rehearsals on the simulator and the flight model: cold start, nominal day, Safe entry and recovery, station outage,
+    ARM/FIRE of the sail with two operators.'
+  requirements:
+  - OPS-PRC-01
+  - OPS-CRT-01
+  - OPS-CRT-02
+  - VER-E2E-01
+  - VER-DIL-01
+  exit: every contingency procedure run at least once
+- id: V5
+  name: In-orbit validation of products against reference imagery
+  when: commissioning (CRR)
+  who: science team
+  method: '>= 5 same-day matchups with Sentinel-2/Landsat before closing commissioning; boresight map update; compression
+    ratio on real scenes.'
+  requirements:
+  - MIS-VAL-04
+  - MIS-SCI-09
+  - MIS-SCI-10
+  - SEG-US-05
+  - SEG-US-06
+  exit: PAY-RAD, SYS-BUD-13 and MIS-SCI-10 met on real data
+- id: V6
+  name: Operational validation with communities
+  when: first break-up season and first fire season
+  who: site communities
+  method: Products delivered per site agreement; seasonal assessment recorded (SEG-US-10) against MOE-10 as co-defined; release
+    record checked against agreements (MOE-13).
+  requirements:
+  - SEG-US-10
+  - MIS-IF-05
+  - MIS-IF-06
+  - MIS-DAT-04
+  exit: community assessment recorded; requirement changes raised where products did not help
+- id: V7
+  name: Mission results review
+  when: end of year 1 (FRR-type results review) and end of mission
+  who: sponsor, science team, communities
+  method: MOEs measured against needs; lessons for the next mission.
+  requirements:
+  - MIS-SCI-01
+  - MIS-SCI-02
+  - MIS-SCI-05
+  - MIS-SCI-12
+  exit: need satisfaction stated per SN
+need_validation:
+- need: SN-01
+  method: V1 sponsor review of the mission need and objectives; V7 mission results review
+  stage: MDR, PRR, FRR
+- need: SN-02
+  method: V1 walkthrough with community representatives; V3 simulated products; V6 seasonal assessment
+  stage: PRR, AR, Phase E
+- need: SN-03
+  method: V1 science requirements review; V3 simulated products; V5 in-orbit matchups
+  stage: PRR, CDR, CRR
+- need: SN-04
+  method: V2 scenario tracing with operators; V4 operational rehearsals on the simulator
+  stage: SRR, ORR
+- need: SN-05
+  method: V1 pre-consultation records; licences granted
+  stage: PRR, launch - 12 months
+- need: SN-06
+  method: V1 team review of interfaces and schedule; seat retrospectives at each gate
+  stage: PRR and each gate
+- need: SN-07
+  method: V3 catalogue test with an outside user; V7 usage statistics
+  stage: AR, Phase E
+- need: SN-08
+  method: Launch ICD signed; acceptance data package accepted
+  stage: CDR, AR
+- need: SN-09
+  method: V1 site agreements drafted with community governance; V6 record of releases against agreements
+  stage: PRR, CDR, Phase E
+- need: SN-10
+  method: V3 simulated products reviewed in the community's language; V6 seasonal assessment (SEG-US-10)
+  stage: AR, Phase E
+- need: SN-11
+  method: Disposal analysis (DRAMA/DAS) and conjunction-service registration
+  stage: PDR, launch - 90 days
+- need: SN-12
+  method: Siting consultation records per station
+  stage: launch - 12 months
+conops_scenarios_for_requirements_validation:
+- id: S1
+  scenario: 'LEOP: separation, delays, antennas and wings, detumble, first contact'
+  requirements:
+  - SYS-LCH-02
+  - SYS-LCH-03
+  - COM-ANT-02
+  - EPS-SA-02
+  - ADC-MOD-01
+  - COM-BCN-01
+  - MIS-IF-02
+  - SEG-LS-06
+- id: S2
+  scenario: 'Commissioning: platform, payload first light, cross-calibration'
+  requirements:
+  - MIS-OPS-01
+  - ADC-PNT-03
+  - VER-CAL-01
+  - MIS-VAL-04
+  - PAY-CAL-01
+- id: S3
+  scenario: 'Nominal day: plan upload, acquisitions, dumps, product delivery'
+  requirements:
+  - SEG-GS-09
+  - OPS-PLN-01
+  - OPS-PLN-02
+  - SYS-AUT-01
+  - PAY-FUN-01
+  - PAY-FUN-03
+  - MIS-OPS-04
+  - MIS-DAT-01
+  - SEG-GS-12
+  - SEG-US-01
+- id: S4
+  scenario: Break-up campaign at community sites
+  requirements:
+  - MIS-SCI-02
+  - MIS-DAT-04
+  - MIS-IF-05
+  - SEG-US-08
+  - SEG-US-06
+- id: S5
+  scenario: Fire season and burn severity
+  requirements:
+  - MIS-SCI-01
+  - MIS-SCI-08
+  - SEG-US-05
+- id: S6
+  scenario: Night-SWIR campaign (exploratory)
+  requirements:
+  - MIS-SCI-04
+  - PAY-FUN-02
+  - ADC-MOD-03
+  - ADC-STB-02
+  - SYS-BUD-15
+  - MIS-SCI-12
+- id: S7
+  scenario: Safe-mode entry and recovery
+  requirements:
+  - SYS-MOD-02
+  - ADC-MOD-02
+  - SYS-AUT-04
+  - OPS-CTG-01
+  - SYS-FDR-01
+  - SYS-MOD-03
+- id: S8
+  scenario: Northern station out for weeks in winter
+  requirements:
+  - SEG-GS-07
+  - MIS-DAT-01
+  - SYS-BUD-05
+- id: S9
+  scenario: Commanded end of life
+  requirements:
+  - DIS-TRG-01
+  - OPS-CRT-02
+  - MIS-DIS-04
+  - EPS-PAS-01
+  - MIS-IF-12
+- id: S10
+  scenario: 'Unrecoverable failure: disposal by the independent timer'
+  requirements:
+  - DIS-IND-01
+  - DIS-TRG-01
+  - SYS-REL-01
+  - SYS-REL-02
+  - MIS-DIS-03
+- id: S11
+  scenario: Data-governance request from a community (embargo a site)
+  requirements:
+  - MIS-IF-06
+  - MIS-DAT-05
+  - SEG-US-07
+- id: S12
+  scenario: Regulator asks to stop transmissions
+  requirements:
+  - MIS-IF-12
+  - REG-SPC-06

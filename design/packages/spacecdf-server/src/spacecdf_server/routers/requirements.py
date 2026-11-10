@@ -16,7 +16,9 @@ Nov 2026 (W2):
 * **Levels** ``stakeholder``, ``mission``, ``segment``, ``system``, ``subsystem``, ``interface``;
   POST and PATCH answer 422 on any other level, operator, method, stage or priority.
 * **Fields** ``priority``, ``category``, ``source_ref``, ``threshold_unit``, ``verification_level``,
-  ``verification_methods`` (list; the first is ``verification_method``), ``open_item``. The stage
+  ``verification_methods`` (list; the first is ``verification_method``), ``open_item``; wave 3
+  (v2 baseline) adds ``acceptance``, ``verification_model``, ``verification_event``, ``budget_ref``,
+  ``open_item_note`` and the code lists ``function_codes`` / ``allocation_codes``. The stage
   is ``verification_phase`` (``verification_stage`` is accepted as its alias) and includes ``IOV``.
   Method ``D`` is stored as ``T`` (ECSS-E-ST-10-02C).
 * **Codes** are unique among the live requirements of a study: a duplicate answers 409.
@@ -62,7 +64,13 @@ PATCH_FIELDS = ("text", "rationale", "req_type", "threshold_param_path", "thresh
                 "threshold_value", "threshold_unit", "verification_method", "verification_methods",
                 "verification_phase", "verification_level", "responsible_position", "status", "code",
                 "element_id", "parent_id", "derived_from_requirement_id", "objective_id", "external_id",
-                "level", "priority", "category", "source_ref", "open_item", "ir_json")
+                "level", "priority", "category", "source_ref", "open_item", "ir_json",
+                # wave 3, step 0: the v2 baseline fields
+                "acceptance", "verification_model", "verification_event", "budget_ref", "open_item_note",
+                "function_codes", "allocation_codes")
+
+#: v2 code-list fields (``["F1", "F12.1"]``; a string is split on , ; |).
+CODE_LIST_FIELDS = ("function_codes", "allocation_codes")
 
 
 # ─── In-memory store (write-through cache — DB is source of truth) ───
@@ -190,6 +198,16 @@ def normalise_fields(body: dict[str, Any]) -> dict[str, Any]:
         body["priority"] = None
     if "threshold_value" in body:
         body["threshold_value"] = normalise_threshold_value(body["threshold_value"])
+    for k in CODE_LIST_FIELDS:
+        if k in body:
+            v = body[k]
+            if isinstance(v, str):
+                v = [x for x in v.replace(";", ",").replace("|", ",").split(",")]
+            v = [str(x).strip() for x in (v or []) if str(x).strip()]
+            body[k] = list(dict.fromkeys(v)) or None
+    for k in ("acceptance", "verification_model", "verification_event", "budget_ref", "open_item_note"):
+        if k in body and isinstance(body[k], str):
+            body[k] = body[k].strip() or None
     if "code" in body and body["code"] is not None:
         body["code"] = str(body["code"]).strip()
         if not body["code"] or len(body["code"]) > 32:
@@ -428,6 +446,13 @@ async def create_requirement(body: dict[str, Any]) -> dict:
         "category": body.get("category"),
         "source_ref": body.get("source_ref"),
         "open_item": body.get("open_item"),
+        "acceptance": body.get("acceptance"),
+        "verification_model": body.get("verification_model"),
+        "verification_event": body.get("verification_event"),
+        "budget_ref": body.get("budget_ref"),
+        "open_item_note": body.get("open_item_note"),
+        "function_codes": body.get("function_codes"),
+        "allocation_codes": body.get("allocation_codes"),
     }
     from ..db.requirement_repo import REQ_TYPES
     if not req["req_type"] and req["rationale"] in REQ_TYPES:   # older clients sent the type here

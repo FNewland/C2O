@@ -89,6 +89,56 @@ async def _legacy_rows(sid: str, element_id: str) -> None:
         await s.commit()
 
 
+async def _wave3_rows(sid: str, element_id: str) -> None:
+    """Wave 3, step 0: one row in every new table of the wave (written directly: their routes are
+    stubs until the owners fill them). Owners replace a row with their route's call when it lands."""
+    from spacecdf_server.db.engine import get_session_factory
+    from spacecdf_server.db.models_alloc import AllocationLedgerRow
+    from spacecdf_server.db.models_changes import ChangeApprovalRow, ChangeProposalRow, OpenItemRow
+    from spacecdf_server.db.models_cost import CostItemRow
+    from spacecdf_server.db.models_debris import DebrisAssessmentRow
+    from spacecdf_server.db.models_icd import IcdIssueRow
+    from spacecdf_server.db.models_negotiation import NegotiationRecordRow
+    from spacecdf_server.db.models_reliability import FmeaRow, ReliabilityBlockRow
+    from spacecdf_server.db.models_se import SeAssumptionRow, SeMoeRow, SeNeedValidationRow, SeValidationActivityRow
+    from spacecdf_server.db.models_thermal import ThermalCaseRow, ThermalCouplingRow, ThermalNodeRow
+    k = sid[:12]
+    async with get_session_factory()() as s:
+        s.add(AllocationLedgerRow(id=f"al{k}01", study_id=sid, element_id=element_id, element_code="EPS",
+                                  budget_type="mass", value=1.75, unit="kg", owner_seat="power_engineer",
+                                  status="agreed", history_json=[{"field": "value", "old": 1.7, "new": 1.75}]))
+        s.add(SeMoeRow(id=f"moe{k}01", study_id=sid, code="MOE-04", measure="Sites selected", placeholder=True,
+                       objectives_json=["O3"], needs_json=["SN-02"]))
+        s.add(SeValidationActivityRow(id=f"val{k}01", study_id=sid, code="V1", title="Walkthrough",
+                                      objectives_json=["O1"], stage="PRR", performer="SH-02"))
+        s.add(SeNeedValidationRow(id=f"nv{k}01", study_id=sid, need_code="SN-02", activity_codes_json=["V1"]))
+        s.add(SeAssumptionRow(id=f"asm{k}01", study_id=sid, code="ASM-01", statement="Wing mass 0.25 kg",
+                              affects_json=[{"kind": "element", "ref": element_id}], due_gate="pdr"))
+        s.add(ChangeProposalRow(id=f"ecp{k}01", study_id=sid, code="ECP-01", affected_codes_json=["PAY-OPT-01"],
+                                impact_json={"mass_kg": 0.02}))
+        s.add(OpenItemRow(id=f"oi{k}01", study_id=sid, code="D-PAY-01", blocks_gate="pdr",
+                          links_json={"risks": ["RSK-001"]}))
+        s.add(ChangeApprovalRow(id=f"ca{k}01", study_id=sid, change_id=f"ecp{k}01", seat="payload_lead",
+                                decision="agree"))
+        s.add(NegotiationRecordRow(id=f"neg{k}01", study_id=sid, code="N1", seats_json=["payload_lead"],
+                                   signoffs_json={"payload_lead": {"by": "Sam"}}))
+        s.add(IcdIssueRow(id=f"icd{k}01", study_id=sid, icd_ref="ICD-DEP-01", issue="A", state="issue_a",
+                          signoffs_json={"structures_engineer": {"issue": "A"}}))
+        s.add(ReliabilityBlockRow(id=f"rb{k}01", study_id=sid, element_id=element_id, name="EPS",
+                                  failure_rate_fit=500.0, rate_source="assumption"))
+        s.add(FmeaRow(id=f"fm{k}01", study_id=sid, code="FM-EPS-01", element_id=element_id, severity=2,
+                      probability=3, criticality=6, risk_ids_json=["RSK-003"]))
+        s.add(ThermalNodeRow(id=f"tn{k}01", study_id=sid, code="N01", element_id=element_id, op_min_c=-10.0))
+        s.add(ThermalCouplingRow(id=f"tc{k}01", study_id=sid, node_a=f"tn{k}01", node_b="space", value=0.1))
+        s.add(ThermalCaseRow(id=f"th{k}01", study_id=sid, code="HOT", kind="hot", beta_deg=29.0,
+                             results_json={f"tn{k}01": {"t_c": 31.0}}))
+        s.add(DebrisAssessmentRow(id=f"deb{k}01", study_id=sid, lifetime_y=3.0, status="accepted",
+                                  accepted_gate="srr"))
+        s.add(CostItemRow(id=f"cost{k}01", study_id=sid, category="labour", quantity=12.0, unit="person-month",
+                          unit_cost_keur=8.0, total_keur=96.0))
+        await s.commit()
+
+
 async def build_rich_study(c, monkeypatch) -> tuple[str, dict]:
     """EOSAT-1 with something in every study-owned table."""
     sid = (await _ok(await c.post("/api/studies/", json={
@@ -193,6 +243,7 @@ async def build_rich_study(c, monkeypatch) -> tuple[str, dict]:
         "filings": [{"id": "ised_preconsultation", "status": "submitted", "submitted": "2026-11-10"}]}))
 
     await _legacy_rows(sid, eps["id"])
+    await _wave3_rows(sid, eps["id"])
 
     # seats last (writes need a seat afterwards): preset, claims, a pending cross-seat edit
     await _ok(await c.post(f"/api/studies/{sid}/team/preset", json={"team_size": "6"}, headers=PROF))
@@ -633,15 +684,46 @@ async def test_decide_records_round_trip(client, rich):
 async def test_requirement_baseline_fields_round_trip(client, db_factory):
     """W2 (agent R): the new requirement columns and the derives / traces→objective /
     allocates→exchange_item relations travel with the project file."""
-    from tests.fixtures.nfi import seed_nfi
+    from tests.fixtures.nfi import load, seed_nfi
     s = await seed_nfi(client, "S1")
     a = await _export(client, s.study_id)
     res = await _import(client, a)
     b = await _export(client, res["id"])
     cols = ("code", "level", "priority", "category", "source_ref", "threshold_unit", "threshold_value",
-            "verification_phase", "verification_methods_json", "open_item")
+            "verification_phase", "verification_methods_json", "open_item",
+            # wave 3, step 0 (3.0b)
+            "acceptance", "verification_model", "verification_event", "budget_ref", "open_item_note",
+            "function_codes_json", "allocation_codes_json")
     pick = lambda d: sorted(tuple(json.dumps(r.get(c), sort_keys=True) for c in cols) for r in d["tables"]["requirements"])  # noqa: E731
-    assert pick(a) == pick(b) and len(a["tables"]["requirements"]) >= 216 + 5 + 6
+    base = load("requirements")
+    assert pick(a) == pick(b) and len(a["tables"]["requirements"]) >= (
+        len(base["requirements"]) + len(base["objectives"]) + len(base["stakeholder_needs"]))
+    assert sum(1 for r in b["tables"]["requirements"] if r.get("function_codes_json")) == sum(
+        1 for r in base["requirements"] if r.get("function"))
     kinds = lambda d: sorted((r["kind"], r["target_kind"]) for r in d["tables"]["requirement_relations"]  # noqa: E731
                              if not r.get("deleted_at"))
     assert kinds(a) == kinds(b) and ("traces", "objective") in kinds(b) and ("derives", "requirement") in kinds(b)
+
+
+async def test_wave3_tables_round_trip_empty_and_one_row(client, rich):
+    """Wave 3, step 0: every new table of the wave travels with the project file: one row each in
+    the rich study (ids and references remapped), none in a fresh study."""
+    from spacecdf_server.db.migrate import WAVE3_TABLES
+    from spacecdf_server.services import project_file as pf
+    assert set(WAVE3_TABLES) <= set(pf.study_tables())
+    sid, parts = rich
+    a = await _export(client, sid)
+    res = await _import(client, a)
+    b = await _export(client, res["id"])
+    for t in WAVE3_TABLES:
+        assert len(a["tables"][t]) == len(b["tables"][t]) == 1, t
+        assert b["tables"][t][0]["study_id"] == res["id"]
+    new_eps = res["id_map"][parts["EPS"]["id"]]
+    assert b["tables"]["allocation_ledger"][0]["element_id"] == new_eps
+    assert b["tables"]["se_assumptions"][0]["affects_json"] == [{"kind": "element", "ref": new_eps}]
+    assert b["tables"]["change_approvals"][0]["change_id"] == b["tables"]["change_proposals"][0]["id"]
+    # empty case: a study with none of them exports and imports with the tables empty
+    fresh = (await _ok(await client.post("/api/studies/", json={"requirements": {"name": "Empty"}})))["id"]
+    e = await _export(client, fresh)
+    e2 = await _export(client, (await _import(client, e))["id"])
+    assert all(e["tables"].get(t, []) == [] == e2["tables"].get(t, []) for t in WAVE3_TABLES)

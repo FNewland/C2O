@@ -119,3 +119,29 @@ async def study_cost(study_id: str) -> dict[str, Any]:
     _require_study(study_id)
     from ..services.cost_engine import study_cost as compute
     return await compute(study_id, await svc.get_settings(study_id))
+
+
+# ─── wave 3, step 0 (PI addendum): cost pricing with labour, test campaigns and reserve (A) ───
+
+@router.get("/studies/{study_id}/cost/items")
+async def list_cost_items(study_id: str) -> dict:
+    """TODO(A, 3.A7): the priced lines (``cost_items``): labour, test campaigns, hardware, reserve;
+    launch zero when provided."""
+    from ._wave3_stub import stub_list
+    return stub_list(study_id, "A", "3.A7", total_keur=None)
+
+
+@router.post("/studies/{study_id}/cost/items")
+async def create_cost_item(study_id: str, body: dict) -> dict:
+    """TODO(A, 3.A7)."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A7")
+
+
+@router.post("/studies/{study_id}/cost/price")
+async def price_cost_model(study_id: str) -> dict:
+    """TODO(A, 3.A7): propose the priced lines from the WBS, the AIT test matrix and a reference class."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A7")

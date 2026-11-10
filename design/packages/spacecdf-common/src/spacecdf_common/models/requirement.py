@@ -41,7 +41,11 @@ LEVEL_RANK: dict[str, int] = {"stakeholder": 0, "mission": 1, "segment": 2, "sys
 VERIFICATION_METHODS: tuple[str, ...] = ("T", "A", "R", "I")
 
 #: Verification stages: the review that closes the requirement, or in-orbit verification.
-VERIFICATION_STAGES: tuple[str, ...] = ("PDR", "CDR", "QR", "AR", "IOV")
+VERIFICATION_STAGES: tuple[str, ...] = ("PRR", "SRR", "PDR", "CDR", "QR", "AR", "IOV")
+
+#: Verification models of the model philosophy a requirement's evidence comes from (wave 3, step 0:
+#: the v2 ``verification_model`` field). Free text is kept; these are the known values.
+VERIFICATION_MODELS: tuple[str, ...] = ("design", "BB", "EM", "BB+EM", "PFM", "LV", "GS", "flight")
 
 #: Verification levels: the product level the requirement is verified at.
 VERIFICATION_LEVELS: tuple[str, ...] = ("mission", "segment", "system", "subsystem", "unit")

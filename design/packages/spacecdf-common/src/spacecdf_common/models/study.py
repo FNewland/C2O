@@ -202,6 +202,10 @@ class Study(BaseModel):
     # Nov 2026 (WP0): team records that lived in each browser's localStorage, now per study.
     risk_register: list[dict[str, Any]] = Field(default_factory=list)
     trade_records: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    # Wave 3, step 0: the study's own margin choices on top of configs/margin_policy.yaml,
+    # e.g. {"study_override": {"percent": 20, "through_gate": "pdr", "resources": ["mass", "power"],
+    # "rationale": "..."}} (services/rollup.py applies it; the ladder is still quoted beside it).
+    margin_policy: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod

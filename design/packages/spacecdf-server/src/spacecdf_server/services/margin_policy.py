@@ -65,9 +65,17 @@ def _system_node(cfg: dict, gate: str | None, resource: str) -> dict:
     return by[g] if g in by else cfg[resource]["system_margin_percent"]
 
 
-def _category(e: dict, cfg: dict) -> tuple[str, str]:
-    """(category letter, how it was chosen: element | trl | no_kb)."""
+def _category(e: dict, cfg: dict, resource: str = "mass") -> tuple[str, str]:
+    """(category letter, how it was chosen: element | trl | no_kb).
+
+    ``resource="power"`` first reads ``performance.power_maturity_category`` (wave 3: a unit's
+    power figure can be less mature than its mass, e.g. an estimated transmit power, ESA R-P-11..13);
+    without it the power margin follows the mass category."""
     cats = cfg["maturity_margins"]["categories"]
+    if resource == "power":
+        explicit = str(perf(e).get("power_maturity_category") or "").strip().upper()
+        if explicit in cats:
+            return explicit, "element"
     explicit = str(perf(e).get("maturity_category") or "").strip().upper()
     if explicit in cats:
         return explicit, "element"
@@ -83,7 +91,7 @@ def _category(e: dict, cfg: dict) -> tuple[str, str]:
     return "D", "trl"
 
 
-def maturity(e: dict, cfg: dict | None = None) -> dict[str, Any]:
+def maturity(e: dict, cfg: dict | None = None, resource: str = "mass") -> dict[str, Any]:
     """The element's maturity category and margin: the ONE source (F3, rule EB-01).
 
     ``{category, percent, category_from: element|trl|no_kb, label{en,fr}, standard_ref}``.
@@ -91,16 +99,16 @@ def maturity(e: dict, cfg: dict | None = None) -> dict[str, Any]:
     "heritage_json"}``. Element ``margin_percent`` columns are kept equal to ``percent``.
     """
     cfg = cfg or rc.load(CONFIG)
-    cat, how = _category(e, cfg)
+    cat, how = _category(e, cfg, resource)
     node = cfg["maturity_margins"]["categories"][cat]
     return {"category": cat, "percent": float(node["percent"]), "category_from": how,
             "label": node.get("label"), "standard_ref": rc.ref_of(cfg, cfg["maturity_margins"])["standard_ref"]}
 
 
-def maturity_percent(e: dict) -> float:
-    """Shorthand for ``maturity(e)["percent"]`` (never raises: 20 % if the policy is unreadable)."""
+def maturity_percent(e: dict, resource: str = "mass") -> float:
+    """Shorthand for ``maturity(e, resource=...)["percent"]`` (never raises: 20 % if the policy is unreadable)."""
     try:
-        return maturity(e)["percent"]
+        return maturity(e, resource=resource)["percent"]
     except Exception:  # noqa: BLE001 — a broken policy file must not break element writes
         return 20.0
 
@@ -116,7 +124,7 @@ def _units(elements: list[dict], field: str, cfg: dict) -> list[dict]:
     cats = cfg["maturity_margins"]["categories"]
     rows = []
     for e in leaves_with(elements, field):
-        cat, how = _category(e, cfg)
+        cat, how = _category(e, cfg, "power" if field.startswith("power") else "mass")
         cbe = float(e.get(field) or 0) * qty(e)
         pct = float(cats[cat]["percent"])
         rows.append({"element_id": e["id"], "name": e.get("name", ""), "quantity": qty(e),

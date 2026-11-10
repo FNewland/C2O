@@ -11,7 +11,7 @@
 #                      the orbit, links and decay did not change, so these were not re-run unless stated
 #   kb:<id>            SpaceCDF knowledge-base entry (design/packages/spacecdf-kb, components on main)
 #   decision           a design decision of the teaching baseline (see script/logbook.yaml)
-# frozen: 2026-11-10
+# frozen: 2026-11-10; v2 (systems-engineering V pass) 2026-11-10 - changes listed in v2_changes at the end
 
 orbit:
   type: {value: "sun-synchronous, circular", src: decision}
@@ -200,7 +200,7 @@ payload:
     note: "The 1610/90 filter changes the SWIR inputs (about 1.8x bandwidth, about 10 % lower solar irradiance, lower QE toward 1700 nm); re-run the model before PDR (open item)."
   peak_power_w: {value: 11.5, budget: 12, parts: "SWIR 2.7 + VNIR 3.8 + controller 5.0 (3-5)", src: research:payload §3.7, §4}
   transfer_power_w_max: 3.0
-  mass_kg: {nominal: 0.65, requirement_max: 0.70}
+  mass_kg: {nominal: 0.65, margined: 0.748, allocation: 0.76, note: "v2: PAY-BUD-01 is an allocation incl. maturity margin (v1 capped the CBE at 0.70)"}
   controller: {value: "Raspberry Pi CM4 on a custom carrier (CM5 accepted alternative)", kb: pc-rpi-cm4, store_gb: 8, src: "decision (trade T-03)"}
   trl: {value: "4-5", models: "breadboard month 6, engineering model month 18, protoflight month 30"}
   pointing: {control_deg: 1.0, knowledge_deg_3sigma: 0.08, geolocation_before_registration_km: 1.5, geolocation_after_registration_m: 120}
@@ -208,10 +208,10 @@ payload:
 power:   # calc/budgets.py from script/modes.yaml
   mode_totals_w: {leop: 2.11, commissioning: 4.11, nominal: 2.87, imaging: 15.68, downlink: 9.17, night_swir: 11.88, safe: 2.91, survival: 1.68, eol: "6.88 for seconds"}
   mode_mix_pct: {nominal: 85, imaging: 5, downlink: 9, night_swir: 1}
-  orbit_average_w: {value: 4.17, with_20pct: 5.00}
+  orbit_average_w: {value: 4.17, with_maturity: 4.55, with_20pct: 5.47, note: "v2: power maturity margins 5/10/20 % applied before the 20 % system margin (v1 applied 20 % to 4.17 -> 5.00)"}
   eol_generation_w: {value: 12.2, note: "body + two deployed wings, beta 15 deg, EOL factor 0.79", src: research:bus §10.3}
   body_mounted_only_eol_w: {value: 3.98, src: research:bus §10.3}
-  margin_ratio: {value: 2.44, note: "12.2 / 5.00"}
+  margin_ratio: {value: 2.23, note: "12.2 / 5.47 (v1 2.44)"}
   eclipse_energy_wh: {typical: 1.69, typical_dod_pct: 3.9, worst: 3.79, worst_dod_pct: 8.8, worst_case: "20 min nominal + 10 min downlink + 5 min imaging", requirement_dod_pct_max: 15}
   battery_wh: {value: 43, kb: bat-gom-nanopow-bp4}
   peak_load_w: {value: 19.6, note: "imaging + TX + ADCS + GNSS + OBC + EPS; within the P60 4 A battery limit", src: research:bus §10.3}
@@ -220,10 +220,10 @@ power:   # calc/budgets.py from script/modes.yaml
 mass:   # calc/budgets.py from script/equipment.yaml; maturity 5 % OTS / 10 % modified / 20 % new; +20 % system on the margined mass
   by_subsystem_kg_nominal: {payload: 0.650, eps: 1.607, aocs: 0.587, communications: 0.134, obc: 0.024, thermal: 0.105, structure: 0.384, disposal: 0.380}
   nominal_kg: 3.87
-  with_maturity_kg: 4.15
-  with_system_margin_kg: 4.98
+  with_maturity_kg: 4.17   # v2: DMSA wing mass is an estimate -> 10 % (was 5 %); v1 4.15
+  with_system_margin_kg: 5.01   # v1 4.98
   limit_kg: 6.0
-  margin_to_limit_kg: 1.02
+  margin_to_limit_kg: 0.99   # v1 1.02
   stack_height_mm: {value: 295, usable: 328, margin_pct: 10, src: research:bus §10.5}
 
 disposal:   # research:mission analysis §2 (NRLMSIS 2.1, CanX-7-calibrated effective area 0.38 x sail area); not re-run
@@ -267,3 +267,181 @@ open_decisions:
   - {id: D-GND-02, owner: Mission analysis & ops, question: "Northern sites: keep the 15 dBic 400CP24 year-round with a de-icing plan, or swap to the 401CP14 winter spare (+2.5 dB at 10 deg, below the 3 dB requirement)."}
   - {id: D-PAY-01, owner: Payload, question: "Re-run the SNR model for the 1610/90 nm SWIR filter."}
   - {id: D-COM-01, owner: Comms & OBDH, question: "Radio receive edge 450.25 MHz (Murgas) to be confirmed; AX100UL + R0405 fallback."}
+
+# ===================== v2 additions (systems-engineering V pass) =====================
+v2_allocations:
+  mass_kg:
+    PAY:
+      cbe: 0.65
+      margined: 0.748
+      allocation: 0.76
+    EPS:
+      cbe: 1.607
+      margined: 1.7124
+      allocation: 1.75
+    AOCS:
+      cbe: 0.587
+      margined: 0.6163
+      allocation: 0.65
+    COM:
+      cbe: 0.134
+      margined: 0.1452
+      allocation: 0.2
+    OBC:
+      cbe: 0.024
+      margined: 0.0252
+      allocation: 0.05
+    THM:
+      cbe: 0.105
+      margined: 0.1103
+      allocation: 0.15
+    STR:
+      cbe: 0.384
+      margined: 0.4032
+      allocation: 0.45
+    DIS:
+      cbe: 0.38
+      margined: 0.411
+      allocation: 0.42
+  mass_closure_kg:
+    sum_allocations_kg: 4.43
+    with_system_margin_kg: 5.316
+    limit_kg: 6.0
+    closes: true
+    left_to_limit_kg: 0.684
+    requirement: SYS-BUD-09
+  power_orbit_average_w:
+    PAY:
+      cbe: 0.922
+      margined: 1.071
+      allocation: 1.1
+    EPS:
+      cbe: 0.9
+      margined: 0.945
+      allocation: 1.0
+    AOCS:
+      cbe: 1.769
+      margined: 1.918
+      allocation: 2.0
+    COM:
+      cbe: 0.427
+      margined: 0.463
+      allocation: 0.5
+    OBC:
+      cbe: 0.15
+      margined: 0.158
+      allocation: 0.2
+    THM:
+      cbe: 0.0
+      margined: 0.0
+      allocation: 0.1
+    STR:
+      cbe: 0.0
+      margined: 0.0
+      allocation: 0.0
+    DIS:
+      cbe: 0.0
+      margined: 0.0
+      allocation: 0.01
+  power_closure_w:
+    sum_allocations_w: 4.91
+    with_system_margin_w: 5.892
+    eol_generation_w: 12.2
+    closes: true
+    requirement: SYS-BUD-10
+  one_wing_undeployed_w: 8.09
+  data_mb_per_day:
+    allocated: 16.28
+    allocatable_90pct: 22.73
+    reserve: 6.45
+  src: v2 build/calc_budgets.py -> script/budgets.yaml
+v2_performance_budgets:
+  geolocation_before_registration_m_3sigma:
+    nadir: 977.0
+    roll_30deg: 1368.0
+    requirement: 1500
+  band_to_band_registration_px_rms:
+    rss: 0.592
+    requirement: 1.0
+    goal: 0.5
+  frame_time_tag_ms:
+    sum: 0.316
+    requirement: 1.0
+    convention: mid-exposure
+  smear_day:
+    orbital_px: 0.5
+    attitude_rate_limit_deg_s: 0.1
+  smear_night:
+    uncompensated_px: 5.95
+    tracking_rate_deg_s: 0.673
+    residual_limit_deg_s: 0.05
+  can_bus_peak_pct: 34.9
+  payload_store_used_pct_7d: 29.7
+  src: v2 build/calc_budgets.py
+v2_trade_evidence:
+  contacts_union_min_per_day:
+    four_sites_590: 125.7
+    ottawa_only_590: 25.9
+    ottawa_inuvik_590: 88.6
+    three_no_inuvik_590: 93.4
+    four_sites_550: 117.6
+    four_sites_500: 105.9
+    four_sites_590_ltan1330: 125.7
+  longest_gap_h:
+    four_sites_590: 6.6
+    ottawa_only_590: 11.6
+    ottawa_inuvik_590: 8.2
+    three_no_inuvik_590: 8.2
+    four_sites_550: 6.5
+    four_sites_500: 8.0
+    four_sites_590_ltan1330: 6.6
+  lifetime_y_from_mid_2030:
+    '500':
+      sail_nominal_y: 1.1
+      nosail_A0.08_nominal_y: 4.1
+      sail_weak_y: 1.1
+      nosail_A0.08_weak_y: 4.8
+      nosail_A0.12_strong_y: 3.1
+    '550':
+      sail_nominal_y: 2.3
+      nosail_A0.08_nominal_y: 6.0
+      sail_weak_y: 2.4
+      nosail_A0.08_weak_y: 10.8
+      nosail_A0.12_strong_y: 4.1
+    '590':
+      sail_nominal_y: 3.0
+      nosail_A0.08_nominal_y: 14.7
+      sail_weak_y: 3.4
+      nosail_A0.08_weak_y: 20.7
+      nosail_A0.12_strong_y: 5.0
+  src: v2 calc/trade_calcs.py (v1 orbit_lib/decay reused; decay shim F10.7 = 70 to 2030.9, sail fraction 0.38; reproduces
+    v1 3.0/3.4 y at 590 km)
+v2_changes:
+- key: mass.with_maturity_kg
+  v1: 4.15
+  v2: 4.17
+  why: 'DMSA wing mass is an estimate without datasheet: maturity 5 % -> 10 %'
+- key: mass.with_system_margin_kg
+  v1: 4.98
+  v2: 5.01
+  why: follows
+- key: mass.margin_to_limit_kg
+  v1: 1.02
+  v2: 0.99
+  why: follows
+- key: power.orbit_average_w.with_20pct
+  v1: 5.0
+  v2: 5.47
+  why: power maturity margins (ESA R-P-11..13) applied before the system margin
+- key: power.margin_ratio
+  v1: 2.44
+  v2: 2.23
+  why: follows
+- key: payload.mass_kg
+  v1: requirement_max 0.70 (CBE cap)
+  v2: allocation 0.76 (CBE + maturity)
+  why: ECSS allocations hold the maturity margin; margined payload is 0.748 kg
+- key: v2_allocations / v2_performance_budgets / v2_trade_evidence
+  v1: null
+  v2: new sections
+  why: budget flow-down and trade evidence of the V pass

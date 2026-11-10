@@ -18,7 +18,7 @@ S2     + equipment (``equipment.yaml``: mass, ON power, quantity, TRL, maturity 
        + modes (template patched to ``modes.yaml``, Night SWIR and Sail deploy added, shares of
        orbit, the mode x unit power matrix, the extra transitions) + links, electrical and data
        proposed and accepted
-S3     + every requirement of ``requirements.yaml`` (216) + the risk register (``risks.yaml``)
+S3     + every requirement of ``requirements.yaml`` (v2: 302) + the risk register (``risks.yaml``)
 S4     + CDR design model proposed and accepted, stack auto-placed and approved, analyses run
        (V&V, mission simulation, ground segment, physics); AIT model philosophy and test matrix,
        schedule settings (launch provided), milestones and WBS; the design loop re-run on the placed
@@ -46,6 +46,21 @@ review record: three RIDs and the chair's decision (W4.08).
 
 The seed never writes a person's or an institution's name; the YAML files are the frozen
 teaching baseline (``NUMBERS.yaml`` wins over every other file).
+
+Wave 3, step 0 (v2 baseline, ``/home/claude/nfi/v2``): the requirements are imported by their own
+``level`` (mission 68, segment 40, system 67, subsystem 115, interface 12) with the v2 fields; the
+maturity classes of ``budgets.yaml`` (``mass.items``, ``power.units``) are laid over the equipment
+by item name; the study holds the 20 % system margin through PDR (``budgets.yaml``
+``margin_policy.adopted``). ``seed_nfi(client, stage, recording=True)`` (``python -m
+tests.fixtures.nfi --recording``) builds the walkthrough's seed: the Licensing tab, the
+allocation ledger and the negotiation records are left empty because they are filled on camera
+(PI ruling); the tests and the example project use the full seed.
+
+Named step functions of the wave-3 agents (each fills only its own; append-only inside a step,
+never reorder; W0_SEAMS §9): S0 ``_s0_stakeholders`` (S); S1 ``_s1_functions``, ``_s1_bindings``
+(R); S2 ``_s2_allocations`` (A), ``_s2_readiness`` (L), ``_s2_conops_scenarios`` (D); S3
+``_s3_trades``, ``_s3_risks``, ``_s3_open_items`` (D), ``_s3_changes`` (L), ``_s3_validation``,
+``_s3_assumptions`` (S), ``_s3_negotiations`` (H); S4 ``_s4_ait_v2`` (A).
 """
 from __future__ import annotations
 
@@ -59,6 +74,36 @@ STAGES = ("S0", "S1", "S2", "S3", "S4")
 
 #: maturity of equipment.yaml -> margin_policy category (A/B 5 %, C 10 %, D 20 %)
 MATURITY_CATEGORY = {"OTS": "A", "MOD": "C", "NEW": "D"}
+#: v2 maturity percentage of budgets.yaml (mass.items, power.units) -> margin_policy category
+MATURITY_PCT_CATEGORY = {5: "A", 10: "C", 20: "D"}
+
+#: v2 element ids (functions.yaml ``elements``, requirements.yaml ``allocation``) -> the name of
+#: the element the seed creates (S1). GS, OPS, SCI and SCT have no element of their own in the
+#: tool: the four stations are ground-station records of the Ground Segment, the operations team
+#: is the Operations segment, the science data system and the science team are the Science
+#: Segment. 3.R1 resolves these into relations.
+ELEMENT_IDS = {
+    "MIS": "Northern Fire and Ice",
+    "SSEG": "Space Segment",
+    "SC": "Northern Fire and Ice spacecraft",
+    "PAY": "Payload",
+    "EPS": "EPS",
+    "AOCS": "AOCS",
+    "COM": "Communications",
+    "OBC": "On-Board Computer",
+    "THM": "Thermal",
+    "STR": "Structure",
+    "DIS": "Disposal (drag sail)",
+    "HAR": "Harness",
+    "GSEG": "Ground Segment",
+    "MCC": "Mission control centre (Ottawa, VPN to the remote sites)",
+    "GS": "Ground Segment",
+    "OPS": "Operations",
+    "USEG": "Science Segment",
+    "SCI": "Science Segment",
+    "SCT": "Science Segment",
+    "LSEG": "Launch Segment",
+}
 
 #: short unit labels of modes.yaml -> element name in equipment.yaml (Radio RX + TX = one radio)
 MODE_UNITS = {
@@ -92,6 +137,7 @@ class SeedError(RuntimeError):
 class NfiSeed:
     study_id: str = ""
     stage: str = "S0"
+    recording: bool = False     # the walkthrough's seed: scenes filmed on camera are left empty
     elements: dict[str, dict] = field(default_factory=dict)     # name -> element
     requirements: dict[str, str] = field(default_factory=dict)  # code -> requirement id
     modes: dict[str, dict] = field(default_factory=dict)        # modes.yaml key -> mode
@@ -151,6 +197,7 @@ async def _s0(api: _Api, seed: NfiSeed) -> None:
     if len((st.get("mission_need") or {}).get("objectives") or []) != len(objectives):
         raise SeedError("mission need was not accepted by POST /api/studies/")
     await _s0_mission_need(api, seed)
+    await _s0_stakeholders(api, seed)
 
 
 async def _s1(api: _Api, seed: NfiSeed) -> None:
@@ -188,9 +235,17 @@ async def _s1(api: _Api, seed: NfiSeed) -> None:
                                             "rationale": o.get("measure"), "objectives": [o["id"]]})
     await _post_requirements(api, seed, lambda r: r["tool_level"] == "mission")
     # W2.09 (agent R): the elements the baseline allocates to that the tree above lacks, then the
-    # whole baseline through the bulk import (W2.04): needs, objectives and all 216 rows with
-    # every field, extra parents and objectives; the rows posted above are updated in place.
+    # whole baseline through the bulk import (W2.04): needs, objectives and every row (v2: 302)
+    # with every field, extra parents and objectives; the rows posted above are updated in place.
+    # Wave 3: the functions first (the v2 rows reference them), the threshold bindings after.
+    await _s1_functions(api, seed)
     await _w2_import_baseline(api, seed)
+    await _s1_bindings(api, seed)
+
+
+def element_name(code: str) -> str | None:
+    """The tool element name of a v2 element id (``ELEMENT_IDS``)."""
+    return ELEMENT_IDS.get(code)
 
 
 def _element_for(seed: NfiSeed, name: str | None) -> str | None:
@@ -245,14 +300,36 @@ async def _accept_all_suggestions(api: _Api, sid: str) -> None:
                 await api.call("PATCH", f"/api/studies/{sid}/electrical/{kind}/{row['id']}", {"status": "accepted"})
 
 
+def maturity_overlay() -> tuple[dict[str, str], dict[str, str]]:
+    """v2 maturity classes by equipment name: (mass category, power category). ``budgets.yaml``
+    ``mass.items`` names the items; ``power.units`` uses the short labels of ``modes.yaml``
+    (``MODE_UNITS``); two labels on one element (radio RX and TX) take the larger margin."""
+    b = load("budgets")
+    mass = {it["item"]: MATURITY_PCT_CATEGORY[int(it["maturity_pct"])] for it in b["mass"]["items"]}
+    power: dict[str, str] = {}
+    for u in b["power"]["units"]:
+        name = MODE_UNITS.get(u["unit"])
+        if name is None:
+            continue
+        cat = MATURITY_PCT_CATEGORY[int(u["maturity_pct"])]
+        power[name] = max(power.get(name, "A"), cat)      # A < C < D: the larger margin wins
+    return mass, power
+
+
 async def _s2(api: _Api, seed: NfiSeed) -> None:
     sid, eq = seed.study_id, load("equipment")
+    mass_cat, power_cat = maturity_overlay()
     for sub in eq["spacecraft"]["subsystems"]:
         parent = seed.elements[sub["name"]]
         for it in sub["items"]:
             perf = {}
             if it.get("maturity"):
                 perf["maturity_category"] = MATURITY_CATEGORY[it["maturity"]]
+            # v2: the classes of budgets.yaml win (DMSA wing mass, radio TX power, ADCS power)
+            if it["name"] in mass_cat:
+                perf["maturity_category"] = mass_cat[it["name"]]
+            if it["name"] in power_cat:
+                perf["power_maturity_category"] = power_cat[it["name"]]
             seed.elements[it["name"]] = await api.element(
                 sid, name=it["name"], element_type="component", parent_id=parent["id"],
                 subsystem_domain=sub["domain"], kb_component_id=None if it.get("custom") else it.get("kb"),
@@ -265,6 +342,10 @@ async def _s2(api: _Api, seed: NfiSeed) -> None:
     await _w103_disposal_mode(api, seed)
     await _s2_conops_phases(api, seed)
     await _s2_link_cases(api, seed)
+    await _s2_margin_hold(api, seed)
+    await _s2_allocations(api, seed)
+    await _s2_readiness(api, seed)
+    await _s2_conops_scenarios(api, seed)
 
 
 async def _modes(api: _Api, seed: NfiSeed) -> None:
@@ -331,11 +412,17 @@ async def _s3(api: _Api, seed: NfiSeed) -> None:
             "consequence": int(r["C"]), "mitigation": r.get("mit", ""), "owner": r.get("owner", ""),
             "status": r.get("status", "open"), "source": str(r.get("src", ""))[:120]})
         seed.risks.append(res)
+    await _s3_risks(api, seed)
     # W2.07 (agent R): the 12 IF rows linked to their interfaces and ICD rows; the interfaces
     # they name that the proposer did not make (IF-02 suggestions) are accepted
     await _w2_link_interfaces(api, seed)
     await _s3_trades(api, seed)
     await _s3_mdr_review(api, seed)
+    await _s3_open_items(api, seed)
+    await _s3_changes(api, seed)
+    await _s3_validation(api, seed)
+    await _s3_assumptions(api, seed)
+    await _s3_negotiations(api, seed)
 
 
 async def _s4(api: _Api, seed: NfiSeed) -> None:
@@ -353,10 +440,12 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     # W8a / W11a: model philosophy and test matrix; the launch is provided by the agency, so the
     # cost carries no launch; milestones from the gate profile and the WBS from the product tree
     await api.post(f"/api/studies/{sid}/ait/propose")
+    await _s4_ait_v2(api, seed)
     await api.call("PUT", f"/api/studies/{sid}/schedule/settings", {"launch_provided": True, "currency": "CAD"})
     await api.post(f"/api/studies/{sid}/schedule/propose")
     await _hk_sids(api, seed)
-    await _s4_licensing(api, seed)
+    if not seed.recording:       # PI ruling: the team fills the Licensing tab on camera
+        await _s4_licensing(api, seed)
     await _s4_link_licensing(api, seed)
 
 
@@ -643,13 +732,16 @@ async def _hk_sids(api: _Api, seed: NfiSeed) -> None:
 _STEPS = {"S0": _s0, "S1": _s1, "S2": _s2, "S3": _s3, "S4": _s4}
 
 
-async def seed_nfi(client, stage: str = "S4") -> NfiSeed:
+async def seed_nfi(client, stage: str = "S4", recording: bool = False) -> NfiSeed:
     """Build the Northern Fire and Ice study up to ``stage`` (S0..S4). Raises SeedError on any
-    unexpected HTTP status; ``report`` counts the calls, 403 responses and seconds per stage."""
+    unexpected HTTP status; ``report`` counts the calls, 403 responses and seconds per stage.
+
+    ``recording=True`` builds the walkthrough's seed: the scenes filmed on camera (the Licensing
+    tab, the allocation ledger, the negotiation records) are left for the team to fill."""
     stage = stage.upper()
     if stage not in STAGES:
         raise ValueError(f"stage must be one of {STAGES}")
-    seed = NfiSeed()
+    seed = NfiSeed(recording=bool(recording))
     api = _Api(client, seed)
     for s in STAGES[: STAGES.index(stage) + 1]:
         t0 = time.perf_counter()
@@ -788,3 +880,85 @@ async def _s4_licensing(api: _Api, seed: NfiSeed) -> None:
     saved = await api.call("PUT", f"/api/lifecycle/licensing/{sid}",
                            {**licensing_record(load("NUMBERS")), "version": cur["version"]})
     seed.report["licensing_version"] = saved["version"]
+
+
+# ───────────────────────────────────── wave 3, step 0: v2 margin hold and the agents' steps
+
+async def _s2_margin_hold(api: _Api, seed: NfiSeed) -> None:
+    """3.0c: the study holds 20 % system margin on mass and power through PDR (``budgets.yaml``
+    ``margin_policy``: "hold 20 % system margin on mass and power through PDR"); the course
+    ladder (15 % at SRR and PDR) is unchanged and quoted next to it."""
+    mp = load("budgets")["margin_policy"]
+    pct = load("budgets")["mass"]["system_margin_pct"]
+    await api.call("PUT", f"/api/studies/{seed.study_id}/margin-policy", {"study_override": {
+        "percent": pct, "through_gate": "pdr", "resources": ["mass", "power"],
+        "rationale": f"{mp['adopted']}. {mp['note']}"}})
+
+
+# Each step below is EMPTY in step 0 and belongs to one agent of the parallel wave; the owner
+# fills it (append-only, never reorder the calls in the stage functions above). Use
+# ``seed.recording`` to leave out what the walkthrough films on camera.
+
+async def _s0_stakeholders(api: _Api, seed: NfiSeed) -> None:
+    """TODO(S, 3.S3): ``stakeholders.yaml``: 12 stakeholders in 5 categories with authority and
+    engagement, the 12 needs (SN-*), the 15 MOEs (MOE-04 and MOE-10 placeholders)."""
+
+
+async def _s1_functions(api: _Api, seed: NfiSeed) -> None:
+    """TODO(R, 3.R1): ``functions.yaml`` in at most 3 calls, before the requirements: 86 functions
+    (13 / 70 / 3), 5 enabling processes (PR-*), leaf allocations to the elements (``ELEMENT_IDS``),
+    37 functional exchanges."""
+
+
+async def _s1_bindings(api: _Api, seed: NfiSeed) -> None:
+    """TODO(R, 3.R2): accept the threshold-binding proposals (``budget_ref`` → roll-up, data-budget,
+    link paths); then drop ``BUDGET_PARAM_PATHS`` and its loop in ``_w2_import_baseline``."""
+
+
+async def _s2_allocations(api: _Api, seed: NfiSeed) -> None:
+    """TODO(A, 3.A2): every allocation of ``budgets.yaml`` (8 mass, 8 power, peak, mode, data,
+    pointing, registration, timing lines) agreed by its seat. Not in the recording seed (the
+    scene is filmed)."""
+
+
+async def _s2_readiness(api: _Api, seed: NfiSeed) -> None:
+    """TODO(L, 3.L7): ``risks.yaml`` ``readiness.trl``: TRL targets at PDR and CDR per element."""
+
+
+async def _s2_conops_scenarios(api: _Api, seed: NfiSeed) -> None:
+    """TODO(D, 3.D5): the 12 ConOps scenarios of ``vv_plan.yaml``
+    ``conops_scenarios_for_requirements_validation`` with their requirement links."""
+
+
+async def _s3_risks(api: _Api, seed: NfiSeed) -> None:
+    """TODO(D, 3.D6): residual L/C and owner seats of the v2 risks (the loop in ``_s3`` posts the
+    37 risks without them today)."""
+
+
+async def _s3_open_items(api: _Api, seed: NfiSeed) -> None:
+    """TODO(D, 3.D4): NUMBERS ``open_decisions`` (D-PI-01/02 closed by the PI ruling, D-GND-01/02,
+    D-PAY-01, D-COM-01 open); the T-07 condition and fallback."""
+
+
+async def _s3_changes(api: _Api, seed: NfiSeed) -> None:
+    """TODO(L, 3.L4): ``risks.yaml`` ``configuration_management.change_records``: ECP-01, ECP-02, CR-V2."""
+
+
+async def _s3_validation(api: _Api, seed: NfiSeed) -> None:
+    """TODO(S, 3.S5): the v2 validation plan V1–V7 (``vv_plan.yaml``) and the 12 need-validation
+    rows (``stakeholders.yaml``)."""
+
+
+async def _s3_assumptions(api: _Api, seed: NfiSeed) -> None:
+    """TODO(S, 3.S6): the ``[ASSUMPTION]`` tags of ``budgets.yaml`` and the requirement rows whose
+    ``open_item_note`` names an assumption."""
+
+
+async def _s3_negotiations(api: _Api, seed: NfiSeed) -> None:
+    """TODO(H, 3.H6): negotiation records N1 (science and downlink), N3 (payload peak and battery),
+    N7 (mass envelopes). Not in the recording seed (the scenes are filmed)."""
+
+
+async def _s4_ait_v2(api: _Api, seed: NfiSeed) -> None:
+    """TODO(A, 3.A4): the 6 models of the v2 model philosophy and the 75 verification events of
+    ``vv_plan.yaml`` with their requirements, as test-matrix events."""

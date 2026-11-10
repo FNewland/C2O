@@ -26,16 +26,22 @@ async def _reqs(client, sid: str) -> list[dict]:
 
 
 def _yaml_fields(r: dict) -> dict:
-    """The 16 fields of a baseline row, in the tool's model (threshold dates become ``before``)."""
-    th = r.get("threshold") or {}
-    op, value, unit = th.get("op"), th.get("value"), th.get("unit")
-    if unit == "date":
-        op, unit = ("before" if op in ("<=", "<") else "after"), None
+    """The 16 fields of a baseline row plus the 8 v2 fields, in the tool's model (threshold dates
+    become ``before``)."""
+    from spacecdf_server.db.requirement_repo import normalise_threshold_value
+    from spacecdf_server.services.requirement_import import threshold_fields
+    op, value, unit = threshold_fields(r.get("threshold"))     # v2: "range" [a, b] -> in_range {min, max}
+    value = normalise_threshold_value(value)
     return {"code": r["id"], "level": r["level"], "category": r["category"], "type": r["type"], "text": r["text"],
             "rationale": r["rationale"], "parents": list(r["parents"]), "objectives": list(r["objectives"]),
             "method": r["verification_method"], "stage": r["verification_phase"], "owner": r["owner_seat"],
             "priority": r["priority"], "source": r["source"], "status": r["status"],
-            "threshold": (op, value, unit), "subsystem": r["subsystem"]}
+            "threshold": (op, value, unit), "subsystem": r["subsystem"],
+            # wave 3, step 0 (3.0b): the 8 v2 fields
+            "function": list(r.get("function") or []) or None, "allocation": list(r.get("allocation") or []) or None,
+            "budget_ref": r.get("budget_ref"), "verification_level": r.get("verification_level"),
+            "verification_model": r.get("verification_model"), "verification_event": r.get("verification_event"),
+            "acceptance": r.get("acceptance"), "open_item_note": r.get("open_item_note")}
 
 
 def _tool_fields(q: dict, code_of: dict, name_of: dict) -> dict:
@@ -44,7 +50,11 @@ def _tool_fields(q: dict, code_of: dict, name_of: dict) -> dict:
             "objectives": q["objective_ids"], "method": q["verification_method"], "stage": q["verification_phase"],
             "owner": q["responsible_position"], "priority": q["priority"], "source": q["source_ref"],
             "status": q["status"], "threshold": (q["threshold_op"], q["threshold_value"], q["threshold_unit"]),
-            "subsystem": name_of.get(q["element_id"])}
+            "subsystem": name_of.get(q["element_id"]),
+            "function": q["function_codes"], "allocation": q["allocation_codes"], "budget_ref": q["budget_ref"],
+            "verification_level": q["verification_level"], "verification_model": q["verification_model"],
+            "verification_event": q["verification_event"], "acceptance": q["acceptance"],
+            "open_item_note": q["open_item_note"]}
 
 
 async def _names(client, sid: str) -> dict:
@@ -70,7 +80,7 @@ async def test_w2_s1_imports_the_whole_baseline_with_every_field(client):
     code_of = {q["id"]: q["code"] for q in reqs}
     name_of = await _names(client, s.study_id)
     tool = {q["code"]: q for q in reqs}
-    for r in ROWS:   # W2.02: every field equal on 216/216 rows
+    for r in ROWS:   # W2.02 + 3.0b: every field (v2 included) equal on every row
         assert _tool_fields(tool[r["id"]], code_of, name_of) == _yaml_fields(r), r["id"]
     # W2.02: IOV stage, D never stored; W2.09: SEG-US rows on the science (user) segment
     # (integration: objective rows without a stage are closed out in orbit, constraints at AR)
@@ -362,7 +372,8 @@ async def test_w2b_ts_rows_and_ird_dataset_for_the_documents(client, monkeypatch
     assert rows["EPS-INH-01"]["unit"] == "independent inhibits (TBC)"
     assert rows["SEG-US-01"]["allocation"] == "Science Segment"
     assert all(r["stage"] for r in ts["rows"] if r["group"] != "functional" or not r["code"].startswith("OBJ-"))
-    assert rows["IF-ADC-OBC-01"]["group"] == "interface" and rows["IF-ADC-OBC-01"]["parents"][0] == "ADC-OUT-01"
+    assert rows["IF-ADC-OBC-01"]["group"] == "interface"
+    assert rows["IF-ADC-OBC-01"]["parents"][0] == BY_CODE["IF-ADC-OBC-01"]["parents"][0]   # v2: SYS-IF-03
     assert rows["SYS-ENV-01"]["group"] == "environmental"
     no_gen = (await client.get(f"/api/studies/{sid}/requirements/ts-rows?include_generated=false")).json()
     assert len(no_gen["rows"]) == counts["specification_without_generated"]

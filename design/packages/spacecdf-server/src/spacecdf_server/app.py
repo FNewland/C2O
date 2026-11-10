@@ -264,6 +264,31 @@ from .routers import schedule as schedule_router  # noqa: E402
 app.include_router(ait_router.router, prefix="/api", tags=["AIT and verification plan"])
 app.include_router(schedule_router.router, prefix="/api", tags=["Schedule and cost"])
 
+# Wave 3, step 0: every new router of the wave, registered once here (owners in
+# docs/dev/W0_SEAMS.md §9; no edits to this list during the parallel wave). Step 0 serves stubs.
+from .routers import se_phase as se_phase_router, moes as moes_router  # noqa: E402
+from .routers import validation as validation_router, assumptions as assumptions_router  # noqa: E402
+from .routers import negotiations as negotiations_router, sensitivity as sensitivity_router  # noqa: E402
+from .routers import changes as changes_router, impact as impact_router, open_items as open_items_router  # noqa: E402
+app.include_router(se_phase_router.router, prefix="/api", tags=["SE phase"])                    # S 3.S1
+app.include_router(moes_router.router, prefix="/api", tags=["Stakeholders and MOEs"])           # S 3.S3
+app.include_router(validation_router.router, prefix="/api", tags=["Validation"])               # S 3.S5
+app.include_router(assumptions_router.router, prefix="/api", tags=["Assumptions"])             # S 3.S6
+app.include_router(negotiations_router.router, prefix="/api", tags=["Negotiations"])           # H 3.H6
+app.include_router(sensitivity_router.router, prefix="/api", tags=["Sensitivity"])             # H 3.H5
+app.include_router(changes_router.router, prefix="/api", tags=["Change proposals"])            # L 3.L4
+app.include_router(impact_router.router, prefix="/api", tags=["Key numbers and impact"])       # L 3.L6
+app.include_router(open_items_router.router, prefix="/api", tags=["Open items"])               # D 3.D4
+# PI addendum (SRR and PDR pass legitimately on camera); cost pricing routes are in routers/schedule.py (A 3.A7)
+from .routers import icd_issues as icd_issues_router, reliability as reliability_router  # noqa: E402
+from .routers import thermal_model as thermal_model_router, debris_assessment as debris_router  # noqa: E402
+from .routers import change_control as change_control_router  # noqa: E402
+app.include_router(icd_issues_router.router, prefix="/api", tags=["ICD issue control"])        # R 3.R6
+app.include_router(reliability_router.router, prefix="/api", tags=["Reliability and FMEA"])     # A 3.A5
+app.include_router(thermal_model_router.router, prefix="/api", tags=["Thermal model"])          # A 3.A6
+app.include_router(debris_router.router, prefix="/api", tags=["Debris assessment"])            # L 3.L8
+app.include_router(change_control_router.router, prefix="/api", tags=["Change control"])       # D 3.D7
+
 
 @app.get("/api/health")
 async def health_check():

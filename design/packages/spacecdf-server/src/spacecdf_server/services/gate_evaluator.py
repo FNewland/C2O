@@ -514,7 +514,8 @@ def _has_acceptance(r: dict) -> bool:
     """An acceptance criterion in place of a threshold (W2.05): an explicit one, or the
     statement itself when it is verified by test, inspection or review (pass/fail outcome), or
     by analysis of a pass/fail statement or of compliance with a cited document."""
-    if (r.get("acceptance_criterion") or "").strip():
+    # wave 3 step 0: the v2 ``acceptance`` column is an explicit criterion (3.R2 refines SRR-EC-02)
+    if (r.get("acceptance_criterion") or r.get("acceptance") or "").strip():
         return True
     text = f" {(r.get('text') or '').lower()} "
     if not _SHALL.search(text):

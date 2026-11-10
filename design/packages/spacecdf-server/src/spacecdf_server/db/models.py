@@ -159,6 +159,17 @@ class RequirementRow(Base):
     verification_level: Mapped[str | None] = mapped_column(String(16), nullable=True)  # mission .. unit
     verification_methods_json: Mapped[list | None] = mapped_column(JSON, nullable=True)  # ["A", "T"]
     open_item: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # TBD/TBC flagged by the baseline
+    # Wave 3, step 0 (v2 baseline): acceptance criterion, the model and event the evidence comes
+    # from, the budget line it allocates (budgets.yaml path), why it is an open item, and the v2
+    # function / allocation references (function ids or PR-* processes; element ids such as EPS)
+    # kept as code lists until 3.R1 resolves them into relations.
+    acceptance: Mapped[str | None] = mapped_column(Text, nullable=True)
+    verification_model: Mapped[str | None] = mapped_column(String(16), nullable=True)   # BB EM PFM GS flight design
+    verification_event: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)  # vv_plan event id
+    budget_ref: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)  # e.g. mass.subsystems.EPS
+    open_item_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    function_codes_json: Mapped[list | None] = mapped_column(JSON, nullable=True)     # ["F1", "F12.1"]
+    allocation_codes_json: Mapped[list | None] = mapped_column(JSON, nullable=True)   # ["SSEG", "GSEG"]
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
 
@@ -803,3 +814,19 @@ from . import models_licensing as _models_licensing  # noqa: E402,F401
 # review record (RIDs and actions, W4.08), each in its own module.
 from . import models_links as _models_links  # noqa: E402,F401
 from . import models_reviews as _models_reviews  # noqa: E402,F401
+# Wave 3, step 0: every new table of the wave, created empty here so the seven parallel agents
+# fill their own module (owners in docs/dev/W0_SEAMS.md §9): the allocation ledger (A), the
+# SE-V tables (S: MOEs, validation activities, need validation, assumptions), change proposals
+# (L) and the open-item register (D), negotiation records (H).
+from . import models_alloc as _models_alloc  # noqa: E402,F401
+from . import models_se as _models_se  # noqa: E402,F401
+from . import models_changes as _models_changes  # noqa: E402,F401
+from . import models_negotiation as _models_negotiation  # noqa: E402,F401
+# Wave 3, step 0 (PI addendum): ICD issue control (R), reliability and FMEA (A), the thermal
+# nodal model (A; moved from H, W0_SEAMS §9), the debris assessment (L), cost pricing (A).
+# ``change_approvals`` (D) is in models_changes.
+from . import models_icd as _models_icd  # noqa: E402,F401
+from . import models_reliability as _models_reliability  # noqa: E402,F401
+from . import models_thermal as _models_thermal  # noqa: E402,F401
+from . import models_debris as _models_debris  # noqa: E402,F401
+from . import models_cost as _models_cost  # noqa: E402,F401

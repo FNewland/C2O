@@ -84,7 +84,8 @@ def _encode_threshold(v: Any) -> str | None:
     return json.dumps(v)
 
 
-_JSON_FIELDS = {"external_ids": "external_ids_json", "verification_methods": "verification_methods_json"}
+_JSON_FIELDS = {"external_ids": "external_ids_json", "verification_methods": "verification_methods_json",
+                "function_codes": "function_codes_json", "allocation_codes": "allocation_codes_json"}
 _TIMESTAMPS = ("created_at", "updated_at")
 
 
@@ -112,6 +113,8 @@ def _row_to_dict(row: RequirementRow) -> dict:
     if ext is not None:
         d["external_ids"] = ext
     d["verification_methods"] = d.pop("verification_methods_json", None)
+    d["function_codes"] = d.pop("function_codes_json", None)
+    d["allocation_codes"] = d.pop("allocation_codes_json", None)
     d["threshold_value"] = normalise_threshold_value(d.get("threshold_value"))
     # Before Nov 2026 the Requirements panel stored the type in ``rationale``; move it.
     if not d.get("req_type") and d.get("rationale") in REQ_TYPES:

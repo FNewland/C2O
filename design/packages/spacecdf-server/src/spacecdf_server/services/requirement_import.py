@@ -8,7 +8,9 @@ Input
   ``level``/``tool_level``, ``type``, ``text``, ``rationale``, ``parents``, ``objectives``,
   ``verification_method``, ``verification_phase``, ``owner_seat``, ``subsystem``, ``priority``,
   ``category``, ``source``, ``status``, ``threshold {op, value, unit}``, ``interface``, ``verifies``,
-  ``open_item``), plus its ``stakeholder_needs`` (level ``stakeholder``) and ``objectives``
+  ``open_item``; v2 adds ``function``, ``allocation`` (code lists), ``budget_ref``,
+  ``verification_level``, ``verification_model``, ``verification_event``, ``acceptance``,
+  ``open_item_note``), plus its ``stakeholder_needs`` (level ``stakeholder``) and ``objectives``
   (mission-level ``OBJ-*`` rows whose parents are the needs);
 * the same as JSON, or a plain list of rows;
 * CSV with one row per requirement and the same column names (lists such as ``parents`` are
@@ -62,7 +64,14 @@ logger = logging.getLogger(__name__)
 MANAGED = ("level", "text", "rationale", "req_type", "category", "element_id", "parent_id",
            "derived_from_requirement_id", "objective_id", "verification_method", "verification_methods",
            "verification_phase", "verification_level", "responsible_position", "priority", "source_ref",
-           "status", "threshold_op", "threshold_value", "threshold_unit", "open_item", "ir_json")
+           "status", "threshold_op", "threshold_value", "threshold_unit", "open_item", "ir_json",
+           # wave 3, step 0 (v2 baseline)
+           "acceptance", "verification_model", "verification_event", "budget_ref", "open_item_note",
+           "function_codes", "allocation_codes")
+
+#: v2 fields with no value on stakeholder-need and objective rows.
+V2_EMPTY = {"acceptance": None, "verification_model": None, "verification_event": None, "budget_ref": None,
+            "open_item_note": None, "function_codes": [], "allocation_codes": []}
 
 OBJECTIVE_PRIORITY = {"primary": 1, "secondary": 2, "constraint": 1, "tertiary": 3}
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -189,6 +198,14 @@ def normalise_row(r: dict) -> dict:
         "threshold_op": op, "threshold_value": value, "threshold_unit": unit,
         "open_item": _bool(r.get("open_item")),
         "interface": iface,
+        # wave 3, step 0: v2 fields (``function`` and ``allocation`` are code lists)
+        "acceptance": g("acceptance"),
+        "verification_model": g("verification_model"),
+        "verification_event": g("verification_event"),
+        "budget_ref": g("budget_ref"),
+        "open_item_note": g("open_item_note"),
+        "function_codes": _list(g("function", "functions", "function_codes")),
+        "allocation_codes": _list(g("allocation", "allocation_codes")),
     }
     return out
 
@@ -204,7 +221,7 @@ def need_rows(needs: list[dict]) -> list[dict]:
             "verification_level": None, "responsible_position": None, "priority": None,
             "source_ref": n.get("stakeholder"), "status": n.get("status") or "draft",
             "threshold_op": None, "threshold_value": None, "threshold_unit": None, "open_item": None,
-            "interface": None,
+            "interface": None, **V2_EMPTY,
         })
     return out
 
@@ -230,7 +247,7 @@ def objective_rows(objectives: list[dict], need_codes: set[str]) -> list[dict]:
             "priority": OBJECTIVE_PRIORITY.get(str(o.get("priority") or "").lower(), _blank(o.get("priority"))),
             "source_ref": o.get("source"), "status": o.get("status") or "draft",
             "threshold_op": None, "threshold_value": None, "threshold_unit": None, "open_item": None,
-            "interface": None,
+            "interface": None, **V2_EMPTY,
         })
     return out
 
@@ -462,6 +479,11 @@ async def import_requirements(study_id: str, doc: Any, *, fmt: str | None = None
             "threshold_op": row["threshold_op"], "threshold_value": normalise_threshold_value(row["threshold_value"]),
             "threshold_unit": _blank(row["threshold_unit"]), "open_item": row["open_item"],
             "ir_json": ir or None,
+            "acceptance": _blank(row["acceptance"]), "verification_model": _blank(row["verification_model"]),
+            "verification_event": _blank(row["verification_event"]), "budget_ref": _blank(row["budget_ref"]),
+            "open_item_note": _blank(row["open_item_note"]),
+            "function_codes": list(row["function_codes"]) or None,
+            "allocation_codes": list(row["allocation_codes"]) or None,
         }
         if new["status"] == "retired":
             new["status"] = "draft"

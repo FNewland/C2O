@@ -203,7 +203,10 @@ The files are copied unchanged from the frozen Northern Fire and Ice teaching ba
 
 - `NUMBERS.yaml` (the source of truth);
 - `mission.yaml`, `equipment.yaml`, `modes.yaml`;
-- `requirements.yaml`: 216 rows, plus 5 objectives and 6 stakeholder needs;
+- `requirements.yaml`: v2 since wave 3 step 0: 302 rows (mission 68, segment 40, system 67,
+  subsystem 115, interface 12), plus 5 objectives and 12 stakeholder needs (v1: 216 + 5 + 6);
+- v2 additions: `functions.yaml`, `budgets.yaml`, `stakeholders.yaml`, `vv_plan.yaml`;
+  `NUMBERS.yaml`, `risks.yaml` (37 risks) and `trades.yaml` are the v2 copies;
 - `hk_sids.yaml`, `risks.yaml`, `trades.yaml`, `ground_stations.yaml`;
 - `logbook.yaml`, `roundtrip_checklist.yaml`.
 
@@ -234,7 +237,8 @@ Measured times (wave 2, after the KB/YAML caches):
   30 s of CPU before). With six test runs on two cores the wall clock stretches to 70–100 s, so
   `test_seed.py` holds the CPU time under 30 s and the wall clock under 60 s only when the load per
   core is at most 1. 0 errors and 0 `403`s.
-- The S2 roll-up gives 3.871 / 4.147 / 4.976 kg (NUMBERS: 3.87 / 4.15 / 4.98) and 3U.
+- The S2 roll-up gave 3.871 / 4.147 / 4.976 kg on v1. On v2 (wave 3) it gives 3.871 / 4.172 /
+  5.006 kg and 4.168 / 4.562 / 5.474 W (`budgets.yaml`: 4.555 / 5.466 W; see §9.9), and 3U.
 
 Each work package extends the seed for its model, in `seed.py`, in its own stage step. Add to the
 end of a step and never reorder earlier calls. Each package also adds its acceptance test as
@@ -341,3 +345,208 @@ tracked by git. See `docs/dev/DRY_RUN.md`.
   timings, and `openapi.json` was byte-identical. A permanent golden-file test would block the
   intended document changes of W1 and W4. `test_w0_seams.py` pins the routes, their modules,
   their order and the operation ids instead.
+
+## 9. Wave 3 seams (step 0)
+
+Step 0 (agent A) landed before the parallel wave of `WAVE3_PLAN.md`, so seven agents (R, H, X,
+L, D, A, S) code against the same tables, routes, sections and seed steps. Each stub is marked
+`TODO(<owner>, <item>)`; a stub route answers 200 with `status: "not_implemented"` and its owner
+on a GET (empty `items`), and 501 on a write. Every stub section returns `status:
+"not_implemented"`, `owner` and its empty shape.
+
+### 9.1 What step 0 delivered
+
+- **Fixture on v2** (3.0a). `tests/fixtures/nfi/*.yaml` hold the v2 copies of `NUMBERS`,
+  `requirements`, `risks` and `trades`, plus `functions`, `budgets`, `stakeholders` and
+  `vv_plan`. The other v1 files stay. The seed imports by `level`, lays the maturity classes of
+  `budgets.yaml` (`mass.items`, `power.units`) over the equipment by item name (mass:
+  `performance.maturity_category`; power: the new `performance.power_maturity_category`), and
+  sets the study's 20 % hold through PDR. `ELEMENT_IDS` (in `seed.py`) maps the v2 element ids
+  to the tool's element names.
+- **Recording seed.** `seed_nfi(client, stage, recording=True)` and `python -m tests.fixtures.nfi
+  --recording` skip `_s4_licensing` (PI ruling: the Licensing tab is filled on camera).
+  `seed.recording` is there for the agents' own steps: `_s2_allocations` and `_s3_negotiations`
+  should leave their scenes empty when it is set. Tests and the example project use the full seed.
+- **Requirement columns** (3.0b): `acceptance`, `verification_model`, `verification_event`,
+  `budget_ref`, `open_item_note`, and the code lists `function_codes` and `allocation_codes`
+  (JSON). They go through POST/PATCH, the bulk import (`function` and `allocation` of the v2
+  rows) and the ReqIF adapter (lists comma-separated). `element_id` is still resolved from
+  `subsystem`, and the first allocation code stays separate until 3.R1. Stages `PRR` and `SRR`
+  joined `VERIFICATION_STAGES` (one v2 row each).
+- **Roll-up on v2** (3.0c). Each unit's power maturity margin is applied before the system
+  margin: `power.orbit_average_with_maturity_w` is new, and `orbit_average_with_margin_w` is now
+  based on it (v1 applied the system margin to the nominal figure). A per-study hold lives in
+  `study.margin_policy.study_override` = `{percent, through_gate, resources, rationale}`. Use
+  `GET/PUT /api/studies/{id}/margin-policy` to read or set it; limits are in
+  `configs/margin_policy.yaml` `study_override`. The roll-up reports `system_margin_percent`
+  (what is applied), `ladder_percent`, `system_margin_source` (`ladder` | `study_hold`) and
+  `margin_hold`. The ladder (`mass.ladder`) keeps the textbook values. A hold only raises the
+  margin, and it ends after `through_gate`.
+- **Contracts** (3.0d): the tables, routes, sections, `key_numbers` and `/phase` listed below.
+- **Risk register fields**: `residual_likelihood`, `residual_consequence` (1–5 or null),
+  `residual_rpn` and `owner_seat`, in the study's risk JSON (no column needed). D fills them (3.D6).
+
+### 9.2 Ownership in wave 3 (plan §3.2, plus the PI addendum)
+
+| Agent | Items | Owns exclusively in this wave |
+|---|---|---|
+| **R** requirements | 3.R1–3.R5, **3.R6** ICD issue control (addendum) | the requirement files of waves 1–2 (`C/models/requirement.py`, RequirementRow, `requirement_repo.py`, `relation_repo.py`, `routers/{requirements,relations,interface_requirements,product_tree}.py`, `services/{requirement_engine,requirement_import,requirement_queries,interface_requirements,gate_evaluator}.py`, `CF/{requirement_rules,interface_requirement_templates,gate_exit_criteria}.yaml`, `AG/exporters/reqif/*`, `FE/workbench/{RequirementsPanel,RequirementsTable,MissionWizard}.tsx`, `FE/components/ICDTable.tsx`, `fr.u_req.json`); new: `S/routers/functions.py`, `S/db/function_repo.py`, `FE/components/FunctionTree.tsx`, `S/services/{allocation_requirements,threshold_binding}.py`, **`S/db/models_icd.py`, `S/routers/icd_issues.py`, section `icds.py`** |
+| **H** telemetry, modes, data | 3.H1–3.H6 | as in waves 1–2 (`mode_model.py`, `data_budget.py`, `cdr_*.py`, `ground_closure.py`, `ground_scheduler.py`, `routers/{modes,cdr,analyses_ground}.py`, `AG/tier1/{data,link}.py`, `FE/cdr/*`, `FE/modes/*`, `FE/components/DataBudget.tsx`, `fr.u_hk.json`); new: `AG/tier2/conflicts.py`, `S/routers/thermal.py`, `S/services/orbit_season.py`, `S/{routers,services}/sensitivity.py`, `FE/components/SensitivityView.tsx`, `S/db/models_negotiation.py`, `S/{routers,services}/negotiations.py`, `FE/workbench/NegotiationPanel.tsx`, section `negotiations.py`, `fr.u_neg.json` |
+| **X** exports | 3.X1–3.X2, **3.X3** SEMP generator (addendum) | as in waves 1–2 (`S/routers/exports/*` families, `S/services/docx/{mrd,ts,ird,semp,rmp,_common,pack_hooks}.py`, `S/services/export_context/__init__.py`, `AG/exporters/docs/*`, `FE/workbench/ExportPanel.tsx`); new: `S/services/diagrams/__init__.py` (KINDS), `S/services/diagrams/b_se.py`, `FE/diagrams/*`, **section `semp.py`** |
+| **L** licensing, disposal, payload, changes, impact | 3.L1–3.L7, **3.L8** debris assessment (addendum) | as in waves 1–2 (`C/physics/debris.py`, `services/{regulatory,spectrum,licensing,licensing_docs}.py`, `routers/licensing.py`, `routers/exports/{deorbit,regulatory,rsssa}.py`, `FE/workbench/{LicensingPanel,BlocksPanel}.tsx`, `fr.u_lic.json`); new: `C/physics/payload_sizing.py`, `ChangeProposalRow` in `S/db/models_changes.py`, `S/routers/changes.py`, `FE/workbench/ChangesPanel.tsx`, section `changes.py`, `S/services/{impact_preview,key_numbers}.py`, `S/routers/impact.py`, `FE/components/ImpactPreview.tsx`, **`S/db/models_debris.py`, `S/routers/debris_assessment.py`, section `debris.py`** |
+| **D** decide, gates, ConOps, risks | 3.D1–3.D6, **3.D7** change-control flow (addendum) | as in waves 1–2 (`routers/{gates,trades,link_budgets,conops}.py`, `services/{gate_reviews,mission_definition,trades}.py`, `S/seats/*`, `services/docx/{conops,trades,review_report}.py`, `services/diagrams/b_conops.py`, `FE/workbench/{DecisionPanel,VVPanel,ConopsPhases,GateReviewRecord}.tsx`, `FE/components/{LinkBudgetTool,MissionDefinitionEditor,MissionNeedCard}.tsx`, `FE/seats/*`, `fr.u_dec.json`); new: `CF/gate_profiles.yaml`, `FE/workbench/PhasePanel.tsx`, `OpenItemRow` in `models_changes.py`, `S/routers/open_items.py`, `S/routers/analyses_common.py`, **`ChangeApprovalRow` in `models_changes.py`, `S/routers/change_control.py`, section `change_control.py`** |
+| **A** platform, design loop | 3.A1–3.A4, **3.A5** reliability + FMEA, **3.A6** thermal nodal model, **3.A7** cost pricing (addendum); step 0, 3.F2 | as in waves 1–2 (`analysis_context.py`, `rollup.py`, `routers/{elements,ait,schedule}.py`, `services/{ait,schedule,cost_engine,bom_generator,readiness}.py`, `S/db/{element_repo,models_ait,models_schedule}.py`, `services/docx/{vp,ait,bom}.py`, `FE/workbench/{BudgetPanel,AitPanel,ProjectPanel}.tsx`, KB data, `fr.u_ait.json`); new: `S/db/models_alloc.py`, section `allocations.py`, `S/routers/design.py`, `AG/tier1/{orbit,power,mass}.py`, `AG/tier2/{cost,reliability}.py`, the app router list, `S/routers/_wave3_stub.py`, **`S/db/{models_reliability,models_thermal,models_cost}.py`, `S/routers/{reliability,thermal_model}.py`, sections `reliability.py`, `thermal_model.py`, `cost.py`** |
+| **S** SE integration | 3.S1–3.S6 | `CF/se_protocol.yaml`, `S/services/{se_protocol,se_deliverables}.py`, `S/routers/{se_phase,moes,validation,assumptions}.py`, `S/db/models_se.py`, `C/models/mission_need.py`, `FE/components/StakeholderEditor.tsx`, `FE/workbench/{ValidationPanel,GuidancePanel}.tsx`, sections `{stakeholders,validation,assumptions,se_phase}.py`, `fr.u_se.json`, `tools/se_paraphrase_check.py`, `tests/test_se/*` |
+
+**Step-0 decision: the thermal model goes to A (3.A6), not H.** H is the critical path at 15.5 pd.
+A thermal nodal model with hot and cold cases (about 4 pd) would take H to about 19.5 pd. A has
+12 pd in the plan, plus step 0 and 3.F2, and already owns the design loop and the KB limits.
+
+The split between them:
+
+- H keeps 3.H4. `S/services/orbit_season.py` proposes β, the eclipse range and the hot and cold
+  β cases. H exposes `orbit_season.thermal_cases(study_id)`.
+- A's model (`routers/thermal_model.py`, `thermal_cases.source = "orbit_season"`) reads those
+  cases. It does not compute its own β.
+- The legacy single-node `/api/thermal/*` routes stay H's.
+
+**Cost.** A owns the cost engine and the pricing (3.A7: labour, test campaigns, reserve, launch
+provided). D owns only how the cost criterion shows at MDR and PRR. R wires MDR-EC-08 and PRR-EC-11
+to `cost_engine`.
+
+### 9.3 Tables (all study-owned; project file carries them; one-row and empty round trip in `tests/test_api/test_project_file.py`)
+
+| Table | Module | Owner | Item |
+|---|---|---|---|
+| `allocation_ledger` | `models_alloc.py` | A | 3.A2 |
+| `se_moes`, `se_validation_activities`, `se_need_validation`, `se_assumptions` | `models_se.py` | S | 3.S3, 3.S5, 3.S6 |
+| `change_proposals` | `models_changes.py` (`ChangeProposalRow`) | L | 3.L4 |
+| `open_items` | `models_changes.py` (`OpenItemRow`) | D | 3.D4 |
+| `change_approvals` | `models_changes.py` (`ChangeApprovalRow`) | D | 3.D7 |
+| `negotiation_records` | `models_negotiation.py` | H | 3.H6 |
+| `icd_issues` | `models_icd.py` | R | 3.R6 |
+| `reliability_blocks`, `fmea_rows` | `models_reliability.py` | A | 3.A5 |
+| `thermal_nodes`, `thermal_couplings`, `thermal_cases` | `models_thermal.py` | A | 3.A6 |
+| `debris_assessments` | `models_debris.py` | L | 3.L8 |
+| `cost_items` | `models_cost.py` | A | 3.A7 |
+
+`db/migrate.py` lists them in `WAVE3_TABLES`. New columns on existing tables are added
+automatically by `_upgrade_sync`. After step 0 the file is append-only: one block per agent at
+the end. Every row has `data_json`; prefer it to a new column.
+
+### 9.4 Routes (registered once in `S/app.py`; no edits to the list during the wave)
+
+| Router | Routes (under `/api/studies/{study_id}`) | Owner |
+|---|---|---|
+| `se_phase.py` | `GET /phase` (stub contract, below) | S 3.S1 |
+| `moes.py` | `GET/POST /moes`, `PATCH/DELETE /moes/{id}`, `POST /stakeholders/import` | S 3.S3 |
+| `validation.py` | `GET/POST /validation/activities`, `PATCH …/{id}`, `POST /validation/propose`, `POST /validation/import`, `GET /validation/need-validation`, `GET /validation/coverage` | S 3.S5 |
+| `assumptions.py` | `GET/POST /assumptions`, `PATCH /assumptions/{id}`, `POST /assumptions/import` | S 3.S6 |
+| `negotiations.py` | `GET/POST /negotiations`, `GET/PATCH /negotiations/{id}`, `POST …/{id}/signoff`, `POST …/{id}/reopen` | H 3.H6 |
+| `sensitivity.py` | `GET /sensitivity?parameter=`, `GET /sensitivity/altitude` | H 3.H5 |
+| `changes.py` | `GET/POST /changes`, `PATCH /changes/{id}`, `POST /changes/import`, `POST /changes/from-trade/{trade_id}` | L 3.L4 |
+| `impact.py` | `GET /key-numbers` (real), `POST /impact/preview` | L 3.L6 |
+| `open_items.py` | `GET /open-items?blocks_gate=`, `POST /open-items`, `PATCH /open-items/{id}`, `POST /open-items/import` | D 3.D4 |
+| `elements.py` | `GET/PUT /margin-policy` (real); `GET/POST /allocation-ledger`, `POST /allocation-ledger/import`, `PATCH …/{id}`, `POST …/{id}/agree`, `POST …/{id}/dispute` | A 3.0c, 3.A2 |
+| `icd_issues.py` | `GET /icds`, `POST /icds/{icd_ref}/issue`, `POST /icds/{icd_ref}/signoff`, `GET /icds/{icd_ref}/history` | R 3.R6 |
+| `reliability.py` | `GET /reliability`, `POST /reliability/run`, `GET/POST /fmea`, `POST /fmea/propose`, `PATCH /fmea/{id}` | A 3.A5 |
+| `thermal_model.py` | `GET /thermal-model`, `POST /thermal-model/propose`, `POST /thermal-model/nodes`, `PATCH …/nodes/{id}`, `POST /thermal-model/run` | A 3.A6 |
+| `debris_assessment.py` | `GET /debris-assessment`, `POST /debris-assessment/run`, `POST /debris-assessment/accept` | L 3.L8 |
+| `change_control.py` | `GET /changes/{id}/control`, `POST …/control/start`, `POST …/control/agree`, `POST …/control/decide` | D 3.D7 |
+| `schedule.py` | `GET/POST /cost/items`, `POST /cost/price` | A 3.A7 |
+| (R's own file) `functions.py` | `POST /functions/import` (bulk; R adds it in 3.R1) | R 3.R1 |
+
+The SEMP has no new route. `POST /api/exports/docx/semp` (X) builds it from `collect()`, and the
+`semp` section holds the content no other section has.
+
+### 9.5 Export sections (`SECTIONS`; 15 new stubs, each module owned as listed)
+
+`stakeholders` (S), `allocations` (A), `validation` (S), `assumptions` (S), `changes` (L),
+`open_items` (D), `negotiations` (H), `se_phase` (S); PI addendum: `semp` (X), `icds` (R),
+`reliability` (A), `thermal_model` (A), `debris` (L), `change_control` (D), `cost` (A). Their
+empty shapes are in each module's `empty()`; keep the keys when making them real.
+
+### 9.6 Contracts
+
+**`/phase`**: `S/services/se_protocol.py` `phase(study_id, study)` returns
+`{study_id, gate, phase, entry[], deliverables[], analysis[], coaching{}}`. On S0 the stub gives
+`gate: "mdr"` and `phase: "0"`, plus `status` and `owner` until 3.S1 lands. Item shapes are in
+the module docstring.
+
+**`key_numbers`**: `S/services/key_numbers.py`, `async key_numbers(study_id, gate=None)` →
+`{key: {value, unit, source, owner_seat}}`. It is filled from the roll-up and the data budget.
+The keys are:
+
+- `mass.*`: `cbe_kg`, `with_maturity_kg`, `with_system_margin_kg`, `system_margin_percent`,
+  `limit_kg`, `margin_to_limit_kg`;
+- `power.*`: `orbit_average_w`, `…_with_maturity_w`, `…_with_margin_w`, `system_margin_percent`;
+- `data.*`: `capacity_mb_per_day`, `demand_mb_per_day`, `margin_pct`, `science_delivered_mb_per_day`;
+- `contacts.union_min_per_day`.
+
+L owns the file after step 0 and adds keys on request.
+
+**Evidence functions R wires into the gate criteria** (`gate_evaluator.py`):
+
+- S: `se_deliverables.evaluate` and `validation.coverage`;
+- A: allocation ledger status, the reliability result (PDR-EC-05) and the cost total (MDR-EC-08,
+  PRR-EC-11);
+- R: the ICD issue state (PDR-EC-02, SRR);
+- L: debris acceptance (SRR);
+- A: the thermal model margins (the thermal criteria).
+
+### 9.7 Seed steps (`tests/fixtures/nfi/seed.py`; empty until filled; append-only, never reorder)
+
+| Stage | Step | Owner |
+|---|---|---|
+| S0 | `_s0_stakeholders` | S |
+| S1 | `_s1_functions` (before the requirement import), `_s1_bindings` (after it) | R |
+| S2 | `_s2_margin_hold` (done in step 0) | A |
+| S2 | `_s2_allocations` (skip when `seed.recording`) | A |
+| S2 | `_s2_readiness` | L |
+| S2 | `_s2_conops_scenarios` | D |
+| S3 | `_s3_risks` (after the risk loop), `_s3_trades`, `_s3_open_items` | D |
+| S3 | `_s3_changes` | L |
+| S3 | `_s3_validation`, `_s3_assumptions` | S |
+| S3 | `_s3_negotiations` (skip when `seed.recording`) | H |
+| S4 | `_s4_ait_v2` (after `ait/propose`) | A |
+| S4 | `_s4_licensing` (skipped when `seed.recording`) | L |
+
+The addendum work (ICD issues, reliability, thermal model, debris assessment, change control,
+cost) has no seed step. The walkthrough does it on camera. An owner who needs fixture data for
+a test adds a step at the end of its stage, in the same pattern, and lists it here.
+
+### 9.8 Seam files in wave 3
+
+| Seam file | Owner | Others |
+|---|---|---|
+| `S/db/migrate.py` | step 0 | append-only, one block per agent at the end |
+| `S/services/export_context/__init__.py` (`SECTIONS`, `StudyExport`) | X (step 0 registered the 15 sections) | ask X |
+| `S/services/diagrams/__init__.py` (KINDS) | X | ask X for a line |
+| `S/app.py` router list | A (step 0 registered every router) | no edits during the wave |
+| `CF/gate_exit_criteria.yaml`, `S/services/gate_evaluator.py` | R | others expose one evidence function each (9.6) |
+| `CF/se_protocol.yaml` | S | D, R and A send rows by note |
+| `S/services/key_numbers.py` | L | H and S read it |
+| `S/db/models_changes.py` | `change_proposals` L; `open_items`, `change_approvals` D | each edits only its own class |
+| `tests/fixtures/nfi/seed.py` | each agent fills only its named step | append-only within a step |
+| `tests/fixtures/nfi/*.yaml` | frozen baseline (v2 copies) | read-only; refresh only from `/home/claude/nfi/v2/` |
+| `tests/test_api/test_project_file.py` | step 0 added `_wave3_rows` and the round trip | owners may replace their row by a route call; data round-trip tests go in their own files |
+| Mount lines | the host's owner, one line each on request | `PhasePanel` in `VVPanel` (D); `ValidationPanel` in `AitPanel` (A); `StakeholderEditor` in `MissionNeedCard` (D); `NegotiationPanel`, `ChangesPanel`, the open-item list and the change-control card in `DecisionPanel` (D); `ImpactPreview` in `SeatDrawer.tsx` (D), Modes (H) and Budget (A); `SensitivityView` in `DataBudget` (H) and Decide (D); the ICD issue column in `ICDTable` (R); the reliability, FMEA and thermal-model views in `VVPanel`/`AitPanel` (A, D mounts in `VVPanel`); the debris assessment in `LicensingPanel` (L) |
+
+### 9.9 Deviations from the plan in step 0
+
+- `mode_model._maturity_pct` (H's file) now passes `resource="power"`, so the Modes energy balance
+  uses the power maturity class. This is a one-line change.
+  - `mode_model.equipment_budgets` (the per-line "every budget" view) still uses one class per
+    unit for mass and power. Left to H.
+- `margin_policy._category`, `maturity` and `maturity_percent` take a `resource` argument
+  (default `mass`; no behaviour change for existing callers).
+- `VERIFICATION_STAGES` gained `PRR` and `SRR`.
+- `Study.margin_policy` is a new field on the common Study model.
+- The radio's RX and TX power units (5 % and 10 %) share one tool element, so it takes the larger
+  class (10 %). The S2 roll-up gives 3.871 / 4.172 / 5.006 kg (exact) and 4.168 / 4.562 /
+  5.474 W, against 4.168 / 4.555 / 5.466 W in `budgets.yaml` (within the plan's ±0.02 W). A
+  separate RX/TX element would close the 0.008 W gap; it is not worth a new element.
+- SRR-EC-02 (`gate_evaluator._has_acceptance`) and the SMART "measurable" check
+  (`requirement_engine`) accept a non-empty v2 `acceptance` as the pass criterion. Without it,
+  two v2 rows (PAY-OPT-06 and THM-PAY-02, whose measure is only in the text) failed the existing
+  tests. This is the minimal part of 3.R2; R refines it.

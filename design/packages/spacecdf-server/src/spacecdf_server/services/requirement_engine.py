@@ -305,6 +305,8 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     elif (req.get("verification_method") or "") in ("T", "I", "R", "A") \
             and any(w in f" {text.lower()} " for w in CITES_DOCUMENT):
         check.measurable = True     # wave 2: the levels are those of a cited document (launch ICD, ECSS)
+    elif (req.get("verification_method") or "") in ("T", "I", "R", "A") and str(req.get("acceptance") or "").strip():
+        check.measurable = True     # wave 3 step 0: the v2 acceptance criterion states the pass/fail measure
     else:
         issues.append("Not measurable: add a threshold value with operator and unit")
         check.codes.append("measurable")

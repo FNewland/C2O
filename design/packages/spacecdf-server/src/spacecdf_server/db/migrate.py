@@ -278,3 +278,27 @@ async def ensure_schema_upgrades(engine: AsyncEngine) -> list[str]:
     if n:
         added.append(f"{IFACE_TABLE}.canonical_vocabulary({n} rows)")
     return added
+
+
+# ── Wave 3, step 0: the tables and columns of the wave ─────────────────
+#
+# New tables (``create_all`` creates them; registered at the end of ``models.py``):
+#   allocation_ledger (models_alloc, A) · se_moes, se_validation_activities, se_need_validation,
+#   se_assumptions (models_se, S) · change_proposals (L), open_items (D) (models_changes) ·
+#   negotiation_records (models_negotiation, H).
+# New columns on existing tables (added by ``_upgrade_sync`` above, nothing to write here):
+#   requirements.acceptance, verification_model, verification_event, budget_ref, open_item_note,
+#   function_codes_json, allocation_codes_json (3.0b).
+# Risk residual likelihood / consequence and owner seat live in the study's risk register JSON
+# (``Study.risk_register``), so they need no column.
+#
+# Append-only from here: one block per agent at the end of the file (data migrations only;
+# prefer JSON fields to new columns). Owners: W0_SEAMS.md §9.
+
+#   PI addendum: icd_issues (models_icd, R) · reliability_blocks, fmea_rows (models_reliability, A) ·
+#   thermal_nodes, thermal_couplings, thermal_cases (models_thermal, A) · debris_assessments
+#   (models_debris, L) · change_approvals (models_changes, D) · cost_items (models_cost, A).
+WAVE3_TABLES = ("allocation_ledger", "se_moes", "se_validation_activities", "se_need_validation",
+                "se_assumptions", "change_proposals", "open_items", "negotiation_records",
+                "icd_issues", "reliability_blocks", "fmea_rows", "thermal_nodes", "thermal_couplings",
+                "thermal_cases", "debris_assessments", "change_approvals", "cost_items")

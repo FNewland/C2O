@@ -1525,3 +1525,99 @@ async def populate_subsystems(
         "message": (f"Created {len(created_elements)} elements ({equipment_count} equipment items from KB), "
                     f"{len(created_interfaces)} interfaces"),
     }
+
+
+# ─── wave 3, step 0: the study's margin hold and the allocation ledger (A) ─────────────
+
+@router.get("/studies/{study_id}/margin-policy")
+async def get_margin_policy(study_id: str) -> dict:
+    """The study's own margin choices (``study.margin_policy``) and the ladder they sit on."""
+    from ..services.margin_policy import ladder
+    from ._wave3_stub import study_or_404
+    study = study_or_404(study_id)
+    return {"study_id": study_id, "margin_policy": dict(getattr(study, "margin_policy", None) or {}),
+            "ladder": ladder()}
+
+
+@router.put("/studies/{study_id}/margin-policy")
+async def put_margin_policy(study_id: str, body: dict[str, Any]) -> dict:
+    """Set the study's margin hold: ``{"study_override": {"percent": 20, "through_gate": "pdr",
+    "resources": ["mass", "power"], "rationale": "..."}}`` (``{"study_override": null}`` clears it).
+    The roll-up applies it (``services/rollup.margin_hold``); the ladder is unchanged."""
+    from ..db.study_repo import db_save_study
+    from ..services import rule_config as rc
+    from ..services.margin_policy import LADDER_GATES
+    from ._wave3_stub import study_or_404
+    study = study_or_404(study_id)
+    pol = dict(getattr(study, "margin_policy", None) or {})
+    if "study_override" in body:
+        ov = body.get("study_override")
+        if ov is None:
+            pol.pop("study_override", None)
+        else:
+            if not isinstance(ov, dict):
+                raise HTTPException(422, "study_override must be an object or null")
+            lim = rc.load("margin_policy").get("study_override") or {}
+            try:
+                pct = float(ov.get("percent"))
+            except (TypeError, ValueError):
+                raise HTTPException(422, "study_override.percent must be a number")
+            if not float(lim.get("min_percent", 0)) <= pct <= float(lim.get("max_percent", 50)):
+                raise HTTPException(422, f"study_override.percent must be within {lim.get('min_percent', 0)}"
+                                         f"–{lim.get('max_percent', 50)} %")
+            through = str(ov.get("through_gate") or "").strip().lower() or None
+            if through is not None and through not in LADDER_GATES:
+                raise HTTPException(422, f"through_gate must be one of {list(LADDER_GATES)}")
+            res = [r for r in (ov.get("resources") or ["mass", "power"]) if r in ("mass", "power")]
+            pol["study_override"] = {"percent": pct, "through_gate": through, "resources": res or ["mass", "power"],
+                                     "rationale": str(ov.get("rationale") or "")[:2000]}
+    study.margin_policy = pol
+    await db_save_study(study)
+    return {"study_id": study_id, "margin_policy": pol}
+
+
+@router.get("/studies/{study_id}/allocation-ledger")
+async def list_allocation_ledger(study_id: str) -> dict:
+    """TODO(A, 3.A2): the ledger lines (``allocation_ledger``) with the Systems reserve."""
+    from ._wave3_stub import stub_list
+    return stub_list(study_id, "A", "3.A2", reserve=None)
+
+
+@router.post("/studies/{study_id}/allocation-ledger")
+async def create_ledger_line(study_id: str, body: dict[str, Any]) -> dict:
+    """TODO(A, 3.A2)."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A2")
+
+
+@router.post("/studies/{study_id}/allocation-ledger/import")
+async def import_ledger(study_id: str, body: dict[str, Any]) -> dict:
+    """TODO(A, 3.A2): every allocation of budgets.yaml in one call (seed S2)."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A2")
+
+
+@router.patch("/studies/{study_id}/allocation-ledger/{line_id}")
+async def update_ledger_line(study_id: str, line_id: str, body: dict[str, Any]) -> dict:
+    """TODO(A, 3.A2): a non-owner edit becomes a pending change."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A2")
+
+
+@router.post("/studies/{study_id}/allocation-ledger/{line_id}/agree")
+async def agree_ledger_line(study_id: str, line_id: str) -> dict:
+    """TODO(A, 3.A2): the owner seat agrees its line."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A2")
+
+
+@router.post("/studies/{study_id}/allocation-ledger/{line_id}/dispute")
+async def dispute_ledger_line(study_id: str, line_id: str, body: dict[str, Any]) -> dict:
+    """TODO(A, 3.A2)."""
+    from ._wave3_stub import not_implemented, study_or_404
+    study_or_404(study_id)
+    raise not_implemented("A", "3.A2")
