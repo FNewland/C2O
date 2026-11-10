@@ -16,7 +16,10 @@ Sections, in collection order (``SECTIONS``); each lives in its own module
 that owns a section edits only that file (ownership table in design/docs/dev/W0_SEAMS.md):
 
 need, mission, elements, rollup, requirements, verification, risks, trades, decisions, gates,
-analyses, modes, data_budget, links, contacts, licensing, ait, schedule
+analyses, modes, data_budget, links, contacts, licensing, ait, schedule, cdr, functions
+
+(``cdr`` and ``functions`` were added by W4.01 for the review packs: the CDR design model and the
+function tree.)
 
 Contract for a section collector:
 
@@ -44,7 +47,7 @@ logger = logging.getLogger(__name__)
 SECTIONS: tuple[str, ...] = (
     "need", "mission", "elements", "rollup", "requirements", "verification", "risks", "trades",
     "decisions", "gates", "analyses", "modes", "data_budget", "links", "contacts", "licensing",
-    "ait", "schedule",
+    "ait", "schedule", "cdr", "functions",
 )
 
 Collector = Callable[["CollectContext"], Awaitable[dict]]
@@ -88,6 +91,8 @@ class StudyExport:
     licensing: dict = field(default_factory=dict)
     ait: dict = field(default_factory=dict)
     schedule: dict = field(default_factory=dict)
+    cdr: dict = field(default_factory=dict)
+    functions: dict = field(default_factory=dict)
     errors: dict[str, str] = field(default_factory=dict)
 
     def section(self, name: str) -> dict:

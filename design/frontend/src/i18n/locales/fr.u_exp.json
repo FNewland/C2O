@@ -1,0 +1,9 @@
+{
+  "{{gate}} review data pack": "Dossier de revue {{gate}}",
+  "{{name}} ({{covers}}): the documents this review expects, built from the study, with an index of what is still missing": "{{name}} ({{covers}}) : les documents attendus à cette revue, produits à partir de l’étude, avec un index de ce qui manque encore",
+  "{{name}} ({{covers}}): skeleton pack filled from the study; the index lists what later work adds": "{{name}} ({{covers}}) : dossier squelette rempli à partir de l’étude ; l’index liste ce que les travaux suivants ajoutent",
+  "Verification Control Document": "Document de contrôle de la vérification",
+  "Every verification item by level, with the close-out status (ECSS-E-ST-10-02C)": "Chaque élément de vérification par niveau, avec son état de clôture (ECSS-E-ST-10-02C)",
+  "Requirement Traceability Matrix": "Matrice de traçabilité des exigences",
+  "Requirement, method, stage, status and linked elements and functions": "Exigence, méthode, étape, état, éléments et fonctions liés"
+}

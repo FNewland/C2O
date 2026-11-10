@@ -3,6 +3,7 @@
 * ``GET /api/studies/{study_id}/rollup?gate=``           services/rollup.py (mass, power, form factor)
 * ``GET /api/studies/{study_id}/export-context?gate=&lang=&sections=``
                                                           services/export_context.collect, as JSON
+* ``GET /api/studies/{study_id}/review-packs``           the review packs the study can export (W4.02)
 
 The second one is what every document generator sees; it is handy for checking a study before
 exporting and for tools (textbook number extraction, W10.03).
@@ -48,3 +49,16 @@ async def study_export_context(
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return sx.as_dict()
+
+
+@router.get("/studies/{study_id}/review-packs")
+async def study_review_packs(study_id: str) -> dict:
+    """The review data packs the study can export (W4.02): the gates of its profile, then QR, AR
+    and FRR. ``complete`` is false for the skeleton packs after PDR. Feeds the Export drawer."""
+    from .exports.packs import available_packs
+    from .studies import get_study_store
+    study = get_study_store().get(study_id)
+    if study is None:
+        raise HTTPException(status_code=404, detail=f"Study {study_id} not found")
+    from .gates import study_profile
+    return {"study_id": study_id, "profile": study_profile(study).get("id"), "packs": available_packs(study)}

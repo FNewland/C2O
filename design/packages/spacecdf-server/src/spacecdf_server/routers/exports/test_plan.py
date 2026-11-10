@@ -3,7 +3,9 @@
 Test plan (json/docx/xlsx).
 Routes (prefix /api/exports): POST /test-plan/{study_id}
 
-Moved verbatim from the single routers/exports.py in W0.1 (no behaviour change).
+W1.09j: the launcher comes from the mission definition (``launch_vehicle``) or from the launch
+segment elements; with no launcher named the levels are a labelled generic envelope (they used
+to default silently to one specific launcher).
 See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
 """
 from __future__ import annotations
@@ -16,6 +18,53 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from ..studies import get_study_store
 
 router = APIRouter()
+
+#: launchers with an envelope in spacecdf_common.physics.structures.launch_loads
+KNOWN_LAUNCHERS = ("electron", "falcon_9", "falcon_heavy", "vega_c", "ariane_6", "pslv", "soyuz", "h3", "sls",
+                   "starship", "new_glenn", "long_march_5")
+#: quasi-static envelope used when no launcher is identified (C2O default; labelled as such)
+GENERIC_QSL = (6.0, 2.0)
+
+
+def _match_launcher(text: str) -> str | None:
+    t = (text or "").lower().replace("-", " ").replace("_", " ")
+    for lv in KNOWN_LAUNCHERS:
+        if lv.replace("_", " ") in t:
+            return lv
+    return None
+
+
+def identify_launcher(study, elements: list[dict]) -> tuple[str | None, str, str]:
+    """(envelope key or None, label, source) of the study's launcher: ``mission.launch_vehicle``,
+    then the launch segment elements, then the study notes."""
+    req = getattr(study, "requirements", None) if study is not None else None
+    lv = getattr(req, "launch_vehicle", None) if req is not None else None
+    if lv:
+        return _match_launcher(str(lv)), str(lv), "mission.launch_vehicle"
+    ids = {e.get("id"): e for e in elements}
+
+    def in_launch(e: dict) -> bool:
+        cur, n = e, 0
+        while cur is not None and n < 50:
+            if cur.get("segment") == "launch":
+                return True
+            cur, n = ids.get(cur.get("parent_id")), n + 1
+        return False
+
+    launch = [e for e in elements if e.get("element_type") != "segment" and in_launch(e)]
+    for e in launch:
+        perf = e.get("performance") if isinstance(e.get("performance"), dict) else {}
+        text = " ".join(str(x) for x in (perf.get("launch_vehicle"), e.get("name"), e.get("description")) if x)
+        key = _match_launcher(text)
+        if key:
+            return key, str(perf.get("launch_vehicle") or e.get("name")), "launch segment element"
+    if launch:
+        return None, f"{launch[0].get('name')} (launcher not named)", "launch segment element"
+    notes = getattr(study, "notes", "") if study is not None else ""
+    key = _match_launcher(notes or "")
+    if key:
+        return key, key, "study notes"
+    return None, "not selected", "none"
 
 @router.post("/test-plan/{study_id}")
 async def export_test_plan(
@@ -38,7 +87,17 @@ async def export_test_plan(
 
     # Read elements for component-level tests
     elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-    space_components = [e for e in elements if e.get("segment") == "space" and e.get("element_type") == "component"]
+    by_id = {e.get("id"): e for e in elements}
+
+    def _segment(e: dict) -> str | None:   # components inherit the segment of their ancestors
+        cur, n = e, 0
+        while cur is not None and n < 50:
+            if cur.get("segment"):
+                return cur["segment"]
+            cur, n = by_id.get(cur.get("parent_id")), n + 1
+        return None
+
+    space_components = [e for e in elements if e.get("element_type") == "component" and _segment(e) == "space"]
 
     # Read interfaces for integration test matrix
     study_interfaces = [
@@ -107,19 +166,14 @@ async def export_test_plan(
     env_profile: dict = {}
     try:
         from spacecdf_common.physics.structures import launch_loads
-        # Try to detect launch vehicle from study notes or elements
-        launch_vehicle = "falcon_9"  # default
-        if study:
-            notes = getattr(study, "notes", "") or ""
-            for lv in ["electron", "falcon_9", "falcon_heavy", "vega_c", "ariane_6",
-                        "pslv", "soyuz", "h3", "sls", "starship", "new_glenn", "long_march_5"]:
-                if lv.replace("_", " ") in notes.lower() or lv in notes.lower():
-                    launch_vehicle = lv
-                    break
-
-        axial_g, lateral_g = launch_loads(launch_vehicle)
+        lv_key, lv_label, lv_source = identify_launcher(study, elements)
+        launch_vehicle = lv_label
+        axial_g, lateral_g = launch_loads(lv_key) if lv_key else GENERIC_QSL
         env_profile = {
             "launch_vehicle": launch_vehicle,
+            "launch_vehicle_source": lv_source,
+            "levels_source": (f"launch_loads('{lv_key}') envelope" if lv_key else
+                              "generic rideshare envelope (C2O default): replace with the launch provider's levels"),
             "quasi_static_loads": {
                 "axial_g": axial_g,
                 "lateral_g": lateral_g,
@@ -254,7 +308,10 @@ async def export_test_plan(
         if env_profile.get("note"):
             doc.add_paragraph(env_profile["note"])
         if env_profile.get("launch_vehicle"):
-            doc.add_paragraph(f"Launch vehicle: {env_profile['launch_vehicle']}")
+            doc.add_paragraph(f"Launch vehicle: {env_profile['launch_vehicle']} "
+                              f"(from {env_profile.get('launch_vehicle_source', 'the study')})")
+            if env_profile.get("levels_source"):
+                doc.add_paragraph(f"Levels: {env_profile['levels_source']}")
 
         qsl = env_profile.get("quasi_static_loads", {})
         if qsl:

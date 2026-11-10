@@ -1,6 +1,7 @@
 """SpaceCDF Word document family: rmp. Risk Management Plan (RMP).
 
-Moved verbatim from services/docx_generator.py in W0.1 (no behaviour change).
+W1.09b: the register is the study's ``risk_register`` (via the export collector), every risk,
+highest likelihood x consequence first, with category, owner, status, mitigation and source.
 See design/docs/dev/W0_SEAMS.md for ownership.
 """
 from __future__ import annotations
@@ -19,6 +20,13 @@ from ._common import (
     _setup_margins,
     _setup_styles,
 )
+
+
+def _score(r: dict[str, Any]) -> int:
+    try:
+        return int(r.get("score") or (int(r.get("likelihood") or 0) * int(r.get("consequence") or 0)))
+    except (TypeError, ValueError):
+        return 0
 
 
 def generate_rmp_docx(study_name: str, data: dict[str, Any]) -> bytes:
@@ -45,14 +53,17 @@ def generate_rmp_docx(study_name: str, data: dict[str, Any]) -> bytes:
                  "Status tracked: Open / Mitigating / Closed / Accepted.")
 
     _add_section(doc, "3", "Risk Register")
-    risks = data.get("risks", [])
+    risks = sorted(data.get("risks", []) or [], key=lambda r: (-_score(r), str(r.get("id") or "")))
     if risks:
-        _add_table(doc, ["ID", "Risk", "L", "C", "Score", "Mitigation", "Status"],
-                   [[r.get("id", ""), r.get("title", ""), str(r.get("likelihood", "")),
-                     str(r.get("consequence", "")), str(r.get("likelihood", 0) * r.get("consequence", 0)),
-                     r.get("mitigation", "")[:60], r.get("status", "")] for r in risks[:20]])
+        doc.add_paragraph(f"{len(risks)} risks, highest likelihood x consequence first; "
+                          f"{sum(1 for r in risks if (r.get('status') or 'open') != 'closed')} not closed.")
+        _add_table(doc, ["ID", "Risk", "Category", "L", "C", "Score", "Owner", "Status", "Mitigation", "Source"],
+                   [[r.get("id", ""), r.get("description") or r.get("title") or "", r.get("category") or "",
+                     str(r.get("likelihood", "")), str(r.get("consequence", "")), str(_score(r)),
+                     r.get("owner") or "", r.get("status") or "", r.get("mitigation") or "", r.get("source") or ""]
+                    for r in risks])
     else:
-        doc.add_paragraph("Risk register to be populated during Phase A.")
+        doc.add_paragraph("The study has no risk in its register yet.")
 
     _add_section(doc, "4", "Risk Acceptance Criteria")
     doc.add_paragraph("Risks scoring <= 9 may be accepted by the Project Manager. "

@@ -1,6 +1,9 @@
 """SpaceCDF Word document family: ts. Technical Specification (TS).
 
-Moved verbatim from services/docx_generator.py in W0.1 (no behaviour change).
+W1.09a: every requirement the team entered (no row cap), by level then code, with code, type,
+threshold (``threshold_op`` + ``threshold_value`` [+ unit]), verification method, parent,
+allocation and rationale. Interface requirements generated from links (``IR-*``) are in the IRD.
+The type grouping and the environment section are W4.06.
 See design/docs/dev/W0_SEAMS.md for ownership.
 """
 from __future__ import annotations
@@ -19,6 +22,17 @@ from ._common import (
     _setup_margins,
     _setup_styles,
 )
+
+
+def threshold_text(r: dict[str, Any]) -> str:
+    """``>= 10`` / ``<= 30 s``: the stored threshold of a requirement ("" when none)."""
+    val = r.get("threshold_value")
+    if val is None or val == "":
+        return ""
+    if isinstance(val, float) and val == int(val):
+        val = int(val)
+    parts = [str(r.get("threshold_op") or ""), str(val), str(r.get("unit") or r.get("threshold_unit") or "")]
+    return " ".join(p for p in parts if p).strip()
 
 
 def generate_ts_docx(study_name: str, data: dict[str, Any]) -> bytes:
@@ -44,12 +58,22 @@ def generate_ts_docx(study_name: str, data: dict[str, Any]) -> bytes:
     doc.add_paragraph(mission_need.get("problem_statement", "To be defined"))
 
     _add_section(doc, "4", "Technical Requirements")
-    reqs = data.get("requirements", [])
+    reqs = [r for r in data.get("requirements", []) if not str(r.get("code") or "").startswith("IR-")]
     if reqs:
-        _add_table(doc, ["ID", "Type", "Requirement", "Threshold", "V-Method"],
-                   [[r.get("id", ""), r.get("req_type", ""), r.get("text", "")[:80],
-                     f"{r.get('operator', '')} {r.get('threshold', '')} {r.get('unit', '')}",
-                     r.get("verification_method", "A")] for r in reqs[:80]])
+        levels: list[str] = []
+        for r in reqs:
+            if (r.get("level") or "") not in levels:
+                levels.append(r.get("level") or "")
+        doc.add_paragraph(f"{len(reqs)} requirements, by level ({', '.join(l for l in levels if l)}) then code.")
+        for i, lvl in enumerate(levels, start=1):
+            rows = [r for r in reqs if (r.get("level") or "") == lvl]
+            _add_section(doc, f"4.{i}", f"{(lvl or 'Unspecified').capitalize()} requirements ({len(rows)})")
+            _add_table(doc, ["Code", "Type", "Requirement", "Threshold", "Method", "Parent", "Allocated to", "Rationale"],
+                       [[r.get("code") or r.get("id", ""), r.get("req_type") or "", r.get("text") or "",
+                         threshold_text(r), r.get("verification_method") or "", r.get("parent_code") or "",
+                         r.get("allocated_to") or "", r.get("rationale") or ""] for r in rows])
+    else:
+        doc.add_paragraph("No requirements have been entered for this study.")
 
     _add_section(doc, "5", "Interface Requirements")
     doc.add_paragraph("Interface requirements are defined in the IRD (separate document).")
