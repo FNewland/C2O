@@ -26,8 +26,8 @@ components:
     interfaces: [I2C, PC/104]
     operating_temp_c: [-40, 85]
     notes: >-
-      Standard CubeSat EPS, flight proven on 100+ missions. Corrected from the P31u datasheet (NFI
-      research 2026-11-10 (bus.md)). The datasheet product is 'NanoPower P31u' (name kept)
+      Standard CubeSat EPS, flight proven on 100+ missions. Corrected from the P31u datasheet (C2O
+      equipment research 2026-11, bus). The datasheet product is 'NanoPower P31u' (name kept)
     sources:
       - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanopower-p31u-32_(1).pdf
 
@@ -56,7 +56,7 @@ components:
     operating_temp_c: [-35, 85]
     notes: >-
       Modular EPS for 6U-12U. Handles higher power missions. Corrected from the P60 dock and ACU-200
-      datasheets (NFI research 2026-11-10 (bus.md)). The datasheet names no missions; Arctic
+      datasheets (C2O equipment research 2026-11, bus). The datasheet names no missions; Arctic
       Weather Satellite heritage not verified
     sources:
       - https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanopower-p60-dock-3.1.pdf

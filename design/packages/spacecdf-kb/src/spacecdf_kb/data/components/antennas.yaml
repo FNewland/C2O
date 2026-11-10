@@ -77,7 +77,7 @@ components:
       deploy_power_w: 2             # < 3 s per element above 0 C, < 20 s at -40 C; standby < 40 mW
     notes: >-
       Most widely used CubeSat UHF antenna system. Corrected from the antenna-system datasheet
-      (NFI research 2026-11-10 (bus.md))
+      (C2O equipment research 2026-11, bus)
     sources:
       - https://www.isispace.nl/wp-content/uploads/2021/01/ISIS-ANTS-DSH-0001-Antenna_System_Datasheet-04_00.pdf
 
@@ -135,7 +135,7 @@ components:
       deployment: body_mounted
     notes: French space heritage, ESA-funded development
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: ant-endurosat-uhf-antenna-iii
     name: UHF Antenna III
     manufacturer: Endurosat

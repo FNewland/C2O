@@ -100,7 +100,7 @@ def test_payload_imager_category_is_schema_v2():
     assert len(imagers) >= 3 and all(c["category"] == "payload_imager" for c in imagers)
     for c in imagers:
         m = mechanical_of(c)
-        # a U-module imager, or a small catalogue camera on a bracket (NFI Alvium entries)
+        # a U-module imager, or a small catalogue camera on a bracket (Alvium entries)
         assert m["source"] == "kb" and m["mount_class"] in ("u_module", "bracket") and m["anchor"] == "nadir"
         assert m["boresight"] == [0, 0, -1] and m["fov_deg"] > 0 and c["mass_kg"] > 0
     eosat = next(c for c in imagers if c["id"] == "pl-imager-2u-eosat")

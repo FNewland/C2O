@@ -68,7 +68,7 @@ components:
     operating_temp_c: [-40, 85]
     notes: >-
       Multi-constellation GNSS, highest accuracy but needs space qualification. Corrected from the
-      product sheet (NFI research 2026-11-10 (bus.md))
+      product sheet (C2O equipment research 2026-11, bus)
     sources:
       - https://www.gnss.ca/brochures/oem719-product-sheet.html
 
@@ -99,7 +99,7 @@ components:
     category: gps_receiver
     mass_kg: 0.057              # kit 54-57 g by cable length; receiver 31 g
     dimensions_mm: [72, 46, 11]
-    cost_keur: 20               # (est.) NFI brief says CAD 5k; get a quote
+    cost_keur: 20               # (est.) get a quote
     trl: 9
     performance:
       position_accuracy_m: 1.5
@@ -110,13 +110,13 @@ components:
     power_w: 1.3
     interfaces: [UART]
     notes: >-
-      NovAtel OEM719 + antenna, no COCOM limits. Corrected from the kit datasheet (NFI research
-      2026-11-10 (bus.md)); cost (est.)
+      NovAtel OEM719 + antenna, no COCOM limits. Corrected from the kit datasheet (C2O equipment
+      research 2026-11, bus); cost (est.)
     sources:
       - https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanosense-gpskit-26.pdf
       - https://www.gnss.ca/brochures/oem719-product-sheet.html
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: gps-skyfox-pinav-ng
     name: piNAV-NG
     manufacturer: SkyFox Labs

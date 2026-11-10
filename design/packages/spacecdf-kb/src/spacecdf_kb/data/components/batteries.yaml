@@ -46,8 +46,8 @@ components:
       configurations_v: {2S-4P: 7.2, 4S-2P: 14.4, 8S-1P: 28.8}
       heater_w: 6
     notes: >-
-      High-density CubeSat battery, 4S configuration. Corrected from the 2026 datasheet (NFI
-      research 2026-11-10 (bus.md)): 8 cells, 2S-4P / 4S-2P / 8S-1P, 6 W heater; PCB electronics -40
+      High-density CubeSat battery, 4S configuration. Corrected from the 2026 datasheet (C2O
+      equipment research 2026-11, bus): 8 cells, 2S-4P / 4S-2P / 8S-1P, 6 W heater; PCB electronics -40
       to +85 C. Heritage ESAIL / Arctic Weather Satellite not verified
     sources:
       - https://gomspace.com/wp-content/uploads/2026/01/gs-ds-nanopower-bpx-3-2.1-DS-1018161-1-4.1-1.pdf
@@ -206,7 +206,7 @@ components:
       heater_w: 6               # 7 W max
     interfaces: [I2C]
     notes: >-
-      4S1P configuration, ISS-approved ground breaker. Datasheet (NFI research 2026-11-10
+      4S1P configuration, ISS-approved ground breaker. Datasheet (C2O equipment research 2026-11
       (bus.md)): 43 Wh in both configurations; heater 6 W typical, 7 W max; mass kept at 258 g
       (features list says 270 g)
     sources:

@@ -2,7 +2,7 @@
 # They command the cameras, time-tag and store frames and hand data to the OBC or radio
 # (interface role "Payload data handling"). performance: processor, ram_mb, storage_gb, os,
 # csi2_ports / csi2_lanes, camera_interfaces, tid_krad.
-# NFI research 2026-11-10 (nfi/research/payload.md). Every entry lists its `sources:`;
+# C2O equipment research 2026-11 (payload). Every entry lists its `sources:`;
 # `estimated:` lists the fields that are estimates. cost_keur conversions: 1 USD = 0.92 EUR.
 
 components:
@@ -136,6 +136,6 @@ components:
       trigger_out: TTL
       pps_input: true
     estimated: [cost_keur, trl]
-    notes: No MIPI CSI-2; it is relevant only if NFI moves to GigE or Camera Link cameras.
+    notes: No MIPI CSI-2; it is relevant only if a mission moves to GigE or Camera Link cameras.
     sources:
       - https://resources.epiqsolutions.com/hubfs/Xiphos/Xiphos%20Q8%20Camera%20Board%20spec%20sheet.pdf?hsLang=en

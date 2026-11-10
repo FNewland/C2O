@@ -3,7 +3,7 @@
 # the payload but no power. performance: focal_length_mm, f_number_range, format,
 # wavelength_nm, filter_thread; filters: center_nm, fwhm_nm, diameter_mm,
 # transmission_min, blocking_od, blocking_range_nm.
-# NFI research 2026-11-10 (nfi/research/payload.md). Every entry lists its `sources:`;
+# C2O equipment research 2026-11 (payload). Every entry lists its `sources:`;
 # `estimated:` lists the fields that are estimates. cost_keur conversions: 1 CAD = 0.66 EUR,
 # 1 USD = 0.92 EUR, 1 GBP = 1.17 EUR, 1 TWD = 0.029 EUR (assumed rates).
 
@@ -27,7 +27,7 @@ components:
       filter_thread: M35.5x0.5
     estimated: [cost_keur]
     notes: >-
-      Recommended NFI SWIR lens; it covers the 11.4 mm IMX992 diagonal with margin. It has a
+      Recommended SWIR lens for a 35 mm, IMX992 camera; it covers the 11.4 mm IMX992 diagonal with margin. It has a
       manual iris and focus that must be staked and vented for vacuum. The 865 nm band is out of
       its design range.
     sources:
@@ -141,7 +141,7 @@ components:
       filter_thread: M30.5x0.5
     estimated: [cost_keur]
     notes: >-
-      Recommended NFI VNIR lens. It covers the 1.1-inch IMX542, is NIR-corrected, and has fixed
+      Recommended VNIR lens for a 50 mm, IMX542 camera. It covers the 1.1-inch IMX542, is NIR-corrected, and has fixed
       aperture plates instead of an iris. Use the F2.4 or F2.8 plate.
     sources:
       - https://aegis-elec.com/kowa-lm50ec-ir.html

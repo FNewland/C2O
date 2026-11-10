@@ -56,7 +56,7 @@ components:
       area_m2: 0.008
       deployment: body_mounted
     notes: >-
-      Datasheet (NFI research 2026-11-10 (bus.md)): 2x AzurSpace 3G30A, 60.36 cm2 of cells;
+      Datasheet (C2O equipment research 2026-11, bus): 2x AzurSpace 3G30A, 60.36 cm2 of cells;
       U-variants carry a 0.038 Am2 PCB magnetorquer; -40 to +85 C
     sources:
       - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanopower-p110-210.pdf
@@ -131,7 +131,7 @@ components:
       area_m2: 0.060
       deployment: deployable_double_wing
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: sp-endurosat-3u-body
     name: 3U Solar Panel (body-mounted)
     manufacturer: Endurosat
@@ -189,7 +189,7 @@ components:
       cell_efficiency_percent: 30
       area_m2: 0.063                # (est.) 21 cells
       deployment: deployable_double_wing
-    notes: Documented fallback for the NFI deployable array (2 needed). Burn-wire release. EOL, area and cost (est.).
+    notes: Documented fallback for a 3U deployable array (2 needed). Burn-wire release. EOL, area and cost (est.).
     sources:
       - https://www.endurosat.com/products/3u-deployable-solar-array
 
@@ -199,7 +199,7 @@ components:
     category: solar_panel
     mass_kg: 0.250                  # (est.) per wing; no 3U mass published
     dimensions_mm: [340, 98, 6.25]  # (est.) length/width; 6.25 mm folded thickness is published
-    cost_keur: 13.6                 # brief CAD 22k for the set; list range EUR 4.4-45k
+    cost_keur: 13.6                 # (est.) published list range EUR 4.4-45k
     trl: 9                          # "TRL 9 since 2013, 40+ missions" (vendor)
     heritage_missions: []
     performance:
@@ -212,7 +212,7 @@ components:
       embedded_antennas: VHF to L-band, 2 monopoles or 1 dipole
       embedded_magnetorquer: true
     operating_temp_c: [-80, 130]
-    notes: "The proposed NFI array. Spring hinges with \"artificial muscle\" release within 5 s. Panels 1.5 mm thick. Mass, envelope and power (est./unknown): request the 3U datasheet."
+    notes: "Candidate 3U deployable array. Spring hinges with \"artificial muscle\" release within 5 s. Panels 1.5 mm thick. Mass, envelope and power (est./unknown): request the 3U datasheet."
     sources:
       - https://satsearch.co/products/exa-dmsa-3u-a-deployable-multifunction-solar-array
       - https://www.satnow.com/products/solar-panels/ecuadorian-space-agency/102-1595-dmsa-deployable-multifunction-solar-array

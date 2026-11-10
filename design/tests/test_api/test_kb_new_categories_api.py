@@ -1,4 +1,4 @@
-"""NFI KB categories over HTTP: the Equipment Catalog shows them under their domain, and
+"""New KB categories over HTTP: the Equipment Catalog shows them under their domain, and
 selecting an integrated ADCS, a drag sail, and a camera + lens + controller lands in the
 equipment budgets (mass, cost, power per mode) and satisfies the equipment needs."""
 from __future__ import annotations

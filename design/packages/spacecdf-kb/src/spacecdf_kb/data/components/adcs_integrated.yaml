@@ -1,7 +1,7 @@
 # Integrated ADCS units (category adcs_integrated, KB schema v2 with `mechanical:`)
 # One unit = ADCS computer + reaction wheels + magnetorquers + sensors, so it satisfies the
 # AOCS equipment need on its own (services/equipment_logic.py: `alternatives`).
-# NFI research 2026-11-10 (nfi/research/bus.md). Every entry lists its `sources:`;
+# C2O equipment research 2026-11 (bus). Every entry lists its `sources:`;
 # values not on a manufacturer or catalogue page say "(est.)" in `notes`.
 # cost_keur conversions: 1 USD = 0.86 EUR, 1 CAD = 0.62 EUR (approximate late-2025 rates).
 
@@ -35,7 +35,7 @@ components:
       mount_class: pc104_module
       envelope_mm: [96, 90, 57]
       stack_height_mm: 57
-    notes: The proposed NFI ADCS. Gen 1 product (Jan-2023 price list); Gen 2 (CubeADCS Core) is the current line, so check obsolescence. The brief's CAD 55k matches the base system without a star tracker. Pointing accuracy and nominal power (est.).
+    notes: Candidate ADCS for a 3U Earth-observation mission. Gen 1 product (Jan-2023 price list); Gen 2 (CubeADCS Core) is the current line, so check obsolescence. The brief's CAD 55k matches the base system without a star tracker. Pointing accuracy and nominal power (est.).
     sources:
       - https://www.cubesatshop.com/wp-content/uploads/2023/05/GEN-1-ADCS-Jan-2023-web.pdf
       - https://satnow.com/products/adcs-systems/cubespace/46-1187-cubeadcs-3-axis
@@ -126,6 +126,6 @@ components:
       mount_class: u_module
       u_size: 0.5
       envelope_mm: [100, 100, 50]
-    notes: Over-performing and heavy for NFI; listed for the trade only. Power and cost (est.).
+    notes: Over-performing and heavy for a 3U fire-and-ice mission; listed for the trade only. Power and cost (est.).
     sources:
       - https://www.satnow.com/products/adcs-systems/blue-canyon-technologies/46-1186-xact-15

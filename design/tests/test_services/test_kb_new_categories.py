@@ -1,4 +1,4 @@
-"""NFI KB additions (Nov 2026): the four new component categories and the researched entries.
+"""KB additions (Nov 2026): the four new component categories and the researched entries.
 
 adcs_integrated (AOCS), deorbit_devices (structure: drag sails), payload_optics and
 payload_controllers (payload); plus researched cameras, bus units and ground equipment
@@ -12,13 +12,13 @@ import math
 
 import pytest
 
-NEW = {  # file stem -> (singular category, entries from the NFI drafts)
+NEW = {  # file stem -> (singular category, entries from the research drafts)
     "adcs_integrated": ("adcs_integrated", 4),
     "deorbit_devices": ("deorbit_device", 6),
     "payload_optics": ("payload_optic", 9),
     "payload_controllers": ("payload_controller", 5),
 }
-NFI_IN_EXISTING = {  # researched entries added to existing files
+NEW_IN_EXISTING = {  # researched entries added to existing files
     "payload_imagers": ["pl-av-alvium-1800c-530-vswir", "pl-av-alvium-1800c-1620m", "pl-raptor-owl-640m",
                         "pl-dragonfly-chameleon-swir", "pl-dragonfly-gecko", "pl-simera-multiscape100-cis"],
     "obcs": ["obc-gom-nanomind-z7000"],
@@ -60,23 +60,23 @@ def test_new_categories_load(kb):
         assert {c["category"] for c in items} == {cat}
 
 
-def test_nfi_entries_in_existing_files(kb):
-    for stem, ids in NFI_IN_EXISTING.items():
+def test_new_entries_in_existing_files(kb):
+    for stem, ids in NEW_IN_EXISTING.items():
         have = {c["id"] for c in kb.search_components(category=stem)}
         assert set(ids) <= have, (stem, set(ids) - have)
 
 
-def _nfi_entries(kb):
+def _new_entries(kb):
     out = [c for stem in NEW for c in kb.search_components(category=stem)]
-    for stem, ids in NFI_IN_EXISTING.items():
+    for stem, ids in NEW_IN_EXISTING.items():
         out += [c for c in kb.search_components(category=stem) if c["id"] in ids]
     return out
 
 
 def test_each_new_entry_validates(kb):
     from spacecdf_kb.mechanical import mechanical_of
-    entries = _nfi_entries(kb)
-    assert len(entries) == sum(n for _, n in NEW.values()) + sum(len(v) for v in NFI_IN_EXISTING.values())
+    entries = _new_entries(kb)
+    assert len(entries) == sum(n for _, n in NEW.values()) + sum(len(v) for v in NEW_IN_EXISTING.values())
     for c in entries:
         cid = c["id"]
         for key in ("id", "name", "manufacturer", "category", "trl", "performance", "sources"):
@@ -105,7 +105,7 @@ def test_estimated_values_stay_flagged(kb):
     """Estimated numbers keep their flag: '(est.)' / 'unverified' in notes, or an `estimated:` list."""
     import re
     flagged = 0
-    for c in _nfi_entries(kb):
+    for c in _new_entries(kb):
         text = f"{c.get('notes') or ''}"
         if c.get("estimated") or re.search(r"\(est\.\)|unverified|estimate", text, re.I):
             flagged += 1

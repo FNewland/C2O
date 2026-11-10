@@ -99,7 +99,7 @@ def test_equipment_selection_uses_policy_margin():
 def test_kb_copy_carries_physical_facts():
     part = find_kb_part("obc-gom-nanomind-a3200")
     f = kb_element_fields(part)
-    # A3200 values as corrected from the 2025 datasheet (NFI KB research, Nov 2026)
+    # A3200 values as corrected from the 2025 datasheet (C2O KB research, Nov 2026)
     assert f["dimensions_mm"] == [65.0, 40.0, 7.1]
     spec = f["kb_spec"]
     assert spec["form_factor"] == "GomSpace 65x40 module" and "CAN" in spec["interfaces"]

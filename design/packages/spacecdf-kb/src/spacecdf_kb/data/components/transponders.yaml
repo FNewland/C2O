@@ -251,8 +251,8 @@ components:
     interfaces: [I2C, UART, CAN]
     operating_temp_c: [-30, 85]
     notes: >-
-      Most widely used CubeSat UHF transceiver. Corrected from the AX100 datasheet (NFI research
-      2026-11-10 (bus.md)): HMAC authentication only, no encryption listed
+      Most widely used CubeSat UHF transceiver. Corrected from the AX100 datasheet (C2O equipment
+      research 2026-11, bus): HMAC authentication only, no encryption listed
     sources:
       - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanocom-ax100-33.pdf
 
@@ -305,7 +305,7 @@ components:
     power_w: 4.8
     interfaces: [I2C]
     notes: >-
-      The VHF-up/UHF-down unit has a 400.15-402 MHz TX option (NFI research 2026-11-10 (bus.md)).
+      The VHF-up/UHF-down unit has a 400.15-402 MHz TX option (C2O equipment research 2026-11, bus).
       Duplicate of txrx-isis-trxvu (different numbers); not merged
     sources:
       - https://blog.satsearch.co/2020-12-16-satellite-uhf-and-vhf-transceivers-and-transmitters
@@ -345,7 +345,7 @@ components:
     power_w: 8.0
     interfaces: [CAN]
     notes: >-
-      Corrected from the satsearch listing (NFI research 2026-11-10 (bus.md)): 400-403 MHz
+      Corrected from the satsearch listing (C2O equipment research 2026-11, bus): 400-403 MHz
       commercial or 430-440 MHz amateur; AES-256; about 1 week lead time
     sources:
       - https://satsearch.co/products/endurosat-uhf-transceiver-ii
@@ -381,7 +381,7 @@ components:
     interfaces: [UART, RS485, LVDS]
     notes: Up to 150 Mbps, DVB-S2
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: txr-aac-spacequest-trx-u
     name: TRX-U UHF Transceiver
     manufacturer: AAC Clyde Space (SpaceQuest)
@@ -392,7 +392,7 @@ components:
     trl: 9
     heritage_missions: [multiple SpaceQuest/AAC missions (unnamed in datasheet)]
     performance:
-      frequency_mhz: 401.5     # NFI downlink setting; tunable
+      frequency_mhz: 401.5     # 401-402 MHz downlink setting; tunable
       band: UHF
       tx_frequency_mhz: [370, 470]
       rx_frequency_mhz: [370, 470]
@@ -405,7 +405,7 @@ components:
     power_w: 8.0             # TX, >5 W RF at 6 V input
     interfaces: [UART]        # (est.) interface not given on datasheet page
     operating_temp_c: [-35, 80]
-    notes: Covers both NFI bands (401-402 MHz TX, 449.75-450.25 MHz RX) on paper, but max 19.2 kbps (brief target 38.4). satsearch survey lists 390-450 MHz; AAC datasheet says 370-470 MHz (used here). Interface and cost (est.).
+    notes: Covers both 401/450 MHz bands (401-402 MHz TX, 449.75-450.25 MHz RX) on paper, but max 19.2 kbps (38.4 kbps targets need another unit). satsearch survey lists 390-450 MHz; AAC datasheet says 370-470 MHz (used here). Interface and cost (est.).
     sources:
       - https://www.aac-clyde.space/wp-content/uploads/2021/11/TRX-U-datasheet.pdf
       - https://blog.satsearch.co/2020-12-16-satellite-uhf-and-vhf-transceivers-and-transmitters
@@ -431,7 +431,7 @@ components:
     power_w: 5.0            # (est.) TX <1 A, supply voltage not stated on datasheet
     interfaces: []          # not stated in datasheet excerpt
     operating_temp_c: [-40, 85]
-    notes: Best single-unit fit for NFI (401-402 MHz TX at 38.4 kbps). 449.75-450.25 MHz RX at the 450 MHz band edge must be confirmed with Spacemanic. RX <40 mA. TID 20 krad, SEE 60 MeV tested. power_w and cost (est.).
+    notes: Best single-unit fit for a 3U fire-and-ice mission (401-402 MHz TX at 38.4 kbps). 449.75-450.25 MHz RX at the 450 MHz band edge must be confirmed with Spacemanic. RX <40 mA. TID 20 krad, SEE 60 MeV tested. power_w and cost (est.).
     sources:
       - https://spacemanic.com/files/datasheet/datasheet-TRX_Murgas.pdf
       - https://satsearch.co/products/spacemanic-murgas-the-uhf-vhf-transceiver
@@ -457,7 +457,7 @@ components:
     power_w: 2.64            # 800 mA typ TX at 3.3 V; RX 45 mA
     interfaces: [I2C, UART, CAN]
     operating_temp_c: [-30, 85]
-    notes: UHF-Low variant of the AX100. Covers the NFI 401-402 MHz downlink only; a 449.75-450.25 MHz uplink needs a second receiver.
+    notes: UHF-Low variant of the AX100. Covers the 401-402 MHz space-operation downlink only; a 449.75-450.25 MHz uplink needs a second receiver.
     sources:
       - https://gomspace.com/UserFiles/Subsystems/datasheet/gs-ds-nanocom-ax100-33.pdf
 

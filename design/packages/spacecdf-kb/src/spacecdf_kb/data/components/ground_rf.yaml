@@ -162,7 +162,7 @@ components:
       High isolation protects the LNA from transmitter power. Essential
       for any S-band station doing both uplink and downlink.
 
-  # NFI research 2026-11-10 (nfi/research/mission.md): sources per entry; 'unverified' in notes = needs a quote
+  # C2O equipment research 2026-11 (mission): sources per entry; 'unverified' in notes = needs a quote
   - id: gs-rf-lna-403-filtered
     name: 400-406 MHz Filtered Low-Noise Preamplifier
     manufacturer: antennas-amplifiers.com (Nuxcom)
@@ -180,7 +180,7 @@ components:
       supply: 10-15 V, ~100 mA, optional bias-tee
     heritage_missions: [radiosonde and 403 MHz DCS reception]
     notes: >
-      Covers NFI 401-402 MHz downlink. Rejection at 450 MHz is not specified; with a co-sited
+      Covers 401-402 MHz space-operation downlink. Rejection at 450 MHz is not specified; with a co-sited
       450 MHz uplink (25-50 W) add a cavity band-pass/notch ahead of the LNA (or rely on separate
       antennas with >40 dB isolation). Weatherproof housing is an option.
     sources:
@@ -247,6 +247,6 @@ components:
     heritage_missions: []
     notes: >
       Covers the 450 MHz uplink (and a 148-150 MHz VHF fallback) with one part. 25 W is ample
-      for NFI's uplink; run backed-off. Needs heatsink/fan and a harmonic filter at the output.
+      for a 450 MHz uplink; run backed-off. Needs heatsink/fan and a harmonic filter at the output.
     sources:
       - https://www.minicircuits.com/pdfs/ZHL-50W-52-S+.pdf

@@ -69,7 +69,7 @@ categories:
   harnesses:         {mount_class: distributed}
   payload_imager:    {mount_class: u_module, envelope_mm: [98, 98, 100], anchor: nadir, face: mz,
                       boresight: [0, 0, -1], fov_deg: 10.0}
-  # NFI KB additions (2026-11). Integrated ADCS: computer + wheels + torquers in one stack module.
+  # KB additions (2026-11). Integrated ADCS: computer + wheels + torquers in one stack module.
   adcs_integrated:   {mount_class: pc104_module, envelope_mm: [96, 90, 57]}
   # Drag sail / tape: deploys from the zenith end (away from the nadir payload aperture).
   deorbit_device:    {mount_class: u_module, envelope_mm: [96, 90, 35], anchor: zenith, face: pz}

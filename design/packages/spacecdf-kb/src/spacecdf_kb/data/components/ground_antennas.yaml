@@ -207,7 +207,7 @@ components:
       Requires tight pointing. TRL 7 reflects limited CubeSat heritage
       but the ground technology itself is mature from GEO/MEO applications.
 
-  # NFI research 2026-11-10 (nfi/research/mission.md): sources per entry; 'unverified' in notes = needs a quote
+  # C2O equipment research 2026-11 (mission): sources per entry; 'unverified' in notes = needs a quote
   # Az/El rotators have no category of their own: filed here with performance.type: positioner
   - id: gs-ant-m2-400cp24
     name: M2 400CP24 Circular-Polarised Yagi (395-405 MHz)
@@ -230,7 +230,7 @@ components:
       tracking: az/el rotator
     heritage_missions: [commercial 400 MHz telemetry/radiosonde reception]
     notes: >
-      Best COTS match found for the NFI 401-402 MHz downlink. Pair with a separate 450 MHz
+      Best COTS match found for the 401-402 MHz space-operation downlink. Pair with a separate 450 MHz
       uplink Yagi (see gs-ant-m2-450cp-custom) on a common cross-boom, or with a diplexer and a
       wideband antenna. Price from M2 product page (may not be current).
     sources:
@@ -310,7 +310,7 @@ components:
       tracking: az/el rotator
     heritage_missions: [many university/amateur 70 cm satellite stations]
     notes: >
-      Reference amateur-band satellite Yagi. NOT suitable as the primary NFI antenna: NFI
+      Reference amateur-band satellite Yagi. NOT suitable as the primary antenna: a 401/450 MHz mission
       uses 401 and 450 MHz, which lie outside its tuned range. Useful for a station that also
       supports amateur-band CubeSats (training, SatNOGS).
     sources:
@@ -427,6 +427,6 @@ components:
     heritage_missions: [SatNOGS network]
     notes: >
       3D-printed/aluminium-extrusion rotator suited to light antennas. Good for student build
-      and teaching; not recommended for the two-Yagi NFI operational array or Arctic weather.
+      and teaching; not recommended for the two-Yagi operational array or Arctic weather.
     sources:
       - https://satnogs.org/faq/

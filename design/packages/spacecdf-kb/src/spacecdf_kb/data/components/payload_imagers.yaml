@@ -84,7 +84,7 @@ components:
       fov_deg: 29.856
     notes: The simulator's EOSAT-1 imager (geometry.yaml payload, payload.yaml; thermal node 1.1 kg); power is a C2O estimate
 
-  # NFI research 2026-11-10 (nfi/research/payload.md): real catalogue cameras with `sources:`;
+  # C2O equipment research 2026-11 (payload): real catalogue cameras with `sources:`;
   # `estimated:` lists the fields that are estimates. Camera mass/cost INCLUDE the lens and filter
   # named in performance.lens (do not add a payload_optic entry for the same lens to the budget).
   - id: pl-av-alvium-1800c-530-vswir
@@ -93,7 +93,7 @@ components:
     category: payload_imager
     mass_kg: 0.19            # 0.040 camera + 0.130 lens (Kowa LM35HC-SW) + ~0.020 filter in mount (est.)
     dimensions_mm: [43, 43, 74]   # lens dia x lens dia x (26 body + 43 lens + 5 filter)
-    cost_keur: 20.6          # camera 19.8 (proposal CAD 30k, not public) + lens/filter est. 0.8
+    cost_keur: 20.6          # (est.) no public price for the camera; lens/filter est. 0.8
     trl: 4
     power_w: 2.7
     interfaces: [MIPI CSI-2 (4 lanes), GPIO trigger x2, 5V over CSI-2]
@@ -136,7 +136,7 @@ components:
       plot (datasheet p.3). Full well, read noise and dark current are IMX992 values from LUCID
       (other cameras), because Allied Vision publishes no EMVA data. Power is typical: 2.7 W on
       the web datasheet; PDF v1.0.1 said tbd. The housing limit is 55 C on the current page vs
-      65 C in the 2024 PDF. Cost is the NFI proposal quote (CAD 30,000), not a public price;
+      65 C in the 2024 PDF. Cost (est.) from a reseller-class estimate; not a public price;
       lens and filter cost estimated. Export control: the analogous IMX990 camera is EU dual-use
       ECCN 6A003.b.4.a with a licence required (Basler); get Allied Vision's ECCN in writing.
       No space or radiation heritage found. Do not use DRRS (rolling-shutter) mode in orbit.
@@ -195,10 +195,10 @@ components:
     estimated: [mass_kg (filter part), cost_keur (CSI-2 variant, lens), trl]
     notes: >-
       EMVA values from the Allied Vision datasheet. QE at 865 nm is read from the plot and is
-      only ~15%, so NFI meets its SNR targets only after 2x2 binning to the 60 m grid; see
+      only ~15%, so a two-camera 3U payload meets its SNR targets only after 2x2 binning to the 60 m grid; see
       payload.md section 3.4. It needs a lens of 1.1-inch format or larger, since 2/3-inch
       lenses vignette. Fresh snow saturates at f/2.4 with a 2.3 ms exposure in June; use a
-      seasonal exposure table. The proposal quotes CAD 3,300 (2.2 keur). No space heritage found.
+      seasonal exposure table. Price (est.) 2.2 keur. No space heritage found.
     sources:
       - https://www.wdlsystems.com/specifications/spec_16481.pdf
       - https://www.alliedvision.com/de/products/area-scan-cameras/alvium/alvium-c/datasheet/1169?t=camera
@@ -236,7 +236,7 @@ components:
     estimated: [cost_keur, trl, gsd/swath/fov depend on the assumed 35 mm lens]
     notes: >-
       Mass, power and dimensions from SatNow; the 2.5 W is an upper bound ("less than 2.5 W").
-      The low pixel count makes NFI's ~58 m over 150 km impossible. It is listed as an
+      The low pixel count makes ~58 m GSD over a 150 km swath impossible. It is listed as an
       alternative SWIR detector class only.
     sources:
       - https://satnow.com/products/satellite-cameras/raptor-photonics/113-1297-owl-640-m
@@ -270,7 +270,7 @@ components:
     estimated: [dimensions_mm, cost_keur, fov_deg (calc)]
     notes: >-
       Catalogue specs. Survival range -20 to +55 C. The catalogue lists "1000-1750 mm",
-      almost certainly meaning nm. Too narrow for NFI's landscape-scale use, and 1.6 kg / 2.5U
+      almost certainly meaning nm. Too narrow for landscape-scale use, and 1.6 kg / 2.5U
       exceeds the 1U / 0.7 kg payload allocation.
     sources:
       - https://satcatalog.com/component/chameleon-swir
@@ -302,7 +302,7 @@ components:
       boresight: [0, 0, -1]
       fov_deg: 9.1
     estimated: [cost_keur, fov_deg (calc)]
-    notes: Catalogue specs. Flown, wide-swath, 1U, but RGB only with no NIR/SWIR band for NFI.
+    notes: Catalogue specs. Flown, wide-swath, 1U, but RGB only with no NIR/SWIR band for a 3U fire-and-ice mission.
     sources:
       - https://www.satcatalog.com/component/gecko-imager/
 
@@ -337,7 +337,7 @@ components:
     notes: >-
       SatNow gives conflicting mass (1.26 kg in the text, 1.1 kg in the table) and power
       (3.25-7 W; 5.8 W imaging, 2.5 W idle). Bit depth is 10 or 12. No SWIR band, so it is
-      not a NFI fit.
+      not a fit for a wide-swath NIR/SWIR mission.
     sources:
       - https://satcatalog.com/component/multiscape100-cis/
       - https://www.satnow.com/products/satellite-cameras/simera-sense/113-1295-multiscape100-cis

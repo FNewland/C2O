@@ -139,13 +139,13 @@ components:
     power_w: 0.165              # average; 0.271 W peak
     interfaces: [I2C, UART, CAN]
     notes: >-
-      Corrected from the CubeSpace sensors and Gen 1 ADCS price lists (NFI research 2026-11-10
+      Corrected from the CubeSpace sensors and Gen 1 ADCS price lists (C2O equipment research 2026-11
       (bus.md))
     sources:
       - https://www.cubesatshop.com/wp-content/uploads/2023/06/CubeSpace-SENSORS-2023.pdf
       - https://www.cubesatshop.com/wp-content/uploads/2023/05/GEN-1-ADCS-Jan-2023-web.pdf
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: st-arcsec-twinkle
     name: Twinkle
     manufacturer: arcsec

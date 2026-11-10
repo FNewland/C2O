@@ -2,7 +2,7 @@
 the orbit every analysis reads, ground stations with their own coordinates, the link the
 team chose, and the example-loader / duplicate-route fixes.
 
-NFI is the worked case: 3U, SSO 590 km / 97.75°, LTAN 10:30, NIR + SWIR cameras,
+The Northern Fire and Ice teaching mission is the worked case: 3U, SSO 590 km / 97.75°, LTAN 10:30, NIR + SWIR cameras,
 UHF 401.5 MHz downlink at 38.4 kbit/s, four Canadian ground stations, drag sail.
 """
 from __future__ import annotations
@@ -25,11 +25,11 @@ def data_dir(tmp_path, monkeypatch):
 
 
 async def _study(client, **req) -> str:
-    r = await client.post("/api/studies/", json={"requirements": {"name": "NFI", "spacecraft_class": "nano", **req}})
+    r = await client.post("/api/studies/", json={"requirements": {"name": "Northern Fire and Ice", "spacecraft_class": "nano", **req}})
     assert r.status_code == 200, r.text
     sid = r.json()["id"]
     r = await client.post(f"/api/studies/{sid}/product-tree/default",
-                          json={"architecture": "single-leo", "mission_name": "NFI", "spacecraft_class": "nano"})
+                          json={"architecture": "single-leo", "mission_name": "Northern Fire and Ice", "spacecraft_class": "nano"})
     assert r.status_code == 200, r.text
     return sid
 
@@ -126,7 +126,7 @@ async def test_edit_marks_runs_stale_and_orbit_feeds_the_analyses(client, db_fac
     assert await _stale(client, sid) == {"design_loop": False}
 
     # a label-only change is not an input
-    r = await client.patch(f"/api/studies/{sid}/mission", json={"name": "NFI-1"})
+    r = await client.patch(f"/api/studies/{sid}/mission", json={"name": "Northern Fire and Ice 1"})
     assert r.status_code == 200 and r.json()["stale_analyses"] == []
 
     r = await client.patch(f"/api/studies/{sid}/mission", json={"orbit": {"altitude_km": 590}})

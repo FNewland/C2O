@@ -25,8 +25,8 @@ components:
     interfaces: [I2C, SPI, UART, CAN, PC/104, PPS input, PWM (3x magnetorquer drivers)]
     operating_temp_c: [-30, 85]
     notes: >-
-      Proven CubeSat OBC, over 100 missions flown. Corrected from the 2025 datasheet (NFI research
-      2026-11-10 (bus.md)): 65x40 mm module that needs a dock (P60 dock slot X3 or NanoDock);
+      Proven CubeSat OBC, over 100 missions flown. Corrected from the 2025 datasheet (C2O equipment
+      research 2026-11, bus): 65x40 mm module that needs a dock (P60 dock slot X3 or NanoDock);
       on-board gyro and magnetometer, three PWM magnetorquer drivers
     sources:
       - https://gomspace.com/wp-content/uploads/2025/09/gs-ds-nanomind-a3200_1006901-2.0.pdf
@@ -179,7 +179,7 @@ components:
     power_w: 0.5
     interfaces: [CAN, RS422, RS485, SPI, I2C, UART, Ethernet]
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: obc-gom-nanomind-z7000
     name: NanoMind Z7000
     manufacturer: GomSpace

@@ -3,7 +3,7 @@
 # Catalog (Structures & mechanisms seat owns deployable mechanisms). power_w is the
 # release (actuation) power, drawn once at disposal; the unit is off in every ConOps mode.
 # Satisfies the disposal equipment need (services/equipment_logic.py).
-# NFI research 2026-11-10 (nfi/research/bus.md). Every entry lists its `sources:`;
+# C2O equipment research 2026-11 (bus). Every entry lists its `sources:`;
 # values not on a manufacturer page say "(est.)" in `notes`. mass_kg / power_w / cost_keur
 # are null where nothing is published (reference entries); do not invent them.
 # cost_keur conversions: 1 USD = 0.86 EUR, 1 CAD = 0.62 EUR (approximate late-2025 rates).
@@ -17,7 +17,7 @@ components:
     dimensions_mm: [96, 90, 35]   # (est.) from 0.35U and PC/104 compatibility
     form_factor: 0.35U
     power_w: 6.0              # actuation
-    cost_keur: 5.6            # brief CAD 9k (not verified)
+    cost_keur: 5.6            # (est.) no public price; get a quote
     trl: 9
     heritage_missions: [FUTURA SM1 (launched 2023-01-03; deployment result not published)]
     performance:
@@ -38,7 +38,7 @@ components:
       anchor: zenith
       face: pz
       deployable: {kind: boom, panels: 4, hinge: centre}
-    notes: The proposed NFI sail. It exceeds the 0.25U allocation, and its area only just meets the >=2.0 m2 requirement. Dimensions and effective area (est.).
+    notes: Candidate drag sail for a 3U mission. It exceeds the 0.25U allocation, and its area only just meets the >=2.0 m2 requirement. Dimensions and effective area (est.).
     sources:
       - https://www.npcspacemind.com/wp-content/uploads/2025/09/ARTICA-BROCHURE.pdf
       - https://npcspacemind.com/cubesat-deorbiting-system
@@ -93,7 +93,7 @@ components:
       envelope_mm: [95, 95, 72]
       anchor: zenith
       face: pz
-    notes: Too large and heavy for the NFI allocation; listed for the trade. Power, cost and TRL (est.).
+    notes: Too large and heavy for a 0.25U, 0.4 kg allocation; listed for the trade. Power, cost and TRL (est.).
     sources:
       - https://indico.esa.int/event/516/contributions/10000/attachments/6287/10797/CSD2024_Hoffmann_ADEO.pdf
 
@@ -118,7 +118,7 @@ components:
       mount_class: face_panel
       envelope_mm: [100, 83, 6.5]
       face: pz
-    notes: Low mass, but the tape gives far less drag area than a 2 m2 sail. Check that it meets NFI's 5-year disposal from 590 km before considering it. TRL and cost (est.).
+    notes: Low mass, but the tape gives far less drag area than a 2 m2 sail. Check that it meets a 5-year disposal from 590 km before considering it. TRL and cost (est.).
     sources:
       - https://satsearch.co/products/tui-cubesat-terminator-tape
 
@@ -155,6 +155,6 @@ components:
       deployment: tape_spring_booms
       release: door_release_ground_ARM_FIRE
       independent_power: per_module_electronics
-    notes: Calibration reference for NFI's lifetime model (NRLMSIS tuned on CanX-7). Shows effective area at about 40-50% of nominal.
+    notes: Calibration reference for a drag-sail lifetime model (NRLMSIS tuned on CanX-7). Shows effective area at about 40-50% of nominal.
     sources:
       - https://eoportal.org/satellite-missions/canx-7

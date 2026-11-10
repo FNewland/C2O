@@ -134,7 +134,7 @@ components:
       for CCSDS, AX.25, and custom protocols. Requires significant
       software expertise. SatNOGS uses this stack for its global network.
 
-  # NFI research 2026-11-10 (nfi/research/mission.md): sources per entry; 'unverified' in notes = needs a quote
+  # C2O equipment research 2026-11 (mission): sources per entry; 'unverified' in notes = needs a quote
   - id: gs-bb-usrp-b210
     name: Ettus USRP B210 (board)
     manufacturer: Ettus Research (NI/Emerson)

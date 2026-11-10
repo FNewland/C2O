@@ -58,7 +58,7 @@ components:
       deployment_switches: 4
       pc104_slots: 12
     notes: >-
-      Corrected (NFI research 2026-11-10 (bus.md)): lead time 4-6 weeks; flight heritage since
+      Corrected (C2O equipment research 2026-11, bus): lead time 4-6 weeks; flight heritage since
       2013
     sources:
       - https://satcatalog.com/component/3-unit-cubesat-structure
@@ -115,7 +115,7 @@ components:
       deployment_switches: 4
       pc104_slots: 12
     notes: >-
-      Corrected from satcatalog (NFI research 2026-11-10 (bus.md)) for the 3U Structure II
+      Corrected from satcatalog (C2O equipment research 2026-11, bus) for the 3U Structure II
     sources:
       - https://satcatalog.com/component/3u-cubesat-structure-ii/
 
@@ -155,7 +155,7 @@ components:
       integrated_solar_panel_mounting: true
     notes: US-made, includes integrated deployment hardware
 
-  # NFI research 2026-11-10 (nfi/research/bus.md): sources per entry; '(est.)' in notes = estimated
+  # C2O equipment research 2026-11 (bus): sources per entry; '(est.)' in notes = estimated
   - id: struct-clyde-3u
     name: 3U Structure
     manufacturer: AAC Clyde Space
