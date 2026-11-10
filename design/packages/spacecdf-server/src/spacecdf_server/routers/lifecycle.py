@@ -108,7 +108,7 @@ _EXAMPLE_CATEGORY_DOMAIN: dict[str, str] = {
 }
 _DOMAIN_NAME = {"payload": "Payload", "power": "EPS", "aocs": "AOCS", "ttc": "Communications",
                 "obc": "On-Board Computer", "thermal": "Thermal", "structure": "Structure",
-                "propulsion": "Propulsion"}
+                "propulsion": "Propulsion", "other": "Other equipment"}
 
 
 @router.post("/example-missions/{mission_id}/load")
@@ -147,15 +147,25 @@ async def load_example(mission_id: str) -> dict:
                    quantity=max(1, int(req.num_spacecraft or 1)))
     subs: dict[str, str] = {}
     n_comp = 0
+    warnings: list[str] = []
     for i, eq in enumerate(mission.get("selected_equipment") or []):
-        domain = _EXAMPLE_CATEGORY_DOMAIN.get(str(eq.get("category") or ""), "payload")
+        category = str(eq.get("category") or "")
+        domain = _EXAMPLE_CATEGORY_DOMAIN.get(category)
+        if domain is None:
+            # Unknown category: keep the unit, under its own "Other equipment" subsystem
+            # (owned by Systems), and say so; it used to be filed under Payload silently.
+            domain = "other"
+            msg = (f"equipment {eq.get('name') or eq.get('componentId') or i + 1!r}: unknown category "
+                   f"{category!r}; kept under 'Other equipment'")
+            warnings.append(msg)
+            logger.warning("example %s: %s", mission_id, msg)
         if domain not in subs:
             sub = await add(name=_DOMAIN_NAME.get(domain, domain.title()), element_type="subsystem", segment="space",
-                            parent_id=sc["id"], subsystem_domain=domain,
+                            parent_id=sc["id"], subsystem_domain=None if domain == "other" else domain,
                             diagram_x=80 + (len(subs) % 4) * 200, diagram_y=40 + (len(subs) // 4) * 140)
             subs[domain] = sub["id"]
         await add(name=eq.get("name") or eq.get("componentId") or f"Unit {i + 1}", element_type="component",
-                  segment="space", parent_id=subs[domain], subsystem_domain=domain,
+                  segment="space", parent_id=subs[domain], subsystem_domain=None if domain == "other" else domain,
                   kb_component_id=eq.get("componentId"), mass_kg=eq.get("mass_kg"),
                   power_avg_w=eq.get("power_w"), cost_recurring_keur=eq.get("cost_keur"),
                   quantity=max(1, int(eq.get("quantity") or 1)))
@@ -179,7 +189,7 @@ async def load_example(mission_id: str) -> dict:
         except Exception:  # noqa: BLE001
             logger.warning("example %s: study %s not persisted", mission_id, sid, exc_info=True)
     return {"id": sid, "name": req.name, "elements": 6 + len(subs) + n_comp, "components": n_comp,
-            "subsystems": len(subs), "parameters": len(snapshot)}
+            "subsystems": len(subs), "parameters": len(snapshot), "warnings": warnings}
 
 
 # --- Harness Design ---
@@ -225,12 +235,85 @@ async def pass_predictions_endpoint(study_id: str) -> dict:
     study = store.get(study_id)
     if not study:
         raise HTTPException(404, f"Study {study_id} not found")
-    stations = [{"name": gs, "latitude_deg": 78.0} for gs in study.requirements.ground_stations]
-    return generate_pass_predictions(
+    stations, unresolved = _study_station_coords(study_id, study)
+    out = generate_pass_predictions(
         study.requirements.orbit.altitude_km,
         study.requirements.orbit.inclination_deg,
         stations,
     )
+    _propagate_passes(out, stations, study.requirements.orbit.altitude_km, study.requirements.orbit.inclination_deg)
+    if unresolved:
+        out["unresolved_stations"] = unresolved
+        out["warnings"] = [f"no coordinates for ground station {n!r}: add it with its latitude/longitude "
+                           f"(Analyses › Ground segment) or pick it from the catalogue" for n in unresolved]
+    return out
+
+
+def _propagate_passes(out: dict, stations: list[dict], altitude_km: float, inclination_deg: float) -> None:
+    """Replace the latitude-band estimate with a 24 h propagated contact count for every
+    station whose longitude is known (``ground_scheduler.predict_contacts``, the model the
+    ground-segment closure uses): passes depend on the station's latitude, the old
+    estimate gave every mid-latitude station the same numbers."""
+    try:
+        from ..services.ground_scheduler import GroundStation, OrbitParams, predict_contacts
+        orbit = OrbitParams(altitude_km=float(altitude_km), inclination_deg=float(inclination_deg))
+        total = 0.0
+        for row, stn in zip(out.get("stations") or [], stations):
+            if stn.get("longitude_deg") is None:
+                total += row.get("total_contact_min_per_day") or 0.0
+                continue
+            gs = GroundStation(id=str(stn["name"]), name=str(stn["name"]), latitude_deg=float(stn["latitude_deg"]),
+                               longitude_deg=float(stn["longitude_deg"]), elevation_m=0.0, antenna_diameter_m=3.0,
+                               min_elevation_deg=5.0)
+            cs = predict_contacts(orbit, [gs], 24.0, 1.0)
+            minutes = sum(c.duration_s for c in cs) / 60.0
+            row.update({"longitude_deg": stn["longitude_deg"], "passes_per_day": len(cs),
+                        "avg_pass_duration_min": round(minutes / len(cs), 1) if cs else 0.0,
+                        "total_contact_min_per_day": round(minutes, 1),
+                        "total_contact_min_7day": round(minutes * 7, 0), "model": "propagated 24 h"})
+            total += minutes
+        out["total_contact_min_per_day"] = round(total, 1)
+    except Exception:  # noqa: BLE001 — keep the estimate
+        logger.warning("pass propagation failed; latitude-band estimate kept", exc_info=True)
+
+
+def _study_station_coords(study_id: str, study: Any) -> tuple[list[dict], list[str]]:
+    """The study's ground stations with their real coordinates (Nov 2026; before, every
+    station was put at 78° N): the station elements (KB picks and stations of the team's
+    own, ``analysis_context._select_stations``) first, then the names listed in
+    ``requirements.ground_stations`` matched against the KB catalogue. Names that match
+    nothing are returned in the second list, not guessed."""
+    from ..services.analysis_context import _kb_stations, _select_stations
+    from .elements import _elements
+    kb = _kb_stations()
+    els = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    out: list[dict] = []
+    for s in _select_stations(els, kb):
+        el = _elements.get(s.get("element_id") or "") or {}
+        perf = el.get("performance_json") or el.get("performance") or {}
+        lat = perf.get("lat", s.get("lat"))
+        lon = perf.get("lon", s.get("lon"))
+        if lat is None:
+            continue
+        out.append({"name": s.get("name"), "latitude_deg": float(lat),
+                    "longitude_deg": float(lon) if lon is not None else None, "source": "element"})
+    have = {str(o["name"]).strip().lower() for o in out}
+    unresolved: list[str] = []
+    for name in study.requirements.ground_stations or []:
+        key = str(name).strip().lower()
+        if not key or key in have:
+            continue
+        hit = next((s for s in kb if str(s.get("name", "")).lower() == key or str(s.get("id", "")).lower() == key), None)
+        if hit is None:
+            hit = next((s for s in kb if key in str(s.get("name", "")).lower()
+                        or str(s.get("name", "")).lower() in key), None)
+        if hit is None or hit.get("lat") is None:
+            unresolved.append(str(name))
+            continue
+        have.add(key)
+        out.append({"name": str(name), "latitude_deg": float(hit["lat"]),
+                    "longitude_deg": float(hit["lon"]) if hit.get("lon") is not None else None, "source": "catalogue"})
+    return out, unresolved
 
 @router.get("/ground/timeline/{study_id}")
 async def ops_timeline_endpoint(study_id: str) -> dict:
@@ -410,11 +493,18 @@ async def orbit_trade_endpoint(study_id: str) -> dict:
         pl = study.requirements.payloads[0]
         gsd = getattr(pl, 'gsd_m', 10.0) or 10.0  # Default 10m if not specified
         aperture = 0.15  # Default 15cm aperture
+    orb = study.requirements.orbit
+    stations, _ = _study_station_coords(study_id, study)
+    station_lat = abs(stations[0]["latitude_deg"]) if stations else 78.0
     return compute_orbit_trade(
         target_gsd_m=gsd, target_revisit_days=revisit, aperture_m=aperture,
         max_mass_kg=study.requirements.target_mass_kg or 12,
         max_cost_meur=study.requirements.target_cost_meur or 10,
         min_lifetime_years=study.requirements.design_lifetime_years,
+        current_orbit={"altitude_km": orb.altitude_km, "inclination_deg": orb.inclination_deg,
+                       "orbit_type": getattr(orb.orbit_type, "value", orb.orbit_type),
+                       "eccentricity": orb.eccentricity},
+        station_latitude_deg=station_lat,
     )
 
 

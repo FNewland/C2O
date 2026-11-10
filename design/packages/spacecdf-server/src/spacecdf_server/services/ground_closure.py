@@ -174,6 +174,10 @@ def _band_key(band: str) -> str:
 
 def _link_band(freq_ghz: float) -> str:
     """Band letter used in the KB station ``bands`` lists."""
+    if 0.3 <= freq_ghz < 1.0:
+        return "UHF"    # Nov 2026: 400-450 MHz CubeSat links (frequency_band_name calls them S)
+    if 1.0 <= freq_ghz < 2.0:
+        return "L"
     name = frequency_band_name(freq_ghz)
     return _band_key(name.split()[0]) if name else "X"
 

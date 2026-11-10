@@ -8,7 +8,7 @@
  * contact windows as bands (SVGLineChart) and the conflicts with their fixes.
  *
  *   GET    /api/studies/{id}/ground-stations
- *   POST   /api/studies/{id}/ground-stations {kb_station_id}
+ *   POST   /api/studies/{id}/ground-stations {kb_station_id} | {name, lat, lon, bands?, antenna_m?, min_elevation_deg?}
  *   DELETE /api/studies/{id}/ground-stations/{element_id}
  *   POST   /api/studies/{id}/analyses/ground_segment/run?option_id=
  *   GET    /api/studies/{id}/analyses/ground_segment?option_id=
@@ -159,6 +159,24 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
     onSuccess: () => { setError(null); setPick(''); invalidateAll() },
     onError: e => setError(e.message),
   })
+  // A station of the team's own (not in the catalogue): name + coordinates
+  const [own, setOwn] = useState({ name: '', lat: '', lon: '', bands: '', antenna_m: '', min_elevation_deg: '' })
+  const ownLat = Number(own.lat), ownLon = Number(own.lon)
+  const ownValid = own.name.trim() !== '' && own.lat.trim() !== '' && own.lon.trim() !== ''
+    && Number.isFinite(ownLat) && Math.abs(ownLat) <= 90 && Number.isFinite(ownLon) && Math.abs(ownLon) <= 180
+  const addOwnMut = useMutation<unknown, Error>({
+    mutationFn: () => fetch(`${API}/studies/${studyId}/ground-stations`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: own.name.trim(), lat: ownLat, lon: ownLon,
+        ...(own.bands.trim() ? { bands: own.bands.split(/[,/\s]+/).filter(Boolean).map(b => b.toUpperCase()) } : {}),
+        ...(Number(own.antenna_m) > 0 ? { antenna_m: Number(own.antenna_m) } : {}),
+        ...(own.min_elevation_deg.trim() ? { min_elevation_deg: Number(own.min_elevation_deg) } : {}),
+      }),
+    }).then(jsonOrThrow),
+    onSuccess: () => { setError(null); setOwn({ name: '', lat: '', lon: '', bands: '', antenna_m: '', min_elevation_deg: '' }); invalidateAll() },
+    onError: e => setError(e.message),
+  })
   const removeMut = useMutation<unknown, Error, string>({
     mutationFn: elementId => fetch(`${API}/studies/${studyId}/ground-stations/${elementId}`, { method: 'DELETE' }).then(jsonOrThrow),
     onSuccess: () => { setError(null); invalidateAll() },
@@ -274,9 +292,9 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
         ) : (
           <div className="flex wrap gap-1">
             {selected.map(st => (
-              <span key={st.element_id} title={`${st.kb_station_id}${st.operator ? ` · ${st.operator}` : ''}${st.g_over_t_db_k !== null ? ` · G/T ${st.g_over_t_db_k} dB/K` : ''}`}
+              <span key={st.element_id} title={`${st.kb_station_id ?? t('own station')}${st.operator ? ` · ${st.operator}` : ''}${st.g_over_t_db_k !== null ? ` · G/T ${st.g_over_t_db_k} dB/K` : ''}`}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.1rem 0.4rem', borderRadius: 10, border: '1px solid var(--border)', fontSize: fs.label }}>
-                <span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(st.kb_station_id) || 'var(--text-3)', display: 'inline-block' }} />
+                <span style={{ width: 7, height: 7, borderRadius: 4, background: stationColors.get(st.station_id ?? st.kb_station_id ?? '') || 'var(--text-3)', display: 'inline-block' }} />
                 <strong>{st.name}</strong>
                 <span className="c-2">{latLon(st.lat, st.lon, t)} · {(st.bands ?? []).join('/')}{st.min_elevation_deg !== null ? ` · ≥${st.min_elevation_deg}°` : ''}</span>
                 <button title={t('Remove station')} disabled={removeMut.isPending} onClick={() => removeMut.mutate(st.element_id)}
@@ -286,6 +304,29 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
           </div>
         )}
       </div>
+
+      {/* a station of the team's own */}
+      <details className="c2o-card" data-testid="own-station">
+        <summary className="t-12 c-2">{t('Add a station of your own (name and coordinates)')}</summary>
+        <div className="flex wrap ai-e gap-1 mt-1">
+          {([
+            ['name', t('Station name'), 'text', '10rem', 'Ottawa'],
+            ['lat', t('Latitude (°N)'), 'number', '6rem', '45.42'],
+            ['lon', t('Longitude (°E, west negative)'), 'number', '6rem', '-75.70'],
+            ['bands', t('Bands'), 'text', '6rem', 'UHF'],
+            ['antenna_m', t('Antenna (m)'), 'number', '5rem', '2'],
+            ['min_elevation_deg', t('Min elevation (°)'), 'number', '5rem', '5'],
+          ] as const).map(([k, label, type, w, ph]) => (
+            <label key={k} className="flex col t-12">
+              <span className="c-2">{label}</span>
+              <input type={type} step="any" placeholder={ph} value={own[k]} aria-label={label}
+                onChange={e => setOwn(o => ({ ...o, [k]: e.target.value }))}
+                style={{ width: w, fontSize: fs.label, padding: '0.1rem 0.3rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)' }} />
+            </label>
+          ))}
+          <button className="c2o-btn c2o-btn--primary c2o-btn--sm" disabled={!ownValid || addOwnMut.isPending} onClick={() => addOwnMut.mutate()}>{t('Add station')}</button>
+        </div>
+      </details>
 
       {/* closure + summary */}
       {run && run.status === 'ok' && (

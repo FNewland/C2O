@@ -85,10 +85,15 @@ def compute_orbit_trade(
     downlink_rate_mbps: float = 50.0,
     wavelength_um: float = 0.55,
     mission_type: str = "earth_observation",
+    current_orbit: dict[str, Any] | None = None,
+    station_latitude_deg: float = 78.0,
 ) -> dict[str, Any]:
     """Compute orbit trade study from mission objectives.
 
-    Returns scored candidates with full rationale for each.
+    Returns scored candidates with full rationale for each. ``current_orbit``
+    (``{altitude_km, inclination_deg, orbit_type}``, Nov 2026) adds the study's own orbit as
+    a candidate; ``station_latitude_deg`` is the latitude of the study's main ground
+    station for the contact estimate (default: a Svalbard-like polar station).
     """
     # Generate candidate orbits
     candidates: list[OrbitCandidate] = []
@@ -168,10 +173,21 @@ def compute_orbit_trade(
             coverage_description="Ballistic transfer; 4–5 day transit to lunar orbit",
         ))
 
+    if current_orbit and current_orbit.get("altitude_km"):
+        alt = float(current_orbit["altitude_km"])
+        inc = float(current_orbit.get("inclination_deg") or 0.0)
+        otype = str(current_orbit.get("orbit_type") or "leo").lower()
+        candidates.append(OrbitCandidate(
+            name=f"Current mission orbit ({alt:.0f} km, {inc:.1f}°)",
+            altitude_km=alt, inclination_deg=inc, orbit_type=otype if otype in ("sso", "polar", "equatorial", "iss",
+                                                                               "mid_inc") else otype,
+            eccentricity=float(current_orbit.get("eccentricity") or 0.0),
+        ))
+
     # Compute properties for each
     for c in candidates:
         _compute_orbit_properties(c, aperture_m, wavelength_um,
-                                  target_latitude_band, downlink_rate_mbps)
+                                  target_latitude_band, downlink_rate_mbps, station_latitude_deg)
 
     # Score candidates — weights depend on mission type
     is_optical = mission_type in ("earth_observation", "optical_imager", "science_planetary")
@@ -287,6 +303,7 @@ def compute_orbit_trade(
             {
                 "rank": c.rank,
                 "name": c.name,
+                "is_current": c.name.startswith("Current mission orbit"),
                 "altitude_km": c.altitude_km,
                 "inclination_deg": round(c.inclination_deg, 1),
                 "orbit_type": c.orbit_type,
@@ -322,6 +339,7 @@ def _compute_orbit_properties(
     wavelength_um: float,
     lat_band: tuple[float, float],
     downlink_mbps: float,
+    station_latitude_deg: float = 78.0,
 ) -> None:
     """Compute all derived properties for an orbit candidate."""
     HEO_TYPES = {"molniya", "tundra", "gto", "lunar"}
@@ -464,9 +482,9 @@ def _compute_orbit_properties(
     c.compliant_5yr = c.natural_lifetime_years <= 5
     c.needs_propulsion_for_deorbit = not c.compliant_25yr
 
-    # Contact time (Svalbard-like polar station)
+    # Contact time over the study's main station (default: a Svalbard-like polar station)
     from spacecdf_common.physics.orbit import estimate_contact_time_per_day
-    c.contact_min_per_day = estimate_contact_time_per_day(c.altitude_km, 78.0, c.inclination_deg) / 60
+    c.contact_min_per_day = estimate_contact_time_per_day(c.altitude_km, station_latitude_deg, c.inclination_deg) / 60
 
     # Data throughput
     c.max_data_gb_per_day = downlink_mbps * c.contact_min_per_day * 60 / 8 / 1000

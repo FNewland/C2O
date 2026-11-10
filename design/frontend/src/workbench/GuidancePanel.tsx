@@ -242,15 +242,9 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
   const loadExample = async (missionId: string) => {
     setLoadingExample(true)
     try {
-      const res = await fetch(`${API}/lifecycle/example-missions/${missionId}`)
-      if (!res.ok) return
-      const mission = await res.json()
-      // Create a study from the example
-      const studyRes = await fetch(`${API}/studies/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requirements: mission.requirements || { name: mission.name }, mission_need: mission.mission_need || {} }),
-      })
+      // The server builds the study WITH its element tree and design result (the same path as
+      // Home → Load Example Mission); posting only requirements made an empty study.
+      const studyRes = await fetch(`${API}/lifecycle/example-missions/${encodeURIComponent(missionId)}/load`, { method: 'POST' })
       if (studyRes.ok) {
         const study = await studyRes.json()
         setStudyId(study.id)

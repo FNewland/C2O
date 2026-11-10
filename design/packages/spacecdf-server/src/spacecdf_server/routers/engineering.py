@@ -127,45 +127,9 @@ async def search_equipment(domain: str, study_id: str | None = None) -> dict:
         }
 
 
-@router.get("/equipment/needs/{study_id}")
-async def get_equipment_needs(study_id: str) -> dict:
-    """Return which equipment categories are needed based on architecture selections."""
-    # Standard CubeSat subsystem needs
-    needs = [
-        {"category": "batteries", "required": True, "reason": "Power storage for eclipse", "quantity": 1},
-        {"category": "solar_panels", "required": True, "reason": "Power generation", "quantity": 2},
-        {"category": "solar_cells", "required": False, "reason": "Cell-level selection (optional)", "quantity": 0},
-        {"category": "eps_boards", "required": True, "reason": "Power conditioning & distribution", "quantity": 1},
-        {"category": "reaction_wheels", "required": True, "reason": "3-axis attitude control", "quantity": 4},
-        {"category": "star_trackers", "required": True, "reason": "Fine attitude determination", "quantity": 1},
-        {"category": "magnetorquers", "required": True, "reason": "Momentum desaturation", "quantity": 3},
-        {"category": "sun_sensors", "required": True, "reason": "Safe mode attitude", "quantity": 2},
-        {"category": "transponders", "required": True, "reason": "TT&C communications", "quantity": 1},
-        {"category": "antennas", "required": True, "reason": "RF antenna", "quantity": 1},
-        {"category": "obcs", "required": True, "reason": "On-board computer", "quantity": 1},
-        {"category": "gps_receivers", "required": True, "reason": "Orbit determination", "quantity": 1},
-        {"category": "cubesat_structures", "required": True, "reason": "Spacecraft structure", "quantity": 1},
-        {"category": "thermal_hardware", "required": True, "reason": "Thermal control", "quantity": 1},
-        {"category": "thrusters", "required": False, "reason": "Propulsion (if delta-V required)", "quantity": 0},
-        {"category": "deorbit_devices", "required": False, "reason": "Post-mission disposal by drag sail (no propulsion)",
-         "quantity": 1},
-    ]
-    # Alternatives: one integrated ADCS unit covers the AOCS parts; a drag sail or thrusters
-    # cover disposal. satisfied_by: what the study's KB parts already provide.
-    from ..services.equipment_logic import (ADCS_PARTS, DEORBIT_DEVICES, INTEGRATED_ADCS,
-                                            selected_kb_categories)
-    from .elements import _elements
-    alt = {**{c: [INTEGRATED_ADCS] for c in ADCS_PARTS}, "thrusters": [DEORBIT_DEVICES],
-           DEORBIT_DEVICES: ["thrusters"]}
-    try:
-        selected = selected_kb_categories([e for e in _elements.values() if e.get("study_id") == study_id])
-    except Exception:  # noqa: BLE001 — KB unavailable: report needs without coverage
-        selected = set()
-    for n in needs:
-        n["alternatives"] = alt.get(n["category"], [])
-        by = n["category"] if n["category"] in selected else next((a for a in n["alternatives"] if a in selected), None)
-        n["satisfied"], n["satisfied_by"] = by is not None, by
-    return {"needs": needs, "study_id": study_id}
+# GET /equipment/needs/{study_id}: one route, defined below (study-aware, reads the
+# mission definition). A second, static copy used to be registered here first and
+# shadowed it (FastAPI "Duplicate Operation ID").
 
 
 # --- Requirement Verification ---

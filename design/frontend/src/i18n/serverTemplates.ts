@@ -180,4 +180,8 @@ export const SERVER_TEMPLATES: string[] = [
   "Cost estimate {{cost}} MEUR is at {{pct}}% of target {{target}} MEUR, with {{n}} low-TRL component(s). Technology maturation costs may push budget over.",
   "Use proven (TRL 7+) alternatives to reduce development risk/cost",
   "Increase cost budget to accommodate technology maturation",
+  "inclination {{inc}}° is not sun-synchronous at {{alt}} km (J2 value {{ideal}}°)",
+  "LTAN only holds for a sun-synchronous orbit",
+  "disposal method '{{m}}' is not one of {{list}}; kept as entered",
+  "altitude {{alt}} km is outside {{range}} km for a {{type}} orbit",
 ]

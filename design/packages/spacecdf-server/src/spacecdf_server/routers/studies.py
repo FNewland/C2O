@@ -209,6 +209,47 @@ async def get_study(study_id: str) -> Study:
     return study
 
 
+@router.patch("/{study_id}/mission")
+async def update_mission(study_id: str, body: dict[str, Any]) -> dict:
+    """Edit the mission definition after creation (Nov 2026): mission need, orbit, payloads,
+    class, lifetime, launch / disposal, link, ground-station names. Validated as a whole
+    (422 and nothing changed on error); every analysis run made with the old values comes
+    back ``stale`` (the analyses' inputs hash covers the mission definition).
+    Body: ``services.mission_definition.MissionPatch``."""
+    from pydantic import ValidationError
+    from ..services.mission_definition import MissionPatch, apply_mission_patch
+
+    study = _studies.get(study_id)
+    if not study:
+        raise HTTPException(status_code=404, detail=f"Study {study_id} not found")
+    try:
+        patch = MissionPatch(**body)
+    except ValidationError as exc:
+        raise HTTPException(422, detail=[{"loc": e.get("loc"), "msg": e.get("msg")} for e in exc.errors()]) from exc
+    try:
+        changed, warnings = apply_mission_patch(study, patch)
+    except ValueError as exc:
+        raise HTTPException(422, detail=str(exc)) from exc
+    if changed:
+        try:
+            await db_save_study(study)
+        except Exception:
+            logger.exception("Failed to persist study %s to DB", study_id)
+    stale: list[str] = []
+    try:
+        from ..services.analysis_results import list_analyses
+        stale = [r["analysis"] for r in await list_analyses(study_id) if r.get("stale")]
+    except Exception:  # noqa: BLE001 — informational only
+        logger.debug("stale analyses unavailable for %s", study_id, exc_info=True)
+    if changed:
+        from ._arcadia_events import broadcast_mutation
+        await broadcast_mutation(study_id, "mission_updated", "study", study_id,
+                                 {"changed": changed, "stale_analyses": stale})
+    return {"id": study_id, "changed": changed, "warnings": warnings, "stale_analyses": stale,
+            "requirements": study.requirements.model_dump(mode="json"),
+            "mission_need": study.mission_need.model_dump(mode="json")}
+
+
 @router.delete("/{study_id}")
 async def delete_study(study_id: str, request: Request) -> dict:
     """Delete a study. Only the instructor (WP9; open on a laptop until someone is instructor)."""

@@ -115,6 +115,30 @@ class LinkAgent(DesignAgent):
         else:
             required_rate_bps = payload_data_rate_mbps * 1e6 if payload_data_rate_mbps > 0 else 0
 
+        # --- Mission definition override (Nov 2026): the link the team chose ---
+        # ``requirements.link`` (mission editor / link-budget tool "Apply to Design") beats the
+        # class defaults and the KB datasheet values above.
+        link_req = state.get_requirement("link") or {}
+        if isinstance(link_req, dict) and not is_deep_space:
+            def _pos(key: str) -> float | None:
+                v = link_req.get(key)
+                return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else None
+            if _pos("downlink_frequency_mhz"):
+                freq_ghz = _pos("downlink_frequency_mhz") / 1000.0
+            if _pos("tx_power_w"):
+                tx_power = _pos("tx_power_w")
+            if link_req.get("tx_antenna_gain_dbi") is not None:
+                tx_gain = float(link_req["tx_antenna_gain_dbi"])
+            if link_req.get("rx_antenna_gain_dbi") is not None:
+                # G = eta (pi D / lambda)^2, eta = 0.55 (compute_link_budget's assumption)
+                lam = 0.299792458 / freq_ghz
+                g_lin = 10 ** (float(link_req["rx_antenna_gain_dbi"]) / 10.0)
+                gs_diam = max(0.1, lam / math.pi * math.sqrt(g_lin / 0.55))
+            if _pos("downlink_rate_bps"):
+                required_rate_bps = _pos("downlink_rate_bps")
+            result.log(f"Mission link: {freq_ghz * 1000:.1f} MHz, {tx_power:.1f} W, {tx_gain:.1f} dBi, "
+                       f"{required_rate_bps:.0f} bit/s")
+
         lb = compute_link_budget(
             altitude_km=link_altitude_km,
             tx_power_w=tx_power,

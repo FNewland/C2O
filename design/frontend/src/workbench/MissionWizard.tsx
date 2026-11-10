@@ -24,6 +24,8 @@ import { HomeFrame } from '../components/ui/HomeFrame'
 import { useSeatStore } from '../seats/api'
 import { useWhereStore } from '../where/where'
 import { LogbookBanner, LogbookButton, RecordDecision, useLogbookUI } from '../logbook'
+import { MissionDefinitionFields } from './MissionDefinitionFields'
+import { defaultMissionDef, toRequirements, validateDraft, type MissionDefDraft } from './missionDef'
 
 const API = '/api'
 
@@ -143,8 +145,11 @@ export function MissionWizard() {
 
   // Step 4: Architecture
   const [selectedArch, setSelectedArch] = useState('single-leo')
-  const [lifetime, setLifetime] = useState('3')
-  const [massTarget, setMassTarget] = useState('6')
+  // Orbit, payload, class, lifetime, launch / disposal, link (editable later: Traceability › Mission need)
+  const [missionDef, setMissionDef] = useState<MissionDefDraft>(defaultMissionDef)
+  const lifetime = missionDef.design_lifetime_years
+  const massTarget = missionDef.target_mass_kg
+  const defErrors = validateDraft(missionDef)
   // Seats (WP9): team size chosen at creation; "solo" = no seats (everyone edits everything).
   const [teamSize, setTeamSize] = useState<string>('9')
   const [optionalSeats, setOptionalSeats] = useState<string[]>([])
@@ -187,13 +192,10 @@ export function MissionWizard() {
           requirements: {
             name,
             mission_type: missionType,
-            spacecraft_class: 'nano',
-            orbit: { orbit_type: 'sso', altitude_km: 500, inclination_deg: 97.4, mission_duration_years: parseInt(lifetime), deorbit_required: true },
-            payloads: [{ name: 'Payload', mass_kg: 1, power_w: 10, data_rate_mbps: 10, pointing_accuracy_deg: 1, duty_cycle_percent: 25 }],
-            design_lifetime_years: parseInt(lifetime),
-            target_mass_kg: parseFloat(massTarget),
+            ...toRequirements(missionDef),
             target_cost_meur: 2,
-            ground_stations: ['KSAT Svalbard'],
+            // Stations with coordinates are added in Analyses › Ground segment (elements)
+            ground_stations: [],
           },
           mission_need: {
             problem_statement: problemStatement,
@@ -229,7 +231,7 @@ export function MissionWizard() {
       const tree = await fetch(`${API}/studies/${studyId}/product-tree/default`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ architecture: selectedArch, mission_name: name, spacecraft_class: 'nano' }),
+        body: JSON.stringify({ architecture: selectedArch, mission_name: name, spacecraft_class: missionDef.spacecraft_class }),
       }).then(r => (r.ok ? r.json() : null))
       const missionEl = { id: tree?.mission_id as string | undefined }
 
@@ -621,7 +623,7 @@ export function MissionWizard() {
   if (step === 'architecture') {
     return (
       <WizardFrame step={4} title={t('Select starting architecture')} onBack={() => setStep('alternatives')}
-        onNext={createMission} canNext={!creating} nextLabel={creating ? t('Creating...') : t('Create Mission & Start Design')}>
+        onNext={createMission} canNext={!creating && defErrors.length === 0} nextLabel={creating ? t('Creating...') : t('Create Mission & Start Design')}>
         <div className="t-12 c-2 mb-2">
           {t('Choose an initial architecture to start with. You can modify this later by adding, removing, or renaming segments.')}
         </div>
@@ -654,14 +656,15 @@ export function MissionWizard() {
             ],
           })} />
         </div>
-        <div className="flex gap-2">
-          <Field label={t('Design Lifetime (years)')}>
-            <input type="number" value={lifetime} onChange={e => setLifetime(e.target.value)} className="c2o-input c2o-input--num c2o-w-num" />
-          </Field>
-          <Field label={t('Target Mass (kg)')}>
-            <input type="number" value={massTarget} onChange={e => setMassTarget(e.target.value)} className="c2o-input c2o-input--num c2o-w-num" />
-          </Field>
+        <div className="t-12 c-2 mb-1">
+          {t('Mission definition: the values every analysis starts from. You can change them later in Traceability › Mission need.')}
         </div>
+        <MissionDefinitionFields value={missionDef} onChange={setMissionDef} />
+        {defErrors.length > 0 && (
+          <ul className="m-0 pl-4 c-alarm t-12 mt-1" role="alert">
+            {defErrors.map(e => <li key={e}>{t(e)}</li>)}
+          </ul>
+        )}
         <div className="flex wrap ai-e gap-2 mt-2">
           <Field label={t('Team size (seats)')} hint={t('Each person takes a seat that owns its parameters. Changing another seat\u2019s value sends it to them for review.')}>
             <select className="c2o-select" value={teamSize} onChange={e => setTeamSize(e.target.value)} data-testid="wizard-team-size">
