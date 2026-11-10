@@ -550,3 +550,15 @@ a test adds a step at the end of its stage, in the same pattern, and lists it he
   (`requirement_engine`) accept a non-empty v2 `acceptance` as the pass criterion. Without it,
   two v2 rows (PAY-OPT-06 and THM-PAY-02, whose measure is only in the text) failed the existing
   tests. This is the minimal part of 3.R2; R refines it.
+
+### 9.10 Agent A's evidence functions and routes (wave 3, landed)
+
+For R to wire into `gate_evaluator.py` (one call each; all `async`, all read-only):
+
+- `services/allocation_ledger.status(study_id)` → `{ok, lines, agreed, not_agreed[], uncovered[], missing[], closure{mass,power_avg,data}, closes{}}` (PDR-EC-07, readiness "allocations agreed").
+- `services/reliability_model.evidence(study_id)` → `{ok, reliability, target, horizon_months, exposure_months, evidence, fmea_rows, critical_rows, fmea_missing_subsystems[], critical_unlinked[], reasons[]}` (PDR-EC-05; quote `evidence`, e.g. "R = 0.881 over 12 months of operations after commissioning …").
+- `services/thermal_model.evidence(study_id)` → `{ok, solved, nodes, cases[], out_of_design[], heaters[], worst_design_margin_c, reasons[]}` (thermal criteria).
+- `services/cost_pricing.total(study_id)` → `{total_keur, total_meur, by_category, launch_keur, labour_keur, target_meur, within_target}` or `None` before pricing (MDR-EC-08, PRR-EC-11). The design loop's `cost.total_meur` already quotes it.
+- Ledger value changes call `services/allocation_requirements.ledger_changed(study_id, line, old_value)` when R's module defines it (rule AR-01); until then the line carries `data_json.requirement_sync = {status: "stale", …}`.
+
+New routes beyond §9.4: `GET /allocation-ledger/status`, `POST /allocation-ledger/propose`, `DELETE /allocation-ledger/{id}`; `PUT /reliability/horizon`, `GET /reliability/evidence`, `PATCH /reliability/blocks/{id}`, `DELETE /fmea/{id}`; `GET /thermal-model/evidence`, `PATCH /thermal-model/couplings/{id}`, `PATCH /thermal-model/cases/{id}`, `POST /thermal-model/heaters/accept`; `PATCH/DELETE /cost/items/{id}`; `POST /ait/import`. New configs: `configs/reliability_rates.yaml`, `configs/cost_pricing.yaml`. New seed steps (A): `_s0_mission_success` (end of S0), `_s2_array_generation` (S2, before `_s2_allocations`).

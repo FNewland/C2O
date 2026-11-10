@@ -57,17 +57,25 @@ async def test_s0_contracts_phase_sections_and_stub_routes(client):
         "gate": "mdr", "entry": [], "deliverables": [], "analysis": [], "coaching": {}}
     assert ph["phase"] == "0" and ph["owner"] == "S"
     sx = (await client.get(f"/api/studies/{sid}/export-context")).json()
+    import importlib
     for name, owner in WAVE3_SECTIONS.items():
-        assert sx[name]["status"] == "not_implemented" and sx[name]["owner"] == owner, name
+        # a stub until its owner lands it; once real it keeps the keys of its empty shape
+        if sx[name].get("status") == "not_implemented":
+            assert sx[name]["owner"] == owner, name
+        else:
+            mod = importlib.import_module(f"spacecdf_server.services.export_context.sections.{name}")
+            assert set(mod.empty()) <= set(sx[name]), name
     assert sx["errors"] == {}
     paths = app.openapi()["paths"]
     for p, owner in STUB_GETS.items():
         assert f"/api/studies/{{study_id}}{p}".replace("ECP-01", "{change_id}") in paths, p
         r = await client.get(f"/api/studies/{sid}{p}")
-        assert r.status_code == 200 and r.json()["owner"] == owner and r.json()["items"] == [], p
+        assert r.status_code == 200, p
+        if r.json().get("status") == "not_implemented":
+            assert r.json()["owner"] == owner and r.json()["items"] == [], p
     for p in STUB_POSTS:
         r = await client.post(f"/api/studies/{sid}{p}", json={})
-        assert r.status_code == 501, (p, r.status_code)
+        assert r.status_code < 500 or r.status_code == 501, (p, r.status_code)   # 501 while a stub
     assert (await client.get("/api/studies/nope/moes")).status_code == 404
 
 
