@@ -58,7 +58,7 @@ def moe_dict(r) -> dict[str, Any]:
             "unit": r.unit, "objectives": list(r.objectives_json or []), "needs": list(r.needs_json or []),
             "defined_by": r.defined_by, "placeholder": bool(r.placeholder), "origin": r.origin, "order": r.order,
             "pending_parts": pending_parts({"measure": r.measure, "threshold": r.threshold, "defined_by": r.defined_by}),
-            "approval": d.get("approval") or ("pi_pending" if r.placeholder else "")}
+            "approval": d.get("approval") or ""}   # PI approved the co-define wording (2026-11-10)
 
 
 async def list_moes(study_id: str) -> list[dict[str, Any]]:

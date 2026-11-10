@@ -83,7 +83,7 @@ mission_patch:
     design_lifetime_years: 3
     reliability_target: 0.80
     target_mass_kg: 6.0
-    target_cost_meur: 0.5
+    target_cost_meur: 0.8
     num_spacecraft: 1
     ground_stations: ["GS Ottawa", "GS Yellowknife", "GS Iqaluit", "GS Inuvik"]
     launch_date_target: "2030-06"
@@ -109,7 +109,8 @@ mission_patch:
       deployed by command, by an OBC-independent 90-day timer or on under-voltage; transmitters off and
       battery passivated; re-entry about 3.0-3.4 years later from 590 km.
 target_cost_note: >-
-  0.5 MEUR is a working figure for the whole space and ground segment hardware plus tests. Flight hardware
+  0.8 MEUR (PI ruling, raised from a 0.5 MEUR working figure once labour, tests and reserve were priced)
+  is the target for the whole space and ground segment with launch provided. Flight hardware
   from researched list prices and KB estimates is about 231 k EUR, the four ground RF chains about 44 k EUR
   (NUMBERS.yaml cost). The design-loop cost model may include labour and
-  launch and then exceed 0.5 MEUR (design script §6).
+  launch and must then be compared with the 0.8 MEUR target (design script §6).

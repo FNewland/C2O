@@ -125,7 +125,7 @@ export function StakeholderEditor({ studyId }: { studyId: string | null }) {
           <Button size="sm" variant="quiet" onClick={addMoe}>{t('Add an MOE')}</Button>
         </div>
         {(c?.placeholder_moes ?? 0) > 0 && (
-          <Note tone="info">{t('MOEs marked "to co-define" are set by the stakeholders named, not by the engineering team. Their wording awaits PI approval before it is shown in the walkthrough.')}</Note>
+          <Note tone="info">{t('MOEs marked "to co-define" are set by the stakeholders named, not by the engineering team.')}</Note>
         )}
         <DataTable dense caption={t('Measures of effectiveness')} rows={moes} rowKey={m => m.code}
           empty={t('No MOE yet: say how each objective will be judged.')} columns={[

@@ -137,11 +137,12 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "No component has a TRL yet",
     "{{ok}}/{{total}} subsystems have at least one component or a mass allowance",
     # wave 3 (3.R4, 3.R5): SE deliverables, function coverage, allocated baseline, validation,
-    # logbook decisions (SRR-EC-04), ICD issue control (PDR-EC-02), reliability horizon
+    # Decide-panel decisions (SRR-EC-04), ICD issue control (PDR-EC-02), reliability horizon
     "All {{total}} ICDs under issue control at Issue A and signed by both seats",
     "{{agreed}}/{{total}} ICDs under issue control at Issue A and signed by both seats; not agreed: {{unsigned}}",
-    "All {{total}} decisions due at the SRR recorded in the logbook",
-    "{{recorded}}/{{total}} decisions due at the SRR recorded in the logbook; open: {{open}}",
+    "All {{total}} trades due by the SRR decided in the Decide panel",
+    "{{recorded}}/{{total}} trades due by the SRR decided in the Decide panel; open: {{open}}",
+    "No trade due by the SRR recorded in the Decide panel",
     "All {{total}} deliverables of the gate ready",
     "{{ok}}/{{total}} deliverables of the gate ready; missing: {{names}}",
     "No deliverables listed for this gate",
@@ -1453,28 +1454,24 @@ async def _ledger_lines(study_id: str) -> list[dict] | None:
         return None
 
 
-async def _logbook_decisions(study_id: str) -> set[str] | None:
-    """Decision ids of the catalogue recorded (with content) for this study in any logbook of
-    the team (only the ids are read; the records stay private)."""
+def _panel_decisions(study_id: str) -> dict[str, list[str]] | None:
+    """Trades of the study due by the SRR and those decided in the Decide panel (SRR-EC-04)."""
     try:
-        from ..logbook import decisions as dec
-        from ..logbook.router import store
-        from ..logbook.store import _parse_lines, fold
-        root = store.root
-        if not root.exists():
-            return set()
-        out: set[str] = set()
-        for p in root.glob("*.jsonl"):
-            try:
-                entries = fold(_parse_lines(p.read_bytes())).entries.values()
-            except OSError:
-                continue
-            for did, es in dec.recorded(entries, study_id).items():
-                if any(dec.has_content(e.get("record") or {}) or (e.get("text") or "").strip() for e in es):
-                    out.add(did)
-        return out
+        from . import trades as tr
+        from ..routers.studies import get_study_store
+        st = get_study_store().get(study_id)
+        if st is None:
+            return None
+        due, decided = [], []
+        for tid, rec in tr.normalise_records(getattr(st, "trade_records", None)).items():
+            state = rec.get("state") or {}
+            if str(state.get("gate") or "").lower() in ("mdr", "prr", "srr"):
+                due.append(tid)
+                if state.get("status") == "decided":
+                    decided.append(tid)
+        return {"due": sorted(due), "decided": sorted(decided)}
     except Exception:  # noqa: BLE001
-        logger.debug("logbook unavailable", exc_info=True)
+        logger.debug("trades unavailable", exc_info=True)
         return None
 
 
@@ -1496,7 +1493,7 @@ async def collect_evidence(study_id: str, gates: tuple[str, ...] | list[str] | N
         ev["element_codes"] = await element_code_map(study_id)
     except Exception:  # noqa: BLE001
         ev["element_codes"] = {}
-    ev["decisions_recorded"] = await _logbook_decisions(study_id)
+    ev["panel_decisions"] = _panel_decisions(study_id)
     try:                                   # S (3.S2): the SE deliverables per gate
         from . import se_deliverables as sd
         want = [g for g in SE_GATES if gates is None or g in gates]
@@ -1771,26 +1768,21 @@ def _iov_criterion(result: dict, ctx: dict) -> None:
 
 
 def _decisions_criterion(result: dict, ctx: dict) -> None:
-    """SRR-EC-04 (wave 3): the seat decisions the decision catalogue makes due at the SRR are
-    recorded in a logbook of the team ("Record decision" in the tool or the logbook)."""
-    rec = _ev(ctx).get("decisions_recorded")
-    if rec is None:
-        _positions_criterion(result, ctx)          # no logbook: the position-guidance check
+    """SRR-EC-04: every trade due by the SRR (gate MDR, PRR or SRR) is decided in the Decide panel.
+    Only the study's own records are read; personal logbooks are never consulted (PI ruling)."""
+    pd = _ev(ctx).get("panel_decisions")
+    if pd is None:
+        _positions_criterion(result, ctx)          # no study trades readable: the position-guidance check
         return
-    try:
-        from ..logbook.decisions import catalogue
-        due = [d["id"] for d in catalogue().get("decisions") or [] if d.get("gate") == "srr"]
-    except Exception:  # noqa: BLE001
-        due = []
-    if not due:
-        _set(result, "not_evaluated", "No position questions to check")
+    if not pd["due"]:
+        _set(result, "fail", "No trade due by the SRR recorded in the Decide panel")
         return
-    open_ = [d for d in due if d not in rec]
+    open_ = [t for t in pd["due"] if t not in pd["decided"]]
     if open_:
-        _set(result, "fail", "{{recorded}}/{{total}} decisions due at the SRR recorded in the logbook; open: {{open}}",
-             recorded=len(due) - len(open_), total=len(due), open=", ".join(open_[:8]) + (" …" if len(open_) > 8 else ""))
+        _set(result, "fail", "{{recorded}}/{{total}} trades due by the SRR decided in the Decide panel; open: {{open}}",
+             recorded=len(pd["due"]) - len(open_), total=len(pd["due"]), open=", ".join(open_[:8]) + (" …" if len(open_) > 8 else ""))
     else:
-        _set(result, "pass", "All {{total}} decisions due at the SRR recorded in the logbook", total=len(due))
+        _set(result, "pass", "All {{total}} trades due by the SRR decided in the Decide panel", total=len(pd["due"]))
 
 
 def _icd_criterion(result: dict, ctx: dict) -> bool:

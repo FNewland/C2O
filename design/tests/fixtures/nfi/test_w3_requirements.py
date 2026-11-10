@@ -260,20 +260,27 @@ async def test_r4_gate_criteria_of_the_v(client):
     assert (c["evidence_params"]["mass"], c["evidence_params"]["mlimit"]) == ("5.316", "6.0")
     assert (c["evidence_params"]["power"], c["evidence_params"]["plimit"]) == ("5.892", "12.2")
 
-    # SRR-EC-04: the decisions due at the SRR, recorded through the logbook API (the tool's
-    # "Record decision"); the person's logbook is private, the criterion reads only the ids
-    from spacecdf_server.logbook.decisions import catalogue
-    due = [d for d in catalogue()["decisions"] if d["gate"] == "srr"]
-    assert srr["SRR-EC-04"]["status"] == "fail"
-    assert srr["SRR-EC-04"]["evidence_params"]["total"] == len(due)
-    for d in due:
-        r = await client.post("/api/logbook/entries", json={
-            "kind": "decision", "tool": "design", "text": f"Decision {d['id']}",
-            "context": {"study_id": sid, "decision_id": d["id"]},
-            "record": {"decision_id": d["id"], "choice": "Option A", "rationale": "Closes the open question."}})
-        assert r.status_code == 201, r.text
+    # SRR-EC-04: every trade due by the SRR is decided in the Decide panel; personal logbooks
+    # are never read (PI ruling)
+    trades = (await client.get(f"/api/studies/{sid}/trades")).json()["items"]
+    due = [t for t in trades if str(t["state"].get("gate") or "").lower() in ("mdr", "prr", "srr")]
+    assert due, "the seed has trades due by the SRR"
+    open_ = [t for t in due if t["state"].get("status") != "decided"]
+    c = srr["SRR-EC-04"]
+    assert c["evidence_params"].get("total", len(due)) == len(due)
+    assert c["status"] == ("fail" if open_ else "pass"), c["evidence_found"]
+    for t in open_:
+        r = await client.post(f"/api/studies/{sid}/trades/{t['id']}/decision",
+                              json={"selected": t["state"]["options"][0], "rationale": "Closes the trade."})
+        assert r.status_code == 200, r.text
     srr = await _gate(client, sid, "srr")
     assert srr["SRR-EC-04"]["status"] == "pass", srr["SRR-EC-04"]["evidence_found"]
+    r = await client.post("/api/logbook/entries", json={       # a logbook record changes nothing
+        "kind": "decision", "tool": "design", "text": "Decision D-3.1-EPS",
+        "context": {"study_id": sid, "decision_id": "D-3.1-EPS"},
+        "record": {"decision_id": "D-3.1-EPS", "choice": "Option A", "rationale": "Private note."}})
+    assert r.status_code == 201, r.text
+    assert (await _gate(client, sid, "srr"))["SRR-EC-04"]["evidence_params"] == srr["SRR-EC-04"]["evidence_params"]
 
 
 def test_r4_validation_criteria_read_the_validation_coverage():

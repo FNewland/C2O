@@ -28,7 +28,7 @@ async def test_s0_stakeholders_needs_and_moes(client):
     assert moes["counts"]["total"] == len(sh["moes"])
     ph = sorted(m["code"] for m in moes["items"] if m["placeholder"])
     assert ph == ["MOE-04", "MOE-10"]
-    assert all(m["approval"] == "pi_pending" for m in moes["items"] if m["placeholder"])
+    assert all(m["approval"] == "" for m in moes["items"])           # PI approved the wording
     m11 = next(m for m in moes["items"] if m["code"] == "MOE-11")
     assert not m11["placeholder"] and m11["pending_parts"]          # one pending part, still a defined MOE
     # MDR-EC-02 and MDR-EC-03 pass on the imported register

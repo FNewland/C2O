@@ -472,7 +472,7 @@ risks:
   owner: Cost & risk
   src: SE skill proactive trigger (optimism bias); budgets.yaml cost
   desc: Because the 0.275 MEUR estimate covers flight and ground hardware only (no launch, AIT facilities, labour, licence
-    fees or reserve) and no reference-class forecast has been made, the mission cost may be well above the 0.5 MEUR target
+    fees or reserve) and no reference-class forecast has been made, the mission cost may be well above the 0.8 MEUR target
     without anyone noticing before PDR.
   mit: Price launch (T-M02 quotes) and AIT; apply a reference class of university CubeSat outturn costs; hold a management
     reserve; report MDR-EC-08 as open until then.

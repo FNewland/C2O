@@ -144,7 +144,7 @@ phases:
         team_leader:
           source: skill_concept
           why: {en: "The review asks whether the people who decide agree on the problem. You hold that agreement together.", fr: "La revue demande si ceux qui décident s’accordent sur le problème. Vous êtes garant de cet accord."}
-          focus: {en: "Problem statement, stakeholder register with decision authority, objectives with MOEs; check that MOE-04 and MOE-10 stay marked to co-define.", fr: "Énoncé du problème, registre des parties prenantes avec l’autorité de décision, objectifs avec MOE ; vérifier que MOE-04 et MOE-10 restent marquées à co-définir."}
+          focus: {en: "Problem statement, stakeholder register with decision authority, objectives with MOEs; check that MOE-04 and MOE-10 keep their example thresholds marked to co-define with the communities.", fr: "Énoncé du problème, registre des parties prenantes avec l’autorité de décision, objectifs avec MOE ; vérifier que MOE-04 et MOE-10 gardent leurs seuils d’exemple marqués à co-définir avec les communautés."}
         systems_engineer:
           source: skill_core
           why: {en: "A picture of the boundary shows what is inside your design and what you only talk to. Drawing it early exposes the interfaces nobody owns.", fr: "Une image de la frontière montre ce qui est dans votre conception et ce avec quoi vous ne faites qu’échanger. La tracer tôt révèle les interfaces sans responsable."}
@@ -619,8 +619,8 @@ phases:
 
 # ──────────────────────────────────────────────────────────────────────── pointer cards
 # Shown when their gates are active (and to the listed seats first). `approval: pi_pending` marks a
-# draft the PI must approve before the walkthrough recording (PI default: community data-governance
-# wording to be shown to the PI).
+# draft the PI must approve before the walkthrough recording (the data-governance card was approved
+# as written on 2026-11-10).
 pointers:
   - id: PTR-COST-01
     gates: [mdr, prr, srr, pdr]
@@ -650,7 +650,6 @@ pointers:
     gates: [mdr, prr, srr, pdr]
     seats: [team_leader, payload_lead, customer, instructor]
     source: skill_core
-    approval: pi_pending
     title: {en: "Data about northern lands and communities", fr: "Données sur les terres et les communautés du Nord"}
     body:
       en: "This mission observes lands where communities, including First Nations, Inuit and Métis communities, may hold authority over what is observed and how data about their lands is shared. Treat their governance bodies as decision authorities, not as people to consult, and design consent as something renewed at each phase. Principles of Indigenous data governance such as OCAP® and the CARE principles are a starting point to read about. Whether specific legal obligations apply to a given site is uncertain and is a question for legal counsel. This tool can record decisions and agreements; it cannot replace the relationship with the communities, which is built by people over time."

@@ -329,7 +329,7 @@ phases:
       - id: SRR-EC-04
         question: "Have all engineering positions answered their key questions?"
         category: positions
-        evidence: "Every seat decision the decision catalogue makes due at the SRR is recorded in a logbook of the team (Record decision); without a logbook, the must-answer position questions"
+        evidence: "Every trade due by the SRR (gate MDR, PRR or SRR) is decided in the Decide panel; personal logbooks are not read"
         status: auto
         priority: should_pass
         owner_seat: team_leader

@@ -58,12 +58,12 @@ def test_linter_every_card_cites_a_source_and_uses_no_banned_superlative():
                 assert "'" not in text, (c["id"], "use the typographic apostrophe")
 
 
-def test_pointer_cards_and_the_data_governance_draft():
+def test_pointer_cards_and_the_data_governance_card():
     from spacecdf_server.services import se_protocol as sp
     ptr = {p["id"]: p for p in sp.coaching(["pdr"])["pointers"]}
     assert {"PTR-COST-01", "PTR-REVIEW-01", "PTR-CYBER-01", "PTR-DATAGOV-01"} <= set(ptr)
     gov = ptr["PTR-DATAGOV-01"]
-    assert gov["approval"] == "pi_pending" and gov["legal_confidence"] == "uncertain"
+    assert not gov.get("approval") and gov["legal_confidence"] == "uncertain"   # approved as written
     assert "uncertain" in gov["body"]["en"] and "incertaine" in gov["body"]["fr"]
     assert "cannot replace the relationship" in gov["body"]["en"]
     # seat filter keeps the pointers meant for the seat

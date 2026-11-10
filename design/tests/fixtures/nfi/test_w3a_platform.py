@@ -75,7 +75,7 @@ async def test_design_loop_reliability_thermal_and_cost_on_the_study(client):
     base = sum(v for k, v in cats.items() if k not in ("reserve", "launch"))
     assert cats["reserve"] == pytest.approx(base * 0.20, abs=0.1)
     assert cost["total_keur"] == pytest.approx(sum(cats.values()), abs=0.1)
-    assert cost["target_meur"] == 0.5 and cost["within_target"] == (cost["total_meur"] <= 0.5)
+    assert cost["target_meur"] == 0.8 and cost["within_target"] == (cost["total_meur"] <= 0.8)
     kinds = {(i["data_json"] or {}).get("kind") for i in cost["items"] if i["category"] == "test_campaign"}
     assert {"sine", "random", "tvac", "emc"} <= kinds
     # a line the team edits survives the next price, and the reserve follows it

@@ -1090,7 +1090,7 @@ cost:
   - insurance
   - spares
   optimism_bias_flag: Hardware-only estimate; no reference-class forecast or management reserve yet. Not comparable to the
-    0.5 MEUR target until launch and AIT are priced (RSK-034).
+    0.8 MEUR target until launch and AIT are priced (RSK-034).
 traceability:
 - requirement: SEG-US-09
   budget_ref: registration.resampling

@@ -233,8 +233,9 @@ export const GATE_QUESTIONS_W3 = [
 export const EVIDENCE_KEYS_W3_1 = [
   'All {{total}} ICDs under issue control at Issue A and signed by both seats',
   '{{agreed}}/{{total}} ICDs under issue control at Issue A and signed by both seats; not agreed: {{unsigned}}',
-  'All {{total}} decisions due at the SRR recorded in the logbook',
-  '{{recorded}}/{{total}} decisions due at the SRR recorded in the logbook; open: {{open}}',
+  'All {{total}} trades due by the SRR decided in the Decide panel',
+  '{{recorded}}/{{total}} trades due by the SRR decided in the Decide panel; open: {{open}}',
+  'No trade due by the SRR recorded in the Decide panel',
   'All {{total}} deliverables of the gate ready',
   '{{ok}}/{{total}} deliverables of the gate ready; missing: {{names}}',
   'No deliverables listed for this gate',

@@ -208,12 +208,12 @@ moes:
   defined_by: science team with the communities
 - id: MOE-04
   measure: Ice-product delivery time to the community in break-up
-  threshold: <= 7 days
+  threshold: <= 7 days (example threshold)
   objectives:
   - O3
   needs:
   - SN-10
-  defined_by: '[PLACEHOLDER: confirm with each community; 7 days is an engineering proposal]'
+  defined_by: communities; example threshold proposed by the engineering team, to be co-defined with each community
 - id: MOE-05
   measure: Radiometric repeatability and matchups per year
   threshold: <= 5 % and >= 20 per product type
@@ -259,14 +259,14 @@ moes:
   defined_by: regulators
 - id: MOE-10
   measure: Community assessment of usefulness
-  threshold: '[PLACEHOLDER: measure and threshold to be co-defined with each community]'
+  threshold: '>= 4 of 5 average usefulness rating after each season, from at least two communities (example threshold)'
   objectives:
   - O1
   - O3
   needs:
   - SN-02
   - SN-10
-  defined_by: communities (co-defined, not by the engineering team)
+  defined_by: communities; example threshold, to be co-defined with each community (not set by the engineering team)
 - id: MOE-11
   measure: Delivered within the programme envelope and trained students
   threshold: 'launch mid-2030 within budget; [PLACEHOLDER: training measure from the sponsor]'

@@ -684,6 +684,6 @@ async def gate_evidence(study_id: str) -> dict:
             "icds": (ev.get("icds") or {}).get("counts"),
             "ledger_lines": len(ev.get("ledger") or []) if ev.get("ledger") is not None else None,
             "allocation_requirements": (ev.get("allocation_requirements") or {}).get("counts"),
-            "decisions_recorded": sorted(ev["decisions_recorded"]) if ev.get("decisions_recorded") is not None else None,
+            "panel_decisions": ev.get("panel_decisions"),
             "se_deliverables": ev.get("se_deliverables") is not None,
             "validation": ev.get("validation") is not None}
