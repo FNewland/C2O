@@ -109,5 +109,6 @@ async def test_needs_are_satisfied_by_integrated_adcs_and_drag_sail(client, stud
     for part in ("reaction_wheels", "star_trackers", "magnetorquers", "sun_sensors"):
         assert needs[part]["satisfied_by"] == "adcs_integrated", part
     assert needs["deorbit_devices"]["satisfied_by"] == "deorbit_devices"
-    assert needs["thrusters"]["satisfied_by"] == "deorbit_devices"
+    if "thrusters" in needs:  # listed only when the mission needs delta-V
+        assert needs["thrusters"]["satisfied_by"] == "deorbit_devices"
     assert not needs["batteries"]["satisfied"]

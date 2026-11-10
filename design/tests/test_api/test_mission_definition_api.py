@@ -245,7 +245,7 @@ async def test_example_unknown_category_is_kept_with_a_warning(client, db_factor
     mission = {
         "name": "Sail demo", "requirements": {"name": "Sail demo"}, "mission_need": {},
         "selected_equipment": [
-            {"category": "drag_sails", "componentId": "x-sail", "name": "Drag sail", "mass_kg": 0.3, "power_w": 0.1},
+            {"category": "tether_reels", "componentId": "x-tether", "name": "Tether reel", "mass_kg": 0.3, "power_w": 0.1},
             {"category": "cameras", "componentId": "x-cam", "name": "SWIR camera", "mass_kg": 0.4, "power_w": 4},
         ],
     }
@@ -253,10 +253,10 @@ async def test_example_unknown_category_is_kept_with_a_warning(client, db_factor
     r = await client.post("/api/lifecycle/example-missions/sail/load")
     assert r.status_code == 200, r.text
     out = r.json()
-    assert len(out["warnings"]) == 1 and "drag_sails" in out["warnings"][0]
+    assert len(out["warnings"]) == 1 and "tether_reels" in out["warnings"][0]
     els = (await client.get(f"/api/studies/{out['id']}/elements")).json()
     by_name = {e["name"]: e for e in els}
-    sail = by_name["Drag sail"]
+    sail = by_name["Tether reel"]
     assert by_name[next(e["name"] for e in els if e["id"] == sail["parent_id"])]["name"] == "Other equipment"
     assert by_name["SWIR camera"]["subsystem_domain"] == "payload"
 

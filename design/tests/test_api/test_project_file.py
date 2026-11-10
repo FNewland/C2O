@@ -414,7 +414,7 @@ PRESENCE_KEYS = frozenset({"active_seat", "last_action", "last_action_at", "stat
 
 #: endpoints whose lists the server orders by keys that contain ids (``target_key``, mode id):
 #: new ids sort differently, so their nested lists are compared as sets
-ORDERED_BY_IDS = ("/modes", "/design-rules/proposals")
+ORDERED_BY_IDS = ("/modes", "/design-rules/proposals", "/electrical")  # element order is insertion order
 
 
 def _deep_sorted(v):
