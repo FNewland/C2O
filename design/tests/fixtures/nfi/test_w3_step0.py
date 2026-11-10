@@ -10,19 +10,18 @@ import pytest
 from tests.fixtures.nfi import ELEMENT_IDS, load, seed_nfi
 
 #: the stub sections of step 0 and their owners (W0_SEAMS §9)
-WAVE3_SECTIONS = {"stakeholders": "S", "allocations": "A", "validation": "S", "assumptions": "S", "changes": "L",
-                  "open_items": "D", "negotiations": "H", "se_phase": "S",
+WAVE3_SECTIONS = {"allocations": "A", "changes": "L",      # S's four sections are real (3.S1–3.S6)
+                  "open_items": "D", "negotiations": "H",
                   # PI addendum
                   "semp": "X", "icds": "R", "reliability": "A", "thermal_model": "A", "debris": "L",
                   "change_control": "D", "cost": "A"}
 
 #: one GET per stub router (owner) and the write routes that answer 501 until the owner lands
-STUB_GETS = {"/moes": "S", "/validation/activities": "S", "/validation/need-validation": "S",
-             "/validation/coverage": "S", "/assumptions": "S", "/negotiations": "H", "/sensitivity": "H",
+STUB_GETS = {"/negotiations": "H", "/sensitivity": "H",
              "/sensitivity/altitude": "H", "/changes": "L", "/open-items": "D", "/allocation-ledger": "A",
              "/icds": "R", "/reliability": "A", "/fmea": "A", "/thermal-model": "A", "/debris-assessment": "L",
              "/cost/items": "A", "/changes/ECP-01/control": "D"}
-STUB_POSTS = ("/moes", "/stakeholders/import", "/validation/import", "/assumptions/import", "/negotiations",
+STUB_POSTS = ("/negotiations",
               "/changes/import", "/impact/preview", "/open-items/import", "/allocation-ledger/import",
               "/icds/ICD-DEP-01/issue", "/reliability/run", "/fmea/propose", "/thermal-model/propose",
               "/debris-assessment/run", "/changes/ECP-01/control/start", "/cost/price")
@@ -53,9 +52,9 @@ async def test_s0_contracts_phase_sections_and_stub_routes(client):
     s = await seed_nfi(client, "S0")
     sid = s.study_id
     ph = (await client.get(f"/api/studies/{sid}/phase")).json()
-    assert {k: ph[k] for k in ("gate", "entry", "deliverables", "analysis", "coaching")} == {
-        "gate": "mdr", "entry": [], "deliverables": [], "analysis": [], "coaching": {}}
-    assert ph["phase"] == "0" and ph["owner"] == "S"
+    # the contract keys of step 0; 3.S1 fills them (tests/test_se)
+    assert {"gate", "phase", "entry", "deliverables", "analysis", "coaching"} <= set(ph)
+    assert ph["gate"] == "mdr" and ph["phase"] == "0"
     sx = (await client.get(f"/api/studies/{sid}/export-context")).json()
     for name, owner in WAVE3_SECTIONS.items():
         assert sx[name]["status"] == "not_implemented" and sx[name]["owner"] == owner, name

@@ -31,6 +31,41 @@ class StakeholderRole(str, Enum):
     PUBLIC = "public"             # General public / society
     PARTNER = "partner"           # International or commercial partner
     LAUNCH_PROVIDER = "launch_provider"
+    AFFECTED = "affected"         # affected party with no role in the mission (wave 3, 3.S3)
+
+
+class StakeholderCategory(str, Enum):
+    """Why the stakeholder matters to the design (wave 3, 3.S3). The categories are kept apart on
+    purpose: a body that decides is not consulted like a beneficiary, and a rights-holder is not
+    an affected party. One stakeholder may sit in two categories (``categories``)."""
+    DECISION_AUTHORITY = "decision_authority"   # decides go / no-go, grants a licence, accepts for flight
+    BENEFICIARY = "beneficiary"                 # uses what the mission delivers
+    AFFECTED_PARTY = "affected_party"           # bears an effect without using the mission
+    RIGHTS_HOLDER = "rights_holder"             # holds rights over the lands, data or knowledge concerned
+    NON_HUMAN = "non_human"                     # the orbital environment, ecosystems, future users
+
+
+#: words of a free-text category (the v2 baseline writes "decision authority / rights-holder")
+_CATEGORY_WORDS = (("decision", "decision_authority"), ("beneficiar", "beneficiary"), ("affected", "affected_party"),
+                   ("rights", "rights_holder"), ("non-human", "non_human"), ("non human", "non_human"),
+                   ("environment", "non_human"))
+
+
+def parse_categories(raw: Any) -> list[str]:
+    """Category ids from an id, a list or the baseline's free text, in the order given."""
+    items = raw if isinstance(raw, (list, tuple)) else str(raw or "").replace(",", "/").split("/")
+    valid = {c.value for c in StakeholderCategory}
+    out: list[str] = []
+    for it in items:
+        s = str(getattr(it, "value", it) or "").strip().lower()
+        if not s:
+            continue
+        cid = s.replace(" ", "_").replace("-", "_") if s.replace(" ", "_").replace("-", "_") in valid else None
+        if cid is None:
+            cid = next((c for w, c in _CATEGORY_WORDS if w in s), None)
+        if cid and cid not in out:
+            out.append(cid)
+    return out
 
 
 class Stakeholder(BaseModel):
@@ -41,6 +76,38 @@ class Stakeholder(BaseModel):
     needs: list[str] = Field(default_factory=list, description="What this stakeholder needs from the mission")
     constraints: list[str] = Field(default_factory=list, description="Constraints this stakeholder imposes")
     priority: str = Field(default="primary", description="primary / secondary / advisory")
+    # wave 3 (3.S3): the register of the systems-engineering V
+    category: str = Field(default="", description="primary StakeholderCategory id ('' = not yet classified)")
+    categories: list[str] = Field(default_factory=list, description="every StakeholderCategory id that applies")
+    authority: str = Field(default="", description="what this stakeholder decides or controls")
+    engagement: str = Field(default="", description="how the team engages it: inform, consult, involve, collaborate, co-decide …")
+    need_ids: list[str] = Field(default_factory=list, description="stakeholder needs (SN-…) this stakeholder holds")
+    note: str = ""
+    consent_status: str = Field(default="", description="for a decision authority over lands or data: where consent stands")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _tolerant(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        d = dict(data)
+        role = d.get("role")
+        if role is not None and str(getattr(role, "value", role)) not in {r.value for r in StakeholderRole}:
+            d["role"] = "user"
+        cats = parse_categories(d.get("categories") or d.get("category"))
+        d["categories"] = cats
+        d["category"] = cats[0] if cats else ""
+        return d
+
+
+class StakeholderNeed(BaseModel):
+    """One stakeholder need (SN-…), the top row of the requirement tree (wave 3, 3.S3)."""
+    id: str
+    text: str = ""
+    stakeholder_ids: list[str] = Field(default_factory=list)
+    stakeholder: str = Field(default="", description="the holder as named in the source")
+    role: str = ""
+    traces_to: list[str] = Field(default_factory=list, description="requirement codes that answer it")
 
 
 # ---------------------------------------------------------------------------
@@ -168,6 +235,10 @@ class MissionNeed(BaseModel):
 
     # Stakeholders
     stakeholders: list[Stakeholder] = Field(default_factory=list)
+    stakeholder_needs: list[StakeholderNeed] = Field(default_factory=list,
+                                                     description="needs by SN id (wave 3, 3.S3)")
+    governance_notes: dict[str, str] = Field(default_factory=dict,
+                                             description="decision authority, data governance, legal status, limits")
 
     # Objectives (derived from stakeholder needs)
     objectives: list[Objective] = Field(default_factory=list)
