@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { Disclosure } from './ui/Disclosure'
 import { MissionDefinitionEditor } from './MissionDefinitionEditor'
 import { CLASS_LABELS, DISPOSAL_LABELS, orbitSummary } from '../workbench/missionDef'
+import { ConopsPhases } from '../workbench/ConopsPhases'
 
 const API = '/api'
 
@@ -29,9 +30,11 @@ const TYPE_LABEL: Record<string, string> = {
 interface Need {
   problem_statement?: string
   operational_context?: string
-  stakeholders?: { id: string; name: string; role?: string; needs?: string[] }[]
+  stakeholders?: { id: string; name: string; role?: string; needs?: string[]; constraints?: string[] }[]
   objectives?: { id: string; text: string; priority?: string; measurable_criterion?: string }[]
-  alternatives_considered?: { id: string; name: string; decision?: string; decision_rationale?: string }[]
+  success_criteria?: string[]
+  conops_summary?: string
+  alternatives_considered?: { id: string; name: string; decision?: string; decision_rationale?: string; pros?: string[]; cons?: string[]; feasibility_score?: number }[]
 }
 
 export function MissionNeedCard({ studyId }: { studyId: string | null }) {
@@ -97,6 +100,7 @@ export function MissionNeedCard({ studyId }: { studyId: string | null }) {
                   <li key={s.id}><span className="w-600">{s.name}</span>
                     {s.role && <span className="c-3"> · {t(ROLE_LABEL[s.role] ?? s.role)}</span>}
                     {(s.needs ?? []).filter(Boolean).length > 0 && <span> — {(s.needs ?? []).filter(Boolean).join('; ')}</span>}
+                    {(s.constraints ?? []).filter(Boolean).length > 0 && <span className="c-3"> · {t('constraints: {{c}}', { c: (s.constraints ?? []).filter(Boolean).join('; ') })}</span>}
                   </li>
                 ))}
               </ul>
@@ -116,17 +120,33 @@ export function MissionNeedCard({ studyId }: { studyId: string | null }) {
               </ul>
             )}
           </dd>
+          <dt>{t('Success criteria')}</dt>
+          <dd data-testid="mission-success-criteria">
+            {(need.success_criteria ?? []).filter(Boolean).length === 0 ? empty : (
+              <ul className="list-reset c2o-need__list">
+                {(need.success_criteria ?? []).filter(Boolean).map((c, i) => <li key={i}>{c}</li>)}
+              </ul>
+            )}
+          </dd>
+          <dt>{t('ConOps summary')}</dt><dd data-testid="mission-conops-summary">{need.conops_summary?.trim() || empty}</dd>
           <dt>{t('Alternative chosen')}</dt>
           <dd>
             {chosen ? (<>
               <span className="w-600">{chosen.name}</span>
               {chosen.decision_rationale && <span> — {chosen.decision_rationale}</span>}
               <span className="c-3"> {t('({{n}} alternatives considered)', { n: alts.length })}</span>
+              {((chosen.pros ?? []).length > 0 || (chosen.cons ?? []).length > 0) && (
+                <div className="t-12 c-2">
+                  {(chosen.pros ?? []).length > 0 && <span>{t('pros: {{p}}', { p: (chosen.pros ?? []).join('; ') })}</span>}
+                  {(chosen.cons ?? []).length > 0 && <span> · {t('cons: {{c}}', { c: (chosen.cons ?? []).join('; ') })}</span>}
+                </div>
+              )}
             </>) : empty}
           </dd>
         </dl>
         <p className="t-12 c-3 m-0 mt-1">{t('Entered when the study was created and editable here; every analysis reads these values. The objectives below carry on into the requirements.')}</p>
         </>)}
+        <ConopsPhases studyId={studyId} />
       </Disclosure>
     </div>
   )

@@ -3,7 +3,9 @@
 A study holds the review gates of its *profile*: full ECSS (MDR → PRR → SRR → PDR → CDR, the
 default, ruling 1 carried on to CDR in Nov 2026), ESA IOD CubeSat (concept review → PDR → CDR),
 C2O three gates (MDR → PRR+SRR → PDR) or the NASA vocabulary skin (MCR → SRR → MDR/SDR → PDR → CDR).
-A profile covers the canonical gates in order from MDR to at least PDR; CDR is optional.
+A profile covers the canonical gates in order from MDR to at least PDR; CDR, the qualification
+and acceptance reviews (QR, AR) and the flight readiness review (FRR) are optional (Nov 2026: the
+PI's profile is full ECSS plus FRR).
 
 Each profile gate ``covers`` canonical gates (the phases of gate_exit_criteria.yaml):
 its checklist is the union of their criteria, the decisions due by it are those of every
@@ -23,9 +25,11 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-CANONICAL = ("mdr", "prr", "srr", "pdr", "cdr")
-#: the canonical gates every profile must cover (CDR is optional: the C2O spine stops at PDR)
+CANONICAL = ("mdr", "prr", "srr", "pdr", "cdr", "qr", "ar", "frr")
+#: the canonical gates every profile must cover (CDR and later are optional: the C2O spine stops at PDR)
 REQUIRED = ("mdr", "prr", "srr", "pdr")
+#: canonical gates after CDR: no step of the margin ladder of their own (they use the CDR step)
+POST_CDR = ("qr", "ar", "frr")
 
 
 def _file() -> Path:
@@ -53,7 +57,7 @@ def load() -> dict[str, Any]:
 
 def validate(data: dict[str, Any] | None = None) -> list[str]:
     """Structural checks: every profile covers the canonical gates once, in order, from MDR to
-    at least PDR (CDR optional)."""
+    at least PDR (CDR, QR, AR and FRR optional, in that order)."""
     data = data if data is not None else load()
     errs: list[str] = []
     profiles = data.get("profiles") or {}
@@ -81,7 +85,8 @@ def validate(data: dict[str, Any] | None = None) -> list[str]:
             if mg is not None and mg not in (*CANONICAL, "cdr"):
                 errs.append(f"profiles.{pid}.{g.get('id')}: bad margin_gate {mg}")
         if covered != list(CANONICAL[: len(covered)]) or len(covered) < len(REQUIRED):
-            errs.append(f"profiles.{pid}: gates must cover {list(REQUIRED)} (then optionally cdr) once, in order (got {covered})")
+            errs.append(f"profiles.{pid}: gates must cover {list(REQUIRED)} (then optionally cdr, qr, ar, frr) "
+                        f"once, in order (got {covered})")
     for step, label in steps.items():
         if not (isinstance(label, dict) and label.get("en") and label.get("fr")):
             errs.append(f"steps.{step}: needs en and fr")
@@ -136,7 +141,8 @@ def covering_gate(profile: dict[str, Any], canonical: str) -> dict[str, Any] | N
 
 def margin_gate(gate: dict[str, Any]) -> str:
     covers = gate.get("covers") or []
-    return gate.get("margin_gate") or (covers[-1] if covers else "mdr")
+    mg = gate.get("margin_gate") or (covers[-1] if covers else "mdr")
+    return "cdr" if mg in POST_CDR else mg
 
 
 def due_canonical(gate: dict[str, Any]) -> list[str]:

@@ -13,6 +13,14 @@ requirement id, or ``"study_id"`` in the JSON body). For a study with seats:
 Parameter ownership, element deletion, gate decisions and study deletion are checked in the
 routes themselves (``service``). Seat, instructor, logbook and identity routes are exempt.
 Studies without seats are not touched.
+
+Required seats (PI decision, Nov 2026): a study that needs a disposal device (a drag sail or
+another deorbit device in its product tree, or ``disposal_method`` drag_sail / propulsive) or any
+ΔV gets the optional **Propulsion** seat, which owns the disposal function (the drag sail). The
+guard adds it to the team (``ensure_required_seats``) before any write to the study and when the
+team is read, so the seat card is there to claim even when the preset or the wizard left it out.
+Apply from the Comms & OBDH seat (link budget → ``PATCH /studies/{id}/mission``) is an ordinary
+write: it is never turned into a pending change for the Team leader (W1.04).
 """
 from __future__ import annotations
 
@@ -43,6 +51,54 @@ _ELEMENT_PATH = re.compile(r"^/api/elements/([^/?]+)")
 _IFACE_PATH = re.compile(r"^/api/interfaces/([^/?]+)")
 _REQ_PATH = re.compile(r"^/api/requirements/([^/?]+)")
 _REQ_ROUTE = re.compile(r"^/api/requirements(/|$)")
+_TEAM_READ = re.compile(r"^/api/studies/([^/]+)/team/?$")
+
+
+# ─── required seats (PI decision: Propulsion owns disposal) ───────────────────
+
+def required_optional_seats(study: Any, elements: list[dict[str, Any]]) -> list[str]:
+    """Optional seats a study must have: Propulsion when it needs ΔV or a disposal device."""
+    need: list[str] = []
+    req = getattr(study, "requirements", None)
+    orbit = getattr(req, "orbit", None)
+    dv = 0.0
+    try:
+        dv = float(getattr(orbit, "delta_v_insertion_ms", 0) or 0) + float(getattr(orbit, "delta_v_maintenance_ms", 0) or 0)
+    except (TypeError, ValueError):
+        dv = 0.0
+    method = str(getattr(req, "disposal_method", "") or "").lower()
+    device = method in ("drag_sail", "propulsive") or any(
+        cfg.is_disposal_device(e) or str(e.get("subsystem_domain") or "").lower() in ("propulsion", "prop")
+        for e in elements if not e.get("deleted_at"))
+    if dv > 0 or device:
+        need.append("propulsion_engineer")
+    return need
+
+
+async def ensure_required_seats(study_id: str) -> list[str]:
+    """Add the required optional seats to a seat study's team; returns the seats added."""
+    state = store.peek_team(study_id)
+    if state is None:
+        state = await store.get_team(study_id)
+    if not state.get("enabled") or not state.get("preset"):
+        return []
+    from ..routers.elements import _elements
+    from ..routers.studies import get_study_store
+    study = get_study_store().get(study_id)
+    if study is None:
+        return []
+    els = [e for e in _elements.values() if e.get("study_id") == study_id]
+    used = set(cfg.study_seats(state.get("groups") or []))
+    missing = [s for s in required_optional_seats(study, els) if s not in used]
+    if not missing:
+        return []
+    optional = [*list(state.get("optional") or []), *missing]
+    state["optional"] = optional
+    state["groups"] = cfg.groups_for(state["preset"], optional)
+    await store.save_team(study_id, state)
+    await store.log_event(study_id, "", None, "seat_required", ", ".join(missing),
+                          {"reason": "disposal device or delta-V (PI decision: Propulsion owns disposal)"})
+    return missing
 
 
 def _deny(status: int, code: str, message: str) -> JSONResponse:
@@ -101,17 +157,34 @@ def _customer_may(request: Request, body: dict[str, Any]) -> bool:
     return (body.get("level") or "system") == "mission"
 
 
+async def _ensure(sid: str) -> None:
+    try:
+        await ensure_required_seats(sid)
+    except Exception:  # noqa: BLE001 — never block a request on this
+        import logging
+        logging.getLogger(__name__).debug("required seats not checked for %s", sid, exc_info=True)
+
+
 class SeatGuard(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.method not in WRITE_METHODS or not request.url.path.startswith("/api/"):
-            return await call_next(request)
         path = request.url.path
+        if request.method == "GET":
+            m = _TEAM_READ.match(path)
+            if m:
+                await _ensure(m.group(1))
+            return await call_next(request)
+        if request.method not in WRITE_METHODS or not path.startswith("/api/"):
+            return await call_next(request)
         if any(rx.match(path) for rx in _EXEMPT):
+            m = _STUDY_PATH.match(path)
+            if m and "/team" in path:
+                await _ensure(m.group(1))
             return await call_next(request)
         body = await _body_json(request) if request.method in ("POST", "PUT", "PATCH") else {}
         sid = await study_of(request, body)
         if not sid:
             return await call_next(request)
+        await _ensure(sid)
         state = store.peek_team(sid)
         if state is None:
             state = await store.get_team(sid)

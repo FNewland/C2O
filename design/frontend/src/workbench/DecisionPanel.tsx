@@ -17,8 +17,9 @@ import i18n, { fmtProse } from '../i18n'
 import { useUIStore } from '../stores/uiStore'
 import { pairKey, pairwiseWeights } from './pairwise'
 import { fs } from '../theme/tokens'
-import { showAlert } from '../components/ui/Dialog'
-import { Button, Disclosure } from '../components/ui'
+import { askConfirm, askText, showAlert } from '../components/ui/Dialog'
+import { Button, Disclosure, Input, Note, Select, Tag, Textarea } from '../components/ui'
+import { useSeatStore } from '../seats/api'
 import { useWhereSection } from '../where/where'
 
 const API = '/api'
@@ -27,7 +28,7 @@ const API = '/api'
 // trade record; displayed with t(c, { context: 'criterion' }) (user-added names fall through).
 const DEFAULT_CRITERIA = ['Mass', 'Power', 'Cost', 'TRL', 'Risk']
 
-/** The Pugh trade with its pairwise weighting: one record per study on the server (WP0). */
+/** One criterion-weighted Pugh trade with its pairwise weighting (W6: many per study, T-01…). */
 interface PughState {
   criteria: string[]
   options: string[]
@@ -36,61 +37,149 @@ interface PughState {
   comparisons: Record<string, number>
 }
 
+interface TradeDecision { selected?: string; rationale?: string; record_id?: string; decided_at?: string; decided_by_seat?: string }
+interface TradeLinks { decision_record?: string; requirements?: string[]; risks?: string[]; elements?: string[] }
+
+interface TradeState extends PughState {
+  id: string
+  title: string
+  seat: string
+  level: string
+  status: 'open' | 'decided'
+  weights_mode?: 'pairwise' | 'direct'
+  weights?: Record<string, number>
+  thresholds: Record<string, number>
+  evidence?: string
+  note?: string
+  decision?: TradeDecision
+  links?: TradeLinks
+}
+
+interface TradeEvaluation {
+  weights: Record<string, number>
+  weights_source: 'pairwise' | 'direct'
+  totals: Array<{ option: string; datum: boolean; weighted: number; unweighted: number; below_threshold: string[]; acceptable: boolean }>
+  winner: string | null
+  sensitivity: Array<{ criterion: string; weight: number; robust: boolean; flip: { delta: number; new_weight: number; new_winner: string } | null }>
+  robust: boolean
+  decision_differs_from_winner: boolean
+}
+
+interface TradeItem { id: string; state: TradeState; version: number; evaluation: TradeEvaluation | null }
+
 const LEGACY_PUGH_KEY = 'spacecdf-pugh'
 
+/** Weights of a trade: typed (``weights_mode`` direct) or derived from the pairwise comparisons. */
+function tradeWeights(st: TradeState): Record<string, number> {
+  if (st.weights_mode === 'direct' && st.weights && Object.keys(st.weights).length) {
+    const total = st.criteria.reduce((s, c) => s + (st.weights?.[c] ?? 0), 0)
+    if (total > 0) return Object.fromEntries(st.criteria.map(c => [c, (st.weights?.[c] ?? 0) / total]))
+  }
+  return pairwiseWeights(st.criteria, st.comparisons || {})
+}
+
 /**
- * Load / save the study's Pugh trade (GET/PUT /api/studies/{id}/trades/pugh). It used to
- * live in localStorage under ONE global key, shared by every study on the machine and
- * invisible to teammates; an old local copy is moved to the study once.
+ * The study's trade studies (GET/POST/PUT/DELETE /api/studies/{id}/trades…). Edits are kept
+ * locally and saved after 400 ms with the version they were made on (409 = someone else saved:
+ * reload). The server returns each trade's evaluation (weights, totals, winner, sensitivity).
+ * A browser's old single Pugh record (localStorage, before Nov 2026) becomes T-01 once.
  */
-function useTradeRecord(studyId: string | null, defaults: () => PughState) {
+function useTrades(studyId: string | null) {
   const qc = useQueryClient()
-  const { data } = useQuery<{ state: Partial<PughState> | null; version: number }>({
-    queryKey: ['trade', studyId, 'pugh'],
-    queryFn: () => fetch(`${API}/studies/${studyId}/trades/pugh`).then(r => (r.ok ? r.json() : { state: null, version: 0 })),
+  const key = ['trades', studyId]
+  const { data, isLoading } = useQuery<{ items: TradeItem[] }>({
+    queryKey: key,
+    queryFn: () => fetch(`${API}/studies/${studyId}/trades`).then(r => (r.ok ? r.json() : { items: [] })),
     enabled: !!studyId,
   })
-  const [local, setLocal] = useState<PughState | null>(null)
-  const version = useRef(0)
-  const dirty = useRef(false)
-  const timer = useRef<number | null>(null)
-
-  const put = useCallback(async (state: PughState) => {
-    if (!studyId) return
-    const res = await fetch(`${API}/studies/${studyId}/trades/pugh`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state, version: version.current }),
-    })
-    if (res.ok) { version.current = (await res.json()).version; dirty.current = false }
-    else if (res.status === 409) { dirty.current = false; void qc.invalidateQueries({ queryKey: ['trade', studyId, 'pugh'] }) }
-  }, [studyId, qc])
+  const [local, setLocal] = useState<Record<string, TradeState>>({})
+  const versions = useRef<Record<string, number>>({})
+  const timers = useRef<Record<string, number>>({})
+  const migrated = useRef(false)
 
   useEffect(() => {
-    if (!data || dirty.current) return
-    version.current = data.version || 0
-    if (data.state) { setLocal({ ...defaults(), ...data.state }); return }
+    for (const it of data?.items ?? []) {
+      if (!timers.current[it.id]) versions.current[it.id] = it.version
+    }
+    if (!studyId || !data || migrated.current || data.items.length) return
+    migrated.current = true
     let legacy: Partial<PughState> | null = null
     try { const raw = localStorage.getItem(LEGACY_PUGH_KEY); legacy = raw ? JSON.parse(raw) : null } catch { legacy = null }
-    const init = { ...defaults(), ...(legacy || {}) }
-    setLocal(init)
-    if (legacy) {
-      void put(init).then(() => { try { localStorage.removeItem(LEGACY_PUGH_KEY) } catch { /* private mode */ } })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
-
-  const update = useCallback((patch: Partial<PughState>) => {
-    setLocal(prev => {
-      const next = { ...(prev ?? defaults()), ...patch }
-      dirty.current = true
-      if (timer.current) window.clearTimeout(timer.current)
-      timer.current = window.setTimeout(() => { void put(next) }, 400)
-      return next
+    if (!legacy) return
+    void fetch(`${API}/studies/${studyId}/trades`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'T-01', state: legacy }),
+    }).then(r => {
+      if (r.ok) { try { localStorage.removeItem(LEGACY_PUGH_KEY) } catch { /* private mode */ } }
+      void qc.invalidateQueries({ queryKey: key })
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [put])
+  }, [data, studyId])
 
-  return { state: local ?? defaults(), update }
+  const put = useCallback(async (tid: string, state: TradeState) => {
+    if (!studyId) return
+    const res = await fetch(`${API}/studies/${studyId}/trades/${encodeURIComponent(tid)}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state, version: versions.current[tid] ?? 0 }),
+    })
+    delete timers.current[tid]
+    if (res.ok) {
+      const saved: TradeItem = await res.json()
+      versions.current[tid] = saved.version
+      qc.setQueryData<{ items: TradeItem[] }>(key, old => old ? { ...old, items: old.items.map(x => (x.id === tid ? saved : x)) } : old)
+    } else if (res.status === 409) {
+      setLocal(l => { const n = { ...l }; delete n[tid]; return n })
+      void qc.invalidateQueries({ queryKey: key })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyId, qc])
+
+  const items: TradeItem[] = (data?.items ?? []).map(it => (local[it.id] ? { ...it, state: local[it.id] } : it))
+
+  const update = useCallback((tid: string, patch: Partial<TradeState>) => {
+    const base = local[tid] ?? data?.items.find(x => x.id === tid)?.state
+    if (!base) return
+    const next = { ...base, ...patch }
+    setLocal(l => ({ ...l, [tid]: next }))
+    if (timers.current[tid]) window.clearTimeout(timers.current[tid])
+    timers.current[tid] = window.setTimeout(() => { void put(tid, next) }, 400)
+  }, [local, data, put])
+
+  const create = useCallback(async (title: string, seat: string) => {
+    if (!studyId) return null
+    const res = await fetch(`${API}/studies/${studyId}/trades`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: { title, seat, criteria: DEFAULT_CRITERIA, options: [i18n.t('Option A'), i18n.t('Option B'), i18n.t('Option C')], datum: 0 } }),
+    })
+    if (!res.ok) return null
+    const it: TradeItem = await res.json()
+    await qc.invalidateQueries({ queryKey: key })
+    return it.id
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyId, qc])
+
+  const remove = useCallback(async (tid: string) => {
+    if (!studyId) return
+    await fetch(`${API}/studies/${studyId}/trades/${encodeURIComponent(tid)}`, { method: 'DELETE' })
+    setLocal(l => { const n = { ...l }; delete n[tid]; return n })
+    await qc.invalidateQueries({ queryKey: key })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyId, qc])
+
+  /** Record the decision on the server (the trade is kept; the study decision record is written). */
+  const decide = useCallback(async (tid: string, selected: string, rationale: string, seat: string) => {
+    if (!studyId) return false
+    if (timers.current[tid]) { window.clearTimeout(timers.current[tid]); const st = local[tid]; if (st) await put(tid, st) }
+    const res = await fetch(`${API}/studies/${studyId}/trades/${encodeURIComponent(tid)}/decision`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selected, rationale, seat }),
+    })
+    if (!res.ok) return false
+    setLocal(l => { const n = { ...l }; delete n[tid]; return n })
+    await qc.invalidateQueries({ queryKey: key })
+    return true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyId, qc, local, put])
+
+  return { items, isLoading, update, create, remove, decide }
 }
 
 export function DecisionPanel() {
@@ -104,13 +193,6 @@ export function DecisionPanel() {
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
     enabled: !!studyId, structuralSharing: false,
   })
-
-  const trade = useTradeRecord(studyId, () => ({
-    criteria: DEFAULT_CRITERIA, options: [t('Option A'), t('Option B'), t('Option C')], datum: 0, scores: {}, comparisons: {},
-  }))
-  const sharedCriteria = trade.state.criteria
-  const setSharedCriteria = (c: string[]) => trade.update({ criteria: c })
-  const weights = pairwiseWeights(sharedCriteria, trade.state.comparisons)
 
   const focusElement = allElements.find((e: any) => e.id === focusElementId)
   const isSpaceSegment = focusElement?.segment === 'space'
@@ -138,12 +220,216 @@ export function DecisionPanel() {
       {(currentLevel === 1 || isGroundSegment) && <GroundTradeWidget studyId={studyId} />}
       {currentLevel >= 1 && <ContactScheduleWidget studyId={studyId} />}
 
-      {/* Any level: Decision tools — weighting first, then scoring */}
-      <PairwiseWeightingWidget weights={weights} comparisons={trade.state.comparisons}
-        onComparisonsChanged={c => trade.update({ comparisons: c })} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria} />
-      <PughMatrixWidget weights={weights} criteria={sharedCriteria} onCriteriaChanged={setSharedCriteria}
-        state={trade.state} onChange={trade.update} />
+      {/* Any level: the study's trade studies — weighting first, then scoring */}
+      <TradeStudies studyId={studyId} />
     </div>
+  )
+}
+
+// ─── Trade studies (W6): list, weighting, Pugh matrix, sensitivity, decision ───
+
+function splitList(v: string): string[] {
+  return v.split(/[,;\n]/).map(x => x.trim()).filter(Boolean)
+}
+
+function TradeStudies({ studyId }: { studyId: string | null }) {
+  const { t } = useTranslation()
+  const trades = useTrades(studyId)
+  const [picked, setPicked] = useState<string | null>(null)
+  const seatTeam = useSeatStore(st => st.team)
+  const mySeat = seatTeam?.enabled ? (seatTeam.me?.active ?? '') : ''
+  const current = trades.items.find(x => x.id === picked) ?? trades.items[0] ?? null
+  const tid = current?.id ?? null
+  const st = current?.state ?? null
+  const weights = st ? tradeWeights(st) : {}
+  const upd = (patch: Partial<TradeState>) => { if (tid) trades.update(tid, patch) }
+
+  const addTrade = async () => {
+    const title = await askText(t('Title of the new trade study:'), '')
+    if (title == null) return
+    const id = await trades.create(title.trim() || t('New trade'), mySeat)
+    if (id) setPicked(id)
+  }
+  const removeTrade = async () => {
+    if (!tid || !(await askConfirm(t('Delete the trade study {{id}}?', { id: tid }), { danger: true }))) return
+    await trades.remove(tid)
+    setPicked(null)
+  }
+
+  return (
+    <>
+      <ToolSection whereId="trades" title={t('Trade studies')} color="var(--cat-6)">
+        <div className="t-12 c-2 mb-1">
+          {t('Each trade compares options against a datum with weighted criteria. Every trade is kept with the study; Record decision writes its decision record and keeps the trade.')}
+        </div>
+        <div className="flex gap-1 wrap ai-c mb-1" data-testid="trade-list">
+          {trades.items.length > 0 && (
+            <Select dense aria-label={t('Trade study')} value={tid ?? ''} onChange={e => setPicked(e.target.value)}>
+              {trades.items.map(it => (
+                <option key={it.id} value={it.id}>
+                  {it.id} {it.state.title}{it.state.status === 'decided' ? ` ✓` : ''}
+                </option>
+              ))}
+            </Select>
+          )}
+          <Button size="sm" onClick={() => void addTrade()}>{t('+ New trade')}</Button>
+          {tid && <Button size="sm" variant="quiet" onClick={() => void removeTrade()}>{t('Delete trade')}</Button>}
+          <span className="grow" />
+          {studyId && trades.items.length > 0 && (
+            <Button size="sm" variant="quiet" onClick={() => void downloadPost(`${API}/studies/${studyId}/trades/report?lang=${i18n.language === 'fr' ? 'fr' : 'en'}`, 'SpaceCDF_Trade_reports.docx')}>
+              {t('Trade-off report (.docx)')}
+            </Button>
+          )}
+        </div>
+        {trades.isLoading && <p className="t-12 c-2 m-0">{t('Loading...')}</p>}
+        {!trades.isLoading && trades.items.length === 0 && (
+          <p className="t-12 c-2 m-0">{t('No trade study yet. Add one to compare options.')}</p>
+        )}
+        {st && tid && (
+          <div className="stack gap-1">
+            <div className="flex gap-1 wrap">
+              <Input dense aria-label={t('Title')} placeholder={t('Title')} value={st.title} style={{ flex: 2, minWidth: '14rem' }}
+                onChange={e => upd({ title: e.target.value })} />
+              <Input dense aria-label={t('Owner seat')} placeholder={t('Owner seat')} value={st.seat} style={{ flex: 1, minWidth: '8rem' }}
+                onChange={e => upd({ seat: e.target.value })} />
+              <Input dense aria-label={t('Level')} placeholder={t('Level')} value={st.level} style={{ flex: 1, minWidth: '8rem' }}
+                onChange={e => upd({ level: e.target.value })} />
+            </div>
+          </div>
+        )}
+      </ToolSection>
+      {st && tid && (<>
+        <PairwiseWeightingWidget weights={weights} comparisons={st.comparisons || {}}
+          onComparisonsChanged={c => upd({ comparisons: c, weights_mode: 'pairwise' })}
+          criteria={st.criteria} onCriteriaChanged={c => upd({ criteria: c })} />
+        <PughMatrixWidget tradeId={tid} weights={weights} criteria={st.criteria} onCriteriaChanged={c => upd({ criteria: c })}
+          state={st} onChange={upd} />
+        <TradeSensitivity evaluation={current?.evaluation ?? null} />
+        <TradeLinksAndDecision tradeId={tid} state={st} evaluation={current?.evaluation ?? null} onChange={upd}
+          onDecide={(sel, why) => trades.decide(tid, sel, why, mySeat || st.seat)} />
+      </>)}
+    </>
+  )
+}
+
+async function downloadPost(url: string, fallbackName: string) {
+  const res = await fetch(url, { method: 'POST' })
+  if (!res.ok) { void showAlert(i18n.t('The document could not be generated ({{code}}).', { code: res.status })); return }
+  const blob = await res.blob()
+  const cd = res.headers.get('content-disposition') || ''
+  const name = /filename="([^"]+)"/.exec(cd)?.[1] || fallbackName
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+}
+
+function TradeSensitivity({ evaluation }: { evaluation: TradeEvaluation | null }) {
+  const { t } = useTranslation()
+  if (!evaluation || !evaluation.sensitivity.length) return null
+  return (
+    <ToolSection whereId="trade-sensitivity" title={t('Weight sensitivity')} color="var(--cat-2)">
+      <div className="t-12 c-2 mb-1">
+        {evaluation.robust
+          ? t('Robust: no single weight change of 10 points or less changes the leader ({{w}}).', { w: evaluation.winner ?? '' })
+          : t('Sensitive: a change of 10 points or less in one weight changes the leader ({{w}}).', { w: evaluation.winner ?? '' })}
+      </div>
+      <table className="c2o-table c2o-table--dense" data-testid="trade-sensitivity">
+        <thead><tr className="bb"><th>{t('Criterion')}</th><th className="num">{t('Weight')}</th><th className="num">{t('Change that flips the leader')}</th><th>{t('New leader')}</th></tr></thead>
+        <tbody>
+          {evaluation.sensitivity.map(s => (
+            <tr key={s.criterion} className="bb">
+              <td>{t(s.criterion, { context: 'criterion' })}</td>
+              <td className="num">{(s.weight * 100).toFixed(0)}%</td>
+              <td className={`num${s.robust ? '' : ' c-caution w-600'}`}>{s.flip ? `${s.flip.delta > 0 ? '+' : ''}${(s.flip.delta * 100).toFixed(0)} ${t('points')}` : t('none')}</td>
+              <td>{s.flip?.new_winner ?? ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </ToolSection>
+  )
+}
+
+function TradeLinksAndDecision({ tradeId, state, evaluation, onChange, onDecide }: {
+  tradeId: string; state: TradeState; evaluation: TradeEvaluation | null
+  onChange: (patch: Partial<TradeState>) => void
+  onDecide: (selected: string, rationale: string) => Promise<boolean>
+}) {
+  const { t } = useTranslation()
+  const links = state.links ?? {}
+  const dec = state.decision ?? {}
+  const [selected, setSelected] = useState<string>(dec.selected ?? evaluation?.winner ?? state.options[state.datum] ?? '')
+  const [why, setWhy] = useState<string>(dec.rationale ?? '')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  useEffect(() => {
+    setSelected(state.decision?.selected ?? evaluation?.winner ?? state.options[state.datum] ?? '')
+    setWhy(state.decision?.rationale ?? '')
+    setMsg(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tradeId])
+  const setLinks = (patch: Partial<TradeLinks>) => onChange({ links: { ...links, ...patch } })
+  const totals = evaluation?.totals ?? []
+  const best = evaluation?.winner ?? ''
+  return (
+    <ToolSection whereId="trade-decision" title={t('Links and decision')} color="var(--cat-6)">
+      <div className="stack gap-1 t-12">
+        <label className="flex gap-1 ai-c">
+          <span style={{ width: '11rem' }}>{t('Decision record')}</span>
+          <Input dense value={links.decision_record ?? ''} placeholder="D-PAY-01" onChange={e => setLinks({ decision_record: e.target.value })} />
+        </label>
+        <label className="flex gap-1 ai-c">
+          <span style={{ width: '11rem' }}>{t('Requirements affected')}</span>
+          <Input dense style={{ flex: 1 }} value={(links.requirements ?? []).join(', ')} placeholder="PAY-OPT-01, EPS-SA-01"
+            onChange={e => setLinks({ requirements: splitList(e.target.value) })} />
+        </label>
+        <label className="flex gap-1 ai-c">
+          <span style={{ width: '11rem' }}>{t('Risks affected')}</span>
+          <Input dense style={{ flex: 1 }} value={(links.risks ?? []).join(', ')} placeholder="RSK-010"
+            onChange={e => setLinks({ risks: splitList(e.target.value) })} />
+        </label>
+        <label className="flex gap-1 ai-c">
+          <span style={{ width: '11rem' }}>{t('Selected option')}</span>
+          <Select dense value={selected} onChange={e => setSelected(e.target.value)}>
+            {state.options.map(o => <option key={o} value={o}>{o}{o === best ? ' ★' : ''}</option>)}
+          </Select>
+          {dec.selected && <Tag>{t('Decided: {{o}}', { o: dec.selected })}</Tag>}
+        </label>
+        <Textarea rows={3} aria-label={t('Rationale')} placeholder={t('Why this option (required when it is not the highest score)')}
+          value={why} onChange={e => setWhy(e.target.value)} />
+        {selected && best && selected !== best && <Note tone="caution">{t('The selected option is not the highest weighted score: say why in the rationale.')}</Note>}
+        <div className="flex gap-1 wrap ai-c">
+          <Button size="sm" variant="primary" busy={busy}
+            disabledReason={!selected ? t('Pick the selected option') : (selected !== best && !why.trim()) ? t('Give the rationale first') : undefined}
+            onClick={async () => {
+              setBusy(true); setMsg(null)
+              const ok = await onDecide(selected, why)
+              setBusy(false)
+              setMsg(ok ? t('Decision recorded on {{id}}; the trade is kept.', { id: tradeId }) : t('The decision could not be recorded.'))
+            }}>
+            {t('Record decision on the trade')}
+          </Button>
+          <RecordDecision decision="D-3.4-TRADE" capture="decide:pugh" context={{ trade: tradeId }} label={t('Write it in my logbook')} prefill={() => ({
+            options: state.options.map(o => {
+              const tot = totals.find(x => x.option === o)
+              return {
+                name: o,
+                summary: tot?.datum ? t('Datum (reference)') : undefined,
+                values: tot && !tot.datum ? { [t('Weighted Total')]: tot.weighted } : {},
+                chosen: o === selected || undefined,
+              }
+            }),
+            criteria: state.criteria.map(c => ({ name: t(c, { context: 'criterion' }), weight: Math.round((evaluation?.weights?.[c] ?? 0) * 100) / 100 })),
+            choice: selected,
+            rationale: why || undefined,
+            evidence: [{ label: t('Method'), value: t('Pugh Matrix (Weighted)') }, { label: t('Trade'), value: `${tradeId} ${state.title}` }],
+          })} />
+        </div>
+        {msg && <div role="status" className="t-12 c-2">{msg}</div>}
+      </div>
+    </ToolSection>
   )
 }
 
@@ -672,12 +958,20 @@ function ContactScheduleWidget({ studyId }: { studyId: string | null }) {
 
 // ─── Pugh Matrix ───
 
-function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChange }: {
+function PughMatrixWidget({ tradeId, weights, criteria, onCriteriaChanged, state, onChange }: {
+  tradeId: string
   weights?: Record<string, number>; criteria: string[]; onCriteriaChanged: (c: string[]) => void
-  state: PughState; onChange: (patch: Partial<PughState>) => void
+  state: TradeState; onChange: (patch: Partial<TradeState>) => void
 }) {
   const { t } = useTranslation()
   const { options, datum, scores } = state
+  const thresholds = state.thresholds ?? {}
+  const setThreshold = (crit: string, v: string) => {
+    const next = { ...thresholds }
+    if (v === '') delete next[crit]; else next[crit] = parseInt(v)
+    onChange({ thresholds: next })
+  }
+  const belowThreshold = (opt: string, i: number) => criteria.filter(c => c in thresholds && (i === datum ? 0 : getScore(opt, c)) < thresholds[c])
   const setDatum = (i: number) => onChange({ datum: i })
   const setOptions = (f: (p: string[]) => string[]) => onChange({ options: f(options) })
   const [newCriterion, setNewCriterion] = useState('')
@@ -702,7 +996,12 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChang
     return { unweighted, weighted: Math.round(weighted * 100) / 100 }
   })
 
-  const best = totals.reduce((bi, t, i) => (i !== datum && t.weighted > (totals[bi]?.weighted ?? -999) ? i : bi), datum === 0 ? 1 : 0)
+  // the leader: the highest weighted total among acceptable options; the datum counts as 0 and wins ties
+  const best = totals.reduce((bi, tot, i) => {
+    if (belowThreshold(options[i], i).length) return bi
+    const cur = bi < 0 ? -Infinity : totals[bi].weighted
+    return tot.weighted > cur + 1e-9 || (Math.abs(tot.weighted - cur) < 1e-9 && i === datum) ? i : bi
+  }, -1)
 
   return (
     <ToolSection whereId="pugh" title={hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)')} color="var(--cat-6)">
@@ -719,9 +1018,10 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChang
             {options.map((opt, i) => (
               <th key={opt} className={`ctr c2o-pugh__opt${i === datum ? ' is-datum' : i === best ? ' is-best' : ''}`}
                 onClick={() => setDatum(i)} title={t('Click to set as datum')}>
-                {opt} {i === datum ? '(D)' : i === best ? '★' : ''}
+                {opt} {i === datum ? '(D)' : ''}{i === best ? '★' : ''}
               </th>
             ))}
+            <th className="ctr" title={t('Minimum acceptable score on this criterion')}>{t('Threshold')}</th>
           </tr>
         </thead>
         <tbody>
@@ -739,16 +1039,25 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChang
                   )}
                 </td>
               ))}
+              <td className="p-1 ta-c">
+                <select aria-label={t('Threshold for {{c}}', { c: crit })} value={crit in thresholds ? String(thresholds[crit]) : ''}
+                  onChange={e => setThreshold(crit, e.target.value)} style={{ fontSize: fs.label }}>
+                  <option value="">{t('none')}</option>
+                  <option value="-2">≥ −2</option><option value="-1">≥ −1</option><option value="0">≥ 0</option><option value="1">≥ +1</option>
+                </select>
+              </td>
             </tr>
           ))}
           <tr style={{ borderTop: '2px solid var(--border)' }}>
             <td className="p-1 w-600">{hasWeights ? t('Weighted Total') : t('Total')}</td>
             {hasWeights && <td />}
             {totals.map((tot, i) => (
-              <td key={i} style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 700, color: i === datum ? 'var(--text-secondary)' : i === best ? 'var(--success)' : tot.weighted > 0 ? 'var(--success)' : tot.weighted < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
+              <td key={i} title={belowThreshold(options[i], i).length ? t('Below threshold: {{c}}', { c: belowThreshold(options[i], i).join(', ') }) : undefined}
+                style={{ padding: '0.2rem', textAlign: 'center', fontWeight: 700, textDecoration: belowThreshold(options[i], i).length ? 'line-through' : undefined, color: i === datum ? 'var(--text-secondary)' : i === best ? 'var(--success)' : tot.weighted > 0 ? 'var(--success)' : tot.weighted < 0 ? 'var(--danger)' : 'var(--text-primary)' }}>
                 {i === datum ? '—' : hasWeights ? tot.weighted.toFixed(2) : tot.unweighted}
               </td>
             ))}
+            <td />
           </tr>
         </tbody>
       </table>
@@ -759,21 +1068,7 @@ function PughMatrixWidget({ weights, criteria, onCriteriaChanged, state, onChang
         <input value={newOption} onChange={e => setNewOption(e.target.value)} placeholder={t('+ option')} className="c2o-input c2o-input--sm c2o-w-num"
           onKeyDown={e => { if (e.key === 'Enter' && newOption) { setOptions(p => [...p, newOption]); setNewOption('') } }} />
         <span className="grow" />
-        <RecordDecision decision="D-3.4-TRADE" capture="decide:pugh" prefill={() => ({
-          options: options.map((opt, i) => ({
-            name: opt,
-            summary: i === datum ? t('Datum (reference)') : undefined,
-            // Pugh totals run −2…+2 per criterion: a value, not a 0–1 score.
-            values: i === datum ? {} : {
-              ...Object.fromEntries(criteria.map(c => [t(c, { context: 'criterion' }), getScore(opt, c)])),
-              [hasWeights ? t('Weighted Total') : t('Total')]: hasWeights ? totals[i].weighted : totals[i].unweighted,
-            },
-            chosen: (i === best && i !== datum) || undefined,
-          })),
-          criteria: criteria.map(c => ({ name: t(c, { context: 'criterion' }), ...(hasWeights ? { weight: Math.round((weights?.[c] ?? 0) * 100) / 100 } : {}) })),
-          choice: options[best],
-          evidence: [{ label: t('Method'), value: hasWeights ? t('Pugh Matrix (Weighted)') : t('Pugh Matrix (Unweighted)') }],
-        })} />
+        <span className="t-12 c-3 mono">{tradeId}</span>
       </div>
     </ToolSection>
   )

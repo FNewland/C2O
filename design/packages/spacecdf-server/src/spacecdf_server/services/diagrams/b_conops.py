@@ -17,6 +17,8 @@ DEFAULT_DAYS = {"leop": 3.0, "commissioning": 30.0, "nominal": None, "disposal":
 KIND_STYLE = {"leop": "cat1", "commissioning": "cat3", "nominal": "default", "imaging": "cat6", "downlink": "cat2",
               "safe": "caution", "survival": "alarm", "custom": "default"}
 CONTINGENCY = {"safe", "survival"}
+#: W7.01: a ConOps phase without its own mode list shows the Modes-tab modes of its phase
+MODE_PHASES = {"transfer": ("nominal",), "extended": ("nominal",)}
 # English text is the key (vocab.ts)
 TRIGGER_SHORT = {"ground_tc": "TC", "autonomous": "auto", "timer": "timer", "event": "event"}
 
@@ -59,7 +61,8 @@ def phases(d: DiagramData, **_: Any) -> dict:
             pt = getattr(getattr(p, "phase_type", None), "value", None) or str(getattr(p, "phase_type", "nominal"))
             items.append({"key": pt, "name": getattr(p, "name", "") or plain(T(PHASE_LABEL.get(pt, "Nominal operations"))),
                           "days": float(getattr(p, "duration_days", 0) or 0), "src": prov("conops", getattr(p, "id", "") or pt),
-                          "modes": [cmodes.get(mid, mid) for mid in (getattr(p, "modes", None) or [])],
+                          "modes": [cmodes.get(mid, mid) for mid in (getattr(p, "modes", None) or [])]
+                          or [m.get("name") or "" for m in d.modes if _phase(m) in MODE_PHASES.get(pt, (pt,))],
                           "entry": getattr(p, "entry_criteria", ""), "exit": getattr(p, "exit_criteria", "")})
     else:
         D.source("modes (phase attribute)", "C2O default durations")

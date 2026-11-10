@@ -30,8 +30,14 @@ Known gaps, each owned by a later work package (the seed grows with them):
   extra parents/objectives (``derives``/``traces``), priority, category, unit and source are not
   stored (W2.02/W2.03); requirements are created one by one, not by the bulk import (W2.04);
 * housekeeping SIDs (``hk_sids.yaml``) are not loaded (W3.01-W3.04);
-* trades (``trades.yaml``) are not loaded: the study holds one Pugh record (W6.01);
-* link-budget cases (W4.04), licensing (W5.03), AIT (W8a), schedule (W11a) have no model yet.
+* licensing (W5.03), AIT (W8a), schedule (W11a) have no model yet.
+
+Loaded by agent D (wave 1), each at the end of its stage: S0 the mission-need fields (success
+criteria, alternative types; W1.06); S2 the mission phases from ``modes.yaml`` (W7.01) and the
+eight link cases of NUMBERS.yaml ``links`` with the design cases applied (W4.04); S3 every trade of
+``trades.yaml`` with its pairwise weights, links to requirements, risks and elements, the decision
+and decision record of each (W6), and the MDR review record: three RIDs and the chair's decision
+(W4.08).
 
 The seed never writes a person's or an institution's name; the YAML files are the frozen
 teaching baseline (``NUMBERS.yaml`` wins over every other file).
@@ -86,6 +92,9 @@ class NfiSeed:
     requirements: dict[str, str] = field(default_factory=dict)  # code -> requirement id
     modes: dict[str, dict] = field(default_factory=dict)        # modes.yaml key -> mode
     risks: list[dict] = field(default_factory=list)
+    trades: dict[str, dict] = field(default_factory=dict)       # trade id -> trade (state, evaluation)
+    link_cases: dict[str, dict] = field(default_factory=dict)   # case name -> link case
+    rids: list[dict] = field(default_factory=list)              # MDR RIDs and actions
     report: dict[str, Any] = field(default_factory=lambda: {"calls": 0, "forbidden": 0, "seconds": {}})
 
 
@@ -137,6 +146,7 @@ async def _s0(api: _Api, seed: NfiSeed) -> None:
     st = await api.call("GET", f"/api/studies/{seed.study_id}")
     if len((st.get("mission_need") or {}).get("objectives") or []) != len(objectives):
         raise SeedError("mission need was not accepted by POST /api/studies/")
+    await _s0_mission_need(api, seed)
 
 
 async def _s1(api: _Api, seed: NfiSeed) -> None:
@@ -244,6 +254,8 @@ async def _s2(api: _Api, seed: NfiSeed) -> None:
                 performance=perf or None)
     await _accept_all_suggestions(api, sid)
     await _modes(api, seed)
+    await _s2_conops_phases(api, seed)
+    await _s2_link_cases(api, seed)
 
 
 async def _modes(api: _Api, seed: NfiSeed) -> None:
@@ -291,6 +303,8 @@ async def _s3(api: _Api, seed: NfiSeed) -> None:
             "consequence": int(r["C"]), "mitigation": r.get("mit", ""), "owner": r.get("owner", ""),
             "status": r.get("status", "open"), "source": str(r.get("src", ""))[:120]})
         seed.risks.append(res)
+    await _s3_trades(api, seed)
+    await _s3_mdr_review(api, seed)
 
 
 async def _s4(api: _Api, seed: NfiSeed) -> None:
@@ -307,6 +321,195 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     await api.post(f"/api/studies/{sid}/ait/propose")
     await api.call("PUT", f"/api/studies/{sid}/schedule/settings", {"launch_provided": True, "currency": "CAD"})
     await api.post(f"/api/studies/{sid}/schedule/propose")
+
+
+# ───────────────────────────────────── agent D (wave 1): mission need, ConOps, links, trades, review
+
+#: success criteria = the measures of the primary objectives (mission.yaml ``step2_objectives``)
+#: alternative types from the alternative names (MissionNeed ``AlternativeType``)
+_ALT_TYPES = (("Sentinel", "space_existing"), ("Landsat", "space_existing"), ("SuperDove", "space_existing"),
+              ("WorldView", "space_existing"), ("Drone", "aerial_drone"), ("aircraft", "aerial_aircraft"),
+              ("IoT", "ground_sensor"), ("Hybrid", "hybrid"), ("CubeSat", "space_dedicated"))
+
+
+async def _s0_mission_need(api: _Api, seed: NfiSeed) -> None:
+    """W1.06: success criteria (the primary objectives' measures) and alternative types."""
+    wiz = load("mission")["wizard"]
+    success = [f"{o['text'][0].upper()}{o['text'][1:]}: {o['measure']}"
+               for o in wiz["step2_objectives"] if o["priority"] == "primary" and o.get("measure")]
+    st = await api.call("GET", f"/api/studies/{seed.study_id}")
+    alts = []
+    for a in (st.get("mission_need") or {}).get("alternatives_considered") or []:
+        kind = next((k for word, k in _ALT_TYPES if word.lower() in a["name"].lower()), "other")
+        alts.append({**a, "type": kind})
+    await api.call("PATCH", f"/api/studies/{seed.study_id}/mission",
+                   {"mission_need": {"success_criteria": success, "alternatives_considered": alts}})
+
+
+_PHASE_TYPES = (("LEOP", "leop"), ("commissioning", "commissioning"), ("Nominal", "nominal"),
+                ("Extended", "extended"), ("disposal", "disposal"))
+
+
+def _phase_days(window: str, start: float, n: dict) -> tuple[float, float]:
+    """(start, end) day of a ``modes.yaml`` phase window such as "L+7 to L+30 d", "L+90 d to
+    L+15 mo"; open windows end at the design life (extended) or the decay time (disposal)."""
+    import re
+    vals = []
+    for num, unit in re.findall(r"L\+(\d+(?:\.\d+)?)\s*(d|mo|y)?", window):
+        v = float(num) * {"mo": 365.25 / 12, "y": 365.25}.get(unit or "d", 1.0)
+        vals.append(v)
+    if re.match(r"^L to L\+", window):
+        vals.insert(0, 0.0)
+    if len(vals) >= 2:
+        return vals[0], vals[1]
+    if "EOL" in window:
+        return start, n["schedule"]["design_life_y"] * 365.25
+    return start, start + n["disposal"]["lifetime_with_sail_y_590km"]["nominal"] * 365.25
+
+
+async def _s2_conops_phases(api: _Api, seed: NfiSeed) -> None:
+    """W7.01: the mission phases of ``modes.yaml`` (pre-launch is not a flight phase)."""
+    n, rows = load("NUMBERS"), load("modes")["phases"]
+    phases, end, prev_exit = [], 0.0, "Separation from the deployer"
+    for name, window, activities, exit_crit in rows:
+        ptype = next((t for word, t in _PHASE_TYPES if word.lower() in name.lower()), None)
+        if ptype is None:
+            prev_exit = exit_crit
+            continue
+        a, b = _phase_days(window, end, n)
+        phases.append({"id": name.lower().replace(" ", "_").replace("/", "")[:40], "name": name, "phase_type": ptype,
+                       "duration_days": round(b - a, 1), "description": activities,
+                       "entry_criteria": prev_exit if phases else "Separation from the deployer",
+                       "exit_criteria": exit_crit})
+        end, prev_exit = b, exit_crit
+    await api.call("PUT", f"/api/studies/{seed.study_id}/conops/phases", {"phases": phases})
+
+
+def _link_cases(n: dict) -> list[dict]:
+    """The link cases of NUMBERS.yaml ``links`` (calc/link.py assumptions: spacecraft antenna 0 dBi
+    with a 3 dB pattern allowance, 1 dB line loss, 3 dB polarisation, 1 dB scintillation, 0.5 dB
+    pointing, a 13 dBic ground antenna and 0.3 dB cable; RS(255,223) needs 6.0 dB + 2 dB
+    implementation, uncoded 10.6 dB)."""
+    lk, gn = n["links"], n["ground_network"]
+    el = gn["min_elevation_deg"]
+    dl = {"direction": "downlink", "band": "UHF", "elevation_deg": el, "frequency_mhz": 401.5,
+          "data_rate_bps": lk["downlink"]["rate_kbps"] * 1000, "rate_tier": f"high {lk['downlink']['rate_kbps']} kbit/s",
+          "modulation": lk["downlink"]["modulation"], "coding": lk["downlink"]["coding"],
+          "tx_antenna_gain_dbi": -3.0, "tx_losses_db": 1.0, "polarisation_loss_db": 3.0,
+          "atmospheric_loss_db": 1.0, "pointing_loss_db": 0.5, "rx_antenna_gain_dbi": 13.0, "rx_losses_db": 0.3,
+          "required_ebn0_db": 6.0, "implementation_loss_db": 2.0, "source": "seed"}
+    sites = lk["margin_by_site"]
+    cases = []
+    for site in ("Ottawa", "Yellowknife", "Iqaluit", "Inuvik"):
+        tsys = sites[site].get("planning_tsys_k") or sites[site]["tsys_k"]
+        kind = "urban" if tsys > 300 else "rural"
+        cases.append({**dl, "name": f"DL {site} 1 W {kind} ({tsys:.0f} K)", "station": site,
+                      "tx_power_w": lk["downlink"]["tx_power_w"], "system_noise_temp_k": tsys})
+    cases.append({**dl, "name": "DL Ottawa 2 W urban (700 K)", "station": "Ottawa", "tx_power_w": 2.0,
+                  "system_noise_temp_k": sites["Ottawa"]["planning_tsys_k"]})
+    cases.append({**dl, "name": "DL Ottawa 1 W urban uncoded", "station": "Ottawa", "coding": "uncoded",
+                  "tx_power_w": lk["downlink"]["tx_power_w"], "system_noise_temp_k": sites["Ottawa"]["planning_tsys_k"],
+                  "required_ebn0_db": 10.6})
+    ul = {"direction": "uplink", "band": "UHF", "elevation_deg": el, "frequency_mhz": 450.0, "station": "all four sites",
+          "data_rate_bps": lk["uplink"]["rate_kbps"] * 1000, "rate_tier": f"{lk['uplink']['rate_kbps']} kbit/s",
+          "modulation": "GMSK", "coding": "uncoded", "tx_power_w": float(lk["uplink"]["ground_tx_w_max"]),
+          "tx_antenna_gain_dbi": 13.0, "tx_losses_db": 1.5, "pointing_loss_db": 0.5, "polarisation_loss_db": 3.0,
+          "atmospheric_loss_db": 1.0, "rx_antenna_gain_dbi": -3.0, "rx_losses_db": 1.0, "required_ebn0_db": 10.6,
+          "implementation_loss_db": 2.0, "source": "seed"}
+    for key in lk["uplink_margin_db_10deg_9k6"]:
+        if key == "src":
+            continue
+        tsys = float(key.split("_")[1].rstrip("K"))
+        cases.append({**ul, "name": f"UL {lk['uplink']['ground_tx_w_max']} W, spacecraft {tsys:.0f} K",
+                      "system_noise_temp_k": tsys})
+    return cases
+
+
+async def _s2_link_cases(api: _Api, seed: NfiSeed) -> None:
+    """W4.04: the eight named link cases; the rural 1 W downlink and the 600 K uplink become the
+    design cases (``requirements.link``)."""
+    sid = seed.study_id
+    for i, c in enumerate(_link_cases(load("NUMBERS"))):
+        seed.link_cases[c["name"]] = await api.post(f"/api/studies/{sid}/link-budgets", {**c, "order": i})
+    for name in ("DL Yellowknife 1 W rural (300 K)", "UL 25 W, spacecraft 600 K"):
+        await api.post(f"/api/studies/{sid}/link-budgets/{seed.link_cases[name]['id']}/apply")
+
+
+#: requirements each trade's criteria are about (beyond the rows that cite the trade id)
+TRADE_REQUIREMENTS = {
+    "T-01": ["PAY-OPT-01", "PAY-OPT-02"], "T-02": ["PAY-OPT-01", "PAY-OPT-04", "PAY-FUN-01"],
+    "T-03": ["PAY-FUN-03", "PAY-FUN-04"], "T-04": ["EPS-SA-01", "SYS-BUD-03"],
+    "T-05": ["EPS-BAT-01", "SYS-BUD-04", "SYS-BUD-08"], "T-06": ["DIS-SAIL-01", "DIS-TRG-01", "DIS-REL-01"],
+    "T-07": ["COM-DL-01", "COM-DL-03", "COM-UL-01", "SYS-BUD-06"], "T-08": ["ADC-PNT-01", "ADC-PNT-03"],
+}
+#: risks of risks.yaml each trade bears on
+TRADE_RISKS = {"T-01": ["RSK-020"], "T-02": ["RSK-005"], "T-03": ["RSK-019"], "T-04": ["RSK-003"],
+               "T-05": ["RSK-016"], "T-06": ["RSK-002"], "T-07": ["RSK-010", "RSK-011"],
+               "T-08": ["RSK-009", "RSK-022"]}
+#: the option each trade's decision kept (logbook.yaml "decide:pugh T-nn"), by option index
+TRADE_CHOICE = {"T-01": 1, "T-02": 0, "T-03": 0, "T-04": 1, "T-05": 1, "T-06": 0, "T-07": 0, "T-08": 1}
+
+
+async def _s3_trades(api: _Api, seed: NfiSeed) -> None:
+    """W6: every trade of ``trades.yaml`` with its pairwise weights, linked to the requirements,
+    risks and the subsystem it affects, then decided (decision record + logbook entry)."""
+    import re
+    sid, data = seed.study_id, load("trades")
+    cites: dict[str, list[str]] = {}
+    for r in load("requirements")["requirements"]:
+        blob = " ".join(str(r.get(k) or "") for k in ("source", "rationale", "text"))
+        for tid in set(re.findall(r"\bT-0\d\b", blob)):
+            cites.setdefault(tid, []).append(r["id"])
+    names = {e.get("name"): e for e in seed.elements.values()}
+    trades = []
+    for t in data["trades"]:
+        tid = t["id"]
+        reqs = [c for c in dict.fromkeys([*TRADE_REQUIREMENTS.get(tid, []), *cites.get(tid, [])]) if c in seed.requirements]
+        sub = str(t.get("level") or "").split(":", 1)[-1].strip()
+        els = [names[sub]["id"]] if sub in names else []
+        trades.append({**t, "links": {"requirements": reqs, "risks": TRADE_RISKS.get(tid, []), "elements": els,
+                                      "decision_record": t.get("decision_record")}})
+    res = await api.post(f"/api/studies/{sid}/trades/import", {"trades": trades, "pairwise_inputs": data["pairwise_inputs"]})
+    if len(res["added"]) != len(data["trades"]):
+        raise SeedError(f"trades import: {res}")
+    notes = {e["decision"].split()[-1]: e for e in load("logbook")["entries"] if str(e["decision"]).startswith("decide:pugh")}
+    for t in data["trades"]:
+        tid = t["id"]
+        entry = notes.get(tid) or {}
+        out = await api.post(f"/api/studies/{sid}/trades/{tid}/decision",
+                             {"selected": t["options"][TRADE_CHOICE[tid]], "rationale": entry.get("text", ""),
+                              "seat": t.get("seat", "")})
+        seed.trades[tid] = out
+        if entry:
+            await api.post("/api/logbook/entries", {"kind": "decision", "text": f"{entry['title']}: {entry['text']}",
+                                                    "context": {"study_id": sid, "where": "decide", "trade": tid,
+                                                                "decision_record": t.get("decision_record") or ""}},
+                           ok=(200, 201))
+
+
+#: three MDR RIDs / actions (logbook.yaml LB-23 lists the MCR actions), neutral wording
+MDR_RIDS = [
+    {"kind": "rid", "severity": "major", "raised_by_seat": "systems_engineer", "owner_seat": "comms_engineer",
+     "criterion_id": "", "due_date": "2027-09-30",
+     "description": "The radio's receive band is not confirmed to cover the 449.75-450.25 MHz uplink; obtain the vendor confirmation or select the fallback radio."},
+    {"kind": "action", "severity": "minor", "raised_by_seat": "team_leader", "owner_seat": "comms_engineer",
+     "criterion_id": "", "due_date": "2027-09-30",
+     "description": "Start the spectrum pre-consultation for the 450 MHz uplink and the 401 MHz downlink."},
+    {"kind": "action", "severity": "minor", "raised_by_seat": "mission_analyst", "owner_seat": "propulsion_engineer",
+     "criterion_id": "", "due_date": "2027-12-15",
+     "description": "Obtain in-orbit deployment evidence for the selected drag sail, or keep the documented fallback."},
+]
+
+
+async def _s3_mdr_review(api: _Api, seed: NfiSeed) -> None:
+    """W4.08: the MDR review record: three RIDs / actions and the chair's GO-with-actions."""
+    sid = seed.study_id
+    for r in MDR_RIDS:
+        seed.rids.append(await api.post(f"/api/studies/{sid}/gates/mdr/rids", r))
+    await api.call("PUT", f"/api/studies/{sid}/gates/mdr/record", {
+        "decision": "go_with_actions", "board": "Team leader (chair), Systems, Mission analysis & ops, Customer",
+        "chair_note": "Mission definition accepted. The radio receive band, the spectrum pre-consultation and the "
+                      "drag-sail evidence are carried as actions to the PRR."})
 
 
 _STEPS = {"S0": _s0, "S1": _s1, "S2": _s2, "S3": _s3, "S4": _s4}

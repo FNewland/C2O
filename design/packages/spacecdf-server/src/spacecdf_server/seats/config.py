@@ -175,10 +175,37 @@ def owner_prefix(seat_id: str) -> str:
     return str(pre[0])
 
 
+#: Words that mark a disposal (deorbit) device: a drag sail, a deorbit / drag device, a
+#: disposal timer. The KB files these under ``structure``; the PI decision (Nov 2026) gives them
+#: to the Propulsion seat (the disposal function).
+_DISPOSAL_WORDS = ("drag sail", "deorbit", "de-orbit", "drag device", "disposal")
+
+
+def is_disposal_device(element: dict[str, Any]) -> bool:
+    """A drag sail or another deorbit device (by KB id, class, domain or name)."""
+    kb = str(element.get("kb_component_id") or "").lower()
+    perf = element.get("performance") if isinstance(element.get("performance"), dict) else {}
+    cls = str(perf.get("component_class") or perf.get("class") or "").lower()
+    dom = str(element.get("subsystem_domain") or "").lower()
+    name = str(element.get("name") or "").lower()
+    return (kb.startswith(("deorb-", "deorbit")) or cls in ("deorbit_device", "drag_sail", "deorbit_timer")
+            or dom in ("disposal", "deorbit") or any(w in name for w in _DISPOSAL_WORDS))
+
+
 def element_owner_seat(element: dict[str, Any], elements: dict[str, dict[str, Any]]) -> str | None:
     """The seat that owns an element: its subsystem_domain, else the nearest ancestor's;
-    a mission root → Team leader, a segment/system without a domain → Systems."""
+    a mission root → Team leader, a segment/system without a domain → Systems. A disposal device
+    (drag sail, deorbit device) and its subtree belong to Propulsion (PI decision, Nov 2026)."""
     seen: set[str] = set()
+    probe: dict[str, Any] | None = element
+    while probe is not None and probe.get("id") not in seen:
+        seen.add(probe.get("id", ""))
+        if (probe.get("element_type") or "").lower() in ("component", "subsystem", "assembly", "equipment") \
+                and is_disposal_device(probe):
+            return "propulsion_engineer"
+        pid = probe.get("parent_id")
+        probe = elements.get(pid) if pid else None
+    seen = set()
     el: dict[str, Any] | None = element
     while el is not None and el.get("id") not in seen:
         seen.add(el.get("id", ""))

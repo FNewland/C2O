@@ -179,7 +179,9 @@ async def test_wp0_9_old_browser_register_is_imported_once(client, study_obj):
 
 async def test_wp0_9_pugh_trade_is_per_study_with_versions(client, study_obj):
     sid = study_obj.id
-    assert (await client.get(f"/api/studies/{sid}/trades/pugh")).json() == {"state": None, "version": 0}
+    # W6 (Nov 2026): "pugh" is the alias of trade T-01; an empty study still answers an empty record
+    empty = (await client.get(f"/api/studies/{sid}/trades/pugh")).json()
+    assert empty["state"] is None and empty["version"] == 0
     state = {"criteria": ["Mass", "Cost"], "options": ["A", "B"], "datum": 0, "scores": {"B": {"Mass": 1}},
              "comparisons": {"Mass|Cost": 1}}
     r = await client.put(f"/api/studies/{sid}/trades/pugh", json={"state": state, "version": 0})

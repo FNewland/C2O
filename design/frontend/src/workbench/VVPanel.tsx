@@ -4,8 +4,10 @@
  * Five sections:
  * 1. Budget Rollup: mass/power/cost hierarchy
  * 2. Requirement Traceability: derivation chains, orphans, SMART status
- * 3. Review Gate Checklist: the gates of the study's profile (MDR/PRR/SRR/PDR by default),
- *    evaluated on the server; states Not ready → Ready → Under review → Passed → Reopened
+ * 3. Review Gate Checklist: the gates of the study's profile (full ECSS by default: MDR, PRR,
+ *    SRR, PDR, CDR, QR, AR, FRR), evaluated on the server; states Not ready → Ready → Under
+ *    review → Passed → Reopened; the review record under it (RIDs and actions, chair note,
+ *    go / no-go, review report, baseline changes: GateReviewRecord, W4.08)
  * 4. FMECA Summary: failure mode analysis results
  * 5. Budget Traceability: trace budget exceedance to stakeholder impact
  */
@@ -26,6 +28,7 @@ import { useWhereSection } from '../where/where'
 import { GateActionError, gateAction, pick, setGateProfile, useGateProfiles, useGateReview, useStudyGates, type GateState } from '../components/useGateReview'
 import { FIX_LABEL, STATE_LABEL, STATUS_LABEL, badgeKind, evidenceText } from '../components/gateReviewText'
 import { getLang } from '../i18n'
+import { GateReviewRecord } from './GateReviewRecord'
 import { subsystemStyle } from '../theme/tokens'
 import { ArmButton, Button, DataTable, Disclosure, Field, Input, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, tabPanelProps, type Status } from '../components/ui'
 
@@ -278,6 +281,9 @@ function gateDecisionId(covers: string[] | undefined, id: string): string {
   return GATE_DECISION[last] ?? GATE_DECISION.mdr
 }
 
+/** The gate evaluation with its review record (W4.08: chair note, go / no-go). */
+type GateResultWithReview = { review?: { chair_note?: string; decision?: 'go' | 'go_with_actions' | 'no_go' | null; board?: string } }
+
 const STATE_STATUS: Record<GateState, Status> = {
   not_ready: 'alarm', ready: 'ok', under_review: 'info', passed: 'ok', reopened: 'caution',
 }
@@ -498,6 +504,11 @@ function ReviewGates({ studyId, onOpenSection }: { studyId: string | null; onOpe
                   ))}
                 </ul>
               </div>
+            )}
+
+            {studyId && (
+              <GateReviewRecord studyId={studyId} gate={gateResult.gate.id} gateShort={short} gateOrder={gates.map(g => g.id)}
+                review={(gateResult as GateResultWithReview).review} canDecide={canGate} onChanged={refresh} />
             )}
 
             <GateDiagrams studyId={studyId} gate={gateResult.gate.id} />
