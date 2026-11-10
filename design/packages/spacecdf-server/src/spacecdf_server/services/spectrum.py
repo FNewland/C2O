@@ -12,6 +12,7 @@ References:
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -36,6 +37,8 @@ class FrequencyBand:
     requires_national_license: bool = True
 
 
+LICENSE_TYPES = ("amateur", "experimental", "commercial", "academic")
+
 # Comprehensive CubeSat-relevant frequency allocations
 FREQUENCY_BANDS: list[FrequencyBand] = [
     # --- Amateur ---
@@ -52,19 +55,37 @@ FREQUENCY_BANDS: list[FrequencyBand] = [
                   "Shared with ISM band. IARU coordination. Less commonly used.",
                   requires_itu_filing=False),
 
-    # --- MetAids / Earth Exploration ---
-    FrequencyBand("UHF MetAids DL", "UHF", 400.0, 402.0, "downlink", "MetAids/MetSat/EESS",
-                  ["experimental", "commercial"], "1.2-9.6 kbps",
-                  "Used by some science CubeSats. National administration filing required.",
+    # --- UHF / VHF space operation (TT&C of small EO satellites outside the amateur service) ---
+    # Canadian Table of Frequency Allocations (2018 ed.; re-check against the 2026 edition) and ITU RR.
+    FrequencyBand("UHF space operation downlink", "UHF", 401.0, 402.0, "downlink",
+                  "Space Operation (space-to-Earth)",
+                  ["experimental", "commercial", "academic"], "1.2-38.4 kbps",
+                  "Primary SPACE OPERATION (space-to-Earth) allocation, shared with METEOROLOGICAL AIDS "
+                  "(radiosondes) and EESS/MetSat (Earth-to-space) data-collection uplinks: avoid 401.4-401.7 MHz "
+                  "(NGSO DCS, ITU-R SA.2045). Not a meteorological-aids or amateur assignment.",
+                  requires_itu_filing=True),
+    FrequencyBand("UHF space operation uplink (RR 5.286)", "UHF", 449.75, 450.25, "uplink",
+                  "Space Operation (Earth-to-space)",
+                  ["experimental", "commercial", "academic"], "1.2-9.6 kbps",
+                  "RR 5.286: 449.75-450.25 MHz may be used for the space operation and space research services "
+                  "(Earth-to-space), subject to agreement obtained under RR No. 9.21. Radiolocation-primary below "
+                  "450 MHz; land mobile 450-470 MHz (Canadian footnote C23).",
+                  requires_itu_filing=True),
+    FrequencyBand("VHF space operation uplink (fallback)", "VHF", 148.0, 149.9, "uplink",
+                  "Space Operation (Earth-to-space)",
+                  ["experimental", "commercial", "academic"], "1.2-9.6 kbps",
+                  "Space operation (Earth-to-space) under RR 5.218, subject to agreement under RR No. 9.21; "
+                  "individual transmissions within +/- 25 kHz. Shared with the mobile-satellite service "
+                  "(Earth-to-space). Footnote wording to be confirmed against the RR in force.",
                   requires_itu_filing=True),
 
     # --- S-band (most common commercial CubeSat) ---
     FrequencyBand("S-band Uplink", "S", 2025.0, 2110.0, "uplink", "Space Operation / EESS",
-                  ["experimental", "commercial"], "4-256 kbps",
+                  ["experimental", "commercial", "academic"], "4-256 kbps",
                   "Common CubeSat TT&C uplink. Requires ITU API + national license.",
                   requires_itu_filing=True),
     FrequencyBand("S-band Downlink", "S", 2200.0, 2290.0, "downlink", "Space Operation / EESS",
-                  ["experimental", "commercial"], "256 kbps - 10 Mbps",
+                  ["experimental", "commercial", "academic"], "256 kbps - 10 Mbps",
                   "Common CubeSat TT&C + moderate data downlink. Not allocated for non-Federal US use.",
                   requires_itu_filing=True),
 
@@ -107,6 +128,8 @@ def get_bands_for_mission(
 
     Filters by license compatibility and data rate requirements.
     """
+    if license_type not in LICENSE_TYPES:
+        raise ValueError(f"license_type must be one of {', '.join(LICENSE_TYPES)}")
     results = []
     for band in FREQUENCY_BANDS:
         if license_type not in band.license_types:
@@ -131,12 +154,62 @@ def get_bands_for_mission(
             "requires_itu_filing": band.requires_itu_filing,
             "suitable_for_data_rate": suitable,
             "license_types": band.license_types,
+            "coordination": coordination_for(band),
         })
 
     # Sort: suitable first, then by frequency
     results.sort(key=lambda r: (not r["suitable_for_data_rate"], r["freq_min_mhz"]))
     return results
 
+
+
+def band_by_name(name: str) -> FrequencyBand | None:
+    return next((b for b in FREQUENCY_BANDS if b.name == name), None)
+
+
+def coordination_for(band: FrequencyBand) -> str:
+    n = band.notes
+    if "9.21" in n:
+        return "agreement under RR No. 9.21"
+    if band.service.startswith("Amateur"):
+        return "IARU coordination"
+    return "advance publication (RR No. 9.1) and notification" if band.requires_itu_filing else "none"
+
+
+def service_for(freq_mhz: float, direction: str = "") -> dict[str, Any]:
+    """ITU service, allocation and footnotes for a centre frequency (EG D9: derived from the band,
+    never "amateur" or "meteorological aids" for the space-operation bands).
+
+    ``direction`` is "space-to-Earth" or "Earth-to-space"; a band whose direction disagrees is
+    skipped when another band covers the frequency."""
+    want = "downlink" if direction.lower().startswith("space") else ("uplink" if direction else "")
+    cands = [b for b in FREQUENCY_BANDS if b.freq_min_mhz <= freq_mhz <= b.freq_max_mhz]
+    if want:
+        cands = sorted(cands, key=lambda b: (b.direction not in (want, "both"), b.service.startswith("Amateur")))
+    else:
+        cands = sorted(cands, key=lambda b: b.service.startswith("Amateur"))
+    if not cands:
+        return {"service": "Not in the SpaceCDF catalogue: check the Table of Frequency Allocations",
+                "allocation": "", "footnotes": [], "coordination": "to be determined", "band": None}
+    b = cands[0]
+    fn = re.findall(r"RR (5\.\d+[A-Z]?)", b.name + " " + b.notes)
+    fn += [f"C{x}" for x in re.findall(r"footnote C(\d+)", b.notes)]
+    return {"service": b.service, "allocation": f"{b.freq_min_mhz:g}-{b.freq_max_mhz:g} MHz",
+            "footnotes": sorted(set(fn)), "coordination": coordination_for(b), "band": b.name}
+
+
+def _validate_band(b: Any, i: int) -> dict:
+    if not isinstance(b, dict):
+        raise ValueError(f"frequency_bands[{i}] must be an object")
+    try:
+        lo, hi = float(b["freq_min_mhz"]), float(b["freq_max_mhz"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError(f"frequency_bands[{i}] needs numeric freq_min_mhz and freq_max_mhz") from None
+    if not (0 < lo < hi):
+        raise ValueError(f"frequency_bands[{i}]: freq_min_mhz must be positive and below freq_max_mhz")
+    if b.get("direction") not in (None, "uplink", "downlink", "both", "receive"):
+        raise ValueError(f"frequency_bands[{i}].direction must be uplink, downlink, both or receive")
+    return {**b, "freq_min_mhz": lo, "freq_max_mhz": hi}
 
 # ---------------------------------------------------------------------------
 # ITU filing template
@@ -163,7 +236,14 @@ def generate_itu_api_template(
     a_m = (6371 + orbit_altitude_km) * 1000
     period_min = 2 * math.pi * math.sqrt(a_m**3 / 3.986004418e14) / 60
 
-    bands = frequency_bands or []
+    bands = [_validate_band(b, i) for i, b in enumerate(frequency_bands or [])]
+
+    def _svc(b: dict) -> dict:
+        centre = (b["freq_min_mhz"] + b["freq_max_mhz"]) / 2
+        d = "space-to-Earth" if b.get("direction") == "downlink" else ("Earth-to-space" if b.get("direction") == "uplink" else "")
+        return service_for(centre, d)
+
+    services = sorted({_svc(b)["service"] for b in bands})
 
     return {
         "document": "ITU Advance Publication Information (API)",
@@ -177,7 +257,7 @@ def generate_itu_api_template(
             },
             "satellite_network": {
                 "network_name": network_name or f"{operator_name}-SAT-1",
-                "service_type": "Earth Exploration-Satellite Service (EESS)" if any(b.get("band") in ("S", "X") for b in bands) else "Amateur-Satellite Service",
+                "service_type": "; ".join(services) if services else "to be determined from the frequency assignments",
                 "number_of_satellites": num_satellites,
             },
             "orbital_characteristics": {
@@ -198,7 +278,9 @@ def generate_itu_api_template(
                     "emission_designator": "TBD",  # e.g. "200KG1D"
                     "polarization": "RHCP",
                     "eirp_dbw": "TBD",
-                    "service": b.get("service", "EESS"),
+                    "service": _svc(b)["service"],
+                    "footnotes": _svc(b)["footnotes"],
+                    "coordination": _svc(b)["coordination"],
                 }
                 for i, b in enumerate(bands)
             ],

@@ -3,7 +3,10 @@
 RSSSA (Remote Sensing Space Systems Act) application export (json/docx).
 Routes (prefix /api/exports): POST /rsssa/{study_id}
 
-Moved verbatim from the single routers/exports.py in W0.1 (no behaviour change).
+Moved from the single routers/exports.py in W0.1. W1.09e (agent L): the GSD comes from the payload
+(``gsd_m``, else pixel pitch and focal length), not altitude x pointing accuracy (EG D7); stations
+with ``lat``/``lon``; the lifetime from the disposal analysis with the drag sail (W5.02). The full
+application (guide sections 1-32) is ``POST /api/exports/regulatory/rsssa/{study_id}``.
 See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
 """
 from __future__ import annotations
@@ -36,7 +39,10 @@ async def export_rsssa(
     }
 
     elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-    gs_elements = [e for e in elements if e.get("segment") == "ground" and (e.get("performance") or {}).get("latitude")]
+    from ...services import licensing as _lic
+    gs_stations = _lic.stations(elements)
+    gs_elements = [{"name": g["name"], "performance": {"latitude": g["lat"], "longitude": g["lon"],
+                                                       "bands": g.get("bands") or []}} for g in gs_stations]
     ttc_elements = [e for e in elements if e.get("subsystem_domain") == "ttc"]
     spacecraft = [e for e in elements if e.get("segment") == "space" and e.get("element_type") == "system"]
     payload_elements = [e for e in elements if e.get("subsystem_domain") == "payload"]
@@ -56,7 +62,8 @@ async def export_rsssa(
         for e in gs_elements
     ]
 
-    # Extract payload pointing accuracy for GSD estimate
+    # Sensor performance from the payload (GSD from gsd_m / optics, EG D7)
+    sensor = _lic._payload_info(study, elements, orbit_params["altitude_km"]) if study else {}
     pointing_accuracy_deg = None
     try:
         pointing_accuracy_deg = study.requirements.payloads[0].pointing_accuracy_deg if study else None
@@ -85,37 +92,29 @@ async def export_rsssa(
             dimensions=form_factor,
             design_lifetime_years=orbit_params["design_lifetime_years"],
             pointing_accuracy_deg=pointing_accuracy_deg,
+            gsd_m=sensor.get("gsd_m"),
+            fov_deg=sensor.get("fov_deg"),
             ground_stations=gs_list if gs_list else None,
         )
     except Exception:
         pass
 
-    # Run orbital lifetime estimate
+    # Orbital lifetime from the disposal analysis (drag sail, solar-cycle scenarios; W5.02)
     orbital_lifetime_years: float | None = None
     deorbit_compliant_25yr: bool | None = None
+    disposal: dict = {}
     try:
-        from spacecdf_common.physics.debris import estimate_orbital_lifetime, estimate_cubesat_cross_section
-        cross_section = estimate_cubesat_cross_section(form_factor) if form_factor != "Custom" else 0.03
-        a_over_m = cross_section / max(total_mass, 0.1)
-        orbital_lifetime_years = round(estimate_orbital_lifetime(
-            altitude_km=orbit_params["altitude_km"],
-            area_to_mass_ratio_m2_kg=a_over_m,
-        ), 2)
-        deorbit_compliant_25yr = orbital_lifetime_years <= 25.0
+        record, _ = await _lic.load_record(study_id)
+        disposal = _lic.disposal_analysis(study, elements, ru.as_dict(), record) if study else {}
+        ws, wo = disposal.get("lifetime_with_sail_y") or {}, disposal.get("lifetime_without_sail_y") or {}
+        worst = max(ws.values()) if ws else (max(wo.values()) if wo else None)
+        orbital_lifetime_years = worst
+        deorbit_compliant_25yr = worst is not None and worst <= 25.0
     except Exception:
         pass
 
-    # Compute GSD estimate if pointing accuracy available
-    gsd_estimate_m: float | None = None
-    if pointing_accuracy_deg is not None:
-        try:
-            import math
-            # Diffraction-limited GSD ≈ altitude * tan(pointing_accuracy)
-            # Simplified: GSD ~ altitude_m * pointing_accuracy_rad
-            alt_m = orbit_params["altitude_km"] * 1000
-            gsd_estimate_m = round(alt_m * math.radians(pointing_accuracy_deg), 2)
-        except Exception:
-            pass
+    # GSD: the payload's own figure (never altitude x pointing accuracy)
+    gsd_estimate_m: float | None = sensor.get("gsd_m")
 
     # Compute orbit parameters
     orbit_computed: dict = {}
@@ -161,6 +160,8 @@ async def export_rsssa(
         "orbital_lifetime": {
             "orbital_lifetime_years": orbital_lifetime_years,
             "deorbit_compliant_25yr": deorbit_compliant_25yr,
+            "deorbit_compliant_5yr_ised": orbital_lifetime_years is not None and orbital_lifetime_years <= 5.0,
+            "with_drag_sail": bool(disposal.get("sail")),
         },
         "gsd_estimate_m": gsd_estimate_m,
         "ground_stations": gs_list,
@@ -209,15 +210,19 @@ async def export_rsssa(
 
         doc.add_heading("4. Orbital Lifetime Analysis", level=1)
         if orbital_lifetime_years is not None:
-            doc.add_paragraph(f"Estimated orbital lifetime: {orbital_lifetime_years} years")
-            doc.add_paragraph(f"25-year deorbit compliant: {'Yes' if deorbit_compliant_25yr else 'No'}")
+            doc.add_paragraph(f"Post-mission lifetime (worst solar scenario"
+                              f"{', with the drag sail' if disposal.get('sail') else ''}): {orbital_lifetime_years} years")
+            doc.add_paragraph(f"ISED 5-year disposal rule: {'met' if orbital_lifetime_years <= 5.0 else 'not met'}")
         else:
-            doc.add_paragraph("Orbital lifetime analysis not available (physics module missing).")
+            doc.add_paragraph("Orbital lifetime analysis not available.")
 
         if gsd_estimate_m is not None:
             doc.add_heading("5. Imaging Capability", level=1)
-            doc.add_paragraph(f"Estimated GSD: {gsd_estimate_m} m")
-            doc.add_paragraph(f"Pointing accuracy: {pointing_accuracy_deg} deg")
+            doc.add_paragraph(f"Ground sample distance (best, nadir): {gsd_estimate_m} m")
+            if sensor.get("swath_km"):
+                doc.add_paragraph(f"Swath: {sensor['swath_km']} km")
+            if pointing_accuracy_deg is not None:
+                doc.add_paragraph(f"Pointing accuracy: {pointing_accuracy_deg} deg")
 
         next_section = 6 if gsd_estimate_m is not None else 5
         doc.add_heading(f"{next_section}. Ground Stations", level=1)

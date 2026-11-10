@@ -3,176 +3,122 @@
 Deorbit / end-of-life compliance report (json/docx).
 Routes (prefix /api/exports): POST /deorbit/{study_id}
 
-Moved verbatim from the single routers/exports.py in W0.1 (no behaviour change).
-See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
+W1.09c / W5.02 (agent L): the report runs the disposal analysis of ``services/licensing.py``
+(calibrated decay model with the drag sail, solar-cycle scenarios from the launch date, the ISED
+conditions) instead of importing functions that never existed (EG D1), and lists "Vent
+propellant" only when the spacecraft carries propellant (EG D13). Mass and form factor come from
+the one roll-up (W0.3).
 """
 from __future__ import annotations
 
 import io
+import re
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from ..studies import get_study_store
-from ._common import _form_factor_from_mass, _read_orbit_params
-
 router = APIRouter()
+
+
+def _has_propellant(elements: list[dict]) -> bool:
+    """True when a space element holds propellant or pressurant (a drag sail in the propulsion
+    domain does not, EG D13)."""
+    for e in elements:
+        if (e.get("segment") or "space") != "space":
+            continue
+        p = e.get("performance") or {}
+        prop = str(p.get("propellant_type") or "").lower()
+        if prop and prop not in ("none", "n/a", "-"):
+            return True
+        if (p.get("isp_s") or 0) > 0 or (p.get("propellant_mass_kg") or 0) > 0:
+            return True
+        if e.get("element_type") == "component" and re.search(
+                r"thruster|propellant|tank|engine|resistojet|cold gas", str(e.get("name") or ""), re.I):
+            return True
+    return False
+
+
+def passivation_checklist(elements: list[dict], has_sail: bool) -> list[dict]:
+    space = [e for e in elements if (e.get("segment") or "space") == "space"]
+    names = " ".join(str(e.get("name") or "").lower() for e in space)
+    doms = {e.get("subsystem_domain") for e in space}
+    out = []
+    if has_sail:
+        out.append({"item": "Deploy the drag sail",
+                    "description": "Deploy by command at end of operations; the independent timer or the "
+                                   "under-voltage trigger deploys it if the satellite falls silent",
+                    "standard": "ISED debris mitigation conditions (disposal within 5 years)"})
+    if doms & {"eps", "power"} or "battery" in names:
+        out.append({"item": "Discharge batteries", "standard": "ISO 24113 Cl. 6.2.3.1",
+                    "description": "Discharge batteries to a safe level and open the charge path"})
+    if _has_propellant(space):
+        out.append({"item": "Vent propellant", "standard": "ISO 24113 Cl. 6.2.3.2",
+                    "description": "Deplete or vent remaining propellant and pressurant"})
+    if doms & {"ttc", "comms", "communications"} or re.search(r"radio|transmitter|transceiver", names):
+        out.append({"item": "Disable transmitter", "standard": "ITU Radio Regulations Art. 22",
+                    "description": "Permanently disable the RF transmitters"})
+    if "wheel" in names:
+        out.append({"item": "Spin down momentum wheels", "standard": "ISO 24113 Cl. 6.2.3.3",
+                    "description": "De-spin reaction/momentum wheels"})
+    out.append({"item": "Isolate solar arrays", "standard": "ISO 24113 Cl. 6.2.3.1",
+                "description": "Open the solar array circuit to prevent battery charging"})
+    return out
+
 
 @router.post("/deorbit/{study_id}")
 async def export_deorbit(
     study_id: str,
     fmt: str = Query(default="json", description="Output format: json, docx"),
 ) -> JSONResponse:
-    """Generate deorbit analysis and debris compliance report."""
+    """Generate the deorbit analysis and debris compliance report (ISED conditions, drag sail)."""
     from ...services.branding import get_branding
-    from ..elements import _elements
+    from ...services.export_context import collect
 
-    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-    # Mass and form factor from the one roll-up (services/rollup.py, W0.3): leaf units x quantity,
-    # subsystem estimates and product-tree nodes not double-counted (EG D6).
-    from ...services.rollup import compute as _rollup
-    ru = await _rollup(study_id)
-    total_mass = ru.mass.cbe_kg
+    try:
+        sx = await collect(study_id, sections=["mission", "elements", "rollup", "licensing"])
+    except LookupError:
+        raise HTTPException(404, f"Study {study_id} not found") from None
+    elements = (sx.elements or {}).get("items") or []
+    mass = (sx.rollup or {}).get("mass") or {}
+    total_mass = float(mass.get("cbe_kg") or 0.0)
+    form_factor = sx.rollup.get("form_factor") or "Custom"
+    d = (sx.licensing or {}).get("disposal") or {}
+    altitude_km = float(((sx.mission.get("definition") or {}).get("orbit") or {}).get("altitude_km") or 500.0)
+    sail = d.get("sail") or None
+    ws, wo = d.get("lifetime_with_sail_y") or {}, d.get("lifetime_without_sail_y") or {}
 
-    # Read actual orbit altitude from study requirements, fall back to 500 km
-    altitude_km = 500.0
-    studies = get_study_store()
-    study = studies.get(study_id)
-    orbit_params = _read_orbit_params(study) if study else {
-        "altitude_km": 500.0, "inclination_deg": 97.4, "orbit_type": "SSO",
-        "eccentricity": 0.0, "design_lifetime_years": 3.0,
+    lifetime_scenarios = []
+    for r in d.get("scenarios") or []:
+        lifetime_scenarios.append({
+            "scenario": f"{r['scenario'].title()} cycle 26, {r['case'].replace('_', ' ')}",
+            "case": r["case"], "solar": r["scenario"], "start_year": r["start_year"], "area_m2": r["area_m2"],
+            "lifetime_years": r["lifetime_years"],
+            "compliant_5yr": r["lifetime_years"] <= 5.0, "compliant_25yr": r["lifetime_years"] <= 25.0})
+    worst = max(ws.values()) if ws else (max(wo.values()) if wo else None)
+    checks = {c["id"]: c for c in d.get("checks") or []}
+    analysis = {
+        "post_mission_lifetime_years_worst": worst,
+        "lifetime_with_sail_years": ws, "lifetime_without_sail_years": wo,
+        "without_sail_range_years": d.get("without_sail_range_y"),
+        "disposal_reliability": d.get("disposal_reliability"),
+        "collision_probability_large": d.get("collision_probability_large"),
+        "collision_probability_small": d.get("collision_probability_small"),
+        "casualty_risk": d.get("casualty_risk"),
+        "mass_used_kg": d.get("mass_kg"), "mass_basis": d.get("mass_basis"),
+        "model": d.get("model"), "evidence": d.get("evidence") or [],
     }
-    altitude_km = orbit_params["altitude_km"]
-
-    # Derive form factor and cross-section
-    form_factor = ru.form_factor or _form_factor_from_mass(total_mass)
-    cross_section_m2 = 0.03  # default
-    try:
-        from spacecdf_common.physics.debris import estimate_cubesat_cross_section
-        if form_factor != "Custom":
-            cross_section_m2 = estimate_cubesat_cross_section(form_factor)
-    except Exception:
-        pass
-
-    a_over_m = cross_section_m2 / max(total_mass, 0.1) if total_mass > 0 else 0.01
-
-    # Run deorbit analysis using existing physics — 3 solar scenarios
-    deorbit_data: dict = {}
-    lifetime_scenarios: list[dict] = []
-    try:
-        from spacecdf_common.physics.debris import (
-            estimate_orbital_lifetime, compute_casualty_risk, check_deorbit_compliance
-        )
-        # 3 solar scenarios
-        for label, f107 in [("Solar Minimum (F10.7=70)", 70.0),
-                            ("Solar Mean (F10.7=120)", 120.0),
-                            ("Solar Maximum (F10.7=200)", 200.0)]:
-            lt = estimate_orbital_lifetime(
-                altitude_km=altitude_km,
-                area_to_mass_ratio_m2_kg=a_over_m,
-                f107=f107,
-            )
-            lt_rounded = round(lt, 2) if isinstance(lt, (int, float)) and lt < 1e5 else None
-            lifetime_scenarios.append({
-                "scenario": label,
-                "f107": f107,
-                "lifetime_years": lt_rounded,
-                "compliant_25yr": lt_rounded <= 25.0 if lt_rounded is not None else None,
-                "compliant_5yr": lt_rounded <= 5.0 if lt_rounded is not None else None,
-            })
-
-        # Use mean scenario for primary result
-        mean_lifetime = lifetime_scenarios[1]["lifetime_years"]
-        casualty = compute_casualty_risk(mass_kg=total_mass or 6)
-        deorbit_data = {
-            "orbital_lifetime_years": mean_lifetime,
-            "casualty_risk": round(casualty, 6) if isinstance(casualty, (int, float)) else None,
-            "compliant_25yr": mean_lifetime <= 25.0 if mean_lifetime is not None else None,
-            "compliant_5yr": mean_lifetime <= 5.0 if mean_lifetime is not None else None,
-        }
-    except Exception:
-        # Fallback: try the older API
-        try:
-            from spacecdf_common.physics.debris import (
-                compute_orbital_lifetime, compute_casualty_risk, check_deorbit_compliance
-            )
-            lifetime = compute_orbital_lifetime(altitude_km=altitude_km, mass_kg=total_mass or 6, area_m2=cross_section_m2)
-            casualty = compute_casualty_risk(mass_kg=total_mass or 6)
-            compliance = check_deorbit_compliance(altitude_km=altitude_km, mass_kg=total_mass or 6, area_m2=cross_section_m2)
-            deorbit_data = {
-                "orbital_lifetime_years": round(lifetime, 1) if isinstance(lifetime, (int, float)) else None,
-                "casualty_risk": round(casualty, 6) if isinstance(casualty, (int, float)) else None,
-                "compliant_25yr": compliance if isinstance(compliance, bool) else None,
-            }
-        except Exception:
-            deorbit_data = {"note": "Deorbit physics module not available — manual analysis required"}
-
-    # Build passivation checklist from element types
-    passivation_checklist = []
-    has_battery = any(
-        e.get("subsystem_domain") in ("eps", "power") or
-        "battery" in (e.get("name") or "").lower()
-        for e in elements if e.get("segment") == "space"
-    )
-    has_propulsion = any(
-        e.get("subsystem_domain") == "propulsion" or
-        "thruster" in (e.get("name") or "").lower() or
-        "propulsion" in (e.get("name") or "").lower()
-        for e in elements if e.get("segment") == "space"
-    )
-    has_ttc = any(
-        e.get("subsystem_domain") == "ttc" or
-        "transmitter" in (e.get("name") or "").lower() or
-        "radio" in (e.get("name") or "").lower()
-        for e in elements if e.get("segment") == "space"
-    )
-    has_momentum_wheels = any(
-        e.get("subsystem_domain") == "aocs" or
-        "wheel" in (e.get("name") or "").lower() or
-        "magnetorquer" in (e.get("name") or "").lower()
-        for e in elements if e.get("segment") == "space"
-    )
-
-    if has_battery:
-        passivation_checklist.append({
-            "item": "Discharge batteries",
-            "description": "Discharge batteries to safe level (< 50% SoC) to prevent rupture",
-            "standard": "ISO 24113 Cl. 6.2.3.1",
-        })
-    if has_propulsion:
-        passivation_checklist.append({
-            "item": "Vent propellant",
-            "description": "Deplete or vent remaining propellant and pressurant",
-            "standard": "ISO 24113 Cl. 6.2.3.2",
-        })
-    if has_ttc:
-        passivation_checklist.append({
-            "item": "Disable transmitter",
-            "description": "Permanently disable RF transmitter to free frequency allocation",
-            "standard": "ITU Radio Regulations Art. 22",
-        })
-    if has_momentum_wheels:
-        passivation_checklist.append({
-            "item": "Spin down momentum wheels",
-            "description": "De-spin reaction/momentum wheels to prevent debris generation",
-            "standard": "ISO 24113 Cl. 6.2.3.3",
-        })
-    # Always include solar array isolation
-    passivation_checklist.append({
-        "item": "Isolate solar arrays",
-        "description": "Open solar array circuit to prevent battery charging",
-        "standard": "ISO 24113 Cl. 6.2.3.1",
-    })
-
-    # Compliance summary
+    passivation = passivation_checklist(elements, bool(sail))
     compliance_summary = {
-        "iadc_25yr": deorbit_data.get("compliant_25yr"),
-        "fcc_5yr": deorbit_data.get("compliant_5yr"),
-        "casualty_risk_compliant": (
-            deorbit_data.get("casualty_risk", 1.0) < 0.0001
-            if isinstance(deorbit_data.get("casualty_risk"), (int, float)) else None
-        ),
-        "passivation_items_count": len(passivation_checklist),
+        "ised_5yr": (checks.get("ISED-DM-01") or {}).get("pass"),
+        "ised_reliability_90pct": (checks.get("ISED-DM-02") or {}).get("pass"),
+        "ised_collision_large": (checks.get("ISED-DM-03") or {}).get("pass"),
+        "ised_collision_small": (checks.get("ISED-DM-04") or {}).get("pass"),
+        "ised_apogee_600km": (checks.get("ISED-DM-05") or {}).get("pass"),
+        "ised_trackable": (checks.get("ISED-DM-06") or {}).get("pass"),
+        "iadc_25yr": worst is not None and worst <= 25.0,
+        "casualty_risk_compliant": (d.get("casualty_risk") or 0) < 1e-4,
+        "passivation_items_count": len(passivation),
+        "compliant": d.get("compliant"),
     }
 
     b = get_branding()
@@ -180,28 +126,25 @@ async def export_deorbit(
         "document": "Deorbit Analysis & Debris Compliance Report",
         "branding": {"university": b.university, "department": b.department, "classification": b.classification},
         "study_id": study_id,
-        "spacecraft": {
-            "total_mass_kg": round(total_mass, 2),
-            "altitude_km": altitude_km,
-            "form_factor": form_factor,
-            "cross_section_m2": round(cross_section_m2, 4),
-        },
-        "analysis": deorbit_data,
+        "spacecraft": {"total_mass_kg": round(total_mass, 2), "altitude_km": altitude_km, "form_factor": form_factor,
+                       "cross_section_m2": d.get("area_stowed_m2"),
+                       "drag_sail": sail and {"name": sail.get("name"), "deployed_area_m2": sail.get("deployed_area_m2"),
+                                              "effective_area_m2": d.get("area_deployed_effective_m2"),
+                                              "independent_circuits": sail.get("independent_circuits"),
+                                              "trigger": sail.get("trigger")}},
+        "analysis": analysis,
         "lifetime_scenarios": lifetime_scenarios,
-        "passivation_checklist": passivation_checklist,
+        "ised_checks": d.get("checks") or [],
+        "passivation_checklist": passivation,
         "compliance_summary": compliance_summary,
         "standards": {
+            "ised": (d.get("rules") or {}).get("decision", "ISED decision on space debris mitigation (April 2026)"),
+            "ised_conditions": (d.get("rules") or {}).get("conditions", ""),
             "iso_24113": "ISO 24113:2023 — Space debris mitigation requirements",
-            "ecss_u_as_10c": "ECSS-U-AS-10C Rev.2 — Space sustainability",
-            "fcc_5yr": "FCC 2024+ 5-year deorbit rule",
-            "iadc_25yr": "IADC 25-year guideline",
+            "iadc_25yr": "IADC guideline (25 years; superseded for Canadian licences by the ISED 5-year rule)",
         },
-        "mitigation_options": [
-            {"method": "Natural decay", "description": "Rely on atmospheric drag at current altitude"},
-            {"method": "Propulsive deorbit", "description": "Use onboard thruster for controlled reentry"},
-            {"method": "Drag sail", "description": "Deploy drag augmentation device at end-of-life"},
-            {"method": "Electrodynamic tether", "description": "Lorentz force deorbiting"},
-        ],
+        "notes": d.get("notes") or [],
+        "error": d.get("error"),
     }
 
     if fmt.lower() == "docx":
@@ -210,75 +153,54 @@ async def export_deorbit(
         if doc is None:
             raise HTTPException(status_code=500, detail="python-docx not available")
 
+        def table(cols: list[str], rows: list[list]) -> None:
+            t = doc.add_table(rows=1, cols=len(cols), style="Light List Accent 1")
+            for i, c in enumerate(cols):
+                t.rows[0].cells[i].text = c
+            for r in rows:
+                cells = t.add_row().cells
+                for i, v in enumerate(r):
+                    cells[i].text = "" if v is None else str(v)
+
         doc.add_heading("1. Spacecraft Parameters", level=1)
-        doc.add_paragraph(f"Total mass: {round(total_mass, 2)} kg")
-        doc.add_paragraph(f"Orbit altitude: {altitude_km} km")
-        doc.add_paragraph(f"Form factor: {form_factor}")
-        doc.add_paragraph(f"Cross-sectional area: {round(cross_section_m2, 4)} m\u00b2")
-
-        doc.add_heading("2. Lifetime Analysis — 3 Solar Scenarios", level=1)
-        if lifetime_scenarios:
-            t = doc.add_table(rows=1, cols=4, style="Light List Accent 1")
-            t.rows[0].cells[0].text = "Scenario"
-            t.rows[0].cells[1].text = "F10.7"
-            t.rows[0].cells[2].text = "Lifetime (yr)"
-            t.rows[0].cells[3].text = "25-yr Compliant"
-            for sc in lifetime_scenarios:
-                row = t.add_row()
-                row.cells[0].text = sc["scenario"]
-                row.cells[1].text = str(sc["f107"])
-                row.cells[2].text = str(sc["lifetime_years"]) if sc["lifetime_years"] is not None else "> 100,000"
-                row.cells[3].text = "Yes" if sc.get("compliant_25yr") else "No" if sc.get("compliant_25yr") is False else "N/A"
-        elif "note" in deorbit_data:
-            doc.add_paragraph(deorbit_data["note"])
-        else:
-            t = doc.add_table(rows=1, cols=2, style="Light List Accent 1")
-            t.rows[0].cells[0].text = "Parameter"
-            t.rows[0].cells[1].text = "Value"
-            for key, val in deorbit_data.items():
-                row = t.add_row()
-                row.cells[0].text = key.replace("_", " ").title()
-                row.cells[1].text = str(val)
-
-        doc.add_heading("3. Passivation Checklist", level=1)
-        if passivation_checklist:
-            t = doc.add_table(rows=1, cols=3, style="Light List Accent 1")
-            t.rows[0].cells[0].text = "Action"
-            t.rows[0].cells[1].text = "Description"
-            t.rows[0].cells[2].text = "Standard"
-            for item in passivation_checklist:
-                row = t.add_row()
-                row.cells[0].text = item["item"]
-                row.cells[1].text = item["description"]
-                row.cells[2].text = item["standard"]
-        else:
-            doc.add_paragraph("No passivation items identified.")
-
-        doc.add_heading("4. Compliance Summary", level=1)
-        t = doc.add_table(rows=1, cols=2, style="Light List Accent 1")
-        t.rows[0].cells[0].text = "Requirement"
-        t.rows[0].cells[1].text = "Status"
-        for label, key in [("IADC 25-year guideline", "iadc_25yr"),
-                           ("FCC 5-year rule", "fcc_5yr"),
-                           ("Casualty risk < 1:10000", "casualty_risk_compliant")]:
-            row = t.add_row()
-            row.cells[0].text = label
-            val = compliance_summary.get(key)
-            row.cells[1].text = "PASS" if val else "FAIL" if val is False else "N/A"
-
-        doc.add_heading("5. Applicable Standards", level=1)
-        for key, std in data["standards"].items():
-            doc.add_paragraph(std, style="List Bullet")
-
-        doc.add_heading("6. Mitigation Options", level=1)
-        t = doc.add_table(rows=1, cols=2, style="Light List Accent 1")
-        t.rows[0].cells[0].text = "Method"
-        t.rows[0].cells[1].text = "Description"
-        for opt in data["mitigation_options"]:
-            row = t.add_row()
-            row.cells[0].text = opt["method"]
-            row.cells[1].text = opt["description"]
-
+        doc.add_paragraph(f"Total mass (current best estimate): {round(total_mass, 2)} kg; mass used for the "
+                          f"decay: {d.get('mass_kg')} kg ({d.get('mass_basis')})")
+        doc.add_paragraph(f"Orbit altitude: {altitude_km} km; apogee {d.get('apogee_km')} km")
+        doc.add_paragraph(f"Form factor: {form_factor}; tumbling area without the sail {d.get('area_stowed_m2')} m²")
+        if sail:
+            doc.add_paragraph(f"Drag sail: {sail.get('name')}, {sail.get('deployed_area_m2')} m² deployed, "
+                              f"effective {d.get('area_deployed_effective_m2')} m²; triggers: "
+                              f"{', '.join(sail.get('trigger') or [])}; {sail.get('independent_circuits')} "
+                              f"independent release circuit(s)")
+        doc.add_heading("2. Lifetime Analysis — Solar-Cycle Scenarios", level=1)
+        if ws:
+            doc.add_paragraph(f"With the sail (from {d.get('start_year')}): " +
+                              ", ".join(f"{k} {v} y" for k, v in ws.items()))
+        doc.add_paragraph("Without the sail: " + ", ".join(f"{k} {v} y" for k, v in wo.items()) +
+                          f" (typical range {d.get('without_sail_range_y')} y)")
+        table(["Scenario", "Start", "Area (m²)", "Lifetime (y)", "5-year rule"],
+              [[s["scenario"], s["start_year"], s["area_m2"], s["lifetime_years"],
+                "PASS" if s["compliant_5yr"] else "FAIL"] for s in lifetime_scenarios])
+        doc.add_heading("3. ISED Debris Mitigation Conditions", level=1)
+        table(["Check", "Condition", "Value", "Limit", "Result"],
+              [[c["id"], c["rule"], c["value"], c["limit"],
+                "PASS" if c["pass"] else ("FAIL" if c["pass"] is False else "OPEN")] for c in d.get("checks") or []])
+        doc.add_heading("4. Passivation Checklist", level=1)
+        table(["Action", "Description", "Standard"], [[p["item"], p["description"], p["standard"]] for p in passivation])
+        doc.add_heading("5. Evidence and Model", level=1)
+        doc.add_paragraph(f"Model: {d.get('model')}")
+        for ev in d.get("evidence") or []:
+            doc.add_paragraph(f"{ev.get('tool')} {ev.get('version') or ''}: lifetime {ev.get('lifetime_years')} y, "
+                              f"Pc {ev.get('collision_probability')}, casualty {ev.get('casualty_risk')}",
+                              style="List Bullet")
+        if not d.get("evidence"):
+            doc.add_paragraph("No DRAMA/DAS result imported yet (Licensing tab).")
+        for n in d.get("notes") or []:
+            doc.add_paragraph(n, style="List Bullet")
+        doc.add_heading("6. Applicable Standards", level=1)
+        for std in data["standards"].values():
+            if std:
+                doc.add_paragraph(std, style="List Bullet")
         buf = io.BytesIO()
         doc.save(buf)
         buf.seek(0)

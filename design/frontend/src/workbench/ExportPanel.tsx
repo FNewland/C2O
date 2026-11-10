@@ -10,6 +10,7 @@ import { getLang } from '../i18n'
 import { Button, Dialog, Note } from '../components/ui'
 import { SimConfigExportDialog } from './SimConfigExportDialog'
 import { saveProjectFile } from './projectFile'
+import { LicensingDialog, licensingExportCategory } from './LicensingPanel'
 
 const API = '/api'
 
@@ -74,7 +75,7 @@ function reviewPackDocs(sid: string, t: TFunction, packs: ReviewPack[], docLang:
 }
 
 // Labels and descriptions are display-only (translated); file names and CSV content stay English.
-function buildExports(sid: string, t: TFunction, openSimConfig: () => void, packs: ReviewPack[]): DocCategory[] {
+function buildExports(sid: string, t: TFunction, openSimConfig: () => void, packs: ReviewPack[], openLicensing: () => void = () => {}): DocCategory[] {
   // Review packs: headings of the review data package in French when the UI is in French.
   const docLang = getLang() === 'fr' ? '&lang=fr' : ''
   return [
@@ -121,19 +122,13 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void, pack
       { id: 'margins', label: t('Margin Status Report'), description: t('Mass, power, cost margins vs ECSS thresholds'), formats: [
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/ecss/margins/${sid}`, `Margins_${sid}.json`, 'GET') },
       ]},
-      { id: 'rsssa', label: t('RSSSA Licence Application'), description: t('Remote Sensing Space Systems Act filing'), formats: [
-        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/rsssa/${sid}?fmt=docx`, `RSSSA_${sid}.docx`) },
-        { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/rsssa/${sid}`, `RSSSA_${sid}.json`) },
-      ]},
       { id: 'launch-icd', label: t('Launch ICD'), description: t('Launch Interface Control Document'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/launch-icd/${sid}?fmt=docx`, `Launch_ICD_${sid}.docx`) },
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/launch-icd/${sid}`, `Launch_ICD_${sid}.json`) },
       ]},
-      { id: 'deorbit', label: t('Deorbit & Debris Compliance'), description: t('Orbital lifetime, casualty risk, passivation'), formats: [
-        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/deorbit/${sid}?fmt=docx`, `Deorbit_${sid}.docx`) },
-        { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/deorbit/${sid}`, `Deorbit_${sid}.json`) },
-      ]},
     ]},
+    // Regulatory group (agent L, W5.04): licensing inputs, the study-linked licence documents, deorbit
+    licensingExportCategory(sid, t, openLicensing),
     { name: t('Technical Models'), color: 'var(--status-caution)', docs: [
       { id: 'thermal', label: t('Thermal Design Report'), description: t('Thermal balance, radiator sizing, component temps'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/thermal-report/${sid}?fmt=docx`, `Thermal_${sid}.docx`) },
@@ -204,6 +199,7 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
 
   const { t } = useTranslation()
   const [simConfig, setSimConfig] = useState(false)
+  const [licensing, setLicensing] = useState(false)
   const [packs, setPacks] = useState<ReviewPack[]>(FALLBACK_PACKS)
   useEffect(() => {
     if (!studyId) return
@@ -213,7 +209,7 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
       .catch(() => { /* keep the default list */ })
     return () => { live = false }
   }, [studyId])
-  const categories = studyId ? buildExports(studyId, t, () => setSimConfig(true), packs) : []
+  const categories = studyId ? buildExports(studyId, t, () => setSimConfig(true), packs, () => setLicensing(true)) : []
 
   const run = async (docId: string, label: string, action: (sid: string) => Promise<void>) => {
     if (!studyId) return
@@ -224,6 +220,7 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
   }
 
   if (simConfig && studyId) return <SimConfigExportDialog studyId={studyId} onClose={() => setSimConfig(false)} />
+  if (licensing && studyId) return <LicensingDialog studyId={studyId} onClose={() => setLicensing(false)} />
   return (
     <Dialog open title={t('Export Documents & Data')} onClose={onClose} width={680}
       actions={<button type="button" className="c2o-btn" onClick={onClose}>{t('Close')}</button>}>

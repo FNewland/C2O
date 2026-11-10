@@ -643,34 +643,116 @@ const OPTION_WORDS = [
   'hydrazine', 'electric (Xe)',
 ]
 
+/** Debounce of Properties edits (W1.07): one PATCH per pause in typing, never two in flight. */
+export const PROPERTY_SAVE_DELAY_MS = 500
+
 function ElementProperties({ studyId, focusElementId, allElements }: { studyId: string | null; focusElementId: string | null; allElements: any[] }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const qc = useQueryClient()
 
   const focusElement = allElements.find((e: any) => e.id === focusElementId)
+  // Local draft of the edited fields: typing updates it at once; the server sees one debounced
+  // PATCH with the latest version (W1.07: no 409 while typing, the final value is stored).
+  const [draft, setDraft] = useState<Record<string, any>>({})
+  const [shown, setShown] = useState<Record<string, string>>({})   // raw text of number fields while typing
+  const [trlDraft, setTrlDraft] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const versionRef = useRef<number>(focusElement?.version || 1)
+  const pendingRef = useRef<{ perf: Record<string, any>; trl?: number | null } | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const chainRef = useRef<Promise<void>>(Promise.resolve())
+  const elIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    // another element in focus: flush nothing, start a fresh draft
+    if (elIdRef.current !== (focusElement?.id ?? null)) {
+      elIdRef.current = focusElement?.id ?? null
+      setDraft({}); setShown({}); setTrlDraft(null); setSaveError(null)
+      versionRef.current = focusElement?.version || 1
+    } else if ((focusElement?.version || 0) > versionRef.current) {
+      versionRef.current = focusElement.version
+    }
+  }, [focusElement?.id, focusElement?.version])
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
+  const send = useCallback((elementId: string) => {
+    chainRef.current = chainRef.current.then(async () => {
+      const body = pendingRef.current
+      pendingRef.current = null
+      if (!body) return
+      const payload: Record<string, any> = { performance: body.perf }
+      if (body.trl !== undefined) payload.trl = body.trl
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await fetch(`${API}/elements/${elementId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, version: versionRef.current }),
+        })
+        if (res.ok) {
+          const el = await res.json().catch(() => null)
+          if (el?.version) versionRef.current = el.version
+          setSaveError(null)
+          break
+        }
+        if (res.status === 409 && attempt === 0) {
+          // someone else saved in between: take the server version, keep our edit on top
+          const cur = await fetch(`${API}/elements/${elementId}`).then(r => r.ok ? r.json() : null).catch(() => null)
+          if (cur?.version) versionRef.current = cur.version
+          if (cur?.performance) payload.performance = { ...cur.performance, ...body.perf }
+          continue
+        }
+        setSaveError(t('Not saved ({{status}})', { status: res.status }))
+        break
+      }
+      qc.invalidateQueries({ queryKey: ['elements', studyId] })
+    })
+  }, [qc, studyId, t])
+
   if (!focusElement) return null
 
   const domain = focusElement.subsystem_domain || focusElement.element_type
-  const fields = propertyFields(t)[domain]
-  if (!fields || fields.length === 0) return null
+  const fields = propertyFields(t)[domain] || []
+  const isCustom = !focusElement.kb_component_id
+  const showTrl = focusElement.element_type === 'component' || isCustom
+  if (fields.length === 0 && !showTrl) return null
 
-  const perf = focusElement.performance || {}
+  const perf = { ...(focusElement.performance || {}), ...draft }
 
-  const updateProp = async (key: string, value: any) => {
-    const newPerf = { ...perf, [key]: value }
-    await fetch(`${API}/elements/${focusElement.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ performance: newPerf, version: focusElement.version }),
-    })
-    qc.invalidateQueries({ queryKey: ['elements', studyId] })
+  const schedule = (nextDraft: Record<string, any>, trl?: number | null) => {
+    pendingRef.current = {
+      perf: { ...(focusElement.performance || {}), ...nextDraft },
+      trl: trl !== undefined ? trl : pendingRef.current?.trl,
+    }
+    if (timerRef.current) clearTimeout(timerRef.current)
+    const id = focusElement.id
+    timerRef.current = setTimeout(() => send(id), PROPERTY_SAVE_DELAY_MS)
+  }
+
+  const updateProp = (key: string, value: any, raw?: string) => {
+    if (raw !== undefined) setShown(prev => ({ ...prev, [key]: raw }))
+    const next = { ...draft, [key]: value }
+    setDraft(next)
+    schedule(next)
+  }
+
+  const updateTrl = (raw: string) => {
+    setTrlDraft(raw)
+    const n = parseInt(raw, 10)
+    if (raw === '' || (n >= 1 && n <= 9)) schedule(draft, raw === '' ? null : n)
   }
 
   return (
     <Disclosure ruled open={expanded} onToggle={setExpanded}
       summary={t('Properties: {{name}}', { name: displayElementName(focusElement.name, t) })}>
       <div className="c2o-form-grid">
+        {showTrl && (
+          <Field label={t('TRL (1-9)')} help={isCustom ? undefined : t('From the knowledge base')}
+            disabledReason={isCustom ? undefined : t('TRL of a catalogue part comes from the knowledge base')}>
+            <Input dense numeric type="number" min={1} max={9} aria-label={t('TRL (1-9)')}
+              value={trlDraft ?? (focusElement.trl ?? '')} onChange={e => updateTrl(e.target.value)} />
+          </Field>
+        )}
         {fields.map(f => (
           <Field key={f.key} label={f.label}>
             {f.type === 'select' ? (
@@ -679,12 +761,15 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
                 {f.options?.map(o => <option key={o} value={o}>{OPTION_WORDS.includes(o) ? t(o) : o}</option>)}
               </Select>
             ) : (
-              <Input dense numeric={f.type === 'number'} type={f.type} value={perf[f.key] ?? ''}
-                onChange={e => updateProp(f.key, f.type === 'number' ? parseFloat(e.target.value) || null : e.target.value)} />
+              <Input dense numeric={f.type === 'number'} type={f.type} value={shown[f.key] ?? perf[f.key] ?? ''}
+                onChange={e => f.type === 'number'
+                  ? updateProp(f.key, e.target.value === '' || isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value), e.target.value)
+                  : updateProp(f.key, e.target.value)} />
             )}
           </Field>
         ))}
       </div>
+      {saveError && <p role="alert" className="t-12 c-alarm m-0">{saveError}</p>}
     </Disclosure>
   )
 }

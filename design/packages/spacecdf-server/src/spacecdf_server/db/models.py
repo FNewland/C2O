@@ -783,3 +783,5 @@ from . import cdr_models as _cdr_models  # noqa: E402,F401
 # milestones and work packages. Importing them registers the tables on Base.metadata.
 from . import models_ait as _models_ait  # noqa: E402,F401
 from . import models_schedule as _models_schedule  # noqa: E402,F401
+# W5.03 Licensing tab (agent L): one study-owned row per study.
+from . import models_licensing as _models_licensing  # noqa: E402,F401

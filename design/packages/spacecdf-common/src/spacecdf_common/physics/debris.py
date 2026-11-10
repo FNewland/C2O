@@ -234,12 +234,26 @@ def compute_debris_compliance(
     has_battery: bool = True,
     has_pressurised_tanks: bool = False,
     mission_duration_years: float = 3.0,
+    drag_device_area_m2: float = 0.0,
+    start_year: float | None = None,
 ) -> OrbitalLifetimeResult:
     """Compute full debris compliance assessment.
 
     Implements checks per ECSS-U-AS-10C Rev.2 and NASA-STD-8719.14.
+
+    ``drag_device_area_m2`` (W5.02) is the deployed area of a drag sail deployed at the end of
+    operations. When it is given, the post-mission lifetime comes from the calibrated disposal
+    model (``physics/disposal.py``: effective area 0.38 x deployed + bus, solar-cycle scenarios
+    from ``start_year``), and the deorbit method is ``drag_augmentation``.
     """
     result = OrbitalLifetimeResult()
+    if drag_device_area_m2 and drag_device_area_m2 > 0 and altitude_km < 1000:
+        return _compliance_with_drag_device(
+            altitude_km=altitude_km, inclination_deg=inclination_deg, dry_mass_kg=dry_mass_kg,
+            cross_section_m2=cross_section_m2, has_propulsion=has_propulsion, propulsion_type=propulsion_type,
+            available_delta_v_ms=available_delta_v_ms, has_battery=has_battery,
+            has_pressurised_tanks=has_pressurised_tanks, mission_duration_years=mission_duration_years,
+            drag_device_area_m2=drag_device_area_m2, start_year=start_year)
 
     # Estimate cross-section from mass if not provided
     if cross_section_m2 is None:
@@ -398,3 +412,43 @@ def _find_compliant_altitude(
         else:
             hi = mid
     return (lo + hi) / 2
+
+
+def _compliance_with_drag_device(*, altitude_km: float, inclination_deg: float, dry_mass_kg: float,
+                                 cross_section_m2: float | None, has_propulsion: bool, propulsion_type: str,
+                                 available_delta_v_ms: float, has_battery: bool, has_pressurised_tanks: bool,
+                                 mission_duration_years: float, drag_device_area_m2: float,
+                                 start_year: float | None) -> OrbitalLifetimeResult:
+    """Debris compliance when a drag sail is deployed at the end of operations (W5.02)."""
+    from .disposal import BUS_AREA_WITH_SAIL_M2, SAIL_EFFECTIVE_FRACTION, decay_lifetime_years
+
+    # the base assessment (casualty, passivation, environment) without the device
+    base = compute_debris_compliance(
+        altitude_km=altitude_km, inclination_deg=inclination_deg, dry_mass_kg=dry_mass_kg,
+        cross_section_m2=cross_section_m2, has_propulsion=has_propulsion, propulsion_type=propulsion_type,
+        available_delta_v_ms=available_delta_v_ms, has_battery=has_battery,
+        has_pressurised_tanks=has_pressurised_tanks, mission_duration_years=mission_duration_years)
+    t0 = (start_year if start_year is not None else 2030.5) + mission_duration_years
+    eff = SAIL_EFFECTIVE_FRACTION * drag_device_area_m2 + BUS_AREA_WITH_SAIL_M2
+    m = max(dry_mass_kg, 0.1)
+    post = {sc: decay_lifetime_years(altitude_km, t0, m, eff, sc) for sc in ("strong", "nominal", "weak")}
+    r = base
+    r.warnings = [w for w in r.warnings if "drag augmentation" not in w]
+    r.lifetime_years = mission_duration_years + post["nominal"]
+    r.lifetime_years_solar_max = mission_duration_years + post["strong"]
+    r.lifetime_years_solar_min = mission_duration_years + post["weak"]
+    worst = max(post.values())
+    r.compliant_25yr = worst <= 25.0
+    r.compliant_5yr = worst <= 5.0
+    r.deorbit_method = "drag_augmentation"
+    r.deorbit_delta_v_ms = 0.0
+    if "Drag sail deployment (end of life)" not in r.passivation_items:
+        r.passivation_items = list(r.passivation_items) + ["Drag sail deployment (end of life)"]
+    lifetime_score = 30 * (1.0 if r.compliant_25yr else max(0, 1 - worst / 100))
+    five_yr_bonus = 20 if r.compliant_5yr else 0
+    casualty_score = 20 if r.casualty_compliant else 0
+    passivation_component = 15 * r.passivation_score
+    deorbit_capability = 15 if r.compliant_5yr else 7
+    r.debris_compliance_score = min(100, lifetime_score + five_yr_bonus + casualty_score
+                                    + passivation_component + deorbit_capability)
+    return r

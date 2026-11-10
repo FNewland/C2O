@@ -37,7 +37,7 @@ def test_export_routes_are_served_by_their_family_module_in_the_original_order()
     from spacecdf_server.app import app
     from spacecdf_server.routers import exports
     seen = [(m, "/api/exports" + r.path, r.endpoint) for fam in exports.FAMILIES for r in fam.router.routes
-            for m in sorted(r.methods)]
+            for m in sorted(r.methods) if not r.path.startswith("/regulatory/")]   # W5.04 routes appended
     by_key = {(m, p): ep for m, p, ep in seen}
     for method, path, fn, family in EXPORT_ROUTES:
         ep = by_key.get((method, path))
@@ -46,7 +46,8 @@ def test_export_routes_are_served_by_their_family_module_in_the_original_order()
         assert ep.__module__ == f"spacecdf_server.routers.exports.{family}"
     assert [(m, p) for m, p, _ in seen] == [(r[0], r[1]) for r in EXPORT_ROUTES]
     # and the app serves them in that order (openapi paths keep registration order)
-    paths = [p for p in app.openapi()["paths"] if p.startswith("/api/exports/")]
+    paths = [p for p in app.openapi()["paths"] if p.startswith("/api/exports/")
+             and not p.startswith("/api/exports/regulatory/")]
     assert paths == list(dict.fromkeys(r[1] for r in EXPORT_ROUTES))
 
 
@@ -67,7 +68,9 @@ def test_backwards_compatible_names():
                                      "iaru", "rsssa", "export", "copuos", "eol", "srr", "pdr", "cdr"]
     assert docx_generator.DOCX_GENERATORS is DOCX_GENERATORS
     assert docx_generator.generate_did_docx.__module__ == "spacecdf_server.services.docx.did"
-    assert exports.regulatory.router.routes == []   # the W5.04 seam is empty until agent L fills it
+    # W5.04 filled the regulatory seam: its routes are all under /regulatory/
+    assert exports.regulatory.router.routes and all(r.path.startswith("/regulatory/")
+                                                    for r in exports.regulatory.router.routes)
 
 
 # ───────────────────────────────────────────────────────────── W0.3 roll-up (pure)
@@ -130,6 +133,7 @@ async def test_collect_on_an_empty_study_returns_every_section(client, study_obj
         # a stub names its owner; an implemented section answers with its empty or proposed shape
         assert d[stub].get("status") != "not_implemented" or d[stub]["owner"] in {"H", "L", "A"}
     assert d["ait"]["status"] == d["schedule"]["status"] == "proposed"     # W8a / W11a defaults
+    assert d["licensing"]["owner"] == "L" and d["licensing"]["filings"]     # W5.06: no longer a stub
     r = await client.get(f"/api/studies/{study_obj.id}/export-context")
     assert r.status_code == 200 and set(SECTIONS) <= set(r.json())
 
