@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import io
 import re
-from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -36,15 +35,24 @@ async def s3(client):
 
 
 async def _changes(sid: str, *codes: str) -> dict[str, str]:
-    """The v2 change records (``risks.yaml``) as L's register holds them (3.L4 imports them in the
-    seed; inserted here so D's flow is tested on its own). Returns code -> id."""
+    """The v2 change records (``risks.yaml``) as L's register holds them: the seed imports them at
+    S3 (3.L4, ``_s3_changes``, with the decision gates ECP-01 PDR, ECP-02 SRR, CR-V2 PDR); a
+    record still missing is inserted, so D's flow is tested on its own. Returns code -> id."""
+    from sqlalchemy import select
+
     from spacecdf_server.db.engine import get_session_factory
     from spacecdf_server.db.models_changes import ChangeProposalRow
     recs = {c["id"]: c for c in load("risks")["configuration_management"]["change_records"]}
     gates = {"ECP-01": "pdr", "ECP-02": "srr", "CR-V2": "pdr"}
     out = {}
     async with get_session_factory()() as s:
+        have = {r.code: r for r in (await s.execute(select(ChangeProposalRow).where(
+            ChangeProposalRow.study_id == sid))).scalars().all()}
         for i, code in enumerate(codes):
+            if code in have:
+                assert have[code].decision_gate == gates[code], (code, have[code].decision_gate)
+                out[code] = have[code].id
+                continue
             r = recs[code]
             rid = uuid4().hex[:16]
             s.add(ChangeProposalRow(id=rid, study_id=sid, code=code, kind="ecp" if code.startswith("ECP") else "cr",
@@ -253,9 +261,13 @@ async def test_gate_start_enforcement_warn_and_block(client):
     r = await client.post(f"/api/studies/{sid}/gates/mdr/review", json={"action": "start"})
     assert r.status_code == 409
     det = r.json()["detail"]
-    assert det["code"] == "deliverables_missing" and any(i["id"] == "trade.mdr" for i in det["items"])
+    # (since S's protocol landed the deliverables come from se_deliverables; the system trades
+    # of the MDR are one of the missing items at S1)
+    assert det["code"] == "deliverables_missing" and det["items"]
+    assert any("trade" in str(i.get("id") or "") or i.get("kind") == "trade" for i in det["items"]), det["items"]
     inv = (await client.get(f"/api/studies/{sid}/gates/mdr/inventory")).json()
-    assert [f["id"] for f in inv["findings"]] == ["trade.mdr"] and inv["baseline_kind"] == "mission"
+    assert {f["id"] for f in inv["findings"]} >= {i["id"] for i in det["items"] if i.get("code") != "entry_missing"} \
+        and inv["baseline_kind"] == "mission"
 
 
 async def test_gate_start_order_warnings_and_baseline_kind(client, s3):
@@ -264,8 +276,9 @@ async def test_gate_start_order_warnings_and_baseline_kind(client, s3):
     r = await client.post(f"/api/studies/{sid}/gates/prr/review", json={"action": "start"})
     assert r.status_code == 200, r.text
     warns = r.json()["warnings"]
-    assert [w["code"] for w in warns] == ["out_of_order"] and warns[0]["id"] == "mdr"
-    assert r.json()["history"][-1]["warnings"][0]["code"] == "out_of_order"
+    order = [w for w in warns if w["code"] == "out_of_order"]
+    assert len(order) == 1 and order[0]["id"] == "mdr", warns
+    assert "out_of_order" in [w["code"] for w in r.json()["history"][-1]["warnings"]]
     await client.post(f"/api/studies/{sid}/gates/prr/review", json={"action": "cancel"})
     # block: the same start is refused, out of order
     await client.put(f"/api/studies/{sid}/gate-enforcement", json={"mode": "block"})
@@ -281,7 +294,7 @@ async def test_gate_start_order_warnings_and_baseline_kind(client, s3):
     # warn: it starts, with the warning in the history
     await client.put(f"/api/studies/{sid}/gate-enforcement", json={"mode": "warn"})
     r = await client.post(f"/api/studies/{sid}/gates/mdr/review", json={"action": "start"})
-    assert r.status_code == 200 and [w["id"] for w in r.json()["warnings"]] == ["trade.mdr"]
+    assert r.status_code == 200 and any("trade" in str(w["id"]) or w.get("kind") == "trade" for w in r.json()["warnings"]), r.json()["warnings"]
     await client.post(f"/api/studies/{sid}/gates/mdr/review", json={"action": "cancel"})
     # off: the behaviour before wave 3, no warnings
     await client.put(f"/api/studies/{sid}/gate-enforcement", json={"mode": "off"})
@@ -297,41 +310,11 @@ async def test_gate_start_order_warnings_and_baseline_kind(client, s3):
 
 # ─── PI addendum: SRR and PDR pass legitimately once the evidence exists ──
 
-async def _evidence(sid: str, *, debris=True, icds=True, reliability=True, thermal=True) -> None:
-    """The records the other agents' tools write (L 3.L8, R 3.R6, A 3.A5/3.A6), inserted as the
-    tools would leave them after the team's work."""
-    from spacecdf_server.db.engine import get_session_factory
-    from spacecdf_server.db.models_debris import DebrisAssessmentRow
-    from spacecdf_server.db.models_icd import IcdIssueRow
-    from spacecdf_server.db.models_reliability import FmeaRow, ReliabilityBlockRow
-    from spacecdf_server.db.models_thermal import ThermalCaseRow, ThermalNodeRow
-    now = datetime.now(timezone.utc)
-    life = load("NUMBERS")
-    async with get_session_factory()() as s:
-        if debris:
-            s.add(DebrisAssessmentRow(id=uuid4().hex[:16], study_id=sid, version=1, lifetime_y=3.4,
-                                      status="accepted", accepted_gate="srr", accepted_by="board", accepted_at=now))
-        if icds:
-            for i, ref in enumerate(("ICD-DEP", "ICD-RAD-OBC", "ICD-PAY-OBC", "ICD-SAIL-EPS", "ICD-SPC-GND")):
-                s.add(IcdIssueRow(id=uuid4().hex[:16], study_id=sid, icd_ref=ref, issue="A", revision=0,
-                                  state="issue_a", provider_seat="systems_engineer", consumer_seat="comms_engineer",
-                                  signoffs_json={"systems_engineer": {"by": "x"}, "comms_engineer": {"by": "y"}}, order=i))
-        if reliability:
-            s.add(ReliabilityBlockRow(id=uuid4().hex[:16], study_id=sid, name="Space segment", reliability=0.86,
-                                      horizon_months=12, data_json={"system": True}))
-            s.add(FmeaRow(id=uuid4().hex[:16], study_id=sid, code="FM-EPS-01", subsystem="EPS",
-                          failure_mode="Battery cell short", severity=3, probability=2, criticality=6))
-        if thermal:
-            for i in range(8):
-                s.add(ThermalNodeRow(id=uuid4().hex[:16], study_id=sid, code=f"N{i + 1:02d}", name=f"node {i + 1}"))
-            for kind, m in (("hot", 4.0), ("cold", 6.5)):
-                s.add(ThermalCaseRow(id=uuid4().hex[:16], study_id=sid, code=f"{kind.upper()}-OP", kind=kind,
-                                     status="solved", results_json={"N01": {"t_c": 20, "margin_design_c": m}}))
-        await s.commit()
-    assert life
-
-
 async def test_srr_and_pdr_readiness_pass_only_with_the_evidence(client, s3):
+    """D's readiness criteria left after the integration (SEMP, debris, ICDs and reliability/FMEA
+    are R's YAML criteria SRR-EC-09/10 and PDR-EC-02/05 on the same evidence): the change decisions
+    due at the gate (SRR-RD-03, PDR-RD-04) and the thermal model (PDR-RD-03). The whole path, with
+    the real tools, is ``test_w3_integration.py``."""
     sid = s3.study_id
 
     async def crit(g):
@@ -339,38 +322,34 @@ async def test_srr_and_pdr_readiness_pass_only_with_the_evidence(client, s3):
         return {c["id"]: c for c in ev["criteria"] if "-RD-" in c["id"]}, ev
 
     srr, ev = await crit("srr")
-    assert {k: v["status"] for k, v in srr.items()} == {"SRR-RD-01": "fail", "SRR-RD-02": "fail", "SRR-RD-03": "pass"}
-    assert ev["ready"] is False
-    pdr, _ = await crit("pdr")
-    assert all(pdr[k]["status"] == "fail" for k in ("PDR-RD-01", "PDR-RD-02", "PDR-RD-03"))
-    ids = await _changes(sid, "ECP-01", "ECP-02")
-    srr, _ = await crit("srr")
+    assert set(srr) == {"SRR-RD-03"} and ev["ready"] is False
     assert srr["SRR-RD-03"]["status"] == "fail" and "ECP-02" in srr["SRR-RD-03"]["evidence_found"]
-    # the team's work: debris accepted, ICDs at Issue A signed, reliability + FMEA, thermal model
-    await _evidence(sid)
-    # the SEMP: issued by the instructor's sign-off once reviewed (X's generator makes the content)
-    from spacecdf_server.seats import store
-    team = await store.get_team(sid)
-    team.setdefault("signoffs", {})["SRR-RD-01"] = {"by": "Instructor", "at": "2026-11-10", "note": "SEMP issue 1 reviewed"}
-    await store.save_team(sid, team)
+    by = {c["id"]: c for c in ev["criteria"]}
+    assert by["SRR-EC-09"]["priority"] == "must_pass" and by["SRR-EC-09"]["status"] in ("manual", "fail")
+    assert by["SRR-EC-10"]["status"] == "fail"                     # no debris assessment run yet
+    pdr, ev = await crit("pdr")
+    assert set(pdr) == {"PDR-RD-03", "PDR-RD-04"}
+    assert pdr["PDR-RD-03"]["status"] == "fail" and pdr["PDR-RD-04"]["status"] == "fail"
+    ids = await _changes(sid, "ECP-01", "ECP-02")
     # ECP-02 through change control (decided at SRR); ECP-01 rejected at PDR for the test
     start = (await client.post(f"/api/studies/{sid}/changes/ECP-02/control/start")).json()
     for seat in start["pending_seats"]:
         await client.post(f"/api/studies/{sid}/changes/ECP-02/control/agree", json={"seat": seat, "decision": "agree"})
     assert (await client.post(f"/api/studies/{sid}/changes/ECP-02/control/decide", json={"decision": "approve"})).status_code == 200
-    srr, ev = await crit("srr")
-    assert {v["status"] for v in srr.values()} == {"pass"}, {k: v["evidence_found"] for k, v in srr.items()}
-    assert "accepted at SRR" in srr["SRR-RD-02"]["evidence_found"]
+    srr, _ = await crit("srr")
+    assert srr["SRR-RD-03"]["status"] == "pass" and "ECP-02 (accepted)" in srr["SRR-RD-03"]["evidence_found"]
     pdr, _ = await crit("pdr")
-    assert pdr["PDR-RD-01"]["status"] == "pass" and "5/5 ICDs" in pdr["PDR-RD-01"]["evidence_found"]
-    assert pdr["PDR-RD-02"]["status"] == "pass" and "0.860 over 12 months" in pdr["PDR-RD-02"]["evidence_found"]
-    assert pdr["PDR-RD-03"]["status"] == "pass" and "8 nodes" in pdr["PDR-RD-03"]["evidence_found"]
     assert pdr["PDR-RD-04"]["status"] == "fail" and "ECP-01" in pdr["PDR-RD-04"]["evidence_found"]
     await client.post(f"/api/studies/{sid}/changes/{ids['ECP-01']}/control/start")
     await client.post(f"/api/studies/{sid}/changes/{ids['ECP-01']}/control/decide",
                       json={"decision": "reject", "note": "Keep the VNIR camera; filter quote too late"})
     pdr, _ = await crit("pdr")
     assert pdr["PDR-RD-04"]["status"] == "pass"
+    # the thermal model with A's tool: built, solved, heaters taken
+    for step in ("propose", "run", "heaters/accept"):
+        assert (await client.post(f"/api/studies/{sid}/thermal-model/{step}")).status_code == 200
+    pdr, _ = await crit("pdr")
+    assert pdr["PDR-RD-03"]["status"] == "pass", pdr["PDR-RD-03"]["evidence_found"]
 
 
 # ─── 3.D7 change control ──────────────────────────────────────────────────
@@ -420,7 +399,8 @@ async def test_change_control_flow_updates_the_baseline(client, s3):
     codes = {i["code"] for i in (await client.get(f"/api/studies/{sid}/open-items")).json()["items"]}
     assert "ECP-02" not in codes and "ECP-01" in codes
     sx = (await client.get(f"/api/studies/{sid}/export-context?sections=change_control")).json()["change_control"]
-    assert sx["counts"]["total"] == 2 and sx["counts"]["approved"] == 1 and sx["counts"]["not_started"] == 1
+    n = len((await client.get(f"/api/studies/{sid}/changes")).json()["items"])   # ECP-01, ECP-02, CR-V2 (seed S3)
+    assert sx["counts"]["total"] == n and sx["counts"]["approved"] == 1 and sx["counts"]["not_started"] == n - 1
     assert ids["ECP-01"] in {i["change"]["id"] for i in sx["items"]}
     assert re.search(r"^[0-9a-f]{16}$", out["baseline_ref"])
     # the flow travels with the project file: the imported study shows the same decided flow

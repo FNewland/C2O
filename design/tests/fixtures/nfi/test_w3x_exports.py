@@ -1,9 +1,8 @@
 """Wave 3, agent X (3.X1 SE diagrams, 3.X2 packs carry the V, 3.X3 SEMP) on the nfi v2 fixture.
 
-The wave-3 sections other agents own are still stubs on this branch: ``w3x_support`` registers
-collectors that return the baseline records (only where the section is still a stub), and writes
-the v2 function tree into the store (agent R's bulk import does it through the API). Counts come
-from the store and the baseline files, never from typed constants.
+Since the wave-3 merge every section is real and the function tree is R's bulk import, so the
+tests run on the seed alone (``w3x_support`` keeps only ``counts_by_stage``). Counts come from the
+store and the baseline files, never from typed constants.
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ import zipfile
 import pytest
 
 from tests.fixtures.nfi import load, seed_nfi
-from tests.fixtures.nfi.w3x_support import counts_by_stage, register_sections, write_functions
+from tests.fixtures.nfi.w3x_support import counts_by_stage
 
 
 def _docx_text(data: bytes) -> str:
@@ -27,10 +26,9 @@ def _docx_text(data: bytes) -> str:
 
 
 async def _seeded(client, monkeypatch, stage: str = "S4"):
-    s = await seed_nfi(client, stage)
-    register_sections(monkeypatch)
-    await write_functions(s.study_id, s.elements)
-    return s
+    """The seed alone: since the wave-3 merge every section is real (its owner's collector) and
+    the function tree comes from R's bulk import (``_s1_functions``), so the tests read real data."""
+    return await seed_nfi(client, stage)
 
 
 async def _dgm(client, sid: str, kind: str, **q) -> dict:
@@ -60,8 +58,12 @@ async def test_se_diagram_set_from_the_model(client, monkeypatch):
 
     # stakeholder map: grouped by category, MOE-04 and MOE-10 flagged to co-define
     smap = await _dgm(client, sid, "stakeholder_map")
-    cats = {x["category"] for x in sh["stakeholders"]}
-    assert smap["counts"]["categories"] == len(cats) == 5
+    # grouped by each stakeholder's primary category as S's register normalises it (3.S3: the
+    # v2 "decision authority / rights-holder" keeps rights-holder as a second category)
+    reg = (await collect(sid, sections=["stakeholders"])).stakeholders["items"]
+    cats = {str(x["category"]).replace("_", " ") for x in reg}
+    assert len(reg) == len(sh["stakeholders"])
+    assert smap["counts"]["categories"] == len(cats) == len({str(x["category"]).split(" / ")[0] for x in sh["stakeholders"]})
     assert smap["counts"]["needs"] == len(sh["needs"]) == 12
     assert {g["id"] for g in smap["groups"]} == {"cat:" + c for c in cats}
     ph = next(g for g in smap["gaps"] if g["code"] == "moe_placeholder")
@@ -160,7 +162,8 @@ async def test_packs_carry_the_v(client, monkeypatch):
         for bad in ("HUMAN INPUT REQUIRED", "[To be defined]", "Collector section"):
             assert bad not in text, (gate, bad)
         # stakeholder register: 12 stakeholders, 15 MOEs, the two placeholders to co-define
-        assert f"{len(sh['stakeholders'])} stakeholders in 5 categories" in text, gate
+        n_cats = len({str(x["category"]).split(" / ")[0] for x in sh["stakeholders"]})   # S's primary categories
+        assert f"{len(sh['stakeholders'])} stakeholders in {n_cats} categories" in text, gate
         for m in sh["moes"]:
             assert f"| {m['id']} |" in text, (gate, m["id"])
         row04 = next(line for line in text.splitlines() if line.startswith("| MOE-04 |"))

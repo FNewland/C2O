@@ -93,13 +93,17 @@ def _logbook(monkeypatch, tmp_path):
 
 async def _ledger(sid: str, *, unagreed: tuple[str, ...] = (), skip: tuple[tuple[str, str], ...] = ()) -> dict:
     """The mass and power lines of ``budgets.yaml`` in the allocation ledger (A's table, 3.A2),
-    written directly (A's routes land in A's branch). Returns {(type, code): line id}."""
+    written directly, replacing the lines the seed imported (A's ``_s2_allocations``), so the
+    test controls every line. Returns {(type, code): line id}."""
+    from sqlalchemy import delete
+
     from spacecdf_server.db.engine import get_session_factory
     from spacecdf_server.db.models_alloc import AllocationLedgerRow
     from spacecdf_server.services.requirement_queries import element_code_map
     codes = await element_code_map(sid)
     ids = {}
     async with get_session_factory()() as s:
+        await s.execute(delete(AllocationLedgerRow).where(AllocationLedgerRow.study_id == sid))
         n = 0
         for btype, src, unit in (("mass", BUDGETS["mass"]["allocations"], "kg"),
                                  ("power_avg", BUDGETS["power"]["allocations"], "W")):
@@ -240,9 +244,10 @@ async def test_r4_gate_criteria_of_the_v(client):
     qr = await _gate(client, sid, "qr")
     assert "OBJ-" not in str(qr["QR-EC-01"]["evidence_params"].get("codes", ""))
 
-    # PDR-EC-07 fails naming EPS until the Power seat agrees, then passes (5.316 ≤ 6.0 kg; 5.892 ≤ 12.2 W)
+    # PDR-EC-07 passes on the ledger the seed imported, agreed by its owners (A, 3.A2); it fails
+    # naming EPS until the Power seat agrees, then passes (5.316 ≤ 6.0 kg; 5.892 ≤ 12.2 W)
     pdr = await _gate(client, sid, "pdr")
-    assert pdr["PDR-EC-07"]["status"] == "fail" and pdr["PDR-EC-07"]["priority"] == "must_pass"
+    assert pdr["PDR-EC-07"]["status"] == "pass" and pdr["PDR-EC-07"]["priority"] == "must_pass"
     assert pdr["PDR-EC-08"]["status"] == "pass" and pdr["PDR-EC-08"]["priority"] == "must_pass"
     ids = await _ledger(sid, unagreed=("EPS",))
     pdr = await _gate(client, sid, "pdr")

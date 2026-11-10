@@ -106,6 +106,8 @@ def stakeholders(d: DiagramData) -> list[dict]:
             continue
         out.append({"id": str(g(s, "code", "id", default=f"STK-{i + 1:02d}")), "name": str(g(s, "name", default="?")),
                     "category": str(g(s, "category", default="") or "").replace("_", " ").strip(),
+                    # S's register (3.S3): every category of the stakeholder (rights-holder as a second one)
+                    "categories": [str(c).replace("_", " ") for c in as_list(g(s, "categories", default=[]))],
                     "role": str(g(s, "role", default="") or ""), "authority": str(g(s, "authority", default="") or ""),
                     "engagement": str(g(s, "engagement", default="") or ""),
                     "needs": [str(x) for x in as_list(g(s, "needs", "need_codes", default=[]))]})
@@ -165,19 +167,23 @@ def _code_key(c: str) -> tuple:
 
 
 def top_functions(d: DiagramData) -> tuple[list[dict], dict[str, str]]:
-    """(top functions in code order, {function id: top ancestor id})."""
-    ids = {f["id"]: f for f in d.functions}
+    """(top functions in code order, {function id: top ancestor id}). The processes of the v2
+    import (``function_type == "process"``, R 3.R1) and their sub-functions are left out, as in
+    the function tree and the allocation matrix."""
+    from .b_trees import _product_functions
+    fns = _product_functions(d)
+    ids = {f["id"]: f for f in fns}
     top: dict[str, str] = {}
-    for f in d.functions:
+    for f in fns:
         cur, n = f, 0
         while cur.get("parent_id") in ids and n < 20:
             cur = ids[cur["parent_id"]]
             n += 1
         top[f["id"]] = cur["id"]
-    roots = [f for f in d.functions if f.get("parent_id") not in ids]
+    roots = [f for f in fns if f.get("parent_id") not in ids]
     # a single root above the top functions (the mission function) is skipped
     if len(roots) == 1:
-        kids = [f for f in d.functions if f.get("parent_id") == roots[0]["id"]]
+        kids = [f for f in fns if f.get("parent_id") == roots[0]["id"]]
         if len(kids) > 1:
             root = roots[0]["id"]
             for fid in list(top):
@@ -492,7 +498,8 @@ def stakeholder_map(d: DiagramData, **_: Any) -> dict:
     for s in sh:
         b = pos["sh:" + s["id"]]
         badges = []
-        if "authority" in (s["category"] or "") or "rights" in (s["category"] or ""):
+        cats_all = " ".join([s["category"] or "", *s.get("categories", [])])
+        if "authority" in cats_all or "rights" in cats_all:
             badges.append(T("decides"))
         D.node("sh:" + s["id"], clip(s["name"], 44), b["x"], b["y"], b["w"], b["h"], sub=clip(s["engagement"] or "—", 44),
                style="accent" if badges else "default", badges=badges, ref={"kind": "stakeholder", "id": s["id"]},

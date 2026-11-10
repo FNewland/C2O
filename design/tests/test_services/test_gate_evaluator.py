@@ -249,8 +249,10 @@ def test_srr_traceability_and_requirement_quality():
     assert by["SRR-EC-01"]["evidence_params"] == {"traced": 1, "total": 2}
     assert by["SRR-EC-02"]["status"] == "fail"
     assert by["SRR-EC-02"]["evidence_params"] == {"ok": 1, "total": 2}
-    assert by["SRR-EC-09"]["status"] == "manual"
-    assert by["SRR-EC-09"]["verdict"] == "advisory"   # should_pass sign-off: never blocks
+    # wave 3 integration: the SEMP is a hybrid must-pass (issued in the tool, or signed off);
+    # without the evidence collection it stays manual and blocks
+    assert by["SRR-EC-09"]["status"] == "manual" and by["SRR-EC-09"]["mode"] == "hybrid"
+    assert by["SRR-EC-09"]["priority"] == "must_pass" and by["SRR-EC-09"]["verdict"] == "manual"
 
 
 # --------------------------------------------------------------------------- i18n contract

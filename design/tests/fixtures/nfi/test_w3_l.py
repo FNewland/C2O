@@ -166,8 +166,8 @@ async def test_l3_l4_l6_l7_l8_on_the_s4_study(client):
     assert len(e1["affected_requirement_ids"]) == len(want)
     assert e1["change_class"] == "I" and e1["status"] == "proposed" and e1["decision_gate"] == "pdr"
     assert e1["source_trade"] == "T-A01" and "NUMBERS payload.vnir" in e1["affected_other"]
-    assert by["CR-V2"]["kind"] == "cr" and by["CR-V2"]["status"] == "implemented" and by["CR-V2"]["decision_gate"] == "srr"
-    assert by["ECP-02"]["decision_gate"] == "" and "SEG-LS-02" in by["ECP-02"]["affected_codes"]
+    assert by["CR-V2"]["kind"] == "cr" and by["CR-V2"]["status"] == "implemented" and by["CR-V2"]["decision_gate"] == "pdr"   # seed CHANGE_GATES (approved with the allocated baseline)
+    assert by["ECP-02"]["decision_gate"] == "srr" and "SEG-LS-02" in by["ECP-02"]["affected_codes"]
     # idempotent import, patch, the section (blocks PDR)
     again = (await client.post(f"/api/studies/{sid}/changes/import",
                                json={"records": recs})).json()
