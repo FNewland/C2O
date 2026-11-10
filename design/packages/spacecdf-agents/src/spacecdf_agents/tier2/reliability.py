@@ -61,8 +61,15 @@ class ReliabilityAgent(DesignAgent):
     async def execute(self, state: DesignState) -> AgentResult:
         result = AgentResult(domain=self.domain)
 
-        mission_years = state.get("mission.duration_years", 3.0) or 3.0
+        design_years = state.get("mission.duration_years", 3.0) or 3.0
+        # wave 3 (3.A1): the mission-success horizon (e.g. 12 months of operations after
+        # commissioning, MIS-LIF-02), not the design life
+        horizon_months = state.get("mission.success_horizon_months")
+        if not horizon_months:
+            horizon_months = state.get_requirement("success_horizon_months")
+        mission_years = float(horizon_months) / 12.0 if horizon_months else design_years
         mission_hours = mission_years * 365.25 * 24
+        horizon_text = f"over {float(horizon_months):g} months" if horizon_months else f"over {design_years:g} years (design life)"
 
         reliability_target = state.get_requirement("reliability_target") or 0.9
 
@@ -106,8 +113,19 @@ class ReliabilityAgent(DesignAgent):
         total_lambda = sum(fr / 1e6 for fr in _FAILURE_RATES.values())
         mtbf_hours = 1.0 / total_lambda if total_lambda > 0 else float("inf")
 
+        phase0 = system_reliability
+        study_r = state.get("reliability.study_mission_reliability")
+        if study_r is not None:
+            # the study's reliability block diagram (3.A5) wins; the heritage chain is the Phase 0 figure
+            result.add_param("reliability.phase0_mission_reliability", "Mission Reliability (Phase 0 heritage chain)",
+                             round(phase0, 4), "", rationale=f"heritage subsystem rates {horizon_text}")
+            system_reliability = float(study_r)
         result.add_param("reliability.mission_reliability", "Mission Reliability",
-                         round(system_reliability, 4), "")
+                         round(system_reliability, 4), "",
+                         rationale=(f"reliability block diagram {horizon_text}" if study_r is not None
+                                    else f"heritage series chain {horizon_text}"))
+        result.add_param("reliability.horizon_months", "Reliability horizon", round(mission_years * 12, 2), "months",
+                         rationale="mission-success horizon" if horizon_months else "design life (no mission-success horizon set)")
         result.add_param("reliability.weakest_subsystem", "Weakest Subsystem",
                          weakest[0] if weakest[0] else "none", "")
         result.add_param("reliability.single_point_failures", "Single-Point Failures",
@@ -117,7 +135,7 @@ class ReliabilityAgent(DesignAgent):
 
         if system_reliability < reliability_target:
             result.add_warning(
-                f"Mission reliability {system_reliability:.3f} < target {reliability_target:.2f}; "
+                f"Mission reliability {system_reliability:.3f} {horizon_text} < target {reliability_target:.2f}; "
                 f"weakest: {weakest[0]} (R={weakest[1]:.3f}). Consider redundancy."
             )
         if single_point_failures:
@@ -125,8 +143,8 @@ class ReliabilityAgent(DesignAgent):
 
         # ---- Report-quality narrative & FMECA-lite extras ----
         result.rationale = (
-            f"Series reliability model R_sys=∏R_i.  Over {mission_years:.1f} yr "
-            f"({mission_hours:.0f} h) the mission reliability is "
+            f"Series reliability model R_sys=∏R_i.  Over {mission_years * 12:.0f} months "
+            f"({mission_hours:.0f} h; {'mission-success horizon' if horizon_months else 'design life'}) the mission reliability is "
             f"{system_reliability:.3f} against a target of "
             f"{reliability_target:.2f}.  Weakest contributor: "
             f"{weakest[0] or 'n/a'} (R={weakest[1]:.3f}).  System MTBF "

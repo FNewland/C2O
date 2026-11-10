@@ -125,23 +125,71 @@ async def study_cost(study_id: str) -> dict[str, Any]:
 
 @router.get("/studies/{study_id}/cost/items")
 async def list_cost_items(study_id: str) -> dict:
-    """TODO(A, 3.A7): the priced lines (``cost_items``): labour, test campaigns, hardware, reserve;
-    launch zero when provided."""
-    from ._wave3_stub import stub_list
-    return stub_list(study_id, "A", "3.A7", total_keur=None)
+    """The priced lines (``cost_items``): labour, test campaigns, hardware, other, reserve and the
+    launch (zero when provided), the totals by category and against the target."""
+    _require_study(study_id)
+    from ..services.cost_pricing import summary
+    return await summary(study_id)
 
 
 @router.post("/studies/{study_id}/cost/items")
 async def create_cost_item(study_id: str, body: dict) -> dict:
-    """TODO(A, 3.A7)."""
-    from ._wave3_stub import not_implemented, study_or_404
-    study_or_404(study_id)
-    raise not_implemented("A", "3.A7")
+    """A line of the team's own (kept by a later ``price``); the reserve follows the new base."""
+    _require_study(study_id)
+    from ..db.models_cost import CostItemRow
+    from ..services import cost_pricing as cp
+    from ..services import study_rows
+    try:
+        f = cp.clean_item(body)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    if not f.get("name"):
+        raise HTTPException(422, "a cost line needs a name")
+    f.setdefault("category", "other")
+    f["origin"] = "user"
+    f["order"] = 500
+    row = (await study_rows.insert_rows(CostItemRow, study_id, [f], prefix="ci"))[0]
+    await cp.refresh_reserve(study_id)
+    return row
+
+
+@router.patch("/studies/{study_id}/cost/items/{item_id}")
+async def update_cost_item(study_id: str, item_id: str, body: dict) -> dict:
+    _require_study(study_id)
+    from ..db.models_cost import CostItemRow
+    from ..services import cost_pricing as cp
+    from ..services import study_rows
+    row = await study_rows.get_row(CostItemRow, item_id)
+    if row is None or row.get("study_id") != study_id:
+        raise HTTPException(404, "cost line not found")
+    try:
+        f = cp.clean_item({**{k: row.get(k) for k in ("quantity", "unit_cost_keur")}, **body})
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    if "total_keur" in body:
+        f["total_keur"] = body["total_keur"]
+    f["origin"] = "user"
+    out = await study_rows.update_row(CostItemRow, item_id, f)
+    await cp.refresh_reserve(study_id)
+    return out
+
+
+@router.delete("/studies/{study_id}/cost/items/{item_id}")
+async def delete_cost_item(study_id: str, item_id: str) -> dict:
+    _require_study(study_id)
+    from ..db.models_cost import CostItemRow
+    from ..services import cost_pricing as cp
+    from ..services import study_rows
+    if not await study_rows.delete_rows(CostItemRow, study_id, ids=[item_id]):
+        raise HTTPException(404, "cost line not found")
+    await cp.refresh_reserve(study_id)
+    return {"deleted": item_id}
 
 
 @router.post("/studies/{study_id}/cost/price")
-async def price_cost_model(study_id: str) -> dict:
-    """TODO(A, 3.A7): propose the priced lines from the WBS, the AIT test matrix and a reference class."""
-    from ._wave3_stub import not_implemented, study_or_404
-    study_or_404(study_id)
-    raise not_implemented("A", "3.A7")
+async def price_cost_model(study_id: str, replace: bool = False) -> dict:
+    """Propose the priced lines from the WBS, the AIT test matrix and the reference class
+    (``configs/cost_pricing.yaml``); the team's own lines are kept unless ``replace``."""
+    _require_study(study_id)
+    from ..services.cost_pricing import price
+    return await price(study_id, replace=replace)

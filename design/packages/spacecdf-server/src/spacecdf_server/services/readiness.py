@@ -182,6 +182,28 @@ async def compute_readiness(study_id: str, *, level: int | None = None, element_
             "counts": {"conflicts": len(conf), "alarm": alarms, "caution": len(conf) - alarms},
         })
 
+    # 5b. Allocations agreed (wave 3, 3.A2): the ledger lines of the elements at this level, each
+    # agreed by its owner seat (shown only once the ledger has lines for this level)
+    try:
+        from ..db.models_alloc import AllocationLedgerRow
+        from . import study_rows
+        led = [r for r in await study_rows.list_rows(AllocationLedgerRow, study_id)
+               if r.get("line_kind") != "reserve" and r.get("element_id") in child_ids]
+    except Exception:  # noqa: BLE001
+        led = []
+    if led:
+        open_ = [r for r in led if r.get("status") != "agreed"]
+        disputed = sum(1 for r in open_ if r.get("status") == "disputed")
+        names = sorted({f"{r.get('element_code') or ''} {r.get('budget_type')}".strip() for r in open_})
+        items.append({
+            "id": "allocations_agreed", "label": _bi("Allocations agreed", "Allocations acceptées"), "ok": not open_,
+            "detail": _bi(f"{len(led) - len(open_)}/{len(led)} agreed; waiting: {_names(names)}",
+                          f"{len(led) - len(open_)}/{len(led)} acceptées ; en attente : {_names(names)}") if open_
+            else _bi(f"All {len(led)} allocation lines agreed by their owners",
+                     f"Les {len(led)} lignes d’allocation sont acceptées par leurs responsables"),
+            "counts": {"lines": len(led), "agreed": len(led) - len(open_), "disputed": disputed},
+        })
+
     # 6. All elements frozen
     if in_scope:
         unfrozen = [e.get("name", "") for e in in_scope if not e.get("frozen")]

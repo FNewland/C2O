@@ -1,0 +1,52 @@
+# Cost pricing at MDR/PRR (services/cost_pricing.py, wave 3, 3.A7)
+# ================================================================
+# Prices the study's cost model so the cost criteria (MDR-EC-08, PRR-EC-11) can be judged:
+# labour per work package, test campaigns per environmental test, hardware from the selected
+# equipment (cost_engine), spares, ground support equipment, licence fees, a management reserve,
+# and the launch (zero when the launch is provided). Every value below is a planning value
+# (C2O default reference class for a university CubeSat): the team replaces each with its
+# institution's rates and the test house's quotes; a priced line the team edits is kept.
+sources:
+  c2o_pricing:
+    kind: c2o_default
+    title: "C2O default planning rates for a university CubeSat (replace with the institution's rates and quotes)"
+    verified: false
+
+currency: EUR
+reference_class:
+  en: "University 3U Earth-observation CubeSat, protoflight model philosophy, about 3 years to launch, a small staff team with student engineers"
+  fr: "CubeSat universitaire 3U d’observation de la Terre, philosophie protovol, environ 3 ans jusqu’au lancement, petite équipe de personnel avec des étudiants ingénieurs"
+
+#: loaded monthly cost per full-time equivalent (kEUR per person-month)
+labour_rates_keur_per_pm:
+  staff: 8.0        # engineer or technician on staff, salary with overheads
+  student: 0.0      # students on credit (courses, capstone): in kind, counted in person-months, not in cost
+#: full-time equivalents per work package of the WBS (services/schedule.py DEFAULT_WBS codes);
+#: the duration is the package's own start-to-end months
+wbs_labour_fte:
+  "1": {staff: 0.2, student: 0.2}     # project management
+  "2": {staff: 0.3, student: 0.5}     # systems engineering and product assurance
+  "3": {staff: 0.1, student: 1.0}     # payload
+  "4": {staff: 0.1, student: 1.0}     # platform
+  "5": {staff: 0.4, student: 0.5}     # AIT
+  "6": {staff: 0.1, student: 1.0}     # flight software
+  "7": {staff: 0.05, student: 0.5}    # ground segment
+  "8": {staff: 0.05, student: 0.0}    # launch services and licensing
+  "9": {staff: 0.2, student: 1.0}     # mission operations
+  "10": {staff: 0.0, student: 0.1}    # disposal
+
+#: external test campaigns, matched on the AIT test (env, category or code); days at the facility
+#: and the facility day rate (kEUR/day); a test done in house is not priced here
+test_campaigns:
+  sine:   {days: 1, keur_per_day: 3.0, label: {en: "Sine vibration campaign", fr: "Campagne de vibrations sinusoïdales"}}
+  random: {days: 2, keur_per_day: 3.0, label: {en: "Random vibration campaign", fr: "Campagne de vibrations aléatoires"}}
+  shock:  {days: 1, keur_per_day: 3.0, label: {en: "Shock test", fr: "Essai de choc"}}
+  tvac:   {days: 8, keur_per_day: 2.5, label: {en: "Thermal-vacuum campaign", fr: "Campagne de vide thermique"}}
+  emc:    {days: 2, keur_per_day: 3.0, label: {en: "EMC and RF compatibility campaign", fr: "Campagne CEM et compatibilité RF"}}
+
+#: other lines, as a share of the flight hardware or as a lump sum
+spares_percent_of_flight_hardware: 10
+ground_support_equipment_keur: 15.0
+licence_and_coordination_fees_keur: 5.0
+#: management reserve on everything above (launch excluded), a percentage of the base
+reserve_percent: 20

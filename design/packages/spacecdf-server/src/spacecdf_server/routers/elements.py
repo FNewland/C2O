@@ -1576,48 +1576,182 @@ async def put_margin_policy(study_id: str, body: dict[str, Any]) -> dict:
     return {"study_id": study_id, "margin_policy": pol}
 
 
+# ─── wave 3 (3.A2): allocation ledger with owner sign-off ────────────────────
+
+async def _ledger_line(study_id: str, line_id: str) -> dict:
+    from ..db.models_alloc import AllocationLedgerRow
+    from ..services import study_rows
+    from ._wave3_stub import study_or_404
+    study_or_404(study_id)
+    line = await study_rows.get_row(AllocationLedgerRow, line_id)
+    if line is None or line.get("study_id") != study_id:
+        raise HTTPException(404, "allocation line not found")
+    return line
+
+
+async def _ledger_actor(request: Request, study_id: str, owner_seat: str | None) -> dict:
+    """Who acts on a ledger line: ``{"mode": open|owner|other, "by", "ctx"}``. Without seats the
+    study is open (the body's ``seat`` names the actor); with seats the active seat must hold the
+    line's owner seat (or be the instructor) to agree or edit directly."""
+    from ..seats import config as seat_cfg
+    from ..seats.service import seat_ctx
+    ctx = await seat_ctx(request, study_id)
+    if not ctx.enabled:
+        return {"mode": "open", "by": "", "ctx": ctx}
+    owner = seat_cfg.resolve_in_study(owner_seat, seat_cfg.study_seats(ctx.state.get("groups") or [])) or owner_seat
+    name = ctx.person.name or ctx.person.id
+    if ctx.instructor or (owner and ctx.holds(owner)):
+        return {"mode": "owner", "by": f"{owner or 'instructor'} ({name})", "ctx": ctx, "owner": owner}
+    return {"mode": "other", "by": f"{ctx.active or ''} ({name})", "ctx": ctx, "owner": owner}
+
+
 @router.get("/studies/{study_id}/allocation-ledger")
 async def list_allocation_ledger(study_id: str) -> dict:
-    """TODO(A, 3.A2): the ledger lines (``allocation_ledger``) with the Systems reserve."""
-    from ._wave3_stub import stub_list
-    return stub_list(study_id, "A", "3.A2", reserve=None)
+    """The ledger lines (``allocation_ledger``) with the Systems reserve, the closure per resource
+    and the counts by type and state."""
+    from ..services import allocation_ledger as al
+    from ._wave3_stub import study_or_404
+    study_or_404(study_id)
+    return await al.list_lines(study_id)
+
+
+@router.get("/studies/{study_id}/allocation-ledger/status")
+async def allocation_ledger_status(study_id: str) -> dict:
+    """Readiness evidence: mass and power lines agreed for every space subsystem, closure, coverage."""
+    from ..services import allocation_ledger as al
+    from ._wave3_stub import study_or_404
+    study_or_404(study_id)
+    return await al.status(study_id)
 
 
 @router.post("/studies/{study_id}/allocation-ledger")
-async def create_ledger_line(study_id: str, body: dict[str, Any]) -> dict:
-    """TODO(A, 3.A2)."""
-    from ._wave3_stub import not_implemented, study_or_404
+async def create_ledger_line(study_id: str, body: dict[str, Any], request: Request) -> dict:
+    """A new line, proposed (Systems offers it; the owner seat agrees it)."""
+    from ..services import allocation_ledger as al
+    from ._wave3_stub import study_or_404
     study_or_404(study_id)
-    raise not_implemented("A", "3.A2")
+    actor = await _ledger_actor(request, study_id, body.get("owner_seat"))
+    try:
+        return await al.create_line(study_id, body, by=actor["by"] or str(body.get("seat") or ""))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
 
 
 @router.post("/studies/{study_id}/allocation-ledger/import")
 async def import_ledger(study_id: str, body: dict[str, Any]) -> dict:
-    """TODO(A, 3.A2): every allocation of budgets.yaml in one call (seed S2)."""
-    from ._wave3_stub import not_implemented, study_or_404
+    """Every allocation of a ``budgets.yaml`` document in one call (seed S2):
+    ``{"budgets": {...}, "agree": true, "replace": true}``."""
+    from ..services import allocation_ledger as al
+    from ._wave3_stub import study_or_404
     study_or_404(study_id)
-    raise not_implemented("A", "3.A2")
+    budgets = body.get("budgets") or body.get("document")
+    if not isinstance(budgets, dict):
+        raise HTTPException(422, "budgets must be the budgets.yaml document (an object)")
+    return await al.import_budgets(study_id, budgets, agree=bool(body.get("agree")),
+                                   replace=body.get("replace", True) is not False, by=str(body.get("by") or ""))
+
+
+@router.post("/studies/{study_id}/allocation-ledger/propose")
+async def propose_ledger(study_id: str) -> dict:
+    """Mass and orbit-average power lines per space subsystem from the roll-up, proposed."""
+    from ..services import allocation_ledger as al
+    from ._wave3_stub import study_or_404
+    study_or_404(study_id)
+    return await al.propose(study_id)
 
 
 @router.patch("/studies/{study_id}/allocation-ledger/{line_id}")
-async def update_ledger_line(study_id: str, line_id: str, body: dict[str, Any]) -> dict:
-    """TODO(A, 3.A2): a non-owner edit becomes a pending change."""
-    from ._wave3_stub import not_implemented, study_or_404
-    study_or_404(study_id)
-    raise not_implemented("A", "3.A2")
+async def update_ledger_line(study_id: str, line_id: str, body: dict[str, Any], request: Request):
+    """Edit a line. The owner seat edits directly (the line stays agreed by it); another seat's
+    edit becomes a pending change for the owner (409 ``owned_by_other_seat`` first, then 202 with
+    ``pending_change`` once the request carries the review confirmation), as for element fields."""
+    from ..services import allocation_ledger as al
+    line = await _ledger_line(study_id, line_id)
+    fields = {k: v for k, v in body.items() if k in al.EDITABLE}
+    why = str(body.get("why") or body.get("rationale_change") or "")
+    actor = await _ledger_actor(request, study_id, line.get("owner_seat"))
+    if actor["mode"] == "open":
+        by = str(body.get("seat") or "")
+        return await al.update_line(line, fields, by=by, by_owner=bool(by) and by == line.get("owner_seat"), why=why)
+    if actor["mode"] == "owner":
+        return await al.update_line(line, fields, by=actor["by"], by_owner=True, why=why)
+    from ..seats import config as seat_cfg
+    from ..seats.identity import confirmed_review
+    ctx, owner = actor["ctx"], actor["owner"]
+    if not (ctx.instructor or ctx.active_kind in seat_cfg.EDITING_KINDS):
+        raise HTTPException(403, {"code": "read_only_seat", "message": "Your seat cannot edit allocations"})
+    if not confirmed_review(request):
+        raise HTTPException(409, {"code": "owned_by_other_seat", "owner_seat": owner,
+                                  "owner_label": seat_cfg.label(owner) if owner else None,
+                                  "message": f"Owned by {seat_cfg.label(owner)['en'] if owner else 'another seat'}"
+                                             " — your change goes to them for review",
+                                  "fields": list(fields)})
+    from fastapi.encoders import jsonable_encoder
+    from fastapi.responses import JSONResponse
+    from ..seats import store as seat_store
+    from ..seats.router import broadcast_team
+    by_seat = ctx.active or ("instructor" if ctx.instructor else "")
+    old = {k: line.get(k) for k in fields}
+    pc = await seat_store.add_pending({
+        "study_id": study_id, "owner_seat": owner, "kind": "allocation_ledger",
+        "element_id": line.get("element_id") or line_id,
+        "element_name": f"{line.get('element_code') or ''} {line.get('budget_type')} allocation".strip(),
+        "param_keys": [f"allocation.{line.get('element_code')}.{line.get('budget_type')}.{k}" for k in fields],
+        "old": jsonable_encoder(old),
+        "new": jsonable_encoder({"_entity": "allocation_ledger", "_id": line_id, **fields, "why": why}),
+        "option_id": None, "by_person": ctx.person.id, "by_name": ctx.person.name, "by_seat": by_seat})
+    await seat_store.log_event(study_id, by_seat, ctx.person, "propose", pc["element_name"], {
+        "pending_id": pc["id"], "kind": "allocation_ledger", "line_id": line_id, "owner_seat": owner,
+        "old": pc["old"], "new": pc["new"]})
+    try:
+        request.state.seat_logged = True
+    except Exception:  # noqa: BLE001
+        pass
+    await broadcast_team(study_id, "pending")
+    data = dict(line.get("data_json") or {})
+    data["pending_change_id"] = pc["id"]
+    from ..db.models_alloc import AllocationLedgerRow
+    from ..services import study_rows
+    line = await study_rows.update_row(AllocationLedgerRow, line_id, {"data_json": data}) or line
+    return JSONResponse(status_code=202, content=jsonable_encoder(
+        {**line, "pending_change": {**pc, "owner_label": seat_cfg.label(owner) if owner else None}}))
 
 
 @router.post("/studies/{study_id}/allocation-ledger/{line_id}/agree")
-async def agree_ledger_line(study_id: str, line_id: str) -> dict:
-    """TODO(A, 3.A2): the owner seat agrees its line."""
-    from ._wave3_stub import not_implemented, study_or_404
-    study_or_404(study_id)
-    raise not_implemented("A", "3.A2")
+async def agree_ledger_line(study_id: str, line_id: str, request: Request, body: dict[str, Any] | None = None) -> dict:
+    """The owner seat agrees its line (403 ``not_owner`` from another seat)."""
+    from ..services import allocation_ledger as al
+    line = await _ledger_line(study_id, line_id)
+    actor = await _ledger_actor(request, study_id, line.get("owner_seat"))
+    if actor["mode"] == "other":
+        raise HTTPException(403, {"code": "not_owner", "owner_seat": actor["owner"],
+                                  "message": "Only the owner seat agrees its allocation"})
+    by = actor["by"] or str((body or {}).get("seat") or line.get("owner_seat") or "")
+    return await al.agree(line, by)
 
 
 @router.post("/studies/{study_id}/allocation-ledger/{line_id}/dispute")
-async def dispute_ledger_line(study_id: str, line_id: str, body: dict[str, Any]) -> dict:
-    """TODO(A, 3.A2)."""
-    from ._wave3_stub import not_implemented, study_or_404
-    study_or_404(study_id)
-    raise not_implemented("A", "3.A2")
+async def dispute_ledger_line(study_id: str, line_id: str, body: dict[str, Any], request: Request) -> dict:
+    """The owner seat disputes its line, with a reason (the line is renegotiated)."""
+    from ..services import allocation_ledger as al
+    line = await _ledger_line(study_id, line_id)
+    reason = str(body.get("reason") or "").strip()
+    if not reason:
+        raise HTTPException(422, "a dispute needs a reason")
+    actor = await _ledger_actor(request, study_id, line.get("owner_seat"))
+    if actor["mode"] == "other":
+        raise HTTPException(403, {"code": "not_owner", "owner_seat": actor["owner"],
+                                  "message": "Only the owner seat disputes its allocation"})
+    by = actor["by"] or str(body.get("seat") or line.get("owner_seat") or "")
+    return await al.dispute(line, by, reason)
+
+
+@router.delete("/studies/{study_id}/allocation-ledger/{line_id}")
+async def delete_ledger_line(study_id: str, line_id: str) -> dict:
+    from ..db.models_alloc import AllocationLedgerRow
+    from ..services import allocation_ledger as al
+    from ..services import study_rows
+    line = await _ledger_line(study_id, line_id)
+    await study_rows.delete_rows(AllocationLedgerRow, study_id, ids=[line["id"]])
+    await al.refresh_reserves(study_id)
+    return {"deleted": line_id}

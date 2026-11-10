@@ -198,6 +198,7 @@ async def _s0(api: _Api, seed: NfiSeed) -> None:
         raise SeedError("mission need was not accepted by POST /api/studies/")
     await _s0_mission_need(api, seed)
     await _s0_stakeholders(api, seed)
+    await _s0_mission_success(api, seed)
 
 
 async def _s1(api: _Api, seed: NfiSeed) -> None:
@@ -343,6 +344,7 @@ async def _s2(api: _Api, seed: NfiSeed) -> None:
     await _s2_conops_phases(api, seed)
     await _s2_link_cases(api, seed)
     await _s2_margin_hold(api, seed)
+    await _s2_array_generation(api, seed)
     await _s2_allocations(api, seed)
     await _s2_readiness(api, seed)
     await _s2_conops_scenarios(api, seed)
@@ -916,9 +918,14 @@ async def _s1_bindings(api: _Api, seed: NfiSeed) -> None:
 
 
 async def _s2_allocations(api: _Api, seed: NfiSeed) -> None:
-    """TODO(A, 3.A2): every allocation of ``budgets.yaml`` (8 mass, 8 power, peak, mode, data,
-    pointing, registration, timing lines) agreed by its seat. Not in the recording seed (the
-    scene is filmed)."""
+    """3.A2: every allocation of ``budgets.yaml`` (8 mass, 8 power, the payload peak, 4 mode, 4 data,
+    pointing, registration and timing lines) in one call, agreed by its owner seat, plus the Systems
+    reserves. Not in the recording seed (the scene is filmed: Systems proposes, each seat agrees)."""
+    if seed.recording:
+        return
+    res = await api.post(f"/api/studies/{seed.study_id}/allocation-ledger/import",
+                         {"budgets": load("budgets"), "agree": True, "by": "baseline v2"})
+    seed.report["allocation_ledger"] = res.get("counts")
 
 
 async def _s2_readiness(api: _Api, seed: NfiSeed) -> None:
@@ -960,5 +967,37 @@ async def _s3_negotiations(api: _Api, seed: NfiSeed) -> None:
 
 
 async def _s4_ait_v2(api: _Api, seed: NfiSeed) -> None:
-    """TODO(A, 3.A4): the 6 models of the v2 model philosophy and the 75 verification events of
-    ``vv_plan.yaml`` with their requirements, as test-matrix events."""
+    """3.A4: the 6 models of the v2 model philosophy and the 75 verification events of
+    ``vv_plan.yaml`` with their requirements, as test-matrix events (replacing the default proposal
+    of ``ait/propose``); the requirement rows' ``verification_event`` names them."""
+    res = await api.post(f"/api/studies/{seed.study_id}/ait/import", {"plan": load("vv_plan"), "replace_proposed": True})
+    seed.report["ait_v2"] = {"models": len(res["models"]), "events": len(res["tests"])}
+
+
+async def _s2_array_generation(api: _Api, seed: NfiSeed) -> None:
+    """3.A1: the Power seat's orbit-average end-of-life generation on the selected arrays
+    (``NUMBERS.power``: 12.2 W for the body and the two deployed wings, 3.98 W body only), so the
+    Modes energy balance and the design loop read the arrays the study chose, not the loop's own
+    sizing. Body panels share the body-only figure; the wings share the rest."""
+    p = load("NUMBERS")["power"]
+    total, body = float(p["eol_generation_w"]["value"]), float(p["body_mounted_only_eol_w"]["value"])
+    eq = load("equipment")
+    parts = {it["kb"]: it for sub in eq["spacecraft"]["subsystems"] for it in sub["items"] if it.get("kb")}
+    share = {"sp-endurosat-3u-body": body, "sp-exa-dmsa-3u-a": total - body}
+    for kb, w in share.items():
+        it = parts.get(kb)
+        el = seed.elements.get(it["name"]) if it else None
+        if el is None:
+            continue
+        cur = await api.call("GET", f"/api/elements/{el['id']}")
+        perf = dict(cur.get("performance") or {})
+        perf["orbit_average_eol_w"] = round(w / int(it.get("qty") or 1), 4)
+        seed.elements[it["name"]] = await api.call("PATCH", f"/api/elements/{el['id']}",
+                                                   {"version": cur["version"], "performance": perf})
+
+
+async def _s0_mission_success(api: _Api, seed: NfiSeed) -> None:
+    """3.A1 / 3.A5: the mission-success horizon of MIS-LIF-02 (12 months of science operations
+    after commissioning, probability at least 0.80), kept apart from the 3-year design life."""
+    await api.call("PUT", f"/api/studies/{seed.study_id}/reliability/horizon",
+                   {"success_horizon_months": 12, "reliability_target": 0.80})

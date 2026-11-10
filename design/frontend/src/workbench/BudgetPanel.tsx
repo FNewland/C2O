@@ -20,6 +20,7 @@ import { displayElementName } from './BlocksPanel'
 import { RecordDecision } from '../logbook'
 import { Button, DataTable, Disclosure, MarginBar, MarginBarKey, Note, NoData, Panel, Tabs, fmtNum, tabPanelProps, type Column } from '../components/ui'
 import { ProjectPanel } from './ProjectPanel'
+import { AllocationLedger } from './AllocationLedger'
 
 const API = '/api'
 
@@ -252,6 +253,14 @@ export function BudgetPanel() {
         {lines.length > 0 && (
           <Disclosure summary={t('Detail table')} meta={t('allocations, nominal, maturity margin')} ruled>
             <BudgetTable kind={activeBudget} unit={bt.unit} digits={bt.digits} lines={lines} budget={budget} totalChildAlloc={totalChildAlloc} onSet={setAllocation} />
+          </Disclosure>
+        )}
+
+        {/* wave 3 (3.A2): the allocations each owner seat signs up to, for this budget */}
+        {activeBudget !== 'cost' && <AllocationLedger studyId={studyId} budget={activeBudget} />}
+        {activeBudget !== 'cost' && (
+          <Disclosure summary={t('Performance allocations')} meta={t('pointing, registration, timing')} ruled>
+            <AllocationLedger studyId={studyId} budget="performance" />
           </Disclosure>
         )}
 

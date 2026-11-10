@@ -77,12 +77,19 @@ class OrbitAgent(DesignAgent):
         result.add_param("orbit.raan_drift_deg_day", "RAAN Drift", params.raan_drift_deg_day, "deg/day")
         result.add_param("orbit.footprint_radius_km", "Footprint Radius", params.footprint_radius_km, "km")
 
-        # Contact time estimate
-        gs_lat = state.get_requirement("ground_stations")
+        # Contact time: the union contact of the study's own stations when the study gives it
+        # (wave 3, 3.A1: ground scheduler, sticky), else the generic high-latitude estimate
         gs_latitude = 78.0  # Default: Svalbard-like high latitude station
-        contact_s = estimate_contact_time_per_day(alt, gs_latitude, inc)
+        union_min = state.get("ground.union_contact_min_per_day")
+        n_stations = int(state.get("ground.station_count", 0) or 0)
+        if union_min:
+            contact_s = float(union_min) * 60.0
+            contact_basis = f"union of the study's {n_stations or ''} stations (ground scheduler)".replace("  ", " ")
+        else:
+            contact_s = estimate_contact_time_per_day(alt, gs_latitude, inc)
+            contact_basis = f"Estimated for GS at {gs_latitude:.0f}° lat"
         result.add_param("orbit.contact_time_per_day_s", "Contact Time/Day", contact_s, "s",
-                         rationale=f"Estimated for GS at {gs_latitude:.0f}° lat")
+                         rationale=contact_basis)
 
         # Delta-V budget
         # For non-Earth orbits, use insertion delta-V from requirements
@@ -97,7 +104,18 @@ class OrbitAgent(DesignAgent):
             result.log(f"Non-Earth orbit: using requirement-specified dV (insertion={dv_insertion:.0f}, maintenance={dv_sk:.0f} m/s)")
         else:
             dv_sk = delta_v_station_keeping(alt, mission_years)
-            dv_deorbit = delta_v_deorbit(alt) if state.get_requirement("orbit.deorbit_required") != False else 0.0
+            # wave 3 (3.A1): a drag sail (or another passive device) disposes of the spacecraft
+            # without a burn, so the disposal ΔV is 0 (the debris agent checks the decay time)
+            drag_area = state.get("deorbit.drag_area_m2", 0.0) or 0.0
+            method = str(state.get_requirement("disposal_method") or "").lower()
+            passive = drag_area > 0 or method in ("drag_sail", "natural_decay", "drag_augmentation")
+            if passive:
+                dv_deorbit = 0.0
+                result.add_param("orbit.disposal_method", "Disposal method",
+                                 "drag_sail" if (drag_area > 0 or method == "drag_sail") else method or "natural_decay", "",
+                                 rationale="passive disposal: no deorbit burn")
+            else:
+                dv_deorbit = delta_v_deorbit(alt) if state.get_requirement("orbit.deorbit_required") != False else 0.0
             dv_total = dv_sk + dv_deorbit
 
         result.add_param("orbit.delta_v_sk_ms", "Station-keeping ΔV", dv_sk, "m/s",
@@ -113,11 +131,14 @@ class OrbitAgent(DesignAgent):
             f"Orbit chosen as {_ot} at {alt:.0f} km altitude "
             f"and inclination {inc:.2f}°.  The Keplerian period is {params.period_min:.1f} min "
             f"({params.orbits_per_day:.1f} orbits / day) with an eclipse fraction of "
-            f"{params.eclipse_fraction:.2f} (cylindrical shadow).  A high-latitude ground "
-            f"station near {gs_latitude:.0f}° provides ≈{contact_s/60:.1f} min of contact / day."
+            f"{params.eclipse_fraction:.2f} (cylindrical shadow).  "
+            + (f"The study's stations give ≈{contact_s/60:.1f} min of contact / day (union)."
+               if union_min else
+               f"A high-latitude ground station near {gs_latitude:.0f}° provides ≈{contact_s/60:.1f} min of contact / day.")
         )
         result.add_assumption(f"Cylindrical Earth-shadow eclipse model (no penumbra).")
-        result.add_assumption(f"Ground-station latitude assumed {gs_latitude:.0f}° (Svalbard-class).")
+        if not union_min:
+            result.add_assumption(f"Ground-station latitude assumed {gs_latitude:.0f}° (Svalbard-class).")
         if orbit_type in ("lunar", "interplanetary", "lagrange", "mars"):
             result.add_assumption(
                 "Atmospheric drag neglected — non-Earth-orbit / deep-space regime; "
@@ -137,11 +158,13 @@ class OrbitAgent(DesignAgent):
              1.0 * (mission_years or 1.0) if body == "earth" else 0.0,
              "Allowance of ~1 m/s per year for collision-avoidance burns."),
             ("Deorbit / EOL", dv_deorbit,
-             "Lower perigee for ≤25-yr re-entry (IADC compliance)."),
+             "Passive disposal (drag sail): no burn." if dv_deorbit == 0 and body == "earth"
+             else "Lower perigee for ≤25-yr re-entry (IADC compliance)."),
         )
         result.extras["orbit.contact_window"] = {
             "per_day_s": contact_s,
-            "ground_station_latitude_deg": gs_latitude,
+            "ground_station_latitude_deg": None if union_min else gs_latitude,
+            "basis": contact_basis,
             "footprint_radius_km": params.footprint_radius_km,
         }
         result.extras["orbit.geometry"] = {

@@ -208,6 +208,67 @@ def _proposed_milestones(study: Any, models: list[dict]) -> list[dict]:
                     "name": f"{m.get('name') or m['code']} delivered",
                     "name_fr": f"{m.get('name_fr') or m['code']} livré", "month": int(m["due_month"])})
     out.append({**LAUNCH, "gate_id": "", "month": GATE_MONTH["launch"]})
+    # wave 3 (3.A3): the licence filings (licensing record, DEFAULT_FILINGS) are milestones too,
+    # counted from the launch; a filing that starts before the project shows as a negative month
+    for f in filing_milestones(study, GATE_MONTH["launch"]):
+        out.append(f)
+    return out
+
+
+def filing_milestones(study: Any, launch_month: int, filings: list[dict] | None = None) -> list[dict]:
+    """One milestone per licence filing: ``month = launch month + start_months`` (negative when
+    the filing starts before the project), with ``before_project_start`` set (pure)."""
+    try:
+        from .licensing import DEFAULT_FILINGS
+    except Exception:  # noqa: BLE001
+        return []
+    rows = filings if filings is not None else [dict(f) for f in DEFAULT_FILINGS]
+    out = []
+    for f in rows:
+        sm = f.get("start_months")
+        if not isinstance(sm, (int, float)):
+            continue
+        title = f.get("title") or {}
+        month = int(launch_month + sm)
+        out.append({"code": f"FIL-{str(f.get('id') or '').upper()[:20]}", "kind": "filing", "gate_id": "",
+                    "name": f"{f.get('authority') or ''}: {title.get('en', f.get('id'))}"[:200],
+                    "name_fr": f"{f.get('authority') or ''} : {title.get('fr', '')}"[:200], "month": month})
+    return out
+
+
+#: months between a part's delivery and the model it goes into (incoming inspection, unit tests)
+RECEIVING_MONTHS = 1
+WEEKS_PER_MONTH = 4.345
+
+
+def need_by(long_lead: list[dict], models: list[dict], start_date: str = "") -> list[dict]:
+    """Order and freeze dates of the long-lead parts (pure). A part is needed one month before the
+    first model built with flight-representative hardware (the engineering model, else the
+    protoflight or flight model); the order goes out its (longest) lead time earlier; the
+    specification freezes one month before the order."""
+    first = None
+    for code in ("EM", "QM", "PFM", "FM"):
+        m = next((x for x in models if x.get("code") == code and x.get("due_month") is not None), None)
+        if m is not None:
+            first = m
+            break
+    out = []
+    for item in long_lead:
+        weeks = item.get("max_weeks") or item.get("lead_time_weeks") or 0
+        lt_months = int(-(-float(weeks) // WEEKS_PER_MONTH)) if weeks else 0     # ceil
+        row = {"name": item.get("name") or item.get("part") or "", "lead_time_weeks": weeks,
+               "lead_time_min_weeks": item.get("min_weeks", item.get("lead_time_min_weeks")),
+               "lead_time_source": item.get("source", item.get("lead_time_source")),
+               "model": first.get("code") if first else None}
+        if first is not None:
+            need = int(first["due_month"]) - RECEIVING_MONTHS
+            order = need - lt_months
+            row.update(model_month=int(first["due_month"]), need_by_month=need, order_by_month=order,
+                       freeze_by_month=order - 1, before_project_start=order - 1 < 0)
+            if start_date:
+                row.update(order_by_date=add_months(start_date, order), freeze_by_date=add_months(start_date, order - 1),
+                           need_by_date=add_months(start_date, need))
+        out.append(row)
     return out
 
 
@@ -363,9 +424,25 @@ async def schedule_summary(study_id: str) -> dict[str, Any]:
         cost = {"error": f"{type(exc).__name__}: {exc}"}
     ms = await list_milestones(study_id)
     wps = await list_work_packages(study_id)
-    return {"settings": settings, "milestones": ms, "work_packages": wps, "long_lead": long_lead_items(els),
-            "cost": cost, "counts": {"milestones": len(ms), "work_packages": len(wps)}}
+    from . import ait
+    lead = long_lead_items(els, n=10)
+    models = await ait.list_models(study_id) or [dict(m) for m in ait.DEFAULT_MODELS]
+    nb = need_by(lead, models, settings.get("start_date") or "")
+    warnings = []
+    for m in ms:
+        if m.get("kind") == "filing" and isinstance(m.get("month"), int) and m["month"] < 0:
+            warnings.append({"code": m["code"], "kind": "filing_before_start", "month": m["month"],
+                             "text": {"en": f"{m['name']} starts {-m['month']} month(s) before the project start",
+                                      "fr": f"{m.get('name_fr') or m['name']} commence {-m['month']} mois avant le début du projet"}})
+    for r in nb:
+        if r.get("before_project_start"):
+            warnings.append({"code": r["name"], "kind": "order_before_start", "month": r.get("freeze_by_month"),
+                             "text": {"en": f"{r['name']}: the specification must freeze before the project start",
+                                      "fr": f"{r['name']} : la spécification doit être figée avant le début du projet"}})
+    return {"settings": settings, "milestones": ms, "work_packages": wps, "long_lead": lead, "need_by": nb,
+            "warnings": warnings, "cost": cost,
+            "counts": {"milestones": len(ms), "work_packages": len(wps), "filings": sum(1 for m in ms if m.get("kind") == "filing")}}
 
 
-__all__ = ["GATE_MONTH", "add_months", "default_start", "get_settings", "put_settings", "list_milestones",
+__all__ = ["GATE_MONTH", "add_months", "filing_milestones", "need_by", "default_start", "get_settings", "put_settings", "list_milestones",
            "list_work_packages", "propose", "upsert", "delete_row", "long_lead_items", "schedule_summary"]

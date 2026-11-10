@@ -14,6 +14,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Button, DataTable, Disclosure, Field, Input, Note, Panel, Select, Tag, fmtNum } from '../components/ui'
+import { CostModel } from './CostModel'
 
 const API = '/api'
 
@@ -21,9 +22,11 @@ interface Milestone { id?: string; code: string; kind: string; name: string; nam
 interface WorkPackage { id?: string; code: string; parent_code: string; name: string; name_fr: string; owner_seat: string; start_month: number | null; end_month: number | null }
 interface LongLead { name: string; min_weeks: number; max_weeks: number; source: string }
 interface Money { keur: number; kcad: number }
+interface NeedBy { name: string; lead_time_weeks: number; model: string | null; model_month?: number; need_by_month?: number; order_by_month?: number; freeze_by_month?: number; order_by_date?: string; freeze_by_date?: string; before_project_start?: boolean }
+interface SchedWarning { code: string; kind: string; month: number | null; text: { en: string; fr: string } }
 
 // English text is the i18n key
-const KIND_LABEL: Record<string, string> = { review: 'review', model: 'model', launch: 'launch', other: 'other' }
+const KIND_LABEL: Record<string, string> = { review: 'review', model: 'model', launch: 'launch', filing: 'licence filing', other: 'other' }
 
 export function ProjectPanel({ studyId }: { studyId: string | null }) {
   const { t } = useTranslation()
@@ -46,7 +49,11 @@ export function ProjectPanel({ studyId }: { studyId: string | null }) {
   const cost = data?.cost ?? {}
   const cad = (settings.currency ?? 'EUR') === 'CAD'
   const money = (m?: Money) => (m ? (cad ? `${fmtNum(m.kcad, 1)} kCAD` : `${fmtNum(m.keur, 1)} kEUR`) : '—')
+  const needBy: NeedBy[] = data?.need_by ?? []
+  const warnings: SchedWarning[] = data?.warnings ?? []
   const lastMonth = Math.max(37, ...milestones.map(m => m.month ?? 0))
+  const firstMonth = Math.min(0, ...milestones.map(m => m.month ?? 0))
+  const pos = (month: number | null) => (((month ?? 0) - firstMonth) / Math.max(1, lastMonth - firstMonth)) * 100
 
   const save = async (patch: Record<string, unknown>) => {
     await fetch(`${API}/studies/${studyId}/schedule/settings`, {
@@ -92,9 +99,9 @@ export function ProjectPanel({ studyId }: { studyId: string | null }) {
             style={{ position: 'relative', height: 64, borderBottom: '1px solid var(--c2o-line, #8884)', margin: '0 2em' }}>
             {milestones.map((m, i) => (
               <div key={m.id ?? m.code} role="listitem" title={`${(fr ? m.name_fr : m.name) || m.name} · ${m.date}`}
-                style={{ position: 'absolute', left: `${((m.month ?? 0) / lastMonth) * 100}%`, transform: 'translateX(-50%)',
+                style={{ position: 'absolute', left: `${pos(m.month)}%`, transform: 'translateX(-50%)',
                   bottom: i % 2 ? 26 : 2, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                <Tag mono accent={m.kind === 'review' || m.kind === 'launch'}>{m.code}</Tag>
+                <Tag mono accent={m.kind === 'review' || m.kind === 'launch'}>{m.kind === 'filing' ? t('licence') : m.code}</Tag>
                 <div className="t-12 c-3">{m.date}</div>
               </div>
             ))}
@@ -108,6 +115,14 @@ export function ProjectPanel({ studyId }: { studyId: string | null }) {
             ]} />
           </Disclosure>
         </section>
+      )}
+
+      {warnings.length > 0 && (
+        <Note tone="caution" role="status">
+          <ul className="m-0">
+            {warnings.map(w => <li key={`${w.kind}-${w.code}`}>{fr ? w.text.fr : w.text.en}</li>)}
+          </ul>
+        </Note>
       )}
 
       <section aria-label={t('Cost')} className="mb-4">
@@ -136,6 +151,22 @@ export function ProjectPanel({ studyId }: { studyId: string | null }) {
           ]} />
         </section>
       )}
+
+      {needBy.length > 0 && (
+        <section aria-label={t('Need-by dates')} className="mb-4">
+          <h3 className="t-13 w-600 m-0 mb-2">{t('Need-by dates')}</h3>
+          <p className="t-12 c-3 m-0 mb-2">{t('Each part is needed one month before the first model built with flight-representative hardware; the order goes out its lead time earlier and the specification freezes one month before the order.')}</p>
+          <DataTable dense caption={t('Need-by dates')} rows={needBy} rowKey={l => l.name} columns={[
+            { key: 'n', header: t('Item'), render: l => l.name },
+            { key: 'w', header: t('Lead time (weeks)'), num: true, render: l => String(l.lead_time_weeks), sort: l => l.lead_time_weeks },
+            { key: 'm', header: t('Model'), render: l => l.model ? `${l.model} · ${t('month {{m}}', { m: l.model_month ?? '?' })}` : '—' },
+            { key: 'f', header: t('Freeze by'), render: l => l.freeze_by_month != null ? `${t('month {{m}}', { m: l.freeze_by_month })}${l.freeze_by_date ? ` · ${l.freeze_by_date}` : ''}` : '—', sort: l => l.freeze_by_month ?? null },
+            { key: 'o', header: t('Order by'), render: l => l.order_by_month != null ? <span className={l.before_project_start ? 'c-alarm' : undefined}>{t('month {{m}}', { m: l.order_by_month })}{l.order_by_date ? ` · ${l.order_by_date}` : ''}</span> : '—', sort: l => l.order_by_month ?? null },
+          ]} />
+        </section>
+      )}
+
+      <CostModel studyId={studyId} />
 
       {wps.length > 0 && (
         <Disclosure summary={t('Work breakdown structure')} meta={t('{{n}} work packages', { n: wps.length })} ruled>

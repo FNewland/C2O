@@ -1,9 +1,12 @@
-"""W8a acceptance on the Northern Fire and Ice fixture: model philosophy and verification plan.
+"""W8a / wave 3 (3.A4) acceptance on the Northern Fire and Ice fixture: model philosophy and
+verification plan from the v2 V&V plan.
 
-The S4 seed proposes the default protoflight philosophy (breadboards month 6, engineering model
-month 18, protoflight model month 30) and the 12-test matrix. The verification plan lists every
-requirement in the store once (less the generated IR-* rows), by its close-out stage, with no
-row cap, and the Word document names no launch vehicle the study did not choose.
+The S4 seed proposes the default protoflight philosophy, then imports the v2 plan
+(``vv_plan.yaml``): the 6 models of its model philosophy and its 75 verification events, with their
+requirements, as the test-matrix events (the default proposal is replaced). The verification plan
+lists every requirement in the store once (less the generated IR-* rows), by its close-out stage,
+with no row cap; each requirement points at its event; the Word document has a Validation chapter
+and names no launch vehicle the study did not choose. Counts come from the fixture and the store.
 """
 from __future__ import annotations
 
@@ -13,7 +16,7 @@ from collections import Counter
 from tests.fixtures.nfi import load, seed_nfi
 
 
-STAGES = ("PDR", "CDR", "QR", "AR", "IOV")
+STAGES = ("PRR", "SRR", "PDR", "CDR", "QR", "AR", "IOV")
 
 
 async def _store_rows(client, sid: str) -> list[dict]:
@@ -36,38 +39,48 @@ def _expected_stages(rows: list[dict]) -> Counter:
 async def test_vp_lists_models_tests_and_every_item_by_stage(client):
     s = await seed_nfi(client, "S4")
     sid = s.study_id
+    plan = load("vv_plan")
     ait = (await client.get(f"/api/studies/{sid}/ait")).json()
-    assert [m["code"] for m in ait["models"]] == ["BB", "EM", "PFM"]
-    assert [m["due_month"] for m in ait["models"]] == [6, 18, 30]
+    assert [m["code"] for m in ait["models"]] == [m["model"] for m in plan["model_philosophy"]]
+    assert len(ait["models"]) == 6
+    assert [m["due_month"] for m in ait["models"]] == [m["month"] for m in plan["model_philosophy"]]
     n = load("NUMBERS")["schedule"]["models"]
-    assert [n["breadboard"], n["engineering_model"], n["protoflight_model"]] == [6, 18, 30]
-    assert len(ait["tests"]) == 12
-    assert {t["category"] for t in ait["tests"]} >= {"environmental", "functional"}
+    by_model = {m["code"]: m["due_month"] for m in ait["models"]}
+    assert [by_model["BB"], by_model["EM"], by_model["PFM"]] == [n["breadboard"], n["engineering_model"],
+                                                                  n["protoflight_model"]]
+    assert len(ait["tests"]) == len(plan["events"]) == 75
     by_code = {t["code"]: t for t in ait["tests"]}
-    assert "VER-ENV-01" in by_code["T-ENV-02"]["requirement_codes"]
-    assert "VER-DEP-01" in by_code["T-DEP-01"]["requirement_codes"]
-    assert by_code["T-ENV-02"]["environment"]["grms"] > 0
+    an_bud = next(e for e in plan["events"] if e["id"] == "AN-BUD")
+    assert by_code["AN-BUD"]["requirement_codes"] == an_bud["requirements"] and len(an_bud["requirements"]) == 28
+    assert by_code["AN-BUD"]["category"] == "analysis"
+    assert by_code["TS-PFM-VIB"]["models"] == ["PFM"] and by_code["TS-PFM-VIB"]["category"] == "environmental"
+    assert by_code["IOV-SCI"]["models"] == ["flight"]
 
     vp = (await client.get(f"/api/studies/{sid}/ait/verification-plan")).json()
     rows = await _store_rows(client, sid)
     total = len(rows)
     assert vp["counts"]["items"] == total == len(vp["items"])
     assert {i["requirement_id"] for i in vp["items"]} == {r["id"] for r in rows}
-    # the store holds the whole baseline: requirements, objectives and stakeholder needs (W2 import)
     base = load("requirements")
     assert total == len(base["requirements"]) + len(base["objectives"]) + len(base["stakeholder_needs"])
     exp = _expected_stages(rows)
-    assert vp["counts"]["by_stage"] == {st: exp[st] for st in STAGES}
-    # each item keeps its method; test-verified VER rows point at their tests
-    ver = {i["code"]: i for i in vp["items"]}
-    assert ver["VER-ENV-02"]["methods"] == ["T"] and "T-ENV-03" in ver["VER-ENV-02"]["tests"]
+    assert vp["counts"]["by_stage"] == {st: exp[st] for st in STAGES if exp[st] or st not in ("PRR", "SRR")}
+    # the v2 matrix rows close at the stage the store holds (PDR 72, CDR 109 … PRR 1, SRR 1)
+    v2_stage = Counter(r["stage"] for r in plan["matrix"])
+    in_matrix = {r["id"] for r in plan["matrix"]}
+    got = Counter(i["stage"] for i in vp["items"] if i["code"] in in_matrix)
+    assert got == v2_stage and len(plan["matrix"]) == 302
+    # every requirement row points at its verification event, and the event is a test-matrix row
+    items = {i["code"]: i for i in vp["items"]}
+    for r in plan["matrix"][:40]:
+        assert items[r["id"]]["event"] == r["event"] and r["event"] in items[r["id"]]["tests"], r["id"]
 
     # the export collector carries the same plan
     sx = (await client.get(f"/api/studies/{sid}/export-context?sections=ait,schedule")).json()
     assert sx["ait"]["status"] == "ok" and sx["ait"]["counts"]["items"] == total
-    assert len(sx["ait"]["models"]) == 3 and len(sx["ait"]["tests"]) == 12
+    assert len(sx["ait"]["models"]) == 6 and len(sx["ait"]["tests"]) == 75
 
-    # the Word document: every stage, no cap, no launch vehicle the study did not choose
+    # the Word document: every stage, no cap, a Validation chapter, no launch vehicle the study did not choose
     r = await client.get(f"/api/studies/{sid}/ait/verification-plan?fmt=docx")
     assert r.status_code == 200, r.text[:300]
     from docx import Document
@@ -76,11 +89,12 @@ async def test_vp_lists_models_tests_and_every_item_by_stage(client):
         c.text for t in doc.tables for row in t.rows for c in row.cells)
     assert "falcon" not in text.lower()
     for st in STAGES:
-        assert f"({st}) — {exp[st]}" in text, st
-    assert "VER-MOD-01" in text and "Protoflight model" in text and "T-DIL-01" in text
+        if exp[st]:
+            assert f"({st}) — {exp[st]}" in text, st
+    assert "Protoflight model" in text and "TS-PFM-DITL" in text and "Validation" in text
     fr = await client.get(f"/api/studies/{sid}/ait/verification-plan?fmt=docx&lang=fr")
     frtext = "\n".join(p.text for p in Document(io.BytesIO(fr.content)).paragraphs)
-    assert "Philosophie des modèles" in frtext and "Vérification en orbite (IOV)" in frtext
+    assert "Philosophie des modèles" in frtext and "Vérification en orbite (IOV)" in frtext and "Validation" in frtext
 
 
 async def test_user_rows_survive_a_new_proposal(client):

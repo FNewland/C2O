@@ -147,6 +147,14 @@ class PowerAgent(DesignAgent):
             pb.battery_mass_kg = kb_battery.get("mass_kg", pb.battery_mass_kg)
             result.log(f"KB battery: mass={pb.battery_mass_kg:.2f} kg")
 
+        # wave 3 (3.A1): the arrays the Power seat selected win (sticky study value); the loop's own
+        # sizing stays as the Phase 0 estimate next to it
+        sel = state.get_param("power.sa_power_eol_w")
+        selected_eol = float(sel.value) if sel is not None and sel.source.is_sticky and isinstance(sel.value, (int, float)) else None
+        if selected_eol is not None:
+            result.add_param("power.phase0_sa_power_eol_w", "SA Power EOL (Phase 0 sizing)", round(pb.sa_power_eol_w, 1), "W",
+                             rationale="the design loop's own array sizing, before the selected arrays")
+            result.log(f"Selected arrays: {selected_eol:.2f} W EOL orbit average (sizing alone gave {pb.sa_power_eol_w:.1f} W)")
         result.add_param("power.sa_area_m2", "Solar Array Area", round(pb.sa_area_m2, 3), "m²")
         result.add_param("power.sa_power_bol_w", "SA Power BOL", round(pb.sa_power_bol_w, 1), "W")
         result.add_param("power.sa_power_eol_w", "SA Power EOL", round(pb.sa_power_eol_w, 1), "W")
@@ -172,7 +180,10 @@ class PowerAgent(DesignAgent):
         result.warnings.extend(pb.warnings)
 
         # ---- Report-quality narrative & structured intermediates ----
-        result.rationale = (
+        eol_text = (f"The selected arrays give {selected_eol:.1f} W orbit-average at end of life (the "
+                    f"loop's own sizing, kept as the Phase 0 estimate, gave {pb.sa_power_eol_w:.1f} W).  "
+                    if selected_eol is not None else "")
+        result.rationale = eol_text + (
             f"Electrical power system sized for a worst-case sunlight load of "
             f"{pb.total_power_sunlight_w:.1f} W and worst-case eclipse load of "
             f"{pb.total_power_eclipse_w:.1f} W.  Solar array delivers "
