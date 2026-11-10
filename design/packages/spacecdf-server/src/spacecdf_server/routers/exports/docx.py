@@ -1,6 +1,7 @@
 """SpaceCDF export family: docx.
 
-Word documents from services/docx (MRD, ConOps, VP, TS, IRD, SEMP, RMP, test plan, regulatory and review stubs).
+Word documents from services/docx (MRD, ConOps, VP, TS, IRD, SEMP, RMP, test plan, licensing
+documents and review stubs).
 Routes (prefix /api/exports): POST /docx/{doc_type}
 
 Since W1.09 (a, b) the requirements, verification items and risks come from the study
@@ -8,13 +9,19 @@ collector (``services.export_context``): every requirement, sorted by level then
 code, type, threshold, parent and allocation; ``IR-*`` rows generated from links go to the IRD,
 not the TS/VP; the RMP receives the risk register sorted by likelihood x consequence.
 ``docx_document`` builds the bytes; the review packs (``packs.py``) call it too.
+
+Wave 2: with a study, ``STUDY_DOCS`` are built from the collector: the MRD
+(``mrd_kwargs_from_export``), the ConOps (``routers.conops``), the verification plan (W8a,
+``generate_verification_plan_docx``), the TS (W4.06) and the IRD (W4.07); ``rsssa``, ``itu_api``,
+``copuos``, ``eol`` and ``export`` render the study-linked licensing documents of
+``services.licensing_docs`` (W5.04). ``iaru`` and the review stubs keep the legacy path.
 See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
 """
 from __future__ import annotations
 
 import io
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
 from ._common import _read_orbit_params
@@ -24,17 +31,20 @@ router = APIRouter()
 # --- Word Document Generation ---
 
 @router.post("/docx/{doc_type}")
-async def generate_docx(doc_type: str, study_id: str | None = None):
+async def generate_docx(doc_type: str, study_id: str | None = None,
+                        lang: str = Query(default="en", description="Document language: en or fr (the TS, IRD, "
+                                          "VP, ConOps and licensing documents; the others stay English until W9)")):
     """Generate an editable Word (.docx) document.
 
     Types: the keys of ``services.docx.DOCX_GENERATORS`` (mrd, conops, vp, ts, ird, semp, rmp,
-    testplan, the regulatory stubs and the srr/pdr/cdr review stubs).
-    Returns a downloadable .docx file.
+    testplan, the licensing documents and the srr/pdr/cdr review stubs). With a study, the MRD,
+    ConOps, VP, TS, IRD and the licensing documents (rsssa, itu_api, copuos, eol, export) are built
+    from the study collector (``STUDY_DOCS``). Returns a downloadable .docx file.
     """
     from ...services.docx import DOCX_GENERATORS
     if doc_type not in DOCX_GENERATORS:
         raise HTTPException(400, f"Unknown doc type: {doc_type}. Available: {list(DOCX_GENERATORS.keys())}")
-    filename, docx_bytes = await docx_document(doc_type, study_id)
+    filename, docx_bytes = await docx_document(doc_type, study_id, lang=lang)
     return StreamingResponse(
         io.BytesIO(docx_bytes),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -59,7 +69,65 @@ def requirement_rows_for_docs(sx_requirements: list[dict], elements: list[dict])
     return out
 
 
-async def docx_document(doc_type: str, study_id: str | None, *, sx=None) -> tuple[str, bytes]:
+#: registry key -> licensing document kind of ``services.licensing_docs`` (W5.04)
+LICENSING_KINDS = {"rsssa": "rsssa", "itu_api": "itu-api", "copuos": "un-registration", "eol": "debris",
+                   "export": "export-control"}
+#: documents built from the study collector when a study is given: type -> sections they read
+STUDY_DOCS: dict[str, tuple[str, ...]] = {
+    "mrd": ("need", "mission", "requirements", "elements"),
+    "conops": (),                       # routers.conops collects its own sections
+    "vp": ("mission", "requirements", "ait", "schedule"),
+    "ts": ("need", "mission", "elements", "requirements", "ait"),
+    "ird": ("mission", "elements", "requirements", "links", "electrical"),
+    **{k: () for k in LICENSING_KINDS},  # services.licensing_docs.SECTIONS_NEEDED
+}
+
+
+async def study_document(doc_type: str, study_id: str, *, sx=None, lang: str = "en") -> bytes:
+    """.docx bytes of a document in ``STUDY_DOCS``, built from ``sx`` (collected here when None or
+    when it lacks the sections the document reads)."""
+    from ...services.export_context import collect
+    lang = "fr" if str(lang or "").lower().startswith("fr") else "en"
+
+    async def need(sections):
+        if sx is not None:
+            return sx
+        return await collect(study_id, lang=lang, sections=list(sections))
+
+    if doc_type == "conops":
+        from ...services.docx.conops import generate_conops_from_view
+        from ..conops import conops_view
+        return generate_conops_from_view(await conops_view(study_id, lang=lang, sx=sx), lang=lang)
+    if doc_type in LICENSING_KINDS:
+        from ...services import licensing_docs as ld
+        from ...services.docx.regulatory import render_regulatory_docx
+        model = ld.GENERATORS[LICENSING_KINDS[doc_type]](await need(ld.SECTIONS_NEEDED))
+        return render_regulatory_docx(model[0] if isinstance(model, list) else model)
+    s = await need(STUDY_DOCS[doc_type])
+    if doc_type == "mrd":
+        from ...services.docx.mrd import generate_mrd_docx, mrd_kwargs_from_export
+        return generate_mrd_docx(**mrd_kwargs_from_export(s))
+    if doc_type == "vp":
+        from ...services.docx.vp import generate_verification_plan_docx
+        return generate_verification_plan_docx(s, lang)
+    if doc_type == "ts":
+        from ...services.docx.ts import generate_ts_from_export
+        return generate_ts_from_export(s, lang)
+    if doc_type == "ird":
+        from ...services.docx.ird import generate_ird_from_export
+        diagrams = []
+        try:
+            from ...services import diagrams as dg
+            ddata = await dg.load(study_id)
+            diagrams = [dg.build(k, ddata) for k in dg.DOCUMENT_SETS["ird"]]
+        except Exception:  # noqa: BLE001 — the document still renders without figures
+            import logging
+            logging.getLogger(__name__).warning("diagrams for the IRD failed", exc_info=True)
+        return generate_ird_from_export(s, lang, diagrams=diagrams)
+    raise KeyError(doc_type)
+
+
+async def docx_document(doc_type: str, study_id: str | None, *, sx=None, lang: str = "en") -> tuple[str, bytes]:
     """(file name, .docx bytes) of one Word family for a study. ``sx`` is a ``StudyExport``
     already collected (the packs pass theirs); otherwise the needed sections are collected."""
     from ...services.docx import DOCX_GENERATORS
@@ -68,6 +136,10 @@ async def docx_document(doc_type: str, study_id: str | None, *, sx=None) -> tupl
     if doc_type not in DOCX_GENERATORS:
         raise KeyError(doc_type)
     name, gen_fn = DOCX_GENERATORS[doc_type]
+    if study_id and doc_type in STUDY_DOCS and get_study_store().get(study_id) is not None:
+        study_name = get_study_store().get(study_id).name or "study"
+        data = await study_document(doc_type, study_id, sx=sx, lang=lang)
+        return f"SpaceCDF_{name.replace(' ', '_')}_{study_name.replace(' ', '_')}.docx", data
 
     # Get study data if available
     study_name = "Unnamed Mission"

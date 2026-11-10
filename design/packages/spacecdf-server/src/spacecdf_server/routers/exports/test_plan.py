@@ -5,7 +5,9 @@ Routes (prefix /api/exports): POST /test-plan/{study_id}
 
 W1.09j: the launcher comes from the mission definition (``launch_vehicle``) or from the launch
 segment elements; with no launcher named the levels are a labelled generic envelope (they used
-to default silently to one specific launcher).
+to default silently to one specific launcher). Wave 2: the levels are
+``services.ait.environment_levels`` (W8a: protoflight, GEVS spectra, the launcher's quasi-static
+loads when named, the launch provider's ICD when the launch is provided).
 See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
 """
 from __future__ import annotations
@@ -162,56 +164,39 @@ async def export_test_plan(
             "pass_criteria": f"Data/power/signal flows correctly between {src_name} and {tgt_name}",
         })
 
-    # Environmental test profile from launch vehicle
+    # Environmental test profile: services.ait.environment_levels (W8a) from the launch segment
     env_profile: dict = {}
     try:
-        from spacecdf_common.physics.structures import launch_loads
+        from ...services.ait import _launch_provided, environment_levels
         lv_key, lv_label, lv_source = identify_launcher(study, elements)
-        launch_vehicle = lv_label
-        axial_g, lateral_g = launch_loads(lv_key) if lv_key else GENERIC_QSL
+        try:
+            provided = await _launch_provided(study_id)
+        except Exception:  # noqa: BLE001
+            provided = False
+        env = environment_levels(study, elements, launch_provided=provided)
+        qs, sine, rnd, tv = (env.get(k) or {} for k in ("quasi_static", "sine", "random", "tvac"))
         env_profile = {
-            "launch_vehicle": launch_vehicle,
+            "launch_vehicle": lv_label,
             "launch_vehicle_source": lv_source,
-            "levels_source": (f"launch_loads('{lv_key}') envelope" if lv_key else
-                              "generic rideshare envelope (C2O default): replace with the launch provider's levels"),
-            "quasi_static_loads": {
-                "axial_g": axial_g,
-                "lateral_g": lateral_g,
-            },
-            "random_vibration": {
-                "level_grms": round(axial_g * 2.35, 1),  # Typical qualification = ~2.35x QSL
-                "frequency_range_hz": "20 - 2000",
-                "duration_s": 120,
-            },
-            "sine_vibration": {
-                "axial_g": round(axial_g * 1.25, 1),
-                "lateral_g": round(lateral_g * 1.25, 1),
-                "sweep_rate_oct_min": 2,
-                "frequency_range_hz": "5 - 100",
-            },
-            "shock": {
-                "srs_g_at_1000hz": 1500,
-                "srs_g_at_3000hz": 3000,
-            },
-            "thermal_vacuum": {
-                "hot_survival_c": 60,
-                "cold_survival_c": -40,
-                "hot_operational_c": 50,
-                "cold_operational_c": -20,
-                "cycles": 4,
-                "pressure_mbar": 1e-5,
-            },
+            "levels_source": env.get("level_source"),
+            "philosophy": env.get("philosophy"),
+            "quasi_static_loads": {"axial_g": qs.get("axial_g"), "lateral_g": qs.get("lateral_g"),
+                                   **({"note": qs["note"]} if qs.get("note") else {})},
+            "random_vibration": {"level_grms": rnd.get("grms"),
+                                 "frequency_range_hz": " - ".join(str(x) for x in rnd.get("range_hz") or []),
+                                 "duration_s": rnd.get("duration_s_per_axis"), "axes": rnd.get("axes"),
+                                 "note": rnd.get("note")},
+            "sine_vibration": {"level_g": sine.get("level_g"),
+                               "frequency_range_hz": " - ".join(str(x) for x in sine.get("range_hz") or []),
+                               "sweep_rate_oct_min": sine.get("sweep_oct_per_min"), "axes": sine.get("axes"),
+                               "note": sine.get("note")},
+            "thermal_vacuum": {"cycles": tv.get("cycles"), "pressure_mbar": tv.get("pressure_hpa"),
+                               "margin_c": tv.get("margin_c"), "note": tv.get("note")},
         }
-    except Exception:
-        env_profile = {
-            "note": "Launch loads module not available — using generic profile",
-            "quasi_static_loads": {"axial_g": 6.0, "lateral_g": 2.0},
-            "thermal_vacuum": {
-                "hot_survival_c": 60, "cold_survival_c": -40,
-                "hot_operational_c": 50, "cold_operational_c": -20,
-                "cycles": 4,
-            },
-        }
+    except Exception:  # noqa: BLE001
+        import logging
+        logging.getLogger(__name__).warning("environment levels unavailable for %s", study_id, exc_info=True)
+        env_profile = {"note": "Environmental levels unavailable: to be taken from the launch provider"}
 
     b = get_branding()
     data = {
@@ -313,31 +298,36 @@ async def export_test_plan(
             if env_profile.get("levels_source"):
                 doc.add_paragraph(f"Levels: {env_profile['levels_source']}")
 
+        if env_profile.get("philosophy"):
+            doc.add_paragraph(f"Test philosophy: {env_profile['philosophy']}")
+
+        def _v(v, unit=""):
+            return "from the launch provider" if v in (None, "") else f"{v} {unit}".strip()
+
         qsl = env_profile.get("quasi_static_loads", {})
         if qsl:
             doc.add_heading("Quasi-Static Loads", level=2)
-            doc.add_paragraph(f"Axial: {qsl.get('axial_g', 'TBD')} g")
-            doc.add_paragraph(f"Lateral: {qsl.get('lateral_g', 'TBD')} g")
+            doc.add_paragraph(f"Axial: {_v(qsl.get('axial_g'), 'g')}")
+            doc.add_paragraph(f"Lateral: {_v(qsl.get('lateral_g'), 'g')}")
+            if qsl.get("note"):
+                doc.add_paragraph(str(qsl["note"]))
 
         rv = env_profile.get("random_vibration")
         if rv:
             doc.add_heading("Random Vibration", level=2)
-            doc.add_paragraph(f"Level: {rv.get('level_grms', 'TBD')} grms")
-            doc.add_paragraph(f"Frequency range: {rv.get('frequency_range_hz', 'TBD')}")
-            doc.add_paragraph(f"Duration: {rv.get('duration_s', 'TBD')} s per axis")
+            doc.add_paragraph(f"Level: {_v(rv.get('level_grms'), 'grms')}")
+            doc.add_paragraph(f"Frequency range: {_v(rv.get('frequency_range_hz'), 'Hz')}")
+            doc.add_paragraph(f"Duration: {_v(rv.get('duration_s'), 's')} per axis, {rv.get('axes') or 3} axes")
+            if rv.get("note"):
+                doc.add_paragraph(str(rv["note"]))
 
         sv = env_profile.get("sine_vibration")
         if sv:
             doc.add_heading("Sine Vibration", level=2)
-            doc.add_paragraph(f"Axial: {sv.get('axial_g', 'TBD')} g")
-            doc.add_paragraph(f"Lateral: {sv.get('lateral_g', 'TBD')} g")
-            doc.add_paragraph(f"Sweep rate: {sv.get('sweep_rate_oct_min', 'TBD')} oct/min")
-
-        shock = env_profile.get("shock")
-        if shock:
-            doc.add_heading("Shock (SRS)", level=2)
-            doc.add_paragraph(f"SRS @ 1000 Hz: {shock.get('srs_g_at_1000hz', 'TBD')} g")
-            doc.add_paragraph(f"SRS @ 3000 Hz: {shock.get('srs_g_at_3000hz', 'TBD')} g")
+            doc.add_paragraph(f"Level: {_v(sv.get('level_g'), 'g')}, {_v(sv.get('frequency_range_hz'), 'Hz')}")
+            doc.add_paragraph(f"Sweep rate: {_v(sv.get('sweep_rate_oct_min'), 'oct/min')}")
+            if sv.get("note"):
+                doc.add_paragraph(str(sv["note"]))
 
         tvac = env_profile.get("thermal_vacuum")
         if tvac:
@@ -346,14 +336,12 @@ async def export_test_plan(
             t.rows[0].cells[0].text = "Parameter"
             t.rows[0].cells[1].text = "Value"
             for label, key, unit in [
-                ("Hot survival", "hot_survival_c", "C"),
-                ("Cold survival", "cold_survival_c", "C"),
-                ("Hot operational", "hot_operational_c", "C"),
-                ("Cold operational", "cold_operational_c", "C"),
                 ("Cycles", "cycles", ""),
                 ("Pressure", "pressure_mbar", "mbar"),
+                ("Margin on the predicted extremes", "margin_c", "C"),
+                ("Note", "note", ""),
             ]:
-                if key in tvac:
+                if tvac.get(key) not in (None, ""):
                     row = t.add_row()
                     row.cells[0].text = label
                     row.cells[1].text = f"{tvac[key]} {unit}".strip()

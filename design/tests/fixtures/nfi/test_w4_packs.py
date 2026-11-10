@@ -115,17 +115,38 @@ async def test_gate_packs_differ_and_report_the_study(client):
               "data/requirements.csv", "data/risk_register.csv"):
         assert f in names, f
     index = z.read("INDEX.md").decode()
-    assert "| included |" in index and "| missing |" in index and "generator not available yet" in index
+    assert "| included |" in index
+    # wave 2: every document the tool can produce for the PDR is in the pack (hooks included)
+    for f in ("documents/Trade_off_report.docx", "documents/Previous_review_report.docx",
+              "documents/AIT_model_philosophy.docx", "documents/Schedule_WBS.docx", "documents/Licensing_status.docx",
+              "documents/TMTC_database.docx", "documents/ConOps.docx", "documents/MRD_mission_requirements.docx"):
+        assert f in names, (f, index)
+    assert "| missing |" not in index, index
     texts = {nm: _text(nm, z.read(nm)) for nm in names if nm.endswith((".docx", ".md", ".csv", ".xlsx"))}
     for nm, txt in texts.items():
         if nm == "documents/Diagrams.docx":
             continue   # the ops-pass figure takes its band from the analysis context (hand-off, see W0_SEAMS)
         for bad in INVENTED:
             assert bad not in txt, (nm, bad)
-    # W1.09a: the TS lists every team requirement with its threshold, no IR-* row
+    # W1.09a / W4.06: the TS lists every team requirement (no IR-* row, no stakeholder need) in the
+    # seven type groups, with threshold, unit, priority, every parent; the environment section
+    # quotes the orbit and the dose estimate still to be confirmed by SPENVIS
     ts = texts["documents/TS_technical_requirements.docx"]
     assert all(r["id"] in ts for r in reqs) and "IR-" not in ts
-    assert "MIS-COV-01 | performance | " in ts and "| >= 10 |" in ts
+    assert not any(line.startswith(("SN-", "IR-")) for line in ts.splitlines())
+    store = (await client.get(f"/api/studies/{sid}/export-context?sections=requirements")).json()["requirements"]
+    team = [r for r in store["items"] if r["level"] != "stakeholder" and not r["generated_interface"]]
+    assert f"{len(team)} requirements in 7 groups" in ts
+    for g in ("Functional", "Performance", "Interface", "Environmental", "Operational", "Product assurance", "Regulatory"):
+        assert f"{g} requirements (" in ts, g
+    assert "| >= 10 | krad(Si) TID |" in ts and "SPENVIS" in ts
+    assert f"Altitude (km) | {n['orbit']['altitude_km']['value']:g}" in ts
+    # W4.07: the IRD comes from the study's links, link cases and electrical model
+    ird = texts["documents/IRD_interfaces.docx"]
+    for word in ("401.5", "450", "14.4", "3.3", "CAN", "CSI-2", "PPS", "CSP", "ICD-RADIO-OBC", "IF-COM-OBC-01"):
+        assert word in ird, word
+    for bad in ("SpaceWire", "28V", "28 V", "S/X-band"):
+        assert bad not in ird, bad
     # W1.09b: the RMP carries the register
     rmp = texts["documents/RMP_risk_management.docx"]
     assert all(f"RSK-{i:03d}" in rmp for i in range(1, len(risks) + 1))
@@ -146,7 +167,11 @@ async def test_gate_packs_differ_and_report_the_study(client):
 async def test_did_route_xlsx_buttons_and_test_plan_launcher(client):
     s = await seed_nfi(client, "S3")
     sid = s.study_id
-    n_req = len(load("requirements")["requirements"]) + len(load("requirements")["objectives"])
+    # requirement counts come from the store (the import adds the objectives and stakeholder needs,
+    # the interface-requirement rule adds IR-* rows)
+    store = (await client.get(f"/api/studies/{sid}/export-context?sections=requirements")).json()["requirements"]
+    n_req = store["counts"]["total"]
+    assert n_req >= len(load("requirements")["requirements"]) + len(load("requirements")["objectives"])
     n_risk = len(load("risks")["risks"])
     # W1.09f: the DID JSON reads the requirement store, the risks, the modes and the stations
     mrd = (await client.post(f"/api/ecss/dids/mrd/generate?study_id={sid}")).json()
@@ -170,4 +195,5 @@ async def test_did_route_xlsx_buttons_and_test_plan_launcher(client):
     tp = (await client.post(f"/api/exports/test-plan/{sid}")).json()
     env = tp["environmental_profile"]
     assert "falcon" not in str(env["launch_vehicle"]).lower()
-    assert env["launch_vehicle_source"] == "launch segment element" and "generic" in env["levels_source"]
+    assert env["launch_vehicle_source"] == "launch segment element" and "GEVS" in env["levels_source"]
+    assert env["random_vibration"]["level_grms"] == 14.1 and env["philosophy"].startswith("protoflight")

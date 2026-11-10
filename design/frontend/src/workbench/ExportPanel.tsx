@@ -79,7 +79,14 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void, pack
   // Review packs: headings of the review data package in French when the UI is in French.
   const docLang = getLang() === 'fr' ? '&lang=fr' : ''
   return [
-    { name: t('Design Reviews'), color: 'var(--interactive)', docs: reviewPackDocs(sid, t, packs, docLang) },
+    { name: t('Design Reviews'), color: 'var(--interactive)', docs: [
+      ...reviewPackDocs(sid, t, packs, docLang),
+      { id: 'review-report', label: t('Review report'), description: t('Criteria with results and evidence, RIDs and actions, chair note, go / no-go and the baseline diff of one review'),
+        formats: packs.map(p => ({ fmt: p.short, label: p.short, action: () => dl(`${API}/studies/${sid}/gates/${encodeURIComponent(p.id)}/report?lang=${docLang ? 'fr' : 'en'}`, `Review_report_${p.short.replace(/[^A-Za-z0-9]+/g, '_')}_${sid}.docx`) })) },
+      { id: 'trades', label: t('Trade-off report'), description: t('Every trade study with its options, criteria, weights, scores and decision (ECSS-E-ST-10C Annex K)'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/trades/report?lang=${docLang ? 'fr' : 'en'}`, `Trade_off_report_${sid}.docx`) },
+      ]},
+    ]},
     { name: t('Systems Engineering'), color: 'var(--cat-2)', docs: [
       { id: 'semp', label: 'SEMP', description: t('Systems Engineering Management Plan'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/semp?study_id=${sid}`, `SEMP_${sid}.docx`) },
@@ -88,14 +95,17 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void, pack
       { id: 'diagrams', label: t('SEMP / ECSS diagram set'), description: t('Every diagram with its gaps and data table (same as the Diagrams tab)'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/diagrams-document.docx?set=all${docLang}`, `Diagrams_${sid}.docx`, 'GET') },
       ]},
-      { id: 'ird', label: t('Interface Requirements Document'), description: t('Interfaces with the block, N², power, data-bus and RF diagrams'), formats: [
-        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/ird?study_id=${sid}`, `IRD_${sid}.docx`) },
+      { id: 'ird', label: t('Interface Requirements Document'), description: t('Link cases, power rails and lines, buses and addresses, ICDs and interface requirements, with the diagrams'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/ird?study_id=${sid}${docLang}`, `IRD_${sid}.docx`) },
+      ]},
+      { id: 'ts', label: t('Technical requirements specification'), description: t('Every requirement by type, with its environment section, verification and parents (ECSS-E-ST-10-06C)'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/ts?study_id=${sid}${docLang}`, `TS_${sid}.docx`) },
       ]},
       { id: 'mrd', label: t('Mission Requirements Document'), description: t('Mission needs, stakeholders, objectives, requirements'), formats: [
-        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/mrd?study_id=${sid}`, `MRD_${sid}.docx`) },
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/mrd?study_id=${sid}${docLang}`, `MRD_${sid}.docx`) },
       ]},
-      { id: 'conops', label: t('Concept of Operations'), description: t('Modes, phases, orbit, ground stations, data flow'), formats: [
-        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/conops?study_id=${sid}`, `ConOps_${sid}.docx`) },
+      { id: 'conops', label: t('Concept of Operations'), description: t('Modes, phases, contacts, data flow, typical day, flight rules, end-of-life operations'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/conops/document?lang=${docLang ? 'fr' : 'en'}`, `ConOps_${sid}.docx`) },
       ]},
       { id: 'bom', label: t('Bill of Materials'), description: t('All components with mass, power, cost, TRL'), formats: [
         { fmt: 'XLSX', label: 'XLSX', action: () => dl(`${API}/studies/${sid}/export/bom.xlsx`, `BOM_${sid}.xlsx`, 'GET') },
@@ -109,6 +119,9 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void, pack
     { name: t('Verification & Compliance'), color: 'var(--status-ok)', docs: [
       { id: 'vv', label: t('V&V Matrix'), description: t('Requirements verification matrix'), formats: [
         { fmt: 'XLSX', label: 'XLSX', action: () => dl(`${API}/studies/${sid}/export/vv.xlsx`, `VV_Matrix_${sid}.xlsx`, 'GET') },
+      ]},
+      { id: 'vp', label: t('Verification Plan'), description: t('Model philosophy, test matrix, environmental test levels and the verification items by stage'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/vp?study_id=${sid}${docLang}`, `VP_${sid}.docx`) },
       ]},
       { id: 'vcd', label: t('Verification Control Document'), description: t('Every verification item by level, with the close-out status (ECSS-E-ST-10-02C)'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/export/vcd.docx`, `VCD_${sid}.docx`, 'GET') },
