@@ -33,6 +33,9 @@ class DiagramData:
     _thermal: Any = None
     _thermal_done: bool = False
     _link: Any = None
+    cdr_rows: list[dict] = field(default_factory=list)   # CDR model rows (HK SIDs, stores, framing, pass plan)
+    _budget: Any = None
+    _budget_done: bool = False
     warnings: list[str] = field(default_factory=list)
 
     # ---- lookups
@@ -87,6 +90,19 @@ class DiagramData:
                 logger.info("thermal closure for diagrams failed: %s", exc)
                 self.warnings.append(f"thermal closure: {exc}")
         return self._thermal
+
+    def data_budget(self) -> dict | None:
+        """The study's daily data budget (services/data_budget, W3.05), computed once on first use."""
+        if not self._budget_done:
+            self._budget_done = True
+            try:
+                from ..data_budget import from_context
+                if self.ctx is not None:
+                    self._budget = from_context(self.ctx, self.cdr_rows, include_degraded=False, study_id=self.study_id)
+            except Exception as exc:  # noqa: BLE001
+                logger.info("data budget for diagrams failed: %s", exc)
+                self.warnings.append(f"data budget: {exc}")
+        return self._budget
 
     def link(self) -> tuple[Any, list[dict], list[str]]:
         """(link inputs, station rows, warnings) as the data chain sees them."""
@@ -147,6 +163,11 @@ async def load(study_id: str) -> DiagramData:
         d.verification = [v for v in await verification_repo.list_by_study(study_id) if not v.get("deleted_at")]
     except Exception as exc:  # noqa: BLE001
         d.warnings.append(f"verification: {exc}")
+    try:
+        from ...db import cdr_repo
+        d.cdr_rows = await cdr_repo.list_rows(study_id)
+    except Exception as exc:  # noqa: BLE001
+        d.warnings.append(f"cdr: {exc}")
     d.risks = list(getattr(d.study, "risk_register", None) or []) if d.study is not None else []
     d.stack = await _stack(study_id)
     return d

@@ -385,4 +385,15 @@ const KEYS_6 = [
   'Maturity per gate: D draft, B baselined, U updated.',
 ]
 
-export const DIAGRAM_KEYS: readonly string[] = [...KEYS_0, ...KEYS_1, ...KEYS_2, ...KEYS_3, ...KEYS_4, ...KEYS_5, ...KEYS_6]
+// W3.05: the ops_pass diagram from a real operations pass (data budget)
+// i18n-keys
+const KEYS_HK = [
+  'VC0 real-time HK, {{profile}} profile ({{bps}} bit/s)',
+  'VC1 delayed HK dump: {{mb}} MB',
+  'VC2 payload files: {{mb}} MB',
+  'Channel',
+  '{{cls}} pass at {{local}} (local), {{min}} min ({{usable}} min usable) over {{station}}, max. elevation {{el}}°; channel {{ch}} MB: VC0 {{vc0}}, VC1 {{vc1}}, VC2 {{vc2}} MB',
+  'Pass and channel split from the data budget (day in the life, pass plan); the seat steps are the C2O pass template',
+]
+
+export const DIAGRAM_KEYS: readonly string[] = [...KEYS_0, ...KEYS_1, ...KEYS_2, ...KEYS_3, ...KEYS_4, ...KEYS_5, ...KEYS_6, ...KEYS_HK]

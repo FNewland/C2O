@@ -169,6 +169,19 @@ export const EVIDENCE_KEYS_REQ = [
   'Orbit-average power {{power}} W ({{ptotal}} W with {{pmargin}}% margin) vs {{avail}} W generated at end of life; mass margin {{mass}}%',
 ]
 
+// English text is the i18n key — W3.05 daily data budget (PDR-EC-06, CDR-EC-04; gate_evaluator.py EVIDENCE_KEYS)
+export const GATE_QUESTIONS_HK = [
+  'Does the daily data budget (housekeeping + science) close with margin, and do the stores hold the required days?',
+  'Does the housekeeping fit the downlink in every mode, does the daily budget close with margin and do the stores hold the required days?',
+]
+// English text is the i18n key — W3.05 data-budget evidence
+export const EVIDENCE_KEYS_HK = [
+  'No data budget yet: no mode, no contact plan or no link rate',
+  'Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); no HK store sized yet',
+  'Daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days at the worst rate (required {{need}})',
+  'Housekeeping fits the downlink in {{ok}}/{{total}} regimes; daily budget case {{case}}: margin {{margin}} % (required {{required}} %); the stores hold {{days}} days (required {{need}})',
+]
+
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
 export const FIX_LABEL: Record<string, string> = {
