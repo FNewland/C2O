@@ -734,7 +734,7 @@ def _budgets(c: Ctx) -> None:
 
 
 def _data_budget(c: Ctx) -> None:
-    t, sx, view = c.t, c.sx, c.view
+    t, sx = c.t, c.sx
     c.pkg.h2(t("Data budget"))
     from .v_sections import payload_data_lines
     pdl = payload_data_lines(sx, t.lang)

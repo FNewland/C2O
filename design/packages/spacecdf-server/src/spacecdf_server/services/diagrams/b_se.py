@@ -321,7 +321,6 @@ def context(d: DiagramData, **_: Any) -> dict:
     left, right = ext[:half], ext[half:]
     def esize(x): return size_of(x["label"], x["sub"], minw=170, maxw=250)
     LW = max([esize(x)[0] for x in left] + [170])
-    RW = max([esize(x)[0] for x in right] + [170])
     lane_l = 26 + 7 * max(1, len(left))
     lane_r = 26 + 7 * max(1, len(right))
     xs = 16 + LW + lane_l + 40

@@ -16,10 +16,9 @@ the same model, so the screen and the documents show the same picture.
 """
 from __future__ import annotations
 
-import io
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import Response
 
 from ..services import diagrams as dg
 
@@ -96,11 +95,11 @@ async def diagram_png(study_id: str, kind: str, lang: str = Query("en"), level: 
 
 @router.get("/studies/{study_id}/diagrams-document.docx")
 async def diagram_document(study_id: str, set: str = Query("all", pattern="^(semp|ird|se|all)$"),
-                           lang: str = Query("en")) -> StreamingResponse:
+                           lang: str = Query("en")) -> Response:
     from ..services.diagrams.render import diagrams_docx
     d = await _data(study_id)
     name = getattr(d.study, "name", None) or study_id
     data = diagrams_docx(d, dg.DOCUMENT_SETS[set], study_name=name, lang=lang)
-    return StreamingResponse(io.BytesIO(data),
+    return Response(content=data,
                              media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                              headers={"Content-Disposition": f'attachment; filename="SpaceCDF_Diagrams_{set}_{study_id}.docx"'})

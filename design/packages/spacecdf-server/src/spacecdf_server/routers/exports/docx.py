@@ -19,10 +19,9 @@ See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
 """
 from __future__ import annotations
 
-import io
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response
 
 from ._common import _read_orbit_params
 
@@ -45,8 +44,7 @@ async def generate_docx(doc_type: str, study_id: str | None = None,
     if doc_type not in DOCX_GENERATORS:
         raise HTTPException(400, f"Unknown doc type: {doc_type}. Available: {list(DOCX_GENERATORS.keys())}")
     filename, docx_bytes = await docx_document(doc_type, study_id, lang=lang)
-    return StreamingResponse(
-        io.BytesIO(docx_bytes),
+    return Response(content=docx_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

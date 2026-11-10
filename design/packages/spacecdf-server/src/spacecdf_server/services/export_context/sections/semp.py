@@ -141,7 +141,7 @@ async def _organisation(ctx) -> list[dict]:
         from ....seats import store
         from ....seats.service import used_seats
         state = store.peek_team(ctx.study_id) or await store.get_team(ctx.study_id)
-        used = list(used_seats(state) or [])
+        used = list(used_seats(state) or []) if state.get("groups") else []
     except Exception:  # noqa: BLE001 — fall back to every seat of the configuration
         used = []
     seats = [s for s in seat_cfg.seats() if not used or s["id"] in used]

@@ -170,8 +170,11 @@ DOCUMENTS: tuple[Document, ...] = (
              {"en": "Requirements table (all levels, CSV)", "fr": "Tableau des exigences (tous niveaux, CSV)"},
              "—", ("trs",), "csv:requirements"),
     Document("diagrams", "documents/Diagrams.docx",
-             {"en": "Diagram set (product and function trees, block, N², power, data, RF)",
-              "fr": "Jeu de diagrammes (arbres produit et fonctionnel, blocs, N², puissance, données, RF)"},
+             {"en": "Diagram set (context, stakeholder map, product and function trees, FFBD, N², V diagram, trade "
+                    "matrices, budget flow-down, verification flow, block, power, data, RF)",
+              "fr": "Jeu de diagrammes (contexte, carte des parties prenantes, arbres produit et fonctionnel, FFBD, N², "
+                    "diagramme en V, matrices de compromis, déclinaison des bilans, flux de vérification, blocs, "
+                    "puissance, données, RF)"},
              "ECSS-E-ST-10C Annex A figures", ("function_tree", "product_tree", "design_files"), "diagrams"),
     Document("ird", "documents/IRD_interfaces.docx",
              {"en": "Interface requirements document", "fr": "Document des exigences d’interface"},

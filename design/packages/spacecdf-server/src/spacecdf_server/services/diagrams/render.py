@@ -398,7 +398,26 @@ def to_svg(m: dict, lang: str = "en", *, legend: bool = True, header: bool = Tru
     return "\n".join(out)
 
 
+_PNG_CACHE: "dict[str, bytes]" = {}
+_PNG_CACHE_MAX = 96
+
+
 def to_png(m: dict, lang: str = "en", *, legend: bool = True, header: bool = False, dpi: int = 200) -> bytes:
+    """The model as PNG. The same model drawn twice (the SEMP, the diagram set and the IRD of one
+    review pack share most figures) is rendered once: a small cache keyed on the model's content."""
+    import hashlib
+    key = hashlib.sha1(json.dumps([m, lang, legend, header, dpi], sort_keys=True, default=str).encode()).hexdigest()
+    hit = _PNG_CACHE.get(key)
+    if hit is not None:
+        return hit
+    data = _to_png(m, lang, legend=legend, header=header, dpi=dpi)
+    if len(_PNG_CACHE) >= _PNG_CACHE_MAX:
+        _PNG_CACHE.pop(next(iter(_PNG_CACHE)))
+    _PNG_CACHE[key] = data
+    return data
+
+
+def _to_png(m: dict, lang: str = "en", *, legend: bool = True, header: bool = False, dpi: int = 200) -> bytes:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -406,6 +425,8 @@ def to_png(m: dict, lang: str = "en", *, legend: bool = True, header: bool = Fal
     from matplotlib.path import Path as MPath
 
     P, W, H = scene(m, lang, legend=legend, header=header)
+    # add_artist, not add_patch: the limits are fixed below, so matplotlib need not recompute the
+    # data limits for every patch (that was most of the time of a large figure)
     K = 0.72   # model px → points (100 px per inch)
     with matplotlib.rc_context({"font.family": "sans-serif",
                                 "font.sans-serif": ["IBM Plex Sans", "Liberation Sans", "Arial", "DejaVu Sans"],
@@ -435,19 +456,19 @@ def to_png(m: dict, lang: str = "en", *, legend: bool = True, header: bool = Fal
                 else:
                     patch = Rectangle((p["x"], p["y"]), p["w"], p["h"], fc=fill or "none", ec=ec or "none", lw=lw,
                                       ls=dashes(p.get("dash", ""), lw), alpha=op)
-                ax.add_patch(patch)
+                ax.add_artist(patch)
             elif k == "circle":
-                ax.add_patch(Circle((p["cx"], p["cy"]), p["r"], fc=p["fill"], ec=p["stroke"], lw=p["sw"] * K))
+                ax.add_artist(Circle((p["cx"], p["cy"]), p["r"], fc=p["fill"], ec=p["stroke"], lw=p["sw"] * K))
             elif k == "path":
                 pts = p["pts"]
                 if p.get("curve") and len(pts) == 3:
                     path = MPath(pts, [MPath.MOVETO, MPath.CURVE3, MPath.CURVE3])
                 else:
                     path = MPath(pts, [MPath.MOVETO] + [MPath.LINETO] * (len(pts) - 1))
-                ax.add_patch(PathPatch(path, fc="none", ec=p["stroke"], lw=p["sw"] * K, ls=dashes(p.get("dash", ""), p["sw"]),
+                ax.add_artist(PathPatch(path, fc="none", ec=p["stroke"], lw=p["sw"] * K, ls=dashes(p.get("dash", ""), p["sw"]),
                                        alpha=op, joinstyle="round", capstyle="butt"))
             elif k == "poly":
-                ax.add_patch(Polygon(p["pts"], closed=True, fc=p["fill"], ec="none", alpha=op))
+                ax.add_artist(Polygon(p["pts"], closed=True, fc=p["fill"], ec="none", alpha=op))
             elif k == "text":
                 ha = {"middle": "center", "end": "right"}.get(p.get("anchor", "start"), "left")
                 ax.text(p["x"], p["y"], p["s"], fontsize=p["size"] * K, fontweight="bold" if p["w"] >= 600 else "normal",
@@ -472,7 +493,7 @@ def add_diagram(doc: Any, m: dict, *, lang: str = "en", heading_level: int | Non
         p.runs[0].italic = True
     w = float(m["width"])
     width = min(width_cm, max(8.0, w / 50.0))
-    theme.add_figure(doc, to_png(m, lang), caption=tx(m["title"], lang) + _gate_note(m, lang), width_cm=width)
+    theme.add_figure(doc, to_png(m, lang, dpi=160), caption=tx(m["title"], lang) + _gate_note(m, lang), width_cm=width)
     if gaps and m.get("gaps"):
         doc.add_paragraph(tx({"t": "Gaps"}, lang) + ":").runs[0].bold = True
         for g in m["gaps"]:

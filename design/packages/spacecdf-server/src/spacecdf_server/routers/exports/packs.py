@@ -37,7 +37,7 @@ import zipfile
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response
 
 from . import _common
 
@@ -370,8 +370,7 @@ async def export_design_document(
             if d.id in files:
                 zf.writestr(d.file, files[d.id])
     filename = f"{_slug(plan.short)}_{_slug(sx.study_name)}_review_pack.zip"
-    return StreamingResponse(
-        io.BytesIO(buf.getvalue()),
+    return Response(content=buf.getvalue(),
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
