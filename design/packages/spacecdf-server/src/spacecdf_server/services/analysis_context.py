@@ -627,6 +627,64 @@ def _build_power(flat: dict, latest: dict, eff_elements: list[dict]) -> dict[str
     }
 
 
+def power_sources_from(elements: list[dict], power: dict | None = None
+                       ) -> tuple[float | None, str, float | None, str]:
+    """(EOL array W, its source, battery Wh, its source) — the **selected parts first** (wave 3,
+    3.A1; before, the design loop's own array sizing won over the arrays the Power seat chose).
+
+    Array, in order: the orbit-average end-of-life generation the parts carry
+    (``performance.orbit_average_eol_w`` × quantity, the Power seat's figure for its geometry);
+    the EPS subsystem's ``performance.eol_generation_w``; the parts' panel EOL power
+    (``power_eol_w`` × quantity, a peak figure); the last design loop (``power.sa_power_eol_w``).
+    Battery: the parts' ``capacity_wh`` × quantity, else the design loop's capacity."""
+    from .rule_inputs import kb_component, perf, qty, space_hardware
+    power = power or {}
+    oa = peak = bat = 0.0
+    eps_gen = None
+    for e in space_hardware(elements):
+        kp = (kb_component(e) or {}).get("performance") or {}
+        pe = perf(e)
+        v = pe.get("orbit_average_eol_w")
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+            oa += float(v) * qty(e)
+        if e.get("element_type") == "subsystem" and e.get("subsystem_domain") == "power":
+            g = pe.get("eol_generation_w")
+            if isinstance(g, (int, float)) and not isinstance(g, bool) and g > 0:
+                eps_gen = float(g)
+        for src in (pe, kp):
+            v = src.get("power_eol_w")
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+                peak += float(v) * qty(e)
+                break
+        for src in (pe, kp):
+            v = src.get("capacity_wh")
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+                bat += float(v) * qty(e)
+                break
+    if oa > 0:
+        sa, sa_src = round(oa, 3), "solar array parts (orbit-average EOL generation)"
+    elif eps_gen:
+        sa, sa_src = eps_gen, "EPS subsystem (eol_generation_w)"
+    elif peak > 0:
+        sa, sa_src = round(peak, 3), "solar array parts (power_eol_w, panel peak)"
+    elif power.get("sa_power_eol_w"):
+        sa, sa_src = power.get("sa_power_eol_w"), "power.sa_power_eol_w (design loop sizing)"
+    else:
+        sa, sa_src = None, ""
+    if bat > 0:
+        cap, cap_src = round(bat, 3), "battery parts (capacity_wh)"
+    elif power.get("battery_capacity_wh"):
+        cap, cap_src = power.get("battery_capacity_wh"), "power.battery_capacity_wh (design loop sizing)"
+    else:
+        cap, cap_src = None, ""
+    return sa, sa_src, cap, cap_src
+
+
+def power_sources(ctx: "AnalysisContext") -> tuple[float | None, str, float | None, str]:
+    """:func:`power_sources_from` on a context (the Modes energy balance and the design loop)."""
+    return power_sources_from(ctx.elements, ctx.power)
+
+
 def _build_thermal(eff_elements: list[dict]) -> dict[str, Any]:
     nodes = []
     for e in eff_elements:
@@ -921,13 +979,159 @@ def context_hash(ctx: AnalysisContext, keys: list[str] | tuple[str, ...]) -> str
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+# ── Wave 3 (3.A1): the design loop reads the study's own values ─────────
+
+#: ModeSpec kind -> ConOps ModeType value
+_MODE_TYPE = {"leop": "launch", "launch": "launch", "commissioning": "commissioning", "nominal": "standby",
+              "imaging": "nominal_science", "payload": "nominal_science", "science": "nominal_science",
+              "downlink": "downlink", "safe": "safe", "survival": "safe", "disposal": "deorbit", "eol": "deorbit"}
+
+
+def conops_from_modes(ctx: AnalysisContext, conops: Any = None) -> Any:
+    """The Modes tab as the ConOps the agents size from (wave 3, 3.A1). Element modes become
+    ``OperationalMode`` rows (power per mode from the power matrix, payload / platform / heater
+    split, share of the orbit, sunlit or eclipse); the study's own ConOps keeps its phases and
+    ground segment. Without element modes the study's ConOps is returned unchanged."""
+    modes = [m for m in ctx.modes if m.source == "element"]
+    if not modes:
+        return conops
+    from spacecdf_common.models.conops import ConceptOfOperations, ModeType, OperationalMode
+    by_id = ctx.elements_by_id
+    ops = []
+    for m in modes:
+        pay = heat = 0.0
+        for mem in m.members:
+            el = by_id.get(mem["element_id"]) or {}
+            w = float(mem.get("power_w") or 0.0) * float(mem.get("duty") or 1.0)
+            if el.get("subsystem_domain") == "payload":
+                pay += w
+            elif "heater" in str(el.get("name") or "").lower():
+                heat += w
+        kind = (m.kind or "").lower()
+        mt = _MODE_TYPE.get(kind) or ("nominal_science" if m.payload_active else "custom")
+        night = "night" in (m.name or "").lower() or "eclipse" in (m.name or "").lower()
+        ops.append(OperationalMode(
+            id=m.id, name=m.name, mode_type=ModeType(mt), power_w=float(m.power_w),
+            payload_active=bool(m.payload_active), payload_power_w=round(pay, 3),
+            platform_power_w=round(max(0.0, float(m.power_w) - pay - heat), 3), heater_power_w=round(heat, 3),
+            internal_dissipation_w=float(m.power_w), sun_illuminated=not night,
+            data_rate_mbps=float(m.data_rate_bps or 0.0) / 1e6, data_downlink_active=(kind == "downlink"),
+            duty_cycle_percent=round(float(m.orbit_fraction) * 100, 3) if m.orbit_fraction is not None else 100.0,
+            is_critical=kind in ("safe", "survival")))
+    if conops is None:
+        return ConceptOfOperations(modes=ops)
+    try:
+        return conops.model_copy(update={"modes": ops})
+    except Exception:  # noqa: BLE001
+        return ConceptOfOperations(modes=ops)
+
+
+def _design_case(ctx: AnalysisContext) -> dict | None:
+    cases = [c for c in ctx.link_cases if c.get("direction") == "downlink"]
+    return next((c for c in cases if c.get("is_design_case")), None)
+
+
+async def study_design_inputs(ctx: AnalysisContext) -> dict[str, dict[str, Any]]:
+    """The study's own figures the design loop must read instead of its class defaults (wave 3,
+    3.A1): ``{path: {value, unit, source}}``, seeded sticky (``POSITION_OVERRIDE``) so no agent
+    overwrites them. Each is best-effort: a figure the study cannot give yet is left out.
+
+    * ``orbit.contact_time_per_day_s``: the union contact of the study's stations (ground
+      scheduler), not a 78° station;
+    * ``power.sa_power_eol_w`` / ``power.battery_capacity_wh``: the selected arrays and battery;
+    * ``mass.study_*``: the roll-up (with maturity, with the system margin, the limit) and
+      ``systems.mass_margin_percent`` to the limit;
+    * ``mission.success_horizon_months``: the reliability horizon (MIS-LIF-02);
+    * ``cost.study_*``: the priced cost model (launch provided), else the bottom-up hardware cost;
+    * ``link.downlink_margin_db``: the downlink design case of the link-budget tool;
+    * ``data.science_*`` / ``data.capacity_mb_per_day``: the data budget (agent H's data agent reads them);
+    * ``reliability.study_mission_reliability``: the reliability block diagram over the horizon.
+    """
+    out: dict[str, dict[str, Any]] = {}
+
+    def put(path: str, value: Any, unit: str, source: str) -> None:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            out[path] = {"value": float(value), "unit": unit, "source": source}
+
+    sid = ctx.study_id
+    kn: dict[str, Any] = {}
+    try:
+        from .key_numbers import key_numbers
+        kn = await key_numbers(sid)
+    except Exception:  # noqa: BLE001
+        logger.debug("key numbers unavailable", exc_info=True)
+
+    def k(key: str) -> Any:
+        return (kn.get(key) or {}).get("value")
+
+    union = k("contacts.union_min_per_day")
+    if union:
+        put("orbit.contact_time_per_day_s", float(union) * 60.0, "s", "ground scheduler: union of the study's stations")
+        put("ground.union_contact_min_per_day", union, "min/day", "ground scheduler")
+        put("ground.station_count", len(ctx.ground_stations), "", "study stations")
+    sa, sa_src, bat, bat_src = power_sources(ctx)
+    if sa and ("orbit-average" in sa_src or "EPS subsystem" in sa_src):
+        put("power.sa_power_eol_w", sa, "W", sa_src)
+    if bat and "parts" in bat_src:
+        put("power.battery_capacity_wh", bat, "Wh", bat_src)
+    wm, wsm, lim = k("mass.with_maturity_kg"), k("mass.with_system_margin_kg"), k("mass.limit_kg")
+    if wm:
+        put("mass.study_with_maturity_kg", wm, "kg", "roll-up")
+        put("mass.study_cbe_kg", k("mass.cbe_kg"), "kg", "roll-up")
+        put("mass.study_system_margin_percent", k("mass.system_margin_percent"), "%", "roll-up")
+    if wsm and lim:
+        put("mass.study_with_system_margin_kg", wsm, "kg", "roll-up")
+        put("mass.study_limit_kg", lim, "kg", "roll-up")
+        put("mass.margin_to_limit_kg", round(float(lim) - float(wsm), 3), "kg", "roll-up")
+        put("systems.mass_margin_percent", round((float(lim) - float(wsm)) / float(lim) * 100, 1), "%",
+            "roll-up: limit minus the mass with the system margin")
+    req = getattr(ctx.study, "requirements", None)
+    put("mission.success_horizon_months", getattr(req, "success_horizon_months", None), "months",
+        "mission definition (mission-success horizon)")
+    try:
+        from .cost_pricing import total as priced_total
+        pt = await priced_total(sid)
+        if pt:
+            put("cost.study_total_keur", pt["total_keur"], "kEUR", "priced cost model (cost_items)")
+            put("cost.study_launch_keur", pt["launch_keur"], "kEUR", "priced cost model")
+            put("cost.study_labour_keur", pt["labour_keur"], "kEUR", "priced cost model")
+            put("cost.study_hardware_keur", (pt["by_category"] or {}).get("hardware", 0.0), "kEUR", "priced cost model")
+        else:
+            from . import schedule
+            from .cost_engine import study_cost
+            c = await study_cost(sid, await schedule.get_settings(sid))
+            put("cost.study_total_keur", (c.get("total") or {}).get("keur"), "kEUR", "bottom-up equipment cost (not priced)")
+            put("cost.study_launch_keur", (c.get("launch") or {}).get("keur"), "kEUR", str((c.get("launch") or {}).get("basis") or ""))
+            put("cost.study_hardware_keur", (c.get("flight_hardware") or {}).get("keur"), "kEUR", "bottom-up equipment cost")
+    except Exception:  # noqa: BLE001
+        logger.debug("study cost unavailable", exc_info=True)
+    case = _design_case(ctx)
+    if case is not None:
+        m = case.get("margin_db")
+        if m is None:
+            m = (case.get("results") or {}).get("margin_db")
+        put("link.downlink_margin_db", m, "dB", f"link design case {case.get('name') or case.get('id')}")
+    for key, path, unit in (("data.science_delivered_mb_per_day", "data.science_delivered_mb_per_day", "MB/day"),
+                            ("data.capacity_mb_per_day", "data.capacity_mb_per_day", "MB/day"),
+                            ("data.demand_mb_per_day", "data.demand_mb_per_day", "MB/day")):
+        put(path, k(key), unit, "data budget")
+    try:
+        from .reliability_model import get as rel_get
+        rel = (await rel_get(sid)).get("result") or {}
+        put("reliability.study_mission_reliability", rel.get("mission_reliability"), "",
+            f"reliability block diagram ({rel.get('evidence') or ''})")
+    except Exception:  # noqa: BLE001
+        logger.debug("reliability model unavailable", exc_info=True)
+    return out
+
+
 def seed_design_state(ctx: AnalysisContext, *, requirements: Any = None, conops: Any = None,
-                      knowledge_base: Any = None):
+                      knowledge_base: Any = None, study_inputs: dict[str, dict[str, Any]] | None = None):
     """``DesignState`` for the orchestrator, seeded from the context (SCDF-171).
 
-    Precedence: overridden flat paths (``POSITION_OVERRIDE``, sticky) >
-    last design-loop values (``COMPUTED``) > non-overridden flat paths
-    (``COMPUTED``, only where the last loop has no value).
+    Precedence: the study's own figures (``study_inputs``, wave 3: sticky) > overridden flat
+    paths (``POSITION_OVERRIDE``, sticky) > last design-loop values (``COMPUTED``) >
+    non-overridden flat paths (``COMPUTED``, only where the last loop has no value).
     """
     from spacecdf_common.agents.base import DesignState
     from spacecdf_common.models.parameter import ParameterSource, ParameterValue
@@ -956,5 +1160,11 @@ def seed_design_state(ctx: AnalysisContext, *, requirements: Any = None, conops:
         if pv is not None:
             params[path] = pv
 
+    for path, entry in (study_inputs or {}).items():
+        pv = _pv(path, entry.get("value"), ParameterSource.POSITION_OVERRIDE, entry.get("unit") or "")
+        if pv is not None:
+            pv.rationale = f"study value: {entry.get('source') or ''}"[:300]
+            pv.updated_by = "study"
+            params[path] = pv
     req_dict = requirements.model_dump() if hasattr(requirements, "model_dump") else (requirements or {})
     return DesignState(parameters=params, requirements=req_dict, knowledge_base=knowledge_base, conops=conops)

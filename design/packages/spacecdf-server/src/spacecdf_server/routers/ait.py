@@ -82,6 +82,17 @@ async def propose_ait(study_id: str, body: ProposeBody | None = None) -> dict:
     return await svc.propose(study_id, replace=bool(body and body.replace))
 
 
+@router.post("/studies/{study_id}/ait/import")
+async def import_plan(study_id: str, body: dict[str, Any]) -> dict:
+    """Wave 3 (3.A4): a V&V plan's model philosophy and verification events (``vv_plan.yaml``
+    shape) as the study's models and test-matrix events: ``{"plan": {...}, "replace_proposed": true}``."""
+    _require_study(study_id)
+    plan = body.get("plan") or body.get("document")
+    if not isinstance(plan, dict):
+        raise HTTPException(422, "plan must be the V&V plan document (an object)")
+    return await svc.import_vv_plan(study_id, plan, replace_proposed=body.get("replace_proposed", True) is not False)
+
+
 @router.post("/studies/{study_id}/ait/models")
 async def add_model(study_id: str, body: ModelBody) -> dict:
     _require_study(study_id)
@@ -135,7 +146,7 @@ async def verification_plan(study_id: str, fmt: str = Query("json", description=
     if fmt == "docx":
         from ..services.docx.vp import generate_verification_plan_docx
         from ..services.export_context import collect
-        sx = await collect(study_id, sections=["mission", "requirements", "ait", "schedule"], lang=lang)
+        sx = await collect(study_id, sections=["mission", "requirements", "ait", "schedule", "validation"], lang=lang)
         data = generate_verification_plan_docx(sx, lang=lang)
         return StreamingResponse(io.BytesIO(data),
                                  media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

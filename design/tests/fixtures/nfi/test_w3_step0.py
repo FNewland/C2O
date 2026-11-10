@@ -46,10 +46,14 @@ async def test_s0_contracts_phase_sections_and_stub_routes(client):
     assert {"gate", "phase", "entry", "deliverables", "analysis", "coaching"} <= set(ph)
     assert ph["gate"] == "mdr" and ph["phase"] == "0"
     sx = (await client.get(f"/api/studies/{sid}/export-context")).json()
-    for name, owner in WAVE3_SECTIONS.items():   # a stub until its owner lands it (then real, no "status")
-        assert sx[name].get("status", "real") in ("not_implemented", "real"), name
+    import importlib
+    for name, owner in WAVE3_SECTIONS.items():
+        # a stub until its owner lands it; once real it keeps the keys of its empty shape
         if sx[name].get("status") == "not_implemented":
             assert sx[name]["owner"] == owner, name
+        else:
+            mod = importlib.import_module(f"spacecdf_server.services.export_context.sections.{name}")
+            assert set(mod.empty()) <= set(sx[name]), name
     assert sx["errors"] == {}
     paths = app.openapi()["paths"]
     for p, owner in STUB_GETS.items():

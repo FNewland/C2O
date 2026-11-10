@@ -118,6 +118,40 @@ class DesignRunResponse(BaseModel):
     warnings: list[str]
     recommendations: list[str]
     conflicts: list[dict] = []
+    #: wave 3 (3.A1): the study's own figures the loop read (``{path: {value, unit, source}}``)
+    #: and the summary the Analyses tab quotes (study figure next to the loop's Phase 0 estimate)
+    study_values: dict = {}
+    summary: dict = {}
+
+
+def _summary(params: dict, study_inputs: dict) -> dict:
+    """The design-loop summary on the study's figures: EOL power, mass margin, link margin, contact,
+    ΔV for disposal, reliability over the mission-success horizon, cost; each with the loop's own
+    Phase 0 estimate where it differs."""
+    def v(path: str):
+        p = params.get(path)
+        return p.get("value") if isinstance(p, dict) else None
+
+    def s(path: str):
+        return (study_inputs.get(path) or {}).get("source")
+
+    rows = {
+        "eol_power_w": {"value": v("power.sa_power_eol_w"), "source": s("power.sa_power_eol_w") or "design loop sizing",
+                        "phase0_estimate": v("power.phase0_sa_power_eol_w")},
+        "mass_margin_to_limit_kg": {"value": v("mass.margin_to_limit_kg"), "source": s("mass.margin_to_limit_kg"),
+                                    "percent": v("systems.mass_margin_percent"),
+                                    "phase0_estimate_kg": v("mass.phase0_dry_mass_kg")},
+        "link_margin_db": {"value": v("link.downlink_margin_db"), "source": s("link.downlink_margin_db") or "design loop"},
+        "contact_min_per_day": {"value": (v("orbit.contact_time_per_day_s") or 0) / 60.0 or None,
+                                "source": s("orbit.contact_time_per_day_s") or "design loop estimate"},
+        "delta_v_deorbit_ms": {"value": v("orbit.delta_v_deorbit_ms"), "method": v("orbit.disposal_method")},
+        "reliability": {"value": v("reliability.mission_reliability"), "horizon_months": v("reliability.horizon_months"),
+                        "phase0_estimate": v("reliability.phase0_mission_reliability")},
+        "cost_keur": {"value": v("cost.total_keur"), "launch_keur": v("cost.launch_keur"),
+                      "source": s("cost.study_total_keur") or "design loop parametric model",
+                      "phase0_estimate_keur": v("cost.phase0_estimate_keur")},
+    }
+    return rows
 
 
 @router.post("/{study_id}/run")
@@ -141,11 +175,20 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
     ctx = None
     initial_state = None
     run_id = None
+    study_inputs: dict = {}
     try:
-        from ..services.analysis_context import build_context, context_hash, seed_design_state
+        from ..services.analysis_context import (build_context, context_hash, conops_from_modes, seed_design_state,
+                                                 study_design_inputs)
         from ..services.analysis_results import input_keys_for, start_run
         ctx = await build_context(study_id, option_id=option_id)
-        initial_state = seed_design_state(ctx, requirements=study.requirements, conops=study.conops)
+        # wave 3 (3.A1): the Modes tab is the ConOps; the study's own figures are sticky inputs
+        try:
+            study_inputs = await study_design_inputs(ctx)
+        except Exception:  # noqa: BLE001 — never block the run on a missing study figure
+            logger.warning("design loop: study inputs unavailable for %s", study_id, exc_info=True)
+            study_inputs = {}
+        initial_state = seed_design_state(ctx, requirements=study.requirements,
+                                          conops=conops_from_modes(ctx, study.conops), study_inputs=study_inputs)
         run_id = await start_run(study_id, DESIGN_LOOP, context_hash(ctx, input_keys_for(DESIGN_LOOP)), option_id)
     except Exception:
         logger.warning("design loop: model coupling unavailable for %s (running uncoupled)", study_id, exc_info=True)
@@ -243,6 +286,7 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
         warnings=loop_result.all_warnings,
         recommendations=loop_result.all_recommendations,
         conflicts=[c.model_dump() if hasattr(c, 'model_dump') else c for c in loop_result.conflicts],
+        study_values=study_inputs, summary=_summary(params, study_inputs),
     )
 
 

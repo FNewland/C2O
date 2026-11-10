@@ -437,32 +437,10 @@ def _element_modes(ctx) -> list:
 
 
 def _power_sources(ctx) -> tuple[float | None, str, float | None, str]:
-    """(EOL array W, its source, battery Wh, its source) from the design parameters or the parts."""
-    from ..services.rule_inputs import kb_component, perf, qty, space_hardware
-    sa = ctx.power.get("sa_power_eol_w")
-    sa_src = "power.sa_power_eol_w" if sa else ""
-    bat = ctx.power.get("battery_capacity_wh")
-    bat_src = "power.battery_capacity_wh" if bat else ""
-    if not sa or not bat:
-        sa_sum = bat_sum = 0.0
-        for e in space_hardware(ctx.elements):
-            kp = (kb_component(e) or {}).get("performance") or {}
-            pe = perf(e)
-            for src in (pe, kp):
-                v = src.get("power_eol_w")
-                if isinstance(v, (int, float)) and v > 0:
-                    sa_sum += float(v) * qty(e)
-                    break
-            for src in (pe, kp):
-                v = src.get("capacity_wh")
-                if isinstance(v, (int, float)) and v > 0:
-                    bat_sum += float(v) * qty(e)
-                    break
-        if not sa and sa_sum:
-            sa, sa_src = sa_sum, "solar array parts (power_eol_w)"
-        if not bat and bat_sum:
-            bat, bat_src = bat_sum, "battery parts (capacity_wh)"
-    return sa, sa_src, bat, bat_src
+    """(EOL array W, its source, battery Wh, its source): the selected parts first, then the design
+    loop's sizing (wave 3, 3.A1: ``analysis_context.power_sources``)."""
+    from ..services.analysis_context import power_sources
+    return power_sources(ctx)
 
 
 @router.get("/studies/{study_id}/modes/energy")

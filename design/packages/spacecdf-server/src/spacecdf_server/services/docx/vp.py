@@ -116,6 +116,18 @@ _VP_TEXT: dict[str, dict[str, str]] = {
     "unlinked": {"en": "Tests that verify no requirement yet: {codes}.",
                  "fr": "Essais qui ne vérifient encore aucune exigence : {codes}."},
     "no_open": {"en": "None.", "fr": "Aucun."},
+    "validation": {"en": "Validation", "fr": "Validation"},
+    "val_intro": {"en": "Validation confirms with the stakeholders that the mission meets their needs (right side of "
+                        "the V, above verification): {n} activities.",
+                  "fr": "La validation confirme avec les parties prenantes que la mission répond à leurs besoins "
+                        "(branche droite du V, au-dessus de la vérification) : {n} activités."},
+    "val_none": {"en": "No validation activity recorded yet (V&V › Validation).",
+                 "fr": "Aucune activité de validation enregistrée pour l’instant (V&V › Validation)."},
+    "activity": {"en": "Activity", "fr": "Activité"}, "val_stage": {"en": "When", "fr": "Quand"},
+    "performer": {"en": "Performed by", "fr": "Réalisée par"},
+    "val_accept": {"en": "Acceptance", "fr": "Acceptation"},
+    "need_val": {"en": "Validation of the stakeholder needs", "fr": "Validation des besoins des parties prenantes"},
+    "need": {"en": "Need", "fr": "Besoin"},
 }
 
 _ENV_NAMES = {
@@ -124,6 +136,8 @@ _ENV_NAMES = {
     "tvac": {"en": "Thermal vacuum", "fr": "Vide thermique"},
 }
 _STAGE_NAMES = {
+    "PRR": {"en": "Preliminary requirements review (PRR)", "fr": "Revue préliminaire des exigences (PRR)"},
+    "SRR": {"en": "System requirements review (SRR)", "fr": "Revue des exigences système (SRR)"},
     "PDR": {"en": "Preliminary design review (PDR)", "fr": "Revue de conception préliminaire (PDR)"},
     "CDR": {"en": "Critical design review (CDR)", "fr": "Revue critique de conception (CDR)"},
     "QR": {"en": "Qualification review (QR)", "fr": "Revue de qualification (QR)"},
@@ -225,8 +239,9 @@ def generate_verification_plan_docx(sx: Any, lang: str = "en") -> bytes:
 
     # 6 verification items by stage (every item, no cap)
     _add_section(doc, "6", T("items"))
-    order = ["PDR", "CDR", "QR", "AR", "IOV", "unassigned"]
-    for k, st in enumerate([s for s in order if s != "unassigned" or (counts.get("by_stage") or {}).get(s)], 1):
+    order = ["PRR", "SRR", "PDR", "CDR", "QR", "AR", "IOV", "unassigned"]
+    for k, st in enumerate([s for s in order if s not in ("unassigned", "PRR", "SRR")
+                            or (counts.get("by_stage") or {}).get(s)], 1):
         rows_st = [i for i in items if i.get("stage") == st]
         _add_section(doc, f"6.{k}", f"{_STAGE_NAMES[st][lang]} — {len(rows_st)}")
         if not rows_st:
@@ -237,8 +252,30 @@ def generate_verification_plan_docx(sx: Any, lang: str = "en") -> bytes:
              str(i.get("level") or ""), str(i.get("facility") or ""), ", ".join(i.get("tests") or []) or "—"]
             for i in rows_st])
 
-    # 7 open items
-    _add_section(doc, "7", T("open"))
+    # 7 validation (wave 3, 3.A4): the right side of the V above verification, from the
+    # ``validation`` section (agent S): activities V1 … with stage, performer and acceptance, and
+    # the need-validation rows
+    val = getattr(sx, "validation", None) or {}
+    acts = list(val.get("items") or []) if isinstance(val, dict) else []
+    _add_section(doc, "7", T("validation"), T("val_intro", n=len(acts)))
+    if acts:
+        _add_table(doc, [T("activity"), T("val_stage"), T("performer"), T("method"), T("val_accept")], [
+            [f"{a.get('code') or a.get('id') or ''}: {a.get('title_fr') if lang == 'fr' and a.get('title_fr') else (a.get('title') or a.get('name') or '')}",
+             str(a.get("stage") or a.get("when") or ""), str(a.get("performer_label") or a.get("performer") or a.get("who") or ""),
+             str(a.get("method") or ""), str(a.get("acceptance") or a.get("exit") or "")]
+            for a in acts])
+    else:
+        doc.add_paragraph(T("val_none"))
+    nv = list(val.get("need_validation") or []) if isinstance(val, dict) else []
+    if nv:
+        _add_section(doc, "7.1", T("need_val"))
+        _add_table(doc, [T("need"), T("method"), T("val_stage")], [
+            [str(r.get("need_code") or r.get("need") or ""),
+             ", ".join(r.get("activity_codes") or r.get("activity_codes_json") or []) or str(r.get("method") or ""),
+             str(r.get("stage") or "")] for r in nv])
+
+    # 8 open items
+    _add_section(doc, "8", T("open"))
     opened = []
     n_un = (counts.get("by_stage") or {}).get("unassigned", 0)
     if n_un:

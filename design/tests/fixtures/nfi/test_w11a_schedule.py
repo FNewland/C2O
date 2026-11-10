@@ -25,9 +25,28 @@ async def test_schedule_milestones_wbs_long_lead_and_cost(client):
     frr = next(m for m in reviews if m["code"] == "FRR")
     assert frr["date"] == "2030-04"
     assert next(m for m in sch["milestones"] if m["code"] == "LAUNCH")["date"] == "2030-06"
-    assert [m["date"] for m in sch["milestones"] if m["kind"] == "model"] == ["2027-11", "2028-11", "2029-11"]
+    # wave 3 (3.A4): the v2 model philosophy (BB 6, EM 18, GS 24, PFM 30, LV 34, flight 36)
+    v2 = sorted(load("vv_plan")["model_philosophy"], key=lambda m: m["month"])
+    assert [m["month"] for m in sch["milestones"] if m["kind"] == "model"] == [m["month"] for m in v2]
+    assert [m["date"] for m in sch["milestones"] if m["kind"] == "model"][:2] == ["2027-11", "2028-11"]
     dates = [m["date"] for m in sch["milestones"]]
     assert dates == sorted(dates)
+
+    # wave 3 (3.A3): need-by dates of the long-lead parts and the licence filings as milestones
+    adcs = next(r for r in sch["need_by"] if r["name"].startswith("CubeADCS"))
+    em = next(m for m in v2 if m["model"] == "EM")["month"]
+    assert adcs["model"] == "EM" and adcs["model_month"] == em == 18
+    weeks = adcs["lead_time_weeks"]
+    assert 12 <= weeks <= 20
+    assert adcs["order_by_month"] == em - 1 - -(-weeks // 4.345) == 13
+    assert adcs["freeze_by_month"] == adcs["order_by_month"] - 1 and not adcs["before_project_start"]
+    filings = [m for m in sch["milestones"] if m["kind"] == "filing"]
+    from spacecdf_server.services.licensing import DEFAULT_FILINGS
+    assert len(filings) == len(DEFAULT_FILINGS) == sch["counts"]["filings"]
+    pre = next(m for m in filings if "PRECONSULTATION" in m["code"])
+    launch = next(m for m in sch["milestones"] if m["code"] == "LAUNCH")["month"]
+    assert pre["month"] == launch - 42 < 0
+    assert any(w["kind"] == "filing_before_start" and w["code"] == pre["code"] for w in sch["warnings"])
 
     wps = sch["work_packages"]
     assert len(wps) >= 10
@@ -36,7 +55,7 @@ async def test_schedule_milestones_wbs_long_lead_and_cost(client):
     assert all(w["element_id"] for w in platform)
 
     lead = sch["long_lead"]
-    assert len(lead) == 5 and all(item["source"] in ("kb", "element") for item in lead)
+    assert len(lead) >= 5 and all(item["source"] in ("kb", "element") for item in lead)
     assert any(item["name"].startswith("CubeADCS") for item in lead)
     assert lead[0]["max_weeks"] >= lead[-1]["max_weeks"]
 

@@ -1,0 +1,55 @@
+# Planning failure rates for the reliability block diagram (services/reliability_model.py, 3.A5)
+# =============================================================================================
+# FIT = failures per 10^9 operating hours. Order-of-magnitude CubeSat planning values (C2O
+# default), chosen so that a single-string 3U CubeSat sits near the on-orbit experience of
+# small university missions (roughly 0.8-0.9 probability of surviving the first year once
+# deployed). They are NOT quotations of MIL-HDBK-217F, SMAD or a vendor datasheet: the team
+# replaces a rate with the supplier's figure (element performance ``failure_rate_fit``, or
+# ``mtbf_h``) as soon as it has one, and the block shows that source instead.
+#
+# ``one_shot``: probability that a one-time event (deployment) succeeds, applied once.
+# ``mission_success: false``: the unit is not needed for the mission-success function (the
+# disposal device): it is shown, with its own reliability, but kept out of the series chain.
+# Types are the failure-mode library types (configs/failure_modes.yaml) so the FMEA and the
+# block diagram match the same unit the same way.
+sources:
+  c2o_rates:
+    kind: c2o_default
+    title: "C2O default CubeSat planning failure rates (order of magnitude; replace with supplier data)"
+    verified: false
+
+dormant_ratio: 0.1          # failure rate of a unit while switched off, as a fraction of the operating rate
+default_fit: 1000           # a unit type with no entry below
+
+types:
+  battery:        {fit: 800}
+  eps:            {fit: 1500}
+  solar_array:    {fit: 400, one_shot: 0.99}
+  obc:            {fit: 1500}
+  transceiver:    {fit: 2000}
+  antenna:        {fit: 100, one_shot: 0.98}
+  reaction_wheel: {fit: 1500}
+  star_tracker:   {fit: 1500}
+  magnetorquer:   {fit: 100}
+  sun_sensor:     {fit: 300}
+  gnss:           {fit: 1000}
+  adcs_unit:      {fit: 3000}
+  thruster:       {fit: 2000}
+  thermal:        {fit: 100}
+  structure:      {fit: 10}
+  deorbit_device: {fit: 500, one_shot: 0.95, mission_success: false}
+  payload:        {fit: 1000}
+  harness:        {fit: 50}
+  generic:        {fit: 1000}
+
+#: k of n by unit type when the element says nothing (``redundancy_k`` on the element wins):
+#: ``k_fraction`` of the n identical units must work. Solar panels: the power margin ratio
+#: (EOL generation over the load with margins, about 2 for a CubeSat that closes its budget)
+#: lets the mission survive the loss of half of the generation (one wing undeployed, SYS-REL-03
+#: of the teaching mission); the team checks it against its own margin ratio.
+redundancy:
+  solar_array: {k_fraction: 0.5}
+
+#: units with no mass and no power that only complete an assembly (fasteners, lenses, filters)
+#: are folded into their parent and get no block
+passive_keywords: [fastener, standoff, lens, filter, coating, paint, mli, strap, cable, connector, kit, baffle]

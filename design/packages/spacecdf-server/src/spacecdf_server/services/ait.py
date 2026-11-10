@@ -34,8 +34,10 @@ from sqlalchemy import delete, select
 
 logger = logging.getLogger(__name__)
 
-STAGES = ("PDR", "CDR", "QR", "AR", "IOV")
+STAGES = ("PRR", "SRR", "PDR", "CDR", "QR", "AR", "IOV")
 STAGE_LABEL = {
+    "PRR": {"en": "Preliminary requirements review", "fr": "Revue préliminaire des exigences"},
+    "SRR": {"en": "System requirements review", "fr": "Revue des exigences système"},
     "PDR": {"en": "Preliminary design review", "fr": "Revue de conception préliminaire"},
     "CDR": {"en": "Critical design review", "fr": "Revue critique de conception"},
     "QR": {"en": "Qualification review", "fr": "Revue de qualification"},
@@ -365,6 +367,107 @@ async def propose(study_id: str, *, replace: bool = False) -> dict[str, Any]:
             "environment": env}
 
 
+# ─────────────────────────────────────────────────────────────── import of a V&V plan (wave 3, 3.A4)
+
+#: model codes of a V&V plan -> (level, build standard)
+_V2_MODEL_LEVEL = {"BB": "subsystem", "EM": "system", "PFM": "system", "LV": "system", "GS": "segment",
+                   "flight": "mission", "FM": "system", "QM": "system", "STM": "system"}
+_V2_MODEL_FR = {"BB": "Maquettes fonctionnelles", "EM": "Modèle d’ingénierie et banc à plat", "PFM": "Modèle protovol",
+                "LV": "Vibrations finales du lanceur dans le déployeur", "GS": "Intégration du segment sol",
+                "flight": "Vérification et validation en orbite"}
+#: event-id prefix -> (category, models)
+_EVENT_KIND = (("AN-", "analysis"), ("IN-", "inspection"), ("RV-", "review"), ("IOV-", "in_orbit"), ("TS-", "test"))
+_TEST_CATEGORY_WORDS = (("VIB", "environmental"), ("TVAC", "environmental"), ("EMC", "emc"), ("DEP", "deployment"),
+                        ("E2E", "end_to_end"), ("DITL", "mission"), ("-MP", "physical"), ("CAL", "performance"),
+                        ("ACC", "functional"), ("SURVEY", "functional"))
+_FACILITY = {"analysis": "analysis (SpaceCDF analyses and design files)",
+             "inspection": "inspection (records, drawings, workmanship)",
+             "review": "review of design (review data package)",
+             "in_orbit": "in orbit (mission control, ground stations)"}
+
+
+def _event_meta(eid: str, models: set[str]) -> tuple[str, list[str], str]:
+    """(category, models, stage hint) of a verification event from its id (AN-, IN-EM-, TS-PFM- …)."""
+    kind = next((k for p, k in _EVENT_KIND if eid.startswith(p)), "test")
+    parts = eid.split("-")
+    mods = [p for p in parts[1:3] if p in models] or (["flight"] if kind == "in_orbit" else ["design"]
+                                                      if kind in ("analysis", "review") else [])
+    if kind == "test":
+        cat = next((c for w, c in _TEST_CATEGORY_WORDS if w in eid), "functional")
+    else:
+        cat = kind
+    stage = parts[1] if kind == "review" and len(parts) > 1 else ""
+    return cat, mods, stage
+
+
+async def import_vv_plan(study_id: str, plan: dict[str, Any], *, replace_proposed: bool = True) -> dict[str, Any]:
+    """The models of a V&V plan's model philosophy and its verification events (with their
+    requirements) as the study's model philosophy and test-matrix events (``vv_plan.yaml`` shape:
+    ``model_philosophy``, ``events``, ``matrix``). Rows the team made (``origin = "user"``) are kept;
+    with ``replace_proposed`` the default proposal (``propose``) is replaced."""
+    from ..db.engine import get_session_factory
+    from ..db.models_ait import AitModelRow, AitTestRow
+
+    mp = list(plan.get("model_philosophy") or [])
+    events = list(plan.get("events") or [])
+    matrix = list(plan.get("matrix") or [])
+    stage_of: dict[str, dict[str, int]] = {}
+    level_of: dict[str, dict[str, int]] = {}
+    for r in matrix:
+        ev = str(r.get("event") or "")
+        if ev:
+            st = stage_of.setdefault(ev, {})
+            st[str(r.get("stage") or "")] = st.get(str(r.get("stage") or ""), 0) + 1
+            lv = level_of.setdefault(ev, {})
+            lv[str(r.get("verification_level") or r.get("level") or "")] = lv.get(str(r.get("verification_level") or ""), 0) + 1
+    codes = {str(m.get("model")) for m in mp}
+    added_m = added_t = 0
+    async with get_session_factory()() as s:
+        if replace_proposed:
+            await s.execute(delete(AitModelRow).where(AitModelRow.study_id == study_id, AitModelRow.origin == "proposed"))
+            await s.execute(delete(AitTestRow).where(AitTestRow.study_id == study_id, AitTestRow.origin == "proposed"))
+        have_m = {r.code: r for r in (await s.execute(select(AitModelRow).where(AitModelRow.study_id == study_id))).scalars()}
+        for i, m in enumerate(mp):
+            code = str(m.get("model"))
+            levels = list(m.get("levels") or [])
+            fields = {"code": code, "name": str(m.get("name") or code), "name_fr": _V2_MODEL_FR.get(code, str(m.get("name") or code)),
+                      "philosophy": "protoflight", "level": (levels[-1] if levels else _V2_MODEL_LEVEL.get(code, "system"))[:16],
+                      "due_month": int(m["month"]) if isinstance(m.get("month"), (int, float)) else None,
+                      "purpose": str(m.get("purpose") or ""), "purpose_fr": "",
+                      "build_standard": str(m.get("trl_target") or "")[:64], "order": i}
+            row = have_m.get(code)
+            if row is None:
+                s.add(AitModelRow(id=_uid(), study_id=study_id, origin="import", **fields))
+                added_m += 1
+            elif row.origin != "user":
+                for k, v in fields.items():
+                    setattr(row, k, v)
+        have_t = {r.code: r for r in (await s.execute(select(AitTestRow).where(AitTestRow.study_id == study_id))).scalars()}
+        for i, ev in enumerate(events):
+            eid = str(ev.get("id") or "")
+            cat, mods, st_hint = _event_meta(eid, codes)
+            stages = stage_of.get(eid) or {}
+            stage = max(stages.items(), key=lambda kv: kv[1])[0] if stages else (st_hint or "")
+            levels = level_of.get(eid) or {}
+            level = max(levels.items(), key=lambda kv: kv[1])[0] if levels else "system"
+            desc = str(ev.get("description") or "")
+            fields = {"code": eid, "name": f"{eid}: {desc}"[:160], "name_fr": "", "category": cat,
+                      "models_json": mods, "level": (level or "system")[:16], "stage": (stage or "")[:8],
+                      "facility": _FACILITY.get(cat, ""), "level_source": "",
+                      "requirement_codes_json": list(ev.get("requirements") or []),
+                      "notes": f"{len(ev.get('requirements') or [])} requirement(s); V&V plan event"}
+            row = have_t.get(eid)
+            if row is None:
+                s.add(AitTestRow(id=_uid(), study_id=study_id, origin="import", order=100 + i, **fields))
+                added_t += 1
+            elif row.origin != "user":
+                for k, v in fields.items():
+                    setattr(row, k, v)
+        await s.commit()
+    return {"models": await list_models(study_id), "tests": await list_tests(study_id),
+            "added": {"models": added_m, "events": added_t}}
+
+
 _MODEL_FIELDS = ("code", "name", "name_fr", "philosophy", "level", "due_month", "purpose", "purpose_fr",
                  "build_standard", "status", "order")
 _TEST_FIELDS = ("code", "name", "name_fr", "category", "level", "level_source", "facility", "stage", "status",
@@ -467,12 +570,16 @@ def plan_from(requirements: list[dict], models: list[dict], tests: list[dict],
         level = (r.get("verification_level") or vi.get("level")
                  or _LEVEL_FROM_REQ.get(str(r.get("level") or ""), "system"))
         linked = tests_by_code.get(str(r.get("code") or ""), [])
+        event = str(r.get("verification_event") or "").strip()
+        if event and event not in [t["code"] for t in linked]:
+            linked = linked + [t for t in tests if t.get("code") == event]
         items.append({
             "requirement_id": r.get("id"), "code": r.get("code") or r.get("id"), "text": r.get("text") or "",
+            "event": event or None, "model": r.get("verification_model") or None,
             "req_level": r.get("level"), "methods": methods, "stage": stage, "level": level,
             "tests": [t["code"] for t in linked],
             "facility": vi.get("facility") or _facility(methods, linked),
-            "acceptance": vi.get("acceptance_criterion") or "",
+            "acceptance": r.get("acceptance") or vi.get("acceptance_criterion") or "",
             "status": vi.get("status") or "planned",
         })
     by_stage = {s: 0 for s in (*STAGES, "unassigned")}
@@ -483,8 +590,9 @@ def plan_from(requirements: list[dict], models: list[dict], tests: list[dict],
         for m in it["methods"] or ["?"]:
             by_method[m] = by_method.get(m, 0) + 1
         by_level[it["level"]] = by_level.get(it["level"], 0) + 1
-    if not by_stage["unassigned"]:
-        by_stage.pop("unassigned")
+    for st in ("unassigned", "PRR", "SRR"):      # shown only when a row closes there (v2: one each)
+        if not by_stage.get(st):
+            by_stage.pop(st, None)
     philosophy = next((m.get("philosophy") for m in models if m.get("philosophy")), DEFAULT_PHILOSOPHY) \
         if models else None
     return {
@@ -506,5 +614,5 @@ async def verification_plan(study_id: str) -> dict[str, Any]:
                      v_items, environment_levels(study, els, launch_provided=await _launch_provided(study_id)))
 
 
-__all__ = ["DEFAULT_MODELS", "DEFAULT_TESTS", "STAGES", "environment_levels", "list_models", "list_tests",
-           "plan_from", "propose", "upsert_model", "upsert_test", "delete_row", "verification_plan"]
+__all__ = ["DEFAULT_MODELS", "DEFAULT_TESTS", "STAGES", "environment_levels", "import_vv_plan", "list_models",
+           "list_tests", "plan_from", "propose", "upsert_model", "upsert_test", "delete_row", "verification_plan"]

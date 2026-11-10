@@ -149,13 +149,28 @@ class CostAgent(DesignAgent):
         ops_cost = ops_per_year * mission_years
 
         total = hw_cost + ait_cost + nre_cost + launch_cost + ops_cost
+        phase0_total = total
+
+        # wave 3 (3.A1, 3.A7): the study's own cost model wins: the priced lines (labour, test
+        # campaigns, hardware, reserve; launch provided) or, before pricing, the bottom-up cost of
+        # the selected equipment. The parametric figure above stays as the Phase 0 estimate.
+        study_total = state.get("cost.study_total_keur")
+        if study_total is not None:
+            result.add_param("cost.phase0_estimate_keur", "Phase 0 parametric estimate", round(phase0_total, 0), "kEUR",
+                             rationale="CubeSat COTS table / SSCM with launch, AIT, NRE and operations")
+            hw_cost = float(state.get("cost.study_hardware_keur", hw_cost) or 0.0)
+            launch_cost = float(state.get("cost.study_launch_keur", 0.0) or 0.0)
+            nre_cost = float(state.get("cost.study_labour_keur", 0.0) or 0.0)
+            ait_cost = 0.0
+            ops_cost = 0.0
+            total = float(study_total)
 
         result.add_param("cost.hardware_keur", "Hardware Cost", round(hw_cost, 0), "kEUR")
-        result.add_param("cost.nre_keur", "NRE Cost", round(nre_cost, 0), "kEUR")
+        result.add_param("cost.nre_keur", "NRE Cost" if study_total is None else "Labour", round(nre_cost, 0), "kEUR")
         result.add_param("cost.launch_keur", "Launch Cost", round(launch_cost, 0), "kEUR")
         result.add_param("cost.operations_keur", "Operations Cost", round(ops_cost, 0), "kEUR")
         result.add_param("cost.total_keur", "Total Cost", round(total, 0), "kEUR")
-        result.add_param("cost.total_meur", "Total Cost", round(total / 1000, 1), "MEUR")
+        result.add_param("cost.total_meur", "Total Cost", round(total / 1000, 3), "MEUR")
 
         result.log(f"Cost breakdown: HW={hw_cost:.0f} + AIT={ait_cost:.0f} + NRE={nre_cost:.0f} + Launch={launch_cost:.0f} + Ops={ops_cost:.0f} = {total:.0f} kEUR")
 
@@ -164,7 +179,10 @@ class CostAgent(DesignAgent):
             result.add_warning(f"Cost estimate {total/1000:.1f} MEUR exceeds target {target:.1f} MEUR")
 
         # ---- Report-quality narrative & structured intermediates ----
-        result.rationale = (
+        study_text = (f"The study's cost model gives {total:.0f} kEUR (launch {launch_cost:.0f} kEUR); the "
+                      f"parametric estimate below is the Phase 0 figure ({phase0_total:.0f} kEUR).  "
+                      if study_total is not None else "")
+        result.rationale = study_text + (
             f"Parametric life-cycle cost estimate using the "
             f"{'CubeSat COTS' if use_cots else 'SSCM kEUR/kg'} model. "
             f"Hardware {hw_cost:.0f} kEUR + AIT {ait_cost:.0f} kEUR + "

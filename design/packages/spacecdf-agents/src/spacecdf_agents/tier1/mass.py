@@ -77,6 +77,19 @@ class MassAgent(DesignAgent):
         platform_mass = platform_mass_raw
 
         dry_mass = payload_mass + platform_mass + prop_dry_hw
+        # wave 3 (3.A1): the study's roll-up (selected equipment with maturity margins) is the dry
+        # mass; the agents' class-based sum stays as the Phase 0 estimate
+        phase0_dry = dry_mass
+        study_mass = state.get("mass.study_with_maturity_kg")
+        if study_mass:
+            dry_mass = float(study_mass)
+            result.add_param("mass.phase0_dry_mass_kg", "Dry Mass (Phase 0 estimate)", round(phase0_dry, 2), "kg",
+                             rationale="sum of the agents' class-based subsystem estimates")
+            lim = state.get("mass.study_limit_kg")
+            wsm = state.get("mass.study_with_system_margin_kg")
+            if lim and wsm:
+                result.add_param("mass.margin_to_limit_kg", "Mass margin to the limit", round(float(lim) - float(wsm), 3),
+                                 "kg", rationale="limit minus the roll-up with the system margin")
         wet_mass = dry_mass + prop_mass
 
         result.add_param("mass.payload_kg", "Payload Mass", round(payload_mass, 2), "kg",
@@ -95,7 +108,9 @@ class MassAgent(DesignAgent):
 
         # ---- Report-quality narrative & structured intermediates ----
         dry_margin = 20.0
-        result.rationale = (
+        result.rationale = ((
+            f"Dry mass from the study roll-up (selected equipment with maturity margins): {dry_mass:.3f} kg; "
+            f"the agents' class-based sum below is the Phase 0 estimate ({phase0_dry:.2f} kg).  ") if study_mass else "") + (
             f"System mass rollup: payload {payload_mass:.2f} kg, platform "
             f"{platform_mass:.2f} kg (EPS {eps_mass:.2f}, TCS {tcs_mass:.2f}, "
             f"TT&C {ttc_mass:.2f}, AOCS {aocs_mass:.2f}, structure {struct_mass:.2f}, "

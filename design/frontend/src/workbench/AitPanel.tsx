@@ -14,6 +14,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Button, DataTable, Disclosure, Input, Note, Panel, Tag, Tabs, tabPanelProps } from '../components/ui'
+import { ReliabilityPanel } from './ReliabilityPanel'
+import { ThermalModelPanel } from './ThermalModelPanel'
 
 const API = '/api'
 
@@ -27,9 +29,10 @@ interface AitTest {
 }
 interface VpItem { code: string; text: string; methods: string[]; stage: string; level: string; facility: string; tests: string[] }
 
-const STAGES = ['PDR', 'CDR', 'QR', 'AR', 'IOV'] as const
+const STAGES = ['PRR', 'SRR', 'PDR', 'CDR', 'QR', 'AR', 'IOV'] as const
 // English text is the i18n key
 const STAGE_LABEL: Record<string, string> = {
+  PRR: 'Preliminary requirements review', SRR: 'System requirements review',
   PDR: 'Preliminary design review', CDR: 'Critical design review', QR: 'Qualification review',
   AR: 'Acceptance review', IOV: 'In-orbit verification', unassigned: 'No stage yet',
 }
@@ -37,6 +40,7 @@ const STAGE_LABEL: Record<string, string> = {
 const CATEGORY_LABEL: Record<string, string> = {
   environmental: 'environmental', functional: 'functional', performance: 'performance', emc: 'EMC',
   deployment: 'deployment', end_to_end: 'end to end', mission: 'mission', physical: 'physical',
+  analysis: 'analysis', inspection: 'inspection', review: 'review', in_orbit: 'in orbit',
 }
 // English text is the i18n key
 const LEVEL_LABEL: Record<string, string> = {
@@ -81,7 +85,7 @@ export function AitPanel({ studyId }: { studyId: string | null }) {
   }
   const lastMonth = Math.max(36, ...models.map(m => m.due_month ?? 0))
   const stageItems = items.filter(i => i.stage === stage)
-  const stageTabs = [...STAGES, ...(byStage.unassigned ? ['unassigned'] : [])]
+  const stageTabs = [...STAGES.filter(st => (st !== 'PRR' && st !== 'SRR') || byStage[st]), ...(byStage.unassigned ? ['unassigned'] : [])]
 
   return (
     <Panel level={2} title={t('AIT and verification plan')}
@@ -154,6 +158,12 @@ export function AitPanel({ studyId }: { studyId: string | null }) {
             ]} />
         </div>
       </section>
+
+      {/* wave 3 (3.A5, 3.A6): reliability and FMEA, thermal model — PDR evidence */}
+      <div className="stack gap-4 mt-4">
+        <ReliabilityPanel studyId={studyId} />
+        <ThermalModelPanel studyId={studyId} />
+      </div>
     </Panel>
   )
 }

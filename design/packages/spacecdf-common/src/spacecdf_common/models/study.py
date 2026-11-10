@@ -125,6 +125,9 @@ class MissionRequirements(BaseModel):
     payloads: list[PayloadRequirements] = Field(default_factory=lambda: [PayloadRequirements()])
     design_lifetime_years: float = 3.0
     reliability_target: float = 0.9
+    # wave 3 (3.A1): the mission-success horizon the reliability target applies to (months of
+    # operations after commissioning, e.g. 12 for MIS-LIF-02), kept apart from the design life
+    success_horizon_months: float | None = None
     target_cost_meur: float | None = None
     target_mass_kg: float | None = None
     spacecraft_class: str = Field(default="small", description="nano/micro/small/medium/large/flagship")
