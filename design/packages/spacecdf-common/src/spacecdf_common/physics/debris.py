@@ -452,3 +452,107 @@ def _compliance_with_drag_device(*, altitude_km: float, inclination_deg: float, 
     r.debris_compliance_score = min(100, lifetime_score + five_yr_bonus + casualty_score
                                     + passivation_component + deorbit_capability)
     return r
+
+
+# ─────────────────────────────────────────── wave 3 (3.L3, 3.L8): sweeps and a DAS-like re-entry
+
+#: tumbling-averaged bus areas of a 3U without the sail (low, typical, high), m^2
+BUS_AREAS_M2 = (0.04, 0.08, 0.12)
+
+
+def decay_sweep(altitudes_km: list[float], *, mass_kg: float, start_year: float = 2030.5,
+                sail_area_m2: float | None = None, bus_areas_m2: tuple[float, ...] = BUS_AREAS_M2,
+                scenarios: tuple[str, ...] = ("strong", "nominal", "weak")) -> list[dict]:
+    """Post-mission lifetime against start altitude, with and without the drag sail (3.L3).
+
+    One row per altitude: ``with_sail_y`` {scenario: years} (sail deployed at ``start_year``,
+    effective area 0.38 x deployed + 0.05 m^2 bus), ``without_sail_y`` {bus area: {scenario: years}}
+    and ``without_sail_range_y`` [min, max] over the areas and scenarios. The decay model is
+    ``physics/disposal.decay_lifetime_years`` (NRLMSIS table, SWPC cycle 25, Hathaway cycle 26)."""
+    from .disposal import BUS_AREA_WITH_SAIL_M2, SAIL_EFFECTIVE_FRACTION, decay_lifetime_years
+    eff = (SAIL_EFFECTIVE_FRACTION * sail_area_m2 + BUS_AREA_WITH_SAIL_M2) if sail_area_m2 else None
+    rows = []
+    for h in altitudes_km:
+        h = float(h)
+        ws = {sc: round(decay_lifetime_years(h, start_year, mass_kg, eff, sc), 2) for sc in scenarios} if eff else {}
+        wo = {f"{a:.2f}": {sc: round(decay_lifetime_years(h, start_year, mass_kg, a, sc), 2) for sc in scenarios}
+              for a in bus_areas_m2}
+        flat = [v for d in wo.values() for v in d.values()]
+        rows.append({"altitude_km": h, "with_sail_y": ws, "without_sail_y": wo,
+                     "without_sail_range_y": [min(flat), max(flat)] if flat else None,
+                     "with_sail_worst_y": max(ws.values()) if ws else None})
+    return rows
+
+
+#: re-entry survival screening (DAS-like): name pattern -> (material, density kg/m^3, surviving
+#: mass fraction, pieces). Aluminium, composites, electronics and plastics demise; steel, titanium
+#: and glass optics may survive. Screening only: the licence quotes DAS or DRAMA/SARA.
+SURVIVAL_RULES: tuple[tuple[str, str, float, float, int | None], ...] = (
+    (r"\bCW\d{4}\b|reaction wheel|momentum wheel", "stainless steel (wheel rotor)", 7900.0, 0.3, None),
+    (r"titanium|ti-6al-4v", "titanium", 4430.0, 1.0, 1),
+    (r"\blens\b|\bfilter\b|optic(?!al bench)|star ?tracker|cubestar", "glass (optics)", 2200.0, 0.5, 1),
+    (r"battery|\bBP4\b|\bcells?\b", "stainless steel (cell cans)", 7900.0, 0.2, 4),
+    (r"fastener|screw|standoff|bolt", "stainless steel (fasteners)", 7900.0, 1.0, 0),   # 0: pieces of 2 g
+)
+
+#: orbit-averaged population density under the ground track in 2030 (people / km^2) by inclination
+#: band (screening values after the DAS method; the licence quotes the tool)
+POPULATION_DENSITY_KM2: tuple[tuple[float, float], ...] = ((30.0, 25.0), (60.0, 20.0), (180.0, 14.0))
+
+HUMAN_AREA_SQRT_M = 0.6       # sqrt(0.36 m^2), NASA-STD-8719.14
+KE_THRESHOLD_J = 15.0         # fragments below 15 J at impact are not counted
+CASUALTY_LIMIT = 1e-4         # 1:10 000
+
+
+def _pieces_from_name(name: str, default: int) -> int:
+    import re
+    m = re.search(r"(\d+)\s*[x×]\s*CW\d{4}|(\d+)\s*x\s*(?:reaction )?wheels?", name, re.I)
+    if m:
+        return int(m.group(1) or m.group(2))
+    return default
+
+
+def reentry_casualty(components: list[dict], inclination_deg: float) -> dict:
+    """DAS-like casualty screening of an uncontrolled re-entry (3.L8).
+
+    ``components``: ``[{name, mass_kg, quantity}]``. Each component matching ``SURVIVAL_RULES``
+    leaves surviving fragments (mass x fraction, split in pieces); a fragment counts when its
+    impact kinetic energy (terminal velocity of a compact body) is at least 15 J. Debris casualty
+    area DCA = sum (0.6 + sqrt(A_i))^2; casualty expectation Ec = DCA x population density."""
+    import re
+    frags = []
+    for c in components:
+        name = str(c.get("name") or "")
+        m = float(c.get("mass_kg") or 0.0) * int(c.get("quantity") or 1)
+        if m <= 0:
+            continue
+        for pat, mat, rho, frac, pieces in SURVIVAL_RULES:
+            if not re.search(pat, name, re.I):
+                continue
+            q = int(c.get("quantity") or 1)
+            if pieces == 0:
+                n = max(1, int(round(m / 0.002)))          # a kit of small parts, about 2 g each
+            elif pieces is None:
+                n = max(1, _pieces_from_name(name, 1) * q)  # "3x CW0017" -> three rotors
+            else:
+                n = max(1, pieces * q)
+            mp = m * frac / n
+            area = (mp / rho) ** (2.0 / 3.0)
+            v2 = 2 * mp * 9.81 / (1.225 * 1.0 * area)
+            ke = 0.5 * mp * v2
+            counts = ke >= KE_THRESHOLD_J
+            frags.append({"component": name, "material": mat, "pieces": n, "piece_mass_kg": round(mp, 4),
+                          "piece_area_m2": round(area, 6), "impact_energy_j": round(ke, 1), "counted": counts,
+                          "dca_m2": round(n * (HUMAN_AREA_SQRT_M + math.sqrt(area)) ** 2, 4) if counts else 0.0})
+            break
+    dca = sum(f["dca_m2"] for f in frags)
+    inc = abs(float(inclination_deg or 0.0))
+    inc = 180.0 - inc if inc > 90 else inc
+    dens = next(d for lim, d in POPULATION_DENSITY_KM2 if inc <= lim)
+    ec = dca * dens * 1e-6
+    return {"fragments": frags, "surviving_mass_kg": round(sum(f["piece_mass_kg"] * f["pieces"] for f in frags if f["counted"]), 4),
+            "dca_m2": round(dca, 4), "population_density_km2": dens, "casualty_expectation": float(f"{ec:.3e}"),
+            "one_in": int(round(1.0 / ec)) if ec > 0 else None, "limit": CASUALTY_LIMIT,
+            "compliant": ec < CASUALTY_LIMIT,
+            "method": "DAS-like screening: material survival rules, 15 J energy threshold, DCA with the 0.36 m^2 "
+                      "human area, orbit-averaged population density by inclination (2030)"}

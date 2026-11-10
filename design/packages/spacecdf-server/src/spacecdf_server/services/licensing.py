@@ -80,6 +80,115 @@ EMPTY_RECORD: dict[str, Any] = {
 }
 
 
+#: The team inputs of the Licensing tab (3.L1): record path, tab, the RSSSA application section it
+#: fills (guide numbering as the generated document uses it), and whether it is required for the
+#: filing. The tab's progress indicator counts the required ones; ``rsssa_14_30`` the command and
+#: data protection plan and the data policy (RSSSA sections 14 to 30).
+FIELDS: tuple[dict, ...] = (
+    {"path": "applicant.legal_name", "tab": "applicant", "rsssa": "1", "required": True},
+    {"path": "applicant.address", "tab": "applicant", "rsssa": "1", "required": True},
+    {"path": "applicant.contact_name", "tab": "applicant", "rsssa": "2", "required": True},
+    {"path": "applicant.contact_email", "tab": "applicant", "rsssa": "2", "required": True, "format": "email"},
+    {"path": "applicant.contact_phone", "tab": "applicant", "rsssa": "2", "required": True, "format": "phone"},
+    {"path": "applicant.canadian_entity", "tab": "applicant", "rsssa": "3", "required": True},
+    {"path": "notes", "tab": "applicant", "rsssa": "4", "required": True},
+    {"path": "applicant.security_officer", "tab": "applicant", "rsssa": "5", "required": True},
+    {"path": "itu_network_name", "tab": "applicant", "rsssa": "9", "required": True},
+    {"path": "participants", "tab": "applicant", "rsssa": "32", "required": True, "list": True},
+    {"path": "affiliates", "tab": "applicant", "rsssa": "31", "required": False, "list": True},
+    {"path": "cdpp.command_process", "tab": "protection", "rsssa": "14", "required": True},
+    {"path": "cdpp.command_facility", "tab": "protection", "rsssa": "15", "required": True},
+    {"path": "cdpp.command_encryption", "tab": "protection", "rsssa": "18", "required": True},
+    {"path": "cdpp.command_authentication", "tab": "protection", "rsssa": "18", "required": True},
+    {"path": "cdpp.key_management", "tab": "protection", "rsssa": "19", "required": True},
+    {"path": "cdpp.key_custody", "tab": "protection", "rsssa": "19", "required": True},
+    {"path": "cdpp.personnel_security", "tab": "protection", "rsssa": "21", "required": True},
+    {"path": "cdpp.data_facility", "tab": "protection", "rsssa": "22", "required": True},
+    {"path": "cdpp.backup_facility", "tab": "protection", "rsssa": "23", "required": True},
+    {"path": "cdpp.downlink_encryption", "tab": "protection", "rsssa": "24", "required": True},
+    {"path": "cdpp.network_security", "tab": "protection", "rsssa": "26", "required": True},
+    {"path": "cdpp.physical_security", "tab": "protection", "rsssa": "30", "required": True},
+    {"path": "data_policy.distribution", "tab": "policy", "rsssa": "27", "required": True},
+    {"path": "data_policy.retention", "tab": "policy", "rsssa": "25", "required": True},
+    {"path": "data_policy.sensed_state_access", "tab": "policy", "rsssa": "27", "required": True},
+    {"path": "data_policy.priority_access", "tab": "policy", "rsssa": "27", "required": True},
+    {"path": "data_policy.disposal", "tab": "policy", "rsssa": "28", "required": True},
+    {"path": "data_policy.eula", "tab": "policy", "rsssa": "29", "required": True},
+    {"path": "launch.provider", "tab": "policy", "rsssa": "10", "required": True},
+    {"path": "launch.vehicle", "tab": "policy", "rsssa": "10", "required": True},
+    {"path": "launch.site", "tab": "policy", "rsssa": "10", "required": True},
+    {"path": "launch.deployer", "tab": "policy", "rsssa": "10", "required": False},
+    {"path": "launch.date", "tab": "policy", "rsssa": "10", "required": False, "format": "date"},
+)
+
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_PHONE = re.compile(r"^\+?[0-9][0-9 ().-]{5,24}$")
+_DATE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
+
+
+def _get(rec: dict, path: str) -> Any:
+    cur: Any = rec
+    for k in path.split("."):
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(k)
+    return cur
+
+
+def _filled(v: Any, is_list: bool = False) -> bool:
+    if is_list:
+        return isinstance(v, list) and any(isinstance(x, dict) and any(str(y or "").strip() for y in x.values()) for x in v)
+    if isinstance(v, bool):
+        return True
+    return v is not None and str(v).strip() != ""
+
+
+def field_problem(fmt: str | None, v: Any) -> str | None:
+    """The format problem of one typed value (None when it is fine or empty)."""
+    if v is None or str(v).strip() == "" or not fmt:
+        return None
+    s = str(v).strip()
+    if fmt == "email" and not _EMAIL.match(s):
+        return "not an e-mail address"
+    if fmt == "phone" and not _PHONE.match(s):
+        return "not a telephone number (digits, spaces, + ( ) - .)"
+    if fmt == "date" and not _DATE.match(s):
+        return "not a date (YYYY, YYYY-MM or YYYY-MM-DD)"
+    return None
+
+
+def progress(rec: dict) -> dict:
+    """How much of the Licensing tab the team has filled (3.L1): required fields n/m overall, per
+    tab and for RSSSA sections 14 to 30, the missing paths and the format problems."""
+    tabs: dict[str, list[int]] = {}
+    r1430 = [0, 0]
+    missing, problems = [], []
+    n = m = 0
+    for f in FIELDS:
+        v = _get(rec, f["path"])
+        ok = _filled(v, bool(f.get("list")))
+        p = field_problem(f.get("format"), v)
+        if p:
+            problems.append({"path": f["path"], "problem": p})
+        if not f.get("required"):
+            continue
+        m += 1
+        good = ok and not p
+        n += int(good)
+        t = tabs.setdefault(f["tab"], [0, 0])
+        t[0] += int(good)
+        t[1] += 1
+        if 14 <= int(f["rsssa"]) <= 30:
+            r1430[0] += int(good)
+            r1430[1] += 1
+        if not good:
+            missing.append(f["path"])
+    return {"filled": n, "total": m, "percent": round(100 * n / m) if m else 100,
+            "tabs": {k: {"filled": v[0], "total": v[1]} for k, v in tabs.items()},
+            "rsssa_14_30": {"filled": r1430[0], "total": r1430[1]}, "missing": missing, "problems": problems,
+            "fields": [dict(f) for f in FIELDS]}
+
+
 def _merge(base: Any, over: Any) -> Any:
     if isinstance(base, dict) and isinstance(over, dict):
         out = dict(base)
@@ -147,6 +256,11 @@ def validate_record(data: dict) -> list[str]:
     for ev in data.get("evidence") or []:
         if not isinstance(ev, dict) or not ev.get("tool"):
             errs.append("every evidence row needs a tool (DRAMA, DAS, ...)")
+    for f in FIELDS:            # 3.L1: e-mail, telephone and date formats of the typed values
+        if f.get("format"):
+            p = field_problem(f["format"], _get(data, f["path"]))
+            if p:
+                errs.append(f"{f['path']}: {p}")
     return errs
 
 
@@ -284,8 +398,9 @@ def _payload_info(study: Any, elements: list[dict], altitude_km: float) -> dict:
             m = re.search(r"(\d+(?:\.\d+)?)\s*mm\b", str(e.get("name") or ""))
             focal = float(m.group(1)) if m else None
         if pitch and focal and e.get("element_type") == "component":
+            from spacecdf_common.physics.payload_sizing import native_gsd_m
             instruments.append({"name": e.get("name"), "pixel_pitch_um": pitch, "focal_length_mm": focal,
-                                "native_gsd_m": round(altitude_km * 1e3 * pitch * 1e-6 / (focal * 1e-3), 1)})
+                                "native_gsd_m": round(native_gsd_m(altitude_km, pitch, focal), 1)})
     native = [i["native_gsd_m"] for i in instruments]
     gsd = min(stated) if stated else (min(native) if native else None)
     sw = max(swath) if swath else (2 * altitude_km * math.tan(math.radians(max(fov) / 2)) if fov else None)
@@ -294,6 +409,73 @@ def _payload_info(study: Any, elements: list[dict], altitude_km: float) -> dict:
             "finest_native_gsd_m": min(native) if native else None, "instruments": instruments,
             "swath_km": round(sw, 1) if sw else None, "spectral_bands": bands,
             "fov_deg": max(fov) if fov else None, "instrument_names": [n for n in names if n]}
+
+
+# ───────────────────────────────────────────────────────── payload geometry (3.L5)
+
+def _camera_inputs(e: dict) -> dict | None:
+    """Pixel pitch, format, bit depth and focal length of a payload camera element (its own
+    ``performance`` first, then its KB entry; the focal length also from the lens in its name)."""
+    p, kb = _perf(e), (_kb(e).get("performance") or {})
+    pitch = _num(p.get("pixel_pitch_um") or kb.get("pixel_pitch_um") or kb.get("pixel_size_um"))
+    res = p.get("resolution_px") or kb.get("resolution_px")
+    focal = _num(p.get("focal_length_mm") or kb.get("focal_length_mm"))
+    if not focal:
+        m = re.search(r"(\d+(?:\.\d+)?)\s*mm\b", str(e.get("name") or ""))
+        focal = float(m.group(1)) if m else None
+    bits = int(_num(p.get("bit_depth") or kb.get("bit_depth")) or 12)
+    if not (pitch and focal and isinstance(res, (list, tuple)) and len(res) == 2):
+        return None
+    return {"pixel_pitch_um": pitch, "resolution_px": [int(res[0]), int(res[1])], "focal_length_mm": focal,
+            "bit_depth": bits}
+
+
+#: Properties of a payload camera the geometry proposes (key -> camera result field)
+PROPOSED_PROPERTIES = {"gsd_m": "gsd_m", "fov_deg": "fov_deg", "swath_km": "swath_km", "data_rate_mbps": "csi2_mbps"}
+
+
+def payload_geometry(study: Any, elements: list[dict], rows: list[dict] | None = None) -> dict:
+    """GSD, swath, FOV, frame size, CSI-2 rate at the contiguous cadence and the product sizes of
+    the study's payload cameras, from the optics and the detector (A5, ``physics/payload_sizing``).
+
+    ``proposals`` maps each camera element to the Properties it proposes (``gsd_m``, ``fov_deg``,
+    ``swath_km``, ``data_rate_mbps``); ``products`` the ``mb_raw`` it proposes for the
+    ``payload_products`` rows named ROI / Quicklook, with the planned set when the rows give counts.
+    The Properties show a proposal only once the student has typed a value (the hand calculation
+    stays a learning outcome)."""
+    from spacecdf_common.physics.payload_sizing import camera_geometry, imaging_chain
+    req = getattr(study, "requirements", None)
+    alt = float(getattr(getattr(req, "orbit", None), "altitude_km", 500.0) or 500.0)
+    cams = []
+    for e in elements:
+        if (e.get("subsystem_domain") or "") != "payload" or e.get("element_type") != "component" or e.get("deleted_at"):
+            continue
+        ci = _camera_inputs(e)
+        if ci is None:
+            continue
+        g = camera_geometry(altitude_km=alt, **ci)
+        cams.append({**g, "element_id": e.get("id"), "name": e.get("name"), "inputs": ci})
+    prod: dict[str, Any] = {}
+    try:
+        from . import cdr_model as cm
+        prod = cm.singleton(rows or [], "payload_products") or {}
+    except Exception:  # noqa: BLE001
+        prod = {}
+    items = [p for p in (prod.get("products") or []) if isinstance(p, dict)]
+    roi_row = next((p for p in items if re.search(r"\broi\b", str(p.get("name") or ""), re.I)), None)
+    ql_row = next((p for p in items if re.search(r"quick ?look", str(p.get("name") or ""), re.I)), None)
+    chain = imaging_chain(cams, alt, roi_per_day=_num((roi_row or {}).get("per_day")),
+                          quicklooks_per_day=_num((ql_row or {}).get("per_day")))
+    proposals = {c["element_id"]: {k: c.get(f) for k, f in PROPOSED_PROPERTIES.items()} for c in cams}
+    products = []
+    if cams:
+        if roi_row is not None:
+            products.append({"name": roi_row.get("name"), "mb_raw": chain["roi_pair_mb"], "stored": _num(roi_row.get("mb_raw"))})
+        if ql_row is not None:
+            products.append({"name": ql_row.get("name"), "mb_raw": chain["quicklook_mb"], "stored": _num(ql_row.get("mb_raw"))})
+    return {**chain, "proposals": proposals, "products": products,
+            "source": "physics/payload_sizing: GSD = h p / f; swath = pixels x GSD; FOV = 2 atan(w / 2f); "
+                      "trigger interval = shortest along-track footprint / ground speed"}
 
 
 # ───────────────────────────────────────────────────────── frequency assignments (W5.01)

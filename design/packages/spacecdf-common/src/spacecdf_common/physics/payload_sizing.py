@@ -413,3 +413,72 @@ def size_payload(
         power = kwargs.get("power_w", 20.0)
         return {"type": "generic", "mass_kg": mass, "power_w": power,
                 "data_rate_mbps": kwargs.get("data_rate_mbps", 1.0), "warnings": []}
+
+
+# ---------------------------------------------------------------------------
+# Wave 3 (3.L5): frame-camera geometry and product sizes from the optics and the detector
+# ---------------------------------------------------------------------------
+
+_MU_KM3_S2 = 398600.4418
+_RE_KM = 6371.0
+
+
+def ground_speed_km_s(altitude_km: float) -> float:
+    """Sub-satellite ground speed of a circular orbit (Earth rotation neglected)."""
+    a = _RE_KM + float(altitude_km)
+    return math.sqrt(_MU_KM3_S2 / a) * _RE_KM / a
+
+
+def native_gsd_m(altitude_km: float, pixel_pitch_um: float, focal_length_mm: float) -> float:
+    """Nadir ground sample distance GSD = h * p / f (the classic hand calculation)."""
+    return float(altitude_km) * 1e3 * float(pixel_pitch_um) * 1e-6 / (float(focal_length_mm) * 1e-3)
+
+
+def camera_geometry(*, altitude_km: float, pixel_pitch_um: float, resolution_px: tuple[int, int] | list[int],
+                    focal_length_mm: float, bit_depth: int = 12) -> dict:
+    """Footprint and frame size of a nadir frame camera.
+
+    ``resolution_px`` is (across-track, along-track). Swath = pixels x GSD (flat-Earth small-angle
+    footprint, as the baseline computes it); FOV = 2 atan(detector half-width / f); frame size in
+    MB (1e6 bytes) with the pixels packed at ``bit_depth``."""
+    nx, ny = int(resolution_px[0]), int(resolution_px[1])
+    gsd = native_gsd_m(altitude_km, pixel_pitch_um, focal_length_mm)
+    half_x = nx * pixel_pitch_um * 1e-3 / 2.0
+    half_y = ny * pixel_pitch_um * 1e-3 / 2.0
+    return {"gsd_m": round(gsd, 1), "swath_km": round(nx * gsd / 1e3, 1), "along_track_km": round(ny * gsd / 1e3, 1),
+            "fov_deg": round(math.degrees(2 * math.atan(half_x / focal_length_mm)), 2),
+            "fov_along_deg": round(math.degrees(2 * math.atan(half_y / focal_length_mm)), 2),
+            "frame_mb": round(nx * ny * bit_depth / 8 / 1e6, 2), "pixels": [nx, ny], "bit_depth": bit_depth}
+
+
+def imaging_chain(cameras: list[dict], altitude_km: float, *, product_grid_m: float = 60.0, roi_km: float = 15.0,
+                  roi_bits: int = 12, quicklook_m: float = 480.0, quicklook_bits: int = 8,
+                  roi_per_day: float | None = None, quicklooks_per_day: float | None = None) -> dict:
+    """Cameras triggered together (one bench): the contiguous trigger interval, the CSI-2 rate of
+    each camera at that cadence, and the ROI and quicklook product sizes (3.L5).
+
+    ``cameras``: ``camera_geometry`` results (with ``name``). The trigger interval that keeps the
+    strips contiguous is the shortest along-track footprint over the ground speed. A ROI pair is a
+    ``roi_km`` square on the common ``product_grid_m`` grid, every band at ``roi_bits``; a quicklook
+    is the coarsest camera's full frame binned to about ``quicklook_m``, every band at
+    ``quicklook_bits``."""
+    if not cameras:
+        return {"cameras": [], "trigger_interval_s": None}
+    v = ground_speed_km_s(altitude_km)
+    along = min(c["along_track_km"] for c in cameras)
+    interval = along / v
+    nb = len(cameras)
+    for c in cameras:
+        c["csi2_mbps"] = round(c["frame_mb"] * 8 / interval, 1)
+    px = round(roi_km * 1e3 / product_grid_m)
+    roi = px * px * nb * roi_bits / 8 / 1e6
+    coarse = max(cameras, key=lambda c: c["gsd_m"])
+    k = max(1, round(quicklook_m / coarse["gsd_m"]))
+    ql = (coarse["pixels"][0] // k) * (coarse["pixels"][1] // k) * nb * quicklook_bits / 8 / 1e6
+    out = {"altitude_km": altitude_km, "ground_speed_km_s": round(v, 2), "trigger_interval_s": round(interval, 1),
+           "common_footprint_km": [min(c["swath_km"] for c in cameras), round(along, 1)],
+           "cameras": cameras, "roi_pair_mb": round(roi, 4), "roi_px": px, "quicklook_mb": round(ql, 3),
+           "quicklook_binning": k, "product_grid_m": product_grid_m, "roi_km": roi_km}
+    if roi_per_day is not None and quicklooks_per_day is not None:
+        out["planned_set_raw_mb"] = round(roi * roi_per_day + ql * quicklooks_per_day, 1)
+    return out

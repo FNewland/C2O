@@ -10,7 +10,12 @@ Included by ``routers/lifecycle.py`` (prefix ``/api/lifecycle``):
   (and the instructor) may write; the propulsion_engineer seat, which owns the disposal function
   (PI decision), may write the ``disposal`` part only;
 * ``POST /licensing/{study_id}/evidence`` — import a DRAMA or DAS result (structured fields, or the
-  tool's text report, from which lifetime, collision probability and casualty risk are read).
+  tool's text report, from which lifetime, collision probability and casualty risk are read);
+* ``GET  /payload-geometry/{study_id}`` — wave 3 (3.L5): GSD, swath, FOV, frame size, CSI-2 rate,
+  trigger interval and product sizes of the payload cameras from their optics and detectors.
+
+The GET also returns ``progress`` (3.L1): the required team inputs filled, n/m overall, per tab and
+for RSSSA sections 14 to 30, with the missing fields and the format problems.
 """
 from __future__ import annotations
 
@@ -69,7 +74,8 @@ async def get_licensing(study_id: str, lang: str = "en") -> dict:
     return {"study_id": study_id, "version": version, "record": record,
             "filings": sec.get("filings") or [], "filing_statuses": list(lic.FILING_STATUSES),
             "derived": {k: sec.get(k) for k in ("assignments", "disposal", "stations", "orbit", "sensor", "launch")},
-            "to_be_confirmed": sec.get("to_be_confirmed") or [], "errors": sx.errors}
+            "to_be_confirmed": sec.get("to_be_confirmed") or [], "progress": lic.progress(record),
+            "errors": sx.errors}
 
 
 @router.put("/licensing/{study_id}")
@@ -150,3 +156,19 @@ async def add_evidence(study_id: str, body: dict[str, Any], request: Request) ->
     evidence = list(record.get("evidence") or []) + [row]
     record, ver = await lic.save_record(study_id, {"evidence": evidence}, actor=actor)
     return {"study_id": study_id, "version": ver, "evidence": row, "parsed": parsed}
+
+
+@router.get("/payload-geometry/{study_id}")
+async def payload_geometry(study_id: str) -> dict:
+    """3.L5: the payload cameras' geometry and product sizes proposed from the optics."""
+    from ..routers.studies import get_study_store
+    from ..services import rollup as ru
+    study = get_study_store().get(study_id)
+    if study is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    try:
+        from ..db import cdr_repo
+        rows = await cdr_repo.list_rows(study_id)
+    except Exception:  # noqa: BLE001
+        rows = []
+    return {"study_id": study_id, **lic.payload_geometry(study, ru.study_elements(study_id), rows)}

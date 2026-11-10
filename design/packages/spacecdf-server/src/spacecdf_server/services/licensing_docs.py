@@ -518,9 +518,50 @@ def itu_api(sx) -> dict:
 
 # ───────────────────────────────────────────────────────────────── debris
 
+def _assessment(sx) -> dict | None:
+    sec = getattr(sx, "debris", None) or {}
+    return sec.get("assessment") if isinstance(sec, dict) else None
+
+
+def _casualty_rows(d: dict, a: dict | None) -> list[dict]:
+    """Section 6: the in-tool DAS-like screening when the team has run it, else the old basis."""
+    cas = (a or {}).get("casualty") or {}
+    if not cas:
+        return [_row("Casualty expectation", d.get("casualty_risk")),
+                _row("Basis", "small all-aluminium CubeSat expected to demise fully; run the debris assessment in "
+                     "the tool, then confirm with DAS or DRAMA SARA", "tbc")]
+    surv = [f for f in cas.get("fragments") or [] if f.get("counted")]
+    return [_row("Casualty expectation", f"{cas.get('casualty_expectation'):.1e} (1 in {cas.get('one_in'):,})"
+                 if cas.get("one_in") else "0 (every fragment below 15 J)"),
+            _row("Limit", "1:10 000 (1e-4)"),
+            _row("Debris casualty area", f"{cas.get('dca_m2')} m2"),
+            _row("Surviving fragments counted", ", ".join(f"{f['pieces']} x {f['material']} ({f['component']})" for f in surv)
+                 or "none"),
+            _row("Method", cas.get("method") + "; confirm with DAS or DRAMA SARA", "tbc")]
+
+
+def _assessment_rows(a: dict | None) -> list[dict]:
+    if not a:
+        return [_row("Assessment", None, "team", "run the debris assessment (Licensing tab, Disposal)")]
+    lt = a.get("lifetime") or {}
+    acc = a.get("status") == "accepted"
+    return [_row("Assessment version", f"v{a.get('version')} ({a.get('created_at') or ''})".strip()),
+            _row("Lifetime with the device, worst cycle", f"{lt.get('worst_with_device_y')} y"
+                 if lt.get("worst_with_device_y") is not None else None),
+            _row("Lifetime without the device, worst cycle", f"{lt.get('worst_without_device_y')} y"
+                 if lt.get("worst_without_device_y") is not None else None),
+            _row("Collision probability (>= 10 cm, operational life)", (a.get("collision") or {}).get("operational_large")),
+            _row("Casualty expectation", (a.get("casualty") or {}).get("casualty_expectation")),
+            _row("Every check met", "yes" if a.get("compliant") else "no"),
+            _row("Accepted", f"at {str(a.get('accepted_gate') or '').upper()} by {a.get('accepted_by')} "
+                 f"({a.get('accepted_at') or ''})" if acc else None, "team", "acceptance at a review"),
+            *([_row("Deviation", a.get("deviation"))] if a.get("deviation") else [])]
+
+
 def debris(sx) -> dict:
     lic = sx.licensing or {}
     d = lic.get("disposal") or {}
+    a = _assessment(sx)
     rules = d.get("rules") or {}
     secs = [
         _sec("1", "Mission and orbit", [_row("Space station", _mission_name(sx)),
@@ -544,9 +585,7 @@ def debris(sx) -> dict:
             _row("Disposal phase with the sail, objects >= 10 cm", d.get("collision_probability_disposal_large")),
             _row("Method", "screening flux by altitude (catalogue spatial density x 10 km/s); replace with DRAMA ARES "
                  "or DAS", "tbc")]),
-        _sec("6", "Re-entry casualty risk", [_row("Casualty expectation", d.get("casualty_risk")),
-                                             _row("Basis", "small all-aluminium CubeSat expected to demise fully; "
-                                                  "confirm with DAS or DRAMA SARA", "tbc")]),
+        _sec("6", "Re-entry casualty risk", _casualty_rows(d, a)),
         _sec("7", "Passivation", paragraphs=[
             "At end of life: deploy the sail, switch off both transmitters permanently, discharge the battery and "
             "open the solar-array charge path. No propellant or pressurised system on board."]),
@@ -559,6 +598,7 @@ def debris(sx) -> dict:
             _row("Orbital environment within 30 km", "to be assessed with the launch provider's injection orbit "
                  "and the catalogue (DRAMA or a commercial service)", "tbc")]),
         _sec("9", "Evidence (DRAMA / DAS)", _evidence_rows(d)),
+        _sec("10", "Debris assessment in the tool and its acceptance", _assessment_rows(a)),
     ]
     ws = d.get("lifetime_with_sail_y") or {}
     return _doc("debris", sx, secs, {"lifetime_nominal_y": ws.get("nominal"), "lifetime_weak_y": ws.get("weak"),
@@ -639,7 +679,7 @@ GENERATORS = {"rsssa": rsssa, "ised-space": ised_space, "ised-earth": ised_earth
               "debris": debris, "un-registration": un_registration, "export-control": export_control,
               "status": status}
 
-SECTIONS_NEEDED = ["need", "mission", "elements", "rollup", "links", "data_budget", "contacts", "licensing"]
+SECTIONS_NEEDED = ["need", "mission", "elements", "rollup", "links", "data_budget", "contacts", "licensing", "debris"]
 
 
 async def build(kind: str, study_id: str, *, lang: str = "en", gate: str | None = None) -> dict | list[dict]:

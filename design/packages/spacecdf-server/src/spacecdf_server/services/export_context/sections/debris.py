@@ -1,11 +1,11 @@
-"""Section ``debris``: the debris assessment: lifetime with and without the device, casualty risk, collision probability, compliance and acceptance. Owner: L (3.L8).
+"""Section ``debris``: the debris assessment: lifetime with and without the device, casualty risk,
+collision probability, compliance and acceptance. Owner: L (3.L8).
 
-STEP 0 STUB (wave 3, PI addendum): returns ``status: not_implemented`` with the owner and the
-empty shape below. TODO(L, 3.L8): read the model and return the real shape (keep these keys).
+``assessment`` is the latest stored run (``services/debris_assessment.py``) with its acceptance,
+``history`` the earlier runs (version, status, headline figures), ``evidence`` the gate evidence
+(accepted at which gate, compliant, stale). ``assessment`` is None until the team runs it.
 """
 from __future__ import annotations
-
-from ._util import stub
 
 
 def empty() -> dict:
@@ -13,4 +13,11 @@ def empty() -> dict:
 
 
 async def collect(ctx) -> dict:
-    return stub("L", "3.L8", **empty())
+    from ...debris_assessment import history, srr_evidence
+    items = await history(ctx.study_id)
+    head = ("version", "status", "lifetime_y", "lifetime_without_device_y", "casualty_risk", "collision_probability",
+            "compliant", "accepted_by", "accepted_gate", "accepted_at", "created_at")
+    return {"status": "ok", "owner": "L", "work_package": "3.L8",
+            "assessment": items[0] if items else None,
+            "history": [{k: it.get(k) for k in head} for it in items[1:]],
+            "evidence": await srr_evidence(ctx.study_id) if items else None}
