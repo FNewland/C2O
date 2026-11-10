@@ -2,8 +2,8 @@
 
 The S4 seed proposes the default protoflight philosophy (breadboards month 6, engineering model
 month 18, protoflight model month 30) and the 12-test matrix. The verification plan lists every
-requirement once, by its close-out stage, with the counts of the fixture (no row cap), and the
-Word document names no launch vehicle the study did not choose.
+requirement in the store once (less the generated IR-* rows), by its close-out stage, with no
+row cap, and the Word document names no launch vehicle the study did not choose.
 """
 from __future__ import annotations
 
@@ -13,11 +13,23 @@ from collections import Counter
 from tests.fixtures.nfi import load, seed_nfi
 
 
-def _expected_stages() -> Counter:
-    data = load("requirements")
-    c = Counter(r.get("verification_phase") or "unassigned" for r in data["requirements"])
-    # OBJ-* rows carry no stage in the seed: the V&V planner's verification items close them at PDR
-    c["PDR"] += len(data["objectives"])
+STAGES = ("PDR", "CDR", "QR", "AR", "IOV")
+
+
+async def _store_rows(client, sid: str) -> list[dict]:
+    """The study's requirements as the store holds them, less the generated interface requirements
+    (``IR-*``: the IRD lists those, not the verification plan)."""
+    r = await client.get(f"/api/requirements/tree?study_id={sid}")
+    assert r.status_code == 200, r.text[:300]
+    return [x for x in r.json() if x.get("status") != "retired" and not str(x.get("code") or "").startswith("IR-")]
+
+
+def _expected_stages(rows: list[dict]) -> Counter:
+    c = Counter()
+    for r in rows:
+        st = str(r.get("verification_phase") or "").upper()
+        # rows with no stage (stakeholder needs, OBJ-*): the V&V planner's verification items close them at PDR
+        c[st if st in STAGES else "PDR"] += 1
     return c
 
 
@@ -37,10 +49,15 @@ async def test_vp_lists_models_tests_and_every_item_by_stage(client):
     assert by_code["T-ENV-02"]["environment"]["grms"] > 0
 
     vp = (await client.get(f"/api/studies/{sid}/ait/verification-plan")).json()
-    total = len(load("requirements")["requirements"]) + len(load("requirements")["objectives"])
+    rows = await _store_rows(client, sid)
+    total = len(rows)
     assert vp["counts"]["items"] == total == len(vp["items"])
-    exp = _expected_stages()
-    assert vp["counts"]["by_stage"] == {st: exp[st] for st in ("PDR", "CDR", "QR", "AR", "IOV")}
+    assert {i["requirement_id"] for i in vp["items"]} == {r["id"] for r in rows}
+    # the store holds the whole baseline: requirements, objectives and stakeholder needs (W2 import)
+    base = load("requirements")
+    assert total == len(base["requirements"]) + len(base["objectives"]) + len(base["stakeholder_needs"])
+    exp = _expected_stages(rows)
+    assert vp["counts"]["by_stage"] == {st: exp[st] for st in STAGES}
     # each item keeps its method; test-verified VER rows point at their tests
     ver = {i["code"]: i for i in vp["items"]}
     assert ver["VER-ENV-02"]["methods"] == ["T"] and "T-ENV-03" in ver["VER-ENV-02"]["tests"]
@@ -58,7 +75,7 @@ async def test_vp_lists_models_tests_and_every_item_by_stage(client):
     text = "\n".join(p.text for p in doc.paragraphs) + "\n".join(
         c.text for t in doc.tables for row in t.rows for c in row.cells)
     assert "falcon" not in text.lower()
-    for st in ("PDR", "CDR", "QR", "AR", "IOV"):
+    for st in STAGES:
         assert f"({st}) — {exp[st]}" in text, st
     assert "VER-MOD-01" in text and "Protoflight model" in text and "T-DIL-01" in text
     fr = await client.get(f"/api/studies/{sid}/ait/verification-plan?fmt=docx&lang=fr")

@@ -15,12 +15,18 @@ fills empty methods.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import Any
 
 from . import rule_config as rc
 
 CONFIG = "requirement_rules"
 _ALIASES = {"D": "T"}   # demonstration is part of Test in ECSS-E-ST-10-02C
+
+
+@lru_cache(maxsize=1024)
+def _kw_re(kw: str) -> re.Pattern[str]:
+    return re.compile(r"(?<!\w)" + re.escape(kw.lower()))
 
 
 def classify(req: dict[str, Any]) -> dict[str, Any]:
@@ -34,7 +40,7 @@ def classify(req: dict[str, Any]) -> dict[str, Any]:
     for t in cfg["types"]:
         for kw in t.get("keywords", []):
             # word-start match: "ITU" must not match "attitude"; "licen" matches "licence"
-            if re.search(r"(?<!\w)" + re.escape(kw.lower()), text):
+            if _kw_re(kw).search(text):
                 return {**t, "matched": kw}
     return {"id": "unclassified", **cfg["fallback"], "matched": None}
 

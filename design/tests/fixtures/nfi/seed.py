@@ -52,8 +52,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 HERE = Path(__file__).resolve().parent
 STAGES = ("S0", "S1", "S2", "S3", "S4")
 
@@ -80,7 +78,8 @@ MODE_UNITS = {
 
 def load(name: str) -> Any:
     """One companion file of the fixture, parsed (``load("requirements")``, ``load("NUMBERS")``)."""
-    return yaml.safe_load((HERE / f"{name}.yaml").read_text(encoding="utf-8"))
+    from spacecdf_common.config.loader import read_yaml_cached  # parsed once, a fresh copy per call
+    return read_yaml_cached(HERE / f"{name}.yaml")
 
 
 class SeedError(RuntimeError):

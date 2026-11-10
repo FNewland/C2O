@@ -108,6 +108,7 @@ class ModeSpec:
     kind: str = ""                                      # leop|commissioning|nominal|imaging|downlink|safe|survival|custom
     orbit_fraction: float | None = None
     sunlit_only: bool = False
+    phase: str = ""                                     # mission phase (launch|leop|commissioning|operations|disposal|...)
 
 
 @dataclass
@@ -132,6 +133,7 @@ class AnalysisContext:
     all_kb_stations: list[dict] = field(default_factory=list)
     requirements: list[dict] = field(default_factory=list)
     relations: list[dict] = field(default_factory=list)
+    link: dict[str, Any] = field(default_factory=dict)       # derived downlink: band, frequency_ghz, source
     warnings: list[str] = field(default_factory=list)
 
     # -- lookups ---------------------------------------------------------
@@ -350,6 +352,147 @@ def _overlay_mission_link(flat: dict, study: Any) -> None:
             flat[path] = float(v) * scale
 
 
+#: Band centre frequencies (GHz) for a band named without a frequency; the same table as the
+#: ground closure's, so the derived frequency maps back to the same band letter.
+_BAND_CENTRE_GHZ: dict[str, float] = {
+    "VHF": 0.145, "UHF": 0.437, "L": 1.6, "S": 2.2, "C": 4.0, "X": 8.2, "KU": 12.0, "K": 20.0, "KA": 26.0,
+}
+
+
+def _band_ghz(band: Any) -> float | None:
+    if not isinstance(band, str) or not band.strip():
+        return None
+    key = band.upper().replace("-BAND", "").replace("BAND", "").strip().split("/")[0].strip()
+    return _BAND_CENTRE_GHZ.get(key)
+
+
+def _pos(v: Any) -> float | None:
+    return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else None
+
+
+def _ttc_link(eff_elements: list[dict]) -> tuple[float | None, str | None, str, dict[str, float]]:
+    """(frequency GHz, band, source, other flat paths) from the space TT&C elements: a frequency in
+    ``performance``, else a band in ``performance`` or in the copied KB spec
+    (``kb_spec.frequency_band``); with it the downlink rate and transmit power the TT&C elements
+    state, since the last design run's values belong to its own (class default) band."""
+    freq, band, src = None, None, ""
+    extra: dict[str, float] = {}
+    for e in eff_elements:
+        if e.get("subsystem_domain") != "ttc" or (e.get("segment") or "space") != "space":
+            continue
+        perf = e.get("performance_json") or e.get("performance") or {}
+        perf = perf if isinstance(perf, dict) else {}
+        if freq is None:
+            for k, scale in (("frequency_ghz", 1.0), ("downlink_frequency_ghz", 1.0),
+                             ("downlink_frequency_mhz", 1e-3), ("frequency_mhz", 1e-3)):
+                f = _pos(perf.get(k))
+                if f is not None:
+                    freq, src = f * scale, f"ttc element {e.get('name')}"
+                    break
+        spec = e.get("kb_spec") if isinstance(e.get("kb_spec"), dict) else {}
+        for v in (perf.get("rf_band"), perf.get("frequency_band"), perf.get("band"), spec.get("frequency_band")):
+            if band is None and _band_ghz(v) is not None:
+                band = str(v)
+                src = src or f"ttc element {e.get('name')}"
+        if "link.downlink_rate_bps" not in extra:
+            for k, scale in (("downlink_rate_bps", 1.0), ("data_rate_bps", 1.0), ("downlink_rate_kbps", 1e3),
+                             ("data_rate_kbps", 1e3), ("downlink_rate_mbps", 1e6), ("data_rate_mbps", 1e6)):
+                r = _pos(perf.get(k))
+                if r is not None:
+                    extra["link.downlink_rate_bps"] = r * scale
+                    break
+        if "link.tx_power_w" not in extra:
+            for k in ("tx_power_w", "power_tx_w", "rf_power_w"):
+                w = _pos(perf.get(k))
+                if w is not None:
+                    extra["link.tx_power_w"] = w
+                    break
+    if freq is None and band is not None:
+        freq = _band_ghz(band)
+    return freq, band, src, extra
+
+
+async def _link_cases(study_id: str) -> list[dict]:
+    try:
+        from ..routers.link_budgets import list_cases
+        return await list_cases(study_id)
+    except Exception:  # noqa: BLE001 — no link cases is not an error
+        logger.debug("link cases unavailable", exc_info=True)
+        return []
+
+
+async def _derive_link(ctx: "AnalysisContext", eff_elements: list[dict]) -> dict[str, Any]:
+    """The downlink the analyses use when the mission definition gives no downlink frequency.
+
+    Wave 2 (hand-off X→A): an empty ``requirements.link`` used to leave the ground closure on the
+    last design run's class default (X-band), which excluded every UHF station. Now, in order:
+
+    1. ``requirements.link`` with a downlink frequency: nothing to derive (``_overlay_mission_link``);
+    2. ``requirements.link.band`` alone: the band centre;
+    3. the study's downlink design case (``link_budgets.is_design_case``), else its first downlink
+       case: frequency, rate, transmit power and antenna gain of the case;
+    4. the TT&C equipment: a frequency in ``performance``, else its band (``rf_band``,
+       ``frequency_band``, or the KB spec's ``frequency_band``).
+
+    The values go on the flat paths that are still free, so an element parameter keeps winning,
+    and they win over the last design run's values (``ground_closure._pick`` reads flat first).
+    """
+    link = getattr(getattr(ctx.study, "requirements", None), "link", None)
+    if link is not None and _pos(getattr(link, "downlink_frequency_mhz", None)):
+        return {"band": getattr(link, "band", None), "frequency_ghz": float(link.downlink_frequency_mhz) * 1e-3,
+                "source": "mission_definition"}
+    out: dict[str, Any] = {}
+    paths: dict[str, float] = {}
+    band = getattr(link, "band", None) if link is not None else None
+    if _band_ghz(band) is not None:
+        out = {"band": band, "frequency_ghz": _band_ghz(band), "source": "mission_definition_band"}
+        paths["link.frequency_ghz"] = out["frequency_ghz"]
+    else:
+        cases = [c for c in await _link_cases(ctx.study_id)
+                 if c.get("direction") == "downlink" and _pos(c.get("frequency_mhz"))]
+        case = next((c for c in cases if c.get("is_design_case")), cases[0] if cases else None)
+        if case is not None:
+            out = {"band": case.get("band") or None, "frequency_ghz": float(case["frequency_mhz"]) * 1e-3,
+                   "source": f"link_case:{case.get('name') or case.get('id')}",
+                   "design_case": bool(case.get("is_design_case"))}
+            paths["link.frequency_ghz"] = out["frequency_ghz"]
+            for key, path in (("data_rate_bps", "link.downlink_rate_bps"), ("tx_power_w", "link.tx_power_w"),
+                              ("tx_antenna_gain_dbi", "link.tx_antenna_gain_dbi")):
+                v = case.get(key)
+                if isinstance(v, (int, float)) and not isinstance(v, bool) and (key == "tx_antenna_gain_dbi" or v > 0):
+                    paths[path] = float(v)
+        else:
+            f, b, src, extra = _ttc_link(eff_elements)
+            if f is not None:
+                out = {"band": b, "frequency_ghz": f, "source": src}
+                paths["link.frequency_ghz"] = f
+                paths.update(extra)
+    for path, v in paths.items():
+        if path not in ctx.flat:
+            ctx.flat[path] = v
+    return out
+
+
+def _overlay_drag_sail(flat: dict, eff_elements: list[dict], warnings: list[str]) -> None:
+    """``deorbit.drag_area_m2`` from the study's deorbit device (wave 2, hand-off L→A).
+
+    The debris agent (design loop) reads this path; without it a study with a drag sail scored
+    as if it had none (MDR-EC-10, PRR-EC-12). The area is the element's
+    ``performance.deployed_area_m2``, else the KB part's, else the "<n> m2" in its name
+    (``services.licensing.disposal_device``). An element parameter on the path still wins."""
+    if "deorbit.drag_area_m2" in flat:
+        return
+    try:
+        from .licensing import disposal_device
+        dev = disposal_device(eff_elements)
+    except Exception:  # noqa: BLE001
+        logger.debug("disposal device unavailable", exc_info=True)
+        warnings.append("drag sail area unavailable")
+        return
+    if dev is not None and dev.deployed_area_m2 > 0:
+        flat["deorbit.drag_area_m2"] = float(dev.deployed_area_m2)
+
+
 def _parse_guards(text: str | None) -> list[dict]:
     guards = []
     for i, m in enumerate(_GUARD_RE.finditer(text or "")):
@@ -437,6 +580,7 @@ async def _build_modes(study_id: str, eff_elements: list[dict], study: Any) -> l
                 members=rows, kind=str(perf.get("mode_kind") or ""),
                 orbit_fraction=perf.get("orbit_fraction") if isinstance(perf.get("orbit_fraction"), (int, float)) else None,
                 sunlit_only=bool(perf.get("sunlit_only")),
+                phase=str(perf.get("phase") or ""),
             ))
         return specs
     conops = getattr(study, "conops", None)
@@ -492,9 +636,16 @@ def _build_thermal(eff_elements: list[dict]) -> dict[str, Any]:
 
 
 def _kb_stations() -> list[dict]:
+    """The KB station catalogue. Reads only ``ground_stations/networks.yaml`` (parsed once, re-read
+    when the file changes) instead of loading the whole KB on every context build."""
     try:
-        from spacecdf_kb.loader import KnowledgeBase
-        return KnowledgeBase().ground_stations
+        from spacecdf_common.config.loader import read_yaml_cached
+        from spacecdf_kb.loader import DATA_DIR
+        path = DATA_DIR / "ground_stations" / "networks.yaml"
+        if not path.exists():
+            return []
+        data = read_yaml_cached(path) or {}
+        return list(data.get("stations", data.get("items", [])) or [])
     except Exception:
         logger.warning("KB ground stations unavailable", exc_info=True)
         return []
@@ -629,6 +780,8 @@ async def build_context(study_id: str, *, option_id: str | None = None) -> Analy
     }
 
     _overlay_mission_link(ctx.flat, ctx.study)
+    ctx.link = await _derive_link(ctx, eff_elements)
+    _overlay_drag_sail(ctx.flat, eff_elements, ctx.warnings)
     ctx.orbit = _build_orbit(ctx.flat, ctx.latest_design, ctx.study)
     ctx.modes = await _build_modes(study_id, eff_elements, ctx.study)
     ctx.power = _build_power(ctx.flat, ctx.latest_design, eff_elements)
@@ -679,6 +832,8 @@ def _hash_subset(ctx: AnalysisContext, key: str) -> Any:
             return {}
         d = req.model_dump(mode="json")
         d.pop("name", None)
+        if str(ctx.link.get("source") or "").startswith("link_case:"):
+            d["derived_link"] = ctx.link   # the link case the analyses fall back to (wave 2)
         return d
     if key == "requirements":
         return sorted(

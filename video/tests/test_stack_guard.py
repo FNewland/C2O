@@ -47,3 +47,45 @@ def test_stack_up_exits_nonzero_on_a_stale_build(tmp_path, monkeypatch):
         stack.up_spacecdf()
     assert "stale" in str(exc.value.code)
     assert not (tmp_path / "state").exists()      # refused before touching any state
+
+
+def test_stack_up_rebuilds_a_stale_build_then_serves_it(tmp_path, monkeypatch):
+    fe = _tree(tmp_path, built_at=1_000_000, src_at=1_000_600)
+    (fe / "node_modules" / ".bin").mkdir(parents=True)
+    (fe / "node_modules" / ".bin" / "vite").write_text("#!/bin/sh\n")
+    built = []
+
+    def fake_run(cmd, cwd=None, **kw):
+        built.append((cmd[1], cwd))
+        os.utime(fe / "dist" / "index.html", (2_000_000, 2_000_000))   # vite writes index.html last
+        return type("R", (), {"returncode": 0})()
+
+    spawned = {}
+    monkeypatch.setattr(stack, "DESIGN", fe.parent)
+    monkeypatch.setattr(stack, "STATE", tmp_path / "state")
+    monkeypatch.setattr(stack, "_free", lambda port: True)
+    monkeypatch.setattr(stack.subprocess, "run", fake_run)
+    monkeypatch.setattr(stack, "design_python", lambda: "python-of-the-checkout")
+    monkeypatch.setattr(stack, "_spawn", lambda name, cmd, env, cwd: spawned.update(cmd=cmd, env=env) or 4242)
+    monkeypatch.setattr(stack, "_wait", lambda url, secs=60: True)
+    monkeypatch.delenv("C2O_VIDEO_ALLOW_STALE_DIST", raising=False)
+    monkeypatch.delenv("C2O_VIDEO_NO_BUILD", raising=False)
+    info = stack.up_spacecdf()
+    assert built == [("build", str(fe))]
+    assert info["spacecdf"]["ok"] and spawned["cmd"][0] == "python-of-the-checkout"
+    assert spawned["env"]["SPACECDF_STATIC_DIR"] == str(fe / "dist")
+    assert str(fe.parent / "packages" / "spacecdf-server" / "src") in spawned["env"]["PYTHONPATH"]
+
+
+def test_no_build_keeps_the_refusal(tmp_path, monkeypatch):
+    fe = _tree(tmp_path, built_at=1_000_000, src_at=1_000_600)
+    (fe / "node_modules" / ".bin").mkdir(parents=True)
+    (fe / "node_modules" / ".bin" / "vite").write_text("#!/bin/sh\n")
+    monkeypatch.setattr(stack, "DESIGN", fe.parent)
+    monkeypatch.setattr(stack, "STATE", tmp_path / "state")
+    monkeypatch.setattr(stack, "_free", lambda port: True)
+    monkeypatch.setenv("C2O_VIDEO_NO_BUILD", "1")
+    monkeypatch.delenv("C2O_VIDEO_ALLOW_STALE_DIST", raising=False)
+    with pytest.raises(SystemExit) as exc:
+        stack.up_spacecdf()
+    assert "stale" in str(exc.value.code) and not (tmp_path / "state").exists()

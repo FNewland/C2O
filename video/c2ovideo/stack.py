@@ -1,7 +1,8 @@
 """Run the tools on capture ports, with throw-away state.
 
-``spacecdf``: the SpaceCDF server on :18800 serving the built frontend, with a
-fresh database and logbook folder under ``video/out/_stack/``.
+``spacecdf``: the SpaceCDF server on :18800 serving the built frontend of this
+checkout (rebuilt first with ``vite build`` when missing or stale), with a fresh
+database and logbook folder under ``video/out/_stack/``.
 ``sim``: simulator, MCS, planner, orbit tools and docs viewer on their usual
 ports from ``sim/`` (a seeded, repeatable run; pass overrides on).
 """
@@ -99,28 +100,73 @@ def frontend_build_problem(frontend: Path) -> str | None:
             f"Set C2O_VIDEO_ALLOW_STALE_DIST=1 only to film an old build on purpose.")
 
 
+def build_frontend(frontend: Path) -> bool:
+    """Run ``vite build`` in ``frontend`` (writes ``dist/``). False when vite is not installed there.
+
+    Wave 2: ``stack up spacecdf`` rebuilds a missing or stale build itself, so the server always
+    serves the frontend of the checkout it runs from (a git worktree too: its ``node_modules`` may
+    be a link to the main checkout's). Only ``vite build`` runs; the type check (``tsc -b``) is the
+    test suite's job and its build-info file lives in the shared ``node_modules``.
+    """
+    vite = frontend / "node_modules" / ".bin" / "vite"
+    if not vite.exists():
+        return False
+    print(f"building the SpaceCDF frontend in {frontend} (vite build) …", flush=True)
+    r = subprocess.run([str(vite), "build", "--logLevel", "warn"], cwd=str(frontend))
+    if r.returncode != 0:
+        raise SystemExit(f"vite build failed in {frontend} (exit {r.returncode})")
+    return True
+
+
+def design_python() -> str:
+    """The interpreter that runs the SpaceCDF server: ``C2O_VIDEO_SPACECDF_PYTHON``, else
+    ``design/.venv``, else (in a git worktree) the main checkout's ``design/.venv``. The server
+    imports the packages of *this* checkout either way (``PYTHONPATH`` comes first)."""
+    explicit = os.environ.get("C2O_VIDEO_SPACECDF_PYTHON")
+    if explicit:
+        return explicit
+    candidates = [DESIGN]
+    try:
+        common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                                cwd=str(REPO), capture_output=True, text=True, timeout=10).stdout.strip()
+        if common:
+            candidates.append(Path(common).parent / "design")
+    except Exception:  # noqa: BLE001 — not a git checkout
+        pass
+    for d in candidates:
+        if (d / ".venv" / "bin" / "uvicorn").exists():
+            return _py(d)
+    raise SystemExit(f"No SpaceCDF install in {DESIGN / '.venv'}.\n"
+                     "Create it once with:  python -m c2ovideo stack setup spacecdf\n"
+                     "(or point C2O_VIDEO_SPACECDF_PYTHON at a Python that has the server's dependencies)")
+
+
 def up_spacecdf() -> dict:
     port = int(os.environ.get("C2O_VIDEO_SPACECDF_PORT", 18800))
     if not _free(port):
         raise SystemExit(f"port {port} is busy (stack already up?)")
-    problem = frontend_build_problem(DESIGN / "frontend")
-    if problem and (not (DESIGN / "frontend" / "dist" / "index.html").exists()
-                    or os.environ.get("C2O_VIDEO_ALLOW_STALE_DIST") != "1"):
-        raise SystemExit(problem)
+    frontend = DESIGN / "frontend"
+    problem = frontend_build_problem(frontend)
+    allow_stale = (frontend / "dist" / "index.html").exists() and os.environ.get("C2O_VIDEO_ALLOW_STALE_DIST") == "1"
+    if problem and not allow_stale:
+        # rebuild in place unless told not to (C2O_VIDEO_NO_BUILD=1) or vite is not installed
+        if os.environ.get("C2O_VIDEO_NO_BUILD") == "1" or not build_frontend(frontend):
+            raise SystemExit(problem)
+        problem = frontend_build_problem(frontend)
+        if problem:
+            raise SystemExit(problem)
+    py = design_python()
     d = STATE / "spacecdf"
     if d.exists():
         shutil.rmtree(d)
     (d / "data").mkdir(parents=True)
-    dist = DESIGN / "frontend" / "dist"
-    if not (DESIGN / ".venv" / "bin" / "uvicorn").exists():
-        raise SystemExit(f"No SpaceCDF install in {DESIGN / '.venv'}.\n"
-                         "Create it once with:  python -m c2ovideo stack setup spacecdf")
+    dist = frontend / "dist"
     pkgs = DESIGN_PACKAGES
     env = dict(os.environ,
                PYTHONPATH=os.pathsep.join([str(DESIGN / "packages" / p / "src") for p in pkgs] + [str(DESIGN)]),
                DATABASE_URL=f"sqlite+aiosqlite:///{d / 'video.db'}", SPACECDF_STATIC_DIR=str(dist),
                SPACECDF_DATA_DIR=str(d / "data"), SMO_LOGBOOK_DIR=str(d / "logbook"), SPACECDF_INSTRUCTORS="")
-    pid = _spawn("spacecdf", [_py(DESIGN), "-m", "uvicorn", "spacecdf_server.app:app", "--host", "127.0.0.1",
+    pid = _spawn("spacecdf", [py, "-m", "uvicorn", "spacecdf_server.app:app", "--host", "127.0.0.1",
                               "--port", str(port), "--log-level", "warning"], env, DESIGN)
     ok = _wait(f"http://127.0.0.1:{port}/api/health", 90) or _wait(f"http://127.0.0.1:{port}/", 30)
     return {"spacecdf": {"pid": pid, "url": f"http://127.0.0.1:{port}", "ok": ok}}
