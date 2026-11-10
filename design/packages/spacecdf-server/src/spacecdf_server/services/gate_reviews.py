@@ -223,3 +223,234 @@ def diff_snapshots(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
         "criteria": sorted(k for k in set(ca) | set(cb) if ca.get(k) != cb.get(k) and k in ca and k in cb),
         "counts": {"requirements": [len(ra), len(rb)], "elements": [len(ea), len(eb)], "risks": [len(ka), len(kb)]},
     }
+
+
+# ─── wave 3 (3.D1): protocol enforcement at review start, baseline kinds ──────────────────
+
+#: how the systems-engineering protocol is enforced when a review starts (PI ruling: ``warn`` by
+#: default, the instructor can set ``block``; ``off`` = the behaviour before wave 3)
+ENFORCEMENT_MODES = ("off", "warn", "block")
+DEFAULT_ENFORCEMENT = "warn"
+#: the study's own setting lives in ``Study.gate_states[SETTINGS_KEY]`` (not a gate id)
+SETTINGS_KEY = "_settings"
+#: configuration baseline a passed canonical gate sets (``gate_profiles.yaml`` ``baseline_kinds``)
+BASELINE_KINDS = {"mdr": "mission", "prr": "mission", "srr": "functional", "pdr": "allocated",
+                  "cdr": "product", "qr": "product", "ar": "product", "frr": "product"}
+
+
+def enforcement_mode(profile: dict[str, Any] | None, gate_states: dict[str, Any] | None,
+                     config: dict[str, Any] | None = None) -> dict[str, Any]:
+    """The study's enforcement mode and where it comes from: the study's setting (the instructor
+    chose it), else the profile's ``se_enforcement``, else the file default, else ``warn``."""
+    cfg = config or {}
+    study = ((gate_states or {}).get(SETTINGS_KEY) or {}).get("se_enforcement")
+    if study in ENFORCEMENT_MODES:
+        return {"mode": study, "source": "study", "set_by": ((gate_states or {}).get(SETTINGS_KEY) or {}).get("set_by", "")}
+    prof = (profile or {}).get("se_enforcement")
+    if prof in ENFORCEMENT_MODES:
+        return {"mode": prof, "source": "profile"}
+    dflt = cfg.get("default_se_enforcement")
+    return {"mode": dflt if dflt in ENFORCEMENT_MODES else DEFAULT_ENFORCEMENT, "source": "default"}
+
+
+def baseline_kind(pg: dict[str, Any], config: dict[str, Any] | None = None) -> str:
+    """The baseline a pass of profile gate ``pg`` sets: that of the last canonical gate it covers."""
+    kinds = {**BASELINE_KINDS, **dict((config or {}).get("baseline_kinds") or {})}
+    covers = list(pg.get("covers") or [])
+    return kinds.get(covers[-1], "mission") if covers else "mission"
+
+
+def protocol_checks(gate_id: str, order: list[str], gate_states: dict[str, Any] | None,
+                    entry: list[dict[str, Any]] | None, deliverables: list[dict[str, Any]] | None,
+                    ) -> list[dict[str, Any]]:
+    """What the protocol says before a review of ``gate_id`` starts, as a list of findings
+    ``{code, kind, id, label, owner_seat, state, evidence}``:
+
+    * ``out_of_order``: an earlier gate of the profile has not passed;
+    * ``entry_missing``: a "Before you start" item of the phase is not ``ok``;
+    * ``deliverables_missing``: a deliverable of the phase is ``missing`` (``warn`` items, which
+      exist but are incomplete, are listed with code ``deliverable_partial``).
+
+    Pure: ``entry`` and ``deliverables`` come from ``se_protocol.phase`` (agent S)."""
+    out: list[dict[str, Any]] = []
+    states = gate_states or {}
+    if gate_id in order:
+        for g in order[: order.index(gate_id)]:
+            if (states.get(g) or {}).get("state") != "passed":
+                out.append({"code": "out_of_order", "kind": "gate", "id": g, "label": {"en": g.upper(), "fr": g.upper()},
+                            "state": "missing", "evidence": f"{g.upper()} has not passed"})
+    for e in entry or []:
+        if e.get("state") not in ("ok", "pass", None):
+            out.append({"code": "entry_missing", "kind": "entry", "id": e.get("id"), "label": e.get("label") or {},
+                        "owner_seat": e.get("owner_seat", ""), "state": e.get("state"), "evidence": e.get("evidence", "")})
+    for d in deliverables or []:
+        st = d.get("state")
+        if st in ("missing", "warn"):
+            out.append({"code": "deliverables_missing" if st == "missing" else "deliverable_partial",
+                        "kind": d.get("kind", "deliverable"), "id": d.get("id"), "label": d.get("label") or {},
+                        "owner_seat": d.get("owner_seat", ""), "state": st, "evidence": d.get("evidence", ""),
+                        "fix": d.get("fix")})
+    return out
+
+
+def blocking_code(findings: list[dict[str, Any]]) -> str | None:
+    """The 409 code a ``block`` start answers with (out of order first), or None."""
+    codes = {f["code"] for f in findings}
+    if "out_of_order" in codes:
+        return "out_of_order"
+    if "deliverables_missing" in codes or "entry_missing" in codes:
+        return "deliverables_missing"
+    return None
+
+
+def finding_text(f: dict[str, Any], lang: str = "en") -> str:
+    lab = f.get("label") or {}
+    name = (lab.get(lang) or lab.get("en") or f.get("id") or "") if isinstance(lab, dict) else str(lab)
+    if f["code"] == "out_of_order":
+        return (f"{name} n’a pas été franchi" if lang == "fr" else f"{name} has not passed")
+    if f["code"] == "entry_missing":
+        return (f"Avant de commencer : {name}" if lang == "fr" else f"Before you start: {name}")
+    if f["code"] == "deliverable_partial":
+        return (f"Livrable incomplet : {name}" if lang == "fr" else f"Deliverable incomplete: {name}")
+    return (f"Livrable manquant : {name}" if lang == "fr" else f"Deliverable missing: {name}")
+
+
+# ─── wave 3 (PI addendum): the review-readiness evidence of SRR and PDR ───────────────────
+#
+# v2 REVIEW_READINESS says SRR and PDR are "not ready" until the team has produced the SEMP, the
+# debris assessment, the ICDs at Issue A signed by both owners, the reliability analysis and the
+# FMEA, the thermal model (hot and cold cases) and the change decisions due at the gate. These
+# criteria read the records the other agents' tools write (``services/gate_evidence.py``), so the
+# gates pass legitimately once the work is done in the tool and not before.
+
+READINESS_CRITERIA: dict[str, list[dict[str, Any]]] = {
+    "srr": [
+        {"id": "SRR-RD-01", "probe": "semp", "mode": "hybrid", "owner_seat": "systems_engineer", "category": "management",
+         "question": "Is the systems engineering management plan (SEMP) issued for the review?",
+         "evidence": "SEMP generated from the study (organisation, life cycle and gates, technical processes, "
+                     "model philosophy, risk and configuration management, tailoring) and issued"},
+        {"id": "SRR-RD-02", "probe": "debris", "owner_seat": "mission_analyst", "category": "sustainability",
+         "question": "Is the debris assessment completed and accepted (lifetime, casualty risk, collision probability)?",
+         "evidence": "Debris assessment run in the tool and accepted"},
+        {"id": "SRR-RD-03", "probe": "changes", "owner_seat": "team_leader", "category": "configuration",
+         "question": "Are the change proposals due at this review decided?",
+         "evidence": "Every change proposal whose decision gate is this review or an earlier one approved or rejected"},
+    ],
+    "pdr": [
+        {"id": "PDR-RD-01", "probe": "icds", "owner_seat": "systems_engineer", "category": "interfaces",
+         "question": "Are the interface control documents at Issue A and signed by both owning seats?",
+         "evidence": "Every ICD at Issue A (or later) with the provider and consumer sign-off"},
+        {"id": "PDR-RD-02", "probe": "reliability", "owner_seat": "cost_engineer", "category": "dependability",
+         "question": "Is the reliability analysis run and the FMEA worksheet filled for the space segment?",
+         "evidence": "Reliability block diagram computed over the mission-success horizon and FMEA lines per subsystem"},
+        {"id": "PDR-RD-03", "probe": "thermal", "owner_seat": "thermal_engineer", "category": "thermal",
+         "question": "Is the thermal model solved for the hot and cold cases with positive design margins?",
+         "evidence": "Nodal thermal model (at least 6 nodes) solved for a hot and a cold case; no negative design margin"},
+        {"id": "PDR-RD-04", "probe": "changes", "owner_seat": "team_leader", "category": "configuration",
+         "question": "Are the change proposals due at this review decided?",
+         "evidence": "Every change proposal whose decision gate is this review or an earlier one approved or rejected"},
+    ],
+}
+
+#: change-proposal statuses that count as decided (L's ``change_proposals.status``)
+CHANGE_DECIDED = ("accepted", "approved", "rejected", "closed", "implemented", "withdrawn")
+CANON_ORDER = ("mdr", "prr", "srr", "pdr", "cdr", "qr", "ar", "frr")
+
+
+def _due_by(gate: str, canonical: str) -> bool:
+    g = str(gate or "").lower()
+    if g not in CANON_ORDER or canonical not in CANON_ORDER:
+        return False
+    return CANON_ORDER.index(g) <= CANON_ORDER.index(canonical)
+
+
+def _probe(kind: str, canonical: str, ev: dict[str, Any]) -> tuple[str, str]:
+    """(status, evidence found) of one readiness probe; status pass | fail | manual."""
+    if kind == "semp":
+        s = ev.get("semp") or {}
+        if s.get("issue"):
+            return "pass", f"SEMP issue {s['issue']}" + (f" ({s.get('issued_at')})" if s.get("issued_at") else "")
+        if s.get("ready"):
+            return "manual", (f"SEMP content ready ({s.get('parts', 0)}/{s.get('of', 0)} parts): export it, review it "
+                              "and record the issue (instructor sign-off)")
+        return "fail", ("Missing evidence: the SEMP generator has no content yet"
+                        + (f" ({s.get('parts', 0)}/{s.get('of', 0)} parts)" if s.get("of") else ""))
+    if kind == "debris":
+        d = ev.get("debris")
+        if not d:
+            return "fail", "Missing evidence: no debris assessment run"
+        if d.get("status") == "accepted":
+            life = d.get("lifetime_y")
+            return "pass", ("Debris assessment accepted" + (f" at {str(d.get('accepted_gate')).upper()}" if d.get("accepted_gate") else "")
+                            + (f": orbital lifetime {life:.1f} y" if isinstance(life, (int, float)) else ""))
+        return "fail", f"Debris assessment is {d.get('status') or 'draft'}, not accepted"
+    if kind == "changes":
+        due = [c for c in ev.get("changes") or [] if _due_by(c.get("decision_gate"), canonical)]
+        open_ = [c for c in due if str(c.get("status") or "").lower() not in CHANGE_DECIDED]
+        if not due:
+            return "pass", "No change proposal is due at this review"
+        if open_:
+            return "fail", "Not decided: " + ", ".join(c.get("code") or c.get("id", "") for c in open_[:12])
+        return "pass", "Decided: " + ", ".join(f"{c.get('code')} ({c.get('status')})" for c in due[:12])
+    if kind == "icds":
+        icds = ev.get("icds") or []
+        if not icds:
+            return "fail", "Missing evidence: no ICD issued yet"
+        low = [i for i in icds if i.get("state") not in ("issue_a", "issue_b", "baselined")]
+        unsigned = [i for i in icds if i not in low and not i.get("signed_by_both")]
+        if low or unsigned:
+            parts = []
+            if low:
+                parts.append("below Issue A: " + ", ".join(i.get("icd_ref", "") for i in low[:10]))
+            if unsigned:
+                parts.append("not signed by both owners: " + ", ".join(i.get("icd_ref", "") for i in unsigned[:10]))
+            return "fail", f"{len(icds) - len(low) - len(unsigned)}/{len(icds)} ICDs at Issue A and signed; " + "; ".join(parts)
+        return "pass", f"{len(icds)}/{len(icds)} ICDs at Issue A or later, signed by both owners"
+    if kind == "reliability":
+        r, f = ev.get("reliability") or {}, ev.get("fmea") or {}
+        miss = []
+        if not r.get("computed"):
+            miss.append("reliability block diagram not computed")
+        if not f.get("rows"):
+            miss.append("FMEA worksheet empty")
+        if miss:
+            return "fail", "Missing evidence: " + "; ".join(miss)
+        val = r.get("system")
+        return "pass", ((f"Mission reliability {val:.3f}" if isinstance(val, (int, float)) else "Reliability computed")
+                        + (f" over {r['horizon_months']:g} months" if isinstance(r.get("horizon_months"), (int, float)) else "")
+                        + f"; FMEA {f['rows']} lines over {len(f.get('subsystems') or [])} subsystems")
+    if kind == "thermal":
+        t = ev.get("thermal") or {}
+        nodes = int(t.get("nodes") or 0)
+        cases = t.get("cases") or []
+        solved = {c.get("kind") for c in cases if c.get("solved")}
+        miss = []
+        if nodes < 6:
+            miss.append(f"{nodes} node(s), at least 6 needed")
+        for k in ("hot", "cold"):
+            if k not in solved:
+                miss.append(f"no solved {k} case")
+        neg = [c for c in cases if isinstance(c.get("min_margin_c"), (int, float)) and c["min_margin_c"] < 0]
+        if neg:
+            miss.append("negative design margin: " + ", ".join(f"{c.get('code')} {c['min_margin_c']:.1f} °C" for c in neg))
+        if miss:
+            return "fail", "Missing evidence: " + "; ".join(miss)
+        mm = [c["min_margin_c"] for c in cases if isinstance(c.get("min_margin_c"), (int, float))]
+        return "pass", f"{nodes} nodes; hot and cold cases solved" + (f"; smallest design margin {min(mm):.1f} °C" if mm else "")
+    return "not_evaluated", ""
+
+
+def readiness_criteria(canonical: str, evidence: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """The review-readiness criteria of canonical gate ``canonical`` (SRR, PDR), evaluated on the
+    evidence ``services/gate_evidence.collect`` gathered. Must-pass: the gate is not ready until
+    the work is done in the tool. Shapes as ``gate_evaluator`` criteria."""
+    ev = evidence or {}
+    out = []
+    for spec in READINESS_CRITERIA.get(canonical, []):
+        status, found = _probe(spec["probe"], canonical, ev)
+        out.append({"id": spec["id"], "question": spec["question"], "category": spec["category"],
+                    "priority": "must_pass", "advisory": False, "owner_seat": spec["owner_seat"],
+                    "evidence_required": spec["evidence"], "evidence_key": f"readiness.{spec['probe']}",
+                    "evidence_params": {}, "step": None, "mode": spec.get("mode", "auto"),
+                    "status": status, "verdict": status, "evidence_found": found, "source": "review_readiness"})
+    return out

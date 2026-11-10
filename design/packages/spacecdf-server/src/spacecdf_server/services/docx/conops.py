@@ -278,6 +278,11 @@ _T = {
         "s2": "Orbit", "s3": "Mission phases", "s4": "Spacecraft modes", "s4_1": "Mode transitions",
         "s4_2": "Power by mode", "s5": "Ground segment and contacts", "s6": "Data flow and downlink allocation",
         "s7": "A typical day", "s8": "Flight rules", "s9": "Contingencies", "s10": "End-of-life operations",
+        "s11": "Operational scenarios", "s11_intro": "Each scenario is walked through with the requirements it exercises, "
+        "to check that the requirement set covers the way the mission will be operated (requirements validation).",
+        "scenario": "Scenario", "kind": "Kind", "reqs_n": "Requirements",
+        "kinds": {"nominal": "nominal", "degraded": "degraded", "contingency": "contingency", "end_of_life": "end of life"},
+        "not_found": "not in the requirement set",
         "param": "Parameter", "value": "Value", "phase": "Phase", "type": "Type", "dur": "Duration (days)",
         "entry": "Entry criteria", "exit": "Exit criteria", "modes": "Modes", "mode": "Mode", "kind": "Kind",
         "pointing": "Pointing", "sunlit": "Sunlit only", "share": "Share of orbit (%)", "initial": "Initial",
@@ -324,6 +329,11 @@ _T = {
         "s2": "Orbite", "s3": "Phases de la mission", "s4": "Modes du satellite", "s4_1": "Transitions de mode",
         "s4_2": "Puissance par mode", "s5": "Segment sol et contacts", "s6": "Flux de données et allocation de la liaison descendante",
         "s7": "Une journée type", "s8": "Règles de vol", "s9": "Contingences", "s10": "Opérations de fin de vie",
+        "s11": "Scénarios opérationnels", "s11_intro": "Chaque scénario est parcouru avec les exigences qu’il sollicite, "
+        "pour vérifier que l’ensemble des exigences couvre la façon dont la mission sera exploitée (validation des exigences).",
+        "scenario": "Scénario", "kind": "Type", "reqs_n": "Exigences",
+        "kinds": {"nominal": "nominal", "degraded": "dégradé", "contingency": "contingence", "end_of_life": "fin de vie"},
+        "not_found": "absente de l’ensemble des exigences",
         "param": "Paramètre", "value": "Valeur", "phase": "Phase", "type": "Type", "dur": "Durée (jours)",
         "entry": "Critères d’entrée", "exit": "Critères de sortie", "modes": "Modes", "mode": "Mode", "kind": "Nature",
         "pointing": "Pointage", "sunlit": "Au soleil seulement", "share": "Part de l’orbite (%)", "initial": "Initial",
@@ -595,6 +605,19 @@ def generate_conops_from_view(view: dict[str, Any], lang: str = "en") -> bytes:
         _add_table(doc, [t["param"], t["value"]], rows)
     if eol.get("requirements"):
         _add_table(doc, [t["req"], t["text"]], [[r.get("code") or "", r.get("text") or ""] for r in eol["requirements"]])
+
+    # wave 3 (3.D5): the operational scenarios and the requirements each one exercises
+    scen = view.get("scenarios") or []
+    _add_section(doc, "11", t["s11"], t["s11_intro"] if scen else t["none"])
+    if scen:
+        _add_table(doc, [t["scenario"], t["name"], t["kind"], t["reqs_n"]],
+                   [[sc.get("id") or "", sc.get("name") or "", t["kinds"].get(sc.get("kind"), sc.get("kind") or ""),
+                     str(len(sc.get("requirements") or []))] for sc in scen])
+        for i, sc in enumerate(scen, 1):
+            _add_section(doc, f"11.{i}", f"{sc.get('id')} {sc.get('name') or ''}".strip(), sc.get("description") or None)
+            rows = [[r["code"], r.get("text") or t["not_found"]] for r in sc.get("requirements") or []]
+            if rows:
+                _add_table(doc, [t["req"], t["text"]], rows)
 
     buffer = io.BytesIO()
     doc.save(buffer)

@@ -157,7 +157,6 @@ Not reachable from `main.tsx`; do not translate. If one is wired back in later, 
 - `src/components/OptimizerPanel.tsx`
 - `src/components/ParametricEditor.tsx`
 - `src/components/PersistenceWarningBanner.tsx`
-- `src/components/PhaseAndGateStrip.tsx`
 - `src/components/PointingBudget.tsx`
 - `src/components/PositionAnswersPanel.tsx`
 - `src/components/PositionPanel.tsx`
@@ -173,7 +172,6 @@ Not reachable from `main.tsx`; do not translate. If one is wired back in later, 
 - `src/components/SnapshotsPanel.tsx`
 - `src/components/SolarArrayDecayPlot.tsx`
 - `src/components/SpectrumSelector.tsx`
-- `src/components/StudyStepper.tsx`
 - `src/components/SystemArchitectureEditor.tsx`
 - `src/components/SystemBlockDiagram.tsx`
 - `src/components/SystemBudgetEditor.tsx`

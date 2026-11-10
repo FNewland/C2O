@@ -31,6 +31,25 @@ default_profile: full_ecss
 # Gate ids written before Nov 2026 (MCR was the old name of MDR, ruling 3)
 legacy_gate_ids: {mcr: mdr}
 
+# Wave 3 (3.D1, PI ruling): how the systems-engineering protocol is enforced when a review is
+# started. ``warn`` (default): the review starts and the missing entry items, deliverables and
+# an out-of-order gate are written to the gate history as warnings. ``block``: the start is
+# refused (409 ``out_of_order`` / ``deliverables_missing``). ``off``: no protocol check (the
+# behaviour before wave 3). A profile may set its own default; the instructor sets the study's
+# mode (``PUT /api/studies/{id}/gate-enforcement``).
+se_enforcement_modes: ["off", "warn", "block"]
+default_se_enforcement: "warn"
+
+# Wave 3 (3.D1, SE-10): the configuration baseline a passed gate sets, by canonical gate (the
+# last gate a profile gate covers names it). ECSS-M-ST-40C: functional (SRR), allocated (PDR),
+# product (CDR); the mission baseline is the course's name for the MDR/PRR products.
+baseline_kinds: {mdr: mission, prr: mission, srr: functional, pdr: allocated, cdr: product, qr: product, ar: product, frr: product}
+baseline_kind_labels:
+  mission: {en: "Mission baseline", fr: "Référentiel de mission"}
+  functional: {en: "Functional baseline", fr: "Référentiel fonctionnel"}
+  allocated: {en: "Allocated baseline", fr: "Référentiel alloué"}
+  product: {en: "Product baseline", fr: "Référentiel produit"}
+
 profiles:
   full_ecss:
     label: {en: "Full ECSS (MDR → PRR → SRR → PDR → CDR → QR → AR → FRR)", fr: "ECSS complet (MDR → PRR → SRR → PDR → CDR → QR → AR → FRR)"}
@@ -38,6 +57,7 @@ profiles:
       en: "Separate reviews as in ECSS-M-ST-10C Rev.1: Mission Definition, Preliminary Requirements, System Requirements, Preliminary Design, Critical Design, Qualification and Acceptance, then the Flight Readiness Review before launch."
       fr: "Revues distinctes, comme dans l’ECSS-M-ST-10C Rev.1 : définition de la mission, exigences préliminaires, exigences système, conception préliminaire, conception détaillée, qualification et recette, puis la revue d’aptitude au vol avant le lancement."
     source: "ECSS-M-ST-10C Rev.1 §4.4 (to verify)"
+    se_enforcement: "warn"
     gates:
       - id: mdr
         short: MDR

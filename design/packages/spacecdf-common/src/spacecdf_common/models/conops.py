@@ -150,6 +150,18 @@ class DataPipelineStep(BaseModel):
 # Full ConOps
 # ---------------------------------------------------------------------------
 
+class ConopsScenario(BaseModel):
+    """An operational scenario walked through to validate the requirements (wave 3, 3.D5;
+    v2 ``vv_plan.yaml`` ``conops_scenarios_for_requirements_validation``)."""
+    id: str = ""                          # S1 …
+    name: str = ""
+    kind: str = "nominal"                 # nominal | degraded | contingency | end_of_life
+    phase_id: str = ""                    # a MissionPhase id (optional)
+    description: str = ""
+    requirement_codes: list[str] = Field(default_factory=list)
+    modes: list[str] = Field(default_factory=list)
+
+
 class ConceptOfOperations(BaseModel):
     """Structured Concept of Operations per NASA SEH Appendix S.
 
@@ -189,6 +201,8 @@ class ConceptOfOperations(BaseModel):
     # Nov 2026 (W7.01): True once the team edited the phases (durations, entry and exit
     # criteria); the auto-generated ConOps then never replaces them.
     phases_edited: bool = False
+    # Wave 3 (3.D5): operational scenarios with the requirements each one exercises
+    scenarios: list[ConopsScenario] = Field(default_factory=list)
 
     def get_mode(self, mode_id: str) -> OperationalMode | None:
         for m in self.modes:

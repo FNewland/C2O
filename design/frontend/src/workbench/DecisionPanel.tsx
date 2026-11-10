@@ -21,6 +21,8 @@ import { askConfirm, askText, showAlert } from '../components/ui/Dialog'
 import { Button, Disclosure, Input, Note, Select, Tag, Textarea } from '../components/ui'
 import { useSeatStore } from '../seats/api'
 import { useWhereSection } from '../where/where'
+import { AbsoluteScaleMatrix, ChangeControlCard, ConditionFields, GATES, LEVEL_LABEL, LEVELS, OpenItemsPanel, RecordAsTradeButton,
+  TradeGateSummary, TradeSensitivityPm20, type ConditionValue, type TradeEvaluationV2, type TradeStateV2 } from './DecideV2'
 
 const API = '/api'
 
@@ -37,10 +39,13 @@ interface PughState {
   comparisons: Record<string, number>
 }
 
-interface TradeDecision { selected?: string; rationale?: string; record_id?: string; decided_at?: string; decided_by_seat?: string }
+interface TradeDecision {
+  selected?: string; rationale?: string; record_id?: string; decided_at?: string; decided_by_seat?: string
+  condition?: string; due?: string; fallback?: string; risks?: string[]; blocks_gate?: string
+}
 interface TradeLinks { decision_record?: string; requirements?: string[]; risks?: string[]; elements?: string[] }
 
-interface TradeState extends PughState {
+interface TradeState extends PughState, Omit<TradeStateV2, keyof PughState> {
   id: string
   title: string
   seat: string
@@ -55,7 +60,7 @@ interface TradeState extends PughState {
   links?: TradeLinks
 }
 
-interface TradeEvaluation {
+interface TradeEvaluation extends Omit<TradeEvaluationV2, 'totals' | 'weights' | 'winner'> {
   weights: Record<string, number>
   weights_source: 'pairwise' | 'direct'
   totals: Array<{ option: string; datum: boolean; weighted: number; unweighted: number; below_threshold: string[]; acceptable: boolean }>
@@ -166,15 +171,19 @@ function useTrades(studyId: string | null) {
   }, [studyId, qc])
 
   /** Record the decision on the server (the trade is kept; the study decision record is written). */
-  const decide = useCallback(async (tid: string, selected: string, rationale: string, seat: string) => {
+  const decide = useCallback(async (tid: string, selected: string, rationale: string, seat: string, cond?: ConditionValue) => {
     if (!studyId) return false
     if (timers.current[tid]) { window.clearTimeout(timers.current[tid]); const st = local[tid]; if (st) await put(tid, st) }
+    const extra = cond ? { condition: cond.condition, due: cond.due, fallback: cond.fallback, blocks_gate: cond.blocks_gate,
+      risks: cond.risks.split(/[,;\s]+/).map(x => x.trim()).filter(Boolean) } : {}
     const res = await fetch(`${API}/studies/${studyId}/trades/${encodeURIComponent(tid)}/decision`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selected, rationale, seat }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selected, rationale, seat, ...extra }),
     })
     if (!res.ok) return false
     setLocal(l => { const n = { ...l }; delete n[tid]; return n })
     await qc.invalidateQueries({ queryKey: key })
+    await qc.invalidateQueries({ queryKey: ['trades-summary', studyId] })
+    await qc.invalidateQueries({ queryKey: ['open-items', studyId] })
     return true
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studyId, qc, local, put])
@@ -222,6 +231,10 @@ export function DecisionPanel() {
 
       {/* Any level: the study's trade studies — weighting first, then scoring */}
       <TradeStudies studyId={studyId} />
+
+      {/* Wave 3 (3.D4, 3.D7): the open-item register and the change-control flow */}
+      <OpenItemsPanel studyId={studyId} />
+      <ChangeControlCard studyId={studyId} />
     </div>
   )
 }
@@ -262,14 +275,23 @@ function TradeStudies({ studyId }: { studyId: string | null }) {
         <div className="t-12 c-2 mb-1">
           {t('Each trade compares options against a datum with weighted criteria. Every trade is kept with the study; Record decision writes its decision record and keeps the trade.')}
         </div>
+        <TradeGateSummary studyId={studyId} />
         <div className="flex gap-1 wrap ai-c mb-1" data-testid="trade-list">
           {trades.items.length > 0 && (
             <Select dense aria-label={t('Trade study')} value={tid ?? ''} onChange={e => setPicked(e.target.value)}>
-              {trades.items.map(it => (
-                <option key={it.id} value={it.id}>
-                  {it.id} {it.state.title}{it.state.status === 'decided' ? ` ✓` : ''}
-                </option>
-              ))}
+              {[...LEVELS, ''].map(lv => {
+                const group = trades.items.filter(it => (it.state.level || '') === lv)
+                if (!group.length) return null
+                return (
+                  <optgroup key={lv || 'other'} label={lv ? t(LEVEL_LABEL[lv]) : t('Other')}>
+                    {group.map(it => (
+                      <option key={it.id} value={it.id}>
+                        {it.id} {it.state.title}{it.state.gate ? ` · ${it.state.gate.toUpperCase()}` : ''}{it.state.status === 'decided' ? ` ✓` : ''}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              })}
             </Select>
           )}
           <Button size="sm" onClick={() => void addTrade()}>{t('+ New trade')}</Button>
@@ -292,21 +314,42 @@ function TradeStudies({ studyId }: { studyId: string | null }) {
                 onChange={e => upd({ title: e.target.value })} />
               <Input dense aria-label={t('Owner seat')} placeholder={t('Owner seat')} value={st.seat} style={{ flex: 1, minWidth: '8rem' }}
                 onChange={e => upd({ seat: e.target.value })} />
-              <Input dense aria-label={t('Level')} placeholder={t('Level')} value={st.level} style={{ flex: 1, minWidth: '8rem' }}
-                onChange={e => upd({ level: e.target.value })} />
+              <Select dense aria-label={t('Level')} value={st.level} onChange={e => upd({ level: e.target.value })}>
+                <option value="">{t('Level')}</option>
+                {LEVELS.map(lv => <option key={lv} value={lv}>{t(LEVEL_LABEL[lv])}</option>)}
+              </Select>
+              <Select dense aria-label={t('Review gate')} value={st.gate ?? ''} onChange={e => upd({ gate: e.target.value })}>
+                <option value="">{t('No gate')}</option>
+                {GATES.map(g => <option key={g} value={g}>{g.toUpperCase()}</option>)}
+              </Select>
+              <Select dense aria-label={t('Scoring')} value={st.method ?? 'pugh_weighted'}
+                onChange={e => upd({ method: e.target.value as TradeState['method'] })}>
+                <option value="pugh_weighted">{t('Weighted Pugh (−2 to +2 against the datum)')}</option>
+                <option value="absolute_scale">{t('Absolute scale (1 to 5 per criterion)')}</option>
+              </Select>
             </div>
+            {st.decision_question && <p className="t-12 c-2 m-0">{t('Decision to make: {{q}}', { q: st.decision_question })}</p>}
           </div>
         )}
       </ToolSection>
+      {st && tid && st.method === 'absolute_scale' && (
+        <ToolSection whereId="trade-absolute" title={t('Absolute-scale matrix')} color="var(--cat-6)">
+          <AbsoluteScaleMatrix state={st} evaluation={current?.evaluation ?? null} onChange={p => upd(p as Partial<TradeState>)} />
+          <TradeSensitivityPm20 evaluation={current?.evaluation ?? null} />
+        </ToolSection>
+      )}
       {st && tid && (<>
-        <PairwiseWeightingWidget weights={weights} comparisons={st.comparisons || {}}
-          onComparisonsChanged={c => upd({ comparisons: c, weights_mode: 'pairwise' })}
-          criteria={st.criteria} onCriteriaChanged={c => upd({ criteria: c })} />
-        <PughMatrixWidget tradeId={tid} weights={weights} criteria={st.criteria} onCriteriaChanged={c => upd({ criteria: c })}
-          state={st} onChange={upd} />
-        <TradeSensitivity evaluation={current?.evaluation ?? null} />
+        {st.method !== 'absolute_scale' && (<>
+          <PairwiseWeightingWidget weights={weights} comparisons={st.comparisons || {}}
+            onComparisonsChanged={c => upd({ comparisons: c, weights_mode: 'pairwise' })}
+            criteria={st.criteria} onCriteriaChanged={c => upd({ criteria: c })} />
+          <PughMatrixWidget tradeId={tid} weights={weights} criteria={st.criteria} onCriteriaChanged={c => upd({ criteria: c })}
+            state={st} onChange={upd} />
+          <TradeSensitivity evaluation={current?.evaluation ?? null} />
+          <TradeSensitivityPm20 evaluation={current?.evaluation ?? null} />
+        </>)}
         <TradeLinksAndDecision tradeId={tid} state={st} evaluation={current?.evaluation ?? null} onChange={upd}
-          onDecide={(sel, why) => trades.decide(tid, sel, why, mySeat || st.seat)} />
+          onDecide={(sel, why, cond) => trades.decide(tid, sel, why, mySeat || st.seat, cond)} />
       </>)}
     </>
   )
@@ -355,18 +398,22 @@ function TradeSensitivity({ evaluation }: { evaluation: TradeEvaluation | null }
 function TradeLinksAndDecision({ tradeId, state, evaluation, onChange, onDecide }: {
   tradeId: string; state: TradeState; evaluation: TradeEvaluation | null
   onChange: (patch: Partial<TradeState>) => void
-  onDecide: (selected: string, rationale: string) => Promise<boolean>
+  onDecide: (selected: string, rationale: string, cond: ConditionValue) => Promise<boolean>
 }) {
   const { t } = useTranslation()
   const links = state.links ?? {}
   const dec = state.decision ?? {}
   const [selected, setSelected] = useState<string>(dec.selected ?? evaluation?.winner ?? state.options[state.datum] ?? '')
   const [why, setWhy] = useState<string>(dec.rationale ?? '')
+  const condOf = (d: TradeDecision): ConditionValue => ({ condition: d.condition ?? '', due: d.due ?? '', fallback: d.fallback ?? '',
+    risks: (d.risks ?? []).join(', '), blocks_gate: d.blocks_gate ?? '' })
+  const [cond, setCond] = useState<ConditionValue>(condOf(dec))
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   useEffect(() => {
     setSelected(state.decision?.selected ?? evaluation?.winner ?? state.options[state.datum] ?? '')
     setWhy(state.decision?.rationale ?? '')
+    setCond(condOf(state.decision ?? {}))
     setMsg(null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tradeId])
@@ -393,19 +440,20 @@ function TradeLinksAndDecision({ tradeId, state, evaluation, onChange, onDecide 
         <label className="flex gap-1 ai-c">
           <span style={{ width: '11rem' }}>{t('Selected option')}</span>
           <Select dense value={selected} onChange={e => setSelected(e.target.value)}>
-            {state.options.map(o => <option key={o} value={o}>{o}{o === best ? ' ★' : ''}</option>)}
+            {state.options.map(o => <option key={o} value={o} disabled={!!state.screened?.[o]}>{o}{state.option_labels?.[o] ? `: ${state.option_labels[o]}` : ''}{o === best ? ' ★' : ''}{state.screened?.[o] ? ` (${t('screened out')})` : ''}</option>)}
           </Select>
           {dec.selected && <Tag>{t('Decided: {{o}}', { o: dec.selected })}</Tag>}
         </label>
         <Textarea rows={3} aria-label={t('Rationale')} placeholder={t('Why this option (required when it is not the highest score)')}
           value={why} onChange={e => setWhy(e.target.value)} />
         {selected && best && selected !== best && <Note tone="caution">{t('The selected option is not the highest weighted score: say why in the rationale.')}</Note>}
+        <ConditionFields value={cond} onChange={setCond} />
         <div className="flex gap-1 wrap ai-c">
           <Button size="sm" variant="primary" busy={busy}
             disabledReason={!selected ? t('Pick the selected option') : (selected !== best && !why.trim()) ? t('Give the rationale first') : undefined}
             onClick={async () => {
               setBusy(true); setMsg(null)
-              const ok = await onDecide(selected, why)
+              const ok = await onDecide(selected, why, cond)
               setBusy(false)
               setMsg(ok ? t('Decision recorded on {{id}}; the trade is kept.', { id: tradeId }) : t('The decision could not be recorded.'))
             }}>
@@ -682,6 +730,16 @@ function OrbitTradeWidget({ studyId }: { studyId: string | null }) {
               ))}
             </tbody>
           </table>
+          <div className="mt-1">
+            <RecordAsTradeButton studyId={studyId} tool="orbit" title={t('Operational orbit')}
+              options={result.candidates.slice(0, 8).map((c: any, i: number) => ({
+                id: String.fromCharCode(65 + i), label: `${orbitName(c)}, ${Number(c.inclination_deg ?? 0).toFixed(1)}°`,
+                metrics: { [t('GSD (m)')]: c.achievable_gsd_m != null ? Number(Number(c.achievable_gsd_m).toFixed(1)) : null,
+                  [t('Revisit (days)')]: c.revisit_days != null ? Number(Number(c.revisit_days).toFixed(1)) : null,
+                  [t('Natural lifetime (yr)')]: c.natural_lifetime_years != null ? Number(Number(c.natural_lifetime_years).toFixed(1)) : null,
+                  [t('Eclipse (% of orbit)')]: c.eclipse_fraction != null ? Math.round(Number(c.eclipse_fraction) * 100) : null },
+              }))} />
+          </div>
           <p className="t-12 c-3 m-0 mt-1 measure">
             {t('Lifetime: natural decay without propulsion at mean solar activity. 25-yr: re-entry within 25 years (IADC / COPUOS guideline). FCC 5-yr: re-entry within 5 years after the mission ends (FCC rule, 2022). Apply makes it the mission orbit; the analyses run with the old orbit are then marked stale.')}
           </p>
@@ -855,6 +913,14 @@ function GroundTradeWidget({ studyId }: { studyId: string | null }) {
               {result.recommendation}
             </div>
           )}
+          <div className="mt-1">
+            <RecordAsTradeButton studyId={studyId} tool="ground" title={t('Ground segment architecture')}
+              options={result.alternatives.slice(0, 8).map((a: any, i: number) => ({
+                id: String.fromCharCode(65 + i), label: String(a.name),
+                metrics: { [t('Contact (min/day)')]: a.contact_minutes_per_day != null ? Math.round(a.contact_minutes_per_day) : null,
+                  [t('Annual cost (kEUR)')]: a.annual_cost_keur ?? null },
+              }))} />
+          </div>
         </div>
       )}
     </ToolSection>
