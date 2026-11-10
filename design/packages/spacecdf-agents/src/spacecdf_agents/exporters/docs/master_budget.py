@@ -209,33 +209,80 @@ def _sheet_power(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
         opens.append(["Power", "No energy balance per mode (Modes tab)", "H"])
 
 
+def data_budget_cases(db: dict) -> tuple[dict, list[dict]]:
+    """(closure, cases) of the ``data_budget`` section: ``daily.closure`` / ``daily.cases`` (W3.02,
+    each case {id, label, capacity_mb, rt_hk_mb, stored_hk_mb, science_mb, other_mb, demand_mb,
+    margin_pct, status}); an older top-level ``cases`` list or dict is read too."""
+    daily = db.get("daily") or {}
+    cases = daily.get("cases") if isinstance(daily, dict) else None
+    if cases is None:
+        cases = db.get("cases")
+    if isinstance(cases, dict):
+        cases = [{"id": k, **(v or {})} for k, v in cases.items()]
+    cases = [c for c in cases or [] if isinstance(c, dict)]
+    closure = daily.get("closure") if isinstance(daily, dict) and isinstance(daily.get("closure"), dict) else {}
+    return closure, cases
+
+
+def _label(v: Any, lang: str = "en") -> str:
+    if isinstance(v, dict):
+        return str(v.get(lang) or v.get("en") or "")
+    return "" if v is None else str(v)
+
+
+#: data budget case columns (key, header)
+DB_COLUMNS = (("capacity_mb", "Capacity (MB/day)"), ("rt_hk_mb", "Real-time HK (MB/day)"),
+              ("stored_hk_mb", "Stored HK (MB/day)"), ("science_mb", "Science (MB/day)"), ("other_mb", "Other (MB/day)"),
+              ("demand_mb", "Demand (MB/day)"), ("margin_pct", "Margin (%)"), ("status", "Status"))
+
+
 def _sheet_data(wb: Workbook, sx: dict, opens: list[list[str]]) -> None:
     ws = wb.create_sheet("Data")
     db = sx.get("data_budget") or {}
     r = 1
-    cases = db.get("cases")
-    if not _stub(db) and cases:
-        items = list(cases.items()) if isinstance(cases, dict) else [(c.get("id") or c.get("name") or str(i), c)
-                                                                      for i, c in enumerate(cases) if isinstance(c, dict)]
-        keys: list[str] = []
-        for _, c in items:
-            for k, v in (c or {}).items():
-                if k not in keys and not isinstance(v, (dict, list)):
-                    keys.append(k)
-        _headers(ws, r, ["Case"] + keys, [34] + [14] * len(keys))
-        for i, (cid, c) in enumerate(items, start=r + 1):
-            ws.cell(row=i, column=1, value=cid)
-            for j, k in enumerate(keys, start=2):
-                ws.cell(row=i, column=j, value=(c or {}).get(k))
-        r = r + len(items) + 2
-    daily = db.get("daily") if not _stub(db) else None
-    if daily:
+    closure, cases = data_budget_cases(db) if not _stub(db) else ({}, [])
+    daily = db.get("daily") if not _stub(db) and isinstance(db.get("daily"), dict) else {}
+    if cases:
+        _headers(ws, r, ["Case", "Description"] + [h for _, h in DB_COLUMNS], [12, 60] + [14] * len(DB_COLUMNS))
+        for i, c in enumerate(cases, start=r + 1):
+            ws.cell(row=i, column=1, value=c.get("id"))
+            ws.cell(row=i, column=2, value=_label(c.get("label")))
+            for j, (k, _h) in enumerate(DB_COLUMNS, start=3):
+                v = c.get(k)
+                ws.cell(row=i, column=j, value=_f(v) if k != "status" else v)
+            if closure and c.get("id") == closure.get("id"):
+                for j in range(1, len(DB_COLUMNS) + 3):
+                    ws.cell(row=i, column=j).font = TOTAL_FONT
+        r = r + len(cases) + 1
+        if closure:
+            _note(ws, r, f"Baseline case {closure.get('id')}: demand {closure.get('demand_mb')} MB/day against a capacity "
+                         f"of {closure.get('capacity_mb')} MB/day, margin {closure.get('margin_pct')} % "
+                         f"(required {daily.get('margin_required_percent', '—')} %), {closure.get('status')}. "
+                         "Source: data budget (Telemetry tab).")
+            r += 1
+        r += 1
+    cap = daily.get("capacity") if isinstance(daily.get("capacity"), dict) else {}
+    sci = daily.get("science") if isinstance(daily.get("science"), dict) else {}
+    scal = [(f"capacity.{k}", v) for k, v in cap.items() if isinstance(v, (int, float)) and not isinstance(v, bool)]
+    scal += [(f"science.{k}", v) for k, v in sci.items() if isinstance(v, (int, float)) and not isinstance(v, bool)]
+    scal += [(k, v) for k, v in daily.items() if isinstance(v, (int, float, str)) and not isinstance(v, bool)]
+    if scal:
         _headers(ws, r, ["Daily budget item", "Value"], [40, 16])
-        for i, (k, v) in enumerate([(k, v) for k, v in daily.items() if not isinstance(v, (dict, list))], start=r + 1):
+        for i, (k, v) in enumerate(scal, start=r + 1):
             ws.cell(row=i, column=1, value=k)
             ws.cell(row=i, column=2, value=v)
-        r = ws.max_row + 2
-    if _stub(db) or not (cases or daily):
+        r = r + len(scal) + 2
+    prods = sci.get("products") or []
+    if prods:
+        _headers(ws, r, ["Science product", "MB raw", "Per day", "MB/day raw", "Priority"], [40, 12, 12, 14, 10])
+        for i, p in enumerate(prods, start=r + 1):
+            for j, k in enumerate(("name", "mb_raw", "per_day", "mb_per_day_raw", "priority"), start=1):
+                ws.cell(row=i, column=j, value=p.get(k))
+        r = r + len(prods) + 2
+    if closure and closure.get("status") == "fail":
+        opens.append(["Data", f"The baseline data budget case {closure.get('id')} does not close: margin "
+                              f"{closure.get('margin_pct')} %", "H"])
+    if _stub(db) or not (cases or scal):
         opens.append(["Data", "Daily data budget against the downlink (generated, stored, downlinked, margin per case)",
                       _owner(db, "H W3.02")])
     _headers(ws, r, ["Payload", "Data per day (GB)", "Data rate (Mbit/s)", "Duty cycle (%)"], [40, 16, 16, 14])

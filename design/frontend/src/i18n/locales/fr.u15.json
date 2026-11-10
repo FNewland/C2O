@@ -337,6 +337,5 @@
   "Diagrams": "Schémas",
   "Every diagram with its gaps and data table (same as the Diagrams tab)": "Chaque schéma avec ses lacunes et son tableau de données (comme l’onglet Schémas)",
   "Interface Requirements Document": "Document d’exigences d’interface",
-  "Interfaces with the block, N², power, data-bus and RF diagrams": "Interfaces avec les schémas fonctionnel, N², alimentation, bus de données et RF",
   "Gaps: {{n}}": "Lacunes : {{n}}"
 }

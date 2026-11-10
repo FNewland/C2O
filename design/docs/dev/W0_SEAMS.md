@@ -66,6 +66,7 @@ Rules:
 | `ts.py`, `ird.py`, `semp.py`, `rmp.py`, `testplan.py` | the generator of the same name | X |
 | `regulatory.py` | `_generate_regulatory_docx` (shared stub) | L (replaced in W5.04) |
 | `review.py` | `_generate_review_package_docx` (stub) | X (retired in W4.14) |
+| `pack_hooks.py` | interim `HOOKS` for the pack documents `trades`, `review_report`, `ait`, `schedule`, `licensing`, `tmtc` (used until the owner's module defines `pack_docx`) | X |
 | new: `trades.py`, `review_report.py` | | D |
 | new: `ait.py` | | A |
 
@@ -102,7 +103,7 @@ Sections (`SECTIONS`, in collection order). Each section is one module in
 | `mission` | real | `name, phase, gate_profile, definition` (`MissionRequirements`), `orbit` (+ period, eclipse, orbits/day) | X |
 | `elements` | real | `items` (depth, name order), `interfaces`, `allocations` (budget allocations), `counts` | X |
 | `rollup` | real | `services.rollup` `as_dict()` (see §4) | X |
-| `requirements` | real | `items` (level, then code order; `generated_interface` flag for `IR-*`), `counts` | X (fields: R) |
+| `requirements` | real | `items` (level, then code order; `generated_interface` flag for `IR-*`; `parent_ids`, `objective_ids`, `parent_codes` from W2.03 relations), `counts` | X (fields: R) |
 | `verification` | real | `items`, `counts` by status | X (fields: R, AIT evidence: A) |
 | `risks` | real | `items` (with `score` = L×C, highest first), `counts` | X |
 | `trades` | real (one Pugh record) | `items` [{id, state, version}] | D (W6.01) |
@@ -118,6 +119,7 @@ Sections (`SECTIONS`, in collection order). Each section is one module in
 | `schedule` | **stub** | `milestones, work_packages, long_lead` | A (W11a) |
 | `cdr` | real (W4.01) | `dataset, rows` {kind: rows}, `counts, groups, checks, summary, budget` (CDR model) | X (model: H) |
 | `functions` | real (W4.01) | `items` (tree order, `depth`, `allocated_to`), `counts` | X |
+| `electrical` | real (W4.07) | `rails, lines, buses, nodes` (names resolved), `ports` {total, by_kind}, `exchange_items` (with `interface_ids`), `counts` | X (model: electrical tab, exchange items) |
 
 The contract for a collector:
 
@@ -148,7 +150,7 @@ soon as `spacecdf_server/services/docx/<module>.py` defines
 def pack_docx(sx: StudyExport, *, gate: str, lang: str) -> bytes | None   # may be async
 ```
 
-Until then the pack index lists it as missing with its owner. Hooks expected: `trades` (D, W6),
+Until then the export core serves it from `services/docx/pack_hooks.py` (`HOOKS`, built from the owner's generator or section: trade-off report, previous review report, AIT programme, schedule, licensing status, TM/TC/FDIR/AOCS tables); the owner's `pack_docx` wins as soon as it exists. A hook that has no data returns `None` and the index lists the document as missing with its owner. Hooks expected: `trades` (D, W6),
 `review_report` (D, W4.08), `ait` (A, W8a), `schedule` (A, W11a), `licensing` (L, W5.04),
 `tmtc` (H, W3.06). The stub sections (`data_budget`, `contacts`, `licensing`, `ait`, `schedule`)
 are already read by the package and the workbook (shapes as in the table above): fill them and

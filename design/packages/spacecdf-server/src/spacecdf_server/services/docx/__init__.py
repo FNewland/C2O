@@ -21,8 +21,17 @@ New document families (``conops`` rework, ``trades``, ``review_report``, ``ait``
 modules in this package, owned by one agent each (design/docs/dev/W0_SEAMS.md). New generators
 should take a ``StudyExport`` from ``services.export_context.collect`` rather than ad-hoc dicts.
 
+``pack_hooks``  the review pack hooks (trades, review report, AIT, schedule, licensing, TM/TC)
+                served by the export core until their owners define ``pack_docx`` (wave 2)
+
 ``DOCX_GENERATORS`` is the registry behind ``POST /api/exports/docx/{doc_type}``: type ->
-(display name, generator). Its key order is part of the API (the 400 message lists it).
+(display name, generator). Its key order is part of the API (the 400 message lists it). With a
+study, ``routers/exports/docx.STUDY_DOCS`` build ``mrd``, ``conops``, ``vp``
+(``vp.generate_verification_plan_docx``, W8a), ``ts`` (``ts.generate_ts_from_export``, W4.06),
+``ird`` (``ird.generate_ird_from_export``, W4.07) and the licensing documents ``rsssa``,
+``itu_api``, ``copuos``, ``eol``, ``export`` (``services.licensing_docs`` + ``regulatory.
+render_regulatory_docx``, W5.04) from the study collector; the generators listed here are the
+fallback without a study.
 """
 from __future__ import annotations
 

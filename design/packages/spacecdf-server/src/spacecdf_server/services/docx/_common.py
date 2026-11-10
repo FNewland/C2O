@@ -335,3 +335,72 @@ def _add_diagrams(doc: Document, number: str, title: str, data: dict[str, Any], 
     _add_section(doc, number, title, intro)
     for k, m in enumerate(models, 1):
         add_diagram(doc, m, heading_level=None, gaps=True, table=False)
+
+
+# ---------------------------------------------------------------------------
+# Wide tables (W4.06 / W4.07): landscape sections and a compact table
+# ---------------------------------------------------------------------------
+
+def _orient(doc: Document, landscape: bool) -> None:
+    """Start a new section (new page) in landscape or portrait. The running header and footer
+    carry over (sections link to the previous one)."""
+    from docx.enum.section import WD_ORIENT, WD_SECTION
+    prev = doc.sections[-1]
+    sec = doc.add_section(WD_SECTION.NEW_PAGE)
+    w, h = prev.page_width, prev.page_height
+    if landscape and w < h or not landscape and w > h:
+        w, h = h, w
+    sec.orientation = WD_ORIENT.LANDSCAPE if landscape else WD_ORIENT.PORTRAIT
+    sec.page_width, sec.page_height = w, h
+    for k in ("top_margin", "bottom_margin", "left_margin", "right_margin", "header_distance", "footer_distance"):
+        setattr(sec, k, getattr(prev, k))
+
+
+def _cell_str(v: Any) -> str:
+    if v is None:
+        return ""
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    if isinstance(v, float):
+        return f"{v:g}"
+    if isinstance(v, (list, tuple)):
+        return ", ".join(_cell_str(x) for x in v if x not in (None, ""))
+    return str(v)
+
+
+def _compact_table(doc: Document, headers: list[str], rows: list[list[Any]], widths_cm: list[float] | None = None,
+                   font_pt: float = 8.0) -> None:
+    """A table for many columns: smaller font, optional column widths (cm), header row repeated on
+    every page. Cell values may be any type (``None`` is blank, lists are joined)."""
+    from docx.shared import Cm
+    if not headers:
+        return
+    n = len(headers)
+    table = doc.add_table(rows=1 + len(rows), cols=n)
+    table.style = 'Table Grid'
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    hdr = table.rows[0]
+    trpr = hdr._tr.get_or_add_trPr()
+    trpr.append(parse_xml(f'<w:tblHeader {nsdecls("w")} w:val="true"/>'))
+    for i, h in enumerate(headers):
+        cell = hdr.cells[i]
+        cell.text = ""
+        run = cell.paragraphs[0].add_run(str(h))
+        run.bold = True
+        run.font.size = Pt(font_pt)
+        run.font.color.rgb = _CLR_WHITE
+        _set_cell_shading(cell, _CLR_HEADER_BG)
+    for r_idx, row in enumerate(rows):
+        cells = table.rows[r_idx + 1].cells
+        for c_idx in range(n):
+            cell = cells[c_idx]
+            cell.text = ""
+            run = cell.paragraphs[0].add_run(_cell_str(row[c_idx] if c_idx < len(row) else ""))
+            run.font.size = Pt(font_pt)
+            if r_idx % 2 == 1:
+                _set_cell_shading(cell, _CLR_ALT_ROW)
+    if widths_cm:
+        for row in table.rows:
+            for c_idx, w in enumerate(widths_cm[:n]):
+                row.cells[c_idx].width = Cm(w)
+    doc.add_paragraph()

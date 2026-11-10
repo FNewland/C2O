@@ -285,6 +285,20 @@ async def _evaluate_gate_for_study(study_id: str, phase_id: str, body: dict | No
     params["_component_count"] = len([e for e in elements if e.get("element_type") == "component"])
     params["_frozen_count"] = len([e for e in elements if e.get("frozen")])
 
+    reqs = ctx["requirements"]
+    roll = None
+    if study is not None:
+        try:  # W1.08: the roll-up's orbit-average power and mass; W2.03: further parents and objectives count
+            from ..services import rollup as _rollup
+            roll = (await _rollup.compute(study_id)).as_dict()
+        except Exception:  # noqa: BLE001 — the criteria fall back to the design parameters
+            roll = None
+        try:
+            from .requirements import with_lists
+            reqs = await with_lists(study_id, list(reqs or []))
+        except Exception:  # noqa: BLE001
+            reqs = ctx["requirements"]
+
     result = evaluate_gate(
         phase_id=phase_id,
         mission_need=getattr(study, "mission_need", None) if study else None,
@@ -292,12 +306,13 @@ async def _evaluate_gate_for_study(study_id: str, phase_id: str, body: dict | No
         target_mass_kg=getattr(reqs_model, "target_mass_kg", None) if reqs_model else None,
         target_cost_meur=getattr(reqs_model, "target_cost_meur", None) if reqs_model else None,
         reliability_target=getattr(reqs_model, "reliability_target", None) if reqs_model else None,
-        requirements=ctx["requirements"],
+        requirements=reqs,
         elements=elements,
         interfaces=ctx["interfaces"],
         mission=reqs_model,
         function_count=ctx.get("function_count"),
         risks=ctx.get("risks"),
+        rollup=roll,
     )
     result["study_id"] = study_id
     result["study_found"] = study is not None

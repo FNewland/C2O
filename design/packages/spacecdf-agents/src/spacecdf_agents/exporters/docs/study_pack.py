@@ -264,9 +264,10 @@ def requirement_rows(view: View, reqs: list[dict]) -> list[list[Any]]:
     out = []
     for r in reqs:
         parent = r.get("parent_id") or r.get("derived_from_requirement_id")
+        pids = r.get("parent_ids") or ([parent] if parent else [])   # W2.03: every parent
         out.append([r.get("code") or r.get("id"), r.get("level") or "", r.get("req_type") or "",
                     r.get("text") or "", threshold_text(r), r.get("verification_method") or "",
-                    r.get("verification_phase") or "", codes.get(parent, parent or ""),
+                    r.get("verification_phase") or "", ", ".join(str(codes.get(p, p)) for p in pids),
                     view.name(r.get("element_id"))])
     return out
 
@@ -467,14 +468,30 @@ def _contacts_table(c: Ctx, contacts: dict) -> None:
         rows.append([s.get("name"), s.get("min_per_day") or s.get("contact_min_per_day"), s.get("passes_per_day"),
                      s.get("mean_pass_min"), s.get("max_pass_min")])
     u = contacts.get("union") or {}
+    for r, s in zip(rows, contacts.get("stations") or []):
+        r.append(s.get("data_mb_per_day_alone"))
     if u:
-        rows.append(["union" if t.lang != "fr" else "union", u.get("min_per_day"), u.get("passes_per_day"),
-                     u.get("mean_pass_min"), u.get("max_pass_min")])
+        rows.append(["union" if t.lang != "fr" else "union", u.get("min_per_day"),
+                     u.get("passes_per_day") if u.get("passes_per_day") is not None else u.get("windows_per_day"),
+                     u.get("mean_pass_min") if u.get("mean_pass_min") is not None else u.get("mean_window_min"),
+                     u.get("max_pass_min") if u.get("max_pass_min") is not None else u.get("max_window_min"),
+                     u.get("data_mb_per_day")])
     c.pkg.table([t("Station"), "min/day" if t.lang != "fr" else "min/jour", "passes/day" if t.lang != "fr" else "passages/jour",
-                 "mean pass (min)" if t.lang != "fr" else "passage moyen (min)", "max pass (min)" if t.lang != "fr" else "passage max (min)"], rows)
+                 "mean pass (min)" if t.lang != "fr" else "passage moyen (min)", "max pass (min)" if t.lang != "fr" else "passage max (min)",
+                 "MB/day" if t.lang != "fr" else "Mo/jour"], rows,
+                caption="Contact statistics per station and for the network (union of the windows)" if t.lang != "fr"
+                else "Statistiques de contact par station et pour le réseau (union des fenêtres)")
     if u.get("longest_gap_h") is not None:
         c.pkg.p(("Longest gap without contact: " if t.lang != "fr" else "Plus longue interruption sans contact : ")
                 + f"{_fmt(u.get('longest_gap_h'), 1)} h")
+    loo = contacts.get("leave_one_out") or []
+    if loo:
+        c.pkg.table(["Without" if t.lang != "fr" else "Sans", "min/day" if t.lang != "fr" else "min/jour",
+                     "windows/day" if t.lang != "fr" else "fenêtres/jour",
+                     "longest gap (h)" if t.lang != "fr" else "plus longue interruption (h)", "MB/day" if t.lang != "fr" else "Mo/jour"],
+                    [[x.get("without"), x.get("union_min_per_day"), x.get("windows_per_day"), x.get("longest_gap_h"),
+                      x.get("data_mb_per_day")] for x in loo],
+                    caption="Network with one station out" if t.lang != "fr" else "Réseau avec une station hors service")
 
 
 def _mission_analysis(c: Ctx) -> None:
@@ -723,15 +740,41 @@ def _data_budget(c: Ctx) -> None:
         c.pkg.p((f"Payload data generated per day (payload definition): {gen * 1000:.0f} MB."
                  if t.lang != "fr" else f"Données de charge utile produites par jour (définition) : {gen * 1000:.0f} Mo."))
     db = sx.get("data_budget") or {}
-    if is_stub(db) or not (db.get("daily") or db.get("cases")):
+    from .master_budget import DB_COLUMNS, data_budget_cases
+    closure, cases = data_budget_cases(db) if not is_stub(db) else ({}, [])
+    daily = db.get("daily") if isinstance(db.get("daily"), dict) else {}
+    if is_stub(db) or not (cases or daily):
         c.pkg.open("Daily data budget against the downlink (generated, stored, downlinked, margin)", stub_owner(db) or "H W3.02")
     else:
-        daily = db.get("daily") or {}
-        if daily:
-            c.pkg.table([t("Item"), t("Value")], [[k, v] for k, v in daily.items() if not isinstance(v, (dict, list))])
-        for case in db.get("cases") or []:
-            if isinstance(case, dict):
-                c.pkg.p(", ".join(f"{k} {_cell(v)}" for k, v in case.items() if not isinstance(v, (dict, list))))
+        fr = t.lang == "fr"
+        if closure:
+            c.pkg.p((f"Baseline case {closure.get('id')}: demand {_fmt(closure.get('demand_mb'))} MB/day against a downlink "
+                     f"capacity of {_fmt(closure.get('capacity_mb'))} MB/day, margin {_fmt(closure.get('margin_pct'), 1)} % "
+                     f"(required {_fmt(daily.get('margin_required_percent'), 0)} %): {closure.get('status')}.") if not fr else
+                    (f"Cas de référence {closure.get('id')} : demande {_fmt(closure.get('demand_mb'))} Mo/jour pour une capacité "
+                     f"de descente de {_fmt(closure.get('capacity_mb'))} Mo/jour, marge {_fmt(closure.get('margin_pct'), 1)} % "
+                     f"(requise {_fmt(daily.get('margin_required_percent'), 0)} %) : {closure.get('status')}."))
+        if cases:
+            heads = {"capacity_mb": ("capacity", "capacité"), "rt_hk_mb": ("RT HK", "TM serv. TR"),
+                     "stored_hk_mb": ("stored HK", "TM serv. stockée"), "science_mb": ("science", "science"),
+                     "other_mb": ("other", "autre"), "demand_mb": ("demand", "demande"), "margin_pct": ("margin %", "marge %"),
+                     "status": ("status", "état")}
+            c.pkg.table(["Case" if not fr else "Cas", t("Description")] + [heads[k][1 if fr else 0] for k, _ in DB_COLUMNS],
+                        [[x.get("id"), (x.get("label") or {}).get(t.lang) or (x.get("label") or {}).get("en")
+                          if isinstance(x.get("label"), dict) else x.get("label")]
+                         + [x.get(k) for k, _ in DB_COLUMNS] for x in cases],
+                        caption="Daily data budget per case (MB/day), from the Telemetry tab" if not fr
+                        else "Bilan de données quotidien par cas (Mo/jour), onglet Télémesure")
+        sci = daily.get("science") if isinstance(daily.get("science"), dict) else {}
+        if sci.get("target_mb_per_day") is not None:
+            c.pkg.p((f"Science return: target {_fmt(sci.get('target_mb_per_day'))} MB/day delivered, "
+                     f"{_fmt(sci.get('raw_mb_per_day'))} MB/day raw, compression needed {_fmt(sci.get('compression_needed'))} "
+                     f"(assumed {_fmt(sci.get('compression_ratio'))}).") if not fr else
+                    (f"Retour scientifique : objectif {_fmt(sci.get('target_mb_per_day'))} Mo/jour livrés, "
+                     f"{_fmt(sci.get('raw_mb_per_day'))} Mo/jour bruts, compression nécessaire {_fmt(sci.get('compression_needed'))} "
+                     f"(supposée {_fmt(sci.get('compression_ratio'))})."))
+        if closure.get("status") == "fail":
+            c.pkg.open(f"The baseline data budget case {closure.get('id')} does not close", "H")
     hk = ((sx.get("cdr") or {}).get("budget") or {})
     if hk:
         rows = [[k, v] for k, v in hk.items() if isinstance(v, (int, float, str)) and not isinstance(v, bool)]
@@ -855,11 +898,20 @@ def _verification(c: Ctx) -> None:
             c.pkg.bullets([f"{r.get('code')}: {r.get('text')}" for r in pa])
         c.pkg.open("Model philosophy and AIT programme (models, test matrix, facilities)", stub_owner(ait) or "A W8a")
     else:
+        fr = t.lang == "fr"
         if ait.get("models"):
-            c.pkg.table([t("Name"), t("Description")], [[m.get("name") or m.get("id"), m.get("purpose") or m.get("description") or ""]
-                                                       for m in ait["models"]])
+            c.pkg.table([t("ID"), t("Name"), t("Level"), t("Description")],
+                        [[m.get("code") or m.get("id"), (m.get("name_fr") if fr else None) or m.get("name") or "",
+                          m.get("level") or "", (m.get("purpose_fr") if fr else None) or m.get("purpose") or m.get("description") or ""]
+                         for m in ait["models"]],
+                        caption=(f"Model philosophy: {ait.get('philosophy') or '—'}" if not fr
+                                 else f"Philosophie des modèles : {ait.get('philosophy') or '—'}"))
         if ait.get("tests"):
-            c.pkg.table([t("ID"), t("Name"), t("Status")], [[x.get("id"), x.get("name") or x.get("type"), x.get("status")] for x in ait["tests"]])
+            c.pkg.table([t("ID"), t("Name"), "Models" if not fr else "Modèles", t("Level"), "Stage" if not fr else "Étape",
+                         "Facility" if not fr else "Moyen", t("Status")],
+                        [[x.get("code") or x.get("id"), (x.get("name_fr") if fr else None) or x.get("name") or x.get("type"),
+                          ", ".join(x.get("models") or []), x.get("level") or "", x.get("stage") or "", x.get("facility") or "",
+                          x.get("status")] for x in ait["tests"]])
 
 
 def _trl(c: Ctx) -> None:
@@ -963,13 +1015,23 @@ def _spectrum(c: Ctx) -> None:
         c.pkg.open("Frequency assignments and licence filings (ISED space and earth stations, ITU, RSSSA)",
                    stub_owner(lic) or "L W5")
     else:
+        fr = t.lang == "fr"
         if lic.get("assignments"):
-            c.pkg.table([t("Name"), "Frequency (MHz)" if t.lang != "fr" else "Fréquence (MHz)", "Direction", t("Note")],
-                        [[a.get("name") or a.get("id"), a.get("frequency_mhz") or a.get("centre_mhz"), a.get("direction") or "",
-                          a.get("emission") or a.get("note") or ""] for a in lic["assignments"]])
+            c.pkg.table([t("Name"), t("Station"), "Direction", "Frequency (MHz)" if not fr else "Fréquence (MHz)",
+                         "Emission" if not fr else "Émission", "Service", "Allocation", t("Note")],
+                        [[a.get("name") or a.get("id"), a.get("station") or "", a.get("direction") or "",
+                          a.get("centre_frequency_mhz") or a.get("frequency_mhz") or a.get("centre_mhz"),
+                          a.get("emission_designator") or a.get("emission") or "", a.get("service") or "",
+                          a.get("allocation") or "", a.get("note") or ""] for a in lic["assignments"]],
+                        caption="Frequency assignments (licensing record)" if not fr else "Assignations de fréquences (dossier de licences)")
         if lic.get("filings"):
-            c.pkg.table([t("Document"), t("Status"), "Date"], [[f.get("kind") or f.get("name"), f.get("status"),
-                                                                f.get("submitted_at") or f.get("date") or ""] for f in lic["filings"]])
+            c.pkg.table([t("Document"), "Authority" if not fr else "Autorité", t("Status"),
+                         "Start by" if not fr else "À lancer avant", "Submitted" if not fr else "Déposé",
+                         "Granted" if not fr else "Accordé", "Reference" if not fr else "Référence"],
+                        [[f.get("title") or f.get("kind") or f.get("name") or f.get("id"), f.get("authority") or "",
+                          f.get("status") or "", f.get("start_by") or "", f.get("submitted") or f.get("submitted_at") or "",
+                          f.get("granted") or "", f.get("reference") or ""] for f in lic["filings"]],
+                        caption="Licence filings and their status" if not fr else "Dépôts de licences et leur état")
 
 
 def _cds(c: Ctx) -> None:

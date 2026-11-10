@@ -5,5 +5,15 @@
   "Verification Control Document": "Document de contrôle de la vérification",
   "Every verification item by level, with the close-out status (ECSS-E-ST-10-02C)": "Chaque élément de vérification par niveau, avec son état de clôture (ECSS-E-ST-10-02C)",
   "Requirement Traceability Matrix": "Matrice de traçabilité des exigences",
-  "Requirement, method, stage, status and linked elements and functions": "Exigence, méthode, étape, état, éléments et fonctions liés"
+  "Requirement, method, stage, status and linked elements and functions": "Exigence, méthode, étape, état, éléments et fonctions liés",
+  "Review report": "Rapport de revue",
+  "Criteria with results and evidence, RIDs and actions, chair note, go / no-go and the baseline diff of one review": "Critères avec résultats et preuves, RID et actions, note du président, décision et écarts de configuration d’une revue",
+  "Trade-off report": "Rapport de compromis",
+  "Every trade study with its options, criteria, weights, scores and decision (ECSS-E-ST-10C Annex K)": "Chaque étude de compromis avec ses options, critères, pondérations, notes et décision (ECSS-E-ST-10C annexe K)",
+  "Technical requirements specification": "Spécification technique des besoins",
+  "Every requirement by type, with its environment section, verification and parents (ECSS-E-ST-10-06C)": "Chaque exigence par type, avec la section environnement, la vérification et les exigences mères (ECSS-E-ST-10-06C)",
+  "Modes, phases, contacts, data flow, typical day, flight rules, end-of-life operations": "Modes, phases, contacts, flux de données, journée type, règles de vol, opérations de fin de vie",
+  "Link cases, power rails and lines, buses and addresses, ICDs and interface requirements, with the diagrams": "Cas de liaison, rails et lignes d’alimentation, bus et adresses, ICD et exigences d’interface, avec les diagrammes",
+  "Verification Plan": "Plan de vérification",
+  "Model philosophy, test matrix, environmental test levels and the verification items by stage": "Philosophie des modèles, matrice d’essais, niveaux d’essais d’environnement et éléments de vérification par étape"
 }

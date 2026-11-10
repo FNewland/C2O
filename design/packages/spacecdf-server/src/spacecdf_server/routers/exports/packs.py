@@ -133,11 +133,17 @@ async def _route(family: str, study_id: str) -> bytes:
 
 
 async def _hook(module: str, sx: Any, plan, lang: str) -> bytes | None:
+    """The owner's ``services/docx/<module>.pack_docx``, else the export core's interim hook
+    (``services/docx/pack_hooks.HOOKS``), else None (listed as missing)."""
+    fn = None
     try:
         mod = importlib.import_module(f"spacecdf_server.services.docx.{module}")
+        fn = getattr(mod, "pack_docx", None)
     except ImportError:
-        return None
-    fn = getattr(mod, "pack_docx", None)
+        fn = None
+    if fn is None:
+        from ...services.docx.pack_hooks import HOOKS
+        fn = HOOKS.get(module)
     if fn is None:
         return None
     out = fn(sx, gate=plan.gate, lang=lang)
@@ -153,7 +159,7 @@ async def produce(doc, study_id: str, sx: Any, plan, lang: str, crosscheck: dict
     sxd = sx.as_dict()
     if kind == "docx":
         from .docx import docx_document
-        return (await docx_document(arg, study_id, sx=sx))[1], ""
+        return (await docx_document(arg, study_id, sx=sx, lang=lang))[1], ""
     if kind == "route":
         return await _route(arg, study_id), ""
     if kind == "vcd":
@@ -196,7 +202,7 @@ async def produce(doc, study_id: str, sx: Any, plan, lang: str, crosscheck: dict
     if kind == "hook":
         data = await _hook(arg, sx, plan, lang)
         if data is None:
-            return None, f"generator not available yet ({doc.owner} {doc.work_package})".strip()
+            return None, f"nothing to report yet: the study has no data for it ({doc.owner} {doc.work_package})".strip()
         return data, ""
     return None, f"unknown producer {doc.producer}"
 
