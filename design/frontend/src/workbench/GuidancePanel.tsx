@@ -3,6 +3,14 @@
  *
  * Shown as a collapsible sidebar or modal.
  * Content varies by current level and element context.
+ *
+ * Wave 3 (3.S4, owner S): the drawer opens on "This phase", the coaching cards of the systems-
+ * engineering protocol for the gate the study prepares for (GET /api/studies/{id}/phase): why the
+ * phase exists, what matters, the exit in plain words, common failures, the card of the active
+ * seat (all seats behind a disclosure) and the pointer cards. Three registers (learning, the
+ * default; plain; practitioner) are remembered per browser. Each card cites its source; the text
+ * paraphrases the systems-engineering skill (configs/se_protocol.yaml). ``PhaseCoaching`` is
+ * exported so the Phase panel (agent D) can show the same cards.
  */
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -10,8 +18,79 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import i18n from '../i18n'
 import { useUIStore, type Level } from '../stores/uiStore'
+import { useSeatStore } from '../seats/api'
+import { Disclosure, Select, StatusBadge } from '../components/ui'
 
 const API = '/api'
+
+// ─── wave 3: coaching cards of the systems-engineering protocol ─────────────
+
+type Bi = { en: string; fr: string }
+interface CoachCard { id: string; kind: string; title: Bi; body: Bi; source: string; source_label?: string; seat?: string; approval?: string }
+interface Coaching { register: string; registers: string[]; register_labels?: Record<string, Bi>; phase: CoachCard[]; seats: Record<string, CoachCard[]>; pointers: CoachCard[] }
+interface PhaseView { gate: string | null; gate_short?: string; phase: string | null; phase_label?: Bi; coaching: Coaching }
+
+const REGISTER_KEY = 'scdf.se.register'
+function readRegister(): string { try { return localStorage.getItem(REGISTER_KEY) || 'learning' } catch { return 'learning' } }
+function writeRegister(v: string) { try { localStorage.setItem(REGISTER_KEY, v) } catch { /* private mode */ } }
+
+function CardView({ c, fr }: { c: CoachCard; fr: boolean }) {
+  const { t } = useTranslation()
+  const body = (fr ? c.body.fr : c.body.en) || c.body.en
+  return (
+    <div className="p-1 mb-1 bg-accent rounded bl-accent">
+      <div className="t-12 w-600 mb-1">{(fr ? c.title.fr : c.title.en) || c.title.en}
+        {c.approval === 'pi_pending' && <> <StatusBadge status="info">{t('draft for approval')}</StatusBadge></>}</div>
+      {body.split('\n').filter(Boolean).map((line, i) => <div key={i} className="t-12 py-1 px-0">{line}</div>)}
+      <div className="t-12 c-3">{t('Source: {{source}}', { source: c.source_label || c.source })}</div>
+    </div>
+  )
+}
+
+/** The coaching cards of the phase the study prepares for (or ``gate``), in the chosen register. */
+export function PhaseCoaching({ studyId, gate }: { studyId: string | null; gate?: string }) {
+  const { t } = useTranslation()
+  const fr = i18n.language === 'fr'
+  const [register, setRegister] = useState<string>(readRegister)
+  const mySeat = useSeatStore(s => (s.team?.enabled ? s.team?.me?.active ?? null : null))
+  const { data } = useQuery<PhaseView | null>({
+    queryKey: ['se-phase-coaching', studyId, gate ?? '', register],
+    queryFn: () => fetch(`${API}/studies/${studyId}/phase?register=${encodeURIComponent(register)}&lang=${fr ? 'fr' : 'en'}${gate ? `&gate=${encodeURIComponent(gate)}` : ''}`)
+      .then(r => (r.ok ? r.json() : null)),
+    enabled: !!studyId,
+  })
+  if (!studyId || !data?.coaching) return null
+  const co = data.coaching
+  const seatIds = Object.keys(co.seats)
+  const mine = mySeat && co.seats[mySeat] ? co.seats[mySeat] : []
+  const others = seatIds.filter(s => s !== mySeat)
+  const regLabel = (r: string) => (fr ? co.register_labels?.[r]?.fr : co.register_labels?.[r]?.en) || r
+  return (
+    <section className="mb-4" aria-label={t('This phase')}>
+      <div className="row gap-2 mb-1">
+        <h3 className="t-13 w-600 m-0">{t('This phase')}: {data.gate_short ?? data.gate?.toUpperCase()}
+          {data.phase_label && <span className="c-2"> · {fr ? data.phase_label.fr : data.phase_label.en}</span>}</h3>
+        <Select aria-label={t('How the coaching talks')} value={register}
+          onChange={e => { setRegister(e.target.value); writeRegister(e.target.value) }}>
+          {co.registers.map(r => <option key={r} value={r}>{regLabel(r)}</option>)}
+        </Select>
+      </div>
+      {co.phase.map(c => <CardView key={c.id} c={c} fr={fr} />)}
+      {mine.map(c => <CardView key={c.id} c={c} fr={fr} />)}
+      {co.pointers.length > 0 && (
+        <div className="mt-2">
+          <div className="t-12 w-600 c-2 mb-1 caps">{t('Points to raise')}</div>
+          {co.pointers.map(c => <CardView key={c.id} c={c} fr={fr} />)}
+        </div>
+      )}
+      {others.length > 0 && (
+        <Disclosure summary={t('Cards for every seat')} meta={String(others.length)} ruled>
+          {others.flatMap(s => co.seats[s]).map(c => <CardView key={c.id} c={c} fr={fr} />)}
+        </Disclosure>
+      )}
+    </section>
+  )
+}
 
 const levelGuidance = (t: TFunction): Record<Level, { title: string; sessions: string[]; objectives: string[]; tips: string[] }> => ({
   0: {
@@ -227,6 +306,7 @@ async function downloadWorksheet(ws: Worksheet) {
 export function GuidancePanel({ onClose }: { onClose: () => void }) {
   const currentLevel = useUIStore(s => s.currentLevel)
   const setStudyId = useUIStore(s => s.setStudyId)
+  const studyIdNow = useUIStore(s => s.studyId)
   const qc = useQueryClient()
   const { t } = useTranslation()
   const [loadingExample, setLoadingExample] = useState(false)
@@ -261,6 +341,9 @@ export function GuidancePanel({ onClose }: { onClose: () => void }) {
         <h2 id="c2o-guide-title" className="t-15 w-600 m-0">{t('Facilitator Guide')}</h2>
         <button type="button" onClick={onClose} className="c2o-btn c2o-btn--icon" aria-label={t('Close')} autoFocus>×</button>
       </div>
+
+      {/* Wave 3: the coaching of the phase the study prepares for */}
+      <PhaseCoaching studyId={studyIdNow} />
 
       {/* Current level guidance */}
       <div className="mb-4">
