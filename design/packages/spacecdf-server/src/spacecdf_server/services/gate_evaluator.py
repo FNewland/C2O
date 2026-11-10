@@ -1776,4 +1776,10 @@ def _icd_pdr(result: dict, ctx: dict) -> bool:
 
 def _cost_total(ctx: dict) -> float | None:
     cost = _ev(ctx).get("cost")
-    return _first_num(cost or {}, "total_meur") if isinstance(cost, dict) else None
+    if not isinstance(cost, dict):
+        return None
+    meur = _first_num(cost, "total_meur")
+    if meur is None:
+        keur = _first_num(cost, "total_keur")
+        meur = keur / 1000.0 if keur is not None else None
+    return meur
