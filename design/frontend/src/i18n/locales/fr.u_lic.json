@@ -83,7 +83,6 @@
   "Emission": "Émission",
   "EIRP (dBW)": "PIRE (dBW)",
   "PFD at 5° (dBW/m²/4 kHz)": "Puissance surfacique à 5° (dBW/m²/4 kHz)",
-  "Coordination": "Coordination",
   "fallback": "repli",
   "Derived from the TT&C properties, the mission link and the ground stations. Not amateur, not meteorological aids: the space operation service.": "Dérivé des propriétés TT&C, de la liaison de la mission et des stations sol. Ni amateur ni auxiliaires de la météorologie : le service d’exploitation spatiale.",
   "With the {{area}} m² sail: {{s}} / {{n}} / {{w}} y (strong / nominal / weak cycle) from {{alt}} km; without it {{lo}}-{{hi}} y.": "Avec la voile de {{area}} m² : {{s}} / {{n}} / {{w}} ans (cycle fort / nominal / faible) depuis {{alt}} km; sans elle {{lo}}-{{hi}} ans.",
@@ -109,5 +108,12 @@
   "Filing": "Demande",
   "Start by": "Commencer avant",
   "Conditions": "Conditions",
-  "To be confirmed before filing:": "À confirmer avant le dépôt :"
+  "To be confirmed before filing:": "À confirmer avant le dépôt :",
+  "Your seat owns the disposal function: you see and edit the disposal part of the licensing record.": "Votre poste est responsable de la fonction d’élimination : vous voyez et modifiez la partie élimination du dossier de licence.",
+  "Link case": "Cas de liaison",
+  "Override power (W)": "Puissance imposée (W)",
+  "Override gain (dBi)": "Gain imposé (dBi)",
+  "Override EIRP (dBW)": "PIRE imposée (dBW)",
+  "margin": "marge",
+  "Each earth station takes its power, antenna gain and line loss from its link case. An override here wins over the link case in the ISED documents; save, then the EIRP is recomputed.": "Chaque station terrienne tire sa puissance, son gain d’antenne et ses pertes de ligne de son cas de liaison. Une valeur imposée ici l’emporte sur le cas de liaison dans les documents d’ISDE; enregistrez, puis la PIRE est recalculée."
 }

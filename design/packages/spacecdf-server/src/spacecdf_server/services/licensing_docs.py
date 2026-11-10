@@ -367,7 +367,8 @@ def ised_space(sx) -> dict:
         _sec("7", "Link budgets (Annex C)", [
             _row("Design case", f"{link.get('downlink_frequency_mhz')} MHz, {link.get('downlink_rate_bps')} bit/s, "
                  f"margin {link.get('margin_db')} dB" if link else None),
-            _row("Per-station cases", "from the link cases (W4.04) when available", "tbc")]),
+            _row("Per-station cases", f"{len((sx.links or {}).get('items') or [])} named link cases (W4.04), table below"
+                 if (sx.links or {}).get("items") else None)], table=_link_cases_table(sx)),
         _sec("8", "Interference and sharing", paragraphs=[
             "401-402 MHz: primary space operation (space-to-Earth); the channel avoids 401.4-401.7 MHz used by NGSO "
             "data-collection systems (ITU-R SA.2045) and is shared with radiosondes (meteorological aids).",
@@ -385,29 +386,95 @@ def ised_space(sx) -> dict:
     return _doc("ised-space", sx, secs, {"service": dl.get("service"), "emission": dl.get("emission_designator")})
 
 
+def _fmt(v: Any, unit: str = "", nd: int = 1) -> str | None:
+    if v is None or v == "":
+        return None
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        v = f"{round(float(v), nd):g}"
+    return f"{v} {unit}".strip()
+
+
+def _case_rows(prefix: str, c: dict | None) -> list[dict]:
+    """The link case (W4.04) a station's assignment is based on, as document rows."""
+    if not c:
+        return [_row(f"{prefix} link case", "no named link case for this station: band defaults used", "tbc")]
+    return [
+        _row(f"{prefix} link case", f"{c.get('name')}" + (" (design case)" if c.get("is_design_case") else "")),
+        _row(f"{prefix} elevation", _fmt(c.get("elevation_deg"), "deg", 0)),
+        _row(f"{prefix} slant range", _fmt(c.get("slant_range_km"), "km", 0)),
+        _row(f"{prefix} data rate", _fmt((c.get("data_rate_bps") or 0) / 1e3 or None, "kbit/s")
+             + (f", {c['coding']}" if c.get("coding") else "") if c.get("data_rate_bps") else None),
+        _row(f"{prefix} receiver G/T", _fmt(c.get("g_over_t_dbk"), "dB/K")
+             + (f" (T_sys {c['system_noise_temp_k']:g} K)" if c.get("system_noise_temp_k") else "")
+             if c.get("g_over_t_dbk") is not None else None),
+        _row(f"{prefix} Eb/N0", _fmt(c.get("ebn0_db"), "dB")),
+        _row(f"{prefix} margin", _fmt(c.get("margin_db"), "dB")),
+    ]
+
+
+def _link_cases_table(sx) -> dict | None:
+    items = (sx.links or {}).get("items") or []
+    if not items:
+        return None
+    rows = []
+    for c in items:
+        r = c.get("results") or {}
+        m = c.get("margin_db") if c.get("margin_db") is not None else r.get("margin_db")
+        rows.append([c.get("name") or c.get("id"), c.get("direction"), c.get("station") or "",
+                     f"{c.get('elevation_deg') or 0:g}", f"{(c.get('data_rate_bps') or 0) / 1e3:g}",
+                     f"{c.get('tx_power_w') or 0:g}", "" if r.get("eirp_dbw") is None else f"{r['eirp_dbw']:g}",
+                     "" if r.get("g_over_t_dbk") is None else f"{r['g_over_t_dbk']:g}",
+                     "" if m is None else f"{round(m, 1):g}", "yes" if c.get("is_design_case") else ""])
+    return {"columns": ["Case", "Direction", "Station", "Elevation (deg)", "Rate (kbit/s)", "Power (W)", "EIRP (dBW)",
+                        "G/T (dB/K)", "Margin (dB)", "Design case"], "rows": rows}
+
+
 def ised_earth(sx) -> list[dict]:
+    """One ISED earth-station application per ground station. Transmit power, antenna gain and line
+    loss come from the station's link case (W4.04) unless the Licensing tab overrides them for the
+    assignment (``assignment_overrides``)."""
     lic = sx.licensing or {}
     asg = lic.get("assignments") or []
+    ap = lic.get("applicant") or {}
     docs = []
     for st in lic.get("stations") or []:
         mine = [a for a in asg if a["station"] == st["name"]]
         tx = next((a for a in mine if a["transmits"]), {})
+        rx = next((a for a in mine if not a["transmits"]), {})
+        height = tx.get("antenna_height_m") or rx.get("antenna_height_m")
+        basis = {"link case": "from the link case", "licensing record": "from the Licensing tab (override)",
+                 "design": "band default"}
         secs = [
-            _sec("1", "Applicant", [_row("Applicant", (lic.get("applicant") or {}).get("legal_name"), "team", "legal name")]),
+            _sec("1", "Applicant", [_row("Applicant", ap.get("legal_name"), "team", "legal name"),
+                                    _row("Contact", ap.get("contact_name"), "team", "contact"),
+                                    _row("Address", ap.get("address"), "team", "address")]),
             _sec("2", "Site", [_row("Station", st["name"]), _row("Latitude", f"{st['lat']:.4f}"),
                                _row("Longitude", f"{st['lon']:.4f}"),
-                               _row("Antenna height above ground", None, "team", "antenna height"),
+                               _row("Antenna height above ground", _fmt(height, "m"), "team", "antenna height"),
                                _row("Minimum elevation", f"{st.get('min_elevation_deg') or 10:g} deg"),
                                _row("Antenna siting consultation (CPC-2-0-03)", "exemption to be confirmed", "tbc")]),
             _sec("3", "Frequency assignments (earth station)", table=_assign_table(mine)),
-            _sec("4", "Transmitter", [_row("Power", f"{tx.get('tx_power_w')} W (at most)"),
-                                      _row("Antenna", tx.get("antenna")), _row("Gain", f"{tx.get('antenna_gain_dbi')} dBi"),
-                                      _row("EIRP", f"{tx.get('eirp_dbw')} dBW")]),
-            _sec("5", "Sharing", paragraphs=["Uplink at 449.75-450.25 MHz: protect land-mobile users above 450 MHz "
+            _sec("4", "Transmitter", [_row("Power", f"{tx.get('tx_power_w'):g} W (at most)" if tx.get("tx_power_w") else None),
+                                      _row("Antenna", tx.get("antenna")),
+                                      _row("Gain", _fmt(tx.get("antenna_gain_dbi"), "dBi")),
+                                      _row("Line loss", _fmt(tx.get("line_loss_db"), "dB")),
+                                      _row("EIRP", _fmt(tx.get("eirp_dbw"), "dBW")),
+                                      _row("Basis", basis.get(tx.get("basis"), tx.get("basis")))]),
+            _sec("5", "Receiver", [_row("Antenna", rx.get("antenna")),
+                                   _row("Gain", _fmt(rx.get("antenna_gain_dbi"), "dBi")),
+                                   _row("System noise temperature", _fmt(rx.get("system_noise_temp_k"), "K", 0)),
+                                   _row("Basis", basis.get(rx.get("basis"), rx.get("basis")))]),
+            _sec("6", "Link budgets (W4.04 link cases)",
+                 _case_rows("Uplink", tx.get("link_case")) + _case_rows("Downlink", rx.get("link_case"))),
+            _sec("7", "Sharing", paragraphs=["Uplink at 449.75-450.25 MHz: protect land-mobile users above 450 MHz "
                                              "(C23) and radiolocation below; transmit only above the elevation mask "
                                              "and while the satellite is in view."]),
         ]
-        docs.append(_doc("ised-earth", sx, secs, {"station": st["name"]},
+        dlc = rx.get("link_case") or {}
+        docs.append(_doc("ised-earth", sx, secs,
+                         {"station": st["name"], "tx_power_w": tx.get("tx_power_w"), "eirp_dbw": tx.get("eirp_dbw"),
+                          "uplink_case": (tx.get("link_case") or {}).get("name"), "downlink_case": dlc.get("name"),
+                          "downlink_margin_db": dlc.get("margin_db")},
                          title=f"ISED earth station licence application: {st['name']}"))
     return docs
 
@@ -524,40 +591,37 @@ def un_registration(sx) -> dict:
 # ───────────────────────────────────────────────────────────────── export control
 
 def export_control(sx) -> dict:
+    """Per-part classification from ``bom_generator.export_control_of`` (W5.05: the element's
+    ``performance.export_control``, the KB part's default, then the InGaAs / crypto / GNSS rules), and
+    the flags of ``bom_generator.export_assessment_flags`` as the actions."""
+    from .bom_generator import export_assessment_flags, export_control_of
+    els = [e for e in (sx.elements or {}).get("items") or [] if not e.get("deleted_at")]
+    by_id = {e.get("id"): e for e in els}
     items = []
-    for e in (sx.elements or {}).get("items") or []:
+    for e in els:
         if (e.get("segment") or "space") != "space" or e.get("element_type") != "component":
             continue
-        p = e.get("performance") or {}
-        name = str(e.get("name") or "")
-        low = name.lower()
-        eccn, basis = p.get("eccn"), "element field" if p.get("eccn") else ""
-        if not eccn:
-            if any(k in low for k in ("swir", "ingaas", "vswir")):
-                eccn, basis = "6A003.b.4.b (likely)", "InGaAs focal plane 900-1700 nm (6A002.a.3); vendor ECCN to be confirmed"
-            elif any(k in low for k in ("transceiver", "radio", "crypto")) and "aes" in str(
-                    (e.get("performance") or {}).get("encryption", "")).lower():
-                eccn, basis = "5A002 (to be confirmed)", "encryption function (AES-256)"
-            elif "gnss" in low or "gps" in low:
-                eccn, basis = "7A105 / 7A994 (to be confirmed)", "GNSS receiver: check altitude/velocity limits"
-        if eccn:
-            items.append([name, eccn, p.get("origin") or "", basis])
-    # TT&C encryption may sit on the subsystem
-    for e in (sx.elements or {}).get("items") or []:
-        if e.get("element_type") == "subsystem" and "aes" in str((e.get("performance") or {}).get("encryption", "")).lower():
-            if not any("5A002" in r[1] for r in items):
-                items.append([f"{e.get('name')} (encryption)", "5A002 (to be confirmed)", "", "AES-256 command/data encryption"])
+        ec = export_control_of(e, by_id.get(e.get("parent_id")))
+        if not (ec["controlled"] or [r for r in ec["rules"] if r != "EC-US-ORIGIN"] or ec["eccn"]):
+            continue
+        basis = ", ".join(r.replace("EC-", "") for r in ec["rules"]) or "export-control data"
+        items.append([str(e.get("name") or ""), ec["eccn"] or "to classify", ec["origin"] or "",
+                      ec["permit"] or "", basis])
+    flags = export_assessment_flags([e for e in els if (e.get("segment") or "space") == "space"])
     secs = [
-        _sec("1", "Controlled items (by part)", table={"columns": ["Item", "Classification", "Origin", "Basis"],
-                                                       "rows": items}),
-        _sec("2", "Spacecraft", [_row("Complete spacecraft", "Export Control List Group 2/9 spacecraft item (to be "
+        _sec("1", "Controlled items (by part)", table={"columns": ["Item", "Classification", "Origin", "Permit",
+                                                                   "Rule"], "rows": items}),
+        _sec("2", "Flags", table={"columns": ["Flag", "Severity", "Parts", "Basis", "Action"],
+                                  "rows": [[f["flag"], f["severity"], f["parameter"], f["detail"], f["action"]]
+                                           for f in flags]}),
+        _sec("3", "Spacecraft", [_row("Complete spacecraft", "Export Control List Group 2/9 spacecraft item (to be "
                                       "confirmed); a permit is needed to export to a foreign launch site", "tbc")]),
-        _sec("3", "Actions", paragraphs=[
+        _sec("4", "Actions", paragraphs=[
             "Ask the SWIR camera vendor for its ECCN and the export authorisation it ships under before ordering the "
             "engineering model; re-export of the camera or of the satellite needs a Canadian export permit.",
-            "Record the ECCN and origin on each BOM line (performance fields eccn / origin)."]),
+            "Record the ECCN, origin and permit on each BOM line (Element Properties, export control)."]),
     ]
-    return _doc("export-control", sx, secs, {"items": len(items)})
+    return _doc("export-control", sx, secs, {"items": len(items), "flags": [f["flag"] for f in flags]})
 
 
 # ───────────────────────────────────────────────────────────────── status

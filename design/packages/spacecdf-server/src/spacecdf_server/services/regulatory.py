@@ -1071,11 +1071,16 @@ def generate_export_assessment(
     kb_components: list[dict[str, Any]] | None = None,
     # Design params passthrough
     design_params: dict[str, Any] | None = None,
+    # The study's elements (W5.05 per-part export-control flags from bom_generator)
+    elements: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Generate export control classification assessment.
 
     Automatically flags potential controlled technologies based on
-    design parameters and component origins.
+    design parameters and component origins. With ``elements`` (the study's product tree), the
+    per-part flags of ``bom_generator.export_assessment_flags`` are added (InGaAs/SWIR camera
+    6A003, encrypted radio 5A002, GNSS receiver, parts marked controlled in their export-control
+    data) and listed under ``per_part``.
     """
     dp = design_params or {}
     comps = components_origin or dp.get("components_origin", [])
@@ -1153,6 +1158,14 @@ def generate_export_assessment(
             "action": "Verify propulsion system classification with vendor",
             "auto_populated": True,
         })
+
+    # Per-part flags (W5.05): ECCN, origin and permit stored per element or in the KB part
+    _els = elements if elements is not None else dp.get("elements")
+    part_flags: list[dict[str, Any]] = []
+    if _els:
+        from .bom_generator import export_assessment_flags
+        part_flags = export_assessment_flags([e for e in _els if isinstance(e, dict)])
+        flags.extend(part_flags)
 
     # US-origin components from KB → flag for EAR review
     us_components: list[dict[str, Any]] = []
@@ -1252,6 +1265,11 @@ def generate_export_assessment(
                 "flags": flags,
             },
             "classifications": classifications,
+            "per_part": {
+                "count": _field(sum(len(f.get("components") or []) for f in part_flags)),
+                "flags": [f["flag"] for f in part_flags],
+                "components": [c for f in part_flags for c in (f.get("components") or [])],
+            },
             "us_origin_components": {
                 "count": _field(len(us_components)),
                 "components": us_components,

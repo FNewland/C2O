@@ -37,7 +37,7 @@ seats:
       element_types: [mission]
       element_domains: [mission]
     sees_first: {view: vv, panel: blocks, focus: {en: "Gate checklist, next action per seat, open proposals", fr: "Liste de contrôle du jalon, prochaine action par poste, propositions ouvertes"}}
-    tabs: [blocks, modes, budget, requirements, decide, trace, tmtc, fdir, ops]
+    tabs: [blocks, modes, budget, requirements, decide, trace, tmtc, fdir, ops, licensing]
 
   - id: systems_engineer
     label: {en: Systems, fr: Ingénierie système}
@@ -104,7 +104,7 @@ seats:
       prefixes: [link, data, ttc, obdh]
       element_domains: [ttc, comms, communications, rf, obc, obdh, cdh, data, dhs, software]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "Link budget, data budget, RF band, licensing", fr: "Bilan de liaison, bilan de données, bande RF, licences"}}
-    tabs: [blocks, spacecraft, modes, budget, interfaces, data, icd, tmtc, analyses, decide]
+    tabs: [blocks, spacecraft, modes, budget, interfaces, data, icd, tmtc, analyses, decide, licensing]
 
   - id: thermal_engineer
     label: {en: Thermal, fr: Thermique}
@@ -142,7 +142,7 @@ seats:
       # a disposal device even with no ΔV (seats/guard.py required_optional_seats).
       element_domains: [propulsion, prop, disposal, deorbit]
     sees_first: {view: spacecraft, panel: analyses, focus: {en: "ΔV budget, propellant", fr: "Bilan de ΔV, ergols"}}
-    tabs: [blocks, spacecraft, budget, analyses, decide]
+    tabs: [blocks, spacecraft, budget, analyses, decide, licensing]
 
   - id: cost_engineer
     label: {en: Cost & risk, fr: Coûts et risques}
@@ -169,14 +169,14 @@ seats:
     kind: observer
     exclusive: false
     sees_first: {view: top, panel: blocks, focus: {en: "Any view, read-only", fr: "Toutes les vues, en lecture seule"}}
-    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses]
+    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses, licensing]
 
   - id: instructor
     label: {en: Instructor, fr: Enseignant}
     kind: instructor
     exclusive: false
     sees_first: {view: top, panel: blocks, focus: {en: "Class board", fr: "Tableau de la classe"}}
-    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses]
+    tabs: [blocks, spacecraft, modes, budget, requirements, functions, interfaces, electrical, data, icd, tmtc, fdir, aocs, ops, trace, decide, analyses, licensing]
 
 # Team-size presets (C2O default). Each group is held by one person: claiming a group's card
 # claims every seat in it. The seats stay distinct (ownership, review inbox, audit).

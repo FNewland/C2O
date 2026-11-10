@@ -352,6 +352,7 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     await api.call("PUT", f"/api/studies/{sid}/schedule/settings", {"launch_provided": True, "currency": "CAD"})
     await api.post(f"/api/studies/{sid}/schedule/propose")
     await _hk_sids(api, seed)
+    await _s4_licensing(api, seed)
 
 
 # ───────────────────────────────────── agent D (wave 1): mission need, ConOps, links, trades, review
@@ -674,3 +675,78 @@ async def _w2_link_interfaces(api: _Api, seed: NfiSeed) -> None:
             await api.call("PATCH", f"/api/interfaces/{i['id']}", {"status": "accepted"})
     await api.post(f"/api/studies/{sid}/interface-requirements/sync")
     seed.report["interface_link"] = rep
+
+
+# ───────────────────────────────────── agent L (wave 2): the Licensing tab
+
+#: Neutral applicant placeholders: the example names no institution, person or real address.
+LICENSING_APPLICANT = {
+    "legal_name": "Example university (applicant placeholder)", "address": "Example address, Ottawa, Ontario, Canada",
+    "country": "Canada", "canadian_entity": True, "contact_name": "Mission manager (placeholder)",
+    "contact_email": "licensing@example.org", "contact_phone": "+1 555 0100",
+    "security_officer": "Security officer (placeholder)",
+}
+
+
+def licensing_record(n: dict) -> dict:
+    """The Licensing tab of the Northern Fire and Ice mission at S4, from the baseline requirements
+    (codes cited) and NUMBERS.yaml. What the baseline does not say (backup facility, personnel and
+    physical security, data disposal, priority access, launch provider and vehicle) stays empty, so
+    the documents print it as an applicant input."""
+    d = n["disposal"]
+    return {
+        "applicant": dict(LICENSING_APPLICANT),
+        "contacts": [{"role": "24/7 operations contact (conjunction screening, REG-DEB-02)",
+                      "name": "Operations duty officer (placeholder)", "email": "ops@example.org", "phone": "+1 555 0101"}],
+        "participants": [
+            {"name": "Student engineering team (placeholder)", "role": "design, build and operation", "country": "Canada"},
+            {"name": "Science team (placeholder)", "role": "science processing and archive", "country": "Canada"},
+            {"name": "Funding agency student CubeSat programme (placeholder)", "role": "sponsor", "country": "Canada"}],
+        "itu_network_name": "NFI-1",
+        "cdpp": {
+            "command_facility": "Mission control centre, Ottawa: the single licensed command centre; the four ground "
+                                "stations are reached only over its site-to-site VPN (MIS-OPS-03, SEG-GS-08).",
+            "data_facility": "Science segment: Level-0 to Level-2 processing and archive for at least 10 years after "
+                             "the end of the mission (MIS-DAT-07).",
+            "command_encryption": "CCSDS SDLS authenticated encryption, AES-256, in the on-board computer software, "
+                                  "independent of the radio (REG-RSS-03).",
+            "command_authentication": "Every accepted telecommand authenticated (SDLS); irreversible commands need "
+                                      "ARM + FIRE, a second certified operator and a GO from the Team leader.",
+            "downlink_encryption": "Payload data encrypted on the space-to-ground link (SDLS, AES-256) and held in "
+                                   "access-controlled storage on the ground (REG-RSS-04).",
+            "key_management": "Encrypted key store with two-person access control, logged key loading and a "
+                              "documented key-compromise procedure (SEG-GS-10).",
+            "key_custody": "Mission control centre, two-person control (SEG-GS-10).",
+            "command_process": "Pass schedule for all four stations at least 24 h ahead (SEG-GS-09); every "
+                               "telecommand logged with operator identity, time and verification result for the "
+                               "life of the licence (SEG-GS-11).",
+            "network_security": "Site-to-site VPN between mission control and each station, mutual certificate "
+                                "authentication and AES-256 (SEG-GS-08).",
+        },
+        "data_policy": {
+            "distribution": "Level-1C and Level-2 products released openly within 6 months of acquisition, subject "
+                            "to the RSSSA licence conditions (MIS-DAT-05).",
+            "eula": "CC BY 4.0 or an equivalent open licence (MIS-DAT-05).",
+            "retention": "All Level-0 data, products, calibration data and software versions for at least 10 years "
+                         "after the end of the mission (MIS-DAT-07).",
+            "sensed_state_access": "Raw data of a sensed state's territory provided within 30 days of a request when "
+                                   "the licence requires it (REG-RSS-05).",
+        },
+        "launch": {"deployer": "3U CubeSat deployer (rideshare)"},
+        "disposal": {"independent_circuits": int(d["release_circuits"]),
+                     "independent_timer_days": int(d["independent_timer_days"]),
+                     "trigger": ["ground command (ARM + FIRE)", "independent timer (OBC-independent)",
+                                 "battery under-voltage"],
+                     "mass_basis": "allocation"},
+        "notes": "Applicant placeholder for the teaching example: replace with the real applicant, its ownership and "
+                 "control before any filing.",
+    }
+
+
+async def _s4_licensing(api: _Api, seed: NfiSeed) -> None:
+    """W5.03 / W5.04: the Licensing tab filled from the baseline (neutral applicant placeholders)."""
+    sid = seed.study_id
+    cur = await api.call("GET", f"/api/lifecycle/licensing/{sid}")
+    saved = await api.call("PUT", f"/api/lifecycle/licensing/{sid}",
+                           {**licensing_record(load("NUMBERS")), "version": cur["version"]})
+    seed.report["licensing_version"] = saved["version"]
