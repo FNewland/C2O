@@ -6,12 +6,18 @@
  *
  * Server: GET/PUT /api/lifecycle/licensing/{study}, POST …/evidence,
  *         POST /api/exports/regulatory/{kind}/{study}?fmt=docx|json.
- * Edited by the Team leader and Comms engineer seats (the server refuses other seats).
+ * Its own workbench tab ('licensing') and the Export drawer's dialog. Edited by the Team leader and
+ * Comms engineer seats; the Propulsion seat (which owns the disposal function) sees and edits the
+ * disposal part only. The server refuses other seats.
+ *
+ * Frequencies: each earth station's power, gain and line loss come from its link case (W4.04);
+ * per-assignment overrides (power, gain, EIRP) are kept in the record's assignment_overrides.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Button, Dialog, Field, Input, Note, Select, Tabs, Textarea, tabPanelProps } from '../components/ui'
+import { useSeatView } from '../seats/view'
 
 const API = '/api'
 const GRID = { gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' } as const
@@ -106,9 +112,16 @@ function RowsEditor({ rows, cols, onChange, addLabel }: {
   )
 }
 
+/** Seats that see only the disposal part of the tab (the Propulsion seat owns the disposal function). */
+const DISPOSAL_SEATS = new Set(['propulsion_engineer'])
+const OVERRIDE_FIELDS = ['tx_power_w', 'antenna_gain_dbi', 'eirp_dbw'] as const
+
 export function LicensingPanel({ studyId }: { studyId: string }) {
   const { t } = useTranslation()
-  const [tab, setTab] = useState<Section>('applicant')
+  const seat = useSeatView()
+  const disposalOnly = !!seat.active && DISPOSAL_SEATS.has(seat.active) && !seat.instructor
+  const [tab, setTab] = useState<Section>(disposalOnly ? 'disposal' : 'applicant')
+  useEffect(() => { if (disposalOnly) setTab(cur => (cur === 'disposal' || cur === 'documents') ? cur : 'disposal') }, [disposalOnly])
   const [data, setData] = useState<Rec | null>(null)
   const [rec, setRec] = useState<Rec | null>(null)
   const [version, setVersion] = useState(0)
@@ -151,7 +164,9 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
     if (!rec) return
     setBusy(true); setMsg(null)
     const { filings: f, ...rest } = rec
-    const body = { ...rest, filings: (f ?? []).filter((x: Rec) => x && x.id), version }
+    // The Propulsion seat writes the disposal part only (the server refuses the rest).
+    const body = disposalOnly ? { disposal: rec.disposal ?? {}, version }
+      : { ...rest, filings: (f ?? []).filter((x: Rec) => x && x.id), version }
     const r = await fetch(`${API}/lifecycle/licensing/${studyId}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     setBusy(false)
@@ -177,11 +192,19 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
   const disp: Rec = d.disposal ?? {}
   const ap = rec.applicant ?? {}, cd = rec.cdpp ?? {}, dp = rec.data_policy ?? {}, ln = rec.launch ?? {}, rd = rec.disposal ?? {}
 
-  const tabs: Array<{ id: Section; label: string }> = [
+  const allTabs: Array<{ id: Section; label: string }> = [
     { id: 'applicant', label: t('Applicant') }, { id: 'protection', label: t('Command and data protection') },
     { id: 'policy', label: t('Data policy and launch') }, { id: 'frequencies', label: t('Frequencies') },
     { id: 'disposal', label: t('Disposal') }, { id: 'filings', label: t('Filings') }, { id: 'documents', label: t('Documents') },
   ]
+  const tabs = disposalOnly ? allTabs.filter(x => x.id === 'disposal' || x.id === 'documents') : allTabs
+  const overrides: Rec = rec.assignment_overrides ?? {}
+  const setOverride = (aid: string, field: string, value: string) => {
+    const cur: Rec = { ...(overrides[aid] ?? {}) }
+    // '' clears the override (the record keeps the key; the server ignores empty values)
+    cur[field] = value === '' ? '' : Number(value)
+    set(['assignment_overrides'], { ...overrides, [aid]: cur })
+  }
 
   return (
     <div className="c2o-pane stack gap-2">
@@ -191,6 +214,7 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
         <Button size="sm" variant="primary" onClick={save} busy={busy} disabledReason={!dirty ? t('No changes') : undefined}>{t('Save')}</Button>
       </div>
       {msg && <Note tone={msg.tone} role={msg.tone === 'alarm' ? 'alert' : 'status'}>{msg.text}</Note>}
+      {disposalOnly && <p className="t-12 c-2 m-0">{t('Your seat owns the disposal function: you see and edit the disposal part of the licensing record.')}</p>}
 
       <div {...tabPanelProps('lic', tab)} className="stack gap-2">
         {tab === 'applicant' && (<>
@@ -257,7 +281,8 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
               <thead><tr>
                 <th>{t('Assignment')}</th><th>{t('Station')}</th><th>{t('Direction')}</th><th>{t('Centre (MHz)')}</th>
                 <th>{t('Emission')}</th><th>{t('Power (W)')}</th><th>{t('EIRP (dBW)')}</th><th>{t('PFD at 5° (dBW/m²/4 kHz)')}</th>
-                <th>{t('Service')}</th><th>{t('Coordination')}</th>
+                <th>{t('Service')}</th><th>{t('Link case')}</th><th>{t('Override power (W)')}</th>
+                <th>{t('Override gain (dBi)')}</th><th>{t('Override EIRP (dBW)')}</th>
               </tr></thead>
               <tbody>
                 {(d.assignments ?? []).map((a: Rec) => (
@@ -265,12 +290,21 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
                     <td className="mono">{a.id}</td><td>{a.station}</td><td>{a.direction}{a.fallback ? ` (${t('fallback')})` : ''}</td>
                     <td className="mono">{a.centre_frequency_mhz}</td><td className="mono">{a.emission_designator}</td>
                     <td className="mono">{a.tx_power_w ?? '—'}</td><td className="mono">{a.eirp_dbw ?? '—'}</td>
-                    <td className="mono">{a.pfd_5deg_dbw_m2_4khz ?? '—'}</td><td>{a.service}</td><td>{a.coordination}</td>
+                    <td className="mono">{a.pfd_5deg_dbw_m2_4khz ?? '—'}</td><td title={a.coordination}>{a.service}</td>
+                    <td>{a.link_case ? `${a.link_case.name}${a.link_case.margin_db != null ? ` (${t('margin')} ${Number(a.link_case.margin_db).toFixed(1)} dB)` : ''}` : '—'}</td>
+                    {OVERRIDE_FIELDS.map(k => (
+                      <td key={k}>{a.transmits
+                        ? <Input dense numeric aria-label={`${a.id} ${k}`} value={overrides[a.id]?.[k] ?? ''}
+                            placeholder={k === 'eirp_dbw' ? String(a.eirp_dbw ?? '') : k === 'tx_power_w' ? String(a.tx_power_w ?? '') : String(a.antenna_gain_dbi ?? '')}
+                            onChange={e => setOverride(a.id, k, e.target.value)} />
+                        : '—'}</td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
             </table>
             <p className="t-12 c-2">{t('Derived from the TT&C properties, the mission link and the ground stations. Not amateur, not meteorological aids: the space operation service.')}</p>
+            <p className="t-12 c-2">{t('Each earth station takes its power, antenna gain and line loss from its link case. An override here wins over the link case in the ISED documents; save, then the EIRP is recomputed.')}</p>
           </div>
         )}
 

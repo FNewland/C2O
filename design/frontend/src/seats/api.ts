@@ -19,7 +19,7 @@ import { useUIStore } from '../stores/uiStore'
 import { clientId } from '../workbench/useCollaboration'
 
 export type Lang2 = { en: string; fr: string }
-export type ActivityTab = 'blocks' | 'spacecraft' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses' | 'modes' | 'electrical' | 'data' | 'tmtc' | 'fdir' | 'aocs' | 'ops' | 'diagrams'
+export type ActivityTab = 'blocks' | 'spacecraft' | 'budget' | 'requirements' | 'functions' | 'interfaces' | 'icd' | 'trace' | 'decide' | 'analyses' | 'modes' | 'electrical' | 'data' | 'tmtc' | 'fdir' | 'aocs' | 'ops' | 'licensing' | 'diagrams'
 
 export interface SeatDef {
   id: string

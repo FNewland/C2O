@@ -127,6 +127,21 @@ def validate_record(data: dict) -> list[str]:
     n = disp.get("independent_circuits")
     if n is not None and not (isinstance(n, int) and 1 <= n <= 4):
         errs.append("disposal.independent_circuits must be 1-4")
+    ov = data.get("assignment_overrides")
+    if ov is not None:
+        if not isinstance(ov, dict):
+            errs.append("assignment_overrides must map an assignment id to its fields")
+        else:
+            for aid, fields in ov.items():
+                if not isinstance(fields, dict):
+                    errs.append(f"assignment_overrides.{aid} must be an object")
+                    continue
+                for k, v in fields.items():
+                    if k not in OVERRIDABLE:
+                        errs.append(f"assignment_overrides.{aid}.{k} cannot be overridden "
+                                    f"(allowed: {', '.join(OVERRIDABLE)})")
+                    elif k in _NUMERIC_OVERRIDES and v not in (None, "") and _num(v) is None:
+                        errs.append(f"assignment_overrides.{aid}.{k} must be a number")
     for ev in data.get("evidence") or []:
         if not isinstance(ev, dict) or not ev.get("tool"):
             errs.append("every evidence row needs a tool (DRAMA, DAS, ...)")
@@ -310,14 +325,77 @@ def _ttc(elements: list[dict]) -> tuple[dict, dict, dict]:
     return sub, radio, (_kb(radio).get("performance") or {}) if radio else {}
 
 
-def frequency_assignments(study: Any, elements: list[dict], overrides: dict | None = None) -> list[dict]:
-    """One assignment per transmitter / receiver, space and ground (W5.01)."""
+def _station_key(name: Any) -> str:
+    """Comparable station name: case-folded, without a "GS" / "ground station" prefix or suffix."""
+    s = re.sub(r"\b(gs|ground station|earth station|station)\b", " ", str(name or "").lower())
+    return re.sub(r"[^a-z0-9]+", "", s)
+
+
+def _case_for(cases: list[dict], direction: str, station: str) -> dict | None:
+    """The link case (W4.04) that applies to ``station`` in ``direction``: a case named for that
+    station first, else a case for every station (no station, or "all four sites", "all", "any");
+    in each group the design case wins, then the display order. A case for another station is
+    never used."""
+    key = _station_key(station)
+    own, shared = [], []
+    for c in cases or []:
+        if c.get("direction") != direction:
+            continue
+        ck = _station_key(c.get("station"))
+        if ck and key and (ck == key or ck in key or key in ck):
+            own.append(c)
+        elif not ck or re.search(r"\b(all|any|every|each)\b", str(c.get("station") or ""), re.I):
+            shared.append(c)
+    for group in (own, shared):
+        if group:
+            return sorted(group, key=lambda c: (not c.get("is_design_case"), c.get("order") or 0))[0]
+    return None
+
+
+def _case_ref(c: dict | None) -> dict | None:
+    """What a licensing document quotes from a link case."""
+    if not c:
+        return None
+    r = c.get("results") or {}
+    return {"id": c.get("id"), "name": c.get("name"), "station": c.get("station"),
+            "is_design_case": bool(c.get("is_design_case")), "elevation_deg": c.get("elevation_deg"),
+            "data_rate_bps": c.get("data_rate_bps"), "coding": c.get("coding"),
+            "tx_power_w": c.get("tx_power_w"), "system_noise_temp_k": c.get("system_noise_temp_k"),
+            "g_over_t_dbk": r.get("g_over_t_dbk"), "ebn0_db": r.get("ebn0_db"),
+            "margin_db": c.get("margin_db") if c.get("margin_db") is not None else r.get("margin_db"),
+            "slant_range_km": r.get("slant_range_km"), "eirp_dbw": r.get("eirp_dbw")}
+
+
+#: assignment fields the licensing record may override per assignment id (``assignment_overrides``)
+OVERRIDABLE = ("centre_frequency_mhz", "tx_power_w", "antenna_gain_dbi", "line_loss_db", "eirp_dbw", "polarisation",
+               "antenna", "note", "emission_designator", "necessary_bandwidth_khz", "antenna_height_m")
+_NUMERIC_OVERRIDES = ("centre_frequency_mhz", "tx_power_w", "antenna_gain_dbi", "line_loss_db", "eirp_dbw",
+                      "necessary_bandwidth_khz", "antenna_height_m")
+
+
+def _in_band(f: float | None, band: list[float]) -> bool:
+    return f is not None and band[0] <= f <= band[1]
+
+
+def frequency_assignments(study: Any, elements: list[dict], overrides: dict | None = None,
+                          link_cases: list[dict] | None = None) -> list[dict]:
+    """One assignment per transmitter / receiver, space and ground (W5.01, W5.04).
+
+    Each earth station takes its transmit power, antenna gain and line loss from the named link
+    case (W4.04, export section ``links.items``) for that station and direction (``_case_for``),
+    else the band defaults; the space station takes the study's design link, else the downlink
+    design case. The licensing record's ``assignment_overrides`` (by assignment id) win over both,
+    and EIRP and PFD are recomputed from the overridden values (unless ``eirp_dbw`` itself is
+    overridden)."""
     req = getattr(study, "requirements", None)
     link = getattr(req, "link", None)
     cons = getattr(req, "constraints", None) or {}
     alt = float(getattr(getattr(req, "orbit", None), "altitude_km", 500.0) or 500.0)
     sub, radio, kbp = _ttc(elements)
     p_radio = _perf(radio) if radio else {}
+    cases = [c for c in (link_cases or []) if isinstance(c, dict)]
+    dl_design = next((c for c in cases if c.get("direction") == "downlink" and c.get("is_design_case")), None) or {}
+    ul_design = next((c for c in cases if c.get("direction") == "uplink" and c.get("is_design_case")), None) or {}
 
     def first(*vals):
         for v in vals:
@@ -326,25 +404,35 @@ def frequency_assignments(study: Any, elements: list[dict], overrides: dict | No
                 return n
         return None
 
+    def any_num(*vals):
+        for v in vals:
+            n = _num(v)
+            if n is not None:
+                return n
+        return None
+
     dl_band = cons.get("downlink_band_mhz") or [401.0, 402.0]
     ul_band = cons.get("uplink_band_mhz") or [449.75, 450.25]
     dl_f = first(getattr(link, "downlink_frequency_mhz", None), p_radio.get("downlink_frequency_mhz"),
-                 sub.get("downlink_frequency_mhz"), kbp.get("frequency_mhz")) or round(sum(dl_band) / 2, 3)
-    if not (dl_band[0] <= dl_f <= dl_band[1]):
+                 sub.get("downlink_frequency_mhz"), dl_design.get("frequency_mhz"),
+                 kbp.get("frequency_mhz")) or round(sum(dl_band) / 2, 3)
+    if not _in_band(dl_f, dl_band):
         dl_f = 401.5 if dl_band == [401.0, 402.0] else round(sum(dl_band) / 2, 3)
     ul_f = first(getattr(link, "uplink_frequency_mhz", None), p_radio.get("uplink_frequency_mhz"),
-                 sub.get("uplink_frequency_mhz"))
-    if not ul_f or not (ul_band[0] <= ul_f <= ul_band[1]):
+                 sub.get("uplink_frequency_mhz"), ul_design.get("frequency_mhz"))
+    if not _in_band(ul_f, ul_band):
         ul_f = round(sum(ul_band) / 2, 3)
     dl_rate = first(getattr(link, "downlink_rate_bps", None), _num(p_radio.get("data_rate_bps")),
-                    (_num(sub.get("data_rate_kbps")) or 0) * 1e3, kbp.get("data_rate_bps")) or 9600.0
-    ul_rate = first(getattr(link, "uplink_rate_bps", None), p_radio.get("uplink_rate_bps")) or 9600.0
+                    (_num(sub.get("data_rate_kbps")) or 0) * 1e3, dl_design.get("data_rate_bps"),
+                    kbp.get("data_rate_bps")) or 9600.0
+    ul_rate = first(getattr(link, "uplink_rate_bps", None), p_radio.get("uplink_rate_bps"),
+                    ul_design.get("data_rate_bps")) or 9600.0
     tx_w = first(getattr(link, "tx_power_w", None), p_radio.get("tx_power_w"), sub.get("tx_power_w"),
-                 (10 ** ((kbp.get("tx_power_dbm") or 30) / 10)) / 1000.0) or 1.0
+                 dl_design.get("tx_power_w"), (10 ** ((kbp.get("tx_power_dbm") or 30) / 10)) / 1000.0) or 1.0
     sc_gain = first(getattr(link, "tx_antenna_gain_dbi", None), p_radio.get("antenna_gain_dbi"),
                     sub.get("antenna_gain_dbi"))
     sc_gain = 0.0 if sc_gain is None else sc_gain
-    line_loss = first(getattr(link, "tx_losses_db", None)) or 1.0
+    line_loss = first(getattr(link, "tx_losses_db", None), dl_design.get("tx_losses_db")) or 1.0
     gs_gain = first(getattr(link, "rx_antenna_gain_dbi", None)) or 15.0
     mod = "GMSK"
     m = str(sub.get("modulation") or p_radio.get("modulation") or "").upper()
@@ -356,24 +444,15 @@ def frequency_assignments(study: Any, elements: list[dict], overrides: dict | No
               note: str = "") -> dict:
         svc = spectrum.service_for(freq, "space-to-Earth" if direction == "downlink" else "Earth-to-space")
         bw = necessary_bandwidth_hz(rate, mod)
-        row = {"id": aid, "station": station, "side": side, "direction": direction,
-               "transmits": (side == "space") == (direction == "downlink"),
-               "centre_frequency_mhz": round(freq, 4), "band_mhz": list(band),
-               "necessary_bandwidth_khz": round(bw / 1e3, 1),
-               "emission_designator": _designator(bw, mod), "modulation": mod, "rate_bps": rate,
-               "tx_power_w": power_w, "antenna": ant, "antenna_gain_dbi": gain_dbi, "polarisation": pol,
-               "line_loss_db": loss_db, "service": svc["service"], "allocation": svc["allocation"],
-               "footnotes": svc["footnotes"], "coordination": svc["coordination"], "note": note}
-        if row["transmits"] and power_w:
-            eirp = 10 * math.log10(power_w) + gain_dbi - loss_db
-            row["eirp_dbw"] = round(eirp, 1)
-            if side == "space":
-                from .regulatory import compute_pfd_dbw_m2
-                pfd = compute_pfd_dbw_m2(eirp, alt, 5.0)
-                row["pfd_5deg_dbw_m2"] = pfd
-                row["pfd_5deg_dbw_m2_4khz"] = round(pfd - 10 * math.log10(max(bw, 4000.0) / 4000.0), 1)
-                row["slant_range_5deg_km"] = round(_slant_km(alt, 5.0), 0)
-        return row
+        return {"id": aid, "station": station, "side": side, "direction": direction,
+                "transmits": (side == "space") == (direction == "downlink"),
+                "centre_frequency_mhz": round(freq, 4), "band_mhz": list(band),
+                "necessary_bandwidth_khz": round(bw / 1e3, 1),
+                "emission_designator": _designator(bw, mod), "modulation": mod, "rate_bps": rate,
+                "tx_power_w": power_w, "antenna": ant, "antenna_gain_dbi": gain_dbi, "polarisation": pol,
+                "line_loss_db": loss_db, "service": svc["service"], "allocation": svc["allocation"],
+                "footnotes": svc["footnotes"], "coordination": svc["coordination"], "note": note,
+                "basis": "design"}
 
     out = [
         entry("SS-TX-DL", station="space station", side="space", direction="downlink", freq=dl_f, band=dl_band,
@@ -385,19 +464,37 @@ def frequency_assignments(study: Any, elements: list[dict], overrides: dict | No
               ant="UHF deployable dipole/monopole (near-omnidirectional)",
               note="Radio receive edge at 450.25 MHz to be confirmed with the supplier."),
     ]
-    gs_tx_w = 25.0
+    if dl_design:
+        out[0]["link_case"] = _case_ref(dl_design)
+    if ul_design:
+        out[1]["link_case"] = _case_ref(ul_design)
     for st in stations(elements):
         key = re.sub(r"[^A-Z0-9]+", "", str(st["name"]).upper().replace("GS ", ""))[:6] or "GS"
-        out.append(entry(f"ES-{key}-TX-UL", station=st["name"], side="earth", direction="uplink", freq=ul_f,
-                         band=ul_band, rate=ul_rate, power_w=gs_tx_w, gain_dbi=gs_gain, loss_db=0.3,
-                         pol="circular (RHCP)", ant="450 MHz circularly polarised Yagi on az/el rotator",
-                         note="Protect land-mobile users in 450-470 MHz (Canadian footnote C23)."))
-        out.append(entry(f"ES-{key}-RX-DL", station=st["name"], side="earth", direction="downlink", freq=dl_f,
-                         band=dl_band, rate=dl_rate, power_w=None, gain_dbi=gs_gain, loss_db=0.3,
-                         pol="circular (RHCP)", ant="401 MHz circularly polarised Yagi (15 dBic) on az/el rotator"))
-        out[-1]["station_lat"] = out[-2]["station_lat"] = st["lat"]
-        out[-1]["station_lon"] = out[-2]["station_lon"] = st["lon"]
-        out[-1]["min_elevation_deg"] = out[-2]["min_elevation_deg"] = st.get("min_elevation_deg")
+        ulc = _case_for(cases, "uplink", st["name"]) or {}
+        dlc = _case_for(cases, "downlink", st["name"]) or {}
+        uf, df = first(ulc.get("frequency_mhz")), first(dlc.get("frequency_mhz"))
+        tx = entry(f"ES-{key}-TX-UL", station=st["name"], side="earth", direction="uplink",
+                   freq=uf if _in_band(uf, ul_band) else ul_f, band=ul_band,
+                   rate=first(ulc.get("data_rate_bps")) or ul_rate, power_w=first(ulc.get("tx_power_w")) or 25.0,
+                   gain_dbi=any_num(ulc.get("tx_antenna_gain_dbi"), gs_gain),
+                   loss_db=any_num(ulc.get("tx_losses_db"), 0.3),
+                   pol="circular (RHCP)", ant="450 MHz circularly polarised Yagi on az/el rotator",
+                   note="Protect land-mobile users in 450-470 MHz (Canadian footnote C23).")
+        rx = entry(f"ES-{key}-RX-DL", station=st["name"], side="earth", direction="downlink",
+                   freq=df if _in_band(df, dl_band) else dl_f, band=dl_band,
+                   rate=first(dlc.get("data_rate_bps")) or dl_rate, power_w=None,
+                   gain_dbi=any_num(dlc.get("rx_antenna_gain_dbi"), gs_gain),
+                   loss_db=any_num(dlc.get("rx_losses_db"), 0.3),
+                   pol="circular (RHCP)", ant="401 MHz circularly polarised Yagi on az/el rotator")
+        for row, c in ((tx, ulc), (rx, dlc)):
+            row["station_lat"], row["station_lon"] = st["lat"], st["lon"]
+            row["min_elevation_deg"] = st.get("min_elevation_deg")
+            if c:
+                row["link_case"] = _case_ref(c)
+                row["basis"] = "link case"
+                if row["direction"] == "downlink" and c.get("system_noise_temp_k"):
+                    row["system_noise_temp_k"] = c["system_noise_temp_k"]
+        out += [tx, rx]
     # VHF fallback uplink, listed but not filed unless selected
     vhf = spectrum.band_by_name("VHF space operation uplink (fallback)")
     if vhf is not None:
@@ -410,11 +507,38 @@ def frequency_assignments(study: Any, elements: list[dict], overrides: dict | No
     for row in out:
         ov = (overrides or {}).get(row["id"]) or {}
         for k, v in ov.items():
-            if k in ("centre_frequency_mhz", "tx_power_w", "antenna_gain_dbi", "polarisation", "antenna", "note",
-                     "emission_designator", "necessary_bandwidth_khz"):
-                row[k] = v
+            if k in OVERRIDABLE and v is not None and v != "":
+                row[k] = _num(v) if k in _NUMERIC_OVERRIDES else v
                 row.setdefault("overridden", []).append(k)
+        if row.get("overridden"):
+            row["basis"] = "licensing record"
+        _radiated(row, alt)
     return out
+
+
+def _radiated(row: dict, alt_km: float) -> None:
+    """EIRP of a transmitting assignment (and, for the space station, the PFD at 5 deg elevation)
+    from its power, antenna gain and line loss, or the overridden EIRP."""
+    if not row["transmits"]:
+        return
+    p, g = _num(row.get("tx_power_w")), _num(row.get("antenna_gain_dbi"))
+    loss = _num(row.get("line_loss_db")) or 0.0
+    if "eirp_dbw" in (row.get("overridden") or []):
+        eirp = _num(row["eirp_dbw"])
+    elif p and p > 0 and g is not None:
+        eirp = round(10 * math.log10(p) + g - loss, 1)
+    else:
+        return
+    if eirp is None:
+        return
+    row["eirp_dbw"] = eirp
+    if row["side"] == "space":
+        from .regulatory import compute_pfd_dbw_m2
+        bw = (_num(row.get("necessary_bandwidth_khz")) or 4.0) * 1e3
+        pfd = compute_pfd_dbw_m2(eirp, alt_km, 5.0)
+        row["pfd_5deg_dbw_m2"] = pfd
+        row["pfd_5deg_dbw_m2_4khz"] = round(pfd - 10 * math.log10(max(bw, 4000.0) / 4000.0), 1)
+        row["slant_range_5deg_km"] = round(_slant_km(alt_km, 5.0), 0)
 
 
 def _designator(bw_hz: float, mod: str) -> str:
@@ -556,6 +680,14 @@ async def collect(ctx) -> dict:
     counts: dict[str, int] = {}
     for f in filings:
         counts[f["status"]] = counts.get(f["status"], 0) + 1
+    links = ctx.sections.get("links") or {}
+    link_items = links.get("items")
+    if link_items is None:
+        try:
+            from ..routers.link_budgets import list_cases
+            link_items = await list_cases(ctx.study_id)
+        except Exception:  # noqa: BLE001 — no link cases: band defaults
+            link_items = []
     try:
         disposal = disposal_analysis(study, els, rollup, rec) if study is not None else {}
     except Exception as exc:  # noqa: BLE001
@@ -573,7 +705,8 @@ async def collect(ctx) -> dict:
                   **node_times(getattr(orb, "ltan", None))},
         "sensor": _payload_info(study, els, alt),
         "stations": stations(els),
-        "assignments": frequency_assignments(study, els, rec.get("assignment_overrides")) if study is not None else [],
+        "assignments": frequency_assignments(study, els, rec.get("assignment_overrides"), link_items)
+        if study is not None else [],
         "disposal": disposal,
         "evidence": rec.get("evidence") or [],
         "filings": filings, "filing_counts": counts,

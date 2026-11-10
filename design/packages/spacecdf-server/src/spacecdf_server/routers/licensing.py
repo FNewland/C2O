@@ -6,8 +6,9 @@ Included by ``routers/lifecycle.py`` (prefix ``/api/lifecycle``):
   ``version``, plus what the design derives: frequency assignments (W5.01), the disposal analysis
   (W5.02), stations, orbit node times and sensor performance;
 * ``PUT  /licensing/{study_id}`` — merge a patch into the record (``version`` must match the stored
-  one; lists are replaced whole). In a study with seats only the team_leader and comms_engineer
-  seats (and the instructor) may write;
+  one; lists are replaced whole). In a study with seats the team_leader and comms_engineer seats
+  (and the instructor) may write; the propulsion_engineer seat, which owns the disposal function
+  (PI decision), may write the ``disposal`` part only;
 * ``POST /licensing/{study_id}/evidence`` — import a DRAMA or DAS result (structured fields, or the
   tool's text report, from which lifetime, collision probability and casualty risk are read).
 """
@@ -23,6 +24,8 @@ from ..services import licensing as lic
 router = APIRouter()
 
 WRITE_SEATS = ("team_leader", "comms_engineer")
+#: seats that may write only some parts of the record: the Propulsion seat owns the disposal function
+PARTIAL_SEATS: dict[str, tuple[str, ...]] = {"propulsion_engineer": ("disposal", "evidence")}
 
 
 async def _context(study_id: str):
@@ -33,8 +36,9 @@ async def _context(study_id: str):
         raise HTTPException(404, f"Study {study_id} not found") from None
 
 
-async def _check_seat(request: Request, study_id: str) -> str:
-    """Seat studies: team_leader / comms_engineer (or the instructor) only. Returns the actor."""
+async def _check_seat(request: Request, study_id: str, parts: set[str] | None = None) -> str:
+    """Seat studies: team_leader / comms_engineer (or the instructor); the propulsion_engineer seat
+    for the disposal part only (``parts`` = the record keys written). Returns the actor."""
     try:
         from ..seats import store
         from ..seats.service import seat_ctx
@@ -46,11 +50,15 @@ async def _check_seat(request: Request, study_id: str) -> str:
         return ""
     if ctx.instructor:
         return "instructor"
-    if not any(ctx.holds(s) for s in WRITE_SEATS):
-        raise HTTPException(403, detail={"code": "licensing_seat",
-                                         "message": "The Licensing tab is edited by the Team leader and the "
-                                                    "Comms engineer seats"})
-    return ctx.active or ""
+    if any(ctx.holds(s) for s in WRITE_SEATS):
+        return ctx.active or ""
+    for seat, allowed in PARTIAL_SEATS.items():
+        if ctx.holds(seat) and parts is not None and parts <= set(allowed):
+            return ctx.active or seat
+    raise HTTPException(403, detail={"code": "licensing_seat",
+                                     "message": "The Licensing tab is edited by the Team leader and the "
+                                                "Comms engineer seats (the Propulsion seat edits the "
+                                                "disposal part)"})
 
 
 @router.get("/licensing/{study_id}")
@@ -69,10 +77,10 @@ async def put_licensing(study_id: str, body: dict[str, Any], request: Request) -
     from ..routers.studies import get_study_store
     if get_study_store().get(study_id) is None:
         raise HTTPException(404, f"Study {study_id} not found")
-    actor = await _check_seat(request, study_id)
     body = dict(body or {})
     version = body.pop("version", None)
     body.pop("study_id", None)
+    actor = await _check_seat(request, study_id, set(body))
     allowed = set(lic.EMPTY_RECORD)
     unknown = sorted(set(body) - allowed)
     if unknown:
@@ -125,7 +133,7 @@ async def add_evidence(study_id: str, body: dict[str, Any], request: Request) ->
     from ..routers.studies import get_study_store
     if get_study_store().get(study_id) is None:
         raise HTTPException(404, f"Study {study_id} not found")
-    actor = await _check_seat(request, study_id)
+    actor = await _check_seat(request, study_id, {"evidence"})
     tool = str(body.get("tool") or "").strip()
     text = body.get("text") or ""
     parsed = parse_tool_report(text) if text else {}

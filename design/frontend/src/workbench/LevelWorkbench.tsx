@@ -29,13 +29,14 @@ import { FdirPanel } from '../cdr/FdirPanel'
 import { AocsModesPanel } from '../cdr/AocsModesPanel'
 import { OpsPanel } from '../cdr/OpsPanel'
 import { DiagramsView } from '../diagrams/DiagramsView'
+import { LicensingPanel } from './LicensingPanel'
 import { useSeatView } from '../seats/view'
 import { useSeatStore } from '../seats/api'
 
-const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses', 'diagrams']
+const PANELS: ActivityPanel[] = ['blocks', 'spacecraft', 'modes', 'budget', 'requirements', 'functions', 'interfaces', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses', 'licensing', 'diagrams']
 
 /** Tabs that are tables or lists: the diagram collapses to a strip so they get the height. */
-const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses', 'diagrams'])
+const TABLE_PANELS = new Set<ActivityPanel>(['spacecraft', 'modes', 'budget', 'requirements', 'functions', 'electrical', 'data', 'icd', 'tmtc', 'fdir', 'aocs', 'ops', 'trace', 'decide', 'analyses', 'licensing', 'diagrams'])
 
 const MIN_PANEL = 160
 
@@ -64,6 +65,7 @@ const PANEL_LABELS: Partial<Record<ActivityPanel, string>> = {
   trace: 'Traceability',
   decide: 'Decide',
   analyses: 'Analyses',
+  licensing: 'Licensing',
   diagrams: 'Diagrams',
 }
 
@@ -238,6 +240,7 @@ export function LevelWorkbench() {
           {activePanel === 'trace' && <ErrorBoundary phaseName="Traceability"><div className="c2o-pane"><MissionNeedCard studyId={studyId} /><TraceabilityTree /></div></ErrorBoundary>}
           {activePanel === 'decide' && <DecisionPanel />}
           {activePanel === 'analyses' && <ErrorBoundary phaseName="Analyses"><AnalysesPanel /></ErrorBoundary>}
+          {activePanel === 'licensing' && studyId && <ErrorBoundary phaseName="Licensing"><LicensingPanel studyId={studyId} /></ErrorBoundary>}
           {activePanel === 'diagrams' && <ErrorBoundary phaseName="Diagrams"><DiagramsView /></ErrorBoundary>}
           </fieldset>
         </div>

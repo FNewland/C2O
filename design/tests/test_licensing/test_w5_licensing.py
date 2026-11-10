@@ -250,3 +250,137 @@ async def test_regulatory_documents_on_s4(client):
     d = Document(io.BytesIO((await client.post(f"/api/exports/regulatory/debris/{sid}?fmt=docx")).content))
     text = "\n".join(p.text for p in d.paragraphs)
     assert "ISED" in text
+    await _wave2_checks_on_s4(client, s)
+
+
+# ───────────────────────────────────────────────────────────── wave 2 (W5.04 with link cases, W5.05)
+
+def _link_case(name, direction, station, *, design=False, order=0, **kw):
+    base = {"id": name, "name": name, "direction": direction, "station": station, "is_design_case": design,
+            "order": order, "frequency_mhz": 401.5 if direction == "downlink" else 450.0, "data_rate_bps": 9600.0,
+            "tx_power_w": 1.0, "tx_antenna_gain_dbi": -3.0, "tx_losses_db": 1.0, "rx_antenna_gain_dbi": 13.0,
+            "rx_losses_db": 0.3, "system_noise_temp_k": 300.0, "margin_db": 4.0, "results": {"g_over_t_dbk": -12.0}}
+    base.update(kw)
+    return base
+
+
+def test_earth_station_assignments_follow_the_link_cases_and_the_overrides():
+    from types import SimpleNamespace
+
+    from spacecdf_server.services.licensing import frequency_assignments
+    study = SimpleNamespace(requirements=SimpleNamespace(link=None, constraints={}, orbit=SimpleNamespace(altitude_km=590)))
+    els = [{"id": f"g{i}", "name": f"GS {n}", "segment": "ground", "performance": {"lat": 50.0 + i, "lon": -80.0}}
+           for i, n in enumerate(("Ottawa", "Inuvik"))]
+    cases = [
+        _link_case("DL Ottawa urban", "downlink", "Ottawa", system_noise_temp_k=700.0, margin_db=0.4),
+        _link_case("DL Ottawa 2 W", "downlink", "Ottawa", order=1, tx_power_w=2.0),
+        _link_case("DL rural design", "downlink", "Yellowknife", design=True, order=2),
+        _link_case("UL 25 W", "uplink", "all four sites", design=True, tx_power_w=25.0, tx_antenna_gain_dbi=13.0,
+                   tx_losses_db=1.5, rx_antenna_gain_dbi=-3.0),
+    ]
+    asg = {a["id"]: a for a in frequency_assignments(study, els, None, cases)}
+    ul = asg["ES-OTTAWA-TX-UL"]
+    assert ul["tx_power_w"] == 25.0 and ul["antenna_gain_dbi"] == 13.0 and ul["line_loss_db"] == 1.5
+    assert ul["eirp_dbw"] == pytest.approx(10 * __import__("math").log10(25) + 13.0 - 1.5, abs=0.06)
+    assert ul["link_case"]["name"] == "UL 25 W" and ul["basis"] == "link case"
+    assert asg["ES-OTTAWA-RX-DL"]["link_case"]["name"] == "DL Ottawa urban"            # own station, first in order
+    assert asg["ES-OTTAWA-RX-DL"]["system_noise_temp_k"] == 700.0
+    assert asg["ES-INUVIK-RX-DL"].get("link_case") is None                              # no case of its own
+    assert asg["ES-INUVIK-TX-UL"]["link_case"]["name"] == "UL 25 W"                     # the shared uplink case
+    assert asg["SS-TX-DL"]["link_case"]["name"] == "DL rural design"
+    # the licensing record overrides one station's power and gain: EIRP recomputed; an EIRP override wins
+    ov = {"ES-OTTAWA-TX-UL": {"tx_power_w": "10", "antenna_gain_dbi": 15}, "ES-INUVIK-TX-UL": {"eirp_dbw": 30.0}}
+    asg = {a["id"]: a for a in frequency_assignments(study, els, ov, cases)}
+    o = asg["ES-OTTAWA-TX-UL"]
+    assert o["tx_power_w"] == 10.0 and o["eirp_dbw"] == pytest.approx(10 + 15 - 1.5, abs=0.06)
+    assert o["basis"] == "licensing record" and set(o["overridden"]) == {"tx_power_w", "antenna_gain_dbi"}
+    assert asg["ES-INUVIK-TX-UL"]["eirp_dbw"] == 30.0
+
+
+def test_record_validation_of_assignment_overrides():
+    from spacecdf_server.services.licensing import validate_record
+    assert validate_record({"assignment_overrides": {"ES-X-TX-UL": {"tx_power_w": 20, "antenna_gain_dbi": ""}}}) == []
+    errs = validate_record({"assignment_overrides": {"ES-X-TX-UL": {"service": "amateur", "tx_power_w": "lots"}}})
+    assert len(errs) == 2
+
+
+def test_export_assessment_reads_the_per_part_flags():
+    from spacecdf_server.services.regulatory import generate_export_assessment
+    els = [{"id": "c1", "name": "SWIR camera (InGaAs)", "element_type": "component", "subsystem_domain": "payload"},
+           {"id": "s1", "name": "Communications", "element_type": "subsystem", "subsystem_domain": "ttc",
+            "performance": {"encryption": "AES-256"}},
+           {"id": "c2", "name": "UHF transceiver", "element_type": "component", "subsystem_domain": "ttc", "parent_id": "s1"}]
+    out = generate_export_assessment(study_name="x", elements=els)
+    flags = {f["flag"] for f in out["sections"]["automated_flags"]["flags"]}
+    assert {"PART_6A003", "PART_5A002"} <= flags
+    assert out["sections"]["per_part"]["count"]["value"] == 2
+    assert "per_part" in generate_export_assessment(study_name="x")["sections"]       # no elements: no part flags
+
+
+async def test_propulsion_seat_writes_the_disposal_part_only(client, s2):
+    sid = s2.study_id
+
+    def who(email: str) -> dict:
+        return {"X-Goog-Authenticated-User-Email": f"accounts.google.com:{email}", "X-C2O-Name": "x"}
+    import os
+    os.environ["SPACECDF_INSTRUCTORS"] = "prof@c2o.live"
+    try:
+        r = await client.post(f"/api/studies/{sid}/team/preset", json={"team_size": "9"}, headers=who("prof@c2o.live"))
+        if r.status_code != 200:
+            pytest.skip(f"seat preset unavailable: {r.status_code}")
+        r = await client.post(f"/api/studies/{sid}/team/claim", json={"seats": ["propulsion_engineer"]},
+                              headers=who("prop@c2o.live"))
+        if r.status_code != 200:
+            pytest.skip(f"no propulsion seat in this preset: {r.text[:200]}")
+        h = who("prop@c2o.live")
+        ok = await client.put(f"/api/lifecycle/licensing/{sid}", json={"disposal": {"independent_circuits": 2}}, headers=h)
+        assert ok.status_code == 200, ok.text
+        no = await client.put(f"/api/lifecycle/licensing/{sid}", json={"notes": "x"}, headers=h)
+        assert no.status_code == 403
+        ev = await client.post(f"/api/lifecycle/licensing/{sid}/evidence", json={"tool": "DRAMA", "lifetime_years": 3.1},
+                               headers=h)
+        assert ev.status_code == 200
+    finally:
+        os.environ.pop("SPACECDF_INSTRUCTORS", None)
+        from spacecdf_server.seats import store
+        store.reset_memory()
+
+
+async def _wave2_checks_on_s4(client, s):
+    """The S4 seed has the Licensing tab filled (neutral placeholders) and the eight link cases."""
+    sid = s.study_id
+    j = (await client.get(f"/api/lifecycle/licensing/{sid}")).json()
+    assert j["version"] >= 1 and j["record"]["applicant"]["legal_name"].endswith("(applicant placeholder)")
+    asg = {a["id"]: a for a in j["derived"]["assignments"]}
+    ups = [a for a in asg.values() if a["side"] == "earth" and a["transmits"]]
+    lk = N["links"]
+    assert {a["tx_power_w"] for a in ups} == {float(lk["uplink"]["ground_tx_w_max"])}
+    assert all(a["basis"] == "link case" and a["link_case"]["name"].startswith("UL ") for a in ups)
+    rx = {a["station"]: a for a in asg.values() if a["side"] == "earth" and not a["transmits"]}
+    assert rx["GS Ottawa"]["link_case"]["margin_db"] == pytest.approx(
+        lk["downlink_margin_db_10deg_rs"]["urban_700K_1W"], abs=0.3)
+    assert rx["GS Yellowknife"]["link_case"]["is_design_case"]
+    earth = (await client.post(f"/api/exports/regulatory/ised-earth/{sid}")).json()["documents"]
+    ott = next(d for d in earth if d["key"]["station"] == "GS Ottawa")
+    assert ott["key"]["uplink_case"].startswith("UL ") and ott["key"]["downlink_case"].startswith("DL Ottawa")
+    assert not any("legal name" in o for o in ott["open_items"])               # the record fills the applicant
+    # a per-station override through the record changes that station's document only
+    r = await client.put(f"/api/lifecycle/licensing/{sid}", json={
+        "assignment_overrides": {"ES-OTTAWA-TX-UL": {"antenna_gain_dbi": 15.0}}, "version": j["version"]})
+    assert r.status_code == 200, r.text
+    earth2 = {d["key"]["station"]: d for d in (await client.post(f"/api/exports/regulatory/ised-earth/{sid}")).json()["documents"]}
+    assert earth2["GS Ottawa"]["key"]["eirp_dbw"] == pytest.approx(ott["key"]["eirp_dbw"] + 2.0, abs=0.06)
+    assert earth2["GS Inuvik"]["key"]["eirp_dbw"] == pytest.approx(ott["key"]["eirp_dbw"], abs=0.06)
+    space = (await client.post(f"/api/exports/regulatory/ised-space/{sid}")).json()
+    sec7 = next(x for x in space["sections"] if x["number"] == "7")
+    assert sec7["table"] and len(sec7["table"]["rows"]) == 8
+    # W5.05 hand-off: the lifecycle export assessment reads the study's parts
+    ea = (await client.post("/api/lifecycle/regulatory/export-assessment", json={"study_id": sid, "study_name": "nfi"})).json()
+    flags = {f["flag"] for f in ea["sections"]["automated_flags"]["flags"]}
+    assert {"PART_6A003", "PART_5A002"} <= flags
+    # the review-pack hook (hook:licensing)
+    from spacecdf_server.services.docx.licensing import pack_docx
+    from spacecdf_server.services.export_context import collect
+    sx = await collect(sid, gate="pdr")
+    blob = pack_docx(sx, gate="pdr", lang="en")
+    assert blob and len(blob) > 1000

@@ -104,6 +104,7 @@ _EXAMPLE_CATEGORY_DOMAIN: dict[str, str] = {
     "heaters": "thermal", "thermal": "thermal",
     "cameras": "payload", "imagers": "payload", "payloads": "payload",
     "adcs_integrated": "aocs", "deorbit_devices": "propulsion", "drag_sails": "propulsion",
+    "deorbit_device": "propulsion", "drag_sail": "propulsion",   # KB category names (PI: Propulsion owns disposal)
     "payload_imagers": "payload", "payload_optics": "payload", "payload_controllers": "payload",
 }
 _DOMAIN_NAME = {"payload": "Payload", "power": "EPS", "aocs": "AOCS", "ttc": "Communications",
@@ -970,7 +971,16 @@ async def generate_rsssa(body: dict[str, Any]) -> dict:
 async def generate_export(body: dict[str, Any]) -> dict:
     """Generate export control classification assessment."""
     from ..services.regulatory import generate_export_assessment
-    return generate_export_assessment(**body)
+    body = dict(body or {})
+    sid = body.pop("study_id", None)
+    if sid and body.get("elements") is None:
+        # W5.05: the per-part flags read the study's product tree
+        from .elements import _elements
+        body["elements"] = [e for e in _elements.values() if e.get("study_id") == sid and not e.get("deleted_at")]
+    try:
+        return generate_export_assessment(**body)
+    except TypeError as exc:   # unknown keys: 422, not 500
+        raise HTTPException(422, str(exc)) from None
 
 
 @router.post("/regulatory/copuos-registration")
