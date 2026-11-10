@@ -46,10 +46,11 @@ def test_template_search_path_prefers_fr_and_keeps_english_fallback():
 
 
 async def test_export_docs_markdown_lang_fr_and_default(client, study_obj, monkeypatch):
-    from spacecdf_server.routers import exports
+    from spacecdf_server.routers.exports import _common as exports_common
 
-    # Run the real design loop once per review is slow; cache one run.
-    real = exports._run_design_for_study
+    # Run the real design loop once per review is slow; cache one run. Since W0.1 every export
+    # family calls the loop through routers/exports/_common, so that is where it is patched.
+    real = exports_common._run_design_for_study
     cache: dict = {}
 
     async def cached(study_id):
@@ -57,7 +58,7 @@ async def test_export_docs_markdown_lang_fr_and_default(client, study_obj, monke
             cache[study_id] = await real(study_id)
         return cache[study_id]
 
-    monkeypatch.setattr(exports, "_run_design_for_study", cached)
+    monkeypatch.setattr(exports_common, "_run_design_for_study", cached)
 
     for review in REVIEWS:
         base = f"/api/exports/docs/{study_obj.id}?review={review}&fmt=markdown"

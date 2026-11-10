@@ -253,6 +253,8 @@ def test_wp0_12_exports_carry_c2o_not_a_wrong_sedti_expansion():
 
 @pytest.mark.parametrize("module", [
     "spacecdf_server.services.docx_generator", "spacecdf_server.services.branding",
+    *(f"spacecdf_server.services.docx.{m}" for m in ("_common", "did", "bom", "mrd", "conops", "vp", "ts", "ird",
+                                                       "semp", "rmp", "testplan", "regulatory", "review")),
     "spacecdf_agents.exporters.docs.theme", "spacecdf_agents.exporters.docs.generator",
     "spacecdf_agents.exporters.docs.docx_generator",
 ])
