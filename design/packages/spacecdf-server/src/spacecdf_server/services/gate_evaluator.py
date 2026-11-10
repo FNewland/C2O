@@ -24,6 +24,7 @@ Every criterion comes back with
 from __future__ import annotations
 
 import json
+import re
 import logging
 from functools import lru_cache
 from pathlib import Path
@@ -109,6 +110,11 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     "{{tiers}} rate tier(s), command-loss timer {{hours}} h; {{alarms}} alarm finding(s)",
     "{{positions}} position(s), {{gonogo}} GO/NO-GO situation(s), {{rules}} flight rule(s); {{uncovered}} critical telecommand(s) without a GO/NO-GO entry",
     "{{ok}}/{{total}} requirements have a verification method",
+    # Nov 2026 (W2.03, W2.05, W1.08): requirement baseline fields and the one roll-up
+    "{{ok}}/{{total}} requirements have a verification method and a threshold or an acceptance criterion",
+    "{{n}} requirement(s) below mission level without a parent",
+    "Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; orbit-average power {{power}} W ({{ptotal}} W with {{margin}}% margin) vs {{avail}} W generated at end of life",
+    "Orbit-average power {{power}} W ({{ptotal}} W with {{pmargin}}% margin) vs {{avail}} W generated at end of life; mass margin {{mass}}%",
 )
 
 
@@ -264,6 +270,7 @@ def evaluate_gate(
     risks: list[dict] | None = None,
     margin_gate: str | None = None,
     cdr: dict[str, Any] | None = None,
+    rollup: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
@@ -272,6 +279,11 @@ def evaluate_gate(
     functions in the study's function tree; ``risks``: the study's risk register;
     ``margin_gate``: the margin-ladder step for budget criteria (default: this gate);
     ``cdr``: the CDR model summary (routers/cdr.cdr_gate_summary) the CDR criteria read.
+    ``rollup``: ``services.rollup.compute(...).as_dict()`` (W1.08): when given (or as
+    ``design_params["_rollup"]``), MDR-EC-07 and the budget criteria compare the modes
+    orbit-average power and the rolled-up mass with EOL generation and the mass limit.
+    ``requirements`` may carry ``parent_ids`` / ``objective_ids`` (routers/requirements.with_lists):
+    further parents and objectives then count (W2.03).
 
     Returns::
 
@@ -311,6 +323,7 @@ def evaluate_gate(
         "risks": list(risks or []),
         "margin_gate": (margin_gate or str(gate.get("gate", ""))).lower(),
         "cdr": cdr,
+        "rollup": rollup or (design_params or {}).get("_rollup") if isinstance(design_params, dict) else rollup,
     }
 
     results = [_evaluate_criterion(ec, ctx) for ec in gate.get("exit_criteria", [])]
@@ -388,6 +401,7 @@ def _threshold_results(reqs: list[dict], dp: dict) -> list[tuple[dict, str]]:
 
 
 def _has_threshold(r: dict) -> bool:
+    """A threshold the compliance tracker can check: parameter path, operator and a number."""
     raw = r.get("threshold_value")
     if not r.get("threshold_param_path") or not r.get("threshold_op") or raw in (None, ""):
         return False
@@ -396,6 +410,61 @@ def _has_threshold(r: dict) -> bool:
     except (ValueError, TypeError, json.JSONDecodeError):
         return False
     return True
+
+
+_PASS_FAIL_TYPES = ("functional", "interface", "regulatory", "process")
+_SHALL = re.compile(r"\b(shall|doit|doivent)\b")
+_CITES_DOCUMENT = ("according to", "in accordance with", "as defined in", "as specified in", " per ", "ecss-",
+                   " icd", "standard", "specification", "conformément", "selon la norme")
+
+
+def _stated_threshold(r: dict) -> bool:
+    """A threshold stated on the requirement (W2.05): an operator with a number, a range
+    (``in_range``: {min, max}) or a date (``before`` / ``after``), or ``exists``. A parameter path
+    is not needed: it only makes the threshold checkable against the design."""
+    op = r.get("threshold_op")
+    if not op:
+        return False
+    if op == "exists":
+        return True
+    raw = r.get("threshold_value")
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (ValueError, TypeError):
+            pass
+    if raw in (None, ""):
+        return False
+    if op == "in_range":
+        return isinstance(raw, dict) and ("min" in raw or "max" in raw)
+    if op in ("before", "after"):
+        return isinstance(raw, str) and len(raw) >= 4
+    try:
+        float(raw)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def _has_acceptance(r: dict) -> bool:
+    """An acceptance criterion in place of a threshold (W2.05): an explicit one, or the
+    statement itself when it is verified by test, inspection or review (pass/fail outcome), or
+    by analysis of a pass/fail statement or of compliance with a cited document."""
+    if (r.get("acceptance_criterion") or "").strip():
+        return True
+    text = f" {(r.get('text') or '').lower()} "
+    if not _SHALL.search(text):
+        return False                       # no statement to pass or fail
+    m = r.get("verification_method")
+    if m in ("T", "I", "R", "D"):
+        return True
+    if m == "A":
+        return r.get("req_type") in _PASS_FAIL_TYPES or any(w in text for w in _CITES_DOCUMENT)
+    return False
+
+
+def _is_objective_row(r: dict) -> bool:
+    return r.get("category") == "objective" or str(r.get("code") or "").startswith("OBJ-")
 
 
 def _evaluate_criterion(ec: dict, ctx: dict) -> dict[str, Any]:
@@ -488,6 +557,21 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         else:
             _set(result, "fail", "ConOps summary is empty")
 
+    elif cid == "MDR-EC-07" and _rollup_power(ctx) is not None and _get_param(dp, "power.sa_power_eol_w"):
+        # W1.08: the modes orbit average (nominal, with the gate's system margin) against EOL generation
+        avg, with_margin, p_pct = _rollup_power(ctx)
+        avail = _get_param(dp, "power.sa_power_eol_w") or 0.0
+        mass = _get_param(dp, "systems.mass_margin_percent")
+        if mass is None:
+            ru_mass = (ctx["rollup"] or {}).get("mass") or {}
+            lim, tot = ru_mass.get("limit_kg"), ru_mass.get("with_system_margin_kg")
+            mass = 100.0 * (lim - tot) / lim if lim and tot is not None else None
+        ok = avail > 0 and with_margin <= avail and (mass is None or mass > -50)
+        _set(result, "pass" if ok else "fail",
+             "Orbit-average power {{power}} W ({{ptotal}} W with {{pmargin}}% margin) vs {{avail}} W generated at end of life; mass margin {{mass}}%",
+             power=_fmt(avg, 2), ptotal=_fmt(with_margin, 2), pmargin=_fmt(p_pct), avail=_fmt(avail, 1),
+             mass="?" if mass is None else _fmt(mass))
+
     elif cid == "MDR-EC-07":
         if (_get_param(dp, "systems.power_margin_percent") is not None
                 and _get_param(dp, "systems.mass_margin_percent") is None and not ctx["target_mass"]):
@@ -536,7 +620,8 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
         if not objectives:
             _set(result, "fail", "No objectives defined")
         else:
-            traced_ids = {r.get("objective_id") for r in reqs if r.get("objective_id")}
+            traced_ids = {o for r in reqs for o in ([r.get("objective_id")] + list(r.get("objective_ids") or []))
+                          if o}
             traced = sum(1 for o in objectives
                          if o.get("traced_to_requirements") or (o.get("id") and o.get("id") in traced_ids))
             _set(result, "pass" if traced == len(objectives) else "fail",
@@ -545,18 +630,21 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
     elif cid == "SRR-EC-02":
         # Interface requirements (level "interface") are checked by test or inspection of the
         # interface, not against a design threshold: they are counted for completeness only.
-        sys_reqs = [r for r in reqs if r.get("level") != "interface"]
+        # Stakeholder needs and objective rows are verified through the requirements below them.
+        # W2.05: a stated threshold (number, range, date) or an acceptance criterion is enough.
+        sys_reqs = [r for r in reqs if r.get("level") not in ("interface", "stakeholder") and not _is_objective_row(r)]
         from .interface_requirements import ird_status
         orphans = ird_status(ctx["interfaces"], reqs)["without_interface"]
         if not sys_reqs:
             _set(result, "fail", "No requirements defined")
         else:
-            ok = sum(1 for r in sys_reqs if r.get("verification_method") and _has_threshold(r))
+            ok = sum(1 for r in sys_reqs if r.get("verification_method")
+                     and (_has_threshold(r) or _stated_threshold(r) or _has_acceptance(r)))
             if ok == len(sys_reqs) and orphans:
                 _set(result, "fail", "{{n}} interface requirement(s) name no accepted interface", n=len(orphans))
             else:
                 _set(result, "pass" if ok == len(sys_reqs) else "fail",
-                     "{{ok}}/{{total}} requirements have a verification method and a threshold",
+                     "{{ok}}/{{total}} requirements have a verification method and a threshold or an acceptance criterion",
                      ok=ok, total=len(sys_reqs))
 
     elif cid == "SRR-EC-03":
@@ -572,6 +660,19 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
 
     elif cid in ("SRR-EC-06", "PDR-EC-03", "PRR-EC-05", "CDR-EC-10"):
         _ladder_budget(result, ctx)
+
+    elif cid == "SRR-EC-11":
+        # W2.03: a further parent (``derives`` relation, served as ``parent_ids``) counts
+        live = {r.get("id") for r in reqs}
+        below = [r for r in reqs if r.get("level") in ("segment", "system", "subsystem")]
+        orphans = [r for r in below
+                   if not any(p in live for p in (r.get("parent_ids")
+                                                  or [r.get("parent_id") or r.get("derived_from_requirement_id")]))]
+        if not below:
+            _set(result, "not_evaluated", "No requirements defined")
+        else:
+            _set(result, "fail" if orphans else "pass",
+                 "{{n}} requirement(s) below mission level without a parent", n=len(orphans))
 
     elif cid == "SRR-EC-10":
         v = _need(result, dp, "sustainability.score", "debris.casualty_compliant")
@@ -701,9 +802,10 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
              "{{systems}} system(s), {{subsystems}} subsystem(s) in the product tree", systems=systems, subsystems=subs)
 
     elif cid == "PRR-EC-06":
-        n_mission = sum(1 for r in reqs if r.get("level") == "mission")
-        n_system = sum(1 for r in reqs if r.get("level") == "system")
-        nomethod = sum(1 for r in reqs if not (r.get("verification_method") or "").strip())
+        n_mission = sum(1 for r in reqs if r.get("level") == "mission" and not _is_objective_row(r))
+        n_system = sum(1 for r in reqs if r.get("level") in ("segment", "system"))
+        nomethod = sum(1 for r in reqs if not (r.get("verification_method") or "").strip()
+                       and r.get("level") != "stakeholder" and not _is_objective_row(r))
         ok = n_mission >= 1 and n_system >= 1 and nomethod == 0
         _set(result, "pass" if ok else "fail",
              "{{mission}} mission and {{system}} system requirement(s); {{nomethod}} without a verification method",
@@ -843,16 +945,50 @@ def _cdr_criterion(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 —
         _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
 
 
+def _rollup_power(ctx: dict) -> tuple[float, float, float] | None:
+    """(orbit average, with the gate's system margin, margin %) from the roll-up, or None."""
+    ru = ctx.get("rollup") or {}
+    p = ru.get("power") or {}
+    avg = p.get("orbit_average_w")
+    if avg is None:
+        return None
+    from .margin_policy import system_margin_percent
+    pct = system_margin_percent(ctx["margin_gate"], "power")
+    return float(avg), float(avg) * (1 + pct / 100), pct
+
+
 def _ladder_budget(result: dict, ctx: dict) -> None:
     """Mass and power close with the system margin of the gate (margin_policy.yaml ladder).
 
-    Convention (stated in the ladder): total = nominal × (1 + margin). Mass is the design
-    loop's dry mass against the study mass target; power is the orbit demand in sunlight
-    against the EOL array power.
+    Convention (stated in the ladder): total = nominal × (1 + margin). With the roll-up
+    (W1.08) the mass is the rolled-up nominal mass with maturity margins and the power is the
+    modes orbit average, both against EOL generation and the mass limit; without it, the
+    design loop's dry mass and orbit demand in sunlight are used, as before.
     """
     from .margin_policy import system_margin_percent
 
     dp = ctx["dp"]
+    rp = _rollup_power(ctx)
+    if rp is not None:
+        v = _need(result, dp, "power.sa_power_eol_w")
+        if not v:
+            return
+        avail = v[0]
+        ru_mass = (ctx["rollup"] or {}).get("mass") or {}
+        nominal = ru_mass.get("with_maturity_kg") or ru_mass.get("cbe_kg")
+        limit = ctx["target_mass"] or ru_mass.get("limit_kg")
+        if not limit or limit <= 0 or not nominal:
+            _set(result, "not_evaluated", "No mass target or form factor to check the mass budget against")
+            return
+        m_pct = system_margin_percent(ctx["margin_gate"], "mass")
+        total = nominal * (1 + m_pct / 100)
+        avg, ptotal, _ = rp
+        ok = total <= limit and (avail > 0 and ptotal <= avail)
+        _set(result, "pass" if ok else "fail",
+             "Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; orbit-average power {{power}} W ({{ptotal}} W with {{margin}}% margin) vs {{avail}} W generated at end of life",
+             mass=_fmt(nominal, 2), margin=_fmt(m_pct), total=_fmt(total, 2), limit=_fmt(limit, 2),
+             power=_fmt(avg, 2), ptotal=_fmt(ptotal, 2), avail=_fmt(avail, 1))
+        return
     v = _need(result, dp, "mass.dry_mass_kg", "power.total_sunlight_w", "power.sa_power_eol_w")
     if not v:
         return

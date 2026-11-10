@@ -25,8 +25,16 @@ Source of truth for requirements is the in-memory store the API serves
 ``external_id`` write-back updates the store and mirrors into the DB row
 *if* one exists (best effort, never raises).
 
+Nov 2026 (W2.02): the requirement type, owner seat, allocation (by element **name**, so it maps
+into another study), every objective, priority, category, source, threshold unit, verification
+level and methods and the open-item flag travel as attributes too, so a ReqIF export imported
+into a new study gives the same fields on every row. ``threshold_value`` is JSON.
+Further parents are ``derives`` SPEC-RELATIONs; further objectives ride in ``objective_ids``.
+
 Import
 ------
+New requirements get ids scoped to the study (``"<study id>:<code>"`` when it fits, else
+``REQ-<hex>``); the ReqIF identifier stays in ``external_id``.
 Upserts by identifier: an existing requirement with the same ``external_id``
 (or ``SCDF-REQ-<id>`` for a requirement whose id matches) is updated,
 otherwise a new one is created with the ReqIF identifier as ``external_id``.
@@ -35,6 +43,7 @@ whose type maps to a known kind (created when no identical relation exists).
 """
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -62,10 +71,15 @@ from reqif.unparser import ReqIFUnparser
 logger = logging.getLogger(__name__)
 
 ATTRIBUTES = ("code", "text", "rationale", "level", "verification_method", "verification_phase", "status",
-              "threshold_param_path", "threshold_op", "threshold_value")
+              "threshold_param_path", "threshold_op", "threshold_value",
+              # W2.02 (Nov 2026)
+              "req_type", "element", "responsible_position", "objective_ids", "priority", "category", "source_ref",
+              "threshold_unit", "verification_level", "verification_methods", "open_item")
 #: Attributes that are cleared on import when the ReqIF value is empty.
 CLEARABLE_ATTRIBUTES = ("rationale", "verification_method", "verification_phase",
-                        "threshold_param_path", "threshold_op", "threshold_value")
+                        "threshold_param_path", "threshold_op", "threshold_value",
+                        "req_type", "responsible_position", "priority", "category", "source_ref", "threshold_unit",
+                        "verification_level", "verification_methods", "open_item")
 RELATION_KINDS = ("satisfies", "verifies", "refines", "derives", "traces")
 SPEC_OBJECT_TYPE_ID = "SCDF-TYPE-REQUIREMENT"
 SPECIFICATION_TYPE_ID = "SCDF-TYPE-SPECIFICATION"
@@ -148,9 +162,32 @@ def _x(v: Any) -> str:
     return "" if v is None else xml_escape(str(v), {'"': "&quot;"})
 
 
-def _spec_object(req: dict) -> ReqIFSpecObject:
+def _export_value(req: dict, a: str, objectives: dict[str, list[str]]) -> str:
+    if a == "threshold_value":
+        v = req.get(a)
+        if v is None:
+            return ""
+        if isinstance(v, str):
+            from spacecdf_server.db.requirement_repo import normalise_threshold_value
+            v = normalise_threshold_value(v)
+        return json.dumps(v)
+    if a == "element":
+        from spacecdf_server.routers.elements import _elements
+        return _s((_elements.get(req.get("element_id") or "") or {}).get("name"))
+    if a == "objective_ids":
+        first = req.get("objective_id")
+        ids = ([first] if first else []) + [o for o in objectives.get(req["id"], []) if o != first]
+        return ",".join(ids)
+    if a == "verification_methods":
+        return ",".join(req.get("verification_methods") or [])
+    if a == "open_item":
+        return "" if req.get(a) is None else ("true" if req.get(a) else "false")
+    return _s(req.get(a))
+
+
+def _spec_object(req: dict, objectives: dict[str, list[str]] | None = None) -> ReqIFSpecObject:
     attrs = [SpecObjectAttribute(attribute_type=SpecObjectAttributeType.STRING,
-                                 definition_ref=_attr_id(a), value=_s(req.get(a)))
+                                 definition_ref=_attr_id(a), value=_export_value(req, a, objectives or {}))
              for a in ATTRIBUTES]
     return ReqIFSpecObject(identifier=requirement_identifier(req), attributes=attrs,
                            spec_object_type=SPEC_OBJECT_TYPE_ID, long_name=_s(req.get("code")),
@@ -176,6 +213,8 @@ def _hierarchy(reqs: list[dict]) -> list[ReqIFSpecHierarchy]:
 async def export_requirements_reqif(study_id: str) -> bytes:
     """ReqIF 1.2 XML (UTF-8 bytes) of the study's requirements."""
     from spacecdf_server.db.relation_repo import load_all_relations
+    from spacecdf_server.routers.requirements import ensure_requirements_loaded
+    await ensure_requirements_loaded()
 
     reqs = _study_requirements(study_id)
     await _ensure_external_ids(reqs)
@@ -195,12 +234,20 @@ async def export_requirements_reqif(study_id: str) -> bytes:
     spec_types += [ReqIFSpecRelationType(identifier=_rel_type_id(k), long_name=k, last_change=_now())
                    for k in RELATION_KINDS]
 
-    spec_objects = [_spec_object(r) for r in reqs]
+    rels = await load_all_relations(study_id)
+    objectives: dict[str, list[str]] = {}
+    for rel in sorted(rels.values(), key=lambda r: (str(r.get("created_at") or ""), r.get("id") or "")):
+        if rel.get("kind") == "traces" and rel.get("source_kind") == "requirement" \
+                and rel.get("target_kind") == "objective":
+            objectives.setdefault(rel["source_id"], []).append(rel["target_id"])
+    spec_objects = [_spec_object(r, objectives) for r in reqs]
 
     warnings: list[str] = []  # plain text; escaped when written to the header
     spec_relations: list[ReqIFSpecRelation] = []
-    for rel in (await load_all_relations(study_id)).values():
+    for rel in rels.values():
         kind = rel.get("kind")
+        if kind == "traces" and rel.get("target_kind") == "objective":
+            continue   # carried by the objective_ids attribute
         if kind not in RELATION_KINDS:
             warnings.append(f"relation {rel.get('id')}: kind '{kind}' has no ReqIF SPEC-RELATION-TYPE")
             continue
@@ -257,6 +304,8 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
         result.warnings.append("no SPEC-OBJECTs in document")
         return result
 
+    from spacecdf_server.routers.requirements import ensure_requirements_loaded
+    await ensure_requirements_loaded()
     store = _store()
     existing_by_ident: dict[str, dict] = {}
     for r in store.values():
@@ -273,37 +322,70 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
         walk(spec.children, None)
 
     # upsert requirements
+    from spacecdf_server.routers import elements as el_router
+    from spacecdf_server.routers.requirements import normalise_fields
+    from spacecdf_server.services.requirement_import import resolve_element
+    study_elements = [e for e in el_router._elements.values() if e.get("study_id") == study_id]
+    extra_objectives: dict[str, list[str]] = {}
     for obj in content.spec_objects:
         attrs = _attr_values(obj)
         ident = obj.identifier
         req = existing_by_ident.get(ident)
-        fields = {a: (attrs.get(a) or None) for a in ATTRIBUTES}
+        fields: dict[str, Any] = {a: (attrs.get(a) or None) for a in ATTRIBUTES if a in attrs or req is None}
         if fields.get("level") is None:
             fields["level"] = "system"
         if fields.get("status") is None:
             fields["status"] = "draft"
+        if "priority" in fields and fields["priority"] is not None:
+            try:
+                fields["priority"] = int(fields["priority"])
+            except ValueError:
+                result.warnings.append(f"{ident}: priority {fields['priority']!r} ignored")
+                fields["priority"] = None
+        if "open_item" in fields and fields["open_item"] is not None:
+            fields["open_item"] = str(fields["open_item"]).lower() in ("true", "1", "yes")
+        if "verification_methods" in fields and fields["verification_methods"]:
+            fields["verification_methods"] = [m for m in str(fields["verification_methods"]).split(",") if m]
+        if "element" in fields:
+            name = fields.pop("element")
+            fields["element_id"] = resolve_element(name, study_elements) if name else None
+            if name and not fields["element_id"]:
+                result.warnings.append(f"{ident}: no element named {name!r} in the study")
+        oids = None
+        if "objective_ids" in fields:
+            oids = [o for o in str(fields.pop("objective_ids") or "").split(",") if o]
+            fields["objective_id"] = oids[0] if oids else None
+        try:
+            normalise_fields(fields)
+        except Exception as exc:  # an unknown level, method, stage ... (HTTPException 422)
+            result.warnings.append(f"{ident}: {getattr(exc, 'detail', exc)}; kept as text where possible")
+            for k in ("level", "verification_phase", "verification_level", "threshold_op"):
+                fields.pop(k, None)
+            fields.setdefault("level", "system")
         if req is None:
-            req_id = ident[len("SCDF-REQ-"):] if ident.startswith("SCDF-REQ-") else ident
-            if req_id in store:
-                req_id = f"REQ-{uuid4().hex[:8]}"
+            code = fields.get("code") or ident
+            req_id = f"{study_id}:{code}"
+            if len(req_id) > 32 or req_id in store:
+                req_id = f"REQ-{uuid4().hex[:12]}"
             req = {
                 "id": req_id, "study_id": study_id, "parent_id": None, "element_id": None,
-                "level": fields["level"], "code": fields.get("code") or ident, "text": fields.get("text") or "",
-                "rationale": fields.get("rationale"), "threshold_param_path": fields.get("threshold_param_path"),
-                "threshold_op": fields.get("threshold_op"), "threshold_value": fields.get("threshold_value"),
-                "verification_method": fields.get("verification_method"),
-                "verification_phase": fields.get("verification_phase"), "responsible_position": None,
+                "level": fields["level"], "code": code, "text": fields.get("text") or "",
+                "rationale": None, "threshold_param_path": None, "threshold_op": None, "threshold_value": None,
+                "verification_method": None, "verification_phase": None, "responsible_position": None,
                 "status": fields["status"], "derived_from_requirement_id": None, "external_id": ident,
             }
+            req.update({k: v for k, v in fields.items() if k not in ("code",)})
             store[req_id] = req
             existing_by_ident[ident] = req
             result.created += 1
         else:
             for k, v in fields.items():
-                if v is not None or k in CLEARABLE_ATTRIBUTES:
+                if v is not None or k in CLEARABLE_ATTRIBUTES or k in ("element_id", "objective_id"):
                     req[k] = v
             req["external_id"] = ident
             result.updated += 1
+        if oids is not None:
+            extra_objectives[req["id"]] = oids[1:]
         result.id_map[ident] = req["id"]
         await _mirror_external_id_to_db(req["id"], ident)
 
@@ -319,9 +401,26 @@ async def import_requirements_reqif(study_id: str, data: bytes | str) -> ImportR
 
     # write-through (SCDF-160 N0): imported requirements must survive a restart
     from spacecdf_server.db.requirement_repo import db_upsert_requirement
+    written: set[str] = set()
+
+    async def write(rid: str, depth: int = 0) -> None:      # parents first (self-referencing key)
+        if rid in written or rid not in store or depth > 64:
+            return
+        written.add(rid)
+        pid = store[rid].get("parent_id")
+        if pid and pid in result.id_map.values():
+            await write(pid, depth + 1)
+        await db_upsert_requirement(store[rid])
+
     for rid in result.id_map.values():
-        if rid in store:
-            await db_upsert_requirement(store[rid])
+        await write(rid)
+
+    # further objectives: ``traces`` relations to entity kind ``objective``
+    from spacecdf_server.routers.requirements import set_extra_links
+    for rid, oids in extra_objectives.items():
+        if oids or rid in result.id_map.values():
+            created, _ = await set_extra_links(study_id, rid, "traces", "objective", oids)
+            result.relations_created += created
 
     # relations
     existing_rels = {(r["kind"], r["source_id"], r["target_id"]) for r in (await load_all_relations(study_id)).values()

@@ -219,6 +219,44 @@ async def ensure_interface_vocabulary(engine: AsyncEngine) -> int:
         return 0
 
 
+# ── Nov 2026 (W2.04): one live requirement per code in a study ────────
+
+REQ_CODE_INDEX = "uq_requirements_study_code_live"
+
+
+def _requirement_code_index_sync(conn: Connection) -> bool:
+    """Create the partial unique index on ``requirements (study_id, code)`` for live rows.
+
+    A database that already holds duplicate codes keeps working without the index (the API
+    still answers 409 on a new duplicate); the duplicates are logged so they can be fixed.
+    """
+    inspector = inspect(conn)
+    if "requirements" not in set(inspector.get_table_names()):
+        return False
+    if any(ix.get("name") == REQ_CODE_INDEX for ix in inspector.get_indexes("requirements")):
+        return False
+    dup = conn.execute(text(
+        "SELECT study_id, code, COUNT(*) FROM requirements WHERE status != 'retired' "
+        "GROUP BY study_id, code HAVING COUNT(*) > 1")).fetchall()
+    if dup:
+        logger.warning("requirements: %d duplicate (study, code) pair(s); unique index not created: %s",
+                       len(dup), ", ".join(f"{s}:{c}" for s, c, _ in dup[:10]))
+        return False
+    conn.execute(text(f"CREATE UNIQUE INDEX IF NOT EXISTS {REQ_CODE_INDEX} ON requirements (study_id, code) "
+                      "WHERE status != 'retired'"))
+    return True
+
+
+async def ensure_requirement_code_index(engine: AsyncEngine) -> bool:
+    """Idempotent; never raises."""
+    try:
+        async with engine.begin() as conn:
+            return await conn.run_sync(_requirement_code_index_sync)
+    except Exception:
+        logger.exception("ensure_requirement_code_index failed")
+        return False
+
+
 async def ensure_schema_upgrades(engine: AsyncEngine) -> list[str]:
     """Add any ORM-declared columns missing from existing tables.
 
@@ -234,6 +272,8 @@ async def ensure_schema_upgrades(engine: AsyncEngine) -> list[str]:
         logger.exception("ensure_schema_upgrades failed")
     if await ensure_option_scoped_parameters(engine):
         added.append(f"{PARAM_TABLE}.{OPTION_UNIQUE_NAME}")
+    if await ensure_requirement_code_index(engine):
+        added.append(f"requirements.{REQ_CODE_INDEX}")
     n = await ensure_interface_vocabulary(engine)
     if n:
         added.append(f"{IFACE_TABLE}.canonical_vocabulary({n} rows)")

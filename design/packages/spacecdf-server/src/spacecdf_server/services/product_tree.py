@@ -73,6 +73,8 @@ ARCHITECTURES: dict[str, list[dict[str, Any]]] = {
         {"name": "Space Segment", "segment": "space", "systems": [{"name": "Spacecraft", "spacecraft": True}]},
         {"name": "Ground Segment", "segment": "ground", "systems": [{"name": "Ground Station", "domain": "ground"}]},
         {"name": "Launch Segment", "segment": "launch", "systems": []},
+        # W2.09 (Nov 2026): the user / science segment receives the product requirements
+        {"name": "User Segment", "segment": "user", "systems": []},
         {"name": "Operations", "segment": "operations", "systems": []},
     ],
     "constellation": [

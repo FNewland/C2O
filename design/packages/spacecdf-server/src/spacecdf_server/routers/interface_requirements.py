@@ -3,6 +3,7 @@
     GET   /api/studies/{sid}/interface-requirements                 IRs + IRD status (PDR-EC-02)
     POST  /api/studies/{sid}/interface-requirements                 IF-02: IR naming two elements → interface
     POST  /api/studies/{sid}/interface-requirements/sync            re-apply IF-01/03/04 to the study
+    POST  /api/studies/{sid}/interface-requirements/link            link imported IRs to interfaces + ICD rows (W2.07)
     POST  /api/studies/{sid}/interface-requirements/{rid}/accept-update   take the re-rendered text / retire
     POST  /api/studies/{sid}/interface-requirements/{rid}/dismiss-update  keep the current text
     GET   /api/studies/{sid}/interfaces/{iid}/requirements          IRs of one interface + agreement
@@ -61,7 +62,7 @@ def _ir_view(r: dict, ifaces: dict[str, dict]) -> dict:
 @router.get("/studies/{study_id}/interface-requirements")
 async def list_irs(study_id: str) -> dict:
     """Interface requirements of the study with their interface, and the IRD status."""
-    from ..services.interface_requirements import agreement_view, interface_irs, ird_status
+    from ..services.interface_requirements import agreement_view, compute_suggestions, interface_irs, ird_status
     from . import elements as el
     reqs = await _reqs(study_id)
     ifaces = {i["id"]: i for i in el._interfaces.values() if i.get("study_id") == study_id}
@@ -71,7 +72,20 @@ async def list_irs(study_id: str) -> dict:
     agreements = {iid: agreement_view(i, by_if.get(iid, []), els)
                   for iid, i in ifaces.items() if i.get("status") == "accepted" and not i.get("deleted_at")}
     return {"requirements": [_ir_view(r, ifaces) for r in sorted(irs, key=lambda x: x.get("code") or "")],
-            "status": ird_status(list(ifaces.values()), reqs), "agreements": agreements}
+            "status": ird_status(list(ifaces.values()), reqs), "agreements": agreements,
+            "suggestions": await compute_suggestions(study_id)}
+
+
+@router.post("/studies/{study_id}/interface-requirements/link")
+async def link_irs(study_id: str) -> dict:
+    """Link the interface requirements that name their end points (bulk import) to the
+    interfaces between those elements and to their ICD row (exchange item); propose missing
+    interfaces (IF-02, status suggested)."""
+    from ..services.interface_requirements import link_imported
+    from ._arcadia_events import broadcast_mutation
+    out = await link_imported(study_id)
+    await broadcast_mutation(study_id, "relation_created", "requirement", study_id, out)
+    return out
 
 
 @router.post("/studies/{study_id}/interface-requirements/sync")

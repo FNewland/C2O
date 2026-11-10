@@ -32,24 +32,29 @@ ears:
       fr: '^tant que\b.+,\s*(lorsque|quand)\b.+\bdoi(t|vent)\b'
     - id: unwanted
       label: {en: "Unwanted behaviour (If…, then…)", fr: "Comportement indésirable (Si…, alors…)"}
-      en: '^if\b.+\bthen\b.+\bshall\b'
-      fr: '^si\b.+\balors\b.+\bdoi(t|vent)\b'
+      # "then" is optional (W2.06): "If no telecommand is received for 72 h the spacecraft shall …"
+      en: '^if\b.+\bshall\b'
+      fr: '^si\b.+\bdoi(t|vent)\b'
     - id: state
       label: {en: "State-driven (While…)", fr: "Piloté par état (Tant que…)"}
-      en: '^while\b.+\bshall\b'
-      fr: '^(tant que|pendant que)\b.+\bdoi(t|vent)\b'
+      # "During …" and "In <mode> …" name a state as well (W2.06)
+      en: '^(while|during|in (safe|survival|leop|nominal|imaging|downlink|eclipse|sunlight)\b|on the\b[^,]*\bgrid\b)\b.*\bshall\b'
+      fr: '^(tant que|pendant que|pendant|en mode)\b.+\bdoi(t|vent)\b'
     - id: event
       label: {en: "Event-driven (When…)", fr: "Piloté par événement (Lorsque…)"}
-      en: '^when\b.+\bshall\b'
-      fr: '^(lorsque|quand|dès que)\b.+\bdoi(t|vent)\b'
+      # "After …", "Before …", "At PDR …" are events too (W2.06)
+      en: '^(when|after|before|at (pdr|cdr|qr|ar|srr|launch|separation))\b.+\bshall\b'
+      fr: '^(lorsque|quand|dès que|après|avant)\b.+\bdoi(t|vent)\b'
     - id: optional
       label: {en: "Optional feature (Where…)", fr: "Option (Là où…)"}
       en: '^where\b.+\bshall\b'
       fr: '^(là où|dans les configurations où)\b.+\bdoi(t|vent)\b'
     - id: ubiquitous
       label: {en: "Ubiquitous (The … shall …)", fr: "Permanent (Le/La … doit …)"}
-      en: '^(the|each|every|all)\b.+\bshall\b'
-      fr: "^(le|la|les|l'|l’|chaque|tout|toute)\\s*\\S.*\\bdoi(t|vent)\\b"
+      # subject first (W2.06): any subject before "shall" with no leading condition keyword,
+      # e.g. "Both cameras shall …", "Mission control shall …", "No person shall …"
+      en: '^(?!(if|when|while|where|during|after|before)\b).*?\bshall\b'
+      fr: "^(le|la|les|l'|l’|chaque|tout|toute|aucun|aucune|un|une|des)\\s*\\S.*\\bdoi(t|vent)\\b"
 
 # ------------------------------------------------------------------ quality checks
 # kind: one of
@@ -91,7 +96,7 @@ checks:
     severity: error
     words:
       en: [adequate, appropriate, sufficient, fast, quick, rapid, efficient, user-friendly, easy, flexible,
-           robust, reliable, high, low, large, small, several, many, few, approximately, about, optimal,
+           robust, reliable, high, low, large, small, several, many, few, approximately, optimal,
            optimised, optimized, minimise, minimize, maximise, maximize, state-of-the-art, significant, normal,
            typical, reasonable, best]
       fr: [adéquat, adéquate, approprié, appropriée, suffisant, suffisante, rapide, efficace, convivial, facile,
@@ -155,7 +160,8 @@ checks:
     kind: words
     severity: warning
     words:
-      en: [it, they, them, this, these, those, its, their]
+      # the possessive "its" / "their" names its noun right after it, so it is not flagged (W2.06)
+      en: [it, they, them, this, these, those]
       fr: [il, ils, elle, elles, celui-ci, celle-ci, ceux-ci, ceci, cela]
     skip_first_words: 0
     message: {en: "Pronoun “{term}”: name the item explicitly.",
@@ -201,7 +207,28 @@ units: ["%", "kg", "g", "t", "W", "kW", "mW", "Wh", "kWh", "mAh", "Ah", "V", "mV
         "Hz", "kHz", "MHz", "GHz", "bps", "kbps", "Mbps", "Gbps", "bit/s", "kbit/s", "Mbit/s", "b/s", "B", "kB", "MB", "GB", "TB",
         "Mo", "Go", "To", "Gbit", "Mbit", "°C", "°", "K", "deg", "arcsec", "arcmin", "rad", "mrad", "µrad", "sr", "m/s", "km/s",
         "m/s²", "m/s2", "g0", "N", "mN", "µN", "Nm", "N·m", "mNm", "mN·m", "Ns", "N·s", "Pa", "kPa", "bar", "krad", "rad(Si)",
-        "U", "lux", "W/m²", "W/m2", "J", "kJ", "Gauss", "G", "nT", "µT", "T", "sigma", "σ", "pixels", "px", "rpm"]
+        "U", "lux", "W/m²", "W/m2", "J", "kJ", "Gauss", "G", "nT", "µT", "T", "sigma", "σ", "pixels", "px", "rpm",
+        # W2.06 (Nov 2026): ASCII spellings used in requirement baselines
+        "degC", "deg C", "m2", "m²", "deg/s", "°/s", "dB/K", "us", "urad", "hPa", "mbar", "K/min", "month", "months",
+        "week", "weeks", "mois", "semaine", "semaines", "kbit", "MB/day", "Mo/jour", "GB/day", "pixel", "Mpx", "lp/mm",
+        "nm/K", "g/s", "Wh/kg", "dBc", "dB(A)", "ppm"]
+# Numbers that are not measured quantities (W2.06): no unit is expected after them.
+#   ranges "449.75-450.25 MHz", "0 to 25 degC", "between 1600 and 1630 nm" (the last number carries the unit);
+#   lists "1.2, 9.6 and 38.4 kbps"; tolerances "865 ±10 nm"; times "09:30"; dates "31 March 2027",
+#   "2027-03-31"; ratios "1.3:1"; "1 in 10 000"; scientific "1e-5"; dimensions "100 x 100 x 340.5 mm";
+#   compounds "30-day", "4-lane"; identifiers after the words below ("rev 14.1", "RR No. 9.21",
+#   "CCSDS 121.0", "Appendix 3", "services 1, 3, 5"); fractions "0.95"; and counts ("40 scene pairs":
+#   a number followed by a noun).
+number_skips:
+  id_words: [rev, revision, "no.", "no", nr, class, version, level, appendix, annex, section, services, service,
+             sid, sids, step, phase, month, day, week, goal, cycle, cycles, iso, ecss, ccsds, itu, rr, un, ipc, cds,
+             pus, std, landsat, sentinel, j-std-001, clause, table, figure, article, by, "§", mil-std]
+  dimensionless_words: [snr, ratio, probability, factor, factors, margin, reliability, index, density, mtf, bias,
+                        coefficient, efficiency, ber, bit-error, error rate, fraction, reflectance]
+  function_words: [and, or, to, "on", at, in, for, with, over, before, after, from, as, per, the, a, an, under,
+                   below, above, within, during, while, than, et, ou, à, pour, avec, sur, dans, de, du, des]
+  months: [january, february, march, april, may, june, july, august, september, october, november, december,
+           janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre]
 # Comparator / tolerance phrases that make a numeric value bounded (R33).
 bounds:
   en: [at least, at most, no more than, no less than, not exceed, not to exceed, greater than, less than, more than,

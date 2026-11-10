@@ -230,6 +230,22 @@ def generate_smart_requirements(
 
 _SHALL = re.compile(r"\b(shall|doit|doivent)\b", re.IGNORECASE)
 
+#: Requirement types verified as pass/fail (no numeric threshold needed).
+PASS_FAIL_TYPES = frozenset({"functional", "interface", "regulatory", "process"})
+#: Levels where a HOW wording is flagged (W2.06).
+HOW_LEVELS = frozenset({"mission", "segment", "system"})
+
+
+def _decode_threshold(raw: str):
+    import json
+    try:
+        return json.loads(raw)
+    except (ValueError, TypeError):
+        try:
+            return float(raw.replace(",", "."))
+        except ValueError:
+            return raw.strip() or None
+
 
 def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     """Validate a requirement against SMART criteria.
@@ -243,6 +259,11 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     check = SMARTCheck(requirement_id=req.get("id", ""))
     text = req.get("text", "")
     issues: list[str] = []
+    if req.get("level") == "stakeholder":
+        # A stakeholder need is a statement of need, not a "shall" requirement: SMART does not apply.
+        check.specific = check.measurable = check.achievable = check.relevant = check.traceable = True
+        check.is_smart = True
+        return check
 
     # Specific
     # "shall", or its French equivalent « doit » / « doivent » (bilingual course)
@@ -252,14 +273,24 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
         issues.append("Not specific: requirement should use 'shall' and be detailed")
         check.codes.append("specific")
 
-    # Measurable
+    # Measurable (W1.01/W2.06): a threshold with an operator, whatever its type (number, range,
+    # date; the store keeps the decoded value, so a restart changes nothing), or a pass/fail
+    # requirement verified by test, inspection, review or analysis of the statement itself.
     threshold = req.get("threshold")
+    tv = req.get("threshold_value")
+    if isinstance(tv, str):
+        tv = _decode_threshold(tv)
     if threshold is not None and (isinstance(threshold, (int, float)) and threshold != 0):
         check.measurable = True
     elif req.get("operator") and req.get("unit"):
         check.measurable = True
-    elif req.get("threshold_op") and isinstance(req.get("threshold_value"), (int, float)):
+    elif req.get("threshold_op") and tv is not None and tv != "":
         check.measurable = True     # the workbench's threshold fields
+    elif req.get("threshold_op") == "exists":
+        check.measurable = True
+    elif (req.get("req_type") in PASS_FAIL_TYPES or req.get("level") == "interface") \
+            and (req.get("verification_method") or "") in ("T", "I", "R", "A"):
+        check.measurable = True     # a pass/fail statement: the acceptance criterion is the "shall"
     else:
         issues.append("Not measurable: add a threshold value with operator and unit")
         check.codes.append("measurable")
@@ -267,8 +298,9 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
     # Achievable (simplified — just check it's not obviously impossible)
     check.achievable = True  # Would need class envelope check in production
 
-    # A derived requirement traces up through its parent (textbook § 5.4)
-    has_parent = bool(req.get("derived_from_requirement_id") or req.get("parent_id"))
+    # A derived requirement traces up through its parent (textbook § 5.4); ``has_parent`` is set
+    # by the caller when a ``derives`` relation is the only parent (W2.03)
+    has_parent = bool(req.get("derived_from_requirement_id") or req.get("parent_id") or req.get("has_parent"))
 
     # Relevant
     if req.get("objective_id") or req.get("rationale") or has_parent:
@@ -284,10 +316,11 @@ def validate_smart(req: dict[str, Any]) -> SMARTCheck:
         issues.append("Not traceable: should link to an objective, a function or a parent requirement")
         check.codes.append("traceable")
 
-    # Check HOW vs WHAT
+    # Check HOW vs WHAT: only at mission, segment and system level (W2.06). A subsystem or
+    # interface requirement may legitimately name the means ("use UN 38.3-tested cells").
     text_lower = text.lower()
-    req_type = req.get("req_type", "system")
-    if req_type != "interface":  # Interface reqs ARE allowed to be specific HOW
+    level = req.get("level") or "system"
+    if req.get("req_type") != "interface" and level in HOW_LEVELS:
         for indicator in _HOW_INDICATORS:
             if indicator in text_lower:
                 check.is_how_not_what = True

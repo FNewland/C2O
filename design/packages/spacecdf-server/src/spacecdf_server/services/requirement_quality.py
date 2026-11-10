@@ -80,21 +80,82 @@ def detect_ears(text: str, lang: str) -> dict[str, Any] | None:
     return None
 
 
+_TIME = re.compile(r"\b\d{1,2}:\d{2}\b")
+_ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+_ONE_IN = re.compile(r"\b1 in \d{1,3}(?:[ \u202f\u00a0]\d{3})*\b")
+_RATIO = re.compile(r"\b\d+(?:\.\d+)?:\d+(?:\.\d+)?\b")
+_PAREN_ID = re.compile(r"\(\s*\d+(?:[.,]\d+)*\s*\)")
+
+
+def _masked_spans(text: str) -> list[tuple[int, int]]:
+    """Spans whose numbers are never measured quantities: times, ISO dates, "1 in 10 000",
+    ratios "1.3:1", parenthesised identifiers "(255,223)"."""
+    spans = []
+    for rx in (_TIME, _ISO_DATE, _ONE_IN, _RATIO, _PAREN_ID):
+        spans += [m.span() for m in rx.finditer(text)]
+    return spans
+
+
 def _numbers_without_unit(text: str) -> list[str]:
-    unit_re = _rules()["unit_re"]
+    """Numbers that look like measured quantities but carry no unit (INCOSE R6).
+
+    Not flagged (W2.06; word lists in ``number_skips`` of requirement_rules.yaml): a number
+    followed by a unit or by a noun (a count: "40 scene pairs"); the first number of a range,
+    a list or a tolerance ("449.75-450.25 MHz", "0 to 25 degC", "1.2, 9.6 and 38.4 kbps",
+    "865 ±10 nm"); times, ISO dates, day-month dates and years; "1 in 10 000"; ratios;
+    scientific notation; dimensions "100 x 100 x 340.5 mm"; compounds "30-day"; identifiers
+    after a word such as "rev", "No.", "CCSDS", "Appendix", "services"; fractions below 1; and
+    numbers in a dimensionless context (SNR, ratio, probability, factor, margin …)."""
+    rules = _rules()
+    unit_re = rules["unit_re"]
+    skips = rules["cfg"].get("number_skips") or {}
+    id_words = {w.lower() for w in skips.get("id_words") or []}
+    dimless = [w.lower() for w in skips.get("dimensionless_words") or []]
+    function_words = {w.lower() for w in skips.get("function_words") or []}
+    months = {w.lower() for w in skips.get("months") or []}
+    masked = _masked_spans(text)
+    low = text.lower()
     out = []
     for m in _NUMBER.finditer(text):
         num = m.group(1)
+        if any(a <= m.start() < b for a, b in masked):
+            continue
         after = text[m.end():]
+        before = text[:m.start()]
         if unit_re.match(after):
             continue
-        # ordinal-ish or list markers ("phase 2", "R18", "3 inhibits" counts are fine)
-        nxt = re.match(r"\s?([A-Za-zÀ-ÿ]+)", after)
-        if nxt and nxt.group(1).lower() in {
-            "inhibits", "inhibit", "inhibitions", "independent", "indépendantes", "times", "fois", "axes",
-            "axis", "redundant", "redondants", "units", "unités", "elements", "éléments", "of", "sur", "out", "parmi",
-            "satellites", "spacecraft", "stations", "passes", "passages", "wheels", "roues", "switches",
-            "interrupteurs", "sigma", "failures", "défaillances", "channels", "canaux", "modes"}:
+        # range, list or tolerance: another number follows ("-", "–", "to", "and", "or", ",", "±")
+        if re.match(r"\s?(?:[-–]|to\b|and\b|or\b|et\b|à\b|,|±|\+/-)\s?[-+±]?\d", after):
+            continue
+        # scientific notation, dimensions, compounds and fractions written with "/"
+        if re.match(r"[eE][-+]?\d", after) or re.match(r"\s?[x×]\s?\d", after) \
+                or re.match(r"-[A-Za-zÀ-ÿ]|-\s", after) or re.match(r"/\d", after):
+            continue
+        prev = re.search(r"([A-Za-zÀ-ÿ§][\w.\-§]*)\s*$", before)
+        prev_word = prev.group(1).lower() if prev else ""
+        if prev_word.rstrip(".") in id_words or prev_word in id_words:
+            continue
+        if prev and prev.group(1)[:1].isupper() and prev.group(1).lower() not in ("at", "the", "in", "on"):
+            # an identifier after a proper noun or acronym ("Landsat 8", "Appendix 3", "UN 38.3")
+            if not re.search(r"(?i)\b(at least|at most|within|below|above|between|than|of)\s*$", before):
+                continue
+        nxt = re.match(r"\s?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-]*)", after)
+        if nxt:
+            word = nxt.group(1).lower()
+            if word in months or prev_word in months:
+                continue                       # "31 March", "1 April", "May 2027"
+            if word not in function_words:
+                continue                       # a count: the noun is what is counted
+        elif prev_word in months:
+            continue
+        try:
+            val = float(num.replace(",", ".").replace("+", ""))
+        except ValueError:
+            val = None
+        if val is not None and 0 < abs(val) < 1:
+            continue                           # a fraction or probability
+        clause = low[max(0, low.rfind(",", 0, m.start()), low.rfind(";", 0, m.start())):m.start()]
+        if any(re.search(r"(?<![\w-])" + re.escape(w) + r"(?![\w-])", clause) for w in dimless):
             continue
         out.append(num)
     return out

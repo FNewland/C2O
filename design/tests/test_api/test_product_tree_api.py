@@ -21,12 +21,13 @@ async def test_default_tree_is_mission_segment_spacecraft_subsystems(client, stu
     root = by[out["mission_id"]]
     assert root["element_type"] == "mission" and root["name"] == "TreeSat" and root["parent_id"] is None
     segs = {e["name"]: e for e in kids(root["id"])}
-    assert set(segs) == {"Space Segment", "Ground Segment", "Launch Segment", "Operations"}
+    assert set(segs) == {"Space Segment", "Ground Segment", "Launch Segment", "User Segment", "Operations"}
     assert {e["element_type"] for e in segs.values()} == {"segment"}
     (sc,) = kids(segs["Space Segment"]["id"])
     assert sc["element_type"] == "system" and sc["name"] == "Spacecraft" and out["spacecraft_ids"] == [sc["id"]]
     subs = kids(sc["id"])
-    assert len(subs) == 8 and {e["element_type"] for e in subs} == {"subsystem"}
+    assert len(subs) == 9 and {e["element_type"] for e in subs} == {"subsystem"}   # 8 + Harness (W2.09)
+    assert "Harness" in {e["name"] for e in subs}
     assert {e["subsystem_domain"] for e in subs} >= {"payload", "power", "aocs", "ttc", "obc"}
     (gs,) = kids(segs["Ground Segment"]["id"])
     assert gs["element_type"] == "system" and gs["name"] == "Ground Station"

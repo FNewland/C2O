@@ -34,6 +34,7 @@ export const GATE_QUESTIONS = [
   'Are technology readiness levels acceptable for the target phase?',
   'Has the Systems Engineering Management Plan been baselined?',
   'Is the mission sustainable (debris, EOL, casualty risk)?',
+  'Does every requirement below mission level flow down from a parent requirement?',
   'Does the preliminary design satisfy all system requirements?',
   'Are interface requirements defined between all subsystems?',
   'Are all subsystem mass, power, and data margins positive?',
@@ -159,6 +160,13 @@ export const EVIDENCE_KEYS_CDR2 = [
   '{{tiers}} rate tier(s), command-loss timer {{hours}} h; {{alarms}} alarm finding(s)',
   '{{positions}} position(s), {{gonogo}} GO/NO-GO situation(s), {{rules}} flight rule(s); {{uncovered}} critical telecommand(s) without a GO/NO-GO entry',
   '{{ok}}/{{total}} requirements have a verification method',
+]
+// English text is the i18n key — requirement baseline evidence (W2.03, W2.05, W1.08: new fields, the one roll-up)
+export const EVIDENCE_KEYS_REQ = [
+  '{{ok}}/{{total}} requirements have a verification method and a threshold or an acceptance criterion',
+  '{{n}} requirement(s) below mission level without a parent',
+  'Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; orbit-average power {{power}} W ({{ptotal}} W with {{margin}}% margin) vs {{avail}} W generated at end of life',
+  'Orbit-average power {{power}} W ({{ptotal}} W with {{pmargin}}% margin) vs {{avail}} W generated at end of life; mass margin {{mass}}%',
 ]
 
 // English text is the i18n key — what the Fix link opens (criterion `fix` in

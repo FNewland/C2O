@@ -80,7 +80,7 @@ async def test_export_parse_import_round_trip(db_factory, study, clean_stores): 
     assert new["SCDF-REQ-SR-1"]["parent_id"] == new["SCDF-REQ-MR-1"]["id"]
     assert new["CUSTOMER-REQ-42"]["parent_id"] == new["SCDF-REQ-SR-1"]["id"]
     assert new["CUSTOMER-REQ-42"]["text"].endswith('"clean".')
-    assert new["CUSTOMER-REQ-42"]["verification_method"] == "test" and new["CUSTOMER-REQ-42"]["level"] == "subsystem"
+    assert new["CUSTOMER-REQ-42"]["verification_method"] == "T" and new["CUSTOMER-REQ-42"]["level"] == "subsystem"
     assert new["SCDF-REQ-SR-2"]["rationale"] is None
     # original ids are kept for generated identifiers when free; SCDF-REQ-MR-1 collides -> new id
     assert new["SCDF-REQ-MR-1"]["id"] != "MR-1"
@@ -138,8 +138,8 @@ async def test_threshold_round_trip(db_factory, study, clean_stores):  # noqa: F
     await import_requirements_reqif(fresh, data)
     new = {r["external_id"]: r for r in _requirements.values() if r["study_id"] == fresh}
     sr1, ssr1, mr1 = new["SCDF-REQ-SR-1"], new["CUSTOMER-REQ-42"], new["SCDF-REQ-MR-1"]
-    assert (sr1["threshold_param_path"], sr1["threshold_op"], sr1["threshold_value"]) == ("power.eps_mass_kg", "<=", "5")
-    assert (ssr1["threshold_param_path"], ssr1["threshold_op"], ssr1["threshold_value"]) == ("el:PCDU.mass_kg", ">=", "0.25")
+    assert (sr1["threshold_param_path"], sr1["threshold_op"], sr1["threshold_value"]) == ("power.eps_mass_kg", "<=", 5)  # W1.01: decoded
+    assert (ssr1["threshold_param_path"], ssr1["threshold_op"], ssr1["threshold_value"]) == ("el:PCDU.mass_kg", ">=", 0.25)  # W1.01: decoded
     assert mr1["threshold_param_path"] is None and mr1["threshold_op"] is None and mr1["threshold_value"] is None
 
     # the compliance tracker can act on the imported requirement

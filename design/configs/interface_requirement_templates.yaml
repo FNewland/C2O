@@ -24,6 +24,9 @@
 #   fitting
 
 schema_version: 1
+# W2.07: "boundary" = one IRD row set per subsystem boundary (the unit links under it are
+# covered, links inside a subsystem get none); "link" = one row set per accepted link.
+ird_scope: boundary
 standard_ref: "ECSS-E-ST-10-24C (interface management: IRD/ICD); EARS; C2O default templates"
 
 templates:
@@ -70,9 +73,11 @@ templates:
     values: [p_eol]
 
   # ── data ─────────────────────────────────────────────────────────────────
+  # W2.07: no ``null`` here any more: a data link without a subtype (a PPS line, a CSI-2 camera
+  # link) is not a TM/TC bus, and the template rendered "on TBD bus TBD at address TBD"
   - id: IRT-DATA-BUS
     type: data
-    subtypes: [tm_tc, bus, null]
+    subtypes: [tm_tc, bus]
     subject: to
     method: T
     phase: CDR
@@ -90,6 +95,27 @@ templates:
       en: "The {from} shall transfer payload data to the {to} over {protocol} at no less than {rate} bit/s."
       fr: "L'élément {from} doit transférer les données de charge utile à l'élément {to} par {protocol} à au moins {rate} bit/s."
     values: [protocol, rate]
+
+  - id: IRT-DATA-CSI2
+    type: data
+    subtypes: [csi2]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall stream image data to the {to} over a MIPI CSI-2 link of {lanes} lanes at no less than {rate} bit/s."
+      fr: "L'élément {from} doit transmettre les données d'image à l'élément {to} par une liaison MIPI CSI-2 de {lanes} voies à au moins {rate} bit/s."
+    values: [lanes, rate]
+  - id: IRT-DATA-TIMING
+    type: data
+    subtypes: [timing]
+    subject: from
+    method: T
+    phase: CDR
+    text:
+      en: "The {from} shall send the {to} a time signal with an error of no more than {accuracy_us} µs."
+      fr: "L'élément {from} doit envoyer à l'élément {to} un signal de temps avec une erreur d'au plus {accuracy_us} µs."
+    values: [accuracy_us]
 
   # ── RF ───────────────────────────────────────────────────────────────────
   - id: IRT-RF-LINK

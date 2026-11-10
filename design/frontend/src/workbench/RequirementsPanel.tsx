@@ -4,7 +4,12 @@
  * Requirements can be:
  * - Assigned to the parent element (mission-level) OR any child element (segment-level)
  * - Typed: functional, performance, interface, regulatory, process
- * - Verified: A (analysis), T (test), I (inspection), R (review), D (demonstration)
+ * - Verified: T (test, incl. demonstration), A (analysis), R (review), I (inspection)
+ * - Levels (W2.01): stakeholder need, mission, segment, system, subsystem, interface
+ *
+ * Two views: "By level" (the requirements of the focused element and its children) and
+ * "Table" (RequirementsTable: the whole baseline, filters, bulk edit, import). No polling:
+ * requirement changes arrive on the study socket (W2.08).
  */
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,6 +20,7 @@ import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge
 import { askText, showAlert } from '../components/ui/Dialog'
 import { RecordDecision } from '../logbook'
 import { RequirementIrInfo } from './irParts'
+import { LEVEL_LABELS, LEVEL_ORDER, RequirementEditor, RequirementsTable, treeOptions, useStudyContext, type Req } from './RequirementsTable'
 
 const API = '/api'
 
@@ -32,8 +38,9 @@ const REQ_TYPES = [
   { value: 'process', label: REQ_TYPE_LABELS.process },
 ]
 
+// ECSS-E-ST-10-02C: demonstration is part of test (the server stores D as T)
 const VERIFICATION_METHODS: Record<string, string> = {
-  A: 'Analysis', T: 'Test', I: 'Inspection', R: 'Review', D: 'Demonstration',
+  T: 'Test', A: 'Analysis', R: 'Review', I: 'Inspection',
 }
 
 // English text is the i18n key — SMART check finding codes (server: requirement_engine.validate_smart)
@@ -62,7 +69,7 @@ export function RequirementsPanel() {
   const { data: allElements = [] } = useQuery({
     queryKey: ['elements', studyId],
     queryFn: () => fetch(`${API}/studies/${studyId}/elements`).then(r => r.json()),
-    enabled: !!studyId, structuralSharing: false, refetchInterval: 3000,
+    enabled: !!studyId, structuralSharing: false,
   })
 
   // Children of current focus (the elements we can assign requirements to)
@@ -76,8 +83,18 @@ export function RequirementsPanel() {
   const { data: allRequirements = [] } = useQuery({
     queryKey: ['requirements', studyId],
     queryFn: () => fetch(`${API}/requirements/tree?study_id=${studyId}`).then(r => r.json()),
-    enabled: !!studyId, structuralSharing: false, refetchInterval: 3000,
+    enabled: !!studyId, structuralSharing: false,
   })
+  const [view, setView] = useState<'level' | 'table'>(() => {
+    try { return localStorage.getItem('c2o.req.view') === 'table' ? 'table' : 'level' } catch { return 'level' }
+  })
+  const chooseView = (v: 'level' | 'table') => { setView(v); try { localStorage.setItem('c2o.req.view', v) } catch { /* ignore */ } }
+  const [levelFilter, setLevelFilter] = useState('')
+  const ctx = useStudyContext(studyId)
+  const seatLabel = (id?: string | null) => {
+    const s = ctx.seats.find((x: any) => x.id === id)
+    return s ? s.label.en : (id ?? '')
+  }
 
   // Filter to requirements relevant to current view
   const relevantElementIds = new Set<string>()
@@ -85,7 +102,7 @@ export function RequirementsPanel() {
   for (const child of children) relevantElementIds.add(child.id)
 
   const requirements = allRequirements.filter((r: any) =>
-    !r.element_id || relevantElementIds.has(r.element_id)
+    (!r.element_id || relevantElementIds.has(r.element_id)) && (!levelFilter || r.level === levelFilter)
   )
 
   // Name lookup
@@ -102,7 +119,9 @@ export function RequirementsPanel() {
   const [newReqType, setNewReqType] = useState('functional')
   const [newElementId, setNewElementId] = useState<string>(focusElementId || '')
 
-  const LEVEL_TO_REQ: Record<number, string> = { 0: 'mission', 1: 'system', 2: 'subsystem', 3: 'subsystem', 4: 'subsystem' }
+  // W2.01: tab 1 (a segment and its systems) writes segment requirements
+  const LEVEL_TO_REQ: Record<number, string> = { 0: 'mission', 1: 'segment', 2: 'subsystem', 3: 'subsystem', 4: 'subsystem' }
+  const [newLevel, setNewLevel] = useState('')
   const levelName = LEVEL_TO_REQ[currentLevel] || 'system'
 
   const addMutation = useMutation({
@@ -129,7 +148,7 @@ export function RequirementsPanel() {
         body: JSON.stringify({
           study_id: studyId,
           element_id: newElementId || focusElementId || undefined,
-          level: levelName,
+          level: newLevel || levelName,
           code: newCode || undefined,
           text: newText,
           req_type: newReqType,
@@ -193,26 +212,10 @@ export function RequirementsPanel() {
   const visibleKey = requirements.map((r: any) => r.id).join(',')
   useEffect(() => { if (smart) setRecheck(n => n + 1) }, [visibleKey])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Inline edit: text, threshold and verification method (what the SMART check needs)
+  // Edit: every field of the requirement (RequirementEditor: code, level, parents, objectives,
+  // threshold with ranges and dates, unit, methods, stage, owner, allocation, IR interface)
   const [editId, setEditId] = useState<string | null>(null)
-  const [editText, setEditText] = useState('')
-  const [editOp, setEditOp] = useState('<=')
-  const [editValue, setEditValue] = useState('')
-  const [editMethod, setEditMethod] = useState('')
-  const startEdit = (req: any) => {
-    setEditId(req.id); setEditText(req.text || ''); setEditOp(req.threshold_op || '<=')
-    setEditValue(req.threshold_value != null ? String(req.threshold_value) : ''); setEditMethod(req.verification_method || '')
-  }
-  const saveEdit = useMutation({
-    mutationFn: async (reqId: string) => {
-      const value = editValue.trim() === '' ? null : Number(editValue.replace(',', '.'))
-      await fetch(`${API}/requirements/${reqId}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: editText, threshold_op: value == null ? null : editOp, threshold_value: value, verification_method: editMethod || null }),
-      })
-    },
-    onSuccess: () => { setEditId(null); qc.invalidateQueries({ queryKey: ['requirements', studyId] }); setRecheck(n => n + 1) },
-  })
+  const startEdit = (req: any) => setEditId(req.id)
 
   // Group requirements by element
   const grouped = new Map<string, any[]>()
@@ -244,28 +247,42 @@ export function RequirementsPanel() {
           <RecordDecision decision="D-2.1-FLOWDOWN" capture="requirements:flowdown" label={t('Record flow-down decision')}
             prefill={() => {
               const by = (lvl: string) => allRequirements.filter((r: any) => r.level === lvl).length
-              const traced = allRequirements.filter((r: any) => r.level !== 'mission' && r.derived_from_requirement_id).length
-              const below = allRequirements.filter((r: any) => r.level !== 'mission').length
+              const belowReqs = allRequirements.filter((r: any) => !['stakeholder', 'mission'].includes(r.level))
+              const traced = belowReqs.filter((r: any) => (r.parent_ids ?? []).length || r.derived_from_requirement_id).length
               return {
                 evidence: [
                   { label: t('Mission requirements'), value: by('mission') },
+                  { label: t('Segment requirements'), value: by('segment') },
                   { label: t('System requirements'), value: by('system') },
                   { label: t('Subsystem requirements'), value: by('subsystem') },
-                  { label: t('Derived requirements traced to a parent'), value: `${traced} / ${below}` },
+                  { label: t('Interface requirements'), value: by('interface') },
+                  { label: t('Derived requirements traced to a parent'), value: `${traced} / ${belowReqs.length}` },
                 ],
               }
             }} />
+          <span className="row gap-1" role="group" aria-label={t('View')}>
+            <Button size="sm" active={view === 'level'} aria-pressed={view === 'level'} onClick={() => chooseView('level')}>{t('By level')}</Button>
+            <Button size="sm" active={view === 'table'} aria-pressed={view === 'table'} onClick={() => chooseView('table')}>{t('Table')}</Button>
+          </span>
+          {view === 'level' && (
+            <Select dense value={levelFilter} onChange={e => setLevelFilter(e.target.value)} aria-label={t('Level')} className="w-auto">
+              <option value="">{t('All levels')}</option>
+              {LEVEL_ORDER.map(l => <option key={l} value={l}>{t(LEVEL_LABELS[l])}</option>)}
+            </Select>
+          )}
           <Button variant="primary" size="sm" onClick={() => { setNewElementId(focusElementId || ''); setShowAdd(true) }}
             disabledReason={showAdd ? t('The add form is already open below') : undefined}>
             {t('+ Add Requirement')}
           </Button>
         </>}
       >
-        {requirements.length === 0 && !showAdd && (
+        {view === 'table' && studyId && <RequirementsTable studyId={studyId} requirements={allRequirements as Req[]} />}
+
+        {view === 'level' && requirements.length === 0 && !showAdd && (
           <p className="t-13 c-2 m-0 py-2">{t('No requirements at this level.')}</p>
         )}
 
-        {Array.from(grouped.entries()).map(([elementKey, reqs]) => (
+        {view === 'level' && Array.from(grouped.entries()).map(([elementKey, reqs]) => (
           <div key={elementKey} className="c2o-reqs">
             <h4 className="c2o-reqs__group">
               {elementKey === '_mission' ? (focusElement?.name || t('Mission Level')) : nameOf(elementKey)}
@@ -273,12 +290,12 @@ export function RequirementsPanel() {
             </h4>
             {reqs.map((req: any) => {
               const reqType = REQ_TYPES.find(rt => rt.value === (req.level === 'interface' ? 'interface' : req.req_type)) || REQ_TYPES[0]
-              const parentId = req.derived_from_requirement_id || req.parent_id
-              const parentCode = parentId
-                ? allRequirements.find((r: any) => r.id === parentId)?.code || t('traced')
+              const parentIds: string[] = req.parent_ids ?? (req.derived_from_requirement_id || req.parent_id ? [req.derived_from_requirement_id || req.parent_id] : [])
+              const parentCode = parentIds.length
+                ? parentIds.map(pid => allRequirements.find((r: any) => r.id === pid)?.code || t('traced')).join(', ')
                 : null
               const findings = smart?.[req.id] ?? []
-              const orphan = !parentCode && req.level !== 'mission' && req.level !== 'interface'
+              const orphan = !parentCode && !['stakeholder', 'mission', 'interface'].includes(req.level)
               return (
                 <div key={req.id}>
                 <div className="c2o-reqs__row">
@@ -312,9 +329,7 @@ export function RequirementsPanel() {
                     ) : (
                       <Button size="sm" variant="quiet" onClick={() => linkParent(req)} title={t('Click to link to a parent requirement')}>{t('link ↑')}</Button>
                     )}
-                    {req.level !== 'interface' && (
-                      <Button size="sm" variant="quiet" onClick={() => startEdit(req)} title={t('Edit text, threshold and verification method')}>{t('edit')}</Button>
-                    )}
+                    <Button size="sm" variant="quiet" onClick={() => startEdit(req)} title={t('Edit every field of the requirement')}>{t('edit')}</Button>
                     <Button size="sm" variant="quiet" onClick={() => startDerive(req)} title={t('Flow down — derive a child requirement')}>{t('flow ↓')}</Button>
                     <ArmButton variant="icon" label="×" armedLabel={t('Delete')} aria-label={t('Delete {{code}}', { code: req.code })}
                       onConfirm={() => deleteMutation.mutate(req.id)} />
@@ -325,31 +340,11 @@ export function RequirementsPanel() {
                     {t('SMART: {{list}}', { list: findings.map(c => t(SMART_CODES[c] ?? c)).join(' · ') })}
                   </div>
                 )}
-                {editId === req.id && (
-                  <form className="c2o-blocks__add" aria-label={t('Edit {{code}}', { code: req.code })}
-                    onSubmit={e => { e.preventDefault(); saveEdit.mutate(req.id) }}>
-                    <Field label={t('Requirement text')} className="grow c2o-reqs__textfield">
-                      <Input dense value={editText} onChange={e => setEditText(e.target.value)} />
-                    </Field>
-                    <Field label={t('Operator')}>
-                      <Select dense value={editOp} onChange={e => setEditOp(e.target.value)}>
-                        {['<=', '>=', '<', '>', '=='].map(o => <option key={o} value={o}>{o}</option>)}
-                      </Select>
-                    </Field>
-                    <Field label={t('Threshold')}>
-                      <Input dense className="mono" value={editValue} onChange={e => setEditValue(e.target.value)} inputMode="decimal" />
-                    </Field>
-                    <Field label={t('Verification method')}>
-                      <Select dense value={editMethod} onChange={e => setEditMethod(e.target.value)}>
-                        <option value="">{t('none')}</option>
-                        {Object.entries(VERIFICATION_METHODS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
-                      </Select>
-                    </Field>
-                    <span className="row gap-2">
-                      <Button type="submit" variant="primary" size="sm" busy={saveEdit.isPending}>{t('Save')}</Button>
-                      <Button size="sm" onClick={() => setEditId(null)}>{t('Cancel')}</Button>
-                    </span>
-                  </form>
+                {editId === req.id && studyId && (
+                  <RequirementEditor studyId={studyId} req={req as Req} requirements={allRequirements as Req[]}
+                    elements={allElements} study={ctx.study} seats={ctx.seats} seatLabel={seatLabel}
+                    onClose={() => setEditId(null)}
+                    onSaved={() => { setEditId(null); qc.invalidateQueries({ queryKey: ['requirements', studyId] }); setRecheck(n => n + 1) }} />
                 )}
                 </div>
               )
@@ -364,8 +359,13 @@ export function RequirementsPanel() {
           onSubmit={e => { e.preventDefault(); if (newText) addMutation.mutate() }}>
           <Field label={t('Allocated to')}>
             <Select dense value={newElementId} onChange={e => setNewElementId(e.target.value)}>
-              <option value={focusElementId || ''}>{focusElement?.name || t('Mission Level')}</option>
-              {children.map((el: any) => <option key={el.id} value={el.id}>{el.name}</option>)}
+              <option value="">{t('Not allocated')}</option>
+              {treeOptions(allElements)}
+            </Select>
+          </Field>
+          <Field label={t('Level')}>
+            <Select dense value={newLevel || levelName} onChange={e => setNewLevel(e.target.value)}>
+              {LEVEL_ORDER.map(l => <option key={l} value={l}>{t(LEVEL_LABELS[l])}</option>)}
             </Select>
           </Field>
           <Field label={t('Type')}>
@@ -454,8 +454,7 @@ function SmartVerifyButton({ studyId, visibleIds, recheck, onResult }: {
             ],
             // The tool's findings, one line per requirement: the student says which get rewritten, split or deleted.
             open_issues: [
-              ...(result.issues ?? []).slice(0, 12).map((i: any) => `${i.code ?? i.id ?? '?'}: ${(i.codes ?? []).map((c: string) => t(SMART_CODES[c] ?? c)).join('; ')}`.slice(0, 160)),
-              ...((result.issues ?? []).length > 12 ? [t('{{n}} more requirements with issues', { n: result.issues.length - 12 })] : []),
+              ...(result.issues ?? []).map((i: any) => `${i.code ?? i.id ?? '?'}: ${(i.codes ?? []).map((c: string) => t(SMART_CODES[c] ?? c)).join('; ')}`.slice(0, 160)),
             ].join('\n') || undefined,
           })} />
         </span>
@@ -463,6 +462,16 @@ function SmartVerifyButton({ studyId, visibleIds, recheck, onResult }: {
       <Button size="sm" onClick={verify} busy={loading} title={t('Check each requirement is specific, measurable, achievable, relevant and traceable')}>
         {loading ? t('Checking...') : t('SMART Check')}
       </Button>
+      {result && (result.issues ?? []).length > 0 && (
+        <Disclosure summary={t('Findings')} meta={String(result.issues.length)}>
+          {/* every finding, in a scrolling list (it was cut at 12) */}
+          <ul className="c2o-reqs__findings t-12">
+            {result.issues.map((i: any) => (
+              <li key={i.requirement_id}><span className="mono">{i.code}</span>: {(i.codes ?? []).map((c: string) => t(SMART_CODES[c] ?? c)).join('; ')}</li>
+            ))}
+          </ul>
+        </Disclosure>
+      )}
     </div>
   )
 }

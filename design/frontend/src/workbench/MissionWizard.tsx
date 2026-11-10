@@ -32,6 +32,13 @@ const API = '/api'
 
 type WizardStep = 'home' | 'problem' | 'stakeholders' | 'alternatives' | 'architecture'
 
+// English text is the i18n key — trade categories (services/mission_trade.py) as labels, not ids (W1.05)
+const ALT_CATEGORY_LABELS: Record<string, string> = {
+  existing_satellite: 'Existing satellite data', commercial_tasking: 'Commercial tasking', aerial: 'Aircraft',
+  drone: 'Drone', uav: 'Drone', ground: 'Ground network', ground_sensor: 'Ground sensors', ground_network: 'Ground network',
+  new_satellite: 'New satellite', constellation: 'Constellation', hosted: 'Hosted payload', hybrid: 'Hybrid',
+}
+
 interface Stakeholder {
   id: string; name: string; role: string; need: string
 }
@@ -134,9 +141,17 @@ export function MissionWizard() {
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([
     { id: '1', name: '', role: 'sponsor', need: '' },
   ])
+  // W1.05: objective ids are stable and editable (O1, O2 …; a constraint may be C1); the
+  // objective requirements get the code OBJ-<id> and the objective id
   const [objectives, setObjectives] = useState<Objective[]>([
-    { id: '1', text: '', priority: 'primary', measurable_criterion: '' },
+    { id: 'O1', text: '', priority: 'primary', measurable_criterion: '' },
   ])
+  const nextObjectiveId = (list: Objective[], priority: string) => {
+    const prefix = priority === 'constraint' ? 'C' : 'O'
+    let n = 1
+    while (list.some(o => o.id === `${prefix}${n}`)) n++
+    return `${prefix}${n}`
+  }
 
   // Step 3: Alternatives
   const [tradeResult, setTradeResult] = useState<any>(null)
@@ -236,15 +251,18 @@ export function MissionWizard() {
       }).then(r => (r.ok ? r.json() : null))
       const missionEl = { id: tree?.mission_id as string | undefined }
 
-      // Create initial mission-level requirements from objectives
+      // Create initial mission-level requirements from objectives (W1.05): code OBJ-<id>,
+      // the objective id and the requirement type; the measure is the rationale
       for (const obj of objectives.filter(o => o.text)) {
         await fetch(`${API}/requirements/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             study_id: studyId, element_id: missionEl.id, level: 'mission',
+            code: `OBJ-${obj.id}`, objective_id: obj.id, req_type: 'functional', category: 'objective',
+            priority: obj.priority === 'secondary' ? 2 : 1,
             text: `The mission shall ${obj.text}`,
-            rationale: 'functional',
+            rationale: obj.measurable_criterion || null,
             verification_method: 'A', status: 'draft',
           }),
         })
@@ -409,7 +427,10 @@ export function MissionWizard() {
 
         <Field group label={t('Mission Objectives (minimum 2)')} hint={t('What must the mission achieve? Be specific and measurable.')}>
           {objectives.map((o, i) => (
-            <div key={o.id} className="flex gap-1 mb-1">
+            <div key={i} className="flex gap-1 mb-1">
+              <input value={o.id} onChange={e => { const n = [...objectives]; n[i] = { ...n[i], id: e.target.value.replace(/\s+/g, '').slice(0, 12) }; setObjectives(n) }}
+                aria-label={t('Objective {{n}}: identifier', { n: i + 1 })} className="c2o-input mono" style={{ width: '4.5rem' }}
+                title={t('Short identifier, used in the requirement code OBJ-{{id}}', { id: o.id })} />
               <select value={o.priority} onChange={e => { const n = [...objectives]; n[i].priority = e.target.value; setObjectives(n) }}
                 aria-label={t('Objective {{n}}: priority', { n: i + 1 })} className="c2o-select w-auto">
                 <option value="primary">{t('Primary')}</option>
@@ -426,7 +447,7 @@ export function MissionWizard() {
               )}
             </div>
           ))}
-          <button onClick={() => setObjectives([...objectives, { id: String(Date.now()), text: '', priority: 'secondary', measurable_criterion: '' }])}
+          <button onClick={() => setObjectives([...objectives, { id: nextObjectiveId(objectives, 'secondary'), text: '', priority: 'secondary', measurable_criterion: '' }])}
             type="button" className="c2o-btn c2o-btn--quiet c2o-btn--sm">
             {t('+ Add objective')}
           </button>
@@ -477,7 +498,7 @@ export function MissionWizard() {
                   className="c2o-choice-card">
                   <div className="flex jc-sb mb-1">
                     <span className="w-600 t-12">{alt.name}</span>
-                    <span className="t-12 c-2">#{alt.rank} — {alt.category}</span>
+                    <span className="t-12 c-2">#{alt.rank} — {t(ALT_CATEGORY_LABELS[alt.category] ?? String(alt.category ?? '').replace(/_/g, ' '))}</span>
                   </div>
                   <div className="t-12 c-2">{alt.description?.slice(0, 120)}</div>
                   {alt.gsd_m != null && (
