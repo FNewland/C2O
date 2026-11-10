@@ -21,7 +21,7 @@ def _kb(cid: str) -> dict:
 
 
 @pytest.mark.parametrize("domain, category, n", [
-    ("aocs", "adcs_integrated", 4), ("structure", "deorbit_devices", 6),
+    ("aocs", "adcs_integrated", 4), ("propulsion", "deorbit_devices", 6),
     ("payload", "payload_optics", 9), ("payload", "payload_controllers", 5),
 ])
 async def test_catalog_lists_new_categories_under_their_domain(client, domain, category, n):
@@ -33,7 +33,7 @@ async def test_catalog_lists_new_categories_under_their_domain(client, domain, c
 
 
 async def test_catalog_with_a_study_scores_the_new_parts(client, study_obj):
-    r = await client.get(f"/api/engineering/equipment/structure/search?study_id={study_obj.id}")
+    r = await client.get(f"/api/engineering/equipment/propulsion/search?study_id={study_obj.id}")
     assert r.status_code == 200, r.text
     ids = {i["component"]["id"] for i in r.json()["categories"]["deorbit_devices"]}
     assert SAIL in ids and "deorb-sfl-canx7-dsm" in ids        # null-mass reference entry still listed

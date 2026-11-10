@@ -42,16 +42,22 @@ _budget_allocations: list[dict] = []
 
 
 async def init_element_cache() -> None:
-    """Load persisted elements and interfaces into the in-memory cache.
+    """Load persisted elements, interfaces and budget allocations into the in-memory cache.
 
     Called once during application startup (from app.py lifespan).
     """
     loaded_els, loaded_ifaces = await load_all_elements()
     _elements.update(loaded_els)
     _interfaces.update(loaded_ifaces)
+    # W1.02: budget allocations survive a restart (before, only the project import filled them)
+    from ..db.element_repo import load_all_budget_allocations
+    loaded_allocs = await load_all_budget_allocations(set(_elements))
+    seen = {(a["element_id"], a["budget_type"]) for a in loaded_allocs}
+    _budget_allocations[:] = loaded_allocs + [
+        a for a in _budget_allocations if (a["element_id"], a["budget_type"]) not in seen]
     logger.info(
-        "Element cache initialized: %d elements, %d interfaces",
-        len(_elements), len(_interfaces),
+        "Element cache initialized: %d elements, %d interfaces, %d budget allocations",
+        len(_elements), len(_interfaces), len(_budget_allocations),
     )
 
 

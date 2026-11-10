@@ -257,6 +257,12 @@ app.add_middleware(seats_pkg.SeatGuard)
 # Participant logbook + worksheets (same API as the ops tools)
 app.include_router(logbook.router, prefix="/api/logbook", tags=["Logbook"])
 app.include_router(ws.router, tags=["WebSocket"])
+# W8a / W11a (platform, AIT and schedule): model philosophy, test matrix and verification plan;
+# project settings, milestones, work packages and the bottom-up cost
+from .routers import ait as ait_router  # noqa: E402
+from .routers import schedule as schedule_router  # noqa: E402
+app.include_router(ait_router.router, prefix="/api", tags=["AIT and verification plan"])
+app.include_router(schedule_router.router, prefix="/api", tags=["Schedule and cost"])
 
 
 @app.get("/api/health")

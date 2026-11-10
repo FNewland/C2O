@@ -100,6 +100,7 @@ components:
     operating_temp_c: [-20, 55]
     heritage_missions: []
     performance:
+      export_control: {eccn: 6A003.b.4 (InGaAs focal-plane camera; get the vendor's ECCN in writing), regime: Wassenaar / EU dual-use Annex I; Canada ECL 1-6.A.3, origin: DE, permit: EU export to Canada under general authorisation EU001 (verify); Canadian permit for any re-export, controlled: true}
       sensor: Sony IMX992 InGaAs (SenSWIR), global shutter, no TEC (IMX992-AABJ inferred)
       spectral_range_nm: [400, 1700]
       bands: [{name: SWIR1550, center_nm: 1550, fwhm_nm: 50, filter: Edmund 85-903}]
@@ -163,6 +164,7 @@ components:
     operating_temp_c: [-20, 65]
     heritage_missions: []
     performance:
+      export_control: {eccn: not listed (silicon CMOS, verify with vendor), origin: DE}
       sensor: Sony IMX542 CMOS (Pregius S), monochrome, global shutter, type 1.1 (16.8 mm diag)
       spectral_range_nm: [300, 1100]
       bands: [{name: NIR865, center_nm: 875, fwhm_nm: 50, filter: Edmund 86-958}]

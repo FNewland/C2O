@@ -14,6 +14,8 @@ components:
     trl: 9
     heritage_missions: [GOMX-1, GOMX-3, OPS-SAT]
     performance:
+      lead_time_weeks: [8, 18]      # research brief 8-18 weeks (not verified)
+      export_control: {eccn: not listed (verify with vendor), origin: DK}
       processor: Atmel AT32UC3C (AVR32) with FPU
       clock_mhz: 64            # 8-64 MHz
       ram_mb: 32               # SDRAM

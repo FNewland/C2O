@@ -20,7 +20,8 @@ S2     + equipment (``equipment.yaml``: mass, ON power, quantity, TRL, maturity 
        proposed and accepted
 S3     + every requirement of ``requirements.yaml`` (216) + the risk register (``risks.yaml``)
 S4     + CDR design model proposed and accepted, stack auto-placed and approved, analyses run
-       (V&V, mission simulation, ground segment, physics)
+       (V&V, mission simulation, ground segment, physics); AIT model philosophy and test matrix,
+       schedule settings (launch provided), milestones and WBS
 =====  ==========================================================================================
 
 Known gaps, each owned by a later work package (the seed grows with them):
@@ -301,6 +302,11 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
         await api.call("POST", f"/api/studies/{sid}/stack/approve", {}, ok=(200, 409, 422))
     for a in ("vv", "ground_segment", "physics", "mission_simulation"):
         await api.post(f"/api/studies/{sid}/analyses/{a}/run")
+    # W8a / W11a: model philosophy and test matrix; the launch is provided by the agency, so the
+    # cost carries no launch; milestones from the gate profile and the WBS from the product tree
+    await api.post(f"/api/studies/{sid}/ait/propose")
+    await api.call("PUT", f"/api/studies/{sid}/schedule/settings", {"launch_provided": True, "currency": "CAD"})
+    await api.post(f"/api/studies/{sid}/schedule/propose")
 
 
 _STEPS = {"S0": _s0, "S1": _s1, "S2": _s2, "S3": _s3, "S4": _s4}

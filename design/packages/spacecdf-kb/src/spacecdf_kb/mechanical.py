@@ -76,6 +76,18 @@ def band_key(band: str, freq_mhz: float | None, name: str) -> str:
     return "default"
 
 
+_DISPOSAL_WORDS = ("drag sail", "sail", "drag tape", "deorbit", "de-orbit", "disposal")
+
+
+def _is_disposal_device(domain: str | None, name: str) -> bool:
+    """A propulsion-domain element named like a drag sail / tape / deorbit device."""
+    d = str(domain or "").lower()
+    if d not in ("propulsion", "prop", "disposal"):
+        return False
+    n = str(name or "").lower()
+    return d == "disposal" or any(w in n for w in _DISPOSAL_WORDS)
+
+
 def mechanical_of(component: dict | None, *, domain: str | None = None, name: str = "",
                   category: str | None = None) -> dict[str, Any]:
     """The mechanical view of a KB component (or of a bare element by its domain).
@@ -90,6 +102,10 @@ def mechanical_of(component: dict | None, *, domain: str | None = None, name: st
     cat = str(category or comp.get("category") or "")
     perf = comp.get("performance") if isinstance(comp.get("performance"), dict) else {}
     own = comp.get("mechanical") if isinstance(comp.get("mechanical"), dict) else {}
+    if not cat and not comp and _is_disposal_device(domain, name):
+        # A bare drag-sail element sits in the propulsion domain (the disposal function, PI
+        # decision Nov 2026): place it like a deorbit device, not like a thruster.
+        cat = "deorbit_device"
     cat_def = dict((cfg.get("categories") or {}).get(cat) or {})
     dom_def = dict((cfg.get("domains") or {}).get(str(domain or "").lower()) or {})
     if not cat_def and not dom_def:

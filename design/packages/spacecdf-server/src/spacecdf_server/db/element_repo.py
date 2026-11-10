@@ -266,6 +266,37 @@ async def db_bulk_create_interfaces(interface_dicts: list[dict]) -> None:
         logger.exception("db_bulk_create_interfaces failed (%d items)", len(interface_dicts))
 
 
+def budget_allocation_row_to_dict(row) -> dict:
+    """The cache form of a ``BudgetAllocationRow`` (same keys as ``POST /elements/{id}/allocations``)."""
+    return {
+        "element_id": row.element_id, "study_id": row.study_id, "budget_type": row.budget_type,
+        "allocation_value": row.allocation_value, "unit": row.unit or "", "source": row.source or "manual",
+        "rationale": row.rationale or "",
+    }
+
+
+async def load_all_budget_allocations(element_ids: set[str] | None = None) -> list[dict]:
+    """Every persisted budget allocation (W1.02: reloaded at start-up).
+
+    With ``element_ids``, allocations of elements that are not loaded (soft-deleted)
+    are skipped. Duplicates for one (element, budget type) keep the newest row.
+    """
+    from .models import BudgetAllocationRow
+    out: dict[tuple[str, str], dict] = {}
+    try:
+        factory = get_session_factory()
+        async with factory() as session:
+            result = await session.execute(
+                select(BudgetAllocationRow).order_by(BudgetAllocationRow.id))
+            for row in result.scalars():
+                if element_ids is not None and row.element_id not in element_ids:
+                    continue
+                out[(row.element_id, row.budget_type)] = budget_allocation_row_to_dict(row)
+    except Exception:
+        logger.exception("Failed to load budget allocations from DB")
+    return list(out.values())
+
+
 async def db_upsert_budget_allocation(alloc: dict) -> None:
     """Persist a budget allocation to DB (upsert by element_id + budget_type)."""
     from .models import BudgetAllocationRow

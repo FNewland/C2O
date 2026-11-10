@@ -533,3 +533,180 @@ WBS_TEMPLATES: dict[str, list[dict[str, str]]] = {
 def get_wbs_template(spacecraft_class: str) -> list[dict[str, str]]:
     """Return WBS template for the given spacecraft class."""
     return WBS_TEMPLATES.get(spacecraft_class, WBS_TEMPLATES["nano"])
+
+
+# === W11a: bottom-up cost of the study from the selected equipment and the roll-up ===
+
+#: Rideshare launch price per CubeSat unit (kEUR / U) when the launch is bought: about
+#: 200 kEUR for a 3U on a commercial rideshare (planning value; replace with a quote).
+RIDESHARE_KEUR_PER_U = 200.0 / 3.0
+#: 1 EUR in CAD (KB note: 1 CAD = 0.62 EUR, late-2025 rate)
+DEFAULT_EUR_TO_CAD = round(1 / 0.62, 4)
+#: lognormal sigma of a unit price by its basis (list price / KB estimate / team estimate / missing)
+PRICE_SIGMA = {"list": 0.10, "kb": 0.25, "estimate": 0.35, "missing": 0.60}
+
+_SUBSYSTEM_LABEL = {
+    "payload": "Payload", "power": "EPS", "eps": "EPS", "aocs": "AOCS", "adcs": "AOCS", "ttc": "Communications",
+    "link": "Communications", "comms": "Communications", "obc": "On-board computer", "data": "On-board computer",
+    "thermal": "Thermal", "structure": "Structure", "structures": "Structure", "propulsion": "Propulsion and disposal",
+    "integration": "Harness", "harness": "Harness",
+}
+
+
+def _form_factor_units(ff: str | None) -> float | None:
+    if not ff:
+        return None
+    s = str(ff).upper().replace(" ", "")
+    if s.endswith("U"):
+        try:
+            return float(s[:-1])
+        except ValueError:
+            return None
+    return None
+
+
+def _price_basis(e: dict) -> str:
+    perf = e.get("performance") if isinstance(e.get("performance"), dict) else {}
+    basis = str(perf.get("cost_basis") or "").lower()
+    if basis.startswith("list"):
+        return "list"
+    if basis.startswith("kb"):
+        return "kb"
+    if basis:
+        return "estimate"
+    if e.get("kb_component_id"):
+        return "kb"
+    return "estimate"
+
+
+def estimate_study_cost(
+    elements: list[dict],
+    *,
+    form_factor: str | None = None,
+    launch_provided: bool = False,
+    launch_cost_keur: float | None = None,
+    currency: str = "EUR",
+    eur_to_cad: float = DEFAULT_EUR_TO_CAD,
+    n_samples: int = 2000,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Cost of a study from its product tree (pure; no design loop).
+
+    * Hardware is the sum of ``cost_recurring_keur × quantity`` over the units the roll-up
+      counts (``rule_inputs.leaves_with``: the most detailed level that has a value, space
+      hardware only), so the selected equipment is costed once. Ground hardware is summed the
+      same way over the ground segment. ``cost_nre_keur`` adds non-recurring cost.
+    * Units with a mass but no price are listed under ``missing_prices`` (not invented).
+    * Launch: 0 when ``launch_provided`` (the agency launches the spacecraft); otherwise
+      ``launch_cost_keur`` or a rideshare planning value per CubeSat unit of the form factor.
+    * P50–P90 from a Monte Carlo over the unit prices (lognormal, sigma by price basis).
+    * Every total is given in kEUR and in the reporting currency (CAD with ``eur_to_cad``).
+    """
+    from .rule_inputs import by_id, effective_segment, leaves_with, live, qty
+
+    els = live(elements)
+    idx = by_id(els)
+    space = leaves_with(els, "cost_recurring_keur")
+    mass_leaves = leaves_with(els, "mass_kg")
+    priced_ids = {e["id"] for e in space}
+
+    def _subsystem(e: dict) -> str:
+        cur, depth = e, 0
+        while cur is not None and depth < 30:
+            if cur.get("element_type") == "subsystem":
+                return cur.get("name") or _SUBSYSTEM_LABEL.get(str(cur.get("subsystem_domain") or ""), "Other")
+            cur = idx.get(cur.get("parent_id"))
+            depth += 1
+        return _SUBSYSTEM_LABEL.get(str(e.get("subsystem_domain") or ""), "Other")
+
+    items: list[dict] = []
+    for e in space:
+        q = qty(e)
+        unit = float(e.get("cost_recurring_keur") or 0)
+        items.append({"element_id": e["id"], "name": e.get("name", ""), "subsystem": _subsystem(e),
+                      "quantity": q, "unit_keur": round(unit, 3), "total_keur": round(unit * q, 3),
+                      "basis": _price_basis(e)})
+    items.sort(key=lambda r: -r["total_keur"])
+    by_sub: dict[str, float] = {}
+    for it in items:
+        by_sub[it["subsystem"]] = by_sub.get(it["subsystem"], 0.0) + it["total_keur"]
+    missing = [{"element_id": e["id"], "name": e.get("name", "")} for e in mass_leaves
+               if e["id"] not in priced_ids and not any(
+                   p in priced_ids for p in _ancestors(e, idx))]
+
+    ground = [e for e in els if effective_segment(e, idx) == "ground"
+              and float(e.get("cost_recurring_keur") or 0) > 0
+              and not any(float(c.get("cost_recurring_keur") or 0) > 0 for c in els if c.get("parent_id") == e["id"])]
+    ground_keur = sum(float(e.get("cost_recurring_keur") or 0) * qty(e) for e in ground)
+    nre_keur = sum(float(e.get("cost_nre_keur") or 0) for e in els)
+    hw_keur = sum(it["total_keur"] for it in items)
+
+    units = _form_factor_units(form_factor)
+    if launch_provided:
+        launch, launch_basis = 0.0, "provided by the agency (no launch cost)"
+    elif launch_cost_keur is not None:
+        launch, launch_basis = float(launch_cost_keur), "entered"
+    elif units:
+        launch, launch_basis = RIDESHARE_KEUR_PER_U * units, f"rideshare planning value for {form_factor}"
+    else:
+        launch, launch_basis = 0.0, "not estimated (no form factor)"
+
+    total = hw_keur + ground_keur + nre_keur + launch
+
+    # Monte Carlo over unit prices; ground, NRE and launch carry the "estimate" sigma
+    rng = np.random.default_rng(seed)
+    nominal = [it["total_keur"] for it in items if it["total_keur"] > 0]
+    sig = [PRICE_SIGMA.get(it["basis"], 0.35) for it in items if it["total_keur"] > 0]
+    for v in (ground_keur, nre_keur, launch):
+        if v > 0:
+            nominal.append(v)
+            sig.append(PRICE_SIGMA["estimate"])
+    if nominal:
+        mu = np.log(np.array(nominal)) - 0.5 * np.array(sig) ** 2   # mean-preserving lognormal
+        draws = rng.lognormal(mean=mu, sigma=np.array(sig), size=(n_samples, len(nominal))).sum(axis=1)
+        p50, p70, p80, p90 = (float(x) for x in np.percentile(draws, [50, 70, 80, 90]))
+    else:
+        p50 = p70 = p80 = p90 = 0.0
+
+    rate = float(eur_to_cad or DEFAULT_EUR_TO_CAD)
+    cur = (currency or "EUR").upper()
+
+    def money(keur: float) -> dict[str, float]:
+        return {"keur": round(keur, 1), "kcad": round(keur * rate, 1)}
+
+    return {
+        "currency": cur, "eur_to_cad": rate,
+        "flight_hardware": money(hw_keur),
+        "by_subsystem": [{"subsystem": k, **money(v)} for k, v in sorted(by_sub.items(), key=lambda kv: -kv[1])],
+        "ground_hardware": money(ground_keur),
+        "nre": money(nre_keur),
+        "launch": {**money(launch), "basis": launch_basis, "provided": bool(launch_provided)},
+        "total": money(total),
+        "p50": money(p50), "p70": money(p70), "p80": money(p80), "p90": money(p90),
+        "items": items, "missing_prices": missing,
+        "method": "bottom-up from the selected equipment (roll-up leaf rule); prices are list prices or "
+                  "flagged estimates, never invented; Monte Carlo over unit prices for P50-P90",
+    }
+
+
+def _ancestors(e: dict, idx: dict[str, dict]) -> list[str]:
+    out, cur, depth = [], idx.get(e.get("parent_id")), 0
+    while cur is not None and depth < 30:
+        out.append(cur["id"])
+        cur = idx.get(cur.get("parent_id"))
+        depth += 1
+    return out
+
+
+async def study_cost(study_id: str, settings: dict | None = None) -> dict[str, Any]:
+    """``estimate_study_cost`` on a stored study, with its project settings and roll-up form factor."""
+    from . import rollup
+    s = settings or {}
+    ru = await rollup.compute(study_id)
+    out = estimate_study_cost(
+        rollup.study_elements(study_id), form_factor=ru.form_factor,
+        launch_provided=bool(s.get("launch_provided")), launch_cost_keur=s.get("launch_cost_keur"),
+        currency=s.get("currency") or "EUR", eur_to_cad=s.get("eur_to_cad") or DEFAULT_EUR_TO_CAD)
+    out["rollup"] = {"cbe_kg": ru.mass.cbe_kg, "with_system_margin_kg": ru.mass.with_system_margin_kg,
+                     "form_factor": ru.form_factor}
+    return out

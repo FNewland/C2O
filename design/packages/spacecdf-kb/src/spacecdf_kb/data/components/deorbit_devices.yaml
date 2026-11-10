@@ -1,7 +1,8 @@
 # De-orbit devices: drag sails and drag tapes (category deorbit_device, KB schema v2)
-# Passive post-mission disposal by drag augmentation. Domain `structure` in the Equipment
-# Catalog (Structures & mechanisms seat owns deployable mechanisms). power_w is the
-# release (actuation) power, drawn once at disposal; the unit is off in every ConOps mode.
+# Passive post-mission disposal by drag augmentation. Domain `propulsion` in the Equipment
+# Catalog: the Propulsion seat owns the disposal function, also when the mission has no
+# delta-V (PI decision, Nov 2026). power_w is the release (actuation) power, drawn once at
+# disposal; the unit is off in every other ConOps mode.
 # Satisfies the disposal equipment need (services/equipment_logic.py).
 # C2O equipment research 2026-11 (bus). Every entry lists its `sources:`;
 # values not on a manufacturer page say "(est.)" in `notes`. mass_kg / power_w / cost_keur
@@ -21,6 +22,7 @@ components:
     trl: 9
     heritage_missions: [FUTURA SM1 (launched 2023-01-03; deployment result not published)]
     performance:
+      export_control: {eccn: not listed (verify with vendor), origin: IT}
       deployed_area_m2: 2.1
       effective_area_m2: null   # tumbling average not published (CanX-7 analogue ~0.4-0.5 x nominal)
       deployment: spring_booms

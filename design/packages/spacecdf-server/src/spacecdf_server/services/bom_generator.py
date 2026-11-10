@@ -102,6 +102,15 @@ def generate_bom_from_elements(
             "heritage": comp.get("heritage_missions") if isinstance(comp.get("heritage_missions"), list) else [],
             "maturity": _assess_maturity(comp),
         }
+        # W5.05: per-part export control (ECCN, origin, permit) and W11a: lead time from the KB part
+        ec = export_control_of(comp, parent)
+        lt = lead_time_of(comp)
+        line.update({
+            "export_control": ec["summary"], "eccn": ec["eccn"], "origin": ec["origin"],
+            "permit": ec["permit"], "export_controlled": ec["controlled"], "export_rules": ec["rules"],
+            "lead_time_weeks": lt["max_weeks"], "lead_time_min_weeks": lt["min_weeks"],
+            "lead_time_source": lt["source"], "allowance": False,
+        })
         lines.append(line)
         total_mass += mass
         total_power += power
@@ -111,8 +120,11 @@ def generate_bom_from_elements(
             groups[subsys_name] = []
         groups[subsys_name].append(line)
 
-    # Add standard hardware
-    std_items = _standard_hardware(form_factor)
+    # Standard hardware: an allowance only for what the element tree does not already hold
+    # (a harness, fastener or thermal element of the study covers its line). Allowance lines are
+    # listed for completeness but are not added to the totals, so the BOM mass equals the
+    # roll-up (services/rollup.py) of the selected equipment.
+    std_items = [it for it in _standard_hardware(form_factor) if not _covered(it, components)]
     for item in std_items:
         line_num += 1
         item_mass = item["mass_kg"] * item["qty"]
@@ -140,18 +152,28 @@ def generate_bom_from_elements(
             "criticality": "standard",
             "heritage": [],
             "maturity": "specified",
+            "eccn": "", "origin": "", "permit": "", "export_controlled": False, "export_rules": [],
+            "lead_time_min_weeks": 4, "lead_time_source": "allowance", "allowance": True,
         }
         lines.append(line)
-        total_mass += item_mass
-        total_cost += item_cost
+        if not components:      # an empty tree: the allowances are the only estimate there is
+            total_mass += item_mass
+            total_cost += item_cost
         if "Standard Hardware" not in groups:
             groups["Standard Hardware"] = []
         groups["Standard Hardware"].append(line)
 
     # Summary
-    max_lead = max((l["lead_time_weeks"] for l in lines), default=0)
-    itar_items = [l for l in lines if l["export_control"] in ("ITAR", "EAR")]
+    max_lead = max((l["lead_time_weeks"] for l in lines if not l.get("allowance")), default=0)
+    itar_items = [l for l in lines if l["export_control"] in ("ITAR", "EAR")
+                  or str(l["export_control"]).startswith("EAR")]
+    controlled = [l for l in lines if l.get("export_controlled")]
     low_trl = [l for l in lines if l["trl"] < 7 and l["trl"] > 0]
+    real = [l for l in lines if not l.get("allowance")]
+    space_lines = [l for l in real if l.get("segment", "space") == "space"]
+    long_lead = sorted((l for l in real if l.get("lead_time_source") in ("kb", "element")),
+                       key=lambda l: (-(l["lead_time_weeks"] + (l.get("lead_time_min_weeks") or l["lead_time_weeks"])) / 2,
+                                      -l["lead_time_weeks"], l["name"]))
 
     return {
         "title": f"Bill of Materials — {study_name}",
@@ -171,11 +193,21 @@ def generate_bom_from_elements(
             "completeness_percent": _calc_completeness(subsystems, components),
             "critical_path_weeks": max_lead,
             "itar_items": len(itar_items),
+            "export_controlled_items": len(controlled),
+            "space_mass_kg": round(sum(l["total_mass_kg"] for l in space_lines), 3),
+            "space_cost_keur": round(sum(l["total_cost_keur"] for l in space_lines), 1),
+            "allowance_lines": len([l for l in lines if l.get("allowance")]),
             "low_trl_items": len(low_trl),
             "mean_trl": round(sum(l["trl"] for l in lines if l["trl"] > 0) / max(len([l for l in lines if l["trl"] > 0]), 1), 1),
         },
-        "procurement_notes": _procurement_notes(lines, [], itar_items),
-        "segment_totals": _segment_totals(lines),
+        "procurement_notes": _procurement_notes(real or lines, [], itar_items, controlled),
+        "segment_totals": _segment_totals(real or lines),
+        "export_control": [{"line": l["line"], "name": l["name"], "manufacturer": l["manufacturer"],
+                            "eccn": l["eccn"], "origin": l["origin"], "permit": l["permit"],
+                            "rules": l["export_rules"]} for l in controlled],
+        "long_lead": [{"line": l["line"], "name": l["name"], "item_id": l["item_id"],
+                       "min_weeks": l["lead_time_min_weeks"], "max_weeks": l["lead_time_weeks"],
+                       "source": l["lead_time_source"]} for l in long_lead],
     }
 
 
@@ -188,6 +220,7 @@ def bom_to_csv(bom: dict[str, Any]) -> str:
         "Unit Mass (kg)", "Total Mass (kg)", "Unit Power (W)", "Total Power (W)",
         "Unit Cost (kEUR)", "Total Cost (kEUR)", "TRL", "Manufacturer",
         "Model Level", "Procurement", "Export Control", "Lead Time (wk)", "Criticality",
+        "ECCN", "Origin", "Permit",
     ])
     for line in bom.get("lines", []):
         writer.writerow([
@@ -199,6 +232,7 @@ def bom_to_csv(bom: dict[str, Any]) -> str:
             line["trl"], line["manufacturer"],
             line["model_level"], line["procurement_status"],
             line["export_control"], line["lead_time_weeks"], line["criticality"],
+            line.get("eccn", ""), line.get("origin", ""), line.get("permit", ""),
         ])
     return output.getvalue()
 
@@ -486,12 +520,15 @@ def _standard_hardware(form_factor: str) -> list[dict]:
     ]
 
 
-def _procurement_notes(lines: list, missing: list, itar: list) -> list[str]:
+def _procurement_notes(lines: list, missing: list, itar: list, controlled: list | None = None) -> list[str]:
     notes = []
     if missing:
         notes.append(f"WARNING: {len(missing)} categories not yet selected: {', '.join(missing)}")
     if itar:
         notes.append(f"EXPORT CONTROL: {len(itar)} item(s) may be subject to US EAR — verify before international procurement")
+    for l in controlled or []:
+        notes.append(f"EXPORT CONTROL: {l['name']} — ECCN {l.get('eccn') or 'to classify'}"
+                     + (f"; permit: {l['permit']}" if l.get("permit") else "") + " — get the vendor's classification in writing")
     max_lt = max((l["lead_time_weeks"] for l in lines), default=0)
     if max_lt > 12:
         notes.append(f"SCHEDULE: Critical path component has {max_lt}-week lead time — order immediately")
@@ -502,3 +539,161 @@ def _procurement_notes(lines: list, missing: list, itar: list) -> list[str]:
     notes.append("All prices are estimates. Request formal quotations from vendors before commitment.")
     notes.append("Lead times are typical — confirm with vendor for current availability.")
     return notes
+
+
+# ─── W5.05 export control and W11a lead times (per part, from the element then the KB) ───
+
+#: Wassenaar / EU dual-use / Canada ECL rules applied on top of the per-part data.
+EXPORT_RULES: list[dict[str, Any]] = [
+    {"id": "EC-6A003", "eccn": "6A003.b.4",
+     "label": "Camera with an InGaAs (SWIR) focal-plane array: Wassenaar 6A003.b.4 / Canada ECL 1-6.A.3",
+     "permit": "export licence likely; get the vendor's ECCN in writing before the order"},
+    {"id": "EC-5A002", "eccn": "5A002",
+     "label": "Radio with encryption of more than 56 bits (AES): Wassenaar 5A002 / Canada ECL 1-5.A.2",
+     "permit": "check the cryptography note (5A002 Note 3) or a general authorisation"},
+    {"id": "EC-GNSS", "eccn": "7A994 / 7A105",
+     "label": "GNSS receiver: 7A105 (MTCR) when the COCOM speed and altitude limits are removed, else 7A994",
+     "permit": "confirm the firmware limits with the vendor; space use needs the limits removed"},
+]
+
+_SWIR_WORDS = ("ingaas", "swir", "vswir")
+_STRONG_CRYPTO = ("aes", "aes-128", "aes-192", "aes-256", "3des", "rsa")
+
+
+def _kb_part(comp: dict) -> dict:
+    try:
+        from .rule_inputs import kb_component
+        return kb_component(comp) or {}
+    except Exception:  # noqa: BLE001 — the KB is optional for a BOM
+        return {}
+
+
+def _perf(d: dict | None) -> dict:
+    p = (d or {}).get("performance")
+    return p if isinstance(p, dict) else {}
+
+
+def export_control_of(comp: dict, parent: dict | None = None) -> dict[str, Any]:
+    """Export classification of one part: ``{eccn, origin, permit, controlled, rules, summary}``.
+
+    Sources, first hit wins per field: the element's ``performance.export_control`` (what the
+    team entered), the KB part's ``performance.export_control`` (the KB default), then the rules
+    in ``EXPORT_RULES`` (InGaAs/SWIR cameras 6A003, encrypted radios 5A002, GNSS receivers). The
+    radio rule also reads the encryption of the parent subsystem (the Communications properties).
+    """
+    kb = _kb_part(comp)
+    own = _perf(comp).get("export_control") if isinstance(_perf(comp).get("export_control"), dict) else {}
+    kbe = _perf(kb).get("export_control") if isinstance(_perf(kb).get("export_control"), dict) else {}
+    if not kbe and isinstance(kb.get("export_control"), dict):
+        kbe = kb["export_control"]
+    eccn = str(own.get("eccn") or kbe.get("eccn") or "").strip()
+    origin = str(own.get("origin") or kbe.get("origin") or comp.get("country_of_origin") or "").strip()
+    permit = str(own.get("permit") or kbe.get("permit") or "").strip()
+    controlled = bool(own.get("controlled", kbe.get("controlled", False)))
+    rules: list[str] = []
+
+    cat = str(kb.get("category") or (comp.get("kb_spec") or {}).get("category") or "").lower()
+    text = " ".join(str(x) for x in (comp.get("name"), kb.get("name"), _perf(kb).get("sensor"),
+                                     _perf(comp).get("sensor"))).lower()
+    rng = _perf(kb).get("spectral_range_nm") or _perf(comp).get("spectral_range_nm")
+    swir = any(w in text for w in _SWIR_WORDS) or (
+        isinstance(rng, (list, tuple)) and len(rng) == 2 and isinstance(rng[1], (int, float)) and rng[1] > 1200)
+    is_camera = cat in ("payload_imager", "payload_imagers") or (
+        not cat and comp.get("subsystem_domain") == "payload" and "camera" in str(comp.get("name") or "").lower())
+    if is_camera and swir:
+        rules.append("EC-6A003")
+    enc = " ".join(str(x) for x in (_perf(comp).get("encryption"), _perf(parent).get("encryption"),
+                                    _perf(kb).get("encryption"))).lower()
+    is_radio = cat in ("transponder", "transponders") or (comp.get("subsystem_domain") in ("ttc", "link", "comms")
+                                                        and any(w in text for w in ("radio", "transceiver", "transmitter")))
+    if is_radio and any(w in enc for w in _STRONG_CRYPTO):
+        rules.append("EC-5A002")
+    if cat in ("gps_receiver", "gps_receivers") or any(w in text for w in ("gnss", "gps")):
+        rules.append("EC-GNSS")
+
+    by_id = {r["id"]: r for r in EXPORT_RULES}
+    for rid in rules:
+        r = by_id[rid]
+        if rid in ("EC-6A003", "EC-5A002"):
+            controlled = True
+            if r["eccn"] not in eccn:
+                eccn = f"{r['eccn']} ({eccn})" if eccn else r["eccn"]
+        elif not eccn:
+            eccn = r["eccn"]
+        if not permit:
+            permit = r["permit"]
+    us = _assess_export(comp) == "EAR"
+    if us and "EAR" not in eccn:
+        rules.append("EC-US-ORIGIN")
+    summary = (eccn or "to classify") if (controlled or [r for r in rules if r != "EC-US-ORIGIN"]) \
+        else ("EAR" if us else "none")
+    return {"eccn": eccn, "origin": origin, "permit": permit, "controlled": controlled, "rules": rules,
+            "summary": summary}
+
+
+def lead_time_of(comp: dict) -> dict[str, Any]:
+    """Procurement lead time ``{min_weeks, max_weeks, source}``: the element's
+    ``performance.lead_time_weeks`` (a number or ``[min, max]``), else the KB part's, else the
+    TRL rule of thumb (``source = "estimate"``)."""
+    for src, val in (("element", _perf(comp).get("lead_time_weeks")),
+                     ("kb", _perf(_kb_part(comp)).get("lead_time_weeks") or _kb_part(comp).get("lead_time_weeks"))):
+        if isinstance(val, (int, float)) and not isinstance(val, bool) and val > 0:
+            return {"min_weeks": int(val), "max_weeks": int(val), "source": src}
+        if isinstance(val, (list, tuple)) and val and all(isinstance(v, (int, float)) for v in val):
+            return {"min_weeks": int(min(val)), "max_weeks": int(max(val)), "source": src}
+    w = _estimate_lead_time(comp)
+    return {"min_weeks": w, "max_weeks": w, "source": "estimate"}
+
+
+_STD_COVER = {
+    "hw-harness": ("harness",),
+    "hw-fasteners": ("fastener", "standoff"),
+    "hw-thermal": ("mli", "thermal strap", "thermal tape", "thermistor", "heater"),
+    "hw-sep-switch": ("deployment switch", "separation switch", "kill switch"),
+    "hw-rbf-flags": ("remove before flight", "rbf"),
+}
+
+
+def _covered(item: dict, components: list[dict]) -> bool:
+    words = _STD_COVER.get(item["id"], ())
+    for c in components:
+        name = str(c.get("name") or "").lower()
+        cat = str((_kb_part(c) or {}).get("category") or "").lower()
+        if any(w in name for w in words):
+            return True
+        if item["id"] == "hw-harness" and cat == "harnesses":
+            return True
+        if item["id"] == "hw-thermal" and cat == "thermal_hardware":
+            return True
+        if item["id"] == "hw-fasteners" and cat == "mechanical_hardware":
+            return True
+    return False
+
+
+def export_assessment_flags(elements: list[dict]) -> list[dict[str, Any]]:
+    """Per-part export-control flags in the shape of ``regulatory.generate_export_assessment``
+    flags (``flag, severity, parameter, detail, us_regime, canadian_regime, action, components``),
+    one per rule hit, from ``export_control_of`` over the study's components (W5.05)."""
+    by_id = {e.get("id"): e for e in elements}
+    hits: dict[str, list[dict]] = {}
+    for e in elements:
+        if e.get("element_type") != "component" or e.get("deleted_at"):
+            continue
+        ec = export_control_of(e, by_id.get(e.get("parent_id")))
+        for rid in ec["rules"] or (["EC-PART"] if ec["controlled"] else []):
+            hits.setdefault(rid, []).append({"component": e.get("name", ""), "manufacturer": e.get("manufacturer") or "",
+                                             "eccn": ec["eccn"], "origin": ec["origin"], "permit": ec["permit"],
+                                             "auto_populated": True})
+    rules = {r["id"]: r for r in EXPORT_RULES}
+    out = []
+    for rid, comps in hits.items():
+        r = rules.get(rid, {"label": "Part flagged as controlled in its export-control data", "eccn": "",
+                            "permit": "classify before procurement"})
+        out.append({
+            "flag": rid.replace("EC-", "PART_"), "severity": "MEDIUM" if rid in ("EC-6A003", "EC-5A002") else "LOW",
+            "parameter": f"{len(comps)} part(s): " + ", ".join(c["component"] for c in comps),
+            "detail": r["label"], "us_regime": f"ECCN {r['eccn']}" if r.get("eccn") else "",
+            "canadian_regime": "Export Control List (Canada), same Wassenaar category",
+            "action": r["permit"], "components": comps, "auto_populated": True,
+        })
+    return out

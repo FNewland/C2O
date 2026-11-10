@@ -54,6 +54,7 @@ components:
     trl: 9
     heritage_missions: []
     performance:
+      export_control: {eccn: not listed (verify with vendor; star trackers can fall under 7A004), origin: ZA}
       pointing_accuracy_deg: 1.0        # (est.)
       knowledge_accuracy_deg: 0.06      # CubeStar 3 sigma roll
       reaction_wheels: 3x CW0017

@@ -1,6 +1,6 @@
 """KB additions (Nov 2026): the four new component categories and the researched entries.
 
-adcs_integrated (AOCS), deorbit_devices (structure: drag sails), payload_optics and
+adcs_integrated (AOCS), deorbit_devices (propulsion: drag sails, the disposal function), payload_optics and
 payload_controllers (payload); plus researched cameras, bus units and ground equipment
 that carry a ``sources:`` list. Checks the loader, the entry schema, the mechanical
 defaults, the Equipment Catalog domain map, the mode / interface / FMECA classes and
@@ -138,7 +138,7 @@ def test_domain_map_and_rules_know_the_new_categories(kb):
     from spacecdf_server.services.equipment import DOMAIN_TO_CATEGORIES
     from spacecdf_server.services.mode_model import cfg, unit_class
     assert "adcs_integrated" in DOMAIN_TO_CATEGORIES["aocs"]
-    assert "deorbit_devices" in DOMAIN_TO_CATEGORIES["structure"]
+    assert "deorbit_devices" in DOMAIN_TO_CATEGORIES["propulsion"]   # PI decision: disposal = Propulsion seat
     assert {"payload_optics", "payload_controllers", "payload_imagers"} <= set(DOMAIN_TO_CATEGORIES["payload"])
     first = {stem: kb.search_components(category=stem)[0]["id"] for stem in NEW}
     classes = {stem: unit_class({"kb_component_id": kid, "name": "x"}, cfg()) for stem, kid in first.items()}
@@ -188,5 +188,5 @@ def test_null_mass_entries_do_not_break_search(kb):
     assert kb.search_components(category="deorbit_devices", max_mass_kg=1.0)
     from spacecdf_common.agents.base import DesignState
     from spacecdf_server.services.equipment import search_compatible_equipment
-    res = search_compatible_equipment("structure", DesignState(), {"deorbit_devices": kb.search_components(category="deorbit_devices")})
+    res = search_compatible_equipment("propulsion", DesignState(), {"deorbit_devices": kb.search_components(category="deorbit_devices")})
     assert {m.component["id"] for m in res["deorbit_devices"]} >= UNPUBLISHED
