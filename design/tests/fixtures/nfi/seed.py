@@ -945,8 +945,51 @@ async def _s2_allocations(api: _Api, seed: NfiSeed) -> None:
     scene is filmed)."""
 
 
+#: 3.L7: ``risks.yaml`` ``readiness.trl`` item -> the equipment it names (an element-name prefix);
+#: the last row ("All other units") covers every other space component
+READINESS_ITEMS = {
+    "SWIR camera (Alvium C-530 VSWIR)": "Alvium 1800 C-530 VSWIR",
+    "VNIR camera (Alvium C-1620m)": "Alvium 1800 C-1620m",
+    "SWIR filter 1610/90 (custom)": "SWIR filter 1610/90",
+    "Optical bench and baffles": "Optical bench and baffles",
+    "Payload controller (CM4 on custom carrier)": "Payload controller",
+    "Independent disposal timer and battery": "Independent deorbit timer",
+    "Payload harness": "Payload harness",
+}
+
+
 async def _s2_readiness(api: _Api, seed: NfiSeed) -> None:
-    """TODO(L, 3.L7): ``risks.yaml`` ``readiness.trl``: TRL targets at PDR and CDR per element."""
+    """3.L7: ``risks.yaml`` ``readiness.trl``: TRL targets at PDR and CDR and the maturation text per
+    element (``performance.trl_target_pdr`` / ``trl_target_cdr`` / ``trl_maturation`` /
+    ``readiness_item``); "All other units" goes on every other space component."""
+    rows = load("risks")["readiness"]["trl"]
+    comps = {n: e for n, e in seed.elements.items() if e.get("element_type") == "component"
+             and (e.get("segment") or "space") == "space"}
+    done: set[str] = set()
+    other = None
+    for r in rows:
+        prefix = READINESS_ITEMS.get(r["item"])
+        if prefix is None:
+            other = r
+            continue
+        hits = [n for n in comps if n.startswith(prefix)]
+        if len(hits) != 1:
+            raise SeedError(f"readiness item {r['item']!r} matches {hits}")
+        done.add(hits[0])
+        await _readiness_patch(api, seed, hits[0], r)
+    if other is not None:
+        for n in comps:
+            if n not in done:
+                await _readiness_patch(api, seed, n, other)
+
+
+async def _readiness_patch(api: _Api, seed: NfiSeed, name: str, r: dict) -> None:
+    e = seed.elements[name]
+    cur = await api.call("GET", f"/api/elements/{e['id']}")
+    perf = {**(cur.get("performance") or {}), "trl_target_pdr": int(r["target_pdr"]), "trl_target_cdr": int(r["target_cdr"]),
+            "trl_maturation": r.get("maturation", ""), "readiness_item": r["item"]}
+    seed.elements[name] = await api.call("PATCH", f"/api/elements/{e['id']}",
+                                         {"performance": perf, "version": cur.get("version")})
 
 
 async def _s2_conops_scenarios(api: _Api, seed: NfiSeed) -> None:
@@ -964,8 +1007,24 @@ async def _s3_open_items(api: _Api, seed: NfiSeed) -> None:
     D-PAY-01, D-COM-01 open); the T-07 condition and fallback."""
 
 
+#: 3.L4: the impact-preview specs of the change records, read from their ``impact`` lines in
+#: ``risks.yaml``: ECP-01 "payload allocation 0.76 -> 0.82 kg; imaging power -1.1 W" (the second
+#: IMX992 camera draws 2.7 W where the VNIR camera drew 3.8 W, ``modes.yaml``); ECP-02 "nominal
+#: 590 km, acceptable injection altitude 550-600 km" (the low end is the case that moves numbers)
+CHANGE_PREVIEWS = {
+    "ECP-01": [{"kind": "allocation", "element": "payload", "resource": "mass", "from": 0.76, "value": 0.82},
+               {"kind": "mode_member", "mode": "imaging", "element": "Alvium 1800 C-1620m", "power_w": 2.7}],
+    "ECP-02": [{"kind": "orbit", "altitude_km": 550}],
+}
+
+
 async def _s3_changes(api: _Api, seed: NfiSeed) -> None:
-    """TODO(L, 3.L4): ``risks.yaml`` ``configuration_management.change_records``: ECP-01, ECP-02, CR-V2."""
+    """3.L4: ``risks.yaml`` ``configuration_management.change_records``: ECP-01, ECP-02, CR-V2, in
+    one call, with their impact-preview specs. Imported as proposed: the walkthrough decides ECP-01
+    and ECP-02 on camera (change control, agent D)."""
+    recs = load("risks")["configuration_management"]["change_records"]
+    rep = await api.post(f"/api/studies/{seed.study_id}/changes/import", {"records": recs, "previews": CHANGE_PREVIEWS})
+    seed.report["changes"] = {"created": rep["created"], "updated": rep["updated"]}
 
 
 async def _s3_validation(api: _Api, seed: NfiSeed) -> None:

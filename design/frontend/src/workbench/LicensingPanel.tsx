@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { Button, Dialog, Field, Input, Note, Select, Tabs, Textarea, tabPanelProps } from '../components/ui'
+import { Button, Dialog, Field, Input, Note, Select, StatusBadge, Tabs, Textarea, tabPanelProps } from '../components/ui'
 import { useSeatView } from '../seats/view'
 
 const API = '/api'
@@ -83,11 +83,102 @@ export function licensingExportCategory(sid: string, t: TFunction, openLicensing
   }
 }
 
-function TextField({ label, value, onChange, area }: { label: string; value: string; onChange: (v: string) => void; area?: boolean }) {
+// 3.L1: field help (what the RSSSA guide asks for), shown under each team input.
+// English text is the i18n key: literal t() calls so the i18n check sees every label.
+export function fieldHelp(t: TFunction, path: string): string | undefined {
+  switch (path) {
+    case 'applicant.legal_name': return t('The legal name of the organisation that will hold the licence')
+    case 'applicant.address': return t('Registered address of the applicant')
+    case 'applicant.contact_name': return t('The person the regulator contacts about the application')
+    case 'applicant.contact_email': return t('An e-mail address, e.g. licensing@example.org')
+    case 'applicant.contact_phone': return t('A telephone number with the country code, e.g. +1 555 0100')
+    case 'applicant.canadian_entity': return t('Whether the applicant is a Canadian entity')
+    case 'applicant.security_officer': return t('The person responsible for security of the system')
+    case 'itu_network_name': return t('The name under which the satellite network is filed with the ITU')
+    case 'notes': return t('Who owns 10 % or more of the applicant, and who controls it')
+    case 'cdpp.command_facility': return t('Where commands are sent from, and who may send them')
+    case 'cdpp.data_facility': return t('Where data are received, processed and archived')
+    case 'cdpp.backup_facility': return t('The facility that takes over if the main one is lost')
+    case 'cdpp.command_encryption': return t('How commands are encrypted on the uplink')
+    case 'cdpp.command_authentication': return t('How the spacecraft knows a command is genuine')
+    case 'cdpp.downlink_encryption': return t('How the payload data are protected on the downlink')
+    case 'cdpp.key_management': return t('How keys are generated, loaded, changed and revoked')
+    case 'cdpp.key_custody': return t('Who holds the keys, and under what control')
+    case 'cdpp.command_process': return t('How a command is prepared, checked, sent and logged')
+    case 'cdpp.personnel_security': return t('Screening of the people with access to commanding or data')
+    case 'cdpp.physical_security': return t('Physical protection of the facilities and stations')
+    case 'cdpp.network_security': return t('Protection of the links between the facilities')
+    case 'data_policy.distribution': return t('Who receives which products, and when')
+    case 'data_policy.eula': return t('The licence under which users receive the data')
+    case 'data_policy.retention': return t('How long raw data and products are kept')
+    case 'data_policy.disposal': return t('How data are destroyed at the end of retention')
+    case 'data_policy.sensed_state_access': return t('How a sensed state obtains the data of its territory')
+    case 'data_policy.priority_access': return t('Government priority access, if the licence requires it')
+    case 'launch.provider': return t('The company that provides the launch')
+    case 'launch.vehicle': return t('The launch vehicle')
+    case 'launch.site': return t('The launch site')
+    case 'launch.date': return t('YYYY-MM or YYYY-MM-DD; empty uses the mission target date')
+    default: return undefined
+  }
+}
+
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+const PHONE = /^\+?[0-9][0-9 ().-]{5,24}$/
+const DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/
+
+/** The format problem of a typed value (mirrors licensing.field_problem on the server). */
+export function fieldError(t: TFunction, fmt: string | undefined, v: unknown): string | undefined {
+  const s = v === null || v === undefined ? '' : String(v).trim()
+  if (!s || !fmt) return undefined
+  if (fmt === 'email' && !EMAIL.test(s)) return t('Not an e-mail address')
+  if (fmt === 'phone' && !PHONE.test(s)) return t('Not a telephone number (digits, spaces, + ( ) - .)')
+  if (fmt === 'date' && !DATE.test(s)) return t('Not a date (YYYY, YYYY-MM or YYYY-MM-DD)')
+  return undefined
+}
+
+type FieldSpec = { path: string; tab: string; rsssa: string; required: boolean; list?: boolean; format?: string }
+
+function getPath(rec: Rec | null, path: string): unknown {
+  let o: any = rec
+  for (const k of path.split('.')) { if (o == null || typeof o !== 'object') return undefined; o = o[k] }
+  return o
+}
+
+function isFilled(v: unknown, list?: boolean): boolean {
+  if (list) return Array.isArray(v) && v.some(x => x && typeof x === 'object' && Object.values(x).some(y => String(y ?? '').trim() !== ''))
+  if (typeof v === 'boolean') return true
+  return v !== null && v !== undefined && String(v).trim() !== ''
+}
+
+/** Live progress of the required inputs (the server's ``progress.fields``, counted on the local record). */
+export function liveProgress(t: TFunction, fields: FieldSpec[], rec: Rec | null) {
+  const tabs: Record<string, [number, number]> = {}
+  let n = 0, m = 0, a = 0, b = 0
+  for (const f of fields) {
+    if (!f.required) continue
+    const v = getPath(rec, f.path)
+    const ok = isFilled(v, f.list) && !fieldError(t, f.format, v)
+    m++; if (ok) n++
+    const tb = tabs[f.tab] ?? (tabs[f.tab] = [0, 0]); tb[1]++; if (ok) tb[0]++
+    const sec = parseInt(f.rsssa, 10)
+    if (sec >= 14 && sec <= 30) { b++; if (ok) a++ }
+  }
+  return { filled: n, total: m, percent: m ? Math.round(100 * n / m) : 100, tabs, rsssa: [a, b] as [number, number] }
+}
+
+function TextField({ label, value, onChange, area, path, fields }: {
+  label: string; value: string; onChange: (v: string) => void; area?: boolean; path?: string; fields?: FieldSpec[]
+}) {
+  const { t } = useTranslation()
+  const spec = path ? fields?.find(f => f.path === path) : undefined
+  const help = path ? fieldHelp(t, path) : undefined
+  const sec = spec?.rsssa ? t('RSSSA §{{n}}', { n: spec.rsssa }) : ''
   return (
-    <Field label={label}>
-      {area ? <Textarea rows={2} value={value ?? ''} onChange={e => onChange(e.target.value)} />
-            : <Input value={value ?? ''} onChange={e => onChange(e.target.value)} />}
+    <Field label={<>{label}{spec?.required && <span aria-hidden="true" className="c-2"> *</span>}</>}
+      help={[help, sec].filter(Boolean).join(' · ') || undefined}
+      error={fieldError(t, spec?.format, value)}>
+      {area ? <Textarea rows={2} value={value ?? ''} onChange={e => onChange(e.target.value)} aria-required={spec?.required || undefined} />
+            : <Input value={value ?? ''} onChange={e => onChange(e.target.value)} aria-required={spec?.required || undefined} />}
     </Field>
   )
 }
@@ -197,6 +288,12 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
     { id: 'policy', label: t('Data policy and launch') }, { id: 'frequencies', label: t('Frequencies') },
     { id: 'disposal', label: t('Disposal') }, { id: 'filings', label: t('Filings') }, { id: 'documents', label: t('Documents') },
   ]
+  const fields: FieldSpec[] = data.progress?.fields ?? []
+  const prog = liveProgress(t, fields, rec)
+  for (const x of allTabs) {
+    const tp = prog.tabs[x.id]
+    if (tp) x.label = `${x.label} (${tp[0]}/${tp[1]})`
+  }
   const tabs = disposalOnly ? allTabs.filter(x => x.id === 'disposal' || x.id === 'documents') : allTabs
   const overrides: Rec = rec.assignment_overrides ?? {}
   const setOverride = (aid: string, field: string, value: string) => {
@@ -214,24 +311,34 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
         <Button size="sm" variant="primary" onClick={save} busy={busy} disabledReason={!dirty ? t('No changes') : undefined}>{t('Save')}</Button>
       </div>
       {msg && <Note tone={msg.tone} role={msg.tone === 'alarm' ? 'alert' : 'status'}>{msg.text}</Note>}
+      {!disposalOnly && fields.length > 0 && (
+        <div className="stack gap-0" data-testid="licensing-progress">
+          <div className="flex ai-c gap-2 t-12">
+            <span className="w-600">{t('Licensing inputs: {{n}} of {{m}} ({{p}} %)', { n: prog.filled, m: prog.total, p: prog.percent })}</span>
+            <span className="c-2">{t('RSSSA §14–30: {{a}} of {{b}}', { a: prog.rsssa[0], b: prog.rsssa[1] })}</span>
+            {dirty && <span className="c-2">{t('(not saved yet)')}</span>}
+          </div>
+          <progress max={prog.total} value={prog.filled} aria-label={t('Licensing inputs filled')} style={{ width: '100%', height: 6 }} />
+        </div>
+      )}
       {disposalOnly && <p className="t-12 c-2 m-0">{t('Your seat owns the disposal function: you see and edit the disposal part of the licensing record.')}</p>}
 
       <div {...tabPanelProps('lic', tab)} className="stack gap-2">
         {tab === 'applicant' && (<>
           <div className="grid gap-2" style={GRID}>
-            <TextField label={t('Legal name')} value={ap.legal_name} onChange={v => set(['applicant', 'legal_name'], v)} />
-            <TextField label={t('Address')} value={ap.address} onChange={v => set(['applicant', 'address'], v)} />
-            <TextField label={t('Contact person')} value={ap.contact_name} onChange={v => set(['applicant', 'contact_name'], v)} />
-            <TextField label={t('E-mail')} value={ap.contact_email} onChange={v => set(['applicant', 'contact_email'], v)} />
-            <TextField label={t('Telephone')} value={ap.contact_phone} onChange={v => set(['applicant', 'contact_phone'], v)} />
-            <TextField label={t('Security officer')} value={ap.security_officer} onChange={v => set(['applicant', 'security_officer'], v)} />
+            <TextField label={t('Legal name')} value={ap.legal_name} path="applicant.legal_name" fields={fields} onChange={v => set(['applicant', 'legal_name'], v)} />
+            <TextField label={t('Address')} value={ap.address} path="applicant.address" fields={fields} onChange={v => set(['applicant', 'address'], v)} />
+            <TextField label={t('Contact person')} value={ap.contact_name} path="applicant.contact_name" fields={fields} onChange={v => set(['applicant', 'contact_name'], v)} />
+            <TextField label={t('E-mail')} value={ap.contact_email} path="applicant.contact_email" fields={fields} onChange={v => set(['applicant', 'contact_email'], v)} />
+            <TextField label={t('Telephone')} value={ap.contact_phone} path="applicant.contact_phone" fields={fields} onChange={v => set(['applicant', 'contact_phone'], v)} />
+            <TextField label={t('Security officer')} value={ap.security_officer} path="applicant.security_officer" fields={fields} onChange={v => set(['applicant', 'security_officer'], v)} />
             <Field label={t('Canadian entity')}>
               <Select value={ap.canadian_entity === true ? 'yes' : ap.canadian_entity === false ? 'no' : ''}
                 onChange={e => set(['applicant', 'canadian_entity'], e.target.value === '' ? null : e.target.value === 'yes')}>
                 <option value="">—</option><option value="yes">{t('Yes')}</option><option value="no">{t('No')}</option>
               </Select>
             </Field>
-            <TextField label={t('ITU satellite network name')} value={rec.itu_network_name} onChange={v => set(['itu_network_name'], v)} />
+            <TextField label={t('ITU satellite network name')} value={rec.itu_network_name} path="itu_network_name" fields={fields} onChange={v => set(['itu_network_name'], v)} />
           </div>
           <h4 className="c2o-panel__title">{t('System participants')}</h4>
           <RowsEditor rows={rec.participants ?? []} onChange={v => set(['participants'], v)} addLabel={t('Add participant')}
@@ -239,39 +346,39 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
           <h4 className="c2o-panel__title">{t('Affiliates')}</h4>
           <RowsEditor rows={rec.affiliates ?? []} onChange={v => set(['affiliates'], v)} addLabel={t('Add affiliate')}
             cols={[{ key: 'name', label: t('Name') }, { key: 'relationship', label: t('Relationship') }, { key: 'country', label: t('Country') }]} />
-          <TextField area label={t('Ownership and control')} value={rec.notes} onChange={v => set(['notes'], v)} />
+          <TextField area label={t('Ownership and control')} value={rec.notes} path="notes" fields={fields} onChange={v => set(['notes'], v)} />
         </>)}
 
         {tab === 'protection' && (
           <div className="grid gap-2" style={GRID}>
-            <TextField area label={t('Command facility (mission control)')} value={cd.command_facility} onChange={v => set(['cdpp', 'command_facility'], v)} />
-            <TextField area label={t('Data facility (processing and archive)')} value={cd.data_facility} onChange={v => set(['cdpp', 'data_facility'], v)} />
-            <TextField area label={t('Backup facility')} value={cd.backup_facility} onChange={v => set(['cdpp', 'backup_facility'], v)} />
-            <TextField area label={t('Command encryption')} value={cd.command_encryption} onChange={v => set(['cdpp', 'command_encryption'], v)} />
-            <TextField area label={t('Command authentication')} value={cd.command_authentication} onChange={v => set(['cdpp', 'command_authentication'], v)} />
-            <TextField area label={t('Downlink encryption')} value={cd.downlink_encryption} onChange={v => set(['cdpp', 'downlink_encryption'], v)} />
-            <TextField area label={t('Key management')} value={cd.key_management} onChange={v => set(['cdpp', 'key_management'], v)} />
-            <TextField area label={t('Key custody')} value={cd.key_custody} onChange={v => set(['cdpp', 'key_custody'], v)} />
-            <TextField area label={t('Command process and procedures')} value={cd.command_process} onChange={v => set(['cdpp', 'command_process'], v)} />
-            <TextField area label={t('Personnel security')} value={cd.personnel_security} onChange={v => set(['cdpp', 'personnel_security'], v)} />
-            <TextField area label={t('Physical security')} value={cd.physical_security} onChange={v => set(['cdpp', 'physical_security'], v)} />
-            <TextField area label={t('Network security')} value={cd.network_security} onChange={v => set(['cdpp', 'network_security'], v)} />
+            <TextField area label={t('Command facility (mission control)')} value={cd.command_facility} path="cdpp.command_facility" fields={fields} onChange={v => set(['cdpp', 'command_facility'], v)} />
+            <TextField area label={t('Data facility (processing and archive)')} value={cd.data_facility} path="cdpp.data_facility" fields={fields} onChange={v => set(['cdpp', 'data_facility'], v)} />
+            <TextField area label={t('Backup facility')} value={cd.backup_facility} path="cdpp.backup_facility" fields={fields} onChange={v => set(['cdpp', 'backup_facility'], v)} />
+            <TextField area label={t('Command encryption')} value={cd.command_encryption} path="cdpp.command_encryption" fields={fields} onChange={v => set(['cdpp', 'command_encryption'], v)} />
+            <TextField area label={t('Command authentication')} value={cd.command_authentication} path="cdpp.command_authentication" fields={fields} onChange={v => set(['cdpp', 'command_authentication'], v)} />
+            <TextField area label={t('Downlink encryption')} value={cd.downlink_encryption} path="cdpp.downlink_encryption" fields={fields} onChange={v => set(['cdpp', 'downlink_encryption'], v)} />
+            <TextField area label={t('Key management')} value={cd.key_management} path="cdpp.key_management" fields={fields} onChange={v => set(['cdpp', 'key_management'], v)} />
+            <TextField area label={t('Key custody')} value={cd.key_custody} path="cdpp.key_custody" fields={fields} onChange={v => set(['cdpp', 'key_custody'], v)} />
+            <TextField area label={t('Command process and procedures')} value={cd.command_process} path="cdpp.command_process" fields={fields} onChange={v => set(['cdpp', 'command_process'], v)} />
+            <TextField area label={t('Personnel security')} value={cd.personnel_security} path="cdpp.personnel_security" fields={fields} onChange={v => set(['cdpp', 'personnel_security'], v)} />
+            <TextField area label={t('Physical security')} value={cd.physical_security} path="cdpp.physical_security" fields={fields} onChange={v => set(['cdpp', 'physical_security'], v)} />
+            <TextField area label={t('Network security')} value={cd.network_security} path="cdpp.network_security" fields={fields} onChange={v => set(['cdpp', 'network_security'], v)} />
           </div>
         )}
 
         {tab === 'policy' && (
           <div className="grid gap-2" style={GRID}>
-            <TextField area label={t('Data distribution')} value={dp.distribution} onChange={v => set(['data_policy', 'distribution'], v)} />
-            <TextField area label={t('End-user licence agreement (EULA)')} value={dp.eula} onChange={v => set(['data_policy', 'eula'], v)} />
-            <TextField area label={t('Data retention')} value={dp.retention} onChange={v => set(['data_policy', 'retention'], v)} />
-            <TextField area label={t('Data disposal')} value={dp.disposal} onChange={v => set(['data_policy', 'disposal'], v)} />
-            <TextField area label={t('Sensed-state access')} value={dp.sensed_state_access} onChange={v => set(['data_policy', 'sensed_state_access'], v)} />
-            <TextField area label={t('Priority access')} value={dp.priority_access} onChange={v => set(['data_policy', 'priority_access'], v)} />
-            <TextField label={t('Launch provider')} value={ln.provider} onChange={v => set(['launch', 'provider'], v)} />
-            <TextField label={t('Launch vehicle')} value={ln.vehicle} onChange={v => set(['launch', 'vehicle'], v)} />
-            <TextField label={t('Launch site')} value={ln.site} onChange={v => set(['launch', 'site'], v)} />
-            <TextField label={t('Deployer')} value={ln.deployer} onChange={v => set(['launch', 'deployer'], v)} />
-            <TextField label={t('Launch date (overrides the mission target)')} value={ln.date} onChange={v => set(['launch', 'date'], v)} />
+            <TextField area label={t('Data distribution')} value={dp.distribution} path="data_policy.distribution" fields={fields} onChange={v => set(['data_policy', 'distribution'], v)} />
+            <TextField area label={t('End-user licence agreement (EULA)')} value={dp.eula} path="data_policy.eula" fields={fields} onChange={v => set(['data_policy', 'eula'], v)} />
+            <TextField area label={t('Data retention')} value={dp.retention} path="data_policy.retention" fields={fields} onChange={v => set(['data_policy', 'retention'], v)} />
+            <TextField area label={t('Data disposal')} value={dp.disposal} path="data_policy.disposal" fields={fields} onChange={v => set(['data_policy', 'disposal'], v)} />
+            <TextField area label={t('Sensed-state access')} value={dp.sensed_state_access} path="data_policy.sensed_state_access" fields={fields} onChange={v => set(['data_policy', 'sensed_state_access'], v)} />
+            <TextField area label={t('Priority access')} value={dp.priority_access} path="data_policy.priority_access" fields={fields} onChange={v => set(['data_policy', 'priority_access'], v)} />
+            <TextField label={t('Launch provider')} value={ln.provider} path="launch.provider" fields={fields} onChange={v => set(['launch', 'provider'], v)} />
+            <TextField label={t('Launch vehicle')} value={ln.vehicle} path="launch.vehicle" fields={fields} onChange={v => set(['launch', 'vehicle'], v)} />
+            <TextField label={t('Launch site')} value={ln.site} path="launch.site" fields={fields} onChange={v => set(['launch', 'site'], v)} />
+            <TextField label={t('Deployer')} value={ln.deployer} path="launch.deployer" fields={fields} onChange={v => set(['launch', 'deployer'], v)} />
+            <TextField label={t('Launch date (overrides the mission target)')} value={ln.date} path="launch.date" fields={fields} onChange={v => set(['launch', 'date'], v)} />
           </div>
         )}
 
@@ -357,6 +464,7 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
           <TextField area label={t('Paste the tool report (lifetime, collision probability and casualty risk are read from it)')}
             value={evidence.text} onChange={v => setEvidence({ ...evidence, text: v })} />
           <div><Button size="sm" onClick={importEvidence} busy={busy} disabledReason={!evidence.text ? t('Paste a report first') : undefined}>{t('Import result')}</Button></div>
+          <DebrisAssessmentCard studyId={studyId} />
         </>)}
 
         {tab === 'filings' && (
@@ -396,6 +504,97 @@ export function LicensingPanel({ studyId }: { studyId: string }) {
         )}
       </div>
     </div>
+  )
+}
+
+const GATE_CHOICES = ['mdr', 'prr', 'srr', 'pdr', 'cdr']
+
+function sci(v: unknown): string {
+  return typeof v === 'number' ? (v === 0 ? '0' : v.toExponential(1)) : '—'
+}
+
+/**
+ * The debris assessment in the tool (3.L8, PI addendum): lifetime with and without the sail
+ * (OSCAR-like), collision probability (ARES-like) and casualty risk of the uncontrolled re-entry
+ * (DAS-like), run, reviewed and accepted at a gate (SRR in the walkthrough).
+ * Server: GET/POST /api/studies/{id}/debris-assessment[/run|/accept].
+ */
+export function DebrisAssessmentCard({ studyId }: { studyId: string }) {
+  const { t } = useTranslation()
+  const [data, setData] = useState<Rec | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ tone: 'ok' | 'alarm'; text: string } | null>(null)
+  const [gate, setGate] = useState('srr')
+  const [deviation, setDeviation] = useState('')
+  const base = `${API}/studies/${encodeURIComponent(studyId)}/debris-assessment`
+  const load = useCallback(async () => {
+    const r = await fetch(base)
+    if (r.ok) setData(await r.json())
+  }, [base])
+  useEffect(() => { void load() }, [load])
+  const post = async (path: string, body: Rec, ok: string) => {
+    setBusy(true); setMsg(null)
+    const r = await fetch(`${base}/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    setBusy(false)
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok) { setMsg({ tone: 'alarm', text: typeof j.detail === 'string' ? j.detail : (j.detail?.message ?? `${r.status}`) }); return }
+    setMsg({ tone: 'ok', text: ok }); await load()
+  }
+  if (!data) return null
+  const a: Rec | null = data.latest
+  const ev: Rec = data.evidence ?? {}
+  const lt: Rec = a?.lifetime ?? {}
+  const cas: Rec = a?.casualty ?? {}
+  const col: Rec = a?.collision ?? {}
+  const scen = (o: Rec | undefined) => o ? ['strong', 'nominal', 'weak'].map(k => o[k] ?? '—').join(' / ') : '—'
+  return (
+    <section className="stack gap-1" aria-label={t('Debris assessment')} data-testid="debris-assessment">
+      <div className="flex ai-c gap-2">
+        <h4 className="c2o-panel__title m-0">{t('Debris assessment')}</h4>
+        {a && <StatusBadge status={a.status === 'accepted' ? 'ok' : a.status === 'superseded' ? 'stale' : 'caution'}>
+          {a.status === 'accepted' ? t('Accepted at {{gate}}', { gate: String(a.accepted_gate).toUpperCase() })
+            : a.status === 'superseded' ? t('Superseded') : t('Not accepted yet')}</StatusBadge>}
+        {ev.stale && <StatusBadge status="stale">{t('The design changed since this run')}</StatusBadge>}
+        <span className="grow" />
+        <Button size="sm" onClick={() => post('run', {}, t('Assessment run'))} busy={busy}>{a ? t('Run again') : t('Run the assessment')}</Button>
+      </div>
+      <p className="t-12 c-2 m-0">{t('Screening in the tool (lifetime as OSCAR, collision probability as ARES, re-entry casualty as DAS). A licence quotes DRAMA or DAS: import their result above.')}</p>
+      {msg && <Note tone={msg.tone} role={msg.tone === 'alarm' ? 'alert' : 'status'}>{msg.text}</Note>}
+      {!a && <p className="t-12 c-2 m-0">{t('No assessment yet: run it once the disposal design is set.')}</p>}
+      {a && (<>
+        <table className="c2o-table c2o-table--dense t-12">
+          <tbody>
+            <tr><td>{t('Version')}</td><td className="mono">v{a.version}</td></tr>
+            <tr><td>{t('Lifetime with the sail, strong / nominal / weak cycle')}</td><td className="mono">{scen(lt.with_device_y)} y</td></tr>
+            <tr><td>{t('Lifetime without the sail, strong / nominal / weak cycle')}</td><td className="mono">{scen(lt.without_device_y)} y</td></tr>
+            <tr><td>{t('Collision probability, objects ≥ 10 cm (operational life)')}</td><td className="mono">{sci(col.operational_large)} ({t('limit')} {sci(col.limit_large)})</td></tr>
+            <tr><td>{t('Collision probability, objects < 10 cm (operational life)')}</td><td className="mono">{sci(col.operational_small)} ({t('limit')} {sci(col.limit_small)})</td></tr>
+            <tr><td>{t('Casualty expectation of the re-entry')}</td><td className="mono">{sci(cas.casualty_expectation)}{cas.one_in ? ` (1:${cas.one_in})` : ''} ({t('limit')} 1:10000)</td></tr>
+            <tr><td>{t('Debris casualty area')}</td><td className="mono">{cas.dca_m2 ?? '—'} m²</td></tr>
+          </tbody>
+        </table>
+        <table className="c2o-table c2o-table--dense t-12">
+          <thead><tr><th>{t('Check')}</th><th>{t('ISED condition')}</th><th>{t('Value')}</th><th>{t('Result')}</th></tr></thead>
+          <tbody>{(a.checks ?? []).map((c: Rec) => (
+            <tr key={c.id}><td className="mono">{c.id}</td><td>{c.rule}</td><td className="mono">{String(c.value)} {c.unit}</td>
+              <td>{c.pass === true ? t('Pass') : c.pass === false ? t('Fail') : t('Open')}</td></tr>))}</tbody>
+        </table>
+        {a.status !== 'accepted' && (
+          <div className="flex gap-2 ai-e wrap">
+            <Field label={t('Accept at gate')}>
+              <Select dense value={gate} onChange={e => setGate(e.target.value)}>
+                {GATE_CHOICES.map(g => <option key={g} value={g}>{g.toUpperCase()}</option>)}
+              </Select>
+            </Field>
+            {!a.compliant && <TextField label={t('Deviation (a check fails)')} value={deviation} onChange={setDeviation} />}
+            <Button size="sm" variant="primary" busy={busy} onClick={() => post('accept', { gate, deviation }, t('Assessment accepted'))}
+              disabledReason={!a.compliant && !deviation.trim() ? t('A failing assessment needs a deviation note') : undefined}>
+              {t('Accept the assessment')}</Button>
+          </div>
+        )}
+        {a.status === 'accepted' && <p className="t-12 c-2 m-0">{t('Accepted by {{by}} at {{gate}}.', { by: a.accepted_by, gate: String(a.accepted_gate).toUpperCase() })}</p>}
+      </>)}
+    </section>
   )
 }
 

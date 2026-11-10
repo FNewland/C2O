@@ -16,7 +16,7 @@ import { useCollaboration } from './useCollaboration'
 import { ParameterSection } from '../components/ParameterPanel'
 import { subsystemStyle } from '../theme/tokens'
 import { askText } from '../components/ui/Dialog'
-import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge } from '../components/ui'
+import { ArmButton, Button, Disclosure, Field, Input, Panel, Select, StatusBadge, Tag } from '../components/ui'
 
 import { canAddSpacecraft, placement, segmentOf, showQuickStart, structuralLevel } from './blockLevels'
 
@@ -579,6 +579,7 @@ const propertyFields = (t: TFunction): Record<string, Array<{ key: string; label
   payload: [
     { key: 'gsd_m', label: t('GSD (m)'), type: 'number' },
     { key: 'fov_deg', label: t('FOV (deg)'), type: 'number' },
+    { key: 'swath_km', label: t('Swath (km)'), type: 'number' },
     { key: 'spectral_bands', label: t('Spectral bands'), type: 'text' },
     { key: 'shutter_control', label: t('Shutter control'), type: 'select', options: ['yes', 'no', 'N/A'] },
     { key: 'data_format', label: t('Data format'), type: 'text' },
@@ -710,8 +711,41 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
   }, [qc, studyId, t])
 
   if (!focusElement) return null
+  return <ElementPropertiesBody {...{ studyId, focusElement, expanded, setExpanded, draft, setDraft, shown, setShown,
+    trlDraft, setTrlDraft, saveError, pendingRef, timerRef, send }} />
+}
 
+/** 3.L5: Properties the optics propose for a payload camera (GSD, FOV, swath, CSI-2 rate). */
+const PROPOSED_KEYS = ['gsd_m', 'fov_deg', 'swath_km', 'data_rate_mbps']
+
+function ProposedChip({ value, proposed }: { value: unknown; proposed: unknown }) {
+  const { t } = useTranslation()
+  // shown only once the student has typed a value: the hand calculation comes first (A5)
+  if (proposed === null || proposed === undefined || value === null || value === undefined || value === '') return null
+  const v = Number(value), p = Number(proposed)
+  const agrees = Number.isFinite(v) && Math.abs(v - p) <= Math.max(0.02 * Math.abs(p), 0.05)
+  return (
+    <Tag accent={!agrees} title={agrees ? t('Your value agrees with the optics') : t('The optics give {{p}}: check your calculation', { p })}>
+      {agrees ? t('✓ proposed {{p}}', { p }) : t('proposed {{p}}', { p })}
+    </Tag>
+  )
+}
+
+function ElementPropertiesBody({ studyId, focusElement, expanded, setExpanded, draft, setDraft, shown, setShown,
+  trlDraft, setTrlDraft, saveError, pendingRef, timerRef, send }: any) {
+  const { t } = useTranslation()
   const domain = focusElement.subsystem_domain || focusElement.element_type
+  const isCamera = domain === 'payload' && focusElement.element_type === 'component'
+  const { data: geometry } = useQuery({
+    queryKey: ['payload-geometry', studyId],
+    queryFn: async () => {
+      const r = await fetch(`${API}/lifecycle/payload-geometry/${studyId}`)
+      return r.ok ? r.json() : null
+    },
+    enabled: !!studyId && isCamera,
+    staleTime: 10_000,
+  })
+  const proposal: Record<string, number> | undefined = geometry?.proposals?.[focusElement.id]
   const fields = propertyFields(t)[domain] || []
   const isCustom = !focusElement.kb_component_id
   const showTrl = focusElement.element_type === 'component' || isCustom
@@ -730,7 +764,7 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
   }
 
   const updateProp = (key: string, value: any, raw?: string) => {
-    if (raw !== undefined) setShown(prev => ({ ...prev, [key]: raw }))
+    if (raw !== undefined) setShown((prev: Record<string, string>) => ({ ...prev, [key]: raw }))
     const next = { ...draft, [key]: value }
     setDraft(next)
     schedule(next)
@@ -753,8 +787,23 @@ function ElementProperties({ studyId, focusElementId, allElements }: { studyId: 
               value={trlDraft ?? (focusElement.trl ?? '')} onChange={e => updateTrl(e.target.value)} />
           </Field>
         )}
+        {showTrl && (<>
+          <Field label={t('TRL target at PDR')}>
+            <Input dense numeric type="number" min={1} max={9} aria-label={t('TRL target at PDR')}
+              value={shown.trl_target_pdr ?? perf.trl_target_pdr ?? ''}
+              onChange={e => updateProp('trl_target_pdr', e.target.value === '' ? null : parseInt(e.target.value, 10), e.target.value)} />
+          </Field>
+          <Field label={t('TRL target at CDR')}>
+            <Input dense numeric type="number" min={1} max={9} aria-label={t('TRL target at CDR')}
+              value={shown.trl_target_cdr ?? perf.trl_target_cdr ?? ''}
+              onChange={e => updateProp('trl_target_cdr', e.target.value === '' ? null : parseInt(e.target.value, 10), e.target.value)} />
+          </Field>
+          <Field label={t('Maturation plan')} help={perf.readiness_item ? t('Readiness plan row: {{item}}', { item: perf.readiness_item }) : undefined}>
+            <Input dense value={perf.trl_maturation ?? ''} onChange={e => updateProp('trl_maturation', e.target.value)} />
+          </Field>
+        </>)}
         {fields.map(f => (
-          <Field key={f.key} label={f.label}>
+          <Field key={f.key} label={<>{f.label} {isCamera && PROPOSED_KEYS.includes(f.key) && <ProposedChip value={perf[f.key]} proposed={proposal?.[f.key]} />}</>}>
             {f.type === 'select' ? (
               <Select dense value={perf[f.key] || ''} onChange={e => updateProp(f.key, e.target.value)}>
                 <option value="">{t('not set')}</option>

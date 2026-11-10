@@ -1328,3 +1328,37 @@ def _is_likely_us_manufacturer(name: str) -> bool:
     }
     lower = name.lower()
     return any(n in lower for n in us_names)
+
+
+# ---------------------------------------------------------------------------
+# Wave 3 (3.L3): disposal figures for the sweeps (3.H5) and the change proposals (ECP-02)
+# ---------------------------------------------------------------------------
+
+async def disposal_sweep(study_id: str, altitudes_km: list[float]) -> dict[str, Any]:
+    """Post-mission lifetime against start altitude, with and without the study's drag sail, for
+    the three solar-cycle scenarios (``physics/debris.decay_sweep``). The mass, start year and sail
+    are those of the Licensing tab's disposal analysis (mass basis of the licensing record,
+    allocation by default; decay from the launch date: the early-failure case). Also the highest
+    start altitudes that still decay within 5 years, and the ISED lines (600 km apogee, 5 years)."""
+    from spacecdf_common.physics.debris import BUS_AREAS_M2, decay_sweep
+    from spacecdf_common.physics.disposal import ISED_RULES
+    from . import licensing as lic
+    from . import rollup as ru
+    from ..routers.studies import get_study_store
+    study = get_study_store().get(study_id)
+    if study is None:
+        raise LookupError(study_id)
+    els = ru.study_elements(study_id)
+    roll = (await ru.compute(study_id)).as_dict()
+    rec, _v = await lic.load_record(study_id)
+    d = lic.disposal_analysis(study, els, roll, rec)
+    sail = (d.get("sail") or {}).get("deployed_area_m2")
+    alts = sorted({float(a) for a in altitudes_km if 150.0 < float(a) < 1000.0})
+    rows = decay_sweep(alts, mass_kg=float(d["mass_kg"]), start_year=float(d["start_year"]), sail_area_m2=sail)
+    return {"study_id": study_id, "mass_kg": d["mass_kg"], "mass_basis": d.get("mass_basis"),
+            "start_year": d["start_year"], "sail_area_m2": sail, "bus_areas_m2": list(BUS_AREAS_M2),
+            "design_altitude_km": d.get("altitude_km"), "rows": rows,
+            "highest_start_altitude_5y_km": d.get("highest_start_altitude_5y_km"),
+            "rules": {"disposal_max_years": ISED_RULES["disposal_max_years"],
+                      "apogee_without_propulsion_max_km": ISED_RULES["apogee_without_propulsion_max_km"]},
+            "model": d.get("model")}
