@@ -220,6 +220,57 @@ export const EVIDENCE_KEYS_W2B = [
   '{{ok}}/{{total}} subsystems have at least one component or a mass allowance',
 ]
 
+// English text is the i18n key — wave 3 (3.R4/3.R5) criteria questions
+export const GATE_QUESTIONS_W3 = [
+  'Are the systems-engineering deliverables of this phase ready?',
+  'Is every leaf function covered by a requirement, and does every space subsystem have requirements?',
+  'Does every primary objective have a validation activity performed by a stakeholder?',
+  'Are the mass and power allocations agreed by their owners, covered by requirements and within the limits with the system margin?',
+  'Are the in-orbit validation activities planned?',
+]
+
+// English text is the i18n key — wave 3 evidence (1/4)
+export const EVIDENCE_KEYS_W3_1 = [
+  'All {{total}} ICDs under issue control at Issue A and signed by both seats',
+  '{{agreed}}/{{total}} ICDs under issue control at Issue A and signed by both seats; not agreed: {{unsigned}}',
+  'All {{total}} decisions due at the SRR recorded in the logbook',
+  '{{recorded}}/{{total}} decisions due at the SRR recorded in the logbook; open: {{open}}',
+  'All {{total}} deliverables of the gate ready',
+  '{{ok}}/{{total}} deliverables of the gate ready; missing: {{names}}',
+  'No deliverables listed for this gate',
+]
+
+// English text is the i18n key — wave 3 evidence (2/4)
+export const EVIDENCE_KEYS_W3_2 = [
+  'The deliverables check is not available yet',
+  'All {{total}} primary objectives have a validation activity performed by a stakeholder',
+  '{{ok}}/{{total}} primary objectives have a validation activity performed by a stakeholder; without: {{ids}}',
+  'All {{total}} primary objectives have an in-orbit validation activity planned',
+  '{{ok}}/{{total}} primary objectives have an in-orbit validation activity planned; without: {{ids}}',
+  'No in-orbit validation activity planned',
+  'The validation plan is not available yet',
+]
+
+// English text is the i18n key — wave 3 evidence (3/4)
+export const EVIDENCE_KEYS_W3_3 = [
+  'Allocations with the system margin exceed the limit: {{mass}} kg vs {{mlimit}} kg; {{power}} W vs {{plimit}} W',
+  'Lines not agreed by their owner: {{names}}; {{mass}} kg vs {{mlimit}} kg; {{power}} W vs {{plimit}} W',
+  'Mass and power lines agreed for {{n}} subsystem(s); {{mass}} ≤ {{mlimit}} kg; {{power}} ≤ {{plimit}} W',
+  'No allocation ledger lines yet',
+  'No mass or power line for: {{names}}',
+  '{{n}} allocation line(s) without a covering requirement: {{names}}',
+  'No function tree yet',
+]
+
+// English text is the i18n key — wave 3 evidence (4/4)
+export const EVIDENCE_KEYS_W3_4 = [
+  '{{leaves}} leaf function(s) covered by requirements; {{subs}} space subsystem(s) with requirements',
+  '{{uncovered}}/{{leaves}} leaf function(s) without a requirement: {{codes}}; {{nosubs}} space subsystem(s) without one: {{names}}',
+  '{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated',
+  '{{n}} function(s); {{allocated}}/{{leaves}} leaf function(s) allocated; unallocated: {{codes}}',
+  'Reliability {{rel}} over {{horizon}} vs target {{target}}',
+]
+
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
 export const FIX_LABEL: Record<string, string> = {

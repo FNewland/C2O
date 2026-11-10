@@ -1102,3 +1102,314 @@ def on_requirement_patched(req: dict, body: dict) -> None:
         ir["edited"] = True
         ir["text_i18n"] = None
         req["ir_json"] = ir
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Wave 3 (3.R6, PI addendum): ICD issue control with the sign-off of both owning seats
+# ═══════════════════════════════════════════════════════════════════════
+#
+# An ICD is the document an ``icd_ref`` of the requirements names (``ICD-RADIO-OBC``,
+# ``ICD-LAUNCH (deployer)`` → the document ``ICD-LAUNCH``). Its content is the set of requirement
+# rows that cite it. Each issue is one ``icd_issues`` row: draft (no letter) → Issue A → Issue B …,
+# and an issue signed by both seats can be baselined. Raising an issue supersedes the previous one
+# (kept as history). A sign-off records the content hash of the rows; a later change to those rows
+# makes the sign-off stale, so the ICD is no longer agreed until it is signed again (or a new issue
+# is raised). The PDR inventory is the set of ICDs the team puts under issue control for the PDR
+# (``data_json.required_at``); PDR-EC-02 reads :func:`icd_status`.
+
+ICD_SYSTEM_SEAT = "systems_engineer"
+
+
+def icd_key(ref: str | None) -> str:
+    """``ICD-LAUNCH (deployer)`` → ``ICD-LAUNCH``; ``Site agreement (…)`` → ``SITE-AGREEMENT``."""
+    base = str(ref or "").split("(")[0].strip()
+    return re.sub(r"[^A-Za-z0-9]+", "-", base).strip("-").upper()
+
+
+def _issue_letter_next(cur: str) -> str:
+    if not cur:
+        return "A"
+    return chr(ord(cur[-1].upper()) + 1) if cur[-1].upper() < "Z" else cur + "A"
+
+
+def _state_of(issue: str) -> str:
+    if not issue:
+        return "draft"
+    return "issue_a" if issue.upper() == "A" else "issue_b"
+
+
+def icd_content_hash(rows: list[dict]) -> str:
+    return _hash(sorted([[r.get("code"), r.get("text"), r.get("threshold_op"), str(r.get("threshold_value")),
+                          r.get("threshold_unit"), r.get("status") == "retired"] for r in rows], key=lambda x: str(x[0])))
+
+
+def icd_catalogue(reqs: list[dict], elements: list[dict], codes: dict[str, str]) -> dict[str, dict]:
+    """ICD key → ``{icd_ref, title, refs[], requirement_ids[], codes[], provider_seat,
+    consumer_seat, interface_ids[]}`` from the live requirements that cite an ICD."""
+    els = {e["id"]: e for e in elements}
+    out: dict[str, dict] = {}
+    rows = [r for r in reqs if r.get("status") != "retired" and (r.get("ir_json") or {}).get("icd_ref")]
+    order = {"interface": 0, "subsystem": 1, "system": 2, "segment": 3, "mission": 4}
+    for r in sorted(rows, key=lambda r: (order.get(r.get("level") or "", 9), r.get("code") or "")):
+        ref = (r.get("ir_json") or {}).get("icd_ref")
+        k = icd_key(ref)
+        if not k:
+            continue
+        d = out.setdefault(k, {"icd_ref": k, "title": str(ref).split("(")[0].strip(), "refs": [], "requirement_ids": [],
+                               "codes": [], "interface_ids": [], "provider_seat": None, "consumer_seat": None,
+                               "levels": []})
+        if ref not in d["refs"]:
+            d["refs"].append(ref)
+        d["requirement_ids"].append(r["id"])
+        d["codes"].append(r.get("code"))
+        d["levels"].append(r.get("level"))
+        ir = r.get("ir_json") or {}
+        for i in [ir.get("interface_id"), *(ir.get("interface_ids") or [])]:
+            if i and i not in d["interface_ids"]:
+                d["interface_ids"].append(i)
+        if d["provider_seat"] is None:
+            prov = r.get("responsible_position") or ICD_SYSTEM_SEAT
+            cons = None
+            for c in reversed(list(r.get("allocation_codes") or [])):
+                seat = owner_seat(els.get(codes.get(c) or ""), els)
+                if seat and seat != prov:
+                    cons = seat
+                    break
+            d["provider_seat"], d["consumer_seat"] = prov, cons or (ICD_SYSTEM_SEAT if prov != ICD_SYSTEM_SEAT
+                                                                    else "team_leader")
+    return out
+
+
+def _issue_view(row: dict | None, content: str, seats: tuple[str | None, str | None]) -> dict:
+    if row is None:
+        return {"issue": None, "revision": None, "state": "none", "signoffs": {}, "agreed": False, "stale": False,
+                "provider_seat": seats[0], "consumer_seat": seats[1], "id": None, "signed": [], "unsigned": [],
+                "change_note": "", "required_at": None, "created_at": "", "updated_at": ""}
+    so = dict(row.get("signoffs_json") or {})
+    prov, cons = row.get("provider_seat") or seats[0], row.get("consumer_seat") or seats[1]
+    current = {s: v for s, v in so.items() if (v or {}).get("content_hash") == content
+               and (v or {}).get("issue") == row.get("issue") and (v or {}).get("revision") == row.get("revision")}
+    issued = row.get("state") in ("issue_a", "issue_b", "baselined")
+    agreed = issued and bool(prov in current and cons in current)
+    return {"id": row["id"], "issue": row.get("issue") or "", "revision": row.get("revision") or 0,
+            "state": row.get("state"), "provider_seat": prov, "consumer_seat": cons,
+            "signoffs": so, "signed": sorted(current), "agreed": agreed,
+            "stale": bool(so) and len(current) < len([s for s in so if so[s]]),
+            "unsigned": [s for s in (prov, cons) if s not in current] if issued else [prov, cons],
+            "change_note": row.get("change_note") or "", "required_at": (row.get("data_json") or {}).get("required_at"),
+            "created_at": str(row.get("created_at") or ""), "updated_at": str(row.get("updated_at") or "")}
+
+
+async def _icd_rows(study_id: str) -> list[dict]:
+    from sqlalchemy import select
+    from ..db._arcadia_common import get_session_factory
+    from ..db.models_icd import IcdIssueRow
+    async with get_session_factory()() as s:
+        rows = (await s.execute(select(IcdIssueRow).where(IcdIssueRow.study_id == study_id)
+                                .order_by(IcdIssueRow.order, IcdIssueRow.created_at))).scalars().all()
+    return [{c.name: getattr(r, c.name) for c in IcdIssueRow.__table__.columns} for r in rows]
+
+
+async def _icd_context(study_id: str) -> tuple[dict[str, dict], list[dict], dict[str, list[dict]]]:
+    from ..routers.requirements import ensure_requirements_loaded, study_requirements
+    from .requirement_queries import _study_elements_list, element_code_map
+    await ensure_requirements_loaded()
+    reqs = study_requirements(study_id, live=False)
+    elements = _study_elements_list(study_id)
+    codes = await element_code_map(study_id, elements)
+    cat = icd_catalogue([r for r in reqs if r.get("status") != "retired"], elements, codes)
+    rows = await _icd_rows(study_id)
+    by_ref: dict[str, list[dict]] = {}
+    for r in rows:
+        by_ref.setdefault(r["icd_ref"], []).append(r)
+    return cat, reqs, by_ref
+
+
+def _latest(rows: list[dict]) -> dict | None:
+    live = [r for r in rows if r.get("state") != "superseded"]
+    return (live or rows or [None])[-1] if rows else None
+
+
+async def icd_status(study_id: str, gate: str | None = None) -> dict[str, Any]:
+    """Every ICD with its latest issue, state and the two sign-offs; ``inventory`` = the ICDs put
+    under issue control (for ``gate`` when given: ``required_at`` that gate or none)."""
+    cat, reqs, by_ref = await _icd_context(study_id)
+    by_id = {r["id"]: r for r in reqs}
+    items = []
+    for k in sorted(set(cat) | set(by_ref)):
+        c = cat.get(k) or {"icd_ref": k, "title": k, "refs": [], "requirement_ids": [], "codes": [],
+                           "interface_ids": [], "provider_seat": None, "consumer_seat": None}
+        rows = [by_id[i] for i in c["requirement_ids"] if i in by_id]
+        content = icd_content_hash(rows)
+        latest = _latest(by_ref.get(k, []))
+        v = _issue_view(latest, content, (c["provider_seat"], c["consumer_seat"]))
+        items.append({**{x: c[x] for x in ("icd_ref", "title", "refs", "codes", "requirement_ids", "interface_ids")},
+                      "controlled": latest is not None, "history": len(by_ref.get(k, [])), "content_hash": content,
+                      **v})
+    inv = [i for i in items if i["controlled"] and (gate is None or i.get("required_at") in (None, "", gate))]
+    return {"study_id": study_id, "items": items, "inventory": [i["icd_ref"] for i in inv],
+            "counts": {"icds": len(items), "controlled": len(inv),
+                       "at_issue_a": sum(1 for i in inv if i["state"] in ("issue_a", "issue_b", "baselined")),
+                       "agreed": sum(1 for i in inv if i["agreed"]),
+                       "baselined": sum(1 for i in inv if i["state"] == "baselined")},
+            "unsigned_by_seat": _unsigned_by_seat(inv)}
+
+
+def _unsigned_by_seat(inv: list[dict]) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    for i in inv:
+        if i["agreed"]:
+            continue
+        for s in i.get("unsigned") or []:
+            if s:
+                out.setdefault(s, []).append(i["icd_ref"])
+    return out
+
+
+async def _write_icd(row: dict, *, new: bool) -> None:
+    from ..db._arcadia_common import get_session_factory
+    from ..db.models_icd import IcdIssueRow
+    async with get_session_factory()() as s:
+        if new:
+            s.add(IcdIssueRow(**row))
+        else:
+            obj = await s.get(IcdIssueRow, row["id"])
+            for k, v in row.items():
+                if k not in ("id", "created_at"):
+                    setattr(obj, k, v)
+        await s.commit()
+
+
+async def icd_declare(study_id: str, refs: list[str], required_at: str | None = "pdr") -> dict[str, Any]:
+    """Put ICDs under issue control (the PDR inventory): a draft issue for each that has none."""
+    cat, reqs, by_ref = await _icd_context(study_id)
+    made = []
+    for ref in refs:
+        k = icd_key(ref)
+        if k not in cat:
+            raise KeyError(k)
+        if by_ref.get(k):
+            continue
+        c = cat[k]
+        await _write_icd(_new_issue_row(study_id, c, "", 0, "draft", "", {"required_at": required_at},
+                                        order=0), new=True)
+        made.append(k)
+    return {"study_id": study_id, "declared": made}
+
+
+def _new_issue_row(study_id: str, c: dict, issue: str, revision: int, state: str, note: str, data: dict,
+                   order: int = 0, history: list | None = None) -> dict:
+    now = datetime.now(timezone.utc)
+    return {"id": f"icd{uuid4().hex[:20]}", "study_id": study_id, "icd_ref": c["icd_ref"],
+            "interface_id": (c.get("interface_ids") or [None])[0], "title": c.get("title") or c["icd_ref"],
+            "issue": issue, "revision": revision, "state": state, "provider_seat": c.get("provider_seat") or "",
+            "consumer_seat": c.get("consumer_seat") or "", "signoffs_json": {},
+            "requirement_ids_json": list(c.get("requirement_ids") or []), "change_note": note or "",
+            "history_json": history or [], "data_json": data, "origin": "user", "order": order,
+            "created_at": now, "updated_at": now}
+
+
+async def icd_raise(study_id: str, ref: str, *, issue: str | None = None, baseline: bool = False,
+                    revision: bool = False, note: str = "", provider_seat: str | None = None,
+                    consumer_seat: str | None = None, by: str = "") -> dict[str, Any]:
+    """Raise the next issue of an ICD (draft → A → B …), a revision of the current issue
+    (``revision``: same letter, revision + 1, sign-offs cleared) or baseline the current signed
+    issue (``baseline``). The previous row is kept, superseded."""
+    cat, reqs, by_ref = await _icd_context(study_id)
+    k = icd_key(ref)
+    if k not in cat and k not in by_ref:
+        raise KeyError(k)
+    c = dict(cat.get(k) or {"icd_ref": k, "title": k, "requirement_ids": [], "interface_ids": []})
+    if provider_seat:
+        c["provider_seat"] = provider_seat
+    if consumer_seat:
+        c["consumer_seat"] = consumer_seat
+    rows = by_ref.get(k, [])
+    cur = _latest(rows)
+    by_id = {r["id"]: r for r in reqs}
+    content = icd_content_hash([by_id[i] for i in c.get("requirement_ids", []) if i in by_id])
+    now = datetime.now(timezone.utc).isoformat()
+    if cur is not None:
+        c.setdefault("provider_seat", cur.get("provider_seat"))
+        c.setdefault("consumer_seat", cur.get("consumer_seat"))
+        if not provider_seat and cur.get("provider_seat"):
+            c["provider_seat"] = cur["provider_seat"]
+        if not consumer_seat and cur.get("consumer_seat"):
+            c["consumer_seat"] = cur["consumer_seat"]
+    data = dict((cur or {}).get("data_json") or {"required_at": None})
+    if baseline:
+        if cur is None:
+            raise ValueError("raise Issue A first")
+        v = _issue_view(cur, content, (c.get("provider_seat"), c.get("consumer_seat")))
+        if not v["agreed"]:
+            raise ValueError("both seats must sign the current issue before it is baselined")
+        cur = dict(cur)
+        cur["history_json"] = list(cur.get("history_json") or []) + [{"at": now, "by": by, "event": "baselined"}]
+        cur["state"] = "baselined"
+        cur["updated_at"] = datetime.now(timezone.utc)
+        await _write_icd(cur, new=False)
+        return {"icd_ref": k, "issue": cur["issue"], "revision": cur["revision"], "state": "baselined"}
+    if revision:
+        if cur is None or not cur.get("issue"):
+            raise ValueError("a revision needs an issued ICD")
+        letter, rev = cur["issue"], int(cur.get("revision") or 0) + 1
+    else:
+        letter = (issue or _issue_letter_next((cur or {}).get("issue") or "")).upper()
+        if cur is not None and cur.get("issue") and letter <= str(cur["issue"]).upper():
+            raise ValueError(f"issue {letter} is not after the current issue {cur['issue']}")
+        rev = 0
+    hist = list((cur or {}).get("history_json") or []) + [{"at": now, "by": by, "event": "raised", "issue": letter,
+                                                           "revision": rev, "note": note}]
+    if cur is not None:
+        old = dict(cur)
+        old["state"] = "superseded"
+        old["updated_at"] = datetime.now(timezone.utc)
+        await _write_icd(old, new=False)
+    order = max(int(r.get("order") or 0) for r in rows) + 1 if rows else 0
+    row = _new_issue_row(study_id, c, letter, rev, _state_of(letter), note, data, order=order, history=hist)
+    await _write_icd(row, new=True)
+    return {"icd_ref": k, "issue": letter, "revision": rev, "state": row["state"]}
+
+
+async def icd_sign(study_id: str, ref: str, sides: list[str], agree: bool, person: str = "") -> dict[str, Any]:
+    """The provider and/or consumer seat signs (or withdraws from) the current issue."""
+    cat, reqs, by_ref = await _icd_context(study_id)
+    k = icd_key(ref)
+    cur = _latest(by_ref.get(k, []))
+    if cur is None or cur.get("state") not in ("issue_a", "issue_b", "baselined"):
+        raise ValueError("only an issued ICD (Issue A or later) can be signed")
+    by_id = {r["id"]: r for r in reqs}
+    c = cat.get(k) or {"requirement_ids": []}
+    content = icd_content_hash([by_id[i] for i in c.get("requirement_ids", []) if i in by_id])
+    so = dict(cur.get("signoffs_json") or {})
+    now = datetime.now(timezone.utc).isoformat()
+    seats = []
+    for side in sides:
+        seat = cur.get(f"{side}_seat")
+        if not seat:
+            continue
+        seats.append(seat)
+        if agree:
+            so[seat] = {"by": person, "at": now, "issue": cur.get("issue"), "revision": cur.get("revision"),
+                        "side": side, "content_hash": content}
+        else:
+            so.pop(seat, None)
+    cur = dict(cur)
+    cur["signoffs_json"] = so
+    cur["history_json"] = list(cur.get("history_json") or []) + [
+        {"at": now, "by": person, "event": "signed" if agree else "withdrawn", "seats": seats,
+         "issue": cur.get("issue"), "revision": cur.get("revision")}]
+    cur["updated_at"] = datetime.now(timezone.utc)
+    await _write_icd(cur, new=False)
+    v = _issue_view(cur, content, (cur.get("provider_seat"), cur.get("consumer_seat")))
+    return {"icd_ref": k, **v}
+
+
+async def icd_history(study_id: str, ref: str) -> list[dict]:
+    rows = await _icd_rows(study_id)
+    k = icd_key(ref)
+    return [{"id": r["id"], "issue": r.get("issue") or "", "revision": r.get("revision") or 0, "state": r.get("state"),
+             "provider_seat": r.get("provider_seat"), "consumer_seat": r.get("consumer_seat"),
+             "signoffs": r.get("signoffs_json") or {}, "change_note": r.get("change_note") or "",
+             "history": r.get("history_json") or [], "created_at": str(r.get("created_at") or "")}
+            for r in rows if r["icd_ref"] == k]

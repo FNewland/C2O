@@ -136,6 +136,18 @@ phases:
         step: S1
         fix: analyses
 
+      # wave 3 (3.R4): the SE deliverables of the phase (services/se_deliverables, agent S); a
+      # warning by default (PI ruling), blocking when the instructor sets the deliverable checks to
+      # block; the instructor may sign it off
+      - id: MDR-SE-01
+        question: "Are the systems-engineering deliverables of this phase ready?"
+        category: se_process
+        evidence: "Every deliverable the SE protocol (configs/se_protocol.yaml) asks of the phase is ready (state ok)"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: S6
+
   phase_a:
     gate: PRR
     gate_name: "Preliminary Requirements Review"
@@ -167,7 +179,7 @@ phases:
       - id: PRR-EC-03
         question: "Is the function tree defined?"
         category: functions
-        evidence: ">= 1 function in the study's function tree"
+        evidence: ">= 1 function in the study's function tree, and every leaf function allocated to an element"
         status: auto
         priority: should_pass
         owner_seat: systems_engineer
@@ -263,6 +275,18 @@ phases:
         step: A1
         fix: analyses
 
+      # wave 3 (3.R4): the SE deliverables of the phase (services/se_deliverables, agent S); a
+      # warning by default (PI ruling), blocking when the instructor sets the deliverable checks to
+      # block; the instructor may sign it off
+      - id: PRR-SE-01
+        question: "Are the systems-engineering deliverables of this phase ready?"
+        category: se_process
+        evidence: "Every deliverable the SE protocol (configs/se_protocol.yaml) asks of the phase is ready (state ok)"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: S6
+
   phase_b1:
     gate: SRR
     gate_name: "System Requirements Review"
@@ -305,7 +329,7 @@ phases:
       - id: SRR-EC-04
         question: "Have all engineering positions answered their key questions?"
         category: positions
-        evidence: "All must_answer questions have position answers"
+        evidence: "Every seat decision the decision catalogue makes due at the SRR is recorded in a logbook of the team (Record decision); without a logbook, the must-answer position questions"
         status: auto
         priority: should_pass
         owner_seat: team_leader
@@ -379,6 +403,39 @@ phases:
         step: B1
         fix: requirements
 
+      # wave 3 (3.R4, SE-04a): function ↔ requirement coverage (GET …/requirements/function-coverage)
+      - id: SRR-EC-12
+        question: "Is every leaf function covered by a requirement, and does every space subsystem have requirements?"
+        category: functions
+        evidence: "Every leaf function has a requirement (satisfies relation) and every space subsystem has at least one requirement allocated to it"
+        status: auto
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: B2
+        fix: requirements
+
+      # wave 3 (3.R4, SE-07a): validation planned with the stakeholders (agent S, validation coverage)
+      - id: SRR-EC-13
+        question: "Does every primary objective have a validation activity performed by a stakeholder?"
+        category: validation
+        evidence: "Every primary objective of the mission need has at least one validation activity whose performer is a stakeholder"
+        status: auto
+        priority: should_pass
+        owner_seat: team_leader
+        step: B1
+
+      # wave 3 (3.R4): the SE deliverables of the phase (services/se_deliverables, agent S); a
+      # warning by default (PI ruling), blocking when the instructor sets the deliverable checks to
+      # block; the instructor may sign it off
+      - id: SRR-SE-01
+        question: "Are the systems-engineering deliverables of this phase ready?"
+        category: se_process
+        evidence: "Every deliverable the SE protocol (configs/se_protocol.yaml) asks of the phase is ready (state ok)"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: B1
+
   phase_b:
     gate: PDR
     gate_name: "Preliminary Design Review"
@@ -400,7 +457,7 @@ phases:
       - id: PDR-EC-02
         question: "Are interface requirements defined between all subsystems?"
         category: interfaces
-        evidence: "Every subsystem has its expected power, data, mechanical and thermal links (configs/interface_rules.yaml coverage) and no suggested link is left unreviewed; the IRD/ICD for external interfaces is still checked by the board"
+        evidence: "Every subsystem has its expected power, data, mechanical and thermal links (configs/interface_rules.yaml coverage) and no suggested link is left unreviewed; then every ICD under issue control is at Issue A or later and signed by both owning seats (wave 3, ICD issue control), or, with no ICD under issue control, every accepted link has an approved interface requirement agreed by both parties"
         status: auto
         priority: must_pass
         owner_seat: systems_engineer
@@ -430,7 +487,7 @@ phases:
       - id: PDR-EC-05
         question: "Is the reliability analysis acceptable?"
         category: reliability
-        evidence: "reliability.mission_reliability >= reliability_target"
+        evidence: "reliability.mission_reliability >= reliability_target, over the mission-success horizon of the reliability analysis"
         status: auto
         priority: must_pass
         owner_seat: systems_engineer
@@ -447,6 +504,40 @@ phases:
         owner_seat: mission_analyst
         step: A6
         fix: tmtc
+
+      # wave 3 (3.R4, SE-05): the allocated baseline (allocation ledger, agent A; rule AR-01, agent R)
+      - id: PDR-EC-07
+        question: "Are the mass and power allocations agreed by their owners, covered by requirements and within the limits with the system margin?"
+        category: budgets
+        evidence: "Every space subsystem (a harness carried as an allowance apart) has a mass and an orbit-average power line agreed by its owner seat; the sum of the allocations × (1 + system margin) is within the limit (the system closure requirement, else the mass limit and EOL generation); every line is covered by a requirement"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: A6
+        fix: budget
+
+      # wave 3 (3.R4, SE-04a): function ↔ requirement coverage (GET …/requirements/function-coverage)
+      - id: PDR-EC-08
+        question: "Is every leaf function covered by a requirement, and does every space subsystem have requirements?"
+        category: functions
+        evidence: "Every leaf function has a requirement (satisfies relation) and every space subsystem has at least one requirement allocated to it"
+        status: auto
+        priority: must_pass
+        owner_seat: systems_engineer
+        step: B2
+        fix: requirements
+
+      # wave 3 (3.R4): the SE deliverables of the phase (services/se_deliverables, agent S); a
+      # warning by default (PI ruling), blocking when the instructor sets the deliverable checks to
+      # block; the instructor may sign it off
+      - id: PDR-SE-01
+        question: "Are the systems-engineering deliverables of this phase ready?"
+        category: se_process
+        evidence: "Every deliverable the SE protocol (configs/se_protocol.yaml) asks of the phase is ready (state ok)"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: C3
 
   # Nov 2026 (phase 2): the Critical Design Review, the last gate of the full ECSS profile.
   # Expectations after ECSS-E-ST-10C Annex A / ECSS-M-ST-10C Rev.1 §4.4.3.4.5 (clause numbers
@@ -573,6 +664,18 @@ phases:
         owner_seat: systems_engineer
         step: C3
         fix: vv:risks
+
+      # wave 3 (3.R4): the SE deliverables of the phase (services/se_deliverables, agent S); a
+      # warning by default (PI ruling), blocking when the instructor sets the deliverable checks to
+      # block; the instructor may sign it off
+      - id: CDR-SE-01
+        question: "Are the systems-engineering deliverables of this phase ready?"
+        category: se_process
+        evidence: "Every deliverable the SE protocol (configs/se_protocol.yaml) asks of the phase is ready (state ok)"
+        status: hybrid
+        priority: should_pass
+        owner_seat: systems_engineer
+        step: C3
 
   # ─────────────────────────────────────────────────────────── after CDR (wave 2, W4.09)
   # The reviews after CDR (ECSS-M-ST-10C Rev.1 §4.4; clause numbers and wording to verify):
@@ -772,3 +875,14 @@ phases:
         priority: must_pass
         owner_seat: team_leader
         step: C3
+
+
+      # wave 3 (3.R4, SE-07a): in-orbit validation planned (agent S, validation coverage)
+      - id: FRR-EC-01
+        question: "Are the in-orbit validation activities planned?"
+        category: validation
+        evidence: "Every primary objective has an in-orbit (IOV or commissioning) validation activity planned"
+        status: auto
+        priority: must_pass
+        owner_seat: mission_analyst
+        step: D4

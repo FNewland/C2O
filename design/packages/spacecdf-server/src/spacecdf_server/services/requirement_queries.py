@@ -356,3 +356,260 @@ async def ird_dataset(study_id: str) -> dict[str, Any]:
                    "generated": sum(1 for r in out_reqs if r["origin"] == "rule"),
                    "exchange_items": len(out_items), "suggestions": len(sugg)},
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Wave 3 (3.R1): element codes, function ↔ requirement links and coverage
+# ═══════════════════════════════════════════════════════════════════════
+
+#: v2 element codes (functions.yaml ``elements``) → how to find the tool element: (element
+#: types, segments, name words). The import's ``element_map`` wins; the function import stores
+#: the map it used on each function, so later lookups (ICD seats, coverage) reuse it.
+ELEMENT_CODES: dict[str, tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]] = {
+    "MIS": (("mission",), (), ()),
+    "SSEG": (("segment",), ("space",), ()),
+    "GSEG": (("segment",), ("ground",), ()),
+    "LSEG": (("segment",), ("launch",), ()),
+    "USEG": (("segment",), ("user", "science"), ()),
+    "SCI": (("segment",), ("user", "science"), ()),
+    "SCT": (("segment",), ("user", "science"), ()),
+    "OPS": (("segment",), ("operations",), ()),
+    "GS": (("segment",), ("ground",), ()),
+    "SC": (("system",), ("space",), ()),
+    "MCC": (("system",), ("ground",), ("mission control",)),
+    "PAY": (("subsystem",), (), ("payload",)),
+    "EPS": (("subsystem",), (), ("eps", "power")),
+    "AOCS": (("subsystem",), (), ("aocs", "adcs", "attitude")),
+    "COM": (("subsystem",), (), ("communication", "ttc", "tt&c")),
+    "OBC": (("subsystem",), (), ("on-board computer", "obc", "data handling")),
+    "THM": (("subsystem",), (), ("thermal",)),
+    "STR": (("subsystem",), (), ("structure",)),
+    "DIS": (("subsystem",), (), ("disposal", "drag sail", "deorbit")),
+    "HAR": (("subsystem",), (), ("harness",)),
+}
+
+
+def resolve_element_code(code: str, elements: list[dict], element_map: dict[str, str] | None = None) -> str | None:
+    """The tool element id of a v2 element code (``PAY``, ``SSEG`` …); None when unknown."""
+    if not code:
+        return None
+    if element_map and element_map.get(code):
+        return element_map[code]
+    live = [e for e in elements if not e.get("deleted_at")]
+    if any(e.get("id") == code for e in live):
+        return code
+    rule = ELEMENT_CODES.get(code.upper())
+    if rule is None:
+        hit = [e for e in live if (e.get("name") or "").strip().casefold() == code.casefold()]
+        return hit[0]["id"] if len(hit) == 1 else None
+    types, segs, words = rule
+    cands = [e for e in live if e.get("element_type") in types
+             and (not segs or (e.get("segment") or "") in segs)]
+    if words:
+        named = [e for e in cands if any((e.get("name") or "").casefold().startswith(w) for w in words)]
+        if not named:
+            named = [e for e in cands if any(w in (e.get("name") or "").casefold() for w in words)]
+        cands = named
+    if code.upper() == "SC" and len(cands) > 1:
+        cands = [e for e in cands if any(c.get("parent_id") == e["id"] and c.get("element_type") == "subsystem"
+                                         for c in live)] or cands
+    return cands[0]["id"] if cands else None
+
+
+async def element_code_map(study_id: str, elements: list[dict] | None = None) -> dict[str, str]:
+    """Element code → element id for the study: the map the function import stored, completed by
+    :func:`resolve_element_code` for every code in :data:`ELEMENT_CODES`."""
+    from ..db import function_repo
+    if elements is None:
+        elements = _study_elements_list(study_id)
+    out: dict[str, str] = {}
+    try:
+        for f in await function_repo.list_functions_by_study(study_id):
+            ext = f.get("external_ids") or {}
+            for c, e in zip(ext.get("allocation_codes") or [], ext.get("allocation") or []):
+                if c and e:
+                    out.setdefault(c, e)
+    except Exception:  # noqa: BLE001 — no function table: resolve by name only
+        logger.debug("no stored element codes for %s", study_id, exc_info=True)
+    ids = {e["id"] for e in elements}
+    out = {c: e for c, e in out.items() if e in ids}
+    for c in ELEMENT_CODES:
+        if c not in out:
+            eid = resolve_element_code(c, elements)
+            if eid:
+                out[c] = eid
+    return out
+
+
+def _study_elements_list(study_id: str) -> list[dict]:
+    from ..routers import elements as el
+    return [e for e in el._elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+
+
+async def link_function_requirements(study_id: str) -> dict[str, int]:
+    """``function_codes`` of the requirements become ``satisfies`` relations function →
+    requirement (3.R1). The links of every row that carries codes are made exact; rows without
+    codes keep the links a user drew. Codes no function has are reported."""
+    from ..db import function_repo
+    from ..db.relation_repo import sync_incoming
+    from ..routers.requirements import ensure_requirements_loaded, study_requirements
+    await ensure_requirements_loaded()
+    by_code = {f.get("external_id"): f["id"] for f in await function_repo.list_functions_by_study(study_id)
+               if f.get("external_id")}
+    wanted: set[tuple[str, str]] = set()
+    managed: set[str] = set()
+    unknown: set[str] = set()
+    for r in study_requirements(study_id):
+        codes = r.get("function_codes") or []
+        if not codes or not by_code:
+            continue
+        managed.add(r["id"])
+        for c in codes:
+            fid = by_code.get(c)
+            if fid:
+                wanted.add((fid, r["id"]))
+            else:
+                unknown.add(c)
+    created, removed = await sync_incoming(study_id, "satisfies", "function", "requirement", wanted, managed,
+                                           rationale="function_codes")
+    return {"links": len(wanted), "created": created, "removed": removed, "rows": len(managed),
+            "unknown_codes": sorted(unknown)}
+
+
+async def set_requirement_functions(study_id: str, req: dict, function_ids: list[str]) -> dict:
+    """The Requirements table's function picker: the functions (or processes) that satisfy
+    ``req`` become exactly ``function_ids``; ``function_codes`` follows (the codes of the
+    functions that have one)."""
+    from ..db import function_repo
+    from ..db.relation_repo import sync_incoming
+    fns = {f["id"]: f for f in await function_repo.list_functions_by_study(study_id)}
+    bad = [f for f in function_ids if f not in fns]
+    if bad:
+        raise ValueError(f"unknown function(s): {', '.join(bad)}")
+    await sync_incoming(study_id, "satisfies", "function", "requirement",
+                        {(f, req["id"]) for f in function_ids}, {req["id"]}, rationale="picker")
+    codes = [fns[f].get("external_id") or fns[f].get("name") for f in function_ids]
+    return {"function_ids": list(function_ids), "function_codes": [c for c in codes if c]}
+
+
+def _is_spec_row(r: dict) -> bool:
+    """A requirement row the function coverage counts: not a stakeholder need, an objective row
+    or an interface row generated by rule IF-01 from a link (it traces to its interface)."""
+    return (r.get("level") != "stakeholder" and not is_objective(r) and not is_generated(r)
+            and r.get("status") != "retired")
+
+
+async def function_coverage(study_id: str) -> dict[str, Any]:
+    """Function ↔ requirement coverage (3.R1, SRR-EC-12, PRR-EC-03).
+
+    Returns ``{functions, processes, leaves, leaves_allocated, leaves_without_requirement[],
+    leaves_unallocated[], requirements, requirements_with_function, requirements_without_function[],
+    allocation_warnings[], subsystems_without_requirement[], by_depth}``. A requirement counts as
+    covered by a function when a ``satisfies`` relation links them (either direction); its
+    allocation (``allocation_codes``, else ``element_id``) should sit under, or above, an element
+    one of its functions (or their leaves) is allocated to, else a warning."""
+    from ..db import function_repo
+    from ..db.relation_repo import list_relations_by_study
+    from ..routers.requirements import ensure_requirements_loaded, study_requirements
+    await ensure_requirements_loaded()
+    fns = await function_repo.list_functions_by_study(study_id)
+    allocs = await function_repo.list_allocations_by_study(study_id)
+    rels = await list_relations_by_study(study_id, kind="satisfies")
+    els = {e["id"]: e for e in _study_elements_list(study_id)}
+    codes = await element_code_map(study_id, list(els.values()))
+    reqs = [r for r in study_requirements(study_id) if _is_spec_row(r)]
+    req_ids = {r["id"] for r in reqs}
+    fn_by = {f["id"]: f for f in fns}
+
+    children: dict[str, list[str]] = {}
+    for f in fns:
+        if f.get("parent_id") in fn_by:
+            children.setdefault(f["parent_id"], []).append(f["id"])
+    procs = [f for f in fns if f.get("function_type") == "process"]
+    funcs = [f for f in fns if f.get("function_type") != "process"]
+    leaves = [f for f in funcs if f["id"] not in children]
+    alloc_of: dict[str, set[str]] = {}
+    for a in allocs:
+        if a.get("element_id"):
+            alloc_of.setdefault(a["function_id"], set()).add(a["element_id"])
+
+    def under(fid: str, seen: set | None = None) -> set[str]:
+        seen = seen if seen is not None else set()
+        if fid in seen:
+            return set()
+        seen.add(fid)
+        out = set(alloc_of.get(fid, set()))
+        for c in children.get(fid, []):
+            out |= under(c, seen)
+        return out
+
+    fn_reqs: dict[str, set[str]] = {}
+    req_fns: dict[str, set[str]] = {}
+    for rel in rels:
+        if rel.get("source_kind") == "function" and rel.get("target_kind") == "requirement":
+            f, r = rel["source_id"], rel["target_id"]
+        elif rel.get("source_kind") == "requirement" and rel.get("target_kind") == "function":
+            f, r = rel["target_id"], rel["source_id"]
+        else:
+            continue
+        if f in fn_by and r in req_ids:
+            fn_reqs.setdefault(f, set()).add(r)
+            req_fns.setdefault(r, set()).add(f)
+
+    def lineage(eid: str) -> set[str]:
+        out, cur, n = set(), els.get(eid), 0
+        while cur is not None and n < 30:
+            out.add(cur["id"])
+            cur, n = els.get(cur.get("parent_id") or ""), n + 1
+        return out
+
+    code_of = {f["id"]: f.get("external_id") or f.get("name") for f in fns}
+    req_code = {r["id"]: r.get("code") or r["id"] for r in reqs}
+    warnings = []
+    for r in reqs:
+        fs = req_fns.get(r["id"], set())
+        if not fs:
+            continue
+        mine = {codes.get(c) for c in (r.get("allocation_codes") or [])} - {None}
+        if not mine and r.get("element_id"):
+            mine = {r["element_id"]}
+        theirs: set[str] = set()
+        for f in fs:
+            theirs |= under(f)
+        if not theirs:
+            continue
+        near: set[str] = set()
+        for e in theirs:
+            near |= lineage(e)                     # the function's elements and their parents
+        odd = [e for e in mine if e not in near and not (lineage(e) & theirs)]
+        if odd:
+            warnings.append({"code": req_code[r["id"]], "requirement_id": r["id"],
+                             "elements": sorted((els.get(e) or {}).get("name") or e for e in odd),
+                             "functions": sorted(code_of[f] for f in fs)})
+    subs = [e for e in els.values() if e.get("element_type") == "subsystem" and (e.get("segment") or "space") == "space"
+            and e.get("in_scope") is not False]
+    with_req: set[str] = set()
+    for r in reqs:
+        if r.get("element_id"):
+            with_req.add(r["element_id"])
+        for c in r.get("allocation_codes") or []:
+            if codes.get(c):
+                with_req.add(codes[c])
+    depth: dict[int, int] = {}
+    for f in funcs:
+        depth[int(f.get("level") or 0)] = depth.get(int(f.get("level") or 0), 0) + 1
+    return {
+        "study_id": study_id,
+        "functions": len(funcs), "processes": len(procs), "by_depth": {str(k): v for k, v in sorted(depth.items())},
+        "leaves": len(leaves),
+        "leaves_allocated": sum(1 for f in leaves if alloc_of.get(f["id"])),
+        "leaves_unallocated": [code_of[f["id"]] for f in leaves if not alloc_of.get(f["id"])],
+        "leaves_without_requirement": [code_of[f["id"]] for f in leaves if not fn_reqs.get(f["id"])],
+        "requirements": len(reqs),
+        "requirements_with_function": sum(1 for r in reqs if req_fns.get(r["id"])),
+        "requirements_without_function": sorted(req_code[r["id"]] for r in reqs if not req_fns.get(r["id"])),
+        "allocation_warnings": warnings,
+        "subsystems": len(subs),
+        "subsystems_without_requirement": sorted(e.get("name") or e["id"] for e in subs if e["id"] not in with_req),
+        "per_function": {code_of[f]: sorted(req_code[r] for r in rs) for f, rs in fn_reqs.items()},
+    }

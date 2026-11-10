@@ -387,7 +387,12 @@ async def allocate_function(function_id: str, body: AllocateBody) -> dict:
     el_study = _study_of_element(body.element_id)
     if el_study and el_study != fn["study_id"]:
         raise HTTPException(400, "Element belongs to a different study")
+    old = next((a for a in await repo.list_allocations_by_function(function_id)
+                if a.get("layer") == body.layer and not a.get("secondary")), None)
     alloc = await repo.allocate_function(fn["study_id"], function_id, body.element_id, layer=body.layer)
+    if old and old.get("element_id") != body.element_id and body.layer == "SA":
+        # wave 3: the multi-element list follows the allocation row (first element replaced)
+        await repo.remove_secondary_allocation(function_id, old["element_id"])
     alloc = _decorate_allocation(alloc)
     await broadcast_mutation(fn["study_id"], "function_allocated", "function", function_id, alloc)
     return alloc
@@ -397,6 +402,10 @@ async def allocate_function(function_id: str, body: AllocateBody) -> dict:
 async def unallocate_function(function_id: str, layer: str) -> dict:
     fn = await _get_or_404(function_id)
     _check_layer(layer)
+    if layer == "SA":
+        for a in await repo.list_allocations_by_function(function_id):
+            if a.get("element_id"):
+                await repo.remove_secondary_allocation(function_id, a["element_id"])
     ok = await repo.unallocate_function(function_id, layer=layer)
     if not ok:
         raise HTTPException(404, f"Function {function_id} has no allocation at layer {layer}")
@@ -499,3 +508,153 @@ async def delete_realization(realization_id: str) -> dict:
     if not ok:
         raise HTTPException(404, f"Realization {realization_id} not found")
     return {"id": realization_id, "deleted": True}
+
+
+# ─── Wave 3 (3.R1): bulk import ───
+
+class FunctionImportBody(BaseModel):
+    document: Any                                  # functions.yaml (dict) or its text, or a list of functions
+    element_map: dict[str, str] | None = None      # element code (PAY, SSEG …) -> element id
+    link_requirements: bool = True                 # function_codes of the requirements -> satisfies
+
+
+def _parse_function_document(doc: Any) -> dict:
+    import yaml
+    if isinstance(doc, (bytes, bytearray)):
+        doc = doc.decode("utf-8-sig")
+    if isinstance(doc, str):
+        doc = yaml.safe_load(doc)
+    if isinstance(doc, list):
+        doc = {"functions": doc}
+    if not isinstance(doc, dict) or not isinstance(doc.get("functions"), list):
+        raise HTTPException(422, "the document has no 'functions' list")
+    return doc
+
+
+@router.post("/studies/{study_id}/functions/import")
+async def import_functions(study_id: str, body: FunctionImportBody) -> dict:
+    """One call for a whole functional architecture (3.R1): the function tree (``functions``:
+    ``id``, ``name``, ``parent``, ``depth``, ``description``, ``leaf``, ``allocation`` element
+    codes), the enabling processes (``enabling_processes``, kind ``process``) and the functional
+    exchanges (``functional_interfaces``: ``from``, ``to``, ``item``). Functions are upserted by
+    code, so a second import changes nothing. Element codes are resolved by ``element_map``, then
+    by name (``services.requirement_queries.resolve_element_code``); the function keeps every
+    element it is allocated to. The requirements' ``function_codes`` then become ``satisfies``
+    relations."""
+    import time
+    from ..services import requirement_queries as rq
+    from .elements import _elements
+    from .studies import get_study_store
+
+    t0 = time.perf_counter()
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    doc = _parse_function_document(body.document)
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    seats = {str(e.get("id")): e.get("owner_seat") for e in doc.get("elements") or [] if isinstance(e, dict)}
+    emap = dict(body.element_map or {})
+    resolved: dict[str, str | None] = {}
+    errors: list[str] = []
+
+    def eid(code: str) -> str | None:
+        if code not in resolved:
+            resolved[code] = rq.resolve_element_code(code, elements, emap)
+        return resolved[code]
+
+    rows: list[dict] = []
+    seen: set[str] = set()
+    raw = [f for f in doc["functions"] if isinstance(f, dict)]
+    for f in sorted(raw, key=lambda x: int(x.get("depth") or 1)):
+        code = str(f.get("id") or f.get("code") or "").strip()
+        if not code or not str(f.get("name") or "").strip():
+            errors.append(f"function without id or name: {f!r:.80}")
+            continue
+        if code in seen:
+            errors.append(f"duplicate function id {code}")
+            continue
+        seen.add(code)
+        acodes = [str(c) for c in (f.get("allocation") or []) if c]
+        leaf = bool(f.get("leaf", not f.get("children")))
+        ids = [e for e in (eid(c) for c in acodes) if e] if leaf else []
+        rows.append({"code": code, "name": str(f["name"]).strip(), "description": f.get("description") or "",
+                     "parent_code": f.get("parent"), "level": int(f.get("depth") or 1), "is_leaf": leaf,
+                     "function_type": "function",
+                     "position_responsible": seats.get(acodes[0]) if acodes else None,
+                     "element_ids": list(dict.fromkeys(ids)), "allocation_codes": acodes if leaf else [],
+                     "extra": {"union_allocation_codes": acodes} if not leaf else {}})
+    for p in doc.get("enabling_processes") or []:
+        code = str(p.get("id") or "").strip()
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        rows.append({"code": code, "name": str(p.get("name") or code), "description": p.get("reference") or "",
+                     "parent_code": None, "level": 1, "is_leaf": True, "function_type": "process",
+                     "position_responsible": None, "element_ids": [], "allocation_codes": [],
+                     "extra": {"reference": p.get("reference")}})
+    for r in rows:
+        if r["parent_code"] and r["parent_code"] not in seen:
+            errors.append(f"{r['code']}: parent {r['parent_code']} is not in the document")
+    if errors:
+        raise HTTPException(422, {"errors": errors[:50]})
+    exchanges = [{"from_code": str(x.get("from")), "to_code": str(x.get("to")), "item": x.get("item")}
+                 for x in doc.get("functional_interfaces") or [] if isinstance(x, dict)]
+    try:
+        rep = await repo.bulk_import(study_id, rows, exchanges)
+    except ValueError as exc:
+        raise _map_error(exc)
+    links = await rq.link_function_requirements(study_id) if body.link_requirements else None
+    unresolved = sorted(c for c, v in resolved.items() if v is None)
+    leaves = [r for r in rows if r["is_leaf"] and r["function_type"] == "function"]
+    report = {
+        "study_id": study_id, **{k: v for k, v in rep.items() if k != "id_map"},
+        "functions": sum(1 for r in rows if r["function_type"] == "function"),
+        "processes": sum(1 for r in rows if r["function_type"] == "process"),
+        "by_depth": {str(d): sum(1 for r in rows if r["function_type"] == "function" and r["level"] == d)
+                     for d in sorted({r["level"] for r in rows if r["function_type"] == "function"})},
+        "leaves": len(leaves), "leaves_allocated": sum(1 for r in leaves if r["element_ids"]),
+        "element_map": {c: v for c, v in resolved.items() if v}, "unresolved_elements": unresolved,
+        "requirement_links": links, "id_map": rep["id_map"], "seconds": round(time.perf_counter() - t0, 3),
+    }
+    await broadcast_mutation(study_id, "functions_imported", "function", study_id,
+                             {k: report[k] for k in ("created", "updated", "unchanged")})
+    return report
+
+
+class SecondaryAllocationBody(BaseModel):
+    element_id: str
+
+
+@router.post("/functions/{function_id}/allocate/also")
+async def allocate_function_also(function_id: str, body: SecondaryAllocationBody) -> dict:
+    """Allocate a function to one more element (wave 3: a function may sit on several)."""
+    fn = await _get_or_404(function_id)
+    if not _element_exists(body.element_id):
+        raise HTTPException(400, f"Element {body.element_id} not found")
+    if (_study_of_element(body.element_id) or fn["study_id"]) != fn["study_id"]:
+        raise HTTPException(400, "Element belongs to a different study")
+    if not await repo.list_allocations_by_function(function_id):
+        alloc = await repo.allocate_function(fn["study_id"], function_id, body.element_id)
+    updated = await repo.add_secondary_allocation(function_id, body.element_id)
+    allocs = [_decorate_allocation(a) for a in await repo.list_allocations_by_function(function_id)]
+    await broadcast_mutation(fn["study_id"], "function_allocated", "function", function_id, {"allocations": allocs})
+    return {"function": updated, "allocations": allocs}
+
+
+@router.delete("/functions/{function_id}/allocate/also/{element_id}")
+async def unallocate_function_also(function_id: str, element_id: str) -> dict:
+    fn = await _get_or_404(function_id)
+    removed = await repo.remove_secondary_allocation(function_id, element_id)
+    primary = [a for a in await repo.list_allocations_by_function(function_id) if not a.get("secondary")]
+    if primary and primary[0].get("element_id") == element_id:
+        rest = [e for e in ((await repo.get_function(function_id)) or {}).get("external_ids", {}).get("allocation") or []
+                if e != element_id]
+        if rest:
+            await repo.allocate_function(fn["study_id"], function_id, rest[0])
+        else:
+            await repo.unallocate_function(function_id)
+        removed = True
+    if not removed:
+        raise HTTPException(404, f"Function {function_id} is not allocated to {element_id}")
+    allocs = [_decorate_allocation(a) for a in await repo.list_allocations_by_function(function_id)]
+    await broadcast_mutation(fn["study_id"], "function_unallocated", "function", function_id, {"allocations": allocs})
+    return {"function_id": function_id, "allocations": allocs}

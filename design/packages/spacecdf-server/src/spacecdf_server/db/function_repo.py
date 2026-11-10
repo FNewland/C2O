@@ -91,7 +91,12 @@ async def load_all_function_ports(study_id: str | None = None) -> dict[str, dict
 
 
 async def load_all_function_allocations(study_id: str | None = None) -> dict[str, dict]:
-    return await _load_all(FunctionAllocationRow, study_id, FunctionAllocationRow.study_id)
+    """Allocation rows by id, plus the secondary allocations of multi-element functions (wave 3)."""
+    out = await _load_all(FunctionAllocationRow, study_id, FunctionAllocationRow.study_id)
+    fns = await _load_all(FunctionRow, study_id, FunctionRow.study_id)
+    for a in _secondary_allocations(fns, list(out.values())):
+        out[a["id"]] = a
+    return out
 
 
 async def load_all_functional_exchanges(study_id: str | None = None) -> dict[str, dict]:
@@ -239,15 +244,24 @@ async def unallocate_function(function_id: str, layer: str = "SA") -> bool:
 
 
 async def list_allocations_by_study(study_id: str) -> list[dict]:
-    return await list_rows(FunctionAllocationRow, FunctionAllocationRow.study_id == study_id)
+    """Every allocation of the study, the secondary ones of multi-element functions included."""
+    return await all_allocations_by_study(study_id)
 
 
 async def list_allocations_by_function(function_id: str) -> list[dict]:
-    return await list_rows(FunctionAllocationRow, FunctionAllocationRow.function_id == function_id)
+    primary = await list_rows(FunctionAllocationRow, FunctionAllocationRow.function_id == function_id)
+    fn = await get_function(function_id)
+    return primary + (_secondary_allocations([fn], primary) if fn else [])
 
 
 async def list_allocations_by_element(element_id: str) -> list[dict]:
-    return await list_rows(FunctionAllocationRow, FunctionAllocationRow.element_id == element_id)
+    primary = await list_rows(FunctionAllocationRow, FunctionAllocationRow.element_id == element_id)
+    from ..routers.elements import _elements
+    sid = (_elements.get(element_id) or {}).get("study_id")
+    if not sid:
+        return primary
+    fns = await list_rows(FunctionRow, FunctionRow.study_id == sid)
+    return primary + [a for a in _secondary_allocations(fns, primary) if a["element_id"] == element_id]
 
 
 # ── Functional exchanges ────────────────────────────────────────────────
@@ -342,3 +356,171 @@ async def list_realizations_for(kind: str, entity_id: str) -> list[dict]:
             and_(RealizationRow.target_kind == kind, RealizationRow.target_id == entity_id),
         ),
     )
+
+
+# ── Wave 3 (3.R1): several elements per function, bulk import ───────────
+#
+# ``function_allocations`` is unique per (function, layer), so a function allocated to several
+# elements (v2: 25 of the 72 leaves) keeps its first element as the allocation row and the
+# others in ``external_ids["allocation"]`` (the full list, first first). The readers below serve
+# the others as allocation dicts with ``secondary: True``, so every consumer (tree, diagrams,
+# export section, analysis context) sees each element.
+
+def _secondary_allocations(fns: list[dict] | dict[str, dict], primary: list[dict]) -> list[dict]:
+    have = {(a.get("function_id"), a.get("element_id")) for a in primary}
+    out: list[dict] = []
+    rows = fns.values() if isinstance(fns, dict) else fns
+    for f in rows:
+        if f.get("deleted_at"):
+            continue
+        ext = f.get("external_ids") or {}
+        for eid in ext.get("allocation") or []:
+            if eid and (f["id"], eid) not in have:
+                have.add((f["id"], eid))
+                out.append({"id": f"{f['id']}~{eid}"[:64], "study_id": f.get("study_id"), "function_id": f["id"],
+                            "element_id": eid, "layer": "SA", "secondary": True, "created_at": f.get("created_at")})
+    return out
+
+
+async def add_secondary_allocation(function_id: str, element_id: str) -> dict:
+    """Allocate ``function_id`` to one more element (kept in ``external_ids["allocation"]``)."""
+    factory = get_session_factory()
+    async with factory() as session:
+        row = await get_row(session, FunctionRow, function_id)
+        if row is None:
+            raise ValueError(f"Function '{function_id}' not found")
+        ext = dict(row.external_ids_json or {})
+        lst = [e for e in (ext.get("allocation") or []) if e]
+        if element_id not in lst:
+            lst.append(element_id)
+        ext["allocation"] = lst
+        row.external_ids_json = ext
+        await session.commit()
+        return row_to_dict(row)
+
+
+async def remove_secondary_allocation(function_id: str, element_id: str) -> bool:
+    factory = get_session_factory()
+    async with factory() as session:
+        row = await get_row(session, FunctionRow, function_id)
+        if row is None:
+            return False
+        ext = dict(row.external_ids_json or {})
+        lst = [e for e in (ext.get("allocation") or []) if e]
+        if element_id not in lst:
+            return False
+        ext["allocation"] = [e for e in lst if e != element_id]
+        row.external_ids_json = ext
+        await session.commit()
+        return True
+
+
+async def all_allocations_by_study(study_id: str) -> list[dict]:
+    """Allocation rows plus the secondary allocations (wave 3)."""
+    primary = await list_rows(FunctionAllocationRow, FunctionAllocationRow.study_id == study_id)
+    fns = await list_rows(FunctionRow, FunctionRow.study_id == study_id)
+    return primary + _secondary_allocations(fns, primary)
+
+
+async def bulk_import(study_id: str, functions: list[dict], exchanges: list[dict]) -> dict:
+    """Upsert functions (by ``code`` = ``external_id``), their allocations and the functional
+    exchanges between them in one transaction (3.R1).
+
+    ``functions``: ``{code, name, description, parent_code, level, is_leaf, function_type,
+    position_responsible, element_ids, allocation_codes, extra}`` in parent-first order.
+    ``exchanges``: ``{from_code, to_code, item}``; each gets an ``out`` port on the source and an
+    ``in`` port on the target named after the item, and ``external_id = "<from>><to>:<item>"``.
+    Returns counts and the code → function id map."""
+    now = utcnow()
+    factory = get_session_factory()
+    created = updated = unchanged = 0
+    async with factory() as session:
+        rows = (await session.execute(select(FunctionRow).where(FunctionRow.study_id == study_id,
+                                                                 FunctionRow.deleted_at.is_(None)))).scalars().all()
+        by_code = {r.external_id: r for r in rows if r.external_id}
+        ids: dict[str, str] = {c: r.id for c, r in by_code.items()}
+        allocs = (await session.execute(select(FunctionAllocationRow).where(
+            FunctionAllocationRow.study_id == study_id))).scalars().all()
+        alloc_by_fn = {(a.function_id, a.layer): a for a in allocs}
+        for f in functions:
+            code = f["code"]
+            parent_id = ids.get(f.get("parent_code") or "") if f.get("parent_code") else None
+            ext = {**(f.get("extra") or {}), "code": code, "allocation": list(f.get("element_ids") or []),
+                   "allocation_codes": list(f.get("allocation_codes") or []), "origin": "import"}
+            want = {"name": f["name"][:255], "description": f.get("description") or "", "parent_id": parent_id,
+                    "layer": "SA", "function_type": f.get("function_type") or "function",
+                    "level": int(f.get("level") or 0), "is_leaf": bool(f.get("is_leaf")),
+                    "position_responsible": f.get("position_responsible"), "external_ids_json": ext}
+            row = by_code.get(code)
+            if row is None:
+                row = FunctionRow(id=new_id("fn"), study_id=study_id, external_id=code, created_at=now,
+                                  updated_at=now, version=1, **want)
+                session.add(row)
+                by_code[code] = row
+                ids[code] = row.id
+                created += 1
+            else:
+                diff = [k for k, v in want.items() if getattr(row, k) != v]
+                if diff:
+                    for k in diff:
+                        setattr(row, k, want[k])
+                    row.version = (row.version or 1) + 1
+                    row.updated_at = now
+                    updated += 1
+                else:
+                    unchanged += 1
+            first = (f.get("element_ids") or [None])[0]
+            cur = alloc_by_fn.get((row.id, "SA"))
+            if first and cur is None:
+                cur = FunctionAllocationRow(id=new_id("fa"), study_id=study_id, function_id=row.id,
+                                            element_id=first, layer="SA", created_at=now)
+                session.add(cur)
+                alloc_by_fn[(row.id, "SA")] = cur
+            elif first and cur.element_id != first:
+                cur.element_id = first
+            elif not first and cur is not None and f.get("function_type") == "process":
+                await session.delete(cur)
+                alloc_by_fn.pop((row.id, "SA"), None)
+        await session.flush()
+
+        # functional exchanges (one out / in port pair per exchange)
+        fx_rows = (await session.execute(select(FunctionalExchangeRow).where(
+            FunctionalExchangeRow.study_id == study_id, FunctionalExchangeRow.deleted_at.is_(None)))).scalars().all()
+        fx_by_ext = {x.external_id: x for x in fx_rows if x.external_id}
+        fn_ids = [r.id for r in by_code.values()]
+        ports = (await session.execute(select(FunctionPortRow).where(
+            FunctionPortRow.function_id.in_(fn_ids), FunctionPortRow.deleted_at.is_(None)))).scalars().all() if fn_ids else []
+        port_by = {(p.function_id, p.direction, p.name): p for p in ports}
+
+        def port(fid: str, direction: str, name: str) -> FunctionPortRow:
+            p = port_by.get((fid, direction, name))
+            if p is None:
+                p = FunctionPortRow(id=new_id("fp"), function_id=fid, name=name, direction=direction,
+                                    exchange_item_ids_json=[], created_at=now)
+                session.add(p)
+                port_by[(fid, direction, name)] = p
+            return p
+
+        fx_created = fx_unchanged = 0
+        missing: list[str] = []
+        for x in exchanges:
+            a, b = ids.get(x["from_code"]), ids.get(x["to_code"])
+            if not a or not b:
+                missing.append(f"{x['from_code']}>{x['to_code']}")
+                continue
+            item = str(x.get("item") or "").strip()[:200] or f"{x['from_code']} to {x['to_code']}"
+            ext = f"{x['from_code']}>{x['to_code']}:{item}"[:128]
+            if ext in fx_by_ext:
+                fx_unchanged += 1
+                continue
+            po, pi = port(a, "out", item), port(b, "in", item)
+            await session.flush()
+            row = FunctionalExchangeRow(id=new_id("fx"), study_id=study_id, name=item[:255], from_port_id=po.id,
+                                        to_port_id=pi.id, exchange_item_ids_json=[], external_id=ext,
+                                        version=1, created_at=now, updated_at=now)
+            session.add(row)
+            fx_by_ext[ext] = row
+            fx_created += 1
+        await session.commit()
+    return {"created": created, "updated": updated, "unchanged": unchanged, "exchanges_created": fx_created,
+            "exchanges_unchanged": fx_unchanged, "exchanges_unresolved": missing, "id_map": ids}

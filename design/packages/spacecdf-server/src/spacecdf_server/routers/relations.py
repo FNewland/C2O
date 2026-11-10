@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from ..db import function_repo
@@ -485,3 +485,205 @@ async def ird_dataset(study_id: str) -> dict:
     power lines and bus nodes, from data."""
     from ..services.requirement_queries import ird_dataset as dataset
     return {"study_id": study_id, **(await dataset(study_id))}
+
+
+# ─── Wave 3 (3.R1): function ↔ requirement coverage and the function picker ───
+
+@router.get("/studies/{study_id}/requirements/function-coverage")
+async def requirement_function_coverage(study_id: str) -> dict:
+    """Leaves without a requirement, requirements without a function or process, and rows
+    allocated where none of their functions is (warning). SRR-EC-12 and PRR-EC-03 read it."""
+    from ..services.requirement_queries import function_coverage
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    return await function_coverage(study_id)
+
+
+@router.get("/studies/{study_id}/requirements/function-links")
+async def requirement_function_links(study_id: str) -> dict:
+    """Requirement id → the functions (and processes) that satisfy it, for the Requirements
+    table's function column: ``{links: {req_id: [{id, code, name, kind}]}, functions: [...]}``."""
+    from ..db import function_repo
+    fns = {f["id"]: f for f in await function_repo.list_functions_by_study(study_id)}
+    links: dict[str, list[dict]] = {}
+    for rel in await repo.list_relations_by_study(study_id, kind="satisfies"):
+        if rel.get("source_kind") == "function" and rel.get("target_kind") == "requirement":
+            f, r = rel["source_id"], rel["target_id"]
+        elif rel.get("source_kind") == "requirement" and rel.get("target_kind") == "function":
+            f, r = rel["target_id"], rel["source_id"]
+        else:
+            continue
+        fn = fns.get(f)
+        if fn is None:
+            continue
+        lst = links.setdefault(r, [])
+        if not any(x["id"] == f for x in lst):
+            lst.append({"id": f, "code": fn.get("external_id"), "name": fn.get("name"),
+                        "kind": "process" if fn.get("function_type") == "process" else "function"})
+    for lst in links.values():
+        lst.sort(key=lambda x: _code_key(x.get("code") or x.get("name") or ""))
+    funcs = sorted(({"id": f["id"], "code": f.get("external_id"), "name": f.get("name"), "level": f.get("level"),
+                     "kind": "process" if f.get("function_type") == "process" else "function",
+                     "is_leaf": bool(f.get("is_leaf"))} for f in fns.values()),
+                   key=lambda x: (x["kind"] == "process", _code_key(x.get("code") or x.get("name") or "")))
+    return {"study_id": study_id, "links": links, "functions": funcs}
+
+
+def _code_key(code: str) -> tuple:
+    import re as _re
+    return tuple((0, int(p)) if p.isdigit() else (1, p) for p in _re.split(r"[.\-]", str(code)))
+
+
+class FunctionLinksBody(BaseModel):
+    function_ids: list[str]
+
+
+@router.put("/requirements/{requirement_id}/functions")
+async def put_requirement_functions(requirement_id: str, body: FunctionLinksBody) -> dict:
+    """The function picker: the functions (or processes) that satisfy this requirement become
+    exactly ``function_ids``; the row's ``function_codes`` follows."""
+    from ..db.requirement_repo import db_update_requirement
+    from ..services.requirement_queries import set_requirement_functions
+    from .requirements import _requirements, ensure_requirements_loaded
+    await ensure_requirements_loaded()
+    req = _requirements.get(requirement_id)
+    if req is None or req.get("status") == "retired":
+        raise HTTPException(404, f"Requirement {requirement_id} not found")
+    try:
+        res = await set_requirement_functions(req["study_id"], req, list(dict.fromkeys(body.function_ids)))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    req["function_codes"] = res["function_codes"] or None
+    await db_update_requirement(requirement_id, req)
+    from ._arcadia_events import broadcast_mutation
+    await broadcast_mutation(req["study_id"], "requirement_updated", "requirement", requirement_id, req)
+    return {"requirement_id": requirement_id, **res}
+
+
+# ─── Wave 3 (3.R2): threshold ↔ computed value binding ───
+
+@router.get("/studies/{study_id}/requirements/bindings")
+async def requirement_bindings(study_id: str) -> dict:
+    """The "checked against" column: per row with a numeric threshold, its binding, the proposal
+    (from ``budget_ref``, unit and keywords) and the compliance verdict; the catalogue of figures
+    a threshold can be bound to, with their current value."""
+    from ..services.threshold_binding import binding_rows
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    return await binding_rows(study_id)
+
+
+class AcceptBindingsBody(BaseModel):
+    requirement_ids: list[str] | None = None     # None: every proposed row
+
+
+@router.post("/studies/{study_id}/requirements/bindings/accept")
+async def accept_requirement_bindings(study_id: str, body: AcceptBindingsBody, request: Request) -> dict:
+    from ..services.threshold_binding import accept
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    return await accept(study_id, body.requirement_ids, by=await _person(request, study_id))
+
+
+class BindingBody(BaseModel):
+    path: str | None = None                      # None clears the binding
+
+
+@router.put("/requirements/{requirement_id}/binding")
+async def put_requirement_binding(requirement_id: str, body: BindingBody, request: Request) -> dict:
+    """Bind a row by hand to a catalogue figure (or an ``el:`` element parameter), or clear it."""
+    from ..services.threshold_binding import CATALOGUE, bind
+    from .requirements import _requirements, ensure_requirements_loaded
+    await ensure_requirements_loaded()
+    req = _requirements.get(requirement_id)
+    if req is None or req.get("status") == "retired":
+        raise HTTPException(404, f"Requirement {requirement_id} not found")
+    path = (body.path or "").strip() or None
+    if path and path not in CATALOGUE and not path.startswith("el:") and "." not in path:
+        raise HTTPException(422, f"unknown figure {path!r}")
+    await bind(req, path, source="manual", by=await _person(request, req["study_id"]))
+    from ._arcadia_events import broadcast_mutation
+    await broadcast_mutation(req["study_id"], "requirement_updated", "requirement", requirement_id, req)
+    return req
+
+
+async def _person(request: Request, study_id: str) -> str:
+    try:
+        from ..seats.service import seat_ctx
+        ctx = await seat_ctx(request, study_id)
+        return ctx.person.name if ctx and ctx.person else ""
+    except Exception:  # noqa: BLE001 — no seats: anonymous
+        return ""
+
+
+# ─── Wave 3 (3.R3): allocation requirements in step with the ledger (AR-01) ───
+
+@router.get("/studies/{study_id}/requirements/allocation-sync")
+async def allocation_sync_status(study_id: str) -> dict:
+    """Per allocation-ledger line, the requirement that covers it and its state (covered,
+    uncovered, stale, nil), and the rows whose line was deleted."""
+    from ..services.allocation_requirements import status
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    return await status(study_id)
+
+
+@router.post("/studies/{study_id}/requirements/allocation-sync")
+async def allocation_sync_run(study_id: str) -> dict:
+    """Apply AR-01: propose ``AR-*`` rows for uncovered lines, mark covering rows stale or
+    retired (A's ledger routes call the same service after each change)."""
+    from ..services.allocation_requirements import sync
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    return await sync(study_id)
+
+
+class AllocationFlagBody(BaseModel):
+    action: str                                   # accept | dismiss
+
+
+@router.post("/requirements/{requirement_id}/allocation-sync")
+async def allocation_flag_resolve(requirement_id: str, body: AllocationFlagBody) -> dict:
+    from ..services.allocation_requirements import resolve
+    from .requirements import _requirements, ensure_requirements_loaded
+    await ensure_requirements_loaded()
+    req = _requirements.get(requirement_id)
+    if req is None:
+        raise HTTPException(404, f"Requirement {requirement_id} not found")
+    try:
+        req = await resolve(req, body.action)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc))
+    from ._arcadia_events import broadcast_mutation
+    await broadcast_mutation(req["study_id"], "requirement_updated", "requirement", requirement_id, req)
+    return req
+
+
+# ─── Wave 3 (3.R4): the evidence the wave-3 gate criteria read ───
+
+@router.get("/studies/{study_id}/gate-evidence")
+async def gate_evidence(study_id: str) -> dict:
+    """Collect (and keep for the gate evaluation) the wave-3 evidence of the study: function
+    coverage, threshold-binding values, ICD issue control, allocation ledger and its covering
+    requirements, SE deliverables, validation coverage, logbook decisions. Returns a summary."""
+    from ..services.gate_evaluator import collect_evidence
+    from .studies import get_study_store
+    if get_study_store().get(study_id) is None:
+        raise HTTPException(404, f"Study {study_id} not found")
+    ev = await collect_evidence(study_id)
+    cov = ev.get("function_coverage") or {}
+    return {"study_id": study_id,
+            "function_coverage": {k: cov.get(k) for k in ("functions", "leaves", "leaves_allocated", "requirements",
+                                                         "requirements_with_function")} if cov else None,
+            "binding_values": len(ev.get("binding_values") or {}),
+            "icds": (ev.get("icds") or {}).get("counts"),
+            "ledger_lines": len(ev.get("ledger") or []) if ev.get("ledger") is not None else None,
+            "allocation_requirements": (ev.get("allocation_requirements") or {}).get("counts"),
+            "decisions_recorded": sorted(ev["decisions_recorded"]) if ev.get("decisions_recorded") is not None else None,
+            "se_deliverables": ev.get("se_deliverables") is not None,
+            "validation": ev.get("validation") is not None}
