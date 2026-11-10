@@ -266,7 +266,8 @@ async def test_conops_from_the_modes_tab(client):
     assert sum(p["duration_days"] for p in view["phases"][:3]) == 90       # payload commissioning ends on day 90
     assert len(view["modes"]) == len(md["modes"])
     assert len(view["transitions"]) >= len(md["transitions_added"])
-    assert view["data_flow"]["status"] == "open" and view["data_flow"]["downlink_rate_bps"] == 38400
+    # agent H's data budget is merged, so the data-flow section is filled (wave 2 hook)
+    assert view["data_flow"]["status"] in ("open", "ready") and view["data_flow"]["downlink_rate_bps"] == 38400
     assert view["flight_rules"] and view["flight_rules"][0]["id"] == "FR-01"
     # W7.01: a mission-definition change that regenerates the auto ConOps keeps the phases
     r = await client.patch(f"/api/studies/{sid}/mission", json={"design_lifetime_years": 3.5})
@@ -280,7 +281,9 @@ async def test_conops_from_the_modes_tab(client):
         assert m["name"] in text
     for bad in ("Safe Mode 19.0 W", "Downlink 30.0 W", "Nominal 876"):
         assert bad not in text
-    assert "FR-01" in text and "Open item" in text and "Sail deploy" in text
+    assert "FR-01" in text and "Sail deploy" in text
+    # the data-flow section is an open item only until the data budget exists
+    assert ("Open item" in text) == (view["data_flow"]["status"] == "open")
     assert "MIS-DIS-01" in text                                               # EOL operations cite the disposal rows
     fr = _text((await client.post(f"/api/studies/{sid}/conops/document?lang=fr")).content)
     assert "Phases de la mission" in fr and "Règles de vol" in fr
