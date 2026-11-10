@@ -1075,6 +1075,10 @@ async def study_design_inputs(ctx: AnalysisContext) -> dict[str, dict[str, Any]]
     if bat and "parts" in bat_src:
         put("power.battery_capacity_wh", bat, "Wh", bat_src)
     wm, wsm, lim = k("mass.with_maturity_kg"), k("mass.with_system_margin_kg"), k("mass.limit_kg")
+    # the roll-up reads the baseline parameters only: a run scoped to a design option keeps the
+    # agents' own mass (the option's overrides would otherwise be hidden by the baseline roll-up)
+    if getattr(ctx, "option_id", None):
+        wm = None
     if wm:
         put("mass.study_with_maturity_kg", wm, "kg", "roll-up")
         put("mass.study_cbe_kg", k("mass.cbe_kg"), "kg", "roll-up")

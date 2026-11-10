@@ -189,6 +189,9 @@ async def run_design_loop(study_id: str, request: DesignRunRequest | None = None
             study_inputs = {}
         initial_state = seed_design_state(ctx, requirements=study.requirements,
                                           conops=conops_from_modes(ctx, study.conops), study_inputs=study_inputs)
+        if option_id:   # the roll-up is the baseline's: an option run keeps the agents' own mass
+            for k in [k for k in initial_state.parameters if k.startswith("mass.study_")]:
+                del initial_state.parameters[k]
         # wave 3 (3.H1): the study's data budget (science product set, capacity of the union of the
         # passes, closure) feeds the tier-1 data and link agents as sticky study figures
         try:
