@@ -73,8 +73,10 @@ async def test_w2_s1_imports_the_whole_baseline_with_every_field(client):
     for r in ROWS:   # W2.02: every field equal on 216/216 rows
         assert _tool_fields(tool[r["id"]], code_of, name_of) == _yaml_fields(r), r["id"]
     # W2.02: IOV stage, D never stored; W2.09: SEG-US rows on the science (user) segment
+    # (integration: objective rows without a stage are closed out in orbit, constraints at AR)
     assert sum(1 for q in reqs if q["verification_phase"] == "IOV") == sum(
-        1 for r in ROWS if r["verification_phase"] == "IOV")
+        1 for r in ROWS if r["verification_phase"] == "IOV") + sum(
+        1 for o in BASE["objectives"] if not o.get("verification_phase") and o.get("priority") != "constraint")
     assert all(name_of[tool[c]["element_id"]] == "Science Segment" for c in tool if c.startswith("SEG-US"))
     # every requirement below the needs has a parent; 99 rows have several, all shown
     assert all(q["parent_ids"] for q in reqs if q["level"] != "stakeholder")

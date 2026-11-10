@@ -555,6 +555,12 @@ def data_chain(modes: list[Any], *, period_s: float, link_rate_bps: float, stati
         "downlink": {"rate_bps": link_rate_bps, "protocol_efficiency": round(eff_used, 4), "contact_min_per_day": round(contact_min, 2),
                      "sum_of_stations_min_per_day": round(contact_sum, 2), "contact_basis": cap_src,
                      "capacity_gb_per_day": round(cap_gb_day, 4), "stations": st_rows,
+                     # the figure above is what is LEFT for stored data after the real-time HK of the
+                     # passes; the data budget's total channel capacity is beside it (labelled in the UI)
+                     "capacity_basis": "after_realtime_hk" if rt_mb > 0 else "total",
+                     "total_capacity_mb_per_day": round(float(budget["capacity"]["capacity_mb_per_day"]), 2)
+                     if budget and budget.get("capacity") else round(cap_gb_day * 1000.0, 2),
+                     "realtime_hk_mb_per_day": round(rt_mb, 3),
                      "usable_min_per_day": (budget or {}).get("capacity", {}).get("usable_min_per_day")},
         "backlog_growth_gb_per_day": round(growth, 4), "days_to_full": days_to_full,
         "checks": checks,

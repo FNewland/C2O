@@ -76,6 +76,7 @@ const KEYS_1 = [
   'Pass plan approved',
   'Schedule and antenna pointing sent',
   'AOS: carrier lock ({{band}}-band)',
+  'AOS: carrier lock ({{band}}-band, {{rate}})',
   'Beacon and housekeeping TM',
   'TC uplink: time-tagged plan',
   'Payload data dump at {{rate}}',

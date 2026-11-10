@@ -289,8 +289,11 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
     if op:
         D.source("data budget (day in the life)")
         pass_min = float(op.get("minutes") or pass_min)
-        rate = op.get("rate_bps") or rate
-        band = op.get("band") or band
+        # the mission's design link case first (agent D), the data budget's link only when the
+        # mission states none; both come from the same link inputs, so normally they agree
+        if not rate or link_src == "fallback":
+            rate = op.get("rate_bps") or rate
+        band = band or op.get("band")
         contact_src = prov("derived", f"pass {op.get('index')}", note="day in the life (data budget)")
     else:
         try:
@@ -315,7 +318,8 @@ def ops_pass(d: DiagramData, **_: Any) -> dict:
         steps = [
             ("ops", -15.0, 6.0, T("Pass plan approved"), None),
             ("mcc", -8.0, 4.0, T("Schedule and antenna pointing sent"), None),
-            ("gs", 0.0, max(acq, 0.5), T("AOS: carrier lock ({{band}}-band)", band=band or "?"), None),
+            ("gs", 0.0, max(acq, 0.5), T("AOS: carrier lock ({{band}}-band, {{rate}})", band=band or "?",
+                                         rate=_rate_txt(rate)), None),
             ("sc", acq, usable, T("VC0 real-time HK, {{profile}} profile ({{bps}} bit/s)", profile=op.get("rt_profile") or "FULL",
                                   bps=f"{float(op.get('rt_bps') or 0):.0f}"), None),
             ("mcc", acq + 0.3, 1.5, T("TC uplink: time-tagged plan"), None),

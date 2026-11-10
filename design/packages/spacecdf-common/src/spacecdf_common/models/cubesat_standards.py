@@ -13,6 +13,8 @@ References:
 """
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -154,6 +156,8 @@ def normalise_protocol(name: Any) -> str | None:
     key = name.strip().upper()
     if key in _PROTOCOL_ALIASES:
         return _PROTOCOL_ALIASES[key]
+    if re.match(r"^(MIPI[\s-]+)?CSI-?2\b", key):        # "MIPI CSI-2 (4 lanes)" -> CSI-2
+        return "CSI-2"
     return name.strip()
 
 

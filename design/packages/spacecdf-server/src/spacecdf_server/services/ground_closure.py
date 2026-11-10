@@ -185,6 +185,16 @@ def _link_band(freq_ghz: float) -> str:
     return _band_key(name.split()[0]) if name else "X"
 
 
+def _path_source(ctx: AnalysisContext, path: str) -> str:
+    """Provenance label of a flat ``link.*`` path: the path itself when the model states it, or
+    where ``analysis_context._derive_link`` took it from (the TT&C element or a link case)."""
+    link = getattr(ctx, "link", None) or {}
+    if path in (link.get("derived_paths") or ()):
+        src = str(link.get("source") or "")
+        return "ttc element" if src.startswith("ttc element") else (src or path)
+    return path
+
+
 def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
     sc_class = str(getattr(getattr(ctx.study, "requirements", None), "spacecraft_class", "small") or "small").lower()
     d_freq, d_pow, _d_diam, d_gain = CLASS_LINK_DEFAULTS.get(sc_class, CLASS_LINK_DEFAULTS["small"])
@@ -192,7 +202,7 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
 
     freq = _pick(ctx, "link.frequency_ghz", "link.downlink_frequency_ghz")
     if freq is not None:
-        src["frequency"] = "link.frequency_ghz"
+        src["frequency"] = _path_source(ctx, "link.frequency_ghz")
     if freq is None:
         freq = _perf_num(ctx, "ttc", "frequency_ghz", "downlink_frequency_ghz")
         if freq is not None:
@@ -212,14 +222,14 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
         src["eirp"] = "link.eirp_dbw" if "link.eirp_dbw" in ctx.flat or "link.eirp_dbw" in ctx.latest_design else "ttc element"
     else:
         tx_power = _pick(ctx, "link.tx_power_w")
-        src["tx_power"] = "link.tx_power_w"
+        src["tx_power"] = _path_source(ctx, "link.tx_power_w")
         if tx_power is None:
             tx_power = _perf_num(ctx, "ttc", "tx_power_w", "power_tx_w", "rf_power_w")
             src["tx_power"] = "ttc element"
         if tx_power is None:
             tx_power, src["tx_power"] = d_pow, f"class default ({sc_class})"
         gain = _pick(ctx, "link.tx_antenna_gain_dbi", "link.antenna_gain_dbi")
-        src["tx_gain"] = "link.tx_antenna_gain_dbi"
+        src["tx_gain"] = _path_source(ctx, "link.tx_antenna_gain_dbi")
         if gain is None:
             gain = _perf_num(ctx, "ttc", "gain_dbi", "antenna_gain_dbi", "tx_antenna_gain_dbi")
             src["tx_gain"] = "ttc element"
@@ -228,7 +238,7 @@ def _link_inputs(ctx: AnalysisContext, warnings: list[str]) -> _LinkInputs:
         line = 1.0
 
     rate = _pick(ctx, "link.downlink_rate_bps")
-    src["downlink_rate"] = "link.downlink_rate_bps"
+    src["downlink_rate"] = _path_source(ctx, "link.downlink_rate_bps")
     if rate is None:
         mbps = _pick(ctx, "link.downlink_rate_mbps", "link.data_rate_mbps")
         rate = mbps * 1e6 if mbps is not None else None
@@ -336,6 +346,40 @@ def _station_margin_db(link: _LinkInputs, gs: GroundStation, g_t_db_k: float | N
     return lb.downlink_margin_db, g_t_db_k
 
 
+def _case_margin(c: dict) -> float | None:
+    m = _num(c.get("margin_db"))
+    return m if m is not None else _num((c.get("results") or {}).get("margin_db"))
+
+
+def station_link_case(ctx: AnalysisContext, link: _LinkInputs, station_name: str) -> dict | None:
+    """The stored downlink case that states this station's margin (integration, wave 2): a case
+    in the link's band naming the station (else one for all sites), preferring the one at the
+    operational transmit power and rate, then the design case's coding, then the design case,
+    then display order. ``None`` when the study has no such case (the model margin is used)."""
+    from ..routers.link_budgets import _station_matches
+    cases = [c for c in (getattr(ctx, "link_cases", None) or [])
+             if c.get("direction") == "downlink" and _case_margin(c) is not None
+             and _num(c.get("frequency_mhz")) and _link_band(float(c["frequency_mhz"]) / 1000.0) == link.band
+             and _station_matches(c.get("station") or "", station_name)]
+    if not cases:
+        return None
+    design = next((c for c in (getattr(ctx, "link_cases", None) or [])
+                   if c.get("direction") == "downlink" and c.get("is_design_case")), {})
+
+    def close(a: Any, b: float) -> bool:
+        a = _num(a)
+        return a is not None and abs(a - b) <= 1e-6 * max(1.0, abs(b))
+
+    def rank(c: dict) -> tuple:
+        cs = (c.get("station") or "").strip().lower()
+        return (0 if cs and not cs.startswith("all") else 1,
+                0 if close(c.get("tx_power_w"), link.tx_power_w) else 1,
+                0 if close(c.get("data_rate_bps"), link.downlink_bps) else 1,
+                0 if (c.get("coding") or "") == (design.get("coding") or "") else 1,
+                0 if c.get("is_design_case") else 1, c.get("order") or 0)
+    return sorted(cases, key=rank)[0]
+
+
 def _pick_stations(ctx: AnalysisContext, warnings: list[str]) -> list[dict]:
     if ctx.ground_stations:
         return [_station_overlay(ctx, s) for s in ctx.ground_stations]
@@ -419,6 +463,15 @@ def network(ctx: AnalysisContext, warnings: list[str]) -> dict[str, Any]:
             margin, g_t = _station_margin_db(link, gs, _num(s.get("g_over_t_db_k")), orbit.altitude_km,
                                              row["contact_min_per_day"] * 60.0)
             row["margin_db"], row["g_t_db_k"] = round(margin, 2), round(g_t, 2)
+            row["margin_source"] = "station G/T model"
+            case = station_link_case(ctx, link, gs.name)
+            if case is not None:
+                # the stored link case of this site (its noise temperature, losses and coding) is
+                # the margin of record; the generic G/T model figure is kept beside it
+                row["model_margin_db"] = row["margin_db"]
+                margin = float(_case_margin(case))
+                row["margin_db"] = round(margin, 2)
+                row["margin_source"] = f"link_case:{case.get('name') or case.get('id')}"
             if margin < 0:
                 row["status"], row["reason"] = "excluded", f"link margin {margin:.1f} dB < 0 dB at {link.downlink_bps / 1e6:.2f} Mbps"
             elif margin < MARGIN_WARN_DB:
@@ -618,8 +671,21 @@ async def run_ground_segment(ctx: AnalysisContext) -> AnalysisOutput:
     per_station_data: dict[str, float] = {}
     for c in sched.contacts:
         per_station_data[c.station_id] = per_station_data.get(c.station_id, 0.0) + c.data_volume_mbit / 8000.0
+    # Two different per-station volumes (integration, wave 2): what the greedy schedule of the
+    # reported day actually routed through the station (shared with the other stations, overlaps
+    # given to one) and what the station could return on its own (the W4.05 contact table's
+    # "alone" figure: mean minutes x availability less acquisition, at the information rate).
+    from .data_budget import framing as _framing
+    fr = _framing([], link.downlink_bps)
     for r in rows:
         r["data_gb_per_day"] = round(per_station_data.get(r["station_id"], 0.0), 3)
+        r["data_mb_per_day_scheduled"] = round(per_station_data.get(r["station_id"], 0.0) * 1000.0, 2)
+        alone = 0.0
+        if r["status"] != "excluded":
+            alone = max(0.0, (float(r.get("contact_min_per_day") or 0.0) - float(r.get("passes_per_day") or 0.0)
+                              * fr["acquisition_s"] / 60.0) * fr["availability"]) * 60 * link.downlink_bps \
+                * fr["frame_efficiency"] / 8e6
+        r["data_mb_per_day_alone"] = round(alone, 2)
 
     # ── parameters
     P = out.parameters

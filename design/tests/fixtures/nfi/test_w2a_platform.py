@@ -54,7 +54,14 @@ async def test_empty_mission_link_uses_the_design_link_case(client, monkeypatch)
 
     gs = await _ground(client, s.study_id)
     assert gs["band"] == "UHF"
-    assert [st["status"] for st in gs["stations"]] == ["ok"] * 4, gs["stations"]
+    # every station is used; each margin is its stored link case (integration), so Ottawa's urban
+    # 700 K case (NUMBERS: ~0.4 dB) is "low_margin" and the northern rural sites are "ok"
+    lk = load("NUMBERS")["links"]
+    st = {x["name"]: x for x in gs["stations"]}
+    assert all(x["status"] in ("ok", "low_margin") for x in st.values()), gs["stations"]
+    assert st["GS Ottawa"]["margin_db"] == pytest.approx(lk["downlink_margin_db_10deg_rs"]["urban_700K_1W"], abs=0.3)
+    assert st["GS Ottawa"]["status"] == "low_margin" and st["GS Ottawa"]["margin_source"].startswith("link_case:DL Ottawa")
+    assert all(x["status"] == "ok" and x["margin_db"] > 3 for n, x in st.items() if n != "GS Ottawa")
 
 
 async def test_without_link_cases_the_ttc_band_is_used(client, monkeypatch):

@@ -137,6 +137,8 @@ def validate_record(data: dict) -> list[str]:
                     errs.append(f"assignment_overrides.{aid} must be an object")
                     continue
                 for k, v in fields.items():
+                    if k == "link_case":          # provenance tag written by the link-budget sync
+                        continue
                     if k not in OVERRIDABLE:
                         errs.append(f"assignment_overrides.{aid}.{k} cannot be overridden "
                                     f"(allowed: {', '.join(OVERRIDABLE)})")
@@ -429,8 +431,9 @@ def frequency_assignments(study: Any, elements: list[dict], overrides: dict | No
                     ul_design.get("data_rate_bps")) or 9600.0
     tx_w = first(getattr(link, "tx_power_w", None), p_radio.get("tx_power_w"), sub.get("tx_power_w"),
                  dl_design.get("tx_power_w"), (10 ** ((kbp.get("tx_power_dbm") or 30) / 10)) / 1000.0) or 1.0
-    sc_gain = first(getattr(link, "tx_antenna_gain_dbi", None), p_radio.get("antenna_gain_dbi"),
-                    sub.get("antenna_gain_dbi"))
+    # a gain may be negative (a near-omni UHF antenna at -3 dBi): any number, not only positive ones
+    sc_gain = any_num(getattr(link, "tx_antenna_gain_dbi", None), p_radio.get("antenna_gain_dbi"),
+                      sub.get("antenna_gain_dbi"), dl_design.get("tx_antenna_gain_dbi"))
     sc_gain = 0.0 if sc_gain is None else sc_gain
     line_loss = first(getattr(link, "tx_losses_db", None), dl_design.get("tx_losses_db")) or 1.0
     gs_gain = first(getattr(link, "rx_antenna_gain_dbi", None)) or 15.0
@@ -508,9 +511,17 @@ def frequency_assignments(study: Any, elements: list[dict], overrides: dict | No
         ov = (overrides or {}).get(row["id"]) or {}
         for k, v in ov.items():
             if k in OVERRIDABLE and v is not None and v != "":
-                row[k] = _num(v) if k in _NUMERIC_OVERRIDES else v
-                row.setdefault("overridden", []).append(k)
-        if row.get("overridden"):
+                val = _num(v) if k in _NUMERIC_OVERRIDES else v
+                cur = row.get(k)
+                same = (val == cur) if k not in _NUMERIC_OVERRIDES else (
+                    val is not None and _num(cur) is not None and abs(val - _num(cur)) < 1e-9)
+                row[k] = val
+                row.setdefault("overridden", []).append(k)       # the record carries the field
+                if not same or k == "eirp_dbw":
+                    row.setdefault("changed", []).append(k)
+        # a value the link-budget tool synced from this station's case (equal to the derived one)
+        # is recorded but does not change the basis: only a differing value makes it the record's
+        if row.get("changed"):
             row["basis"] = "licensing record"
         _radiated(row, alt)
     return out

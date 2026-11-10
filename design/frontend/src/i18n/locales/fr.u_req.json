@@ -81,5 +81,17 @@
   "Are the as-built mass properties within the launch interface limits?": "Les propriétés de masse telles que construites respectent-elles les limites de l’interface de lancement ?",
   "Is the spacecraft ready for delivery (launch provider documents accepted, delivery configuration recorded)?": "Le satellite est-il prêt à être livré (documents du fournisseur de lancement acceptés, configuration de livraison consignée) ?",
   "{{ok}}/{{total}} requirements have a verification method and a close-out stage; without: {{codes}}": "{{ok}}/{{total}} exigences ont une méthode de vérification et une étape de clôture ; sans : {{codes}}",
-  "All {{total}} requirements have a verification method and a close-out stage": "Les {{total}} exigences ont toutes une méthode de vérification et une étape de clôture"
+  "All {{total}} requirements have a verification method and a close-out stage": "Les {{total}} exigences ont toutes une méthode de vérification et une étape de clôture",
+  "{{answered}}/{{total}} must-answer position questions answered by the design; open: {{open}}": "{{answered}}/{{total}} questions obligatoires des postes ont une réponse dans la conception ; ouvertes : {{open}}",
+  "All {{total}} must-answer position questions answered by the design": "Les {{total}} questions obligatoires des postes ont toutes une réponse dans la conception",
+  "No position questions to check": "Aucune question de poste à vérifier",
+  "{{critical}} critical conflict(s) unresolved: {{codes}}": "{{critical}} conflit(s) critique(s) non résolu(s) : {{codes}}",
+  "No critical conflict unresolved ({{major}} major, {{other}} other open)": "Aucun conflit critique non résolu ({{major}} majeur(s), {{other}} autre(s) ouvert(s))",
+  "No model philosophy yet: propose the AIT models and test matrix": "Pas encore de philosophie des modèles : proposez les modèles AIT et la matrice d’essais",
+  "{{philosophy}} model philosophy: {{models}} model(s), {{tests}} test(s) covering {{reqs}} requirement(s)": "Philosophie des modèles {{philosophy}} : {{models}} modèle(s), {{tests}} essai(s) couvrant {{reqs}} exigence(s)",
+  "{{philosophy}} model philosophy with {{models}} model(s) but no test in the test matrix": "Philosophie des modèles {{philosophy}} avec {{models}} modèle(s) mais aucun essai dans la matrice d’essais",
+  "Lowest subsystem TRL {{trl}} ({{subsystem}}); {{low}} subsystem(s) below TRL {{min}}: {{names}}": "TRL de sous-système le plus bas {{trl}} ({{subsystem}}) ; {{low}} sous-système(s) sous le TRL {{min}} : {{names}}",
+  "Every subsystem at TRL {{min}} or above (lowest: {{subsystem}} at TRL {{trl}})": "Tous les sous-systèmes sont au TRL {{min}} ou plus (le plus bas : {{subsystem}} au TRL {{trl}})",
+  "No component has a TRL yet": "Aucun équipement n’a encore de TRL",
+  "{{ok}}/{{total}} subsystems have at least one component or a mass allowance": "{{ok}}/{{total}} sous-systèmes ont au moins un équipement ou une provision de masse"
 }

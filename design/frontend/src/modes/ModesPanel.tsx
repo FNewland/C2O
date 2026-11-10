@@ -480,8 +480,12 @@ function DataChainView({ sid }: { sid: string }) {
         </div>
         <span className="mdl-flow__arrow" aria-hidden="true">→</span>
         <div className="mdl-flow__box">
-          <span className="t-12 c-3">{t('Downlink capacity')}</span>
-          <span><span className="mono t-20 c-v">{fmtNum(dl.capacity_gb_per_day, 2)}</span> <span className="t-12 c-3">{t('GB/day')}</span></span>
+          <span className="t-12 c-3">{dl.capacity_basis === 'after_realtime_hk' ? t('Downlink capacity left for stored data') : t('Downlink capacity')}</span>
+          {dl.capacity_gb_per_day < 1
+            ? <span><span className="mono t-20 c-v">{fmtNum(dl.capacity_gb_per_day * 1000, 2)}</span> <span className="t-12 c-3">{t('MB/day')}</span></span>
+            : <span><span className="mono t-20 c-v">{fmtNum(dl.capacity_gb_per_day, 2)}</span> <span className="t-12 c-3">{t('GB/day')}</span></span>}
+          {dl.capacity_basis === 'after_realtime_hk' && dl.total_capacity_mb_per_day != null &&
+            <span className="t-12 c-3">{t('of {{total}} MB/day channel capacity (data budget)', { total: fmtNum(dl.total_capacity_mb_per_day, 2) })}</span>}
           <span className="t-12 c-3">{t('{{min}} min/day at {{rate}} Mbit/s ({{band}}-band) × {{eff}}', { min: fmtNum(dl.contact_min_per_day, 1),
             rate: fmtNum(dl.rate_bps / 1e6, 4), band: dl.band ?? '?', eff: dl.protocol_efficiency })}</span>
           {dl.contact_basis === 'union' && <span className="t-12 c-3">{t('union of the passes (the stations add up to {{sum}} min/day; one transmitter)', { sum: fmtNum(dl.sum_of_stations_min_per_day ?? 0, 1) })}</span>}

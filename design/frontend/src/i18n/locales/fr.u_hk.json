@@ -112,5 +112,12 @@
   "{{cls}} pass at {{local}} (local), {{min}} min ({{usable}} min usable) over {{station}}, max. elevation {{el}}°; channel {{ch}} MB: VC0 {{vc0}}, VC1 {{vc1}}, VC2 {{vc2}} MB": "Passage {{cls}} à {{local}} (heure locale), {{min}} min ({{usable}} min utiles) au-dessus de {{station}}, élévation max. {{el}}° ; canal {{ch}} Mo : VC0 {{vc0}}, VC1 {{vc1}}, VC2 {{vc2}} Mo",
   "Pass and channel split from the data budget (day in the life, pass plan); the seat steps are the C2O pass template": "Passage et répartition du canal tirés du bilan des données (journée type, plan des passages) ; les étapes des postes suivent le gabarit de passage C2O",
   "Daily closure {{case}}: {{margin}} %": "Bouclage quotidien {{case}} : {{margin}} %",
-  "{{demand}} MB/day of {{capacity}} MB/day downlink capacity (real-time HK, stored HK, science); same numbers as the Data budget page": "{{demand}} Mo/jour sur {{capacity}} Mo/jour de capacité descendante (HK temps réel, HK stockée, science) ; mêmes chiffres que la page Bilan de données"
+  "{{demand}} MB/day of {{capacity}} MB/day downlink capacity (real-time HK, stored HK, science); same numbers as the Data budget page": "{{demand}} Mo/jour sur {{capacity}} Mo/jour de capacité descendante (HK temps réel, HK stockée, science) ; mêmes chiffres que la page Bilan de données",
+  "What this station could return on its own (contact table)": "Ce que la station pourrait renvoyer seule (tableau des contacts)",
+  "MB/day alone": "Mo/jour seule",
+  "What the schedule of the reported day routed through this station": "Ce que la planification de la journée présentée fait passer par cette station",
+  "MB/day scheduled": "Mo/jour planifiés",
+  "Margin from {{source}}": "Marge tirée de {{source}}",
+  "Downlink capacity left for stored data": "Capacité de transmission restante pour les données stockées",
+  "of {{total}} MB/day channel capacity (data budget)": "sur {{total}} Mo/jour de capacité du canal (bilan de données)"
 }

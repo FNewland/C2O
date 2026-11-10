@@ -78,7 +78,11 @@ defaults:
   # Shared protocol chosen in this order (C2O default; CAN first because it is
   # multi-drop and robust, as harness_designer.py also assumed).
   protocol_priority: [CAN, I2C, RS422, RS485, UART, SPI, SpaceWire, MIL-STD-1553, LVDS, Ethernet, USB, analog]
-  payload_protocol_priority: [SpaceWire, LVDS, Ethernet, RS422, CAN, SPI, UART, I2C]
+  payload_protocol_priority: [SpaceWire, CSI-2, LVDS, Ethernet, RS422, CAN, SPI, UART, I2C]
+  # C2O default: the control channel that comes with a payload-only data interface, so the TM/TC
+  # bus to such a unit is that channel, not the data interface (MIPI CSI-2 cameras are configured
+  # over the camera control interface, CCI, which is I2C-compatible and on the same connector).
+  control_channels: {CSI-2: I2C}
   # C2O default: preferred regulated rail per consumer role / domain (first one the EPS offers wins).
   rail_preference:
     default: [5.0, 3.3, 12.0, 28.0]
@@ -251,9 +255,11 @@ roles:
     data: true              # deploy command and deployed-status feedback
     deployable: true
   optic:
-    label: {en: Lens or filter, fr: Objectif ou filtre}
+    label: {en: Lens, filter or optical bench, fr: Objectif, filtre ou banc optique}
     kb_categories: [payload_optic]
-    names: ['\blens\b', 'bandpass filter']
+    # passive optics (no power, no data): lenses, optical filters, the optical bench and baffles
+    names: ['\blens\b', 'bandpass filter', '(nir|swir|vnir|optical|spectral|band-?pass|interference) filter',
+            'filter \d+(/\d+)? ?nm', 'optical bench', 'baffle']
     powered: false
     data: false
   payload:

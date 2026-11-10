@@ -123,6 +123,19 @@ EVIDENCE_KEYS: tuple[str, ...] = (
     # wave 2 (W4.09): QR-EC-01
     "{{ok}}/{{total}} requirements have a verification method and a close-out stage; without: {{codes}}",
     "All {{total}} requirements have a verification method and a close-out stage",
+    # wave 2 integration: SRR-EC-04, 05, 07, 08 and the harness allowance of PDR-EC-04
+    "{{answered}}/{{total}} must-answer position questions answered by the design; open: {{open}}",
+    "All {{total}} must-answer position questions answered by the design",
+    "No position questions to check",
+    "{{critical}} critical conflict(s) unresolved: {{codes}}",
+    "No critical conflict unresolved ({{major}} major, {{other}} other open)",
+    "No model philosophy yet: propose the AIT models and test matrix",
+    "{{philosophy}} model philosophy: {{models}} model(s), {{tests}} test(s) covering {{reqs}} requirement(s)",
+    "{{philosophy}} model philosophy with {{models}} model(s) but no test in the test matrix",
+    "Lowest subsystem TRL {{trl}} ({{subsystem}}); {{low}} subsystem(s) below TRL {{min}}: {{names}}",
+    "Every subsystem at TRL {{min}} or above (lowest: {{subsystem}} at TRL {{trl}})",
+    "No component has a TRL yet",
+    "{{ok}}/{{total}} subsystems have at least one component or a mass allowance",
 )
 
 
@@ -308,6 +321,8 @@ def evaluate_gate(
     margin_gate: str | None = None,
     cdr: dict[str, Any] | None = None,
     rollup: dict[str, Any] | None = None,
+    conflicts: list[dict] | None = None,
+    ait: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all exit criteria for a gate and return structured results.
 
@@ -321,6 +336,8 @@ def evaluate_gate(
     orbit-average power and the rolled-up mass with EOL generation and the mass limit.
     ``requirements`` may carry ``parent_ids`` / ``objective_ids`` (routers/requirements.with_lists):
     further parents and objectives then count (W2.03).
+    ``conflicts``: the study's unresolved analysis conflicts (SRR-EC-05); ``ait``: ``{"models",
+    "tests"}`` of the AIT model philosophy (SRR-EC-07). Absent, those criteria are not evaluated.
 
     Returns::
 
@@ -365,7 +382,10 @@ def evaluate_gate(
         "data_budget": (cdr or {}).get("data_budget")
         or (design_params.get("_data_budget") if isinstance(design_params, dict) else None),
         "rollup": rollup or (design_params or {}).get("_rollup") if isinstance(design_params, dict) else rollup,
+        "conflicts": conflicts,
+        "ait": ait,
     }
+    _add_budget_params(ctx)
 
     # wave 2 (W4.09): the review-record items of QR / AR / FRR are evaluated with the RID log by
     # services/gate_reviews.post_cdr_criteria (routers/gates.py appends them)
@@ -735,6 +755,46 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                 _set(result, "pass", "All {{total}} requirements have a verification method and a close-out stage",
                      total=len(spec))
 
+    elif cid == "SRR-EC-04":
+        _positions_criterion(result, ctx)
+
+    elif cid == "SRR-EC-05":
+        conflicts = ctx.get("conflicts")
+        if conflicts is None:
+            _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
+        else:
+            open_ = [c for c in conflicts if not c.get("resolved") and not c.get("resolved_at")]
+            crit = [c for c in open_ if str(c.get("severity") or "").lower() == "critical"]
+            if crit:
+                codes = sorted({str(c.get("code") or c.get("title") or "?") for c in crit})
+                _set(result, "fail", "{{critical}} critical conflict(s) unresolved: {{codes}}",
+                     critical=len(crit), codes=", ".join(codes[:8]) + (" …" if len(codes) > 8 else ""))
+            else:
+                major = sum(1 for c in open_ if str(c.get("severity") or "").lower() == "major")
+                _set(result, "pass", "No critical conflict unresolved ({{major}} major, {{other}} other open)",
+                     major=major, other=len(open_) - major)
+
+    elif cid == "SRR-EC-07":
+        ait = ctx.get("ait")
+        if ait is None:
+            _set(result, "not_evaluated", "Auto-evaluation not implemented for this criterion")
+        else:
+            models, tests = list(ait.get("models") or []), list(ait.get("tests") or [])
+            phil = sorted({str(m.get("philosophy") or "") for m in models if m.get("philosophy")})
+            philosophy = "/".join(phil) or "?"
+            if not models:
+                _set(result, "fail", "No model philosophy yet: propose the AIT models and test matrix")
+            elif not tests:
+                _set(result, "fail", "{{philosophy}} model philosophy with {{models}} model(s) but no test in the test matrix",
+                     philosophy=philosophy, models=len(models))
+            else:
+                covered = {c for t in tests for c in (t.get("requirement_codes") or [])}
+                _set(result, "pass", "{{philosophy}} model philosophy: {{models}} model(s), {{tests}} test(s) covering {{reqs}} requirement(s)",
+                     philosophy=philosophy, models=len(models), tests=len(tests), reqs=len(covered))
+
+    elif cid == "SRR-EC-08":
+        _trl_criterion(result, ctx)
+
     elif cid == "SRR-EC-10":
         v = _need(result, dp, "sustainability.score", "debris.casualty_compliant")
         if v:
@@ -816,9 +876,17 @@ def _auto(cid: str, result: dict, ctx: dict) -> None:  # noqa: C901 — one bran
                 return any(c.get("element_type") == "component" or has_component(c.get("id", ""), depth + 1)
                            for c in children.get(eid, []))
 
-            ok = sum(1 for s in subs if has_component(s.get("id", "")))
-            _set(result, "pass" if ok == len(subs) else "fail",
-                 "{{ok}}/{{total}} subsystems have at least one component", ok=ok, total=len(subs))
+            # a harness subsystem is carried as a mass allowance in the roll-up (W1.08), not as units
+            harness_kg = float((((ctx.get("rollup") or {}).get("mass") or {}).get("harness_kg")) or 0.0)
+
+            def allowance(sub: dict) -> bool:
+                return harness_kg > 0 and (sub.get("subsystem_domain") == "harness"
+                                           or str(sub.get("name") or "").strip().lower() == "harness")
+
+            ok = sum(1 for s in subs if has_component(s.get("id", "")) or allowance(s))
+            key = ("{{ok}}/{{total}} subsystems have at least one component or a mass allowance"
+                   if any(allowance(s) for s in subs) else "{{ok}}/{{total}} subsystems have at least one component")
+            _set(result, "pass" if ok == len(subs) else "fail", key, ok=ok, total=len(subs))
 
     elif cid == "PDR-EC-06":
         _data_budget_criterion(result, ctx)
@@ -1107,3 +1175,118 @@ def _ladder_budget(result: dict, ctx: dict) -> None:
          "Mass {{mass}} kg + {{margin}}% system margin = {{total}} kg vs {{limit}} kg; power {{power}} W + {{margin}}% = {{ptotal}} W vs {{avail}} W",
          mass=_fmt(dry, 2), margin=_fmt(m_pct), total=_fmt(total, 2), limit=_fmt(limit, 2),
          power=_fmt(demand, 1), ptotal=_fmt(ptotal, 1), avail=_fmt(avail, 1))
+
+
+# --------------------------------------------------------------------------- wave 2 integration
+
+#: budget figures the requirement thresholds can name (``threshold_param_path``), derived from the
+#: one roll-up (W1.08), the data budget (W3.02) and the mission's design link case (W4.04) so the
+#: budget rows check the study's own numbers, not the design loop's generic ones
+BUDGET_PARAMS = ("budget.mass_total_dry_kg", "budget.mass_with_system_margin_kg",
+                 "budget.mass_system_margin_available_percent", "budget.power_margin_eol_percent",
+                 "budget.data_margin_percent", "budget.link_margin_design_case_db")
+
+
+def _add_budget_params(ctx: dict) -> None:
+    """``budget.*`` parameters in ``ctx["dp"]`` (an explicit parameter of that name wins)."""
+    dp = ctx["dp"]
+    ru = ctx.get("rollup") or {}
+    mass = ru.get("mass") or {}
+    vals: dict[str, float] = {}
+    if mass.get("total_dry_kg") is not None:
+        vals["budget.mass_total_dry_kg"] = float(mass["total_dry_kg"])
+    if mass.get("with_system_margin_kg") is not None:
+        vals["budget.mass_with_system_margin_kg"] = float(mass["with_system_margin_kg"])
+    limit = ctx.get("target_mass") or mass.get("limit_kg")
+    wm = mass.get("with_maturity_kg")
+    if limit and wm:
+        # the system margin the limit leaves on the margined mass: (limit - margined) / margined
+        vals["budget.mass_system_margin_available_percent"] = round(100.0 * (float(limit) - float(wm)) / float(wm), 2)
+    avg = (ru.get("power") or {}).get("orbit_average_w")
+    eol = _get_param(dp, "power.sa_power_eol_w")
+    if avg and eol is not None:
+        vals["budget.power_margin_eol_percent"] = round(100.0 * (eol - float(avg)) / float(avg), 2)
+    try:
+        gc = _data_budget_check(ctx)
+    except Exception:  # noqa: BLE001 — a malformed budget leaves the figure out
+        gc = None
+    m = (gc or {}).get("margin_pct") if isinstance(gc, dict) else None
+    if m is None:
+        cl = (ctx.get("data_budget") or {}).get("closure") if isinstance(ctx.get("data_budget"), dict) else None
+        m = (cl or {}).get("margin_pct")
+    if isinstance(m, (int, float)) and not isinstance(m, bool):
+        vals["budget.data_margin_percent"] = float(m)
+    link = (ctx.get("mission") or {}).get("link") or {}
+    lm = link.get("margin_db") if isinstance(link, dict) else None
+    if isinstance(lm, (int, float)) and not isinstance(lm, bool):
+        vals["budget.link_margin_design_case_db"] = float(lm)
+    for k, v in vals.items():
+        dp.setdefault(k, v)
+
+
+def _positions_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-04: every must-answer question of the engineering positions (KB positions.yaml)
+    has its related design parameters (routers/positions guidance on the gate's parameters)."""
+    try:
+        from ..routers.positions import _compute_guidance, _load_positions
+        positions = _load_positions()
+    except Exception:  # noqa: BLE001 — no positions file: nothing to check
+        positions = []
+    params = {k: v for k, v in ctx["dp"].items() if not str(k).startswith("_")}
+    total, open_ = 0, []
+    for pos in positions:
+        g = _compute_guidance(pos, params)
+        for q in pos.key_questions:
+            if q.priority == "must_answer" and q.related_parameters:
+                total += 1
+        open_ += [f"{pos.id}:{qs.question_id}" for qs in g.open_questions if qs.priority == "must_answer"]
+    if not total:
+        _set(result, "not_evaluated", "No position questions to check")
+    elif open_:
+        _set(result, "fail", "{{answered}}/{{total}} must-answer position questions answered by the design; open: {{open}}",
+             answered=total - len(open_), total=total, open=", ".join(open_[:8]) + (" …" if len(open_) > 8 else ""))
+    else:
+        _set(result, "pass", "All {{total}} must-answer position questions answered by the design", total=total)
+
+
+#: SRR-EC-08: the lowest TRL a subsystem may have at Phase B entry (gate_exit_criteria.yaml evidence)
+MIN_TRL_PHASE_B = 4
+
+
+def _trl_criterion(result: dict, ctx: dict) -> None:
+    """SRR-EC-08: a subsystem's TRL is the lowest TRL of the components below it."""
+    elements = ctx["elements"]
+    by_id = {e.get("id"): e for e in elements}
+
+    def subsystem_of(e: dict) -> dict | None:
+        seen = 0
+        cur = by_id.get(e.get("parent_id"))
+        while cur is not None and seen < 20:
+            if cur.get("element_type") == "subsystem":
+                return cur
+            cur = by_id.get(cur.get("parent_id"))
+            seen += 1
+        return None
+
+    trl: dict[str, tuple[int, str]] = {}
+    for e in elements:
+        if e.get("element_type") != "component" or e.get("in_scope") is False:
+            continue
+        t = e.get("trl")
+        if not isinstance(t, (int, float)) or isinstance(t, bool):
+            continue
+        sub = subsystem_of(e)
+        name = str((sub or {}).get("name") or e.get("name") or "?")
+        if name not in trl or int(t) < trl[name][0]:
+            trl[name] = (int(t), str(e.get("name") or ""))
+    if not trl:
+        _set(result, "not_evaluated", "No component has a TRL yet")
+        return
+    lowest = min(trl.items(), key=lambda kv: kv[1][0])
+    low = sorted(n for n, (t, _) in trl.items() if t < MIN_TRL_PHASE_B)
+    if low:
+        _set(result, "fail", "Lowest subsystem TRL {{trl}} ({{subsystem}}); {{low}} subsystem(s) below TRL {{min}}: {{names}}",
+             trl=lowest[1][0], subsystem=lowest[0], low=len(low), min=MIN_TRL_PHASE_B, names=", ".join(low))
+    else:
+        _set(result, "pass", "Every subsystem at TRL {{min}} or above (lowest: {{subsystem}} at TRL {{trl}})",
+             min=MIN_TRL_PHASE_B, subsystem=lowest[0], trl=lowest[1][0])

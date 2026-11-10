@@ -50,6 +50,7 @@
   "Pass plan approved": "Plan de passage approuvé",
   "Schedule and antenna pointing sent": "Planning et pointage d’antenne envoyés",
   "AOS: carrier lock ({{band}}-band)": "AOS : accrochage de la porteuse (bande {{band}})",
+  "AOS: carrier lock ({{band}}-band, {{rate}})": "AOS : accrochage de la porteuse (bande {{band}}, {{rate}})",
   "Beacon and housekeeping TM": "Balise et TM de servitude",
   "TC uplink: time-tagged plan": "TC en liaison montante : plan horodaté",
   "Payload data dump at {{rate}}": "Vidage des données charge utile à {{rate}}",

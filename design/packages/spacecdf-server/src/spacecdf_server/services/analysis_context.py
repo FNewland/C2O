@@ -134,6 +134,7 @@ class AnalysisContext:
     requirements: list[dict] = field(default_factory=list)
     relations: list[dict] = field(default_factory=list)
     link: dict[str, Any] = field(default_factory=dict)       # derived downlink: band, frequency_ghz, source
+    link_cases: list[dict] = field(default_factory=list)     # the study's named link cases (link-budget tool)
     warnings: list[str] = field(default_factory=list)
 
     # -- lookups ---------------------------------------------------------
@@ -448,7 +449,7 @@ async def _derive_link(ctx: "AnalysisContext", eff_elements: list[dict]) -> dict
         out = {"band": band, "frequency_ghz": _band_ghz(band), "source": "mission_definition_band"}
         paths["link.frequency_ghz"] = out["frequency_ghz"]
     else:
-        cases = [c for c in await _link_cases(ctx.study_id)
+        cases = [c for c in (ctx.link_cases if ctx.link_cases else await _link_cases(ctx.study_id))
                  if c.get("direction") == "downlink" and _pos(c.get("frequency_mhz"))]
         case = next((c for c in cases if c.get("is_design_case")), cases[0] if cases else None)
         if case is not None:
@@ -467,9 +468,13 @@ async def _derive_link(ctx: "AnalysisContext", eff_elements: list[dict]) -> dict
                 out = {"band": b, "frequency_ghz": f, "source": src}
                 paths["link.frequency_ghz"] = f
                 paths.update(extra)
+    derived = []
     for path, v in paths.items():
         if path not in ctx.flat:
             ctx.flat[path] = v
+            derived.append(path)
+    if derived:
+        out["derived_paths"] = derived   # provenance: these flat paths came from ``source``
     return out
 
 
@@ -780,6 +785,7 @@ async def build_context(study_id: str, *, option_id: str | None = None) -> Analy
     }
 
     _overlay_mission_link(ctx.flat, ctx.study)
+    ctx.link_cases = await _link_cases(study_id)
     ctx.link = await _derive_link(ctx, eff_elements)
     _overlay_drag_sail(ctx.flat, eff_elements, ctx.warnings)
     ctx.orbit = _build_orbit(ctx.flat, ctx.latest_design, ctx.study)
@@ -834,6 +840,10 @@ def _hash_subset(ctx: AnalysisContext, key: str) -> Any:
         d.pop("name", None)
         if str(ctx.link.get("source") or "").startswith("link_case:"):
             d["derived_link"] = ctx.link   # the link case the analyses fall back to (wave 2)
+        if ctx.link_cases:                 # per-station margins of the ground analysis (integration)
+            d["link_cases"] = sorted([str(c.get("name") or ""), str(c.get("station") or ""), c.get("direction"),
+                                      c.get("margin_db"), (c.get("results") or {}).get("margin_db")]
+                                     for c in ctx.link_cases)
         return d
     if key == "requirements":
         return sorted(

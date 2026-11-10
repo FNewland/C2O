@@ -275,14 +275,20 @@ def data_flow_section(sx, lang: str = "en") -> Dict[str, Any]:
     if not db or db.get("status") in ("not_implemented", "empty") or not closure:
         return {**out, "status": "open", "owner": db.get("owner", "H"),
                 "work_package": db.get("work_package", "W3.02/W3.05")}
-    sci = daily.get("science") or {}
-    cap = daily.get("capacity") or {}
+    # the section (H, wave 2) carries ``science``/``capacity``/``cases`` at its top level and the
+    # flat closure figures in ``daily``; older payloads nested them in ``daily`` — read either
+    sci = db.get("science") or daily.get("science") or {}
+    cap = dict(db.get("capacity") or daily.get("capacity") or {})
+    if cap.get("capacity_mb_per_day") is None:
+        cap["capacity_mb_per_day"] = daily.get("capacity_mb_per_day")
     req_margin = _num(daily.get("margin_required_percent"))
+    #: export case key (``sections/data_budget.CASE_KEYS``) -> the data-budget case key used here
+    export_keys = {"capacity_mb": "capacity", "demand_mb": "demand", "science_mb": "science", "rt_hk_mb": "rt_hk",
+                   "stored_hk_mb": "stored_hk", "other_mb": "other", "margin_pct": "margin_pct"}
 
     def case(c: dict) -> Dict[str, Any]:
         return {"id": c.get("id"), "label": _text(c.get("label"), lang), "baseline": c.get("id") == closure.get("id"),
-                **{k: _num(c.get(k)) for k in ("capacity_mb", "demand_mb", "science_mb", "rt_hk_mb", "stored_hk_mb",
-                                                "other_mb", "margin_pct")},
+                **{k: _num(c.get(k)) if c.get(k) is not None else _num(c.get(ek)) for k, ek in export_keys.items()},
                 "status": c.get("status")}
 
     stores = []
@@ -306,7 +312,8 @@ def data_flow_section(sx, lang: str = "en") -> Dict[str, Any]:
             "capacity": {k: _num(cap.get(k)) for k in ("union_min_per_day", "usable_min_per_day", "raw_mb_per_day",
                                                        "capacity_mb_per_day")},
             "closure": {**case(closure), "margin_required_pct": req_margin},
-            "cases": [case(c) for c in daily.get("cases") or [] if isinstance(c, dict)],
+            "daily": {k: v for k, v in daily.items() if k != "closure"},
+            "cases": [case(c) for c in (db.get("cases") or daily.get("cases") or []) if isinstance(c, dict)],
             "allocation": [{"name": pc.get("name"), "per_day": _num(pc.get("per_day")),
                             "usable_min_per_day": _num(pc.get("usable_min_per_day")), "rt_profile": pc.get("rt_profile"),
                             "rt_mb_per_day": _num(pc.get("rt_mb_per_day")), "order": list(pc.get("order") or []),

@@ -70,6 +70,8 @@ export interface DataChain {
   storage: { capacity_gb: number | null; buffer_days: number; need_gb: number; need_with_margin_gb: number; margin_percent: number }
   downlink: { rate_bps: number; protocol_efficiency: number; contact_min_per_day: number; capacity_gb_per_day: number
     band?: string; rate_source?: string; sum_of_stations_min_per_day?: number; contact_basis?: string; usable_min_per_day?: number | null
+    /** "after_realtime_hk": capacity_gb_per_day is what is left after the real-time HK of the passes */
+    capacity_basis?: 'after_realtime_hk' | 'total'; total_capacity_mb_per_day?: number; realtime_hk_mb_per_day?: number
     stations: { name: string; contact_min_per_day: number; margin_db: number | null; used: boolean; low_margin: boolean; status: string; capacity_gb_per_day: number }[] }
   backlog_growth_gb_per_day: number; days_to_full: number | null; checks: Check[]; warnings: string[]
   /** W3.05: the daily closure of the data budget (the numbers of the Data budget page) */

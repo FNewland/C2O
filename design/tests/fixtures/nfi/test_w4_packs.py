@@ -124,10 +124,8 @@ async def test_gate_packs_differ_and_report_the_study(client):
     assert "| missing |" not in index, index
     texts = {nm: _text(nm, z.read(nm)) for nm in names if nm.endswith((".docx", ".md", ".csv", ".xlsx"))}
     for nm, txt in texts.items():
-        if nm == "documents/Diagrams.docx":
-            continue   # the ops-pass figure takes its band from the analysis context (hand-off, see W0_SEAMS)
-        for bad in INVENTED:
-            assert bad not in txt, (nm, bad)
+        for bad in INVENTED:     # "13.0 m" (an antenna) must not match "13.0 min" (a pass)
+            assert not re.search(re.escape(bad) + r"(?![A-Za-z])", txt), (nm, bad)
     # W1.09a / W4.06: the TS lists every team requirement (no IR-* row, no stakeholder need) in the
     # seven type groups, with threshold, unit, priority, every parent; the environment section
     # quotes the orbit and the dose estimate still to be confirmed by SPENVIS

@@ -355,7 +355,9 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
               <tr>
                 <th>{t('Station')}</th><th>{t('Position')}</th><th>{t('Bands')}</th>
                 <th className="ta-r">{t('Passes/day')}</th><th className="ta-r">{t('Min/day')}</th>
-                <th className="ta-r">{t('GB/day')}</th><th className="ta-r">G/T dB/K</th>
+                <th className="ta-r" title={t('What this station could return on its own (contact table)')}>{t('MB/day alone')}</th>
+                <th className="ta-r" title={t('What the schedule of the reported day routed through this station')}>{t('MB/day scheduled')}</th>
+                <th className="ta-r">G/T dB/K</th>
                 <th className="ta-r">{t('Margin dB')}</th><th>{t('Status')}</th>
               </tr>
             </thead>
@@ -372,9 +374,11 @@ export function GroundSegmentPanel({ studyId, optionId }: { studyId: string | nu
                     <td className="c-2">{r.bands.join('/')} · {fmt(r.antenna_m, 1)} m</td>
                     <td className="num">{r.contacts_per_day}</td>
                     <td className="num">{fmt(r.contact_min_per_day, 0)}</td>
-                    <td className="num">{fmt(r.data_gb_per_day, 2)}</td>
+                    <td className="num">{fmt(r.data_mb_per_day_alone, 2)}</td>
+                    <td className="num">{fmt(r.data_mb_per_day_scheduled ?? (r.data_gb_per_day ?? 0) * 1000, 2)}</td>
                     <td className="num">{fmt(r.g_t_db_k)}</td>
-                    <td className="num" style={{ color: r.margin_db === null ? undefined : r.margin_db < 0 ? 'var(--status-alarm)' : r.margin_db < 3 ? 'var(--status-caution)' : 'var(--status-ok)' }}>{fmt(r.margin_db)}</td>
+                    <td className="num" style={{ color: r.margin_db === null ? undefined : r.margin_db < 0 ? 'var(--status-alarm)' : r.margin_db < 3 ? 'var(--status-caution)' : 'var(--status-ok)' }}
+                        title={r.margin_source ? t('Margin from {{source}}', { source: r.margin_source.replace(/^link_case:/, '') }) : undefined}>{fmt(r.margin_db)}</td>
                     <td><Badge text={STATUS_LABEL[r.status] ? t(STATUS_LABEL[r.status]) : r.status} color={color} title={r.reason || undefined} /></td>
                   </tr>
                 )

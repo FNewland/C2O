@@ -204,6 +204,22 @@ export const EVIDENCE_KEYS_QR = [
   'All {{total}} requirements have a verification method and a close-out stage',
 ]
 
+// English text is the i18n key — SRR-EC-04/05/07/08 and the PDR-EC-04 harness allowance (wave 2 integration)
+export const EVIDENCE_KEYS_W2B = [
+  '{{answered}}/{{total}} must-answer position questions answered by the design; open: {{open}}',
+  'All {{total}} must-answer position questions answered by the design',
+  'No position questions to check',
+  '{{critical}} critical conflict(s) unresolved: {{codes}}',
+  'No critical conflict unresolved ({{major}} major, {{other}} other open)',
+  'No model philosophy yet: propose the AIT models and test matrix',
+  '{{philosophy}} model philosophy: {{models}} model(s), {{tests}} test(s) covering {{reqs}} requirement(s)',
+  '{{philosophy}} model philosophy with {{models}} model(s) but no test in the test matrix',
+  'Lowest subsystem TRL {{trl}} ({{subsystem}}); {{low}} subsystem(s) below TRL {{min}}: {{names}}',
+  'Every subsystem at TRL {{min}} or above (lowest: {{subsystem}} at TRL {{trl}})',
+  'No component has a TRL yet',
+  '{{ok}}/{{total}} subsystems have at least one component or a mass allowance',
+]
+
 // English text is the i18n key — what the Fix link opens (criterion `fix` in
 // configs/gate_exit_criteria.yaml: a workbench panel id, or vv:<section>).
 export const FIX_LABEL: Record<string, string> = {
