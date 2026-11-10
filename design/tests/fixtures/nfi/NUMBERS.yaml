@@ -1,0 +1,269 @@
+# Northern Fire and Ice (NFI) - key numbers, single source of truth
+# =================================================================
+# A teaching mission concept for northern fire and ice monitoring; numbers are a frozen teaching baseline.
+# Use these values in the textbooks, the video narration and the SpaceCDF example project. If a number in any
+# other NFI file disagrees with this file, this file wins and the other file is the error.
+#
+# Conventions: MB = 1e6 bytes; kbps / bit/s are channel or information rates as labelled; k EUR = thousand euro.
+# `src` says where each number came from:
+#   calc/<script>      recomputed for this teaching baseline (scripts in calc/, outputs *.json next to them)
+#   research:<note>    carried from the research notes behind the baseline (mission analysis, bus, payload);
+#                      the orbit, links and decay did not change, so these were not re-run unless stated
+#   kb:<id>            SpaceCDF knowledge-base entry (design/packages/spacecdf-kb, components on main)
+#   decision           a design decision of the teaching baseline (see script/logbook.yaml)
+# frozen: 2026-11-10
+
+orbit:
+  type: {value: "sun-synchronous, circular", src: decision}
+  altitude_km: {value: 590, src: decision, note: "apogee <= 600 km incl. dispersion (ISED propulsion threshold)"}
+  inclination_deg: {value: 97.75, src: calc/orbit1.py}
+  node: {value: "LTDN 10:30 (daylight pass descending); entered in the tool as LTAN 22:30", window: "09:30-13:30", src: decision}
+  period_keplerian_min: {value: 96.48, src: calc/orbit1.py}
+  period_nodal_min: {value: 96.60, src: calc/orbit1.py}
+  revs_per_day: {value: 14.907, src: calc/orbit1.py}
+  equator_track_spacing: {value_deg: 24.15, value_km: 2688, src: calc/orbit1.py}
+  nearest_exact_repeat: {value: "164 rev / 11 d at 589.2 km (no exact repeat is maintained)", src: research:mission analysis §1.1}
+  beta_deg_2030: {min: 16.3, max: 26.3, src: calc/orbit2.py}
+  eclipse_min: {min: 34.0, max: 35.0, fraction_pct: [35.2, 36.2], eclipse_free_days: 0, src: calc/orbit2.py}
+  ground_speed_km_s: {value: 6.93, src: research:payload §3.4}
+  node_drift_per_0p1deg_inclination_error: {value: "18.5 min per year", src: research:mission analysis §1.1}
+  inclination_tolerance_requested_deg: {value: 0.15, src: decision}
+
+revisit:   # generic test points 48N 84W, 52N 80W, 56N 98W, 60N 112W, 64N 120W; full year 2030; sun elevation > 10 deg
+  nadir_looks_per_site_per_month: {range: [2.7, 3.2], src: calc/orbit4.py (calc/revisit_out.txt)}
+  roll_15deg_looks_per_month: {range: [5.5, 6.7], src: calc/orbit4.py}
+  roll_30deg_looks_per_month: {range: [12.2, 14.5], mean_gap_days: [1.6, 2.5], max_gap_days: [5, 8], src: calc/orbit4.py}
+  sun_elevation_at_overpass_deg_median:
+    breakup_15apr_31may: {range: [43.3, 56.6]}
+    fire_season_jun_aug: {range: [45.7, 60.3]}
+    freezeup_october: {range: [16.9, 31.8]}
+    freezeup_nov_dec: {range: [6.1, 19.7], note: "north of about 60 N freeze-up after mid-November is not observable in the optical"}
+    src: calc/orbit4.py
+  roll_limit_deg: {value: 30, settle_s: 60, src: decision (SEG-SS-02)}
+
+ground_network:
+  sites:   # generic town-centre locations; no institution or existing facility implied
+    - {name: Ottawa, lat: 45.42, lon: -75.69, role: "mission control + station", min_per_day: 25.9, passes_per_day: 3.9, mean_pass_min: 6.6, max_pass_min: 8.5}
+    - {name: Yellowknife, lat: 62.45, lon: -114.37, role: "remote station", min_per_day: 43.0, passes_per_day: 6.67, mean_pass_min: 6.5, max_pass_min: 8.5}
+    - {name: Iqaluit, lat: 63.75, lon: -68.52, role: "remote station", min_per_day: 46.1, passes_per_day: 7.2, mean_pass_min: 6.4, max_pass_min: 8.5}
+    - {name: Inuvik, lat: 68.36, lon: -133.72, role: "remote station", min_per_day: 62.7, passes_per_day: 9.53, mean_pass_min: 6.6, max_pass_min: 8.5}
+  min_elevation_deg: 10
+  method: {src: calc/contacts_nfi.py, propagator: "J2 secular circular", step_s: 5, days: 30, epochs: ["2030-06-01", "2030-12-01"]}
+  union_min_per_day: {value: 125.7, src: calc/contacts_nfi.py, note: "December 2030: 125.7"}
+  sum_of_sites_min_per_day: {value: 177.7, src: calc/contacts_nfi.py, note: "one transmitter: capacity follows the union, not the sum"}
+  windows_per_day: {value: 14.0, src: calc/contacts_nfi.py}
+  window_min: {mean: 9.0, median: 8.5, min: 1.1, max: 16.3, src: calc/contacts_nfi.py}
+  windows_shorter_than_3min_per_day: {value: 0.53, minutes: 1.1, src: calc/contacts_nfi.py}
+  longest_gap_h: {value: 6.6, src: calc/contacts_nfi.py}
+  daily_union_min_range: {value: [114.2, 129.3], src: calc/contacts_nfi.py}
+  min_above_30deg_per_day: {value: 35.7, src: calc/contacts_nfi.py}
+  windows_with_ottawa_per_day: {value: 3.9, minutes: 52.6, src: calc/contacts_nfi.py}
+  fourth_site_trade:   # Ottawa + Yellowknife + Iqaluit + candidate, union min/day / longest gap h
+    three_sites: [93.4, 8.2]
+    inuvik: [125.7, 6.6]
+    resolute: [127.2, 8.1]
+    whitehorse: [107.6, 6.6]
+    prince_george: [103.2, 8.2]
+    kuujjuaq: [94.6, 8.2]
+    churchill: [94.3, 8.2]
+    selected: Inuvik
+    src: calc/contacts.py
+  leave_one_out_union_min_per_day: {without_ottawa: 109.6, without_yellowknife: 119.4, without_iqaluit: 99.9, without_inuvik: 93.4, src: calc/degraded.py}
+  representative_day: {date: "2030-06-28 (EDT)", windows: 14, union_min: 125.8, ops_passes: ["11:46 Ottawa+Iqaluit, 78 deg, 13.5 min", "22:44 all four, 69 deg, 16.3 min"], src: calc/contacts_nfi.py (calc/day.json)}
+
+links:
+  downlink: {band_mhz: [401, 402], avoid_mhz: [401.4, 401.7], rate_kbps: 38.4, modulation: "GMSK or BPSK", coding: "RS(255,223), interleave 2", occupied_bw_khz_max: 50, tx_power_w: 1, src: decision}
+  uplink: {band_mhz: [449.75, 450.25], rate_kbps: 9.6, ground_tx_w_max: 25, fallback: "VHF 148-149.9 MHz", src: decision}
+  rate_ladder_kbps: [1.2, 9.6, 19.2, 38.4]
+  growth_rate_kbps: {value: 76.8, condition: "above about 30 deg elevation (35.7 min/day), wider channel and licence change needed"}
+  slant_range_km: {el_10deg: 1909, el_30deg: 1059, el_90deg: 590, src: calc/link.py}
+  fspl_db: {at_401p5MHz_10deg: 150.1, at_450MHz_10deg: 151.1, src: calc/link.py}
+  downlink_ebn0_db_10deg: {"1W_700K": 8.4, "1W_300K": 12.0, "2W_700K": 11.4, "2W_300K": 15.1, src: calc/link.py, assumptions: "s/c antenna 0 dBi - 3 dB allowance, 1 dB line loss, 3 dB polarisation, 1 dB scintillation, 0.5 dB pointing, 13 dBic ground antenna, 0.3 dB cable"}
+  downlink_margin_db_10deg_rs:   # required Eb/N0 6.0 dB + 2 dB implementation loss
+    urban_700K_1W: 0.4
+    rural_300K_1W: 4.0
+    urban_700K_2W: 3.4
+    uncoded_urban_1W: -4.2
+    margin_gain_at_20deg: 2.9
+    margin_gain_at_30deg: 5.1
+    rate_76k8_at_30deg_urban: 2.5
+    src: calc/link.py
+  margin_by_site:
+    Ottawa: {planning_tsys_k: 700, margin_db_10deg_1w: 0.4, note: "meets SEG-GS-03 (+4.0 dB) only if the antenna is sited away from the urban core after a noise survey"}
+    Yellowknife: {tsys_k: 300, margin_db_10deg_1w: 4.0}
+    Iqaluit: {tsys_k: 300, margin_db_10deg_1w: 4.0}
+    Inuvik: {tsys_k: 300, margin_db_10deg_1w: 4.0}
+    with_15dBic_400CP24: {extra_db: 2.0, note: "the budget assumes 13 dBic; the selected Yagi gives 15 dBic"}
+    winter_spare_401CP14: {extra_db: -1.5, rural_margin_db_10deg_1w: 2.5}
+    src: calc/link.py; script/ground_stations.yaml
+  uplink_margin_db_10deg_9k6: {"25W_600K": 14.2, "25W_1500K": 10.3, src: calc/link.py}
+  doppler_khz_401MHz: {value: 9.5, src: research:mission analysis (IF-SG-02)}
+
+data_budget:   # calc/budget_nfi.py; MB = 1e6 bytes per day
+  framing: {tm_frame_bytes: 446, channel_bytes_per_frame: 514, data_field_bytes: 422, frame_efficiency: 0.821, information_rate_bps: 31527, src: calc/budget_nfi.py}
+  pass_overheads: {acquisition_s_per_window: 30, availability: 0.90, cfdp_efficiency: 0.96}
+  usable_min_per_day: {value: 106.8, src: calc/budget_nfi.py}
+  raw_channel_mb_per_day: {value: 36.2, src: calc/budget_nfi.py}
+  capacity_mb_per_day: {value: 25.26, src: calc/budget_nfi.py, note: "frame data field after framing, coding, SDLS, acquisition and availability"}
+  science_target_mb_per_day_after_compression: {value: 13.0, src: "decision (open PI decision D-PI-01)"}
+  science_on_channel_mb_per_day: {value: 13.54, src: calc/budget_nfi.py, note: "13.0 / 0.96 CFDP"}
+  products:
+    roi_pair_mb_raw: {value: 0.1875, note: "250 x 250 px x 2 bands x 12 bit (15 km square on the 60 m grid)"}
+    quicklook_mb_raw: {value: 0.167, note: "full frame, both bands, 480 m, 8 bit"}
+    image_pair_mb_raw: {value: 32.3, note: "SWIR 7.99 + VNIR 24.30 MB, 12-bit packed"}
+    planned_set_per_day: {roi_pairs: 80, quicklooks: 10, raw_mb: 16.7, at_1p5_to_1_mb: 11.1}
+    compression_needed_to_fit_13mb: {value: 1.28, src: calc/budget_nfi.py}
+    compression_required: {value: "lossless CCSDS 121.0 (or 123.0), >= 1.3:1, goal 1.5:1", src: "decision (PAY-FUN-03)"}
+    compression_typical: {value: "1.5-2:1 on 12-bit EO data", src: "research:payload §3.2 (est., to verify on simulated scenes)"}
+  hk_load_c1_mb_per_day: {realtime: 1.27, stored: 0.73, total: 2.00, src: calc/budget_nfi.py}
+  cases:   # capacity, real-time HK, stored HK, science on channel, other, demand (all MB/day), margin %
+    C0_full_rt_hk_every_pass:           {capacity: 25.26, rt_hk: 3.85, stored_hk: 0.73, science: 13.54, other: 0.00, demand: 18.11, margin_pct: 28.3}
+    C1_per_pass_profiles_BASELINE:      {capacity: 25.26, rt_hk: 1.27, stored_hk: 0.73, science: 13.54, other: 0.00, demand: 15.54, margin_pct: 38.5}
+    C2_C1_plus_adcs_diag_campaign:      {capacity: 25.26, rt_hk: 1.27, stored_hk: 0.73, science: 13.54, other: 0.67, demand: 16.21, margin_pct: 35.8}
+    C3_commissioning_day:               {capacity: 25.26, rt_hk: 4.81, stored_hk: 0.73, science: 0.00,  other: 1.92, demand: 7.45,  margin_pct: 70.5}
+    C4_C1_inuvik_out:                   {capacity: 18.72, rt_hk: 1.16, stored_hk: 0.73, science: 13.54, other: 0.00, demand: 15.43, margin_pct: 17.6}
+    C5_C1_at_19k2_fallback:             {capacity: 12.63, rt_hk: 1.27, stored_hk: 0.73, science: 13.54, other: 0.00, demand: 15.54, margin_pct: -23.1}
+    C6_C1_planned_set_uncompressed:     {capacity: 25.26, rt_hk: 1.27, stored_hk: 0.73, science: 17.36, other: 0.00, demand: 19.36, margin_pct: 23.3}
+    C7_C1_15min_tx_inhibit_in_passes:   {capacity: 22.07, rt_hk: 1.27, stored_hk: 0.73, science: 13.54, other: 0.00, demand: 15.54, margin_pct: 29.6}
+    src: calc/budget_nfi.py (calc/budget.json)
+  largest_science_with_10pct_margin_mb: {at_38k4: 19.9, at_19k2: 9.0, src: calc/budget_nfi.py}
+  day_in_the_life: {windows: 14, usable_min: 118.8, channel_mb: 28.09, rt_hk_mb: 1.42, delayed_hk_mb: 0.72, payload_mb: 24.91, note: "single representative day before the 90 % availability factor", src: calc/budget_nfi.py}
+  full_frame_pair_days_of_science_allocation: {value: 2.4, note: "32.3 MB raw / 13.54 MB per day"}
+
+telemetry:   # script/hk_sids.yaml (generated by calc/sids_nfi.py + calc/emit_nfi.py)
+  packet_overhead_bytes: {value: 23, breakdown: "CCSDS primary 6 + PUS-C TM secondary 13 + SID 2 + CRC 2"}
+  sids: {routine: 10, stored_copies: 10, beacon: 1, diagnostic: 1, parameters_routine: 206}
+  sid_table:   # id: [name, packet bytes, real-time interval s, real-time bit/s, stored interval s (nominal), stored bit/s (nominal)]
+    1:  [EPS_CORE, 57, 1, 456, 30, 15.2]
+    2:  [EPS_DETAIL, 82, 1, 656, 300, 2.2]
+    3:  [ADCS (outputs), 70, 1, 560, 30, 18.7]
+    4:  [OBC_PLATFORM, 70, 1, 560, 300, 1.9]
+    5:  [TTC, 50, 1, 400, 600, 0.7]
+    6:  [GNSS, 58, 2, 232, 300, 1.5]
+    7:  [PAYLOAD, 57, 1, 456, 600, 0.8]
+    8:  [THERMAL, 85, 60, 11.3, 60, 11.3]
+    9:  [FDIR, 59, 2, 236, 300, 1.6]
+    10: [DEPLOY_DISPOSAL, 35, 60, 4.7, 3600, 0.1]
+    11: [BEACON, 46, 30, null, null, null]
+    20: [ADCS_DIAG (off by default), 150, 1, 1200, 2, 600]
+  thermal_interval_s: {value: 60, src: "decision (PI ruling: thermal once per minute)"}
+  realtime_full_designed_bps: {value: 3747, parts: "periodic SIDs 3572 + S1/S5/S9/S15 175"}
+  realtime_allocation_bps: {value: 4800, reserve_bps: 1053, src: "decision (PI guidance ~4800 bit/s)"}
+  realtime_lean_bps: {value: 562, use: "payload-dump passes"}
+  realtime_with_adcs_diag_bps: {value: 4947}
+  beacon_bps: {value: 12, tier: "1.2 kbps"}
+  realtime_by_mode_bps: {leop: 2949, commissioning: 3577, nominal: 3572, downlink: 3572, safe: 2001, survival: 509, eol: 478, imaging: 0, night_swir: 0}
+  stored_by_mode_bps: {leop: 157.0, commissioning: 163.5, nominal: 54.0, imaging: 255.4, downlink: 55.3, night_swir: 255.4, safe: 107.5, survival: 30.1, eol: 164.3}
+  stored_nominal_mix_bps: {value: 66.2, mix: "nominal 85 / imaging 5 / downlink 9 / night SWIR 1 %"}
+  stored_mb_per_day: {value: 0.73, note: "incl. 400 events/day (0.012 MB)"}
+  adcs_diag_stored_mb_per_orbit: {value: 0.435, note: "SID 120 at 2 s"}
+  stores_mb: {hk: 16, event: 1, adcs_diag: 4, file: 8, payload_gb: 8}
+  hk_store_days: {nominal: 22, commissioning: 9, safe: 14}
+  hk_share_of_information_rate_pct: {value: 15.2, note: "4800 / 31527"}
+  rate_tier_fit: {beacon_1k2: "beacon only", low_9k6: "LEAN; FULL designed fits, 4.8 kbit/s allocation does not", default_19k2: "FULL + diagnostics", high_38k4: "FULL + diagnostics"}
+  pass_classes: {OPS: "2/day, FULL real-time HK + delayed-HK dump + plan upload", DUMP: "LEAN + payload priority queue", SHORT: "< 3 min, events only", ANOMALY_SAFE: "FULL + diag", LEOP_COMMISSIONING: "FULL + diag on calibration days"}
+  superseded: "an earlier single figure of <= 150 bit/s average HK is not used; real-time and stored HK are sized separately"
+
+payload:
+  concept: {value: "two fixed cameras on one rigid bench, triggered together from the GNSS PPS, every frame GNSS time-stamped; no moving parts", src: decision}
+  swir:
+    camera: {value: "Allied Vision Alvium 1800 C-530 VSWIR (Sony IMX992 InGaAs)", kb: pl-av-alvium-1800c-530-vswir}
+    format_px: [2592, 2056]
+    pixel_um: 3.45
+    lens: "35 mm f/1.4 (Kowa LM35HC-SW)"
+    filter: {centre_nm: 1610, fwhm_nm: 90, blocking: "OD >= 4 over 400-1700 nm", cross_cal: "Sentinel-2 B11 (1610-1614 nm, 91-94 nm FWHM) / Landsat OLI B6 (1566-1651 nm)", src: "decision (trade T-01)"}
+    gsd_m_590km: 58.2
+    swath_km: 150.7
+    frame_mb: 7.99
+    exposure_ms: 4.2
+  vnir:
+    camera: {value: "Allied Vision Alvium 1800 C-1620m (Sony IMX542 mono)", kb: pl-av-alvium-1800c-1620m}
+    format_px: [5328, 3040]
+    pixel_um: 2.74
+    lens: "50 mm f/2.4 (Kowa LM50EC-IR)"
+    filter: {centre_nm: 875, fwhm_nm: 50, note: "brackets Sentinel-2 B8A 865 nm; requirement 865 +- 10 nm, FWHM <= 50 nm"}
+    gsd_m_native_590km: 32.3
+    swath_km: 172.3
+    frame_mb: 24.30
+    binning: "always binned 2x2 and resampled to the common 60 m grid"
+  product_grid_m: 60
+  common_overlap_km: [150.7, 98.3]
+  max_trigger_interval_s_contiguous: 14.2
+  band_to_band_registration: {req_swir_px_rms: 1.0, goal: 0.5}
+  ice_resolvable_width_m: {value: 175, note: "3 product pixels"}
+  snr_on_60m_grid:   # first-order model, research:payload §3.4 (computed for a 1550/50 SWIR band)
+    burns_vnir_binned: [42, 85]
+    burns_swir_f1p4_to_f1p8: [47, 120]
+    water_vnir_binned: [19, 37]
+    swir_native_water_october_f1p8: 10.5
+    requirement: "SNR >= 30 burns (10 % reflectance, 30 deg sun); >= 10 water (2 % reflectance, 15 deg sun)"
+    note: "The 1610/90 filter changes the SWIR inputs (about 1.8x bandwidth, about 10 % lower solar irradiance, lower QE toward 1700 nm); re-run the model before PDR (open item)."
+  peak_power_w: {value: 11.5, budget: 12, parts: "SWIR 2.7 + VNIR 3.8 + controller 5.0 (3-5)", src: research:payload §3.7, §4}
+  transfer_power_w_max: 3.0
+  mass_kg: {nominal: 0.65, requirement_max: 0.70}
+  controller: {value: "Raspberry Pi CM4 on a custom carrier (CM5 accepted alternative)", kb: pc-rpi-cm4, store_gb: 8, src: "decision (trade T-03)"}
+  trl: {value: "4-5", models: "breadboard month 6, engineering model month 18, protoflight month 30"}
+  pointing: {control_deg: 1.0, knowledge_deg_3sigma: 0.08, geolocation_before_registration_km: 1.5, geolocation_after_registration_m: 120}
+
+power:   # calc/budgets.py from script/modes.yaml
+  mode_totals_w: {leop: 2.11, commissioning: 4.11, nominal: 2.87, imaging: 15.68, downlink: 9.17, night_swir: 11.88, safe: 2.91, survival: 1.68, eol: "6.88 for seconds"}
+  mode_mix_pct: {nominal: 85, imaging: 5, downlink: 9, night_swir: 1}
+  orbit_average_w: {value: 4.17, with_20pct: 5.00}
+  eol_generation_w: {value: 12.2, note: "body + two deployed wings, beta 15 deg, EOL factor 0.79", src: research:bus §10.3}
+  body_mounted_only_eol_w: {value: 3.98, src: research:bus §10.3}
+  margin_ratio: {value: 2.44, note: "12.2 / 5.00"}
+  eclipse_energy_wh: {typical: 1.69, typical_dod_pct: 3.9, worst: 3.79, worst_dod_pct: 8.8, worst_case: "20 min nominal + 10 min downlink + 5 min imaging", requirement_dod_pct_max: 15}
+  battery_wh: {value: 43, kb: bat-gom-nanopow-bp4}
+  peak_load_w: {value: 19.6, note: "imaging + TX + ADCS + GNSS + OBC + EPS; within the P60 4 A battery limit", src: research:bus §10.3}
+  tx_energy_wh_per_day: {value: 6.9, note: "3.3 W DC x 125.7 min"}
+
+mass:   # calc/budgets.py from script/equipment.yaml; maturity 5 % OTS / 10 % modified / 20 % new; +20 % system on the margined mass
+  by_subsystem_kg_nominal: {payload: 0.650, eps: 1.607, aocs: 0.587, communications: 0.134, obc: 0.024, thermal: 0.105, structure: 0.384, disposal: 0.380}
+  nominal_kg: 3.87
+  with_maturity_kg: 4.15
+  with_system_margin_kg: 4.98
+  limit_kg: 6.0
+  margin_to_limit_kg: 1.02
+  stack_height_mm: {value: 295, usable: 328, margin_pct: 10, src: research:bus §10.5}
+
+disposal:   # research:mission analysis §2 (NRLMSIS 2.1, CanX-7-calibrated effective area 0.38 x sail area); not re-run
+  sail: {device: "NPC Spacemind ARTICA config A", area_m2: 2.1, requirement_m2: 2.0, volume_u: 0.35, mass_kg: 0.30, kb: deorb-npc-artica}
+  lifetime_with_sail_y_590km: {strong: 2.8, nominal: 3.0, weak: 3.4, note: "sail deployed mid-2030"}
+  lifetime_without_sail_y_590km: {range: [5, 42], typical: "14-42 y nominal/weak", note: "tumbling 3U, effective area 0.04-0.12 m2"}
+  highest_start_altitude_for_5y_km: {weak_cycle: 649, nominal_cycle: 688}
+  rules: {disposal_max_y: 5, probability_min: 0.90, collision_probability_max: 0.001, apogee_without_propulsion_max_km: 600}
+  independent_timer_days: 90
+  release_circuits: 2
+
+cost:   # calc/budgets.py; researched list prices or flagged estimates only
+  flight_hardware_keur: {value: 230.7}
+  by_basis_keur: {list: 107.8, list_comparable: 20.9, kb_estimate: 85.1, team_estimate_custom: 17.0}
+  largest_items_keur: {adcs_gen2_build: 53.5, eps_p60: 25.0, solar_wings_2x: 24.4, body_panels_4x: 23.6, gnss_kit: 20.0, swir_camera: 17.0, obc: 12.0, drag_sail: 10.0}
+  ground_rf_per_site_keur: {south: 10.5, north: 11.3, note: "incl. GPSDO"}
+  ground_rf_four_sites_keur: 44.4
+  space_plus_ground_hardware_keur: 275.1
+  working_target_meur: 0.5
+  note: "kb_estimate items have no public price and need quotes; the SWIR camera and VNIR camera carry comparable-product list prices"
+
+schedule:
+  development_months: 36
+  models: {breadboard: 6, engineering_model: 18, protoflight_model: 30}
+  launch_target: "mid-2030 (rideshare, 3U deployer)"
+  commissioning_days: 90
+  science_months_min: 24
+  design_life_y: 3
+
+science_targets:
+  fire: {scene_pairs_year1: 40, burns: 3, max_cloud_pct: 20, burn_index_bias_max: 0.08}
+  ice: {breakup_seasons: 1, community_sites_min: 3, channel_width_m_min: 175}
+  calibration: {repeatability_pct_1sigma: 5, geolocation_px_after_registration: 2, matchups_per_year_per_product: 20}
+  night_swir_exploratory: {images_per_burn: 10, burns: 2, season: "1 Mar - 31 May", outcome: "detection or documented null result", hotspot_signal_pct_of_day: 7}
+  sites: "community-selected sites (at least 3 ice and 3 burn sites); no site is named in the teaching baseline"
+
+open_decisions:
+  - {id: D-PI-01, owner: PI, question: "Science volume target. 13 MB/day after compression is kept as the teaching baseline (38.5 % margin). The four-site network would carry up to about 19.9 MB/day with 10 % margin at 38.4 kbps, but only about 9 MB/day at the 19.2 kbps fallback. Keep 13 MB/day (robust to losing a site), or raise it?"}
+  - {id: D-PI-02, owner: PI, question: "Compression requirement: >= 1.3:1 lossless (fits 80 ROI pairs + 10 quicklooks in 13 MB) with 1.5:1 as goal, verified on simulated scenes before CDR. Accept, or require 1.5:1?"}
+  - {id: D-GND-01, owner: Mission analysis & ops, question: "Ottawa antenna siting: noise survey; urban 700 K gives only +0.4 dB at 10 deg."}
+  - {id: D-GND-02, owner: Mission analysis & ops, question: "Northern sites: keep the 15 dBic 400CP24 year-round with a de-icing plan, or swap to the 401CP14 winter spare (+2.5 dB at 10 deg, below the 3 dB requirement)."}
+  - {id: D-PAY-01, owner: Payload, question: "Re-run the SNR model for the 1610/90 nm SWIR filter."}
+  - {id: D-COM-01, owner: Comms & OBDH, question: "Radio receive edge 450.25 MHz (Murgas) to be confirmed; AX100UL + R0405 fallback."}

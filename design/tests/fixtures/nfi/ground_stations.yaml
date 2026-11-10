@@ -1,0 +1,102 @@
+# Northern Fire and Ice (NFI) teaching mission - ground network (four generic Canadian sites).
+# A teaching mission concept for northern fire and ice monitoring; numbers are a frozen teaching baseline.
+# Sites are generic town-centre locations, not tied to any institution or existing facility. A real station
+# would be sited after a radio-noise survey (SEG-GS-03: system noise temperature <= 300 K at 401 MHz).
+# Contact statistics: calc/contacts_nfi.py (590 km circular SSO, LTDN 10:30, 10 deg mask, J2-secular
+# propagation, 5 s step, 30 days from 2030-06-01; December 2030 gives the same values within 0.2 min/day).
+
+method: {altitude_km: 590, ltdn: "10:30", ltan_entered: "22:30", min_elevation_deg: 10, step_s: 5, days: 30,
+         epoch: "2030-06-01", propagator: "J2 secular, circular (calc/orbit_lib.py)", script: calc/contacts_nfi.py}
+
+sites:
+  - id: GS-OTT
+    name: "GS Ottawa"
+    lat: 45.42
+    lon: -75.69
+    role: "mission control centre + UHF station"
+    environment: "southern; urban/suburban radio noise until the antenna is sited (planning Tsys 700 K)"
+    rf_chain: south
+    contact: {min_per_day: 25.9, passes_per_day: 3.9, mean_pass_min: 6.6, max_pass_min: 8.5, passes_above_30deg_per_day: 1.83}
+    downlink_margin_db_10deg_1w_rs: {at_700K: 0.4, at_300K: 4.0}
+    note: "Mission control can sit in the city; the antenna should be on a quiet site in the Ottawa area (VPN to mission control) so that it meets SEG-GS-03."
+  - id: GS-YKN
+    name: "GS Yellowknife"
+    lat: 62.45
+    lon: -114.37
+    role: "remote UHF station, unattended"
+    environment: "northern; rural noise (Tsys 300 K); -45 degC winters, ice loading"
+    rf_chain: north
+    contact: {min_per_day: 43.0, passes_per_day: 6.67, mean_pass_min: 6.5, max_pass_min: 8.5, passes_above_30deg_per_day: 3.03}
+    downlink_margin_db_10deg_1w_rs: {at_300K: 4.0}
+  - id: GS-IQA
+    name: "GS Iqaluit"
+    lat: 63.75
+    lon: -68.52
+    role: "remote UHF station, unattended"
+    environment: "northern; rural noise (Tsys 300 K); -40 degC winters, ice loading, high wind"
+    rf_chain: north
+    contact: {min_per_day: 46.1, passes_per_day: 7.2, mean_pass_min: 6.4, max_pass_min: 8.5, passes_above_30deg_per_day: 3.2}
+    downlink_margin_db_10deg_1w_rs: {at_300K: 4.0}
+  - id: GS-INU
+    name: "GS Inuvik"
+    lat: 68.36
+    lon: -133.72
+    role: "remote UHF station, unattended"
+    environment: "northern (Arctic); rural noise (Tsys 300 K); -45 degC winters, ice loading, polar night"
+    rf_chain: north
+    contact: {min_per_day: 62.7, passes_per_day: 9.53, mean_pass_min: 6.6, max_pass_min: 8.5, passes_above_30deg_per_day: 3.9}
+    downlink_margin_db_10deg_1w_rs: {at_300K: 4.0}
+
+union:   # the four sites together (the spacecraft has one transmitter: capacity is the union, not the sum)
+  min_per_day: 125.7
+  sum_of_sites_min_per_day: 177.7
+  windows_per_day: 14.0
+  mean_window_min: 9.0
+  max_window_min: 16.3
+  windows_lt3min_per_day: 0.53
+  longest_gap_h: 6.6
+  daily_min_range: [114.2, 129.3]
+  min_above_30deg_per_day: 35.7
+  windows_with_ottawa_per_day: 3.9
+  station_sets_per_day: {"Yellowknife+Inuvik": 3.4, "Inuvik": 3.17, "Iqaluit": 2.33, "all four": 1.47, "Ottawa+Iqaluit": 1.3,
+                         "Yellowknife+Iqaluit+Inuvik": 1.0, "Ottawa+Yellowknife+Iqaluit": 0.57, other: 0.76}
+
+fourth_site_trade:   # calc/contacts.py: Ottawa + Yellowknife + Iqaluit + candidate (June 2030)
+  three_sites_only: {union_min_per_day: 93.4, longest_gap_h: 8.2}
+  candidates:
+    - {site: Inuvik,        union_min_per_day: 125.7, longest_gap_h: 6.6, min_above_30deg: 35.7, selected: true}
+    - {site: Resolute,      union_min_per_day: 127.2, longest_gap_h: 8.1, min_above_30deg: 47.2, note: "no road access, very high logistics cost; does not shorten the gap"}
+    - {site: Whitehorse,    union_min_per_day: 107.6, longest_gap_h: 6.6}
+    - {site: Prince George, union_min_per_day: 103.2, longest_gap_h: 8.2}
+    - {site: Kuujjuaq,      union_min_per_day: 94.6,  longest_gap_h: 8.2}
+    - {site: Churchill,     union_min_per_day: 94.3,  longest_gap_h: 8.2, note: "adds only 0.9 min/day: its passes are already seen by Yellowknife or Iqaluit"}
+  decision: "Inuvik: +32.3 min/day over the three-site union and the shortest longest-gap (6.6 h); road-accessible. Resolute gives 1.5 min/day more but no gap improvement at far higher logistics cost."
+
+degraded:   # calc/degraded.py, leave-one-out union
+  without_Ottawa:      {union_min_per_day: 109.6, longest_gap_h: 6.6}
+  without_Yellowknife: {union_min_per_day: 119.4, longest_gap_h: 6.6}
+  without_Iqaluit:     {union_min_per_day: 99.9,  longest_gap_h: 8.2}
+  without_Inuvik:      {union_min_per_day: 93.4,  longest_gap_h: 8.2}
+
+rf_chains:   # KB ids verified in spacecdf-kb components (ground_antennas, ground_rf, ground_baseband)
+  south:
+    - {kb: gs-ant-m2-400cp24, name: "M2 400CP24 RX Yagi 401 MHz (15 dBic)", qty: 1, cost_keur: 0.81}
+    - {kb: gs-ant-m2-450cp-custom, name: "M2 CP Yagi 450 MHz TX (custom)", qty: 1, cost_keur: 1.0}
+    - {kb: gs-rot-yaesu-g5500dc, name: "Yaesu G-5500DC az/el rotator", qty: 1, cost_keur: 0.76}
+    - {kb: gs-rf-lna-403-filtered, name: "400-406 MHz filtered masthead LNA (NF 0.6 dB)", qty: 1, cost_keur: 0.2}
+    - {kb: gs-rf-pa-minicircuits-zhl-50w-52, name: "Mini-Circuits ZHL-50W-52-S+ 450 MHz PA (run at <= 25 W)", qty: 1, cost_keur: 2.5}
+    - {kb: gs-bb-usrp-b210, name: "Ettus USRP B210 (full duplex)", qty: 1, cost_keur: 2.2}
+  north:   # Yellowknife, Iqaluit, Inuvik: same RX Yagi, heavy-duty rotator in a heated housing
+    - {kb: gs-ant-m2-400cp24, name: "M2 400CP24 RX Yagi 401 MHz (15 dBic), ice-rated mounting", qty: 1, cost_keur: 0.81}
+    - {kb: gs-ant-m2-450cp-custom, name: "M2 CP Yagi 450 MHz TX (custom)", qty: 1, cost_keur: 1.0}
+    - {kb: gs-rot-spid-big-ras, name: "SPID BIG-RAS rotator (heated housing)", qty: 1, cost_keur: 1.6}
+    - {kb: gs-rf-lna-403-filtered, name: "400-406 MHz filtered masthead LNA", qty: 1, cost_keur: 0.2}
+    - {kb: gs-rf-pa-minicircuits-zhl-50w-52, name: "450 MHz PA", qty: 1, cost_keur: 2.5}
+    - {kb: gs-bb-usrp-b210, name: "Ettus USRP B210 (full duplex)", qty: 1, cost_keur: 2.2}
+  every_site:
+    - {kb: gs-time-gpsdo, name: "GPS-disciplined oscillator (station time and frequency)", qty: 1, cost_keur: 3.0}
+  winter_fallback: {kb: gs-ant-m2-401cp14, name: "M2 401CP14 RX Yagi (11.5 dBic, 1.2 m)", cost_keur: 0.5, note: "spare short Yagi for heavy-icing periods; 1.5 dB below the 13 dBic link-budget assumption, so the 1 W rural margin at 10 deg falls to +2.5 dB (meets 3 dB above about 12 deg)"}
+  link_budget_note: "The link budget assumes 13 dBic at the ground. The 400CP24 (15 dBic) adds 2 dB: rural margin at 10 deg about +6.0 dB at 1 W with RS(255,223)."
+  software:
+    - {kb: gs-sw-satnogs, role: "scheduling and tracking client at each site (software only; amateur hardware is not used)"}
+    - {kb: gs-sw-yamcs, role: "mission control system (TM/TC, archive)"}

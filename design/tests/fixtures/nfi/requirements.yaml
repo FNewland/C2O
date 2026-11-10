@@ -1,0 +1,4011 @@
+# Northern Fire and Ice (NFI) teaching mission, 3U CubeSat - requirements baseline (machine-readable; ready to import)
+# =====================================================================================================================
+# A teaching mission concept for northern fire and ice monitoring; numbers are a frozen teaching baseline (../NUMBERS.yaml).
+# Built by calc/build/make_requirements.py. Companions: ../NFI_DESIGN_SCRIPT.md (Appendix A), script/*.yaml.
+#
+# Hierarchy (parent links run upward; every row has >= 1 parent):
+#   stakeholder_needs SN-xx  ->  objectives O1-O4, C1 (code OBJ-xx)  ->  mission MIS-*/REG-*
+#   ->  segment SEG-SS/GS/LS/US-*, OPS-*  ->  system (spacecraft) SYS-*, VER-*
+#   ->  subsystem PAY/EPS/ADC/OBD/COM/STR/THM/DIS/HAR/GNS-*  ;  interface IF-<A>-<B>-nn (parents at any level)
+#
+# Numbering: <AREA>-<GROUP>-<nn>. AREA = level/subsystem (MIS REG SEG SYS VER OPS PAY EPS ADC OBD COM STR
+#   THM DIS HAR GNS IF); GROUP = topic (e.g. MIS-SCI, SYS-BUD, PAY-RAD, SEG-GS). Codes are <= 32 chars
+#   (requirements.code is String(32)).
+#
+# Field -> SpaceCDF (POST /api/requirements/, PATCH /api/requirements/{id}):
+#   id -> code | tool_level -> level (mission|system|subsystem|interface; `segment` rows map to system)
+#   type -> req_type | text -> text | rationale -> rationale
+#   verifies -> relations kind "verifies" (VER-/OPS- rows; API only)
+#   parents[0] -> parent_id (+ derived_from_requirement_id); parents[1:] -> relations kind "derives" (API only)
+#   objectives[0] -> objective_id; objectives[1:] -> relations kind "traces" (API only, no objective entity kind)
+#   verification_method -> verification_method | verification_phase -> verification_phase (IOV has no tool value)
+#   owner_seat -> responsible_position | subsystem -> element_id (look up the element by name)
+#   threshold.op/value -> threshold_op/threshold_value (unit has no field; it stays in the text)
+#   priority, category, source, interface.icd_ref, open_item -> NO FIELD in SpaceCDF
+#   Import order: `import_order` lists ids parents-first (POST rejects an unknown parent_id).
+# Priority: 1 = mandatory (mission or licence fails without it), 2 = needed for full performance, 3 = goal.
+# Verification methods: T test (incl. demonstration and in-orbit test), A analysis, I inspection, R review
+#   (ECSS-E-ST-10-02C). Phases: PDR, CDR, QR, AR, IOV (in-orbit verification).
+# Sources "research: mission analysis / bus / payload §x" are the research notes behind the teaching baseline;
+#   every number they supply is carried, with its provenance, in ../NUMBERS.yaml.
+
+schema_version: 1
+baseline:
+  mission: Northern Fire and Ice
+  file_prefix: nfi
+  status: teaching baseline (frozen), PDR-level draft
+  date: '2026-11-10'
+  counts: {requirements: 216, level_interface: 12, level_mission: 53, level_segment: 36, level_subsystem: 75, level_system: 40}
+  provenance: A teaching mission concept for northern fire and ice monitoring; numbers are a frozen teaching baseline (NUMBERS.yaml).
+stakeholder_needs:
+- {id: SN-01, stakeholder: Funding agency (student CubeSat programme), role: sponsor, need: 'A student-built mission that
+    flies, trains students and delivers its science within the programme budget and schedule, on a rideshare launch.'}
+- {id: SN-02, stakeholder: Northern communities that select the sites, role: user, need: 'Seasonal ice-on/ice-off, break-up
+    and burn-scar information for community-selected sites, openly published with a stated uncertainty.'}
+- {id: SN-03, stakeholder: Science team (fire and ice), role: science_pi, need: 'NIR and SWIR imagery at about 60 m, cross-calibrated
+    against Sentinel-2 and Landsat, with enough clear scenes over burns and ice sites.'}
+- {id: SN-04, stakeholder: 'Mission operations team (mission control, Ottawa)', role: operator, need: 'A reliable encrypted
+    two-way UHF link, a spacecraft that runs a stored plan, organised housekeeping and a ground network that returns at least
+    13 MB of compressed science products per day.'}
+- {id: SN-05, stakeholder: ISED Canada and Global Affairs Canada (RSSSA), role: regulator, need: 'Licensable spectrum use
+    at 401/450 MHz, disposal within 5 years with at least 90 % probability, collision risk below 0.001, command and data protection.'}
+- {id: SN-06, stakeholder: Student engineering team, role: partner, need: 'Clear interfaces, early breadboards and a schedule
+    that fits teaching terms.'}
+objectives:
+- id: O1
+  code: OBJ-O1
+  priority: primary
+  needs: [SN-02, SN-03]
+  text: Map burn scars and relative burn severity of boreal fires at landscape scale.
+  measure: '>= 40 usable cloud-free scene pairs over >= 3 burns in the first year; burn-index bias vs the dNBR-calibrated
+    reference within 0.08'
+- id: O2
+  code: OBJ-O2
+  priority: secondary
+  needs: [SN-02, SN-03]
+  text: Explore, as an exploratory test, whether overwintering fires can be detected with SWIR at night and in early spring.
+  measure: '>= 10 night SWIR images over each of >= 2 previous-season burns (1 Mar - 31 May); detection or documented null
+    result'
+- id: O3
+  code: OBJ-O3
+  priority: primary
+  needs: [SN-02, SN-03]
+  text: Measure river- and lake-ice phenology (freeze-up, break-up, ice-on, ice-off) at community-selected sites.
+  measure: one complete break-up season at >= 3 community-selected sites; ice extent for channels wider than 175 m
+- id: O4
+  code: OBJ-O4
+  priority: primary
+  needs: [SN-01, SN-03]
+  text: Quantify how well a low-cost student instrument reproduces Sentinel-2 and Landsat measurements and publish the uncertainty.
+  measure: radiometric repeatability <= 5 %; geolocation <= 2 px after registration; >= 20 same-day matchups per product type
+    per year; uncertainty published
+- id: C1
+  code: OBJ-C1
+  priority: constraint
+  needs: [SN-05, SN-01, SN-04]
+  text: Comply with ISED spectrum and debris conditions, the RSSSA licence, ITU procedures and export control.
+  measure: all licences granted before launch; re-entry <= 5 years after end of operations with >= 90 % probability; collision
+    probability < 0.001
+requirements:
+- id: MIS-SCI-01
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall acquire at least 40 usable scene pairs, each with at most 20 % cloud over the region of interest,
+    covering at least 3 distinct burn scars within 12 months of the end of commissioning.
+  rationale: NFI brief year-1 fire target. Verified in orbit from the acquisition log and the cloud mask (in-orbit test).
+  parents: [OBJ-O1]
+  objectives: [O1, O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: 'NFI brief (science targets); research: mission analysis §6.6'
+  threshold: {op: '>=', value: 40, unit: scene pairs}
+  status: draft
+- id: MIS-SCI-02
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall observe one complete river- or lake-ice break-up season, from the last fully ice-covered to the
+    first ice-free acquisition, at each of at least 3 community-selected sites between 1 April and 15 June.
+  rationale: 'NFI brief: one full break-up season at >= 3 sites. With ±30 deg roll there are 11-14 opportunities per site
+    per month (research: mission analysis §1.4).'
+  parents: [OBJ-O3]
+  objectives: [O3]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: 'NFI brief; research: mission analysis §1.4'
+  threshold: {op: '>=', value: 3, unit: sites}
+  status: draft
+- id: MIS-SCI-03
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall attempt an acquisition at every opportunity within ±30 deg roll over each of at least 3 community-selected
+    ice sites from 1 October until the sun elevation at overpass falls below 15 deg.
+  rationale: 'O3 includes freeze-up. North of 60 N freeze-up after mid-November is not observable in the optical (sun elevation
+    3-7 deg, research: mission analysis §1.5), so the season is bounded by sun elevation.'
+  parents: [OBJ-O3]
+  objectives: [O3]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 2
+  source: 'research: mission analysis §1.5, §6.3'
+  threshold: {op: '>=', value: 3, unit: sites}
+  status: draft
+- id: MIS-SCI-04
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall acquire at least 10 night-time SWIR images over each of at least 2 burn scars from the previous
+    fire season between 1 March and 31 May.
+  rationale: 'About 30 nadir and 140 roll-30 night looks per site per year (research: mission analysis §1.4). O2 is a test;
+    a null result is an acceptable outcome (MIS-SCI-12).'
+  parents: [OBJ-O2]
+  objectives: [O2]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 2
+  source: 'NFI brief; research: mission analysis §1.4, §6.2'
+  threshold: {op: '>=', value: 10, unit: night images per burn}
+  status: draft
+- id: MIS-SCI-05
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall obtain at least 20 same-day matchups per year with Sentinel-2 or Landsat 8/9 for each product type
+    (burn, ice).
+  rationale: Cross-calibration and validation base for O4; Sentinel-2 shares the 10:30 descending node, Landsat crosses at
+    about 10:00-10:15.
+  parents: [OBJ-O4]
+  objectives: [O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: 'NFI brief; research: mission analysis §6.4'
+  threshold: {op: '>=', value: 20, unit: matchups per product type per year}
+  status: draft
+- id: MIS-SCI-06
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The mission shall deliver, for every usable acquisition over a target site, Level-2 burn-index, relative burn-severity
+    class and ice/snow/open-water/cloud class products on a common 60 m grid.
+  rationale: 'NFI brief product list (L1/L2 chain, burn scar, burn index, ice/snow extent). The 60 m grid is where both bands
+    meet the SNR requirement (research: payload §3.4).'
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: NFI brief (products)
+  status: draft
+- id: MIS-SCI-07
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The ice-extent product shall resolve ice cover on rivers and lakes wider than 175 m (3 product pixels).
+  rationale: NFI brief. Resolves the lower reaches of the larger northern rivers at community-selected sites. Verified by
+    analysis of the product MTF plus in-orbit comparison with Sentinel-2.
+  parents: [OBJ-O3]
+  objectives: [O3]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: NFI brief
+  threshold: {op: <=, value: 175, unit: m channel width}
+  status: draft
+- id: MIS-SCI-08
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The burn-index bias against the dNBR-calibrated Sentinel-2/Landsat reference shall be within ±0.08 over the validation
+    set of each year.
+  rationale: 'NFI brief target. The mission''s burn index is NDMI-like (865 nm / ~1.6 um) with about half the dNBR dynamic
+    range (research: mission analysis R9): classes are reported, not dNBR-equivalent values.'
+  parents: [OBJ-O1, OBJ-O4]
+  objectives: [O1, O4]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: 'NFI brief; research: mission analysis R9'
+  threshold: {op: <=, value: 0.08, unit: absolute burn-index bias}
+  status: draft
+- id: MIS-SCI-09
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The radiometric repeatability of both bands shall be within 5 % (1 sigma) over any 30-day period on pseudo-invariant
+    calibration sites.
+  rationale: NFI brief O4 measure; moved from payload to mission level because it depends on the instrument, calibration and
+    processing together.
+  parents: [OBJ-O4]
+  objectives: [O4]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: NFI brief
+  threshold: {op: <=, value: 5, unit: '% (1 sigma, 30 days)'}
+  status: draft
+- id: MIS-SCI-10
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The geolocation error of Level-2 products shall be at most 120 m (2 product pixels, 1 sigma) after registration to
+    Landsat or Sentinel-2, with winter scenes over snow reported as a separate class.
+  rationale: NFI brief. Snow-covered scenes lack registration texture, so they are reported separately rather than excluded
+    silently.
+  parents: [OBJ-O4]
+  objectives: [O1, O3, O4]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: NFI brief
+  threshold: {op: <=, value: 120, unit: m (2 px) after registration}
+  status: draft
+- id: MIS-SCI-11
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: Each Level-2 product shall carry a per-scene uncertainty estimate for every geophysical quantity it reports.
+  rationale: 'NFI brief: each product calibrated against Sentinel-2/Landsat with published uncertainty.'
+  parents: [OBJ-O4]
+  objectives: [O4]
+  verification_method: I
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: NFI brief (uncertainty published)
+  status: draft
+- id: MIS-SCI-12
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The science team shall report the outcome of each spring night-SWIR campaign, either detections or a null result with
+    the detection limit in exposed hot area (m2) and temperature (K), within 6 months of 31 May.
+  rationale: 'O2 is exploratory: smouldering under snow is invisible and a 10 m2 hotspot at 800 K gives about 7 % of a daytime
+    signal (research: mission analysis R11).'
+  parents: [OBJ-O2]
+  objectives: [O2]
+  verification_method: R
+  verification_phase: AR
+  owner_seat: customer
+  priority: 2
+  source: 'research: mission analysis R11, §6.2'
+  threshold: {op: <=, value: 6, unit: months after campaign}
+  status: draft
+- id: MIS-SCI-13
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The science team shall produce simulated mission Level-1 and Level-2 products from Sentinel-2 and Landsat data for
+    every selected target site at least 12 months before launch.
+  rationale: 'NFI brief: pre-launch, simulate mission images from Sentinel-2 and Landsat. Exercises the processing chain and
+    sets expected product accuracy before flight.'
+  parents: [OBJ-O4]
+  objectives: [O4]
+  verification_method: R
+  verification_phase: CDR
+  owner_seat: customer
+  priority: 1
+  source: NFI brief (pre-launch simulation)
+  status: draft
+- id: MIS-SCI-14
+  level: mission
+  tool_level: mission
+  category: science
+  subsystem: Northern Fire and Ice
+  type: process
+  text: The mission shall select at least 3 ice sites and at least 3 burn sites together with the northern communities concerned,
+    documented in site agreements, before CDR.
+  rationale: 'NFI brief: sites chosen with communities. The site list drives the target database, the ground track planning
+    and the matchup plan.'
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3]
+  verification_method: R
+  verification_phase: CDR
+  owner_seat: customer
+  priority: 1
+  source: NFI brief (sites chosen with communities)
+  threshold: {op: '>=', value: 3, unit: sites per product type}
+  status: draft
+- id: MIS-COV-01
+  level: mission
+  tool_level: mission
+  category: coverage
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall provide at least 10 daytime imaging opportunities per month at sun elevation above 10 deg over each
+    target site between 45 N and 65 N.
+  rationale: Over generic test points at 48-64 N, nadir-only gives 2.7-3.2 looks per site per month; ±30 deg roll gives 12.2-14.5
+    (calc/orbit4.py, calc/revisit_out.txt). Clear-sky probability is 0.3-0.5 in boreal summer, so 10 opportunities give 3-5
+    usable scenes.
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'calc/orbit4.py (generic test points); research: mission analysis §1.4'
+  threshold: {op: '>=', value: 10, unit: opportunities per site per month}
+  status: draft
+- id: MIS-COV-02
+  level: mission
+  tool_level: mission
+  category: coverage
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall acquire usable daytime imagery at sun elevations down to 15 deg.
+  rationale: 'Freeze-up in October at 60 N is observed at 17-25 deg sun elevation; 15 deg is the design case for open-water
+    SNR (research: mission analysis §1.5).'
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'research: mission analysis §1.5'
+  threshold: {op: '>=', value: 15, unit: deg sun elevation}
+  status: draft
+- id: MIS-COV-03
+  level: mission
+  tool_level: mission
+  category: coverage
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The operational orbit shall be sun-synchronous with apogee at most 600 km including injection dispersion and perigee
+    at least 520 km.
+  rationale: 'ISED April 2026 conditions require propulsion above 600 km apogee (research: mission analysis R7). The launch
+    request asks for 590 km nominal.'
+  parents: [OBJ-C1]
+  objectives: [C1, O1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'ISED SMSE-009-26 (number TBC); research: mission analysis R7'
+  threshold: {op: <=, value: 600, unit: km apogee}
+  status: draft
+- id: MIS-COV-04
+  level: mission
+  tool_level: mission
+  category: coverage
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The local time of the daylight node shall be between 09:30 and 13:30 at injection and remain in that window for 24
+    months, which requires an injection inclination error of at most 0.15 deg.
+  rationale: 'LTAN drifts about 18 min per year per 0.1 deg of inclination error at 590 km (research: mission analysis §1.1).'
+  parents: [OBJ-O1, OBJ-O3, OBJ-O4]
+  objectives: [O1, O3, O4]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'NFI brief; research: mission analysis R14, §1.1'
+  threshold: {op: <=, value: 0.15, unit: deg inclination error}
+  status: draft
+- id: MIS-LIF-01
+  level: mission
+  tool_level: mission
+  category: lifetime
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall provide at least 24 months of science operations after the end of commissioning.
+  rationale: Two fire seasons and two break-up seasons; a third year is an extension within the 3-year design life (SYS-ENV-02).
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3, O4]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: NFI brief; mission.yaml (duration 2 y)
+  threshold: {op: '>=', value: 24, unit: months of operations}
+  status: draft
+- id: MIS-LIF-02
+  level: mission
+  tool_level: mission
+  category: lifetime
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The probability that the mission completes 12 months of science operations after commissioning shall be at least 0.80.
+  rationale: Reliability target from the mission definition; drives single-string choices to be justified by FMECA.
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3, C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: mission.yaml (reliability 0.80)
+  threshold: {op: '>=', value: 0.8, unit: probability}
+  status: draft
+- id: MIS-DAT-01
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The space-to-ground system shall return at least 13 MB per day of compressed payload products (after lossless compression)
+    averaged over any 7 days, in addition to real-time and stored housekeeping, with at least 10 % daily-budget margin.
+  rationale: 'Teaching baseline: 13 MB/day post-compression (open PI decision, see NUMBERS.yaml open_decisions). Four-site
+    network: 125.7 min/day union, 25.3 MB/day of frame data at 38.4 kbps; with per-pass HK profiles the budget closes with
+    38.5 % margin (NUMBERS.yaml data_budget). The planned product set (10 quicklooks + 80 ROI pairs, 16.7 MB raw) needs at
+    least 1.28:1 compression to fit 13 MB (PAY-FUN-03).'
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O2, O3, O4]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'NFI brief; research: mission analysis R2, §3.4'
+  threshold: {op: '>=', value: 13, unit: MB/day compressed payload products (7-day mean)}
+  status: draft
+  open_item: true
+- id: MIS-DAT-02
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: The mission shall return on average at least 10 quicklooks and 80 region-of-interest pairs (15 km square, both bands,
+    60 m grid) per day.
+  rationale: '80 ROI pairs are 15.0 MB raw and 10 quicklooks (full frame, both bands, 480 m, 8 bit) are 1.7 MB: 16.7 MB raw,
+    11.1 MB at 1.5:1, inside the 13 MB/day target of MIS-DAT-01. 60 ROI pairs is the floor at the 19.2 kbps fallback rate.'
+  parents: [MIS-DAT-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 2
+  source: 'NFI brief; research: payload §3.2'
+  threshold: {op: '>=', value: 80, unit: ROI pairs per day (plus 10 quicklooks)}
+  status: draft
+- id: MIS-DAT-03
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: At least 80 % of quicklooks shall reach mission control within 24 h of acquisition.
+  rationale: Landscape-scale seasonal monitoring, not emergency response; the longest gap without contact is 6.6 h (calc/contacts.json).
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: comms_engineer
+  priority: 1
+  source: NFI brief (landscape monitoring)
+  threshold: {op: '>=', value: 80, unit: '% of quicklooks within 24 h'}
+  status: draft
+- id: MIS-DAT-04
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: performance
+  text: During the break-up season (1 April to 15 June) Level-2 ice products for each community site shall be delivered to
+    the community concerned within 7 days of acquisition.
+  rationale: Seasonal ice information is only useful to communities while the season is under way; 7 days stays clear of emergency-response
+    expectations.
+  parents: [OBJ-O3]
+  objectives: [O3]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 2
+  source: NFI brief (community use); SN-02
+  threshold: {op: <=, value: 7, unit: days}
+  status: draft
+- id: MIS-DAT-05
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: Every Level-1C and Level-2 product shall be released openly under the CC BY 4.0 licence or an equivalent open licence
+    within 6 months of acquisition, subject to the RSSSA licence conditions.
+  rationale: Open publication of products and uncertainties is a stated mission outcome; the RSSSA licence may restrict raw
+    data distribution (REG-RSS-05).
+  parents: [OBJ-O4]
+  objectives: [O1, O3, O4]
+  verification_method: R
+  verification_phase: IOV
+  owner_seat: customer
+  priority: 1
+  source: 'NFI brief; research: mission analysis §6.6'
+  threshold: {op: <=, value: 6, unit: months}
+  status: draft
+- id: MIS-DAT-06
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The mission shall downlink any full-frame image pair still held on board within 7 days of a request from the science
+    team.
+  rationale: 'NFI brief: full frames on request. A full pair is 32 MB raw, about 2.4 days of the science allocation, so requests
+    are rationed by the operations plan.'
+  parents: [OBJ-O4]
+  objectives: [O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: mission_analyst
+  priority: 2
+  source: NFI brief (full frames on request)
+  threshold: {op: <=, value: 7, unit: days from request}
+  status: draft
+- id: MIS-DAT-07
+  level: mission
+  tool_level: mission
+  category: data
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: All Level-0 data, products, calibration data and processing software versions shall be archived for at least 10 years
+    after the end of the mission.
+  rationale: Reproducibility of the O4 uncertainty claims and long-term value of the seasonal record.
+  parents: [OBJ-O4]
+  objectives: [O4]
+  verification_method: R
+  verification_phase: AR
+  owner_seat: mission_analyst
+  priority: 3
+  source: design-tool default; open-data practice
+  threshold: {op: '>=', value: 10, unit: years after end of mission}
+  status: draft
+- id: MIS-OPS-01
+  level: mission
+  tool_level: mission
+  category: operations
+  subsystem: Northern Fire and Ice
+  type: process
+  text: Commissioning of the platform and the payload shall be complete within 90 days of separation.
+  rationale: 'ConOps phases: LEOP 7 d, platform commissioning to L+30 d, payload commissioning to L+90 d (research: mission
+    analysis §7.1).'
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O2, O3, O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'research: mission analysis §7.1'
+  threshold: {op: <=, value: 90, unit: days after separation}
+  status: draft
+- id: MIS-OPS-02
+  level: mission
+  tool_level: mission
+  category: operations
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The mission shall continue planned acquisitions for at least 48 h without ground contact.
+  rationale: Longest gap without contact is 6.6 h; 48 h covers station outages and weekends without staff.
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'research: mission analysis §1.3'
+  threshold: {op: '>=', value: 48, unit: h without contact}
+  status: draft
+- id: MIS-OPS-03
+  level: mission
+  tool_level: mission
+  category: operations
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: All telecommands shall originate from the single licensed mission control centre and reach the ground stations only
+    through its VPN.
+  rationale: NFI brief architecture; one command origin simplifies the RSSSA Command Protection Plan.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: team_leader
+  priority: 1
+  source: NFI brief (mission control in Ottawa, VPN to remote sites); RSSSA
+  status: draft
+- id: MIS-OPS-04
+  level: mission
+  tool_level: mission
+  category: operations
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The operators shall be able to choose, for each pass at any of the 4 ground stations, whether the downlink carries
+    stored housekeeping, payload data or a set mix of both.
+  rationale: 'Telemetry design: delayed (stored) TM fills the downlink, and per pass the operators choose delayed HK or payload
+    data across the 4 sites (pass classes in script/hk_sids.yaml).'
+  parents: [OBJ-O1, OBJ-O3]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design (script/hk_sids.yaml)
+  status: draft
+- id: MIS-DIS-01
+  level: mission
+  tool_level: mission
+  category: disposal
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The mission shall re-enter within 5 years of the end of operational life with a probability of at least 0.90.
+  rationale: 'ISED April 2026 conditions. With the sail from 590 km: 3.0 y nominal / 3.4 y weak cycle; without it 14-42 y
+    (research: mission analysis §2.2), so compliance rests on the sail.'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'ISED SMSE-009-26 (number TBC); NFI brief; research: mission analysis §2'
+  threshold: {op: '>=', value: 0.9, unit: probability of re-entry <= 5 y}
+  status: draft
+- id: MIS-DIS-02
+  level: mission
+  tool_level: mission
+  category: disposal
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The probability of collision over the operational life shall be below 0.001 with objects larger than 10 cm and below
+    0.01 with objects smaller than 10 cm.
+  rationale: ISED conditions; assessed with ESA DRAMA/ARES or NASA DAS at PDR for the operational and the sail-deployed phases.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: ISED SMSE-009-26; NFI brief
+  threshold: {op: <, value: 0.001, unit: collision probability (> 10 cm objects)}
+  status: draft
+- id: MIS-DIS-03
+  level: mission
+  tool_level: mission
+  category: disposal
+  subsystem: Northern Fire and Ice
+  type: functional
+  text: The disposal action shall start within 90 days of the end of operational life, including an end of life caused by
+    an unrecoverable anomaly.
+  rationale: ISED counts the 5 years from end of operational life, which includes an early failure; this is what makes the
+    OBC-independent timer necessary.
+  parents: [MIS-DIS-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'research: mission analysis §2.3 point 1'
+  threshold: {op: <=, value: 90, unit: days after end of operational life}
+  status: draft
+- id: MIS-DIS-04
+  level: mission
+  tool_level: mission
+  category: disposal
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: After drag-sail deployment is confirmed the spacecraft shall be passivated, with all transmitters permanently disabled
+    and the battery isolated from charging.
+  rationale: Debris-mitigation passivation and protection of other users of 401/450 MHz after end of life.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'ISO 24113 passivation; research: mission analysis §6.6'
+  status: draft
+- id: REG-SPC-01
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: Pre-consultation with ISED on the 401 MHz downlink channel, the 450 MHz uplink and the VHF fallback shall be held
+    before 31 March 2027.
+  rationale: 'The 449.75-450.25 MHz uplink needs RR 9.21 agreement and is the longest regulatory lead item (research: mission
+    analysis R6).'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §4.2 item 1'
+  threshold: {op: <=, value: '2027-03-31', unit: date}
+  status: draft
+- id: REG-SPC-02
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The ITU advance publication information and the RR No. 9.21 agreement-seeking for 449.75-450.25 MHz shall be submitted
+    through ISED at least 30 months before launch.
+  rationale: 4-month comment period (RR 9.3); 9.21 agreements with affected administrations (USA at minimum) may take longer.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'ITU RR 9.1, 9.3, 9.21, 5.286; research: mission analysis §4.2 item 2'
+  threshold: {op: '>=', value: 30, unit: months before launch}
+  status: draft
+- id: REG-SPC-03
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The ISED space station licence application, including the space debris mitigation plan and Annex C link budgets, shall
+    be submitted at least 24 months before launch.
+  rationale: Apply within 6 months of the ITU filing; 126-day service standard; at most two applications in process.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'ISED CPC-2-6-02 Issue 7; research: mission analysis §4.2 item 3'
+  threshold: {op: '>=', value: 24, unit: months before launch}
+  status: draft
+- id: REG-SPC-04
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: An ISED earth station licence for each of the 4 ground stations shall be granted at least 12 months before launch.
+  rationale: Separate licence and fee per station; 450 MHz EIRP must protect land-mobile users.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'ISED CPC-2-6-01; research: mission analysis §4.2 item 5'
+  threshold: {op: '>=', value: 12, unit: months before launch}
+  status: draft
+- id: REG-SPC-05
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: Antenna-siting and land-use consultation under CPC-2-0-03, or a documented exemption, shall be complete for each ground
+    station at least 12 months before launch.
+  rationale: Rooftop or mast Yagi exemptions to be verified per site and municipality.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'ISED CPC-2-0-03; research: mission analysis §4.2 item 6'
+  threshold: {op: '>=', value: 12, unit: months before launch}
+  status: draft
+- id: REG-SPC-06
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The space and ground segments shall transmit only on the frequencies, bandwidths and powers assigned in the ISED licences,
+    with no use of amateur-service allocations.
+  rationale: 'NFI brief: space operation service only; amateur 70 cm hardware does not cover 401 or 450 MHz anyway (research:
+    mission analysis §5).'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: NFI brief (no amateur frequencies); ISED licence
+  status: draft
+- id: REG-RSS-01
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The RSSSA operating licence application, with the Command Protection Plan, the Data Protection Plan and the System
+    Disposal Plan, shall be submitted at least 24 months before launch.
+  rationale: 180-day service standard for a complete initial application; security screening of personnel included.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: team_leader
+  priority: 1
+  source: 'RSSSA (Global Affairs Canada); research: mission analysis §4.2 item 7'
+  threshold: {op: '>=', value: 24, unit: months before launch}
+  status: draft
+- id: REG-RSS-02
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The PDR and CDR reports shall be sent to Global Affairs Canada within 45 days of each review.
+  rationale: RSSSA licence condition for systems under development.
+  parents: [REG-RSS-01]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: team_leader
+  priority: 1
+  source: 'RSSSA licence conditions; research: mission analysis §4.2 item 7'
+  threshold: {op: <=, value: 45, unit: days after each review}
+  status: draft
+- id: REG-RSS-03
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: Every telecommand accepted by the spacecraft shall be authenticated and encrypted as set out in the RSSSA Command
+    Protection Plan.
+  rationale: 'RSSSA: all commands encrypted. Implemented in the OBC software, independent of the radio (OBD-SEC-01).'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: RSSSA Command Protection Plan; NFI brief (uplink and downlink encrypted)
+  status: draft
+- id: REG-RSS-04
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: Payload data shall be encrypted on the space-to-ground link and held in access-controlled storage on the ground, as
+    set out in the RSSSA Data Protection Plan.
+  rationale: 'NFI brief: uplink and downlink encrypted; the plan also covers ground archive access.'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: RSSSA Data Protection Plan; NFI brief
+  status: draft
+- id: REG-RSS-05
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The mission shall provide raw data of a sensed state's territory to that state, when the licence requires it, within
+    30 days of a request.
+  rationale: RSSSA licences include sensed-state access and data distribution conditions; confirm the period with GAC.
+  parents: [REG-RSS-01]
+  objectives: [C1, O4]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: team_leader
+  priority: 2
+  source: 'RSSSA (sensed-state access, distribution); research: mission analysis §4.2 item 7'
+  threshold: {op: <=, value: 30, unit: days from request}
+  status: draft
+- id: REG-EXP-01
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: A written export classification (ECCN) of the SWIR camera from the supplier shall be obtained before the breadboard
+    order.
+  rationale: 'The IMX990 analogue camera is EU dual-use 6A003.b.4.a with a licence required (research: payload §1.1).'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §6 item 1; Wassenaar 6A003.b.4'
+  status: draft
+- id: REG-EXP-02
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: Export permits for every planned transfer of the SWIR camera or the spacecraft outside Canada, including to the launch
+    site, shall be applied for at least 9 months before the transfer.
+  rationale: Re-export of a controlled camera inside the satellite to a foreign launch site needs a Canadian permit.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: AR
+  owner_seat: team_leader
+  priority: 1
+  source: 'research: mission analysis §4.2 items 8-9; research: payload §6'
+  threshold: {op: '>=', value: 9, unit: months before launch}
+  status: draft
+- id: REG-DEB-01
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The debris mitigation assessment (lifetime, disposal reliability, collision and casualty risk) shall be performed
+    with ESA DRAMA or NASA DAS at PDR and updated at CDR.
+  rationale: NFI brief commitment; feeds the ISED licence debris plan and the RSSSA System Disposal Plan.
+  parents: [MIS-DIS-01, MIS-DIS-02]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: NFI brief (DRAMA/DAS at PDR); ISED SMSE-009-26
+  status: draft
+- id: REG-DEB-02
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The operator shall be registered with a conjunction-screening service, with a 24/7 contact point and ephemeris sharing
+    at least every 7 days, at least 90 days before launch.
+  rationale: 'ISED space-safety conditions; rideshare: best-estimate orbit first, then updated with GNSS-derived ephemerides.'
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: AR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'ISED SMSE-009-26 (conjunction-service registration); research: mission analysis §4.2 item 11'
+  threshold: {op: <=, value: 90, unit: days before launch}
+  status: draft
+- id: REG-DEB-03
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The re-entry casualty risk shall be at most 1 in 10 000.
+  rationale: Standard debris requirement; a 6 kg aluminium 3U with COTS optics is expected to demise, to be shown with DAS.
+  parents: [MIS-DIS-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: ISO 24113:2023; NASA-STD-8719.14
+  threshold: {op: <=, value: 0.0001, unit: casualty risk}
+  status: draft
+- id: REG-DEB-04
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The spacecraft shall release no object larger than 1 mm in orbit, with covers, pins and the deployed sail remaining
+    attached.
+  rationale: Mission-related debris; the antenna and sail hold-downs must capture their parts.
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: ISO 24113 (mission-related objects)
+  status: draft
+- id: REG-REG-01
+  level: mission
+  tool_level: mission
+  category: regulatory
+  subsystem: Northern Fire and Ice
+  type: regulatory
+  text: The orbital data needed for UN registration shall be sent to the national registry of space objects within 60 days
+    of launch.
+  rationale: Canada registers space objects through its national registry (held by the Canadian Space Agency).
+  parents: [OBJ-C1]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: IOV
+  owner_seat: team_leader
+  priority: 1
+  source: 'UN Registration Convention via CSA; research: mission analysis §4.2 item 10'
+  threshold: {op: <=, value: 60, unit: days after launch}
+  status: draft
+- id: SEG-SS-01
+  level: segment
+  tool_level: system
+  category: space_segment
+  subsystem: Space Segment
+  type: functional
+  text: The space segment shall consist of one 3U spacecraft that acquires simultaneous VNIR and SWIR image pairs, stores
+    them on board and downlinks them over UHF.
+  rationale: Root of the spacecraft (system-level) requirements.
+  parents: [MIS-SCI-01, MIS-SCI-02, MIS-SCI-04]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: NFI brief (mission architecture)
+  status: draft
+- id: SEG-SS-02
+  level: segment
+  tool_level: system
+  category: space_segment
+  subsystem: Space Segment
+  type: performance
+  text: The space segment shall point the payload boresight to any target within ±30 deg roll of nadir and be settled for
+    acquisition within 60 s of the start of the manoeuvre.
+  rationale: '±30 deg roll raises revisit from 2.7-3.2 to 12.2-14.5 looks per site per month (calc/orbit4.py); SWIR GSD is
+    68 x 81 m at 30 deg (research: mission analysis §1.4).'
+  parents: [MIS-COV-01]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'research: mission analysis R1, §1.4'
+  threshold: {op: '>=', value: 30, unit: deg roll}
+  status: draft
+- id: SEG-SS-03
+  level: segment
+  tool_level: system
+  category: space_segment
+  subsystem: Space Segment
+  type: performance
+  text: The space segment shall meet its performance requirements at any circular altitude between 520 km and 600 km.
+  rationale: Without propulsion the orbit is set by the launch; decay before sail deployment is small but the injection range
+    must be covered.
+  parents: [MIS-COV-03]
+  objectives: [O1, O3, C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'research: mission analysis §1.1, §2'
+  threshold: {op: '>=', value: 520, unit: km lowest operating altitude}
+  status: draft
+- id: SEG-GS-01
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: performance
+  text: The ground segment shall provide at least 100 min per day of contact time, as the union of all stations above a 10
+    deg elevation mask.
+  rationale: Ottawa, Yellowknife, Iqaluit and Inuvik give 125.7 min/day (sum of sites 177.7); losing the worst single site
+    (Inuvik) leaves 93.4 min/day (calc/contacts.json, degraded.json). 100 min/day keeps the 13 MB/day target closing with
+    margin; with the worst single site out the budget still closes with 17.6 % margin (NUMBERS.yaml data_budget C4).
+  parents: [MIS-DAT-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: NFI ground-site choice; calc/contacts_nfi.py
+  threshold: {op: '>=', value: 100, unit: 'min/day contact (union, 10 deg mask)'}
+  status: draft
+- id: SEG-GS-02
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: functional
+  text: The ground segment shall comprise 4 UHF ground stations of a common design at generic sites near Ottawa, Yellowknife,
+    Iqaluit and Inuvik, and one mission control centre in Ottawa.
+  rationale: 'Common design shares spares and procedures. The four sites were chosen on contact time: Inuvik adds 32.3 min/day
+    to the Ottawa-Yellowknife-Iqaluit union (Churchill would add 0.9) and cuts the longest gap from 8.2 to 6.6 h (calc/contacts.py).'
+  parents: [SEG-GS-01]
+  objectives: [O1, O3, C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: NFI ground-site trade (calc/contacts.py)
+  threshold: {op: ==, value: 4, unit: stations}
+  status: draft
+- id: SEG-GS-03
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: performance
+  text: Each ground station shall have a 401 MHz receive system noise temperature of at most 300 K, confirmed by a site noise
+    survey before installation.
+  rationale: An urban site (about 700 K) leaves +0.4 dB at 10 deg with RS coding at 1 W; a quiet site gives +4.0 dB (calc/link.py).
+    The three northern sites are rural; the Ottawa antenna is to be sited outside the urban core after the survey.
+  parents: [SEG-GS-01]
+  objectives: [O1]
+  verification_method: T
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis R4, §3.2'
+  threshold: {op: <=, value: 300, unit: K system noise temperature}
+  status: draft
+- id: SEG-GS-04
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: performance
+  text: Each ground station shall close the 450 MHz uplink with at least 3 dB margin at 10 deg elevation using at most 25
+    W at the antenna input.
+  rationale: '+10 to +14 dB margin at 25 W and 9.6 kbps (research: mission analysis §3.3); the lowest power that closes eases
+    RR 9.21 coordination.'
+  parents: [REG-SPC-04]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §3.3'
+  threshold: {op: <=, value: 25, unit: W PA output}
+  status: draft
+- id: SEG-GS-05
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: functional
+  text: Each ground station shall execute scheduled passes unattended, under remote supervision from mission control.
+  rationale: Four sites, three of them remote northern sites, cannot be staffed by a student team; operators supervise from
+    mission control.
+  parents: [SEG-GS-01, MIS-OPS-03]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: mission_analyst
+  priority: 1
+  source: NFI brief (mission control with VPN to remote sites)
+  status: draft
+- id: SEG-GS-06
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: performance
+  text: Each ground station shall successfully support at least 95 % of its scheduled passes in any month.
+  rationale: Lost passes are lost data; the 10 % availability allowance in the data budget assumes at least 95 % per site
+    plus weather and conflicts.
+  parents: [SEG-GS-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: mission_analyst
+  priority: 2
+  source: design-tool default
+  threshold: {op: '>=', value: 95, unit: '% of scheduled passes per station per month'}
+  status: draft
+- id: SEG-GS-07
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: performance
+  text: The three northern ground stations (Yellowknife, Iqaluit, Inuvik) shall operate from -45 to +30 degC with ice loading
+    on the antennas.
+  rationale: Standard rotators are rated to about -20 degC; the northern sites need a heated heavy-duty rotator housing and
+    the shorter 401CP14-class receive antenna. Inuvik winter minima reach about -45 degC.
+  parents: [SEG-GS-06]
+  objectives: [O3, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'research: mission analysis §5 (northern site note); NFI ground-site choice'
+  threshold: {op: '>=', value: -45, unit: degC lowest operating temperature}
+  status: draft
+- id: SEG-GS-08
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: functional
+  text: The links between mission control and each ground station shall run over a site-to-site VPN with mutual certificate
+    authentication and AES-256 encryption.
+  rationale: Command and data protection extends to the terrestrial network; no telecommand path exists outside the VPN.
+  parents: [MIS-OPS-03, REG-RSS-03]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: NFI brief (VPN); RSSSA Command Protection Plan
+  status: draft
+- id: SEG-GS-09
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: functional
+  text: Mission control shall generate a pass schedule for all 4 stations, including the downlink content of each pass, at
+    least 24 h ahead from the latest orbit determination.
+  rationale: Scheduling assigns each pass to a station and to delayed HK, payload data or a mix (MIS-OPS-04); about 14 windows
+    per day.
+  parents: [MIS-OPS-04]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: telemetry design (script/hk_sids.yaml pass_classes)
+  threshold: {op: '>=', value: 24, unit: h schedule look-ahead}
+  status: draft
+- id: SEG-GS-10
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: functional
+  text: Mission control shall manage the spacecraft encryption and authentication keys in an encrypted key store with two-person
+    access control, logged key loading and a documented key-compromise procedure.
+  rationale: The RSSSA plans need key generation, storage, change and compromise procedures; key loading before launch is
+    a two-person action.
+  parents: [REG-RSS-03, REG-RSS-04]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: RSSSA Command and Data Protection Plans; CCSDS 350.9-G (SDLS key management)
+  status: draft
+- id: SEG-GS-11
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: functional
+  text: Mission control shall log every telecommand sent, with operator identity, time and verification result, and keep the
+    log for the life of the licence.
+  rationale: Traceability of commanding for the regulator and for anomaly investigation.
+  parents: [REG-RSS-03]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: RSSSA licence conditions
+  status: draft
+- id: SEG-GS-12
+  level: segment
+  tool_level: system
+  category: ground_segment
+  subsystem: Ground Segment
+  type: performance
+  text: Mission control shall deliver received payload data and housekeeping to the science segment within 60 min of the end
+    of each pass.
+  rationale: Leaves most of the 24 h quicklook budget (MIS-DAT-03) to processing.
+  parents: [MIS-DAT-03]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: design-tool default
+  threshold: {op: <=, value: 60, unit: min after pass end}
+  status: draft
+- id: SEG-LS-01
+  level: segment
+  tool_level: system
+  category: launch_segment
+  subsystem: Launch Segment
+  type: interface
+  text: The spacecraft shall be compatible with a rideshare launch in a 3U CubeSat deployer, as defined in the launch interface
+    control document.
+  rationale: Launch vehicle and deployer are not yet known; the CDS rev 14.1 envelope is used until the ICD is issued.
+  parents: [MIS-COV-03]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: NFI brief (rideshare launch, 3U deployer)
+  status: draft
+- id: SEG-LS-02
+  level: segment
+  tool_level: system
+  category: launch_segment
+  subsystem: Launch Segment
+  type: regulatory
+  text: The launch request shall specify a sun-synchronous orbit with nominal altitude 590 km, apogee at most 600 km including
+    dispersion, inclination error at most 0.15 deg and a daylight descending node at 10:30 ±30 min local time.
+  rationale: 'Secondary slot: RAAN not guaranteed; the request is the only lever on apogee and LTAN drift. 10:30 LTDN gives
+    same-hour Sentinel-2 matchups (research: mission analysis §6.4); 13:30 stays acceptable for power and thermal.'
+  parents: [MIS-COV-03, MIS-COV-04]
+  objectives: [C1, O1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'research: mission analysis R7, R14'
+  threshold: {op: <=, value: 590, unit: km nominal apogee requested}
+  status: draft
+- id: SEG-LS-03
+  level: segment
+  tool_level: system
+  category: launch_segment
+  subsystem: Launch Segment
+  type: performance
+  text: The spacecraft shall withstand the launch environments of the launch ICD (quasi-static, sine, random, shock, depressurisation)
+    without loss of function; NASA GEVS levels apply until the ICD is issued.
+  rationale: Final vibration in the deployer is done by the launch provider; the spacecraft qualifies to protoflight levels
+    first (VER-ENV-01).
+  parents: [SEG-LS-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: NFI brief (final vibration by the launch provider); launch ICD (TBD)
+  status: draft
+- id: SEG-LS-04
+  level: segment
+  tool_level: system
+  category: launch_segment
+  subsystem: Launch Segment
+  type: performance
+  text: The spacecraft shall remain in the deployer for at least 6 months without recharging and still complete LEOP.
+  rationale: Secondary payloads wait for the launch; battery self-discharge and the sail timer battery must allow it.
+  parents: [SEG-LS-01]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: power_engineer
+  priority: 1
+  source: NFI brief (launch near end of development)
+  threshold: {op: '>=', value: 6, unit: months in deployer}
+  status: draft
+- id: SEG-LS-05
+  level: segment
+  tool_level: system
+  category: launch_segment
+  subsystem: Launch Segment
+  type: process
+  text: The flight spacecraft and its acceptance data package shall be delivered to the launch provider at least 4 months
+    before launch, or earlier if the launch ICD requires.
+  rationale: Integration in the deployer, final vibration and shipping.
+  parents: [SEG-LS-01]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: CDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: design-tool default; launch ICD (TBD)
+  threshold: {op: '>=', value: 4, unit: months before launch}
+  status: draft
+- id: SEG-LS-06
+  level: segment
+  tool_level: system
+  category: launch_segment
+  subsystem: Launch Segment
+  type: performance
+  text: The spacecraft shall recover from separation tip-off rates up to 10 deg/s about any axis.
+  rationale: Covers typical POD tip-off; drives the detumble requirement (ADC-MOD-01).
+  parents: [SEG-LS-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: design-tool default; deployer heritage
+  threshold: {op: '>=', value: 10, unit: deg/s tip-off rate}
+  status: draft
+- id: SEG-US-01
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: functional
+  text: The science segment shall process every received acquisition through Level-0 (raw, time-tagged), Level-1A (decompressed,
+    unpacked), Level-1B (radiometrically calibrated), Level-1C (geolocated, co-registered, 60 m grid) and Level-2 (burn and
+    ice products).
+  rationale: Defined product levels make the uncertainty chain auditable for O4.
+  parents: [MIS-SCI-06, MIS-SCI-11, MIS-SCI-13, MIS-DAT-04]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: payload_lead
+  priority: 1
+  source: NFI brief (L1/L2 chain)
+  status: draft
+- id: SEG-US-02
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: performance
+  text: The Level-1C processor shall register each scene to a Landsat or Sentinel-2 reference with a residual of at most 1
+    SWIR pixel RMS where at least 20 tie points are found.
+  rationale: Pre-registration geolocation is about 1 km (0.1 deg knowledge); registration brings it to the 2-pixel target.
+  parents: [MIS-SCI-10]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: payload_lead
+  priority: 1
+  source: NFI brief (registration to Landsat/Sentinel-2)
+  threshold: {op: <=, value: 1, unit: SWIR px RMS residual}
+  status: draft
+- id: SEG-US-03
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: functional
+  text: The science segment shall cross-calibrate both bands against Sentinel-2 B8A/B11 and Landsat OLI B5/B6 using spectral
+    band adjustment factors derived from the measured flight filter responses.
+  rationale: the instrument bands differ from the reference bands; snow/ice reflectance is steep at 1.6 um, so SBAFs are needed.
+  parents: [MIS-SCI-09, MIS-SCI-05]
+  objectives: [O4]
+  verification_method: R
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: mission analysis R10, §6.4'
+  status: draft
+- id: SEG-US-04
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: performance
+  text: The science segment shall plan at least 2 acquisitions per month over pseudo-invariant calibration sites to trend
+    radiometric stability.
+  rationale: Needed for the 5 % repeatability measure; the sites are outside Canada and use spare capacity.
+  parents: [MIS-SCI-09]
+  objectives: [O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: payload_lead
+  priority: 1
+  source: design-tool default; CEOS PICS practice
+  threshold: {op: '>=', value: 2, unit: PICS acquisitions per month}
+  status: draft
+- id: SEG-US-05
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: functional
+  text: The science segment shall validate the burn-index and burn-class products against dNBR from same-season Sentinel-2
+    or Landsat over at least 3 burns per year.
+  rationale: dNBR (2.2 um) is the severity standard; the mission's classes are calibrated against it.
+  parents: [MIS-SCI-08]
+  objectives: [O1, O4]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: mission analysis §6.1'
+  status: draft
+- id: SEG-US-06
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: functional
+  text: The science segment shall validate the ice/snow/water/cloud classification against same-day Sentinel-2 classifications
+    and, where available, Water Survey of Canada break-up dates.
+  rationale: 'Published methods reach 89-91 % accuracy with Sentinel-2 and 3-7 day break-up date errors with MODIS (research:
+    mission analysis §6.3).'
+  parents: [MIS-SCI-07]
+  objectives: [O3, O4]
+  verification_method: A
+  verification_phase: IOV
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: mission analysis §6.3'
+  status: draft
+- id: SEG-US-07
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: functional
+  text: The science archive shall publish products as cloud-optimised GeoTIFF with STAC metadata, a persistent identifier
+    per collection and the processing version of each product.
+  rationale: Open, findable products for communities and other researchers.
+  parents: [MIS-DAT-05, MIS-DAT-07]
+  objectives: [O1, O3, O4]
+  verification_method: I
+  verification_phase: QR
+  owner_seat: payload_lead
+  priority: 3
+  source: design-tool default; open-data practice
+  status: draft
+- id: SEG-US-08
+  level: segment
+  tool_level: system
+  category: user_segment
+  subsystem: Science Segment
+  type: functional
+  text: The science segment shall accept target requests from the science team and the site communities at least 72 h before
+    the planned acquisition and pass them to mission planning.
+  rationale: Target database feeds the daily plan; 72 h fits the 48 h stored plan cycle.
+  parents: [MIS-SCI-14]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: payload_lead
+  priority: 2
+  source: NFI brief (sites with communities)
+  threshold: {op: '>=', value: 72, unit: h before acquisition}
+  status: draft
+- id: OPS-CRT-01
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: No person shall send telecommands to the spacecraft before being certified as an operator through the training syllabus
+    and at least 10 supervised simulated passes including contingency cases.
+  rationale: Student operators change every year; certification is also part of the RSSSA command protection.
+  parents: [MIS-OPS-03, REG-RSS-03]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: AR
+  owner_seat: mission_analyst
+  priority: 1
+  source: RSSSA Command Protection Plan; design-tool default
+  threshold: {op: '>=', value: 10, unit: supervised simulator passes}
+  status: draft
+- id: OPS-CRT-02
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: Critical telecommands (sail ARM and FIRE, passivation, key change, software image activation, transmitter disable)
+    shall require confirmation by a second certified operator in the mission control system.
+  rationale: Irreversible or security-relevant commands.
+  parents: [OPS-CRT-01, REG-RSS-03]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: mission_analyst
+  priority: 1
+  source: design script §5.7 FR-09; RSSSA
+  status: draft
+- id: OPS-PRC-01
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: Every nominal and contingency flight procedure shall be validated on the spacecraft simulator or the engineering model
+    before its first use in flight.
+  rationale: Procedures are student-written; validation on the simulator catches wrong commands before they reach the spacecraft.
+  parents: [MIS-OPS-01, SEG-GS-05]
+  objectives: [O1, O3, C1]
+  verification_method: R
+  verification_phase: AR
+  owner_seat: mission_analyst
+  priority: 1
+  source: ECSS-E-ST-70C
+  status: draft
+- id: OPS-PLN-01
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: The mission planning tool shall check every plan against the flight rules (battery state of charge at least 40 % before
+    imaging, roll at most 30 deg, no transmission during acquisitions) before upload.
+  rationale: Flight rules enforced by tooling rather than memory.
+  parents: [MIS-OPS-02, SEG-GS-09]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: mission_analyst
+  priority: 1
+  source: design script §5.7 (FR-01..FR-03)
+  verifies: [SYS-EMC-02, SYS-AUT-03, SEG-SS-02]
+  status: draft
+- id: OPS-DLS-01
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: The pass plan shall downlink every stored housekeeping packet within 7 days of its generation, or record its deliberate
+    loss in the operations log.
+  rationale: Per-pass choice between delayed HK and payload data must not silently lose HK when the 7-day store wraps.
+  parents: [MIS-OPS-04, SEG-GS-09]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: mission_analyst
+  priority: 1
+  source: telemetry design
+  threshold: {op: <=, value: 7, unit: days}
+  status: draft
+- id: OPS-CTG-01
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: The operations team shall start the anomaly procedure for a Safe-mode entry or a missed beacon within 24 h of detection.
+  rationale: Passes cluster in two daily windows; 24 h always includes several passes.
+  parents: [MIS-OPS-03, MIS-LIF-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: mission_analyst
+  priority: 1
+  source: design-tool default
+  threshold: {op: <=, value: 24, unit: h from detection}
+  status: draft
+- id: OPS-CNJ-01
+  level: segment
+  tool_level: system
+  category: operations
+  subsystem: Operations
+  type: process
+  text: The operations team shall assess and act on a high-risk conjunction alert within 24 h of receipt.
+  rationale: 'No propulsion: the actions are attitude change to minimum or maximum drag, coordination with the other operator,
+    and reporting.'
+  parents: [REG-DEB-02, MIS-DIS-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: mission_analyst
+  priority: 1
+  source: 'ISED space-safety condition; research: mission analysis §6.6'
+  threshold: {op: <=, value: 24, unit: h}
+  status: draft
+- id: SYS-BUD-01
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The measured launch mass of the spacecraft shall not exceed 6.0 kg.
+  rationale: CDS rev 14.1 3U limit and NFI brief maximum; verified by weighing the flight model.
+  parents: [SEG-LS-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: AR
+  owner_seat: structures_engineer
+  priority: 1
+  source: CubeSat Design Specification rev 14.1 (3U); NFI brief
+  threshold: {op: <=, value: 6.0, unit: kg}
+  status: draft
+- id: SYS-BUD-02
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: At PDR the nominal mass plus equipment maturity margins (5 % off-the-shelf, 10 % modified, 20 % new) plus a 20 % system
+    margin applied to that margined mass shall not exceed 6.0 kg.
+  rationale: 'Baseline: 3.87 kg nominal, 4.15 kg with maturity margins, 4.98 kg with the 20 % system margin (calc/budgets.py),
+    1.02 kg below the limit.'
+  parents: [SYS-BUD-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: calc/budgets.py; ECSS/ESA margin practice
+  threshold: {op: '>=', value: 20, unit: '% system mass margin'}
+  status: draft
+- id: SYS-BUD-03
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: End-of-life orbit-average power generation shall exceed the orbit-average load of the nominal operations mix by at
+    least 20 % at beta 15 deg in the nominal attitude.
+  rationale: 'Load 4.17 W orbit average (mode mix nominal 85 / imaging 5 / downlink 9 / night SWIR 1 %), 5.00 W with 20 %;
+    deployable wings give about 12.2 W EOL; body-mounted cells alone give 4.0 W and fail at low beta (research: bus R6; calc/budgets.py).'
+  parents: [SEG-SS-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §10.2-10.3'
+  threshold: {op: '>=', value: 20, unit: '% power margin (EOL)'}
+  status: draft
+- id: SYS-BUD-04
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The battery depth of discharge shall not exceed 15 % in the worst-case orbit, which includes a 12 W payload acquisition
+    of 5 min in eclipse.
+  rationale: 'Worst eclipse: 20 min nominal + 10 min downlink + 5 min imaging is about 3.8 Wh, 8.8 % of a 43 Wh BP4 (calc/budgets.py);
+    15 % leaves room for capacity fade and safe-mode cases.'
+  parents: [SYS-BUD-03]
+  objectives: [O1, O2, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §10.3; research: payload §3.7'
+  threshold: {op: <=, value: 15, unit: '% depth of discharge'}
+  status: draft
+- id: SYS-BUD-05
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The daily volume queued for downlink (payload products plus stored housekeeping) and the real-time housekeeping of
+    the pass plan shall together be at most 90 % of the daily net downlink capacity of the 4-station network.
+  rationale: Net capacity 25.3 MB/day (union 125.7 min/day, 30 s acquisition per window, 90 % availability, frame efficiency
+    0.821). Baseline demand 15.54 MB/day gives 38.5 % margin; at the 19.2 kbps fallback the science volume must drop to about
+    9 MB/day.
+  parents: [MIS-DAT-01, MIS-DAT-02]
+  objectives: [O1, O3, O4]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: calc/budget_nfi.py; NUMBERS.yaml data_budget
+  threshold: {op: '>=', value: 10, unit: '% data-volume margin'}
+  status: draft
+- id: SYS-BUD-06
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The downlink and the uplink shall each close with at least 3 dB margin at 10 deg elevation to a ground station meeting
+    SEG-GS-03.
+  rationale: 'Downlink with RS(255,223) at 1 W and 300 K: +4.0 dB; uplink at 25 W: +10 to +14 dB (research: mission analysis
+    §3.2-3.3).'
+  parents: [MIS-DAT-01, SEG-GS-03, SEG-GS-04]
+  objectives: [O1, O3, C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §3.2-3.3; ISED CPC-2-6-02 Annex C'
+  threshold: {op: '>=', value: 3, unit: dB link margin at 10 deg}
+  status: draft
+- id: SYS-BUD-07
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The geolocation error of Level-1C images before registration shall be at most 1.5 km (3 sigma).
+  rationale: 'Budget: 0.1 deg attitude knowledge = 1.03 km, payload-to-star-tracker alignment 0.05 deg = 0.5 km, 1 ms time
+    error = 7 m, GNSS position 20 m; RSS about 1.2 km.'
+  parents: [MIS-SCI-10, SEG-US-02]
+  objectives: [O1, O3, O4]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'NFI brief; research: mission analysis §6.6'
+  threshold: {op: <=, value: 1.5, unit: km before registration}
+  status: draft
+- id: SYS-BUD-08
+  level: system
+  tool_level: system
+  category: budgets
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The internal stack shall leave at least 10 % height margin against the usable 328 mm.
+  rationale: About 312 mm with BPX (5 %), about 295 mm with BP4 (10 %).
+  parents: [SYS-LCH-01]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: PDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: 'research: bus R7, §10.5'
+  threshold: {op: '>=', value: 10, unit: '% stack height margin'}
+  status: draft
+- id: SYS-MOD-01
+  level: system
+  tool_level: system
+  category: modes_fdir
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall implement the modes OFF/launch, LEOP/detumble, commissioning, nominal, imaging, night SWIR, downlink,
+    safe, survival and end of life, with the transitions of the mode table.
+  rationale: 'ConOps mode set (research: mission analysis §7.2); the transitions are those of script/modes.yaml.'
+  parents: [SEG-SS-01, MIS-OPS-01]
+  objectives: [O1, O2, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'research: mission analysis §7.2; script/modes.yaml'
+  status: draft
+- id: SYS-MOD-02
+  level: system
+  tool_level: system
+  category: modes_fdir
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall enter Safe mode autonomously after any on-board computer reset or safe-mode FDIR trigger and
+    leave Safe mode only on ground command.
+  rationale: A predictable, power-positive state after any anomaly; operators decide recovery.
+  parents: [SYS-MOD-01]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: design-tool default; ECSS-E-ST-70-11C
+  status: draft
+- id: SYS-MOD-03
+  level: system
+  tool_level: system
+  category: modes_fdir
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: In Safe mode the spacecraft shall generate at least 20 % more orbit-average power than it consumes at any beta angle
+    of orbits with a daylight node between 09:30 and 13:30.
+  rationale: Safe mode must be survivable indefinitely, including with the payload and star tracker off.
+  parents: [SYS-MOD-02, SYS-BUD-03]
+  objectives: [O1, O3, C1]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §10.3'
+  threshold: {op: '>=', value: 20, unit: '% power margin in Safe'}
+  status: draft
+- id: SYS-AUT-01
+  level: system
+  tool_level: system
+  category: modes_fdir
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall execute a stored plan of time-tagged commands covering at least 48 h without ground contact.
+  rationale: Derived from MIS-OPS-02; the plan holds imaging, night-SWIR and downlink configuration commands.
+  parents: [MIS-OPS-02]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'research: mission analysis §1.3'
+  threshold: {op: '>=', value: 48, unit: h stored plan}
+  status: draft
+- id: SYS-AUT-02
+  level: system
+  tool_level: system
+  category: modes_fdir
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: If no valid telecommand is received for 72 h the spacecraft shall power-cycle the radio and enter Safe mode with the
+    beacon on.
+  rationale: Command-loss recovery; longer than the 48 h stored plan and much shorter than the 90-day disposal timer.
+  parents: [SYS-MOD-02, MIS-DIS-03]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: design script §5.4 (FDIR)
+  threshold: {op: <=, value: 72, unit: h without valid TC}
+  status: draft
+- id: SYS-AUT-03
+  level: system
+  tool_level: system
+  category: modes_fdir
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: 'The spacecraft shall shed loads autonomously at three battery state-of-charge thresholds: payload off below 40 %,
+    GNSS and star tracker off with entry to Safe below 20 %, and Survival below 10 %.'
+  rationale: Staged load shedding keeps the platform alive; the thresholds are FDIR parameters, adjustable by telecommand.
+  parents: [SYS-MOD-02, SYS-BUD-04]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: power_engineer
+  priority: 1
+  source: design script §5.4 (load shedding)
+  threshold: {op: '>=', value: 10, unit: '% SoC survival threshold'}
+  status: draft
+- id: SYS-DH-01
+  level: system
+  tool_level: system
+  category: data_handling
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall organise housekeeping telemetry into structure identifiers (SIDs), each with its own collection
+    period that is settable by telecommand.
+  rationale: 'Telemetry design: HK organised in SIDs with per-SID rates, e.g. thermal once per minute, ADCS outputs routinely,
+    ADCS diagnostics in a separate SID.'
+  parents: [SEG-SS-01, MIS-OPS-04]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design (script/hk_sids.yaml); ECSS-E-ST-70-41C service 3
+  status: draft
+- id: SYS-DH-02
+  level: system
+  tool_level: system
+  category: data_handling
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The real-time housekeeping of the routine SIDs and the service reports at their default periods shall not exceed 4800
+    bit/s including packet overhead, and enabling the ADCS diagnostic SID shall add at most 1200 bit/s.
+  rationale: Allocation 4800 bit/s; designed FULL profile 3747 bit/s (periodic SIDs 3572 + S1/S5/S9/S15 175), leaving a reserve
+    for a 5 events/s S5 burst. 4800 bit/s is 15 % of the 31.5 kbit/s information rate of the 38.4 kbps link; the LEAN profile
+    on payload-dump passes is 562 bit/s.
+  parents: [SYS-DH-01, MIS-DAT-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design (script/hk_sids.yaml)
+  threshold: {op: <=, value: 4800, unit: bit/s real-time HK}
+  status: draft
+- id: SYS-DH-03
+  level: system
+  tool_level: system
+  category: data_handling
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall record housekeeping SIDs in an on-board store at per-SID storage periods and retain at least
+    7 days of stored housekeeping at the Safe-mode storage periods with 50 % storage margin.
+  rationale: Delayed TM fills the downlink. Stored HK averages 66 bit/s in the nominal mix (0.73 MB/day incl. events); the
+    16 MB HK store holds 22 days nominal and 14 days in Safe; 7 days in Safe with 50 % margin is 12.2 MB.
+  parents: [SYS-DH-01, MIS-OPS-04]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design (script/hk_sids.yaml stores); ECSS-E-ST-70-41C service 15
+  threshold: {op: '>=', value: 7, unit: days stored HK retention}
+  status: draft
+- id: SYS-DH-04
+  level: system
+  tool_level: system
+  category: data_handling
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The spacecraft shall store at least 7 days of planned acquisitions, including the full-frame pairs kept for requests.
+  rationale: A full pair is 32 MB raw; 7 days of the nominal plan is about 8 GB (PAY-FUN-04).
+  parents: [MIS-OPS-02, MIS-DAT-06]
+  objectives: [O1, O2, O3]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §6.6; research: payload §3.2'
+  threshold: {op: '>=', value: 7, unit: days of planned acquisitions}
+  status: draft
+- id: SYS-SEC-01
+  level: system
+  tool_level: system
+  category: security
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall reject any telecommand that fails authentication or carries a sequence number already used, and
+    report each rejection in an event.
+  rationale: Authenticated encryption plus anti-replay; rejected commands are visible to operators.
+  parents: [REG-RSS-03]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: RSSSA Command Protection Plan; CCSDS 355.0-B (SDLS)
+  status: draft
+- id: SYS-SEC-02
+  level: system
+  tool_level: system
+  category: security
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall encrypt all payload data and stored telemetry downlinked to the ground with AES-256.
+  rationale: 'NFI brief: uplink and downlink encrypted. Whether the beacon may be sent in clear is to be agreed with GAC (TBC).'
+  parents: [REG-RSS-04]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: RSSSA Data Protection Plan; NFI brief (downlink encrypted)
+  status: draft
+  open_item: true
+- id: SYS-SEC-03
+  level: system
+  tool_level: system
+  category: security
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall hold at least 2 independent key sets and switch between them, or load a new key set, only on
+    an authenticated telecommand.
+  rationale: Key rollover and compromise recovery without a clear-text bypass.
+  parents: [REG-RSS-03, SEG-GS-10]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: CCSDS 350.9-G / 355.0-B key management
+  threshold: {op: '>=', value: 2, unit: key slots}
+  status: draft
+- id: SYS-ENV-01
+  level: system
+  tool_level: system
+  category: environment
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: Every unit shall withstand a total ionising dose of at least 10 krad(Si) at its location, or be shielded to its rated
+    dose with a design margin of 2.
+  rationale: 3.5 years at 600 km SSO behind about 1.5 mm Al is a few krad(Si) (estimate, TBC). The COTS cameras and controller
+    have no radiation data.
+  parents: [MIS-LIF-01]
+  objectives: [O1, O3, C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'design estimate (TBC by SPENVIS at PDR); research: payload §1.3'
+  threshold: {op: '>=', value: 10, unit: krad(Si) TID}
+  status: draft
+  open_item: true
+- id: SYS-ENV-02
+  level: system
+  tool_level: system
+  category: environment
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The spacecraft shall be designed for 3 years in orbit after up to 6 months of storage in the deployer.
+  rationale: Two years of science plus extension and disposal; ARTICA configuration A is rated for 2 years only (DIS-BAT-01
+    covers the independent timer battery).
+  parents: [MIS-LIF-01, SEG-LS-04]
+  objectives: [O1, O3, C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'NFI brief; research: bus R4'
+  threshold: {op: '>=', value: 3, unit: years in orbit}
+  status: draft
+- id: SYS-REL-01
+  level: system
+  tool_level: system
+  category: reliability
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: No single failure in the spacecraft, including total loss of the on-board computer or the EPS, shall prevent drag-sail
+    deployment.
+  rationale: 'Compliance with the 5-year rule depends on the sail (research: mission analysis §2.3).'
+  parents: [MIS-DIS-01, MIS-DIS-03]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: NFI brief (independent timer, two release circuits)
+  status: draft
+- id: SYS-REL-02
+  level: system
+  tool_level: system
+  category: reliability
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: The probability that the drag sail deploys when commanded or triggered at any time up to 3.5 years after launch shall
+    be at least 0.95.
+  rationale: Allocates 0.95 to the sail chain within the 0.90 mission disposal probability, leaving room for atmospheric and
+    attitude uncertainty.
+  parents: [MIS-DIS-01, SYS-REL-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: ISED >= 90 % disposal; design allocation
+  threshold: {op: '>=', value: 0.95, unit: probability}
+  status: draft
+- id: SYS-EMC-01
+  level: system
+  tool_level: system
+  category: emc
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: Emissions from all on-board units in any mode shall degrade the 450 MHz receiver and GNSS L1 sensitivity by at most
+    1 dB.
+  rationale: The payload controller, cameras and DC/DC converters are COTS; the uplink margin is large but GNSS L1 is sensitive.
+  parents: [SYS-BUD-06]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: ECSS-E-ST-20-07C (self-compatibility)
+  threshold: {op: <=, value: 1, unit: dB desensitisation}
+  status: draft
+- id: SYS-EMC-02
+  level: system
+  tool_level: system
+  category: emc
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: The spacecraft shall inhibit RF transmission during payload acquisitions.
+  rationale: Power peak (11.5 W payload + 3.3 W TX) and EMC into the camera electronics; flight rule FR-01 made a software
+    interlock.
+  parents: [SYS-BUD-04]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: design script §5.7 FR-01
+  status: draft
+- id: SYS-CLN-01
+  level: system
+  tool_level: system
+  category: cleanliness
+  subsystem: Northern Fire and Ice spacecraft
+  type: performance
+  text: Every material used on the spacecraft shall have total mass loss at most 1.0 % and collected volatile condensable
+    material at most 0.1 %, unless baked out and accepted by review.
+  rationale: Machine-vision lenses contain greases and plastics; outgassing onto the optics degrades radiometry (O4).
+  parents: [MIS-SCI-09]
+  objectives: [O4]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'ECSS-Q-ST-70-02C / ASTM E595; research: payload §2.5'
+  threshold: {op: <=, value: 1.0, unit: '% TML'}
+  status: draft
+- id: SYS-LCH-01
+  level: system
+  tool_level: system
+  category: launch
+  subsystem: Northern Fire and Ice spacecraft
+  type: interface
+  text: The spacecraft shall comply with the CubeSat Design Specification rev 14.1 (or the later revision named in the launch
+    ICD) for a 3U CubeSat.
+  rationale: Rideshare deployer; the CDS items that drive design are flowed to STR, EPS and COM requirements.
+  parents: [SEG-LS-01]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: CubeSat Design Specification rev 14.1
+  status: draft
+- id: SYS-LCH-02
+  level: system
+  tool_level: system
+  category: launch
+  subsystem: Northern Fire and Ice spacecraft
+  type: functional
+  text: After separation the spacecraft shall wait at least 30 min before any deployment and at least 45 min before any RF
+    transmission.
+  rationale: CDS timing rules; the separation timer is in hardware/EPS so it holds through an OBC reset.
+  parents: [SYS-LCH-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: CDS rev 14.1 (deployables 30 min, RF 45 min; confirm in ICD)
+  threshold: {op: '>=', value: 30, unit: min after separation}
+  status: draft
+- id: VER-MOD-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: The model philosophy shall be breadboard (month 6), engineering model (month 18) and protoflight model (month 30),
+    with the final vibration test in the deployer performed by the launch provider.
+  rationale: 36-month development with launch at about month 36; protoflight saves a qualification model.
+  parents: [SEG-SS-01, SEG-LS-03]
+  objectives: [C1, O1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: NFI brief (BB m6, EM m18, FM m30); ECSS-E-ST-10-02C
+  status: draft
+- id: VER-VCD-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: Every requirement shall have a verification method, verification level and close-out stage recorded in the verification
+    control document, and be closed with evidence before the acceptance review.
+  rationale: Methods T, A, R, I (demonstration is a test, ECSS-E-ST-10-02C); A- or R-only items need a risk assessment.
+  parents: [VER-MOD-01]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: ECSS-E-ST-10-02C
+  status: draft
+- id: VER-ENV-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: The flight model shall pass protoflight sine and random vibration in all three axes with a first-mode frequency shift
+    of at most 5 % between the pre- and post-test resonance surveys.
+  rationale: Protoflight levels from the launch ICD or GEVS; the launch-provider vibration in the deployer comes after.
+  parents: [SEG-LS-03, VER-MOD-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: launch ICD (TBD); NASA GEVS-7000B; ECSS-E-ST-10-03C
+  threshold: {op: <=, value: 5, unit: '% first-mode shift'}
+  verifies: [STR-MOD-01, STR-FOS-01, SEG-LS-03]
+  status: draft
+- id: VER-ENV-02
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: The flight model shall pass a protoflight thermal-vacuum test of at least 4 cycles at a pressure of at most 1e-5 hPa,
+    with functional tests at each hot and cold plateau.
+  rationale: Also the opportunity to check payload focus in vacuum and to correlate the thermal model.
+  parents: [VER-MOD-01, SYS-ENV-02]
+  objectives: [C1, O4]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: ECSS-E-ST-10-03C
+  threshold: {op: '>=', value: 4, unit: thermal cycles}
+  verifies: [THM-ALL-01, THM-PAY-01, PAY-OPT-05]
+  status: draft
+- id: VER-FUN-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: A full functional test of the flight model shall be run before and after each environmental test and before delivery.
+  rationale: Detects degradation caused by each test.
+  parents: [VER-ENV-01, VER-ENV-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: ECSS-E-ST-10-03C
+  verifies: [SYS-MOD-01]
+  status: draft
+- id: VER-E2E-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: An end-to-end test shall send encrypted telecommands from mission control through at least 2 ground stations over
+    RF to the flight model and return an image pair that the science segment processes to Level-1C.
+  rationale: Exercises the whole chain, including keys, VPN and the processing chain, before launch.
+  parents: [VER-MOD-01, SEG-SS-01]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: ECSS-E-ST-10-02C; design-tool default
+  threshold: {op: '>=', value: 2, unit: ground stations in the test}
+  verifies: [IF-SG-01, SEG-GS-08, SEG-US-01, SYS-SEC-01]
+  status: draft
+- id: VER-DIL-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: A day-in-the-life test of at least 72 h on the flight model shall run a stored plan without commanding, including
+    a command-loss recovery to Safe mode.
+  rationale: Shows 48 h autonomy and the 72 h command-loss response on flight hardware.
+  parents: [VER-MOD-01, MIS-OPS-02]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: design-tool default
+  threshold: {op: '>=', value: 72, unit: h}
+  verifies: [SYS-AUT-01, SYS-AUT-02]
+  status: draft
+- id: VER-DEP-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: Each release circuit of the sail and the independent timer (in accelerated mode) shall be tested on the flight model,
+    with full sail, antenna and wing deployments tested on the engineering model.
+  rationale: Drag-sail deployment reliability is a top risk; ARTICA's only flight has no published deployment result.
+  parents: [VER-MOD-01, SYS-REL-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'NFI brief (sail reliability risk); research: bus R4'
+  verifies: [DIS-REL-01, DIS-TRG-01, COM-ANT-02, STR-MEC-01]
+  status: draft
+- id: VER-CAL-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: The flight payload shall be calibrated before delivery for relative radiometric response with an integrating sphere,
+    for spectral response of each flight filter and for the inter-camera boresight map with focus set in vacuum.
+  rationale: Calibration baseline for O4; in-orbit cross-calibration then tracks changes.
+  parents: [VER-MOD-01, MIS-SCI-09]
+  objectives: [O4]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: 'research: payload §2.5, §7; NFI brief'
+  verifies: [PAY-OPT-01, PAY-GEO-01, PAY-RAD-01, PAY-OPT-05]
+  status: draft
+- id: VER-WKM-01
+  level: system
+  tool_level: system
+  category: verification
+  subsystem: Northern Fire and Ice spacecraft
+  type: process
+  text: All flight hardware assembly shall follow ECSS-Q-ST-70-61C or IPC J-STD-001 Class 3 with the space addendum, under
+    an ANSI/ESD S20.20 ESD-control programme.
+  rationale: Student-built boards and harness; workmanship is the dominant early-failure cause in CubeSats.
+  parents: [VER-MOD-01, SYS-LCH-01]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: cost_engineer
+  priority: 1
+  source: ECSS-Q-ST-70-61C or IPC J-STD-001 Class 3 Space Addendum; ANSI/ESD S20.20
+  status: draft
+- id: PAY-OPT-01
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The VNIR band shall be centred at 865 ±10 nm with FWHM at most 50 nm, and the SWIR band centred between 1600 and 1630
+    nm with FWHM at most 100 nm.
+  rationale: Matches Sentinel-2 B8A/B11 and OLI B5/B6; T-01 moved the SWIR filter from 1550 to about 1610 nm. VNIR FWHM 50
+    nm admits the COTS 875/50 filter.
+  parents: [MIS-SCI-06, SEG-US-03]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: mission analysis R10, §6.4; research: payload §2.4; trade T-01'
+  threshold: {op: <=, value: 100, unit: nm SWIR FWHM}
+  status: draft
+- id: PAY-OPT-02
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: Each bandpass filter shall block out-of-band light with optical density at least 4 over the detector response range
+    (400-1700 nm for SWIR, 300-1100 nm for VNIR) outside its passband.
+  rationale: The InGaAs IMX992 sees the visible at about 70 % QE and the solar spectrum peaks there; a small visible leak
+    would dominate the SWIR signal.
+  parents: [PAY-OPT-01]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §2.4, §6 item 5'
+  threshold: {op: '>=', value: 4, unit: OD out-of-band}
+  status: draft
+- id: PAY-OPT-03
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The SWIR ground sample distance shall be at most 75 m (goal 60 m) at nadir from 600 km and at most 75 m along-track
+    up to 25 deg off-nadir.
+  rationale: 58.2 m at 590 km with 35 mm focal length and 3.45 um pixels; 65 x 73 m at 25 deg.
+  parents: [MIS-SCI-07, MIS-SCI-06]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: payload §3.1; research: mission analysis §1.4'
+  threshold: {op: <=, value: 75, unit: m SWIR GSD}
+  status: draft
+- id: PAY-OPT-04
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The common-grid swath of the two bands shall be at least 140 km at nadir from 590 km.
+  rationale: SWIR swath 150.7 km and VNIR 172.3 km; the revisit analysis assumed 150 km.
+  parents: [MIS-COV-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: payload §3.1'
+  threshold: {op: '>=', value: 140, unit: km common swath}
+  status: draft
+- id: PAY-OPT-05
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The system MTF of each band at its native Nyquist frequency shall be at least 0.2 in orbit, with focus set in vacuum
+    and held over bench temperatures from 0 to 25 degC.
+  rationale: 'Depth of focus is ±6-14 um, of the order of the air-to-vacuum and thermal focus shifts: focus in TVAC or with
+    a measured offset, then stake.'
+  parents: [MIS-SCI-07, MIS-SCI-09]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §2.5, §6 item 6'
+  threshold: {op: '>=', value: 0.2, unit: system MTF at Nyquist}
+  status: draft
+- id: PAY-RAD-01
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: On the 60 m product grid the SNR of each band shall be at least 30 for a 10 % reflectance target at 30 deg sun elevation.
+  rationale: 'Burn scars. Met with an f/1.4-1.8 SWIR lens and an f/2.4-2.8 VNIR lens binned 2 x 2 to 60 m (research: payload
+    §3.4).'
+  parents: [MIS-SCI-08, MIS-COV-02]
+  objectives: [O1, O4]
+  verification_method: A
+  verification_phase: QR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: payload §3.4'
+  threshold: {op: '>=', value: 30, unit: SNR}
+  status: draft
+- id: PAY-RAD-02
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: On the 60 m product grid the SNR of each band shall be at least 10 for a 2 % reflectance target at 15 deg sun elevation.
+  rationale: Open water at freeze-up; SWIR native is marginal in October at f/1.8, so 2 x 2 binning or high-conversion-gain
+    mode is used late season.
+  parents: [MIS-COV-02, MIS-SCI-07, MIS-SCI-03]
+  objectives: [O3]
+  verification_method: A
+  verification_phase: QR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: payload §3.4; research: mission analysis §1.5'
+  threshold: {op: '>=', value: 10, unit: SNR}
+  status: draft
+- id: PAY-RAD-03
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: Neither band shall saturate on a 0.95 reflectance target at 65 deg sun elevation using the seasonal exposure table.
+  rationale: The IMX542 saturates on fresh snow at f/2.4 and 2.3 ms in June; exposures of 1-1.5 ms are needed over spring
+    snow.
+  parents: [MIS-SCI-02]
+  objectives: [O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief (snow unsaturated); research: payload §3.4'
+  threshold: {op: '>=', value: 0.95, unit: reflectance unsaturated}
+  status: draft
+- id: PAY-GEO-01
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: Band-to-band registration on the product grid shall be at most 1.0 SWIR pixel RMS (goal 0.5) using the bench boresight
+    map.
+  rationale: Two cameras on one rigid bench; the boresight map is measured on the ground and updated in orbit.
+  parents: [MIS-SCI-10, MIS-SCI-08]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: payload §7'
+  threshold: {op: <=, value: 1.0, unit: SWIR px RMS}
+  status: draft
+- id: PAY-GEO-02
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: functional
+  text: Both cameras shall operate in global-shutter mode only, with the IMX992 DRRS rolling-shutter mode disabled in flight
+    software.
+  rationale: Rolling shutter adds row-dependent shear at 6.9 km/s ground speed.
+  parents: [PAY-GEO-01]
+  objectives: [O1, O3]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §3.6'
+  status: draft
+- id: PAY-FUN-01
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: functional
+  text: Both cameras shall be triggered together from the GNSS PPS-disciplined clock and each frame time-tagged to within
+    1 ms of GNSS time.
+  rationale: 1 ms is about 7 m along track, well inside the geolocation budget.
+  parents: [PAY-GEO-01, SYS-BUD-07]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief (GNSS time stamp); research: bus §6'
+  threshold: {op: <=, value: 1, unit: ms time-tag error}
+  status: draft
+- id: PAY-FUN-02
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: functional
+  text: The SWIR camera shall provide a night mode with exposures up to 50 ms and a dark frame acquired within 60 s of each
+    night image.
+  rationale: 'O2 radiometry; beyond about 50 ms smear exceeds 6 pixels and dark current dominates (research: payload §3.5).'
+  parents: [MIS-SCI-04, MIS-SCI-12]
+  objectives: [O2]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 2
+  source: 'research: mission analysis §6.2; research: payload §3.5'
+  threshold: {op: <=, value: 60, unit: s to dark frame}
+  status: draft
+- id: PAY-FUN-03
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The payload controller shall produce quicklooks and 15 km region-of-interest pairs on the 60 m grid and compress all
+    downlinked products losslessly (CCSDS 121.0 or 123.0) with a mean ratio of at least 1.3:1 (goal 1.5:1) on 12-bit data.
+  rationale: The planned product set (16.7 MB raw per day) fits the 13 MB/day post-compression target only with at least 1.28:1;
+    CCSDS 121 typically gives 1.5-2:1 on 12-bit EO data (est., to be verified on simulated scenes). Lossless keeps the radiometry
+    for O4.
+  parents: [MIS-DAT-02, SYS-BUD-05]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §3.2; CCSDS 121.0-B / 123.0-B; calc/budget_nfi.py'
+  threshold: {op: '>=', value: 1.3, unit: mean lossless compression ratio}
+  status: draft
+- id: PAY-FUN-04
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The payload controller shall provide at least 8 GB of non-volatile product storage protected by per-file CRC and periodic
+    scrubbing.
+  rationale: 7 days of planned acquisitions; the controller has no ECC RAM, so integrity is checked in software.
+  parents: [SYS-DH-04]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: mission analysis §6.6; research: payload §4'
+  threshold: {op: '>=', value: 8, unit: GB usable store}
+  status: draft
+- id: PAY-CAL-01
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: functional
+  text: The payload shall acquire a dark-frame set of both cameras at least once per day on the night side and update its
+    hot-pixel map at least once per month.
+  rationale: No shutter; InGaAs hot pixels grow in orbit (CUMULOS) and DSNU depends on temperature.
+  parents: [MIS-SCI-09]
+  objectives: [O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §1.3, §3.5, §7 (calibration)'
+  threshold: {op: '>=', value: 1, unit: dark-frame set per day}
+  status: draft
+- id: PAY-BUD-01
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The payload (cameras, lenses, filters, bench, baffles, controller and payload harness) shall have a mass of at most
+    0.70 kg and fit within 1U.
+  rationale: 0.55-0.71 kg estimated; target 0.65 kg.
+  parents: [SYS-BUD-02]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'NFI brief; research: payload §3.7'
+  threshold: {op: <=, value: 0.7, unit: kg}
+  status: draft
+- id: PAY-BUD-02
+  level: subsystem
+  tool_level: subsystem
+  category: payload
+  subsystem: Payload
+  type: performance
+  text: The payload power shall be at most 12 W during acquisition and at most 3 W while transferring data to the on-board
+    computer.
+  rationale: '2.7 + 3.8 W cameras plus a 3-5 W CM4-class controller gives 11.5 W, budgeted as about 12 W (research: payload
+    §3.7, §4).'
+  parents: [SYS-BUD-04]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §3.7, §4'
+  threshold: {op: <=, value: 12, unit: W peak}
+  status: draft
+- id: EPS-SA-01
+  level: subsystem
+  tool_level: subsystem
+  category: eps
+  subsystem: EPS
+  type: performance
+  text: The solar arrays shall deliver at least 12 W orbit-average at end of life at beta 15 deg in the nominal attitude.
+  rationale: Body + two deployed wings give 12.2 W EOL; body-only gives 4.0 W, which does not close at low beta.
+  parents: [SYS-BUD-03, SYS-MOD-03]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §3, §10.3 (deployables baseline, trade T-04)'
+  threshold: {op: '>=', value: 12, unit: W orbit average EOL}
+  status: draft
+- id: EPS-BAT-01
+  level: subsystem
+  tool_level: subsystem
+  category: eps
+  subsystem: EPS
+  type: performance
+  text: The battery shall have at least 40 Wh capacity at beginning of life and retain at least 80 % of it after 3 years of
+    cycling at the planned depth of discharge.
+  rationale: BP4 43 Wh; BPX 86 Wh is 500 g and 41 mm for a 1.6 Wh eclipse need.
+  parents: [SYS-BUD-04]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §2 (BP4 recommended, trade T-05)'
+  threshold: {op: '>=', value: 40, unit: Wh BOL}
+  status: draft
+- id: EPS-PWR-01
+  level: subsystem
+  tool_level: subsystem
+  category: eps
+  subsystem: EPS
+  type: performance
+  text: The EPS shall supply a total spacecraft load of 20 W for at least 5 min in sunlight or eclipse.
+  rationale: Peak simultaneous load is about 19.6 W; within the P60 4 A battery limit.
+  parents: [SYS-BUD-04, PAY-BUD-02]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §10.3'
+  threshold: {op: '>=', value: 20, unit: W peak for 5 min}
+  status: draft
+- id: EPS-DST-01
+  level: subsystem
+  tool_level: subsystem
+  category: eps
+  subsystem: EPS
+  type: functional
+  text: Every switched output to a unit without radiation test data shall be current-limited with latch-up detection that
+    trips within 10 ms and retries at most 3 times before latching off.
+  rationale: No TID/SEE data for the Alvium cameras, IMX992, IMX542 or CM4; latch-up protection and power cycling are the
+    mitigation.
+  parents: [SYS-ENV-01, SYS-AUT-03]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: payload §1.3; research: bus §2'
+  threshold: {op: <=, value: 10, unit: ms trip time}
+  status: draft
+- id: EPS-THM-01
+  level: subsystem
+  tool_level: subsystem
+  category: eps
+  subsystem: EPS
+  type: functional
+  text: The battery shall be kept at or above 0 degC while charging by its integrated heater under EPS control.
+  rationale: Li-ion charging below 0 degC plates lithium.
+  parents: [SYS-ENV-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: thermal_engineer
+  priority: 1
+  source: 'Li-ion practice; research: bus §2 (BP4 heater)'
+  threshold: {op: '>=', value: 0, unit: degC while charging}
+  status: draft
+- id: EPS-SAF-01
+  level: subsystem
+  tool_level: subsystem
+  category: safety
+  subsystem: EPS
+  type: functional
+  text: The battery shall use UN 38.3-tested cells with over-charge, over-discharge, over-current and short-circuit protection.
+  rationale: Launch-provider safety acceptance of lithium-ion batteries.
+  parents: [SYS-LCH-01]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: QR
+  owner_seat: power_engineer
+  priority: 1
+  source: CDS rev 14.1 (battery); UN 38.3; launch provider safety
+  status: draft
+- id: EPS-INH-01
+  level: subsystem
+  tool_level: subsystem
+  category: safety
+  subsystem: EPS
+  type: functional
+  text: The EPS shall keep every load unpowered while the deployment switches are depressed or the remove-before-flight pin
+    is inserted, through at least 3 independent inhibits (TBC against the launch ICD).
+  rationale: Deployer safety; the number of inhibits is set by the CDS revision and the launch ICD.
+  parents: [SYS-LCH-01, SYS-LCH-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: power_engineer
+  priority: 1
+  source: CDS rev 14.1 (deployment switches, RBF); launch ICD
+  threshold: {op: '>=', value: 3, unit: independent inhibits (TBC)}
+  status: draft
+  open_item: true
+- id: EPS-PAS-01
+  level: subsystem
+  tool_level: subsystem
+  category: eps
+  subsystem: EPS
+  type: functional
+  text: The EPS shall permanently isolate the battery from the solar arrays on an authenticated two-step ARM and FIRE command.
+  rationale: Passivation at end of life after sail confirmation.
+  parents: [MIS-DIS-04]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: power_engineer
+  priority: 1
+  source: ISO 24113 passivation
+  status: draft
+- id: ADC-PNT-01
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: During imaging and night-SWIR acquisitions, in sunlight or eclipse, the ADCS shall control attitude to within 1 deg
+    and know it to within 0.08 deg (3 sigma).
+  rationale: 0.08 deg leaves 0.05 deg for payload alignment in the 0.1 deg budget. Sun sensor plus magnetometer gives 0.2
+    deg (2 sigma) and nothing in eclipse, so a star tracker is required.
+  parents: [SEG-SS-02, SYS-BUD-07]
+  objectives: [O1, O2, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'NFI brief; research: bus §1 (star tracker needed)'
+  threshold: {op: <=, value: 0.1, unit: deg knowledge (3 sigma)}
+  status: draft
+- id: ADC-PNT-02
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: The ADCS shall slew 30 deg in roll and settle to within 1 deg of the target attitude within 60 s.
+  rationale: Average 0.75 deg/s including settling; check against 1.77 mNms wheels with the deployed-panel inertia.
+  parents: [SEG-SS-02]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: mission analysis R1'
+  threshold: {op: <=, value: 60, unit: s slew and settle (30 deg)}
+  status: draft
+- id: ADC-PNT-03
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: The alignment between the star tracker and the payload boresight shall be known to within 0.05 deg (3 sigma) after
+    in-orbit calibration.
+  rationale: Ground alignment drifts with launch loads; in-orbit calibration uses registration to Sentinel-2/Landsat.
+  parents: [ADC-PNT-01, SYS-BUD-07]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: IOV
+  owner_seat: aocs_engineer
+  priority: 1
+  source: design allocation of the 0.1 deg budget
+  threshold: {op: <=, value: 0.05, unit: deg alignment knowledge}
+  status: draft
+- id: ADC-MOD-01
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: After separation the ADCS shall reduce body rates from 10 deg/s to below 0.5 deg/s within 3 orbits using magnetic
+    B-dot control.
+  rationale: LEOP exit criterion; B-dot needs only the magnetometer and torquers.
+  parents: [SEG-LS-06, SYS-MOD-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: mission analysis §7.1 (LEOP exit)'
+  threshold: {op: <=, value: 3, unit: orbits}
+  status: draft
+- id: ADC-MOD-02
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: In Safe mode the ADCS shall point the solar arrays to within 10 deg of the Sun within 1 orbit using only sun sensors,
+    magnetometer, gyros, wheels and torquers.
+  rationale: Safe mode must not depend on the star tracker or GNSS, which are shed below 20 % SoC.
+  parents: [SYS-MOD-03]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §10.3; design-tool default'
+  threshold: {op: <=, value: 10, unit: deg sun-pointing error}
+  status: draft
+- id: ADC-MOM-01
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: The ADCS shall keep each reaction wheel below 80 % of its momentum capacity by magnetic desaturation during nominal
+    operations.
+  rationale: Disturbance torques with deployed panels at 590 km are not yet assessed; margin for roll manoeuvres.
+  parents: [ADC-PNT-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §1 assessment'
+  threshold: {op: <=, value: 80, unit: '% wheel momentum capacity'}
+  status: draft
+- id: ADC-MAG-01
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: performance
+  text: The spacecraft residual magnetic dipole shall be at most 0.05 A m2 with all units in nominal mode.
+  rationale: Torquers give 0.2-0.3 A m2; residual dipole corrupts B-dot and desaturation.
+  parents: [ADC-MOD-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: systems_engineer
+  priority: 1
+  source: design-tool default (magnetic cleanliness)
+  threshold: {op: <=, value: 0.05, unit: A m2 residual dipole}
+  status: draft
+- id: ADC-OUT-01
+  level: subsystem
+  tool_level: subsystem
+  category: adcs
+  subsystem: AOCS
+  type: functional
+  text: The ADCS shall provide its outputs (attitude estimate, body rates, mode, pointing error, wheel speeds and system momentum)
+    to the on-board computer at 1 Hz in every mode except OFF.
+  rationale: These outputs are the routine ADCS SID and the per-frame attitude in the image metadata; raw sensor data goes
+    to the separate diagnostic SID.
+  parents: [SYS-DH-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: telemetry design (ADCS outputs routinely)
+  status: draft
+- id: OBD-SW-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The flight software shall implement PUS-C services 1, 3, 5, 6, 8, 9, 11, 12, 13, 15, 17 and 20 as tailored in the
+    mission PUS tailoring document.
+  rationale: Verification, housekeeping, events, memory, functions, time, schedule, monitoring, large data transfer, storage,
+    test, parameters.
+  parents: [SYS-DH-01, SYS-AUT-01]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: ECSS-E-ST-70-41C (PUS-C)
+  status: draft
+- id: OBD-HK-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The flight software shall let each housekeeping SID be enabled, disabled and given a collection period from 1 s to
+    3600 s by telecommand.
+  rationale: Per-SID rates are the main tool for keeping real-time HK within the 4800 bit/s allocation.
+  parents: [SYS-DH-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design; PUS-C service 3
+  threshold: {op: '>=', value: 1, unit: s minimum SID period}
+  status: draft
+- id: OBD-HK-02
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The default collection period of the thermal SID shall be 60 s.
+  rationale: Thermal time constants are minutes; faster sampling wastes downlink.
+  parents: [SYS-DH-02]
+  objectives: [O1, O3]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design (thermal once per minute)
+  threshold: {op: ==, value: 60, unit: s thermal SID period}
+  status: draft
+- id: OBD-HK-03
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The ADCS routine SID shall contain only the ADCS outputs, with the ADCS raw-sensor and estimator data placed in a
+    separate diagnostic SID that is disabled by default.
+  rationale: ADCS sends only its outputs routinely (SID 3, 560 bit/s at 1 s), with a separately enableable diagnostic SID
+    20 (1200 bit/s at 1 s) that an on-board procedure disables after a set duration.
+  parents: [SYS-DH-02, ADC-OUT-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design (ADCS diagnostic SID)
+  status: draft
+- id: OBD-STO-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The flight software shall provide separate packet stores for housekeeping, events and payload products, each with
+    selectable downlink by store, time window and priority in every pass.
+  rationale: Operators choose per pass delayed HK, payload data or a mix.
+  parents: [SYS-DH-03, MIS-OPS-04]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: telemetry design; PUS-C service 15
+  status: draft
+- id: OBD-TT-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: performance
+  text: The on-board schedule shall hold at least 1000 time-tagged telecommands and execute each within 1 s of its release
+    time.
+  rationale: 48 h of up to 14 roll targets per site per month, night-SWIR acquisitions and downlink set-up.
+  parents: [SYS-AUT-01]
+  objectives: [O1, O2, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §1.4, §7.3'
+  threshold: {op: '>=', value: 1000, unit: time-tagged commands}
+  status: draft
+- id: OBD-SEC-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The flight software shall perform AES-256 authenticated encryption of telecommands and downlinked data independently
+    of the radio.
+  rationale: Only one catalogue radio offers AES-256; doing it in the OBC keeps the radio choice open (trade T-07).
+  parents: [SYS-SEC-01, SYS-SEC-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: bus §5 (encryption in OBC layer); CCSDS 355.0-B'
+  status: draft
+- id: OBD-SW-02
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: The flight software shall accept in-orbit image updates verified by CRC before activation, and boot a protected golden
+    image after 3 consecutive failed boots.
+  rationale: Student-written software will need patches; a bad patch must not lose the mission.
+  parents: [SYS-MOD-02]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: design-tool default
+  status: draft
+- id: OBD-WD-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: functional
+  text: A hardware watchdog shall reset the on-board computer within 60 s of a software hang.
+  rationale: Single-string OBC; the reset leads to Safe mode (SYS-MOD-02).
+  parents: [SYS-MOD-02]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'design-tool default; research: bus §4'
+  threshold: {op: <=, value: 60, unit: s to reset}
+  status: draft
+- id: OBD-TIM-01
+  level: subsystem
+  tool_level: subsystem
+  category: obdh
+  subsystem: On-Board Computer
+  type: performance
+  text: On-board time shall be correlated to GNSS time within 1 ms while a fix is available and drift by at most 1 s per day
+    without one.
+  rationale: GNSS runs about 30 % of the time; time-tagged commands and pass predictions use on-board time between fixes.
+  parents: [PAY-FUN-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: design-tool default; ECSS-E-ST-70-41C service 9
+  threshold: {op: <=, value: 1, unit: s/day drift without GNSS}
+  status: draft
+- id: COM-DL-01
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: performance
+  text: The downlink shall operate in 401-402 MHz outside 401.4-401.7 MHz at 38.4 kbps within an occupied bandwidth of at
+    most 50 kHz.
+  rationale: Argos-type NGSO DCS sub-band avoided; a rate-1/2 convolutional code would need 80-104 kHz. 1 W RF nominal, 2
+    W where power allows.
+  parents: [SYS-BUD-06, REG-SPC-06]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'NFI brief; research: mission analysis R4, R5'
+  threshold: {op: <=, value: 50, unit: kHz occupied bandwidth}
+  status: draft
+- id: COM-DL-02
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: functional
+  text: The downlink shall use CCSDS TM synchronisation and channel coding with Reed-Solomon (255,223), attached sync marker
+    and pseudo-randomisation.
+  rationale: 'RS(255,223) gives +4.0 dB at 1 W to a 300 K station where uncoded GMSK fails (research: mission analysis §3.2).'
+  parents: [SYS-BUD-06]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'CCSDS 131.0-B (TM synchronisation and channel coding); research: mission analysis §3.2'
+  status: draft
+- id: COM-DL-03
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: functional
+  text: The radio shall support telecommand-selectable downlink rates of 1.2, 9.6, 19.2 and 38.4 kbps, with 76.8 kbps as a
+    goal for passes above 30 deg elevation.
+  rationale: Rate ladder; 76.8 kbps closes above about 30 deg (35.7 min/day of the union) if the channel allows; a growth
+    option only (licence change needed).
+  parents: [SYS-BUD-05]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 3
+  source: 'research: mission analysis §3.4; design script §5.5 (rate ladder)'
+  threshold: {op: '>=', value: 76.8, unit: kbps goal above 30 deg}
+  status: draft
+- id: COM-DL-04
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: regulatory
+  text: Spurious and out-of-band emissions of the transmitter shall meet ITU RR Appendix 3 and the ISED licence limits.
+  rationale: 401-402 MHz is shared with radiosondes and data-collection systems.
+  parents: [REG-SPC-06]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: ITU RR Appendix 3; ITU-R SM.329; ISED licence
+  status: draft
+- id: COM-UL-01
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: performance
+  text: The receiver shall demodulate telecommands in 449.75-450.25 MHz at 9.6 kbps with a bit-error rate of at most 1e-5
+    at the input level given by a 25 W ground transmitter at 10 deg elevation minus 3 dB.
+  rationale: Uplink margin +10 to +14 dB at 25 W; the 450.25 MHz upper receive edge of the selected transceiver is still to
+    be confirmed by the vendor.
+  parents: [SYS-BUD-06, SEG-GS-04]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'NFI brief; research: mission analysis §3.3; ITU RR 5.286'
+  threshold: {op: '>=', value: 9.6, unit: kbps}
+  status: draft
+  open_item: true
+- id: COM-UL-02
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: functional
+  text: The telecommand receiver shall be powered in every mode except OFF/launch and after passivation.
+  rationale: The spacecraft must always be commandable, including in Safe and Survival.
+  parents: [SYS-AUT-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: design-tool default
+  status: draft
+- id: COM-ANT-01
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: interface
+  text: The UHF antenna system shall provide one element tuned to 401.5 MHz for transmit and one tuned to 450 MHz for receive,
+    each with gain at least -3 dBi toward the ground station at 10 deg elevation in nominal attitude.
+  rationale: 401.5 and 450 MHz are 48 MHz apart against >10 MHz element bandwidth; -3 dBi is the link-budget allowance.
+  parents: [COM-DL-01, COM-UL-01]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: bus R5, §5b'
+  status: draft
+- id: COM-ANT-02
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: functional
+  text: Each antenna element shall deploy through two redundant release heaters and report its deployed state by a switch.
+  rationale: Antenna deployment is a single point of failure for the mission.
+  parents: [SYS-LCH-02]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: bus §5b (AntS burn wire, redundant heaters)'
+  status: draft
+- id: COM-BCN-01
+  level: subsystem
+  tool_level: subsystem
+  category: ttc
+  subsystem: Communications
+  type: functional
+  text: In LEOP, Safe and Survival the spacecraft shall transmit a beacon frame with the essential housekeeping SID at 1.2
+    kbps at least every 60 s on the licensed downlink channel.
+  rationale: First acquisition and anomaly diagnosis; content and encryption to agree with GAC (SYS-SEC-02).
+  parents: [SYS-AUT-02, SYS-MOD-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §7.2; design script §5.5'
+  threshold: {op: <=, value: 60, unit: s beacon interval}
+  status: draft
+- id: STR-ENV-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: interface
+  text: The structure shall meet the CDS rev 14.1 3U envelope of 100 x 100 x 340.5 mm with hard-anodised rails at least 8.5
+    mm wide and no protrusion beyond 6.5 mm from the rail plane.
+  rationale: Deployer fit; stowed antennas, sail and wings count against the protrusion envelope.
+  parents: [SYS-LCH-01]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: AR
+  owner_seat: structures_engineer
+  priority: 1
+  source: CubeSat Design Specification rev 14.1 (3U)
+  threshold: {op: <=, value: 6.5, unit: mm protrusion}
+  status: draft
+- id: STR-CG-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: interface
+  text: The centre of mass shall lie within 20 mm of the geometric centre in X and Y and within 70 mm in Z.
+  rationale: CDS rev 14.1 3U limits; the 1U payload and battery at one end push the CoG along Z.
+  parents: [SYS-LCH-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: AR
+  owner_seat: structures_engineer
+  priority: 1
+  source: CubeSat Design Specification rev 14.1
+  threshold: {op: <=, value: 20, unit: mm CoG offset in X and Y}
+  status: draft
+- id: STR-MOD-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: performance
+  text: The first natural frequency of the spacecraft in the deployer shall be at least 100 Hz (TBC against the launch ICD).
+  rationale: Decouples from launcher modes; confirmed by sine survey (VER-ENV-01).
+  parents: [SEG-LS-03]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: launch ICD (TBD); design-tool default
+  threshold: {op: '>=', value: 100, unit: Hz first mode (TBC)}
+  status: draft
+  open_item: true
+- id: STR-FOS-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: performance
+  text: The structure shall have positive margins with factors of safety of at least 1.25 on yield and 1.4 on ultimate under
+    launch loads.
+  rationale: Test-verified structure factors.
+  parents: [SEG-LS-03]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: ECSS-E-ST-32-10C; NASA GEVS
+  threshold: {op: '>=', value: 1.25, unit: yield factor of safety}
+  status: draft
+- id: STR-ACC-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: interface
+  text: The configuration shall keep the -Z face clear for the payload apertures, give the star tracker a 42 deg field of
+    view with 30 deg Sun exclusion, give the GNSS antenna a zenith view and give the drag sail an unobstructed deployment
+    path.
+  rationale: The +Z face is contested by the antenna, sail, star tracker and GNSS patch; resolution in LB-21.
+  parents: [SYS-BUD-08, ADC-PNT-01]
+  objectives: [O1, O3]
+  verification_method: R
+  verification_phase: PDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: 'research: bus §10.5 (+Z conflict)'
+  status: draft
+- id: STR-BEN-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: performance
+  text: The payload bench shall keep the relative boresight of the two cameras within 0.5 SWIR pixel (49 urad) between ground
+    calibration and orbit, after launch vibration and over 0-25 degC.
+  rationale: Allocates half of the 1 SWIR pixel band-to-band budget to the bench; the rest goes to the map and resampling.
+  parents: [PAY-GEO-01]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: structures_engineer
+  priority: 1
+  source: 'NFI brief (one rigid bench); research: payload §7'
+  threshold: {op: <=, value: 0.5, unit: SWIR px boresight change}
+  status: draft
+- id: STR-MEC-01
+  level: subsystem
+  tool_level: subsystem
+  category: structure
+  subsystem: Structure
+  type: performance
+  text: Every spring-driven deployment mechanism (antennas, solar wings, drag sail) shall have a motorisation factor of at
+    least 2 at end of life.
+  rationale: Deployment reliability after 3 years stowed.
+  parents: [COM-ANT-02, DIS-REL-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: ECSS-E-ST-33-01C
+  threshold: {op: '>=', value: 2, unit: motorisation factor}
+  status: draft
+- id: THM-PAY-01
+  level: subsystem
+  tool_level: subsystem
+  category: thermal
+  subsystem: Thermal
+  type: performance
+  text: The SWIR camera shall be kept between 0 and 25 degC during imaging and between -20 and +55 degC at all times.
+  rationale: 'DSNU and dark current; housing rated -20 to +55 degC (research: payload §1.1).'
+  parents: [MIS-SCI-09, PAY-CAL-01]
+  objectives: [O4]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: thermal_engineer
+  priority: 1
+  source: 'research: payload §3.5'
+  threshold: {op: <=, value: 25, unit: degC SWIR camera during imaging}
+  status: draft
+- id: THM-ALL-01
+  level: subsystem
+  tool_level: subsystem
+  category: thermal
+  subsystem: Thermal
+  type: performance
+  text: Every unit shall stay within its operating limits, with a 10 degC uncertainty margin at PDR, for beta angles from
+    14 to 29 deg and daylight-node times from 09:30 to 13:30 in the hot (imaging and downlink in sunlight) and cold (Safe
+    in eclipse) cases.
+  rationale: Beta range for the 09:30-13:30 node window; no mission thermal model exists yet.
+  parents: [SYS-ENV-02]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: PDR
+  owner_seat: thermal_engineer
+  priority: 1
+  source: 'research: mission analysis §1.2; ECSS-E-ST-31C'
+  threshold: {op: '>=', value: 10, unit: degC uncertainty margin}
+  status: draft
+- id: THM-BEN-01
+  level: subsystem
+  tool_level: subsystem
+  category: thermal
+  subsystem: Thermal
+  type: performance
+  text: The temperature difference between the two camera mounts on the payload bench shall be at most 2 degC during imaging.
+  rationale: Limits thermo-elastic boresight change between the bands.
+  parents: [STR-BEN-01]
+  objectives: [O1, O3, O4]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: thermal_engineer
+  priority: 1
+  source: 'design allocation; research: payload §2.5'
+  threshold: {op: <=, value: 2, unit: degC between camera mounts}
+  status: draft
+- id: DIS-SAIL-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: performance
+  text: The drag sail shall deploy at least 2.0 m2, occupy at most 0.35U and 0.40 kg stowed including its trigger electronics,
+    and remain deployable after 6 months in the deployer plus 3 years in orbit.
+  rationale: ARTICA is 0.35U and up to 2.1 m2; configuration A is rated for 2 years, so the timer battery is team-built.
+  parents: [MIS-DIS-01, SYS-ENV-02]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'NFI brief; research: bus R4, §7'
+  threshold: {op: '>=', value: 2.0, unit: m2 deployed area}
+  status: draft
+- id: DIS-TRG-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: functional
+  text: The drag sail shall deploy on an authenticated ARM and FIRE ground command, on expiry of an independent timer after
+    90 days without a valid telecommand, or on battery under-voltage.
+  rationale: 90 days is the team choice (TBC with ISED); it bounds the delay after an unrecoverable anomaly.
+  parents: [MIS-DIS-03, SYS-REL-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'NFI brief; research: mission analysis §2.3'
+  threshold: {op: <=, value: 90, unit: days without valid TC}
+  status: draft
+  open_item: true
+- id: DIS-REL-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: functional
+  text: The sail shall have two independent release circuits, each able to deploy the sail alone, one powered by the EPS and
+    one by the independent disposal battery.
+  rationale: No single failure prevents deployment (SYS-REL-01).
+  parents: [SYS-REL-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: NFI brief (two redundant release circuits)
+  threshold: {op: '>=', value: 2, unit: independent release circuits}
+  status: draft
+- id: DIS-IND-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: functional
+  text: The disposal timer and its battery shall operate with no power, clock or software from the on-board computer or the
+    EPS.
+  rationale: The timer must fire after a total OBC or EPS failure.
+  parents: [SYS-REL-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: NFI brief (own timer and battery, independent of OBC)
+  status: draft
+- id: DIS-BAT-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: performance
+  text: The independent disposal battery shall hold enough energy for at least 2 full release actuations after 3.5 years including
+    its timer consumption.
+  rationale: ARTICA needs about 6 W for seconds; two attempts plus the timer quiescent current.
+  parents: [DIS-IND-01, DIS-SAIL-01]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'research: bus §7 (6 W actuation, 2-year rating)'
+  threshold: {op: '>=', value: 2, unit: release actuations at 3.5 y}
+  status: draft
+- id: DIS-RST-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: functional
+  text: The disposal timer shall be restarted only by a pulse generated on receipt of an authenticated telecommand.
+  rationale: A software fault that keeps resetting the timer would defeat it; only a valid command proves the satellite is
+    under control.
+  parents: [DIS-TRG-01, SYS-SEC-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: design-tool default (timer reset path)
+  status: draft
+- id: DIS-TLM-01
+  level: subsystem
+  tool_level: subsystem
+  category: disposal
+  subsystem: Disposal (drag sail)
+  type: functional
+  text: The disposal subsystem shall report timer count, battery voltage, arming state and sail-deployed switch states in
+    the disposal SID.
+  rationale: Confirmation before passivation, then by decay rate from tracking data.
+  parents: [MIS-DIS-04]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'research: mission analysis §7.1 (sail confirmation)'
+  status: draft
+- id: HAR-DER-01
+  level: subsystem
+  tool_level: subsystem
+  category: harness
+  subsystem: Harness
+  type: performance
+  text: Every wire and connector contact shall be derated in current according to ECSS-Q-ST-30-11C for its gauge and bundle
+    size.
+  rationale: Student-built harness; derating is the main workmanship safeguard.
+  parents: [SYS-ENV-02]
+  objectives: [C1]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: ECSS-Q-ST-30-11C (derating)
+  status: draft
+- id: HAR-SEG-01
+  level: subsystem
+  tool_level: subsystem
+  category: harness
+  subsystem: Harness
+  type: functional
+  text: The two sail release circuits shall use separate connectors and separate routing from each other and from the EPS
+    distribution harness.
+  rationale: A connector or chafe failure must not take out both circuits.
+  parents: [DIS-REL-01]
+  objectives: [C1]
+  verification_method: I
+  verification_phase: CDR
+  owner_seat: systems_engineer
+  priority: 1
+  source: NFI brief (redundant release circuits)
+  status: draft
+- id: GNS-POS-01
+  level: subsystem
+  tool_level: subsystem
+  category: gnss
+  subsystem: AOCS
+  type: performance
+  text: The GNSS receiver shall provide position within 20 m and velocity within 0.1 m/s (3 sigma) in orbit.
+  rationale: Orbit determination for conjunction screening and image geolocation; NanoSense (OEM719) gives 1.5 m.
+  parents: [SYS-BUD-07]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §6; research: mission analysis §6.6'
+  threshold: {op: <=, value: 20, unit: m position (3 sigma)}
+  status: draft
+- id: GNS-PPS-01
+  level: subsystem
+  tool_level: subsystem
+  category: gnss
+  subsystem: AOCS
+  type: interface
+  text: The GNSS receiver shall deliver a PPS aligned to GPS time within 1 us to both the on-board computer and the payload
+    controller.
+  rationale: OEM719 PPS is 20 ns RMS; wiring to the payload controller is a recommendation of the bus research.
+  parents: [PAY-FUN-01, OBD-TIM-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §6, §11'
+  threshold: {op: <=, value: 1, unit: us PPS error}
+  status: draft
+- id: GNS-OPS-01
+  level: subsystem
+  tool_level: subsystem
+  category: gnss
+  subsystem: AOCS
+  type: functional
+  text: The GNSS receiver shall track at orbital velocity and altitude, with COCOM limits removed under an export authorisation.
+  rationale: Terrestrial receivers stop above 18 km altitude or 515 m/s.
+  parents: [GNS-POS-01, REG-EXP-02]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §6 (COCOM limit removed)'
+  status: draft
+- id: GNS-PRP-01
+  level: subsystem
+  tool_level: subsystem
+  category: gnss
+  subsystem: AOCS
+  type: performance
+  text: The on-board orbit propagator shall predict position within 2 km after 48 h without a GNSS fix.
+  rationale: Target pointing and pass predictions in the stored plan run between GNSS fixes (GNSS duty about 30 %).
+  parents: [SYS-AUT-01, ADC-PNT-01]
+  objectives: [O1, O3]
+  verification_method: A
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: design-tool default
+  threshold: {op: <=, value: 2, unit: km after 48 h}
+  status: draft
+- id: IF-PAY-OBC-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Payload
+  type: interface
+  text: The payload controller shall exchange commands, status and product files with the on-board computer over the CAN bus
+    at a sustained file-transfer rate of at least 100 kbit/s.
+  rationale: Products stay on the payload store until the pass; 100 kbit/s keeps the 38.4 kbps downlink fed with margin.
+  parents: [PAY-FUN-03, OBD-STO-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: bus §4, §11; design script §5.2 (CAN/CSP addresses)'
+  threshold: {op: '>=', value: 100, unit: kbit/s sustained file transfer}
+  interface:
+    icd_ref: ICD-PAY-OBC (data)
+    endpoints: [Payload controller, On-Board Computer]
+  status: draft
+- id: IF-PAY-CAM-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Payload
+  type: interface
+  text: The payload controller shall connect the VNIR camera on a 4-lane and the SWIR camera on a 2- or 4-lane MIPI CSI-2
+    port and trigger both cameras with a skew of at most 100 us.
+  rationale: '100 us is 0.7 m along track; the IMX542 needs the 4-lane port (research: payload §4).'
+  parents: [PAY-FUN-01, PAY-GEO-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: 'research: payload §4; design script §5.2'
+  threshold: {op: <=, value: 100, unit: us trigger skew}
+  interface:
+    icd_ref: ICD-PAY-internal (CSI-2, trigger)
+    endpoints: [Payload controller, SWIR camera / VNIR camera]
+  status: draft
+- id: IF-ADC-OBC-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: AOCS
+  type: interface
+  text: The ADCS shall accept time-tagged attitude-target commands (nadir, roll target, inertial, sun) and orbit data at 1
+    Hz from the on-board computer.
+  rationale: The ADCS needs position for nadir and target pointing; profiles come from the stored plan.
+  parents: [ADC-OUT-01, ADC-PNT-02]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §1; design script §5.2'
+  interface:
+    icd_ref: ICD-ADCS-OBC
+    endpoints: [ADCS, On-Board Computer]
+  status: draft
+- id: IF-GNS-OBC-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: AOCS
+  type: interface
+  text: The GNSS receiver shall send position, velocity and time records at 1 Hz to the on-board computer over a UART while
+    it is powered.
+  rationale: The OBC forwards them to the ADCS and the payload controller and uses them for time correlation.
+  parents: [GNS-POS-01, GNS-PPS-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: aocs_engineer
+  priority: 1
+  source: 'research: bus §6'
+  interface:
+    icd_ref: ICD-GNSS-OBC
+    endpoints: [GNSS receiver, On-Board Computer]
+  status: draft
+- id: IF-EPS-ALL-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: EPS
+  type: interface
+  text: The EPS shall supply each unit on its own switched line at 3.3 V or 5 V within ±5 % or at battery voltage (12-16.8
+    V), with the line current limit set by the electrical ICD.
+  rationale: Line list and LCL settings are in the Electrical tab (design script §5.1); each unit's ICD sheet states its inrush
+    and peak current.
+  parents: [EPS-PWR-01, EPS-DST-01]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: power_engineer
+  priority: 1
+  source: 'research: bus §2 (P60 rails); design script §5.1'
+  interface:
+    icd_ref: ICD-EPS (power lines)
+    endpoints: [EPS, all units]
+  status: draft
+- id: IF-COM-OBC-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Communications
+  type: interface
+  text: The radio shall exchange complete, already encrypted transfer frames with the on-board computer and report RSSI, frequency
+    offset and frame counters for each pass.
+  rationale: Keeps encryption in the OBC so the radio is replaceable (trade T-07).
+  parents: [OBD-SEC-01, COM-DL-02]
+  objectives: [O1, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: bus §5; research: mission analysis §3'
+  interface:
+    icd_ref: ICD-RADIO-OBC
+    endpoints: [UHF radio, On-Board Computer]
+  status: draft
+- id: IF-DIS-EPS-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Disposal (drag sail)
+  type: interface
+  text: The disposal interface shall provide release circuit A from an EPS switched battery line rated at least 2 A, release
+    circuit B from the independent disposal battery, the timer-restart pulse from the on-board computer and the deployed-state
+    switches to both the on-board computer and the timer.
+  rationale: Circuit B is outside the EPS; the timer reads the deployed state so it stops firing after deployment.
+  parents: [DIS-REL-01, DIS-RST-01, HAR-SEG-01]
+  objectives: [C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: propulsion_engineer
+  priority: 1
+  source: 'NFI brief; research: bus §7; design script §5.1 (release A/B)'
+  interface:
+    icd_ref: ICD-SAIL (release, timer)
+    endpoints: [Drag sail / disposal timer, EPS and On-Board Computer]
+  status: draft
+- id: IF-SC-POD-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Structure
+  type: interface
+  text: The spacecraft-to-deployer interface (rail contact, deployment-switch positions, access port and remove-before-flight
+    pin location) shall be agreed with the launch provider in an ICD before CDR.
+  rationale: The deployer type is not yet known; switch positions and access windows differ between deployers.
+  parents: [SEG-LS-01, STR-ENV-01]
+  objectives: [C1]
+  verification_method: R
+  verification_phase: CDR
+  owner_seat: structures_engineer
+  priority: 1
+  source: NFI brief (3U deployer); CDS rev 14.1
+  interface:
+    icd_ref: ICD-LAUNCH (deployer)
+    endpoints: [Northern Fire and Ice spacecraft, CubeSat deployer]
+  status: draft
+- id: IF-SG-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Northern Fire and Ice
+  type: interface
+  text: Space-to-ground data shall use CCSDS TM and TC space data link protocols with SDLS security, CCSDS space packets carrying
+    PUS-C services, and file delivery with acknowledged retransmission of missing segments for payload products.
+  rationale: Standard stack shared by the MCS and the simulator; CSP may still run on the internal CAN bus. File retransmission
+    recovers frames lost at low elevation.
+  parents: [OBD-SW-01, SYS-SEC-01, COM-DL-02]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: QR
+  owner_seat: comms_engineer
+  priority: 1
+  source: CCSDS 132.0-B, 232.0-B, 133.0-B, 355.0-B, 727.0-B; ECSS-E-ST-70-41C
+  interface:
+    icd_ref: ICD-SPACE-GROUND
+    endpoints: [Space segment, Ground segment]
+  status: draft
+- id: IF-SG-02
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Ground Segment
+  type: interface
+  text: Each ground station shall acquire the downlink within 30 s of rising above 10 deg elevation for Doppler offsets up
+    to ±10 kHz.
+  rationale: The data budget assumes 30 s acquisition per pass; Doppler at 401 MHz from 590 km is about ±9.5 kHz.
+  parents: [SEG-GS-01, MIS-DAT-01]
+  objectives: [O1, O3]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: comms_engineer
+  priority: 1
+  source: 'research: mission analysis §3.4 (30 s acquisition per pass)'
+  threshold: {op: <=, value: 30, unit: s acquisition time}
+  interface:
+    icd_ref: ICD-SPACE-GROUND (RF)
+    endpoints: [Ground station, Space segment]
+  status: draft
+- id: IF-GS-MCC-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Ground Segment
+  type: interface
+  text: Each ground station shall forward received TM frames to mission control and transmit TC frames from it with at most
+    2 s latency, and accept schedules and report station status over the VPN.
+  rationale: Real-time commanding through remote stations; schedules are pushed at least 24 h ahead (SEG-GS-09).
+  parents: [SEG-GS-05, SEG-GS-08, SEG-GS-09]
+  objectives: [O1, O3, C1]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: mission_analyst
+  priority: 1
+  source: NFI brief (mission control with VPN to remote sites)
+  threshold: {op: <=, value: 2, unit: s frame forwarding latency}
+  interface:
+    icd_ref: ICD-GS-MCC
+    endpoints: [Ground station, Mission control]
+  status: draft
+- id: IF-MCC-SCI-01
+  level: interface
+  tool_level: interface
+  category: interface
+  subsystem: Science Segment
+  type: interface
+  text: Mission control shall deliver to the science segment, for each acquisition, the payload files, the attitude and GNSS
+    records from 60 s before to 60 s after it, and the current time-correlation data.
+  rationale: Everything Level-1 processing needs, in one package.
+  parents: [SEG-GS-12, SEG-US-01]
+  objectives: [O1, O3, O4]
+  verification_method: T
+  verification_phase: CDR
+  owner_seat: payload_lead
+  priority: 1
+  source: design-tool default
+  interface:
+    icd_ref: ICD-MCC-SCIENCE
+    endpoints: [Mission control, Science segment]
+  status: draft
+import_order: [MIS-SCI-01, MIS-SCI-02, MIS-SCI-03, MIS-SCI-04, MIS-SCI-05, MIS-SCI-06, MIS-SCI-07, MIS-SCI-08, MIS-SCI-09,
+  MIS-SCI-10, MIS-SCI-11, MIS-SCI-12, MIS-SCI-13, MIS-SCI-14, MIS-COV-01, MIS-COV-02, MIS-COV-03, MIS-COV-04, MIS-LIF-01,
+  MIS-LIF-02, MIS-DAT-01, MIS-DAT-02, MIS-DAT-03, MIS-DAT-04, MIS-DAT-05, MIS-DAT-06, MIS-DAT-07, MIS-OPS-01, MIS-OPS-02,
+  MIS-OPS-03, MIS-OPS-04, MIS-DIS-01, MIS-DIS-02, MIS-DIS-03, MIS-DIS-04, REG-SPC-01, REG-SPC-02, REG-SPC-03, REG-SPC-04,
+  REG-SPC-05, REG-SPC-06, REG-RSS-01, REG-RSS-02, REG-RSS-03, REG-RSS-04, REG-RSS-05, REG-EXP-01, REG-EXP-02, REG-DEB-01,
+  REG-DEB-02, REG-DEB-03, REG-DEB-04, REG-REG-01, SEG-SS-01, SEG-SS-02, SEG-SS-03, SEG-GS-01, SEG-GS-02, SEG-GS-03, SEG-GS-04,
+  SEG-GS-05, SEG-GS-06, SEG-GS-07, SEG-GS-08, SEG-GS-09, SEG-GS-10, SEG-GS-11, SEG-GS-12, SEG-LS-01, SEG-LS-02, SEG-LS-03,
+  SEG-LS-04, SEG-LS-05, SEG-LS-06, SEG-US-01, SEG-US-02, SEG-US-03, SEG-US-04, SEG-US-05, SEG-US-06, SEG-US-07, SEG-US-08,
+  OPS-CRT-01, OPS-CRT-02, OPS-PRC-01, OPS-PLN-01, OPS-DLS-01, OPS-CTG-01, OPS-CNJ-01, SYS-BUD-01, SYS-BUD-02, SYS-BUD-03,
+  SYS-BUD-04, SYS-BUD-05, SYS-BUD-06, SYS-BUD-07, SYS-MOD-01, SYS-MOD-02, SYS-MOD-03, SYS-AUT-01, SYS-AUT-02, SYS-AUT-03,
+  SYS-DH-01, SYS-DH-02, SYS-DH-03, SYS-DH-04, SYS-SEC-01, SYS-SEC-02, SYS-SEC-03, SYS-ENV-01, SYS-ENV-02, SYS-REL-01, SYS-REL-02,
+  SYS-EMC-01, SYS-EMC-02, SYS-CLN-01, SYS-LCH-01, SYS-LCH-02, VER-MOD-01, VER-VCD-01, VER-ENV-01, VER-ENV-02, VER-FUN-01,
+  VER-E2E-01, VER-DIL-01, VER-DEP-01, VER-CAL-01, VER-WKM-01, PAY-OPT-01, PAY-OPT-02, PAY-OPT-03, PAY-OPT-04, PAY-OPT-05,
+  PAY-RAD-01, PAY-RAD-02, PAY-RAD-03, PAY-GEO-01, PAY-GEO-02, PAY-FUN-01, PAY-FUN-02, PAY-FUN-03, PAY-FUN-04, PAY-CAL-01,
+  PAY-BUD-01, PAY-BUD-02, EPS-SA-01, EPS-BAT-01, EPS-PWR-01, EPS-DST-01, EPS-THM-01, EPS-SAF-01, EPS-INH-01, EPS-PAS-01, ADC-PNT-01,
+  ADC-PNT-02, ADC-PNT-03, ADC-MOD-01, ADC-MOD-02, ADC-MOM-01, ADC-MAG-01, ADC-OUT-01, OBD-SW-01, OBD-HK-01, OBD-HK-02, OBD-HK-03,
+  OBD-STO-01, OBD-TT-01, OBD-SEC-01, OBD-SW-02, OBD-WD-01, OBD-TIM-01, COM-DL-01, COM-DL-02, COM-DL-03, COM-DL-04, COM-UL-01,
+  COM-UL-02, COM-ANT-01, COM-ANT-02, COM-BCN-01, STR-ENV-01, STR-CG-01, STR-MOD-01, STR-FOS-01, STR-BEN-01, THM-PAY-01, THM-ALL-01,
+  THM-BEN-01, DIS-SAIL-01, DIS-TRG-01, DIS-REL-01, DIS-IND-01, DIS-BAT-01, DIS-RST-01, DIS-TLM-01, HAR-DER-01, HAR-SEG-01,
+  GNS-POS-01, GNS-PPS-01, GNS-OPS-01, GNS-PRP-01, IF-PAY-OBC-01, IF-PAY-CAM-01, IF-ADC-OBC-01, IF-GNS-OBC-01, IF-EPS-ALL-01,
+  IF-COM-OBC-01, IF-DIS-EPS-01, IF-SC-POD-01, IF-SG-01, IF-SG-02, IF-GS-MCC-01, IF-MCC-SCI-01, SYS-BUD-08, STR-ACC-01, STR-MEC-01]

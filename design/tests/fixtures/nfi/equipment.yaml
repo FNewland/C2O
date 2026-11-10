@@ -1,0 +1,118 @@
+# Northern Fire and Ice (NFI) teaching mission - product tree and equipment selections
+# (Blocks tab + level-3 Equipment Catalog). A teaching mission concept for northern fire and ice
+# monitoring; numbers are a frozen teaching baseline (../NUMBERS.yaml).
+#
+# kb: KB component id. Every id below was checked against
+#   design/packages/spacecdf-kb/src/spacecdf_kb/data/components/*.yaml on main (2026-11-10), including the
+#   categories adcs_integrated, deorbit_device, payload_optic and payload_controller.
+# kb_fix: the KB entry still carries a value the research corrected; type the corrected value inline
+#   (Mass / Average power) after selection.
+# custom: no KB entry -> "+ Add Element" (Type component) with the given mass/power; set TRL through the API.
+# power_w is the unit's ON power (what the Average power field should hold); orbit averages come from the
+#   Modes tab. qty -> "Quantity: n" inline control.
+# The camera KB entries already include lens + filter mass, so the payload_optic elements are entered with
+#   Mass 0 (traceability only) to avoid double counting.
+# maturity: OTS (off-the-shelf, 5 %), MOD (modified, 10 %), NEW (new development, 20 %) - mass maturity margin.
+# cost_keur and cost_basis: researched list prices only. "list" = public list price (source in the research
+#   notes); "list-comparable" = no public price, the list price of the nearest comparable product is carried;
+#   "kb-est" = the KB's own estimate (no public price, quote needed); "est" = team estimate for a custom part.
+#   Only researched list prices or flagged estimates are used.
+
+spacecraft:
+  name: "Northern Fire and Ice spacecraft"      # rename "Spacecraft" from the single-leo preset
+  properties: {form_factor: 3U, material: "Al 7075", deployables: "2 solar wings (EXA DMSA), UHF dipoles (2), drag sail (ARTICA)"}
+  subsystems:
+    - name: Payload
+      domain: payload
+      seat: payload_lead
+      properties: {gsd_m: 58.2, fov_deg: 14.56, spectral_bands: "NIR 865 nm (875/50 filter, VNIR camera binned to 60 m); SWIR 1610/90 nm (C-530 VSWIR)", shutter_control: "no", data_format: "12-bit raw; L1 60 m common grid; ROI 250x250 px and quicklooks, CCSDS 121 lossless", data_rate_mbps: 18.2, data_volume_gb_per_day: 1.1, duty_cycle: 0.05}
+      items:
+        - {kb: pl-av-alvium-1800c-530-vswir, name: "Alvium 1800 C-530 VSWIR (SWIR camera, 35 mm f/1.4, 1610/90 filter)", qty: 1, mass_kg: 0.19, power_w: 2.7, trl: 4, maturity: MOD, cost_keur: 17.0, cost_basis: "list-comparable: no public price; LUCID Atlas10 IMX992 camera list USD 18,500"}
+        - {kb: pl-av-alvium-1800c-1620m, name: "Alvium 1800 C-1620m (VNIR camera, 50 mm f/2.4, 875/50 filter)", qty: 1, mass_kg: 0.13, power_w: 3.8, trl: 4, maturity: MOD, cost_keur: 1.57, cost_basis: "list-comparable: CSI-2 version not public; USB3 sibling U-1620m list EUR 1,570"}
+        - {kb: pc-rpi-cm4, name: "Payload controller (Raspberry Pi CM4 on custom carrier)", qty: 1, mass_kg: 0.08, power_w: 3.0, power_note: "KB 7.0 W typical; type 3.0 W (imaging-session average; budget 3-5 W); peak 5 W in the Modes matrix", trl: 5, maturity: NEW, cost_keur: 1.1, cost_basis: "list: CM4 module about USD 50-100; est: carrier board about 1.0 k EUR"}
+        - {kb: opt-kowa-lm35hc-sw, name: "SWIR lens Kowa LM35HC-SW 35 mm f/1.4", qty: 1, mass_kg: 0.0, power_w: 0, note: "mass carried in the camera entry", cost_keur: 2.29, cost_basis: "list-comparable: Kowa price on quote; Edmund #68-689 35 mm f/1.4 SWIR list EUR 2,286"}
+        - {kb: opt-kowa-lm50ec-ir, name: "NIR lens Kowa LM50EC-IR 50 mm (F2.4 plate)", qty: 1, mass_kg: 0.0, power_w: 0, note: "mass carried in the camera entry", cost_keur: 0.8, cost_basis: "kb-est"}
+        - {kb: opt-edmund-86-958, name: "NIR filter 875/50 nm (Edmund 86-958)", qty: 1, mass_kg: 0.0, power_w: 0, cost_keur: 0.28, cost_basis: "list: GBP 236"}
+        - {custom: true, name: "SWIR filter 1610/90 nm (custom, OD4 400-1700 nm)", qty: 1, mass_kg: 0.0, power_w: 0, trl: 4, maturity: NEW, cost_keur: 1.5, cost_basis: "est (custom coating, quote needed)", note: "No KB entry (KB has only the 1550/50 opt-edmund-85-903); trade T-01 selected 1610 nm for cross-calibration with Sentinel-2 B11 / Landsat OLI B6"}
+        - {custom: true, name: "Optical bench and baffles (Al)", qty: 1, mass_kg: 0.20, power_w: 0, trl: 4, maturity: NEW, cost_keur: 3.0, cost_basis: "est"}
+        - {custom: true, name: "Payload harness", qty: 1, mass_kg: 0.05, power_w: 0, trl: 5, maturity: NEW, cost_keur: 0.5, cost_basis: "est"}
+      sanity: {mass_kg: 0.65, peak_w: 11.5}
+    - name: EPS
+      domain: power
+      seat: power_engineer
+      properties: {bus_voltage_v: 14.4, sa_type: dual-deploy, battery_chemistry: Li-ion, duty_cycle: 1}
+      items:
+        - {kb: eps-gom-nanopow-p60, name: "NanoPower P60 (Dock + ACU-200 + PDU-200)", qty: 1, mass_kg: 0.181, power_w: 0.6, trl: 9, maturity: OTS, cost_keur: 25.0, cost_basis: "kb-est (price not public; quote needed)"}
+        - {kb: bat-gom-nanopow-bp4, name: "NanoPower BP4 43 Wh (1P-4S, 12-16.8 V)", qty: 1, mass_kg: 0.258, power_w: 0.3, power_note: "integrated heater, thermostat average 0.3 W", trl: 9, maturity: OTS, cost_keur: 8.0, cost_basis: "kb-est"}
+        - {kb: sp-exa-dmsa-3u-a, name: "EXA DMSA 3U/A deployable wing", qty: 2, mass_kg: 0.25, power_w: 0, trl: 9, maturity: OTS, note: "mass est.; datasheet requested", cost_keur: 12.2, cost_basis: "list range EUR 4.4-20k (cubesatshop); mid-range per wing carried"}
+        - {kb: sp-endurosat-3u-body, name: "EnduroSat 3U body panel", qty: 4, mass_kg: 0.147, power_w: 0, trl: 9, maturity: OTS, cost_keur: 5.9, cost_basis: "list: USD 6,900"}
+        - {kb: hrn-power-harness-3u, name: "Power harness (3U)", qty: 1, mass_kg: 0.08, power_w: 0, trl: 9, maturity: OTS, cost_keur: 2.0, cost_basis: "kb-est"}
+      sanity: {mass_kg: 1.607, eol_orbit_average_w: 12.2}
+    - name: AOCS
+      domain: aocs
+      seat: aocs_engineer
+      properties: {pointing_accuracy_deg: 1.0, pointing_knowledge_deg: 0.1, slew_rate_deg_s: 1.0, duty_cycle: 1}
+      items:
+        - {kb: adcs-cubespace-cubeadcs-gen2-3u, category: adcs_integrated, name: "CubeADCS Gen 2 (Core + 3x CW0017 + CR torquers + CubeStar)", qty: 1, mass_kg: 0.50, power_w: 1.2, trl: 9, maturity: OTS, cost_keur: 53.5, cost_basis: "list: sum of CubeSpace list items (Core USD 21,000; 3x CW0017; 3x CR0002; CubeStar+Earth bundle; CubeSense Sun; CubeMag Compact), about USD 62k"}
+        - {kb: ss-cubespace-cubesense, name: "CubeSense Sun (fine sun sensor)", qty: 1, mass_kg: 0.03, power_w: 0.1, kb_fix: "Gen 2 CubeSense Sun is 15 g / 0.10 W; KB 0.03 kg / 0.15 W kept for mass (conservative)", trl: 9, maturity: OTS, cost_keur: 0.0, cost_basis: "included in the ADCS build price above"}
+        - {kb: gps-gom-nanosense-gpskit, name: "NanoSense GPS Kit (OEM719 + TW1322)", qty: 1, mass_kg: 0.057, power_w: 1.3, trl: 9, maturity: OTS, note: "PPS to OBC and payload controller", cost_keur: 20.0, cost_basis: "kb-est (price not public; quote needed)"}
+      sanity: {mass_kg: 0.587}
+    - name: Communications
+      domain: ttc
+      seat: comms_engineer
+      properties: {rf_band: UHF, tx_power_w: 1.0, data_rate_kbps: 38.4, data_rate_mbps: 0.0384, encryption: AES-256, modulation: "GMSK or BPSK + RS(255,223); uplink 450 MHz 9.6 kbps", duty_cycle: 0.087}
+      items:
+        - {kb: txr-spacemanic-murgas, name: "Spacemanic Murgas UHF transceiver (401 TX / 450 RX, receive edge TBC)", qty: 1, mass_kg: 0.025, power_w: 3.3, power_note: "KB 5.0 W; TX DC < 1 A at 3.3 V (est.) -> 3.3 W; RX 0.13 W", trl: 8, maturity: OTS, cost_keur: 8.0, cost_basis: "kb-est (price not public)"}
+        - {kb: ant-isis-uhf-deploy, name: "ISIS AntS, 2 dipoles (401.5 / 450 MHz)", qty: 1, mass_kg: 0.089, power_w: 0, trl: 9, maturity: MOD, cost_keur: 3.0, cost_basis: "kb-est"}
+        - {kb: hrn-rf-cable-sma-01, name: "RF cable assembly", qty: 2, mass_kg: 0.01, power_w: 0, trl: 9, maturity: OTS, cost_keur: 0.3, cost_basis: "kb-est"}
+      sanity: {mass_kg: 0.134}
+    - name: On-Board Computer
+      domain: obc
+      seat: comms_engineer
+      items:
+        - {kb: obc-gom-nanomind-a3200, name: "NanoMind A3200 (in P60 slot X3)", qty: 1, mass_kg: 0.024, power_w: 0.15, trl: 9, maturity: OTS, cost_keur: 12.0, cost_basis: "kb-est (price not public)"}
+      sanity: {mass_kg: 0.024}
+    - name: Thermal
+      domain: thermal
+      seat: thermal_engineer
+      properties: {temp_min_c: 0, temp_max_c: 25, coating: "white paint", duty_cycle: 0.1}
+      items:
+        - {kb: th-thermal-strap-01, name: "Copper thermal strap (SWIR camera / bench to radiator)", qty: 2, mass_kg: 0.02, power_w: 0, trl: 9, maturity: OTS, cost_keur: 1.0, cost_basis: "kb-est"}
+        - {kb: th-radiator-coating-01, name: "White paint AZ-2000 (payload-end radiator)", qty: 1, mass_kg: 0.01, power_w: 0, trl: 9, maturity: OTS, cost_keur: 0.5, cost_basis: "kb-est"}
+        - {kb: th-heater-kapton-01, name: "Kapton heater 2 W (payload bench survival)", qty: 1, mass_kg: 0.005, power_w: 2.0, trl: 9, maturity: OTS, cost_keur: 0.3, cost_basis: "kb-est"}
+        - {kb: th-mli-blanket-01, name: "MLI blanket (payload bay)", qty: 1, mass_kg: 0.05, power_w: 0, trl: 9, maturity: OTS, cost_keur: 2.0, cost_basis: "kb-est"}
+      sanity: {mass_kg: 0.105}
+    - name: Structure
+      domain: structure
+      seat: structures_engineer
+      properties: {form_factor: 3U, material: "Al 7075-T6", deployables: "see spacecraft"}
+      items:
+        - {kb: struct-isis-3u, name: "ISISPACE 3U CubeSat structure", qty: 1, mass_kg: 0.304, power_w: 0, trl: 9, maturity: OTS, cost_keur: 4.9, cost_basis: "list: about EUR 4,900 (cubesatshop); 4-6 weeks", note: "commercial frame, flight heritage since 2013; EnduroSat 3U Structure II (struct-endurosat-3u, 0.285 kg, USD 3,300-3,600) is the alternative"}
+        - {kb: mech-standoff-kit, name: "PCB standoff kit", qty: 1, mass_kg: 0.02, power_w: 0, trl: 9, maturity: OTS, cost_keur: 0.2, cost_basis: "kb-est"}
+        - {kb: mech-fastener-m2-kit, name: "M2.5 fastener kit", qty: 1, mass_kg: 0.015, power_w: 0, trl: 9, maturity: OTS, cost_keur: 0.1, cost_basis: "kb-est"}
+        - {kb: mech-fastener-m3-kit, name: "M3 fastener kit", qty: 1, mass_kg: 0.03, power_w: 0, trl: 9, maturity: OTS, cost_keur: 0.1, cost_basis: "kb-est"}
+        - {kb: hrn-pc104-stack-01, name: "PC/104 stack connector set", qty: 1, mass_kg: 0.015, power_w: 0, trl: 9, maturity: OTS, cost_keur: 0.5, cost_basis: "kb-est"}
+      sanity: {mass_kg: 0.384}
+    - name: "Disposal (drag sail)"        # renamed "Propulsion" subsystem; domain stays propulsion
+      domain: propulsion
+      seat: propulsion_engineer
+      properties: {isp_s: 0, thrust_n: 0, propellant_type: none, total_impulse_ns: 0, duty_cycle: 0}
+      items:
+        - {kb: deorb-npc-artica, category: deorbit_device, name: "NPC Spacemind ARTICA drag sail (config A, 2.1 m2, 0.35U)", qty: 1, mass_kg: 0.30, power_w: 0.0, power_note: "KB 6.0 W is the deployment actuation for seconds; type 0 for Average power and give 6 W in the Sail deploy mode", trl: 9, maturity: OTS, kb_fix: "KB mass 0.21 (brochure) -> 0.30 for configuration A", cost_keur: 10.0, cost_basis: "est: price not public; planning allowance until a quote (KB price is not used)"}
+        - {custom: true, name: "Independent deorbit timer and battery (2 release circuits)", qty: 1, mass_kg: 0.08, power_w: 0.0, trl: 4, maturity: NEW, cost_keur: 2.0, cost_basis: "est"}
+      sanity: {mass_kg: 0.38}
+
+ground_segment:   # full detail, contact statistics and RF chains in ground_stations.yaml
+  stations:
+    - {name: "GS Ottawa", lat: 45.42, lon: -75.69, rf_chain: south, kb_station: null}
+    - {name: "GS Yellowknife", lat: 62.45, lon: -114.37, rf_chain: north, kb_station: null}
+    - {name: "GS Iqaluit", lat: 63.75, lon: -68.52, rf_chain: north, kb_station: null}
+    - {name: "GS Inuvik", lat: 68.36, lon: -133.72, rf_chain: north, kb_station: null}
+  properties_all: {antenna_diameter_m: 1.8, antenna_note: "equivalent aperture of a 15 dBic Yagi at 401 MHz (eta 0.55); the field expects a dish diameter", min_elevation_deg: 10, bands: "UHF RX 401-402 MHz; UHF TX 449.75-450.25 MHz (fallback VHF 148-149.9 MHz)"}
+  rf_chain_ref: "ground_stations.yaml -> rf_chains (south: Yaesu G-5500DC rotator; north: SPID BIG-RAS in a heated housing; all: M2 400CP24 RX, M2 450 MHz CP TX, filtered LNA, 50 W PA run at <= 25 W, USRP B210, GPSDO)"
+
+operations:
+  - {name: "Mission control centre (Ottawa, VPN to the remote sites)", domain: ground, custom: true, note: "Yamcs mission control system; SatNOGS-derived scheduling and tracking client at each site; 24/7 conjunction contact point"}
+
+launch_segment:
+  - {name: "Rideshare launch and 3U deployer", in_scope: false, note: "final vibration in the deployer by the launch provider; launch request: apogee <= 590 km incl. dispersion, inclination tolerance <= 0.15 deg"}

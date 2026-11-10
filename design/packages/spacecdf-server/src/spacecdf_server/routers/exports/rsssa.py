@@ -41,8 +41,12 @@ async def export_rsssa(
     spacecraft = [e for e in elements if e.get("segment") == "space" and e.get("element_type") == "system"]
     payload_elements = [e for e in elements if e.get("subsystem_domain") == "payload"]
 
-    total_mass = sum((e.get("mass_kg") or 0) * e.get("quantity", 1) for e in elements if e.get("segment") == "space")
-    form_factor = _form_factor_from_mass(total_mass)
+    # Mass and form factor from the one roll-up (services/rollup.py, W0.3): leaf units x quantity,
+    # subsystem estimates and product-tree nodes not double-counted (EG D6).
+    from ...services.rollup import compute as _rollup
+    ru = await _rollup(study_id)
+    total_mass = ru.mass.cbe_kg
+    form_factor = ru.form_factor or _form_factor_from_mass(total_mass)
 
     # Build ground station list for regulatory template
     gs_list = [

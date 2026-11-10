@@ -68,17 +68,50 @@ def _spawn(name: str, cmd: list[str], env: dict, cwd: Path) -> int:
     return p.pid
 
 
+#: What the built frontend is made from: a change to any of these after the build means ``dist`` is stale.
+FRONTEND_SOURCES = ("src", "index.html", "package.json", "package-lock.json", "vite.config.ts",
+                    "tsconfig.json", "tsconfig.app.json", "tsconfig.node.json")
+
+
+def frontend_build_problem(frontend: Path) -> str | None:
+    """Why ``frontend/dist`` must not be filmed (missing, or older than a source file), else None.
+
+    W0.5: a video recorded from a stale build shows yesterday's UI. ``dist/index.html`` is written
+    last by ``vite build``, so its time is the build time.
+    """
+    index = frontend / "dist" / "index.html"
+    if not index.exists():
+        return "build the SpaceCDF frontend first: (cd design/frontend && npm ci && npm run build)"
+    built = index.stat().st_mtime
+    newest, newest_t = None, built
+    for name in FRONTEND_SOURCES:
+        p = frontend / name
+        files = [p] if p.is_file() else (f for f in p.rglob("*") if f.is_file()) if p.is_dir() else []
+        for f in files:
+            t = f.stat().st_mtime
+            if t > newest_t:
+                newest, newest_t = f, t
+    if newest is None:
+        return None
+    age_min = (newest_t - built) / 60
+    return (f"the SpaceCDF frontend build is stale: {newest.relative_to(frontend)} changed {age_min:.0f} min after "
+            f"dist/index.html was built. Rebuild it: (cd design/frontend && npm run build). "
+            f"Set C2O_VIDEO_ALLOW_STALE_DIST=1 only to film an old build on purpose.")
+
+
 def up_spacecdf() -> dict:
     port = int(os.environ.get("C2O_VIDEO_SPACECDF_PORT", 18800))
     if not _free(port):
         raise SystemExit(f"port {port} is busy (stack already up?)")
+    problem = frontend_build_problem(DESIGN / "frontend")
+    if problem and (not (DESIGN / "frontend" / "dist" / "index.html").exists()
+                    or os.environ.get("C2O_VIDEO_ALLOW_STALE_DIST") != "1"):
+        raise SystemExit(problem)
     d = STATE / "spacecdf"
     if d.exists():
         shutil.rmtree(d)
     (d / "data").mkdir(parents=True)
     dist = DESIGN / "frontend" / "dist"
-    if not (dist / "index.html").exists():
-        raise SystemExit("build the SpaceCDF frontend first: (cd design/frontend && npm ci && npm run build)")
     if not (DESIGN / ".venv" / "bin" / "uvicorn").exists():
         raise SystemExit(f"No SpaceCDF install in {DESIGN / '.venv'}.\n"
                          "Create it once with:  python -m c2ovideo stack setup spacecdf")

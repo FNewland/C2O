@@ -243,6 +243,9 @@ app.include_router(project_io_router.router, prefix="/api", tags=["Project file"
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)
 from .routers import gates as gates_router  # noqa: E402
 app.include_router(gates_router.router, prefix="/api", tags=["Review gates"])
+# Shared export seams (W0): the one mass/power roll-up and the study collector, read-only
+from .routers import study_export as study_export_router  # noqa: E402
+app.include_router(study_export_router.router, prefix="/api", tags=["Exports"])
 # SEMP / ECSS diagram models, SVG/PNG and the diagram document (design rules §3)
 from .routers import diagrams as diagrams_router  # noqa: E402
 app.include_router(diagrams_router.router, prefix="/api", tags=["Diagrams"])

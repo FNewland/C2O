@@ -1,0 +1,205 @@
+# Northern Fire and Ice (NFI) teaching mission - export/import round-trip checklist (NFI_DESIGN_SCRIPT.md §8.1).
+# One row per area/tab touched by the script; "old_behaviour" is what the previous Save/Load lost or
+# duplicated (rows to watch first). Frozen teaching baseline.
+checklist:
+- area: Study
+  tab: Wizard step 1
+  fields: Mission Name, Problem Statement, Operational Context, mission type
+  value: Northern Fire and Ice; texts in mission.yaml; Earth Observation
+  old_behaviour: workbench Load renamed it 'Loaded Mission'
+- area: Mission need
+  tab: Wizard step 2
+  fields: 6 stakeholders (name, role, need); 5 objectives (priority, text, measure)
+  value: mission.yaml
+  old_behaviour: lost by workbench Load
+- area: Mission need
+  tab: Wizard step 3
+  fields: alternatives_considered (9), selected_alternative_id, selection_rationale
+  value: New dedicated CubeSat + rationale
+  old_behaviour: lost by workbench Load
+- area: Mission need
+  tab: Mission definition editor
+  fields: conops_summary
+  value: mission.yaml
+  old_behaviour: not editable before
+- area: Mission requirements
+  tab: Mission definition editor
+  fields: name, mission_type, spacecraft_class, orbit {sso, 590, 97.75, e 0, ltan 22:30, duration 2, deorbit true}, payloads ×3, lifetime 3, reliability 0.80, target mass 6.0, cost 0.5, ground_stations
+    ×4 (Ottawa, Yellowknife, Iqaluit, Inuvik), launch date, constraints
+  value: mission.yaml → mission_patch
+  old_behaviour: reset to defaults by workbench Load
+- area: Seats
+  tab: Wizard step 4 / Seats drawer
+  fields: team preset 9 + optional Propulsion, Cost & risk; claims; active seat
+  value: 11 seat groups
+  old_behaviour: loaded study became solo
+- area: Product tree
+  tab: Blocks
+  fields: names (Northern Fire and Ice, Northern Fire and Ice spacecraft, Disposal (drag sail), 4 GS, MCC, launch), types, domains, segment, In scope (launch off), Frozen
+  value: ≈ 80 elements incl. ground RF chains
+  old_behaviour: kept; diagram_collapsed, layer, heritage not exported
+- area: Elements
+  tab: Blocks inline
+  fields: Mass, Average power, Quantity per equipment.yaml; kb_component_id; manufacturer; cost
+  value: Appendix D
+  old_behaviour: kept; margin_percent re-derived
+- area: Elements
+  tab: 'Properties: <name>'
+  fields: payload, power, aocs, ttc, thermal, structure, propulsion, ground keys
+  value: §2.1, §4.x
+  old_behaviour: kept (performance)
+- area: Elements
+  tab: API
+  fields: trl on 4 custom elements
+  value: 4–5
+  old_behaviour: TRL not in UI
+- area: Elements
+  tab: Blocks drag
+  fields: diagram_x / diagram_y
+  value: layout
+  old_behaviour: kept
+- area: Modes
+  tab: Modes rows
+  fields: '9 modes: name, kind, pointing, share, initial, daylight'
+  value: modes.yaml
+  old_behaviour: kept as elements
+- area: Modes
+  tab: Transitions
+  fields: 13 template + 7 added (from, to, trigger, guard)
+  value: '20'
+  old_behaviour: lost (13 → 0)
+- area: Modes
+  tab: Matrix
+  fields: State and Power (W) per unit per mode
+  value: 13 units × 9 modes
+  old_behaviour: lost (91 → 0)
+- area: Budget
+  tab: Budget
+  fields: 'allocations: spacecraft 6.0 kg / 12.2 W / 500 k€; 8 subsystem mass + power allocations'
+  value: §2.3, §3.2
+  old_behaviour: workbench Load lost them
+- area: Requirements
+  tab: Requirements
+  fields: code, text, type, method, allocated element, op, threshold, status
+  value: 216 (requirements.yaml) + 5 objective reqs
+  old_behaviour: duplicated ×2 by both loaders
+- area: Requirements
+  tab: link ↑ / flow ↓
+  fields: parent_id
+  value: Appendix A Parent column
+  old_behaviour: Home Load kept OLD study ids; workbench Load dropped
+- area: Requirements
+  tab: API
+  fields: objective_id; renamed codes OBJ-O1…OBJ-O4, OBJ-C1
+  value: 5 + 216
+  old_behaviour: not in old loaders
+- area: Requirements
+  tab: auto (AUTO_IRD)
+  fields: interface requirements from accepted links
+  value: count after §3.5
+  old_behaviour: duplicated
+- area: Functions
+  tab: Functions
+  fields: root + 12 functions, ports, exchanges, allocations at SA
+  value: §3.1
+  old_behaviour: lost (only Capella carried them)
+- area: Interfaces
+  tab: Interfaces
+  fields: accepted proposals + 9 manual links (from, to, type, label, status)
+  value: §3.5
+  old_behaviour: duplicated (83 → 243)
+- area: Electrical
+  tab: Electrical
+  fields: rails, lines (number, rail, LCL trip, switchable, on at boot, on at separation), load
+  value: §5.1
+  old_behaviour: lost
+- area: Data
+  tab: Data
+  fields: buses, nodes (address, data rate, redundancy, segment)
+  value: §5.2
+  old_behaviour: lost
+- area: ICD
+  tab: ICD
+  fields: 7 exchange items + props, attachments
+  value: §5.3
+  old_behaviour: user edits lost (regenerated)
+- area: TM/TC
+  tab: TM/TC
+  fields: uplink settings, command-loss timer 72 h, rate ladder 4 tiers, 12 SIDs with real-time and stored intervals (hk_sids.yaml), accepted rows
+  value: §5.5
+  old_behaviour: lost (cdr_rows)
+- area: FDIR
+  tab: FDIR
+  fields: monitors, event-actions, load-shed stages, safe-mode definition
+  value: §5.4
+  old_behaviour: lost
+- area: AOCS modes
+  tab: AOCS modes
+  fields: B-dot gain, minimum dwell, line states per mode
+  value: §5.6
+  old_behaviour: lost
+- area: Operations
+  tab: Operations
+  fields: flight rules FR-01…FR-11
+  value: '11'
+  old_behaviour: lost
+- area: Stack
+  tab: Spacecraft
+  fields: proposal + approved layout
+  value: approved
+  old_behaviour: lost
+- area: Trades
+  tab: Decide
+  fields: 'Pugh: criteria, options, datum, scores, comparisons (T-07 left in study)'
+  value: trades.yaml T-07
+  old_behaviour: workbench Load lost it
+- area: Options
+  tab: Analyses / API
+  fields: option B body-mounted
+  value: '1'
+  old_behaviour: lost (2 → 0)
+- area: Risks
+  tab: V&V Risk Register
+  fields: '23 risks: category, description, L, C, mitigation, owner, status'
+  value: risks.yaml
+  old_behaviour: workbench Load lost them
+- area: Gates
+  tab: V&V Review Gates
+  fields: gate profile nasa; MCR passed with note; SRR in review; go/no-go record
+  value: §6
+  old_behaviour: gate_profile reset to '' ; baselines lost
+- area: V&V
+  tab: V&V Requirements / analyses
+  fields: verification items status, evidence
+  value: after vv run
+  old_behaviour: lost (101 → 0)
+- area: Analyses
+  tab: Analyses
+  fields: design loop, mission_simulation, ground_segment, physics, vv, fmeca runs and conflicts
+  value: re-run or carried
+  old_behaviour: lost; re-run required
+- area: Parameters
+  tab: Blocks → Parameters & equations
+  fields: derived parameters (none set by hand in this script)
+  value: —
+  old_behaviour: re-derived only
+- area: Ground stations
+  tab: Blocks (ground)
+  fields: 4 stations (Ottawa, Yellowknife, Iqaluit, Inuvik) with lat/lon/antenna/min elevation/bands
+  value: ground_stations.yaml
+  old_behaviour: kept
+- area: Link budget
+  tab: Analyses → Link budget
+  fields: 8 cases (browser storage only)
+  value: §4.4 table
+  old_behaviour: 'never in the study: re-enter; results in LB-18'
+- area: Logbook
+  tab: Logbook
+  fields: LB-01…LB-28 decision records
+  value: logbook.yaml
+  old_behaviour: 'not in any export: download Markdown'
+- area: UI state
+  tab: breadcrumb, level, panel
+  fields: focus element
+  value: —
+  old_behaviour: per browser

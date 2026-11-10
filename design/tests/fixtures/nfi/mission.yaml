@@ -1,0 +1,115 @@
+# Northern Fire and Ice (NFI) teaching mission - mission definition: wizard inputs (steps 1-4) and the
+# mission-definition body for PATCH /api/studies/{id}/mission (field names follow MissionRequirements /
+# MissionNeed in spacecdf_common/models/study.py).
+# A teaching mission concept for northern fire and ice monitoring; numbers are a frozen teaching baseline
+# (../NUMBERS.yaml). No personal names anywhere: stakeholders are organisations or roles.
+
+wizard:
+  step1_problem:
+    mission_name: "Northern Fire and Ice"
+    problem_statement: >-
+      Northern communities face two seasonal hazards that are poorly observed at the scale they need:
+      wildfire (burn scars, post-fire recovery and fires that overwinter in peat) and river and lake ice
+      (freeze-up and break-up timing, ice roads, spring ice-jam flooding). Free Sentinel-2 and Landsat data
+      exist but cannot be tasked by the communities, do not image at night, and do not show whether a
+      low-cost student-built instrument can reproduce these landscape-scale measurements within known
+      limits. Northern Fire and Ice is a 3U CubeSat with a near-infrared (865 nm) and short-wave infrared
+      (1610 nm) imager at about 60 m that tests this, at sites chosen with the communities, with every
+      product calibrated against Sentinel-2 and Landsat.
+    operational_context: >-
+      Sun-synchronous orbit at 590 km (apogee <= 600 km), daylight descending node 10:30 (window
+      09:30-13:30), rideshare launch from a 3U deployer around mid-2030 after a 36-month development.
+      Four UHF ground stations at generic sites near Ottawa, Yellowknife, Iqaluit and Inuvik give about
+      126 min of contact per day (union, 10 deg mask); mission control in Ottawa. Landscape-scale,
+      seasonal monitoring, not emergency response; not designed for active-fire detection, fire
+      radiative power, smoke, or ice thickness. Licensing under ISED (space and earth stations, April
+      2026 debris conditions), ITU, and the RSSSA.
+    mission_type: "Earth Observation"
+  step2_stakeholders:
+    # role values: sponsor | user | operator | science_pi | regulator | partner
+    - {name: "Funding agency (student CubeSat programme)", role: sponsor, need: "A student-built mission that flies, trains students and delivers its science within the programme budget and schedule, on a rideshare launch"}
+    - {name: "Northern communities that select the sites", role: user, need: "Seasonal ice-on/ice-off and break-up information and burn-scar maps for their own sites, openly published with stated uncertainty"}
+    - {name: "Science PI and fire/ice science team", role: science_pi, need: "NIR and SWIR imagery at about 60 m, cross-calibrated against Sentinel-2/Landsat, with enough clear scenes over burns and ice sites"}
+    - {name: "Mission operations team (mission control, Ottawa)", role: operator, need: "Reliable two-way UHF link, a stored-plan spacecraft and a ground network that returns at least 13 MB of compressed science products per day"}
+    - {name: "ISED Canada and Global Affairs Canada (RSSSA)", role: regulator, need: "Licensable spectrum use (401/450 MHz), disposal within 5 years with >= 90 % probability, command and data protection"}
+    - {name: "Student engineering team", role: partner, need: "Clear interfaces, early breadboards and a schedule that fits teaching terms"}
+  step2_objectives:   # the wizard writes "The mission shall <text>" as a mission requirement for each
+    - {priority: primary,    text: "map burn scars and relative burn severity of boreal fires at landscape scale", measure: ">= 40 usable cloud-free scene pairs over >= 3 burns in year 1; burn-index bias within 0.08 of the dNBR-calibrated reference"}
+    - {priority: primary,    text: "measure river- and lake-ice phenology (freeze-up, break-up, ice-on, ice-off) at community-selected sites", measure: "one complete break-up season at >= 3 community-selected sites; ice extent for channels wider than 175 m"}
+    - {priority: primary,    text: "quantify how well a low-cost student instrument reproduces Sentinel-2 and Landsat measurements and publish the uncertainty", measure: "repeatability <= 5 %; geolocation <= 2 px after registration; >= 20 matchups per product type per year"}
+    - {priority: secondary,  text: "explore, as an exploratory test, whether overwintering fires can be detected with SWIR at night and in early spring", measure: ">= 10 night SWIR images over each of >= 2 previous-season burns (Mar-May); detection or documented null result"}
+    - {priority: constraint, text: "comply with ISED spectrum and debris conditions, the RSSSA licence and export control", measure: "licences before launch; re-entry <= 5 years after end of operations with >= 90 % probability"}
+  step3_alternatives:
+    select: "New dedicated CubeSat"
+    expected_list: ["Copernicus Sentinel-2 (free)", "Landsat 8/9 (free)", "Planet SuperDove (commercial subscription)", "Maxar WorldView (commercial tasking)", "Drone survey (UAV)", "Crewed aircraft survey", "IoT ground sensor network", "New dedicated CubeSat", "Hybrid: Sentinel-2 + drone validation"]
+    rationale: >-
+      Sentinel-2 and Landsat are free and remain the reference for every product, but they cannot be
+      tasked by the communities, acquire no night SWIR (exploratory objective O2) and cannot answer the
+      central question (O4) of whether a low-cost student-built instrument reproduces their measurements.
+      Drones and aircraft do not cover landscape scale (150 km swath) through the break-up season at
+      remote sites, and ground sensors give points, not ice extent. A dedicated 3U CubeSat meets O1-O4
+      within a student-programme envelope and is the training vehicle the sponsor funds; the free missions
+      are used for cross-calibration and validation rather than replaced.
+  step4_architecture:
+    preset: "Single Spacecraft (LEO)"
+    design_lifetime_years: 3
+    target_mass_kg: 6
+    team_size: "9"                      # one seat each (label "7-9 people (one seat each)")
+    optional_seats: [Propulsion, "Cost & risk"]
+
+# ------------------------------------------------------------------------------------------------
+# Mission definition after creation (PATCH /api/studies/{id}/mission, or the editor in the UI).
+# Replaces the wizard's fixed values (500 km / 97.4 deg / one 1 kg 10 W payload / 2 MEUR / KSAT Svalbard).
+mission_patch:
+  requirements:
+    name: "Northern Fire and Ice"
+    mission_type: earth_observation
+    spacecraft_class: nano
+    orbit:
+      orbit_type: sso
+      altitude_km: 590
+      inclination_deg: 97.75
+      eccentricity: 0.0
+      ltan: "22:30"                     # = LTDN 10:30 (daylight pass descending at 10:30); see the design script §1.6
+      mission_duration_years: 2
+      deorbit_required: true
+      repeat_cycle_days: 0              # no exact repeat (decays slowly; nearest 164 rev / 11 d at 589.2 km)
+      delta_v_insertion_ms: 0
+      delta_v_maintenance_ms: 0
+    payloads:
+      - {name: "SWIR camera (Alvium C-530 VSWIR, 1610/90 nm)", type: imager, mass_kg: 0.19, power_w: 2.7, power_peak_w: 2.7, data_rate_mbps: 4.5, data_volume_per_day_gb: 0.27, pointing_accuracy_deg: 1.0, pointing_stability_deg_s: 0.1, temperature_range_c: [0, 25], fov_deg: 14.56, duty_cycle_percent: 5, description: "IMX992 InGaAs, 2592x2056, 3.45 um, 35 mm f/1.4; 58.2 m GSD, 150.7 km swath at 590 km; filter centred 1610 nm for cross-calibration with Sentinel-2 B11 / Landsat OLI B6"}
+      - {name: "VNIR camera (Alvium C-1620m, 875/50 nm)", type: imager, mass_kg: 0.13, power_w: 3.8, power_peak_w: 3.8, data_rate_mbps: 13.7, data_volume_per_day_gb: 0.82, pointing_accuracy_deg: 1.0, pointing_stability_deg_s: 0.1, temperature_range_c: [-20, 65], fov_deg: 16.61, duty_cycle_percent: 5, description: "IMX542 mono, 5328x3040, 2.74 um, 50 mm f/2.4; 32.3 m native, always binned to the 60 m grid"}
+      - {name: "Payload controller, bench and harness", type: other, mass_kg: 0.33, power_w: 3.0, power_peak_w: 5.0, data_rate_mbps: 0, data_volume_per_day_gb: 0.013, pointing_accuracy_deg: 1.0, temperature_range_c: [-20, 85], duty_cycle_percent: 15, description: "Raspberry Pi CM4 on a custom carrier (trade T-03), >= 8 GB store, GNSS-PPS trigger of both cameras, ROI and quicklook extraction, CCSDS 121 lossless compression; 13 MB/day of compressed products downlinked"}
+    design_lifetime_years: 3
+    reliability_target: 0.80
+    target_mass_kg: 6.0
+    target_cost_meur: 0.5
+    num_spacecraft: 1
+    ground_stations: ["GS Ottawa", "GS Yellowknife", "GS Iqaluit", "GS Inuvik"]
+    launch_date_target: "2030-06"
+    constraints:
+      apogee_max_km: 600
+      disposal_max_years: 5
+      disposal_probability_min: 0.9
+      collision_probability_max: 0.001
+      downlink_band_mhz: [401, 402]
+      uplink_band_mhz: [449.75, 450.25]
+      daylight_node_window: ["09:30", "13:30"]
+  mission_need:
+    conops_summary: >-
+      LEOP (B-dot detumble, antenna and wing deployment, first contacts) for about 7 days, platform
+      commissioning to day 30 and payload commissioning to day 90 (dark frames, first light, boresight
+      map, cross-calibration with Sentinel-2/Landsat, roll tests, compression check). Nominal operations:
+      nadir standby with scheduled acquisitions of a few minutes per orbit over burns (Jun-Sep), freeze-up
+      (Oct-Dec), break-up (Apr-Jun) and exploratory night SWIR over previous burns (Mar-May), rolling up to
+      ±30 deg for revisit; quicklooks and region-of-interest pairs, losslessly compressed, returned at
+      38.4 kbps over four UHF stations (about 126 min/day union, 14 windows, 13 MB/day of compressed
+      products); per pass the operators choose delayed housekeeping or payload data. Safe and survival
+      modes on faults or low battery; a stored plan covers 48 h without contact. End of life: drag sail
+      deployed by command, by an OBC-independent 90-day timer or on under-voltage; transmitters off and
+      battery passivated; re-entry about 3.0-3.4 years later from 590 km.
+target_cost_note: >-
+  0.5 MEUR is a working figure for the whole space and ground segment hardware plus tests. Flight hardware
+  from researched list prices and KB estimates is about 231 k EUR, the four ground RF chains about 44 k EUR
+  (NUMBERS.yaml cost). The design-loop cost model may include labour and
+  launch and then exceed 0.5 MEUR (design script §6).

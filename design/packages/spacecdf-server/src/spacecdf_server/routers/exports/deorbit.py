@@ -28,7 +28,11 @@ async def export_deorbit(
     from ..elements import _elements
 
     elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-    total_mass = sum((e.get("mass_kg") or 0) * e.get("quantity", 1) for e in elements if e.get("segment") == "space")
+    # Mass and form factor from the one roll-up (services/rollup.py, W0.3): leaf units x quantity,
+    # subsystem estimates and product-tree nodes not double-counted (EG D6).
+    from ...services.rollup import compute as _rollup
+    ru = await _rollup(study_id)
+    total_mass = ru.mass.cbe_kg
 
     # Read actual orbit altitude from study requirements, fall back to 500 km
     altitude_km = 500.0
@@ -41,7 +45,7 @@ async def export_deorbit(
     altitude_km = orbit_params["altitude_km"]
 
     # Derive form factor and cross-section
-    form_factor = _form_factor_from_mass(total_mass)
+    form_factor = ru.form_factor or _form_factor_from_mass(total_mass)
     cross_section_m2 = 0.03  # default
     try:
         from spacecdf_common.physics.debris import estimate_cubesat_cross_section

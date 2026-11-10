@@ -1,0 +1,296 @@
+# Northern Fire and Ice (NFI) teaching mission - trade studies for Decide -> "Pairwise Comparison Weighting" + "Pugh Matrix (Weighted)".
+# UI limits (see NFI_DESIGN_SCRIPT.md §0.3):
+#  - The study holds ONE Pugh record (trade key "pugh"); criteria are shared with the pairwise widget.
+#  - Weights are not typed: they come from pairwise comparisons (1 = left wins, 0.5 = equal,
+#    0 = right wins). "pairwise" below gives the comparisons that produce the target weights.
+#  - Scores are -2..+2 against the datum (the column you click).
+# So each trade is entered, recorded in the logbook with "Record decision", then replaced by the
+# next one. The LAST trade entered (T-07 radio) stays in the study and is what Save/Export carries.
+# "criteria" holds the intended weights; "pairwise_inputs" at the end gives the slider settings
+# that reproduce them exactly (pairwise.ts normalises the row sums).
+# Frozen teaching baseline; costs quoted in evidence are researched list prices (../NUMBERS.yaml cost).
+
+trades:
+  - id: T-01
+    title: "SWIR filter centre: 1550 nm vs 1610 nm"
+    seat: payload_lead
+    level: "Subsystem: Payload"
+    datum: "1550/50 nm (Edmund 85-903, COTS)"
+    options: ["1550/50 nm (Edmund 85-903, COTS)", "1610/90 nm (custom, S2 B11-matched)"]
+    criteria: {"Cross-calibration match": 0.35, "SNR": 0.20, "Index heritage (NDMI/B11)": 0.20, "Availability / cost": 0.15, "Out-of-band blocking risk": 0.10}
+    scores: {"1610/90 nm (custom, S2 B11-matched)": {"Cross-calibration match": 2, "SNR": -1, "Index heritage (NDMI/B11)": 1, "Availability / cost": -1, "Out-of-band blocking risk": 0}}
+    expected_winner: "1610/90 nm (weighted total +0.55; unweighted +1)"
+    evidence: "S2 B11 1610-1614 nm/91-94 nm, OLI B6 1566-1651 nm; IMX992 QE falls from ~72 % at 1550 to lower values toward 1700 nm and solar irradiance is ~10 % lower at 1610 nm (est.), hence SNR -1; custom filter needs a quote."
+    decision_record: "D-PAY-01"
+  - id: T-02
+    title: "Imaging architecture: two cameras vs one IMX992 with a two-zone filter"
+    seat: payload_lead
+    level: "Subsystem: Payload"
+    datum: "Two cameras (C-530 VSWIR + C-1620m)"
+    options: ["Two cameras (C-530 VSWIR + C-1620m)", "One C-530 VSWIR with 865/1610 two-zone filter", "Two C-530 VSWIR cameras"]
+    criteria: {"NIR SNR": 0.20, "Band simultaneity / registration": 0.25, "Mass and power": 0.15, "Technical risk (custom parts)": 0.25, "Cost": 0.15}
+    scores:
+      "One C-530 VSWIR with 865/1610 two-zone filter": {"NIR SNR": 2, "Band simultaneity / registration": -1, "Mass and power": 2, "Technical risk (custom parts)": -2, "Cost": 1}
+      "Two C-530 VSWIR cameras": {"NIR SNR": 2, "Band simultaneity / registration": 0, "Mass and power": -1, "Technical risk (custom parts)": 0, "Cost": -2}
+    expected_winner: "Near tie: single camera +0.10, two VSWIR -0.05 against the two-camera datum. Decision: keep two cameras for MCR, reopen at PDR"
+    evidence: "IMX992 QE 73 % at 865 nm vs 15 % for IMX542 (about 4x NIR SNR); two-zone filter puts bands 60 km / 8.6 s apart along track; a second C-530-class SWIR camera costs about 17 k EUR more (comparable list price, NUMBERS.yaml cost)."
+    note: "With these weights both alternatives score slightly positive; the team keeps the baseline because the two-zone filter is a custom part at TRL 4 and the two-camera bench is the NFI brief reference concept. Record it as 'keep baseline, reopen at PDR'."
+    decision_record: "D-PAY-02"
+  - id: T-03
+    title: "Payload controller (two CSI-2 cameras)"
+    seat: payload_lead
+    level: "Subsystem: Payload"
+    datum: "Raspberry Pi CM4 on custom carrier"
+    options: ["Raspberry Pi CM4 on custom carrier", "Raspberry Pi CM5 on custom carrier", "NVIDIA Jetson Orin Nano 8GB", "Xiphos Q8S + Q8 Camera Board"]
+    criteria: {"Power": 0.25, "Dual CSI-2 support": 0.25, "Heritage / TRL": 0.20, "Mass": 0.10, "Cost": 0.20}
+    scores:
+      "Raspberry Pi CM5 on custom carrier": {"Power": 0, "Dual CSI-2 support": 1, "Heritage / TRL": -1, "Mass": 0, "Cost": 0}
+      "NVIDIA Jetson Orin Nano 8GB": {"Power": -2, "Dual CSI-2 support": 1, "Heritage / TRL": 0, "Mass": 0, "Cost": -1}
+      "Xiphos Q8S + Q8 Camera Board": {"Power": 0, "Dual CSI-2 support": -2, "Heritage / TRL": 2, "Mass": -1, "Cost": -2}
+    expected_winner: "Tie between CM4 (datum) and CM5 (+0.05; the tool will star CM5); Jetson -0.45, Xiphos -0.60. Decision: CM4 baseline for its VERTECS heritage and TRL 5, CM5 accepted alternative if the driver breadboard works on it"
+    evidence: "CM4 1x4-lane + 1x2-lane CSI, ~2 W idle / ~7 W typical, VERTECS CCB heritage (TVAC, not flown); CM5 2x4-lane; Jetson 7-15 W; Q8S has no native CSI-2 (research: payload §4)."
+    decision_record: "D-PAY-03"
+  - id: T-04
+    title: "Solar array: body-mounted vs deployable"
+    seat: power_engineer
+    level: "Subsystem: EPS"
+    datum: "Body-mounted (4 x EnduroSat 3U body)"
+    options: ["Body-mounted (4 x EnduroSat 3U body)", "EXA DMSA 3U/A wings + body panels", "EnduroSat 3U double deployable x2 + body panels"]
+    criteria: {"EOL power margin (beta 15 deg)": 0.35, "Mass": 0.15, "Ops simplicity (no sun-pointing)": 0.20, "Deployment risk": 0.15, "Cost": 0.15}
+    scores:
+      "EXA DMSA 3U/A wings + body panels": {"EOL power margin (beta 15 deg)": 2, "Mass": -1, "Ops simplicity (no sun-pointing)": 2, "Deployment risk": -1, "Cost": -1}
+      "EnduroSat 3U double deployable x2 + body panels": {"EOL power margin (beta 15 deg)": 2, "Mass": -2, "Ops simplicity (no sun-pointing)": 2, "Deployment risk": -1, "Cost": -1}
+    expected_winner: "EXA DMSA wings (+0.65); EnduroSat double deployable (+0.50) documented fallback"
+    evidence: "Body-mounted 3.98 W EOL usable at beta 15 deg vs ~5.0 W need with margin; wings give ~12.2 W EOL (>2.5x margin) (research: bus §10.3). DMSA 3U mass/power not published: request datasheet."
+    decision_record: "D-2.4-POWER"
+  - id: T-05
+    title: "Battery: BPX vs BP4"
+    seat: power_engineer
+    level: "Subsystem: EPS"
+    datum: "NanoPower BPX (86 Wh)"
+    options: ["NanoPower BPX (86 Wh)", "NanoPower BP4 (43 Wh)"]
+    criteria: {"Mass": 0.30, "Stack height (volume margin)": 0.25, "Energy margin (DoD)": 0.25, "Heritage": 0.10, "Cost": 0.10}
+    scores: {"NanoPower BP4 (43 Wh)": {"Mass": 2, "Stack height (volume margin)": 2, "Energy margin (DoD)": -1, "Heritage": 0, "Cost": 1}}
+    expected_winner: "BP4 (+0.95)"
+    evidence: "BPX 500 g / 41 mm vs BP4 258 g / 23.5 mm; eclipse need ~1.6-2.0 Wh gives < 6 % DoD on BP4 (research: bus §2)."
+    decision_record: "D-PWR-02"
+  - id: T-06
+    title: "Drag sail"
+    seat: propulsion_engineer
+    level: "Subsystem: Disposal (drag sail)"
+    datum: "NPC Spacemind ARTICA (config A, 2.1 m2)"
+    options: ["NPC Spacemind ARTICA (config A, 2.1 m2)", "HPS ADEO-P (1.7 m2)", "HPS ADEO-C (3.4 m2)", "TUI Terminator Tape"]
+    criteria: {"Deorbit time from 590 km": 0.30, "Deployment heritage": 0.25, "Mass and volume": 0.25, "Independent power/timer": 0.10, "Cost": 0.10}
+    scores:
+      "HPS ADEO-P (1.7 m2)": {"Deorbit time from 590 km": -1, "Deployment heritage": 1, "Mass and volume": -1, "Independent power/timer": 0, "Cost": -1}
+      "HPS ADEO-C (3.4 m2)": {"Deorbit time from 590 km": 1, "Deployment heritage": 1, "Mass and volume": -2, "Independent power/timer": 0, "Cost": -2}
+      "TUI Terminator Tape": {"Deorbit time from 590 km": -2, "Deployment heritage": 0, "Mass and volume": 2, "Independent power/timer": 1, "Cost": -1}
+    expected_winner: "ARTICA (datum): ADEO-P -0.40, ADEO-C -0.15, Terminator Tape -0.10. Keep ARTICA conditionally; ADEO-P fallback"
+    evidence: "ARTICA 0.35U, 210-300 g, up to 2.1 m2, config A 2-year rating, no published deployment result; ADEO-P 1.7 m2, 0.45 kg, family deployed in orbit (research: bus §7). Lifetime 3.0 y nominal / 3.4 y weak with a 2 m2 sail (research: mission analysis §2.2)."
+    decision_record: "D-DIS-01"
+  - id: T-07
+    title: "UHF transceiver: 401 MHz TX at 38.4 kbps and 450 MHz RX"
+    seat: comms_engineer
+    level: "Subsystem: Communications"
+    datum: "Spacemanic Murgas"
+    options: ["Spacemanic Murgas", "AAC SpaceQuest TRX-U", "GomSpace AX100UL + STT R0405 RX", "EnduroSat UHF Transceiver II"]
+    criteria: {"Meets 38.4 kbps downlink": 0.25, "Covers 401 TX and 450 RX": 0.30, "Link margin (RF power)": 0.15, "Mass and DC power": 0.15, "Heritage / vendor confirmation": 0.15}
+    scores:
+      "AAC SpaceQuest TRX-U": {"Meets 38.4 kbps downlink": -2, "Covers 401 TX and 450 RX": 1, "Link margin (RF power)": 2, "Mass and DC power": -2, "Heritage / vendor confirmation": 1}
+      "GomSpace AX100UL + STT R0405 RX": {"Meets 38.4 kbps downlink": 0, "Covers 401 TX and 450 RX": 1, "Link margin (RF power)": 0, "Mass and DC power": -1, "Heritage / vendor confirmation": 1}
+      "EnduroSat UHF Transceiver II": {"Meets 38.4 kbps downlink": -2, "Covers 401 TX and 450 RX": -2, "Link margin (RF power)": 1, "Mass and DC power": -2, "Heritage / vendor confirmation": 1}
+    expected_winner: "AX100UL + R0405 scores +0.30 against the Murgas datum while the Murgas 450.25 MHz receive edge is unconfirmed (TRX-U -0.05, EnduroSat -1.10). If Spacemanic confirms 449.75-450.25 MHz receive, set the combo's band score to 0 and it falls to 0.00 (a tie). Decision: Murgas selected conditionally (one board, 25 g); AX100UL + R0405 is the fallback; with 1 W the 10 deg margin needs a <= 300 K site (SEG-GS-03). Encryption is not a criterion because it is done in the OBC (OBD-SEC-01)"
+    evidence: "research: bus §5; link margins: 1 W urban +0.4 dB, 1 W rural +4.0 dB, 2 W urban +3.4 dB (RS, 10 deg)."
+    decision_record: "D-COM-01"
+    keep_in_study: true
+  - id: T-08
+    title: "ADCS (added)"
+    seat: aocs_engineer
+    level: "Subsystem: AOCS"
+    datum: "CubeADCS 3-Axis Small (Gen 1) + CubeStar + CubeSense Sun"
+    options: ["CubeADCS 3-Axis Small (Gen 1) + CubeStar + CubeSense Sun", "CubeADCS Gen 2 (Core + 3x CW0017 + CubeStar)", "AAC iADCS200", "BCT XACT-15"]
+    criteria: {"Knowledge 0.1 deg": 0.30, "Obsolescence / availability": 0.20, "Mass and power": 0.20, "Cost": 0.20, "Heritage": 0.10}
+    scores:
+      "CubeADCS Gen 2 (Core + 3x CW0017 + CubeStar)": {"Knowledge 0.1 deg": 0, "Obsolescence / availability": 2, "Mass and power": 0, "Cost": -1, "Heritage": 0}
+      "AAC iADCS200": {"Knowledge 0.1 deg": 0, "Obsolescence / availability": 1, "Mass and power": 1, "Cost": -1, "Heritage": -1}
+      "BCT XACT-15": {"Knowledge 0.1 deg": 1, "Obsolescence / availability": 1, "Mass and power": -2, "Cost": -2, "Heritage": 1}
+    expected_winner: "Gen 2 (+0.20) over iADCS200 (+0.10, price not published) and XACT-15 (-0.20). Gen 2 baseline, iADCS200 second source"
+    evidence: "research: bus §1: Gen 1 + CubeStar + FSS ~USD 55.6k; Gen 2 ~USD 62k; iADCS200 0.40-0.47 kg, 1.4 W, ST200 included; XACT-15 1.1 kg."
+    decision_record: "D-AOC-01"
+
+# ---------------------------------------------------------------------------------------------
+# Pairwise slider settings that reproduce the weights above exactly (pairwise.ts: weight = row sum
+# / total; 1 = first-named criterion wins, 0.5 = equal, 0 = second wins), chosen so that a more
+# heavily weighted criterion never loses a comparison. Totals are the weighted Pugh totals the tool
+# should display for each non-datum option.
+pairwise_inputs:
+  T-01:
+    weights_from_pairwise:
+      Cross-calibration match: 0.35
+      SNR: 0.2
+      Index heritage (NDMI/B11): 0.2
+      Availability / cost: 0.15
+      Out-of-band blocking risk: 0.1
+    pairwise:
+      Cross-calibration match vs SNR: 0.5
+      Cross-calibration match vs Index heritage (NDMI/B11): 1
+      Cross-calibration match vs Availability / cost: 1
+      Cross-calibration match vs Out-of-band blocking risk: 1
+      SNR vs Index heritage (NDMI/B11): 0.5
+      SNR vs Availability / cost: 0.5
+      SNR vs Out-of-band blocking risk: 0.5
+      Index heritage (NDMI/B11) vs Availability / cost: 0.5
+      Index heritage (NDMI/B11) vs Out-of-band blocking risk: 1
+      Availability / cost vs Out-of-band blocking risk: 0.5
+    totals_with_these_weights:
+      1610/90 nm (custom, S2 B11-matched): 0.55
+  T-02:
+    weights_from_pairwise:
+      NIR SNR: 0.2
+      Band simultaneity / registration: 0.25
+      Mass and power: 0.15
+      Technical risk (custom parts): 0.25
+      Cost: 0.15
+    pairwise:
+      NIR SNR vs Band simultaneity / registration: 0
+      NIR SNR vs Mass and power: 0.5
+      NIR SNR vs Technical risk (custom parts): 0.5
+      NIR SNR vs Cost: 1
+      Band simultaneity / registration vs Mass and power: 0.5
+      Band simultaneity / registration vs Technical risk (custom parts): 0.5
+      Band simultaneity / registration vs Cost: 0.5
+      Mass and power vs Technical risk (custom parts): 0
+      Mass and power vs Cost: 0.5
+      Technical risk (custom parts) vs Cost: 0.5
+    totals_with_these_weights:
+      One C-530 VSWIR with 865/1610 two-zone filter: 0.1
+      Two C-530 VSWIR cameras: -0.05
+  T-03:
+    weights_from_pairwise:
+      Power: 0.25
+      Dual CSI-2 support: 0.25
+      Heritage / TRL: 0.2
+      Mass: 0.1
+      Cost: 0.2
+    pairwise:
+      Power vs Dual CSI-2 support: 0.5
+      Power vs Heritage / TRL: 0.5
+      Power vs Mass: 0.5
+      Power vs Cost: 1
+      Dual CSI-2 support vs Heritage / TRL: 0.5
+      Dual CSI-2 support vs Mass: 1
+      Dual CSI-2 support vs Cost: 0.5
+      Heritage / TRL vs Mass: 0.5
+      Heritage / TRL vs Cost: 0.5
+      Mass vs Cost: 0
+    totals_with_these_weights:
+      Raspberry Pi CM5 on custom carrier: 0.05
+      NVIDIA Jetson Orin Nano 8GB: -0.45
+      Xiphos Q8S + Q8 Camera Board: -0.6
+  T-04:
+    weights_from_pairwise:
+      EOL power margin (beta 15 deg): 0.35
+      Mass: 0.15
+      Ops simplicity (no sun-pointing): 0.2
+      Deployment risk: 0.15
+      Cost: 0.15
+    pairwise:
+      EOL power margin (beta 15 deg) vs Mass: 0.5
+      EOL power margin (beta 15 deg) vs Ops simplicity (no sun-pointing): 1
+      EOL power margin (beta 15 deg) vs Deployment risk: 1
+      EOL power margin (beta 15 deg) vs Cost: 1
+      Mass vs Ops simplicity (no sun-pointing): 0
+      Mass vs Deployment risk: 0.5
+      Mass vs Cost: 0.5
+      Ops simplicity (no sun-pointing) vs Deployment risk: 0.5
+      Ops simplicity (no sun-pointing) vs Cost: 0.5
+      Deployment risk vs Cost: 0.5
+    totals_with_these_weights:
+      EXA DMSA 3U/A wings + body panels: 0.65
+      EnduroSat 3U double deployable x2 + body panels: 0.5
+  T-05:
+    weights_from_pairwise:
+      Mass: 0.3
+      Stack height (volume margin): 0.25
+      Energy margin (DoD): 0.25
+      Heritage: 0.1
+      Cost: 0.1
+    pairwise:
+      Mass vs Stack height (volume margin): 0.5
+      Mass vs Energy margin (DoD): 0.5
+      Mass vs Heritage: 1
+      Mass vs Cost: 1
+      Stack height (volume margin) vs Energy margin (DoD): 0.5
+      Stack height (volume margin) vs Heritage: 0.5
+      Stack height (volume margin) vs Cost: 1
+      Energy margin (DoD) vs Heritage: 1
+      Energy margin (DoD) vs Cost: 0.5
+      Heritage vs Cost: 0.5
+    totals_with_these_weights:
+      NanoPower BP4 (43 Wh): 0.95
+  T-06:
+    weights_from_pairwise:
+      Deorbit time from 590 km: 0.3
+      Deployment heritage: 0.25
+      Mass and volume: 0.25
+      Independent power/timer: 0.1
+      Cost: 0.1
+    pairwise:
+      Deorbit time from 590 km vs Deployment heritage: 0.5
+      Deorbit time from 590 km vs Mass and volume: 0.5
+      Deorbit time from 590 km vs Independent power/timer: 1
+      Deorbit time from 590 km vs Cost: 1
+      Deployment heritage vs Mass and volume: 0.5
+      Deployment heritage vs Independent power/timer: 0.5
+      Deployment heritage vs Cost: 1
+      Mass and volume vs Independent power/timer: 1
+      Mass and volume vs Cost: 0.5
+      Independent power/timer vs Cost: 0.5
+    totals_with_these_weights:
+      HPS ADEO-P (1.7 m2): -0.4
+      HPS ADEO-C (3.4 m2): -0.15
+      TUI Terminator Tape: -0.1
+  T-07:
+    weights_from_pairwise:
+      Meets 38.4 kbps downlink: 0.25
+      Covers 401 TX and 450 RX: 0.3
+      Link margin (RF power): 0.15
+      Mass and DC power: 0.15
+      Heritage / vendor confirmation: 0.15
+    pairwise:
+      Meets 38.4 kbps downlink vs Covers 401 TX and 450 RX: 0
+      Meets 38.4 kbps downlink vs Link margin (RF power): 0.5
+      Meets 38.4 kbps downlink vs Mass and DC power: 1
+      Meets 38.4 kbps downlink vs Heritage / vendor confirmation: 1
+      Covers 401 TX and 450 RX vs Link margin (RF power): 1
+      Covers 401 TX and 450 RX vs Mass and DC power: 0.5
+      Covers 401 TX and 450 RX vs Heritage / vendor confirmation: 0.5
+      Link margin (RF power) vs Mass and DC power: 0.5
+      Link margin (RF power) vs Heritage / vendor confirmation: 0.5
+      Mass and DC power vs Heritage / vendor confirmation: 0.5
+    totals_with_these_weights:
+      AAC SpaceQuest TRX-U: -0.05
+      GomSpace AX100UL + STT R0405 RX: 0.3
+      EnduroSat UHF Transceiver II: -1.1
+  T-08:
+    weights_from_pairwise:
+      Knowledge 0.1 deg: 0.3
+      Obsolescence / availability: 0.2
+      Mass and power: 0.2
+      Cost: 0.2
+      Heritage: 0.1
+    pairwise:
+      Knowledge 0.1 deg vs Obsolescence / availability: 0.5
+      Knowledge 0.1 deg vs Mass and power: 0.5
+      Knowledge 0.1 deg vs Cost: 1
+      Knowledge 0.1 deg vs Heritage: 1
+      Obsolescence / availability vs Mass and power: 0.5
+      Obsolescence / availability vs Cost: 0.5
+      Obsolescence / availability vs Heritage: 0.5
+      Mass and power vs Cost: 0.5
+      Mass and power vs Heritage: 0.5
+      Cost vs Heritage: 1
+    totals_with_these_weights:
+      CubeADCS Gen 2 (Core + 3x CW0017 + CubeStar): 0.2
+      AAC iADCS200: 0.1
+      BCT XACT-15: -0.2

@@ -1,0 +1,102 @@
+# Northern Fire and Ice (NFI) teaching mission - risk register for V&V -> Risk Register ("+ Add Risk" form) or POST /api/studies/{sid}/risks.
+# Form fields: Category (Technical | Schedule | Cost | Programmatic | Safety | Regulatory),
+# Risk description, Likelihood 1-5, Consequence 1-5 (RPN = L x C shown), Mitigation action,
+# Owner (free text: use the seat label, never a person's name). Status per row afterwards:
+# open | mitigating | accepted | closed. Ids RSK-001.. are assigned by the tool in entry order,
+# so enter them in this order. "src" says where the risk comes from (brief list or research flag).
+# L/C are the values at the MCR (before mitigation); "residual" is the expected value once the
+# mitigation is in place, for the PDR update. Frozen teaching baseline (../NUMBERS.yaml).
+
+risks:
+  - {id: RSK-001, cat: Regulatory, L: 4, C: 4, residual: [3, 3], status: mitigating, owner: "Comms & OBDH",
+     src: "NFI brief: UHF 450 MHz uplink coordination; research: mission analysis R6",
+     desc: "The 449.75-450.25 MHz uplink needs an RR 9.21 agreement and sits next to radiolocation (438-450 MHz) and heavily used land-mobile (450-470 MHz) bands; coordination may be slow or refused.",
+     mit: "Start ISED pre-consultation now; keep the 148-149.9 MHz VHF uplink fallback qualified; use the lowest uplink power that closes (<= 25 W); ask ISED/DND about 420-450 MHz radar interference."}
+  - {id: RSK-002, cat: Regulatory, L: 3, C: 5, residual: [2, 5], status: mitigating, owner: "Propulsion",
+     src: "NFI brief: drag-sail deployment reliability; research: mission analysis R8, bus R4",
+     desc: "Disposal compliance (re-entry <= 5 years, >= 90 % probability) depends on the drag sail deploying; ARTICA has no published deployment result, its self-powered configuration is rated 2 years, and without the sail re-entry takes 14-42 years.",
+     mit: "OBC-independent timer and battery with two release circuits; ask NPC for FUTURA SM1 deployment telemetry and a long-storage variant; ground deployment tests after TVAC; HPS ADEO-P as fallback; DRAMA/DAS at PDR."}
+  - {id: RSK-003, cat: Technical, L: 3, C: 3, residual: [1, 3], status: mitigating, owner: "Power",
+     src: "NFI brief: payload peak power vs power budget; research: payload §3.7",
+     desc: "The payload peak is about 11.5 W (cameras 2.7 + 3.8 W, controller 3-5 W), budgeted as 12 W; body-mounted panels give about 4.0 W EOL at beta 15 deg against a 5.0 W need with margin.",
+     mit: "Keep deployable wings as baseline (about 12.2 W EOL orbit average); budget the payload at 12 W peak; switch the controller off between sessions."}
+  - {id: RSK-004, cat: Technical, L: 3, C: 3, residual: [2, 3], status: mitigating, owner: "Payload",
+     src: "NFI brief: SWIR SNR over dark targets; research: payload §3.4",
+     desc: "Water SNR at the native SWIR resolution is marginal in October (about 10 at f/1.8) and fails in November; the IMX542 has only about 15 % QE at 865 nm.",
+     mit: "f/1.4 SWIR lens; VNIR always binned to the 60 m grid; SWIR 2x2 binning or high-conversion-gain mode for late-season water scenes; check SNR at 15 deg sun elevation."}
+  - {id: RSK-005, cat: Technical, L: 3, C: 3, residual: [2, 3], status: open, owner: "Payload",
+     src: "NFI brief: band-to-band misalignment",
+     desc: "Thermal or launch-induced shifts between the two cameras could exceed the 1 SWIR pixel registration requirement.",
+     mit: "One rigid bench with thermal straps; boresight map measured on the ground and updated in orbit over invariant sites; single-camera two-zone-filter option kept as a PDR trade."}
+  - {id: RSK-006, cat: Schedule, L: 3, C: 3, residual: [2, 3], status: open, owner: "Team leader",
+     src: "NFI brief: long-lead items",
+     desc: "Long-lead items (ADCS about 17 weeks, radio receive band still to be confirmed by the vendor, SWIR camera subject to an export licence) could delay the engineering model.",
+     mit: "Place ADCS and camera orders after MCR; request radio quotes and the 450.25 MHz receive confirmation now; obtain the camera ECCN before the breadboard order."}
+  - {id: RSK-007, cat: Programmatic, L: 3, C: 2, residual: [2, 2], status: accepted, owner: "Mission analysis & ops",
+     src: "NFI brief: LTAN not guaranteed; research: mission analysis R14",
+     desc: "The secondary slot does not guarantee the local time; an inclination error drifts the node by about 18 min per year per 0.1 deg.",
+     mit: "Specify inclination tolerance <= 0.15 deg in the launch request; size power and thermal for node times 09:30-13:30."}
+  - {id: RSK-008, cat: Technical, L: 3, C: 3, residual: [2, 2], status: mitigating, owner: "Comms & OBDH",
+     src: "NFI brief: limited UHF bandwidth; calc/budget_nfi.py (NUMBERS.yaml data_budget)",
+     desc: "The four-site network (125.7 min/day union, 25.3 MB/day capacity) closes the 13 MB/day post-compression target with 38 % margin, but the planned product set (16.7 MB raw) fits only with >= 1.28:1 lossless compression, which is unverified on mission scenes, and at the 19.2 kbps fallback rate the budget fails by 23 %.",
+     mit: "Verify CCSDS 121 on simulated scenes before CDR (goal 1.5:1); at 19.2 kbps cut ROIs to 60 per day (about 9 MB/day); per-pass HK profiles (LEAN on dump passes); 76.8 kbps above 30 deg (35.7 min/day) as a growth option."}
+  - {id: RSK-009, cat: Cost, L: 4, C: 3, residual: [2, 3], status: mitigating, owner: "Cost & risk",
+     src: "NFI brief: ADCS pointing adequacy; research: bus R2, R3",
+     desc: "0.1 deg knowledge needs a star tracker, which makes the ADCS the largest single cost (about 53.5 k EUR list build, 23 % of flight hardware); the Gen 1 'CubeADCS 3-Axis Small' configuration may be obsolete by 2027-2030.",
+     mit: "Quote the Gen 2 build with CubeStar and CubeSense Sun; AAC iADCS200 as second source; keep the cost estimate on list prices until quotes arrive."}
+  - {id: RSK-010, cat: Technical, L: 4, C: 4, residual: [2, 4], status: open, owner: "Comms & OBDH",
+     src: "research: bus R1, §5 (trade T-07)",
+     desc: "No catalogue transceiver is confirmed for a 401 MHz 38.4 kbps downlink plus a 449.75-450.25 MHz uplink in one unit; the selected Murgas lists receive to 450 MHz, so the 450.25 MHz edge is unconfirmed.",
+     mit: "Ask Spacemanic to confirm a 449.75-450.25 MHz receive setting; quote AAC TRX-U at 38.4 kbps; fallback GomSpace AX100UL plus an STT R0405 450 MHz receiver."}
+  - {id: RSK-011, cat: Technical, L: 3, C: 3, residual: [2, 2], status: open, owner: "Comms & OBDH",
+     src: "research: mission analysis R4, §3.2; calc/link.py",
+     desc: "With a 1 W radio, the downlink margin at 10 deg is only +0.4 dB at an urban site (700 K) with RS coding, and negative uncoded; the Ottawa station is the only site at risk (the three northern sites are rural, +4.0 dB).",
+     mit: "RS(255,223) coding; site the Ottawa antenna outside the urban core after a noise survey (<= 300 K gives +4.0 dB, +6.0 dB with the 15 dBic Yagi); 2 W if the radio allows."}
+  - {id: RSK-012, cat: Regulatory, L: 2, C: 5, residual: [1, 5], status: mitigating, owner: "Mission analysis & ops",
+     src: "research: mission analysis R7",
+     desc: "If the injected apogee exceeds 600 km, the ISED April 2026 conditions require active propulsion, which the spacecraft does not have.",
+     mit: "Request apogee <= 590 km including dispersion; confirm the wording of the N2 annex with ISED."}
+  - {id: RSK-013, cat: Regulatory, L: 4, C: 3, residual: [2, 3], status: open, owner: "Payload",
+     src: "research: mission analysis §4.2 item 8; payload §6",
+     desc: "The InGaAs SWIR camera is very likely a dual-use item (6A003); permits are needed for import and for export to the launch site.",
+     mit: "Written ECCN from the vendor before the breadboard order; permits planned at EM (month ~12) and L-6 months."}
+  - {id: RSK-014, cat: Technical, L: 3, C: 3, residual: [2, 3], status: open, owner: "Payload",
+     src: "research: payload §1.3",
+     desc: "No radiation data exist for the Alvium cameras, the IMX992 or the IMX542; InGaAs hot pixels grow in orbit.",
+     mit: "Switched current-limited supplies with latch-up detection; power cycling; dark frames every pass; hot-pixel map updates; optional proton screening."}
+  - {id: RSK-015, cat: Technical, L: 3, C: 4, residual: [2, 3], status: open, owner: "Payload",
+     src: "research: payload §2.5",
+     desc: "Depth of focus is only ±6-14 um, comparable to the air-to-vacuum and thermal focus shifts of C-mount lenses.",
+     mit: "Focus against a collimator in vacuum (or with a measured offset); stake focus and iris; vent and bake out the lenses."}
+  - {id: RSK-016, cat: Technical, L: 3, C: 3, residual: [2, 2], status: open, owner: "Structures & config",
+     src: "research: bus R7, §10.5",
+     desc: "Volume is tight and the +Z face is wanted by the UHF antenna, the 0.35U drag sail, the star tracker field of view and the GNSS patch.",
+     mit: "BP4 instead of BPX (+18 mm); antennas in the wings or on a side face; star tracker off a long face; keep +Z for the sail."}
+  - {id: RSK-017, cat: Technical, L: 4, C: 2, residual: [4, 1], status: accepted, owner: "Payload",
+     src: "research: mission analysis R11",
+     desc: "Night detection of overwintering fires is marginal: a 10 m2 hotspot at 800 K gives about 7 % of a daytime signal and fires under snow are invisible.",
+     mit: "Frame O2 as an exploratory test with a reportable null result; long-exposure and dark-frame mode; compare with VIIRS and Landsat night detections."}
+  - {id: RSK-018, cat: Regulatory, L: 3, C: 2, residual: [2, 2], status: open, owner: "Comms & OBDH",
+     src: "research: mission analysis R5",
+     desc: "401-402 MHz is shared with radiosondes and data-collection systems (Argos, GOES DCS); interference both ways is possible.",
+     mit: "Choose the channel with ISED early, outside 401.4-401.7 MHz; check upper-air stations near the receive sites."}
+  - {id: RSK-019, cat: Technical, L: 3, C: 3, residual: [1, 3], status: open, owner: "Payload",
+     src: "research: payload §4",
+     desc: "The mainline Alvium CSI-2 driver has not been demonstrated on the Raspberry Pi camera front-end used by the payload controller.",
+     mit: "Breadboard both cameras on the controller in months 1-3; Jetson-class or Xiphos fallback recorded in the controller trade."}
+  - {id: RSK-020, cat: Technical, L: 3, C: 3, residual: [2, 3], status: open, owner: "Payload",
+     src: "research: mission analysis R9, R10",
+     desc: "The mission burn index is NDMI-like (865 nm and ~1.6 um) with about half the dynamic range of dNBR, so the 0.08 bias target is relatively tight; a 1550 nm filter would also need a spectral band adjustment against S2 B11.",
+     mit: "Centre the SWIR filter at about 1610 nm; validate against dNBR from Landsat/S2 and report severity classes."}
+  - {id: RSK-021, cat: Technical, L: 3, C: 2, residual: [1, 2], status: mitigating, owner: "Payload",
+     src: "research: payload §3.4",
+     desc: "The VNIR camera saturates on fresh snow at f/2.4 with a 2.3 ms exposure in June.",
+     mit: "Seasonal exposure table (about 1-1.5 ms over snow in spring)."}
+  - {id: RSK-022, cat: Technical, L: 2, C: 2, residual: [1, 2], status: open, owner: "AOCS",
+     src: "research: bus §1",
+     desc: "The 1.77 mNms wheels may saturate under aerodynamic and gravity-gradient torques once the deployable wings are added.",
+     mit: "Disturbance-torque analysis with the wing geometry at PDR; magnetorquer desaturation each orbit."}
+  - {id: RSK-023, cat: Technical, L: 3, C: 3, residual: [2, 2], status: open, owner: "Mission analysis & ops",
+     src: "NFI ground-site choice; calc/degraded.py",
+     desc: "Three of the four stations are unattended northern sites (Yellowknife, Iqaluit, Inuvik) with -45 degC winters, ice loading, polar night, power and network outages and slow physical access; a site can be out for weeks.",
+     mit: "Heated heavy-duty rotator housings and a short-Yagi winter spare; remote power cycling and site monitoring over the VPN; spares at each site and a local service arrangement; the network tolerates any single site out (worst case Inuvik: 93.4 min/day, budget margin +17.6 %)."}

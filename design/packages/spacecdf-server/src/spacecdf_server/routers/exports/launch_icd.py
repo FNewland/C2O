@@ -41,11 +41,13 @@ async def export_launch_icd(
     spacecraft = [e for e in elements if e.get("segment") == "space" and e.get("element_type") in ("system", "segment")]
     components = [e for e in elements if e.get("element_type") == "component"]
 
-    total_mass = sum((e.get("mass_kg") or 0) * (e.get("quantity", 1)) for e in elements if e.get("segment") == "space")
+    # Mass and form factor from the one roll-up (services/rollup.py, W0.3): leaf units x quantity,
+    # subsystem estimates and product-tree nodes not double-counted (EG D6).
+    from ...services.rollup import compute as _rollup
+    ru = await _rollup(study_id)
+    total_mass = ru.mass.cbe_kg
     comp_mass = round(sum((c.get("mass_kg") or 0) * c.get("quantity", 1) for c in components), 2)
-
-    # Derive form factor from total mass
-    form_factor = _form_factor_from_mass(total_mass)
+    form_factor = ru.form_factor or _form_factor_from_mass(total_mass)
 
     # Build component BOM table
     component_bom = []

@@ -1,0 +1,72 @@
+# Northern Fire and Ice (NFI) teaching mission - ConOps modes for the Modes tab
+# (start from "Create the ConOps modes", then edit). A frozen teaching baseline (../NUMBERS.yaml).
+# Fields per mode row: Name, Kind (leop|commissioning|nominal|imaging|downlink|safe|survival|custom),
+# Pointing (tumbling|sun|nadir|target|station|inertial), Share of orbit (%), initial, only in daylight.
+# The nominal-phase mix (nominal + imaging + downlink + night_swir) sums to 100 %.
+# Downlink share = union contact 125.7 min/day / 1440 min = 8.7 % -> 9 % (the radio transmits on every pass;
+# delayed TM fills the downlink). Imaging 5 % is about 5 min per orbit.
+# matrix_w: target power (W) of each unit in each mode, to type into "Power (W) of ..." where the
+# proposal of the tool differs. Units are the element names of equipment.yaml (short labels here).
+# Totals and the orbit average are computed by calc/budgets.py.
+
+modes:
+  - {key: leop,       name: "LEOP / detumble",          kind: leop,          pointing: tumbling, share_pct: 100, initial: true,  sunlit_only: false, from_template: true}
+  - {key: commissioning, name: "Commissioning",          kind: commissioning, pointing: sun,      share_pct: 100, initial: false, sunlit_only: false, from_template: true}
+  - {key: nominal,    name: "Nominal (nadir, standby)", kind: nominal,       pointing: nadir,    share_pct: 85,  initial: false, sunlit_only: false, from_template: true}
+  - {key: imaging,    name: "Imaging (nadir or roll ±30 deg)", kind: imaging, pointing: target,  share_pct: 5,   initial: false, sunlit_only: true,  from_template: true}
+  - {key: downlink,   name: "Downlink",                 kind: downlink,      pointing: station,  share_pct: 9,   initial: false, sunlit_only: false, from_template: true}
+  - {key: night_swir, name: "Night SWIR (exploratory)", kind: custom,        pointing: target,   share_pct: 1,   initial: false, sunlit_only: false, from_template: false, note: "1 Mar - 31 May only; SWIR + dark frames over previous-season burns"}
+  - {key: safe,       name: "Safe",                     kind: safe,          pointing: sun,      share_pct: 100, initial: false, sunlit_only: false, from_template: true}
+  - {key: survival,   name: "Survival",                 kind: survival,      pointing: tumbling, share_pct: 100, initial: false, sunlit_only: false, from_template: true}
+  - {key: eol,        name: "Sail deploy / end of life", kind: custom,       pointing: tumbling, share_pct: 100, initial: false, sunlit_only: false, from_template: false, note: "phase: disposal; then transmitters off, battery passivated"}
+
+transitions_added:   # on top of the 13 template transitions (keep those)
+  - {from: nominal, to: night_swir, trigger: timer, guard: "planned night acquisition start (time-tagged)"}
+  - {from: night_swir, to: nominal, trigger: timer, guard: "acquisition end + dark frame"}
+  - {from: night_swir, to: safe, trigger: autonomous, guard: "aocs.attitude_error_deg > 5 deg"}
+  - {from: nominal, to: eol, trigger: ground_tc, guard: "two-step ARM + FIRE, confirmed by a second certified operator, GO from Team leader"}
+  - {from: safe, to: eol, trigger: timer, guard: "no valid telecommand for 90 days (independent timer)"}
+  - {from: survival, to: eol, trigger: autonomous, guard: "battery.voltage_v < under-voltage threshold (independent circuit)"}
+  - {from: imaging, to: safe, trigger: autonomous, guard: "aocs.attitude_error_deg > 5 deg (template)"}
+
+units: [OBC, EPS, Battery heater, ADCS unit, Sun sensor, GNSS, Radio RX, Radio TX, SWIR camera, VNIR camera, Payload controller, Bench heater, Drag sail]
+
+matrix_w:
+  #               OBC   EPS  BatH  ADCS  Sun  GNSS  RX    TX    SWIR VNIR  Ctrl  BenchH Sail
+  leop:          [0.15, 0.6, 0.3,  0.6,  0.0, 0.0,  0.13, 0.33, 0,   0,    0,    0.0,  0]
+  commissioning: [0.15, 0.6, 0.3,  1.2,  0.1, 1.3,  0.13, 0.33, 0,   0,    0,    0.0,  0]
+  nominal:       [0.15, 0.6, 0.3,  1.2,  0.1, 0.39, 0.13, 0.0,  0,   0,    0,    0.0,  0]
+  imaging:       [0.15, 0.6, 0.3,  1.6,  0.1, 1.3,  0.13, 0.0,  2.7, 3.8,  5.0,  0.0,  0]
+  downlink:      [0.15, 0.6, 0.3,  1.2,  0.1, 0.39, 0.13, 3.3,  0,   0,    3.0,  0.0,  0]
+  night_swir:    [0.15, 0.6, 0.3,  1.6,  0.1, 1.3,  0.13, 0.0,  2.7, 0,    5.0,  0.0,  0]
+  safe:          [0.15, 0.6, 0.3,  0.8,  0.1, 0.0,  0.13, 0.33, 0,   0,    0,    0.5,  0]
+  survival:      [0.15, 0.6, 0.3,  0.0,  0.0, 0.0,  0.13, 0.0,  0,   0,    0,    0.5,  0]
+  eol:           [0.15, 0.6, 0.0,  0.0,  0.0, 0.0,  0.13, 0.0,  0,   0,    0,    0.0,  6.0]
+
+# Filled by calc/budgets.py (do not edit by hand):
+totals_w: {leop: 2.11, commissioning: 4.11, nominal: 2.87, imaging: 15.68, downlink: 9.17, night_swir: 11.88, safe: 2.91, survival: 1.68, eol: "6.88 for seconds, then 0"}
+orbit_average_nominal_w: 4.17      # 0.85*2.87 + 0.05*15.68 + 0.09*9.17 + 0.01*11.88
+with_20pct_system_margin_w: 5.00
+eol_generation_orbit_average_w: 12.2   # research: bus §10.3, beta 15 deg, wings zenith-facing
+eclipse_energy_wh: "1.69 Wh typical eclipse (35 min x 2.9 W) = 3.9 % DoD on BP4 43 Wh; worst eclipse (20 min nominal + 10 min downlink + 5 min imaging) 3.79 Wh = 8.8 % DoD"
+
+typical_day:   # summer day 2030-06-28, Eastern Daylight Time; contact windows from calc/day.json (union 125.8 min, 14 windows).
+               # The daylight descending node is 10:30 local solar time, i.e. about 11:50 EDT over 80 W: imaging over
+               # Ontario and Quebec happens inside the Ottawa pass, so FR-01 pauses transmission for each acquisition.
+  - ["00:13-03:38", "Three night passes (all four sites at 45 deg; Yellowknife + Inuvik at 86 deg; Inuvik): bulk ROI and full-frame dumps", Downlink]
+  - ["03:38-10:11", "No contact (6.5 h, the longest gap of the day); night-SWIR acquisitions in season (1 Mar - 31 May)", "Nominal, Night SWIR"]
+  - ["10:11-10:17", "Iqaluit pass (17 deg), daylight orbit over Labrador and Baffin: eastern targets imaged before the pass, quicklooks", "Imaging, Downlink"]
+  - ["11:46-12:00", "OPS pass, Ottawa + Iqaluit (78 deg), daylight orbit over Quebec and Ontario: FULL real-time HK, delayed-HK dump, quicklooks; transmission paused for each 1-min acquisition", "Downlink, Imaging"]
+  - ["13:22-13:32", "Ottawa + Yellowknife + Iqaluit (29 deg), orbit over Manitoba and Hudson Bay: imaging, ROI dump", "Imaging, Downlink"]
+  - ["14:59-16:43", "Two near-overhead northern passes (88 and 87 deg) over the NWT and Yukon: imaging, ROI dumps", "Imaging, Downlink"]
+  - ["18:10-21:25", "Five shorter northern passes (Inuvik, Iqaluit): ROI and full-frame dumps", Downlink]
+  - ["22:44-23:00", "OPS pass, all four sites (69 deg): FULL real-time HK, delayed-HK dump, next-day plan upload", Downlink]
+
+phases:   # research: mission analysis §7.1
+  - [Pre-launch, "to L", "Simulated mission images from Sentinel-2/Landsat; ground-station commissioning at the four sites; licences", "All licences, ops readiness review"]
+  - [LEOP, "L to L+7 d", "Separation, antenna deployment (timer), beacon, B-dot detumble, first contacts, TLE identification, wing deployment", "Power-positive, two-way link, attitude stable"]
+  - [Platform commissioning, "L+7 to L+30 d", "ADCS calibration (sun, then nadir), GNSS, OBC time sync, link-rate tests, power/thermal trending", "All subsystems nominal"]
+  - [Payload commissioning, "L+30 to L+90 d", "Dark frames, first light over invariant sites, boresight map, cross-cal with Sentinel-2/Landsat, roll tests, compression-ratio check", "L1 product meets PAY-RAD/PAY-GEO requirements"]
+  - [Nominal science year 1, "L+90 d to L+15 mo", "Fire season Jun-Sep; freeze-up Oct-Dec; night SWIR Mar-May (exploratory); break-up Apr-Jun", "MIS-SCI targets"]
+  - [Extended mission, "to EOL (~2-3 y)", "Second seasons, degradation trending", "Decision to dispose"]
+  - [End of life / disposal, "~3 y from deploy (or on timer)", "Sail deployment, decay-rate confirmation, transmitters off, passivation", "Re-entry <= 5 y"]
