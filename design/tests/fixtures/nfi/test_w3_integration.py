@@ -14,7 +14,8 @@ SRR: issue the SEMP (Phase panel), run and accept the debris assessment (Licensi
 decide ECP-02 through change control (Decide). PDR: raise Issue A of the five PDR ICDs and sign
 each by both owning seats (ICD tab), build the reliability block diagram and propose the FMEA
 (V&V, Reliability), build, solve and take the sized heaters of the thermal model (V&V, Thermal),
-decide ECP-01 (Decide); the allocation ledger is agreed (seeded, or filled on camera).
+check the logic of the T-A01 score and decide ECP-01 (Decide; the
+teaching scene ``ecp01_scene``); the allocation ledger is agreed (seeded, or filled on camera).
 """
 from __future__ import annotations
 
@@ -95,9 +96,46 @@ async def pdr_actions(client, sid: str) -> None:
     await _ok(await client.post(f"/api/studies/{sid}/thermal-model/run"))
     th = await _ok(await client.get(f"/api/studies/{sid}/thermal-model/evidence"))
     assert th["ok"], th["reasons"]
-    # 7. ECP-01 (second IMX992 camera) decided at the PDR: kept open in v2 for the NIR filter
-    # quote; the board rejects it for now and keeps the VNIR camera
-    dec = await _decide_change(client, sid, "ECP-01", "reject", "Keep the VNIR camera; the NIR filter quote is not in")
+    # 7. ECP-01 (second IMX992 camera) decided at the PDR. Teaching scene (PI, 2026-11-10): the
+    # matrix says C; the team disagrees and checks its logic before overruling the score.
+    await ecp01_scene(client, sid)
+
+
+#: the reasons the team records for keeping A, none of which is a criterion of the matrix
+ECP01_RATIONALE = (
+    "The matrix ranks C first (3.65 vs 3.50) and the ranking survives every +-20 % weight change, but "
+    "weight sensitivity does not test the scores. The 0.15 margin is smaller than one score step on any "
+    "criterion weighted 0.2 or more, and two of C's gains rest on calculation, not measurement: the NIR "
+    "SNR is scaled from a datasheet and the snow exposure limit is scaled from the IMX542. The trade's "
+    "own conditions (quote for the 875/50 filter, breadboard measurement over snow, 0.82 kg payload "
+    "allocation) are not met. Keep A, the cameras in hand; revisit if the evidence arrives before CDR.")
+
+
+async def ecp01_scene(client, sid: str) -> None:
+    """When the team disagrees with a score, check the logic before following or overruling it:
+    (1) what does the matrix say, and how robust is it; (2) is the margin bigger than the
+    uncertainty of the scores; (3) which scores are measured and which assumed; (4) were the
+    trade's own conditions met. Then decide, record why, and say what would reopen it."""
+    t = await _ok(await client.get(f"/api/studies/{sid}/trades/T-A01"))
+    ev = t["evaluation"]
+    # (1) the score: C first, robust to +-20 % on every weight
+    assert ev["ranking_eligible"][0] == "C" and ev["runner_up"] == "A" and ev["robust_pm20"]
+    # (2) the margin is smaller than one score step on the heavier criteria
+    assert ev["margin"] < max(ev["weights"].values())
+    # (3)/(4) the evidence behind C's gains is calculated or assumed, and the conditions are open
+    evid = t["state"].get("evidence_by_criterion") or {}
+    assert "Calculated" in str(evid.get("Technical risk (custom parts, TRL)")) and "Assumed" in str(evid.get("Cost"))
+    # the decision: A, conditional, reopened before CDR if the evidence arrives
+    d = await _ok(await client.post(f"/api/studies/{sid}/trades/T-A01/decision", json={
+        "selected": "A", "rationale": ECP01_RATIONALE, "seat": "payload_lead",
+        "condition": "Reopen ECP-01 if the 875/50 filter is quoted and the IMX992 breadboard measurement over snow "
+                     "is in before CDR",
+        "due": "2028-06-30", "fallback": "Keep A (IMX992 SWIR + IMX542 VNIR)", "risks": ["RSK-035"],
+        "blocks_gate": "cdr"}))
+    assert d["state"]["status"] == "decided"
+    dec = await _decide_change(client, sid, "ECP-01", "reject",
+                               "Score overruled after checking the logic; see T-A01. Revisit before CDR if the "
+                               "filter quote and the breadboard measurement arrive.")
     assert dec["state"] == "rejected"
 
 
