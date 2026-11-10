@@ -6,14 +6,12 @@
   "Failed to create study": "Impossible de créer l'étude",
   "Guide": "Guide",
   "Interface language": "Langue de l'interface",
-  "Invalid save file — no elements found": "Fichier de sauvegarde non valide — aucun élément trouvé",
   "Join": "Rejoindre",
   "Load": "Charger",
   "Load failed: {{message}}": "Échec du chargement : {{message}}",
   "Mission": "Mission",
   "Run Analysis": "Lancer l'analyse",
   "Save": "Enregistrer",
-  "Save failed": "Échec de l'enregistrement",
   "V&V": "V&V",
   "Your name": "Votre nom"
 }

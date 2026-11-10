@@ -24,6 +24,7 @@ import { HomeFrame } from '../components/ui/HomeFrame'
 import { useSeatStore } from '../seats/api'
 import { useWhereStore } from '../where/where'
 import { LogbookBanner, LogbookButton, RecordDecision, useLogbookUI } from '../logbook'
+import { loadProjectFile } from './projectFile'
 
 const API = '/api'
 
@@ -263,94 +264,8 @@ export function MissionWizard() {
     }
   }
 
-  // Load from file
-  const handleLoad = () => {
-    const input = document.createElement('input')
-    input.type = 'file'; input.accept = '.json'
-    input.onchange = async (e: any) => {
-      const file = e.target.files?.[0]; if (!file) return
-      try {
-        const data = JSON.parse(await file.text())
-        if (!data.elements) { void showAlert(i18n.t('Invalid save file')); return }
-        const studyReq = data.studyMetadata?.requirements || { name: data.studyMetadata?.name || 'Loaded Mission' }
-        const studyNeed = data.studyMetadata?.mission_need || {}
-        const studyRes = await fetch(`${API}/studies/`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requirements: studyReq, mission_need: studyNeed }),
-        })
-        if (!studyRes.ok) return
-        const newStudy = await studyRes.json()
-        const oldToNew = new Map<string, string>()
-        const sorted: any[] = []; const remaining = [...data.elements]; const created = new Set<string>()
-        while (remaining.length > 0) {
-          const batch = remaining.filter((el: any) => !el.parent_id || created.has(el.parent_id))
-          if (batch.length === 0) { sorted.push(...remaining); break }
-          for (const el of batch) { sorted.push(el); created.add(el.id); remaining.splice(remaining.indexOf(el), 1) }
-        }
-        for (const el of sorted) {
-          const res = await fetch(`${API}/elements/?study_id=${newStudy.id}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...el, id: undefined, study_id: undefined, parent_id: el.parent_id ? oldToNew.get(el.parent_id) || null : null }),
-          })
-          if (res.ok) { const c = await res.json(); oldToNew.set(el.id, c.id) }
-        }
-        if (data.interfaces) {
-          for (const i of data.interfaces) {
-            const from = oldToNew.get(i.from_element_id), to = oldToNew.get(i.to_element_id)
-            if (from && to) await fetch(`${API}/interfaces/?study_id=${newStudy.id}`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...i, id: undefined, from_element_id: from, to_element_id: to }),
-            })
-          }
-        }
-        // Restore requirements
-        if (data.requirements) {
-          for (const req of data.requirements) {
-            const elementId = req.element_id ? oldToNew.get(req.element_id) : undefined
-            await fetch(`${API}/requirements/`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...req, id: undefined, study_id: newStudy.id, element_id: elementId || undefined, derived_from_requirement_id: undefined }),
-            })
-          }
-        }
-        // Restore budget allocations
-        if (data.allocations) {
-          for (const alloc of data.allocations) {
-            const elementId = oldToNew.get(alloc.element_id)
-            if (elementId) {
-              await fetch(`${API}/elements/${elementId}/allocations`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ budget_type: alloc.budget_type, allocation_value: alloc.allocation_value, unit: alloc.unit || '', source: alloc.source || 'loaded', rationale: alloc.rationale || '' }),
-              })
-            }
-          }
-        }
-        // Restore the team records to the new study on the server (WP0: they were localStorage)
-        if (data.riskRegister?.length > 0) {
-          await fetch(`${API}/studies/${newStudy.id}/risks/import`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ risks: data.riskRegister, only_if_empty: false }),
-          })
-        }
-        if (data.pughMatrix && Object.keys(data.pughMatrix).length > 0) {
-          await fetch(`${API}/studies/${newStudy.id}/trades/pugh`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: data.pughMatrix }),
-          })
-        }
-        // Restore UI state
-        setStudyId(newStudy.id)
-        if (data.uiState?.breadcrumb) {
-          const mapped = data.uiState.breadcrumb
-            .map((c: any) => ({ id: oldToNew.get(c.id) || c.id, name: c.name, type: c.type }))
-            .filter((c: any) => c.id)
-          for (const crumb of mapped) { useUIStore.getState().drillInto(crumb.id, crumb.name, crumb.type) }
-        }
-        qc.invalidateQueries()
-      } catch { void showAlert(i18n.t('Load failed')) }
-    }
-    input.click()
-  }
+  // Load from file: the server imports the project file as a new study (workbench/projectFile.ts)
+  const handleLoad = () => loadProjectFile(() => { void qc.invalidateQueries() })
 
   // Load example: pick from a card list (replaces the old numbered window.prompt)
   const [examples, setExamples] = useState<Array<{ id: string; name: string; description: string }> | null>(null)

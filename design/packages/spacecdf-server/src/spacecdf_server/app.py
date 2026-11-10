@@ -237,6 +237,9 @@ app.include_router(sim_export_router.router, prefix="/api", tags=["Simulator con
 
 # CubeSat stack builder (design rules §4, D9)
 app.include_router(stack_router.router, prefix="/api", tags=["Stack builder"])
+# Project file Save / Load: the whole study as one JSON document (services/project_file.py)
+from .routers import project_io as project_io_router  # noqa: E402
+app.include_router(project_io_router.router, prefix="/api", tags=["Project file"])
 # Review gates per study profile + team records (WP0/WP6, Nov 2026)
 from .routers import gates as gates_router  # noqa: E402
 app.include_router(gates_router.router, prefix="/api", tags=["Review gates"])
