@@ -19,11 +19,11 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { useUIStore } from '../stores/uiStore'
 import { useWhereSection } from '../where/where'
-import { Button, DataTable, Disclosure, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, askConfirm, fmtNum, showAlert,
+import { Button, DataTable, Disclosure, Note, NoData, Panel, Select, StatusBadge, Tabs, Tag, askConfirm, askText, fmtNum, showAlert,
   tabPanelProps, type Column, type Status } from '../components/ui'
 import { ModeDiagram } from './ModeDiagram'
 import { ConopsPhases } from '../workbench/ConopsPhases'
-import { bi, get, modeKeys, send, useInvalidateModes, useModes, type DailyCase, type DataChain, type Energy, type EquipBudgets,
+import { bi, get, modeKeys, send, useInvalidateModes, useModes, type Bi, type DailyCase, type DataChain, type Energy, type EquipBudgets,
   type Member, type Mode, type ModesOverview, type Proposal, type StaleRow, type SystemMargin, type Transition, type Unit } from './api'
 import { KIND_LABELS, PHASE_LABELS, POINTING_LABELS, PROPOSAL_KIND_LABELS, STATE_LABELS, STATUS_LABELS, TRIGGER_LABELS } from './labels'
 import './modes.css'
@@ -413,6 +413,7 @@ function EnergyView({ sid }: { sid: string }) {
         </div>
       </Panel>
       <DataTable dense caption={t('Energy per mode')} columns={cols} rows={rows} rowKey={r => r.mode_id} />
+      <ShareProposals sid={sid} />
       {ops && (
         <Panel title={t('Operational orbit')} meta={ops.modes.map(m => `${m.name} ${Math.round(m.orbit_fraction * 100)} %`).join(' · ')}>
           <div className="row wrap gap-5">
@@ -420,8 +421,15 @@ function EnergyView({ sid }: { sid: string }) {
             <Figure label={t('Needed (incl. battery losses)')} value={fmtNum(ops.needed_wh, 1)} unit="Wh" />
             <Figure label={t('Balance')} value={ops.balance_wh == null ? '—' : fmtNum(ops.balance_wh, 1)} unit="Wh" />
             <Figure label={t('Depth of discharge')} value={ops.dod_percent == null ? '—' : fmtNum(ops.dod_percent, 1)} unit="%" />
+            {ops.orbit_average_cbe_w != null && <Figure label={t('Orbit average (CBE)')} value={fmtNum(ops.orbit_average_cbe_w, 3)} unit="W" />}
+            {data.season?.worst_eclipse_orbit?.dod_percent != null &&
+              <Figure label={t('DoD, longest eclipse of {{y}}', { y: data.season.year })} value={fmtNum(data.season.worst_eclipse_orbit.dod_percent, 1)} unit="%" />}
             <StatusBadge status={statusOf(ops.status)} boxed>{ops.status === 'pass' ? t('Positive with margins') : ops.status === 'fail' ? t('Negative or DoD over limit') : t('Not evaluated')}</StatusBadge>
           </div>
+          {data.season && (
+            <p className="t-12 c-3 m-0 mt-2" data-testid="orbit-season">{t('Through {{y}}: β {{b0}}° to {{b1}}°, eclipse {{e0}} to {{e1}} min per orbit (orbit season; the table above uses the β = 0 eclipse).', {
+              y: data.season.year, b0: fmtNum(data.season.beta.min_deg, 1), b1: fmtNum(data.season.beta.max_deg, 1),
+              e0: fmtNum(data.season.eclipse.min_min, 1), e1: fmtNum(data.season.eclipse.max_min, 1) })}</p>)}
           {data.sustainable_duty.length > 0 && (
             <ul className="list-reset stack gap-1 mt-3">
               {data.sustainable_duty.map(d => (
@@ -440,6 +448,62 @@ function EnergyView({ sid }: { sid: string }) {
         bats: data.inputs.battery_source || t('not set'), eta: data.inputs.battery_efficiency, dod: data.inputs.max_dod_percent,
         ref: data.inputs.array_factor_ref.standard_ref })}</p>
     </>
+  )
+}
+
+// ───────────────────────────────────────────────────────────── shares from the ConOps (3.H3)
+
+interface ShareProposal {
+  mode_id: string; name: string; kind: string; basis: string; proposed_fraction: number | null; current_fraction: number | null
+  provenance: Bi; status: 'matches' | 'proposed' | 'accepted' | 'overridden' | 'stale' | 'not_evaluated'
+  accepted: { accepted_fraction: number; override_reason: string | null; by: string | null; at: string } | null
+}
+// English text is the i18n key
+const SHARE_STATUS: Record<ShareProposal['status'], string> = {
+  matches: 'Matches', proposed: 'Proposed', accepted: 'Accepted', overridden: 'Overridden', stale: 'Stale: inputs changed', not_evaluated: 'Not evaluated',
+}
+
+function ShareProposals({ sid }: { sid: string }) {
+  const { t } = useTranslation()
+  const invalidate = useInvalidateModes(sid)
+  const { data, refetch } = useQuery<{ proposals: ShareProposal[]; union_min_per_day: number | null; stations: string[]; share_total: number }>({
+    queryKey: [...modeKeys(sid).all, 'shares'], queryFn: () => get(`/studies/${sid}/modes/share-proposals`), refetchInterval: 15000 })
+  const [busy, setBusy] = useState(false)
+  if (!data || !data.proposals.length) return null
+  const accept = async (body: Record<string, unknown>) => {
+    setBusy(true)
+    try { await send(`/studies/${sid}/modes/share-proposals/accept`, 'POST', body); await refetch(); invalidate() }
+    catch (e) { await showAlert((e as Error).message) }
+    finally { setBusy(false) }
+  }
+  const override = async (p: ShareProposal) => {
+    const v = await askText(t('Share of the orbit for {{name}} (%)', { name: p.name }), fmtNum((p.current_fraction ?? 0) * 100, 1))
+    if (v == null) return
+    const reason = await askText(t('Why override the proposal of {{p}} %?', { p: fmtNum((p.proposed_fraction ?? 0) * 100, 1) }))
+    if (!reason) return
+    await accept({ mode_id: p.mode_id, fraction: Number(v.replace(',', '.')) / 100, reason })
+  }
+  const open = data.proposals.filter(p => p.status === 'proposed' || p.status === 'stale')
+  return (
+    <Panel title={t('Shares of the orbit from the ConOps')} id="share-proposals"
+      meta={t('{{n}} stations, union {{u}} min/day', { n: data.stations.length, u: data.union_min_per_day == null ? '–' : fmtNum(data.union_min_per_day, 1) })}
+      actions={open.length > 0 ? <Button size="sm" variant="primary" busy={busy} onClick={() => accept({})}>{t('Accept the proposals')}</Button> : undefined}>
+      <DataTable dense caption={t('Shares of the orbit from the ConOps')} rows={data.proposals} rowKey={r => r.mode_id} columns={[
+        { key: 'n', header: t('Mode'), render: r => r.name },
+        { key: 'c', header: t('Current'), num: true, render: r => r.current_fraction == null ? '–' : `${fmtNum(r.current_fraction * 100, 1)} %` },
+        { key: 'p', header: t('Proposed'), num: true, render: r => r.proposed_fraction == null ? '–' : `${fmtNum(r.proposed_fraction * 100, 1)} %` },
+        { key: 'w', header: t('From'), render: r => <span className="t-12">{bi(r.provenance)}</span> },
+        { key: 's', header: t('State'), render: r => <StatusBadge status={r.status === 'stale' ? 'caution' : r.status === 'proposed' ? 'info' : r.status === 'not_evaluated' ? 'nodata' : 'ok'}
+          title={r.accepted?.override_reason ?? undefined}>{t(SHARE_STATUS[r.status])}</StatusBadge> },
+        { key: 'a', header: '', render: r => r.kind === 'nominal' ? null : (
+          <span className="row gap-1">
+            {(r.status === 'proposed' || r.status === 'stale') &&
+              <Button size="sm" busy={busy} onClick={() => accept({ mode_id: r.mode_id })}>{t('Accept')}</Button>}
+            <Button size="sm" variant="quiet" busy={busy} onClick={() => override(r)}>{t('Override')}</Button>
+          </span>) },
+      ]} />
+      <p className="t-12 c-3 m-0">{t('The owner accepts a proposal or overrides it with a reason; a change of stations, settle time or products re-proposes it. The nominal mode takes the balance of the orbit.')}</p>
+    </Panel>
   )
 }
 
@@ -467,9 +531,13 @@ function DataChainView({ sid }: { sid: string }) {
         <div className="mdl-flow__box">
           <span className="t-12 c-3">{t('Generated')}</span>
           <span><span className="mono t-20 c-v">{fmtNum(data.generated_gb_per_day, 2)}</span> <span className="t-12 c-3">{t('GB/day')}</span></span>
-          <span className="t-12 c-3">{data.housekeeping?.designed
+          <span className="t-12 c-3">{data.generation_basis === 'products'
+            ? t('payload product files after compression + stored housekeeping ({{mb}} MB/day)', { mb: fmtNum(data.housekeeping?.stored_mb_per_day ?? 0, 2) })
+            : data.housekeeping?.designed
             ? t('payload in each mode + stored housekeeping from the TM/TC SIDs ({{mb}} MB/day)', { mb: fmtNum(data.housekeeping.stored_mb_per_day, 2) })
             : t('payload in each mode + {{hk}} kbit/s housekeeping', { hk: fmtNum(data.housekeeping_bps / 1000, 1) })}</span>
+          {data.generation_basis === 'products' && data.acquired_gb_per_day != null &&
+            <span className="t-12 c-3">{t('the cameras write {{gb}} GB/day at their interface; it stays on the payload store', { gb: fmtNum(data.acquired_gb_per_day, 1) })}</span>}
         </div>
         <span className="mdl-flow__arrow" aria-hidden="true">→</span>
         <div className="mdl-flow__box">
@@ -480,12 +548,15 @@ function DataChainView({ sid }: { sid: string }) {
         </div>
         <span className="mdl-flow__arrow" aria-hidden="true">→</span>
         <div className="mdl-flow__box">
-          <span className="t-12 c-3">{dl.capacity_basis === 'after_realtime_hk' ? t('Downlink capacity left for stored data') : t('Downlink capacity')}</span>
+          <span className="t-12 c-3">{dl.capacity_basis === 'after_realtime_hk' ? t('Remaining after real-time HK') : t('Downlink capacity')}</span>
           {dl.capacity_gb_per_day < 1
             ? <span><span className="mono t-20 c-v">{fmtNum(dl.capacity_gb_per_day * 1000, 2)}</span> <span className="t-12 c-3">{t('MB/day')}</span></span>
             : <span><span className="mono t-20 c-v">{fmtNum(dl.capacity_gb_per_day, 2)}</span> <span className="t-12 c-3">{t('GB/day')}</span></span>}
           {dl.capacity_basis === 'after_realtime_hk' && dl.total_capacity_mb_per_day != null &&
             <span className="t-12 c-3">{t('of {{total}} MB/day channel capacity (data budget)', { total: fmtNum(dl.total_capacity_mb_per_day, 2) })}</span>}
+          {dl.allocatable_mb_per_day != null &&
+            <span className="t-12 c-3" data-testid="allocatable">{t('allocatable at {{p}} %: {{a}} MB/day', { p: dl.allocatable_percent ?? 90, a: fmtNum(dl.allocatable_mb_per_day, 2) })}</span>}
+          {dl.acquisition_s != null && <span className="t-12 c-3">{t('{{s}} s acquisition per pass, {{a}} % availability', { s: dl.acquisition_s, a: fmtNum((dl.availability ?? 1) * 100, 0) })}</span>}
           <span className="t-12 c-3">{t('{{min}} min/day at {{rate}} Mbit/s ({{band}}-band) × {{eff}}', { min: fmtNum(dl.contact_min_per_day, 1),
             rate: fmtNum(dl.rate_bps / 1e6, 4), band: dl.band ?? '?', eff: dl.protocol_efficiency })}</span>
           {dl.contact_basis === 'union' && <span className="t-12 c-3">{t('union of the passes (the stations add up to {{sum}} min/day; one transmitter)', { sum: fmtNum(dl.sum_of_stations_min_per_day ?? 0, 1) })}</span>}
@@ -515,6 +586,7 @@ function DataChainView({ sid }: { sid: string }) {
           <DataTable dense caption={t('Contact plan')} rows={dl.stations} rowKey={r => r.name} empty={<NoData label={t('no station')} />} columns={[
             { key: 'n', header: t('Station'), render: r => r.name },
             { key: 'm', header: t('min/day'), num: true, render: r => fmtNum(r.contact_min_per_day, 1) },
+            { key: 'u', header: t('Usable min/day'), num: true, render: r => r.usable_min_per_day == null ? '' : fmtNum(r.usable_min_per_day, 1) },
             { key: 'g', header: t('Margin (dB)'), num: true, render: r => r.margin_db == null ? <NoData label={t('no data')} /> : fmtNum(r.margin_db, 1) },
             { key: 'c', header: t('GB/day'), num: true, render: r => fmtNum(r.capacity_gb_per_day, 3) },
             { key: 's', header: t('Used'), render: r => <StatusBadge status={!r.used ? 'alarm' : r.low_margin ? 'caution' : 'ok'}>{!r.used ? t('Link does not close') : r.low_margin ? t('Low margin') : t('Yes')}</StatusBadge> },

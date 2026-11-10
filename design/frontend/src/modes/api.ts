@@ -56,12 +56,18 @@ export interface Energy {
     array_factor_ref: { standard_ref: string } }
   modes: EnergyRow[]
   operational_orbit: { modes: { mode_id: string; name: string; orbit_fraction: number }[]; generated_wh: number
-    needed_wh: number; balance_wh: number | null; orbit_average_load_w: number; dod_percent: number | null; status: string } | null
+    needed_wh: number; balance_wh: number | null; orbit_average_load_w: number; dod_percent: number | null; status: string
+    orbit_average_cbe_w?: number; share_total?: number } | null
+  /** wave 3 (3.H4): β and the eclipse range over the year, the operational orbit in the longest eclipse */
+  season?: { year: number; beta: { min_deg: number; max_deg: number }; eclipse: { min_min: number; max_min: number }
+    worst_eclipse_orbit: { dod_percent: number | null; orbit_average_load_w: number } | null } | null
   sustainable_duty: { mode_id: string; name: string; sustainable_fraction: number; planned_fraction: number; status: string }[]
   warnings: string[]
 }
 export interface Check { id: string; label: Bi; status: string; value: number | null; limit: number | null; unit: string; standard_ref: string; c2o_default: boolean }
 export interface DataChain {
+  /** wave 3 (3.H2): "products" = science files + stored HK; acquired = the payloads' interface rate over the mix */
+  generation_basis?: 'products' | 'modes'; acquired_gb_per_day?: number
   per_mode: { mode_id: string; name: string; kind: string; generation_bps: number; orbit_fraction: number | null; per_orbit_mb: number
     payload_bps?: number; hk_stored_bps?: number; hk_realtime_bps?: number | null; in_mix?: boolean }[]
   housekeeping_bps: number; orbits_per_day: number; generated_gb_per_day: number
@@ -72,7 +78,10 @@ export interface DataChain {
     band?: string; rate_source?: string; sum_of_stations_min_per_day?: number; contact_basis?: string; usable_min_per_day?: number | null
     /** "after_realtime_hk": capacity_gb_per_day is what is left after the real-time HK of the passes */
     capacity_basis?: 'after_realtime_hk' | 'total'; total_capacity_mb_per_day?: number; realtime_hk_mb_per_day?: number
-    stations: { name: string; contact_min_per_day: number; margin_db: number | null; used: boolean; low_margin: boolean; status: string; capacity_gb_per_day: number }[] }
+    remaining_after_realtime_hk_mb_per_day?: number; allocatable_mb_per_day?: number | null; allocatable_percent?: number | null
+    acquisition_s?: number | null; availability?: number | null
+    stations: { name: string; contact_min_per_day: number; margin_db: number | null; used: boolean; low_margin: boolean; status: string
+      capacity_gb_per_day: number; usable_min_per_day?: number }[] }
   backlog_growth_gb_per_day: number; days_to_full: number | null; checks: Check[]; warnings: string[]
   /** W3.05: the daily closure of the data budget (the numbers of the Data budget page) */
   data_budget?: { status: string; closure: DailyCase | null } | null
