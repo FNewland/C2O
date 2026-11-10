@@ -33,6 +33,9 @@ On a Mac with Apple silicon:
 bash video/scripts/setup_voice.sh ~/Downloads/franz_en.wav ~/Downloads/franz_fr.wav   # once
 bash video/scripts/render_all.sh            # all videos, EN and FR; resumable
 bash video/scripts/render_all.sh V-OPS-02   # or named videos only
+bash video/scripts/render_all.sh sim        # simulator videos (V-OPS, V-PLN); also: scdf, design, concepts
+bash video/scripts/render_all.sh list       # groups, video IDs and which are done
+LANG_ONLY=en FORCE=1 bash video/scripts/render_all.sh sim design concepts   # redo English only, skip SpaceCDF
 ```
 
 The voice runs on the GPU (MPS) when available, otherwise on the CPU; set
