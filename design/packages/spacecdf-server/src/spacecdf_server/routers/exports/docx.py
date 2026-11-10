@@ -3,7 +3,11 @@
 Word documents from services/docx (MRD, ConOps, VP, TS, IRD, SEMP, RMP, test plan, regulatory and review stubs).
 Routes (prefix /api/exports): POST /docx/{doc_type}
 
-Moved verbatim from the single routers/exports.py in W0.1 (no behaviour change).
+Since W1.09 (a, b) the requirements, verification items and risks come from the study
+collector (``services.export_context``): every requirement, sorted by level then code, with its
+code, type, threshold, parent and allocation; ``IR-*`` rows generated from links go to the IRD,
+not the TS/VP; the RMP receives the risk register sorted by likelihood x consequence.
+``docx_document`` builds the bytes; the review packs (``packs.py``) call it too.
 See design/docs/dev/W0_SEAMS.md for the module map and file ownership.
 """
 from __future__ import annotations
@@ -23,21 +27,54 @@ router = APIRouter()
 async def generate_docx(doc_type: str, study_id: str | None = None):
     """Generate an editable Word (.docx) document.
 
-    Available types: mrd, conops, vp
+    Types: the keys of ``services.docx.DOCX_GENERATORS`` (mrd, conops, vp, ts, ird, semp, rmp,
+    testplan, the regulatory stubs and the srr/pdr/cdr review stubs).
     Returns a downloadable .docx file.
     """
+    from ...services.docx import DOCX_GENERATORS
+    if doc_type not in DOCX_GENERATORS:
+        raise HTTPException(400, f"Unknown doc type: {doc_type}. Available: {list(DOCX_GENERATORS.keys())}")
+    filename, docx_bytes = await docx_document(doc_type, study_id)
+    return StreamingResponse(
+        io.BytesIO(docx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+#: collector sections the Word families read
+_SECTIONS = ("need", "mission", "elements", "requirements", "verification", "risks")
+
+
+def requirement_rows_for_docs(sx_requirements: list[dict], elements: list[dict]) -> list[dict]:
+    """Requirement dicts for the Word generators: the stored row plus ``parent_code`` and
+    ``allocated_to`` (element name). Order as collected (level, then code)."""
+    codes = {r.get("id"): (r.get("code") or r.get("id")) for r in sx_requirements}
+    names = {e.get("id"): e.get("name") for e in elements}
+    out = []
+    for r in sx_requirements:
+        parent = r.get("parent_id") or r.get("derived_from_requirement_id")
+        out.append({**r, "parent_code": codes.get(parent, parent or ""),
+                    "allocated_to": names.get(r.get("element_id"), "") if r.get("element_id") else ""})
+    return out
+
+
+async def docx_document(doc_type: str, study_id: str | None, *, sx=None) -> tuple[str, bytes]:
+    """(file name, .docx bytes) of one Word family for a study. ``sx`` is a ``StudyExport``
+    already collected (the packs pass theirs); otherwise the needed sections are collected."""
     from ...services.docx import DOCX_GENERATORS
     from ..studies import get_study_store
 
     if doc_type not in DOCX_GENERATORS:
-        raise HTTPException(400, f"Unknown doc type: {doc_type}. Available: {list(DOCX_GENERATORS.keys())}")
-
+        raise KeyError(doc_type)
     name, gen_fn = DOCX_GENERATORS[doc_type]
 
     # Get study data if available
     study_name = "Unnamed Mission"
     mission_need: dict = {}
     requirements: list = []
+    risks: list = []
+    verification: list = []
     conops: dict = {}
     orbit_params: dict = {}
     elements: list = []
@@ -93,15 +130,18 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
                     "selected_alternative_id": getattr(mn, "selected_alternative_id", None),
                 }
 
-            # ── Requirements from the requirements store ──
-            try:
-                from ..requirements import _requirements
-                requirements = [
-                    r for r in _requirements.values()
-                    if r.get("study_id") == study_id and r.get("status") != "retired"
-                ]
-            except Exception:
-                pass
+            # ── Requirements, verification items and risks from the study collector ──
+            if sx is None:
+                from ...services.export_context import collect
+                try:
+                    sx = await collect(study_id, sections=_SECTIONS)
+                except LookupError:
+                    sx = None
+            if sx is not None:
+                requirements = requirement_rows_for_docs((sx.requirements or {}).get("items") or [],
+                                                         (sx.elements or {}).get("items") or [])
+                risks = list((sx.risks or {}).get("items") or [])
+                verification = list((sx.verification or {}).get("items") or [])
 
             # ── Orbit parameters ──
             orbit_params = _read_orbit_params(study)
@@ -125,54 +165,7 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
                 pass
 
             # ── ConOps from study ──
-            if hasattr(study, 'conops') and study.conops:
-                cop = study.conops
-                conops = {
-                    "phases": [
-                        {
-                            "name": p.name, "phase_type": p.phase_type.value if hasattr(p.phase_type, "value") else str(p.phase_type),
-                            "duration_days": p.duration_days, "description": p.description,
-                            "entry_criteria": getattr(p, "entry_criteria", ""),
-                            "exit_criteria": getattr(p, "exit_criteria", ""),
-                        }
-                        for p in getattr(cop, "phases", [])
-                    ],
-                    "modes": [
-                        {
-                            "name": m.name, "mode_type": m.mode_type.value if hasattr(m.mode_type, "value") else str(m.mode_type),
-                            "description": getattr(m, "description", ""),
-                            "power_w": m.power_w, "payload_active": m.payload_active,
-                            "data_rate_mbps": m.data_rate_mbps,
-                            "pointing_requirement_deg": m.pointing_requirement_deg,
-                            "nadir_pointing": m.nadir_pointing,
-                            "duty_cycle_percent": m.duty_cycle_percent,
-                            "is_critical": m.is_critical,
-                        }
-                        for m in getattr(cop, "modes", [])
-                    ],
-                    "ground_stations": [
-                        {
-                            "name": gs.name,
-                            "type": gs.type.value if hasattr(gs.type, "value") else str(gs.type),
-                            "latitude_deg": gs.latitude_deg, "longitude_deg": gs.longitude_deg,
-                            "antenna_diameter_m": gs.antenna_diameter_m,
-                            "frequency_bands": gs.frequency_bands,
-                            "contact_time_per_day_min": gs.contact_time_per_day_min,
-                        }
-                        for gs in getattr(cop, "ground_stations", [])
-                    ],
-                    "data_pipeline": [
-                        {
-                            "name": dp.name, "location": dp.location,
-                            "description": dp.description, "latency": dp.latency,
-                            "data_level": dp.data_level,
-                        }
-                        for dp in getattr(cop, "data_pipeline", [])
-                    ],
-                    "autonomy_level": getattr(cop, "autonomy_level", ""),
-                    "operations_concept": getattr(cop, "operations_concept", ""),
-                    "summary": getattr(cop, "summary", ""),
-                }
+            conops = conops_dict(study)
 
             # ── Elements from the element store ──
             try:
@@ -193,9 +186,16 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
                 pass
 
     # Build a universal data dict for generators that take (study_name, data)
+    # TS / VP / review stubs carry the team's requirements; IR-* rows generated from the links
+    # belong to the IRD (W1.09a).
+    team_reqs = [r for r in requirements if not r.get("generated_interface")]
     data = {
         "mission_need": mission_need,
-        "requirements": requirements,
+        "requirements": team_reqs,
+        "interface_requirements": [r for r in requirements if r.get("generated_interface")
+                                   or r.get("level") == "interface"],
+        "risks": risks,
+        "verification": verification,
         "orbit": orbit_params,
         "conops": conops,
         "elements": elements,
@@ -225,7 +225,8 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
         kwargs["orbit"] = orbit_params
         kwargs["elements"] = elements
     elif doc_type in ("vp",):
-        kwargs["requirements"] = requirements
+        kwargs["requirements"] = team_reqs
+        kwargs["verification_items"] = verification
     elif doc_type in ("ts", "ird", "semp", "rmp", "testplan",
                       "itu_api", "iaru", "rsssa", "export", "copuos", "eol",
                       "srr", "pdr", "cdr"):
@@ -234,8 +235,59 @@ async def generate_docx(doc_type: str, study_id: str | None = None):
     docx_bytes = gen_fn(**kwargs)
 
     filename = f"SpaceCDF_{name.replace(' ', '_')}_{study_name.replace(' ', '_')}.docx"
-    return StreamingResponse(
-        io.BytesIO(docx_bytes),
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return filename, docx_bytes
+
+
+def conops_dict(study) -> dict:
+    """``study.conops`` (the auto-generated ConOps) as plain data ({} when the study has none).
+    Shared with the DID route (routers/ecss.py)."""
+    conops: dict = {}
+    if hasattr(study, 'conops') and study.conops:
+        cop = study.conops
+        conops = {
+            "phases": [
+                {
+                    "name": p.name, "phase_type": p.phase_type.value if hasattr(p.phase_type, "value") else str(p.phase_type),
+                    "duration_days": p.duration_days, "description": p.description,
+                    "entry_criteria": getattr(p, "entry_criteria", ""),
+                    "exit_criteria": getattr(p, "exit_criteria", ""),
+                }
+                for p in getattr(cop, "phases", [])
+            ],
+            "modes": [
+                {
+                    "name": m.name, "mode_type": m.mode_type.value if hasattr(m.mode_type, "value") else str(m.mode_type),
+                    "description": getattr(m, "description", ""),
+                    "power_w": m.power_w, "payload_active": m.payload_active,
+                    "data_rate_mbps": m.data_rate_mbps,
+                    "pointing_requirement_deg": m.pointing_requirement_deg,
+                    "nadir_pointing": m.nadir_pointing,
+                    "duty_cycle_percent": m.duty_cycle_percent,
+                    "is_critical": m.is_critical,
+                }
+                for m in getattr(cop, "modes", [])
+            ],
+            "ground_stations": [
+                {
+                    "name": gs.name,
+                    "type": gs.type.value if hasattr(gs.type, "value") else str(gs.type),
+                    "latitude_deg": gs.latitude_deg, "longitude_deg": gs.longitude_deg,
+                    "antenna_diameter_m": gs.antenna_diameter_m,
+                    "frequency_bands": gs.frequency_bands,
+                    "contact_time_per_day_min": gs.contact_time_per_day_min,
+                }
+                for gs in getattr(cop, "ground_stations", [])
+            ],
+            "data_pipeline": [
+                {
+                    "name": dp.name, "location": dp.location,
+                    "description": dp.description, "latency": dp.latency,
+                    "data_level": dp.data_level,
+                }
+                for dp in getattr(cop, "data_pipeline", [])
+            ],
+            "autonomy_level": getattr(cop, "autonomy_level", ""),
+            "operations_concept": getattr(cop, "operations_concept", ""),
+            "summary": getattr(cop, "summary", ""),
+        }
+    return conops

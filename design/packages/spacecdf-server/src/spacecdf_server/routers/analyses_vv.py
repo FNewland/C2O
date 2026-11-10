@@ -12,6 +12,8 @@
     POST  /api/verification-items/{item_id}/evidence           {evidence_ref, status}
     GET   /api/studies/{study_id}/export/rtm.csv               requirement traceability matrix
     GET   /api/studies/{study_id}/export/vcd.docx              Verification Control Document
+    GET   /api/studies/{study_id}/export/vv.xlsx               V&V matrix workbook (W1.09i: was CSV under an XLSX label)
+    GET   /api/studies/{study_id}/export/bom.xlsx              bill of materials workbook (W1.09i)
 
 Broadcasts ``verification_item_updated`` on every item write and
 ``analysis_completed`` (via ``ResultsSink.publish`` / on failure from here).
@@ -324,3 +326,63 @@ async def export_vcd_docx(study_id: str) -> StreamingResponse:
     data = generate_did_docx(build_vcd_did(name, items))
     return _download(data, f"{_slug(name)}_VCD.docx",
                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
+# ── workbooks for the Export drawer (W1.09i) ───────────────────────────
+
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+VV_COLUMNS = ["Code", "Level", "Type", "Requirement", "Threshold", "Method", "Stage", "Parent", "Allocated to",
+              "Rationale", "Verification level", "Facility", "Acceptance criterion", "Verification status", "Evidence"]
+BOM_COLUMNS = ["Line", "Item ID", "Name", "Subsystem", "Segment", "Qty", "Unit Mass (kg)", "Total Mass (kg)",
+               "Unit Power (W)", "Total Power (W)", "Unit Cost (kEUR)", "Total Cost (kEUR)", "TRL", "Manufacturer",
+               "Model Level", "Procurement", "Export Control", "Lead Time (wk)", "Criticality"]
+
+
+async def vv_matrix_rows(study_id: str) -> list[list[Any]]:
+    """One row per requirement (level then code, every one), with its verification item."""
+    from ..services.export_context import collect
+    from ..services.docx.ts import threshold_text
+    from .exports.docx import requirement_rows_for_docs
+    sx = await collect(study_id, sections=("elements", "requirements", "verification"))
+    reqs = requirement_rows_for_docs(sx.requirements.get("items") or [], sx.elements.get("items") or [])
+    vi = {v.get("requirement_id"): v for v in sx.verification.get("items") or []}
+    rows = []
+    for r in reqs:
+        v = vi.get(r.get("id")) or {}
+        rows.append([r.get("code") or r.get("id"), r.get("level") or "", r.get("req_type") or "", r.get("text") or "",
+                     threshold_text(r), v.get("method") or r.get("verification_method") or "",
+                     r.get("verification_phase") or v.get("phase") or "", r.get("parent_code") or "",
+                     r.get("allocated_to") or "", r.get("rationale") or "", v.get("level") or "", v.get("facility") or "",
+                     v.get("acceptance_criterion") or "", v.get("status") or "", v.get("evidence_ref") or ""])
+    return rows
+
+
+def bom_rows(study_id: str) -> tuple[str, list[list[Any]]]:
+    from ..services.bom_generator import generate_bom_from_elements
+    from .elements import _elements
+    elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    name = _study_name(study_id)
+    bom = generate_bom_from_elements(elements, study_name=name) if elements else {"lines": []}
+    keys = ["line", "item_id", "name", "subsystem", "segment", "quantity", "unit_mass_kg", "total_mass_kg",
+            "unit_power_w", "total_power_w", "unit_cost_keur", "total_cost_keur", "trl", "manufacturer",
+            "model_level", "procurement_status", "export_control", "lead_time_weeks", "criticality"]
+    return name, [[ln.get(k) for k in keys] for ln in bom.get("lines") or []]
+
+
+@router.get("/studies/{study_id}/export/vv.xlsx")
+async def export_vv_xlsx(study_id: str) -> StreamingResponse:
+    from spacecdf_agents.exporters.docs.master_budget import table_workbook
+    try:
+        rows = await vv_matrix_rows(study_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    data = table_workbook([("V&V matrix", VV_COLUMNS, rows)])
+    return _download(data, f"{_slug(_study_name(study_id))}_VV_matrix.xlsx", XLSX)
+
+
+@router.get("/studies/{study_id}/export/bom.xlsx")
+async def export_bom_xlsx(study_id: str) -> StreamingResponse:
+    from spacecdf_agents.exporters.docs.master_budget import table_workbook
+    name, rows = bom_rows(study_id)
+    data = table_workbook([("Bill of materials", BOM_COLUMNS, rows)])
+    return _download(data, f"{_slug(name)}_BOM.xlsx", XLSX)

@@ -148,6 +148,7 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
     mission_phases: list[dict] = []
     ground_stations: list[dict] = []
     equipment: list[dict] = []
+    risks: list[dict] = []
 
     if study_id:
         study = store.get(study_id)
@@ -162,21 +163,51 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
                     "objectives": [{"id": getattr(o, "id", ""), "text": o.text, "priority": o.priority, "type": getattr(o, "type", ""), "measurable_criterion": getattr(o, "measurable_criterion", "")} for o in getattr(mn, "objectives", [])],
                     "stakeholders": [{"name": s.name, "role": getattr(s, "role", ""), "needs": getattr(s, "needs", [])} for s in getattr(mn, "stakeholders", [])],
                 }
-            requirements = [
-                {"id": r.id, "text": r.text, "domain": r.domain, "level": getattr(r, "level", "system"),
-                 "category": getattr(r, "category", ""), "verification_method": r.verification_method.value,
-                 "threshold": getattr(r, "threshold", None), "operator": getattr(r, "operator", ""),
-                 "unit": getattr(r, "unit", ""), "objective_id": getattr(r, "objective_id", "")}
-                # Study.requirements is a RequirementsDefinition (not a list) on a fresh study
-                for r in (study.requirements if isinstance(getattr(study, "requirements", None), list) else [])
-            ]
+            from .exports.docx import conops_dict
+            conops = conops_dict(study)
+            mission_phases = list(conops.get("phases") or [])
 
-        # Load element tree and interfaces for this study
-        from .elements import _elements, _interfaces
-        elements = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
-        interfaces = [i for i in _interfaces.values() if i.get("study_id") == study_id
-                      and not i.get("deleted_at") and i.get("status") != "rejected"]
-        equipment = [e for e in elements if e.get("element_type") == "component"]
+        # W1.09f: the requirement store, the risk register, the ConOps and the ground stations of
+        # the study, through the export collector (study.requirements is the mission definition,
+        # not a list, so the old read always gave 0 requirements).
+        from ..services.export_context import collect
+        try:
+            sx = await collect(study_id, sections=("elements", "requirements", "risks", "modes"))
+        except LookupError:
+            sx = None
+        if sx is not None:
+            names = {e.get("id"): e for e in (sx.elements or {}).get("items") or []}
+            for r in (sx.requirements or {}).get("items") or []:
+                el = names.get(r.get("element_id")) or {}
+                requirements.append({
+                    "id": r.get("code") or r.get("id"), "text": r.get("text") or "",
+                    "domain": el.get("subsystem_domain") or r.get("req_type") or "",
+                    "level": r.get("level") or "system", "category": r.get("req_type") or "",
+                    "verification_method": r.get("verification_method") or "",
+                    "threshold": r.get("threshold_value"), "operator": r.get("threshold_op") or "",
+                    "unit": r.get("unit") or "", "objective_id": r.get("objective_id") or "",
+                    "rationale": r.get("rationale") or "", "allocated_to": el.get("name") or "",
+                })
+            risks = list((sx.risks or {}).get("items") or [])
+            elements = list((sx.elements or {}).get("items") or [])
+            interfaces = list((sx.elements or {}).get("interfaces") or [])
+            for e in elements:
+                perf = e.get("performance") if isinstance(e.get("performance"), dict) else {}
+                if e.get("subsystem_domain") == "ground" and (perf.get("lat") is not None or perf.get("latitude") is not None):
+                    ground_stations.append({"name": e.get("name"), "latitude": perf.get("lat", perf.get("latitude")),
+                                            "longitude": perf.get("lon", perf.get("longitude")),
+                                            "bands": perf.get("bands") or [], "antenna_m": perf.get("antenna_m")})
+            equipment = [e for e in elements if e.get("element_type") == "component"]
+            # the Modes tab (the team's mode set) wins over the auto-generated ConOps modes
+            mset = sx.modes or {}
+            if mset.get("modes"):
+                pw = {m.get("mode_id"): m for m in ((mset.get("energy") or {}).get("modes") or [])}
+                conops = {**conops, "modes": [
+                    {"name": m.get("name"), "mode_type": m.get("kind") or "", "description": m.get("description") or "",
+                     "power_w": (pw.get(m.get("id")) or {}).get("power_cbe_w"), "pointing": m.get("pointing"),
+                     "duty_cycle_percent": round(float(m.get("orbit_fraction") or 0) * 100, 1),
+                     "sunlit_only": bool(m.get("sunlit_only"))} for m in mset["modes"]]}
+            conops.setdefault("ground_stations", ground_stations)
 
     # Generate based on type — pass all available data (generators use **kwargs)
     _, gen_fn = DID_TYPES[did_type]
@@ -208,7 +239,7 @@ async def generate_did(did_type: str, study_id: str | None = None) -> dict:
         except Exception:
             return gen_fn(**common)
     elif did_type == "rmp":
-        return gen_fn(**common, parameters=design_params)
+        return gen_fn(**common, risks=risks, parameters=design_params)
     elif did_type == "conops":
         return gen_fn(**common, mission_need=mission_need, conops=conops,
                        ground_stations=ground_stations)

@@ -1,7 +1,7 @@
 /**
  * ExportPanel — All documents, one entry each, multiple format options.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useUIStore } from '../stores/uiStore'
@@ -41,22 +41,44 @@ async function dlCsv(headers: string[], rows: string[][], filename: string) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href)
 }
 
+/** A review pack the study can export (GET /api/studies/{id}/review-packs). */
+export interface ReviewPack { id: string; short: string; name: Record<string, string> | null; covers: string[]; complete: boolean }
+
+const FALLBACK_PACKS: ReviewPack[] = [
+  { id: 'mdr', short: 'MDR', name: null, covers: ['mdr'], complete: true },
+  { id: 'prr', short: 'PRR', name: null, covers: ['prr'], complete: true },
+  { id: 'srr', short: 'SRR', name: null, covers: ['srr'], complete: true },
+  { id: 'pdr', short: 'PDR', name: null, covers: ['pdr'], complete: true },
+  { id: 'cdr', short: 'CDR', name: null, covers: ['cdr'], complete: false },
+  { id: 'qr', short: 'QR', name: null, covers: ['qr'], complete: false },
+  { id: 'ar', short: 'AR', name: null, covers: ['ar'], complete: false },
+  { id: 'frr', short: 'FRR', name: null, covers: ['frr'], complete: false },
+]
+
+function reviewPackDocs(sid: string, t: TFunction, packs: ReviewPack[], docLang: string): DocExport[] {
+  const lang = getLang() === 'fr' ? 'fr' : 'en'
+  return packs.map(p => {
+    const name = p.name ? (p.name[lang] || p.name.en || p.short) : p.short
+    const covers = p.covers.map(c => c.toUpperCase()).join(' + ')
+    return {
+      id: `pack-${p.id}`,
+      label: t('{{gate}} review data pack', { gate: p.short }),
+      description: p.complete
+        ? t('{{name}} ({{covers}}): the documents this review expects, built from the study, with an index of what is still missing', { name, covers })
+        : t('{{name}} ({{covers}}): skeleton pack filled from the study; the index lists what later work adds', { name, covers }),
+      formats: [
+        { fmt: 'ZIP', label: 'ZIP', action: () => dl(`${API}/exports/docs/${sid}?review=${encodeURIComponent(p.id)}&fmt=zip${docLang}`, `${p.short.replace(/[^A-Za-z0-9]+/g, '_')}_${sid}.zip`) },
+      ],
+    }
+  })
+}
+
 // Labels and descriptions are display-only (translated); file names and CSV content stay English.
-function buildExports(sid: string, t: TFunction, openSimConfig: () => void): DocCategory[] {
-  // ECSS review packs: French Markdown templates (templates/fr/) when the UI is in French.
+function buildExports(sid: string, t: TFunction, openSimConfig: () => void, packs: ReviewPack[]): DocCategory[] {
+  // Review packs: headings of the review data package in French when the UI is in French.
   const docLang = getLang() === 'fr' ? '&lang=fr' : ''
   return [
-    { name: t('Design Reviews'), color: 'var(--interactive)', docs: [
-      { id: 'srr', label: t('SRR Document Pack'), description: t('System Requirements Review'), formats: [
-        { fmt: 'ZIP', label: 'ZIP', action: () => dl(`${API}/exports/docs/${sid}?review=srr&fmt=zip${docLang}`, `SRR_${sid}.zip`) },
-      ]},
-      { id: 'pdr', label: t('PDR Document Pack'), description: t('Preliminary Design Review'), formats: [
-        { fmt: 'ZIP', label: 'ZIP', action: () => dl(`${API}/exports/docs/${sid}?review=pdr&fmt=zip${docLang}`, `PDR_${sid}.zip`) },
-      ]},
-      { id: 'cdr', label: t('CDR Document Pack'), description: t('Critical Design Review'), formats: [
-        { fmt: 'ZIP', label: 'ZIP', action: () => dl(`${API}/exports/docs/${sid}?review=cdr&fmt=zip${docLang}`, `CDR_${sid}.zip`) },
-      ]},
-    ]},
+    { name: t('Design Reviews'), color: 'var(--interactive)', docs: reviewPackDocs(sid, t, packs, docLang) },
     { name: t('Systems Engineering'), color: 'var(--cat-2)', docs: [
       { id: 'semp', label: 'SEMP', description: t('Systems Engineering Management Plan'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/semp?study_id=${sid}`, `SEMP_${sid}.docx`) },
@@ -75,13 +97,7 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void): Doc
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/docx/conops?study_id=${sid}`, `ConOps_${sid}.docx`) },
       ]},
       { id: 'bom', label: t('Bill of Materials'), description: t('All components with mass, power, cost, TRL'), formats: [
-        { fmt: 'XLSX', label: 'XLSX', action: async () => {
-          const elements = await fetch(`${API}/studies/${sid}/elements`).then(r => r.json())
-          const comps = elements.filter((e: any) => e.element_type === 'component')
-          dlCsv(['Name','Domain','Mass (kg)','Power (W)','Cost (kEUR)','TRL','Manufacturer','Qty','KB ID'],
-            comps.map((c: any) => [c.name,c.subsystem_domain||'',String(c.mass_kg||''),String(c.power_avg_w||''),String(c.cost_recurring_keur||''),String(c.trl||''),c.manufacturer||'',String(c.quantity||1),c.kb_component_id||'']),
-            `BOM_${sid}.csv`)
-        }},
+        { fmt: 'XLSX', label: 'XLSX', action: () => dl(`${API}/studies/${sid}/export/bom.xlsx`, `BOM_${sid}.xlsx`, 'GET') },
         { fmt: 'JSON', label: 'JSON', action: async () => {
           const elements = await fetch(`${API}/studies/${sid}/elements`).then(r => r.json())
           const blob = new Blob([JSON.stringify(elements.filter((e: any) => e.element_type === 'component'), null, 2)], { type: 'application/json' })
@@ -91,12 +107,13 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void): Doc
     ]},
     { name: t('Verification & Compliance'), color: 'var(--status-ok)', docs: [
       { id: 'vv', label: t('V&V Matrix'), description: t('Requirements verification matrix'), formats: [
-        { fmt: 'XLSX', label: 'XLSX', action: async () => {
-          const reqs = await fetch(`${API}/requirements/tree?study_id=${sid}`).then(r => r.json())
-          dlCsv(['Code','Level','Text','Type','V&V Method','Status','Element'],
-            reqs.map((r: any) => [r.code||'',r.level,r.text,r.rationale||'',r.verification_method||'',r.status,r.element_id||'']),
-            `VV_Matrix_${sid}.csv`)
-        }},
+        { fmt: 'XLSX', label: 'XLSX', action: () => dl(`${API}/studies/${sid}/export/vv.xlsx`, `VV_Matrix_${sid}.xlsx`, 'GET') },
+      ]},
+      { id: 'vcd', label: t('Verification Control Document'), description: t('Every verification item by level, with the close-out status (ECSS-E-ST-10-02C)'), formats: [
+        { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/studies/${sid}/export/vcd.docx`, `VCD_${sid}.docx`, 'GET') },
+      ]},
+      { id: 'rtm', label: t('Requirement Traceability Matrix'), description: t('Requirement, method, stage, status and linked elements and functions'), formats: [
+        { fmt: 'CSV', label: 'CSV', action: () => dl(`${API}/studies/${sid}/export/rtm.csv`, `RTM_${sid}.csv`, 'GET') },
       ]},
       { id: 'compliance', label: t('ECSS Compliance Matrix'), description: t('Standard-by-standard compliance'), formats: [
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/compliance/${sid}`, `ECSS_Compliance_${sid}.json`, 'GET') },
@@ -120,7 +137,7 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void): Doc
     { name: t('Technical Models'), color: 'var(--status-caution)', docs: [
       { id: 'thermal', label: t('Thermal Design Report'), description: t('Thermal balance, radiator sizing, component temps'), formats: [
         { fmt: 'DOCX', label: 'DOCX', action: () => dl(`${API}/exports/thermal-report/${sid}?fmt=docx`, `Thermal_${sid}.docx`) },
-        { fmt: 'XLSX', label: 'XLSX', action: async () => {
+        { fmt: 'CSV', label: 'CSV', action: async () => {
           const elements = await fetch(`${API}/studies/${sid}/elements`).then(r => r.json())
           const rows = elements.filter((e: any) => e.power_avg_w || e.subsystem_domain === 'thermal')
           dlCsv(['Name','Type','Domain','Power Avg (W)','Power Peak (W)','Mass (kg)'],
@@ -130,7 +147,7 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void): Doc
         { fmt: 'JSON', label: 'JSON', action: () => dlJson(`${API}/exports/thermal-report/${sid}`, `Thermal_${sid}.json`) },
       ]},
       { id: 'structural', label: t('Structural Model Data'), description: t('Mass breakdown, dimensions, CoG inputs'), formats: [
-        { fmt: 'XLSX', label: 'XLSX', action: async () => {
+        { fmt: 'CSV', label: 'CSV', action: async () => {
           const elements = await fetch(`${API}/studies/${sid}/elements`).then(r => r.json())
           dlCsv(['Name','Type','Domain','Mass (kg)','Qty','Total Mass (kg)','Dimensions'],
             elements.filter((e: any) => e.mass_kg).map((e: any) => [e.name,e.element_type,e.subsystem_domain||'',String(e.mass_kg),String(e.quantity||1),String((e.mass_kg||0)*(e.quantity||1)),JSON.stringify(e.dimensions_mm||[])]),
@@ -138,7 +155,7 @@ function buildExports(sid: string, t: TFunction, openSimConfig: () => void): Doc
         }},
       ]},
       { id: 'wiring', label: t('Wiring & Interface Data'), description: t('All interfaces with properties'), formats: [
-        { fmt: 'XLSX', label: 'XLSX', action: async () => {
+        { fmt: 'CSV', label: 'CSV', action: async () => {
           const [interfaces, elements] = await Promise.all([fetch(`${API}/studies/${sid}/interfaces`).then(r=>r.json()), fetch(`${API}/studies/${sid}/elements`).then(r=>r.json())])
           const n = (id: string) => elements.find((e: any) => e.id === id)?.name || id
           dlCsv(['Name','Type','Direction','From','To','Status','Properties'],
@@ -187,7 +204,16 @@ export function ExportPanel({ onClose }: { onClose: () => void }) {
 
   const { t } = useTranslation()
   const [simConfig, setSimConfig] = useState(false)
-  const categories = studyId ? buildExports(studyId, t, () => setSimConfig(true)) : []
+  const [packs, setPacks] = useState<ReviewPack[]>(FALLBACK_PACKS)
+  useEffect(() => {
+    if (!studyId) return
+    let live = true
+    fetch(`${API}/studies/${studyId}/review-packs`).then(r => (r.ok ? r.json() : null))
+      .then(d => { if (live && d && Array.isArray(d.packs) && d.packs.length) setPacks(d.packs) })
+      .catch(() => { /* keep the default list */ })
+    return () => { live = false }
+  }, [studyId])
+  const categories = studyId ? buildExports(studyId, t, () => setSimConfig(true), packs) : []
 
   const run = async (docId: string, label: string, action: (sid: string) => Promise<void>) => {
     if (!studyId) return

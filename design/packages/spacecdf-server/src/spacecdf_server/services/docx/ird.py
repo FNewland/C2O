@@ -1,6 +1,8 @@
 """SpaceCDF Word document family: ird. Interface Requirements Document (IRD).
 
-Moved verbatim from services/docx_generator.py in W0.1 (no behaviour change).
+W1.09a: the interface tables come from the study (interfaces between segments, interfaces inside
+the space segment, and the interface requirements, including the ``IR-*`` rows generated from the
+links); nothing is hard-coded. Exchange items, electrical lines and bus nodes are W4.07.
 See design/docs/dev/W0_SEAMS.md for ownership.
 """
 from __future__ import annotations
@@ -36,21 +38,47 @@ def generate_ird_docx(study_name: str, data: dict[str, Any]) -> bytes:
     _add_section(doc, "1.1", "Purpose", "This document defines the interfaces between mission segments and between subsystems.")
     _add_section(doc, "1.2", "Scope", "Covers mechanical, electrical, data, and RF interfaces.")
 
-    _add_section(doc, "2", "Mission Segment Interfaces")
-    _add_table(doc, ["Interface", "Segment A", "Segment B", "Type", "Description"],
-               [["IF-001", "Space", "Ground", "RF", "S/X-band TM/TC link"],
-                ["IF-002", "Space", "Ground", "RF", "Payload data downlink"],
-                ["IF-003", "Ground", "User", "Data", "Data products via API/FTP"],
-                ["IF-004", "Launch", "Space", "Mechanical", "Separation interface per PUG"],
-                ["IF-005", "External", "Space", "RF", "GNSS signals for orbit determination"]])
+    els = {e.get("id"): e for e in data.get("elements") or [] if e.get("id")}
 
+    def seg(eid):
+        cur, n = els.get(eid) or {}, 0
+        while cur and not cur.get("segment") and cur.get("parent_id") in els and n < 50:
+            cur, n = els[cur["parent_id"]], n + 1
+        return (cur or {}).get("segment") or ""
+
+    def row(i):
+        a, b = i.get("source_element_id") or i.get("from_element_id"), i.get("target_element_id") or i.get("to_element_id")
+        props = i.get("properties") if isinstance(i.get("properties"), dict) else {}
+        detail = "; ".join(f"{k}: {v}" for k, v in props.items() if not isinstance(v, (dict, list)))
+        return a, b, [i.get("name") or "", (els.get(a) or {}).get("name") or a or "", (els.get(b) or {}).get("name") or b or "",
+                      str(i.get("interface_type") or i.get("type") or ""), i.get("status") or "", detail]
+
+    ifs = sorted(data.get("interfaces") or [], key=lambda i: (str(i.get("interface_type") or ""), str(i.get("name") or "")))
+    seg_rows, sub_rows = [], []
+    for i in ifs:
+        a, b, r = row(i)
+        (seg_rows if seg(a) != seg(b) else sub_rows).append(r)
+    headers = ["Interface", "From", "To", "Type", "Status", "Properties"]
+    _add_section(doc, "2", "Mission Segment Interfaces")
+    if seg_rows:
+        _add_table(doc, headers, seg_rows)
+    else:
+        doc.add_paragraph("No interface between segments is recorded in the study yet.")
     _add_section(doc, "3", "Subsystem Interfaces")
-    _add_table(doc, ["Interface", "From", "To", "Type", "Protocol/Standard"],
-               [["IF-101", "OBC", "EPS", "Electrical", "I2C power telemetry"],
-                ["IF-102", "OBC", "TTC", "Data", "CCSDS TM/TC packets"],
-                ["IF-103", "OBC", "Payload", "Data", "SpaceWire/LVDS"],
-                ["IF-104", "EPS", "All", "Electrical", "28V regulated bus"],
-                ["IF-105", "AOCS", "Payload", "Data", "Attitude quaternion @ 10Hz"]])
+    if sub_rows:
+        _add_table(doc, headers, sub_rows)
+    else:
+        doc.add_paragraph("No interface inside a segment is recorded in the study yet.")
+    irs = data.get("interface_requirements") or []
+    _add_section(doc, "3.1", f"Interface Requirements ({len(irs)})")
+    if irs:
+        from .ts import threshold_text
+        _add_table(doc, ["Code", "Requirement", "Threshold", "Method", "Parent", "Allocated to"],
+                   [[r.get("code") or r.get("id", ""), r.get("text") or "", threshold_text(r),
+                     r.get("verification_method") or "", r.get("parent_code") or "", r.get("allocated_to") or ""]
+                    for r in irs])
+    else:
+        doc.add_paragraph("No interface requirement is recorded in the study yet.")
 
     _add_section(doc, "4", "Physical Interface Definitions")
     doc.add_paragraph("Connector definitions, pinouts, and harness routing to be defined during Phase C.")

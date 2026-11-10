@@ -1,7 +1,9 @@
-"""i18n packet C2: French ECSS review templates (templates/fr/*.md.j2).
+"""i18n packet C2: French ECSS review templates (templates/fr/*.md.j2), and the French headings of
+the study-based review data package (W4.02).
 
-``POST /api/exports/docs/{id}?lang=fr`` renders the French Markdown; without
-``lang`` (or ``lang=en``) the English templates are used unchanged.
+``POST /api/exports/docs/{id}?lang=fr`` renders the French Markdown of the review data package;
+without ``lang`` (or ``lang=en``) it is English. The Jinja templates still serve the legacy
+parametric ``DocumentGenerator``.
 """
 from __future__ import annotations
 
@@ -20,10 +22,10 @@ EN_HEADINGS = {
     "pdr": "Preliminary Design Review (PDR)",
     "cdr": "Critical Design Review (CDR)",
 }
-FR_HEADINGS = {
+FR_HEADINGS = {   # the gate names of configs/gate_profiles.yaml (full ECSS profile)
     "srr": "Revue des exigences système (SRR)",
-    "pdr": "Revue de définition préliminaire (PDR)",
-    "cdr": "Revue de définition critique (CDR)",
+    "pdr": "Revue de conception préliminaire (PDR)",
+    "cdr": "Revue critique de conception (CDR)",
 }
 
 
@@ -66,7 +68,7 @@ async def test_export_docs_markdown_lang_fr_and_default(client, study_obj, monke
         assert r_en.status_code == 200, r_en.text
         md_en = r_en.json()["document_markdown"]
         assert EN_HEADINGS[review] in md_en
-        assert "## 3. " in md_en and "Mass Budget" in md_en
+        assert "## 3. " in md_en and "Mass budget" in md_en
         assert "Bilan de masse" not in md_en
 
         r_fr = await client.post(base + "&lang=fr")
@@ -74,7 +76,7 @@ async def test_export_docs_markdown_lang_fr_and_default(client, study_obj, monke
         md_fr = r_fr.json()["document_markdown"]
         assert FR_HEADINGS[review] in md_fr
         assert "Bilan de masse" in md_fr and "Bilan de puissance" in md_fr
-        assert "Mass Budget" not in md_fr and "HUMAN INPUT REQUIRED" not in md_fr
+        assert "Mass budget" not in md_fr and "HUMAN INPUT REQUIRED" not in md_fr
 
         r_en2 = await client.post(base + "&lang=en")
         assert r_en2.status_code == 200, r_en2.text

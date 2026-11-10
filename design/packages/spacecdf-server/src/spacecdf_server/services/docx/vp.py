@@ -1,6 +1,8 @@
 """SpaceCDF Word document family: vp. Verification Plan (VP).
 
-Moved verbatim from services/docx_generator.py in W0.1 (no behaviour change).
+W1.09a: the matrix lists every requirement the team entered (no row cap), by level then code,
+with the method and stage stored on the requirement and the status of its verification item.
+Owned by agent A after W1.09a (W8a model philosophy and AIT programme).
 See design/docs/dev/W0_SEAMS.md for ownership.
 """
 from __future__ import annotations
@@ -24,12 +26,14 @@ from ._common import (
 def generate_vp_docx(
     study_name: str = "",
     requirements: list[dict[str, Any]] | None = None,
+    verification_items: list[dict[str, Any]] | None = None,
 ) -> bytes:
     """Generate Verification Plan as .docx bytes."""
     doc = Document()
     _setup_styles(doc)
     _setup_margins(doc)
-    reqs = requirements or []
+    reqs = [r for r in (requirements or []) if not str(r.get("code") or "").startswith("IR-")]
+    vi = {v.get("requirement_id"): v for v in (verification_items or [])}
 
     _add_cover_page(doc, "Verification Plan", "ECSS-E-ST-10-02C Rev.1", study_name)
     _add_toc_placeholder(doc)
@@ -42,10 +46,16 @@ def generate_vp_docx(
 
     _add_section(doc, "2", "Verification Matrix")
     if reqs:
+        doc.add_paragraph(f"{len(reqs)} requirements, by level then code.")
         _add_table(doc,
-                   ["Req ID", "Requirement", "Method", "Phase", "Status"],
-                   [[r.get("id", ""), r.get("text", "")[:60], r.get("verification_method", "A"),
-                     "Phase B", "Planned"] for r in reqs[:50]])
+                   ["Code", "Level", "Requirement", "Method", "Stage", "Level of verification", "Status"],
+                   [[r.get("code") or r.get("id", ""), r.get("level") or "", r.get("text") or "",
+                     (vi.get(r.get("id")) or {}).get("method") or r.get("verification_method") or "",
+                     r.get("verification_phase") or (vi.get(r.get("id")) or {}).get("phase") or "",
+                     (vi.get(r.get("id")) or {}).get("level") or "",
+                     (vi.get(r.get("id")) or {}).get("status") or "no verification item"] for r in reqs])
+    else:
+        doc.add_paragraph("No requirements have been entered for this study.")
 
     _add_section(doc, "3", "Environmental Test Programme")
     _add_section(doc, "3.1", "Vibration", "Sine + random per launch vehicle PUG. 3 axes, 1 min/axis.")

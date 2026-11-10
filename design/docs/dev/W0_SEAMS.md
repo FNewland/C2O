@@ -100,7 +100,7 @@ Sections (`SECTIONS`, in collection order). Each section is one module in
 |---|---|---|---|
 | `need` | real | `MissionNeed` as JSON | X |
 | `mission` | real | `name, phase, gate_profile, definition` (`MissionRequirements`), `orbit` (+ period, eclipse, orbits/day) | X |
-| `elements` | real | `items` (depth, name order), `interfaces`, `counts` | X |
+| `elements` | real | `items` (depth, name order), `interfaces`, `allocations` (budget allocations), `counts` | X |
 | `rollup` | real | `services.rollup` `as_dict()` (see §4) | X |
 | `requirements` | real | `items` (level, then code order; `generated_interface` flag for `IR-*`), `counts` | X (fields: R) |
 | `verification` | real | `items`, `counts` by status | X (fields: R, AIT evidence: A) |
@@ -116,6 +116,8 @@ Sections (`SECTIONS`, in collection order). Each section is one module in
 | `licensing` | **stub** | `applicant, assignments, filings` | L (W5.01/W5.03/W5.06) |
 | `ait` | **stub** | `models, tests` | A (W8a) |
 | `schedule` | **stub** | `milestones, work_packages, long_lead` | A (W11a) |
+| `cdr` | real (W4.01) | `dataset, rows` {kind: rows}, `counts, groups, checks, summary, budget` (CDR model) | X (model: H) |
+| `functions` | real (W4.01) | `items` (tree order, `depth`, `allocated_to`), `counts` | X |
 
 The contract for a collector:
 
@@ -130,6 +132,27 @@ The contract for a collector:
   error goes to `StudyExport.errors`.
 - A new section needs a name in `SECTIONS`, a field in `StudyExport` (both in `__init__.py`, owner
   X: ask X) and its module.
+
+### 3.1 Review packs and how other work packages light up in them (W4.02)
+
+`POST /api/exports/docs/{id}?review=<gate>` builds the pack of one gate from `collect()`:
+`spacecdf_agents/exporters/docs/pack_catalog.py` (products and maturity per gate, the document
+list), `study_pack.py` (the review data package, Word + Markdown), `master_budget.py` (the
+workbook). `GET /api/studies/{id}/review-packs` lists the packs of the study's profile plus QR,
+AR and FRR.
+
+A document another agent writes is a `hook:<module>` in the catalogue. It appears in the pack as
+soon as `spacecdf_server/services/docx/<module>.py` defines
+
+```python
+def pack_docx(sx: StudyExport, *, gate: str, lang: str) -> bytes | None   # may be async
+```
+
+Until then the pack index lists it as missing with its owner. Hooks expected: `trades` (D, W6),
+`review_report` (D, W4.08), `ait` (A, W8a), `schedule` (A, W11a), `licensing` (L, W5.04),
+`tmtc` (H, W3.06). The stub sections (`data_budget`, `contacts`, `licensing`, `ait`, `schedule`)
+are already read by the package and the workbook (shapes as in the table above): fill them and
+the open items close by themselves.
 
 ## 4. One roll-up: `S/services/rollup.py` (W0.3)
 
