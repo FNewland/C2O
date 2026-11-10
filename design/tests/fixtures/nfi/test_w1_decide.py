@@ -287,3 +287,92 @@ async def test_conops_from_the_modes_tab(client):
     assert "MIS-DIS-01" in text                                               # EOL operations cite the disposal rows
     fr = _text((await client.post(f"/api/studies/{sid}/conops/document?lang=fr")).content)
     assert "Phases de la mission" in fr and "Règles de vol" in fr
+    # wave 2: the data-flow section reads agent H's data budget (NUMBERS.yaml data_budget, baseline C1)
+    n = load("NUMBERS")["data_budget"]
+    c1 = n["cases"]["C1_per_pass_profiles_BASELINE"]
+    df = view["data_flow"]
+    assert df["status"] == "ready" and df["band"] == "UHF"
+    assert df["closure"]["id"] == "C1" and df["closure"]["baseline"] and df["closure"]["status"] == "pass"
+    assert abs(df["closure"]["margin_pct"] - c1["margin_pct"]) <= 0.3
+    assert abs(df["closure"]["capacity_mb"] - c1["capacity"]) <= 0.05
+    assert df["volume"]["delivered_mb_per_day"] == n["science_target_mb_per_day_after_compression"]["value"]
+    assert {c["id"] for c in df["cases"]} >= {"C0", "C1"} and [a["name"] for a in df["allocation"]][:2] == ["DUMP", "OPS"]
+    assert "Open item" not in text and "6.3 Downlink allocation by pass class" in text
+    assert f"{df['closure']['margin_pct']:.1f}" in text and "13 MB of science delivered per day" in text
+    assert "6.2 Bilan quotidien" in fr and "Le bilan de données est bouclé." in fr
+
+
+async def test_s4_link_licensing_ops_pass_and_gates(client):
+    """Wave 2 (agent D): the design link case at S4, the ops-pass band, the link cases in the
+    licensing record, and the gates: MDR and PRR pass on the seed (the design loop ran at S3)."""
+    s = await seed_nfi(client, "S4")
+    sid = s.study_id
+    st = (await client.get(f"/api/studies/{sid}")).json()
+    link = st["requirements"]["link"]
+    lk = load("NUMBERS")["links"]
+    assert link["band"] == "UHF" and link["downlink_rate_bps"] == lk["downlink"]["rate_kbps"] * 1000
+    assert link["uplink_rate_bps"] == lk["uplink"]["rate_kbps"] * 1000
+    assert s.report["design_loop"]["iterations"] >= 1
+    # the operations pass is a UHF pass (the design case), never the X-band class default
+    op = (await client.get(f"/api/studies/{sid}/diagrams/ops_pass")).json()
+    blob = str(op)
+    assert "'band': 'UHF'" in blob and "'band': 'X'" not in blob
+    assert "38.4 kbit/s" in blob
+    # the link cases' per-station earth-station values are the licensing overrides (by assignment id)
+    lic = (await client.get(f"/api/lifecycle/licensing/{sid}")).json()
+    ov = lic["record"]["assignment_overrides"]
+    ul = [a for a in lic["derived"]["assignments"] if a["id"].startswith("ES-") and a["id"].endswith("-TX-UL")]
+    assert len(ul) == 4
+    for a in ul:
+        assert ov[a["id"]]["tx_power_w"] == float(lk["uplink"]["ground_tx_w_max"])
+        assert ov[a["id"]]["link_case"].startswith("link_case:UL ")
+        assert "tx_power_w" in a.get("overridden", [])
+    rx = [a for a in lic["derived"]["assignments"] if a["id"].endswith("-RX-DL")]
+    assert rx and all("antenna_gain_dbi" in ov[a["id"]] for a in rx)
+    # gates: the roll-up and the requirement lists reach the evaluator
+    status = {}
+    for g in ("mdr", "prr", "srr", "pdr"):
+        ev = (await client.get(f"/api/studies/{sid}/rules/gates/{g}")).json()
+        status[g] = {c["id"]: c["status"] for c in ev["criteria"]}
+        if g in ("mdr", "prr"):
+            assert ev["ready"], [(c["id"], c["status"], c.get("evidence_found")) for c in ev["criteria"]
+                                 if c["priority"] == "must_pass" and c["status"] != "pass"]
+    assert status["mdr"]["MDR-EC-07"] == "pass"
+    assert status["prr"]["PRR-EC-05"] == "pass"     # roll-up mass with maturity, not the loop's dry mass
+    assert status["srr"]["SRR-EC-06"] == "pass" and status["pdr"]["PDR-EC-03"] == "pass"
+
+
+def test_licensing_overrides_from_link_cases():
+    from spacecdf_server.routers.link_budgets import licensing_overrides
+    cases = [
+        {"name": "DL Ottawa", "direction": "downlink", "station": "Ottawa", "rx_antenna_gain_dbi": 13.0, "order": 0},
+        {"name": "DL all", "direction": "downlink", "station": "", "rx_antenna_gain_dbi": 15.0, "order": 1,
+         "is_design_case": True},
+        {"name": "UL all", "direction": "uplink", "station": "all four sites", "tx_power_w": 25.0,
+         "tx_antenna_gain_dbi": 13.0, "order": 2},
+    ]
+    asg = [{"id": "ES-OTTAWA-RX-DL", "station": "GS Ottawa", "side": "earth", "direction": "downlink", "transmits": False},
+           {"id": "ES-INUVIK-RX-DL", "station": "GS Inuvik", "side": "earth", "direction": "downlink", "transmits": False},
+           {"id": "ES-INUVIK-TX-UL", "station": "GS Inuvik", "side": "earth", "direction": "uplink", "transmits": True},
+           {"id": "SS-TX-DL", "station": "space station", "side": "space", "direction": "downlink", "transmits": True}]
+    ov = licensing_overrides(cases, asg)
+    assert ov["ES-OTTAWA-RX-DL"]["antenna_gain_dbi"] == 13.0          # the station's own case wins
+    assert ov["ES-INUVIK-RX-DL"]["antenna_gain_dbi"] == 15.0          # else the all-station case
+    assert ov["ES-INUVIK-TX-UL"]["tx_power_w"] == 25.0 and ov["ES-INUVIK-TX-UL"]["antenna_gain_dbi"] == 13.0
+    assert "SS-TX-DL" not in ov
+
+
+def test_ops_pass_band_from_the_mission_not_the_class_default():
+    from types import SimpleNamespace as NS
+
+    from spacecdf_server.services.diagrams.b_conops import mission_link
+    x_model = NS(band="X", downlink_bps=1e6, source={"downlink_rate": "fallback"})
+    empty = NS(band=None, downlink_frequency_mhz=None, downlink_rate_bps=None)
+    d = NS(study=NS(requirements=NS(link=empty, constraints={"downlink_band_mhz": [401, 402]})))
+    band, rate, src = mission_link(d, x_model)
+    assert band == "UHF" and src == "fallback"
+    d = NS(study=NS(requirements=NS(link=NS(band=None, downlink_frequency_mhz=401.5, downlink_rate_bps=38400.0),
+                                    constraints={})))
+    assert mission_link(d, x_model) == ("UHF", 38400.0, "design_case")
+    d = NS(study=NS(requirements=NS(link=empty, constraints={})))
+    assert mission_link(d, NS(band="S", downlink_bps=2e6, source={}))[:2] == ("S", 2e6)

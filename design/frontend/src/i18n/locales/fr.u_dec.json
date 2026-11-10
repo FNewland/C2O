@@ -147,5 +147,6 @@
   "Closed": "Clos",
   "GO": "GO",
   "GO with actions": "GO avec actions",
-  "NO GO": "NO GO"
+  "NO GO": "NO GO",
+  "Two objectives share the id {{ids}}: give each a unique id": "Deux objectifs partagent l’identifiant {{ids}} : donnez à chacun un identifiant unique"
 }

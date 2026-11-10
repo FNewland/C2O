@@ -23,6 +23,7 @@ import { GateDecisions, RecordDecision, useLogbookUI } from '../logbook'
 
 import { TraceabilityTree } from '../components/TraceabilityTree'
 import { VVPlanPanel } from '../components/VVPlanPanel'
+import { AitPanel } from './AitPanel'
 import { useSeatStore } from '../seats/api'
 import { useWhereSection } from '../where/where'
 import { GateActionError, gateAction, pick, setGateProfile, useGateProfiles, useGateReview, useStudyGates, type GateState } from '../components/useGateReview'
@@ -106,6 +107,7 @@ export function VVPanel() {
         {activeSection === 'trace' && (<>
           <div className="mb-4"><TraceabilityTree studyId={studyId} /></div>
           <div className="mb-4"><VVPlanPanel studyId={studyId} /></div>
+          <div className="mb-4"><AitPanel studyId={studyId} /></div>
           <div className="mb-4"><DiagramFigure studyId={studyId} kind="vcd" compact /></div>
           <BudgetTraceability studyId={studyId} />
         </>)}

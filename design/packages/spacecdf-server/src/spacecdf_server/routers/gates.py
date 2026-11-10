@@ -93,6 +93,19 @@ async def gate_inputs(study_id: str, form_factor: str | None = None) -> dict[str
     if not ctx["params"]:
         ctx["params"] = await design_params(study_id, study)
     ctx["function_count"] = await _function_count(study_id, study)
+    # W1.08/W2.03: the one roll-up (modes orbit-average power, mass with maturity margins) and
+    # the requirements' further parents and objectives, so every gate counts the same numbers
+    try:
+        from ..services import rollup as _rollup
+        ctx["rollup"] = (await _rollup.compute(study_id)).as_dict()
+    except Exception:  # noqa: BLE001 — no elements / no modes: the evaluator falls back
+        logger.debug("no roll-up for %s", study_id, exc_info=True)
+        ctx["rollup"] = None
+    try:
+        from .requirements import with_lists
+        ctx["requirements"] = await with_lists(study_id, ctx["requirements"])
+    except Exception:  # noqa: BLE001 — relations unavailable: first parent / objective only
+        logger.debug("no requirement relation lists for %s", study_id, exc_info=True)
     ctx["risks"] = list(getattr(study, "risk_register", None) or []) if study else []
     try:  # the CDR model (TM/TC database, FDIR, AOCS, TT&C, operations) for the CDR criteria
         gates = (study_profile(study).get("gates") or []) if study else []
@@ -150,7 +163,7 @@ def _evaluate(ctx: dict[str, Any], pg: dict[str, Any]) -> dict[str, Any]:
             reliability_target=getattr(req_model, "reliability_target", None) if req_model else None,
             requirements=ctx["requirements"], elements=ctx["elements"], interfaces=ctx["interfaces"],
             mission=req_model, function_count=ctx.get("function_count"), risks=ctx.get("risks"),
-            margin_gate=mg, cdr=ctx.get("cdr"),
+            margin_gate=mg, cdr=ctx.get("cdr"), rollup=ctx.get("rollup"),
         )
         if canon in gp.POST_CDR:
             from ..services.gate_reviews import post_cdr_criteria

@@ -11,7 +11,13 @@ Mounted under ``/api`` (included by routers/gates.py):
 * ``DELETE /studies/{sid}/link-budgets/{cid}``
 * ``POST   /studies/{sid}/link-budgets/{cid}/apply``    make the case the study's design case for its
                                                         direction (writes ``requirements.link``, which the
-                                                        analyses read; their runs become stale)
+                                                        analyses read; their runs become stale); once the
+                                                        study has a licensing record, also syncs the
+                                                        licensing overrides below
+* ``POST   /studies/{sid}/link-budgets/licensing-sync`` the cases' per-station earth-station values
+                                                        (uplink transmit power and gain, downlink receive
+                                                        gain) into the licensing record's
+                                                        ``assignment_overrides``, by assignment id
 
 The cases feed the export collector (``export_context`` section ``links``): the master budget, the
 ISED brief and the earth-station documents read them from there.
@@ -233,6 +239,82 @@ def design_link_patch(case: dict[str, Any]) -> dict[str, Any]:
             "required_ebn0_db": case["required_ebn0_db"], "margin_db": case.get("margin_db"), "source": src}
 
 
+#: earth-station fields a link case sets in the licensing record (assignment id -> fields)
+LICENSING_FIELDS = ("tx_power_w", "antenna_gain_dbi")
+
+
+def _station_matches(case_station: str, station_name: str) -> bool:
+    """A case's ``station`` names one site ("Ottawa") or all of them ("all four sites", "")."""
+    cs = (case_station or "").strip().lower()
+    if not cs or cs.startswith("all"):
+        return True
+    sn = (station_name or "").strip().lower()
+    return cs == sn or cs in sn.split() or sn.endswith(" " + cs) or sn.replace("gs ", "", 1) == cs
+
+
+def licensing_overrides(cases: list[dict[str, Any]], assignments: list[dict[str, Any]]) -> dict[str, dict]:
+    """``assignment_overrides`` for the licensing record from the named link cases (W4.04 -> W5.04).
+
+    Per earth station: the uplink transmit assignment (``ES-*-TX-UL``) takes the uplink case's
+    ground transmit power and antenna gain; the downlink receive assignment (``ES-*-RX-DL``) takes the
+    downlink case's receive antenna gain. A case for that station wins over a case for all stations,
+    and the design case over the others; otherwise the first case in display order."""
+    def rank(c: dict, station: str) -> tuple:
+        specific = (c.get("station") or "").strip().lower() not in ("",) and \
+            not (c.get("station") or "").strip().lower().startswith("all")
+        return (0 if specific else 1, 0 if c.get("is_design_case") else 1, c.get("order") or 0)
+
+    out: dict[str, dict] = {}
+    for a in assignments:
+        if a.get("side") != "earth" or a.get("fallback"):
+            continue
+        direction = a.get("direction")
+        mine = [c for c in cases if c.get("direction") == direction and _station_matches(c.get("station"), a.get("station"))]
+        if not mine:
+            continue
+        c = sorted(mine, key=lambda c: rank(c, a.get("station") or ""))[0]
+        if direction == "uplink" and a.get("transmits"):
+            vals = {"tx_power_w": c.get("tx_power_w"), "antenna_gain_dbi": c.get("tx_antenna_gain_dbi")}
+        elif direction == "downlink" and not a.get("transmits"):
+            vals = {"antenna_gain_dbi": c.get("rx_antenna_gain_dbi")}
+        else:
+            continue
+        vals = {k: float(v) for k, v in vals.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+        if vals:
+            out[a["id"]] = {**vals, "source": f"link_case:{c.get('name') or c.get('id')}"[:120]}
+    return out
+
+
+async def sync_licensing(study_id: str) -> dict[str, dict]:
+    """Write the link cases' earth-station values into the licensing record (merged: other
+    fields of an override, and overrides of other assignments, are kept). Returns what was set."""
+    from ..services import licensing as lic
+    from .elements import _elements
+    study = _study(study_id)
+    els = [e for e in _elements.values() if e.get("study_id") == study_id and not e.get("deleted_at")]
+    cases = await list_cases(study_id)
+    if not cases:
+        return {}
+    ov = licensing_overrides(cases, lic.frequency_assignments(study, els))
+    if ov:
+        record, _ = await lic.load_record(study_id)
+        have = record.get("assignment_overrides") or {}
+        patch = {aid: {**(have.get(aid) or {}), **{k: v for k, v in vals.items() if k in LICENSING_FIELDS},
+                       "link_case": vals["source"]} for aid, vals in ov.items()}
+        if any(have.get(aid) != v for aid, v in patch.items()):   # no new record version when unchanged
+            await lic.save_record(study_id, {"assignment_overrides": patch}, actor="link-budget tool")
+    return ov
+
+
+@router.post("/studies/{study_id}/link-budgets/licensing-sync")
+async def licensing_sync(study_id: str) -> dict:
+    """The named cases' per-station values into the licensing record's assignment overrides."""
+    _study(study_id)
+    ov = await sync_licensing(study_id)
+    await _broadcast(study_id)
+    return {"study_id": study_id, "assignment_overrides": ov}
+
+
 @router.post("/studies/{study_id}/link-budgets/{case_id}/apply")
 async def apply_case(study_id: str, case_id: str) -> dict:
     """Make a case the design case of its direction: ``requirements.link`` gets its values
@@ -255,6 +337,12 @@ async def apply_case(study_id: str, case_id: str) -> dict:
         for r in same:
             r.is_design_case = r.id == case_id
         await s.commit()
+    try:  # W5.04: once a licensing record exists, keep its earth-station values on the cases
+        from ..services import licensing as lic
+        if (await lic.load_record(study_id))[1]:
+            await sync_licensing(study_id)
+    except Exception:  # noqa: BLE001 — no licensing table (old DB): the design case is still applied
+        logger.warning("link cases: licensing overrides not synced for %s", study_id, exc_info=True)
     await _broadcast(study_id)
     return {"applied": case_id, "direction": case["direction"], "link": res.get("requirements", {}).get("link"),
             "stale_analyses": res.get("stale_analyses", [])}

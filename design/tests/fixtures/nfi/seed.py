@@ -21,7 +21,9 @@ S2     + equipment (``equipment.yaml``: mass, ON power, quantity, TRL, maturity 
 S3     + every requirement of ``requirements.yaml`` (216) + the risk register (``risks.yaml``)
 S4     + CDR design model proposed and accepted, stack auto-placed and approved, analyses run
        (V&V, mission simulation, ground segment, physics); AIT model philosophy and test matrix,
-       schedule settings (launch provided), milestones and WBS
+       schedule settings (launch provided), milestones and WBS; the design loop re-run on the placed
+       stack before the analyses and the link cases' earth-station values in the licensing
+       record (wave 2, agent D)
 =====  ==========================================================================================
 
 Known gaps, each owned by a later work package (the seed grows with them):
@@ -39,8 +41,8 @@ Loaded by agent D (wave 1), each at the end of its stage: S0 the mission-need fi
 criteria, alternative types; W1.06); S2 the mission phases from ``modes.yaml`` (W7.01) and the
 eight link cases of NUMBERS.yaml ``links`` with the design cases applied (W4.04); S3 every trade of
 ``trades.yaml`` with its pairwise weights, links to requirements, risks and elements, the decision
-and decision record of each (W6), and the MDR review record: three RIDs and the chair's decision
-(W4.08).
+and decision record of each (W6), the design loop (wave 2: MDR-EC-07 reads its results) and the MDR
+review record: three RIDs and the chair's decision (W4.08).
 
 The seed never writes a person's or an institution's name; the YAML files are the frozen
 teaching baseline (``NUMBERS.yaml`` wins over every other file).
@@ -343,6 +345,9 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     r = await api.call("POST", f"/api/studies/{sid}/stack/auto-place", {}, ok=(200, 409, 422))
     if r and not r.get("detail"):
         await api.call("POST", f"/api/studies/{sid}/stack/approve", {}, ok=(200, 409, 422))
+    # wave 2 (agent D): the design loop again on the placed stack, before the analyses that read
+    # its results, so no run is stale at S4 (its write-back feeds ground, physics and simulation)
+    await _s3_design_loop(api, seed)
     for a in ("vv", "ground_segment", "physics", "mission_simulation"):
         await api.post(f"/api/studies/{sid}/analyses/{a}/run")
     # W8a / W11a: model philosophy and test matrix; the launch is provided by the agency, so the
@@ -352,6 +357,7 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     await api.post(f"/api/studies/{sid}/schedule/propose")
     await _hk_sids(api, seed)
     await _s4_licensing(api, seed)
+    await _s4_link_licensing(api, seed)
 
 
 # ───────────────────────────────────── agent D (wave 1): mission need, ConOps, links, trades, review
@@ -532,9 +538,26 @@ MDR_RIDS = [
 ]
 
 
+async def _s3_design_loop(api: _Api, seed: NfiSeed) -> None:
+    """Wave 2: the design loop, run once the mission, equipment, modes, link design cases and the
+    requirement baseline are in, as a team does before its MDR: MDR-EC-07 (and the budget criteria
+    of the later gates) read its end-of-life generation and margins. Equipment values entered by
+    the seats are sticky, so the roll-up is unchanged by the run."""
+    res = await api.post(f"/api/design/{seed.study_id}/run")
+    seed.report["design_loop"] = {"converged": res.get("converged"), "iterations": res.get("iterations")}
+
+
+async def _s4_link_licensing(api: _Api, seed: NfiSeed) -> None:
+    """Wave 2: the link cases' per-station earth-station values into the licensing record
+    (W4.04 -> W5.04)."""
+    seed.report["licensing_sync"] = await api.post(f"/api/studies/{seed.study_id}/link-budgets/licensing-sync")
+
+
 async def _s3_mdr_review(api: _Api, seed: NfiSeed) -> None:
-    """W4.08: the MDR review record: three RIDs / actions and the chair's GO-with-actions."""
+    """W4.08: the MDR review record: three RIDs / actions and the chair's GO-with-actions, after
+    the design loop has run (the MDR's power and mass criterion needs it)."""
     sid = seed.study_id
+    await _s3_design_loop(api, seed)
     for r in MDR_RIDS:
         seed.rids.append(await api.post(f"/api/studies/{sid}/gates/mdr/rids", r))
     await api.call("PUT", f"/api/studies/{sid}/gates/mdr/record", {

@@ -2,8 +2,9 @@
 
 * ``generate_conops_from_view(view, lang)`` (W7.02, Nov 2026): the ConOps built from the study:
   the Modes tab (modes, transitions with guards, power by mode, sunlit-only flags), the edited
-  mission phases, the ConOps summary and success criteria, the contacts and the data flow (an
-  open item until the data budget exists: ``routers/conops.data_flow_section``), a typical day,
+  mission phases, the ConOps summary and success criteria, the contacts, the data flow and
+  downlink allocation (from the data budget through ``routers/conops.data_flow_section``; an open
+  item while the study has none), a typical day,
   the flight rules and contingencies of the CDR model and the end-of-life operations. ``view`` is
   ``routers.conops.conops_view``; EN or FR headings.
 * ``generate_conops_docx`` — the legacy generator of ``/exports/docx/conops`` (auto ConOps model),
@@ -294,6 +295,28 @@ _T = {
         "req": "Requirement", "phases_auto": "These phases are the tool's defaults: edit them in the ConOps phases editor.",
         "td_intro": "Share of each operational mode in a day of nominal operations (from the Modes tab).",
         "op_orbit": "Operational orbit",
+        "df_intro": "Daily closure, baseline case {case} ({label}): {delivered} MB of science delivered per day; "
+                    "{demand} MB demanded against {capacity} MB of downlink capacity, a margin of {margin} % "
+                    "(required: {required} % or more). {verdict}",
+        "df_pass": "The data budget closes.", "df_fail": "The data budget does not close.",
+        "df_volume": "Data volumes", "df_raw": "Payload products, raw (MB/day)", "df_ratio": "Compression ratio",
+        "df_needed": "Compression needed for the target", "df_delivered": "Science delivered (MB/day)",
+        "df_channel": "Science on the channel, with file-transfer overhead (MB/day)", "df_rate": "Downlink rate (bit/s)",
+        "df_product": "Product", "df_per_day": "Per day", "df_mb_raw": "MB each (raw)", "df_mb_day": "MB/day (raw)",
+        "df_closure": "Daily closure", "df_union": "Contact time, all stations (min/day)",
+        "df_usable": "Usable contact time (min/day)", "df_cap": "Downlink capacity (MB/day)",
+        "df_sci": "Science (MB/day)", "df_rt": "Real-time housekeeping (MB/day)", "df_st": "Stored housekeeping (MB/day)",
+        "df_other": "Other (MB/day)", "df_demand": "Total demand (MB/day)", "df_margin": "Margin (%)",
+        "df_req": "Required margin (%)", "df_case": "Case", "df_cap_s": "Capacity (MB)", "df_demand_s": "Demand (MB)",
+        "df_baseline_note": "* the baseline case.",
+        "df_alloc": "Downlink allocation by pass class", "df_class": "Pass class", "df_passes": "Passes per day",
+        "df_usable_s": "Usable min/day", "df_profile": "Real-time HK profile", "df_rt_mb": "Real-time HK (MB/day)",
+        "df_order": "Virtual-channel order",
+        "df_stores": "On-board stores", "df_store": "Store", "df_size": "Size (MB)",
+        "df_fill": "Fill, nominal mix (MB/day)", "df_days": "Days held", "df_check": "Sizing check met",
+        "df_backlog_ok": "Backlog over {days} days does not grow (last day: VC1 {vc1} MB, VC2 {vc2} MB).",
+        "df_backlog_grow": "Backlog over {days} days grows (last day: VC1 {vc1} MB, VC2 {vc2} MB): the downlink "
+                           "allocation does not keep up.",
     },
     "fr": {
         "title": "Concept d’opérations", "std": "NASA SEH annexe S / ECSS-E-ST-70C",
@@ -320,6 +343,33 @@ _T = {
         "req": "Exigence", "phases_auto": "Ces phases sont celles proposées par l’outil : modifiez-les dans l’éditeur des phases.",
         "td_intro": "Part de chaque mode opérationnel dans une journée d’opérations nominales (onglet Modes).",
         "op_orbit": "Orbite opérationnelle",
+        "df_intro": "Bilan quotidien, cas de référence {case} ({label}) : {delivered} Mo de données scientifiques "
+                    "livrées par jour ; {demand} Mo demandés pour {capacity} Mo de capacité descendante, soit une "
+                    "marge de {margin} % (exigée : {required} % ou plus). {verdict}",
+        "df_pass": "Le bilan de données est bouclé.", "df_fail": "Le bilan de données n’est pas bouclé.",
+        "df_volume": "Volumes de données", "df_raw": "Produits de la charge utile, bruts (Mo/jour)",
+        "df_ratio": "Taux de compression", "df_needed": "Compression nécessaire pour la cible",
+        "df_delivered": "Données scientifiques livrées (Mo/jour)",
+        "df_channel": "Données scientifiques sur le canal, avec le surcoût du transfert de fichiers (Mo/jour)",
+        "df_rate": "Débit descendant (bit/s)",
+        "df_product": "Produit", "df_per_day": "Par jour", "df_mb_raw": "Mo chacun (brut)", "df_mb_day": "Mo/jour (brut)",
+        "df_closure": "Bilan quotidien", "df_union": "Temps de contact, toutes stations (min/jour)",
+        "df_usable": "Temps de contact utilisable (min/jour)", "df_cap": "Capacité descendante (Mo/jour)",
+        "df_sci": "Données scientifiques (Mo/jour)", "df_rt": "TM de servitude temps réel (Mo/jour)",
+        "df_st": "TM de servitude stockée (Mo/jour)", "df_other": "Autres (Mo/jour)",
+        "df_demand": "Demande totale (Mo/jour)", "df_margin": "Marge (%)", "df_req": "Marge exigée (%)",
+        "df_case": "Cas", "df_cap_s": "Capacité (Mo)", "df_demand_s": "Demande (Mo)",
+        "df_baseline_note": "* le cas de référence.",
+        "df_alloc": "Allocation de la liaison descendante par classe de passage", "df_class": "Classe de passage",
+        "df_passes": "Passages par jour", "df_usable_s": "Min utilisables/jour",
+        "df_profile": "Profil de TM de servitude temps réel", "df_rt_mb": "TM temps réel (Mo/jour)",
+        "df_order": "Ordre des canaux virtuels",
+        "df_stores": "Mémoires de bord", "df_store": "Mémoire", "df_size": "Taille (Mo)",
+        "df_fill": "Remplissage, mélange nominal (Mo/jour)", "df_days": "Jours conservés",
+        "df_check": "Dimensionnement respecté",
+        "df_backlog_ok": "L’arriéré sur {days} jours ne croît pas (dernier jour : VC1 {vc1} Mo, VC2 {vc2} Mo).",
+        "df_backlog_grow": "L’arriéré sur {days} jours croît (dernier jour : VC1 {vc1} Mo, VC2 {vc2} Mo) : "
+                           "l’allocation descendante ne suit pas.",
     },
 }
 
@@ -332,6 +382,69 @@ def _fmt(v: Any, nd: int = 2) -> str:
     if isinstance(v, float):
         return f"{v:.{nd}f}".rstrip("0").rstrip(".") if nd else f"{v:.0f}"
     return str(v)
+
+
+def _render_data_flow(doc, df: dict[str, Any], t: dict[str, str]) -> None:
+    """Section 6 from ``routers.conops.data_flow_section`` (the data budget, agent H)."""
+    cl = df.get("closure") or {}
+    vol = df.get("volume") or {}
+    cap = df.get("capacity") or {}
+    verdict = t["df_pass"] if cl.get("status") == "pass" else t["df_fail"]
+    doc.add_paragraph(t["df_intro"].format(
+        case=cl.get("id") or "", label=cl.get("label") or "", delivered=_fmt(vol.get("delivered_mb_per_day"), 1),
+        demand=_fmt(cl.get("demand_mb"), 1), capacity=_fmt(cl.get("capacity_mb"), 1),
+        margin=_fmt(cl.get("margin_pct"), 1), required=_fmt(cl.get("margin_required_pct"), 0), verdict=verdict))
+    # 6.1 volumes
+    _add_section(doc, "6.1", t["df_volume"])
+    rows = [[t["df_raw"], _fmt(vol.get("raw_mb_per_day"), 2)],
+            [t["df_ratio"], _fmt(vol.get("compression_ratio"), 2)],
+            [t["df_needed"], _fmt(vol.get("compression_needed"), 2)],
+            [t["df_delivered"], _fmt(vol.get("delivered_mb_per_day"), 2)],
+            [t["df_channel"], _fmt(vol.get("on_channel_mb_per_day"), 2)],
+            [t["df_rate"], f"{_fmt(df.get('downlink_rate_bps'), 0)} ({df.get('band') or '—'})"]]
+    _add_table(doc, [t["param"], t["value"]], rows)
+    prods = vol.get("products") or []
+    if prods:
+        _add_table(doc, [t["df_product"], t["df_per_day"], t["df_mb_raw"], t["df_mb_day"]],
+                   [[p.get("name") or "", _fmt(p.get("per_day"), 0), _fmt(p.get("mb_raw"), 3),
+                     _fmt(p.get("mb_per_day_raw"), 2)] for p in prods])
+    # 6.2 daily closure
+    _add_section(doc, "6.2", t["df_closure"])
+    _add_table(doc, [t["param"], t["value"]],
+               [[t["df_union"], _fmt(cap.get("union_min_per_day"), 1)], [t["df_usable"], _fmt(cap.get("usable_min_per_day"), 1)],
+                [t["df_cap"], _fmt(cap.get("capacity_mb_per_day"), 2)],
+                [t["df_sci"], _fmt(cl.get("science_mb"), 2)], [t["df_rt"], _fmt(cl.get("rt_hk_mb"), 2)],
+                [t["df_st"], _fmt(cl.get("stored_hk_mb"), 2)], [t["df_other"], _fmt(cl.get("other_mb"), 2)],
+                [t["df_demand"], _fmt(cl.get("demand_mb"), 2)], [t["df_margin"], _fmt(cl.get("margin_pct"), 1)],
+                [t["df_req"], _fmt(cl.get("margin_required_pct"), 0)]])
+    cases = df.get("cases") or []
+    if cases:
+        _add_table(doc, [t["df_case"], t["text"], t["df_cap_s"], t["df_demand_s"], t["df_margin"], t["status"]],
+                   [[(c.get("id") or "") + (" *" if c.get("baseline") else ""), c.get("label") or "",
+                     _fmt(c.get("capacity_mb"), 2), _fmt(c.get("demand_mb"), 2), _fmt(c.get("margin_pct"), 1),
+                     c.get("status") or ""] for c in cases])
+        doc.add_paragraph(t["df_baseline_note"])
+    # 6.3 downlink allocation by pass class
+    alloc = df.get("allocation") or []
+    if alloc:
+        _add_section(doc, "6.3", t["df_alloc"])
+        _add_table(doc, [t["df_class"], t["df_passes"], t["df_usable_s"], t["df_profile"], t["df_rt_mb"], t["df_order"]],
+                   [[a.get("name") or "", _fmt(a.get("per_day"), 1), _fmt(a.get("usable_min_per_day"), 1),
+                     a.get("rt_profile") or "", _fmt(a.get("rt_mb_per_day"), 2), " > ".join(a.get("order") or [])]
+                    for a in alloc])
+    stores = df.get("stores") or []
+    if stores:
+        _add_section(doc, "6.4", t["df_stores"])
+        _add_table(doc, [t["df_store"], t["df_size"], t["df_fill"], t["df_days"], t["df_check"]],
+                   [[f"{s.get('id')} {s.get('name') or ''}", _fmt(s.get("size_mb"), 0), _fmt(s.get("fill_mb_per_day"), 3),
+                     _fmt(s.get("days_held"), 1), "—" if s.get("ok") is None else (t["yes"] if s["ok"] else t["no"])]
+                    for s in stores])
+    bl = df.get("backlog") or {}
+    if bl:
+        doc.add_paragraph((t["df_backlog_grow"] if bl.get("growing") else t["df_backlog_ok"]).format(
+            days=bl.get("days") or 0, vc1=_fmt(bl.get("last_vc1_mb"), 3), vc2=_fmt(bl.get("last_vc2_mb"), 3)))
+    for w in df.get("warnings") or []:
+        _render_bullet(doc, f"- {w}")
 
 
 def generate_conops_from_view(view: dict[str, Any], lang: str = "en") -> bytes:
@@ -433,14 +546,7 @@ def generate_conops_from_view(view: dict[str, Any], lang: str = "en") -> bytes:
         doc.add_paragraph(f"{t['open_item']}: " + t["df_open"].format(wp=df.get("work_package", "W3.02"),
                                                                       owner=df.get("owner", "H")))
     else:
-        daily = df.get("daily") or {}
-        if daily:
-            _add_table(doc, [t["param"], t["value"]], [[k, _fmt(v)] for k, v in daily.items()
-                                                       if not isinstance(v, (dict, list))])
-        for c in df.get("cases") or []:
-            if isinstance(c, dict):
-                _render_bullet(doc, "- " + ", ".join(f"{k}: {_fmt(v)}" for k, v in c.items()
-                                                      if not isinstance(v, (dict, list))))
+        _render_data_flow(doc, df, t)
 
     _add_section(doc, "7", t["s7"], t["td_intro"])
     td = view.get("typical_day") or {}
