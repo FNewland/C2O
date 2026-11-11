@@ -293,3 +293,17 @@ class TestTraceability:
         print(f"Status: {r.status_code}, Body: {r.text[:500]}")
         # May fail if no design has been run — that's expected
         assert r.status_code in (200, 404, 500)
+
+
+def test_orbit_trade_scales_the_study_camera_with_altitude():
+    """The orbit trade shows the study's own camera (GSD and swath at the study altitude, scaled
+    to each candidate), not the generic 15 cm telescope (walkthrough scene 2.2)."""
+    from spacecdf_server.services.orbit_trade import compute_orbit_trade
+
+    res = compute_orbit_trade(target_gsd_m=58.2, current_orbit={"altitude_km": 590, "inclination_deg": 97.75,
+                                                                 "orbit_type": "sso"},
+                              payload_ref={"gsd_m": 58.2, "swath_km": 150.7, "altitude_km": 590})
+    cur = next(c for c in res["candidates"] if c["is_current"])
+    assert cur["achievable_gsd_m"] == 58.2
+    sso500 = next(c for c in res["candidates"] if c["name"] == "SSO 500 km")
+    assert abs(sso500["achievable_gsd_m"] - 58.2 * 500 / 590) < 0.1

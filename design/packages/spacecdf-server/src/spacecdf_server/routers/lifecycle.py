@@ -505,6 +505,13 @@ async def orbit_trade_endpoint(study_id: str) -> dict:
         gsd = getattr(pl, 'gsd_m', 10.0) or 10.0  # Default 10m if not specified
         aperture = 0.15  # Default 15cm aperture
     orb = study.requirements.orbit
+    # The study's own camera: its nadir GSD and swath at the study altitude scale to each candidate.
+    pref = None
+    if study.requirements.payloads and orb.altitude_km:
+        pl0 = study.requirements.payloads[0]
+        if getattr(pl0, "gsd_m", None):
+            pref = {"gsd_m": pl0.gsd_m, "swath_km": getattr(pl0, "swath_km", None) or 0.0,
+                    "altitude_km": orb.altitude_km}
     stations, _ = _study_station_coords(study_id, study)
     station_lat = abs(stations[0]["latitude_deg"]) if stations else 78.0
     return compute_orbit_trade(
@@ -515,7 +522,7 @@ async def orbit_trade_endpoint(study_id: str) -> dict:
         current_orbit={"altitude_km": orb.altitude_km, "inclination_deg": orb.inclination_deg,
                        "orbit_type": getattr(orb.orbit_type, "value", orb.orbit_type),
                        "eccentricity": orb.eccentricity},
-        station_latitude_deg=station_lat,
+        station_latitude_deg=station_lat, payload_ref=pref,
     )
 
 

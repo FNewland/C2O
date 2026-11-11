@@ -87,6 +87,7 @@ def compute_orbit_trade(
     mission_type: str = "earth_observation",
     current_orbit: dict[str, Any] | None = None,
     station_latitude_deg: float = 78.0,
+    payload_ref: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     """Compute orbit trade study from mission objectives.
 
@@ -187,7 +188,7 @@ def compute_orbit_trade(
     # Compute properties for each
     for c in candidates:
         _compute_orbit_properties(c, aperture_m, wavelength_um,
-                                  target_latitude_band, downlink_rate_mbps, station_latitude_deg)
+                                  target_latitude_band, downlink_rate_mbps, station_latitude_deg, payload_ref)
 
     # Score candidates — weights depend on mission type
     is_optical = mission_type in ("earth_observation", "optical_imager", "science_planetary")
@@ -340,8 +341,12 @@ def _compute_orbit_properties(
     lat_band: tuple[float, float],
     downlink_mbps: float,
     station_latitude_deg: float = 78.0,
+    payload_ref: dict[str, float] | None = None,
 ) -> None:
-    """Compute all derived properties for an orbit candidate."""
+    """Compute all derived properties for an orbit candidate.
+
+    ``payload_ref`` (``{gsd_m, swath_km, altitude_km}``): the study's own camera, whose nadir GSD
+    and swath scale with altitude; without it a generic 15 cm f/8 telescope is assumed."""
     HEO_TYPES = {"molniya", "tundra", "gto", "lunar"}
     is_heo = c.orbit_type in HEO_TYPES
 
@@ -437,6 +442,12 @@ def _compute_orbit_properties(
 
     # Swath width (assuming 5000 pixel detector)
     c.swath_km = 5000 * c.achievable_gsd_m / 1000
+    if payload_ref and payload_ref.get("gsd_m") and payload_ref.get("altitude_km"):
+        k = c.altitude_km / payload_ref["altitude_km"]
+        c.achievable_gsd_m = payload_ref["gsd_m"] * k
+        c.diffraction_limited_gsd_m = min(c.diffraction_limited_gsd_m, c.achievable_gsd_m)
+        if payload_ref.get("swath_km"):
+            c.swath_km = payload_ref["swath_km"] * k
 
     # Revisit time — repeat ground track period (for reference)
     target_lat = (lat_band[0] + lat_band[1]) / 2
