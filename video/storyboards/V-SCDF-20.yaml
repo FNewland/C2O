@@ -226,8 +226,8 @@ steps:
       - wait: 1.5
       - click: {role: tab, name: Analyses, exact: true}
       - wait: 2
-      - click: {target: {css: "button:has-text('Re-run') >> nth=4"}}
+      - click: {target: {css: "button:text-matches('^(Re-run|Relancer)$') >> nth=4"}}
       - wait: 4
-      - click: {target: {css: "button:has-text('Re-run') >> nth=5"}}
+      - click: {target: {css: "button:text-matches('^(Re-run|Relancer)$') >> nth=5"}}
       - wait: 4
       - highlight: {target: {css: "main :text-matches('FMECA|AMDEC') >> nth=0"}, seconds: 3}

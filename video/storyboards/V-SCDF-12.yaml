@@ -56,7 +56,7 @@ steps:
       - click: {role: tab, name: Requirements, exact: true}
       - wait: 2
       - highlight: {target: {css: "main :text-is('OBJ-O1')"}, seconds: 2.5}
-      - click: {target: {css: "main :text-is('OBJ-O1') >> xpath=ancestor::*[.//button][1] >> button:has-text('edit')"}}
+      - click: {target: {css: "main :text-is('OBJ-O1') >> xpath=ancestor::*[.//button][1] >> button:text-matches('^(edit|modifier)$')"}}
       - wait: 1.5
       - highlight: {target: {label: "Code", exact: true}, seconds: 3}
       - click: {role: button, name: Cancel, exact: true}
@@ -89,7 +89,7 @@ steps:
       - wait: 1.5
       - click: {role: button, name: "Import requirements"}
       - wait: 1
-      - highlight: {target: {css: "main :text-matches('rows are matched by code|appariées par code|apparié')"}, seconds: 3.5}
+      - highlight: {target: {css: "main :text-matches('rows are matched by code|rapprochées par code')"}, seconds: 3.5}
       - click: {role: button, name: "Import requirements"}
       - select: {target: {css: "main select:has(option[value='stakeholder'])"}, value: mission}
       - wait: 1.5
@@ -129,7 +129,7 @@ steps:
       - click: {role: tab, name: Functions, exact: true}
       - wait: 2
       - highlight: {target: {role: button, name: "+ child"}, seconds: 2}
-      - highlight: {target: {css: "main :text('Allocate to…') >> nth=0"}, seconds: 2}
+      - highlight: {target: {text: "Allocate to…"}, seconds: 2}
       - click: {role: tab, name: Requirements, exact: true}
       - wait: 2
       - scroll: {target: {css: "main [role=columnheader]:has-text('Functions'), main [role=columnheader]:has-text('Fonctions')"}}

@@ -69,14 +69,17 @@ steps:
       - highlight: {target: {css: "main tr:has-text('MOE-04'), main li:has-text('MOE-04'), main div:has-text('MOE-04') >> nth=-1"}, seconds: 3}
       - scroll: {target: {css: "[data-testid=start-review]"}}
       - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: "[data-testid=start-review]"}
       - wait: 2.5
       - highlight: {target: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer') >> xpath=ancestor::*[contains(@class,'card') or self::section][1]"}, seconds: 4, point: false}
       - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
       - wait: 2.5
       - scroll: {target: {css: ".c2o-verdict"}}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass MDR'), .c2o-verdict button:has-text('Franchir la MDR')"}
       - wait: 2.5
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button.c2o-lb-record, button.c2o-lb-record:has-text('go / no'), button.c2o-lb-record:has-text('go ou no')"}
       - wait_for: {css: "#c2o-logbook"}
       - fill:
@@ -106,11 +109,13 @@ steps:
       - click: {role: tab, name: PRR, exact: true}
       - wait: 2
       - scroll: {target: {css: "[data-testid=start-review]"}}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: "[data-testid=start-review]"}
       - wait: 2.5
       - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
       - wait: 2.5
       - scroll: {target: {css: ".c2o-verdict"}}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass PRR'), .c2o-verdict button:has-text('Franchir la PRR')"}
       - wait: 2.5
       - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
@@ -257,11 +262,13 @@ steps:
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - scroll: {target: {css: ".c2o-verdict"}}
       - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: "[data-testid=start-review]"}
       - wait: 2.5
       - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
       - wait: 2.5
       - scroll: {target: {css: ".c2o-verdict"}}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass SRR'), .c2o-verdict button:has-text('Franchir la SRR')"}
       - wait: 2.5
       - highlight: {target: {css: ".c2o-verdict"}, seconds: 3}

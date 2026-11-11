@@ -309,30 +309,30 @@ steps:
         enregistrée pour le poste qui en est responsable. Une valeur tenue par un autre poste ne
         peut pas simplement être écrasée : elle est envoyée à ce poste pour examen.
     do:
-      - wait_for: {css: "button:has-text('Claim')"}
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}}
+      - wait_for: {css: "button:text-matches('^(Claim|Prendre)$')"}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}}
       - wait: 0.6
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}}
       - wait: 0.6
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - click: {target: {css: "button:text-matches('^(Claim|Prendre ce poste|Prendre)$') >> nth=0"}, instant: true}
       - wait: 0.4
-      - click: {target: {css: "button:has-text('Join') >> nth=0"}}
+      - click: {target: {css: "button:text-matches('^(Join|Rejoindre)$') >> nth=0"}}
       - wait: 0.6
       - click: {role: button, name: Close, exact: true}
       - wait: 0.6

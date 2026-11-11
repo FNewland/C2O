@@ -54,6 +54,7 @@ steps:
         même édition ; si l’un d’eux la modifie ensuite, les signatures tombent et une nouvelle
         édition est nécessaire.
     do:
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - js: {en: "__lt('Scene 6.6 · Systems, with the provider and consumer seats', 'An interface is fixed only when both sides have signed the same issue.')", fr: "__lt('Scène 6.6 · Systèmes, avec les postes fournisseur et client', 'Une interface n’est figée que lorsque les deux côtés ont signé la même édition.')"}
       - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
       - wait: 1.5
@@ -120,6 +121,7 @@ steps:
         de chaque équipement, y compris l’échec du déploiement de la voile, que traite le second
         circuit de libération indépendant.
     do:
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - js: {en: "__lt('Scene 6.7 · Cost & risk with Systems', 'The reliability target is judged over the twelve months of science the mission promises, not the design life.')", fr: "__lt('Scène 6.7 · Coût et risques, avec Systèmes', 'L’objectif de fiabilité se juge sur les douze mois de science promis, pas sur la durée de vie de conception.')"}
       - select: {target: {css: "[data-testid=active-seat]"}, value: cost_engineer}
       - wait: 1.5
@@ -156,6 +158,7 @@ steps:
         de conception, y compris la caméra infrarouge à ondes courtes et la batterie, qui doit
         rester au-dessus de zéro degré pendant la charge.
     do:
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - js: {en: "__lt('Scene 6.8 · Thermal', 'The cold case shows where heat is missing; the model sizes the heaters and checks again.')", fr: "__lt('Scène 6.8 · Thermique', 'Le cas froid montre où la chaleur manque ; le modèle dimensionne les réchauffeurs et vérifie à nouveau.')"}
       - select: {target: {css: "[data-testid=active-seat]"}, value: thermal_engineer}
       - wait: 1.5

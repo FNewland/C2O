@@ -101,5 +101,5 @@ steps:
     do:
       - click: {role: tab, name: Profiles, exact: true}
       - wait: 2
-      - scroll: {target: {css: "main :text-matches('Daily closure|Fermeture quotidienne') >> nth=0"}}
-      - highlight: {target: {css: "main :text-matches('Daily closure|Fermeture quotidienne') >> nth=0"}, seconds: 3.5}
+      - scroll: {target: {css: "main :text-matches('Daily closure|Bouclage journalier') >> nth=0"}}
+      - highlight: {target: {css: "main :text-matches('Daily closure|Bouclage journalier') >> nth=0"}, seconds: 3.5}

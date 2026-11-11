@@ -181,11 +181,11 @@ steps:
       - js: {en: "__lt('Scene 2.7 · Mission analysis & ops', 'From 590 km the satellite would stay up for decades; the drag sail brings it down in about three years.')", fr: "__lt('Scène 2.7 · Analyse de mission et opérations', 'Depuis 590 km, le satellite resterait en orbite des décennies ; la voile de traînée le fait rentrer en trois ans environ.')"}
       - click: {role: tab, name: Analyses, exact: true}
       - wait: 1.5
-      - click: {target: {css: "button:has-text('Re-run') >> nth=1"}}
+      - click: {target: {css: "button:text-matches('^(Re-run|Relancer)$') >> nth=1"}}
       - wait: 3
-      - click: {target: {css: "button:has-text('Re-run') >> nth=2"}}
+      - click: {target: {css: "button:text-matches('^(Re-run|Relancer)$') >> nth=2"}}
       - wait: 4
-      - click: {target: {css: "button:has-text('Re-run') >> nth=3"}}
+      - click: {target: {css: "button:text-matches('^(Re-run|Relancer)$') >> nth=3"}}
       - wait: 5
       - click: {role: button, name: "Ground segment"}
       - wait: 2

@@ -46,6 +46,7 @@ steps:
         modèles : Capella, le format de modèle d’ingénierie de la Coopération européenne pour la normalisation spatiale, l’ECSS, ReqIF pour les outils
         d’exigences, et SysML version deux.
     do:
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - js: {en: "__lt('Scene 5.13 · each document by its owner', 'Every document is generated from the one shared study.')", fr: "__lt('Scène 5.13 · chaque document par son responsable', 'Chaque document est produit à partir de la même étude partagée.')"}
       - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
       - wait: 1.5
@@ -72,9 +73,12 @@ steps:
         rapport thermique et les documents de licence. Chacun est produit par son poste
         responsable à partir du même modèle.
     do:
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - scroll: {target: {css: "[role=dialog] button:has-text('PDR') >> nth=0"}}
       - highlight: {target: {css: "[role=dialog] button:has-text('PDR') >> nth=0"}, seconds: 3}
-      - scroll: {target: {css: "[role=dialog] button:has-text('SEMP') >> nth=0"}}
-      - highlight: {target: {css: "[role=dialog] button:has-text('SEMP') >> nth=0"}, seconds: 2.5}
-      - scroll: {target: {css: "[role=dialog] button:has-text('RSSSA') >> nth=0"}}
-      - highlight: {target: {css: "[role=dialog] button:has-text('RSSSA') >> nth=0"}, seconds: 2.5}
+      - scroll: {target: {text: "Mission Requirements Document", exact: true}}
+      - highlight: {target: {text: "Mission Requirements Document", exact: true}, seconds: 2.5}
+      - scroll: {target: {text: "Launch ICD", exact: true}}
+      - highlight: {target: {text: "Launch ICD", exact: true}, seconds: 2.5}
+      - scroll: {target: {text: "Licensing status and timeline", exact: true}}
+      - highlight: {target: {text: "Licensing status and timeline", exact: true}, seconds: 2.5}
