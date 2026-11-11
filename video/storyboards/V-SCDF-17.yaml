@@ -191,6 +191,8 @@ steps:
       - js: {en: "__lt('Scene 5.12 · Systems', 'Every assumption names the evidence that will replace it and the review where it is due.')", fr: "__lt('Scène 5.12 · Systèmes', 'Chaque hypothèse nomme la preuve qui la remplacera et la revue à laquelle elle est attendue.')"}
       - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
       - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
       - click: {role: tab, name: "Review Gates", exact: true}
       - wait: 1.5
       - click: {role: tab, name: PDR, exact: true}

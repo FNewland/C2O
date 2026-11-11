@@ -15,7 +15,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore, type ActivityPanel } from '../stores/uiStore'
-import { useSeatStore } from '../seats/api'
+import { seatLabel, useSeatStore } from '../seats/api'
 import { openDiagram } from '../diagrams/GateDiagrams'
 import { pick, type Bilingual } from '../components/useGateReview'
 import { Button, Note, Panel, Select, StatusBadge, Tag, type Status } from '../components/ui'
@@ -66,7 +66,6 @@ export interface Inventory {
   open_items: OpenItem[]
 }
 
-const STATE_ICON: Record<string, string> = { ok: '✅', pass: '✅', warn: '⚠️', missing: '❌', fail: '❌' }
 const STATE_STATUS: Record<string, Status> = { ok: 'ok', pass: 'ok', warn: 'caution', missing: 'alarm', fail: 'alarm' }
 // English text is the i18n key
 export const BASELINE_LABEL: Record<string, string> = {
@@ -123,11 +122,11 @@ function ItemRow({ item, lang, onOpenSection }: { item: PhaseItem; lang: string;
   const canFix = !!item.fix || item.kind === 'diagram'
   return (
     <li className="c2o-criteria__row" data-testid={`phase-item-${item.id}`}>
-      <StatusBadge status={STATE_STATUS[st] ?? 'nodata'}><span aria-hidden>{STATE_ICON[st] ?? '·'}</span> {st === 'ok' || st === 'pass' ? t('Done') : st === 'warn' ? t('Partial') : t('Missing')}</StatusBadge>
+      <StatusBadge status={STATE_STATUS[st] ?? 'nodata'}>{st === 'ok' || st === 'pass' ? t('Done') : st === 'warn' ? t('Partial') : t('Missing')}</StatusBadge>
       <span className="c2o-criteria__q">{label}</span>
       <span className="t-12 c-2">{item.evidence ?? ''}</span>
       <span className="t-12 c-3 row gap-2 wrap ai-c">
-        {item.owner_seat && <Tag>{t('Owner: {{seat}}', { seat: item.owner_seat })}</Tag>}
+        {item.owner_seat && <Tag>{t('Owner: {{seat}}', { seat: seatLabel(item.owner_seat) })}</Tag>}
         {canFix && st !== 'ok' && st !== 'pass' && (
           <Button size="sm" variant="quiet" onClick={() => openFix(item.fix, item, onOpenSection)}>{t('Fix')}</Button>
         )}
@@ -164,7 +163,7 @@ export function OpenItemList({ items }: { items: OpenItem[] }) {
           <span>{i.title}</span>
           {i.condition && <span className="c-2">{t('Condition: {{c}}', { c: i.condition })}</span>}
           {i.fallback && <span className="c-3">{t('Fallback: {{f}}', { f: i.fallback })}</span>}
-          {i.owner_seat && <span className="c-3">{t('Owner: {{seat}}', { seat: i.owner_seat })}</span>}
+          {i.owner_seat && <span className="c-3">{t('Owner: {{seat}}', { seat: seatLabel(i.owner_seat) })}</span>}
           {i.blocks_gate && <span className="c-3 mono">{i.blocks_gate.toUpperCase()}</span>}
         </li>
       ))}
