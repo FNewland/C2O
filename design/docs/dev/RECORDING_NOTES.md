@@ -44,7 +44,24 @@ does not name (budgets and negotiations, licensing, the reviews). V-SCDF-01 … 
 
 | Video | Title | Scenes | Starts from | Length EN / FR (silent) |
 |---|---|---|---|---|
-DURATIONS_TABLE
+| V-SCDF-08 | Defining the mission from a proposal | 1.1–1.6 (wizard, seats claimed) | empty server (live wizard) | 6:03 / 6:12 |
+| V-SCDF-17 | The V in SpaceCDF: phases, deliverables and reviews | 1.7, 5.8, 5.11, 5.12 | S4 + licensing, ledger, negotiations, price | 3:36 / 3:49 |
+| V-SCDF-11 | Ground stations and contact time | 2.1, 2.2, 2.3 (GS4 signed), 2.7, 4.9 | S4 + Inuvik RF chain | 3:23 / 3:30 |
+| V-SCDF-12 | The requirements tree | 2.6, 3.1 | S4 | 2:00 / — |
+| V-SCDF-18 | Allocations every seat agrees: budgets, cost and risk | 2.4, 3.3 (ledger, N7 signed), 2.9, 2.8, 4.10 (3.2 inside 3.3) | S4 + licensing | 3:16 / — |
+| V-SCDF-10 | Weighting criteria and the Pugh matrix | 3.4, 3.4b, 3.6 | S4 + licensing, ledger, negotiations, price | 2:19 / 2:29 |
+| V-SCDF-09 | Choosing equipment from the catalogue | 4.1, 4.2, 4.3, 4.5, 4.6, 4.7, 4.8 | S4 + licensing, ledger, negotiations, price | 3:09 / 3:28 |
+| V-SCDF-19 | Modes, power and the downlink: two negotiations | 2.5, 4.11, 4.4, 4.12 (N1 signed), 4.13 (N3 signed) | S4 + licensing, ledger, GS4, N7, price | 3:13 / 3:36 |
+| V-SCDF-20 | Integration: interfaces, stack, power lines, FDIR and operations | 3.5, 3.7, 3.8, 5.1, 5.2, 5.3, 5.4, 5.6, 5.7, 5.9 | S4 + licensing, ledger, negotiations, price | 3:37 / 3:51 |
+| V-SCDF-13 | Designing housekeeping telemetry | 5.5 | S4 + licensing, ledger, negotiations, price | 1:38 / 1:47 |
+| V-SCDF-21 | Licensing from the design | 5.10 (filled on camera) | S4 + ledger, negotiations, price | 2:13 / 2:24 |
+| V-SCDF-15 | Building the review package | 5.13 | everything to the PDR passed | 1:04 / 1:09 |
+| V-SCDF-22 | Passing the MDR, PRR and SRR | 6.1, 6.2, 6.3, 6.4, 6.5 (ECP-02), SRR pass of 6.6 | S4 + licensing, ledger, negotiations, price | 4:26 / 4:21 |
+| V-SCDF-23 | PDR evidence: interfaces, reliability and the thermal model | 6.6 (ICDs), 6.7, 6.8 | + SEMP, debris, ECP-02, MDR/PRR/SRR passed | 2:47 / 2:47 |
+| V-SCDF-24 | When you disagree with the score, check the logic | 6.9 (ECP-01), 6.10 (PDR passed) | + ICDs, reliability, thermal | 4:09 / 4:23 |
+| V-SCDF-14 | Saving, sharing and reopening a study | chapter 8 | everything to the PDR passed | 1:28 / 1:28 |
+
+Total: 48 min in English, 45 min in French (silent backend: about 150 words a minute; the cloned voice will change each length a little).
 
 Order of the walkthrough: 08 → 17 (1.7) → 11 → 12 → 18 → 10 → 09 → 19 → 20 → 13 → 21 → 17 (5.8,
 5.11, 5.12) → 15 → 22 → 23 → 24 → 14. V-SCDF-17 gathers the protocol scenes (1.7, 5.8, 5.11,
@@ -144,6 +161,22 @@ Every scene of the script is in one video except: 2.3–4.13 are not re-filmed w
    passed. Harmless, but it fills the console of every capture.
 10. **Risk register** wraps the risk text in a very narrow column (RSK-034/-035 rows several
     lines tall).
+11. **Alternatives ranking** (wizard step 3, scene 1.4): the list ranks commercial imagery first and
+    Landsat 13th of 13, against the script's "Sentinel-2 and Landsat ranked high" (the mission's
+    60 m, 3-day, community-owned values do not seem to drive the ranking). The narration only says
+    the free missions are in the list. The list also names commercial providers (Planet, Maxar,
+    ICEYE, Spire, Iridium).
+12. **French UI, English server texts**: in the French videos the wizard's key question and the
+    alternatives' descriptions, the evidence column of the Phase card ("Problem statement written
+    (115 words)") and several analysis findings stay in English. "Science Segment" is not
+    translated while the other segment names are ("Segment spatial", "Segment sol").
+13. **End-of-review logbook prompt** ("Review finished: download your logbook") opens by itself a
+    while after a gate has passed, including gates passed through the API, and blocks the page
+    until dismissed. The storyboards dismiss it before each gate action.
+14. **Smaller points seen in passing**: the French decimal comma is used in the Modes tab only
+    (other panels show "4.17"); Load gives no visible confirmation that the study was opened; the
+    gate verdict takes several seconds to change from "Under review" to "Passed" after the pass
+    (the storyboards wait for it); each ICD row repeats its reference inside its title.
 
 ## Tool checks read on camera
 
@@ -161,7 +194,27 @@ Every scene of the script is in one video except: 2.3–4.13 are not re-filmed w
 
 ## Stills
 
-STILLS_SECTION
+Two stills per scene (English and French, 1280 px, taken near the end of each step) are kept with the
+renders, outside git: `video/out/<id>/stills/{en,fr}_<step>.jpg`. Key frames:
+
+| Scene | Still |
+|---|---|
+| 1.5 seats | `video/out/v-scdf-08/stills/en_seats.jpg` |
+| 1.6 mission definition | `video/out/v-scdf-08/stills/en_missiondef.jpg` |
+| 1.7 Phase card | `video/out/v-scdf-17/stills/en_phase.jpg` |
+| 2.3 GS4 agreed | `video/out/v-scdf-11/stills/en_gs4.jpg` |
+| 3.3 N7 agreed | `video/out/v-scdf-18/stills/en_n7.jpg` |
+| 2.9 priced project | `video/out/v-scdf-18/stills/en_price.jpg` |
+| 4.12 N1 agreed | `video/out/v-scdf-19/stills/en_n1.jpg` |
+| 5.5 housekeeping | `video/out/v-scdf-13/stills/en_sids.jpg` |
+| 5.8 V diagram | `video/out/v-scdf-17/stills/en_vdiagram.jpg` |
+| 5.10 licensing | `video/out/v-scdf-21/stills/en_protection.jpg` |
+| 6.5 ECP-02 approved | `video/out/v-scdf-22/stills/en_ecp02.jpg` |
+| 6.6 ICDs at Issue A | `video/out/v-scdf-23/stills/en_icds.jpg` |
+| 6.8 thermal model | `video/out/v-scdf-23/stills/en_thermal.jpg` |
+| 6.9 T-A01 evidence | `video/out/v-scdf-24/stills/en_evidence.jpg` |
+| 6.9 decision, ECP-01 rejected | `video/out/v-scdf-24/stills/en_decide.jpg` |
+| 6.10 PDR passed | `video/out/v-scdf-24/stills/en_pdr.jpg` |
 
 ## Left to do
 

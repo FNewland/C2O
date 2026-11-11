@@ -78,7 +78,8 @@ steps:
       - scroll: {target: {css: ".c2o-verdict"}}
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass MDR'), .c2o-verdict button:has-text('Franchir la MDR')"}
-      - wait: 2.5
+      - wait_for: {target: {css: ".c2o-verdict", has_text: "Passed"}, timeout: 90}
+      - wait: 1
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button.c2o-lb-record, button.c2o-lb-record:has-text('go / no'), button.c2o-lb-record:has-text('go ou no')"}
       - wait_for: {css: "#c2o-logbook"}
@@ -117,7 +118,8 @@ steps:
       - scroll: {target: {css: ".c2o-verdict"}}
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass PRR'), .c2o-verdict button:has-text('Franchir la PRR')"}
-      - wait: 2.5
+      - wait_for: {target: {css: ".c2o-verdict", has_text: "Passed"}, timeout: 90}
+      - wait: 1
       - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
 
   - id: semp
@@ -270,5 +272,6 @@ steps:
       - scroll: {target: {css: ".c2o-verdict"}}
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass SRR'), .c2o-verdict button:has-text('Franchir la SRR')"}
-      - wait: 2.5
+      - wait_for: {target: {css: ".c2o-verdict", has_text: "Passed"}, timeout: 90}
+      - wait: 1
       - highlight: {target: {css: ".c2o-verdict"}, seconds: 3}

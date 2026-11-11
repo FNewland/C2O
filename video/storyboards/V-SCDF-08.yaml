@@ -208,16 +208,14 @@ steps:
       en: >-
         The third step asks whether space is the right answer at all. Nine alternatives are ranked
         against the mission's own values: sixty-metre pixels, a three-day revisit, data within a
-        day, and data that the communities own and can task. Sentinel-2 and Landsat rank high, and
-        they stay in the mission as the calibration reference. But only a dedicated satellite can be
+        day, and data that the communities own and can task. Sentinel-2 and Landsat are in the list, and they stay in the mission as the calibration reference. But only a dedicated satellite can be
         tasked by the communities, image at night, and answer the central question. The new
         dedicated CubeSat is selected, and the reason is written and recorded.
       fr: >-
         La troisième étape demande si l’espace est vraiment la bonne réponse. Neuf solutions sont
         classées selon les valeurs propres à la mission : des pixels de soixante mètres, une revisite
         de trois jours, des données en moins d’une journée, et des données que les communautés
-        possèdent et peuvent programmer. Sentinel-2 et Landsat sont bien classés, et ils restent
-        dans la mission comme référence d’étalonnage. Mais seul un satellite dédié peut être
+        possèdent et peuvent programmer. Sentinel-2 et Landsat figurent dans la liste, et ils restent dans la mission comme référence d’étalonnage. Mais seul un satellite dédié peut être
         programmé par les communautés, imager de nuit et répondre à la question centrale. Le
         nouveau CubeSat dédié est retenu, et la raison est rédigée puis consignée.
     do:

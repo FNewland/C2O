@@ -232,7 +232,8 @@ steps:
       - scroll: {target: {css: ".c2o-verdict"}}
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button:has-text('Pass PDR'), .c2o-verdict button:has-text('Franchir la PDR')"}
-      - wait: 2.5
+      - wait_for: {target: {css: ".c2o-verdict", has_text: "Passed"}, timeout: 90}
+      - wait: 1
       - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - click: {css: ".c2o-verdict button.c2o-lb-record, button.c2o-lb-record:has-text('go / no'), button.c2o-lb-record:has-text('go ou no')"}
       - wait_for: {css: "#c2o-logbook"}
