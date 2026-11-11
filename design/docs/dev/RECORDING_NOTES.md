@@ -176,7 +176,9 @@ Every scene of the script is in one video except: 2.3–4.13 are not re-filmed w
 14. **Smaller points seen in passing**: the French decimal comma is used in the Modes tab only
     (other panels show "4.17"); Load gives no visible confirmation that the study was opened; the
     gate verdict takes several seconds to change from "Under review" to "Passed" after the pass
-    (the storyboards wait for it); each ICD row repeats its reference inside its title.
+    (the storyboards wait for it); each ICD row repeats its reference inside its title; in French at
+    1280 px the app bar wraps ("Clair" drops to a second line) and the "Suivant : …" hint runs
+    under "Lancer l'analyse" (still `video/out/v-scdf-08/stills/fr_seats.jpg`).
 
 ## Tool checks read on camera
 
