@@ -66,6 +66,12 @@ const EFFECT_LABEL: Record<string, string> = {
   limit_kg: 'Limit (kg)', reserve_kg: 'Reserve held by Systems (kg)', closes: 'Closes',
 }
 
+/** The unit after a value, unless fmtVal already wrote it (shares and percentages carry "%"). */
+function unitAfter(k: string, unit: string | null | undefined): string {
+  if (!unit || k.endsWith('share') || k.endsWith('_pct') || k.endsWith('percent')) return ''
+  return ` ${unit}`
+}
+
 function fmtVal(k: string, v: unknown): string {
   if (v == null) return '–'
   if (typeof v === 'boolean') return v ? '✓' : '✗'
@@ -155,8 +161,8 @@ function RecordCard({ r, studyId, expanded, onToggle, busy, run, L }: {
         <div className="stack gap-3">
           <DataTable dense caption={t('Coupled parameters')} rows={r.live_parameters} rowKey={p => p.key} columns={[
             { key: 'l', header: t('Parameter'), render: p => L(p.label) },
-            { key: 'v', header: t('Now'), num: true, render: p => p.value == null ? <NoData label={t('no data')} /> : `${fmtVal(p.key, p.value)} ${p.key.endsWith('share') ? '' : p.unit}` },
-            { key: 'a', header: t('When agreed'), num: true, render: p => p.agreed_value == null ? '' : `${fmtVal(p.key, p.agreed_value)} ${p.key.endsWith('share') ? '' : p.unit}` },
+            { key: 'v', header: t('Now'), num: true, render: p => p.value == null ? <NoData label={t('no data')} /> : `${fmtVal(p.key, p.value)}${unitAfter(p.key, p.unit)}` },
+            { key: 'a', header: t('When agreed'), num: true, render: p => p.agreed_value == null ? '' : `${fmtVal(p.key, p.agreed_value)}${unitAfter(p.key, p.unit)}` },
             { key: 'o', header: t('Owner'), render: p => seatLabel(p.owner_seat) },
             { key: 's', header: t('Source'), render: p => <span className="t-12 c-3 mono">{p.source}</span> },
           ]} />

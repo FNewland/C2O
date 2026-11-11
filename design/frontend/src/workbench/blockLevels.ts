@@ -130,6 +130,8 @@ export function showQuickStart(elements: ElLike[], focusId: string | null): bool
   if (!focusId) return false
   const focus = elements.find(e => e.id === focusId)
   const kids = elements.filter(e => e.parent_id === focusId && !e.deleted_at)
+  // Spacecraft subsystems only: never on a ground station, the mission control centre or the launcher.
+  if (focus && effectiveSegment(focus, elements) !== 'space') return false
   if (focus?.element_type === 'segment') return !kids.some(e => e.element_type === 'system')
   if (focus?.element_type === 'system') return !kids.some(e => e.element_type === 'subsystem')
   return false

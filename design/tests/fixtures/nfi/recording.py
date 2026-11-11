@@ -25,6 +25,8 @@ icds            the five PDR ICDs at Issue A, signed by both seats (6.6)
 reliability     the reliability block diagram run and the FMEA proposed (6.7)
 thermal         the thermal model built, solved, heaters taken, solved (6.8)
 ecp01           T-A01 decided A (conditional) and ECP-01 rejected (6.9)
+rfchain         the RF chain of GS Inuvik (ground_stations.yaml, north) without the station
+                time reference, which is added on camera (4.9)
 ==============  ===========================================================================
 """
 from __future__ import annotations
@@ -109,6 +111,15 @@ async def after(c, seed, step: str) -> None:
             await _ok(await c.post(f"/api/studies/{sid}/thermal-model/{path}"))
     elif step == "ecp01":
         await ecp01_scene(c, sid)
+    elif step == "rfchain":
+        from tests.fixtures.nfi.seed import load
+        els = await _ok(await c.get(f"/api/studies/{sid}/elements"))
+        gs = next(e for e in els if e.get("name") == "GS Inuvik")
+        for it in load("ground_stations")["rf_chains"]["north"]:
+            await _ok(await c.post(f"/api/elements/?study_id={sid}", json={
+                "name": it["name"], "element_type": "component", "parent_id": gs["id"],
+                "quantity": int(it.get("qty") or 1), "cost_recurring_keur": it.get("cost_keur"),
+                "owner_position": "mission_analyst"}))
     else:
         raise SystemExit(f"unknown --after step {step!r}")
 

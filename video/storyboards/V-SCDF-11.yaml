@@ -1,0 +1,223 @@
+# Week 2 — Northern Fire and Ice walkthrough: the mission architecture, the orbit and the
+# ground network (DESIGN_SCRIPT_V2 scenes 2.1, 2.2, 2.3, 2.7, 4.9). The fourth-station
+# negotiation (GS4) is opened and signed on camera. Recording seed S4, with the RF chain of
+# GS Inuvik in place except its time reference, which is added on camera.
+id: V-SCDF-11
+week: 2
+audience: all
+title:
+  en: "Ground stations and contact time"
+  fr: "Stations sol et temps de contact"
+summary:
+  en: "The Northern Fire and Ice product tree with its four ground stations, the orbit trade and the system-level trades of the MDR, the fourth-station negotiation that moves numbers owned by four seats, the mission analyses, and the RF chain of a northern station."
+  fr: "L’arbre produit de Northern Fire and Ice avec ses quatre stations sol, le compromis d’orbite et les compromis de niveau système de la MDR, la négociation de la quatrième station qui fait bouger des valeurs tenues par quatre postes, les analyses de mission, et la chaîne radio d’une station du Nord."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-3.3/D, LW-2.3/B]
+  decisions: [D-5.1-GROUND, D-3.3-DATA]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 2.1, 2.2, 2.3, 2.7, 4.9)
+  - design/tests/fixtures/nfi/ground_stations.yaml
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "rfchain"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: tree
+    title: {en: "The product tree", fr: "L’arbre produit"}
+    say:
+      en: >-
+        Systems completes the product tree at mission level. Under the mission are the space
+        segment, the ground segment, the launch segment, which is out of scope because the launch is
+        provided, the science segment and operations. The spacecraft is a 3U CubeSat, and its
+        propulsion subsystem is renamed Disposal, the drag sail, owned by the Propulsion seat. The
+        ground segment holds four stations, at Ottawa, Yellowknife, Iqaluit and Inuvik, and the
+        mission control centre in Ottawa, which reaches the remote sites over a virtual private
+        network.
+      fr: >-
+        L’ingénierie système complète l’arbre produit au niveau de la mission. Sous la mission se
+        trouvent le segment spatial, le segment sol, le segment de lancement, hors du périmètre car
+        le lancement est fourni, le segment scientifique et les opérations. Le satellite est un
+        CubeSat 3U, et son sous-système de propulsion est renommé Retrait, la voile de traînée, tenu
+        par le poste Propulsion. Le segment sol comprend quatre stations, à Ottawa, Yellowknife,
+        Iqaluit et Inuvik, et le centre de contrôle de mission à Ottawa, qui joint les sites
+        éloignés par un réseau privé virtuel.
+    do:
+      - js: {en: "__lt('Scene 2.1 · Systems', 'One spacecraft, a disposal subsystem instead of propulsion, four stations across Canada.')", fr: "__lt('Scène 2.1 · Systèmes', 'Un satellite, un sous-système de retrait au lieu de la propulsion, quatre stations au Canada.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
+      - wait: 2
+      - highlight: {target: {css: "main tr:has-text('Launch'), main [class*=row]:has-text('Launch') >> nth=0"}, seconds: 2.5}
+      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
+      - wait: 2
+      - highlight: {target: {css: ".react-flow__node:has-text('Disposal')"}, seconds: 3}
+      - click: {role: button, name: "Northern Fire and Ice", exact: true}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Ground Segment')"}
+      - wait: 2
+      - highlight: {target: {css: ".react-flow__node:has-text('GS Inuvik')"}, seconds: 2.5}
+
+  - id: orbit
+    title: {en: "The orbit trade", fr: "Le compromis d’orbite"}
+    say:
+      en: >-
+        Mission analysis takes its seat. The orbit trade evaluates candidate orbits against the
+        mission's own camera: at five hundred and ninety kilometres, the period is about ninety-six
+        and a half minutes and the eclipse about thirty-five. Without a drag sail, the satellite
+        would stay up for decades, which is why the five-year rule column fails. Every phase needs
+        at least one system-level trade, recorded with its level and its gate. At the MDR there are
+        two, the operational orbit and the launch approach, and both are decided.
+      fr: >-
+        L’analyse de mission prend son poste. Le compromis d’orbite évalue les orbites candidates
+        avec la caméra de la mission : à cinq cent quatre-vingt-dix kilomètres, la période est
+        d’environ quatre-vingt-seize minutes et demie et l’éclipse d’environ trente-cinq. Sans voile
+        de traînée, le satellite resterait en orbite des décennies, c’est pourquoi la colonne de la
+        règle des cinq ans échoue. Chaque phase demande au moins un compromis de niveau système,
+        consigné avec son niveau et son jalon. À la MDR, il y en a deux, l’orbite opérationnelle et
+        l’approche de lancement, et les deux sont tranchés.
+    do:
+      - js: {en: "__lt('Scene 2.2 · Mission analysis & ops', 'Every phase needs at least one system-level trade; at the MDR they are the orbit and the launch.')", fr: "__lt('Scène 2.2 · Analyse de mission et opérations', 'Chaque phase demande au moins un compromis de niveau système ; à la MDR, ce sont l’orbite et le lancement.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: mission_analyst}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1
+      - click: {role: button, name: "Orbit Trade Study"}
+      - click: {role: button, name: "Evaluate Orbit Options"}
+      - wait: 4
+      - highlight: {target: {css: "tr:has-text('590 km')"}, seconds: 4}
+      - click: {role: button, name: "Orbit Trade Study"}
+      - click: {role: button, name: "Trade studies"}
+      - wait: 1
+      - highlight: {target: {css: "[data-testid=trade-gate-summary]"}, seconds: 3}
+      - select: {target: {css: "select:has(option[value='T-M01'])"}, value: T-M01}
+      - wait: 1.5
+      - click: {role: button, name: "Absolute-scale matrix"}
+      - wait: 1
+      - scroll: {target: {css: "[data-testid=absolute-matrix]"}}
+      - highlight: {target: {css: "[data-testid=absolute-matrix] table"}, seconds: 4, point: false}
+      - click: {role: button, name: "Sensitivity to ±20 % on each weight"}
+      - wait: 1
+      - highlight: {target: {css: "[data-testid=trade-pm20]"}, seconds: 3}
+
+  - id: gs4
+    title: {en: "The fourth station: a negotiation", fr: "La quatrième station : une négociation"}
+    say:
+      en: >-
+        The fourth station, at Inuvik, is a decision that moves numbers owned by other seats. Under
+        Negotiations, mission analysis opens the GS4 record. The tool computes two options, three
+        sites without Inuvik and four with it, and shows what each one affects. With Inuvik, the
+        union of the passes rises from about ninety-three to about one hundred and twenty-six
+        minutes a day, and the daily data margin goes from minus twelve percent to plus thirty-eight.
+        The downlink share of the orbit rises from five to nine percent, which the Power seat must
+        carry in its orbit average. The team chooses four sites, and each seat that owns an affected
+        number signs: mission analysis, comms and data handling, power, and systems. Only then does
+        the record turn to agreed.
+      fr: >-
+        La quatrième station, à Inuvik, est une décision qui fait bouger des valeurs tenues par
+        d’autres postes. Sous Négociations, l’analyse de mission ouvre la fiche GS4. L’outil calcule
+        deux options, trois sites sans Inuvik et quatre avec, et montre ce que chacune touche. Avec
+        Inuvik, l’union des passages passe d’environ quatre-vingt-treize à environ cent vingt-six
+        minutes par jour, et la marge quotidienne de données passe de moins douze pour cent à plus
+        trente-huit. La part de la transmission dans l’orbite passe de cinq à neuf pour cent, que
+        le poste Puissance doit porter dans sa moyenne orbitale. L’équipe choisit quatre sites, et
+        chaque poste qui tient une valeur touchée signe : l’analyse de mission, les télécoms et le
+        traitement de données, la puissance, et l’ingénierie système. Alors seulement la fiche passe
+        à approuvée.
+    do:
+      - js: {en: "__lt('Scene 2.3 · Mission analysis & ops proposes', 'One station decision moves numbers owned by four other seats; each one agrees before it stands.')", fr: "__lt('Scène 2.3 · L’analyse de mission propose', 'Une décision sur une station fait bouger des valeurs tenues par quatre autres postes ; chacun donne son accord avant qu’elle tienne.')"}
+      - scroll: {target: {role: button, name: "New GS4"}}
+      - click: {role: button, name: "New GS4"}
+      - wait: 3
+      - scroll: {target: {css: "[data-testid=negotiation-GS4] table >> nth=1"}}
+      - highlight: {target: {css: "[data-testid=negotiation-GS4] table >> nth=1"}, seconds: 5, point: false}
+      - click: {target: {css: "[data-testid=negotiation-GS4] tr:has-text('Inuvik') button:has-text('Choose'), [data-testid=negotiation-GS4] tr:has-text('four') button:has-text('Choose'), [data-testid=negotiation-GS4] tr:has-text('4') button:has-text('Choose')"}}
+      - wait: 1.5
+      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Mission analysis'), [data-testid=negotiation-GS4] button:has-text('Analyse de mission')"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Comms')"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Power'), [data-testid=negotiation-GS4] button:has-text('Puissance')"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=negotiation-GS4] button:has-text('Systems'), [data-testid=negotiation-GS4] button:has-text('Systèmes')"}}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=negotiation-GS4]"}}
+      - highlight: {target: {css: "[data-testid=negotiation-GS4] > div >> nth=0"}, seconds: 3}
+
+  - id: analyses
+    title: {en: "The mission analyses", fr: "Les analyses de mission"}
+    say:
+      en: >-
+        The mission analyses run again on the same study: the mission simulation, the ground segment
+        and the physics. The ground-segment run lists the four UHF stations, each with its ten-degree
+        mask. The orbit trade has already shown the lifetime without the sail: from five hundred and
+        ninety kilometres the satellite would stay in orbit for decades. With the drag sail it comes
+        down in about three years, which the debris assessment confirms at the SRR.
+      fr: >-
+        Les analyses de mission tournent à nouveau sur la même étude : la simulation de mission, le
+        segment sol et la physique. L’analyse du segment sol liste les quatre stations UHF, chacune
+        avec son masque de dix degrés. Le compromis d’orbite a déjà montré la durée de vie sans
+        voile : depuis cinq cent quatre-vingt-dix kilomètres, le satellite resterait en orbite des
+        décennies. Avec la voile de traînée, il rentre en trois ans environ, ce que l’évaluation des
+        débris confirme à la SRR.
+    do:
+      - js: {en: "__lt('Scene 2.7 · Mission analysis & ops', 'From 590 km the satellite would stay up for decades; the drag sail brings it down in about three years.')", fr: "__lt('Scène 2.7 · Analyse de mission et opérations', 'Depuis 590 km, le satellite resterait en orbite des décennies ; la voile de traînée le fait rentrer en trois ans environ.')"}
+      - click: {role: tab, name: Analyses, exact: true}
+      - wait: 1.5
+      - click: {target: {css: "button:has-text('Re-run') >> nth=1"}}
+      - wait: 3
+      - click: {target: {css: "button:has-text('Re-run') >> nth=2"}}
+      - wait: 4
+      - click: {target: {css: "button:has-text('Re-run') >> nth=3"}}
+      - wait: 5
+      - click: {role: button, name: "Ground segment"}
+      - wait: 2
+      - highlight: {target: {css: "main :text-matches('GS Inuvik')"}, seconds: 2.5}
+
+  - id: rfchain
+    title: {en: "The RF chain of a northern station", fr: "La chaîne radio d’une station du Nord"}
+    say:
+      en: >-
+        Each station has its own RF chain. At Inuvik, the receive Yagi at four hundred and one
+        megahertz has an ice-rated mounting, and the rotator has a heated housing: three of the
+        four stations are unattended in the North, at minus forty-five degrees in winter. Mission
+        analysis adds the last item, the GPS-disciplined oscillator that gives the station its time
+        and frequency reference.
+      fr: >-
+        Chaque station a sa propre chaîne radio. À Inuvik, la Yagi de réception à quatre cent un
+        mégahertz a une fixation prévue pour le givre, et le rotor a un boîtier chauffé : trois des
+        quatre stations sont automatiques, dans le Nord, à moins quarante-cinq degrés en hiver.
+        L’analyse de mission ajoute le dernier élément, l’oscillateur discipliné par GPS qui donne à
+        la station sa référence de temps et de fréquence.
+    do:
+      - js: {en: "__lt('Scene 4.9 · Mission analysis & ops', 'Three of the four stations are unattended in the North, at minus forty-five in winter.')", fr: "__lt('Scène 4.9 · Analyse de mission et opérations', 'Trois des quatre stations sont automatiques, dans le Nord, à moins quarante-cinq en hiver.')"}
+      - click: {role: tab, name: Blocks, exact: true}
+      - wait: 1
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Ground Segment')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('GS Inuvik')"}
+      - wait: 2
+      - highlight: {target: {css: "main :text('SPID BIG-RAS rotator (heated housing)')"}, seconds: 3}
+      - click: {role: button, name: "+ Add Element"}
+      - type: {target: {label: "Element name"}, text: "GPS-disciplined oscillator (station time and frequency)", delay_ms: 18}
+      - click: {role: button, name: Add, exact: true}
+      - wait: 2

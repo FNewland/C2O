@@ -33,9 +33,10 @@ const elementTypesByLevel = (t: TFunction, segment?: string | null): Record<Leve
     { value: 'system', label: segment === 'space' ? t('Spacecraft (system)')
       : segment === 'ground' ? t('Ground station / facility (system)') : t('System / element') },
   ],
-  2: [
-    { value: 'subsystem', label: t('Subsystem') },
-  ],
+  // Under a ground station or facility the parts are equipment (RF chain, computers), not subsystems.
+  2: segment && segment !== 'space'
+    ? [{ value: 'component', label: t('Component') }, { value: 'subsystem', label: t('Subsystem') }]
+    : [{ value: 'subsystem', label: t('Subsystem') }],
   3: [
     { value: 'component', label: t('Component') },
   ],

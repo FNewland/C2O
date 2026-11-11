@@ -1,0 +1,158 @@
+# Week 2 — Northern Fire and Ice walkthrough: the requirements tree and the functions
+# (DESIGN_SCRIPT_V2 scenes 2.6 and 3.1): readable codes on the objective requirements, the
+# mission-level rows with their objectives, the bulk import of the 302-row baseline, the SMART
+# check, then the function tree, the function column of the requirements and the FFBD.
+# Recording seed S4 (the baseline is already imported; the import dialog is shown, not re-run).
+id: V-SCDF-12
+week: 2
+audience: all
+title:
+  en: "The requirements tree"
+  fr: "L’arbre des exigences"
+summary:
+  en: "The Northern Fire and Ice requirements from the objectives down: readable codes, a parent objective for every mission requirement, the bulk import of the baseline, the SMART check, and the functions each requirement serves, drawn as a function tree and a functional flow block diagram."
+  fr: "Les exigences de Northern Fire and Ice depuis les objectifs : des codes lisibles, un objectif parent pour chaque exigence de mission, l’import en bloc du référentiel, la vérification SMART, et les fonctions que sert chaque exigence, dessinées en arbre des fonctions et en diagramme de flux fonctionnel."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-2.1/C]
+  decisions: [D-2.1-BASELINE, D-2.1-FLOWDOWN]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 2.6, 3.1)
+  - design/tests/fixtures/nfi/requirements.yaml
+  - design/tests/fixtures/nfi/functions.yaml
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: ""}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: codes
+    title: {en: "Codes on the objective requirements", fr: "Des codes sur les exigences d’objectif"}
+    say:
+      en: >-
+        The wizard turned each objective into a requirement: "The mission shall…". The team leader
+        gives each one a readable code in the row editor, OBJ-O1 to OBJ-C1, so that every
+        requirement below can name the objective it serves. Each requirement then carries a
+        threshold, a verification method and a parent.
+      fr: >-
+        L’assistant a transformé chaque objectif en exigence : « La mission doit… ». Le chef
+        d’équipe donne à chacune un code lisible dans l’éditeur de ligne, de OBJ-O1 à OBJ-C1, afin
+        que chaque exigence en dessous puisse nommer l’objectif qu’elle sert. Chaque exigence porte
+        ensuite un seuil, une méthode de vérification et un parent.
+    do:
+      - js: {en: "__lt('Scene 2.6 · Team leader', 'Each requirement has a threshold, a verification method and a parent objective.')", fr: "__lt('Scène 2.6 · Chef d’équipe', 'Chaque exigence a un seuil, une méthode de vérification et un objectif parent.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: team_leader}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Requirements, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "main :text-is('OBJ-O1')"}, seconds: 2.5}
+      - click: {target: {css: "main :text-is('OBJ-O1') >> xpath=ancestor::*[.//button][1] >> button:has-text('edit')"}}
+      - wait: 1.5
+      - highlight: {target: {label: "Code", exact: true}, seconds: 3}
+      - click: {role: button, name: Cancel, exact: true}
+      - wait: 1
+
+  - id: mission
+    title: {en: "Mission requirements and their objectives", fr: "Les exigences de mission et leurs objectifs"}
+    say:
+      en: >-
+        Below the objectives come the mission requirements. A few are written by hand with Add
+        Requirement, for example the science rows that the Customer writes, and the rest of the
+        baseline, three hundred and two rows across five levels, is brought in with the bulk import:
+        a file with the baseline columns, matched by code, so importing again updates the rows.
+        In the table, filtered on the mission level, the objectives column shows which objective
+        each requirement serves. The SMART check then reads every row for being specific,
+        measurable and verifiable.
+      fr: >-
+        Sous les objectifs viennent les exigences de mission. Quelques-unes sont rédigées à la main
+        avec Ajouter une exigence, par exemple les lignes scientifiques qu’écrit le client, et le
+        reste du référentiel, trois cent deux lignes sur cinq niveaux, est apporté par l’import en
+        bloc : un fichier avec les colonnes du référentiel, apparié par code, si bien qu’un nouvel
+        import met les lignes à jour. Dans le tableau, filtré sur le niveau mission, la colonne des
+        objectifs montre quel objectif sert chaque exigence. La vérification SMART lit ensuite
+        chaque ligne : spécifique, mesurable et vérifiable.
+    do:
+      - click: {role: button, name: "+ Add Requirement"}
+      - wait: 1.5
+      - click: {role: button, name: Cancel, exact: true}
+      - click: {role: button, name: Table, exact: true}
+      - wait: 1.5
+      - click: {role: button, name: "Import requirements"}
+      - wait: 1
+      - highlight: {target: {css: "main :text-matches('rows are matched by code|appariées par code|apparié')"}, seconds: 3.5}
+      - click: {role: button, name: "Import requirements"}
+      - select: {target: {css: "main select:has(option[value='stakeholder'])"}, value: mission}
+      - wait: 1.5
+      - type: {target: {placeholder: "Search code, text, rationale, source"}, text: "MIS-SCI", delay_ms: 60}
+      - wait: 1.5
+      - highlight: {target: {css: "main [role=row]:has-text('MIS-SCI-01')"}, seconds: 3}
+      - click: {role: button, name: "SMART Check"}
+      - wait: 3
+
+  - id: functions
+    title: {en: "Functions and their allocation", fr: "Les fonctions et leur allocation"}
+    say:
+      en: >-
+        At system level, Systems builds the function tree: twelve functions, from acquiring the
+        images to disposing of the spacecraft at the end of life, with the enabling processes. Each
+        function is allocated to the product that performs it, and the exchanges between functions
+        become the interfaces later. In the requirements, the Functions column links each
+        requirement to the function it asks for, and every one of the twelve functions is covered.
+      fr: >-
+        Au niveau système, l’ingénierie système construit l’arbre des fonctions : douze fonctions,
+        de l’acquisition des images jusqu’au retrait du satellite en fin de vie, avec les processus
+        de soutien. Chaque fonction est allouée au produit qui la réalise, et les échanges entre
+        fonctions deviennent plus tard les interfaces. Dans les exigences, la colonne Fonctions
+        relie chaque exigence à la fonction qu’elle demande, et chacune des douze fonctions est
+        couverte.
+    do:
+      - js: {en: "__lt('Scene 3.1 · Systems', 'Every function is allocated to a product and traced to the requirements that ask for it.')", fr: "__lt('Scène 3.1 · Systèmes', 'Chaque fonction est allouée à un produit et reliée aux exigences qui la demandent.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: Blocks, exact: true}
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
+      - wait: 1.5
+      - click: {role: tab, name: Functions, exact: true}
+      - wait: 2
+      - highlight: {target: {role: button, name: "+ child"}, seconds: 2}
+      - highlight: {target: {css: "main :text('Allocate to…') >> nth=0"}, seconds: 2}
+      - click: {role: tab, name: Requirements, exact: true}
+      - wait: 2
+      - scroll: {target: {css: "main [role=columnheader]:has-text('Functions'), main [role=columnheader]:has-text('Fonctions')"}}
+      - highlight: {target: {css: "main [role=columnheader]:has-text('Functions'), main [role=columnheader]:has-text('Fonctions')"}, seconds: 3}
+
+  - id: ffbd
+    title: {en: "The function diagrams", fr: "Les diagrammes des fonctions"}
+    say:
+      en: >-
+        From the same model the tool draws the function tree, the allocation of functions to
+        products, and the functional flow block diagram, the FFBD, which shows the order in which
+        the functions run through a typical orbit, from standby to imaging, storage and downlink.
+      fr: >-
+        À partir du même modèle, l’outil dessine l’arbre des fonctions, l’allocation des fonctions
+        aux produits, et le diagramme de flux fonctionnel, le FFBD, qui montre l’ordre dans lequel
+        les fonctions s’enchaînent sur une orbite typique, de l’attente à l’imagerie, au stockage
+        et à la transmission.
+    do:
+      - click: {role: tab, name: Diagrams}
+      - wait: 1.5
+      - click: {role: button, name: "Function tree"}
+      - wait: 3
+      - click: {role: button, name: "Function × product allocation"}
+      - wait: 3
+      - click: {role: button, name: "Functional flow block diagram"}
+      - wait: 4
