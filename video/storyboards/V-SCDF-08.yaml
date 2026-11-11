@@ -1,0 +1,391 @@
+# Week 1 — Northern Fire and Ice walkthrough, chapter 1 (scenes 1.1–1.6 of
+# design/docs/dev/DESIGN_SCRIPT_V2.md): the wizard from the problem to the starting
+# architecture, the seats, and the mission definition. Live wizard on an empty server.
+# Lower-third captions: the script's Caption EN / FR, one per scene (window.__lt).
+id: V-SCDF-08
+week: 1
+audience: all
+title:
+  en: "Defining the mission from a proposal"
+  fr: "Définir la mission à partir d’une proposition"
+summary:
+  en: "The Northern Fire and Ice team starts its study in SpaceCDF: the problem, the stakeholders and objectives with their measures, the alternatives, the starting architecture with nine seats plus Propulsion and Cost and risk, and the mission definition that every analysis starts from."
+  fr: "L’équipe de Northern Fire and Ice démarre son étude dans SpaceCDF : le problème, les parties prenantes et les objectifs avec leurs mesures, les solutions possibles, l’architecture de départ avec neuf postes plus la propulsion et le coût et risques, et la définition de mission dont partent toutes les analyses."
+apps:
+  spacecdf: default
+ties:
+  worksheets: [LW-1.4/A, LW-1.4/B, LW-1.4/C, LW-1.4/E, LW-1.4/G]
+  decisions: [D-1.4-PROBLEM, D-1.4-SPACE]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (§1, scenes 1.1–1.6)
+  - design/tests/fixtures/nfi/mission.yaml
+  - design/tests/fixtures/nfi/logbook.yaml
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 1}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 2}
+  - js: *ltjs
+
+steps:
+  - id: join
+    title: {en: "Join and create the mission", fr: "Rejoindre la session et créer la mission"}
+    say:
+      en: >-
+        This recording follows one student team as it designs Northern Fire and Ice, a 3U CubeSat
+        that maps burn scars and river ice for northern communities. Each position works in its own
+        seat, and the tool keeps the shared design consistent as decisions are made. The presenter
+        joins under a role, not a personal name, and starts with Create New Mission. The wizard has
+        four steps, and it begins with the problem, not with a spacecraft.
+      fr: >-
+        Cet enregistrement suit une équipe d’étudiants qui conçoit Northern Fire and Ice, un CubeSat
+        3U qui cartographie les cicatrices de feux et la glace des rivières pour les communautés du
+        Nord. Chaque position travaille à son propre poste, et l’outil garde la conception commune
+        cohérente à mesure que les décisions sont prises. Le présentateur rejoint la session sous
+        un rôle, et non sous un nom de personne, puis choisit Créer une mission. L’assistant compte
+        quatre étapes, et il commence par le problème, pas par un satellite.
+    do:
+      - js: {en: "__lt('Scene 1.1 · Team leader', 'We start from the problem, not from a spacecraft.')", fr: "__lt('Scène 1.1 · Chef d’équipe', 'On part du problème, pas d’un satellite.')"}
+      - fill: {target: "input", text: {en: "NFI Team leader", fr: "NFI Chef d’équipe"}}
+      - click: {role: button, name: Join, exact: true}
+      - wait: 1.5
+      - highlight: {target: {role: button, name: Create New Mission}, seconds: 2.5}
+      - click: {role: button, name: Create New Mission}
+      - wait: 1
+
+  - id: problem
+    title: {en: "Step 1: the problem", fr: "Étape 1 : le problème"}
+    say:
+      en: >-
+        The team leader enters the mission name and the problem statement from the proposal. It
+        names the two hazards, wildfire and river and lake ice, the communities who need the
+        information, and the central question: can a low-cost student instrument reproduce what
+        Sentinel-2 and Landsat measure? The operational context says how the products will be used,
+        and what the mission will not do. The reasons are saved as the first decision record in the
+        logbook.
+      fr: >-
+        Le chef d’équipe saisit le nom de la mission et l’énoncé du problème tiré de la proposition.
+        Il nomme les deux aléas, les feux et la glace des rivières et des lacs, les communautés qui
+        ont besoin de l’information, et la question centrale : un instrument d’étudiants à faible
+        coût peut-il reproduire ce que mesurent Sentinel-2 et Landsat ? Le contexte opérationnel dit
+        comment les produits seront utilisés, et ce que la mission ne fera pas. Les raisons sont
+        enregistrées comme première fiche de décision du journal de bord.
+    do:
+      - js: {en: "__lt('Scene 1.2 · Team leader', 'The problem names the hazards, the users and the question the mission must answer.')", fr: "__lt('Scène 1.2 · Chef d’équipe', 'Le problème nomme les aléas, les utilisateurs et la question à laquelle la mission doit répondre.')"}
+      - type: {target: {label: Mission Name}, text: "Northern Fire and Ice", delay_ms: 30}
+      - fill: {target: {css: "textarea >> nth=0"}, text: "Northern communities face two seasonal hazards that are poorly observed at the scale they need: wildfire (burn scars, post-fire recovery and fires that overwinter in peat) and river and lake ice (freeze-up and break-up timing, ice roads, spring ice-jam flooding). Free Sentinel-2 and Landsat data exist but cannot be tasked by the communities, do not image at night, and do not show whether a low-cost student-built instrument can reproduce these landscape-scale measurements within known limits. Northern Fire and Ice is a 3U CubeSat with a near-infrared (865 nm) and short-wave infrared (1610 nm) imager at about 60 m that tests this, at sites chosen with the communities, with every product calibrated against Sentinel-2 and Landsat."}
+      - fill: {target: {css: "textarea >> nth=1"}, text: "Sun-synchronous orbit at 590 km (apogee <= 600 km), daylight descending node 10:30 (window 09:30-13:30), rideshare launch from a 3U deployer around mid-2030 after a 36-month development. Four UHF ground stations at generic sites near Ottawa, Yellowknife, Iqaluit and Inuvik give about 126 min of contact per day (union, 10 deg mask); mission control in Ottawa. Landscape-scale, seasonal monitoring, not emergency response; not designed for active-fire detection, fire radiative power, smoke, or ice thickness. Licensing under ISED (space and earth stations, April 2026 debris conditions), ITU, and the RSSSA."}
+      - click: {role: button, name: Earth Observation}
+      - highlight: {target: {css: "textarea >> nth=0"}, seconds: 2.5}
+      - click: {css: "[data-decision='D-1.4-PROBLEM']"}
+      - wait_for: {css: "#c2o-logbook"}
+      - fill:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          text: "Northern Fire and Ice addresses landscape-scale, seasonal observation of wildfire and river/lake ice for northern communities, and tests whether a low-cost student instrument reproduces Sentinel-2/Landsat measurements within known limits. Not emergency response; not active fire, FRP, smoke or ice thickness."
+      - click: {role: button, name: Save decision record}
+      - wait: 0.8
+      - click: {role: button, name: Close the logbook}
+      - click: {role: button, name: "Next →"}
+
+  - id: stakeholders
+    title: {en: "Step 2: the stakeholders", fr: "Étape 2 : les parties prenantes"}
+    say:
+      en: >-
+        The second step lists who the mission is for and who can stop it: the sponsor, the northern
+        communities that choose the sites, the science team, the operators, the regulators and the
+        student team. Each stakeholder is entered with the need the mission must meet for them. The
+        communities are users, not only an audience: they choose the sites the satellite images.
+      fr: >-
+        La deuxième étape recense pour qui est la mission et qui peut l’arrêter : le commanditaire,
+        les communautés du Nord qui choisissent les sites, l’équipe scientifique, les opérateurs,
+        les autorités de réglementation et l’équipe d’étudiants. Chaque partie prenante est saisie
+        avec le besoin que la mission doit satisfaire pour elle. Les communautés sont des
+        utilisateurs, et pas seulement un public : ce sont elles qui choisissent les sites imagés.
+    do:
+      - js: {en: "__lt('Scene 1.3 · Team leader', 'Each objective carries the measure that will tell us, after launch, whether it was met.')", fr: "__lt('Scène 1.3 · Chef d’équipe', 'Chaque objectif porte la mesure qui dira, après le lancement, s’il est atteint.')"}
+      - fill: {target: {label: "Stakeholder 1: name / organisation"}, text: "Funding agency (student CubeSat programme)"}
+      - select: {target: {label: "Stakeholder 1: role"}, value: sponsor}
+      - fill: {target: {label: "Stakeholder 1: key need"}, text: "A student-built mission that flies, trains students and delivers its science within the programme budget and schedule, on a rideshare launch"}
+      - click: {role: button, name: "+ Add stakeholder", instant: true}
+      - fill: {target: {label: "Stakeholder 2: name / organisation"}, text: "Northern communities that select the sites"}
+      - select: {target: {label: "Stakeholder 2: role"}, value: user}
+      - fill: {target: {label: "Stakeholder 2: key need"}, text: "Seasonal ice-on/ice-off and break-up information and burn-scar maps for their own sites, openly published with stated uncertainty"}
+      - click: {target: {role: button, name: "+ Add stakeholder"}, instant: true}
+      - fill: {target: {label: "Stakeholder 3: name / organisation"}, text: "Science PI and fire/ice science team"}
+      - select: {target: {label: "Stakeholder 3: role"}, value: science_pi}
+      - fill: {target: {label: "Stakeholder 3: key need"}, text: "NIR and SWIR imagery at about 60 m, cross-calibrated against Sentinel-2/Landsat, with enough clear scenes over burns and ice sites"}
+      - click: {target: {role: button, name: "+ Add stakeholder"}, instant: true}
+      - fill: {target: {label: "Stakeholder 4: name / organisation"}, text: "Mission operations team (mission control, Ottawa)"}
+      - select: {target: {label: "Stakeholder 4: role"}, value: operator}
+      - fill: {target: {label: "Stakeholder 4: key need"}, text: "Reliable two-way UHF link, a stored-plan spacecraft and a ground network that returns at least 13 MB of compressed science products per day"}
+      - click: {target: {role: button, name: "+ Add stakeholder"}, instant: true}
+      - fill: {target: {label: "Stakeholder 5: name / organisation"}, text: "ISED Canada and Global Affairs Canada (RSSSA)"}
+      - select: {target: {label: "Stakeholder 5: role"}, value: regulator}
+      - fill: {target: {label: "Stakeholder 5: key need"}, text: "Licensable spectrum use (401/450 MHz), disposal within 5 years with >= 90 % probability, command and data protection"}
+      - click: {target: {role: button, name: "+ Add stakeholder"}, instant: true}
+      - fill: {target: {label: "Stakeholder 6: name / organisation"}, text: "Student engineering team"}
+      - select: {target: {label: "Stakeholder 6: role"}, value: partner}
+      - fill: {target: {label: "Stakeholder 6: key need"}, text: "Clear interfaces, early breadboards and a schedule that fits teaching terms"}
+
+  - id: objectives
+    title: {en: "Step 2: objectives and their measures", fr: "Étape 2 : les objectifs et leurs mesures"}
+    say:
+      en: >-
+        Then come the objectives. Three are primary: burn scars, ice phenology, and reproducing the
+        reference measurements. Night detection of overwintering fires is an exploratory objective,
+        and regulatory compliance is a constraint. Each objective carries its measure, for example
+        at least forty usable cloud-free scene pairs over at least three burns in the first year.
+        That measure is what will tell the team, after launch, whether the objective was met.
+      fr: >-
+        Viennent ensuite les objectifs. Trois sont principaux : les cicatrices de feux, la
+        phénologie des glaces, et la reproduction des mesures de référence. La détection nocturne
+        des feux qui couvent sous la neige est un objectif exploratoire, et la conformité
+        réglementaire est une contrainte. Chaque objectif porte sa mesure, par exemple au moins
+        quarante paires de scènes utilisables sans nuages sur au moins trois brûlis la première
+        année. C’est cette mesure qui dira à l’équipe, après le lancement, si l’objectif est
+        atteint.
+    do:
+      - fill: {target: {label: "Objective 1: identifier"}, text: "O1"}
+      - select: {target: {label: "Objective 1: priority"}, value: primary}
+      - fill: {target: {label: "Objective 1", exact: true}, text: "map burn scars and relative burn severity of boreal fires at landscape scale"}
+      - fill: {target: {label: "Objective 1: how to measure"}, text: ">= 40 usable cloud-free scene pairs over >= 3 burns in year 1; burn-index bias within 0.08 of the dNBR-calibrated reference"}
+      - click: {target: {role: button, name: "+ Add objective"}, instant: true}
+      - fill: {target: {label: "Objective 2: identifier"}, text: "O3"}
+      - select: {target: {label: "Objective 2: priority"}, value: primary}
+      - fill: {target: {label: "Objective 2", exact: true}, text: "measure river- and lake-ice phenology (freeze-up, break-up, ice-on, ice-off) at community-selected sites"}
+      - fill: {target: {label: "Objective 2: how to measure"}, text: "one complete break-up season at >= 3 community-selected sites; ice extent for channels wider than 175 m"}
+      - click: {target: {role: button, name: "+ Add objective"}, instant: true}
+      - fill: {target: {label: "Objective 3: identifier"}, text: "O4"}
+      - select: {target: {label: "Objective 3: priority"}, value: primary}
+      - fill: {target: {label: "Objective 3", exact: true}, text: "quantify how well a low-cost student instrument reproduces Sentinel-2 and Landsat measurements and publish the uncertainty"}
+      - fill: {target: {label: "Objective 3: how to measure"}, text: "repeatability <= 5 %; geolocation <= 2 px after registration; >= 20 matchups per product type per year"}
+      - click: {target: {role: button, name: "+ Add objective"}, instant: true}
+      - fill: {target: {label: "Objective 4: identifier"}, text: "O2"}
+      - select: {target: {label: "Objective 4: priority"}, value: secondary}
+      - fill: {target: {label: "Objective 4", exact: true}, text: "explore, as an exploratory test, whether overwintering fires can be detected with SWIR at night and in early spring"}
+      - fill: {target: {label: "Objective 4: how to measure"}, text: ">= 10 night SWIR images over each of >= 2 previous-season burns (Mar-May); detection or documented null result"}
+      - click: {target: {role: button, name: "+ Add objective"}, instant: true}
+      - fill: {target: {label: "Objective 5: identifier"}, text: "C1"}
+      - select: {target: {label: "Objective 5: priority"}, value: constraint}
+      - fill: {target: {label: "Objective 5", exact: true}, text: "comply with ISED spectrum and debris conditions, the RSSSA licence and export control"}
+      - fill: {target: {label: "Objective 5: how to measure"}, text: "licences before launch; re-entry <= 5 years after end of operations with >= 90 % probability"}
+      - highlight: {target: {label: "Objective 1: how to measure"}, seconds: 2.5}
+
+  - id: records
+    title: {en: "Record the two decisions", fr: "Consigner les deux décisions"}
+    say:
+      en: >-
+        Both lists are recorded as decisions in the logbook: who the stakeholders are, with the
+        communities choosing the sites, and which objectives are primary. The exploratory objective
+        is recorded as one that may give a null result. Then the wizard moves on to the alternatives.
+      fr: >-
+        Les deux listes sont consignées comme décisions dans le journal de bord : qui sont les
+        parties prenantes, les communautés choisissant les sites, et quels objectifs sont
+        principaux. L’objectif exploratoire est consigné comme pouvant donner un résultat nul.
+        L’assistant passe ensuite aux solutions possibles.
+    do:
+      - click: {css: "[data-decision='D-1.4-STAKEHOLDERS']"}
+      - wait_for: {css: "#c2o-logbook"}
+      - fill:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          text: "Sponsor: a funding agency's student CubeSat programme; users: the northern communities that select the sites; science PI team; operator: mission control in Ottawa; regulators ISED and Global Affairs Canada (RSSSA); partner: the student engineering team. Communities choose the sites."
+      - click: {role: button, name: Save decision record}
+      - wait: 0.6
+      - click: {role: button, name: Close the logbook}
+      - click: {css: "[data-decision='D-1.4-OBJECTIVES']"}
+      - wait_for: {css: "#c2o-logbook"}
+      - fill:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          text: "Primary O1 burn scars, O3 ice phenology, O4 reproduction of reference measurements with published uncertainty; O2 overwintering fires is an exploratory test that may give a null result (a 10 m2 hotspot gives about 7 % of a daytime signal); constraint C1 regulatory compliance."
+      - click: {role: button, name: Save decision record}
+      - wait: 0.6
+      - click: {role: button, name: Close the logbook}
+      - click: {role: button, name: "Next →"}
+      - wait: 1.5
+
+  - id: alternatives
+    title: {en: "Step 3: the alternatives", fr: "Étape 3 : les solutions possibles"}
+    say:
+      en: >-
+        The third step asks whether space is the right answer at all. Nine alternatives are ranked
+        against the mission's own values: sixty-metre pixels, a three-day revisit, data within a
+        day, and data that the communities own and can task. Sentinel-2 and Landsat rank high, and
+        they stay in the mission as the calibration reference. But only a dedicated satellite can be
+        tasked by the communities, image at night, and answer the central question. The new
+        dedicated CubeSat is selected, and the reason is written and recorded.
+      fr: >-
+        La troisième étape demande si l’espace est vraiment la bonne réponse. Neuf solutions sont
+        classées selon les valeurs propres à la mission : des pixels de soixante mètres, une revisite
+        de trois jours, des données en moins d’une journée, et des données que les communautés
+        possèdent et peuvent programmer. Sentinel-2 et Landsat sont bien classés, et ils restent
+        dans la mission comme référence d’étalonnage. Mais seul un satellite dédié peut être
+        programmé par les communautés, imager de nuit et répondre à la question centrale. Le
+        nouveau CubeSat dédié est retenu, et la raison est rédigée puis consignée.
+    do:
+      - js: {en: "__lt('Scene 1.4 · Systems', 'The free missions stay as the reference; only a dedicated satellite can be tasked by the communities.')", fr: "__lt('Scène 1.4 · Systèmes', 'Les missions gratuites restent la référence ; seul un satellite dédié peut être programmé par les communautés.')"}
+      - wait_for: {css: "[aria-label='Alternatives'] button, [aria-label='Solutions possibles'] button"}
+      - highlight: {target: {css: "button.c2o-choice-card:has-text('Sentinel-2')"}, seconds: 2.5}
+      - click: {css: "button.c2o-choice-card:has-text('New dedicated CubeSat')"}
+      - fill: {target: {css: "textarea >> nth=0"}, text: "Sentinel-2 and Landsat are free and remain the reference for every product, but they cannot be tasked by the communities, acquire no night SWIR (exploratory objective O2) and cannot answer the central question (O4) of whether a low-cost student-built instrument reproduces their measurements. Drones and aircraft do not cover landscape scale (150 km swath) through the break-up season at remote sites, and ground sensors give points, not ice extent. A dedicated 3U CubeSat meets O1-O4 within a student-programme envelope and is the training vehicle the sponsor funds; the free missions are used for cross-calibration and validation rather than replaced."}
+      - click: {css: "[data-decision='D-1.4-SPACE']"}
+      - wait_for: {css: "#c2o-logbook"}
+      - fill:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          text: "New dedicated CubeSat selected. Sentinel-2 and Landsat rank well and stay as the calibration reference, but cannot be tasked by communities, take no night SWIR and cannot answer O4."
+      - click: {role: button, name: Save decision record}
+      - wait: 0.6
+      - click: {role: button, name: Close the logbook}
+      - click: {role: button, name: "Next →"}
+      - wait: 1
+
+  - id: architecture
+    title: {en: "Step 4: architecture and seats", fr: "Étape 4 : architecture et postes"}
+    say:
+      en: >-
+        The fourth step chooses a starting architecture, a single spacecraft in low Earth orbit,
+        with a design lifetime of three years and a target mass of six kilograms, the limit of a 3U
+        CubeSat. The mission definition is entered here too: a sun-synchronous orbit at five hundred
+        and ninety kilometres, a rideshare launch from a 3U deployer, a drag sail for disposal, the
+        first camera and the UHF link. The team has nine people, one seat each, with the two
+        optional seats, Propulsion and Cost and risk. Propulsion is needed even without any change
+        of velocity, because it owns the drag sail. Creating the mission builds the first product
+        tree and divides ownership among the seats.
+      fr: >-
+        La quatrième étape choisit une architecture de départ, un satellite unique en orbite basse,
+        avec une durée de vie de conception de trois ans et une masse visée de six kilogrammes, la
+        limite d’un CubeSat 3U. La définition de mission se saisit aussi ici : une orbite
+        héliosynchrone à cinq cent quatre-vingt-dix kilomètres, un lancement partagé depuis un
+        déployeur 3U, une voile de traînée pour le retrait de service, la première caméra et la
+        liaison UHF. L’équipe compte neuf personnes, un poste chacune, avec les deux postes
+        optionnels, la propulsion et le coût et risques. La propulsion est nécessaire même sans
+        aucune variation de vitesse, car elle est responsable de la voile de traînée. La création
+        de la mission construit le premier arbre produit et répartit les responsabilités entre les
+        postes.
+    do:
+      - js: {en: "__lt('Scene 1.5 · Team leader', 'Creating the mission builds the first product tree and divides ownership among the seats.')", fr: "__lt('Scène 1.5 · Chef d’équipe', 'La création de la mission construit le premier arbre produit et répartit les responsabilités entre les postes.')"}
+      - click: {css: "button.c2o-choice-card:has-text('Single Spacecraft (LEO)'), button.c2o-choice-card:has-text('Satellite unique (LEO)')"}
+      - fill: {target: {label: "Design Lifetime (years)"}, text: "3"}
+      - fill: {target: {label: "Target Mass (kg)"}, text: "6"}
+      - select: {target: {label: "Orbit type"}, value: sso}
+      - fill: {target: {label: "Altitude (km)"}, text: "590"}
+      - fill: {target: {label: "LTAN (hh:mm)"}, text: "22:30"}
+      - fill: {target: {label: "Launch / deployer"}, text: "Rideshare to SSO, 3U deployer (injection 550-600 km)"}
+      - select: {target: {label: "Disposal"}, value: drag_sail}
+      - fill: {target: {label: "Payload name"}, text: "SWIR camera (Alvium C-530 VSWIR, 1610/90 nm)"}
+      - fill: {target: {label: "Mass (kg)", exact: true}, text: "0.19"}
+      - fill: {target: {label: "Average power (W)"}, text: "2.7"}
+      - fill: {target: {label: "Peak power (W)"}, text: "2.7"}
+      - fill: {target: {label: "Data rate (Mbit/s)"}, text: "4.5"}
+      - fill: {target: {label: "Duty cycle (%)"}, text: "5"}
+      - fill: {target: {label: "GSD (m)"}, text: "58.2"}
+      - fill: {target: {label: "Swath (km)"}, text: "150.7"}
+      - fill: {target: {label: "Wavelengths (nm)"}, text: "1610"}
+      - fill: {target: {label: "Band", exact: true}, text: "UHF"}
+      - fill: {target: {label: "Downlink frequency (MHz)"}, text: "401.5"}
+      - fill: {target: {label: "Downlink rate (bit/s)"}, text: "38400"}
+      - fill: {target: {label: "Uplink frequency (MHz)"}, text: "450"}
+      - fill: {target: {label: "Uplink rate (bit/s)"}, text: "9600"}
+      - fill: {target: {label: "TX power (W)"}, text: "1"}
+      - select: {target: {css: "[data-testid=wizard-team-size]"}, value: "9"}
+      - check: {target: {css: "label.c2o-check:has-text('Propulsion') input"}}
+      - check: {target: {css: "label.c2o-check:has-text('Cost'), label.c2o-check:has-text('Coût') >> input"}}
+      - highlight: {target: {css: "[data-testid=wizard-team-size]"}, seconds: 2}
+      - click: {role: button, name: "Create Mission & Start Design"}
+      - wait: 4
+
+  - id: seats
+    title: {en: "Claim the seats", fr: "Prendre les postes"}
+    say:
+      en: >-
+        The Seats drawer opens with eleven seats, plus the Customer and the Observer. In a class,
+        each student claims one seat. For this recording one presenter claims them all, and switches
+        the active seat at the start of each scene, so that every change is recorded for the seat
+        that owns it. A value owned by another seat cannot simply be overwritten: it is sent to that
+        seat for review.
+      fr: >-
+        Le tiroir des postes s’ouvre avec onze postes, plus le client et l’observateur. En classe,
+        chaque étudiant prend un poste. Pour cet enregistrement, un seul présentateur les prend
+        tous, et change de poste actif au début de chaque scène, afin que chaque modification soit
+        enregistrée pour le poste qui en est responsable. Une valeur tenue par un autre poste ne
+        peut pas simplement être écrasée : elle est envoyée à ce poste pour examen.
+    do:
+      - wait_for: {css: "button:has-text('Claim')"}
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}}
+      - wait: 0.6
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}}
+      - wait: 0.6
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Claim') >> nth=0"}, instant: true}
+      - wait: 0.4
+      - click: {target: {css: "button:has-text('Join') >> nth=0"}}
+      - wait: 0.6
+      - click: {role: button, name: Close, exact: true}
+      - wait: 0.6
+      - highlight: {target: {css: "[data-testid=active-seat]"}, seconds: 3}
+
+  - id: missiondef
+    title: {en: "The mission definition", fr: "La définition de mission"}
+    say:
+      en: >-
+        The mission definition is the set of values every analysis starts from. It stays editable in
+        Traceability, under Mission need. The team leader adds the near-infrared camera and the
+        payload controller, with its five-watt peak, and the concept of operations summary, from
+        launch and commissioning to the drag sail at the end of life. The node time is entered as
+        ten thirty in the evening, the ascending node, because the daylight pass is the descending
+        one, at half past ten in the morning. These researched values replace the wizard's
+        placeholders.
+      fr: >-
+        La définition de mission est l’ensemble des valeurs dont partent toutes les analyses. Elle
+        reste modifiable dans Traçabilité, sous Besoin de mission. Le chef d’équipe ajoute la caméra
+        proche infrarouge et le contrôleur de charge utile, avec sa crête de cinq watts, ainsi que le
+        résumé du concept d’opérations, du lancement et de la mise en service jusqu’à la voile de
+        traînée en fin de vie. L’heure du nœud est saisie à vingt-deux heures trente, le nœud
+        ascendant, car le passage de jour est le passage descendant, à dix heures trente. Ces
+        valeurs étudiées remplacent les valeurs provisoires de l’assistant.
+    do:
+      - js: {en: "__lt('Scene 1.6 · Team leader', 'The researched orbit and payload replace the wizard’s placeholders.')", fr: "__lt('Scène 1.6 · Chef d’équipe', 'L’orbite et la charge utile étudiées remplacent les valeurs provisoires de l’assistant.')"}
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - wait: 1
+      - click: {role: tab, name: Traceability, exact: true}
+      - wait: 1.5
+      - click: {css: "[data-testid=edit-mission]"}
+      - wait: 1
+      - click: {role: button, name: "+ Add payload"}
+      - fill: {target: {label: "Payload name", nth: 1}, text: "VNIR camera (Alvium C-1620m, 875/50 nm)"}
+      - fill: {target: {label: "Mass (kg)", exact: true, nth: 1}, text: "0.13"}
+      - fill: {target: {label: "Average power (W)", nth: 1}, text: "3.8"}
+      - fill: {target: {label: "Peak power (W)", nth: 1}, text: "3.8"}
+      - fill: {target: {label: "Data rate (Mbit/s)", nth: 1}, text: "13.7"}
+      - fill: {target: {label: "Duty cycle (%)", nth: 1}, text: "5"}
+      - fill: {target: {label: "Wavelengths (nm)", nth: 1}, text: "875"}
+      - click: {role: button, name: "+ Add payload"}
+      - fill: {target: {label: "Payload name", nth: 2}, text: "Payload controller, bench and harness"}
+      - fill: {target: {label: "Mass (kg)", exact: true, nth: 2}, text: "0.33"}
+      - fill: {target: {label: "Average power (W)", nth: 2}, text: "3"}
+      - fill: {target: {label: "Peak power (W)", nth: 2}, text: "5"}
+      - fill: {target: {label: "Data rate (Mbit/s)", nth: 2}, text: "0"}
+      - fill: {target: {label: "Duty cycle (%)", nth: 2}, text: "15"}
+      - fill: {target: {label: "ConOps summary"}, text: "LEOP (B-dot detumble, antenna and wing deployment, first contacts) for about 7 days, platform commissioning to day 30 and payload commissioning to day 90 (dark frames, first light, boresight map, cross-calibration with Sentinel-2/Landsat, roll tests, compression check). Nominal operations: nadir standby with scheduled acquisitions of a few minutes per orbit over burns (Jun-Sep), freeze-up (Oct-Dec), break-up (Apr-Jun) and exploratory night SWIR over previous burns (Mar-May), rolling up to ±30 deg for revisit; quicklooks and region-of-interest pairs, losslessly compressed, returned at 38.4 kbps over four UHF stations (about 126 min/day union, 14 windows, 13 MB/day of compressed products); per pass the operators choose delayed housekeeping or payload data. Safe and survival modes on faults or low battery; a stored plan covers 48 h without contact. End of life: drag sail deployed by command, by an OBC-independent 90-day timer or on under-voltage; transmitters off and battery passivated; re-entry about 3.0-3.4 years later from 590 km."}
+      - highlight: {target: {label: "LTAN (hh:mm)"}, seconds: 2.5}
+      - click: {role: button, name: "Save mission definition"}
+      - wait: 2
+      - click: {role: button, name: Close, exact: true}
+      - wait: 1
+      - scroll: {target: {css: "[data-testid=edit-mission]"}}
+      - highlight: {target: {css: "main dl, main .c2o-kv, [data-testid=edit-mission] >> xpath=ancestor::*[contains(@class,'c2o-disclosure') or self::details][1]"}, seconds: 4, point: false}

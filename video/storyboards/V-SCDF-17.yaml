@@ -1,0 +1,210 @@
+# Week 1 — Northern Fire and Ice walkthrough: the systems-engineering protocol in SpaceCDF
+# (DESIGN_SCRIPT_V2 scenes 1.7, 5.8, 5.11, 5.12): the Phase card of each review, the
+# stakeholder map and context diagram, the V diagram, validation against verification, and
+# the assumptions and open items. Recording seed S4 with chapters 2–5 done.
+id: V-SCDF-17
+week: 1
+audience: all
+title:
+  en: "The V in SpaceCDF: phases, deliverables and reviews"
+  fr: "Le V dans SpaceCDF : phases, livrables et revues"
+summary:
+  en: "How SpaceCDF follows the systems-engineering protocol on the Northern Fire and Ice study: the Phase card that opens each review, the stakeholder map and context diagram, the V diagram, validation as distinct from verification, and the register of assumptions and open items."
+  fr: "Comment SpaceCDF suit le protocole d’ingénierie système sur l’étude Northern Fire and Ice : la carte de phase qui ouvre chaque revue, la carte des parties prenantes et le diagramme de contexte, le diagramme en V, la validation distincte de la vérification, et le registre des hypothèses et des points ouverts."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: []
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 1.7, 5.8, 5.11, 5.12)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: phase
+    title: {en: "The Phase card", fr: "La carte de phase"}
+    say:
+      en: >-
+        Each review gate opens with the same card, here for the Mission Definition Review, the MDR.
+        It asks three questions. Before you start: what must already be true. Deliverables this
+        phase: what the team hands to the reviewers, each one marked done, partial or missing,
+        with the seat that owns it. And the analysis standard: to what standard the numbers are
+        produced. The coaching card beside it is written in the learning register for the whole
+        course. The protocol checks are set to Warn: a review can start, and anything missing is
+        written to the gate history. An instructor can set them to Block, and then the review
+        cannot start until the deliverables are in.
+      fr: >-
+        Chaque jalon de revue s’ouvre sur la même carte, ici pour la revue de définition de
+        mission, la MDR. Elle pose trois questions. Avant de commencer : ce qui doit déjà être
+        vrai. Livrables de cette phase : ce que l’équipe remet aux examinateurs, chacun marqué fait,
+        partiel ou manquant, avec le poste qui en est responsable. Et les exigences d’analyse :
+        selon quelle norme les chiffres sont produits. La carte de conseil à côté est rédigée pour
+        l’apprentissage pendant tout le cours. Les contrôles du protocole sont réglés sur Avertir :
+        une revue peut démarrer, et ce qui manque est écrit dans l’historique du jalon. Un
+        instructeur peut les régler sur Bloquer, et la revue ne peut alors démarrer qu’une fois les
+        livrables en place.
+    do:
+      - js: {en: "__lt('Scene 1.7 · Team leader', 'Each phase starts with the same three questions: what must be true, what we deliver, to what standard.')", fr: "__lt('Scène 1.7 · Chef d’équipe', 'Chaque phase commence par les trois mêmes questions : ce qui doit être vrai, ce que l’on livre, selon quelle norme.')"}
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 2
+      - click: {role: tab, name: MDR, exact: true}
+      - wait: 1.5
+      - highlight: {target: {text: "Before you start", exact: true}, seconds: 2.5}
+      - highlight: {target: {text: "Deliverables this phase", exact: true}, seconds: 3}
+      - scroll: {target: {text: "Analysis standard", exact: true}}
+      - highlight: {target: {text: "Analysis standard", exact: true}, seconds: 2.5}
+      - scroll: {target: {text: "Protocol checks", exact: true}}
+      - highlight: {target: {text: "Protocol checks", exact: true}, seconds: 3}
+
+  - id: stakeholders
+    title: {en: "Stakeholders, their interest and authority", fr: "Les parties prenantes, leur intérêt et leur autorité"}
+    say:
+      en: >-
+        The stakeholder register is under Traceability, below the mission need. Each stakeholder
+        has a category, an authority and an engagement. The northern communities, for example, are
+        users with authority over the sites: they choose where the satellite images, and they
+        co-define two of the measures of effectiveness. From the register, the tool draws the
+        stakeholder map, interest against authority, and the context diagram: the mission at the
+        centre, with every external party and interface around it, including the link to the
+        regulator.
+      fr: >-
+        Le registre des parties prenantes se trouve dans Traçabilité, sous le besoin de mission.
+        Chaque partie prenante a une catégorie, une autorité et un engagement. Les communautés du
+        Nord, par exemple, sont des utilisateurs qui ont autorité sur les sites : elles choisissent
+        où le satellite image, et elles co-définissent deux des mesures d’efficacité. À partir du
+        registre, l’outil dessine la carte des parties prenantes, l’intérêt en fonction de
+        l’autorité, et le diagramme de contexte : la mission au centre, avec chaque partie et
+        chaque interface externes autour, y compris le lien vers l’autorité de réglementation.
+    do:
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - wait: 1
+      - click: {role: tab, name: Traceability, exact: true}
+      - wait: 1.5
+      - scroll: {target: {css: "tr:has-text('Governance bodies of the site communities')"}}
+      - highlight: {target: {css: "tr:has-text('Governance bodies of the site communities')"}, seconds: 3.5}
+      - click: {role: button, name: "Show all"}
+      - click: {role: tab, name: "Diagrams"}
+      - wait: 1.5
+      - click: {role: button, name: "Stakeholder map"}
+      - wait: 3
+      - click: {role: button, name: "Context diagram"}
+      - wait: 3.5
+
+  - id: vdiagram
+    title: {en: "The V diagram", fr: "Le diagramme en V"}
+    say:
+      en: >-
+        By the end of the integration chapter, Systems walks through the diagrams of the phase and
+        checks the gaps on each. The set ends on the V. On the left, going down, are the products
+        and the reviews that define them, from the mission to the units. On the right, going up,
+        are the verification stages that prove each level, and validation with the users at the
+        top. The budget flow-down shows how each envelope is passed from the system to the
+        subsystems, and the verification flow shows which method proves which requirement, at
+        which stage.
+      fr: >-
+        À la fin du chapitre sur l’intégration, l’ingénierie système parcourt les diagrammes de la
+        phase et vérifie les manques de chacun. La série se termine sur le V. À gauche, en
+        descendant, se trouvent les produits et les revues qui les définissent, de la mission aux
+        équipements. À droite, en remontant, se trouvent les étapes de vérification qui prouvent
+        chaque niveau, et la validation avec les utilisateurs au sommet. La déclinaison des bilans
+        montre comment chaque enveloppe passe du système aux sous-systèmes, et le flux de
+        vérification montre quelle méthode prouve quelle exigence, et à quelle étape.
+    do:
+      - js: {en: "__lt('Scene 5.8 · Systems', 'The V shows what we define on the way down and how we prove it on the way up.')", fr: "__lt('Scène 5.8 · Systèmes', 'Le V montre ce que l’on définit en descendant et comment on le prouve en remontant.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: "Diagrams"}
+      - wait: 1.5
+      - click: {role: button, name: "V diagram"}
+      - wait: 5
+      - click: {role: button, name: "Budget flow-down"}
+      - wait: 3.5
+      - click: {role: button, name: "Verification flow"}
+      - wait: 3.5
+
+  - id: validation
+    title: {en: "Validation is not verification", fr: "La validation n’est pas la vérification"}
+    say:
+      en: >-
+        Validation has its own plan, under V and V, Traceability. Seven validation activities ask
+        the users, not the engineers alone, whether the mission does what they need. The first is
+        performed by each stakeholder group. Each of the twelve stakeholder needs has its
+        validation row, and the stages run from the preliminary requirements review to operations,
+        with the operational and commissioning reviews as validation stages. The plan becomes the
+        Validation chapter of the verification plan.
+      fr: >-
+        La validation a son propre plan, sous V et V, Traçabilité. Sept activités de validation
+        demandent aux utilisateurs, et pas seulement aux ingénieurs, si la mission fait ce dont ils
+        ont besoin. La première est menée par chaque groupe de parties prenantes. Chacun des douze
+        besoins des parties prenantes a sa ligne de validation, et les étapes vont de la revue des
+        exigences préliminaires jusqu’aux opérations, avec les revues d’opérations et de mise en
+        service comme étapes de validation. Le plan devient le chapitre Validation du plan de
+        vérification.
+    do:
+      - js: {en: "__lt('Scene 5.11 · Team leader', 'Verification asks whether we built it right; validation asks the users whether we built the right thing.')", fr: "__lt('Scène 5.11 · Chef d’équipe', 'La vérification demande si on l’a bien construit ; la validation demande aux utilisateurs si on a construit la bonne chose.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: team_leader}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: Traceability, exact: true}
+      - wait: 2
+      - scroll: {target: {role: button, name: "Propose for the primary objectives"}}
+      - highlight: {target: {css: "tr:has-text('V1')"}, seconds: 3.5}
+      - scroll: {target: {text: "Validation of each stakeholder need"}}
+      - highlight: {target: {text: "Validation of each stakeholder need"}, seconds: 3}
+
+  - id: openitems
+    title: {en: "Assumptions and open items", fr: "Hypothèses et points ouverts"}
+    say:
+      en: >-
+        Every number that is not yet measured rests on an assumption. The analysis standard of the
+        Phase card lists them, from the budget tags and the requirement notes, each with the
+        evidence that will replace it and the review where it is due, such as the latency
+        assumption due at the PDR. Under Decide, the open items gather everything that can still
+        block a review: review item discrepancies, conditional decisions, the decisions waiting for
+        the principal investigator, undecided trades and change proposals. Filtered on the system
+        requirements review, then on the PDR, the list shows what the team must close before each.
+      fr: >-
+        Tout chiffre qui n’est pas encore mesuré repose sur une hypothèse. Les exigences d’analyse
+        de la carte de phase les listent, à partir des étiquettes des bilans et des notes des
+        exigences, chacune avec la preuve qui la remplacera et la revue à laquelle elle est
+        attendue, comme l’hypothèse de latence attendue à la PDR. Sous Décider, les points ouverts
+        rassemblent tout ce qui peut encore bloquer une revue : les fiches de revue, les décisions
+        conditionnelles, les décisions qui attendent le chercheur principal, les compromis non
+        tranchés et les propositions de modification. Filtrée sur la revue des exigences système,
+        puis sur la PDR, la liste montre ce que l’équipe doit fermer avant chacune.
+    do:
+      - js: {en: "__lt('Scene 5.12 · Systems', 'Every assumption names the evidence that will replace it and the review where it is due.')", fr: "__lt('Scène 5.12 · Systèmes', 'Chaque hypothèse nomme la preuve qui la remplacera et la revue à laquelle elle est attendue.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: PDR, exact: true}
+      - wait: 1.5
+      - scroll: {target: {text: "Analysis standard", exact: true}}
+      - highlight: {target: {text: "Analysis standard", exact: true}, seconds: 3.5}
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - wait: 1
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 2
+      - scroll: {target: {css: "[data-testid=open-items-panel]"}}
+      - select: {target: {label: "Blocks gate"}, value: srr}
+      - wait: 1.5
+      - highlight: {target: {css: "[data-testid=open-items-panel]"}, seconds: 3, point: false}
+      - select: {target: {label: "Blocks gate"}, value: pdr}
+      - wait: 1.5
+      - highlight: {target: {css: "[data-testid=open-items-panel]"}, seconds: 3, point: false}
