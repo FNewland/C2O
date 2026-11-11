@@ -20,7 +20,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from ..services import change_control as cc
-from ._wave3_stub import study_or_404
+from ._lookup import study_or_404
 
 router = APIRouter()
 

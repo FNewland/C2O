@@ -13,7 +13,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from ..services.key_numbers import key_numbers
-from ._wave3_stub import study_or_404
+from ._lookup import study_or_404
 
 router = APIRouter()
 OWNER, WP = "L", "3.L6"

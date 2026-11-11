@@ -1533,7 +1533,7 @@ async def populate_subsystems(
 async def get_margin_policy(study_id: str) -> dict:
     """The study's own margin choices (``study.margin_policy``) and the ladder they sit on."""
     from ..services.margin_policy import ladder
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study = study_or_404(study_id)
     return {"study_id": study_id, "margin_policy": dict(getattr(study, "margin_policy", None) or {}),
             "ladder": ladder()}
@@ -1547,7 +1547,7 @@ async def put_margin_policy(study_id: str, body: dict[str, Any]) -> dict:
     from ..db.study_repo import db_save_study
     from ..services import rule_config as rc
     from ..services.margin_policy import LADDER_GATES
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study = study_or_404(study_id)
     pol = dict(getattr(study, "margin_policy", None) or {})
     if "study_override" in body:
@@ -1587,7 +1587,7 @@ async def _ar_sync(study_id: str, *, create: bool = True) -> None:
 async def _ledger_line(study_id: str, line_id: str) -> dict:
     from ..db.models_alloc import AllocationLedgerRow
     from ..services import study_rows
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study_or_404(study_id)
     line = await study_rows.get_row(AllocationLedgerRow, line_id)
     if line is None or line.get("study_id") != study_id:
@@ -1616,7 +1616,7 @@ async def list_allocation_ledger(study_id: str) -> dict:
     """The ledger lines (``allocation_ledger``) with the Systems reserve, the closure per resource
     and the counts by type and state."""
     from ..services import allocation_ledger as al
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study_or_404(study_id)
     return await al.list_lines(study_id)
 
@@ -1625,7 +1625,7 @@ async def list_allocation_ledger(study_id: str) -> dict:
 async def allocation_ledger_status(study_id: str) -> dict:
     """Readiness evidence: mass and power lines agreed for every space subsystem, closure, coverage."""
     from ..services import allocation_ledger as al
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study_or_404(study_id)
     return await al.status(study_id)
 
@@ -1634,7 +1634,7 @@ async def allocation_ledger_status(study_id: str) -> dict:
 async def create_ledger_line(study_id: str, body: dict[str, Any], request: Request) -> dict:
     """A new line, proposed (Systems offers it; the owner seat agrees it)."""
     from ..services import allocation_ledger as al
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study_or_404(study_id)
     actor = await _ledger_actor(request, study_id, body.get("owner_seat"))
     try:
@@ -1650,7 +1650,7 @@ async def import_ledger(study_id: str, body: dict[str, Any]) -> dict:
     """Every allocation of a ``budgets.yaml`` document in one call (seed S2):
     ``{"budgets": {...}, "agree": true, "replace": true}``."""
     from ..services import allocation_ledger as al
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study_or_404(study_id)
     budgets = body.get("budgets") or body.get("document")
     if not isinstance(budgets, dict):
@@ -1666,7 +1666,7 @@ async def import_ledger(study_id: str, body: dict[str, Any]) -> dict:
 async def propose_ledger(study_id: str) -> dict:
     """Mass and orbit-average power lines per space subsystem from the roll-up, proposed."""
     from ..services import allocation_ledger as al
-    from ._wave3_stub import study_or_404
+    from ._lookup import study_or_404
     study_or_404(study_id)
     res = await al.propose(study_id)
     await _ar_sync(study_id)

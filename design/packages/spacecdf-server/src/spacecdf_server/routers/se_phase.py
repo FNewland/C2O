@@ -18,7 +18,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 
 from ..services import se_deliverables, se_protocol
-from ._wave3_stub import study_or_404
+from ._lookup import study_or_404
 
 router = APIRouter()
 

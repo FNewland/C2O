@@ -19,7 +19,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from ._wave3_stub import study_or_404
+from ._lookup import study_or_404
 
 router = APIRouter()
 
