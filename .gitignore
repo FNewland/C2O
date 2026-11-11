@@ -18,3 +18,6 @@ sim/sim_captures/*.cf32
 **/workspace/link/
 # Participant logbooks (private, 48 h retention; never committed)
 **/workspace/logbook/
+
+# analysis runs written by tests run from the repository root
+/data/analysis/
