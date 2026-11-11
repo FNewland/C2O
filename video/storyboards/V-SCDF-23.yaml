@@ -1,0 +1,176 @@
+# Week 4 — Northern Fire and Ice walkthrough: the PDR evidence (DESIGN_SCRIPT_V2 scenes
+# 6.6 ICDs, 6.7 reliability and FMEA, 6.8 thermal nodal model). Recording seed S4 with chapters
+# 2–5 done and the MDR, PRR and SRR passed. Proposed id (not in the plan).
+id: V-SCDF-23
+week: 4
+audience: all
+title:
+  en: "PDR evidence: interfaces, reliability and the thermal model"
+  fr: "Les preuves de la PDR : interfaces, fiabilité et modèle thermique"
+summary:
+  en: "Before the preliminary design review, the Northern Fire and Ice team issues its interface control documents and has both sides sign them, runs the reliability block diagram and the FMEA over the twelve months of science, and builds and solves the thermal nodal model with its sized heaters."
+  fr: "Avant la revue de conception préliminaire, l’équipe de Northern Fire and Ice émet ses documents de contrôle d’interface et les fait signer par les deux côtés, calcule le diagramme de fiabilité et l’AMDE sur les douze mois de science, puis construit et résout le modèle thermique nodal avec ses réchauffeurs dimensionnés."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: [D-GATE-PDR]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 6.6–6.8)
+  - design/tests/fixtures/nfi/test_w3_integration.py (pdr_actions)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price semp debris ecp02 pass:mdr,prr,srr"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: icds
+    title: {en: "ICDs at Issue A, signed by both sides", fr: "Les ICD en édition A, signés des deux côtés"}
+    say:
+      en: >-
+        The system requirements review has passed. For the preliminary design review, the PDR, the
+        interfaces must be fixed. Five interface control documents, the ICDs, are due now: the
+        launch interface, the radio to the on-board computer, the payload to the on-board
+        computer, the drag sail, and the space-to-ground link. Systems raises Issue A of each. Then
+        the provider seat and the consumer seat each agree the same issue. An interface is fixed
+        only when both sides have signed the same issue; if either side changes it later, the
+        signatures fall and a new issue is needed.
+      fr: >-
+        La revue des exigences système est franchie. Pour la revue de conception préliminaire, la
+        PDR, les interfaces doivent être figées. Cinq documents de contrôle d’interface, les ICD,
+        sont attendus maintenant : l’interface lanceur, la radio vers l’ordinateur de bord, la charge
+        utile vers l’ordinateur de bord, la voile de traînée, et la liaison espace-sol. L’ingénierie
+        système émet l’édition A de chacun. Puis le poste fournisseur et le poste client acceptent
+        chacun la même édition. Une interface n’est figée que lorsque les deux côtés ont signé la
+        même édition ; si l’un d’eux la modifie ensuite, les signatures tombent et une nouvelle
+        édition est nécessaire.
+    do:
+      - js: {en: "__lt('Scene 6.6 · Systems, with the provider and consumer seats', 'An interface is fixed only when both sides have signed the same issue.')", fr: "__lt('Scène 6.6 · Systèmes, avec les postes fournisseur et client', 'Une interface n’est figée que lorsque les deux côtés ont signé la même édition.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Blocks, exact: true}
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - wait: 1.5
+      - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
+      - wait: 1.5
+      - click: {role: tab, name: ICD, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "section.card:has(table) table"}, seconds: 3, point: false}
+      - click: {target: {css: "tr:has-text('ICD-LAUNCH') td:nth-child(7) button >> nth=0"}}
+      - wait: 1.2
+      - click: {target: {css: "tr:has-text('ICD-LAUNCH') td:nth-child(4) button"}}
+      - wait: 1.2
+      - click: {target: {css: "tr:has-text('ICD-LAUNCH') td:nth-child(5) button"}}
+      - wait: 1.2
+      - highlight: {target: {css: "tr:has-text('ICD-LAUNCH')"}, seconds: 2.5}
+      - click: {target: {css: "tr:has-text('ICD-RADIO-OBC') td:nth-child(7) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-RADIO-OBC') td:nth-child(4) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-RADIO-OBC') td:nth-child(5) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-PAY-OBC') td:nth-child(7) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-PAY-OBC') td:nth-child(4) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-PAY-OBC') td:nth-child(5) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-SAIL') td:nth-child(7) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-SAIL') td:nth-child(4) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-SAIL') td:nth-child(5) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-SPACE-GROUND') td:nth-child(7) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-SPACE-GROUND') td:nth-child(4) button"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "tr:has-text('ICD-SPACE-GROUND') td:nth-child(5) button"}, instant: true}
+      - wait: 1.5
+      - highlight: {target: {css: "section.card:has(table) > div >> nth=0"}, seconds: 3}
+
+  - id: reliability
+    title: {en: "Reliability and the FMEA", fr: "La fiabilité et l’AMDE"}
+    say:
+      en: >-
+        Cost and risk, acting as product assurance, builds the reliability block diagram. The
+        target is judged over the twelve months of science operations the mission promises after
+        commissioning, not over the three-year design life: zero point eight. The diagram gives
+        about zero point eight eight. Then the failure modes and effects analysis, the FMEA, is
+        proposed: the failure modes of each unit, including the failure of the drag sail to deploy,
+        which the second, independent release circuit addresses.
+      fr: >-
+        Le poste coût et risques, au titre de l’assurance produit, construit le diagramme de
+        fiabilité. L’objectif se juge sur les douze mois d’opérations scientifiques que la mission
+        promet après la mise en service, et non sur la durée de vie de conception de trois ans :
+        zéro virgule huit. Le diagramme donne environ zéro virgule quatre-vingt-huit. Puis l’analyse
+        des modes de défaillance et de leurs effets, l’AMDE, est proposée : les modes de défaillance
+        de chaque équipement, y compris l’échec du déploiement de la voile, que traite le second
+        circuit de libération indépendant.
+    do:
+      - js: {en: "__lt('Scene 6.7 · Cost & risk with Systems', 'The reliability target is judged over the twelve months of science the mission promises, not the design life.')", fr: "__lt('Scène 6.7 · Coût et risques, avec Systèmes', 'L’objectif de fiabilité se juge sur les douze mois de science promis, pas sur la durée de vie de conception.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: cost_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: Traceability, exact: true}
+      - wait: 2
+      - scroll: {target: {role: button, name: "Build the block diagram"}}
+      - click: {role: button, name: "Build the block diagram"}
+      - wait: 4
+      - highlight: {target: {css: "[data-testid=reliability-evidence]"}, seconds: 3.5}
+      - click: {role: button, name: "Propose the FMEA"}
+      - wait: 4
+      - click: {role: button, name: "FMEA worksheet"}
+      - wait: 1.5
+      - highlight: {target: {role: button, name: "FMEA worksheet"}, seconds: 3}
+
+  - id: thermal
+    title: {en: "The thermal nodal model", fr: "Le modèle thermique nodal"}
+    say:
+      en: >-
+        Thermal builds the nodal model: one node per unit and panel, the conductive and radiative
+        couplings, and the hot and cold cases taken from the orbit and the season. The first solve
+        shows where heat is missing in the cold case: units below their limits. The model sizes the
+        heaters, the team takes them, and the model is solved again. Every unit is now inside its
+        design range, including the short-wave infrared camera and the battery, which must stay
+        above zero degrees while it charges.
+      fr: >-
+        Le poste thermique construit le modèle nodal : un nœud par équipement et par panneau, les
+        couplages conductifs et radiatifs, et les cas chaud et froid tirés de l’orbite et de la
+        saison. La première résolution montre où la chaleur manque dans le cas froid : des
+        équipements sous leurs limites. Le modèle dimensionne les réchauffeurs, l’équipe les
+        retient, et le modèle est résolu à nouveau. Chaque équipement est maintenant dans sa plage
+        de conception, y compris la caméra infrarouge à ondes courtes et la batterie, qui doit
+        rester au-dessus de zéro degré pendant la charge.
+    do:
+      - js: {en: "__lt('Scene 6.8 · Thermal', 'The cold case shows where heat is missing; the model sizes the heaters and checks again.')", fr: "__lt('Scène 6.8 · Thermique', 'Le cas froid montre où la chaleur manque ; le modèle dimensionne les réchauffeurs et vérifie à nouveau.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: thermal_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: Traceability, exact: true}
+      - wait: 2
+      - scroll: {target: {role: button, name: "Build the model"}}
+      - click: {role: button, name: "Build the model"}
+      - wait: 3
+      - click: {role: button, name: Solve, exact: true}
+      - wait: 5
+      - highlight: {target: {css: "[data-testid=thermal-summary]"}, seconds: 3.5}
+      - click: {role: button, name: "Take the sized heaters"}
+      - wait: 3
+      - click: {role: button, name: Solve, exact: true}
+      - wait: 5
+      - highlight: {target: {css: "[data-testid=thermal-summary]"}, seconds: 4}

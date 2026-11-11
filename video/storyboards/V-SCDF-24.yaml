@@ -1,0 +1,242 @@
+# Week 4 — Northern Fire and Ice walkthrough: "when you disagree with the score, check the
+# logic" (DESIGN_SCRIPT_V2 scene 6.9, PI ruling 2026-11-10) and the PDR passed (scene 6.10).
+# T-A01 read in four beats, decided A conditionally, ECP-01 rejected through change control.
+# Recording seed S4 with everything up to scene 6.8 done. Proposed id (not in the plan).
+id: V-SCDF-24
+week: 4
+audience: all
+title:
+  en: "When you disagree with the score, check the logic"
+  fr: "Quand on n’est pas d’accord avec la note, vérifier le raisonnement"
+summary:
+  en: "The Northern Fire and Ice payload trade ranks a second infrared camera first. Before overruling the score, the team checks its logic: the robustness of the ranking, the margin against the uncertainty of the scores, the evidence behind each score, and the trade's own conditions. It then decides, records what would change its mind, rejects the change proposal and passes the PDR."
+  fr: "Le compromis de charge utile de Northern Fire and Ice classe en tête une seconde caméra infrarouge. Avant de passer outre la note, l’équipe vérifie le raisonnement : la robustesse du classement, la marge face à l’incertitude des notes, les preuves derrière chaque note, et les conditions propres au compromis. Elle décide ensuite, consigne ce qui la ferait changer d’avis, rejette la proposition de modification et franchit la PDR."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: [D-3.4-TRADE, D-GATE-PDR]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 6.9, 6.10)
+  - design/tests/fixtures/nfi/test_w3_integration.py (ecp01_scene)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price semp debris ecp02 pass:mdr,prr,srr icds reliability thermal"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: score
+    title: {en: "What does the matrix say?", fr: "Que dit la matrice ?"}
+    say:
+      en: >-
+        ECP-01 proposes to replace the near-infrared camera by a second copy of the short-wave
+        infrared camera, with a new lens and filter. It comes from the payload architecture trade,
+        T-A01, decided at the PDR. The absolute-scale matrix reads: option C, three point six five,
+        option A, the cameras in hand, three point five. Under every change of twenty percent on
+        any weight, the winner stays C. The matrix says C, and the weights are not the problem.
+      fr: >-
+        ECP-01 propose de remplacer la caméra proche infrarouge par un second exemplaire de la
+        caméra infrarouge à ondes courtes, avec un nouvel objectif et un nouveau filtre. Elle vient
+        du compromis d’architecture de la charge utile, T-A01, tranché à la PDR. La matrice à
+        échelle absolue indique : option C, trois virgule six cinq, option A, les caméras déjà en
+        main, trois virgule cinq. Pour toute variation de vingt pour cent sur n’importe quel poids,
+        le gagnant reste C. La matrice dit C, et les poids ne sont pas le problème.
+    do:
+      - js: {en: "__lt('Scene 6.9 · Payload leads', 'When you disagree with the score, check the logic: the margin, the evidence and the conditions, then decide and say what would change your mind.')", fr: "__lt('Scène 6.9 · La charge utile mène', 'Quand on n’est pas d’accord avec la note, on vérifie le raisonnement : la marge, les preuves et les conditions, puis on décide et l’on dit ce qui ferait changer d’avis.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: payload_lead}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - click: {role: button, name: "Trade studies"}
+      - select: {target: {css: "select:has(option[value='T-A01'])"}, value: T-A01}
+      - wait: 1.5
+      - click: {role: button, name: "Absolute-scale matrix"}
+      - wait: 1
+      - scroll: {target: {css: "[data-testid=absolute-matrix] tr:last-child"}}
+      - highlight: {target: {css: "[data-testid=absolute-matrix] table tr:last-child"}, seconds: 4}
+      - click: {role: button, name: "Sensitivity to ±20 % on each weight"}
+      - wait: 1
+      - highlight: {target: {css: "[data-testid=trade-pm20]"}, seconds: 4}
+
+  - id: margin
+    title: {en: "Is the margin bigger than the uncertainty?", fr: "La marge dépasse-t-elle l’incertitude ?"}
+    say:
+      en: >-
+        Second question: is the margin bigger than the uncertainty of the scores? The lead is zero
+        point one five. One step on the one-to-five scale of a criterion weighted zero point two or
+        zero point two five moves a total by zero point two to zero point two five. So one score
+        moved by one step erases the lead. Weight sensitivity tests the weights, not the scores.
+      fr: >-
+        Deuxième question : la marge dépasse-t-elle l’incertitude des notes ? L’avance est de zéro
+        virgule un cinq. Un cran sur l’échelle de un à cinq d’un critère pesant zéro virgule deux ou
+        zéro virgule vingt-cinq déplace un total de zéro virgule deux à zéro virgule vingt-cinq. Une
+        seule note décalée d’un cran efface donc l’avance. La sensibilité aux poids teste les
+        poids, pas les notes.
+    do:
+      - scroll: {target: {css: "[data-testid=absolute-matrix] table"}}
+      - highlight: {target: {css: "[data-testid=absolute-matrix] table td:nth-child(2) >> nth=0"}, seconds: 3}
+      - highlight: {target: {css: "[data-testid=trade-pm20]"}, seconds: 3}
+
+  - id: evidence
+    title: {en: "Measured or assumed?", fr: "Mesuré ou supposé ?"}
+    say:
+      en: >-
+        Third question: which scores are measured and which are assumed? The evidence line under
+        each criterion says it. The gains of option C on near-infrared signal-to-noise and on
+        technical risk are calculated: the signal-to-noise is scaled from a datasheet, and the snow
+        exposure limit is scaled from the other camera. The cost of the custom filter is assumed.
+        Nothing in C's favour has been measured.
+      fr: >-
+        Troisième question : quelles notes sont mesurées, et lesquelles sont supposées ? La ligne
+        des preuves sous chaque critère le dit. Les gains de l’option C sur le rapport signal sur
+        bruit en proche infrarouge et sur le risque technique sont calculés : le rapport signal sur
+        bruit est extrapolé d’une fiche technique, et la limite d’exposition sur la neige est
+        extrapolée de l’autre caméra. Le coût du filtre sur mesure est supposé. Rien de ce qui
+        favorise C n’a été mesuré.
+    do:
+      - scroll: {target: {css: "[data-testid=trade-evidence] >> nth=0"}}
+      - highlight: {target: {css: "[data-testid=absolute-matrix] tr:has([data-testid=trade-evidence]:has-text('Calculated')) >> nth=0"}, seconds: 3.5}
+      - highlight: {target: {css: "[data-testid=absolute-matrix] tr:has([data-testid=trade-evidence]:has-text('Assumed')) >> nth=0"}, seconds: 3.5}
+
+  - id: conditions
+    title: {en: "Were the trade's conditions met?", fr: "Les conditions du compromis sont-elles remplies ?"}
+    say:
+      en: >-
+        Fourth question: were the trade's own conditions met? The trade said what evidence it
+        needed before C could be chosen: a quote for the eight-hundred-and-seventy-five nanometre
+        filter, a breadboard measurement of the infrared camera over snow, and a payload allocation
+        of zero point eight two kilograms. None is met today.
+      fr: >-
+        Quatrième question : les conditions propres au compromis sont-elles remplies ? Le compromis
+        disait de quelles preuves il avait besoin avant de pouvoir choisir C : un devis pour le
+        filtre à huit cent soixante-quinze nanomètres, une mesure sur maquette de la caméra
+        infrarouge au-dessus de la neige, et une allocation de charge utile de zéro virgule
+        quatre-vingt-deux kilogramme. Aucune n’est remplie aujourd’hui.
+    do:
+      - scroll: {target: {css: "[data-testid=trade-acceptance-conditions]"}}
+      - highlight: {target: {css: "[data-testid=trade-acceptance-conditions]"}, seconds: 5}
+
+  - id: decide
+    title: {en: "Decide, and say what would change your mind", fr: "Décider, et dire ce qui ferait changer d’avis"}
+    say:
+      en: >-
+        So Payload records the decision: option A, the cameras in hand, with the four checks as the
+        rationale. The decision is conditional: it is reopened if the filter is quoted and the
+        breadboard measurement over snow is in before the critical design review, the CDR, with A
+        as the fallback, and it blocks the CDR until then. The change proposal goes through change
+        control: the affected seats agree to the review, and the team leader rejects ECP-01, citing
+        the trade. Overruling a score is allowed; doing it without checking the logic is not.
+      fr: >-
+        La charge utile consigne donc la décision : l’option A, les caméras en main, avec les quatre
+        vérifications comme justification. La décision est conditionnelle : elle est rouverte si le
+        filtre fait l’objet d’un devis et si la mesure sur maquette au-dessus de la neige arrive
+        avant la revue de conception détaillée, la CDR, avec A comme solution de repli, et elle
+        bloque la CDR d’ici là. La proposition de modification passe en maîtrise des modifications :
+        les postes touchés acceptent l’examen, et le chef d’équipe rejette ECP-01 en citant le
+        compromis. Passer outre une note est permis ; le faire sans vérifier le raisonnement ne
+        l’est pas.
+    do:
+      - scroll: {target: {role: button, name: "Links and decision"}}
+      - click: {role: button, name: "Links and decision"}
+      - wait: 1
+      - select: {target: {css: "select:has(option[value='A']):has(option[value='C']) >> nth=-1"}, value: A}
+      - fill: {target: {label: "Rationale"}, text: "The matrix ranks C first (3.65 vs 3.50) and the ranking survives every +-20 % weight change, but weight sensitivity does not test the scores. The 0.15 margin is smaller than one score step on any criterion weighted 0.2 or more, and two of C's gains rest on calculation, not measurement: the NIR SNR is scaled from a datasheet and the snow exposure limit is scaled from the IMX542. The trade's own conditions (quote for the 875/50 filter, breadboard measurement over snow, 0.82 kg payload allocation) are not met. Keep A, the cameras in hand; revisit if the evidence arrives before CDR."}
+      - click: {role: button, name: "Conditional decision"}
+      - wait: 0.8
+      - fill: {target: {placeholder: "What must be confirmed for the decision to stand"}, text: "Reopen ECP-01 if the 875/50 filter is quoted and the IMX992 breadboard measurement over snow is in before CDR"}
+      - fill: {target: {label: "Fallback"}, text: "Keep A (IMX992 SWIR + IMX542 VNIR)"}
+      - fill: {target: {css: "[data-testid=trade-condition] input[type=date]"}, text: "2028-06-30"}
+      - select: {target: {css: "[data-testid=trade-condition] select"}, value: cdr}
+      - fill: {target: {label: "Linked risks"}, text: "RSK-035"}
+      - click: {role: button, name: "Record decision on the trade"}
+      - wait: 2.5
+      - select: {target: {css: "[data-testid=active-seat]"}, value: team_leader}
+      - wait: 2
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=change-flow-ECP-01]"}}
+      - click: {css: "[data-testid=change-flow-ECP-01] button.c2o-btn--primary"}
+      - wait: 3.5
+      - click: {target: {css: "[data-testid=change-flow-ECP-01] ul:not([data-testid]) > li:nth-child(1) button >> nth=0"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-01] ul:not([data-testid]) > li:nth-child(2) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-01] ul:not([data-testid]) > li:nth-child(3) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-01] ul:not([data-testid]) > li:nth-child(4) button >> nth=0"}, instant: true}
+      - wait: 1
+      - fill: {target: {css: "[data-testid=change-flow-ECP-01] textarea"}, text: "Score overruled after checking the logic; see T-A01. Revisit before CDR if the filter quote and the breadboard measurement arrive."}
+      - click: {css: "[data-testid=change-flow-ECP-01] button:has-text('Reject'), [data-testid=change-flow-ECP-01] button:has-text('Rejeter')"}
+      - wait: 2.5
+      - highlight: {target: {css: "[data-testid=change-flow-ECP-01]"}, seconds: 3, point: false}
+      - scroll: {target: {css: "[data-testid=open-items-panel]"}}
+      - select: {target: {label: "Blocks gate"}, value: cdr}
+      - wait: 1.5
+      - highlight: {target: {css: "[data-testid=open-items-panel]"}, seconds: 3, point: false}
+
+  - id: pdr
+    title: {en: "The PDR passes", fr: "La PDR est franchie"}
+    say:
+      en: >-
+        At the review gates, the PDR is ready: nine of nine must-pass criteria. On the Phase card,
+        the deliverables are done: the ledger agreed, the reliability and the FMEA, the thermal
+        model, ECP-01 decided and the PDR trades decided. The interface line stays a warning, and
+        says why: ten interface control documents are under issue control, and the five due at the
+        PDR are issued and signed; the other five are due at the CDR. The team leader starts the
+        review, passes it, and records the go decision, with the conditional decision on T-A01 as
+        an action. The design is allocated and its interfaces are fixed; the team can start the
+        detailed design.
+      fr: >-
+        Aux jalons de revue, la PDR est prête : neuf critères obligatoires sur neuf. Sur la carte de
+        phase, les livrables sont faits : le registre accepté, la fiabilité et l’AMDE, le modèle
+        thermique, ECP-01 tranchée et les compromis de la PDR tranchés. La ligne des interfaces
+        reste un avertissement, et dit pourquoi : dix documents de contrôle d’interface sont sous
+        contrôle d’édition, et les cinq attendus à la PDR sont émis et signés ; les cinq autres sont
+        attendus à la CDR. Le chef d’équipe ouvre la revue, la franchit, et consigne la décision go,
+        avec la décision conditionnelle sur T-A01 comme action. La conception est allouée et ses
+        interfaces sont figées ; l’équipe peut aborder la conception détaillée.
+    do:
+      - js: {en: "__lt('Scene 6.10 · Team leader', 'The design is allocated and its interfaces are fixed; the team can start the detailed design.')", fr: "__lt('Scène 6.10 · Chef d’équipe', 'La conception est allouée et ses interfaces sont figées ; l’équipe peut aborder la conception détaillée.')"}
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: PDR, exact: true}
+      - wait: 2.5
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - highlight: {target: {text: "Deliverables this phase", exact: true}, seconds: 3}
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+      - click: {css: "[data-testid=start-review]"}
+      - wait: 2.5
+      - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
+      - wait: 2.5
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - click: {css: ".c2o-verdict button:has-text('Pass PDR'), .c2o-verdict button:has-text('Franchir la PDR')"}
+      - wait: 2.5
+      - click: {css: ".c2o-verdict button.c2o-lb-record, button.c2o-lb-record:has-text('go / no'), button.c2o-lb-record:has-text('go ou no')"}
+      - wait_for: {css: "#c2o-logbook"}
+      - fill:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          text: {en: "GO. Every must-pass criterion passes. Actions: the conditional decision on T-A01 (reopen before CDR on the filter quote and the breadboard measurement), D-PI-01, the TBC launch ICD values.", fr: "GO. Tous les critères obligatoires passent. Actions : la décision conditionnelle sur T-A01 (à rouvrir avant la CDR sur le devis du filtre et la mesure sur maquette), D-PI-01, les valeurs à confirmer de l’ICD lanceur."}
+      - click: {role: button, name: Save decision record}
+      - wait: 0.8
+      - click: {role: button, name: Close the logbook}
+      - wait: 1
+      - click: {role: tab, name: SRR, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: PDR, exact: true}
+      - wait: 2.5
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 3}
