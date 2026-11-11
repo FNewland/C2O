@@ -216,8 +216,9 @@ export function MissionWizard() {
           mission_need: {
             problem_statement: problemStatement,
             operational_context: operationalContext,
-            stakeholders: stakeholders.filter(s => s.name).map(s => ({
-              id: s.id, name: s.name, role: s.role, needs: [s.need], constraints: [], priority: 'high',
+            // Short, ordered ids (the register shows them): the rows' own ids are timestamps.
+            stakeholders: stakeholders.filter(s => s.name).map((s, i) => ({
+              id: String(i + 1), name: s.name, role: s.role, needs: [s.need], constraints: [], priority: 'high',
             })),
             objectives: objectives.filter(o => o.text).map(o => ({
               id: o.id, text: o.text, priority: o.priority, type: 'performance',

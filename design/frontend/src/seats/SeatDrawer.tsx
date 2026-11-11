@@ -3,7 +3,7 @@
  * for my seats (accept / reject pending changes, ruling 5), my proposals, subscriptions with
  * "changed since you looked", the wanted-vs-provided ledger (Systems) and recent activity.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '../stores/uiStore'
@@ -98,6 +98,11 @@ function SeatBoard() {
   const qc = useQueryClient()
   const [size, setSize] = useState<string>(team?.preset ?? '9')
   const [optional, setOptional] = useState<string[]>(team?.optional ?? [])
+  // The drawer can mount before the team arrives (it opens right after the wizard creates the
+  // study): follow the saved preset and optional seats until the user edits them here.
+  const savedOptional = (team?.optional ?? []).join(',')
+  useEffect(() => { if (team?.preset) setSize(team.preset) }, [team?.preset])
+  useEffect(() => { setOptional(savedOptional ? savedOptional.split(',') : []) }, [savedOptional])
   const base = `/api/studies/${enc(studyId!)}/team`
   const myId = team?.me?.id
   const canPreset = !team?.enabled || team?.me?.held.includes('team_leader') || team?.me?.instructor

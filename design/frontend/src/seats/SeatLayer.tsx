@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useUIStore, type Level } from '../stores/uiStore'
 import { StatusBadge } from '../components/ui/StatusBadge'
-import { post, seatLabel, pick, useSeatStore } from './api'
+import { post, seatLabel, pick, useSeatStore, type TeamView } from './api'
 import { useNextCard, usePending, useSeatBootstrap, useTeam } from './hooks'
 
 const enc = encodeURIComponent
@@ -34,7 +34,13 @@ export function SeatBar() {
 
   const switchTo = async (seat: string) => {
     try {
-      await post(`/api/studies/${enc(studyId!)}/team/active`, { seat })
+      // Take the answer at once: every request carries the active seat (X-C2O-Seat), so a
+      // refetch sent before the store knows the new seat would bring the old one back.
+      const view = await post<TeamView>(`/api/studies/${enc(studyId!)}/team/active`, { seat })
+      if (view?.me) {
+        qc.setQueryData(['team', studyId], view)
+        useSeatStore.getState().setTeam(view)
+      }
       await qc.invalidateQueries({ queryKey: ['team'] })
     } catch (e) { toast((e as Error).message, 'alarm') }
   }
