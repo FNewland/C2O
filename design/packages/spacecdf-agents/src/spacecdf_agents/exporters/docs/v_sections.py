@@ -559,7 +559,7 @@ def figures(c) -> None:
         title = e.get("title")
         title = (title.get("t") if isinstance(title, dict) else title) or e.get("kind")
         rows.append([title, ", ".join(mats), e.get("gaps", 0), "; ".join(
-            (x.get("t") if isinstance(x, dict) else str(x)) for x in e.get("top_gaps") or [])[:200],
+            _gap_text(x) for x in e.get("top_gaps") or [])[:200],
             len(e.get("instances") or []) or 1])
     c.pkg.table(["Figure", t("Maturity"), "Gaps" if not fr else "Lacunes", "What the model lacks" if not fr else "Ce qui manque au modèle",
                  "Figures" if not fr else "Figures"], rows,
@@ -569,7 +569,23 @@ def figures(c) -> None:
         if e.get("empty") or e.get("gap_alarm"):
             title = e.get("title")
             title = (title.get("t") if isinstance(title, dict) else title) or e.get("kind")
-            c.pkg.open(f"Figure {title}: the model lacks data for it", "systems_engineer")
+            if e.get("empty"):
+                c.pkg.open(f"Figure {title}: the model lacks data for it", "systems_engineer")
+            else:
+                # the figure is drawn; what it shows is an alarm of the design (3.F1 dry run: "lacks
+                # data" was printed for a risk matrix of 37 risks with 3 critical ones open)
+                gaps = "; ".join(_gap_text(x) for x in (e.get("top_gaps") or [])[:2])
+                c.pkg.open(f"Figure {title}: {gaps or 'alarms in the design shown'}", "systems_engineer")
+
+
+def _gap_text(g) -> str:
+    """One gap of the diagram catalogue as plain text (``{"t": "{{n}} …", "p": {"n": 3}}``)."""
+    if not isinstance(g, dict):
+        return str(g)
+    out = str(g.get("t") or "")
+    for k, v in (g.get("p") or {}).items():
+        out = out.replace("{{" + k + "}}", str(v))
+    return out
 
 
 # ─────────────────────────────────────────────────────────────── payload definition

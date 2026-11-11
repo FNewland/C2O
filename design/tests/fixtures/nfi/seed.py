@@ -439,7 +439,8 @@ async def _s4(api: _Api, seed: NfiSeed) -> None:
     # wave 2 (agent D): the design loop again on the placed stack, before the analyses that read
     # its results, so no run is stale at S4 (its write-back feeds ground, physics and simulation)
     await _s3_design_loop(api, seed)
-    for a in ("vv", "ground_segment", "physics", "mission_simulation"):
+    # FMECA too (script 5.9 "Run from study"): the review packs list an analysis that never ran
+    for a in ("vv", "ground_segment", "physics", "mission_simulation", "fmeca"):
         await api.post(f"/api/studies/{sid}/analyses/{a}/run")
     # W8a / W11a: model philosophy and test matrix; the launch is provided by the agency, so the
     # cost carries no launch; milestones from the gate profile and the WBS from the product tree
@@ -1095,6 +1096,36 @@ CHANGE_PREVIEWS = {
 }
 
 
+#: the requirement edits an approved change makes (change control ``data.apply``, fields in
+#: ``services/change_control.APPLY_FIELDS``). ECP-02 widens the launch request from "590 km" to
+#: "590 km nominal, 550-600 km acceptable": the launch-request row names the range, the orbit row
+#: records why its 520 km perigee floor still holds, and the swath row is restated at the bottom of
+#: the range, where it just meets 140 km (140.5 km). ECP-01 is rejected on camera, so it has none.
+CHANGE_APPLY = {
+    "ECP-02": [
+        {"code": "SEG-LS-02",
+         "text": "The launch request shall specify a sun-synchronous orbit with nominal altitude 590 km and an "
+                 "acceptable injection altitude of 550 to 600 km, apogee at most 600 km including dispersion, "
+                 "inclination error at most 0.15 deg and a daylight descending node at 10:30 ±30 min local time.",
+         "acceptance": "590 km nominal and 550-600 km acceptable injection altitude requested, apogee <= 600 km, "
+                       "confirmed by review in RV-PDR-LCH",
+         "rationale": "Secondary slot: RAAN not guaranteed; the request is the only lever on apogee and LTAN drift. "
+                      "ECP-02 (approved at SRR): accepting 550-600 km widens the rideshare options; at 550 km the "
+                      "no-sail lifetime in a strong cycle is 4.1 y and contact time stays >= 117.6 min/day."},
+        {"code": "MIS-COV-03",
+         "rationale": "ISED April 2026 conditions require propulsion above 600 km apogee (research: mission analysis "
+                      "R7). ECP-02 (approved at SRR): the launch request asks for 590 km nominal and accepts "
+                      "550-600 km; the 520 km perigee floor covers the whole range."},
+        {"code": "PAY-OPT-04",
+         "text": "The common-grid swath of the two bands shall be at least 140 km at nadir over the accepted "
+                 "injection range 550-600 km.",
+         "acceptance": ">= 140 km common swath at 550 km (worst case of the range), shown by analysis in AN-PAY",
+         "rationale": "SWIR swath 150.7 km and VNIR 172.3 km at 590 km; the revisit analysis assumed 150 km. "
+                      "ECP-02: at 550 km the common swath is 140.5 km, which just meets the requirement."},
+    ],
+}
+
+
 #: the review each change record is decided at (v2 REVIEW_READINESS; PI decision 2): ECP-01 at the
 #: PDR (NIR filter quote and breadboard), ECP-02 at the SRR (the launch request), CR-V2 approved
 #: with the allocated baseline at the PDR
@@ -1105,7 +1136,8 @@ async def _s3_changes(api: _Api, seed: NfiSeed) -> None:
     """3.L4: ``risks.yaml`` ``configuration_management.change_records``: ECP-01, ECP-02, CR-V2, in
     one call, with their impact-preview specs and decision gates. Imported as proposed: the
     walkthrough decides ECP-01 and ECP-02 on camera (change control, agent D)."""
-    recs = [{**r, "decision_gate": CHANGE_GATES.get(r["id"], r.get("decision_gate"))}
+    recs = [{**r, "decision_gate": CHANGE_GATES.get(r["id"], r.get("decision_gate")),
+             **({"apply": CHANGE_APPLY[r["id"]]} if r["id"] in CHANGE_APPLY else {})}
             for r in load("risks")["configuration_management"]["change_records"]]
     rep = await api.post(f"/api/studies/{seed.study_id}/changes/import", {"records": recs, "previews": CHANGE_PREVIEWS})
     seed.report["changes"] = {"created": rep["created"], "updated": rep["updated"]}

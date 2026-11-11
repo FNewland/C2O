@@ -62,6 +62,12 @@ async def _decide_change(client, sid: str, code: str, decision: str, note: str) 
                                        json={"decision": decision, "note": note}))
 
 
+async def mdr_actions(client, sid: str) -> None:
+    # 0. the project is priced before the cost criterion is judged (PI: price it first; Budget, Cost)
+    cost = await _ok(await client.post(f"/api/studies/{sid}/cost/price", json={}))
+    assert cost["by_category"]["launch"] == 0 and cost["total_keur"] > 0
+
+
 async def srr_actions(client, sid: str) -> None:
     # 1. the SEMP generated from the study is reviewed and issued (Phase panel)
     sm = await _ok(await client.get(f"/api/studies/{sid}/semp/issue"))
@@ -155,6 +161,26 @@ async def fill_recording_scenes(client, seed) -> None:
                                         json={"seat": ln["owner_seat"]}))
 
 
+async def negotiation_scenes(client, sid: str) -> None:
+    """The four negotiation scenes (PI: each ends with sign-off), as the team does them on camera
+    (Decide, Negotiations): open the record from its template (its options computed from the
+    study), choose the option of the baseline, and every involved seat signs. GS4 is the
+    fourth-station ripple, N1 the science volume and downlink, N3 the payload peak power and N7
+    the mass envelopes. The full seed builds the same records (``_s3/_s4_negotiations``)."""
+    from tests.fixtures.nfi.seed import NEGOTIATIONS
+    for code, opt in NEGOTIATIONS:
+        rec = await _ok(await client.post(f"/api/studies/{sid}/negotiations", json={"template": code}))
+        url = f"/api/studies/{sid}/negotiations/{rec['id']}"
+        assert any(o.get("key") == opt for o in rec["options"]), (code, [o.get("key") for o in rec["options"]])
+        rec = await _ok(await client.patch(url, json={"chosen_option": opt}))
+        for seat in rec["seats"]:
+            rec = await _ok(await client.post(f"{url}/signoff", json={"seat": seat, "note": "agreed on camera"}))
+    recs = (await _ok(await client.get(f"/api/studies/{sid}/negotiations")))["items"]
+    signed = {r["template"]: r for r in recs}
+    for code, opt in NEGOTIATIONS:
+        assert signed[code]["chosen_option"] == opt and signed[code]["status"] == "agreed", signed[code]
+
+
 def _assert_before(t: dict) -> None:
     assert t["mdr"]["ready"] and t["prr"]["ready"], t
     assert not t["srr"]["ready"] and not t["pdr"]["ready"], t
@@ -170,6 +196,8 @@ async def _walkthrough(client, recording: bool) -> dict:
     if recording:
         assert "PDR-EC-07" in before["pdr"]["open"]          # the ledger is filled on camera
         await fill_recording_scenes(client, seed)
+        await negotiation_scenes(client, sid)
+    await mdr_actions(client, sid)
     await srr_actions(client, sid)
     mid = await _table(client, sid)
     assert mid["srr"]["ready"], mid["srr"]["open"]

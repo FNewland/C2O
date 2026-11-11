@@ -145,7 +145,10 @@ export function AbsoluteScaleMatrix({ state, evaluation, onChange }: {
           <tbody>
             {state.criteria.map(c => (
               <tr key={c} className="bb">
-                <td title={meta[c]?.scale ?? ''}>{c}{meta[c]?.scale && <div className="t-12 c-3">{meta[c]?.scale}</div>}</td>
+                <td title={meta[c]?.scale ?? ''}>{c}{meta[c]?.scale && <div className="t-12 c-3">{meta[c]?.scale}</div>}
+                  {state.evidence_by_criterion?.[c] && (
+                    <div className="t-12 c-2" data-testid="trade-evidence"><span className="w-600">{t('Evidence')}:</span> {state.evidence_by_criterion[c]}</div>
+                  )}</td>
                 <td className="num">
                   <Input dense type="number" step="0.05" min="0" max="1" style={{ width: '4.5rem' }} aria-label={t('Weight of {{c}}', { c })}
                     value={(w[c] ?? 0).toFixed(2)} onChange={e => setWeight(c, Math.max(0, Number(e.target.value) || 0))} />
@@ -185,6 +188,12 @@ export function AbsoluteScaleMatrix({ state, evaluation, onChange }: {
         <ul className="t-12 c-3 m-0">
           {state.options.map(o => state.option_labels?.[o] ? <li key={o}><span className="mono">{o}</span> {state.option_labels[o]}</li> : null)}
         </ul>
+      )}
+      {(state.acceptance_conditions ?? []).length > 0 && (
+        <div className="t-12" data-testid="trade-acceptance-conditions">
+          <span className="w-600">{t('Conditions of the trade')}:</span>
+          <ul className="m-0">{(state.acceptance_conditions ?? []).map(x => <li key={x}>{x}</li>)}</ul>
+        </div>
       )}
       {(evaluation?.issues ?? []).length > 0 && (
         <Note tone="caution">{(evaluation?.issues ?? []).map(i => t(i)).join(' · ')}</Note>
@@ -324,7 +333,9 @@ interface Approval { id: string; seat: string; decision: string; note: string; b
 interface Control {
   change: ChangeRow & { impact?: unknown; affected_codes?: string[] }
   state: 'not_started' | 'in_review' | 'agreed' | 'objected' | 'approved' | 'rejected'
-  impact: { source?: string; deltas?: Record<string, { before?: number; after?: number; delta?: number; unit?: string; owner_seat?: string }>; stated_impact?: unknown; seats?: unknown[] }
+  impact: { source?: string; deltas?: Record<string, { before?: number; after?: number; delta?: number; unit?: string; owner_seat?: string }>;
+    lines?: Array<{ key: string; before?: number | null; after?: number | null; delta?: number | null; unit?: string; owner_seat?: string }>;
+    stated_impact?: unknown; seats?: unknown[] }
   seats: Approval[]
   pending_seats: string[]
   board: (Approval & { baseline_ref: string; data?: { baseline?: { label?: string; kind?: string; revision?: number }; applied?: Array<{ code: string; applied: boolean }> } }) | null
@@ -362,7 +373,10 @@ function ChangeFlow({ studyId, change }: { studyId: string; change: ChangeRow })
     } catch (e) { setErr(String((e as Error).message)) } finally { setBusy(null) }
   }
   if (!flow) return null
-  const deltas = Object.entries(flow.impact?.deltas ?? {})
+  // the impact preview (L, services/impact_preview.py) answers ``lines``; the key-number fallback ``deltas``
+  const deltas: Array<[string, { delta?: number | null; unit?: string }]> = (flow.impact?.lines ?? [])
+    .filter(l => l.delta != null && l.delta !== 0).map(l => [l.key, l] as [string, { delta?: number | null; unit?: string }])
+  if (!deltas.length) deltas.push(...Object.entries(flow.impact?.deltas ?? {}))
   return (
     <div className="c2o-dec-row" data-testid={`change-flow-${change.code}`}>
       <div className="row gap-2 ai-c wrap">
@@ -415,6 +429,12 @@ function ChangeFlow({ studyId, change }: { studyId: string; change: ChangeRow })
             </div>
           )}
         </>)}
+        {flow.board?.decision === 'approve' && (flow.board.data?.applied ?? []).some(a => a.applied) && (
+          <p className="t-12 m-0 mt-1" data-testid={`change-applied-${change.code}`}>
+            <span className="w-600">{t('Requirements updated')}:</span>{' '}
+            {(flow.board.data?.applied ?? []).filter(a => a.applied).map(a => a.code).join(', ')}
+          </p>
+        )}
         {flow.board?.decision === 'approve' && flow.board.data?.baseline?.label && (
           <Note tone="ok">{t('New baseline: {{kind}}, revision {{rev}} ({{code}}).', {
             kind: t(BASELINE_LABEL[flow.board.data.baseline.kind ?? ''] ?? flow.board.data.baseline.kind ?? ''),

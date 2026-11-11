@@ -602,14 +602,22 @@ async def run(study_id: str) -> dict[str, Any]:
     return await get(study_id)
 
 
+#: extra heater power over the sized figure when the Thermal seat takes it (see ``accept_heaters``)
+HEATER_SIZING_MARGIN = 0.10
+
+
 async def accept_heaters(study_id: str) -> dict[str, Any]:
     """The Thermal seat takes the sized heaters: each node's ``heater_w`` becomes the power the last
-    run asked for (rounded up to 0.1 W), then the model is solved again. The heater power is an
-    eclipse/cold-case load the Power seat must carry (a pending power change, wave 4)."""
+    run asked for plus ``HEATER_SIZING_MARGIN`` (rounded up to 0.1 W), then the model is solved again.
+    The margin covers the sizing search, which runs the coarse transient (20 s step, 8 orbits): taken
+    bare, a heater could come out a few hundredths of a watt short on the full solve (the 3.F1 dry run
+    found the battery 0.08 °C below its design range after taking 2.7 W for 2.69 W asked). The heater
+    power is an eclipse/cold-case load the Power seat must carry (a pending power change, wave 4)."""
     for n in await sr.list_rows(ThermalNodeRow, study_id):
         need = (n.get("data_json") or {}).get("heater_needed_w")
         if need:
-            await sr.update_row(ThermalNodeRow, n["id"], {"heater_w": math.ceil(float(need) * 10 - 1e-9) / 10,
+            sized = float(need) * (1 + HEATER_SIZING_MARGIN)
+            await sr.update_row(ThermalNodeRow, n["id"], {"heater_w": math.ceil(sized * 10 - 1e-9) / 10,
                                                           "origin": "user"})
     return await run(study_id)
 

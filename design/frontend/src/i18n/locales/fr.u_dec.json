@@ -294,5 +294,7 @@
   "Record the SEMP issue": "Enregistrer l’édition du SEMP",
   "Record the next SEMP issue": "Enregistrer l’édition suivante du SEMP",
   "Systems engineering management plan": "Plan de management de l’ingénierie système",
-  "The SEMP could not be issued ({{code}}).": "Le SEMP n’a pas pu être édité ({{code}})."
+  "The SEMP could not be issued ({{code}}).": "Le SEMP n’a pas pu être édité ({{code}}).",
+  "Conditions of the trade": "Conditions du compromis",
+  "Requirements updated": "Exigences mises à jour"
 }
