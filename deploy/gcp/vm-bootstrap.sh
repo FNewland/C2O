@@ -106,9 +106,14 @@ clone_repo() {
 }
 update_repo() {
     say "updating $APP_DIR to the latest $REF"
-    git -C "$APP_DIR" fetch --prune origin
-    git -C "$APP_DIR" checkout "$REF"
-    git -C "$APP_DIR" pull --ff-only origin "$REF"
+    git -C "$APP_DIR" fetch --prune --tags --force origin
+    # The VM keeps no edits of its own, so it simply takes what the repository holds now; a
+    # fast-forward pull would refuse a branch whose history was rewritten upstream.
+    if git -C "$APP_DIR" show-ref --verify --quiet "refs/remotes/origin/$REF"; then
+        git -C "$APP_DIR" checkout --force -B "$REF" "origin/$REF"
+    else
+        git -C "$APP_DIR" checkout --force "$REF"
+    fi
 }
 
 # ── Secret Manager (REST with the VM's service-account token; no gcloud needed) ──
