@@ -198,7 +198,7 @@ steps:
       - click: {role: button, name: "Next →"}
       - wait: 1.0
       - highlight: {target: {css: "main :text-matches('#3|#4')"}, seconds: 2.4, point: false}
-      - click: {css: "button:has-text('new_satellite'), [role=button]:has-text('new_satellite')"}
+      - click: {css: "button.c2o-choice-card:has-text('New satellite'), button.c2o-choice-card:has-text('Nouveau satellite')"}
       - type:
           target: {css: "textarea >> nth=0"}
           delay_ms: 12

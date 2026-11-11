@@ -88,7 +88,7 @@ steps:
       - wait: 0.8
       - select: {target: {label: Operator, exact: true}, value: "<="}
       - fill: {target: {label: Threshold, exact: true}, text: "12", typed: true}
-      - highlight: {target: {label: "Verification method", exact: true, within: "form[aria-label^='Edit'], form[aria-label^='Modifier']"}, seconds: 2}
+      - highlight: {target: {css: "form[aria-label^='Edit'] fieldset.c2o-rt__set, form[aria-label^='Modifier'] fieldset.c2o-rt__set"}, seconds: 2}
       - click: {role: button, name: Save, exact: true, within: "form[aria-label^='Edit'], form[aria-label^='Modifier']"}
       - wait: 2
 
