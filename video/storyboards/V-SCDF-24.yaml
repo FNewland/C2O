@@ -40,13 +40,13 @@ steps:
       en: >-
         ECP-01 proposes to replace the near-infrared camera by a second copy of the short-wave
         infrared camera, with a new lens and filter. It comes from the payload architecture trade,
-        T-A01, decided at the PDR. The absolute-scale matrix reads: option C, three point six five,
+        T-A01, decided at the preliminary design review, the PDR. The absolute-scale matrix reads: option C, three point six five,
         option A, the cameras in hand, three point five. Under every change of twenty percent on
         any weight, the winner stays C. The matrix says C, and the weights are not the problem.
       fr: >-
         ECP-01 propose de remplacer la caméra proche infrarouge par un second exemplaire de la
         caméra infrarouge à ondes courtes, avec un nouvel objectif et un nouveau filtre. Elle vient
-        du compromis d’architecture de la charge utile, T-A01, tranché à la PDR. La matrice à
+        du compromis d’architecture de la charge utile, T-A01, tranché à la revue de conception préliminaire, la PDR. La matrice à
         échelle absolue indique : option C, trois virgule six cinq, option A, les caméras déjà en
         main, trois virgule cinq. Pour toute variation de vingt pour cent sur n’importe quel poids,
         le gagnant reste C. La matrice dit C, et les poids ne sont pas le problème.

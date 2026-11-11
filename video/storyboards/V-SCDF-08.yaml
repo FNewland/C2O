@@ -86,7 +86,6 @@ steps:
       - click: {role: button, name: Save decision record}
       - wait: 0.8
       - click: {role: button, name: Close the logbook}
-      - click: {role: button, name: "Next →"}
 
   - id: stakeholders
     title: {en: "Step 2: the stakeholders", fr: "Étape 2 : les parties prenantes"}
@@ -103,6 +102,7 @@ steps:
         avec le besoin que la mission doit satisfaire pour elle. Les communautés sont des
         utilisateurs, et pas seulement un public : ce sont elles qui choisissent les sites imagés.
     do:
+      - click: {role: button, name: "Next →"}
       - js: {en: "__lt('Scene 1.3 · Team leader', 'Each objective carries the measure that will tell us, after launch, whether it was met.')", fr: "__lt('Scène 1.3 · Chef d’équipe', 'Chaque objectif porte la mesure qui dira, après le lancement, s’il est atteint.')"}
       - fill: {target: {label: "Stakeholder 1: name / organisation"}, text: "Funding agency (student CubeSat programme)"}
       - select: {target: {label: "Stakeholder 1: role"}, value: sponsor}
@@ -201,8 +201,6 @@ steps:
       - click: {role: button, name: Save decision record}
       - wait: 0.6
       - click: {role: button, name: Close the logbook}
-      - click: {role: button, name: "Next →"}
-      - wait: 1.5
 
   - id: alternatives
     title: {en: "Step 3: the alternatives", fr: "Étape 3 : les solutions possibles"}
@@ -223,8 +221,10 @@ steps:
         programmé par les communautés, imager de nuit et répondre à la question centrale. Le
         nouveau CubeSat dédié est retenu, et la raison est rédigée puis consignée.
     do:
+      - click: {role: button, name: "Next →"}
+      - wait: 1.5
       - js: {en: "__lt('Scene 1.4 · Systems', 'The free missions stay as the reference; only a dedicated satellite can be tasked by the communities.')", fr: "__lt('Scène 1.4 · Systèmes', 'Les missions gratuites restent la référence ; seul un satellite dédié peut être programmé par les communautés.')"}
-      - wait_for: {css: "[aria-label='Alternatives'] button, [aria-label='Solutions possibles'] button"}
+      - wait_for: {css: "button.c2o-choice-card"}
       - highlight: {target: {css: "button.c2o-choice-card:has-text('Sentinel-2')"}, seconds: 2.5}
       - click: {css: "button.c2o-choice-card:has-text('New dedicated CubeSat')"}
       - fill: {target: {css: "textarea >> nth=0"}, text: "Sentinel-2 and Landsat are free and remain the reference for every product, but they cannot be tasked by the communities, acquire no night SWIR (exploratory objective O2) and cannot answer the central question (O4) of whether a low-cost student-built instrument reproduces their measurements. Drones and aircraft do not cover landscape scale (150 km swath) through the break-up season at remote sites, and ground sensors give points, not ice extent. A dedicated 3U CubeSat meets O1-O4 within a student-programme envelope and is the training vehicle the sponsor funds; the free missions are used for cross-calibration and validation rather than replaced."}
@@ -236,7 +236,6 @@ steps:
       - click: {role: button, name: Save decision record}
       - wait: 0.6
       - click: {role: button, name: Close the logbook}
-      - click: {role: button, name: "Next →"}
       - wait: 1
 
   - id: architecture
@@ -246,8 +245,7 @@ steps:
         The fourth step chooses a starting architecture, a single spacecraft in low Earth orbit,
         with a design lifetime of three years and a target mass of six kilograms, the limit of a 3U
         CubeSat. The mission definition is entered here too: a sun-synchronous orbit at five hundred
-        and ninety kilometres, a rideshare launch from a 3U deployer, a drag sail for disposal, the
-        first camera and the UHF link. The team has nine people, one seat each, with the two
+        and ninety kilometres, a rideshare launch from a 3U deployer, a drag sail for disposal, the first camera and the ultra-high frequency link, the UHF link. The team has nine people, one seat each, with the two
         optional seats, Propulsion and Cost and risk. Propulsion is needed even without any change
         of velocity, because it owns the drag sail. Creating the mission builds the first product
         tree and divides ownership among the seats.
@@ -256,13 +254,14 @@ steps:
         avec une durée de vie de conception de trois ans et une masse visée de six kilogrammes, la
         limite d’un CubeSat 3U. La définition de mission se saisit aussi ici : une orbite
         héliosynchrone à cinq cent quatre-vingt-dix kilomètres, un lancement partagé depuis un
-        déployeur 3U, une voile de traînée pour le retrait de service, la première caméra et la
-        liaison UHF. L’équipe compte neuf personnes, un poste chacune, avec les deux postes
+        déployeur 3U, une voile de traînée pour le retrait de service, la première caméra et la liaison en ultra-haute fréquence, la liaison UHF. L’équipe compte neuf personnes, un poste chacune, avec les deux postes
         optionnels, la propulsion et le coût et risques. La propulsion est nécessaire même sans
         aucune variation de vitesse, car elle est responsable de la voile de traînée. La création
         de la mission construit le premier arbre produit et répartit les responsabilités entre les
         postes.
     do:
+      - click: {role: button, name: "Next →"}
+      - wait: 1
       - js: {en: "__lt('Scene 1.5 · Team leader', 'Creating the mission builds the first product tree and divides ownership among the seats.')", fr: "__lt('Scène 1.5 · Chef d’équipe', 'La création de la mission construit le premier arbre produit et répartit les responsabilités entre les postes.')"}
       - click: {css: "button.c2o-choice-card:has-text('Single Spacecraft (LEO)'), button.c2o-choice-card:has-text('Satellite unique (LEO)')"}
       - fill: {target: {label: "Design Lifetime (years)"}, text: "3"}

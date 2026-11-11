@@ -61,7 +61,7 @@ steps:
       - click: {role: tab, name: Blocks, exact: true}
       - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
       - wait: 1.5
-      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - dblclick: {css: {en: ".react-flow__node:has-text('Space Segment')", fr: ".react-flow__node:has-text('Segment spatial')"}}
       - wait: 1.5
       - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
       - wait: 1.5

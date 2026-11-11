@@ -39,11 +39,11 @@ steps:
       en: >-
         Every document is generated from the one shared study, so nothing is copied by hand and
         nothing goes out of date. The Export drawer opens with the model exchange formats: Capella,
-        the ECSS engineering-model format, ReqIF for requirements tools, and SysML version two.
+        the engineering-model format of the European Cooperation for Space Standardization, the ECSS, ReqIF for requirements tools, and SysML version two.
       fr: >-
         Chaque document est produit à partir de la même étude partagée : rien n’est recopié à la
         main, et rien ne devient périmé. Le tiroir Exporter s’ouvre sur les formats d’échange de
-        modèles : Capella, le format de modèle d’ingénierie de l’ECSS, ReqIF pour les outils
+        modèles : Capella, le format de modèle d’ingénierie de la Coopération européenne pour la normalisation spatiale, l’ECSS, ReqIF pour les outils
         d’exigences, et SysML version deux.
     do:
       - js: {en: "__lt('Scene 5.13 · each document by its owner', 'Every document is generated from the one shared study.')", fr: "__lt('Scène 5.13 · chaque document par son responsable', 'Chaque document est produit à partir de la même étude partagée.')"}

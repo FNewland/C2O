@@ -62,15 +62,15 @@ steps:
       - wait: 1
       - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
       - wait: 2
-      - highlight: {target: {css: "main tr:has-text('Launch'), main [class*=row]:has-text('Launch') >> nth=0"}, seconds: 2.5}
-      - dblclick: {css: ".react-flow__node:has-text('Space Segment')"}
+      - highlight: {target: {css: {en: "main tr:has-text('Launch'), main [class*=row]:has-text('Launch') >> nth=0", fr: "main tr:has-text('lancement'), main [class*=row]:has-text('lancement') >> nth=0"}}, seconds: 2.5}
+      - dblclick: {css: {en: ".react-flow__node:has-text('Space Segment')", fr: ".react-flow__node:has-text('Segment spatial')"}}
       - wait: 1.5
       - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice spacecraft')"}
       - wait: 2
       - highlight: {target: {css: ".react-flow__node:has-text('Disposal')"}, seconds: 3}
       - click: {role: button, name: {en: "Northern Fire and Ice", fr: "Northern Fire and Ice"}, exact: true}
       - wait: 1.5
-      - dblclick: {css: ".react-flow__node:has-text('Ground Segment')"}
+      - dblclick: {css: {en: ".react-flow__node:has-text('Ground Segment')", fr: ".react-flow__node:has-text('Segment sol')"}}
       - wait: 2
       - highlight: {target: {css: ".react-flow__node:has-text('GS Inuvik')"}, seconds: 2.5}
 
@@ -212,7 +212,7 @@ steps:
       - wait: 1
       - dblclick: {css: ".react-flow__node:has-text('Northern Fire and Ice')"}
       - wait: 1.5
-      - dblclick: {css: ".react-flow__node:has-text('Ground Segment')"}
+      - dblclick: {css: {en: ".react-flow__node:has-text('Ground Segment')", fr: ".react-flow__node:has-text('Segment sol')"}}
       - wait: 1.5
       - dblclick: {css: ".react-flow__node:has-text('GS Inuvik')"}
       - wait: 2

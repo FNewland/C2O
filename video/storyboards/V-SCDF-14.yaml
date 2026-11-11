@@ -82,12 +82,12 @@ steps:
     say:
       en: >-
         From the home screen, Load Example Mission lists the worked missions. Northern Fire and Ice
-        opens the study as this walkthrough leaves it, with the PDR passed, so that a team can study
+        opens the study as this walkthrough leaves it, with the preliminary design review, the PDR, passed, so that a team can study
         any step of it. In week three, the course moves from design to flight, with EOSAT-1, the
         spacecraft the class will operate.
       fr: >-
         Depuis l’écran d’accueil, Charger une mission d’exemple liste les missions travaillées.
-        Northern Fire and Ice ouvre l’étude telle que la laisse ce parcours, avec la PDR franchie,
+        Northern Fire and Ice ouvre l’étude telle que la laisse ce parcours, avec la revue de conception préliminaire, la PDR, franchie,
         afin qu’une équipe puisse en étudier n’importe quelle étape. En semaine trois, le cours
         passe de la conception au vol, avec EOSAT-1, le satellite que la classe va exploiter.
     do:

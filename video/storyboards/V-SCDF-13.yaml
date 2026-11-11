@@ -63,15 +63,14 @@ steps:
     title: {en: "The housekeeping SIDs", fr: "Les SID de servitude"}
     say:
       en: >-
-        Housekeeping is organised the way operators use it: one structure, or SID, per subsystem,
+        Housekeeping is organised the way operators use it: one structure, identified by its structure identifier, the SID, per subsystem,
         each with its own interval in each mode. The thermal SID goes once a minute; the attitude
         system sends its outputs routinely, and its diagnostic SID is off at boot and enabled only
         when needed. In real time the full set needs about three point seven five kilobits per
         second against an allocation of four point eight. The stored copies fill the housekeeping
         store and go down as delayed telemetry.
       fr: >-
-        La télémesure de servitude suit l’usage des opérateurs : une structure, ou SID, par
-        sous-système, chacune avec son intervalle dans chaque mode. Le SID thermique part une fois par
+        La télémesure de servitude suit l’usage des opérateurs : une structure, désignée par son identifiant de structure, le SID, par sous-système, chacune avec son intervalle dans chaque mode. Le SID thermique part une fois par
         minute ; le système d’attitude envoie ses sorties en routine, et son SID de diagnostic est
         désactivé au démarrage et activé seulement en cas de besoin. En temps réel, l’ensemble complet
         demande environ trois virgule sept cinq kilobits par seconde, pour une allocation de quatre

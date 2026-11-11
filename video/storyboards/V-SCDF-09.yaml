@@ -66,13 +66,13 @@ steps:
       - click: {role: tab, name: Blocks, exact: true}
       - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Northern Fire and Ice')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
       - wait: 2
-      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Space Segment')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - js: {en: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Space Segment')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()", fr: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Segment spatial')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"}
       - wait: 2
       - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Northern Fire and Ice spacecraft')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
       - wait: 2
       - click: {role: tab, name: Blocks, exact: true}
       - wait: 1
-      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Payload')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - js: {en: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Payload')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()", fr: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Charge utile')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"}
       - wait: 2
       - highlight: {target: {css: "main [role=button][aria-label*='SWIR filter 1610/90'], main :text('SWIR filter 1610/90 nm') >> nth=0"}, seconds: 3}
       - scroll: {target: {css: "[data-where=equipment-catalog]"}}
@@ -142,13 +142,13 @@ steps:
     title: {en: "Communications and the computer", fr: "Télécoms et ordinateur de bord"}
     say:
       en: >-
-        Comms and data handling selects the UHF transceiver, transmitting at one watt and thirty-
+        Comms and data handling selects the ultra-high frequency, UHF, transceiver, transmitting at one watt and thirty-
         eight point four kilobits per second, the deployable antennas and the radio cables; the
         radio choice stays conditional on the receive band being confirmed. The on-board computer is
         the NanoMind. Encryption of commands and data sits in the computer's software, independent
         of the radio.
       fr: >-
-        Les télécoms et le traitement de données choisissent l’émetteur-récepteur UHF, qui émet à un
+        Les télécoms et le traitement de données choisissent l’émetteur-récepteur en ultra-haute fréquence, UHF,, qui émet à un
         watt et trente-huit virgule quatre kilobits par seconde, les antennes déployables et les
         câbles radio ; le choix de la radio reste conditionnel à la confirmation de la bande de
         réception. L’ordinateur de bord est le NanoMind. Le chiffrement des commandes et des données
@@ -165,7 +165,7 @@ steps:
       - wait: 1
       - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - wait: 1
-      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Communications')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - js: {en: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Communications')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()", fr: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Télécommunications')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"}
       - wait: 2
       - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
       - click: {role: button, name: {en: "Northern Fire and Ice spacecraft", fr: "Northern Fire and Ice spacecraft"}, exact: true}
@@ -174,7 +174,7 @@ steps:
       - wait: 1
       - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - wait: 1
-      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'On-Board Computer')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - js: {en: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'On-Board Computer')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()", fr: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Ordinateur de bord')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"}
       - wait: 2
       - wait: 2
 
@@ -184,13 +184,12 @@ steps:
       en: >-
         Thermal chooses straps, a white coating, a two-watt Kapton heater on the payload bench and
         multi-layer insulation. The short-wave infrared camera must image between zero and twenty-
-        five degrees, and the thermal design keeps it there; the nodal model that proves it is built
-        for the PDR.
+        five degrees, and the thermal design keeps it there; the nodal model that proves it is built for the preliminary design review, the PDR.
       fr: >-
         Le poste thermique choisit des tresses, un revêtement blanc, un réchauffeur Kapton de deux
         watts sur le banc de la charge utile et une isolation multicouche. La caméra infrarouge à
         ondes courtes doit imager entre zéro et vingt-cinq degrés, et la conception thermique l’y
-        maintient ; le modèle nodal qui le prouve est construit pour la PDR.
+        maintient ; le modèle nodal qui le prouve est construit pour la revue de conception préliminaire, la PDR.
     do:
       - js: {en: "__lt('Scene 4.6 · Thermal', 'The SWIR camera must image between 0 and 25 °C; the thermal design keeps it there.')", fr: "__lt('Scène 4.6 · Thermique', 'La caméra SWIR doit imager entre 0 et 25 °C ; la conception thermique l’y maintient.')"}
       - select: {target: {css: "[data-testid=active-seat]"}, value: thermal_engineer}
@@ -203,7 +202,7 @@ steps:
       - wait: 1
       - js: "(() => { const b = [...document.querySelectorAll('button')].find(x => /^(Show diagram|Afficher le schéma)$/.test(x.innerText.trim())); if (b) b.click(); })()"
       - wait: 1
-      - js: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Thermal')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"
+      - js: {en: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Thermal')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()", fr: "(() => { const n = [...document.querySelectorAll('.react-flow__node')].find(e => [...e.querySelectorAll('*')].some(c => c.children.length === 0 && c.textContent.trim() === 'Thermique')); n && n.dispatchEvent(new MouseEvent('dblclick', {bubbles: true})); })()"}
       - wait: 2
       - highlight: {target: {css: "main .c2o-blocks"}, seconds: 4, point: false}
 
