@@ -14,7 +14,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useSeatStore } from '../seats/api'
+import { seatLabel, useSeatStore } from '../seats/api'
 import { showAlert } from '../components/ui/Dialog'
 import { Button, Disclosure, Input, Note, Select, StatusBadge, Tag, Textarea, type Status } from '../components/ui'
 import { BASELINE_LABEL, OpenItemList, type OpenItem } from './PhasePanel'
@@ -330,6 +330,37 @@ export function OpenItemsPanel({ studyId }: { studyId: string | null }) {
 
 interface ChangeRow { id: string; code: string; title: string; status: string; decision_gate?: string }
 interface Approval { id: string; seat: string; decision: string; note: string; by: string; at: string | null }
+type ImpactLine = { before?: number | null; after?: number | null; delta?: number | null; unit?: string; owner_seat?: string }
+
+/** Readable names of the impact-preview keys (services/impact_preview.py); others are spelled out. */
+const IMPACT_LABELS: Record<string, string> = {
+  'contacts.union_min_per_day': 'Contact, union of the passes',
+  'contacts.longest_gap_h': 'Longest gap between contacts',
+  'contacts.windows_per_day': 'Contact windows per day',
+  'data.capacity_mb_per_day': 'Downlink capacity',
+  'data.demand_mb_per_day': 'Data to return per day',
+  'data.margin_pct': 'Daily data margin',
+  'disposal.lifetime_with_sail_worst_y': 'Lifetime with the sail (weakest cycle)',
+  'disposal.lifetime_without_sail_worst_y': 'Lifetime without the sail (weakest cycle)',
+  'energy.operational_balance_wh': 'Energy balance per orbit',
+  'energy.worst_dod_percent': 'Worst-eclipse depth of discharge',
+  'modes.downlink_share_proposed_pct': 'Downlink share of the orbit',
+}
+
+function impactLabel(key: string, t: (k: string, o?: Record<string, unknown>) => string): string {
+  if (IMPACT_LABELS[key]) return t(IMPACT_LABELS[key])
+  const st = /^contacts\.station\.(.+)_min_per_day$/.exec(key)
+  if (st) return t('Contact at {{site}}', { site: st[1].charAt(0).toUpperCase() + st[1].slice(1) })
+  return key.replace(/[._]/g, ' ')
+}
+
+function fmtImpact(v: number | null | undefined): string {
+  if (v == null) return '–'
+  const a = Math.abs(v)
+  const txt = v.toFixed(a >= 100 ? 0 : a >= 10 ? 1 : 2)
+  return txt.includes('.') ? txt.replace(/\.?0+$/, '') : txt
+}
+
 interface Control {
   change: ChangeRow & { impact?: unknown; affected_codes?: string[] }
   state: 'not_started' | 'in_review' | 'agreed' | 'objected' | 'approved' | 'rejected'
@@ -374,9 +405,9 @@ function ChangeFlow({ studyId, change }: { studyId: string; change: ChangeRow })
   }
   if (!flow) return null
   // the impact preview (L, services/impact_preview.py) answers ``lines``; the key-number fallback ``deltas``
-  const deltas: Array<[string, { delta?: number | null; unit?: string }]> = (flow.impact?.lines ?? [])
-    .filter(l => l.delta != null && l.delta !== 0).map(l => [l.key, l] as [string, { delta?: number | null; unit?: string }])
-  if (!deltas.length) deltas.push(...Object.entries(flow.impact?.deltas ?? {}))
+  const deltas: Array<[string, ImpactLine]> = (flow.impact?.lines ?? [])
+    .filter(l => l.delta != null && l.delta !== 0).map(l => [l.key, l] as [string, ImpactLine])
+  if (!deltas.length) deltas.push(...Object.entries(flow.impact?.deltas ?? {}) as Array<[string, ImpactLine]>)
   return (
     <div className="c2o-dec-row" data-testid={`change-flow-${change.code}`}>
       <div className="row gap-2 ai-c wrap">
@@ -394,7 +425,12 @@ function ChangeFlow({ studyId, change }: { studyId: string; change: ChangeRow })
         <div className="t-12 mt-1">
           <span className="w-600">{t('Impact')}:</span>{' '}
           {deltas.length > 0
-            ? deltas.map(([k, d]) => `${k} ${d.delta != null ? (d.delta > 0 ? '+' : '') + d.delta : '—'} ${d.unit ?? ''}`).join(' · ')
+            ? <ul className="list-reset stack gap-0 mt-1" data-testid={`change-impact-${change.code}`}>
+                {deltas.map(([k, d]) => (
+                  <li key={k}>{impactLabel(k, t)}: <span className="mono">{fmtImpact(d.before)} → {fmtImpact(d.after)} {d.unit ?? ''}</span>
+                    {' '}<span className="c-3">({d.delta != null && d.delta > 0 ? '+' : ''}{fmtImpact(d.delta)})</span>
+                    {d.owner_seat && <span className="c-3"> · {seatLabel(d.owner_seat)}</span>}</li>))}
+              </ul>
             : flow.impact?.stated_impact ? String(flow.impact.stated_impact) : t('no change to the key numbers')}
           {flow.impact?.source === 'key_numbers' && <span className="c-3"> ({t('stated impact; the dry-run preview is not available')})</span>}
         </div>
@@ -403,7 +439,7 @@ function ChangeFlow({ studyId, change }: { studyId: string; change: ChangeRow })
             const mine = mySeats === null || mySeats.includes(a.seat) || canBoard
             return (
               <li key={a.id} className="row gap-2 ai-c wrap">
-                <Tag>{a.seat}</Tag>
+                <Tag>{seatLabel(a.seat)}</Tag>
                 <StatusBadge status={a.decision === 'agree' ? 'ok' : a.decision === 'object' ? 'caution' : 'neutral'}>
                   {a.decision === 'agree' ? t('agrees') : a.decision === 'object' ? t('objects') : t('pending')}
                 </StatusBadge>

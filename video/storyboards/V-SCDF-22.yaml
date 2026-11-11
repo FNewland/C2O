@@ -1,0 +1,267 @@
+# Week 3 — Northern Fire and Ice walkthrough: the reviews up to the SRR (DESIGN_SCRIPT_V2
+# scenes 6.1–6.5 and the SRR pass of 6.6): the MDR with its stage-transition inventory and the
+# go / no-go record, the PRR, the SEMP issued, the debris assessment accepted, ECP-02 decided
+# through change control, and the SRR passed. Recording seed S4 with chapters 2–5 done
+# (licensing, ledger, negotiations, pricing). Proposed id (not in the plan).
+id: V-SCDF-22
+week: 3
+audience: all
+title:
+  en: "Passing the MDR, PRR and SRR"
+  fr: "Franchir la MDR, la PRR et la SRR"
+summary:
+  en: "The Northern Fire and Ice team takes its study through the first three reviews: the inventory before each review starts, the go or no-go record, the management plan issued, the debris assessment accepted, and the launch change decided by every affected seat before the baseline moves."
+  fr: "L’équipe de Northern Fire and Ice fait passer à son étude les trois premières revues : l’inventaire avant chaque revue, la décision go ou no go, le plan de management émis, l’évaluation des débris acceptée, et la modification du lancement décidée par chaque poste touché avant que le référentiel n’évolue."
+apps:
+  spacecdf: default
+ties:
+  worksheets: []
+  decisions: [D-GATE-MDR]
+sources:
+  - design/docs/dev/DESIGN_SCRIPT_V2.md (scenes 6.1–6.6)
+  - design/tests/fixtures/nfi/test_w3_integration.py (srr_actions)
+  - design/tests/fixtures/nfi/recording.py
+  - video/c2ovideo/nfi_seed.py
+x-caption-js: &ltjs "window.__lt=function(k,t){var d=document.getElementById('nfi-lt');if(!d){var s=document.createElement('style');s.textContent='#nfi-lt{position:fixed;left:14px;bottom:12px;max-width:60%;z-index:2147483640;pointer-events:none;background:rgba(11,22,38,.9);color:#fff;border-left:4px solid #ffb000;border-radius:4px;padding:6px 14px 7px;font:500 15px/1.35 \"IBM Plex Sans\",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .35s}#nfi-lt b{display:block;font:600 10.5px/1.5 \"IBM Plex Mono\",monospace;letter-spacing:.08em;color:#ffd27a;text-transform:uppercase}';document.head.appendChild(s);d=document.createElement('div');d.id='nfi-lt';d.style.opacity=0;document.body.appendChild(d);}d.innerHTML='<b></b><span></span>';d.firstChild.textContent=k;d.lastChild.textContent=t;requestAnimationFrame(function(){d.style.opacity=t?1:0;});}"
+
+setup:
+  - python: {call: "video/c2ovideo/nfi_seed.py:seed", app: spacecdf, save: study, kwargs: {stage: S4, after: "licensing ledger negotiations price"}}
+  - goto: {app: spacecdf, path: "/?lang={lang}", settle: 0.5}
+  - storage: {key: scdf.client_id, value: nfirec}
+  - goto: {app: spacecdf, path: "/?study=${study}&lang={lang}", settle: 2}
+  - fill: {target: "input", text: {en: "NFI Team", fr: "Équipe NFI"}}
+  - click: {target: {role: button, name: Join, exact: true}, instant: true}
+  - wait: 2.5
+  - js: *ltjs
+
+steps:
+  - id: mdr
+    title: {en: "The MDR: inventory, review, pass", fr: "La MDR : inventaire, revue, franchissement"}
+    say:
+      en: >-
+        The team leader chairs the Mission Definition Review, the MDR. Every must-pass criterion
+        passes, and the cost criterion is judged on the priced project. One deliverable stays
+        partial: two measures of effectiveness carry example thresholds and remain to be co-defined
+        with the communities, by ruling of the principal investigator. Start review opens the
+        stage-transition inventory, which lists what is missing before the review begins. In Warn
+        mode the warning is written to the gate history, and the review starts. In Block mode it
+        would stop here. The review passes, and the team leader records the go decision, with the
+        actions taken from the open-item register.
+      fr: >-
+        Le chef d’équipe préside la revue de définition de mission, la MDR. Tous les critères
+        obligatoires passent, et le critère de coût est jugé sur le projet chiffré. Un livrable
+        reste partiel : deux mesures d’efficacité portent des seuils d’exemple et restent à
+        co-définir avec les communautés, selon la décision du chercheur principal. Ouvrir la revue
+        affiche l’inventaire de transition de phase, qui liste ce qui manque avant le début de la
+        revue. En mode Avertir, l’avertissement est écrit dans l’historique du jalon, et la revue
+        démarre. En mode Bloquer, elle s’arrêterait ici. La revue est franchie, et le chef d’équipe
+        consigne la décision go, avec les actions tirées du registre des points ouverts.
+    do:
+      - js: {en: "__lt('Scene 6.1 · Team leader', 'Before a review starts, the tool lists what is missing; in Warn mode it is recorded, in Block mode it stops the review.')", fr: "__lt('Scène 6.1 · Chef d’équipe', 'Avant une revue, l’outil liste ce qui manque ; en mode Avertir c’est consigné, en mode Bloquer la revue ne démarre pas.')"}
+      - select: {target: {css: "[data-testid=active-seat]"}, value: team_leader}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 2
+      - click: {role: tab, name: MDR, exact: true}
+      - wait: 2
+      - highlight: {target: {css: "main tr:has-text('MOE-04'), main li:has-text('MOE-04'), main div:has-text('MOE-04') >> nth=-1"}, seconds: 3}
+      - scroll: {target: {css: "[data-testid=start-review]"}}
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+      - click: {css: "[data-testid=start-review]"}
+      - wait: 2.5
+      - highlight: {target: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer') >> xpath=ancestor::*[contains(@class,'card') or self::section][1]"}, seconds: 4, point: false}
+      - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
+      - wait: 2.5
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - click: {css: ".c2o-verdict button:has-text('Pass MDR'), .c2o-verdict button:has-text('Franchir la MDR')"}
+      - wait: 2.5
+      - click: {css: ".c2o-verdict button.c2o-lb-record, button.c2o-lb-record:has-text('go / no'), button.c2o-lb-record:has-text('go ou no')"}
+      - wait_for: {css: "#c2o-logbook"}
+      - fill:
+          target: {placeholder: "Why this option? What made the runner-up lose? What would change your mind?"}
+          text: {en: "GO. Every must-pass criterion passes; cost judged on the priced project. Actions from the open-item register: MOE-04 and MOE-10 to co-define with the communities.", fr: "GO. Tous les critères obligatoires passent ; coût jugé sur le projet chiffré. Actions tirées du registre des points ouverts : MOE-04 et MOE-10 à co-définir avec les communautés."}
+      - click: {role: button, name: Save decision record}
+      - wait: 0.8
+      - click: {role: button, name: Close the logbook}
+
+  - id: prr
+    title: {en: "The PRR", fr: "La PRR"}
+    say:
+      en: >-
+        The Preliminary Requirements Review, the PRR, checks that the orbit is baselined, the
+        function and product trees exist, the margins hold, every requirement has a verification
+        method, and the risks, the cost and the debris case are in hand. The inventory is clean, and
+        the review passes. The preliminary requirements are now baselined; the system requirements
+        come next.
+      fr: >-
+        La revue des exigences préliminaires, la PRR, vérifie que l’orbite est figée, que les arbres
+        des fonctions et des produits existent, que les marges tiennent, que chaque exigence a une
+        méthode de vérification, et que les risques, le coût et le cas des débris sont maîtrisés.
+        L’inventaire est propre, et la revue est franchie. Les exigences préliminaires sont
+        désormais figées ; les exigences système viennent ensuite.
+    do:
+      - js: {en: "__lt('Scene 6.2 · Team leader', 'The preliminary requirements are baselined; the system requirements come next.')", fr: "__lt('Scène 6.2 · Chef d’équipe', 'Les exigences préliminaires sont figées ; les exigences système viennent ensuite.')"}
+      - click: {role: tab, name: PRR, exact: true}
+      - wait: 2
+      - scroll: {target: {css: "[data-testid=start-review]"}}
+      - click: {css: "[data-testid=start-review]"}
+      - wait: 2.5
+      - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
+      - wait: 2.5
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - click: {css: ".c2o-verdict button:has-text('Pass PRR'), .c2o-verdict button:has-text('Franchir la PRR')"}
+      - wait: 2.5
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+
+  - id: semp
+    title: {en: "SRR: issue the management plan", fr: "SRR : émettre le plan de management"}
+    say:
+      en: >-
+        The System Requirements Review, the SRR, is not ready yet: five of its eight must-pass
+        criteria pass. The first gap is the systems engineering management plan, the SEMP. The tool
+        writes it from the study: the phases, the reviews, the seats, the change control and the
+        margin policy. Systems reviews it and records its issue. Issue A is recorded with its date
+        and seat, and the SEMP criterion turns to pass.
+      fr: >-
+        La revue des exigences système, la SRR, n’est pas encore prête : cinq de ses huit critères
+        obligatoires passent. Le premier manque est le plan de management de l’ingénierie système,
+        le SEMP. L’outil le rédige à partir de l’étude : les phases, les revues, les postes, la
+        maîtrise des modifications et la politique de marges. L’ingénierie système le relit et
+        consigne son émission. L’édition A est enregistrée avec sa date et son poste, et le critère
+        du SEMP passe.
+    do:
+      - js: {en: "__lt('Scene 6.3 · Systems', 'The management plan is written from the study and issued before the SRR.')", fr: "__lt('Scène 6.3 · Systèmes', 'Le plan de management est rédigé à partir de l’étude et émis avant la SRR.')"}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - select: {target: {css: "[data-testid=active-seat]"}, value: systems_engineer}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: SRR, exact: true}
+      - wait: 2
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+      - scroll: {target: {css: "[data-testid=semp-issue]"}}
+      - highlight: {target: {css: "[data-testid=semp-issue]"}, seconds: 2.5}
+      - click: {role: button, name: "Record the SEMP issue"}
+      - wait: 2.5
+      - highlight: {target: {css: "[data-testid=semp-issue]"}, seconds: 2.5}
+
+  - id: debris
+    title: {en: "SRR: the debris assessment", fr: "SRR : l’évaluation des débris"}
+    say:
+      en: >-
+        The second gap is the debris assessment. In the Licensing tab, under Disposal, mission
+        analysis runs it: the lifetime with and without the sail over a strong, a nominal and a weak
+        solar cycle, the casualty risk at re-entry, which is negligible because a 3U CubeSat burns
+        up, and the collision probability. With the sail, re-entry comes in about three years, well
+        within the five-year rule. The assessment is accepted at the SRR.
+      fr: >-
+        Le deuxième manque est l’évaluation des débris. Dans l’onglet Licences, sous Retrait de
+        service, l’analyse de mission la lance : la durée de vie avec et sans voile sur un cycle
+        solaire fort, nominal et faible, le risque pour la population à la rentrée, négligeable car
+        un CubeSat 3U se consume, et la probabilité de collision. Avec la voile, la rentrée a lieu en
+        trois ans environ, bien en deçà de la règle des cinq ans. L’évaluation est acceptée à la
+        SRR.
+    do:
+      - js: {en: "__lt('Scene 6.4 · Mission analysis & ops with Propulsion', 'The sail is what makes the mission licensable: the assessment shows re-entry well within five years.')", fr: "__lt('Scène 6.4 · Analyse de mission et propulsion', 'C’est la voile qui rend la mission autorisable : l’évaluation montre une rentrée bien en deçà de cinq ans.')"}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - select: {target: {css: "[data-testid=active-seat]"}, value: team_leader}
+      - wait: 1.5
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=0"}
+      - click: {role: tab, name: Licensing, exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: Disposal, exact: true}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=debris-assessment]"}}
+      - click: {role: button, name: "Run the assessment"}
+      - wait: 4
+      - highlight: {target: {css: "[data-testid=debris-assessment] table >> nth=0"}, seconds: 3.5, point: false}
+      - select: {target: {label: "Accept at gate"}, value: srr}
+      - click: {role: button, name: "Accept the assessment"}
+      - wait: 2
+
+  - id: ecp02
+    title: {en: "SRR: ECP-02 through change control", fr: "SRR : ECP-02 en maîtrise des modifications"}
+    say:
+      en: >-
+        The last gap is a change proposal. ECP-02 asks the launch provider for five hundred and
+        ninety kilometres nominal, but accepts any injection between five hundred and fifty and six
+        hundred. Start change review computes the impact at five hundred and fifty kilometres, the
+        bottom of the range, and names the seat that owns each line: the union of the passes falls
+        from about one hundred and twenty-six to one hundred and eighteen minutes a day, the data
+        margin from thirty-nine to thirty-five percent, and the sail lifetime in the weakest cycle
+        from three point three to two point three years. Each affected seat reads its line and
+        agrees. Then the team leader, as the change board, approves, and the baseline moves: three
+        requirements are updated, and the mission baseline becomes revision one.
+      fr: >-
+        Le dernier manque est une proposition de modification. ECP-02 demande au lanceur cinq cent
+        quatre-vingt-dix kilomètres en nominal, mais accepte toute injection entre cinq cent
+        cinquante et six cents. Ouvrir l’examen de la modification calcule l’impact à cinq cent
+        cinquante kilomètres, le bas de la plage, et nomme le poste responsable de chaque ligne :
+        l’union des passages descend d’environ cent vingt-six à cent dix-huit minutes par jour, la
+        marge de données de trente-neuf à trente-cinq pour cent, et la durée de vie avec voile dans
+        le cycle le plus faible de trois virgule trois à deux virgule trois ans. Chaque poste touché
+        lit sa ligne et donne son accord. Puis le chef d’équipe, comme comité des modifications,
+        approuve, et le référentiel évolue : trois exigences sont mises à jour, et le référentiel de
+        mission passe à la révision un.
+    do:
+      - js: {en: "__lt('Scene 6.5 · Mission analysis presents, Team leader decides', 'A change is approved only after every seat it touches has seen its impact and agreed; the baseline then moves.')", fr: "__lt('Scène 6.5 · L’analyse de mission présente, le chef d’équipe décide', 'Un changement n’est approuvé qu’après l’accord de chaque poste touché, impact à l’appui ; le référentiel évolue alors.')"}
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - click: {role: tab, name: Decide, exact: true}
+      - wait: 1.5
+      - scroll: {target: {css: "[data-testid=change-flow-ECP-02]"}}
+      - click: {css: "[data-testid=change-flow-ECP-02] button.c2o-btn--primary"}
+      - wait: 4
+      - highlight: {target: {css: "[data-testid=change-impact-ECP-02]"}, seconds: 6, point: false}
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(1) button >> nth=0"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(2) button >> nth=0"}}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(3) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(4) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(5) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(6) button >> nth=0"}, instant: true}
+      - wait: 1
+      - click: {target: {css: "[data-testid=change-flow-ECP-02] ul:not([data-testid]) > li:nth-child(7) button >> nth=0"}, instant: true}
+      - wait: 1
+      - fill: {target: {css: "[data-testid=change-flow-ECP-02] textarea"}, text: "Injection 550-600 km acceptable"}
+      - click: {css: "[data-testid=change-flow-ECP-02] button.c2o-btn--primary"}
+      - wait: 3
+      - scroll: {target: {css: "[data-testid=change-applied-ECP-02]"}}
+      - highlight: {target: {css: "[data-testid=change-applied-ECP-02]"}, seconds: 4}
+
+  - id: srr
+    title: {en: "The SRR passes", fr: "La SRR est franchie"}
+    say:
+      en: >-
+        Back at the review gates, the SRR is ready: eight of eight must-pass criteria. The inventory
+        is clean, the review starts, and the SRR passes.
+      fr: >-
+        De retour aux jalons de revue, la SRR est prête : huit critères obligatoires sur huit.
+        L’inventaire est propre, la revue démarre, et la SRR est franchie.
+    do:
+      - js: "__lt('', '')"
+      - click: {css: ".c2o-appbar__levels .c2o-tab >> nth=4"}
+      - wait: 1
+      - click: {role: tab, name: "Review Gates", exact: true}
+      - wait: 1.5
+      - click: {role: tab, name: SRR, exact: true}
+      - wait: 2.5
+      - js: "(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find(x => /^(Done|Terminé)$/.test(x.innerText.trim())); if (b) b.click(); })()"
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 2.5}
+      - click: {css: "[data-testid=start-review]"}
+      - wait: 2.5
+      - click: {css: "main button:has-text('Confirm'), main button:has-text('Confirmer')"}
+      - wait: 2.5
+      - scroll: {target: {css: ".c2o-verdict"}}
+      - click: {css: ".c2o-verdict button:has-text('Pass SRR'), .c2o-verdict button:has-text('Franchir la SRR')"}
+      - wait: 2.5
+      - highlight: {target: {css: ".c2o-verdict"}, seconds: 3}

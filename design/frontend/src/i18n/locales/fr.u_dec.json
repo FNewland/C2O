@@ -296,5 +296,17 @@
   "Systems engineering management plan": "Plan de management de l’ingénierie système",
   "The SEMP could not be issued ({{code}}).": "Le SEMP n’a pas pu être édité ({{code}}).",
   "Conditions of the trade": "Conditions du compromis",
-  "Requirements updated": "Exigences mises à jour"
+  "Requirements updated": "Exigences mises à jour",
+  "Contact, union of the passes": "Contact, union des passages",
+  "Longest gap between contacts": "Plus long intervalle sans contact",
+  "Contact windows per day": "Fenêtres de contact par jour",
+  "Downlink capacity": "Capacité de la liaison descendante",
+  "Data to return per day": "Données à rapatrier par jour",
+  "Daily data margin": "Marge quotidienne de données",
+  "Lifetime with the sail (weakest cycle)": "Durée de vie avec la voile (cycle le plus faible)",
+  "Lifetime without the sail (weakest cycle)": "Durée de vie sans la voile (cycle le plus faible)",
+  "Energy balance per orbit": "Bilan énergétique par orbite",
+  "Worst-eclipse depth of discharge": "Profondeur de décharge à la pire éclipse",
+  "Downlink share of the orbit": "Part de la transmission dans l’orbite",
+  "Contact at {{site}}": "Contact à {{site}}"
 }
